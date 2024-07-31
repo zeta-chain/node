@@ -19,8 +19,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/go-tss/blame"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
+	"gitlab.com/thorchain/tss/go-tss/blame"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
 
@@ -147,7 +147,7 @@ func TestZetacore_PostGasPrice(t *testing.T) {
 	)
 
 	t.Run("post gas price success", func(t *testing.T) {
-		hash, err := client.PostVoteGasPrice(ctx, chains.BscMainnet, 1000000, "100", 1234)
+		hash, err := client.PostVoteGasPrice(ctx, chains.BscMainnet, 1000000, 0, 1234)
 		require.NoError(t, err)
 		require.Equal(t, sampleHash, hash)
 	})
@@ -232,7 +232,7 @@ func TestZetacore_SetTSS(t *testing.T) {
 	})
 }
 
-func TestZetacore_UpdateZetacoreContext(t *testing.T) {
+func TestZetacore_UpdateAppContext(t *testing.T) {
 	ctx := context.Background()
 
 	//Setup server for multiple grpc calls
@@ -284,24 +284,24 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 				Return(observertypes.QuerySupportedChainsResponse{
 					Chains: []chains.Chain{
 						{
-							chains.BitcoinMainnet.ChainId,
-							chains.BitcoinMainnet.ChainName,
-							chains.BscMainnet.Network,
-							chains.BscMainnet.NetworkType,
-							chains.BscMainnet.Vm,
-							chains.BscMainnet.Consensus,
-							chains.BscMainnet.IsExternal,
-							chains.BscMainnet.CctxGateway,
+							ChainId:     chains.BitcoinMainnet.ChainId,
+							Network:     chains.BscMainnet.Network,
+							NetworkType: chains.BscMainnet.NetworkType,
+							Vm:          chains.BscMainnet.Vm,
+							Consensus:   chains.BscMainnet.Consensus,
+							IsExternal:  chains.BscMainnet.IsExternal,
+							CctxGateway: chains.BscMainnet.CctxGateway,
+							Name:        chains.BscMainnet.Name,
 						},
 						{
-							chains.Ethereum.ChainId,
-							chains.Ethereum.ChainName,
-							chains.Ethereum.Network,
-							chains.Ethereum.NetworkType,
-							chains.Ethereum.Vm,
-							chains.Ethereum.Consensus,
-							chains.Ethereum.IsExternal,
-							chains.Ethereum.CctxGateway,
+							ChainId:     chains.Ethereum.ChainId,
+							Network:     chains.Ethereum.Network,
+							NetworkType: chains.Ethereum.NetworkType,
+							Vm:          chains.Ethereum.Vm,
+							Consensus:   chains.Ethereum.Consensus,
+							IsExternal:  chains.Ethereum.IsExternal,
+							CctxGateway: chains.Ethereum.CctxGateway,
+							Name:        chains.Ethereum.Name,
 						},
 					},
 				})
@@ -384,7 +384,7 @@ func TestZetacore_UpdateZetacoreContext(t *testing.T) {
 	t.Run("zetacore update success", func(t *testing.T) {
 		cfg := config.New(false)
 		appContext := zctx.New(cfg, zerolog.Nop())
-		err := client.UpdateZetacoreContext(ctx, appContext, false, zerolog.Logger{})
+		err := client.UpdateAppContext(ctx, appContext, false, zerolog.Logger{})
 		require.NoError(t, err)
 	})
 }

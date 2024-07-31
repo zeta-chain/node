@@ -1,6 +1,7 @@
 package chains
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -13,10 +14,6 @@ import (
 func (chain Chain) Validate() error {
 	if chain.ChainId <= 0 {
 		return fmt.Errorf("chain ID must be positive")
-	}
-
-	if _, ok := ChainName_name[int32(chain.ChainName)]; !ok {
-		return fmt.Errorf("invalid chain name %d", int32(chain.ChainName))
 	}
 
 	if _, ok := Network_name[int32(chain.Network)]; !ok {
@@ -33,6 +30,10 @@ func (chain Chain) Validate() error {
 
 	if _, ok := Consensus_name[int32(chain.Consensus)]; !ok {
 		return fmt.Errorf("invalid consensus %d", int32(chain.Consensus))
+	}
+
+	if chain.Name == "" {
+		return errors.New("chain name cannot be empty")
 	}
 
 	return nil
@@ -52,13 +53,14 @@ func (chain Chain) IsExternalChain() bool {
 // on EVM chain, it is 20Bytes
 // on Bitcoin chain, it is P2WPKH address, []byte(bech32 encoded string)
 func (chain Chain) EncodeAddress(b []byte) (string, error) {
-	if chain.Consensus == Consensus_ethereum {
+	switch chain.Consensus {
+	case Consensus_ethereum:
 		addr := ethcommon.BytesToAddress(b)
 		if addr == (ethcommon.Address{}) {
 			return "", fmt.Errorf("invalid EVM address")
 		}
 		return addr.Hex(), nil
-	} else if chain.Consensus == Consensus_bitcoin {
+	case Consensus_bitcoin:
 		addrStr := string(b)
 		chainParams, err := GetBTCChainParams(chain.ChainId)
 		if err != nil {
@@ -72,8 +74,15 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 			return "", fmt.Errorf("address is not for network %s", chainParams.Name)
 		}
 		return addrStr, nil
+	case Consensus_solana_consensus:
+		pk, err := DecodeSolanaWalletAddress(string(b))
+		if err != nil {
+			return "", err
+		}
+		return pk.String(), nil
+	default:
+		return "", fmt.Errorf("chain id %d not supported", chain.ChainId)
 	}
-	return "", fmt.Errorf("chain (%d) not supported", chain.ChainId)
 }
 
 func (chain Chain) IsEVMChain() bool {
@@ -93,6 +102,8 @@ func DecodeAddressFromChainID(chainID int64, addr string, additionalChains []Cha
 		return ethcommon.HexToAddress(addr).Bytes(), nil
 	case IsBitcoinChain(chainID, additionalChains):
 		return []byte(addr), nil
+	case IsSolanaChain(chainID, additionalChains):
+		return []byte(addr), nil
 	default:
 		return nil, fmt.Errorf("chain (%d) not supported", chainID)
 	}
@@ -109,7 +120,12 @@ func IsEVMChain(chainID int64, additionalChains []Chain) bool {
 // additionalChains is a list of additional chains to search from
 // in practice, it is used in the protocol to dynamically support new chains without doing an upgrade
 func IsBitcoinChain(chainID int64, additionalChains []Chain) bool {
-	return ChainIDInChainList(chainID, ChainListByConsensus(Consensus_bitcoin, additionalChains))
+	return ChainIDInChainList(chainID, ChainListByNetwork(Network_btc, additionalChains))
+}
+
+// IsSolanaChain returns true if the chain is a Solana chain
+func IsSolanaChain(chainID int64, additionalChains []Chain) bool {
+	return ChainIDInChainList(chainID, ChainListByNetwork(Network_solana, additionalChains))
 }
 
 // IsEthereumChain returns true if the chain is an Ethereum chain

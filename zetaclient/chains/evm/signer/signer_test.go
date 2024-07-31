@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/db"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -77,9 +78,11 @@ func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.O
 	params := mocks.MockChainParams(evmcfg.Chain.ChainId, 10)
 	cfg.EVMChainConfigs[chains.BscMainnet.ChainId] = evmcfg
 	//appContext := context.New(cfg, zerolog.Nop())
-	dbpath := sample.CreateTempDir(t)
 	logger := base.Logger{}
 	ts := &metrics.TelemetryServer{}
+
+	database, err := db.NewFromSqliteInMemory(true)
+	require.NoError(t, err)
 
 	return observer.NewObserver(
 		ctx,
@@ -88,7 +91,7 @@ func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.O
 		params,
 		mocks.NewZetacoreClient(t),
 		tss,
-		dbpath,
+		database,
 		logger,
 		ts,
 	)

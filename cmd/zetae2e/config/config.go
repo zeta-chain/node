@@ -18,19 +18,8 @@ func RunnerFromConfig(
 	logger *runner.Logger,
 	opts ...runner.E2ERunnerOption,
 ) (*runner.E2ERunner, error) {
-	// initialize clients
-	btcRPCClient,
-		evmClient,
-		evmAuth,
-		cctxClient,
-		fungibleClient,
-		authClient,
-		bankClient,
-		observerClient,
-		lightClient,
-		zevmClient,
-		zevmAuth,
-		err := getClientsFromConfig(ctx, conf, account)
+	// initialize all clients for E2E tests
+	e2eClients, err := getClientsFromConfig(ctx, conf, account)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get clients from config: %w", err)
 	}
@@ -41,17 +30,20 @@ func RunnerFromConfig(
 		name,
 		ctxCancel,
 		account,
-		evmClient,
-		zevmClient,
-		cctxClient,
-		fungibleClient,
-		authClient,
-		bankClient,
-		observerClient,
-		lightClient,
-		evmAuth,
-		zevmAuth,
-		btcRPCClient,
+		e2eClients.EvmClient,
+		e2eClients.ZevmClient,
+		e2eClients.AuthorityClient,
+		e2eClients.CctxClient,
+		e2eClients.FungibleClient,
+		e2eClients.AuthClient,
+		e2eClients.BankClient,
+		e2eClients.ObserverClient,
+		e2eClients.LightClient,
+		e2eClients.EvmAuth,
+		e2eClients.ZevmAuth,
+		e2eClients.BtcRPCClient,
+		e2eClients.SolanaClient,
+
 		logger,
 		opts...,
 	)
@@ -74,6 +66,8 @@ func RunnerFromConfig(
 
 // ExportContractsFromRunner export contracts from the runner to config using a source config
 func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.Config {
+	conf.Contracts.Solana.GatewayProgramID = r.GatewayProgram.String()
+
 	// copy contracts from deployer runner
 	conf.Contracts.EVM.ZetaEthAddr = config.DoubleQuotedString(r.ZetaEthAddr.Hex())
 	conf.Contracts.EVM.ConnectorEthAddr = config.DoubleQuotedString(r.ConnectorEthAddr.Hex())
@@ -85,6 +79,7 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	conf.Contracts.ZEVM.ETHZRC20Addr = config.DoubleQuotedString(r.ETHZRC20Addr.Hex())
 	conf.Contracts.ZEVM.ERC20ZRC20Addr = config.DoubleQuotedString(r.ERC20ZRC20Addr.Hex())
 	conf.Contracts.ZEVM.BTCZRC20Addr = config.DoubleQuotedString(r.BTCZRC20Addr.Hex())
+	conf.Contracts.ZEVM.SOLZRC20Addr = config.DoubleQuotedString(r.SOLZRC20Addr.Hex())
 	conf.Contracts.ZEVM.UniswapFactoryAddr = config.DoubleQuotedString(r.UniswapV2FactoryAddr.Hex())
 	conf.Contracts.ZEVM.UniswapRouterAddr = config.DoubleQuotedString(r.UniswapV2RouterAddr.Hex())
 	conf.Contracts.ZEVM.ConnectorZEVMAddr = config.DoubleQuotedString(r.ConnectorZEVMAddr.Hex())

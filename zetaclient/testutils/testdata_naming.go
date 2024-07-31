@@ -77,3 +77,14 @@ func FileNameEVMOutboundReceipt(chainID int64, txHash string, coinType coin.Coin
 	}
 	return fmt.Sprintf("chain_%d_outbound_receipt_%s_%s_%s.json", chainID, coinType, eventName, txHash)
 }
+
+//=================================================================================================
+// Solana chain
+
+// FileNameSolanaInbound returns archive file name for inbound tx result
+func FileNameSolanaInbound(chainID int64, inboundHash string, donation bool) string {
+	if !donation {
+		return fmt.Sprintf("chain_%d_inbound_tx_result_%s.json", chainID, inboundHash)
+	}
+	return fmt.Sprintf("chain_%d_inbound_tx_result_donation_%s.json", chainID, inboundHash)
+}

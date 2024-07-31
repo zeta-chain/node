@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	blame "github.com/zeta-chain/go-tss/blame"
+	blame "gitlab.com/thorchain/tss/go-tss/blame"
 	chains "github.com/zeta-chain/zetacore/pkg/chains"
 
 	context "context"
@@ -654,9 +654,9 @@ func (_m *ZetacoreClient) PostVoteBlockHeader(ctx context.Context, chainID int64
 	return r0, r1
 }
 
-// PostVoteGasPrice provides a mock function with given fields: ctx, chain, gasPrice, supply, blockNum
-func (_m *ZetacoreClient) PostVoteGasPrice(ctx context.Context, chain chains.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
-	ret := _m.Called(ctx, chain, gasPrice, supply, blockNum)
+// PostVoteGasPrice provides a mock function with given fields: ctx, chain, gasPrice, priorityFee, blockNum
+func (_m *ZetacoreClient) PostVoteGasPrice(ctx context.Context, chain chains.Chain, gasPrice uint64, priorityFee uint64, blockNum uint64) (string, error) {
+	ret := _m.Called(ctx, chain, gasPrice, priorityFee, blockNum)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PostVoteGasPrice")
@@ -664,17 +664,17 @@ func (_m *ZetacoreClient) PostVoteGasPrice(ctx context.Context, chain chains.Cha
 
 	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, chains.Chain, uint64, string, uint64) (string, error)); ok {
-		return rf(ctx, chain, gasPrice, supply, blockNum)
+	if rf, ok := ret.Get(0).(func(context.Context, chains.Chain, uint64, uint64, uint64) (string, error)); ok {
+		return rf(ctx, chain, gasPrice, priorityFee, blockNum)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, chains.Chain, uint64, string, uint64) string); ok {
-		r0 = rf(ctx, chain, gasPrice, supply, blockNum)
+	if rf, ok := ret.Get(0).(func(context.Context, chains.Chain, uint64, uint64, uint64) string); ok {
+		r0 = rf(ctx, chain, gasPrice, priorityFee, blockNum)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, chains.Chain, uint64, string, uint64) error); ok {
-		r1 = rf(ctx, chain, gasPrice, supply, blockNum)
+	if rf, ok := ret.Get(1).(func(context.Context, chains.Chain, uint64, uint64, uint64) error); ok {
+		r1 = rf(ctx, chain, gasPrice, priorityFee, blockNum)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -277,18 +277,21 @@ func DecodeTSSVout(vout btcjson.Vout, receiverExpected string, chain chains.Chai
 }
 
 func decodeInscriptionPayload(t *scriptTokenizer) ([]byte, error) {
-	if (!t.Next() || t.Opcode() != txscript.OP_FALSE) {
+	if !t.Next() || t.Opcode() != txscript.OP_FALSE {
 		return nil, fmt.Errorf("OP_FALSE not found")
 	}
 
-	if (!t.Next() || t.Opcode() != txscript.OP_IF) {
+	if !t.Next() || t.Opcode() != txscript.OP_IF {
 		return nil, fmt.Errorf("OP_IF not found")
 	}
 
 	memo := make([]byte, 0)
 	var next byte
-	for t.Next() && t.Opcode() != txscript.OP_ENDIF {
+	for t.Next() {
 		next = t.Opcode()
+		if next == txscript.OP_ENDIF {
+			return memo, nil
+		}
 		if next < txscript.OP_DATA_1 || next > txscript.OP_PUSHDATA4 {
 			return nil, fmt.Errorf("expecting data push, found %d", next)
 		}

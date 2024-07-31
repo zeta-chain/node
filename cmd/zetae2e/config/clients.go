@@ -9,60 +9,96 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/gagliardetto/solana-go/rpc"
 	"google.golang.org/grpc"
 
 	"github.com/zeta-chain/zetacore/e2e/config"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// E2EClients contains all the RPC clients and gRPC clients for E2E tests
+type E2EClients struct {
+	// the RPC clients for external chains in the localnet
+	BtcRPCClient *rpcclient.Client
+	SolanaClient *rpc.Client
+	EvmClient    *ethclient.Client
+	EvmAuth      *bind.TransactOpts
+
+	// the gRPC clients for ZetaChain
+	AuthorityClient authoritytypes.QueryClient
+	CctxClient      crosschaintypes.QueryClient
+	FungibleClient  fungibletypes.QueryClient
+	AuthClient      authtypes.QueryClient
+	BankClient      banktypes.QueryClient
+	ObserverClient  observertypes.QueryClient
+	LightClient     lightclienttypes.QueryClient
+
+	// the RPC clients for ZetaChain
+	ZevmClient *ethclient.Client
+	ZevmAuth   *bind.TransactOpts
+}
+
+// zetaChainClients contains all the RPC clients and gRPC clients for ZetaChain
+type zetaChainClients struct {
+	AuthorityClient authoritytypes.QueryClient
+	CctxClient      crosschaintypes.QueryClient
+	FungibleClient  fungibletypes.QueryClient
+	AuthClient      authtypes.QueryClient
+	BankClient      banktypes.QueryClient
+	ObserverClient  observertypes.QueryClient
+	LightClient     lightclienttypes.QueryClient
+}
+
 // getClientsFromConfig get clients from config
 func getClientsFromConfig(ctx context.Context, conf config.Config, account config.Account) (
-	*rpcclient.Client,
-	*ethclient.Client,
-	*bind.TransactOpts,
-	crosschaintypes.QueryClient,
-	fungibletypes.QueryClient,
-	authtypes.QueryClient,
-	banktypes.QueryClient,
-	observertypes.QueryClient,
-	lightclienttypes.QueryClient,
-	*ethclient.Client,
-	*bind.TransactOpts,
+	E2EClients,
 	error,
 ) {
+	if conf.RPCs.Solana == "" {
+		return E2EClients{}, fmt.Errorf("solana rpc is empty")
+	}
+	solanaClient := rpc.New(conf.RPCs.Solana)
+	if solanaClient == nil {
+		return E2EClients{}, fmt.Errorf("failed to get solana client")
+	}
 	btcRPCClient, err := getBtcClient(conf.RPCs.Bitcoin)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get btc client: %w", err)
+		return E2EClients{}, fmt.Errorf("failed to get btc client: %w", err)
 	}
 	evmClient, evmAuth, err := getEVMClient(ctx, conf.RPCs.EVM, account)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get evm client: %w", err)
+		return E2EClients{}, fmt.Errorf("failed to get evm client: %w", err)
 	}
-	cctxClient, fungibleClient, authClient, bankClient, observerClient, lightclientClient, err := getZetaClients(
+	zetaChainClients, err := getZetaClients(
 		conf.RPCs.ZetaCoreGRPC,
 	)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zeta clients: %w", err)
+		return E2EClients{}, fmt.Errorf("failed to get zeta clients: %w", err)
 	}
 	zevmClient, zevmAuth, err := getEVMClient(ctx, conf.RPCs.Zevm, account)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zevm client: %w", err)
+		return E2EClients{}, fmt.Errorf("failed to get zevm client: %w", err)
 	}
-	return btcRPCClient,
-		evmClient,
-		evmAuth,
-		cctxClient,
-		fungibleClient,
-		authClient,
-		bankClient,
-		observerClient,
-		lightclientClient,
-		zevmClient,
-		zevmAuth,
-		nil
+
+	return E2EClients{
+		BtcRPCClient:    btcRPCClient,
+		SolanaClient:    solanaClient,
+		EvmClient:       evmClient,
+		EvmAuth:         evmAuth,
+		AuthorityClient: zetaChainClients.AuthorityClient,
+		CctxClient:      zetaChainClients.CctxClient,
+		FungibleClient:  zetaChainClients.FungibleClient,
+		AuthClient:      zetaChainClients.AuthClient,
+		BankClient:      zetaChainClients.BankClient,
+		ObserverClient:  zetaChainClients.ObserverClient,
+		LightClient:     zetaChainClients.LightClient,
+		ZevmClient:      zevmClient,
+		ZevmAuth:        zevmAuth,
+	}, nil
 }
 
 // getBtcClient get btc client
@@ -118,19 +154,15 @@ func getEVMClient(
 
 // getZetaClients get zeta clients
 func getZetaClients(rpc string) (
-	crosschaintypes.QueryClient,
-	fungibletypes.QueryClient,
-	authtypes.QueryClient,
-	banktypes.QueryClient,
-	observertypes.QueryClient,
-	lightclienttypes.QueryClient,
+	zetaChainClients,
 	error,
 ) {
 	grpcConn, err := grpc.Dial(rpc, grpc.WithInsecure())
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, err
+		return zetaChainClients{}, err
 	}
 
+	authorityClient := authoritytypes.NewQueryClient(grpcConn)
 	cctxClient := crosschaintypes.NewQueryClient(grpcConn)
 	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 	authClient := authtypes.NewQueryClient(grpcConn)
@@ -138,5 +170,13 @@ func getZetaClients(rpc string) (
 	observerClient := observertypes.NewQueryClient(grpcConn)
 	lightclientClient := lightclienttypes.NewQueryClient(grpcConn)
 
-	return cctxClient, fungibleClient, authClient, bankClient, observerClient, lightclientClient, nil
+	return zetaChainClients{
+		AuthorityClient: authorityClient,
+		CctxClient:      cctxClient,
+		FungibleClient:  fungibleClient,
+		AuthClient:      authClient,
+		BankClient:      bankClient,
+		ObserverClient:  observerClient,
+		LightClient:     lightclientClient,
+	}, nil
 }

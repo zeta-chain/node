@@ -331,7 +331,7 @@ func MockUpdateNonce(m *crosschainmocks.CrosschainObserverKeeper, senderChain ch
 	tss := sample.Tss()
 	m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
 		Return(senderChain, true).Once()
-	m.On("GetChainNonces", mock.Anything, senderChain.ChainName.String()).
+	m.On("GetChainNonces", mock.Anything, senderChain.ChainId).
 		Return(observertypes.ChainNonces{Nonce: nonce}, true)
 	m.On("GetTSS", mock.Anything).
 		Return(tss, true)
@@ -370,7 +370,7 @@ func MockVoteOnOutboundSuccessBallot(
 	observer string,
 ) {
 	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutboundParam().ReceiverChainId, chains.ReceiveStatus_success, observer).
-		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_SuccessObservation}, senderChain.ChainName.String(), nil).
+		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_SuccessObservation}, senderChain.Name, nil).
 		Once()
 }
 
@@ -382,7 +382,7 @@ func MockVoteOnOutboundFailedBallot(
 	observer string,
 ) {
 	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutboundParam().ReceiverChainId, chains.ReceiveStatus_failed, observer).
-		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_FailureObservation}, senderChain.ChainName.String(), nil).
+		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_FailureObservation}, senderChain.Name, nil).
 		Once()
 }
 

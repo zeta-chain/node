@@ -16,6 +16,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -77,7 +78,7 @@ func NewSigner(
 	}
 	client, err := rpcclient.New(connCfg, nil)
 	if err != nil {
-		return nil, fmt.Errorf("error creating bitcoin rpc client: %s", err)
+		return nil, errors.Wrap(err, "unable to create bitcoin rpc client")
 	}
 
 	return &Signer{
@@ -428,7 +429,7 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 	logger.Info().
-		Msgf("Key-sign success: %d => %s, nonce %d", cctx.InboundParams.SenderChainId, chain.ChainName, outboundTssNonce)
+		Msgf("Key-sign success: %d => %s, nonce %d", cctx.InboundParams.SenderChainId, chain.Name, outboundTssNonce)
 
 	// FIXME: add prometheus metrics
 	_, err = zetacoreClient.GetObserverList(ctx)
@@ -440,7 +441,7 @@ func (signer *Signer) TryProcessOutbound(
 	if tx != nil {
 		outboundHash := tx.TxHash().String()
 		logger.Info().
-			Msgf("on chain %s nonce %d, outboundHash %s signer %s", chain.ChainName, outboundTssNonce, outboundHash, signerAddress)
+			Msgf("on chain %s nonce %d, outboundHash %s signer %s", chain.Name, outboundTssNonce, outboundHash, signerAddress)
 
 		// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s) in case of RPC error
 		backOff := broadcastBackoff
@@ -450,7 +451,7 @@ func (signer *Signer) TryProcessOutbound(
 			if err != nil {
 				logger.Warn().
 					Err(err).
-					Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outboundHash, chain.ChainName, outboundTssNonce, i)
+					Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outboundHash, chain.Name, outboundTssNonce, i)
 				backOff *= 2
 				continue
 			}
@@ -467,7 +468,7 @@ func (signer *Signer) TryProcessOutbound(
 			)
 			if err != nil {
 				logger.Err(err).
-					Msgf("Unable to add to tracker on zetacore: nonce %d chain %s outboundHash %s", outboundTssNonce, chain.ChainName, outboundHash)
+					Msgf("Unable to add to tracker on zetacore: nonce %d chain %s outboundHash %s", outboundTssNonce, chain.Name, outboundHash)
 			}
 			logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
 

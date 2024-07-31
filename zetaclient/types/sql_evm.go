@@ -11,8 +11,6 @@ import (
 
 // EVM Chain observer types ----------------------------------->
 
-const LastBlockNumID = 0xBEEF
-
 // ReceiptDB : A modified receipt struct that the relational mapping can translate
 type ReceiptDB struct {
 	// Consensus fields: These fields are defined by the Yellow Paper
@@ -62,11 +60,6 @@ type TransactionSQLType struct {
 	gorm.Model
 	Identifier  string
 	Transaction TransactionDB `gorm:"embedded"`
-}
-
-type LastBlockSQLType struct {
-	gorm.Model
-	Num uint64
 }
 
 // Type translation functions:
@@ -158,12 +151,4 @@ func ToTransactionSQLType(transaction *ethtypes.Transaction, index string) (*Tra
 		Identifier:  index,
 		Transaction: trans,
 	}, nil
-}
-
-// ToLastBlockSQLType : Converts a last block number to a LastBlockSQLType
-func ToLastBlockSQLType(lastBlock uint64) *LastBlockSQLType {
-	return &LastBlockSQLType{
-		Model: gorm.Model{ID: LastBlockNumID},
-		Num:   lastBlock,
-	}
 }

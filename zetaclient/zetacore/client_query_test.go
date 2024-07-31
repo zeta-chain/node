@@ -568,14 +568,13 @@ func TestZetacore_GetNonceByChain(t *testing.T) {
 	expectedOutput := observertypes.QueryGetChainNoncesResponse{
 		ChainNonces: observertypes.ChainNonces{
 			Creator:         "",
-			Index:           "",
 			ChainId:         chain.ChainId,
 			Nonce:           8446,
 			Signers:         nil,
 			FinalizedHeight: 0,
 		},
 	}
-	input := observertypes.QueryGetChainNoncesRequest{Index: chain.ChainName.String()}
+	input := observertypes.QueryGetChainNoncesRequest{ChainId: chain.ChainId}
 	method := "/zetachain.zetacore.observer.Query/ChainNonces"
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 
@@ -867,22 +866,22 @@ func TestZetacore_GetSupportedChains(t *testing.T) {
 	expectedOutput := observertypes.QuerySupportedChainsResponse{
 		Chains: []chains.Chain{
 			{
-				ChainName:   chains.BitcoinMainnet.ChainName,
 				ChainId:     chains.BitcoinMainnet.ChainId,
 				Network:     chains.BscMainnet.Network,
 				NetworkType: chains.BscMainnet.NetworkType,
 				Vm:          chains.BscMainnet.Vm,
 				Consensus:   chains.BscMainnet.Consensus,
 				IsExternal:  chains.BscMainnet.IsExternal,
+				Name:        chains.BscMainnet.Name,
 			},
 			{
-				ChainName:   chains.Ethereum.ChainName,
 				ChainId:     chains.Ethereum.ChainId,
 				Network:     chains.Ethereum.Network,
 				NetworkType: chains.Ethereum.NetworkType,
 				Vm:          chains.Ethereum.Vm,
 				Consensus:   chains.Ethereum.Consensus,
 				IsExternal:  chains.Ethereum.IsExternal,
+				Name:        chains.Ethereum.Name,
 			},
 		},
 	}

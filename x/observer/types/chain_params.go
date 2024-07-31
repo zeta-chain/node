@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	solanacontract "github.com/zeta-chain/zetacore/pkg/contract/solana"
 )
 
 const (
@@ -311,6 +312,25 @@ func GetDefaultBtcRegtestChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+	}
+}
+func GetDefaultSolanaLocalnetChainParams() *ChainParams {
+	return &ChainParams{
+		ChainId:                     chains.SolanaLocalnet.ChainId,
+		ConfirmationCount:           32,
+		ZetaTokenContractAddress:    zeroAddress,
+		ConnectorContractAddress:    zeroAddress,
+		Erc20CustodyContractAddress: zeroAddress,
+		GasPriceTicker:              100,
+		WatchUtxoTicker:             0,
+		InboundTicker:               5,
+		OutboundTicker:              5,
+		OutboundScheduleInterval:    10,
+		OutboundScheduleLookahead:   10,
+		BallotThreshold:             DefaultBallotThreshold,
+		MinObserverDelegation:       DefaultMinObserverDelegation,
+		IsSupported:                 false,
+		GatewayAddress:              solanacontract.SolanaGatewayProgramID,
 	}
 }
 func GetDefaultGoerliLocalnetChainParams() *ChainParams {

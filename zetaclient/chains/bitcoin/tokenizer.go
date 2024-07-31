@@ -3,6 +3,7 @@ package bitcoin
 import (
 	"encoding/binary"
 	"fmt"
+
 	"github.com/btcsuite/btcd/txscript"
 )
 
@@ -19,7 +20,7 @@ func newScriptTokenizer(script []byte) scriptTokenizer {
 // one should consider upgrading txscript and remove this implementation
 type scriptTokenizer struct {
 	script []byte
-	offset int32
+	offset int
 	op     byte
 	data   []byte
 	err    error
@@ -28,7 +29,7 @@ type scriptTokenizer struct {
 // Done returns true when either all opcodes have been exhausted or a parse
 // failure was encountered and therefore the state has an associated error.
 func (t *scriptTokenizer) Done() bool {
-	return t.err != nil || t.offset >= int32(len(t.script))
+	return t.err != nil || t.offset >= len(t.script)
 }
 
 // Data returns the data associated with the most recently successfully parsed
@@ -86,11 +87,13 @@ func (t *scriptTokenizer) Next() bool {
 	case op >= txscript.OP_DATA_1 && op <= txscript.OP_DATA_75:
 		script := t.script[t.offset:]
 
-		// add 2 instead of 1 because script includes the opcode as well
-		length := int32(op) - txscript.OP_DATA_1 + 2
-		if int32(len(script)) < length {
-			t.err = fmt.Errorf("opcode %d requires %d bytes, but script only "+
-				"has %d remaining", op, length, len(script))
+		// The length should be: int(op) - txscript.OP_DATA_1 + 2, i.e. op is txscript.OP_DATA_10, that means
+		// the data length should be 10, which is txscript.OP_DATA_10 - txscript.OP_DATA_1 + 1.
+		// Here, 2 instead of 1 because `script` also includes the opcode which means it contains one more byte.
+		// Since txscript.OP_DATA_1 is 1, then length is just int(op) - 1 + 2 = int(op) + 1
+		length := int(op) + 1
+		if len(script) < length {
+			t.err = fmt.Errorf("opcode %d detected, but script only %d bytes remaining", op, len(script))
 			return false
 		}
 
@@ -98,39 +101,42 @@ func (t *scriptTokenizer) Next() bool {
 		t.offset += length
 		t.op = op
 		t.data = script[1:length]
-
 		return true
+
 	case op > txscript.OP_PUSHDATA4:
 		t.err = fmt.Errorf("unexpected op code %d", op)
 		return false
+
 	// Data pushes with parsed lengths -- OP_PUSHDATA{1,2,4}.
 	default:
-		var length int32
+		var length int
 		switch op {
 		case txscript.OP_PUSHDATA1:
 			length = 1
 		case txscript.OP_PUSHDATA2:
 			length = 2
-		default:
+		case txscript.OP_PUSHDATA4:
 			length = 4
+		default:
+			t.err = fmt.Errorf("unexpected op code %d", op)
+			return false
 		}
 
 		script := t.script[t.offset+1:]
-		if int32(len(script)) < length {
-			t.err = fmt.Errorf("opcode %d requires %d bytes, but script only "+
-				"has %d remaining", op, length, len(script))
+		if len(script) < length {
+			t.err = fmt.Errorf("opcode %d requires %d bytes, only %d remaining", op, length, len(script))
 			return false
 		}
 
 		// Next -length bytes are little endian length of data.
-		var dataLen int32
+		var dataLen int
 		switch length {
 		case 1:
-			dataLen = int32(script[0])
+			dataLen = int(script[0])
 		case 2:
-			dataLen = int32(binary.LittleEndian.Uint16(script[:2]))
+			dataLen = int(binary.LittleEndian.Uint16(script[:length]))
 		case 4:
-			dataLen = int32(binary.LittleEndian.Uint32(script[:4]))
+			dataLen = int(binary.LittleEndian.Uint32(script[:length]))
 		default:
 			t.err = fmt.Errorf("invalid opcode length %d", length)
 			return false
@@ -140,14 +146,15 @@ func (t *scriptTokenizer) Next() bool {
 		script = script[length:]
 
 		// Disallow entries that do not fit script or were sign extended.
-		if dataLen > int32(len(script)) || dataLen < 0 {
-			t.err = fmt.Errorf("opcode %d pushes %d bytes, but script only "+
-				"has %d remaining", op, dataLen, len(script))
+		if dataLen > len(script) || dataLen < 0 {
+			t.err = fmt.Errorf("opcode %d pushes %d bytes, only %d remaining", op, dataLen, len(script))
 			return false
 		}
 
 		// Move the offset forward and set the opcode and data accordingly.
-		t.offset += 1 + int32(length) + dataLen
+		// 1 is the opcode size, which is just 1 byte. int(op) is the opcode value,
+		// it should not be mixed with the size.
+		t.offset += 1 + length + dataLen
 		t.op = op
 		t.data = script[:dataLen]
 		return true

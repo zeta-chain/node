@@ -25,6 +25,8 @@ jobs:
     if: ${{ inputs.run }}
     runs-on: ${{ inputs.runs-on }}
     timeout-minutes: ${{ inputs.timeout-minutes }}
+    strategy:
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       

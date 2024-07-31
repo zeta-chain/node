@@ -75,7 +75,7 @@ type ObserverKeeper interface {
 	GetAllTssFundMigrators(ctx sdk.Context) (fms []observertypes.TssFundMigratorInfo)
 	RemoveAllExistingMigrators(ctx sdk.Context)
 	SetChainNonces(ctx sdk.Context, chainNonces observertypes.ChainNonces)
-	GetChainNonces(ctx sdk.Context, index string) (val observertypes.ChainNonces, found bool)
+	GetChainNonces(ctx sdk.Context, chainID int64) (val observertypes.ChainNonces, found bool)
 	GetAllChainNonces(ctx sdk.Context) (list []observertypes.ChainNonces)
 	SetNonceToCctx(ctx sdk.Context, nonceToCctx observertypes.NonceToCctx)
 	GetNonceToCctx(ctx sdk.Context, tss string, chainID int64, nonce int64) (val observertypes.NonceToCctx, found bool)
@@ -103,7 +103,6 @@ type ObserverKeeper interface {
 	) (bool, bool, observertypes.Ballot, string, error)
 	GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) (chains.Chain, bool)
 	GetSupportedChains(ctx sdk.Context) []chains.Chain
-	GetSupportedForeignChains(ctx sdk.Context) []chains.Chain
 }
 
 type FungibleKeeper interface {

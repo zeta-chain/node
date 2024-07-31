@@ -2,9 +2,11 @@ package cli
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -45,7 +47,7 @@ func CmdListChainNonces() *cobra.Command {
 
 func CmdShowChainNonces() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show-chain-nonces [index]",
+		Use:   "show-chain-nonces [chain-id]",
 		Short: "shows a chainNonces",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -53,8 +55,13 @@ func CmdShowChainNonces() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
+			chainID, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return errors.Wrapf(err, "unable to parse chain id from %s", args[0])
+			}
+
 			params := &types.QueryGetChainNoncesRequest{
-				Index: args[0],
+				ChainId: chainID,
 			}
 
 			res, err := queryClient.ChainNonces(context.Background(), params)

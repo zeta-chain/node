@@ -142,6 +142,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 6, m.Migrate6to7); err != nil {
 		panic(err)
 	}
+	if err := cfg.RegisterMigration(types.ModuleName, 7, m.Migrate7to8); err != nil {
+		panic(err)
+	}
 }
 
 // RegisterInvariants registers the observer module's invariants.
@@ -166,7 +169,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 7 }
+func (AppModule) ConsensusVersion() uint64 { return 8 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the observer module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {

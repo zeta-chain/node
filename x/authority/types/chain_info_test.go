@@ -37,12 +37,12 @@ func TestChainInfo_Validate(t *testing.T) {
 				Chains: []chains.Chain{
 					{
 						ChainId:     0,
-						ChainName:   chains.ChainName_empty,
 						Network:     chains.Network_optimism,
 						NetworkType: chains.NetworkType_testnet,
 						Vm:          chains.Vm_evm,
 						Consensus:   chains.Consensus_op_stack,
 						IsExternal:  true,
+						Name:        "foo",
 					},
 				},
 			},
@@ -54,12 +54,12 @@ func TestChainInfo_Validate(t *testing.T) {
 				Chains: []chains.Chain{
 					{
 						ChainId:     42,
-						ChainName:   chains.ChainName_empty,
 						Network:     chains.Network_optimism,
 						NetworkType: chains.NetworkType_testnet,
 						Vm:          chains.Vm_evm,
 						Consensus:   chains.Consensus_op_stack,
 						IsExternal:  false,
+						Name:        "foo",
 					},
 				},
 			},

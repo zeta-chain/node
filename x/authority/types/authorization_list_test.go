@@ -391,20 +391,14 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&crosschaintypes.MsgRefundAbortedCCTX{}),
 			sdk.MsgTypeURL(&crosschaintypes.MsgAbortStuckCCTX{}),
 			sdk.MsgTypeURL(&crosschaintypes.MsgUpdateRateLimiterFlags{}),
-			sdk.MsgTypeURL(&crosschaintypes.MsgWhitelistERC20{}),
-			sdk.MsgTypeURL(&fungibletypes.MsgDeployFungibleCoinZRC20{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgDeploySystemContracts{}),
-			sdk.MsgTypeURL(&fungibletypes.MsgRemoveForeignCoin{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateZRC20LiquidityCap{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateZRC20WithdrawFee{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgUnpauseZRC20{}),
-			sdk.MsgTypeURL(&observertypes.MsgAddObserver{}),
-			sdk.MsgTypeURL(&observertypes.MsgRemoveChainParams{}),
 			sdk.MsgTypeURL(&observertypes.MsgResetChainNonces{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateChainParams{}),
 			sdk.MsgTypeURL(&observertypes.MsgEnableCCTX{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateGasPriceIncreaseFlags{}),
-			sdk.MsgTypeURL(&lightclienttypes.MsgEnableHeaderVerification{}),
 		}
 
 		// EmergencyPolicyMessageList is a list of messages that can be authorized by the emergency policy
@@ -422,12 +416,18 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 		var AdminPolicyMessageList = []string{
 			sdk.MsgTypeURL(&crosschaintypes.MsgMigrateTssFunds{}),
 			sdk.MsgTypeURL(&crosschaintypes.MsgUpdateTssAddress{}),
+			sdk.MsgTypeURL(&crosschaintypes.MsgWhitelistERC20{}),
+			sdk.MsgTypeURL(&fungibletypes.MsgDeployFungibleCoinZRC20{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateContractBytecode{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateSystemContract{}),
+			sdk.MsgTypeURL(&fungibletypes.MsgRemoveForeignCoin{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateObserver{}),
+			sdk.MsgTypeURL(&observertypes.MsgAddObserver{}),
+			sdk.MsgTypeURL(&observertypes.MsgRemoveChainParams{}),
 			sdk.MsgTypeURL(&types.MsgAddAuthorization{}),
 			sdk.MsgTypeURL(&types.MsgRemoveAuthorization{}),
 			sdk.MsgTypeURL(&types.MsgUpdateChainInfo{}),
+			sdk.MsgTypeURL(&lightclienttypes.MsgEnableHeaderVerification{}),
 		}
 		defaultList := types.DefaultAuthorizationsList()
 		for _, msgUrl := range OperationalPolicyMessageList {

@@ -1,6 +1,6 @@
 package types
 
-import "github.com/zeta-chain/go-tss/blame"
+import "gitlab.com/thorchain/tss/go-tss/blame"
 
 func ConvertNodes(n []blame.Node) (nodes []*Node) {
 	for _, node := range n {

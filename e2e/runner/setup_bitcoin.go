@@ -30,7 +30,7 @@ func (r *E2ERunner) SetupBitcoinAccount(initNetwork bool) {
 	r.Logger.Print("⚙️ setting up Bitcoin account")
 	startTime := time.Now()
 	defer func() {
-		r.Logger.Print("✅ Bitcoin account setup in %s\n", time.Since(startTime))
+		r.Logger.Print("✅ Bitcoin account setup in %s", time.Since(startTime))
 	}()
 
 	_, err := r.BtcRPCClient.CreateWallet(r.Name, rpcclient.WithCreateWalletBlank())

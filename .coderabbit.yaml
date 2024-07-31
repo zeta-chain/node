@@ -1,7 +1,25 @@
+# https://docs.coderabbit.ai/guides/configure-coderabbit
+language: "en-US"
+early_access: false
+chat: { auto_reply: true }
+tone_instructions: >-
+  Maintain a formal tone, highlighting issues, and suggesting production-grade, elegant, and concise solutions.
+
 reviews:
+  profile: chill
+  high_level_summary: true
+
+  # disables the cringe
+  poem: false
+
+  collapse_walkthrough: true
+  sequence_diagrams: true
+
   path_filters:
     - "!**/*.pb.go"
     - "!**/*.pb.gw.go"
+    - "!**/*_pb.d.ts"
+
   path_instructions:
     - path: '**/*.go'
       instructions: >-
@@ -13,8 +31,17 @@ reviews:
         compatibility, and expressiveness.
     - path: '**/*.sh'
       instructions: >-
-          Review the shell scripts, point out issues relative to security,
-          performance, and maintainability.
+        Review the shell scripts, point out issues relative to security,
+        performance, and maintainability.
+
   auto_review:
+    drafts: false
+    # disables review for new commits
+    auto_incremental_review: false
     base_branches:
       - develop
+
+  tools:
+    languagetool:
+      enabled: true
+      level: default

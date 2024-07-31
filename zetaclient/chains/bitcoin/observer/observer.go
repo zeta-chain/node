@@ -27,6 +27,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/db"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
@@ -45,7 +46,7 @@ const (
 	BigValueConfirmationCount = 6
 )
 
-var _ interfaces.ChainObserver = &Observer{}
+var _ interfaces.ChainObserver = (*Observer)(nil)
 
 // Logger contains list of loggers used by Bitcoin chain observer
 type Logger struct {
@@ -116,7 +117,7 @@ func NewObserver(
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
-	dbpath string,
+	database *db.DB,
 	logger base.Logger,
 	ts *metrics.TelemetryServer,
 ) (*Observer, error) {
@@ -129,16 +130,17 @@ func NewObserver(
 		btcBlocksPerDay,
 		base.DefaultHeaderCacheSize,
 		ts,
+		database,
 		logger,
 	)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "unable to create base observer for chain %d", chain.ChainId)
 	}
 
 	// get the bitcoin network params
 	netParams, err := chains.BitcoinNetParamsFromChainID(chain.ChainId)
 	if err != nil {
-		return nil, fmt.Errorf("error getting net params for chain %d: %s", chain.ChainId, err)
+		return nil, errors.Wrapf(err, "unable to get BTC net params for chain %d", chain.ChainId)
 	}
 
 	// create bitcoin observer
@@ -157,10 +159,14 @@ func NewObserver(
 		},
 	}
 
-	// load btc chain observer DB
-	err = ob.LoadDB(dbpath)
-	if err != nil {
-		return nil, err
+	// load last scanned block
+	if err := ob.LoadLastBlockScanned(); err != nil {
+		return nil, errors.Wrap(err, "unable to load last scanned block")
+	}
+
+	// load broadcasted transactions
+	if err := ob.LoadBroadcastedTxMap(); err != nil {
+		return nil, errors.Wrap(err, "unable to load broadcasted tx map")
 	}
 
 	return ob, nil
@@ -194,6 +200,11 @@ func (ob *Observer) GetChainParams() observertypes.ChainParams {
 
 // Start starts the Go routine processes to observe the Bitcoin chain
 func (ob *Observer) Start(ctx context.Context) {
+	if noop := ob.Observer.Start(); noop {
+		ob.Logger().Chain.Info().Msgf("observer is already started for chain %d", ob.Chain().ChainId)
+		return
+	}
+
 	ob.Logger().Chain.Info().Msgf("observer is starting for chain %d", ob.Chain().ChainId)
 
 	// watch bitcoin chain for incoming txs and post votes to zetacore
@@ -375,8 +386,11 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 		return err
 	}
 
+	// UTXO has no concept of priority fee (like eth)
+	const priorityFee = 0
+
 	// #nosec G115 always positive
-	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), feeRateEstimated, "100", uint64(blockNumber))
+	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), feeRateEstimated, priorityFee, uint64(blockNumber))
 	if err != nil {
 		ob.logger.GasPrice.Err(err).Msg("err PostGasPrice")
 		return err
@@ -529,7 +543,7 @@ func (ob *Observer) SaveBroadcastedTx(txHash string, nonce uint64) {
 	ob.Mu().Unlock()
 
 	broadcastEntry := clienttypes.ToOutboundHashSQLType(txHash, outboundID)
-	if err := ob.DB().Save(&broadcastEntry).Error; err != nil {
+	if err := ob.DB().Client().Save(&broadcastEntry).Error; err != nil {
 		ob.logger.Outbound.Error().
 			Err(err).
 			Msgf("SaveBroadcastedTx: error saving broadcasted txHash %s for outbound %s", txHash, outboundID)
@@ -570,39 +584,6 @@ func (ob *Observer) GetBlockByNumberCached(blockNumber int64) (*BTCBlockNHeader,
 	return blockNheader, nil
 }
 
-// LoadDB open sql database and load data into Bitcoin observer
-func (ob *Observer) LoadDB(dbPath string) error {
-	if dbPath == "" {
-		return errors.New("empty db path")
-	}
-
-	// open database, the custom dbName is used here for backward compatibility
-	err := ob.OpenDB(dbPath, "btc_chain_client")
-	if err != nil {
-		return errors.Wrapf(err, "error OpenDB for chain %d", ob.Chain().ChainId)
-	}
-
-	// run auto migration
-	// transaction result table is used nowhere but we still run migration in case they are needed in future
-	err = ob.DB().AutoMigrate(
-		&clienttypes.TransactionResultSQLType{},
-		&clienttypes.OutboundHashSQLType{},
-	)
-	if err != nil {
-		return errors.Wrapf(err, "error AutoMigrate for chain %d", ob.Chain().ChainId)
-	}
-
-	// load last scanned block
-	err = ob.LoadLastBlockScanned()
-	if err != nil {
-		return err
-	}
-
-	// load broadcasted transactions
-	err = ob.LoadBroadcastedTxMap()
-	return err
-}
-
 // LoadLastBlockScanned loads the last scanned block from the database
 func (ob *Observer) LoadLastBlockScanned() error {
 	err := ob.Observer.LoadLastBlockScanned(ob.Logger().Chain)
@@ -634,7 +615,7 @@ func (ob *Observer) LoadLastBlockScanned() error {
 // LoadBroadcastedTxMap loads broadcasted transactions from the database
 func (ob *Observer) LoadBroadcastedTxMap() error {
 	var broadcastedTransactions []clienttypes.OutboundHashSQLType
-	if err := ob.DB().Find(&broadcastedTransactions).Error; err != nil {
+	if err := ob.DB().Client().Find(&broadcastedTransactions).Error; err != nil {
 		ob.logger.Chain.Error().Err(err).Msgf("error iterating over db for chain %d", ob.Chain().ChainId)
 		return err
 	}

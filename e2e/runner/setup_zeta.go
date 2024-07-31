@@ -74,34 +74,35 @@ func (r *E2ERunner) SetZEVMContracts() {
 	}()
 
 	// deploy system contracts and ZRC20 contracts on ZetaChain
-	uniswapV2FactoryAddr, uniswapV2RouterAddr, zevmConnectorAddr, wzetaAddr, erc20zrc20Addr, err := r.ZetaTxServer.DeploySystemContractsAndZRC20(
+	addresses, err := r.ZetaTxServer.DeploySystemContractsAndZRC20(
 		e2eutils.OperationalPolicyName,
+		e2eutils.AdminPolicyName,
 		r.ERC20Addr.Hex(),
 	)
 	require.NoError(r, err)
 
 	// Set ERC20ZRC20Addr
-	r.ERC20ZRC20Addr = ethcommon.HexToAddress(erc20zrc20Addr)
+	r.ERC20ZRC20Addr = ethcommon.HexToAddress(addresses.ERC20zrc20Addr)
 	r.ERC20ZRC20, err = zrc20.NewZRC20(r.ERC20ZRC20Addr, r.ZEVMClient)
 	require.NoError(r, err)
 
 	// UniswapV2FactoryAddr
-	r.UniswapV2FactoryAddr = ethcommon.HexToAddress(uniswapV2FactoryAddr)
+	r.UniswapV2FactoryAddr = ethcommon.HexToAddress(addresses.UniswapV2FactoryAddr)
 	r.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(r.UniswapV2FactoryAddr, r.ZEVMClient)
 	require.NoError(r, err)
 
 	// UniswapV2RouterAddr
-	r.UniswapV2RouterAddr = ethcommon.HexToAddress(uniswapV2RouterAddr)
+	r.UniswapV2RouterAddr = ethcommon.HexToAddress(addresses.UniswapV2RouterAddr)
 	r.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(r.UniswapV2RouterAddr, r.ZEVMClient)
 	require.NoError(r, err)
 
 	// ZevmConnectorAddr
-	r.ConnectorZEVMAddr = ethcommon.HexToAddress(zevmConnectorAddr)
+	r.ConnectorZEVMAddr = ethcommon.HexToAddress(addresses.ZEVMConnectorAddr)
 	r.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(r.ConnectorZEVMAddr, r.ZEVMClient)
 	require.NoError(r, err)
 
 	// WZetaAddr
-	r.WZetaAddr = ethcommon.HexToAddress(wzetaAddr)
+	r.WZetaAddr = ethcommon.HexToAddress(addresses.WZETAAddr)
 	r.WZeta, err = wzeta.NewWETH9(r.WZetaAddr, r.ZEVMClient)
 	require.NoError(r, err)
 
@@ -125,6 +126,7 @@ func (r *E2ERunner) SetZEVMContracts() {
 	// set ZRC20 contracts
 	r.SetupETHZRC20()
 	r.SetupBTCZRC20()
+	r.SetupSOLZRC20()
 
 	// deploy TestDApp contract on zEVM
 	appAddr, txApp, _, err := testdapp.DeployTestDApp(
@@ -205,11 +207,30 @@ func (r *E2ERunner) SetupBTCZRC20() {
 	r.BTCZRC20 = BTCZRC20
 }
 
+// SetupSOLZRC20 sets up the SOL ZRC20 in the runner from the values queried from the chain
+func (r *E2ERunner) SetupSOLZRC20() {
+	// set SOLZRC20 address by chain ID
+	SOLZRC20Addr, err := r.SystemContract.GasCoinZRC20ByChainId(
+		&bind.CallOpts{},
+		big.NewInt(chains.SolanaLocalnet.ChainId),
+	)
+	require.NoError(r, err)
+
+	// set SOLZRC20 address
+	r.SOLZRC20Addr = SOLZRC20Addr
+	r.Logger.Info("SOLZRC20Addr: %s", SOLZRC20Addr.Hex())
+
+	// set SOLZRC20 contract
+	SOLZRC20, err := zrc20.NewZRC20(SOLZRC20Addr, r.ZEVMClient)
+	require.NoError(r, err)
+	r.SOLZRC20 = SOLZRC20
+}
+
 // EnableHeaderVerification enables the header verification for the given chain IDs
 func (r *E2ERunner) EnableHeaderVerification(chainIDList []int64) error {
 	r.Logger.Print("⚙️ enabling verification flags for block headers")
 
-	return r.ZetaTxServer.EnableHeaderVerification(e2eutils.OperationalPolicyName, chainIDList)
+	return r.ZetaTxServer.EnableHeaderVerification(e2eutils.AdminPolicyName, chainIDList)
 }
 
 // FundEmissionsPool funds the emissions pool on ZetaChain with the same value as used originally on mainnet (20M ZETA)
