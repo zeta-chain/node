@@ -29,6 +29,9 @@ type Signer struct {
 	// client is the Solana RPC client that interacts with the Solana chain
 	client interfaces.SolanaRPCClient
 
+	// solanaFeePayerKey is the private key of the fee payer account on Solana chain
+	solanaFeePayerKey solana.PrivateKey
+
 	// gatewayID is the program ID of gateway program on Solana chain
 	gatewayID solana.PublicKey
 
@@ -42,6 +45,7 @@ func NewSigner(
 	chainParams observertypes.ChainParams,
 	solClient interfaces.SolanaRPCClient,
 	tss interfaces.TSSSigner,
+	solanaKey solana.PrivateKey,
 	ts *metrics.TelemetryServer,
 	logger base.Logger,
 ) (*Signer, error) {
@@ -53,13 +57,15 @@ func NewSigner(
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
 	}
+	logger.Std.Info().Msgf("Solana fee payer address: %s", solanaKey.PublicKey())
 
 	// create solana observer
 	return &Signer{
-		Signer:    baseSigner,
-		client:    solClient,
-		gatewayID: gatewayID,
-		pda:       pda,
+		Signer:            baseSigner,
+		client:            solClient,
+		solanaFeePayerKey: solanaKey,
+		gatewayID:         gatewayID,
+		pda:               pda,
 	}, nil
 }
 
@@ -99,11 +105,6 @@ func (signer *Signer) SignMsgWithdraw(
 
 // SignWithdrawTx signs the Solana gateway 'withdraw' transaction specified by 'msg'
 func (signer *Signer) SignWithdrawTx(ctx context.Context, msg contract.MsgWithdraw) (*solana.Transaction, error) {
-	// FIXME: config this; right now it's the same privkey used by local e2e test_solana_*.go
-	privkey := solana.MustPrivateKeyFromBase58(
-		"4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C",
-	)
-
 	// create withdraw instruction with program call data
 	var err error
 	var inst solana.GenericInstruction
@@ -120,6 +121,7 @@ func (signer *Signer) SignWithdrawTx(ctx context.Context, msg contract.MsgWithdr
 	}
 
 	// attach required accounts to the instruction
+	privkey := signer.solanaFeePayerKey
 	var accountSlice []*solana.AccountMeta
 	accountSlice = append(accountSlice, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
 	accountSlice = append(accountSlice, solana.Meta(signer.pda).WRITE())

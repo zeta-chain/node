@@ -97,10 +97,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
 	)
 
-	if !testSolana {
-		testSolana = true
-	}
-
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
 
 	testStartTime := time.Now()

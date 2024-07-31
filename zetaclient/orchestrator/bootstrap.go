@@ -203,8 +203,14 @@ func syncSignerMap(
 			continue
 		}
 
+		// load the Solana private key
+		solanaKey, err := app.Config().LoadSolanaPrivateKey()
+		if err != nil {
+			logger.Std.Error().Err(err).Msg("Unable to get Solana private key")
+		}
+
 		// create Solana signer
-		signer, err := solanasigner.NewSigner(solChain, *solChainParams, rpcClient, tss, ts, logger)
+		signer, err := solanasigner.NewSigner(solChain, *solChainParams, rpcClient, tss, solanaKey, ts, logger)
 		if err != nil {
 			logger.Std.Error().Err(err).Msgf("Unable to construct signer for Solana chain %d", chainID)
 			continue
