@@ -489,7 +489,7 @@ func GetBtcEventWithWitness(
 		logger.Debug().Msgf("no output %s", tx.Txid)
 		return nil, nil
 	}
-	if len(tx.Vin) == 0 { // should never happen
+	if len(tx.Vin) == 0 {
 		logger.Debug().Msgf("no input found for inbound: %s", tx.Txid)
 		return nil, nil
 	}
