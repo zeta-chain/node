@@ -2,11 +2,13 @@ package local
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/fatih/color"
+
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/e2etests"
 	"github.com/zeta-chain/zetacore/e2e/runner"
-	"time"
 )
 
 // erc20TestRoutine runs v2 related e2e tests

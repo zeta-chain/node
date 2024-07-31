@@ -2,6 +2,7 @@ package e2etests
 
 import (
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 )

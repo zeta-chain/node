@@ -1,10 +1,12 @@
 package e2etests
 
 import (
+	"math/big"
+
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
-	"math/big"
 )
 
 func TestV2ETHDeposit(r *runner.E2ERunner, args []string) {

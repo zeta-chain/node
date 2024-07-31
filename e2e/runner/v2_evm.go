@@ -1,10 +1,11 @@
 package runner
 
 import (
+	"math/big"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	"math/big"
 )
 
 // V2ETHDeposit calls Deposit of Gateway with gas token on EVM
@@ -23,7 +24,11 @@ func (r *E2ERunner) V2ETHDeposit(receiver ethcommon.Address, amount *big.Int) *e
 }
 
 // V2ETHDepositAndCall calls DepositAndCall of Gateway with gas token on EVM
-func (r *E2ERunner) V2ETHDepositAndCall(receiver ethcommon.Address, amount *big.Int, payload []byte) *ethtypes.Transaction {
+func (r *E2ERunner) V2ETHDepositAndCall(
+	receiver ethcommon.Address,
+	amount *big.Int,
+	payload []byte,
+) *ethtypes.Transaction {
 	// set the value of the transaction
 	previousValue := r.EVMAuth.Value
 	defer func() {
@@ -46,7 +51,11 @@ func (r *E2ERunner) V2ERC20Deposit(receiver ethcommon.Address, amount *big.Int) 
 }
 
 // V2ERC20DepositAndCall calls DepositAndCall of Gateway with erc20 token on EVM
-func (r *E2ERunner) V2ERC20DepositAndCall(receiver ethcommon.Address, amount *big.Int, payload []byte) *ethtypes.Transaction {
+func (r *E2ERunner) V2ERC20DepositAndCall(
+	receiver ethcommon.Address,
+	amount *big.Int,
+	payload []byte,
+) *ethtypes.Transaction {
 	tx, err := r.GatewayEVM.DepositAndCall0(r.EVMAuth, receiver, amount, r.ERC20Addr, payload)
 	require.NoError(r, err)
 
