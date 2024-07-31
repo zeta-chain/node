@@ -140,3 +140,14 @@ message MsgUnpauseZRC20 {
 }
 ```
 
+## MsgUpdateGatewayContract
+
+UpdateGatewayContract updates the zevm gateway contract used by the ZetaChain protocol to read inbounds and process outbounds
+
+```proto
+message MsgUpdateGatewayContract {
+	string creator = 1;
+	string new_gateway_contract_address = 2;
+}
+```
+
