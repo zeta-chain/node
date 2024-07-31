@@ -6,6 +6,9 @@ import (
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
+	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
+
 	"github.com/zeta-chain/zetacore/e2e/contracts/erc1967proxy"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/constant"
@@ -59,7 +62,7 @@ func (r *E2ERunner) SetupEVMV2() {
 	r.Logger.Info("Gateway EVM contract address: %s, tx hash: %s", gatewayEVMAddr.Hex(), txGateway.Hash().Hex())
 
 	r.Logger.Info("Deploying ERC20Custody contract")
-	erc20CustodyNewAddr, txCustody, erc20CustodyNew, err := erc20custodynew.DeployERC20CustodyNew(
+	erc20CustodyNewAddr, txCustody, erc20CustodyNew, err := erc20custodyv2.DeployERC20Custody(
 		r.EVMAuth,
 		r.EVMClient,
 		r.GatewayEVMAddr,

@@ -2,8 +2,6 @@ package runner
 
 import (
 	"context"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 	"os"
 	"sync"
 	"time"
@@ -28,6 +26,9 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
@@ -140,7 +141,7 @@ type E2ERunner struct {
 	GatewayEVMAddr      ethcommon.Address
 	GatewayEVM          *gatewayevm.GatewayEVM
 	ERC20CustodyNewAddr ethcommon.Address
-	ERC20CustodyNew     *erc20custodynew.ERC20CustodyNew
+	ERC20CustodyNew     *erc20custodyv2.ERC20Custody
 
 	// zevm v2
 	GatewayZEVMAddr ethcommon.Address
@@ -298,7 +299,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 		return err
 	}
 	r.ERC20CustodyNewAddr = other.ERC20CustodyNewAddr
-	r.ERC20CustodyNew, err = erc20custodynew.NewERC20CustodyNew(r.ERC20CustodyNewAddr, r.EVMClient)
+	r.ERC20CustodyNew, err = erc20custodyv2.NewERC20Custody(r.ERC20CustodyNewAddr, r.EVMClient)
 	if err != nil {
 		return err
 	}
