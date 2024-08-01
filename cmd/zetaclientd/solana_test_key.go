@@ -24,6 +24,7 @@ func createSolanaTestKeyFile(keyFile string) error {
 	}
 
 	// create file (or overwrite if it already exists)
+	// #nosec G304 -- for E2E testing purposes only
 	file, err := os.Create(keyFile)
 	if err != nil {
 		return err

@@ -171,6 +171,7 @@ func (c Config) LoadSolanaPrivateKey() (solana.PrivateKey, error) {
 	fileName := path.Join(c.ZetaCoreHome, c.SolanaKeyFile)
 
 	// load the gateway keypair from a JSON file
+	// #nosec G304 -- user is allowed to specify the key file
 	fileContent, err := os.ReadFile(fileName)
 	if err != nil {
 		return solana.PrivateKey{}, errors.Wrapf(err, "unable to read Solana key file: %s", fileName)
