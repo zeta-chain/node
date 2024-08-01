@@ -23,7 +23,6 @@ import (
 
 // WatchOutbound watches solana chain for outgoing txs status
 // TODO(revamp): move ticker function to ticker file
-// TODO(revamp): move inner logic to a separate function
 func (ob *Observer) WatchOutbound(ctx context.Context) error {
 	// get app context
 	app, err := zctx.FromContext(ctx)
@@ -52,55 +51,16 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 				sampledLogger.Info().Msgf("WatchOutbound: outbound observation is disabled for chain %d", chainID)
 				continue
 			}
-			trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
+
+			// process outbound trackers
+			err := ob.ProcessOutboundTrackers(ctx)
 			if err != nil {
 				ob.Logger().
 					Outbound.Error().
 					Err(err).
-					Msgf("WatchOutbound: GetAllOutboundTrackerByChain error for chain %d", chainID)
-				continue
+					Msgf("WatchOutbound: error ProcessOutboundTrackers for chain %d", chainID)
 			}
 
-			for _, tracker := range trackers {
-				// go to next tracker if this one already has a finalized tx
-				nonce := tracker.Nonce
-				if ob.IsTxFinalized(tracker.Nonce) {
-					continue
-				}
-
-				// get original cctx parameters
-				cctx, err := ob.ZetacoreClient().GetCctxByNonce(ctx, chainID, tracker.Nonce)
-				if err != nil {
-					// take a rest if zetacore RPC breaks
-					ob.Logger().Outbound.Error().
-						Err(err).
-						Msgf("WatchOutbound: can't find cctx for chain %d nonce %d", chainID, tracker.Nonce)
-					break
-				}
-				coinType := cctx.InboundParams.CoinType
-
-				txCount := 0
-				var txResult *rpc.GetTransactionResult
-				for _, txHash := range tracker.HashList {
-					if result, ok := ob.CheckFinalizedTx(ctx, txHash.TxHash, nonce, coinType); ok {
-						txCount++
-						txResult = result
-						ob.Logger().Outbound.Info().
-							Msgf("WatchOutbound: confirmed outbound %s for chain %d nonce %d", txHash.TxHash, chainID, nonce)
-						if txCount > 1 {
-							ob.Logger().Outbound.Error().Msgf(
-								"WatchOutbound: checkFinalizedTx passed, txCount %d chain %d nonce %d txResult %v", txCount, chainID, nonce, txResult)
-						}
-					}
-				}
-				// should be only one finalized txHash for each nonce
-				if txCount == 1 {
-					ob.SetTxResult(nonce, txResult)
-				} else if txCount > 1 {
-					// should not happen. We can't tell which txHash is true. It might happen (e.g. glitchy/hacked endpoint)
-					ob.Logger().Outbound.Error().Msgf("WatchOutbound: finalized multiple (%d) outbound for chain %d nonce %d", txCount, chainID, nonce)
-				}
-			}
 			ticker.UpdateInterval(ob.GetChainParams().OutboundTicker, ob.Logger().Outbound)
 		case <-ob.StopChannel():
 			ob.Logger().Outbound.Info().Msgf("WatchOutbound: watcher stopped for chain %d", chainID)
@@ -109,10 +69,63 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 	}
 }
 
-// IsOutboundProcessed checks outbound status and returns (isIncluded, isFinalized, error)
-// It also posts vote to zetacore if the tx is finalized
-// TODO(revamp): rename as it also vote the outbound
-func (ob *Observer) IsOutboundProcessed(ctx context.Context, cctx *crosschaintypes.CrossChainTx) (bool, bool, error) {
+// ProcessOutboundTrackers processes Solana outbound trackers
+func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
+	chainID := ob.Chain().ChainId
+	trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
+	if err != nil {
+		return errors.Wrap(err, "GetAllOutboundTrackerByChain error")
+	}
+
+	// prepare logger fields
+	logger := ob.Logger().Outbound.With().
+		Str("method", "ProcessOutboundTrackers").
+		Int64("chain", chainID).
+		Logger()
+
+	// process outbound trackers
+	for _, tracker := range trackers {
+		// go to next tracker if this one already has a finalized tx
+		nonce := tracker.Nonce
+		if ob.IsTxFinalized(tracker.Nonce) {
+			continue
+		}
+
+		// get original cctx parameters
+		cctx, err := ob.ZetacoreClient().GetCctxByNonce(ctx, chainID, tracker.Nonce)
+		if err != nil {
+			// take a rest if zetacore RPC breaks
+			return errors.Wrapf(err, "GetCctxByNonce error for chain %d nonce %d", chainID, tracker.Nonce)
+		}
+		coinType := cctx.InboundParams.CoinType
+
+		txCount := 0
+		var txResult *rpc.GetTransactionResult
+		for _, txHash := range tracker.HashList {
+			if result, ok := ob.CheckFinalizedTx(ctx, txHash.TxHash, nonce, coinType); ok {
+				txCount++
+				txResult = result
+				logger.Info().Msgf("confirmed outbound %s for chain %d nonce %d", txHash.TxHash, chainID, nonce)
+				if txCount > 1 {
+					logger.Error().
+						Msgf("checkFinalizedTx passed, txCount %d chain %d nonce %d txResult %v", txCount, chainID, nonce, txResult)
+				}
+			}
+		}
+		// should be only one finalized txHash for each nonce
+		if txCount == 1 {
+			ob.SetTxResult(nonce, txResult)
+		} else if txCount > 1 {
+			// should not happen. We can't tell which txHash is true. It might happen (e.g. bug, glitchy/hacked endpoint)
+			ob.Logger().Outbound.Error().Msgf("finalized multiple (%d) outbound for chain %d nonce %d", txCount, chainID, nonce)
+		}
+	}
+
+	return nil
+}
+
+// VoteOutboundIfConfirmed checks outbound status and returns (continueKeysign, error)
+func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschaintypes.CrossChainTx) (bool, error) {
 	// get outbound params
 	params := cctx.GetCurrentOutboundParam()
 	nonce := params.TssNonce
@@ -121,14 +134,14 @@ func (ob *Observer) IsOutboundProcessed(ctx context.Context, cctx *crosschaintyp
 	// early return if outbound is not finalized yet
 	txResult := ob.GetTxResult(nonce)
 	if txResult == nil {
-		return false, false, nil
+		return true, nil
 	}
 
 	// extract tx signature from tx result
 	tx, err := txResult.Transaction.GetTransaction()
 	if err != nil {
 		// should not happen
-		return true, true, errors.Wrapf(err, "GetTransaction error for nonce %d", nonce)
+		return false, errors.Wrapf(err, "GetTransaction error for nonce %d", nonce)
 	}
 	txSig := tx.Signatures[0]
 
@@ -136,7 +149,7 @@ func (ob *Observer) IsOutboundProcessed(ctx context.Context, cctx *crosschaintyp
 	inst, err := ParseGatewayInstruction(txResult, ob.gatewayID, coinType)
 	if err != nil {
 		// should never happen as it was already successfully parsed in CheckFinalizedTx
-		return true, true, errors.Wrapf(err, "ParseGatewayInstruction error for sig %s", txSig)
+		return false, errors.Wrapf(err, "ParseGatewayInstruction error for sig %s", txSig)
 	}
 
 	// the amount and status of the outbound
@@ -146,7 +159,7 @@ func (ob *Observer) IsOutboundProcessed(ctx context.Context, cctx *crosschaintyp
 
 	// post vote to zetacore
 	ob.PostVoteOutbound(ctx, cctx.Index, txSig.String(), txResult, outboundAmount, outboundStatus, nonce, coinType)
-	return true, true, nil
+	return false, nil
 }
 
 // PostVoteOutbound posts vote to zetacore for the finalized outbound
@@ -160,42 +173,24 @@ func (ob *Observer) PostVoteOutbound(
 	nonce uint64,
 	coinType coin.CoinType,
 ) {
-	chainID := ob.Chain().ChainId
+	// create outbound vote message
+	msg := ob.CreateMsgVoteOutbound(cctxIndex, outboundHash, txResult, valueReceived, status, nonce, coinType)
 
+	// prepare logger fields
+	logFields := map[string]any{
+		"chain": ob.Chain().ChainId,
+		"nonce": nonce,
+		"tx":    outboundHash,
+	}
+
+	// so we set retryGasLimit to 0 because the solana gateway withdrawal will always succeed
+	// and the vote msg won't trigger ZEVM interaction
 	const (
-		// Solana implements a different gas fee model than Ethereum, below values are not used.
-		// Solana tx fee is based on both static fee and dynamic fee (priority fee), setting
-		// zero values to by pass incorrectly funded gas stability pool.
-		outboundGasUsed  = 0
-		outboundGasPrice = 0
-		outboundGasLimit = 0
-
 		gasLimit      = zetacore.PostVoteOutboundGasLimit
 		retryGasLimit = 0
 	)
 
-	creator := ob.ZetacoreClient().GetKeys().GetOperatorAddress()
-	msg := crosschaintypes.NewMsgVoteOutbound(
-		creator.String(),
-		cctxIndex,
-		outboundHash,
-		txResult.Slot, // instead of using block, Solana explorer uses slot for indexing
-		outboundGasUsed,
-		math.NewInt(outboundGasPrice),
-		outboundGasLimit,
-		math.NewUintFromBigInt(valueReceived),
-		status,
-		chainID,
-		nonce,
-		coinType,
-	)
-
 	// post vote to zetacore
-	logFields := map[string]any{
-		"chain": chainID,
-		"nonce": nonce,
-		"tx":    outboundHash,
-	}
 	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
 	if err != nil {
 		ob.Logger().Outbound.Error().Err(err).Fields(logFields).Msg("PostVoteOutbound: error posting outbound vote")
@@ -208,6 +203,43 @@ func (ob *Observer) PostVoteOutbound(
 		logFields["ballot"] = ballot
 		ob.Logger().Outbound.Info().Fields(logFields).Msg("PostVoteOutbound: posted outbound vote successfully")
 	}
+}
+
+// CreateMsgVoteOutbound creates a vote outbound message for Solana chain
+func (ob *Observer) CreateMsgVoteOutbound(
+	cctxIndex string,
+	outboundHash string,
+	txResult *rpc.GetTransactionResult,
+	valueReceived *big.Int,
+	status chains.ReceiveStatus,
+	nonce uint64,
+	coinType coin.CoinType,
+) *crosschaintypes.MsgVoteOutbound {
+	const (
+		// Solana implements a different gas fee model than Ethereum, below values are not used.
+		// Solana tx fee is based on both static fee and dynamic fee (priority fee), setting
+		// zero values to by pass incorrectly funded gas stability pool.
+		outboundGasUsed  = 0
+		outboundGasPrice = 0
+		outboundGasLimit = 0
+	)
+
+	creator := ob.ZetacoreClient().GetKeys().GetOperatorAddress()
+
+	return crosschaintypes.NewMsgVoteOutbound(
+		creator.String(),
+		cctxIndex,
+		outboundHash,
+		txResult.Slot, // instead of using block, Solana explorer uses slot for indexing
+		outboundGasUsed,
+		math.NewInt(outboundGasPrice),
+		outboundGasLimit,
+		math.NewUintFromBigInt(valueReceived),
+		status,
+		ob.Chain().ChainId,
+		nonce,
+		coinType,
+	)
 }
 
 // CheckFinalizedTx checks if a txHash is finalized for given nonce and coinType

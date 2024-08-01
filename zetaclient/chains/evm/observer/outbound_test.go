@@ -64,10 +64,9 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		ob.SetTxNReceipt(nonce, receipt, outbound)
 
 		// post outbound vote
-		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx)
+		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
 		require.NoError(t, err)
-		require.True(t, isIncluded)
-		require.True(t, isConfirmed)
+		require.False(t, continueKeysign)
 	})
 	t.Run("should post vote and return true on restricted address", func(t *testing.T) {
 		// load cctx and modify sender address to arbitrary address
@@ -88,18 +87,16 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		config.LoadComplianceConfig(cfg)
 
 		// post outbound vote
-		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx)
+		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
 		require.NoError(t, err)
-		require.True(t, isIncluded)
-		require.True(t, isConfirmed)
+		require.False(t, continueKeysign)
 	})
 	t.Run("should return false if outbound is not confirmed", func(t *testing.T) {
 		// create evm observer and DO NOT set outbound as confirmed
 		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
-		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx)
+		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
 		require.NoError(t, err)
-		require.False(t, isIncluded)
-		require.False(t, isConfirmed)
+		require.True(t, continueKeysign)
 	})
 	t.Run("should fail if unable to parse ZetaReceived event", func(t *testing.T) {
 		// create evm observer and set outbound and receipt
@@ -110,10 +107,9 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		chainParamsNew := ob.GetChainParams()
 		chainParamsNew.ConnectorContractAddress = sample.EthAddress().Hex()
 		ob.SetChainParams(chainParamsNew)
-		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx)
+		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
 		require.Error(t, err)
-		require.False(t, isIncluded)
-		require.False(t, isConfirmed)
+		require.True(t, continueKeysign)
 	})
 }
 
@@ -160,18 +156,16 @@ func Test_IsOutboundProcessed_ContractError(t *testing.T) {
 
 		// set invalid connector ABI
 		zetaconnector.ZetaConnectorNonEthMetaData.ABI = "invalid abi"
-		isIncluded, isConfirmed, err := ob.IsOutboundProcessed(ctx, cctx)
+		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
 		zetaconnector.ZetaConnectorNonEthMetaData.ABI = abiConnector // reset connector ABI
 		require.ErrorContains(t, err, "error getting zeta connector")
-		require.False(t, isIncluded)
-		require.False(t, isConfirmed)
+		require.True(t, continueKeysign)
 
 		// set invalid custody ABI
 		erc20custody.ERC20CustodyMetaData.ABI = "invalid abi"
-		isIncluded, isConfirmed, err = ob.IsOutboundProcessed(ctx, cctx)
+		continueKeysign, err = ob.VoteOutboundIfConfirmed(ctx, cctx)
 		require.ErrorContains(t, err, "error getting erc20 custody")
-		require.False(t, isIncluded)
-		require.False(t, isConfirmed)
+		require.True(t, continueKeysign)
 		erc20custody.ERC20CustodyMetaData.ABI = abiCustody // reset custody ABI
 	})
 }

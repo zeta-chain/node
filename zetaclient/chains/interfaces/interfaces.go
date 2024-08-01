@@ -41,10 +41,10 @@ const (
 type ChainObserver interface {
 	Start(ctx context.Context)
 	Stop()
-	IsOutboundProcessed(
+	VoteOutboundIfConfirmed(
 		ctx context.Context,
 		cctx *crosschaintypes.CrossChainTx,
-	) (bool, bool, error)
+	) (bool, error)
 	SetChainParams(observertypes.ChainParams)
 	GetChainParams() observertypes.ChainParams
 	WatchInboundTracker(ctx context.Context) error

@@ -114,12 +114,11 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 	}
 }
 
-// IsOutboundProcessed returns isIncluded(or inMempool), isConfirmed, Error
-// TODO(revamp): rename as it vote the outbound and doesn't only check if outbound is processed
-func (ob *Observer) IsOutboundProcessed(
+// VoteOutboundIfConfirmed checks outbound status and returns (continueKeysign, error)
+func (ob *Observer) VoteOutboundIfConfirmed(
 	ctx context.Context,
 	cctx *crosschaintypes.CrossChainTx,
-) (bool, bool, error) {
+) (bool, error) {
 	const (
 		// not used with Bitcoin
 		outboundGasUsed  = 0
@@ -135,7 +134,7 @@ func (ob *Observer) IsOutboundProcessed(
 
 	// get broadcasted outbound and tx result
 	outboundID := ob.OutboundID(nonce)
-	ob.Logger().Outbound.Info().Msgf("IsOutboundProcessed %s", outboundID)
+	ob.Logger().Outbound.Info().Msgf("VoteOutboundIfConfirmed %s", outboundID)
 
 	ob.Mu().Lock()
 	txnHash, broadcasted := ob.broadcastedTx[outboundID]
@@ -144,7 +143,7 @@ func (ob *Observer) IsOutboundProcessed(
 
 	if !included {
 		if !broadcasted {
-			return false, false, nil
+			return true, nil
 		}
 		// If the broadcasted outbound is nonce 0, just wait for inclusion and don't schedule more keysign
 		// Schedule more than one keysign for nonce 0 can lead to duplicate payments.
@@ -152,16 +151,16 @@ func (ob *Observer) IsOutboundProcessed(
 		// prevents double spending of same UTXO. However, for nonce 0, we don't have a prior nonce (e.g., -1)
 		// for the signer to check against when making the payment. Signer treats nonce 0 as a special case in downstream code.
 		if nonce == 0 {
-			return true, false, nil
+			return false, nil
 		}
 
 		// Try including this outbound broadcasted by myself
 		txResult, inMempool := ob.checkIncludedTx(ctx, cctx, txnHash)
 		if txResult == nil { // check failed, try again next time
-			return false, false, nil
+			return true, nil
 		} else if inMempool { // still in mempool (should avoid unnecessary Tss keysign)
-			ob.logger.Outbound.Info().Msgf("IsOutboundProcessed: outbound %s is still in mempool", outboundID)
-			return true, false, nil
+			ob.logger.Outbound.Info().Msgf("VoteOutboundIfConfirmed: outbound %s is still in mempool", outboundID)
+			return false, nil
 		}
 		// included
 		ob.setIncludedTx(nonce, txResult)
@@ -169,9 +168,9 @@ func (ob *Observer) IsOutboundProcessed(
 		// Get tx result again in case it is just included
 		res = ob.getIncludedTx(nonce)
 		if res == nil {
-			return false, false, nil
+			return true, nil
 		}
-		ob.logger.Outbound.Info().Msgf("IsOutboundProcessed: setIncludedTx succeeded for outbound %s", outboundID)
+		ob.logger.Outbound.Info().Msgf("VoteOutboundIfConfirmed: setIncludedTx succeeded for outbound %s", outboundID)
 	}
 
 	// It's safe to use cctx's amount to post confirmation because it has already been verified in observeOutbound()
@@ -180,17 +179,17 @@ func (ob *Observer) IsOutboundProcessed(
 		ob.logger.Outbound.Debug().
 			Int64("currentConfirmations", res.Confirmations).
 			Int64("requiredConfirmations", ob.ConfirmationsThreshold(amountInSat)).
-			Msg("IsOutboundProcessed: outbound not confirmed yet")
+			Msg("VoteOutboundIfConfirmed: outbound not confirmed yet")
 
-		return true, false, nil
+		return false, nil
 	}
 
 	// Get outbound block height
 	blockHeight, err := rpc.GetBlockHeightByHash(ob.btcClient, res.BlockHash)
 	if err != nil {
-		return true, false, errors.Wrapf(
+		return false, errors.Wrapf(
 			err,
-			"IsOutboundProcessed: error getting block height by hash %s",
+			"VoteOutboundIfConfirmed: error getting block height by hash %s",
 			res.BlockHash,
 		)
 	}
@@ -235,12 +234,12 @@ func (ob *Observer) IsOutboundProcessed(
 			Outbound.Error().
 			Err(err).
 			Fields(logFields).
-			Msg("IsOutboundProcessed: error confirming bitcoin outbound")
+			Msg("VoteOutboundIfConfirmed: error confirming bitcoin outbound")
 	} else if zetaHash != "" {
-		ob.Logger().Outbound.Info().Fields(logFields).Msgf("IsOutboundProcessed: confirmed Bitcoin outbound")
+		ob.Logger().Outbound.Info().Fields(logFields).Msgf("VoteOutboundIfConfirmed: confirmed Bitcoin outbound")
 	}
 
-	return true, true, nil
+	return false, nil
 }
 
 // SelectUTXOs selects a sublist of utxos to be used as inputs.

@@ -27,11 +27,11 @@ func NewEVMObserver(chainParams *observertypes.ChainParams) *EVMObserver {
 func (ob *EVMObserver) Start(_ context.Context) {}
 func (ob *EVMObserver) Stop()                   {}
 
-func (ob *EVMObserver) IsOutboundProcessed(
+func (ob *EVMObserver) VoteOutboundIfConfirmed(
 	_ context.Context,
 	_ *crosschaintypes.CrossChainTx,
-) (bool, bool, error) {
-	return false, false, nil
+) (bool, error) {
+	return false, nil
 }
 
 func (ob *EVMObserver) SetChainParams(chainParams observertypes.ChainParams) {
@@ -70,11 +70,11 @@ func (ob *BTCObserver) Start(_ context.Context) {}
 
 func (ob *BTCObserver) Stop() {}
 
-func (ob *BTCObserver) IsOutboundProcessed(
+func (ob *BTCObserver) VoteOutboundIfConfirmed(
 	_ context.Context,
 	_ *crosschaintypes.CrossChainTx,
-) (bool, bool, error) {
-	return false, false, nil
+) (bool, error) {
+	return false, nil
 }
 
 func (ob *BTCObserver) SetChainParams(chainParams observertypes.ChainParams) {
@@ -111,11 +111,11 @@ func (ob *SolanaObserver) Start(_ context.Context) {}
 
 func (ob *SolanaObserver) Stop() {}
 
-func (ob *SolanaObserver) IsOutboundProcessed(
+func (ob *SolanaObserver) VoteOutboundIfConfirmed(
 	_ context.Context,
 	_ *crosschaintypes.CrossChainTx,
-) (bool, bool, error) {
-	return false, false, nil
+) (bool, error) {
+	return false, nil
 }
 
 func (ob *SolanaObserver) SetChainParams(chainParams observertypes.ChainParams) {

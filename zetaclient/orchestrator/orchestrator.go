@@ -450,17 +450,17 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 			break
 		}
 
-		// try confirming the outbound
-		_, confirmed, err := observer.IsOutboundProcessed(ctx, cctx)
+		// vote outbound if it's already confirmed
+		continueKeysign, err := observer.VoteOutboundIfConfirmed(ctx, cctx)
 		if err != nil {
 			oc.logger.Error().
 				Err(err).
-				Msgf("ScheduleCctxEVM: IsOutboundProcessed failed for chain %d nonce %d", chainID, nonce)
+				Msgf("ScheduleCctxEVM: VoteOutboundIfConfirmed failed for chain %d nonce %d", chainID, nonce)
 			continue
 		}
-		if confirmed {
+		if !continueKeysign {
 			oc.logger.Info().
-				Msgf("ScheduleCctxEVM: outbound %s already confirmed; do not schedule keysign", outboundID)
+				Msgf("ScheduleCctxEVM: outbound %s already processed; do not schedule keysign", outboundID)
 			continue
 		}
 
@@ -542,16 +542,16 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 			continue
 		}
 		// try confirming the outbound
-		included, confirmed, err := btcObserver.IsOutboundProcessed(ctx, cctx)
+		continueKeysign, err := btcObserver.VoteOutboundIfConfirmed(ctx, cctx)
 		if err != nil {
 			oc.logger.Error().
 				Err(err).
-				Msgf("ScheduleCctxBTC: IsOutboundProcessed failed for chain %d nonce %d", chainID, nonce)
+				Msgf("ScheduleCctxBTC: VoteOutboundIfConfirmed failed for chain %d nonce %d", chainID, nonce)
 			continue
 		}
-		if included || confirmed {
+		if !continueKeysign {
 			oc.logger.Info().
-				Msgf("ScheduleCctxBTC: outbound %s already included; do not schedule keysign", outboundID)
+				Msgf("ScheduleCctxBTC: outbound %s already processed; do not schedule keysign", outboundID)
 			continue
 		}
 
@@ -613,17 +613,17 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 			continue
 		}
 
-		// try confirming the outbound
-		_, finalized, err := solObserver.IsOutboundProcessed(ctx, cctx)
+		// vote outbound if it's already confirmed
+		continueKeysign, err := solObserver.VoteOutboundIfConfirmed(ctx, cctx)
 		if err != nil {
 			oc.logger.Error().
 				Err(err).
-				Msgf("ScheduleCctxSolana: IsOutboundProcessed failed for chain %d nonce %d", chainID, nonce)
+				Msgf("ScheduleCctxSolana: VoteOutboundIfConfirmed failed for chain %d nonce %d", chainID, nonce)
 			continue
 		}
-		if finalized {
+		if !continueKeysign {
 			oc.logger.Info().
-				Msgf("ScheduleCctxSolana: outbound %s already finalized; do not schedule keysign", outboundID)
+				Msgf("ScheduleCctxSolana: outbound %s already processed; do not schedule keysign", outboundID)
 			continue
 		}
 
