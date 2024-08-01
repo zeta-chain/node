@@ -77,7 +77,7 @@ func Test_CheckFinalizedTx(t *testing.T) {
 
 	// create observer with and TSS
 	ob := createTestObserver(t, chain, solClient, tss)
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	t.Run("should successfully check finalized tx", func(t *testing.T) {
 		tx, finalized := ob.CheckFinalizedTx(ctx, txHash, nonce, coinType)
