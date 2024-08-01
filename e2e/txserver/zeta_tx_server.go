@@ -298,6 +298,26 @@ func (zts ZetaTxServer) EnableHeaderVerification(account string, chainIDList []i
 	return err
 }
 
+// UpdateGatewayAddress updates the gateway address
+func (zts ZetaTxServer) UpdateGatewayAddress(account, gatewayAddr string) error {
+	// retrieve account
+	acc, err := zts.clientCtx.Keyring.Key(account)
+	if err != nil {
+		return err
+	}
+	addr, err := acc.GetAddress()
+	if err != nil {
+		return err
+	}
+
+	//_, err = zts.BroadcastTx(account, fungibletypes.Neew(
+	//	addr.String(),
+	//	gatewayAddr,
+	//))
+	return err
+
+}
+
 // DeploySystemContractsAndZRC20 deploys the system contracts and ZRC20 contracts
 // returns the addresses of uniswap factory, router and erc20 zrc20
 func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
