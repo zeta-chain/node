@@ -210,13 +210,14 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		IsAbortRefunded:     false,
 	}
 	cctx := CrossChainTx{
-		Creator:        msg.Creator,
-		Index:          index,
-		ZetaFees:       sdkmath.ZeroUint(),
-		RelayedMessage: msg.Message,
-		CctxStatus:     status,
-		InboundParams:  inboundParams,
-		OutboundParams: []*OutboundParams{outboundParams},
+		Creator:                 msg.Creator,
+		Index:                   index,
+		ZetaFees:                sdkmath.ZeroUint(),
+		RelayedMessage:          msg.Message,
+		CctxStatus:              status,
+		InboundParams:           inboundParams,
+		OutboundParams:          []*OutboundParams{outboundParams},
+		ProtocolContractVersion: msg.ProtocolContractVersion,
 	}
 
 	// TODO: remove this validate call

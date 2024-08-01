@@ -40,6 +40,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				coin.CoinType_Zeta,
 				sample.String(),
 				42,
+				types.ProtocolContractVersion_V1,
 			),
 		},
 		{
@@ -59,6 +60,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				coin.CoinType_Zeta,
 				sample.String(),
 				42,
+				types.ProtocolContractVersion_V1,
 			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
@@ -79,6 +81,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				coin.CoinType_Zeta,
 				sample.String(),
 				42,
+				types.ProtocolContractVersion_V1,
 			),
 			err: types.ErrInvalidChainID,
 		},
@@ -99,6 +102,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				coin.CoinType_Zeta,
 				sample.String(),
 				42,
+				types.ProtocolContractVersion_V1,
 			),
 			err: types.ErrInvalidChainID,
 		},
@@ -119,6 +123,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				coin.CoinType_Zeta,
 				sample.String(),
 				42,
+				types.ProtocolContractVersion_V1,
 			),
 			err: sdkerrors.ErrInvalidRequest,
 		},
@@ -139,20 +144,21 @@ func TestMsgVoteInbound_Digest(t *testing.T) {
 	r := rand.New(rand.NewSource(42))
 
 	msg := types.MsgVoteInbound{
-		Creator:            sample.AccAddress(),
-		Sender:             sample.AccAddress(),
-		SenderChainId:      42,
-		TxOrigin:           sample.String(),
-		Receiver:           sample.String(),
-		ReceiverChain:      42,
-		Amount:             math.NewUint(42),
-		Message:            sample.String(),
-		InboundHash:        sample.String(),
-		InboundBlockHeight: 42,
-		GasLimit:           42,
-		CoinType:           coin.CoinType_Zeta,
-		Asset:              sample.String(),
-		EventIndex:         42,
+		Creator:                 sample.AccAddress(),
+		Sender:                  sample.AccAddress(),
+		SenderChainId:           42,
+		TxOrigin:                sample.String(),
+		Receiver:                sample.String(),
+		ReceiverChain:           42,
+		Amount:                  math.NewUint(42),
+		Message:                 sample.String(),
+		InboundHash:             sample.String(),
+		InboundBlockHeight:      42,
+		GasLimit:                42,
+		CoinType:                coin.CoinType_Zeta,
+		Asset:                   sample.String(),
+		EventIndex:              42,
+		ProtocolContractVersion: types.ProtocolContractVersion_V1,
 	}
 	hash := msg.Digest()
 	require.NotEmpty(t, hash, "hash should not be empty")
@@ -240,6 +246,12 @@ func TestMsgVoteInbound_Digest(t *testing.T) {
 	msg.EventIndex = 43
 	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "event index should change hash")
+
+	// protocol contract version used
+	msg = msg
+	msg.ProtocolContractVersion = types.ProtocolContractVersion_V2
+	hash2 = msg.Digest()
+	require.NotEqual(t, hash, hash2, "protocol contract version should change hash")
 }
 
 func TestMsgVoteInbound_GetSigners(t *testing.T) {

@@ -51,5 +51,9 @@ func (r *E2ERunner) SetZEVMContractsV2() {
 	require.NoError(r, err)
 	r.Logger.Info("Gateway ZEVM contract address: %s, tx hash: %s", gatewayZEVMAddr.Hex(), txGateway.Hash().Hex())
 
+	// Set the gateway address in the protocol
+	err = r.ZetaTxServer.UpdateGatewayAddress(utils.AdminPolicyName, r.GatewayZEVMAddr.Hex())
+	require.NoError(r, err)
+
 	ensureTxReceipt(txProxy, "Gateway proxy deployment failed")
 }

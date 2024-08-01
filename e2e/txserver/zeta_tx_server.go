@@ -310,12 +310,11 @@ func (zts ZetaTxServer) UpdateGatewayAddress(account, gatewayAddr string) error 
 		return err
 	}
 
-	//_, err = zts.BroadcastTx(account, fungibletypes.Neew(
-	//	addr.String(),
-	//	gatewayAddr,
-	//))
+	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgUpdateGatewayContract(
+		addr.String(),
+		gatewayAddr,
+	))
 	return err
-
 }
 
 // DeploySystemContractsAndZRC20 deploys the system contracts and ZRC20 contracts

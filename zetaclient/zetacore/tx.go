@@ -51,6 +51,7 @@ func GetInboundVoteMessage(
 		coinType,
 		asset,
 		eventIndex,
+		types.ProtocolContractVersion_V1,
 	)
 	return msg
 }
