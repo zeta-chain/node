@@ -65,6 +65,11 @@ func Run(ctx context.Context, interval time.Duration, runner Runner) error {
 	return New(interval, runner).Run(ctx)
 }
 
+// SecondsFromUint64 converts uint64 to time.Duration in seconds.
+func SecondsFromUint64(d uint64) time.Duration {
+	return time.Duration(d) * time.Second
+}
+
 // Run runs the ticker by blocking current goroutine. It also invokes BEFORE ticker starts.
 // Stops when (if any):
 // - context is done (returns ctx.Err())
