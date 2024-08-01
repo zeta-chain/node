@@ -1,8 +1,6 @@
 package runner
 
 import (
-	"time"
-
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -10,22 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	solanacontract "github.com/zeta-chain/zetacore/pkg/contract/solana"
+	solanacontracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
 )
 
+// SetupSolanaAccount imports the deployer's private key
 func (r *E2ERunner) SetupSolanaAccount() {
-	r.Logger.Print("⚙️ setting up Solana account")
-	startTime := time.Now()
-	defer func() {
-		r.Logger.Print("✅ Solana account setup in %s", time.Since(startTime))
-	}()
-
-	r.SetSolanaAddress()
-}
-
-// SetSolanaAddress imports the deployer's private key
-func (r *E2ERunner) SetSolanaAddress() {
-	privateKey := solana.MustPrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
+	privateKey, err := solana.PrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
+	require.NoError(r, err)
 	r.SolanaDeployerAddress = privateKey.PublicKey()
 
 	r.Logger.Info("SolanaDeployerAddress: %s", r.SolanaDeployerAddress)
@@ -33,13 +22,14 @@ func (r *E2ERunner) SetSolanaAddress() {
 
 // SetSolanaContracts set Solana contracts
 func (r *E2ERunner) SetSolanaContracts(deployerPrivateKey string) {
-	r.Logger.Print("⚙️ setting up Solana contracts")
+	r.Logger.Print("⚙️ initializing gateway program on Solana")
 
 	// set Solana contracts
-	r.GatewayProgram = solana.MustPublicKeyFromBase58(solanacontract.SolanaGatewayProgramID)
+	r.GatewayProgram = solana.MustPublicKeyFromBase58(solanacontracts.SolanaGatewayProgramID)
 
 	// get deployer account balance
-	privkey := solana.MustPrivateKeyFromBase58(deployerPrivateKey)
+	privkey, err := solana.PrivateKeyFromBase58(deployerPrivateKey)
+	require.NoError(r, err)
 	bal, err := r.SolanaClient.GetBalance(r.Ctx, privkey.PublicKey(), rpc.CommitmentFinalized)
 	require.NoError(r, err)
 	r.Logger.Info("deployer address: %s, balance: %f SOL", privkey.PublicKey().String(), float64(bal.Value)/1e9)
@@ -57,8 +47,8 @@ func (r *E2ERunner) SetSolanaContracts(deployerPrivateKey string) {
 	inst.ProgID = r.GatewayProgram
 	inst.AccountValues = accountSlice
 
-	inst.DataBytes, err = borsh.Serialize(solanacontract.InitializeParams{
-		Discriminator: solanacontract.DiscriminatorInitialize(),
+	inst.DataBytes, err = borsh.Serialize(solanacontracts.InitializeParams{
+		Discriminator: solanacontracts.DiscriminatorInitialize(),
 		TssAddress:    r.TSSAddress,
 		ChainID:       uint64(chains.SolanaLocalnet.ChainId),
 	})
@@ -76,7 +66,7 @@ func (r *E2ERunner) SetSolanaContracts(deployerPrivateKey string) {
 	require.NoError(r, err)
 
 	// deserialize the PDA info
-	pda := solanacontract.PdaInfo{}
+	pda := solanacontracts.PdaInfo{}
 	err = borsh.Deserialize(&pda, pdaInfo.Bytes())
 	require.NoError(r, err)
 	tssAddress := ethcommon.BytesToAddress(pda.TssAddress[:])

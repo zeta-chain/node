@@ -3,8 +3,6 @@ package mocks
 import (
 	"context"
 
-	"github.com/rs/zerolog"
-
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
@@ -29,12 +27,11 @@ func NewEVMObserver(chainParams *observertypes.ChainParams) *EVMObserver {
 func (ob *EVMObserver) Start(_ context.Context) {}
 func (ob *EVMObserver) Stop()                   {}
 
-func (ob *EVMObserver) IsOutboundProcessed(
+func (ob *EVMObserver) VoteOutboundIfConfirmed(
 	_ context.Context,
 	_ *crosschaintypes.CrossChainTx,
-	_ zerolog.Logger,
-) (bool, bool, error) {
-	return false, false, nil
+) (bool, error) {
+	return false, nil
 }
 
 func (ob *EVMObserver) SetChainParams(chainParams observertypes.ChainParams) {
@@ -73,12 +70,11 @@ func (ob *BTCObserver) Start(_ context.Context) {}
 
 func (ob *BTCObserver) Stop() {}
 
-func (ob *BTCObserver) IsOutboundProcessed(
+func (ob *BTCObserver) VoteOutboundIfConfirmed(
 	_ context.Context,
 	_ *crosschaintypes.CrossChainTx,
-	_ zerolog.Logger,
-) (bool, bool, error) {
-	return false, false, nil
+) (bool, error) {
+	return false, nil
 }
 
 func (ob *BTCObserver) SetChainParams(chainParams observertypes.ChainParams) {
@@ -94,3 +90,44 @@ func (ob *BTCObserver) GetTxID(_ uint64) string {
 }
 
 func (ob *BTCObserver) WatchInboundTracker(_ context.Context) error { return nil }
+
+// ----------------------------------------------------------------------------
+// SolanaObserver
+// ----------------------------------------------------------------------------
+var _ interfaces.ChainObserver = (*SolanaObserver)(nil)
+
+// SolanaObserver is a mock of solana chain observer for testing
+type SolanaObserver struct {
+	ChainParams observertypes.ChainParams
+}
+
+func NewSolanaObserver(chainParams *observertypes.ChainParams) *SolanaObserver {
+	return &SolanaObserver{
+		ChainParams: *chainParams,
+	}
+}
+
+func (ob *SolanaObserver) Start(_ context.Context) {}
+
+func (ob *SolanaObserver) Stop() {}
+
+func (ob *SolanaObserver) VoteOutboundIfConfirmed(
+	_ context.Context,
+	_ *crosschaintypes.CrossChainTx,
+) (bool, error) {
+	return false, nil
+}
+
+func (ob *SolanaObserver) SetChainParams(chainParams observertypes.ChainParams) {
+	ob.ChainParams = chainParams
+}
+
+func (ob *SolanaObserver) GetChainParams() observertypes.ChainParams {
+	return ob.ChainParams
+}
+
+func (ob *SolanaObserver) GetTxID(_ uint64) string {
+	return ""
+}
+
+func (ob *SolanaObserver) WatchInboundTracker(_ context.Context) error { return nil }

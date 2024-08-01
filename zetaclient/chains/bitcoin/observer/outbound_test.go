@@ -71,7 +71,7 @@ func createObserverWithUTXOs(t *testing.T) *Observer {
 
 func mineTxNSetNonceMark(ob *Observer, nonce uint64, txid string, preMarkIndex int) {
 	// Mine transaction
-	outboundID := ob.GetTxID(nonce)
+	outboundID := ob.OutboundID(nonce)
 	ob.includedTxResults[outboundID] = &btcjson.GetTransactionResult{TxID: txid}
 
 	// Set nonce mark
