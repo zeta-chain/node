@@ -6,8 +6,6 @@ on:
       - develop
       - release/*
   pull_request:
-    branches:
-      - "*"
   merge_group:
   schedule:
     # run at 6AM UTC Daily
