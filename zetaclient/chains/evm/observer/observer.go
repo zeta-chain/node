@@ -18,6 +18,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zeta.non-eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
@@ -152,6 +153,13 @@ func (ob *Observer) GetConnectorContractEth() (ethcommon.Address, *zetaconnector
 func (ob *Observer) GetERC20CustodyContract() (ethcommon.Address, *erc20custody.ERC20Custody, error) {
 	addr := ethcommon.HexToAddress(ob.GetChainParams().Erc20CustodyContractAddress)
 	contract, err := erc20custody.NewERC20Custody(addr, ob.evmClient)
+	return addr, contract, err
+}
+
+// GetGatewayContract returns the gateway contract address and binder
+func (ob *Observer) GetGatewayContract() (ethcommon.Address, *gatewayevm.GatewayEVM, error) {
+	addr := ethcommon.HexToAddress(ob.GetChainParams().GatewayAddress)
+	contract, err := gatewayevm.NewGatewayEVM(addr, ob.evmClient)
 	return addr, contract, err
 }
 
