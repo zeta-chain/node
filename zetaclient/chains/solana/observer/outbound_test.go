@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	contracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
@@ -144,15 +145,16 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 	txHash := withdrawTxTest
 	txAmount := uint64(890880)
 
-	// create observer
-	ob := createTestObserver(t, chain, nil, nil)
+	// gateway address
+	gatewayID, err := solana.PublicKeyFromBase58(GatewayAddressTest)
+	require.NoError(t, err)
 
 	t.Run("should parse gateway instruction", func(t *testing.T) {
 		// load archived outbound tx result
 		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
 
 		// parse gateway instruction
-		inst, err := ob.ParseGatewayInstruction(txResult, coin.CoinType_Gas)
+		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas)
 		require.NoError(t, err)
 
 		// check sender, nonce and amount
@@ -171,7 +173,7 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 		// remove all instructions
 		tx.Message.Instructions = nil
 
-		inst, err := ob.ParseGatewayInstruction(txResult, coin.CoinType_Gas)
+		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas)
 		require.ErrorContains(t, err, "want 1 instruction, got 0")
 		require.Nil(t, inst)
 	})
@@ -184,7 +186,7 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 		// set invalid program id index (out of range)
 		tx.Message.Instructions[0].ProgramIDIndex = 4
 
-		inst, err := ob.ParseGatewayInstruction(txResult, coin.CoinType_Gas)
+		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas)
 		require.ErrorContains(t, err, "error getting program ID")
 		require.Nil(t, inst)
 	})
@@ -197,7 +199,7 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 		// set invalid program id index (pda account index)
 		tx.Message.Instructions[0].ProgramIDIndex = 1
 
-		inst, err := ob.ParseGatewayInstruction(txResult, coin.CoinType_Gas)
+		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas)
 		require.ErrorContains(t, err, "not a gateway program invocation")
 		require.Nil(t, inst)
 	})
@@ -210,7 +212,7 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 		// set invalid instruction data to cause parsing error
 		tx.Message.Instructions[0].Data = []byte("invalid instruction data")
 
-		inst, err := ob.ParseGatewayInstruction(txResult, coin.CoinType_Gas)
+		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas)
 		require.Error(t, err)
 		require.Nil(t, inst)
 	})
@@ -218,7 +220,7 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 		// load and unmarshal archived transaction
 		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
 
-		inst, err := ob.ParseGatewayInstruction(txResult, coin.CoinType_ERC20)
+		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_ERC20)
 		require.ErrorContains(t, err, "unsupported outbound coin type")
 		require.Nil(t, inst)
 	})
@@ -230,16 +232,14 @@ func Test_ParseInstructionWithdraw(t *testing.T) {
 	txHash := withdrawTxTest
 	txAmount := uint64(890880)
 
-	// create observer
-	ob := createTestObserver(t, chain, nil, nil)
-
 	t.Run("should parse instruction withdraw", func(t *testing.T) {
 		// load and unmarshal archived transaction
 		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
 
-		inst, err := ob.ParseInstructionWithdraw(tx, 0)
+		instruction := tx.Message.Instructions[0]
+		inst, err := contracts.ParseInstructionWithdraw(instruction)
 		require.NoError(t, err)
 
 		// check sender, nonce and amount
@@ -256,9 +256,10 @@ func Test_ParseInstructionWithdraw(t *testing.T) {
 		require.NoError(t, err)
 
 		// set invalid instruction data
-		txFake.Message.Instructions[0].Data = []byte("invalid instruction data")
+		instruction := txFake.Message.Instructions[0]
+		instruction.Data = []byte("invalid instruction data")
 
-		inst, err := ob.ParseInstructionWithdraw(txFake, 0)
+		inst, err := contracts.ParseInstructionWithdraw(instruction)
 		require.ErrorContains(t, err, "error deserializing instruction")
 		require.Nil(t, inst)
 	})
@@ -269,12 +270,13 @@ func Test_ParseInstructionWithdraw(t *testing.T) {
 		require.NoError(t, err)
 
 		// overwrite discriminator (first 8 bytes)
+		instruction := txFake.Message.Instructions[0]
 		fakeDiscriminator := "b712469c946da12100980d0000000000"
 		fakeDiscriminatorBytes, err := hex.DecodeString(fakeDiscriminator)
 		require.NoError(t, err)
-		copy(txFake.Message.Instructions[0].Data, fakeDiscriminatorBytes)
+		copy(instruction.Data, fakeDiscriminatorBytes)
 
-		inst, err := ob.ParseInstructionWithdraw(txFake, 0)
+		inst, err := contracts.ParseInstructionWithdraw(instruction)
 		require.ErrorContains(t, err, "not a withdraw instruction")
 		require.Nil(t, inst)
 	})

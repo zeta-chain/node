@@ -47,7 +47,6 @@ type ChainObserver interface {
 	) (bool, bool, error)
 	SetChainParams(observertypes.ChainParams)
 	GetChainParams() observertypes.ChainParams
-	GetTxID(nonce uint64) string
 	WatchInboundTracker(ctx context.Context) error
 }
 

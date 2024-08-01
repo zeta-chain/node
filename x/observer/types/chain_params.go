@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	solanacontract "github.com/zeta-chain/zetacore/pkg/contract/solana"
+	solanacontracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
 )
 
 const (
@@ -331,7 +331,7 @@ func GetDefaultSolanaLocalnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
-		GatewayAddress:              solanacontract.SolanaGatewayProgramID,
+		GatewayAddress:              solanacontracts.SolanaGatewayProgramID,
 	}
 }
 func GetDefaultGoerliLocalnetChainParams() *ChainParams {

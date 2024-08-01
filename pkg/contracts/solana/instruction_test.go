@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	contract "github.com/zeta-chain/zetacore/pkg/contract/solana"
+	contracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
 )
 
 const (
@@ -42,7 +42,7 @@ func Test_SignerWithdraw(t *testing.T) {
 	copy(sigRS[:], sigTest[:64])
 
 	// create a withdraw instruction
-	inst := contract.WithdrawInstructionParams{
+	inst := contracts.WithdrawInstructionParams{
 		Signature:   sigRS,
 		RecoveryID:  0,
 		MessageHash: getTestmessageHash(),
@@ -59,21 +59,21 @@ func Test_RecoverSigner(t *testing.T) {
 	hashTest := getTestmessageHash()
 
 	// recover the signer from the test message hash and signature
-	signer, err := contract.RecoverSigner(hashTest[:], sigTest[:])
+	signer, err := contracts.RecoverSigner(hashTest[:], sigTest[:])
 	require.NoError(t, err)
 	require.EqualValues(t, testSigner, signer.String())
 
 	// slightly modify the signature and recover the signer
 	sigFake := sigTest
 	sigFake[0]++
-	signer, err = contract.RecoverSigner(hashTest[:], sigFake[:])
+	signer, err = contracts.RecoverSigner(hashTest[:], sigFake[:])
 	require.Error(t, err)
 	require.Equal(t, ethcommon.Address{}, signer)
 
 	// slightly modify the message hash and recover the signer
 	hashFake := hashTest
 	hashFake[0]++
-	signer, err = contract.RecoverSigner(hashFake[:], sigTest[:])
+	signer, err = contracts.RecoverSigner(hashFake[:], sigTest[:])
 	require.NoError(t, err)
 	require.NotEqual(t, ethcommon.Address{}, signer)
 	require.NotEqual(t, testSigner, signer.String())

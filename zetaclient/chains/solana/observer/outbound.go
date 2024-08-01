@@ -8,13 +8,12 @@ import (
 	"cosmossdk.io/math"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/near/borsh-go"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
-	contract "github.com/zeta-chain/zetacore/pkg/contract/solana"
+	contracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
@@ -22,13 +21,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
-// GetTxID returns a unique id for Solana outbound
-func (ob *Observer) GetTxID(nonce uint64) string {
-	tssAddr := ob.TSS().EVMAddress().String()
-	return fmt.Sprintf("%d-%s-%d", ob.Chain().ChainId, tssAddr, nonce)
-}
-
-// WatchOutbound watches evm chain for outgoing txs status
+// WatchOutbound watches solana chain for outgoing txs status
 // TODO(revamp): move ticker function to ticker file
 // TODO(revamp): move inner logic to a separate function
 func (ob *Observer) WatchOutbound(ctx context.Context) error {
@@ -119,10 +112,7 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 // IsOutboundProcessed checks outbound status and returns (isIncluded, isFinalized, error)
 // It also posts vote to zetacore if the tx is finalized
 // TODO(revamp): rename as it also vote the outbound
-func (ob *Observer) IsOutboundProcessed(
-	ctx context.Context,
-	cctx *crosschaintypes.CrossChainTx,
-) (bool, bool, error) {
+func (ob *Observer) IsOutboundProcessed(ctx context.Context, cctx *crosschaintypes.CrossChainTx) (bool, bool, error) {
 	// get outbound params
 	params := cctx.GetCurrentOutboundParam()
 	nonce := params.TssNonce
@@ -143,7 +133,7 @@ func (ob *Observer) IsOutboundProcessed(
 	txSig := tx.Signatures[0]
 
 	// parse gateway instruction from tx result
-	inst, err := ob.ParseGatewayInstruction(txResult, coinType)
+	inst, err := ParseGatewayInstruction(txResult, ob.gatewayID, coinType)
 	if err != nil {
 		// should never happen as it was already successfully parsed in CheckFinalizedTx
 		return true, true, errors.Wrapf(err, "ParseGatewayInstruction error for sig %s", txSig)
@@ -254,12 +244,12 @@ func (ob *Observer) CheckFinalizedTx(
 
 	// the tx must be successful in order to effectively increment the nonce
 	if txResult.Meta.Err != nil {
-		logger.Error().Msgf("tx is not successful for chain %d nonce %d", chainID, nonce)
+		logger.Error().Any("Err", txResult.Meta.Err).Msgf("tx is not successful for chain %d nonce %d", chainID, nonce)
 		return nil, false
 	}
 
 	// parse gateway instruction from tx result
-	inst, err := ob.ParseGatewayInstruction(txResult, coinType)
+	inst, err := ParseGatewayInstruction(txResult, ob.gatewayID, coinType)
 	if err != nil {
 		logger.Error().Err(err).Msgf("ParseGatewayInstruction err for chain %d nonce %d", chainID, nonce)
 		return nil, false
@@ -288,11 +278,12 @@ func (ob *Observer) CheckFinalizedTx(
 	return txResult, true
 }
 
-// ParseGatewayInstruction parses the instruction signer and nonce from tx result
-func (ob *Observer) ParseGatewayInstruction(
+// ParseGatewayInstruction parses the outbound instruction from tx result
+func ParseGatewayInstruction(
 	txResult *rpc.GetTransactionResult,
+	gatewayID solana.PublicKey,
 	coinType coin.CoinType,
-) (contract.OutboundInstruction, error) {
+) (contracts.OutboundInstruction, error) {
 	// unmarshal transaction
 	tx, err := txResult.Transaction.GetTransaction()
 	if err != nil {
@@ -312,39 +303,15 @@ func (ob *Observer) ParseGatewayInstruction(
 	}
 
 	// the instruction should be an invocation of the gateway program
-	if !programPk.Equals(ob.gatewayID) {
+	if !programPk.Equals(gatewayID) {
 		return nil, errors.New("not a gateway program invocation")
 	}
 
 	// parse the instruction as a 'withdraw' or 'withdraw_spl_token'
 	switch coinType {
 	case coin.CoinType_Gas:
-		return ob.ParseInstructionWithdraw(tx, 0)
+		return contracts.ParseInstructionWithdraw(instruction)
 	default:
 		return nil, errors.New("unsupported outbound coin type")
 	}
-}
-
-// ParseInstructionWithdraw tries to parse an instruction as a 'withdraw'.
-// It returns nil if the instruction can't be parsed as a 'withdraw'.
-func (ob *Observer) ParseInstructionWithdraw(
-	tx *solana.Transaction,
-	instructionIndex int,
-) (*contract.WithdrawInstructionParams, error) {
-	// locate instruction by index
-	instruction := tx.Message.Instructions[instructionIndex]
-
-	// try deserializing instruction as a 'withdraw'
-	inst := &contract.WithdrawInstructionParams{}
-	err := borsh.Deserialize(inst, instruction.Data)
-	if err != nil {
-		return nil, errors.Wrap(err, "error deserializing instruction")
-	}
-
-	// check the discriminator to ensure it's a 'withdraw' instruction
-	if inst.Discriminator != contract.DiscriminatorWithdraw() {
-		return nil, errors.New("not a withdraw instruction")
-	}
-
-	return inst, nil
 }

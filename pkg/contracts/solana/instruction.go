@@ -1,25 +1,12 @@
-package solana // PdaInfo represents the PDA for the gateway program
+package solana
+
 import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/gagliardetto/solana-go"
+	"github.com/near/borsh-go"
+	"github.com/pkg/errors"
 )
-
-type PdaInfo struct {
-	// Discriminator is the unique identifier for the PDA
-	Discriminator [8]byte
-
-	// Nonce is the current nonce for the PDA
-	Nonce uint64
-
-	// TssAddress is the TSS address for the PDA
-	TssAddress [20]byte
-
-	// Authority is the authority for the PDA
-	Authority [32]byte
-
-	// ChainId is the Solana chain id
-	ChainID uint64
-}
 
 // InitializeParams contains the parameters for a gateway initialize instruction
 type InitializeParams struct {
@@ -97,6 +84,24 @@ func (inst *WithdrawInstructionParams) GatewayNonce() uint64 {
 // TokenAmount returns the amount of the instruction
 func (inst *WithdrawInstructionParams) TokenAmount() uint64 {
 	return inst.Amount
+}
+
+// ParseInstructionWithdraw tries to parse the instruction as a 'withdraw'.
+// It returns nil if the instruction can't be parsed as a 'withdraw'.
+func ParseInstructionWithdraw(instruction solana.CompiledInstruction) (*WithdrawInstructionParams, error) {
+	// try deserializing instruction as a 'withdraw'
+	inst := &WithdrawInstructionParams{}
+	err := borsh.Deserialize(inst, instruction.Data)
+	if err != nil {
+		return nil, errors.Wrap(err, "error deserializing instruction")
+	}
+
+	// check the discriminator to ensure it's a 'withdraw' instruction
+	if inst.Discriminator != DiscriminatorWithdraw() {
+		return nil, errors.New("not a withdraw instruction")
+	}
+
+	return inst, nil
 }
 
 // RecoverSigner recover the ECDSA signer from given message hash and signature

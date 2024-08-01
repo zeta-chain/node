@@ -13,7 +13,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
-	solcontract "github.com/zeta-chain/zetacore/pkg/contract/solana"
+	solanacontracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -123,7 +123,7 @@ func Test_GetUpdatedSigner(t *testing.T) {
 	btcChainParams := &observertypes.ChainParams{}
 	solChainParams := &observertypes.ChainParams{
 		ChainId:        solChain.ChainId,
-		GatewayAddress: solcontract.SolanaGatewayProgramID,
+		GatewayAddress: solanacontracts.SolanaGatewayProgramID,
 	}
 
 	// new evm chain params in AppContext
@@ -210,7 +210,7 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 	}
 	solChainParams := &observertypes.ChainParams{
 		ChainId:        solChain.ChainId,
-		GatewayAddress: solcontract.SolanaGatewayProgramID,
+		GatewayAddress: solanacontracts.SolanaGatewayProgramID,
 	}
 
 	// new chain params in AppContext

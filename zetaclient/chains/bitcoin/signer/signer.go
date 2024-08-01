@@ -108,10 +108,12 @@ func (signer *Signer) GetERC20CustodyAddress() ethcommon.Address {
 }
 
 // SetGatewayAddress does nothing for BTC
+// Note: TSS address will be used as gateway address for Bitcoin
 func (signer *Signer) SetGatewayAddress(_ string) {
 }
 
 // GetGatewayAddress returns empty address
+// Note: same as SetGatewayAddress
 func (signer *Signer) GetGatewayAddress() string {
 	return ""
 }

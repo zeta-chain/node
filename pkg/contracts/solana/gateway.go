@@ -1,3 +1,4 @@
+// Package solana privides structures and constants that are used when interacting with the gateway program on Solana chain.
 package solana
 
 import (

@@ -567,7 +567,7 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 				Msgf("ScheduleCctxBTC: lookahead reached, signing %d, earliest pending %d", nonce, cctxList[0].GetCurrentOutboundParam().TssNonce)
 			break
 		}
-		// try confirming the outbound or scheduling a keysign
+		// schedule a TSS keysign
 		if nonce%interval == zetaHeight%interval && !oc.outboundProc.IsOutboundActive(outboundID) {
 			oc.outboundProc.StartTryProcess(outboundID)
 			oc.logger.Debug().Msgf("ScheduleCctxBTC: sign outbound %s with value %d", outboundID, params.Amount)
@@ -584,7 +584,7 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 	}
 }
 
-// ScheduleCctxBTC schedules bitcoin outbound keysign on each ZetaChain block (the ticker)
+// ScheduleCctxSolana schedules solana outbound keysign on each ZetaChain block (the ticker)
 func (oc *Orchestrator) ScheduleCctxSolana(
 	ctx context.Context,
 	zetaHeight uint64,
@@ -627,7 +627,7 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 			continue
 		}
 
-		// try confirming the outbound or scheduling a keysign
+		// schedule a TSS keysign
 		if nonce%interval == zetaHeight%interval && !oc.outboundProc.IsOutboundActive(outboundID) {
 			oc.outboundProc.StartTryProcess(outboundID)
 			oc.logger.Debug().Msgf("ScheduleCctxSolana: sign outbound %s with value %d", outboundID, params.Amount)

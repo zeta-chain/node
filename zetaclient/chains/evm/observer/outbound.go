@@ -28,12 +28,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
-// GetTxID returns a unique id for outbound tx
-func (ob *Observer) GetTxID(nonce uint64) string {
-	tssAddr := ob.TSS().EVMAddress().String()
-	return fmt.Sprintf("%d-%s-%d", ob.Chain().ChainId, tssAddr, nonce)
-}
-
 // WatchOutbound watches evm chain for outgoing txs status
 // TODO(revamp): move ticker function to ticker file
 // TODO(revamp): move inner logic to a separate function

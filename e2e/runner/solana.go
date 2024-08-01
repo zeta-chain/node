@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/utils"
-	solanacontract "github.com/zeta-chain/zetacore/pkg/contract/solana"
+	solanacontract "github.com/zeta-chain/zetacore/pkg/contracts/solana"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 

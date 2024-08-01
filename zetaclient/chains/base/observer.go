@@ -267,6 +267,11 @@ func (ob *Observer) WithHeaderCache(cache *lru.Cache) *Observer {
 	return ob
 }
 
+// OutboundID returns a unique identifier for the outbound transaction.
+func (ob *Observer) OutboundID(nonce uint64) string {
+	return fmt.Sprintf("%d-%d", ob.chain.ChainId, nonce)
+}
+
 // DB returns the database for the observer.
 func (ob *Observer) DB() *db.DB {
 	return ob.db

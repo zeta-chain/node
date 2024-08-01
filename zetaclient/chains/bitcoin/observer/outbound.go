@@ -23,12 +23,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
-// GetTxID returns a unique id for outbound tx
-func (ob *Observer) GetTxID(nonce uint64) string {
-	tssAddr := ob.TSS().BTCAddress()
-	return fmt.Sprintf("%d-%s-%d", ob.Chain().ChainId, tssAddr, nonce)
-}
-
 // WatchOutbound watches Bitcoin chain for outgoing txs status
 // TODO(revamp): move ticker functions to a specific file
 // TODO(revamp): move into a separate package
@@ -66,7 +60,7 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 			}
 			for _, tracker := range trackers {
 				// get original cctx parameters
-				outboundID := ob.GetTxID(tracker.Nonce)
+				outboundID := ob.OutboundID(tracker.Nonce)
 				cctx, err := ob.ZetacoreClient().GetCctxByNonce(ctx, chainID, tracker.Nonce)
 				if err != nil {
 					ob.logger.Outbound.Info().
@@ -140,7 +134,7 @@ func (ob *Observer) IsOutboundProcessed(
 	nonce := cctx.GetCurrentOutboundParam().TssNonce
 
 	// get broadcasted outbound and tx result
-	outboundID := ob.GetTxID(nonce)
+	outboundID := ob.OutboundID(nonce)
 	ob.Logger().Outbound.Info().Msgf("IsOutboundProcessed %s", outboundID)
 
 	ob.Mu().Lock()
@@ -443,7 +437,7 @@ func (ob *Observer) checkIncludedTx(
 	cctx *crosschaintypes.CrossChainTx,
 	txHash string,
 ) (*btcjson.GetTransactionResult, bool) {
-	outboundID := ob.GetTxID(cctx.GetCurrentOutboundParam().TssNonce)
+	outboundID := ob.OutboundID(cctx.GetCurrentOutboundParam().TssNonce)
 	hash, getTxResult, err := rpc.GetTxResultByHash(ob.btcClient, txHash)
 	if err != nil {
 		ob.logger.Outbound.Error().Err(err).Msgf("checkIncludedTx: error GetTxResultByHash: %s", txHash)
@@ -472,7 +466,7 @@ func (ob *Observer) checkIncludedTx(
 // setIncludedTx saves included tx result in memory
 func (ob *Observer) setIncludedTx(nonce uint64, getTxResult *btcjson.GetTransactionResult) {
 	txHash := getTxResult.TxID
-	outboundID := ob.GetTxID(nonce)
+	outboundID := ob.OutboundID(nonce)
 
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
@@ -501,17 +495,17 @@ func (ob *Observer) setIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 func (ob *Observer) getIncludedTx(nonce uint64) *btcjson.GetTransactionResult {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
-	return ob.includedTxResults[ob.GetTxID(nonce)]
+	return ob.includedTxResults[ob.OutboundID(nonce)]
 }
 
 // removeIncludedTx removes included tx from memory
 func (ob *Observer) removeIncludedTx(nonce uint64) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
-	txResult, found := ob.includedTxResults[ob.GetTxID(nonce)]
+	txResult, found := ob.includedTxResults[ob.OutboundID(nonce)]
 	if found {
 		delete(ob.includedTxHashes, txResult.TxID)
-		delete(ob.includedTxResults, ob.GetTxID(nonce))
+		delete(ob.includedTxResults, ob.OutboundID(nonce))
 	}
 }
 

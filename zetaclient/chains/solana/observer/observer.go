@@ -9,7 +9,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	contract "github.com/zeta-chain/zetacore/pkg/contract/solana"
+	contracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
@@ -65,7 +65,7 @@ func NewObserver(
 	}
 
 	// parse gateway ID and PDA
-	gatewayID, pda, err := contract.ParseGatewayIDAndPda(chainParams.GatewayAddress)
+	gatewayID, pda, err := contracts.ParseGatewayIDAndPda(chainParams.GatewayAddress)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
 	}
@@ -144,19 +144,19 @@ func (ob *Observer) LoadLastTxScanned() error {
 func (ob *Observer) SetTxResult(nonce uint64, result *rpc.GetTransactionResult) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
-	ob.finalizedTxResults[ob.GetTxID(nonce)] = result
+	ob.finalizedTxResults[ob.OutboundID(nonce)] = result
 }
 
 // GetTxResult returns the tx result for the given nonce
 func (ob *Observer) GetTxResult(nonce uint64) *rpc.GetTransactionResult {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
-	return ob.finalizedTxResults[ob.GetTxID(nonce)]
+	return ob.finalizedTxResults[ob.OutboundID(nonce)]
 }
 
 // IsTxFinalized returns true if there is a finalized tx for nonce
 func (ob *Observer) IsTxFinalized(nonce uint64) bool {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
-	return ob.finalizedTxResults[ob.GetTxID(nonce)] != nil
+	return ob.finalizedTxResults[ob.OutboundID(nonce)] != nil
 }

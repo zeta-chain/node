@@ -11,7 +11,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
-	contract "github.com/zeta-chain/zetacore/pkg/contract/solana"
+	contracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
@@ -53,7 +53,7 @@ func NewSigner(
 	baseSigner := base.NewSigner(chain, tss, ts, logger)
 
 	// parse gateway ID and PDA
-	gatewayID, pda, err := contract.ParseGatewayIDAndPda(chainParams.GatewayAddress)
+	gatewayID, pda, err := contracts.ParseGatewayIDAndPda(chainParams.GatewayAddress)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
 	}
@@ -74,7 +74,7 @@ func (signer *Signer) SignMsgWithdraw(
 	ctx context.Context,
 	params *types.OutboundParams,
 	height uint64,
-) (*contract.MsgWithdraw, error) {
+) (*contracts.MsgWithdraw, error) {
 	chain := signer.Chain()
 	// #nosec G115 always positive
 	chainID := uint64(signer.Chain().ChainId)
@@ -88,7 +88,7 @@ func (signer *Signer) SignMsgWithdraw(
 	}
 
 	// prepare withdraw msg and compute hash
-	msg := contract.NewMsgWithdraw(chainID, nonce, amount, to)
+	msg := contracts.NewMsgWithdraw(chainID, nonce, amount, to)
 	msgHash := msg.Hash()
 
 	// sign the message with TSS to get an ECDSA signature.
@@ -104,12 +104,12 @@ func (signer *Signer) SignMsgWithdraw(
 }
 
 // SignWithdrawTx signs the Solana gateway 'withdraw' transaction specified by 'msg'
-func (signer *Signer) SignWithdrawTx(ctx context.Context, msg contract.MsgWithdraw) (*solana.Transaction, error) {
+func (signer *Signer) SignWithdrawTx(ctx context.Context, msg contracts.MsgWithdraw) (*solana.Transaction, error) {
 	// create withdraw instruction with program call data
 	var err error
 	var inst solana.GenericInstruction
-	inst.DataBytes, err = borsh.Serialize(contract.WithdrawInstructionParams{
-		Discriminator: contract.DiscriminatorWithdraw(),
+	inst.DataBytes, err = borsh.Serialize(contracts.WithdrawInstructionParams{
+		Discriminator: contracts.DiscriminatorWithdraw(),
 		Amount:        msg.Amount(),
 		Signature:     msg.SigRS(),
 		RecoveryID:    msg.SigV(),
@@ -188,11 +188,11 @@ func (signer *Signer) TryProcessOutbound(
 	// prepare logger
 	params := cctx.GetCurrentOutboundParam()
 	logger := signer.Logger().Std.With().
-		Str("OutboundID", outboundID).
-		Str("SendHash", cctx.Index).
+		Str("method", "TryProcessOutbound").
+		Int64("chain", signer.Chain().ChainId).
+		Uint64("nonce", params.TssNonce).
+		Str("cctx", cctx.Index).
 		Logger()
-	logger.Info().
-		Msgf("Solana TryProcessOutbound: %s, value %d to %s", cctx.Index, params.Amount.BigInt(), params.Receiver)
 
 	// support gas token only for Solana outbound
 	coinType := cctx.InboundParams.CoinType
@@ -243,7 +243,7 @@ func (signer *Signer) TryProcessOutbound(
 // SetGatewayAddress sets the gateway address
 func (signer *Signer) SetGatewayAddress(address string) {
 	// parse gateway ID and PDA
-	gatewayID, pda, err := contract.ParseGatewayIDAndPda(address)
+	gatewayID, pda, err := contracts.ParseGatewayIDAndPda(address)
 	if err != nil {
 		signer.Logger().Std.Error().Err(err).Msgf("cannot parse gateway address %s", address)
 	}

@@ -535,7 +535,7 @@ func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 // SaveBroadcastedTx saves successfully broadcasted transaction
 // TODO(revamp): move to db file
 func (ob *Observer) SaveBroadcastedTx(txHash string, nonce uint64) {
-	outboundID := ob.GetTxID(nonce)
+	outboundID := ob.OutboundID(nonce)
 	ob.Mu().Lock()
 	ob.broadcastedTx[outboundID] = txHash
 	ob.Mu().Unlock()

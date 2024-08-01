@@ -371,12 +371,14 @@ func (signer *Signer) TryProcessOutbound(
 	}()
 
 	// prepare logger
+	params := cctx.GetCurrentOutboundParam()
 	logger := signer.Logger().Std.With().
-		Str("OutboundID", outboundID).
-		Str("SendHash", cctx.Index).
+		Str("method", "TryProcessOutbound").
+		Int64("chain", signer.Chain().ChainId).
+		Uint64("nonce", params.TssNonce).
+		Str("cctx", cctx.Index).
 		Logger()
 
-	params := cctx.GetCurrentOutboundParam()
 	myID := zetacoreClient.GetKeys().GetOperatorAddress()
 	logger.Info().
 		Msgf("EVM TryProcessOutbound: %s, value %d to %s", cctx.Index, params.Amount.BigInt(), params.Receiver)

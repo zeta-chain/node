@@ -9,7 +9,7 @@ import (
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	contract "github.com/zeta-chain/zetacore/pkg/contract/solana"
+	contracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
 )
 
 func Test_MsgWithdrawHash(t *testing.T) {
@@ -25,7 +25,7 @@ func Test_MsgWithdrawHash(t *testing.T) {
 		require.NoError(t, err)
 
 		// create new withdraw message
-		hash := contract.NewMsgWithdraw(chainID, nonce, amount, to).Hash()
+		hash := contracts.NewMsgWithdraw(chainID, nonce, amount, to).Hash()
 		require.True(t, bytes.Equal(hash[:], wantHashBytes))
 	})
 }

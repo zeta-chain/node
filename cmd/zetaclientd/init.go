@@ -13,6 +13,8 @@ import (
 )
 
 // solanaTestKey is a local test private key for Solana
+// TODO: use separate keys for each zetaclient in Solana E2E tests
+// https://github.com/zeta-chain/node/issues/2614
 var solanaTestKey = []uint8{
 	199, 16, 63, 28, 125, 103, 131, 13, 6, 94, 68, 109, 13, 68, 132, 17,
 	71, 33, 216, 51, 49, 103, 146, 241, 245, 162, 90, 228, 71, 177, 32, 199,
