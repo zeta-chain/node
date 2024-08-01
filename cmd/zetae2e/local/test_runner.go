@@ -30,6 +30,10 @@ func initTestRunner(
 		return nil, err
 	}
 
+	// copy timeouts from deployer runner
+	testRunner.CctxTimeout = deployerRunner.ReceiptTimeout
+	testRunner.ReceiptTimeout = deployerRunner.ReceiptTimeout
+
 	// copy contracts from deployer runner
 	if err := testRunner.CopyAddressesFrom(deployerRunner); err != nil {
 		return nil, err

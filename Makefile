@@ -249,7 +249,7 @@ start-e2e-admin-test: zetanode
 start-e2e-performance-test: zetanode
 	@echo "--> Starting e2e performance test"
 	export E2E_ARGS="--test-performance" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) -f docker-compose.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress -f docker-compose.yml up -d
 
 start-e2e-import-mainnet-test: zetanode
 	@echo "--> Starting e2e import-data test"

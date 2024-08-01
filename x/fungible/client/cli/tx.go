@@ -29,6 +29,7 @@ func GetTxCmd() *cobra.Command {
 		CmdPauseZRC20(),
 		CmdUnpauseZRC20(),
 		CmdUpdateZRC20WithdrawFee(),
+		CmdUpdateGatewayContract(),
 	)
 
 	return cmd
