@@ -6,6 +6,10 @@
 
 * [2578](https://github.com/zeta-chain/node/pull/2578) - Add Gateway address in protocol contract list
 
+### Refactor
+
+* [2615](https://github.com/zeta-chain/node/pull/2615) - Refactor cleanup of outbound trackers
+
 ## v19.0.0
 
 ### Breaking Changes

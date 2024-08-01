@@ -91,9 +91,6 @@ func (k msgServer) VoteOutbound(
 	}
 
 	// Set the finalized ballot to the current outbound params.
-	// The two cases are possible
-	// 1. The outbound tx is successful, and this is the only ballot that is set
-	// 2. Revert TX is created, in which case the ballot for the revert TX would be set only when that ballot is finalized.
 	cctx.SetOutboundBallotIndex(ballotIndex)
 	// If ballot is successful, the value received should be the out tx amount.
 	err = cctx.AddOutbound(ctx, *msg, ballot.BallotStatus)
@@ -203,13 +200,9 @@ SaveOutbound saves the outbound transaction.It does the following things in one 
 func (k Keeper) SaveOutbound(ctx sdk.Context, cctx *types.CrossChainTx) {
 	// #nosec G115 always in range
 	for _, outboundParams := range cctx.OutboundParams {
-		k.GetObserverKeeper().RemoveFromPendingNonces(ctx, outboundParams.TssPubkey, outboundParams.ReceiverChainId, int64(outboundParams.TssNonce))
+		k.GetObserverKeeper().
+			RemoveFromPendingNonces(ctx, outboundParams.TssPubkey, outboundParams.ReceiverChainId, int64(outboundParams.TssNonce))
 		k.RemoveOutboundTrackerFromStore(ctx, outboundParams.ReceiverChainId, outboundParams.TssNonce)
-		ctx.Logger().With(
-			"voteOutboundID", voteOutboundID,
-			"trackerIndex", getOutboundTrackerIndex(outboundParams.ReceiverChainId, outboundParams.TssNonce),
-			"blockHeight", ctx.BlockHeight(),
-		).Info("Remove tracker")
 	}
 
 	// This should set nonce to cctx only if a new revert is created.
