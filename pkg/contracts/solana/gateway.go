@@ -3,6 +3,7 @@ package solana
 
 import (
 	"github.com/gagliardetto/solana-go"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -49,7 +50,7 @@ func ParseGatewayIDAndPda(address string) (solana.PublicKey, solana.PublicKey, e
 	// decode gateway address
 	gatewayID, err := solana.PublicKeyFromBase58(address)
 	if err != nil {
-		return gatewayID, pda, err
+		return gatewayID, pda, errors.Wrap(err, "unable to decode address")
 	}
 
 	// compute gateway PDA
