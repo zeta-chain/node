@@ -99,6 +99,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		}
 		coinType := cctx.InboundParams.CoinType
 
+		// check each txHash and save its txResult if it's finalized and legit
 		txCount := 0
 		var txResult *rpc.GetTransactionResult
 		for _, txHash := range tracker.HashList {
