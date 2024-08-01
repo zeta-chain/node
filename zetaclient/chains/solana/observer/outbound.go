@@ -329,14 +329,14 @@ func ParseGatewayInstruction(
 	instruction := tx.Message.Instructions[0]
 
 	// get the program ID
-	programPk, err := tx.Message.Program(instruction.ProgramIDIndex)
+	programID, err := tx.Message.Program(instruction.ProgramIDIndex)
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting program ID")
 	}
 
 	// the instruction should be an invocation of the gateway program
-	if !programPk.Equals(gatewayID) {
-		return nil, errors.New("not a gateway program invocation")
+	if !programID.Equals(gatewayID) {
+		return nil, fmt.Errorf("programID %s is not matching gatewayID %s", programID, gatewayID)
 	}
 
 	// parse the instruction as a 'withdraw' or 'withdraw_spl_token'
@@ -344,6 +344,6 @@ func ParseGatewayInstruction(
 	case coin.CoinType_Gas:
 		return contracts.ParseInstructionWithdraw(instruction)
 	default:
-		return nil, errors.New("unsupported outbound coin type")
+		return nil, fmt.Errorf("unsupported outbound coin type %s", coinType)
 	}
 }

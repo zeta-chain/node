@@ -69,6 +69,7 @@ func (signer *Signer) reportToOutboundTracker(
 				// a failed outbound (e.g. signature err, balance err) will never be able to increment the gateway program nonce.
 				// a good/valid candidate of outbound tracker hash must come with a successful tx.
 				logger.Warn().
+					Any("Err", tx.Meta.Err).
 					Msgf("reportToOutboundTracker: outbound %s failed for chain %d nonce %d", txSig, chainID, nonce)
 				return
 			}

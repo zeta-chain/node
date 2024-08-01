@@ -1,6 +1,8 @@
 package solana
 
 import (
+	"fmt"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gagliardetto/solana-go"
@@ -98,7 +100,7 @@ func ParseInstructionWithdraw(instruction solana.CompiledInstruction) (*Withdraw
 
 	// check the discriminator to ensure it's a 'withdraw' instruction
 	if inst.Discriminator != DiscriminatorWithdraw() {
-		return nil, errors.New("not a withdraw instruction")
+		return nil, fmt.Errorf("not a withdraw instruction: %v", inst.Discriminator)
 	}
 
 	return inst, nil

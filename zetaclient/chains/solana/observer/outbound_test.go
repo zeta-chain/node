@@ -84,11 +84,13 @@ func Test_CheckFinalizedTx(t *testing.T) {
 		require.True(t, finalized)
 		require.NotNil(t, tx)
 	})
+
 	t.Run("should return error on invalid tx hash", func(t *testing.T) {
 		tx, finalized := ob.CheckFinalizedTx(ctx, "invalid_hash_1234", nonce, coinType)
 		require.False(t, finalized)
 		require.Nil(t, tx)
 	})
+
 	t.Run("should return error on GetTransaction error", func(t *testing.T) {
 		// mock GetTransaction error
 		client := mocks.NewSolanaRPCClient(t)
@@ -101,6 +103,7 @@ func Test_CheckFinalizedTx(t *testing.T) {
 		require.False(t, finalized)
 		require.Nil(t, tx)
 	})
+
 	t.Run("should return error on if transaction is failed", func(t *testing.T) {
 		// load archived outbound tx result which is failed due to nonce mismatch
 		failedResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHashFailed)
@@ -116,12 +119,14 @@ func Test_CheckFinalizedTx(t *testing.T) {
 		require.False(t, finalized)
 		require.Nil(t, tx)
 	})
+
 	t.Run("should return error on ParseGatewayInstruction error", func(t *testing.T) {
 		// use CoinType_Zeta to cause ParseGatewayInstruction error
 		tx, finalized := ob.CheckFinalizedTx(ctx, txHash, nonce, coin.CoinType_Zeta)
 		require.False(t, finalized)
 		require.Nil(t, tx)
 	})
+
 	t.Run("should return error on ECDSA signer mismatch", func(t *testing.T) {
 		// create observer with other TSS address
 		tssOther := mocks.NewMockTSS(chain, sample.EthAddress().String(), "")
@@ -131,6 +136,7 @@ func Test_CheckFinalizedTx(t *testing.T) {
 		require.False(t, finalized)
 		require.Nil(t, tx)
 	})
+
 	t.Run("should return error on nonce mismatch", func(t *testing.T) {
 		// use different nonce
 		tx, finalized := ob.CheckFinalizedTx(ctx, txHash, nonce+1, coinType)
@@ -164,6 +170,7 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 		require.EqualValues(t, inst.GatewayNonce(), 0)
 		require.EqualValues(t, inst.TokenAmount(), txAmount)
 	})
+
 	t.Run("should return error on invalid number of instructions", func(t *testing.T) {
 		// load and unmarshal archived transaction
 		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
@@ -177,6 +184,7 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 		require.ErrorContains(t, err, "want 1 instruction, got 0")
 		require.Nil(t, inst)
 	})
+
 	t.Run("should return error on invalid program id index", func(t *testing.T) {
 		// load and unmarshal archived transaction
 		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
@@ -190,6 +198,7 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 		require.ErrorContains(t, err, "error getting program ID")
 		require.Nil(t, inst)
 	})
+
 	t.Run("should return error when invoked program is not gateway", func(t *testing.T) {
 		// load and unmarshal archived transaction
 		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
@@ -200,9 +209,10 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 		tx.Message.Instructions[0].ProgramIDIndex = 1
 
 		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas)
-		require.ErrorContains(t, err, "not a gateway program invocation")
+		require.ErrorContains(t, err, "not matching gatewayID")
 		require.Nil(t, inst)
 	})
+
 	t.Run("should return error when instruction parsing fails", func(t *testing.T) {
 		// load and unmarshal archived transaction
 		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
@@ -216,6 +226,7 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, inst)
 	})
+
 	t.Run("should return error on unsupported coin type", func(t *testing.T) {
 		// load and unmarshal archived transaction
 		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
@@ -249,6 +260,7 @@ func Test_ParseInstructionWithdraw(t *testing.T) {
 		require.EqualValues(t, inst.GatewayNonce(), 0)
 		require.EqualValues(t, inst.TokenAmount(), txAmount)
 	})
+
 	t.Run("should return error on invalid instruction data", func(t *testing.T) {
 		// load and unmarshal archived transaction
 		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
@@ -263,6 +275,7 @@ func Test_ParseInstructionWithdraw(t *testing.T) {
 		require.ErrorContains(t, err, "error deserializing instruction")
 		require.Nil(t, inst)
 	})
+
 	t.Run("should return error on discriminator mismatch", func(t *testing.T) {
 		// load and unmarshal archived transaction
 		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
