@@ -330,7 +330,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			logger.Print("❌ solana client is nil, maybe solana rpc is not set")
 			os.Exit(1)
 		}
-		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, e2etests.TestSolanaDepositName))
+		solanaTests := []string{
+			e2etests.TestSolanaDepositName,
+			e2etests.TestSolanaWithdrawName,
+		}
+		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
 	}
 	if testV2 {
 		eg.Go(v2TestRoutine(conf, deployerRunner, verbose,

@@ -2,7 +2,6 @@ package zetacore
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"cosmossdk.io/errors"
@@ -57,13 +56,15 @@ func GetInboundVoteMessage(
 }
 
 // GasPriceMultiplier returns the gas price multiplier for the given chain
-func GasPriceMultiplier(chain chains.Chain) (float64, error) {
-	if chain.IsEVMChain() {
-		return clientcommon.EVMOutboundGasPriceMultiplier, nil
-	} else if chain.IsBitcoinChain() {
-		return clientcommon.BTCOutboundGasPriceMultiplier, nil
+func GasPriceMultiplier(chain chains.Chain) float64 {
+	switch chain.Consensus {
+	case chains.Consensus_ethereum:
+		return clientcommon.EVMOutboundGasPriceMultiplier
+	case chains.Consensus_bitcoin:
+		return clientcommon.BTCOutboundGasPriceMultiplier
+	default:
+		return clientcommon.DefaultGasPriceMultiplier
 	}
-	return 0, fmt.Errorf("cannot get gas price multiplier for unknown chain %d", chain.ChainId)
 }
 
 // WrapMessageWithAuthz wraps a message with an authz message

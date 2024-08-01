@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	solanacontract "github.com/zeta-chain/zetacore/pkg/contract/solana"
+	solanacontracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
 )
 
 const (
@@ -163,6 +163,7 @@ func GetDefaultChainParams() ChainParamsList {
 			GetDefaultMumbaiTestnetChainParams(),
 			GetDefaultBtcTestnetChainParams(),
 			GetDefaultBtcRegtestChainParams(),
+			GetDefaultSolanaLocalnetChainParams(),
 			GetDefaultGoerliLocalnetChainParams(),
 			GetDefaultZetaPrivnetChainParams(),
 		},
@@ -321,16 +322,16 @@ func GetDefaultSolanaLocalnetChainParams() *ChainParams {
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
 		Erc20CustodyContractAddress: zeroAddress,
-		GasPriceTicker:              100,
+		GasPriceTicker:              5,
 		WatchUtxoTicker:             0,
-		InboundTicker:               5,
-		OutboundTicker:              5,
-		OutboundScheduleInterval:    10,
-		OutboundScheduleLookahead:   10,
+		InboundTicker:               2,
+		OutboundTicker:              2,
+		OutboundScheduleInterval:    2,
+		OutboundScheduleLookahead:   5,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
-		GatewayAddress:              solanacontract.SolanaGatewayProgramID,
+		GatewayAddress:              solanacontracts.SolanaGatewayProgramID,
 	}
 }
 func GetDefaultGoerliLocalnetChainParams() *ChainParams {
@@ -386,5 +387,6 @@ func ChainParamsEqual(params1, params2 ChainParams) bool {
 		params1.OutboundScheduleLookahead == params2.OutboundScheduleLookahead &&
 		params1.BallotThreshold.Equal(params2.BallotThreshold) &&
 		params1.MinObserverDelegation.Equal(params2.MinObserverDelegation) &&
-		params1.IsSupported == params2.IsSupported
+		params1.IsSupported == params2.IsSupported &&
+		params1.GatewayAddress == params2.GatewayAddress
 }
