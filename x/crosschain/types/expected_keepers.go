@@ -145,6 +145,7 @@ type FungibleKeeper interface {
 		data []byte,
 		coinType coin.CoinType,
 		asset string,
+		protocolContractVersion ProtocolContractVersion,
 	) (*evmtypes.MsgEthereumTxResponse, bool, error)
 	CallUniswapV2RouterSwapExactTokensForTokens(
 		ctx sdk.Context,
