@@ -626,7 +626,7 @@ func TestZetacore_GetKeyGen(t *testing.T) {
 
 	resp, err := client.GetKeyGen(ctx)
 	require.NoError(t, err)
-	require.Equal(t, expectedOutput.Keygen, resp)
+	require.Equal(t, *expectedOutput.Keygen, resp)
 }
 
 func TestZetacore_GetBallotByID(t *testing.T) {

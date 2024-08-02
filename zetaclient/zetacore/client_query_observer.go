@@ -2,6 +2,7 @@ package zetacore
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/errors"
 
@@ -95,18 +96,21 @@ func (c *Client) GetNonceByChain(ctx context.Context, chain chains.Chain) (types
 }
 
 // GetKeyGen returns the keygen
-func (c *Client) GetKeyGen(ctx context.Context) (*types.Keygen, error) {
+func (c *Client) GetKeyGen(ctx context.Context) (types.Keygen, error) {
 	in := &types.QueryGetKeygenRequest{}
 
 	resp, err := retry.DoTypedWithRetry(func() (*types.QueryGetKeygenResponse, error) {
 		return c.client.observer.Keygen(ctx, in)
 	})
 
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get keygen")
+	switch {
+	case err != nil:
+		return types.Keygen{}, errors.Wrap(err, "failed to get keygen")
+	case resp.Keygen == nil:
+		return types.Keygen{}, fmt.Errorf("keygen is nil")
 	}
 
-	return resp.GetKeygen(), nil
+	return *resp.Keygen, nil
 }
 
 // GetAllNodeAccounts returns all node accounts

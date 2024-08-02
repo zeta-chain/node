@@ -192,6 +192,36 @@ func DecodeOpReturnMemo(scriptHex string, txid string) ([]byte, bool, error) {
 	return nil, false, nil
 }
 
+// DecodeScript decodes memo wrapped in an inscription like script in witness
+// returns (memo, found, error)
+//
+// Note: the format of the script is following that of "inscription" defined in ordinal theory.
+// However, to separate from inscription (as this use case is not an NFT), simplifications are made.
+// The bitcoin envelope script is as follows:
+// OP_DATA_32 <32 byte of public key> OP_CHECKSIG
+// OP_FALSE
+// OP_IF
+//
+//	OP_PUSH 0x...
+//	OP_PUSH 0x...
+//
+// OP_ENDIF
+// There are no content-type or any other attributes, it's just raw bytes.
+func DecodeScript(script []byte) ([]byte, bool, error) {
+	t := newScriptTokenizer(script)
+
+	if err := checkInscriptionEnvelope(&t); err != nil {
+		return nil, false, errors.Wrap(err, "checkInscriptionEnvelope: unable to check the envelope")
+	}
+
+	memoBytes, err := decodeInscriptionPayload(&t)
+	if err != nil {
+		return nil, false, errors.Wrap(err, "decodeInscriptionPayload: unable to decode the payload")
+	}
+
+	return memoBytes, true, nil
+}
+
 // EncodeAddress returns a human-readable payment address given a ripemd160 hash
 // and netID which encodes the bitcoin network and address type.  It is used
 // in both pay-to-pubkey-hash (P2PKH) and pay-to-script-hash (P2SH) address
@@ -244,4 +274,45 @@ func DecodeTSSVout(vout btcjson.Vout, receiverExpected string, chain chains.Chai
 	}
 
 	return receiverVout, amount, nil
+}
+
+func decodeInscriptionPayload(t *scriptTokenizer) ([]byte, error) {
+	if !t.Next() || t.Opcode() != txscript.OP_FALSE {
+		return nil, fmt.Errorf("OP_FALSE not found")
+	}
+
+	if !t.Next() || t.Opcode() != txscript.OP_IF {
+		return nil, fmt.Errorf("OP_IF not found")
+	}
+
+	memo := make([]byte, 0)
+	var next byte
+	for t.Next() {
+		next = t.Opcode()
+		if next == txscript.OP_ENDIF {
+			return memo, nil
+		}
+		if next < txscript.OP_DATA_1 || next > txscript.OP_PUSHDATA4 {
+			return nil, fmt.Errorf("expecting data push, found %d", next)
+		}
+		memo = append(memo, t.Data()...)
+	}
+	if t.Err() != nil {
+		return nil, t.Err()
+	}
+	return nil, fmt.Errorf("should contain more data, but script ended")
+}
+
+// checkInscriptionEnvelope decodes the envelope for the script monitoring. The format is
+// OP_PUSHBYTES_32 <32 bytes> OP_CHECKSIG <Content>
+func checkInscriptionEnvelope(t *scriptTokenizer) error {
+	if !t.Next() || t.Opcode() != txscript.OP_DATA_32 {
+		return fmt.Errorf("cannot obtain public key bytes op %d or err %s", t.Opcode(), t.Err())
+	}
+
+	if !t.Next() || t.Opcode() != txscript.OP_CHECKSIG {
+		return fmt.Errorf("cannot parse OP_CHECKSIG, op %d or err %s", t.Opcode(), t.Err())
+	}
+
+	return nil
 }

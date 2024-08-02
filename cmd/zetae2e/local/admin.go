@@ -45,7 +45,7 @@ func adminTestRoutine(
 
 		// depositing the necessary tokens on ZetaChain
 		txZetaDeposit := adminRunner.DepositZeta()
-		txEtherDeposit := adminRunner.DepositEther(false)
+		txEtherDeposit := adminRunner.DepositEther()
 		txERC20Deposit := adminRunner.DepositERC20()
 		adminRunner.WaitForMinedCCTX(txZetaDeposit)
 		adminRunner.WaitForMinedCCTX(txEtherDeposit)

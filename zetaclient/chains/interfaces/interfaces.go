@@ -41,14 +41,12 @@ const (
 type ChainObserver interface {
 	Start(ctx context.Context)
 	Stop()
-	IsOutboundProcessed(
+	VoteOutboundIfConfirmed(
 		ctx context.Context,
 		cctx *crosschaintypes.CrossChainTx,
-		logger zerolog.Logger,
-	) (bool, bool, error)
+	) (bool, error)
 	SetChainParams(observertypes.ChainParams)
 	GetChainParams() observertypes.ChainParams
-	GetTxID(nonce uint64) string
 	WatchInboundTracker(ctx context.Context) error
 }
 
@@ -67,6 +65,8 @@ type ChainSigner interface {
 	SetERC20CustodyAddress(address ethcommon.Address)
 	GetZetaConnectorAddress() ethcommon.Address
 	GetERC20CustodyAddress() ethcommon.Address
+	SetGatewayAddress(address string)
+	GetGatewayAddress() string
 }
 
 // ZetacoreVoter represents voter interface.
@@ -106,7 +106,7 @@ type ZetacoreClient interface {
 	GetLogger() *zerolog.Logger
 	GetKeys() keyinterfaces.ObserverKeys
 
-	GetKeyGen(ctx context.Context) (*observertypes.Keygen, error)
+	GetKeyGen(ctx context.Context) (observertypes.Keygen, error)
 	GetTSS(ctx context.Context) (observertypes.TSS, error)
 	GetTSSHistory(ctx context.Context) ([]observertypes.TSS, error)
 
@@ -191,19 +191,35 @@ type EVMRPCClient interface {
 
 // SolanaRPCClient is the interface for Solana RPC client
 type SolanaRPCClient interface {
-	GetVersion(ctx context.Context) (out *solrpc.GetVersionResult, err error)
-	GetHealth(ctx context.Context) (out string, err error)
-	GetAccountInfo(ctx context.Context, account solana.PublicKey) (out *solrpc.GetAccountInfoResult, err error)
+	GetVersion(ctx context.Context) (*solrpc.GetVersionResult, error)
+	GetHealth(ctx context.Context) (string, error)
+	GetSlot(ctx context.Context, commitment solrpc.CommitmentType) (uint64, error)
+	GetAccountInfo(ctx context.Context, account solana.PublicKey) (*solrpc.GetAccountInfoResult, error)
+	GetRecentBlockhash(ctx context.Context, commitment solrpc.CommitmentType) (*solrpc.GetRecentBlockhashResult, error)
+	GetRecentPrioritizationFees(
+		ctx context.Context,
+		accounts solana.PublicKeySlice,
+	) ([]solrpc.PriorizationFeeResult, error)
 	GetTransaction(
 		ctx context.Context,
 		txSig solana.Signature, // transaction signature
 		opts *solrpc.GetTransactionOpts,
-	) (out *solrpc.GetTransactionResult, err error)
+	) (*solrpc.GetTransactionResult, error)
+	GetConfirmedTransactionWithOpts(
+		ctx context.Context,
+		signature solana.Signature,
+		opts *solrpc.GetTransactionOpts,
+	) (*solrpc.TransactionWithMeta, error)
 	GetSignaturesForAddressWithOpts(
 		ctx context.Context,
 		account solana.PublicKey,
 		opts *solrpc.GetSignaturesForAddressOpts,
-	) (out []*solrpc.TransactionSignature, err error)
+	) ([]*solrpc.TransactionSignature, error)
+	SendTransactionWithOpts(
+		ctx context.Context,
+		transaction *solana.Transaction,
+		opts solrpc.TransactionOpts,
+	) (solana.Signature, error)
 }
 
 // EVMJSONRPCClient is the interface for EVM JSON RPC client

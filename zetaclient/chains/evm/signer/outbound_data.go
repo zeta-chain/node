@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"math/big"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -93,7 +93,7 @@ func (txData *OutboundData) SetupGas(
 		if chain.Network == chains.Network_eth {
 			suggested, err := client.SuggestGasPrice(context.Background())
 			if err != nil {
-				return errors.Join(err, fmt.Errorf("cannot get gas price from chain %s ", chain.String()))
+				return errors.Wrapf(err, "cannot get gas price from chain %s ", chain.String())
 			}
 			txData.gasPrice = roundUpToNearestGwei(suggested)
 		} else {
@@ -126,7 +126,6 @@ func NewOutboundData(
 	txData.sender = ethcommon.HexToAddress(cctx.InboundParams.Sender)
 	txData.srcChainID = big.NewInt(cctx.InboundParams.SenderChainId)
 	txData.asset = ethcommon.HexToAddress(cctx.InboundParams.Asset)
-
 	txData.height = height
 
 	skipTx := txData.SetChainAndSender(cctx, logger)
@@ -139,31 +138,30 @@ func NewOutboundData(
 		return nil, false, err
 	}
 
-	toChain, found := chains.GetChainFromChainID(txData.toChainID.Int64(), app.GetAdditionalChains())
-	if !found {
-		return nil, true, fmt.Errorf("unknown chain: %d", txData.toChainID.Int64())
+	chainID := txData.toChainID.Int64()
+
+	toChain, err := app.GetChain(chainID)
+	switch {
+	case err != nil:
+		return nil, true, errors.Wrapf(err, "unable to get chain %d from app context", chainID)
+	case toChain.IsZeta():
+		// should not happen
+		return nil, true, errors.New("destination chain is Zeta")
 	}
 
-	// Get nonce, Early return if the cctx is already processed
-	nonce := cctx.GetCurrentOutboundParam().TssNonce
-	included, confirmed, err := evmObserver.IsOutboundProcessed(ctx, cctx, logger)
-	if err != nil {
-		return nil, true, errors.New("IsOutboundProcessed failed")
-	}
-	if included || confirmed {
-		logger.Info().Msgf("CCTX already processed; exit signer")
-		return nil, true, nil
-	}
+	rawChain := toChain.RawChain()
 
 	// Set up gas limit and gas price
-	err = txData.SetupGas(cctx, logger, evmRPC, toChain)
+	err = txData.SetupGas(cctx, logger, evmRPC, *rawChain)
 	if err != nil {
-		return nil, true, err
+		return nil, true, errors.Wrap(err, "unable to setup gas")
 	}
+
+	nonce := cctx.GetCurrentOutboundParam().TssNonce
 
 	// Get sendHash
 	logger.Info().
-		Msgf("chain %s minting %d to %s, nonce %d, finalized zeta bn %d", toChain.String(), cctx.InboundParams.Amount, txData.to.Hex(), nonce, cctx.InboundParams.FinalizedZetaHeight)
+		Msgf("chain %d minting %d to %s, nonce %d, finalized zeta bn %d", toChain.ID(), cctx.InboundParams.Amount, txData.to.Hex(), nonce, cctx.InboundParams.FinalizedZetaHeight)
 	cctxIndex, err := hex.DecodeString(cctx.Index[2:]) // remove the leading 0x
 	if err != nil || len(cctxIndex) != 32 {
 		return nil, true, fmt.Errorf("decode CCTX %s error", cctx.Index)

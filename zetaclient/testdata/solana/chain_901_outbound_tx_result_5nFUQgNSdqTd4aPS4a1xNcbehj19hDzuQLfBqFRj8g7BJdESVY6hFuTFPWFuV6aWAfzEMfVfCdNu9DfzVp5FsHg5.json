@@ -1,0 +1,52 @@
+{
+  "slot": 314424406,
+  "blockTime": 1722020059,
+  "transaction": {
+    "signatures": [
+      "5nFUQgNSdqTd4aPS4a1xNcbehj19hDzuQLfBqFRj8g7BJdESVY6hFuTFPWFuV6aWAfzEMfVfCdNu9DfzVp5FsHg5"
+    ],
+    "message": {
+      "accountKeys": [
+        "AKbG83jg2V65R7XvaPFrnUvUTWsFENEzDPbLJFEiAk6L",
+        "4pA5vqGeo4ipLoJzH3rdvguhifj1tCzoNM8vDRc4Xbmq",
+        "9fA4vYZfCa9k9UHjnvYCk4YoipsooapGciKMgaTBw9UH",
+        "2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s"
+      ],
+      "header": {
+        "numRequiredSignatures": 1,
+        "numReadonlySignedAccounts": 0,
+        "numReadonlyUnsignedAccounts": 1
+      },
+      "recentBlockhash": "77YRY3YAi9Yvp7V68QJHMkNKRqYAZ7GSAYVDPomCs74J",
+      "instructions": [
+        {
+          "programIdIndex": 3,
+          "accounts": [0, 1, 2, 3],
+          "data": "2w17NoTLyzKYBFJZsc7f4RUTW5fBUqVdzamb3zt37gRNDgSipheFFs83ZMzPDBM363UDMRAcVrEcdcdpnD7nooKwsZRogVp3xv1zgVE9t95m7KrL7DZgHh85wvzePeVoraWzLgQLPuktDHg5FkeDN2L14xjeBu1S8ZQPHH"
+        }
+      ]
+    }
+  },
+  "meta": {
+    "err": { "InstructionError": [0, { "Custom": 6002 }] },
+    "fee": 5000,
+    "preBalances": [7171082800, 1000558080, 0, 1141440],
+    "postBalances": [7171077800, 1000558080, 0, 1141440],
+    "innerInstructions": [],
+    "preTokenBalances": [],
+    "postTokenBalances": [],
+    "logMessages": [
+      "Program 2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s invoke [1]",
+      "Program log: Instruction: Withdraw",
+      "Program log: mismatch nonce",
+      "Program log: AnchorError thrown in programs/protocol-contracts-solana/src/lib.rs:109. Error Code: NonceMismatch. Error Number: 6002. Error Message: NonceMismatch.",
+      "Program 2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s consumed 4801 of 200000 compute units",
+      "Program 2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s failed: custom program error: 0x1772"
+    ],
+    "status": { "Err": { "InstructionError": [0, { "Custom": 6002 }] } },
+    "rewards": [],
+    "loadedAddresses": { "readonly": [], "writable": [] },
+    "computeUnitsConsumed": 4801
+  },
+  "version": 0
+}

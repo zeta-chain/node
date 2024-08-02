@@ -15,7 +15,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/constant"
-	solanacontract "github.com/zeta-chain/zetacore/pkg/contract/solana"
+	solanacontracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	solanarpc "github.com/zeta-chain/zetacore/zetaclient/chains/solana/rpc"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
@@ -52,7 +52,7 @@ func (ob *Observer) WatchInbound(ctx context.Context) error {
 	for {
 		select {
 		case <-ticker.C():
-			if !app.IsInboundObservationEnabled(ob.GetChainParams()) {
+			if !app.IsInboundObservationEnabled() {
 				sampledLogger.Info().
 					Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.Chain().ChainId)
 				continue
@@ -274,14 +274,14 @@ func (ob *Observer) ParseInboundAsDeposit(
 	instruction := tx.Message.Instructions[instructionIndex]
 
 	// try deserializing instruction as a 'deposit'
-	var inst solanacontract.DepositInstructionParams
+	var inst solanacontracts.DepositInstructionParams
 	err := borsh.Deserialize(&inst, instruction.Data)
 	if err != nil {
 		return nil, nil
 	}
 
 	// check if the instruction is a deposit or not
-	if inst.Discriminator != solanacontract.DiscriminatorDeposit() {
+	if inst.Discriminator != solanacontracts.DiscriminatorDeposit() {
 		return nil, nil
 	}
 
@@ -324,8 +324,8 @@ func (ob *Observer) ParseInboundAsDepositSPL(
 // Note: solana-go is not able to parse the AccountMeta 'is_signer' ATM. This is a workaround.
 func (ob *Observer) GetSignerDeposit(tx *solana.Transaction, inst *solana.CompiledInstruction) (string, error) {
 	// there should be 4 accounts for a deposit instruction
-	if len(inst.Accounts) != solanacontract.AccountsNumDeposit {
-		return "", fmt.Errorf("want %d accounts, got %d", solanacontract.AccountsNumDeposit, len(inst.Accounts))
+	if len(inst.Accounts) != solanacontracts.AccountsNumDeposit {
+		return "", fmt.Errorf("want %d accounts, got %d", solanacontracts.AccountsNumDeposit, len(inst.Accounts))
 	}
 
 	// the accounts are [signer, pda, system_program, gateway_program]

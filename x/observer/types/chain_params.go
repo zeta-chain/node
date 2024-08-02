@@ -8,10 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethchains "github.com/ethereum/go-ethereum/common"
-	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	solanacontract "github.com/zeta-chain/zetacore/pkg/contract/solana"
+	solanacontracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
 )
 
 const (
@@ -57,19 +56,8 @@ func ValidateChainParams(params *ChainParams) error {
 		return fmt.Errorf("chain params cannot be nil")
 	}
 
-	// TODO: ZetaChain chain params should be completely removed
-	// Once removed, this check is no longer necessary as all chasin params would need the same checks
-	// https://github.com/zeta-chain/node/issues/2419
-	_, err := chains.ZetaChainFromChainID(params.ChainId)
-	if err == nil {
-		// zeta chain skips the rest of the checks for now
-		return nil
-	}
-
-	// ignore error from ZetaChainFromChainID if reason is chain is not zeta chain
-	// return error otherwise
-	if !errors.Is(err, chains.ErrNotZetaChain) {
-		return err
+	if chains.IsZetaChain(params.ChainId, nil) {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidChainID, "zeta chain cannot have observer chain parameters")
 	}
 
 	if params.ConfirmationCount == 0 {
@@ -163,8 +151,8 @@ func GetDefaultChainParams() ChainParamsList {
 			GetDefaultMumbaiTestnetChainParams(),
 			GetDefaultBtcTestnetChainParams(),
 			GetDefaultBtcRegtestChainParams(),
+			GetDefaultSolanaLocalnetChainParams(),
 			GetDefaultGoerliLocalnetChainParams(),
-			GetDefaultZetaPrivnetChainParams(),
 		},
 	}
 }
@@ -321,16 +309,16 @@ func GetDefaultSolanaLocalnetChainParams() *ChainParams {
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
 		Erc20CustodyContractAddress: zeroAddress,
-		GasPriceTicker:              100,
+		GasPriceTicker:              5,
 		WatchUtxoTicker:             0,
-		InboundTicker:               5,
-		OutboundTicker:              5,
-		OutboundScheduleInterval:    10,
-		OutboundScheduleLookahead:   10,
+		InboundTicker:               2,
+		OutboundTicker:              2,
+		OutboundScheduleInterval:    2,
+		OutboundScheduleLookahead:   5,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
-		GatewayAddress:              solanacontract.SolanaGatewayProgramID,
+		GatewayAddress:              solanacontracts.SolanaGatewayProgramID,
 	}
 }
 func GetDefaultGoerliLocalnetChainParams() *ChainParams {
@@ -385,5 +373,6 @@ func ChainParamsEqual(params1, params2 ChainParams) bool {
 		params1.OutboundScheduleLookahead == params2.OutboundScheduleLookahead &&
 		params1.BallotThreshold.Equal(params2.BallotThreshold) &&
 		params1.MinObserverDelegation.Equal(params2.MinObserverDelegation) &&
-		params1.IsSupported == params2.IsSupported
+		params1.IsSupported == params2.IsSupported &&
+		params1.GatewayAddress == params2.GatewayAddress
 }

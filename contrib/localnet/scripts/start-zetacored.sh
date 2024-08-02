@@ -247,6 +247,9 @@ then
 # bitcoin tester
   address=$(yq -r '.additional_accounts.user_bitcoin.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+# solana tester
+  address=$(yq -r '.additional_accounts.user_solana.bech32_address' /root/config.yml)
+  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
 # ethers tester
   address=$(yq -r '.additional_accounts.user_ether.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta

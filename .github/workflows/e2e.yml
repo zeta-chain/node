@@ -6,8 +6,6 @@ on:
       - develop
       - release/*
   pull_request:
-    branches:
-      - "*"
   merge_group:
   schedule:
     # run at 6AM UTC Daily
@@ -168,6 +166,7 @@ jobs:
       make-target: ${{ matrix.make-target }}
       runs-on: ${{ matrix.runs-on}}
       run: ${{ matrix.run }}
+      timeout-minutes: "${{ matrix.timeout-minutes || 25 }}"
     secrets: inherit
   # this allows you to set a required status check
   e2e-ok:
@@ -179,7 +178,7 @@ jobs:
     steps:
       - name: Send slack message with results
         uses: actions/github-script@v7
-        if: ${{ github.event_name == 'schedule' || (github.event_name == 'push' && needs.e2e.result == 'failed') }}
+        if: ${{ github.event_name == 'schedule' || (github.event_name == 'push' && needs.e2e.result == 'failure') }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_CI_ALERTS }}
         with:
