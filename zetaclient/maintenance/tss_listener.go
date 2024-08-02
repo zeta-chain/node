@@ -67,7 +67,7 @@ func (tl *TSSListener) waitForUpdate(ctx context.Context) error {
 				tl.logger.Warn().Err(err).Msg("unable to get new tss")
 				continue
 			}
-
+			// If the TSS address is not updated, continue loop
 			if tssNew.TssPubkey == tss.TssPubkey {
 				continue
 			}
@@ -111,12 +111,15 @@ func (tl *TSSListener) waitForNewKeyGeneration(ctx context.Context) error {
 			}
 
 			tssLenUpdated := len(tssHistoricalListNew)
-
+			// New tss key has not been added to list , continue loop
 			if tssLenUpdated <= tssLen {
 				continue
 			}
 
-			tl.logger.Info().Msgf("tss list updated from %d to %d", tssLen, tssLenUpdated)
+			tl.logger.Info().
+				Int("tssLen", tssLen).
+				Int("tssLenUpdated", tssLenUpdated).
+				Msg("tss list updated")
 			return nil
 		case <-ctx.Done():
 			tl.logger.Info().Msg("waitForNewKeyGeneration stopped")
@@ -129,7 +132,7 @@ func (tl *TSSListener) waitForNewKeyGeneration(ctx context.Context) error {
 func (tl *TSSListener) waitForNewKeygen(ctx context.Context) error {
 	// Initial Keygen retrieval
 	keygen, err := retry.DoTypedWithBackoffAndRetry(
-		func() (*observertypes.Keygen, error) { return tl.client.GetKeyGen(ctx) },
+		func() (observertypes.Keygen, error) { return tl.client.GetKeyGen(ctx) },
 		retry.DefaultConstantBackoff(),
 	)
 	if err != nil {
@@ -147,17 +150,25 @@ func (tl *TSSListener) waitForNewKeygen(ctx context.Context) error {
 			case err != nil:
 				tl.logger.Warn().Err(err).Msg("unable to get keygen")
 				continue
-			case keygenUpdated == nil:
+			// Keygen is not pending it has already been successfully generated, continue loop
+			case keygenUpdated.Status == observertypes.KeygenStatus_KeyGenSuccess:
 				continue
-			case keygenUpdated.Status == observertypes.KeygenStatus_KeyGenSuccess || keygenUpdated.Status == observertypes.KeygenStatus_KeyGenFailed:
+			// Keygen failed we to need to wait until a new keygen is set, continue loop
+			case keygenUpdated.Status == observertypes.KeygenStatus_KeyGenFailed:
 				continue
+			// Keygen is pending but block number is not updated, continue loop.
+			// Most likely the zetaclient is waiting for the keygen block to arrive.
 			case keygenUpdated.Status == observertypes.KeygenStatus_PendingKeygen && keygenUpdated.BlockNumber <= keygen.BlockNumber:
-				continue
-			case keygen.BlockNumber == keygenUpdated.BlockNumber:
 				continue
 			}
 
-			tl.logger.Info().Msgf("got new keygen at block %d", keygen.BlockNumber)
+			// Trigger restart only when the following conditions are met:
+			// 1. Keygen is pending
+			// 2. Block number is updated
+
+			tl.logger.Info().
+				Int64("blockNumber", keygenUpdated.BlockNumber).
+				Msg("got new keygen")
 			return nil
 		case <-ctx.Done():
 			tl.logger.Info().Msg("waitForNewKeygen stopped")
