@@ -15,12 +15,12 @@ import (
 	"github.com/samber/lo"
 
 	"github.com/zeta-chain/zetacore/pkg/bg"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	zetamath "github.com/zeta-chain/zetacore/pkg/math"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	solanaobserver "github.com/zeta-chain/zetacore/zetaclient/chains/solana/observer"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
@@ -664,7 +664,7 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 // and optionally (de)provisions respective observers and signers.
 func (oc *Orchestrator) runObserverSignerSync(ctx context.Context) error {
 	// check every other zeta block
-	const cadence = 2 * evm.ZetaBlockTime
+	const cadence = 2 * constant.ZetaBlockTime
 
 	ticker := time.NewTicker(cadence)
 	defer ticker.Stop()

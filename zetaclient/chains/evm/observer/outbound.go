@@ -19,6 +19,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
@@ -30,19 +31,21 @@ import (
 
 // WatchOutbound watches evm chain for outgoing txs status
 // TODO(revamp): move ticker function to ticker file
-// TODO(revamp): move inner logic to a separate function
 func (ob *Observer) WatchOutbound(ctx context.Context) error {
+	// get app context
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	// create outbound ticker
+	chainID := ob.Chain().ChainId
 	ticker, err := clienttypes.NewDynamicTicker(
 		fmt.Sprintf("EVM_WatchOutbound_%d", ob.Chain().ChainId),
 		ob.GetChainParams().OutboundTicker,
 	)
 	if err != nil {
 		ob.Logger().Outbound.Error().Err(err).Msg("error creating ticker")
-		return err
-	}
-
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
 		return err
 	}
 
@@ -57,44 +60,77 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 					Msgf("WatchOutbound: outbound observation is disabled for chain %d", ob.Chain().ChainId)
 				continue
 			}
-			trackers, err := ob.ZetacoreClient().
-				GetAllOutboundTrackerByChain(ctx, ob.Chain().ChainId, interfaces.Ascending)
+
+			// process outbound trackers
+			err := ob.ProcessOutboundTrackers(ctx)
 			if err != nil {
-				continue
+				ob.Logger().
+					Outbound.Error().
+					Err(err).
+					Msgf("WatchOutbound: error ProcessOutboundTrackers for chain %d", chainID)
 			}
-			for _, tracker := range trackers {
-				nonceInt := tracker.Nonce
-				if ob.IsTxConfirmed(nonceInt) { // Go to next tracker if this one already has a confirmed tx
-					continue
-				}
-				txCount := 0
-				var outboundReceipt *ethtypes.Receipt
-				var outbound *ethtypes.Transaction
-				for _, txHash := range tracker.HashList {
-					if receipt, tx, ok := ob.checkConfirmedTx(ctx, txHash.TxHash, nonceInt); ok {
-						txCount++
-						outboundReceipt = receipt
-						outbound = tx
-						ob.Logger().Outbound.Info().
-							Msgf("WatchOutbound: confirmed outbound %s for chain %d nonce %d", txHash.TxHash, ob.Chain().ChainId, nonceInt)
-						if txCount > 1 {
-							ob.Logger().Outbound.Error().Msgf(
-								"WatchOutbound: checkConfirmedTx passed, txCount %d chain %d nonce %d receipt %v transaction %v", txCount, ob.Chain().ChainId, nonceInt, outboundReceipt, outbound)
-						}
-					}
-				}
-				if txCount == 1 { // should be only one txHash confirmed for each nonce.
-					ob.SetTxNReceipt(nonceInt, outboundReceipt, outbound)
-				} else if txCount > 1 { // should not happen. We can't tell which txHash is true. It might happen (e.g. glitchy/hacked endpoint)
-					ob.Logger().Outbound.Error().Msgf("WatchOutbound: confirmed multiple (%d) outbound for chain %d nonce %d", txCount, ob.Chain().ChainId, nonceInt)
-				}
-			}
+
 			ticker.UpdateInterval(ob.GetChainParams().OutboundTicker, ob.Logger().Outbound)
 		case <-ob.StopChannel():
 			ob.Logger().Outbound.Info().Msg("WatchOutbound: stopped")
 			return nil
 		}
 	}
+}
+
+// ProcessOutboundTrackers processes outbound trackers
+func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
+	chainID := ob.Chain().ChainId
+	trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, ob.Chain().ChainId, interfaces.Ascending)
+	if err != nil {
+		return errors.Wrap(err, "GetAllOutboundTrackerByChain error")
+	}
+
+	// prepare logger fields
+	logger := ob.Logger().Outbound.With().
+		Str("method", "ProcessOutboundTrackers").
+		Int64("chain", chainID).
+		Logger()
+
+	// process outbound trackers
+	for _, tracker := range trackers {
+		// go to next tracker if this one already has a confirmed tx
+		nonce := tracker.Nonce
+		if ob.IsTxConfirmed(nonce) {
+			continue
+		}
+
+		// check each txHash and save tx and receipt if it's legit and confirmed
+		txCount := 0
+		var outboundReceipt *ethtypes.Receipt
+		var outbound *ethtypes.Transaction
+		for _, txHash := range tracker.HashList {
+			if receipt, tx, ok := ob.checkConfirmedTx(ctx, txHash.TxHash, nonce); ok {
+				txCount++
+				outboundReceipt = receipt
+				outbound = tx
+				logger.Info().Msgf("confirmed outbound %s for chain %d nonce %d", txHash.TxHash, chainID, nonce)
+				if txCount > 1 {
+					logger.Error().
+						Msgf("checkConfirmedTx passed, txCount %d chain %d nonce %d receipt %v tx %v", txCount, chainID, nonce, receipt, tx)
+				}
+			}
+		}
+
+		// should be only one txHash confirmed for each nonce.
+		if txCount == 1 {
+			ob.SetTxNReceipt(nonce, outboundReceipt, outbound)
+		} else if txCount > 1 {
+			// should not happen. We can't tell which txHash is true. It might happen (e.g. bug, glitchy/hacked endpoint)
+			ob.Logger().Outbound.Error().Msgf("WatchOutbound: confirmed multiple (%d) outbound for chain %d nonce %d", txCount, chainID, nonce)
+		} else {
+			if len(tracker.HashList) == crosschainkeeper.MaxOutboundTrackerHashes {
+				ob.Logger().Outbound.Error().Msgf("WatchOutbound: outbound tracker is full of invalid hashes for chain %d nonce %d", chainID, nonce)
+			}
+		}
+	}
+
+	return nil
 }
 
 // PostVoteOutbound posts vote to zetacore for the confirmed outbound

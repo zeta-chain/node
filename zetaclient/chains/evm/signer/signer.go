@@ -24,7 +24,6 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/constant"
-	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
@@ -747,115 +746,6 @@ func (signer *Signer) SignMigrateTssFundsCmd(ctx context.Context, txData *Outbou
 		return nil, fmt.Errorf("SignMigrateTssFundsCmd error: %w", err)
 	}
 	return tx, nil
-}
-
-// reportToOutboundTracker reports outboundHash to tracker only when tx receipt is available
-// TODO(revamp): move outbound tracker function to a outbound tracker file
-func (signer *Signer) reportToOutboundTracker(
-	ctx context.Context,
-	zetacoreClient interfaces.ZetacoreClient,
-	chainID int64,
-	nonce uint64,
-	outboundHash string,
-	logger zerolog.Logger,
-) {
-	// set being reported flag to avoid duplicate reporting
-	alreadySet := signer.Signer.SetBeingReportedFlag(outboundHash)
-	if alreadySet {
-		logger.Info().
-			Msgf("reportToOutboundTracker: outboundHash %s for chain %d nonce %d is being reported", outboundHash, chainID, nonce)
-		return
-	}
-
-	// report to outbound tracker with goroutine
-	go func() {
-		defer func() {
-			signer.Signer.ClearBeingReportedFlag(outboundHash)
-		}()
-
-		// try monitoring tx inclusion status for 10 minutes
-		var err error
-		report := false
-		isPending := false
-		blockNumber := uint64(0)
-		tStart := time.Now()
-		for {
-			// give up after 10 minutes of monitoring
-			time.Sleep(10 * time.Second)
-
-			if time.Since(tStart) > evm.OutboundInclusionTimeout {
-				// if tx is still pending after timeout, report to outboundTracker anyway as we cannot monitor forever
-				if isPending {
-					report = true // probably will be included later
-				}
-				logger.Info().
-					Msgf("reportToOutboundTracker: timeout waiting tx inclusion for chain %d nonce %d outboundHash %s report %v", chainID, nonce, outboundHash, report)
-				break
-			}
-			// try getting the tx
-			_, isPending, err = signer.client.TransactionByHash(ctx, ethcommon.HexToHash(outboundHash))
-			if err != nil {
-				logger.Info().
-					Err(err).
-					Msgf("reportToOutboundTracker: error getting tx for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
-				continue
-			}
-			// if tx is include in a block, try getting receipt
-			if !isPending {
-				report = true // included
-				receipt, err := signer.client.TransactionReceipt(ctx, ethcommon.HexToHash(outboundHash))
-				if err != nil {
-					logger.Info().
-						Err(err).
-						Msgf("reportToOutboundTracker: error getting receipt for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
-				}
-				if receipt != nil {
-					blockNumber = receipt.BlockNumber.Uint64()
-				}
-				break
-			}
-			// keep monitoring pending tx
-			logger.Info().
-				Msgf("reportToOutboundTracker: tx has not been included yet for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
-		}
-
-		// try adding to outbound tracker for 10 minutes
-		if report {
-			tStart := time.Now()
-			for {
-				// give up after 10 minutes of retrying
-				if time.Since(tStart) > evm.OutboundTrackerReportTimeout {
-					logger.Info().
-						Msgf("reportToOutboundTracker: timeout adding outbound tracker for chain %d nonce %d outboundHash %s, please add manually", chainID, nonce, outboundHash)
-					break
-				}
-				// stop if the cctx is already finalized
-				cctx, err := zetacoreClient.GetCctxByNonce(ctx, chainID, nonce)
-				if err != nil {
-					logger.Err(err).
-						Msgf("reportToOutboundTracker: error getting cctx for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
-				} else if !crosschainkeeper.IsPending(cctx) {
-					logger.Info().Msgf("reportToOutboundTracker: cctx already finalized for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
-					break
-				}
-				// report to outbound tracker
-				zetaHash, err := zetacoreClient.AddOutboundTracker(ctx, chainID, nonce, outboundHash, nil, "", -1)
-				if err != nil {
-					logger.Err(err).
-						Msgf("reportToOutboundTracker: error adding to outbound tracker for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
-				} else if zetaHash != "" {
-					logger.Info().Msgf("reportToOutboundTracker: added outboundHash to core successful %s, chain %d nonce %d outboundHash %s block %d",
-						zetaHash, chainID, nonce, outboundHash, blockNumber)
-				} else {
-					// stop if the tracker contains the outboundHash
-					logger.Info().Msgf("reportToOutboundTracker: outbound tracker contains outboundHash %s for chain %d nonce %d", outboundHash, chainID, nonce)
-					break
-				}
-				// retry otherwise
-				time.Sleep(evm.ZetaBlockTime * 3)
-			}
-		}
-	}()
 }
 
 // getEVMRPC is a helper function to set up the client and signer, also initializes a mock client for unit tests
