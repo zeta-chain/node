@@ -120,6 +120,7 @@
 * [2481](https://github.com/zeta-chain/node/pull/2481) - increase gas limit inbound and outbound vote message to 500k
 * [2545](https://github.com/zeta-chain/node/pull/2545) - check solana minimum rent exempt to avoid outbound failure
 * [2547](https://github.com/zeta-chain/node/pull/2547) - limit max txs in priority mempool
+* [2628](https://github.com/zeta-chain/node/pull/2628) - avoid submitting invalid hashes to outbound tracker
 
 ### CI
 
