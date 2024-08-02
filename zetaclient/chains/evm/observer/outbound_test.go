@@ -12,7 +12,6 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
@@ -60,7 +59,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 
 	t.Run("should post vote and return true if outbound is processed", func(t *testing.T) {
 		// create evm observer and set outbound and receipt
-		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
+		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
 		ob.SetTxNReceipt(nonce, receipt, outbound)
 
 		// post outbound vote
@@ -76,7 +75,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		cctx.InboundParams.Sender = sample.EthAddress().Hex()
 
 		// create evm observer and set outbound and receipt
-		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
+		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
 		ob.SetTxNReceipt(nonce, receipt, outbound)
 
 		// modify compliance config to restrict sender address
@@ -93,14 +92,14 @@ func Test_IsOutboundProcessed(t *testing.T) {
 	})
 	t.Run("should return false if outbound is not confirmed", func(t *testing.T) {
 		// create evm observer and DO NOT set outbound as confirmed
-		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
+		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
 		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
 		require.NoError(t, err)
 		require.True(t, continueKeysign)
 	})
 	t.Run("should fail if unable to parse ZetaReceived event", func(t *testing.T) {
 		// create evm observer and set outbound and receipt
-		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
+		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
 		ob.SetTxNReceipt(nonce, receipt, outbound)
 
 		// set connector contract address to an arbitrary address to make event parsing fail
@@ -149,7 +148,7 @@ func Test_IsOutboundProcessed_ContractError(t *testing.T) {
 
 	t.Run("should fail if unable to get connector/custody contract", func(t *testing.T) {
 		// create evm observer and set outbound and receipt
-		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
+		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
 		ob.SetTxNReceipt(nonce, receipt, outbound)
 		abiConnector := zetaconnector.ZetaConnectorNonEthMetaData.ABI
 		abiCustody := erc20custody.ERC20CustodyMetaData.ABI
@@ -193,7 +192,7 @@ func Test_PostVoteOutbound(t *testing.T) {
 		receiveStatus := chains.ReceiveStatus_success
 
 		// create evm client using mock zetacore client and post outbound vote
-		ob := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, observertypes.ChainParams{})
+		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, mocks.MockChainParams(chain.ChainId, 100))
 		ob.PostVoteOutbound(
 			ctx,
 			cctx.Index,

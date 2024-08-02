@@ -144,7 +144,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 		e2eTest.SetZEVMContracts()
 
 		// deposit on ZetaChain
-		e2eTest.DepositEther(false)
+		e2eTest.DepositEther()
 		e2eTest.DepositZeta()
 	case "TESTNET":
 		ethZRC20Addr := must(e2eTest.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(5)))

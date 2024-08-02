@@ -34,7 +34,7 @@ func TestPostGasPrice(t *testing.T) {
 		confirmation := uint64(10)
 		chainParam := mocks.MockChainParams(chain.ChainId, confirmation)
 
-		observer := MockEVMObserver(t, chain, ethRPC, nil, zetacoreClient, nil, blockNumber, chainParam)
+		observer, _ := MockEVMObserver(t, chain, ethRPC, nil, zetacoreClient, nil, blockNumber, chainParam)
 
 		// Given empty baseFee from RPC
 		ethRPC.WithHeader(&ethtypes.Header{BaseFee: nil})
@@ -79,7 +79,7 @@ func TestPostGasPrice(t *testing.T) {
 		confirmation := uint64(10)
 		chainParam := mocks.MockChainParams(chain.ChainId, confirmation)
 
-		observer := MockEVMObserver(t, chain, ethRPC, nil, zetacoreClient, nil, blockNumber, chainParam)
+		observer, _ := MockEVMObserver(t, chain, ethRPC, nil, zetacoreClient, nil, blockNumber, chainParam)
 
 		// Given 1 gwei baseFee from RPC
 		ethRPC.WithHeader(&ethtypes.Header{BaseFee: big.NewInt(gwei)})

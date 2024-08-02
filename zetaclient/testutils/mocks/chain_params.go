@@ -13,11 +13,32 @@ import (
 )
 
 func MockChainParams(chainID int64, confirmation uint64) observertypes.ChainParams {
+	const zeroAddress = "0x0000000000000000000000000000000000000000"
+
+	connectorAddr := zeroAddress
+	if a, ok := testutils.ConnectorAddresses[chainID]; ok {
+		connectorAddr = a.Hex()
+	}
+
+	erc20CustodyAddr := zeroAddress
+	if a, ok := testutils.CustodyAddresses[chainID]; ok {
+		erc20CustodyAddr = a.Hex()
+	}
+
 	return observertypes.ChainParams{
 		ChainId:                     chainID,
 		ConfirmationCount:           confirmation,
-		ConnectorContractAddress:    testutils.ConnectorAddresses[chainID].Hex(),
-		Erc20CustodyContractAddress: testutils.CustodyAddresses[chainID].Hex(),
+		ZetaTokenContractAddress:    zeroAddress,
+		ConnectorContractAddress:    connectorAddr,
+		Erc20CustodyContractAddress: erc20CustodyAddr,
+		InboundTicker:               12,
+		OutboundTicker:              15,
+		WatchUtxoTicker:             0,
+		GasPriceTicker:              30,
+		OutboundScheduleInterval:    30,
+		OutboundScheduleLookahead:   60,
+		BallotThreshold:             observertypes.DefaultBallotThreshold,
+		MinObserverDelegation:       observertypes.DefaultMinObserverDelegation,
 		IsSupported:                 true,
 	}
 }

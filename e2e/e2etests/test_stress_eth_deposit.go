@@ -31,7 +31,7 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 	// send the deposits
 	for i := 0; i < numDeposits; i++ {
 		i := i
-		hash := r.DepositEtherWithAmount(false, depositAmount)
+		hash := r.DepositEtherWithAmount(depositAmount)
 		r.Logger.Print("index %d: starting deposit, tx hash: %s", i, hash.Hex())
 
 		eg.Go(func() error { return monitorEtherDeposit(r, hash, i, time.Now()) })

@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethchains "github.com/ethereum/go-ethereum/common"
-	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	solanacontracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
@@ -57,19 +56,8 @@ func ValidateChainParams(params *ChainParams) error {
 		return fmt.Errorf("chain params cannot be nil")
 	}
 
-	// TODO: ZetaChain chain params should be completely removed
-	// Once removed, this check is no longer necessary as all chasin params would need the same checks
-	// https://github.com/zeta-chain/node/issues/2419
-	_, err := chains.ZetaChainFromChainID(params.ChainId)
-	if err == nil {
-		// zeta chain skips the rest of the checks for now
-		return nil
-	}
-
-	// ignore error from ZetaChainFromChainID if reason is chain is not zeta chain
-	// return error otherwise
-	if !errors.Is(err, chains.ErrNotZetaChain) {
-		return err
+	if chains.IsZetaChain(params.ChainId, nil) {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidChainID, "zeta chain cannot have observer chain parameters")
 	}
 
 	if params.ConfirmationCount == 0 {
@@ -165,7 +153,6 @@ func GetDefaultChainParams() ChainParamsList {
 			GetDefaultBtcRegtestChainParams(),
 			GetDefaultSolanaLocalnetChainParams(),
 			GetDefaultGoerliLocalnetChainParams(),
-			GetDefaultZetaPrivnetChainParams(),
 		},
 	}
 }
