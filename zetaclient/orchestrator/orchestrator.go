@@ -158,29 +158,38 @@ func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chainID int64) (inte
 	switch {
 	case err != nil:
 		return nil, err
-	case !chain.IsEVM():
-		// noop for non-EVM chains
-		return signer, nil
 	case chain.IsZeta():
 		// should not happen
 		return nil, fmt.Errorf("unable to resolve signer for zeta chain %d", chainID)
-	}
+	case chain.IsEVM():
+		params := chain.Params()
 
-	// update zeta connector and ERC20 custody addresses
-	zetaConnectorAddress := ethcommon.HexToAddress(chain.Params().GetConnectorContractAddress())
-	if zetaConnectorAddress != signer.GetZetaConnectorAddress() {
-		signer.SetZetaConnectorAddress(zetaConnectorAddress)
-		oc.logger.Info().
-			Str("signer.connector_address", zetaConnectorAddress.String()).
-			Msgf("updated zeta connector address for chain %d", chainID)
-	}
+		// update zeta connector and ERC20 custody addresses
+		zetaConnectorAddress := ethcommon.HexToAddress(params.GetConnectorContractAddress())
+		if zetaConnectorAddress != signer.GetZetaConnectorAddress() {
+			signer.SetZetaConnectorAddress(zetaConnectorAddress)
+			oc.logger.Info().
+				Str("signer.connector_address", zetaConnectorAddress.String()).
+				Msgf("updated zeta connector address for chain %d", chainID)
+		}
 
-	erc20CustodyAddress := ethcommon.HexToAddress(chain.Params().GetErc20CustodyContractAddress())
-	if erc20CustodyAddress != signer.GetERC20CustodyAddress() {
-		signer.SetERC20CustodyAddress(erc20CustodyAddress)
-		oc.logger.Info().
-			Str("signer.erc20_custody", erc20CustodyAddress.String()).
-			Msgf("updated zeta connector address for chain %d", chainID)
+		erc20CustodyAddress := ethcommon.HexToAddress(params.GetErc20CustodyContractAddress())
+		if erc20CustodyAddress != signer.GetERC20CustodyAddress() {
+			signer.SetERC20CustodyAddress(erc20CustodyAddress)
+			oc.logger.Info().
+				Str("signer.erc20_custody", erc20CustodyAddress.String()).
+				Msgf("updated zeta connector address for chain %d", chainID)
+		}
+	case chain.IsSolana():
+		params := chain.Params()
+
+		// update solana gateway address
+		if params.GatewayAddress != signer.GetGatewayAddress() {
+			signer.SetGatewayAddress(params.GatewayAddress)
+			oc.logger.Info().
+				Str("signer.gateway_address", params.GatewayAddress).
+				Msgf("updated gateway address for chain %d", chainID)
+		}
 	}
 
 	return signer, nil
@@ -401,6 +410,8 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 							oc.ScheduleCctxEVM(ctx, zetaHeight, chainID, cctxList, ob, signer)
 						case chain.IsUTXO():
 							oc.ScheduleCctxBTC(ctx, zetaHeight, chainID, cctxList, ob, signer)
+						case chain.IsSolana():
+							oc.ScheduleCctxSolana(ctx, zetaHeight, chainID, cctxList, ob, signer)
 						default:
 							oc.logger.Error().Msgf("runScheduler: no scheduler found chain %d", chainID)
 							continue

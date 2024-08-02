@@ -362,6 +362,12 @@ func (signer *Signer) TryProcessOutbound(
 	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		signer.Logger().Std.Error().Err(err).Msg("error getting app context")
+		return
+	}
+
 	// end outbound process on panic
 	defer func() {
 		outboundProc.EndTryProcess(outboundID)
@@ -410,8 +416,6 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 
-	// Get cross-chain flags
-	crossChainflags := app.GetCrossChainFlags()
 	// https://github.com/zeta-chain/node/issues/2050
 	var tx *ethtypes.Transaction
 	// compliance check goes first

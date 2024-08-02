@@ -157,6 +157,8 @@ func NewOutboundData(
 		return nil, true, errors.Wrap(err, "unable to setup gas")
 	}
 
+	nonce := cctx.GetCurrentOutboundParam().TssNonce
+
 	// Get sendHash
 	logger.Info().
 		Msgf("chain %d minting %d to %s, nonce %d, finalized zeta bn %d", toChain.ID(), cctx.InboundParams.Amount, txData.to.Hex(), nonce, cctx.InboundParams.FinalizedZetaHeight)

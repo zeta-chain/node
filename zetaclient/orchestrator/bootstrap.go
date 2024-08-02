@@ -145,68 +145,45 @@ func syncSignerMap(
 			}
 
 			addSigner(chainID, signer)
+		case chain.IsSolana():
+			cfg, found := app.Config().GetSolanaConfig()
+			if !found {
+				logger.Std.Warn().Msgf("Unable to find SOL config for chain %d", chainID)
+				continue
+			}
+
+			// create Solana client
+			rpcClient := solrpc.New(cfg.Endpoint)
+			if rpcClient == nil {
+				// should never happen
+				logger.Std.Error().Msgf("Unable to create SOL client from endpoint %s", cfg.Endpoint)
+				continue
+			}
+
+			// load the Solana private key
+			solanaKey, err := app.Config().LoadSolanaPrivateKey()
+			if err != nil {
+				logger.Std.Error().Err(err).Msg("Unable to get Solana private key")
+			}
+
+			var (
+				chainRaw  = chain.RawChain()
+				paramsRaw = chain.Params()
+			)
+
+			// create Solana signer
+			signer, err := solanasigner.NewSigner(*chainRaw, *paramsRaw, rpcClient, tss, solanaKey, ts, logger)
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("Unable to construct signer for SOL chain %d", chainID)
+				continue
+			}
+
+			addSigner(chainID, signer)
 		default:
 			logger.Std.Warn().
 				Int64("signer.chain_id", chain.ID()).
 				Str("signer.chain_name", chain.RawChain().Name).
 				Msgf("Unable to create a signer")
-
-			/*
-			TODO FIX AFTER MERGE
-
-				// Solana signer
-				// Emulate same loop semantics as for EVM chains
-				for i := 0; i < 1; i++ {
-					solChain, solChainParams, solChainParamsFound := app.GetSolanaChainParams()
-					switch {
-					case !solChainParamsFound:
-						logger.Std.Warn().Msgf("Unable to find chain params for Solana chain")
-						continue
-					case !solChainParams.IsSupported:
-						logger.Std.Warn().Msgf("Solana chain is not supported")
-						continue
-					}
-
-					chainID := solChainParams.ChainId
-					presentChainIDs = append(presentChainIDs, chainID)
-
-					// noop
-					if mapHas(signers, chainID) {
-						continue
-					}
-
-					// get Solana config
-					cfg, found := app.Config().GetSolanaConfig()
-					if !found {
-						logger.Std.Error().Msgf("Unable to find Solana config for chain %d", chainID)
-						continue
-					}
-
-					// create Solana client
-					rpcClient := solrpc.New(cfg.Endpoint)
-					if rpcClient == nil {
-						// should never happen
-						logger.Std.Error().Msgf("Unable to create Solana client from endpoint %s", cfg.Endpoint)
-						continue
-					}
-
-					// load the Solana private key
-					solanaKey, err := app.Config().LoadSolanaPrivateKey()
-					if err != nil {
-						logger.Std.Error().Err(err).Msg("Unable to get Solana private key")
-					}
-
-					// create Solana signer
-					signer, err := solanasigner.NewSigner(solChain, *solChainParams, rpcClient, tss, solanaKey, ts, logger)
-					if err != nil {
-						logger.Std.Error().Err(err).Msgf("Unable to construct signer for Solana chain %d", chainID)
-						continue
-					}
-
-					addSigner(chainID, signer)
-				}
-
-			*/
 		}
 	}
 
