@@ -164,6 +164,7 @@ func (m CrossChainTx) GetCCTXIndexBytes() ([32]byte, error) {
 	return sendHash, nil
 }
 
+// SetOutboundBallotIndex sets the outbound ballot index for the most recent outbound.
 func (m CrossChainTx) SetOutboundBallotIndex(index string) {
 	m.GetCurrentOutboundParam().BallotIndex = index
 }

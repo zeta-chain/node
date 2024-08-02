@@ -351,7 +351,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testTSSMigration {
 		runTSSMigrationTest(deployerRunner, logger, verbose, conf)
 	}
-	checkTrackers(deployerRunner)
+	// Verify that there are no trackers left over after tests complete
+	deployerRunner.EnsureNoTrackers()
 	// print and validate report
 	networkReport, err := deployerRunner.GenerateNetworkReport()
 	if err != nil {
@@ -364,16 +365,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	os.Exit(0)
-}
-
-func checkTrackers(deployRunner *runner.E2ERunner) {
-	// get all trackers
-	res, err := deployRunner.CctxClient.OutTxTrackerAll(
-		deployRunner.Ctx,
-		&crosschaintypes.QueryAllOutboundTrackerRequest{},
-	)
-	require.NoError(deployRunner, err)
-	require.Empty(deployRunner, res.OutboundTracker, "there should be no trackers at the end of the test")
 }
 
 // waitKeygenHeight waits for keygen height

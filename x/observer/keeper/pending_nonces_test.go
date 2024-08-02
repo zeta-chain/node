@@ -144,47 +144,47 @@ func TestKeeper_RemoveFromPendingNonces(t *testing.T) {
 		tss := sample.Tss()
 		// make nonces and pubkey deterministic for test
 		chainIDS := []int64{chains.GoerliLocalnet.ChainId, chains.BitcoinTestnet.ChainId, chains.BscTestnet.ChainId}
-		pn := make([]types.PendingNonces, len(chainIDS))
+		pendingNonces := make([]types.PendingNonces, len(chainIDS))
 
 		for idx, chainID := range chainIDS {
-			pn[idx] = types.PendingNonces{
+			pendingNonces[idx] = types.PendingNonces{
 				ChainId:   chainID,
 				NonceLow:  1,
 				NonceHigh: 10,
 				Tss:       tss.TssPubkey,
 			}
 		}
-		for _, pendingNonce := range pn {
+		for _, pendingNonce := range pendingNonces {
 			k.SetPendingNonces(ctx, pendingNonce)
 		}
 
 		// remove from pending nonces
 		k.RemoveFromPendingNonces(ctx, tss.TssPubkey, chains.GoerliLocalnet.ChainId, 1)
-		pnGoerli, found := k.GetPendingNonces(ctx, tss.TssPubkey, chains.GoerliLocalnet.ChainId)
+		actualPendingNoncesGoerli, found := k.GetPendingNonces(ctx, tss.TssPubkey, chains.GoerliLocalnet.ChainId)
 		require.True(t, found)
-		require.Equal(t, int64(2), pnGoerli.NonceLow)
-		require.Equal(t, int64(10), pnGoerli.NonceHigh)
+		require.Equal(t, int64(2), actualPendingNoncesGoerli.NonceLow)
+		require.Equal(t, int64(10), actualPendingNoncesGoerli.NonceHigh)
 
 		// try removing lower than nonceLow, this might be triggered if we try to remove a previously removed nonce
 		k.RemoveFromPendingNonces(ctx, tss.TssPubkey, chains.GoerliLocalnet.ChainId, 1)
-		pnGoerli, found = k.GetPendingNonces(ctx, tss.TssPubkey, chains.GoerliLocalnet.ChainId)
+		actualPendingNoncesGoerli, found = k.GetPendingNonces(ctx, tss.TssPubkey, chains.GoerliLocalnet.ChainId)
 		require.True(t, found)
-		require.Equal(t, int64(2), pnGoerli.NonceLow)
-		require.Equal(t, int64(10), pnGoerli.NonceHigh)
+		require.Equal(t, int64(2), actualPendingNoncesGoerli.NonceLow)
+		require.Equal(t, int64(10), actualPendingNoncesGoerli.NonceHigh)
 
 		// try removing higher than nonceHigh
 		k.RemoveFromPendingNonces(ctx, tss.TssPubkey, chains.GoerliLocalnet.ChainId, 11)
-		pnGoerli, found = k.GetPendingNonces(ctx, tss.TssPubkey, chains.GoerliLocalnet.ChainId)
+		actualPendingNoncesGoerli, found = k.GetPendingNonces(ctx, tss.TssPubkey, chains.GoerliLocalnet.ChainId)
 		require.True(t, found)
-		require.Equal(t, int64(2), pnGoerli.NonceLow)
-		require.Equal(t, int64(10), pnGoerli.NonceHigh)
+		require.Equal(t, int64(2), actualPendingNoncesGoerli.NonceLow)
+		require.Equal(t, int64(10), actualPendingNoncesGoerli.NonceHigh)
 
 		//pending nonces for other chains should not be affected by removal
 		for _, chainID := range chainIDS[1:] {
-			pn, found := k.GetPendingNonces(ctx, tss.TssPubkey, chainID)
+			pendingNonces, found := k.GetPendingNonces(ctx, tss.TssPubkey, chainID)
 			require.True(t, found)
-			require.Equal(t, int64(1), pn.NonceLow)
-			require.Equal(t, int64(10), pn.NonceHigh)
+			require.Equal(t, int64(1), pendingNonces.NonceLow)
+			require.Equal(t, int64(10), pendingNonces.NonceHigh)
 		}
 	})
 }
