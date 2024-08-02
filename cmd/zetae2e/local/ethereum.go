@@ -16,7 +16,6 @@ func ethereumTestRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
-	testHeader bool,
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
@@ -36,7 +35,7 @@ func ethereumTestRoutine(
 		startTime := time.Now()
 
 		// depositing the necessary tokens on ZetaChain
-		txEtherDeposit := ethereumRunner.DepositEther(testHeader)
+		txEtherDeposit := ethereumRunner.DepositEther()
 		ethereumRunner.WaitForMinedCCTX(txEtherDeposit)
 
 		// run ethereum test

@@ -11,7 +11,6 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
@@ -20,7 +19,6 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
 
 	"github.com/zeta-chain/zetacore/pkg/bg"
-	"github.com/zeta-chain/zetacore/pkg/proofs"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
@@ -387,45 +385,5 @@ func (ob *Observer) LoadLastBlockScanned(ctx context.Context) error {
 	}
 	ob.Logger().Chain.Info().Msgf("chain %d starts scanning from block %d", ob.Chain().ChainId, ob.LastBlockScanned())
 
-	return nil
-}
-
-// postBlockHeader posts the block header to zetacore
-// TODO(revamp): move to a block header file
-func (ob *Observer) postBlockHeader(ctx context.Context, tip uint64) error {
-	bn := tip
-
-	chainState, err := ob.ZetacoreClient().GetBlockHeaderChainState(ctx, ob.Chain().ChainId)
-	if err == nil && chainState != nil && chainState.EarliestHeight > 0 {
-		// #nosec G115 always positive
-		bn = uint64(chainState.LatestHeight) + 1 // the next header to post
-	}
-
-	if bn > tip {
-		return fmt.Errorf("postBlockHeader: must post block confirmed block header: %d > %d", bn, tip)
-	}
-
-	header, err := ob.GetBlockHeaderCached(ctx, bn)
-	if err != nil {
-		ob.Logger().Inbound.Error().Err(err).Msgf("postBlockHeader: error getting block: %d", bn)
-		return err
-	}
-	headerRLP, err := rlp.EncodeToBytes(header)
-	if err != nil {
-		ob.Logger().Inbound.Error().Err(err).Msgf("postBlockHeader: error encoding block header: %d", bn)
-		return err
-	}
-
-	_, err = ob.ZetacoreClient().PostVoteBlockHeader(
-		ctx,
-		ob.Chain().ChainId,
-		header.Hash().Bytes(),
-		header.Number.Int64(),
-		proofs.NewEthereumHeader(headerRLP),
-	)
-	if err != nil {
-		ob.Logger().Inbound.Error().Err(err).Msgf("postBlockHeader: error posting block header: %d", bn)
-		return err
-	}
 	return nil
 }

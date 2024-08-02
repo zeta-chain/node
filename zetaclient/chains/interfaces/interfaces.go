@@ -106,7 +106,7 @@ type ZetacoreClient interface {
 	GetLogger() *zerolog.Logger
 	GetKeys() keyinterfaces.ObserverKeys
 
-	GetKeyGen(ctx context.Context) (*observertypes.Keygen, error)
+	GetKeyGen(ctx context.Context) (observertypes.Keygen, error)
 
 	GetBlockHeight(ctx context.Context) (int64, error)
 	GetBlockHeaderChainState(ctx context.Context, chainID int64) (*lightclienttypes.ChainState, error)

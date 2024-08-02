@@ -57,7 +57,7 @@ func (ob *Observer) WatchInbound(ctx context.Context) error {
 	for {
 		select {
 		case <-ticker.C():
-			if !app.IsInboundObservationEnabled(ob.GetChainParams()) {
+			if !app.IsInboundObservationEnabled() {
 				sampledLogger.Info().
 					Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.Chain().ChainId)
 				continue
@@ -97,7 +97,7 @@ func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
 	for {
 		select {
 		case <-ticker.C():
-			if !app.IsInboundObservationEnabled(ob.GetChainParams()) {
+			if !app.IsInboundObservationEnabled() {
 				continue
 			}
 			err := ob.ProcessInboundTrackers(ctx)
@@ -311,18 +311,17 @@ func (ob *Observer) ObserveZetaSent(ctx context.Context, startBlock, toBlock uin
 		guard[event.Raw.TxHash.Hex()] = true
 
 		msg := ob.BuildInboundVoteMsgForZetaSentEvent(app, event)
-		if msg != nil {
-			_, err = ob.PostVoteInbound(
-				ctx,
-				msg,
-				zetacore.PostVoteInboundMessagePassingExecutionGasLimit,
-			)
-			if err != nil {
-				// we have to re-scan from this block next time
-				return beingScanned - 1, err
-			}
+		if msg == nil {
+			continue
+		}
+
+		const gasLimit = zetacore.PostVoteInboundMessagePassingExecutionGasLimit
+		if _, err = ob.PostVoteInbound(ctx, msg, gasLimit); err != nil {
+			// we have to re-scan from this block next time
+			return beingScanned - 1, err
 		}
 	}
+
 	// successful processed all events in [startBlock, toBlock]
 	return toBlock, nil
 }
@@ -414,34 +413,10 @@ func (ob *Observer) ObserveERC20Deposited(ctx context.Context, startBlock, toBlo
 // ObserverTSSReceive queries the incoming gas asset to TSS address and posts to zetacore
 // returns the last block successfully scanned
 func (ob *Observer) ObserverTSSReceive(ctx context.Context, startBlock, toBlock uint64) (uint64, error) {
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		return 0, err
-	}
-
-	var (
-		// post new block header (if any) to zetacore and ignore error
-		// TODO: consider having a independent ticker(from TSS scaning) for posting block headers
-		// https://github.com/zeta-chain/node/issues/1847
-		chainID                        = ob.Chain().ChainId
-		blockHeaderVerification, found = app.GetBlockHeaderEnabledChains(chainID)
-		shouldPostBlockHeader          = found && blockHeaderVerification.Enabled
-	)
+	chainID := ob.Chain().ChainId
 
 	// query incoming gas asset
 	for bn := startBlock; bn <= toBlock; bn++ {
-		if shouldPostBlockHeader {
-			// post block header for supported chains
-			// TODO: move this logic in its own routine
-			// https://github.com/zeta-chain/node/issues/2204
-			if err := ob.postBlockHeader(ctx, toBlock); err != nil {
-				ob.Logger().Inbound.
-					Error().Err(err).
-					Uint64("tss.to_block", toBlock).
-					Msg("error posting block header")
-			}
-		}
-
 		// observe TSS received gas token in block 'bn'
 		err := ob.ObserveTSSReceiveInBlock(ctx, bn)
 		if err != nil {
@@ -532,7 +507,7 @@ func (ob *Observer) CheckAndVoteInboundTokenERC20(
 	}
 
 	// get erc20 custody contract
-	addrCustory, custody, err := ob.GetERC20CustodyContract()
+	addrCustody, custody, err := ob.GetERC20CustodyContract()
 	if err != nil {
 		return "", err
 	}
@@ -544,7 +519,7 @@ func (ob *Observer) CheckAndVoteInboundTokenERC20(
 		zetaDeposited, err := custody.ParseDeposited(*log)
 		if err == nil && zetaDeposited != nil {
 			// sanity check tx event
-			err = evm.ValidateEvmTxLog(&zetaDeposited.Raw, addrCustory, tx.Hash, evm.TopicsDeposited)
+			err = evm.ValidateEvmTxLog(&zetaDeposited.Raw, addrCustody, tx.Hash, evm.TopicsDeposited)
 			if err == nil {
 				msg = ob.BuildInboundVoteMsgForDepositedEvent(zetaDeposited, sender)
 			} else {
@@ -671,14 +646,13 @@ func (ob *Observer) BuildInboundVoteMsgForZetaSentEvent(
 	appContext *zctx.AppContext,
 	event *zetaconnector.ZetaConnectorNonEthZetaSent,
 ) *types.MsgVoteInbound {
-	destChain, found := chains.GetChainFromChainID(
-		event.DestinationChainId.Int64(),
-		appContext.GetAdditionalChains(),
-	)
-	if !found {
-		ob.Logger().Inbound.Warn().Msgf("chain id not supported  %d", event.DestinationChainId.Int64())
+	// note that this is most likely zeta chain
+	destChain, err := appContext.GetChain(event.DestinationChainId.Int64())
+	if err != nil {
+		ob.Logger().Inbound.Warn().Err(err).Msgf("chain id %d not supported", event.DestinationChainId.Int64())
 		return nil
 	}
+
 	destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
 
 	// compliance check
@@ -689,17 +663,10 @@ func (ob *Observer) BuildInboundVoteMsgForZetaSentEvent(
 		return nil
 	}
 
-	if !destChain.IsZetaChain() {
-		paramsDest, found := appContext.GetEVMChainParams(destChain.ChainId)
-		if !found {
+	if !destChain.IsZeta() {
+		if strings.EqualFold(destAddr, destChain.Params().ZetaTokenContractAddress) {
 			ob.Logger().Inbound.Warn().
-				Msgf("chain id not present in EVMChainParams  %d", event.DestinationChainId.Int64())
-			return nil
-		}
-
-		if strings.EqualFold(destAddr, paramsDest.ZetaTokenContractAddress) {
-			ob.Logger().Inbound.Warn().
-				Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain.String(), destAddr)
+				Msgf("potential attack attempt: %s destination address is ZETA token contract address", destAddr)
 			return nil
 		}
 	}
@@ -713,7 +680,7 @@ func (ob *Observer) BuildInboundVoteMsgForZetaSentEvent(
 		ob.Chain().ChainId,
 		event.SourceTxOriginAddress.Hex(),
 		destAddr,
-		destChain.ChainId,
+		destChain.ID(),
 		sdkmath.NewUintFromBigInt(event.ZetaValueAndGas),
 		message,
 		event.Raw.TxHash.Hex(),

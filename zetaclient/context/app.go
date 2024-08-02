@@ -3,37 +3,30 @@ package context
 
 import (
 	"fmt"
-	"sort"
 	"sync"
 
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/samber/lo"
+	"golang.org/x/exp/constraints"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
-// AppContext represents application context.
+// AppContext represents application (zetaclient) context.
 type AppContext struct {
 	config config.Config
 	logger zerolog.Logger
 
-	keygen             observertypes.Keygen
-	chainsEnabled      []chains.Chain
-	evmChainParams     map[int64]*observertypes.ChainParams
-	bitcoinChainParams *observertypes.ChainParams
-	solanaChainParams  *observertypes.ChainParams
-	currentTssPubkey   string
-	crosschainFlags    observertypes.CrosschainFlags
+	chainRegistry *ChainRegistry
 
-	// additionalChains is a list of additional static chain information to use when searching from chain IDs
-	// it is stored in the protocol to dynamically support new chains without doing an upgrade
-	additionalChain []chains.Chain
-
-	// blockHeaderEnabledChains is used to store the list of chains that have block header verification enabled
-	// All chains in this list will have Enabled flag set to true
-	blockHeaderEnabledChains []lightclienttypes.HeaderSupportedChain
+	currentTssPubKey string
+	crosschainFlags  observertypes.CrosschainFlags
+	keygen           observertypes.Keygen
 
 	mu sync.RWMutex
 }
@@ -44,16 +37,13 @@ func New(cfg config.Config, logger zerolog.Logger) *AppContext {
 		config: cfg,
 		logger: logger.With().Str("module", "appcontext").Logger(),
 
-		chainsEnabled:            []chains.Chain{},
-		evmChainParams:           map[int64]*observertypes.ChainParams{},
-		bitcoinChainParams:       nil,
-		solanaChainParams:        nil,
-		crosschainFlags:          observertypes.CrosschainFlags{},
-		blockHeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{},
+		chainRegistry: NewChainRegistry(),
 
-		currentTssPubkey: "",
+		crosschainFlags:  observertypes.CrosschainFlags{},
+		currentTssPubKey: "",
 		keygen:           observertypes.Keygen{},
-		mu:               sync.RWMutex{},
+
+		mu: sync.RWMutex{},
 	}
 }
 
@@ -62,43 +52,45 @@ func (a *AppContext) Config() config.Config {
 	return a.config
 }
 
-// GetBTCChainAndConfig returns btc chain and config if enabled
-func (a *AppContext) GetBTCChainAndConfig() (chains.Chain, config.BTCConfig, bool) {
-	cfg, configEnabled := a.Config().GetBTCConfig()
-	if !configEnabled {
-		return chains.Chain{}, config.BTCConfig{}, false
-	}
-
-	chain, _, paramsEnabled := a.GetBTCChainParams()
-	if !paramsEnabled {
-		return chains.Chain{}, config.BTCConfig{}, false
-	}
-
-	return chain, cfg, true
+// GetChain returns the chain by ID.
+func (a *AppContext) GetChain(chainID int64) (Chain, error) {
+	return a.chainRegistry.Get(chainID)
 }
 
-// GetSolanaChainAndConfig returns solana chain and config if enabled
-func (a *AppContext) GetSolanaChainAndConfig() (chains.Chain, config.SolanaConfig, bool) {
-	solConfig, configEnabled := a.Config().GetSolanaConfig()
-	solChain, _, paramsEnabled := a.GetSolanaChainParams()
+// ListChainIDs returns the list of existing chain ids in the registry.
+func (a *AppContext) ListChainIDs() []int64 {
+	return a.chainRegistry.ChainIDs()
+}
 
-	if !configEnabled || !paramsEnabled {
-		return chains.Chain{}, config.SolanaConfig{}, false
+// ListChains returns the list of existing chains in the registry.
+func (a *AppContext) ListChains() []Chain {
+	return a.chainRegistry.All()
+}
+
+// FilterChains returns the list of chains that satisfy the filter
+func (a *AppContext) FilterChains(filter func(Chain) bool) []Chain {
+	var (
+		all = a.ListChains()
+		out = make([]Chain, 0, len(all))
+	)
+
+	for _, chain := range all {
+		if filter(chain) {
+			out = append(out, chain)
+		}
 	}
 
-	return solChain, solConfig, true
+	return out
 }
 
-// IsOutboundObservationEnabled returns true if the chain is supported and outbound flag is enabled
-func (a *AppContext) IsOutboundObservationEnabled(chainParams observertypes.ChainParams) bool {
-	flags := a.GetCrossChainFlags()
-	return chainParams.IsSupported && flags.IsOutboundEnabled
+// IsOutboundObservationEnabled returns true if outbound flag is enabled
+func (a *AppContext) IsOutboundObservationEnabled() bool {
+	return a.GetCrossChainFlags().IsOutboundEnabled
 }
 
-// IsInboundObservationEnabled returns true if the chain is supported and inbound flag is enabled
-func (a *AppContext) IsInboundObservationEnabled(chainParams observertypes.ChainParams) bool {
-	flags := a.GetCrossChainFlags()
-	return chainParams.IsSupported && flags.IsInboundEnabled
+// IsInboundObservationEnabled returns true if inbound flag is enabled
+func (a *AppContext) IsInboundObservationEnabled() bool {
+	return a.GetCrossChainFlags().IsInboundEnabled
 }
 
 // GetKeygen returns the current keygen
@@ -106,110 +98,25 @@ func (a *AppContext) GetKeygen() observertypes.Keygen {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 
-	var copiedPubkeys []string
+	var copiedPubKeys []string
 	if a.keygen.GranteePubkeys != nil {
-		copiedPubkeys = make([]string, len(a.keygen.GranteePubkeys))
-		copy(copiedPubkeys, a.keygen.GranteePubkeys)
+		copiedPubKeys = make([]string, len(a.keygen.GranteePubkeys))
+		copy(copiedPubKeys, a.keygen.GranteePubkeys)
 	}
 
 	return observertypes.Keygen{
 		Status:         a.keygen.Status,
-		GranteePubkeys: copiedPubkeys,
+		GranteePubkeys: copiedPubKeys,
 		BlockNumber:    a.keygen.BlockNumber,
 	}
 }
 
-// GetCurrentTssPubKey returns the current tss pubkey
+// GetCurrentTssPubKey returns the current tss pubKey.
 func (a *AppContext) GetCurrentTssPubKey() string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 
-	return a.currentTssPubkey
-}
-
-// GetEnabledChains returns all enabled chains including zetachain
-func (a *AppContext) GetEnabledChains() []chains.Chain {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-
-	copiedChains := make([]chains.Chain, len(a.chainsEnabled))
-	copy(copiedChains, a.chainsEnabled)
-
-	return copiedChains
-}
-
-// GetEnabledExternalChains returns all enabled external chains
-func (a *AppContext) GetEnabledExternalChains() []chains.Chain {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-
-	externalChains := make([]chains.Chain, 0)
-	for _, chain := range a.chainsEnabled {
-		if chain.IsExternal {
-			externalChains = append(externalChains, chain)
-		}
-	}
-	return externalChains
-}
-
-// GetEVMChainParams returns chain params for a specific EVM chain
-func (a *AppContext) GetEVMChainParams(chainID int64) (*observertypes.ChainParams, bool) {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-
-	evmChainParams, found := a.evmChainParams[chainID]
-	return evmChainParams, found
-}
-
-// GetAllEVMChainParams returns all chain params for EVM chains
-func (a *AppContext) GetAllEVMChainParams() map[int64]*observertypes.ChainParams {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-
-	// deep copy evm chain params
-	copied := make(map[int64]*observertypes.ChainParams, len(a.evmChainParams))
-	for chainID, evmConfig := range a.evmChainParams {
-		copied[chainID] = &observertypes.ChainParams{}
-		*copied[chainID] = *evmConfig
-	}
-	return copied
-}
-
-// GetBTCChainParams returns (chain, chain params, found) for bitcoin chain
-func (a *AppContext) GetBTCChainParams() (chains.Chain, *observertypes.ChainParams, bool) {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-
-	// bitcoin is not enabled
-	if a.bitcoinChainParams == nil {
-		return chains.Chain{}, nil, false
-	}
-
-	chain, found := chains.GetChainFromChainID(a.bitcoinChainParams.ChainId, a.additionalChain)
-	if !found {
-		return chains.Chain{}, nil, false
-	}
-
-	return chain, a.bitcoinChainParams, true
-}
-
-// GetSolanaChainParams returns (chain, chain params, found) for solana chain
-func (a *AppContext) GetSolanaChainParams() (chains.Chain, *observertypes.ChainParams, bool) {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-
-	// solana is not enabled
-	if a.solanaChainParams == nil {
-		return chains.Chain{}, nil, false
-	}
-
-	chain, found := chains.GetChainFromChainID(a.solanaChainParams.ChainId, a.additionalChain)
-	if !found {
-		fmt.Printf("solana Chain %d not found", a.solanaChainParams.ChainId)
-		return chains.Chain{}, nil, false
-	}
-
-	return chain, a.solanaChainParams, true
+	return a.currentTssPubKey
 }
 
 // GetCrossChainFlags returns crosschain flags
@@ -220,123 +127,159 @@ func (a *AppContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 	return a.crosschainFlags
 }
 
-// GetAdditionalChains returns additional chains
-func (a *AppContext) GetAdditionalChains() []chains.Chain {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-	return a.additionalChain
-}
-
-// GetAllHeaderEnabledChains returns all verification flags
-func (a *AppContext) GetAllHeaderEnabledChains() []lightclienttypes.HeaderSupportedChain {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-
-	return a.blockHeaderEnabledChains
-}
-
-// GetBlockHeaderEnabledChains checks if block header verification is enabled for a specific chain
-func (a *AppContext) GetBlockHeaderEnabledChains(chainID int64) (lightclienttypes.HeaderSupportedChain, bool) {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-
-	for _, flags := range a.blockHeaderEnabledChains {
-		if flags.ChainId == chainID {
-			return flags, true
-		}
-	}
-
-	return lightclienttypes.HeaderSupportedChain{}, false
-}
-
 // Update updates AppContext and params for all chains
 // this must be the ONLY function that writes to AppContext
 func (a *AppContext) Update(
-	keygen *observertypes.Keygen,
-	newChains []chains.Chain,
-	evmChainParams map[int64]*observertypes.ChainParams,
-	btcChainParams *observertypes.ChainParams,
-	solChainParams *observertypes.ChainParams,
+	keygen observertypes.Keygen,
+	freshChains, additionalChains []chains.Chain,
+	freshChainParams map[int64]*observertypes.ChainParams,
 	tssPubKey string,
 	crosschainFlags observertypes.CrosschainFlags,
-	additionalChains []chains.Chain,
-	blockHeaderEnabledChains []lightclienttypes.HeaderSupportedChain,
-	init bool,
-) {
-	if len(newChains) == 0 {
-		a.logger.Warn().Msg("UpdateChainParams: No chains enabled in ZeroCore")
+) error {
+	// some sanity checks
+	switch {
+	case len(freshChains) == 0:
+		return fmt.Errorf("no chains present")
+	case len(freshChainParams) == 0:
+		return fmt.Errorf("no chain params present")
+	case tssPubKey == "" && a.currentTssPubKey != "":
+		// note that if we're doing a fresh start, we ALLOW an empty tssPubKey
+		return fmt.Errorf("tss pubkey is empty")
+	case len(additionalChains) > 0:
+		for _, c := range additionalChains {
+			if !c.IsExternal {
+				return fmt.Errorf("additional chain %d is not external", c.ChainId)
+			}
+		}
 	}
 
-	// Ignore whatever order zetacore organizes chain list in state
-	sort.SliceStable(newChains, func(i, j int) bool {
-		return newChains[i].ChainId < newChains[j].ChainId
-	})
+	err := a.updateChainRegistry(freshChains, additionalChains, freshChainParams)
+	if err != nil {
+		return errors.Wrap(err, "unable to update chain registry")
+	}
 
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
-	// Add some warnings if chain list changes at runtime
-	if !init && !chainsEqual(a.chainsEnabled, newChains) {
-		a.logger.Warn().
-			Interface("chains.current", a.chainsEnabled).
-			Interface("chains.new", newChains).
-			Msg("ChainsEnabled changed at runtime!")
-	}
-
-	if keygen != nil {
-		a.keygen = *keygen
-	}
-
-	a.chainsEnabled = newChains
 	a.crosschainFlags = crosschainFlags
-	a.additionalChain = additionalChains
-	a.blockHeaderEnabledChains = blockHeaderEnabledChains
+	a.keygen = keygen
+	a.currentTssPubKey = tssPubKey
 
-	// update core params for evm chains we have configs in file
-	freshEvmChainParams := make(map[int64]*observertypes.ChainParams)
-	for _, cp := range evmChainParams {
-		_, found := a.config.EVMChainConfigs[cp.ChainId]
-		if !found {
-			a.logger.Warn().
-				Int64("chain.id", cp.ChainId).
-				Msg("Encountered EVM ChainParams that are not present in the config file")
-
-			continue
-		}
-
-		if chains.IsZetaChain(cp.ChainId, nil) {
-			continue
-		}
-
-		freshEvmChainParams[cp.ChainId] = cp
-	}
-
-	a.evmChainParams = freshEvmChainParams
-
-	// update chain params for bitcoin if it has config in file
-	if btcChainParams != nil {
-		a.bitcoinChainParams = btcChainParams
-	}
-
-	// update chain params for solana if it has config in file
-	if solChainParams != nil {
-		a.solanaChainParams = solChainParams
-	}
-
-	if tssPubKey != "" {
-		a.currentTssPubkey = tssPubKey
-	}
+	return nil
 }
 
-func chainsEqual(a []chains.Chain, b []chains.Chain) bool {
+// updateChainRegistry updates the chain registry with fresh chains and chain params.
+// Note that there's an edge-case for ZetaChain itself because we WANT to have it in chains list,
+// but it doesn't have chain params.
+func (a *AppContext) updateChainRegistry(
+	freshChains []chains.Chain,
+	additionalChains []chains.Chain,
+	freshChainParams map[int64]*observertypes.ChainParams,
+) error {
+	var zetaChainID int64
+
+	// 1. build map[chainId]Chain
+	freshChainsByID := make(map[int64]chains.Chain, len(freshChains)+len(additionalChains))
+	for _, c := range freshChains {
+		freshChainsByID[c.ChainId] = c
+
+		if isZeta(c.ChainId) && zetaChainID == 0 {
+			zetaChainID = c.ChainId
+		}
+	}
+
+	for _, c := range additionalChains {
+		// shouldn't happen, but just in case
+		if _, found := freshChainsByID[c.ChainId]; found {
+			continue
+		}
+
+		freshChainsByID[c.ChainId] = c
+	}
+
+	var (
+		freshChainIDs    = maps.Keys(freshChainsByID)
+		existingChainIDs = a.chainRegistry.ChainIDs()
+	)
+
+	// 2. Compare existing chains with fresh ones
+	if len(existingChainIDs) > 0 && !elementsMatch(existingChainIDs, freshChainIDs) {
+		a.logger.Warn().
+			Ints64("chains.current", existingChainIDs).
+			Ints64("chains.new", freshChainIDs).
+			Msg("Chain list changed at the runtime!")
+	}
+
+	// Log warn if somehow chain doesn't chainParam
+	for _, chainID := range freshChainIDs {
+		if _, ok := freshChainParams[chainID]; !ok && !isZeta(chainID) {
+			a.logger.Warn().
+				Int64("chain.id", chainID).
+				Msg("Chain doesn't have according ChainParams present. Skipping.")
+		}
+	}
+
+	// 3. If we have zeta chain, we want to force "fake" chainParams for it
+	if zetaChainID != 0 {
+		freshChainParams[zetaChainID] = zetaObserverChainParams(zetaChainID)
+	}
+
+	// 3. Update chain registry
+	// okay, let's update the chains.
+	// Set() ensures that chain, chainID, and params are consistent and chain is not zeta + chain is supported
+	for chainID, params := range freshChainParams {
+		chain, ok := freshChainsByID[chainID]
+		if !ok {
+			return fmt.Errorf("unable to locate fresh chain %d based on chain params", chainID)
+		}
+
+		if !isZeta(chainID) {
+			if err := observertypes.ValidateChainParams(params); err != nil {
+				return errors.Wrapf(err, "invalid chain params for chain %d", chainID)
+			}
+		}
+
+		if err := a.chainRegistry.Set(chainID, &chain, params); err != nil {
+			return errors.Wrap(err, "unable to set chain in the registry")
+		}
+	}
+
+	a.chainRegistry.SetAdditionalChains(additionalChains)
+
+	toBeDeleted, _ := lo.Difference(existingChainIDs, freshChainIDs)
+	if len(toBeDeleted) > 0 {
+		a.logger.Warn().
+			Ints64("chains.deleted", toBeDeleted).
+			Msg("Deleting chains that are no longer relevant")
+
+		a.chainRegistry.Delete(toBeDeleted...)
+	}
+
+	return nil
+}
+
+func isZeta(chainID int64) bool {
+	return chains.IsZetaChain(chainID, nil)
+}
+
+// zetaObserverChainParams returns "fake" chain params because
+// actually chainParams is a concept of observer
+func zetaObserverChainParams(chainID int64) *observertypes.ChainParams {
+	return &observertypes.ChainParams{ChainId: chainID, IsSupported: true}
+}
+
+// elementsMatch returns true if two slices are equal.
+// SORTS the slices before comparison.
+func elementsMatch[T constraints.Ordered](a, b []T) bool {
 	if len(a) != len(b) {
 		return false
 	}
 
-	for i, left := range a {
-		right := b[i]
+	slices.Sort(a)
+	slices.Sort(b)
 
-		if left.ChainId != right.ChainId {
+	for i := range a {
+		if a[i] != b[i] {
 			return false
 		}
 	}

@@ -16,7 +16,7 @@ func TestEtherDeposit(r *runner.E2ERunner, args []string) {
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
 	require.True(r, ok, "Invalid amount specified for TestEtherDeposit.")
 
-	hash := r.DepositEtherWithAmount(false, amount) // in wei
+	hash := r.DepositEtherWithAmount(amount) // in wei
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
