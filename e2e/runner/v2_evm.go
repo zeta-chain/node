@@ -1,12 +1,13 @@
 package runner
 
 import (
-	"github.com/zeta-chain/zetacore/e2e/utils"
 	"math/big"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
 // V2ETHDeposit calls Deposit of Gateway with gas token on EVM

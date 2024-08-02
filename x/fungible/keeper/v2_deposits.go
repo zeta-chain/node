@@ -23,7 +23,6 @@ func (k Keeper) ProcessV2Deposit(
 		// simple deposit
 		res, err := k.DepositZRC20(ctx, zrc20Addr, to, amount)
 		return res, false, err
-	} else {
-		return nil, true, errors.New("not implemented")
 	}
+	return nil, true, errors.New("not implemented")
 }

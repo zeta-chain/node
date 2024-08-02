@@ -39,4 +39,10 @@ const (
 	// [signature, asset]
 	// https://github.com/zeta-chain/protocol-contracts/blob/d65814debf17648a6c67d757ba03646415842790/contracts/evm/ERC20Custody.sol#L42
 	TopicsDeposited = 2
+
+	// V2 contracts
+
+	// TopicsGatewayDeposit is the number of topics for a gateway deposit event
+	// [signature, sender, receiver]
+	TopicsGatewayDeposit = 3
 )

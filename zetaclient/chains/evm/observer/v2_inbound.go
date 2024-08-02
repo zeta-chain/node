@@ -14,6 +14,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -30,8 +31,6 @@ func (ob *Observer) ObserveGateway(ctx context.Context, startBlock, toBlock uint
 		return startBlock - 1 // lastScanned
 	}
 
-	ob.Logger().Inbound.Info().Msgf("ObserveGateway: gatewayAddreth %s", gatewayAddr.Hex())
-
 	// get iterator for the events for the block range
 	eventIterator, err := gatewayContract.FilterDeposit(&bind.FilterOpts{
 		Start:   startBlock,
@@ -45,7 +44,7 @@ func (ob *Observer) ObserveGateway(ctx context.Context, startBlock, toBlock uint
 	}
 
 	// parse and validate events
-	events := ob.parseAndValidateDepositEvents(eventIterator)
+	events := ob.parseAndValidateDepositEvents(eventIterator, gatewayAddr)
 
 	// increment prom counter
 	metrics.GetFilterLogsPerChain.WithLabelValues(ob.Chain().Name).Inc()
@@ -84,21 +83,21 @@ func (ob *Observer) ObserveGateway(ctx context.Context, startBlock, toBlock uint
 // parseAndValidateEvents collects and sorts events by block number, tx index, and log index
 func (ob *Observer) parseAndValidateDepositEvents(
 	iterator *gatewayevm.GatewayEVMDepositIterator,
+	gatewayAddr ethcommon.Address,
 ) []*gatewayevm.GatewayEVMDeposit {
 	// collect and sort events by block number, then tx index, then log index (ascending)
 	events := make([]*gatewayevm.GatewayEVMDeposit, 0)
 	for iterator.Next() {
-		// TODO: implement sanity check tx event
 		events = append(events, iterator.Event)
-		//err := evm.ValidateEvmTxLog(&eventIterator.Event.Raw, gatewayAddr, "", evm.TopicsDeposited)
-		//if err == nil {
-		//	events = append(events, eventIterator.Event)
-		//	continue
-		//}
-		//ob.Logger().Inbound.Warn().
-		//	Err(err).
-		//	Msgf("ObserveGateway: invalid Deposited event in tx %s on chain %d at height %d",
-		//		eventIterator.Event.Raw.TxHash.Hex(), ob.Chain().ChainId, eventIterator.Event.Raw.BlockNumber)
+		err := evm.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", evm.TopicsGatewayDeposit)
+		if err == nil {
+			events = append(events, iterator.Event)
+			continue
+		}
+		ob.Logger().Inbound.Warn().
+			Err(err).
+			Msgf("ObserveGateway: invalid Deposited event in tx %s on chain %d at height %d",
+				iterator.Event.Raw.TxHash.Hex(), ob.Chain().ChainId, iterator.Event.Raw.BlockNumber)
 	}
 	sort.SliceStable(events, func(i, j int) bool {
 		if events[i].Raw.BlockNumber == events[j].Raw.BlockNumber {
