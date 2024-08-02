@@ -149,7 +149,9 @@ func (tl *TSSListener) waitForNewKeygen(ctx context.Context) error {
 				continue
 			case keygenUpdated == nil:
 				continue
-			case keygenUpdated.Status == observertypes.KeygenStatus_PendingKeygen:
+			case keygenUpdated.Status == observertypes.KeygenStatus_KeyGenSuccess || keygenUpdated.Status == observertypes.KeygenStatus_KeyGenFailed:
+				continue
+			case keygenUpdated.Status == observertypes.KeygenStatus_PendingKeygen && keygenUpdated.BlockNumber <= keygen.BlockNumber:
 				continue
 			case keygen.BlockNumber == keygenUpdated.BlockNumber:
 				continue

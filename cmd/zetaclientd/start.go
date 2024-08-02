@@ -208,6 +208,16 @@ func start(_ *cobra.Command, _ []string) error {
 	// Set P2P ID for telemetry
 	telemetryServer.SetP2PID(server.GetLocalPeerID())
 
+	// Creating a channel to listen for os signals (or other signals)
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
+
+	// Maintenance workers ============
+	maintenance.NewTSSListener(zetacoreClient, masterLogger).Listen(ctx, func() {
+		masterLogger.Info().Msg("TSS listener received an action to shutdown zetaclientd.")
+		signalChannel <- syscall.SIGTERM
+	})
+
 	// Generate a new TSS if keygen is set and add it into the tss server
 	// If TSS has already been generated, and keygen was successful ; we use the existing TSS
 	err = GenerateTSS(ctx, masterLogger, zetacoreClient, server)
@@ -343,16 +353,6 @@ func start(_ *cobra.Command, _ []string) error {
 	//}
 
 	startLogger.Info().Msgf("Zetaclientd is running")
-
-	// Creating a channel to listen for os signals (or other signals)
-	signalChannel := make(chan os.Signal, 1)
-	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
-
-	// Maintenance workers ============
-	maintenance.NewTSSListener(zetacoreClient, masterLogger).Listen(ctx, func() {
-		masterLogger.Info().Msg("TSS listener received an action to shutdown zetaclientd.")
-		signalChannel <- syscall.SIGTERM
-	})
 
 	sig := <-signalChannel
 	startLogger.Info().Msgf("Stop signal received: %q", sig)
