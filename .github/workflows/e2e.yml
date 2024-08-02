@@ -92,6 +92,7 @@ jobs:
               core.setOutput('STATEFUL_DATA_TESTS', labels.includes('STATEFUL_DATA_TESTS'));
               core.setOutput('TSS_MIGRATION_TESTS', labels.includes('TSS_MIGRATION_TESTS'));
               core.setOutput('SOLANA_TESTS', labels.includes('SOLANA_TESTS'));
+              core.setOutput('V2_TESTS', labels.includes('V2_TESTS')); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
             } else if (context.eventName === 'merge_group') {
               core.setOutput('DEFAULT_TESTS', true);
             } else if (context.eventName === 'push' && context.ref === 'refs/heads/develop') {
@@ -160,6 +161,9 @@ jobs:
           - make-target: "start-solana-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.SOLANA_TESTS == 'true' }}
+          - make-target: "start-v2-test"
+            runs-on: ubuntu-20.04
+            run: ${{ needs.matrix-conditionals.outputs.V2_TESTS == 'true' }}
     name: ${{ matrix.make-target }}
     uses: ./.github/workflows/reusable-e2e.yml
     with:
