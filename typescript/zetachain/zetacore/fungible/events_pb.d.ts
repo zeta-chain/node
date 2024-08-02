@@ -340,3 +340,42 @@ export declare class EventBytecodeUpdated extends Message<EventBytecodeUpdated> 
   static equals(a: EventBytecodeUpdated | PlainMessage<EventBytecodeUpdated> | undefined, b: EventBytecodeUpdated | PlainMessage<EventBytecodeUpdated> | undefined): boolean;
 }
 
+/**
+ * @generated from message zetachain.zetacore.fungible.EventGatewayContractUpdated
+ */
+export declare class EventGatewayContractUpdated extends Message<EventGatewayContractUpdated> {
+  /**
+   * @generated from field: string msg_type_url = 1;
+   */
+  msgTypeUrl: string;
+
+  /**
+   * @generated from field: string new_contract_address = 2;
+   */
+  newContractAddress: string;
+
+  /**
+   * @generated from field: string old_contract_address = 3;
+   */
+  oldContractAddress: string;
+
+  /**
+   * @generated from field: string signer = 4;
+   */
+  signer: string;
+
+  constructor(data?: PartialMessage<EventGatewayContractUpdated>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.EventGatewayContractUpdated";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventGatewayContractUpdated;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventGatewayContractUpdated;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventGatewayContractUpdated;
+
+  static equals(a: EventGatewayContractUpdated | PlainMessage<EventGatewayContractUpdated> | undefined, b: EventGatewayContractUpdated | PlainMessage<EventGatewayContractUpdated> | undefined): boolean;
+}
+

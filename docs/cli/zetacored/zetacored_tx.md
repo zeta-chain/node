@@ -41,8 +41,6 @@ zetacored tx [flags]
 * [zetacored tx fungible](zetacored_tx_fungible.md)	 - fungible transactions subcommands
 * [zetacored tx gov](zetacored_tx_gov.md)	 - Governance transactions subcommands
 * [zetacored tx group](zetacored_tx_group.md)	 - Group transaction subcommands
-* [zetacored tx ibc](zetacored_tx_ibc.md)	 - IBC transaction subcommands
-* [zetacored tx ibc-transfer](zetacored_tx_ibc-transfer.md)	 - IBC fungible token transfer transaction subcommands
 * [zetacored tx lightclient](zetacored_tx_lightclient.md)	 - lightclient transactions subcommands
 * [zetacored tx multi-sign](zetacored_tx_multi-sign.md)	 - Generate multisig signatures for transactions generated offline
 * [zetacored tx multisign-batch](zetacored_tx_multisign-batch.md)	 - Assemble multisig transactions in batch from batch signatures
@@ -53,5 +51,4 @@ zetacored tx [flags]
 * [zetacored tx staking](zetacored_tx_staking.md)	 - Staking transaction subcommands
 * [zetacored tx validate-signatures](zetacored_tx_validate-signatures.md)	 - validate transactions signatures
 * [zetacored tx vesting](zetacored_tx_vesting.md)	 - Vesting transaction subcommands
-* [zetacored tx zetaibccrosschain](zetacored_tx_zetaibccrosschain.md)	 - zetaibccrosschain transactions subcommands
 

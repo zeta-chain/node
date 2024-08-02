@@ -88,3 +88,8 @@ func FileNameSolanaInbound(chainID int64, inboundHash string, donation bool) str
 	}
 	return fmt.Sprintf("chain_%d_inbound_tx_result_donation_%s.json", chainID, inboundHash)
 }
+
+// FileNameSolanaOutbound returns archive file name for outbound tx result
+func FileNameSolanaOutbound(chainID int64, txHash string) string {
+	return fmt.Sprintf("chain_%d_outbound_tx_result_%s.json", chainID, txHash)
+}
