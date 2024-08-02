@@ -15,6 +15,8 @@ func TestV2ETHDeposit(r *runner.E2ERunner, args []string) {
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
 	require.True(r, ok, "Invalid amount specified for TestV2ETHDeposit")
 
+	r.Logger.Info("starting v2 eth deposit test")
+
 	// perform the deposit
 	tx := r.V2ETHDeposit(r.EVMAddress(), amount)
 

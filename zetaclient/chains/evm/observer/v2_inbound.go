@@ -24,11 +24,13 @@ import (
 // returns the last block successfully scanned
 func (ob *Observer) ObserveGateway(ctx context.Context, startBlock, toBlock uint64) uint64 {
 	// filter ERC20CustodyDeposited logs
-	_, gatewayContract, err := ob.GetGatewayContract()
+	gatewayAddr, gatewayContract, err := ob.GetGatewayContract()
 	if err != nil {
 		ob.Logger().Inbound.Warn().Err(err).Msgf("ObserveGateway: can't get gateway contract")
 		return startBlock - 1 // lastScanned
 	}
+
+	ob.Logger().Inbound.Info().Msgf("ObserveGateway: gatewayAddreth %s", gatewayAddr.Hex())
 
 	// get iterator for the events for the block range
 	eventIterator, err := gatewayContract.FilterDeposit(&bind.FilterOpts{
@@ -64,7 +66,7 @@ func (ob *Observer) ObserveGateway(ctx context.Context, startBlock, toBlock uint
 		msg := ob.newDepositInboundVote(event)
 
 		ob.Logger().Inbound.Info().
-			Msgf("ERC20CustodyDeposited inbound detected on chain %d tx %s block %d from %s value %s message %s",
+			Msgf("ObserveGateway: Deposit inbound detected on chain %d tx %s block %d from %s value %s message %s",
 				ob.Chain().
 					ChainId, event.Raw.TxHash.Hex(), event.Raw.BlockNumber, event.Sender.Hex(), event.Amount.String(), hex.EncodeToString(event.Payload))
 

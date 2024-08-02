@@ -1,7 +1,9 @@
 package runner
 
 import (
+	"encoding/hex"
 	"fmt"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 	"sync"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -196,6 +198,29 @@ func (l *Logger) ZRC20Withdrawal(
 			event.Value,
 			event.GasFee,
 		)
+	}
+}
+
+// GatewayDeposit prints a GatewayDeposit event
+func (l *Logger) GatewayDeposit(
+	contract interface {
+		ParseDeposit(ethtypes.Log) (*gatewayevm.GatewayEVMDeposit, error)
+	},
+	receipt ethtypes.Receipt,
+	name string,
+) {
+	for _, log := range receipt.Logs {
+		event, err := contract.ParseDeposit(*log)
+		if err != nil {
+			continue
+		}
+
+		l.Info(" Gateway Deposit: %s", name)
+		l.Info("  Sender: %s", event.Sender.Hex())
+		l.Info("  Receiver: %s", event.Receiver.Hex())
+		l.Info("  Amount: %s", event.Amount.String())
+		l.Info("  Asset: %s", event.Asset.Hex())
+		l.Info("  Payload: %s", hex.EncodeToString(event.Payload))
 	}
 }
 

@@ -579,7 +579,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "10000000000000000"},
 		},
-		TestV2ERC20Deposit,
+		TestV2ETHDeposit,
 	),
 	runner.NewE2ETest(
 		TestV2ETHDepositAndCallName,
