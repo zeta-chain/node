@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg/slices"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -448,7 +448,7 @@ func Test_GetPendingCctxsWithinRateLimit(t *testing.T) {
 			// create orchestrator
 			orchestrator := mockOrchestrator(t, client, ethChain, btcChain, ethChainParams, btcChainParams)
 
-			chainIDs := slices.Map(foreignChains, func(c chains.Chain) int64 { return c.ChainId })
+			chainIDs := lo.Map(foreignChains, func(c chains.Chain, _ int) int64 { return c.ChainId })
 
 			// run the test
 			cctxsMap, err := orchestrator.GetPendingCctxsWithinRateLimit(ctx, chainIDs)

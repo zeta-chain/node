@@ -12,10 +12,10 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/samber/lo"
 
 	"github.com/zeta-chain/zetacore/pkg/bg"
 	zetamath "github.com/zeta-chain/zetacore/pkg/math"
-	"github.com/zeta-chain/zetacore/pkg/slices"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
@@ -352,10 +352,9 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 					metrics.HotKeyBurnRate.Set(float64(oc.ts.HotKeyBurnRate.GetBurnRate().Int64()))
 
 					// get chain ids without zeta chain
-					chainIDs := slices.Map(
-						app.FilterChains(zctx.ChainIsNotZeta),
-						zctx.Chain.ID,
-					)
+					chainIDs := lo.FilterMap(app.ListChains(), func(c zctx.Chain, _ int) (int64, bool) {
+						return c.ID(), !c.IsZeta()
+					})
 
 					// query pending cctxs across all external chains within rate limit
 					cctxMap, err := oc.GetPendingCctxsWithinRateLimit(ctx, chainIDs)

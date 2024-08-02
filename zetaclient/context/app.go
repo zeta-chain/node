@@ -7,10 +7,12 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/samber/lo"
+	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/slices"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
@@ -201,7 +203,7 @@ func (a *AppContext) updateChainRegistry(
 	)
 
 	// 2. Compare existing chains with fresh ones
-	if len(existingChainIDs) > 0 && !slices.ElementsMatch(existingChainIDs, freshChainIDs) {
+	if len(existingChainIDs) > 0 && !elementsMatch(existingChainIDs, freshChainIDs) {
 		a.logger.Warn().
 			Ints64("chains.current", existingChainIDs).
 			Ints64("chains.new", freshChainIDs).
@@ -244,7 +246,7 @@ func (a *AppContext) updateChainRegistry(
 
 	a.chainRegistry.SetAdditionalChains(additionalChains)
 
-	toBeDeleted := slices.Diff(existingChainIDs, freshChainIDs)
+	toBeDeleted, _ := lo.Difference(existingChainIDs, freshChainIDs)
 	if len(toBeDeleted) > 0 {
 		a.logger.Warn().
 			Ints64("chains.deleted", toBeDeleted).
@@ -266,6 +268,21 @@ func zetaObserverChainParams(chainID int64) *observertypes.ChainParams {
 	return &observertypes.ChainParams{ChainId: chainID, IsSupported: true}
 }
 
-func ChainIsNotZeta(c Chain) bool {
-	return !c.IsZeta()
+// elementsMatch returns true if two slices are equal.
+// SORTS the slices before comparison.
+func elementsMatch[T constraints.Ordered](a, b []T) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	slices.Sort(a)
+	slices.Sort(b)
+
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+
+	return true
 }
