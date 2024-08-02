@@ -2,7 +2,8 @@
 
 ## v19.1.0
 
-* [2524](https://github.com/zeta-chain/node/pull/2524) - add inscription envolop parsing 
+* [2524](https://github.com/zeta-chain/node/pull/2524) - add inscription envolop parsing
+* [2533](https://github.com/zeta-chain/node/pull/2533) - parse memo from both OP_RETURN and inscription
 
 
 ## v19.0.1

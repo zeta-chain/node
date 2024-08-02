@@ -1,0 +1,32 @@
+{
+  "txid": "7a57f987a3cb605896a5909d9ef2bf7afbf0c78f21e4118b85d00d9e4cce0c2c",
+  "version": 2,
+  "locktime": 0,
+  "vin": [
+    {
+      "txid": "213403e1efb29349a48ea9717096cf20d6e19091e496052ab591f310f0deebd6",
+      "vout": 0,
+      "scriptSig": {
+        "asm": "",
+        "hex": ""
+      },
+      "txinwitness": [
+        "7a8d20a4bb100ffd6399dc4fa1972e405e0e245775be1fcd7df3d5212d62c8d2e4b5534b3ae508a1f974d8995aac759454de9645f78245b8bee3b90ade86ea70",
+        "20a7172b841ddb8716fd0afa3400d18bfe1105df132e6938cca651b65ee3e64853ac00634c6472f080c854647755d0d9e6f6821f6931f855b9acffd53d87433395672756d58822fd143360762109ab898626556b1c3b8d3096d2361f1297df4a41c1b429471a9aa2fc9be5f27c13b3863d6ac269e4b587d8389f8fd9649859935b0d48dea88cdb40f20c68",
+        "c1a7172b841ddb8716fd0afa3400d18bfe1105df132e6938cca651b65ee3e64853"
+      ],
+      "sequence": 4294967295
+    }
+  ],
+  "vout": [
+    {
+      "scriptPubKey": {
+        "asm": "0 daaae0d3de9d8fdee31661e61aea828b59be7864",
+        "hex": "0014daaae0d3de9d8fdee31661e61aea828b59be7864",
+        "type": "witness_v0_keyhash"
+      },
+      "value": 0.45,
+      "n": 0
+    }
+  ]
+}
