@@ -22,6 +22,7 @@ import (
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	solanaobserver "github.com/zeta-chain/zetacore/zetaclient/chains/solana/observer"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
@@ -153,31 +154,38 @@ func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chainID int64) (inte
 		return nil, err
 	}
 
-	// noop for non-EVM chains
-	if !chains.IsEVMChain(chainID, app.GetAdditionalChains()) {
-		return signer, nil
-	}
+	// update signer chain parameters
+	if chains.IsEVMChain(chainID, app.GetAdditionalChains()) {
+		evmParams, found := app.GetEVMChainParams(chainID)
+		if found {
+			// update zeta connector and ERC20 custody addresses
+			zetaConnectorAddress := ethcommon.HexToAddress(evmParams.GetConnectorContractAddress())
+			if zetaConnectorAddress != signer.GetZetaConnectorAddress() {
+				signer.SetZetaConnectorAddress(zetaConnectorAddress)
+				oc.logger.Info().
+					Str("signer.connector_address", zetaConnectorAddress.String()).
+					Msgf("updated zeta connector address for chain %d", chainID)
+			}
 
-	evmParams, found := app.GetEVMChainParams(chainID)
-	if !found {
-		return signer, nil
-	}
-
-	// update zeta connector and ERC20 custody addresses
-	zetaConnectorAddress := ethcommon.HexToAddress(evmParams.GetConnectorContractAddress())
-	if zetaConnectorAddress != signer.GetZetaConnectorAddress() {
-		signer.SetZetaConnectorAddress(zetaConnectorAddress)
-		oc.logger.Info().
-			Str("signer.connector_address", zetaConnectorAddress.String()).
-			Msgf("updated zeta connector address for chain %d", chainID)
-	}
-
-	erc20CustodyAddress := ethcommon.HexToAddress(evmParams.GetErc20CustodyContractAddress())
-	if erc20CustodyAddress != signer.GetERC20CustodyAddress() {
-		signer.SetERC20CustodyAddress(erc20CustodyAddress)
-		oc.logger.Info().
-			Str("signer.erc20_custody", erc20CustodyAddress.String()).
-			Msgf("updated zeta connector address for chain %d", chainID)
+			erc20CustodyAddress := ethcommon.HexToAddress(evmParams.GetErc20CustodyContractAddress())
+			if erc20CustodyAddress != signer.GetERC20CustodyAddress() {
+				signer.SetERC20CustodyAddress(erc20CustodyAddress)
+				oc.logger.Info().
+					Str("signer.erc20_custody", erc20CustodyAddress.String()).
+					Msgf("updated zeta connector address for chain %d", chainID)
+			}
+		}
+	} else if chains.IsSolanaChain(chainID, app.GetAdditionalChains()) {
+		_, solParams, found := app.GetSolanaChainParams()
+		if found {
+			// update solana gateway address
+			if solParams.GatewayAddress != signer.GetGatewayAddress() {
+				signer.SetGatewayAddress(solParams.GatewayAddress)
+				oc.logger.Info().
+					Str("signer.gateway_address", solParams.GatewayAddress).
+					Msgf("updated gateway address for chain %d", chainID)
+			}
+		}
 	}
 
 	return signer, nil
@@ -219,6 +227,13 @@ func (oc *Orchestrator) resolveObserver(app *zctx.AppContext, chainID int64) (in
 			oc.logger.Info().
 				Interface("observer.chain_params", *btcParams).
 				Msgf("updated chain params for UTXO chainID %d", btcParams.ChainId)
+		}
+	} else if chains.IsSolanaChain(chainID, app.GetAdditionalChains()) {
+		_, solParams, found := app.GetSolanaChainParams()
+		if found && !observertypes.ChainParamsEqual(curParams, *solParams) {
+			observer.SetChainParams(*solParams)
+			oc.logger.Info().Msgf(
+				"updated chain params for Solana, new params: %v", *solParams)
 		}
 	}
 
@@ -378,8 +393,10 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 							oc.ScheduleCctxEVM(ctx, zetaHeight, c.ChainId, cctxList, ob, signer)
 						} else if chains.IsBitcoinChain(c.ChainId, app.GetAdditionalChains()) {
 							oc.ScheduleCctxBTC(ctx, zetaHeight, c.ChainId, cctxList, ob, signer)
+						} else if chains.IsSolanaChain(c.ChainId, app.GetAdditionalChains()) {
+							oc.ScheduleCctxSolana(ctx, zetaHeight, c.ChainId, cctxList, ob, signer)
 						} else {
-							oc.logger.Error().Msgf("StartCctxScheduler: unsupported chain %d", c.ChainId)
+							oc.logger.Error().Msgf("runScheduler: unsupported chain %d", c.ChainId)
 							continue
 						}
 					}
@@ -433,17 +450,17 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 			break
 		}
 
-		// try confirming the outbound
-		included, _, err := observer.IsOutboundProcessed(ctx, cctx, oc.logger.Logger)
+		// vote outbound if it's already confirmed
+		continueKeysign, err := observer.VoteOutboundIfConfirmed(ctx, cctx)
 		if err != nil {
 			oc.logger.Error().
 				Err(err).
-				Msgf("ScheduleCctxEVM: IsOutboundProcessed faild for chain %d nonce %d", chainID, nonce)
+				Msgf("ScheduleCctxEVM: VoteOutboundIfConfirmed failed for chain %d nonce %d", chainID, nonce)
 			continue
 		}
-		if included {
+		if !continueKeysign {
 			oc.logger.Info().
-				Msgf("ScheduleCctxEVM: outbound %s already included; do not schedule keysign", outboundID)
+				Msgf("ScheduleCctxEVM: outbound %s already processed; do not schedule keysign", outboundID)
 			continue
 		}
 
@@ -473,7 +490,7 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 			!oc.outboundProc.IsOutboundActive(outboundID) {
 			oc.outboundProc.StartTryProcess(outboundID)
 			oc.logger.Debug().
-				Msgf("ScheduleCctxEVM: sign outbound %s with value %d\n", outboundID, cctx.GetCurrentOutboundParam().Amount)
+				Msgf("ScheduleCctxEVM: sign outbound %s with value %d", outboundID, cctx.GetCurrentOutboundParam().Amount)
 			go signer.TryProcessOutbound(
 				ctx,
 				cctx,
@@ -525,16 +542,16 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 			continue
 		}
 		// try confirming the outbound
-		included, confirmed, err := btcObserver.IsOutboundProcessed(ctx, cctx, oc.logger.Logger)
+		continueKeysign, err := btcObserver.VoteOutboundIfConfirmed(ctx, cctx)
 		if err != nil {
 			oc.logger.Error().
 				Err(err).
-				Msgf("ScheduleCctxBTC: IsOutboundProcessed faild for chain %d nonce %d", chainID, nonce)
+				Msgf("ScheduleCctxBTC: VoteOutboundIfConfirmed failed for chain %d nonce %d", chainID, nonce)
 			continue
 		}
-		if included || confirmed {
+		if !continueKeysign {
 			oc.logger.Info().
-				Msgf("ScheduleCctxBTC: outbound %s already included; do not schedule keysign", outboundID)
+				Msgf("ScheduleCctxBTC: outbound %s already processed; do not schedule keysign", outboundID)
 			continue
 		}
 
@@ -550,10 +567,70 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 				Msgf("ScheduleCctxBTC: lookahead reached, signing %d, earliest pending %d", nonce, cctxList[0].GetCurrentOutboundParam().TssNonce)
 			break
 		}
-		// try confirming the outbound or scheduling a keysign
+		// schedule a TSS keysign
 		if nonce%interval == zetaHeight%interval && !oc.outboundProc.IsOutboundActive(outboundID) {
 			oc.outboundProc.StartTryProcess(outboundID)
-			oc.logger.Debug().Msgf("ScheduleCctxBTC: sign outbound %s with value %d\n", outboundID, params.Amount)
+			oc.logger.Debug().Msgf("ScheduleCctxBTC: sign outbound %s with value %d", outboundID, params.Amount)
+			go signer.TryProcessOutbound(
+				ctx,
+				cctx,
+				oc.outboundProc,
+				outboundID,
+				observer,
+				oc.zetacoreClient,
+				zetaHeight,
+			)
+		}
+	}
+}
+
+// ScheduleCctxSolana schedules solana outbound keysign on each ZetaChain block (the ticker)
+func (oc *Orchestrator) ScheduleCctxSolana(
+	ctx context.Context,
+	zetaHeight uint64,
+	chainID int64,
+	cctxList []*types.CrossChainTx,
+	observer interfaces.ChainObserver,
+	signer interfaces.ChainSigner,
+) {
+	solObserver, ok := observer.(*solanaobserver.Observer)
+	if !ok { // should never happen
+		oc.logger.Error().Msgf("ScheduleCctxSolana: chain observer is not a solana observer")
+		return
+	}
+	// #nosec G701 positive
+	interval := uint64(observer.GetChainParams().OutboundScheduleInterval)
+
+	// schedule keysign for each pending cctx
+	for _, cctx := range cctxList {
+		params := cctx.GetCurrentOutboundParam()
+		nonce := params.TssNonce
+		outboundID := outboundprocessor.ToOutboundID(cctx.Index, params.ReceiverChainId, nonce)
+
+		if params.ReceiverChainId != chainID {
+			oc.logger.Error().
+				Msgf("ScheduleCctxSolana: outbound %s chainid mismatch: want %d, got %d", outboundID, chainID, params.ReceiverChainId)
+			continue
+		}
+
+		// vote outbound if it's already confirmed
+		continueKeysign, err := solObserver.VoteOutboundIfConfirmed(ctx, cctx)
+		if err != nil {
+			oc.logger.Error().
+				Err(err).
+				Msgf("ScheduleCctxSolana: VoteOutboundIfConfirmed failed for chain %d nonce %d", chainID, nonce)
+			continue
+		}
+		if !continueKeysign {
+			oc.logger.Info().
+				Msgf("ScheduleCctxSolana: outbound %s already processed; do not schedule keysign", outboundID)
+			continue
+		}
+
+		// schedule a TSS keysign
+		if nonce%interval == zetaHeight%interval && !oc.outboundProc.IsOutboundActive(outboundID) {
+			oc.outboundProc.StartTryProcess(outboundID)
+			oc.logger.Debug().Msgf("ScheduleCctxSolana: sign outbound %s with value %d", outboundID, params.Amount)
 			go signer.TryProcessOutbound(
 				ctx,
 				cctx,

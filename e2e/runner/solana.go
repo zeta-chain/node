@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"math/big"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -9,7 +10,9 @@ import (
 	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
 
-	solanacontract "github.com/zeta-chain/zetacore/pkg/contract/solana"
+	"github.com/zeta-chain/zetacore/e2e/utils"
+	solanacontract "github.com/zeta-chain/zetacore/pkg/contracts/solana"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 // ComputePdaAddress computes the PDA address for the gateway program
@@ -104,4 +107,27 @@ func (r *E2ERunner) BroadcastTxSync(tx *solana.Transaction) (solana.Signature, *
 	}
 
 	return sig, out
+}
+
+// WithdrawSOLZRC20 withdraws an amount of ZRC20 SOL tokens
+func (r *E2ERunner) WithdrawSOLZRC20(to solana.PublicKey, amount *big.Int, approveAmount *big.Int) {
+	// approve
+	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.SOLZRC20Addr, approveAmount)
+	require.NoError(r, err)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt)
+
+	// withdraw
+	tx, err = r.SOLZRC20.Withdraw(r.ZEVMAuth, []byte(to.String()), amount)
+	require.NoError(r, err)
+	r.Logger.EVMTransaction(*tx, "withdraw")
+
+	// wait for tx receipt
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt)
+	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
+
+	// wait for the cctx to be mined
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 }
