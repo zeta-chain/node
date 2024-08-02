@@ -234,31 +234,31 @@ func (ob *Observer) WatchRPCStatus(ctx context.Context) error {
 func (ob *Observer) SetPendingTx(nonce uint64, transaction *ethtypes.Transaction) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
-	ob.outboundPendingTransactions[ob.GetTxID(nonce)] = transaction
+	ob.outboundPendingTransactions[ob.OutboundID(nonce)] = transaction
 }
 
 // GetPendingTx gets the pending transaction from memory
 func (ob *Observer) GetPendingTx(nonce uint64) *ethtypes.Transaction {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
-	return ob.outboundPendingTransactions[ob.GetTxID(nonce)]
+	return ob.outboundPendingTransactions[ob.OutboundID(nonce)]
 }
 
 // SetTxNReceipt sets the receipt and transaction in memory
 func (ob *Observer) SetTxNReceipt(nonce uint64, receipt *ethtypes.Receipt, transaction *ethtypes.Transaction) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
-	delete(ob.outboundPendingTransactions, ob.GetTxID(nonce)) // remove pending transaction, if any
-	ob.outboundConfirmedReceipts[ob.GetTxID(nonce)] = receipt
-	ob.outboundConfirmedTransactions[ob.GetTxID(nonce)] = transaction
+	delete(ob.outboundPendingTransactions, ob.OutboundID(nonce)) // remove pending transaction, if any
+	ob.outboundConfirmedReceipts[ob.OutboundID(nonce)] = receipt
+	ob.outboundConfirmedTransactions[ob.OutboundID(nonce)] = transaction
 }
 
 // GetTxNReceipt gets the receipt and transaction from memory
 func (ob *Observer) GetTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
-	receipt := ob.outboundConfirmedReceipts[ob.GetTxID(nonce)]
-	transaction := ob.outboundConfirmedTransactions[ob.GetTxID(nonce)]
+	receipt := ob.outboundConfirmedReceipts[ob.OutboundID(nonce)]
+	transaction := ob.outboundConfirmedTransactions[ob.OutboundID(nonce)]
 	return receipt, transaction
 }
 
@@ -266,8 +266,8 @@ func (ob *Observer) GetTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethtypes.Tr
 func (ob *Observer) IsTxConfirmed(nonce uint64) bool {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
-	return ob.outboundConfirmedReceipts[ob.GetTxID(nonce)] != nil &&
-		ob.outboundConfirmedTransactions[ob.GetTxID(nonce)] != nil
+	return ob.outboundConfirmedReceipts[ob.OutboundID(nonce)] != nil &&
+		ob.outboundConfirmedTransactions[ob.OutboundID(nonce)] != nil
 }
 
 // CheckTxInclusion returns nil only if tx is included at the position indicated by the receipt ([block, index])

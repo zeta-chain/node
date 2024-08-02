@@ -46,6 +46,13 @@ func (s *EVMSigner) TryProcessOutbound(
 ) {
 }
 
+func (s *EVMSigner) SetGatewayAddress(_ string) {
+}
+
+func (s *EVMSigner) GetGatewayAddress() string {
+	return ""
+}
+
 func (s *EVMSigner) SetZetaConnectorAddress(address ethcommon.Address) {
 	s.ZetaConnectorAddress = address
 }
@@ -86,6 +93,13 @@ func (s *BTCSigner) TryProcessOutbound(
 ) {
 }
 
+func (s *BTCSigner) SetGatewayAddress(_ string) {
+}
+
+func (s *BTCSigner) GetGatewayAddress() string {
+	return ""
+}
+
 func (s *BTCSigner) SetZetaConnectorAddress(_ ethcommon.Address) {
 }
 
@@ -97,5 +111,52 @@ func (s *BTCSigner) GetZetaConnectorAddress() ethcommon.Address {
 }
 
 func (s *BTCSigner) GetERC20CustodyAddress() ethcommon.Address {
+	return ethcommon.Address{}
+}
+
+// ----------------------------------------------------------------------------
+// SolanaSigner
+// ----------------------------------------------------------------------------
+var _ interfaces.ChainSigner = (*SolanaSigner)(nil)
+
+// SolanaSigner is a mock of solana chain signer for testing
+type SolanaSigner struct {
+	GatewayAddress string
+}
+
+func NewSolanaSigner() *SolanaSigner {
+	return &SolanaSigner{}
+}
+
+func (s *SolanaSigner) TryProcessOutbound(
+	_ context.Context,
+	_ *crosschaintypes.CrossChainTx,
+	_ *outboundprocessor.Processor,
+	_ string,
+	_ interfaces.ChainObserver,
+	_ interfaces.ZetacoreClient,
+	_ uint64,
+) {
+}
+
+func (s *SolanaSigner) SetGatewayAddress(address string) {
+	s.GatewayAddress = address
+}
+
+func (s *SolanaSigner) GetGatewayAddress() string {
+	return s.GatewayAddress
+}
+
+func (s *SolanaSigner) SetZetaConnectorAddress(_ ethcommon.Address) {
+}
+
+func (s *SolanaSigner) SetERC20CustodyAddress(_ ethcommon.Address) {
+}
+
+func (s *SolanaSigner) GetZetaConnectorAddress() ethcommon.Address {
+	return ethcommon.Address{}
+}
+
+func (s *SolanaSigner) GetERC20CustodyAddress() ethcommon.Address {
 	return ethcommon.Address{}
 }

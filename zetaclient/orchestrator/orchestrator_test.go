@@ -14,6 +14,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	solanacontracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -24,12 +25,14 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
 
+// TODO FIX AFTER MERGING
+
 // MockOrchestrator creates a mock orchestrator for testing
 func MockOrchestrator(
 	t *testing.T,
 	zetacoreClient interfaces.ZetacoreClient,
-	evmChain, btcChain chains.Chain,
-	evmChainParams, btcChainParams *observertypes.ChainParams,
+	evmChain, btcChain, solChain *chains.Chain,
+	evmChainParams, btcChainParams, solChainParams *observertypes.ChainParams,
 ) *Orchestrator {
 	// create mock signers and clients
 	evmSigner := mocks.NewEVMSigner(
@@ -56,6 +59,8 @@ func MockOrchestrator(
 	return orchestrator
 }
 
+// 	evmChain, btcChain, solChain chains.Chain,
+//	evmChainParams, btcChainParams, solChainParams *observertypes.ChainParams,
 func CreateAppContext(
 	t *testing.T,
 	evmChain, btcChain chains.Chain,
@@ -96,8 +101,14 @@ func Test_GetUpdatedSigner(t *testing.T) {
 	// initial parameters for orchestrator creation
 	evmChain := chains.Ethereum
 	btcChain := chains.BitcoinMainnet
+	solChain := chains.SolanaMainnet
+
 	evmChainParams := mocks.MockChainParams(evmChain.ChainId, 100)
 	btcChainParams := mocks.MockChainParams(btcChain.ChainId, 100)
+	solChainParams := &observertypes.ChainParams{
+		ChainId:        solChain.ChainId,
+		GatewayAddress: solanacontracts.SolanaGatewayProgramID,
+	}
 
 	// new chain params in AppContext
 	evmChainParamsNew := mocks.MockChainParams(evmChainParams.ChainId, 100)
@@ -120,14 +131,38 @@ func Test_GetUpdatedSigner(t *testing.T) {
 		require.Equal(t, testutils.OtherAddress1, signer.GetZetaConnectorAddress().Hex())
 		require.Equal(t, testutils.OtherAddress2, signer.GetERC20CustodyAddress().Hex())
 	})
+	t.Run("should be able to update solana gateway address", func(t *testing.T) {
+		orchestrator := MockOrchestrator(
+			t,
+			nil,
+			&evmChain,
+			&btcChain,
+			&solChain,
+			evmChainParams,
+			btcChainParams,
+			solChainParams,
+		)
+		context := CreateAppContext(evmChain, btcChain, solChain, evmChainParams, btcChainParams, solChainParamsNew)
+
+		// update signer with new gateway address
+		signer, err := orchestrator.resolveSigner(context, solChain.ChainId)
+		require.NoError(t, err)
+		require.Equal(t, solChainParamsNew.GatewayAddress, signer.GetGatewayAddress())
+	})
 }
 
 func Test_GetUpdatedChainObserver(t *testing.T) {
 	// initial parameters for orchestrator creation
 	evmChain := chains.Ethereum
 	btcChain := chains.BitcoinMainnet
+	solChain := chains.SolanaMainnet
 	evmChainParams := mocks.MockChainParams(evmChain.ChainId, 100)
 	btcChainParams := mocks.MockChainParams(btcChain.ChainId, 100)
+
+	// solChainParams := &observertypes.ChainParams{
+	//		ChainId:        solChain.ChainId,
+	//		GatewayAddress: solanacontracts.SolanaGatewayProgramID,
+	//	}
 
 	// new chain params in AppContext
 	evmChainParamsNew := &observertypes.ChainParams{
@@ -162,10 +197,37 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		MinObserverDelegation:       sdk.OneDec(),
 		IsSupported:                 true,
 	}
+	solChainParamsNew := &observertypes.ChainParams{
+		ChainId:                     solChain.ChainId,
+		ConfirmationCount:           10,
+		GasPriceTicker:              5,
+		InboundTicker:               6,
+		OutboundTicker:              6,
+		WatchUtxoTicker:             1,
+		ZetaTokenContractAddress:    "",
+		ConnectorContractAddress:    "",
+		Erc20CustodyContractAddress: "",
+		OutboundScheduleInterval:    10,
+		OutboundScheduleLookahead:   10,
+		BallotThreshold:             sdk.OneDec(),
+		MinObserverDelegation:       sdk.OneDec(),
+		IsSupported:                 true,
+	}
 
 	t.Run("evm chain observer should not be found", func(t *testing.T) {
 		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, &evmChainParams, &btcChainParams)
 		appContext := CreateAppContext(t, evmChain, btcChain, evmChainParamsNew, &btcChainParams)
+		orchestrator := MockOrchestrator(
+			t,
+			nil,
+			&evmChain,
+			&btcChain,
+			&solChain,
+			evmChainParams,
+			btcChainParams,
+			solChainParams,
+		)
+		appContext := CreateAppContext(evmChain, btcChain, solChain, evmChainParamsNew, btcChainParams, solChainParams)
 		// BSC chain observer should not be found
 		_, err := orchestrator.resolveObserver(appContext, chains.BscMainnet.ChainId)
 		require.ErrorContains(t, err, "observer not found")
@@ -173,6 +235,17 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 	t.Run("chain params in evm chain observer should be updated successfully", func(t *testing.T) {
 		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, &evmChainParams, &btcChainParams)
 		appContext := CreateAppContext(t, evmChain, btcChain, evmChainParamsNew, &btcChainParams)
+		orchestrator := MockOrchestrator(
+			t,
+			nil,
+			&evmChain,
+			&btcChain,
+			&solChain,
+			evmChainParams,
+			btcChainParams,
+			solChainParams,
+		)
+		appContext := CreateAppContext(evmChain, btcChain, solChain, evmChainParamsNew, btcChainParams, solChainParams)
 		// update evm chain observer with new chain params
 		chainOb, err := orchestrator.resolveObserver(appContext, evmChain.ChainId)
 		require.NoError(t, err)
@@ -182,6 +255,17 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 	t.Run("btc chain observer should not be found", func(t *testing.T) {
 		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, &evmChainParams, &btcChainParams)
 		appContext := CreateAppContext(t, btcChain, btcChain, &evmChainParams, btcChainParamsNew)
+		orchestrator := MockOrchestrator(
+			t,
+			nil,
+			&evmChain,
+			&btcChain,
+			&solChain,
+			evmChainParams,
+			btcChainParams,
+			solChainParams,
+		)
+		appContext := CreateAppContext(btcChain, btcChain, solChain, evmChainParams, btcChainParamsNew, solChainParams)
 		// BTC testnet chain observer should not be found
 		_, err := orchestrator.resolveObserver(appContext, chains.BitcoinTestnet.ChainId)
 		require.ErrorContains(t, err, "observer not found")
@@ -189,11 +273,56 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 	t.Run("chain params in btc chain observer should be updated successfully", func(t *testing.T) {
 		orchestrator := MockOrchestrator(t, nil, evmChain, btcChain, &evmChainParams, &btcChainParams)
 		appContext := CreateAppContext(t, btcChain, btcChain, &evmChainParams, btcChainParamsNew)
+		orchestrator := MockOrchestrator(
+			t,
+			nil,
+			&evmChain,
+			&btcChain,
+			&solChain,
+			evmChainParams,
+			btcChainParams,
+			solChainParams,
+		)
+		appContext := CreateAppContext(btcChain, btcChain, solChain, evmChainParams, btcChainParamsNew, solChainParams)
 		// update btc chain observer with new chain params
 		chainOb, err := orchestrator.resolveObserver(appContext, btcChain.ChainId)
 		require.NoError(t, err)
 		require.NotNil(t, chainOb)
 		require.True(t, observertypes.ChainParamsEqual(*btcChainParamsNew, chainOb.GetChainParams()))
+	})
+	t.Run("solana chain observer should not be found", func(t *testing.T) {
+		orchestrator := MockOrchestrator(
+			t,
+			nil,
+			&evmChain,
+			&btcChain,
+			&solChain,
+			evmChainParams,
+			btcChainParams,
+			solChainParams,
+		)
+		appContext := CreateAppContext(solChain, btcChain, solChain, evmChainParams, btcChainParams, solChainParamsNew)
+		// Solana Devnet chain observer should not be found
+		_, err := orchestrator.resolveObserver(appContext, chains.SolanaDevnet.ChainId)
+		require.ErrorContains(t, err, "observer not found")
+	})
+	t.Run("chain params in solana chain observer should be updated successfully", func(t *testing.T) {
+		orchestrator := MockOrchestrator(
+			t,
+			nil,
+			&evmChain,
+			&btcChain,
+			&solChain,
+			evmChainParams,
+			btcChainParams,
+			solChainParams,
+		)
+		appContext := CreateAppContext(solChain, btcChain, solChain, evmChainParams, btcChainParams, solChainParamsNew)
+		// update solana chain observer with new chain params
+		chainOb, err := orchestrator.resolveObserver(appContext, solChain.ChainId)
+		require.NoError(t, err)
+		require.NotNil(t, chainOb)
+		require.True(t, observertypes.ChainParamsEqual(*solChainParamsNew, chainOb.GetChainParams()))
 	})
 }
 
@@ -357,7 +486,7 @@ func Test_GetPendingCctxsWithinRateLimit(t *testing.T) {
 			client.WithPendingCctx(btcChain.ChainId, tt.btcCctxsFallback)
 
 			// create orchestrator
-			orchestrator := MockOrchestrator(t, client, ethChain, btcChain, ethChainParams, btcChainParams)
+			orchestrator := MockOrchestrator(t, client, &ethChain, &btcChain, nil, ethChainParams, btcChainParams, nil)
 
 			chainIDs := slices.Map(foreignChains, func(c chains.Chain) int64 { return c.ChainId })
 

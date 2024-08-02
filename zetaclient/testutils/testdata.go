@@ -309,6 +309,19 @@ func LoadSolanaInboundTxResult(
 	return txResult
 }
 
+// LoadSolanaOutboundTxResult loads archived Solana outbound tx result from file
+func LoadSolanaOutboundTxResult(
+	t *testing.T,
+	dir string,
+	chainID int64,
+	txHash string,
+) *rpc.GetTransactionResult {
+	name := path.Join(dir, TestDataPathSolana, FileNameSolanaOutbound(chainID, txHash))
+	txResult := &rpc.GetTransactionResult{}
+	LoadObjectFromJSONFile(t, txResult, name)
+	return txResult
+}
+
 //==============================================================================
 // other helpers methods
 

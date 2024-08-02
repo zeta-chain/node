@@ -126,7 +126,6 @@ func NewOutboundData(
 	txData.sender = ethcommon.HexToAddress(cctx.InboundParams.Sender)
 	txData.srcChainID = big.NewInt(cctx.InboundParams.SenderChainId)
 	txData.asset = ethcommon.HexToAddress(cctx.InboundParams.Asset)
-
 	txData.height = height
 
 	skipTx := txData.SetChainAndSender(cctx, logger)
@@ -151,17 +150,6 @@ func NewOutboundData(
 	}
 
 	rawChain := toChain.RawChain()
-
-	// Get nonce, Early return if the cctx is already processed
-	nonce := cctx.GetCurrentOutboundParam().TssNonce
-	included, confirmed, err := evmObserver.IsOutboundProcessed(ctx, cctx, logger)
-	if err != nil {
-		return nil, true, errors.New("IsOutboundProcessed failed")
-	}
-	if included || confirmed {
-		logger.Info().Msgf("CCTX already processed; exit signer")
-		return nil, true, nil
-	}
 
 	// Set up gas limit and gas price
 	err = txData.SetupGas(cctx, logger, evmRPC, *rawChain)

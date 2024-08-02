@@ -11,6 +11,7 @@
 ### Breaking Changes
 
 * [2460](https://github.com/zeta-chain/node/pull/2460) - Upgrade to go 1.22. This required us to temporarily remove the QUIC backend from [go-libp2p](https://github.com/libp2p/go-libp2p). If you are a zetaclient operator and have configured quic peers, you need to switch to tcp peers.
+* [List of the other breaking changes can be found in this document](docs/releases/v19_breaking_changes.md)
 
 ### Features
 
@@ -42,6 +43,9 @@
 * [2518](https://github.com/zeta-chain/node/pull/2518) - add support for Solana address in zetacore
 * [2483](https://github.com/zeta-chain/node/pull/2483) - add priorityFee (gasTipCap) gas to the state
 * [2567](https://github.com/zeta-chain/node/pull/2567) - add sign latency metric to zetaclient (zetaclient_sign_latency)
+* [2524](https://github.com/zeta-chain/node/pull/2524) - add inscription envelop parsing 
+* [2560](https://github.com/zeta-chain/node/pull/2560) - add support for Solana SOL token withdraw
+* [2533](https://github.com/zeta-chain/node/pull/2533) - parse memo from both OP_RETURN and inscription
 
 ### Refactor
 
