@@ -194,3 +194,7 @@ func (c Config) LoadSolanaPrivateKey() (solana.PrivateKey, error) {
 
 	return privKey, nil
 }
+
+func (c EVMConfig) Empty() bool {
+	return c.Endpoint == "" && c.Chain.IsEmpty()
+}

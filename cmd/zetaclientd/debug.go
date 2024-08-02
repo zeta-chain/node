@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
+	"cosmossdk.io/errors"
 	"github.com/btcsuite/btcd/rpcclient"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -14,10 +16,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	evmobserver "github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -35,11 +35,14 @@ type debugArguments struct {
 }
 
 func init() {
-	RootCmd.AddCommand(DebugCmd())
-	DebugCmd().Flags().
-		StringVar(&debugArgs.zetaCoreHome, "core-home", "/Users/tanmay/.zetacored", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
-	DebugCmd().Flags().StringVar(&debugArgs.zetaNode, "node", "46.4.15.110", "public ip address")
-	DebugCmd().Flags().StringVar(&debugArgs.zetaChainID, "chain-id", "athens_7001-1", "pre-params file path")
+	defaultHomeDir := os.ExpandEnv("$HOME/.zetacored")
+
+	cmd := DebugCmd()
+	cmd.Flags().StringVar(&debugArgs.zetaCoreHome, "core-home", defaultHomeDir, "zetacore home directory")
+	cmd.Flags().StringVar(&debugArgs.zetaNode, "node", "46.4.15.110", "public ip address")
+	cmd.Flags().StringVar(&debugArgs.zetaChainID, "chain-id", "athens_7001-1", "pre-params file path")
+
+	RootCmd.AddCommand(cmd)
 }
 
 func DebugCmd() *cobra.Command {
@@ -54,19 +57,15 @@ func debugCmd(_ *cobra.Command, args []string) error {
 	cobra.ExactArgs(2)
 	cfg, err := config.Load(debugArgs.zetaCoreHome)
 	if err != nil {
-		return err
-	}
-
-	appContext := zctx.New(cfg, zerolog.Nop())
-	ctx := zctx.WithAppContext(context.Background(), appContext)
-
-	chainID, err := strconv.ParseInt(args[1], 10, 64)
-	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to load config")
 	}
 
 	inboundHash := args[0]
-	var ballotIdentifier string
+
+	chainID, err := strconv.ParseInt(args[1], 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse chain id")
+	}
 
 	// create a new zetacore client
 	client, err := zetacore.NewClient(
@@ -80,21 +79,30 @@ func debugCmd(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	chainParams, err := client.GetChainParams(ctx)
-	if err != nil {
-		return err
+
+	appContext := zctx.New(cfg, zerolog.Nop())
+	ctx := zctx.WithAppContext(context.Background(), appContext)
+
+	if err := client.UpdateAppContext(ctx, appContext, zerolog.Nop()); err != nil {
+		return errors.Wrap(err, "failed to update app context")
 	}
+
+	var ballotIdentifier string
+
 	tssEthAddress, err := client.GetEVMTSSAddress(ctx)
 	if err != nil {
 		return err
 	}
-	chain, found := chains.GetChainFromChainID(chainID, appContext.GetAdditionalChains())
-	if !found {
-		return fmt.Errorf("invalid chain id")
+
+	chain, err := appContext.GetChain(chainID)
+	if err != nil {
+		return err
 	}
 
+	chainProto := chain.RawChain()
+
 	// get ballot identifier according to the chain type
-	if chains.IsEVMChain(chain.ChainId, appContext.GetAdditionalChains()) {
+	if chain.IsEVM() {
 		evmObserver := evmobserver.Observer{}
 		evmObserver.WithZetacoreClient(client)
 		var ethRPC *ethrpc.EthRPC
@@ -109,43 +117,34 @@ func debugCmd(_ *cobra.Command, args []string) error {
 				}
 				evmObserver.WithEvmClient(client)
 				evmObserver.WithEvmJSONRPC(ethRPC)
-				evmObserver.WithChain(chain)
+				evmObserver.WithChain(*chainProto)
 			}
 		}
 		hash := ethcommon.HexToHash(inboundHash)
 		tx, isPending, err := evmObserver.TransactionByHash(inboundHash)
 		if err != nil {
-			return fmt.Errorf("tx not found on chain %s , %d", err.Error(), chain.ChainId)
+			return fmt.Errorf("tx not found on chain %s, %d", err.Error(), chain.ID())
 		}
+
 		if isPending {
 			return fmt.Errorf("tx is still pending")
 		}
+
 		receipt, err := client.TransactionReceipt(context.Background(), hash)
 		if err != nil {
-			return fmt.Errorf("tx receipt not found on chain %s, %d", err.Error(), chain.ChainId)
+			return fmt.Errorf("tx receipt not found on chain %s, %d", err.Error(), chain.ID())
 		}
 
-		for _, chainParams := range chainParams {
-			if chainParams.ChainId == chainID {
-				evmObserver.SetChainParams(observertypes.ChainParams{
-					ChainId:                     chainID,
-					ConnectorContractAddress:    chainParams.ConnectorContractAddress,
-					ZetaTokenContractAddress:    chainParams.ZetaTokenContractAddress,
-					Erc20CustodyContractAddress: chainParams.Erc20CustodyContractAddress,
-				})
-				evmChainParams, found := appContext.GetEVMChainParams(chainID)
-				if !found {
-					return fmt.Errorf("missing chain params for chain %d", chainID)
-				}
-				evmChainParams.ZetaTokenContractAddress = chainParams.ZetaTokenContractAddress
-				if strings.EqualFold(tx.To, chainParams.ConnectorContractAddress) {
-					coinType = coin.CoinType_Zeta
-				} else if strings.EqualFold(tx.To, chainParams.Erc20CustodyContractAddress) {
-					coinType = coin.CoinType_ERC20
-				} else if strings.EqualFold(tx.To, tssEthAddress) {
-					coinType = coin.CoinType_Gas
-				}
-			}
+		params := chain.Params()
+
+		evmObserver.SetChainParams(*params)
+
+		if strings.EqualFold(tx.To, params.ConnectorContractAddress) {
+			coinType = coin.CoinType_Zeta
+		} else if strings.EqualFold(tx.To, params.Erc20CustodyContractAddress) {
+			coinType = coin.CoinType_ERC20
+		} else if strings.EqualFold(tx.To, tssEthAddress) {
+			coinType = coin.CoinType_Gas
 		}
 
 		switch coinType {
@@ -170,10 +169,10 @@ func debugCmd(_ *cobra.Command, args []string) error {
 			fmt.Println("CoinType not detected")
 		}
 		fmt.Println("CoinType : ", coinType)
-	} else if chains.IsBitcoinChain(chain.ChainId, appContext.GetAdditionalChains()) {
+	} else if chain.IsUTXO() {
 		btcObserver := btcobserver.Observer{}
 		btcObserver.WithZetacoreClient(client)
-		btcObserver.WithChain(chain)
+		btcObserver.WithChain(*chainProto)
 		connCfg := &rpcclient.ConnConfig{
 			Host:         cfg.BitcoinConfig.RPCHost,
 			User:         cfg.BitcoinConfig.RPCUsername,

@@ -11,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/db"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
@@ -161,7 +162,7 @@ func TestSigner_SetGetERC20CustodyAddress(t *testing.T) {
 }
 
 func TestSigner_TryProcessOutbound(t *testing.T) {
-	ctx := makeCtx()
+	ctx := makeCtx(t)
 
 	evmSigner, err := getNewEvmSigner(nil)
 	require.NoError(t, err)
@@ -184,7 +185,7 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 }
 
 func TestSigner_SignOutbound(t *testing.T) {
-	ctx := makeCtx()
+	ctx := makeCtx(t)
 
 	// Setup evm signer
 	tss := mocks.NewTSSMainnet()
@@ -221,7 +222,7 @@ func TestSigner_SignOutbound(t *testing.T) {
 }
 
 func TestSigner_SignRevertTx(t *testing.T) {
-	ctx := makeCtx()
+	ctx := makeCtx(t)
 
 	// Setup evm signer
 	tss := mocks.NewTSSMainnet()
@@ -261,7 +262,7 @@ func TestSigner_SignRevertTx(t *testing.T) {
 }
 
 func TestSigner_SignCancelTx(t *testing.T) {
-	ctx := makeCtx()
+	ctx := makeCtx(t)
 
 	// Setup evm signer
 	tss := mocks.NewTSSMainnet()
@@ -301,7 +302,7 @@ func TestSigner_SignCancelTx(t *testing.T) {
 }
 
 func TestSigner_SignWithdrawTx(t *testing.T) {
-	ctx := makeCtx()
+	ctx := makeCtx(t)
 
 	// Setup evm signer
 	tss := mocks.NewTSSMainnet()
@@ -340,7 +341,7 @@ func TestSigner_SignWithdrawTx(t *testing.T) {
 }
 
 func TestSigner_SignCommandTx(t *testing.T) {
-	ctx := makeCtx()
+	ctx := makeCtx(t)
 
 	// Setup evm signer
 	evmSigner, err := getNewEvmSigner(nil)
@@ -386,7 +387,7 @@ func TestSigner_SignCommandTx(t *testing.T) {
 }
 
 func TestSigner_SignERC20WithdrawTx(t *testing.T) {
-	ctx := makeCtx()
+	ctx := makeCtx(t)
 
 	// Setup evm signer
 	tss := mocks.NewTSSMainnet()
@@ -427,7 +428,7 @@ func TestSigner_SignERC20WithdrawTx(t *testing.T) {
 }
 
 func TestSigner_BroadcastOutbound(t *testing.T) {
-	ctx := makeCtx()
+	ctx := makeCtx(t)
 
 	// Setup evm signer
 	evmSigner, err := getNewEvmSigner(nil)
@@ -437,9 +438,10 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, nil)
 	require.NoError(t, err)
+
 	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
-	require.False(t, skip)
 	require.NoError(t, err)
+	require.False(t, skip)
 
 	t.Run("BroadcastOutbound - should successfully broadcast", func(t *testing.T) {
 		// Call SignERC20WithdrawTx
@@ -481,7 +483,7 @@ func TestSigner_SignerErrorMsg(t *testing.T) {
 }
 
 func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
-	ctx := makeCtx()
+	ctx := makeCtx(t)
 
 	// Setup evm signer
 	tss := mocks.NewTSSMainnet()
@@ -490,11 +492,13 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
+
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
+
 	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
-	require.False(t, skip)
 	require.NoError(t, err)
+	require.False(t, skip)
 
 	t.Run("SignWhitelistERC20Cmd - should successfully sign", func(t *testing.T) {
 		// Call SignWhitelistERC20Cmd
@@ -526,7 +530,7 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 }
 
 func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
-	ctx := makeCtx()
+	ctx := makeCtx(t)
 
 	// Setup evm signer
 	tss := mocks.NewTSSMainnet()
@@ -565,8 +569,20 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 		require.Nil(t, tx)
 	})
 }
-func makeCtx() context.Context {
+func makeCtx(t *testing.T) context.Context {
 	app := zctx.New(config.New(false), zerolog.Nop())
+
+	bscParams := mocks.MockChainParams(chains.BscMainnet.ChainId, 10)
+
+	err := app.Update(
+		observertypes.Keygen{},
+		[]chains.Chain{chains.BscMainnet},
+		nil,
+		map[int64]*observertypes.ChainParams{chains.BscMainnet.ChainId: &bscParams},
+		"tssPubKey",
+		observertypes.CrosschainFlags{},
+	)
+	require.NoError(t, err, "unable to update app context")
 
 	return zctx.WithAppContext(context.Background(), app)
 }

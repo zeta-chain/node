@@ -52,7 +52,7 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 	for {
 		select {
 		case <-ticker.C():
-			if !app.IsOutboundObservationEnabled(ob.GetChainParams()) {
+			if !app.IsOutboundObservationEnabled() {
 				sampledLogger.Info().
 					Msgf("WatchOutbound: outbound observation is disabled for chain %d", ob.Chain().ChainId)
 				continue

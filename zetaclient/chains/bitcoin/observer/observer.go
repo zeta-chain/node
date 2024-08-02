@@ -2,7 +2,6 @@
 package observer
 
 import (
-	"bytes"
 	"context"
 	"encoding/hex"
 	"fmt"
@@ -21,7 +20,6 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/proofs"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
@@ -645,42 +643,4 @@ func (ob *Observer) specialHandleFeeRate() (uint64, error) {
 func (ob *Observer) isTssTransaction(txid string) bool {
 	_, found := ob.includedTxHashes[txid]
 	return found
-}
-
-// postBlockHeader posts block header to zetacore
-// TODO(revamp): move to block header file
-func (ob *Observer) postBlockHeader(ctx context.Context, tip int64) error {
-	ob.logger.Inbound.Info().Msgf("postBlockHeader: tip %d", tip)
-	bn := tip
-	chainState, err := ob.ZetacoreClient().GetBlockHeaderChainState(ctx, ob.Chain().ChainId)
-	if err == nil && chainState != nil && chainState.EarliestHeight > 0 {
-		bn = chainState.LatestHeight + 1
-	}
-	if bn > tip {
-		return fmt.Errorf("postBlockHeader: must post block confirmed block header: %d > %d", bn, tip)
-	}
-	res2, err := ob.GetBlockByNumberCached(bn)
-	if err != nil {
-		return fmt.Errorf("error getting bitcoin block %d: %s", bn, err)
-	}
-
-	var headerBuf bytes.Buffer
-	err = res2.Header.Serialize(&headerBuf)
-	if err != nil { // should never happen
-		ob.logger.Inbound.Error().Err(err).Msgf("error serializing bitcoin block header: %d", bn)
-		return err
-	}
-	blockHash := res2.Header.BlockHash()
-	_, err = ob.ZetacoreClient().PostVoteBlockHeader(
-		ctx,
-		ob.Chain().ChainId,
-		blockHash[:],
-		res2.Block.Height,
-		proofs.NewBitcoinHeader(headerBuf.Bytes()),
-	)
-	ob.logger.Inbound.Info().Msgf("posted block header %d: %s", bn, blockHash)
-	if err != nil { // error shouldn't block the process
-		ob.logger.Inbound.Error().Err(err).Msgf("error posting bitcoin block header: %d", bn)
-	}
-	return err
 }

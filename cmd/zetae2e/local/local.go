@@ -283,14 +283,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
 		}
 
-		// skip the header proof test if we run light test or skipHeaderProof is enabled
-		testHeader := !light && !skipHeaderProof
-
 		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
 		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
 		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
-		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, testHeader, bitcoinTests...))
-		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, testHeader, ethereumTests...))
+		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, bitcoinTests...))
+		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, ethereumTests...))
 	}
 
 	if testAdmin {

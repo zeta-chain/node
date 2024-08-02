@@ -41,7 +41,7 @@ func zevmMPTestRoutine(
 
 		// depositing the necessary tokens on ZetaChain
 		txZetaDeposit := zevmMPRunner.DepositZeta()
-		txEtherDeposit := zevmMPRunner.DepositEther(false)
+		txEtherDeposit := zevmMPRunner.DepositEther()
 		zevmMPRunner.WaitForMinedCCTX(txZetaDeposit)
 		zevmMPRunner.WaitForMinedCCTX(txEtherDeposit)
 

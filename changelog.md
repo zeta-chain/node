@@ -80,6 +80,7 @@
 * [2542](https://github.com/zeta-chain/node/pull/2542) - adjust permissions to be more restrictive
 * [2572](https://github.com/zeta-chain/node/pull/2572) - turn off IBC modules
 * [2556](https://github.com/zeta-chain/node/pull/2556) - refactor migrator length check to use consensus type
+* [2568](https://github.com/zeta-chain/node/pull/2568) - improve AppContext by converging chains, chainParams, enabledChains, and additionalChains into a single zctx.Chain
 
 ### Tests
 
