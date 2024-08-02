@@ -267,11 +267,16 @@ func start(_ *cobra.Command, _ []string) error {
 	tss.CurrentPubkey = currentTss.TssPubkey
 	if tss.EVMAddress() == (ethcommon.Address{}) || tss.BTCAddress() == "" {
 		startLogger.Error().Msg("TSS address is not set in zetacore")
+	} else {
+		startLogger.Info().
+			Str("tss.eth", tss.EVMAddress().String()).
+			Str("tss.btc", tss.BTCAddress()).
+			Str("tss.pub_key", tss.CurrentPubkey).
+			Msg("Current TSS")
 	}
-	startLogger.Info().
-		Msgf("Current TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
+
 	if len(appContext.ListChainIDs()) == 0 {
-		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
+		startLogger.Error().Interface("config", cfg).Msgf("No chains in updated config")
 	}
 
 	isObserver, err := isObserverNode(ctx, zetacoreClient)
