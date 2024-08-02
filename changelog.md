@@ -44,6 +44,7 @@
 * [2483](https://github.com/zeta-chain/node/pull/2483) - add priorityFee (gasTipCap) gas to the state
 * [2567](https://github.com/zeta-chain/node/pull/2567) - add sign latency metric to zetaclient (zetaclient_sign_latency)
 * [2524](https://github.com/zeta-chain/node/pull/2524) - add inscription envelop parsing 
+* [2560](https://github.com/zeta-chain/node/pull/2560) - add support for Solana SOL token withdraw
 * [2533](https://github.com/zeta-chain/node/pull/2533) - parse memo from both OP_RETURN and inscription
 
 ### Refactor

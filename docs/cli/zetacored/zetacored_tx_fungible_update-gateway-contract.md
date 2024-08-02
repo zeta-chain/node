@@ -3,7 +3,7 @@
 Broadcast message UpdateGatewayContract to update the gateway contract address
 
 ```
-zetacored tx fungible update-gateway-contract [contract-address]  [flags]
+zetacored tx fungible update-gateway-contract [contract-address] [flags]
 ```
 
 ### Options

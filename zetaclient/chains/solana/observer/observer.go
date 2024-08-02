@@ -4,11 +4,12 @@ import (
 	"context"
 
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	solanacontract "github.com/zeta-chain/zetacore/pkg/contract/solana"
+	contracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
@@ -31,6 +32,9 @@ type Observer struct {
 
 	// pda is the program derived address of the gateway program
 	pda solana.PublicKey
+
+	// finalizedTxResults indexes tx results with the outbound hash
+	finalizedTxResults map[string]*rpc.GetTransactionResult
 }
 
 // NewObserver returns a new Solana chain observer
@@ -60,28 +64,24 @@ func NewObserver(
 		return nil, err
 	}
 
-	pubKey, err := solana.PublicKeyFromBase58(chainParams.GatewayAddress)
+	// parse gateway ID and PDA
+	gatewayID, pda, err := contracts.ParseGatewayIDAndPda(chainParams.GatewayAddress)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to derive public key")
+		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
 	}
 
 	// create solana observer
-	ob := Observer{
-		Observer:  *baseObserver,
-		solClient: solClient,
-		gatewayID: pubKey,
-	}
-
-	// compute gateway PDA
-	seed := []byte(solanacontract.PDASeed)
-	ob.pda, _, err = solana.FindProgramAddress([][]byte{seed}, ob.gatewayID)
-	if err != nil {
-		return nil, err
+	ob := &Observer{
+		Observer:           *baseObserver,
+		solClient:          solClient,
+		gatewayID:          gatewayID,
+		pda:                pda,
+		finalizedTxResults: make(map[string]*rpc.GetTransactionResult),
 	}
 
 	ob.Observer.LoadLastTxScanned()
 
-	return &ob, nil
+	return ob, nil
 }
 
 // SolClient returns the solana rpc client
@@ -122,6 +122,12 @@ func (ob *Observer) Start(ctx context.Context) {
 	// watch Solana chain for incoming txs and post votes to zetacore
 	bg.Work(ctx, ob.WatchInbound, bg.WithName("WatchInbound"), bg.WithLogger(ob.Logger().Inbound))
 
+	// watch Solana chain for outbound trackers
+	bg.Work(ctx, ob.WatchOutbound, bg.WithName("WatchOutbound"), bg.WithLogger(ob.Logger().Outbound))
+
+	// watch Solana chain for fee rate and post to zetacore
+	bg.Work(ctx, ob.WatchGasPrice, bg.WithName("WatchGasPrice"), bg.WithLogger(ob.Logger().GasPrice))
+
 	// watch zetacore for Solana inbound trackers
 	bg.Work(ctx, ob.WatchInboundTracker, bg.WithName("WatchInboundTracker"), bg.WithLogger(ob.Logger().Inbound))
 }
@@ -132,4 +138,25 @@ func (ob *Observer) LoadLastTxScanned() error {
 	ob.Logger().Chain.Info().Msgf("chain %d starts scanning from tx %s", ob.Chain().ChainId, ob.LastTxScanned())
 
 	return nil
+}
+
+// SetTxResult sets the tx result for the given nonce
+func (ob *Observer) SetTxResult(nonce uint64, result *rpc.GetTransactionResult) {
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
+	ob.finalizedTxResults[ob.OutboundID(nonce)] = result
+}
+
+// GetTxResult returns the tx result for the given nonce
+func (ob *Observer) GetTxResult(nonce uint64) *rpc.GetTransactionResult {
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
+	return ob.finalizedTxResults[ob.OutboundID(nonce)]
+}
+
+// IsTxFinalized returns true if there is a finalized tx for nonce
+func (ob *Observer) IsTxFinalized(nonce uint64) bool {
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
+	return ob.finalizedTxResults[ob.OutboundID(nonce)] != nil
 }

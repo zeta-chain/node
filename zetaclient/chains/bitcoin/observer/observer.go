@@ -324,8 +324,7 @@ func (ob *Observer) WatchGasPrice(ctx context.Context) error {
 	// start gas price ticker
 	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchGasPrice", ob.GetChainParams().GasPriceTicker)
 	if err != nil {
-		ob.logger.GasPrice.Error().Err(err).Msg("error creating ticker")
-		return err
+		return errors.Wrapf(err, "NewDynamicTicker error")
 	}
 	ob.logger.GasPrice.Info().Msgf("WatchGasPrice started for chain %d with interval %d",
 		ob.Chain().ChainId, ob.GetChainParams().GasPriceTicker)
@@ -383,7 +382,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	// query the current block number
 	blockNumber, err := ob.btcClient.GetBlockCount()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "GetBlockCount error")
 	}
 
 	// UTXO has no concept of priority fee (like eth)
@@ -392,8 +391,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	// #nosec G115 always positive
 	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), feeRateEstimated, priorityFee, uint64(blockNumber))
 	if err != nil {
-		ob.logger.GasPrice.Err(err).Msg("err PostGasPrice")
-		return err
+		return errors.Wrap(err, "PostVoteGasPrice error")
 	}
 
 	return nil
@@ -537,7 +535,7 @@ func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 // SaveBroadcastedTx saves successfully broadcasted transaction
 // TODO(revamp): move to db file
 func (ob *Observer) SaveBroadcastedTx(txHash string, nonce uint64) {
-	outboundID := ob.GetTxID(nonce)
+	outboundID := ob.OutboundID(nonce)
 	ob.Mu().Lock()
 	ob.broadcastedTx[outboundID] = txHash
 	ob.Mu().Unlock()
