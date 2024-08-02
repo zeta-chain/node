@@ -49,6 +49,7 @@ func TestChainRegistry(t *testing.T) {
 		require.Error(t, r.Set(btc.ChainId, btc, nil))
 		require.Error(t, r.Set(btc.ChainId, nil, btcParams))
 		require.Error(t, r.Set(123, btc, btcParams))
+		require.Error(t, r.Set(btc.ChainId, btc, ethParams))
 
 		// With failure on adding unsupported chains
 		require.ErrorIs(t, r.Set(opt.ChainId, opt, optParams), ErrChainNotSupported)
