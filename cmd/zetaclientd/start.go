@@ -214,8 +214,13 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	btcChains := appContext.FilterChains(zctx.Chain.IsUTXO)
-	if len(btcChains) == 0 {
+	switch {
+	case len(btcChains) == 0:
 		return errors.New("no BTC chains found")
+	case len(btcChains) > 1:
+		// In the future we might support multiple UTXO chains;
+		// right now we only support BTC. Let's make sure there are no surprises.
+		return errors.New("more than one BTC chain found")
 	}
 
 	tss, err := mc.NewTSS(

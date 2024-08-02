@@ -646,7 +646,7 @@ func (ob *Observer) BuildInboundVoteMsgForZetaSentEvent(
 	appContext *zctx.AppContext,
 	event *zetaconnector.ZetaConnectorNonEthZetaSent,
 ) *types.MsgVoteInbound {
-	// not that this is most likely zeta chain
+	// note that this is most likely zeta chain
 	destChain, err := appContext.GetChain(event.DestinationChainId.Int64())
 	if err != nil {
 		ob.Logger().Inbound.Warn().Err(err).Msgf("chain id %d not supported", event.DestinationChainId.Int64())

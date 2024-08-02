@@ -34,12 +34,11 @@ type debugArguments struct {
 	zetaChainID  string
 }
 
-var homeDir = os.ExpandEnv("$HOME/.zetacored")
-
 func init() {
-	cmd := DebugCmd()
+	defaultHomeDir := os.ExpandEnv("$HOME/.zetacored")
 
-	cmd.Flags().StringVar(&debugArgs.zetaCoreHome, "core-home", homeDir, "zetecore home directory")
+	cmd := DebugCmd()
+	cmd.Flags().StringVar(&debugArgs.zetaCoreHome, "core-home", defaultHomeDir, "zetacore home directory")
 	cmd.Flags().StringVar(&debugArgs.zetaNode, "node", "46.4.15.110", "public ip address")
 	cmd.Flags().StringVar(&debugArgs.zetaChainID, "chain-id", "athens_7001-1", "pre-params file path")
 

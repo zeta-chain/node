@@ -67,7 +67,7 @@ func (cr *ChainRegistry) All() []Chain {
 }
 
 // Set sets a chain in the registry.
-// A chain must be SUPPORTED and NOT ZetaChain itself; otherwise returns ErrChainNotSupported
+// A chain must be SUPPORTED; otherwise returns ErrChainNotSupported
 func (cr *ChainRegistry) Set(chainID int64, chain *chains.Chain, params *observer.ChainParams) error {
 	item, err := newChain(cr, chainID, chain, params)
 	if err != nil {
