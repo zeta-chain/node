@@ -129,7 +129,7 @@ func (tl *TSSListener) waitForNewKeyGeneration(ctx context.Context) error {
 func (tl *TSSListener) waitForNewKeygen(ctx context.Context) error {
 	// Initial Keygen retrieval
 	keygen, err := retry.DoTypedWithBackoffAndRetry(
-		func() (*observertypes.Keygen, error) { return tl.client.GetKeyGen(ctx) },
+		func() (observertypes.Keygen, error) { return tl.client.GetKeyGen(ctx) },
 		retry.DefaultConstantBackoff(),
 	)
 	if err != nil {
@@ -146,8 +146,6 @@ func (tl *TSSListener) waitForNewKeygen(ctx context.Context) error {
 			switch {
 			case err != nil:
 				tl.logger.Warn().Err(err).Msg("unable to get keygen")
-				continue
-			case keygenUpdated == nil:
 				continue
 			case keygenUpdated.Status == observertypes.KeygenStatus_PendingKeygen:
 				continue
