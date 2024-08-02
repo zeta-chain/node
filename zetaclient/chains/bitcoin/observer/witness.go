@@ -3,10 +3,12 @@ package observer
 import (
 	"encoding/hex"
 	"fmt"
+
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 )
@@ -50,7 +52,8 @@ func GetBtcEventWithWitness(
 	var memo []byte
 	if candidate := tryExtractOpRet(tx, logger); candidate != nil {
 		memo = candidate
-		logger.Debug().Msgf("GetBtcEventWithWitness: found OP_RETURN memo %s in tx %s", hex.EncodeToString(memo), tx.Txid)
+		logger.Debug().
+			Msgf("GetBtcEventWithWitness: found OP_RETURN memo %s in tx %s", hex.EncodeToString(memo), tx.Txid)
 	} else if candidate = tryExtractInscription(tx, logger); candidate != nil {
 		memo = candidate
 		logger.Debug().Msgf("GetBtcEventWithWitness: found inscription memo %s in tx %s", hex.EncodeToString(memo), tx.Txid)
