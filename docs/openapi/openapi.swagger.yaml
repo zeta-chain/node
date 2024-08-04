@@ -57231,6 +57231,8 @@ definitions:
       is_removed:
         type: boolean
         title: if the tx was removed from the tracker due to no pending cctx
+  crosschainMsgMigrateERC20CustodyFundsResponse:
+    type: object
   crosschainMsgMigrateTssFundsResponse:
     type: object
   crosschainMsgRefundAbortedCCTXResponse:
