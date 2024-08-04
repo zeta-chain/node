@@ -195,8 +195,9 @@ message MsgUpdateRateLimiterFlagsResponse {}
 message MsgMigrateERC20CustodyFunds {
   string creator = 1;
   int64 chain_id = 2;
-  string erc20_address = 3;
-  string amount = 4 [
+  string new_custody_address = 3;
+  string erc20_address = 4;
+  string amount = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false
   ];

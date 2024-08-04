@@ -280,8 +280,9 @@ MigrateERC20CustodyFunds migrates the funds from the current TSS to the new TSS
 message MsgMigrateERC20CustodyFunds {
 	string creator = 1;
 	int64 chain_id = 2;
-	string erc20_address = 3;
-	string amount = 4;
+	string new_custody_address = 3;
+	string erc20_address = 4;
+	string amount = 5;
 }
 ```
 

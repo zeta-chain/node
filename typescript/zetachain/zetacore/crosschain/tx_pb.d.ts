@@ -841,12 +841,17 @@ export declare class MsgMigrateERC20CustodyFunds extends Message<MsgMigrateERC20
   chainId: bigint;
 
   /**
-   * @generated from field: string erc20_address = 3;
+   * @generated from field: string new_custody_address = 3;
+   */
+  newCustodyAddress: string;
+
+  /**
+   * @generated from field: string erc20_address = 4;
    */
   erc20Address: string;
 
   /**
-   * @generated from field: string amount = 4;
+   * @generated from field: string amount = 5;
    */
   amount: string;
 

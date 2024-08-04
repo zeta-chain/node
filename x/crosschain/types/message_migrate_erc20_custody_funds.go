@@ -15,14 +15,16 @@ var _ sdk.Msg = &MsgMigrateERC20CustodyFunds{}
 func NewMsgMigrateERC20CustodyFunds(
 	creator string,
 	chainID int64,
+	newCustodyAddress string,
 	erc20Address string,
 	amount sdkmath.Uint,
 ) *MsgMigrateERC20CustodyFunds {
 	return &MsgMigrateERC20CustodyFunds{
-		Creator:      creator,
-		ChainId:      chainID,
-		Erc20Address: erc20Address,
-		Amount:       amount,
+		Creator:           creator,
+		ChainId:           chainID,
+		NewCustodyAddress: newCustodyAddress,
+		Erc20Address:      erc20Address,
+		Amount:            amount,
 	}
 }
 
@@ -51,6 +53,11 @@ func (msg *MsgMigrateERC20CustodyFunds) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
+
+	// newCustodyContractAddress is a valid ethereum address
+	if !ethcommon.IsHexAddress(msg.NewCustodyAddress) {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid new custody address")
 	}
 
 	// erc20Address is a valid ethereum address

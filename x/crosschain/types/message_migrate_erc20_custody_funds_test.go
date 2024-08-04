@@ -26,6 +26,7 @@ func TestNewMsgMigrateERC20CustodyFunds_ValidateBasic(t *testing.T) {
 				"invalid address",
 				chains.DefaultChainsList()[0].ChainId,
 				sample.EthAddress().String(),
+				sample.EthAddress().String(),
 				sdkmath.NewUintFromString("100000"),
 			),
 			error: true,
@@ -35,6 +36,7 @@ func TestNewMsgMigrateERC20CustodyFunds_ValidateBasic(t *testing.T) {
 			msg: types.NewMsgMigrateERC20CustodyFunds(
 				sample.AccAddress(),
 				chains.DefaultChainsList()[0].ChainId,
+				sample.EthAddress().String(),
 				sample.EthAddress().String(),
 				sdkmath.NewUintFromString("0"),
 			),
@@ -46,6 +48,7 @@ func TestNewMsgMigrateERC20CustodyFunds_ValidateBasic(t *testing.T) {
 				sample.AccAddress(),
 				chains.DefaultChainsList()[0].ChainId,
 				sample.EthAddress().String(),
+				sample.EthAddress().String(),
 				sdkmath.NewUintFromString("100000"),
 			),
 			error: false,
@@ -55,7 +58,18 @@ func TestNewMsgMigrateERC20CustodyFunds_ValidateBasic(t *testing.T) {
 			msg: types.NewMsgMigrateERC20CustodyFunds(
 				sample.AccAddress(),
 				chains.DefaultChainsList()[0].ChainId,
+				sample.EthAddress().String(),
 				"invalid address",
+				sdkmath.NewUintFromString("100000"),
+			),
+		},
+		{
+			name: "invalid new custody address",
+			msg: types.NewMsgMigrateERC20CustodyFunds(
+				sample.AccAddress(),
+				chains.DefaultChainsList()[0].ChainId,
+				"invalid address",
+				sample.EthAddress().String(),
 				sdkmath.NewUintFromString("100000"),
 			),
 		},
@@ -83,20 +97,22 @@ func TestNewMsgMigrateERC20CustodyFunds_GetSigners(t *testing.T) {
 		{
 			name: "valid signer",
 			msg: types.MsgMigrateERC20CustodyFunds{
-				Creator:      signer,
-				ChainId:      chains.DefaultChainsList()[0].ChainId,
-				Erc20Address: sample.EthAddress().String(),
-				Amount:       sdkmath.NewUintFromString("100000"),
+				Creator:           signer,
+				ChainId:           chains.DefaultChainsList()[0].ChainId,
+				NewCustodyAddress: sample.EthAddress().String(),
+				Erc20Address:      sample.EthAddress().String(),
+				Amount:            sdkmath.NewUintFromString("100000"),
 			},
 			panics: false,
 		},
 		{
 			name: "invalid signer",
 			msg: types.MsgMigrateERC20CustodyFunds{
-				Creator:      "invalid_address",
-				ChainId:      chains.DefaultChainsList()[0].ChainId,
-				Erc20Address: sample.EthAddress().String(),
-				Amount:       sdkmath.NewUintFromString("100000"),
+				Creator:           "invalid_address",
+				ChainId:           chains.DefaultChainsList()[0].ChainId,
+				NewCustodyAddress: sample.EthAddress().String(),
+				Erc20Address:      sample.EthAddress().String(),
+				Amount:            sdkmath.NewUintFromString("100000"),
 			},
 			panics: true,
 		},
@@ -118,30 +134,33 @@ func TestNewMsgMigrateERC20CustodyFunds_GetSigners(t *testing.T) {
 
 func TestNewMsgMigrateERC20CustodyFunds_Type(t *testing.T) {
 	msg := types.MsgMigrateERC20CustodyFunds{
-		Creator:      sample.AccAddress(),
-		ChainId:      chains.DefaultChainsList()[0].ChainId,
-		Erc20Address: sample.EthAddress().String(),
-		Amount:       sdkmath.NewUintFromString("100000"),
+		Creator:           sample.AccAddress(),
+		ChainId:           chains.DefaultChainsList()[0].ChainId,
+		NewCustodyAddress: sample.EthAddress().String(),
+		Erc20Address:      sample.EthAddress().String(),
+		Amount:            sdkmath.NewUintFromString("100000"),
 	}
 	require.Equal(t, types.TypeMsgMigrateERC20CustodyFunds, msg.Type())
 }
 
 func TestNewMsgMigrateERC20CustodyFunds_Route(t *testing.T) {
 	msg := types.MsgMigrateERC20CustodyFunds{
-		Creator:      sample.AccAddress(),
-		ChainId:      chains.DefaultChainsList()[0].ChainId,
-		Erc20Address: sample.EthAddress().String(),
-		Amount:       sdkmath.NewUintFromString("100000"),
+		Creator:           sample.AccAddress(),
+		ChainId:           chains.DefaultChainsList()[0].ChainId,
+		NewCustodyAddress: sample.EthAddress().String(),
+		Erc20Address:      sample.EthAddress().String(),
+		Amount:            sdkmath.NewUintFromString("100000"),
 	}
 	require.Equal(t, types.RouterKey, msg.Route())
 }
 
 func TestNewMsgMigrateERC20CustodyFunds_GetSignBytes(t *testing.T) {
 	msg := types.MsgMigrateERC20CustodyFunds{
-		Creator:      sample.AccAddress(),
-		ChainId:      chains.DefaultChainsList()[0].ChainId,
-		Erc20Address: sample.EthAddress().String(),
-		Amount:       sdkmath.NewUintFromString("100000"),
+		Creator:           sample.AccAddress(),
+		ChainId:           chains.DefaultChainsList()[0].ChainId,
+		NewCustodyAddress: sample.EthAddress().String(),
+		Erc20Address:      sample.EthAddress().String(),
+		Amount:            sdkmath.NewUintFromString("100000"),
 	}
 	require.NotPanics(t, func() {
 		msg.GetSignBytes()

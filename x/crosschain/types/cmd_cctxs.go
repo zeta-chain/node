@@ -15,6 +15,53 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/gas"
 )
 
+// MigrateERC20CustodyFundsCmdCCTX returns a CCTX allowing to migrate ERC20 custody funds
+func MigrateERC20CustodyFundsCmdCCTX(
+	creator string,
+	erc20Address string,
+	custodyContractAddress string,
+	newCustodyContractAddress string,
+	chainID int64,
+	amount sdkmath.Uint,
+	gasPrice string,
+	priorityFee string,
+	tssPubKey string,
+	currentNonce uint64,
+) CrossChainTx {
+	indexString := GetERC20CustodyMigrationCCTXIndexString(tssPubKey, currentNonce, erc20Address)
+	hash := crypto.Keccak256Hash([]byte(indexString))
+
+	return newCmdCCTX(
+		creator,
+		hash.Hex(),
+		fmt.Sprintf(
+			"%s:%s:%s:%s",
+			constant.CmdMigrateERC20CustodyFunds,
+			newCustodyContractAddress,
+			erc20Address,
+			amount.String(),
+		),
+		"",
+		hash.Hex(),
+		custodyContractAddress,
+		chainID,
+		sdkmath.NewUint(0),
+		100_000,
+		gasPrice,
+		priorityFee,
+		tssPubKey,
+	)
+}
+
+// GetERC20CustodyMigrationCCTXIndexString returns the index string of the CCTX for migrating ERC20 custody funds
+func GetERC20CustodyMigrationCCTXIndexString(
+	tssPubKey string,
+	nonce uint64,
+	erc20Address string,
+) string {
+	return fmt.Sprintf("%s-%d-%s", tssPubKey, nonce, erc20Address)
+}
+
 // WhitelistERC20CmdCCTX returns a CCTX allowing to whitelist an ERC20 token on an external chain
 func WhitelistERC20CmdCCTX(
 	creator string,
@@ -36,7 +83,7 @@ func WhitelistERC20CmdCCTX(
 		hash.Hex(),
 		fmt.Sprintf("%s:%s", constant.CmdWhitelistERC20, erc20Address),
 		"",
-		hash.String(),
+		hash.Hex(),
 		custodyContractAddress,
 		chainID,
 		sdkmath.NewUint(0),
