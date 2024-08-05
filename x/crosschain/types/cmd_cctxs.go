@@ -192,7 +192,8 @@ func MigrateFundCmdCCTX(
 
 // GetTssMigrationCCTXIndexString returns the index string of the CCTX for migrating funds from the current TSS to the new TSS
 func GetTssMigrationCCTXIndexString(
-	currentTssPubkey, newTssPubkey string,
+	currentTssPubkey,
+	newTssPubkey string,
 	chainID int64,
 	amount sdkmath.Uint,
 	height int64,
