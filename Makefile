@@ -322,7 +322,7 @@ start-upgrade-import-mainnet-test: zetanode-upgrade
 ###############################################################################
 
 PACKAGE_NAME          := github.com/zeta-chain/node
-GOLANG_CROSS_VERSION  ?= v1.20.7
+GOLANG_CROSS_VERSION  ?= v1.22.4
 GOPATH ?= '$(HOME)/go'
 release-dry-run:
 	docker run \
