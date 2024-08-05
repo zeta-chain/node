@@ -61,6 +61,7 @@ func (signer *Signer) reportToOutboundTracker(
 			confirmed, err := rpc.IsTxConfirmed(ctx, signer.client, outboundHash, evm.ReorgProtectBlockCount)
 			if err != nil {
 				logger.Err(err).Msg("unable to check confirmation status of outbound")
+				continue
 			}
 			if !confirmed {
 				continue
