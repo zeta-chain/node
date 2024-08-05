@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"math/big"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -50,10 +51,12 @@ func NewOutboundData(
 	height uint64,
 	logger zerolog.Logger,
 ) (*OutboundData, bool, error) {
-	var (
-		outboundParams = cctx.GetCurrentOutboundParam()
-		nonce          = outboundParams.TssNonce
-	)
+	if cctx == nil {
+		return nil, false, errors.New("cctx is nil")
+	}
+
+	outboundParams := cctx.GetCurrentOutboundParam()
+	nonce := outboundParams.TssNonce
 
 	if err := validateParams(outboundParams); err != nil {
 		return nil, false, errors.Wrap(err, "invalid outboundParams")
@@ -137,7 +140,13 @@ func NewOutboundData(
 }
 
 func getCCTXIndex(cctx *types.CrossChainTx) ([32]byte, error) {
-	cctxIndexSlice, err := hex.DecodeString(cctx.Index[2:]) // remove the leading 0x
+	// `0x` + `64 chars`. Two chars ranging `00...FF` represent one byte (64 chars = 32 bytes)
+	if len(cctx.Index) != (2 + 64) {
+		return [32]byte{}, fmt.Errorf("cctx index %q is invalid", cctx.Index)
+	}
+
+	// remove the leading `0x`
+	cctxIndexSlice, err := hex.DecodeString(cctx.Index[2:])
 	if err != nil || len(cctxIndexSlice) != 32 {
 		return [32]byte{}, errors.Wrapf(err, "unable to decode cctx index %s", cctx.Index)
 	}
