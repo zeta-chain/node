@@ -51,7 +51,6 @@ func TestNewMsgMigrateERC20CustodyFunds_ValidateBasic(t *testing.T) {
 				sample.EthAddress().String(),
 				sdkmath.NewUintFromString("100000"),
 			),
-			error: false,
 		},
 		{
 			name: "invalid erc20 address",
@@ -62,6 +61,7 @@ func TestNewMsgMigrateERC20CustodyFunds_ValidateBasic(t *testing.T) {
 				"invalid address",
 				sdkmath.NewUintFromString("100000"),
 			),
+			error: true,
 		},
 		{
 			name: "invalid new custody address",
@@ -72,6 +72,7 @@ func TestNewMsgMigrateERC20CustodyFunds_ValidateBasic(t *testing.T) {
 				sample.EthAddress().String(),
 				sdkmath.NewUintFromString("100000"),
 			),
+			error: true,
 		},
 	}
 	for _, tt := range tests {
