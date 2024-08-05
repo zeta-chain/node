@@ -10,6 +10,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
@@ -197,11 +198,11 @@ func TestSigner_SignOutbound(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, makeLogger(t))
 	require.False(t, skip)
 	require.NoError(t, err)
 
-	t.Run("SignOutbound - should successfully sign", func(t *testing.T) {
+	t.Run("SignOutbound - should successfully sign LegacyTx", func(t *testing.T) {
 		// Call SignOutbound
 		tx, err := evmSigner.SignOutbound(ctx, txData)
 		require.NoError(t, err)
@@ -209,6 +210,9 @@ func TestSigner_SignOutbound(t *testing.T) {
 		// Verify Signature
 		tss := mocks.NewTSSMainnet()
 		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+
+		// check that by default tx type is legacy tx
+		assert.Equal(t, ethtypes.LegacyTxType, int(tx.Type()))
 	})
 	t.Run("SignOutbound - should fail if keysign fails", func(t *testing.T) {
 		// Pause tss to make keysign fail
@@ -218,6 +222,42 @@ func TestSigner_SignOutbound(t *testing.T) {
 		tx, err := evmSigner.SignOutbound(ctx, txData)
 		require.ErrorContains(t, err, "sign onReceive error")
 		require.Nil(t, tx)
+	})
+
+	t.Run("SignOutbound - should successfully sign DynamicFeeTx", func(t *testing.T) {
+		// ARRANGE
+		const (
+			gwei        = 1_000_000_000
+			priorityFee = 1 * gwei
+			gasPrice    = 3 * gwei
+		)
+
+		// Given a CCTX with gas price and priority fee
+		cctx := getCCTX(t)
+		cctx.OutboundParams[0].GasPrice = big.NewInt(gasPrice).String()
+		cctx.OutboundParams[0].GasPriorityFee = big.NewInt(priorityFee).String()
+
+		// Given outbound data
+		txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, makeLogger(t))
+		require.False(t, skip)
+		require.NoError(t, err)
+
+		// Given a working TSS
+		tss.Unpause()
+
+		// ACT
+		tx, err := evmSigner.SignOutbound(ctx, txData)
+		require.NoError(t, err)
+
+		// ASSERT
+		verifyTxSignature(t, tx, mocks.NewTSSMainnet().Pubkey(), evmSigner.EvmSigner())
+
+		// check that by default tx type is a dynamic fee tx
+		assert.Equal(t, ethtypes.DynamicFeeTxType, int(tx.Type()))
+
+		// check that the gasPrice & priorityFee are set correctly
+		assert.Equal(t, int64(gasPrice), tx.GasFeeCap().Int64())
+		assert.Equal(t, int64(priorityFee), tx.GasTipCap().Int64())
 	})
 }
 
@@ -587,4 +627,8 @@ func makeCtx(t *testing.T) context.Context {
 	require.NoError(t, err, "unable to update app context")
 
 	return zctx.WithAppContext(context.Background(), app)
+}
+
+func makeLogger(t *testing.T) zerolog.Logger {
+	return zerolog.New(zerolog.NewTestWriter(t))
 }
