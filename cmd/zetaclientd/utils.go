@@ -41,5 +41,3 @@ func CreateZetacoreClient(cfg config.Config, hotkeyPassword string, logger zerol
 
 	return client, nil
 }
-
-// TODO
