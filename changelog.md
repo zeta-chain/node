@@ -46,6 +46,7 @@
 * [2524](https://github.com/zeta-chain/node/pull/2524) - add inscription envelop parsing 
 * [2560](https://github.com/zeta-chain/node/pull/2560) - add support for Solana SOL token withdraw
 * [2533](https://github.com/zeta-chain/node/pull/2533) - parse memo from both OP_RETURN and inscription
+* [2634](https://github.com/zeta-chain/node/pull/2634) - add support for EIP-1559 gas fees
 
 ### Refactor
 
