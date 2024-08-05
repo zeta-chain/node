@@ -86,5 +86,19 @@ func (k msgServer) MigrateERC20CustodyFunds(
 	}
 	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx)
 
-	return &types.MsgMigrateERC20CustodyFundsResponse{}, nil
+	err = ctx.EventManager().EmitTypedEvent(
+		&types.EventERC20CustodyFundsMigration{
+			NewCustodyAddress: msg.NewCustodyAddress,
+			Erc20Address:      msg.Erc20Address,
+			Amount:            msg.Amount.String(),
+			CctxIndex:         cctx.Index,
+		},
+	)
+	if err != nil {
+		return nil, errorsmod.Wrapf(err, "failed to emit event")
+	}
+
+	return &types.MsgMigrateERC20CustodyFundsResponse{
+		CctxIndex: cctx.Index,
+	}, nil
 }

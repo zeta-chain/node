@@ -203,4 +203,4 @@ message MsgMigrateERC20CustodyFunds {
   ];
 }
 
-message MsgMigrateERC20CustodyFundsResponse {}
+message MsgMigrateERC20CustodyFundsResponse { string cctx_index = 1; }
