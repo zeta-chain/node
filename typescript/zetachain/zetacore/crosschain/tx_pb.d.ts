@@ -874,6 +874,11 @@ export declare class MsgMigrateERC20CustodyFunds extends Message<MsgMigrateERC20
  * @generated from message zetachain.zetacore.crosschain.MsgMigrateERC20CustodyFundsResponse
  */
 export declare class MsgMigrateERC20CustodyFundsResponse extends Message<MsgMigrateERC20CustodyFundsResponse> {
+  /**
+   * @generated from field: string cctx_index = 1;
+   */
+  cctxIndex: string;
+
   constructor(data?: PartialMessage<MsgMigrateERC20CustodyFundsResponse>);
 
   static readonly runtime: typeof proto3;

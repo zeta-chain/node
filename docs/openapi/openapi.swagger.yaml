@@ -57233,6 +57233,9 @@ definitions:
         title: if the tx was removed from the tracker due to no pending cctx
   crosschainMsgMigrateERC20CustodyFundsResponse:
     type: object
+    properties:
+      cctx_index:
+        type: string
   crosschainMsgMigrateTssFundsResponse:
     type: object
   crosschainMsgRefundAbortedCCTXResponse:
