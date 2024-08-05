@@ -14,7 +14,6 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 )
@@ -114,7 +113,6 @@ func (txData *OutboundData) SetupGas(
 func NewOutboundData(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
-	evmObserver *observer.Observer,
 	evmRPC interfaces.EVMRPCClient,
 	logger zerolog.Logger,
 	height uint64,
@@ -167,18 +165,6 @@ func NewOutboundData(
 		return nil, true, fmt.Errorf("decode CCTX %s error", cctx.Index)
 	}
 	copy(txData.cctxIndex[:32], cctxIndex[:32])
-
-	// In case there is a pending transaction, make sure this keysign is a transaction replacement
-	pendingTx := evmObserver.GetPendingTx(nonce)
-	if pendingTx != nil {
-		if txData.gasPrice.Cmp(pendingTx.GasPrice()) > 0 {
-			logger.Info().
-				Msgf("replace pending outbound %s nonce %d using gas price %d", pendingTx.Hash().Hex(), nonce, txData.gasPrice)
-		} else {
-			logger.Info().Msgf("please wait for pending outbound %s nonce %d to be included", pendingTx.Hash().Hex(), nonce)
-			return nil, true, nil
-		}
-	}
 
 	// Base64 decode message
 	if cctx.InboundParams.CoinType != coin.CoinType_Cmd {

@@ -431,6 +431,11 @@ func (ob *Observer) checkConfirmedTx(
 		logger.Error().Msg("transaction is nil")
 		return nil, nil, false
 	}
+	if isPending {
+		// should not happen when we are here. The outbound tracker reporter won't report a pending tx.
+		logger.Error().Msg("transaction is pending")
+		return nil, nil, false
+	}
 
 	// check tx sender and nonce
 	signer := ethtypes.NewLondonSigner(big.NewInt(ob.Chain().ChainId))
@@ -462,12 +467,6 @@ func (ob *Observer) checkConfirmedTx(
 	}
 	if transaction.Nonce() != nonce { // must match tracker nonce
 		logger.Error().Msgf("tx nonce %d is not matching tracker nonce", nonce)
-		return nil, nil, false
-	}
-
-	// save pending transaction
-	if isPending {
-		ob.SetPendingTx(nonce, transaction)
 		return nil, nil, false
 	}
 

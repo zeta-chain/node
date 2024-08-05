@@ -92,13 +92,10 @@ func TestSigner_NewOutboundData(t *testing.T) {
 	evmSigner, err := getNewEvmSigner(nil)
 	require.NoError(t, err)
 
-	mockObserver, err := getNewEvmChainObserver(t, nil)
-	require.NoError(t, err)
-
 	t.Run("NewOutboundData success", func(t *testing.T) {
 		cctx := getCCTX(t)
 
-		_, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+		_, skip, err := NewOutboundData(ctx, cctx, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 		assert.NoError(t, err)
 		assert.False(t, skip)
 	})
@@ -107,7 +104,7 @@ func TestSigner_NewOutboundData(t *testing.T) {
 		cctx := getCCTX(t)
 		cctx.CctxStatus.Status = types.CctxStatus_Aborted
 
-		_, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+		_, skip, err := NewOutboundData(ctx, cctx, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 		assert.NoError(t, err)
 		assert.True(t, skip)
 	})
@@ -115,7 +112,7 @@ func TestSigner_NewOutboundData(t *testing.T) {
 	t.Run("NewOutboundData unknown chain", func(t *testing.T) {
 		cctx := getInvalidCCTX(t)
 
-		_, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+		_, skip, err := NewOutboundData(ctx, cctx, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 		assert.ErrorContains(t, err, "unable to get chain 13378337 from app context: id=13378337: chain not found")
 		assert.True(t, skip)
 	})
@@ -124,7 +121,7 @@ func TestSigner_NewOutboundData(t *testing.T) {
 		cctx := getCCTX(t)
 		cctx.GetCurrentOutboundParam().GasPrice = "invalidGasPrice"
 
-		_, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+		_, skip, err := NewOutboundData(ctx, cctx, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 		assert.True(t, skip)
 		assert.ErrorContains(t, err, "cannot convert gas price")
 	})

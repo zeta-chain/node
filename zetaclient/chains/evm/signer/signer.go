@@ -27,7 +27,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
@@ -357,7 +356,7 @@ func (signer *Signer) TryProcessOutbound(
 	cctx *types.CrossChainTx,
 	outboundProc *outboundprocessor.Processor,
 	outboundID string,
-	chainObserver interfaces.ChainObserver,
+	_ interfaces.ChainObserver,
 	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
@@ -388,14 +387,8 @@ func (signer *Signer) TryProcessOutbound(
 	logger.Info().
 		Msgf("EVM TryProcessOutbound: %s, value %d to %s", cctx.Index, params.Amount.BigInt(), params.Receiver)
 
-	evmObserver, ok := chainObserver.(*observer.Observer)
-	if !ok {
-		logger.Error().Msg("chain observer is not an EVM observer")
-		return
-	}
-
 	// Setup Transaction input
-	txData, skipTx, err := NewOutboundData(ctx, cctx, evmObserver, signer.client, logger, height)
+	txData, skipTx, err := NewOutboundData(ctx, cctx, signer.client, logger, height)
 	if err != nil {
 		logger.Err(err).Msg("error setting up transaction input fields")
 		return
