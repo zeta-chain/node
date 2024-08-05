@@ -1,6 +1,7 @@
 package signer
 
 import (
+	"fmt"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/constant"
@@ -28,6 +29,27 @@ func TestSigner_SignCommandTx(t *testing.T) {
 	t.Run("SignCommandTx CmdWhitelistERC20", func(t *testing.T) {
 		cmd := constant.CmdWhitelistERC20
 		params := ConnectorAddress.Hex()
+		// Call SignCommandTx
+		tx, err := evmSigner.SignCommandTx(ctx, txData, cmd, params)
+		require.NoError(t, err)
+
+		// Verify tx signature
+		tss := mocks.NewTSSMainnet()
+		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+
+		// Verify tx body basics
+		// Note: Revert tx calls erc20 custody contract with 0 gas token
+		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, big.NewInt(0))
+	})
+
+	t.Run("SignCommandTx CmdMigrateERC20CustodyFunds", func(t *testing.T) {
+		cmd := constant.CmdMigrateERC20CustodyFunds
+		params := fmt.Sprintf(
+			"%s,%s,%s",
+			sample.EthAddress().Hex(),
+			sample.EthAddress().Hex(),
+			big.NewInt(100).String(),
+		)
 		// Call SignCommandTx
 		tx, err := evmSigner.SignCommandTx(ctx, txData, cmd, params)
 		require.NoError(t, err)
@@ -87,11 +109,13 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 		// Verify tx body basics
 		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, zeroValue)
 	})
+
 	t.Run("SignWhitelistERC20Cmd - should fail on invalid erc20 address", func(t *testing.T) {
 		tx, err := evmSigner.SignWhitelistERC20Cmd(ctx, txData, "")
 		require.Nil(t, tx)
 		require.ErrorContains(t, err, "invalid erc20 address")
 	})
+
 	t.Run("SignWhitelistERC20Cmd - should fail if keysign fails", func(t *testing.T) {
 		// Pause tss to make keysign fail
 		tss.Pause()
@@ -99,6 +123,72 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 		// Call SignWhitelistERC20Cmd
 		tx, err := evmSigner.SignWhitelistERC20Cmd(ctx, txData, sample.EthAddress().Hex())
 		require.ErrorContains(t, err, "sign whitelist error")
+		require.Nil(t, tx)
+	})
+}
+
+func TestSigner_SignMigrateERC20CustodyFundsCmd(t *testing.T) {
+	ctx := makeCtx(t)
+
+	// Setup evm signer
+	tss := mocks.NewTSSMainnet()
+	evmSigner, err := getNewEvmSigner(tss)
+	require.NoError(t, err)
+
+	// Setup txData struct
+	cctx := getCCTX(t)
+
+	mockObserver, err := getNewEvmChainObserver(t, tss)
+	require.NoError(t, err)
+
+	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	require.NoError(t, err)
+	require.False(t, skip)
+
+	t.Run("SignMigrateERC20CustodyFundsCmd - should successfully sign", func(t *testing.T) {
+		// Call SignWhitelistERC20Cmd
+
+		params := fmt.Sprintf(
+			"%s,%s,%s",
+			sample.EthAddress().Hex(),
+			sample.EthAddress().Hex(),
+			big.NewInt(100).String(),
+		)
+
+		tx, err := evmSigner.SignMigrateERC20CustodyFundsCmd(ctx, txData, params)
+		require.NoError(t, err)
+		require.NotNil(t, tx)
+
+		// Verify tx signature
+		tss := mocks.NewTSSMainnet()
+		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+
+		// Verify tx body basics
+		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, zeroValue)
+	})
+
+	t.Run("SignMigrateERC20CustodyFundsCmd - should fail on invalid params", func(t *testing.T) {
+
+		params := fmt.Sprintf("%s,%s", sample.EthAddress().Hex(), sample.EthAddress().Hex())
+
+		_, err := evmSigner.SignMigrateERC20CustodyFundsCmd(ctx, txData, params)
+		require.ErrorContains(t, err, "invalid params")
+	})
+
+	t.Run("SignMigrateERC20CustodyFundsCmd - should fail if keysign fails", func(t *testing.T) {
+		// Pause tss to make keysign fail
+		tss.Pause()
+
+		params := fmt.Sprintf(
+			"%s,%s,%s",
+			sample.EthAddress().Hex(),
+			sample.EthAddress().Hex(),
+			big.NewInt(100).String(),
+		)
+
+		// Call SignWhitelistERC20Cmd
+		tx, err := evmSigner.SignMigrateERC20CustodyFundsCmd(ctx, txData, params)
+		require.ErrorContains(t, err, "tss is paused")
 		require.Nil(t, tx)
 	})
 }
