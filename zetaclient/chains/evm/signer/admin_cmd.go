@@ -3,12 +3,14 @@ package signer
 import (
 	"context"
 	"fmt"
+	"math/big"
+	"strings"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
+
 	"github.com/zeta-chain/zetacore/pkg/constant"
-	"math/big"
-	"strings"
 )
 
 // SignCommandTx signs a transaction based on the given command includes:
@@ -69,8 +71,12 @@ func (signer *Signer) SignWhitelistERC20Cmd(
 }
 
 // SignMigrateERC20CustodyFundsCmd signs a migrate ERC20 custody funds command
-func (signer *Signer) SignMigrateERC20CustodyFundsCmd(ctx context.Context, txData *OutboundData, params string) (*ethtypes.Transaction, error) {
-	paramsArray := strings.Split(params, ":")
+func (signer *Signer) SignMigrateERC20CustodyFundsCmd(
+	ctx context.Context,
+	txData *OutboundData,
+	params string,
+) (*ethtypes.Transaction, error) {
+	paramsArray := strings.Split(params, ",")
 	if len(paramsArray) != 3 {
 		return nil, fmt.Errorf("SignMigrateERC20CustodyFundsCmd: invalid params %s", params)
 	}
@@ -86,6 +92,9 @@ func (signer *Signer) SignMigrateERC20CustodyFundsCmd(ctx context.Context, txDat
 		return nil, err
 	}
 	data, err := custodyAbi.Pack("withdraw", newCustody, erc20, amount)
+	if err != nil {
+		return nil, fmt.Errorf("withdraw pack error: %w", err)
+	}
 
 	tx, _, _, err := signer.Sign(
 		ctx,
