@@ -82,7 +82,7 @@ func WhitelistERC20CmdCCTX(
 		creator,
 		hash.Hex(),
 		fmt.Sprintf("%s:%s", constant.CmdWhitelistERC20, erc20Address),
-		"",
+		creator,
 		hash.Hex(),
 		custodyContractAddress,
 		chainID,
