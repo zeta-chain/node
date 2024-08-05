@@ -197,7 +197,7 @@ func TestSigner_SignOutbound(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -233,7 +233,7 @@ func TestSigner_SignRevertTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -273,7 +273,7 @@ func TestSigner_SignCancelTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -313,7 +313,7 @@ func TestSigner_SignWithdrawTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -351,7 +351,7 @@ func TestSigner_SignCommandTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, nil)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -398,7 +398,7 @@ func TestSigner_SignERC20WithdrawTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -439,7 +439,7 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 	mockObserver, err := getNewEvmChainObserver(t, nil)
 	require.NoError(t, err)
 
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
 	require.NoError(t, err)
 	require.False(t, skip)
 
@@ -496,7 +496,7 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
 
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
 	require.NoError(t, err)
 	require.False(t, skip)
 
@@ -541,7 +541,7 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -576,9 +576,11 @@ func makeCtx(t *testing.T) context.Context {
 
 	err := app.Update(
 		observertypes.Keygen{},
-		[]chains.Chain{chains.BscMainnet},
+		[]chains.Chain{chains.BscMainnet, chains.ZetaChainMainnet},
 		nil,
-		map[int64]*observertypes.ChainParams{chains.BscMainnet.ChainId: &bscParams},
+		map[int64]*observertypes.ChainParams{
+			chains.BscMainnet.ChainId: &bscParams,
+		},
 		"tssPubKey",
 		observertypes.CrosschainFlags{},
 	)

@@ -30,11 +30,11 @@ func Test_makeGasFromCCTX(t *testing.T) {
 
 		{
 			name: "legacy: gas is too low",
-			cctx: makeCCTX(MinGasLimit-200, gwei(2).String(), ""),
+			cctx: makeCCTX(minGasLimit-200, gwei(2).String(), ""),
 			assert: func(t *testing.T, g Gas) {
 				assert.True(t, g.isLegacy())
 				assertGasEquals(t, Gas{
-					Limit:       MinGasLimit,
+					Limit:       minGasLimit,
 					PriorityFee: gwei(0),
 					Price:       gwei(2),
 				}, g)
@@ -42,11 +42,11 @@ func Test_makeGasFromCCTX(t *testing.T) {
 		},
 		{
 			name: "london: gas is too low",
-			cctx: makeCCTX(MinGasLimit-200, gwei(2).String(), gwei(1).String()),
+			cctx: makeCCTX(minGasLimit-200, gwei(2).String(), gwei(1).String()),
 			assert: func(t *testing.T, g Gas) {
 				assert.False(t, g.isLegacy())
 				assertGasEquals(t, Gas{
-					Limit:       MinGasLimit,
+					Limit:       minGasLimit,
 					Price:       gwei(2),
 					PriorityFee: gwei(1),
 				}, g)
@@ -54,7 +54,7 @@ func Test_makeGasFromCCTX(t *testing.T) {
 		},
 		{
 			name: "pre London gas logic",
-			cctx: makeCCTX(MinGasLimit+100, gwei(3).String(), ""),
+			cctx: makeCCTX(minGasLimit+100, gwei(3).String(), ""),
 			assert: func(t *testing.T, g Gas) {
 				assert.True(t, g.isLegacy())
 				assertGasEquals(t, Gas{
@@ -66,7 +66,7 @@ func Test_makeGasFromCCTX(t *testing.T) {
 		},
 		{
 			name: "post London gas logic",
-			cctx: makeCCTX(MinGasLimit+200, gwei(4).String(), gwei(1).String()),
+			cctx: makeCCTX(minGasLimit+200, gwei(4).String(), gwei(1).String()),
 			assert: func(t *testing.T, g Gas) {
 				assert.False(t, g.isLegacy())
 				assertGasEquals(t, Gas{
@@ -78,11 +78,11 @@ func Test_makeGasFromCCTX(t *testing.T) {
 		},
 		{
 			name: "gas is too high, force to the ceiling",
-			cctx: makeCCTX(MaxGasLimit+200, gwei(4).String(), gwei(1).String()),
+			cctx: makeCCTX(maxGasLimit+200, gwei(4).String(), gwei(1).String()),
 			assert: func(t *testing.T, g Gas) {
 				assert.False(t, g.isLegacy())
 				assertGasEquals(t, Gas{
-					Limit:       MaxGasLimit,
+					Limit:       maxGasLimit,
 					Price:       gwei(4),
 					PriorityFee: gwei(1),
 				}, g)

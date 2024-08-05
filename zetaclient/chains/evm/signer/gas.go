@@ -10,6 +10,11 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
+const (
+	minGasLimit = 100_000
+	maxGasLimit = 1_000_000
+)
+
 // Gas represents gas parameters for EVM transactions.
 //
 // This is pretty interesting because all EVM chains now support EIP-1559, but some chains do it in a specific way
@@ -57,18 +62,18 @@ func makeGasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, erro
 	)
 
 	switch {
-	case limit < MinGasLimit:
-		limit = MinGasLimit
+	case limit < minGasLimit:
+		limit = minGasLimit
 		logger.Warn().
 			Uint64("cctx.initial_gas_limit", params.GasLimit).
 			Uint64("cctx.gas_limit", limit).
-			Msgf("Gas limit is too low. Setting to the minimum (%d)", MinGasLimit)
-	case limit > MaxGasLimit:
-		limit = MaxGasLimit
+			Msgf("Gas limit is too low. Setting to the minimum (%d)", minGasLimit)
+	case limit > maxGasLimit:
+		limit = maxGasLimit
 		logger.Warn().
 			Uint64("cctx.initial_gas_limit", params.GasLimit).
 			Uint64("cctx.gas_limit", limit).
-			Msgf("Gas limit is too high; Setting to the maximum (%d)", MaxGasLimit)
+			Msgf("Gas limit is too high; Setting to the maximum (%d)", maxGasLimit)
 	}
 
 	gasPrice, err := bigIntFromString(params.GasPrice)
