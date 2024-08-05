@@ -5,6 +5,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/logs"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
@@ -38,7 +39,10 @@ func NewSigner(chain chains.Chain, tss interfaces.TSSSigner, ts *metrics.Telemet
 		tss:   tss,
 		ts:    ts,
 		logger: Logger{
-			Std:        logger.Std.With().Int64("chain", chain.ChainId).Str("module", "signer").Logger(),
+			Std: logger.Std.With().
+				Int64(logs.FieldChain, chain.ChainId).
+				Str(logs.FieldModule, "signer").
+				Logger(),
 			Compliance: logger.Compliance,
 		},
 		outboundBeingReported: make(map[string]bool),

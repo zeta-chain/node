@@ -31,7 +31,7 @@ func (signer *Signer) reportToOutboundTracker(
 		Logger()
 
 	// set being reported flag to avoid duplicate reporting
-	alreadySet := signer.Signer.SetBeingReportedFlag(outboundHash)
+	alreadySet := signer.SetBeingReportedFlag(outboundHash)
 	if alreadySet {
 		logger.Info().
 			Msgf("outbound %s for chain %d nonce %d is being reported", outboundHash, chainID, nonce)
@@ -41,7 +41,7 @@ func (signer *Signer) reportToOutboundTracker(
 	// launch a goroutine to monitor tx confirmation status
 	go func() {
 		defer func() {
-			signer.Signer.ClearBeingReportedFlag(outboundHash)
+			signer.ClearBeingReportedFlag(outboundHash)
 		}()
 
 		// try monitoring tx inclusion status for 20 minutes

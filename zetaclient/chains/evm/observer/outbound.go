@@ -25,6 +25,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/logs"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
@@ -88,8 +89,8 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 
 	// prepare logger fields
 	logger := ob.Logger().Outbound.With().
-		Str("method", "ProcessOutboundTrackers").
-		Int64("chain", chainID).
+		Str(logs.FieldMethod, "ProcessOutboundTrackers").
+		Int64(logs.FieldChain, chainID).
 		Logger()
 
 	// process outbound trackers
