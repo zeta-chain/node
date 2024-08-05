@@ -33,8 +33,7 @@ func (signer *Signer) reportToOutboundTracker(
 	// set being reported flag to avoid duplicate reporting
 	alreadySet := signer.SetBeingReportedFlag(outboundHash)
 	if alreadySet {
-		logger.Info().
-			Msgf("outbound %s for chain %d nonce %d is being reported", outboundHash, chainID, nonce)
+		logger.Info().Msg("outbound is being reported to tracker")
 		return
 	}
 
@@ -54,16 +53,14 @@ func (signer *Signer) reportToOutboundTracker(
 			// 1. the gas stability pool should have kicked in and replaced the tx by then.
 			// 2. even if there is a chance that the tx is included later, most likely it's going to be a false tx hash (either replaced or dropped).
 			if time.Since(tStart) > evm.OutboundInclusionTimeout {
-				logger.Info().
-					Msgf("timeout waiting outbound %s inclusion for chain %d nonce %d", outboundHash, chainID, nonce)
+				logger.Info().Msgf("timeout waiting outbound inclusion")
 				return
 			}
 
 			// check tx confirmation status
 			confirmed, err := rpc.IsTxConfirmed(ctx, signer.client, outboundHash, evm.ReorgProtectBlockCount)
 			if err != nil {
-				logger.Err(err).
-					Msgf("unable to check confirmation status for chain %d nonce %d outbound %s", chainID, nonce, outboundHash)
+				logger.Err(err).Msg("unable to check confirmation status of outbound")
 			}
 			if !confirmed {
 				continue
@@ -72,13 +69,12 @@ func (signer *Signer) reportToOutboundTracker(
 			// report outbound hash to tracker
 			zetaHash, err := zetacoreClient.AddOutboundTracker(ctx, chainID, nonce, outboundHash, nil, "", -1)
 			if err != nil {
-				logger.Err(err).
-					Msgf("error adding outbound %s to tracker for chain %d nonce %d", outboundHash, chainID, nonce)
+				logger.Err(err).Msg("error adding outbound to tracker")
 			} else if zetaHash != "" {
-				logger.Info().Msgf("added outbound %s to tracker for chain %d nonce %d; zeta txhash %s", outboundHash, chainID, nonce, zetaHash)
+				logger.Info().Msgf("added outbound to tracker; zeta txhash %s", zetaHash)
 			} else {
 				// exit goroutine until the tracker contains the hash (reported by either this or other signers)
-				logger.Info().Msgf("outbound %s now exists in tracker for chain %d nonce %d", outboundHash, chainID, nonce)
+				logger.Info().Msg("outbound now exists in tracker")
 				return
 			}
 		}

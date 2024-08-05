@@ -39,8 +39,7 @@ func (signer *Signer) reportToOutboundTracker(
 	// set being reported flag to avoid duplicate reporting
 	alreadySet := signer.Signer.SetBeingReportedFlag(txSig.String())
 	if alreadySet {
-		logger.Info().
-			Msgf("outbound %s for chain %d nonce %d is being reported", txSig, chainID, nonce)
+		logger.Info().Msg("outbound is being reported to tracker")
 		return
 	}
 
@@ -57,8 +56,7 @@ func (signer *Signer) reportToOutboundTracker(
 
 			// give up if we know the tx is too old and already expired
 			if time.Since(start) > SolanaTransactionTimeout {
-				logger.Info().
-					Msgf("outbound %s expired for chain %d nonce %d", txSig, chainID, nonce)
+				logger.Info().Msg("outbound is expired")
 				return
 			}
 
@@ -77,22 +75,19 @@ func (signer *Signer) reportToOutboundTracker(
 				// unlike Ethereum, Solana doesn't have protocol-level nonce; the nonce is enforced by the gateway program.
 				// a failed outbound (e.g. signature err, balance err) will never be able to increment the gateway program nonce.
 				// a good/valid candidate of outbound tracker hash must come with a successful tx.
-				logger.Warn().
-					Any("Err", tx.Meta.Err).
-					Msgf("outbound %s failed for chain %d nonce %d", txSig, chainID, nonce)
+				logger.Warn().Any("Err", tx.Meta.Err).Msg("outbound is failed")
 				return
 			}
 
 			// report outbound hash to zetacore
 			zetaHash, err := zetacoreClient.AddOutboundTracker(ctx, chainID, nonce, txSig.String(), nil, "", -1)
 			if err != nil {
-				logger.Err(err).
-					Msgf("error adding outbound %s for chain %d nonce %d", txSig, chainID, nonce)
+				logger.Err(err).Msg("error adding outbound to tracker")
 			} else if zetaHash != "" {
-				logger.Info().Msgf("added outbound %s for chain %d nonce %d; zeta txhash %s", txSig, chainID, nonce, zetaHash)
+				logger.Info().Msgf("added outbound to tracker; zeta txhash %s", zetaHash)
 			} else {
 				// exit goroutine until the tracker contains the hash (reported by either this or other signers)
-				logger.Info().Msgf("outbound %s now exists in tracker for chain %d nonce %d", txSig, chainID, nonce)
+				logger.Info().Msg("outbound now exists in tracker")
 				return
 			}
 		}
