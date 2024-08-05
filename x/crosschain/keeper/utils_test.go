@@ -8,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/ethereum/go-ethereum/common"
-	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	"github.com/stretchr/testify/require"
+	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"

@@ -16,7 +16,7 @@ smart contracts and messaging between any blockchain.
 
 ZetaChain is built with [Cosmos SDK](https://github.com/cosmos/cosmos-sdk), a
 modular framework for building blockchain and
-[Ethermint](https://github.com/evmos/ethermint), a module that implements
+[Ethermint](https://github.com/zeta-chain/ethermint), a module that implements
 EVM-compatibility.
 
 - [zeta-node](https://github.com/zeta-chain/zeta-node) (this repository)
@@ -29,15 +29,18 @@ EVM-compatibility.
 ## Building the `zetacored`/`zetaclientd` binaries
 
 Clone this repository, checkout the latest release tag, and type the following command to build the binaries:
+
 ```
 make install
 ```
-to build. 
+
+to build.
 
 This command will install the `zetacored` and `zetaclientd` binaries in your
 `$GOPATH/bin` directory.
 
-Verify that the version of the binaries match the release tag.  
+Verify that the version of the binaries match the release tag.
+
 ```
 zetacored version
 zetaclientd version
@@ -67,14 +70,12 @@ documentation for all the messages in that module.
 
 Find below further documentation for development and running your own ZetaChain node:
 
-* [Run the E2E tests and interact with the localnet](docs/development/LOCAL_TESTING.md)
-* [Make a new ZetaChain release](docs/development/RELEASES.md)
-* [Deploy your own ZetaChain or Bitcoin node](docs/development/DEPLOY_NODES.md)
+- [Run the E2E tests and interact with the localnet](docs/development/LOCAL_TESTING.md)
+- [Make a new ZetaChain release](docs/development/RELEASES.md)
+- [Deploy your own ZetaChain or Bitcoin node](docs/development/DEPLOY_NODES.md)
 
 ## Community
 
 [Twitter](https://twitter.com/zetablockchain) |
 [Discord](https://discord.com/invite/zetachain) |
 [Telegram](https://t.me/zetachainofficial) | [Website](https://zetachain.com)
-
-

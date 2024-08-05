@@ -27,7 +27,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/emicklei/proto v1.11.1
 	github.com/ethereum/go-ethereum v1.10.26
-	github.com/evmos/ethermint v0.22.0
 	github.com/fatih/color v1.13.0
 	github.com/frumioj/crypto11 v1.2.5-0.20210823151709-946ce662cc0e
 	github.com/gagliardetto/solana-go v1.10.0
@@ -57,6 +56,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.9.0
+	github.com/zeta-chain/ethermint v0.0.0-20240729121328-43bf9ddbf82f
 	github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2
 	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240418181724-c222fd3ae1f5
 	gitlab.com/thorchain/tss/go-tss v1.6.5
@@ -350,7 +350,7 @@ replace (
 
 // ZetaChain maintained forks.
 replace (
-	github.com/evmos/ethermint => github.com/zeta-chain/ethermint v0.0.0-20240531172701-61d040058c94
+	github.com/ethereum/go-ethereum => github.com/zeta-chain/go-ethereum v1.10.26-spc
 	github.com/libp2p/go-libp2p => github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4
 	gitlab.com/thorchain/tss/go-tss => github.com/zeta-chain/go-tss v0.0.0-20240729195411-9f5ae8189449
 )

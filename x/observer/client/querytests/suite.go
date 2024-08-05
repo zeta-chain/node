@@ -2,8 +2,8 @@ package querytests
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ethcfg "github.com/evmos/ethermint/cmd/config"
 	"github.com/stretchr/testify/suite"
+	ethcfg "github.com/zeta-chain/ethermint/cmd/config"
 
 	"github.com/zeta-chain/zetacore/app"
 	cmdcfg "github.com/zeta-chain/zetacore/cmd/zetacored/config"

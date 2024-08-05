@@ -28,10 +28,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	ethermintclient "github.com/evmos/ethermint/client"
-	"github.com/evmos/ethermint/crypto/hd"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+	ethermintclient "github.com/zeta-chain/ethermint/client"
+	"github.com/zeta-chain/ethermint/crypto/hd"
 
 	"github.com/zeta-chain/zetacore/app"
 	zetacoredconfig "github.com/zeta-chain/zetacore/cmd/zetacored/config"

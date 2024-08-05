@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/core/vm"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 )
 
 // IsRevertError checks if an error is a evm revert error

@@ -12,7 +12,7 @@
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/evmos/ethermint/blob/main/LICENSE
+// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package txpool
 
 import (
@@ -23,7 +23,7 @@ import (
 )
 
 // PublicAPI offers and API for the transaction pool. It only operates on data that is non-confidential.
-// NOTE: For more info about the current status of this endpoints see https://github.com/evmos/ethermint/issues/124
+// NOTE: For more info about the current status of this endpoints see https://github.com/zeta-chain/ethermint/issues/124
 type PublicAPI struct {
 	logger log.Logger
 }

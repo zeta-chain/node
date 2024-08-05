@@ -9,8 +9,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/stretchr/testify/require"
+	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
 
