@@ -13,7 +13,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	etherminttypes "github.com/zeta-chain/ethermint/types"
+	ethermint "github.com/zeta-chain/ethermint/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -36,7 +36,7 @@ func NewCodec() *codec.ProtoCodec {
 	evidencetypes.RegisterInterfaces(registry)
 	crisistypes.RegisterInterfaces(registry)
 	evmtypes.RegisterInterfaces(registry)
-	etherminttypes.RegisterInterfaces(registry)
+	ethermint.RegisterInterfaces(registry)
 	crosschaintypes.RegisterInterfaces(registry)
 	emissionstypes.RegisterInterfaces(registry)
 	fungibletypes.RegisterInterfaces(registry)
