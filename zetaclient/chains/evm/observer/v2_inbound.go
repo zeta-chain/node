@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"sort"
 
+	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -23,12 +24,12 @@ import (
 
 // ObserveGateway queries the gateway contract for deposit/call events
 // returns the last block successfully scanned
-func (ob *Observer) ObserveGateway(ctx context.Context, startBlock, toBlock uint64) uint64 {
+func (ob *Observer) ObserveGateway(ctx context.Context, startBlock, toBlock uint64) (uint64, error) {
 	// filter ERC20CustodyDeposited logs
 	gatewayAddr, gatewayContract, err := ob.GetGatewayContract()
 	if err != nil {
-		ob.Logger().Inbound.Warn().Err(err).Msgf("ObserveGateway: can't get gateway contract")
-		return startBlock - 1 // lastScanned
+		// lastScanned is startBlock - 1
+		return startBlock - 1, errors.Wrap(err, "can't get gateway contract")
 	}
 
 	// get iterator for the events for the block range
@@ -38,9 +39,13 @@ func (ob *Observer) ObserveGateway(ctx context.Context, startBlock, toBlock uint
 		Context: ctx,
 	}, []ethcommon.Address{}, []ethcommon.Address{})
 	if err != nil {
-		ob.Logger().Inbound.Warn().Err(err).Msgf(
-			"ObserveGateway: FilterDeposit error from block %d to %d for chain %d", startBlock, toBlock, ob.Chain().ChainId)
-		return startBlock - 1 // lastScanned
+		return startBlock - 1, errors.Wrapf(
+			err,
+			"error filtering deposits from block %d to %d for chain %d",
+			startBlock,
+			toBlock,
+			ob.Chain().ChainId,
+		)
 	}
 
 	// parse and validate events
@@ -72,12 +77,12 @@ func (ob *Observer) ObserveGateway(ctx context.Context, startBlock, toBlock uint
 		_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
 		if err != nil {
 			// decrement the last scanned block so we have to re-scan from this block next time
-			return lastScanned - 1
+			return lastScanned - 1, errors.Wrap(err, "error posting vote inbound")
 		}
 	}
 
 	// successfully processed all events in [startBlock, toBlock]
-	return toBlock
+	return toBlock, nil
 }
 
 // parseAndValidateEvents collects and sorts events by block number, tx index, and log index

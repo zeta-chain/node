@@ -220,7 +220,12 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 	// query the gateway logs
 	// TODO: refactor in a more declarative design. Example: storing the list of contract and events to listen in an array
 	// https://github.com/zeta-chain/node/issues/2493
-	lastScannedGateway := ob.ObserveGateway(ctx, startBlock, toBlock)
+	lastScannedGateway, err := ob.ObserveGateway(ctx, startBlock, toBlock)
+	if err != nil {
+		ob.Logger().Inbound.Error().
+			Err(err).
+			Msgf("ObserveInbound: error observing events from Gateway contract")
+	}
 
 	// note: using lowest height for all 3 events is not perfect, but it's simple and good enough
 	lastScannedLowest := lastScannedZetaSent
