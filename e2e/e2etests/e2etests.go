@@ -99,6 +99,7 @@ const (
 	 Admin tests
 	 Test admin functionalities
 	*/
+	TestWhitelistERC20Name            = "whitelist_erc20"
 	TestDepositEtherLiquidityCapName  = "deposit_eth_liquidity_cap"
 	TestMigrateChainSupportName       = "migrate_chain_support"
 	TestPauseZRC20Name                = "pause_zrc20"
@@ -512,6 +513,12 @@ var AllE2ETests = []runner.E2ETest{
 	/*
 	 Admin tests
 	*/
+	runner.NewE2ETest(
+		TestWhitelistERC20Name,
+		"whitelist a new ERC20 token",
+		[]runner.ArgDefinition{},
+		TestWhitelistERC20,
+	),
 	runner.NewE2ETest(
 		TestDepositEtherLiquidityCapName,
 		"deposit Ethers into ZEVM with a liquidity cap",
