@@ -1,5 +1,6 @@
 .PHONY: build
 
+PACKAGE_NAME := github.com/zeta-chain/node
 VERSION := $(shell ./version.sh)
 COMMIT := $(shell [ -z "${COMMIT_ID}" ] && git log -1 --format='%H' || echo ${COMMIT_ID} )
 BUILDTIME := $(shell date -u +"%Y%m%d.%H%M%S" )
@@ -8,7 +9,9 @@ DOCKER ?= docker
 # useful for setting profiles
 DOCKER_COMPOSE ?= $(DOCKER) compose $(COMPOSE_ARGS)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
-GOFLAGS:=""
+GOFLAGS := ""
+GOLANG_CROSS_VERSION ?= v1.20.7
+GOPATH ?= '$(HOME)/go'
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/cosmos/cosmos-sdk/version.ServerName=zetacored \
@@ -23,7 +26,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 
 BUILD_FLAGS := -ldflags '$(ldflags)' -tags pebbledb,ledger
 
-TEST_DIR?="./..."
+TEST_DIR ?= "./..."
 TEST_BUILD_FLAGS := -tags pebbledb,ledger
 HSM_BUILD_FLAGS := -tags pebbledb,ledger,hsm_test
 
@@ -53,10 +56,10 @@ go.sum: go.mod
 ###                             Test commands                               ###
 ###############################################################################
 
+test: clean-test-dir run-test
+
 run-test:
 	@go test ${TEST_BUILD_FLAGS} ${TEST_DIR}
-
-test :clean-test-dir run-test
 
 test-hsm:
 	@go test ${HSM_BUILD_FLAGS} ${TEST_DIR}
@@ -288,7 +291,6 @@ zetanode-upgrade: zetanode
 .PHONY: zetanode-upgrade
 endif
 
-
 start-upgrade-test: zetanode-upgrade
 	@echo "--> Starting upgrade test"
 	export LOCALNET_MODE=upgrade && \
@@ -300,7 +302,6 @@ start-upgrade-test-light: zetanode-upgrade
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=90 && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
-
 
 start-upgrade-test-admin: zetanode-upgrade
 	@echo "--> Starting admin upgrade test"
@@ -321,9 +322,6 @@ start-upgrade-import-mainnet-test: zetanode-upgrade
 ###                                GoReleaser  		                        ###
 ###############################################################################
 
-PACKAGE_NAME          := github.com/zeta-chain/node
-GOLANG_CROSS_VERSION  ?= v1.20.7
-GOPATH ?= '$(HOME)/go'
 release-dry-run:
 	docker run \
 		--rm \
