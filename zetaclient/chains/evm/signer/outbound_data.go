@@ -11,33 +11,29 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
-)
-
-const (
-	MinGasLimit = 100_000
-	MaxGasLimit = 1_000_000
 )
 
 // OutboundData is a data structure containing input fields used to construct each type of transaction.
 // This is populated using cctx and other input parameters passed to TryProcessOutbound
 type OutboundData struct {
 	srcChainID *big.Int
-	toChainID  *big.Int
 	sender     ethcommon.Address
-	to         ethcommon.Address
-	asset      ethcommon.Address
-	amount     *big.Int
-	gasPrice   *big.Int
-	gasLimit   uint64
-	message    []byte
-	nonce      uint64
-	height     uint64
+
+	toChainID *big.Int
+	to        ethcommon.Address
+
+	asset  ethcommon.Address
+	amount *big.Int
+
+	gas    Gas
+	nonce  uint64
+	height uint64
+
+	message []byte
 
 	// cctxIndex field is the inbound message digest that is sent to the destination contract
 	cctxIndex [32]byte
@@ -46,147 +42,154 @@ type OutboundData struct {
 	outboundParams *types.OutboundParams
 }
 
-// SetChainAndSender populates the destination address and Chain ID based on the status of the cross chain tx
-// returns true if transaction should be skipped
-// returns false otherwise
-func (txData *OutboundData) SetChainAndSender(cctx *types.CrossChainTx, logger zerolog.Logger) bool {
-	switch cctx.CctxStatus.Status {
-	case types.CctxStatus_PendingRevert:
-		txData.to = ethcommon.HexToAddress(cctx.InboundParams.Sender)
-		txData.toChainID = big.NewInt(cctx.InboundParams.SenderChainId)
-		logger.Info().Msgf("Abort: reverting inbound")
-	case types.CctxStatus_PendingOutbound:
-		txData.to = ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
-		txData.toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
-	default:
-		logger.Info().Msgf("Transaction doesn't need to be processed status: %d", cctx.CctxStatus.Status)
-		return true
-	}
-	return false
-}
-
-// SetupGas sets the gas limit and price
-func (txData *OutboundData) SetupGas(
-	cctx *types.CrossChainTx,
-	logger zerolog.Logger,
-	client interfaces.EVMRPCClient,
-	chain chains.Chain,
-) error {
-	txData.gasLimit = cctx.GetCurrentOutboundParam().GasLimit
-	if txData.gasLimit < MinGasLimit {
-		txData.gasLimit = MinGasLimit
-		logger.Warn().
-			Msgf("gasLimit %d is too low; set to %d", cctx.GetCurrentOutboundParam().GasLimit, txData.gasLimit)
-	}
-	if txData.gasLimit > MaxGasLimit {
-		txData.gasLimit = MaxGasLimit
-		logger.Warn().
-			Msgf("gasLimit %d is too high; set to %d", cctx.GetCurrentOutboundParam().GasLimit, txData.gasLimit)
-	}
-
-	// use dynamic gas price for ethereum chains.
-	// The code below is a fix for https://github.com/zeta-chain/node/issues/1085
-	// doesn't close directly the issue because we should determine if we want to keep using SuggestGasPrice if no GasPrice
-	// we should possibly remove it completely and return an error if no GasPrice is provided because it means no fee is processed on ZetaChain
-	specified, ok := new(big.Int).SetString(cctx.GetCurrentOutboundParam().GasPrice, 10)
-	if !ok {
-		if chain.Network == chains.Network_eth {
-			suggested, err := client.SuggestGasPrice(context.Background())
-			if err != nil {
-				return errors.Wrapf(err, "cannot get gas price from chain %s ", chain.String())
-			}
-			txData.gasPrice = roundUpToNearestGwei(suggested)
-		} else {
-			return fmt.Errorf("cannot convert gas price  %s ", cctx.GetCurrentOutboundParam().GasPrice)
-		}
-	} else {
-		txData.gasPrice = specified
-	}
-	return nil
-}
-
-// NewOutboundData populates transaction input fields parsed from the cctx and other parameters
-// returns
-//  1. New NewOutboundData Data struct or nil if an error occurred.
-//  2. bool (skipTx) - if the transaction doesn't qualify to be processed the function will return true, meaning that this
-//     cctx will be skipped and false otherwise.
-//  3. error
+// NewOutboundData creates OutboundData from the given CCTX.
+// returns `bool true` when transaction should be skipped.
 func NewOutboundData(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
-	evmObserver *observer.Observer,
-	evmRPC interfaces.EVMRPCClient,
-	logger zerolog.Logger,
+	observer *observer.Observer,
 	height uint64,
+	logger zerolog.Logger,
 ) (*OutboundData, bool, error) {
-	txData := OutboundData{}
-	txData.outboundParams = cctx.GetCurrentOutboundParam()
-	txData.amount = cctx.GetCurrentOutboundParam().Amount.BigInt()
-	txData.nonce = cctx.GetCurrentOutboundParam().TssNonce
-	txData.sender = ethcommon.HexToAddress(cctx.InboundParams.Sender)
-	txData.srcChainID = big.NewInt(cctx.InboundParams.SenderChainId)
-	txData.asset = ethcommon.HexToAddress(cctx.InboundParams.Asset)
-	txData.height = height
+	if cctx == nil {
+		return nil, false, errors.New("cctx is nil")
+	}
 
-	skipTx := txData.SetChainAndSender(cctx, logger)
-	if skipTx {
-		return nil, true, nil
+	outboundParams := cctx.GetCurrentOutboundParam()
+	nonce := outboundParams.TssNonce
+
+	if err := validateParams(outboundParams); err != nil {
+		return nil, false, errors.Wrap(err, "invalid outboundParams")
 	}
 
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
-		return nil, false, err
+		return nil, false, errors.Wrap(err, "unable to get app from context")
 	}
 
-	chainID := txData.toChainID.Int64()
-
-	toChain, err := app.GetChain(chainID)
-	switch {
-	case err != nil:
-		return nil, true, errors.Wrapf(err, "unable to get chain %d from app context", chainID)
-	case toChain.IsZeta():
-		// should not happen
-		return nil, true, errors.New("destination chain is Zeta")
+	// recipient + destination chain
+	to, toChainID, skip := getDestination(cctx, logger)
+	if skip {
+		return nil, true, nil
 	}
 
-	rawChain := toChain.RawChain()
+	// ensure that chain exists in app's context
+	if _, err := app.GetChain(toChainID.Int64()); err != nil {
+		return nil, false, errors.Wrapf(err, "unable to get chain %d from app context", toChainID.Int64())
+	}
 
-	// Set up gas limit and gas price
-	err = txData.SetupGas(cctx, logger, evmRPC, *rawChain)
+	gas, err := gasFromCCTX(cctx, logger)
 	if err != nil {
-		return nil, true, errors.Wrap(err, "unable to setup gas")
+		return nil, false, errors.Wrap(err, "unable to make gas from CCTX")
 	}
 
-	nonce := cctx.GetCurrentOutboundParam().TssNonce
-
-	// Get sendHash
-	logger.Info().
-		Msgf("chain %d minting %d to %s, nonce %d, finalized zeta bn %d", toChain.ID(), cctx.InboundParams.Amount, txData.to.Hex(), nonce, cctx.InboundParams.FinalizedZetaHeight)
-	cctxIndex, err := hex.DecodeString(cctx.Index[2:]) // remove the leading 0x
-	if err != nil || len(cctxIndex) != 32 {
-		return nil, true, fmt.Errorf("decode CCTX %s error", cctx.Index)
+	cctxIndex, err := getCCTXIndex(cctx)
+	if err != nil {
+		return nil, false, errors.Wrap(err, "unable to get cctx index")
 	}
-	copy(txData.cctxIndex[:32], cctxIndex[:32])
 
-	// In case there is a pending transaction, make sure this keysign is a transaction replacement
-	pendingTx := evmObserver.GetPendingTx(nonce)
-	if pendingTx != nil {
-		if txData.gasPrice.Cmp(pendingTx.GasPrice()) > 0 {
-			logger.Info().
-				Msgf("replace pending outbound %s nonce %d using gas price %d", pendingTx.Hash().Hex(), nonce, txData.gasPrice)
-		} else {
-			logger.Info().Msgf("please wait for pending outbound %s nonce %d to be included", pendingTx.Hash().Hex(), nonce)
+	// In case there is a pending tx, make sure this keySign is a tx replacement
+	if tx := observer.GetPendingTx(nonce); tx != nil {
+		evt := logger.Info().
+			Str("cctx.pending_tx_hash", tx.Hash().Hex()).
+			Uint64("cctx.pending_tx_nonce", nonce)
+
+		// new gas price is less or equal to pending tx gas
+		if gas.Price.Cmp(tx.GasPrice()) <= 0 {
+			evt.Msg("Please wait for pending outbound to be included in the block")
 			return nil, true, nil
 		}
+
+		evt.
+			Uint64("cctx.gas_price", gas.Price.Uint64()).
+			Uint64("cctx.priority_fee", gas.PriorityFee.Uint64()).
+			Msg("Replacing pending outbound transaction with higher gas fees")
 	}
 
 	// Base64 decode message
+	var message []byte
 	if cctx.InboundParams.CoinType != coin.CoinType_Cmd {
-		txData.message, err = base64.StdEncoding.DecodeString(cctx.RelayedMessage)
-		if err != nil {
-			logger.Err(err).Msgf("decode CCTX.Message %s error", cctx.RelayedMessage)
+		msg, errDecode := base64.StdEncoding.DecodeString(cctx.RelayedMessage)
+		if errDecode != nil {
+			logger.Err(err).Str("cctx.relayed_message", cctx.RelayedMessage).Msg("Unable to decode relayed message")
+		} else {
+			message = msg
 		}
 	}
 
-	return &txData, false, nil
+	return &OutboundData{
+		srcChainID: big.NewInt(cctx.InboundParams.SenderChainId),
+		sender:     ethcommon.HexToAddress(cctx.InboundParams.Sender),
+
+		toChainID: toChainID,
+		to:        to,
+
+		asset:  ethcommon.HexToAddress(cctx.InboundParams.Asset),
+		amount: outboundParams.Amount.BigInt(),
+
+		gas:    gas,
+		nonce:  outboundParams.TssNonce,
+		height: height,
+
+		message: message,
+
+		cctxIndex: cctxIndex,
+
+		outboundParams: outboundParams,
+	}, false, nil
+}
+
+func getCCTXIndex(cctx *types.CrossChainTx) ([32]byte, error) {
+	// `0x` + `64 chars`. Two chars ranging `00...FF` represent one byte (64 chars = 32 bytes)
+	if len(cctx.Index) != (2 + 64) {
+		return [32]byte{}, fmt.Errorf("cctx index %q is invalid", cctx.Index)
+	}
+
+	// remove the leading `0x`
+	cctxIndexSlice, err := hex.DecodeString(cctx.Index[2:])
+	if err != nil || len(cctxIndexSlice) != 32 {
+		return [32]byte{}, errors.Wrapf(err, "unable to decode cctx index %s", cctx.Index)
+	}
+
+	var cctxIndex [32]byte
+	copy(cctxIndex[:32], cctxIndexSlice[:32])
+
+	return cctxIndex, nil
+}
+
+// getDestination picks the destination address and Chain ID based on the status of the cross chain tx.
+// returns true if transaction should be skipped.
+func getDestination(cctx *types.CrossChainTx, logger zerolog.Logger) (ethcommon.Address, *big.Int, bool) {
+	switch cctx.CctxStatus.Status {
+	case types.CctxStatus_PendingRevert:
+		to := ethcommon.HexToAddress(cctx.InboundParams.Sender)
+		chainID := big.NewInt(cctx.InboundParams.SenderChainId)
+
+		logger.Info().
+			Str("cctx.index", cctx.Index).
+			Int64("cctx.chain_id", chainID.Int64()).
+			Msgf("Abort: reverting inbound")
+
+		return to, chainID, false
+	case types.CctxStatus_PendingOutbound:
+		to := ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
+		chainID := big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
+
+		return to, chainID, false
+	}
+
+	logger.Info().
+		Str("cctx.index", cctx.Index).
+		Str("cctx.status", cctx.CctxStatus.String()).
+		Msgf("CCTX doesn't need to be processed")
+
+	return ethcommon.Address{}, nil, true
+}
+
+func validateParams(params *types.OutboundParams) error {
+	if params == nil || params.GasLimit == 0 {
+		return errors.New("outboundParams is empty")
+	}
+
+	return nil
 }
