@@ -1,6 +1,8 @@
-FROM zetanode:latest as zeta
-FROM ghcr.io/zeta-chain/ethereum-client-go:v1.10.26 as geth
-FROM ghcr.io/zeta-chain/golang:1.22.5-bookworm as orchestrator
+# syntax=ghcr.io/zeta-chain/docker-dockerfile:1.9-labs
+# check=error=true
+FROM zetanode:latest AS zeta
+FROM ghcr.io/zeta-chain/ethereum-client-go:v1.10.26 AS geth
+FROM ghcr.io/zeta-chain/golang:1.22.5-bookworm AS orchestrator
 
 RUN apt update && \
     apt install -yq jq yq curl tmux python3 openssh-server iputils-ping iproute2 && \
