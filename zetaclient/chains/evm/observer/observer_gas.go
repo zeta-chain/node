@@ -126,7 +126,7 @@ func (ob *Observer) supportsPriorityFee(ctx context.Context) (bool, error) {
 	defer ob.Mu().Unlock()
 
 	ob.priorityFeeConfig.checked = true
-	ob.priorityFeeConfig.checked = isSupported
+	ob.priorityFeeConfig.supported = isSupported
 
 	return isSupported, nil
 }
