@@ -10,8 +10,8 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/wzeta.sol"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )

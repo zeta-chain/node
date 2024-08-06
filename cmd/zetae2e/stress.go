@@ -15,7 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 	"google.golang.org/grpc"
 
 	"github.com/zeta-chain/zetacore/app"
