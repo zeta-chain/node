@@ -27,9 +27,10 @@ type Gas struct {
 	Limit uint64
 
 	// This is a "total" gasPrice per 1 unit of gas.
+	// GasPrice for pre EIP-1559 transactions or maxFeePerGas for EIP-1559.
 	Price *big.Int
 
-	// PriorityFee a fee paid directly to validators.
+	// PriorityFee a fee paid directly to validators for EIP-1559.
 	PriorityFee *big.Int
 }
 
@@ -41,6 +42,12 @@ func (g Gas) validate() error {
 		return errors.New("max fee per unit is nil")
 	case g.PriorityFee == nil:
 		return errors.New("priority fee per unit is nil")
+	case g.Price.Cmp(g.PriorityFee) == -1:
+		return fmt.Errorf(
+			"max fee per unit (%d) is less than priority fee per unit (%d)",
+			g.Price.Int64(),
+			g.PriorityFee.Int64(),
+		)
 	default:
 		return nil
 	}

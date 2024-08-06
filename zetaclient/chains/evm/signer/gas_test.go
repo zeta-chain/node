@@ -9,7 +9,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func Test_makeGasFromCCTX(t *testing.T) {
+func TestGasFromCCTX(t *testing.T) {
 	logger := zerolog.New(zerolog.NewTestWriter(t))
 
 	makeCCTX := func(gasLimit uint64, price, priorityFee string) *types.CrossChainTx {
@@ -27,7 +27,6 @@ func Test_makeGasFromCCTX(t *testing.T) {
 		errorContains string
 		assert        func(t *testing.T, g Gas)
 	}{
-
 		{
 			name: "legacy: gas is too low",
 			cctx: makeCCTX(minGasLimit-200, gwei(2).String(), ""),
@@ -117,9 +116,20 @@ func Test_makeGasFromCCTX(t *testing.T) {
 			}
 
 			assert.NoError(t, err)
+			assert.NoError(t, g.validate())
 			tt.assert(t, g)
 		})
 	}
+
+	t.Run("empty priority fee", func(t *testing.T) {
+		gas := Gas{
+			Limit:       123_000,
+			Price:       gwei(4),
+			PriorityFee: nil,
+		}
+
+		assert.Error(t, gas.validate())
+	})
 }
 
 func assertGasEquals(t *testing.T, expected, actual Gas) {
