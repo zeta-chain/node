@@ -217,13 +217,13 @@ func newTx(
 		return nil, errors.Wrap(err, "invalid gas parameters")
 	}
 
-	if gas.IsLegacy() {
+	if gas.isLegacy() {
 		return ethtypes.NewTx(&ethtypes.LegacyTx{
 			To:       &to,
 			Value:    amount,
 			Data:     data,
-			GasPrice: gas.GasPrice(),
-			Gas:      gas.Limit(),
+			GasPrice: gas.Price,
+			Gas:      gas.Limit,
 			Nonce:    nonce,
 		}), nil
 	}
@@ -233,9 +233,9 @@ func newTx(
 		To:        &to,
 		Value:     amount,
 		Data:      data,
-		GasFeeCap: gas.GasFeeCap(),
-		GasTipCap: gas.PriorityFee(),
-		Gas:       gas.Limit(),
+		GasFeeCap: gas.Price,
+		GasTipCap: gas.PriorityFee,
+		Gas:       gas.Limit,
 		Nonce:     nonce,
 	}), nil
 }
@@ -331,7 +331,7 @@ func (signer *Signer) SignRevertTx(ctx context.Context, txData *OutboundData) (*
 
 // SignCancelTx signs a transaction from TSS address to itself with a zero amount in order to increment the nonce
 func (signer *Signer) SignCancelTx(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
-	txData.gas.limit = evm.EthTransferGasLimit
+	txData.gas.Limit = evm.EthTransferGasLimit
 	tx, _, _, err := signer.Sign(
 		ctx,
 		nil,
@@ -350,7 +350,7 @@ func (signer *Signer) SignCancelTx(ctx context.Context, txData *OutboundData) (*
 
 // SignWithdrawTx signs a withdrawal transaction sent from the TSS address to the destination
 func (signer *Signer) SignWithdrawTx(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
-	txData.gas.limit = evm.EthTransferGasLimit
+	txData.gas.Limit = evm.EthTransferGasLimit
 	tx, _, _, err := signer.Sign(
 		ctx,
 		nil,
@@ -507,7 +507,7 @@ func (signer *Signer) TryProcessOutbound(
 				cctx.InboundParams.SenderChainId,
 				toChain.ID(),
 				cctx.GetCurrentOutboundParam().TssNonce,
-				txData.gas.GasPrice(),
+				txData.gas.Price,
 			)
 			tx, err = signer.SignWithdrawTx(ctx, txData)
 		case coin.CoinType_ERC20:
@@ -516,7 +516,7 @@ func (signer *Signer) TryProcessOutbound(
 				cctx.InboundParams.SenderChainId,
 				toChain.ID(),
 				cctx.GetCurrentOutboundParam().TssNonce,
-				txData.gas.GasPrice(),
+				txData.gas.Price,
 			)
 			tx, err = signer.SignERC20WithdrawTx(ctx, txData)
 		case coin.CoinType_Zeta:
@@ -525,7 +525,7 @@ func (signer *Signer) TryProcessOutbound(
 				cctx.InboundParams.SenderChainId,
 				toChain.ID(),
 				cctx.GetCurrentOutboundParam().TssNonce,
-				txData.gas.GasPrice(),
+				txData.gas.Price,
 			)
 			tx, err = signer.SignOutbound(ctx, txData)
 		}
@@ -540,7 +540,7 @@ func (signer *Signer) TryProcessOutbound(
 				"SignRevertTx: %d => %d, nonce %d, gasPrice %d",
 				cctx.InboundParams.SenderChainId,
 				toChain.ID(), cctx.GetCurrentOutboundParam().TssNonce,
-				txData.gas.GasPrice(),
+				txData.gas.Price,
 			)
 			txData.srcChainID = big.NewInt(cctx.OutboundParams[0].ReceiverChainId)
 			txData.toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
@@ -551,7 +551,7 @@ func (signer *Signer) TryProcessOutbound(
 				cctx.InboundParams.SenderChainId,
 				toChain.ID(),
 				cctx.GetCurrentOutboundParam().TssNonce,
-				txData.gas.GasPrice(),
+				txData.gas.Price,
 			)
 			tx, err = signer.SignWithdrawTx(ctx, txData)
 		case coin.CoinType_ERC20:
@@ -559,7 +559,7 @@ func (signer *Signer) TryProcessOutbound(
 				cctx.InboundParams.SenderChainId,
 				toChain.ID(),
 				cctx.GetCurrentOutboundParam().TssNonce,
-				txData.gas.GasPrice(),
+				txData.gas.Price,
 			)
 			tx, err = signer.SignERC20WithdrawTx(ctx, txData)
 		}
@@ -573,7 +573,7 @@ func (signer *Signer) TryProcessOutbound(
 			cctx.InboundParams.SenderChainId,
 			toChain.ID(),
 			cctx.GetCurrentOutboundParam().TssNonce,
-			txData.gas.GasPrice(),
+			txData.gas.Price,
 		)
 		txData.srcChainID = big.NewInt(cctx.OutboundParams[0].ReceiverChainId)
 		txData.toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
@@ -589,7 +589,7 @@ func (signer *Signer) TryProcessOutbound(
 			cctx.InboundParams.SenderChainId,
 			toChain.ID(),
 			cctx.GetCurrentOutboundParam().TssNonce,
-			txData.gas.GasPrice(),
+			txData.gas.Price,
 		)
 		tx, err = signer.SignOutbound(ctx, txData)
 		if err != nil {

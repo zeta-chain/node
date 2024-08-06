@@ -227,10 +227,9 @@ func TestSigner_SignOutbound(t *testing.T) {
 	t.Run("SignOutbound - should successfully sign DynamicFeeTx", func(t *testing.T) {
 		// ARRANGE
 		const (
-			gwei            = 1_000_000_000
-			priorityFee     = 1 * gwei
-			gasPrice        = 3 * gwei
-			londonGasFeeCap = 2*gasPrice - priorityFee
+			gwei        = 1_000_000_000
+			priorityFee = 1 * gwei
+			gasPrice    = 3 * gwei
 		)
 
 		// Given a CCTX with gas price and priority fee
@@ -257,7 +256,7 @@ func TestSigner_SignOutbound(t *testing.T) {
 		assert.Equal(t, ethtypes.DynamicFeeTxType, int(tx.Type()))
 
 		// check that the gasPrice & priorityFee are set correctly
-		assert.Equal(t, int64(londonGasFeeCap), tx.GasFeeCap().Int64())
+		assert.Equal(t, int64(gasPrice), tx.GasFeeCap().Int64())
 		assert.Equal(t, int64(priorityFee), tx.GasTipCap().Int64())
 	})
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestGasFromCCTX(t *testing.T) {
+func Test_makeGasFromCCTX(t *testing.T) {
 	logger := zerolog.New(zerolog.NewTestWriter(t))
 
 	makeCCTX := func(gasLimit uint64, price, priorityFee string) *types.CrossChainTx {
@@ -32,11 +32,11 @@ func TestGasFromCCTX(t *testing.T) {
 			name: "legacy: gas is too low",
 			cctx: makeCCTX(minGasLimit-200, gwei(2).String(), ""),
 			assert: func(t *testing.T, g Gas) {
-				assert.True(t, g.IsLegacy())
+				assert.True(t, g.isLegacy())
 				assertGasEquals(t, Gas{
-					limit:       minGasLimit,
-					price:       gwei(2),
-					priorityFee: gwei(0),
+					Limit:       minGasLimit,
+					PriorityFee: gwei(0),
+					Price:       gwei(2),
 				}, g)
 			},
 		},
@@ -44,27 +44,23 @@ func TestGasFromCCTX(t *testing.T) {
 			name: "london: gas is too low",
 			cctx: makeCCTX(minGasLimit-200, gwei(2).String(), gwei(1).String()),
 			assert: func(t *testing.T, g Gas) {
-				assert.False(t, g.IsLegacy())
+				assert.False(t, g.isLegacy())
 				assertGasEquals(t, Gas{
-					limit:       minGasLimit,
-					price:       gwei(2),
-					priorityFee: gwei(1),
+					Limit:       minGasLimit,
+					Price:       gwei(2),
+					PriorityFee: gwei(1),
 				}, g)
-
-				// gasPrice=2, priorityFee=1, so baseFee=1
-				// gasFeeCap = 2*baseFee + priorityFee = 2 + 1 = 3
-				assert.Equal(t, gwei(3).Int64(), g.GasFeeCap().Int64())
 			},
 		},
 		{
 			name: "pre London gas logic",
 			cctx: makeCCTX(minGasLimit+100, gwei(3).String(), ""),
 			assert: func(t *testing.T, g Gas) {
-				assert.True(t, g.IsLegacy())
+				assert.True(t, g.isLegacy())
 				assertGasEquals(t, Gas{
-					limit:       100_100,
-					price:       gwei(3),
-					priorityFee: gwei(0),
+					Limit:       100_100,
+					Price:       gwei(3),
+					PriorityFee: gwei(0),
 				}, g)
 			},
 		},
@@ -72,11 +68,11 @@ func TestGasFromCCTX(t *testing.T) {
 			name: "post London gas logic",
 			cctx: makeCCTX(minGasLimit+200, gwei(4).String(), gwei(1).String()),
 			assert: func(t *testing.T, g Gas) {
-				assert.False(t, g.IsLegacy())
+				assert.False(t, g.isLegacy())
 				assertGasEquals(t, Gas{
-					limit:       100_200,
-					price:       gwei(4),
-					priorityFee: gwei(1),
+					Limit:       100_200,
+					Price:       gwei(4),
+					PriorityFee: gwei(1),
 				}, g)
 			},
 		},
@@ -84,11 +80,11 @@ func TestGasFromCCTX(t *testing.T) {
 			name: "gas is too high, force to the ceiling",
 			cctx: makeCCTX(maxGasLimit+200, gwei(4).String(), gwei(1).String()),
 			assert: func(t *testing.T, g Gas) {
-				assert.False(t, g.IsLegacy())
+				assert.False(t, g.isLegacy())
 				assertGasEquals(t, Gas{
-					limit:       maxGasLimit,
-					price:       gwei(4),
-					priorityFee: gwei(1),
+					Limit:       maxGasLimit,
+					Price:       gwei(4),
+					PriorityFee: gwei(1),
 				}, g)
 			},
 		},
@@ -127,10 +123,9 @@ func TestGasFromCCTX(t *testing.T) {
 }
 
 func assertGasEquals(t *testing.T, expected, actual Gas) {
-	assert.Equal(t, int64(expected.Limit()), int64(actual.Limit()), "gas limit")
-	assert.Equal(t, expected.GasPrice().Int64(), actual.GasPrice().Int64(), "gas price")
-	assert.Equal(t, expected.GasFeeCap().Int64(), actual.GasFeeCap().Int64(), "max fee cap")
-	assert.Equal(t, expected.PriorityFee().Int64(), actual.PriorityFee().Int64(), "priority fee")
+	assert.Equal(t, int64(expected.Limit), int64(actual.Limit), "gas limit")
+	assert.Equal(t, expected.Price.Int64(), actual.Price.Int64(), "max fee per unit")
+	assert.Equal(t, expected.PriorityFee.Int64(), actual.PriorityFee.Int64(), "priority fee per unit")
 }
 
 func gwei(i int64) *big.Int {

@@ -95,14 +95,14 @@ func NewOutboundData(
 			Uint64("cctx.pending_tx_nonce", nonce)
 
 		// new gas price is less or equal to pending tx gas
-		if gas.GasPrice().Cmp(tx.GasPrice()) <= 0 {
+		if gas.Price.Cmp(tx.GasPrice()) <= 0 {
 			evt.Msg("Please wait for pending outbound to be included in the block")
 			return nil, true, nil
 		}
 
 		evt.
-			Uint64("cctx.gas_price", gas.GasPrice().Uint64()).
-			Uint64("cctx.priority_fee", gas.PriorityFee().Uint64()).
+			Uint64("cctx.gas_price", gas.Price.Uint64()).
+			Uint64("cctx.priority_fee", gas.PriorityFee.Uint64()).
 			Msg("Replacing pending outbound transaction with higher gas fees")
 	}
 
