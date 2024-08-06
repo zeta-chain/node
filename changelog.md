@@ -6,6 +6,7 @@
 * [2533](https://github.com/zeta-chain/node/pull/2533) - parse memo from both OP_RETURN and inscription
 * [2568](https://github.com/zeta-chain/node/pull/2568) - improve AppContext by converging chains, chainParams, enabledChains, and additionalChains into a single zctx.Chain
 * [2597](https://github.com/zeta-chain/node/pull/2597) - Add generic rpc metrics to zetaclient
+* [2634](https://github.com/zeta-chain/node/pull/2634) - add support for EIP-1559 gas fees
 
 
 ## v19.0.1
