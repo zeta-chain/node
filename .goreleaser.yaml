@@ -20,7 +20,6 @@ env:
   - CC_windows_amd64=x86_64-w64-mingw32-gcc
   - CXX_windows_amd64=x86_64-w64-mingw32-g++
   - VERSION={{ .Version }}
-  - COMMIT={{ .Commit }}
   - BUILDTIME={{ .Date }}
   # - CC_windows_arm64= NOT_CREATING_WINDOWS_ARM64_BINARIES
   # - CXX_windows_arm64= NOT_CREATING_WINDOWS_ARM64_BINARIES
@@ -54,10 +53,10 @@ builds:
       - -X github.com/cosmos/cosmos-sdk/version.ServerName=zetacored
       - -X github.com/cosmos/cosmos-sdk/version.ClientName=zetaclientd
       - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
-      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Env.COMMIT }}
+      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .FullCommit }}
       - -X github.com/zeta-chain/zetacore/pkg/constant.Name=zetacored
       - -X github.com/zeta-chain/zetacore/pkg/constant.Version={{ .Version }}
-      - -X github.com/zeta-chain/zetacore/pkg/constant.CommitHash={{ .Env.COMMIT }}
+      - -X github.com/zeta-chain/zetacore/pkg/constant.CommitHash={{ .FullCommit }}
       - -X github.com/zeta-chain/zetacore/pkg/constant.BuildTime={{ .Env.BUILDTIME }}
       - -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 
@@ -100,7 +99,7 @@ release:
   # Available only for GitHub and Gitea.
   draft: false
 
-  target_commitish: "{{ .Commit }}"
+  target_commitish: "{{ .FullCommit }}"
 
   # If set, will create a release discussion in the category specified.
   #
