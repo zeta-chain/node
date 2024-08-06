@@ -43,14 +43,6 @@ func v2TestRoutine(
 		txERC20Send := deployerRunner.SendERC20OnEvm(account.EVMAddress(), 10)
 		v2Runner.WaitForTxReceiptOnEvm(txERC20Send)
 
-		// depositing the necessary tokens on ZetaChain
-		// TODO: update with v2 deposits
-		// https://github.com/zeta-chain/node/issues/2554
-		txEtherDeposit := v2Runner.DepositEther(false)
-		txERC20Deposit := v2Runner.DepositERC20()
-		v2Runner.WaitForMinedCCTX(txEtherDeposit)
-		v2Runner.WaitForMinedCCTX(txERC20Deposit)
-
 		// run erc20 test
 		testsToRun, err := v2Runner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,

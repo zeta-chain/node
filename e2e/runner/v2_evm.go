@@ -6,6 +6,8 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
 // V2ETHDeposit calls Deposit of Gateway with gas token on EVM
@@ -19,6 +21,14 @@ func (r *E2ERunner) V2ETHDeposit(receiver ethcommon.Address, amount *big.Int) *e
 
 	tx, err := r.GatewayEVM.Deposit(r.EVMAuth, receiver)
 	require.NoError(r, err)
+
+	r.Logger.EVMTransaction(*tx, "eth_deposit")
+
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+	r.requireTxSuccessful(receipt, "eth_deposit failed")
+
+	r.Logger.EVMReceipt(*receipt, "eth_deposit")
+	r.Logger.GatewayDeposit(r.GatewayEVM, *receipt, "eth_deposit")
 
 	return tx
 }

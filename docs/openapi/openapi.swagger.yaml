@@ -57121,6 +57121,8 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/crosschainOutboundParams'
+      protocol_contract_version:
+        $ref: '#/definitions/crosschainProtocolContractVersion'
   crosschainGasPrice:
     type: object
     properties:
@@ -57315,6 +57317,15 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/crosschainTxHash'
+  crosschainProtocolContractVersion:
+    type: string
+    enum:
+      - V1
+      - V2
+    default: V1
+    title: |-
+      ProtocolContractVersion represents the version of the protocol contract used
+      for cctx workflow
   crosschainQueryAllCctxResponse:
     type: object
     properties:

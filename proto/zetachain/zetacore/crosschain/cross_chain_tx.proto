@@ -91,6 +91,14 @@ message Status {
   bool isAbortRefunded = 4;
 }
 
+// ProtocolContractVersion represents the version of the protocol contract used
+// for cctx workflow
+enum ProtocolContractVersion {
+  option (gogoproto.goproto_enum_stringer) = true;
+  V1 = 0;
+  V2 = 1;
+}
+
 message CrossChainTx {
   string creator = 1;
   string index = 2;
@@ -103,4 +111,5 @@ message CrossChainTx {
   Status cctx_status = 8;
   InboundParams inbound_params = 9;
   repeated OutboundParams outbound_params = 10;
+  ProtocolContractVersion protocol_contract_version = 11;
 }

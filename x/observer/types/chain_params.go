@@ -349,6 +349,7 @@ func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		GatewayAddress:              "0xF0deebCB0E9C829519C4baa794c5445171973826",
 	}
 }
 func GetDefaultZetaPrivnetChainParams() *ChainParams {

@@ -178,6 +178,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(
 		foreignCoin.CoinType,
 		foreignCoin.Asset,
 		event.Raw.Index,
+		types.ProtocolContractVersion_V1,
 	)
 
 	cctx, err := k.ValidateInbound(ctx, msg, false)
@@ -241,6 +242,7 @@ func (k Keeper) ProcessZetaSentEvent(
 
 	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
 	messageString := base64.StdEncoding.EncodeToString(event.Message)
+
 	// Bump gasLimit by event index (which is very unlikely to be larger than 1000) to always have different ZetaSent events msgs.
 	msg := types.NewMsgVoteInbound(
 		"",
@@ -256,6 +258,7 @@ func (k Keeper) ProcessZetaSentEvent(
 		coin.CoinType_Zeta,
 		"",
 		event.Raw.Index,
+		types.ProtocolContractVersion_V1,
 	)
 
 	cctx, err := k.ValidateInbound(ctx, msg, true)

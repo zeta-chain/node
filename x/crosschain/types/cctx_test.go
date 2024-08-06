@@ -23,7 +23,7 @@ func TestCrossChainTx_GetCCTXIndexBytes(t *testing.T) {
 	require.Equal(t, cctx.Index, types.GetCctxIndexFromBytes(indexBytes))
 }
 
-func Test_InitializeCCTX(t *testing.T) {
+func Test_NewCCTX(t *testing.T) {
 	t.Run("should return a cctx with correct values", func(t *testing.T) {
 		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		senderChain := chains.Goerli
@@ -41,20 +41,21 @@ func Test_InitializeCCTX(t *testing.T) {
 		cointType := coin.CoinType_ERC20
 		tss := sample.Tss()
 		msg := types.MsgVoteInbound{
-			Creator:            creator,
-			Sender:             sender.String(),
-			SenderChainId:      senderChain.ChainId,
-			Receiver:           receiver.String(),
-			ReceiverChain:      receiverChain.ChainId,
-			Amount:             amount,
-			Message:            message,
-			InboundHash:        inboundHash.String(),
-			InboundBlockHeight: inboundBlockHeight,
-			GasLimit:           gasLimit,
-			CoinType:           cointType,
-			TxOrigin:           sender.String(),
-			Asset:              asset,
-			EventIndex:         eventIndex,
+			Creator:                 creator,
+			Sender:                  sender.String(),
+			SenderChainId:           senderChain.ChainId,
+			Receiver:                receiver.String(),
+			ReceiverChain:           receiverChain.ChainId,
+			Amount:                  amount,
+			Message:                 message,
+			InboundHash:             inboundHash.String(),
+			InboundBlockHeight:      inboundBlockHeight,
+			GasLimit:                gasLimit,
+			CoinType:                cointType,
+			TxOrigin:                sender.String(),
+			Asset:                   asset,
+			EventIndex:              eventIndex,
+			ProtocolContractVersion: types.ProtocolContractVersion_V2,
 		}
 		cctx, err := types.NewCCTX(ctx, msg, tss.TssPubkey)
 		require.NoError(t, err)
@@ -73,7 +74,9 @@ func Test_InitializeCCTX(t *testing.T) {
 		require.Equal(t, sdkmath.ZeroUint(), cctx.GetCurrentOutboundParam().Amount)
 		require.Equal(t, types.CctxStatus_PendingInbound, cctx.CctxStatus.Status)
 		require.Equal(t, false, cctx.CctxStatus.IsAbortRefunded)
+		require.Equal(t, types.ProtocolContractVersion_V2, cctx.ProtocolContractVersion)
 	})
+
 	t.Run("should return an error if the cctx is invalid", func(t *testing.T) {
 		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		senderChain := chains.Goerli
@@ -108,6 +111,11 @@ func Test_InitializeCCTX(t *testing.T) {
 		}
 		_, err := types.NewCCTX(ctx, msg, tss.TssPubkey)
 		require.ErrorContains(t, err, "sender cannot be empty")
+	})
+
+	t.Run("zero value for protocol contract version gives V1", func(t *testing.T) {
+		cctx := types.CrossChainTx{}
+		require.Equal(t, types.ProtocolContractVersion_V1, cctx.ProtocolContractVersion)
 	})
 }
 

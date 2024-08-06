@@ -53,33 +53,6 @@ func RateLimiterFlags() types.RateLimiterFlags {
 	}
 }
 
-// CustomRateLimiterFlags creates a custom rate limiter flags with the given parameters
-func CustomRateLimiterFlags(
-	enabled bool,
-	window int64,
-	rate math.Uint,
-	conversions []types.Conversion,
-) types.RateLimiterFlags {
-	return types.RateLimiterFlags{
-		Enabled:     enabled,
-		Window:      window,
-		Rate:        rate,
-		Conversions: conversions,
-	}
-}
-
-func AssetRate() types.AssetRate {
-	r := Rand()
-
-	return types.AssetRate{
-		ChainId:  r.Int63(),
-		Asset:    EthAddress().Hex(),
-		Decimals: uint32(r.Uint64()),
-		CoinType: coin.CoinType_ERC20,
-		Rate:     sdk.NewDec(r.Int63()),
-	}
-}
-
 // CustomAssetRate creates a custom asset rate with the given parameters
 func CustomAssetRate(
 	chainID int64,
@@ -211,13 +184,14 @@ func CrossChainTx(t *testing.T, index string) *types.CrossChainTx {
 	r := newRandFromStringSeed(t, index)
 
 	return &types.CrossChainTx{
-		Creator:        AccAddress(),
-		Index:          GetCctxIndexFromString(index),
-		ZetaFees:       math.NewUint(uint64(r.Int63())),
-		RelayedMessage: StringRandom(r, 32),
-		CctxStatus:     Status(t, index),
-		InboundParams:  InboundParams(r),
-		OutboundParams: []*types.OutboundParams{OutboundParams(r), OutboundParams(r)},
+		Creator:                 AccAddress(),
+		Index:                   GetCctxIndexFromString(index),
+		ZetaFees:                math.NewUint(uint64(r.Int63())),
+		RelayedMessage:          StringRandom(r, 32),
+		CctxStatus:              Status(t, index),
+		InboundParams:           InboundParams(r),
+		OutboundParams:          []*types.OutboundParams{OutboundParams(r), OutboundParams(r)},
+		ProtocolContractVersion: types.ProtocolContractVersion_V1,
 	}
 }
 

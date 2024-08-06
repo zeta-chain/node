@@ -8,6 +8,7 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 import type { CoinType } from "../pkg/coin/coin_pb.js";
 import type { Proof } from "../pkg/proofs/proofs_pb.js";
 import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
+import type { ProtocolContractVersion } from "./cross_chain_tx_pb.js";
 import type { RateLimiterFlags } from "./rate_limiter_flags_pb.js";
 
 /**
@@ -640,6 +641,13 @@ export declare class MsgVoteInbound extends Message<MsgVoteInbound> {
    * @generated from field: uint64 event_index = 15;
    */
   eventIndex: bigint;
+
+  /**
+   * protocol contract version to use for the cctx workflow
+   *
+   * @generated from field: zetachain.zetacore.crosschain.ProtocolContractVersion protocol_contract_version = 16;
+   */
+  protocolContractVersion: ProtocolContractVersion;
 
   constructor(data?: PartialMessage<MsgVoteInbound>);
 

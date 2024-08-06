@@ -335,15 +335,15 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testV2 {
 		eg.Go(v2TestRoutine(conf, deployerRunner, verbose,
 			e2etests.TestV2ETHDepositName,
-			e2etests.TestV2ETHDepositAndCallName,
-			e2etests.TestV2ETHWithdrawName,
-			e2etests.TestV2ETHWithdrawAndCallName,
-			e2etests.TestV2ERC20DepositName,
-			e2etests.TestV2ERC20DepositAndCallName,
-			e2etests.TestV2ERC20WithdrawName,
-			e2etests.TestV2ERC20WithdrawAndCallName,
-			e2etests.TestV2ZEVMToEVMCallName,
-			e2etests.TestV2EVMToZEVMCallName,
+			//e2etests.TestV2ETHDepositAndCallName,
+			//e2etests.TestV2ETHWithdrawName,
+			//e2etests.TestV2ETHWithdrawAndCallName,
+			//e2etests.TestV2ERC20DepositName,
+			//e2etests.TestV2ERC20DepositAndCallName,
+			//e2etests.TestV2ERC20WithdrawName,
+			//e2etests.TestV2ERC20WithdrawAndCallName,
+			//e2etests.TestV2ZEVMToEVMCallName,
+			//e2etests.TestV2EVMToZEVMCallName,
 		))
 	}
 

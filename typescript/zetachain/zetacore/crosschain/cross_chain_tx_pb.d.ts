@@ -81,6 +81,24 @@ export declare enum TxFinalizationStatus {
 }
 
 /**
+ * ProtocolContractVersion represents the version of the protocol contract used
+ * for cctx workflow
+ *
+ * @generated from enum zetachain.zetacore.crosschain.ProtocolContractVersion
+ */
+export declare enum ProtocolContractVersion {
+  /**
+   * @generated from enum value: V1 = 0;
+   */
+  V1 = 0,
+
+  /**
+   * @generated from enum value: V2 = 1;
+   */
+  V2 = 1,
+}
+
+/**
  * @generated from message zetachain.zetacore.crosschain.InboundParams
  */
 export declare class InboundParams extends Message<InboundParams> {
@@ -370,6 +388,11 @@ export declare class CrossChainTx extends Message<CrossChainTx> {
    * @generated from field: repeated zetachain.zetacore.crosschain.OutboundParams outbound_params = 10;
    */
   outboundParams: OutboundParams[];
+
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.ProtocolContractVersion protocol_contract_version = 11;
+   */
+  protocolContractVersion: ProtocolContractVersion;
 
   constructor(data?: PartialMessage<CrossChainTx>);
 
