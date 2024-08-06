@@ -49,8 +49,8 @@ func TestNewOutboundData(t *testing.T) {
 		assert.NotEmpty(t, out.nonce)
 		assert.NotEmpty(t, out.height)
 		assert.NotEmpty(t, out.gas)
-		assert.True(t, out.gas.isLegacy())
-		assert.Equal(t, uint64(minGasLimit), out.gas.Limit)
+		assert.True(t, out.gas.IsLegacy())
+		assert.Equal(t, uint64(minGasLimit), out.gas.Limit())
 
 		assert.Empty(t, out.message)
 		assert.NotEmpty(t, out.cctxIndex)

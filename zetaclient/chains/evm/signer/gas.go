@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"cosmossdk.io/math"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
@@ -24,34 +25,58 @@ const (
 //
 // However, this doesn't affect tx creation nor broadcasting
 type Gas struct {
-	Limit uint64
+	limit uint64
 
 	// This is a "total" gasPrice per 1 unit of gas.
-	Price *big.Int
+	price *big.Int
 
 	// PriorityFee a fee paid directly to validators.
-	PriorityFee *big.Int
+	priorityFee *big.Int
 }
 
 func (g Gas) validate() error {
 	switch {
-	case g.Limit == 0:
+	case g.limit == 0:
 		return errors.New("gas limit is zero")
-	case g.Price == nil:
-		return errors.New("max fee per unit is nil")
-	case g.PriorityFee == nil:
+	case g.price == nil:
+		return errors.New("gas price per unit is nil")
+	case g.priorityFee == nil:
 		return errors.New("priority fee per unit is nil")
 	default:
 		return nil
 	}
 }
 
-// isLegacy determines whether the gas is meant for LegacyTx{} (pre EIP-1559)
+// IsLegacy determines whether the gas is meant for LegacyTx{} (pre EIP-1559)
 // or DynamicFeeTx{} (post EIP-1559).
 //
 // Returns true if priority fee is <= 0.
-func (g Gas) isLegacy() bool {
-	return g.PriorityFee.Sign() < 1
+func (g Gas) IsLegacy() bool {
+	return g.priorityFee.Sign() < 1
+}
+
+func (g Gas) Limit() uint64 {
+	return g.limit
+}
+
+// GasPrice returns the gas price for legacy transactions.
+func (g Gas) GasPrice() *big.Int {
+	return g.price
+}
+
+// PriorityFee returns the priority fee for EIP-1559 transactions.
+func (g Gas) PriorityFee() *big.Int {
+	return g.priorityFee
+}
+
+// GasFeeCap returns the gas fee cap for EIP-1559 transactions.
+// heuristic of `2*baseFee + gasTipCap` is used. And because baseFee = `gasPrice - priorityFee`,
+// it's `2*(gasPrice - priorityFee) + priorityFee` => `2*gasPrice - priorityFee`
+func (g Gas) GasFeeCap() *big.Int {
+	return math.NewUintFromBigInt(g.price).
+		MulUint64(2).
+		Sub(math.NewUintFromBigInt(g.priorityFee)).
+		BigInt()
 }
 
 func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
@@ -89,9 +114,9 @@ func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 	}
 
 	return Gas{
-		Limit:       limit,
-		Price:       gasPrice,
-		PriorityFee: priorityFee,
+		limit:       limit,
+		price:       gasPrice,
+		priorityFee: priorityFee,
 	}, nil
 }
 
