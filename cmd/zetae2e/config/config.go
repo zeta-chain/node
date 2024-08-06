@@ -91,7 +91,10 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	// v2
 	conf.Contracts.EVM.Gateway = config.DoubleQuotedString(r.GatewayEVMAddr.Hex())
 	conf.Contracts.EVM.ERC20CustodyNew = config.DoubleQuotedString(r.ERC20CustodyV2Addr.Hex())
+	conf.Contracts.EVM.TestDAppV2Addr = config.DoubleQuotedString(r.TestDAppV2EVMAddr.Hex())
+
 	conf.Contracts.ZEVM.Gateway = config.DoubleQuotedString(r.GatewayZEVMAddr.Hex())
+	conf.Contracts.ZEVM.TestDAppV2Addr = config.DoubleQuotedString(r.TestDAppV2ZEVMAddr.Hex())
 
 	return conf
 }

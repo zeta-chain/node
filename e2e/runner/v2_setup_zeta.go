@@ -8,13 +8,14 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/zetacore/e2e/contracts/erc1967proxy"
+	"github.com/zeta-chain/zetacore/e2e/contracts/testdappv2"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
 // SetZEVMContractsV2 set contracts for the ZEVM
 func (r *E2ERunner) SetZEVMContractsV2() {
 	ensureTxReceipt := func(tx *ethtypes.Transaction, failMessage string) {
-		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 		r.requireTxSuccessful(receipt, failMessage)
 	}
 
@@ -25,7 +26,7 @@ func (r *E2ERunner) SetZEVMContractsV2() {
 	}()
 
 	r.Logger.Info("Deploying Gateway ZEVM")
-	gatewayZEVMAddr, txGateway, _, err := gatewayzevm.DeployGatewayZEVM(r.EVMAuth, r.EVMClient)
+	gatewayZEVMAddr, txGateway, _, err := gatewayzevm.DeployGatewayZEVM(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
 
 	ensureTxReceipt(txGateway, "Gateway deployment failed")
@@ -39,15 +40,15 @@ func (r *E2ERunner) SetZEVMContractsV2() {
 
 	// Deploy the proxy contract
 	proxyAddress, txProxy, _, err := erc1967proxy.DeployERC1967Proxy(
-		r.EVMAuth,
-		r.EVMClient,
+		r.ZEVMAuth,
+		r.ZEVMClient,
 		gatewayZEVMAddr,
 		initializerData,
 	)
 	require.NoError(r, err)
 
 	r.GatewayZEVMAddr = proxyAddress
-	r.GatewayZEVM, err = gatewayzevm.NewGatewayZEVM(proxyAddress, r.EVMClient)
+	r.GatewayZEVM, err = gatewayzevm.NewGatewayZEVM(proxyAddress, r.ZEVMClient)
 	require.NoError(r, err)
 	r.Logger.Info("Gateway ZEVM contract address: %s, tx hash: %s", gatewayZEVMAddr.Hex(), txGateway.Hash().Hex())
 
@@ -55,5 +56,14 @@ func (r *E2ERunner) SetZEVMContractsV2() {
 	err = r.ZetaTxServer.UpdateGatewayAddress(utils.AdminPolicyName, r.GatewayZEVMAddr.Hex())
 	require.NoError(r, err)
 
+	// deploy test dapp v2
+	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.ZEVMAuth, r.ZEVMClient)
+	require.NoError(r, err)
+
+	r.TestDAppV2ZEVMAddr = testDAppV2Addr
+	r.TestDAppV2ZEVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.ZEVMClient)
+	require.NoError(r, err)
+
 	ensureTxReceipt(txProxy, "Gateway proxy deployment failed")
+	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
 }

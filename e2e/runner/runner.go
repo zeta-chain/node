@@ -33,6 +33,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
+	"github.com/zeta-chain/zetacore/e2e/contracts/testdappv2"
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
 	"github.com/zeta-chain/zetacore/e2e/txserver"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -142,10 +143,14 @@ type E2ERunner struct {
 	GatewayEVM         *gatewayevm.GatewayEVM
 	ERC20CustodyV2Addr ethcommon.Address
 	ERC20CustodyV2     *erc20custodyv2.ERC20Custody
+	TestDAppV2EVMAddr  ethcommon.Address
+	TestDAppV2EVM      *testdappv2.TestDAppV2
 
 	// zevm v2
-	GatewayZEVMAddr ethcommon.Address
-	GatewayZEVM     *gatewayzevm.GatewayZEVM
+	GatewayZEVMAddr    ethcommon.Address
+	GatewayZEVM        *gatewayzevm.GatewayZEVM
+	TestDAppV2ZEVMAddr ethcommon.Address
+	TestDAppV2ZEVM     *testdappv2.TestDAppV2
 }
 
 func NewE2ERunner(
@@ -303,9 +308,19 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	if err != nil {
 		return err
 	}
+	r.TestDAppV2EVMAddr = other.TestDAppV2EVMAddr
+	r.TestDAppV2EVM, err = testdappv2.NewTestDAppV2(r.TestDAppV2EVMAddr, r.EVMClient)
+	if err != nil {
+		return err
+	}
 
 	r.GatewayZEVMAddr = other.GatewayZEVMAddr
 	r.GatewayZEVM, err = gatewayzevm.NewGatewayZEVM(r.GatewayZEVMAddr, r.ZEVMClient)
+	if err != nil {
+		return err
+	}
+	r.TestDAppV2ZEVMAddr = other.TestDAppV2ZEVMAddr
+	r.TestDAppV2ZEVM, err = testdappv2.NewTestDAppV2(r.TestDAppV2ZEVMAddr, r.ZEVMClient)
 	if err != nil {
 		return err
 	}
@@ -357,10 +372,12 @@ func (r *E2ERunner) PrintContractAddresses() {
 
 	r.Logger.Print(" --- 📜zEVM v2 contracts ---")
 	r.Logger.Print("GatewayZEVM:    %s", r.GatewayZEVMAddr.Hex())
+	r.Logger.Print("TestDAppV2ZEVM: %s", r.TestDAppV2ZEVMAddr.Hex())
 
 	r.Logger.Print(" --- 📜EVM v2 contracts ---")
 	r.Logger.Print("GatewayEVM:     %s", r.GatewayEVMAddr.Hex())
-	r.Logger.Print("ERC20CustodyV2:%s", r.ERC20CustodyV2Addr.Hex())
+	r.Logger.Print("ERC20CustodyV2: %s", r.ERC20CustodyV2Addr.Hex())
+	r.Logger.Print("TestDAppV2EVM:  %s", r.TestDAppV2EVMAddr.Hex())
 }
 
 // Errorf logs an error message. Mimics the behavior of testing.T.Errorf

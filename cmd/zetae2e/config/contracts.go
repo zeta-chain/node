@@ -20,6 +20,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
+	"github.com/zeta-chain/zetacore/e2e/contracts/testdappv2"
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
@@ -238,12 +239,34 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		}
 	}
 
+	if c := conf.Contracts.EVM.TestDAppV2Addr; c != "" {
+		r.TestDAppV2EVMAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid TestDAppV2Addr: %w", err)
+		}
+		r.TestDAppV2EVM, err = testdappv2.NewTestDAppV2(r.TestDAppV2EVMAddr, r.EVMClient)
+		if err != nil {
+			return err
+		}
+	}
+
 	if c := conf.Contracts.ZEVM.Gateway; c != "" {
 		r.GatewayZEVMAddr, err = c.AsEVMAddress()
 		if err != nil {
 			return fmt.Errorf("invalid GatewayAddr: %w", err)
 		}
 		r.GatewayZEVM, err = gatewayzevm.NewGatewayZEVM(r.GatewayZEVMAddr, r.ZEVMClient)
+		if err != nil {
+			return err
+		}
+	}
+
+	if c := conf.Contracts.ZEVM.TestDAppV2Addr; c != "" {
+		r.TestDAppV2EVMAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid TestDAppV2Addr: %w", err)
+		}
+		r.TestDAppV2ZEVM, err = testdappv2.NewTestDAppV2(r.TestDAppV2ZEVMAddr, r.EVMClient)
 		if err != nil {
 			return err
 		}
