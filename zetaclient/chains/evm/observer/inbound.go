@@ -20,9 +20,11 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
 
+	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/constant"
+	"github.com/zeta-chain/zetacore/pkg/ticker"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
@@ -36,42 +38,46 @@ import (
 // WatchInbound watches evm chain for incoming txs and post votes to zetacore
 // TODO(revamp): move ticker function to a separate file
 func (ob *Observer) WatchInbound(ctx context.Context) error {
+	sampledLogger := ob.Logger().Inbound.Sample(&zerolog.BasicSampler{N: 10})
+	interval := ticker.SecondsFromUint64(ob.GetChainParams().InboundTicker)
+	task := func(ctx context.Context, t *ticker.Ticker) error {
+		return ob.watchInboundOnce(ctx, t, sampledLogger)
+	}
+
+	t := ticker.New(interval, task)
+
+	bg.Work(ctx, func(_ context.Context) error {
+		<-ob.StopChannel()
+		t.Stop()
+		ob.Logger().Inbound.Info().Msg("WatchInbound stopped")
+		return nil
+	})
+
+	ob.Logger().Inbound.Info().Msgf("WatchInbound started")
+
+	return t.Run(ctx)
+}
+
+func (ob *Observer) watchInboundOnce(ctx context.Context, t *ticker.Ticker, sampledLogger zerolog.Logger) error {
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
 		return err
 	}
 
-	ticker, err := clienttypes.NewDynamicTicker(
-		fmt.Sprintf("EVM_WatchInbound_%d", ob.Chain().ChainId),
-		ob.GetChainParams().InboundTicker,
-	)
-	if err != nil {
-		ob.Logger().Inbound.Error().Err(err).Msg("error creating ticker")
-		return err
+	// noop
+	if !app.IsInboundObservationEnabled() {
+		ob.Logger().Inbound.Warn().Msg("WatchInbound: inbound observation is disabled")
+		return nil
 	}
-	defer ticker.Stop()
 
-	ob.Logger().Inbound.Info().Msgf("WatchInbound started for chain %d", ob.Chain().ChainId)
-	sampledLogger := ob.Logger().Inbound.Sample(&zerolog.BasicSampler{N: 10})
-
-	for {
-		select {
-		case <-ticker.C():
-			if !app.IsInboundObservationEnabled() {
-				sampledLogger.Info().
-					Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.Chain().ChainId)
-				continue
-			}
-			err := ob.ObserveInbound(ctx, sampledLogger)
-			if err != nil {
-				ob.Logger().Inbound.Err(err).Msg("WatchInbound: observeInbound error")
-			}
-			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.Logger().Inbound)
-		case <-ob.StopChannel():
-			ob.Logger().Inbound.Info().Msgf("WatchInbound stopped for chain %d", ob.Chain().ChainId)
-			return nil
-		}
+	if err := ob.ObserveInbound(ctx, sampledLogger); err != nil {
+		ob.Logger().Inbound.Err(err).Msg("WatchInbound: observeInbound error")
 	}
+
+	newInterval := ticker.SecondsFromUint64(ob.GetChainParams().InboundTicker)
+	t.SetInterval(newInterval)
+
+	return nil
 }
 
 // WatchInboundTracker gets a list of Inbound tracker suggestions from zeta-core at each tick and tries to check if the in-tx was confirmed.
