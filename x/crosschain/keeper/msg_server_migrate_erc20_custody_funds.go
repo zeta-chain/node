@@ -26,7 +26,7 @@ func (k msgServer) MigrateERC20CustodyFunds(
 	// get the current TSS nonce allow to set a unique index for the CCTX
 	chainNonce, found := k.GetObserverKeeper().GetChainNonces(ctx, msg.ChainId)
 	if !found {
-		return nil, errorsmod.Wrap(types.ErrInvalidChainID, "cannot find current TSS nonce")
+		return nil, errorsmod.Wrap(types.ErrInvalidChainID, "cannot find current chain nonce")
 	}
 	currentNonce := chainNonce.Nonce
 
