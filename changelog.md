@@ -9,6 +9,9 @@
 * [2597](https://github.com/zeta-chain/node/pull/2597) - Add generic rpc metrics to zetaclient
 * [2538](https://github.com/zeta-chain/node/pull/2538) - add background worker routines to shutdown zetaclientd when needed for tss migration
 
+### Refactor
+
+* [2615](https://github.com/zeta-chain/node/pull/2615) - Refactor cleanup of outbound trackers
 
 ## v19.0.0
 
