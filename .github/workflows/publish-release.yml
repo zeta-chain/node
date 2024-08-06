@@ -23,7 +23,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  check_branch:
+  check-branch:
     if: ${{ (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
     runs-on: ubuntu-22.04
     steps:
@@ -31,9 +31,18 @@ jobs:
         run: |
           echo "${{ github.ref }}"
 
+  check-goreleaser:
+    needs:
+      - check-branch
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Branch
+        run: |
+          make release-dry-run
+          
   check-changelog:
     needs:
-      - check_branch
+      - check-branch
     runs-on: ubuntu-22.04
     steps:
 
@@ -75,7 +84,7 @@ jobs:
 
   check-upgrade-handler-updated:
     needs:
-      - check_branch
+      - check-branch
     runs-on: ubuntu-22.04
     timeout-minutes: 10
     steps:
@@ -114,7 +123,7 @@ jobs:
     needs:
       - check-changelog
       - check-upgrade-handler-updated
-      - check_branch
+      - check-branch
     runs-on: ubuntu-22.04
     timeout-minutes: 60
     environment: release
