@@ -5,6 +5,7 @@
 ### Features
 
 * [2578](https://github.com/zeta-chain/node/pull/2578) - Add Gateway address in protocol contract list
+* [2597](https://github.com/zeta-chain/node/pull/2597) - Add generic rpc metrics to zetaclient
 * [2538](https://github.com/zeta-chain/node/pull/2538) - add background worker routines to shutdown zetaclientd when needed for tss migration
 
 ## v19.0.0

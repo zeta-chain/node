@@ -149,7 +149,7 @@ func (k msgServer) WhitelistERC20(
 			LastUpdateTimestamp: 0,
 		},
 		InboundParams: &types.InboundParams{
-			Sender:                 "",
+			Sender:                 msg.Creator,
 			SenderChainId:          0,
 			TxOrigin:               "",
 			CoinType:               coin.CoinType_Cmd,
