@@ -40,7 +40,7 @@ import (
 type Ticker struct {
 	interval   time.Duration
 	ticker     *time.Ticker
-	runner     Runner
+	task       Task
 	signalChan chan struct{}
 
 	// runnerMu is a mutex to prevent double run
@@ -52,17 +52,17 @@ type Ticker struct {
 	stopped bool
 }
 
-// Runner is a function that will be called by the Ticker
-type Runner func(ctx context.Context, t *Ticker) error
+// Task is a function that will be called by the Ticker
+type Task func(ctx context.Context, t *Ticker) error
 
 // New creates a new Ticker.
-func New(interval time.Duration, runner Runner) *Ticker {
-	return &Ticker{interval: interval, runner: runner}
+func New(interval time.Duration, runner Task) *Ticker {
+	return &Ticker{interval: interval, task: runner}
 }
 
 // Run creates and runs a new Ticker.
-func Run(ctx context.Context, interval time.Duration, runner Runner) error {
-	return New(interval, runner).Run(ctx)
+func Run(ctx context.Context, interval time.Duration, task Task) error {
+	return New(interval, task).Run(ctx)
 }
 
 // SecondsFromUint64 converts uint64 to time.Duration in seconds.
@@ -73,7 +73,7 @@ func SecondsFromUint64(d uint64) time.Duration {
 // Run runs the ticker by blocking current goroutine. It also invokes BEFORE ticker starts.
 // Stops when (if any):
 // - context is done (returns ctx.Err())
-// - runner returns an error or panics
+// - task returns an error or panics
 // - shutdown signal is received
 func (t *Ticker) Run(ctx context.Context) (err error) {
 	defer func() {
@@ -92,8 +92,8 @@ func (t *Ticker) Run(ctx context.Context) (err error) {
 	t.stopped = false
 
 	// initial run
-	if err := t.runner(ctx, t); err != nil {
-		return errors.Wrap(err, "ticker runner failed")
+	if err := t.task(ctx, t); err != nil {
+		return errors.Wrap(err, "ticker task failed")
 	}
 
 	for {
@@ -101,8 +101,8 @@ func (t *Ticker) Run(ctx context.Context) (err error) {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-t.ticker.C:
-			if err := t.runner(ctx, t); err != nil {
-				return errors.Wrap(err, "ticker runner failed")
+			if err := t.task(ctx, t); err != nil {
+				return errors.Wrap(err, "ticker task failed")
 			}
 		case <-t.signalChan:
 			return nil
