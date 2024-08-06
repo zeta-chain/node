@@ -869,7 +869,7 @@ func getEVMRPC(ctx context.Context, endpoint string) (interfaces.EVMRPCClient, e
 	}
 	httpClient, err := metrics.GetInstrumentedHTTPClient(endpoint)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "unable to get instrumented HTTP client")
 	}
 
 	rpcClient, err := ethrpc.DialHTTPWithClient(endpoint, httpClient)

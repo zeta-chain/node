@@ -48,7 +48,7 @@ func (ms *MetricsSuite) TestMetrics(c *C) {
 	chain1Ctr := testutil.ToFloat64(GetFilterLogsPerChain.WithLabelValues("chain1"))
 	c.Assert(chain1Ctr, Equals, 1.0)
 
-	httpClient, err := GetInstrumentedHTTPClient("http://127.0.0.1:8886")
+	httpClient, err := GetInstrumentedHTTPClient("http://127.0.0.1:8886/myauthuuid")
 	c.Assert(err, IsNil)
 
 	res, err := httpClient.Get("http://127.0.0.1:8886")
