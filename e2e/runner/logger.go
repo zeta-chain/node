@@ -201,11 +201,13 @@ func (l *Logger) ZRC20Withdrawal(
 	}
 }
 
+type depositParser interface {
+	ParseDeposit(ethtypes.Log) (*gatewayevm.GatewayEVMDeposit, error)
+}
+
 // GatewayDeposit prints a GatewayDeposit event
 func (l *Logger) GatewayDeposit(
-	contract interface {
-		ParseDeposit(ethtypes.Log) (*gatewayevm.GatewayEVMDeposit, error)
-	},
+	contract depositParser,
 	receipt ethtypes.Receipt,
 	name string,
 ) {
