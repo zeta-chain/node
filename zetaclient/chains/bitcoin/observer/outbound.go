@@ -151,7 +151,8 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 		// prevents double spending of same UTXO. However, for nonce 0, we don't have a prior nonce (e.g., -1)
 		// for the signer to check against when making the payment. Signer treats nonce 0 as a special case in downstream code.
 		if nonce == 0 {
-			return false, nil
+			ob.logger.Outbound.Info().Msgf("VoteOutboundIfConfirmed: outbound %s is nonce 0", outboundID)
+			return true, nil
 		}
 
 		// Try including this outbound broadcasted by myself

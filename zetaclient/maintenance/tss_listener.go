@@ -131,10 +131,7 @@ func (tl *TSSListener) waitForNewKeyGeneration(ctx context.Context) error {
 // waitForNewKeygen is a background thread that listens for new keygen; it returns when a new keygen is set
 func (tl *TSSListener) waitForNewKeygen(ctx context.Context) error {
 	// Initial Keygen retrieval
-	keygen, err := retry.DoTypedWithBackoffAndRetry(
-		func() (observertypes.Keygen, error) { return tl.client.GetKeyGen(ctx) },
-		retry.DefaultConstantBackoff(),
-	)
+	keygen, err := tl.client.GetKeyGen(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial tss history")
 	}
