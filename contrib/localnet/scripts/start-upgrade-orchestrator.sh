@@ -36,10 +36,7 @@ if [[ $(hostname) != "zetacore0" ]]; then
   sed -i 's|tcp://localhost:26657|tcp://zetacore0:26657|g' ~/.zetacored/config/client.toml
 fi
 
-# get new zetacored version
-curl -L -o /tmp/zetacored.new "${ZETACORED_URL}"
-chmod +x /tmp/zetacored.new
-UPGRADE_NAME=$(/tmp/zetacored.new version)
+UPGRADE_NAME="v19"
 
 # if explicit upgrade height not provided, use dumb estimator
 if [[ -z $UPGRADE_HEIGHT ]]; then
