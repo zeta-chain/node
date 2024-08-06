@@ -152,7 +152,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 		// for the signer to check against when making the payment. Signer treats nonce 0 as a special case in downstream code.
 		if nonce == 0 {
 			ob.logger.Outbound.Info().Msgf("VoteOutboundIfConfirmed: outbound %s is nonce 0", outboundID)
-			return true, nil
+			return false, nil
 		}
 
 		// Try including this outbound broadcasted by myself
