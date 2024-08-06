@@ -136,4 +136,5 @@ func (t *Ticker) Stop() {
 
 	close(t.signalChan)
 	t.stopped = true
+	t.ticker.Stop()
 }
