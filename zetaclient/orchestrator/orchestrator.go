@@ -137,9 +137,6 @@ func (oc *Orchestrator) Start(ctx context.Context) error {
 	shutdownOrchestrator := func() {
 		// now stop orchestrator and all observers
 		close(oc.stop)
-		for _, c := range oc.observerMap {
-			c.Stop()
-		}
 	}
 
 	oc.zetacoreClient.OnBeforeStop(shutdownOrchestrator)

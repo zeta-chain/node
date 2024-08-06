@@ -391,7 +391,7 @@ func (c *Client) UpdateAppContext(ctx context.Context, appContext *zctx.AppConte
 		return errors.Wrap(err, "unable to fetch crosschain flags from zetacore")
 	}
 
-	tss, err := c.GetCurrentTSS(ctx)
+	tss, err := c.GetTSS(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to fetch current TSS")
 	}

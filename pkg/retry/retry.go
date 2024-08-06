@@ -46,6 +46,11 @@ func DefaultBackoff() Backoff {
 	return backoff.WithMaxRetries(bo, 5)
 }
 
+func DefaultConstantBackoff() Backoff {
+	bo := backoff.NewConstantBackOff(5 * time.Second)
+	return backoff.WithMaxRetries(bo, 10)
+}
+
 // Do executes the callback function with the default backoff config.
 // It will retry a callback ONLY if error is retryable.
 func Do(cb Callback) error {
