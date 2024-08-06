@@ -5,10 +5,10 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 
-	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
