@@ -68,7 +68,7 @@ func NewOutboundData(
 	}
 
 	// recipient + destination chain
-	to, toChainID, skip := determineDestination(cctx, logger)
+	to, toChainID, skip := getDestination(cctx, logger)
 	if skip {
 		return nil, true, nil
 	}
@@ -78,7 +78,7 @@ func NewOutboundData(
 		return nil, false, errors.Wrapf(err, "unable to get chain %d from app context", toChainID.Int64())
 	}
 
-	gas, err := makeGasFromCCTX(cctx, logger)
+	gas, err := gasFromCCTX(cctx, logger)
 	if err != nil {
 		return nil, false, errors.Wrap(err, "unable to make gas from CCTX")
 	}
@@ -157,9 +157,9 @@ func getCCTXIndex(cctx *types.CrossChainTx) ([32]byte, error) {
 	return cctxIndex, nil
 }
 
-// determineDestination picks the destination address and Chain ID based on the status of the cross chain tx.
+// getDestination picks the destination address and Chain ID based on the status of the cross chain tx.
 // returns true if transaction should be skipped.
-func determineDestination(cctx *types.CrossChainTx, logger zerolog.Logger) (ethcommon.Address, *big.Int, bool) {
+func getDestination(cctx *types.CrossChainTx, logger zerolog.Logger) (ethcommon.Address, *big.Int, bool) {
 	switch cctx.CctxStatus.Status {
 	case types.CctxStatus_PendingRevert:
 		to := ethcommon.HexToAddress(cctx.InboundParams.Sender)

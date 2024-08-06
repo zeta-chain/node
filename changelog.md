@@ -5,6 +5,7 @@
 ### Features
 
 * [2578](https://github.com/zeta-chain/node/pull/2578) - Add Gateway address in protocol contract list
+* [2634](https://github.com/zeta-chain/node/pull/2634) - add support for EIP-1559 gas fees
 
 ## v19.0.0
 
@@ -46,7 +47,6 @@
 * [2524](https://github.com/zeta-chain/node/pull/2524) - add inscription envelop parsing 
 * [2560](https://github.com/zeta-chain/node/pull/2560) - add support for Solana SOL token withdraw
 * [2533](https://github.com/zeta-chain/node/pull/2533) - parse memo from both OP_RETURN and inscription
-* [2634](https://github.com/zeta-chain/node/pull/2634) - add support for EIP-1559 gas fees
 
 ### Refactor
 

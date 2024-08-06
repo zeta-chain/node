@@ -110,7 +110,7 @@ func Test_makeGasFromCCTX(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			g, err := makeGasFromCCTX(tt.cctx, logger)
+			g, err := gasFromCCTX(tt.cctx, logger)
 			if tt.errorContains != "" {
 				assert.ErrorContains(t, err, tt.errorContains)
 				return

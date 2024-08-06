@@ -54,8 +54,7 @@ func (g Gas) isLegacy() bool {
 	return g.PriorityFee.Sign() < 1
 }
 
-// makeGasFromCCTX creates Gas struct based from CCTX and priorityFee.
-func makeGasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
+func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 	var (
 		params = cctx.GetCurrentOutboundParam()
 		limit  = params.GasLimit
