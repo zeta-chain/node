@@ -372,7 +372,7 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 						cctxList := cctxMap[chainID]
 
 						metrics.PendingTxsPerChain.
-							WithLabelValues(fmt.Sprintf("chain_%d", chainID)).
+							WithLabelValues(chain.Name()).
 							Set(float64(len(cctxList)))
 
 						if len(cctxList) == 0 {

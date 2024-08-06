@@ -132,6 +132,10 @@ func (c Chain) ID() int64 {
 	return c.chainInfo.ChainId
 }
 
+func (c Chain) Name() string {
+	return c.chainInfo.Name
+}
+
 func (c Chain) Params() *observer.ChainParams {
 	return c.observerParams
 }
