@@ -20,11 +20,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"golang.org/x/exp/slices"
 
-	"github.com/zeta-chain/zetacore/pkg/constant"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
+
+const releaseVersion = "v19"
 
 func SetupHandlers(app *App) {
 	// Set param key table for params module migration
@@ -135,9 +136,9 @@ func SetupHandlers(app *App) {
 	}
 
 	app.UpgradeKeeper.SetUpgradeHandler(
-		constant.Version,
+		releaseVersion,
 		func(ctx sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
-			app.Logger().Info("Running upgrade handler for " + constant.Version)
+			app.Logger().Info("Running upgrade handler for " + releaseVersion)
 
 			var err error
 			for _, upgradeHandler := range upgradeHandlerFns {
@@ -155,7 +156,7 @@ func SetupHandlers(app *App) {
 	if err != nil {
 		panic(err)
 	}
-	if upgradeInfo.Name == constant.Version && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+	if upgradeInfo.Name == releaseVersion && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		// Use upgrade store loader for the initial loading of all stores when app starts,
 		// it checks if version == upgradeHeight and applies store upgrades before loading the stores,
 		// so that new stores start with the correct version (the current height of chain),
