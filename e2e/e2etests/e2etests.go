@@ -54,7 +54,8 @@ const (
 	/*
 	 Solana tests
 	*/
-	TestSolanaDepositName = "solana_deposit"
+	TestSolanaDepositName  = "solana_deposit"
+	TestSolanaWithdrawName = "solana_withdraw"
 
 	/*
 	 Bitcoin tests
@@ -99,6 +100,7 @@ const (
 	 Admin tests
 	 Test admin functionalities
 	*/
+	TestWhitelistERC20Name            = "whitelist_erc20"
 	TestDepositEtherLiquidityCapName  = "deposit_eth_liquidity_cap"
 	TestMigrateChainSupportName       = "migrate_chain_support"
 	TestPauseZRC20Name                = "pause_zrc20"
@@ -338,9 +340,17 @@ var AllE2ETests = []runner.E2ETest{
 		TestSolanaDepositName,
 		"deposit SOL into ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount in SOL", DefaultValue: "0.1"},
+			{Description: "amount in lamport", DefaultValue: "13370000"},
 		},
 		TestSolanaDeposit,
+	),
+	runner.NewE2ETest(
+		TestSolanaWithdrawName,
+		"withdraw SOL from ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "1336000"},
+		},
+		TestSolanaWithdraw,
 	),
 	/*
 	 Bitcoin tests
@@ -512,6 +522,12 @@ var AllE2ETests = []runner.E2ETest{
 	/*
 	 Admin tests
 	*/
+	runner.NewE2ETest(
+		TestWhitelistERC20Name,
+		"whitelist a new ERC20 token",
+		[]runner.ArgDefinition{},
+		TestWhitelistERC20,
+	),
 	runner.NewE2ETest(
 		TestDepositEtherLiquidityCapName,
 		"deposit Ethers into ZEVM with a liquidity cap",

@@ -33,7 +33,7 @@ func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
 	for {
 		select {
 		case <-ticker.C():
-			if !app.IsInboundObservationEnabled(ob.GetChainParams()) {
+			if !app.IsInboundObservationEnabled() {
 				continue
 			}
 			err := ob.ProcessInboundTrackers(ctx)

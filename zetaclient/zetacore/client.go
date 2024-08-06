@@ -341,20 +341,15 @@ func (c *Client) WaitForZetacoreToCreateBlocks(ctx context.Context) error {
 
 // UpdateAppContext updates zctx.AppContext
 // zetacore stores AppContext for all clients
-func (c *Client) UpdateAppContext(
-	ctx context.Context,
-	appContext *zctx.AppContext,
-	init bool,
-	sampledLogger zerolog.Logger,
-) error {
+func (c *Client) UpdateAppContext(ctx context.Context, appContext *zctx.AppContext, logger zerolog.Logger) error {
 	bn, err := c.GetBlockHeight(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get zetablock height: %w", err)
+		return errors.Wrap(err, "unable to get zetablock height")
 	}
 
 	plan, err := c.GetUpgradePlan(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get upgrade plan: %w", err)
+		return errors.Wrap(err, "unable to get upgrade plan")
 	}
 
 	// Stop client and notify dependant services to stop (Orchestrator, Observers, and Signers)
@@ -367,87 +362,72 @@ func (c *Client) UpdateAppContext(
 		)
 
 		c.Stop()
-	}
 
-	additionalChains, err := c.GetAdditionalChains(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to additional chains: %w", err)
-	}
-
-	chainParams, err := c.GetChainParams(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get chain params: %w", err)
-	}
-
-	newEVMParams := make(map[int64]*observertypes.ChainParams)
-	var newBTCParams *observertypes.ChainParams
-	var newSolanaParams *observertypes.ChainParams
-
-	// check and update chain params for each chain
-	for _, chainParam := range chainParams {
-		err := observertypes.ValidateChainParams(chainParam)
-		if err != nil {
-			sampledLogger.Warn().Err(err).Msgf("Invalid chain params for chain %d", chainParam.ChainId)
-			continue
-		}
-		if chains.IsBitcoinChain(chainParam.ChainId, additionalChains) {
-			newBTCParams = chainParam
-		} else if chains.IsSolanaChain(chainParam.ChainId, additionalChains) {
-			newSolanaParams = chainParam
-		} else if chains.IsEVMChain(chainParam.ChainId, additionalChains) {
-			newEVMParams[chainParam.ChainId] = chainParam
-		}
+		return nil
 	}
 
 	supportedChains, err := c.GetSupportedChains(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get supported chains: %w", err)
+		return errors.Wrap(err, "unable to fetch supported chains")
 	}
 
-	newChains := make([]chains.Chain, len(supportedChains))
-	for i, chain := range supportedChains {
-		newChains[i] = chain
+	additionalChains, err := c.GetAdditionalChains(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to fetch additional chains")
+	}
+
+	chainParams, err := c.GetChainParams(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to fetch chain params")
 	}
 
 	keyGen, err := c.GetKeyGen(ctx)
 	if err != nil {
-		c.logger.Info().Msg("Unable to fetch keygen from zetacore")
-		return fmt.Errorf("failed to get keygen: %w", err)
+		return errors.Wrap(err, "unable to fetch keygen from zetacore")
+	}
+
+	crosschainFlags, err := c.GetCrosschainFlags(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to fetch crosschain flags from zetacore")
 	}
 
 	tss, err := c.GetCurrentTSS(ctx)
 	if err != nil {
-		c.logger.Info().Err(err).Msg("Unable to fetch TSS from zetacore")
-		return fmt.Errorf("failed to get current tss: %w", err)
-	}
-	tssPubKey := tss.GetTssPubkey()
-
-	crosschainFlags, err := c.GetCrosschainFlags(ctx)
-	if err != nil {
-		c.logger.Info().Msg("Unable to fetch cross-chain flags from zetacore")
-		return fmt.Errorf("failed to get crosschain flags: %w", err)
+		return errors.Wrap(err, "unable to fetch current TSS")
 	}
 
-	blockHeaderEnabledChains, err := c.GetBlockHeaderEnabledChains(ctx)
-	if err != nil {
-		c.logger.Info().Msg("Unable to fetch block header enabled chains from zetacore")
-		return err
+	freshParams := make(map[int64]*observertypes.ChainParams, len(chainParams))
+
+	// check and update chain params for each chain
+	// Note that we are EXCLUDING ZetaChain from the chainParams if it's present
+	for i := range chainParams {
+		cp := chainParams[i]
+
+		if !cp.IsSupported {
+			logger.Warn().Int64("chain.id", cp.ChainId).Msg("Skipping unsupported chain")
+			continue
+		}
+
+		if chains.IsZetaChain(cp.ChainId, nil) {
+			continue
+		}
+
+		if err := observertypes.ValidateChainParams(cp); err != nil {
+			logger.Warn().Err(err).Int64("chain.id", cp.ChainId).Msg("Skipping invalid chain params")
+			continue
+		}
+
+		freshParams[cp.ChainId] = cp
 	}
 
-	appContext.Update(
+	return appContext.Update(
 		keyGen,
-		newChains,
-		newEVMParams,
-		newBTCParams,
-		newSolanaParams,
-		tssPubKey,
-		crosschainFlags,
+		supportedChains,
 		additionalChains,
-		blockHeaderEnabledChains,
-		init,
+		freshParams,
+		tss.GetTssPubkey(),
+		crosschainFlags,
 	)
-
-	return nil
 }
 
 func cosmosREST(host string) string {

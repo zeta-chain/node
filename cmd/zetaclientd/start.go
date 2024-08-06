@@ -21,7 +21,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/zetacore/pkg/authz"
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
@@ -143,11 +142,11 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore
-	err = zetacoreClient.UpdateAppContext(ctx, appContext, true, startLogger)
-	if err != nil {
+	if err = zetacoreClient.UpdateAppContext(ctx, appContext, startLogger); err != nil {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")
 		return err
 	}
+
 	startLogger.Info().Msgf("Config is updated from zetacore %s", maskCfg(cfg))
 
 	go zetacoreClient.UpdateAppContextWorker(ctx, appContext)
@@ -214,16 +213,21 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	bitcoinChainID := chains.BitcoinRegtest.ChainId
-	btcChain, _, btcEnabled := appContext.GetBTCChainAndConfig()
-	if btcEnabled {
-		bitcoinChainID = btcChain.ChainId
+	btcChains := appContext.FilterChains(zctx.Chain.IsUTXO)
+	switch {
+	case len(btcChains) == 0:
+		return errors.New("no BTC chains found")
+	case len(btcChains) > 1:
+		// In the future we might support multiple UTXO chains;
+		// right now we only support BTC. Let's make sure there are no surprises.
+		return errors.New("more than one BTC chain found")
 	}
+
 	tss, err := mc.NewTSS(
 		ctx,
 		zetacoreClient,
 		tssHistoricalList,
-		bitcoinChainID,
+		btcChains[0].ID(),
 		hotkeyPass,
 		server,
 	)
@@ -263,11 +267,16 @@ func start(_ *cobra.Command, _ []string) error {
 	tss.CurrentPubkey = currentTss.TssPubkey
 	if tss.EVMAddress() == (ethcommon.Address{}) || tss.BTCAddress() == "" {
 		startLogger.Error().Msg("TSS address is not set in zetacore")
+	} else {
+		startLogger.Info().
+			Str("tss.eth", tss.EVMAddress().String()).
+			Str("tss.btc", tss.BTCAddress()).
+			Str("tss.pub_key", tss.CurrentPubkey).
+			Msg("Current TSS")
 	}
-	startLogger.Info().
-		Msgf("Current TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
-	if len(appContext.GetEnabledChains()) == 0 {
-		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
+
+	if len(appContext.ListChainIDs()) == 0 {
+		startLogger.Error().Interface("config", cfg).Msgf("No chains in updated config")
 	}
 
 	isObserver, err := isObserverNode(ctx, zetacoreClient)

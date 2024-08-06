@@ -36,7 +36,7 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
-	chainParams.GatewayAddress = "2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s"
+	chainParams.GatewayAddress = GatewayAddressTest
 	zetacoreClient := mocks.NewZetacoreClient(t)
 	zetacoreClient.WithKeys(&keys.Keys{}).WithZetaChain().WithPostVoteInbound("", "")
 
@@ -61,7 +61,7 @@ func Test_FilterInboundEvents(t *testing.T) {
 
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
-	chainParams.GatewayAddress = "2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s"
+	chainParams.GatewayAddress = GatewayAddressTest
 
 	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, database, base.DefaultLogger(), nil)
 	require.NoError(t, err)
@@ -169,7 +169,7 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
-	chainParams.GatewayAddress = "2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s"
+	chainParams.GatewayAddress = GatewayAddressTest
 	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, database, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
