@@ -22,7 +22,7 @@ func (r *E2ERunner) V2ETHWithdrawAndCall(
 	amount *big.Int,
 	payload []byte,
 ) *ethtypes.Transaction {
-	tx, err := r.GatewayZEVM.WithdrawAndCall0(r.EVMAuth, receiver.Bytes(), amount, r.ETHZRC20Addr, payload)
+	tx, err := r.GatewayZEVM.WithdrawAndCall(r.EVMAuth, receiver.Bytes(), amount, r.ETHZRC20Addr, payload)
 	require.NoError(r, err)
 
 	return tx
@@ -42,7 +42,7 @@ func (r *E2ERunner) V2ERC20WithdrawAndCall(
 	amount *big.Int,
 	payload []byte,
 ) *ethtypes.Transaction {
-	tx, err := r.GatewayZEVM.WithdrawAndCall0(r.EVMAuth, receiver.Bytes(), amount, r.ERC20Addr, payload)
+	tx, err := r.GatewayZEVM.WithdrawAndCall(r.EVMAuth, receiver.Bytes(), amount, r.ERC20Addr, payload)
 	require.NoError(r, err)
 
 	return tx
@@ -50,7 +50,10 @@ func (r *E2ERunner) V2ERC20WithdrawAndCall(
 
 // V2ZEVMToEMVCall calls Call of Gateway on ZEVM
 func (r *E2ERunner) V2ZEVMToEMVCall(receiver ethcommon.Address, payload []byte) *ethtypes.Transaction {
-	tx, err := r.GatewayZEVM.Call(r.EVMAuth, receiver.Bytes(), payload)
+	chainID, err := r.EVMClient.ChainID(r.Ctx)
+	require.NoError(r, err)
+
+	tx, err := r.GatewayZEVM.Call(r.EVMAuth, receiver.Bytes(), chainID, payload)
 	require.NoError(r, err)
 
 	return tx

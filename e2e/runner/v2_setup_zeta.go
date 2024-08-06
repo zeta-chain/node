@@ -34,7 +34,7 @@ func (r *E2ERunner) SetZEVMContractsV2() {
 	require.NoError(r, err)
 
 	// Encode the initializer data
-	initializerData, err := gatewayZEVMABI.Pack("initialize", r.WZetaAddr)
+	initializerData, err := gatewayZEVMABI.Pack("initialize", r.WZetaAddr, r.Account.EVMAddress())
 	require.NoError(r, err)
 
 	// Deploy the proxy contract

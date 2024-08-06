@@ -44,7 +44,7 @@ func (r *E2ERunner) SetupEVMV2() {
 	require.NoError(r, err)
 
 	// Encode the initializer data
-	initializerData, err := gatewayEVMABI.Pack("initialize", r.TSSAddress, r.ZetaEthAddr)
+	initializerData, err := gatewayEVMABI.Pack("initialize", r.TSSAddress, r.ZetaEthAddr, r.Account.EVMAddress())
 	require.NoError(r, err)
 
 	// Deploy the proxy contract
@@ -67,6 +67,7 @@ func (r *E2ERunner) SetupEVMV2() {
 		r.EVMClient,
 		r.GatewayEVMAddr,
 		r.TSSAddress,
+		r.Account.EVMAddress(),
 	)
 	require.NoError(r, err)
 
