@@ -179,26 +179,11 @@ func (r *E2ERunner) SetupEVM(contractsDeployed bool, whitelistERC20 bool) {
 		},
 	)
 	require.NoError(r, err, "failed to get chain params for chain %d", chains.GoerliLocalnet.ChainId)
+
 	chainParams := currentChainParamsRes.ChainParams
-	needsUpdate := false
-
-	if chainParams.Erc20CustodyContractAddress != r.ERC20CustodyAddr.Hex() {
-		chainParams.Erc20CustodyContractAddress = r.ERC20CustodyAddr.Hex()
-		needsUpdate = true
-	}
-	if chainParams.ConnectorContractAddress != r.ConnectorEthAddr.Hex() {
-		chainParams.ConnectorContractAddress = r.ConnectorEthAddr.Hex()
-		needsUpdate = true
-	}
-	if chainParams.ZetaTokenContractAddress != r.ZetaEthAddr.Hex() {
-		chainParams.ZetaTokenContractAddress = r.ZetaEthAddr.Hex()
-		needsUpdate = true
-	}
-
-	if !needsUpdate {
-		r.Logger.Info("Chain params are up to date")
-		return
-	}
+	chainParams.Erc20CustodyContractAddress = r.ERC20CustodyAddr.Hex()
+	chainParams.ConnectorContractAddress = r.ConnectorEthAddr.Hex()
+	chainParams.ZetaTokenContractAddress = r.ZetaEthAddr.Hex()
 
 	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, observertypes.NewMsgUpdateChainParams(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
