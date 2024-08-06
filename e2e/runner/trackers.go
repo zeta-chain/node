@@ -2,6 +2,7 @@ package runner
 
 import (
 	"github.com/stretchr/testify/require"
+
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
