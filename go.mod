@@ -68,6 +68,7 @@ require (
 	github.com/nanmu42/etherscan-api v1.10.0
 	github.com/near/borsh-go v0.3.1
 	github.com/onrik/ethrpc v1.2.0
+	github.com/samber/lo v1.46.0
 	gitlab.com/thorchain/tss/tss-lib v0.2.0
 	go.nhat.io/grpcmock v0.25.0
 )
@@ -326,16 +327,16 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
-	golang.org/x/crypto v0.17.0
+	golang.org/x/crypto v0.23.0
 	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
-	golang.org/x/mod v0.11.0 // indirect
-	golang.org/x/net v0.19.0
+	golang.org/x/mod v0.17.0 // indirect
+	golang.org/x/net v0.25.0
 	golang.org/x/oauth2 v0.15.0 // indirect
-	golang.org/x/sync v0.6.0
-	golang.org/x/sys v0.18.0 // indirect
-	golang.org/x/term v0.15.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
-	golang.org/x/tools v0.9.1 // indirect
+	golang.org/x/sync v0.7.0
+	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/term v0.20.0 // indirect
+	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	google.golang.org/api v0.152.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.32.0

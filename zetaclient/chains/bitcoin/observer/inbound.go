@@ -49,7 +49,7 @@ func (ob *Observer) WatchInbound(ctx context.Context) error {
 	for {
 		select {
 		case <-ticker.C():
-			if !app.IsInboundObservationEnabled(ob.GetChainParams()) {
+			if !app.IsInboundObservationEnabled() {
 				sampledLogger.Info().
 					Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.Chain().ChainId)
 				continue
@@ -69,11 +69,6 @@ func (ob *Observer) WatchInbound(ctx context.Context) error {
 // ObserveInbound observes the Bitcoin chain for inbounds and post votes to zetacore
 // TODO(revamp): simplify this function into smaller functions
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		return err
-	}
-
 	zetaCoreClient := ob.ZetacoreClient()
 
 	// get and update latest block height
@@ -119,18 +114,6 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		blockNumber, len(res.Block.Tx), cnt, lastScanned)
 
 	// add block header to zetacore
-	// TODO: consider having a separate ticker(from TSS scaning) for posting block headers
-	// https://github.com/zeta-chain/node/issues/1847
-	// TODO: move this logic in its own routine
-	// https://github.com/zeta-chain/node/issues/2204
-	blockHeaderVerification, found := app.GetBlockHeaderEnabledChains(ob.Chain().ChainId)
-	if found && blockHeaderVerification.Enabled {
-		// #nosec G115 always in range
-		err = ob.postBlockHeader(ctx, int64(blockNumber))
-		if err != nil {
-			ob.logger.Inbound.Warn().Err(err).Msgf("observeInboundBTC: error posting block header %d", blockNumber)
-		}
-	}
 	if len(res.Block.Tx) > 1 {
 		// get depositor fee
 		depositorFee := bitcoin.CalcDepositorFee(res.Block, ob.Chain().ChainId, ob.netParams, ob.logger.Inbound)
@@ -206,7 +189,7 @@ func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
 	for {
 		select {
 		case <-ticker.C():
-			if !app.IsInboundObservationEnabled(ob.GetChainParams()) {
+			if !app.IsInboundObservationEnabled() {
 				continue
 			}
 			err := ob.ProcessInboundTrackers(ctx)
@@ -475,41 +458,5 @@ func GetBtcEvent(
 			TxHash:      tx.Txid,
 		}, nil
 	}
-	return nil, nil
-}
-
-// GetBtcEventWithWitness either returns a valid BTCInboundEvent or nil.
-// This method supports data with more than 80 bytes by scanning the witness for possible presence of a tapscript.
-// It will first prioritize OP_RETURN over tapscript.
-func GetBtcEventWithWitness(
-	client interfaces.BTCRPCClient,
-	tx btcjson.TxRawResult,
-	tssAddress string,
-	blockNumber uint64,
-	logger zerolog.Logger,
-	netParams *chaincfg.Params,
-	depositorFee float64,
-) (*BTCInboundEvent, error) {
-	// first check for OP_RETURN data
-	event, err := GetBtcEvent(
-		client,
-		tx,
-		tssAddress,
-		blockNumber,
-		logger,
-		netParams,
-		depositorFee,
-	)
-
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get btc event")
-	}
-
-	if event != nil {
-		return event, nil
-	}
-
-	// TODO: integrate parsing script
-
 	return nil, nil
 }

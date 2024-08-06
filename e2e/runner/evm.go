@@ -11,13 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/proofs"
-	"github.com/zeta-chain/zetacore/pkg/proofs/ethereum"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
 )
-
-var blockHeaderETHTimeout = 5 * time.Minute
 
 // WaitForTxReceiptOnEvm waits for a tx receipt on EVM
 func (r *E2ERunner) WaitForTxReceiptOnEvm(tx *ethtypes.Transaction) {
@@ -110,13 +104,13 @@ func (r *E2ERunner) DepositERC20WithAmountAndMessage(to ethcommon.Address, amoun
 }
 
 // DepositEther sends Ethers into ZEVM
-func (r *E2ERunner) DepositEther(testHeader bool) ethcommon.Hash {
+func (r *E2ERunner) DepositEther() ethcommon.Hash {
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(100)) // 100 eth
-	return r.DepositEtherWithAmount(testHeader, amount)
+	return r.DepositEtherWithAmount(amount)
 }
 
 // DepositEtherWithAmount sends Ethers into ZEVM
-func (r *E2ERunner) DepositEtherWithAmount(testHeader bool, amount *big.Int) ethcommon.Hash {
+func (r *E2ERunner) DepositEtherWithAmount(amount *big.Int) ethcommon.Hash {
 	r.Logger.Print("⏳ depositing Ethers into ZEVM")
 
 	signedTx, err := r.SendEther(r.TSSAddress, amount, nil)
@@ -128,12 +122,6 @@ func (r *E2ERunner) DepositEtherWithAmount(testHeader bool, amount *big.Int) eth
 	r.requireTxSuccessful(receipt, "deposit failed")
 
 	r.Logger.EVMReceipt(*receipt, "send to TSS")
-
-	// due to the high block throughput in localnet, ZetaClient might catch up slowly with the blocks
-	// to optimize block header proof test, this test is directly executed here on the first deposit instead of having a separate test
-	if testHeader {
-		r.ProveEthTransaction(receipt)
-	}
 
 	return signedTx.Hash()
 }
@@ -174,64 +162,6 @@ func (r *E2ERunner) SendEther(_ ethcommon.Address, value *big.Int, data []byte) 
 	}
 
 	return signedTx, nil
-}
-
-// ProveEthTransaction proves an ETH transaction on ZetaChain
-func (r *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
-	startTime := time.Now()
-
-	txHash := receipt.TxHash
-	blockHash := receipt.BlockHash
-
-	// #nosec G115 test - always in range
-	txIndex := int(receipt.TransactionIndex)
-
-	block, err := r.EVMClient.BlockByHash(r.Ctx, blockHash)
-	require.NoError(r, err)
-
-	for {
-		// check timeout
-		reachedTimeout := time.Since(startTime) > blockHeaderETHTimeout
-		require.False(r, reachedTimeout, "timeout waiting for block header")
-
-		_, err := r.LightclientClient.BlockHeader(r.Ctx, &lightclienttypes.QueryGetBlockHeaderRequest{
-			BlockHash: blockHash.Bytes(),
-		})
-		if err != nil {
-			r.Logger.Info("WARN: block header not found; retrying... error: %s", err.Error())
-		} else {
-			r.Logger.Info("OK: block header found")
-			break
-		}
-
-		time.Sleep(2 * time.Second)
-	}
-
-	trie := ethereum.NewTrie(block.Transactions())
-	require.Equal(r, trie.Hash(), block.Header().TxHash, "tx root hash & block tx root mismatch")
-
-	txProof, err := trie.GenerateProof(txIndex)
-	require.NoError(r, err, "error generating txProof")
-
-	val, err := txProof.Verify(block.TxHash(), txIndex)
-	require.NoError(r, err, "error verifying txProof")
-
-	var txx ethtypes.Transaction
-	require.NoError(r, txx.UnmarshalBinary(val))
-
-	res, err := r.LightclientClient.Prove(r.Ctx, &lightclienttypes.QueryProveRequest{
-		BlockHash: blockHash.Hex(),
-		TxIndex:   int64(txIndex),
-		TxHash:    txHash.Hex(),
-		Proof:     proofs.NewEthereumProof(txProof),
-		ChainId:   chains.GoerliLocalnet.ChainId,
-	})
-
-	// FIXME: @lumtis: don't do this in production
-	require.NoError(r, err)
-	require.True(r, res.Valid, "txProof invalid")
-
-	r.Logger.Info("OK: txProof verified")
 }
 
 // AnvilMineBlocks mines blocks on Anvil localnet

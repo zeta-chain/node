@@ -5,6 +5,7 @@
 ### Features
 
 * [2578](https://github.com/zeta-chain/node/pull/2578) - Add Gateway address in protocol contract list
+* [2597](https://github.com/zeta-chain/node/pull/2597) - Add generic rpc metrics to zetaclient
 
 ### Refactor
 
@@ -47,7 +48,9 @@
 * [2518](https://github.com/zeta-chain/node/pull/2518) - add support for Solana address in zetacore
 * [2483](https://github.com/zeta-chain/node/pull/2483) - add priorityFee (gasTipCap) gas to the state
 * [2567](https://github.com/zeta-chain/node/pull/2567) - add sign latency metric to zetaclient (zetaclient_sign_latency)
-* [2524](https://github.com/zeta-chain/node/pull/2524) - add inscription envolop parsing 
+* [2524](https://github.com/zeta-chain/node/pull/2524) - add inscription envelop parsing 
+* [2560](https://github.com/zeta-chain/node/pull/2560) - add support for Solana SOL token withdraw
+* [2533](https://github.com/zeta-chain/node/pull/2533) - parse memo from both OP_RETURN and inscription
 
 ### Refactor
 
@@ -82,6 +85,7 @@
 * [2542](https://github.com/zeta-chain/node/pull/2542) - adjust permissions to be more restrictive
 * [2572](https://github.com/zeta-chain/node/pull/2572) - turn off IBC modules
 * [2556](https://github.com/zeta-chain/node/pull/2556) - refactor migrator length check to use consensus type
+* [2568](https://github.com/zeta-chain/node/pull/2568) - improve AppContext by converging chains, chainParams, enabledChains, and additionalChains into a single zctx.Chain
 
 ### Tests
 

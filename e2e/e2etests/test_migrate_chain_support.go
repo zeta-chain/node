@@ -136,7 +136,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// deposit Ethers and ERC20 on ZetaChain
 	etherAmount := big.NewInt(1e18)
 	etherAmount = etherAmount.Mul(etherAmount, big.NewInt(10))
-	txEtherDeposit := newRunner.DepositEtherWithAmount(false, etherAmount)
+	txEtherDeposit := newRunner.DepositEtherWithAmount(etherAmount)
 	newRunner.WaitForMinedCCTX(txEtherDeposit)
 
 	// perform withdrawals on the new chain

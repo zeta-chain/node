@@ -61,3 +61,21 @@ func TestSignerGetterAndSetter(t *testing.T) {
 		logger.Compliance.Info().Msg("print compliance log")
 	})
 }
+
+func Test_BeingReportedFlag(t *testing.T) {
+	signer := createSigner(t)
+
+	// hash to be reported
+	hash := "0x1234"
+	alreadySet := signer.SetBeingReportedFlag(hash)
+	require.False(t, alreadySet)
+
+	// set reported outbound again and check
+	alreadySet = signer.SetBeingReportedFlag(hash)
+	require.True(t, alreadySet)
+
+	// clear reported outbound and check again
+	signer.ClearBeingReportedFlag(hash)
+	alreadySet = signer.SetBeingReportedFlag(hash)
+	require.False(t, alreadySet)
+}
