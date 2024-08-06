@@ -38,34 +38,13 @@ import (
 // WatchInbound watches evm chain for incoming txs and post votes to zetacore
 // TODO(revamp): move ticker function to a separate file
 func (ob *Observer) WatchInbound(ctx context.Context) error {
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		return err
+	sampledLogger := ob.Logger().Inbound.Sample(&zerolog.BasicSampler{N: 10})
+	interval := ticker.SecondsFromUint64(ob.GetChainParams().InboundTicker)
+	task := func(ctx context.Context, t *ticker.Ticker) error {
+		return ob.watchInboundOnce(ctx, t, sampledLogger)
 	}
 
-	ob.Logger().Inbound.Info().Msgf("WatchInbound started for chain %d", ob.Chain().ChainId)
-
-	var (
-		logger   = ob.Logger().Inbound.Sample(&zerolog.BasicSampler{N: 10})
-		interval = ticker.SecondsFromUint64(ob.GetChainParams().InboundTicker)
-	)
-
-	t := ticker.New(interval, func(ctx context.Context, t *ticker.Ticker) error {
-		// noop
-		if !app.IsInboundObservationEnabled(ob.GetChainParams()) {
-			logger.Info().Msg("WatchInbound: inbound observation is disabled")
-			return nil
-		}
-
-		if err := ob.ObserveInbound(ctx, logger); err != nil {
-			ob.Logger().Inbound.Err(err).Msg("WatchInbound: observeInbound error")
-		}
-
-		newInterval := ticker.SecondsFromUint64(ob.GetChainParams().InboundTicker)
-		t.SetInterval(newInterval)
-
-		return nil
-	})
+	t := ticker.New(interval, task)
 
 	bg.Work(ctx, func(_ context.Context) error {
 		<-ob.StopChannel()
@@ -74,7 +53,31 @@ func (ob *Observer) WatchInbound(ctx context.Context) error {
 		return nil
 	})
 
+	ob.Logger().Inbound.Info().Msgf("WatchInbound started")
+
 	return t.Run(ctx)
+}
+
+func (ob *Observer) watchInboundOnce(ctx context.Context, t *ticker.Ticker, sampledLogger zerolog.Logger) error {
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	// noop
+	if !app.IsInboundObservationEnabled(ob.GetChainParams()) {
+		ob.Logger().Inbound.Warn().Msg("WatchInbound: inbound observation is disabled")
+		return nil
+	}
+
+	if err := ob.ObserveInbound(ctx, sampledLogger); err != nil {
+		ob.Logger().Inbound.Err(err).Msg("WatchInbound: observeInbound error")
+	}
+
+	newInterval := ticker.SecondsFromUint64(ob.GetChainParams().InboundTicker)
+	t.SetInterval(newInterval)
+
+	return nil
 }
 
 // WatchInboundTracker gets a list of Inbound tracker suggestions from zeta-core at each tick and tries to check if the in-tx was confirmed.
