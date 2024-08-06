@@ -122,7 +122,6 @@ func (k msgServer) VoteOutbound(
 	newOutboundAdded := lenOutboundsNew > lenOutbounds
 	k.SaveSuccessfulOutbound(ctx, &cctx, ballotIndex, newOutboundAdded)
 
-	fmt.Printf("SaveSuccessfulOutbound: Cctx %s outbound : %d\n ,ballot %s\n", cctx.Index, len(cctx.OutboundParams), ballotIndex)
 	return &types.MsgVoteOutboundResponse{}, nil
 }
 

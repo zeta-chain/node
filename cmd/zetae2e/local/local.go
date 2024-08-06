@@ -231,41 +231,41 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestERC20DepositRestrictedName,
 		}
 		zetaTests := []string{
-			//e2etests.TestZetaWithdrawName,
+			e2etests.TestZetaWithdrawName,
 			e2etests.TestMessagePassingExternalChainsName,
 			e2etests.TestMessagePassingRevertFailExternalChainsName,
-			//e2etests.TestMessagePassingRevertSuccessExternalChainsName,
+			e2etests.TestMessagePassingRevertSuccessExternalChainsName,
 		}
-		//zetaAdvancedTests := []string{
-		//	e2etests.TestZetaDepositRestrictedName,
-		//	e2etests.TestZetaDepositName,
-		//	e2etests.TestZetaDepositNewAddressName,
-		//}
+		zetaAdvancedTests := []string{
+			e2etests.TestZetaDepositRestrictedName,
+			e2etests.TestZetaDepositName,
+			e2etests.TestZetaDepositNewAddressName,
+		}
 		zevmMPTests := []string{}
 		zevmMPAdvancedTests := []string{
 			e2etests.TestMessagePassingZEVMToEVMName,
 			e2etests.TestMessagePassingEVMtoZEVMName,
 			e2etests.TestMessagePassingEVMtoZEVMRevertName,
-			//e2etests.TestMessagePassingZEVMtoEVMRevertName,
-			//e2etests.TestMessagePassingZEVMtoEVMRevertFailName,
-			//e2etests.TestMessagePassingEVMtoZEVMRevertFailName,
+			e2etests.TestMessagePassingZEVMtoEVMRevertName,
+			e2etests.TestMessagePassingZEVMtoEVMRevertFailName,
+			e2etests.TestMessagePassingEVMtoZEVMRevertFailName,
 		}
 
 		bitcoinTests := []string{
-			//e2etests.TestBitcoinDepositName,
-			//e2etests.TestBitcoinDepositRefundName,
+			e2etests.TestBitcoinDepositName,
+			e2etests.TestBitcoinDepositRefundName,
 			e2etests.TestBitcoinWithdrawSegWitName,
-			//e2etests.TestBitcoinWithdrawInvalidAddressName,
-			//e2etests.TestZetaWithdrawBTCRevertName,
+			e2etests.TestBitcoinWithdrawInvalidAddressName,
+			e2etests.TestZetaWithdrawBTCRevertName,
 			//e2etests.TestCrosschainSwapName,
 		}
 		bitcoinAdvancedTests := []string{
-			//e2etests.TestBitcoinWithdrawTaprootName,
-			//e2etests.TestBitcoinWithdrawLegacyName,
-			//e2etests.TestBitcoinWithdrawMultipleName,
-			//e2etests.TestBitcoinWithdrawP2SHName,
-			//e2etests.TestBitcoinWithdrawP2WSHName,
-			//e2etests.TestBitcoinWithdrawRestrictedName,
+			e2etests.TestBitcoinWithdrawTaprootName,
+			e2etests.TestBitcoinWithdrawLegacyName,
+			e2etests.TestBitcoinWithdrawMultipleName,
+			e2etests.TestBitcoinWithdrawP2SHName,
+			e2etests.TestBitcoinWithdrawP2WSHName,
+			e2etests.TestBitcoinWithdrawRestrictedName,
 		}
 		ethereumTests := []string{
 			e2etests.TestEtherWithdrawName,
@@ -279,7 +279,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		if !light {
 			erc20Tests = append(erc20Tests, erc20AdvancedTests...)
-			//zetaTests = append(zetaTests, zetaAdvancedTests...)
+			zetaTests = append(zetaTests, zetaAdvancedTests...)
 			zevmMPTests = append(zevmMPTests, zevmMPAdvancedTests...)
 			bitcoinTests = append(bitcoinTests, bitcoinAdvancedTests...)
 			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
@@ -287,13 +287,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		// skip the header proof test if we run light test or skipHeaderProof is enabled
 		testHeader := !light && !skipHeaderProof
-		fmt.Println(skipBitcoinSetup)
-		fmt.Println(testHeader)
-		//eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
+		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
 		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
-		//eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
+		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
 		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, testHeader, bitcoinTests...))
-		//eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, testHeader, ethereumTests...))
+		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, testHeader, ethereumTests...))
 	}
 
 	if testAdmin {
