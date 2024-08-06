@@ -160,6 +160,12 @@ func (ob *Observer) checkEventProcessability(event *gatewayevm.GatewayEVMDeposit
 
 // newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
 func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposit) types.MsgVoteInbound {
+	// if event.Asset is not zero, use it as the asset
+	coinType := coin.CoinType_Gas
+	if event.Asset == (ethcommon.Address{}) || event.Asset.Hex() == constant.EVMZeroAddress {
+		coinType = coin.CoinType_ERC20
+	}
+
 	return *types.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		event.Sender.Hex(),
@@ -172,8 +178,8 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposit) t
 		event.Raw.TxHash.Hex(),
 		event.Raw.BlockNumber,
 		1_500_000,
-		coin.CoinType_Gas,
-		"",
+		coinType,
+		event.Asset.Hex(),
 		event.Raw.Index,
 		types.ProtocolContractVersion_V2,
 	)

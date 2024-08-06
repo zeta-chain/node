@@ -9,6 +9,16 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
+// depositType is the type of deposit to be processed
+type depositType int
+
+const (
+	// deposit of gas token
+	gasTokendeposit depositType = iota
+	// deposit of gas token with contract call
+	depositAndCall
+)
+
 // ProcessV2Deposit handles a deposit from an inbound tx with protocol version 2
 // returns [txResponse, isContractCall, error]
 // isContractCall is true if the message is non empty

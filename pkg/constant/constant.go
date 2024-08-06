@@ -19,4 +19,7 @@ const (
 	// The Solana protocol sets minimum rent exempt to 890880 lamports but we set it to 1_000_000 lamports (0.001 SOL)
 	// The number 890880 comes from CLI command `solana rent 0` and has been verified on devnet gateway program
 	SolanaWalletRentExempt = 1_000_000
+
+	// EVMZeroAddress is the zero address for EVM address format
+	EVMZeroAddress = "0x0000000000000000000000000000000000000000"
 )

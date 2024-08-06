@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -449,7 +450,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		msg := crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
-			RefundAddress: "0x0000000000000000000000000000000000000000",
+			RefundAddress: constant.EVMZeroAddress,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.RefundAbortedCCTX(ctx, &msg)

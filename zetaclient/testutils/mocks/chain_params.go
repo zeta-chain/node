@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -13,14 +14,12 @@ import (
 )
 
 func MockChainParams(chainID int64, confirmation uint64) observertypes.ChainParams {
-	const zeroAddress = "0x0000000000000000000000000000000000000000"
-
-	connectorAddr := zeroAddress
+	connectorAddr := constant.EVMZeroAddress
 	if a, ok := testutils.ConnectorAddresses[chainID]; ok {
 		connectorAddr = a.Hex()
 	}
 
-	erc20CustodyAddr := zeroAddress
+	erc20CustodyAddr := constant.EVMZeroAddress
 	if a, ok := testutils.CustodyAddresses[chainID]; ok {
 		erc20CustodyAddr = a.Hex()
 	}
@@ -28,7 +27,7 @@ func MockChainParams(chainID int64, confirmation uint64) observertypes.ChainPara
 	return observertypes.ChainParams{
 		ChainId:                     chainID,
 		ConfirmationCount:           confirmation,
-		ZetaTokenContractAddress:    zeroAddress,
+		ZetaTokenContractAddress:    constant.EVMZeroAddress,
 		ConnectorContractAddress:    connectorAddr,
 		Erc20CustodyContractAddress: erc20CustodyAddr,
 		InboundTicker:               12,
