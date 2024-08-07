@@ -188,9 +188,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		deployerRunner.SetupEVMV2()
 
-		deployerRunner.SetZEVMContracts()
-
+		// NOTE: v2 called first because gateway must be deployed to deploy ZRC20s
 		deployerRunner.SetZEVMContractsV2()
+
+		deployerRunner.SetZEVMContracts()
 
 		if testSolana {
 			deployerRunner.SetSolanaContracts(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
@@ -336,8 +337,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 	if testV2 {
 		eg.Go(v2TestRoutine(conf, deployerRunner, verbose,
-			e2etests.TestV2ETHDepositName,
-			//e2etests.TestV2ETHDepositAndCallName,
+			//e2etests.TestV2ETHDepositName,
+			e2etests.TestV2ETHDepositAndCallName,
 			//e2etests.TestV2ETHWithdrawName,
 			//e2etests.TestV2ETHWithdrawAndCallName,
 			//e2etests.TestV2ERC20DepositName,

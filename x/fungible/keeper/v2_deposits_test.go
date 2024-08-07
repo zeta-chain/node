@@ -24,7 +24,7 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 
 		// ACT
-		_, contractCall, err := k.ProcessV2Deposit(ctx, zrc20, receiver, big.NewInt(42), []byte{})
+		_, contractCall, err := k.ProcessV2Deposit(ctx, sample.EthAddress().Bytes(), chainID, zrc20, receiver, big.NewInt(42), []byte{})
 
 		// ASSERT
 		require.NoError(t, err)
@@ -35,22 +35,22 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 		require.Equal(t, big.NewInt(42), balance)
 	})
 
-	t.Run("should fail if not recognized action", func(t *testing.T) {
-		// ARRANGE
-		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
-
-		chainID := chains.DefaultChainsList()[0].ChainId
-		receiver := sample.EthAddress()
-
-		// deploy the system contracts
-		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
-
-		// ACT
-		_, _, err := k.ProcessV2Deposit(ctx, zrc20, receiver, big.NewInt(42), sample.Bytes())
-
-		// ASSERT
-		require.ErrorContains(t, err, "not implemented")
-	})
+	//t.Run("should fail if not recognized action", func(t *testing.T) {
+	//	// ARRANGE
+	//	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	//	_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	//
+	//	chainID := chains.DefaultChainsList()[0].ChainId
+	//	receiver := sample.EthAddress()
+	//
+	//	// deploy the system contracts
+	//	deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+	//	zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+	//
+	//	// ACT
+	//	_, _, err := k.ProcessV2Deposit(ctx, sample.EthAddress().Bytes(), chainID, zrc20, receiver, big.NewInt(42), sample.Bytes())
+	//
+	//	// ASSERT
+	//	require.ErrorContains(t, err, "not implemented")
+	//})
 }

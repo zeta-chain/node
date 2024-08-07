@@ -15,8 +15,7 @@ func TestV2ERC20DepositAndCall(r *runner.E2ERunner, args []string) {
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
 	require.True(r, ok, "Invalid amount specified for TestV2ERC20DepositAndCall")
 
-	// TODO: set payload
-	payload := []byte("")
+	payload := []byte("this is a test payload")
 
 	// perform the deposit
 	tx := r.V2ERC20DepositAndCall(r.EVMAddress(), amount, payload)

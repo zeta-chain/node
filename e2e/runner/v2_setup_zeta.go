@@ -16,7 +16,7 @@ import (
 func (r *E2ERunner) SetZEVMContractsV2() {
 	ensureTxReceipt := func(tx *ethtypes.Transaction, failMessage string) {
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-		r.requireTxSuccessful(receipt, failMessage)
+		r.requireTxSuccessful(receipt, failMessage+" tx hash: "+tx.Hash().Hex())
 	}
 
 	r.Logger.Print("⚙️ setting up ZEVM v2 network")

@@ -54,6 +54,16 @@ func deploySystemContractsWithMockEvmKeeper(
 	return deploySystemContracts(t, ctx, k, mockEVMKeeper)
 }
 
+// deploy upgradable gateway contract and return its address
+func deployGatewayContract(t *testing.T, ctx sdk.Context, k *fungiblekeeper.Keeper) common.Address {
+	//gateway, err := k.DeployGatewayZEVM(ctx)
+	//require.NoError(t, err)
+	//require.NotEmpty(t, gateway)
+	//assertContractDeployment(t, k.EvmKeeper, ctx, gateway)
+	//return gateway
+	return common.Address{}
+}
+
 // deploySystemContracts deploys the system contracts and returns their addresses.
 func deploySystemContracts(
 	t *testing.T,

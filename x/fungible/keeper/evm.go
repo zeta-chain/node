@@ -125,7 +125,9 @@ func (k Keeper) DeployZRC20Contract(
 	if !found {
 		return common.Address{}, cosmoserrors.Wrapf(types.ErrSystemContractNotFound, "system contract not found")
 	}
-	contractAddr, err := k.DeployContract(ctx, zrc20.ZRC20MetaData,
+	contractAddr, err := k.DeployContract(
+		ctx,
+		zrc20.ZRC20MetaData,
 		name,                      // name
 		symbol,                    // symbol
 		decimals,                  // decimals
