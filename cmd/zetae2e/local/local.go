@@ -257,7 +257,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinWithdrawSegWitName,
 			e2etests.TestBitcoinWithdrawInvalidAddressName,
 			e2etests.TestZetaWithdrawBTCRevertName,
-			//e2etests.TestCrosschainSwapName,
+			e2etests.TestCrosschainSwapName,
 		}
 		bitcoinAdvancedTests := []string{
 			e2etests.TestBitcoinWithdrawTaprootName,
