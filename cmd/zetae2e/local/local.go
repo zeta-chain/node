@@ -353,6 +353,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testTSSMigration {
 		runTSSMigrationTest(deployerRunner, logger, verbose, conf)
 	}
+	// Verify that there are no trackers left over after tests complete
+	deployerRunner.EnsureNoTrackers()
 
 	// print and validate report
 	networkReport, err := deployerRunner.GenerateNetworkReport()
