@@ -240,7 +240,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrUnableToAddVote)
 	})
 
-	t.Run("can create a new ballot, vote without finalizing, then add vote and finalizing", func(t *testing.T) {
+	t.Run("can create a new ballot, vote without finalizing,then finalize older ballot", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		ctx = ctx.WithBlockHeight(42)
 		srv := keeper.NewMsgServerImpl(*k)
