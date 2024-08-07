@@ -11,7 +11,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-const payloadMessage = "this is a test ETH deposit and call payload"
+const payloadMessageETH = "this is a test ETH deposit and call payload"
 
 func TestV2ETHDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
@@ -20,7 +20,7 @@ func TestV2ETHDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.True(r, ok, "Invalid amount specified for TestV2ETHDepositAndCall")
 
 	// perform the deposit and call to the TestDAppV2ZEVMAddr
-	tx := r.V2ETHDepositAndCall(r.TestDAppV2ZEVMAddr, amount, []byte(payloadMessage))
+	tx := r.V2ETHDepositAndCall(r.TestDAppV2ZEVMAddr, amount, []byte(payloadMessageETH))
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
@@ -30,7 +30,7 @@ func TestV2ETHDepositAndCall(r *runner.E2ERunner, args []string) {
 	// check the payload was received on the contract
 	message, err := r.TestDAppV2ZEVM.LastMessage(&bind.CallOpts{})
 	require.NoError(r, err)
-	require.Equal(r, payloadMessage, message)
+	require.Equal(r, payloadMessageETH, message)
 
 	// check the amount was received on the contract
 	amountReceived, err := r.TestDAppV2ZEVM.LastAmount(&bind.CallOpts{})
