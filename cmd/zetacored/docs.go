@@ -58,9 +58,7 @@ func docsCmd(cmd *cobra.Command, args []string) error {
 func GenMarkdownToSingleFile(cmd *cobra.Command, w *os.File) error {
 	buf := new(bytes.Buffer)
 	linkHandler := func(s string) string {
-		anchor := strings.ReplaceAll(strings.ToLower(s), " ", "-")
-		anchor = strings.ReplaceAll(anchor, "_", "-")
-		return "#" + anchor
+		return "#" + strings.NewReplacer(" ", "-", "_", "-").Replace(strings.ToLower(s))
 	}
 
 	cmd.DisableAutoGenTag = true
