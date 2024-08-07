@@ -15,6 +15,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 )
@@ -28,8 +29,8 @@ type Signer struct {
 	// client is the Solana RPC client that interacts with the Solana chain
 	client interfaces.SolanaRPCClient
 
-	// solanaFeePayerKey is the private key of the fee payer account on Solana chain
-	solanaFeePayerKey solana.PrivateKey
+	// relayerKey is the private key of the relayer account for Solana chain
+	relayerKey solana.PrivateKey
 
 	// gatewayID is the program ID of gateway program on Solana chain
 	gatewayID solana.PublicKey
@@ -44,7 +45,7 @@ func NewSigner(
 	chainParams observertypes.ChainParams,
 	solClient interfaces.SolanaRPCClient,
 	tss interfaces.TSSSigner,
-	solanaKey solana.PrivateKey,
+	relayerKey keys.RelayerKey,
 	ts *metrics.TelemetryServer,
 	logger base.Logger,
 ) (*Signer, error) {
@@ -56,15 +57,21 @@ func NewSigner(
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
 	}
-	logger.Std.Info().Msgf("Solana fee payer address: %s", solanaKey.PublicKey())
 
-	// create solana observer
+	// construct Solana private key
+	privKey, err := solana.PrivateKeyFromBase58(relayerKey.PrivateKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to construct solana private key")
+	}
+	logger.Std.Info().Msgf("Solana relayer address: %s", privKey.PublicKey())
+
+	// create Solana signer
 	return &Signer{
-		Signer:            baseSigner,
-		client:            solClient,
-		solanaFeePayerKey: solanaKey,
-		gatewayID:         gatewayID,
-		pda:               pda,
+		Signer:     baseSigner,
+		client:     solClient,
+		relayerKey: privKey,
+		gatewayID:  gatewayID,
+		pda:        pda,
 	}, nil
 }
 
@@ -114,7 +121,7 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 
-	// sign the withdraw transaction by fee payer
+	// sign the withdraw transaction by relayer key
 	tx, err := signer.SignWithdrawTx(ctx, *msg)
 	if err != nil {
 		logger.Error().Err(err).Msgf("TryProcessOutbound: SignWithdrawTx error for chain %d nonce %d", chainID, nonce)
