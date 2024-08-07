@@ -8,6 +8,7 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/rs/zerolog"
 
+	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/logs"
 )
@@ -44,7 +45,7 @@ func (signer *Signer) reportToOutboundTracker(
 	}
 
 	// launch a goroutine to monitor tx confirmation status
-	go func() {
+	bg.Work(ctx, func(ctx context.Context) error {
 		defer func() {
 			signer.Signer.ClearBeingReportedFlag(txSig.String())
 		}()
@@ -57,7 +58,7 @@ func (signer *Signer) reportToOutboundTracker(
 			// give up if we know the tx is too old and already expired
 			if time.Since(start) > SolanaTransactionTimeout {
 				logger.Info().Msg("outbound is expired")
-				return
+				return nil
 			}
 
 			// query tx using optimistic commitment level "confirmed"
@@ -76,7 +77,7 @@ func (signer *Signer) reportToOutboundTracker(
 				// a failed outbound (e.g. signature err, balance err) will never be able to increment the gateway program nonce.
 				// a good/valid candidate of outbound tracker hash must come with a successful tx.
 				logger.Warn().Any("Err", tx.Meta.Err).Msg("outbound is failed")
-				return
+				return nil
 			}
 
 			// report outbound hash to zetacore
@@ -88,8 +89,8 @@ func (signer *Signer) reportToOutboundTracker(
 			} else {
 				// exit goroutine until the tracker contains the hash (reported by either this or other signers)
 				logger.Info().Msg("outbound now exists in tracker")
-				return
+				return nil
 			}
 		}
-	}()
+	}, bg.WithName("TrackerReporterSolana"), bg.WithLogger(logger))
 }

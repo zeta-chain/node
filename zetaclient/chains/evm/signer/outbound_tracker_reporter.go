@@ -7,6 +7,7 @@ import (
 
 	"github.com/rs/zerolog"
 
+	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/rpc"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
@@ -38,7 +39,7 @@ func (signer *Signer) reportToOutboundTracker(
 	}
 
 	// launch a goroutine to monitor tx confirmation status
-	go func() {
+	bg.Work(ctx, func(ctx context.Context) error {
 		defer func() {
 			signer.ClearBeingReportedFlag(outboundHash)
 		}()
@@ -54,7 +55,7 @@ func (signer *Signer) reportToOutboundTracker(
 			// 2. even if there is a chance that the tx is included later, most likely it's going to be a false tx hash (either replaced or dropped).
 			if time.Since(tStart) > evm.OutboundInclusionTimeout {
 				logger.Info().Msgf("timeout waiting outbound inclusion")
-				return
+				return nil
 			}
 
 			// check tx confirmation status
@@ -76,8 +77,8 @@ func (signer *Signer) reportToOutboundTracker(
 			} else {
 				// exit goroutine until the tracker contains the hash (reported by either this or other signers)
 				logger.Info().Msg("outbound now exists in tracker")
-				return
+				return nil
 			}
 		}
-	}()
+	}, bg.WithName("TrackerReporterEVM"), bg.WithLogger(logger))
 }
