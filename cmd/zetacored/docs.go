@@ -1,7 +1,11 @@
 package main
 
 import (
+	"bytes"
+	"errors"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
@@ -10,7 +14,7 @@ import (
 func docsCmd(cmd *cobra.Command, args []string) error {
 	var path string
 
-	// If path is provided as an argument, use it. Else, get from flag.
+	// Determine the output path
 	if len(args) > 0 {
 		path = args[0]
 	} else {
@@ -21,17 +25,72 @@ func docsCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		err = os.MkdirAll(path, 0750)
+	// Sanitize and validate the path
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+
+	// Create the output directory if it doesn't exist
+	if _, err := os.Stat(absPath); os.IsNotExist(err) {
+		err = os.MkdirAll(absPath, 0750)
 		if err != nil {
 			return err
 		}
 	}
 
-	err := doc.GenMarkdownTree(cmd.Root(), path)
+	// Set the output file
+	outputFile := filepath.Join(absPath, "cli.md")
+
+	// Inline validation of the output file path
+	cleanPath := filepath.Clean(outputFile)
+	if strings.Contains(cleanPath, "..") {
+		return errors.New("invalid output file path: potential security risk")
+	}
+
+	file, err := os.Create(outputFile)
 	if err != nil {
 		return err
 	}
+	defer file.Close()
+
+	// Generate the documentation
+	err = GenMarkdownToSingleFile(cmd.Root(), file)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// GenMarkdownToSingleFile generates markdown documentation for all commands into a single file
+func GenMarkdownToSingleFile(cmd *cobra.Command, w *os.File) error {
+	buf := new(bytes.Buffer)
+	linkHandler := func(s string) string {
+		return "#" + strings.NewReplacer(" ", "-", "_", "-").Replace(strings.ToLower(s))
+	}
+
+	cmd.DisableAutoGenTag = true
+
+	err := doc.GenMarkdownCustom(cmd, buf, linkHandler)
+	if err != nil {
+		return err
+	}
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		return err
+	}
+
+	for _, c := range cmd.Commands() {
+		if !c.IsAvailableCommand() || c.IsAdditionalHelpTopicCommand() {
+			continue
+		}
+		err := GenMarkdownToSingleFile(c, w)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
