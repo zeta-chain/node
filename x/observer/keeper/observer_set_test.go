@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -39,7 +40,8 @@ func TestKeeper_AddObserverToSet(t *testing.T) {
 		os := sample.ObserverSet(10)
 		k.SetObserverSet(ctx, os)
 		newObserver := sample.AccAddress()
-		k.AddObserverToSet(ctx, newObserver)
+		err := k.AddObserverToSet(ctx, newObserver)
+		require.NoError(t, err)
 		require.True(t, k.IsAddressPartOfObserverSet(ctx, newObserver))
 		require.False(t, k.IsAddressPartOfObserverSet(ctx, sample.AccAddress()))
 		osNew, found := k.GetObserverSet(ctx)
@@ -95,6 +97,20 @@ func TestKeeper_UpdateObserverAddress(t *testing.T) {
 		require.True(t, found)
 		require.Equal(t, newObserverAddress, observerSet.ObserverList[len(observerSet.ObserverList)-1])
 	})
+	t.Run("unable to update observer list if the new list is not valid", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		oldObserverAddress := sample.AccAddress()
+		newObserverAddress := sample.AccAddress()
+		observerSet := sample.ObserverSet(10)
+		observerSet.ObserverList = append(observerSet.ObserverList, []string{oldObserverAddress, newObserverAddress}...)
+
+		err := k.UpdateObserverAddress(ctx, oldObserverAddress, newObserverAddress)
+		require.ErrorIs(t, err, types.ErrObserverSetNotFound)
+		k.SetObserverSet(ctx, observerSet)
+
+		err = k.UpdateObserverAddress(ctx, oldObserverAddress, newObserverAddress)
+		require.ErrorContains(t, err, types.ErrDuplicateObserver.Error())
+	})
 	t.Run("should error if observer address not found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		oldObserverAddress := sample.AccAddress()
@@ -103,7 +119,7 @@ func TestKeeper_UpdateObserverAddress(t *testing.T) {
 		observerSet.ObserverList = append(observerSet.ObserverList, oldObserverAddress)
 		k.SetObserverSet(ctx, observerSet)
 		err := k.UpdateObserverAddress(ctx, sample.AccAddress(), newObserverAddress)
-		require.Error(t, err)
+		require.ErrorIs(t, err, types.ErrObserverNotFound)
 	})
 	t.Run("update observer address long observerList", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)

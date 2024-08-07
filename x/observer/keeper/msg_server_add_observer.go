@@ -52,7 +52,10 @@ func (k msgServer) AddObserver(
 		return &types.MsgAddObserverResponse{}, nil
 	}
 
-	k.AddObserverToSet(ctx, msg.ObserverAddress)
+	err = k.AddObserverToSet(ctx, msg.ObserverAddress)
+	if err != nil {
+		return &types.MsgAddObserverResponse{}, err
+	}
 	observerSet, _ := k.GetObserverSet(ctx)
 
 	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: observerSet.LenUint()})

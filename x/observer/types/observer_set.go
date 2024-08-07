@@ -1,6 +1,7 @@
 package types
 
 import (
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -21,6 +22,14 @@ func (m *ObserverSet) Validate() error {
 		if err != nil {
 			return err
 		}
+	}
+	// Check for duplicates
+	observers := make(map[string]bool)
+	for _, observerAddress := range m.ObserverList {
+		if _, ok := observers[observerAddress]; ok {
+			return errors.Wrapf(ErrDuplicateObserver, "observer %s", observerAddress)
+		}
+		observers[observerAddress] = true
 	}
 	return nil
 }
