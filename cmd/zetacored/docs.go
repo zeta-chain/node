@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -23,16 +24,22 @@ func docsCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// Sanitize and validate the path
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+
 	// Create the output directory if it doesn't exist
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		err = os.MkdirAll(path, 0750)
+	if _, err := os.Stat(absPath); os.IsNotExist(err) {
+		err = os.MkdirAll(absPath, 0750)
 		if err != nil {
 			return err
 		}
 	}
 
 	// Set the output file
-	outputFile := path + "/cli.md"
+	outputFile := filepath.Join(absPath, "cli.md")
 	file, err := os.Create(outputFile)
 	if err != nil {
 		return err
