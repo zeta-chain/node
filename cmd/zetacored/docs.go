@@ -1,9 +1,10 @@
 package main
 
 import (
-	"os"
 	"bytes"
+	"os"
 	"strings"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 )
@@ -80,12 +81,11 @@ func GenMarkdownToSingleFile(cmd *cobra.Command, w *os.File) error {
 	return nil
 }
 
-
 func docsCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "docs [path]",
 		Short: "Generate markdown documentation for zetacored",
-		RunE:  docsCmd, 
+		RunE:  docsCmd,
 		Args:  cobra.MaximumNArgs(1),
 	}
 
