@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"errors"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/systemcontract.sol"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,21 +9,13 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
-// depositType is the type of deposit to be processed
-type depositType int
-
-const (
-	// deposit of gas token
-	gasTokendeposit depositType = iota
-	// deposit of gas token with contract call
-	depositAndCall
-)
-
 // ProcessV2Deposit handles a deposit from an inbound tx with protocol version 2
 // returns [txResponse, isContractCall, error]
 // isContractCall is true if the message is non empty
 func (k Keeper) ProcessV2Deposit(
 	ctx sdk.Context,
+	from []byte,
+	senderChainID int64,
 	zrc20Addr ethcommon.Address,
 	to ethcommon.Address,
 	amount *big.Int,
@@ -33,6 +25,14 @@ func (k Keeper) ProcessV2Deposit(
 		// simple deposit
 		res, err := k.DepositZRC20(ctx, zrc20Addr, to, amount)
 		return res, false, err
+	} else {
+		// deposit and call
+		context := systemcontract.ZContext{
+			Origin:  from,
+			Sender:  ethcommon.Address{},
+			ChainID: big.NewInt(senderChainID),
+		}
+		res, err := k.CallDepositAndCallZRC20(ctx, context, zrc20Addr, amount, to, message)
+		return res, true, err
 	}
-	return nil, true, errors.New("not implemented")
 }
