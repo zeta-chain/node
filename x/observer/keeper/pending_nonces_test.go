@@ -6,9 +6,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
-
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestKeeper_PendingNoncesAll(t *testing.T) {
@@ -135,5 +136,55 @@ func TestKeeper_RemoveFromPendingNonces(t *testing.T) {
 			}
 		}
 		require.True(t, nonceUpdated)
+	})
+
+	t.Run("test removal within range only using fixed value", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		tss := sample.Tss()
+		// make nonces and pubkey deterministic for test
+		chainIDS := []int64{chains.GoerliLocalnet.ChainId, chains.BitcoinTestnet.ChainId, chains.BscTestnet.ChainId}
+		pendingNonces := make([]types.PendingNonces, len(chainIDS))
+
+		for idx, chainID := range chainIDS {
+			pendingNonces[idx] = types.PendingNonces{
+				ChainId:   chainID,
+				NonceLow:  1,
+				NonceHigh: 10,
+				Tss:       tss.TssPubkey,
+			}
+		}
+		for _, pendingNonce := range pendingNonces {
+			k.SetPendingNonces(ctx, pendingNonce)
+		}
+
+		// remove from pending nonces
+		k.RemoveFromPendingNonces(ctx, tss.TssPubkey, chains.GoerliLocalnet.ChainId, 1)
+		actualPendingNoncesGoerli, found := k.GetPendingNonces(ctx, tss.TssPubkey, chains.GoerliLocalnet.ChainId)
+		require.True(t, found)
+		require.Equal(t, int64(2), actualPendingNoncesGoerli.NonceLow)
+		require.Equal(t, int64(10), actualPendingNoncesGoerli.NonceHigh)
+
+		// try removing lower than nonceLow, this might be triggered if we try to remove a previously removed nonce
+		k.RemoveFromPendingNonces(ctx, tss.TssPubkey, chains.GoerliLocalnet.ChainId, 1)
+		actualPendingNoncesGoerli, found = k.GetPendingNonces(ctx, tss.TssPubkey, chains.GoerliLocalnet.ChainId)
+		require.True(t, found)
+		require.Equal(t, int64(2), actualPendingNoncesGoerli.NonceLow)
+		require.Equal(t, int64(10), actualPendingNoncesGoerli.NonceHigh)
+
+		// try removing higher than nonceHigh
+		k.RemoveFromPendingNonces(ctx, tss.TssPubkey, chains.GoerliLocalnet.ChainId, 11)
+		actualPendingNoncesGoerli, found = k.GetPendingNonces(ctx, tss.TssPubkey, chains.GoerliLocalnet.ChainId)
+		require.True(t, found)
+		require.Equal(t, int64(2), actualPendingNoncesGoerli.NonceLow)
+		require.Equal(t, int64(10), actualPendingNoncesGoerli.NonceHigh)
+
+		//pending nonces for other chains should not be affected by removal
+		for _, chainID := range chainIDS[1:] {
+			pendingNonces, found := k.GetPendingNonces(ctx, tss.TssPubkey, chainID)
+			require.True(t, found)
+			require.Equal(t, int64(1), pendingNonces.NonceLow)
+			require.Equal(t, int64(10), pendingNonces.NonceHigh)
+		}
 	})
 }

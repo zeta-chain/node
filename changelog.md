@@ -5,6 +5,13 @@
 ### Features
 
 * [2578](https://github.com/zeta-chain/node/pull/2578) - Add Gateway address in protocol contract list
+* [2634](https://github.com/zeta-chain/node/pull/2634) - add support for EIP-1559 gas fees
+* [2597](https://github.com/zeta-chain/node/pull/2597) - Add generic rpc metrics to zetaclient
+* [2538](https://github.com/zeta-chain/node/pull/2538) - add background worker routines to shutdown zetaclientd when needed for tss migration
+
+### Refactor
+
+* [2615](https://github.com/zeta-chain/node/pull/2615) - Refactor cleanup of outbound trackers
 
 ## v19.0.0
 

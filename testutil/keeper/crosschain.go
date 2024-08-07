@@ -426,10 +426,11 @@ func MockSaveOutbound(
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,
 	tss observertypes.TSS,
+	expectedNumberOfOutboundParams int,
 ) {
 	m.On("RemoveFromPendingNonces",
 		ctx, tss.TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId, mock.Anything).
-		Return().Once()
+		Return().Times(expectedNumberOfOutboundParams)
 	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true)
 }
 
@@ -438,10 +439,12 @@ func MockSaveOutboundNewRevertCreated(
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,
 	tss observertypes.TSS,
+	expectedNumberOfOutboundParams int,
 ) {
 	m.On("RemoveFromPendingNonces",
 		ctx, tss.TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId, mock.Anything).
-		Return().Once()
+		Return().Times(expectedNumberOfOutboundParams)
+
 	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true)
 	m.On("SetNonceToCctx", mock.Anything, mock.Anything).Return().Once()
 }

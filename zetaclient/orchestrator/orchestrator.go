@@ -137,9 +137,6 @@ func (oc *Orchestrator) Start(ctx context.Context) error {
 	shutdownOrchestrator := func() {
 		// now stop orchestrator and all observers
 		close(oc.stop)
-		for _, c := range oc.observerMap {
-			c.Stop()
-		}
 	}
 
 	oc.zetacoreClient.OnBeforeStop(shutdownOrchestrator)
@@ -375,7 +372,7 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 						cctxList := cctxMap[chainID]
 
 						metrics.PendingTxsPerChain.
-							WithLabelValues(fmt.Sprintf("chain_%d", chainID)).
+							WithLabelValues(chain.Name()).
 							Set(float64(len(cctxList)))
 
 						if len(cctxList) == 0 {

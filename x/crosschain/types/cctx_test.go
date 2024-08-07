@@ -16,6 +16,12 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+func TestCrossChainTx_SetOutboundBallot(t *testing.T) {
+	cctx := sample.CrossChainTx(t, "test")
+	ballotIndex := sample.ZetaIndex(t)
+	cctx.SetOutboundBallotIndex(ballotIndex)
+	require.Equal(t, ballotIndex, cctx.GetCurrentOutboundParam().BallotIndex)
+}
 func TestCrossChainTx_GetCCTXIndexBytes(t *testing.T) {
 	cctx := sample.CrossChainTx(t, "sample")
 	indexBytes, err := cctx.GetCCTXIndexBytes()

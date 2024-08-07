@@ -670,7 +670,7 @@ func TestZetacore_GetInboundTrackersForChain(t *testing.T) {
 	require.Equal(t, expectedOutput.InboundTracker, resp)
 }
 
-func TestZetacore_GetCurrentTss(t *testing.T) {
+func TestZetacore_GetTss(t *testing.T) {
 	ctx := context.Background()
 
 	expectedOutput := observertypes.QueryGetTSSResponse{
@@ -688,7 +688,7 @@ func TestZetacore_GetCurrentTss(t *testing.T) {
 
 	client := setupZetacoreClient(t, withDefaultObserverKeys())
 
-	resp, err := client.GetCurrentTSS(ctx)
+	resp, err := client.GetTSS(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.TSS, resp)
 }

@@ -10,7 +10,7 @@ DOCKER ?= docker
 DOCKER_COMPOSE ?= $(DOCKER) compose $(COMPOSE_ARGS)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 GOFLAGS := ""
-GOLANG_CROSS_VERSION ?= v1.20.7
+GOLANG_CROSS_VERSION ?= v1.22.4
 GOPATH ?= '$(HOME)/go'
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
@@ -332,7 +332,7 @@ release-dry-run:
 		-v ${GOPATH}/pkg:/go/pkg \
 		-w /go/src/$(PACKAGE_NAME) \
 		ghcr.io/goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
-		--clean --skip-validate --skip-publish --snapshot
+		--clean --skip=validate --skip=publish --snapshot
 
 release:
 	@if [ ! -f ".release-env" ]; then \
@@ -348,7 +348,7 @@ release:
 		-v `pwd`:/go/src/$(PACKAGE_NAME) \
 		-w /go/src/$(PACKAGE_NAME) \
 		ghcr.io/goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
-		release --clean --skip-validate
+		release --clean --skip=validate
 
 ###############################################################################
 ###                     Local Mainnet Development                           ###

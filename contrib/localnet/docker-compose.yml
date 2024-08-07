@@ -126,6 +126,7 @@ services:
       - ETHDEV_ENDPOINT=http://eth:8545
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+    restart: always
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
@@ -142,6 +143,7 @@ services:
       - ETHDEV_ENDPOINT=http://eth:8545
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+    restart: always
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams

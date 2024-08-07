@@ -268,8 +268,14 @@ func (ob *Observer) WithHeaderCache(cache *lru.Cache) *Observer {
 }
 
 // OutboundID returns a unique identifier for the outbound transaction.
+// The identifier is now used as the key for maps that store outbound related data (e.g. transaction, receipt, etc).
 func (ob *Observer) OutboundID(nonce uint64) string {
-	return fmt.Sprintf("%d-%d", ob.chain.ChainId, nonce)
+	// all chains uses EVM address as part of the key except bitcoin
+	tssAddress := ob.tss.EVMAddress().String()
+	if ob.chain.Consensus == chains.Consensus_bitcoin {
+		tssAddress = ob.tss.BTCAddress()
+	}
+	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddress, nonce)
 }
 
 // DB returns the database for the observer.
