@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -40,6 +41,13 @@ func docsCmd(cmd *cobra.Command, args []string) error {
 
 	// Set the output file
 	outputFile := filepath.Join(absPath, "cli.md")
+
+	// Inline validation of the output file path
+	cleanPath := filepath.Clean(outputFile)
+	if strings.Contains(cleanPath, "..") {
+		return errors.New("invalid output file path: potential security risk")
+	}
+
 	file, err := os.Create(outputFile)
 	if err != nil {
 		return err
