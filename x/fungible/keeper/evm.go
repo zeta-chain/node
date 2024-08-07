@@ -46,15 +46,15 @@ var (
 func (k Keeper) DeployContract(
 	ctx sdk.Context,
 	metadata *bind.MetaData,
-	ctorArguments ...interface{},
+	constructorArguments ...interface{},
 ) (common.Address, error) {
 	contractABI, err := metadata.GetAbi()
 	if err != nil {
 		return common.Address{}, cosmoserrors.Wrapf(types.ErrABIGet, "failed to get  ABI: %s", err.Error())
 	}
-	ctorArgs, err := contractABI.Pack(
-		"",               // function--empty string for constructor
-		ctorArguments..., // feeToSetter
+	constructorArgumentsPacked, err := contractABI.Pack(
+		"",                      // function--empty string for constructor
+		constructorArguments..., // feeToSetter
 	)
 	if err != nil {
 		return common.Address{}, cosmoserrors.Wrapf(
@@ -78,9 +78,9 @@ func (k Keeper) DeployContract(
 		)
 	}
 
-	data := make([]byte, len(bin)+len(ctorArgs))
+	data := make([]byte, len(bin)+len(constructorArgumentsPacked))
 	copy(data[:len(bin)], bin)
-	copy(data[len(bin):], ctorArgs)
+	copy(data[len(bin):], constructorArgumentsPacked)
 
 	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
 	if err != nil {

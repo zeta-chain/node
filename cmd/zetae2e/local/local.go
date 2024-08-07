@@ -188,10 +188,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		deployerRunner.SetupEVMV2()
 
+		deployerRunner.SetZEVMContracts()
+
 		// NOTE: v2 called first because gateway must be deployed to deploy ZRC20s
 		deployerRunner.SetZEVMContractsV2()
-
-		deployerRunner.SetZEVMContracts()
 
 		if testSolana {
 			deployerRunner.SetSolanaContracts(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())

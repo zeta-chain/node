@@ -471,7 +471,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 	// fetch the erc20 zrc20 contract address and remove the quotes
 	erc20zrc20Addr, err := FetchAttributeFromTxResponse(res, "Contract")
 	if err != nil {
-		return SystemContractAddresses{}, fmt.Errorf("failed to fetch erc20 zrc20 contract address: %s", err.Error())
+		return SystemContractAddresses{}, fmt.Errorf("failed to fetch erc20 zrc20 contract address: %s, %s", err.Error(), res.String())
 	}
 	if !ethcommon.IsHexAddress(erc20zrc20Addr) {
 		return SystemContractAddresses{}, fmt.Errorf("invalid address in event: %s", erc20zrc20Addr)

@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
 	"os"
 	"sync"
 	"time"
@@ -33,7 +34,6 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
-	"github.com/zeta-chain/zetacore/e2e/contracts/testdappv2"
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
 	"github.com/zeta-chain/zetacore/e2e/txserver"
 	"github.com/zeta-chain/zetacore/e2e/utils"

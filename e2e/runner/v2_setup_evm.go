@@ -1,6 +1,8 @@
 package runner
 
 import (
+	"github.com/zeta-chain/zetacore/pkg/contracts/erc1967proxy"
+	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
 	"math/big"
 	"time"
 
@@ -9,8 +11,6 @@ import (
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
-	"github.com/zeta-chain/zetacore/e2e/contracts/erc1967proxy"
-	"github.com/zeta-chain/zetacore/e2e/contracts/testdappv2"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 )

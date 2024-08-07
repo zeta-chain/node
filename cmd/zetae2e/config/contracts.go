@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
@@ -20,7 +21,6 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
-	"github.com/zeta-chain/zetacore/e2e/contracts/testdappv2"
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
