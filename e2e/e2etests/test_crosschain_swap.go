@@ -57,9 +57,9 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		r.ERC20ZRC20Addr,
 		r.BTCZRC20Addr,
 		big.NewInt(1e8),
+		big.NewInt(1e7),
 		big.NewInt(1e8),
-		big.NewInt(1e8),
-		big.NewInt(1e5),
+		big.NewInt(1e7),
 		r.EVMAddress(),
 		big.NewInt(time.Now().Add(10*time.Minute).Unix()),
 	)
