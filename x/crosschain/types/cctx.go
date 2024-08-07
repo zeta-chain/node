@@ -122,7 +122,6 @@ func (m *CrossChainTx) AddOutbound(
 	m.GetCurrentOutboundParam().EffectiveGasPrice = msg.ObservedOutboundEffectiveGasPrice
 	m.GetCurrentOutboundParam().EffectiveGasLimit = msg.ObservedOutboundEffectiveGasLimit
 	m.GetCurrentOutboundParam().ObservedExternalHeight = msg.ObservedOutboundBlockHeight
-	m.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 	return nil
 }
 

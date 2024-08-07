@@ -171,7 +171,6 @@ func CheckAndUpdateCctxGasPrice(
 	// set new gas price and last update timestamp
 	cctx.GetCurrentOutboundParam().GasPrice = newGasPrice.String()
 	cctx.GetCurrentOutboundParam().GasPriorityFee = newPriorityFee.String()
-	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 	k.SetCrossChainTx(ctx, cctx)
 
 	return gasPriceIncrease, additionalFees, nil
