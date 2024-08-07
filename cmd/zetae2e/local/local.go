@@ -225,7 +225,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestERC20WithdrawName,
 			e2etests.TestMultipleERC20WithdrawsName,
 			e2etests.TestERC20DepositAndCallRefundName,
-			//e2etests.TestZRC20SwapName,
+			e2etests.TestZRC20SwapName,
 		}
 		erc20AdvancedTests := []string{
 			e2etests.TestERC20DepositRestrictedName,
