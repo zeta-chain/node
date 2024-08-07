@@ -43,6 +43,9 @@ func (k Keeper) CallDepositAndCallZRC20(
 		return nil, types.ErrGatewayContractNotSet
 	}
 
+	// NOTE:
+	// depositAndCall: ZETA version for depositAndCall method
+	// depositAndCall0: ZRC20 version for depositAndCall method
 	return k.CallEVM(
 		ctx,
 		*gatewayABI,
@@ -52,7 +55,7 @@ func (k Keeper) CallDepositAndCallZRC20(
 		nil,
 		true,
 		false,
-		"depositAndCall",
+		"depositAndCall0",
 		context,
 		zrc20,
 		amount,

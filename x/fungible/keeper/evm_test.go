@@ -65,7 +65,6 @@ func deployGatewayContract(t *testing.T, ctx sdk.Context, k *fungiblekeeper.Keep
 	assertContractDeployment(t, evmk, ctx, implAddr)
 
 	// Deploy the proxy contract
-
 	gatewayABI, err := gatewayzevm.GatewayZEVMMetaData.GetAbi()
 	require.NoError(t, err)
 

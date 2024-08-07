@@ -21,18 +21,19 @@ func (k Keeper) ProcessV2Deposit(
 	amount *big.Int,
 	message []byte,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+	// simple deposit
 	if len(message) == 0 {
 		// simple deposit
 		res, err := k.DepositZRC20(ctx, zrc20Addr, to, amount)
 		return res, false, err
-	} else {
-		// deposit and call
-		context := systemcontract.ZContext{
-			Origin:  from,
-			Sender:  ethcommon.Address{},
-			ChainID: big.NewInt(senderChainID),
-		}
-		res, err := k.CallDepositAndCallZRC20(ctx, context, zrc20Addr, amount, to, message)
-		return res, true, err
 	}
+
+	// deposit and call
+	context := systemcontract.ZContext{
+		Origin:  from,
+		Sender:  ethcommon.Address{},
+		ChainID: big.NewInt(senderChainID),
+	}
+	res, err := k.CallDepositAndCallZRC20(ctx, context, zrc20Addr, amount, to, message)
+	return res, true, err
 }
