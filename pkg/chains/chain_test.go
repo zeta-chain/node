@@ -21,7 +21,7 @@ func TestChain_Validate(t *testing.T) {
 			name: "should pass if chain is valid",
 			chain: chains.Chain{
 				ChainId:     42,
-				ChainName:   chains.ChainName_empty,
+				Name:        "foo",
 				Network:     chains.Network_optimism,
 				NetworkType: chains.NetworkType_testnet,
 				Vm:          chains.Vm_evm,
@@ -33,7 +33,7 @@ func TestChain_Validate(t *testing.T) {
 			name: "should error if chain ID is zero",
 			chain: chains.Chain{
 				ChainId:     0,
-				ChainName:   chains.ChainName_empty,
+				Name:        "foo",
 				Network:     chains.Network_optimism,
 				NetworkType: chains.NetworkType_testnet,
 				Vm:          chains.Vm_evm,
@@ -46,7 +46,7 @@ func TestChain_Validate(t *testing.T) {
 			name: "should error if chain ID is negative",
 			chain: chains.Chain{
 				ChainId:     0,
-				ChainName:   chains.ChainName_empty,
+				Name:        "foo",
 				Network:     chains.Network_optimism,
 				NetworkType: chains.NetworkType_testnet,
 				Vm:          chains.Vm_evm,
@@ -56,23 +56,23 @@ func TestChain_Validate(t *testing.T) {
 			errStr: "chain ID must be positive",
 		},
 		{
-			name: "should error if chain name invalid",
+			name: "should error if chain name empty",
 			chain: chains.Chain{
 				ChainId:     42,
-				ChainName:   chains.ChainName_solana_localnet + 1,
+				Name:        "",
 				Network:     chains.Network_optimism,
 				NetworkType: chains.NetworkType_testnet,
 				Vm:          chains.Vm_evm,
 				Consensus:   chains.Consensus_op_stack,
 				IsExternal:  true,
 			},
-			errStr: "invalid chain name",
+			errStr: "chain name cannot be empty",
 		},
 		{
 			name: "should error if network invalid",
 			chain: chains.Chain{
 				ChainId:     42,
-				ChainName:   chains.ChainName_empty,
+				Name:        "foo",
 				Network:     chains.Network_solana + 1,
 				NetworkType: chains.NetworkType_testnet,
 				Vm:          chains.Vm_evm,
@@ -85,7 +85,7 @@ func TestChain_Validate(t *testing.T) {
 			name: "should error if network type invalid",
 			chain: chains.Chain{
 				ChainId:     42,
-				ChainName:   chains.ChainName_empty,
+				Name:        "foo",
 				Network:     chains.Network_base,
 				NetworkType: chains.NetworkType_devnet + 1,
 				Vm:          chains.Vm_evm,
@@ -98,7 +98,7 @@ func TestChain_Validate(t *testing.T) {
 			name: "should error if vm invalid",
 			chain: chains.Chain{
 				ChainId:     42,
-				ChainName:   chains.ChainName_empty,
+				Name:        "foo",
 				Network:     chains.Network_base,
 				NetworkType: chains.NetworkType_devnet,
 				Vm:          chains.Vm_svm + 1,
@@ -111,7 +111,7 @@ func TestChain_Validate(t *testing.T) {
 			name: "should error if consensus invalid",
 			chain: chains.Chain{
 				ChainId:     42,
-				ChainName:   chains.ChainName_empty,
+				Name:        "foo",
 				Network:     chains.Network_base,
 				NetworkType: chains.NetworkType_devnet,
 				Vm:          chains.Vm_evm,
@@ -191,8 +191,7 @@ func TestChain_EncodeAddress(t *testing.T) {
 		{
 			name: "should error if chain not supported",
 			chain: chains.Chain{
-				ChainName: 999,
-				ChainId:   999,
+				ChainId: 999,
 			},
 			b:       ethcommon.Hex2Bytes("0x321"),
 			want:    "",

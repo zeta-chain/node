@@ -17,7 +17,6 @@ func bitcoinTestRoutine(
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
 	initBitcoinNetwork bool,
-	testHeader bool,
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
@@ -42,7 +41,7 @@ func bitcoinTestRoutine(
 		bitcoinRunner.WaitForTxReceiptOnEvm(txERC20Send)
 
 		// depositing the necessary tokens on ZetaChain
-		txEtherDeposit := bitcoinRunner.DepositEther(false)
+		txEtherDeposit := bitcoinRunner.DepositEther()
 		txERC20Deposit := bitcoinRunner.DepositERC20()
 
 		bitcoinRunner.WaitForMinedCCTX(txEtherDeposit)
@@ -50,7 +49,7 @@ func bitcoinTestRoutine(
 
 		bitcoinRunner.SetupBitcoinAccount(initBitcoinNetwork)
 		if initBitcoinNetwork {
-			bitcoinRunner.DepositBTC(testHeader)
+			bitcoinRunner.DepositBTC()
 		}
 
 		// run bitcoin test

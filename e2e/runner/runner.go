@@ -42,6 +42,13 @@ import (
 
 type E2ERunnerOption func(*E2ERunner)
 
+// Important ENV
+const (
+	EnvKeyLocalnetMode = "LOCALNET_MODE"
+
+	LocalnetModeUpgrade = "upgrade"
+)
+
 func WithZetaTxServer(txServer *txserver.ZetaTxServer) E2ERunnerOption {
 	return func(r *E2ERunner) {
 		r.ZetaTxServer = txServer
@@ -320,6 +327,11 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("ERC20Custody:   %s", r.ERC20CustodyAddr.Hex())
 	r.Logger.Print("ERC20:          %s", r.ERC20Addr.Hex())
 	r.Logger.Print("TestDappEVM:    %s", r.EvmTestDAppAddr.Hex())
+}
+
+// IsRunningUpgrade returns true if the test is running an upgrade test suite.
+func (r *E2ERunner) IsRunningUpgrade() bool {
+	return os.Getenv(EnvKeyLocalnetMode) == LocalnetModeUpgrade
 }
 
 // Errorf logs an error message. Mimics the behavior of testing.T.Errorf

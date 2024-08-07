@@ -4,6 +4,7 @@ package metrics
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -104,6 +105,42 @@ var (
 		Name:      "percentage_of_rate_reached",
 		Help:      "Percentage of the rate limiter rate reached",
 	})
+
+	// SignLatency is a histogram of of the TSS keysign latency
+	SignLatency = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "sign_latency",
+		Help:      "Histogram of the TSS keysign latency",
+		Buckets:   []float64{1, 7, 15, 30, 60, 120, 240},
+	}, []string{"result"})
+
+	// RPCInProgress is a gauge that contains the number of RPCs requests in progress
+	RPCInProgress = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "rpc_in_progress",
+		Help:      "Number of RPC requests in progress",
+	}, []string{"host"})
+
+	// RPCCount is a counter that contains the number of total RPC requests
+	RPCCount = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: ZetaClientNamespace,
+			Name:      "rpc_count",
+			Help:      "A counter for number of total RPC requests",
+		},
+		[]string{"host", "code"},
+	)
+
+	// RPCLatency is a histogram of the RPC latency
+	RPCLatency = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: ZetaClientNamespace,
+			Name:      "rpc_duration_seconds",
+			Help:      "A histogram of the RPC duration in seconds",
+			Buckets:   prometheus.DefBuckets,
+		},
+		[]string{"host"},
+	)
 )
 
 // NewMetrics creates a new Metrics instance
@@ -142,4 +179,32 @@ func (m *Metrics) Stop() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 	return m.s.Shutdown(ctx)
+}
+
+// GetInstrumentedHTTPClient sets up a http client that emits prometheus metrics
+func GetInstrumentedHTTPClient(endpoint string) (*http.Client, error) {
+	host := endpoint
+	// try to parse as url (so that we do not expose auth uuid in metrics)
+	endpointURL, err := url.Parse(endpoint)
+	if err == nil {
+		host = endpointURL.Host
+	}
+	labels := prometheus.Labels{"host": host}
+	rpcCounterMetric, err := RPCCount.CurryWith(labels)
+	if err != nil {
+		return nil, err
+	}
+	rpcLatencyMetric, err := RPCLatency.CurryWith(labels)
+	if err != nil {
+		return nil, err
+	}
+
+	transport := http.DefaultTransport
+	transport = promhttp.InstrumentRoundTripperDuration(rpcLatencyMetric, transport)
+	transport = promhttp.InstrumentRoundTripperCounter(rpcCounterMetric, transport)
+	transport = promhttp.InstrumentRoundTripperInFlight(RPCInProgress.With(labels), transport)
+
+	return &http.Client{
+		Transport: transport,
+	}, nil
 }

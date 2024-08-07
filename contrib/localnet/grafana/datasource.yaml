@@ -14,3 +14,7 @@ datasources:
       cacheLevel: 'High'
       disableRecordingRules: false
       incrementalQueryOverlapWindow: 10m
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100

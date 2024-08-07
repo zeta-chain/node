@@ -626,7 +626,7 @@ func TestZetacore_GetKeyGen(t *testing.T) {
 
 	resp, err := client.GetKeyGen(ctx)
 	require.NoError(t, err)
-	require.Equal(t, expectedOutput.Keygen, resp)
+	require.Equal(t, *expectedOutput.Keygen, resp)
 }
 
 func TestZetacore_GetBallotByID(t *testing.T) {
@@ -670,7 +670,7 @@ func TestZetacore_GetInboundTrackersForChain(t *testing.T) {
 	require.Equal(t, expectedOutput.InboundTracker, resp)
 }
 
-func TestZetacore_GetCurrentTss(t *testing.T) {
+func TestZetacore_GetTss(t *testing.T) {
 	ctx := context.Background()
 
 	expectedOutput := observertypes.QueryGetTSSResponse{
@@ -688,7 +688,7 @@ func TestZetacore_GetCurrentTss(t *testing.T) {
 
 	client := setupZetacoreClient(t, withDefaultObserverKeys())
 
-	resp, err := client.GetCurrentTSS(ctx)
+	resp, err := client.GetTSS(ctx)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.TSS, resp)
 }
@@ -866,22 +866,22 @@ func TestZetacore_GetSupportedChains(t *testing.T) {
 	expectedOutput := observertypes.QuerySupportedChainsResponse{
 		Chains: []chains.Chain{
 			{
-				ChainName:   chains.BitcoinMainnet.ChainName,
 				ChainId:     chains.BitcoinMainnet.ChainId,
 				Network:     chains.BscMainnet.Network,
 				NetworkType: chains.BscMainnet.NetworkType,
 				Vm:          chains.BscMainnet.Vm,
 				Consensus:   chains.BscMainnet.Consensus,
 				IsExternal:  chains.BscMainnet.IsExternal,
+				Name:        chains.BscMainnet.Name,
 			},
 			{
-				ChainName:   chains.Ethereum.ChainName,
 				ChainId:     chains.Ethereum.ChainId,
 				Network:     chains.Ethereum.Network,
 				NetworkType: chains.Ethereum.NetworkType,
 				Vm:          chains.Ethereum.Vm,
 				Consensus:   chains.Ethereum.Consensus,
 				IsExternal:  chains.Ethereum.IsExternal,
+				Name:        chains.Ethereum.Name,
 			},
 		},
 	}

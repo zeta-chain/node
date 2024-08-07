@@ -249,8 +249,7 @@ func TestKeeper_SetObserverOutboundInfo(t *testing.T) {
 
 		// mock successful GetSupportedChainFromChainID
 		keepertest.MockGetSupportedChainFromChainID(observerMock, chains.Chain{
-			ChainName: 5,
-			ChainId:   5,
+			ChainId: 5,
 		})
 
 		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).Return(observertypes.ChainNonces{}, false)
@@ -275,8 +274,7 @@ func TestKeeper_SetObserverOutboundInfo(t *testing.T) {
 
 		// mock successful GetSupportedChainFromChainID
 		keepertest.MockGetSupportedChainFromChainID(observerMock, chains.Chain{
-			ChainName: 5,
-			ChainId:   5,
+			ChainId: 5,
 		})
 
 		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).Return(observertypes.ChainNonces{
@@ -305,8 +303,7 @@ func TestKeeper_SetObserverOutboundInfo(t *testing.T) {
 
 		// mock successful GetSupportedChainFromChainID
 		keepertest.MockGetSupportedChainFromChainID(observerMock, chains.Chain{
-			ChainName: 5,
-			ChainId:   5,
+			ChainId: 5,
 		})
 
 		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).Return(observertypes.ChainNonces{
@@ -337,8 +334,7 @@ func TestKeeper_SetObserverOutboundInfo(t *testing.T) {
 
 		// mock successful GetSupportedChainFromChainID
 		keepertest.MockGetSupportedChainFromChainID(observerMock, chains.Chain{
-			ChainName: 5,
-			ChainId:   5,
+			ChainId: 5,
 		})
 
 		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).Return(observertypes.ChainNonces{
@@ -371,8 +367,7 @@ func TestKeeper_SetObserverOutboundInfo(t *testing.T) {
 
 		// mock successful GetSupportedChainFromChainID
 		keepertest.MockGetSupportedChainFromChainID(observerMock, chains.Chain{
-			ChainName: 5,
-			ChainId:   5,
+			ChainId: 5,
 		})
 
 		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).Return(observertypes.ChainNonces{

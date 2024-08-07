@@ -21,12 +21,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/zetacore/pkg/authz"
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/maintenance"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/orchestrator"
 	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
@@ -143,11 +143,11 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore
-	err = zetacoreClient.UpdateAppContext(ctx, appContext, true, startLogger)
-	if err != nil {
+	if err = zetacoreClient.UpdateAppContext(ctx, appContext, startLogger); err != nil {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")
 		return err
 	}
+
 	startLogger.Info().Msgf("Config is updated from zetacore %s", maskCfg(cfg))
 
 	go zetacoreClient.UpdateAppContextWorker(ctx, appContext)
@@ -207,6 +207,16 @@ func start(_ *cobra.Command, _ []string) error {
 	// Set P2P ID for telemetry
 	telemetryServer.SetP2PID(server.GetLocalPeerID())
 
+	// Creating a channel to listen for os signals (or other signals)
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
+
+	// Maintenance workers ============
+	maintenance.NewTSSListener(zetacoreClient, masterLogger).Listen(ctx, func() {
+		masterLogger.Info().Msg("TSS listener received an action to shutdown zetaclientd.")
+		signalChannel <- syscall.SIGTERM
+	})
+
 	// Generate a new TSS if keygen is set and add it into the tss server
 	// If TSS has already been generated, and keygen was successful ; we use the existing TSS
 	err = GenerateTSS(ctx, masterLogger, zetacoreClient, server)
@@ -214,16 +224,21 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	bitcoinChainID := chains.BitcoinRegtest.ChainId
-	btcChain, _, btcEnabled := appContext.GetBTCChainAndConfig()
-	if btcEnabled {
-		bitcoinChainID = btcChain.ChainId
+	btcChains := appContext.FilterChains(zctx.Chain.IsUTXO)
+	switch {
+	case len(btcChains) == 0:
+		return errors.New("no BTC chains found")
+	case len(btcChains) > 1:
+		// In the future we might support multiple UTXO chains;
+		// right now we only support BTC. Let's make sure there are no surprises.
+		return errors.New("more than one BTC chain found")
 	}
+
 	tss, err := mc.NewTSS(
 		ctx,
 		zetacoreClient,
 		tssHistoricalList,
-		bitcoinChainID,
+		btcChains[0].ID(),
 		hotkeyPass,
 		server,
 	)
@@ -253,7 +268,7 @@ func start(_ *cobra.Command, _ []string) error {
 	// Update Current TSS value from zetacore, if TSS keygen is successful, the TSS address is set on zeta-core
 	// Returns err if the RPC call fails as zeta client needs the current TSS address to be set
 	// This is only needed in case of a new Keygen , as the TSS address is set on zetacore only after the keygen is successful i.e enough votes have been broadcast
-	currentTss, err := zetacoreClient.GetCurrentTSS(ctx)
+	currentTss, err := zetacoreClient.GetTSS(ctx)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("GetCurrentTSS error")
 		return err
@@ -263,11 +278,16 @@ func start(_ *cobra.Command, _ []string) error {
 	tss.CurrentPubkey = currentTss.TssPubkey
 	if tss.EVMAddress() == (ethcommon.Address{}) || tss.BTCAddress() == "" {
 		startLogger.Error().Msg("TSS address is not set in zetacore")
+	} else {
+		startLogger.Info().
+			Str("tss.eth", tss.EVMAddress().String()).
+			Str("tss.btc", tss.BTCAddress()).
+			Str("tss.pub_key", tss.CurrentPubkey).
+			Msg("Current TSS")
 	}
-	startLogger.Info().
-		Msgf("Current TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
-	if len(appContext.GetEnabledChains()) == 0 {
-		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
+
+	if len(appContext.ListChainIDs()) == 0 {
+		startLogger.Error().Interface("config", cfg).Msgf("No chains in updated config")
 	}
 
 	isObserver, err := isObserverNode(ctx, zetacoreClient)
@@ -341,11 +361,10 @@ func start(_ *cobra.Command, _ []string) error {
 	//	defer zetaSupplyChecker.Stop()
 	//}
 
-	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	sig := <-ch
-	startLogger.Info().Msgf("stop signal received: %s", sig)
+	startLogger.Info().Msgf("Zetaclientd is running")
+
+	sig := <-signalChannel
+	startLogger.Info().Msgf("Stop signal received: %q", sig)
 
 	zetacoreClient.Stop()
 

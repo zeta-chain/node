@@ -20,6 +20,11 @@ export declare class SystemContract extends Message<SystemContract> {
    */
   connectorZevm: string;
 
+  /**
+   * @generated from field: string gateway = 3;
+   */
+  gateway: string;
+
   constructor(data?: PartialMessage<SystemContract>);
 
   static readonly runtime: typeof proto3;

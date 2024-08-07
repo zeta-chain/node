@@ -28,7 +28,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 )
@@ -47,7 +46,7 @@ const (
 	broadcastRetries = 5
 )
 
-var _ interfaces.ChainSigner = &Signer{}
+var _ interfaces.ChainSigner = (*Signer)(nil)
 
 // Signer deals with signing BTC transactions and implements the ChainSigner interface
 type Signer struct {
@@ -63,7 +62,8 @@ func NewSigner(
 	tss interfaces.TSSSigner,
 	ts *metrics.TelemetryServer,
 	logger base.Logger,
-	cfg config.BTCConfig) (*Signer, error) {
+	cfg config.BTCConfig,
+) (*Signer, error) {
 	// create base signer
 	baseSigner := base.NewSigner(chain, tss, ts, logger)
 
@@ -87,6 +87,8 @@ func NewSigner(
 	}, nil
 }
 
+// TODO: get rid of below four get/set functions for Bitcoin, as they are not needed in future
+// https://github.com/zeta-chain/node/issues/2532
 // SetZetaConnectorAddress does nothing for BTC
 func (signer *Signer) SetZetaConnectorAddress(_ ethcommon.Address) {
 }
@@ -103,6 +105,17 @@ func (signer *Signer) GetZetaConnectorAddress() ethcommon.Address {
 // GetERC20CustodyAddress returns dummy address
 func (signer *Signer) GetERC20CustodyAddress() ethcommon.Address {
 	return ethcommon.Address{}
+}
+
+// SetGatewayAddress does nothing for BTC
+// Note: TSS address will be used as gateway address for Bitcoin
+func (signer *Signer) SetGatewayAddress(_ string) {
+}
+
+// GetGatewayAddress returns empty address
+// Note: same as SetGatewayAddress
+func (signer *Signer) GetGatewayAddress() string {
+	return ""
 }
 
 // AddWithdrawTxOutputs adds the 3 outputs to the withdraw tx
@@ -328,12 +341,7 @@ func (signer *Signer) TryProcessOutbound(
 	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		signer.Logger().Std.Error().Msgf("BTC TryProcessOutbound: %s, cannot get app context", cctx.Index)
-		return
-	}
-
+	// end outbound process on panic
 	defer func() {
 		outboundProcessor.EndTryProcess(outboundID)
 		if err := recover(); err != nil {
@@ -341,35 +349,34 @@ func (signer *Signer) TryProcessOutbound(
 		}
 	}()
 
+	// prepare logger
+	params := cctx.GetCurrentOutboundParam()
 	logger := signer.Logger().Std.With().
-		Str("OutboundID", outboundID).
-		Str("SendHash", cctx.Index).
+		Str("method", "TryProcessOutbound").
+		Int64("chain", signer.Chain().ChainId).
+		Uint64("nonce", params.TssNonce).
+		Str("cctx", cctx.Index).
 		Logger()
 
-	params := cctx.GetCurrentOutboundParam()
+	// support gas token only for Bitcoin outbound
 	coinType := cctx.InboundParams.CoinType
 	if coinType == coin.CoinType_Zeta || coinType == coin.CoinType_ERC20 {
-		logger.Error().Msgf("BTC TryProcessOutbound: can only send BTC to a BTC network")
+		logger.Error().Msg("can only send BTC to a BTC network")
 		return
 	}
 
-	logger.Info().
-		Msgf("BTC TryProcessOutbound: %s, value %d to %s", cctx.Index, params.Amount.BigInt(), params.Receiver)
+	// convert chain observer to BTC observer
 	btcObserver, ok := chainObserver.(*observer.Observer)
 	if !ok {
-		logger.Error().Msgf("chain observer is not a bitcoin observer")
+		logger.Error().Msg("chain observer is not a bitcoin observer")
 		return
 	}
-	flags := app.GetCrossChainFlags()
-	if !flags.IsOutboundEnabled {
-		logger.Info().Msgf("outbound is disabled")
-		return
-	}
+
 	chain := btcObserver.Chain()
 	outboundTssNonce := params.TssNonce
 	signerAddress, err := zetacoreClient.GetKeys().GetAddress()
 	if err != nil {
-		logger.Error().Err(err).Msgf("cannot get signer address")
+		logger.Error().Err(err).Msg("cannot get signer address")
 		return
 	}
 
@@ -429,7 +436,7 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 	logger.Info().
-		Msgf("Key-sign success: %d => %s, nonce %d", cctx.InboundParams.SenderChainId, chain.ChainName, outboundTssNonce)
+		Msgf("Key-sign success: %d => %s, nonce %d", cctx.InboundParams.SenderChainId, chain.Name, outboundTssNonce)
 
 	// FIXME: add prometheus metrics
 	_, err = zetacoreClient.GetObserverList(ctx)
@@ -441,7 +448,7 @@ func (signer *Signer) TryProcessOutbound(
 	if tx != nil {
 		outboundHash := tx.TxHash().String()
 		logger.Info().
-			Msgf("on chain %s nonce %d, outboundHash %s signer %s", chain.ChainName, outboundTssNonce, outboundHash, signerAddress)
+			Msgf("on chain %s nonce %d, outboundHash %s signer %s", chain.Name, outboundTssNonce, outboundHash, signerAddress)
 
 		// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s) in case of RPC error
 		backOff := broadcastBackoff
@@ -451,7 +458,7 @@ func (signer *Signer) TryProcessOutbound(
 			if err != nil {
 				logger.Warn().
 					Err(err).
-					Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outboundHash, chain.ChainName, outboundTssNonce, i)
+					Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outboundHash, chain.Name, outboundTssNonce, i)
 				backOff *= 2
 				continue
 			}
@@ -468,7 +475,7 @@ func (signer *Signer) TryProcessOutbound(
 			)
 			if err != nil {
 				logger.Err(err).
-					Msgf("Unable to add to tracker on zetacore: nonce %d chain %s outboundHash %s", outboundTssNonce, chain.ChainName, outboundHash)
+					Msgf("Unable to add to tracker on zetacore: nonce %d chain %s outboundHash %s", outboundTssNonce, chain.Name, outboundHash)
 			}
 			logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
 

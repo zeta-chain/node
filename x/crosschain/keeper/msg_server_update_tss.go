@@ -40,7 +40,7 @@ func (k msgServer) UpdateTssAddress(
 	tssMigrators := k.zetaObserverKeeper.GetAllTssFundMigrators(ctx)
 
 	// Each connected chain should have its own tss migrator
-	if len(k.GetChainsSupportingMigration(ctx)) != len(tssMigrators) {
+	if len(k.GetChainsSupportingTSSMigration(ctx)) != len(tssMigrators) {
 		return nil, errorsmod.Wrap(
 			types.ErrUnableToUpdateTss,
 			"cannot update tss address incorrect number of migrations have been created and completed",
@@ -73,8 +73,23 @@ func (k msgServer) UpdateTssAddress(
 	return &types.MsgUpdateTssAddressResponse{}, nil
 }
 
-// GetChainsSupportingMigration returns the chains that support migration.
-func (k *Keeper) GetChainsSupportingMigration(ctx sdk.Context) []chains.Chain {
-	return append(k.zetaObserverKeeper.GetSupportedForeignChainsByConsensus(ctx, chains.Consensus_ethereum),
-		k.zetaObserverKeeper.GetSupportedForeignChainsByConsensus(ctx, chains.Consensus_bitcoin)...)
+// GetChainsSupportingTSSMigration returns the chains that support tss migration.
+// Chains that support tss migration are chains that have the following properties:
+// 1. External chains
+// 2. Gateway observer
+// 3. Consensus is bitcoin or ethereum (Other consensus types are not supported)
+func (k *Keeper) GetChainsSupportingTSSMigration(ctx sdk.Context) []chains.Chain {
+	supportedChains := k.zetaObserverKeeper.GetSupportedChains(ctx)
+	return chains.CombineFilterChains([][]chains.Chain{
+		chains.FilterChains(supportedChains, []chains.ChainFilter{
+			chains.FilterExternalChains,
+			chains.FilterByGateway(chains.CCTXGateway_observers),
+			chains.FilterByConsensus(chains.Consensus_ethereum),
+		}...),
+		chains.FilterChains(supportedChains, []chains.ChainFilter{
+			chains.FilterExternalChains,
+			chains.FilterByGateway(chains.CCTXGateway_observers),
+			chains.FilterByConsensus(chains.Consensus_bitcoin),
+		}...),
+	}...)
 }

@@ -74,7 +74,11 @@ func (k Keeper) RateLimiterInput(
 	}
 
 	// get foreign chains and conversion rates of foreign coins
-	chains := k.zetaObserverKeeper.GetSupportedForeignChains(ctx)
+	externalSupportedChains := chains.FilterChains(
+		k.GetObserverKeeper().GetSupportedChains(ctx),
+		chains.FilterExternalChains,
+	)
+
 	_, assetRates, found := k.GetRateLimiterAssetRateList(ctx)
 	if !found {
 		return nil, status.Error(codes.Internal, "asset rates not found")
@@ -84,7 +88,7 @@ func (k Keeper) RateLimiterInput(
 	// query pending nonces of each foreign chain and get the lowest height of the pending cctxs
 	lowestPendingCctxHeight := int64(0)
 	pendingNoncesMap := make(map[int64]observertypes.PendingNonces)
-	for _, chain := range chains {
+	for _, chain := range externalSupportedChains {
 		pendingNonces, found := k.GetObserverKeeper().GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)
 		if !found {
 			return nil, status.Error(codes.Internal, "pending nonces not found")
@@ -113,7 +117,7 @@ func (k Keeper) RateLimiterInput(
 	cctxsPending := make([]*types.CrossChainTx, 0)
 
 	// query backwards for pending cctxs of each foreign chain
-	for _, chain := range chains {
+	for _, chain := range externalSupportedChains {
 		// we should at least query 1000 prior to find any pending cctx that we might have missed
 		// this logic is needed because a confirmation of higher nonce will automatically update the p.NonceLow
 		// therefore might mask some lower nonce cctx that is still pending.
@@ -205,7 +209,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(
 	totalPending := uint64(0)
 	totalWithdrawInAzeta := sdkmath.NewInt(0)
 	cctxs := make([]*types.CrossChainTx, 0)
-	foreignChains := k.zetaObserverKeeper.GetSupportedForeignChains(ctx)
+	foreignChains := chains.FilterChains(k.zetaObserverKeeper.GetSupportedChains(ctx), chains.FilterExternalChains)
 
 	// check rate limit flags to decide if we should apply rate limit
 	applyLimit := true

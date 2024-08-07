@@ -32,7 +32,7 @@ func (c *Client) UpdateAppContextWorker(ctx context.Context, app *appcontext.App
 		select {
 		case <-ticker.C:
 			c.logger.Debug().Msg("UpdateAppContextWorker invocation")
-			if err := c.UpdateAppContext(ctx, app, false, logger); err != nil {
+			if err := c.UpdateAppContext(ctx, app, logger); err != nil {
 				c.logger.Err(err).Msg("UpdateAppContextWorker failed to update config")
 			}
 		case <-c.stop:

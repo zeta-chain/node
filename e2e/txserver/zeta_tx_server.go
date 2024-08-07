@@ -431,7 +431,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 		100000,
 	))
 	if err != nil {
-		return SystemContractAddresses{}, fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
+		return SystemContractAddresses{}, fmt.Errorf("failed to deploy sol zrc20: %s", err.Error())
 	}
 
 	// deploy erc20 zrc20

@@ -230,7 +230,7 @@ func (ob *Observer) LastBlockScanned() uint64 {
 // WithLastBlockScanned set last block scanned (not necessarily caught up with the chain; could be slow/paused).
 func (ob *Observer) WithLastBlockScanned(blockNumber uint64) *Observer {
 	atomic.StoreUint64(&ob.lastBlockScanned, blockNumber)
-	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.ChainName.String()).Set(float64(blockNumber))
+	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.Name).Set(float64(blockNumber))
 	return ob
 }
 
@@ -265,6 +265,17 @@ func (ob *Observer) HeaderCache() *lru.Cache {
 func (ob *Observer) WithHeaderCache(cache *lru.Cache) *Observer {
 	ob.headerCache = cache
 	return ob
+}
+
+// OutboundID returns a unique identifier for the outbound transaction.
+// The identifier is now used as the key for maps that store outbound related data (e.g. transaction, receipt, etc).
+func (ob *Observer) OutboundID(nonce uint64) string {
+	// all chains uses EVM address as part of the key except bitcoin
+	tssAddress := ob.tss.EVMAddress().String()
+	if ob.chain.Consensus == chains.Consensus_bitcoin {
+		tssAddress = ob.tss.BTCAddress()
+	}
+	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddress, nonce)
 }
 
 // DB returns the database for the observer.

@@ -28,6 +28,7 @@ var (
 		"/zetachain.zetacore.crosschain.MsgWhitelistERC20",
 		"/zetachain.zetacore.fungible.MsgUpdateContractBytecode",
 		"/zetachain.zetacore.fungible.MsgUpdateSystemContract",
+		"/zetachain.zetacore.fungible.MsgUpdateGatewayContract",
 		"/zetachain.zetacore.fungible.MsgRemoveForeignCoin",
 		"/zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20",
 		"/zetachain.zetacore.observer.MsgUpdateObserver",

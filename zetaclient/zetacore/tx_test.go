@@ -46,73 +46,61 @@ func Test_GasPriceMultiplier(t *testing.T) {
 		name       string
 		chain      chains.Chain
 		multiplier float64
-		fail       bool
 	}{
 		{
 			name:       "get Ethereum multiplier",
 			chain:      chains.Ethereum,
 			multiplier: 1.2,
-			fail:       false,
 		},
 		{
 			name:       "get Goerli multiplier",
 			chain:      chains.Goerli,
 			multiplier: 1.2,
-			fail:       false,
 		},
 		{
 			name:       "get BSC multiplier",
 			chain:      chains.BscMainnet,
 			multiplier: 1.2,
-			fail:       false,
 		},
 		{
 			name:       "get BSC Testnet multiplier",
 			chain:      chains.BscTestnet,
 			multiplier: 1.2,
-			fail:       false,
 		},
 		{
 			name:       "get Polygon multiplier",
 			chain:      chains.Polygon,
 			multiplier: 1.2,
-			fail:       false,
 		},
 		{
 			name:       "get Mumbai Testnet multiplier",
 			chain:      chains.Mumbai,
 			multiplier: 1.2,
-			fail:       false,
 		},
 		{
 			name:       "get Bitcoin multiplier",
 			chain:      chains.BitcoinMainnet,
 			multiplier: 2.0,
-			fail:       false,
 		},
 		{
 			name:       "get Bitcoin Testnet multiplier",
 			chain:      chains.BitcoinTestnet,
 			multiplier: 2.0,
-			fail:       false,
 		},
 		{
-			name: "get unknown chain gas price multiplier",
-			chain: chains.Chain{
-				Consensus: chains.Consensus_tendermint,
-			},
+			name:       "get Solana multiplier",
+			chain:      chains.SolanaMainnet,
 			multiplier: 1.0,
-			fail:       true,
+		},
+		{
+			name:       "get Solana devnet multiplier",
+			chain:      chains.SolanaDevnet,
+			multiplier: 1.0,
 		},
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			multiplier, err := GasPriceMultiplier(tc.chain)
-			if tc.fail {
-				require.Error(t, err)
-				return
-			}
-			require.NoError(t, err)
+			multiplier := GasPriceMultiplier(tc.chain)
 			require.Equal(t, tc.multiplier, multiplier)
 		})
 	}
@@ -239,6 +227,8 @@ func TestZetacore_UpdateAppContext(t *testing.T) {
 	listener, err := net.Listen("tcp", "127.0.0.1:9090")
 	require.NoError(t, err)
 
+	ethChainParams := mocks.MockChainParams(chains.Ethereum.ChainId, 100)
+
 	server := grpcmock.MockUnstartedServer(
 		grpcmock.RegisterService(crosschaintypes.RegisterQueryServer),
 		grpcmock.RegisterService(upgradetypes.RegisterQueryServer),
@@ -271,9 +261,8 @@ func TestZetacore_UpdateAppContext(t *testing.T) {
 				WithPayload(observertypes.QueryGetChainParamsRequest{}).
 				Return(observertypes.QueryGetChainParamsResponse{ChainParams: &observertypes.ChainParamsList{
 					ChainParams: []*observertypes.ChainParams{
-						{
-							ChainId: 7000,
-						},
+						{ChainId: 7000}, // ZetaChain
+						&ethChainParams,
 					},
 				}})
 
@@ -284,24 +273,24 @@ func TestZetacore_UpdateAppContext(t *testing.T) {
 				Return(observertypes.QuerySupportedChainsResponse{
 					Chains: []chains.Chain{
 						{
-							chains.BitcoinMainnet.ChainId,
-							chains.BitcoinMainnet.ChainName,
-							chains.BscMainnet.Network,
-							chains.BscMainnet.NetworkType,
-							chains.BscMainnet.Vm,
-							chains.BscMainnet.Consensus,
-							chains.BscMainnet.IsExternal,
-							chains.BscMainnet.CctxGateway,
+							ChainId:     chains.BitcoinMainnet.ChainId,
+							Network:     chains.BscMainnet.Network,
+							NetworkType: chains.BscMainnet.NetworkType,
+							Vm:          chains.BscMainnet.Vm,
+							Consensus:   chains.BscMainnet.Consensus,
+							IsExternal:  chains.BscMainnet.IsExternal,
+							CctxGateway: chains.BscMainnet.CctxGateway,
+							Name:        chains.BscMainnet.Name,
 						},
 						{
-							chains.Ethereum.ChainId,
-							chains.Ethereum.ChainName,
-							chains.Ethereum.Network,
-							chains.Ethereum.NetworkType,
-							chains.Ethereum.Vm,
-							chains.Ethereum.Consensus,
-							chains.Ethereum.IsExternal,
-							chains.Ethereum.CctxGateway,
+							ChainId:     chains.Ethereum.ChainId,
+							Network:     chains.Ethereum.Network,
+							NetworkType: chains.Ethereum.NetworkType,
+							Vm:          chains.Ethereum.Vm,
+							Consensus:   chains.Ethereum.Consensus,
+							IsExternal:  chains.Ethereum.IsExternal,
+							CctxGateway: chains.Ethereum.CctxGateway,
+							Name:        chains.Ethereum.Name,
 						},
 					},
 				})
@@ -341,21 +330,6 @@ func TestZetacore_UpdateAppContext(t *testing.T) {
 					GasPriceIncreaseFlags: nil,
 				}})
 
-			method = "/zetachain.zetacore.lightclient.Query/HeaderEnabledChains"
-			s.ExpectUnary(method).
-				UnlimitedTimes().
-				WithPayload(lightclienttypes.QueryHeaderEnabledChainsRequest{}).
-				Return(lightclienttypes.QueryHeaderEnabledChainsResponse{HeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{
-					{
-						ChainId: chains.Ethereum.ChainId,
-						Enabled: true,
-					},
-					{
-						ChainId: chains.BitcoinMainnet.ChainId,
-						Enabled: false,
-					},
-				}})
-
 			method = "/zetachain.zetacore.authority.Query/ChainInfo"
 			s.ExpectUnary(method).
 				UnlimitedTimes().
@@ -384,7 +358,7 @@ func TestZetacore_UpdateAppContext(t *testing.T) {
 	t.Run("zetacore update success", func(t *testing.T) {
 		cfg := config.New(false)
 		appContext := zctx.New(cfg, zerolog.Nop())
-		err := client.UpdateAppContext(ctx, appContext, false, zerolog.Logger{})
+		err := client.UpdateAppContext(ctx, appContext, zerolog.New(zerolog.NewTestWriter(t)))
 		require.NoError(t, err)
 	})
 }

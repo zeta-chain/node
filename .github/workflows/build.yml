@@ -7,12 +7,6 @@ on:
       - release/*
   merge_group:
   pull_request:
-    branches:
-      - "*"
-    types:
-      - synchronize
-      - opened
-      - reopened
 
 concurrency: 
   group: pr-testing-${{ github.head_ref || github.run_id }}
@@ -28,8 +22,6 @@ jobs:
   build-and-test:
     runs-on: ubuntu-20.04
     timeout-minutes: 15
-    concurrency:
-      group: "build-and-test"
     steps:
       - uses: actions/checkout@v4
 

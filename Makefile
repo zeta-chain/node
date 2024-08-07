@@ -4,6 +4,9 @@ VERSION := $(shell ./version.sh)
 COMMIT := $(shell [ -z "${COMMIT_ID}" ] && git log -1 --format='%H' || echo ${COMMIT_ID} )
 BUILDTIME := $(shell date -u +"%Y%m%d.%H%M%S" )
 DOCKER ?= docker
+# allow setting of DOCKER_COMPOSE_ARGS to pass additional args to docker compose
+# useful for setting profiles
+DOCKER_COMPOSE ?= $(DOCKER) compose $(COMPOSE_ARGS)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 GOFLAGS:=""
 
@@ -209,11 +212,11 @@ start-localnet: zetanode start-localnet-skip-build
 start-localnet-skip-build:
 	@echo "--> Starting localnet"
 	export LOCALNET_MODE=setup-only && \
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) -f docker-compose.yml up -d
 
 # stop-localnet should include all profiles so other containers are also removed
 stop-localnet:
-	cd contrib/localnet/ && $(DOCKER) compose --profile all down --remove-orphans
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile all down --remove-orphans
 
 ###############################################################################
 ###                         E2E tests               						###
@@ -236,38 +239,38 @@ solana:
 
 start-e2e-test: zetanode
 	@echo "--> Starting e2e test"
-	cd contrib/localnet/ && $(DOCKER) compose up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d 
 
 start-e2e-admin-test: zetanode
 	@echo "--> Starting e2e admin test"
 	export E2E_ARGS="--skip-regular --test-admin" && \
-	cd contrib/localnet/ && $(DOCKER) compose --profile eth2 -f docker-compose.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile eth2 -f docker-compose.yml up -d
 
 start-e2e-performance-test: zetanode
 	@echo "--> Starting e2e performance test"
 	export E2E_ARGS="--test-performance" && \
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress -f docker-compose.yml up -d
 
 start-e2e-import-mainnet-test: zetanode
 	@echo "--> Starting e2e import-data test"
 	export ZETACORED_IMPORT_GENESIS_DATA=true && \
 	export ZETACORED_START_PERIOD=15m && \
-	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose -f docker-compose.yml up -d
+	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER_COMPOSE) -f docker-compose.yml up -d
 
 start-stress-test: zetanode
 	@echo "--> Starting stress test"
-	cd contrib/localnet/ && $(DOCKER) compose --profile stress -f docker-compose.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress -f docker-compose.yml up -d
 
 start-tss-migration-test: zetanode
 	@echo "--> Starting migration test"
 	export LOCALNET_MODE=migrate && \
 	export E2E_ARGS="--test-tss-migration" && \
-	cd contrib/localnet/ && $(DOCKER) compose up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 start-solana-test: zetanode solana
 	@echo "--> Starting solana test"
 	export E2E_ARGS="--skip-regular --test-solana" && \
-	cd contrib/localnet/ && $(DOCKER) compose --profile solana -f docker-compose.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana -f docker-compose.yml up -d
 
 ###############################################################################
 ###                         Upgrade Tests              						###
@@ -291,13 +294,13 @@ start-upgrade-test: zetanode-upgrade
 	@echo "--> Starting upgrade test"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=225 && \
-	cd contrib/localnet/ && $(DOCKER) compose --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
 start-upgrade-test-light: zetanode-upgrade
 	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=90 && \
-	cd contrib/localnet/ && $(DOCKER) compose --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
 
 start-upgrade-test-admin: zetanode-upgrade
@@ -305,7 +308,7 @@ start-upgrade-test-admin: zetanode-upgrade
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=90 && \
 	export E2E_ARGS="--skip-regular --test-admin" && \
-	cd contrib/localnet/ && $(DOCKER) compose --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
 start-upgrade-import-mainnet-test: zetanode-upgrade
 	@echo "--> Starting import-data upgrade test"
@@ -313,27 +316,14 @@ start-upgrade-import-mainnet-test: zetanode-upgrade
 	export ZETACORED_IMPORT_GENESIS_DATA=true && \
 	export ZETACORED_START_PERIOD=15m && \
 	export UPGRADE_HEIGHT=225 && \
-	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER) compose --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
-
-###############################################################################
-###                              Monitoring                                 ###
-###############################################################################
-
-start-monitoring:
-	@echo "Starting monitoring services"
-	cd contrib/localnet/grafana/ && ./get-tss-address.sh
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-monitoring.yml up -d
-
-stop-monitoring:
-	@echo "Stopping monitoring services"
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-monitoring.yml down
+	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
 ###############################################################################
 ###                                GoReleaser  		                        ###
 ###############################################################################
 
 PACKAGE_NAME          := github.com/zeta-chain/node
-GOLANG_CROSS_VERSION  ?= v1.20.7
+GOLANG_CROSS_VERSION  ?= v1.22.4
 GOPATH ?= '$(HOME)/go'
 release-dry-run:
 	docker run \
@@ -345,7 +335,7 @@ release-dry-run:
 		-v ${GOPATH}/pkg:/go/pkg \
 		-w /go/src/$(PACKAGE_NAME) \
 		ghcr.io/goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
-		--clean --skip-validate --skip-publish --snapshot
+		--clean --skip=validate --skip=publish --snapshot
 
 release:
 	@if [ ! -f ".release-env" ]; then \
@@ -361,7 +351,7 @@ release:
 		-v `pwd`:/go/src/$(PACKAGE_NAME) \
 		-w /go/src/$(PACKAGE_NAME) \
 		ghcr.io/goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
-		release --clean --skip-validate
+		release --clean --skip=validate
 
 ###############################################################################
 ###                     Local Mainnet Development                           ###

@@ -9,6 +9,8 @@
 # - An orchestrator to manage interaction with the localnet (orchestrator)
 # - An upgrade host to serve binaries for the upgrade tests (upgrade-host). Only enabled when profile is set to upgrade.
 # - An upgrade orchestrator to send the upgrade governance proposal (upgrade-orchestrator). Only enabled when profile is set to upgrade.
+#
+# If you are using third party images in CI, you should copy them into ghcr via https://github.com/zeta-chain/copy-docker-images
 
 networks:
   mynetwork:
@@ -124,6 +126,7 @@ services:
       - ETHDEV_ENDPOINT=http://eth:8545
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+    restart: always
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
@@ -140,6 +143,7 @@ services:
       - ETHDEV_ENDPOINT=http://eth:8545
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+    restart: always
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
@@ -181,7 +185,7 @@ services:
       - preparams:/root/preparams
 
   eth:
-    image: ethereum/client-go:v1.10.26
+    image: ghcr.io/zeta-chain/ethereum-client-go:v1.10.26
     container_name: eth
     hostname: eth
     ports:
@@ -207,7 +211,7 @@ services:
         ipv4_address: 172.20.0.102
 
   bitcoin:
-    image: ruimarinho/bitcoin-core:22 # version 23 is not working with btcd 0.22.0 due to change in createwallet rpc
+    image: ghcr.io/zeta-chain/ruimarinho-bitcoin-core:22 # version 23 is not working with btcd 0.22.0 due to change in createwallet rpc
     container_name: bitcoin
     hostname: bitcoin
     networks:
@@ -291,6 +295,97 @@ services:
       - UPGRADE_HEIGHT=${UPGRADE_HEIGHT-}
     volumes:
       - ssh:/root/.ssh
+
+  grafana:
+    image: grafana/grafana:9.1.7
+    container_name: grafana
+    hostname: grafana
+    profiles:
+      - monitoring
+      - all
+    volumes:
+      - ./grafana/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
+      - ./grafana/dashboards/:/etc/grafana/provisioning/dashboards
+      - grafana_storage:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.30
+    depends_on:
+      - prometheus
+
+  prometheus:
+    image: prom/prometheus:v2.53.1
+    container_name: prometheus
+    hostname: prometheus
+    profiles:
+      - monitoring
+      - all
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.31
+    depends_on:
+      zetacore0:
+        condition: service_healthy
+
+  zetachain-exporter:
+    image: zetachain/zetachain-exporter:v2.0.6
+    container_name: zetachain-exporter
+    hostname: zetachain-exporter
+    profiles:
+      - monitoring
+      - all
+    ports:
+      - "9015:9015"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.32
+    environment:
+      - ETH_EVM_URL=http://eth:8545
+      - ZETA_EVM_URL=http://zetacore0:8545
+      - ZETA_LCD_URL=http://zetacore0:1317
+      - ZETA_TENDERMINT_URL=http://zetacore0:26657
+      - ETH_CHAIN_ID=1337
+      - ZETA_CHAIN_ID=7001
+      - REFRESH_INTERVAL=15
+      - FAST_REFRESH_INTERVAL=1
+    depends_on:
+      zetacore0:
+        condition: service_healthy
+      eth:
+        condition: service_started
+
+  loki:
+    container_name: loki
+    image: grafana/loki:3.1.0
+    hostname: loki
+    profiles:
+      - monitoring
+      - all
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.33
+    command: -config.file=/etc/loki/local-config.yaml
+
+  promtail:
+    container_name: promtail
+    image: grafana/promtail:2.9.9
+    hostname: promtail
+    profiles:
+      - monitoring
+      - all
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.34
+    volumes:
+      - ./promtail/config.yaml:/etc/promtail/config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/config.yaml
+
 volumes:
   ssh:
   preparams:
+  grafana_storage:

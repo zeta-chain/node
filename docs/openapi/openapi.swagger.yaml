@@ -56946,7 +56946,9 @@ definitions:
         title: ChainId is the unique identifier of the chain
       chain_name:
         $ref: '#/definitions/chainsChainName'
-        title: ChainName is the name of the chain
+        title: |-
+          ChainName is the name of the chain
+          Deprecated(v19): replaced with Name
       network:
         $ref: '#/definitions/chainsNetwork'
         title: Network is the network of the chain
@@ -56965,6 +56967,9 @@ definitions:
       cctx_gateway:
         $ref: '#/definitions/chainsCCTXGateway'
         title: CCTXGateway is the gateway used to handle CCTX outbounds
+      name:
+        type: string
+        title: Name is the name of the chain
     title: |-
       Chain represents static data about a blockchain network
       it is identified by a unique chain ID
@@ -56994,7 +56999,9 @@ definitions:
       - solana_devnet
       - solana_localnet
     default: empty
-    title: ChainName represents the name of the chain
+    title: |-
+      ChainName represents the name of the chain
+      Deprecated(v19): replaced with Chain.Name as string
   chainsConsensus:
     type: string
     enum:
@@ -57646,6 +57653,8 @@ definitions:
     type: object
   fungibleMsgUpdateContractBytecodeResponse:
     type: object
+  fungibleMsgUpdateGatewayContractResponse:
+    type: object
   fungibleMsgUpdateSystemContractResponse:
     type: object
   fungibleMsgUpdateZRC20LiquidityCapResponse:
@@ -57703,6 +57712,8 @@ definitions:
       system_contract:
         type: string
       connector_zevm:
+        type: string
+      gateway:
         type: string
   googlerpcStatus:
     type: object

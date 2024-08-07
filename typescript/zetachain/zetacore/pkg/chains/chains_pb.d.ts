@@ -34,6 +34,7 @@ export declare enum ReceiveStatus {
 
 /**
  * ChainName represents the name of the chain
+ * Deprecated(v19): replaced with Chain.Name as string
  *
  * @generated from enum zetachain.zetacore.pkg.chains.ChainName
  */
@@ -322,8 +323,10 @@ export declare class Chain extends Message<Chain> {
 
   /**
    * ChainName is the name of the chain
+   * Deprecated(v19): replaced with Name
    *
-   * @generated from field: zetachain.zetacore.pkg.chains.ChainName chain_name = 1;
+   * @generated from field: zetachain.zetacore.pkg.chains.ChainName chain_name = 1 [deprecated = true];
+   * @deprecated
    */
   chainName: ChainName;
 
@@ -368,6 +371,13 @@ export declare class Chain extends Message<Chain> {
    * @generated from field: zetachain.zetacore.pkg.chains.CCTXGateway cctx_gateway = 8;
    */
   cctxGateway: CCTXGateway;
+
+  /**
+   * Name is the name of the chain
+   *
+   * @generated from field: string name = 9;
+   */
+  name: string;
 
   constructor(data?: PartialMessage<Chain>);
 

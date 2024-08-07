@@ -1,7 +1,8 @@
-# syntax=docker/dockerfile:1.7-labs
-FROM golang:1.22.5-bookworm AS base-build
+# syntax=ghcr.io/zeta-chain/docker-dockerfile:1.9-labs
+# check=error=true
+FROM ghcr.io/zeta-chain/golang:1.22.5-bookworm AS base-build
 
-ENV GOPATH /go
+ENV GOPATH=/go
 ENV GOOS=linux
 ENV CGO_ENABLED=1
 ENV GOCACHE=/root/.cache/go-build
@@ -22,10 +23,10 @@ COPY --exclude=*.sh --exclude=*.md --exclude=*.yml . .
 RUN --mount=type=cache,target="/root/.cache/go-build" make install
 RUN --mount=type=cache,target="/root/.cache/go-build" make install-zetae2e
 
-FROM golang:1.22.5-bookworm AS cosmovisor-build
+FROM ghcr.io/zeta-chain/golang:1.22.5-bookworm AS cosmovisor-build
 RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.5.0
 
-FROM golang:1.22.5-bookworm AS base-runtime
+FROM ghcr.io/zeta-chain/golang:1.22.5-bookworm AS base-runtime
 
 RUN apt update && \
     apt install -yq jq yq curl tmux python3 openssh-server iputils-ping iproute2 bind9-host && \
@@ -41,11 +42,12 @@ RUN mkdir -p /root/.zetacored/cosmovisor/genesis/bin && \
     ln -s /usr/local/bin/zetaclientd /root/.zetaclientd/upgrades/genesis/zetacored && \
     ln -s /root/.zetaclientd/upgrades/genesis /root/.zetaclientd/upgrades/current
 
-ENV PATH /root/.zetacored/cosmovisor/current/bin/:/root/.zetaclientd/upgrades/current/:${PATH}
+ENV PATH=/root/.zetacored/cosmovisor/current/bin/:/root/.zetaclientd/upgrades/current/:${PATH}
 
 COPY contrib/localnet/scripts /root
 COPY contrib/localnet/ssh_config /etc/ssh/ssh_config.d/localnet.conf
 COPY contrib/localnet/zetacored /root/zetacored
+COPY contrib/localnet/preparams /root/static-preparams
 COPY cmd/zetae2e/config/localnet.yml /root/config.yml
 
 RUN chmod 755 /root/*.sh && \
@@ -61,7 +63,7 @@ COPY --from=latest-build /go/bin/zetacored /go/bin/zetaclientd /go/bin/zetaclien
 
 # Optional old version build (from source). This old build is used as the genesis version in the upgrade tests. 
 # Use --target latest-runtime to skip.
-FROM base-build as old-build-source
+FROM base-build AS old-build-source
 
 ARG OLD_VERSION
 RUN git clone https://github.com/zeta-chain/node.git

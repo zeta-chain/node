@@ -285,17 +285,16 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
 		}
 
-		// skip the header proof test if we run light test or skipHeaderProof is enabled
-		testHeader := !light && !skipHeaderProof
 		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
 		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
 		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
-		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, testHeader, bitcoinTests...))
-		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, testHeader, ethereumTests...))
+		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, bitcoinTests...))
+		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, ethereumTests...))
 	}
 
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose,
+			e2etests.TestWhitelistERC20Name,
 			e2etests.TestRateLimiterName,
 			e2etests.TestPauseZRC20Name,
 			e2etests.TestUpdateBytecodeZRC20Name,
@@ -318,7 +317,15 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		eg.Go(miscTestRoutine(conf, deployerRunner, verbose, e2etests.TestMyTestName))
 	}
 	if testSolana {
-		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, e2etests.TestSolanaDepositName))
+		if deployerRunner.SolanaClient == nil {
+			logger.Print("❌ solana client is nil, maybe solana rpc is not set")
+			os.Exit(1)
+		}
+		solanaTests := []string{
+			e2etests.TestSolanaDepositName,
+			e2etests.TestSolanaWithdrawName,
+		}
+		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
 	}
 
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
@@ -348,7 +355,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testTSSMigration {
 		runTSSMigrationTest(deployerRunner, logger, verbose, conf)
 	}
-
+	// Verify that there are no trackers left over after tests complete
+	deployerRunner.EnsureNoTrackers()
 	// print and validate report
 	networkReport, err := deployerRunner.GenerateNetworkReport()
 	if err != nil {

@@ -370,7 +370,7 @@ func MockVoteOnOutboundSuccessBallot(
 	observer string,
 ) {
 	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutboundParam().ReceiverChainId, chains.ReceiveStatus_success, observer).
-		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_SuccessObservation}, senderChain.ChainName.String(), nil).
+		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_SuccessObservation}, senderChain.Name, nil).
 		Once()
 }
 
@@ -382,7 +382,7 @@ func MockVoteOnOutboundFailedBallot(
 	observer string,
 ) {
 	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutboundParam().ReceiverChainId, chains.ReceiveStatus_failed, observer).
-		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_FailureObservation}, senderChain.ChainName.String(), nil).
+		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_FailureObservation}, senderChain.Name, nil).
 		Once()
 }
 
@@ -395,10 +395,11 @@ func MockSaveOutbound(
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,
 	tss observertypes.TSS,
+	expectedNumberOfOutboundParams int,
 ) {
 	m.On("RemoveFromPendingNonces",
 		ctx, tss.TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId, mock.Anything).
-		Return().Once()
+		Return().Times(expectedNumberOfOutboundParams)
 	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true)
 }
 
@@ -407,10 +408,12 @@ func MockSaveOutboundNewRevertCreated(
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,
 	tss observertypes.TSS,
+	expectedNumberOfOutboundParams int,
 ) {
 	m.On("RemoveFromPendingNonces",
 		ctx, tss.TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId, mock.Anything).
-		Return().Once()
+		Return().Times(expectedNumberOfOutboundParams)
+
 	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true)
 	m.On("SetNonceToCctx", mock.Anything, mock.Anything).Return().Once()
 }
