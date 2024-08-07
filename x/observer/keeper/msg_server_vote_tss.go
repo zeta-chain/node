@@ -43,9 +43,9 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 	}
 
 	// Use a separate transaction to update keygen status to pending when trying to change the TSS address.
-	if keygen.Status == types.KeygenStatus_KeyGenSuccess {
-		return &types.MsgVoteTSSResponse{}, errorsmod.Wrap(types.ErrKeygenCompleted, voteTSSid)
-	}
+	//if keygen.Status == types.KeygenStatus_KeyGenSuccess {
+	//	return &types.MsgVoteTSSResponse{}, errorsmod.Wrap(types.ErrKeygenCompleted, voteTSSid)
+	//}
 
 	// GetBallot checks against the supported chains list before querying for Ballot.
 	ballotCreated := false
@@ -92,6 +92,14 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 			BallotCreated: ballotCreated,
 			KeygenSuccess: false,
 		}, nil
+	}
+
+	if keygen.Status != types.KeygenStatus_PendingKeygen {
+		return &types.MsgVoteTSSResponse{}, nil
+	}
+
+	if msg.KeygenZetaHeight != keygen.BlockNumber {
+		return &types.MsgVoteTSSResponse{}, nil
 	}
 
 	// Set TSS only on success, set keygen either way.

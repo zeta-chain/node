@@ -62,7 +62,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 			KeygenZetaHeight: 42,
 			Status:           chains.ReceiveStatus_success,
 		})
-		require.ErrorIs(t, err, types.ErrKeygenCompleted)
+		require.NoError(t, err)
 	})
 
 	t.Run("can create a new ballot, vote success and finalize", func(t *testing.T) {
@@ -74,6 +74,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		nodeAcc := sample.NodeAccount()
 		keygen := sample.Keygen(t)
 		keygen.Status = types.KeygenStatus_PendingKeygen
+		keygen.BlockNumber = 42
 		k.SetNodeAccount(ctx, *nodeAcc)
 		k.SetKeygen(ctx, *keygen)
 
@@ -106,6 +107,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		// setup state
 		nodeAcc := sample.NodeAccount()
 		keygen := sample.Keygen(t)
+		keygen.BlockNumber = 42
 		keygen.Status = types.KeygenStatus_PendingKeygen
 		k.SetNodeAccount(ctx, *nodeAcc)
 		k.SetKeygen(ctx, *keygen)
@@ -141,6 +143,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		nodeAcc2 := sample.NodeAccount()
 		nodeAcc3 := sample.NodeAccount()
 		keygen := sample.Keygen(t)
+		keygen.BlockNumber = 42
 		keygen.Status = types.KeygenStatus_PendingKeygen
 		tss := sample.Tss()
 		k.SetNodeAccount(ctx, *nodeAcc1)
@@ -346,11 +349,9 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 
 		newKeygen, found = k.GetKeygen(ctx)
 		require.True(t, found)
-		require.EqualValues(t, types.KeygenStatus_KeyGenSuccess, newKeygen.Status)
+		require.EqualValues(t, types.KeygenStatus_PendingKeygen, newKeygen.Status)
 
-		newTss, found := k.GetTSS(ctx)
-		require.True(t, found)
-		require.EqualValues(t, tss.TssPubkey, newTss.TssPubkey)
-		require.EqualValues(t, 42, newTss.KeyGenZetaHeight)
+		_, found = k.GetTSS(ctx)
+		require.False(t, found)
 	})
 }
