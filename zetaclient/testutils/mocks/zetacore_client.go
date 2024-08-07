@@ -496,6 +496,64 @@ func (_m *ZetacoreClient) GetRateLimiterInput(ctx context.Context, window int64)
 	return r0, r1
 }
 
+// GetTSS provides a mock function with given fields: ctx
+func (_m *ZetacoreClient) GetTSS(ctx context.Context) (observertypes.TSS, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTSS")
+	}
+
+	var r0 observertypes.TSS
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (observertypes.TSS, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) observertypes.TSS); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(observertypes.TSS)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetTSSHistory provides a mock function with given fields: ctx
+func (_m *ZetacoreClient) GetTSSHistory(ctx context.Context) ([]observertypes.TSS, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTSSHistory")
+	}
+
+	var r0 []observertypes.TSS
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) ([]observertypes.TSS, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) []observertypes.TSS); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]observertypes.TSS)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetZetaHotKeyBalance provides a mock function with given fields: ctx
 func (_m *ZetacoreClient) GetZetaHotKeyBalance(ctx context.Context) (math.Int, error) {
 	ret := _m.Called(ctx)

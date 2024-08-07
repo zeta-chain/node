@@ -322,7 +322,7 @@ start-upgrade-import-mainnet-test: zetanode-upgrade
 ###############################################################################
 
 PACKAGE_NAME          := github.com/zeta-chain/node
-GOLANG_CROSS_VERSION  ?= v1.20.7
+GOLANG_CROSS_VERSION  ?= v1.22.4
 GOPATH ?= '$(HOME)/go'
 release-dry-run:
 	docker run \
@@ -334,7 +334,7 @@ release-dry-run:
 		-v ${GOPATH}/pkg:/go/pkg \
 		-w /go/src/$(PACKAGE_NAME) \
 		ghcr.io/goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
-		--clean --skip-validate --skip-publish --snapshot
+		--clean --skip=validate --skip=publish --snapshot
 
 release:
 	@if [ ! -f ".release-env" ]; then \
@@ -350,7 +350,7 @@ release:
 		-v `pwd`:/go/src/$(PACKAGE_NAME) \
 		-w /go/src/$(PACKAGE_NAME) \
 		ghcr.io/goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
-		release --clean --skip-validate
+		release --clean --skip=validate
 
 ###############################################################################
 ###                     Local Mainnet Development                           ###

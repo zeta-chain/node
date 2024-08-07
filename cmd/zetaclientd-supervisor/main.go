@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"cosmossdk.io/errors"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/zeta-chain/zetacore/app"
@@ -69,10 +70,17 @@ func main() {
 		cmd.Stdin = &passwordInputBuffer
 
 		eg, ctx := errgroup.WithContext(ctx)
-		eg.Go(cmd.Run)
+		eg.Go(func() error {
+			defer cancel()
+			if err := cmd.Run(); err != nil {
+				return errors.Wrap(err, "zetaclient process failed")
+			}
+
+			logger.Info().Msg("zetaclient process exited")
+			return nil
+		})
 		eg.Go(func() error {
 			supervisor.WaitForReloadSignal(ctx)
-			cancel()
 			return nil
 		})
 		eg.Go(func() error {

@@ -107,6 +107,8 @@ type ZetacoreClient interface {
 	GetKeys() keyinterfaces.ObserverKeys
 
 	GetKeyGen(ctx context.Context) (observertypes.Keygen, error)
+	GetTSS(ctx context.Context) (observertypes.TSS, error)
+	GetTSSHistory(ctx context.Context) ([]observertypes.TSS, error)
 
 	GetBlockHeight(ctx context.Context) (int64, error)
 	GetBlockHeaderChainState(ctx context.Context, chainID int64) (*lightclienttypes.ChainState, error)
