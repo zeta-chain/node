@@ -142,7 +142,12 @@ var moduleAccountPerms = map[string][]string{
 }
 
 var (
-	testStoreKeys = sdk.NewKVStoreKeys(authtypes.StoreKey, banktypes.StoreKey, evmtypes.StoreKey, consensustypes.StoreKey)
+	testStoreKeys = sdk.NewKVStoreKeys(
+		authtypes.StoreKey,
+		banktypes.StoreKey,
+		evmtypes.StoreKey,
+		consensustypes.StoreKey,
+	)
 	testTransientKeys = sdk.NewTransientStoreKeys(evmtypes.TransientKey)
 	testMemKeys       = sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 )
@@ -392,6 +397,7 @@ func EVMKeeper(
 func NewSDKKeepersWithKeys(
 	cdc codec.Codec,
 	keys map[string]*storetypes.KVStoreKey,
+	memKeys map[string]*storetypes.MemoryStoreKey,
 	tKeys map[string]*storetypes.TransientStoreKey,
 	allKeys map[string]storetypes.StoreKey,
 ) SDKKeepers {
@@ -448,7 +454,7 @@ func NewSDKKeepersWithKeys(
 		feeMarketKeeper,
 		"",
 		paramsKeeper.Subspace(evmtypes.ModuleName),
-		nil,
+		[]evmkeeper.CustomContractFn{},
 		consensusKeeper,
 		allKeys,
 	)
@@ -459,14 +465,21 @@ func NewSDKKeepersWithKeys(
 		stakingKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
+	capabilityKeeper := capabilitykeeper.NewKeeper(
+		cdc,
+		keys[capabilitytypes.StoreKey],
+		memKeys[capabilitytypes.MemStoreKey],
+	)
+
 	return SDKKeepers{
-		ParamsKeeper:    paramsKeeper,
-		AuthKeeper:      authKeeper,
-		BankKeeper:      bankKeeper,
-		StakingKeeper:   stakingKeeper,
-		FeeMarketKeeper: feeMarketKeeper,
-		EvmKeeper:       evmKeeper,
-		SlashingKeeper:  slashingKeeper,
+		ParamsKeeper:     paramsKeeper,
+		AuthKeeper:       authKeeper,
+		BankKeeper:       bankKeeper,
+		StakingKeeper:    stakingKeeper,
+		FeeMarketKeeper:  feeMarketKeeper,
+		EvmKeeper:        evmKeeper,
+		SlashingKeeper:   slashingKeeper,
+		CapabilityKeeper: capabilityKeeper,
 	}
 }
 
@@ -540,8 +553,7 @@ func TransferKeeper(
 	)
 
 	// create IBC module from bottom to top of stack
-	var transferStack porttypes.IBCModule
-	transferStack = transfer.NewIBCModule(transferKeeper)
+	transferStack := transfer.NewIBCModule(transferKeeper)
 
 	// Add transfer stack to IBC Router
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack)
@@ -608,11 +620,9 @@ func NewSDKKeepers(
 // InitGenesis initializes the test modules genesis state
 func (sdkk SDKKeepers) InitGenesis(ctx sdk.Context) {
 	capabilitymodule.InitGenesis(ctx, *sdkk.CapabilityKeeper, *capabilitytypes.DefaultGenesis())
-
 	sdkk.AuthKeeper.InitGenesis(ctx, *authtypes.DefaultGenesisState())
 	sdkk.BankKeeper.InitGenesis(ctx, banktypes.DefaultGenesisState())
 	sdkk.StakingKeeper.InitGenesis(ctx, stakingtypes.DefaultGenesisState())
-
 	evmGenesis := *evmtypes.DefaultGenesisState()
 	evmGenesis.Params.EvmDenom = "azeta"
 	evmmodule.InitGenesis(ctx, sdkk.EvmKeeper, sdkk.AuthKeeper, evmGenesis)

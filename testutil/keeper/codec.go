@@ -42,6 +42,5 @@ func NewCodec() *codec.ProtoCodec {
 	fungibletypes.RegisterInterfaces(registry)
 	observertypes.RegisterInterfaces(registry)
 
-	cdc := codec.NewProtoCodec(registry)
-	return cdc
+	return codec.NewProtoCodec(registry)
 }

@@ -560,7 +560,6 @@ func New(
 	)
 	evmSs := app.GetSubspace(evmtypes.ModuleName)
 
-
 	allKeys := make(map[string]storetypes.StoreKey, len(keys)+len(tkeys)+len(memKeys))
 	for k, v := range keys {
 		allKeys[k] = v

@@ -18,6 +18,9 @@ import (
 	"github.com/rs/zerolog"
 	etherminttypes "github.com/zeta-chain/ethermint/types"
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -29,8 +32,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	keyinterfaces "github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 var _ interfaces.ZetacoreClient = &Client{}
