@@ -1,7 +1,6 @@
 package mocks
 
 import (
-	"github.com/zeta-chain/zetacore/pkg/constant"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -9,6 +8,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
 
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )

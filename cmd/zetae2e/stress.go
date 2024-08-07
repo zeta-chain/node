@@ -141,7 +141,8 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	switch stressTestArgs.network {
 	case "LOCAL":
 		// deploy and set zevm contract
-		e2eTest.SetZEVMContracts()
+		e2eTest.SetZEVMSystemContracts()
+		e2eTest.SetZEVMZRC20s()
 
 		// deposit on ZetaChain
 		e2eTest.DepositEther()

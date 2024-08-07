@@ -2,7 +2,6 @@ package runner
 
 import (
 	"context"
-	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
 	"os"
 	"sync"
 	"time"
@@ -37,6 +36,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
 	"github.com/zeta-chain/zetacore/e2e/txserver"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"

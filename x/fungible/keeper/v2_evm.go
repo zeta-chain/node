@@ -1,13 +1,15 @@
 package keeper
 
 import (
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/systemcontract.sol"
+
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	"math/big"
 )
 
 // CallDepositAndCallZRC20 calls the depositAndCall (ZRC20 version) function on the gateway contract

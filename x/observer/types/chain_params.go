@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/pkg/constant"
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
@@ -11,6 +10,7 @@ import (
 	ethchains "github.com/ethereum/go-ethereum/common"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	solanacontracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
 )
 

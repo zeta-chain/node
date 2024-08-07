@@ -1,12 +1,12 @@
 package keeper
 
 import (
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/systemcontract.sol"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/systemcontract.sol"
 )
 
 // ProcessV2Deposit handles a deposit from an inbound tx with protocol version 2

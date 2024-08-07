@@ -93,7 +93,15 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 
 		// ACT
-		_, contractCall, err := k.ProcessV2Deposit(ctx, sample.EthAddress().Bytes(), chainID, zrc20, receiver, big.NewInt(42), []byte{})
+		_, contractCall, err := k.ProcessV2Deposit(
+			ctx,
+			sample.EthAddress().Bytes(),
+			chainID,
+			zrc20,
+			receiver,
+			big.NewInt(42),
+			[]byte{},
+		)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -119,7 +127,15 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 
 		// ACT
-		_, contractCall, err := k.ProcessV2Deposit(ctx, sample.EthAddress().Bytes(), chainID, zrc20, testDapp, big.NewInt(82), []byte("foo"))
+		_, contractCall, err := k.ProcessV2Deposit(
+			ctx,
+			sample.EthAddress().Bytes(),
+			chainID,
+			zrc20,
+			testDapp,
+			big.NewInt(82),
+			[]byte("foo"),
+		)
 
 		// ASSERT
 		require.NoError(t, err)

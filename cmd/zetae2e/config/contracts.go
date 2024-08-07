@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
@@ -23,6 +22,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
 	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
 )
 
 // setContractsFromConfig get EVM contracts from config
@@ -262,7 +262,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	}
 
 	if c := conf.Contracts.ZEVM.TestDAppV2Addr; c != "" {
-		r.TestDAppV2EVMAddr, err = c.AsEVMAddress()
+		r.TestDAppV2ZEVMAddr, err = c.AsEVMAddress()
 		if err != nil {
 			return fmt.Errorf("invalid TestDAppV2Addr: %w", err)
 		}

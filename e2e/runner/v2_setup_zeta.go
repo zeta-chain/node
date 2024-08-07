@@ -1,8 +1,6 @@
 package runner
 
 import (
-	"github.com/zeta-chain/zetacore/pkg/contracts/erc1967proxy"
-	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
 	"time"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -10,6 +8,8 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/pkg/contracts/erc1967proxy"
+	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
 )
 
 // SetZEVMContractsV2 set contracts for the ZEVM

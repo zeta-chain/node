@@ -57,7 +57,13 @@ func deploySystemContractsWithMockEvmKeeper(
 }
 
 // deploy upgradable gateway contract and return its address
-func deployGatewayContract(t *testing.T, ctx sdk.Context, k *fungiblekeeper.Keeper, evmk types.EVMKeeper, wzeta, admin common.Address) common.Address {
+func deployGatewayContract(
+	t *testing.T,
+	ctx sdk.Context,
+	k *fungiblekeeper.Keeper,
+	evmk types.EVMKeeper,
+	wzeta, admin common.Address,
+) common.Address {
 	// Deploy the gateway contract
 	implAddr, err := k.DeployContract(ctx, gatewayzevm.GatewayZEVMMetaData)
 	require.NoError(t, err)

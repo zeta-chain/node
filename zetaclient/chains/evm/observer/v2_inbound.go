@@ -160,10 +160,10 @@ func (ob *Observer) checkEventProcessability(event *gatewayevm.GatewayEVMDeposit
 
 // newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
 func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposit) types.MsgVoteInbound {
-	// if event.Asset is not zero, use it as the asset
-	coinType := coin.CoinType_Gas
+	// if event.Asset is zero, it's a native token
+	coinType := coin.CoinType_ERC20
 	if event.Asset == (ethcommon.Address{}) || event.Asset.Hex() == constant.EVMZeroAddress {
-		coinType = coin.CoinType_ERC20
+		coinType = coin.CoinType_Gas
 	}
 
 	return *types.NewMsgVoteInbound(

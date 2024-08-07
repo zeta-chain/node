@@ -1,8 +1,6 @@
 package runner
 
 import (
-	"github.com/zeta-chain/zetacore/pkg/contracts/erc1967proxy"
-	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
 	"math/big"
 	"time"
 
@@ -13,6 +11,8 @@ import (
 
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/constant"
+	"github.com/zeta-chain/zetacore/pkg/contracts/erc1967proxy"
+	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
 )
 
 // SetupEVMV2 setup contracts on EVM with v2 contracts
