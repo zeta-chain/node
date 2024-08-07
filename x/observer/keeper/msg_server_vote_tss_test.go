@@ -200,7 +200,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		require.True(t, res.VoteFinalized)
 		require.True(t, res.KeygenSuccess)
 
-		// check keygen not updated
+		// check keygen updated
 		newKeygen, found = k.GetKeygen(ctx)
 		require.True(t, found)
 		require.EqualValues(t, types.KeygenStatus_KeyGenSuccess, newKeygen.Status)
@@ -238,5 +238,119 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 			Status:           chains.ReceiveStatus_success,
 		})
 		require.ErrorIs(t, err, types.ErrUnableToAddVote)
+	})
+
+	t.Run("can create a new ballot, vote without finalizing, then add vote and finalizing", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		ctx = ctx.WithBlockHeight(42)
+		srv := keeper.NewMsgServerImpl(*k)
+
+		// setup state with 3 node accounts
+		nodeAcc1 := sample.NodeAccount()
+		nodeAcc2 := sample.NodeAccount()
+		nodeAcc3 := sample.NodeAccount()
+		keygen := sample.Keygen(t)
+		keygen.Status = types.KeygenStatus_PendingKeygen
+		tss := sample.Tss()
+		k.SetNodeAccount(ctx, *nodeAcc1)
+		k.SetNodeAccount(ctx, *nodeAcc2)
+		k.SetNodeAccount(ctx, *nodeAcc3)
+		k.SetKeygen(ctx, *keygen)
+
+		// 1st vote: created ballot, but not finalized
+		res, err := srv.VoteTSS(ctx, &types.MsgVoteTSS{
+			Creator:          nodeAcc1.Operator,
+			TssPubkey:        tss.TssPubkey,
+			KeygenZetaHeight: 42,
+			Status:           chains.ReceiveStatus_success,
+		})
+		require.NoError(t, err)
+
+		// check response
+		require.True(t, res.BallotCreated)
+		require.False(t, res.VoteFinalized)
+		require.False(t, res.KeygenSuccess)
+
+		// check keygen not updated
+		newKeygen, found := k.GetKeygen(ctx)
+		require.True(t, found)
+		require.EqualValues(t, types.KeygenStatus_PendingKeygen, newKeygen.Status)
+
+		// 2nd vote: already created ballot, and not finalized
+		res, err = srv.VoteTSS(ctx, &types.MsgVoteTSS{
+			Creator:          nodeAcc2.Operator,
+			TssPubkey:        tss.TssPubkey,
+			KeygenZetaHeight: 42,
+			Status:           chains.ReceiveStatus_success,
+		})
+		require.NoError(t, err)
+
+		// check response
+		require.False(t, res.BallotCreated)
+		require.False(t, res.VoteFinalized)
+		require.False(t, res.KeygenSuccess)
+
+		// check keygen not updated
+		newKeygen, found = k.GetKeygen(ctx)
+		require.True(t, found)
+		require.EqualValues(t, types.KeygenStatus_PendingKeygen, newKeygen.Status)
+
+		// Start voting on a new ballot
+		tss2 := sample.Tss()
+		// 1st Vote on new ballot (acc1)
+		res, err = srv.VoteTSS(ctx, &types.MsgVoteTSS{
+			Creator:          nodeAcc1.Operator,
+			TssPubkey:        tss2.TssPubkey,
+			KeygenZetaHeight: 52,
+			Status:           chains.ReceiveStatus_success,
+		})
+		require.NoError(t, err)
+
+		// check response
+		require.True(t, res.BallotCreated)
+		require.False(t, res.VoteFinalized)
+		require.False(t, res.KeygenSuccess)
+
+		// 2nd vote on new ballot: already created ballot, and not finalized (acc3)
+		res, err = srv.VoteTSS(ctx, &types.MsgVoteTSS{
+			Creator:          nodeAcc3.Operator,
+			TssPubkey:        tss2.TssPubkey,
+			KeygenZetaHeight: 52,
+			Status:           chains.ReceiveStatus_success,
+		})
+		require.NoError(t, err)
+
+		// check response
+		require.False(t, res.BallotCreated)
+		require.False(t, res.VoteFinalized)
+		require.False(t, res.KeygenSuccess)
+
+		// check keygen status
+		newKeygen, found = k.GetKeygen(ctx)
+		require.True(t, found)
+		require.EqualValues(t, types.KeygenStatus_PendingKeygen, newKeygen.Status)
+
+		// At this point, we have two ballots
+		// 1. Ballot for keygen 42 Voted : (acc1, acc2)
+		// 2. Ballot for keygen 52 Voted : (acc1, acc3)
+
+		// 3rd vote on ballot 1: finalize the older ballot
+
+		res, err = srv.VoteTSS(ctx, &types.MsgVoteTSS{
+			Creator:          nodeAcc3.Operator,
+			TssPubkey:        tss.TssPubkey,
+			KeygenZetaHeight: 42,
+			Status:           chains.ReceiveStatus_success,
+		})
+		require.NoError(t, err)
+
+		newKeygen, found = k.GetKeygen(ctx)
+		require.True(t, found)
+		require.EqualValues(t, types.KeygenStatus_KeyGenSuccess, newKeygen.Status)
+
+		newTss, found := k.GetTSS(ctx)
+		require.True(t, found)
+		require.EqualValues(t, tss.TssPubkey, newTss.TssPubkey)
+		require.EqualValues(t, 42, newTss.KeyGenZetaHeight)
 	})
 }
