@@ -9,7 +9,7 @@ import (
 	cmdcfg "github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/testutil/network"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 type CliTestSuite struct {
@@ -18,7 +18,7 @@ type CliTestSuite struct {
 	cfg             network.Config
 	network         *network.Network
 	crosschainState *types.GenesisState
-	observerState   *observerTypes.GenesisState
+	observerState   *observertypes.GenesisState
 }
 
 func NewCLITestSuite(cfg network.Config) *CliTestSuite {
