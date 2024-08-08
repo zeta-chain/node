@@ -14,6 +14,11 @@ func (gs GenesisState) Validate() error {
 	if err := gs.Policies.Validate(); err != nil {
 		return err
 	}
-
-	return gs.ChainInfo.Validate()
+	if err := gs.AuthorizationList.Validate(); err != nil {
+		return err
+	}
+	if err := gs.ChainInfo.Validate(); err != nil {
+		return err
+	}
+	return nil
 }
