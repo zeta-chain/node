@@ -183,7 +183,7 @@ func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chainID int64) (inte
 	case chain.IsSolana():
 		params := chain.Params()
 
-		// update solana gateway address
+		// update gateway address
 		if params.GatewayAddress != signer.GetGatewayAddress() {
 			signer.SetGatewayAddress(params.GatewayAddress)
 			oc.logger.Info().
