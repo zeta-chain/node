@@ -43,7 +43,6 @@ var (
 
 func initObserverKeeper(
 	cdc codec.Codec,
-	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 	stakingKeeper stakingkeeper.Keeper,
 	slashingKeeper slashingkeeper.Keeper,
@@ -80,8 +79,8 @@ func ObserverKeeperWithMocks(
 	stateStore := rootmulti.NewStore(db, log.NewNopLogger())
 	cdc := NewCodec()
 
-	authorityKeeperTmp := initAuthorityKeeper(cdc, db, stateStore)
-	lightclientKeeperTmp := initLightclientKeeper(cdc, db, stateStore, authorityKeeperTmp)
+	authorityKeeperTmp := initAuthorityKeeper(cdc, stateStore)
+	lightclientKeeperTmp := initLightclientKeeper(cdc, stateStore, authorityKeeperTmp)
 
 	// Create regular keepers
 	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)

@@ -31,7 +31,6 @@ var (
 
 func initLightclientKeeper(
 	cdc codec.Codec,
-	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 	authorityKeeper types.AuthorityKeeper,
 ) keeper.Keeper {
@@ -56,7 +55,7 @@ func LightclientKeeperWithMocks(
 	stateStore := rootmulti.NewStore(db, log.NewNopLogger())
 	cdc := NewCodec()
 
-	authorityKeeperTmp := initAuthorityKeeper(cdc, db, stateStore)
+	authorityKeeperTmp := initAuthorityKeeper(cdc, stateStore)
 
 	// Create regular keepers
 	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)

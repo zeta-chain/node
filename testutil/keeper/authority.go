@@ -25,7 +25,6 @@ var (
 
 func initAuthorityKeeper(
 	cdc codec.Codec,
-	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 ) keeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)

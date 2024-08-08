@@ -52,7 +52,6 @@ var (
 
 func initFungibleKeeper(
 	cdc codec.Codec,
-	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 	authKeeper types.AccountKeeper,
 	bankKeepr types.BankKeeper,
