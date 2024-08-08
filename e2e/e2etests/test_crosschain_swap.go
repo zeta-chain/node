@@ -15,6 +15,8 @@ import (
 )
 
 func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
+	stop := r.MineBlocksIfLocalBitcoin()
+	defer stop()
 	r.ZEVMAuth.GasLimit = 10000000
 
 	// TODO: move into setup and skip it if already initialized
@@ -23,6 +25,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	// if the tx fails due to already initialized, it will be ignored
 	_, err := r.UniswapV2Factory.CreatePair(r.ZEVMAuth, r.ERC20ZRC20Addr, r.BTCZRC20Addr)
 	if err != nil {
+		time.Sleep(3 * time.Second)
 		r.Logger.Print("ℹ️create pair error")
 	}
 
@@ -55,9 +58,9 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		r.ERC20ZRC20Addr,
 		r.BTCZRC20Addr,
 		big.NewInt(1e8),
-		big.NewInt(1e3),
 		big.NewInt(1e8),
-		big.NewInt(1e3),
+		big.NewInt(1e8),
+		big.NewInt(1e5),
 		r.EVMAddress(),
 		big.NewInt(time.Now().Add(10*time.Minute).Unix()),
 	)
@@ -89,10 +92,6 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	// mine 10 blocks to confirm the outbound tx
 	_, err = r.GenerateToAddressIfLocalBitcoin(10, r.BTCDeployerAddress)
 	require.NoError(r, err)
-
-	// mine blocks if testing on regnet
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
 
 	// cctx1 index acts like the inboundHash for the second cctx (the one that withdraws BTC)
 	cctx2 := utils.WaitCctxMinedByInboundHash(r.Ctx, cctx1.Index, r.CctxClient, r.Logger, r.CctxTimeout)
@@ -145,7 +144,10 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		r.Logger.Info("memo length %d", len(memo))
 
 		amount := 0.1
-		txid, err := r.SendToTSSFromDeployerWithMemo(amount, utxos[1:2], memo)
+
+		txid := &chainhash.Hash{}
+		utxos, err = r.ListDeployerUTXOs()
+		txid, err = r.SendToTSSFromDeployerWithMemo(amount, utxos[0:1], memo)
 		require.NoError(r, err)
 
 		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txid.String(), r.CctxClient, r.Logger, r.CctxTimeout)
