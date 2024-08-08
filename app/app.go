@@ -144,16 +144,11 @@ func init() {
 var (
 	AccountAddressPrefix = "zeta"
 	NodeDir              = ".zetacored"
+	DefaultNodeHome      = os.ExpandEnv("$HOME/") + NodeDir
 
 	// AddrLen is the allowed length (in bytes) for an address.
-	//
 	// NOTE: In the SDK, the default value is 255.
 	AddrLen = 20
-)
-
-var (
-	// DefaultNodeHome default home directories for wasmd
-	DefaultNodeHome = os.ExpandEnv("$HOME/") + NodeDir
 
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
 	Bech32PrefixAccAddr = AccountAddressPrefix
@@ -354,9 +349,9 @@ func New(
 		consensusparamtypes.StoreKey,
 		crisistypes.StoreKey,
 	)
-	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
+	tKeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
 	memKeys := sdk.NewMemoryStoreKeys(
-	//capabilitytypes.MemStoreKey,
+	// capabilitytypes.MemStoreKey,
 	)
 
 	app := &App{
@@ -366,7 +361,7 @@ func New(
 		interfaceRegistry: interfaceRegistry,
 		invCheckPeriod:    invCheckPeriod,
 		keys:              keys,
-		tkeys:             tkeys,
+		tkeys:             tKeys,
 		memKeys:           memKeys,
 	}
 	if homePath == "" {
@@ -376,7 +371,7 @@ func New(
 	// get authority address
 	authAddr := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 
-	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
+	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tKeys[paramstypes.TStoreKey])
 	// set the BaseApp's parameter store
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamtypes.StoreKey], authAddr)
 	bApp.SetParamStore(&app.ConsensusParamsKeeper)
@@ -554,29 +549,16 @@ func New(
 		appCodec,
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		keys[feemarkettypes.StoreKey],
-		tkeys[feemarkettypes.TransientKey],
+		tKeys[feemarkettypes.TransientKey],
 		feeSs,
 		app.ConsensusParamsKeeper,
 	)
 	evmSs := app.GetSubspace(evmtypes.ModuleName)
 
-	allKeys := make(map[string]storetypes.StoreKey, len(keys)+len(tkeys)+len(memKeys))
-	for k, v := range keys {
-		allKeys[k] = v
-	}
-	for k, v := range tkeys {
-		allKeys[k] = v
-	}
-	for k, v := range memKeys {
-		allKeys[k] = v
-	}
-
-	//gasConfig := storetypes.TransientGasConfig()
-
 	app.EvmKeeper = evmkeeper.NewKeeper(
 		appCodec,
 		keys[evmtypes.StoreKey],
-		tkeys[evmtypes.TransientKey],
+		tKeys[evmtypes.TransientKey],
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
@@ -586,7 +568,7 @@ func New(
 		evmSs,
 		[]evmkeeper.CustomContractFn{},
 		app.ConsensusParamsKeeper,
-		allKeys,
+		aggregateAllKeys(keys, tKeys, memKeys),
 	)
 
 	app.FungibleKeeper = *fungiblekeeper.NewKeeper(
@@ -825,7 +807,7 @@ func New(
 
 	// initialize stores
 	app.MountKVStores(keys)
-	app.MountTransientStores(tkeys)
+	app.MountTransientStores(tKeys)
 	app.MountMemoryStores(memKeys)
 
 	// initialize BaseApp
@@ -1072,4 +1054,27 @@ func (app *App) BlockedAddrs() map[string]bool {
 		blockList[addr.String()] = v
 	}
 	return blockList
+}
+
+// aggregateAllKeys aggregates all the keys in a single map.
+func aggregateAllKeys(
+	keys map[string]*storetypes.KVStoreKey,
+	tKeys map[string]*storetypes.TransientStoreKey,
+	memKeys map[string]*storetypes.MemoryStoreKey,
+) map[string]storetypes.StoreKey {
+	allKeys := make(map[string]storetypes.StoreKey, len(keys)+len(tKeys)+len(memKeys))
+
+	for k, v := range keys {
+		allKeys[k] = v
+	}
+
+	for k, v := range tKeys {
+		allKeys[k] = v
+	}
+
+	for k, v := range memKeys {
+		allKeys[k] = v
+	}
+
+	return allKeys
 }
