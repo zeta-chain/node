@@ -55,10 +55,6 @@ func (k msgServer) AddOutboundTracker(
 		k.RemoveOutboundTrackerFromStore(ctx, msg.ChainId, msg.Nonce)
 		return &types.MsgAddOutboundTrackerResponse{IsRemoved: true}, nil
 	}
-
-	fmt.Println("Trying to add new tracker :", cctx.CrossChainTx.Index, len(cctx.CrossChainTx.OutboundParams), cctx.CrossChainTx.CctxStatus.Status)
-	fmt.Println("Tracker Index ", msg.ChainId, msg.Nonce)
-
 	// check if the msg signer is from the emergency group policy address.It is okay to ignore the error as the sender can also be an observer
 	isAuthorizedPolicy := false
 	if k.GetAuthorityKeeper().CheckAuthorization(ctx, msg) == nil {

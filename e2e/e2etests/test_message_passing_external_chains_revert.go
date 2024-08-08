@@ -62,11 +62,11 @@ func TestMessagePassingRevertSuccessExternalChains(r *runner.E2ERunner, args []s
 	for _, log := range receipt.Logs {
 		event, err := r.ConnectorEth.ParseZetaReverted(*log)
 		if err == nil {
-			r.Logger.Info("ZetaReverted event: ")
-			r.Logger.Info("  Dest Addr: %s", ethcommon.BytesToAddress(event.DestinationAddress).Hex())
-			r.Logger.Info("  Dest Chain: %d", event.DestinationChainId)
-			r.Logger.Info("  RemainingZetaValue: %d", event.RemainingZetaValue)
-			r.Logger.Info("  Message: %x", event.Message)
+			r.Logger.Print("ZetaReverted event: ")
+			r.Logger.Print("  Dest Addr: %s", ethcommon.BytesToAddress(event.DestinationAddress).Hex())
+			r.Logger.Print("  Dest Chain: %d", event.DestinationChainId)
+			r.Logger.Print("  RemainingZetaValue: %d", event.RemainingZetaValue)
+			r.Logger.Print("  Message: %x", event.Message)
 		}
 	}
 

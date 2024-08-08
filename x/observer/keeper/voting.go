@@ -26,7 +26,6 @@ func (k Keeper) AddVoteToBallot(
 	}
 	ctx.Logger().Info(fmt.Sprintf("Vote Added | Voter :%s, ballot identifier %s", address, ballot.BallotIdentifier))
 	k.SetBallot(ctx, &ballot)
-	ctx.Logger().Info(fmt.Sprintf("Ballot Updated | Ballot Identifier : %s", ballot.BallotIdentifier))
 	return ballot, nil
 }
 

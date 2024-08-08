@@ -87,7 +87,6 @@
 * [2542](https://github.com/zeta-chain/node/pull/2542) - adjust permissions to be more restrictive
 * [2556](https://github.com/zeta-chain/node/pull/2556) - refactor migrator length check to use consensus type
 * [2572](https://github.com/zeta-chain/node/pull/2572) - turn off IBC modules
-* [2556](https://github.com/zeta-chain/node/pull/2556) - refactor migrator length check to use consensus type
 * [2568](https://github.com/zeta-chain/node/pull/2568) - improve AppContext by converging chains, chainParams, enabledChains, and additionalChains into a single zctx.Chain
 
 ### Tests
@@ -111,6 +110,7 @@
 * [2415](https://github.com/zeta-chain/node/pull/2415) - add e2e test for upgrade and test admin functionalities
 * [2440](https://github.com/zeta-chain/node/pull/2440) - Add e2e test for TSS migration
 * [2473](https://github.com/zeta-chain/node/pull/2473) - add e2e tests for most used admin transactions
+* [2661](https://github.com/zeta-chain/node/pull/2661) - update connector and erc20Custody addresses in tss migration e2e tests
 
 ### Fixes
 

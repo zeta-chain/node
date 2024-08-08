@@ -20,7 +20,7 @@ const (
 	AdminPolicyName       = "admin"
 	OperationalPolicyName = "operational"
 
-	DefaultCctxTimeout = 8 * time.Minute
+	DefaultCctxTimeout = 4 * time.Minute
 )
 
 // WaitCctxMinedByInboundHash waits until cctx is mined; returns the cctxIndex (the last one)
