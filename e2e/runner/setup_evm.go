@@ -15,7 +15,9 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
 	"github.com/zeta-chain/zetacore/e2e/contracts/testdapp"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/constant"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 const (
@@ -167,4 +169,27 @@ func (r *E2ERunner) SetupEVM(contractsDeployed bool, whitelistERC20 bool) {
 	// We use this config to be consistent with the old implementation
 	// https://github.com/zeta-chain/node-private/issues/41
 	require.NoError(r, config.WriteConfig(ContractsConfigFile, conf))
+
+	// chain params will need to be updated if they do not match the default params
+	// this be required if the deployer account changes
+	currentChainParamsRes, err := r.ObserverClient.GetChainParamsForChain(
+		r.Ctx,
+		&observertypes.QueryGetChainParamsForChainRequest{
+			ChainId: chains.GoerliLocalnet.ChainId,
+		},
+	)
+	require.NoError(r, err, "failed to get chain params for chain %d", chains.GoerliLocalnet.ChainId)
+
+	chainParams := currentChainParamsRes.ChainParams
+	chainParams.Erc20CustodyContractAddress = r.ERC20CustodyAddr.Hex()
+	chainParams.ConnectorContractAddress = r.ConnectorEthAddr.Hex()
+	chainParams.ZetaTokenContractAddress = r.ZetaEthAddr.Hex()
+
+	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, observertypes.NewMsgUpdateChainParams(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+		chainParams,
+	))
+
+	require.NoError(r, err, "failed to update chain params")
+	r.Logger.Print("🔄 updated chain params")
 }
