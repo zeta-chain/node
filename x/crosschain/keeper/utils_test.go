@@ -2,6 +2,9 @@
 package keeper_test
 
 import (
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/zetacore/pkg/contracts/erc1967proxy"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
 	"testing"
 
@@ -67,6 +70,44 @@ func assertContractDeployment(t *testing.T, k *evmkeeper.Keeper, ctx sdk.Context
 	require.NotEmpty(t, code)
 }
 
+// deploy upgradable gateway contract and return its address
+func deployGatewayContract(
+	t *testing.T,
+	ctx sdk.Context,
+	k *fungiblekeeper.Keeper,
+	evmk *evmkeeper.Keeper,
+	wzeta, admin common.Address,
+) common.Address {
+	// Deploy the gateway contract
+	implAddr, err := k.DeployContract(ctx, gatewayzevm.GatewayZEVMMetaData)
+	require.NoError(t, err)
+	require.NotEmpty(t, implAddr)
+	assertContractDeployment(t, evmk, ctx, implAddr)
+
+	// Deploy the proxy contract
+	gatewayABI, err := gatewayzevm.GatewayZEVMMetaData.GetAbi()
+	require.NoError(t, err)
+
+	// Encode the initializer data
+	initializerData, err := gatewayABI.Pack("initialize", wzeta, admin)
+	require.NoError(t, err)
+
+	gatewayContract, err := k.DeployContract(ctx, erc1967proxy.ERC1967ProxyMetaData, implAddr, initializerData)
+	require.NoError(t, err)
+	require.NotEmpty(t, gatewayContract)
+	assertContractDeployment(t, evmk, ctx, gatewayContract)
+
+	// store the gateway in the system contract object
+	sys, found := k.GetSystemContract(ctx)
+	if !found {
+		sys = fungibletypes.SystemContract{}
+	}
+	sys.Gateway = gatewayContract.Hex()
+	k.SetSystemContract(ctx, sys)
+
+	return gatewayContract
+}
+
 // deploySystemContracts deploys the system contracts and returns their addresses.
 func deploySystemContracts(
 	t *testing.T,
@@ -100,6 +141,10 @@ func deploySystemContracts(
 	require.NoError(t, err)
 	require.NotEmpty(t, systemContract)
 	assertContractDeployment(t, evmk, ctx, systemContract)
+
+	// deploy the gateway contract
+	contract := deployGatewayContract(t, ctx, k, evmk, wzeta, sample.EthAddress())
+	require.NotEmpty(t, contract)
 
 	return
 }

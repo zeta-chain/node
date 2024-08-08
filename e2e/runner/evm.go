@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -162,6 +163,22 @@ func (r *E2ERunner) SendEther(_ ethcommon.Address, value *big.Int, data []byte) 
 	}
 
 	return signedTx, nil
+}
+
+// ApproveERC20 approves ERC20 on EVM to a specific address
+// check if allowance is zero before calling this method
+// allow a high amount to avoid multiple approvals
+func (r *E2ERunner) ApproveERC20(allowed ethcommon.Address) {
+	allowance, err := r.ERC20.Allowance(&bind.CallOpts{}, r.Account.EVMAddress(), r.GatewayEVMAddr)
+	require.NoError(r, err)
+
+	// approve 1M*1e18 if allowance is zero
+	if allowance.Cmp(big.NewInt(0)) == 0 {
+		tx, err := r.ERC20.Approve(r.EVMAuth, allowed, big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1000000)))
+		require.NoError(r, err)
+		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+		require.True(r, receipt.Status == 1, "approval failed")
+	}
 }
 
 // AnvilMineBlocks mines blocks on Anvil localnet

@@ -22,13 +22,7 @@ func (r *E2ERunner) V2ETHDeposit(receiver ethcommon.Address, amount *big.Int) *e
 	tx, err := r.GatewayEVM.Deposit(r.EVMAuth, receiver)
 	require.NoError(r, err)
 
-	r.Logger.EVMTransaction(*tx, "eth_deposit")
-
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	r.requireTxSuccessful(receipt, "eth_deposit failed")
-
-	r.Logger.EVMReceipt(*receipt, "eth_deposit")
-	r.Logger.GatewayDeposit(r.GatewayEVM, *receipt, "eth_deposit")
+	logDepositInfoAndWaitForTxReceipt(r, tx, "eth_deposit")
 
 	return tx
 }
@@ -49,6 +43,8 @@ func (r *E2ERunner) V2ETHDepositAndCall(
 	tx, err := r.GatewayEVM.DepositAndCall(r.EVMAuth, receiver, payload)
 	require.NoError(r, err)
 
+	logDepositInfoAndWaitForTxReceipt(r, tx, "eth_deposit_and_call")
+
 	return tx
 }
 
@@ -56,6 +52,8 @@ func (r *E2ERunner) V2ETHDepositAndCall(
 func (r *E2ERunner) V2ERC20Deposit(receiver ethcommon.Address, amount *big.Int) *ethtypes.Transaction {
 	tx, err := r.GatewayEVM.Deposit0(r.EVMAuth, receiver, amount, r.ERC20Addr)
 	require.NoError(r, err)
+
+	logDepositInfoAndWaitForTxReceipt(r, tx, "erc20_deposit")
 
 	return tx
 }
@@ -69,6 +67,8 @@ func (r *E2ERunner) V2ERC20DepositAndCall(
 	tx, err := r.GatewayEVM.DepositAndCall0(r.EVMAuth, receiver, amount, r.ERC20Addr, payload)
 	require.NoError(r, err)
 
+	logDepositInfoAndWaitForTxReceipt(r, tx, "erc20_deposit_and_call")
+
 	return tx
 }
 
@@ -78,4 +78,18 @@ func (r *E2ERunner) V2EVMToZEMVCall(receiver ethcommon.Address, payload []byte) 
 	require.NoError(r, err)
 
 	return tx
+}
+
+func logDepositInfoAndWaitForTxReceipt(
+	r *E2ERunner,
+	tx *ethtypes.Transaction,
+	name string,
+) {
+	r.Logger.EVMTransaction(*tx, name)
+
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+	r.requireTxSuccessful(receipt, name+" failed")
+
+	r.Logger.EVMReceipt(*receipt, name)
+	r.Logger.GatewayDeposit(r.GatewayEVM, *receipt, name)
 }

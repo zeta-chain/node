@@ -317,10 +317,10 @@ func (zts ZetaTxServer) UpdateGatewayAddress(account, gatewayAddr string) error 
 	return err
 }
 
-// DeploySystemContractsAndZRC20 deploys the system contracts and ZRC20 contracts
-// returns the addresses of uniswap factory, router and erc20 zrc20
-func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
-	accountOperational, accountAdmin, erc20Addr string,
+// DeploySystemContracts deploys the system contracts
+// returns the addresses of uniswap factory, router
+func (zts ZetaTxServer) DeploySystemContracts(
+	accountOperational, accountAdmin string,
 ) (SystemContractAddresses, error) {
 	// retrieve account
 	accOperational, err := zts.clientCtx.Keyring.Key(accountOperational)
@@ -394,6 +394,37 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 		)
 	}
 
+	return SystemContractAddresses{
+		UniswapV2FactoryAddr: uniswapV2FactoryAddr,
+		UniswapV2RouterAddr:  uniswapV2RouterAddr,
+		ZEVMConnectorAddr:    zevmConnectorAddr,
+		WZETAAddr:            wzetaAddr,
+	}, nil
+}
+
+// DeployZRC20s deploys the ZRC20 contracts
+// returns the addresses of erc20 zrc20
+func (zts ZetaTxServer) DeployZRC20s(
+	accountOperational, accountAdmin, erc20Addr string,
+) (string, error) {
+	// retrieve account
+	accOperational, err := zts.clientCtx.Keyring.Key(accountOperational)
+	if err != nil {
+		return "", err
+	}
+	addrOperational, err := accOperational.GetAddress()
+	if err != nil {
+		return "", err
+	}
+	accAdmin, err := zts.clientCtx.Keyring.Key(accountAdmin)
+	if err != nil {
+		return "", err
+	}
+	addrAdmin, err := accAdmin.GetAddress()
+	if err != nil {
+		return "", err
+	}
+
 	// authorization for deploying new ZRC20 has changed from accountOperational to accountAdmin in v19
 	// we use this query to check the current authorization for the message
 	// if pre v19 the query is not implement and authorization is operational
@@ -401,7 +432,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 	deployerAddr := addrAdmin.String()
 	authorization, preV19, err := zts.fetchMessagePermissions(&fungibletypes.MsgDeployFungibleCoinZRC20{})
 	if err != nil {
-		return SystemContractAddresses{}, fmt.Errorf("failed to fetch message permissions: %s", err.Error())
+		return "", fmt.Errorf("failed to fetch message permissions: %s", err.Error())
 	}
 	if preV19 || authorization == authoritytypes.PolicyType_groupOperational {
 		deployerAccount = accountOperational
@@ -420,7 +451,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 		100000,
 	))
 	if err != nil {
-		return SystemContractAddresses{}, fmt.Errorf("failed to deploy eth zrc20: %s", err.Error())
+		return "", fmt.Errorf("failed to deploy eth zrc20: %s", err.Error())
 	}
 
 	// deploy btc zrc20
@@ -435,7 +466,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 		100000,
 	))
 	if err != nil {
-		return SystemContractAddresses{}, fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
+		return "", fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
 	}
 
 	// deploy sol zrc20
@@ -450,11 +481,11 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 		100000,
 	))
 	if err != nil {
-		return SystemContractAddresses{}, fmt.Errorf("failed to deploy sol zrc20: %s", err.Error())
+		return "", fmt.Errorf("failed to deploy sol zrc20: %s", err.Error())
 	}
 
 	// deploy erc20 zrc20
-	res, err = zts.BroadcastTx(deployerAccount, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+	res, err := zts.BroadcastTx(deployerAccount, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		deployerAddr,
 		erc20Addr,
 		chains.GoerliLocalnet.ChainId,
@@ -465,25 +496,19 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(
 		100000,
 	))
 	if err != nil {
-		return SystemContractAddresses{}, fmt.Errorf("failed to deploy erc20 zrc20: %s", err.Error())
+		return "", fmt.Errorf("failed to deploy erc20 zrc20: %s", err.Error())
 	}
 
 	// fetch the erc20 zrc20 contract address and remove the quotes
 	erc20zrc20Addr, err := FetchAttributeFromTxResponse(res, "Contract")
 	if err != nil {
-		return SystemContractAddresses{}, fmt.Errorf("failed to fetch erc20 zrc20 contract address: %s", err.Error())
+		return "", fmt.Errorf("failed to fetch erc20 zrc20 contract address: %s, %s", err.Error(), res.String())
 	}
 	if !ethcommon.IsHexAddress(erc20zrc20Addr) {
-		return SystemContractAddresses{}, fmt.Errorf("invalid address in event: %s", erc20zrc20Addr)
+		return "", fmt.Errorf("invalid address in event: %s", erc20zrc20Addr)
 	}
 
-	return SystemContractAddresses{
-		uniswapV2FactoryAddr,
-		uniswapV2RouterAddr,
-		zevmConnectorAddr,
-		wzetaAddr,
-		erc20zrc20Addr,
-	}, nil
+	return erc20zrc20Addr, nil
 }
 
 // FundEmissionsPool funds the emissions pool with the given amount

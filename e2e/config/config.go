@@ -117,6 +117,7 @@ type EVM struct {
 	TestDappAddr     DoubleQuotedString `yaml:"test_dapp"`
 	Gateway          DoubleQuotedString `yaml:"gateway"`
 	ERC20CustodyNew  DoubleQuotedString `yaml:"erc20_custody_new"`
+	TestDAppV2Addr   DoubleQuotedString `yaml:"test_dapp_v2"`
 }
 
 // ZEVM contains the addresses of predeployed contracts on the zEVM chain
@@ -134,6 +135,7 @@ type ZEVM struct {
 	ContextAppAddr     DoubleQuotedString `yaml:"context_app"`
 	TestDappAddr       DoubleQuotedString `yaml:"test_dapp"`
 	Gateway            DoubleQuotedString `yaml:"gateway"`
+	TestDAppV2Addr     DoubleQuotedString `yaml:"test_dapp_v2"`
 }
 
 // DefaultConfig returns the default config using values for localnet testing

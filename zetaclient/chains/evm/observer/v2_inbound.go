@@ -14,6 +14,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/constant"
+	"github.com/zeta-chain/zetacore/pkg/crypto"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
@@ -160,6 +161,12 @@ func (ob *Observer) checkEventProcessability(event *gatewayevm.GatewayEVMDeposit
 
 // newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
 func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposit) types.MsgVoteInbound {
+	// if event.Asset is zero, it's a native token
+	coinType := coin.CoinType_ERC20
+	if crypto.IsEmptyAddress(event.Asset) {
+		coinType = coin.CoinType_Gas
+	}
+
 	return *types.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		event.Sender.Hex(),
@@ -172,8 +179,8 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposit) t
 		event.Raw.TxHash.Hex(),
 		event.Raw.BlockNumber,
 		1_500_000,
-		coin.CoinType_Gas,
-		"",
+		coinType,
+		event.Asset.Hex(),
 		event.Raw.Index,
 		types.ProtocolContractVersion_V2,
 	)

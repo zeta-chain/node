@@ -11,9 +11,9 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/wzeta.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zetaconnectorzevm.sol"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/e2e/contracts/testdapp"
@@ -65,8 +65,8 @@ func (r *E2ERunner) SetTSSAddresses() error {
 	return nil
 }
 
-// SetZEVMContracts set contracts for the ZEVM
-func (r *E2ERunner) SetZEVMContracts() {
+// SetZEVMSystemContracts set system contracts for the ZEVM
+func (r *E2ERunner) SetZEVMSystemContracts() {
 	r.Logger.Print("⚙️ deploying system contracts and ZRC20s on ZEVM")
 	startTime := time.Now()
 	defer func() {
@@ -74,16 +74,10 @@ func (r *E2ERunner) SetZEVMContracts() {
 	}()
 
 	// deploy system contracts and ZRC20 contracts on ZetaChain
-	addresses, err := r.ZetaTxServer.DeploySystemContractsAndZRC20(
+	addresses, err := r.ZetaTxServer.DeploySystemContracts(
 		e2eutils.OperationalPolicyName,
 		e2eutils.AdminPolicyName,
-		r.ERC20Addr.Hex(),
 	)
-	require.NoError(r, err)
-
-	// Set ERC20ZRC20Addr
-	r.ERC20ZRC20Addr = ethcommon.HexToAddress(addresses.ERC20zrc20Addr)
-	r.ERC20ZRC20, err = zrc20.NewZRC20(r.ERC20ZRC20Addr, r.ZEVMClient)
 	require.NoError(r, err)
 
 	// UniswapV2FactoryAddr
@@ -122,11 +116,6 @@ func (r *E2ERunner) SetZEVMContracts() {
 
 	r.SystemContract = systemContract
 	r.SystemContractAddr = systemContractAddr
-
-	// set ZRC20 contracts
-	r.SetupETHZRC20()
-	r.SetupBTCZRC20()
-	r.SetupSOLZRC20()
 
 	// deploy TestDApp contract on zEVM
 	appAddr, txApp, _, err := testdapp.DeployTestDApp(
@@ -175,6 +164,33 @@ func (r *E2ERunner) SetZEVMContracts() {
 
 	r.ContextAppAddr = contextAppAddr
 	r.ContextApp = contextApp
+}
+
+// SetZEVMZRC20s set ZRC20 for the ZEVM
+func (r *E2ERunner) SetZEVMZRC20s() {
+	r.Logger.Print("⚙️ deploying system contracts and ZRC20s on ZEVM")
+	startTime := time.Now()
+	defer func() {
+		r.Logger.Info("System contract deployments took %s\n", time.Since(startTime))
+	}()
+
+	// deploy system contracts and ZRC20 contracts on ZetaChain
+	erc20zrc20Addr, err := r.ZetaTxServer.DeployZRC20s(
+		e2eutils.OperationalPolicyName,
+		e2eutils.AdminPolicyName,
+		r.ERC20Addr.Hex(),
+	)
+	require.NoError(r, err)
+
+	// Set ERC20ZRC20Addr
+	r.ERC20ZRC20Addr = ethcommon.HexToAddress(erc20zrc20Addr)
+	r.ERC20ZRC20, err = zrc20.NewZRC20(r.ERC20ZRC20Addr, r.ZEVMClient)
+	require.NoError(r, err)
+
+	// set ZRC20 contracts
+	r.SetupETHZRC20()
+	r.SetupBTCZRC20()
+	r.SetupSOLZRC20()
 }
 
 // SetupETHZRC20 sets up the ETH ZRC20 in the runner from the values queried from the chain

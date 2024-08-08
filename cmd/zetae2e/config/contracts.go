@@ -10,18 +10,19 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/wzeta.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zetaconnectorzevm.sol"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
 	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
 )
 
 // setContractsFromConfig get EVM contracts from config
@@ -238,12 +239,34 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		}
 	}
 
+	if c := conf.Contracts.EVM.TestDAppV2Addr; c != "" {
+		r.TestDAppV2EVMAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid TestDAppV2Addr: %w", err)
+		}
+		r.TestDAppV2EVM, err = testdappv2.NewTestDAppV2(r.TestDAppV2EVMAddr, r.EVMClient)
+		if err != nil {
+			return err
+		}
+	}
+
 	if c := conf.Contracts.ZEVM.Gateway; c != "" {
 		r.GatewayZEVMAddr, err = c.AsEVMAddress()
 		if err != nil {
 			return fmt.Errorf("invalid GatewayAddr: %w", err)
 		}
 		r.GatewayZEVM, err = gatewayzevm.NewGatewayZEVM(r.GatewayZEVMAddr, r.ZEVMClient)
+		if err != nil {
+			return err
+		}
+	}
+
+	if c := conf.Contracts.ZEVM.TestDAppV2Addr; c != "" {
+		r.TestDAppV2ZEVMAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid TestDAppV2Addr: %w", err)
+		}
+		r.TestDAppV2ZEVM, err = testdappv2.NewTestDAppV2(r.TestDAppV2ZEVMAddr, r.EVMClient)
 		if err != nil {
 			return err
 		}

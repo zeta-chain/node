@@ -10,11 +10,8 @@ import (
 	ethchains "github.com/ethereum/go-ethereum/common"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	solanacontracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
-)
-
-const (
-	zeroAddress = "0x0000000000000000000000000000000000000000"
 )
 
 var (
@@ -161,9 +158,9 @@ func GetDefaultEthMainnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.Ethereum.ChainId,
 		ConfirmationCount:           14,
-		ZetaTokenContractAddress:    zeroAddress,
-		ConnectorContractAddress:    zeroAddress,
-		Erc20CustodyContractAddress: zeroAddress,
+		ZetaTokenContractAddress:    constant.EVMZeroAddress,
+		ConnectorContractAddress:    constant.EVMZeroAddress,
+		Erc20CustodyContractAddress: constant.EVMZeroAddress,
 		InboundTicker:               12,
 		OutboundTicker:              15,
 		WatchUtxoTicker:             0,
@@ -179,9 +176,9 @@ func GetDefaultBscMainnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.BscMainnet.ChainId,
 		ConfirmationCount:           14,
-		ZetaTokenContractAddress:    zeroAddress,
-		ConnectorContractAddress:    zeroAddress,
-		Erc20CustodyContractAddress: zeroAddress,
+		ZetaTokenContractAddress:    constant.EVMZeroAddress,
+		ConnectorContractAddress:    constant.EVMZeroAddress,
+		Erc20CustodyContractAddress: constant.EVMZeroAddress,
 		InboundTicker:               5,
 		OutboundTicker:              15,
 		WatchUtxoTicker:             0,
@@ -197,9 +194,9 @@ func GetDefaultBtcMainnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.BitcoinMainnet.ChainId,
 		ConfirmationCount:           2,
-		ZetaTokenContractAddress:    zeroAddress,
-		ConnectorContractAddress:    zeroAddress,
-		Erc20CustodyContractAddress: zeroAddress,
+		ZetaTokenContractAddress:    constant.EVMZeroAddress,
+		ConnectorContractAddress:    constant.EVMZeroAddress,
+		Erc20CustodyContractAddress: constant.EVMZeroAddress,
 		WatchUtxoTicker:             30,
 		InboundTicker:               120,
 		OutboundTicker:              60,
@@ -217,8 +214,8 @@ func GetDefaultGoerliTestnetChainParams() *ChainParams {
 		ConfirmationCount: 6,
 		// This is the actual Zeta token Goerli testnet, we need to specify this address for the integration tests to pass
 		ZetaTokenContractAddress:    "0x0000c304d2934c00db1d51995b9f6996affd17c0",
-		ConnectorContractAddress:    zeroAddress,
-		Erc20CustodyContractAddress: zeroAddress,
+		ConnectorContractAddress:    constant.EVMZeroAddress,
+		Erc20CustodyContractAddress: constant.EVMZeroAddress,
 		InboundTicker:               12,
 		OutboundTicker:              15,
 		WatchUtxoTicker:             0,
@@ -234,9 +231,9 @@ func GetDefaultBscTestnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.BscTestnet.ChainId,
 		ConfirmationCount:           6,
-		ZetaTokenContractAddress:    zeroAddress,
-		ConnectorContractAddress:    zeroAddress,
-		Erc20CustodyContractAddress: zeroAddress,
+		ZetaTokenContractAddress:    constant.EVMZeroAddress,
+		ConnectorContractAddress:    constant.EVMZeroAddress,
+		Erc20CustodyContractAddress: constant.EVMZeroAddress,
 		InboundTicker:               5,
 		OutboundTicker:              15,
 		WatchUtxoTicker:             0,
@@ -252,9 +249,9 @@ func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.Mumbai.ChainId,
 		ConfirmationCount:           12,
-		ZetaTokenContractAddress:    zeroAddress,
-		ConnectorContractAddress:    zeroAddress,
-		Erc20CustodyContractAddress: zeroAddress,
+		ZetaTokenContractAddress:    constant.EVMZeroAddress,
+		ConnectorContractAddress:    constant.EVMZeroAddress,
+		Erc20CustodyContractAddress: constant.EVMZeroAddress,
 		InboundTicker:               2,
 		OutboundTicker:              15,
 		WatchUtxoTicker:             0,
@@ -270,9 +267,9 @@ func GetDefaultBtcTestnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.BitcoinTestnet.ChainId,
 		ConfirmationCount:           2,
-		ZetaTokenContractAddress:    zeroAddress,
-		ConnectorContractAddress:    zeroAddress,
-		Erc20CustodyContractAddress: zeroAddress,
+		ZetaTokenContractAddress:    constant.EVMZeroAddress,
+		ConnectorContractAddress:    constant.EVMZeroAddress,
+		Erc20CustodyContractAddress: constant.EVMZeroAddress,
 		WatchUtxoTicker:             30,
 		InboundTicker:               120,
 		OutboundTicker:              12,
@@ -288,9 +285,9 @@ func GetDefaultBtcRegtestChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.BitcoinRegtest.ChainId,
 		ConfirmationCount:           1,
-		ZetaTokenContractAddress:    zeroAddress,
-		ConnectorContractAddress:    zeroAddress,
-		Erc20CustodyContractAddress: zeroAddress,
+		ZetaTokenContractAddress:    constant.EVMZeroAddress,
+		ConnectorContractAddress:    constant.EVMZeroAddress,
+		Erc20CustodyContractAddress: constant.EVMZeroAddress,
 		GasPriceTicker:              5,
 		WatchUtxoTicker:             1,
 		InboundTicker:               1,
@@ -306,9 +303,9 @@ func GetDefaultSolanaLocalnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.SolanaLocalnet.ChainId,
 		ConfirmationCount:           32,
-		ZetaTokenContractAddress:    zeroAddress,
-		ConnectorContractAddress:    zeroAddress,
-		Erc20CustodyContractAddress: zeroAddress,
+		ZetaTokenContractAddress:    constant.EVMZeroAddress,
+		ConnectorContractAddress:    constant.EVMZeroAddress,
+		Erc20CustodyContractAddress: constant.EVMZeroAddress,
 		GasPriceTicker:              5,
 		WatchUtxoTicker:             0,
 		InboundTicker:               2,
@@ -344,9 +341,9 @@ func GetDefaultZetaPrivnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.ZetaChainPrivnet.ChainId,
 		ConfirmationCount:           1,
-		ZetaTokenContractAddress:    zeroAddress,
-		ConnectorContractAddress:    zeroAddress,
-		Erc20CustodyContractAddress: zeroAddress,
+		ZetaTokenContractAddress:    constant.EVMZeroAddress,
+		ConnectorContractAddress:    constant.EVMZeroAddress,
+		Erc20CustodyContractAddress: constant.EVMZeroAddress,
 		InboundTicker:               2,
 		OutboundTicker:              2,
 		WatchUtxoTicker:             0,

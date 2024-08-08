@@ -23,9 +23,9 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/wzeta.sol"
 	zevmconnectorcontract "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zetaconnectorzevm.sol"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -46,15 +46,15 @@ var (
 func (k Keeper) DeployContract(
 	ctx sdk.Context,
 	metadata *bind.MetaData,
-	ctorArguments ...interface{},
+	constructorArguments ...interface{},
 ) (common.Address, error) {
 	contractABI, err := metadata.GetAbi()
 	if err != nil {
 		return common.Address{}, cosmoserrors.Wrapf(types.ErrABIGet, "failed to get  ABI: %s", err.Error())
 	}
-	ctorArgs, err := contractABI.Pack(
-		"",               // function--empty string for constructor
-		ctorArguments..., // feeToSetter
+	constructorArgumentsPacked, err := contractABI.Pack(
+		"",                      // function--empty string for constructor
+		constructorArguments..., // feeToSetter
 	)
 	if err != nil {
 		return common.Address{}, cosmoserrors.Wrapf(
@@ -78,9 +78,9 @@ func (k Keeper) DeployContract(
 		)
 	}
 
-	data := make([]byte, len(bin)+len(ctorArgs))
+	data := make([]byte, len(bin)+len(constructorArgumentsPacked))
 	copy(data[:len(bin)], bin)
-	copy(data[len(bin):], ctorArgs)
+	copy(data[len(bin):], constructorArgumentsPacked)
 
 	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
 	if err != nil {
@@ -125,7 +125,9 @@ func (k Keeper) DeployZRC20Contract(
 	if !found {
 		return common.Address{}, cosmoserrors.Wrapf(types.ErrSystemContractNotFound, "system contract not found")
 	}
-	contractAddr, err := k.DeployContract(ctx, zrc20.ZRC20MetaData,
+	contractAddr, err := k.DeployContract(
+		ctx,
+		zrc20.ZRC20MetaData,
 		name,                      // name
 		symbol,                    // symbol
 		decimals,                  // decimals
@@ -134,6 +136,7 @@ func (k Keeper) DeployZRC20Contract(
 		uint8(coinType), // coinType: 0: Zeta 1: gas 2 ERC20
 		gasLimit,        //gas limit for transfer; 21k for gas asset; around 70k for ERC20
 		common.HexToAddress(system.SystemContract),
+		common.HexToAddress(system.Gateway),
 	)
 	if err != nil {
 		return common.Address{}, cosmoserrors.Wrapf(

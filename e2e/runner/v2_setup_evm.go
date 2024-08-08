@@ -9,9 +9,10 @@ import (
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
-	"github.com/zeta-chain/zetacore/e2e/contracts/erc1967proxy"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/constant"
+	"github.com/zeta-chain/zetacore/pkg/contracts/erc1967proxy"
+	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
 )
 
 // SetupEVMV2 setup contracts on EVM with v2 contracts
@@ -85,8 +86,17 @@ func (r *E2ERunner) SetupEVMV2() {
 	txSetCustody, err := r.GatewayEVM.SetCustody(r.EVMAuth, erc20CustodyNewAddr)
 	require.NoError(r, err)
 
+	// deploy test dapp v2
+	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.EVMAuth, r.EVMClient)
+	require.NoError(r, err)
+
+	r.TestDAppV2EVMAddr = testDAppV2Addr
+	r.TestDAppV2EVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.EVMClient)
+	require.NoError(r, err)
+
 	// check contract deployment receipt
 	ensureTxReceipt(txDonation, "EVM donation tx failed")
 	ensureTxReceipt(txProxy, "Gateway proxy deployment failed")
 	ensureTxReceipt(txSetCustody, "Set custody in Gateway failed")
+	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
 }
