@@ -25,8 +25,8 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	// if the tx fails due to already initialized, it will be ignored
 	_, err := r.UniswapV2Factory.CreatePair(r.ZEVMAuth, r.ERC20ZRC20Addr, r.BTCZRC20Addr)
 	if err != nil {
-		time.Sleep(3 * time.Second)
-		r.Logger.Print("ℹ️create pair error")
+		r.Logger.Print("ℹ️ create pair error")
+		time.Sleep(3 * time.Second) // wait for sometime so that the
 	}
 
 	txERC20ZRC20Approve, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
@@ -144,10 +144,8 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		r.Logger.Info("memo length %d", len(memo))
 
 		amount := 0.1
-
-		txid := &chainhash.Hash{}
 		utxos, err = r.ListDeployerUTXOs()
-		txid, err = r.SendToTSSFromDeployerWithMemo(amount, utxos[0:1], memo)
+		txid, err := r.SendToTSSFromDeployerWithMemo(amount, utxos[0:1], memo)
 		require.NoError(r, err)
 
 		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txid.String(), r.CctxClient, r.Logger, r.CctxTimeout)

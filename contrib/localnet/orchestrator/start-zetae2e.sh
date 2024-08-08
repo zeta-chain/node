@@ -90,8 +90,11 @@ geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: w
 address=$(yq -r '.additional_accounts.user_migration.evm_address' config.yml)
 echo "funding migration tester address ${address} with 10000 Ether"
 geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+### Run zetae2e command depending on the option passed
 
-
+# Mode migrate is used to run the e2e tests before and after the TSS migration
+# It runs the e2e tests with the migrate flag which triggers a TSS migration at the end of the tests. Once the migrationis done the first e2e test is complete
+# The second e2e test is run after the migration to ensure the network is still working as expected with the new tss address
 if [ "$LOCALNET_MODE" == "migrate" ]; then
   if [[ ! -f deployed.yml ]]; then
     zetae2e local $E2E_ARGS --setup-only --config config.yml --config-out deployed.yml --skip-header-proof
@@ -104,8 +107,6 @@ if [ "$LOCALNET_MODE" == "migrate" ]; then
   fi
 
   echo "running e2e test before migrating TSS"
-
-  # Use light flag to ensure tests can complete before the upgrade height
   zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --skip-header-proof
   if [ $? -ne 0 ]; then
     echo "first e2e failed"
@@ -116,7 +117,6 @@ if [ "$LOCALNET_MODE" == "migrate" ]; then
     sleep 10
 
   zetae2e local --skip-setup --config deployed.yml --skip-bitcoin-setup --light --skip-header-proof
-
   ZETAE2E_EXIT_CODE=$?
   if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
     echo "E2E passed after migration"
@@ -128,8 +128,9 @@ if [ "$LOCALNET_MODE" == "migrate" ]; then
 fi
 
 
-### Run zetae2e command depending on the option passed
-
+# Mode upgrade is used to run the e2e tests before and after the upgrade
+# It runs the e2e tests , waits for the upgrade height to be reached, and then runs the e2e tests again once the ungrade is done.
+# The second e2e test is run after the upgrade to ensure the network is still working as expected with the new version
 if [ "$LOCALNET_MODE" == "upgrade" ]; then
 
   # Run the e2e tests, then restart zetaclientd at upgrade height and run the e2e tests again
@@ -162,7 +163,6 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   echo "Waiting for upgrade height..."
 
   OLD_VERSION=$(get_zetacored_version)
-
   CURRENT_HEIGHT=0
   WAIT_HEIGHT=$(( UPGRADE_HEIGHT - 1 ))
   # wait for upgrade height
@@ -209,8 +209,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   fi
 
 else
-
-  # Run the e2e tests normally
+  # If no mode is passed, run the e2e tests normally
   echo "running e2e setup..."
 
   if [[ ! -f deployed.yml ]]; then

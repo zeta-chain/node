@@ -421,10 +421,10 @@ func runTSSMigration(deployerRunner *runner.E2ERunner, logger *runner.Logger, ve
 	// Generate new TSS
 	waitKeygenHeight(deployerRunner.Ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0)
 
-	// migration test is a blocking thread, we cannot run other tests in parallel
-	// The migration test migrates funds to a new TSS and then updates the TSS address on zetacore.
-	// The necessary restarts are done by the zetaclient supervisor
-	fn := migrationTestRoutine(conf, deployerRunner, verbose, e2etests.TestMigrateTSSName)
+	// Run migration
+	// migrationRoutine runs migration e2e test , which migrates funds from the older TSS to the new one
+	// The zetaclient restarts required for this process are managed by the background workers in zetaclient (TSSListener)
+	fn := migrationRoutine(conf, deployerRunner, verbose, e2etests.TestMigrateTSSName)
 
 	if err := fn(); err != nil {
 		logger.Print("❌ %v", err)
