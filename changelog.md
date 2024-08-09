@@ -13,6 +13,10 @@
 
 * [2615](https://github.com/zeta-chain/node/pull/2615) - Refactor cleanup of outbound trackers
 
+### Fixes
+
+* [2672](https://github.com/zeta-chain/node/pull/2672) - check observer set for duplicates when adding a new observer or updating an existing one
+
 ## v19.0.0
 
 ### Breaking Changes

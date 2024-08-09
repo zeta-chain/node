@@ -37,6 +37,7 @@ func (k Keeper) IsAddressPartOfObserverSet(ctx sdk.Context, address string) bool
 	return false
 }
 
+// AddObserverToSet adds an observer to the observer set.It makes sure the updated observer set is valid.
 func (k Keeper) AddObserverToSet(ctx sdk.Context, address string) error {
 	observerSet, found := k.GetObserverSet(ctx)
 	switch {
@@ -55,6 +56,7 @@ func (k Keeper) AddObserverToSet(ctx sdk.Context, address string) error {
 	return nil
 }
 
+// RemoveObserverFromSet removes an observer from the observer set.
 func (k Keeper) RemoveObserverFromSet(ctx sdk.Context, address string) {
 	observerSet, found := k.GetObserverSet(ctx)
 	if !found {
@@ -69,6 +71,7 @@ func (k Keeper) RemoveObserverFromSet(ctx sdk.Context, address string) {
 	}
 }
 
+// UpdateObserverAddress updates an observer address in the observer set.It makes sure the updated observer set is valid.
 func (k Keeper) UpdateObserverAddress(ctx sdk.Context, oldObserverAddress, newObserverAddress string) error {
 	observerSet, found := k.GetObserverSet(ctx)
 	if !found {

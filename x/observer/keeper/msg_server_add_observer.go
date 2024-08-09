@@ -52,6 +52,7 @@ func (k msgServer) AddObserver(
 		return &types.MsgAddObserverResponse{}, nil
 	}
 
+	// Add observer to the observer set
 	err = k.AddObserverToSet(ctx, msg.ObserverAddress)
 	if err != nil {
 		return &types.MsgAddObserverResponse{}, err
@@ -59,6 +60,7 @@ func (k msgServer) AddObserver(
 	observerSet, _ := k.GetObserverSet(ctx)
 
 	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: observerSet.LenUint()})
+
 	EmitEventAddObserver(
 		ctx,
 		observerSet.LenUint(),
