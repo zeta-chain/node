@@ -39,13 +39,14 @@ func (k Keeper) IsAddressPartOfObserverSet(ctx sdk.Context, address string) bool
 
 func (k Keeper) AddObserverToSet(ctx sdk.Context, address string) error {
 	observerSet, found := k.GetObserverSet(ctx)
-	if !found {
-		k.SetObserverSet(ctx, types.ObserverSet{
+	switch {
+	case !found:
+		observerSet = types.ObserverSet{
 			ObserverList: []string{address},
-		})
-		return nil
+		}
+	default:
+		observerSet.ObserverList = append(observerSet.ObserverList, address)
 	}
-	observerSet.ObserverList = append(observerSet.ObserverList, address)
 	err := observerSet.Validate()
 	if err != nil {
 		return err

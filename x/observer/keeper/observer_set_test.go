@@ -52,18 +52,16 @@ func TestKeeper_AddObserverToSet(t *testing.T) {
 	t.Run("add observer to set if set doesn't exist", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		newObserver := sample.AccAddress()
-		k.AddObserverToSet(ctx, newObserver)
+		err := k.AddObserverToSet(ctx, newObserver)
+		require.NoError(t, err)
 		require.True(t, k.IsAddressPartOfObserverSet(ctx, newObserver))
 		osNew, found := k.GetObserverSet(ctx)
 		require.True(t, found)
 		require.Len(t, osNew.ObserverList, 1)
 
-		// add same address again, len doesn't change
-		k.AddObserverToSet(ctx, newObserver)
-		require.True(t, k.IsAddressPartOfObserverSet(ctx, newObserver))
-		osNew, found = k.GetObserverSet(ctx)
-		require.True(t, found)
-		require.Len(t, osNew.ObserverList, 1)
+		// cannot add same address again
+		err = k.AddObserverToSet(ctx, newObserver)
+		require.ErrorIs(t, err, types.ErrDuplicateObserver)
 	})
 }
 
