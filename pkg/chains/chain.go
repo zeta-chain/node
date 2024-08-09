@@ -147,6 +147,12 @@ func (chain Chain) IsEmpty() bool {
 	return strings.TrimSpace(chain.String()) == ""
 }
 
+// GetNetworkName returns the network name from the network ID
+func GetNetworkName(network int32) (string, bool) {
+	name, found := Network_name[network]
+	return name, found
+}
+
 // GetChainFromChainID returns the chain from the chain ID
 // additionalChains is a list of additional chains to search from
 // in practice, it is used in the protocol to dynamically support new chains without doing an upgrade

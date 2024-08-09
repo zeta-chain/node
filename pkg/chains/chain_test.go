@@ -396,11 +396,19 @@ func TestChain_IsEmpty(t *testing.T) {
 	require.False(t, chains.ZetaChainMainnet.IsEmpty())
 }
 
+func TestGetNetworkName(t *testing.T) {
+	network := int32(chains.Network_solana)
+	name, found := chains.GetNetworkName(network)
+	nameExpected, foundExpected := chains.Network_name[network]
+	require.Equal(t, nameExpected, name)
+	require.Equal(t, foundExpected, found)
+}
+
 func TestGetChainFromChainID(t *testing.T) {
 	chain, found := chains.GetChainFromChainID(chains.ZetaChainMainnet.ChainId, []chains.Chain{})
 	require.EqualValues(t, chains.ZetaChainMainnet, chain)
 	require.True(t, found)
-	chain, found = chains.GetChainFromChainID(9999, []chains.Chain{})
+	_, found = chains.GetChainFromChainID(9999, []chains.Chain{})
 	require.False(t, found)
 }
 
