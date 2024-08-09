@@ -66,6 +66,10 @@ const (
 	// [signature, token, destination]
 	TopicsRevertedWithERC20 = 3
 
+	// TopicsERC20CustodyWithdraw is the number of topics for an ERC20 custody withdraw event
+	// [signature, recipient, asset]
+	TopicsERC20CustodyWithdraw = 3
+
 	// TopicsERC20CustodyWithdrawAndCall is the number of topics for an ERC20 custody withdraw and call event
 	// [signature, recipient, asset]
 	TopicsERC20CustodyWithdrawAndCall = 3

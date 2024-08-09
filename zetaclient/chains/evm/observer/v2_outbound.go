@@ -36,12 +36,12 @@ func ParseOutboundEventV2(
 	case evm.OutboundTypeGasWithdraw:
 		// simple transfer, no need to parse event
 		return transaction.Value(), chains.ReceiveStatus_success, nil
-	//case evm.OutboundTypeERC20Withdraw:
-	//	return big.NewInt(0), chains.ReceiveStatus_failed, nil
+	case evm.OutboundTypeERC20Withdraw:
+		return ParseAndCheckERC20CustodyWithdraw(cctx, receipt, custodyAddr, custody)
 	case evm.OutboundTypeGasWithdrawAndCall:
 		return ParseAndCheckGatewayExecuted(cctx, receipt, gatewayAddr, gateway)
-		//case evm.OutboundTypeERC20WithdrawAndCall:
-		//	return big.NewInt(0), chains.ReceiveStatus_failed, nil
+	case evm.OutboundTypeERC20WithdrawAndCall:
+		return ParseAndCheckERC20CustodyWithdrawAndCall(cctx, receipt, custodyAddr, custody)
 	}
 	return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("unsupported outbound type %d", outboundType)
 }
@@ -82,6 +82,88 @@ func ParseAndCheckGatewayExecuted(
 	}
 
 	return big.NewInt(0), chains.ReceiveStatus_failed, errors.New("gateway execute event not found")
+}
+
+// ParseAndCheckERC20CustodyWithdraw parses and checks the ERC20 custody withdraw event
+func ParseAndCheckERC20CustodyWithdraw(
+	cctx *crosschaintypes.CrossChainTx,
+	receipt *ethtypes.Receipt,
+	custodyAddr ethcommon.Address,
+	custody *erc20custody.ERC20Custody,
+) (*big.Int, chains.ReceiveStatus, error) {
+	params := cctx.GetCurrentOutboundParam()
+
+	for _, vLog := range receipt.Logs {
+		withdrawn, err := custody.ERC20CustodyFilterer.ParseWithdraw(*vLog)
+		if err == nil {
+			// basic event check
+			if err := evm.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), evm.TopicsERC20CustodyWithdraw); err != nil {
+				return big.NewInt(0), chains.ReceiveStatus_failed, errors.Wrap(err, "failed to validate erc20 custody withdrawn event")
+			}
+			// destination
+			if !strings.EqualFold(withdrawn.To.Hex(), params.Receiver) {
+				return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("receiver address mismatch in event, want %s got %s",
+					params.Receiver, withdrawn.To.Hex())
+			}
+			// token
+			if !strings.EqualFold(withdrawn.Token.Hex(), cctx.InboundParams.Asset) {
+				return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("asset address mismatch in event, want %s got %s",
+					cctx.InboundParams.Asset, withdrawn.Token.Hex())
+			}
+			// amount
+			if withdrawn.Amount.Cmp(params.Amount.BigInt()) != 0 {
+				return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("amount mismatch in event, want %s got %s",
+					params.Amount.String(), withdrawn.Amount.String())
+			}
+
+			return withdrawn.Amount, chains.ReceiveStatus_success, nil
+		}
+	}
+
+	return big.NewInt(0), chains.ReceiveStatus_failed, errors.New("erc20 custody withdraw event not found")
+}
+
+// ParseAndCheckERC20CustodyWithdrawAndCall parses and checks the ERC20 custody withdraw and call event
+func ParseAndCheckERC20CustodyWithdrawAndCall(
+	cctx *crosschaintypes.CrossChainTx,
+	receipt *ethtypes.Receipt,
+	custodyAddr ethcommon.Address,
+	custody *erc20custody.ERC20Custody,
+) (*big.Int, chains.ReceiveStatus, error) {
+	params := cctx.GetCurrentOutboundParam()
+
+	for _, vLog := range receipt.Logs {
+		withdrawn, err := custody.ERC20CustodyFilterer.ParseWithdrawAndCall(*vLog)
+		if err == nil {
+			// basic event check
+			if err := evm.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), evm.TopicsERC20CustodyWithdrawAndCall); err != nil {
+				return big.NewInt(0), chains.ReceiveStatus_failed, errors.Wrap(err, "failed to validate erc20 custody withdraw and call event")
+			}
+			// destination
+			if !strings.EqualFold(withdrawn.To.Hex(), params.Receiver) {
+				return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("receiver address mismatch in event, want %s got %s",
+					params.Receiver, withdrawn.To.Hex())
+			}
+			// token
+			if !strings.EqualFold(withdrawn.Token.Hex(), cctx.InboundParams.Asset) {
+				return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("asset address mismatch in event, want %s got %s",
+					cctx.InboundParams.Asset, withdrawn.Token.Hex())
+			}
+			// amount
+			if withdrawn.Amount.Cmp(params.Amount.BigInt()) != 0 {
+				return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("amount mismatch in event, want %s got %s",
+					params.Amount.String(), withdrawn.Amount.String())
+			}
+			// data
+			if err := checkCCTXMessage(withdrawn.Data, cctx.RelayedMessage); err != nil {
+				return big.NewInt(0), chains.ReceiveStatus_failed, err
+			}
+
+			return withdrawn.Amount, chains.ReceiveStatus_success, nil
+		}
+	}
+
+	return big.NewInt(0), chains.ReceiveStatus_failed, errors.New("erc20 custody withdraw and call event not found")
 }
 
 // checkCCTXMessage checks the message of cctx with the emitted data of the event

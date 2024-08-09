@@ -235,11 +235,12 @@ func (signer *Signer) SignMigrateTssFundsCmd(ctx context.Context, txData *Outbou
 	return tx, nil
 }
 
-// SignGasWithdrawAndCall signs a gas withdrawal and call transaction
+// SignGatewayExecute signs a gateway execute
+// used for gas withdrawal and call transaction
 // function execute
 // address destination,
 // bytes calldata data
-func (signer *Signer) SignGasWithdrawAndCall(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignGatewayExecute(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 
@@ -270,13 +271,49 @@ func (signer *Signer) SignGasWithdrawAndCall(ctx context.Context, txData *Outbou
 	return tx, nil
 }
 
-// SignERC20WithdrawAndCall signs a gas withdrawal and call transaction
+// SignERC20CustodyWithdraw signs a erc20 withdrawal transaction
+// function withdrawAndCall
+// address token,
+// address to,
+// uint256 amount,
+func (signer *Signer) SignERC20CustodyWithdraw(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
+	var data []byte
+	var err error
+
+	erc20CustodyV2ABI, err := erc20custodyv2.ERC20CustodyMetaData.GetAbi()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get ERC20CustodyMetaData ABI")
+	}
+
+	data, err = erc20CustodyV2ABI.Pack("withdraw", txData.asset, txData.to, txData.amount)
+	if err != nil {
+		return nil, fmt.Errorf("withdraw pack error: %w", err)
+	}
+
+	tx, _, _, err := signer.Sign(
+		ctx,
+		data,
+		signer.er20CustodyAddress,
+		zeroValue,
+		txData.gasLimit,
+		txData.gasPrice,
+		txData.nonce,
+		txData.height,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("sign withdraw error: %w", err)
+	}
+
+	return tx, nil
+}
+
+// SignERC20CustodyWithdrawAndCall signs a erc20 withdrawal and call transaction
 // function withdrawAndCall
 // address token,
 // address to,
 // uint256 amount,
 // bytes calldata data
-func (signer *Signer) SignERC20WithdrawAndCall(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignERC20CustodyWithdrawAndCall(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 
@@ -301,7 +338,7 @@ func (signer *Signer) SignERC20WithdrawAndCall(ctx context.Context, txData *Outb
 		txData.height,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("sign withdraw error: %w", err)
+		return nil, fmt.Errorf("sign withdrawAndCall error: %w", err)
 	}
 
 	return tx, nil

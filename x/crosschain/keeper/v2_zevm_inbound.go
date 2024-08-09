@@ -119,11 +119,18 @@ func (k Keeper) newWithdrawalInbound(
 		return nil, errors.Wrapf(err, "cannot encode address %v", event.Receiver)
 	}
 
-	// TODO: emit gas limit in the withdrawal event
-	// https://github.com/zeta-chain/node/issues/2658
-	gasLimit, err := k.fungibleKeeper.QueryGasLimit(ctx, ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress))
-	if err != nil {
-		return nil, errors.Wrap(err, "cannot query gas limit")
+	// temporary hardcoded gas limit for withdraw and call
+	// TODO: use gas limit specified by user
+	// https://github.com/zeta-chain/node/issues/2668
+	gasLimit := uint64(1000000)
+
+	// for simple withdraw without call, we use the specified gas limit in the zrc20 contract
+	if len(event.Message) == 0 {
+		gasLimitQueried, err := k.fungibleKeeper.QueryGasLimit(ctx, ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress))
+		if err != nil {
+			return nil, errors.Wrap(err, "cannot query gas limit")
+		}
+		gasLimit = gasLimitQueried.Uint64()
 	}
 
 	return types.NewMsgVoteInbound(
@@ -137,7 +144,7 @@ func (k Keeper) newWithdrawalInbound(
 		hex.EncodeToString(event.Message),
 		event.Raw.TxHash.String(),
 		event.Raw.BlockNumber,
-		gasLimit.Uint64(),
+		gasLimit,
 		foreignCoin.CoinType,
 		foreignCoin.Asset,
 		event.Raw.Index,

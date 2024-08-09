@@ -120,7 +120,7 @@ func (k Keeper) validateFailedOutboundObservers(ctx sdk.Context, cctx *types.Cro
 	if cctx.InboundParams.CoinType == coin.CoinType_Cmd {
 		// if the cctx is of coin type cmd or the sender chain is zeta chain, then we do not revert, the cctx is aborted
 		cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
-		cctx.SetAbort("Outbound failed")
+		cctx.SetAbort("Outbound failed, cmd cctx reverted")
 	} else if chains.IsZetaChain(cctx.InboundParams.SenderChainId, k.GetAuthorityKeeper().GetAdditionalChainList(ctx)) {
 		switch cctx.InboundParams.CoinType {
 		// Try revert if the coin-type is ZETA
@@ -135,7 +135,7 @@ func (k Keeper) validateFailedOutboundObservers(ctx sdk.Context, cctx *types.Cro
 		default:
 			{
 				cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
-				cctx.SetAbort("Outbound failed")
+				cctx.SetAbort("Outbound failed for non-ZETA cctx")
 			}
 		}
 	} else {
