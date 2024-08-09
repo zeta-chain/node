@@ -165,92 +165,95 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		require.EqualValues(t, math.MaxInt64, newKeygen.BlockNumber)
 	})
 
-	t.Run("can create a new ballot, vote without finalizing, then add final vote to update keygen and set tss", func(t *testing.T) {
-		// ARRANGE
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
-		finalizingHeight := int64(55)
-		ctx = ctx.WithBlockHeight(finalizingHeight)
-		srv := keeper.NewMsgServerImpl(*k)
+	t.Run(
+		"can create a new ballot, vote without finalizing, then add final vote to update keygen and set tss",
+		func(t *testing.T) {
+			// ARRANGE
+			k, ctx, _, _ := keepertest.ObserverKeeper(t)
+			finalizingHeight := int64(55)
+			ctx = ctx.WithBlockHeight(finalizingHeight)
+			srv := keeper.NewMsgServerImpl(*k)
 
-		// setup state with 3 node accounts
-		nodeAcc1 := sample.NodeAccount()
-		nodeAcc2 := sample.NodeAccount()
-		nodeAcc3 := sample.NodeAccount()
-		keygen := sample.Keygen(t)
-		keygen.BlockNumber = 42
-		keygen.Status = types.KeygenStatus_PendingKeygen
-		tss := sample.Tss()
-		k.SetNodeAccount(ctx, *nodeAcc1)
-		k.SetNodeAccount(ctx, *nodeAcc2)
-		k.SetNodeAccount(ctx, *nodeAcc3)
-		k.SetKeygen(ctx, *keygen)
+			// setup state with 3 node accounts
+			nodeAcc1 := sample.NodeAccount()
+			nodeAcc2 := sample.NodeAccount()
+			nodeAcc3 := sample.NodeAccount()
+			keygen := sample.Keygen(t)
+			keygen.BlockNumber = 42
+			keygen.Status = types.KeygenStatus_PendingKeygen
+			tss := sample.Tss()
+			k.SetNodeAccount(ctx, *nodeAcc1)
+			k.SetNodeAccount(ctx, *nodeAcc2)
+			k.SetNodeAccount(ctx, *nodeAcc3)
+			k.SetKeygen(ctx, *keygen)
 
-		// ACT
-		// 1st vote: created ballot, but not finalized
-		res, err := srv.VoteTSS(ctx, &types.MsgVoteTSS{
-			Creator:          nodeAcc1.Operator,
-			TssPubkey:        tss.TssPubkey,
-			KeygenZetaHeight: 42,
-			Status:           chains.ReceiveStatus_success,
-		})
-		require.NoError(t, err)
+			// ACT
+			// 1st vote: created ballot, but not finalized
+			res, err := srv.VoteTSS(ctx, &types.MsgVoteTSS{
+				Creator:          nodeAcc1.Operator,
+				TssPubkey:        tss.TssPubkey,
+				KeygenZetaHeight: 42,
+				Status:           chains.ReceiveStatus_success,
+			})
+			require.NoError(t, err)
 
-		// check response
-		require.True(t, res.BallotCreated)
-		require.False(t, res.VoteFinalized)
-		require.False(t, res.KeygenSuccess)
+			// check response
+			require.True(t, res.BallotCreated)
+			require.False(t, res.VoteFinalized)
+			require.False(t, res.KeygenSuccess)
 
-		// check keygen not updated
-		newKeygen, found := k.GetKeygen(ctx)
-		require.True(t, found)
-		require.EqualValues(t, types.KeygenStatus_PendingKeygen, newKeygen.Status)
+			// check keygen not updated
+			newKeygen, found := k.GetKeygen(ctx)
+			require.True(t, found)
+			require.EqualValues(t, types.KeygenStatus_PendingKeygen, newKeygen.Status)
 
-		// 2nd vote: already created ballot, and not finalized
-		res, err = srv.VoteTSS(ctx, &types.MsgVoteTSS{
-			Creator:          nodeAcc2.Operator,
-			TssPubkey:        tss.TssPubkey,
-			KeygenZetaHeight: 42,
-			Status:           chains.ReceiveStatus_success,
-		})
-		require.NoError(t, err)
+			// 2nd vote: already created ballot, and not finalized
+			res, err = srv.VoteTSS(ctx, &types.MsgVoteTSS{
+				Creator:          nodeAcc2.Operator,
+				TssPubkey:        tss.TssPubkey,
+				KeygenZetaHeight: 42,
+				Status:           chains.ReceiveStatus_success,
+			})
+			require.NoError(t, err)
 
-		// check response
-		require.False(t, res.BallotCreated)
-		require.False(t, res.VoteFinalized)
-		require.False(t, res.KeygenSuccess)
+			// check response
+			require.False(t, res.BallotCreated)
+			require.False(t, res.VoteFinalized)
+			require.False(t, res.KeygenSuccess)
 
-		// check keygen not updated
-		newKeygen, found = k.GetKeygen(ctx)
-		require.True(t, found)
-		require.EqualValues(t, types.KeygenStatus_PendingKeygen, newKeygen.Status)
+			// check keygen not updated
+			newKeygen, found = k.GetKeygen(ctx)
+			require.True(t, found)
+			require.EqualValues(t, types.KeygenStatus_PendingKeygen, newKeygen.Status)
 
-		// 3rd vote: finalize the ballot
-		res, err = srv.VoteTSS(ctx, &types.MsgVoteTSS{
-			Creator:          nodeAcc3.Operator,
-			TssPubkey:        tss.TssPubkey,
-			KeygenZetaHeight: 42,
-			Status:           chains.ReceiveStatus_success,
-		})
-		require.NoError(t, err)
+			// 3rd vote: finalize the ballot
+			res, err = srv.VoteTSS(ctx, &types.MsgVoteTSS{
+				Creator:          nodeAcc3.Operator,
+				TssPubkey:        tss.TssPubkey,
+				KeygenZetaHeight: 42,
+				Status:           chains.ReceiveStatus_success,
+			})
+			require.NoError(t, err)
 
-		// ASSERT
-		// check response
-		require.False(t, res.BallotCreated)
-		require.True(t, res.VoteFinalized)
-		require.True(t, res.KeygenSuccess)
+			// ASSERT
+			// check response
+			require.False(t, res.BallotCreated)
+			require.True(t, res.VoteFinalized)
+			require.True(t, res.KeygenSuccess)
 
-		// check keygen updated
-		newKeygen, found = k.GetKeygen(ctx)
-		require.True(t, found)
-		require.EqualValues(t, types.KeygenStatus_KeyGenSuccess, newKeygen.Status)
-		require.EqualValues(t, ctx.BlockHeight(), newKeygen.BlockNumber)
+			// check keygen updated
+			newKeygen, found = k.GetKeygen(ctx)
+			require.True(t, found)
+			require.EqualValues(t, types.KeygenStatus_KeyGenSuccess, newKeygen.Status)
+			require.EqualValues(t, ctx.BlockHeight(), newKeygen.BlockNumber)
 
-		// check tss updated
-		tss, found = k.GetTSS(ctx)
-		require.True(t, found)
-		require.Equal(t, tss.KeyGenZetaHeight, int64(42))
-		require.Equal(t, tss.FinalizedZetaHeight, finalizingHeight)
-	})
+			// check tss updated
+			tss, found = k.GetTSS(ctx)
+			require.True(t, found)
+			require.Equal(t, tss.KeyGenZetaHeight, int64(42))
+			require.Equal(t, tss.FinalizedZetaHeight, finalizingHeight)
+		},
+	)
 
 	t.Run("fail if voting fails", func(t *testing.T) {
 		// ARRANGE

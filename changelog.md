@@ -16,6 +16,7 @@
 ### Fixes
 
 * [2654](https://github.com/zeta-chain/node/pull/2654) - add validation for authorization list in when validating genesis state for authorization module
+* [2674](https://github.com/zeta-chain/node/pull/2674) - allow operators to vote on ballots assosiated with discarded keygen without affecting the status of the current keygen.
 
 ## v19.0.0
 
