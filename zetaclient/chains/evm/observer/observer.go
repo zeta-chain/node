@@ -4,7 +4,6 @@ package observer
 import (
 	"context"
 	"fmt"
-	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
 	"math"
 	"math/big"
 	"strings"
@@ -18,6 +17,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zeta.non-eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
+	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/zetacore/pkg/bg"

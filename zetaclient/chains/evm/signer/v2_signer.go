@@ -3,7 +3,9 @@ package signer
 import (
 	"context"
 	"fmt"
+
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 )

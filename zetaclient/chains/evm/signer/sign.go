@@ -3,6 +3,7 @@ package signer
 import (
 	"context"
 	"fmt"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
@@ -10,6 +11,7 @@ import (
 	connectorevm "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.base.sol"
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
+
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 )
 
@@ -276,7 +278,10 @@ func (signer *Signer) SignGatewayExecute(ctx context.Context, txData *OutboundDa
 // address token,
 // address to,
 // uint256 amount,
-func (signer *Signer) SignERC20CustodyWithdraw(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignERC20CustodyWithdraw(
+	ctx context.Context,
+	txData *OutboundData,
+) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 
@@ -313,7 +318,10 @@ func (signer *Signer) SignERC20CustodyWithdraw(ctx context.Context, txData *Outb
 // address to,
 // uint256 amount,
 // bytes calldata data
-func (signer *Signer) SignERC20CustodyWithdrawAndCall(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignERC20CustodyWithdrawAndCall(
+	ctx context.Context,
+	txData *OutboundData,
+) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 

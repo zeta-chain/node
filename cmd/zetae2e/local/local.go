@@ -338,15 +338,18 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
 	}
 	if testV2 {
+		// update the ERC20 custody contract for v2 tests
+		deployerRunner.UpdateChainParamsERC20CustodyContract()
+
 		eg.Go(v2TestRoutine(conf, deployerRunner, verbose,
 			e2etests.TestV2ETHDepositName,
 			//e2etests.TestV2ETHDepositAndCallName,
 			//e2etests.TestV2ETHWithdrawName,
-			e2etests.TestV2ETHWithdrawAndCallName,
-			//e2etests.TestV2ERC20DepositName,
+			//e2etests.TestV2ETHWithdrawAndCallName,
+			e2etests.TestV2ERC20DepositName,
 			//e2etests.TestV2ERC20DepositAndCallName,
 			//e2etests.TestV2ERC20WithdrawName,
-			//e2etests.TestV2ERC20WithdrawAndCallName,
+			e2etests.TestV2ERC20WithdrawAndCallName,
 			//e2etests.TestV2ZEVMToEVMCallName,
 			//e2etests.TestV2EVMToZEVMCallName,
 		))

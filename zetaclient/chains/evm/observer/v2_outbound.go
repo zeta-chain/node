@@ -4,16 +4,18 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"math/big"
+	"strings"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
-	"math/big"
-	"strings"
 )
 
 // ParseOutboundEventV2 parses an event from an outbound with protocol contract v2
@@ -60,17 +62,32 @@ func ParseAndCheckGatewayExecuted(
 		if err == nil {
 			// basic event check
 			if err := evm.ValidateEvmTxLog(vLog, gatewayAddr, receipt.TxHash.Hex(), evm.TopicsGatewayExecuted); err != nil {
-				return big.NewInt(0), chains.ReceiveStatus_failed, errors.Wrap(err, "failed to validate gateway executed event")
+				return big.NewInt(
+						0,
+					), chains.ReceiveStatus_failed, errors.Wrap(
+						err,
+						"failed to validate gateway executed event",
+					)
 			}
 			// destination
 			if !strings.EqualFold(executed.Destination.Hex(), params.Receiver) {
-				return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("receiver address mismatch in event, want %s got %s",
-					params.Receiver, executed.Destination.Hex())
+				return big.NewInt(
+						0,
+					), chains.ReceiveStatus_failed, fmt.Errorf(
+						"receiver address mismatch in event, want %s got %s",
+						params.Receiver,
+						executed.Destination.Hex(),
+					)
 			}
 			// amount
 			if executed.Value.Cmp(params.Amount.BigInt()) != 0 {
-				return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("amount mismatch in event, want %s got %s",
-					params.Amount.String(), executed.Value.String())
+				return big.NewInt(
+						0,
+					), chains.ReceiveStatus_failed, fmt.Errorf(
+						"amount mismatch in event, want %s got %s",
+						params.Amount.String(),
+						executed.Value.String(),
+					)
 			}
 			// data
 			if err := checkCCTXMessage(executed.Data, cctx.RelayedMessage); err != nil {
@@ -98,22 +115,42 @@ func ParseAndCheckERC20CustodyWithdraw(
 		if err == nil {
 			// basic event check
 			if err := evm.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), evm.TopicsERC20CustodyWithdraw); err != nil {
-				return big.NewInt(0), chains.ReceiveStatus_failed, errors.Wrap(err, "failed to validate erc20 custody withdrawn event")
+				return big.NewInt(
+						0,
+					), chains.ReceiveStatus_failed, errors.Wrap(
+						err,
+						"failed to validate erc20 custody withdrawn event",
+					)
 			}
 			// destination
 			if !strings.EqualFold(withdrawn.To.Hex(), params.Receiver) {
-				return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("receiver address mismatch in event, want %s got %s",
-					params.Receiver, withdrawn.To.Hex())
+				return big.NewInt(
+						0,
+					), chains.ReceiveStatus_failed, fmt.Errorf(
+						"receiver address mismatch in event, want %s got %s",
+						params.Receiver,
+						withdrawn.To.Hex(),
+					)
 			}
 			// token
 			if !strings.EqualFold(withdrawn.Token.Hex(), cctx.InboundParams.Asset) {
-				return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("asset address mismatch in event, want %s got %s",
-					cctx.InboundParams.Asset, withdrawn.Token.Hex())
+				return big.NewInt(
+						0,
+					), chains.ReceiveStatus_failed, fmt.Errorf(
+						"asset address mismatch in event, want %s got %s",
+						cctx.InboundParams.Asset,
+						withdrawn.Token.Hex(),
+					)
 			}
 			// amount
 			if withdrawn.Amount.Cmp(params.Amount.BigInt()) != 0 {
-				return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("amount mismatch in event, want %s got %s",
-					params.Amount.String(), withdrawn.Amount.String())
+				return big.NewInt(
+						0,
+					), chains.ReceiveStatus_failed, fmt.Errorf(
+						"amount mismatch in event, want %s got %s",
+						params.Amount.String(),
+						withdrawn.Amount.String(),
+					)
 			}
 
 			return withdrawn.Amount, chains.ReceiveStatus_success, nil
@@ -137,22 +174,42 @@ func ParseAndCheckERC20CustodyWithdrawAndCall(
 		if err == nil {
 			// basic event check
 			if err := evm.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), evm.TopicsERC20CustodyWithdrawAndCall); err != nil {
-				return big.NewInt(0), chains.ReceiveStatus_failed, errors.Wrap(err, "failed to validate erc20 custody withdraw and call event")
+				return big.NewInt(
+						0,
+					), chains.ReceiveStatus_failed, errors.Wrap(
+						err,
+						"failed to validate erc20 custody withdraw and call event",
+					)
 			}
 			// destination
 			if !strings.EqualFold(withdrawn.To.Hex(), params.Receiver) {
-				return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("receiver address mismatch in event, want %s got %s",
-					params.Receiver, withdrawn.To.Hex())
+				return big.NewInt(
+						0,
+					), chains.ReceiveStatus_failed, fmt.Errorf(
+						"receiver address mismatch in event, want %s got %s",
+						params.Receiver,
+						withdrawn.To.Hex(),
+					)
 			}
 			// token
 			if !strings.EqualFold(withdrawn.Token.Hex(), cctx.InboundParams.Asset) {
-				return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("asset address mismatch in event, want %s got %s",
-					cctx.InboundParams.Asset, withdrawn.Token.Hex())
+				return big.NewInt(
+						0,
+					), chains.ReceiveStatus_failed, fmt.Errorf(
+						"asset address mismatch in event, want %s got %s",
+						cctx.InboundParams.Asset,
+						withdrawn.Token.Hex(),
+					)
 			}
 			// amount
 			if withdrawn.Amount.Cmp(params.Amount.BigInt()) != 0 {
-				return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("amount mismatch in event, want %s got %s",
-					params.Amount.String(), withdrawn.Amount.String())
+				return big.NewInt(
+						0,
+					), chains.ReceiveStatus_failed, fmt.Errorf(
+						"amount mismatch in event, want %s got %s",
+						params.Amount.String(),
+						withdrawn.Amount.String(),
+					)
 			}
 			// data
 			if err := checkCCTXMessage(withdrawn.Data, cctx.RelayedMessage); err != nil {

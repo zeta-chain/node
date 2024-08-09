@@ -432,7 +432,9 @@ func (signer *Signer) TryProcessOutbound(
 		cancelTx,
 	)
 	if err != nil {
-		logger.Warn().Err(err).Msgf("SignConnectorOnReceive error: nonce %d chain %d", outboundTssNonce, params.ReceiverChainId)
+		logger.Warn().
+			Err(err).
+			Msgf("SignConnectorOnReceive error: nonce %d chain %d", outboundTssNonce, params.ReceiverChainId)
 		return
 	}
 	logger.Info().

@@ -1,12 +1,13 @@
 package runner
 
 import (
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+
+	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
 )
 
 // AssertTestDAppZEVMValues is a function that asserts the values of the test dapp on the ZEVM
@@ -21,7 +22,12 @@ func (r *E2ERunner) AssertTestDAppEVMValues(equals bool, message string, amount 
 	r.assertTestDAppValues(r.TestDAppV2EVM, equals, message, amount)
 }
 
-func (r *E2ERunner) assertTestDAppValues(testDApp *testdappv2.TestDAppV2, equals bool, message string, amount *big.Int) {
+func (r *E2ERunner) assertTestDAppValues(
+	testDApp *testdappv2.TestDAppV2,
+	equals bool,
+	message string,
+	amount *big.Int,
+) {
 	// check the payload was received on the contract
 	actualMessage, err := testDApp.LastMessage(&bind.CallOpts{})
 	require.NoError(r, err)

@@ -1,13 +1,13 @@
 package e2etests
 
 import (
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func TestV2ERC20Withdraw(r *runner.E2ERunner, args []string) {
@@ -17,6 +17,7 @@ func TestV2ERC20Withdraw(r *runner.E2ERunner, args []string) {
 	require.True(r, ok, "Invalid amount specified for TestV2ERC20Withdraw")
 
 	r.ApproveERC20ZRC20(r.GatewayZEVMAddr)
+	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw
 	tx := r.V2ERC20Withdraw(r.EVMAddress(), amount)

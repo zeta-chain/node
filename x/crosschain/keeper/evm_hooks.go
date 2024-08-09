@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"github.com/pkg/errors"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -15,6 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/pkg/errors"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zetaconnectorzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 

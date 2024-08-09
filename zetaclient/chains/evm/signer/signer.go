@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/zeta-chain/zetacore/pkg/constant"
 	"math/big"
 	"strconv"
 	"strings"
@@ -19,8 +18,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -294,7 +295,6 @@ func (signer *Signer) SignOutboundFromCCTX(
 	toChain zctx.Chain,
 ) (*ethtypes.Transaction, error) {
 	if compliance.IsCctxRestricted(cctx) {
-
 		// restricted cctx
 		compliance.PrintComplianceLog(
 			logger,
@@ -309,7 +309,6 @@ func (signer *Signer) SignOutboundFromCCTX(
 
 		return signer.SignCancel(ctx, outboundData)
 	} else if cctx.InboundParams.CoinType == coin.CoinType_Cmd {
-
 		// admin command
 		to := ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
 		if to == (ethcommon.Address{}) {
@@ -326,12 +325,10 @@ func (signer *Signer) SignOutboundFromCCTX(
 		// contract address when a whitelist command is requested
 		params := msg[1]
 		return signer.SignCommandTx(ctx, outboundData, cmd, params)
-
 	} else if cctx.ProtocolContractVersion == crosschaintypes.ProtocolContractVersion_V2 {
 
 		// call sign outbound from cctx for v2 protocol contracts
 		return signer.SignOutboundFromCCTXV2(ctx, cctx, outboundData)
-
 	} else if IsSenderZetaChain(cctx, zetacoreClient) {
 		switch cctx.InboundParams.CoinType {
 		case coin.CoinType_Gas:

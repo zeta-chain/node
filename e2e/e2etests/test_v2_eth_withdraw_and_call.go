@@ -1,13 +1,13 @@
 package e2etests
 
 import (
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 const payloadMessageWithdrawETH = "this is a test ETH withdraw and call payload"

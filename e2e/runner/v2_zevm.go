@@ -30,7 +30,7 @@ func (r *E2ERunner) V2ETHWithdrawAndCall(
 
 // V2ERC20Withdraw calls Withdraw of Gateway with erc20 token on ZEVM
 func (r *E2ERunner) V2ERC20Withdraw(receiver ethcommon.Address, amount *big.Int) *ethtypes.Transaction {
-	tx, err := r.GatewayZEVM.Withdraw(r.ZEVMAuth, receiver.Bytes(), amount, r.ERC20Addr)
+	tx, err := r.GatewayZEVM.Withdraw(r.ZEVMAuth, receiver.Bytes(), amount, r.ERC20ZRC20Addr)
 	require.NoError(r, err)
 
 	return tx
@@ -42,7 +42,7 @@ func (r *E2ERunner) V2ERC20WithdrawAndCall(
 	amount *big.Int,
 	payload []byte,
 ) *ethtypes.Transaction {
-	tx, err := r.GatewayZEVM.WithdrawAndCall(r.ZEVMAuth, receiver.Bytes(), amount, r.ERC20Addr, payload)
+	tx, err := r.GatewayZEVM.WithdrawAndCall(r.ZEVMAuth, receiver.Bytes(), amount, r.ERC20ZRC20Addr, payload)
 	require.NoError(r, err)
 
 	return tx

@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 	"math/big"
 	"strings"
 	"time"
@@ -18,6 +16,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
+	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"

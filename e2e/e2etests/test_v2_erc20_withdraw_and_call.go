@@ -1,13 +1,13 @@
 package e2etests
 
 import (
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 const payloadMessageWithdrawERC20 = "this is a test ERC20 withdraw and call payload"
@@ -21,9 +21,14 @@ func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, args []string) {
 	r.AssertTestDAppEVMValues(false, payloadMessageWithdrawETH, amount)
 
 	r.ApproveERC20ZRC20(r.GatewayZEVMAddr)
+	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw
-	tx := r.V2ERC20WithdrawAndCall(r.EVMAddress(), amount, r.EncodeERC20Call(r.ERC20ZRC20Addr, amount, payloadMessageWithdrawERC20))
+	tx := r.V2ERC20WithdrawAndCall(
+		r.TestDAppV2EVMAddr,
+		amount,
+		r.EncodeERC20Call(r.ERC20Addr, amount, payloadMessageWithdrawERC20),
+	)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

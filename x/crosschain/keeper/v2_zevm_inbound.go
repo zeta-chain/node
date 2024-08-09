@@ -126,7 +126,10 @@ func (k Keeper) newWithdrawalInbound(
 
 	// for simple withdraw without call, we use the specified gas limit in the zrc20 contract
 	if len(event.Message) == 0 {
-		gasLimitQueried, err := k.fungibleKeeper.QueryGasLimit(ctx, ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress))
+		gasLimitQueried, err := k.fungibleKeeper.QueryGasLimit(
+			ctx,
+			ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress),
+		)
 		if err != nil {
 			return nil, errors.Wrap(err, "cannot query gas limit")
 		}

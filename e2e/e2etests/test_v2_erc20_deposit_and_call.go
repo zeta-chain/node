@@ -1,9 +1,9 @@
 package e2etests
 
 import (
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
