@@ -1,6 +1,7 @@
 package e2etests
 
 import (
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"math/big"
 
 	"github.com/stretchr/testify/require"
@@ -20,6 +21,9 @@ func TestV2ETHDepositAndCall(r *runner.E2ERunner, args []string) {
 
 	r.AssertTestDAppValues(false, payloadMessageETH, amount)
 
+	oldBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
+	require.NoError(r, err)
+
 	// perform the deposit and call to the TestDAppV2ZEVMAddr
 	tx := r.V2ETHDepositAndCall(r.TestDAppV2ZEVMAddr, amount, []byte(payloadMessageETH))
 
@@ -30,4 +34,9 @@ func TestV2ETHDepositAndCall(r *runner.E2ERunner, args []string) {
 
 	// check the payload was received on the contract
 	r.AssertTestDAppValues(true, payloadMessageETH, amount)
+
+	// check the balance was updated
+	newBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
+	require.NoError(r, err)
+	require.Equal(r, new(big.Int).Add(oldBalance, amount), newBalance)
 }

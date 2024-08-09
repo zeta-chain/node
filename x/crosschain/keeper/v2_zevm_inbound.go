@@ -30,7 +30,7 @@ func (k Keeper) ProcessZEVMInboundV2(
 ) error {
 	withdrawalEvent, err := k.parseGatewayWithdrawalEvent(*log, gatewayAddr)
 	if err != nil {
-		return err
+		return nil
 	}
 
 	// find foreign coin object associated to zrc20

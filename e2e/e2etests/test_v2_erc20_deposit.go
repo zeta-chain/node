@@ -1,6 +1,7 @@
 package e2etests
 
 import (
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"math/big"
 
 	"github.com/stretchr/testify/require"
@@ -18,6 +19,9 @@ func TestV2ERC20Deposit(r *runner.E2ERunner, args []string) {
 
 	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
 
+	oldBalance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	require.NoError(r, err)
+
 	// perform the deposit
 	tx := r.V2ERC20Deposit(r.EVMAddress(), amount)
 
@@ -25,4 +29,9 @@ func TestV2ERC20Deposit(r *runner.E2ERunner, args []string) {
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+
+	// check the balance was updated
+	newBalance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	require.NoError(r, err)
+	require.Equal(r, new(big.Int).Add(oldBalance, amount), newBalance)
 }
