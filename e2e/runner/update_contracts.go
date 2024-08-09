@@ -5,11 +5,11 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
 func (r *E2ERunner) UpdateTssAddressForConnector() {
-
 	require.NoError(r, r.SetTSSAddresses())
 
 	tx, err := r.ConnectorEth.UpdateTssAddress(r.EVMAuth, r.TSSAddress)
@@ -21,11 +21,9 @@ func (r *E2ERunner) UpdateTssAddressForConnector() {
 	tssAddressOnConnector, err := r.ConnectorEth.TssAddress(&bind.CallOpts{Context: r.Ctx})
 	require.NoError(r, err)
 	require.Equal(r, r.TSSAddress, tssAddressOnConnector)
-
 }
 
 func (r *E2ERunner) UpdateTssAddressForErc20custody() {
-
 	require.NoError(r, r.SetTSSAddresses())
 
 	tx, err := r.ERC20Custody.UpdateTSSAddress(r.EVMAuth, r.TSSAddress)

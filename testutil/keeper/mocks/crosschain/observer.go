@@ -604,46 +604,6 @@ func (_m *CrosschainObserverKeeper) GetSupportedChains(ctx types.Context) []chai
 	return r0
 }
 
-// GetSupportedForeignChains provides a mock function with given fields: ctx
-func (_m *CrosschainObserverKeeper) GetSupportedForeignChains(ctx types.Context) []chains.Chain {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetSupportedForeignChains")
-	}
-
-	var r0 []chains.Chain
-	if rf, ok := ret.Get(0).(func(types.Context) []chains.Chain); ok {
-		r0 = rf(ctx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]chains.Chain)
-		}
-	}
-
-	return r0
-}
-
-// GetSupportedForeignChainsByConsensus provides a mock function with given fields: ctx, consensus
-func (_m *CrosschainObserverKeeper) GetSupportedForeignChainsByConsensus(ctx types.Context, consensus chains.Consensus) []chains.Chain {
-	ret := _m.Called(ctx, consensus)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetSupportedForeignChainsByConsensus")
-	}
-
-	var r0 []chains.Chain
-	if rf, ok := ret.Get(0).(func(types.Context, chains.Consensus) []chains.Chain); ok {
-		r0 = rf(ctx, consensus)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]chains.Chain)
-		}
-	}
-
-	return r0
-}
-
 // GetTSS provides a mock function with given fields: ctx
 func (_m *CrosschainObserverKeeper) GetTSS(ctx types.Context) (observertypes.TSS, bool) {
 	ret := _m.Called(ctx)
