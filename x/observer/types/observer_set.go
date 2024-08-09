@@ -15,8 +15,11 @@ func (m *ObserverSet) LenUint() uint64 {
 	return uint64(len(m.ObserverList))
 }
 
-// Validate observer mapper contains an existing chain
+// Validate observer set verifies that the observer set is valid
+// - All observer addresses are valid
+// - No duplicate observer addresses
 func (m *ObserverSet) Validate() error {
+	// Check for valid observer addresses
 	for _, observerAddress := range m.ObserverList {
 		_, err := sdk.AccAddressFromBech32(observerAddress)
 		if err != nil {
