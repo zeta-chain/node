@@ -76,11 +76,11 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 	t.Run(
 		"unable to update a tombstoned observer if the new address already exists in the observer set",
 		func(t *testing.T) {
+			//ARRANGE
 			k, ctx, _, _ := keepertest.ObserverKeeper(t)
 			srv := keeper.NewMsgServerImpl(*k)
 			// #nosec G404 test purpose - weak randomness is not an issue here
 			r := rand.New(rand.NewSource(9))
-
 			// Set validator in the store
 			validator := sample.Validator(t, r)
 			validatorNew := sample.Validator(t, r)
@@ -104,27 +104,26 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			newOperatorAddress, err := types.GetAccAddressFromOperatorAddress(validatorNew.OperatorAddress)
 			require.NoError(t, err)
 
-			count := uint64(0)
-
+			observerList := []string{accAddressOfValidator.String(), newOperatorAddress.String()}
 			k.SetObserverSet(ctx, types.ObserverSet{
-				ObserverList: []string{accAddressOfValidator.String(), newOperatorAddress.String()},
+				ObserverList: observerList,
 			})
-			count = 1
-
 			k.SetNodeAccount(ctx, types.NodeAccount{
 				Operator: accAddressOfValidator.String(),
 			})
-
 			k.SetLastObserverCount(ctx, &types.LastObserverCount{
-				Count: count,
+				Count: uint64(len(observerList)),
 			})
 
+			//ACT
 			_, err = srv.UpdateObserver(sdk.WrapSDKContext(ctx), &types.MsgUpdateObserver{
 				Creator:            accAddressOfValidator.String(),
 				OldObserverAddress: accAddressOfValidator.String(),
 				NewObserverAddress: newOperatorAddress.String(),
 				UpdateReason:       types.ObserverUpdateReason_Tombstoned,
 			})
+
+			// ASSERT
 			require.ErrorContains(t, err, types.ErrDuplicateObserver.Error())
 		},
 	)

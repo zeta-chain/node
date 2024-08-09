@@ -96,17 +96,24 @@ func TestKeeper_UpdateObserverAddress(t *testing.T) {
 		require.Equal(t, newObserverAddress, observerSet.ObserverList[len(observerSet.ObserverList)-1])
 	})
 	t.Run("unable to update observer list if the new list is not valid", func(t *testing.T) {
+		// ARRANGE
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		oldObserverAddress := sample.AccAddress()
 		newObserverAddress := sample.AccAddress()
 		observerSet := sample.ObserverSet(10)
 		observerSet.ObserverList = append(observerSet.ObserverList, []string{oldObserverAddress, newObserverAddress}...)
 
+		// ACT 1
 		err := k.UpdateObserverAddress(ctx, oldObserverAddress, newObserverAddress)
-		require.ErrorIs(t, err, types.ErrObserverSetNotFound)
-		k.SetObserverSet(ctx, observerSet)
 
+		// ASSERT 1
+		require.ErrorIs(t, err, types.ErrObserverSetNotFound)
+
+		// ACT 2
+		k.SetObserverSet(ctx, observerSet)
 		err = k.UpdateObserverAddress(ctx, oldObserverAddress, newObserverAddress)
+
+		// ASSERT 2
 		require.ErrorContains(t, err, types.ErrDuplicateObserver.Error())
 	})
 	t.Run("should error if observer address not found", func(t *testing.T) {
