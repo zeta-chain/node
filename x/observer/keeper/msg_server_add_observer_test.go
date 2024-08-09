@@ -53,6 +53,7 @@ func TestMsgServer_AddObserver(t *testing.T) {
 	})
 
 	t.Run("unable to add observer if observer already exists", func(t *testing.T) {
+		//ARRANGE
 		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
 			UseAuthorityMock: true,
 		})
@@ -73,7 +74,11 @@ func TestMsgServer_AddObserver(t *testing.T) {
 			ObserverAddress:         observerAddress,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+
+		// ACT
 		_, err := srv.AddObserver(wctx, &msg)
+
+		// ASSERT
 		require.ErrorIs(t, err, types.ErrDuplicateObserver)
 	})
 
