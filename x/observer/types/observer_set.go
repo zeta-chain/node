@@ -23,7 +23,7 @@ func (m *ObserverSet) Validate() error {
 	for _, observerAddress := range m.ObserverList {
 		_, err := sdk.AccAddressFromBech32(observerAddress)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "invalid observer address: %s", observerAddress)
 		}
 	}
 	// Check for duplicates
