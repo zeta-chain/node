@@ -13,6 +13,10 @@
 
 * [2615](https://github.com/zeta-chain/node/pull/2615) - Refactor cleanup of outbound trackers
 
+### Fixes
+
+* [2654](https://github.com/zeta-chain/node/pull/2654) - add validation for authorization list in when validating genesis state for authorization module
+
 ## v19.0.0
 
 ### Breaking Changes
