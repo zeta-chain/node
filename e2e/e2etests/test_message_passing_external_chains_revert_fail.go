@@ -40,7 +40,7 @@ func TestMessagePassingRevertFailExternalChains(r *runner.E2ERunner, args []stri
 	tx, err = r.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
 		DestinationChainId:  chainID,
 		DestinationAddress:  r.EVMAddress().Bytes(),
-		DestinationGasLimit: big.NewInt(1800_000),
+		DestinationGasLimit: big.NewInt(400_000),
 		Message: []byte(
 			"revert",
 		), // non-empty message will cause revert, because the dest address is not a contract
