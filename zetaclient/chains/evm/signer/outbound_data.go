@@ -182,9 +182,17 @@ func NewOutboundData(
 
 	// Base64 decode message
 	if cctx.InboundParams.CoinType != coin.CoinType_Cmd {
-		txData.message, err = base64.StdEncoding.DecodeString(cctx.RelayedMessage)
-		if err != nil {
-			logger.Err(err).Msgf("decode CCTX.Message %s error", cctx.RelayedMessage)
+		// protocol contract v2 uses hex encoding
+		if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 {
+			txData.message, err = hex.DecodeString(cctx.RelayedMessage)
+			if err != nil {
+				logger.Err(err).Msgf("decode CCTX.Message %s error", cctx.RelayedMessage)
+			}
+		} else {
+			txData.message, err = base64.StdEncoding.DecodeString(cctx.RelayedMessage)
+			if err != nil {
+				logger.Err(err).Msgf("decode CCTX.Message %s error", cctx.RelayedMessage)
+			}
 		}
 	}
 

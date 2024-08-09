@@ -205,7 +205,7 @@ func (signer *Signer) SignWithdrawTx(
 		signer.Logger().
 			Std.Error().
 			Err(err).
-			Msgf("SignWithdrawTx: FetchUTXOs error: nonce %d chain %d", nonce, chain.ChainId)
+			Msgf("SignGasWithdraw: FetchUTXOs error: nonce %d chain %d", nonce, chain.ChainId)
 	}
 
 	// select N UTXOs to cover the total expense
@@ -416,7 +416,7 @@ func (signer *Signer) TryProcessOutbound(
 			true, chain.ChainId, cctx.Index, cctx.InboundParams.Sender, params.Receiver, "BTC")
 		amount = 0.0 // zero out the amount to cancel the tx
 	}
-	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", to.EncodeAddress(), params.Amount.Uint64())
+	logger.Info().Msgf("SignGasWithdraw: to %s, value %d sats", to.EncodeAddress(), params.Amount.Uint64())
 
 	// sign withdraw tx
 	tx, err := signer.SignWithdrawTx(
@@ -432,7 +432,7 @@ func (signer *Signer) TryProcessOutbound(
 		cancelTx,
 	)
 	if err != nil {
-		logger.Warn().Err(err).Msgf("SignOutbound error: nonce %d chain %d", outboundTssNonce, params.ReceiverChainId)
+		logger.Warn().Err(err).Msgf("SignConnectorOnReceive error: nonce %d chain %d", outboundTssNonce, params.ReceiverChainId)
 		return
 	}
 	logger.Info().

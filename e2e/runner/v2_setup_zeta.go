@@ -39,6 +39,7 @@ func (r *E2ERunner) SetZEVMContractsV2() {
 	require.NoError(r, err)
 
 	// Deploy the proxy contract
+	r.Logger.Info("Deploying proxy with %s and %s, address: %s", r.WZetaAddr.Hex(), r.Account.EVMAddress().Hex(), gatewayZEVMAddr.Hex())
 	proxyAddress, txProxy, _, err := erc1967proxy.DeployERC1967Proxy(
 		r.ZEVMAuth,
 		r.ZEVMClient,

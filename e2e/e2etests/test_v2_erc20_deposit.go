@@ -16,7 +16,7 @@ func TestV2ERC20Deposit(r *runner.E2ERunner, args []string) {
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
 	require.True(r, ok, "Invalid amount specified for TestV2ERC20Deposit")
 
-	r.ApproveERC20(r.GatewayEVMAddr)
+	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
 
 	// perform the deposit
 	tx := r.V2ERC20Deposit(r.EVMAddress(), amount)

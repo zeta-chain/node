@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/hex"
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
@@ -133,7 +134,7 @@ func (k Keeper) newWithdrawalInbound(
 		toAddr,
 		foreignCoin.ForeignChainId,
 		math.NewUintFromBigInt(event.Value),
-		"",
+		hex.EncodeToString(event.Message),
 		event.Raw.TxHash.String(),
 		event.Raw.BlockNumber,
 		gasLimit.Uint64(),

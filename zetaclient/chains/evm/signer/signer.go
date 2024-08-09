@@ -258,7 +258,14 @@ func (signer *Signer) TryProcessOutbound(
 	}
 
 	// sign outbound
-	tx, err := signer.SignConnectorOnReceive(ctx, txData)
+	tx, err := signer.SignOutboundFromCCTX(
+		ctx,
+		logger,
+		cctx,
+		txData,
+		zetacoreClient,
+		toChain,
+	)
 	if err != nil {
 		logger.Err(err).Msg("error signing outbound")
 		return
