@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"math"
 	"testing"
 
@@ -298,6 +299,10 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		require.True(t, found)
 		require.EqualValues(t, types.KeygenStatus_PendingKeygen, newKeygen.Status)
 
+		keygen.Status = types.KeygenStatus_PendingKeygen
+		keygen.BlockNumber = 52
+		k.SetKeygen(ctx, *keygen)
+
 		// Start voting on a new ballot
 		tss2 := sample.Tss()
 		// 1st Vote on new ballot (acc1)
@@ -347,11 +352,152 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		})
 		require.NoError(t, err)
 
+		// Older ballot should be finalized which still keep keygen in pending state.
 		newKeygen, found = k.GetKeygen(ctx)
 		require.True(t, found)
 		require.EqualValues(t, types.KeygenStatus_PendingKeygen, newKeygen.Status)
 
 		_, found = k.GetTSS(ctx)
 		require.False(t, found)
+
+		oldBallot, found := k.GetBallot(ctx, fmt.Sprintf("%d-%s", 42, "tss-keygen"))
+		require.True(t, found)
+		require.EqualValues(t, types.BallotStatus_BallotFinalized_SuccessObservation, oldBallot.BallotStatus)
+
+		newBallot, found := k.GetBallot(ctx, fmt.Sprintf("%d-%s", 52, "tss-keygen"))
+		require.True(t, found)
+		require.EqualValues(t, types.BallotStatus_BallotInProgress, newBallot.BallotStatus)
+	})
+
+	t.Run("can create a new ballot, vote without finalizing,then finalize newer ballot", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		ctx = ctx.WithBlockHeight(42)
+		srv := keeper.NewMsgServerImpl(*k)
+
+		// setup state with 3 node accounts
+		nodeAcc1 := sample.NodeAccount()
+		nodeAcc2 := sample.NodeAccount()
+		nodeAcc3 := sample.NodeAccount()
+		keygen := sample.Keygen(t)
+		keygen.Status = types.KeygenStatus_PendingKeygen
+		keygen.BlockNumber = 42
+		tss := sample.Tss()
+		k.SetNodeAccount(ctx, *nodeAcc1)
+		k.SetNodeAccount(ctx, *nodeAcc2)
+		k.SetNodeAccount(ctx, *nodeAcc3)
+		k.SetKeygen(ctx, *keygen)
+
+		// 1st vote: created ballot, but not finalized
+		res, err := srv.VoteTSS(ctx, &types.MsgVoteTSS{
+			Creator:          nodeAcc1.Operator,
+			TssPubkey:        tss.TssPubkey,
+			KeygenZetaHeight: 42,
+			Status:           chains.ReceiveStatus_success,
+		})
+		require.NoError(t, err)
+
+		// check response
+		require.True(t, res.BallotCreated)
+		require.False(t, res.VoteFinalized)
+		require.False(t, res.KeygenSuccess)
+
+		// check keygen not updated
+		newKeygen, found := k.GetKeygen(ctx)
+		require.True(t, found)
+		require.EqualValues(t, types.KeygenStatus_PendingKeygen, newKeygen.Status)
+
+		// 2nd vote: already created ballot, and not finalized
+		res, err = srv.VoteTSS(ctx, &types.MsgVoteTSS{
+			Creator:          nodeAcc2.Operator,
+			TssPubkey:        tss.TssPubkey,
+			KeygenZetaHeight: 42,
+			Status:           chains.ReceiveStatus_success,
+		})
+		require.NoError(t, err)
+
+		// check response
+		require.False(t, res.BallotCreated)
+		require.False(t, res.VoteFinalized)
+		require.False(t, res.KeygenSuccess)
+
+		// check keygen not updated
+		newKeygen, found = k.GetKeygen(ctx)
+		require.True(t, found)
+		require.EqualValues(t, types.KeygenStatus_PendingKeygen, newKeygen.Status)
+
+		// Update keygen to 52 and start voting on new ballot
+		keygen.Status = types.KeygenStatus_PendingKeygen
+		keygen.BlockNumber = 52
+		k.SetKeygen(ctx, *keygen)
+
+		// Start voting on a new ballot
+		tss2 := sample.Tss()
+		// 1st Vote on new ballot (acc1)
+		res, err = srv.VoteTSS(ctx, &types.MsgVoteTSS{
+			Creator:          nodeAcc1.Operator,
+			TssPubkey:        tss2.TssPubkey,
+			KeygenZetaHeight: 52,
+			Status:           chains.ReceiveStatus_success,
+		})
+		require.NoError(t, err)
+
+		// check response
+		require.True(t, res.BallotCreated)
+		require.False(t, res.VoteFinalized)
+		require.False(t, res.KeygenSuccess)
+
+		// 2nd vote on new ballot: already created ballot, and not finalized (acc3)
+		res, err = srv.VoteTSS(ctx, &types.MsgVoteTSS{
+			Creator:          nodeAcc3.Operator,
+			TssPubkey:        tss2.TssPubkey,
+			KeygenZetaHeight: 52,
+			Status:           chains.ReceiveStatus_success,
+		})
+		require.NoError(t, err)
+
+		// check response
+		require.False(t, res.BallotCreated)
+		require.False(t, res.VoteFinalized)
+		require.False(t, res.KeygenSuccess)
+
+		// check keygen status
+		newKeygen, found = k.GetKeygen(ctx)
+		require.True(t, found)
+		require.EqualValues(t, types.KeygenStatus_PendingKeygen, newKeygen.Status)
+
+		// At this point, we have two ballots
+		// 1. Ballot for keygen 42 Voted : (acc1, acc2)
+		// 2. Ballot for keygen 52 Voted : (acc1, acc3)
+
+		// 3rd vote on ballot 1: finalize the older ballot
+
+		finalizingHeight := int64(55)
+		ctx = ctx.WithBlockHeight(finalizingHeight)
+		res, err = srv.VoteTSS(ctx, &types.MsgVoteTSS{
+			Creator:          nodeAcc2.Operator,
+			TssPubkey:        tss2.TssPubkey,
+			KeygenZetaHeight: 52,
+			Status:           chains.ReceiveStatus_success,
+		})
+		require.NoError(t, err)
+
+		// Newer ballot should be finalized which make keygen success
+		newKeygen, found = k.GetKeygen(ctx)
+		require.True(t, found)
+		require.EqualValues(t, finalizingHeight, newKeygen.BlockNumber)
+		require.EqualValues(t, types.KeygenStatus_KeyGenSuccess, newKeygen.Status)
+
+		tss, found = k.GetTSS(ctx)
+		require.True(t, found)
+		require.Equal(t, tss.KeyGenZetaHeight, int64(52))
+		require.Equal(t, tss.FinalizedZetaHeight, finalizingHeight)
+
+		oldBallot, found := k.GetBallot(ctx, fmt.Sprintf("%d-%s", 42, "tss-keygen"))
+		require.True(t, found)
+		require.EqualValues(t, types.BallotStatus_BallotInProgress, oldBallot.BallotStatus)
+
+		newBallot, found := k.GetBallot(ctx, fmt.Sprintf("%d-%s", 52, "tss-keygen"))
+		require.True(t, found)
+		require.EqualValues(t, types.BallotStatus_BallotFinalized_SuccessObservation, newBallot.BallotStatus)
 	})
 }
