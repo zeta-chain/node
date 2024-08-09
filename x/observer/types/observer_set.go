@@ -27,12 +27,12 @@ func (m *ObserverSet) Validate() error {
 		}
 	}
 	// Check for duplicates
-	observers := make(map[string]bool)
+	observers := make(map[string]struct{})
 	for _, observerAddress := range m.ObserverList {
 		if _, ok := observers[observerAddress]; ok {
 			return errors.Wrapf(ErrDuplicateObserver, "observer %s", observerAddress)
 		}
-		observers[observerAddress] = true
+		observers[observerAddress] = struct{}{}
 	}
 	return nil
 }

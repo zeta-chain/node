@@ -86,7 +86,7 @@ func (k Keeper) UpdateObserverAddress(ctx sdk.Context, oldObserverAddress, newOb
 		}
 	}
 	if !found {
-		return types.ErrObserverNotFound
+		return errors.Wrapf(types.ErrObserverNotFound, "observer %s", oldObserverAddress)
 	}
 
 	err := observerSet.Validate()
