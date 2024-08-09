@@ -248,9 +248,9 @@ func (signer *Signer) SignGasWithdrawAndCall(ctx context.Context, txData *Outbou
 		return nil, errors.Wrap(err, "unable to get GatewayEVMMetaData ABI")
 	}
 
-	data, err = gatewayABI.Pack("withdraw", txData.to, txData.message)
+	data, err = gatewayABI.Pack("execute", txData.to, txData.message)
 	if err != nil {
-		return nil, fmt.Errorf("withdraw pack error: %w", err)
+		return nil, fmt.Errorf("execute pack error: %w", err)
 	}
 
 	tx, _, _, err := signer.Sign(
@@ -264,7 +264,7 @@ func (signer *Signer) SignGasWithdrawAndCall(ctx context.Context, txData *Outbou
 		txData.height,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("sign withdraw error: %w", err)
+		return nil, fmt.Errorf("sign execute error: %w", err)
 	}
 
 	return tx, nil

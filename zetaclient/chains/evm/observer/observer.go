@@ -4,6 +4,7 @@ package observer
 import (
 	"context"
 	"fmt"
+	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
 	"math"
 	"math/big"
 	"strings"
@@ -151,6 +152,16 @@ func (ob *Observer) GetConnectorContractEth() (ethcommon.Address, *zetaconnector
 func (ob *Observer) GetERC20CustodyContract() (ethcommon.Address, *erc20custody.ERC20Custody, error) {
 	addr := ethcommon.HexToAddress(ob.GetChainParams().Erc20CustodyContractAddress)
 	contract, err := erc20custody.NewERC20Custody(addr, ob.evmClient)
+	return addr, contract, err
+}
+
+// GetERC20CustodyV2Contract returns ERC20CustodyV2 contract address and binder
+// NOTE: we use the same address as gateway v1
+// this simplify the migration process v1 will be completely removed in the future
+// currently the ABI for withdraw is identical, therefore both contract instances can be used
+func (ob *Observer) GetERC20CustodyV2Contract() (ethcommon.Address, *erc20custodyv2.ERC20Custody, error) {
+	addr := ethcommon.HexToAddress(ob.GetChainParams().Erc20CustodyContractAddress)
+	contract, err := erc20custodyv2.NewERC20Custody(addr, ob.evmClient)
 	return addr, contract, err
 }
 

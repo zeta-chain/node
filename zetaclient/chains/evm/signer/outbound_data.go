@@ -187,6 +187,7 @@ func NewOutboundData(
 			txData.message, err = hex.DecodeString(cctx.RelayedMessage)
 			if err != nil {
 				logger.Err(err).Msgf("decode CCTX.Message %s error", cctx.RelayedMessage)
+				txData.message = []byte{}
 			}
 		} else {
 			txData.message, err = base64.StdEncoding.DecodeString(cctx.RelayedMessage)

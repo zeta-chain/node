@@ -45,4 +45,32 @@ const (
 	// TopicsGatewayDeposit is the number of topics for a gateway deposit event
 	// [signature, sender, receiver]
 	TopicsGatewayDeposit = 3
+
+	// TopicsGatewayCall is the number of topics for a gateway call event
+	// [signature, sender, receiver]
+	TopicsGatewayCall = 3
+
+	// TopicsGatewayExecuted is the number of topics for a gateway executed event
+	// [signature, destination]
+	TopicsGatewayExecuted = 2
+
+	// TopicsGatewayExecutedWithERC20 is the number of topics for a gateway executed with ERC20 event
+	// [signature, token, destination]
+	TopicsGatewayExecutedWithERC20 = 3
+
+	// TopicsReverted is the number of topics for a reverted event
+	// [signature, destination]
+	TopicsReverted = 2
+
+	// TopicsRevertedWithERC20 is the number of topics for a reverted with ERC20 event
+	// [signature, token, destination]
+	TopicsRevertedWithERC20 = 3
+
+	// TopicsERC20CustodyWithdrawAndCall is the number of topics for an ERC20 custody withdraw and call event
+	// [signature, recipient, asset]
+	TopicsERC20CustodyWithdrawAndCall = 3
+
+	// TopicsERC20CustodyWithdrawAndRevert is the number of topics for an ERC20 custody withdraw and revert event
+	// [signature, recipient, asset]
+	TopicsERC20CustodyWithdrawAndRevert = 3
 )
