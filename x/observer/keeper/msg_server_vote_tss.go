@@ -42,11 +42,6 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 		return &types.MsgVoteTSSResponse{}, errorsmod.Wrap(types.ErrKeygenNotFound, voteTSSid)
 	}
 
-	// Use a separate transaction to update keygen status to pending when trying to change the TSS address.
-	//if keygen.Status == types.KeygenStatus_KeyGenSuccess {
-	//	return &types.MsgVoteTSSResponse{}, errorsmod.Wrap(types.ErrKeygenCompleted, voteTSSid)
-	//}
-
 	// GetBallot checks against the supported chains list before querying for Ballot.
 	ballotCreated := false
 	index := msg.Digest()
@@ -94,10 +89,17 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 		}, nil
 	}
 
+	// The ballot is finalized, we check if this is the correct ballot for updating the TSS
+	// The requirements are
+	// 1. The keygen is still pending
+	// 2. The keygen block number matches the ballot block number ,which makes sure this the correct ballot for the current keygen
+
+	// Return without error so the vote is added to the ballot
 	if keygen.Status != types.KeygenStatus_PendingKeygen {
 		return &types.MsgVoteTSSResponse{}, nil
 	}
 
+	// For cases when an observer tries to vote for an older pending ballot , associated with a keygen that was discarded , we would return at this check while still adding the vote to the ballot
 	if msg.KeygenZetaHeight != keygen.BlockNumber {
 		return &types.MsgVoteTSSResponse{}, nil
 	}

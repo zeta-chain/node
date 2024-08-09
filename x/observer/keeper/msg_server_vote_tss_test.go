@@ -17,19 +17,24 @@ import (
 
 func TestMsgServer_VoteTSS(t *testing.T) {
 	t.Run("fail if node account not found", func(t *testing.T) {
+		// ARRANGE
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 
+		// ACT
 		_, err := srv.VoteTSS(ctx, &types.MsgVoteTSS{
 			Creator:          sample.AccAddress(),
 			TssPubkey:        sample.Tss().TssPubkey,
 			KeygenZetaHeight: 42,
 			Status:           chains.ReceiveStatus_success,
 		})
+
+		// ASSERT
 		require.ErrorIs(t, err, sdkerrors.ErrorInvalidSigner)
 	})
 
 	t.Run("fail if keygen is not found", func(t *testing.T) {
+		// ARRANGE
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 
@@ -37,16 +42,20 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		nodeAcc := sample.NodeAccount()
 		k.SetNodeAccount(ctx, *nodeAcc)
 
+		// ACT
 		_, err := srv.VoteTSS(ctx, &types.MsgVoteTSS{
 			Creator:          nodeAcc.Operator,
 			TssPubkey:        sample.Tss().TssPubkey,
 			KeygenZetaHeight: 42,
 			Status:           chains.ReceiveStatus_success,
 		})
+
+		// ASSERT
 		require.ErrorIs(t, err, types.ErrKeygenNotFound)
 	})
 
 	t.Run("fail if keygen already completed ", func(t *testing.T) {
+		// ARRANGE
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 
@@ -54,21 +63,32 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		nodeAcc := sample.NodeAccount()
 		keygen := sample.Keygen(t)
 		keygen.Status = types.KeygenStatus_KeyGenSuccess
+		keygen.BlockNumber = 42
 		k.SetNodeAccount(ctx, *nodeAcc)
 		k.SetKeygen(ctx, *keygen)
 
+		// ACT
 		_, err := srv.VoteTSS(ctx, &types.MsgVoteTSS{
 			Creator:          nodeAcc.Operator,
 			TssPubkey:        sample.Tss().TssPubkey,
 			KeygenZetaHeight: 42,
 			Status:           chains.ReceiveStatus_success,
 		})
+
+		// ASSERT
+		// keygen is already completed, but the vote can still be added if the operator has not voted yet
 		require.NoError(t, err)
+		ballot, found := k.GetBallot(ctx, fmt.Sprintf("%d-%s", 42, "tss-keygen"))
+		require.True(t, found)
+		require.EqualValues(t, types.BallotStatus_BallotFinalized_SuccessObservation, ballot.BallotStatus)
+		require.True(t, ballot.HasVoted(nodeAcc.Operator))
 	})
 
 	t.Run("can create a new ballot, vote success and finalize", func(t *testing.T) {
+		// ARRANGE
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
-		ctx = ctx.WithBlockHeight(42)
+		finalizingHeight := int64(55)
+		ctx = ctx.WithBlockHeight(finalizingHeight)
 		srv := keeper.NewMsgServerImpl(*k)
 
 		// setup state
@@ -79,6 +99,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		k.SetNodeAccount(ctx, *nodeAcc)
 		k.SetKeygen(ctx, *keygen)
 
+		// ACT
 		// there is a single node account, so the ballot will be created and finalized in a single vote
 		res, err := srv.VoteTSS(ctx, &types.MsgVoteTSS{
 			Creator:          nodeAcc.Operator,
@@ -86,8 +107,9 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 			KeygenZetaHeight: 42,
 			Status:           chains.ReceiveStatus_success,
 		})
-		require.NoError(t, err)
 
+		// ASSERT
+		require.NoError(t, err)
 		// check response
 		require.True(t, res.BallotCreated)
 		require.True(t, res.VoteFinalized)
@@ -97,10 +119,17 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		newKeygen, found := k.GetKeygen(ctx)
 		require.True(t, found)
 		require.EqualValues(t, types.KeygenStatus_KeyGenSuccess, newKeygen.Status)
-		require.EqualValues(t, ctx.BlockHeight(), newKeygen.BlockNumber)
+		require.EqualValues(t, finalizingHeight, newKeygen.BlockNumber)
+
+		// check tss updated
+		tss, found := k.GetTSS(ctx)
+		require.True(t, found)
+		require.Equal(t, tss.KeyGenZetaHeight, int64(42))
+		require.Equal(t, tss.FinalizedZetaHeight, finalizingHeight)
 	})
 
 	t.Run("can create a new ballot, vote failure and finalize", func(t *testing.T) {
+		// ARRANGE
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		ctx = ctx.WithBlockHeight(42)
 		srv := keeper.NewMsgServerImpl(*k)
@@ -113,6 +142,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		k.SetNodeAccount(ctx, *nodeAcc)
 		k.SetKeygen(ctx, *keygen)
 
+		// ACT
 		// there is a single node account, so the ballot will be created and finalized in a single vote
 		res, err := srv.VoteTSS(ctx, &types.MsgVoteTSS{
 			Creator:          nodeAcc.Operator,
@@ -120,8 +150,9 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 			KeygenZetaHeight: 42,
 			Status:           chains.ReceiveStatus_failed,
 		})
-		require.NoError(t, err)
 
+		// ASSERT
+		require.NoError(t, err)
 		// check response
 		require.True(t, res.BallotCreated)
 		require.True(t, res.VoteFinalized)
@@ -134,9 +165,11 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		require.EqualValues(t, math.MaxInt64, newKeygen.BlockNumber)
 	})
 
-	t.Run("can create a new ballot, vote without finalizing, then add vote and finalizing", func(t *testing.T) {
+	t.Run("can create a new ballot, vote without finalizing, then add final vote to update keygen and set tss", func(t *testing.T) {
+		// ARRANGE
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
-		ctx = ctx.WithBlockHeight(42)
+		finalizingHeight := int64(55)
+		ctx = ctx.WithBlockHeight(finalizingHeight)
 		srv := keeper.NewMsgServerImpl(*k)
 
 		// setup state with 3 node accounts
@@ -152,6 +185,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		k.SetNodeAccount(ctx, *nodeAcc3)
 		k.SetKeygen(ctx, *keygen)
 
+		// ACT
 		// 1st vote: created ballot, but not finalized
 		res, err := srv.VoteTSS(ctx, &types.MsgVoteTSS{
 			Creator:          nodeAcc1.Operator,
@@ -199,6 +233,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		})
 		require.NoError(t, err)
 
+		// ASSERT
 		// check response
 		require.False(t, res.BallotCreated)
 		require.True(t, res.VoteFinalized)
@@ -209,9 +244,16 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		require.True(t, found)
 		require.EqualValues(t, types.KeygenStatus_KeyGenSuccess, newKeygen.Status)
 		require.EqualValues(t, ctx.BlockHeight(), newKeygen.BlockNumber)
+
+		// check tss updated
+		tss, found = k.GetTSS(ctx)
+		require.True(t, found)
+		require.Equal(t, tss.KeyGenZetaHeight, int64(42))
+		require.Equal(t, tss.FinalizedZetaHeight, finalizingHeight)
 	})
 
 	t.Run("fail if voting fails", func(t *testing.T) {
+		// ARRANGE
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		ctx = ctx.WithBlockHeight(42)
 		srv := keeper.NewMsgServerImpl(*k)
@@ -234,6 +276,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		require.NoError(t, err)
 		require.False(t, res.VoteFinalized)
 
+		// ACT
 		// vote again: voting should fail
 		_, err = srv.VoteTSS(ctx, &types.MsgVoteTSS{
 			Creator:          nodeAcc.Operator,
@@ -241,10 +284,13 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 			KeygenZetaHeight: 42,
 			Status:           chains.ReceiveStatus_success,
 		})
+
+		// ASSERT
 		require.ErrorIs(t, err, types.ErrUnableToAddVote)
 	})
 
-	t.Run("can create a new ballot, vote without finalizing,then finalize older ballot", func(t *testing.T) {
+	t.Run("can create a new ballot, without finalizing the older and then finalize older ballot", func(t *testing.T) {
+		// ARRANGE
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		ctx = ctx.WithBlockHeight(42)
 		srv := keeper.NewMsgServerImpl(*k)
@@ -261,6 +307,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		k.SetNodeAccount(ctx, *nodeAcc3)
 		k.SetKeygen(ctx, *keygen)
 
+		// ACT
 		// 1st vote: created ballot, but not finalized
 		res, err := srv.VoteTSS(ctx, &types.MsgVoteTSS{
 			Creator:          nodeAcc1.Operator,
@@ -352,6 +399,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		})
 		require.NoError(t, err)
 
+		// ASSERT
 		// Older ballot should be finalized which still keep keygen in pending state.
 		newKeygen, found = k.GetKeygen(ctx)
 		require.True(t, found)
@@ -370,6 +418,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 	})
 
 	t.Run("can create a new ballot, vote without finalizing,then finalize newer ballot", func(t *testing.T) {
+		// ARRANGE
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		ctx = ctx.WithBlockHeight(42)
 		srv := keeper.NewMsgServerImpl(*k)
@@ -387,6 +436,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		k.SetNodeAccount(ctx, *nodeAcc3)
 		k.SetKeygen(ctx, *keygen)
 
+		// ACT
 		// 1st vote: created ballot, but not finalized
 		res, err := srv.VoteTSS(ctx, &types.MsgVoteTSS{
 			Creator:          nodeAcc1.Operator,
@@ -481,6 +531,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		})
 		require.NoError(t, err)
 
+		// ASSERT
 		// Newer ballot should be finalized which make keygen success
 		newKeygen, found = k.GetKeygen(ctx)
 		require.True(t, found)
