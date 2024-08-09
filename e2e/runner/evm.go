@@ -197,6 +197,22 @@ func (r *E2ERunner) ApproveETHZRC20(allowed ethcommon.Address) {
 	}
 }
 
+// ApproveERC20ZRC20 approves ERC20 ZRC20 on EVM to a specific address
+// check if allowance is zero before calling this method
+// allow a high amount to avoid multiple approvals
+func (r *E2ERunner) ApproveERC20ZRC20(allowed ethcommon.Address) {
+	allowance, err := r.ERC20ZRC20.Allowance(&bind.CallOpts{}, r.Account.EVMAddress(), r.GatewayEVMAddr)
+	require.NoError(r, err)
+
+	// approve 1M*1e18 if allowance is zero
+	if allowance.Cmp(big.NewInt(0)) == 0 {
+		tx, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, allowed, big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1000000)))
+		require.NoError(r, err)
+		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+		require.True(r, receipt.Status == 1, "approval failed")
+	}
+}
+
 // AnvilMineBlocks mines blocks on Anvil localnet
 // the block time is provided in seconds
 // the method returns a function to stop the mining
