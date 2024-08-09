@@ -19,7 +19,7 @@ func TestV2ETHDepositAndCall(r *runner.E2ERunner, args []string) {
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
 	require.True(r, ok, "Invalid amount specified for TestV2ETHDepositAndCall")
 
-	r.AssertTestDAppValues(false, payloadMessageETH, amount)
+	r.AssertTestDAppZEVMValues(false, payloadMessageETH, amount)
 
 	oldBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
 	require.NoError(r, err)
@@ -33,7 +33,7 @@ func TestV2ETHDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
 	// check the payload was received on the contract
-	r.AssertTestDAppValues(true, payloadMessageETH, amount)
+	r.AssertTestDAppZEVMValues(true, payloadMessageETH, amount)
 
 	// check the balance was updated
 	newBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)

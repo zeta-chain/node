@@ -21,7 +21,7 @@ func TestV2ERC20DepositAndCall(r *runner.E2ERunner, args []string) {
 
 	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
 
-	r.AssertTestDAppValues(false, payloadMessageERC20, amount)
+	r.AssertTestDAppZEVMValues(false, payloadMessageERC20, amount)
 
 	oldBalance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
 	require.NoError(r, err)
@@ -35,7 +35,7 @@ func TestV2ERC20DepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
 	// check the payload was received on the contract
-	r.AssertTestDAppValues(true, payloadMessageERC20, amount)
+	r.AssertTestDAppZEVMValues(true, payloadMessageERC20, amount)
 
 	// check the balance was updated
 	newBalance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
