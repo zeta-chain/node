@@ -23,7 +23,6 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
@@ -197,7 +196,7 @@ func (signer *Signer) Broadcast(tx *ethtypes.Transaction) error {
 // TODO(revamp): simplify function
 func (signer *Signer) TryProcessOutbound(
 	ctx context.Context,
-	cctx *types.CrossChainTx,
+	cctx *crosschaintypes.CrossChainTx,
 	outboundProc *outboundprocessor.Processor,
 	outboundID string,
 	chainObserver interfaces.ChainObserver,
@@ -289,7 +288,7 @@ func (signer *Signer) TryProcessOutbound(
 func (signer *Signer) SignOutboundFromCCTX(
 	ctx context.Context,
 	logger zerolog.Logger,
-	cctx *types.CrossChainTx,
+	cctx *crosschaintypes.CrossChainTx,
 	outboundData *OutboundData,
 	zetacoreClient interfaces.ZetacoreClient,
 	toChain zctx.Chain,
@@ -326,7 +325,6 @@ func (signer *Signer) SignOutboundFromCCTX(
 		params := msg[1]
 		return signer.SignCommandTx(ctx, outboundData, cmd, params)
 	} else if cctx.ProtocolContractVersion == crosschaintypes.ProtocolContractVersion_V2 {
-
 		// call sign outbound from cctx for v2 protocol contracts
 		return signer.SignOutboundFromCCTXV2(ctx, cctx, outboundData)
 	} else if IsSenderZetaChain(cctx, zetacoreClient) {
@@ -359,7 +357,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 			)
 			return signer.SignConnectorOnReceive(ctx, outboundData)
 		}
-	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.OutboundParams[0].ReceiverChainId == zetacoreClient.Chain().ChainId {
+	} else if cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingRevert && cctx.OutboundParams[0].ReceiverChainId == zetacoreClient.Chain().ChainId {
 		switch cctx.InboundParams.CoinType {
 		case coin.CoinType_Zeta:
 			logger.Info().Msgf(
@@ -389,7 +387,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 			)
 			return signer.SignERC20Withdraw(ctx, outboundData)
 		}
-	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
+	} else if cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingRevert {
 		logger.Info().Msgf(
 			"SignConnectorOnRevert: %d => %d, nonce %d, gasPrice %d",
 			cctx.InboundParams.SenderChainId,
@@ -400,7 +398,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 		outboundData.srcChainID = big.NewInt(cctx.OutboundParams[0].ReceiverChainId)
 		outboundData.toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
 		return signer.SignConnectorOnRevert(ctx, outboundData)
-	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound {
+	} else if cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingOutbound {
 		logger.Info().Msgf(
 			"SignConnectorOnReceive: %d => %d, nonce %d, gasPrice %d",
 			cctx.InboundParams.SenderChainId,
@@ -437,7 +435,7 @@ func (signer *Signer) SignCommandTx(
 func (signer *Signer) BroadcastOutbound(
 	ctx context.Context,
 	tx *ethtypes.Transaction,
-	cctx *types.CrossChainTx,
+	cctx *crosschaintypes.CrossChainTx,
 	logger zerolog.Logger,
 	myID sdk.AccAddress,
 	zetacoreClient interfaces.ZetacoreClient,
@@ -512,15 +510,15 @@ func (signer *Signer) EvmSigner() ethtypes.Signer {
 // IsSenderZetaChain checks if the sender chain is ZetaChain
 // TODO(revamp): move to another package more general for cctx functions
 func IsSenderZetaChain(
-	cctx *types.CrossChainTx,
+	cctx *crosschaintypes.CrossChainTx,
 	zetacoreClient interfaces.ZetacoreClient,
 ) bool {
 	return cctx.InboundParams.SenderChainId == zetacoreClient.Chain().ChainId &&
-		cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound
+		cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingOutbound
 }
 
 // ErrorMsg returns a error message for SignConnectorOnReceive failure with cctx data
-func ErrorMsg(cctx *types.CrossChainTx) string {
+func ErrorMsg(cctx *crosschaintypes.CrossChainTx) string {
 	return fmt.Sprintf(
 		"signer SignConnectorOnReceive error: nonce %d chain %d",
 		cctx.GetCurrentOutboundParam().TssNonce,

@@ -7,6 +7,8 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/systemcontract.sol"
+
+	"github.com/zeta-chain/zetacore/pkg/coin"
 )
 
 // ProcessV2Deposit handles a deposit from an inbound tx with protocol version 2
@@ -20,14 +22,22 @@ func (k Keeper) ProcessV2Deposit(
 	to ethcommon.Address,
 	amount *big.Int,
 	message []byte,
+	coinType coin.CoinType,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
-	// simple deposit
 	if len(message) == 0 {
 		// simple deposit
 		res, err := k.DepositZRC20(ctx, zrc20Addr, to, amount)
 		return res, false, err
+	} else if coinType == coin.CoinType_NoAssetCall {
+		// simple call
+		context := systemcontract.ZContext{
+			Origin:  from,
+			Sender:  ethcommon.Address{},
+			ChainID: big.NewInt(senderChainID),
+		}
+		res, err := k.CallExecute(ctx, context, zrc20Addr, amount, to, message)
+		return res, true, err
 	}
-
 	// deposit and call
 	context := systemcontract.ZContext{
 		Origin:  from,

@@ -57071,11 +57071,13 @@ definitions:
       - Gas
       - ERC20
       - Cmd
+      - NoAssetCall
     default: Zeta
     title: |-
       - Gas: Ether, BNB, Matic, Klay, BTC, etc
        - ERC20: ERC20 token
-       - Cmd: not a real coin, rather a command
+       - Cmd: not asset, used for admin command
+       - NoAssetCall: no asset, used for contract call
   crosschainCctxStatus:
     type: string
     enum:

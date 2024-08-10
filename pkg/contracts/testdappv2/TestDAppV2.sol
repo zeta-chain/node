@@ -54,6 +54,7 @@ contract TestDAppV2 {
         require(!isRevertMessage(bytes(message)));
 
         lastMessage = message;
+        lastAmount = 0;
     }
 
     function isRevertMessage(bytes memory message) internal pure returns (bool) {

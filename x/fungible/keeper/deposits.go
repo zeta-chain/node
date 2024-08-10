@@ -41,7 +41,11 @@ func (k Keeper) ZRC20DepositAndCallContract(
 	var found bool
 
 	// get foreign coin
-	if coinType == coin.CoinType_Gas {
+	// retrieve the gas token of the chain for no asset call
+	// this simplify the current workflow and allow to pause calls by pausing the gas token
+	// TODO: refactor this logic and create specific workflow for no asset call
+	// https://github.com/zeta-chain/node/issues/2627
+	if coinType == coin.CoinType_Gas || coinType == coin.CoinType_NoAssetCall {
 		foreignCoin, found = k.GetGasCoinForForeignCoin(ctx, senderChainID)
 		if !found {
 			return nil, false, crosschaintypes.ErrGasCoinNotFound
@@ -74,7 +78,7 @@ func (k Keeper) ZRC20DepositAndCallContract(
 
 	// handle the deposit for protocol contract version 2
 	if protocolContractVersion == crosschaintypes.ProtocolContractVersion_V2 {
-		return k.ProcessV2Deposit(ctx, from, senderChainID, zrc20Contract, to, amount, message)
+		return k.ProcessV2Deposit(ctx, from, senderChainID, zrc20Contract, to, amount, message, coinType)
 	}
 
 	// check if the receiver is a contract

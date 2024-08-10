@@ -40,10 +40,13 @@ func ParseOutboundEventV2(
 		return transaction.Value(), chains.ReceiveStatus_success, nil
 	case evm.OutboundTypeERC20Withdraw:
 		return ParseAndCheckERC20CustodyWithdraw(cctx, receipt, custodyAddr, custody)
-	case evm.OutboundTypeGasWithdrawAndCall:
-		return ParseAndCheckGatewayExecuted(cctx, receipt, gatewayAddr, gateway)
 	case evm.OutboundTypeERC20WithdrawAndCall:
 		return ParseAndCheckERC20CustodyWithdrawAndCall(cctx, receipt, custodyAddr, custody)
+	case evm.OutboundTypeGasWithdrawAndCall:
+	case evm.OutboundTypeCall:
+		// both gas withdraw and call and no-asset call uses gateway execute
+		// no-asset call simply hash msg.value == 0
+		return ParseAndCheckGatewayExecuted(cctx, receipt, gatewayAddr, gateway)
 	}
 	return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("unsupported outbound type %d", outboundType)
 }

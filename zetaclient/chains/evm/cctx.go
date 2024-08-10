@@ -57,6 +57,10 @@ func ParseOutboundTypeFromCCTX(cctx types.CrossChainTx) OutboundTypes {
 				return OutboundTypeERC20WithdrawAndCall
 			}
 		}
+	case coin.CoinType_NoAssetCall:
+		if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound {
+			return OutboundTypeCall
+		}
 	}
 
 	return OutboundTypeUnknown

@@ -22,11 +22,13 @@ func (signer *Signer) SignOutboundFromCCTXV2(
 		return signer.SignGasWithdraw(ctx, outboundData)
 	case evm.OutboundTypeERC20Withdraw:
 		return signer.SignERC20CustodyWithdraw(ctx, outboundData)
-	case evm.OutboundTypeGasWithdrawAndCall:
-		return signer.SignGatewayExecute(ctx, outboundData)
 	case evm.OutboundTypeERC20WithdrawAndCall:
 		return signer.SignERC20CustodyWithdrawAndCall(ctx, outboundData)
-	default:
-		return nil, fmt.Errorf("unsupported outbound type %d", outboundType)
+	case evm.OutboundTypeGasWithdrawAndCall:
+	case evm.OutboundTypeCall:
+		// both gas withdraw and call and no-asset call uses gateway execute
+		// no-asset call simply hash msg.value == 0
+		return signer.SignGatewayExecute(ctx, outboundData)
 	}
+	return nil, fmt.Errorf("unsupported outbound type %d", outboundType)
 }

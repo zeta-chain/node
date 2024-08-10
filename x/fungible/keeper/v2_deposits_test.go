@@ -5,6 +5,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -101,6 +102,7 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 			receiver,
 			big.NewInt(42),
 			[]byte{},
+			coin.CoinType_Gas,
 		)
 
 		// ASSERT
@@ -135,6 +137,7 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 			testDapp,
 			big.NewInt(82),
 			[]byte("foo"),
+			coin.CoinType_Gas,
 		)
 
 		// ASSERT

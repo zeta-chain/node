@@ -23,9 +23,40 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
 
-// ObserveGateway queries the gateway contract for deposit/call events
+// checkEventProcessability checks if the event is processable
+func (ob *Observer) checkEventProcessability(
+	sender, receiver ethcommon.Address,
+	txHash ethcommon.Hash,
+	payload []byte,
+) bool {
+	// compliance check
+	if config.ContainRestrictedAddress(sender.Hex(), receiver.Hex()) {
+		compliance.PrintComplianceLog(
+			ob.Logger().Inbound,
+			ob.Logger().Compliance,
+			false,
+			ob.Chain().ChainId,
+			txHash.Hex(),
+			sender.Hex(),
+			receiver.Hex(),
+			"Deposit",
+		)
+		return false
+	}
+
+	// donation check
+	if bytes.Equal(payload, []byte(constant.DonationMessage)) {
+		ob.Logger().Inbound.Info().
+			Msgf("thank you rich folk for your donation! tx %s chain %d", txHash.Hex(), ob.Chain().ChainId)
+		return false
+	}
+
+	return true
+}
+
+// ObserveGatewayDeposit queries the gateway contract for deposit events
 // returns the last block successfully scanned
-func (ob *Observer) ObserveGateway(ctx context.Context, startBlock, toBlock uint64) (uint64, error) {
+func (ob *Observer) ObserveGatewayDeposit(ctx context.Context, startBlock, toBlock uint64) (uint64, error) {
 	// filter ERC20CustodyDeposited logs
 	gatewayAddr, gatewayContract, err := ob.GetGatewayContract()
 	if err != nil {
@@ -64,7 +95,7 @@ func (ob *Observer) ObserveGateway(ctx context.Context, startBlock, toBlock uint
 		}
 
 		// check if the event is processable
-		if !ob.checkEventProcessability(event) {
+		if !ob.checkEventProcessability(event.Sender, event.Receiver, event.Raw.TxHash, event.Payload) {
 			continue
 		}
 
@@ -86,7 +117,7 @@ func (ob *Observer) ObserveGateway(ctx context.Context, startBlock, toBlock uint
 	return toBlock, nil
 }
 
-// parseAndValidateEvents collects and sorts events by block number, tx index, and log index
+// parseAndValidateDepositEvents collects and sorts events by block number, tx index, and log index
 func (ob *Observer) parseAndValidateDepositEvents(
 	iterator *gatewayevm.GatewayEVMDepositIterator,
 	gatewayAddr ethcommon.Address,
@@ -132,33 +163,6 @@ func (ob *Observer) parseAndValidateDepositEvents(
 	return filtered
 }
 
-// checkEventProcessability checks if the event is processable
-func (ob *Observer) checkEventProcessability(event *gatewayevm.GatewayEVMDeposit) bool {
-	// compliance check
-	if config.ContainRestrictedAddress(event.Sender.Hex(), event.Receiver.Hex()) {
-		compliance.PrintComplianceLog(
-			ob.Logger().Inbound,
-			ob.Logger().Compliance,
-			false,
-			ob.Chain().ChainId,
-			event.Raw.TxHash.Hex(),
-			event.Sender.Hex(),
-			event.Receiver.Hex(),
-			"Deposit",
-		)
-		return false
-	}
-
-	// donation check
-	if bytes.Equal(event.Payload, []byte(constant.DonationMessage)) {
-		ob.Logger().Inbound.Info().
-			Msgf("thank you rich folk for your donation! tx %s chain %d", event.Raw.TxHash.Hex(), ob.Chain().ChainId)
-		return false
-	}
-
-	return true
-}
-
 // newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
 func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposit) types.MsgVoteInbound {
 	// if event.Asset is zero, it's a native token
@@ -181,6 +185,139 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposit) t
 		1_500_000,
 		coinType,
 		event.Asset.Hex(),
+		event.Raw.Index,
+		types.ProtocolContractVersion_V2,
+	)
+}
+
+// ObserveGatewayCall queries the gateway contract for call events
+// returns the last block successfully scanned
+// TODO: there are lot of similarities between this function and ObserveGatewayDeposit
+// logic should be factorized using interfaces and generics
+// https://github.com/zeta-chain/node/issues/2493
+func (ob *Observer) ObserveGatewayCall(ctx context.Context, startBlock, toBlock uint64) (uint64, error) {
+	// filter ERC20CustodyDeposited logs
+	gatewayAddr, gatewayContract, err := ob.GetGatewayContract()
+	if err != nil {
+		// lastScanned is startBlock - 1
+		return startBlock - 1, errors.Wrap(err, "can't get gateway contract")
+	}
+
+	// get iterator for the events for the block range
+	eventIterator, err := gatewayContract.FilterCall(&bind.FilterOpts{
+		Start:   startBlock,
+		End:     &toBlock,
+		Context: ctx,
+	}, []ethcommon.Address{}, []ethcommon.Address{})
+	if err != nil {
+		return startBlock - 1, errors.Wrapf(
+			err,
+			"error filtering calls from block %d to %d for chain %d",
+			startBlock,
+			toBlock,
+			ob.Chain().ChainId,
+		)
+	}
+
+	// parse and validate events
+	events := ob.parseAndValidateCallEvents(eventIterator, gatewayAddr)
+
+	// increment prom counter
+	metrics.GetFilterLogsPerChain.WithLabelValues(ob.Chain().Name).Inc()
+
+	// post to zetacore
+	lastScanned := uint64(0)
+	for _, event := range events {
+		// remember which block we are scanning (there could be multiple events in the same block)
+		if event.Raw.BlockNumber > lastScanned {
+			lastScanned = event.Raw.BlockNumber
+		}
+
+		// check if the event is processable
+		if !ob.checkEventProcessability(event.Sender, event.Receiver, event.Raw.TxHash, event.Payload) {
+			continue
+		}
+
+		msg := ob.newCallInboundVote(event)
+
+		ob.Logger().Inbound.Info().
+			Msgf("ObserveGateway: Call inbound detected on chain %d tx %s block %d from %s value message %s",
+				ob.Chain().
+					ChainId, event.Raw.TxHash.Hex(), event.Raw.BlockNumber, event.Sender.Hex(), hex.EncodeToString(event.Payload))
+
+		_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
+		if err != nil {
+			// decrement the last scanned block so we have to re-scan from this block next time
+			return lastScanned - 1, errors.Wrap(err, "error posting vote inbound")
+		}
+	}
+
+	// successfully processed all events in [startBlock, toBlock]
+	return toBlock, nil
+}
+
+// parseAndValidateCallEvents collects and sorts events by block number, tx index, and log index
+func (ob *Observer) parseAndValidateCallEvents(
+	iterator *gatewayevm.GatewayEVMCallIterator,
+	gatewayAddr ethcommon.Address,
+) []*gatewayevm.GatewayEVMCall {
+	// collect and sort events by block number, then tx index, then log index (ascending)
+	events := make([]*gatewayevm.GatewayEVMCall, 0)
+	for iterator.Next() {
+		events = append(events, iterator.Event)
+		err := evm.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", evm.TopicsGatewayCall)
+		if err == nil {
+			events = append(events, iterator.Event)
+			continue
+		}
+		ob.Logger().Inbound.Warn().
+			Err(err).
+			Msgf("ObserveGateway: invalid Call event in tx %s on chain %d at height %d",
+				iterator.Event.Raw.TxHash.Hex(), ob.Chain().ChainId, iterator.Event.Raw.BlockNumber)
+	}
+	sort.SliceStable(events, func(i, j int) bool {
+		if events[i].Raw.BlockNumber == events[j].Raw.BlockNumber {
+			if events[i].Raw.TxIndex == events[j].Raw.TxIndex {
+				return events[i].Raw.Index < events[j].Raw.Index
+			}
+			return events[i].Raw.TxIndex < events[j].Raw.TxIndex
+		}
+		return events[i].Raw.BlockNumber < events[j].Raw.BlockNumber
+	})
+
+	// filter events from same tx
+	filtered := make([]*gatewayevm.GatewayEVMCall, 0)
+	guard := make(map[string]bool)
+	for _, event := range events {
+		// guard against multiple events in the same tx
+		if guard[event.Raw.TxHash.Hex()] {
+			ob.Logger().Inbound.Warn().
+				Msgf("ObserveGateway: multiple remote call events detected in same tx %s", event.Raw.TxHash)
+			continue
+		}
+		guard[event.Raw.TxHash.Hex()] = true
+		filtered = append(filtered, event)
+	}
+
+	return filtered
+}
+
+// newCallInboundVote creates a MsgVoteInbound message for a Call event
+func (ob *Observer) newCallInboundVote(event *gatewayevm.GatewayEVMCall) types.MsgVoteInbound {
+	return *types.NewMsgVoteInbound(
+		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		event.Sender.Hex(),
+		ob.Chain().ChainId,
+		"",
+		event.Receiver.Hex(),
+		ob.ZetacoreClient().Chain().ChainId,
+		sdkmath.ZeroUint(),
+		hex.EncodeToString(event.Payload),
+		event.Raw.TxHash.Hex(),
+		event.Raw.BlockNumber,
+		1_500_000,
+		coin.CoinType_NoAssetCall,
+		"",
 		event.Raw.Index,
 		types.ProtocolContractVersion_V2,
 	)

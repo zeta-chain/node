@@ -220,11 +220,17 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 	// query the gateway logs
 	// TODO: refactor in a more declarative design. Example: storing the list of contract and events to listen in an array
 	// https://github.com/zeta-chain/node/issues/2493
-	lastScannedGateway, err := ob.ObserveGateway(ctx, startBlock, toBlock)
+	lastScannedGatewayDeposit, err := ob.ObserveGatewayDeposit(ctx, startBlock, toBlock)
 	if err != nil {
 		ob.Logger().Inbound.Error().
 			Err(err).
-			Msgf("ObserveInbound: error observing events from Gateway contract")
+			Msgf("ObserveInbound: error observing deposit events from Gateway contract")
+	}
+	lastScannedGatewayCall, err := ob.ObserveGatewayCall(ctx, startBlock, toBlock)
+	if err != nil {
+		ob.Logger().Inbound.Error().
+			Err(err).
+			Msgf("ObserveInbound: error observing call events from Gateway contract")
 	}
 
 	// note: using lowest height for all 3 events is not perfect, but it's simple and good enough
@@ -235,8 +241,11 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 	if lastScannedTssRecvd < lastScannedLowest {
 		lastScannedLowest = lastScannedTssRecvd
 	}
-	if lastScannedGateway < lastScannedLowest {
-		lastScannedLowest = lastScannedGateway
+	if lastScannedGatewayDeposit < lastScannedLowest {
+		lastScannedLowest = lastScannedGatewayDeposit
+	}
+	if lastScannedGatewayCall < lastScannedLowest {
+		lastScannedLowest = lastScannedGatewayCall
 	}
 
 	// update last scanned block height for all 3 events (ZetaSent, Deposited, TssRecvd), ignore db error

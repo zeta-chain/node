@@ -82,6 +82,7 @@ func (r *E2ERunner) UpdateChainParamsERC20CustodyContract() {
 	require.NoError(r, err)
 
 	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
+	require.NoError(r, err)
 
 	// find old chain params
 	var (

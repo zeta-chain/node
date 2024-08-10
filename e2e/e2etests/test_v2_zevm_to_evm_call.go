@@ -1,6 +1,8 @@
 package e2etests
 
 import (
+	"math/big"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
@@ -8,17 +10,22 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
+const payloadMessageEVMCall = "this is a test EVM call payload"
+
 func TestV2ZEVMToEVMCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0)
 
-	// TODO: set payload
-	payload := []byte("")
+	// Necessary approval for fee payment
+	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw
-	tx := r.V2ZEVMToEMVCall(r.EVMAddress(), payload)
+	tx := r.V2ZEVMToEMVCall(r.TestDAppV2EVMAddr, r.EncodeSimpleCall(payloadMessageEVMCall))
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "call")
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+
+	// check the payload was received on the contract
+	r.AssertTestDAppEVMValues(true, payloadMessageEVMCall, big.NewInt(0))
 }
