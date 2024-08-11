@@ -99,6 +99,13 @@ enum ProtocolContractVersion {
   V2 = 1;
 }
 
+// RevertOptions represents the options for reverting a cctx
+message RevertOptions {
+  string revert_address = 1;
+  bool call_on_revert = 2;
+  string abort_address = 3;
+}
+
 message CrossChainTx {
   string creator = 1;
   string index = 2;
@@ -112,4 +119,5 @@ message CrossChainTx {
   InboundParams inbound_params = 9;
   repeated OutboundParams outbound_params = 10;
   ProtocolContractVersion protocol_contract_version = 11;
+  RevertOptions revert_options = 12 [ (gogoproto.nullable) = false ];
 }

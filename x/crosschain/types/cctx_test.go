@@ -16,6 +16,39 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+func TestCrossChainTx_GetEVMRevertAddress(t *testing.T) {
+	t.Run("use revert address if revert options", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "sample")
+		addr := sample.EthAddress()
+		cctx.RevertOptions.RevertAddress = addr.Hex()
+		require.EqualValues(t, addr, cctx.GetEVMRevertAddress())
+	})
+
+	t.Run("use sender address if no revert options", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "sample")
+		addr := sample.EthAddress()
+		cctx.InboundParams.Sender = addr.Hex()
+		require.EqualValues(t, addr, cctx.GetEVMRevertAddress())
+	})
+
+}
+
+func TestCrossChainTx_GetEVMAbortAddress(t *testing.T) {
+	t.Run("use revert address if abort options", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "sample")
+		addr := sample.EthAddress()
+		cctx.RevertOptions.AbortAddress = addr.Hex()
+		require.EqualValues(t, addr, cctx.GetEVMAbortAddress())
+	})
+
+	t.Run("use sender address if no abort options", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "sample")
+		addr := sample.EthAddress()
+		cctx.InboundParams.Sender = addr.Hex()
+		require.EqualValues(t, addr, cctx.GetEVMAbortAddress())
+	})
+}
+
 func TestCrossChainTx_GetCCTXIndexBytes(t *testing.T) {
 	cctx := sample.CrossChainTx(t, "sample")
 	indexBytes, err := cctx.GetCCTXIndexBytes()

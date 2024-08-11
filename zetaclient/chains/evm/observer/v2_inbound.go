@@ -164,6 +164,8 @@ func (ob *Observer) parseAndValidateDepositEvents(
 }
 
 // newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
+// TODO: include revert options
+// https://github.com/zeta-chain/node/issues/2660
 func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposit) types.MsgVoteInbound {
 	// if event.Asset is zero, it's a native token
 	coinType := coin.CoinType_ERC20
@@ -303,6 +305,8 @@ func (ob *Observer) parseAndValidateCallEvents(
 }
 
 // newCallInboundVote creates a MsgVoteInbound message for a Call event
+// TODO: include revert options
+// https://github.com/zeta-chain/node/issues/2660
 func (ob *Observer) newCallInboundVote(event *gatewayevm.GatewayEVMCall) types.MsgVoteInbound {
 	return *types.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),

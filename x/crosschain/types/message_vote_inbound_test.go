@@ -15,6 +15,55 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
+func TestNewMsgVoteInbound(t *testing.T) {
+	t.Run("can set revert options", func(t *testing.T) {
+		msg := types.NewMsgVoteInbound(
+			sample.AccAddress(),
+			sample.AccAddress(),
+			42,
+			sample.String(),
+			sample.String(),
+			42,
+			math.NewUint(42),
+			sample.String(),
+			sample.String(),
+			42,
+			42,
+			coin.CoinType_Zeta,
+			sample.String(),
+			42,
+			types.ProtocolContractVersion_V1,
+		)
+		require.EqualValues(t, types.RevertOptions{}, msg.RevertOptions)
+
+		revertOptions := types.RevertOptions{
+			RevertAddress: sample.EthAddress().Hex(),
+			CallOnRevert:  true,
+			AbortAddress:  sample.EthAddress().Hex(),
+		}
+
+		msg = types.NewMsgVoteInbound(
+			sample.AccAddress(),
+			sample.AccAddress(),
+			42,
+			sample.String(),
+			sample.String(),
+			42,
+			math.NewUint(42),
+			sample.String(),
+			sample.String(),
+			42,
+			42,
+			coin.CoinType_Zeta,
+			sample.String(),
+			42,
+			types.ProtocolContractVersion_V1,
+			types.WithRevertOptions(revertOptions),
+		)
+		require.EqualValues(t, revertOptions, msg.RevertOptions)
+	})
+}
+
 func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 	r := rand.New(rand.NewSource(42))
 

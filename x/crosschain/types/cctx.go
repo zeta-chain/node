@@ -8,9 +8,32 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
+
+// GetEVMRevertAddress returns the EVM revert address
+// If a revert address is specified in the revert options, it returns the address
+// Otherwise returns sender address
+func (m CrossChainTx) GetEVMRevertAddress() ethcommon.Address {
+	addr, valid := m.RevertOptions.GetEVMRevertAddress()
+	if valid {
+		return addr
+	}
+	return ethcommon.HexToAddress(m.InboundParams.Sender)
+}
+
+// GetEVMAbortAddress returns the EVM abort address
+// If an abort address is specified in the revert options, it returns the address
+// Otherwise returns sender address
+func (m CrossChainTx) GetEVMAbortAddress() ethcommon.Address {
+	addr, valid := m.RevertOptions.GetEVMAbortAddress()
+	if valid {
+		return addr
+	}
+	return ethcommon.HexToAddress(m.InboundParams.Sender)
+}
 
 // GetCurrentOutboundParam returns the current outbound params.
 // There can only be one active outbound.
@@ -164,6 +187,7 @@ func (m CrossChainTx) GetCCTXIndexBytes() ([32]byte, error) {
 	return sendHash, nil
 }
 
+// GetCctxIndexFromBytes returns the CCTX index from a byte array.
 func GetCctxIndexFromBytes(sendHash [32]byte) string {
 	return fmt.Sprintf("0x%s", hex.EncodeToString(sendHash[:]))
 }

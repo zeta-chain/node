@@ -17,6 +17,16 @@ import (
 // https://github.com/zeta-chain/node/issues/862
 const MaxMessageLength = 10240
 
+// InboundVoteOption is a function that sets some option on the inbound vote message
+type InboundVoteOption func(*MsgVoteInbound)
+
+// WithRevertOptions sets the revert options for the inbound vote message
+func WithRevertOptions(revertOptions RevertOptions) InboundVoteOption {
+	return func(msg *MsgVoteInbound) {
+		msg.RevertOptions = revertOptions
+	}
+}
+
 var _ sdk.Msg = &MsgVoteInbound{}
 
 func NewMsgVoteInbound(
@@ -35,8 +45,9 @@ func NewMsgVoteInbound(
 	asset string,
 	eventIndex uint,
 	protocolContractVersion ProtocolContractVersion,
+	options ...InboundVoteOption,
 ) *MsgVoteInbound {
-	return &MsgVoteInbound{
+	msg := &MsgVoteInbound{
 		Creator:                 creator,
 		Sender:                  sender,
 		SenderChainId:           senderChain,
@@ -53,6 +64,12 @@ func NewMsgVoteInbound(
 		EventIndex:              uint64(eventIndex),
 		ProtocolContractVersion: protocolContractVersion,
 	}
+
+	for _, option := range options {
+		option(msg)
+	}
+
+	return msg
 }
 
 func (msg *MsgVoteInbound) Route() string {

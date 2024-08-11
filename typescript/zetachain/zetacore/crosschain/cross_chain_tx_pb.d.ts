@@ -349,6 +349,42 @@ export declare class Status extends Message<Status> {
 }
 
 /**
+ * RevertOptions represents the options for reverting a cctx
+ *
+ * @generated from message zetachain.zetacore.crosschain.RevertOptions
+ */
+export declare class RevertOptions extends Message<RevertOptions> {
+  /**
+   * @generated from field: string revert_address = 1;
+   */
+  revertAddress: string;
+
+  /**
+   * @generated from field: bool call_on_revert = 2;
+   */
+  callOnRevert: boolean;
+
+  /**
+   * @generated from field: string abort_address = 3;
+   */
+  abortAddress: string;
+
+  constructor(data?: PartialMessage<RevertOptions>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.RevertOptions";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RevertOptions;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): RevertOptions;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): RevertOptions;
+
+  static equals(a: RevertOptions | PlainMessage<RevertOptions> | undefined, b: RevertOptions | PlainMessage<RevertOptions> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.crosschain.CrossChainTx
  */
 export declare class CrossChainTx extends Message<CrossChainTx> {
@@ -393,6 +429,11 @@ export declare class CrossChainTx extends Message<CrossChainTx> {
    * @generated from field: zetachain.zetacore.crosschain.ProtocolContractVersion protocol_contract_version = 11;
    */
   protocolContractVersion: ProtocolContractVersion;
+
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.RevertOptions revert_options = 12;
+   */
+  revertOptions?: RevertOptions;
 
   constructor(data?: PartialMessage<CrossChainTx>);
 

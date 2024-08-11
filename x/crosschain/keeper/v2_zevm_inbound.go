@@ -139,6 +139,8 @@ func (k Keeper) parseGatewayCallEvent(
 // currently inbound data is represented with a MsgVoteInbound message
 // TODO: replace with a more appropriate object
 // https://github.com/zeta-chain/node/issues/2658
+// TODO: include revert options
+// https://github.com/zeta-chain/node/issues/2660
 func (k Keeper) newWithdrawalInbound(
 	ctx sdk.Context,
 	from ethcommon.Address,
@@ -205,6 +207,8 @@ func (k Keeper) newWithdrawalInbound(
 // currently inbound data is represented with a MsgVoteInbound message
 // TODO: replace with a more appropriate object
 // https://github.com/zeta-chain/node/issues/2658
+// TODO: include revert options
+// https://github.com/zeta-chain/node/issues/2660
 func (k Keeper) newCallInbound(
 	ctx sdk.Context,
 	from ethcommon.Address,

@@ -28,15 +28,20 @@ const (
 	// OutboundTypeCall is a no-asset call transaction
 	OutboundTypeCall
 
-	// OutboundTypeGasWithdrawAndRevert is a gas withdraw and revert call
-	OutboundTypeGasWithdrawAndRevert
+	// OutboundTypeGasWithdrawRevert is a gas withdraw revert
+	OutboundTypeGasWithdrawRevert
 
-	// OutboundTypeERC20WithdrawAndRevert is an ERC20 withdraw and revert call
-	OutboundTypeERC20WithdrawAndRevert
+	// OutboundTypeGasWithdrawRevertAndCallOnRevert is a gas withdraw revert and call on revert
+	OutboundTypeGasWithdrawRevertAndCallOnRevert
+
+	// OutboundTypeERC20WithdrawRevert is an ERC20 withdraw revert
+	OutboundTypeERC20WithdrawRevert
+
+	// OutboundTypeERC20WithdrawRevertAndCallOnRevert is an ERC20 withdraw revert and call on revert
+	OutboundTypeERC20WithdrawRevertAndCallOnRevert
 )
 
 // ParseOutboundTypeFromCCTX returns the outbound type from the CCTX
-// TODO: address revert
 func ParseOutboundTypeFromCCTX(cctx types.CrossChainTx) OutboundTypes {
 	switch cctx.InboundParams.CoinType {
 	case coin.CoinType_Gas:
@@ -47,6 +52,12 @@ func ParseOutboundTypeFromCCTX(cctx types.CrossChainTx) OutboundTypes {
 			} else {
 				return OutboundTypeGasWithdrawAndCall
 			}
+		case types.CctxStatus_PendingRevert:
+			if cctx.RevertOptions.CallOnRevert {
+				return OutboundTypeGasWithdrawRevertAndCallOnRevert
+			} else {
+				return OutboundTypeGasWithdrawRevert
+			}
 		}
 	case coin.CoinType_ERC20:
 		switch cctx.CctxStatus.Status {
@@ -55,6 +66,12 @@ func ParseOutboundTypeFromCCTX(cctx types.CrossChainTx) OutboundTypes {
 				return OutboundTypeERC20Withdraw
 			} else {
 				return OutboundTypeERC20WithdrawAndCall
+			}
+		case types.CctxStatus_PendingRevert:
+			if cctx.RevertOptions.CallOnRevert {
+				return OutboundTypeERC20WithdrawRevertAndCallOnRevert
+			} else {
+				return OutboundTypeERC20WithdrawRevert
 			}
 		}
 	case coin.CoinType_NoAssetCall:

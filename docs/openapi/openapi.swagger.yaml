@@ -57125,6 +57125,8 @@ definitions:
           $ref: '#/definitions/crosschainOutboundParams'
       protocol_contract_version:
         $ref: '#/definitions/crosschainProtocolContractVersion'
+      revert_options:
+        $ref: '#/definitions/crosschainRevertOptions'
   crosschainGasPrice:
     type: object
     properties:
@@ -57550,6 +57552,16 @@ definitions:
           type: object
           $ref: '#/definitions/crosschainConversion'
         title: conversion in azeta per token
+  crosschainRevertOptions:
+    type: object
+    properties:
+      revert_address:
+        type: string
+      call_on_revert:
+        type: boolean
+      abort_address:
+        type: string
+    title: RevertOptions represents the options for reverting a cctx
   crosschainTxFinalizationStatus:
     type: string
     enum:

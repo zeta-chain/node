@@ -36,9 +36,11 @@ func ParseOutboundEventV2(
 	outboundType := evm.ParseOutboundTypeFromCCTX(*cctx)
 	switch outboundType {
 	case evm.OutboundTypeGasWithdraw:
+	case evm.OutboundTypeGasWithdrawRevert:
 		// simple transfer, no need to parse event
 		return transaction.Value(), chains.ReceiveStatus_success, nil
 	case evm.OutboundTypeERC20Withdraw:
+	case evm.OutboundTypeERC20WithdrawRevert:
 		return ParseAndCheckERC20CustodyWithdraw(cctx, receipt, custodyAddr, custody)
 	case evm.OutboundTypeERC20WithdrawAndCall:
 		return ParseAndCheckERC20CustodyWithdrawAndCall(cctx, receipt, custodyAddr, custody)
@@ -47,6 +49,9 @@ func ParseOutboundEventV2(
 		// both gas withdraw and call and no-asset call uses gateway execute
 		// no-asset call simply hash msg.value == 0
 		return ParseAndCheckGatewayExecuted(cctx, receipt, gatewayAddr, gateway)
+	case evm.OutboundTypeGasWithdrawRevertAndCallOnRevert:
+	case evm.OutboundTypeERC20WithdrawRevertAndCallOnRevert:
+		return ParseAndCheckGatewayReverted(cctx, receipt, gatewayAddr, gateway)
 	}
 	return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("unsupported outbound type %d", outboundType)
 }
@@ -102,6 +107,18 @@ func ParseAndCheckGatewayExecuted(
 	}
 
 	return big.NewInt(0), chains.ReceiveStatus_failed, errors.New("gateway execute event not found")
+}
+
+// ParseAndCheckGatewayReverted parses and checks the gateway reverted event
+func ParseAndCheckGatewayReverted(
+	cctx *crosschaintypes.CrossChainTx,
+	receipt *ethtypes.Receipt,
+	gatewayAddr ethcommon.Address,
+	gateway *gatewayevm.GatewayEVM,
+) (*big.Int, chains.ReceiveStatus, error) {
+	// TODO: implement
+	// https://github.com/zeta-chain/protocol-contracts/issues/310
+	return big.NewInt(0), chains.ReceiveStatus_failed, errors.New("not implemented")
 }
 
 // ParseAndCheckERC20CustodyWithdraw parses and checks the ERC20 custody withdraw event
