@@ -4,6 +4,7 @@
 # First argument is the command to run the local e2e
 # A second optional argument can be passed and can have the following value:
 # upgrade: run the local e2e once, then restart zetaclientd at upgrade height and run the local e2e again
+# tss-migrate: run the local e2e once, then trigger a TSS migration and run the local e2e again
 
 get_zetacored_version() {
   retries=10
@@ -95,7 +96,7 @@ geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: w
 # Mode migrate is used to run the e2e tests before and after the TSS migration
 # It runs the e2e tests with the migrate flag which triggers a TSS migration at the end of the tests. Once the migrationis done the first e2e test is complete
 # The second e2e test is run after the migration to ensure the network is still working as expected with the new tss address
-if [ "$LOCALNET_MODE" == "migrate" ]; then
+if [ "$LOCALNET_MODE" == "tss-migrate" ]; then
   if [[ ! -f deployed.yml ]]; then
     zetae2e local $E2E_ARGS --setup-only --config config.yml --config-out deployed.yml --skip-header-proof
     if [ $? -ne 0 ]; then
