@@ -94,6 +94,7 @@ jobs:
               core.setOutput('SOLANA_TESTS', labels.includes('SOLANA_TESTS'));
             } else if (context.eventName === 'merge_group') {
               core.setOutput('DEFAULT_TESTS', true);
+              core.setOutput('UPGRADE_LIGHT_TESTS', true);
             } else if (context.eventName === 'push' && context.ref === 'refs/heads/develop') {
               core.setOutput('DEFAULT_TESTS', true);
             } else if (context.eventName === 'push' && context.ref.startsWith('refs/heads/release/')) {
