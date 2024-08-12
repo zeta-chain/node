@@ -315,6 +315,13 @@ export declare class Status extends Message<Status> {
    */
   isAbortRefunded: boolean;
 
+  /**
+   * when the CCTX was created. only populated on new transactions.
+   *
+   * @generated from field: int64 created_timestamp = 5;
+   */
+  createdTimestamp: bigint;
+
   constructor(data?: PartialMessage<Status>);
 
   static readonly runtime: typeof proto3;
