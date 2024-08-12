@@ -3,8 +3,6 @@ package keeper
 import (
 	"context"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -13,7 +11,7 @@ func (k msgServer) UpdateERC20CustodyPauseStatus(
 	goCtx context.Context,
 	msg *types.MsgUpdateERC20CustodyPauseStatus,
 ) (*types.MsgUpdateERC20CustodyPauseStatusResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	//ctx := sdk.UnwrapSDKContext(goCtx)
 
 	//// check if authorized
 	//err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
@@ -84,6 +82,6 @@ func (k msgServer) UpdateERC20CustodyPauseStatus(
 	//k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx)
 
 	return &types.MsgUpdateERC20CustodyPauseStatusResponse{
-		CctxIndex: cctx.Index,
+		//CctxIndex: cctx.Index,
 	}, nil
 }
