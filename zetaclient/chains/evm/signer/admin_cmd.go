@@ -16,7 +16,7 @@ import (
 // SignCommandTx signs a transaction based on the given command includes:
 //
 //	cmd_whitelist_erc20
-//	cmd_migrate_er20_custody_funds
+//	cmd_migrate_erc20_custody_funds
 //	cmd_migrate_tss_funds
 func (signer *Signer) SignCommandTx(
 	ctx context.Context,
