@@ -19,14 +19,26 @@ import (
 
 // AppContext represents application (zetaclient) context.
 type AppContext struct {
+	// config is the config of the app
 	config config.Config
+
+	// logger is the logger of the app
 	logger zerolog.Logger
 
+	// chainRegistry is a registry of supported chains
 	chainRegistry *ChainRegistry
 
+	// currentTssPubKey is the current tss pubKey
 	currentTssPubKey string
-	crosschainFlags  observertypes.CrosschainFlags
-	keygen           observertypes.Keygen
+
+	// crosschainFlags is the current crosschain flags state
+	crosschainFlags observertypes.CrosschainFlags
+
+	// keygen is the current tss keygen state
+	keygen observertypes.Keygen
+
+	// relayerKeyPasswords maps network id to relayer key password
+	relayerKeyPasswords map[chains.Network]string
 
 	mu sync.RWMutex
 }
@@ -39,9 +51,10 @@ func New(cfg config.Config, logger zerolog.Logger) *AppContext {
 
 		chainRegistry: NewChainRegistry(),
 
-		crosschainFlags:  observertypes.CrosschainFlags{},
-		currentTssPubKey: "",
-		keygen:           observertypes.Keygen{},
+		crosschainFlags:     observertypes.CrosschainFlags{},
+		currentTssPubKey:    "",
+		keygen:              observertypes.Keygen{},
+		relayerKeyPasswords: make(map[chains.Network]string),
 
 		mu: sync.RWMutex{},
 	}
@@ -125,6 +138,22 @@ func (a *AppContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 	defer a.mu.RUnlock()
 
 	return a.crosschainFlags
+}
+
+// SetRelayerKeyPasswords sets the relayer key passwords for given networks
+func (a *AppContext) SetRelayerKeyPasswords(relayerKeyPasswords map[chains.Network]string) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	a.relayerKeyPasswords = relayerKeyPasswords
+}
+
+// GetRelayerKeyPassword returns the relayer key password for the given network
+func (a *AppContext) GetRelayerKeyPassword(network chains.Network) string {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	return a.relayerKeyPasswords[network]
 }
 
 // Update updates AppContext and params for all chains

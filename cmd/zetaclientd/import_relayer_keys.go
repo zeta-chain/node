@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/crypto"
 	zetaos "github.com/zeta-chain/zetacore/pkg/os"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
@@ -62,13 +62,13 @@ func init() {
 	CmdImportRelayerKey.Flags().
 		StringVar(&importArgs.privateKey, "private-key", "", "the relayer private key to import")
 	CmdImportRelayerKey.Flags().
-		StringVar(&importArgs.password, "password", "", "the password to encrypt the private key")
+		StringVar(&importArgs.password, "password", "", "the password to encrypt the relayer private key")
 	CmdImportRelayerKey.Flags().
 		StringVar(&importArgs.relayerKeyPath, "relayer-key-path", defaultRelayerKeyPath, "path to relayer keys")
 
 	CmdRelayerAddress.Flags().Int32Var(&addressArgs.network, "network", 7, "network id, (7:solana)")
 	CmdRelayerAddress.Flags().
-		StringVar(&addressArgs.password, "password", "", "the password to decrypt the private key")
+		StringVar(&addressArgs.password, "password", "", "the password to decrypt the relayer private key")
 	CmdRelayerAddress.Flags().
 		StringVar(&addressArgs.relayerKeyPath, "relayer-key-path", defaultRelayerKeyPath, "path to relayer keys")
 }
@@ -84,12 +84,13 @@ func ImportRelayerKey(_ *cobra.Command, _ []string) error {
 	}
 
 	// resolve the relayer key file path
-	keyPath, fileName, err := resolveRelayerKeyPath(importArgs.network, importArgs.relayerKeyPath)
+	fileName, err := keys.ResolveRelayerKeyFile(importArgs.relayerKeyPath, chains.Network(importArgs.network))
 	if err != nil {
 		return errors.Wrap(err, "failed to resolve relayer key file path")
 	}
 
 	// create path (owner `rwx` permissions) if it does not exist
+	keyPath := filepath.Dir(fileName)
 	if _, err := os.Stat(keyPath); os.IsNotExist(err) {
 		if err := os.MkdirAll(keyPath, 0o700); err != nil {
 			return errors.Wrapf(err, "failed to create relayer key path: %s", keyPath)
@@ -110,14 +111,8 @@ func ImportRelayerKey(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "private key encryption failed")
 	}
 
-	// construct the relayer key struct and write to file as json
-	keyData, err := json.Marshal(keys.RelayerKey{PrivateKey: ciphertext})
-	if err != nil {
-		return errors.Wrap(err, "failed to marshal relayer key")
-	}
-
-	// create relay key file (owner `rw` permissions)
-	err = os.WriteFile(fileName, keyData, 0o600)
+	// create the relayer key file
+	err = keys.WriteRelayerKeyToFile(fileName, keys.RelayerKey{PrivateKey: ciphertext})
 	if err != nil {
 		return errors.Wrapf(err, "failed to create relayer key file: %s", fileName)
 	}
@@ -128,51 +123,28 @@ func ImportRelayerKey(_ *cobra.Command, _ []string) error {
 
 // ShowRelayerAddress shows the relayer address
 func ShowRelayerAddress(_ *cobra.Command, _ []string) error {
-	// resolve the relayer key file path
-	_, fileName, err := resolveRelayerKeyPath(addressArgs.network, addressArgs.relayerKeyPath)
+	// try loading the relayer key if present
+	network := chains.Network(addressArgs.network)
+	relayerKey, err := keys.LoadRelayerKey(addressArgs.relayerKeyPath, network, addressArgs.password)
 	if err != nil {
-		return errors.Wrap(err, "failed to resolve relayer key file path")
+		return errors.Wrap(err, "failed to load relayer key")
 	}
 
-	// read the relayer key file
-	relayerKey, err := keys.ReadRelayerKeyFromFile(fileName)
-	if err != nil {
-		return err
+	// relayer key does not exist, return error
+	if relayerKey == nil {
+		return fmt.Errorf(
+			"relayer key not found for network %d in path: %s",
+			addressArgs.network,
+			addressArgs.relayerKeyPath,
+		)
 	}
 
-	// decrypt the private key
-	privateKey, err := crypto.DecryptAES256GCMBase64(relayerKey.PrivateKey, addressArgs.password)
-	if err != nil {
-		return errors.Wrap(err, "private key decryption failed")
-	}
-	relayerKey.PrivateKey = privateKey
-
-	// resolve the address
-	networkName, address, err := relayerKey.ResolveAddress(addressArgs.network)
+	// resolve the relayer address
+	networkName, address, err := relayerKey.ResolveAddress(network)
 	if err != nil {
 		return errors.Wrap(err, "failed to resolve relayer address")
 	}
 	fmt.Printf("relayer address (%s): %s\n", networkName, address)
 
 	return nil
-}
-
-// resolveRelayerKeyPath is a helper function to resolve the relayer key file path and name
-func resolveRelayerKeyPath(network int32, relayerKeyPath string) (string, string, error) {
-	// get relayer key file name by network
-	name, err := keys.GetRelayerKeyFileByNetwork(network)
-	if err != nil {
-		return "", "", errors.Wrap(err, "failed to get relayer key file name")
-	}
-
-	// resolve relayer key path if it contains a tilde
-	keyPath, err := zetaos.ExpandHomeDir(relayerKeyPath)
-	if err != nil {
-		return "", "", errors.Wrap(err, "failed to resolve relayer key path")
-	}
-
-	// build file name
-	fileName := filepath.Join(keyPath, name)
-
-	return keyPath, fileName, err
 }

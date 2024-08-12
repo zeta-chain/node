@@ -14,16 +14,13 @@ set_sepolia_endpoint() {
   jq '.EVMChainConfigs."11155111".Endpoint = "http://eth2:8545"' /root/.zetacored/config/zetaclient_config.json > tmp.json && mv tmp.json /root/.zetacored/config/zetaclient_config.json
 }
 
-# creates a file that contains a relayer private key (e.g. Solana relayer key)
-create_relayer_key_file() {
+# import a relayer private key (e.g. Solana relayer key)
+import_relayer_key() {
     local num="$1"
-    local file="$2"
 
-  # read observer relayer private key from config
-  privkey_relayer=$(yq -r ".observer_relayer_accounts.relayer_account_${num}.solana_private_key" /root/config.yml)
-
-  # create the key file that contains the private key
-  jq -n --arg privkey_relayer "$privkey_relayer" '{"private_key": $privkey_relayer}' > "${file}"
+  # import solana (network=7) relayer private key
+  privkey_solana=$(yq -r ".observer_relayer_accounts.relayer_account_${num}.solana_private_key" /root/config.yml)
+  zetaclientd import-relayer-key --network=7 --private-key="$privkey_solana" --password=pass_relayerkey
 }
 
 PREPARAMS_PATH="/root/preparams/${HOSTNAME}.json"
@@ -78,8 +75,8 @@ then
     MYIP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
     zetaclientd init --zetacore-url zetacore0 --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
 
-    # create relayer key file for solana
-    create_relayer_key_file 0 "${RELAYER_KEY_PATH}/solana.json"
+    # import relayer private key for zetaclient0
+    import_relayer_key 0
 
     # if eth2 is enabled, set the endpoint in the zetaclient_config.json
     # in this case, the additional evm is represented with the sepolia chain, we set manually the eth2 endpoint to the sepolia chain (11155111 -> http://eth2:8545)
@@ -101,8 +98,8 @@ then
   done
   zetaclientd init --peer "/ip4/172.20.0.21/tcp/6668/p2p/${SEED}" --zetacore-url "$node" --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --log-level 1 --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
 
-  # create relayer key file for solana
-  create_relayer_key_file "${num}" "${RELAYER_KEY_PATH}/solana.json"
+  # import relayer private key for zetaclient{$num}
+  import_relayer_key "${num}"
 
   # check if the option is additional-evm
   # in this case, the additional evm is represented with the sepolia chain, we set manually the eth2 endpoint to the sepolia chain (11155111 -> http://eth2:8545)

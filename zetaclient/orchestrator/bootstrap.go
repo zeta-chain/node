@@ -162,19 +162,16 @@ func syncSignerMap(
 				continue
 			}
 
-			// load the Solana private key
-			relayerKey, err := keys.LoadRelayerKey(app.Config().GetRelayerKeyPath(), *rawChain)
+			// try loading Solana relayer key if present
+			password := app.GetRelayerKeyPassword(rawChain.Network)
+			relayerKey, err := keys.LoadRelayerKey(app.Config().GetRelayerKeyPath(), rawChain.Network, password)
 			if err != nil {
 				logger.Std.Error().Err(err).Msg("Unable to load Solana relayer key")
 				continue
 			}
 
-			var (
-				paramsRaw = chain.Params()
-			)
-
 			// create Solana signer
-			signer, err := solanasigner.NewSigner(*rawChain, *paramsRaw, rpcClient, tss, relayerKey, ts, logger)
+			signer, err := solanasigner.NewSigner(*rawChain, *chain.Params(), rpcClient, tss, relayerKey, ts, logger)
 			if err != nil {
 				logger.Std.Error().Err(err).Msgf("Unable to construct signer for SOL chain %d", chainID)
 				continue

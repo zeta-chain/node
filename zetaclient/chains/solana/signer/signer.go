@@ -30,7 +30,8 @@ type Signer struct {
 	client interfaces.SolanaRPCClient
 
 	// relayerKey is the private key of the relayer account for Solana chain
-	relayerKey solana.PrivateKey
+	// relayerKey is optional, the signer will not relay transactions if it is not set
+	relayerKey *solana.PrivateKey
 
 	// gatewayID is the program ID of gateway program on Solana chain
 	gatewayID solana.PublicKey
@@ -45,7 +46,7 @@ func NewSigner(
 	chainParams observertypes.ChainParams,
 	solClient interfaces.SolanaRPCClient,
 	tss interfaces.TSSSigner,
-	relayerKey keys.RelayerKey,
+	relayerKey *keys.RelayerKey,
 	ts *metrics.TelemetryServer,
 	logger base.Logger,
 ) (*Signer, error) {
@@ -58,21 +59,32 @@ func NewSigner(
 		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
 	}
 
-	// construct Solana private key
-	privKey, err := solana.PrivateKeyFromBase58(relayerKey.PrivateKey)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to construct solana private key")
-	}
-	logger.Std.Info().Msgf("Solana relayer address: %s", privKey.PublicKey())
-
 	// create Solana signer
-	return &Signer{
-		Signer:     baseSigner,
-		client:     solClient,
-		relayerKey: privKey,
-		gatewayID:  gatewayID,
-		pda:        pda,
-	}, nil
+	signer := &Signer{
+		Signer:    baseSigner,
+		client:    solClient,
+		gatewayID: gatewayID,
+		pda:       pda,
+	}
+
+	// construct Solana private key if present
+	if relayerKey != nil {
+		privKey, err := solana.PrivateKeyFromBase58(relayerKey.PrivateKey)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to construct solana private key")
+		}
+		signer.relayerKey = &privKey
+		logger.Std.Info().Msgf("Solana relayer address: %s", privKey.PublicKey())
+	} else {
+		logger.Std.Info().Msg("Solana relayer key is not provided")
+	}
+
+	return signer, nil
+}
+
+// HasRelayerKey returns true if the signer has a relayer key
+func (signer *Signer) HasRelayerKey() bool {
+	return signer.relayerKey != nil
 }
 
 // TryProcessOutbound - signer interface implementation
@@ -118,6 +130,11 @@ func (signer *Signer) TryProcessOutbound(
 	msg, err := signer.SignMsgWithdraw(ctx, params, height)
 	if err != nil {
 		logger.Error().Err(err).Msgf("TryProcessOutbound: SignMsgWithdraw error for chain %d nonce %d", chainID, nonce)
+		return
+	}
+
+	// skip relaying the transaction if this signer hasn't set the relayer key
+	if !signer.HasRelayerKey() {
 		return
 	}
 

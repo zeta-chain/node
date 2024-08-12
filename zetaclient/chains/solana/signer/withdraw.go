@@ -92,7 +92,7 @@ func (signer *Signer) SignWithdrawTx(ctx context.Context, msg contracts.MsgWithd
 	// relayer signs the transaction
 	_, err = tx.Sign(func(key solana.PublicKey) *solana.PrivateKey {
 		if key.Equals(privkey.PublicKey()) {
-			return &privkey
+			return privkey
 		}
 		return nil
 	})
