@@ -15,8 +15,8 @@ import (
 	"testing"
 )
 
-func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
-	t.Run("can create CCTX to migrate ERC20 custody funds", func(t *testing.T) {
+func TestKeeper_UpdateERC20CustodyPauseStatus(t *testing.T) {
+	t.Run("can create CCTX to pause ERC20 custody pause status", func(t *testing.T) {
 		// ARRANGE
 		k, ctx, _, zk := testkeeper.CrosschainKeeperWithMocks(t, testkeeper.CrosschainMockOptions{
 			UseAuthorityMock: true,
@@ -26,12 +26,10 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		tss := sample.Tss()
 
-		msg := types.MsgMigrateERC20CustodyFunds{
-			Creator:           sample.AccAddress(),
-			ChainId:           chainID,
-			NewCustodyAddress: sample.EthAddress().Hex(),
-			Erc20Address:      sample.EthAddress().Hex(),
-			Amount:            sample.UintInRange(42, 100),
+		msg := types.MsgUpdateERC20CustodyPauseStatus{
+			Creator: sample.AccAddress(),
+			ChainId: chainID,
+			Pause:   true,
 		}
 
 		// mock authority calls
@@ -50,7 +48,7 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 		require.True(t, isFound)
 
 		// ACT
-		res, err := msgServer.MigrateERC20CustodyFunds(sdk.WrapSDKContext(ctx), &msg)
+		res, err := msgServer.UpdateERC20CustodyPauseStatus(sdk.WrapSDKContext(ctx), &msg)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -59,16 +57,16 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 		cctx, found := k.GetCrossChainTx(ctx, res.CctxIndex)
 		require.True(t, found)
 		require.Equal(t, coin.CoinType_Cmd, cctx.InboundParams.CoinType)
-		require.Contains(t, cctx.RelayedMessage, constant.CmdMigrateERC20CustodyFunds)
+		require.Contains(t, cctx.RelayedMessage, constant.CmdUpdateERC20CustodyPauseStatus)
 		require.Len(t, cctx.OutboundParams, 1)
 		require.EqualValues(
 			t,
-			medianGasPrice.MulUint64(types.ERC20CustodyMigrationGasMultiplierEVM).String(),
+			medianGasPrice.MulUint64(types.ERC20CustodyPausingGasMultiplierEVM).String(),
 			cctx.OutboundParams[0].GasPrice,
 		)
 		require.EqualValues(
 			t,
-			priorityFee.MulUint64(types.ERC20CustodyMigrationGasMultiplierEVM).String(),
+			priorityFee.MulUint64(types.ERC20CustodyPausingGasMultiplierEVM).String(),
 			cctx.OutboundParams[0].GasPriorityFee,
 		)
 	})
@@ -81,12 +79,10 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		msg := types.MsgMigrateERC20CustodyFunds{
-			Creator:           sample.AccAddress(),
-			ChainId:           getValidEthChain().ChainId,
-			NewCustodyAddress: sample.EthAddress().Hex(),
-			Erc20Address:      sample.EthAddress().Hex(),
-			Amount:            sample.UintInRange(42, 100),
+		msg := types.MsgUpdateERC20CustodyPauseStatus{
+			Creator: sample.AccAddress(),
+			ChainId: getValidEthChain().ChainId,
+			Pause:   true,
 		}
 
 		// mock authority calls
@@ -94,7 +90,7 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 		testkeeper.MockCheckAuthorization(&authorityMock.Mock, &msg, errors.New("not authorized"))
 
 		// ACT
-		_, err := msgServer.MigrateERC20CustodyFunds(sdk.WrapSDKContext(ctx), &msg)
+		_, err := msgServer.UpdateERC20CustodyPauseStatus(sdk.WrapSDKContext(ctx), &msg)
 
 		// ASSERT
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
@@ -110,12 +106,10 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		tss := sample.Tss()
 
-		msg := types.MsgMigrateERC20CustodyFunds{
-			Creator:           sample.AccAddress(),
-			ChainId:           chainID,
-			NewCustodyAddress: sample.EthAddress().Hex(),
-			Erc20Address:      sample.EthAddress().Hex(),
-			Amount:            sample.UintInRange(42, 100),
+		msg := types.MsgUpdateERC20CustodyPauseStatus{
+			Creator: sample.AccAddress(),
+			ChainId: chainID,
+			Pause:   true,
 		}
 
 		// mock authority calls
@@ -132,7 +126,7 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 		k.SetGasPrice(ctx, sample.GasPriceWithChainID(t, chainID))
 
 		// ACT
-		_, err := msgServer.MigrateERC20CustodyFunds(sdk.WrapSDKContext(ctx), &msg)
+		_, err := msgServer.UpdateERC20CustodyPauseStatus(sdk.WrapSDKContext(ctx), &msg)
 
 		// ASSERT
 		require.ErrorIs(t, err, types.ErrInvalidChainID)
@@ -148,12 +142,10 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		tss := sample.Tss()
 
-		msg := types.MsgMigrateERC20CustodyFunds{
-			Creator:           sample.AccAddress(),
-			ChainId:           chainID,
-			NewCustodyAddress: sample.EthAddress().Hex(),
-			Erc20Address:      sample.EthAddress().Hex(),
-			Amount:            sample.UintInRange(42, 100),
+		msg := types.MsgUpdateERC20CustodyPauseStatus{
+			Creator: sample.AccAddress(),
+			ChainId: chainID,
+			Pause:   true,
 		}
 
 		// mock authority calls
@@ -170,7 +162,7 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 		k.SetGasPrice(ctx, sample.GasPriceWithChainID(t, chainID))
 
 		// ACT
-		_, err := msgServer.MigrateERC20CustodyFunds(sdk.WrapSDKContext(ctx), &msg)
+		_, err := msgServer.UpdateERC20CustodyPauseStatus(sdk.WrapSDKContext(ctx), &msg)
 
 		// ASSERT
 		require.ErrorIs(t, err, types.ErrCannotFindTSSKeys)
@@ -186,12 +178,10 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		tss := sample.Tss()
 
-		msg := types.MsgMigrateERC20CustodyFunds{
-			Creator:           sample.AccAddress(),
-			ChainId:           chainID,
-			NewCustodyAddress: sample.EthAddress().Hex(),
-			Erc20Address:      sample.EthAddress().Hex(),
-			Amount:            sample.UintInRange(42, 100),
+		msg := types.MsgUpdateERC20CustodyPauseStatus{
+			Creator: sample.AccAddress(),
+			ChainId: chainID,
+			Pause:   true,
 		}
 
 		// mock authority calls
@@ -206,7 +196,7 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 		k.SetGasPrice(ctx, sample.GasPriceWithChainID(t, chainID))
 
 		// ACT
-		_, err := msgServer.MigrateERC20CustodyFunds(sdk.WrapSDKContext(ctx), &msg)
+		_, err := msgServer.UpdateERC20CustodyPauseStatus(sdk.WrapSDKContext(ctx), &msg)
 
 		// ASSERT
 		require.ErrorIs(t, err, types.ErrInvalidChainID)
@@ -222,12 +212,10 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		tss := sample.Tss()
 
-		msg := types.MsgMigrateERC20CustodyFunds{
-			Creator:           sample.AccAddress(),
-			ChainId:           chainID,
-			NewCustodyAddress: sample.EthAddress().Hex(),
-			Erc20Address:      sample.EthAddress().Hex(),
-			Amount:            sample.UintInRange(42, 100),
+		msg := types.MsgUpdateERC20CustodyPauseStatus{
+			Creator: sample.AccAddress(),
+			ChainId: chainID,
+			Pause:   true,
 		}
 
 		// mock authority calls
@@ -244,7 +232,7 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 		//k.SetGasPrice(ctx, sample.GasPriceWithChainID(t, chainID)) // not set
 
 		// ACT
-		_, err := msgServer.MigrateERC20CustodyFunds(sdk.WrapSDKContext(ctx), &msg)
+		_, err := msgServer.UpdateERC20CustodyPauseStatus(sdk.WrapSDKContext(ctx), &msg)
 
 		// ASSERT
 		require.ErrorIs(t, err, types.ErrUnableToGetGasPrice)
@@ -260,12 +248,10 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		tss := sample.Tss()
 
-		msg := types.MsgMigrateERC20CustodyFunds{
-			Creator:           sample.AccAddress(),
-			ChainId:           chainID,
-			NewCustodyAddress: sample.EthAddress().Hex(),
-			Erc20Address:      sample.EthAddress().Hex(),
-			Amount:            sample.UintInRange(42, 100),
+		msg := types.MsgUpdateERC20CustodyPauseStatus{
+			Creator: sample.AccAddress(),
+			ChainId: chainID,
+			Pause:   true,
 		}
 
 		// mock authority calls
@@ -290,7 +276,7 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 		})
 
 		// ACT
-		_, err := msgServer.MigrateERC20CustodyFunds(sdk.WrapSDKContext(ctx), &msg)
+		_, err := msgServer.UpdateERC20CustodyPauseStatus(sdk.WrapSDKContext(ctx), &msg)
 
 		// ASSERT
 		require.ErrorIs(t, err, types.ErrInvalidGasAmount)
@@ -306,12 +292,10 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		tss := sample.Tss()
 
-		msg := types.MsgMigrateERC20CustodyFunds{
-			Creator:           sample.AccAddress(),
-			ChainId:           chainID,
-			NewCustodyAddress: sample.EthAddress().Hex(),
-			Erc20Address:      sample.EthAddress().Hex(),
-			Amount:            sample.UintInRange(42, 100),
+		msg := types.MsgUpdateERC20CustodyPauseStatus{
+			Creator: sample.AccAddress(),
+			ChainId: chainID,
+			Pause:   true,
 		}
 
 		// mock authority calls
@@ -330,7 +314,7 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 		k.SetGasPrice(ctx, sample.GasPriceWithChainID(t, chainID))
 
 		// ACT
-		_, err := msgServer.MigrateERC20CustodyFunds(sdk.WrapSDKContext(ctx), &msg)
+		_, err := msgServer.UpdateERC20CustodyPauseStatus(sdk.WrapSDKContext(ctx), &msg)
 
 		// ASSERT
 		require.ErrorIs(t, err, observertypes.ErrSupportedChains)

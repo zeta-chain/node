@@ -894,3 +894,59 @@ export declare class MsgMigrateERC20CustodyFundsResponse extends Message<MsgMigr
   static equals(a: MsgMigrateERC20CustodyFundsResponse | PlainMessage<MsgMigrateERC20CustodyFundsResponse> | undefined, b: MsgMigrateERC20CustodyFundsResponse | PlainMessage<MsgMigrateERC20CustodyFundsResponse> | undefined): boolean;
 }
 
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgUpdateERC20CustodyPauseStatus
+ */
+export declare class MsgUpdateERC20CustodyPauseStatus extends Message<MsgUpdateERC20CustodyPauseStatus> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: int64 chain_id = 2;
+   */
+  chainId: bigint;
+
+  /**
+   * pause or unpause
+   * true = pause, false = unpause
+   *
+   * @generated from field: bool pause = 3;
+   */
+  pause: boolean;
+
+  constructor(data?: PartialMessage<MsgUpdateERC20CustodyPauseStatus>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgUpdateERC20CustodyPauseStatus";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateERC20CustodyPauseStatus;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateERC20CustodyPauseStatus;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateERC20CustodyPauseStatus;
+
+  static equals(a: MsgUpdateERC20CustodyPauseStatus | PlainMessage<MsgUpdateERC20CustodyPauseStatus> | undefined, b: MsgUpdateERC20CustodyPauseStatus | PlainMessage<MsgUpdateERC20CustodyPauseStatus> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgUpdateERC20CustodyPauseStatusResponse
+ */
+export declare class MsgUpdateERC20CustodyPauseStatusResponse extends Message<MsgUpdateERC20CustodyPauseStatusResponse> {
+  constructor(data?: PartialMessage<MsgUpdateERC20CustodyPauseStatusResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgUpdateERC20CustodyPauseStatusResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateERC20CustodyPauseStatusResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateERC20CustodyPauseStatusResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateERC20CustodyPauseStatusResponse;
+
+  static equals(a: MsgUpdateERC20CustodyPauseStatusResponse | PlainMessage<MsgUpdateERC20CustodyPauseStatusResponse> | undefined, b: MsgUpdateERC20CustodyPauseStatusResponse | PlainMessage<MsgUpdateERC20CustodyPauseStatusResponse> | undefined): boolean;
+}
+

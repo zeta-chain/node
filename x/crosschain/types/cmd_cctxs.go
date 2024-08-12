@@ -29,6 +29,9 @@ const (
 
 	// ERC20CustodyWhitelistGasMultiplierEVM is multiplied to the median gas price to get the gas price for the erc20 custody whitelist
 	ERC20CustodyWhitelistGasMultiplierEVM = 2
+
+	// ERC20CustodyPausingGasMultiplierEVM is multiplied to the median gas price to get the gas price for the erc20 custody pausing
+	ERC20CustodyPausingGasMultiplierEVM = 2
 )
 
 // MigrateERC20CustodyFundsCmdCCTX returns a CCTX allowing to migrate ERC20 custody funds
@@ -44,7 +47,7 @@ func MigrateERC20CustodyFundsCmdCCTX(
 	tssPubKey string,
 	currentNonce uint64,
 ) CrossChainTx {
-	indexString := GetERC20CustodyMigrationCCTXIndexString(tssPubKey, currentNonce, erc20Address)
+	indexString := GetERC20CustodyMigrationCCTXIndexString(tssPubKey, currentNonce, chainID, erc20Address)
 	hash := crypto.Keccak256Hash([]byte(indexString))
 
 	return newCmdCCTX(
@@ -73,9 +76,54 @@ func MigrateERC20CustodyFundsCmdCCTX(
 func GetERC20CustodyMigrationCCTXIndexString(
 	tssPubKey string,
 	nonce uint64,
+	chainID int64,
 	erc20Address string,
 ) string {
-	return fmt.Sprintf("%s-%d-%s", tssPubKey, nonce, erc20Address)
+	return fmt.Sprintf("%s-%s-%d-%d-%s", constant.CmdMigrateERC20CustodyFunds, tssPubKey, nonce, chainID, erc20Address)
+}
+
+// UpdateERC20CustodyPauseStatusCmdCCTX returns a CCTX allowing to update the pause status of the ERC20 custody contract
+func UpdateERC20CustodyPauseStatusCmdCCTX(
+	creator string,
+	custodyContractAddress string,
+	chainID int64,
+	pause bool,
+	gasPrice string,
+	priorityFee string,
+	tssPubKey string,
+	currentNonce uint64,
+) CrossChainTx {
+	indexString := GetERC20CustodyPausingCmdCCTXIndecString(tssPubKey, currentNonce, chainID)
+	hash := crypto.Keccak256Hash([]byte(indexString))
+
+	params := constant.OptionUnpause
+	if pause {
+		params = constant.OptionPause
+	}
+
+	return newCmdCCTX(
+		creator,
+		hash.Hex(),
+		fmt.Sprintf("%s:%s", constant.CmdUpdateERC20CustodyPauseStatus, params),
+		creator,
+		hash.Hex(),
+		custodyContractAddress,
+		chainID,
+		sdkmath.NewUint(0),
+		100_000,
+		gasPrice,
+		priorityFee,
+		tssPubKey,
+	)
+}
+
+// GetERC20CustodyPausingCmdCCTXIndecString returns the index string of the CCTX for updating the pause status of the ERC20 custody contract
+func GetERC20CustodyPausingCmdCCTXIndecString(
+	tssPubKey string,
+	nonce uint64,
+	chainID int64,
+) string {
+	return fmt.Sprintf("%s-%s-%d-%d", constant.CmdUpdateERC20CustodyPauseStatus, tssPubKey, nonce, chainID)
 }
 
 // WhitelistERC20CmdCCTX returns a CCTX allowing to whitelist an ERC20 token on an external chain

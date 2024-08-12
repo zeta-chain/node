@@ -217,4 +217,4 @@ message MsgUpdateERC20CustodyPauseStatus {
   bool pause = 3;
 }
 
-message MsgUpdateERC20CustodyPauseStatusResponse {}
+message MsgUpdateERC20CustodyPauseStatusResponse { string cctx_index = 1; }
