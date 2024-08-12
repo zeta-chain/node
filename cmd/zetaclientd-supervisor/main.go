@@ -81,6 +81,7 @@ func main() {
 		})
 		eg.Go(func() error {
 			supervisor.WaitForReloadSignal(ctx)
+			cancel()
 			return nil
 		})
 		eg.Go(func() error {
