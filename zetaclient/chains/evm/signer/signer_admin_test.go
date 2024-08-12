@@ -22,7 +22,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, nil)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -92,7 +92,7 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
 
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
 	require.NoError(t, err)
 	require.False(t, skip)
 
@@ -141,7 +141,7 @@ func TestSigner_SignMigrateERC20CustodyFundsCmd(t *testing.T) {
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
 
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
 	require.NoError(t, err)
 	require.False(t, skip)
 
@@ -205,7 +205,7 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 	cctx := getCCTX(t)
 	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 

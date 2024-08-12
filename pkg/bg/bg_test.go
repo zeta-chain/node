@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -51,6 +52,35 @@ func TestWork(t *testing.T) {
 		// Check the log output
 		const expected = `{"level":"error","error":"oopsie","worker.name":"hello","message":"Background task failed"}`
 		assert.JSONEq(t, expected, out.String())
+	})
+
+	t.Run("with name and logger and onComplete", func(t *testing.T) {
+		// ARRANGE
+		// Given a logger
+		out := &bytes.Buffer{}
+		logger := zerolog.New(out)
+		check := int64(0)
+
+		// And a call returning an error
+		call := func(ctx context.Context) error {
+			time.Sleep(100 * time.Millisecond)
+			return nil
+		}
+
+		complete := func() {
+			atomic.AddInt64(&check, 1)
+		}
+
+		// ACT
+		Work(ctx, call, WithName("hello"), WithLogger(logger), OnComplete(complete))
+		time.Sleep(200 * time.Millisecond)
+
+		// Check the log output
+		const expected = `{"level":"info", "message":"Background task completed", "worker.name":"hello"}`
+		assert.JSONEq(t, expected, out.String())
+
+		// Check onComplete
+		assert.Equal(t, int64(1), check)
 	})
 
 	t.Run("panic recovery", func(t *testing.T) {

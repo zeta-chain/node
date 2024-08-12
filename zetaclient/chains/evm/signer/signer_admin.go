@@ -59,8 +59,7 @@ func (signer *Signer) signWhitelistERC20Cmd(
 		data,
 		txData.to,
 		zeroValue,
-		txData.gasLimit,
-		txData.gasPrice,
+		txData.gas,
 		txData.outboundParams.TssNonce,
 		txData.height,
 	)
@@ -101,8 +100,7 @@ func (signer *Signer) signMigrateERC20CustodyFundsCmd(
 		data,
 		txData.to,
 		zeroValue,
-		txData.gasLimit,
-		txData.gasPrice,
+		txData.gas,
 		txData.outboundParams.TssNonce,
 		txData.height,
 	)
@@ -119,8 +117,7 @@ func (signer *Signer) signMigrateTssFundsCmd(ctx context.Context, txData *Outbou
 		nil,
 		txData.to,
 		txData.amount,
-		txData.gasLimit,
-		txData.gasPrice,
+		txData.gas,
 		txData.nonce,
 		txData.height,
 	)

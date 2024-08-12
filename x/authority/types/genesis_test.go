@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -26,8 +27,9 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "valid genesis",
 			gs: &types.GenesisState{
-				Policies:  sample.Policies(),
-				ChainInfo: sample.ChainInfo(42),
+				Policies:          sample.Policies(),
+				ChainInfo:         sample.ChainInfo(42),
+				AuthorizationList: sample.AuthorizationList("testMessage"),
 			},
 			errContains: "",
 		},
@@ -42,12 +44,13 @@ func TestGenesisState_Validate(t *testing.T) {
 						},
 					},
 				},
-				ChainInfo: sample.ChainInfo(42),
+				ChainInfo:         sample.ChainInfo(42),
+				AuthorizationList: sample.AuthorizationList("testMessage"),
 			},
 			errContains: "invalid address",
 		},
 		{
-			name: "invalid if policies is invalid",
+			name: "invalid if chainInfo is invalid",
 			gs: &types.GenesisState{
 				Policies: sample.Policies(),
 				ChainInfo: types.ChainInfo{
@@ -63,8 +66,33 @@ func TestGenesisState_Validate(t *testing.T) {
 						},
 					},
 				},
+				AuthorizationList: sample.AuthorizationList("testMessage"),
 			},
 			errContains: "chain ID must be positive",
+		},
+		{
+			name: "invalid if authorization list is invalid",
+			gs: &types.GenesisState{
+				Policies:  sample.Policies(),
+				ChainInfo: sample.ChainInfo(42),
+				AuthorizationList: types.AuthorizationList{
+					Authorizations: []types.Authorization{
+						{
+							MsgUrl:           fmt.Sprintf("/zetachain/%d%s", 0, "testMessage"),
+							AuthorizedPolicy: types.PolicyType_groupEmergency,
+						},
+						{
+							MsgUrl:           fmt.Sprintf("/zetachain/%d%s", 0, "testMessage"),
+							AuthorizedPolicy: types.PolicyType_groupAdmin,
+						},
+						{
+							MsgUrl:           fmt.Sprintf("/zetachain/%d%s", 0, "testMessage"),
+							AuthorizedPolicy: types.PolicyType_groupOperational,
+						},
+					},
+				},
+			},
+			errContains: "duplicate message url",
 		},
 	}
 	for _, tt := range tests {
