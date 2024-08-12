@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-// MigrateERC20CustodyFunds migrates the funds from the current TSS to the new TSS
+// MigrateERC20CustodyFunds migrates the funds from the current ERC20Custody contract to the new ERC20Custody contract
 func (k msgServer) MigrateERC20CustodyFunds(
 	goCtx context.Context,
 	msg *types.MsgMigrateERC20CustodyFunds,
@@ -49,11 +49,10 @@ func (k msgServer) MigrateERC20CustodyFunds(
 			msg.ChainId,
 		)
 	}
-	// overpays gas price by 2x
-	const multiplier = 2
 
-	medianGasPrice = medianGasPrice.MulUint64(multiplier)
-	priorityFee = priorityFee.MulUint64(multiplier)
+	// overpays gas price by 2x
+	medianGasPrice = medianGasPrice.MulUint64(types.ERC20CustodyMigrationGasMultiplierEVM)
+	priorityFee = priorityFee.MulUint64(types.ERC20CustodyMigrationGasMultiplierEVM)
 
 	// should not happen
 	if priorityFee.GT(medianGasPrice) {
@@ -65,7 +64,7 @@ func (k msgServer) MigrateERC20CustodyFunds(
 		)
 	}
 
-	// create the CCTX
+	// create the CCTX that allows to sign the fund migration
 	cctx := types.MigrateERC20CustodyFundsCmdCCTX(
 		msg.Creator,
 		msg.Erc20Address,

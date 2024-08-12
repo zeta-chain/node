@@ -15,6 +15,22 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/gas"
 )
 
+const (
+	// TssMigrationGasMultiplierEVM is multiplied to the median gas price to get the gas price for the tss migration .
+	// This is done to avoid the tss migration tx getting stuck in the mempool
+	TssMigrationGasMultiplierEVM = "2.5"
+
+	// TSSMigrationBufferAmountEVM is the buffer amount added to the gas price for the tss migration transaction
+	TSSMigrationBufferAmountEVM = "2100000000"
+
+	// ERC20CustodyMigrationGasMultiplierEVM is multiplied to the median gas price to get the gas price for the erc20 custody migration
+	// NOTE: this is a integer type unlike type above because the message logic is slightly different and an integer is needed
+	ERC20CustodyMigrationGasMultiplierEVM = 2
+
+	// ERC20CustodyWhitelistGasMultiplierEVM is multiplied to the median gas price to get the gas price for the erc20 custody whitelist
+	ERC20CustodyWhitelistGasMultiplierEVM = 2
+)
+
 // MigrateERC20CustodyFundsCmdCCTX returns a CCTX allowing to migrate ERC20 custody funds
 func MigrateERC20CustodyFundsCmdCCTX(
 	creator string,

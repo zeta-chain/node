@@ -274,7 +274,7 @@ message MsgUpdateRateLimiterFlags {
 
 ## MsgMigrateERC20CustodyFunds
 
-MigrateERC20CustodyFunds migrates the funds from the current TSS to the new TSS
+MigrateERC20CustodyFunds migrates the funds from the current ERC20Custody contract to the new ERC20Custody contract
 
 ```proto
 message MsgMigrateERC20CustodyFunds {

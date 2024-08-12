@@ -45,6 +45,8 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 			ChainParams: []*observertypes.ChainParams{sample.ChainParamsSupported(chainID)},
 		})
 		k.SetGasPrice(ctx, sample.GasPriceWithChainID(t, chainID))
+		medianGasPrice, priorityFee, isFound := k.GetMedianGasValues(ctx, msg.ChainId)
+		require.True(t, isFound)
 
 		// ACT
 		res, err := msgServer.MigrateERC20CustodyFunds(sdk.WrapSDKContext(ctx), &msg)
@@ -56,6 +58,17 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 		cctx, found := k.GetCrossChainTx(ctx, res.CctxIndex)
 		require.True(t, found)
 		require.Equal(t, coin.CoinType_Cmd, cctx.InboundParams.CoinType)
+		require.Len(t, cctx.OutboundParams, 1)
+		require.EqualValues(
+			t,
+			medianGasPrice.MulUint64(types.ERC20CustodyMigrationGasMultiplierEVM).String(),
+			cctx.OutboundParams[0].GasPrice,
+		)
+		require.EqualValues(
+			t,
+			priorityFee.MulUint64(types.ERC20CustodyMigrationGasMultiplierEVM).String(),
+			cctx.OutboundParams[0].GasPriorityFee,
+		)
 	})
 
 	t.Run("should fail if not authorized", func(t *testing.T) {

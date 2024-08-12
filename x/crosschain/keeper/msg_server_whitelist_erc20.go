@@ -109,11 +109,10 @@ func (k msgServer) WhitelistERC20(
 			msg.ChainId,
 		)
 	}
-	// overpays gas price by 2x
-	const multiplier = 2
 
-	medianGasPrice = medianGasPrice.MulUint64(multiplier)
-	priorityFee = priorityFee.MulUint64(multiplier)
+	// overpays gas price by 2x
+	medianGasPrice = medianGasPrice.MulUint64(types.ERC20CustodyWhitelistGasMultiplierEVM)
+	priorityFee = priorityFee.MulUint64(types.ERC20CustodyWhitelistGasMultiplierEVM)
 
 	// should not happen
 	if priorityFee.GT(medianGasPrice) {
