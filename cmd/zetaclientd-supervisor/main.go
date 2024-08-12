@@ -50,8 +50,6 @@ func main() {
 		os.Exit(1)
 	}
 	supervisor.Start(ctx)
-	// listen for SIGHUP to trigger a restart of zetaclientd
-	signal.Notify(supervisor.restartChan, syscall.SIGHUP)
 
 	shouldRestart := true
 	for shouldRestart {
@@ -89,8 +87,6 @@ func main() {
 				select {
 				case <-ctx.Done():
 					return nil
-				case sig := <-supervisor.restartChan:
-					logger.Info().Msgf("got signal %d, sending SIGINT to zetaclientd", sig)
 				case sig := <-shutdownChan:
 					logger.Info().Msgf("got signal %d, shutting down", sig)
 					shouldRestart = false

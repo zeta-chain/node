@@ -67,7 +67,6 @@ type zetaclientdSupervisor struct {
 	upgradesDir        string
 	upgradePlanName    string
 	enableAutoDownload bool
-	restartChan        chan os.Signal
 }
 
 func newZetaclientdSupervisor(
@@ -83,15 +82,12 @@ func newZetaclientdSupervisor(
 	if err != nil {
 		return nil, fmt.Errorf("grpc dial: %w", err)
 	}
-	// these signals will result in the supervisor process only restarting zetaclientd
-	restartChan := make(chan os.Signal, 1)
 	return &zetaclientdSupervisor{
 		zetacoredConn:      conn,
 		logger:             logger,
 		reloadSignals:      make(chan bool, 1),
 		upgradesDir:        defaultUpgradesDir,
 		enableAutoDownload: enableAutoDownload,
-		restartChan:        restartChan,
 	}, nil
 }
 
