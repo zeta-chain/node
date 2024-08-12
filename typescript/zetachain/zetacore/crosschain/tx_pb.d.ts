@@ -935,6 +935,11 @@ export declare class MsgUpdateERC20CustodyPauseStatus extends Message<MsgUpdateE
  * @generated from message zetachain.zetacore.crosschain.MsgUpdateERC20CustodyPauseStatusResponse
  */
 export declare class MsgUpdateERC20CustodyPauseStatusResponse extends Message<MsgUpdateERC20CustodyPauseStatusResponse> {
+  /**
+   * @generated from field: string cctx_index = 1;
+   */
+  cctxIndex: string;
+
   constructor(data?: PartialMessage<MsgUpdateERC20CustodyPauseStatusResponse>);
 
   static readonly runtime: typeof proto3;
