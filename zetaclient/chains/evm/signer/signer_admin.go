@@ -13,12 +13,12 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/constant"
 )
 
-// SignCommandTx signs a transaction based on the given command includes:
+// SignAdminTx signs a transaction based on the given command includes:
 //
 //	cmd_whitelist_erc20
 //	cmd_migrate_erc20_custody_funds
 //	cmd_migrate_tss_funds
-func (signer *Signer) SignCommandTx(
+func (signer *Signer) SignAdminTx(
 	ctx context.Context,
 	txData *OutboundData,
 	cmd string,
@@ -26,24 +26,24 @@ func (signer *Signer) SignCommandTx(
 ) (*ethtypes.Transaction, error) {
 	switch cmd {
 	case constant.CmdWhitelistERC20:
-		return signer.SignWhitelistERC20Cmd(ctx, txData, params)
+		return signer.signWhitelistERC20Cmd(ctx, txData, params)
 	case constant.CmdMigrateERC20CustodyFunds:
-		return signer.SignMigrateERC20CustodyFundsCmd(ctx, txData, params)
+		return signer.signMigrateERC20CustodyFundsCmd(ctx, txData, params)
 	case constant.CmdMigrateTssFunds:
-		return signer.SignMigrateTssFundsCmd(ctx, txData)
+		return signer.signMigrateTssFundsCmd(ctx, txData)
 	}
-	return nil, fmt.Errorf("SignCommandTx: unknown command %s", cmd)
+	return nil, fmt.Errorf("SignAdminTx: unknown command %s", cmd)
 }
 
-// SignWhitelistERC20Cmd signs a whitelist command for ERC20 token
-func (signer *Signer) SignWhitelistERC20Cmd(
+// signWhitelistERC20Cmd signs a whitelist command for ERC20 token
+func (signer *Signer) signWhitelistERC20Cmd(
 	ctx context.Context,
 	txData *OutboundData,
 	params string,
 ) (*ethtypes.Transaction, error) {
 	erc20 := ethcommon.HexToAddress(params)
 	if erc20 == (ethcommon.Address{}) {
-		return nil, fmt.Errorf("SignCommandTx: invalid erc20 address %s", params)
+		return nil, fmt.Errorf("SignAdminTx: invalid erc20 address %s", params)
 	}
 	custodyAbi, err := erc20custody.ERC20CustodyMetaData.GetAbi()
 	if err != nil {
@@ -70,21 +70,21 @@ func (signer *Signer) SignWhitelistERC20Cmd(
 	return tx, nil
 }
 
-// SignMigrateERC20CustodyFundsCmd signs a migrate ERC20 custody funds command
-func (signer *Signer) SignMigrateERC20CustodyFundsCmd(
+// signMigrateERC20CustodyFundsCmd signs a migrate ERC20 custody funds command
+func (signer *Signer) signMigrateERC20CustodyFundsCmd(
 	ctx context.Context,
 	txData *OutboundData,
 	params string,
 ) (*ethtypes.Transaction, error) {
 	paramsArray := strings.Split(params, ",")
 	if len(paramsArray) != 3 {
-		return nil, fmt.Errorf("SignMigrateERC20CustodyFundsCmd: invalid params %s", params)
+		return nil, fmt.Errorf("signMigrateERC20CustodyFundsCmd: invalid params %s", params)
 	}
 	newCustody := ethcommon.HexToAddress(paramsArray[0])
 	erc20 := ethcommon.HexToAddress(paramsArray[1])
 	amount, ok := new(big.Int).SetString(paramsArray[2], 10)
 	if !ok {
-		return nil, fmt.Errorf("SignMigrateERC20CustodyFundsCmd: invalid amount %s", paramsArray[2])
+		return nil, fmt.Errorf("signMigrateERC20CustodyFundsCmd: invalid amount %s", paramsArray[2])
 	}
 
 	custodyAbi, err := erc20custody.ERC20CustodyMetaData.GetAbi()
@@ -107,13 +107,13 @@ func (signer *Signer) SignMigrateERC20CustodyFundsCmd(
 		txData.height,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("SignMigrateERC20CustodyFundsCmd error: %w", err)
+		return nil, fmt.Errorf("signMigrateERC20CustodyFundsCmd error: %w", err)
 	}
 	return tx, nil
 }
 
-// SignMigrateTssFundsCmd signs a migrate TSS funds command
-func (signer *Signer) SignMigrateTssFundsCmd(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
+// signMigrateTssFundsCmd signs a migrate TSS funds command
+func (signer *Signer) signMigrateTssFundsCmd(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
 	tx, _, _, err := signer.Sign(
 		ctx,
 		nil,
@@ -125,7 +125,7 @@ func (signer *Signer) SignMigrateTssFundsCmd(ctx context.Context, txData *Outbou
 		txData.height,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("SignMigrateTssFundsCmd error: %w", err)
+		return nil, fmt.Errorf("signMigrateTssFundsCmd error: %w", err)
 	}
 	return tx, nil
 }

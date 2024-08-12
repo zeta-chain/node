@@ -432,7 +432,7 @@ func (signer *Signer) TryProcessOutbound(
 		// params field is used to pass input parameters for command requests, currently it is used to pass the ERC20
 		// contract address when a whitelist command is requested
 		params := msg[1]
-		tx, err = signer.SignCommandTx(ctx, txData, cmd, params)
+		tx, err = signer.SignAdminTx(ctx, txData, cmd, params)
 		if err != nil {
 			logger.Warn().Err(err).Msg(ErrorMsg(cctx))
 			return

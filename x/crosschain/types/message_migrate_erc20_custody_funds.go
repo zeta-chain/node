@@ -55,18 +55,14 @@ func (msg *MsgMigrateERC20CustodyFunds) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
-	// newCustodyContractAddress is a valid ethereum address
-	if !ethcommon.IsHexAddress(msg.NewCustodyAddress) {
+	switch {
+	case !ethcommon.IsHexAddress(msg.NewCustodyAddress):
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid new custody address")
-	}
-
-	// erc20Address is a valid ethereum address
-	if !ethcommon.IsHexAddress(msg.Erc20Address) {
+	case !ethcommon.IsHexAddress(msg.Erc20Address):
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid erc20 address")
-	}
-
-	if msg.Amount.IsZero() {
+	case msg.Amount.IsZero():
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "amount cannot be zero")
 	}
+
 	return nil
 }
