@@ -11,6 +11,9 @@ const (
 	// CmdMigrateERC20CustodyFunds is used for CCTX of type cmd to give the instruction to the TSS to transfer its funds on a new address
 	CmdMigrateERC20CustodyFunds = "cmd_migrate_erc20_custody_funds"
 
+	// CmdUpdateERC20CustodyPauseStatus is used for CCTX of type cmd to give the instruction to the TSS to update the pause status of the ERC20 custody contract
+	CmdUpdateERC20CustodyPauseStatus = "cmd_update_erc20_custody_pause_status"
+
 	// CmdMigrateTssFunds is used for CCTX of type cmd to give the instruction to the TSS to transfer its funds on a new address
 	CmdMigrateTssFunds = "cmd_migrate_tss_funds"
 
@@ -22,4 +25,10 @@ const (
 	// The Solana protocol sets minimum rent exempt to 890880 lamports but we set it to 1_000_000 lamports (0.001 SOL)
 	// The number 890880 comes from CLI command `solana rent 0` and has been verified on devnet gateway program
 	SolanaWalletRentExempt = 1_000_000
+
+	// OptionPause is the argument used in CmdUpdateERC20CustodyPauseStatus to pause the ERC20 custody contract
+	OptionPause = "pause"
+
+	// OptionUnpause is the argument used in CmdUpdateERC20CustodyPauseStatus to unpause the ERC20 custody contract
+	OptionUnpause = "unpause"
 )

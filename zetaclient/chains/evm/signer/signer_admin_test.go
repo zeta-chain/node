@@ -63,6 +63,22 @@ func TestSigner_SignAdminTx(t *testing.T) {
 		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, big.NewInt(0))
 	})
 
+	t.Run("SignAdminTx CmdUpdateERC20CustodyPauseStatus", func(t *testing.T) {
+		cmd := constant.CmdUpdateERC20CustodyPauseStatus
+		params := constant.OptionPause
+		// Call SignAdminTx
+		tx, err := evmSigner.SignAdminTx(ctx, txData, cmd, params)
+		require.NoError(t, err)
+
+		// Verify tx signature
+		tss := mocks.NewTSSMainnet()
+		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+
+		// Verify tx body basics
+		// Note: Revert tx calls erc20 custody contract with 0 gas token
+		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, big.NewInt(0))
+	})
+
 	t.Run("SignAdminTx CmdMigrateTssFunds", func(t *testing.T) {
 		cmd := constant.CmdMigrateTssFunds
 		// Call SignAdminTx
@@ -188,6 +204,85 @@ func TestSigner_SignMigrateERC20CustodyFundsCmd(t *testing.T) {
 
 		// Call signWhitelistERC20Cmd
 		tx, err := evmSigner.signMigrateERC20CustodyFundsCmd(ctx, txData, params)
+		require.ErrorContains(t, err, "tss is paused")
+		require.Nil(t, tx)
+	})
+}
+
+func TestSigner_SignUpdateERC20CustodyPauseStatusCmd(t *testing.T) {
+	ctx := makeCtx(t)
+
+	// Setup evm signer
+	tss := mocks.NewTSSMainnet()
+	evmSigner, err := getNewEvmSigner(tss)
+	require.NoError(t, err)
+
+	// Setup txData struct
+	cctx := getCCTX(t)
+
+	mockObserver, err := getNewEvmChainObserver(t, tss)
+	require.NoError(t, err)
+
+	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
+	require.NoError(t, err)
+	require.False(t, skip)
+
+	t.Run("signUpdateERC20CustodyPauseStatusCmd - should successfully sign for pause", func(t *testing.T) {
+		// Call signWhitelistERC20Cmd
+
+		params := constant.OptionPause
+
+		tx, err := evmSigner.signUpdateERC20CustodyPauseStatusCmd(ctx, txData, params)
+		require.NoError(t, err)
+		require.NotNil(t, tx)
+
+		// Verify tx signature
+		tss := mocks.NewTSSMainnet()
+		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+
+		// Verify tx body basics
+		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, zeroValue)
+	})
+
+	t.Run("signUpdateERC20CustodyPauseStatusCmd - should successfully sign for unpause", func(t *testing.T) {
+		// Call signWhitelistERC20Cmd
+
+		params := constant.OptionUnpause
+
+		tx, err := evmSigner.signUpdateERC20CustodyPauseStatusCmd(ctx, txData, params)
+		require.NoError(t, err)
+		require.NotNil(t, tx)
+
+		// Verify tx signature
+		tss := mocks.NewTSSMainnet()
+		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+
+		// Verify tx body basics
+		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, zeroValue)
+	})
+
+	t.Run("signUpdateERC20CustodyPauseStatusCmd - should fail on invalid params", func(t *testing.T) {
+		params := "invalid"
+
+		_, err := evmSigner.signUpdateERC20CustodyPauseStatusCmd(ctx, txData, params)
+		require.ErrorContains(t, err, "invalid params")
+	})
+
+	t.Run("signUpdateERC20CustodyPauseStatusCmd - should fail on empty params", func(t *testing.T) {
+		params := ""
+
+		_, err := evmSigner.signUpdateERC20CustodyPauseStatusCmd(ctx, txData, params)
+		require.ErrorContains(t, err, "invalid params")
+	})
+
+	t.Run("signUpdateERC20CustodyPauseStatusCmd - should fail if keysign fails", func(t *testing.T) {
+		// Pause tss to make keysign fail
+		tss.Pause()
+
+		params := constant.OptionPause
+
+		// Call signWhitelistERC20Cmd
+		tx, err := evmSigner.signUpdateERC20CustodyPauseStatusCmd(ctx, txData, params)
 		require.ErrorContains(t, err, "tss is paused")
 		require.Nil(t, tx)
 	})
