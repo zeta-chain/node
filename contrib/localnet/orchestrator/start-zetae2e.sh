@@ -99,6 +99,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
 
   # set upgrade height to 225 by default
   UPGRADE_HEIGHT=${UPGRADE_HEIGHT:=225}
+  OLD_VERSION=$(get_zetacored_version)
 
   if [[ ! -f deployed.yml ]]; then
     zetae2e local $E2E_ARGS --setup-only --config config.yml --config-out deployed.yml --skip-header-proof
@@ -123,9 +124,6 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   fi
 
   echo "Waiting for upgrade height..."
-
-  OLD_VERSION=$(get_zetacored_version)
-
   CURRENT_HEIGHT=0
   WAIT_HEIGHT=$(( UPGRADE_HEIGHT - 1 ))
   # wait for upgrade height
