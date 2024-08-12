@@ -117,7 +117,7 @@ func UpdateERC20CustodyPauseStatusCmdCCTX(
 	)
 }
 
-// GetERC20CustodyPausingCmdCCTXIndecString returns the index string of the CCTX for updating the pause status of the ERC20 custody contract
+// GetERC20CustodyPausingCmdCCTXIndexString returns the index string of the CCTX for updating the pause status of the ERC20 custody contract
 func GetERC20CustodyPausingCmdCCTXIndecString(
 	tssPubKey string,
 	nonce uint64,
