@@ -83,6 +83,17 @@ func (k msgServer) UpdateERC20CustodyPauseStatus(
 	}
 	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx)
 
+	err = ctx.EventManager().EmitTypedEvent(
+		&types.EventERC20CustodyPausing{
+			ChainId:   msg.ChainId,
+			Pause:     msg.Pause,
+			CctxIndex: cctx.Index,
+		},
+	)
+	if err != nil {
+		return nil, errorsmod.Wrapf(err, "failed to emit event")
+	}
+
 	return &types.MsgUpdateERC20CustodyPauseStatusResponse{
 		CctxIndex: cctx.Index,
 	}, nil
