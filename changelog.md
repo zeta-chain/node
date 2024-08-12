@@ -5,7 +5,7 @@
 ### Features
 
 * [2578](https://github.com/zeta-chain/node/pull/2578) - add Gateway address in protocol contract list
-* [2630](https://github.com/zeta-chain/node/pull/2630) - implement `MsgMigrateERC20CustodyFunds` to migrate the funds from the ERC20Custody to a new contracts
+* [2630](https://github.com/zeta-chain/node/pull/2630) - implement `MsgMigrateERC20CustodyFunds` to migrate the funds from the ERC20Custody to a new contracts (to be used for the new ERC20Custody contract for smart contract V2)
 
 ## v19.0.0
 
