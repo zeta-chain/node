@@ -142,7 +142,7 @@ func TestKeeper_UpdateObserverAddress(t *testing.T) {
 		// ACT
 		err := k.UpdateObserverAddress(ctx, oldObserverAddress, newObserverAddress)
 
-		// ASSERT 2
+		// ASSERT
 		require.ErrorContains(t, err, types.ErrDuplicateObserver.Error())
 	})
 	t.Run("should error if observer address not found", func(t *testing.T) {

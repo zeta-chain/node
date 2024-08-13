@@ -40,19 +40,20 @@ func (k Keeper) IsAddressPartOfObserverSet(ctx sdk.Context, address string) bool
 // AddObserverToSet adds an observer to the observer set.It makes sure the updated observer set is valid.
 func (k Keeper) AddObserverToSet(ctx sdk.Context, address string) error {
 	observerSet, found := k.GetObserverSet(ctx)
-	switch {
-	case !found:
+	if !found {
 		observerSet = types.ObserverSet{
-			ObserverList: []string{address},
+			ObserverList: []string{},
 		}
-	default:
-		observerSet.ObserverList = append(observerSet.ObserverList, address)
 	}
-	err := observerSet.Validate()
-	if err != nil {
+
+	observerSet.ObserverList = append(observerSet.ObserverList, address)
+
+	if err := observerSet.Validate(); err != nil {
 		return err
 	}
+
 	k.SetObserverSet(ctx, observerSet)
+
 	return nil
 }
 
