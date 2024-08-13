@@ -122,7 +122,6 @@ func (m *CrossChainTx) AddOutbound(
 	m.GetCurrentOutboundParam().EffectiveGasPrice = msg.ObservedOutboundEffectiveGasPrice
 	m.GetCurrentOutboundParam().EffectiveGasLimit = msg.ObservedOutboundEffectiveGasLimit
 	m.GetCurrentOutboundParam().ObservedExternalHeight = msg.ObservedOutboundBlockHeight
-	m.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 	return nil
 }
 
@@ -211,6 +210,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 	status := &Status{
 		Status:              CctxStatus_PendingInbound,
 		StatusMessage:       "",
+		CreatedTimestamp:    ctx.BlockHeader().Time.Unix(),
 		LastUpdateTimestamp: ctx.BlockHeader().Time.Unix(),
 		IsAbortRefunded:     false,
 	}

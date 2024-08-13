@@ -56,6 +56,11 @@ func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(ctx sdk.Context, cctx 
 
 // SetCrossChainTx set a specific send in the store from its index
 func (k Keeper) SetCrossChainTx(ctx sdk.Context, cctx types.CrossChainTx) {
+	// only set the update timestamp if the block height is >0 to allow
+	// for a genesis import
+	if cctx.CctxStatus != nil && ctx.BlockHeight() > 0 {
+		cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
+	}
 	p := types.KeyPrefix(fmt.Sprintf("%s", types.CCTXKey))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 	b := k.cdc.MustMarshal(&cctx)

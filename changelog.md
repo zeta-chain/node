@@ -8,6 +8,7 @@
 * [2634](https://github.com/zeta-chain/node/pull/2634) - add support for EIP-1559 gas fees
 * [2597](https://github.com/zeta-chain/node/pull/2597) - Add generic rpc metrics to zetaclient
 * [2538](https://github.com/zeta-chain/node/pull/2538) - add background worker routines to shutdown zetaclientd when needed for tss migration
+* [2644](https://github.com/zeta-chain/node/pull/2644) - add created_timestamp to cctx status
 * [2673](https://github.com/zeta-chain/node/pull/2673) - add relayer key importer, encryption and decryption
 
 ### Refactor
