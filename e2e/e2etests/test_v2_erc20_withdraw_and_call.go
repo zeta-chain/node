@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -18,7 +19,7 @@ func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, args []string) {
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
 	require.True(r, ok, "Invalid amount specified for TestV2ERC20WithdrawAndCall")
 
-	r.AssertTestDAppEVMValues(false, payloadMessageWithdrawERC20, amount)
+	r.AssertTestDAppEVMCalled(false, payloadMessageWithdrawERC20, amount)
 
 	r.ApproveERC20ZRC20(r.GatewayZEVMAddr)
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
@@ -28,6 +29,7 @@ func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, args []string) {
 		r.TestDAppV2EVMAddr,
 		amount,
 		r.EncodeERC20Call(r.ERC20Addr, amount, payloadMessageWithdrawERC20),
+		gatewayzevm.RevertOptions{},
 	)
 
 	// wait for the cctx to be mined
@@ -35,5 +37,5 @@ func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "withdraw")
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
-	r.AssertTestDAppEVMValues(true, payloadMessageWithdrawERC20, amount)
+	r.AssertTestDAppEVMCalled(true, payloadMessageWithdrawERC20, amount)
 }

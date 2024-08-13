@@ -29,6 +29,13 @@ var (
 	_ = abi.ConvertType
 )
 
+// TestDAppV2RevertContext is an auto generated low-level Go binding around an user-defined struct.
+type TestDAppV2RevertContext struct {
+	Asset         common.Address
+	Amount        uint64
+	RevertMessage []byte
+}
+
 // TestDAppV2zContext is an auto generated low-level Go binding around an user-defined struct.
 type TestDAppV2zContext struct {
 	Origin  []byte
@@ -38,8 +45,8 @@ type TestDAppV2zContext struct {
 
 // TestDAppV2MetaData contains all meta data concerning the TestDAppV2 contract.
 var TestDAppV2MetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"erc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"message\",\"type\":\"string\"}],\"name\":\"erc20Call\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"message\",\"type\":\"string\"}],\"name\":\"gasCall\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"lastAmount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"lastContext\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"origin\",\"type\":\"bytes\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"lastMessage\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"lastZRC20\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"bytes\",\"name\":\"origin\",\"type\":\"bytes\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"}],\"internalType\":\"structTestDAppV2.zContext\",\"name\":\"context\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"zrc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"}],\"name\":\"onCrossChainCall\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"message\",\"type\":\"string\"}],\"name\":\"simpleCall\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
-	Bin: "0x608060405234801561001057600080fd5b50611277806100206000396000f3fe60806040526004361061007b5760003560e01c8063b2f79b031161004e578063b2f79b031461011b578063b73f7eb114610146578063c7a339a914610173578063de43156e1461019c5761007b565b8063329707101461008057806336e980a0146100ab578063829a86d9146100d4578063a799911f146100ff575b600080fd5b34801561008c57600080fd5b506100956101c5565b6040516100a29190610aba565b60405180910390f35b3480156100b757600080fd5b506100d260048036038101906100cd9190610875565b610253565b005b3480156100e057600080fd5b506100e9610288565b6040516100f69190610adc565b60405180910390f35b61011960048036038101906101149190610875565b61028e565b005b34801561012757600080fd5b506101306102c2565b60405161013d9190610a2a565b60405180910390f35b34801561015257600080fd5b5061015b6102e8565b60405161016a93929190610a7c565b60405180910390f35b34801561017f57600080fd5b5061019a60048036038101906101959190610806565b6103a8565b005b3480156101a857600080fd5b506101c360048036038101906101be91906108be565b610476565b005b600580546101d290610ea7565b80601f01602080910402602001604051908101604052809291908181526020018280546101fe90610ea7565b801561024b5780601f106102205761010080835404028352916020019161024b565b820191906000526020600020905b81548152906001019060200180831161022e57829003601f168201915b505050505081565b61025c81610540565b1561026657600080fd5b806005908051906020019061027c929190610577565b50600060048190555050565b60045481565b61029781610540565b156102a157600080fd5b80600590805190602001906102b7929190610577565b503460048190555050565b600360009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b60008060000180546102f990610ea7565b80601f016020809104026020016040519081016040528092919081815260200182805461032590610ea7565b80156103725780601f1061034757610100808354040283529160200191610372565b820191906000526020600020905b81548152906001019060200180831161035557829003601f168201915b5050505050908060010160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff16908060020154905083565b6103b181610540565b156103bb57600080fd5b8273ffffffffffffffffffffffffffffffffffffffff166323b872dd3330856040518463ffffffff1660e01b81526004016103f893929190610a45565b602060405180830381600087803b15801561041257600080fd5b505af1158015610426573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061044a91906107d9565b61045357600080fd5b8060059080519060200190610469929190610577565b5081600481905550505050565b6104c382828080601f016020809104026020016040519081016040528093929190818152602001838380828437600081840152601f19601f82011690508083019250505050505050610540565b156104cd57600080fd5b84600081816104dc919061118a565b90505083600360006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550826004819055508181600591906105389291906105fd565b505050505050565b600060405160200161055190610a15565b604051602081830303815290604052805190602001208280519060200120149050919050565b82805461058390610ea7565b90600052602060002090601f0160209004810192826105a557600085556105ec565b82601f106105be57805160ff19168380011785556105ec565b828001600101855582156105ec579182015b828111156105eb5782518255916020019190600101906105d0565b5b5090506105f99190610683565b5090565b82805461060990610ea7565b90600052602060002090601f01602090048101928261062b5760008555610672565b82601f1061064457803560ff1916838001178555610672565b82800160010185558215610672579182015b82811115610671578235825591602001919060010190610656565b5b50905061067f9190610683565b5090565b5b8082111561069c576000816000905550600101610684565b5090565b60006106b36106ae84610b7f565b610b5a565b9050828152602081018484840111156106cf576106ce611005565b5b6106da848285610dee565b509392505050565b6000813590506106f1816111e0565b92915050565b600081519050610706816111f7565b92915050565b60008083601f84011261072257610721610fe7565b5b8235905067ffffffffffffffff81111561073f5761073e610fe2565b5b60208301915083600182028301111561075b5761075a610ffb565b5b9250929050565b6000813590506107718161120e565b92915050565b600082601f83011261078c5761078b610fe7565b5b813561079c8482602086016106a0565b91505092915050565b6000606082840312156107bb576107ba610ff1565b5b81905092915050565b6000813590506107d381611225565b92915050565b6000602082840312156107ef576107ee61100f565b5b60006107fd848285016106f7565b91505092915050565b60008060006060848603121561081f5761081e61100f565b5b600061082d86828701610762565b935050602061083e868287016107c4565b925050604084013567ffffffffffffffff81111561085f5761085e61100a565b5b61086b86828701610777565b9150509250925092565b60006020828403121561088b5761088a61100f565b5b600082013567ffffffffffffffff8111156108a9576108a861100a565b5b6108b584828501610777565b91505092915050565b6000806000806000608086880312156108da576108d961100f565b5b600086013567ffffffffffffffff8111156108f8576108f761100a565b5b610904888289016107a5565b9550506020610915888289016106e2565b9450506040610926888289016107c4565b935050606086013567ffffffffffffffff8111156109475761094661100a565b5b6109538882890161070c565b92509250509295509295909350565b61096b81610c59565b82525050565b600061097c82610bd0565b6109868185610be6565b9350610996818560208601610dfd565b61099f81611014565b840191505092915050565b60006109b582610bdb565b6109bf8185610bf7565b93506109cf818560208601610dfd565b6109d881611014565b840191505092915050565b60006109f0600683610c08565b91506109fb82611064565b600682019050919050565b610a0f81610ca9565b82525050565b6000610a20826109e3565b9150819050919050565b6000602082019050610a3f6000830184610962565b92915050565b6000606082019050610a5a6000830186610962565b610a676020830185610962565b610a746040830184610a06565b949350505050565b60006060820190508181036000830152610a968186610971565b9050610aa56020830185610962565b610ab26040830184610a06565b949350505050565b60006020820190508181036000830152610ad481846109aa565b905092915050565b6000602082019050610af16000830184610a06565b92915050565b60008083356001602003843603038112610b1457610b13610ff6565b5b80840192508235915067ffffffffffffffff821115610b3657610b35610fec565b5b602083019250600182023603831315610b5257610b51611000565b5b509250929050565b6000610b64610b75565b9050610b708282610ef5565b919050565b6000604051905090565b600067ffffffffffffffff821115610b9a57610b99610f73565b5b610ba382611014565b9050602081019050919050565b60008190508160005260206000209050919050565b600082905092915050565b600081519050919050565b600081519050919050565b600082825260208201905092915050565b600082825260208201905092915050565b600081905092915050565b601f821115610c5457610c2581610bb0565b610c2e84610e97565b81016020851015610c3d578190505b610c51610c4985610e97565b830182610cb3565b50505b505050565b6000610c6482610c89565b9050919050565b60008115159050919050565b6000610c8282610c59565b9050919050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b6000819050919050565b5b81811015610cd257610cc760008261104c565b600181019050610cb4565b5050565b6000610ce182610ce8565b9050919050565b6000610cf382610cfa565b9050919050565b6000610d0582610c89565b9050919050565b6000610d1782610ca9565b9050919050565b610d288383610bc5565b67ffffffffffffffff811115610d4157610d40610f73565b5b610d4b8254610ea7565b610d56828285610c13565b6000601f831160018114610d855760008415610d73578287013590505b610d7d8582610ed9565b865550610de5565b601f198416610d9386610bb0565b60005b82811015610dbb57848901358255600182019150602085019450602081019050610d96565b86831015610dd85784890135610dd4601f891682610f26565b8355505b6001600288020188555050505b50505050505050565b82818337600083830152505050565b60005b83811015610e1b578082015181840152602081019050610e00565b83811115610e2a576000848401525b50505050565b6000810160008301610e428185610af7565b610e4d81838661117a565b50505050600181016020830180610e6381610fb6565b9050610e6f8184611157565b505050600281016040830180610e8481610fcc565b9050610e908184611198565b5050505050565b60006020601f8301049050919050565b60006002820490506001821680610ebf57607f821691505b60208210811415610ed357610ed2610f44565b5b50919050565b6000610ee58383610f26565b9150826002028217905092915050565b610efe82611014565b810181811067ffffffffffffffff82111715610f1d57610f1c610f73565b5b80604052505050565b6000610f376000198460080261103f565b1980831691505092915050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052602260045260246000fd5b7f4e487b7100000000000000000000000000000000000000000000000000000000600052604160045260246000fd5b6000819050919050565b6000819050919050565b60008135610fc3816111e0565b80915050919050565b60008135610fd981611225565b80915050919050565b600080fd5b600080fd5b600080fd5b600080fd5b600080fd5b600080fd5b600080fd5b600080fd5b600080fd5b600080fd5b6000601f19601f8301169050919050565b60008160001b9050919050565b600082821b905092915050565b600082821c905092915050565b61105461123c565b61105f8184846111bb565b505050565b7f7265766572740000000000000000000000000000000000000000000000000000600082015250565b600073ffffffffffffffffffffffffffffffffffffffff6110ad84611025565b9350801983169250808416831791505092915050565b60007fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff6110ef84611025565b9350801983169250808416831791505092915050565b6000600883026111357fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff82611032565b61113f8683611032565b95508019841693508086168417925050509392505050565b61116082610cd6565b61117361116c82610fa2565b835461108d565b8255505050565b611185838383610d1e565b505050565b6111948282610e30565b5050565b6111a182610d0c565b6111b46111ad82610fac565b83546110c3565b8255505050565b6111c483610d0c565b6111d86111d082610fac565b848454611105565b825550505050565b6111e981610c59565b81146111f457600080fd5b50565b61120081610c6b565b811461120b57600080fd5b50565b61121781610c77565b811461122257600080fd5b50565b61122e81610ca9565b811461123957600080fd5b50565b60009056fea2646970667358221220b1ce7c9b2fc96e1650beda0d57f966fa383464e64542b3eb5e2c049c85a3743d64736f6c63430008070033",
+	ABI: "[{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"amountWithMessage\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"calledWithMessage\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"erc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"message\",\"type\":\"string\"}],\"name\":\"erc20Call\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"message\",\"type\":\"string\"}],\"name\":\"gasCall\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"message\",\"type\":\"string\"}],\"name\":\"getAmountWithMessage\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"message\",\"type\":\"string\"}],\"name\":\"getCalledWithMessage\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"bytes\",\"name\":\"origin\",\"type\":\"bytes\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"}],\"internalType\":\"structTestDAppV2.zContext\",\"name\":\"_context\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"_zrc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"}],\"name\":\"onCrossChainCall\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"uint64\",\"name\":\"amount\",\"type\":\"uint64\"},{\"internalType\":\"bytes\",\"name\":\"revertMessage\",\"type\":\"bytes\"}],\"internalType\":\"structTestDAppV2.RevertContext\",\"name\":\"revertContext\",\"type\":\"tuple\"}],\"name\":\"onRevert\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"message\",\"type\":\"string\"}],\"name\":\"simpleCall\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	Bin: "0x608060405234801561001057600080fd5b50610e2f806100206000396000f3fe6080604052600436106100865760003560e01c8063a799911f11610059578063a799911f14610157578063c7a339a914610173578063de43156e1461019c578063e2842ed7146101c5578063f592cbfb1461020257610086565b806336e980a01461008b5780634297a263146100b4578063660b9de0146100f15780639291fe261461011a575b600080fd5b34801561009757600080fd5b506100b260048036038101906100ad91906108f5565b61023f565b005b3480156100c057600080fd5b506100db60048036038101906100d69190610859565b610269565b6040516100e89190610b2a565b60405180910390f35b3480156100fd57600080fd5b506101186004803603810190610113919061093e565b610281565b005b34801561012657600080fd5b50610141600480360381019061013c91906108f5565b61033c565b60405161014e9190610b2a565b60405180910390f35b610171600480360381019061016c91906108f5565b61037f565b005b34801561017f57600080fd5b5061019a60048036038101906101959190610886565b6103a8565b005b3480156101a857600080fd5b506101c360048036038101906101be9190610987565b61046b565b005b3480156101d157600080fd5b506101ec60048036038101906101e79190610859565b610564565b6040516101f99190610b0f565b60405180910390f35b34801561020e57600080fd5b50610229600480360381019061022491906108f5565b610584565b6040516102369190610b0f565b60405180910390f35b610248816105d3565b1561025257600080fd5b61025b81610629565b61026681600061067d565b50565b60016020528060005260406000206000915090505481565b6102dc8180604001906102949190610b45565b8080601f016020809104026020016040519081016040528093929190818152602001838380828437600081840152601f19601f82011690508083019250505050505050610629565b6103398180604001906102ef9190610b45565b8080601f016020809104026020016040519081016040528093929190818152602001838380828437600081840152601f19601f82011690508083019250505050505050600061067d565b50565b600060016000836040516020016103539190610aac565b604051602081830303815290604052805190602001208152602001908152602001600020549050919050565b610388816105d3565b1561039257600080fd5b61039b81610629565b6103a5813461067d565b50565b6103b1816105d3565b156103bb57600080fd5b8273ffffffffffffffffffffffffffffffffffffffff166323b872dd3330856040518463ffffffff1660e01b81526004016103f893929190610ad8565b602060405180830381600087803b15801561041257600080fd5b505af1158015610426573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061044a919061082c565b61045357600080fd5b61045c81610629565b610466818361067d565b505050565b6104b882828080601f016020809104026020016040519081016040528093929190818152602001838380828437600081840152601f19601f820116905080830192505050505050506105d3565b156104c257600080fd5b61050f82828080601f016020809104026020016040519081016040528093929190818152602001838380828437600081840152601f19601f82011690508083019250505050505050610629565b61055d82828080601f016020809104026020016040519081016040528093929190818152602001838380828437600081840152601f19601f820116905080830192505050505050508461067d565b5050505050565b60006020528060005260406000206000915054906101000a900460ff1681565b60008060008360405160200161059a9190610aac565b60405160208183030381529060405280519060200120815260200190815260200160002060009054906101000a900460ff169050919050565b60006040516020016105e490610ac3565b604051602081830303815290604052805190602001208260405160200161060b9190610aac565b60405160208183030381529060405280519060200120149050919050565b60016000808360405160200161063f9190610aac565b60405160208183030381529060405280519060200120815260200190815260200160002060006101000a81548160ff02191690831515021790555050565b8060016000846040516020016106939190610aac565b604051602081830303815290604052805190602001208152602001908152602001600020819055505050565b60006106d26106cd84610bcd565b610ba8565b9050828152602081018484840111156106ee576106ed610d3d565b5b6106f9848285610c78565b509392505050565b60008135905061071081610d86565b92915050565b60008151905061072581610d9d565b92915050565b60008135905061073a81610db4565b92915050565b60008083601f84011261075657610755610d1f565b5b8235905067ffffffffffffffff81111561077357610772610d1a565b5b60208301915083600182028301111561078f5761078e610d33565b5b9250929050565b6000813590506107a581610dcb565b92915050565b600082601f8301126107c0576107bf610d1f565b5b81356107d08482602086016106bf565b91505092915050565b6000606082840312156107ef576107ee610d29565b5b81905092915050565b60006060828403121561080e5761080d610d29565b5b81905092915050565b60008135905061082681610de2565b92915050565b60006020828403121561084257610841610d47565b5b600061085084828501610716565b91505092915050565b60006020828403121561086f5761086e610d47565b5b600061087d8482850161072b565b91505092915050565b60008060006060848603121561089f5761089e610d47565b5b60006108ad86828701610796565b93505060206108be86828701610817565b925050604084013567ffffffffffffffff8111156108df576108de610d42565b5b6108eb868287016107ab565b9150509250925092565b60006020828403121561090b5761090a610d47565b5b600082013567ffffffffffffffff81111561092957610928610d42565b5b610935848285016107ab565b91505092915050565b60006020828403121561095457610953610d47565b5b600082013567ffffffffffffffff81111561097257610971610d42565b5b61097e848285016107d9565b91505092915050565b6000806000806000608086880312156109a3576109a2610d47565b5b600086013567ffffffffffffffff8111156109c1576109c0610d42565b5b6109cd888289016107f8565b95505060206109de88828901610701565b94505060406109ef88828901610817565b935050606086013567ffffffffffffffff811115610a1057610a0f610d42565b5b610a1c88828901610740565b92509250509295509295909350565b610a3481610c14565b82525050565b610a4381610c26565b82525050565b6000610a5482610bfe565b610a5e8185610c09565b9350610a6e818560208601610c87565b80840191505092915050565b6000610a87600683610c09565b9150610a9282610d5d565b600682019050919050565b610aa681610c6e565b82525050565b6000610ab88284610a49565b915081905092915050565b6000610ace82610a7a565b9150819050919050565b6000606082019050610aed6000830186610a2b565b610afa6020830185610a2b565b610b076040830184610a9d565b949350505050565b6000602082019050610b246000830184610a3a565b92915050565b6000602082019050610b3f6000830184610a9d565b92915050565b60008083356001602003843603038112610b6257610b61610d2e565b5b80840192508235915067ffffffffffffffff821115610b8457610b83610d24565b5b602083019250600182023603831315610ba057610b9f610d38565b5b509250929050565b6000610bb2610bc3565b9050610bbe8282610cba565b919050565b6000604051905090565b600067ffffffffffffffff821115610be857610be7610ceb565b5b610bf182610d4c565b9050602081019050919050565b600081519050919050565b600081905092915050565b6000610c1f82610c4e565b9050919050565b60008115159050919050565b6000819050919050565b6000610c4782610c14565b9050919050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b6000819050919050565b82818337600083830152505050565b60005b83811015610ca5578082015181840152602081019050610c8a565b83811115610cb4576000848401525b50505050565b610cc382610d4c565b810181811067ffffffffffffffff82111715610ce257610ce1610ceb565b5b80604052505050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052604160045260246000fd5b600080fd5b600080fd5b600080fd5b600080fd5b600080fd5b600080fd5b600080fd5b600080fd5b600080fd5b600080fd5b6000601f19601f8301169050919050565b7f7265766572740000000000000000000000000000000000000000000000000000600082015250565b610d8f81610c14565b8114610d9a57600080fd5b50565b610da681610c26565b8114610db157600080fd5b50565b610dbd81610c32565b8114610dc857600080fd5b50565b610dd481610c3c565b8114610ddf57600080fd5b50565b610deb81610c6e565b8114610df657600080fd5b5056fea2646970667358221220984e13c75ab9ee18727b50514647fdb0e047e22548160a9b3bbf26cf1990ce6164736f6c63430008070033",
 }
 
 // TestDAppV2ABI is the input ABI used to generate the binding from.
@@ -209,12 +216,12 @@ func (_TestDAppV2 *TestDAppV2TransactorRaw) Transact(opts *bind.TransactOpts, me
 	return _TestDAppV2.Contract.contract.Transact(opts, method, params...)
 }
 
-// LastAmount is a free data retrieval call binding the contract method 0x829a86d9.
+// AmountWithMessage is a free data retrieval call binding the contract method 0x4297a263.
 //
-// Solidity: function lastAmount() view returns(uint256)
-func (_TestDAppV2 *TestDAppV2Caller) LastAmount(opts *bind.CallOpts) (*big.Int, error) {
+// Solidity: function amountWithMessage(bytes32 ) view returns(uint256)
+func (_TestDAppV2 *TestDAppV2Caller) AmountWithMessage(opts *bind.CallOpts, arg0 [32]byte) (*big.Int, error) {
 	var out []interface{}
-	err := _TestDAppV2.contract.Call(opts, &out, "lastAmount")
+	err := _TestDAppV2.contract.Call(opts, &out, "amountWithMessage", arg0)
 
 	if err != nil {
 		return *new(*big.Int), err
@@ -226,130 +233,111 @@ func (_TestDAppV2 *TestDAppV2Caller) LastAmount(opts *bind.CallOpts) (*big.Int, 
 
 }
 
-// LastAmount is a free data retrieval call binding the contract method 0x829a86d9.
+// AmountWithMessage is a free data retrieval call binding the contract method 0x4297a263.
 //
-// Solidity: function lastAmount() view returns(uint256)
-func (_TestDAppV2 *TestDAppV2Session) LastAmount() (*big.Int, error) {
-	return _TestDAppV2.Contract.LastAmount(&_TestDAppV2.CallOpts)
+// Solidity: function amountWithMessage(bytes32 ) view returns(uint256)
+func (_TestDAppV2 *TestDAppV2Session) AmountWithMessage(arg0 [32]byte) (*big.Int, error) {
+	return _TestDAppV2.Contract.AmountWithMessage(&_TestDAppV2.CallOpts, arg0)
 }
 
-// LastAmount is a free data retrieval call binding the contract method 0x829a86d9.
+// AmountWithMessage is a free data retrieval call binding the contract method 0x4297a263.
 //
-// Solidity: function lastAmount() view returns(uint256)
-func (_TestDAppV2 *TestDAppV2CallerSession) LastAmount() (*big.Int, error) {
-	return _TestDAppV2.Contract.LastAmount(&_TestDAppV2.CallOpts)
+// Solidity: function amountWithMessage(bytes32 ) view returns(uint256)
+func (_TestDAppV2 *TestDAppV2CallerSession) AmountWithMessage(arg0 [32]byte) (*big.Int, error) {
+	return _TestDAppV2.Contract.AmountWithMessage(&_TestDAppV2.CallOpts, arg0)
 }
 
-// LastContext is a free data retrieval call binding the contract method 0xb73f7eb1.
+// CalledWithMessage is a free data retrieval call binding the contract method 0xe2842ed7.
 //
-// Solidity: function lastContext() view returns(bytes origin, address sender, uint256 chainID)
-func (_TestDAppV2 *TestDAppV2Caller) LastContext(opts *bind.CallOpts) (struct {
-	Origin  []byte
-	Sender  common.Address
-	ChainID *big.Int
-}, error) {
+// Solidity: function calledWithMessage(bytes32 ) view returns(bool)
+func (_TestDAppV2 *TestDAppV2Caller) CalledWithMessage(opts *bind.CallOpts, arg0 [32]byte) (bool, error) {
 	var out []interface{}
-	err := _TestDAppV2.contract.Call(opts, &out, "lastContext")
-
-	outstruct := new(struct {
-		Origin  []byte
-		Sender  common.Address
-		ChainID *big.Int
-	})
-	if err != nil {
-		return *outstruct, err
-	}
-
-	outstruct.Origin = *abi.ConvertType(out[0], new([]byte)).(*[]byte)
-	outstruct.Sender = *abi.ConvertType(out[1], new(common.Address)).(*common.Address)
-	outstruct.ChainID = *abi.ConvertType(out[2], new(*big.Int)).(**big.Int)
-
-	return *outstruct, err
-
-}
-
-// LastContext is a free data retrieval call binding the contract method 0xb73f7eb1.
-//
-// Solidity: function lastContext() view returns(bytes origin, address sender, uint256 chainID)
-func (_TestDAppV2 *TestDAppV2Session) LastContext() (struct {
-	Origin  []byte
-	Sender  common.Address
-	ChainID *big.Int
-}, error) {
-	return _TestDAppV2.Contract.LastContext(&_TestDAppV2.CallOpts)
-}
-
-// LastContext is a free data retrieval call binding the contract method 0xb73f7eb1.
-//
-// Solidity: function lastContext() view returns(bytes origin, address sender, uint256 chainID)
-func (_TestDAppV2 *TestDAppV2CallerSession) LastContext() (struct {
-	Origin  []byte
-	Sender  common.Address
-	ChainID *big.Int
-}, error) {
-	return _TestDAppV2.Contract.LastContext(&_TestDAppV2.CallOpts)
-}
-
-// LastMessage is a free data retrieval call binding the contract method 0x32970710.
-//
-// Solidity: function lastMessage() view returns(string)
-func (_TestDAppV2 *TestDAppV2Caller) LastMessage(opts *bind.CallOpts) (string, error) {
-	var out []interface{}
-	err := _TestDAppV2.contract.Call(opts, &out, "lastMessage")
+	err := _TestDAppV2.contract.Call(opts, &out, "calledWithMessage", arg0)
 
 	if err != nil {
-		return *new(string), err
+		return *new(bool), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
 
 	return out0, err
 
 }
 
-// LastMessage is a free data retrieval call binding the contract method 0x32970710.
+// CalledWithMessage is a free data retrieval call binding the contract method 0xe2842ed7.
 //
-// Solidity: function lastMessage() view returns(string)
-func (_TestDAppV2 *TestDAppV2Session) LastMessage() (string, error) {
-	return _TestDAppV2.Contract.LastMessage(&_TestDAppV2.CallOpts)
+// Solidity: function calledWithMessage(bytes32 ) view returns(bool)
+func (_TestDAppV2 *TestDAppV2Session) CalledWithMessage(arg0 [32]byte) (bool, error) {
+	return _TestDAppV2.Contract.CalledWithMessage(&_TestDAppV2.CallOpts, arg0)
 }
 
-// LastMessage is a free data retrieval call binding the contract method 0x32970710.
+// CalledWithMessage is a free data retrieval call binding the contract method 0xe2842ed7.
 //
-// Solidity: function lastMessage() view returns(string)
-func (_TestDAppV2 *TestDAppV2CallerSession) LastMessage() (string, error) {
-	return _TestDAppV2.Contract.LastMessage(&_TestDAppV2.CallOpts)
+// Solidity: function calledWithMessage(bytes32 ) view returns(bool)
+func (_TestDAppV2 *TestDAppV2CallerSession) CalledWithMessage(arg0 [32]byte) (bool, error) {
+	return _TestDAppV2.Contract.CalledWithMessage(&_TestDAppV2.CallOpts, arg0)
 }
 
-// LastZRC20 is a free data retrieval call binding the contract method 0xb2f79b03.
+// GetAmountWithMessage is a free data retrieval call binding the contract method 0x9291fe26.
 //
-// Solidity: function lastZRC20() view returns(address)
-func (_TestDAppV2 *TestDAppV2Caller) LastZRC20(opts *bind.CallOpts) (common.Address, error) {
+// Solidity: function getAmountWithMessage(string message) view returns(uint256)
+func (_TestDAppV2 *TestDAppV2Caller) GetAmountWithMessage(opts *bind.CallOpts, message string) (*big.Int, error) {
 	var out []interface{}
-	err := _TestDAppV2.contract.Call(opts, &out, "lastZRC20")
+	err := _TestDAppV2.contract.Call(opts, &out, "getAmountWithMessage", message)
 
 	if err != nil {
-		return *new(common.Address), err
+		return *new(*big.Int), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
 
 	return out0, err
 
 }
 
-// LastZRC20 is a free data retrieval call binding the contract method 0xb2f79b03.
+// GetAmountWithMessage is a free data retrieval call binding the contract method 0x9291fe26.
 //
-// Solidity: function lastZRC20() view returns(address)
-func (_TestDAppV2 *TestDAppV2Session) LastZRC20() (common.Address, error) {
-	return _TestDAppV2.Contract.LastZRC20(&_TestDAppV2.CallOpts)
+// Solidity: function getAmountWithMessage(string message) view returns(uint256)
+func (_TestDAppV2 *TestDAppV2Session) GetAmountWithMessage(message string) (*big.Int, error) {
+	return _TestDAppV2.Contract.GetAmountWithMessage(&_TestDAppV2.CallOpts, message)
 }
 
-// LastZRC20 is a free data retrieval call binding the contract method 0xb2f79b03.
+// GetAmountWithMessage is a free data retrieval call binding the contract method 0x9291fe26.
 //
-// Solidity: function lastZRC20() view returns(address)
-func (_TestDAppV2 *TestDAppV2CallerSession) LastZRC20() (common.Address, error) {
-	return _TestDAppV2.Contract.LastZRC20(&_TestDAppV2.CallOpts)
+// Solidity: function getAmountWithMessage(string message) view returns(uint256)
+func (_TestDAppV2 *TestDAppV2CallerSession) GetAmountWithMessage(message string) (*big.Int, error) {
+	return _TestDAppV2.Contract.GetAmountWithMessage(&_TestDAppV2.CallOpts, message)
+}
+
+// GetCalledWithMessage is a free data retrieval call binding the contract method 0xf592cbfb.
+//
+// Solidity: function getCalledWithMessage(string message) view returns(bool)
+func (_TestDAppV2 *TestDAppV2Caller) GetCalledWithMessage(opts *bind.CallOpts, message string) (bool, error) {
+	var out []interface{}
+	err := _TestDAppV2.contract.Call(opts, &out, "getCalledWithMessage", message)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// GetCalledWithMessage is a free data retrieval call binding the contract method 0xf592cbfb.
+//
+// Solidity: function getCalledWithMessage(string message) view returns(bool)
+func (_TestDAppV2 *TestDAppV2Session) GetCalledWithMessage(message string) (bool, error) {
+	return _TestDAppV2.Contract.GetCalledWithMessage(&_TestDAppV2.CallOpts, message)
+}
+
+// GetCalledWithMessage is a free data retrieval call binding the contract method 0xf592cbfb.
+//
+// Solidity: function getCalledWithMessage(string message) view returns(bool)
+func (_TestDAppV2 *TestDAppV2CallerSession) GetCalledWithMessage(message string) (bool, error) {
+	return _TestDAppV2.Contract.GetCalledWithMessage(&_TestDAppV2.CallOpts, message)
 }
 
 // Erc20Call is a paid mutator transaction binding the contract method 0xc7a339a9.
@@ -396,23 +384,44 @@ func (_TestDAppV2 *TestDAppV2TransactorSession) GasCall(message string) (*types.
 
 // OnCrossChainCall is a paid mutator transaction binding the contract method 0xde43156e.
 //
-// Solidity: function onCrossChainCall((bytes,address,uint256) context, address zrc20, uint256 amount, bytes message) returns()
-func (_TestDAppV2 *TestDAppV2Transactor) OnCrossChainCall(opts *bind.TransactOpts, context TestDAppV2zContext, zrc20 common.Address, amount *big.Int, message []byte) (*types.Transaction, error) {
-	return _TestDAppV2.contract.Transact(opts, "onCrossChainCall", context, zrc20, amount, message)
+// Solidity: function onCrossChainCall((bytes,address,uint256) _context, address _zrc20, uint256 amount, bytes message) returns()
+func (_TestDAppV2 *TestDAppV2Transactor) OnCrossChainCall(opts *bind.TransactOpts, _context TestDAppV2zContext, _zrc20 common.Address, amount *big.Int, message []byte) (*types.Transaction, error) {
+	return _TestDAppV2.contract.Transact(opts, "onCrossChainCall", _context, _zrc20, amount, message)
 }
 
 // OnCrossChainCall is a paid mutator transaction binding the contract method 0xde43156e.
 //
-// Solidity: function onCrossChainCall((bytes,address,uint256) context, address zrc20, uint256 amount, bytes message) returns()
-func (_TestDAppV2 *TestDAppV2Session) OnCrossChainCall(context TestDAppV2zContext, zrc20 common.Address, amount *big.Int, message []byte) (*types.Transaction, error) {
-	return _TestDAppV2.Contract.OnCrossChainCall(&_TestDAppV2.TransactOpts, context, zrc20, amount, message)
+// Solidity: function onCrossChainCall((bytes,address,uint256) _context, address _zrc20, uint256 amount, bytes message) returns()
+func (_TestDAppV2 *TestDAppV2Session) OnCrossChainCall(_context TestDAppV2zContext, _zrc20 common.Address, amount *big.Int, message []byte) (*types.Transaction, error) {
+	return _TestDAppV2.Contract.OnCrossChainCall(&_TestDAppV2.TransactOpts, _context, _zrc20, amount, message)
 }
 
 // OnCrossChainCall is a paid mutator transaction binding the contract method 0xde43156e.
 //
-// Solidity: function onCrossChainCall((bytes,address,uint256) context, address zrc20, uint256 amount, bytes message) returns()
-func (_TestDAppV2 *TestDAppV2TransactorSession) OnCrossChainCall(context TestDAppV2zContext, zrc20 common.Address, amount *big.Int, message []byte) (*types.Transaction, error) {
-	return _TestDAppV2.Contract.OnCrossChainCall(&_TestDAppV2.TransactOpts, context, zrc20, amount, message)
+// Solidity: function onCrossChainCall((bytes,address,uint256) _context, address _zrc20, uint256 amount, bytes message) returns()
+func (_TestDAppV2 *TestDAppV2TransactorSession) OnCrossChainCall(_context TestDAppV2zContext, _zrc20 common.Address, amount *big.Int, message []byte) (*types.Transaction, error) {
+	return _TestDAppV2.Contract.OnCrossChainCall(&_TestDAppV2.TransactOpts, _context, _zrc20, amount, message)
+}
+
+// OnRevert is a paid mutator transaction binding the contract method 0x660b9de0.
+//
+// Solidity: function onRevert((address,uint64,bytes) revertContext) returns()
+func (_TestDAppV2 *TestDAppV2Transactor) OnRevert(opts *bind.TransactOpts, revertContext TestDAppV2RevertContext) (*types.Transaction, error) {
+	return _TestDAppV2.contract.Transact(opts, "onRevert", revertContext)
+}
+
+// OnRevert is a paid mutator transaction binding the contract method 0x660b9de0.
+//
+// Solidity: function onRevert((address,uint64,bytes) revertContext) returns()
+func (_TestDAppV2 *TestDAppV2Session) OnRevert(revertContext TestDAppV2RevertContext) (*types.Transaction, error) {
+	return _TestDAppV2.Contract.OnRevert(&_TestDAppV2.TransactOpts, revertContext)
+}
+
+// OnRevert is a paid mutator transaction binding the contract method 0x660b9de0.
+//
+// Solidity: function onRevert((address,uint64,bytes) revertContext) returns()
+func (_TestDAppV2 *TestDAppV2TransactorSession) OnRevert(revertContext TestDAppV2RevertContext) (*types.Transaction, error) {
+	return _TestDAppV2.Contract.OnRevert(&_TestDAppV2.TransactOpts, revertContext)
 }
 
 // SimpleCall is a paid mutator transaction binding the contract method 0x36e980a0.

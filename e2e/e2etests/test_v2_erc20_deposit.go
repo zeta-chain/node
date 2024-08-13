@@ -5,6 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -23,7 +24,7 @@ func TestV2ERC20Deposit(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	// perform the deposit
-	tx := r.V2ERC20Deposit(r.EVMAddress(), amount)
+	tx := r.V2ERC20Deposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{})
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

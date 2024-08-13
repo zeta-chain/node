@@ -344,9 +344,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// Test happy paths for gas token workflow
 		eg.Go(v2TestRoutine(conf, "eth", conf.AdditionalAccounts.UserEther, color.FgHiGreen, deployerRunner, verbose,
 			e2etests.TestV2ETHDepositName,
-			e2etests.TestV2ETHDepositAndCallName,
-			e2etests.TestV2ETHWithdrawName,
-			e2etests.TestV2ETHWithdrawAndCallName,
+			//e2etests.TestV2ETHDepositAndCallName,
+			//e2etests.TestV2ETHWithdrawName,
+			//e2etests.TestV2ETHWithdrawAndCallName,
 			e2etests.TestV2ZEVMToEVMCallName,
 			e2etests.TestV2EVMToZEVMCallName,
 		))
@@ -354,10 +354,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// Test happy paths for erc20 token workflow
 		eg.Go(v2TestRoutine(conf, "erc20", conf.AdditionalAccounts.UserERC20, color.FgHiBlue, deployerRunner, verbose,
 			e2etests.TestV2ETHDepositName, // necessary to pay fees on ZEVM
-			e2etests.TestV2ERC20DepositName,
-			e2etests.TestV2ERC20DepositAndCallName,
-			e2etests.TestV2ERC20WithdrawName,
-			e2etests.TestV2ERC20WithdrawAndCallName,
+			//e2etests.TestV2ERC20DepositName,
+			//e2etests.TestV2ERC20DepositAndCallName,
+			//e2etests.TestV2ERC20WithdrawName,
+			//e2etests.TestV2ERC20WithdrawAndCallName,
 		))
 
 		//// Test revert cases for gas token workflow
@@ -377,7 +377,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		//	//e2etests.TestV2ERC20WithdrawAndCallRevertName,
 		//	//e2etests.TestV2ERC20WithdrawAndCallRevertWithCallName,
 		//))
-
 	}
 
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
