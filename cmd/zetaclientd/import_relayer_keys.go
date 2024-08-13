@@ -16,14 +16,14 @@ import (
 )
 
 var CmdImportRelayerKey = &cobra.Command{
-	Use:     "import-relayer-key [network] [private-key] [password] [relayer-key-path]",
+	Use:     "import-relayer-key --network=<network> --private-key=<private-key> --password=<password> --relayer-key-path=<relayer-key-path>",
 	Short:   "Import a relayer private key",
-	Example: `zetaclientd import-relayer-key --network=7 --private-key=3EMjCcCJg53fMEGVj13UPQpo6py9AKKyLE2qroR4yL1SvAN2tUznBvDKRYjntw7m6Jof1R2CSqjTddL27rEb6sFQ --password=my_password`,
+	Example: `zetaclientd import-relayer-key --network=7 --private-key=<your_private_key> --password=<your_password>`,
 	RunE:    ImportRelayerKey,
 }
 
 var CmdRelayerAddress = &cobra.Command{
-	Use:     "relayer-address [network] [password] [relayer-key-path]",
+	Use:     "relayer-address --network=<network> --password=<password> --relayer-key-path=<relayer-key-path>",
 	Short:   "Show the relayer address",
 	Example: `zetaclientd relayer-address --network=7 --password=my_password`,
 	RunE:    ShowRelayerAddress,
@@ -81,6 +81,9 @@ func ImportRelayerKey(_ *cobra.Command, _ []string) error {
 	}
 	if importArgs.password == "" {
 		return errors.New("must provide a password")
+	}
+	if !keys.IsRelayerPrivateKeyValid(importArgs.privateKey, chains.Network(importArgs.network)) {
+		return errors.New("invalid private key")
 	}
 
 	// resolve the relayer key file path

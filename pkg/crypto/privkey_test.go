@@ -8,7 +8,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/crypto"
 )
 
-func Test_IsValidSolanaPrivateKey(t *testing.T) {
+func Test_SolanaPrivateKeyFromString(t *testing.T) {
 	tests := []struct {
 		name   string
 		input  string

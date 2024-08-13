@@ -95,11 +95,11 @@ geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: w
 solana_url=$(yq -r '.rpcs.solana' config.yml)
 solana config set --url "$solana_url" > /dev/null
 
-relayer=$(yq -r '.observer_relayer_accounts.relayer_account_0.solana_address' config.yml)
+relayer=$(yq -r '.observer_relayer_accounts.relayer_accounts[0].solana_address' config.yml)
 echo "funding solana relayer address ${relayer} with 100 SOL"
 solana airdrop 100 "$relayer" > /dev/null
 
-relayer=$(yq -r '.observer_relayer_accounts.relayer_account_1.solana_address' config.yml)
+relayer=$(yq -r '.observer_relayer_accounts.relayer_accounts[1].solana_address' config.yml)
 echo "funding solana relayer address ${relayer} with 100 SOL"
 solana airdrop 100 "$relayer" > /dev/null
 

@@ -2,7 +2,6 @@ package keys
 
 import (
 	"encoding/json"
-	"io"
 	"os"
 	"path/filepath"
 
@@ -34,7 +33,7 @@ func (rk RelayerKey) ResolveAddress(network chains.Network) (string, string, err
 		}
 		return networkName, privKey.PublicKey().String(), nil
 	default:
-		return "", "", errors.Errorf("cannot derive relayer address for unsupported network %d", network)
+		return "", "", errors.Errorf("unsupported network %d: unable to derive relayer address", network)
 	}
 }
 
@@ -52,6 +51,11 @@ func LoadRelayerKey(relayerKeyPath string, network chains.Network, password stri
 		relayerKey, err := ReadRelayerKeyFromFile(fileName)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to read relayer key file: %s", fileName)
+		}
+
+		// password must be set by operator
+		if password == "" {
+			return nil, errors.New("password is required to decrypt the private key")
 		}
 
 		// decrypt the private key
@@ -104,15 +108,8 @@ func ReadRelayerKeyFromFile(fileName string) (*RelayerKey, error) {
 		return nil, errors.Wrapf(err, "ExpandHome failed for file: %s", fileName)
 	}
 
-	// open the file
-	file, err := os.Open(fileNameFull)
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to open relayer key file: %s", fileNameFull)
-	}
-	defer file.Close()
-
 	// read the file contents
-	fileData, err := io.ReadAll(file)
+	fileData, err := os.ReadFile(fileNameFull)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to read relayer key data: %s", fileNameFull)
 	}
@@ -125,6 +122,21 @@ func ReadRelayerKeyFromFile(fileName string) (*RelayerKey, error) {
 	}
 
 	return &key, nil
+}
+
+// IsRelayerPrivateKeyValid checks if the given private key is valid for the given network
+func IsRelayerPrivateKeyValid(privateKey string, network chains.Network) bool {
+	switch network {
+	case chains.Network_solana:
+		_, err := crypto.SolanaPrivateKeyFromString(privateKey)
+		if err != nil {
+			return false
+		}
+	default:
+		// unsupported network
+		return false
+	}
+	return true
 }
 
 // relayerKeyFileByNetwork returns the relayer key JSON file name based on network

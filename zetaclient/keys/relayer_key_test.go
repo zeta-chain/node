@@ -73,7 +73,7 @@ func Test_ResolveAddress(t *testing.T) {
 			relayerKey: keys.RelayerKey{
 				PrivateKey: solanaPrivKey.String(),
 			},
-			expectedError: "cannot derive relayer address for unsupported network",
+			expectedError: "unsupported network",
 		},
 	}
 
@@ -147,6 +147,14 @@ func Test_LoadRelayerKey(t *testing.T) {
 			password:    "",
 			expectedKey: nil,
 			expectError: "failed to read relayer key file",
+		},
+		{
+			name:        "should return error if password is missing",
+			keyPath:     keyPath,
+			network:     chains.Network_solana,
+			password:    "",
+			expectedKey: nil,
+			expectError: "password is required to decrypt the private key",
 		},
 		{
 			name:        "should return error if password is incorrect",
@@ -242,7 +250,7 @@ func Test_ReadWriteRelayerKeyFile(t *testing.T) {
 	t.Run("should return error if relayer key file does not exist", func(t *testing.T) {
 		noFileName := path.Join(keyPath, "non-existing.json")
 		_, err := keys.ReadRelayerKeyFromFile(noFileName)
-		require.ErrorContains(t, err, "unable to open relayer key file")
+		require.ErrorContains(t, err, "unable to read relayer key data")
 	})
 
 	t.Run("should return error if unmarsalling fails", func(t *testing.T) {
@@ -255,4 +263,39 @@ func Test_ReadWriteRelayerKeyFile(t *testing.T) {
 		require.ErrorContains(t, err, "unable to unmarshal relayer key")
 		require.Nil(t, key)
 	})
+}
+
+func Test_IsRelayerPrivateKeyValid(t *testing.T) {
+	tests := []struct {
+		name    string
+		privKey string
+		network chains.Network
+		result  bool
+	}{
+		{
+			name:    "valid private key - solana",
+			privKey: "3EMjCcCJg53fMEGVj13UPQpo6py9AKKyLE2qroR4yL1SvAN2tUznBvDKRYjntw7m6Jof1R2CSqjTddL27rEb6sFQ",
+			network: chains.Network(7), // solana
+			result:  true,
+		},
+		{
+			name:    "invalid private key - unsupported network",
+			privKey: "3EMjCcCJg53fMEGVj13UPQpo6py9AKKyLE2qroR4yL1SvAN2tUznBvDKRYjntw7m6Jof1R2CSqjTddL27rEb6sFQ",
+			network: chains.Network(0), // eth
+			result:  false,
+		},
+		{
+			name:    "invalid private key - invalid solana private key",
+			privKey: "3EMjCcCJg53fMEGVj13UPQpo6p", // too short
+			network: chains.Network(7),            // solana
+			result:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := keys.IsRelayerPrivateKeyValid(tt.privKey, chains.Network(tt.network))
+			require.Equal(t, tt.result, result)
+		})
+	}
 }

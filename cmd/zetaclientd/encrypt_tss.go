@@ -25,7 +25,7 @@ func init() {
 // EncryptTSSFile encrypts the given file with the given secret key
 func EncryptTSSFile(_ *cobra.Command, args []string) error {
 	filePath := args[0]
-	secretKey := args[1]
+	password := args[1]
 
 	filePath = filepath.Clean(filePath)
 	data, err := os.ReadFile(filePath)
@@ -38,7 +38,7 @@ func EncryptTSSFile(_ *cobra.Command, args []string) error {
 	}
 
 	// encrypt the data
-	cipherText, err := crypto.EncryptAES256GCM(data, secretKey)
+	cipherText, err := crypto.EncryptAES256GCM(data, password)
 	if err != nil {
 		return errors.Wrap(err, "failed to encrypt data")
 	}

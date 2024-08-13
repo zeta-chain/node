@@ -19,7 +19,7 @@ import_relayer_key() {
     local num="$1"
 
   # import solana (network=7) relayer private key
-  privkey_solana=$(yq -r ".observer_relayer_accounts.relayer_account_${num}.solana_private_key" /root/config.yml)
+  privkey_solana=$(yq -r ".observer_relayer_accounts.relayer_accounts[${num}].solana_private_key" /root/config.yml)
   zetaclientd import-relayer-key --network=7 --private-key="$privkey_solana" --password=pass_relayerkey
 }
 

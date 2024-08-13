@@ -100,7 +100,10 @@ func syncSignerMap(
 			continue
 		}
 
-		rawChain := chain.RawChain()
+		var (
+			params   = chain.Params()
+			rawChain = chain.RawChain()
+		)
 
 		switch {
 		case chain.IsEVM():
@@ -171,7 +174,7 @@ func syncSignerMap(
 			}
 
 			// create Solana signer
-			signer, err := solanasigner.NewSigner(*rawChain, *chain.Params(), rpcClient, tss, relayerKey, ts, logger)
+			signer, err := solanasigner.NewSigner(*rawChain, *params, rpcClient, tss, relayerKey, ts, logger)
 			if err != nil {
 				logger.Std.Error().Err(err).Msgf("Unable to construct signer for SOL chain %d", chainID)
 				continue
