@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"cosmossdk.io/errors"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/zeta-chain/zetacore/app"
@@ -53,8 +54,6 @@ func main() {
 		os.Exit(1)
 	}
 	supervisor.Start(ctx)
-	// listen for SIGHUP to trigger a restart of zetaclientd
-	signal.Notify(supervisor.restartChan, syscall.SIGHUP)
 
 	shouldRestart := true
 	for shouldRestart {
@@ -73,7 +72,15 @@ func main() {
 		cmd.Stdin = &passwordInputBuffer
 
 		eg, ctx := errgroup.WithContext(ctx)
-		eg.Go(cmd.Run)
+		eg.Go(func() error {
+			defer cancel()
+			if err := cmd.Run(); err != nil {
+				return errors.Wrap(err, "zetaclient process failed")
+			}
+
+			logger.Info().Msg("zetaclient process exited")
+			return nil
+		})
 		eg.Go(func() error {
 			supervisor.WaitForReloadSignal(ctx)
 			cancel()
@@ -84,8 +91,6 @@ func main() {
 				select {
 				case <-ctx.Done():
 					return nil
-				case sig := <-supervisor.restartChan:
-					logger.Info().Msgf("got signal %d, sending SIGINT to zetaclientd", sig)
 				case sig := <-shutdownChan:
 					logger.Info().Msgf("got signal %d, shutting down", sig)
 					shouldRestart = false

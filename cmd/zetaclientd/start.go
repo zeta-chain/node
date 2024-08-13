@@ -27,6 +27,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/maintenance"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/orchestrator"
 	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
@@ -213,6 +214,16 @@ func start(_ *cobra.Command, _ []string) error {
 	// Set P2P ID for telemetry
 	telemetryServer.SetP2PID(server.GetLocalPeerID())
 
+	// Creating a channel to listen for os signals (or other signals)
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
+
+	// Maintenance workers ============
+	maintenance.NewTSSListener(zetacoreClient, masterLogger).Listen(ctx, func() {
+		masterLogger.Info().Msg("TSS listener received an action to shutdown zetaclientd.")
+		signalChannel <- syscall.SIGTERM
+	})
+
 	// Generate a new TSS if keygen is set and add it into the tss server
 	// If TSS has already been generated, and keygen was successful ; we use the existing TSS
 	err = GenerateTSS(ctx, masterLogger, zetacoreClient, server)
@@ -264,7 +275,7 @@ func start(_ *cobra.Command, _ []string) error {
 	// Update Current TSS value from zetacore, if TSS keygen is successful, the TSS address is set on zeta-core
 	// Returns err if the RPC call fails as zeta client needs the current TSS address to be set
 	// This is only needed in case of a new Keygen , as the TSS address is set on zetacore only after the keygen is successful i.e enough votes have been broadcast
-	currentTss, err := zetacoreClient.GetCurrentTSS(ctx)
+	currentTss, err := zetacoreClient.GetTSS(ctx)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("GetCurrentTSS error")
 		return err
@@ -357,11 +368,10 @@ func start(_ *cobra.Command, _ []string) error {
 	//	defer zetaSupplyChecker.Stop()
 	//}
 
-	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	sig := <-ch
-	startLogger.Info().Msgf("stop signal received: %s", sig)
+	startLogger.Info().Msgf("Zetaclientd is running")
+
+	sig := <-signalChannel
+	startLogger.Info().Msgf("Stop signal received: %q", sig)
 
 	zetacoreClient.Stop()
 
