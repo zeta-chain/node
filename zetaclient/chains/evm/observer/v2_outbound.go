@@ -112,9 +112,56 @@ func ParseAndCheckGatewayReverted(
 	gatewayAddr ethcommon.Address,
 	gateway *gatewayevm.GatewayEVM,
 ) (*big.Int, chains.ReceiveStatus, error) {
-	// TODO: implement
-	// https://github.com/zeta-chain/protocol-contracts/issues/310
-	return big.NewInt(0), chains.ReceiveStatus_failed, errors.New("not implemented")
+	params := cctx.GetCurrentOutboundParam()
+
+	for _, vLog := range receipt.Logs {
+		reverted, err := gateway.GatewayEVMFilterer.ParseReverted(*vLog)
+		if err == nil {
+			// basic event check
+			if err := evm.ValidateEvmTxLog(vLog, gatewayAddr, receipt.TxHash.Hex(), evm.TopicsGatewayReverted); err != nil {
+				return big.NewInt(
+						0,
+					), chains.ReceiveStatus_failed, errors.Wrap(
+						err,
+						"failed to validate gateway reverte event",
+					)
+			}
+			// destination
+			if !strings.EqualFold(reverted.To.Hex(), params.Receiver) {
+				return big.NewInt(
+						0,
+					), chains.ReceiveStatus_failed, fmt.Errorf(
+						"receiver address mismatch in event, want %s got %s",
+						params.Receiver,
+						reverted.To.Hex(),
+					)
+			}
+			// token
+			if !strings.EqualFold(reverted.Token.Hex(), cctx.InboundParams.Asset) {
+				return big.NewInt(
+						0,
+					), chains.ReceiveStatus_failed, fmt.Errorf(
+						"asset address mismatch in event, want %s got %s",
+						cctx.InboundParams.Asset,
+						reverted.Token.Hex(),
+					)
+			}
+			// amount
+			if reverted.Amount.Cmp(params.Amount.BigInt()) != 0 {
+				return big.NewInt(
+						0,
+					), chains.ReceiveStatus_failed, fmt.Errorf(
+						"amount mismatch in event, want %s got %s",
+						params.Amount.String(),
+						reverted.Amount.String(),
+					)
+			}
+
+			return reverted.Amount, chains.ReceiveStatus_success, nil
+		}
+	}
+
+	return big.NewInt(0), chains.ReceiveStatus_failed, errors.New("erc20 custody withdraw event not found")
 }
 
 // ParseAndCheckERC20CustodyWithdraw parses and checks the ERC20 custody withdraw event

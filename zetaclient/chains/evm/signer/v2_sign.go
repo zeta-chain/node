@@ -50,8 +50,6 @@ func (signer *Signer) SignGatewayExecute(ctx context.Context, txData *OutboundDa
 // function executeRevert
 // address destination,
 // bytes calldata data
-// TODO: compete with future new interface
-// https://github.com/zeta-chain/protocol-contracts/issues/310
 func (signer *Signer) SignGatewayExecuteRevert(
 	ctx context.Context,
 	txData *OutboundData,
@@ -64,7 +62,7 @@ func (signer *Signer) SignGatewayExecuteRevert(
 		return nil, errors.Wrap(err, "unable to get GatewayEVMMetaData ABI")
 	}
 
-	data, err = gatewayABI.Pack("executeRevert", txData.to, txData.message)
+	data, err = gatewayABI.Pack("executeRevert", txData.to, txData.message, txData.revertOptions.ToEVMRevertOptions())
 	if err != nil {
 		return nil, fmt.Errorf("executeRevert pack error: %w", err)
 	}
@@ -171,8 +169,6 @@ func (signer *Signer) SignERC20CustodyWithdrawAndCall(
 // address to,
 // uint256 amount,
 // bytes calldata data
-// TODO: compete with future new interface
-// https://github.com/zeta-chain/protocol-contracts/issues/310
 func (signer *Signer) SignERC20CustodyWithdrawRevert(
 	ctx context.Context,
 	txData *OutboundData,
@@ -185,7 +181,14 @@ func (signer *Signer) SignERC20CustodyWithdrawRevert(
 		return nil, errors.Wrap(err, "unable to get ERC20CustodyMetaData ABI")
 	}
 
-	data, err = erc20CustodyV2ABI.Pack("withdrawAndRevert", txData.to, txData.asset, txData.amount, txData.message)
+	data, err = erc20CustodyV2ABI.Pack(
+		"withdrawAndRevert",
+		txData.to,
+		txData.asset,
+		txData.amount,
+		txData.message,
+		txData.revertOptions.ToEVMRevertOptions(),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("withdraw pack error: %w", err)
 	}

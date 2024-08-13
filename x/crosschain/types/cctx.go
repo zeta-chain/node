@@ -105,8 +105,19 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 		return fmt.Errorf("cannot revert before trying to process an outbound tx")
 	}
 
+	// in protocol contract V2, developers can specify a specific address to receive the revert
+	// if not specified, the sender address is used
+	// note: this option is current only support for EVM type chains
+	revertReceiver := m.InboundParams.Sender
+	if m.ProtocolContractVersion == ProtocolContractVersion_V2 {
+		revertAddress, valid := m.RevertOptions.GetEVMRevertAddress()
+		if valid {
+			revertReceiver = revertAddress.Hex()
+		}
+	}
+
 	revertTxParams := &OutboundParams{
-		Receiver:        m.InboundParams.Sender,
+		Receiver:        revertReceiver,
 		ReceiverChainId: m.InboundParams.SenderChainId,
 		Amount:          m.GetCurrentOutboundParam().Amount,
 		GasLimit:        gasLimit,
@@ -242,6 +253,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		InboundParams:           inboundParams,
 		OutboundParams:          []*OutboundParams{outboundParams},
 		ProtocolContractVersion: msg.ProtocolContractVersion,
+		RevertOptions:           msg.RevertOptions,
 	}
 
 	// TODO: remove this validate call

@@ -369,6 +369,11 @@ export declare class RevertOptions extends Message<RevertOptions> {
    */
   abortAddress: string;
 
+  /**
+   * @generated from field: bytes revert_message = 4;
+   */
+  revertMessage: Uint8Array;
+
   constructor(data?: PartialMessage<RevertOptions>);
 
   static readonly runtime: typeof proto3;

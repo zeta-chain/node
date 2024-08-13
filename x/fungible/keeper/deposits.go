@@ -36,44 +36,10 @@ func (k Keeper) ZRC20DepositAndCallContract(
 	asset string,
 	protocolContractVersion crosschaintypes.ProtocolContractVersion,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
-	var zrc20Contract eth.Address
-	var foreignCoin types.ForeignCoins
-	var found bool
-
-	// get foreign coin
-	// retrieve the gas token of the chain for no asset call
-	// this simplify the current workflow and allow to pause calls by pausing the gas token
-	// TODO: refactor this logic and create specific workflow for no asset call
-	// https://github.com/zeta-chain/node/issues/2627
-	if coinType == coin.CoinType_Gas || coinType == coin.CoinType_NoAssetCall {
-		foreignCoin, found = k.GetGasCoinForForeignCoin(ctx, senderChainID)
-		if !found {
-			return nil, false, crosschaintypes.ErrGasCoinNotFound
-		}
-	} else {
-		foreignCoin, found = k.GetForeignCoinFromAsset(ctx, asset, senderChainID)
-		if !found {
-			return nil, false, crosschaintypes.ErrForeignCoinNotFound
-		}
-	}
-	zrc20Contract = eth.HexToAddress(foreignCoin.Zrc20ContractAddress)
-
-	// check if foreign coin is paused
-	if foreignCoin.Paused {
-		return nil, false, types.ErrPausedZRC20
-	}
-
-	// check foreign coins cap if it has a cap
-	if !foreignCoin.LiquidityCap.IsNil() && !foreignCoin.LiquidityCap.IsZero() {
-		liquidityCap := foreignCoin.LiquidityCap.BigInt()
-		totalSupply, err := k.TotalSupplyZRC4(ctx, zrc20Contract)
-		if err != nil {
-			return nil, false, err
-		}
-		newSupply := new(big.Int).Add(totalSupply, amount)
-		if newSupply.Cmp(liquidityCap) > 0 {
-			return nil, false, types.ErrForeignCoinCapReached
-		}
+	// get ZRC20 contract
+	zrc20Contract, _, err := k.getAndCheckZRC20(ctx, amount, senderChainID, coinType, asset)
+	if err != nil {
+		return nil, false, err
 	}
 
 	// handle the deposit for protocol contract version 2
@@ -102,4 +68,56 @@ func (k Keeper) ZRC20DepositAndCallContract(
 
 	res, err := k.DepositZRC20(ctx, zrc20Contract, to, amount)
 	return res, false, err
+}
+
+// getAndCheckZRC20 returns the ZRC20 contract address and foreign coin for the given chainID and asset
+// it also checks if the foreign coin is paused and if the cap is reached
+func (k Keeper) getAndCheckZRC20(
+	ctx sdk.Context,
+	amount *big.Int,
+	chainID int64,
+	coinType coin.CoinType,
+	asset string,
+) (eth.Address, types.ForeignCoins, error) {
+	var zrc20Contract eth.Address
+	var foreignCoin types.ForeignCoins
+	var found bool
+
+	// get foreign coin
+	// retrieve the gas token of the chain for no asset call
+	// this simplify the current workflow and allow to pause calls by pausing the gas token
+	// TODO: refactor this logic and create specific workflow for no asset call
+	// https://github.com/zeta-chain/node/issues/2627
+	if coinType == coin.CoinType_Gas || coinType == coin.CoinType_NoAssetCall {
+		foreignCoin, found = k.GetGasCoinForForeignCoin(ctx, chainID)
+		if !found {
+			return eth.Address{}, types.ForeignCoins{}, crosschaintypes.ErrGasCoinNotFound
+		}
+	} else {
+		foreignCoin, found = k.GetForeignCoinFromAsset(ctx, asset, chainID)
+		if !found {
+			return eth.Address{}, types.ForeignCoins{}, crosschaintypes.ErrForeignCoinNotFound
+		}
+	}
+	zrc20Contract = eth.HexToAddress(foreignCoin.Zrc20ContractAddress)
+
+	// check if foreign coin is paused
+	if foreignCoin.Paused {
+		return eth.Address{}, types.ForeignCoins{}, types.ErrPausedZRC20
+	}
+
+	// check foreign coins cap if it has a cap
+	if !foreignCoin.LiquidityCap.IsNil() && !foreignCoin.LiquidityCap.IsZero() {
+		liquidityCap := foreignCoin.LiquidityCap.BigInt()
+		totalSupply, err := k.TotalSupplyZRC4(ctx, zrc20Contract)
+		if err != nil {
+			return eth.Address{}, types.ForeignCoins{}, err
+		}
+		newSupply := new(big.Int).Add(totalSupply, amount)
+		if newSupply.Cmp(liquidityCap) > 0 {
+			return eth.Address{}, types.ForeignCoins{}, types.ErrForeignCoinCapReached
+		}
+	}
+
+	return zrc20Contract, foreignCoin, nil
 }

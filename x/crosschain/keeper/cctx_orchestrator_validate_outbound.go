@@ -10,6 +10,7 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -118,7 +119,7 @@ func (k Keeper) processFailedOutboundObservers(ctx sdk.Context, cctx *types.Cros
 	// For all other transactions we need to create a revert tx and set the status to pending revert
 
 	if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 {
-		return processFailedOutboundV2(ctx, cctx)
+		return k.processFailedOutboundV2(ctx, cctx)
 	}
 
 	if cctx.InboundParams.CoinType == coin.CoinType_Cmd {
@@ -311,7 +312,7 @@ func (k Keeper) processFailedZETAOutboundOnZEVM(ctx sdk.Context, cctx *types.Cro
 // - all coin type use the same workflow
 // TODO: consolidate logic with above function
 // https://github.com/zeta-chain/node/issues/2627
-func processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainTx) error {
+func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainTx) error {
 	switch cctx.CctxStatus.Status {
 	case types.CctxStatus_PendingOutbound:
 
@@ -319,15 +320,25 @@ func processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainTx) error {
 		err := cctx.AddRevertOutbound(fungiblekeeper.ZEVMGasLimitDepositAndCall.Uint64())
 		if err != nil {
 			// Return err to save the failed outbound ad set to aborted
-			return fmt.Errorf("failed AddRevertOutbound: %s", err.Error())
+			return errors.Wrap(err, "failed AddRevertOutbound")
 		}
 
 		// update status
 		cctx.SetPendingRevert("Outbound failed, trying revert")
 
 		// process the revert on ZEVM
-		// TODO: add ProcessV2RevertDeposit call
-		// https://github.com/zeta-chain/node/issues/2660
+		if err := k.fungibleKeeper.ProcessV2RevertDeposit(
+			ctx,
+			cctx.GetCurrentOutboundParam().Amount.BigInt(),
+			cctx.GetCurrentOutboundParam().ReceiverChainId,
+			cctx.InboundParams.CoinType,
+			cctx.InboundParams.Asset,
+			ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver),
+			cctx.RevertOptions.CallOnRevert,
+			cctx.RevertOptions.RevertMessage,
+		); err != nil {
+			return errors.Wrap(err, "failed ProcessV2RevertDeposit")
+		}
 
 		// tx is reverted
 		cctx.SetReverted("Outbound failed, revert executed")

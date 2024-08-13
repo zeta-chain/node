@@ -58,13 +58,9 @@ const (
 	// [signature, token, destination]
 	TopicsGatewayExecutedWithERC20 = 3
 
-	// TopicsReverted is the number of topics for a reverted event
+	// TopicsGatewayReverted is the number of topics for a reverted event
 	// [signature, destination]
-	TopicsReverted = 2
-
-	// TopicsRevertedWithERC20 is the number of topics for a reverted with ERC20 event
-	// [signature, token, destination]
-	TopicsRevertedWithERC20 = 3
+	TopicsGatewayReverted = 2
 
 	// TopicsERC20CustodyWithdraw is the number of topics for an ERC20 custody withdraw event
 	// [signature, recipient, asset]
@@ -73,8 +69,4 @@ const (
 	// TopicsERC20CustodyWithdrawAndCall is the number of topics for an ERC20 custody withdraw and call event
 	// [signature, recipient, asset]
 	TopicsERC20CustodyWithdrawAndCall = 3
-
-	// TopicsERC20CustodyWithdrawAndRevert is the number of topics for an ERC20 custody withdraw and revert event
-	// [signature, recipient, asset]
-	TopicsERC20CustodyWithdrawAndRevert = 3
 )

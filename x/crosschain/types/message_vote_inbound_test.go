@@ -1,6 +1,8 @@
 package types_test
 
 import (
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 	"math/rand"
 	"testing"
 
@@ -16,7 +18,7 @@ import (
 )
 
 func TestNewMsgVoteInbound(t *testing.T) {
-	t.Run("can set revert options", func(t *testing.T) {
+	t.Run("no revert options by default", func(t *testing.T) {
 		msg := types.NewMsgVoteInbound(
 			sample.AccAddress(),
 			sample.AccAddress(),
@@ -35,14 +37,14 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			types.ProtocolContractVersion_V1,
 		)
 		require.EqualValues(t, types.RevertOptions{}, msg.RevertOptions)
+	})
 
-		revertOptions := types.RevertOptions{
-			RevertAddress: sample.EthAddress().Hex(),
-			CallOnRevert:  true,
-			AbortAddress:  sample.EthAddress().Hex(),
-		}
+	t.Run("can set ZEVM revert options", func(t *testing.T) {
+		revertAddress := sample.EthAddress()
+		abortAddress := sample.EthAddress()
+		revertMessage := sample.Bytes()
 
-		msg = types.NewMsgVoteInbound(
+		msg := types.NewMsgVoteInbound(
 			sample.AccAddress(),
 			sample.AccAddress(),
 			42,
@@ -58,9 +60,55 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			sample.String(),
 			42,
 			types.ProtocolContractVersion_V1,
-			types.WithRevertOptions(revertOptions),
+			types.WithZEVMRevertOptions(gatewayzevm.RevertOptions{
+				RevertAddress: revertAddress,
+				CallOnRevert:  true,
+				AbortAddress:  abortAddress,
+				RevertMessage: revertMessage,
+			}),
 		)
-		require.EqualValues(t, revertOptions, msg.RevertOptions)
+		require.EqualValues(t, types.RevertOptions{
+			RevertAddress: revertAddress.Hex(),
+			CallOnRevert:  true,
+			AbortAddress:  abortAddress.Hex(),
+			RevertMessage: revertMessage,
+		}, msg.RevertOptions)
+	})
+
+	t.Run("can set EVM revert options", func(t *testing.T) {
+		revertAddress := sample.EthAddress()
+		abortAddress := sample.EthAddress()
+		revertMessage := sample.Bytes()
+
+		msg := types.NewMsgVoteInbound(
+			sample.AccAddress(),
+			sample.AccAddress(),
+			42,
+			sample.String(),
+			sample.String(),
+			42,
+			math.NewUint(42),
+			sample.String(),
+			sample.String(),
+			42,
+			42,
+			coin.CoinType_Zeta,
+			sample.String(),
+			42,
+			types.ProtocolContractVersion_V1,
+			types.WithEVMRevertOptions(gatewayevm.RevertOptions{
+				RevertAddress: revertAddress,
+				CallOnRevert:  true,
+				AbortAddress:  abortAddress,
+				RevertMessage: revertMessage,
+			}),
+		)
+		require.EqualValues(t, types.RevertOptions{
+			RevertAddress: revertAddress.Hex(),
+			CallOnRevert:  true,
+			AbortAddress:  abortAddress.Hex(),
+			RevertMessage: revertMessage,
+		}, msg.RevertOptions)
 	})
 }
 

@@ -155,8 +155,6 @@ func (k Keeper) parseGatewayCallEvent(
 // currently inbound data is represented with a MsgVoteInbound message
 // TODO: replace with a more appropriate object
 // https://github.com/zeta-chain/node/issues/2658
-// TODO: include revert options
-// https://github.com/zeta-chain/node/issues/2660
 func (k Keeper) newWithdrawalInbound(
 	ctx sdk.Context,
 	from ethcommon.Address,
@@ -183,13 +181,8 @@ func (k Keeper) newWithdrawalInbound(
 		return nil, errors.Wrapf(err, "cannot encode address %v", event.Receiver)
 	}
 
-	// temporary hardcoded gas limit for withdraw and call
-	// TODO: use gas limit specified by user
-	// https://github.com/zeta-chain/node/issues/2668
-	gasLimit := uint64(1000000)
-
-	// for simple withdraw without call, we use the specified gas limit in the zrc20 contract
-	if len(event.Message) == 0 {
+	gasLimit := event.GasLimit.Uint64()
+	if gasLimit == 0 {
 		gasLimitQueried, err := k.fungibleKeeper.QueryGasLimit(
 			ctx,
 			ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress),
@@ -216,6 +209,7 @@ func (k Keeper) newWithdrawalInbound(
 		foreignCoin.Asset,
 		event.Raw.Index,
 		types.ProtocolContractVersion_V2,
+		types.WithZEVMRevertOptions(event.RevertOptions),
 	), nil
 }
 
@@ -223,8 +217,6 @@ func (k Keeper) newWithdrawalInbound(
 // currently inbound data is represented with a MsgVoteInbound message
 // TODO: replace with a more appropriate object
 // https://github.com/zeta-chain/node/issues/2658
-// TODO: include revert options
-// https://github.com/zeta-chain/node/issues/2660
 func (k Keeper) newCallInbound(
 	ctx sdk.Context,
 	from ethcommon.Address,
@@ -251,10 +243,17 @@ func (k Keeper) newCallInbound(
 		return nil, errors.Wrapf(err, "cannot encode address %v", event.Receiver)
 	}
 
-	// temporary hardcoded gas limit for withdraw and call
-	// TODO: use gas limit specified by user
-	// https://github.com/zeta-chain/node/issues/2668
-	gasLimit := uint64(1000000)
+	gasLimit := event.GasLimit.Uint64()
+	if gasLimit == 0 {
+		gasLimitQueried, err := k.fungibleKeeper.QueryGasLimit(
+			ctx,
+			ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress),
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, "cannot query gas limit")
+		}
+		gasLimit = gasLimitQueried.Uint64()
+	}
 
 	return types.NewMsgVoteInbound(
 		"",
@@ -272,5 +271,6 @@ func (k Keeper) newCallInbound(
 		"",
 		event.Raw.Index,
 		types.ProtocolContractVersion_V2,
+		types.WithZEVMRevertOptions(event.RevertOptions),
 	), nil
 }

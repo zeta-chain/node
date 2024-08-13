@@ -6,6 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -20,10 +22,19 @@ const MaxMessageLength = 10240
 // InboundVoteOption is a function that sets some option on the inbound vote message
 type InboundVoteOption func(*MsgVoteInbound)
 
-// WithRevertOptions sets the revert options for the inbound vote message
-func WithRevertOptions(revertOptions RevertOptions) InboundVoteOption {
+// WithZEVMRevertOptions sets the revert options for the inbound vote message (ZEVM format)
+// the function convert the type from abigen to type defined in proto
+func WithZEVMRevertOptions(revertOptions gatewayzevm.RevertOptions) InboundVoteOption {
 	return func(msg *MsgVoteInbound) {
-		msg.RevertOptions = revertOptions
+		msg.RevertOptions = NewRevertOptionsFromZEVM(revertOptions)
+	}
+}
+
+// WithEVMRevertOptions sets the revert options for the inbound vote message (EVM format)
+// the function convert the type from abigen to type defined in proto
+func WithEVMRevertOptions(revertOptions gatewayevm.RevertOptions) InboundVoteOption {
+	return func(msg *MsgVoteInbound) {
+		msg.RevertOptions = NewRevertOptionsFromEVM(revertOptions)
 	}
 }
 

@@ -44,6 +44,9 @@ type OutboundData struct {
 
 	// outboundParams field contains data detailing the receiver chain and outbound transaction
 	outboundParams *types.OutboundParams
+
+	// revertOptions field contains data detailing the revert options
+	revertOptions types.RevertOptions
 }
 
 // SetChainAndSender populates the destination address and Chain ID based on the status of the cross chain tx
@@ -127,6 +130,7 @@ func NewOutboundData(
 	txData.srcChainID = big.NewInt(cctx.InboundParams.SenderChainId)
 	txData.asset = ethcommon.HexToAddress(cctx.InboundParams.Asset)
 	txData.height = height
+	txData.revertOptions = cctx.RevertOptions
 
 	skipTx := txData.SetChainAndSender(cctx, logger)
 	if skipTx {

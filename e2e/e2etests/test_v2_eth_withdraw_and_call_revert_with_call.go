@@ -40,5 +40,5 @@ func TestV2ETHWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) 
 	r.Logger.CCTX(*cctx, "withdraw")
 	require.Equal(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
 
-	r.AssertTestDAppZEVMCalled(true, payloadMessageWithdrawOnRevertETH, amount)
+	r.AssertTestDAppZEVMCalled(true, payloadMessageWithdrawOnRevertETH, big.NewInt(0))
 }

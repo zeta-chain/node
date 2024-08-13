@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/revert.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/systemcontract.sol"
 
 	"github.com/zeta-chain/zetacore/x/fungible/types"
@@ -117,20 +118,13 @@ func (k Keeper) CallExecute(
 }
 
 // CallExecuteRevert calls the executeRevert function on the gateway contract
-// function executeRevert(
 //
-//	revertContext calldata context,
-//	address zrc20,
-//	uint256 amount,
+//	function executeRevert(
 //	address target,
-//	bytes calldata message
-//
-// )
-// TODO: complete once interface finalized
-// https://github.com/zeta-chain/node/issues/2660
+//	RevertContext revertContext,
+//	)
 func (k Keeper) CallExecuteRevert(
 	ctx sdk.Context,
-	context systemcontract.ZContext,
 	zrc20 common.Address,
 	amount *big.Int,
 	target common.Address,
@@ -160,27 +154,26 @@ func (k Keeper) CallExecuteRevert(
 		true,
 		false,
 		"executeRevert",
-		context,
-		zrc20,
-		amount,
 		target,
-		message,
+		revert.RevertContext{
+			Asset:         zrc20,
+			Amount:        amount.Uint64(),
+			RevertMessage: message,
+		},
 	)
 }
 
 // CallDepositAndRevert calls the depositAndRevert function on the gateway contract
-// function depositAndRevert(
 //
-//	revertContext calldata context,
+//function depositAndRevert(
 //	address zrc20,
 //	uint256 amount,
 //	address target,
-//	bytes calldata message
-//
-// )
+//	RevertContext revertContext
+//)
+
 func (k Keeper) CallDepositAndRevert(
 	ctx sdk.Context,
-	context systemcontract.ZContext,
 	zrc20 common.Address,
 	amount *big.Int,
 	target common.Address,
@@ -210,10 +203,13 @@ func (k Keeper) CallDepositAndRevert(
 		true,
 		false,
 		"depositAndRevert",
-		context,
 		zrc20,
 		amount,
 		target,
-		message,
+		revert.RevertContext{
+			Asset:         zrc20,
+			Amount:        amount.Uint64(),
+			RevertMessage: message,
+		},
 	)
 }

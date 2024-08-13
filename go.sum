@@ -1673,8 +1673,8 @@ github.com/zeta-chain/go-tss v0.0.0-20240729195411-9f5ae8189449 h1:4U+4g2QQjbrme
 github.com/zeta-chain/go-tss v0.0.0-20240729195411-9f5ae8189449/go.mod h1:LN1IBRN8xQkKgdgLhl5BDGZyPm70QOTbVLejdS2FVpo=
 github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2 h1:gd2uE0X+ZbdFJ8DubxNqLbOVlCB12EgWdzSNRAR82tM=
 github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2/go.mod h1:x7Bkwbzt2W2lQfjOirnff0Dj+tykdbTG1FMJPVPZsvE=
-github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240813115206-2d79414c9ec0 h1:Wp67+TdHrHaetpc2HANrIR/IIcvqK+uykW/3V/m9kVw=
-github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240813115206-2d79414c9ec0/go.mod h1:SjT7QirtJE8stnAe1SlNOanxtfSfijJm3MGJ+Ax7w7w=
+github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240813155303-bc9246d9c711 h1:0PW6j5EDKsR0+LjGZsz3UVrOPk14iUgmwKP2J633388=
+github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240813155303-bc9246d9c711/go.mod h1:SjT7QirtJE8stnAe1SlNOanxtfSfijJm3MGJ+Ax7w7w=
 github.com/zondax/hid v0.9.0/go.mod h1:l5wttcP0jwtdLjqjMMWFVEE7d1zO0jvSPA9OPZxWpEM=
 github.com/zondax/hid v0.9.2 h1:WCJFnEDMiqGF64nlZz28E9qLVZ0KSJ7xpc5DLEyma2U=
 github.com/zondax/hid v0.9.2/go.mod h1:l5wttcP0jwtdLjqjMMWFVEE7d1zO0jvSPA9OPZxWpEM=
