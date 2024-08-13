@@ -113,7 +113,7 @@ jobs:
               core.setOutput('ADMIN_TESTS', true);
               core.setOutput('PERFORMANCE_TESTS', true);
               core.setOutput('STATEFUL_DATA_TESTS', true);
-              core.setOutput('TSS_MIGRATION_TESTS', labels.includes('TSS_MIGRATION_TESTS'));
+              core.setOutput('TSS_MIGRATION_TESTS', true);
               core.setOutput('SOLANA_TESTS', true);
             } else if (context.eventName === 'workflow_dispatch') {
               core.setOutput('DEFAULT_TESTS', context.payload.inputs['default-test']);
