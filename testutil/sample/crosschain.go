@@ -196,10 +196,13 @@ func OutboundParamsValidChainID(r *rand.Rand) *types.OutboundParams {
 func Status(t *testing.T, index string) *types.Status {
 	r := newRandFromStringSeed(t, index)
 
+	createdAt := r.Int63()
+
 	return &types.Status{
 		Status:              types.CctxStatus(r.Intn(100)),
 		StatusMessage:       String(),
-		LastUpdateTimestamp: r.Int63(),
+		CreatedTimestamp:    createdAt,
+		LastUpdateTimestamp: createdAt,
 	}
 }
 

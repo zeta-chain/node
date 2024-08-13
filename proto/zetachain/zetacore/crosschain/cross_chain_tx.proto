@@ -89,6 +89,8 @@ message Status {
   string status_message = 2;
   int64 lastUpdate_timestamp = 3;
   bool isAbortRefunded = 4;
+  // when the CCTX was created. only populated on new transactions.
+  int64 created_timestamp = 5;
 }
 
 message CrossChainTx {
