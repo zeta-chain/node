@@ -17,26 +17,30 @@ import (
 // https://github.com/zeta-chain/node/issues/2554
 func v2TestRoutine(
 	conf config.Config,
+	name string,
+	account config.Account,
+	color color.Attribute,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
-		account := conf.AdditionalAccounts.UserERC20
+		name = "v2-" + name
+
 		// initialize runner for erc20 test
 		v2Runner, err := initTestRunner(
-			"v2",
+			name,
 			conf,
 			deployerRunner,
 			account,
-			runner.NewLogger(verbose, color.FgHiYellow, "v2"),
+			runner.NewLogger(verbose, color, name),
 			runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
 		)
 		if err != nil {
 			return err
 		}
 
-		v2Runner.Logger.Print("🏃 starting v2 tests")
+		v2Runner.Logger.Print("🏃 starting %s tests", name)
 		startTime := time.Now()
 
 		// funding the account
@@ -49,14 +53,14 @@ func v2TestRoutine(
 			testNames...,
 		)
 		if err != nil {
-			return fmt.Errorf("v2 tests failed: %v", err)
+			return fmt.Errorf("%s tests failed: %v", name, err)
 		}
 
 		if err := v2Runner.RunE2ETests(testsToRun); err != nil {
-			return fmt.Errorf("v2 tests failed: %v", err)
+			return fmt.Errorf("%s tests failed: %v", name, err)
 		}
 
-		v2Runner.Logger.Print("🍾 v2 tests completed in %s", time.Since(startTime).String())
+		v2Runner.Logger.Print("🍾 %s tests completed in %s", name, time.Since(startTime).String())
 
 		return err
 	}

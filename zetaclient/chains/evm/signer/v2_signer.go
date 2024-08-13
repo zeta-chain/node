@@ -18,16 +18,13 @@ func (signer *Signer) SignOutboundFromCCTXV2(
 ) (*ethtypes.Transaction, error) {
 	outboundType := evm.ParseOutboundTypeFromCCTX(*cctx)
 	switch outboundType {
-	case evm.OutboundTypeGasWithdraw:
-	case evm.OutboundTypeGasWithdrawRevert:
+	case evm.OutboundTypeGasWithdraw, evm.OutboundTypeGasWithdrawRevert:
 		return signer.SignGasWithdraw(ctx, outboundData)
-	case evm.OutboundTypeERC20Withdraw:
-	case evm.OutboundTypeERC20WithdrawRevert:
+	case evm.OutboundTypeERC20Withdraw, evm.OutboundTypeERC20WithdrawRevert:
 		return signer.SignERC20CustodyWithdraw(ctx, outboundData)
 	case evm.OutboundTypeERC20WithdrawAndCall:
 		return signer.SignERC20CustodyWithdrawAndCall(ctx, outboundData)
-	case evm.OutboundTypeGasWithdrawAndCall:
-	case evm.OutboundTypeCall:
+	case evm.OutboundTypeGasWithdrawAndCall, evm.OutboundTypeCall:
 		// both gas withdraw and call and no-asset call uses gateway execute
 		// no-asset call simply hash msg.value == 0
 		return signer.SignGatewayExecute(ctx, outboundData)

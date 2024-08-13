@@ -18,7 +18,7 @@ func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, args []string) {
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
 	require.True(r, ok, "Invalid amount specified for TestV2ERC20WithdrawAndCall")
 
-	r.AssertTestDAppEVMValues(false, payloadMessageWithdrawETH, amount)
+	r.AssertTestDAppEVMValues(false, payloadMessageWithdrawERC20, amount)
 
 	r.ApproveERC20ZRC20(r.GatewayZEVMAddr)
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)

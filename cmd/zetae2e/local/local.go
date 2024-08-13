@@ -341,17 +341,20 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// update the ERC20 custody contract for v2 tests
 		deployerRunner.UpdateChainParamsERC20CustodyContract()
 
-		eg.Go(v2TestRoutine(conf, deployerRunner, verbose,
+		eg.Go(v2TestRoutine(conf, "eth", conf.AdditionalAccounts.UserEther, color.FgHiGreen, deployerRunner, verbose,
 			e2etests.TestV2ETHDepositName,
-			//e2etests.TestV2ETHDepositAndCallName,
-			//e2etests.TestV2ETHWithdrawName,
-			//e2etests.TestV2ETHWithdrawAndCallName,
-			//e2etests.TestV2ERC20DepositName,
-			//e2etests.TestV2ERC20DepositAndCallName,
-			//e2etests.TestV2ERC20WithdrawName,
-			//e2etests.TestV2ERC20WithdrawAndCallName,
+			e2etests.TestV2ETHDepositAndCallName,
+			e2etests.TestV2ETHWithdrawName,
+			e2etests.TestV2ETHWithdrawAndCallName,
 			e2etests.TestV2ZEVMToEVMCallName,
 			e2etests.TestV2EVMToZEVMCallName,
+		))
+		eg.Go(v2TestRoutine(conf, "erc20", conf.AdditionalAccounts.UserERC20, color.FgHiBlue, deployerRunner, verbose,
+			e2etests.TestV2ETHDepositName, // necessary to pay fees on ZEVM
+			e2etests.TestV2ERC20DepositName,
+			e2etests.TestV2ERC20DepositAndCallName,
+			e2etests.TestV2ERC20WithdrawName,
+			e2etests.TestV2ERC20WithdrawAndCallName,
 		))
 	}
 

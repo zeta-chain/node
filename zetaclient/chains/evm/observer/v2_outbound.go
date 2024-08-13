@@ -35,22 +35,18 @@ func ParseOutboundEventV2(
 
 	outboundType := evm.ParseOutboundTypeFromCCTX(*cctx)
 	switch outboundType {
-	case evm.OutboundTypeGasWithdraw:
-	case evm.OutboundTypeGasWithdrawRevert:
+	case evm.OutboundTypeGasWithdraw, evm.OutboundTypeGasWithdrawRevert:
 		// simple transfer, no need to parse event
 		return transaction.Value(), chains.ReceiveStatus_success, nil
-	case evm.OutboundTypeERC20Withdraw:
-	case evm.OutboundTypeERC20WithdrawRevert:
+	case evm.OutboundTypeERC20Withdraw, evm.OutboundTypeERC20WithdrawRevert:
 		return ParseAndCheckERC20CustodyWithdraw(cctx, receipt, custodyAddr, custody)
 	case evm.OutboundTypeERC20WithdrawAndCall:
 		return ParseAndCheckERC20CustodyWithdrawAndCall(cctx, receipt, custodyAddr, custody)
-	case evm.OutboundTypeGasWithdrawAndCall:
-	case evm.OutboundTypeCall:
+	case evm.OutboundTypeGasWithdrawAndCall, evm.OutboundTypeCall:
 		// both gas withdraw and call and no-asset call uses gateway execute
 		// no-asset call simply hash msg.value == 0
 		return ParseAndCheckGatewayExecuted(cctx, receipt, gatewayAddr, gateway)
-	case evm.OutboundTypeGasWithdrawRevertAndCallOnRevert:
-	case evm.OutboundTypeERC20WithdrawRevertAndCallOnRevert:
+	case evm.OutboundTypeGasWithdrawRevertAndCallOnRevert, evm.OutboundTypeERC20WithdrawRevertAndCallOnRevert:
 		return ParseAndCheckGatewayReverted(cctx, receipt, gatewayAddr, gateway)
 	}
 	return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("unsupported outbound type %d", outboundType)
