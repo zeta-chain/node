@@ -21,7 +21,7 @@ func PromptPasswords(passwordTitles []string) ([]string, error) {
 		}
 
 		// trim delimiters
-		password = strings.TrimSuffix(password, "\n")
+		password = strings.TrimSpace(password)
 		passwords[i] = password
 	}
 

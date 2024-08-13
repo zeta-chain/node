@@ -2,7 +2,7 @@
 # check=error=true
 FROM zetanode:latest AS zeta
 FROM ghcr.io/zeta-chain/ethereum-client-go:v1.10.26 AS geth
-FROM ghcr.io/zeta-chain/solana-docker:1.18.15 as solana
+FROM ghcr.io/zeta-chain/solana-docker:1.18.15 AS solana
 FROM ghcr.io/zeta-chain/golang:1.22.5-bookworm AS orchestrator
 
 RUN apt update && \

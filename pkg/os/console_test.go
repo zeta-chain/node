@@ -19,7 +19,7 @@ func Test_PromptPasswords(t *testing.T) {
 		{
 			name:           "Single password prompt",
 			passwordTitles: []string{"HotKey"},
-			input:          "pass123\n",
+			input:          " pass123\n",
 			expected:       []string{"pass123"},
 		},
 		{
