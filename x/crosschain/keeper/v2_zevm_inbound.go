@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/hex"
 	"fmt"
+	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -31,31 +32,46 @@ func (k Keeper) ProcessZEVMInboundV2(
 ) error {
 	// try to parse a withdrawal event from the log
 	withdrawalEvent, gatewayEvent, err := k.parseGatewayEvent(*log, gatewayAddr)
-	if err == nil {
+	if err == nil && (withdrawalEvent != nil || gatewayEvent != nil) {
 		var inbound *types.MsgVoteInbound
 
+		// parse data from event and validate
+		var zrc20 ethcommon.Address
+		var value *big.Int
+		var receiver []byte
+		var contractAddress ethcommon.Address
 		if withdrawalEvent != nil {
-			// find foreign coin object associated to zrc20
-			foreignCoin, found := k.fungibleKeeper.GetForeignCoins(ctx, withdrawalEvent.Zrc20.Hex())
-			if !found {
-				ctx.Logger().
-					Info(fmt.Sprintf("cannot find foreign coin with contract address %s", withdrawalEvent.Raw.Address.Hex()))
-				return nil
-			}
+			zrc20 = withdrawalEvent.Zrc20
+			value = withdrawalEvent.Value
+			receiver = withdrawalEvent.Receiver
+			contractAddress = withdrawalEvent.Raw.Address
+		} else {
+			zrc20 = gatewayEvent.Zrc20
+			value = big.NewInt(0)
+			receiver = gatewayEvent.Receiver
+			contractAddress = gatewayEvent.Raw.Address
+		}
 
-			// validate data of the withdrawal event
-			if err := k.validateZRC20Withdrawal(ctx, foreignCoin.ForeignChainId, withdrawalEvent.Value, withdrawalEvent.Receiver); err != nil {
-				return err
-			}
+		foreignCoin, found := k.fungibleKeeper.GetForeignCoins(ctx, zrc20.Hex())
+		if !found {
+			ctx.Logger().
+				Info(fmt.Sprintf("cannot find foreign coin with contract address %s", contractAddress.Hex()))
+			return nil
+		}
 
-			// create a new inbound object for the withdrawal
+		// validate data of the withdrawal event
+		if err := k.validateZRC20Withdrawal(ctx, foreignCoin.ForeignChainId, value, receiver); err != nil {
+			return err
+		}
+
+		// create inbound object depending on the event type
+		if withdrawalEvent != nil {
 			inbound, err = k.newWithdrawalInbound(ctx, from, txOrigin, foreignCoin, withdrawalEvent)
 			if err != nil {
 				return err
 			}
-		} else if gatewayEvent != nil {
-			// create a new inbound object for the call
-			inbound, err = k.newCallInbound(ctx, from, txOrigin, gatewayEvent)
+		} else {
+			inbound, err = k.newCallInbound(ctx, from, txOrigin, foreignCoin, gatewayEvent)
 			if err != nil {
 				return err
 			}
@@ -84,7 +100,7 @@ func (k Keeper) ProcessZEVMInboundV2(
 func (k Keeper) parseGatewayEvent(
 	log ethtypes.Log,
 	gatewayAddr ethcommon.Address,
-) (*gatewayzevm.GatewayZEVMWithdrawal, *gatewayzevm.GatewayZEVMCall, error) {
+) (*gatewayzevm.GatewayZEVMWithdrawn, *gatewayzevm.GatewayZEVMCalled, error) {
 	if len(log.Topics) == 0 {
 		return nil, nil, errors.New("ParseGatewayCallEvent: invalid log - no topics")
 	}
@@ -108,8 +124,8 @@ func (k Keeper) parseGatewayWithdrawalEvent(
 	log ethtypes.Log,
 	gatewayAddr ethcommon.Address,
 	filterer *gatewayzevm.GatewayZEVMFilterer,
-) (*gatewayzevm.GatewayZEVMWithdrawal, error) {
-	event, err := filterer.ParseWithdrawal(log)
+) (*gatewayzevm.GatewayZEVMWithdrawn, error) {
+	event, err := filterer.ParseWithdrawn(log)
 	if err != nil {
 		return nil, err
 	}
@@ -124,8 +140,8 @@ func (k Keeper) parseGatewayCallEvent(
 	log ethtypes.Log,
 	gatewayAddr ethcommon.Address,
 	filterer *gatewayzevm.GatewayZEVMFilterer,
-) (*gatewayzevm.GatewayZEVMCall, error) {
-	event, err := filterer.ParseCall(log)
+) (*gatewayzevm.GatewayZEVMCalled, error) {
+	event, err := filterer.ParseCalled(log)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +162,7 @@ func (k Keeper) newWithdrawalInbound(
 	from ethcommon.Address,
 	txOrigin string,
 	foreignCoin fungibletypes.ForeignCoins,
-	event *gatewayzevm.GatewayZEVMWithdrawal,
+	event *gatewayzevm.GatewayZEVMWithdrawn,
 ) (*types.MsgVoteInbound, error) {
 	receiverChain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, foreignCoin.ForeignChainId)
 	if !found {
@@ -213,15 +229,15 @@ func (k Keeper) newCallInbound(
 	ctx sdk.Context,
 	from ethcommon.Address,
 	txOrigin string,
-	event *gatewayzevm.GatewayZEVMCall,
+	foreignCoin fungibletypes.ForeignCoins,
+	event *gatewayzevm.GatewayZEVMCalled,
 ) (*types.MsgVoteInbound, error) {
-	receiverChainID := event.ChainId.Int64()
-	receiverChain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, receiverChainID)
+	receiverChain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, foreignCoin.ForeignChainId)
 	if !found {
 		return nil, errorsmod.Wrapf(
 			observertypes.ErrSupportedChains,
 			"chain with chainID %d not supported",
-			receiverChainID,
+			foreignCoin.ForeignChainId,
 		)
 	}
 
@@ -246,7 +262,7 @@ func (k Keeper) newCallInbound(
 		senderChain.ChainId,
 		txOrigin,
 		toAddr,
-		receiverChainID,
+		foreignCoin.ForeignChainId,
 		math.ZeroUint(),
 		hex.EncodeToString(event.Message),
 		event.Raw.TxHash.String(),

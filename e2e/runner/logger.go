@@ -202,7 +202,7 @@ func (l *Logger) ZRC20Withdrawal(
 }
 
 type depositParser interface {
-	ParseDeposit(ethtypes.Log) (*gatewayevm.GatewayEVMDeposit, error)
+	ParseDeposited(ethtypes.Log) (*gatewayevm.GatewayEVMDeposited, error)
 }
 
 // GatewayDeposit prints a GatewayDeposit event
@@ -212,7 +212,7 @@ func (l *Logger) GatewayDeposit(
 	name string,
 ) {
 	for _, log := range receipt.Logs {
-		event, err := contract.ParseDeposit(*log)
+		event, err := contract.ParseDeposited(*log)
 		if err != nil {
 			continue
 		}

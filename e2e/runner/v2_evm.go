@@ -6,6 +6,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/zetacore/e2e/utils"
 )
@@ -19,7 +20,7 @@ func (r *E2ERunner) V2ETHDeposit(receiver ethcommon.Address, amount *big.Int) *e
 	}()
 	r.EVMAuth.Value = amount
 
-	tx, err := r.GatewayEVM.Deposit(r.EVMAuth, receiver)
+	tx, err := r.GatewayEVM.Deposit0(r.EVMAuth, receiver, gatewayevm.RevertOptions{})
 	require.NoError(r, err)
 
 	logDepositInfoAndWaitForTxReceipt(r, tx, "eth_deposit")
@@ -40,7 +41,7 @@ func (r *E2ERunner) V2ETHDepositAndCall(
 	}()
 	r.EVMAuth.Value = amount
 
-	tx, err := r.GatewayEVM.DepositAndCall(r.EVMAuth, receiver, payload)
+	tx, err := r.GatewayEVM.DepositAndCall0(r.EVMAuth, receiver, payload, gatewayevm.RevertOptions{})
 	require.NoError(r, err)
 
 	logDepositInfoAndWaitForTxReceipt(r, tx, "eth_deposit_and_call")
@@ -50,7 +51,7 @@ func (r *E2ERunner) V2ETHDepositAndCall(
 
 // V2ERC20Deposit calls Deposit of Gateway with erc20 token on EVM
 func (r *E2ERunner) V2ERC20Deposit(receiver ethcommon.Address, amount *big.Int) *ethtypes.Transaction {
-	tx, err := r.GatewayEVM.Deposit0(r.EVMAuth, receiver, amount, r.ERC20Addr)
+	tx, err := r.GatewayEVM.Deposit(r.EVMAuth, receiver, amount, r.ERC20Addr, gatewayevm.RevertOptions{})
 	require.NoError(r, err)
 
 	logDepositInfoAndWaitForTxReceipt(r, tx, "erc20_deposit")
@@ -64,7 +65,14 @@ func (r *E2ERunner) V2ERC20DepositAndCall(
 	amount *big.Int,
 	payload []byte,
 ) *ethtypes.Transaction {
-	tx, err := r.GatewayEVM.DepositAndCall0(r.EVMAuth, receiver, amount, r.ERC20Addr, payload)
+	tx, err := r.GatewayEVM.DepositAndCall(
+		r.EVMAuth,
+		receiver,
+		amount,
+		r.ERC20Addr,
+		payload,
+		gatewayevm.RevertOptions{},
+	)
 	require.NoError(r, err)
 
 	logDepositInfoAndWaitForTxReceipt(r, tx, "erc20_deposit_and_call")
@@ -74,7 +82,7 @@ func (r *E2ERunner) V2ERC20DepositAndCall(
 
 // V2EVMToZEMVCall calls Call of Gateway on EVM
 func (r *E2ERunner) V2EVMToZEMVCall(receiver ethcommon.Address, payload []byte) *ethtypes.Transaction {
-	tx, err := r.GatewayEVM.Call(r.EVMAuth, receiver, payload)
+	tx, err := r.GatewayEVM.Call(r.EVMAuth, receiver, payload, gatewayevm.RevertOptions{})
 	require.NoError(r, err)
 
 	return tx

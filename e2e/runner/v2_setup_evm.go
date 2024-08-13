@@ -99,4 +99,10 @@ func (r *E2ERunner) SetupEVMV2() {
 	ensureTxReceipt(txProxy, "Gateway proxy deployment failed")
 	ensureTxReceipt(txSetCustody, "Set custody in Gateway failed")
 	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
+
+	// whitelist the ERC20
+	txWhitelist, err := r.ERC20CustodyV2.Whitelist(r.EVMAuth, r.ERC20Addr)
+	require.NoError(r, err)
+
+	ensureTxReceipt(txWhitelist, "ERC20 whitelist failed")
 }

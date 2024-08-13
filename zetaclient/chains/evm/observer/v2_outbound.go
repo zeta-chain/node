@@ -127,7 +127,7 @@ func ParseAndCheckERC20CustodyWithdraw(
 	params := cctx.GetCurrentOutboundParam()
 
 	for _, vLog := range receipt.Logs {
-		withdrawn, err := custody.ERC20CustodyFilterer.ParseWithdraw(*vLog)
+		withdrawn, err := custody.ERC20CustodyFilterer.ParseWithdrawn(*vLog)
 		if err == nil {
 			// basic event check
 			if err := evm.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), evm.TopicsERC20CustodyWithdraw); err != nil {
@@ -186,7 +186,7 @@ func ParseAndCheckERC20CustodyWithdrawAndCall(
 	params := cctx.GetCurrentOutboundParam()
 
 	for _, vLog := range receipt.Logs {
-		withdrawn, err := custody.ERC20CustodyFilterer.ParseWithdrawAndCall(*vLog)
+		withdrawn, err := custody.ERC20CustodyFilterer.ParseWithdrawnAndCalled(*vLog)
 		if err == nil {
 			// basic event check
 			if err := evm.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), evm.TopicsERC20CustodyWithdrawAndCall); err != nil {

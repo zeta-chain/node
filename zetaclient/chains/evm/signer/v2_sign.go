@@ -88,8 +88,8 @@ func (signer *Signer) SignGatewayExecuteRevert(
 
 // SignERC20CustodyWithdraw signs a erc20 withdrawal transaction
 // function withdrawAndCall
-// address token,
 // address to,
+// address token,
 // uint256 amount,
 func (signer *Signer) SignERC20CustodyWithdraw(
 	ctx context.Context,
@@ -103,7 +103,7 @@ func (signer *Signer) SignERC20CustodyWithdraw(
 		return nil, errors.Wrap(err, "unable to get ERC20CustodyMetaData ABI")
 	}
 
-	data, err = erc20CustodyV2ABI.Pack("withdraw", txData.asset, txData.to, txData.amount)
+	data, err = erc20CustodyV2ABI.Pack("withdraw", txData.to, txData.asset, txData.amount)
 	if err != nil {
 		return nil, fmt.Errorf("withdraw pack error: %w", err)
 	}
@@ -143,7 +143,7 @@ func (signer *Signer) SignERC20CustodyWithdrawAndCall(
 		return nil, errors.Wrap(err, "unable to get ERC20CustodyMetaData ABI")
 	}
 
-	data, err = erc20CustodyV2ABI.Pack("withdrawAndCall", txData.asset, txData.to, txData.amount, txData.message)
+	data, err = erc20CustodyV2ABI.Pack("withdrawAndCall", txData.to, txData.asset, txData.amount, txData.message)
 	if err != nil {
 		return nil, fmt.Errorf("withdraw pack error: %w", err)
 	}
@@ -185,7 +185,7 @@ func (signer *Signer) SignERC20CustodyWithdrawRevert(
 		return nil, errors.Wrap(err, "unable to get ERC20CustodyMetaData ABI")
 	}
 
-	data, err = erc20CustodyV2ABI.Pack("withdrawAndRevert", txData.asset, txData.to, txData.amount, txData.message)
+	data, err = erc20CustodyV2ABI.Pack("withdrawAndRevert", txData.to, txData.asset, txData.amount, txData.message)
 	if err != nil {
 		return nil, fmt.Errorf("withdraw pack error: %w", err)
 	}

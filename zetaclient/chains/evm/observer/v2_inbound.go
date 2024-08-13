@@ -65,7 +65,7 @@ func (ob *Observer) ObserveGatewayDeposit(ctx context.Context, startBlock, toBlo
 	}
 
 	// get iterator for the events for the block range
-	eventIterator, err := gatewayContract.FilterDeposit(&bind.FilterOpts{
+	eventIterator, err := gatewayContract.FilterDeposited(&bind.FilterOpts{
 		Start:   startBlock,
 		End:     &toBlock,
 		Context: ctx,
@@ -119,11 +119,11 @@ func (ob *Observer) ObserveGatewayDeposit(ctx context.Context, startBlock, toBlo
 
 // parseAndValidateDepositEvents collects and sorts events by block number, tx index, and log index
 func (ob *Observer) parseAndValidateDepositEvents(
-	iterator *gatewayevm.GatewayEVMDepositIterator,
+	iterator *gatewayevm.GatewayEVMDepositedIterator,
 	gatewayAddr ethcommon.Address,
-) []*gatewayevm.GatewayEVMDeposit {
+) []*gatewayevm.GatewayEVMDeposited {
 	// collect and sort events by block number, then tx index, then log index (ascending)
-	events := make([]*gatewayevm.GatewayEVMDeposit, 0)
+	events := make([]*gatewayevm.GatewayEVMDeposited, 0)
 	for iterator.Next() {
 		events = append(events, iterator.Event)
 		err := evm.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", evm.TopicsGatewayDeposit)
@@ -147,7 +147,7 @@ func (ob *Observer) parseAndValidateDepositEvents(
 	})
 
 	// filter events from same tx
-	filtered := make([]*gatewayevm.GatewayEVMDeposit, 0)
+	filtered := make([]*gatewayevm.GatewayEVMDeposited, 0)
 	guard := make(map[string]bool)
 	for _, event := range events {
 		// guard against multiple events in the same tx
@@ -166,7 +166,7 @@ func (ob *Observer) parseAndValidateDepositEvents(
 // newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
 // TODO: include revert options
 // https://github.com/zeta-chain/node/issues/2660
-func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposit) types.MsgVoteInbound {
+func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited) types.MsgVoteInbound {
 	// if event.Asset is zero, it's a native token
 	coinType := coin.CoinType_ERC20
 	if crypto.IsEmptyAddress(event.Asset) {
@@ -206,7 +206,7 @@ func (ob *Observer) ObserveGatewayCall(ctx context.Context, startBlock, toBlock 
 	}
 
 	// get iterator for the events for the block range
-	eventIterator, err := gatewayContract.FilterCall(&bind.FilterOpts{
+	eventIterator, err := gatewayContract.FilterCalled(&bind.FilterOpts{
 		Start:   startBlock,
 		End:     &toBlock,
 		Context: ctx,
@@ -260,11 +260,11 @@ func (ob *Observer) ObserveGatewayCall(ctx context.Context, startBlock, toBlock 
 
 // parseAndValidateCallEvents collects and sorts events by block number, tx index, and log index
 func (ob *Observer) parseAndValidateCallEvents(
-	iterator *gatewayevm.GatewayEVMCallIterator,
+	iterator *gatewayevm.GatewayEVMCalledIterator,
 	gatewayAddr ethcommon.Address,
-) []*gatewayevm.GatewayEVMCall {
+) []*gatewayevm.GatewayEVMCalled {
 	// collect and sort events by block number, then tx index, then log index (ascending)
-	events := make([]*gatewayevm.GatewayEVMCall, 0)
+	events := make([]*gatewayevm.GatewayEVMCalled, 0)
 	for iterator.Next() {
 		events = append(events, iterator.Event)
 		err := evm.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", evm.TopicsGatewayCall)
@@ -288,7 +288,7 @@ func (ob *Observer) parseAndValidateCallEvents(
 	})
 
 	// filter events from same tx
-	filtered := make([]*gatewayevm.GatewayEVMCall, 0)
+	filtered := make([]*gatewayevm.GatewayEVMCalled, 0)
 	guard := make(map[string]bool)
 	for _, event := range events {
 		// guard against multiple events in the same tx
@@ -307,7 +307,7 @@ func (ob *Observer) parseAndValidateCallEvents(
 // newCallInboundVote creates a MsgVoteInbound message for a Call event
 // TODO: include revert options
 // https://github.com/zeta-chain/node/issues/2660
-func (ob *Observer) newCallInboundVote(event *gatewayevm.GatewayEVMCall) types.MsgVoteInbound {
+func (ob *Observer) newCallInboundVote(event *gatewayevm.GatewayEVMCalled) types.MsgVoteInbound {
 	return *types.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		event.Sender.Hex(),
