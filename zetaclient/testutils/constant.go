@@ -1,6 +1,10 @@
 package testutils
 
-import ethcommon "github.com/ethereum/go-ethereum/common"
+import (
+	ethcommon "github.com/ethereum/go-ethereum/common"
+
+	"github.com/zeta-chain/zetacore/pkg/chains"
+)
 
 const (
 	// TSSAddressEVMMainnet the EVM TSS address for test purposes
@@ -29,33 +33,39 @@ const (
 	EventERC20Withdraw = "Withdrawn"
 )
 
+// GatewayAddresses contains constants gateway addresses for testing
+var GatewayAddresses = map[int64]string{
+	// Gateway address on Solana devnet
+	chains.SolanaDevnet.ChainId: "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d",
+}
+
 // ConnectorAddresses contains constants ERC20 connector addresses for testing
 var ConnectorAddresses = map[int64]ethcommon.Address{
 	// Connector address on Ethereum mainnet
-	1: ethcommon.HexToAddress("0x000007Cf399229b2f5A4D043F20E90C9C98B7C6a"),
+	chains.Ethereum.ChainId: ethcommon.HexToAddress("0x000007Cf399229b2f5A4D043F20E90C9C98B7C6a"),
 
 	// Connector address on Binance Smart Chain mainnet
-	56: ethcommon.HexToAddress("0x000063A6e758D9e2f438d430108377564cf4077D"),
+	chains.BscMainnet.ChainId: ethcommon.HexToAddress("0x000063A6e758D9e2f438d430108377564cf4077D"),
 
 	// testnet
-	5:        ethcommon.HexToAddress("0x00005E3125aBA53C5652f9F0CE1a4Cf91D8B15eA"),
-	97:       ethcommon.HexToAddress("0x0000ecb8cdd25a18F12DAA23f6422e07fBf8B9E1"),
-	11155111: ethcommon.HexToAddress("0x3963341dad121c9CD33046089395D66eBF20Fb03"),
+	chains.Goerli.ChainId:     ethcommon.HexToAddress("0x00005E3125aBA53C5652f9F0CE1a4Cf91D8B15eA"),
+	chains.BscTestnet.ChainId: ethcommon.HexToAddress("0x0000ecb8cdd25a18F12DAA23f6422e07fBf8B9E1"),
+	chains.Sepolia.ChainId:    ethcommon.HexToAddress("0x3963341dad121c9CD33046089395D66eBF20Fb03"),
 
 	// localnet
-	1337: ethcommon.HexToAddress("0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"),
+	chains.GoerliLocalnet.ChainId: ethcommon.HexToAddress("0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"),
 }
 
 // CustodyAddresses contains constants ERC20 custody addresses for testing
 var CustodyAddresses = map[int64]ethcommon.Address{
 	// ERC20 custody address on Ethereum mainnet
-	1: ethcommon.HexToAddress("0x0000030Ec64DF25301d8414eE5a29588C4B0dE10"),
+	chains.Ethereum.ChainId: ethcommon.HexToAddress("0x0000030Ec64DF25301d8414eE5a29588C4B0dE10"),
 
 	// ERC20 custody address on Binance Smart Chain mainnet
-	56: ethcommon.HexToAddress("0x00000fF8fA992424957F97688015814e707A0115"),
+	chains.BscMainnet.ChainId: ethcommon.HexToAddress("0x00000fF8fA992424957F97688015814e707A0115"),
 
 	// testnet
-	5:        ethcommon.HexToAddress("0x000047f11C6E42293F433C82473532E869Ce4Ec5"),
-	97:       ethcommon.HexToAddress("0x0000a7Db254145767262C6A81a7eE1650684258e"),
-	11155111: ethcommon.HexToAddress("0x84725b70a239d3Faa7C6EF0C6C8E8b6c8e28338b"),
+	chains.Goerli.ChainId:     ethcommon.HexToAddress("0x000047f11C6E42293F433C82473532E869Ce4Ec5"),
+	chains.BscTestnet.ChainId: ethcommon.HexToAddress("0x0000a7Db254145767262C6A81a7eE1650684258e"),
+	chains.Sepolia.ChainId:    ethcommon.HexToAddress("0x84725b70a239d3Faa7C6EF0C6C8E8b6c8e28338b"),
 }

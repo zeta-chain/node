@@ -11,6 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	contracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
+	"github.com/zeta-chain/zetacore/pkg/crypto"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
@@ -69,12 +70,11 @@ func NewSigner(
 
 	// construct Solana private key if present
 	if relayerKey != nil {
-		privKey, err := solana.PrivateKeyFromBase58(relayerKey.PrivateKey)
+		signer.relayerKey, err = crypto.SolanaPrivateKeyFromString(relayerKey.PrivateKey)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to construct solana private key")
 		}
-		signer.relayerKey = &privKey
-		logger.Std.Info().Msgf("Solana relayer address: %s", privKey.PublicKey())
+		logger.Std.Info().Msgf("Solana relayer address: %s", signer.relayerKey.PublicKey())
 	} else {
 		logger.Std.Info().Msg("Solana relayer key is not provided")
 	}
@@ -138,6 +138,9 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 
+	// set relayer balance metrics
+	signer.SetRelayerBalanceMetrics(ctx)
+
 	// sign the withdraw transaction by relayer key
 	tx, err := signer.SignWithdrawTx(ctx, *msg)
 	if err != nil {
@@ -189,6 +192,19 @@ func (signer *Signer) GetGatewayAddress() string {
 	signer.Lock()
 	defer signer.Unlock()
 	return signer.gatewayID.String()
+}
+
+// SetRelayerBalanceMetrics sets the relayer balance metrics
+func (signer *Signer) SetRelayerBalanceMetrics(ctx context.Context) {
+	if signer.HasRelayerKey() {
+		result, err := signer.client.GetBalance(ctx, signer.relayerKey.PublicKey(), rpc.CommitmentFinalized)
+		if err != nil {
+			signer.Logger().Std.Error().Err(err).Msg("GetBalance error")
+			return
+		}
+		solBalance := float64(result.Value) / float64(solana.LAMPORTS_PER_SOL)
+		metrics.RelayerKeyBalance.WithLabelValues(signer.Chain().Name).Set(solBalance)
+	}
 }
 
 // TODO: get rid of below four functions for Solana and Bitcoin
