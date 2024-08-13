@@ -44,7 +44,7 @@ func (k Keeper) ValidateOutboundZEVM(
 	if depositErr != nil && isContractReverted {
 		tmpCtxRevert, commitRevert := ctx.CacheContext()
 		// contract call reverted; should refund via a revert tx
-		err := k.processFailedOutboundonExternalChain(
+		err := k.processFailedOutboundOnExternalChain(
 			tmpCtxRevert,
 			cctx,
 			types.CctxStatus_PendingOutbound,
@@ -52,7 +52,7 @@ func (k Keeper) ValidateOutboundZEVM(
 			cctx.InboundParams.Amount,
 		)
 		if err != nil {
-			cctx.SetAbort(err.Error())
+			cctx.SetAbort(fmt.Sprintf("%s : %s", depositErr, err.Error()))
 			return types.CctxStatus_Aborted
 		}
 
@@ -143,9 +143,9 @@ func (k Keeper) processFailedOutboundObservers(ctx sdk.Context, cctx *types.Cros
 			}
 		}
 	} else {
-		err := k.processFailedOutboundonExternalChain(ctx, cctx, oldStatus, "Outbound failed, start revert", cctx.GetCurrentOutboundParam().Amount)
+		err := k.processFailedOutboundOnExternalChain(ctx, cctx, oldStatus, "Outbound failed, start revert", cctx.GetCurrentOutboundParam().Amount)
 		if err != nil {
-			return cosmoserrors.Wrap(err, "processFailedOutboundonExternalChain")
+			return cosmoserrors.Wrap(err, "processFailedOutboundOnExternalChain")
 		}
 	}
 	newStatus := cctx.CctxStatus.Status.String()
@@ -153,8 +153,8 @@ func (k Keeper) processFailedOutboundObservers(ctx sdk.Context, cctx *types.Cros
 	return nil
 }
 
-// processFailedOutboundonExternalChain processes the failed outbound transaction where the receiver is an external chain.
-func (k Keeper) processFailedOutboundonExternalChain(
+// processFailedOutboundOnExternalChain processes the failed outbound transaction where the receiver is an external chain.
+func (k Keeper) processFailedOutboundOnExternalChain(
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,
 	oldStatus types.CctxStatus,
