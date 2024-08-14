@@ -52,6 +52,9 @@ func TestKeeper_AddObserverToSet(t *testing.T) {
 		osNew, found := k.GetObserverSet(ctx)
 		require.True(t, found)
 		require.Len(t, osNew.ObserverList, len(os.ObserverList)+1)
+		count, found := k.GetLastObserverCount(ctx)
+		require.True(t, found)
+		require.Equal(t, osNew.LenUint(), count.Count)
 	})
 
 	t.Run("add observer to set if set doesn't exist", func(t *testing.T) {
@@ -61,12 +64,16 @@ func TestKeeper_AddObserverToSet(t *testing.T) {
 
 		// ACT
 		err := k.AddObserverToSet(ctx, newObserver)
+
 		// ASSERT
 		require.NoError(t, err)
 		require.True(t, k.IsAddressPartOfObserverSet(ctx, newObserver))
 		osNew, found := k.GetObserverSet(ctx)
 		require.True(t, found)
 		require.Len(t, osNew.ObserverList, 1)
+		count, found := k.GetLastObserverCount(ctx)
+		require.True(t, found)
+		require.Equal(t, osNew.LenUint(), count.Count)
 	})
 
 	t.Run("cannot add observer to set the address is already part of the set", func(t *testing.T) {

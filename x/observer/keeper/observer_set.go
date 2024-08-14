@@ -47,12 +47,12 @@ func (k Keeper) AddObserverToSet(ctx sdk.Context, address string) error {
 	}
 
 	observerSet.ObserverList = append(observerSet.ObserverList, address)
-
 	if err := observerSet.Validate(); err != nil {
 		return err
 	}
 
 	k.SetObserverSet(ctx, observerSet)
+	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: observerSet.LenUint()})
 
 	return nil
 }

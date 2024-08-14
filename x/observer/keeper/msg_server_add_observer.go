@@ -59,8 +59,6 @@ func (k msgServer) AddObserver(
 	}
 	observerSet, _ := k.GetObserverSet(ctx)
 
-	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: observerSet.LenUint()})
-
 	EmitEventAddObserver(
 		ctx,
 		observerSet.LenUint(),
