@@ -125,7 +125,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 			ob.Logger().Outbound.Error().Msgf("WatchOutbound: confirmed multiple (%d) outbound for chain %d nonce %d", txCount, chainID, nonce)
 		} else {
 			if len(tracker.HashList) == crosschainkeeper.MaxOutboundTrackerHashes {
-				ob.Logger().Outbound.Error().Msgf("WatchOutbound: outbound tracker is full of invalid hashes for chain %d nonce %d", chainID, nonce)
+				ob.Logger().Outbound.Error().Msgf("WatchOutbound: outbound tracker is full of hashes for chain %d nonce %d", chainID, nonce)
 			}
 		}
 	}
