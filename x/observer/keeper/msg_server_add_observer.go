@@ -52,16 +52,15 @@ func (k msgServer) AddObserver(
 		return &types.MsgAddObserverResponse{}, nil
 	}
 
-	// Add observer to the observer set
-	err = k.AddObserverToSet(ctx, msg.ObserverAddress)
+	// Add observer to the observer set and update the observer count
+	count, err := k.AddObserverToSet(ctx, msg.ObserverAddress)
 	if err != nil {
 		return &types.MsgAddObserverResponse{}, err
 	}
-	observerSet, _ := k.GetObserverSet(ctx)
 
 	EmitEventAddObserver(
 		ctx,
-		observerSet.LenUint(),
+		count,
 		msg.ObserverAddress,
 		granteeAddress.String(),
 		msg.ZetaclientGranteePubkey,

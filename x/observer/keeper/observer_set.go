@@ -38,7 +38,8 @@ func (k Keeper) IsAddressPartOfObserverSet(ctx sdk.Context, address string) bool
 }
 
 // AddObserverToSet adds an observer to the observer set.It makes sure the updated observer set is valid.
-func (k Keeper) AddObserverToSet(ctx sdk.Context, address string) error {
+// It also sets the observer count and returns the updated length of the observer set.
+func (k Keeper) AddObserverToSet(ctx sdk.Context, address string) (uint64, error) {
 	observerSet, found := k.GetObserverSet(ctx)
 	if !found {
 		observerSet = types.ObserverSet{
@@ -48,13 +49,14 @@ func (k Keeper) AddObserverToSet(ctx sdk.Context, address string) error {
 
 	observerSet.ObserverList = append(observerSet.ObserverList, address)
 	if err := observerSet.Validate(); err != nil {
-		return err
+		return 0, err
 	}
 
 	k.SetObserverSet(ctx, observerSet)
-	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: observerSet.LenUint()})
+	newCount := observerSet.LenUint()
+	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: newCount})
 
-	return nil
+	return newCount, nil
 }
 
 // RemoveObserverFromSet removes an observer from the observer set.

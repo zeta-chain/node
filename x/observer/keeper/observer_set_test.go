@@ -43,7 +43,7 @@ func TestKeeper_AddObserverToSet(t *testing.T) {
 		newObserver := sample.AccAddress()
 
 		// ACT
-		err := k.AddObserverToSet(ctx, newObserver)
+		countReturned, err := k.AddObserverToSet(ctx, newObserver)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -55,6 +55,7 @@ func TestKeeper_AddObserverToSet(t *testing.T) {
 		count, found := k.GetLastObserverCount(ctx)
 		require.True(t, found)
 		require.Equal(t, osNew.LenUint(), count.Count)
+		require.Equal(t, osNew.LenUint(), countReturned)
 	})
 
 	t.Run("add observer to set if set doesn't exist", func(t *testing.T) {
@@ -63,7 +64,7 @@ func TestKeeper_AddObserverToSet(t *testing.T) {
 		newObserver := sample.AccAddress()
 
 		// ACT
-		err := k.AddObserverToSet(ctx, newObserver)
+		countReturned, err := k.AddObserverToSet(ctx, newObserver)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -74,13 +75,14 @@ func TestKeeper_AddObserverToSet(t *testing.T) {
 		count, found := k.GetLastObserverCount(ctx)
 		require.True(t, found)
 		require.Equal(t, osNew.LenUint(), count.Count)
+		require.Equal(t, osNew.LenUint(), countReturned)
 	})
 
 	t.Run("cannot add observer to set the address is already part of the set", func(t *testing.T) {
 		// ARRANGE
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		newObserver := sample.AccAddress()
-		err := k.AddObserverToSet(ctx, newObserver)
+		_, err := k.AddObserverToSet(ctx, newObserver)
 		require.NoError(t, err)
 		require.True(t, k.IsAddressPartOfObserverSet(ctx, newObserver))
 		osNew, found := k.GetObserverSet(ctx)
@@ -88,7 +90,7 @@ func TestKeeper_AddObserverToSet(t *testing.T) {
 		require.Len(t, osNew.ObserverList, 1)
 
 		// ACT
-		err = k.AddObserverToSet(ctx, newObserver)
+		_, err = k.AddObserverToSet(ctx, newObserver)
 
 		// ASSERT
 		require.ErrorIs(t, err, types.ErrDuplicateObserver)
