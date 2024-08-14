@@ -92,6 +92,7 @@ import (
 	"github.com/zeta-chain/zetacore/app/ante"
 	"github.com/zeta-chain/zetacore/docs/openapi"
 	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
+	precompiles "github.com/zeta-chain/zetacore/precompile"
 	srvflags "github.com/zeta-chain/zetacore/server/flags"
 	authoritymodule "github.com/zeta-chain/zetacore/x/authority"
 	authoritykeeper "github.com/zeta-chain/zetacore/x/authority/keeper"
@@ -555,6 +556,7 @@ func New(
 	)
 	evmSs := app.GetSubspace(evmtypes.ModuleName)
 
+	gasConfig := storetypes.TransientGasConfig()
 	app.EvmKeeper = evmkeeper.NewKeeper(
 		appCodec,
 		keys[evmtypes.StoreKey],
@@ -566,7 +568,11 @@ func New(
 		&app.FeeMarketKeeper,
 		tracer,
 		evmSs,
-		[]evmkeeper.CustomContractFn{},
+		precompiles.PrecompiledContracts(
+			app.FungibleKeeper, 
+			appCodec, 
+			gasConfig,
+		),
 		app.ConsensusParamsKeeper,
 		aggregateAllKeys(keys, tKeys, memKeys),
 	)
