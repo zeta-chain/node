@@ -89,6 +89,7 @@ import (
 	feemarketkeeper "github.com/zeta-chain/ethermint/x/feemarket/keeper"
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/zeta-chain/zetacore/app/ante"
 	"github.com/zeta-chain/zetacore/docs/openapi"
 	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
@@ -571,6 +572,7 @@ func New(
 		tracer,
 		evmSs,
 		precompiles.StatefulContracts(
+			app.NewContext(true, tmproto.Header{}),
 			app.FungibleKeeper,
 			appCodec,
 			gasConfig,
