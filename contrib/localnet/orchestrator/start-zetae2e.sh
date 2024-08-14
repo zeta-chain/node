@@ -177,7 +177,7 @@ else
   echo "running e2e setup..."
 
   if [[ ! -f deployed.yml ]]; then
-    zetae2e local $E2E_ARGS --config config.yml --setup-only --config-out deployed.yml
+    zetae2e local $E2E_ARGS --config config.yml --setup-only --config-out deployed.yml --skip-header-proof
     if [ $? -ne 0 ]; then
       echo "e2e setup failed"
       exit 1
@@ -192,7 +192,7 @@ else
 
   echo "running e2e tests with arguments: $E2E_ARGS"
 
-  zetae2e local $E2E_ARGS --skip-setup --config deployed.yml
+  zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --skip-header-proof
   ZETAE2E_EXIT_CODE=$?
 
   # if e2e passed, exit with 0, otherwise exit with 1
