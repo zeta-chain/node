@@ -361,23 +361,39 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		))
 
 		// Test revert cases for gas token workflow
-		eg.Go(v2TestRoutine(conf, "eth-revert", conf.AdditionalAccounts.UserZetaTest, color.FgHiYellow, deployerRunner, verbose,
-			e2etests.TestV2ETHDepositName, // necessary to pay fees on ZEVM and withdraw
-			e2etests.TestV2ETHDepositAndCallRevertName,
-			e2etests.TestV2ETHDepositAndCallRevertWithCallName,
-			e2etests.TestV2ETHWithdrawAndCallRevertName,
-			e2etests.TestV2ETHWithdrawAndCallRevertWithCallName,
-		))
+		eg.Go(
+			v2TestRoutine(
+				conf,
+				"eth-revert",
+				conf.AdditionalAccounts.UserZetaTest,
+				color.FgHiYellow,
+				deployerRunner,
+				verbose,
+				e2etests.TestV2ETHDepositName, // necessary to pay fees on ZEVM and withdraw
+				e2etests.TestV2ETHDepositAndCallRevertName,
+				e2etests.TestV2ETHDepositAndCallRevertWithCallName,
+				e2etests.TestV2ETHWithdrawAndCallRevertName,
+				e2etests.TestV2ETHWithdrawAndCallRevertWithCallName,
+			),
+		)
 
 		// Test revert cases for erc20 token workflow
-		eg.Go(v2TestRoutine(conf, "erc20-revert", conf.AdditionalAccounts.UserBitcoin, color.FgHiRed, deployerRunner, verbose,
-			e2etests.TestV2ETHDepositName,   // necessary to pay fees on ZEVM
-			e2etests.TestV2ERC20DepositName, // necessary to have assets to withdraw
-			e2etests.TestV2ERC20DepositAndCallRevertName,
-			e2etests.TestV2ERC20DepositAndCallRevertWithCallName,
-			e2etests.TestV2ERC20WithdrawAndCallRevertName,
-			e2etests.TestV2ERC20WithdrawAndCallRevertWithCallName,
-		))
+		eg.Go(
+			v2TestRoutine(
+				conf,
+				"erc20-revert",
+				conf.AdditionalAccounts.UserBitcoin,
+				color.FgHiRed,
+				deployerRunner,
+				verbose,
+				e2etests.TestV2ETHDepositName,   // necessary to pay fees on ZEVM
+				e2etests.TestV2ERC20DepositName, // necessary to have assets to withdraw
+				e2etests.TestV2ERC20DepositAndCallRevertName,
+				e2etests.TestV2ERC20DepositAndCallRevertWithCallName,
+				e2etests.TestV2ERC20WithdrawAndCallRevertName,
+				e2etests.TestV2ERC20WithdrawAndCallRevertWithCallName,
+			),
+		)
 	}
 
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority

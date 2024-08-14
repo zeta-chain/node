@@ -1,12 +1,14 @@
 package runner
 
 import (
+	"math/big"
+	"time"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/zetacore/e2e/utils"
-	"math/big"
-	"time"
 )
 
 // AddLiquidityETH adds liquidity token to the uniswap pool ZETA/ETH

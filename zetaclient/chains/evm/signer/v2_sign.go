@@ -3,12 +3,12 @@ package signer
 import (
 	"context"
 	"fmt"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/revert.sol"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/revert.sol"
 )
 
 // SignGatewayExecute signs a gateway execute

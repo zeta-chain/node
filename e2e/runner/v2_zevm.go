@@ -75,7 +75,6 @@ func (r *E2ERunner) V2ERC20WithdrawAndCall(
 	payload []byte,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
-
 	// this function take more gas than default 500k
 	// so we need to increase the gas limit
 	previousGasLimit := r.ZEVMAuth.GasLimit
