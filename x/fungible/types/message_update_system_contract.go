@@ -4,7 +4,7 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/zetacore/pkg/address"
 )
 
 const TypeMsgUpdateSystemContract = "update_system_contract"
@@ -45,12 +45,9 @@ func (msg *MsgUpdateSystemContract) ValidateBasic() error {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	// check if the system contract address is valid
-	if ethcommon.HexToAddress(msg.NewSystemContractAddress) == (ethcommon.Address{}) {
-		return cosmoserrors.Wrapf(
-			sdkerrors.ErrInvalidAddress,
-			"invalid system contract address (%s)",
-			msg.NewSystemContractAddress,
-		)
+	err = address.ValidateEthereumAddress(msg.NewSystemContractAddress)
+	if err != nil {
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid system contract address (%s): %s", msg.NewSystemContractAddress, err)
 	}
 
 	return nil

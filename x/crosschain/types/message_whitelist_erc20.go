@@ -4,7 +4,7 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/zetacore/pkg/address"
 
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -54,8 +54,9 @@ func (msg *MsgWhitelistERC20) ValidateBasic() error {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	// check if the system contract address is valid
-	if ethcommon.HexToAddress(msg.Erc20Address) == (ethcommon.Address{}) {
-		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid ERC20 contract address (%s)", msg.Erc20Address)
+	err = address.ValidateEthereumAddress(msg.Erc20Address)
+	if err != nil {
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid erc20 address (%s): %s", msg.Erc20Address, err)
 	}
 	if msg.Decimals > 128 {
 		return cosmoserrors.Wrapf(types.ErrInvalidDecimals, "invalid decimals (%d)", msg.Decimals)
