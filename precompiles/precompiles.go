@@ -27,12 +27,14 @@ func StatefulContracts(
 	precompiledContracts = make([]evmkeeper.CustomContractFn, 0)
 
 	// Define the regular contract function.
-	regularContract := func(_ sdktypes.Context, _ ethparams.Rules) vm.PrecompiledContract {
-		return regular.NewRegularContract(fungibleKeeper, cdc, gasConfig)
-	}
+	if EnabledStatefulContracts[regular.ContractAddress] {
+		regularContract := func(_ sdktypes.Context, _ ethparams.Rules) vm.PrecompiledContract {
+			return regular.NewRegularContract(fungibleKeeper, cdc, gasConfig)
+		}
 
-	// Append all the precompiled contracts to the precompiledContracts slice.
-	precompiledContracts = append(precompiledContracts, regularContract)
+		// Append the regular contract to the precompiledContracts slice.
+		precompiledContracts = append(precompiledContracts, regularContract)
+	}
 
 	return precompiledContracts
 }

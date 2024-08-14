@@ -1064,7 +1064,9 @@ func (app *App) BlockedAddrs() map[string]bool {
 	}
 
 	for addr, enabled := range precompiles.EnabledStatefulContracts {
-		blockList[addr.String()] = enabled
+		if enabled {
+			blockList[addr.String()] = enabled
+		}
 	}
 
 	return blockList
