@@ -8,7 +8,10 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/zetacore/pkg/address"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -167,6 +170,31 @@ func (m CrossChainTx) GetCCTXIndexBytes() ([32]byte, error) {
 // SetOutboundBallotIndex sets the outbound ballot index for the most recent outbound.
 func (m CrossChainTx) SetOutboundBallotIndex(index string) {
 	m.GetCurrentOutboundParam().BallotIndex = index
+}
+
+func (m CrossChainTx) GetValidReceiverAddress() (ethcommon.Address, error) {
+	inboundCoinType := m.InboundParams.CoinType
+	switch inboundCoinType {
+	case coin.CoinType_Zeta:
+		{
+			err := address.ValidateEthereumAddress(m.GetCurrentOutboundParam().Receiver)
+			if err != nil {
+				return ethcommon.Address{}, err
+			}
+			return ethcommon.HexToAddress(m.GetCurrentOutboundParam().Receiver), nil
+		}
+	case coin.CoinType_Gas:
+		{
+			parsedAddress, _, err := chains.ParseAddressAndData(m.RelayedMessage)
+			if err != nil {
+				return ethcommon.Address{}, err
+			}
+			if parsedAddress != (ethcommon.Address{}) {
+				return parsedAddress, nil
+			}
+		}
+
+	}
 }
 
 func GetCctxIndexFromBytes(sendHash [32]byte) string {
