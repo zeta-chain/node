@@ -19,7 +19,6 @@ var EnabledStatefulContracts = map[common.Address]bool{
 
 // StatefulContracts returns all the registered precompiled contracts.
 func StatefulContracts(
-	_ sdktypes.Context,
 	fungibleKeeper keeper.Keeper,
 	cdc codec.Codec,
 	gasConfig storetypes.GasConfig,
