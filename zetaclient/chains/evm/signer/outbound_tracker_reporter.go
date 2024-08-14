@@ -53,6 +53,7 @@ func (signer *Signer) reportToOutboundTracker(
 			// give up (forget about the tx) after 20 minutes of monitoring, there are 2 reasons:
 			// 1. the gas stability pool should have kicked in and replaced the tx by then.
 			// 2. even if there is a chance that the tx is included later, most likely it's going to be a false tx hash (either replaced or dropped).
+			// 3. we prefer missed tx hash over potentially invalid txhash.
 			if time.Since(tStart) > evm.OutboundInclusionTimeout {
 				logger.Info().Msgf("timeout waiting outbound inclusion")
 				return nil
