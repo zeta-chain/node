@@ -83,12 +83,10 @@ func (k Keeper) ProcessV2RevertDeposit(
 	case coin.CoinType_Zeta:
 		return errors.New("ZETA asset is currently unsupported for revert with V2 protocol contracts")
 	case coin.CoinType_ERC20, coin.CoinType_Gas:
-		// revert with a ZRC20 asset
 		if callOnRevert {
-			// no asset, call simple revert
-			_, err := k.CallDepositAndCallZRC20(
+			// revert with a ZRC20 asset
+			_, err := k.CallDepositAndRevert(
 				ctx,
-				systemcontract.ZContext{},
 				zrc20Addr,
 				amount,
 				revertAddress,

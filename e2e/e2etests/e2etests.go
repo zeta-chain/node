@@ -601,7 +601,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestV2ETHDepositName,
 		"deposit Ether into ZEVM using V2 contract",
 		[]runner.ArgDefinition{
-			{Description: "amount in wei", DefaultValue: "10000000000000000"},
+			{Description: "amount in wei", DefaultValue: "100000000000000000000"},
 		},
 		TestV2ETHDeposit,
 	),
@@ -665,7 +665,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestV2ERC20DepositName,
 		"deposit ERC20 into ZEVM using V2 contract",
 		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "100000"},
+			{Description: "amount", DefaultValue: "100000000000000000000"},
 		},
 		TestV2ERC20Deposit,
 	),
@@ -681,7 +681,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestV2ERC20DepositAndCallRevertName,
 		"deposit ERC20 into ZEVM and call a contract using V2 contract that reverts",
 		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "100000"},
+			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestV2ERC20DepositAndCallRevert,
 	),
@@ -689,7 +689,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestV2ERC20DepositAndCallRevertWithCallName,
 		"deposit ERC20 into ZEVM and call a contract using V2 contract that reverts with a onRevert call",
 		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "100000"},
+			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestV2ERC20DepositAndCallRevertWithCall,
 	),

@@ -52,6 +52,8 @@ func (k Keeper) ProcessZEVMInboundV2(
 			contractAddress = gatewayEvent.Raw.Address
 		}
 
+		k.Logger(ctx).Error(fmt.Sprintf("processing inbound. zrc20: %s", zrc20.Hex()))
+
 		foreignCoin, found := k.fungibleKeeper.GetForeignCoins(ctx, zrc20.Hex())
 		if !found {
 			ctx.Logger().

@@ -273,7 +273,7 @@ start-solana-test: zetanode solana
 
 start-v2-test: zetanode
 	@echo "--> Starting e2e smart contracts v2 test"
-	export E2E_ARGS="--skip-regular --test-v2 --verbose" && \
+	export E2E_ARGS="--skip-regular --test-v2" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) -f docker-compose.yml up -d
 
 ###############################################################################

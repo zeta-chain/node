@@ -132,9 +132,15 @@ func NewOutboundData(
 	txData.height = height
 	txData.revertOptions = cctx.RevertOptions
 
-	skipTx := txData.SetChainAndSender(cctx, logger)
-	if skipTx {
-		return nil, true, nil
+	// in protocol contract v2, receiver is always set in the outbound
+	if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 {
+		txData.to = ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
+		txData.toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
+	} else {
+		skipTx := txData.SetChainAndSender(cctx, logger)
+		if skipTx {
+			return nil, true, nil
+		}
 	}
 
 	app, err := zctx.FromContext(ctx)

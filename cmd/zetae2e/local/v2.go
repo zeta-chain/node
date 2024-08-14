@@ -44,7 +44,7 @@ func v2TestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		txERC20Send := deployerRunner.SendERC20OnEvm(account.EVMAddress(), 10)
+		txERC20Send := deployerRunner.SendERC20OnEvm(account.EVMAddress(), 10000)
 		v2Runner.WaitForTxReceiptOnEvm(txERC20Send)
 
 		// run erc20 test

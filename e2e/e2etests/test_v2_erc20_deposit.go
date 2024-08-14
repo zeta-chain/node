@@ -35,4 +35,9 @@ func TestV2ERC20Deposit(r *runner.E2ERunner, args []string) {
 	newBalance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 	require.Equal(r, new(big.Int).Add(oldBalance, amount), newBalance)
+
+	// add liquidity, 50ZETA/50ETH and 50ZETA/50ERC20
+	fifty := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(50))
+	r.AddLiquidityETH(fifty, fifty)
+	r.AddLiquidityERC20(fifty, fifty)
 }

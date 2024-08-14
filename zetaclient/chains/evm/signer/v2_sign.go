@@ -3,6 +3,7 @@ package signer
 import (
 	"context"
 	"fmt"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/revert.sol"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
@@ -62,7 +63,16 @@ func (signer *Signer) SignGatewayExecuteRevert(
 		return nil, errors.Wrap(err, "unable to get GatewayEVMMetaData ABI")
 	}
 
-	data, err = gatewayABI.Pack("executeRevert", txData.to, txData.message, txData.revertOptions.ToEVMRevertOptions())
+	data, err = gatewayABI.Pack(
+		"executeRevert",
+		txData.to,
+		txData.message,
+		revert.RevertContext{
+			Asset:         txData.asset,
+			Amount:        txData.amount.Uint64(),
+			RevertMessage: txData.revertOptions.RevertMessage,
+		},
+	)
 	if err != nil {
 		return nil, fmt.Errorf("executeRevert pack error: %w", err)
 	}
@@ -187,7 +197,11 @@ func (signer *Signer) SignERC20CustodyWithdrawRevert(
 		txData.asset,
 		txData.amount,
 		txData.message,
-		txData.revertOptions.ToEVMRevertOptions(),
+		revert.RevertContext{
+			Asset:         txData.asset,
+			Amount:        txData.amount.Uint64(),
+			RevertMessage: txData.revertOptions.RevertMessage,
+		},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("withdraw pack error: %w", err)

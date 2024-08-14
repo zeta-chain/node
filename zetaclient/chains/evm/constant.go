@@ -60,7 +60,7 @@ const (
 
 	// TopicsGatewayReverted is the number of topics for a reverted event
 	// [signature, destination]
-	TopicsGatewayReverted = 2
+	TopicsGatewayReverted = 3
 
 	// TopicsERC20CustodyWithdraw is the number of topics for an ERC20 custody withdraw event
 	// [signature, recipient, asset]

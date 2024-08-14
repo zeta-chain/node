@@ -92,4 +92,6 @@ contract TestDAppV2 {
         setCalledWithMessage(string(revertContext.revertMessage));
         setAmountWithMessage(string(revertContext.revertMessage), 0);
     }
+
+    receive() external payable {}
 }

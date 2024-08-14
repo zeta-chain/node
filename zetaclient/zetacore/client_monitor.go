@@ -150,10 +150,10 @@ func (c *Client) monitorVoteInboundResult(
 
 		if retryGasLimit > 0 {
 			// new retryGasLimit set to 0 to prevent reentering this function
-			if _, _, err := c.PostVoteInbound(ctx, retryGasLimit, 0, msg); err != nil {
+			if resentTxHash, _, err := c.PostVoteInbound(ctx, retryGasLimit, 0, msg); err != nil {
 				c.logger.Error().Err(err).Fields(logFields).Msg("monitorVoteInboundResult: failed to resend tx")
 			} else {
-				c.logger.Info().Fields(logFields).Msg("monitorVoteInboundResult: successfully resent tx")
+				c.logger.Info().Fields(logFields).Msgf("monitorVoteInboundResult: successfully resent tx: %s", resentTxHash)
 			}
 		}
 

@@ -316,6 +316,9 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 	switch cctx.CctxStatus.Status {
 	case types.CctxStatus_PendingOutbound:
 
+		//  get the chain ID of the connected chain
+		chainID := cctx.GetCurrentOutboundParam().ReceiverChainId
+
 		// add revert outbound
 		err := cctx.AddRevertOutbound(fungiblekeeper.ZEVMGasLimitDepositAndCall.Uint64())
 		if err != nil {
@@ -330,7 +333,7 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 		if err := k.fungibleKeeper.ProcessV2RevertDeposit(
 			ctx,
 			cctx.GetCurrentOutboundParam().Amount.BigInt(),
-			cctx.GetCurrentOutboundParam().ReceiverChainId,
+			chainID,
 			cctx.InboundParams.CoinType,
 			cctx.InboundParams.Asset,
 			ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver),
