@@ -51,6 +51,31 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		fungibleMock.AssertExpectations(t)
 	})
 
+	t.Run("cannot process Zeta depositif the receiver address is invalid zevm address", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+
+		receiver := "invalid"
+		amount := big.NewInt(42)
+		sender := sample.EthAddress()
+		senderChainId := int64(0)
+
+		// call HandleEVMDeposit
+		cctx := sample.CrossChainTx(t, "foo")
+		cctx.GetCurrentOutboundParam().Receiver = receiver
+		cctx.GetInboundParams().Amount = math.NewUintFromBigInt(amount)
+		cctx.GetInboundParams().CoinType = coin.CoinType_Zeta
+		cctx.GetInboundParams().SenderChainId = senderChainId
+		cctx.InboundParams.Sender = sender.String()
+		reverted, err := k.HandleEVMDeposit(
+			ctx,
+			cctx,
+		)
+		require.ErrorIs(t, err, types.ErrInvalidReceiverAddress)
+		require.True(t, reverted)
+	})
+
 	t.Run("should return error with non-reverted if deposit Zeta fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseFungibleMock: true,
@@ -67,7 +92,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		fungibleMock.On("ZETADepositAndCallContract", ctx, ethcommon.HexToAddress(sender.String()), receiver, senderChainId, amount, mock.Anything, mock.Anything).
 			Return(nil, errDeposit)
 
-			// call HandleEVMDeposit
+		// call HandleEVMDeposit
 
 		cctx.InboundParams.Sender = sender.String()
 		cctx.GetCurrentOutboundParam().Receiver = receiver.String()
