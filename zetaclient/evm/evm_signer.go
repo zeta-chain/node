@@ -521,15 +521,15 @@ func (signer *Signer) reportToOutTxTracker(zetaBridge interfaces.ZetaCoreBridger
 		blockNumber := uint64(0)
 		tStart := time.Now()
 		for {
-			// give up after 10 minutes of monitoring
+			// take a rest between each check
 			time.Sleep(10 * time.Second)
 
+			// give up (forget about the tx) after 20 minutes of monitoring, the reasons are:
+			// 1. the gas stability pool should have kicked in and replaced the tx by then.
+			// 2. even if there is a chance that the tx is included later, more likely it's going to be a false tx hash (either replaced or dropped).
+			// 3. we prefer missed tx hash over potentially invalid tx hash.
 			if time.Since(tStart) > OutTxInclusionTimeout {
-				// if tx is still pending after timeout, report to outTxTracker anyway as we cannot monitor forever
-				if isPending {
-					report = true // probably will be included later
-				}
-				logger.Info().Msgf("reportToOutTxTracker: timeout waiting tx inclusion for chain %d nonce %d outTxHash %s report %v", chainID, nonce, outTxHash, report)
+				logger.Info().Msgf("reportToOutTxTracker: timeout waiting tx inclusion for chain %d nonce %d outTxHash %s", chainID, nonce, outTxHash)
 				break
 			}
 			// try getting the tx

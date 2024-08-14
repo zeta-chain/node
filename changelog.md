@@ -2,6 +2,12 @@
 
 ## v18.0.0
 
+### Fixes
+
+* []() - avoid submitting invalid hashes
+
+## v18.0.0
+
 * [2470](https://github.com/zeta-chain/node/pull/2470) - add Polygon, Base and Base Sepolia in static chain info
 
 ## v17.0.1
