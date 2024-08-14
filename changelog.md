@@ -4,7 +4,7 @@
 
 ### Fixes
 
-* []() - avoid submitting invalid hashes
+* [2706](https://github.com/zeta-chain/node/pull/2706) - avoid submitting pending outbound hashes
 
 ## v18.0.0
 
