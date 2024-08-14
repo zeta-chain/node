@@ -7,23 +7,41 @@ import (
 	"strings"
 )
 
-// PromptPasswords prompts the user for passwords with the given titles
+// PromptPassword prompts the user for a password with the given title
+func PromptPassword(passwordTitle string) (string, error) {
+	reader := bufio.NewReader(os.Stdin)
+
+	return readPassword(reader, passwordTitle)
+}
+
+// PromptPasswords is a convenience function that prompts the user for multiple passwords
 func PromptPasswords(passwordTitles []string) ([]string, error) {
 	reader := bufio.NewReader(os.Stdin)
 	passwords := make([]string, len(passwordTitles))
 
 	// iterate over password titles and prompt for each
 	for i, title := range passwordTitles {
-		fmt.Printf("%s Password: ", title)
-		password, err := reader.ReadString('\n')
+		password, err := readPassword(reader, title)
 		if err != nil {
 			return nil, err
 		}
-
-		// trim delimiters
-		password = strings.TrimSpace(password)
 		passwords[i] = password
 	}
 
 	return passwords, nil
+}
+
+// readPassword is a helper function that reads a password from bufio.Reader
+func readPassword(reader *bufio.Reader, passwordTitle string) (string, error) {
+	const delimitor = '\n'
+
+	// prompt for password
+	fmt.Printf("%s Password: ", passwordTitle)
+	password, err := reader.ReadString(delimitor)
+	if err != nil {
+		return "", err
+	}
+
+	// trim leading and trailing spaces
+	return strings.TrimSpace(password), nil
 }
