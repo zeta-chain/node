@@ -374,7 +374,7 @@ func (ob *ChainClient) WatchOutTx() {
 					ob.logger.OutTx.Error().Msgf("WatchOutTx: confirmed multiple (%d) outTx for chain %d nonce %d", txCount, ob.chain.ChainId, nonceInt)
 				} else {
 					if len(tracker.HashList) == crosschainkeeper.MaxOutTxTrackerHashes {
-						ob.logger.OutTx.Error().Msgf("WatchOutTx: outbound tracker is full of invalid hashes for chain %d nonce %d", ob.chain.ChainId, nonceInt)
+						ob.logger.OutTx.Error().Msgf("WatchOutTx: outbound tracker is full of hashes for chain %d nonce %d", ob.chain.ChainId, nonceInt)
 					}
 				}
 			}
