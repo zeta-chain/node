@@ -175,25 +175,45 @@ func (m CrossChainTx) SetOutboundBallotIndex(index string) {
 func (m CrossChainTx) GetValidReceiverAddress() (ethcommon.Address, error) {
 	inboundCoinType := m.InboundParams.CoinType
 	switch inboundCoinType {
+	// For coin type ZETA the receiver is added to the receiver field of the inbound vote so we can use it directly
 	case coin.CoinType_Zeta:
 		{
 			err := address.ValidateEthereumAddress(m.GetCurrentOutboundParam().Receiver)
 			if err != nil {
-				return ethcommon.Address{}, err
+				return ethcommon.Address{}, cosmoserrors.Wrap(ErrInvalidReceiverAddress, err.Error())
 			}
 			return ethcommon.HexToAddress(m.GetCurrentOutboundParam().Receiver), nil
 		}
+	// For coin type gas we create the message by composing the receiver and the call data so we need to parse the address from the RelayedMessage
+	// The receiver in this case is set to me the sender of the message
+	// For cases where this is not the case we should try and use the receiver field of the inbound vote
 	case coin.CoinType_Gas:
 		{
+			to := m.GetCurrentOutboundParam().Receiver
 			parsedAddress, _, err := chains.ParseAddressAndData(m.RelayedMessage)
 			if err != nil {
-				return ethcommon.Address{}, err
+				return ethcommon.Address{}, cosmoserrors.Wrap(ErrInvalidReceiverAddress, err.Error())
 			}
 			if parsedAddress != (ethcommon.Address{}) {
-				return parsedAddress, nil
+				to = parsedAddress.String()
 			}
+			err = address.ValidateEthereumAddress(to)
+			if err != nil {
+				return ethcommon.Address{}, cosmoserrors.Wrap(ErrInvalidReceiverAddress, err.Error())
+			}
+			return ethcommon.HexToAddress(m.GetCurrentOutboundParam().Receiver), nil
 		}
-
+	// For coin type ERC20 we can use the receiver field of the inbound vote
+	case coin.CoinType_ERC20:
+		{
+			err := address.ValidateEthereumAddress(m.GetCurrentOutboundParam().Receiver)
+			if err != nil {
+				return ethcommon.Address{}, cosmoserrors.Wrap(ErrInvalidReceiverAddress, err.Error())
+			}
+			return ethcommon.HexToAddress(m.GetCurrentOutboundParam().Receiver), nil
+		}
+	default:
+		return ethcommon.Address{}, fmt.Errorf("invalid coin type %s", inboundCoinType)
 	}
 }
 

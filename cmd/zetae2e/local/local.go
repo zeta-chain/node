@@ -230,14 +230,14 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 		zetaTests := []string{
 			e2etests.TestZetaDepositInvalidAddressName,
-			//e2etests.TestZetaWithdrawName,
-			//e2etests.TestMessagePassingExternalChainsName,
-			//e2etests.TestMessagePassingRevertFailExternalChainsName,
-			//e2etests.TestMessagePassingRevertSuccessExternalChainsName,
+			e2etests.TestZetaWithdrawName,
+			e2etests.TestMessagePassingExternalChainsName,
+			e2etests.TestMessagePassingRevertFailExternalChainsName,
+			e2etests.TestMessagePassingRevertSuccessExternalChainsName,
 		}
 		zetaAdvancedTests := []string{
-			//e2etests.TestZetaDepositRestrictedName,
-			//e2etests.TestZetaDepositName,
+			e2etests.TestZetaDepositRestrictedName,
+			e2etests.TestZetaDepositName,
 			e2etests.TestZetaDepositNewAddressName,
 		}
 		zevmMPTests := []string{}

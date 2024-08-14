@@ -23,7 +23,11 @@ const InCCTXIndexKey = "inCctxIndex"
 // returns (isContractReverted, err)
 // (true, non-nil) means CallEVM() reverted
 func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (bool, error) {
-	to := ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
+	//to := ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
+	to, err := cctx.GetValidReceiverAddress()
+	if err != nil {
+		return true, err
+	}
 	sender := ethcommon.HexToAddress(cctx.InboundParams.Sender)
 	var ethTxHash ethcommon.Hash
 	inboundAmount := cctx.GetInboundParams().Amount.BigInt()
