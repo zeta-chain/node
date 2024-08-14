@@ -428,11 +428,14 @@ func (c *Client) UpdateAppContext(
 		return fmt.Errorf("failed to get crosschain flags: %w", err)
 	}
 
-	blockHeaderEnabledChains, err := c.GetBlockHeaderEnabledChains(ctx)
-	if err != nil {
-		c.logger.Info().Msg("Unable to fetch block header enabled chains from zetacore")
-		return err
-	}
+	// hotfix-v19.0.1: hardcode blockHeaderEnabledChains to empty because the zetacore API somehow won't work
+	blockHeaderEnabledChains := []lightclienttypes.HeaderSupportedChain{}
+
+	// blockHeaderEnabledChains, err := c.GetBlockHeaderEnabledChains(ctx)
+	// if err != nil {
+	// 	c.logger.Info().Msg("Unable to fetch block header enabled chains from zetacore")
+	// 	return err
+	// }
 
 	appContext.Update(
 		keyGen,

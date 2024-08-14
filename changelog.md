@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v19.0.1
+
+### Fixes
+
+* [2704](https://github.com/zeta-chain/node/pull/2704) - skip calling `GetBlockHeaderEnabledChains()` to bypass API error
+
 ## v19.0.0
 
 ### Breaking Changes

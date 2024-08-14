@@ -329,20 +329,21 @@ func TestZetacore_UpdateAppContext(t *testing.T) {
 					GasPriceIncreaseFlags: nil,
 				}})
 
-			method = "/zetachain.zetacore.lightclient.Query/HeaderEnabledChains"
-			s.ExpectUnary(method).
-				UnlimitedTimes().
-				WithPayload(lightclienttypes.QueryHeaderEnabledChainsRequest{}).
-				Return(lightclienttypes.QueryHeaderEnabledChainsResponse{HeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{
-					{
-						ChainId: chains.Ethereum.ChainId,
-						Enabled: true,
-					},
-					{
-						ChainId: chains.BitcoinMainnet.ChainId,
-						Enabled: false,
-					},
-				}})
+			// hotfix-v19.0.1: hardcode blockHeaderEnabledChains to empty
+			// method = "/zetachain.zetacore.lightclient.Query/HeaderEnabledChains"
+			// s.ExpectUnary(method).
+			// 	UnlimitedTimes().
+			// 	WithPayload(lightclienttypes.QueryHeaderEnabledChainsRequest{}).
+			// 	Return(lightclienttypes.QueryHeaderEnabledChainsResponse{HeaderEnabledChains: []lightclienttypes.HeaderSupportedChain{
+			// 		{
+			// 			ChainId: chains.Ethereum.ChainId,
+			// 			Enabled: true,
+			// 		},
+			// 		{
+			// 			ChainId: chains.BitcoinMainnet.ChainId,
+			// 			Enabled: false,
+			// 		},
+			// 	}})
 
 			method = "/zetachain.zetacore.authority.Query/ChainInfo"
 			s.ExpectUnary(method).
