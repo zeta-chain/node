@@ -52,14 +52,6 @@ func Test_ResolveAddress(t *testing.T) {
 			expectedAddress:     solanaPrivKey.PublicKey().String(),
 		},
 		{
-			name:    "should return error if network name not found",
-			network: chains.Network(999),
-			relayerKey: keys.RelayerKey{
-				PrivateKey: solanaPrivKey.String(),
-			},
-			expectedError: "network name not found",
-		},
-		{
 			name:    "should return error if private key is invalid",
 			network: chains.Network_solana,
 			relayerKey: keys.RelayerKey{
@@ -202,7 +194,7 @@ func Test_ResolveRelayerKeyPath(t *testing.T) {
 			expectedName:   path.Join(usr.HomeDir, ".zetacored/relayer-keys/solana.json"),
 		},
 		{
-			name:           "should return error if network is not found",
+			name:           "should return error if network is invalid",
 			relayerKeyPath: "~/.zetacored/relayer-keys",
 			network:        chains.Network(999),
 			errMessage:     "failed to get relayer key file name",

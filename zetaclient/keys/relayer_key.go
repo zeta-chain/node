@@ -19,11 +19,7 @@ type RelayerKey struct {
 
 // ResolveAddress returns the network name and address of the relayer key
 func (rk RelayerKey) ResolveAddress(network chains.Network) (string, string, error) {
-	// get network name
-	networkName, found := chains.GetNetworkName(int32(network))
-	if !found {
-		return "", "", errors.Errorf("network name not found for network %d", network)
-	}
+	var address string
 
 	switch network {
 	case chains.Network_solana:
@@ -31,10 +27,13 @@ func (rk RelayerKey) ResolveAddress(network chains.Network) (string, string, err
 		if err != nil {
 			return "", "", errors.Wrap(err, "unable to construct solana private key")
 		}
-		return networkName, privKey.PublicKey().String(), nil
+		address = privKey.PublicKey().String()
 	default:
 		return "", "", errors.Errorf("unsupported network %d: unable to derive relayer address", network)
 	}
+
+	// return network name and address
+	return network.String(), address, nil
 }
 
 // LoadRelayerKey loads the relayer key for given network and password
@@ -142,19 +141,14 @@ func IsRelayerPrivateKeyValid(privateKey string, network chains.Network) bool {
 
 // relayerKeyFileByNetwork returns the relayer key JSON file name based on network
 func relayerKeyFileByNetwork(network chains.Network) (string, error) {
-	// get network name
-	networkName, found := chains.GetNetworkName(int32(network))
-	if !found {
-		return "", errors.Errorf("network name not found for network %d", network)
-	}
-
 	// JSONFileSuffix is the suffix for the relayer key file
 	const JSONFileSuffix = ".json"
 
 	// return file name for supported networks only
 	switch network {
 	case chains.Network_solana:
-		return networkName + JSONFileSuffix, nil
+		// return network name + '.json'
+		return network.String() + JSONFileSuffix, nil
 	default:
 		return "", errors.Errorf("network %d does not support relayer key", network)
 	}

@@ -196,15 +196,17 @@ func (signer *Signer) GetGatewayAddress() string {
 
 // SetRelayerBalanceMetrics sets the relayer balance metrics
 func (signer *Signer) SetRelayerBalanceMetrics(ctx context.Context) {
-	if signer.HasRelayerKey() {
-		result, err := signer.client.GetBalance(ctx, signer.relayerKey.PublicKey(), rpc.CommitmentFinalized)
-		if err != nil {
-			signer.Logger().Std.Error().Err(err).Msg("GetBalance error")
-			return
-		}
-		solBalance := float64(result.Value) / float64(solana.LAMPORTS_PER_SOL)
-		metrics.RelayerKeyBalance.WithLabelValues(signer.Chain().Name).Set(solBalance)
+	if !signer.HasRelayerKey() {
+		return
 	}
+
+	result, err := signer.client.GetBalance(ctx, signer.relayerKey.PublicKey(), rpc.CommitmentFinalized)
+	if err != nil {
+		signer.Logger().Std.Error().Err(err).Msg("GetBalance error")
+		return
+	}
+	solBalance := float64(result.Value) / float64(solana.LAMPORTS_PER_SOL)
+	metrics.RelayerKeyBalance.WithLabelValues(signer.Chain().Name).Set(solBalance)
 }
 
 // TODO: get rid of below four functions for Solana and Bitcoin
