@@ -10,11 +10,12 @@ const (
 	 ZETA tests
 	 Test transfer of ZETA asset across chains
 	*/
-	TestZetaDepositName           = "zeta_deposit"
-	TestZetaDepositNewAddressName = "zeta_deposit_new_address"
-	TestZetaDepositRestrictedName = "zeta_deposit_restricted"
-	TestZetaWithdrawName          = "zeta_withdraw"
-	TestZetaWithdrawBTCRevertName = "zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
+	TestZetaDepositName               = "zeta_deposit"
+	TestZetaDepositInvalidAddressName = "zeta_deposit_invalid_address"
+	TestZetaDepositNewAddressName     = "zeta_deposit_new_address"
+	TestZetaDepositRestrictedName     = "zeta_deposit_restricted"
+	TestZetaWithdrawName              = "zeta_withdraw"
+	TestZetaWithdrawBTCRevertName     = "zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
 
 	/*
 	 Message passing tests
@@ -130,6 +131,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
 		},
 		TestZetaDeposit,
+	),
+	runner.NewE2ETest(
+		TestZetaDepositInvalidAddressName,
+		"deposit ZETA from Ethereum to ZEVM but use invalid address",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
+		},
+		TestZetaDepositToInvalidAddress,
 	),
 	runner.NewE2ETest(
 		TestZetaDepositNewAddressName,

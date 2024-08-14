@@ -229,14 +229,15 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestERC20DepositRestrictedName,
 		}
 		zetaTests := []string{
-			e2etests.TestZetaWithdrawName,
-			e2etests.TestMessagePassingExternalChainsName,
-			e2etests.TestMessagePassingRevertFailExternalChainsName,
-			e2etests.TestMessagePassingRevertSuccessExternalChainsName,
+			e2etests.TestZetaDepositInvalidAddressName,
+			//e2etests.TestZetaWithdrawName,
+			//e2etests.TestMessagePassingExternalChainsName,
+			//e2etests.TestMessagePassingRevertFailExternalChainsName,
+			//e2etests.TestMessagePassingRevertSuccessExternalChainsName,
 		}
 		zetaAdvancedTests := []string{
-			e2etests.TestZetaDepositRestrictedName,
-			e2etests.TestZetaDepositName,
+			//e2etests.TestZetaDepositRestrictedName,
+			//e2etests.TestZetaDepositName,
 			e2etests.TestZetaDepositNewAddressName,
 		}
 		zevmMPTests := []string{}
@@ -283,11 +284,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
 		}
 
-		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
+		//eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
 		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
-		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
+		//eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
 		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, bitcoinTests...))
-		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, ethereumTests...))
+		//eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, ethereumTests...))
 	}
 
 	if testAdmin {

@@ -11,7 +11,6 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
-	"github.com/zeta-chain/zetacore/pkg/address"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -24,12 +23,6 @@ const InCCTXIndexKey = "inCctxIndex"
 // returns (isContractReverted, err)
 // (true, non-nil) means CallEVM() reverted
 func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (bool, error) {
-	err := address.ValidateEthereumAddress(cctx.GetCurrentOutboundParam().Receiver)
-	if err != nil {
-		// Return true will revert the cctx and create a revert cctx with status PendingRevert
-		// Since the receiver address is invalid, we can try refunding the original sender
-		return true, errors.Wrap(types.ErrInvalidReceiverAddress, err.Error())
-	}
 	to := ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
 	sender := ethcommon.HexToAddress(cctx.InboundParams.Sender)
 	var ethTxHash ethcommon.Hash
