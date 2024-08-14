@@ -6,10 +6,6 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/zeta-chain/zetacore/testutil/contracts"
-	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,7 +13,11 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
-	ptypes "github.com/zeta-chain/zetacore/precompile/types"
+
+	ptypes "github.com/zeta-chain/zetacore/precompiles/types"
+	"github.com/zeta-chain/zetacore/testutil/contracts"
+	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 const (
@@ -64,7 +64,7 @@ func initABI() (abi abi.ABI, gasRequiredByMethod map[[4]byte]uint64) {
 	return abi, gasRequiredByMethod
 }
 
-type RegularContract struct {
+type Contract struct {
 	ptypes.BaseContract
 
 	FungibleKeeper fungiblekeeper.Keeper
@@ -73,8 +73,12 @@ type RegularContract struct {
 }
 
 // NewRegularContract creates the precompiled contract to manage native tokens
-func NewRegularContract(fungibleKeeper fungiblekeeper.Keeper, cdc codec.Codec, kvGasConfig storetypes.GasConfig) *RegularContract {
-	return &RegularContract{
+func NewRegularContract(
+	fungibleKeeper fungiblekeeper.Keeper,
+	cdc codec.Codec,
+	kvGasConfig storetypes.GasConfig,
+) *Contract {
+	return &Contract{
 		BaseContract:   ptypes.NewBaseContract(ContractAddress),
 		FungibleKeeper: fungibleKeeper,
 		cdc:            cdc,
@@ -82,16 +86,16 @@ func NewRegularContract(fungibleKeeper fungiblekeeper.Keeper, cdc codec.Codec, k
 	}
 }
 
-func (rc *RegularContract) Address() common.Address {
+func (rc *Contract) Address() common.Address {
 	return ContractAddress
 }
 
-func (rc *RegularContract) Abi() abi.ABI {
+func (rc *Contract) Abi() abi.ABI {
 	return ABI
 }
 
 // RequiredGas calculates the contract gas use
-func (rc *RegularContract) RequiredGas(input []byte) uint64 {
+func (rc *Contract) RequiredGas(input []byte) uint64 {
 	// base cost to prevent large input size
 	baseCost := uint64(len(input)) * rc.kvGasConfig.WriteCostPerByte
 	var methodID [4]byte
@@ -103,7 +107,7 @@ func (rc *RegularContract) RequiredGas(input []byte) uint64 {
 	return baseCost
 }
 
-func (rc *RegularContract) Bech32ToHexAddr(method *abi.Method, args []interface{}) ([]byte, error) {
+func (rc *Contract) Bech32ToHexAddr(method *abi.Method, args []interface{}) ([]byte, error) {
 	if len(args) != 1 {
 		return nil, fmt.Errorf(ptypes.ErrInvalidNumberOfArgs, 1, len(args))
 	}
@@ -129,7 +133,7 @@ func (rc *RegularContract) Bech32ToHexAddr(method *abi.Method, args []interface{
 
 	return method.Outputs.Pack(common.BytesToAddress(addressBz))
 }
-func (rc *RegularContract) Bech32ify(method *abi.Method, args []interface{}) ([]byte, error) {
+func (rc *Contract) Bech32ify(method *abi.Method, args []interface{}) ([]byte, error) {
 	if len(args) != 2 {
 		return nil, fmt.Errorf(ptypes.ErrInvalidNumberOfArgs, 2, len(args))
 	}
@@ -139,7 +143,9 @@ func (rc *RegularContract) Bech32ify(method *abi.Method, args []interface{}) ([]
 	if strings.TrimSpace(prefix) == "" {
 		return nil, fmt.Errorf(
 			"invalid bech32 human readable prefix (HRP). Please provide a either an account, validator or consensus address prefix (eg: %s, %s, %s)",
-			cfg.GetBech32AccountAddrPrefix(), cfg.GetBech32ValidatorAddrPrefix(), cfg.GetBech32ConsensusAddrPrefix(),
+			cfg.GetBech32AccountAddrPrefix(),
+			cfg.GetBech32ValidatorAddrPrefix(),
+			cfg.GetBech32ConsensusAddrPrefix(),
 		)
 	}
 
@@ -154,6 +160,10 @@ func (rc *RegularContract) Bech32ify(method *abi.Method, args []interface{}) ([]
 	}
 
 	bech32Str, err := sdk.Bech32ifyAddressBytes(prefix, address.Bytes())
+	if err != nil {
+		return nil, err
+	}
+
 	addressBz, err := sdk.GetFromBech32(bech32Str, "zeta")
 	if err != nil {
 		return nil, err
@@ -163,14 +173,10 @@ func (rc *RegularContract) Bech32ify(method *abi.Method, args []interface{}) ([]
 		return nil, err
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
 	return method.Outputs.Pack(bech32Str)
 }
 
-func (rc *RegularContract) RegularCall(ctx sdk.Context, method *abi.Method, args []interface{}) ([]byte, error) {
+func (rc *Contract) RegularCall(ctx sdk.Context, method *abi.Method, args []interface{}) ([]byte, error) {
 	if len(args) != 2 {
 		return nil, fmt.Errorf(ptypes.ErrInvalidNumberOfArgs, 2, len(args))
 	}
@@ -203,7 +209,7 @@ func (rc *RegularContract) RegularCall(ctx sdk.Context, method *abi.Method, args
 	)
 }
 
-func (rc *RegularContract) Run(evm *vm.EVM, contract *vm.Contract, readonly bool) ([]byte, error) {
+func (rc *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, error) {
 	// parse input
 	methodID := contract.Input[:4]
 	method, err := ABI.MethodById(methodID)

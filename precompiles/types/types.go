@@ -1,6 +1,8 @@
 package types
 
 import (
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
@@ -11,7 +13,11 @@ import (
 // It's used to persist changes into the store.
 type ExtStateDB interface {
 	vm.StateDB
-	ExecuteNativeAction(contract common.Address, converter statedb.EventConverter, action func(ctx sdk.Context) error) error
+	ExecuteNativeAction(
+		contract common.Address,
+		converter statedb.EventConverter,
+		action func(ctx sdk.Context) error,
+	) error
 	CacheContext() sdk.Context
 }
 
@@ -36,4 +42,8 @@ func NewBaseContract(address common.Address) BaseContract {
 
 func (c *baseContract) RegistryKey() common.Address {
 	return c.address
+}
+
+func BytesToBigInt(data []byte) *big.Int {
+	return big.NewInt(0).SetBytes(data[:])
 }

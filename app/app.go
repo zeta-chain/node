@@ -92,7 +92,7 @@ import (
 	"github.com/zeta-chain/zetacore/app/ante"
 	"github.com/zeta-chain/zetacore/docs/openapi"
 	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
-	precompiles "github.com/zeta-chain/zetacore/precompile"
+	"github.com/zeta-chain/zetacore/precompiles"
 	srvflags "github.com/zeta-chain/zetacore/server/flags"
 	authoritymodule "github.com/zeta-chain/zetacore/x/authority"
 	authoritykeeper "github.com/zeta-chain/zetacore/x/authority/keeper"
@@ -556,7 +556,9 @@ func New(
 	)
 	evmSs := app.GetSubspace(evmtypes.ModuleName)
 
+	// Get gas config for stateful contracts.
 	gasConfig := storetypes.TransientGasConfig()
+
 	app.EvmKeeper = evmkeeper.NewKeeper(
 		appCodec,
 		keys[evmtypes.StoreKey],
@@ -568,9 +570,9 @@ func New(
 		&app.FeeMarketKeeper,
 		tracer,
 		evmSs,
-		precompiles.PrecompiledContracts(
-			app.FungibleKeeper, 
-			appCodec, 
+		precompiles.StatefulContracts(
+			app.FungibleKeeper,
+			appCodec,
 			gasConfig,
 		),
 		app.ConsensusParamsKeeper,
@@ -1055,10 +1057,16 @@ func (app *App) SimulationManager() *module.SimulationManager {
 
 func (app *App) BlockedAddrs() map[string]bool {
 	blockList := make(map[string]bool)
+
 	for k, v := range blockedReceivingModAcc {
 		addr := authtypes.NewModuleAddress(k)
 		blockList[addr.String()] = v
 	}
+
+	for addr, enabled := range precompiles.EnabledStatefulContracts {
+		blockList[addr.String()] = enabled
+	}
+
 	return blockList
 }
 
