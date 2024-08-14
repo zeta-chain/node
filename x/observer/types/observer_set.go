@@ -19,19 +19,18 @@ func (m *ObserverSet) LenUint() uint64 {
 // - All observer addresses are valid
 // - No duplicate observer addresses
 func (m *ObserverSet) Validate() error {
-	// Check for valid observer addresses
-	for _, observerAddress := range m.ObserverList {
-		_, err := sdk.AccAddressFromBech32(observerAddress)
-		if err != nil {
-			return errors.Wrapf(err, "invalid observer address: %s", observerAddress)
-		}
-	}
-	// Check for duplicates
 	observers := make(map[string]struct{})
 	for _, observerAddress := range m.ObserverList {
+		// Check for valid observer addresses
+		_, err := sdk.AccAddressFromBech32(observerAddress)
+		if err != nil {
+			return errors.Wrapf(ErrInvalidObserverAddress, "observer %s err %s", observerAddress, err.Error())
+		}
+		// Check for duplicates
 		if _, ok := observers[observerAddress]; ok {
 			return errors.Wrapf(ErrDuplicateObserver, "observer %s", observerAddress)
 		}
+
 		observers[observerAddress] = struct{}{}
 	}
 	return nil
