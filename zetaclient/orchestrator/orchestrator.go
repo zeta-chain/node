@@ -660,8 +660,13 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 // runObserverSignerSync runs a blocking ticker that observes chain changes from zetacore
 // and optionally (de)provisions respective observers and signers.
 func (oc *Orchestrator) runObserverSignerSync(ctx context.Context) error {
-	// check every other zeta block
-	const cadence = 2 * constant.ZetaBlockTime
+	// sync observers and signers right away to speed up zetaclient startup
+	if err := oc.syncObserverSigner(ctx); err != nil {
+		oc.logger.Error().Err(err).Msg("runObserverSignerSync: syncObserverSigner failed for initial sync")
+	}
+
+	// sync observer and signer every 10 blocks (approx. 1 minute)
+	const cadence = 10 * constant.ZetaBlockTime
 
 	ticker := time.NewTicker(cadence)
 	defer ticker.Stop()
