@@ -196,9 +196,7 @@ func TestSigner_SignOutbound(t *testing.T) {
 	// Setup txData struct
 
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(t, tss)
-	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, makeLogger(t))
+	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -238,7 +236,7 @@ func TestSigner_SignOutbound(t *testing.T) {
 		cctx.OutboundParams[0].GasPriorityFee = big.NewInt(priorityFee).String()
 
 		// Given outbound data
-		txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, makeLogger(t))
+		txData, skip, err := NewOutboundData(ctx, cctx, 123, makeLogger(t))
 		require.False(t, skip)
 		require.NoError(t, err)
 
@@ -271,9 +269,7 @@ func TestSigner_SignRevertTx(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(t, tss)
-	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -311,9 +307,7 @@ func TestSigner_SignCancelTx(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(t, tss)
-	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -351,9 +345,7 @@ func TestSigner_SignWithdrawTx(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(t, tss)
-	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -389,9 +381,7 @@ func TestSigner_SignCommandTx(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(t, nil)
-	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -436,9 +426,7 @@ func TestSigner_SignERC20WithdrawTx(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(t, tss)
-	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -476,10 +464,7 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(t, nil)
-	require.NoError(t, err)
-
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 	require.NoError(t, err)
 	require.False(t, skip)
 
@@ -532,11 +517,7 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-
-	mockObserver, err := getNewEvmChainObserver(t, tss)
-	require.NoError(t, err)
-
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 	require.NoError(t, err)
 	require.False(t, skip)
 
@@ -579,9 +560,7 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(t, tss)
-	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 

@@ -3,11 +3,12 @@ package evm
 import "time"
 
 const (
-	// ZetaBlockTime is the block time of the Zeta network
-	ZetaBlockTime = 6500 * time.Millisecond
-
 	// OutboundInclusionTimeout is the timeout for waiting for an outbound to be included in a block
 	OutboundInclusionTimeout = 20 * time.Minute
+
+	// ReorgProtectBlockCount is confirmations count to protect against reorg
+	// Short 1~2 block reorgs could happen often on Ethereum due to network congestion or block production race conditions
+	ReorgProtectBlockCount = 2
 
 	// OutboundTrackerReportTimeout is the timeout for waiting for an outbound tracker report
 	OutboundTrackerReportTimeout = 10 * time.Minute
