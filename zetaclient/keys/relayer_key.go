@@ -109,6 +109,7 @@ func ReadRelayerKeyFromFile(fileName string) (*RelayerKey, error) {
 	}
 
 	// read the file contents
+	// #nosec G304 -- relayer key file is controlled by the operator
 	fileData, err := os.ReadFile(fileNameFull)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to read relayer key data: %s", fileNameFull)
