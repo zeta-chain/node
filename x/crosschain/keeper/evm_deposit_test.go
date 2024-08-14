@@ -590,7 +590,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			ctx,
 			cctx,
 		)
-		require.ErrorIs(t, err, types.ErrUnableToParseAddress)
+		require.ErrorIs(t, err, types.ErrInvalidReceiverAddress)
 	})
 
 	t.Run("should deposit into address if address is parsed", func(t *testing.T) {
