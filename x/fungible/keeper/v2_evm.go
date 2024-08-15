@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/zeta-chain/zetacore/pkg/crypto"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,7 +43,7 @@ func (k Keeper) CallDepositAndCallZRC20(
 		return nil, types.ErrSystemContractNotFound
 	}
 	gatewayAddr := common.HexToAddress(systemContract.Gateway)
-	if gatewayAddr == (common.Address{}) {
+	if crypto.IsEmptyAddress(gatewayAddr) {
 		return nil, types.ErrGatewayContractNotSet
 	}
 
@@ -95,7 +96,7 @@ func (k Keeper) CallExecute(
 		return nil, types.ErrSystemContractNotFound
 	}
 	gatewayAddr := common.HexToAddress(systemContract.Gateway)
-	if gatewayAddr == (common.Address{}) {
+	if crypto.IsEmptyAddress(gatewayAddr) {
 		return nil, types.ErrGatewayContractNotSet
 	}
 
@@ -140,7 +141,7 @@ func (k Keeper) CallExecuteRevert(
 		return nil, types.ErrSystemContractNotFound
 	}
 	gatewayAddr := common.HexToAddress(systemContract.Gateway)
-	if gatewayAddr == (common.Address{}) {
+	if crypto.IsEmptyAddress(gatewayAddr) {
 		return nil, types.ErrGatewayContractNotSet
 	}
 
@@ -189,7 +190,7 @@ func (k Keeper) CallDepositAndRevert(
 		return nil, types.ErrSystemContractNotFound
 	}
 	gatewayAddr := common.HexToAddress(systemContract.Gateway)
-	if gatewayAddr == (common.Address{}) {
+	if crypto.IsEmptyAddress(gatewayAddr) {
 		return nil, types.ErrGatewayContractNotSet
 	}
 

@@ -107,13 +107,13 @@ func (k Keeper) ProcessZEVMInboundV1(
 	emittingAddress ethcommon.Address,
 	txOrigin string,
 ) error {
-	eventZrc20Withdrawal, errZrc20 := ParseZRC20WithdrawalEvent(*log)
-	eventZetaSent, errZetaSent := ParseZetaSentEvent(*log, connectorZEVMAddr)
+	eventZRC20Withdrawal, errZrc20 := ParseZRC20WithdrawalEvent(*log)
+	eventZETASent, errZetaSent := ParseZetaSentEvent(*log, connectorZEVMAddr)
 	if errZrc20 != nil && errZetaSent != nil {
 		// This log does not contain any of the two events
 		return nil
 	}
-	if eventZrc20Withdrawal != nil && eventZetaSent != nil {
+	if eventZRC20Withdrawal != nil && eventZETASent != nil {
 		// This log contains both events, this is not possible
 		ctx.Logger().
 			Error(fmt.Sprintf("ProcessLogs: log contains both ZRC20Withdrawal and ZetaSent events, %s , %s", log.Topics, log.Data))
@@ -121,29 +121,29 @@ func (k Keeper) ProcessZEVMInboundV1(
 	}
 
 	// if eventZrc20Withdrawal is not nil we will try to validate it and see if it can be processed
-	if eventZrc20Withdrawal != nil {
+	if eventZRC20Withdrawal != nil {
 		// Check if the contract is a registered ZRC20 contract. If its not a registered ZRC20 contract, we can discard this event as it is not relevant
-		coin, foundCoin := k.fungibleKeeper.GetForeignCoins(ctx, eventZrc20Withdrawal.Raw.Address.Hex())
+		coin, foundCoin := k.fungibleKeeper.GetForeignCoins(ctx, eventZRC20Withdrawal.Raw.Address.Hex())
 		if !foundCoin {
 			ctx.Logger().
-				Info(fmt.Sprintf("cannot find foreign coin with contract address %s", eventZrc20Withdrawal.Raw.Address.Hex()))
+				Info(fmt.Sprintf("cannot find foreign coin with contract address %s", eventZRC20Withdrawal.Raw.Address.Hex()))
 			return nil
 		}
 
 		// If Validation fails, we will not process the event and return and error. This condition means that the event was correct, and emitted from a registered ZRC20 contract
 		// But the information entered by the user is incorrect. In this case we can return an error and roll back the transaction
-		if err := k.ValidateZrc20WithdrawEvent(ctx, eventZrc20Withdrawal, coin.ForeignChainId); err != nil {
+		if err := k.ValidateZrc20WithdrawEvent(ctx, eventZRC20Withdrawal, coin.ForeignChainId); err != nil {
 			return err
 		}
 		// If the event is valid, we will process it and create a new CCTX
 		// If the process fails, we will return an error and roll back the transaction
-		if err := k.ProcessZRC20WithdrawalEvent(ctx, eventZrc20Withdrawal, emittingAddress, txOrigin); err != nil {
+		if err := k.ProcessZRC20WithdrawalEvent(ctx, eventZRC20Withdrawal, emittingAddress, txOrigin); err != nil {
 			return err
 		}
 	}
 	// if eventZetaSent is not nil we will try to validate it and see if it can be processed
-	if eventZetaSent != nil {
-		if err := k.ProcessZetaSentEvent(ctx, eventZetaSent, emittingAddress, txOrigin); err != nil {
+	if eventZETASent != nil {
+		if err := k.ProcessZetaSentEvent(ctx, eventZETASent, emittingAddress, txOrigin); err != nil {
 			return err
 		}
 	}

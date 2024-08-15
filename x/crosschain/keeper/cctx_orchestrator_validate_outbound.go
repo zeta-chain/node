@@ -252,8 +252,8 @@ func (k Keeper) processFailedZETAOutboundOnZEVM(ctx sdk.Context, cctx *types.Cro
 	cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 
 	// create new OutboundParams for the revert. We use the fixed gas limit for revert when calling zEVM
-	err = cctx.AddRevertOutbound(fungiblekeeper.ZEVMGasLimitDepositAndCall.Uint64())
-	if err != nil {
+
+	if err := cctx.AddRevertOutbound(fungiblekeeper.ZEVMGasLimitDepositAndCall.Uint64()); err != nil {
 		// Return err to save the failed outbound ad set to aborted
 		return fmt.Errorf("failed AddRevertOutbound: %s", err.Error())
 	}
@@ -320,8 +320,7 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 		chainID := cctx.GetCurrentOutboundParam().ReceiverChainId
 
 		// add revert outbound
-		err := cctx.AddRevertOutbound(fungiblekeeper.ZEVMGasLimitDepositAndCall.Uint64())
-		if err != nil {
+		if err := cctx.AddRevertOutbound(fungiblekeeper.ZEVMGasLimitDepositAndCall.Uint64()); err != nil {
 			// Return err to save the failed outbound ad set to aborted
 			return errors.Wrap(err, "failed AddRevertOutbound")
 		}
