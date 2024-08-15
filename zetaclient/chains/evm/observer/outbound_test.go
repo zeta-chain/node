@@ -433,7 +433,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 //			testutils.EventZetaReceived,
 //		)
 //		params := cctx.GetCurrentOutboundParam()
-//		value, status, err := observer.ParseOutboundReceivedValue(
+//		value, status, err := observer.parseOutboundReceivedValue(
 //			cctx,
 //			receipt,
 //			outbound,
@@ -462,7 +462,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 //			testutils.EventZetaReverted,
 //		)
 //		params := cctx.GetCurrentOutboundParam()
-//		value, status, err := observer.ParseOutboundReceivedValue(
+//		value, status, err := observer.parseOutboundReceivedValue(
 //			cctx, receipt, outbound, coinType, connectorAddrLocal, connectorLocal, custodyAddrLocal, custodyLocal)
 //		require.NoError(t, err)
 //		require.True(t, params.Amount.BigInt().Cmp(value) == 0)
@@ -481,7 +481,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 //			testutils.EventERC20Withdraw,
 //		)
 //		params := cctx.GetCurrentOutboundParam()
-//		value, status, err := observer.ParseOutboundReceivedValue(
+//		value, status, err := observer.parseOutboundReceivedValue(
 //			cctx,
 //			receipt,
 //			outbound,
@@ -502,7 +502,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 //		coinType := coin.CoinType_Gas
 //		cctx, outbound, receipt := testutils.LoadEVMCctxNOutboundNReceipt(t, TestDataDir, chainID, nonce, "")
 //		params := cctx.GetCurrentOutboundParam()
-//		value, status, err := observer.ParseOutboundReceivedValue(
+//		value, status, err := observer.parseOutboundReceivedValue(
 //			cctx,
 //			receipt,
 //			outbound,
@@ -528,7 +528,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 //			nonce,
 //			testutils.EventZetaReceived,
 //		)
-//		value, status, err := observer.ParseOutboundReceivedValue(
+//		value, status, err := observer.parseOutboundReceivedValue(
 //			cctx,
 //			receipt,
 //			outbound,
@@ -557,7 +557,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 //
 //		// use an arbitrary address to make event parsing fail
 //		fakeConnectorAddress := sample.EthAddress()
-//		value, status, err := observer.ParseOutboundReceivedValue(
+//		value, status, err := observer.parseOutboundReceivedValue(
 //			cctx,
 //			receipt,
 //			outbound,
@@ -586,7 +586,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 //
 //		// use an arbitrary address to make event parsing fail
 //		fakeCustodyAddress := sample.EthAddress()
-//		value, status, err := observer.ParseOutboundReceivedValue(
+//		value, status, err := observer.parseOutboundReceivedValue(
 //			cctx,
 //			receipt,
 //			outbound,

@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"github.com/zeta-chain/zetacore/pkg/crypto"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,6 +10,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/revert.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/systemcontract.sol"
 
+	"github.com/zeta-chain/zetacore/pkg/crypto"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 

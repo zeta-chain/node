@@ -5,13 +5,13 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-// OutboundTypes enumerate the different types of outbound transactions
+// OutboundType enumerate the different types of outbound transactions
 // NOTE: only used for v2 protocol contracts and currently excludes ZETA withdraws
-type OutboundTypes int
+type OutboundType int
 
 const (
 	// OutboundTypeUnknown is an unknown outbound transaction
-	OutboundTypeUnknown OutboundTypes = iota
+	OutboundTypeUnknown OutboundType = iota
 
 	// OutboundTypeGasWithdraw is a gas withdraw transaction
 	OutboundTypeGasWithdraw
@@ -42,7 +42,7 @@ const (
 )
 
 // ParseOutboundTypeFromCCTX returns the outbound type from the CCTX
-func ParseOutboundTypeFromCCTX(cctx types.CrossChainTx) OutboundTypes {
+func ParseOutboundTypeFromCCTX(cctx types.CrossChainTx) OutboundType {
 	switch cctx.InboundParams.CoinType {
 	case coin.CoinType_Gas:
 		switch cctx.CctxStatus.Status {

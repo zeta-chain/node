@@ -46,8 +46,12 @@ func (ob *Observer) checkEventProcessability(
 
 	// donation check
 	if bytes.Equal(payload, []byte(constant.DonationMessage)) {
-		ob.Logger().Inbound.Info().
-			Msgf("thank you rich folk for your donation! tx %s chain %d", txHash.Hex(), ob.Chain().ChainId)
+		logFields := map[string]any{
+			"chain": ob.Chain().ChainId,
+			"tx":    txHash.Hex(),
+		}
+		ob.Logger().Inbound.Info().Fields(logFields).
+			Msgf("thank you rich folk for your donation!")
 		return false
 	}
 

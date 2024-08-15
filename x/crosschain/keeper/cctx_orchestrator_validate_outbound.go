@@ -316,7 +316,11 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 		return errors.Wrap(err, "failed to get ZetaChain chainID")
 	}
 	if cctx.InboundParams.SenderChainId != zetaChain.ChainId {
-		return fmt.Errorf("sender chain for withdraw cctx is not ZetaChain expected %d got %d", zetaChain.ChainId, cctx.InboundParams.SenderChainId)
+		return fmt.Errorf(
+			"sender chain for withdraw cctx is not ZetaChain expected %d got %d",
+			zetaChain.ChainId,
+			cctx.InboundParams.SenderChainId,
+		)
 	}
 
 	switch cctx.CctxStatus.Status {

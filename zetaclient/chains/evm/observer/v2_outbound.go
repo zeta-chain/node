@@ -18,8 +18,8 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 )
 
-// ParseOutboundEventV2 parses an event from an outbound with protocol contract v2
-func ParseOutboundEventV2(
+// parseOutboundEventV2 parses an event from an outbound with protocol contract v2
+func parseOutboundEventV2(
 	cctx *crosschaintypes.CrossChainTx,
 	receipt *ethtypes.Receipt,
 	transaction *ethtypes.Transaction,
@@ -39,21 +39,21 @@ func ParseOutboundEventV2(
 		// simple transfer, no need to parse event
 		return transaction.Value(), chains.ReceiveStatus_success, nil
 	case evm.OutboundTypeERC20Withdraw, evm.OutboundTypeERC20WithdrawRevert:
-		return ParseAndCheckERC20CustodyWithdraw(cctx, receipt, custodyAddr, custody)
+		return parseAndCheckERC20CustodyWithdraw(cctx, receipt, custodyAddr, custody)
 	case evm.OutboundTypeERC20WithdrawAndCall:
-		return ParseAndCheckERC20CustodyWithdrawAndCall(cctx, receipt, custodyAddr, custody)
+		return parseAndCheckERC20CustodyWithdrawAndCall(cctx, receipt, custodyAddr, custody)
 	case evm.OutboundTypeGasWithdrawAndCall, evm.OutboundTypeCall:
 		// both gas withdraw and call and no-asset call uses gateway execute
 		// no-asset call simply hash msg.value == 0
-		return ParseAndCheckGatewayExecuted(cctx, receipt, gatewayAddr, gateway)
+		return parseAndCheckGatewayExecuted(cctx, receipt, gatewayAddr, gateway)
 	case evm.OutboundTypeGasWithdrawRevertAndCallOnRevert, evm.OutboundTypeERC20WithdrawRevertAndCallOnRevert:
-		return ParseAndCheckGatewayReverted(cctx, receipt, gatewayAddr, gateway)
+		return parseAndCheckGatewayReverted(cctx, receipt, gatewayAddr, gateway)
 	}
 	return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("unsupported outbound type %d", outboundType)
 }
 
-// ParseAndCheckGatewayExecuted parses and checks the gateway execute event
-func ParseAndCheckGatewayExecuted(
+// parseAndCheckGatewayExecuted parses and checks the gateway execute event
+func parseAndCheckGatewayExecuted(
 	cctx *crosschaintypes.CrossChainTx,
 	receipt *ethtypes.Receipt,
 	gatewayAddr ethcommon.Address,
@@ -106,8 +106,8 @@ func ParseAndCheckGatewayExecuted(
 	return big.NewInt(0), chains.ReceiveStatus_failed, errors.New("gateway execute event not found")
 }
 
-// ParseAndCheckGatewayReverted parses and checks the gateway reverted event
-func ParseAndCheckGatewayReverted(
+// parseAndCheckGatewayReverted parses and checks the gateway reverted event
+func parseAndCheckGatewayReverted(
 	cctx *crosschaintypes.CrossChainTx,
 	receipt *ethtypes.Receipt,
 	gatewayAddr ethcommon.Address,
@@ -166,8 +166,8 @@ func ParseAndCheckGatewayReverted(
 	return big.NewInt(0), chains.ReceiveStatus_failed, errors.New("erc20 custody withdraw event not found")
 }
 
-// ParseAndCheckERC20CustodyWithdraw parses and checks the ERC20 custody withdraw event
-func ParseAndCheckERC20CustodyWithdraw(
+// parseAndCheckERC20CustodyWithdraw parses and checks the ERC20 custody withdraw event
+func parseAndCheckERC20CustodyWithdraw(
 	cctx *crosschaintypes.CrossChainTx,
 	receipt *ethtypes.Receipt,
 	custodyAddr ethcommon.Address,
@@ -226,8 +226,8 @@ func ParseAndCheckERC20CustodyWithdraw(
 	return big.NewInt(0), chains.ReceiveStatus_failed, errors.New("erc20 custody withdraw event not found")
 }
 
-// ParseAndCheckERC20CustodyWithdrawAndCall parses and checks the ERC20 custody withdraw and call event
-func ParseAndCheckERC20CustodyWithdrawAndCall(
+// parseAndCheckERC20CustodyWithdrawAndCall parses and checks the ERC20 custody withdraw and call event
+func parseAndCheckERC20CustodyWithdrawAndCall(
 	cctx *crosschaintypes.CrossChainTx,
 	receipt *ethtypes.Receipt,
 	custodyAddr ethcommon.Address,

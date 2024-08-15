@@ -57076,7 +57076,7 @@ definitions:
     title: |-
       - Gas: Ether, BNB, Matic, Klay, BTC, etc
        - ERC20: ERC20 token
-       - Cmd: not asset, used for admin command
+       - Cmd: no asset, used for admin command
        - NoAssetCall: no asset, used for contract call
   crosschainCctxStatus:
     type: string

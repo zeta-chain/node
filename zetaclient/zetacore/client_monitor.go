@@ -153,7 +153,8 @@ func (c *Client) monitorVoteInboundResult(
 			if resentTxHash, _, err := c.PostVoteInbound(ctx, retryGasLimit, 0, msg); err != nil {
 				c.logger.Error().Err(err).Fields(logFields).Msg("monitorVoteInboundResult: failed to resend tx")
 			} else {
-				c.logger.Info().Fields(logFields).Msgf("monitorVoteInboundResult: successfully resent tx: %s", resentTxHash)
+				logFields["inbound.resent_hash"] = resentTxHash
+				c.logger.Info().Fields(logFields).Msgf("monitorVoteInboundResult: successfully resent tx")
 			}
 		}
 

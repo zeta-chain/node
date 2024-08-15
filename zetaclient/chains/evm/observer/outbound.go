@@ -185,7 +185,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	}
 	gatewayAddr, gateway, err := ob.GetGatewayContract()
 	if err != nil {
-		return true, errors.Wrapf(err, "error getting gateway for chain %d", ob.Chain().ChainId)
+		return true, errors.Wrap(err, "error getting gateway for chain")
 	}
 	_, custodyV2, err := ob.GetERC20CustodyV2Contract()
 	if err != nil {
@@ -210,7 +210,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	}
 
 	// parse the received value from the outbound receipt
-	receiveValue, receiveStatus, err = ParseOutboundReceivedValue(
+	receiveValue, receiveStatus, err = parseOutboundReceivedValue(
 		cctx,
 		receipt,
 		transaction,
@@ -235,9 +235,12 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	return false, nil
 }
 
-// ParseOutboundReceivedValue parses the received value and status from the outbound receipt
+// parseOutboundReceivedValue parses the received value and status from the outbound receipt
 // The receivd value is the amount of Zeta/ERC20/Gas token (released from connector/custody/TSS) sent to the receiver
-func ParseOutboundReceivedValue(
+// TODO: simplify this function and reduce the number of argument
+// https://github.com/zeta-chain/node/issues/2627
+// https://github.com/zeta-chain/node/pull/2666#discussion_r1718379784
+func parseOutboundReceivedValue(
 	cctx *crosschaintypes.CrossChainTx,
 	receipt *ethtypes.Receipt,
 	transaction *ethtypes.Transaction,
@@ -261,7 +264,7 @@ func ParseOutboundReceivedValue(
 
 	// parse outbound event for protocol contract v2
 	if cctx.ProtocolContractVersion == crosschaintypes.ProtocolContractVersion_V2 {
-		return ParseOutboundEventV2(cctx, receipt, transaction, custodyAddress, custodyV2, gatewayAddress, gateway)
+		return parseOutboundEventV2(cctx, receipt, transaction, custodyAddress, custodyV2, gatewayAddress, gateway)
 	}
 
 	// parse receive value from the outbound receipt for Zeta and ERC20
