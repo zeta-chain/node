@@ -242,22 +242,22 @@ func TestGetERC20CustodyPausingCmdCCTXIndecString(t *testing.T) {
 		chainID := int64(42)
 
 		// ACT
-		index := types.GetERC20CustodyPausingCmdCCTXIndecString(
+		index := types.GetERC20CustodyPausingCmdCCTXIndexString(
 			tssPubKey,
 			nonce,
 			chainID,
 		)
-		indexDifferentTSSPubkey := types.GetERC20CustodyPausingCmdCCTXIndecString(
+		indexDifferentTSSPubkey := types.GetERC20CustodyPausingCmdCCTXIndexString(
 			sample.PubKeyString(),
 			nonce,
 			chainID,
 		)
-		indexDifferentNonce := types.GetERC20CustodyPausingCmdCCTXIndecString(
+		indexDifferentNonce := types.GetERC20CustodyPausingCmdCCTXIndexString(
 			tssPubKey,
 			nonce+1,
 			chainID,
 		)
-		indexDifferentChainID := types.GetERC20CustodyPausingCmdCCTXIndecString(
+		indexDifferentChainID := types.GetERC20CustodyPausingCmdCCTXIndexString(
 			tssPubKey,
 			nonce,
 			chainID+1,
