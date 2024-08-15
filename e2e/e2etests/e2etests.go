@@ -134,10 +134,12 @@ const (
 	TestV2EVMToZEVMCallName                      = "v2_evm_to_zevm_call"
 
 	/*
-	 Special tests
+	 Operational tests
 	 Not used to test functionalities but do various interactions with the netwoks
 	*/
-	TestDeploy = "deploy"
+	TestDeploy                         = "deploy"
+	TestOperationAddLiquidityETHName   = "add_liquidity_eth"
+	TestOperationAddLiquidityERC20Name = "add_liquidity_erc20"
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -594,6 +596,12 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{},
 		TestCriticalAdminTransactions,
 	),
+	runner.NewE2ETest(
+		TestMigrateTSSName,
+		"migrate TSS funds",
+		[]runner.ArgDefinition{},
+		TestMigrateTSS,
+	),
 	/*
 	 V2 smart contract tests
 	*/
@@ -749,9 +757,21 @@ var AllE2ETests = []runner.E2ETest{
 		TestDeployContract,
 	),
 	runner.NewE2ETest(
-		TestMigrateTSSName,
-		"migrate TSS funds",
-		[]runner.ArgDefinition{},
-		TestMigrateTSS,
+		TestOperationAddLiquidityETHName,
+		"add liquidity to the ZETA/ETH pool",
+		[]runner.ArgDefinition{
+			{Description: "amountZETA", DefaultValue: "50000000000000000000"},
+			{Description: "amountETH", DefaultValue: "50000000000000000000"},
+		},
+		TestOperationAddLiquidityETH,
+	),
+	runner.NewE2ETest(
+		TestOperationAddLiquidityERC20Name,
+		"add liquidity to the ZETA/ERC20 pool",
+		[]runner.ArgDefinition{
+			{Description: "amountZETA", DefaultValue: "50000000000000000000"},
+			{Description: "amountERC20", DefaultValue: "50000000000000000000"},
+		},
+		TestOperationAddLiquidityERC20,
 	),
 }

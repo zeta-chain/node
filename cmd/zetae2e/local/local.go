@@ -388,6 +388,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				verbose,
 				e2etests.TestV2ETHDepositName,   // necessary to pay fees on ZEVM
 				e2etests.TestV2ERC20DepositName, // necessary to have assets to withdraw
+				e2etests.TestOperationAddLiquidityETHName, // liquidity with gas and ERC20 are necessary for reverts
+				e2etests.TestOperationAddLiquidityERC20Name,
 				e2etests.TestV2ERC20DepositAndCallRevertName,
 				e2etests.TestV2ERC20DepositAndCallRevertWithCallName,
 				e2etests.TestV2ERC20WithdrawAndCallRevertName,

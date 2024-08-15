@@ -8,15 +8,15 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 
-// TestOperationAddLiquidityERC20 is an operational test to add liquidity in erc20 token
-func TestOperationAddLiquidityERC20(r *runner.E2ERunner, args []string) {
+// TestOperationAddLiquidityETH is an operational test to add liquidity in gas token
+func TestOperationAddLiquidityETH(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
 	// #nosec G115 e2e - always in range
 	liqZETA := big.NewInt(int64(parseInt(r, args[0])))
 	// #nosec G115 e2e - always in range
-	liqERC20 := big.NewInt(int64(parseInt(r, args[1])))
+	liqETH := big.NewInt(int64(parseInt(r, args[1])))
 
 	// perform the add liquidity
-	r.AddLiquidityERC20(liqZETA, liqERC20)
+	r.AddLiquidityETH(liqZETA, liqETH)
 }
