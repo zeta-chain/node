@@ -29,9 +29,10 @@ func TestV2ETHWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) 
 		amount,
 		r.EncodeGasCall("revert"),
 		gatewayzevm.RevertOptions{
-			RevertAddress: r.TestDAppV2ZEVMAddr,
-			CallOnRevert:  true,
-			RevertMessage: []byte(payloadMessageWithdrawOnRevertETH),
+			RevertAddress:    r.TestDAppV2ZEVMAddr,
+			CallOnRevert:     true,
+			RevertMessage:    []byte(payloadMessageWithdrawOnRevertETH),
+			OnRevertGasLimit: big.NewInt(0),
 		},
 	)
 

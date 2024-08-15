@@ -30,7 +30,7 @@ func TestV2ETHDepositAndCall(r *runner.E2ERunner, args []string) {
 		r.TestDAppV2ZEVMAddr,
 		amount,
 		[]byte(payloadMessageDepositETH),
-		gatewayevm.RevertOptions{},
+		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 
 	// wait for the cctx to be mined

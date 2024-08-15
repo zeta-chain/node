@@ -29,7 +29,8 @@ func TestV2ETHWithdrawAndCallRevert(r *runner.E2ERunner, args []string) {
 
 	// perform the withdraw
 	tx := r.V2ETHWithdrawAndCall(r.TestDAppV2EVMAddr, amount, r.EncodeGasCall("revert"), gatewayzevm.RevertOptions{
-		RevertAddress: revertAddress,
+		RevertAddress:    revertAddress,
+		OnRevertGasLimit: big.NewInt(0),
 	})
 
 	// wait for the cctx to be mined

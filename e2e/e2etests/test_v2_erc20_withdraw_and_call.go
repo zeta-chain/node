@@ -29,7 +29,7 @@ func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, args []string) {
 		r.TestDAppV2EVMAddr,
 		amount,
 		r.EncodeERC20Call(r.ERC20Addr, amount, payloadMessageWithdrawERC20),
-		gatewayzevm.RevertOptions{},
+		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 
 	// wait for the cctx to be mined

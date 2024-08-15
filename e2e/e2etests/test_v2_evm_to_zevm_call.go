@@ -19,7 +19,7 @@ func TestV2EVMToZEVMCall(r *runner.E2ERunner, args []string) {
 	r.AssertTestDAppZEVMCalled(false, payloadMessageZEVMCall, big.NewInt(0))
 
 	// perform the withdraw
-	tx := r.V2EVMToZEMVCall(r.TestDAppV2ZEVMAddr, []byte(payloadMessageZEVMCall), gatewayevm.RevertOptions{})
+	tx := r.V2EVMToZEMVCall(r.TestDAppV2ZEVMAddr, []byte(payloadMessageZEVMCall), gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

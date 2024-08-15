@@ -29,7 +29,8 @@ func TestV2ERC20DepositAndCallRevert(r *runner.E2ERunner, args []string) {
 
 	// perform the deposit
 	tx := r.V2ERC20DepositAndCall(r.TestDAppV2ZEVMAddr, amount, []byte("revert"), gatewayevm.RevertOptions{
-		RevertAddress: revertAddress,
+		RevertAddress:    revertAddress,
+		OnRevertGasLimit: big.NewInt(0),
 	})
 
 	// wait for the cctx to be reverted

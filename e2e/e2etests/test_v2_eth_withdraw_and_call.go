@@ -28,7 +28,7 @@ func TestV2ETHWithdrawAndCall(r *runner.E2ERunner, args []string) {
 		r.TestDAppV2EVMAddr,
 		amount,
 		r.EncodeGasCall(payloadMessageWithdrawETH),
-		gatewayzevm.RevertOptions{},
+		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 
 	// wait for the cctx to be mined

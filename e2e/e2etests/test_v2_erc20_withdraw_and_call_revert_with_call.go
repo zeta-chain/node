@@ -30,9 +30,10 @@ func TestV2ERC20WithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string
 		amount,
 		r.EncodeERC20CallRevert(r.ERC20Addr, amount),
 		gatewayzevm.RevertOptions{
-			RevertAddress: r.TestDAppV2ZEVMAddr,
-			CallOnRevert:  true,
-			RevertMessage: []byte(payloadMessageWithdrawOnRevertERC20),
+			RevertAddress:    r.TestDAppV2ZEVMAddr,
+			CallOnRevert:     true,
+			RevertMessage:    []byte(payloadMessageWithdrawOnRevertERC20),
+			OnRevertGasLimit: big.NewInt(0),
 		},
 	)
 
