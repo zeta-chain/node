@@ -20,9 +20,10 @@ func TestSigner_SignAdminTx(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(t, nil)
+
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
+
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -105,10 +106,10 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 	// Setup txData struct
 	cctx := getCCTX(t)
 
-	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
 
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
+
 	require.NoError(t, err)
 	require.False(t, skip)
 
@@ -154,10 +155,10 @@ func TestSigner_SignMigrateERC20CustodyFundsCmd(t *testing.T) {
 	// Setup txData struct
 	cctx := getCCTX(t)
 
-	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
 
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
+
 	require.NoError(t, err)
 	require.False(t, skip)
 
@@ -220,12 +221,11 @@ func TestSigner_SignUpdateERC20CustodyPauseStatusCmd(t *testing.T) {
 	// Setup txData struct
 	cctx := getCCTX(t)
 
-	mockObserver, err := getNewEvmChainObserver(t, tss)
 	require.NoError(t, err)
+	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
-	require.NoError(t, err)
 	require.False(t, skip)
+	require.NoError(t, err)
 
 	t.Run("signUpdateERC20CustodyPauseStatusCmd - should successfully sign for pause", func(t *testing.T) {
 		// Call signWhitelistERC20Cmd
@@ -298,9 +298,10 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(t, tss)
+
 	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
+
 	require.False(t, skip)
 	require.NoError(t, err)
 

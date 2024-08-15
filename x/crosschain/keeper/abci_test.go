@@ -128,6 +128,7 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 			cctx: types.CrossChainTx{
 				Index: "a1",
 				CctxStatus: &types.Status{
+					CreatedTimestamp:    sampleTimestamp.Unix(),
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
 				},
 				OutboundParams: []*types.OutboundParams{
@@ -152,6 +153,7 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 			cctx: types.CrossChainTx{
 				Index: "a2",
 				CctxStatus: &types.Status{
+					CreatedTimestamp:    sampleTimestamp.Unix(),
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
 				},
 				OutboundParams: []*types.OutboundParams{
@@ -180,6 +182,7 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 			cctx: types.CrossChainTx{
 				Index: "a3",
 				CctxStatus: &types.Status{
+					CreatedTimestamp:    sampleTimestamp.Unix(),
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
 				},
 				OutboundParams: []*types.OutboundParams{
@@ -208,6 +211,7 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 			cctx: types.CrossChainTx{
 				Index: "b0",
 				CctxStatus: &types.Status{
+					CreatedTimestamp:    sampleTimestamp.Unix(),
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
 				},
 				OutboundParams: []*types.OutboundParams{
@@ -235,6 +239,7 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 			cctx: types.CrossChainTx{
 				Index: "b1",
 				CctxStatus: &types.Status{
+					CreatedTimestamp:    sampleTimestamp.Unix(),
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
 				},
 				OutboundParams: []*types.OutboundParams{
@@ -257,6 +262,7 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 			cctx: types.CrossChainTx{
 				Index: "b2",
 				CctxStatus: &types.Status{
+					CreatedTimestamp:    sampleTimestamp.Unix(),
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
 				},
 				OutboundParams: []*types.OutboundParams{
@@ -279,6 +285,7 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 			cctx: types.CrossChainTx{
 				Index: "b3",
 				CctxStatus: &types.Status{
+					CreatedTimestamp:    sampleTimestamp.Unix(),
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
 				},
 				OutboundParams: []*types.OutboundParams{
@@ -301,6 +308,7 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 			cctx: types.CrossChainTx{
 				Index: "c1",
 				CctxStatus: &types.Status{
+					CreatedTimestamp:    sampleTimestamp.Unix(),
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
 				},
 				OutboundParams: []*types.OutboundParams{
@@ -322,6 +330,7 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 			cctx: types.CrossChainTx{
 				Index: "c2",
 				CctxStatus: &types.Status{
+					CreatedTimestamp:    sampleTimestamp.Unix(),
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
 				},
 				OutboundParams: []*types.OutboundParams{

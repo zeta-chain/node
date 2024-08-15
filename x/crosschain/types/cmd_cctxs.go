@@ -93,7 +93,7 @@ func UpdateERC20CustodyPauseStatusCmdCCTX(
 	tssPubKey string,
 	currentNonce uint64,
 ) CrossChainTx {
-	indexString := GetERC20CustodyPausingCmdCCTXIndecString(tssPubKey, currentNonce, chainID)
+	indexString := GetERC20CustodyPausingCmdCCTXIndexString(tssPubKey, currentNonce, chainID)
 	hash := crypto.Keccak256Hash([]byte(indexString))
 
 	params := constant.OptionUnpause
