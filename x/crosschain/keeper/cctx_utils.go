@@ -12,7 +12,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // SetObserverOutboundInfo sets the CCTX outbound nonce to the next available nonce for the TSS address, and updates the nonce of blockchain state.
@@ -20,7 +20,7 @@ import (
 func (k Keeper) SetObserverOutboundInfo(ctx sdk.Context, receiveChainID int64, cctx *types.CrossChainTx) error {
 	chain, found := k.GetObserverKeeper().GetSupportedChainFromChainID(ctx, receiveChainID)
 	if !found {
-		return zetaObserverTypes.ErrSupportedChains
+		return observertypes.ErrSupportedChains
 	}
 
 	nonce, found := k.GetObserverKeeper().GetChainNonces(ctx, receiveChainID)

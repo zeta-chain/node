@@ -2,18 +2,14 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/pkg/constant"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
@@ -101,7 +97,7 @@ func (k msgServer) WhitelistERC20(
 	}
 
 	// get necessary parameters to create the cctx
-	param, found := k.zetaObserverKeeper.GetChainParamsByChainID(ctx, msg.ChainId)
+	params, found := k.zetaObserverKeeper.GetChainParamsByChainID(ctx, msg.ChainId)
 	if !found {
 		return nil, errorsmod.Wrapf(types.ErrInvalidChainID, "chain params not found for chain id (%d)", msg.ChainId)
 	}
@@ -113,11 +109,10 @@ func (k msgServer) WhitelistERC20(
 			msg.ChainId,
 		)
 	}
-	// overpays gas price by 2x
-	const multiplier = 2
 
-	medianGasPrice = medianGasPrice.MulUint64(multiplier)
-	priorityFee = priorityFee.MulUint64(multiplier)
+	// overpays gas price by 2x
+	medianGasPrice = medianGasPrice.MulUint64(types.ERC20CustodyWhitelistGasMultiplierEVM)
+	priorityFee = priorityFee.MulUint64(types.ERC20CustodyWhitelistGasMultiplierEVM)
 
 	// should not happen
 	if priorityFee.GT(medianGasPrice) {
@@ -129,54 +124,18 @@ func (k msgServer) WhitelistERC20(
 		)
 	}
 
-	// calculate the cctx index
-	// we use the deployed zrc20 contract address to generate a unique index
-	// since other parts of the system may use the zrc20 for the index, we add a message specific suffix
-	hash := crypto.Keccak256Hash(zrc20Addr.Bytes(), []byte("WhitelistERC20"))
-	index := hash.Hex()
+	// create the cctx
+	cctx := types.WhitelistERC20CmdCCTX(
+		msg.Creator,
+		zrc20Addr,
+		msg.Erc20Address,
+		params.Erc20CustodyContractAddress,
+		msg.ChainId,
+		medianGasPrice.String(),
+		priorityFee.String(),
+		tss.TssPubkey,
+	)
 
-	// create a cmd cctx to whitelist the erc20 on the external chain
-	// TODO : refactor this to use the `NewCCTX` function instead.
-	//https://github.com/zeta-chain/node/issues/1909
-	cctx := types.CrossChainTx{
-		Creator:        msg.Creator,
-		Index:          index,
-		ZetaFees:       sdk.NewUint(0),
-		RelayedMessage: fmt.Sprintf("%s:%s", constant.CmdWhitelistERC20, msg.Erc20Address),
-		CctxStatus: &types.Status{
-			Status:              types.CctxStatus_PendingOutbound,
-			StatusMessage:       "",
-			LastUpdateTimestamp: 0,
-		},
-		InboundParams: &types.InboundParams{
-			Sender:                 msg.Creator,
-			SenderChainId:          0,
-			TxOrigin:               "",
-			CoinType:               coin.CoinType_Cmd,
-			Asset:                  "",
-			Amount:                 math.Uint{},
-			ObservedHash:           hash.String(), // all Upper case Cosmos TX HEX, with no 0x prefix
-			ObservedExternalHeight: 0,
-			BallotIndex:            "",
-			FinalizedZetaHeight:    0,
-		},
-		OutboundParams: []*types.OutboundParams{
-			{
-				Receiver:               param.Erc20CustodyContractAddress,
-				ReceiverChainId:        msg.ChainId,
-				CoinType:               coin.CoinType_Cmd,
-				Amount:                 math.NewUint(0),
-				TssNonce:               0,
-				GasLimit:               100_000,
-				GasPrice:               medianGasPrice.String(),
-				GasPriorityFee:         priorityFee.String(),
-				Hash:                   "",
-				BallotIndex:            "",
-				ObservedExternalHeight: 0,
-				TssPubkey:              tss.TssPubkey,
-			},
-		},
-	}
 	err = k.SetObserverOutboundInfo(ctx, msg.ChainId, &cctx)
 	if err != nil {
 		return nil, err
@@ -202,7 +161,7 @@ func (k msgServer) WhitelistERC20(
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.EventERC20Whitelist{
 			Zrc20Address:       zrc20Addr.Hex(),
-			WhitelistCctxIndex: index,
+			WhitelistCctxIndex: cctx.Index,
 		},
 	)
 	if err != nil {
@@ -211,6 +170,6 @@ func (k msgServer) WhitelistERC20(
 
 	return &types.MsgWhitelistERC20Response{
 		Zrc20Address: zrc20Addr.Hex(),
-		CctxIndex:    index,
+		CctxIndex:    cctx.Index,
 	}, nil
 }
