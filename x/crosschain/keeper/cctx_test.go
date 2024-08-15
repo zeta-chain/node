@@ -159,9 +159,7 @@ func TestCCTXs(t *testing.T) {
 			sends = append(
 				sends,
 				createNCctxWithStatus(keeper, ctx, tt.Reverted, types.CctxStatus_Reverted, tss.TssPubkey)...)
-			//require.Equal(t, tt.PendingOutbound, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound})))
-			//require.Equal(t, tt.PendingInbound, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingInbound})))
-			//require.Equal(t, tt.PendingOutbound+tt.PendingRevert, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert})))
+
 			require.Equal(t, len(sends), len(keeper.GetAllCrossChainTx(ctx)))
 			for _, s := range sends {
 				send, found := keeper.GetCrossChainTx(ctx, s.Index)
