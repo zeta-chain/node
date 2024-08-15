@@ -10,6 +10,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	. "gopkg.in/check.v1"
 )
 
@@ -39,7 +40,7 @@ func (ms *MetricsSuite) TestCurryWith(c *C) {
 	RPCCount.Reset()
 }
 
-func (ms *MetricsSuite) TestMetrics(c *C) {
+func (ms *MetricsSuite) Test_RPCCount(c *C) {
 	GetFilterLogsPerChain.WithLabelValues("chain1").Inc()
 	GetFilterLogsPerChain.WithLabelValues("chain2").Inc()
 	GetFilterLogsPerChain.WithLabelValues("chain2").Inc()
@@ -76,4 +77,12 @@ func (ms *MetricsSuite) TestMetrics(c *C) {
 	// assert that rpc count is not being incremented incorrectly
 	rpcCount = testutil.ToFloat64(RPCCount.With(prometheus.Labels{"host": "127.0.0.1:8886", "code": "502"}))
 	c.Assert(rpcCount, Equals, 0.0)
+}
+
+func (ms *MetricsSuite) Test_RelayerKeyBalance(c *C) {
+	RelayerKeyBalance.WithLabelValues(chains.SolanaDevnet.Name).Set(2.1564)
+
+	// assert that relayer key balance is being set correctly
+	balance := testutil.ToFloat64(RelayerKeyBalance.WithLabelValues(chains.SolanaDevnet.Name))
+	c.Assert(balance, Equals, 2.1564)
 }

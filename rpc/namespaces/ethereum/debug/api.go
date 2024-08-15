@@ -37,6 +37,7 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	stderrors "github.com/pkg/errors"
 
+	zetaos "github.com/zeta-chain/zetacore/pkg/os"
 	"github.com/zeta-chain/zetacore/rpc/backend"
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
@@ -199,7 +200,7 @@ func (a *API) StartCPUProfile(file string) error {
 		a.logger.Debug("CPU profiling already in progress")
 		return errors.New("CPU profiling already in progress")
 	default:
-		fp, err := ExpandHome(file)
+		fp, err := zetaos.ExpandHomeDir(file)
 		if err != nil {
 			a.logger.Debug("failed to get filepath for the CPU profile file", "error", err.Error())
 			return err
