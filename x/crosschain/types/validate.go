@@ -52,27 +52,3 @@ func ValidateHashForChain(hash string, chainID int64) error {
 // https://github.com/zeta-chain/node/issues/2234
 // https://github.com/zeta-chain/node/issues/2385
 // NOTE: We should eventually not using these hard-coded checks at all for same reasons as above
-
-//func ValidateAddressForChain(address string, chainID int64) error {
-//	// we do not validate the address for zeta chain as the address field can be btc or eth address
-//	if chains.IsZetaChain(chainID, []chains.Chain{}) {
-//		return nil
-//	}
-//	if chains.IsEthereumChain(chainID, []chains.Chain{}) {
-//		if !ethcommon.IsHexAddress(address) {
-//			return fmt.Errorf("invalid address %s , chain %d", address, chainID)
-//		}
-//		return nil
-//	}
-//	if chains.IsBitcoinChain(chainID, []chains.Chain{}) {
-//		addr, err := chains.DecodeBtcAddress(address, chainID)
-//		if err != nil {
-//			return fmt.Errorf("invalid address %s , chain %d: %s", address, chainID, err)
-//		}
-//		if !chains.IsBtcAddressSupported(addr) {
-//			return fmt.Errorf("unsupported address %s", address)
-//		}
-//		return nil
-//	}
-//	return fmt.Errorf("invalid chain id %d", chainID)
-//}
