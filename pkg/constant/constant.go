@@ -1,12 +1,21 @@
 package constant
 
+import "time"
+
 const (
+	// ZetaBlockTime is the block time of the ZetaChain network
+	// It's a rough estimate that can be used in non-critical path to estimate the time of a block
+	ZetaBlockTime = 6000 * time.Millisecond
+
 	// DonationMessage is the message for donation transactions
 	// Transaction sent to the TSS or ERC20 Custody address containing this message are considered as a donation
 	DonationMessage = "I am rich!"
 
 	// CmdWhitelistERC20 is used for CCTX of type cmd to give the instruction to the TSS to whitelist an ERC20 on an exeternal chain
 	CmdWhitelistERC20 = "cmd_whitelist_erc20"
+
+	// CmdMigrateERC20CustodyFunds is used for CCTX of type cmd to give the instruction to the TSS to transfer its funds on a new address
+	CmdMigrateERC20CustodyFunds = "cmd_migrate_erc20_custody_funds"
 
 	// CmdMigrateTssFunds is used for CCTX of type cmd to give the instruction to the TSS to transfer its funds on a new address
 	CmdMigrateTssFunds = "cmd_migrate_tss_funds"

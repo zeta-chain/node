@@ -13,7 +13,6 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 )
 
@@ -47,7 +46,6 @@ type OutboundData struct {
 func NewOutboundData(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
-	observer *observer.Observer,
 	height uint64,
 	logger zerolog.Logger,
 ) (*OutboundData, bool, error) {
@@ -56,8 +54,6 @@ func NewOutboundData(
 	}
 
 	outboundParams := cctx.GetCurrentOutboundParam()
-	nonce := outboundParams.TssNonce
-
 	if err := validateParams(outboundParams); err != nil {
 		return nil, false, errors.Wrap(err, "invalid outboundParams")
 	}
@@ -86,24 +82,6 @@ func NewOutboundData(
 	cctxIndex, err := getCCTXIndex(cctx)
 	if err != nil {
 		return nil, false, errors.Wrap(err, "unable to get cctx index")
-	}
-
-	// In case there is a pending tx, make sure this keySign is a tx replacement
-	if tx := observer.GetPendingTx(nonce); tx != nil {
-		evt := logger.Info().
-			Str("cctx.pending_tx_hash", tx.Hash().Hex()).
-			Uint64("cctx.pending_tx_nonce", nonce)
-
-		// new gas price is less or equal to pending tx gas
-		if gas.Price.Cmp(tx.GasPrice()) <= 0 {
-			evt.Msg("Please wait for pending outbound to be included in the block")
-			return nil, true, nil
-		}
-
-		evt.
-			Uint64("cctx.gas_price", gas.Price.Uint64()).
-			Uint64("cctx.priority_fee", gas.PriorityFee.Uint64()).
-			Msg("Replacing pending outbound transaction with higher gas fees")
 	}
 
 	// Base64 decode message

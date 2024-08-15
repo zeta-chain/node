@@ -33,6 +33,9 @@ service Msg {
 
   rpc UpdateRateLimiterFlags(MsgUpdateRateLimiterFlags)
       returns (MsgUpdateRateLimiterFlagsResponse);
+
+  rpc MigrateERC20CustodyFunds(MsgMigrateERC20CustodyFunds)
+      returns (MsgMigrateERC20CustodyFundsResponse);
 }
 
 message MsgMigrateTssFunds {
@@ -188,3 +191,16 @@ message MsgUpdateRateLimiterFlags {
 }
 
 message MsgUpdateRateLimiterFlagsResponse {}
+
+message MsgMigrateERC20CustodyFunds {
+  string creator = 1;
+  int64 chain_id = 2;
+  string new_custody_address = 3;
+  string erc20_address = 4;
+  string amount = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgMigrateERC20CustodyFundsResponse { string cctx_index = 1; }

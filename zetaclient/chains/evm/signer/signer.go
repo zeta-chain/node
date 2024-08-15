@@ -20,19 +20,16 @@ import (
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/pkg/constant"
-	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/logs"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
@@ -368,25 +365,6 @@ func (signer *Signer) SignWithdrawTx(ctx context.Context, txData *OutboundData) 
 	return tx, nil
 }
 
-// SignCommandTx signs a transaction based on the given command includes:
-//
-//	cmd_whitelist_erc20
-//	cmd_migrate_tss_funds
-func (signer *Signer) SignCommandTx(
-	ctx context.Context,
-	txData *OutboundData,
-	cmd string,
-	params string,
-) (*ethtypes.Transaction, error) {
-	switch cmd {
-	case constant.CmdWhitelistERC20:
-		return signer.SignWhitelistERC20Cmd(ctx, txData, params)
-	case constant.CmdMigrateTssFunds:
-		return signer.SignMigrateTssFundsCmd(ctx, txData)
-	}
-	return nil, fmt.Errorf("SignCommandTx: unknown command %s", cmd)
-}
-
 // TryProcessOutbound - signer interface implementation
 // This function will attempt to build and sign an evm transaction using the TSS signer.
 // It will then broadcast the signed transaction to the outbound chain.
@@ -396,48 +374,42 @@ func (signer *Signer) TryProcessOutbound(
 	cctx *types.CrossChainTx,
 	outboundProc *outboundprocessor.Processor,
 	outboundID string,
-	chainObserver interfaces.ChainObserver,
+	_ interfaces.ChainObserver,
 	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
+	// end outbound process on panic
+	defer func() {
+		outboundProc.EndTryProcess(outboundID)
+		if r := recover(); r != nil {
+			signer.Logger().Std.Error().Msgf("TryProcessOutbound: %s, caught panic error: %v", cctx.Index, r)
+		}
+	}()
+
+	// prepare logger and a few local variables
 	var (
 		params = cctx.GetCurrentOutboundParam()
 		myID   = zetacoreClient.GetKeys().GetOperatorAddress()
 		logger = signer.Logger().Std.With().
-			Str("method", "TryProcessOutbound").
-			Int64("chain", signer.Chain().ChainId).
-			Uint64("nonce", params.TssNonce).
-			Str("cctx.index", cctx.Index).
+			Str(logs.FieldMethod, "TryProcessOutbound").
+			Int64(logs.FieldChain, signer.Chain().ChainId).
+			Uint64(logs.FieldNonce, params.TssNonce).
+			Str(logs.FieldCctx, cctx.Index).
 			Str("cctx.receiver", params.Receiver).
 			Str("cctx.amount", params.Amount.String()).
 			Logger()
 	)
-
 	logger.Info().Msgf("TryProcessOutbound")
 
+	// retrieve app context
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
-		signer.Logger().Std.Error().Err(err).Msg("error getting app context")
-		return
-	}
-
-	// end outbound process on panic
-	defer func() {
-		if r := recover(); r != nil {
-			logger.Error().Interface("panic", r).Msg("panic in TryProcessOutbound")
-		}
-
-		outboundProc.EndTryProcess(outboundID)
-	}()
-
-	evmObserver, ok := chainObserver.(*observer.Observer)
-	if !ok {
-		logger.Error().Msg("chain observer is not an EVM observer")
+		logger.Error().Err(err).Msg("error getting app context")
 		return
 	}
 
 	// Setup Transaction input
-	txData, skipTx, err := NewOutboundData(ctx, cctx, evmObserver, height, logger)
+	txData, skipTx, err := NewOutboundData(ctx, cctx, height, logger)
 	if err != nil {
 		logger.Err(err).Msg("error setting up transaction input fields")
 		return
@@ -495,7 +467,7 @@ func (signer *Signer) TryProcessOutbound(
 		// params field is used to pass input parameters for command requests, currently it is used to pass the ERC20
 		// contract address when a whitelist command is requested
 		params := msg[1]
-		tx, err = signer.SignCommandTx(ctx, txData, cmd, params)
+		tx, err = signer.SignAdminTx(ctx, txData, cmd, params)
 		if err != nil {
 			logger.Warn().Err(err).Msg(ErrorMsg(cctx))
 			return
@@ -731,172 +703,6 @@ func ErrorMsg(cctx *types.CrossChainTx) string {
 		cctx.GetCurrentOutboundParam().TssNonce,
 		cctx.GetCurrentOutboundParam().ReceiverChainId,
 	)
-}
-
-// SignWhitelistERC20Cmd signs a whitelist command for ERC20 token
-// TODO(revamp): move the cmd in a specific file
-func (signer *Signer) SignWhitelistERC20Cmd(
-	ctx context.Context,
-	txData *OutboundData,
-	params string,
-) (*ethtypes.Transaction, error) {
-	outboundParams := txData.outboundParams
-	erc20 := ethcommon.HexToAddress(params)
-	if erc20 == (ethcommon.Address{}) {
-		return nil, fmt.Errorf("SignCommandTx: invalid erc20 address %s", params)
-	}
-
-	custodyAbi, err := erc20custody.ERC20CustodyMetaData.GetAbi()
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := custodyAbi.Pack("whitelist", erc20)
-	if err != nil {
-		return nil, fmt.Errorf("whitelist pack error: %w", err)
-	}
-
-	tx, _, _, err := signer.Sign(
-		ctx,
-		data,
-		txData.to,
-		zeroValue,
-		txData.gas,
-		outboundParams.TssNonce,
-		txData.height,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("sign whitelist error: %w", err)
-	}
-
-	return tx, nil
-}
-
-// SignMigrateTssFundsCmd signs a migrate TSS funds command
-// TODO(revamp): move the cmd in a specific file
-func (signer *Signer) SignMigrateTssFundsCmd(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
-	tx, _, _, err := signer.Sign(
-		ctx,
-		nil,
-		txData.to,
-		txData.amount,
-		txData.gas,
-		txData.nonce,
-		txData.height,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("SignMigrateTssFundsCmd error: %w", err)
-	}
-	return tx, nil
-}
-
-// reportToOutboundTracker reports outboundHash to tracker only when tx receipt is available
-// TODO(revamp): move outbound tracker function to a outbound tracker file
-func (signer *Signer) reportToOutboundTracker(
-	ctx context.Context,
-	zetacoreClient interfaces.ZetacoreClient,
-	chainID int64,
-	nonce uint64,
-	outboundHash string,
-	logger zerolog.Logger,
-) {
-	// set being reported flag to avoid duplicate reporting
-	alreadySet := signer.Signer.SetBeingReportedFlag(outboundHash)
-	if alreadySet {
-		logger.Info().
-			Msgf("reportToOutboundTracker: outboundHash %s for chain %d nonce %d is being reported", outboundHash, chainID, nonce)
-		return
-	}
-
-	// report to outbound tracker with goroutine
-	go func() {
-		defer func() {
-			signer.Signer.ClearBeingReportedFlag(outboundHash)
-		}()
-
-		// try monitoring tx inclusion status for 10 minutes
-		var err error
-		report := false
-		isPending := false
-		blockNumber := uint64(0)
-		tStart := time.Now()
-		for {
-			// give up after 10 minutes of monitoring
-			time.Sleep(10 * time.Second)
-
-			if time.Since(tStart) > evm.OutboundInclusionTimeout {
-				// if tx is still pending after timeout, report to outboundTracker anyway as we cannot monitor forever
-				if isPending {
-					report = true // probably will be included later
-				}
-				logger.Info().
-					Msgf("reportToOutboundTracker: timeout waiting tx inclusion for chain %d nonce %d outboundHash %s report %v", chainID, nonce, outboundHash, report)
-				break
-			}
-			// try getting the tx
-			_, isPending, err = signer.client.TransactionByHash(ctx, ethcommon.HexToHash(outboundHash))
-			if err != nil {
-				logger.Info().
-					Err(err).
-					Msgf("reportToOutboundTracker: error getting tx for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
-				continue
-			}
-			// if tx is include in a block, try getting receipt
-			if !isPending {
-				report = true // included
-				receipt, err := signer.client.TransactionReceipt(ctx, ethcommon.HexToHash(outboundHash))
-				if err != nil {
-					logger.Info().
-						Err(err).
-						Msgf("reportToOutboundTracker: error getting receipt for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
-				}
-				if receipt != nil {
-					blockNumber = receipt.BlockNumber.Uint64()
-				}
-				break
-			}
-			// keep monitoring pending tx
-			logger.Info().
-				Msgf("reportToOutboundTracker: tx has not been included yet for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
-		}
-
-		// try adding to outbound tracker for 10 minutes
-		if report {
-			tStart := time.Now()
-			for {
-				// give up after 10 minutes of retrying
-				if time.Since(tStart) > evm.OutboundTrackerReportTimeout {
-					logger.Info().
-						Msgf("reportToOutboundTracker: timeout adding outbound tracker for chain %d nonce %d outboundHash %s, please add manually", chainID, nonce, outboundHash)
-					break
-				}
-				// stop if the cctx is already finalized
-				cctx, err := zetacoreClient.GetCctxByNonce(ctx, chainID, nonce)
-				if err != nil {
-					logger.Err(err).
-						Msgf("reportToOutboundTracker: error getting cctx for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
-				} else if !crosschainkeeper.IsPending(cctx) {
-					logger.Info().Msgf("reportToOutboundTracker: cctx already finalized for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
-					break
-				}
-				// report to outbound tracker
-				zetaHash, err := zetacoreClient.AddOutboundTracker(ctx, chainID, nonce, outboundHash, nil, "", -1)
-				if err != nil {
-					logger.Err(err).
-						Msgf("reportToOutboundTracker: error adding to outbound tracker for chain %d nonce %d outboundHash %s", chainID, nonce, outboundHash)
-				} else if zetaHash != "" {
-					logger.Info().Msgf("reportToOutboundTracker: added outboundHash to core successful %s, chain %d nonce %d outboundHash %s block %d",
-						zetaHash, chainID, nonce, outboundHash, blockNumber)
-				} else {
-					// stop if the tracker contains the outboundHash
-					logger.Info().Msgf("reportToOutboundTracker: outbound tracker contains outboundHash %s for chain %d nonce %d", outboundHash, chainID, nonce)
-					break
-				}
-				// retry otherwise
-				time.Sleep(evm.ZetaBlockTime * 3)
-			}
-		}
-	}()
 }
 
 // getEVMRPC is a helper function to set up the client and signer, also initializes a mock client for unit tests
