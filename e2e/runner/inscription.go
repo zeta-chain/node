@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil"
 	"github.com/pkg/errors"
 	"io"
 	"net/http"
@@ -33,7 +31,7 @@ type InscriptionBuilder struct {
 	client     http.Client
 }
 
-func (r *InscriptionBuilder) GenerateCommitAddress(memo []byte) (btcutil.Address, error) {
+func (r *InscriptionBuilder) GenerateCommitAddress(memo []byte) (string, error) {
 	// Create the payload
 	postData := map[string]string{
 		"memo": hex.EncodeToString(memo),
@@ -42,36 +40,36 @@ func (r *InscriptionBuilder) GenerateCommitAddress(memo []byte) (btcutil.Address
 	// Convert the payload to JSON
 	jsonData, err := json.Marshal(postData)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	postUrl := r.sidecarUrl + "/commit"
 	req, err := http.NewRequest("POST", postUrl, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot create commit request")
+		return "", errors.Wrap(err, "cannot create commit request")
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	// Send the request
 	resp, err := r.client.Do(req)
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot send to sidecar")
+		return "", errors.Wrap(err, "cannot send to sidecar")
 	}
 	defer resp.Body.Close()
 
 	// Read the response body
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot read commit response body")
+		return "", errors.Wrap(err, "cannot read commit response body")
 	}
 
 	// Parse the JSON response
 	var response commitResponse
 	if err := json.Unmarshal(body, &response); err != nil {
-		return nil, errors.Wrap(err, "cannot parse commit response body")
+		return "", errors.Wrap(err, "cannot parse commit response body")
 	}
 
-	return btcutil.DecodeAddress(response.Address, &chaincfg.RegressionNetParams)
+	return response.Address, nil
 }
 
 func (r *InscriptionBuilder) GenerateRevealTxn(to string, txnHash string, idx int, amount float64) (string, error) {
