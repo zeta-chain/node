@@ -60,7 +60,7 @@ func (r *InscriptionBuilder) GenerateCommitAddress(memo []byte) (string, error) 
 
 	// Read the response body
 	var response commitResponse
-	err := json.NewDecoder(resp.Body).Decode(&response)
+	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
 		return "", err
 	}
