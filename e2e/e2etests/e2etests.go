@@ -15,6 +15,7 @@ const (
 	TestZetaDepositRestrictedName = "zeta_deposit_restricted"
 	TestZetaWithdrawName          = "zeta_withdraw"
 	TestZetaWithdrawBTCRevertName = "zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
+	TestZetaPrecompilesName       = "zeta_precompiles"
 
 	/*
 	 Message passing tests
@@ -123,6 +124,12 @@ var AllE2ETests = []runner.E2ETest{
 	/*
 	 ZETA tests
 	*/
+	runner.NewE2ETest(
+		TestZetaPrecompilesName,
+		"call Regular stateful precompiled contract",
+		[]runner.ArgDefinition{},
+		TestPrecompilesRegular,
+	),
 	runner.NewE2ETest(
 		TestZetaDepositName,
 		"deposit ZETA from Ethereum to ZEVM",

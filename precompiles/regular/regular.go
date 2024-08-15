@@ -98,12 +98,15 @@ func (rc *Contract) Abi() abi.ABI {
 func (rc *Contract) RequiredGas(input []byte) uint64 {
 	// base cost to prevent large input size
 	baseCost := uint64(len(input)) * rc.kvGasConfig.WriteCostPerByte
+
+	// get methodID (first 4 bytes)
 	var methodID [4]byte
 	copy(methodID[:], input[:4])
-	requiredGas, ok := GasRequiredByMethod[methodID]
-	if ok {
+
+	if requiredGas, ok := GasRequiredByMethod[methodID]; ok {
 		return requiredGas + baseCost
 	}
+
 	return baseCost
 }
 
@@ -239,8 +242,6 @@ func (rc *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, err
 		return rc.Bech32ToHexAddr(method, args)
 	case Bech32ifyMethodName:
 		return rc.Bech32ify(method, args)
-	// case OtherMethods:
-	// ..
 	default:
 		return nil, errors.New("unknown method")
 	}

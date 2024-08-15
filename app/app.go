@@ -556,9 +556,6 @@ func New(
 	)
 	evmSs := app.GetSubspace(evmtypes.ModuleName)
 
-	// Get gas config for stateful contracts.
-	gasConfig := storetypes.TransientGasConfig()
-
 	app.EvmKeeper = evmkeeper.NewKeeper(
 		appCodec,
 		keys[evmtypes.StoreKey],
@@ -573,7 +570,7 @@ func New(
 		precompiles.StatefulContracts(
 			app.FungibleKeeper,
 			appCodec,
-			gasConfig,
+			storetypes.TransientGasConfig(),
 		),
 		app.ConsensusParamsKeeper,
 		aggregateAllKeys(keys, tKeys, memKeys),
