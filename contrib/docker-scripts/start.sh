@@ -10,7 +10,7 @@ function load_defaults {
   export DAEMON_HOME=${DAEMON_HOME:=/root/.zetacored}
   export NETWORK=${NETWORK:=mainnet}
   export RESTORE_TYPE=${RESTORE_TYPE:=statesync}
-  export SNAPSHOT_API=${SNAPSHOT_API:=https://snapshots.zetachain.com}
+  export SNAPSHOT_API=${SNAPSHOT_API:=https://snapshots.rpc.zetachain.com}
   export TRUST_HEIGHT_DIFFERENCE_STATE_SYNC=${TRUST_HEIGHT_DIFFERENCE_STATE_SYNC:=40000}
   export COSMOVISOR_VERSION=${COSMOVISOR_VERSION:=v1.5.0}
   export CHAIN_ID=${CHAIN_ID:=zetachain_7000-1}
@@ -109,8 +109,8 @@ function setup_restore_type {
   elif [ "${RESTORE_TYPE}" == "snapshot"  ]; then
     if [ "${NETWORK}" == "mainnet" ]; then
       logt "Get Latest Snapshot URL"
-      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/latest-snapshot?network=mainnet | jq -r .latest_snapshot)
-      SNAPSHOT_FILENAME=$(basename "${SNAPSHOT_URL}")
+      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/mainnet/fullnode/latest.json | jq -r '.snapshots[0].link')
+      SNAPSHOT_FILENAME=$(curl -s ${SNAPSHOT_API}/mainnet/fullnode/latest.json | jq -r '.snapshots[0].filename')
       SNAPSHOT_DIR=$(pwd)
       logt "Download Snapshot from url: ${SNAPSHOT_URL}"
       curl -o "${SNAPSHOT_FILENAME}" "${SNAPSHOT_URL}"
@@ -120,8 +120,8 @@ function setup_restore_type {
       logt " Cleanup Snapshot"
       rm -rf ${SNAPSHOT_DIR}/${SNAPSHOT_FILENAME}
     elif [ "${NETWORK}" == "athens3" ]; then
-      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/latest-snapshot?network=athens3 | jq -r .latest_snapshot)
-      SNAPSHOT_FILENAME=$(basename "${SNAPSHOT_URL}")
+      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/testnet/fullnode/latest.json | jq -r '.snapshots[0].link')
+      SNAPSHOT_FILENAME=$(curl -s ${SNAPSHOT_API}/testnet/fullnode/latest.json | jq -r '.snapshots[0].filename')
       SNAPSHOT_DIR=$(pwd)
       logt "Download Snapshot from url: ${SNAPSHOT_URL}"
       curl -o "${SNAPSHOT_FILENAME}" "${SNAPSHOT_URL}"
@@ -134,8 +134,8 @@ function setup_restore_type {
   elif [ "${RESTORE_TYPE}" == "snapshot-archive"  ]; then
     if [ "${NETWORK}" == "mainnet" ]; then
       logt "Get Latest Snapshot URL"
-      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/latest-archive-snapshot?network=mainnet | jq -r .latest_snapshot)
-      SNAPSHOT_FILENAME=$(basename "${SNAPSHOT_URL}")
+      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/mainnet/archive/latest.json | jq -r '.snapshots[0].link')
+      SNAPSHOT_FILENAME=$(curl -s ${SNAPSHOT_API}/mainnet/archive/latest.json | jq -r '.snapshots[0].filename')
       SNAPSHOT_DIR=$(pwd)
       logt "Download Snapshot from url: ${SNAPSHOT_URL}"
       curl -o "${SNAPSHOT_FILENAME}" "${SNAPSHOT_URL}"
@@ -145,8 +145,8 @@ function setup_restore_type {
       logt " Cleanup Snapshot"
       rm -rf ${SNAPSHOT_DIR}/${SNAPSHOT_FILENAME}
     elif [ "${NETWORK}" == "athens3" ]; then
-      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/latest-archive-snapshot?network=athens3 | jq -r .latest_snapshot)
-      SNAPSHOT_FILENAME=$(basename "${SNAPSHOT_URL}")
+      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/testnet/archive/latest.json | jq -r '.snapshots[0].link')
+      SNAPSHOT_FILENAME=$(curl -s ${SNAPSHOT_API}/testnet/archive/latest.json | jq -r '.snapshots[0].filename')
       SNAPSHOT_DIR=$(pwd)
       logt "Download Snapshot from url: ${SNAPSHOT_URL}"
       curl -o "${SNAPSHOT_FILENAME}" "${SNAPSHOT_URL}"
