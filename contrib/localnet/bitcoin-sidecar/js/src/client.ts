@@ -103,12 +103,12 @@ export class ZetaBtcClient {
         return commitAddress;
     }
 
-    public buildRevealTxn(commitTxn: BtcInput, commitAmount: number, feeRate: number): Buffer {
+    public buildRevealTxn(to: string, commitTxn: BtcInput, commitAmount: number, feeRate: number): Buffer {
         if (this.reveal === null) {
             throw new Error("commit txn not built yet");
         }
 
-        this.reveal.with_commit_tx(commitTxn, commitAmount, feeRate);
+        this.reveal.with_commit_tx(to, commitTxn, commitAmount, feeRate);
         return this.reveal.dump();
     }
 
@@ -132,7 +132,7 @@ class RevealTxnBuilder {
         this.network = network;
     }
 
-    public with_commit_tx(commitTxn: BtcInput, commitAmount: number, feeRate: number): RevealTxnBuilder {
+    public with_commit_tx(to: string, commitTxn: BtcInput, commitAmount: number, feeRate: number): RevealTxnBuilder {
         const scriptTree: Taptree = { output: this.leafScript };
 
         const { output, witness } = payments.p2tr({
@@ -160,7 +160,7 @@ class RevealTxnBuilder {
 
         this.psbt.addOutput({
             value: commitAmount - this.estimateFee(commitAmount, feeRate),
-            address: this.tssAddress(),
+            address: to,
         });
 
         this.psbt.signAllInputs(this.key);

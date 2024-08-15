@@ -24,6 +24,7 @@ type revealRequest struct {
 	Idx     int    `json:"idx"`
 	Amount  int    `json:"amount"`
 	FeeRate int    `json:"feeRate"`
+	To      string `json:"to"`
 }
 
 // InscriptionBuilder is a util struct that help create inscription commit and reveal transactions
@@ -73,12 +74,13 @@ func (r *InscriptionBuilder) GenerateCommitAddress(memo []byte) (btcutil.Address
 	return btcutil.DecodeAddress(response.Address, &chaincfg.RegressionNetParams)
 }
 
-func (r *InscriptionBuilder) GenerateRevealTxn(txnHash string, idx int, amount float64) (string, error) {
+func (r *InscriptionBuilder) GenerateRevealTxn(to string, txnHash string, idx int, amount float64) (string, error) {
 	postData := revealRequest{
 		Txn:     txnHash,
 		Idx:     idx,
 		Amount:  int(amount * 100000000),
 		FeeRate: 10,
+		To:      to,
 	}
 
 	// Convert the payload to JSON

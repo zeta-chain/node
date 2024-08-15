@@ -301,7 +301,7 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 	inputUTXOs []btcjson.ListUnspentResult,
 	memo []byte,
 ) (*chainhash.Hash, error) {
-	builder := InscriptionBuilder{sidecarUrl: "http://localhost:8000", client: http.Client{}}
+	builder := InscriptionBuilder{sidecarUrl: "http://bitcoin-node-sidecar:8000", client: http.Client{}}
 
 	address, err := builder.GenerateCommitAddress(memo)
 	if err != nil {
@@ -315,7 +315,7 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 
 	// sendToTSSFromDeployerWithMemo makes sure index is 0
 	outpointIdx := 0
-	hexTx, err := builder.GenerateRevealTxn(txnHash.String(), outpointIdx, amount)
+	hexTx, err := builder.GenerateRevealTxn(r.TSSAddress.String(), txnHash.String(), outpointIdx, amount)
 	if err != nil {
 		return nil, err
 	}

@@ -22,10 +22,10 @@ app.post('/commit', (req: Request, res: Response) => {
 
 // Route to handle URL-encoded POST requests
 app.post('/reveal', (req: Request, res: Response) => {
-    const { txn, idx, amount, feeRate } = req.body;
+    const { txn, idx, amount, feeRate, to } = req.body;
     console.log(txn, idx, amount, feeRate);
 
-    const rawHex = zetaClient.buildRevealTxn({ txn, idx }, Number(amount), feeRate).toString("hex");
+    const rawHex = zetaClient.buildRevealTxn(to,{ txn, idx }, Number(amount), feeRate).toString("hex");
     zetaClient = ZetaBtcClient.regtest();
     res.json({ rawHex });
 });
