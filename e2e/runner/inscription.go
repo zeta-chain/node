@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"github.com/pkg/errors"
 	"io"
 	"net/http"
@@ -68,6 +69,7 @@ func (r *InscriptionBuilder) GenerateCommitAddress(memo []byte) (string, error) 
 	if err := json.Unmarshal(body, &response); err != nil {
 		return "", errors.Wrap(err, "cannot parse commit response body")
 	}
+	fmt.Print("raw commit response", response)
 
 	return response.Address, nil
 }
