@@ -386,10 +386,6 @@ func MockVoteOnOutboundFailedBallot(
 		Once()
 }
 
-func MockGetOutbound(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context) {
-	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true).Once()
-}
-
 func MockSaveOutbound(
 	m *crosschainmocks.CrosschainObserverKeeper,
 	ctx sdk.Context,
@@ -400,7 +396,7 @@ func MockSaveOutbound(
 	m.On("RemoveFromPendingNonces",
 		ctx, tss.TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId, mock.Anything).
 		Return().Times(expectedNumberOfOutboundParams)
-	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true)
+	//m.On("GetTSS", ctx).Return(observertypes.TSS{}, true)
 }
 
 func MockSaveOutboundNewRevertCreated(

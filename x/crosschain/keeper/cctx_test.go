@@ -24,6 +24,7 @@ func createNCctxWithStatus(
 	ctx sdk.Context,
 	n int,
 	status types.CctxStatus,
+	tssPubkey string,
 ) []types.CrossChainTx {
 	items := make([]types.CrossChainTx, n)
 	for i := range items {
@@ -38,13 +39,15 @@ func createNCctxWithStatus(
 		items[i].InboundParams = &types.InboundParams{ObservedHash: fmt.Sprintf("%d", i), Amount: math.OneUint()}
 		items[i].OutboundParams = []*types.OutboundParams{{Amount: math.ZeroUint()}}
 
-		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, items[i])
+		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, items[i], func(ctx sdk.Context) string {
+			return tssPubkey
+		})
 	}
 	return items
 }
 
 // Keeper Tests
-func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
+func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int, tssPubkey string) []types.CrossChainTx {
 	items := make([]types.CrossChainTx, n)
 	for i := range items {
 		items[i].Creator = "any"
@@ -79,7 +82,9 @@ func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.CrossCha
 		items[i].ZetaFees = math.OneUint()
 		items[i].Index = fmt.Sprintf("%d", i)
 
-		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, items[i])
+		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, items[i], func(ctx sdk.Context) string {
+			return tssPubkey
+		})
 	}
 	return items
 }
@@ -122,21 +127,22 @@ func TestCCTXs(t *testing.T) {
 			keeper, ctx, _, zk := keepertest.CrosschainKeeper(t)
 			keeper.SetZetaAccounting(ctx, types.ZetaAccounting{AbortedZetaAmount: math.ZeroUint()})
 			var sends []types.CrossChainTx
-			zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
+			tss := sample.Tss()
+			zk.ObserverKeeper.SetTSS(ctx, tss)
 			sends = append(
 				sends,
-				createNCctxWithStatus(keeper, ctx, tt.PendingInbound, types.CctxStatus_PendingInbound)...)
+				createNCctxWithStatus(keeper, ctx, tt.PendingInbound, types.CctxStatus_PendingInbound, tss.TssPubkey)...)
 			sends = append(
 				sends,
-				createNCctxWithStatus(keeper, ctx, tt.PendingOutbound, types.CctxStatus_PendingOutbound)...)
+				createNCctxWithStatus(keeper, ctx, tt.PendingOutbound, types.CctxStatus_PendingOutbound, tss.TssPubkey)...)
 			sends = append(
 				sends,
-				createNCctxWithStatus(keeper, ctx, tt.PendingRevert, types.CctxStatus_PendingRevert)...)
-			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.Aborted, types.CctxStatus_Aborted)...)
+				createNCctxWithStatus(keeper, ctx, tt.PendingRevert, types.CctxStatus_PendingRevert, tss.TssPubkey)...)
+			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.Aborted, types.CctxStatus_Aborted, tss.TssPubkey)...)
 			sends = append(
 				sends,
-				createNCctxWithStatus(keeper, ctx, tt.OutboundMined, types.CctxStatus_OutboundMined)...)
-			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.Reverted, types.CctxStatus_Reverted)...)
+				createNCctxWithStatus(keeper, ctx, tt.OutboundMined, types.CctxStatus_OutboundMined, tss.TssPubkey)...)
+			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.Reverted, types.CctxStatus_Reverted, tss.TssPubkey)...)
 			//require.Equal(t, tt.PendingOutbound, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound})))
 			//require.Equal(t, tt.PendingInbound, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingInbound})))
 			//require.Equal(t, tt.PendingOutbound+tt.PendingRevert, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert})))
@@ -153,8 +159,9 @@ func TestCCTXs(t *testing.T) {
 
 func TestCCTXGetAll(t *testing.T) {
 	keeper, ctx, _, zk := keepertest.CrosschainKeeper(t)
-	zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
-	items := createNCctx(keeper, ctx, 10)
+	tss := sample.Tss()
+	zk.ObserverKeeper.SetTSS(ctx, tss)
+	items := createNCctx(keeper, ctx, 10, tss.TssPubkey)
 	cctx := keeper.GetAllCrossChainTx(ctx)
 	c := make([]types.CrossChainTx, len(cctx))
 	for i, val := range cctx {
@@ -167,9 +174,10 @@ func TestCCTXGetAll(t *testing.T) {
 
 func TestCCTXQuerySingle(t *testing.T) {
 	keeper, ctx, _, zk := keepertest.CrosschainKeeper(t)
-	zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
+	tss := sample.Tss()
+	zk.ObserverKeeper.SetTSS(ctx, tss)
 	wctx := sdk.WrapSDKContext(ctx)
-	msgs := createNCctx(keeper, ctx, 2)
+	msgs := createNCctx(keeper, ctx, 2, tss.TssPubkey)
 	for _, tc := range []struct {
 		desc     string
 		request  *types.QueryGetCctxRequest
@@ -210,9 +218,10 @@ func TestCCTXQuerySingle(t *testing.T) {
 
 func TestCCTXQueryPaginated(t *testing.T) {
 	keeper, ctx, _, zk := keepertest.CrosschainKeeper(t)
+	tss := sample.Tss()
 	zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 	wctx := sdk.WrapSDKContext(ctx)
-	msgs := createNCctx(keeper, ctx, 5)
+	msgs := createNCctx(keeper, ctx, 5, tss.TssPubkey)
 
 	request := func(next []byte, offset, limit uint64, total bool) *types.QueryAllCctxRequest {
 		return &types.QueryAllCctxRequest{
@@ -259,8 +268,9 @@ func TestCCTXQueryPaginated(t *testing.T) {
 
 func TestKeeper_RemoveCrossChainTx(t *testing.T) {
 	keeper, ctx, _, zk := keepertest.CrosschainKeeper(t)
-	zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
-	txs := createNCctx(keeper, ctx, 5)
+	tss := sample.Tss()
+	zk.ObserverKeeper.SetTSS(ctx, tss)
+	txs := createNCctx(keeper, ctx, 5, tss.TssPubkey)
 
 	keeper.RemoveCrossChainTx(ctx, txs[0].Index)
 	txs = keeper.GetAllCrossChainTx(ctx)

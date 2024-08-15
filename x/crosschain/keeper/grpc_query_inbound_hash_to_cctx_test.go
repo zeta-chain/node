@@ -126,7 +126,7 @@ func TestInTxHashToCctxQueryPaginated(t *testing.T) {
 	})
 }
 
-func createInTxHashToCctxWithCctxs(keeper *crosschainkeeper.Keeper, ctx sdk.Context) ([]types.CrossChainTx,
+func createInTxHashToCctxWithCctxs(ctx sdk.Context, keeper *crosschainkeeper.Keeper, tssPubkey string) ([]types.CrossChainTx,
 	types.InboundHashToCctx) {
 	cctxs := make([]types.CrossChainTx, 5)
 	for i := range cctxs {
@@ -135,7 +135,9 @@ func createInTxHashToCctxWithCctxs(keeper *crosschainkeeper.Keeper, ctx sdk.Cont
 		cctxs[i].ZetaFees = math.OneUint()
 		cctxs[i].InboundParams = &types.InboundParams{ObservedHash: fmt.Sprintf("%d", i), Amount: math.OneUint()}
 		cctxs[i].CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
-		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctxs[i])
+		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctxs[i], func(ctx sdk.Context) string {
+			return tssPubkey
+		})
 	}
 
 	var inboundHashToCctx types.InboundHashToCctx
@@ -151,9 +153,10 @@ func createInTxHashToCctxWithCctxs(keeper *crosschainkeeper.Keeper, ctx sdk.Cont
 func TestKeeper_InTxHashToCctxDataQuery(t *testing.T) {
 	keeper, ctx, _, zk := keepertest.CrosschainKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
-	zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
+	tss := sample.Tss()
+	zk.ObserverKeeper.SetTSS(ctx, tss)
 	t.Run("can query all cctxs data with in tx hash", func(t *testing.T) {
-		cctxs, inboundHashToCctx := createInTxHashToCctxWithCctxs(keeper, ctx)
+		cctxs, inboundHashToCctx := createInTxHashToCctxWithCctxs(ctx, keeper, tss.TssPubkey)
 		req := &types.QueryInboundHashToCctxDataRequest{
 			InboundHash: inboundHashToCctx.InboundHash,
 		}

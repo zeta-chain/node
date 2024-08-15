@@ -128,7 +128,9 @@ func (k Keeper) initiateMigrateTSSFundsCCTX(
 		}
 	}
 
-	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx)
+	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx, func(ctx sdk.Context) string {
+		return currentTss.TssPubkey
+	})
 	k.zetaObserverKeeper.SetFundMigrator(ctx, observertypes.TssFundMigratorInfo{
 		ChainId:            chainID,
 		MigrationCctxIndex: cctx.Index,
