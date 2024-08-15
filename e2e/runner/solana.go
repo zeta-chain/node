@@ -31,6 +31,7 @@ func (r *E2ERunner) ComputePdaAddress() solana.PublicKey {
 func (r *E2ERunner) CreateDepositInstruction(
 	signer solana.PublicKey,
 	receiver ethcommon.Address,
+	data []byte,
 	amount uint64,
 ) solana.Instruction {
 	// compute the gateway PDA address
@@ -51,7 +52,7 @@ func (r *E2ERunner) CreateDepositInstruction(
 	inst.DataBytes, err = borsh.Serialize(solanacontract.DepositInstructionParams{
 		Discriminator: solanacontract.DiscriminatorDeposit(),
 		Amount:        amount,
-		Memo:          receiver.Bytes(),
+		Memo:          append(receiver.Bytes(), data...),
 	})
 	require.NoError(r, err)
 
@@ -96,9 +97,16 @@ func (r *E2ERunner) BroadcastTxSync(tx *solana.Transaction) (solana.Signature, *
 	require.NoError(r, err)
 	r.Logger.Info("broadcast success! tx sig %s; waiting for confirmation...", sig)
 
+	var (
+		start   = time.Now()
+		timeout = 2 * time.Minute // Solana tx expires automatically after 2 minutes
+	)
+
 	// wait for the transaction to be finalized
 	var out *rpc.GetTransactionResult
 	for {
+		require.False(r, time.Since(start) > timeout, "waiting solana tx timeout")
+
 		time.Sleep(1 * time.Second)
 		out, err = r.SolanaClient.GetTransaction(r.Ctx, sig, &rpc.GetTransactionOpts{})
 		if err == nil {

@@ -13,10 +13,10 @@ import (
 func TestSolanaWithdraw(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	// print balanceAfter of from address
-	balanceBefore, err := r.SOLZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
+	// get ERC20 SOL balance before withdraw
+	balanceBefore, err := r.SOLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
-	r.Logger.Info("from address %s balance of SOL before: %d", r.ZEVMAuth.From, balanceBefore)
+	r.Logger.Info("runner balance of SOL before withdraw: %d", balanceBefore)
 
 	// parse withdraw amount (in lamports), approve amount is 1 SOL
 	approvedAmount := new(big.Int).SetUint64(solana.LAMPORTS_PER_SOL)
@@ -36,10 +36,10 @@ func TestSolanaWithdraw(r *runner.E2ERunner, args []string) {
 	// withdraw
 	r.WithdrawSOLZRC20(privkey.PublicKey(), withdrawAmount, approvedAmount)
 
-	// print balance of from address after withdraw
-	balanceAfter, err := r.SOLZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
+	// get ERC20 SOL balance after withdraw
+	balanceAfter, err := r.SOLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
-	r.Logger.Info("from address %s balance of SOL after: %d", r.ZEVMAuth.From, balanceAfter)
+	r.Logger.Info("runner balance of SOL after withdraw: %d", balanceAfter)
 
 	// check if the balance is reduced correctly
 	amountReduced := new(big.Int).Sub(balanceBefore, balanceAfter)

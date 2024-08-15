@@ -3,7 +3,6 @@ package e2etests
 import (
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 
@@ -57,16 +56,7 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_OutboundMined)
 
 	// Checking example contract has been called, bar value should be set to amount
-	bar, err := exampleContract.Bar(&bind.CallOpts{})
-	require.NoError(r, err)
-	require.Equal(
-		r,
-		0,
-		bar.Cmp(value),
-		"cross-chain call failed bar value %s should be equal to amount %s",
-		bar.String(),
-		value.String(),
-	)
+	utils.MustHaveCalledExampleContract(r, exampleContract, value)
 	r.Logger.Info("Cross-chain call succeeded")
 
 	r.Logger.Info("Deploying reverter contract")

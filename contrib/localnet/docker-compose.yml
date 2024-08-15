@@ -231,9 +231,6 @@ services:
     image: solana-local:latest
     container_name: solana
     hostname: solana
-    profiles:
-      - solana
-      - all
     ports:
       - "8899:8899"
     networks:
