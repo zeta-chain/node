@@ -63,7 +63,7 @@ func (k msgServer) VoteOutbound(
 ) (*types.MsgVoteOutboundResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Check TSS exists
+	// Check if TSS exists
 	// It is almost impossible to reach this point without a TSS,
 	// as the check for TSS was already done when creating the inbound, but we check anyway.
 	// We also expect the tss.Pubkey to be the same as the one in the outbound params,

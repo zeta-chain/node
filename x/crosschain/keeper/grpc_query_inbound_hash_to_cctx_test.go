@@ -126,7 +126,11 @@ func TestInTxHashToCctxQueryPaginated(t *testing.T) {
 	})
 }
 
-func createInTxHashToCctxWithCctxs(ctx sdk.Context, keeper *crosschainkeeper.Keeper, tssPubkey string) ([]types.CrossChainTx,
+func createInTxHashToCctxWithCctxs(
+	ctx sdk.Context,
+	keeper *crosschainkeeper.Keeper,
+	tssPubkey string,
+) ([]types.CrossChainTx,
 	types.InboundHashToCctx) {
 	cctxs := make([]types.CrossChainTx, 5)
 	for i := range cctxs {

@@ -16,11 +16,11 @@ import (
 // 2. set the mapping inboundHash -> cctxIndex , one inboundHash can be connected to multiple cctxindex
 // 3. set the mapping nonce => cctx
 // 4. update the zeta accounting
-func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(ctx sdk.Context, cctx types.CrossChainTx, tssFunc func(ctx sdk.Context) string) {
-	//tss, found := k.zetaObserverKeeper.GetTSS(ctx)
-	//if !found {
-	//	return
-	//}
+func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(
+	ctx sdk.Context,
+	cctx types.CrossChainTx,
+	tssFunc func(ctx sdk.Context) string,
+) {
 	// set mapping nonce => cctxIndex
 	tssPubkey := tssFunc(ctx)
 	if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound ||

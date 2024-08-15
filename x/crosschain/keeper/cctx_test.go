@@ -131,18 +131,34 @@ func TestCCTXs(t *testing.T) {
 			zk.ObserverKeeper.SetTSS(ctx, tss)
 			sends = append(
 				sends,
-				createNCctxWithStatus(keeper, ctx, tt.PendingInbound, types.CctxStatus_PendingInbound, tss.TssPubkey)...)
+				createNCctxWithStatus(
+					keeper,
+					ctx,
+					tt.PendingInbound,
+					types.CctxStatus_PendingInbound,
+					tss.TssPubkey,
+				)...)
 			sends = append(
 				sends,
-				createNCctxWithStatus(keeper, ctx, tt.PendingOutbound, types.CctxStatus_PendingOutbound, tss.TssPubkey)...)
+				createNCctxWithStatus(
+					keeper,
+					ctx,
+					tt.PendingOutbound,
+					types.CctxStatus_PendingOutbound,
+					tss.TssPubkey,
+				)...)
 			sends = append(
 				sends,
 				createNCctxWithStatus(keeper, ctx, tt.PendingRevert, types.CctxStatus_PendingRevert, tss.TssPubkey)...)
-			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.Aborted, types.CctxStatus_Aborted, tss.TssPubkey)...)
+			sends = append(
+				sends,
+				createNCctxWithStatus(keeper, ctx, tt.Aborted, types.CctxStatus_Aborted, tss.TssPubkey)...)
 			sends = append(
 				sends,
 				createNCctxWithStatus(keeper, ctx, tt.OutboundMined, types.CctxStatus_OutboundMined, tss.TssPubkey)...)
-			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.Reverted, types.CctxStatus_Reverted, tss.TssPubkey)...)
+			sends = append(
+				sends,
+				createNCctxWithStatus(keeper, ctx, tt.Reverted, types.CctxStatus_Reverted, tss.TssPubkey)...)
 			//require.Equal(t, tt.PendingOutbound, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound})))
 			//require.Equal(t, tt.PendingInbound, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingInbound})))
 			//require.Equal(t, tt.PendingOutbound+tt.PendingRevert, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert})))
