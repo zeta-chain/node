@@ -94,6 +94,7 @@ jobs:
               core.setOutput('SOLANA_TESTS', labels.includes('SOLANA_TESTS'));
             } else if (context.eventName === 'merge_group') {
               core.setOutput('DEFAULT_TESTS', true);
+              core.setOutput('UPGRADE_LIGHT_TESTS', true);
             } else if (context.eventName === 'push' && context.ref === 'refs/heads/develop') {
               core.setOutput('DEFAULT_TESTS', true);
             } else if (context.eventName === 'push' && context.ref.startsWith('refs/heads/release/')) {
@@ -112,6 +113,7 @@ jobs:
               core.setOutput('ADMIN_TESTS', true);
               core.setOutput('PERFORMANCE_TESTS', true);
               core.setOutput('STATEFUL_DATA_TESTS', true);
+              core.setOutput('TSS_MIGRATION_TESTS', true);
               core.setOutput('SOLANA_TESTS', true);
             } else if (context.eventName === 'workflow_dispatch') {
               core.setOutput('DEFAULT_TESTS', context.payload.inputs['default-test']);
@@ -197,6 +199,7 @@ jobs:
               const cleanName = job.name.split("/")[0];
               return `${icon} ${cleanName}`;
             });
+            e2eResults.sort();
 
             const overallResultStr = '${{ needs.e2e.result }}';
             const overallResultPassing = overallResultStr === 'success' || overallResultStr === 'skipped';

@@ -131,6 +131,19 @@ func GasPrice(t *testing.T, index string) *types.GasPrice {
 	}
 }
 
+func GasPriceWithChainID(t *testing.T, chainID int64) types.GasPrice {
+	r := newRandFromStringSeed(t, fmt.Sprintf("%d", chainID))
+
+	return types.GasPrice{
+		Creator:     AccAddress(),
+		ChainId:     chainID,
+		Signers:     []string{AccAddress(), AccAddress()},
+		BlockNums:   []uint64{r.Uint64(), r.Uint64()},
+		Prices:      []uint64{r.Uint64(), r.Uint64()},
+		MedianIndex: 0,
+	}
+}
+
 func InboundParams(r *rand.Rand) *types.InboundParams {
 	return &types.InboundParams{
 		Sender:                 EthAddress().String(),
@@ -196,10 +209,13 @@ func OutboundParamsValidChainID(r *rand.Rand) *types.OutboundParams {
 func Status(t *testing.T, index string) *types.Status {
 	r := newRandFromStringSeed(t, index)
 
+	createdAt := r.Int63()
+
 	return &types.Status{
 		Status:              types.CctxStatus(r.Intn(100)),
 		StatusMessage:       String(),
-		LastUpdateTimestamp: r.Int63(),
+		CreatedTimestamp:    createdAt,
+		LastUpdateTimestamp: createdAt,
 	}
 }
 

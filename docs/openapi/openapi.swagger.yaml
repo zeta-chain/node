@@ -57231,12 +57231,22 @@ definitions:
       is_removed:
         type: boolean
         title: if the tx was removed from the tracker due to no pending cctx
+  crosschainMsgMigrateERC20CustodyFundsResponse:
+    type: object
+    properties:
+      cctx_index:
+        type: string
   crosschainMsgMigrateTssFundsResponse:
     type: object
   crosschainMsgRefundAbortedCCTXResponse:
     type: object
   crosschainMsgRemoveOutboundTrackerResponse:
     type: object
+  crosschainMsgUpdateERC20CustodyPauseStatusResponse:
+    type: object
+    properties:
+      cctx_index:
+        type: string
   crosschainMsgUpdateRateLimiterFlagsResponse:
     type: object
   crosschainMsgUpdateTssAddressResponse:
@@ -58421,6 +58431,10 @@ definitions:
         format: int64
       isAbortRefunded:
         type: boolean
+      created_timestamp:
+        type: string
+        format: int64
+        description: when the CCTX was created. only populated on new transactions.
   zetacoreemissionsParams:
     type: object
     properties:
