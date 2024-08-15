@@ -10,6 +10,7 @@
 * [2634](https://github.com/zeta-chain/node/pull/2634) - add support for EIP-1559 gas fees
 * [2597](https://github.com/zeta-chain/node/pull/2597) - Add generic rpc metrics to zetaclient
 * [2538](https://github.com/zeta-chain/node/pull/2538) - add background worker routines to shutdown zetaclientd when needed for tss migration
+* [2644](https://github.com/zeta-chain/node/pull/2644) - add created_timestamp to cctx status
 
 ### Refactor
 
@@ -133,6 +134,7 @@
 * [2481](https://github.com/zeta-chain/node/pull/2481) - increase gas limit inbound and outbound vote message to 500k
 * [2545](https://github.com/zeta-chain/node/pull/2545) - check solana minimum rent exempt to avoid outbound failure
 * [2547](https://github.com/zeta-chain/node/pull/2547) - limit max txs in priority mempool
+* [2628](https://github.com/zeta-chain/node/pull/2628) - avoid submitting invalid hashes to outbound tracker
 
 ### CI
 

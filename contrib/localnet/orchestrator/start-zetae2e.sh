@@ -99,9 +99,11 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
 
   # set upgrade height to 225 by default
   UPGRADE_HEIGHT=${UPGRADE_HEIGHT:=225}
+  OLD_VERSION=$(get_zetacored_version)
+  COMMON_ARGS="--skip-header-proof --skip-tracker-check"
 
   if [[ ! -f deployed.yml ]]; then
-    zetae2e local $E2E_ARGS --setup-only --config config.yml --config-out deployed.yml --skip-header-proof
+    zetae2e local $E2E_ARGS --setup-only --config config.yml --config-out deployed.yml ${COMMON_ARGS}
     if [ $? -ne 0 ]; then
       echo "e2e setup failed"
       exit 1
@@ -115,7 +117,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
     echo "running E2E command to setup the networks and populate the state..."
 
     # Use light flag to ensure tests can complete before the upgrade height
-    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --light --skip-header-proof
+    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --light ${COMMON_ARGS}
     if [ $? -ne 0 ]; then
       echo "first e2e failed"
       exit 1
@@ -123,9 +125,6 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   fi
 
   echo "Waiting for upgrade height..."
-
-  OLD_VERSION=$(get_zetacored_version)
-
   CURRENT_HEIGHT=0
   WAIT_HEIGHT=$(( UPGRADE_HEIGHT - 1 ))
   # wait for upgrade height
@@ -157,9 +156,9 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   # When the upgrade height is greater than 100 for upgrade test, the Bitcoin tests have been run once, therefore the Bitcoin wallet is already set up
   # Use light flag to skip advanced tests
   if [ "$UPGRADE_HEIGHT" -lt 100 ]; then
-    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --light --skip-header-proof
+    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --light ${COMMON_ARGS}
   else
-    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --skip-bitcoin-setup --light --skip-header-proof
+    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --skip-bitcoin-setup --light ${COMMON_ARGS}
   fi
 
   ZETAE2E_EXIT_CODE=$?

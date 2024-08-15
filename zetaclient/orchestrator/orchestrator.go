@@ -15,12 +15,12 @@ import (
 	"github.com/samber/lo"
 
 	"github.com/zeta-chain/zetacore/pkg/bg"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	zetamath "github.com/zeta-chain/zetacore/pkg/math"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	solanaobserver "github.com/zeta-chain/zetacore/zetaclient/chains/solana/observer"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
@@ -660,8 +660,13 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 // runObserverSignerSync runs a blocking ticker that observes chain changes from zetacore
 // and optionally (de)provisions respective observers and signers.
 func (oc *Orchestrator) runObserverSignerSync(ctx context.Context) error {
-	// check every other zeta block
-	const cadence = 2 * evm.ZetaBlockTime
+	// sync observers and signers right away to speed up zetaclient startup
+	if err := oc.syncObserverSigner(ctx); err != nil {
+		oc.logger.Error().Err(err).Msg("runObserverSignerSync: syncObserverSigner failed for initial sync")
+	}
+
+	// sync observer and signer every 10 blocks (approx. 1 minute)
+	const cadence = 10 * constant.ZetaBlockTime
 
 	ticker := time.NewTicker(cadence)
 	defer ticker.Stop()
