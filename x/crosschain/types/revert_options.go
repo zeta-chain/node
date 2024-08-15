@@ -68,8 +68,8 @@ func (r RevertOptions) GetEVMRevertAddress() (ethcommon.Address, bool) {
 	return addr, !crypto.IsEmptyAddress(addr)
 }
 
-// GetEVMAbortAddress returns the EVM revert address
-// if the revert address is not a valid address, it returns false
+// GetEVMAbortAddress returns the EVM abort address
+// if the abort address is not a valid address, it returns false
 func (r RevertOptions) GetEVMAbortAddress() (ethcommon.Address, bool) {
 	addr := ethcommon.HexToAddress(r.AbortAddress)
 	return addr, !crypto.IsEmptyAddress(addr)
