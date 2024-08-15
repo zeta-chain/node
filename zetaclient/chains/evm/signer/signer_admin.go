@@ -13,11 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/constant"
 )
 
-// SignAdminTx signs a transaction based on the given command includes:
-//
-//	cmd_whitelist_erc20
-//	cmd_migrate_erc20_custody_funds
-//	cmd_migrate_tss_funds
+// SignAdminTx signs a admin cmd transaction based on the given command
 func (signer *Signer) SignAdminTx(
 	ctx context.Context,
 	txData *OutboundData,
@@ -29,6 +25,8 @@ func (signer *Signer) SignAdminTx(
 		return signer.signWhitelistERC20Cmd(ctx, txData, params)
 	case constant.CmdMigrateERC20CustodyFunds:
 		return signer.signMigrateERC20CustodyFundsCmd(ctx, txData, params)
+	case constant.CmdUpdateERC20CustodyPauseStatus:
+		return signer.signUpdateERC20CustodyPauseStatusCmd(ctx, txData, params)
 	case constant.CmdMigrateTssFunds:
 		return signer.signMigrateTssFundsCmd(ctx, txData)
 	}
@@ -106,6 +104,50 @@ func (signer *Signer) signMigrateERC20CustodyFundsCmd(
 	)
 	if err != nil {
 		return nil, fmt.Errorf("signMigrateERC20CustodyFundsCmd error: %w", err)
+	}
+	return tx, nil
+}
+
+// signUpdateERC20CustodyPauseStatusCmd signs a update ERC20 custody pause status command
+func (signer *Signer) signUpdateERC20CustodyPauseStatusCmd(
+	ctx context.Context,
+	txData *OutboundData,
+	params string,
+) (*ethtypes.Transaction, error) {
+	custodyAbi, err := erc20custody.ERC20CustodyMetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	// select the action
+	// NOTE: we could directly do Pack(params)
+	// having this logic here is more explicit and restrict the possible values
+	var functionName string
+	switch params {
+	case constant.OptionPause:
+		functionName = "pause"
+	case constant.OptionUnpause:
+		functionName = "unpause"
+	default:
+		return nil, fmt.Errorf("signUpdateERC20CustodyPauseStatusCmd: invalid params %s", params)
+	}
+
+	data, err := custodyAbi.Pack(functionName)
+	if err != nil {
+		return nil, fmt.Errorf("pause/unpause pack error: %w", err)
+	}
+
+	tx, _, _, err := signer.Sign(
+		ctx,
+		data,
+		txData.to,
+		zeroValue,
+		txData.gas,
+		txData.outboundParams.TssNonce,
+		txData.height,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("signUpdateERC20CustodyPauseStatusCmd error: %w", err)
 	}
 	return tx, nil
 }
