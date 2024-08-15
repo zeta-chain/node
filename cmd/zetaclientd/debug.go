@@ -80,7 +80,7 @@ func debugCmd(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	appContext := zctx.New(cfg, zerolog.Nop())
+	appContext := zctx.New(cfg, nil, zerolog.Nop())
 	ctx := zctx.WithAppContext(context.Background(), appContext)
 
 	if err := client.UpdateAppContext(ctx, appContext, zerolog.Nop()); err != nil {

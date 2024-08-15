@@ -8,6 +8,7 @@
 * [2597](https://github.com/zeta-chain/node/pull/2597) - Add generic rpc metrics to zetaclient
 * [2634](https://github.com/zeta-chain/node/pull/2634) - add support for EIP-1559 gas fees
 * [2628](https://github.com/zeta-chain/node/pull/2628) - avoid submitting invalid hashes to outbound tracker
+* [2673](https://github.com/zeta-chain/node/pull/2673) - add relayer key importer, encryption and decryption
 
 
 ## v19.0.1

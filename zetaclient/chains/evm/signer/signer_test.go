@@ -589,7 +589,7 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 	})
 }
 func makeCtx(t *testing.T) context.Context {
-	app := zctx.New(config.New(false), zerolog.Nop())
+	app := zctx.New(config.New(false), nil, zerolog.Nop())
 
 	bscParams := mocks.MockChainParams(chains.BscMainnet.ChainId, 10)
 

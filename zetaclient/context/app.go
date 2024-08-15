@@ -19,25 +19,34 @@ import (
 
 // AppContext represents application (zetaclient) context.
 type AppContext struct {
+	// config is the config of the app
 	config config.Config
+
+	// logger is the logger of the app
 	logger zerolog.Logger
 
+	// chainRegistry is a registry of supported chains
 	chainRegistry *ChainRegistry
 
+	// currentTssPubKey is the current tss pubKey
 	currentTssPubKey string
-	crosschainFlags  observertypes.CrosschainFlags
-	keygen           observertypes.Keygen
+
+	// crosschainFlags is the current crosschain flags state
+	crosschainFlags observertypes.CrosschainFlags
+
+	// keygen is the current tss keygen state
+	keygen observertypes.Keygen
 
 	mu sync.RWMutex
 }
 
 // New creates and returns new empty AppContext
-func New(cfg config.Config, logger zerolog.Logger) *AppContext {
+func New(cfg config.Config, relayerKeyPasswords map[string]string, logger zerolog.Logger) *AppContext {
 	return &AppContext{
 		config: cfg,
 		logger: logger.With().Str("module", "appcontext").Logger(),
 
-		chainRegistry: NewChainRegistry(),
+		chainRegistry: NewChainRegistry(relayerKeyPasswords),
 
 		crosschainFlags:  observertypes.CrosschainFlags{},
 		currentTssPubKey: "",
