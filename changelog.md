@@ -12,7 +12,6 @@
 * [2538](https://github.com/zeta-chain/node/pull/2538) - add background worker routines to shutdown zetaclientd when needed for tss migration
 * [2644](https://github.com/zeta-chain/node/pull/2644) - add created_timestamp to cctx status
 
-
 ### Refactor
 
 * [2615](https://github.com/zeta-chain/node/pull/2615) - Refactor cleanup of outbound trackers
