@@ -266,7 +266,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 	}
 
 	// #nosec G115 always positive
-	event, err := GetBtcEvent(
+	event, err := GetBtcEventWithWitness(
 		ob.btcClient,
 		*tx,
 		tss,
@@ -328,7 +328,7 @@ func FilterAndParseIncomingTx(
 			continue // the first tx is coinbase; we do not process coinbase tx
 		}
 
-		inbound, err := GetBtcEvent(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
+		inbound, err := GetBtcEventWithWitness(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
 		if err != nil {
 			// unable to parse the tx, the caller should retry
 			return nil, errors.Wrapf(err, "error getting btc event for tx %s in block %d", tx.Txid, blockNumber)

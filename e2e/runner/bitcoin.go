@@ -2,7 +2,9 @@ package runner
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
+	"net/http"
 	"sort"
 	"time"
 
@@ -177,8 +179,16 @@ func (r *E2ERunner) SendToTSSFromDeployerWithMemo(
 	inputUTXOs []btcjson.ListUnspentResult,
 	memo []byte,
 ) (*chainhash.Hash, error) {
+	return r.sendToTSSFromDeployerWithMemo(amount, r.BTCTSSAddress, inputUTXOs, memo)
+}
+
+func (r *E2ERunner) sendToTSSFromDeployerWithMemo(
+	amount float64,
+	to btcutil.Address,
+	inputUTXOs []btcjson.ListUnspentResult,
+	memo []byte,
+) (*chainhash.Hash, error) {
 	btcRPC := r.BtcRPCClient
-	to := r.BTCTSSAddress
 	btcDeployerAddress := r.BTCDeployerAddress
 	require.NotNil(r, r.BTCDeployerAddress, "btcDeployerAddress is nil")
 
@@ -283,6 +293,49 @@ func (r *E2ERunner) SendToTSSFromDeployerWithMemo(
 		r.Logger.Info("  Amount: %f", event.Value)
 		r.Logger.Info("  Memo: %x", event.MemoBytes)
 	}
+	return txid, nil
+}
+
+func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
+	amount float64,
+	inputUTXOs []btcjson.ListUnspentResult,
+	memo []byte,
+) (*chainhash.Hash, error) {
+	builder := InscriptionBuilder{sidecarUrl: "http://localhost:8000", client: http.Client{}}
+
+	address, err := builder.GenerateCommitAddress(memo)
+	if err != nil {
+		return nil, err
+	}
+
+	txnHash, err := r.sendToTSSFromDeployerWithMemo(amount, address, inputUTXOs, memo)
+	if err != nil {
+		return nil, err
+	}
+
+	// sendToTSSFromDeployerWithMemo makes sure index is 0
+	outpointIdx := 0
+	hexTx, err := builder.GenerateRevealTxn(txnHash.String(), outpointIdx, amount)
+	if err != nil {
+		return nil, err
+	}
+
+	// Decode the hex string into raw bytes
+	rawTxBytes, err := hex.DecodeString(hexTx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Deserialize the raw bytes into a wire.MsgTx structure
+	msgTx := wire.NewMsgTx(wire.TxVersion)
+	if err = msgTx.Deserialize(bytes.NewReader(rawTxBytes)); err != nil {
+		return nil, err
+	}
+
+	txid, err := r.BtcRPCClient.SendRawTransaction(msgTx, true)
+	require.NoError(r, err)
+	r.Logger.Info("txid: %+v", txid)
+
 	return txid, nil
 }
 
