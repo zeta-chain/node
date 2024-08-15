@@ -37,24 +37,20 @@ type AppContext struct {
 	// keygen is the current tss keygen state
 	keygen observertypes.Keygen
 
-	// relayerKeyPasswords maps network name to relayer key password
-	relayerKeyPasswords map[string]string
-
 	mu sync.RWMutex
 }
 
 // New creates and returns new empty AppContext
-func New(cfg config.Config, logger zerolog.Logger) *AppContext {
+func New(cfg config.Config, relayerKeyPasswords map[string]string, logger zerolog.Logger) *AppContext {
 	return &AppContext{
 		config: cfg,
 		logger: logger.With().Str("module", "appcontext").Logger(),
 
-		chainRegistry: NewChainRegistry(),
+		chainRegistry: NewChainRegistry(relayerKeyPasswords),
 
-		crosschainFlags:     observertypes.CrosschainFlags{},
-		currentTssPubKey:    "",
-		keygen:              observertypes.Keygen{},
-		relayerKeyPasswords: make(map[string]string),
+		crosschainFlags:  observertypes.CrosschainFlags{},
+		currentTssPubKey: "",
+		keygen:           observertypes.Keygen{},
 
 		mu: sync.RWMutex{},
 	}
@@ -138,22 +134,6 @@ func (a *AppContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 	defer a.mu.RUnlock()
 
 	return a.crosschainFlags
-}
-
-// SetRelayerKeyPasswords sets the relayer key passwords for given networks
-func (a *AppContext) SetRelayerKeyPasswords(relayerKeyPasswords map[string]string) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-
-	a.relayerKeyPasswords = relayerKeyPasswords
-}
-
-// GetRelayerKeyPassword returns the relayer key password for the given network
-func (a *AppContext) GetRelayerKeyPassword(networkName string) string {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-
-	return a.relayerKeyPasswords[networkName]
 }
 
 // Update updates AppContext and params for all chains

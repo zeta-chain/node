@@ -35,7 +35,7 @@ func TestChainRegistry(t *testing.T) {
 
 	t.Run("Sample Flow", func(t *testing.T) {
 		// Given registry
-		r := NewChainRegistry()
+		r := NewChainRegistry(nil)
 
 		// With some chains added
 		require.NoError(t, r.Set(btc.ChainId, btc, btcParams))

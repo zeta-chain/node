@@ -83,8 +83,7 @@ func start(_ *cobra.Command, _ []string) error {
 	masterLogger := logger.Std
 	startLogger := logger.Std.With().Str("module", "startup").Logger()
 
-	appContext := zctx.New(cfg, masterLogger)
-	appContext.SetRelayerKeyPasswords(relayerKeyPasswords)
+	appContext := zctx.New(cfg, relayerKeyPasswords, masterLogger)
 	ctx := zctx.WithAppContext(context.Background(), appContext)
 
 	// Wait until zetacore is up
