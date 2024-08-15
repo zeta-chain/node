@@ -12,13 +12,14 @@ import (
 )
 
 func TestExtractBitcoinInscriptionMemo(r *runner.E2ERunner, args []string) {
-	r.Logger.Info("Testing extract memo from btc inscription")
+	r.Logger.Print("Testing extract memo from btc inscription")
 
 	r.SetBtcAddress(r.Name, false)
 
 	// obtain some initial fund
 	stop := r.MineBlocksIfLocalBitcoin()
 	defer stop()
+	r.Logger.Print("Mined blocks")
 
 	// list deployer utxos
 	utxos, err := r.ListDeployerUTXOs()
