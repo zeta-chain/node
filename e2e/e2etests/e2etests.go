@@ -54,9 +54,10 @@ const (
 	/*
 	 Solana tests
 	*/
-	TestSolanaDepositName        = "solana_deposit"
-	TestSolanaWithdrawName       = "solana_withdraw"
-	TestSolanaDepositAndCallName = "solana_deposit_and_call"
+	TestSolanaDepositName              = "solana_deposit"
+	TestSolanaWithdrawName             = "solana_withdraw"
+	TestSolanaDepositAndCallName       = "solana_deposit_and_call"
+	TestSolanaDepositAndCallRefundName = "solana_deposit_and_call_refund"
 
 	/*
 	 Bitcoin tests
@@ -357,9 +358,17 @@ var AllE2ETests = []runner.E2ETest{
 		TestSolanaDepositAndCallName,
 		"deposit SOL into ZEVM and call a contract",
 		[]runner.ArgDefinition{
-			{Description: "amount in lamport", DefaultValue: "44780000"},
+			{Description: "amount in lamport", DefaultValue: "4478000"},
 		},
 		TestSolanaDepositAndCall,
+	),
+	runner.NewE2ETest(
+		TestSolanaDepositAndCallRefundName,
+		"deposit SOL into ZEVM and call a contract that reverts; should refund",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "4477000"},
+		},
+		TestSolanaDepositAndCallRefund,
 	),
 	/*
 	 Bitcoin tests

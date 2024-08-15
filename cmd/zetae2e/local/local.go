@@ -100,8 +100,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
 	)
 
-	testSolana = true
-
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
 
 	testStartTime := time.Now()
@@ -328,6 +326,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSolanaDepositName,
 			e2etests.TestSolanaWithdrawName,
 			e2etests.TestSolanaDepositAndCallName,
+			e2etests.TestSolanaDepositAndCallRefundName,
 		}
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
 	}

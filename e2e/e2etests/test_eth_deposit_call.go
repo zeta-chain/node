@@ -90,6 +90,5 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("Cross-chain call to reverter reverted")
 
 	// check the status message contains revert error hash in case of revert
-	// 0xbfb4ebcf is the hash of "Foo()"
-	require.Contains(r, cctx.CctxStatus.StatusMessage, "0xbfb4ebcf")
+	require.Contains(r, cctx.CctxStatus.StatusMessage, utils.ErrHashRevert)
 }

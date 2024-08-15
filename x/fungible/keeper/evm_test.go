@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/big"
 	"testing"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 
+	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/server/config"
@@ -574,8 +576,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 		require.True(t, types.IsContractReverted(res, err))
 
 		// check reason is included for revert error
-		// 0xbfb4ebcf is the hash of "Foo()"
-		require.ErrorContains(t, err, "reason: 0xbfb4ebcf")
+		require.ErrorContains(t, err, fmt.Sprintf("reason: %s", utils.ErrHashRevert))
 
 		res, err = k.CallEVM(
 			ctx,

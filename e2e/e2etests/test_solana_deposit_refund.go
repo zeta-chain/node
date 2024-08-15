@@ -12,19 +12,20 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-// TestSolanaDepositAndCall tests deposit of lamports calling a example contract
-func TestSolanaDepositAndCall(r *runner.E2ERunner, args []string) {
+// TestSolanaDepositAndCallRefund tests deposit of lamports calling a example contract
+func TestSolanaDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// parse deposit amount (in lamports)
 	// #nosec G115 e2e - always in range
 	depositAmount := big.NewInt(int64(parseInt(r, args[0])))
 
-	// deploy an example contract in ZEVM
-	contractAddr, _, contract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)
+	// deploy a reverter contract in ZEVM
+	r.Logger.Info("Deploying reverter contract")
+	reverterAddr, _, _, err := testcontract.DeployReverter(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
 
-	r.Logger.Info("Example contract deployed at: %s", contractAddr.String())
+	r.Logger.Info("Reverter contract deployed at: %s", reverterAddr.String())
 
 	// ---------------------------------------- execute the deposit transaction ----------------------------------------
 	// load deployer private key
@@ -32,8 +33,8 @@ func TestSolanaDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	// create 'deposit' instruction
-	data := []byte("hello lamports")
-	instruction := r.CreateDepositInstruction(privkey.PublicKey(), contractAddr, data, depositAmount.Uint64())
+	data := []byte("hello reverter")
+	instruction := r.CreateDepositInstruction(privkey.PublicKey(), reverterAddr, data, depositAmount.Uint64())
 
 	// create and sign the transaction
 	signedTx := r.CreateSignedTransaction([]solana.Instruction{instruction}, privkey)
@@ -42,12 +43,12 @@ func TestSolanaDepositAndCall(r *runner.E2ERunner, args []string) {
 	sig, out := r.BroadcastTxSync(signedTx)
 	r.Logger.Info("deposit logs: %v", out.Meta.LogMessages)
 
-	// ---------------------------------------- verify the cross-chain call --------------------------------------------
+	// ---------------------------------------- verify the cross-chain revert --------------------------------------------
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
+	r.Logger.Info("cross-chain call reverted: %v", cctx.CctxStatus.StatusMessage)
 
-	// check if example contract has been called, bar value should be set to amount
-	utils.MustHaveCalledExampleContract(r, contract, depositAmount)
-	r.Logger.Info("cross-chain call succeeded")
+	// check the status message contains revert error hash in case of revert
+	require.Contains(r, cctx.CctxStatus.StatusMessage, utils.ErrHashRevert)
 }

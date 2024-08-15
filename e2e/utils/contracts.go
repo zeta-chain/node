@@ -9,6 +9,11 @@ import (
 	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
 )
 
+const (
+	// ErrHashRevert is the keccak256 hash of custom error "Foo()" on reverter contract
+	ErrHashRevert = "0xbfb4ebcf"
+)
+
 // MustHaveCalledExampleContract checks if the contract has been called correctly
 func MustHaveCalledExampleContract(
 	t require.TestingT,
