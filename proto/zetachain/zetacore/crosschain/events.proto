@@ -75,3 +75,9 @@ message EventERC20CustodyFundsMigration {
   string amount = 3;
   string cctx_index = 4;
 }
+
+message EventERC20CustodyPausing {
+  int64 chain_id = 1;
+  bool pause = 2;
+  string cctx_index = 3;
+}

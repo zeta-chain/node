@@ -286,3 +286,15 @@ message MsgMigrateERC20CustodyFunds {
 }
 ```
 
+## MsgUpdateERC20CustodyPauseStatus
+
+UpdateERC20CustodyPauseStatus creates a admin cmd cctx to update the pause status of the ERC20 custody contract
+
+```proto
+message MsgUpdateERC20CustodyPauseStatus {
+	string creator = 1;
+	int64 chain_id = 2;
+	bool pause = 3;
+}
+```
+
