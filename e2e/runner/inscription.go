@@ -59,16 +59,12 @@ func (r *InscriptionBuilder) GenerateCommitAddress(memo []byte) (string, error) 
 	defer resp.Body.Close()
 
 	// Read the response body
-	body, err := io.ReadAll(resp.Body)
+	var response commitResponse
+	err := json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
-		return "", errors.Wrap(err, "cannot read commit response body")
+		return "", err
 	}
 
-	// Parse the JSON response
-	var response commitResponse
-	if err := json.Unmarshal(body, &response); err != nil {
-		return "", errors.Wrap(err, "cannot parse commit response body")
-	}
 	fmt.Print("raw commit response", response)
 
 	return response.Address, nil
