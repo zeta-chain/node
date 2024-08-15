@@ -92,16 +92,18 @@ echo "funding migration tester address ${address} with 10000 Ether"
 geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock local solana relayer accounts
-solana_url=$(yq -r '.rpcs.solana' config.yml)
-solana config set --url "$solana_url" > /dev/null
+if host solana > /dev/null; then
+  solana_url=$(yq -r '.rpcs.solana' config.yml)
+  solana config set --url "$solana_url" > /dev/null
 
-relayer=$(yq -r '.observer_relayer_accounts.relayer_accounts[0].solana_address' config.yml)
-echo "funding solana relayer address ${relayer} with 100 SOL"
-solana airdrop 100 "$relayer" > /dev/null
+  relayer=$(yq -r '.observer_relayer_accounts.relayer_accounts[0].solana_address' config.yml)
+  echo "funding solana relayer address ${relayer} with 100 SOL"
+  solana airdrop 100 "$relayer" > /dev/null
 
-relayer=$(yq -r '.observer_relayer_accounts.relayer_accounts[1].solana_address' config.yml)
-echo "funding solana relayer address ${relayer} with 100 SOL"
-solana airdrop 100 "$relayer" > /dev/null
+  relayer=$(yq -r '.observer_relayer_accounts.relayer_accounts[1].solana_address' config.yml)
+  echo "funding solana relayer address ${relayer} with 100 SOL"
+  solana airdrop 100 "$relayer" > /dev/null
+fi
 
 ### Run zetae2e command depending on the option passed
 
