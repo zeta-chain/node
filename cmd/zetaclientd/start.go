@@ -58,8 +58,8 @@ func start(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "unable to get passwords")
 	}
 	hotkeyPass, tssKeyPass, solanaKeyPass := passwords[0], passwords[1], passwords[2]
-	relayerKeyPasswords := map[chains.Network]string{
-		chains.Network_solana: solanaKeyPass,
+	relayerKeyPasswords := map[string]string{
+		chains.Network_solana.String(): solanaKeyPass,
 	}
 
 	//Load Config file given path

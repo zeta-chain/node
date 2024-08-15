@@ -166,7 +166,7 @@ func syncSignerMap(
 			}
 
 			// try loading Solana relayer key if present
-			password := app.GetRelayerKeyPassword(rawChain.Network)
+			password := app.GetRelayerKeyPassword(rawChain.Network.String())
 			relayerKey, err := keys.LoadRelayerKey(app.Config().GetRelayerKeyPath(), rawChain.Network, password)
 			if err != nil {
 				logger.Std.Error().Err(err).Msg("Unable to load Solana relayer key")

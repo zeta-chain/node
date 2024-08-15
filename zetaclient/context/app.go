@@ -37,8 +37,8 @@ type AppContext struct {
 	// keygen is the current tss keygen state
 	keygen observertypes.Keygen
 
-	// relayerKeyPasswords maps network id to relayer key password
-	relayerKeyPasswords map[chains.Network]string
+	// relayerKeyPasswords maps network name to relayer key password
+	relayerKeyPasswords map[string]string
 
 	mu sync.RWMutex
 }
@@ -54,7 +54,7 @@ func New(cfg config.Config, logger zerolog.Logger) *AppContext {
 		crosschainFlags:     observertypes.CrosschainFlags{},
 		currentTssPubKey:    "",
 		keygen:              observertypes.Keygen{},
-		relayerKeyPasswords: make(map[chains.Network]string),
+		relayerKeyPasswords: make(map[string]string),
 
 		mu: sync.RWMutex{},
 	}
@@ -141,7 +141,7 @@ func (a *AppContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 }
 
 // SetRelayerKeyPasswords sets the relayer key passwords for given networks
-func (a *AppContext) SetRelayerKeyPasswords(relayerKeyPasswords map[chains.Network]string) {
+func (a *AppContext) SetRelayerKeyPasswords(relayerKeyPasswords map[string]string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -149,11 +149,11 @@ func (a *AppContext) SetRelayerKeyPasswords(relayerKeyPasswords map[chains.Netwo
 }
 
 // GetRelayerKeyPassword returns the relayer key password for the given network
-func (a *AppContext) GetRelayerKeyPassword(network chains.Network) string {
+func (a *AppContext) GetRelayerKeyPassword(networkName string) string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 
-	return a.relayerKeyPasswords[network]
+	return a.relayerKeyPasswords[networkName]
 }
 
 // Update updates AppContext and params for all chains
