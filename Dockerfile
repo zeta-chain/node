@@ -1,5 +1,5 @@
 # Build Stage
-FROM golang:1.22.2-alpine3.18 AS builder
+FROM ghcr.io/zeta-chain/golang:1.22.5-bookworm AS builder
 
 ENV GOPATH /go
 ENV GOOS=linux
