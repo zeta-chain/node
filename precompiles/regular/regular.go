@@ -28,7 +28,7 @@ const (
 
 var (
 	ABI                 abi.ABI
-	ContractAddress     = common.BytesToAddress([]byte{101})
+	ContractAddress     = common.HexToAddress("0x0000000000000000000000000000000000000065")
 	GasRequiredByMethod = map[[4]byte]uint64{}
 	ExampleABI          *abi.ABI
 )
