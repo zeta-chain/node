@@ -22,6 +22,17 @@ func RequireCCTXStatus(
 	require.Equal(t, expected, cctx.CctxStatus.Status, msg+errSuffix(msgAndArgs...))
 }
 
+func ContainsStringInCCTXStatusMessage(
+	t require.TestingT,
+	cctx *crosschaintypes.CrossChainTx,
+	expected string,
+	msgAndArgs ...any) {
+	msg := fmt.Sprintf("cctx status message does not contain %s cctx index %s", expected, cctx.Index)
+
+	require.NotNil(t, cctx.CctxStatus)
+	require.Contains(t, cctx.CctxStatus.StatusMessage, expected, msg+errSuffix(msgAndArgs...))
+}
+
 // RequireTxSuccessful checks if the receipt status is successful.
 // Currently, it accepts eth receipt, but we can make this more generic by using type assertion.
 func RequireTxSuccessful(t require.TestingT, receipt *ethtypes.Receipt, msgAndArgs ...any) {

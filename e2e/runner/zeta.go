@@ -95,11 +95,11 @@ func (r *E2ERunner) DepositZeta() ethcommon.Hash {
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(100)) // 100 Zeta
 
-	return r.DepositZetaWithAmount(r.EVMAddress(), amount)
+	return r.DepositZetaWithAmount(r.EVMAddress().Bytes(), amount)
 }
 
 // DepositZetaWithAmount deposits ZETA on ZetaChain from the ZETA smart contract on EVM with the specified amount
-func (r *E2ERunner) DepositZetaWithAmount(to ethcommon.Address, amount *big.Int) ethcommon.Hash {
+func (r *E2ERunner) DepositZetaWithAmount(to []byte, amount *big.Int) ethcommon.Hash {
 	tx, err := r.ZetaEth.Approve(r.EVMAuth, r.ConnectorEthAddr, amount)
 	require.NoError(r, err)
 
@@ -117,55 +117,7 @@ func (r *E2ERunner) DepositZetaWithAmount(to ethcommon.Address, amount *big.Int)
 		// TODO: allow user to specify destination chain id
 		// https://github.com/zeta-chain/node-private/issues/41
 		DestinationChainId:  zetaChainID,
-		DestinationAddress:  to.Bytes(),
-		DestinationGasLimit: big.NewInt(250_000),
-		Message:             nil,
-		ZetaValueAndGas:     amount,
-		ZetaParams:          nil,
-	})
-	require.NoError(r, err)
-
-	r.Logger.Info("Send tx hash: %s", tx.Hash().Hex())
-
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	r.Logger.EVMReceipt(*receipt, "send")
-	r.requireTxSuccessful(receipt, "send tx failed")
-
-	r.Logger.Info("  Logs:")
-	for _, log := range receipt.Logs {
-		sentLog, err := r.ConnectorEth.ParseZetaSent(*log)
-		if err == nil {
-			r.Logger.Info("    Connector: %s", r.ConnectorEthAddr.String())
-			r.Logger.Info("    Dest Addr: %s", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
-			r.Logger.Info("    Dest Chain: %d", sentLog.DestinationChainId)
-			r.Logger.Info("    Dest Gas: %d", sentLog.DestinationGasLimit)
-			r.Logger.Info("    Zeta Value: %d", sentLog.ZetaValueAndGas)
-			r.Logger.Info("    Block Num: %d", log.BlockNumber)
-		}
-	}
-
-	return tx.Hash()
-}
-
-func (r *E2ERunner) DepositZetaWithAmountToInvalidAddress(to ethcommon.Address, amount *big.Int) ethcommon.Hash {
-	tx, err := r.ZetaEth.Approve(r.EVMAuth, r.ConnectorEthAddr, amount)
-	require.NoError(r, err)
-
-	r.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
-
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-	r.Logger.EVMReceipt(*receipt, "approve")
-	r.requireTxSuccessful(receipt, "approve tx failed")
-
-	// query the chain ID using zevm client
-	zetaChainID, err := r.ZEVMClient.ChainID(r.Ctx)
-	require.NoError(r, err)
-
-	tx, err = r.ConnectorEth.Send(r.EVMAuth, zetaconnectoreth.ZetaInterfacesSendInput{
-		// TODO: allow user to specify destination chain id
-		// https://github.com/zeta-chain/node-private/issues/41
-		DestinationChainId:  zetaChainID,
-		DestinationAddress:  []byte("invalid"),
+		DestinationAddress:  to,
 		DestinationGasLimit: big.NewInt(250_000),
 		Message:             nil,
 		ZetaValueAndGas:     amount,

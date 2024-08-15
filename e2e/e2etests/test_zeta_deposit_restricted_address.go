@@ -17,5 +17,5 @@ func TestZetaDepositRestricted(r *runner.E2ERunner, args []string) {
 	require.True(r, ok, "Invalid amount specified for TestZetaDepositRestricted.")
 
 	// Deposit amount to restricted address
-	r.DepositZetaWithAmount(ethcommon.HexToAddress(testutils.RestrictedEVMAddressTest), amount)
+	r.DepositZetaWithAmount(ethcommon.HexToAddress(testutils.RestrictedEVMAddressTest).Bytes(), amount)
 }

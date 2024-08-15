@@ -38,7 +38,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// deposit most of the ZETA supply on ZetaChain
 	zetaAmount := big.NewInt(1e18)
 	zetaAmount = zetaAmount.Mul(zetaAmount, big.NewInt(20_000_000_000)) // 20B Zeta
-	r.DepositZetaWithAmount(r.EVMAddress(), zetaAmount)
+	r.DepositZetaWithAmount(r.EVMAddress().Bytes(), zetaAmount)
 
 	// do an ethers withdraw on the previous chain (0.01eth) for some interaction
 	TestEtherWithdraw(r, []string{"10000000000000000"})

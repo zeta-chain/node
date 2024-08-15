@@ -136,7 +136,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestZetaDepositInvalidAddressName,
 		"deposit ZETA from Ethereum to ZEVM but use invalid address",
 		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
+			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
 		},
 		TestZetaDepositToInvalidAddress,
 	),

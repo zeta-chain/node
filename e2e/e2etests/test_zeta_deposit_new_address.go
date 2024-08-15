@@ -17,7 +17,7 @@ func TestZetaDepositNewAddress(r *runner.E2ERunner, args []string) {
 	require.True(r, ok)
 
 	newAddress := sample.EthAddress()
-	hash := r.DepositZetaWithAmount(newAddress, amount)
+	hash := r.DepositZetaWithAmount(newAddress.Bytes(), amount)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
