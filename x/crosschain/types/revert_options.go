@@ -1,6 +1,7 @@
 package types
 
 import (
+	sdkmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
@@ -10,21 +11,33 @@ import (
 
 // NewRevertOptionsFromZEVM initializes a new RevertOptions from a gatewayzevm.RevertOptions
 func NewRevertOptionsFromZEVM(revertOptions gatewayzevm.RevertOptions) RevertOptions {
+	revertGasLimit := sdkmath.ZeroUint()
+	if revertOptions.OnRevertGasLimit != nil {
+		revertGasLimit = sdkmath.NewUintFromBigInt(revertOptions.OnRevertGasLimit)
+	}
+
 	return RevertOptions{
-		RevertAddress: revertOptions.RevertAddress.Hex(),
-		CallOnRevert:  revertOptions.CallOnRevert,
-		AbortAddress:  revertOptions.AbortAddress.Hex(),
-		RevertMessage: revertOptions.RevertMessage,
+		RevertAddress:  revertOptions.RevertAddress.Hex(),
+		CallOnRevert:   revertOptions.CallOnRevert,
+		AbortAddress:   revertOptions.AbortAddress.Hex(),
+		RevertMessage:  revertOptions.RevertMessage,
+		RevertGasLimit: revertGasLimit,
 	}
 }
 
 // NewRevertOptionsFromEVM initializes a new RevertOptions from a gatewayevm.RevertOptions
 func NewRevertOptionsFromEVM(revertOptions gatewayevm.RevertOptions) RevertOptions {
+	revertGasLimit := sdkmath.ZeroUint()
+	if revertOptions.OnRevertGasLimit != nil {
+		revertGasLimit = sdkmath.NewUintFromBigInt(revertOptions.OnRevertGasLimit)
+	}
+
 	return RevertOptions{
-		RevertAddress: revertOptions.RevertAddress.Hex(),
-		CallOnRevert:  revertOptions.CallOnRevert,
-		AbortAddress:  revertOptions.AbortAddress.Hex(),
-		RevertMessage: revertOptions.RevertMessage,
+		RevertAddress:  revertOptions.RevertAddress.Hex(),
+		CallOnRevert:   revertOptions.CallOnRevert,
+		AbortAddress:   revertOptions.AbortAddress.Hex(),
+		RevertMessage:  revertOptions.RevertMessage,
+		RevertGasLimit: revertGasLimit,
 	}
 }
 

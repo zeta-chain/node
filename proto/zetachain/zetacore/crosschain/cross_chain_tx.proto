@@ -105,6 +105,10 @@ message RevertOptions {
   bool call_on_revert = 2;
   string abort_address = 3;
   bytes revert_message = 4;
+  string revert_gas_limit = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message CrossChainTx {

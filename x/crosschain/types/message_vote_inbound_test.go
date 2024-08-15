@@ -3,6 +3,7 @@ package types_test
 import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
+	"math/big"
 	"math/rand"
 	"testing"
 
@@ -61,6 +62,39 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			42,
 			types.ProtocolContractVersion_V1,
 			types.WithZEVMRevertOptions(gatewayzevm.RevertOptions{
+				RevertAddress:    revertAddress,
+				CallOnRevert:     true,
+				AbortAddress:     abortAddress,
+				RevertMessage:    revertMessage,
+				OnRevertGasLimit: big.NewInt(1000),
+			}),
+		)
+		require.EqualValues(t, types.RevertOptions{
+			RevertAddress:  revertAddress.Hex(),
+			CallOnRevert:   true,
+			AbortAddress:   abortAddress.Hex(),
+			RevertMessage:  revertMessage,
+			RevertGasLimit: math.NewUint(1000),
+		}, msg.RevertOptions)
+
+		// if revertGasLimit not specified, it should be zero
+		msg = types.NewMsgVoteInbound(
+			sample.AccAddress(),
+			sample.AccAddress(),
+			42,
+			sample.String(),
+			sample.String(),
+			42,
+			math.NewUint(42),
+			sample.String(),
+			sample.String(),
+			42,
+			42,
+			coin.CoinType_Zeta,
+			sample.String(),
+			42,
+			types.ProtocolContractVersion_V1,
+			types.WithZEVMRevertOptions(gatewayzevm.RevertOptions{
 				RevertAddress: revertAddress,
 				CallOnRevert:  true,
 				AbortAddress:  abortAddress,
@@ -68,10 +102,11 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			}),
 		)
 		require.EqualValues(t, types.RevertOptions{
-			RevertAddress: revertAddress.Hex(),
-			CallOnRevert:  true,
-			AbortAddress:  abortAddress.Hex(),
-			RevertMessage: revertMessage,
+			RevertAddress:  revertAddress.Hex(),
+			CallOnRevert:   true,
+			AbortAddress:   abortAddress.Hex(),
+			RevertMessage:  revertMessage,
+			RevertGasLimit: math.ZeroUint(),
 		}, msg.RevertOptions)
 	})
 
@@ -97,6 +132,38 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			42,
 			types.ProtocolContractVersion_V1,
 			types.WithEVMRevertOptions(gatewayevm.RevertOptions{
+				RevertAddress:    revertAddress,
+				CallOnRevert:     true,
+				AbortAddress:     abortAddress,
+				RevertMessage:    revertMessage,
+				OnRevertGasLimit: big.NewInt(1000),
+			}),
+		)
+		require.EqualValues(t, types.RevertOptions{
+			RevertAddress:  revertAddress.Hex(),
+			CallOnRevert:   true,
+			AbortAddress:   abortAddress.Hex(),
+			RevertMessage:  revertMessage,
+			RevertGasLimit: math.NewUint(1000),
+		}, msg.RevertOptions)
+
+		msg = types.NewMsgVoteInbound(
+			sample.AccAddress(),
+			sample.AccAddress(),
+			42,
+			sample.String(),
+			sample.String(),
+			42,
+			math.NewUint(42),
+			sample.String(),
+			sample.String(),
+			42,
+			42,
+			coin.CoinType_Zeta,
+			sample.String(),
+			42,
+			types.ProtocolContractVersion_V1,
+			types.WithEVMRevertOptions(gatewayevm.RevertOptions{
 				RevertAddress: revertAddress,
 				CallOnRevert:  true,
 				AbortAddress:  abortAddress,
@@ -104,10 +171,11 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			}),
 		)
 		require.EqualValues(t, types.RevertOptions{
-			RevertAddress: revertAddress.Hex(),
-			CallOnRevert:  true,
-			AbortAddress:  abortAddress.Hex(),
-			RevertMessage: revertMessage,
+			RevertAddress:  revertAddress.Hex(),
+			CallOnRevert:   true,
+			AbortAddress:   abortAddress.Hex(),
+			RevertMessage:  revertMessage,
+			RevertGasLimit: math.ZeroUint(),
 		}, msg.RevertOptions)
 	})
 }

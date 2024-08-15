@@ -46,7 +46,7 @@ func (r *E2ERunner) V2ETHDepositAndCall(
 	}()
 	r.EVMAuth.Value = amount
 
-	tx, err := r.GatewayEVM.DepositAndCall0(r.EVMAuth, receiver, payload, revertOptions)
+	tx, err := r.GatewayEVM.DepositAndCall(r.EVMAuth, receiver, payload, revertOptions)
 	require.NoError(r, err)
 
 	logDepositInfoAndWaitForTxReceipt(r, tx, "eth_deposit_and_call")
@@ -75,7 +75,7 @@ func (r *E2ERunner) V2ERC20DepositAndCall(
 	payload []byte,
 	revertOptions gatewayevm.RevertOptions,
 ) *ethtypes.Transaction {
-	tx, err := r.GatewayEVM.DepositAndCall(
+	tx, err := r.GatewayEVM.DepositAndCall0(
 		r.EVMAuth,
 		receiver,
 		amount,

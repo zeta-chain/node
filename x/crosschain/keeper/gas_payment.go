@@ -177,10 +177,9 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 	}
 
 	// with V2 protocol, reverts on connected chains can eventually call a onRevert function which can require a higher gas limit
-	// TODO: use user defined gas limit for onRevert
-	// https://github.com/zeta-chain/node/issues/2699
-	if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 && cctx.RevertOptions.CallOnRevert {
-		gas.GasLimit = math.NewUint(200000)
+	if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 && cctx.RevertOptions.CallOnRevert &&
+		!cctx.RevertOptions.RevertGasLimit.IsZero() {
+		gas.GasLimit = cctx.RevertOptions.RevertGasLimit
 	}
 
 	outTxGasFee := gas.GasLimit.Mul(gas.GasPrice).Add(gas.ProtocolFlatFee)

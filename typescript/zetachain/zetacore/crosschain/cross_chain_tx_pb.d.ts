@@ -374,6 +374,11 @@ export declare class RevertOptions extends Message<RevertOptions> {
    */
   revertMessage: Uint8Array;
 
+  /**
+   * @generated from field: string revert_gas_limit = 5;
+   */
+  revertGasLimit: string;
+
   constructor(data?: PartialMessage<RevertOptions>);
 
   static readonly runtime: typeof proto3;
