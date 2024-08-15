@@ -1,8 +1,6 @@
 package e2etests
 
-import (
-	"github.com/zeta-chain/zetacore/e2e/runner"
-)
+import "github.com/zeta-chain/zetacore/e2e/runner"
 
 // List of all e2e test names to be used in zetae2e
 const (
@@ -119,485 +117,482 @@ const (
 	TestDeploy = "deploy"
 )
 
-//// AllE2ETests is an ordered list of all e2e tests
-//var AllE2ETests = []runner.E2ETest{
-//	/*
-//	 ZETA tests
-//	*/
-//	runner.NewE2ETest(
-//		TestZetaDepositName,
-//		"deposit ZETA from Ethereum to ZEVM",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
-//		},
-//		TestZetaDeposit,
-//	),
-//	runner.NewE2ETest(
-//		TestZetaDepositNewAddressName,
-//		"deposit ZETA from Ethereum to a new ZEVM address which does not exist yet",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
-//		},
-//		TestZetaDepositNewAddress,
-//	),
-//	runner.NewE2ETest(
-//		TestZetaDepositRestrictedName,
-//		"deposit ZETA from Ethereum to ZEVM restricted address",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
-//		},
-//		TestZetaDepositRestricted,
-//	),
-//	runner.NewE2ETest(
-//		TestZetaWithdrawName,
-//		"withdraw ZETA from ZEVM to Ethereum",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
-//		},
-//		TestZetaWithdraw,
-//	),
-//	runner.NewE2ETest(
-//		TestZetaWithdrawBTCRevertName,
-//		"sending ZETA from ZEVM to Bitcoin with a message that should revert cctxs",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
-//		},
-//		TestZetaWithdrawBTCRevert,
-//	),
-//	/*
-//	 Message passing tests
-//	*/
-//	runner.NewE2ETest(
-//		TestMessagePassingExternalChainsName,
-//		"evm->evm message passing (sending ZETA only)",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
-//		},
-//		TestMessagePassingExternalChains,
-//	),
-//	runner.NewE2ETest(
-//		TestMessagePassingRevertFailExternalChainsName,
-//		"message passing with failing revert between external EVM chains",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
-//		},
-//		TestMessagePassingRevertFailExternalChains,
-//	),
-//	runner.NewE2ETest(
-//		TestMessagePassingRevertSuccessExternalChainsName,
-//		"message passing with successful revert between external EVM chains",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
-//		},
-//		TestMessagePassingRevertSuccessExternalChains,
-//	),
-//	runner.NewE2ETest(
-//		TestMessagePassingEVMtoZEVMName,
-//		"evm -> zevm message passing contract call ",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in azeta", DefaultValue: "10000000000000000009"},
-//		},
-//		TestMessagePassingEVMtoZEVM,
-//	),
-//	runner.NewE2ETest(
-//		TestMessagePassingZEVMToEVMName,
-//		"zevm -> evm message passing contract call",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in azeta", DefaultValue: "10000000000000000007"},
-//		},
-//		TestMessagePassingZEVMtoEVM,
-//	),
-//	runner.NewE2ETest(
-//		TestMessagePassingZEVMtoEVMRevertName,
-//		"zevm -> evm message passing contract call reverts",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in azeta", DefaultValue: "10000000000000000006"},
-//		},
-//		TestMessagePassingZEVMtoEVMRevert,
-//	),
-//	runner.NewE2ETest(
-//		TestMessagePassingEVMtoZEVMRevertName,
-//		"evm -> zevm message passing and revert back to evm",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in azeta", DefaultValue: "10000000000000000008"},
-//		},
-//		TestMessagePassingEVMtoZEVMRevert,
-//	),
-//	runner.NewE2ETest(
-//		TestMessagePassingZEVMtoEVMRevertFailName,
-//		"zevm -> evm message passing contract with failing revert",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in azeta", DefaultValue: "10000000000000000008"},
-//		},
-//		TestMessagePassingZEVMtoEVMRevertFail,
-//	),
-//	runner.NewE2ETest(
-//		TestMessagePassingEVMtoZEVMRevertFailName,
-//		"evm -> zevm message passing contract with failing revert",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in azeta", DefaultValue: "10000000000000000008"},
-//		},
-//		TestMessagePassingEVMtoZEVMRevertFail,
-//	),
-//
-//	/*
-//	 EVM gas tests
-//	*/
-//	runner.NewE2ETest(
-//		TestEtherDepositName,
-//		"deposit Ether into ZEVM",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in wei", DefaultValue: "10000000000000000"},
-//		},
-//		TestEtherDeposit,
-//	),
-//	runner.NewE2ETest(
-//		TestEtherWithdrawName,
-//		"withdraw Ether from ZEVM",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in wei", DefaultValue: "100000"},
-//		},
-//		TestEtherWithdraw,
-//	),
-//	runner.NewE2ETest(
-//		TestEtherWithdrawRestrictedName,
-//		"withdraw Ether from ZEVM to restricted address",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in wei", DefaultValue: "100000"},
-//		},
-//		TestEtherWithdrawRestricted,
-//	),
-//	runner.NewE2ETest(
-//		TestEtherDepositAndCallRefundName,
-//		"deposit Ether into ZEVM and call a contract that reverts; should refund",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in wei", DefaultValue: "10000000000000000000"},
-//		},
-//		TestEtherDepositAndCallRefund,
-//	),
-//	runner.NewE2ETest(
-//		TestEtherDepositAndCallName,
-//		"deposit ZRC20 into ZEVM and call a contract",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
-//		},
-//		TestEtherDepositAndCall,
-//	),
-//	/*
-//	 EVM erc20 tests
-//	*/
-//	runner.NewE2ETest(
-//		TestERC20WithdrawName,
-//		"withdraw ERC20 from ZEVM",
-//		[]runner.ArgDefinition{
-//			{Description: "amount", DefaultValue: "1000"},
-//		},
-//		TestERC20Withdraw,
-//	),
-//	runner.NewE2ETest(
-//		TestERC20DepositName,
-//		"deposit ERC20 into ZEVM",
-//		[]runner.ArgDefinition{
-//			{Description: "amount", DefaultValue: "100000"},
-//		},
-//		TestERC20Deposit,
-//	),
-//	runner.NewE2ETest(
-//		TestMultipleERC20DepositName,
-//		"deposit ERC20 into ZEVM in multiple deposits",
-//		[]runner.ArgDefinition{
-//			{Description: "amount", DefaultValue: "1000000000"},
-//			{Description: "count", DefaultValue: "3"},
-//		},
-//		TestMultipleERC20Deposit,
-//	),
-//	runner.NewE2ETest(
-//		TestMultipleERC20WithdrawsName,
-//		"withdraw ERC20 from ZEVM in multiple withdrawals",
-//		[]runner.ArgDefinition{
-//			{Description: "amount", DefaultValue: "100"},
-//			{Description: "count", DefaultValue: "3"},
-//		},
-//		TestMultipleERC20Withdraws,
-//	),
-//	runner.NewE2ETest(
-//		TestERC20DepositRestrictedName,
-//		"deposit ERC20 into ZEVM restricted address",
-//		[]runner.ArgDefinition{
-//			{Description: "amount", DefaultValue: "100000"},
-//		},
-//		TestERC20DepositRestricted,
-//	),
-//	runner.NewE2ETest(
-//		TestERC20DepositAndCallRefundName,
-//		"deposit a non-gas ZRC20 into ZEVM and call a contract that reverts",
-//		[]runner.ArgDefinition{},
-//		TestERC20DepositAndCallRefund,
-//	),
-//	/*
-//	 Solana tests
-//	*/
-//	runner.NewE2ETest(
-//		TestSolanaDepositName,
-//		"deposit SOL into ZEVM",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in lamport", DefaultValue: "13370000"},
-//		},
-//		TestSolanaDeposit,
-//	),
-//	runner.NewE2ETest(
-//		TestSolanaWithdrawName,
-//		"withdraw SOL from ZEVM",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in lamport", DefaultValue: "1336000"},
-//		},
-//		TestSolanaWithdraw,
-//	),
-//	/*
-//	 Bitcoin tests
-//	*/
-//	runner.NewE2ETest(
-//		TestBitcoinDepositName,
-//		"deposit Bitcoin into ZEVM",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in btc", DefaultValue: "0.001"},
-//		},
-//		TestBitcoinDeposit,
-//	),
-//	runner.NewE2ETest(
-//		TestBitcoinDepositRefundName,
-//		"deposit Bitcoin into ZEVM; expect refund", []runner.ArgDefinition{
-//			{Description: "amount in btc", DefaultValue: "0.1"},
-//		},
-//		TestBitcoinDepositRefund,
-//	),
-//	runner.NewE2ETest(
-//		TestBitcoinWithdrawSegWitName,
-//		"withdraw BTC from ZEVM to a SegWit address",
-//		[]runner.ArgDefinition{
-//			{Description: "receiver address", DefaultValue: ""},
-//			{Description: "amount in btc", DefaultValue: "0.001"},
-//		},
-//		TestBitcoinWithdrawSegWit,
-//	),
-//	runner.NewE2ETest(
-//		TestBitcoinWithdrawTaprootName,
-//		"withdraw BTC from ZEVM to a Taproot address",
-//		[]runner.ArgDefinition{
-//			{Description: "receiver address", DefaultValue: ""},
-//			{Description: "amount in btc", DefaultValue: "0.001"},
-//		},
-//		TestBitcoinWithdrawTaproot,
-//	),
-//	runner.NewE2ETest(
-//		TestBitcoinWithdrawLegacyName,
-//		"withdraw BTC from ZEVM to a legacy address",
-//		[]runner.ArgDefinition{
-//			{Description: "receiver address", DefaultValue: ""},
-//			{Description: "amount in btc", DefaultValue: "0.001"},
-//		},
-//		TestBitcoinWithdrawLegacy,
-//	),
-//	runner.NewE2ETest(
-//		TestBitcoinWithdrawMultipleName,
-//		"withdraw BTC from ZEVM multiple times",
-//		[]runner.ArgDefinition{
-//			{Description: "amount", DefaultValue: "0.01"},
-//			{Description: "times", DefaultValue: "2"},
-//		},
-//		WithdrawBitcoinMultipleTimes,
-//	),
-//	runner.NewE2ETest(
-//		TestBitcoinWithdrawP2WSHName,
-//		"withdraw BTC from ZEVM to a P2WSH address",
-//		[]runner.ArgDefinition{
-//			{Description: "receiver address", DefaultValue: ""},
-//			{Description: "amount in btc", DefaultValue: "0.001"},
-//		},
-//		TestBitcoinWithdrawP2WSH,
-//	),
-//	runner.NewE2ETest(
-//		TestBitcoinWithdrawP2SHName,
-//		"withdraw BTC from ZEVM to a P2SH address",
-//		[]runner.ArgDefinition{
-//			{Description: "receiver address", DefaultValue: ""},
-//			{Description: "amount in btc", DefaultValue: "0.001"},
-//		},
-//		TestBitcoinWithdrawP2SH,
-//	),
-//	runner.NewE2ETest(
-//		TestBitcoinWithdrawInvalidAddressName,
-//		"withdraw BTC from ZEVM to an unsupported btc address",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in btc", DefaultValue: "0.00001"},
-//		},
-//		TestBitcoinWithdrawToInvalidAddress,
-//	),
-//	runner.NewE2ETest(
-//		TestBitcoinWithdrawRestrictedName,
-//		"withdraw Bitcoin from ZEVM to restricted address",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in btc", DefaultValue: "0.001"},
-//		},
-//		TestBitcoinWithdrawRestricted,
-//	),
-//	/*
-//	 Application tests
-//	*/
-//	runner.NewE2ETest(
-//		TestZRC20SwapName,
-//		"swap ZRC20 ERC20 for ZRC20 ETH",
-//		[]runner.ArgDefinition{},
-//		TestZRC20Swap,
-//	),
-//	runner.NewE2ETest(
-//		TestCrosschainSwapName,
-//		"testing Bitcoin ERC20 cross-chain swap",
-//		[]runner.ArgDefinition{},
-//		TestCrosschainSwap,
-//	),
-//	/*
-//	 Miscellaneous tests
-//	*/
-//	runner.NewE2ETest(
-//		TestContextUpgradeName,
-//		"tests sending ETH on ZEVM and check context data using ContextApp",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in wei", DefaultValue: "1000000000000000"},
-//		},
-//		TestContextUpgrade,
-//	),
-//	runner.NewE2ETest(
-//		TestMyTestName,
-//		"performing custom test",
-//		[]runner.ArgDefinition{},
-//		TestMyTest,
-//	),
-//	runner.NewE2ETest(
-//		TestDonationEtherName,
-//		"donate Ether to the TSS",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in wei", DefaultValue: "100000000000000000"},
-//		},
-//		TestDonationEther,
-//	),
-//	/*
-//	 Stress tests
-//	*/
-//	runner.NewE2ETest(
-//		TestStressEtherWithdrawName,
-//		"stress test Ether withdrawal",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in wei", DefaultValue: "100000"},
-//			{Description: "count", DefaultValue: "100"},
-//		},
-//		TestStressEtherWithdraw,
-//	),
-//	runner.NewE2ETest(
-//		TestStressBTCWithdrawName,
-//		"stress test BTC withdrawal",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in btc", DefaultValue: "0.01"},
-//			{Description: "count", DefaultValue: "100"},
-//		},
-//		TestStressBTCWithdraw,
-//	),
-//	runner.NewE2ETest(
-//		TestStressEtherDepositName,
-//		"stress test Ether deposit",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in wei", DefaultValue: "100000"},
-//			{Description: "count", DefaultValue: "100"},
-//		},
-//		TestStressEtherDeposit,
-//	),
-//	runner.NewE2ETest(
-//		TestStressBTCDepositName,
-//		"stress test BTC deposit",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in btc", DefaultValue: "0.001"},
-//			{Description: "count", DefaultValue: "100"},
-//		},
-//		TestStressBTCDeposit,
-//	),
-//	/*
-//	 Admin tests
-//	*/
-//	runner.NewE2ETest(
-//		TestWhitelistERC20Name,
-//		"whitelist a new ERC20 token",
-//		[]runner.ArgDefinition{},
-//		TestWhitelistERC20,
-//	),
-//	runner.NewE2ETest(
-//		TestDepositEtherLiquidityCapName,
-//		"deposit Ethers into ZEVM with a liquidity cap",
-//		[]runner.ArgDefinition{
-//			{Description: "amount in wei", DefaultValue: "100000000000000"},
-//		},
-//		TestDepositEtherLiquidityCap,
-//	),
-//	runner.NewE2ETest(
-//		TestMigrateChainSupportName,
-//		"migrate the evm chain from goerli to sepolia",
-//		[]runner.ArgDefinition{},
-//		TestMigrateChainSupport,
-//	),
-//	runner.NewE2ETest(
-//		TestPauseZRC20Name,
-//		"pausing ZRC20 on ZetaChain",
-//		[]runner.ArgDefinition{},
-//		TestPauseZRC20,
-//	),
-//	runner.NewE2ETest(
-//		TestUpdateBytecodeZRC20Name,
-//		"update ZRC20 bytecode swap",
-//		[]runner.ArgDefinition{},
-//		TestUpdateBytecodeZRC20,
-//	),
-//	runner.NewE2ETest(
-//		TestUpdateBytecodeConnectorName,
-//		"update zevm connector bytecode",
-//		[]runner.ArgDefinition{},
-//		TestUpdateBytecodeConnector,
-//	),
-//	runner.NewE2ETest(
-//		TestRateLimiterName,
-//		"test sending cctxs with rate limiter enabled and show logs when processing cctxs",
-//		[]runner.ArgDefinition{},
-//		TestRateLimiter,
-//	),
-//	runner.NewE2ETest(
-//		TestCriticalAdminTransactionsName,
-//		"test critical admin transactions",
-//		[]runner.ArgDefinition{},
-//		TestCriticalAdminTransactions,
-//	),
-//	/*
-//	 Special tests
-//	*/
-//	runner.NewE2ETest(
-//		TestDeploy,
-//		"deploy a contract",
-//		[]runner.ArgDefinition{
-//			{Description: "contract name", DefaultValue: ""},
-//		},
-//		TestDeployContract,
-//	),
-//	runner.NewE2ETest(
-//		TestMigrateTSSName,
-//		"migrate TSS funds",
-//		[]runner.ArgDefinition{},
-//		TestMigrateTSS,
-//	),
-//}
-
+// AllE2ETests is an ordered list of all e2e tests
 var AllE2ETests = []runner.E2ETest{
+	/*
+	 ZETA tests
+	*/
+	runner.NewE2ETest(
+		TestZetaDepositName,
+		"deposit ZETA from Ethereum to ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
+		},
+		TestZetaDeposit,
+	),
+	runner.NewE2ETest(
+		TestZetaDepositNewAddressName,
+		"deposit ZETA from Ethereum to a new ZEVM address which does not exist yet",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
+		},
+		TestZetaDepositNewAddress,
+	),
+	runner.NewE2ETest(
+		TestZetaDepositRestrictedName,
+		"deposit ZETA from Ethereum to ZEVM restricted address",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
+		},
+		TestZetaDepositRestricted,
+	),
+	runner.NewE2ETest(
+		TestZetaWithdrawName,
+		"withdraw ZETA from ZEVM to Ethereum",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
+		},
+		TestZetaWithdraw,
+	),
+	runner.NewE2ETest(
+		TestZetaWithdrawBTCRevertName,
+		"sending ZETA from ZEVM to Bitcoin with a message that should revert cctxs",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
+		},
+		TestZetaWithdrawBTCRevert,
+	),
+	/*
+	 Message passing tests
+	*/
+	runner.NewE2ETest(
+		TestMessagePassingExternalChainsName,
+		"evm->evm message passing (sending ZETA only)",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
+		},
+		TestMessagePassingExternalChains,
+	),
+	runner.NewE2ETest(
+		TestMessagePassingRevertFailExternalChainsName,
+		"message passing with failing revert between external EVM chains",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
+		},
+		TestMessagePassingRevertFailExternalChains,
+	),
+	runner.NewE2ETest(
+		TestMessagePassingRevertSuccessExternalChainsName,
+		"message passing with successful revert between external EVM chains",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
+		},
+		TestMessagePassingRevertSuccessExternalChains,
+	),
+	runner.NewE2ETest(
+		TestMessagePassingEVMtoZEVMName,
+		"evm -> zevm message passing contract call ",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000009"},
+		},
+		TestMessagePassingEVMtoZEVM,
+	),
+	runner.NewE2ETest(
+		TestMessagePassingZEVMToEVMName,
+		"zevm -> evm message passing contract call",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000007"},
+		},
+		TestMessagePassingZEVMtoEVM,
+	),
+	runner.NewE2ETest(
+		TestMessagePassingZEVMtoEVMRevertName,
+		"zevm -> evm message passing contract call reverts",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000006"},
+		},
+		TestMessagePassingZEVMtoEVMRevert,
+	),
+	runner.NewE2ETest(
+		TestMessagePassingEVMtoZEVMRevertName,
+		"evm -> zevm message passing and revert back to evm",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000008"},
+		},
+		TestMessagePassingEVMtoZEVMRevert,
+	),
+	runner.NewE2ETest(
+		TestMessagePassingZEVMtoEVMRevertFailName,
+		"zevm -> evm message passing contract with failing revert",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000008"},
+		},
+		TestMessagePassingZEVMtoEVMRevertFail,
+	),
+	runner.NewE2ETest(
+		TestMessagePassingEVMtoZEVMRevertFailName,
+		"evm -> zevm message passing contract with failing revert",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000008"},
+		},
+		TestMessagePassingEVMtoZEVMRevertFail,
+	),
+
+	/*
+	 EVM gas tests
+	*/
+	runner.NewE2ETest(
+		TestEtherDepositName,
+		"deposit Ether into ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000"},
+		},
+		TestEtherDeposit,
+	),
+	runner.NewE2ETest(
+		TestEtherWithdrawName,
+		"withdraw Ether from ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000"},
+		},
+		TestEtherWithdraw,
+	),
+	runner.NewE2ETest(
+		TestEtherWithdrawRestrictedName,
+		"withdraw Ether from ZEVM to restricted address",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000"},
+		},
+		TestEtherWithdrawRestricted,
+	),
+	runner.NewE2ETest(
+		TestEtherDepositAndCallRefundName,
+		"deposit Ether into ZEVM and call a contract that reverts; should refund",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000000"},
+		},
+		TestEtherDepositAndCallRefund,
+	),
+	runner.NewE2ETest(
+		TestEtherDepositAndCallName,
+		"deposit ZRC20 into ZEVM and call a contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
+		},
+		TestEtherDepositAndCall,
+	),
+	/*
+	 EVM erc20 tests
+	*/
+	runner.NewE2ETest(
+		TestERC20WithdrawName,
+		"withdraw ERC20 from ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "1000"},
+		},
+		TestERC20Withdraw,
+	),
+	runner.NewE2ETest(
+		TestERC20DepositName,
+		"deposit ERC20 into ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100000"},
+		},
+		TestERC20Deposit,
+	),
+	runner.NewE2ETest(
+		TestMultipleERC20DepositName,
+		"deposit ERC20 into ZEVM in multiple deposits",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "1000000000"},
+			{Description: "count", DefaultValue: "3"},
+		},
+		TestMultipleERC20Deposit,
+	),
+	runner.NewE2ETest(
+		TestMultipleERC20WithdrawsName,
+		"withdraw ERC20 from ZEVM in multiple withdrawals",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100"},
+			{Description: "count", DefaultValue: "3"},
+		},
+		TestMultipleERC20Withdraws,
+	),
+	runner.NewE2ETest(
+		TestERC20DepositRestrictedName,
+		"deposit ERC20 into ZEVM restricted address",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100000"},
+		},
+		TestERC20DepositRestricted,
+	),
+	runner.NewE2ETest(
+		TestERC20DepositAndCallRefundName,
+		"deposit a non-gas ZRC20 into ZEVM and call a contract that reverts",
+		[]runner.ArgDefinition{},
+		TestERC20DepositAndCallRefund,
+	),
+	/*
+	 Solana tests
+	*/
+	runner.NewE2ETest(
+		TestSolanaDepositName,
+		"deposit SOL into ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "13370000"},
+		},
+		TestSolanaDeposit,
+	),
+	runner.NewE2ETest(
+		TestSolanaWithdrawName,
+		"withdraw SOL from ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "1336000"},
+		},
+		TestSolanaWithdraw,
+	),
+	/*
+	 Bitcoin tests
+	*/
 	runner.NewE2ETest(
 		TestExtractBitcoinInscriptionMemoName,
 		"extract memo from BTC inscription", []runner.ArgDefinition{
 			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
 		TestExtractBitcoinInscriptionMemo,
+	),
+	runner.NewE2ETest(
+		TestBitcoinDepositName,
+		"deposit Bitcoin into ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinDeposit,
+	),
+	runner.NewE2ETest(
+		TestBitcoinDepositRefundName,
+		"deposit Bitcoin into ZEVM; expect refund", []runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.1"},
+		},
+		TestBitcoinDepositRefund,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawSegWitName,
+		"withdraw BTC from ZEVM to a SegWit address",
+		[]runner.ArgDefinition{
+			{Description: "receiver address", DefaultValue: ""},
+			{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinWithdrawSegWit,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawTaprootName,
+		"withdraw BTC from ZEVM to a Taproot address",
+		[]runner.ArgDefinition{
+			{Description: "receiver address", DefaultValue: ""},
+			{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinWithdrawTaproot,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawLegacyName,
+		"withdraw BTC from ZEVM to a legacy address",
+		[]runner.ArgDefinition{
+			{Description: "receiver address", DefaultValue: ""},
+			{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinWithdrawLegacy,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawMultipleName,
+		"withdraw BTC from ZEVM multiple times",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "0.01"},
+			{Description: "times", DefaultValue: "2"},
+		},
+		WithdrawBitcoinMultipleTimes,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawP2WSHName,
+		"withdraw BTC from ZEVM to a P2WSH address",
+		[]runner.ArgDefinition{
+			{Description: "receiver address", DefaultValue: ""},
+			{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinWithdrawP2WSH,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawP2SHName,
+		"withdraw BTC from ZEVM to a P2SH address",
+		[]runner.ArgDefinition{
+			{Description: "receiver address", DefaultValue: ""},
+			{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinWithdrawP2SH,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawInvalidAddressName,
+		"withdraw BTC from ZEVM to an unsupported btc address",
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.00001"},
+		},
+		TestBitcoinWithdrawToInvalidAddress,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawRestrictedName,
+		"withdraw Bitcoin from ZEVM to restricted address",
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinWithdrawRestricted,
+	),
+	/*
+	 Application tests
+	*/
+	runner.NewE2ETest(
+		TestZRC20SwapName,
+		"swap ZRC20 ERC20 for ZRC20 ETH",
+		[]runner.ArgDefinition{},
+		TestZRC20Swap,
+	),
+	runner.NewE2ETest(
+		TestCrosschainSwapName,
+		"testing Bitcoin ERC20 cross-chain swap",
+		[]runner.ArgDefinition{},
+		TestCrosschainSwap,
+	),
+	/*
+	 Miscellaneous tests
+	*/
+	runner.NewE2ETest(
+		TestContextUpgradeName,
+		"tests sending ETH on ZEVM and check context data using ContextApp",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "1000000000000000"},
+		},
+		TestContextUpgrade,
+	),
+	runner.NewE2ETest(
+		TestMyTestName,
+		"performing custom test",
+		[]runner.ArgDefinition{},
+		TestMyTest,
+	),
+	runner.NewE2ETest(
+		TestDonationEtherName,
+		"donate Ether to the TSS",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000000000000000"},
+		},
+		TestDonationEther,
+	),
+	/*
+	 Stress tests
+	*/
+	runner.NewE2ETest(
+		TestStressEtherWithdrawName,
+		"stress test Ether withdrawal",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000"},
+			{Description: "count", DefaultValue: "100"},
+		},
+		TestStressEtherWithdraw,
+	),
+	runner.NewE2ETest(
+		TestStressBTCWithdrawName,
+		"stress test BTC withdrawal",
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.01"},
+			{Description: "count", DefaultValue: "100"},
+		},
+		TestStressBTCWithdraw,
+	),
+	runner.NewE2ETest(
+		TestStressEtherDepositName,
+		"stress test Ether deposit",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000"},
+			{Description: "count", DefaultValue: "100"},
+		},
+		TestStressEtherDeposit,
+	),
+	runner.NewE2ETest(
+		TestStressBTCDepositName,
+		"stress test BTC deposit",
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.001"},
+			{Description: "count", DefaultValue: "100"},
+		},
+		TestStressBTCDeposit,
+	),
+	/*
+	 Admin tests
+	*/
+	runner.NewE2ETest(
+		TestWhitelistERC20Name,
+		"whitelist a new ERC20 token",
+		[]runner.ArgDefinition{},
+		TestWhitelistERC20,
+	),
+	runner.NewE2ETest(
+		TestDepositEtherLiquidityCapName,
+		"deposit Ethers into ZEVM with a liquidity cap",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000000000000"},
+		},
+		TestDepositEtherLiquidityCap,
+	),
+	runner.NewE2ETest(
+		TestMigrateChainSupportName,
+		"migrate the evm chain from goerli to sepolia",
+		[]runner.ArgDefinition{},
+		TestMigrateChainSupport,
+	),
+	runner.NewE2ETest(
+		TestPauseZRC20Name,
+		"pausing ZRC20 on ZetaChain",
+		[]runner.ArgDefinition{},
+		TestPauseZRC20,
+	),
+	runner.NewE2ETest(
+		TestUpdateBytecodeZRC20Name,
+		"update ZRC20 bytecode swap",
+		[]runner.ArgDefinition{},
+		TestUpdateBytecodeZRC20,
+	),
+	runner.NewE2ETest(
+		TestUpdateBytecodeConnectorName,
+		"update zevm connector bytecode",
+		[]runner.ArgDefinition{},
+		TestUpdateBytecodeConnector,
+	),
+	runner.NewE2ETest(
+		TestRateLimiterName,
+		"test sending cctxs with rate limiter enabled and show logs when processing cctxs",
+		[]runner.ArgDefinition{},
+		TestRateLimiter,
+	),
+	runner.NewE2ETest(
+		TestCriticalAdminTransactionsName,
+		"test critical admin transactions",
+		[]runner.ArgDefinition{},
+		TestCriticalAdminTransactions,
+	),
+	/*
+	 Special tests
+	*/
+	runner.NewE2ETest(
+		TestDeploy,
+		"deploy a contract",
+		[]runner.ArgDefinition{
+			{Description: "contract name", DefaultValue: ""},
+		},
+		TestDeployContract,
+	),
+	runner.NewE2ETest(
+		TestMigrateTSSName,
+		"migrate TSS funds",
+		[]runner.ArgDefinition{},
+		TestMigrateTSS,
 	),
 }
