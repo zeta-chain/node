@@ -47,16 +47,17 @@ func assertTestDAppV2MessageAndAmount(
 		nil,
 		false,
 		false,
-		"lastMessage",
+		"getCalledWithMessage",
+		expectedMessage,
 	)
 	require.NoError(t, err)
 
-	unpacked, err := testDAppABI.Unpack("lastMessage", res.Ret)
+	unpacked, err := testDAppABI.Unpack("getCalledWithMessage", res.Ret)
 	require.NoError(t, err)
 	require.Len(t, unpacked, 1)
-	message, ok := unpacked[0].(string)
+	found, ok := unpacked[0].(bool)
 	require.True(t, ok)
-	require.Equal(t, expectedMessage, message)
+	require.True(t, found)
 
 	// amount
 	res, err = k.CallEVM(
@@ -68,11 +69,12 @@ func assertTestDAppV2MessageAndAmount(
 		nil,
 		false,
 		false,
-		"lastAmount",
+		"getAmountWithMessage",
+		expectedMessage,
 	)
 	require.NoError(t, err)
 
-	unpacked, err = testDAppABI.Unpack("lastAmount", res.Ret)
+	unpacked, err = testDAppABI.Unpack("getAmountWithMessage", res.Ret)
 	require.NoError(t, err)
 	require.Len(t, unpacked, 1)
 	amount, ok := unpacked[0].(*big.Int)

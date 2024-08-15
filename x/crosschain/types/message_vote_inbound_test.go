@@ -19,7 +19,7 @@ import (
 )
 
 func TestNewMsgVoteInbound(t *testing.T) {
-	t.Run("no revert options by default", func(t *testing.T) {
+	t.Run("empty revert options by default", func(t *testing.T) {
 		msg := types.NewMsgVoteInbound(
 			sample.AccAddress(),
 			sample.AccAddress(),
@@ -37,7 +37,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			42,
 			types.ProtocolContractVersion_V1,
 		)
-		require.EqualValues(t, types.RevertOptions{}, msg.RevertOptions)
+		require.EqualValues(t, types.NewEmptyRevertOptions(), msg.RevertOptions)
 	})
 
 	t.Run("can set ZEVM revert options", func(t *testing.T) {

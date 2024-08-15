@@ -74,6 +74,7 @@ func NewMsgVoteInbound(
 		Asset:                   asset,
 		EventIndex:              uint64(eventIndex),
 		ProtocolContractVersion: protocolContractVersion,
+		RevertOptions:           NewEmptyRevertOptions(),
 	}
 
 	for _, option := range options {

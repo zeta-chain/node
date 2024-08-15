@@ -9,6 +9,13 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/crypto"
 )
 
+// NewEmptyRevertOptions initializes a new empty RevertOptions
+func NewEmptyRevertOptions() RevertOptions {
+	return RevertOptions{
+		RevertGasLimit: sdkmath.ZeroUint(), // default to 0 instead of nil
+	}
+}
+
 // NewRevertOptionsFromZEVM initializes a new RevertOptions from a gatewayzevm.RevertOptions
 func NewRevertOptionsFromZEVM(revertOptions gatewayzevm.RevertOptions) RevertOptions {
 	revertGasLimit := sdkmath.ZeroUint()
