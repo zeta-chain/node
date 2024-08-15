@@ -16,9 +16,12 @@ func GetCoinType(coin string) (CoinType, error) {
 	if err != nil {
 		return CoinType_Cmd, err
 	}
-	if coinInt < 0 || coinInt > 4 {
+
+	// check boundaries of the enum
+	if coinInt < 0 || coinInt > int64(len(CoinType_name)) {
 		return CoinType_Cmd, fmt.Errorf("invalid coin type %d", coinInt)
 	}
+
 	// #nosec G115 always in range
 	return CoinType(coinInt), nil
 }

@@ -66,6 +66,7 @@ func (k Keeper) PostTxProcessing(
 // TODO: implement unit tests
 // https://github.com/zeta-chain/node/issues/1759
 // TODO: refactor and simplify
+// https://github.com/zeta-chain/node/issues/2627
 func (k Keeper) ProcessLogs(
 	ctx sdk.Context,
 	logs []*ethtypes.Log,

@@ -78,10 +78,7 @@ func (k Keeper) ValidateOutboundObservers(
 		case observertypes.BallotStatus_BallotFinalized_SuccessObservation:
 			k.processSuccessfulOutbound(tmpCtx, cctx, valueReceived, true)
 		case observertypes.BallotStatus_BallotFinalized_FailureObservation:
-			err := k.processFailedOutboundObservers(tmpCtx, cctx, valueReceived)
-			if err != nil {
-				return err
-			}
+			return k.processFailedOutboundObservers(tmpCtx, cctx, valueReceived)
 		}
 		return nil
 	}()
@@ -313,6 +310,15 @@ func (k Keeper) processFailedZETAOutboundOnZEVM(ctx sdk.Context, cctx *types.Cro
 // TODO: consolidate logic with above function
 // https://github.com/zeta-chain/node/issues/2627
 func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainTx) error {
+	// check the sender is ZetaChain
+	zetaChain, err := chains.ZetaChainFromCosmosChainID(ctx.ChainID())
+	if err != nil {
+		return errors.Wrap(err, "failed to get ZetaChain chainID")
+	}
+	if cctx.InboundParams.SenderChainId != zetaChain.ChainId {
+		return fmt.Errorf("sender chain for withdraw cctx is not ZetaChain expected %d got %d", zetaChain.ChainId, cctx.InboundParams.SenderChainId)
+	}
+
 	switch cctx.CctxStatus.Status {
 	case types.CctxStatus_PendingOutbound:
 

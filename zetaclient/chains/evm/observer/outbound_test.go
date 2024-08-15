@@ -413,6 +413,8 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 	})
 }
 
+// TODO: create mocks for gateway and ERC20CustodyV2 and uncomment these tests
+// https://github.com/zeta-chain/node/issues/2669
 //
 //func Test_ParseOutboundReceivedValue(t *testing.T) {
 //	chainID := chains.Ethereum.ChainId
