@@ -3,7 +3,6 @@ package keeper
 import (
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"math/big"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/pkg/errors"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zetaconnectorzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
@@ -22,6 +22,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/constant"
+	"github.com/zeta-chain/zetacore/pkg/crypto"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -64,10 +65,12 @@ func (k Keeper) PostTxProcessing(
 // - clear the logs
 // TODO: implement unit tests
 // https://github.com/zeta-chain/node/issues/1759
+// TODO: refactor and simplify
+// https://github.com/zeta-chain/node/issues/2627
 func (k Keeper) ProcessLogs(
 	ctx sdk.Context,
 	logs []*ethtypes.Log,
-	emittingContract ethcommon.Address,
+	emittingAddress ethcommon.Address,
 	txOrigin string,
 ) error {
 	system, found := k.fungibleKeeper.GetSystemContract(ctx)
@@ -78,47 +81,71 @@ func (k Keeper) ProcessLogs(
 	if connectorZEVMAddr == (ethcommon.Address{}) {
 		return fmt.Errorf("connectorZEVM address is empty")
 	}
+	gatewayAddr := ethcommon.HexToAddress(system.Gateway)
 
+	// read the logs and process inbounds from emitted events
+	// run the processing for the v1 and the v2 protocol contracts
 	for _, log := range logs {
-		eventZrc20Withdrawal, errZrc20 := ParseZRC20WithdrawalEvent(*log)
-		eventZetaSent, errZetaSent := ParseZetaSentEvent(*log, connectorZEVMAddr)
-		if errZrc20 != nil && errZetaSent != nil {
-			// This log does not contain any of the two events
-			continue
+		if !crypto.IsEmptyAddress(gatewayAddr) {
+			if err := k.ProcessZEVMInboundV2(ctx, log, gatewayAddr, emittingAddress, txOrigin); err != nil {
+				return errors.Wrap(err, "failed to process ZEVM inbound V2")
+			}
 		}
-		if eventZrc20Withdrawal != nil && eventZetaSent != nil {
-			// This log contains both events, this is not possible
+		if err := k.ProcessZEVMInboundV1(ctx, log, connectorZEVMAddr, emittingAddress, txOrigin); err != nil {
+			return errors.Wrap(err, "failed to process ZEVM inbound V1")
+		}
+	}
+
+	return nil
+}
+
+// ProcessZEVMInboundV1 processes the logs emitted by the zEVM contract for V1 protocol contracts
+// it parses logs from Connector and ZRC20 contracts and processes them accordingly
+func (k Keeper) ProcessZEVMInboundV1(
+	ctx sdk.Context,
+	log *ethtypes.Log,
+	connectorZEVMAddr,
+	emittingAddress ethcommon.Address,
+	txOrigin string,
+) error {
+	eventZRC20Withdrawal, errZrc20 := ParseZRC20WithdrawalEvent(*log)
+	eventZETASent, errZetaSent := ParseZetaSentEvent(*log, connectorZEVMAddr)
+	if errZrc20 != nil && errZetaSent != nil {
+		// This log does not contain any of the two events
+		return nil
+	}
+	if eventZRC20Withdrawal != nil && eventZETASent != nil {
+		// This log contains both events, this is not possible
+		ctx.Logger().
+			Error(fmt.Sprintf("ProcessLogs: log contains both ZRC20Withdrawal and ZetaSent events, %s , %s", log.Topics, log.Data))
+		return nil
+	}
+
+	// if eventZrc20Withdrawal is not nil we will try to validate it and see if it can be processed
+	if eventZRC20Withdrawal != nil {
+		// Check if the contract is a registered ZRC20 contract. If its not a registered ZRC20 contract, we can discard this event as it is not relevant
+		coin, foundCoin := k.fungibleKeeper.GetForeignCoins(ctx, eventZRC20Withdrawal.Raw.Address.Hex())
+		if !foundCoin {
 			ctx.Logger().
-				Error(fmt.Sprintf("ProcessLogs: log contains both ZRC20Withdrawal and ZetaSent events, %s , %s", log.Topics, log.Data))
-			continue
+				Info(fmt.Sprintf("cannot find foreign coin with contract address %s", eventZRC20Withdrawal.Raw.Address.Hex()))
+			return nil
 		}
 
-		// if eventZrc20Withdrawal is not nil we will try to validate it and see if it can be processed
-		if eventZrc20Withdrawal != nil {
-			// Check if the contract is a registered ZRC20 contract. If its not a registered ZRC20 contract, we can discard this event as it is not relevant
-			coin, foundCoin := k.fungibleKeeper.GetForeignCoins(ctx, eventZrc20Withdrawal.Raw.Address.Hex())
-			if !foundCoin {
-				ctx.Logger().
-					Info(fmt.Sprintf("cannot find foreign coin with contract address %s", eventZrc20Withdrawal.Raw.Address.Hex()))
-				continue
-			}
-
-			// If Validation fails, we will not process the event and return and error. This condition means that the event was correct, and emitted from a registered ZRC20 contract
-			// But the information entered by the user is incorrect. In this case we can return an error and roll back the transaction
-			if err := k.ValidateZrc20WithdrawEvent(ctx, eventZrc20Withdrawal, coin.ForeignChainId); err != nil {
-				return err
-			}
-			// If the event is valid, we will process it and create a new CCTX
-			// If the process fails, we will return an error and roll back the transaction
-			if err := k.ProcessZRC20WithdrawalEvent(ctx, eventZrc20Withdrawal, emittingContract, txOrigin); err != nil {
-				return err
-			}
+		// If Validation fails, we will not process the event and return and error. This condition means that the event was correct, and emitted from a registered ZRC20 contract
+		// But the information entered by the user is incorrect. In this case we can return an error and roll back the transaction
+		if err := k.ValidateZrc20WithdrawEvent(ctx, eventZRC20Withdrawal, coin.ForeignChainId); err != nil {
+			return err
 		}
-		// if eventZetaSent is not nil we will try to validate it and see if it can be processed
-		if eventZetaSent != nil {
-			if err := k.ProcessZetaSentEvent(ctx, eventZetaSent, emittingContract, txOrigin); err != nil {
-				return err
-			}
+		// If the event is valid, we will process it and create a new CCTX
+		// If the process fails, we will return an error and roll back the transaction
+		if err := k.ProcessZRC20WithdrawalEvent(ctx, eventZRC20Withdrawal, emittingAddress, txOrigin); err != nil {
+			return err
+		}
+	}
+	// if eventZetaSent is not nil we will try to validate it and see if it can be processed
+	if eventZETASent != nil {
+		if err := k.ProcessZetaSentEvent(ctx, eventZETASent, emittingAddress, txOrigin); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -278,36 +305,41 @@ func (k Keeper) ProcessZetaSentEvent(
 // It verifies event information for BTC chains and returns an error if the event is invalid
 func (k Keeper) ValidateZrc20WithdrawEvent(ctx sdk.Context, event *zrc20.ZRC20Withdrawal, chainID int64) error {
 	// The event was parsed; that means the user has deposited tokens to the contract.
+	return k.validateZRC20Withdrawal(ctx, chainID, event.Value, event.To)
+}
 
+// validateZRC20Withdrawal validates the data of a ZRC20 Withdrawal event (version 1 or 2)
+// it checks if the withdrawal amount is valid and the destination address is supported depending on the chain
+func (k Keeper) validateZRC20Withdrawal(ctx sdk.Context, chainID int64, value *big.Int, to []byte) error {
 	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
 	if chains.IsBitcoinChain(chainID, additionalChains) {
-		if event.Value.Cmp(big.NewInt(constant.BTCWithdrawalDustAmount)) < 0 {
+		if value.Cmp(big.NewInt(constant.BTCWithdrawalDustAmount)) < 0 {
 			return errorsmod.Wrapf(
 				types.ErrInvalidWithdrawalAmount,
 				"withdraw amount %s is less than dust amount %d",
-				event.Value.String(),
+				value.String(),
 				constant.BTCWithdrawalDustAmount,
 			)
 		}
-		addr, err := chains.DecodeBtcAddress(string(event.To), chainID)
+		addr, err := chains.DecodeBtcAddress(string(to), chainID)
 		if err != nil {
-			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid address %s", string(event.To))
+			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid address %s", string(to))
 		}
 		if !chains.IsBtcAddressSupported(addr) {
-			return errorsmod.Wrapf(types.ErrInvalidAddress, "unsupported address %s", string(event.To))
+			return errorsmod.Wrapf(types.ErrInvalidAddress, "unsupported address %s", string(to))
 		}
 	} else if chains.IsSolanaChain(chainID, additionalChains) {
-		if event.Value.Cmp(big.NewInt(constant.SolanaWalletRentExempt)) < 0 {
+		if value.Cmp(big.NewInt(constant.SolanaWalletRentExempt)) < 0 {
 			return errorsmod.Wrapf(
 				types.ErrInvalidWithdrawalAmount,
 				"withdraw amount %s is less than rent exempt %d",
-				event.Value.String(),
+				value.String(),
 				constant.SolanaWalletRentExempt,
 			)
 		}
-		_, err := chains.DecodeSolanaWalletAddress(string(event.To))
+		_, err := chains.DecodeSolanaWalletAddress(string(to))
 		if err != nil {
-			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid address %s", string(event.To))
+			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid address %s", string(to))
 		}
 	}
 

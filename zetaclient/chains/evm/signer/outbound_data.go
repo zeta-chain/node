@@ -44,6 +44,9 @@ type OutboundData struct {
 
 	// outboundParams field contains data detailing the receiver chain and outbound transaction
 	outboundParams *types.OutboundParams
+
+	// revertOptions field contains data detailing the revert options
+	revertOptions types.RevertOptions
 }
 
 // SetChainAndSender populates the destination address and Chain ID based on the status of the cross chain tx
@@ -127,10 +130,17 @@ func NewOutboundData(
 	txData.srcChainID = big.NewInt(cctx.InboundParams.SenderChainId)
 	txData.asset = ethcommon.HexToAddress(cctx.InboundParams.Asset)
 	txData.height = height
+	txData.revertOptions = cctx.RevertOptions
 
-	skipTx := txData.SetChainAndSender(cctx, logger)
-	if skipTx {
-		return nil, true, nil
+	// in protocol contract v2, receiver is always set in the outbound
+	if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 {
+		txData.to = ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
+		txData.toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
+	} else {
+		skipTx := txData.SetChainAndSender(cctx, logger)
+		if skipTx {
+			return nil, true, nil
+		}
 	}
 
 	app, err := zctx.FromContext(ctx)
@@ -182,9 +192,18 @@ func NewOutboundData(
 
 	// Base64 decode message
 	if cctx.InboundParams.CoinType != coin.CoinType_Cmd {
-		txData.message, err = base64.StdEncoding.DecodeString(cctx.RelayedMessage)
-		if err != nil {
-			logger.Err(err).Msgf("decode CCTX.Message %s error", cctx.RelayedMessage)
+		// protocol contract v2 uses hex encoding
+		if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 {
+			txData.message, err = hex.DecodeString(cctx.RelayedMessage)
+			if err != nil {
+				logger.Err(err).Msgf("decode CCTX.Message %s error", cctx.RelayedMessage)
+				txData.message = []byte{}
+			}
+		} else {
+			txData.message, err = base64.StdEncoding.DecodeString(cctx.RelayedMessage)
+			if err != nil {
+				logger.Err(err).Msgf("decode CCTX.Message %s error", cctx.RelayedMessage)
+			}
 		}
 	}
 

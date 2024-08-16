@@ -101,19 +101,16 @@ func TestGetCoinType(t *testing.T) {
 		{
 			name:    "invalid coin type negative",
 			coin:    "-1",
-			want:    CoinType_Cmd,
 			wantErr: true,
 		},
 		{
-			name:    "invalid coin type large number",
-			coin:    "4",
-			want:    CoinType_Cmd,
-			wantErr: true,
+			name: "invalid coin type large number",
+			coin: "4",
+			want: CoinType(4),
 		},
 		{
 			name:    "invalid coin type non-integer",
 			coin:    "abc",
-			want:    CoinType_Cmd,
 			wantErr: true,
 		},
 	}

@@ -10,22 +10,20 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/constant"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
@@ -63,17 +61,14 @@ type Signer struct {
 	// ethSigner encapsulates EVM transaction signature handling
 	ethSigner ethtypes.Signer
 
-	// zetaConnectorABI is the ABI of the ZetaConnector contract
-	zetaConnectorABI abi.ABI
-
-	// erc20CustodyABI is the ABI of the ERC20Custody contract
-	erc20CustodyABI abi.ABI
-
 	// zetaConnectorAddress is the address of the ZetaConnector contract
 	zetaConnectorAddress ethcommon.Address
 
 	// er20CustodyAddress is the address of the ERC20Custody contract
 	er20CustodyAddress ethcommon.Address
+
+	// gatewayAddress is the address of the Gateway contract
+	gatewayAddress ethcommon.Address
 }
 
 // NewSigner creates a new EVM signer
@@ -84,10 +79,9 @@ func NewSigner(
 	ts *metrics.TelemetryServer,
 	logger base.Logger,
 	endpoint string,
-	zetaConnectorABI string,
-	erc20CustodyABI string,
 	zetaConnectorAddress ethcommon.Address,
 	erc20CustodyAddress ethcommon.Address,
+	gatewayAddress ethcommon.Address,
 ) (*Signer, error) {
 	// create base signer
 	baseSigner := base.NewSigner(chain, tss, ts, logger)
@@ -98,25 +92,13 @@ func NewSigner(
 		return nil, errors.Wrap(err, "unable to create EVM client")
 	}
 
-	// prepare ABIs
-	connectorABI, err := abi.JSON(strings.NewReader(zetaConnectorABI))
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to build ZetaConnector ABI")
-	}
-
-	custodyABI, err := abi.JSON(strings.NewReader(erc20CustodyABI))
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to build ERC20Custody ABI")
-	}
-
 	return &Signer{
 		Signer:               baseSigner,
 		client:               client,
 		ethSigner:            ethSigner,
-		zetaConnectorABI:     connectorABI,
-		erc20CustodyABI:      custodyABI,
 		zetaConnectorAddress: zetaConnectorAddress,
 		er20CustodyAddress:   erc20CustodyAddress,
+		gatewayAddress:       gatewayAddress,
 	}, nil
 }
 
@@ -156,9 +138,9 @@ func (signer *Signer) GetERC20CustodyAddress() ethcommon.Address {
 
 // GetGatewayAddress returns the gateway address
 func (signer *Signer) GetGatewayAddress() string {
-	// Note: return empty string for now
-	// gateway address will be needed in the future contract architecture
-	return ""
+	signer.Lock()
+	defer signer.Unlock()
+	return signer.gatewayAddress.String()
 }
 
 // Sign given data, and metadata (gas, nonce, etc)
@@ -208,154 +190,13 @@ func (signer *Signer) Broadcast(tx *ethtypes.Transaction) error {
 	return signer.client.SendTransaction(ctxt, tx)
 }
 
-// SignOutbound
-// function onReceive(
-//
-//	bytes calldata originSenderAddress,
-//	uint256 originChainId,
-//	address destinationAddress,
-//	uint zetaAmount,
-//	bytes calldata message,
-//	bytes32 internalSendHash
-//
-// ) external virtual {}
-func (signer *Signer) SignOutbound(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
-	var data []byte
-	var err error
-
-	data, err = signer.zetaConnectorABI.Pack("onReceive",
-		txData.sender.Bytes(),
-		txData.srcChainID,
-		txData.to,
-		txData.amount,
-		txData.message,
-		txData.cctxIndex)
-	if err != nil {
-		return nil, fmt.Errorf("onReceive pack error: %w", err)
-	}
-
-	tx, _, _, err := signer.Sign(
-		ctx,
-		data,
-		signer.zetaConnectorAddress,
-		zeroValue,
-		txData.gasLimit,
-		txData.gasPrice,
-		txData.nonce,
-		txData.height)
-	if err != nil {
-		return nil, fmt.Errorf("sign onReceive error: %w", err)
-	}
-
-	return tx, nil
-}
-
-// SignRevertTx
-// function onRevert(
-// address originSenderAddress,
-// uint256 originChainId,
-// bytes calldata destinationAddress,
-// uint256 destinationChainId,
-// uint256 zetaAmount,
-// bytes calldata message,
-// bytes32 internalSendHash
-// ) external override whenNotPaused onlyTssAddress
-func (signer *Signer) SignRevertTx(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
-	var data []byte
-	var err error
-
-	data, err = signer.zetaConnectorABI.Pack("onRevert",
-		txData.sender,
-		txData.srcChainID,
-		txData.to.Bytes(),
-		txData.toChainID,
-		txData.amount,
-		txData.message,
-		txData.cctxIndex)
-	if err != nil {
-		return nil, fmt.Errorf("onRevert pack error: %w", err)
-	}
-
-	tx, _, _, err := signer.Sign(
-		ctx,
-		data,
-		signer.zetaConnectorAddress,
-		zeroValue,
-		txData.gasLimit,
-		txData.gasPrice,
-		txData.nonce,
-		txData.height)
-	if err != nil {
-		return nil, fmt.Errorf("sign onRevert error: %w", err)
-	}
-
-	return tx, nil
-}
-
-// SignCancelTx signs a transaction from TSS address to itself with a zero amount in order to increment the nonce
-func (signer *Signer) SignCancelTx(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
-	tx, _, _, err := signer.Sign(
-		ctx,
-		nil,
-		signer.TSS().EVMAddress(),
-		zeroValue, // zero out the amount to cancel the tx
-		evm.EthTransferGasLimit,
-		txData.gasPrice,
-		txData.nonce,
-		txData.height,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("SignCancelTx error: %w", err)
-	}
-
-	return tx, nil
-}
-
-// SignWithdrawTx signs a withdrawal transaction sent from the TSS address to the destination
-func (signer *Signer) SignWithdrawTx(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
-	tx, _, _, err := signer.Sign(
-		ctx,
-		nil,
-		txData.to,
-		txData.amount,
-		evm.EthTransferGasLimit,
-		txData.gasPrice,
-		txData.nonce,
-		txData.height,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("SignWithdrawTx error: %w", err)
-	}
-
-	return tx, nil
-}
-
-// SignCommandTx signs a transaction based on the given command includes:
-//
-//	cmd_whitelist_erc20
-//	cmd_migrate_tss_funds
-func (signer *Signer) SignCommandTx(
-	ctx context.Context,
-	txData *OutboundData,
-	cmd string,
-	params string,
-) (*ethtypes.Transaction, error) {
-	switch cmd {
-	case constant.CmdWhitelistERC20:
-		return signer.SignWhitelistERC20Cmd(ctx, txData, params)
-	case constant.CmdMigrateTssFunds:
-		return signer.SignMigrateTssFundsCmd(ctx, txData)
-	}
-	return nil, fmt.Errorf("SignCommandTx: unknown command %s", cmd)
-}
-
 // TryProcessOutbound - signer interface implementation
 // This function will attempt to build and sign an evm transaction using the TSS signer.
 // It will then broadcast the signed transaction to the outbound chain.
 // TODO(revamp): simplify function
 func (signer *Signer) TryProcessOutbound(
 	ctx context.Context,
-	cctx *types.CrossChainTx,
+	cctx *crosschaintypes.CrossChainTx,
 	outboundProc *outboundprocessor.Processor,
 	outboundID string,
 	chainObserver interfaces.ChainObserver,
@@ -416,145 +257,18 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 
-	// https://github.com/zeta-chain/node/issues/2050
-	var tx *ethtypes.Transaction
-	// compliance check goes first
-	if compliance.IsCctxRestricted(cctx) {
-		compliance.PrintComplianceLog(
-			logger,
-			signer.Logger().Compliance,
-			true,
-			signer.Chain().ChainId,
-			cctx.Index,
-			cctx.InboundParams.Sender,
-			txData.to.Hex(),
-			cctx.GetCurrentOutboundParam().CoinType.String(),
-		)
-
-		tx, err = signer.SignCancelTx(ctx, txData) // cancel the tx
-		if err != nil {
-			logger.Warn().Err(err).Msg(ErrorMsg(cctx))
-			return
-		}
-	} else if cctx.InboundParams.CoinType == coin.CoinType_Cmd { // admin command
-		to := ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
-		if to == (ethcommon.Address{}) {
-			logger.Error().Msgf("invalid receiver %s", cctx.GetCurrentOutboundParam().Receiver)
-			return
-		}
-		msg := strings.Split(cctx.RelayedMessage, ":")
-		if len(msg) != 2 {
-			logger.Error().Msgf("invalid message %s", msg)
-			return
-		}
-		// cmd field is used to determine whether to execute ERC20 whitelist or migrate TSS funds given that the coin type
-		// from the cctx is coin.CoinType_Cmd
-		cmd := msg[0]
-		// params field is used to pass input parameters for command requests, currently it is used to pass the ERC20
-		// contract address when a whitelist command is requested
-		params := msg[1]
-		tx, err = signer.SignCommandTx(ctx, txData, cmd, params)
-		if err != nil {
-			logger.Warn().Err(err).Msg(ErrorMsg(cctx))
-			return
-		}
-	} else if IsSenderZetaChain(cctx, zetacoreClient) {
-		switch cctx.InboundParams.CoinType {
-		case coin.CoinType_Gas:
-			logger.Info().Msgf(
-				"SignWithdrawTx: %d => %d, nonce %d, gasPrice %d",
-				cctx.InboundParams.SenderChainId,
-				toChain.ID(),
-				cctx.GetCurrentOutboundParam().TssNonce,
-				txData.gasPrice,
-			)
-			tx, err = signer.SignWithdrawTx(ctx, txData)
-		case coin.CoinType_ERC20:
-			logger.Info().Msgf(
-				"SignERC20WithdrawTx: %d => %d, nonce %d, gasPrice %d",
-				cctx.InboundParams.SenderChainId,
-				toChain.ID(),
-				cctx.GetCurrentOutboundParam().TssNonce,
-				txData.gasPrice,
-			)
-			tx, err = signer.SignERC20WithdrawTx(ctx, txData)
-		case coin.CoinType_Zeta:
-			logger.Info().Msgf(
-				"SignOutbound: %d => %d, nonce %d, gasPrice %d",
-				cctx.InboundParams.SenderChainId,
-				toChain.ID(),
-				cctx.GetCurrentOutboundParam().TssNonce,
-				txData.gasPrice,
-			)
-			tx, err = signer.SignOutbound(ctx, txData)
-		}
-		if err != nil {
-			logger.Warn().Err(err).Msg(ErrorMsg(cctx))
-			return
-		}
-	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.OutboundParams[0].ReceiverChainId == zetacoreClient.Chain().ChainId {
-		switch cctx.InboundParams.CoinType {
-		case coin.CoinType_Zeta:
-			logger.Info().Msgf(
-				"SignRevertTx: %d => %d, nonce %d, gasPrice %d",
-				cctx.InboundParams.SenderChainId,
-				toChain.ID(), cctx.GetCurrentOutboundParam().TssNonce,
-				txData.gasPrice,
-			)
-			txData.srcChainID = big.NewInt(cctx.OutboundParams[0].ReceiverChainId)
-			txData.toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
-			tx, err = signer.SignRevertTx(ctx, txData)
-		case coin.CoinType_Gas:
-			logger.Info().Msgf(
-				"SignWithdrawTx: %d => %d, nonce %d, gasPrice %d",
-				cctx.InboundParams.SenderChainId,
-				toChain.ID(),
-				cctx.GetCurrentOutboundParam().TssNonce,
-				txData.gasPrice,
-			)
-			tx, err = signer.SignWithdrawTx(ctx, txData)
-		case coin.CoinType_ERC20:
-			logger.Info().Msgf("SignERC20WithdrawTx: %d => %d, nonce %d, gasPrice %d",
-				cctx.InboundParams.SenderChainId,
-				toChain.ID(),
-				cctx.GetCurrentOutboundParam().TssNonce,
-				txData.gasPrice,
-			)
-			tx, err = signer.SignERC20WithdrawTx(ctx, txData)
-		}
-		if err != nil {
-			logger.Warn().Err(err).Msg(ErrorMsg(cctx))
-			return
-		}
-	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
-		logger.Info().Msgf(
-			"SignRevertTx: %d => %d, nonce %d, gasPrice %d",
-			cctx.InboundParams.SenderChainId,
-			toChain.ID(),
-			cctx.GetCurrentOutboundParam().TssNonce,
-			txData.gasPrice,
-		)
-		txData.srcChainID = big.NewInt(cctx.OutboundParams[0].ReceiverChainId)
-		txData.toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
-
-		tx, err = signer.SignRevertTx(ctx, txData)
-		if err != nil {
-			logger.Warn().Err(err).Msg(ErrorMsg(cctx))
-			return
-		}
-	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound {
-		logger.Info().Msgf(
-			"SignOutbound: %d => %d, nonce %d, gasPrice %d",
-			cctx.InboundParams.SenderChainId,
-			toChain.ID(),
-			cctx.GetCurrentOutboundParam().TssNonce,
-			txData.gasPrice,
-		)
-		tx, err = signer.SignOutbound(ctx, txData)
-		if err != nil {
-			logger.Warn().Err(err).Msg(ErrorMsg(cctx))
-			return
-		}
+	// sign outbound
+	tx, err := signer.SignOutboundFromCCTX(
+		ctx,
+		logger,
+		cctx,
+		txData,
+		zetacoreClient,
+		toChain,
+	)
+	if err != nil {
+		logger.Err(err).Msg("error signing outbound")
+		return
 	}
 
 	logger.Info().Msgf(
@@ -568,11 +282,160 @@ func (signer *Signer) TryProcessOutbound(
 	signer.BroadcastOutbound(ctx, tx, cctx, logger, myID, zetacoreClient, txData)
 }
 
+// SignOutboundFromCCTX signs an outbound transaction from a given cctx
+// TODO: simplify logic with all if else
+// https://github.com/zeta-chain/node/issues/2050
+func (signer *Signer) SignOutboundFromCCTX(
+	ctx context.Context,
+	logger zerolog.Logger,
+	cctx *crosschaintypes.CrossChainTx,
+	outboundData *OutboundData,
+	zetacoreClient interfaces.ZetacoreClient,
+	toChain zctx.Chain,
+) (*ethtypes.Transaction, error) {
+	if compliance.IsCctxRestricted(cctx) {
+		// restricted cctx
+		compliance.PrintComplianceLog(
+			logger,
+			signer.Logger().Compliance,
+			true,
+			signer.Chain().ChainId,
+			cctx.Index,
+			cctx.InboundParams.Sender,
+			outboundData.to.Hex(),
+			cctx.GetCurrentOutboundParam().CoinType.String(),
+		)
+
+		return signer.SignCancel(ctx, outboundData)
+	} else if cctx.InboundParams.CoinType == coin.CoinType_Cmd {
+		// admin command
+		to := ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
+		if to == (ethcommon.Address{}) {
+			return nil, fmt.Errorf("invalid receiver %s", cctx.GetCurrentOutboundParam().Receiver)
+		}
+		msg := strings.Split(cctx.RelayedMessage, ":")
+		if len(msg) != 2 {
+			return nil, fmt.Errorf("invalid message %s", msg)
+		}
+		// cmd field is used to determine whether to execute ERC20 whitelist or migrate TSS funds given that the coin type
+		// from the cctx is coin.CoinType_Cmd
+		cmd := msg[0]
+		// params field is used to pass input parameters for command requests, currently it is used to pass the ERC20
+		// contract address when a whitelist command is requested
+		params := msg[1]
+		return signer.SignCommandTx(ctx, outboundData, cmd, params)
+	} else if cctx.ProtocolContractVersion == crosschaintypes.ProtocolContractVersion_V2 {
+		// call sign outbound from cctx for v2 protocol contracts
+		return signer.SignOutboundFromCCTXV2(ctx, cctx, outboundData)
+	} else if IsSenderZetaChain(cctx, zetacoreClient) {
+		switch cctx.InboundParams.CoinType {
+		case coin.CoinType_Gas:
+			logger.Info().Msgf(
+				"SignGasWithdraw: %d => %d, nonce %d, gasPrice %d",
+				cctx.InboundParams.SenderChainId,
+				toChain.ID(),
+				cctx.GetCurrentOutboundParam().TssNonce,
+				outboundData.gasPrice,
+			)
+			return signer.SignGasWithdraw(ctx, outboundData)
+		case coin.CoinType_ERC20:
+			logger.Info().Msgf(
+				"SignERC20Withdraw: %d => %d, nonce %d, gasPrice %d",
+				cctx.InboundParams.SenderChainId,
+				toChain.ID(),
+				cctx.GetCurrentOutboundParam().TssNonce,
+				outboundData.gasPrice,
+			)
+			return signer.SignERC20Withdraw(ctx, outboundData)
+		case coin.CoinType_Zeta:
+			logger.Info().Msgf(
+				"SignConnectorOnReceive: %d => %d, nonce %d, gasPrice %d",
+				cctx.InboundParams.SenderChainId,
+				toChain.ID(),
+				cctx.GetCurrentOutboundParam().TssNonce,
+				outboundData.gasPrice,
+			)
+			return signer.SignConnectorOnReceive(ctx, outboundData)
+		}
+	} else if cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingRevert && cctx.OutboundParams[0].ReceiverChainId == zetacoreClient.Chain().ChainId {
+		switch cctx.InboundParams.CoinType {
+		case coin.CoinType_Zeta:
+			logger.Info().Msgf(
+				"SignConnectorOnRevert: %d => %d, nonce %d, gasPrice %d",
+				cctx.InboundParams.SenderChainId,
+				toChain.ID(), cctx.GetCurrentOutboundParam().TssNonce,
+				outboundData.gasPrice,
+			)
+			outboundData.srcChainID = big.NewInt(cctx.OutboundParams[0].ReceiverChainId)
+			outboundData.toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
+			return signer.SignConnectorOnRevert(ctx, outboundData)
+		case coin.CoinType_Gas:
+			logger.Info().Msgf(
+				"SignGasWithdraw: %d => %d, nonce %d, gasPrice %d",
+				cctx.InboundParams.SenderChainId,
+				toChain.ID(),
+				cctx.GetCurrentOutboundParam().TssNonce,
+				outboundData.gasPrice,
+			)
+			return signer.SignGasWithdraw(ctx, outboundData)
+		case coin.CoinType_ERC20:
+			logger.Info().Msgf("SignERC20Withdraw: %d => %d, nonce %d, gasPrice %d",
+				cctx.InboundParams.SenderChainId,
+				toChain.ID(),
+				cctx.GetCurrentOutboundParam().TssNonce,
+				outboundData.gasPrice,
+			)
+			return signer.SignERC20Withdraw(ctx, outboundData)
+		}
+	} else if cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingRevert {
+		logger.Info().Msgf(
+			"SignConnectorOnRevert: %d => %d, nonce %d, gasPrice %d",
+			cctx.InboundParams.SenderChainId,
+			toChain.ID(),
+			cctx.GetCurrentOutboundParam().TssNonce,
+			outboundData.gasPrice,
+		)
+		outboundData.srcChainID = big.NewInt(cctx.OutboundParams[0].ReceiverChainId)
+		outboundData.toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
+		return signer.SignConnectorOnRevert(ctx, outboundData)
+	} else if cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingOutbound {
+		logger.Info().Msgf(
+			"SignConnectorOnReceive: %d => %d, nonce %d, gasPrice %d",
+			cctx.InboundParams.SenderChainId,
+			toChain.ID(),
+			cctx.GetCurrentOutboundParam().TssNonce,
+			outboundData.gasPrice,
+		)
+		return signer.SignConnectorOnReceive(ctx, outboundData)
+	}
+
+	return nil, fmt.Errorf("SignOutboundFromCCTX: can't determine how to sign outbound from cctx %s", cctx.String())
+}
+
+// SignCommandTx signs a transaction based on the given command includes:
+//
+//	cmd_whitelist_erc20
+//	cmd_migrate_tss_funds
+func (signer *Signer) SignCommandTx(
+	ctx context.Context,
+	txData *OutboundData,
+	cmd string,
+	params string,
+) (*ethtypes.Transaction, error) {
+	switch cmd {
+	case constant.CmdWhitelistERC20:
+		return signer.SignWhitelistERC20Cmd(ctx, txData, params)
+	case constant.CmdMigrateTssFunds:
+		return signer.SignMigrateTssFundsCmd(ctx, txData)
+	}
+	return nil, fmt.Errorf("SignCommandTx: unknown command %s", cmd)
+}
+
 // BroadcastOutbound signed transaction through evm rpc client
 func (signer *Signer) BroadcastOutbound(
 	ctx context.Context,
 	tx *ethtypes.Transaction,
-	cctx *types.CrossChainTx,
+	cctx *crosschaintypes.CrossChainTx,
 	logger zerolog.Logger,
 	myID sdk.AccAddress,
 	zetacoreClient interfaces.ZetacoreClient,
@@ -633,37 +496,6 @@ func (signer *Signer) BroadcastOutbound(
 	}
 }
 
-// SignERC20WithdrawTx
-// function withdraw(
-// address recipient,
-// address asset,
-// uint256 amount,
-// ) external onlyTssAddress
-func (signer *Signer) SignERC20WithdrawTx(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
-	var data []byte
-	var err error
-	data, err = signer.erc20CustodyABI.Pack("withdraw", txData.to, txData.asset, txData.amount)
-	if err != nil {
-		return nil, fmt.Errorf("withdraw pack error: %w", err)
-	}
-
-	tx, _, _, err := signer.Sign(
-		ctx,
-		data,
-		signer.er20CustodyAddress,
-		zeroValue,
-		txData.gasLimit,
-		txData.gasPrice,
-		txData.nonce,
-		txData.height,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("sign withdraw error: %w", err)
-	}
-
-	return tx, nil
-}
-
 // EvmClient returns the EVM RPC client
 func (signer *Signer) EvmClient() interfaces.EVMRPCClient {
 	return signer.client
@@ -678,75 +510,20 @@ func (signer *Signer) EvmSigner() ethtypes.Signer {
 // IsSenderZetaChain checks if the sender chain is ZetaChain
 // TODO(revamp): move to another package more general for cctx functions
 func IsSenderZetaChain(
-	cctx *types.CrossChainTx,
+	cctx *crosschaintypes.CrossChainTx,
 	zetacoreClient interfaces.ZetacoreClient,
 ) bool {
 	return cctx.InboundParams.SenderChainId == zetacoreClient.Chain().ChainId &&
-		cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound
+		cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingOutbound
 }
 
-// ErrorMsg returns a error message for SignOutbound failure with cctx data
-func ErrorMsg(cctx *types.CrossChainTx) string {
+// ErrorMsg returns a error message for SignConnectorOnReceive failure with cctx data
+func ErrorMsg(cctx *crosschaintypes.CrossChainTx) string {
 	return fmt.Sprintf(
-		"signer SignOutbound error: nonce %d chain %d",
+		"signer SignConnectorOnReceive error: nonce %d chain %d",
 		cctx.GetCurrentOutboundParam().TssNonce,
 		cctx.GetCurrentOutboundParam().ReceiverChainId,
 	)
-}
-
-// SignWhitelistERC20Cmd signs a whitelist command for ERC20 token
-// TODO(revamp): move the cmd in a specific file
-func (signer *Signer) SignWhitelistERC20Cmd(
-	ctx context.Context,
-	txData *OutboundData,
-	params string,
-) (*ethtypes.Transaction, error) {
-	outboundParams := txData.outboundParams
-	erc20 := ethcommon.HexToAddress(params)
-	if erc20 == (ethcommon.Address{}) {
-		return nil, fmt.Errorf("SignCommandTx: invalid erc20 address %s", params)
-	}
-	custodyAbi, err := erc20custody.ERC20CustodyMetaData.GetAbi()
-	if err != nil {
-		return nil, err
-	}
-	data, err := custodyAbi.Pack("whitelist", erc20)
-	if err != nil {
-		return nil, fmt.Errorf("whitelist pack error: %w", err)
-	}
-	tx, _, _, err := signer.Sign(
-		ctx,
-		data,
-		txData.to,
-		zeroValue,
-		txData.gasLimit,
-		txData.gasPrice,
-		outboundParams.TssNonce,
-		txData.height,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("sign whitelist error: %w", err)
-	}
-	return tx, nil
-}
-
-// SignMigrateTssFundsCmd signs a migrate TSS funds command
-// TODO(revamp): move the cmd in a specific file
-func (signer *Signer) SignMigrateTssFundsCmd(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
-	tx, _, _, err := signer.Sign(
-		ctx,
-		nil,
-		txData.to,
-		txData.amount,
-		txData.gasLimit,
-		txData.gasPrice,
-		txData.nonce,
-		txData.height,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("SignMigrateTssFundsCmd error: %w", err)
-	}
-	return tx, nil
 }
 
 // reportToOutboundTracker reports outboundHash to tracker only when tx receipt is available

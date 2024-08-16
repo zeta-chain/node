@@ -166,6 +166,9 @@ message MsgVoteInbound {
 
   // protocol contract version to use for the cctx workflow
   ProtocolContractVersion protocol_contract_version = 16;
+
+  // revert options provided by the sender
+  RevertOptions revert_options = 17 [ (gogoproto.nullable) = false ];
 }
 
 message MsgVoteInboundResponse {}

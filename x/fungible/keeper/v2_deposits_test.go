@@ -5,6 +5,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -46,16 +47,17 @@ func assertTestDAppV2MessageAndAmount(
 		nil,
 		false,
 		false,
-		"lastMessage",
+		"getCalledWithMessage",
+		expectedMessage,
 	)
 	require.NoError(t, err)
 
-	unpacked, err := testDAppABI.Unpack("lastMessage", res.Ret)
+	unpacked, err := testDAppABI.Unpack("getCalledWithMessage", res.Ret)
 	require.NoError(t, err)
 	require.Len(t, unpacked, 1)
-	message, ok := unpacked[0].(string)
+	found, ok := unpacked[0].(bool)
 	require.True(t, ok)
-	require.Equal(t, expectedMessage, message)
+	require.True(t, found)
 
 	// amount
 	res, err = k.CallEVM(
@@ -67,11 +69,12 @@ func assertTestDAppV2MessageAndAmount(
 		nil,
 		false,
 		false,
-		"lastAmount",
+		"getAmountWithMessage",
+		expectedMessage,
 	)
 	require.NoError(t, err)
 
-	unpacked, err = testDAppABI.Unpack("lastAmount", res.Ret)
+	unpacked, err = testDAppABI.Unpack("getAmountWithMessage", res.Ret)
 	require.NoError(t, err)
 	require.Len(t, unpacked, 1)
 	amount, ok := unpacked[0].(*big.Int)
@@ -101,6 +104,7 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 			receiver,
 			big.NewInt(42),
 			[]byte{},
+			coin.CoinType_Gas,
 		)
 
 		// ASSERT
@@ -135,6 +139,7 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 			testDapp,
 			big.NewInt(82),
 			[]byte("foo"),
+			coin.CoinType_Gas,
 		)
 
 		// ASSERT

@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -19,7 +20,7 @@ func TestV2ETHDeposit(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("starting v2 eth deposit test")
 
 	// perform the deposit
-	tx := r.V2ETHDeposit(r.EVMAddress(), amount)
+	tx := r.V2ETHDeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

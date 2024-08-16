@@ -10,6 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/contracts/erc1967proxy"
 	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // SetZEVMContractsV2 set contracts for the ZEVM
@@ -39,6 +40,12 @@ func (r *E2ERunner) SetZEVMContractsV2() {
 	require.NoError(r, err)
 
 	// Deploy the proxy contract
+	r.Logger.Info(
+		"Deploying proxy with %s and %s, address: %s",
+		r.WZetaAddr.Hex(),
+		r.Account.EVMAddress().Hex(),
+		gatewayZEVMAddr.Hex(),
+	)
 	proxyAddress, txProxy, _, err := erc1967proxy.DeployERC1967Proxy(
 		r.ZEVMAuth,
 		r.ZEVMClient,
@@ -66,4 +73,38 @@ func (r *E2ERunner) SetZEVMContractsV2() {
 
 	ensureTxReceipt(txProxy, "Gateway proxy deployment failed")
 	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
+}
+
+// UpdateChainParamsERC20CustodyContract update the erc20 custody contract in the chain params
+// this operation is used when transitioning to new smart contract architecture where a new ERC20 custody contract is deployed
+func (r *E2ERunner) UpdateChainParamsERC20CustodyContract() {
+	res, err := r.ObserverClient.GetChainParams(r.Ctx, &observertypes.QueryGetChainParamsRequest{})
+	require.NoError(r, err)
+
+	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
+	require.NoError(r, err)
+
+	// find old chain params
+	var (
+		chainParams *observertypes.ChainParams
+		found       bool
+	)
+	for _, cp := range res.ChainParams.ChainParams {
+		if cp.ChainId == evmChainID.Int64() {
+			chainParams = cp
+			found = true
+			break
+		}
+	}
+	require.True(r, found, "Chain params not found for chain id %d", evmChainID)
+
+	// update with the new ERC20 custody contract address
+	chainParams.Erc20CustodyContractAddress = r.ERC20CustodyV2Addr.Hex()
+
+	// update the chain params
+	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, observertypes.NewMsgUpdateChainParams(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+		chainParams,
+	))
+	require.NoError(r, err)
 }
