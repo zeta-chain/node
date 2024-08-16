@@ -10,14 +10,21 @@ import (
 )
 
 type config struct {
-	name   string
-	logger zerolog.Logger
+	name       string
+	logger     zerolog.Logger
+	onComplete func()
 }
 
 type Opt func(*config)
 
 func WithName(name string) Opt {
 	return func(cfg *config) { cfg.name = name }
+}
+
+// OnComplete is a callback function that is called
+// when the background task is completed without an error
+func OnComplete(fn func()) Opt {
+	return func(cfg *config) { cfg.onComplete = fn }
 }
 
 func WithLogger(logger zerolog.Logger) Opt {
@@ -27,8 +34,9 @@ func WithLogger(logger zerolog.Logger) Opt {
 // Work emits a new task in the background
 func Work(ctx context.Context, f func(context.Context) error, opts ...Opt) {
 	cfg := config{
-		name:   "",
-		logger: zerolog.Nop(),
+		name:       "",
+		logger:     zerolog.Nop(),
+		onComplete: nil,
 	}
 
 	for _, opt := range opts {
@@ -45,8 +53,23 @@ func Work(ctx context.Context, f func(context.Context) error, opts ...Opt) {
 
 		if err := f(ctx); err != nil {
 			logError(err, cfg, false)
+			return
 		}
+
+		if cfg.onComplete != nil {
+			cfg.onComplete()
+		}
+
+		cfg.logger.Info().Str("worker.name", cfg.getName()).Msg("Background task completed")
 	}()
+}
+
+func (c config) getName() string {
+	if c.name != "" {
+		return c.name
+	}
+
+	return "unknown"
 }
 
 func logError(err error, cfg config, isPanic bool) {
@@ -71,10 +94,5 @@ func logError(err error, cfg config, isPanic bool) {
 		evt.Bytes("stack_trace", buf)
 	}
 
-	name := cfg.name
-	if name == "" {
-		name = "unknown"
-	}
-
-	evt.Str("worker.name", name).Msg("Background task failed")
+	evt.Str("worker.name", cfg.getName()).Msg("Background task failed")
 }

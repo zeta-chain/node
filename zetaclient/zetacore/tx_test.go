@@ -357,7 +357,7 @@ func TestZetacore_UpdateAppContext(t *testing.T) {
 
 	t.Run("zetacore update success", func(t *testing.T) {
 		cfg := config.New(false)
-		appContext := zctx.New(cfg, zerolog.Nop())
+		appContext := zctx.New(cfg, nil, zerolog.Nop())
 		err := client.UpdateAppContext(ctx, appContext, zerolog.New(zerolog.NewTestWriter(t)))
 		require.NoError(t, err)
 	})

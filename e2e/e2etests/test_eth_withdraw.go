@@ -3,6 +3,8 @@ package e2etests
 import (
 	"math/big"
 
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
@@ -37,5 +39,22 @@ func TestEtherWithdraw(r *runner.E2ERunner, args []string) {
 
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
+	// Previous binary doesn't take EIP-1559 into account, so this will fail.
+	// Thus, we need to skip this check for upgrade tests
+	if !r.IsRunningUpgrade() {
+		withdrawalReceipt := mustFetchEthReceipt(r, cctx)
+		require.Equal(r, uint8(ethtypes.DynamicFeeTxType), withdrawalReceipt.Type, "receipt type mismatch")
+	}
+
 	r.Logger.Info("TestEtherWithdraw completed")
+}
+
+func mustFetchEthReceipt(r *runner.E2ERunner, cctx *crosschaintypes.CrossChainTx) *ethtypes.Receipt {
+	hash := cctx.GetCurrentOutboundParam().Hash
+	require.NotEmpty(r, hash, "outbound hash is empty")
+
+	receipt, err := r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(hash))
+	require.NoError(r, err)
+
+	return receipt
 }

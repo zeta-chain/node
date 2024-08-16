@@ -24,7 +24,7 @@ jobs:
       - name: "INSTALL:NODEJS"
         uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 20
 
       - name: "START:LOCAL:NET:WITH:STATE"
         run: |
@@ -102,7 +102,7 @@ jobs:
           artillery report report.json --output artillery_report.html
 
       - name: "UPLOAD:REPORT"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: artillery-report

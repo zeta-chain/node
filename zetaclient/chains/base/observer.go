@@ -17,6 +17,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/db"
+	"github.com/zeta-chain/zetacore/zetaclient/logs"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
@@ -268,8 +269,14 @@ func (ob *Observer) WithHeaderCache(cache *lru.Cache) *Observer {
 }
 
 // OutboundID returns a unique identifier for the outbound transaction.
+// The identifier is now used as the key for maps that store outbound related data (e.g. transaction, receipt, etc).
 func (ob *Observer) OutboundID(nonce uint64) string {
-	return fmt.Sprintf("%d-%d", ob.chain.ChainId, nonce)
+	// all chains uses EVM address as part of the key except bitcoin
+	tssAddress := ob.tss.EVMAddress().String()
+	if ob.chain.Consensus == chains.Consensus_bitcoin {
+		tssAddress = ob.tss.BTCAddress()
+	}
+	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddress, nonce)
 }
 
 // DB returns the database for the observer.
@@ -295,13 +302,13 @@ func (ob *Observer) Logger() *ObserverLogger {
 
 // WithLogger attaches a new logger to the observer.
 func (ob *Observer) WithLogger(logger Logger) *Observer {
-	chainLogger := logger.Std.With().Int64("chain", ob.chain.ChainId).Logger()
+	chainLogger := logger.Std.With().Int64(logs.FieldChain, ob.chain.ChainId).Logger()
 	ob.logger = ObserverLogger{
 		Chain:      chainLogger,
-		Inbound:    chainLogger.With().Str("module", "inbound").Logger(),
-		Outbound:   chainLogger.With().Str("module", "outbound").Logger(),
-		GasPrice:   chainLogger.With().Str("module", "gasprice").Logger(),
-		Headers:    chainLogger.With().Str("module", "headers").Logger(),
+		Inbound:    chainLogger.With().Str(logs.FieldModule, logs.ModNameInbound).Logger(),
+		Outbound:   chainLogger.With().Str(logs.FieldModule, logs.ModNameOutbound).Logger(),
+		GasPrice:   chainLogger.With().Str(logs.FieldModule, logs.ModNameGasPrice).Logger(),
+		Headers:    chainLogger.With().Str(logs.FieldModule, logs.ModNameHeaders).Logger(),
 		Compliance: logger.Compliance,
 	}
 	return ob

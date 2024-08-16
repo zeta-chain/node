@@ -5,6 +5,7 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 
@@ -19,6 +20,7 @@ import (
 	solanasigner "github.com/zeta-chain/zetacore/zetaclient/chains/solana/signer"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/db"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
@@ -97,7 +99,10 @@ func syncSignerMap(
 			continue
 		}
 
-		rawChain := chain.RawChain()
+		var (
+			params   = chain.Params()
+			rawChain = chain.RawChain()
+		)
 
 		switch {
 		case chain.IsEVM():
@@ -159,19 +164,16 @@ func syncSignerMap(
 				continue
 			}
 
-			// load the Solana private key
-			solanaKey, err := app.Config().LoadSolanaPrivateKey()
+			// try loading Solana relayer key if present
+			password := chain.RelayerKeyPassword()
+			relayerKey, err := keys.LoadRelayerKey(app.Config().GetRelayerKeyPath(), rawChain.Network, password)
 			if err != nil {
-				logger.Std.Error().Err(err).Msg("Unable to get Solana private key")
+				logger.Std.Error().Err(err).Msg("Unable to load Solana relayer key")
+				continue
 			}
 
-			var (
-				chainRaw  = chain.RawChain()
-				paramsRaw = chain.Params()
-			)
-
 			// create Solana signer
-			signer, err := solanasigner.NewSigner(*chainRaw, *paramsRaw, rpcClient, tss, solanaKey, ts, logger)
+			signer, err := solanasigner.NewSigner(*rawChain, *params, rpcClient, tss, relayerKey, ts, logger)
 			if err != nil {
 				logger.Std.Error().Err(err).Msgf("Unable to construct signer for SOL chain %d", chainID)
 				continue
@@ -278,12 +280,17 @@ func syncObserverMap(
 				continue
 			}
 
-			// create EVM client
-			evmClient, err := ethclient.DialContext(ctx, cfg.Endpoint)
+			httpClient, err := metrics.GetInstrumentedHTTPClient(cfg.Endpoint)
+			if err != nil {
+				logger.Std.Error().Err(err).Str("rpc.endpoint", cfg.Endpoint).Msgf("Unable to create HTTP client")
+				continue
+			}
+			rpcClient, err := ethrpc.DialHTTPWithClient(cfg.Endpoint, httpClient)
 			if err != nil {
 				logger.Std.Error().Err(err).Str("rpc.endpoint", cfg.Endpoint).Msgf("Unable to dial EVM RPC")
 				continue
 			}
+			evmClient := ethclient.NewClient(rpcClient)
 
 			database, err := db.NewFromSqlite(dbpath, chainName, true)
 			if err != nil {

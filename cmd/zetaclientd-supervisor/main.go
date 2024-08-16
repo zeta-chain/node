@@ -7,12 +7,15 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
+	"cosmossdk.io/errors"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/zeta-chain/zetacore/app"
+	zetaos "github.com/zeta-chain/zetacore/pkg/os"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
@@ -36,7 +39,9 @@ func main() {
 	shutdownChan := make(chan os.Signal, 1)
 	signal.Notify(shutdownChan, syscall.SIGINT, syscall.SIGTERM)
 
-	hotkeyPassword, tssPassword, err := promptPasswords()
+	// prompt for all necessary passwords
+	titles := []string{"HotKey", "TSS", "Solana Relayer Key"}
+	passwords, err := zetaos.PromptPasswords(titles)
 	if err != nil {
 		logger.Error().Err(err).Msg("unable to get passwords")
 		os.Exit(1)
@@ -49,8 +54,6 @@ func main() {
 		os.Exit(1)
 	}
 	supervisor.Start(ctx)
-	// listen for SIGHUP to trigger a restart of zetaclientd
-	signal.Notify(supervisor.restartChan, syscall.SIGHUP)
 
 	shouldRestart := true
 	for shouldRestart {
@@ -65,11 +68,19 @@ func main() {
 		cmd.Stderr = os.Stderr
 		// must reset the passwordInputBuffer every iteration because reads are stateful (seek to end)
 		passwordInputBuffer := bytes.Buffer{}
-		passwordInputBuffer.Write([]byte(hotkeyPassword + "\n" + tssPassword + "\n"))
+		passwordInputBuffer.Write([]byte(strings.Join(passwords, "\n") + "\n"))
 		cmd.Stdin = &passwordInputBuffer
 
 		eg, ctx := errgroup.WithContext(ctx)
-		eg.Go(cmd.Run)
+		eg.Go(func() error {
+			defer cancel()
+			if err := cmd.Run(); err != nil {
+				return errors.Wrap(err, "zetaclient process failed")
+			}
+
+			logger.Info().Msg("zetaclient process exited")
+			return nil
+		})
 		eg.Go(func() error {
 			supervisor.WaitForReloadSignal(ctx)
 			cancel()
@@ -80,8 +91,6 @@ func main() {
 				select {
 				case <-ctx.Done():
 					return nil
-				case sig := <-supervisor.restartChan:
-					logger.Info().Msgf("got signal %d, sending SIGINT to zetaclientd", sig)
 				case sig := <-shutdownChan:
 					logger.Info().Msgf("got signal %d, shutting down", sig)
 					shouldRestart = false

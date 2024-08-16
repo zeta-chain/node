@@ -42,6 +42,7 @@ const (
 	flagSkipBitcoinSetup  = "skip-bitcoin-setup"
 	flagSkipHeaderProof   = "skip-header-proof"
 	flagTestV2            = "test-v2"
+	flagSkipTrackerCheck  = "skip-tracker-check"
 )
 
 var (
@@ -75,6 +76,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSkipHeaderProof, false, "set to true to skip header proof tests")
 	cmd.Flags().Bool(flagTestTSSMigration, false, "set to true to include a migration test at the end")
 	cmd.Flags().Bool(flagTestV2, false, "set to true to run tests for v2 contracts")
+	cmd.Flags().Bool(flagSkipTrackerCheck, false, "set to true to skip tracker check at the end of the tests")
 
 	return cmd
 }
@@ -96,6 +98,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipSetup         = must(cmd.Flags().GetBool(flagSkipSetup))
 		skipBitcoinSetup  = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
 		skipHeaderProof   = must(cmd.Flags().GetBool(flagSkipHeaderProof))
+		skipTrackerCheck  = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
 		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
 		testV2            = must(cmd.Flags().GetBool(flagTestV2))
 	)
@@ -305,12 +308,19 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose,
 			e2etests.TestWhitelistERC20Name,
-			e2etests.TestRateLimiterName,
 			e2etests.TestPauseZRC20Name,
 			e2etests.TestUpdateBytecodeZRC20Name,
 			e2etests.TestUpdateBytecodeConnectorName,
 			e2etests.TestDepositEtherLiquidityCapName,
 			e2etests.TestCriticalAdminTransactionsName,
+			e2etests.TestPauseERC20CustodyName,
+			e2etests.TestMigrateERC20CustodyFundsName,
+
+			// Test the rate limiter functionalities
+			// this test is currently incomplete and takes 10m to run
+			// TODO: define assertion, and make more optimized
+			// https://github.com/zeta-chain/node/issues/2090
+			//e2etests.TestRateLimiterName,
 
 			// TestMigrateChainSupportName tests EVM chain migration. Currently this test doesn't work with Anvil because pre-EIP1559 txs are not supported
 			// See issue below for details
@@ -425,7 +435,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testTSSMigration {
 		runTSSMigrationTest(deployerRunner, logger, verbose, conf)
 	}
-
+	// Verify that there are no trackers left over after tests complete
+	if !skipTrackerCheck {
+		deployerRunner.EnsureNoTrackers()
+	}
 	// print and validate report
 	networkReport, err := deployerRunner.GenerateNetworkReport()
 	if err != nil {

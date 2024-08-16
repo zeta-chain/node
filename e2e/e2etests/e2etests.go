@@ -108,8 +108,9 @@ const (
 	TestUpdateBytecodeConnectorName   = "update_bytecode_connector"
 	TestRateLimiterName               = "rate_limiter"
 	TestCriticalAdminTransactionsName = "critical_admin_transactions"
-
-	TestMigrateTSSName = "migrate_TSS"
+	TestPauseERC20CustodyName         = "pause_erc20_custody"
+	TestMigrateERC20CustodyFundsName  = "migrate_erc20_custody_funds"
+	TestMigrateTSSName                = "migrate_TSS"
 
 	/*
 	 V2 smart contract tests
@@ -601,6 +602,18 @@ var AllE2ETests = []runner.E2ETest{
 		"migrate TSS funds",
 		[]runner.ArgDefinition{},
 		TestMigrateTSS,
+	),
+	runner.NewE2ETest(
+		TestPauseERC20CustodyName,
+		"pausing ERC20 custody on ZetaChain",
+		[]runner.ArgDefinition{},
+		TestPauseERC20Custody,
+	),
+	runner.NewE2ETest(
+		TestMigrateERC20CustodyFundsName,
+		"migrate ERC20 custody funds",
+		[]runner.ArgDefinition{},
+		TestMigrateERC20CustodyFunds,
 	),
 	/*
 	 V2 smart contract tests

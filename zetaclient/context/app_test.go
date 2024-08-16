@@ -57,7 +57,7 @@ func TestAppContext(t *testing.T) {
 
 	t.Run("Update", func(t *testing.T) {
 		// Given AppContext
-		appContext := New(testCfg, logger)
+		appContext := New(testCfg, nil, logger)
 
 		// With expected default behavior
 		_, err := appContext.GetChain(123)

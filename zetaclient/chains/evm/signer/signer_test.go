@@ -17,7 +17,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
@@ -183,52 +182,6 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 	require.Len(t, *list, 1)
 }
 
-func TestSigner_SignCommandTx(t *testing.T) {
-	ctx := makeCtx(t)
-
-	// Setup evm signer
-	evmSigner, err := getNewEvmSigner(nil)
-	require.NoError(t, err)
-
-	// Setup txData struct
-	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(t, nil)
-	require.NoError(t, err)
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
-	require.False(t, skip)
-	require.NoError(t, err)
-
-	t.Run("SignCommandTx CmdWhitelistERC20", func(t *testing.T) {
-		cmd := constant.CmdWhitelistERC20
-		params := ConnectorAddress.Hex()
-		// Call SignCommandTx
-		tx, err := evmSigner.SignCommandTx(ctx, txData, cmd, params)
-		require.NoError(t, err)
-
-		// Verify tx signature
-		tss := mocks.NewTSSMainnet()
-		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
-
-		// Verify tx body basics
-		// Note: Revert tx calls erc20 custody contract with 0 gas token
-		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, big.NewInt(0))
-	})
-
-	t.Run("SignCommandTx CmdMigrateTssFunds", func(t *testing.T) {
-		cmd := constant.CmdMigrateTssFunds
-		// Call SignCommandTx
-		tx, err := evmSigner.SignCommandTx(ctx, txData, cmd, "")
-		require.NoError(t, err)
-
-		// Verify tx signature
-		tss := mocks.NewTSSMainnet()
-		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
-
-		// Verify tx body basics
-		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, txData.amount)
-	})
-}
-
 func TestSigner_BroadcastOutbound(t *testing.T) {
 	ctx := makeCtx(t)
 
@@ -238,10 +191,7 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	mockObserver, err := getNewEvmChainObserver(t, nil)
-	require.NoError(t, err)
-
-	txData, skip, err := NewOutboundData(ctx, cctx, mockObserver, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 	require.NoError(t, err)
 	require.False(t, skip)
 
@@ -285,19 +235,25 @@ func TestSigner_SignerErrorMsg(t *testing.T) {
 }
 
 func makeCtx(t *testing.T) context.Context {
-	app := zctx.New(config.New(false), zerolog.Nop())
+	app := zctx.New(config.New(false), nil, zerolog.Nop())
 
 	bscParams := mocks.MockChainParams(chains.BscMainnet.ChainId, 10)
 
 	err := app.Update(
 		observertypes.Keygen{},
-		[]chains.Chain{chains.BscMainnet},
+		[]chains.Chain{chains.BscMainnet, chains.ZetaChainMainnet},
 		nil,
-		map[int64]*observertypes.ChainParams{chains.BscMainnet.ChainId: &bscParams},
+		map[int64]*observertypes.ChainParams{
+			chains.BscMainnet.ChainId: &bscParams,
+		},
 		"tssPubKey",
 		observertypes.CrosschainFlags{},
 	)
 	require.NoError(t, err, "unable to update app context")
 
 	return zctx.WithAppContext(context.Background(), app)
+}
+
+func makeLogger(t *testing.T) zerolog.Logger {
+	return zerolog.New(zerolog.NewTestWriter(t))
 }

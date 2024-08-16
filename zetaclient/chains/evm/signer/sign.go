@@ -49,8 +49,7 @@ func (signer *Signer) SignConnectorOnReceive(ctx context.Context, txData *Outbou
 		data,
 		signer.zetaConnectorAddress,
 		zeroValue,
-		txData.gasLimit,
-		txData.gasPrice,
+		txData.gas,
 		txData.nonce,
 		txData.height)
 	if err != nil {
@@ -96,8 +95,7 @@ func (signer *Signer) SignConnectorOnRevert(ctx context.Context, txData *Outboun
 		data,
 		signer.zetaConnectorAddress,
 		zeroValue,
-		txData.gasLimit,
-		txData.gasPrice,
+		txData.gas,
 		txData.nonce,
 		txData.height)
 	if err != nil {
@@ -109,13 +107,13 @@ func (signer *Signer) SignConnectorOnRevert(ctx context.Context, txData *Outboun
 
 // SignCancel signs a transaction from TSS address to itself with a zero amount in order to increment the nonce
 func (signer *Signer) SignCancel(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
+	txData.gas.Limit = evm.EthTransferGasLimit
 	tx, _, _, err := signer.Sign(
 		ctx,
 		nil,
 		signer.TSS().EVMAddress(),
 		zeroValue, // zero out the amount to cancel the tx
-		evm.EthTransferGasLimit,
-		txData.gasPrice,
+		txData.gas,
 		txData.nonce,
 		txData.height,
 	)
@@ -128,13 +126,13 @@ func (signer *Signer) SignCancel(ctx context.Context, txData *OutboundData) (*et
 
 // SignGasWithdraw signs a withdrawal transaction sent from the TSS address to the destination
 func (signer *Signer) SignGasWithdraw(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
+	txData.gas.Limit = evm.EthTransferGasLimit
 	tx, _, _, err := signer.Sign(
 		ctx,
 		nil,
 		txData.to,
 		txData.amount,
-		evm.EthTransferGasLimit,
-		txData.gasPrice,
+		txData.gas,
 		txData.nonce,
 		txData.height,
 	)
@@ -170,8 +168,7 @@ func (signer *Signer) SignERC20Withdraw(ctx context.Context, txData *OutboundDat
 		data,
 		signer.er20CustodyAddress,
 		zeroValue,
-		txData.gasLimit,
-		txData.gasPrice,
+		txData.gas,
 		txData.nonce,
 		txData.height,
 	)
@@ -188,7 +185,6 @@ func (signer *Signer) SignWhitelistERC20Cmd(
 	txData *OutboundData,
 	params string,
 ) (*ethtypes.Transaction, error) {
-	outboundParams := txData.outboundParams
 	erc20 := ethcommon.HexToAddress(params)
 	if erc20 == (ethcommon.Address{}) {
 		return nil, fmt.Errorf("SignCommandTx: invalid erc20 address %s", params)
@@ -206,9 +202,8 @@ func (signer *Signer) SignWhitelistERC20Cmd(
 		data,
 		txData.to,
 		zeroValue,
-		txData.gasLimit,
-		txData.gasPrice,
-		outboundParams.TssNonce,
+		txData.gas,
+		txData.nonce,
 		txData.height,
 	)
 	if err != nil {
@@ -224,8 +219,7 @@ func (signer *Signer) SignMigrateTssFundsCmd(ctx context.Context, txData *Outbou
 		nil,
 		txData.to,
 		txData.amount,
-		txData.gasLimit,
-		txData.gasPrice,
+		txData.gas,
 		txData.nonce,
 		txData.height,
 	)

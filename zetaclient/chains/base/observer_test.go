@@ -2,6 +2,7 @@ package base_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
@@ -53,7 +54,7 @@ func TestNewObserver(t *testing.T) {
 	// constructor parameters
 	chain := chains.Ethereum
 	chainParams := *sample.ChainParams(chain.ChainId)
-	appContext := zctx.New(config.New(false), zerolog.Nop())
+	appContext := zctx.New(config.New(false), nil, zerolog.Nop())
 	zetacoreClient := mocks.NewZetacoreClient(t)
 	tss := mocks.NewTSSMainnet()
 	blockCacheSize := base.DefaultBlockCacheSize
@@ -246,6 +247,47 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		logger.Headers.Info().Msg("print headers log")
 		logger.Compliance.Info().Msg("print compliance log")
 	})
+}
+
+func TestOutboundID(t *testing.T) {
+	tests := []struct {
+		name  string
+		chain chains.Chain
+		tss   interfaces.TSSSigner
+		nonce uint64
+	}{
+		{
+			name:  "should get correct outbound id for Ethereum chain",
+			chain: chains.Ethereum,
+			tss:   mocks.NewTSSMainnet(),
+			nonce: 100,
+		},
+		{
+			name:  "should get correct outbound id for Bitcoin chain",
+			chain: chains.BitcoinMainnet,
+			tss:   mocks.NewTSSMainnet(),
+			nonce: 200,
+		},
+	}
+
+	// run tests
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// create observer
+			ob := createObserver(t, tt.chain)
+			ob = ob.WithTSS(tt.tss)
+
+			// get outbound id
+			outboundID := ob.OutboundID(tt.nonce)
+
+			// expected outbound id
+			exepctedID := fmt.Sprintf("%d-%s-%d", tt.chain.ChainId, tt.tss.EVMAddress(), tt.nonce)
+			if tt.chain.Consensus == chains.Consensus_bitcoin {
+				exepctedID = fmt.Sprintf("%d-%s-%d", tt.chain.ChainId, tt.tss.BTCAddress(), tt.nonce)
+			}
+			require.Equal(t, exepctedID, outboundID)
+		})
+	}
 }
 
 func TestLoadLastBlockScanned(t *testing.T) {

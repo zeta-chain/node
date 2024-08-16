@@ -15,12 +15,12 @@ import (
 	"github.com/samber/lo"
 
 	"github.com/zeta-chain/zetacore/pkg/bg"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	zetamath "github.com/zeta-chain/zetacore/pkg/math"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	solanaobserver "github.com/zeta-chain/zetacore/zetaclient/chains/solana/observer"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
@@ -137,9 +137,6 @@ func (oc *Orchestrator) Start(ctx context.Context) error {
 	shutdownOrchestrator := func() {
 		// now stop orchestrator and all observers
 		close(oc.stop)
-		for _, c := range oc.observerMap {
-			c.Stop()
-		}
 	}
 
 	oc.zetacoreClient.OnBeforeStop(shutdownOrchestrator)
@@ -375,7 +372,7 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 						cctxList := cctxMap[chainID]
 
 						metrics.PendingTxsPerChain.
-							WithLabelValues(fmt.Sprintf("chain_%d", chainID)).
+							WithLabelValues(chain.Name()).
 							Set(float64(len(cctxList)))
 
 						if len(cctxList) == 0 {
@@ -663,8 +660,13 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 // runObserverSignerSync runs a blocking ticker that observes chain changes from zetacore
 // and optionally (de)provisions respective observers and signers.
 func (oc *Orchestrator) runObserverSignerSync(ctx context.Context) error {
-	// check every other zeta block
-	const cadence = 2 * evm.ZetaBlockTime
+	// sync observers and signers right away to speed up zetaclient startup
+	if err := oc.syncObserverSigner(ctx); err != nil {
+		oc.logger.Error().Err(err).Msg("runObserverSignerSync: syncObserverSigner failed for initial sync")
+	}
+
+	// sync observer and signer every 10 blocks (approx. 1 minute)
+	const cadence = 10 * constant.ZetaBlockTime
 
 	ticker := time.NewTicker(cadence)
 	defer ticker.Stop()

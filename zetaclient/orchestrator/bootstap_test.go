@@ -51,7 +51,7 @@ func TestCreateSignerMap(t *testing.T) {
 		cfg.BitcoinConfig = btcConfig
 
 		// Given AppContext
-		app := zctx.New(cfg, log)
+		app := zctx.New(cfg, nil, log)
 		ctx := zctx.WithAppContext(context.Background(), app)
 
 		// Given chain & chainParams "fetched" from zetacore
@@ -230,7 +230,7 @@ func TestCreateChainObserverMap(t *testing.T) {
 		cfg.SolanaConfig = solConfig
 
 		// Given AppContext
-		app := zctx.New(cfg, log)
+		app := zctx.New(cfg, nil, log)
 		ctx := zctx.WithAppContext(context.Background(), app)
 
 		// Given chain & chainParams "fetched" from zetacore

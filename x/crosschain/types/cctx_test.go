@@ -49,6 +49,13 @@ func TestCrossChainTx_GetEVMAbortAddress(t *testing.T) {
 	})
 }
 
+func TestCrossChainTx_SetOutboundBallot(t *testing.T) {
+	cctx := sample.CrossChainTx(t, "test")
+	ballotIndex := sample.ZetaIndex(t)
+	cctx.SetOutboundBallotIndex(ballotIndex)
+	require.Equal(t, ballotIndex, cctx.GetCurrentOutboundParam().BallotIndex)
+}
+
 func TestCrossChainTx_GetCCTXIndexBytes(t *testing.T) {
 	cctx := sample.CrossChainTx(t, "sample")
 	indexBytes, err := cctx.GetCCTXIndexBytes()
@@ -234,7 +241,6 @@ func TestCrossChainTx_AddOutbound(t *testing.T) {
 		require.Equal(t, cctx.GetCurrentOutboundParam().EffectiveGasPrice, sdkmath.NewInt(100))
 		require.Equal(t, cctx.GetCurrentOutboundParam().EffectiveGasLimit, uint64(20))
 		require.Equal(t, cctx.GetCurrentOutboundParam().ObservedExternalHeight, uint64(10))
-		require.Equal(t, cctx.CctxStatus.LastUpdateTimestamp, ctx.BlockHeader().Time.Unix())
 	})
 
 	t.Run("successfully get outbound tx for failed ballot without amount check", func(t *testing.T) {
@@ -255,7 +261,6 @@ func TestCrossChainTx_AddOutbound(t *testing.T) {
 		require.Equal(t, cctx.GetCurrentOutboundParam().EffectiveGasPrice, sdkmath.NewInt(100))
 		require.Equal(t, cctx.GetCurrentOutboundParam().EffectiveGasLimit, uint64(20))
 		require.Equal(t, cctx.GetCurrentOutboundParam().ObservedExternalHeight, uint64(10))
-		require.Equal(t, cctx.CctxStatus.LastUpdateTimestamp, ctx.BlockHeader().Time.Unix())
 	})
 
 	t.Run("failed to get outbound tx if amount does not match value received", func(t *testing.T) {

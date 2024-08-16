@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -10,9 +9,7 @@ import (
 	"os"
 	"path"
 	"runtime"
-	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -20,8 +17,8 @@ import (
 	"github.com/hashicorp/go-getter"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
@@ -68,7 +65,6 @@ type zetaclientdSupervisor struct {
 	upgradesDir        string
 	upgradePlanName    string
 	enableAutoDownload bool
-	restartChan        chan os.Signal
 }
 
 func newZetaclientdSupervisor(
@@ -79,29 +75,23 @@ func newZetaclientdSupervisor(
 	logger = logger.With().Str("module", "zetaclientdSupervisor").Logger()
 	conn, err := grpc.Dial(
 		fmt.Sprintf("%s:9090", zetaCoreURL),
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("grpc dial: %w", err)
 	}
-	// these signals will result in the supervisor process only restarting zetaclientd
-	restartChan := make(chan os.Signal, 1)
 	return &zetaclientdSupervisor{
 		zetacoredConn:      conn,
 		logger:             logger,
 		reloadSignals:      make(chan bool, 1),
 		upgradesDir:        defaultUpgradesDir,
 		enableAutoDownload: enableAutoDownload,
-		restartChan:        restartChan,
 	}, nil
 }
 
 func (s *zetaclientdSupervisor) Start(ctx context.Context) {
 	go s.watchForVersionChanges(ctx)
 	go s.handleCoreUpgradePlan(ctx)
-	go s.handleNewKeygen(ctx)
-	go s.handleNewTSSKeyGeneration(ctx)
-	go s.handleTSSUpdate(ctx)
 }
 
 func (s *zetaclientdSupervisor) WaitForReloadSignal(ctx context.Context) {
@@ -177,125 +167,6 @@ func (s *zetaclientdSupervisor) watchForVersionChanges(ctx context.Context) {
 	}
 }
 
-func (s *zetaclientdSupervisor) handleTSSUpdate(ctx context.Context) {
-	maxRetries := 11
-	retryInterval := 5 * time.Second
-
-	// TODO : use retry library under pkg/retry
-	// https://github.com/zeta-chain/node/issues/2492
-	for i := 0; i < maxRetries; i++ {
-		client := observertypes.NewQueryClient(s.zetacoredConn)
-		tss, err := client.TSS(ctx, &observertypes.QueryGetTSSRequest{})
-		if err != nil {
-			s.logger.Warn().Err(err).Msg("unable to get original tss")
-			time.Sleep(retryInterval)
-			continue
-		}
-		i = 0
-		for {
-			select {
-			case <-time.After(time.Second):
-			case <-ctx.Done():
-				return
-			}
-			tssNew, err := client.TSS(ctx, &observertypes.QueryGetTSSRequest{})
-			if err != nil {
-				s.logger.Warn().Err(err).Msg("unable to get tss")
-				continue
-			}
-
-			if tssNew.TSS.TssPubkey == tss.TSS.TssPubkey {
-				continue
-			}
-
-			tss = tssNew
-			s.logger.Info().
-				Msgf("tss address is updated from %s to %s", tss.TSS.TssPubkey, tssNew.TSS.TssPubkey)
-			time.Sleep(6 * time.Second)
-			s.logger.Info().Msg("restarting zetaclientd to update tss address")
-			s.restartChan <- syscall.SIGHUP
-		}
-	}
-	s.logger.Warn().Msg("handleTSSUpdate exiting without success")
-}
-
-func (s *zetaclientdSupervisor) handleNewTSSKeyGeneration(ctx context.Context) {
-	maxRetries := 11
-	retryInterval := 5 * time.Second
-
-	// TODO : use retry library under pkg/retry
-	for i := 0; i < maxRetries; i++ {
-		client := observertypes.NewQueryClient(s.zetacoredConn)
-		alltss, err := client.TssHistory(ctx, &observertypes.QueryTssHistoryRequest{})
-		if err != nil {
-			s.logger.Warn().Err(err).Msg("unable to get tss original history")
-			time.Sleep(retryInterval)
-			continue
-		}
-		i = 0
-		tssLenCurrent := len(alltss.TssList)
-		for {
-			select {
-			case <-time.After(time.Second):
-			case <-ctx.Done():
-				return
-			}
-			tssListNew, err := client.TssHistory(ctx, &observertypes.QueryTssHistoryRequest{})
-			if err != nil {
-				s.logger.Warn().Err(err).Msg("unable to get tss new history")
-				continue
-			}
-			tssLenUpdated := len(tssListNew.TssList)
-
-			if tssLenUpdated == tssLenCurrent {
-				continue
-			}
-			if tssLenUpdated < tssLenCurrent {
-				tssLenCurrent = len(tssListNew.TssList)
-				continue
-			}
-
-			tssLenCurrent = tssLenUpdated
-			s.logger.Info().Msgf("tss list updated from %d to %d", tssLenCurrent, tssLenUpdated)
-			time.Sleep(5 * time.Second)
-			s.logger.Info().Msg("restarting zetaclientd to update tss list")
-			s.restartChan <- syscall.SIGHUP
-		}
-	}
-	s.logger.Warn().Msg("handleNewTSSKeyGeneration exiting without success")
-}
-
-func (s *zetaclientdSupervisor) handleNewKeygen(ctx context.Context) {
-	client := observertypes.NewQueryClient(s.zetacoredConn)
-	prevKeygenBlock := int64(0)
-	for {
-		select {
-		case <-time.After(time.Second):
-		case <-ctx.Done():
-			return
-		}
-		resp, err := client.Keygen(ctx, &observertypes.QueryGetKeygenRequest{})
-		if err != nil {
-			s.logger.Warn().Err(err).Msg("unable to get keygen")
-			continue
-		}
-		if resp.Keygen == nil {
-			s.logger.Warn().Err(err).Msg("keygen is nil")
-			continue
-		}
-
-		if resp.Keygen.Status != observertypes.KeygenStatus_PendingKeygen {
-			continue
-		}
-		keygenBlock := resp.Keygen.BlockNumber
-		if prevKeygenBlock == keygenBlock {
-			continue
-		}
-		prevKeygenBlock = keygenBlock
-		s.logger.Info().Msgf("got new keygen at block %d", keygenBlock)
-		s.restartChan <- syscall.SIGHUP
-	}
-}
 func (s *zetaclientdSupervisor) handleCoreUpgradePlan(ctx context.Context) {
 	client := upgradetypes.NewQueryClient(s.zetacoredConn)
 
@@ -345,8 +216,8 @@ func (s *zetaclientdSupervisor) downloadZetaclientd(ctx context.Context, plan *u
 	if plan.Info == "" {
 		return errors.New("upgrade info empty")
 	}
-	var config upgradeConfig
-	err := json.Unmarshal([]byte(plan.Info), &config)
+	var cfg upgradeConfig
+	err := json.Unmarshal([]byte(plan.Info), &cfg)
 	if err != nil {
 		return fmt.Errorf("unmarshal upgrade config: %w", err)
 	}
@@ -354,7 +225,7 @@ func (s *zetaclientdSupervisor) downloadZetaclientd(ctx context.Context, plan *u
 	s.logger.Info().Msg("downloading zetaclientd")
 
 	binKey := fmt.Sprintf("%s-%s/%s", zetaclientdBinaryName, runtime.GOOS, runtime.GOARCH)
-	binURL, ok := config.Binaries[binKey]
+	binURL, ok := cfg.Binaries[binKey]
 	if !ok {
 		return fmt.Errorf("no binary found for: %s", binKey)
 	}
@@ -382,24 +253,4 @@ func (s *zetaclientdSupervisor) downloadZetaclientd(ctx context.Context, plan *u
 		return fmt.Errorf("chmod %s: %w", upgradePath, err)
 	}
 	return nil
-}
-
-func promptPasswords() (string, string, error) {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("HotKey Password: ")
-	hotKeyPass, err := reader.ReadString('\n')
-	if err != nil {
-		return "", "", err
-	}
-	fmt.Print("TSS Password: ")
-	tssKeyPass, err := reader.ReadString('\n')
-	if err != nil {
-		return "", "", err
-	}
-
-	//trim delimiters
-	hotKeyPass = strings.TrimSuffix(hotKeyPass, "\n")
-	tssKeyPass = strings.TrimSuffix(tssKeyPass, "\n")
-
-	return hotKeyPass, tssKeyPass, err
 }

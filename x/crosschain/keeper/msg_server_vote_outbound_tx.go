@@ -90,6 +90,8 @@ func (k msgServer) VoteOutbound(
 		return &types.MsgVoteOutboundResponse{}, nil
 	}
 
+	// Set the finalized ballot to the current outbound params.
+	cctx.SetOutboundBallotIndex(ballotIndex)
 	// If ballot is successful, the value received should be the out tx amount.
 	err = cctx.AddOutbound(ctx, *msg, ballot.BallotStatus)
 	if err != nil {
@@ -101,11 +103,11 @@ func (k msgServer) VoteOutbound(
 
 	err = k.ValidateOutboundObservers(ctx, &cctx, ballot.BallotStatus, msg.ValueReceived.String())
 	if err != nil {
-		k.SaveFailedOutbound(ctx, &cctx, err.Error(), ballotIndex)
+		k.SaveFailedOutbound(ctx, &cctx, err.Error())
 		return &types.MsgVoteOutboundResponse{}, nil
 	}
 
-	k.SaveSuccessfulOutbound(ctx, &cctx, ballotIndex)
+	k.SaveSuccessfulOutbound(ctx, &cctx)
 	return &types.MsgVoteOutboundResponse{}, nil
 }
 
@@ -171,17 +173,17 @@ SaveFailedOutbound saves a failed outbound transaction.It does the following thi
  2. Save the outbound
 */
 
-func (k Keeper) SaveFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx, errMessage string, ballotIndex string) {
+func (k Keeper) SaveFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx, errMessage string) {
 	cctx.SetAbort(errMessage)
 	ctx.Logger().Error(errMessage)
-	k.SaveOutbound(ctx, cctx, ballotIndex)
+	k.SaveOutbound(ctx, cctx)
 }
 
 // SaveSuccessfulOutbound saves a successful outbound transaction.
 // This function does not set the CCTX status, therefore all successful outbound transactions need
 // to have their status set during processing
-func (k Keeper) SaveSuccessfulOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballotIndex string) {
-	k.SaveOutbound(ctx, cctx, ballotIndex)
+func (k Keeper) SaveSuccessfulOutbound(ctx sdk.Context, cctx *types.CrossChainTx) {
+	k.SaveOutbound(ctx, cctx)
 }
 
 /*
@@ -195,18 +197,13 @@ SaveOutbound saves the outbound transaction.It does the following things in one 
 
  4. Set the cctx and nonce to cctx and inboundHash to cctx
 */
-func (k Keeper) SaveOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballotIndex string) {
-	receiverChain := cctx.GetCurrentOutboundParam().ReceiverChainId
-	tssPubkey := cctx.GetCurrentOutboundParam().TssPubkey
-	outTxTssNonce := cctx.GetCurrentOutboundParam().TssNonce
-
-	cctx.GetCurrentOutboundParam().BallotIndex = ballotIndex
-
+func (k Keeper) SaveOutbound(ctx sdk.Context, cctx *types.CrossChainTx) {
 	// #nosec G115 always in range
-	k.GetObserverKeeper().RemoveFromPendingNonces(ctx, tssPubkey, receiverChain, int64(outTxTssNonce))
-	k.RemoveOutboundTrackerFromStore(ctx, receiverChain, outTxTssNonce)
-	ctx.Logger().
-		Info("%s: Remove tracker %s: , Block Height : %d ", voteOutboundID, getOutboundTrackerIndex(receiverChain, outTxTssNonce), ctx.BlockHeight())
+	for _, outboundParams := range cctx.OutboundParams {
+		k.GetObserverKeeper().
+			RemoveFromPendingNonces(ctx, outboundParams.TssPubkey, outboundParams.ReceiverChainId, int64(outboundParams.TssNonce))
+		k.RemoveOutboundTrackerFromStore(ctx, outboundParams.ReceiverChainId, outboundParams.TssNonce)
+	}
 
 	// This should set nonce to cctx only if a new revert is created.
 	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *cctx)
