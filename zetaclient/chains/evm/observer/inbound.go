@@ -424,13 +424,13 @@ func (ob *Observer) ObserverTSSReceive(ctx context.Context, startBlock, toBlock 
 	// query incoming gas asset
 	for bn := startBlock; bn <= toBlock; bn++ {
 		// observe TSS received gas token in block 'bn'
-		err := ob.ObserveTSSReceiveInBlock(ctx, bn)
+		err := ob.ObserveTSSReceiveInBlockAndOutTx(ctx, bn)
 		if err != nil {
 			ob.Logger().Inbound.Error().
 				Err(err).
 				Int64("tss.chain_id", chainID).
 				Uint64("tss.block_number", bn).
-				Msg("ObserverTSSReceive: unable to ObserveTSSReceiveInBlock")
+				Msg("ObserverTSSReceive: unable to ObserveTSSReceiveInBlockAndOutTx")
 
 			// we have to re-scan from this block next time
 			return bn - 1, nil
@@ -748,8 +748,8 @@ func (ob *Observer) BuildInboundVoteMsgForTokenSentToTSS(
 	)
 }
 
-// ObserveTSSReceiveInBlock queries the incoming gas asset to TSS address in a single block and posts votes
-func (ob *Observer) ObserveTSSReceiveInBlock(ctx context.Context, blockNumber uint64) error {
+// ObserveTSSReceiveInBlockAndOutTx queries the incoming gas asset to TSS address in a single block and posts votes
+func (ob *Observer) ObserveTSSReceiveInBlockAndOutTx(ctx context.Context, blockNumber uint64) error {
 	block, err := ob.GetBlockByNumberCached(blockNumber)
 	if err != nil {
 		return errors.Wrapf(err, "error getting block %d for chain %d", blockNumber, ob.Chain().ChainId)
@@ -772,6 +772,13 @@ func (ob *Observer) ObserveTSSReceiveInBlock(ctx context.Context, blockNumber ui
 				)
 			}
 		}
+		if ethcommon.HexToAddress(tx.From) == ob.TSS().EVMAddress() {
+			nonce := uint64(tx.Nonce)
+			if receipt, txx, ok := ob.checkConfirmedTx(ctx, tx.Hash, nonce); ok {
+				ob.SetTxNReceipt(nonce, receipt, txx)
+			}
+		}
+
 	}
 	return nil
 }
