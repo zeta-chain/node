@@ -31,6 +31,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
+	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
@@ -371,6 +372,10 @@ func (ob *ChainClient) WatchOutTx() {
 					ob.SetTxNReceipt(nonceInt, outtxReceipt, outtx)
 				} else if txCount > 1 { // should not happen. We can't tell which txHash is true. It might happen (e.g. glitchy/hacked endpoint)
 					ob.logger.OutTx.Error().Msgf("WatchOutTx: confirmed multiple (%d) outTx for chain %d nonce %d", txCount, ob.chain.ChainId, nonceInt)
+				} else {
+					if len(tracker.HashList) == crosschainkeeper.MaxOutTxTrackerHashes {
+						ob.logger.OutTx.Error().Msgf("WatchOutTx: outbound tracker is full of hashes for chain %d nonce %d", ob.chain.ChainId, nonceInt)
+					}
 				}
 			}
 			ticker.UpdateInterval(ob.GetChainParams().OutTxTicker, ob.logger.OutTx)

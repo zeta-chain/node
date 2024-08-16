@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v18.0.1
+
+### Fixes
+
+* [2706](https://github.com/zeta-chain/node/pull/2706) - avoid submitting pending outbound hashes
+
 ## v18.0.0
 
 * [2470](https://github.com/zeta-chain/node/pull/2470) - add Polygon, Base and Base Sepolia in static chain info
