@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -10,7 +9,6 @@ import (
 	"os"
 	"path"
 	"runtime"
-	"strings"
 	"sync"
 	"time"
 
@@ -255,24 +253,4 @@ func (s *zetaclientdSupervisor) downloadZetaclientd(ctx context.Context, plan *u
 		return fmt.Errorf("chmod %s: %w", upgradePath, err)
 	}
 	return nil
-}
-
-func promptPasswords() (string, string, error) {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("HotKey Password: ")
-	hotKeyPass, err := reader.ReadString('\n')
-	if err != nil {
-		return "", "", err
-	}
-	fmt.Print("TSS Password: ")
-	tssKeyPass, err := reader.ReadString('\n')
-	if err != nil {
-		return "", "", err
-	}
-
-	//trim delimiters
-	hotKeyPass = strings.TrimSuffix(hotKeyPass, "\n")
-	tssKeyPass = strings.TrimSuffix(tssKeyPass, "\n")
-
-	return hotKeyPass, tssKeyPass, err
 }

@@ -195,6 +195,11 @@ type SolanaRPCClient interface {
 	GetHealth(ctx context.Context) (string, error)
 	GetSlot(ctx context.Context, commitment solrpc.CommitmentType) (uint64, error)
 	GetAccountInfo(ctx context.Context, account solana.PublicKey) (*solrpc.GetAccountInfoResult, error)
+	GetBalance(
+		ctx context.Context,
+		account solana.PublicKey,
+		commitment solrpc.CommitmentType,
+	) (*solrpc.GetBalanceResult, error)
 	GetRecentBlockhash(ctx context.Context, commitment solrpc.CommitmentType) (*solrpc.GetRecentBlockhashResult, error)
 	GetRecentPrioritizationFees(
 		ctx context.Context,
