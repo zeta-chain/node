@@ -8,7 +8,9 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/rs/zerolog"
 
+	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/logs"
 )
 
 const (
@@ -27,16 +29,23 @@ func (signer *Signer) reportToOutboundTracker(
 	txSig solana.Signature,
 	logger zerolog.Logger,
 ) {
+	// prepare logger
+	logger = logger.With().
+		Str(logs.FieldMethod, "reportToOutboundTracker").
+		Int64(logs.FieldChain, chainID).
+		Uint64(logs.FieldNonce, nonce).
+		Str(logs.FieldTx, txSig.String()).
+		Logger()
+
 	// set being reported flag to avoid duplicate reporting
 	alreadySet := signer.Signer.SetBeingReportedFlag(txSig.String())
 	if alreadySet {
-		logger.Info().
-			Msgf("reportToOutboundTracker: outbound %s for chain %d nonce %d is being reported", txSig, chainID, nonce)
+		logger.Info().Msg("outbound is being reported to tracker")
 		return
 	}
 
 	// launch a goroutine to monitor tx confirmation status
-	go func() {
+	bg.Work(ctx, func(ctx context.Context) error {
 		defer func() {
 			signer.Signer.ClearBeingReportedFlag(txSig.String())
 		}()
@@ -48,9 +57,8 @@ func (signer *Signer) reportToOutboundTracker(
 
 			// give up if we know the tx is too old and already expired
 			if time.Since(start) > SolanaTransactionTimeout {
-				logger.Info().
-					Msgf("reportToOutboundTracker: outbound %s expired for chain %d nonce %d", txSig, chainID, nonce)
-				return
+				logger.Info().Msg("outbound is expired")
+				return nil
 			}
 
 			// query tx using optimistic commitment level "confirmed"
@@ -68,24 +76,21 @@ func (signer *Signer) reportToOutboundTracker(
 				// unlike Ethereum, Solana doesn't have protocol-level nonce; the nonce is enforced by the gateway program.
 				// a failed outbound (e.g. signature err, balance err) will never be able to increment the gateway program nonce.
 				// a good/valid candidate of outbound tracker hash must come with a successful tx.
-				logger.Warn().
-					Any("Err", tx.Meta.Err).
-					Msgf("reportToOutboundTracker: outbound %s failed for chain %d nonce %d", txSig, chainID, nonce)
-				return
+				logger.Warn().Any("Err", tx.Meta.Err).Msg("outbound is failed")
+				return nil
 			}
 
 			// report outbound hash to zetacore
 			zetaHash, err := zetacoreClient.AddOutboundTracker(ctx, chainID, nonce, txSig.String(), nil, "", -1)
 			if err != nil {
-				logger.Err(err).
-					Msgf("reportToOutboundTracker: error adding outbound %s for chain %d nonce %d", txSig, chainID, nonce)
+				logger.Err(err).Msg("error adding outbound to tracker")
 			} else if zetaHash != "" {
-				logger.Info().Msgf("reportToOutboundTracker: added outbound %s for chain %d nonce %d; zeta txhash %s", txSig, chainID, nonce, zetaHash)
+				logger.Info().Msgf("added outbound to tracker; zeta txhash %s", zetaHash)
 			} else {
-				// exit goroutine if the tracker already contains the hash (reported by other signer)
-				logger.Info().Msgf("reportToOutboundTracker: outbound %s already in tracker for chain %d nonce %d", txSig, chainID, nonce)
-				return
+				// exit goroutine until the tracker contains the hash (reported by either this or other signers)
+				logger.Info().Msg("outbound now exists in tracker")
+				return nil
 			}
 		}
-	}()
+	}, bg.WithName("TrackerReporterSolana"), bg.WithLogger(logger))
 }

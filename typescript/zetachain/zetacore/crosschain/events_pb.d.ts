@@ -354,3 +354,76 @@ export declare class EventERC20Whitelist extends Message<EventERC20Whitelist> {
   static equals(a: EventERC20Whitelist | PlainMessage<EventERC20Whitelist> | undefined, b: EventERC20Whitelist | PlainMessage<EventERC20Whitelist> | undefined): boolean;
 }
 
+/**
+ * @generated from message zetachain.zetacore.crosschain.EventERC20CustodyFundsMigration
+ */
+export declare class EventERC20CustodyFundsMigration extends Message<EventERC20CustodyFundsMigration> {
+  /**
+   * @generated from field: string new_custody_address = 1;
+   */
+  newCustodyAddress: string;
+
+  /**
+   * @generated from field: string erc20_address = 2;
+   */
+  erc20Address: string;
+
+  /**
+   * @generated from field: string amount = 3;
+   */
+  amount: string;
+
+  /**
+   * @generated from field: string cctx_index = 4;
+   */
+  cctxIndex: string;
+
+  constructor(data?: PartialMessage<EventERC20CustodyFundsMigration>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.EventERC20CustodyFundsMigration";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventERC20CustodyFundsMigration;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventERC20CustodyFundsMigration;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventERC20CustodyFundsMigration;
+
+  static equals(a: EventERC20CustodyFundsMigration | PlainMessage<EventERC20CustodyFundsMigration> | undefined, b: EventERC20CustodyFundsMigration | PlainMessage<EventERC20CustodyFundsMigration> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.EventERC20CustodyPausing
+ */
+export declare class EventERC20CustodyPausing extends Message<EventERC20CustodyPausing> {
+  /**
+   * @generated from field: int64 chain_id = 1;
+   */
+  chainId: bigint;
+
+  /**
+   * @generated from field: bool pause = 2;
+   */
+  pause: boolean;
+
+  /**
+   * @generated from field: string cctx_index = 3;
+   */
+  cctxIndex: string;
+
+  constructor(data?: PartialMessage<EventERC20CustodyPausing>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.EventERC20CustodyPausing";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventERC20CustodyPausing;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventERC20CustodyPausing;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventERC20CustodyPausing;
+
+  static equals(a: EventERC20CustodyPausing | PlainMessage<EventERC20CustodyPausing> | undefined, b: EventERC20CustodyPausing | PlainMessage<EventERC20CustodyPausing> | undefined): boolean;
+}
+

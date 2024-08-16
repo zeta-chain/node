@@ -4,11 +4,15 @@
 
 ### Features
 
+* [2578](https://github.com/zeta-chain/node/pull/2578) - add Gateway address in protocol contract list
+* [2630](https://github.com/zeta-chain/node/pull/2630) - implement `MsgMigrateERC20CustodyFunds` to migrate the funds from the ERC20Custody to a new contracts (to be used for the new ERC20Custody contract for smart contract V2)
 * [2578](https://github.com/zeta-chain/node/pull/2578) - Add Gateway address in protocol contract list
 * [2634](https://github.com/zeta-chain/node/pull/2634) - add support for EIP-1559 gas fees
 * [2597](https://github.com/zeta-chain/node/pull/2597) - Add generic rpc metrics to zetaclient
 * [2538](https://github.com/zeta-chain/node/pull/2538) - add background worker routines to shutdown zetaclientd when needed for tss migration
+* [2681](https://github.com/zeta-chain/node/pull/2681) - implement `MsgUpdateERC20CustodyPauseStatus` to pause or unpause ERC20 Custody contract (to be used for the migration process for smart contract V2)
 * [2644](https://github.com/zeta-chain/node/pull/2644) - add created_timestamp to cctx status
+* [2673](https://github.com/zeta-chain/node/pull/2673) - add relayer key importer, encryption and decryption
 
 ### Refactor
 
@@ -133,6 +137,7 @@
 * [2481](https://github.com/zeta-chain/node/pull/2481) - increase gas limit inbound and outbound vote message to 500k
 * [2545](https://github.com/zeta-chain/node/pull/2545) - check solana minimum rent exempt to avoid outbound failure
 * [2547](https://github.com/zeta-chain/node/pull/2547) - limit max txs in priority mempool
+* [2628](https://github.com/zeta-chain/node/pull/2628) - avoid submitting invalid hashes to outbound tracker
 
 ### CI
 

@@ -54,7 +54,7 @@ func TestNewObserver(t *testing.T) {
 	// constructor parameters
 	chain := chains.Ethereum
 	chainParams := *sample.ChainParams(chain.ChainId)
-	appContext := zctx.New(config.New(false), zerolog.Nop())
+	appContext := zctx.New(config.New(false), nil, zerolog.Nop())
 	zetacoreClient := mocks.NewZetacoreClient(t)
 	tss := mocks.NewTSSMainnet()
 	blockCacheSize := base.DefaultBlockCacheSize
