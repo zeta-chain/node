@@ -52,11 +52,11 @@ func initABI() (abi abi.ABI, gasRequiredByMethod map[[4]byte]uint64) {
 		copy(methodID[:], abi.Methods[methodName].ID[:4])
 		switch methodName {
 		case RegularCallMethodName:
-			gasRequiredByMethod[methodID] = 10
+			gasRequiredByMethod[methodID] = 200000
 		case Bech32ToHexAddrMethodName:
-			gasRequiredByMethod[methodID] = 0
+			gasRequiredByMethod[methodID] = 10000
 		case Bech32ifyMethodName:
-			gasRequiredByMethod[methodID] = 0
+			gasRequiredByMethod[methodID] = 10000
 		default:
 			gasRequiredByMethod[methodID] = 0
 		}
