@@ -45,14 +45,14 @@ func TestExtractBitcoinInscriptionMemo(r *runner.E2ERunner, args []string) {
 		r.BtcRPCClient,
 		[]btcjson.TxRawResult{*rawtx},
 		0,
-		r.BTCTSSAddress.EncodeAddress(),
+		r.TSSAddress.String(),
 		log.Logger,
 		r.BitcoinParams,
 		depositorFee,
 	)
 	require.NoError(r, err)
 
-	require.Equal(r, len(events), 1)
+	require.Equal(r, 1, len(events))
 	event := events[0]
 	r.Logger.Print("memo recovered %s", hex.EncodeToString(event.MemoBytes))
 
