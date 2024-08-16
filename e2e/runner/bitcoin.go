@@ -322,11 +322,11 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 
 	// sendToAddrFromDeployerWithMemo makes sure index is 0
 	outpointIdx := 0
-	hexTx, err := builder.GenerateRevealTxn(r.TSSAddress.String(), txnHash.String(), outpointIdx, amount)
+	hexTx, err := builder.GenerateRevealTxn(r.BTCTSSAddress.String(), txnHash.String(), outpointIdx, amount)
 	if err != nil {
 		return nil, err
 	}
-	r.Logger.Print("obtained inscription reveal txn %s sent to %s", hexTx, r.TSSAddress.String())
+	r.Logger.Print("obtained inscription reveal txn %s sent to %s", hexTx, r.BTCTSSAddress.String())
 
 	// Decode the hex string into raw bytes
 	rawTxBytes, err := hex.DecodeString(hexTx)

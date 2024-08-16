@@ -46,7 +46,7 @@ func TestExtractBitcoinInscriptionMemo(r *runner.E2ERunner, args []string) {
 		r.BtcRPCClient,
 		[]btcjson.TxRawResult{*dummyCoinbaseTxn, *rawtx},
 		0,
-		r.TSSAddress.String(),
+		r.BTCTSSAddress.String(),
 		log.Logger,
 		r.BitcoinParams,
 		depositorFee,
