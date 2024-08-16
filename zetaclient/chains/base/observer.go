@@ -17,6 +17,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/db"
+	"github.com/zeta-chain/zetacore/zetaclient/logs"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
@@ -301,13 +302,13 @@ func (ob *Observer) Logger() *ObserverLogger {
 
 // WithLogger attaches a new logger to the observer.
 func (ob *Observer) WithLogger(logger Logger) *Observer {
-	chainLogger := logger.Std.With().Int64("chain", ob.chain.ChainId).Logger()
+	chainLogger := logger.Std.With().Int64(logs.FieldChain, ob.chain.ChainId).Logger()
 	ob.logger = ObserverLogger{
 		Chain:      chainLogger,
-		Inbound:    chainLogger.With().Str("module", "inbound").Logger(),
-		Outbound:   chainLogger.With().Str("module", "outbound").Logger(),
-		GasPrice:   chainLogger.With().Str("module", "gasprice").Logger(),
-		Headers:    chainLogger.With().Str("module", "headers").Logger(),
+		Inbound:    chainLogger.With().Str(logs.FieldModule, logs.ModNameInbound).Logger(),
+		Outbound:   chainLogger.With().Str(logs.FieldModule, logs.ModNameOutbound).Logger(),
+		GasPrice:   chainLogger.With().Str(logs.FieldModule, logs.ModNameGasPrice).Logger(),
+		Headers:    chainLogger.With().Str(logs.FieldModule, logs.ModNameHeaders).Logger(),
 		Compliance: logger.Compliance,
 	}
 	return ob
