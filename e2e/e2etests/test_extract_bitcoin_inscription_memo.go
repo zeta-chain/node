@@ -51,12 +51,10 @@ func TestExtractBitcoinInscriptionMemo(r *runner.E2ERunner, args []string) {
 		depositorFee,
 	)
 	require.NoError(r, err)
-	r.Logger.Info("bitcoin inbound events:")
-	for _, event := range events {
-		r.Logger.Info("  TxHash: %s", event.TxHash)
-		r.Logger.Info("  From: %s", event.FromAddress)
-		r.Logger.Info("  To: %s", event.ToAddress)
-		r.Logger.Info("  Amount: %f", event.Value)
-		r.Logger.Info("  Memo: %x", event.MemoBytes)
-	}
+
+	require.Equal(r, len(events), 1)
+	event := events[0]
+	r.Logger.Print("memo recovered %s", hex.EncodeToString(event.MemoBytes))
+
+	require.Equal(r, event.MemoBytes, memo)
 }
