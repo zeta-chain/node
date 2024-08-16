@@ -189,12 +189,16 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		deployerRunner.SetupEVM(contractsDeployed, true)
 
-		deployerRunner.SetupEVMV2()
+		if testV2 {
+			deployerRunner.SetupEVMV2()
+		}
 
 		deployerRunner.SetZEVMSystemContracts()
 
-		// NOTE: v2 (gateway) setup called here because system contract needs to be set first, then gateway, then zrc20
-		deployerRunner.SetZEVMContractsV2()
+		if testV2 {
+			// NOTE: v2 (gateway) setup called here because system contract needs to be set first, then gateway, then zrc20
+			deployerRunner.SetZEVMContractsV2()
+		}
 
 		deployerRunner.SetZEVMZRC20s()
 
