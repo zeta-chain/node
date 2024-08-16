@@ -126,7 +126,7 @@ var AllE2ETests = []runner.E2ETest{
 	*/
 	runner.NewE2ETest(
 		TestZetaPrecompilesName,
-		"call Regular stateful precompiled contract",
+		"call stateful precompiled contract",
 		[]runner.ArgDefinition{},
 		TestPrecompilesRegular,
 	),
