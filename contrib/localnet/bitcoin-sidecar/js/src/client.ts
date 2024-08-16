@@ -13,14 +13,6 @@ initEccLib(ecc);
 const bip32 = BIP32Factory(ecc);
 const rng = randomBytes;
 
-
-export const DEFAULT_CONFIG = {
-    tss: {
-        mainnet: "bc1p24r8dky87hvauvpc3h798juvh6e3h0fw4sjfs2m4zuq99rd8p2jqt82578",
-        regtest: "bcrt1q7jaj5wvxvadwfz8ws6x8jdhgvrtrfn7n8sh4ks",
-    }
-};
-
 /// The evm address type, a 20 bytes hex string
 export type Address = String;
 export type BtcAddress = String;
@@ -159,7 +151,7 @@ class RevealTxnBuilder {
         });
 
         this.psbt.addOutput({
-            value: commitAmount - this.estimateFee(commitAmount, feeRate),
+            value: commitAmount - this.estimateFee(to, commitAmount, feeRate),
             address: to,
         });
 
@@ -173,12 +165,12 @@ class RevealTxnBuilder {
         return this.psbt.extractTransaction(true).toBuffer();
     }
 
-    private estimateFee(amount: number, feeRate: number): number {
+    private estimateFee(to: string, amount: number, feeRate: number): number {
         const cloned = this.psbt.clone();
 
         cloned.addOutput({
             value: amount,
-            address: this.tssAddress(),
+            address: to,
         });
 
         // should have a way to avoid signing but just providing mocked signautre
@@ -187,16 +179,5 @@ class RevealTxnBuilder {
 
         const size = cloned.extractTransaction().virtualSize();
         return size * feeRate;
-    }
-
-    private tssAddress(): string {
-        switch (this.network) {
-            case regtest:
-                return DEFAULT_CONFIG.tss.regtest;
-            case bitcoin:
-                return DEFAULT_CONFIG.tss.mainnet;
-            default:
-                throw Error("not supported");
-        }
     }
 }
