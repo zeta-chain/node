@@ -336,6 +336,66 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 		require.NotNil(t, newBalance)
 		require.Equal(t, amount.Int64(), newBalance.Int64())
 	})
+
+	t.Run("can deploy the zrc20 contract without a gateway address", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		systemContract, found := k.GetSystemContract(ctx)
+		require.True(t, found)
+		systemContract.Gateway = ""
+		k.SetSystemContract(ctx, systemContract)
+
+		addr, err := k.DeployZRC20Contract(
+			ctx,
+			"foo",
+			"bar",
+			8,
+			chainID,
+			coin.CoinType_Gas,
+			"foobar",
+			big.NewInt(1000),
+		)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, addr)
+
+		// check foreign coin
+		foreignCoins, found := k.GetForeignCoins(ctx, addr.Hex())
+		require.True(t, found)
+		require.Equal(t, "foobar", foreignCoins.Asset)
+		require.Equal(t, chainID, foreignCoins.ForeignChainId)
+		require.Equal(t, uint32(8), foreignCoins.Decimals)
+		require.Equal(t, "foo", foreignCoins.Name)
+		require.Equal(t, "bar", foreignCoins.Symbol)
+		require.Equal(t, coin.CoinType_Gas, foreignCoins.CoinType)
+		require.Equal(t, uint64(1000), foreignCoins.GasLimit)
+
+		// can get the zrc20 data
+		zrc20Data, err := k.QueryZRC20Data(ctx, addr)
+		require.NoError(t, err)
+		require.Equal(t, "foo", zrc20Data.Name)
+		require.Equal(t, "bar", zrc20Data.Symbol)
+		require.Equal(t, uint8(8), zrc20Data.Decimals)
+
+		// can deposit tokens
+		to := sample.EthAddress()
+		oldBalance, err := k.BalanceOfZRC4(ctx, addr, to)
+		require.NoError(t, err)
+		require.NotNil(t, oldBalance)
+		require.Equal(t, int64(0), oldBalance.Int64())
+
+		amount := big.NewInt(100)
+		_, err = k.DepositZRC20(ctx, addr, to, amount)
+		require.NoError(t, err)
+
+		newBalance, err := k.BalanceOfZRC4(ctx, addr, to)
+		require.NoError(t, err)
+		require.NotNil(t, newBalance)
+		require.Equal(t, amount.Int64(), newBalance.Int64())
+	})
 }
 
 func TestKeeper_DeploySystemContracts(t *testing.T) {

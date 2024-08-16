@@ -31,7 +31,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/server/config"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // TODO USE string constant
@@ -112,7 +112,7 @@ func (k Keeper) DeployZRC20Contract(
 ) (common.Address, error) {
 	chain, found := chains.GetChainFromChainID(chainID, k.GetAuthorityKeeper().GetAdditionalChainList(ctx))
 	if !found {
-		return common.Address{}, cosmoserrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %d not found", chainID)
+		return common.Address{}, cosmoserrors.Wrapf(observertypes.ErrSupportedChains, "chain %d not found", chainID)
 	}
 
 	// Check if Contract has already been deployed for Asset
@@ -125,6 +125,14 @@ func (k Keeper) DeployZRC20Contract(
 	if !found {
 		return common.Address{}, cosmoserrors.Wrapf(types.ErrSystemContractNotFound, "system contract not found")
 	}
+
+	// deployment fails if gateway is zero address
+	// if the gateway is not defined in the protocol yet, use the system contract as the gateway
+	gateway := system.Gateway
+	if gateway == "" {
+		gateway = system.SystemContract
+	}
+
 	contractAddr, err := k.DeployContract(
 		ctx,
 		zrc20.ZRC20MetaData,
@@ -136,7 +144,7 @@ func (k Keeper) DeployZRC20Contract(
 		uint8(coinType), // coinType: 0: Zeta 1: gas 2 ERC20
 		gasLimit,        //gas limit for transfer; 21k for gas asset; around 70k for ERC20
 		common.HexToAddress(system.SystemContract),
-		common.HexToAddress(system.Gateway),
+		common.HexToAddress(gateway),
 	)
 	if err != nil {
 		return common.Address{}, cosmoserrors.Wrapf(
