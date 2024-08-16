@@ -110,8 +110,9 @@ const (
 	TestUpdateBytecodeConnectorName   = "update_bytecode_connector"
 	TestRateLimiterName               = "rate_limiter"
 	TestCriticalAdminTransactionsName = "critical_admin_transactions"
-
-	TestMigrateTSSName = "migrate_TSS"
+	TestPauseERC20CustodyName         = "pause_erc20_custody"
+	TestMigrateERC20CustodyFundsName  = "migrate_erc20_custody_funds"
+	TestMigrateTSSName                = "migrate_TSS"
 
 	/*
 	 Special tests
@@ -589,6 +590,18 @@ var AllE2ETests = []runner.E2ETest{
 		"test critical admin transactions",
 		[]runner.ArgDefinition{},
 		TestCriticalAdminTransactions,
+	),
+	runner.NewE2ETest(
+		TestPauseERC20CustodyName,
+		"pausing ERC20 custody on ZetaChain",
+		[]runner.ArgDefinition{},
+		TestPauseERC20Custody,
+	),
+	runner.NewE2ETest(
+		TestMigrateERC20CustodyFundsName,
+		"migrate ERC20 custody funds",
+		[]runner.ArgDefinition{},
+		TestMigrateERC20CustodyFunds,
 	),
 	/*
 	 Special tests

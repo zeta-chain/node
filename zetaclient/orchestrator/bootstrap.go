@@ -21,6 +21,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/db"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
@@ -99,7 +100,10 @@ func syncSignerMap(
 			continue
 		}
 
-		rawChain := chain.RawChain()
+		var (
+			params   = chain.Params()
+			rawChain = chain.RawChain()
+		)
 
 		switch {
 		case chain.IsEVM():
@@ -161,19 +165,16 @@ func syncSignerMap(
 				continue
 			}
 
-			// load the Solana private key
-			solanaKey, err := app.Config().LoadSolanaPrivateKey()
+			// try loading Solana relayer key if present
+			password := chain.RelayerKeyPassword()
+			relayerKey, err := keys.LoadRelayerKey(app.Config().GetRelayerKeyPath(), rawChain.Network, password)
 			if err != nil {
-				logger.Std.Error().Err(err).Msg("Unable to get Solana private key")
+				logger.Std.Error().Err(err).Msg("Unable to load Solana relayer key")
+				continue
 			}
 
-			var (
-				chainRaw  = chain.RawChain()
-				paramsRaw = chain.Params()
-			)
-
 			// create Solana signer
-			signer, err := solanasigner.NewSigner(*chainRaw, *paramsRaw, rpcClient, tss, solanaKey, ts, logger)
+			signer, err := solanasigner.NewSigner(*rawChain, *params, rpcClient, tss, relayerKey, ts, logger)
 			if err != nil {
 				logger.Std.Error().Err(err).Msgf("Unable to construct signer for SOL chain %d", chainID)
 				continue

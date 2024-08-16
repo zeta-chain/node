@@ -74,7 +74,7 @@ func setupTssMigrationParams(
 		ChainId: chain.ChainId,
 		Nonce:   1,
 	})
-	indexString := keeper.GetIndexStringForTssMigration(
+	indexString := crosschaintypes.GetTssMigrationCCTXIndexString(
 		currentTss.TssPubkey,
 		newTss.TssPubkey,
 		chain.ChainId,
@@ -110,10 +110,12 @@ func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
 		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 		_, err := msgServer.MigrateTssFunds(ctx, &msg)
 		require.NoError(t, err)
+
 		hash := crypto.Keccak256Hash([]byte(indexString))
 		index := hash.Hex()
 		cctx, found := k.GetCrossChainTx(ctx, index)
 		require.True(t, found)
+
 		multipliedValue, err := gas.MultiplyGasPrice(gp, crosschaintypes.TssMigrationGasMultiplierEVM)
 		require.NoError(t, err)
 		require.Equal(t, multipliedValue.String(), cctx.GetCurrentOutboundParam().GasPrice)

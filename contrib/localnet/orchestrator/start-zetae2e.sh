@@ -44,52 +44,66 @@ sleep 2
 # unlock the default account account
 address=$(yq -r '.default_account.evm_address' config.yml)
 echo "funding deployer address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock erc20 tester accounts
 address=$(yq -r '.additional_accounts.user_erc20.evm_address' config.yml)
 echo "funding erc20 address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock zeta tester accounts
 address=$(yq -r '.additional_accounts.user_zeta_test.evm_address' config.yml)
 echo "funding zeta tester address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock zevm message passing tester accounts
 address=$(yq -r '.additional_accounts.user_zevm_mp_test.evm_address' config.yml)
 echo "funding zevm mp tester address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock bitcoin tester accounts
 address=$(yq -r '.additional_accounts.user_bitcoin.evm_address' config.yml)
 echo "funding bitcoin tester address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock solana tester accounts
 address=$(yq -r '.additional_accounts.user_solana.evm_address' config.yml)
 echo "funding solana tester address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock ethers tester accounts
 address=$(yq -r '.additional_accounts.user_ether.evm_address' config.yml)
 echo "funding ether tester address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock miscellaneous tests accounts
 address=$(yq -r '.additional_accounts.user_misc.evm_address' config.yml)
 echo "funding misc tester address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock admin erc20 tests accounts
 address=$(yq -r '.additional_accounts.user_admin.evm_address' config.yml)
 echo "funding admin tester address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock migration tests accounts
 address=$(yq -r '.additional_accounts.user_migration.evm_address' config.yml)
 echo "funding migration tester address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
+
+# unlock local solana relayer accounts
+if host solana > /dev/null; then
+  solana_url=$(yq -r '.rpcs.solana' config.yml)
+  solana config set --url "$solana_url" > /dev/null
+
+  relayer=$(yq -r '.observer_relayer_accounts.relayer_accounts[0].solana_address' config.yml)
+  echo "funding solana relayer address ${relayer} with 100 SOL"
+  solana airdrop 100 "$relayer" > /dev/null
+
+  relayer=$(yq -r '.observer_relayer_accounts.relayer_accounts[1].solana_address' config.yml)
+  echo "funding solana relayer address ${relayer} with 100 SOL"
+  solana airdrop 100 "$relayer" > /dev/null
+fi
 
 ### Run zetae2e command depending on the option passed
 
