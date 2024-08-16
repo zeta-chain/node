@@ -31,6 +31,15 @@ jobs:
         run: |
           echo "${{ github.ref }}"
 
+  check-goreleaser:
+    if: ${{ github.event.inputs.skip_checks != 'true' }}
+    runs-on: ${{ vars.RELEASE_RUNNER }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Release build dry-run
+        run: |
+          make release-dry-run
+
   check-changelog:
     needs:
       - check_branch
@@ -115,7 +124,8 @@ jobs:
       - check-changelog
       - check-upgrade-handler-updated
       - check_branch
-    runs-on: ubuntu-22.04
+      - check-goreleaser
+    runs-on: ${{ vars.RELEASE_RUNNER }}
     timeout-minutes: 60
     environment: release
     steps:
