@@ -254,12 +254,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		bitcoinTests := []string{
 			e2etests.TestExtractBitcoinInscriptionMemoName,
-			//e2etests.TestBitcoinDepositName,
-			//e2etests.TestBitcoinDepositRefundName,
-			//e2etests.TestBitcoinWithdrawSegWitName,
-			//e2etests.TestBitcoinWithdrawInvalidAddressName,
-			//e2etests.TestZetaWithdrawBTCRevertName,
-			//e2etests.TestCrosschainSwapName,
+			e2etests.TestBitcoinDepositName,
+			e2etests.TestBitcoinDepositRefundName,
+			e2etests.TestBitcoinWithdrawSegWitName,
+			e2etests.TestBitcoinWithdrawInvalidAddressName,
+			e2etests.TestZetaWithdrawBTCRevertName,
+			e2etests.TestCrosschainSwapName,
 		}
 		bitcoinAdvancedTests := []string{
 			e2etests.TestBitcoinWithdrawTaprootName,
@@ -287,11 +287,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
 		}
 
-		//eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
-		//eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
-		//eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
+		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
+		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
+		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
 		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, bitcoinTests...))
-		//eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, ethereumTests...))
+		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, ethereumTests...))
 	}
 
 	if testAdmin {

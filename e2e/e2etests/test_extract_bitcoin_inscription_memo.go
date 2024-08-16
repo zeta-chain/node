@@ -55,7 +55,6 @@ func TestExtractBitcoinInscriptionMemo(r *runner.E2ERunner, args []string) {
 
 	require.Equal(r, 1, len(events))
 	event := events[0]
-	r.Logger.Print("memo recovered %s", hex.EncodeToString(event.MemoBytes))
 
 	require.Equal(r, event.MemoBytes, memo)
 }

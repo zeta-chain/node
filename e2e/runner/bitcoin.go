@@ -326,7 +326,6 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 	if err != nil {
 		return nil, err
 	}
-	r.Logger.Print("obtained inscription reveal txn %s sent to %s", hexTx, r.BTCTSSAddress.String())
 
 	// Decode the hex string into raw bytes
 	rawTxBytes, err := hex.DecodeString(hexTx)
