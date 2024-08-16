@@ -40,10 +40,11 @@ func TestExtractBitcoinInscriptionMemo(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	r.Logger.Print("obtained reveal txn id %s", txid)
 
+	dummyCoinbaseTxn := rawtx
 	depositorFee := zetabitcoin.DefaultDepositorFee
 	events, err := btcobserver.FilterAndParseIncomingTx(
 		r.BtcRPCClient,
-		[]btcjson.TxRawResult{*rawtx, *rawtx},
+		[]btcjson.TxRawResult{*dummyCoinbaseTxn, *rawtx},
 		0,
 		r.TSSAddress.String(),
 		log.Logger,
