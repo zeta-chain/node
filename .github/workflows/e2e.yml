@@ -49,6 +49,10 @@ on:
         type: boolean
         required: false
         default: false
+      v2-test:
+        type: boolean
+        required: false
+        default: false
 
 concurrency: 
   group: e2e-${{ github.head_ref || github.sha }}
@@ -69,6 +73,7 @@ jobs:
       STATEFUL_DATA_TESTS: ${{ steps.matrix-conditionals.outputs.STATEFUL_DATA_TESTS }}
       TSS_MIGRATION_TESTS: ${{ steps.matrix-conditionals.outputs.TSS_MIGRATION_TESTS }}
       SOLANA_TESTS: ${{ steps.matrix-conditionals.outputs.SOLANA_TESTS }}
+      V2_TESTS: ${{ steps.matrix-conditionals.outputs.V2_TESTS }}
     steps:
       # use api rather than event context to avoid race conditions (label added after push)
       - id: matrix-conditionals
@@ -106,6 +111,7 @@ jobs:
               core.setOutput('ADMIN_TESTS', true);
               core.setOutput('PERFORMANCE_TESTS', true);
               core.setOutput('STATEFUL_DATA_TESTS', true);
+              core.setOutput('V2_TESTS', true); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
             } else if (context.eventName === 'schedule') {
               core.setOutput('DEFAULT_TESTS', true);
               core.setOutput('UPGRADE_TESTS', true);
@@ -116,6 +122,7 @@ jobs:
               core.setOutput('STATEFUL_DATA_TESTS', true);
               core.setOutput('TSS_MIGRATION_TESTS', true);
               core.setOutput('SOLANA_TESTS', true);
+              core.setOutput('V2_TESTS', true); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
             } else if (context.eventName === 'workflow_dispatch') {
               core.setOutput('DEFAULT_TESTS', context.payload.inputs['default-test']);
               core.setOutput('UPGRADE_TESTS', context.payload.inputs['upgrade-test']);
@@ -126,6 +133,7 @@ jobs:
               core.setOutput('STATEFUL_DATA_TESTS', context.payload.inputs['stateful-data-test']);
               core.setOutput('TSS_MIGRATION_TESTS', context.payload.inputs['tss-migration-test']);
               core.setOutput('SOLANA_TESTS', context.payload.inputs['solana-test']);
+              core.setOutput('V2_TESTS', context.payload.inputs['v2-test']); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
             }
 
   e2e:
