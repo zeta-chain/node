@@ -52,7 +52,37 @@ func TestMsgServer_AddObserver(t *testing.T) {
 		require.Equal(t, &types.MsgAddObserverResponse{}, res)
 	})
 
-	t.Run("should add if add node account only false", func(t *testing.T) {
+	t.Run("unable to add observer if observer already exists", func(t *testing.T) {
+		//ARRANGE
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
+			UseAuthorityMock: true,
+		})
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+		admin := sample.AccAddress()
+		observerAddress := sample.AccAddress()
+		wctx := sdk.WrapSDKContext(ctx)
+
+		_, found := k.GetLastObserverCount(ctx)
+		require.False(t, found)
+		srv := keeper.NewMsgServerImpl(*k)
+		k.SetObserverSet(ctx, types.ObserverSet{ObserverList: []string{observerAddress}})
+
+		msg := types.MsgAddObserver{
+			Creator:                 admin,
+			ZetaclientGranteePubkey: sample.PubKeyString(),
+			AddNodeAccountOnly:      false,
+			ObserverAddress:         observerAddress,
+		}
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+
+		// ACT
+		_, err := srv.AddObserver(wctx, &msg)
+
+		// ASSERT
+		require.ErrorIs(t, err, types.ErrDuplicateObserver)
+	})
+
+	t.Run("should add observer if add node account only false", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
 			UseAuthorityMock: true,
 		})
