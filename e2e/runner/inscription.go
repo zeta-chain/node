@@ -65,7 +65,7 @@ func (r *InscriptionBuilder) GenerateCommitAddress(memo []byte) (string, error) 
 		return "", err
 	}
 
-	fmt.Print("raw commit response", response)
+	fmt.Print("raw commit response ", response.Address)
 
 	return response.Address, nil
 }

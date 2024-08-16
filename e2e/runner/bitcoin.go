@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/btcsuite/btcd/chaincfg"
 	"net/http"
 	"sort"
 	"time"
@@ -308,14 +307,14 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 	if err != nil {
 		return nil, err
 	}
-	r.Logger.Print("received inscription commit address", address)
+	r.Logger.Print("received inscription commit address %s", address)
 
-	decodedAddress, err := btcutil.DecodeAddress(address, &chaincfg.RegressionNetParams)
+	receiver, err := chains.DecodeBtcAddress(address, r.GetBitcoinChainID())
 	if err != nil {
 		return nil, err
 	}
 
-	txnHash, err := r.sendToTSSFromDeployerWithMemo(amount, decodedAddress, inputUTXOs, memo)
+	txnHash, err := r.sendToTSSFromDeployerWithMemo(amount, receiver, inputUTXOs, memo)
 	if err != nil {
 		return nil, err
 	}
