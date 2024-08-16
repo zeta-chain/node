@@ -5,6 +5,7 @@
 ### Features
 
 * [2578](https://github.com/zeta-chain/node/pull/2578) - Add Gateway address in protocol contract list
+* [2594](https://github.com/zeta-chain/node/pull/2594) - Integrate Protocol Contracts V2 in the protocol
 
 ## v19.0.0
 
