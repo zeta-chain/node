@@ -370,7 +370,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 				cctx.InboundParams.SenderChainId,
 				toChain.ID(),
 				cctx.GetCurrentOutboundParam().TssNonce,
-				outboundData.gasPrice,
+				outboundData.gas.Price,
 			)
 			return signer.SignGasWithdraw(ctx, outboundData)
 		case coin.CoinType_ERC20:
@@ -379,7 +379,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 				cctx.InboundParams.SenderChainId,
 				toChain.ID(),
 				cctx.GetCurrentOutboundParam().TssNonce,
-				outboundData.gasPrice,
+				outboundData.gas.Price,
 			)
 			return signer.SignERC20Withdraw(ctx, outboundData)
 		case coin.CoinType_Zeta:
@@ -388,7 +388,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 				cctx.InboundParams.SenderChainId,
 				toChain.ID(),
 				cctx.GetCurrentOutboundParam().TssNonce,
-				outboundData.gasPrice,
+				outboundData.gas.Price,
 			)
 			return signer.SignConnectorOnReceive(ctx, outboundData)
 		}
@@ -399,7 +399,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 				"SignConnectorOnRevert: %d => %d, nonce %d, gasPrice %d",
 				cctx.InboundParams.SenderChainId,
 				toChain.ID(), cctx.GetCurrentOutboundParam().TssNonce,
-				outboundData.gasPrice,
+				outboundData.gas.Price,
 			)
 			outboundData.srcChainID = big.NewInt(cctx.OutboundParams[0].ReceiverChainId)
 			outboundData.toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
@@ -410,7 +410,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 				cctx.InboundParams.SenderChainId,
 				toChain.ID(),
 				cctx.GetCurrentOutboundParam().TssNonce,
-				outboundData.gasPrice,
+				outboundData.gas.Price,
 			)
 			return signer.SignGasWithdraw(ctx, outboundData)
 		case coin.CoinType_ERC20:
@@ -418,7 +418,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 				cctx.InboundParams.SenderChainId,
 				toChain.ID(),
 				cctx.GetCurrentOutboundParam().TssNonce,
-				outboundData.gasPrice,
+				outboundData.gas.Price,
 			)
 			return signer.SignERC20Withdraw(ctx, outboundData)
 		}
@@ -428,7 +428,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 			cctx.InboundParams.SenderChainId,
 			toChain.ID(),
 			cctx.GetCurrentOutboundParam().TssNonce,
-			outboundData.gasPrice,
+			outboundData.gas.Price,
 		)
 		outboundData.srcChainID = big.NewInt(cctx.OutboundParams[0].ReceiverChainId)
 		outboundData.toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
@@ -439,7 +439,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 			cctx.InboundParams.SenderChainId,
 			toChain.ID(),
 			cctx.GetCurrentOutboundParam().TssNonce,
-			outboundData.gasPrice,
+			outboundData.gas.Price,
 		)
 		return signer.SignConnectorOnReceive(ctx, outboundData)
 	}

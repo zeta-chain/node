@@ -32,8 +32,7 @@ func (signer *Signer) signGatewayExecute(ctx context.Context, txData *OutboundDa
 		data,
 		signer.gatewayAddress,
 		txData.amount,
-		txData.gasLimit,
-		txData.gasPrice,
+		txData.gas,
 		txData.nonce,
 		txData.height,
 	)
@@ -76,8 +75,7 @@ func (signer *Signer) signGatewayExecuteRevert(
 		data,
 		signer.gatewayAddress,
 		txData.amount,
-		txData.gasLimit,
-		txData.gasPrice,
+		txData.gas,
 		txData.nonce,
 		txData.height,
 	)
@@ -112,8 +110,7 @@ func (signer *Signer) signERC20CustodyWithdraw(
 		data,
 		signer.er20CustodyAddress,
 		zeroValue,
-		txData.gasLimit,
-		txData.gasPrice,
+		txData.gas,
 		txData.nonce,
 		txData.height,
 	)
@@ -149,8 +146,7 @@ func (signer *Signer) signERC20CustodyWithdrawAndCall(
 		data,
 		signer.er20CustodyAddress,
 		zeroValue,
-		txData.gasLimit,
-		txData.gasPrice,
+		txData.gas,
 		txData.nonce,
 		txData.height,
 	)
@@ -197,8 +193,7 @@ func (signer *Signer) signERC20CustodyWithdrawRevert(
 		data,
 		signer.er20CustodyAddress,
 		zeroValue,
-		txData.gasLimit,
-		txData.gasPrice,
+		txData.gas,
 		txData.nonce,
 		txData.height,
 	)

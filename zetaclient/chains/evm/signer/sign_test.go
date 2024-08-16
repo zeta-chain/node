@@ -43,6 +43,7 @@ func TestSigner_SignConnectorOnReceive(t *testing.T) {
 		tx, err := evmSigner.SignConnectorOnReceive(ctx, txData)
 		require.ErrorContains(t, err, "sign onReceive error")
 		require.Nil(t, tx)
+		tss.Unpause()
 	})
 
 	t.Run("SignOutbound - should successfully sign LegacyTx", func(t *testing.T) {
