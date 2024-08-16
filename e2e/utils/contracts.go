@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	// ErrHashRevert is the keccak256 hash of custom error "Foo()" on reverter contract
-	ErrHashRevert = "0xbfb4ebcf"
+	// ErrHashRevertFoo is the keccak256 hash of custom error "Foo()" on reverter contract
+	ErrHashRevertFoo = "0xbfb4ebcf"
 )
 
 // MustHaveCalledExampleContract checks if the contract has been called correctly

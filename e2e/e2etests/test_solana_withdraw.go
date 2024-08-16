@@ -20,8 +20,7 @@ func TestSolanaWithdraw(r *runner.E2ERunner, args []string) {
 
 	// parse withdraw amount (in lamports), approve amount is 1 SOL
 	approvedAmount := new(big.Int).SetUint64(solana.LAMPORTS_PER_SOL)
-	// #nosec G115 e2e - always in range
-	withdrawAmount := big.NewInt(int64(parseInt(r, args[0])))
+	withdrawAmount := parseBigInt(r, args[0])
 	require.Equal(
 		r,
 		-1,

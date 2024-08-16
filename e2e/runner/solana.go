@@ -117,6 +117,33 @@ func (r *E2ERunner) BroadcastTxSync(tx *solana.Transaction) (solana.Signature, *
 	return sig, out
 }
 
+// SOLDepositAndCall deposits an amount of ZRC20 SOL tokens (in lamports) and calls a contract (if data is provided)
+func (r *E2ERunner) SOLDepositAndCall(
+	signerPrivKey *solana.PrivateKey,
+	receiver ethcommon.Address,
+	amount *big.Int,
+	data []byte,
+) solana.Signature {
+	// if signer is not provided, use the runner account as default
+	if signerPrivKey == nil {
+		privkey, err := solana.PrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
+		require.NoError(r, err)
+		signerPrivKey = &privkey
+	}
+
+	// create 'deposit' instruction
+	instruction := r.CreateDepositInstruction(signerPrivKey.PublicKey(), receiver, data, amount.Uint64())
+
+	// create and sign the transaction
+	signedTx := r.CreateSignedTransaction([]solana.Instruction{instruction}, *signerPrivKey)
+
+	// broadcast the transaction and wait for finalization
+	sig, out := r.BroadcastTxSync(signedTx)
+	r.Logger.Info("deposit logs: %v", out.Meta.LogMessages)
+
+	return sig
+}
+
 // WithdrawSOLZRC20 withdraws an amount of ZRC20 SOL tokens
 func (r *E2ERunner) WithdrawSOLZRC20(to solana.PublicKey, amount *big.Int, approveAmount *big.Int) {
 	// approve

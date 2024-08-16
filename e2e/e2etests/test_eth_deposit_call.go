@@ -1,8 +1,6 @@
 package e2etests
 
 import (
-	"math/big"
-
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 
@@ -16,8 +14,8 @@ import (
 func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	value, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok, "Invalid amount specified for TestEtherDepositAndCall.")
+	// parse deposit amount
+	value := parseBigInt(r, args[0])
 
 	r.Logger.Info("Deploying example contract")
 	exampleAddr, _, exampleContract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)
@@ -90,5 +88,5 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("Cross-chain call to reverter reverted")
 
 	// check the status message contains revert error hash in case of revert
-	require.Contains(r, cctx.CctxStatus.StatusMessage, utils.ErrHashRevert)
+	require.Contains(r, cctx.CctxStatus.StatusMessage, utils.ErrHashRevertFoo)
 }

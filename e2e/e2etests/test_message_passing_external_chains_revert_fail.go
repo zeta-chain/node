@@ -19,8 +19,8 @@ import (
 func TestMessagePassingRevertFailExternalChains(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok, "Invalid amount specified for TestMessagePassingRevertFail.")
+	// parse the amount
+	amount := parseBigInt(r, args[0])
 
 	chainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err)
