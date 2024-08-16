@@ -342,7 +342,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestSolanaDepositName,
 		"deposit SOL into ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount in lamport", DefaultValue: "13370000"},
+			{Description: "amount in lamport", DefaultValue: "1200000"},
 		},
 		TestSolanaDeposit,
 	),
@@ -350,7 +350,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestSolanaWithdrawName,
 		"withdraw SOL from ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount in lamport", DefaultValue: "1336000"},
+			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSolanaWithdraw,
 	),
@@ -358,7 +358,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestSolanaDepositAndCallName,
 		"deposit SOL into ZEVM and call a contract",
 		[]runner.ArgDefinition{
-			{Description: "amount in lamport", DefaultValue: "4478000"},
+			{Description: "amount in lamport", DefaultValue: "1200000"},
 		},
 		TestSolanaDepositAndCall,
 	),
@@ -366,7 +366,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestSolanaDepositAndCallRefundName,
 		"deposit SOL into ZEVM and call a contract that reverts; should refund",
 		[]runner.ArgDefinition{
-			{Description: "amount in lamport", DefaultValue: "4477000"},
+			{Description: "amount in lamport", DefaultValue: "1200000"},
 		},
 		TestSolanaDepositAndCallRefund,
 	),
