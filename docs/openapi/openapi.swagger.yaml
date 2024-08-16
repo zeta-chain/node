@@ -57242,6 +57242,11 @@ definitions:
     type: object
   crosschainMsgRemoveOutboundTrackerResponse:
     type: object
+  crosschainMsgUpdateERC20CustodyPauseStatusResponse:
+    type: object
+    properties:
+      cctx_index:
+        type: string
   crosschainMsgUpdateRateLimiterFlagsResponse:
     type: object
   crosschainMsgUpdateTssAddressResponse:

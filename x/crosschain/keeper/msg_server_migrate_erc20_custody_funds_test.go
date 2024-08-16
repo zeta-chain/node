@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -58,6 +59,7 @@ func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
 		cctx, found := k.GetCrossChainTx(ctx, res.CctxIndex)
 		require.True(t, found)
 		require.Equal(t, coin.CoinType_Cmd, cctx.InboundParams.CoinType)
+		require.Contains(t, cctx.RelayedMessage, constant.CmdMigrateERC20CustodyFunds)
 		require.Len(t, cctx.OutboundParams, 1)
 		require.EqualValues(
 			t,
