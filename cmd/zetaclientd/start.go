@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -23,6 +22,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/constant"
+	zetaos "github.com/zeta-chain/zetacore/pkg/os"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -50,10 +50,15 @@ func start(_ *cobra.Command, _ []string) error {
 
 	SetupConfigForTest()
 
-	//Prompt for Hotkey and TSS key-share passwords
-	hotkeyPass, tssKeyPass, err := promptPasswords()
+	// Prompt for Hotkey, TSS key-share and relayer key passwords
+	titles := []string{"HotKey", "TSS", "Solana Relayer Key"}
+	passwords, err := zetaos.PromptPasswords(titles)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to get passwords")
+	}
+	hotkeyPass, tssKeyPass, solanaKeyPass := passwords[0], passwords[1], passwords[2]
+	relayerKeyPasswords := map[string]string{
+		chains.Network_solana.String(): solanaKeyPass,
 	}
 
 	//Load Config file given path
@@ -77,7 +82,7 @@ func start(_ *cobra.Command, _ []string) error {
 	masterLogger := logger.Std
 	startLogger := logger.Std.With().Str("module", "startup").Logger()
 
-	appContext := zctx.New(cfg, masterLogger)
+	appContext := zctx.New(cfg, relayerKeyPasswords, masterLogger)
 	ctx := zctx.WithAppContext(context.Background(), appContext)
 
 	// Wait until zetacore is up
@@ -143,11 +148,11 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore
-	err = zetacoreClient.UpdateAppContext(ctx, appContext, true, startLogger)
-	if err != nil {
+	if err = zetacoreClient.UpdateAppContext(ctx, appContext, startLogger); err != nil {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")
 		return err
 	}
+
 	startLogger.Info().Msgf("Config is updated from zetacore %s", maskCfg(cfg))
 
 	go zetacoreClient.UpdateAppContextWorker(ctx, appContext)
@@ -214,16 +219,21 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	bitcoinChainID := chains.BitcoinRegtest.ChainId
-	btcChain, _, btcEnabled := appContext.GetBTCChainAndConfig()
-	if btcEnabled {
-		bitcoinChainID = btcChain.ChainId
+	btcChains := appContext.FilterChains(zctx.Chain.IsUTXO)
+	switch {
+	case len(btcChains) == 0:
+		return errors.New("no BTC chains found")
+	case len(btcChains) > 1:
+		// In the future we might support multiple UTXO chains;
+		// right now we only support BTC. Let's make sure there are no surprises.
+		return errors.New("more than one BTC chain found")
 	}
+
 	tss, err := mc.NewTSS(
 		ctx,
 		zetacoreClient,
 		tssHistoricalList,
-		bitcoinChainID,
+		btcChains[0].ID(),
 		hotkeyPass,
 		server,
 	)
@@ -263,11 +273,16 @@ func start(_ *cobra.Command, _ []string) error {
 	tss.CurrentPubkey = currentTss.TssPubkey
 	if tss.EVMAddress() == (ethcommon.Address{}) || tss.BTCAddress() == "" {
 		startLogger.Error().Msg("TSS address is not set in zetacore")
+	} else {
+		startLogger.Info().
+			Str("tss.eth", tss.EVMAddress().String()).
+			Str("tss.btc", tss.BTCAddress()).
+			Str("tss.pub_key", tss.CurrentPubkey).
+			Msg("Current TSS")
 	}
-	startLogger.Info().
-		Msgf("Current TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
-	if len(appContext.GetEnabledChains()) == 0 {
-		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
+
+	if len(appContext.ListChainIDs()) == 0 {
+		startLogger.Error().Interface("config", cfg).Msgf("No chains in updated config")
 	}
 
 	isObserver, err := isObserverNode(ctx, zetacoreClient)
@@ -386,29 +401,6 @@ func initPreParams(path string) {
 			}
 		}
 	}
-}
-
-// promptPasswords() This function will prompt for passwords which will be used to decrypt two key files:
-// 1. HotKey
-// 2. TSS key-share
-func promptPasswords() (string, string, error) {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("HotKey Password: ")
-	hotKeyPass, err := reader.ReadString('\n')
-	if err != nil {
-		return "", "", err
-	}
-	fmt.Print("TSS Password: ")
-	TSSKeyPass, err := reader.ReadString('\n')
-	if err != nil {
-		return "", "", err
-	}
-
-	//trim delimiters
-	hotKeyPass = strings.TrimSuffix(hotKeyPass, "\n")
-	TSSKeyPass = strings.TrimSuffix(TSSKeyPass, "\n")
-
-	return hotKeyPass, TSSKeyPass, err
 }
 
 // isObserverNode checks whether THIS node is an observer node.

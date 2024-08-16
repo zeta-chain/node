@@ -7,12 +7,14 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"golang.org/x/sync/errgroup"
 
 	"github.com/zeta-chain/zetacore/app"
+	zetaos "github.com/zeta-chain/zetacore/pkg/os"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
@@ -36,7 +38,9 @@ func main() {
 	shutdownChan := make(chan os.Signal, 1)
 	signal.Notify(shutdownChan, syscall.SIGINT, syscall.SIGTERM)
 
-	hotkeyPassword, tssPassword, err := promptPasswords()
+	// prompt for all necessary passwords
+	titles := []string{"HotKey", "TSS", "Solana Relayer Key"}
+	passwords, err := zetaos.PromptPasswords(titles)
 	if err != nil {
 		logger.Error().Err(err).Msg("unable to get passwords")
 		os.Exit(1)
@@ -65,7 +69,7 @@ func main() {
 		cmd.Stderr = os.Stderr
 		// must reset the passwordInputBuffer every iteration because reads are stateful (seek to end)
 		passwordInputBuffer := bytes.Buffer{}
-		passwordInputBuffer.Write([]byte(hotkeyPassword + "\n" + tssPassword + "\n"))
+		passwordInputBuffer.Write([]byte(strings.Join(passwords, "\n") + "\n"))
 		cmd.Stdin = &passwordInputBuffer
 
 		eg, ctx := errgroup.WithContext(ctx)

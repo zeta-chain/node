@@ -47,7 +47,7 @@ func (signer *Signer) SignMsgWithdraw(
 	return msg.SetSignature(signature), nil
 }
 
-// SignWithdrawTx wraps the withdraw 'msg' into a Solana transaction and signs it with the fee payer key.
+// SignWithdrawTx wraps the withdraw 'msg' into a Solana transaction and signs it with the relayer key.
 func (signer *Signer) SignWithdrawTx(ctx context.Context, msg contracts.MsgWithdraw) (*solana.Transaction, error) {
 	// create withdraw instruction with program call data
 	var err error
@@ -65,7 +65,7 @@ func (signer *Signer) SignWithdrawTx(ctx context.Context, msg contracts.MsgWithd
 	}
 
 	// attach required accounts to the instruction
-	privkey := signer.solanaFeePayerKey
+	privkey := signer.relayerKey
 	attachWithdrawAccounts(&inst, privkey.PublicKey(), signer.pda, msg.To(), signer.gatewayID)
 
 	// get a recent blockhash
@@ -89,10 +89,10 @@ func (signer *Signer) SignWithdrawTx(ctx context.Context, msg contracts.MsgWithd
 		return nil, errors.Wrap(err, "NewTransaction error")
 	}
 
-	// fee payer signs the transaction
+	// relayer signs the transaction
 	_, err = tx.Sign(func(key solana.PublicKey) *solana.PrivateKey {
 		if key.Equals(privkey.PublicKey()) {
-			return &privkey
+			return privkey
 		}
 		return nil
 	})

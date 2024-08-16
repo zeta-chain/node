@@ -54,6 +54,12 @@ policy_accounts:
     bech32_address: "zeta142ds9x7raljv2qz9euys93e64gjmgdfnc47dwq"
     evm_address: "0xAa9b029BC3EFe4c50045Cf0902c73aAa25b43533"
     private_key: "0595CB0CD9BF5264A85A603EC8E43C30ADBB5FD2D9E2EF84C374EA4A65BB616C"
+observer_relayer_accounts:
+  relayer_accounts:
+    - solana_address: "2qBVcNBZCubcnSR3NyCnFjCfkCVUB3G7ECPoaW5rxVjx"
+      solana_private_key: "3EMjCcCJg53fMEGVj13UPQpo6py9AKKyLE2qroR4yL1SvAN2tUznBvDKRYjntw7m6Jof1R2CSqjTddL27rEb6sFQ"
+    - solana_address: "4kkCV8H38xirwQTkE5kL6FHNtYGHnMQQ7SkCjAxibHFK"
+      solana_private_key: "5SSv7jWzamtjWNKGiKf3gvCPHcq9mE5x6LhYgzJCKNSxoQ83gFpmMgmg2JS2zdKcBEdwy7y9bvWgX4LBiUpvnrPf"
 rpcs:
   zevm: "http://zetacore0:8545"
   evm: "http://eth:8545"

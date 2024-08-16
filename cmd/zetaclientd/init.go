@@ -1,8 +1,6 @@
 package main
 
 import (
-	"path"
-
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
@@ -38,7 +36,7 @@ type initArguments struct {
 	KeyringBackend      string
 	HsmMode             bool
 	HsmHotKey           string
-	SolanaKey           string
+	RelayerKeyPath      string
 }
 
 func init() {
@@ -72,7 +70,8 @@ func init() {
 	InitCmd.Flags().BoolVar(&initArgs.HsmMode, "hsm-mode", false, "enable hsm signer, default disabled")
 	InitCmd.Flags().
 		StringVar(&initArgs.HsmHotKey, "hsm-hotkey", "hsm-hotkey", "name of hotkey associated with hardware security module")
-	InitCmd.Flags().StringVar(&initArgs.SolanaKey, "solana-key", "solana-key.json", "solana key file name")
+	InitCmd.Flags().
+		StringVar(&initArgs.RelayerKeyPath, "relayer-key-path", "~/.zetacored/relayer-keys", "path to relayer keys")
 }
 
 func Initialize(_ *cobra.Command, _ []string) error {
@@ -110,15 +109,8 @@ func Initialize(_ *cobra.Command, _ []string) error {
 	configData.KeyringBackend = config.KeyringBackend(initArgs.KeyringBackend)
 	configData.HsmMode = initArgs.HsmMode
 	configData.HsmHotKey = initArgs.HsmHotKey
-	configData.SolanaKeyFile = initArgs.SolanaKey
+	configData.RelayerKeyPath = initArgs.RelayerKeyPath
 	configData.ComplianceConfig = testutils.ComplianceConfigTest()
-
-	// Save solana test fee payer key file
-	keyFile := path.Join(rootArgs.zetaCoreHome, initArgs.SolanaKey)
-	err = createSolanaTestKeyFile(keyFile)
-	if err != nil {
-		return err
-	}
 
 	// Save config file
 	return config.Save(&configData, rootArgs.zetaCoreHome)

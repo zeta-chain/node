@@ -1,17 +1,14 @@
 package main
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
-	"crypto/sha256"
 	"encoding/json"
-	"errors"
-	"io"
 	"os"
 	"path/filepath"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
+	"github.com/zeta-chain/zetacore/pkg/crypto"
 )
 
 var encTssCmd = &cobra.Command{
@@ -25,9 +22,10 @@ func init() {
 	RootCmd.AddCommand(encTssCmd)
 }
 
+// EncryptTSSFile encrypts the given file with the given secret key
 func EncryptTSSFile(_ *cobra.Command, args []string) error {
 	filePath := args[0]
-	secretKey := args[1]
+	password := args[1]
 
 	filePath = filepath.Clean(filePath)
 	data, err := os.ReadFile(filePath)
@@ -39,29 +37,11 @@ func EncryptTSSFile(_ *cobra.Command, args []string) error {
 		return errors.New("file does not contain valid json, may already be encrypted")
 	}
 
-	block, err := aes.NewCipher(getFragmentSeed(secretKey))
+	// encrypt the data
+	cipherText, err := crypto.EncryptAES256GCM(data, password)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to encrypt data")
 	}
 
-	// Creating GCM mode
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return err
-	}
-	// Generating random nonce
-	nonce := make([]byte, gcm.NonceSize())
-	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		return err
-	}
-
-	cipherText := gcm.Seal(nonce, nonce, data, nil)
 	return os.WriteFile(filePath, cipherText, 0o600)
-}
-
-func getFragmentSeed(password string) []byte {
-	h := sha256.New()
-	h.Write([]byte(password))
-	seed := h.Sum(nil)
-	return seed
 }

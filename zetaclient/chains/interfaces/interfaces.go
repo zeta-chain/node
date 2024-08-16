@@ -106,7 +106,7 @@ type ZetacoreClient interface {
 	GetLogger() *zerolog.Logger
 	GetKeys() keyinterfaces.ObserverKeys
 
-	GetKeyGen(ctx context.Context) (*observertypes.Keygen, error)
+	GetKeyGen(ctx context.Context) (observertypes.Keygen, error)
 
 	GetBlockHeight(ctx context.Context) (int64, error)
 	GetBlockHeaderChainState(ctx context.Context, chainID int64) (*lightclienttypes.ChainState, error)
@@ -193,6 +193,11 @@ type SolanaRPCClient interface {
 	GetHealth(ctx context.Context) (string, error)
 	GetSlot(ctx context.Context, commitment solrpc.CommitmentType) (uint64, error)
 	GetAccountInfo(ctx context.Context, account solana.PublicKey) (*solrpc.GetAccountInfoResult, error)
+	GetBalance(
+		ctx context.Context,
+		account solana.PublicKey,
+		commitment solrpc.CommitmentType,
+	) (*solrpc.GetBalanceResult, error)
 	GetRecentBlockhash(ctx context.Context, commitment solrpc.CommitmentType) (*solrpc.GetRecentBlockhashResult, error)
 	GetRecentPrioritizationFees(
 		ctx context.Context,
