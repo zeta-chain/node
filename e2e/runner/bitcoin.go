@@ -318,7 +318,7 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 	if err != nil {
 		return nil, err
 	}
-	r.Logger.Print("obtained inscription commit txn hash", txnHash.String())
+	r.Logger.Print("obtained inscription commit txn hash %s", txnHash.String())
 
 	// sendToAddrFromDeployerWithMemo makes sure index is 0
 	outpointIdx := 0
@@ -326,7 +326,7 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 	if err != nil {
 		return nil, err
 	}
-	r.Logger.Print("obtained inscription reveal txn", hexTx)
+	r.Logger.Print("obtained inscription reveal txn %s", hexTx)
 
 	// Decode the hex string into raw bytes
 	rawTxBytes, err := hex.DecodeString(hexTx)
@@ -339,7 +339,7 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 	if err = msgTx.Deserialize(bytes.NewReader(rawTxBytes)); err != nil {
 		return nil, err
 	}
-	r.Logger.Print("recovered inscription reveal txn", hexTx)
+	r.Logger.Print("recovered inscription reveal txn %s", hexTx)
 
 	txid, err := r.BtcRPCClient.SendRawTransaction(msgTx, true)
 	require.NoError(r, err)

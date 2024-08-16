@@ -36,11 +36,9 @@ func TestExtractBitcoinInscriptionMemo(r *runner.E2ERunner, args []string) {
 	_, err = r.GenerateToAddressIfLocalBitcoin(6, r.BTCDeployerAddress)
 	require.NoError(r, err)
 
-	gtx, err := r.BtcRPCClient.GetTransaction(txid)
-	require.NoError(r, err)
-	r.Logger.Info("rawtx confirmation: %d", gtx.BlockIndex)
 	rawtx, err := r.BtcRPCClient.GetRawTransactionVerbose(txid)
 	require.NoError(r, err)
+	r.Logger.Print("obtained reveal txn id %s", txid)
 
 	depositorFee := zetabitcoin.DefaultDepositorFee
 	events, err := btcobserver.FilterAndParseIncomingTx(
