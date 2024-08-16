@@ -112,7 +112,10 @@ func (rc *Contract) RequiredGas(input []byte) uint64 {
 
 func (rc *Contract) Bech32ToHexAddr(method *abi.Method, args []interface{}) ([]byte, error) {
 	if len(args) != 1 {
-		return nil, fmt.Errorf(ptypes.ErrInvalidNumberOfArgs, 1, len(args))
+		return nil, &ptypes.ErrInvalidNumberOfArgs{
+			Got:    len(args),
+			Expect: 1,
+		}
 	}
 
 	address, ok := args[0].(string)
@@ -136,9 +139,13 @@ func (rc *Contract) Bech32ToHexAddr(method *abi.Method, args []interface{}) ([]b
 
 	return method.Outputs.Pack(common.BytesToAddress(addressBz))
 }
+
 func (rc *Contract) Bech32ify(method *abi.Method, args []interface{}) ([]byte, error) {
 	if len(args) != 2 {
-		return nil, fmt.Errorf(ptypes.ErrInvalidNumberOfArgs, 2, len(args))
+		return nil, &ptypes.ErrInvalidNumberOfArgs{
+			Got:    len(args),
+			Expect: 2,
+		}
 	}
 
 	cfg := sdk.GetConfig()
@@ -181,15 +188,22 @@ func (rc *Contract) Bech32ify(method *abi.Method, args []interface{}) ([]byte, e
 
 func (rc *Contract) RegularCall(ctx sdk.Context, method *abi.Method, args []interface{}) ([]byte, error) {
 	if len(args) != 2 {
-		return nil, fmt.Errorf(ptypes.ErrInvalidNumberOfArgs, 2, len(args))
+		return nil, &(ptypes.ErrInvalidNumberOfArgs{
+			Got:    len(args),
+			Expect: 2,
+		})
 	}
 	callingMethod, ok := args[0].(string)
 	if !ok {
-		return nil, fmt.Errorf(ptypes.ErrInvalidMethod, args[0])
+		return nil, &ptypes.ErrInvalidMethod{
+			Method: callingMethod,
+		}
 	}
 	callingContract, ok := args[1].(common.Address)
 	if !ok {
-		return nil, fmt.Errorf(ptypes.ErrInvalidAddr, args[1])
+		return nil, ptypes.ErrInvalidAddr{
+			Got: callingContract.String(),
+		}
 	}
 
 	res, err := rc.FungibleKeeper.CallEVM(
