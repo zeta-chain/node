@@ -43,7 +43,7 @@ func TestExtractBitcoinInscriptionMemo(r *runner.E2ERunner, args []string) {
 	depositorFee := zetabitcoin.DefaultDepositorFee
 	events, err := btcobserver.FilterAndParseIncomingTx(
 		r.BtcRPCClient,
-		[]btcjson.TxRawResult{*rawtx},
+		[]btcjson.TxRawResult{*rawtx, *rawtx},
 		0,
 		r.TSSAddress.String(),
 		log.Logger,
