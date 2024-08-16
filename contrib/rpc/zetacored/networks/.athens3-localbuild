@@ -1,7 +1,7 @@
 export DAEMON_HOME="/root/.zetacored"
 export NETWORK=athens3
 export RESTORE_TYPE="snapshot"
-export SNAPSHOT_API=https://snapshots.zetachain.com
+export SNAPSHOT_API=https://snapshots.rpc.zetachain.com
 export TRUST_HEIGHT_DIFFERENCE_STATE_SYNC=40000
 export CHAIN_ID="athens_7001-1"
 export VISOR_NAME="cosmovisor"
