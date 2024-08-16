@@ -81,7 +81,9 @@ func (k msgServer) UpdateERC20CustodyPauseStatus(
 	if err != nil {
 		return nil, err
 	}
-	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx)
+	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx, func(ctx sdk.Context) string {
+		return tss.TssPubkey
+	})
 
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.EventERC20CustodyPausing{
