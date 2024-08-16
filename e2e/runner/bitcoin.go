@@ -179,10 +179,10 @@ func (r *E2ERunner) SendToTSSFromDeployerWithMemo(
 	inputUTXOs []btcjson.ListUnspentResult,
 	memo []byte,
 ) (*chainhash.Hash, error) {
-	return r.sendToTSSFromDeployerWithMemo(amount, r.BTCTSSAddress, inputUTXOs, memo)
+	return r.sendToAddrFromDeployerWithMemo(amount, r.BTCTSSAddress, inputUTXOs, memo)
 }
 
-func (r *E2ERunner) sendToTSSFromDeployerWithMemo(
+func (r *E2ERunner) sendToAddrFromDeployerWithMemo(
 	amount float64,
 	to btcutil.Address,
 	inputUTXOs []btcjson.ListUnspentResult,
@@ -314,13 +314,13 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 		return nil, err
 	}
 
-	txnHash, err := r.sendToTSSFromDeployerWithMemo(amount, receiver, inputUTXOs, memo)
+	txnHash, err := r.sendToAddrFromDeployerWithMemo(amount, receiver, inputUTXOs, []byte(constant.DonationMessage))
 	if err != nil {
 		return nil, err
 	}
 	r.Logger.Print("obtained inscription commit txn hash", txnHash.String())
 
-	// sendToTSSFromDeployerWithMemo makes sure index is 0
+	// sendToAddrFromDeployerWithMemo makes sure index is 0
 	outpointIdx := 0
 	hexTx, err := builder.GenerateRevealTxn(r.TSSAddress.String(), txnHash.String(), outpointIdx, amount)
 	if err != nil {
