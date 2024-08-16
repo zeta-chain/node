@@ -8,7 +8,7 @@ services:
       DAEMON_HOME: "${DAEMON_HOME:-/root/.zetacored}"
       NETWORK: ${NETWORK:-mainnet}
       RESTORE_TYPE: "${RESTORE_TYPE:-snapshot}"
-      SNAPSHOT_API: ${SNAPSHOT_API:-https://snapshots.zetachain.com}
+      SNAPSHOT_API: ${SNAPSHOT_API:-https://snapshots.rpc.zetachain.com}
       TRUST_HEIGHT_DIFFERENCE_STATE_SYNC: ${TRUST_HEIGHT_DIFFERENCE_STATE_SYNC:-40000}
       CHAIN_ID: "${CHAIN_ID:-zetachain_7000-1}"
       VISOR_NAME: "${VISOR_NAME:-cosmovisor}"
