@@ -154,9 +154,7 @@ func (k msgServer) WhitelistERC20(
 		GasLimit: uint64(msg.GasLimit),
 	}
 	k.fungibleKeeper.SetForeignCoins(ctx, foreignCoin)
-	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx, func(ctx sdk.Context) string {
-		return tss.TssPubkey
-	})
+	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx, tss.TssPubkey)
 
 	commit()
 

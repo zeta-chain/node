@@ -40,9 +40,7 @@ func createNCctxWithStatus(
 		items[i].OutboundParams = []*types.OutboundParams{{Amount: math.ZeroUint()}}
 		items[i].RevertOptions = types.NewEmptyRevertOptions()
 
-		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, items[i], func(ctx sdk.Context) string {
-			return tssPubkey
-		})
+		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, items[i], tssPubkey)
 	}
 	return items
 }
@@ -84,9 +82,7 @@ func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int, tssPubkey string
 		items[i].Index = fmt.Sprintf("%d", i)
 		items[i].RevertOptions = types.NewEmptyRevertOptions()
 
-		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, items[i], func(ctx sdk.Context) string {
-			return tssPubkey
-		})
+		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, items[i], tssPubkey)
 	}
 	return items
 }

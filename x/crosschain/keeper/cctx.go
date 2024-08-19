@@ -19,10 +19,9 @@ import (
 func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(
 	ctx sdk.Context,
 	cctx types.CrossChainTx,
-	tssFunc func(ctx sdk.Context) string,
+	tssPubkey string,
 ) {
 	// set mapping nonce => cctxIndex
-	tssPubkey := tssFunc(ctx)
 	if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound ||
 		cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
 		k.GetObserverKeeper().SetNonceToCctx(ctx, observerTypes.NonceToCctx{

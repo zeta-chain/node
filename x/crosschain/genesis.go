@@ -47,9 +47,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if found {
 		for _, elem := range genState.CrossChainTxs {
 			if elem != nil {
-				k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *elem, func(ctx sdk.Context) string {
-					return tss.TssPubkey
-				})
+				k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *elem, tss.TssPubkey)
 			}
 		}
 	}
