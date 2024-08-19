@@ -8,15 +8,16 @@ import (
 	"testing"
 
 	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 	. "gopkg.in/check.v1"
 
+	btcecdsa "github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
@@ -118,7 +119,7 @@ func (s *BTCSignerSuite) TestP2PH(c *C) {
 		txscript.ScriptStrictMultiSig |
 		txscript.ScriptDiscourageUpgradableNops
 	vm, err := txscript.NewEngine(originTx.TxOut[0].PkScript, redeemTx, 0,
-		flags, nil, nil, -1)
+		flags, nil, nil, -1, txscript.NewMultiPrevOutFetcher(nil))
 	c.Assert(err, IsNil)
 
 	err = vm.Execute()
@@ -167,7 +168,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 	// but for this example don't bother.
 	txOut = wire.NewTxOut(0, nil)
 	redeemTx.AddTxOut(txOut)
-	txSigHashes := txscript.NewTxSigHashes(redeemTx)
+	txSigHashes := txscript.NewTxSigHashes(redeemTx, txscript.NewCannedPrevOutputFetcher([]byte{}, 0))
 	pkScript, err = bitcoin.PayToAddrScript(addr)
 	c.Assert(err, IsNil)
 
@@ -190,7 +191,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 			txscript.ScriptStrictMultiSig |
 			txscript.ScriptDiscourageUpgradableNops
 		vm, err := txscript.NewEngine(originTx.TxOut[0].PkScript, redeemTx, 0,
-			flags, nil, nil, -1)
+			flags, nil, nil, -1, txscript.NewMultiPrevOutFetcher(nil))
 		c.Assert(err, IsNil)
 
 		err = vm.Execute()
@@ -207,8 +208,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 			100000000,
 		)
 		c.Assert(err, IsNil)
-		sig, err := privKey.Sign(witnessHash)
-		c.Assert(err, IsNil)
+		sig := btcecdsa.Sign(privKey, witnessHash)
 		txWitness := wire.TxWitness{append(sig.Serialize(), byte(txscript.SigHashAll)), pubKeyHash}
 		redeemTx.TxIn[0].Witness = txWitness
 
@@ -216,7 +216,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 			txscript.ScriptStrictMultiSig |
 			txscript.ScriptDiscourageUpgradableNops
 		vm, err := txscript.NewEngine(originTx.TxOut[0].PkScript, redeemTx, 0,
-			flags, nil, nil, -1)
+			flags, nil, nil, -1, txscript.NewMultiPrevOutFetcher(nil))
 		c.Assert(err, IsNil)
 
 		err = vm.Execute()

@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/rpcclient"
-	"github.com/btcsuite/btcutil"
 	"github.com/stretchr/testify/require"
 )
 
@@ -61,7 +61,7 @@ func (r *E2ERunner) GetBtcAddress() (string, string, error) {
 		return "", "", err
 	}
 
-	sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)
+	sk, _ := btcec.PrivKeyFromBytes(skBytes)
 	privkeyWIF, err := btcutil.NewWIF(sk, r.BitcoinParams, true)
 	if err != nil {
 		return "", "", err
@@ -84,7 +84,7 @@ func (r *E2ERunner) SetBtcAddress(name string, rescan bool) {
 	skBytes, err := hex.DecodeString(r.Account.RawPrivateKey.String())
 	require.NoError(r, err)
 
-	sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)
+	sk, _ := btcec.PrivKeyFromBytes(skBytes)
 	privkeyWIF, err := btcutil.NewWIF(sk, r.BitcoinParams, true)
 	require.NoError(r, err)
 
