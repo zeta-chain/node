@@ -228,8 +228,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		erc20AdvancedTests := []string{
 			e2etests.TestERC20DepositRestrictedName,
 		}
+		precompiledContractTests := []string{
+			e2etests.TestZetaPrecompilesPrototypeName,
+		}
 		zetaTests := []string{
-			e2etests.TestZetaPrecompilesName,
 			e2etests.TestZetaWithdrawName,
 			e2etests.TestMessagePassingExternalChainsName,
 			e2etests.TestMessagePassingRevertFailExternalChainsName,
@@ -284,6 +286,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
 		}
 
+		eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose, precompiledContractTests...))
 		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
 		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
 		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))

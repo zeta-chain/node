@@ -15,7 +15,6 @@ const (
 	TestZetaDepositRestrictedName = "zeta_deposit_restricted"
 	TestZetaWithdrawName          = "zeta_withdraw"
 	TestZetaWithdrawBTCRevertName = "zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
-	TestZetaPrecompilesName       = "zeta_precompiles"
 
 	/*
 	 Message passing tests
@@ -117,6 +116,11 @@ const (
 	 Not used to test functionalities but do various interactions with the netwoks
 	*/
 	TestDeploy = "deploy"
+
+	/*
+	 Stateful precompiled contracts tests
+	*/
+	TestZetaPrecompilesPrototypeName = "precompiles_contract_prototype"
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -124,12 +128,6 @@ var AllE2ETests = []runner.E2ETest{
 	/*
 	 ZETA tests
 	*/
-	runner.NewE2ETest(
-		TestZetaPrecompilesName,
-		"call stateful precompiled contract",
-		[]runner.ArgDefinition{},
-		TestPrecompilesRegular,
-	),
 	runner.NewE2ETest(
 		TestZetaDepositName,
 		"deposit ZETA from Ethereum to ZEVM",
@@ -595,5 +593,14 @@ var AllE2ETests = []runner.E2ETest{
 		"migrate TSS funds",
 		[]runner.ArgDefinition{},
 		TestMigrateTSS,
+	),
+	/*
+	 Stateful precompiled contracts tests
+	*/
+	runner.NewE2ETest(
+		TestZetaPrecompilesPrototypeName,
+		"call stateful precompiled contract",
+		[]runner.ArgDefinition{},
+		TestPrecompilesRegular,
 	),
 }
