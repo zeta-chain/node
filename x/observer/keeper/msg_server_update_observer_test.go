@@ -73,6 +73,61 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		require.Equal(t, newOperatorAddress.String(), acc.Operator)
 	})
 
+	t.Run(
+		"unable to update a tombstoned observer if the new address already exists in the observer set",
+		func(t *testing.T) {
+			//ARRANGE
+			k, ctx, _, _ := keepertest.ObserverKeeper(t)
+			srv := keeper.NewMsgServerImpl(*k)
+			// #nosec G404 test purpose - weak randomness is not an issue here
+			r := rand.New(rand.NewSource(9))
+			// Set validator in the store
+			validator := sample.Validator(t, r)
+			validatorNew := sample.Validator(t, r)
+			validatorNew.Status = stakingtypes.Bonded
+			k.GetStakingKeeper().SetValidator(ctx, validatorNew)
+			k.GetStakingKeeper().SetValidator(ctx, validator)
+
+			consAddress, err := validator.GetConsAddr()
+			require.NoError(t, err)
+			k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
+				Address:             consAddress.String(),
+				StartHeight:         0,
+				JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
+				Tombstoned:          true,
+				MissedBlocksCounter: 1,
+			})
+
+			accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
+			require.NoError(t, err)
+
+			newOperatorAddress, err := types.GetAccAddressFromOperatorAddress(validatorNew.OperatorAddress)
+			require.NoError(t, err)
+
+			observerList := []string{accAddressOfValidator.String(), newOperatorAddress.String()}
+			k.SetObserverSet(ctx, types.ObserverSet{
+				ObserverList: observerList,
+			})
+			k.SetNodeAccount(ctx, types.NodeAccount{
+				Operator: accAddressOfValidator.String(),
+			})
+			k.SetLastObserverCount(ctx, &types.LastObserverCount{
+				Count: uint64(len(observerList)),
+			})
+
+			//ACT
+			_, err = srv.UpdateObserver(sdk.WrapSDKContext(ctx), &types.MsgUpdateObserver{
+				Creator:            accAddressOfValidator.String(),
+				OldObserverAddress: accAddressOfValidator.String(),
+				NewObserverAddress: newOperatorAddress.String(),
+				UpdateReason:       types.ObserverUpdateReason_Tombstoned,
+			})
+
+			// ASSERT
+			require.ErrorContains(t, err, types.ErrDuplicateObserver.Error())
+		},
+	)
+
 	t.Run("unable to update to a non validator address", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)

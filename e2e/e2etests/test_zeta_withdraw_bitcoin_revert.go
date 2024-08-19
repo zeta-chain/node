@@ -4,7 +4,7 @@ import (
 	"math/big"
 
 	"github.com/stretchr/testify/require"
-	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
+	connectorzevm "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zetaconnectorzevm.sol"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -14,8 +14,8 @@ import (
 func TestZetaWithdrawBTCRevert(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok)
+	// parse withdraw amount
+	amount := parseBigInt(r, args[0])
 
 	r.ZEVMAuth.Value = amount
 	tx, err := r.WZeta.Deposit(r.ZEVMAuth)

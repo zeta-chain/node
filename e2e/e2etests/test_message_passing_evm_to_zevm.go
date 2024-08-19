@@ -17,8 +17,8 @@ import (
 func TestMessagePassingEVMtoZEVM(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok, "Invalid amount specified for TestMessagePassingEVMtoZEVM.")
+	// parse the amount
+	amount := parseBigInt(r, args[0])
 
 	// Set destination details
 	zEVMChainID, err := r.ZEVMClient.ChainID(r.Ctx)

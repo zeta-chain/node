@@ -15,11 +15,9 @@ import (
 func TestMultipleERC20Deposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
-	depositAmount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok)
-
-	numberOfDeposits, ok := big.NewInt(0).SetString(args[1], 10)
-	require.True(r, ok)
+	// parse the deposit amount and count
+	depositAmount := parseBigInt(r, args[0])
+	numberOfDeposits := parseBigInt(r, args[1])
 	require.NotZero(r, numberOfDeposits.Int64())
 
 	initialBal, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())

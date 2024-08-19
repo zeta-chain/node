@@ -64,7 +64,16 @@ func (k msgServer) DeployFungibleCoinZRC20(
 		}
 	} else {
 		// #nosec G115 always in range
-		address, err = k.DeployZRC20Contract(ctx, msg.Name, msg.Symbol, uint8(msg.Decimals), msg.ForeignChainId, msg.CoinType, msg.ERC20, big.NewInt(msg.GasLimit))
+		address, err = k.DeployZRC20Contract(
+			ctx,
+			msg.Name,
+			msg.Symbol,
+			uint8(msg.Decimals),
+			msg.ForeignChainId,
+			msg.CoinType,
+			msg.ERC20,
+			big.NewInt(msg.GasLimit),
+		)
 		if err != nil {
 			return nil, err
 		}

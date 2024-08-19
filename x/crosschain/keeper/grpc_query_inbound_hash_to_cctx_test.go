@@ -139,6 +139,7 @@ func createInTxHashToCctxWithCctxs(
 		cctxs[i].ZetaFees = math.OneUint()
 		cctxs[i].InboundParams = &types.InboundParams{ObservedHash: fmt.Sprintf("%d", i), Amount: math.OneUint()}
 		cctxs[i].CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
+		cctxs[i].RevertOptions = types.NewEmptyRevertOptions()
 		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctxs[i], func(ctx sdk.Context) string {
 			return tssPubkey
 		})

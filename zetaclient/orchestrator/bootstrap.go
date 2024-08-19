@@ -18,7 +18,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	solbserver "github.com/zeta-chain/zetacore/zetaclient/chains/solana/observer"
 	solanasigner "github.com/zeta-chain/zetacore/zetaclient/chains/solana/signer"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/db"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
@@ -108,8 +107,9 @@ func syncSignerMap(
 		switch {
 		case chain.IsEVM():
 			var (
-				mpiAddress          = ethcommon.HexToAddress(chain.Params().ConnectorContractAddress)
-				erc20CustodyAddress = ethcommon.HexToAddress(chain.Params().Erc20CustodyContractAddress)
+				zetaConnectorAddress = ethcommon.HexToAddress(chain.Params().ConnectorContractAddress)
+				erc20CustodyAddress  = ethcommon.HexToAddress(chain.Params().Erc20CustodyContractAddress)
+				gatewayAddress       = ethcommon.HexToAddress(chain.Params().GatewayAddress)
 			)
 
 			cfg, found := app.Config().GetEVMConfig(chainID)
@@ -125,10 +125,9 @@ func syncSignerMap(
 				ts,
 				logger,
 				cfg.Endpoint,
-				config.GetConnectorABI(),
-				config.GetERC20CustodyABI(),
-				mpiAddress,
+				zetaConnectorAddress,
 				erc20CustodyAddress,
+				gatewayAddress,
 			)
 			if err != nil {
 				logger.Std.Error().Err(err).Msgf("Unable to construct signer for EVM chain %d", chainID)
