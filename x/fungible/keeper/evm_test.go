@@ -3,8 +3,6 @@ package keeper_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/erc1967proxy.sol"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 	"math/big"
 	"testing"
 
@@ -17,6 +15,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/wzeta.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/erc1967proxy.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/zetacore/e2e/utils"
