@@ -9,12 +9,12 @@ import (
 	ethparams "github.com/ethereum/go-ethereum/params"
 	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
 
-	"github.com/zeta-chain/zetacore/precompiles/regular"
+	"github.com/zeta-chain/zetacore/precompiles/prototype"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 )
 
 var EnabledStatefulContracts = map[common.Address]bool{
-	regular.ContractAddress: true,
+	prototype.ContractAddress: true,
 }
 
 // StatefulContracts returns all the registered precompiled contracts.
@@ -27,9 +27,9 @@ func StatefulContracts(
 	precompiledContracts = make([]evmkeeper.CustomContractFn, 0)
 
 	// Define the regular contract function.
-	if EnabledStatefulContracts[regular.ContractAddress] {
+	if EnabledStatefulContracts[prototype.ContractAddress] {
 		regularContract := func(_ sdktypes.Context, _ ethparams.Rules) vm.PrecompiledContract {
-			return regular.NewRegularContract(fungibleKeeper, cdc, gasConfig)
+			return prototype.NewRegularContract(fungibleKeeper, cdc, gasConfig)
 		}
 
 		// Append the regular contract to the precompiledContracts slice.

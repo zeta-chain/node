@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.26;
 
 /// @dev The IRegular contract's address.
-address constant IREGULAR_PRECOMPILE_ADDRESS = 0x0000000000000000000000000000000000000065; // 101
+address constant IPROTOTYPE_PRECOMPILE_ADDRESS = 0x0000000000000000000000000000000000000065; // 101
 
 /// @dev The IRegular contract's instance.
-IRegular constant IREGULAR_CONTRACT = IRegular(IREGULAR_PRECOMPILE_ADDRESS);
+IPrototype constant IREGULAR_CONTRACT = IPrototype(
+    IPROTOTYPE_PRECOMPILE_ADDRESS
+);
 
-interface IRegular {
+interface IPrototype {
     /// @dev converting a bech32 address to hexadecimal address.
     /// @param bech32 The bech32 address.
     /// @return addr The hexadecimal address.

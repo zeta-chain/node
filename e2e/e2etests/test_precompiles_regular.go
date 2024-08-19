@@ -5,13 +5,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/precompiles/regular"
+	"github.com/zeta-chain/zetacore/precompiles/prototype"
 )
 
 func TestPrecompilesRegular(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0, "No arguments expected")
 
-	caller, err := regular.NewRegularCaller(regular.ContractAddress, r.ZEVMClient)
+	caller, err := prototype.NewIPrototypeCaller(prototype.ContractAddress, r.ZEVMClient)
 	require.NoError(r, err, "Failed to create precompiled contract caller")
 
 	res, err := caller.Bech32ify(nil, "zeta", common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE"))
