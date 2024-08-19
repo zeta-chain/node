@@ -144,7 +144,7 @@ func (signer *Signer) TryProcessOutbound(
 	// sign the withdraw transaction by relayer key
 	tx, err := signer.SignWithdrawTx(ctx, *msg)
 	if err != nil {
-		logger.Error().Err(err).Msgf("TryProcessOutbound: SignWithdrawTx error for chain %d nonce %d", chainID, nonce)
+		logger.Error().Err(err).Msgf("TryProcessOutbound: SignGasWithdraw error for chain %d nonce %d", chainID, nonce)
 		return
 	}
 

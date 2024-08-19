@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	"encoding/json"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/erc1967proxy.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 	"math/big"
 	"testing"
 
@@ -12,9 +14,9 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
-	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/wzeta.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -54,6 +56,44 @@ func deploySystemContractsWithMockEvmKeeper(
 	return deploySystemContracts(t, ctx, k, mockEVMKeeper)
 }
 
+// deploy upgradable gateway contract and return its address
+func deployGatewayContract(
+	t *testing.T,
+	ctx sdk.Context,
+	k *fungiblekeeper.Keeper,
+	evmk types.EVMKeeper,
+	wzeta, admin common.Address,
+) common.Address {
+	// Deploy the gateway contract
+	implAddr, err := k.DeployContract(ctx, gatewayzevm.GatewayZEVMMetaData)
+	require.NoError(t, err)
+	require.NotEmpty(t, implAddr)
+	assertContractDeployment(t, evmk, ctx, implAddr)
+
+	// Deploy the proxy contract
+	gatewayABI, err := gatewayzevm.GatewayZEVMMetaData.GetAbi()
+	require.NoError(t, err)
+
+	// Encode the initializer data
+	initializerData, err := gatewayABI.Pack("initialize", wzeta, admin)
+	require.NoError(t, err)
+
+	gatewayContract, err := k.DeployContract(ctx, erc1967proxy.ERC1967ProxyMetaData, implAddr, initializerData)
+	require.NoError(t, err)
+	require.NotEmpty(t, gatewayContract)
+	assertContractDeployment(t, evmk, ctx, gatewayContract)
+
+	// store the gateway in the system contract object
+	sys, found := k.GetSystemContract(ctx)
+	if !found {
+		sys = types.SystemContract{}
+	}
+	sys.Gateway = gatewayContract.Hex()
+	k.SetSystemContract(ctx, sys)
+
+	return gatewayContract
+}
+
 // deploySystemContracts deploys the system contracts and returns their addresses.
 func deploySystemContracts(
 	t *testing.T,
@@ -87,6 +127,10 @@ func deploySystemContracts(
 	require.NoError(t, err)
 	require.NotEmpty(t, systemContract)
 	assertContractDeployment(t, evmk, ctx, systemContract)
+
+	// deploy the gateway contract
+	contract := deployGatewayContract(t, ctx, k, evmk, wzeta, sample.EthAddress())
+	require.NotEmpty(t, contract)
 
 	return
 }
@@ -244,6 +288,66 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 
 		chainID := getValidChainID(t)
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		addr, err := k.DeployZRC20Contract(
+			ctx,
+			"foo",
+			"bar",
+			8,
+			chainID,
+			coin.CoinType_Gas,
+			"foobar",
+			big.NewInt(1000),
+		)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, addr)
+
+		// check foreign coin
+		foreignCoins, found := k.GetForeignCoins(ctx, addr.Hex())
+		require.True(t, found)
+		require.Equal(t, "foobar", foreignCoins.Asset)
+		require.Equal(t, chainID, foreignCoins.ForeignChainId)
+		require.Equal(t, uint32(8), foreignCoins.Decimals)
+		require.Equal(t, "foo", foreignCoins.Name)
+		require.Equal(t, "bar", foreignCoins.Symbol)
+		require.Equal(t, coin.CoinType_Gas, foreignCoins.CoinType)
+		require.Equal(t, uint64(1000), foreignCoins.GasLimit)
+
+		// can get the zrc20 data
+		zrc20Data, err := k.QueryZRC20Data(ctx, addr)
+		require.NoError(t, err)
+		require.Equal(t, "foo", zrc20Data.Name)
+		require.Equal(t, "bar", zrc20Data.Symbol)
+		require.Equal(t, uint8(8), zrc20Data.Decimals)
+
+		// can deposit tokens
+		to := sample.EthAddress()
+		oldBalance, err := k.BalanceOfZRC4(ctx, addr, to)
+		require.NoError(t, err)
+		require.NotNil(t, oldBalance)
+		require.Equal(t, int64(0), oldBalance.Int64())
+
+		amount := big.NewInt(100)
+		_, err = k.DepositZRC20(ctx, addr, to, amount)
+		require.NoError(t, err)
+
+		newBalance, err := k.BalanceOfZRC4(ctx, addr, to)
+		require.NoError(t, err)
+		require.NotNil(t, newBalance)
+		require.Equal(t, amount.Int64(), newBalance.Int64())
+	})
+
+	t.Run("can deploy the zrc20 contract without a gateway address", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		systemContract, found := k.GetSystemContract(ctx)
+		require.True(t, found)
+		systemContract.Gateway = ""
+		k.SetSystemContract(ctx, systemContract)
 
 		addr, err := k.DeployZRC20Contract(
 			ctx,

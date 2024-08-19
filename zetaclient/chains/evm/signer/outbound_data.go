@@ -39,6 +39,9 @@ type OutboundData struct {
 
 	// outboundParams field contains data detailing the receiver chain and outbound transaction
 	outboundParams *types.OutboundParams
+
+	// revertOptions field contains data detailing the revert options
+	revertOptions types.RevertOptions
 }
 
 // NewOutboundData creates OutboundData from the given CCTX.
@@ -63,10 +66,22 @@ func NewOutboundData(
 		return nil, false, errors.Wrap(err, "unable to get app from context")
 	}
 
-	// recipient + destination chain
-	to, toChainID, skip := getDestination(cctx, logger)
-	if skip {
-		return nil, true, nil
+	var (
+		to        ethcommon.Address
+		toChainID *big.Int
+	)
+
+	// in protocol contract v2, receiver is always set in the outbound
+	if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 {
+		to = ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
+		toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
+	} else {
+		// recipient + destination chain
+		var skip bool
+		to, toChainID, skip = getDestination(cctx, logger)
+		if skip {
+			return nil, true, nil
+		}
 	}
 
 	// ensure that chain exists in app's context
@@ -87,11 +102,20 @@ func NewOutboundData(
 	// Base64 decode message
 	var message []byte
 	if cctx.InboundParams.CoinType != coin.CoinType_Cmd {
-		msg, errDecode := base64.StdEncoding.DecodeString(cctx.RelayedMessage)
-		if errDecode != nil {
-			logger.Err(err).Str("cctx.relayed_message", cctx.RelayedMessage).Msg("Unable to decode relayed message")
+		// protocol contract v2 uses hex encoding
+		if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 {
+			message, err = hex.DecodeString(cctx.RelayedMessage)
+			if err != nil {
+				logger.Err(err).Msgf("decode CCTX.Message %s error", cctx.RelayedMessage)
+				message = []byte{}
+			}
 		} else {
-			message = msg
+			msg, errDecode := base64.StdEncoding.DecodeString(cctx.RelayedMessage)
+			if errDecode != nil {
+				logger.Err(err).Str("cctx.relayed_message", cctx.RelayedMessage).Msg("Unable to decode relayed message")
+			} else {
+				message = msg
+			}
 		}
 	}
 
@@ -114,6 +138,8 @@ func NewOutboundData(
 		cctxIndex: cctxIndex,
 
 		outboundParams: outboundParams,
+
+		revertOptions: cctx.RevertOptions,
 	}, false, nil
 }
 
