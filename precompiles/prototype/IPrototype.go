@@ -31,7 +31,7 @@ var (
 
 // IPrototypeMetaData contains all meta data concerning the IPrototype contract.
 var IPrototypeMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"string\",\"name\":\"bech32\",\"type\":\"string\"}],\"name\":\"bech32ToHexAddr\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"prefix\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"bech32ify\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"bech32\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"method\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"regularCall\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"result\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"string\",\"name\":\"bech32\",\"type\":\"string\"}],\"name\":\"bech32ToHexAddr\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"prefix\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"bech32ify\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"bech32\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"int64\",\"name\":\"chainID\",\"type\":\"int64\"}],\"name\":\"getGasStabilityPoolBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"result\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
 }
 
 // IPrototypeABI is the input ABI used to generate the binding from.
@@ -242,23 +242,33 @@ func (_IPrototype *IPrototypeCallerSession) Bech32ify(prefix string, addr common
 	return _IPrototype.Contract.Bech32ify(&_IPrototype.CallOpts, prefix, addr)
 }
 
-// RegularCall is a paid mutator transaction binding the contract method 0x93e3663d.
+// GetGasStabilityPoolBalance is a free data retrieval call binding the contract method 0x3ee8d1a4.
 //
-// Solidity: function regularCall(string method, address addr) returns(uint256 result)
-func (_IPrototype *IPrototypeTransactor) RegularCall(opts *bind.TransactOpts, method string, addr common.Address) (*types.Transaction, error) {
-	return _IPrototype.contract.Transact(opts, "regularCall", method, addr)
+// Solidity: function getGasStabilityPoolBalance(int64 chainID) view returns(uint256 result)
+func (_IPrototype *IPrototypeCaller) GetGasStabilityPoolBalance(opts *bind.CallOpts, chainID int64) (*big.Int, error) {
+	var out []interface{}
+	err := _IPrototype.contract.Call(opts, &out, "getGasStabilityPoolBalance", chainID)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
-// RegularCall is a paid mutator transaction binding the contract method 0x93e3663d.
+// GetGasStabilityPoolBalance is a free data retrieval call binding the contract method 0x3ee8d1a4.
 //
-// Solidity: function regularCall(string method, address addr) returns(uint256 result)
-func (_IPrototype *IPrototypeSession) RegularCall(method string, addr common.Address) (*types.Transaction, error) {
-	return _IPrototype.Contract.RegularCall(&_IPrototype.TransactOpts, method, addr)
+// Solidity: function getGasStabilityPoolBalance(int64 chainID) view returns(uint256 result)
+func (_IPrototype *IPrototypeSession) GetGasStabilityPoolBalance(chainID int64) (*big.Int, error) {
+	return _IPrototype.Contract.GetGasStabilityPoolBalance(&_IPrototype.CallOpts, chainID)
 }
 
-// RegularCall is a paid mutator transaction binding the contract method 0x93e3663d.
+// GetGasStabilityPoolBalance is a free data retrieval call binding the contract method 0x3ee8d1a4.
 //
-// Solidity: function regularCall(string method, address addr) returns(uint256 result)
-func (_IPrototype *IPrototypeTransactorSession) RegularCall(method string, addr common.Address) (*types.Transaction, error) {
-	return _IPrototype.Contract.RegularCall(&_IPrototype.TransactOpts, method, addr)
+// Solidity: function getGasStabilityPoolBalance(int64 chainID) view returns(uint256 result)
+func (_IPrototype *IPrototypeCallerSession) GetGasStabilityPoolBalance(chainID int64) (*big.Int, error) {
+	return _IPrototype.Contract.GetGasStabilityPoolBalance(&_IPrototype.CallOpts, chainID)
 }

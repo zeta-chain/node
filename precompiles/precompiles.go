@@ -13,6 +13,9 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 )
 
+// EnabledStatefulContracts contains the list of all enabled stateful precompiles.
+// This is useful for listing and reading from other packages, such as BlockedAddrs() function.
+// Setting to false a contract here will disable it, not being included in the blockchain.
 var EnabledStatefulContracts = map[common.Address]bool{
 	prototype.ContractAddress: true,
 }
@@ -29,7 +32,7 @@ func StatefulContracts(
 	// Define the regular contract function.
 	if EnabledStatefulContracts[prototype.ContractAddress] {
 		regularContract := func(_ sdktypes.Context, _ ethparams.Rules) vm.PrecompiledContract {
-			return prototype.NewRegularContract(fungibleKeeper, cdc, gasConfig)
+			return prototype.NewIPrototypeContract(fungibleKeeper, cdc, gasConfig)
 		}
 
 		// Append the regular contract to the precompiledContracts slice.

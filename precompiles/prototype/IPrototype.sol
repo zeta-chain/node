@@ -26,12 +26,10 @@ interface IPrototype {
         address addr
     ) external view returns (string memory bech32);
 
-    /// @dev Function to verify calling regular contact through precompiled contact
-    /// @param method to call, e.g. bar.
-    /// @param addr of deployed regular contract.
+    /// @dev returns the balance of the gas stability pool
+    /// @param chainID to query gas.
     /// @return result of the call.
-    function regularCall(
-        string memory method,
-        address addr
-    ) external returns (uint256 result);
+    function getGasStabilityPoolBalance(
+        int64 chainID
+    ) external view returns (uint256 result);
 }

@@ -45,17 +45,12 @@
   {
     "inputs": [
       {
-        "internalType": "string",
-        "name": "method",
-        "type": "string"
-      },
-      {
-        "internalType": "address",
-        "name": "addr",
-        "type": "address"
+        "internalType": "int64",
+        "name": "chainID",
+        "type": "int64"
       }
     ],
-    "name": "regularCall",
+    "name": "getGasStabilityPoolBalance",
     "outputs": [
       {
         "internalType": "uint256",
@@ -63,7 +58,7 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   }
 ]

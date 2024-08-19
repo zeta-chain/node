@@ -1,9 +1,8 @@
 package prototype
 
 import (
-	"errors"
+	_ "embed"
 	"fmt"
-	"math/big"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,53 +14,52 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 
 	ptypes "github.com/zeta-chain/zetacore/precompiles/types"
-	"github.com/zeta-chain/zetacore/testutil/contracts"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 const (
-	RegularCallMethodName     = "regularCall"
-	Bech32ToHexAddrMethodName = "bech32ToHexAddr"
-	Bech32ifyMethodName       = "bech32ify"
+	Bech32ToHexAddrMethodName      = "bech32ToHexAddr"
+	Bech32ifyMethodName            = "bech32ify"
+	GetGasStabilityPoolBalanceName = "getGasStabilityPoolBalance"
 )
 
 var (
 	ABI                 abi.ABI
 	ContractAddress     = common.HexToAddress("0x0000000000000000000000000000000000000065")
 	GasRequiredByMethod = map[[4]byte]uint64{}
-	ExampleABI          *abi.ABI
+
+	//go:embed IPrototype.abi
+	prototypeABI string
 )
 
 func init() {
-	ABI, GasRequiredByMethod = initABI()
-	ExampleABI, _ = contracts.ExampleMetaData.GetAbi()
-}
+	if prototypeABI == "" {
+		panic("missing prototype ABI")
+	}
 
-var RegularModuleMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"string\",\"name\":\"bech32\",\"type\":\"string\"}],\"name\":\"bech32ToHexAddr\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"prefix\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"bech32ify\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"bech32\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"method\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"regularCall\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"result\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
-}
+	var IPrototypeMetaData = &bind.MetaData{
+		ABI: prototypeABI,
+	}
 
-func initABI() (abi abi.ABI, gasRequiredByMethod map[[4]byte]uint64) {
-	gasRequiredByMethod = map[[4]byte]uint64{}
-	if err := abi.UnmarshalJSON([]byte(RegularModuleMetaData.ABI)); err != nil {
+	if err := ABI.UnmarshalJSON([]byte(IPrototypeMetaData.ABI)); err != nil {
 		panic(err)
 	}
-	for methodName := range abi.Methods {
+
+	GasRequiredByMethod = map[[4]byte]uint64{}
+	for methodName := range ABI.Methods {
 		var methodID [4]byte
-		copy(methodID[:], abi.Methods[methodName].ID[:4])
+		copy(methodID[:], ABI.Methods[methodName].ID[:4])
 		switch methodName {
-		case RegularCallMethodName:
-			gasRequiredByMethod[methodID] = 200000
 		case Bech32ToHexAddrMethodName:
-			gasRequiredByMethod[methodID] = 10000
+			GasRequiredByMethod[methodID] = 10000
 		case Bech32ifyMethodName:
-			gasRequiredByMethod[methodID] = 10000
+			GasRequiredByMethod[methodID] = 10000
+		case GetGasStabilityPoolBalanceName:
+			GasRequiredByMethod[methodID] = 10000
 		default:
-			gasRequiredByMethod[methodID] = 0
+			GasRequiredByMethod[methodID] = 0
 		}
 	}
-	return abi, gasRequiredByMethod
 }
 
 type Contract struct {
@@ -72,8 +70,7 @@ type Contract struct {
 	kvGasConfig    storetypes.GasConfig
 }
 
-// NewRegularContract creates the precompiled contract to manage native tokens
-func NewRegularContract(
+func NewIPrototypeContract(
 	fungibleKeeper fungiblekeeper.Keeper,
 	cdc codec.Codec,
 	kvGasConfig storetypes.GasConfig,
@@ -86,18 +83,21 @@ func NewRegularContract(
 	}
 }
 
-func (rc *Contract) Address() common.Address {
+// Address() is required to implement the PrecompiledContract interface.
+func (c *Contract) Address() common.Address {
 	return ContractAddress
 }
 
-func (rc *Contract) Abi() abi.ABI {
+// Abi() is required to implement the PrecompiledContract interface.
+func (c *Contract) Abi() abi.ABI {
 	return ABI
 }
 
-// RequiredGas calculates the contract gas use
-func (rc *Contract) RequiredGas(input []byte) uint64 {
+// RequiredGas is required to implement the PrecompiledContract interface.
+// The gas has to be calculated deterministically based on the input.
+func (c *Contract) RequiredGas(input []byte) uint64 {
 	// base cost to prevent large input size
-	baseCost := uint64(len(input)) * rc.kvGasConfig.WriteCostPerByte
+	baseCost := uint64(len(input)) * c.kvGasConfig.WriteCostPerByte
 
 	// get methodID (first 4 bytes)
 	var methodID [4]byte
@@ -110,7 +110,7 @@ func (rc *Contract) RequiredGas(input []byte) uint64 {
 	return baseCost
 }
 
-func (rc *Contract) Bech32ToHexAddr(method *abi.Method, args []interface{}) ([]byte, error) {
+func (c *Contract) Bech32ToHexAddr(method *abi.Method, args []interface{}) ([]byte, error) {
 	if len(args) != 1 {
 		return nil, &ptypes.ErrInvalidNumberOfArgs{
 			Got:    len(args),
@@ -140,7 +140,7 @@ func (rc *Contract) Bech32ToHexAddr(method *abi.Method, args []interface{}) ([]b
 	return method.Outputs.Pack(common.BytesToAddress(addressBz))
 }
 
-func (rc *Contract) Bech32ify(method *abi.Method, args []interface{}) ([]byte, error) {
+func (c *Contract) Bech32ify(method *abi.Method, args []interface{}) ([]byte, error) {
 	if len(args) != 2 {
 		return nil, &ptypes.ErrInvalidNumberOfArgs{
 			Got:    len(args),
@@ -186,77 +186,68 @@ func (rc *Contract) Bech32ify(method *abi.Method, args []interface{}) ([]byte, e
 	return method.Outputs.Pack(bech32Str)
 }
 
-func (rc *Contract) RegularCall(ctx sdk.Context, method *abi.Method, args []interface{}) ([]byte, error) {
-	if len(args) != 2 {
+func (c *Contract) GetGasStabilityPoolBalance(
+	ctx sdk.Context,
+	method *abi.Method,
+	args []interface{},
+) ([]byte, error) {
+	if len(args) != 1 {
 		return nil, &(ptypes.ErrInvalidNumberOfArgs{
 			Got:    len(args),
-			Expect: 2,
+			Expect: 1,
 		})
 	}
-	callingMethod, ok := args[0].(string)
+
+	// Unwrap arguments. The chainID is the first and unique argument.
+	chainID, ok := args[0].(int64)
 	if !ok {
-		return nil, &ptypes.ErrInvalidMethod{
-			Method: callingMethod,
-		}
-	}
-	callingContract, ok := args[1].(common.Address)
-	if !ok {
-		return nil, ptypes.ErrInvalidAddr{
-			Got: callingContract.String(),
+		return nil, ptypes.ErrInvalidArgument{
+			Got: chainID,
 		}
 	}
 
-	res, err := rc.FungibleKeeper.CallEVM(
-		ctx,
-		*ExampleABI,
-		fungibletypes.ModuleAddressEVM,
-		callingContract,
-		big.NewInt(0),
-		nil,
-		true,
-		false,
-		callingMethod,
-	)
+	balance, err := c.FungibleKeeper.GetGasStabilityPoolBalance(ctx, chainID)
 	if err != nil {
 		return nil, err
 	}
 
-	return method.Outputs.Pack(
-		ptypes.BytesToBigInt(res.Ret),
-	)
+	return method.Outputs.Pack(balance)
 }
 
-func (rc *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, error) {
-	// parse input
-	methodID := contract.Input[:4]
-	method, err := ABI.MethodById(methodID)
+// Run is the entrypoint of the precompiled contract, it switches over the input method,
+// and execute them accordingly.
+func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, error) {
+	method, err := ABI.MethodById(contract.Input[:4])
 	if err != nil {
 		return nil, err
 	}
+
 	args, err := method.Inputs.Unpack(contract.Input[4:])
 	if err != nil {
-		return nil, errors.New("fail to unpack input arguments")
+		return nil, err
 	}
 
 	stateDB := evm.StateDB.(ptypes.ExtStateDB)
 
 	switch method.Name {
-	case RegularCallMethodName:
+	case GetGasStabilityPoolBalanceName:
 		var res []byte
-		if execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-			res, err = rc.RegularCall(ctx, method, args)
+		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
+			res, err = c.GetGasStabilityPoolBalance(ctx, method, args)
 			return err
-		}); execErr != nil {
+		})
+		if execErr != nil {
 			return nil, err
-		} else {
-			return res, nil
 		}
+		return method.Outputs.Pack(res)
 
 	case Bech32ToHexAddrMethodName:
-		return rc.Bech32ToHexAddr(method, args)
+		return c.Bech32ToHexAddr(method, args)
 	case Bech32ifyMethodName:
-		return rc.Bech32ify(method, args)
+		return c.Bech32ify(method, args)
 	default:
-		return nil, errors.New("unknown method")
+		return nil, ptypes.ErrInvalidMethod{
+			Method: method.Name,
+		}
 	}
 }
