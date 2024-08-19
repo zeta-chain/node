@@ -23,5 +23,5 @@ type ErrInvalidMethod struct {
 }
 
 func (e ErrInvalidMethod) Error() string {
-	return fmt.Sprintf("unknown method: %ss", e.Method)
+	return fmt.Sprintf("invalid method: %s", e.Method)
 }
