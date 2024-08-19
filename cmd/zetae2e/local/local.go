@@ -348,6 +348,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		solanaTests := []string{
 			e2etests.TestSolanaDepositName,
 			e2etests.TestSolanaWithdrawName,
+			e2etests.TestSolanaDepositAndCallName,
+			e2etests.TestSolanaDepositAndCallRefundName,
 		}
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
 	}
