@@ -5,7 +5,8 @@ import (
 	"testing"
 
 	"github.com/btcsuite/btcd/blockchain"
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
+	btcecdsa "github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
@@ -59,7 +60,7 @@ var exampleTxids = []string{
 }
 
 func generateKeyPair(t *testing.T, net *chaincfg.Params) (*btcec.PrivateKey, btcutil.Address, []byte) {
-	privateKey, err := btcec.NewPrivateKey(btcec.S256())
+	privateKey, err := btcec.NewPrivateKey()
 	require.NoError(t, err)
 	pubKeyHash := btcutil.Hash160(privateKey.PubKey().SerializeCompressed())
 	addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, net)
@@ -159,7 +160,7 @@ func signTx(t *testing.T, tx *wire.MsgTx, payerScript []byte, privateKey *btcec.
 		amount := int64(1 + rand.Intn(100000000))
 		witnessHash, err := txscript.CalcWitnessSigHash(payerScript, sigHashes, txscript.SigHashAll, tx, ix, amount)
 		require.NoError(t, err)
-		sig, err := privateKey.Sign(witnessHash)
+		sig := btcecdsa.Sign(privateKey, witnessHash)
 		require.NoError(t, err)
 
 		pkCompressed := privateKey.PubKey().SerializeCompressed()

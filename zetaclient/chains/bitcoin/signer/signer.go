@@ -9,7 +9,7 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
@@ -18,6 +18,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
+	btcecdsa "github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -293,12 +294,11 @@ func (signer *Signer) SignWithdrawTx(
 
 	for ix := range tx.TxIn {
 		sig65B := sig65Bs[ix]
-		R := big.NewInt(0).SetBytes(sig65B[:32])
-		S := big.NewInt(0).SetBytes(sig65B[32:64])
-		sig := btcec.Signature{
-			R: R,
-			S: S,
-		}
+		R := &btcec.ModNScalar{}
+		R.SetBytes((*[32]byte)(sig65B[:32]))
+		S := &btcec.ModNScalar{}
+		S.SetBytes((*[32]byte)(sig65B[32:64]))
+		sig := btcecdsa.NewSignature(R, S)
 
 		pkCompressed := signer.TSS().PubKeyCompressedBytes()
 		hashType := txscript.SigHashAll
