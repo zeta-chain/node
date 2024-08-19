@@ -60,7 +60,7 @@ func (k msgServer) AddInboundTracker(
 func verifyProofAndInboundBody(ctx sdk.Context, k msgServer, msg *types.MsgAddInboundTracker) error {
 	txBytes, err := k.GetLightclientKeeper().VerifyProof(ctx, msg.Proof, msg.ChainId, msg.BlockHash, msg.TxIndex)
 	if err != nil {
-		return types.ErrProofVerificationFail.Wrapf(err.Error())
+		return types.ErrProofVerificationFail.Wrap(err.Error())
 	}
 
 	// get chain params and tss addresses to verify the inTx body
@@ -72,14 +72,14 @@ func verifyProofAndInboundBody(ctx sdk.Context, k msgServer, msg *types.MsgAddIn
 		BitcoinChainId: msg.ChainId,
 	})
 	if err != nil {
-		return observertypes.ErrTssNotFound.Wrapf(err.Error())
+		return observertypes.ErrTssNotFound.Wrap(err.Error())
 	}
 	if tss == nil {
 		return observertypes.ErrTssNotFound.Wrapf("tss address nil")
 	}
 
 	if err := types.VerifyInboundBody(*msg, txBytes, *chainParams, *tss); err != nil {
-		return types.ErrTxBodyVerificationFail.Wrapf(err.Error())
+		return types.ErrTxBodyVerificationFail.Wrap(err.Error())
 	}
 
 	return nil
