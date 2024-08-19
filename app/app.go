@@ -567,11 +567,7 @@ func New(
 		&app.FeeMarketKeeper,
 		tracer,
 		evmSs,
-		precompiles.StatefulContracts(
-			app.FungibleKeeper,
-			appCodec,
-			storetypes.TransientGasConfig(),
-		),
+		precompiles.StatefulContracts(&app.FungibleKeeper, appCodec, storetypes.TransientGasConfig()),
 		app.ConsensusParamsKeeper,
 		aggregateAllKeys(keys, tKeys, memKeys),
 	)

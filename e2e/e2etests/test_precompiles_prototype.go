@@ -27,7 +27,7 @@ func TestPrecompilesRegular(r *runner.E2ERunner, args []string) {
 		"Failed to validate Bech32ToHexAddr result",
 	)
 
-	balance, err := iPrototype.GetGasStabilityPoolBalance(nil, int64(101))
-	require.NoError(r, err, err.Error())
+	balance, err := iPrototype.GetGasStabilityPoolBalance(nil, int64(1337))
+	require.NoError(r, err, "Error calling GetGasStabilityPoolBalance")
 	require.NotNil(r, balance, "GetGasStabilityPoolBalance returned balance is nil")
 }

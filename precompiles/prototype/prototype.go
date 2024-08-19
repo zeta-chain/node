@@ -65,19 +65,22 @@ func init() {
 type Contract struct {
 	ptypes.BaseContract
 
+	Ctx            sdk.Context
 	FungibleKeeper fungiblekeeper.Keeper
 	cdc            codec.Codec
 	kvGasConfig    storetypes.GasConfig
 }
 
 func NewIPrototypeContract(
-	fungibleKeeper fungiblekeeper.Keeper,
+	context sdk.Context,
+	fungibleKeeper *fungiblekeeper.Keeper,
 	cdc codec.Codec,
 	kvGasConfig storetypes.GasConfig,
 ) *Contract {
 	return &Contract{
+		Ctx:            context,
 		BaseContract:   ptypes.NewBaseContract(ContractAddress),
-		FungibleKeeper: fungibleKeeper,
+		FungibleKeeper: *fungibleKeeper,
 		cdc:            cdc,
 		kvGasConfig:    kvGasConfig,
 	}
@@ -208,7 +211,11 @@ func (c *Contract) GetGasStabilityPoolBalance(
 
 	balance, err := c.FungibleKeeper.GetGasStabilityPoolBalance(ctx, chainID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error calling fungible keeper: %s", err.Error())
+	}
+
+	if balance == nil {
+		return nil, fmt.Errorf("balance not found")
 	}
 
 	return method.Outputs.Pack(balance)
@@ -239,7 +246,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, erro
 		if execErr != nil {
 			return nil, err
 		}
-		return method.Outputs.Pack(res)
+		return res, nil
 
 	case Bech32ToHexAddrMethodName:
 		return c.Bech32ToHexAddr(method, args)

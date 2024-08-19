@@ -22,7 +22,7 @@ var EnabledStatefulContracts = map[common.Address]bool{
 
 // StatefulContracts returns all the registered precompiled contracts.
 func StatefulContracts(
-	fungibleKeeper keeper.Keeper,
+	fungibleKeeper *keeper.Keeper,
 	cdc codec.Codec,
 	gasConfig storetypes.GasConfig,
 ) (precompiledContracts []evmkeeper.CustomContractFn) {
@@ -31,12 +31,12 @@ func StatefulContracts(
 
 	// Define the regular contract function.
 	if EnabledStatefulContracts[prototype.ContractAddress] {
-		regularContract := func(_ sdktypes.Context, _ ethparams.Rules) vm.PrecompiledContract {
-			return prototype.NewIPrototypeContract(fungibleKeeper, cdc, gasConfig)
+		prototype := func(ctx sdktypes.Context, _ ethparams.Rules) vm.PrecompiledContract {
+			return prototype.NewIPrototypeContract(ctx, fungibleKeeper, cdc, gasConfig)
 		}
 
 		// Append the regular contract to the precompiledContracts slice.
-		precompiledContracts = append(precompiledContracts, regularContract)
+		precompiledContracts = append(precompiledContracts, prototype)
 	}
 
 	return precompiledContracts
