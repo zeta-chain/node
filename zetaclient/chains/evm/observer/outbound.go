@@ -13,8 +13,10 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
+	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -217,6 +219,14 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	if err != nil {
 		return true, errors.Wrapf(err, "error getting erc20 custody for chain %d", ob.Chain().ChainId)
 	}
+	gatewayAddr, gateway, err := ob.GetGatewayContract()
+	if err != nil {
+		return true, errors.Wrap(err, "error getting gateway for chain")
+	}
+	_, custodyV2, err := ob.GetERC20CustodyV2Contract()
+	if err != nil {
+		return true, errors.Wrapf(err, "error getting erc20 custody v2 for chain %d", ob.Chain().ChainId)
+	}
 
 	// define a few common variables
 	var receiveValue *big.Int
@@ -236,7 +246,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	}
 
 	// parse the received value from the outbound receipt
-	receiveValue, receiveStatus, err = ParseOutboundReceivedValue(
+	receiveValue, receiveStatus, err = parseOutboundReceivedValue(
 		cctx,
 		receipt,
 		transaction,
@@ -245,6 +255,9 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 		connector,
 		custodyAddr,
 		custody,
+		custodyV2,
+		gatewayAddr,
+		gateway,
 	)
 	if err != nil {
 		logger.Error().
@@ -256,6 +269,70 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	// post vote to zetacore
 	ob.PostVoteOutbound(ctx, cctx.Index, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
 	return false, nil
+}
+
+// parseOutboundReceivedValue parses the received value and status from the outbound receipt
+// The receivd value is the amount of Zeta/ERC20/Gas token (released from connector/custody/TSS) sent to the receiver
+// TODO: simplify this function and reduce the number of argument
+// https://github.com/zeta-chain/node/issues/2627
+// https://github.com/zeta-chain/node/pull/2666#discussion_r1718379784
+func parseOutboundReceivedValue(
+	cctx *crosschaintypes.CrossChainTx,
+	receipt *ethtypes.Receipt,
+	transaction *ethtypes.Transaction,
+	cointype coin.CoinType,
+	connectorAddress ethcommon.Address,
+	connector *zetaconnector.ZetaConnectorNonEth,
+	custodyAddress ethcommon.Address,
+	custody *erc20custody.ERC20Custody,
+	custodyV2 *erc20custodyv2.ERC20Custody,
+	gatewayAddress ethcommon.Address,
+	gateway *gatewayevm.GatewayEVM,
+) (*big.Int, chains.ReceiveStatus, error) {
+	// determine the receive status and value
+	// https://docs.nethereum.com/en/latest/nethereum-receipt-status/
+	receiveValue := big.NewInt(0)
+	receiveStatus := chains.ReceiveStatus_failed
+	if receipt.Status == ethtypes.ReceiptStatusSuccessful {
+		receiveValue = transaction.Value()
+		receiveStatus = chains.ReceiveStatus_success
+	}
+
+	// parse outbound event for protocol contract v2
+	if cctx.ProtocolContractVersion == crosschaintypes.ProtocolContractVersion_V2 {
+		return parseOutboundEventV2(cctx, receipt, transaction, custodyAddress, custodyV2, gatewayAddress, gateway)
+	}
+
+	// parse receive value from the outbound receipt for Zeta and ERC20
+	switch cointype {
+	case coin.CoinType_Zeta:
+		if receipt.Status == ethtypes.ReceiptStatusSuccessful {
+			receivedLog, revertedLog, err := ParseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
+			if err != nil {
+				return nil, chains.ReceiveStatus_failed, err
+			}
+			// use the value in ZetaReceived/ZetaReverted event for vote message
+			if receivedLog != nil {
+				receiveValue = receivedLog.ZetaValue
+			} else if revertedLog != nil {
+				receiveValue = revertedLog.RemainingZetaValue
+			}
+		}
+	case coin.CoinType_ERC20:
+		if receipt.Status == ethtypes.ReceiptStatusSuccessful {
+			withdrawn, err := ParseAndCheckWithdrawnEvent(cctx, receipt, custodyAddress, custody)
+			if err != nil {
+				return nil, chains.ReceiveStatus_failed, err
+			}
+			// use the value in Withdrawn event for vote message
+			receiveValue = withdrawn.Amount
+		}
+	case coin.CoinType_Gas, coin.CoinType_Cmd:
+		// nothing to do for CoinType_Gas/CoinType_Cmd, no need to parse event
+	default:
+		return nil, chains.ReceiveStatus_failed, fmt.Errorf("unknown coin type %s", cointype)
+	}
+	return receiveValue, receiveStatus, nil
 }
 
 // ParseAndCheckZetaEvent parses and checks ZetaReceived/ZetaReverted event from the outbound receipt
@@ -348,59 +425,6 @@ func ParseAndCheckWithdrawnEvent(
 		}
 	}
 	return nil, errors.New("no ERC20 Withdrawn event found")
-}
-
-// ParseOutboundReceivedValue parses the received value and status from the outbound receipt
-// The receivd value is the amount of Zeta/ERC20/Gas token (released from connector/custody/TSS) sent to the receiver
-func ParseOutboundReceivedValue(
-	cctx *crosschaintypes.CrossChainTx,
-	receipt *ethtypes.Receipt,
-	transaction *ethtypes.Transaction,
-	cointype coin.CoinType,
-	connectorAddress ethcommon.Address,
-	connector *zetaconnector.ZetaConnectorNonEth,
-	custodyAddress ethcommon.Address,
-	custody *erc20custody.ERC20Custody,
-) (*big.Int, chains.ReceiveStatus, error) {
-	// determine the receive status and value
-	// https://docs.nethereum.com/en/latest/nethereum-receipt-status/
-	receiveValue := big.NewInt(0)
-	receiveStatus := chains.ReceiveStatus_failed
-	if receipt.Status == ethtypes.ReceiptStatusSuccessful {
-		receiveValue = transaction.Value()
-		receiveStatus = chains.ReceiveStatus_success
-	}
-
-	// parse receive value from the outbound receipt for Zeta and ERC20
-	switch cointype {
-	case coin.CoinType_Zeta:
-		if receipt.Status == ethtypes.ReceiptStatusSuccessful {
-			receivedLog, revertedLog, err := ParseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
-			if err != nil {
-				return nil, chains.ReceiveStatus_failed, err
-			}
-			// use the value in ZetaReceived/ZetaReverted event for vote message
-			if receivedLog != nil {
-				receiveValue = receivedLog.ZetaValue
-			} else if revertedLog != nil {
-				receiveValue = revertedLog.RemainingZetaValue
-			}
-		}
-	case coin.CoinType_ERC20:
-		if receipt.Status == ethtypes.ReceiptStatusSuccessful {
-			withdrawn, err := ParseAndCheckWithdrawnEvent(cctx, receipt, custodyAddress, custody)
-			if err != nil {
-				return nil, chains.ReceiveStatus_failed, err
-			}
-			// use the value in Withdrawn event for vote message
-			receiveValue = withdrawn.Amount
-		}
-	case coin.CoinType_Gas, coin.CoinType_Cmd:
-		// nothing to do for CoinType_Gas/CoinType_Cmd, no need to parse event
-	default:
-		return nil, chains.ReceiveStatus_failed, fmt.Errorf("unknown coin type %s", cointype)
-	}
-	return receiveValue, receiveStatus, nil
 }
 
 // checkConfirmedTx checks if a txHash is confirmed

@@ -54,7 +54,7 @@ func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(ctx sdk.Context, cctx 
 	}
 }
 
-// SetCrossChainTx set a specific send in the store from its index
+// SetCrossChainTx set a specific cctx in the store from its index
 func (k Keeper) SetCrossChainTx(ctx sdk.Context, cctx types.CrossChainTx) {
 	// only set the update timestamp if the block height is >0 to allow
 	// for a genesis import
@@ -67,7 +67,7 @@ func (k Keeper) SetCrossChainTx(ctx sdk.Context, cctx types.CrossChainTx) {
 	store.Set(types.KeyPrefix(cctx.Index), b)
 }
 
-// GetCrossChainTx returns a send from its index
+// GetCrossChainTx returns a cctx from its index
 func (k Keeper) GetCrossChainTx(ctx sdk.Context, index string) (val types.CrossChainTx, found bool) {
 	p := types.KeyPrefix(fmt.Sprintf("%s", types.CCTXKey))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
@@ -81,6 +81,7 @@ func (k Keeper) GetCrossChainTx(ctx sdk.Context, index string) (val types.CrossC
 	return val, true
 }
 
+// GetAllCrossChainTx returns all cctxs
 func (k Keeper) GetAllCrossChainTx(ctx sdk.Context) (list []types.CrossChainTx) {
 	p := types.KeyPrefix(fmt.Sprintf("%s", types.CCTXKey))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
@@ -98,7 +99,7 @@ func (k Keeper) GetAllCrossChainTx(ctx sdk.Context) (list []types.CrossChainTx) 
 	return list
 }
 
-// RemoveCrossChainTx removes a send from the store
+// RemoveCrossChainTx removes a cctx from the store
 func (k Keeper) RemoveCrossChainTx(ctx sdk.Context, index string) {
 	p := types.KeyPrefix(fmt.Sprintf("%s", types.CCTXKey))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)

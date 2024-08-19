@@ -17,15 +17,18 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
-	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.eth.sol"
-	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
-	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
-	uniswapv2router "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
+	zetaeth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zeta.eth.sol"
+	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/wzeta.sol"
+	connectorzevm "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zetaconnectorzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
+	uniswapv2router "github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
@@ -33,6 +36,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
 	"github.com/zeta-chain/zetacore/e2e/txserver"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
@@ -140,6 +144,20 @@ type E2ERunner struct {
 	Logger        *Logger
 	BitcoinParams *chaincfg.Params
 	mutex         sync.Mutex
+
+	// evm v2
+	GatewayEVMAddr     ethcommon.Address
+	GatewayEVM         *gatewayevm.GatewayEVM
+	ERC20CustodyV2Addr ethcommon.Address
+	ERC20CustodyV2     *erc20custodyv2.ERC20Custody
+	TestDAppV2EVMAddr  ethcommon.Address
+	TestDAppV2EVM      *testdappv2.TestDAppV2
+
+	// zevm v2
+	GatewayZEVMAddr    ethcommon.Address
+	GatewayZEVM        *gatewayzevm.GatewayZEVM
+	TestDAppV2ZEVMAddr ethcommon.Address
+	TestDAppV2ZEVM     *testdappv2.TestDAppV2
 }
 
 func NewE2ERunner(
@@ -285,6 +303,35 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	if err != nil {
 		return err
 	}
+
+	// v2 contracts
+	r.GatewayEVMAddr = other.GatewayEVMAddr
+	r.GatewayEVM, err = gatewayevm.NewGatewayEVM(r.GatewayEVMAddr, r.EVMClient)
+	if err != nil {
+		return err
+	}
+	r.ERC20CustodyV2Addr = other.ERC20CustodyV2Addr
+	r.ERC20CustodyV2, err = erc20custodyv2.NewERC20Custody(r.ERC20CustodyV2Addr, r.EVMClient)
+	if err != nil {
+		return err
+	}
+	r.TestDAppV2EVMAddr = other.TestDAppV2EVMAddr
+	r.TestDAppV2EVM, err = testdappv2.NewTestDAppV2(r.TestDAppV2EVMAddr, r.EVMClient)
+	if err != nil {
+		return err
+	}
+
+	r.GatewayZEVMAddr = other.GatewayZEVMAddr
+	r.GatewayZEVM, err = gatewayzevm.NewGatewayZEVM(r.GatewayZEVMAddr, r.ZEVMClient)
+	if err != nil {
+		return err
+	}
+	r.TestDAppV2ZEVMAddr = other.TestDAppV2ZEVMAddr
+	r.TestDAppV2ZEVM, err = testdappv2.NewTestDAppV2(r.TestDAppV2ZEVMAddr, r.ZEVMClient)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -327,6 +374,17 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("ERC20Custody:   %s", r.ERC20CustodyAddr.Hex())
 	r.Logger.Print("ERC20:          %s", r.ERC20Addr.Hex())
 	r.Logger.Print("TestDappEVM:    %s", r.EvmTestDAppAddr.Hex())
+
+	// v2 contracts
+
+	r.Logger.Print(" --- 📜zEVM v2 contracts ---")
+	r.Logger.Print("GatewayZEVM:    %s", r.GatewayZEVMAddr.Hex())
+	r.Logger.Print("TestDAppV2ZEVM: %s", r.TestDAppV2ZEVMAddr.Hex())
+
+	r.Logger.Print(" --- 📜EVM v2 contracts ---")
+	r.Logger.Print("GatewayEVM:     %s", r.GatewayEVMAddr.Hex())
+	r.Logger.Print("ERC20CustodyV2: %s", r.ERC20CustodyV2Addr.Hex())
+	r.Logger.Print("TestDAppV2EVM:  %s", r.TestDAppV2EVMAddr.Hex())
 }
 
 // IsRunningUpgrade returns true if the test is running an upgrade test suite.

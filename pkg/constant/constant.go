@@ -32,6 +32,9 @@ const (
 	// The number 890880 comes from CLI command `solana rent 0` and has been verified on devnet gateway program
 	SolanaWalletRentExempt = 1_000_000
 
+	// EVMZeroAddress is the zero address for EVM address format
+	EVMZeroAddress = "0x0000000000000000000000000000000000000000"
+
 	// OptionPause is the argument used in CmdUpdateERC20CustodyPauseStatus to pause the ERC20 custody contract
 	OptionPause = "pause"
 

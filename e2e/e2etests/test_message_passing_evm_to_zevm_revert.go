@@ -22,8 +22,8 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 	fungibleEthAddress := ethcommon.HexToAddress(fungibleModuleAddress)
 	require.True(r, fungibleEthAddress != ethcommon.Address{}, "invalid fungible module address")
 
-	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok)
+	// parse the amount
+	amount := parseBigInt(r, args[0])
 
 	// Set destination details
 	zEVMChainID, err := r.ZEVMClient.ChainID(r.Ctx)

@@ -43,7 +43,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2
-	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240418181724-c222fd3ae1f5
+	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240816144801-7eb673cf8890
 	google.golang.org/genproto/googleapis/api v0.0.0-20231212172506-995d672761c0
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -231,7 +231,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.1.0 // indirect
 	github.com/holiman/bloomfilter/v2 v2.0.3 // indirect
-	github.com/holiman/uint256 v1.2.2 // indirect
+	github.com/holiman/uint256 v1.2.3 // indirect
 	github.com/huin/goupnp v1.2.0 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -316,8 +316,8 @@ require (
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	github.com/tidwall/btree v1.6.0 // indirect
-	github.com/tklauser/go-sysconf v0.3.10 // indirect
-	github.com/tklauser/numcpus v0.4.0 // indirect
+	github.com/tklauser/go-sysconf v0.3.12 // indirect
+	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
 	github.com/whyrusleeping/go-keyspace v0.0.0-20160322163242-5b898ac5add1 // indirect
