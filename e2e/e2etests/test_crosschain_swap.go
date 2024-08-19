@@ -144,6 +144,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 
 		amount := 0.1
 		utxos, err = r.ListDeployerUTXOs()
+		require.NoError(r, err)
 		txid, err := r.SendToTSSFromDeployerWithMemo(amount, utxos[0:1], memo)
 		require.NoError(r, err)
 
