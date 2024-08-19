@@ -628,7 +628,7 @@ func (k Keeper) QueryChainIDFromContract(
 ) (*big.Int, error) {
 	abi, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(types.ErrABIUnpack, err.Error())
+		return nil, cosmoserrors.Wrap(types.ErrABIUnpack, err.Error())
 	}
 	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "CHAIN_ID")
 	if err != nil {
@@ -684,7 +684,7 @@ func (k Keeper) CallEVM(
 		if ok {
 			errMes = fmt.Sprintf("%s, reason: %v", errMes, revertErr.ErrorData())
 		}
-		return resp, cosmoserrors.Wrapf(err, errMes)
+		return resp, cosmoserrors.Wrap(err, errMes)
 	}
 	return resp, nil
 }
