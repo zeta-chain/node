@@ -74,6 +74,8 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 		require.True(t, found)
 		require.Equal(t, crosschaintypes.CctxStatus_Aborted, cctxFound.CctxStatus.Status)
 		require.Equal(t, crosschainkeeper.AbortMessage, cctxFound.CctxStatus.StatusMessage)
+		// ensure the last update timestamp is updated
+		require.Equal(t, cctxFound.CctxStatus.LastUpdateTimestamp, ctx.BlockTime().Unix())
 	})
 
 	t.Run("can abort a cctx in pending revert", func(t *testing.T) {

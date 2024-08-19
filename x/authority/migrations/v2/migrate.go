@@ -15,6 +15,7 @@ func MigrateStore(
 	ctx sdk.Context,
 	keeper authorityKeeper,
 ) error {
+	// It is okay to not validate here, as the authorization list is fixed and will not change
 	keeper.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
 	return nil
 }

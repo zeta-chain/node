@@ -20,6 +20,9 @@ type ChainRegistry struct {
 	// chain IDs. It's stored in the protocol to dynamically support new chains without doing an upgrade
 	additionalChains []chains.Chain
 
+	// relayerKeyPasswords maps network name to relayer key password
+	relayerKeyPasswords map[string]string
+
 	mu sync.Mutex
 }
 
@@ -39,11 +42,12 @@ var (
 )
 
 // NewChainRegistry constructs a new ChainRegistry
-func NewChainRegistry() *ChainRegistry {
+func NewChainRegistry(relayerKeyPasswords map[string]string) *ChainRegistry {
 	return &ChainRegistry{
-		chains:           make(map[int64]Chain),
-		additionalChains: []chains.Chain{},
-		mu:               sync.Mutex{},
+		chains:              make(map[int64]Chain),
+		additionalChains:    []chains.Chain{},
+		relayerKeyPasswords: relayerKeyPasswords,
+		mu:                  sync.Mutex{},
 	}
 }
 
@@ -159,6 +163,13 @@ func (c Chain) IsUTXO() bool {
 
 func (c Chain) IsSolana() bool {
 	return chains.IsSolanaChain(c.ID(), c.registry.additionalChains)
+}
+
+// RelayerKeyPassword returns the relayer key password for the chain
+func (c Chain) RelayerKeyPassword() string {
+	network := c.RawChain().Network
+
+	return c.registry.relayerKeyPasswords[network.String()]
 }
 
 func validateNewChain(chainID int64, chain *chains.Chain, params *observer.ChainParams) error {

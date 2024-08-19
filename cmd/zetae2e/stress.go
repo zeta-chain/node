@@ -15,7 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 	"google.golang.org/grpc"
 
 	"github.com/zeta-chain/zetacore/app"
@@ -141,7 +141,8 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	switch stressTestArgs.network {
 	case "LOCAL":
 		// deploy and set zevm contract
-		e2eTest.SetZEVMContracts()
+		e2eTest.SetZEVMSystemContracts()
+		e2eTest.SetZEVMZRC20s()
 
 		// deposit on ZetaChain
 		e2eTest.DepositEther()

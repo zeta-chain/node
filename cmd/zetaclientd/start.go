@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -21,7 +20,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/zetacore/pkg/authz"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/constant"
+	zetaos "github.com/zeta-chain/zetacore/pkg/os"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -50,10 +51,15 @@ func start(_ *cobra.Command, _ []string) error {
 
 	SetupConfigForTest()
 
-	//Prompt for Hotkey and TSS key-share passwords
-	hotkeyPass, tssKeyPass, err := promptPasswords()
+	// Prompt for Hotkey, TSS key-share and relayer key passwords
+	titles := []string{"HotKey", "TSS", "Solana Relayer Key"}
+	passwords, err := zetaos.PromptPasswords(titles)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to get passwords")
+	}
+	hotkeyPass, tssKeyPass, solanaKeyPass := passwords[0], passwords[1], passwords[2]
+	relayerKeyPasswords := map[string]string{
+		chains.Network_solana.String(): solanaKeyPass,
 	}
 
 	//Load Config file given path
@@ -77,7 +83,7 @@ func start(_ *cobra.Command, _ []string) error {
 	masterLogger := logger.Std
 	startLogger := logger.Std.With().Str("module", "startup").Logger()
 
-	appContext := zctx.New(cfg, masterLogger)
+	appContext := zctx.New(cfg, relayerKeyPasswords, masterLogger)
 	ctx := zctx.WithAppContext(context.Background(), appContext)
 
 	// Wait until zetacore is up
@@ -405,29 +411,6 @@ func initPreParams(path string) {
 			}
 		}
 	}
-}
-
-// promptPasswords() This function will prompt for passwords which will be used to decrypt two key files:
-// 1. HotKey
-// 2. TSS key-share
-func promptPasswords() (string, string, error) {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("HotKey Password: ")
-	hotKeyPass, err := reader.ReadString('\n')
-	if err != nil {
-		return "", "", err
-	}
-	fmt.Print("TSS Password: ")
-	TSSKeyPass, err := reader.ReadString('\n')
-	if err != nil {
-		return "", "", err
-	}
-
-	//trim delimiters
-	hotKeyPass = strings.TrimSuffix(hotKeyPass, "\n")
-	TSSKeyPass = strings.TrimSuffix(TSSKeyPass, "\n")
-
-	return hotKeyPass, TSSKeyPass, err
 }
 
 // isObserverNode checks whether THIS node is an observer node.

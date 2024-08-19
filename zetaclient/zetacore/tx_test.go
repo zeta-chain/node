@@ -357,7 +357,7 @@ func TestZetacore_UpdateAppContext(t *testing.T) {
 
 	t.Run("zetacore update success", func(t *testing.T) {
 		cfg := config.New(false)
-		appContext := zctx.New(cfg, zerolog.Nop())
+		appContext := zctx.New(cfg, nil, zerolog.Nop())
 		err := client.UpdateAppContext(ctx, appContext, zerolog.New(zerolog.NewTestWriter(t)))
 		require.NoError(t, err)
 	})
@@ -426,7 +426,7 @@ func TestZetacore_PostVoteInbound(t *testing.T) {
 
 	expectedOutput := observertypes.QueryHasVotedResponse{HasVoted: false}
 	input := observertypes.QueryHasVotedRequest{
-		BallotIdentifier: "0x2d10e9b7ce7921fa6b61ada3020d1c797d5ec52424cdcf86ef31cbbbcd45db58",
+		BallotIdentifier: "0xd204175fc8500bcea563049cce918fa55134bd2d415d3fe137144f55e572b5ff",
 		VoterAddress:     address.String(),
 	}
 	method := "/zetachain.zetacore.observer.Query/HasVoted"

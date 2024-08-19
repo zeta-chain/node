@@ -46,7 +46,10 @@ var (
 	ErrObserverSetNotFound         = errorsmod.Register(ModuleName, 1130, "observer set not found")
 	ErrTssNotFound                 = errorsmod.Register(ModuleName, 1131, "tss not found")
 
-	ErrInboundDisabled      = errorsmod.Register(ModuleName, 1132, "inbound tx processing is disabled")
-	ErrInvalidZetaCoinTypes = errorsmod.Register(ModuleName, 1133, "invalid zeta coin types")
-	ErrNotObserver          = errorsmod.Register(ModuleName, 1134, "sender is not an observer")
+	ErrInboundDisabled        = errorsmod.Register(ModuleName, 1132, "inbound tx processing is disabled")
+	ErrInvalidZetaCoinTypes   = errorsmod.Register(ModuleName, 1133, "invalid zeta coin types")
+	ErrNotObserver            = errorsmod.Register(ModuleName, 1134, "sender is not an observer")
+	ErrDuplicateObserver      = errorsmod.Register(ModuleName, 1135, "observer already exists")
+	ErrObserverNotFound       = errorsmod.Register(ModuleName, 1136, "observer not found")
+	ErrInvalidObserverAddress = errorsmod.Register(ModuleName, 1137, "invalid observer address")
 )

@@ -283,5 +283,8 @@ func TestKeeper_CctxByNonce(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.Equal(t, cctx, res.CrossChainTx)
+
+		// ensure that LastUpdateTimestamp is set to current block time
+		require.Equal(t, res.CrossChainTx.CctxStatus.LastUpdateTimestamp, ctx.BlockTime().Unix())
 	})
 }

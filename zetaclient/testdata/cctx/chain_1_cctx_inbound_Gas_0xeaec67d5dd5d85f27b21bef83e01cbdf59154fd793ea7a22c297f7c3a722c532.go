@@ -28,7 +28,7 @@ var chain_1_cctx_inbound_Gas_0xeaec67d = &crosschaintypes.CrossChainTx{
 		Amount:                 sdkmath.NewUintFromString("4000000000000000"),
 		ObservedHash:           "0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532",
 		ObservedExternalHeight: 19330473,
-		BallotIndex:            "0x639adb850b522874ddd2c4e5eb7ae7ad26d86814fc5b18d8a9e85f638bb94594",
+		BallotIndex:            "0x79f6a3da92d085b2f3c682a2eb1606ef89e53a7db4fdbbb397b3e0f54884cfb0",
 		FinalizedZetaHeight:    1965579,
 		TxFinalizationStatus:   crosschaintypes.TxFinalizationStatus_Executed,
 	},

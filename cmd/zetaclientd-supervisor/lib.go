@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -10,7 +9,6 @@ import (
 	"os"
 	"path"
 	"runtime"
-	"strings"
 	"sync"
 	"time"
 
@@ -67,7 +65,6 @@ type zetaclientdSupervisor struct {
 	upgradesDir        string
 	upgradePlanName    string
 	enableAutoDownload bool
-	restartChan        chan os.Signal
 }
 
 func newZetaclientdSupervisor(
@@ -83,15 +80,12 @@ func newZetaclientdSupervisor(
 	if err != nil {
 		return nil, fmt.Errorf("grpc dial: %w", err)
 	}
-	// these signals will result in the supervisor process only restarting zetaclientd
-	restartChan := make(chan os.Signal, 1)
 	return &zetaclientdSupervisor{
 		zetacoredConn:      conn,
 		logger:             logger,
 		reloadSignals:      make(chan bool, 1),
 		upgradesDir:        defaultUpgradesDir,
 		enableAutoDownload: enableAutoDownload,
-		restartChan:        restartChan,
 	}, nil
 }
 
@@ -259,24 +253,4 @@ func (s *zetaclientdSupervisor) downloadZetaclientd(ctx context.Context, plan *u
 		return fmt.Errorf("chmod %s: %w", upgradePath, err)
 	}
 	return nil
-}
-
-func promptPasswords() (string, string, error) {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("HotKey Password: ")
-	hotKeyPass, err := reader.ReadString('\n')
-	if err != nil {
-		return "", "", err
-	}
-	fmt.Print("TSS Password: ")
-	tssKeyPass, err := reader.ReadString('\n')
-	if err != nil {
-		return "", "", err
-	}
-
-	//trim delimiters
-	hotKeyPass = strings.TrimSuffix(hotKeyPass, "\n")
-	tssKeyPass = strings.TrimSuffix(tssKeyPass, "\n")
-
-	return hotKeyPass, tssKeyPass, err
 }

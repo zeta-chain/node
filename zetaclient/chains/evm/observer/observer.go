@@ -13,10 +13,12 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.non-eth.sol"
-	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zeta.non-eth.sol"
+	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
+	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/zetacore/pkg/bg"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -42,9 +44,6 @@ type Observer struct {
 
 	// evmJSONRPC is the EVM JSON RPC client for the observed chain
 	evmJSONRPC interfaces.EVMJSONRPCClient
-
-	// outboundPendingTransactions is the map to index pending transactions by hash
-	outboundPendingTransactions map[string]*ethtypes.Transaction
 
 	// outboundConfirmedReceipts is the map to index confirmed receipts by hash
 	outboundConfirmedReceipts map[string]*ethtypes.Receipt
@@ -92,7 +91,6 @@ func NewObserver(
 		Observer:                      *baseObserver,
 		evmClient:                     evmClient,
 		evmJSONRPC:                    ethrpc.NewEthRPC(evmCfg.Endpoint),
-		outboundPendingTransactions:   make(map[string]*ethtypes.Transaction),
 		outboundConfirmedReceipts:     make(map[string]*ethtypes.Receipt),
 		outboundConfirmedTransactions: make(map[string]*ethtypes.Transaction),
 		priorityFeeConfig:             priorityFeeConfig{},
@@ -150,6 +148,23 @@ func (ob *Observer) GetConnectorContractEth() (ethcommon.Address, *zetaconnector
 func (ob *Observer) GetERC20CustodyContract() (ethcommon.Address, *erc20custody.ERC20Custody, error) {
 	addr := ethcommon.HexToAddress(ob.GetChainParams().Erc20CustodyContractAddress)
 	contract, err := erc20custody.NewERC20Custody(addr, ob.evmClient)
+	return addr, contract, err
+}
+
+// GetERC20CustodyV2Contract returns ERC20CustodyV2 contract address and binder
+// NOTE: we use the same address as gateway v1
+// this simplify the migration process v1 will be completely removed in the future
+// currently the ABI for withdraw is identical, therefore both contract instances can be used
+func (ob *Observer) GetERC20CustodyV2Contract() (ethcommon.Address, *erc20custodyv2.ERC20Custody, error) {
+	addr := ethcommon.HexToAddress(ob.GetChainParams().Erc20CustodyContractAddress)
+	contract, err := erc20custodyv2.NewERC20Custody(addr, ob.evmClient)
+	return addr, contract, err
+}
+
+// GetGatewayContract returns the gateway contract address and binder
+func (ob *Observer) GetGatewayContract() (ethcommon.Address, *gatewayevm.GatewayEVM, error) {
+	addr := ethcommon.HexToAddress(ob.GetChainParams().GatewayAddress)
+	contract, err := gatewayevm.NewGatewayEVM(addr, ob.evmClient)
 	return addr, contract, err
 }
 
@@ -230,25 +245,10 @@ func (ob *Observer) WatchRPCStatus(ctx context.Context) error {
 	}
 }
 
-// SetPendingTx sets the pending transaction in memory
-func (ob *Observer) SetPendingTx(nonce uint64, transaction *ethtypes.Transaction) {
-	ob.Mu().Lock()
-	defer ob.Mu().Unlock()
-	ob.outboundPendingTransactions[ob.OutboundID(nonce)] = transaction
-}
-
-// GetPendingTx gets the pending transaction from memory
-func (ob *Observer) GetPendingTx(nonce uint64) *ethtypes.Transaction {
-	ob.Mu().Lock()
-	defer ob.Mu().Unlock()
-	return ob.outboundPendingTransactions[ob.OutboundID(nonce)]
-}
-
 // SetTxNReceipt sets the receipt and transaction in memory
 func (ob *Observer) SetTxNReceipt(nonce uint64, receipt *ethtypes.Receipt, transaction *ethtypes.Transaction) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
-	delete(ob.outboundPendingTransactions, ob.OutboundID(nonce)) // remove pending transaction, if any
 	ob.outboundConfirmedReceipts[ob.OutboundID(nonce)] = receipt
 	ob.outboundConfirmedTransactions[ob.OutboundID(nonce)] = transaction
 }

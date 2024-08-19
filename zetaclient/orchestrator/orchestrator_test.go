@@ -535,7 +535,7 @@ func createAppContext(t *testing.T, chainsOrParams ...any) *zctx.AppContext {
 	}
 
 	// new AppContext
-	appContext := zctx.New(cfg, zerolog.New(zerolog.NewTestWriter(t)))
+	appContext := zctx.New(cfg, nil, zerolog.New(zerolog.NewTestWriter(t)))
 
 	ccFlags := sample.CrosschainFlags()
 

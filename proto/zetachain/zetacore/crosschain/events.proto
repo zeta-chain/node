@@ -68,3 +68,16 @@ message EventERC20Whitelist {
   string whitelist_cctx_index = 1;
   string zrc20_address = 2;
 }
+
+message EventERC20CustodyFundsMigration {
+  string new_custody_address = 1;
+  string erc20_address = 2;
+  string amount = 3;
+  string cctx_index = 4;
+}
+
+message EventERC20CustodyPausing {
+  int64 chain_id = 1;
+  bool pause = 2;
+  string cctx_index = 3;
+}

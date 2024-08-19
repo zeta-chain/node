@@ -4,7 +4,6 @@
 # First argument is the command to run the local e2e
 # A second optional argument can be passed and can have the following value:
 # upgrade: run the local e2e once, then restart zetaclientd at upgrade height and run the local e2e again
-# tss-migrate: run the local e2e once, then trigger a TSS migration and run the local e2e again
 
 get_zetacored_version() {
   retries=10
@@ -45,52 +44,67 @@ sleep 2
 # unlock the default account account
 address=$(yq -r '.default_account.evm_address' config.yml)
 echo "funding deployer address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock erc20 tester accounts
 address=$(yq -r '.additional_accounts.user_erc20.evm_address' config.yml)
 echo "funding erc20 address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock zeta tester accounts
 address=$(yq -r '.additional_accounts.user_zeta_test.evm_address' config.yml)
 echo "funding zeta tester address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock zevm message passing tester accounts
 address=$(yq -r '.additional_accounts.user_zevm_mp_test.evm_address' config.yml)
 echo "funding zevm mp tester address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock bitcoin tester accounts
 address=$(yq -r '.additional_accounts.user_bitcoin.evm_address' config.yml)
 echo "funding bitcoin tester address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock solana tester accounts
 address=$(yq -r '.additional_accounts.user_solana.evm_address' config.yml)
 echo "funding solana tester address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock ethers tester accounts
 address=$(yq -r '.additional_accounts.user_ether.evm_address' config.yml)
 echo "funding ether tester address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock miscellaneous tests accounts
 address=$(yq -r '.additional_accounts.user_misc.evm_address' config.yml)
 echo "funding misc tester address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock admin erc20 tests accounts
 address=$(yq -r '.additional_accounts.user_admin.evm_address' config.yml)
 echo "funding admin tester address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock migration tests accounts
 address=$(yq -r '.additional_accounts.user_migration.evm_address' config.yml)
 echo "funding migration tester address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
+
+# unlock local solana relayer accounts
+if host solana > /dev/null; then
+  solana_url=$(yq -r '.rpcs.solana' config.yml)
+  solana config set --url "$solana_url" > /dev/null
+
+  relayer=$(yq -r '.observer_relayer_accounts.relayer_accounts[0].solana_address' config.yml)
+  echo "funding solana relayer address ${relayer} with 100 SOL"
+  solana airdrop 100 "$relayer" > /dev/null
+
+  relayer=$(yq -r '.observer_relayer_accounts.relayer_accounts[1].solana_address' config.yml)
+  echo "funding solana relayer address ${relayer} with 100 SOL"
+  solana airdrop 100 "$relayer" > /dev/null
+fi
+
 ### Run zetae2e command depending on the option passed
 
 # Mode migrate is used to run the e2e tests before and after the TSS migration
@@ -138,9 +152,11 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
 
   # set upgrade height to 225 by default
   UPGRADE_HEIGHT=${UPGRADE_HEIGHT:=225}
+  OLD_VERSION=$(get_zetacored_version)
+  COMMON_ARGS="--skip-header-proof --skip-tracker-check"
 
   if [[ ! -f deployed.yml ]]; then
-    zetae2e local $E2E_ARGS --setup-only --config config.yml --config-out deployed.yml --skip-header-proof
+    zetae2e local $E2E_ARGS --setup-only --config config.yml --config-out deployed.yml ${COMMON_ARGS}
     if [ $? -ne 0 ]; then
       echo "e2e setup failed"
       exit 1
@@ -154,7 +170,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
     echo "running E2E command to setup the networks and populate the state..."
 
     # Use light flag to ensure tests can complete before the upgrade height
-    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --light --skip-header-proof
+    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --light ${COMMON_ARGS}
     if [ $? -ne 0 ]; then
       echo "first e2e failed"
       exit 1
@@ -162,8 +178,6 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   fi
 
   echo "Waiting for upgrade height..."
-
-  OLD_VERSION=$(get_zetacored_version)
   CURRENT_HEIGHT=0
   WAIT_HEIGHT=$(( UPGRADE_HEIGHT - 1 ))
   # wait for upgrade height
@@ -195,9 +209,9 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   # When the upgrade height is greater than 100 for upgrade test, the Bitcoin tests have been run once, therefore the Bitcoin wallet is already set up
   # Use light flag to skip advanced tests
   if [ "$UPGRADE_HEIGHT" -lt 100 ]; then
-    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --light --skip-header-proof
+    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --light ${COMMON_ARGS}
   else
-    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --skip-bitcoin-setup --light --skip-header-proof
+    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --skip-bitcoin-setup --light ${COMMON_ARGS}
   fi
 
   ZETAE2E_EXIT_CODE=$?

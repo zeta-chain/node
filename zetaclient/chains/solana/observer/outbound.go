@@ -17,6 +17,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/zetacore/zetaclient/logs"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
 )
@@ -254,15 +255,15 @@ func (ob *Observer) CheckFinalizedTx(
 	// prepare logger fields
 	chainID := ob.Chain().ChainId
 	logger := ob.Logger().Outbound.With().
-		Str("method", "checkFinalizedTx").
-		Int64("chain", chainID).
-		Uint64("nonce", nonce).
-		Str("tx", txHash).Logger()
+		Str(logs.FieldMethod, "CheckFinalizedTx").
+		Int64(logs.FieldChain, chainID).
+		Uint64(logs.FieldNonce, nonce).
+		Str(logs.FieldTx, txHash).Logger()
 
 	// convert txHash to signature
 	sig, err := solana.SignatureFromBase58(txHash)
 	if err != nil {
-		logger.Error().Err(err).Msgf("SignatureFromBase58 err for chain %d nonce %d", chainID, nonce)
+		logger.Error().Err(err).Msg("SignatureFromBase58 error")
 		return nil, false
 	}
 
@@ -271,20 +272,20 @@ func (ob *Observer) CheckFinalizedTx(
 		Commitment: rpc.CommitmentFinalized,
 	})
 	if err != nil {
-		logger.Error().Err(err).Msgf("GetTransaction err for chain %d nonce %d", chainID, nonce)
+		logger.Error().Err(err).Msg("GetTransaction error")
 		return nil, false
 	}
 
 	// the tx must be successful in order to effectively increment the nonce
 	if txResult.Meta.Err != nil {
-		logger.Error().Any("Err", txResult.Meta.Err).Msgf("tx is not successful for chain %d nonce %d", chainID, nonce)
+		logger.Error().Any("Err", txResult.Meta.Err).Msg("tx is not successful")
 		return nil, false
 	}
 
 	// parse gateway instruction from tx result
 	inst, err := ParseGatewayInstruction(txResult, ob.gatewayID, coinType)
 	if err != nil {
-		logger.Error().Err(err).Msgf("ParseGatewayInstruction err for chain %d nonce %d", chainID, nonce)
+		logger.Error().Err(err).Msg("ParseGatewayInstruction error")
 		return nil, false
 	}
 	txNonce := inst.GatewayNonce()
@@ -292,19 +293,19 @@ func (ob *Observer) CheckFinalizedTx(
 	// recover ECDSA signer from instruction
 	signerECDSA, err := inst.Signer()
 	if err != nil {
-		logger.Error().Err(err).Msgf("cannot get instruction signer for chain %d nonce %d", chainID, nonce)
+		logger.Error().Err(err).Msg("cannot get instruction signer")
 		return nil, false
 	}
 
 	// check tx authorization
 	if signerECDSA != ob.TSS().EVMAddress() {
-		logger.Error().Msgf("tx signer %s is not matching TSS, chain %d nonce %d", signerECDSA, chainID, nonce)
+		logger.Error().Msgf("tx signer %s is not matching current TSS address %s", signerECDSA, ob.TSS().EVMAddress())
 		return nil, false
 	}
 
 	// check tx nonce
 	if txNonce != nonce {
-		logger.Error().Msgf("tx nonce %d is not matching cctx, chain %d nonce %d", txNonce, chainID, nonce)
+		logger.Error().Msgf("tx nonce %d is not matching tracker nonce", txNonce)
 		return nil, false
 	}
 
