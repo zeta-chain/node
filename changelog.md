@@ -14,6 +14,7 @@
 * [2681](https://github.com/zeta-chain/node/pull/2681) - implement `MsgUpdateERC20CustodyPauseStatus` to pause or unpause ERC20 Custody contract (to be used for the migration process for smart contract V2)
 * [2644](https://github.com/zeta-chain/node/pull/2644) - add created_timestamp to cctx status
 * [2673](https://github.com/zeta-chain/node/pull/2673) - add relayer key importer, encryption and decryption
+* [2751](https://github.com/zeta-chain/node/pull/2751) - add RPC status check for Solana chain
 
 ### Refactor
 
