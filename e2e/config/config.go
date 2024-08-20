@@ -213,6 +213,7 @@ func (a AdditionalAccounts) AsSlice() []Account {
 		a.UserMisc,
 		a.UserAdmin,
 		a.UserMigration,
+		a.UserPrecompile,
 	}
 }
 
@@ -302,6 +303,10 @@ func (c *Config) GenerateKeys() error {
 		return err
 	}
 	c.AdditionalAccounts.UserMigration, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserPrecompile, err = generateAccount()
 	if err != nil {
 		return err
 	}
