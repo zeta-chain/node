@@ -54,33 +54,33 @@ func Test_IPrototypeContract(t *testing.T) {
 	copy(method[:], bech32ToHex.ID[:4])
 	baseCost := uint64(len(method)) * gasConfig.WriteCostPerByte
 	require.Equal(
-		t, 
-		GasRequiredByMethod[method] + baseCost,
-		gasBech32ToHex, 
-		"bech32ToHexAddr method should require %d gas, got %d", 
-		GasRequiredByMethod[method] + baseCost, 
+		t,
+		GasRequiredByMethod[method]+baseCost,
+		gasBech32ToHex,
+		"bech32ToHexAddr method should require %d gas, got %d",
+		GasRequiredByMethod[method]+baseCost,
 		gasBech32ToHex)
 
 	gasBech32ify := contract.RequiredGas(bech32ify.ID)
 	copy(method[:], bech32ify.ID[:4])
 	baseCost = uint64(len(method)) * gasConfig.WriteCostPerByte
 	require.Equal(
-		t,  
-		GasRequiredByMethod[method] + baseCost,
+		t,
+		GasRequiredByMethod[method]+baseCost,
 		gasBech32ify,
-		"bech32ify method should require %d gas, got %d", 
-		GasRequiredByMethod[method] + baseCost, 
+		"bech32ify method should require %d gas, got %d",
+		GasRequiredByMethod[method]+baseCost,
 		gasBech32ify)
 
 	gasGetGasStabilityPoolBalance := contract.RequiredGas(getGasStabilityPoolBalance.ID)
 	copy(method[:], getGasStabilityPoolBalance.ID[:4])
 	baseCost = uint64(len(method)) * gasConfig.WriteCostPerByte
 	require.Equal(
-		t,  
-		GasRequiredByMethod[method] + baseCost,
+		t,
+		GasRequiredByMethod[method]+baseCost,
 		gasGetGasStabilityPoolBalance,
-		"getGasStabilityPoolBalance method should require %d gas, got %d", 
-		GasRequiredByMethod[method] + baseCost, 
+		"getGasStabilityPoolBalance method should require %d gas, got %d",
+		GasRequiredByMethod[method]+baseCost,
 		gasGetGasStabilityPoolBalance)
 
 	/*
@@ -89,7 +89,7 @@ func Test_IPrototypeContract(t *testing.T) {
 
 	// Test Bech32HexAddr method.
 	methodID := abi.Methods[Bech32ToHexAddrMethodName]
-	args  := make([]interface{}, 0)
+	args := make([]interface{}, 0)
 	args = append(args, "zeta1h8duy2dltz9xz0qqhm5wvcnj02upy887fyn43u")
 
 	rawBytes, err := contract.Bech32ToHexAddr(&methodID, args)
@@ -98,10 +98,10 @@ func Test_IPrototypeContract(t *testing.T) {
 	// Discard the first 12 bytes, the address is the last 20 bytes.
 	addr := common.BytesToAddress(rawBytes[12:])
 	require.Equal(
-		t, 
-		common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE"), 
-		addr, 
-		"Bech32ToHexAddr should return the correct address, got: %v", 
+		t,
+		common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE"),
+		addr,
+		"Bech32ToHexAddr should return the correct address, got: %v",
 		addr,
 	)
 
@@ -117,10 +117,10 @@ func Test_IPrototypeContract(t *testing.T) {
 	// Manually extract the address from the raw bytes.
 	zetaAddr := string(rawBytes[64:107])
 	require.Equal(
-		t, 
-		"zeta1h8duy2dltz9xz0qqhm5wvcnj02upy887fyn43u", 
-		string(zetaAddr), 
-		"Bech32ify should return the correct address, got: %v", 
+		t,
+		"zeta1h8duy2dltz9xz0qqhm5wvcnj02upy887fyn43u",
+		string(zetaAddr),
+		"Bech32ify should return the correct address, got: %v",
 		zetaAddr,
 	)
 
@@ -133,5 +133,9 @@ func Test_IPrototypeContract(t *testing.T) {
 	args = append(args, int64(1337))
 
 	rawBytes, err = contract.GetGasStabilityPoolBalance(ctx, &methodID, args)
-	require.Error(t, err, "error calling fungible keeper: failed to get system contract variable: state variable not found")
+	require.Error(
+		t,
+		err,
+		"error calling fungible keeper: failed to get system contract variable: state variable not found",
+	)
 }

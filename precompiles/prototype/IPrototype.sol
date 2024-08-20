@@ -1,10 +1,10 @@
 pragma solidity ^0.8.26;
 
-/// @dev The IRegular contract's address.
+/// @dev The IPrototype contract's address.
 address constant IPROTOTYPE_PRECOMPILE_ADDRESS = 0x0000000000000000000000000000000000000065; // 101
 
-/// @dev The IRegular contract's instance.
-IPrototype constant IREGULAR_CONTRACT = IPrototype(
+/// @dev The IPrototype contract's instance.
+IPrototype constant IPROTOTYPE_CONTRACT = IPrototype(
     IPROTOTYPE_PRECOMPILE_ADDRESS
 );
 
