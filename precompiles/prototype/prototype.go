@@ -152,7 +152,11 @@ func (c *Contract) Bech32ify(method *abi.Method, args []interface{}) ([]byte, er
 	}
 
 	cfg := sdk.GetConfig()
-	prefix, _ := args[0].(string)
+	prefix, ok := args[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid bech32 human readable prefix (HRP): %v", args[0])
+	}
+
 	if strings.TrimSpace(prefix) == "" {
 		return nil, fmt.Errorf(
 			"invalid bech32 human readable prefix (HRP). Please provide a either an account, validator or consensus address prefix (eg: %s, %s, %s)",
@@ -167,7 +171,7 @@ func (c *Contract) Bech32ify(method *abi.Method, args []interface{}) ([]byte, er
 		return nil, fmt.Errorf("invalid hex address")
 	}
 
-	// NOTE: safety check, should not happen given that the address is is 20 bytes.
+	// NOTE: safety check, should not happen given that the address is 20 bytes.
 	if err := sdk.VerifyAddressFormat(address.Bytes()); err != nil {
 		return nil, err
 	}

@@ -9,7 +9,7 @@ import (
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 )
 
-// Interface compliance
+// Interface compliance.
 var _ ExtStateDB = (*statedb.StateDB)(nil)
 var _ Registrable = (*baseContract)(nil)
 var _ BaseContract = (*baseContract)(nil)
