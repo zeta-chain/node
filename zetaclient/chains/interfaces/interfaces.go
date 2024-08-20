@@ -194,6 +194,7 @@ type SolanaRPCClient interface {
 	GetVersion(ctx context.Context) (*solrpc.GetVersionResult, error)
 	GetHealth(ctx context.Context) (string, error)
 	GetSlot(ctx context.Context, commitment solrpc.CommitmentType) (uint64, error)
+	GetBlockTime(ctx context.Context, block uint64) (*solana.UnixTimeSeconds, error)
 	GetAccountInfo(ctx context.Context, account solana.PublicKey) (*solrpc.GetAccountInfoResult, error)
 	GetBalance(
 		ctx context.Context,

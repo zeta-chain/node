@@ -219,6 +219,7 @@ func TestBitcoinObserverLive(t *testing.T) {
 	// suite.Run(t, new(BitcoinClientTestSuite))
 
 	// LiveTestNewRPCClient(t)
+	// LiveTestCheckRPCStatus(t)
 	// LiveTestGetBlockHeightByHash(t)
 	// LiveTestBitcoinFeeRate(t)
 	// LiveTestAvgFeeRateMainnetMempoolSpace(t)
@@ -232,7 +233,7 @@ func LiveTestNewRPCClient(t *testing.T) {
 	btcConfig := config.BTCConfig{
 		RPCUsername: "user",
 		RPCPassword: "pass",
-		RPCHost:     "bitcoin.rpc.zetachain.com/6315704c-49bc-4649-8b9d-e9278a1dfeb3",
+		RPCHost:     os.Getenv("BTC_RPC_TESTNET"),
 		RPCParams:   "mainnet",
 	}
 
@@ -244,6 +245,22 @@ func LiveTestNewRPCClient(t *testing.T) {
 	bn, err := client.GetBlockCount()
 	require.NoError(t, err)
 	require.Greater(t, bn, int64(0))
+}
+
+// LiveTestCheckRPCStatus checks the RPC status of the Bitcoin chain
+func LiveTestCheckRPCStatus(t *testing.T) {
+	// setup Bitcoin client
+	chainID := chains.BitcoinMainnet.ChainId
+	client, err := createRPCClient(chainID)
+	require.NoError(t, err)
+
+	// decode tss address
+	tssAddress, err := chains.DecodeBtcAddress(testutils.TSSAddressBTCMainnet, chainID)
+	require.NoError(t, err)
+
+	// check RPC status
+	err = rpc.CheckRPCStatus(client, tssAddress, log.Logger)
+	require.NoError(t, err)
 }
 
 // LiveTestGetBlockHeightByHash queries Bitcoin block height by hash

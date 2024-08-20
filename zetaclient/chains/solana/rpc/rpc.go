@@ -2,10 +2,12 @@ package rpc
 
 import (
 	"context"
+	"time"
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 )
@@ -13,6 +15,10 @@ import (
 const (
 	// defaultPageLimit is the default number of signatures to fetch in one GetSignaturesForAddressWithOpts call
 	DefaultPageLimit = 1000
+
+	// rpcLatencyThreshold is the threshold for RPC latency to be considered unhealthy
+	// The 'HEALTH_CHECK_SLOT_DISTANCE' is default to 150 slots, which is 150 * 0.4s = 60s
+	rpcLatencyThreshold = 60
 )
 
 // GetFirstSignatureForAddress searches the first signature for the given address.
@@ -115,4 +121,39 @@ func GetSignaturesForAddressUntil(
 	}
 
 	return allSignatures, nil
+}
+
+// CheckRPCStatus checks the RPC status of the solana chain
+func CheckRPCStatus(ctx context.Context, client interfaces.SolanaRPCClient, logger zerolog.Logger) error {
+	// query solana health (always return "ok" unless --trusted-validator is provided)
+	_, err := client.GetHealth(ctx)
+	if err != nil {
+		return errors.Wrap(err, "GetHealth error: RPC down?")
+	}
+
+	// query latest slot
+	slot, err := client.GetSlot(ctx, rpc.CommitmentFinalized)
+	if err != nil {
+		return errors.Wrap(err, "GetSlot error: RPC down?")
+	}
+
+	// query latest block time
+	blockTime, err := client.GetBlockTime(ctx, slot)
+	if err != nil {
+		return errors.Wrap(err, "GetBlockTime error: RPC down?")
+	}
+
+	// latest block should not be too old
+	elapsedSeconds := time.Since(blockTime.Time()).Seconds()
+	if elapsedSeconds > rpcLatencyThreshold {
+		return errors.Errorf(
+			"Latest slot %d is %.0fs old, RPC stale or chain stuck (check explorer)?",
+			slot,
+			elapsedSeconds,
+		)
+	}
+
+	logger.Info().
+		Msgf("RPC Status [OK]: latest slot %d, timestamp %s (%.0fs ago)", slot, blockTime.String(), elapsedSeconds)
+	return nil
 }

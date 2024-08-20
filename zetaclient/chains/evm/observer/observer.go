@@ -7,7 +7,6 @@ import (
 	"math"
 	"math/big"
 	"strings"
-	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -200,49 +199,6 @@ func (ob *Observer) Start(ctx context.Context) {
 	bg.Work(ctx, ob.WatchGasPrice, bg.WithName("WatchGasPrice"), bg.WithLogger(ob.Logger().GasPrice))
 	bg.Work(ctx, ob.WatchInboundTracker, bg.WithName("WatchInboundTracker"), bg.WithLogger(ob.Logger().Inbound))
 	bg.Work(ctx, ob.WatchRPCStatus, bg.WithName("WatchRPCStatus"), bg.WithLogger(ob.Logger().Chain))
-}
-
-// WatchRPCStatus watches the RPC status of the evm chain
-// TODO(revamp): move ticker to ticker file
-// TODO(revamp): move inner logic to a separate function
-func (ob *Observer) WatchRPCStatus(ctx context.Context) error {
-	ob.Logger().Chain.Info().Msgf("Starting RPC status check for chain %d", ob.Chain().ChainId)
-	ticker := time.NewTicker(60 * time.Second)
-	for {
-		select {
-		case <-ticker.C:
-			if !ob.GetChainParams().IsSupported {
-				continue
-			}
-			bn, err := ob.evmClient.BlockNumber(ctx)
-			if err != nil {
-				ob.Logger().Chain.Error().Err(err).Msg("RPC Status Check error: RPC down?")
-				continue
-			}
-			gasPrice, err := ob.evmClient.SuggestGasPrice(ctx)
-			if err != nil {
-				ob.Logger().Chain.Error().Err(err).Msg("RPC Status Check error: RPC down?")
-				continue
-			}
-			header, err := ob.evmClient.HeaderByNumber(ctx, new(big.Int).SetUint64(bn))
-			if err != nil {
-				ob.Logger().Chain.Error().Err(err).Msg("RPC Status Check error: RPC down?")
-				continue
-			}
-			// #nosec G115 always in range
-			blockTime := time.Unix(int64(header.Time), 0).UTC()
-			elapsedSeconds := time.Since(blockTime).Seconds()
-			if elapsedSeconds > 100 {
-				ob.Logger().Chain.Warn().
-					Msgf("RPC Status Check warning: RPC stale or chain stuck (check explorer)? Latest block %d timestamp is %.0fs ago", bn, elapsedSeconds)
-				continue
-			}
-			ob.Logger().Chain.Info().
-				Msgf("[OK] RPC status: latest block num %d, timestamp %s ( %.0fs ago), suggested gas price %d", header.Number, blockTime.String(), elapsedSeconds, gasPrice.Uint64())
-		case <-ob.StopChannel():
-			return nil
-		}
-	}
 }
 
 // SetTxNReceipt sets the receipt and transaction in memory
