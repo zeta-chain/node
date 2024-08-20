@@ -19,6 +19,7 @@
 ### Refactor
 
 * [2615](https://github.com/zeta-chain/node/pull/2615) - Refactor cleanup of outbound trackers
+* [2749](https://github.com/zeta-chain/node/pull/2749) - fix all lint errors from govet
 
 ### Tests
 
