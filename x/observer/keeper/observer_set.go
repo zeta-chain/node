@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -36,23 +37,29 @@ func (k Keeper) IsAddressPartOfObserverSet(ctx sdk.Context, address string) bool
 	return false
 }
 
-func (k Keeper) AddObserverToSet(ctx sdk.Context, address string) {
+// AddObserverToSet adds an observer to the observer set.It makes sure the updated observer set is valid.
+// It also sets the observer count and returns the updated length of the observer set.
+func (k Keeper) AddObserverToSet(ctx sdk.Context, address string) (uint64, error) {
 	observerSet, found := k.GetObserverSet(ctx)
 	if !found {
-		k.SetObserverSet(ctx, types.ObserverSet{
-			ObserverList: []string{address},
-		})
-		return
-	}
-	for _, addr := range observerSet.ObserverList {
-		if addr == address {
-			return
+		observerSet = types.ObserverSet{
+			ObserverList: []string{},
 		}
 	}
+
 	observerSet.ObserverList = append(observerSet.ObserverList, address)
+	if err := observerSet.Validate(); err != nil {
+		return 0, err
+	}
+
 	k.SetObserverSet(ctx, observerSet)
+	newCount := observerSet.LenUint()
+	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: newCount})
+
+	return newCount, nil
 }
 
+// RemoveObserverFromSet removes an observer from the observer set.
 func (k Keeper) RemoveObserverFromSet(ctx sdk.Context, address string) {
 	observerSet, found := k.GetObserverSet(ctx)
 	if !found {
@@ -67,17 +74,28 @@ func (k Keeper) RemoveObserverFromSet(ctx sdk.Context, address string) {
 	}
 }
 
+// UpdateObserverAddress updates an observer address in the observer set.It makes sure the updated observer set is valid.
 func (k Keeper) UpdateObserverAddress(ctx sdk.Context, oldObserverAddress, newObserverAddress string) error {
 	observerSet, found := k.GetObserverSet(ctx)
 	if !found {
 		return types.ErrObserverSetNotFound
 	}
+	found = false
 	for i, addr := range observerSet.ObserverList {
 		if addr == oldObserverAddress {
 			observerSet.ObserverList[i] = newObserverAddress
-			k.SetObserverSet(ctx, observerSet)
-			return nil
+			found = true
+			break
 		}
 	}
-	return types.ErrUpdateObserver
+	if !found {
+		return errors.Wrapf(types.ErrObserverNotFound, "observer %s", oldObserverAddress)
+	}
+
+	err := observerSet.Validate()
+	if err != nil {
+		return errors.Wrap(types.ErrUpdateObserver, err.Error())
+	}
+	k.SetObserverSet(ctx, observerSet)
+	return nil
 }

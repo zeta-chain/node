@@ -1,8 +1,6 @@
 package e2etests
 
 import (
-	"math/big"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
@@ -13,8 +11,8 @@ import (
 func TestZetaDepositNewAddress(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok)
+	// parse deposit amount
+	amount := parseBigInt(r, args[0])
 
 	newAddress := sample.EthAddress()
 	hash := r.DepositZetaWithAmount(newAddress, amount)

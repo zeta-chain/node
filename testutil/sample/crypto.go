@@ -57,11 +57,18 @@ func EthAddress() ethcommon.Address {
 	return ethcommon.BytesToAddress(sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address()).Bytes())
 }
 
+// SolanaPrivateKey returns a sample solana private key
+func SolanaPrivateKey(t *testing.T) solana.PrivateKey {
+	privKey, err := solana.NewRandomPrivateKey()
+	require.NoError(t, err)
+	return privKey
+}
+
 // SolanaAddress returns a sample solana address
 func SolanaAddress(t *testing.T) string {
-	keypair, err := solana.NewRandomPrivateKey()
+	privKey, err := solana.NewRandomPrivateKey()
 	require.NoError(t, err)
-	return keypair.PublicKey().String()
+	return privKey.PublicKey().String()
 }
 
 // SolanaSignature returns a sample solana signature

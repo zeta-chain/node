@@ -68,6 +68,7 @@ func (s *UpdateChainParamsSuite) SetupTest() {
 		BallotThreshold:             types.DefaultBallotThreshold,
 		MinObserverDelegation:       types.DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		GatewayAddress:              "0xF0deebCB0E9C829519C4baa794c5445171973826",
 	}
 	s.btcParams = &types.ChainParams{
 		ConfirmationCount:           1,

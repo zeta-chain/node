@@ -7,20 +7,27 @@
 * [2578](https://github.com/zeta-chain/node/pull/2578) - add Gateway address in protocol contract list
 * [2630](https://github.com/zeta-chain/node/pull/2630) - implement `MsgMigrateERC20CustodyFunds` to migrate the funds from the ERC20Custody to a new contracts (to be used for the new ERC20Custody contract for smart contract V2)
 * [2578](https://github.com/zeta-chain/node/pull/2578) - Add Gateway address in protocol contract list
+* [2594](https://github.com/zeta-chain/node/pull/2594) - Integrate Protocol Contracts V2 in the protocol
 * [2634](https://github.com/zeta-chain/node/pull/2634) - add support for EIP-1559 gas fees
 * [2597](https://github.com/zeta-chain/node/pull/2597) - Add generic rpc metrics to zetaclient
 * [2538](https://github.com/zeta-chain/node/pull/2538) - add background worker routines to shutdown zetaclientd when needed for tss migration
 * [2681](https://github.com/zeta-chain/node/pull/2681) - implement `MsgUpdateERC20CustodyPauseStatus` to pause or unpause ERC20 Custody contract (to be used for the migration process for smart contract V2)
 * [2644](https://github.com/zeta-chain/node/pull/2644) - add created_timestamp to cctx status
+* [2673](https://github.com/zeta-chain/node/pull/2673) - add relayer key importer, encryption and decryption
 
 ### Refactor
 
 * [2615](https://github.com/zeta-chain/node/pull/2615) - Refactor cleanup of outbound trackers
 
+### Tests
+
+* [2726](https://github.com/zeta-chain/node/pull/2726) - add e2e tests for deposit and call, deposit and revert
+
 ### Fixes
 
 * [2654](https://github.com/zeta-chain/node/pull/2654) - add validation for authorization list in when validating genesis state for authorization module
 * [2674](https://github.com/zeta-chain/node/pull/2674) - allow operators to vote on ballots assosiated with discarded keygen without affecting the status of the current keygen.
+* [2672](https://github.com/zeta-chain/node/pull/2672) - check observer set for duplicates when adding a new observer or updating an existing one
 
 ## v19.0.0
 

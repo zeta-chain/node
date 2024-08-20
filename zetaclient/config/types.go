@@ -2,14 +2,8 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
-	"os"
-	"path"
 	"strings"
 	"sync"
-
-	"cosmossdk.io/errors"
-	"github.com/gagliardetto/solana-go"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 )
@@ -85,9 +79,9 @@ type Config struct {
 	TssPath             string         `json:"TssPath"`
 	TestTssKeysign      bool           `json:"TestTssKeysign"`
 	KeyringBackend      KeyringBackend `json:"KeyringBackend"`
+	RelayerKeyPath      string         `json:"RelayerKeyPath"`
 	HsmMode             bool           `json:"HsmMode"`
 	HsmHotKey           string         `json:"HsmHotKey"`
-	SolanaKeyFile       string         `json:"SolanaKeyFile"`
 
 	// chain configs
 	EVMChainConfigs map[int64]EVMConfig `json:"EVMChainConfigs"`
@@ -165,34 +159,11 @@ func (c Config) GetKeyringBackend() KeyringBackend {
 	return c.KeyringBackend
 }
 
-// LoadSolanaPrivateKey loads the Solana private key from the key file
-func (c Config) LoadSolanaPrivateKey() (solana.PrivateKey, error) {
-	// key file path
-	fileName := path.Join(c.ZetaCoreHome, c.SolanaKeyFile)
-
-	// load the gateway keypair from a JSON file
-	// #nosec G304 -- user is allowed to specify the key file
-	fileContent, err := os.ReadFile(fileName)
-	if err != nil {
-		return solana.PrivateKey{}, errors.Wrapf(err, "unable to read Solana key file: %s", fileName)
-	}
-
-	// unmarshal the JSON content into a slice of bytes
-	var keyBytes []byte
-	err = json.Unmarshal(fileContent, &keyBytes)
-	if err != nil {
-		return solana.PrivateKey{}, errors.Wrap(err, "unable to unmarshal Solana key bytes")
-	}
-
-	// ensure the key length is 64 bytes
-	if len(keyBytes) != 64 {
-		return solana.PrivateKey{}, fmt.Errorf("invalid Solana key length: %d", len(keyBytes))
-	}
-
-	// create private key from the key bytes
-	privKey := solana.PrivateKey(keyBytes)
-
-	return privKey, nil
+// GetRelayerKeyPath returns the relayer key path
+func (c Config) GetRelayerKeyPath() string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.RelayerKeyPath
 }
 
 func (c EVMConfig) Empty() bool {
