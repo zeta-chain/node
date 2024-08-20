@@ -1,6 +1,7 @@
 package prototype
 
 import (
+	"encoding/json"
 	"testing"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -277,4 +278,26 @@ func Test_InvalidMethod(t *testing.T) {
 	// Test for non existent method.
 	_, doNotExist := abi.Methods["invalidMethod"]
 	require.False(t, doNotExist, "invalidMethod should not be present in the ABI")
+}
+
+func Test_MissingABI(t *testing.T) {
+	prototypeABI = ""
+	defer func() {
+		if r := recover(); r != nil {
+			require.Equal(t, "missing prototype ABI", r, "expected error: missing ABI, got: %v", r)
+		}
+	}()
+
+	initABI()
+}
+
+func Test_InvalidABI(t *testing.T) {
+	prototypeABI = "invalid json"
+	defer func() {
+		if r := recover(); r != nil {
+			require.IsType(t, &json.SyntaxError{}, r, "expected error type: json.SyntaxError, got: %T", r)
+		}
+	}()
+
+	initABI()
 }

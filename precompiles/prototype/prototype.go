@@ -33,6 +33,10 @@ var (
 )
 
 func init() {
+	initABI()
+}
+
+func initABI() {
 	if prototypeABI == "" {
 		panic("missing prototype ABI")
 	}
