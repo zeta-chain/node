@@ -109,7 +109,7 @@ func (k Keeper) initiateMigrateTSSFundsCCTX(
 	// Set the CCTX and the nonce for the outbound migration
 	err = k.SetObserverOutboundInfo(ctx, chainID, &cctx)
 	if err != nil {
-		return errorsmod.Wrap(types.ErrCannotMigrateTssFunds, err.Error())
+		return errorsmod.Wrap(types.ErrUnableToSetOutboundInfo, err.Error())
 	}
 
 	// The migrate funds can be run again to update the migration cctx index if the migration fails
