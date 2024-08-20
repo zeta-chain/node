@@ -120,7 +120,7 @@ const (
 	/*
 	 Stateful precompiled contracts tests
 	*/
-	TestZetaPrecompilesPrototypeName = "precompiles_contract_prototype"
+	TestZetaPrecompilesPrototypeName = "precompile_contracts_prototype"
 )
 
 // AllE2ETests is an ordered list of all e2e tests

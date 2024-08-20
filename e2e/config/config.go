@@ -68,6 +68,7 @@ type AdditionalAccounts struct {
 	UserMisc       Account `yaml:"user_misc"`
 	UserAdmin      Account `yaml:"user_admin"`
 	UserMigration  Account `yaml:"user_migration"`
+	UserPrecompile Account `yaml:"user_precompile"`
 }
 
 type PolicyAccounts struct {

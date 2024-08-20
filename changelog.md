@@ -18,6 +18,10 @@
 
 * [2654](https://github.com/zeta-chain/node/pull/2654) - add validation for authorization list in when validating genesis state for authorization module
 
+### Tests
+
+* [2703](https://github.com/zeta-chain/node/pull/2703) - add e2e tests for stateful precompiled contracts
+
 ## v19.0.0
 
 ### Breaking Changes
@@ -115,7 +119,6 @@
 * [2415](https://github.com/zeta-chain/node/pull/2415) - add e2e test for upgrade and test admin functionalities
 * [2440](https://github.com/zeta-chain/node/pull/2440) - Add e2e test for TSS migration
 * [2473](https://github.com/zeta-chain/node/pull/2473) - add e2e tests for most used admin transactions
-* [2703](https://github.com/zeta-chain/node/pull/2703) - add e2e tests for stateful precompiled contracts
 
 ### Fixes
 

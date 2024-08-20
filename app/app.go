@@ -1056,6 +1056,8 @@ func (app *App) BlockedAddrs() map[string]bool {
 		blockList[addr.String()] = v
 	}
 
+	// Each enabled precompiled stateful contract should be added as a BlockedAddrs.
+	// That way it's marked as non payable by the bank keeper.
 	for addr, enabled := range precompiles.EnabledStatefulContracts {
 		if enabled {
 			blockList[addr.String()] = enabled

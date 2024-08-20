@@ -19,10 +19,9 @@ func statefulPrecompilesTestRoutine(
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
-		account := conf.AdditionalAccounts.UserERC20
+		account := conf.AdditionalAccounts.UserPrecompile
 
-		// initialize runner for erc20 test
-		erc20Runner, err := initTestRunner(
+		precompileRunner, err := initTestRunner(
 			"precompiles",
 			conf,
 			deployerRunner,
@@ -33,11 +32,10 @@ func statefulPrecompilesTestRoutine(
 			return err
 		}
 
-		erc20Runner.Logger.Print("🏃 starting stateful precompiled contracts tests")
+		precompileRunner.Logger.Print("🏃 starting stateful precompiled contracts tests")
 		startTime := time.Now()
 
-		// run erc20 test
-		testsToRun, err := erc20Runner.GetE2ETestsToRunByName(
+		testsToRun, err := precompileRunner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
 			testNames...,
 		)
@@ -45,11 +43,11 @@ func statefulPrecompilesTestRoutine(
 			return fmt.Errorf("precompiled contracts tests failed: %v", err)
 		}
 
-		if err := erc20Runner.RunE2ETests(testsToRun); err != nil {
+		if err := precompileRunner.RunE2ETests(testsToRun); err != nil {
 			return fmt.Errorf("precompiled contracts tests failed: %v", err)
 		}
 
-		erc20Runner.Logger.Print("🍾 precompiled contracts tests completed in %s", time.Since(startTime).String())
+		precompileRunner.Logger.Print("🍾 precompiled contracts tests completed in %s", time.Since(startTime).String())
 
 		return err
 	}

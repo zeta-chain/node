@@ -22,57 +22,59 @@ coverage:
           - pkg
 
 comment:
-  layout: "reach, diff, files"
+  layout: 'reach, diff, files'
   behavior: default
   require_changes: true
 
 flags:
   zetacore:
     paths:
-      - "x/"
+      - 'x/'
   zetaclient:
     paths:
-      - "zetaclient/"
+      - 'zetaclient/'
   pkg:
     paths:
-      - "pkg/"
+      - 'pkg/'
 
 ignore:
-  - "x/**/client/**/*"
-  - "x/**/keeper/keeper.go"
-  - "x/**/keeper/msg_server.go"
-  - "x/**/keeper/grpc_query_params.go"
-  - "x/**/types/codec.go"
-  - "x/**/types/errors.go"
-  - "x/**/types/keys.go"
-  - "x/**/types/key_*.go"
-  - "x/**/types/types.go"
-  - "x/**/types/expected_keepers.go"
-  - "x/**/module.go"
-  - "x/**/events.go"
-  - "x/**/migrator.go"
-  - "x/**/module_simulation.go"
-  - "x/**/simulation/**/*"
-  - "**/*.proto"
-  - "**/*.md"
-  - "**/*.yml"
-  - "**/*.yaml"
-  - "**/*.pb.go"
-  - "**/*.pb.gw.go"
-  - "**/*_legacy.go"
-  - "**/*.json"
-  - "zetaclient/testdata/**/*"
-  - "zetaclient/testutils/**/*"
-  - ".github"
-  - "app"
-  - "cmd"
-  - "contrib"
-  - "docs"
-  - "e2e"
-  - "proto"
-  - "rpc"
-  - "scripts"
-  - "server"
-  - "testutil"
-  - "tool"
-  - "typescript/**/*"
+  - 'x/**/client/**/*'
+  - 'x/**/keeper/keeper.go'
+  - 'x/**/keeper/msg_server.go'
+  - 'x/**/keeper/grpc_query_params.go'
+  - 'x/**/types/codec.go'
+  - 'x/**/types/errors.go'
+  - 'x/**/types/keys.go'
+  - 'x/**/types/key_*.go'
+  - 'x/**/types/types.go'
+  - 'x/**/types/expected_keepers.go'
+  - 'x/**/module.go'
+  - 'x/**/events.go'
+  - 'x/**/migrator.go'
+  - 'x/**/module_simulation.go'
+  - 'x/**/simulation/**/*'
+  - '**/*.proto'
+  - '**/*.md'
+  - '**/*.yml'
+  - '**/*.yaml'
+  - '**/*.pb.go'
+  - '**/*.pb.gw.go'
+  - '**/*_legacy.go'
+  - '**/*.json'
+  - 'zetaclient/testdata/**/*'
+  - 'zetaclient/testutils/**/*'
+  - '.github'
+  - 'app'
+  - 'cmd'
+  - 'contrib'
+  - 'docs'
+  - 'e2e'
+  - 'proto'
+  - 'rpc'
+  - 'scripts'
+  - 'server'
+  - 'testutil'
+  - 'tool'
+  - 'typescript/**/*'
+  - 'precompiles/**/bindings.go'
+  - 'precompiles/prototype/IPrototype.*'
