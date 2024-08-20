@@ -94,14 +94,23 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 	// 1. The keygen is still pending
 	// 2. The keygen block number matches the ballot block number ,which makes sure this the correct ballot for the current keygen
 
-	// Return without error so the vote is added to the ballot
+	// Return without an error so the vote is added to the ballot
 	if keygen.Status != types.KeygenStatus_PendingKeygen {
-		return &types.MsgVoteTSSResponse{}, nil
+		// The response is used for testing only.Setting false for keygen success as the keygen has already been finalized and it doesnt matter what the final status is.We are just asserting that the keygen was previously finalized and is not in pending status.
+		return &types.MsgVoteTSSResponse{
+			VoteFinalized: isFinalized,
+			BallotCreated: ballotCreated,
+			KeygenSuccess: false,
+		}, nil
 	}
 
-	// For cases when an observer tries to vote for an older pending ballot , associated with a keygen that was discarded , we would return at this check while still adding the vote to the ballot
+	// For cases when an observer tries to vote for an older pending ballot, associated with a keygen that was discarded , we would return at this check while still adding the vote to the ballot
 	if msg.KeygenZetaHeight != keygen.BlockNumber {
-		return &types.MsgVoteTSSResponse{}, nil
+		return &types.MsgVoteTSSResponse{
+			VoteFinalized: isFinalized,
+			BallotCreated: ballotCreated,
+			KeygenSuccess: false,
+		}, nil
 	}
 
 	// Set TSS only on success, set keygen either way.
