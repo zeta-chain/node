@@ -56,8 +56,6 @@ func init() {
 			GasRequiredByMethod[methodID] = 10000
 		case GetGasStabilityPoolBalanceName:
 			GasRequiredByMethod[methodID] = 10000
-		default:
-			GasRequiredByMethod[methodID] = 0
 		}
 	}
 }
@@ -107,7 +105,8 @@ func (c *Contract) RequiredGas(input []byte) uint64 {
 		return requiredGas + baseCost
 	}
 
-	return baseCost
+	// Can not happen, but return 0 if the method is not found.
+	return 0
 }
 
 func (c *Contract) Bech32ToHexAddr(method *abi.Method, args []interface{}) ([]byte, error) {
@@ -213,10 +212,6 @@ func (c *Contract) GetGasStabilityPoolBalance(
 	balance, err := c.fungibleKeeper.GetGasStabilityPoolBalance(ctx, chainID)
 	if err != nil {
 		return nil, fmt.Errorf("error calling fungible keeper: %s", err.Error())
-	}
-
-	if balance == nil {
-		return nil, fmt.Errorf("balance not found")
 	}
 
 	return method.Outputs.Pack(balance)
