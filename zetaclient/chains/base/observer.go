@@ -60,6 +60,9 @@ type Observer struct {
 	// lastTxScanned is the last transaction hash scanned by the observer
 	lastTxScanned string
 
+	// rpcAlertLatency is the threshold of RPC latency (in seconds) to trigger an alert
+	rpcAlertLatency uint64
+
 	// blockCache is the cache for blocks
 	blockCache *lru.Cache
 
@@ -92,6 +95,7 @@ func NewObserver(
 	tss interfaces.TSSSigner,
 	blockCacheSize int,
 	headerCacheSize int,
+	rpcAlertLatency uint64,
 	ts *metrics.TelemetryServer,
 	database *db.DB,
 	logger Logger,
@@ -104,6 +108,7 @@ func NewObserver(
 		lastBlock:        0,
 		lastBlockScanned: 0,
 		lastTxScanned:    "",
+		rpcAlertLatency:  rpcAlertLatency,
 		ts:               ts,
 		db:               database,
 		mu:               &sync.Mutex{},
@@ -244,6 +249,11 @@ func (ob *Observer) LastTxScanned() string {
 func (ob *Observer) WithLastTxScanned(txHash string) *Observer {
 	ob.lastTxScanned = txHash
 	return ob
+}
+
+// RPCAlertLatency returns the RPC alert latency for the observer.
+func (ob *Observer) RPCAlertLatency() uint64 {
+	return ob.rpcAlertLatency
 }
 
 // BlockCache returns the block cache for the observer.

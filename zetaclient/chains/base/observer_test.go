@@ -41,6 +41,7 @@ func createObserver(t *testing.T, chain chains.Chain) *base.Observer {
 		tss,
 		base.DefaultBlockCacheSize,
 		base.DefaultHeaderCacheSize,
+		60,
 		nil,
 		database,
 		logger,
@@ -122,6 +123,7 @@ func TestNewObserver(t *testing.T) {
 				tt.tss,
 				tt.blockCacheSize,
 				tt.headerCacheSize,
+				60,
 				nil,
 				database,
 				base.DefaultLogger(),
@@ -159,6 +161,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		ob = ob.WithChain(chains.BscMainnet)
 		require.Equal(t, newChain, ob.Chain())
 	})
+
 	t.Run("should be able to update chain params", func(t *testing.T) {
 		ob := createObserver(t, chain)
 
@@ -167,6 +170,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		ob = ob.WithChainParams(newChainParams)
 		require.True(t, observertypes.ChainParamsEqual(newChainParams, ob.ChainParams()))
 	})
+
 	t.Run("should be able to update zetacore client", func(t *testing.T) {
 		ob := createObserver(t, chain)
 
@@ -175,6 +179,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		ob = ob.WithZetacoreClient(newZetacoreClient)
 		require.Equal(t, newZetacoreClient, ob.ZetacoreClient())
 	})
+
 	t.Run("should be able to update tss", func(t *testing.T) {
 		ob := createObserver(t, chain)
 
@@ -183,6 +188,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		ob = ob.WithTSS(newTSS)
 		require.Equal(t, newTSS, ob.TSS())
 	})
+
 	t.Run("should be able to update last block", func(t *testing.T) {
 		ob := createObserver(t, chain)
 
@@ -191,6 +197,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		ob = ob.WithLastBlock(newLastBlock)
 		require.Equal(t, newLastBlock, ob.LastBlock())
 	})
+
 	t.Run("should be able to update last block scanned", func(t *testing.T) {
 		ob := createObserver(t, chain)
 
@@ -199,6 +206,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		ob = ob.WithLastBlockScanned(newLastBlockScanned)
 		require.Equal(t, newLastBlockScanned, ob.LastBlockScanned())
 	})
+
 	t.Run("should be able to update last tx scanned", func(t *testing.T) {
 		ob := createObserver(t, chain)
 
@@ -207,6 +215,14 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		ob = ob.WithLastTxScanned(newLastTxScanned)
 		require.Equal(t, newLastTxScanned, ob.LastTxScanned())
 	})
+
+	t.Run("should be able to get rpc alert latency", func(t *testing.T) {
+		ob := createObserver(t, chain)
+
+		// get rpc alert latency
+		require.EqualValues(t, 60, ob.RPCAlertLatency())
+	})
+
 	t.Run("should be able to replace block cache", func(t *testing.T) {
 		ob := createObserver(t, chain)
 
@@ -217,6 +233,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		ob = ob.WithBlockCache(newBlockCache)
 		require.Equal(t, newBlockCache, ob.BlockCache())
 	})
+
 	t.Run("should be able to replace header cache", func(t *testing.T) {
 		ob := createObserver(t, chain)
 
@@ -227,6 +244,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		ob = ob.WithHeaderCache(newHeadersCache)
 		require.Equal(t, newHeadersCache, ob.HeaderCache())
 	})
+
 	t.Run("should be able to update telemetry server", func(t *testing.T) {
 		ob := createObserver(t, chain)
 
@@ -235,6 +253,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		ob = ob.WithTelemetryServer(newServer)
 		require.Equal(t, newServer, ob.TelemetryServer())
 	})
+
 	t.Run("should be able to get logger", func(t *testing.T) {
 		ob := createObserver(t, chain)
 		logger := ob.Logger()
@@ -307,6 +326,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 		require.NoError(t, err)
 		require.EqualValues(t, 100, ob.LastBlockScanned())
 	})
+
 	t.Run("latest block scanned should be 0 if not found in db", func(t *testing.T) {
 		// create observer and open db
 		ob := createObserver(t, chain)
@@ -316,6 +336,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 		require.NoError(t, err)
 		require.EqualValues(t, 0, ob.LastBlockScanned())
 	})
+
 	t.Run("should overwrite last block scanned if env var is set", func(t *testing.T) {
 		// create observer and open db
 		ob := createObserver(t, chain)
@@ -331,6 +352,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 		require.NoError(t, err)
 		require.EqualValues(t, 101, ob.LastBlockScanned())
 	})
+
 	t.Run("last block scanned should remain 0 if env var is set to latest", func(t *testing.T) {
 		// create observer and open db
 		ob := createObserver(t, chain)
@@ -346,6 +368,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 		require.NoError(t, err)
 		require.EqualValues(t, 0, ob.LastBlockScanned())
 	})
+
 	t.Run("should return error on invalid env var", func(t *testing.T) {
 		// create observer and open db
 		ob := createObserver(t, chain)
@@ -392,6 +415,7 @@ func TestReadWriteDBLastBlockScanned(t *testing.T) {
 		require.NoError(t, err)
 		require.EqualValues(t, 100, lastBlockScanned)
 	})
+
 	t.Run("should return error when last block scanned not found in db", func(t *testing.T) {
 		// create empty db
 		ob := createObserver(t, chain)
@@ -417,6 +441,7 @@ func TestLoadLastTxScanned(t *testing.T) {
 		ob.LoadLastTxScanned()
 		require.EqualValues(t, lastTx, ob.LastTxScanned())
 	})
+
 	t.Run("latest tx scanned should be empty if not found in db", func(t *testing.T) {
 		// create observer and open db
 		ob := createObserver(t, chain)
@@ -425,6 +450,7 @@ func TestLoadLastTxScanned(t *testing.T) {
 		ob.LoadLastTxScanned()
 		require.Empty(t, ob.LastTxScanned())
 	})
+
 	t.Run("should overwrite last tx scanned if env var is set", func(t *testing.T) {
 		// create observer and open db
 		ob := createObserver(t, chain)
@@ -480,6 +506,7 @@ func TestReadWriteDBLastTxScanned(t *testing.T) {
 		require.NoError(t, err)
 		require.EqualValues(t, lastTx, lastTxScanned)
 	})
+
 	t.Run("should return error when last tx scanned not found in db", func(t *testing.T) {
 		// create empty db
 		ob := createObserver(t, chain)

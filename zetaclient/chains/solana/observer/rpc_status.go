@@ -20,7 +20,8 @@ func (ob *Observer) WatchRPCStatus(ctx context.Context) error {
 				continue
 			}
 
-			err := rpc.CheckRPCStatus(ctx, ob.solClient, ob.Logger().Chain)
+			alertLatency := ob.RPCAlertLatency()
+			err := rpc.CheckRPCStatus(ctx, ob.solClient, alertLatency, ob.Logger().Chain)
 			if err != nil {
 				ob.Logger().Chain.Error().Err(err).Msg("RPC Status error")
 			}

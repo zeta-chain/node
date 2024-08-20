@@ -59,7 +59,7 @@ func (suite *BitcoinObserverTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 
 	// create observer
-	ob, err := observer.NewObserver(chain, btcClient, params, nil, tss, database, base.DefaultLogger(), nil)
+	ob, err := observer.NewObserver(chain, btcClient, params, nil, tss, 60, database, base.DefaultLogger(), nil)
 
 	suite.Require().NoError(err)
 	suite.Require().NotNil(ob)
@@ -259,7 +259,7 @@ func LiveTestCheckRPCStatus(t *testing.T) {
 	require.NoError(t, err)
 
 	// check RPC status
-	err = rpc.CheckRPCStatus(client, tssAddress, log.Logger)
+	err = rpc.CheckRPCStatus(client, rpc.RPCAlertLatency, tssAddress, log.Logger)
 	require.NoError(t, err)
 }
 

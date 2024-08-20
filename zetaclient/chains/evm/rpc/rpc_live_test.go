@@ -51,6 +51,6 @@ func LiveTest_CheckRPCStatus(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	err = rpc.CheckRPCStatus(ctx, client, log.Logger)
+	err = rpc.CheckRPCStatus(ctx, client, rpc.RPCAlertLatency, log.Logger)
 	require.NoError(t, err)
 }

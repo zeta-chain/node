@@ -24,9 +24,9 @@ const (
 	// defaultTestnetFeeRate is the default fee rate for testnet, 10 sat/byte
 	defaultTestnetFeeRate = 10
 
-	// rpcLatencyThreshold is the threshold for RPC latency to be considered unhealthy
+	// RPCAlertLatency is the default threshold for RPC latency to be considered unhealthy and trigger an alert.
 	// Bitcoin block time is 10 minutes, 1200s (20 minutes) is a reasonable threshold for Bitcoin
-	rpcLatencyThreshold = 1200
+	RPCAlertLatency = 1200
 )
 
 // NewRPCClient creates a new RPC client by the given config.
@@ -166,7 +166,12 @@ func GetRecentFeeRate(rpcClient interfaces.BTCRPCClient, netParams *chaincfg.Par
 }
 
 // CheckRPCStatus checks the RPC status of the evm chain
-func CheckRPCStatus(client interfaces.BTCRPCClient, tssAddress btcutil.Address, logger zerolog.Logger) error {
+func CheckRPCStatus(
+	client interfaces.BTCRPCClient,
+	alertLatency uint64,
+	tssAddress btcutil.Address,
+	logger zerolog.Logger,
+) error {
 	// query latest block number
 	bn, err := client.GetBlockCount()
 	if err != nil {
@@ -185,10 +190,15 @@ func CheckRPCStatus(client interfaces.BTCRPCClient, tssAddress btcutil.Address, 
 		return errors.Wrap(err, "GetBlockHeader error: RPC down?")
 	}
 
+	// use default alert latency if not provided
+	if alertLatency == 0 {
+		alertLatency = RPCAlertLatency
+	}
+
 	// latest block should not be too old
 	blockTime := header.Timestamp
 	elapsedSeconds := time.Since(blockTime).Seconds()
-	if elapsedSeconds > rpcLatencyThreshold {
+	if elapsedSeconds > float64(alertLatency) {
 		return errors.Errorf(
 			"Latest block %d is %.0fs old, RPC stale or chain stuck (check explorer)?",
 			bn,

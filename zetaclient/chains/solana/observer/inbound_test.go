@@ -40,7 +40,17 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 	zetacoreClient := mocks.NewZetacoreClient(t)
 	zetacoreClient.WithKeys(&keys.Keys{}).WithZetaChain().WithPostVoteInbound("", "")
 
-	ob, err := observer.NewObserver(chain, nil, *chainParams, zetacoreClient, nil, database, base.DefaultLogger(), nil)
+	ob, err := observer.NewObserver(
+		chain,
+		nil,
+		*chainParams,
+		zetacoreClient,
+		nil,
+		60,
+		database,
+		base.DefaultLogger(),
+		nil,
+	)
 	require.NoError(t, err)
 
 	t.Run("should filter inbound events and vote", func(t *testing.T) {
@@ -63,7 +73,7 @@ func Test_FilterInboundEvents(t *testing.T) {
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = GatewayAddressTest
 
-	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, database, base.DefaultLogger(), nil)
+	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, 60, database, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	// expected result
@@ -103,7 +113,7 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
 
-	ob, err := observer.NewObserver(chain, nil, *params, zetacoreClient, nil, database, base.DefaultLogger(), nil)
+	ob, err := observer.NewObserver(chain, nil, *params, zetacoreClient, nil, 60, database, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	// create test compliance config
@@ -170,7 +180,7 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = GatewayAddressTest
-	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, database, base.DefaultLogger(), nil)
+	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, 60, database, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	// expected result

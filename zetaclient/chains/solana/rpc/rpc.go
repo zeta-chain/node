@@ -16,9 +16,9 @@ const (
 	// defaultPageLimit is the default number of signatures to fetch in one GetSignaturesForAddressWithOpts call
 	DefaultPageLimit = 1000
 
-	// rpcLatencyThreshold is the threshold for RPC latency to be considered unhealthy
+	// RPCAlertLatency is the default threshold for RPC latency to be considered unhealthy and trigger an alert.
 	// The 'HEALTH_CHECK_SLOT_DISTANCE' is default to 150 slots, which is 150 * 0.4s = 60s
-	rpcLatencyThreshold = 60
+	RPCAlertLatency = 60
 )
 
 // GetFirstSignatureForAddress searches the first signature for the given address.
@@ -124,7 +124,12 @@ func GetSignaturesForAddressUntil(
 }
 
 // CheckRPCStatus checks the RPC status of the solana chain
-func CheckRPCStatus(ctx context.Context, client interfaces.SolanaRPCClient, logger zerolog.Logger) error {
+func CheckRPCStatus(
+	ctx context.Context,
+	client interfaces.SolanaRPCClient,
+	alertLatency uint64,
+	logger zerolog.Logger,
+) error {
 	// query solana health (always return "ok" unless --trusted-validator is provided)
 	_, err := client.GetHealth(ctx)
 	if err != nil {
@@ -143,9 +148,14 @@ func CheckRPCStatus(ctx context.Context, client interfaces.SolanaRPCClient, logg
 		return errors.Wrap(err, "GetBlockTime error: RPC down?")
 	}
 
+	// use default alert latency if not provided
+	if alertLatency == 0 {
+		alertLatency = RPCAlertLatency
+	}
+
 	// latest block should not be too old
 	elapsedSeconds := time.Since(blockTime.Time()).Seconds()
-	if elapsedSeconds > rpcLatencyThreshold {
+	if elapsedSeconds > float64(alertLatency) {
 		return errors.Errorf(
 			"Latest slot %d is %.0fs old, RPC stale or chain stuck (check explorer)?",
 			slot,

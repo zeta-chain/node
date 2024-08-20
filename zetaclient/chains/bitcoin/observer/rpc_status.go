@@ -20,8 +20,9 @@ func (ob *Observer) WatchRPCStatus(_ context.Context) error {
 				continue
 			}
 
+			alertLatency := ob.RPCAlertLatency()
 			tssAddress := ob.TSS().BTCAddressWitnessPubkeyHash()
-			err := rpc.CheckRPCStatus(ob.btcClient, tssAddress, ob.Logger().Chain)
+			err := rpc.CheckRPCStatus(ob.btcClient, alertLatency, tssAddress, ob.Logger().Chain)
 			if err != nil {
 				ob.Logger().Chain.Error().Err(err).Msg("RPC Status error")
 			}

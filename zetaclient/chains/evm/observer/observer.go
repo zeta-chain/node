@@ -77,6 +77,7 @@ func NewObserver(
 		tss,
 		base.DefaultBlockCacheSize,
 		base.DefaultHeaderCacheSize,
+		evmCfg.RPCAlertLatency,
 		ts,
 		database,
 		logger,
