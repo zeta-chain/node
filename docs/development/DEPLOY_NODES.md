@@ -54,7 +54,7 @@ The environment variables for both Zetacored and Bitcoin nodes are defined in th
 | `NETWORK` | Network identifier | `mainnet`, `athens3` |
 | `CHAIN_ID` | Chain ID for the network | `zetachain_7000-1`, `athens_7001-1` |
 | `RESTORE_TYPE` | Node restoration method | `snapshot`, `statesync` |
-| `SNAPSHOT_API` | API URL for fetching snapshots | `https://snapshots.zetachain.com` |
+| `SNAPSHOT_API` | API URL for fetching snapshots | `https://snapshots.rpc.zetachain.com` |
 
 #### Example Environment Variables for Bitcoin
 

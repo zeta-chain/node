@@ -40,4 +40,34 @@ const (
 	// [signature, asset]
 	// https://github.com/zeta-chain/protocol-contracts/blob/d65814debf17648a6c67d757ba03646415842790/contracts/evm/ERC20Custody.sol#L42
 	TopicsDeposited = 2
+
+	// V2 contracts
+
+	// TopicsGatewayDeposit is the number of topics for a gateway deposit event
+	// [signature, sender, receiver]
+	TopicsGatewayDeposit = 3
+
+	// TopicsGatewayCall is the number of topics for a gateway call event
+	// [signature, sender, receiver]
+	TopicsGatewayCall = 3
+
+	// TopicsGatewayExecuted is the number of topics for a gateway executed event
+	// [signature, destination]
+	TopicsGatewayExecuted = 2
+
+	// TopicsGatewayExecutedWithERC20 is the number of topics for a gateway executed with ERC20 event
+	// [signature, token, destination]
+	TopicsGatewayExecutedWithERC20 = 3
+
+	// TopicsGatewayReverted is the number of topics for a reverted event
+	// [signature, destination]
+	TopicsGatewayReverted = 3
+
+	// TopicsERC20CustodyWithdraw is the number of topics for an ERC20 custody withdraw event
+	// [signature, recipient, asset]
+	TopicsERC20CustodyWithdraw = 3
+
+	// TopicsERC20CustodyWithdrawAndCall is the number of topics for an ERC20 custody withdraw and call event
+	// [signature, recipient, asset]
+	TopicsERC20CustodyWithdrawAndCall = 3
 )

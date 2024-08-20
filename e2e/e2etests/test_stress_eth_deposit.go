@@ -2,7 +2,6 @@ package e2etests
 
 import (
 	"fmt"
-	"math/big"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -18,9 +17,8 @@ import (
 func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
-	depositAmount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok)
-
+	// parse deposit amount and number of deposits
+	depositAmount := parseBigInt(r, args[0])
 	numDeposits := parseInt(r, args[1])
 
 	r.Logger.Print("starting stress test of %d deposits", numDeposits)

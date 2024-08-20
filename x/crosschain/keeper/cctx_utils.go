@@ -67,6 +67,12 @@ func (k Keeper) SetObserverOutboundInfo(ctx sdk.Context, receiveChainID int64, c
 // GetRevertGasLimit returns the gas limit for the revert transaction in a CCTX
 // It returns 0 if there is no error but the gas limit can't be determined from the CCTX data
 func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uint64, error) {
+	// with V2 protocol, reverts on connected chains can eventually call a onRevert function which can require a higher gas limit
+	if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 && cctx.RevertOptions.CallOnRevert &&
+		!cctx.RevertOptions.RevertGasLimit.IsZero() {
+		return cctx.RevertOptions.RevertGasLimit.Uint64(), nil
+	}
+
 	if cctx.InboundParams == nil {
 		return 0, nil
 	}

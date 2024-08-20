@@ -85,6 +85,8 @@ contract TestZRC20 is IZRC20, IZRC20Metadata, ZRC20Errors {
     string private _symbol;
     uint8 private _decimals;
 
+    address public gatewayAddress;
+
     /// @notice extend the contract with new fields to test contract bytecode upgrade
     uint256 public newField;
     string public newPublicField;
