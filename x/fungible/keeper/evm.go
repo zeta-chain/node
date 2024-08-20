@@ -573,7 +573,7 @@ func (k Keeper) BalanceOfZRC4(
 ) (*big.Int, error) {
 	zrc4ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(types.ErrABIUnpack, err.Error())
+		return nil, cosmoserrors.Wrap(types.ErrABIUnpack, err.Error())
 	}
 	res, err := k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "balanceOf",
 		account)
@@ -583,7 +583,7 @@ func (k Keeper) BalanceOfZRC4(
 
 	unpacked, err := zrc4ABI.Unpack("balanceOf", res.Ret)
 	if err != nil || len(unpacked) == 0 {
-		return nil, cosmoserrors.Wrapf(types.ErrABIUnpack, err.Error())
+		return nil, cosmoserrors.Wrap(types.ErrABIUnpack, err.Error())
 	}
 
 	balance, ok := unpacked[0].(*big.Int)
@@ -601,7 +601,7 @@ func (k Keeper) TotalSupplyZRC4(
 ) (*big.Int, error) {
 	abi, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(types.ErrABIUnpack, err.Error())
+		return nil, cosmoserrors.Wrap(types.ErrABIUnpack, err.Error())
 	}
 	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "totalSupply")
 	if err != nil {
@@ -610,12 +610,12 @@ func (k Keeper) TotalSupplyZRC4(
 
 	unpacked, err := abi.Unpack("totalSupply", res.Ret)
 	if err != nil || len(unpacked) == 0 {
-		return nil, cosmoserrors.Wrapf(types.ErrABIUnpack, err.Error())
+		return nil, cosmoserrors.Wrap(types.ErrABIUnpack, err.Error())
 	}
 
 	totalSupply, ok := unpacked[0].(*big.Int)
 	if !ok {
-		return nil, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack total supply")
+		return nil, cosmoserrors.Wrap(types.ErrABIUnpack, "failed to unpack total supply")
 	}
 
 	return totalSupply, nil
@@ -628,7 +628,7 @@ func (k Keeper) QueryChainIDFromContract(
 ) (*big.Int, error) {
 	abi, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(types.ErrABIUnpack, err.Error())
+		return nil, cosmoserrors.Wrap(types.ErrABIUnpack, err.Error())
 	}
 	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "CHAIN_ID")
 	if err != nil {
@@ -637,12 +637,12 @@ func (k Keeper) QueryChainIDFromContract(
 
 	unpacked, err := abi.Unpack("CHAIN_ID", res.Ret)
 	if err != nil || len(unpacked) == 0 {
-		return nil, cosmoserrors.Wrapf(types.ErrABIUnpack, err.Error())
+		return nil, cosmoserrors.Wrap(types.ErrABIUnpack, err.Error())
 	}
 
 	chainID, ok := unpacked[0].(*big.Int)
 	if !ok {
-		return nil, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack chain ID")
+		return nil, cosmoserrors.Wrap(types.ErrABIUnpack, "failed to unpack chain ID")
 	}
 
 	return chainID, nil
@@ -684,7 +684,7 @@ func (k Keeper) CallEVM(
 		if ok {
 			errMes = fmt.Sprintf("%s, reason: %v", errMes, revertErr.ErrorData())
 		}
-		return resp, cosmoserrors.Wrapf(err, errMes)
+		return resp, cosmoserrors.Wrap(err, errMes)
 	}
 	return resp, nil
 }
