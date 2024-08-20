@@ -1,4 +1,4 @@
-package precompiles_test
+package precompiles
 
 import (
 	"testing"
@@ -7,7 +7,6 @@ import (
 	ethparams "github.com/ethereum/go-ethereum/params"
 	"github.com/stretchr/testify/require"
 	ethermint "github.com/zeta-chain/ethermint/types"
-	"github.com/zeta-chain/zetacore/precompiles"
 	"github.com/zeta-chain/zetacore/testutil/keeper"
 )
 
@@ -19,14 +18,14 @@ func Test_StatefulContracts(t *testing.T) {
 	appCodec := encoding.Codec
 
 	var expectedContracts int
-	for _, enabled := range precompiles.EnabledStatefulContracts {
+	for _, enabled := range EnabledStatefulContracts {
 		if enabled {
 			expectedContracts++
 		}
 	}
 
 	// StatefulContracts() should return all the enabled contracts.
-	contracts := precompiles.StatefulContracts(k, appCodec, gasConfig)
+	contracts := StatefulContracts(k, appCodec, gasConfig)
 	require.NotNil(t, contracts, "StatefulContracts() should not return a nil slice")
 	require.Len(t, contracts, expectedContracts, "StatefulContracts() should return all the enabled contracts")
 
