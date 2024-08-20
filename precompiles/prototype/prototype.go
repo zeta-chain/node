@@ -9,7 +9,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 
@@ -27,9 +26,6 @@ var (
 	ABI                 abi.ABI
 	ContractAddress     = common.HexToAddress("0x0000000000000000000000000000000000000065")
 	GasRequiredByMethod = map[[4]byte]uint64{}
-
-	//go:embed IPrototype.abi
-	prototypeABI string
 )
 
 func init() {
@@ -37,14 +33,6 @@ func init() {
 }
 
 func initABI() {
-	if prototypeABI == "" {
-		panic("missing prototype ABI")
-	}
-
-	var IPrototypeMetaData = &bind.MetaData{
-		ABI: prototypeABI,
-	}
-
 	if err := ABI.UnmarshalJSON([]byte(IPrototypeMetaData.ABI)); err != nil {
 		panic(err)
 	}
@@ -60,6 +48,8 @@ func initABI() {
 			GasRequiredByMethod[methodID] = 10000
 		case GetGasStabilityPoolBalanceName:
 			GasRequiredByMethod[methodID] = 10000
+		default:
+			GasRequiredByMethod[methodID] = 0
 		}
 	}
 }

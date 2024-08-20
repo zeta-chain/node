@@ -280,19 +280,8 @@ func Test_InvalidMethod(t *testing.T) {
 	require.False(t, doNotExist, "invalidMethod should not be present in the ABI")
 }
 
-func Test_MissingABI(t *testing.T) {
-	prototypeABI = ""
-	defer func() {
-		if r := recover(); r != nil {
-			require.Equal(t, "missing prototype ABI", r, "expected error: missing ABI, got: %v", r)
-		}
-	}()
-
-	initABI()
-}
-
 func Test_InvalidABI(t *testing.T) {
-	prototypeABI = "invalid json"
+	IPrototypeMetaData.ABI = "invalid json"
 	defer func() {
 		if r := recover(); r != nil {
 			require.IsType(t, &json.SyntaxError{}, r, "expected error type: json.SyntaxError, got: %T", r)
