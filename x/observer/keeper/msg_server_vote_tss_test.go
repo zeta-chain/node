@@ -539,8 +539,8 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		require.NoError(t, err)
 
 		// ASSERT
-		require.True(t, res.BallotCreated)
-		require.False(t, res.VoteFinalized)
+		require.False(t, res.BallotCreated)
+		require.True(t, res.VoteFinalized)
 		require.True(t, res.KeygenSuccess)
 		// Newer ballot should be finalized which make keygen success
 		newKeygen, found = k.GetKeygen(ctx)
