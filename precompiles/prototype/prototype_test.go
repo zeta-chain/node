@@ -14,6 +14,7 @@ func Test_IPrototypeContract(t *testing.T) {
 	/*
 		Configuration
 	*/
+
 	var encoding ethermint.EncodingConfig
 	appCodec := encoding.Codec
 	k, ctx, _, _ := keeper.FungibleKeeper(t)
@@ -24,7 +25,7 @@ func Test_IPrototypeContract(t *testing.T) {
 	*/
 
 	// Create a new IPrototypeContract instance and get Address and Abi.
-	contract := NewIPrototypeContract(ctx, k, appCodec, gasConfig)
+	contract := NewIPrototypeContract(k, appCodec, gasConfig)
 	require.NotNil(t, contract, "NewIPrototypeContract() should not return a nil contract")
 
 	address := contract.Address()

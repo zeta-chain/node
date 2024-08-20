@@ -65,22 +65,19 @@ func init() {
 type Contract struct {
 	ptypes.BaseContract
 
-	Ctx            sdk.Context
-	FungibleKeeper fungiblekeeper.Keeper
+	fungibleKeeper fungiblekeeper.Keeper
 	cdc            codec.Codec
 	kvGasConfig    storetypes.GasConfig
 }
 
 func NewIPrototypeContract(
-	context sdk.Context,
 	fungibleKeeper *fungiblekeeper.Keeper,
 	cdc codec.Codec,
 	kvGasConfig storetypes.GasConfig,
 ) *Contract {
 	return &Contract{
-		Ctx:            context,
 		BaseContract:   ptypes.NewBaseContract(ContractAddress),
-		FungibleKeeper: *fungibleKeeper,
+		fungibleKeeper: *fungibleKeeper,
 		cdc:            cdc,
 		kvGasConfig:    kvGasConfig,
 	}
@@ -213,7 +210,7 @@ func (c *Contract) GetGasStabilityPoolBalance(
 		}
 	}
 
-	balance, err := c.FungibleKeeper.GetGasStabilityPoolBalance(ctx, chainID)
+	balance, err := c.fungibleKeeper.GetGasStabilityPoolBalance(ctx, chainID)
 	if err != nil {
 		return nil, fmt.Errorf("error calling fungible keeper: %s", err.Error())
 	}
