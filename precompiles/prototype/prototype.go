@@ -1,7 +1,6 @@
 package prototype
 
 import (
-	_ "embed"
 	"fmt"
 	"strings"
 

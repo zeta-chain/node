@@ -11,7 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 
-// erc20TestRoutine runs erc20 related e2e tests
+// statefulPrecompilesTestRoutine runs steateful precompiles related e2e tests
 func statefulPrecompilesTestRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
