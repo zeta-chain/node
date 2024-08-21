@@ -2,17 +2,17 @@ package e2etests
 
 import (
 	"encoding/hex"
+
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
-	zetabitcoin "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
-	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
+	zetabitcoin "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
+	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 )
 
 func TestExtractBitcoinInscriptionMemo(r *runner.E2ERunner, args []string) {
-
 	r.SetBtcAddress(r.Name, false)
 
 	// obtain some initial fund

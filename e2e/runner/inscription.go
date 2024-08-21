@@ -5,9 +5,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 type commitResponse struct {
