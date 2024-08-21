@@ -11,8 +11,8 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 
-// migrationTestRoutine runs migration related e2e tests
-func migrationTestRoutine(
+// tssMigrationTestRoutine runs TSS migration related e2e tests
+func tssMigrationTestRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
@@ -21,7 +21,7 @@ func migrationTestRoutine(
 	return func() (err error) {
 		account := conf.AdditionalAccounts.UserMigration
 		// initialize runner for migration test
-		migrationTestRunner, err := initTestRunner(
+		tssMigrationTestRunner, err := initTestRunner(
 			"migration",
 			conf,
 			deployerRunner,
@@ -33,30 +33,30 @@ func migrationTestRoutine(
 			return err
 		}
 
-		migrationTestRunner.Logger.Print("🏃 starting migration tests")
+		tssMigrationTestRunner.Logger.Print("🏃 starting TSS migration tests")
 		startTime := time.Now()
 
 		if len(testNames) == 0 {
-			migrationTestRunner.Logger.Print("🍾 migration tests completed in %s", time.Since(startTime).String())
+			tssMigrationTestRunner.Logger.Print("🍾 TSS migration tests completed in %s", time.Since(startTime).String())
 			return nil
 		}
-		// run migration test
-		testsToRun, err := migrationTestRunner.GetE2ETestsToRunByName(
+		// run TSS migration test
+		testsToRun, err := tssMigrationTestRunner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
 			testNames...,
 		)
 		if err != nil {
-			return fmt.Errorf("migration tests failed: %v", err)
+			return fmt.Errorf("TSS migration tests failed: %v", err)
 		}
 
-		if err := migrationTestRunner.RunE2ETests(testsToRun); err != nil {
-			return fmt.Errorf("migration tests failed: %v", err)
+		if err := tssMigrationTestRunner.RunE2ETests(testsToRun); err != nil {
+			return fmt.Errorf("TSS migration tests failed: %v", err)
 		}
-		if err := migrationTestRunner.CheckBtcTSSBalance(); err != nil {
+		if err := tssMigrationTestRunner.CheckBtcTSSBalance(); err != nil {
 			return err
 		}
 
-		migrationTestRunner.Logger.Print("🍾 migration tests completed in %s", time.Since(startTime).String())
+		tssMigrationTestRunner.Logger.Print("🍾 TSS migration tests completed in %s", time.Since(startTime).String())
 
 		return err
 	}
