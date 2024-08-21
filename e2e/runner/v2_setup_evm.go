@@ -22,7 +22,7 @@ func (r *E2ERunner) SetupEVMV2() {
 		r.requireTxSuccessful(receipt, failMessage)
 	}
 
-	r.Logger.Print("⚙️ setting up EVM v2 network")
+	r.Logger.Info("⚙️ setting up EVM v2 network")
 	startTime := time.Now()
 	defer func() {
 		r.Logger.Info("EVM v2 setup took %s\n", time.Since(startTime))

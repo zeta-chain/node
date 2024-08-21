@@ -117,6 +117,7 @@ const (
 	/*
 	 V2 smart contract tests
 	*/
+	TestV2MigrationName                          = "v2_migration"
 	TestV2ETHDepositName                         = "v2_eth_deposit"
 	TestV2ETHDepositAndCallName                  = "v2_eth_deposit_and_call"
 	TestV2ETHDepositAndCallRevertName            = "v2_eth_deposit_and_call_revert"
@@ -636,6 +637,12 @@ var AllE2ETests = []runner.E2ETest{
 	/*
 	 V2 smart contract tests
 	*/
+	runner.NewE2ETest(
+		TestV2MigrationName,
+		"migrate V1 contract to V2 contract architecture",
+		[]runner.ArgDefinition{},
+		TestV2Migration,
+	),
 	runner.NewE2ETest(
 		TestV2ETHDepositName,
 		"deposit Ether into ZEVM using V2 contract",

@@ -11,7 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 
-// erc20TestRoutine runs v2 related e2e tests
+// v2TestRoutine runs v2 related e2e tests
 // TODO: this routine will be broken down in the future and will replace most current tests
 // we keep a single routine for v2 for simplicity
 // https://github.com/zeta-chain/node/issues/2554

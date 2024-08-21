@@ -42,6 +42,7 @@ const (
 	flagSkipBitcoinSetup  = "skip-bitcoin-setup"
 	flagSkipHeaderProof   = "skip-header-proof"
 	flagTestV2            = "test-v2"
+	flagTestV2Migration   = "test-v2-migration"
 	flagSkipTrackerCheck  = "skip-tracker-check"
 )
 
@@ -76,11 +77,14 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSkipHeaderProof, false, "set to true to skip header proof tests")
 	cmd.Flags().Bool(flagTestTSSMigration, false, "set to true to include a migration test at the end")
 	cmd.Flags().Bool(flagTestV2, false, "set to true to run tests for v2 contracts")
+	cmd.Flags().Bool(flagTestV2Migration, false, "set to true to run tests for v2 contracts migration test")
 	cmd.Flags().Bool(flagSkipTrackerCheck, false, "set to true to skip tracker check at the end of the tests")
 
 	return cmd
 }
 
+// TODO: simplify this file: put the different type of tests in separate files
+// https://github.com/zeta-chain/node/issues/2762
 func localE2ETest(cmd *cobra.Command, _ []string) {
 	// fetch flags
 	var (
@@ -101,6 +105,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipTrackerCheck  = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
 		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
 		testV2            = must(cmd.Flags().GetBool(flagTestV2))
+		//testV2Migration   = must(cmd.Flags().GetBool(flagTestV2Migration))
 	)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
