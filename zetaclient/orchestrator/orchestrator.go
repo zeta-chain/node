@@ -161,7 +161,7 @@ func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chainID int64) (inte
 	case chain.IsEVM():
 		params := chain.Params()
 
-		// update zeta connector and ERC20 custody addresses
+		// update zeta connector, ERC20 custody, and gateway addresses
 		zetaConnectorAddress := ethcommon.HexToAddress(params.GetConnectorContractAddress())
 		if zetaConnectorAddress != signer.GetZetaConnectorAddress() {
 			signer.SetZetaConnectorAddress(zetaConnectorAddress)
@@ -169,7 +169,6 @@ func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chainID int64) (inte
 				Str("signer.connector_address", zetaConnectorAddress.String()).
 				Msgf("updated zeta connector address for chain %d", chainID)
 		}
-
 		erc20CustodyAddress := ethcommon.HexToAddress(params.GetErc20CustodyContractAddress())
 		if erc20CustodyAddress != signer.GetERC20CustodyAddress() {
 			signer.SetERC20CustodyAddress(erc20CustodyAddress)
@@ -177,6 +176,13 @@ func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chainID int64) (inte
 				Str("signer.erc20_custody", erc20CustodyAddress.String()).
 				Msgf("updated zeta connector address for chain %d", chainID)
 		}
+		if params.GatewayAddress != signer.GetGatewayAddress() {
+			signer.SetGatewayAddress(params.GatewayAddress)
+			oc.logger.Info().
+				Str("signer.gateway_address", params.GatewayAddress).
+				Msgf("updated gateway address for chain %d", chainID)
+		}
+
 	case chain.IsSolana():
 		params := chain.Params()
 
