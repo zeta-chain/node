@@ -771,7 +771,7 @@ func (ob *Observer) BuildInboundVoteMsgForTokenSentToTSS(
 }
 
 // ObserveTSSReceiveInBlockAndOutTx queries the incoming gas asset to TSS address in a single block and posts votes
-func (ob *Observer) ObserveTSSReceiveInBlockAndOutTx(ctx context.Context, blockNumber uint64) error {
+func (ob *Observer) ObserveTSSReceiveInBlockAndOutbound(ctx context.Context, blockNumber uint64) error {
 	block, err := ob.GetBlockByNumberCached(blockNumber)
 	if err != nil {
 		return errors.Wrapf(err, "error getting block %d for chain %d", blockNumber, ob.Chain().ChainId)
