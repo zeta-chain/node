@@ -145,7 +145,18 @@ type FungibleKeeper interface {
 		data []byte,
 		coinType coin.CoinType,
 		asset string,
+		protocolContractVersion ProtocolContractVersion,
 	) (*evmtypes.MsgEthereumTxResponse, bool, error)
+	ProcessV2RevertDeposit(
+		ctx sdk.Context,
+		amount *big.Int,
+		chainID int64,
+		coinType coin.CoinType,
+		asset string,
+		revertAddress ethcommon.Address,
+		callOnRevert bool,
+		revertMessage []byte,
+	) error
 	CallUniswapV2RouterSwapExactTokensForTokens(
 		ctx sdk.Context,
 		sender ethcommon.Address,

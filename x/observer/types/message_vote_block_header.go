@@ -55,7 +55,7 @@ func (msg *MsgVoteBlockHeader) GetSignBytes() []byte {
 func (msg *MsgVoteBlockHeader) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, err.Error())
+		return cosmoserrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
 	}
 
 	if len(msg.BlockHash) != 32 {

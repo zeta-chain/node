@@ -390,6 +390,7 @@ func MockRevertForHandleEVMDeposit(
 		mock.Anything,
 		coin.CoinType_ERC20,
 		mock.Anything,
+		mock.Anything,
 	).Return(&evmtypes.MsgEthereumTxResponse{VmError: "reverted"}, false, errDeposit)
 }
 

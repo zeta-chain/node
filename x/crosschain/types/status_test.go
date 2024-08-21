@@ -3,7 +3,6 @@ package types_test
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,11 +18,9 @@ func TestStatus_AbortRefunded(t *testing.T) {
 			LastUpdateTimestamp: 0,
 			IsAbortRefunded:     false,
 		}
-		timestamp := time.Now().Unix()
-		status.AbortRefunded(timestamp)
+		status.AbortRefunded()
 		require.Equal(t, status.IsAbortRefunded, true)
 		require.Equal(t, status.StatusMessage, "CCTX aborted and Refunded")
-		require.Equal(t, status.LastUpdateTimestamp, timestamp)
 	})
 }
 

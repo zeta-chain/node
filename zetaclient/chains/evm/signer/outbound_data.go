@@ -13,7 +13,6 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 )
 
@@ -40,6 +39,9 @@ type OutboundData struct {
 
 	// outboundParams field contains data detailing the receiver chain and outbound transaction
 	outboundParams *types.OutboundParams
+
+	// revertOptions field contains data detailing the revert options
+	revertOptions types.RevertOptions
 }
 
 // NewOutboundData creates OutboundData from the given CCTX.
@@ -47,7 +49,6 @@ type OutboundData struct {
 func NewOutboundData(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
-	observer *observer.Observer,
 	height uint64,
 	logger zerolog.Logger,
 ) (*OutboundData, bool, error) {
@@ -56,8 +57,6 @@ func NewOutboundData(
 	}
 
 	outboundParams := cctx.GetCurrentOutboundParam()
-	nonce := outboundParams.TssNonce
-
 	if err := validateParams(outboundParams); err != nil {
 		return nil, false, errors.Wrap(err, "invalid outboundParams")
 	}
@@ -67,10 +66,22 @@ func NewOutboundData(
 		return nil, false, errors.Wrap(err, "unable to get app from context")
 	}
 
-	// recipient + destination chain
-	to, toChainID, skip := getDestination(cctx, logger)
-	if skip {
-		return nil, true, nil
+	var (
+		to        ethcommon.Address
+		toChainID *big.Int
+	)
+
+	// in protocol contract v2, receiver is always set in the outbound
+	if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 {
+		to = ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
+		toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
+	} else {
+		// recipient + destination chain
+		var skip bool
+		to, toChainID, skip = getDestination(cctx, logger)
+		if skip {
+			return nil, true, nil
+		}
 	}
 
 	// ensure that chain exists in app's context
@@ -88,32 +99,23 @@ func NewOutboundData(
 		return nil, false, errors.Wrap(err, "unable to get cctx index")
 	}
 
-	// In case there is a pending tx, make sure this keySign is a tx replacement
-	if tx := observer.GetPendingTx(nonce); tx != nil {
-		evt := logger.Info().
-			Str("cctx.pending_tx_hash", tx.Hash().Hex()).
-			Uint64("cctx.pending_tx_nonce", nonce)
-
-		// new gas price is less or equal to pending tx gas
-		if gas.Price.Cmp(tx.GasPrice()) <= 0 {
-			evt.Msg("Please wait for pending outbound to be included in the block")
-			return nil, true, nil
-		}
-
-		evt.
-			Uint64("cctx.gas_price", gas.Price.Uint64()).
-			Uint64("cctx.priority_fee", gas.PriorityFee.Uint64()).
-			Msg("Replacing pending outbound transaction with higher gas fees")
-	}
-
 	// Base64 decode message
 	var message []byte
 	if cctx.InboundParams.CoinType != coin.CoinType_Cmd {
-		msg, errDecode := base64.StdEncoding.DecodeString(cctx.RelayedMessage)
-		if errDecode != nil {
-			logger.Err(err).Str("cctx.relayed_message", cctx.RelayedMessage).Msg("Unable to decode relayed message")
+		// protocol contract v2 uses hex encoding
+		if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 {
+			message, err = hex.DecodeString(cctx.RelayedMessage)
+			if err != nil {
+				logger.Err(err).Msgf("decode CCTX.Message %s error", cctx.RelayedMessage)
+				message = []byte{}
+			}
 		} else {
-			message = msg
+			msg, errDecode := base64.StdEncoding.DecodeString(cctx.RelayedMessage)
+			if errDecode != nil {
+				logger.Err(err).Str("cctx.relayed_message", cctx.RelayedMessage).Msg("Unable to decode relayed message")
+			} else {
+				message = msg
+			}
 		}
 	}
 
@@ -136,6 +138,8 @@ func NewOutboundData(
 		cctxIndex: cctxIndex,
 
 		outboundParams: outboundParams,
+
+		revertOptions: cctx.RevertOptions,
 	}, false, nil
 }
 

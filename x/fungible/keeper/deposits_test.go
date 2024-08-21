@@ -44,6 +44,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			[]byte{},
 			coin.CoinType_Gas,
 			sample.EthAddress().String(),
+			crosschaintypes.ProtocolContractVersion_V1,
 		)
 		require.NoError(t, err)
 		require.False(t, contractCall)
@@ -76,6 +77,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			[]byte{},
 			coin.CoinType_ERC20,
 			assetAddress,
+			crosschaintypes.ProtocolContractVersion_V1,
 		)
 		require.NoError(t, err)
 		require.False(t, contractCall)
@@ -108,6 +110,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			[]byte("DEADBEEF"),
 			coin.CoinType_ERC20,
 			assetAddress,
+			crosschaintypes.ProtocolContractVersion_V1,
 		)
 		require.ErrorIs(t, err, types.ErrCallNonContract)
 	})
@@ -149,6 +152,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			[]byte{},
 			coin.CoinType_Gas,
 			sample.EthAddress().String(),
+			crosschaintypes.ProtocolContractVersion_V1,
 		)
 		require.NoError(t, err)
 		require.False(t, contractCall)
@@ -186,6 +190,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			[]byte{},
 			coin.CoinType_Gas,
 			sample.EthAddress().String(),
+			crosschaintypes.ProtocolContractVersion_V1,
 		)
 		require.ErrorIs(t, err, types.ErrPausedZRC20)
 	})
@@ -227,6 +232,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			[]byte{},
 			coin.CoinType_Gas,
 			sample.EthAddress().String(),
+			crosschaintypes.ProtocolContractVersion_V1,
 		)
 		require.ErrorIs(t, err, types.ErrForeignCoinCapReached)
 	})
@@ -253,6 +259,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			[]byte{},
 			coin.CoinType_Gas,
 			sample.EthAddress().String(),
+			crosschaintypes.ProtocolContractVersion_V1,
 		)
 		require.ErrorIs(t, err, crosschaintypes.ErrGasCoinNotFound)
 	})
@@ -279,6 +286,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			[]byte{},
 			coin.CoinType_ERC20,
 			assetAddress,
+			crosschaintypes.ProtocolContractVersion_V1,
 		)
 		require.ErrorIs(t, err, crosschaintypes.ErrForeignCoinNotFound)
 	})
@@ -309,6 +317,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			[]byte{},
 			coin.CoinType_Gas,
 			sample.EthAddress().String(),
+			crosschaintypes.ProtocolContractVersion_V1,
 		)
 		require.NoError(t, err)
 		require.True(t, contractCall)
@@ -347,6 +356,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			[]byte{},
 			coin.CoinType_Gas,
 			sample.EthAddress().String(),
+			crosschaintypes.ProtocolContractVersion_V1,
 		)
 		require.Error(t, err)
 		require.True(t, contractCall)
@@ -354,6 +364,39 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		balance, err := k.BalanceOfZRC4(ctx, zrc20, reverter)
 		require.NoError(t, err)
 		require.EqualValues(t, int64(0), balance.Int64())
+	})
+
+	t.Run("can deposit using V2", func(t *testing.T) {
+		// setup gas coin
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainList := chains.DefaultChainsList()
+		chain := chainList[0].ChainId
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain, "foobar", "foobar")
+
+		// deposit
+		to := sample.EthAddress()
+		_, contractCall, err := k.ZRC20DepositAndCallContract(
+			ctx,
+			sample.EthAddress().Bytes(),
+			to,
+			big.NewInt(42),
+			chain,
+			[]byte{},
+			coin.CoinType_Gas,
+			sample.EthAddress().String(),
+			crosschaintypes.ProtocolContractVersion_V2,
+		)
+		require.NoError(t, err)
+		require.False(t, contractCall)
+
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, to)
+		require.NoError(t, err)
+		require.Equal(t, big.NewInt(42), balance)
 	})
 }
 

@@ -41,12 +41,13 @@ func (s DoubleQuotedString) AsEVMAddress() (ethcommon.Address, error) {
 // Config contains the configuration for the e2e test
 type Config struct {
 	// Default account to use when running tests and running setup
-	DefaultAccount     Account            `yaml:"default_account"`
-	AdditionalAccounts AdditionalAccounts `yaml:"additional_accounts"`
-	PolicyAccounts     PolicyAccounts     `yaml:"policy_accounts"`
-	RPCs               RPCs               `yaml:"rpcs"`
-	Contracts          Contracts          `yaml:"contracts"`
-	ZetaChainID        string             `yaml:"zeta_chain_id"`
+	DefaultAccount          Account                 `yaml:"default_account"`
+	AdditionalAccounts      AdditionalAccounts      `yaml:"additional_accounts"`
+	PolicyAccounts          PolicyAccounts          `yaml:"policy_accounts"`
+	ObserverRelayerAccounts ObserverRelayerAccounts `yaml:"observer_relayer_accounts"`
+	RPCs                    RPCs                    `yaml:"rpcs"`
+	Contracts               Contracts               `yaml:"contracts"`
+	ZetaChainID             string                  `yaml:"zeta_chain_id"`
 }
 
 // Account contains configuration for an account
@@ -54,6 +55,7 @@ type Account struct {
 	RawBech32Address DoubleQuotedString `yaml:"bech32_address"`
 	RawEVMAddress    DoubleQuotedString `yaml:"evm_address"`
 	RawPrivateKey    DoubleQuotedString `yaml:"private_key"`
+	SolanaAddress    DoubleQuotedString `yaml:"solana_address"`
 	SolanaPrivateKey DoubleQuotedString `yaml:"solana_private_key"`
 }
 
@@ -75,6 +77,12 @@ type PolicyAccounts struct {
 	EmergencyPolicyAccount   Account `yaml:"emergency_policy_account"`
 	OperationalPolicyAccount Account `yaml:"operational_policy_account"`
 	AdminPolicyAccount       Account `yaml:"admin_policy_account"`
+}
+
+// ObserverRelayerAccounts are the accounts used by the observers to interact with gateway contracts in non-EVM chains (e.g. Solana)
+type ObserverRelayerAccounts struct {
+	// RelayerAccounts contains two relayer accounts used by zetaclient0 and zetaclient1
+	RelayerAccounts [2]Account `yaml:"relayer_accounts"`
 }
 
 // RPCs contains the configuration for the RPC endpoints
@@ -116,6 +124,9 @@ type EVM struct {
 	CustodyAddr      DoubleQuotedString `yaml:"custody"`
 	ERC20            DoubleQuotedString `yaml:"erc20"`
 	TestDappAddr     DoubleQuotedString `yaml:"test_dapp"`
+	Gateway          DoubleQuotedString `yaml:"gateway"`
+	ERC20CustodyNew  DoubleQuotedString `yaml:"erc20_custody_new"`
+	TestDAppV2Addr   DoubleQuotedString `yaml:"test_dapp_v2"`
 }
 
 // ZEVM contains the addresses of predeployed contracts on the zEVM chain
@@ -132,6 +143,8 @@ type ZEVM struct {
 	ZEVMSwapAppAddr    DoubleQuotedString `yaml:"zevm_swap_app"`
 	ContextAppAddr     DoubleQuotedString `yaml:"context_app"`
 	TestDappAddr       DoubleQuotedString `yaml:"test_dapp"`
+	Gateway            DoubleQuotedString `yaml:"gateway"`
+	TestDAppV2Addr     DoubleQuotedString `yaml:"test_dapp_v2"`
 }
 
 // DefaultConfig returns the default config using values for localnet testing

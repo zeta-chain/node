@@ -4,10 +4,9 @@ import (
 	"fmt"
 )
 
-func (m *Status) AbortRefunded(timeStamp int64) {
+func (m *Status) AbortRefunded() {
 	m.IsAbortRefunded = true
 	m.StatusMessage = "CCTX aborted and Refunded"
-	m.LastUpdateTimestamp = timeStamp
 }
 
 // ChangeStatus changes the status of the cross chain transaction

@@ -49,6 +49,10 @@ on:
         type: boolean
         required: false
         default: false
+      v2-test:
+        type: boolean
+        required: false
+        default: false
 
 concurrency: 
   group: e2e-${{ github.head_ref || github.sha }}
@@ -69,6 +73,7 @@ jobs:
       STATEFUL_DATA_TESTS: ${{ steps.matrix-conditionals.outputs.STATEFUL_DATA_TESTS }}
       TSS_MIGRATION_TESTS: ${{ steps.matrix-conditionals.outputs.TSS_MIGRATION_TESTS }}
       SOLANA_TESTS: ${{ steps.matrix-conditionals.outputs.SOLANA_TESTS }}
+      V2_TESTS: ${{ steps.matrix-conditionals.outputs.V2_TESTS }}
     steps:
       # use api rather than event context to avoid race conditions (label added after push)
       - id: matrix-conditionals
@@ -92,8 +97,10 @@ jobs:
               core.setOutput('STATEFUL_DATA_TESTS', labels.includes('STATEFUL_DATA_TESTS'));
               core.setOutput('TSS_MIGRATION_TESTS', labels.includes('TSS_MIGRATION_TESTS'));
               core.setOutput('SOLANA_TESTS', labels.includes('SOLANA_TESTS'));
+              core.setOutput('V2_TESTS', labels.includes('V2_TESTS')); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
             } else if (context.eventName === 'merge_group') {
               core.setOutput('DEFAULT_TESTS', true);
+              core.setOutput('UPGRADE_LIGHT_TESTS', true);
             } else if (context.eventName === 'push' && context.ref === 'refs/heads/develop') {
               core.setOutput('DEFAULT_TESTS', true);
             } else if (context.eventName === 'push' && context.ref.startsWith('refs/heads/release/')) {
@@ -104,6 +111,7 @@ jobs:
               core.setOutput('ADMIN_TESTS', true);
               core.setOutput('PERFORMANCE_TESTS', true);
               core.setOutput('STATEFUL_DATA_TESTS', true);
+              core.setOutput('V2_TESTS', true); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
             } else if (context.eventName === 'schedule') {
               core.setOutput('DEFAULT_TESTS', true);
               core.setOutput('UPGRADE_TESTS', true);
@@ -112,7 +120,9 @@ jobs:
               core.setOutput('ADMIN_TESTS', true);
               core.setOutput('PERFORMANCE_TESTS', true);
               core.setOutput('STATEFUL_DATA_TESTS', true);
+              core.setOutput('TSS_MIGRATION_TESTS', true);
               core.setOutput('SOLANA_TESTS', true);
+              core.setOutput('V2_TESTS', true); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
             } else if (context.eventName === 'workflow_dispatch') {
               core.setOutput('DEFAULT_TESTS', context.payload.inputs['default-test']);
               core.setOutput('UPGRADE_TESTS', context.payload.inputs['upgrade-test']);
@@ -123,6 +133,7 @@ jobs:
               core.setOutput('STATEFUL_DATA_TESTS', context.payload.inputs['stateful-data-test']);
               core.setOutput('TSS_MIGRATION_TESTS', context.payload.inputs['tss-migration-test']);
               core.setOutput('SOLANA_TESTS', context.payload.inputs['solana-test']);
+              core.setOutput('V2_TESTS', context.payload.inputs['v2-test']); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
             }
 
   e2e:
@@ -160,6 +171,9 @@ jobs:
           - make-target: "start-solana-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.SOLANA_TESTS == 'true' }}
+          - make-target: "start-v2-test"
+            runs-on: ubuntu-20.04
+            run: ${{ needs.matrix-conditionals.outputs.V2_TESTS == 'true' }}
     name: ${{ matrix.make-target }}
     uses: ./.github/workflows/reusable-e2e.yml
     with:
@@ -197,6 +211,7 @@ jobs:
               const cleanName = job.name.split("/")[0];
               return `${icon} ${cleanName}`;
             });
+            e2eResults.sort();
 
             const overallResultStr = '${{ needs.e2e.result }}';
             const overallResultPassing = overallResultStr === 'success' || overallResultStr === 'skipped';

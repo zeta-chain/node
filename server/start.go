@@ -58,7 +58,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	ethdebug "github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/debug"
+	zetaos "github.com/zeta-chain/zetacore/pkg/os"
 	"github.com/zeta-chain/zetacore/server/config"
 	srvflags "github.com/zeta-chain/zetacore/server/flags"
 )
@@ -337,7 +337,7 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 	logger := ctx.Logger
 
 	if cpuProfile := ctx.Viper.GetString(srvflags.CPUProfile); cpuProfile != "" {
-		fp, err := ethdebug.ExpandHome(cpuProfile)
+		fp, err := zetaos.ExpandHomeDir(cpuProfile)
 		if err != nil {
 			ctx.Logger.Debug("failed to get filepath for the CPU profile file", "error", err.Error())
 			return err

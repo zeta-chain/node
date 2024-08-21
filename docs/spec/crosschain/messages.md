@@ -187,6 +187,8 @@ message MsgVoteInbound {
 	string tx_origin = 13;
 	string asset = 14;
 	uint64 event_index = 15;
+	ProtocolContractVersion protocol_contract_version = 16;
+	RevertOptions revert_options = 17;
 }
 ```
 
@@ -269,6 +271,32 @@ Authorized: admin policy operational.
 message MsgUpdateRateLimiterFlags {
 	string creator = 1;
 	RateLimiterFlags rate_limiter_flags = 2;
+}
+```
+
+## MsgMigrateERC20CustodyFunds
+
+MigrateERC20CustodyFunds migrates the funds from the current ERC20Custody contract to the new ERC20Custody contract
+
+```proto
+message MsgMigrateERC20CustodyFunds {
+	string creator = 1;
+	int64 chain_id = 2;
+	string new_custody_address = 3;
+	string erc20_address = 4;
+	string amount = 5;
+}
+```
+
+## MsgUpdateERC20CustodyPauseStatus
+
+UpdateERC20CustodyPauseStatus creates a admin cmd cctx to update the pause status of the ERC20 custody contract
+
+```proto
+message MsgUpdateERC20CustodyPauseStatus {
+	string creator = 1;
+	int64 chain_id = 2;
+	bool pause = 3;
 }
 ```
 

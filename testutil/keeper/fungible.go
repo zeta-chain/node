@@ -243,7 +243,7 @@ func (m *FungibleMockEVMKeeper) SetupMockEVMKeeperForSystemContractDeployment() 
 		mock.Anything,
 		mock.Anything,
 	).Return(gasRes, nil)
-	m.MockEVMSuccessCallTimes(5)
+	m.MockEVMSuccessCallTimes(7)
 	m.On(
 		"GetAccount",
 		mock.Anything,

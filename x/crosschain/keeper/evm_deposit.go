@@ -69,13 +69,29 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			return false, err
 		}
 	} else {
-		// cointype is Gas or ERC20; then it could be a ZRC20 deposit/depositAndCall cctx.
-		parsedAddress, data, err := chains.ParseAddressAndData(cctx.RelayedMessage)
-		if err != nil {
-			return false, errors.Wrap(types.ErrUnableToParseAddress, err.Error())
-		}
-		if parsedAddress != (ethcommon.Address{}) {
-			to = parsedAddress
+		var (
+			message []byte
+			err     error
+		)
+
+		// in protocol version 1, the destination of the deposit is the first 20 bytes of the message when the message is not empty
+		// in protocol version 2, the destination of the deposit is always the to address, the message is the data to be sent to the contract
+		if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V1 {
+			var parsedAddress ethcommon.Address
+			parsedAddress, message, err = chains.ParseAddressAndData(cctx.RelayedMessage)
+			if err != nil {
+				return false, errors.Wrap(types.ErrUnableToParseAddress, err.Error())
+			}
+			if parsedAddress != (ethcommon.Address{}) {
+				to = parsedAddress
+			}
+		} else if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 {
+			if len(cctx.RelayedMessage) > 0 {
+				message, err = hex.DecodeString(cctx.RelayedMessage)
+				if err != nil {
+					return false, errors.Wrap(types.ErrUnableToDecodeMessageString, err.Error())
+				}
+			}
 		}
 
 		from, err := chains.DecodeAddressFromChainID(inboundSenderChainID, inboundSender, k.GetAuthorityKeeper().GetAdditionalChainList(ctx))
@@ -89,9 +105,10 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			to,
 			inboundAmount,
 			inboundSenderChainID,
-			data,
+			message,
 			inboundCoinType,
 			cctx.InboundParams.Asset,
+			cctx.ProtocolContractVersion,
 		)
 		if fungibletypes.IsContractReverted(evmTxResponse, err) || errShouldRevertCctx(err) {
 			return true, err
@@ -120,7 +137,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 						sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 						sdk.NewAttribute("action", "DepositZRC20AndCallContract"),
 						sdk.NewAttribute("contract", to.String()),
-						sdk.NewAttribute("data", hex.EncodeToString(data)),
+						sdk.NewAttribute("data", hex.EncodeToString(message)),
 						sdk.NewAttribute("cctxIndex", cctx.Index),
 					),
 				)

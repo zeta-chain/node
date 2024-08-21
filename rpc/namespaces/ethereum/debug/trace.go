@@ -25,6 +25,8 @@ import (
 	"runtime/trace"
 
 	stderrors "github.com/pkg/errors"
+
+	zetaos "github.com/zeta-chain/zetacore/pkg/os"
 )
 
 // StartGoTrace turns on tracing, writing to the given file.
@@ -37,7 +39,7 @@ func (a *API) StartGoTrace(file string) error {
 		a.logger.Debug("trace already in progress")
 		return errors.New("trace already in progress")
 	}
-	fp, err := ExpandHome(file)
+	fp, err := zetaos.ExpandHomeDir(file)
 	if err != nil {
 		a.logger.Debug("failed to get filepath for the CPU profile file", "error", err.Error())
 		return err

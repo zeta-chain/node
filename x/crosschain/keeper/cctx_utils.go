@@ -12,7 +12,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // SetObserverOutboundInfo sets the CCTX outbound nonce to the next available nonce for the TSS address, and updates the nonce of blockchain state.
@@ -20,7 +20,7 @@ import (
 func (k Keeper) SetObserverOutboundInfo(ctx sdk.Context, receiveChainID int64, cctx *types.CrossChainTx) error {
 	chain, found := k.GetObserverKeeper().GetSupportedChainFromChainID(ctx, receiveChainID)
 	if !found {
-		return zetaObserverTypes.ErrSupportedChains
+		return observertypes.ErrSupportedChains
 	}
 
 	nonce, found := k.GetObserverKeeper().GetChainNonces(ctx, receiveChainID)
@@ -67,6 +67,12 @@ func (k Keeper) SetObserverOutboundInfo(ctx sdk.Context, receiveChainID int64, c
 // GetRevertGasLimit returns the gas limit for the revert transaction in a CCTX
 // It returns 0 if there is no error but the gas limit can't be determined from the CCTX data
 func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uint64, error) {
+	// with V2 protocol, reverts on connected chains can eventually call a onRevert function which can require a higher gas limit
+	if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 && cctx.RevertOptions.CallOnRevert &&
+		!cctx.RevertOptions.RevertGasLimit.IsZero() {
+		return cctx.RevertOptions.RevertGasLimit.Uint64(), nil
+	}
+
 	if cctx.InboundParams == nil {
 		return 0, nil
 	}

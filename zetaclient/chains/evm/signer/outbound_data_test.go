@@ -13,15 +13,12 @@ import (
 )
 
 func TestNewOutboundData(t *testing.T) {
-	mockObserver, err := getNewEvmChainObserver(t, nil)
-	require.NoError(t, err)
-
 	logger := zerolog.New(zerolog.NewTestWriter(t))
 
 	ctx := makeCtx(t)
 
 	newOutbound := func(cctx *types.CrossChainTx) (*OutboundData, bool, error) {
-		return NewOutboundData(ctx, cctx, mockObserver, 123, logger)
+		return NewOutboundData(ctx, cctx, 123, logger)
 	}
 
 	t.Run("success", func(t *testing.T) {

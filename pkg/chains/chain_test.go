@@ -400,7 +400,7 @@ func TestGetChainFromChainID(t *testing.T) {
 	chain, found := chains.GetChainFromChainID(chains.ZetaChainMainnet.ChainId, []chains.Chain{})
 	require.EqualValues(t, chains.ZetaChainMainnet, chain)
 	require.True(t, found)
-	chain, found = chains.GetChainFromChainID(9999, []chains.Chain{})
+	_, found = chains.GetChainFromChainID(9999, []chains.Chain{})
 	require.False(t, found)
 }
 

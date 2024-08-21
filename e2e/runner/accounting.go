@@ -166,18 +166,24 @@ func (r *E2ERunner) CheckSolanaTSSBalance() error {
 }
 
 func (r *E2ERunner) checkERC20TSSBalance() error {
-	erc20Balance, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.ERC20CustodyAddr)
+	custodyBalance, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.ERC20CustodyAddr)
 	if err != nil {
 		return err
 	}
+	custodyV2Balance, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.ERC20CustodyV2Addr)
+	if err != nil {
+		return err
+	}
+	custodyFullBalance := big.NewInt(0).Add(custodyBalance, custodyV2Balance)
+
 	erc20zrc20Supply, err := r.ERC20ZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		return err
 	}
-	if erc20Balance.Cmp(erc20zrc20Supply) < 0 {
-		return fmt.Errorf("ERC20: TSS balance (%d) < ZRC20 TotalSupply (%d) ", erc20Balance, erc20zrc20Supply)
+	if custodyFullBalance.Cmp(erc20zrc20Supply) < 0 {
+		return fmt.Errorf("ERC20: TSS balance (%d) < ZRC20 TotalSupply (%d) ", custodyFullBalance, erc20zrc20Supply)
 	}
-	r.Logger.Info("ERC20: TSS balance (%d) >= ERC20 ZRC20 TotalSupply (%d)", erc20Balance, erc20zrc20Supply)
+	r.Logger.Info("ERC20: TSS balance (%d) >= ERC20 ZRC20 TotalSupply (%d)", custodyFullBalance, erc20zrc20Supply)
 	return nil
 }
 
@@ -202,7 +208,7 @@ func (r *E2ERunner) checkZetaTSSBalance() error {
 	}
 	zetaSupply, _ := big.NewInt(0).SetString(result.Amount.Amount, 10)
 	if zetaLocked.Cmp(zetaSupply) < 0 {
-		r.Logger.Info(fmt.Sprintf("ZETA: TSS balance (%d) < ZRC20 TotalSupply (%d)", zetaLocked, zetaSupply))
+		r.Logger.Info("ZETA: TSS balance (%d) < ZRC20 TotalSupply (%d)", zetaLocked, zetaSupply)
 	} else {
 		r.Logger.Info("ZETA: TSS balance (%d) >= ZRC20 TotalSupply (%d)", zetaLocked, zetaSupply)
 	}

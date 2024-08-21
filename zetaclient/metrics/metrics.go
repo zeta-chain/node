@@ -50,6 +50,13 @@ var (
 		Help:      "Tss node blame counter per pubkey",
 	}, []string{"pubkey"})
 
+	// RelayerKeyBalance is a gauge that contains the relayer key balance of the chain
+	RelayerKeyBalance = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "relayer_key_balance",
+		Help:      "Relayer key balance of the chain",
+	}, []string{"chain"})
+
 	// HotKeyBurnRate is a gauge that contains the fee burn rate of the hotkey
 	HotKeyBurnRate = promauto.NewGauge(prometheus.GaugeOpts{
 		Namespace: ZetaClientNamespace,
