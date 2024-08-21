@@ -322,6 +322,15 @@ start-upgrade-import-mainnet-test: zetanode-upgrade
 	export UPGRADE_HEIGHT=225 && \
 	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
+# this test upgrades from v18 and execute the v2 contracts migration process
+# this tests is part of upgrade test part because it should run the upgrade from v18 to fully replicate the upgrade process
+#start-upgrade-v2-migration-test: zetanode-upgrade
+#	@echo "--> Starting v2 migration upgrade test"
+#	export LOCALNET_MODE=upgrade && \
+#	export UPGRADE_HEIGHT=90 && \
+#	export E2E_ARGS="--test-v2" && \
+#	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+
 ###############################################################################
 ###                                GoReleaser  		                        ###
 ###############################################################################

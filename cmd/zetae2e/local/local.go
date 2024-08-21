@@ -529,7 +529,7 @@ func runTSSMigrationTest(deployerRunner *runner.E2ERunner, logger *runner.Logger
 		e2etests.TestBitcoinWithdrawSegWitName,
 		e2etests.TestEtherWithdrawName,
 	}
-	fn = postMigrationTestRoutine(conf, deployerRunner, verbose, tests...)
+	fn = postTSSMigrationTestRoutine(conf, deployerRunner, verbose, tests...)
 
 	if err := fn(); err != nil {
 		logger.Print("❌ %v", err)

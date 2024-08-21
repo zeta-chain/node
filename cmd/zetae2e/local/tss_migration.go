@@ -22,7 +22,7 @@ func tssMigrationTestRoutine(
 		account := conf.AdditionalAccounts.UserMigration
 		// initialize runner for migration test
 		tssMigrationTestRunner, err := initTestRunner(
-			"migration",
+			"TSSmigration",
 			conf,
 			deployerRunner,
 			account,
