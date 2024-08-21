@@ -303,6 +303,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			zevmMPTests = append(zevmMPTests, zevmMPAdvancedTests...)
 			bitcoinTests = append(bitcoinTests, bitcoinAdvancedTests...)
 			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
+			precompiledContractTests = make([]string, 0)
 		}
 
 		eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose, precompiledContractTests...))
