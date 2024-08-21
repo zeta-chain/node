@@ -135,6 +135,26 @@ func Test_Bech32ToHexAddress(t *testing.T) {
 		addr,
 	)
 
+	// Test Bech32HexAddr method. Should fail with invalid argument type..
+	args[0] = 1
+	rawBytes, err = contract.Bech32ToHexAddr(&methodID, args)
+	require.Error(t, err, "expected invalid argument; wanted string; got: %T", args[0])
+
+	// Test Bech32HexAddr method. Should fail because it's not a valid bech32 address.
+	args[0] = "foobar"
+	rawBytes, err = contract.Bech32ToHexAddr(&methodID, args)
+	require.Error(t, err, "expected error; invalid bech32 address")
+
+	// Test Bech32HexAddr method. Should fail with invalid prefix.
+	args[0] = "foobar1"
+	rawBytes, err = contract.Bech32ToHexAddr(&methodID, args)
+	require.Error(t, err, "expected error; invalid bech32 addresss")
+
+	// Test Bech32HexAddr method. Should fail with invalid prefix.
+	args[0] = "foobar1foobar"
+	rawBytes, err = contract.Bech32ToHexAddr(&methodID, args)
+	require.Error(t, err, "expected error; decoding bech32 failed")
+
 	// Test Bech32HexAddr method. Should fail with invalid number of arguments.
 	args = append(args, "second argument")
 	_, err = contract.Bech32ToHexAddr(&methodID, args)
@@ -165,14 +185,14 @@ func Test_Bech32ify(t *testing.T) {
 	abi := contract.Abi()
 	require.NotNil(t, abi, "contract ABI should not be nil")
 
-	// Test Bech32ify method.
+	// Test Bech32ify method with a zeta HRP.
 	methodID := abi.Methods[Bech32ifyMethodName]
 	args := make([]interface{}, 0)
 	args = append(args, "zeta")
 	args = append(args, common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE"))
 
 	rawBytes, err := contract.Bech32ify(&methodID, args)
-	require.NoError(t, err, "Bech32ify should not return an error")
+	require.NoError(t, err, "Bech32ify prefix zeta should not return an error")
 
 	// Manually extract the address from the raw bytes.
 	zetaAddr := string(rawBytes[64:107])
@@ -180,7 +200,21 @@ func Test_Bech32ify(t *testing.T) {
 		t,
 		"zeta1h8duy2dltz9xz0qqhm5wvcnj02upy887fyn43u",
 		string(zetaAddr),
-		"Bech32ify should return the correct address, got: %v",
+		"Bech32ify prefix zeta should return the correct address, got: %v",
+		zetaAddr,
+	)
+
+	// Test Bech32ify method with a cosmos HRP.
+	args[0] = "cosmos"
+	rawBytes, err = contract.Bech32ify(&methodID, args)
+	require.NoError(t, err, "Bech32ify prefix cosmos should not return an error")
+
+	zetaAddr = string(rawBytes[64:107])
+	require.Equal(
+		t,
+		"cosmos1h8duy2dltz9xz0qqhm5wvcnj02upy887lqaq",
+		string(zetaAddr),
+		"Bech32ify prefix cosmos should return the correct address, got: %v",
 		zetaAddr,
 	)
 
@@ -207,9 +241,16 @@ func Test_Bech32ify(t *testing.T) {
 	// Test for invalid bech32 human readable prefix.
 	argsInvalidEmptyPrefix := make([]interface{}, 0)
 	argsInvalidEmptyPrefix = append(argsInvalidEmptyPrefix, "")
-	argsInvalidEmptyPrefix = append(argsInvalidEmptyPrefix, common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE"))
+	argsInvalidEmptyPrefix = append(
+		argsInvalidEmptyPrefix,
+		common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE"),
+	)
 	_, errInvalidEmptyPrefix := contract.Bech32ify(&methodID, argsInvalidEmptyPrefix)
-	require.Error(t, errInvalidEmptyPrefix, "expected error invalid bech32 human readable prefix (HRP). Please provide a either an account, validator or consensus address prefix (eg: cosmos, cosmosvaloper, cosmosvalcons)")
+	require.Error(
+		t,
+		errInvalidEmptyPrefix,
+		"expected error invalid bech32 human readable prefix (HRP). Please provide a either an account, validator or consensus address prefix (eg: cosmos, cosmosvaloper, cosmosvalcons)",
+	)
 }
 
 func Test_GetGasStabilityPoolBalance(t *testing.T) {
@@ -255,7 +296,13 @@ func Test_GetGasStabilityPoolBalance(t *testing.T) {
 	argsInvalid = append(argsInvalid, "foobar")
 	_, errInvalid := contract.GetGasStabilityPoolBalance(ctx, &methodID, argsInvalid)
 	require.Error(t, errInvalid, "expected int64, got: %T", argsInvalid[0])
-	require.IsType(t, types.ErrInvalidArgument{}, errInvalid, "expected error type: ErrInvalidArgument, got: %T", errInvalid)
+	require.IsType(
+		t,
+		types.ErrInvalidArgument{},
+		errInvalid,
+		"expected error type: ErrInvalidArgument, got: %T",
+		errInvalid,
+	)
 }
 
 func Test_InvalidMethod(t *testing.T) {

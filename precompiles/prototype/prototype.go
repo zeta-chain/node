@@ -102,6 +102,7 @@ func (c *Contract) RequiredGas(input []byte) uint64 {
 	return 0
 }
 
+// Bech32ToHexAddr converts a bech32 address to a hex address.
 func (c *Contract) Bech32ToHexAddr(method *abi.Method, args []interface{}) ([]byte, error) {
 	if len(args) != 1 {
 		return nil, &ptypes.ErrInvalidNumberOfArgs{
@@ -110,17 +111,24 @@ func (c *Contract) Bech32ToHexAddr(method *abi.Method, args []interface{}) ([]by
 		}
 	}
 
-	address, ok := args[0].(string)
-	if !ok || address == "" {
-		return nil, fmt.Errorf("invalid bech32 address: %v", args[0])
+	bech32String, ok := args[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[0])
 	}
 
-	bech32Prefix := strings.SplitN(address, "1", 2)[0]
-	if bech32Prefix == address {
-		return nil, fmt.Errorf("invalid bech32 address: %s", address)
+	bech32String = strings.TrimSpace(bech32String)
+	if bech32String == "" {
+		return nil, fmt.Errorf("invalid bech32 address: %s", bech32String)
 	}
 
-	addressBz, err := sdk.GetFromBech32(address, bech32Prefix)
+	// 1 is always the separator between the bech32 prefix and the bech32 data part.
+	// https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki#bech32
+	bech32Prefix, bech32Data, found := strings.Cut(bech32String, "1")
+	if !found || bech32Data == "" || bech32Prefix == "" || bech32Prefix == bech32String {
+		return nil, fmt.Errorf("invalid bech32 address: %s", bech32String)
+	}
+
+	addressBz, err := sdk.GetFromBech32(bech32String, bech32Prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -132,6 +140,7 @@ func (c *Contract) Bech32ToHexAddr(method *abi.Method, args []interface{}) ([]by
 	return method.Outputs.Pack(common.BytesToAddress(addressBz))
 }
 
+// Bech32ify converts a hex address to a bech32 address.
 func (c *Contract) Bech32ify(method *abi.Method, args []interface{}) ([]byte, error) {
 	if len(args) != 2 {
 		return nil, &ptypes.ErrInvalidNumberOfArgs{
@@ -170,7 +179,7 @@ func (c *Contract) Bech32ify(method *abi.Method, args []interface{}) ([]byte, er
 		return nil, err
 	}
 
-	addressBz, err := sdk.GetFromBech32(bech32Str, "zeta")
+	addressBz, err := sdk.GetFromBech32(bech32Str, prefix)
 	if err != nil {
 		return nil, err
 	}
