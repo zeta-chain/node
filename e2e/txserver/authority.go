@@ -2,6 +2,7 @@ package txserver
 
 import (
 	"fmt"
+
 	e2eutils "github.com/zeta-chain/zetacore/e2e/utils"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 )

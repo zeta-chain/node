@@ -2,10 +2,10 @@ package local
 
 import (
 	"fmt"
-	"golang.org/x/sync/errgroup"
 	"time"
 
 	"github.com/fatih/color"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/e2etests"

@@ -1,18 +1,20 @@
 package runner
 
 import (
+	"math/big"
+
 	sdkmath "cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
+
 	"github.com/zeta-chain/zetacore/e2e/txserver"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	"math/big"
 )
 
 // RunV2Migration runs the process for the v2 migration
