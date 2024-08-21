@@ -2,7 +2,6 @@ package e2etests
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"strconv"
 	"time"
@@ -146,9 +145,9 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 		btcTSSBalanceNew += utxo.Amount
 	}
 
-	r.Logger.Info(fmt.Sprintf("BTC Balance Old: %f", btcTSSBalanceOld*1e8))
-	r.Logger.Info(fmt.Sprintf("BTC Balance New: %f", btcTSSBalanceNew*1e8))
-	r.Logger.Info(fmt.Sprintf("Migrator amount : %s", cctxBTC.GetCurrentOutboundParam().Amount))
+	r.Logger.Info("BTC Balance Old: %f", btcTSSBalanceOld*1e8)
+	r.Logger.Info("BTC Balance New: %f", btcTSSBalanceNew*1e8)
+	r.Logger.Info("Migrator amount : %s", cctxBTC.GetCurrentOutboundParam().Amount)
 
 	// btcTSSBalanceNew should be less than btcTSSBalanceOld as there is some loss of funds during migration
 	// #nosec G701 e2eTest - always in range
@@ -164,9 +163,9 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	ethTSSBalanceNew, err := r.EVMClient.BalanceAt(context.Background(), r.TSSAddress, nil)
 	require.NoError(r, err)
 
-	r.Logger.Info(fmt.Sprintf("TSS Balance Old: %s", ethTSSBalanceOld.String()))
-	r.Logger.Info(fmt.Sprintf("TSS Balance New: %s", ethTSSBalanceNew.String()))
-	r.Logger.Info(fmt.Sprintf("Migrator amount : %s", cctxETH.GetCurrentOutboundParam().Amount.String()))
+	r.Logger.Info("TSS Balance Old: %s", ethTSSBalanceOld.String())
+	r.Logger.Info("TSS Balance New: %s", ethTSSBalanceNew.String())
+	r.Logger.Info("Migrator amount : %s", cctxETH.GetCurrentOutboundParam().Amount.String())
 
 	// ethTSSBalanceNew should be less than ethTSSBalanceOld as there is some loss of funds during migration
 	require.Equal(r, ethTSSBalanceNew.String(), cctxETH.GetCurrentOutboundParam().Amount.String())

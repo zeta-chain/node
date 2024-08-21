@@ -208,7 +208,7 @@ func (r *E2ERunner) checkZetaTSSBalance() error {
 	}
 	zetaSupply, _ := big.NewInt(0).SetString(result.Amount.Amount, 10)
 	if zetaLocked.Cmp(zetaSupply) < 0 {
-		r.Logger.Info(fmt.Sprintf("ZETA: TSS balance (%d) < ZRC20 TotalSupply (%d)", zetaLocked, zetaSupply))
+		r.Logger.Info("ZETA: TSS balance (%d) < ZRC20 TotalSupply (%d)", zetaLocked, zetaSupply)
 	} else {
 		r.Logger.Info("ZETA: TSS balance (%d) >= ZRC20 TotalSupply (%d)", zetaLocked, zetaSupply)
 	}

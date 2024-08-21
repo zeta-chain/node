@@ -45,7 +45,7 @@ func (msg *MsgUpdateChainParams) ValidateBasic() error {
 	}
 
 	if err := ValidateChainParams(msg.ChainParams); err != nil {
-		return cosmoserrors.Wrapf(ErrInvalidChainParams, err.Error())
+		return cosmoserrors.Wrap(ErrInvalidChainParams, err.Error())
 	}
 
 	return nil
