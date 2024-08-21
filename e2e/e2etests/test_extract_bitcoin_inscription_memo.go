@@ -37,7 +37,7 @@ func TestExtractBitcoinInscriptionMemo(r *runner.E2ERunner, args []string) {
 
 	rawtx, err := r.BtcRPCClient.GetRawTransactionVerbose(txid)
 	require.NoError(r, err)
-	r.Logger.Print("obtained reveal txn id %s", txid)
+	r.Logger.Info("obtained reveal txn id %s", txid)
 
 	dummyCoinbaseTxn := rawtx
 	depositorFee := zetabitcoin.DefaultDepositorFee
