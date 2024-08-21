@@ -269,7 +269,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 
 		bitcoinTests := []string{
-			e2etests.TestExtractBitcoinInscriptionMemoName,
 			e2etests.TestBitcoinDepositName,
 			e2etests.TestBitcoinDepositRefundName,
 			e2etests.TestBitcoinWithdrawSegWitName,
@@ -284,6 +283,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinWithdrawP2SHName,
 			e2etests.TestBitcoinWithdrawP2WSHName,
 			e2etests.TestBitcoinWithdrawRestrictedName,
+			e2etests.TestExtractBitcoinInscriptionMemoName,
 		}
 		ethereumTests := []string{
 			e2etests.TestEtherWithdrawName,
