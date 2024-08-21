@@ -12,7 +12,6 @@ import (
 )
 
 func TestExtractBitcoinInscriptionMemo(r *runner.E2ERunner, args []string) {
-	r.Logger.Print("Testing extract memo from btc inscription")
 
 	r.SetBtcAddress(r.Name, false)
 
