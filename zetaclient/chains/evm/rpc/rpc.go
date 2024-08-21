@@ -70,19 +70,19 @@ func CheckRPCStatus(
 	// query latest block number
 	bn, err := client.BlockNumber(ctx)
 	if err != nil {
-		return errors.Wrap(err, "BlockNumber error: RPC down?")
+		return errors.Wrap(err, "RPC error onBlockNumber: RPC down?")
 	}
 
 	// query suggested gas price
 	gasPrice, err := client.SuggestGasPrice(ctx)
 	if err != nil {
-		return errors.Wrap(err, "SuggestGasPrice error: RPC down?")
+		return errors.Wrap(err, "RPC error onSuggestGasPrice: RPC down?")
 	}
 
 	// query latest block header
 	header, err := client.HeaderByNumber(ctx, new(big.Int).SetUint64(bn))
 	if err != nil {
-		return errors.Wrap(err, "HeaderByNumber error: RPC down?")
+		return errors.Wrap(err, "RPC error onHeaderByNumber: RPC down?")
 	}
 
 	// use default alert latency if not provided

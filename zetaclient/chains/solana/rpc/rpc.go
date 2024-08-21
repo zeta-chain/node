@@ -133,19 +133,19 @@ func CheckRPCStatus(
 	// query solana health (always return "ok" unless --trusted-validator is provided)
 	_, err := client.GetHealth(ctx)
 	if err != nil {
-		return errors.Wrap(err, "GetHealth error: RPC down?")
+		return errors.Wrap(err, "RPC error onGetHealth: RPC down?")
 	}
 
 	// query latest slot
 	slot, err := client.GetSlot(ctx, rpc.CommitmentFinalized)
 	if err != nil {
-		return errors.Wrap(err, "GetSlot error: RPC down?")
+		return errors.Wrap(err, "RPC error onGetSlot: RPC down?")
 	}
 
 	// query latest block time
 	blockTime, err := client.GetBlockTime(ctx, slot)
 	if err != nil {
-		return errors.Wrap(err, "GetBlockTime error: RPC down?")
+		return errors.Wrap(err, "RPC error onGetBlockTime: RPC down?")
 	}
 
 	// use default alert latency if not provided

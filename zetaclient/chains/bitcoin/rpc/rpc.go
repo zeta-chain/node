@@ -175,19 +175,19 @@ func CheckRPCStatus(
 	// query latest block number
 	bn, err := client.GetBlockCount()
 	if err != nil {
-		return errors.Wrap(err, "GetBlockCount error: RPC down?")
+		return errors.Wrap(err, "RPC error onGetBlockCount: RPC down?")
 	}
 
 	// query latest block header
 	hash, err := client.GetBlockHash(bn)
 	if err != nil {
-		return errors.Wrap(err, "GetBlockHash error: RPC down?")
+		return errors.Wrap(err, "RPC error onGetBlockHash: RPC down?")
 	}
 
 	// query latest block header thru hash
 	header, err := client.GetBlockHeader(hash)
 	if err != nil {
-		return errors.Wrap(err, "GetBlockHeader error: RPC down?")
+		return errors.Wrap(err, "RPC error onGetBlockHeader: RPC down?")
 	}
 
 	// use default alert latency if not provided
