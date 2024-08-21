@@ -1,4 +1,4 @@
-package e2etests
+package runner
 
 import (
 	sdkmath "cosmossdk.io/math"
@@ -7,7 +7,6 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
-	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/txserver"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -16,9 +15,8 @@ import (
 	"math/big"
 )
 
-func TestV2Migration(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 0)
-
+// RunV2Migration runs the process for the v2 migration
+func (r *E2ERunner) RunV2Migration() {
 	// Part 1: add new admin authorization
 	r.Logger.Info("Part 1: Adding authorization for new v2 contracts")
 	err := r.ZetaTxServer.AddAuthorization("/zetachain.zetacore.crosschain.MsgUpdateERC20CustodyPauseStatus")
@@ -40,15 +38,15 @@ func TestV2Migration(r *runner.E2ERunner, args []string) {
 
 	// Part 4: upgrade all ZRC20s
 	r.Logger.Info("Part 4: Upgrading ZRC20s")
-	upgradeZRC20s(r)
+	r.upgradeZRC20s()
 
 	// Part 5: migrate ERC20 custody funds
 	r.Logger.Info("Part 5: Migrating ERC20 custody funds")
-	migrateERC20CustodyFunds(r)
+	r.migrateERC20CustodyFunds()
 }
 
 // upgradeZRC20s upgrades all ZRC20s to the new version
-func upgradeZRC20s(r *runner.E2ERunner) {
+func (r *E2ERunner) upgradeZRC20s() {
 	// get chain IDs
 	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err)
@@ -56,15 +54,15 @@ func upgradeZRC20s(r *runner.E2ERunner) {
 
 	// upgrade ETH ZRC20
 	r.Logger.Info("Upgrading ETH ZRC20")
-	upgradeZRC20(r, r.ETHZRC20Addr, r.ETHZRC20, evmChainID, uint8(coin.CoinType_Gas))
+	r.upgradeZRC20(r.ETHZRC20Addr, r.ETHZRC20, evmChainID, uint8(coin.CoinType_Gas))
 
 	// upgrade ERC20 ZRC20
 	r.Logger.Info("Upgrading ERC20 ZRC20")
-	upgradeZRC20(r, r.ERC20ZRC20Addr, r.ERC20ZRC20, evmChainID, uint8(coin.CoinType_ERC20))
+	r.upgradeZRC20(r.ERC20ZRC20Addr, r.ERC20ZRC20, evmChainID, uint8(coin.CoinType_ERC20))
 
 	// upgrade BTC ZRC20
 	r.Logger.Info("Upgrading BTC ZRC20")
-	upgradeZRC20(r, r.BTCZRC20Addr, r.BTCZRC20, big.NewInt(btcChainID), uint8(coin.CoinType_Gas))
+	r.upgradeZRC20(r.BTCZRC20Addr, r.BTCZRC20, big.NewInt(btcChainID), uint8(coin.CoinType_Gas))
 }
 
 // zrc20Caller is an interface to call ZRC20 functions
@@ -75,8 +73,7 @@ type zrc20Caller interface {
 }
 
 // upgradeZRC20 upgrades a ZRC20 to the new version
-func upgradeZRC20(
-	r *runner.E2ERunner,
+func (r *E2ERunner) upgradeZRC20(
 	zrc20Addr common.Address,
 	zrc20Caller zrc20Caller,
 	chainID *big.Int,
@@ -123,7 +120,7 @@ func upgradeZRC20(
 	require.NoError(r, err)
 }
 
-func migrateERC20CustodyFunds(r *runner.E2ERunner) {
+func (r *E2ERunner) migrateERC20CustodyFunds() {
 	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err)
 
@@ -196,4 +193,7 @@ func migrateERC20CustodyFunds(r *runner.E2ERunner) {
 	)
 	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msgUnpause)
 	require.NoError(r, err)
+
+	// Part 5: update the ERC20 custody contract in the chain params
+	r.UpdateChainParamsERC20CustodyContract()
 }
