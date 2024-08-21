@@ -31,8 +31,7 @@ func TestExtractBitcoinInscriptionMemo(r *runner.E2ERunner, args []string) {
 	)
 	require.NoError(r, err)
 
-	txid, err := r.InscribeToTSSFromDeployerWithMemo(amount, utxos, memo)
-	require.NoError(r, err)
+	txid := r.InscribeToTSSFromDeployerWithMemo(amount, utxos, memo)
 
 	_, err = r.GenerateToAddressIfLocalBitcoin(6, r.BTCDeployerAddress)
 	require.NoError(r, err)
