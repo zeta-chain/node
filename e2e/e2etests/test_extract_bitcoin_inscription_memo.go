@@ -18,7 +18,7 @@ func TestExtractBitcoinInscriptionMemo(r *runner.E2ERunner, args []string) {
 	// obtain some initial fund
 	stop := r.MineBlocksIfLocalBitcoin()
 	defer stop()
-	r.Logger.Print("Mined blocks")
+	r.Logger.Info("Mined blocks")
 
 	// list deployer utxos
 	utxos, err := r.ListDeployerUTXOs()
