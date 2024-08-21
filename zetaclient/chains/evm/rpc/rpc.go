@@ -15,7 +15,7 @@ import (
 const (
 	// RPCAlertLatency is the default threshold for RPC latency to be considered unhealthy and trigger an alert.
 	// 100s is a reasonable threshold for most EVM chains
-	RPCAlertLatency = 100
+	RPCAlertLatency = time.Duration(100) * time.Second
 )
 
 // IsTxConfirmed checks if the transaction is confirmed with given confirmations
@@ -64,7 +64,7 @@ func IsTxConfirmed(
 func CheckRPCStatus(
 	ctx context.Context,
 	client interfaces.EVMRPCClient,
-	alertLatency uint64,
+	alertLatency time.Duration,
 	logger zerolog.Logger,
 ) error {
 	// query latest block number
@@ -86,23 +86,23 @@ func CheckRPCStatus(
 	}
 
 	// use default alert latency if not provided
-	if alertLatency == 0 {
+	if alertLatency <= 0 {
 		alertLatency = RPCAlertLatency
 	}
 
 	// latest block should not be too old
 	// #nosec G115 always in range
 	blockTime := time.Unix(int64(header.Time), 0).UTC()
-	elapsedSeconds := time.Since(blockTime).Seconds()
-	if elapsedSeconds > float64(alertLatency) {
+	elapsedTime := time.Since(blockTime)
+	if elapsedTime > alertLatency {
 		return errors.Errorf(
 			"Latest block %d is %.0fs old, RPC stale or chain stuck (check explorer)?",
 			bn,
-			elapsedSeconds,
+			elapsedTime.Seconds(),
 		)
 	}
 
 	logger.Info().
-		Msgf("RPC Status [OK]: latest block %d, timestamp %s (%.0fs ago), gas price %s", header.Number, blockTime.String(), elapsedSeconds, gasPrice.String())
+		Msgf("RPC Status [OK]: latest block %d, timestamp %s (%.0fs ago), gas price %s", header.Number, blockTime.String(), elapsedTime.Seconds(), gasPrice.String())
 	return nil
 }

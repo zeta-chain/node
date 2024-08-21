@@ -26,7 +26,7 @@ const (
 
 	// RPCAlertLatency is the default threshold for RPC latency to be considered unhealthy and trigger an alert.
 	// Bitcoin block time is 10 minutes, 1200s (20 minutes) is a reasonable threshold for Bitcoin
-	RPCAlertLatency = 1200
+	RPCAlertLatency = time.Duration(1200) * time.Second
 )
 
 // NewRPCClient creates a new RPC client by the given config.
@@ -168,7 +168,7 @@ func GetRecentFeeRate(rpcClient interfaces.BTCRPCClient, netParams *chaincfg.Par
 // CheckRPCStatus checks the RPC status of the evm chain
 func CheckRPCStatus(
 	client interfaces.BTCRPCClient,
-	alertLatency uint64,
+	alertLatency time.Duration,
 	tssAddress btcutil.Address,
 	logger zerolog.Logger,
 ) error {
@@ -191,18 +191,18 @@ func CheckRPCStatus(
 	}
 
 	// use default alert latency if not provided
-	if alertLatency == 0 {
+	if alertLatency <= 0 {
 		alertLatency = RPCAlertLatency
 	}
 
 	// latest block should not be too old
 	blockTime := header.Timestamp
-	elapsedSeconds := time.Since(blockTime).Seconds()
-	if elapsedSeconds > float64(alertLatency) {
+	elapsedTime := time.Since(blockTime)
+	if elapsedTime > alertLatency {
 		return errors.Errorf(
 			"Latest block %d is %.0fs old, RPC stale or chain stuck (check explorer)?",
 			bn,
-			elapsedSeconds,
+			elapsedTime.Seconds(),
 		)
 	}
 
@@ -218,6 +218,6 @@ func CheckRPCStatus(
 	}
 
 	logger.Info().
-		Msgf("RPC Status [OK]: latest block %d, timestamp %s (%.fs ago), tss addr %s, #utxos: %d", bn, blockTime, elapsedSeconds, tssAddress, len(res))
+		Msgf("RPC Status [OK]: latest block %d, timestamp %s (%.fs ago), tss addr %s, #utxos: %d", bn, blockTime, elapsedTime.Seconds(), tssAddress, len(res))
 	return nil
 }

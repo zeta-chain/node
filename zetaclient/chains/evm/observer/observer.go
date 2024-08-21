@@ -7,6 +7,7 @@ import (
 	"math"
 	"math/big"
 	"strings"
+	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -77,7 +78,7 @@ func NewObserver(
 		tss,
 		base.DefaultBlockCacheSize,
 		base.DefaultHeaderCacheSize,
-		evmCfg.RPCAlertLatency,
+		time.Duration(evmCfg.RPCAlertLatency),
 		ts,
 		database,
 		logger,

@@ -8,6 +8,7 @@ import (
 	"math"
 	"math/big"
 	"sort"
+	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
@@ -114,7 +115,7 @@ func NewObserver(
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
-	rpcAlertLatency uint64,
+	rpcAlertLatency time.Duration,
 	database *db.DB,
 	logger base.Logger,
 	ts *metrics.TelemetryServer,

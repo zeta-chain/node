@@ -9,13 +9,18 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/solana/rpc"
+	"github.com/zeta-chain/zetacore/zetaclient/common"
 )
 
 // Test_SolanaRPCLive is a phony test to run all live tests
 func Test_SolanaRPCLive(t *testing.T) {
-	// LiveTest_GetFirstSignatureForAddress(t)
-	// LiveTest_GetSignaturesForAddressUntil(t)
-	// LiveTest_CheckRPCStatus(t)
+	if !common.LiveTestEnabled() {
+		return
+	}
+
+	LiveTest_GetFirstSignatureForAddress(t)
+	LiveTest_GetSignaturesForAddressUntil(t)
+	LiveTest_CheckRPCStatus(t)
 }
 
 func LiveTest_GetFirstSignatureForAddress(t *testing.T) {
@@ -44,8 +49,8 @@ func LiveTest_GetSignaturesForAddressUntil(t *testing.T) {
 		"2tUQtcrXxtNFtV9kZ4kQsmY7snnEoEEArmu9pUptr4UCy8UdbtjPD6UtfEtPJ2qk5CTzZTmLwsbmZdLymcwSUcHu",
 	)
 
-	// get all signatures for the address until the first signature (one by one)
-	sigs, err := rpc.GetSignaturesForAddressUntil(context.Background(), client, address, untilSig, 1)
+	// get all signatures for the address until the first signature
+	sigs, err := rpc.GetSignaturesForAddressUntil(context.Background(), client, address, untilSig, 100)
 	require.NoError(t, err)
 
 	// assert

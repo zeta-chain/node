@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
@@ -60,8 +61,8 @@ type Observer struct {
 	// lastTxScanned is the last transaction hash scanned by the observer
 	lastTxScanned string
 
-	// rpcAlertLatency is the threshold of RPC latency (in seconds) to trigger an alert
-	rpcAlertLatency uint64
+	// rpcAlertLatency is the threshold of RPC latency to trigger an alert
+	rpcAlertLatency time.Duration
 
 	// blockCache is the cache for blocks
 	blockCache *lru.Cache
@@ -95,7 +96,7 @@ func NewObserver(
 	tss interfaces.TSSSigner,
 	blockCacheSize int,
 	headerCacheSize int,
-	rpcAlertLatency uint64,
+	rpcAlertLatency time.Duration,
 	ts *metrics.TelemetryServer,
 	database *db.DB,
 	logger Logger,
@@ -108,7 +109,7 @@ func NewObserver(
 		lastBlock:        0,
 		lastBlockScanned: 0,
 		lastTxScanned:    "",
-		rpcAlertLatency:  rpcAlertLatency,
+		rpcAlertLatency:  rpcAlertLatency * time.Second, // latency in seconds
 		ts:               ts,
 		db:               database,
 		mu:               &sync.Mutex{},
@@ -252,7 +253,7 @@ func (ob *Observer) WithLastTxScanned(txHash string) *Observer {
 }
 
 // RPCAlertLatency returns the RPC alert latency for the observer.
-func (ob *Observer) RPCAlertLatency() uint64 {
+func (ob *Observer) RPCAlertLatency() time.Duration {
 	return ob.rpcAlertLatency
 }
 

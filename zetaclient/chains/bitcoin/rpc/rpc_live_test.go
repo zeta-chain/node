@@ -26,6 +26,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
+	"github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
@@ -98,8 +99,8 @@ func (suite *BitcoinObserverTestSuite) TearDownSuite() {
 // createRPCClient creates a new Bitcoin RPC client for given chainID
 func createRPCClient(chainID int64) (*rpcclient.Client, error) {
 	var connCfg *rpcclient.ConnConfig
-	rpcMainnet := os.Getenv("BTC_RPC_MAINNET")
-	rpcTestnet := os.Getenv("BTC_RPC_TESTNET")
+	rpcMainnet := os.Getenv(common.EnvBtcRPCMainnet)
+	rpcTestnet := os.Getenv(common.EnvBtcRPCTestnet)
 
 	// mainnet
 	if chainID == chains.BitcoinMainnet.ChainId {
@@ -216,16 +217,21 @@ func (suite *BitcoinObserverTestSuite) Test2() {
 
 // TestBitcoinObserverLive is a phony test to run each live test individually
 func TestBitcoinObserverLive(t *testing.T) {
+	if !common.LiveTestEnabled() {
+		return
+	}
+
+	// disable legacy live tests
 	// suite.Run(t, new(BitcoinClientTestSuite))
 
-	// LiveTestNewRPCClient(t)
-	// LiveTestCheckRPCStatus(t)
-	// LiveTestGetBlockHeightByHash(t)
-	// LiveTestBitcoinFeeRate(t)
-	// LiveTestAvgFeeRateMainnetMempoolSpace(t)
-	// LiveTestAvgFeeRateTestnetMempoolSpace(t)
-	// LiveTestGetRecentFeeRate(t)
-	// LiveTestGetSenderByVin(t)
+	LiveTestNewRPCClient(t)
+	LiveTestCheckRPCStatus(t)
+	LiveTestGetBlockHeightByHash(t)
+	LiveTestBitcoinFeeRate(t)
+	LiveTestAvgFeeRateMainnetMempoolSpace(t)
+	LiveTestAvgFeeRateTestnetMempoolSpace(t)
+	LiveTestGetRecentFeeRate(t)
+	LiveTestGetSenderByVin(t)
 }
 
 // LiveTestNewRPCClient creates a new Bitcoin RPC client
@@ -233,8 +239,8 @@ func LiveTestNewRPCClient(t *testing.T) {
 	btcConfig := config.BTCConfig{
 		RPCUsername: "user",
 		RPCPassword: "pass",
-		RPCHost:     os.Getenv("BTC_RPC_TESTNET"),
-		RPCParams:   "mainnet",
+		RPCHost:     os.Getenv(common.EnvBtcRPCTestnet),
+		RPCParams:   "testnet3",
 	}
 
 	// create Bitcoin RPC client
@@ -326,9 +332,11 @@ func LiveTestBitcoinFeeRate(t *testing.T) {
 		feeRateEconomical2.Uint64(),
 	)
 
-	// monitor fee rate every 5 minutes
-	for {
-		time.Sleep(time.Duration(5) * time.Minute)
+	// monitor fee rate every 5 minutes, adjust the iteration count as needed
+	for i := 0; i < 1; i++ {
+		// please uncomment this interval for long running test
+		//time.Sleep(time.Duration(5) * time.Minute)
+
 		bn, err = client.GetBlockCount()
 		feeRateConservative1, errCon1 = getFeeRate(client, 1, &btcjson.EstimateModeConservative)
 		feeRateEconomical1, errEco1 = getFeeRate(client, 1, &btcjson.EstimateModeEconomical)
@@ -419,7 +427,7 @@ func LiveTestAvgFeeRateMainnetMempoolSpace(t *testing.T) {
 	// test against mempool.space API for 10000 blocks
 	//startBlock := 210000 * 3 // 3rd halving
 	startBlock := 829596
-	endBlock := startBlock - 10000
+	endBlock := startBlock - 1 // go back to whatever block as needed
 
 	compareAvgFeeRate(t, client, startBlock, endBlock, false)
 }
@@ -433,7 +441,7 @@ func LiveTestAvgFeeRateTestnetMempoolSpace(t *testing.T) {
 	// test against mempool.space API for 10000 blocks
 	//startBlock := 210000 * 12 // 12th halving
 	startBlock := 2577600
-	endBlock := startBlock - 10000
+	endBlock := startBlock - 1 // go back to whatever block as needed
 
 	compareAvgFeeRate(t, client, startBlock, endBlock, true)
 }
@@ -468,7 +476,7 @@ func LiveTestGetSenderByVin(t *testing.T) {
 	// calculates block range to test
 	startBlock, err := client.GetBlockCount()
 	require.NoError(t, err)
-	endBlock := startBlock - 5000
+	endBlock := startBlock - 1 // go back to whatever block as needed
 
 	// loop through mempool.space blocks in descending order
 BLOCKLOOP:

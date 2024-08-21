@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/rpc"
+	"github.com/zeta-chain/zetacore/zetaclient/common"
 
 	"testing"
 )
@@ -21,8 +22,12 @@ const (
 
 // Test_EVMRPCLive is a phony test to run each live test individually
 func Test_EVMRPCLive(t *testing.T) {
-	// LiveTest_IsTxConfirmed(t)
-	// LiveTest_CheckRPCStatus(t)
+	if !common.LiveTestEnabled() {
+		return
+	}
+
+	LiveTest_IsTxConfirmed(t)
+	LiveTest_CheckRPCStatus(t)
 }
 
 func LiveTest_IsTxConfirmed(t *testing.T) {

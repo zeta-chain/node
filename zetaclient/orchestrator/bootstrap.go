@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"context"
+	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -341,7 +342,7 @@ func syncObserverMap(
 				*params,
 				client,
 				tss,
-				cfg.RPCAlertLatency,
+				time.Duration(cfg.RPCAlertLatency),
 				database,
 				logger,
 				ts,
@@ -378,7 +379,7 @@ func syncObserverMap(
 				*params,
 				client,
 				tss,
-				cfg.RPCAlertLatency,
+				time.Duration(cfg.RPCAlertLatency),
 				database,
 				logger,
 				ts,
