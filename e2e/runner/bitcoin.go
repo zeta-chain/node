@@ -314,7 +314,7 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 
 	txnHash, err := r.sendToAddrFromDeployerWithMemo(amount, receiver, inputUTXOs, []byte(constant.DonationMessage))
 	require.NoError(r, err)
-	r.Logger.Print("obtained inscription commit txn hash %s", txnHash.String())
+	r.Logger.Info("obtained inscription commit txn hash %s", txnHash.String())
 
 	// sendToAddrFromDeployerWithMemo makes sure index is 0
 	outpointIdx := 0
