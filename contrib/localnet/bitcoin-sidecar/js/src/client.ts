@@ -17,7 +17,7 @@ const rng = randomBytes;
 export type Address = String;
 export type BtcAddress = String;
 
-/// The BTC transactioin hash returned
+/// The BTC transaction hash returned
 export type BtcTxnHash = String;
 export interface BtcInput {
     txn: BtcTxnHash,
