@@ -105,7 +105,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipTrackerCheck  = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
 		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
 		testV2            = must(cmd.Flags().GetBool(flagTestV2))
-		//testV2Migration   = must(cmd.Flags().GetBool(flagTestV2Migration))
+		testV2Migration   = must(cmd.Flags().GetBool(flagTestV2Migration))
 	)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
@@ -238,6 +238,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		os.Exit(0)
 	}
 
+	// run the v2 migration
+	if testV2Migration {
+		deployerRunner.RunV2Migration()
+	}
+
 	// run tests
 	var eg errgroup.Group
 
@@ -358,65 +363,15 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
 	}
+
 	if testV2 {
 		// update the ERC20 custody contract for v2 tests
+		// note: not run in testV2Migration because it is already run in the migration process
 		deployerRunner.UpdateChainParamsERC20CustodyContract()
+	}
 
-		//// Test happy paths for gas token workflow
-		eg.Go(v2TestRoutine(conf, "eth", conf.AdditionalAccounts.UserEther, color.FgHiGreen, deployerRunner, verbose,
-			e2etests.TestV2ETHDepositName,
-			e2etests.TestV2ETHDepositAndCallName,
-			e2etests.TestV2ETHWithdrawName,
-			e2etests.TestV2ETHWithdrawAndCallName,
-			e2etests.TestV2ZEVMToEVMCallName,
-			e2etests.TestV2EVMToZEVMCallName,
-		))
-
-		//// Test happy paths for erc20 token workflow
-		eg.Go(v2TestRoutine(conf, "erc20", conf.AdditionalAccounts.UserERC20, color.FgHiBlue, deployerRunner, verbose,
-			e2etests.TestV2ETHDepositName, // necessary to pay fees on ZEVM
-			e2etests.TestV2ERC20DepositName,
-			e2etests.TestV2ERC20DepositAndCallName,
-			e2etests.TestV2ERC20WithdrawName,
-			e2etests.TestV2ERC20WithdrawAndCallName,
-		))
-
-		// Test revert cases for gas token workflow
-		eg.Go(
-			v2TestRoutine(
-				conf,
-				"eth-revert",
-				conf.AdditionalAccounts.UserZetaTest,
-				color.FgHiYellow,
-				deployerRunner,
-				verbose,
-				e2etests.TestV2ETHDepositName, // necessary to pay fees on ZEVM and withdraw
-				e2etests.TestV2ETHDepositAndCallRevertName,
-				e2etests.TestV2ETHDepositAndCallRevertWithCallName,
-				e2etests.TestV2ETHWithdrawAndCallRevertName,
-				e2etests.TestV2ETHWithdrawAndCallRevertWithCallName,
-			),
-		)
-
-		// Test revert cases for erc20 token workflow
-		eg.Go(
-			v2TestRoutine(
-				conf,
-				"erc20-revert",
-				conf.AdditionalAccounts.UserBitcoin,
-				color.FgHiRed,
-				deployerRunner,
-				verbose,
-				e2etests.TestV2ETHDepositName,   // necessary to pay fees on ZEVM
-				e2etests.TestV2ERC20DepositName, // necessary to have assets to withdraw
-				e2etests.TestOperationAddLiquidityETHName, // liquidity with gas and ERC20 are necessary for reverts
-				e2etests.TestOperationAddLiquidityERC20Name,
-				e2etests.TestV2ERC20DepositAndCallRevertName,
-				e2etests.TestV2ERC20DepositAndCallRevertWithCallName,
-				e2etests.TestV2ERC20WithdrawAndCallRevertName,
-				e2etests.TestV2ERC20WithdrawAndCallRevertWithCallName,
-			),
-		)
+	if testV2 || testV2Migration {
+		startV2Tests(&eg, conf, deployerRunner, verbose)
 	}
 
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
