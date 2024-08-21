@@ -91,7 +91,9 @@ func (ob *Observer) ObserveGatewayDeposit(ctx context.Context, startBlock, toBlo
 	metrics.GetFilterLogsPerChain.WithLabelValues(ob.Chain().Name).Inc()
 
 	// TODO: remove in this PR
-	ob.Logger().Inbound.Info().Msgf("ObserveGatewayDeposit: observing deposits with gateway contract %s", gatewayAddr.Hex())
+	ob.Logger().
+		Inbound.Info().
+		Msgf("ObserveGatewayDeposit: observing deposits with gateway contract %s", gatewayAddr.Hex())
 
 	// post to zetacore
 	lastScanned := uint64(0)
