@@ -314,6 +314,7 @@ func (zts ZetaTxServer) UpdateGatewayAddress(account, gatewayAddr string) error 
 		addr.String(),
 		gatewayAddr,
 	))
+
 	return err
 }
 

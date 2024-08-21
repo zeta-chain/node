@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"strings"
 
 	cosmosmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
@@ -56,7 +57,10 @@ func (ob *Observer) WatchInbound(ctx context.Context) error {
 			}
 			err := ob.ObserveInbound(ctx)
 			if err != nil {
-				ob.logger.Inbound.Error().Err(err).Msg("WatchInbound error observing in tx")
+				// skip showing log for block number 0 as it means Bitcoin is not being observed
+				if !strings.Contains(err.Error(), "current block number 0 is too low") {
+					ob.logger.Inbound.Error().Err(err).Msg("WatchInbound error observing in tx")
+				}
 			}
 			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.logger.Inbound)
 		case <-ob.StopChannel():

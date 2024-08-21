@@ -196,6 +196,8 @@ func (r *E2ERunner) migrateERC20CustodyFunds() {
 	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msgUnpause)
 	require.NoError(r, err)
 
-	// Part 5: update the ERC20 custody contract in the chain params
-	r.UpdateChainParamsERC20CustodyContract()
+	// Part 5: update the ERC20 custody contract in the chain params and in the runner
+	r.UpdateChainParamsV2Contracts()
+
+	r.ERC20CustodyAddr = r.ERC20CustodyV2Addr
 }

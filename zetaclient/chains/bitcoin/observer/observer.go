@@ -8,6 +8,7 @@ import (
 	"math"
 	"math/big"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
@@ -456,7 +457,9 @@ func (ob *Observer) WatchUTXOs(ctx context.Context) error {
 			}
 			err := ob.FetchUTXOs(ctx)
 			if err != nil {
-				ob.logger.UTXOs.Error().Err(err).Msg("error fetching btc utxos")
+				if !strings.Contains(err.Error(), "No wallet is loaded") {
+					ob.logger.UTXOs.Error().Err(err).Msg("error fetching btc utxos")
+				}
 			}
 			ticker.UpdateInterval(ob.GetChainParams().WatchUtxoTicker, ob.logger.UTXOs)
 		case <-ob.StopChannel():

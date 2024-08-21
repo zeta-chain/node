@@ -3,6 +3,7 @@ package local
 import (
 	"context"
 	"errors"
+	"math/big"
 	"os"
 	"path/filepath"
 	"time"
@@ -240,6 +241,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// run the v2 migration
 	if testV2Migration {
+		// deposit erc20 to ensure that the custody contract has funds to migrate
+		oneThousand := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1000))
+		erc20Deposit := deployerRunner.DepositERC20WithAmountAndMessage(deployerRunner.EVMAddress(), oneThousand, []byte{})
+		deployerRunner.WaitForMinedCCTX(erc20Deposit)
+
 		deployerRunner.RunV2Migration()
 	}
 
@@ -338,7 +344,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 			// TestMigrateChainSupportName tests EVM chain migration. Currently this test doesn't work with Anvil because pre-EIP1559 txs are not supported
 			// See issue below for details
-			// TODO: renenable this test as per the issue below
+			// TODO: reenable this test as per the issue below
 			// https://github.com/zeta-chain/node/issues/1980
 			// e2etests.TestMigrateChainSupportName,
 		))
@@ -367,7 +373,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testV2 {
 		// update the ERC20 custody contract for v2 tests
 		// note: not run in testV2Migration because it is already run in the migration process
-		deployerRunner.UpdateChainParamsERC20CustodyContract()
+		deployerRunner.UpdateChainParamsV2Contracts()
 	}
 
 	if testV2 || testV2Migration {
