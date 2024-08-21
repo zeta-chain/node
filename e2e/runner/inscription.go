@@ -32,6 +32,7 @@ type InscriptionBuilder struct {
 	client     http.Client
 }
 
+// GenerateCommitAddress generates a commit p2tr address that one can send funds to this address
 func (r *InscriptionBuilder) GenerateCommitAddress(memo []byte) (string, error) {
 	// Create the payload
 	postData := map[string]string{
@@ -70,6 +71,7 @@ func (r *InscriptionBuilder) GenerateCommitAddress(memo []byte) (string, error) 
 	return response.Address, nil
 }
 
+// GenerateRevealTxn creates the corresponding reveal txn to the commit txn.
 func (r *InscriptionBuilder) GenerateRevealTxn(to string, txnHash string, idx int, amount float64) (string, error) {
 	postData := revealRequest{
 		Txn:     txnHash,

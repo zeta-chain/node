@@ -296,6 +296,7 @@ func (r *E2ERunner) sendToAddrFromDeployerWithMemo(
 	return txid, nil
 }
 
+// InscribeToTSSFromDeployerWithMemo creates an inscription that is sent to the tss address with the corresponding memo
 func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 	amount float64,
 	inputUTXOs []btcjson.ListUnspentResult,
