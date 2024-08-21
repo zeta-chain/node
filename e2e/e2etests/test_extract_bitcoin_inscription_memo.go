@@ -25,6 +25,7 @@ func TestExtractBitcoinInscriptionMemo(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	amount := parseFloat(r, args[0])
+	// this is just some random test memo for inscription
 	memo, err := hex.DecodeString(
 		"72f080c854647755d0d9e6f6821f6931f855b9acffd53d87433395672756d58822fd143360762109ab898626556b1c3b8d3096d2361f1297df4a41c1b429471a9aa2fc9be5f27c13b3863d6ac269e4b587d8389f8fd9649859935b0d48dea88cdb40f20c",
 	)

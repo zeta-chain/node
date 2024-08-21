@@ -303,7 +303,7 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 ) (*chainhash.Hash, error) {
 	// TODO: replace builder with Go function to enable instructions
 	// https://github.com/zeta-chain/node/issues/2759
-	builder := InscriptionBuilder{sidecarUrl: "http://bitcoin-node-sidecar:8000", client: http.Client{}}
+	builder := InscriptionBuilder{sidecarURL: "http://bitcoin-node-sidecar:8000", client: http.Client{}}
 
 	address, err := builder.GenerateCommitAddress(memo)
 	if err != nil {
