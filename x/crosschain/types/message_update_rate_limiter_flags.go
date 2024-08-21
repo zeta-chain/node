@@ -43,7 +43,7 @@ func (msg *MsgUpdateRateLimiterFlags) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	if err := msg.RateLimiterFlags.Validate(); err != nil {
-		return errorsmod.Wrapf(ErrInvalidRateLimiterFlags, err.Error())
+		return errorsmod.Wrap(ErrInvalidRateLimiterFlags, err.Error())
 	}
 	return nil
 }
