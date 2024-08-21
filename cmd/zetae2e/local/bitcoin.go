@@ -61,7 +61,6 @@ func bitcoinTestRoutine(
 			return fmt.Errorf("bitcoin tests failed: %v", err)
 		}
 
-		bitcoinRunner.Logger.Print("Running tests:", testNames)
 
 		if err := bitcoinRunner.RunE2ETests(testsToRun); err != nil {
 			return fmt.Errorf("bitcoin tests failed: %v", err)
