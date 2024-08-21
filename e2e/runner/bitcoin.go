@@ -307,7 +307,7 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 
 	address, err := builder.GenerateCommitAddress(memo)
 	require.NoError(r, err)
-	r.Logger.Print("received inscription commit address %s", address)
+	r.Logger.Info("received inscription commit address %s", address)
 
 	receiver, err := chains.DecodeBtcAddress(address, r.GetBitcoinChainID())
 	require.NoError(r, err)
