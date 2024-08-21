@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"cosmossdk.io/errors"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
@@ -39,7 +40,7 @@ func ParseAddressAndData(message string) (ethcommon.Address, []byte, error) {
 
 	data, err := hex.DecodeString(message)
 	if err != nil {
-		return ethcommon.Address{}, nil, fmt.Errorf("message should be a hex encoded string: " + err.Error())
+		return ethcommon.Address{}, nil, errors.Wrap(err, "message should be a hex encoded string")
 	}
 
 	if len(data) < 20 {

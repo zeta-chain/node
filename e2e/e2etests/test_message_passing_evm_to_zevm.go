@@ -1,7 +1,6 @@
 package e2etests
 
 import (
-	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -56,7 +55,7 @@ func TestMessagePassingEVMtoZEVM(r *runner.E2ERunner, args []string) {
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	utils.RequireCCTXStatus(r, cctx, cctxtypes.CctxStatus_OutboundMined)
 
-	r.Logger.Info(fmt.Sprintf("🔄 Cctx mined for contract call chain zevm %s", cctx.Index))
+	r.Logger.Info("🔄 Cctx mined for contract call chain zevm %s", cctx.Index)
 
 	// On finalization the Fungible module calls the onReceive function which in turn calls the onZetaMessage function on the destination contract
 	receipt, err = r.ZEVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutboundParam().Hash))
