@@ -26,7 +26,7 @@ export interface BtcInput {
 
 /** 
  * The example client for interacting with ZetaChain in BTC. There are currently two ways 
- * of calling a smart contract on Zetachain from BTC:
+ * of calling a smart contract on ZetaChain from BTC:
  * 
  * - Using OP_RETURN
  * - Using Witness
