@@ -116,6 +116,11 @@ const (
 	 Not used to test functionalities but do various interactions with the netwoks
 	*/
 	TestDeploy = "deploy"
+
+	/*
+	 Stateful precompiled contracts tests
+	*/
+	TestZetaPrecompilesPrototypeName = "precompile_contracts_prototype"
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -588,5 +593,14 @@ var AllE2ETests = []runner.E2ETest{
 		"migrate TSS funds",
 		[]runner.ArgDefinition{},
 		TestMigrateTSS,
+	),
+	/*
+	 Stateful precompiled contracts tests
+	*/
+	runner.NewE2ETest(
+		TestZetaPrecompilesPrototypeName,
+		"test stateful precompiled contracts prototype",
+		[]runner.ArgDefinition{},
+		TestPrecompilesRegular,
 	),
 }

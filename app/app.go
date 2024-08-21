@@ -92,6 +92,7 @@ import (
 	"github.com/zeta-chain/zetacore/app/ante"
 	"github.com/zeta-chain/zetacore/docs/openapi"
 	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
+	"github.com/zeta-chain/zetacore/precompiles"
 	srvflags "github.com/zeta-chain/zetacore/server/flags"
 	authoritymodule "github.com/zeta-chain/zetacore/x/authority"
 	authoritykeeper "github.com/zeta-chain/zetacore/x/authority/keeper"
@@ -566,7 +567,7 @@ func New(
 		&app.FeeMarketKeeper,
 		tracer,
 		evmSs,
-		[]evmkeeper.CustomContractFn{},
+		precompiles.StatefulContracts(&app.FungibleKeeper, appCodec, storetypes.TransientGasConfig()),
 		app.ConsensusParamsKeeper,
 		aggregateAllKeys(keys, tKeys, memKeys),
 	)
@@ -1049,10 +1050,20 @@ func (app *App) SimulationManager() *module.SimulationManager {
 
 func (app *App) BlockedAddrs() map[string]bool {
 	blockList := make(map[string]bool)
+
 	for k, v := range blockedReceivingModAcc {
 		addr := authtypes.NewModuleAddress(k)
 		blockList[addr.String()] = v
 	}
+
+	// Each enabled precompiled stateful contract should be added as a BlockedAddrs.
+	// That way it's marked as non payable by the bank keeper.
+	for addr, enabled := range precompiles.EnabledStatefulContracts {
+		if enabled {
+			blockList[addr.String()] = enabled
+		}
+	}
+
 	return blockList
 }
 

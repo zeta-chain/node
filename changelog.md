@@ -8,6 +8,7 @@
 * [2634](https://github.com/zeta-chain/node/pull/2634) - add support for EIP-1559 gas fees
 * [2597](https://github.com/zeta-chain/node/pull/2597) - Add generic rpc metrics to zetaclient
 * [2538](https://github.com/zeta-chain/node/pull/2538) - add background worker routines to shutdown zetaclientd when needed for tss migration
+* [2633](https://github.com/zeta-chain/node/pull/2633) - support for stateful precompiled contracts.
 
 ### Refactor
 
@@ -16,6 +17,10 @@
 ### Fixes
 
 * [2654](https://github.com/zeta-chain/node/pull/2654) - add validation for authorization list in when validating genesis state for authorization module
+
+### Tests
+
+* [2703](https://github.com/zeta-chain/node/pull/2703) - add e2e tests for stateful precompiled contracts
 
 ## v19.0.0
 
@@ -57,7 +62,6 @@
 * [2524](https://github.com/zeta-chain/node/pull/2524) - add inscription envelop parsing 
 * [2560](https://github.com/zeta-chain/node/pull/2560) - add support for Solana SOL token withdraw
 * [2533](https://github.com/zeta-chain/node/pull/2533) - parse memo from both OP_RETURN and inscription
-* [2633](https://github.com/zeta-chain/node/pull/2633) - support for stateful precompiled contracts.
 
 ### Refactor
 
