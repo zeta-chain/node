@@ -338,7 +338,7 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 	if err = msgTx.Deserialize(bytes.NewReader(rawTxBytes)); err != nil {
 		return nil, err
 	}
-	r.Logger.Print("recovered inscription reveal txn %s", hexTx)
+	r.Logger.Info("recovered inscription reveal txn %s", hexTx)
 
 	txid, err := r.BtcRPCClient.SendRawTransaction(msgTx, true)
 	require.NoError(r, err)
