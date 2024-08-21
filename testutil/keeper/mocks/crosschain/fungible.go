@@ -8,11 +8,9 @@ import (
 	common "github.com/ethereum/go-ethereum/common"
 	coin "github.com/zeta-chain/zetacore/pkg/coin"
 
-
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 
