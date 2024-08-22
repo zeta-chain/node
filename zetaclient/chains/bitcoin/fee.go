@@ -15,6 +15,8 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 )
 
@@ -35,7 +37,11 @@ const (
 	OutboundBytesMax = uint64(1543) // 1543v == EstimateSegWitTxSize(21, 2, toP2TR)
 	OutboundBytesAvg = uint64(245)  // 245vB is a suggested gas limit for zetacore
 
-	DynamicDepositorFeeHeight = 834500 // DynamicDepositorFeeHeight contains the starting height (Bitcoin mainnet) from which dynamic depositor fee will take effect
+	DynamicDepositorFeeHeight   = 834500 // the mainnet height from which dynamic depositor fee V1 is applied
+	DynamicDepositorFeeHeightV2 = 863400 // the mainnet height from which dynamic depositor fee V2 is applied
+
+	feeRateCountBackBlocks = 2  // the default number of blocks to look back for fee rate estimation
+	defaultTestnetFeeRate  = 10 // the default fee rate for testnet, 10 sat/vB
 )
 
 var (
@@ -238,4 +244,68 @@ func CalcDepositorFee(
 	feeRate = int64(float64(feeRate) * clientcommon.BTCOutboundGasPriceMultiplier)
 
 	return DepositorFee(feeRate)
+}
+
+// CalcDepositorFeeV2 calculates the depositor fee for a given tx result
+func CalcDepositorFeeV2(
+	rpcClient interfaces.BTCRPCClient,
+	rawResult *btcjson.TxRawResult,
+	netParams *chaincfg.Params,
+) (float64, error) {
+	// use default fee for regnet
+	if netParams.Name == chaincfg.RegressionNetParams.Name {
+		return DefaultDepositorFee, nil
+	}
+
+	// get fee rate of the transaction
+	_, feeRate, err := rpc.GetTransactionFeeAndRate(rpcClient, rawResult)
+	if err != nil {
+		return 0, errors.Wrapf(err, "error getting fee rate for tx %s", rawResult.Txid)
+	}
+
+	// apply gas price multiplier
+	// #nosec G115 always in range
+	feeRate = int64(float64(feeRate) * clientcommon.BTCOutboundGasPriceMultiplier)
+
+	return DepositorFee(feeRate), nil
+}
+
+// GetRecentFeeRate gets the highest fee rate from recent blocks
+// Note: this method should be used for testnet ONLY
+func GetRecentFeeRate(rpcClient interfaces.BTCRPCClient, netParams *chaincfg.Params) (uint64, error) {
+	blockNumber, err := rpcClient.GetBlockCount()
+	if err != nil {
+		return 0, err
+	}
+
+	// get the highest fee rate among recent 'countBack' blocks to avoid underestimation
+	highestRate := int64(0)
+	for i := int64(0); i < feeRateCountBackBlocks; i++ {
+		// get the block
+		hash, err := rpcClient.GetBlockHash(blockNumber - i)
+		if err != nil {
+			return 0, err
+		}
+		block, err := rpcClient.GetBlockVerboseTx(hash)
+		if err != nil {
+			return 0, err
+		}
+
+		// computes the average fee rate of the block and take the higher rate
+		avgFeeRate, err := CalcBlockAvgFeeRate(block, netParams)
+		if err != nil {
+			return 0, err
+		}
+		if avgFeeRate > highestRate {
+			highestRate = avgFeeRate
+		}
+	}
+
+	// use 10 sat/byte as default estimation if recent fee rate drops to 0
+	if highestRate == 0 {
+		highestRate = defaultTestnetFeeRate
+	}
+
+	// #nosec G115 always in range
+	return uint64(highestRate), nil
 }
