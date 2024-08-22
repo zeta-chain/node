@@ -23,7 +23,7 @@ const (
 	// However this needs to be researched as to why the increase in timeout was needed.
 	// https://github.com/zeta-chain/node/issues/2690
 
-	DefaultCctxTimeout = 6 * time.Minute
+	DefaultCctxTimeout = 8 * time.Minute
 )
 
 // WaitCctxMinedByInboundHash waits until cctx is mined; returns the cctxIndex (the last one)
