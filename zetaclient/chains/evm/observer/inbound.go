@@ -800,7 +800,6 @@ func (ob *Observer) ObserveTSSReceiveInBlockAndOutbound(ctx context.Context, blo
 				ob.SetTxNReceipt(nonce, receipt, txx)
 			}
 		}
-
 	}
 	return nil
 }

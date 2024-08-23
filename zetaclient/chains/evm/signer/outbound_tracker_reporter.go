@@ -69,7 +69,6 @@ func (signer *Signer) reportToOutboundTracker(
 				continue
 			}
 
-			return nil
 			// report outbound hash to tracker
 			zetaHash, err := zetacoreClient.AddOutboundTracker(ctx, chainID, nonce, outboundHash, nil, "", -1)
 			if err != nil {
