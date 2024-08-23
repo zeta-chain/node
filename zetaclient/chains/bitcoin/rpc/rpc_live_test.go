@@ -112,7 +112,7 @@ func Test_BitcoinLive(t *testing.T) {
 	// LiveTest_AvgFeeRateTestnetMempoolSpace(t)
 	// LiveTest_GetRecentFeeRate(t)
 	// LiveTest_GetSenderByVin(t)
-	// LiveTest_GetTransactionFeeRate(t)
+	// LiveTest_GetTransactionFeeAndRate(t)
 	// LiveTest_CalcDepositorFeeV2(t)
 }
 
@@ -452,7 +452,7 @@ BLOCKLOOP:
 }
 
 // LiveTestGetTransactionFeeAndRate gets the transaction fee and rate for each tx and compares with mempool.space fee rate
-func Test_GetTransactionFeeAndRate(t *testing.T) {
+func LiveTest_GetTransactionFeeAndRate(t *testing.T) {
 	// setup Bitcoin client
 	chainID := chains.BitcoinTestnet.ChainId
 	client, err := createRPCClient(chainID)
