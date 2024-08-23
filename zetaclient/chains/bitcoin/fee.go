@@ -21,7 +21,6 @@ import (
 )
 
 const (
-
 	// constants related to transaction size calculations
 	bytesPerKB           = 1000
 	bytesPerInput        = 41           // each input is 41 bytes
@@ -40,17 +39,17 @@ const (
 	// defaultDepositorFeeRate is the default fee rate for depositor fee, 20 sat/vB
 	defaultDepositorFeeRate = 20
 
+	// defaultTestnetFeeRate is the default fee rate for testnet, 10 sat/vB
+	defaultTestnetFeeRate = 10
+
+	// feeRateCountBackBlocks is the default number of blocks to look back for fee rate estimation
+	feeRateCountBackBlocks = 2
+
 	// DynamicDepositorFeeHeight is the mainnet height from which dynamic depositor fee V1 is applied
 	DynamicDepositorFeeHeight = 834500
 
 	// DynamicDepositorFeeHeightV2 is the mainnet height from which dynamic depositor fee V2 is applied
 	DynamicDepositorFeeHeightV2 = 863400
-
-	// feeRateCountBackBlocks is the default number of blocks to look back for fee rate estimation
-	feeRateCountBackBlocks = 2
-
-	// defaultTestnetFeeRate is the default fee rate for testnet, 10 sat/vB
-	defaultTestnetFeeRate = 10
 )
 
 var (
