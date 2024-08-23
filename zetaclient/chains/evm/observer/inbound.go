@@ -446,7 +446,7 @@ func (ob *Observer) ObserverTSSReceive(ctx context.Context, startBlock, toBlock 
 	// query incoming gas asset
 	for bn := startBlock; bn <= toBlock; bn++ {
 		// observe TSS received gas token in block 'bn'
-		err := ob.ObserveTSSReceiveInBlockAndOutTx(ctx, bn)
+		err := ob.ObserveTSSReceiveInBlockAndOutbound(ctx, bn)
 		if err != nil {
 			ob.Logger().Inbound.Error().
 				Err(err).
