@@ -481,19 +481,19 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 		// feed archived block and receipt
 		evmJSONRPC.WithBlock(block)
 		evmClient.WithReceipt(receipt)
-		err := ob.ObserveTSSReceiveInBlockAndOutTx(ctx, blockNumber)
+		err := ob.ObserveTSSReceiveInBlockAndOutbound(ctx, blockNumber)
 		require.NoError(t, err)
 	})
 	t.Run("should not observe on error getting block", func(t *testing.T) {
 		ob, _ := MockEVMObserver(t, chain, evmClient, evmJSONRPC, zetacoreClient, tss, lastBlock, chainParam)
-		err := ob.ObserveTSSReceiveInBlockAndOutTx(ctx, blockNumber)
+		err := ob.ObserveTSSReceiveInBlockAndOutbound(ctx, blockNumber)
 		// error getting block is expected because the mock JSONRPC contains no block
 		require.ErrorContains(t, err, "error getting block")
 	})
 	t.Run("should not observe on error getting receipt", func(t *testing.T) {
 		ob, _ := MockEVMObserver(t, chain, evmClient, evmJSONRPC, zetacoreClient, tss, lastBlock, chainParam)
 		evmJSONRPC.WithBlock(block)
-		err := ob.ObserveTSSReceiveInBlockAndOutTx(ctx, blockNumber)
+		err := ob.ObserveTSSReceiveInBlockAndOutbound(ctx, blockNumber)
 		// error getting block is expected because the mock evmClient contains no receipt
 		require.ErrorContains(t, err, "error getting receipt")
 	})
