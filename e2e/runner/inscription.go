@@ -46,8 +46,8 @@ func (r *InscriptionBuilder) GenerateCommitAddress(memo []byte) (string, error) 
 		return "", err
 	}
 
-	postUrl := r.sidecarURL + "/commit"
-	req, err := http.NewRequest("POST", postUrl, bytes.NewBuffer(jsonData))
+	postURL := r.sidecarURL + "/commit"
+	req, err := http.NewRequest("POST", postURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return "", errors.Wrap(err, "cannot create commit request")
 	}
@@ -88,8 +88,8 @@ func (r *InscriptionBuilder) GenerateRevealTxn(to string, txnHash string, idx in
 		return "", err
 	}
 
-	postUrl := r.sidecarURL + "/reveal"
-	req, err := http.NewRequest("POST", postUrl, bytes.NewBuffer(jsonData))
+	postURL := r.sidecarURL + "/reveal"
+	req, err := http.NewRequest("POST", postURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return "", errors.Wrap(err, "cannot create reveal request")
 	}
