@@ -22,50 +22,23 @@ import (
 
 const (
 
-	// bytesPerKB is the number of bytes in a kilobyte
-	bytesPerKB = 1000
+	// constants related to transaction size calculations
+	bytesPerKB           = 1000
+	bytesPerInput        = 41           // each input is 41 bytes
+	bytesPerOutputP2TR   = 43           // each P2TR output is 43 bytes
+	bytesPerOutputP2WSH  = 43           // each P2WSH output is 43 bytes
+	bytesPerOutputP2WPKH = 31           // each P2WPKH output is 31 bytes
+	bytesPerOutputP2SH   = 32           // each P2SH output is 32 bytes
+	bytesPerOutputP2PKH  = 34           // each P2PKH output is 34 bytes
+	bytesPerOutputAvg    = 37           // average size of all above types of outputs (36.6 bytes)
+	bytes1stWitness      = 110          // the 1st witness incurs about 110 bytes and it may vary
+	bytesPerWitness      = 108          // each additional witness incurs about 108 bytes and it may vary
+	OutboundBytesMin     = uint64(239)  // 239vB == EstimateSegWitTxSize(2, 2, toP2WPKH)
+	OutboundBytesMax     = uint64(1543) // 1543v == EstimateSegWitTxSize(21, 2, toP2TR)
+	OutboundBytesAvg     = uint64(245)  // 245vB is a suggested gas limit for zetacore
 
-	// bytesPerInput is the size of each input
-	bytesPerInput = 41
-
-	// bytesPerOutputP2TR is the size of each P2TR output
-	bytesPerOutputP2TR = 43
-
-	// bytesPerOutputP2WSH is the size of each P2WSH output
-	bytesPerOutputP2WSH = 43
-
-	// bytesPerOutputP2WPKH is the size of each P2WPKH output
-	bytesPerOutputP2WPKH = 31
-
-	// bytesPerOutputP2SH is the size of each P2SH output
-	bytesPerOutputP2SH = 32
-
-	// bytesPerOutputP2PKH is the size of each P2PKH output
-	bytesPerOutputP2PKH = 34
-
-	// bytesPerOutputAvg is the average size of above 5 types of outputs (36.6 bytes)
-	bytesPerOutputAvg = 37
-
-	// bytes1stWitness is the size incurred by the 1st witness and it may vary
-	bytes1stWitness = 110
-
-	// bytesPerWitness is the size incurred (approx.) by each additional witness and it may vary
-	bytesPerWitness = 108
-
-	// defaultDepositorFeeRate is the default fee rate for depositor, 20 sat/vB
+	// defaultDepositorFeeRate is the default fee rate for depositor fee, 20 sat/vB
 	defaultDepositorFeeRate = 20
-
-	// OutboundBytesMin is the minimum size of an outbound in vBytes
-	// 239vB == EstimateSegWitTxSize(2, 2, toP2WPKH)
-	OutboundBytesMin = uint64(239)
-
-	// OutboundBytesMax is the maximum size of an outbound in vBytes
-	// 1543v == EstimateSegWitTxSize(21, 2, toP2TR)
-	OutboundBytesMax = uint64(1543)
-
-	// OutboundBytesAvg is the average size of an outbound in vBytes
-	// 245vB is a suggested gas limit for zetacore
-	OutboundBytesAvg = uint64(245)
 
 	// DynamicDepositorFeeHeight is the mainnet height from which dynamic depositor fee V1 is applied
 	DynamicDepositorFeeHeight = 834500
