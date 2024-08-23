@@ -770,7 +770,8 @@ func (ob *Observer) BuildInboundVoteMsgForTokenSentToTSS(
 	)
 }
 
-// ObserveTSSReceiveInBlockAndOutbound queries the incoming gas asset to TSS address in a single block and posts votes
+// ObserveTSSReceiveInBlockAndOutbound queries the incoming gas asset to TSS address in a single block and posts votes.
+// It also filters TSS outbounds indexed by nonce to supplement outtx tracker.
 func (ob *Observer) ObserveTSSReceiveInBlockAndOutbound(ctx context.Context, blockNumber uint64) error {
 	block, err := ob.GetBlockByNumberCached(blockNumber)
 	if err != nil {
