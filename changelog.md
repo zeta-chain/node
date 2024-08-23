@@ -28,6 +28,7 @@
 
 * [2654](https://github.com/zeta-chain/node/pull/2654) - add validation for authorization list in when validating genesis state for authorization module
 * [2672](https://github.com/zeta-chain/node/pull/2672) - check observer set for duplicates when adding a new observer or updating an existing one
+* [2735](https://github.com/zeta-chain/node/pull/2735) - fix the outbound tracker blocking confirmation and outbound processing on EVM chains by locally index outbound txs in zetaclient
 
 ## v19.0.0
 
