@@ -15,27 +15,41 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
+	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 )
 
 const (
-	bytesPerKB              = 1000
-	bytesPerInput           = 41  // each input is 41 bytes
-	bytesPerOutputP2TR      = 43  // each P2TR output is 43 bytes
-	bytesPerOutputP2WSH     = 43  // each P2WSH output is 43 bytes
-	bytesPerOutputP2WPKH    = 31  // each P2WPKH output is 31 bytes
-	bytesPerOutputP2SH      = 32  // each P2SH output is 32 bytes
-	bytesPerOutputP2PKH     = 34  // each P2PKH output is 34 bytes
-	bytesPerOutputAvg       = 37  // average size of all above types of outputs (36.6 bytes)
-	bytes1stWitness         = 110 // the 1st witness incurs about 110 bytes and it may vary
-	bytesPerWitness         = 108 // each additional witness incurs about 108 bytes and it may vary
-	defaultDepositorFeeRate = 20  // 20 sat/byte is the default depositor fee rate
+	// constants related to transaction size calculations
+	bytesPerKB           = 1000
+	bytesPerInput        = 41           // each input is 41 bytes
+	bytesPerOutputP2TR   = 43           // each P2TR output is 43 bytes
+	bytesPerOutputP2WSH  = 43           // each P2WSH output is 43 bytes
+	bytesPerOutputP2WPKH = 31           // each P2WPKH output is 31 bytes
+	bytesPerOutputP2SH   = 32           // each P2SH output is 32 bytes
+	bytesPerOutputP2PKH  = 34           // each P2PKH output is 34 bytes
+	bytesPerOutputAvg    = 37           // average size of all above types of outputs (36.6 bytes)
+	bytes1stWitness      = 110          // the 1st witness incurs about 110 bytes and it may vary
+	bytesPerWitness      = 108          // each additional witness incurs about 108 bytes and it may vary
+	OutboundBytesMin     = uint64(239)  // 239vB == EstimateSegWitTxSize(2, 2, toP2WPKH)
+	OutboundBytesMax     = uint64(1543) // 1543v == EstimateSegWitTxSize(21, 2, toP2TR)
+	OutboundBytesAvg     = uint64(245)  // 245vB is a suggested gas limit for zetacore
 
-	OutboundBytesMin = uint64(239)  // 239vB == EstimateSegWitTxSize(2, 2, toP2WPKH)
-	OutboundBytesMax = uint64(1543) // 1543v == EstimateSegWitTxSize(21, 2, toP2TR)
-	OutboundBytesAvg = uint64(245)  // 245vB is a suggested gas limit for zetacore
+	// defaultDepositorFeeRate is the default fee rate for depositor fee, 20 sat/vB
+	defaultDepositorFeeRate = 20
 
-	DynamicDepositorFeeHeight = 834500 // DynamicDepositorFeeHeight contains the starting height (Bitcoin mainnet) from which dynamic depositor fee will take effect
+	// defaultTestnetFeeRate is the default fee rate for testnet, 10 sat/vB
+	defaultTestnetFeeRate = 10
+
+	// feeRateCountBackBlocks is the default number of blocks to look back for fee rate estimation
+	feeRateCountBackBlocks = 2
+
+	// DynamicDepositorFeeHeight is the mainnet height from which dynamic depositor fee V1 is applied
+	DynamicDepositorFeeHeight = 834500
+
+	// DynamicDepositorFeeHeightV2 is the mainnet height from which dynamic depositor fee V2 is applied
+	DynamicDepositorFeeHeightV2 = 863400
 )
 
 var (
@@ -238,4 +252,68 @@ func CalcDepositorFee(
 	feeRate = int64(float64(feeRate) * clientcommon.BTCOutboundGasPriceMultiplier)
 
 	return DepositorFee(feeRate)
+}
+
+// CalcDepositorFeeV2 calculates the depositor fee for a given tx result
+func CalcDepositorFeeV2(
+	rpcClient interfaces.BTCRPCClient,
+	rawResult *btcjson.TxRawResult,
+	netParams *chaincfg.Params,
+) (float64, error) {
+	// use default fee for regnet
+	if netParams.Name == chaincfg.RegressionNetParams.Name {
+		return DefaultDepositorFee, nil
+	}
+
+	// get fee rate of the transaction
+	_, feeRate, err := rpc.GetTransactionFeeAndRate(rpcClient, rawResult)
+	if err != nil {
+		return 0, errors.Wrapf(err, "error getting fee rate for tx %s", rawResult.Txid)
+	}
+
+	// apply gas price multiplier
+	// #nosec G115 always in range
+	feeRate = int64(float64(feeRate) * clientcommon.BTCOutboundGasPriceMultiplier)
+
+	return DepositorFee(feeRate), nil
+}
+
+// GetRecentFeeRate gets the highest fee rate from recent blocks
+// Note: this method should be used for testnet ONLY
+func GetRecentFeeRate(rpcClient interfaces.BTCRPCClient, netParams *chaincfg.Params) (uint64, error) {
+	blockNumber, err := rpcClient.GetBlockCount()
+	if err != nil {
+		return 0, err
+	}
+
+	// get the highest fee rate among recent 'countBack' blocks to avoid underestimation
+	highestRate := int64(0)
+	for i := int64(0); i < feeRateCountBackBlocks; i++ {
+		// get the block
+		hash, err := rpcClient.GetBlockHash(blockNumber - i)
+		if err != nil {
+			return 0, err
+		}
+		block, err := rpcClient.GetBlockVerboseTx(hash)
+		if err != nil {
+			return 0, err
+		}
+
+		// computes the average fee rate of the block and take the higher rate
+		avgFeeRate, err := CalcBlockAvgFeeRate(block, netParams)
+		if err != nil {
+			return 0, err
+		}
+		if avgFeeRate > highestRate {
+			highestRate = avgFeeRate
+		}
+	}
+
+	// use 10 sat/byte as default estimation if recent fee rate drops to 0
+	if highestRate == 0 {
+		highestRate = defaultTestnetFeeRate
+	}
+
+	// #nosec G115 always in range
+	return uint64(highestRate), nil
 }
