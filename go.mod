@@ -34,7 +34,7 @@ require (
 	cosmossdk.io/math v1.3.0
 	github.com/99designs/keyring v1.2.1
 	github.com/btcsuite/btcd v0.24.2
-	github.com/btcsuite/btcd/btcec/v2 v2.3.2
+	github.com/btcsuite/btcd/btcec/v2 v2.3.3
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0
 	github.com/emicklei/proto v1.11.1
 	github.com/evmos/ethermint v0.22.0
@@ -57,7 +57,7 @@ require (
 require (
 	cosmossdk.io/simapp v0.0.0-20230608160436-666c345ad23d
 	cosmossdk.io/tools/rosetta v0.2.1
-	github.com/bnb-chain/tss-lib v1.3.5
+	github.com/bnb-chain/tss-lib/v2 v2.0.2
 	github.com/btcsuite/btcd/btcutil v1.1.5
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cometbft/cometbft v0.37.4
@@ -91,7 +91,7 @@ require (
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
 	github.com/decred/dcrd/crypto/blake256 v1.0.1 // indirect
-	github.com/decred/dcrd/dcrec/edwards/v2 v2.0.0 // indirect
+	github.com/decred/dcrd/dcrec/edwards/v2 v2.0.3 // indirect
 	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -116,7 +116,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mostynb/zstdpool-freelist v0.0.0-20201229113212-927304c0c3b1 // indirect
 	github.com/onsi/gomega v1.27.7 // indirect
-	github.com/otiai10/mint v1.3.2 // indirect
 	github.com/prometheus/tsdb v0.7.1 // indirect
 	github.com/rjeczalik/notify v0.9.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
@@ -293,7 +292,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
-	github.com/otiai10/primes v0.0.0-20180210170552-f6d2a1ba97c4 // indirect
+	github.com/otiai10/primes v0.0.0-20210501021515-f1b2be525a11 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
@@ -366,6 +365,6 @@ replace github.com/evmos/ethermint => github.com/zeta-chain/ethermint v0.0.0-202
 
 replace github.com/libp2p/go-libp2p => github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4
 
-replace gitlab.com/thorchain/tss/go-tss => github.com/zeta-chain/go-tss v0.0.0-20240819223347-fce649aca224
+replace gitlab.com/thorchain/tss/go-tss => github.com/zeta-chain/go-tss v0.0.0-20240826183031-1d43c690b416
 
-replace github.com/bnb-chain/tss-lib => github.com/zeta-chain/tss-lib v0.0.0-20240819214903-774ccaf59fca
+replace github.com/bnb-chain/tss-lib/v2 => github.com/zeta-chain/tss-lib/v2 v2.0.0-20240821171246-2e65a5558b5a

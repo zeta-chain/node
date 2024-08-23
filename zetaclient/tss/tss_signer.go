@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/tss-lib/ecdsa/keygen"
+	"github.com/bnb-chain/tss-lib/v2/ecdsa/keygen"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	tmcrypto "github.com/cometbft/cometbft/crypto"

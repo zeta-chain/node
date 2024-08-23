@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/bnb-chain/tss-lib/ecdsa/keygen"
+	"github.com/bnb-chain/tss-lib/v2/ecdsa/keygen"
 	"github.com/spf13/cobra"
 )
 

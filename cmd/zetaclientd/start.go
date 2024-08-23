@@ -179,7 +179,10 @@ func start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		log.Error().Err(err).Msg("peer address error")
 	}
-	initPreParams(cfg.PreParamsPath)
+	err = initPreParams(cfg.PreParamsPath)
+	if err != nil {
+		return err
+	}
 	if cfg.P2PDiagnostic {
 		err := RunDiagnostics(startLogger, peers, hotkeyPk, cfg)
 		if err != nil {
@@ -391,26 +394,30 @@ func initPeers(peer string) ([]maddr.Multiaddr, error) {
 	return peers, nil
 }
 
-func initPreParams(path string) {
-	if path != "" {
-		path = filepath.Clean(path)
-		log.Info().Msgf("pre-params file path %s", path)
-		preParamsFile, err := os.Open(path)
-		if err != nil {
-			log.Error().Err(err).Msg("open pre-params file failed; skip")
-		} else {
-			bz, err := io.ReadAll(preParamsFile)
-			if err != nil {
-				log.Error().Err(err).Msg("read pre-params file failed; skip")
-			} else {
-				err = json.Unmarshal(bz, &preParams)
-				if err != nil {
-					log.Error().Err(err).Msg("unmarshal pre-params file failed; skip and generate new one")
-					preParams = nil // skip reading pre-params; generate new one instead
-				}
-			}
-		}
+func initPreParams(path string) error {
+	if path == "" {
+		return nil
 	}
+	path = filepath.Clean(path)
+	log.Info().Msgf("pre-params file path %s", path)
+	preParamsFile, err := os.Open(path)
+	if err != nil {
+		return fmt.Errorf("open pre-params file: %w", err)
+	}
+
+	bz, err := io.ReadAll(preParamsFile)
+	if err != nil {
+		return fmt.Errorf("read pre-params file: %w", err)
+	}
+
+	err = json.Unmarshal(bz, &preParams)
+	if err != nil {
+		return fmt.Errorf("unmarshal pre-params file: %w", err)
+	}
+	if preParams.PaillierSK.P == nil {
+		return fmt.Errorf("pre-params are missing PaillierSK.{P,Q} parameters and should be regenerated")
+	}
+	return nil
 }
 
 // isObserverNode checks whether THIS node is an observer node.

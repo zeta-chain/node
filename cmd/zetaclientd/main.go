@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	ecdsakeygen "github.com/bnb-chain/tss-lib/ecdsa/keygen"
+	ecdsakeygen "github.com/bnb-chain/tss-lib/v2/ecdsa/keygen"
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/types"
