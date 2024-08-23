@@ -452,7 +452,7 @@ func (ob *Observer) ObserverTSSReceive(ctx context.Context, startBlock, toBlock 
 				Err(err).
 				Int64("tss.chain_id", chainID).
 				Uint64("tss.block_number", bn).
-				Msg("ObserverTSSReceive: unable to ObserveTSSReceiveInBlockAndOutTx")
+				Msg("ObserverTSSReceive: unable to ObserveTSSReceiveInBlockAndOutbound")
 
 			// we have to re-scan from this block next time
 			return bn - 1, nil
@@ -770,7 +770,7 @@ func (ob *Observer) BuildInboundVoteMsgForTokenSentToTSS(
 	)
 }
 
-// ObserveTSSReceiveInBlockAndOutTx queries the incoming gas asset to TSS address in a single block and posts votes
+// ObserveTSSReceiveInBlockAndOutbound queries the incoming gas asset to TSS address in a single block and posts votes
 func (ob *Observer) ObserveTSSReceiveInBlockAndOutbound(ctx context.Context, blockNumber uint64) error {
 	block, err := ob.GetBlockByNumberCached(blockNumber)
 	if err != nil {
