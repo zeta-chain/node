@@ -797,8 +797,10 @@ func (ob *Observer) ObserveTSSReceiveInBlockAndOutbound(ctx context.Context, blo
 		}
 		if ethcommon.HexToAddress(tx.From) == ob.TSS().EVMAddress() {
 			nonce := uint64(tx.Nonce)
-			if receipt, txx, ok := ob.checkConfirmedTx(ctx, tx.Hash, nonce); ok {
-				ob.SetTxNReceipt(nonce, receipt, txx)
+			if !ob.IsTxConfirmed(nonce) {
+				if receipt, txx, ok := ob.checkConfirmedTx(ctx, tx.Hash, nonce); ok {
+					ob.SetTxNReceipt(nonce, receipt, txx)
+				}
 			}
 		}
 	}
