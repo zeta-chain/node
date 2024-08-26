@@ -8,5 +8,5 @@ function bindings() {
 }
 
 # List of bindings to generate
-bindings ./precompiles/prototype
+bindings $(pwd)/precompiles/prototype
 
