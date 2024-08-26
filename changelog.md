@@ -1,10 +1,10 @@
 # CHANGELOG
 
-## v19.1.2
+## v19.2.0
 
 ### Features
 
-* [2765](https://github.com/zeta-chain/node/pull/2765) - enable parsing Bitcoin deposit memo with inscription; deposit fee improvement
+* [2768](https://github.com/zeta-chain/node/pull/2768) - enable parsing Bitcoin deposit memo with inscription; deposit fee improvement
 
 ## v19.1.0
 
