@@ -169,7 +169,7 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Debug().Msgf("hotkeyPk %s", hotkeyPk.String())
 	if len(hotkeyPk.Bytes()) != 32 {
 		errMsg := fmt.Sprintf("key bytes len %d != 32", len(hotkeyPk.Bytes()))
-		log.Error().Msgf(errMsg)
+		log.Error().Msg(errMsg)
 		return errors.New(errMsg)
 	}
 	priKey := secp256k1.PrivKey(hotkeyPk.Bytes()[:32])

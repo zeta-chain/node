@@ -42,7 +42,7 @@ func (k Keeper) SetGasPrice(ctx sdk.Context, chainid *big.Int, gasPrice *big.Int
 		gasPrice,
 	)
 	if err != nil {
-		return 0, cosmoserrors.Wrapf(types.ErrContractCall, err.Error())
+		return 0, cosmoserrors.Wrap(types.ErrContractCall, err.Error())
 	}
 	if res.Failed() {
 		return res.GasUsed, cosmoserrors.Wrapf(types.ErrContractCall, "setGasPrice tx failed")
@@ -78,7 +78,7 @@ func (k Keeper) SetGasCoin(ctx sdk.Context, chainid *big.Int, address ethcommon.
 		address,
 	)
 	if err != nil {
-		return cosmoserrors.Wrapf(types.ErrContractCall, err.Error())
+		return cosmoserrors.Wrap(types.ErrContractCall, err.Error())
 	}
 	if res.Failed() {
 		return cosmoserrors.Wrapf(types.ErrContractCall, "setGasCoinZRC20 tx failed")
@@ -114,7 +114,7 @@ func (k Keeper) SetGasZetaPool(ctx sdk.Context, chainid *big.Int, pool ethcommon
 		pool,
 	)
 	if err != nil {
-		return cosmoserrors.Wrapf(types.ErrContractCall, err.Error())
+		return cosmoserrors.Wrap(types.ErrContractCall, err.Error())
 	}
 	if res.Failed() {
 		return cosmoserrors.Wrapf(types.ErrContractCall, "setGasZetaPool tx failed")
