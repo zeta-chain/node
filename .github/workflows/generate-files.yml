@@ -23,6 +23,7 @@ jobs:
           sudo add-apt-repository ppa:ethereum/ethereum
           sudo apt-get update
           sudo apt-get install solc
+          go install github.com/ethereum/go-ethereum/cmd/abigen@latest
 
       - name: Print solc version
         run: |
