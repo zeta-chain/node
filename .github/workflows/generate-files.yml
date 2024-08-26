@@ -18,6 +18,24 @@ jobs:
         run: |
           echo "$HOME/go/bin" >> $GITHUB_PATH
 
+      - name: Print solc version
+        run: |
+          solc --version
+
+      - name: Run solc and capture output
+        run: |
+          solc IPrototype.sol --combined-json abi 2>&1 | tee solc_output.log
+          cat solc_output.log
+
+      - name: Extract ABI from JSON
+        run: |
+          cat IPrototype.json | jq .abi > IPrototype.abi
+
+      - name: Run abigen and capture errors
+        run: |
+          abigen --abi ./precompiles/prototype/IPrototype.abi --pkg prototype --type IPrototype --out ./precompiles/prototype/IPrototype.go 2>&1 | tee abigen_output.log
+          cat abigen_output.log
+
       - name: Generate Go code, docs and specs
         env:
           TEST_ENV: ${{ github.workspace }}
