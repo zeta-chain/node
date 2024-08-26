@@ -6,7 +6,18 @@
 
 * [2765](https://github.com/zeta-chain/node/pull/2765) - enable parsing Bitcoin deposit memo with inscription; deposit fee improvement
 
+## v19.1.1
+
+Fix release CI build
+
 ## v19.1.0
+
+### Breaking Changes
+
+* `zetaclientd` now prompts for a "Solana Relayer Key" password. If you have not configured a solana relayer key, you should enter an empty password.
+
+### Fixes
+* [2628](https://github.com/zeta-chain/node/pull/2628) - avoid submitting invalid hashes to outbound tracker
 
 ### Features
 

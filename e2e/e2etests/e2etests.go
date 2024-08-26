@@ -71,6 +71,7 @@ const (
 	TestBitcoinWithdrawP2SHName           = "bitcoin_withdraw_p2sh"
 	TestBitcoinWithdrawInvalidAddressName = "bitcoin_withdraw_invalid"
 	TestBitcoinWithdrawRestrictedName     = "bitcoin_withdraw_restricted"
+	TestExtractBitcoinInscriptionMemoName = "bitcoin_memo_from_inscription"
 
 	/*
 	 Application tests
@@ -355,6 +356,13 @@ var AllE2ETests = []runner.E2ETest{
 	/*
 	 Bitcoin tests
 	*/
+	runner.NewE2ETest(
+		TestExtractBitcoinInscriptionMemoName,
+		"extract memo from BTC inscription", []runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.1"},
+		},
+		TestExtractBitcoinInscriptionMemo,
+	),
 	runner.NewE2ETest(
 		TestBitcoinDepositName,
 		"deposit Bitcoin into ZEVM",
