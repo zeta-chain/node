@@ -23,12 +23,14 @@
 
 ### Tests
 
+* [2661](https://github.com/zeta-chain/node/pull/2661) - update connector and erc20Custody addresses in tss migration e2e tests
 * [2726](https://github.com/zeta-chain/node/pull/2726) - add e2e tests for deposit and call, deposit and revert
 * [2703](https://github.com/zeta-chain/node/pull/2703) - add e2e tests for stateful precompiled contracts
 
 ### Fixes
 
 * [2654](https://github.com/zeta-chain/node/pull/2654) - add validation for authorization list in when validating genesis state for authorization module
+* [2674](https://github.com/zeta-chain/node/pull/2674) - allow operators to vote on ballots assosiated with discarded keygen without affecting the status of the current keygen.
 * [2672](https://github.com/zeta-chain/node/pull/2672) - check observer set for duplicates when adding a new observer or updating an existing one
 
 ## v19.0.0

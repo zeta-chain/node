@@ -270,7 +270,8 @@ start-stress-test: zetanode
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress -f docker-compose.yml up -d
 
 start-tss-migration-test: zetanode
-	@echo "--> Starting migration test"
+	@echo "--> Starting tss migration test"
+	export LOCALNET_MODE=tss-migrate && \
 	export E2E_ARGS="--test-tss-migration" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 

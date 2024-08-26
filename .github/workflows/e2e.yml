@@ -168,6 +168,7 @@ jobs:
           - make-target: "start-tss-migration-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.TSS_MIGRATION_TESTS == 'true' }}
+            timeout-minutes: 40
           - make-target: "start-solana-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.SOLANA_TESTS == 'true' }}

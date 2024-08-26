@@ -11,8 +11,8 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 
-// migrationTestRoutine runs migration related e2e tests
-func migrationTestRoutine(
+// migrationRoutine runs migration related e2e tests
+func migrationRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,

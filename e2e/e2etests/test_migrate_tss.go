@@ -159,7 +159,6 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	require.LessOrEqual(r, btcTSSBalanceNew*1e8, btcTSSBalanceOld*1e8)
 
 	// ETH
-
 	r.TSSAddress = common.HexToAddress(newTss.Eth)
 	ethTSSBalanceNew, err := r.EVMClient.BalanceAt(context.Background(), r.TSSAddress, nil)
 	require.NoError(r, err)
