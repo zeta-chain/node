@@ -35,7 +35,11 @@ func Test_IPrototypeContract(t *testing.T) {
 
 		require.NotNil(t, abi.Methods[Bech32ToHexAddrMethodName], "bech32ToHexAddr method should be present in the ABI")
 		require.NotNil(t, abi.Methods[Bech32ifyMethodName], "bech32ify method should be present in the ABI")
-		require.NotNil(t, abi.Methods[GetGasStabilityPoolBalanceName], "getGasStabilityPoolBalance method should be present in the ABI")
+		require.NotNil(
+			t,
+			abi.Methods[GetGasStabilityPoolBalanceName],
+			"getGasStabilityPoolBalance method should be present in the ABI",
+		)
 	})
 
 	t.Run("should check gas requirements for methods", func(t *testing.T) {
@@ -47,27 +51,55 @@ func Test_IPrototypeContract(t *testing.T) {
 			gasBech32ToHex := contract.RequiredGas(abi.Methods[Bech32ToHexAddrMethodName].ID)
 			copy(method[:], abi.Methods[Bech32ToHexAddrMethodName].ID[:4])
 			baseCost := uint64(len(method)) * gasConfig.WriteCostPerByte
-			require.Equal(t, GasRequiredByMethod[method]+baseCost, gasBech32ToHex, "bech32ToHexAddr method should require %d gas, got %d", GasRequiredByMethod[method]+baseCost, gasBech32ToHex)
+			require.Equal(
+				t,
+				GasRequiredByMethod[method]+baseCost,
+				gasBech32ToHex,
+				"bech32ToHexAddr method should require %d gas, got %d",
+				GasRequiredByMethod[method]+baseCost,
+				gasBech32ToHex,
+			)
 		})
 
 		t.Run("bech32ify", func(t *testing.T) {
 			gasBech32ify := contract.RequiredGas(abi.Methods[Bech32ifyMethodName].ID)
 			copy(method[:], abi.Methods[Bech32ifyMethodName].ID[:4])
 			baseCost := uint64(len(method)) * gasConfig.WriteCostPerByte
-			require.Equal(t, GasRequiredByMethod[method]+baseCost, gasBech32ify, "bech32ify method should require %d gas, got %d", GasRequiredByMethod[method]+baseCost, gasBech32ify)
+			require.Equal(
+				t,
+				GasRequiredByMethod[method]+baseCost,
+				gasBech32ify,
+				"bech32ify method should require %d gas, got %d",
+				GasRequiredByMethod[method]+baseCost,
+				gasBech32ify,
+			)
 		})
 
 		t.Run("getGasStabilityPoolBalance", func(t *testing.T) {
 			gasGetGasStabilityPoolBalance := contract.RequiredGas(abi.Methods[GetGasStabilityPoolBalanceName].ID)
 			copy(method[:], abi.Methods[GetGasStabilityPoolBalanceName].ID[:4])
 			baseCost := uint64(len(method)) * gasConfig.WriteCostPerByte
-			require.Equal(t, GasRequiredByMethod[method]+baseCost, gasGetGasStabilityPoolBalance, "getGasStabilityPoolBalance method should require %d gas, got %d", GasRequiredByMethod[method]+baseCost, gasGetGasStabilityPoolBalance)
+			require.Equal(
+				t,
+				GasRequiredByMethod[method]+baseCost,
+				gasGetGasStabilityPoolBalance,
+				"getGasStabilityPoolBalance method should require %d gas, got %d",
+				GasRequiredByMethod[method]+baseCost,
+				gasGetGasStabilityPoolBalance,
+			)
 		})
 
 		t.Run("invalid method", func(t *testing.T) {
 			invalidMethodBytes := []byte("invalidMethod")
 			gasInvalidMethod := contract.RequiredGas(invalidMethodBytes)
-			require.Equal(t, uint64(0), gasInvalidMethod, "invalid method should require %d gas, got %d", uint64(0), gasInvalidMethod)
+			require.Equal(
+				t,
+				uint64(0),
+				gasInvalidMethod,
+				"invalid method should require %d gas, got %d",
+				uint64(0),
+				gasInvalidMethod,
+			)
 		})
 	})
 }
@@ -93,7 +125,13 @@ func Test_Bech32ToHexAddress(t *testing.T) {
 		require.NoError(t, err, "Bech32ToHexAddr should not return an error")
 
 		addr := common.BytesToAddress(rawBytes[12:])
-		require.Equal(t, common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE"), addr, "Bech32ToHexAddr should return the correct address, got: %v", addr)
+		require.Equal(
+			t,
+			common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE"),
+			addr,
+			"Bech32ToHexAddr should return the correct address, got: %v",
+			addr,
+		)
 	})
 
 	t.Run("should fail if invalid argument type", func(t *testing.T) {
@@ -126,7 +164,13 @@ func Test_Bech32ToHexAddress(t *testing.T) {
 			args := []interface{}{"zeta1h8duy2dltz9xz0qqhm5wvcnj02upy887fyn43u", "second argument"}
 			_, err := contract.Bech32ToHexAddr(&methodID, args)
 			require.Error(t, err, "expected invalid number of arguments; expected 1; got: 2")
-			require.IsType(t, &types.ErrInvalidNumberOfArgs{}, err, "expected error type: ErrInvalidNumberOfArgs, got: %T", err)
+			require.IsType(
+				t,
+				&types.ErrInvalidNumberOfArgs{},
+				err,
+				"expected error type: ErrInvalidNumberOfArgs, got: %T",
+				err,
+			)
 		})
 	})
 
@@ -158,7 +202,13 @@ func Test_Bech32ify(t *testing.T) {
 		require.NoError(t, err, "Bech32ify prefix zeta should not return an error")
 
 		zetaAddr := string(rawBytes[64:107])
-		require.Equal(t, "zeta1h8duy2dltz9xz0qqhm5wvcnj02upy887fyn43u", zetaAddr, "Bech32ify prefix zeta should return the correct address, got: %v", zetaAddr)
+		require.Equal(
+			t,
+			"zeta1h8duy2dltz9xz0qqhm5wvcnj02upy887fyn43u",
+			zetaAddr,
+			"Bech32ify prefix zeta should return the correct address, got: %v",
+			zetaAddr,
+		)
 	})
 
 	t.Run("should succeed with cosmos HRP", func(t *testing.T) {
@@ -168,15 +218,31 @@ func Test_Bech32ify(t *testing.T) {
 		require.NoError(t, err, "Bech32ify prefix cosmos should not return an error")
 
 		zetaAddr := string(rawBytes[64:107])
-		require.Equal(t, "cosmos1h8duy2dltz9xz0qqhm5wvcnj02upy887lqaq", zetaAddr, "Bech32ify prefix cosmos should return the correct address, got: %v", zetaAddr)
+		require.Equal(
+			t,
+			"cosmos1h8duy2dltz9xz0qqhm5wvcnj02upy887lqaq",
+			zetaAddr,
+			"Bech32ify prefix cosmos should return the correct address, got: %v",
+			zetaAddr,
+		)
 	})
 
 	t.Run("should fail with invalid arguments", func(t *testing.T) {
 		t.Run("too many arguments", func(t *testing.T) {
-			args := []interface{}{"zeta", common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE"), "third argument"}
+			args := []interface{}{
+				"zeta",
+				common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE"),
+				"third argument",
+			}
 			_, err := contract.Bech32ify(&methodID, args)
 			require.Error(t, err, "expected invalid number of arguments; expected 2; got: 3")
-			require.IsType(t, &types.ErrInvalidNumberOfArgs{}, err, "expected error type: ErrInvalidNumberOfArgs, got: %T", err)
+			require.IsType(
+				t,
+				&types.ErrInvalidNumberOfArgs{},
+				err,
+				"expected error type: ErrInvalidNumberOfArgs, got: %T",
+				err,
+			)
 		})
 
 		t.Run("invalid HRP", func(t *testing.T) {
@@ -194,13 +260,21 @@ func Test_Bech32ify(t *testing.T) {
 		t.Run("empty HRP", func(t *testing.T) {
 			args := []interface{}{"", common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE")}
 			_, err := contract.Bech32ify(&methodID, args)
-			require.Error(t, err, "expected error invalid bech32 human readable prefix (HRP). Please provide either an account, validator, or consensus address prefix (eg: cosmos, cosmosvaloper, cosmosvalcons)")
+			require.Error(
+				t,
+				err,
+				"expected error invalid bech32 human readable prefix (HRP). Please provide either an account, validator, or consensus address prefix (eg: cosmos, cosmosvaloper, cosmosvalcons)",
+			)
 		})
 
 		t.Run("alphanumeric HRP", func(t *testing.T) {
 			args := []interface{}{"%&", common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE")}
 			_, err := contract.Bech32ify(&methodID, args)
-			require.Error(t, err, "expected error invalid bech32 human readable prefix (HRP). Please provide either an account, validator, or consensus address prefix (eg: cosmos, cosmosvaloper, cosmosvalcons)")
+			require.Error(
+				t,
+				err,
+				"expected error invalid bech32 human readable prefix (HRP). Please provide either an account, validator, or consensus address prefix (eg: cosmos, cosmosvaloper, cosmosvalcons)",
+			)
 		})
 	})
 }
@@ -225,7 +299,11 @@ func Test_GetGasStabilityPoolBalance(t *testing.T) {
 	args := []interface{}{int64(1337)}
 
 	_, err := contract.GetGasStabilityPoolBalance(ctx, &methodID, args)
-	require.Error(t, err, "error calling fungible keeper: failed to get system contract variable: state variable not found")
+	require.Error(
+		t,
+		err,
+		"error calling fungible keeper: failed to get system contract variable: state variable not found",
+	)
 
 	t.Run("should fail with invalid arguments", func(t *testing.T) {
 
@@ -233,7 +311,13 @@ func Test_GetGasStabilityPoolBalance(t *testing.T) {
 			args := []interface{}{int64(1337), "second argument"}
 			_, err := contract.GetGasStabilityPoolBalance(ctx, &methodID, args)
 			require.Error(t, err, "expected invalid number of arguments; expected 2; got: 3")
-			require.IsType(t, &types.ErrInvalidNumberOfArgs{}, err, "expected error type: ErrInvalidNumberOfArgs, got: %T", err)
+			require.IsType(
+				t,
+				&types.ErrInvalidNumberOfArgs{},
+				err,
+				"expected error type: ErrInvalidNumberOfArgs, got: %T",
+				err,
+			)
 		})
 
 		t.Run("invalid chainID", func(t *testing.T) {
