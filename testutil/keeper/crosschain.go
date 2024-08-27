@@ -220,7 +220,7 @@ func CrosschainKeeperWithMocks(
 	k.SetIBCCrosschainKeeper(ibcCrosschainKeeperTmp)
 
 	// seal the IBC router
-	sdkKeepers.IBCKeeper.SetRouter(sdkKeepers.IBCRouter)
+	// sdkKeepers.IBCKeeper.SetRouter(sdkKeepers.IBCRouter)
 
 	// load the latest version of the state store
 	require.NoError(t, stateStore.LoadLatestVersion())
