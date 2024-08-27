@@ -5,20 +5,30 @@ import (
 	"testing"
 
 	tmdb "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/evmos/ethermint/x/evm/statedb"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/ethermint/x/evm/statedb"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	fungiblemocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/fungible"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritykeeper "github.com/zeta-chain/zetacore/x/authority/keeper"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
+	lightclientkeeper "github.com/zeta-chain/zetacore/x/lightclient/keeper"
+	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
+	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 type FungibleMockOptions struct {
@@ -42,7 +52,6 @@ var (
 
 func initFungibleKeeper(
 	cdc codec.Codec,
-	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 	authKeeper types.AccountKeeper,
 	bankKeepr types.BankKeeper,
@@ -52,8 +61,8 @@ func initFungibleKeeper(
 ) *keeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
-	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
-	ss.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, db)
+	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, nil)
+	ss.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, nil)
 
 	return keeper.NewKeeper(
 		cdc,
@@ -72,42 +81,44 @@ func FungibleKeeperWithMocks(
 	t testing.TB,
 	mockOptions FungibleMockOptions,
 ) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
-	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
+	keys, memKeys, tkeys, allKeys := StoreKeys()
 
 	// Initialize local store
 	db := tmdb.NewMemDB()
-	stateStore := store.NewCommitMultiStore(db)
+	stateStore := rootmulti.NewStore(db, log.NewNopLogger())
 	cdc := NewCodec()
 
 	// Create regular keepers
-	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)
+	sdkKeepers := NewSDKKeepersWithKeys(cdc, keys, memKeys, tkeys, allKeys)
 
 	// Create authority keeper
-	authorityKeeperTmp := initAuthorityKeeper(
+	authorityKeeperTmp := authoritykeeper.NewKeeper(
 		cdc,
-		db,
-		stateStore,
+		keys[authoritytypes.StoreKey],
+		memKeys[authoritytypes.MemStoreKey],
+		AuthorityGovAddress,
 	)
 
 	// Create lightclient keeper
-	lightclientKeeperTmp := initLightclientKeeper(
+	lightclientKeeperTmp := lightclientkeeper.NewKeeper(
 		cdc,
-		db,
-		stateStore,
+		keys[lightclienttypes.StoreKey],
+		memKeys[lightclienttypes.MemStoreKey],
 		authorityKeeperTmp,
 	)
 
 	// Create observer keeper
-	observerKeeperTmp := initObserverKeeper(
+	observerKeeperTmp := observerkeeper.NewKeeper(
 		cdc,
-		db,
-		stateStore,
+		keys[observertypes.StoreKey],
+		memKeys[observertypes.MemStoreKey],
 		sdkKeepers.StakingKeeper,
 		sdkKeepers.SlashingKeeper,
 		authorityKeeperTmp,
 		lightclientKeeperTmp,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
+
 	zetaKeepers := ZetaKeepers{
 		ObserverKeeper:    observerKeeperTmp,
 		AuthorityKeeper:   &authorityKeeperTmp,
@@ -117,13 +128,20 @@ func FungibleKeeperWithMocks(
 	var authorityKeeper types.AuthorityKeeper = authorityKeeperTmp
 
 	// Create the fungible keeper
-	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
-	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
+	for _, key := range keys {
+		stateStore.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
+	}
+	for _, key := range tkeys {
+		stateStore.MountStoreWithDB(key, storetypes.StoreTypeTransient, nil)
+	}
+	for _, key := range memKeys {
+		stateStore.MountStoreWithDB(key, storetypes.StoreTypeMemory, nil)
+	}
+
 	require.NoError(t, stateStore.LoadLatestVersion())
 
-	ctx := NewContext(stateStore)
-
 	// Initialize modules genesis
+	ctx := NewContext(stateStore)
 	sdkKeepers.InitGenesis(ctx)
 	zetaKeepers.InitGenesis(ctx)
 
@@ -153,8 +171,8 @@ func FungibleKeeperWithMocks(
 
 	k := keeper.NewKeeper(
 		cdc,
-		storeKey,
-		memStoreKey,
+		keys[types.StoreKey],
+		memKeys[types.MemStoreKey],
 		authKeeper,
 		evmKeeper,
 		bankKeeper,

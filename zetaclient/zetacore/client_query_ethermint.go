@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/errors"
-	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
+	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 )
 
 // GetBaseGasPrice returns the base gas price

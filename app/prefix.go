@@ -2,7 +2,7 @@ package app
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ethcfg "github.com/evmos/ethermint/cmd/config"
+	ethcfg "github.com/zeta-chain/ethermint/cmd/config"
 
 	cmdcfg "github.com/zeta-chain/zetacore/cmd/zetacored/config"
 )

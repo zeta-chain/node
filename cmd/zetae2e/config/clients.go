@@ -11,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go/rpc"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/zeta-chain/zetacore/e2e/config"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -156,7 +157,7 @@ func getZetaClients(rpc string) (
 	zetaChainClients,
 	error,
 ) {
-	grpcConn, err := grpc.Dial(rpc, grpc.WithInsecure())
+	grpcConn, err := grpc.Dial(rpc, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return zetaChainClients{}, err
 	}
