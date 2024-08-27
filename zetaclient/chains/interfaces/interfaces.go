@@ -198,7 +198,7 @@ type SolanaRPCClient interface {
 		account solana.PublicKey,
 		commitment solrpc.CommitmentType,
 	) (*solrpc.GetBalanceResult, error)
-	GetRecentBlockhash(ctx context.Context, commitment solrpc.CommitmentType) (*solrpc.GetRecentBlockhashResult, error)
+	GetLatestBlockhash(ctx context.Context, commitment solrpc.CommitmentType) (*solrpc.GetLatestBlockhashResult, error)
 	GetRecentPrioritizationFees(
 		ctx context.Context,
 		accounts solana.PublicKeySlice,

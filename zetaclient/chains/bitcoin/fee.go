@@ -49,6 +49,7 @@ const (
 	DynamicDepositorFeeHeight = 834500
 
 	// DynamicDepositorFeeHeightV2 is the mainnet height from which dynamic depositor fee V2 is applied
+	// Height 863400 is approximately a month away (2024-09-28) from the time of writing, allowing enough time for the upgrade
 	DynamicDepositorFeeHeightV2 = 863400
 )
 
@@ -281,6 +282,12 @@ func CalcDepositorFeeV2(
 // GetRecentFeeRate gets the highest fee rate from recent blocks
 // Note: this method should be used for testnet ONLY
 func GetRecentFeeRate(rpcClient interfaces.BTCRPCClient, netParams *chaincfg.Params) (uint64, error) {
+	// should avoid using this method for mainnet
+	if netParams.Name == chaincfg.MainNetParams.Name {
+		return 0, errors.New("GetRecentFeeRate should not be used for mainnet")
+	}
+
+	// get the current block number
 	blockNumber, err := rpcClient.GetBlockCount()
 	if err != nil {
 		return 0, err
