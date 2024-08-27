@@ -196,6 +196,12 @@ func Test_Bech32ify(t *testing.T) {
 			_, err := contract.Bech32ify(&methodID, args)
 			require.Error(t, err, "expected error invalid bech32 human readable prefix (HRP). Please provide either an account, validator, or consensus address prefix (eg: cosmos, cosmosvaloper, cosmosvalcons)")
 		})
+
+		t.Run("alphanumeric HRP", func(t *testing.T) {
+			args := []interface{}{"%&", common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE")}
+			_, err := contract.Bech32ify(&methodID, args)
+			require.Error(t, err, "expected error invalid bech32 human readable prefix (HRP). Please provide either an account, validator, or consensus address prefix (eg: cosmos, cosmosvaloper, cosmosvalcons)")
+		})
 	})
 }
 
