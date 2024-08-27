@@ -130,6 +130,11 @@ func GetTransactionFeeAndRate(rpcClient interfaces.BTCRPCClient, rawResult *btcj
 		totalOutputValue int64
 	)
 
+	// make sure the tx Vsize is not zero (should not happen)
+	if rawResult.Vsize <= 0 {
+		return 0, 0, fmt.Errorf("tx %s has non-positive Vsize: %d", rawResult.Txid, rawResult.Vsize)
+	}
+
 	// sum up total input value
 	for _, vin := range rawResult.Vin {
 		prevTx, err := GetRawTxByHash(rpcClient, vin.Txid)
