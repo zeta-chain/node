@@ -13,316 +13,244 @@ import (
 )
 
 func Test_IPrototypeContract(t *testing.T) {
-	/*
-		Configuration
-	*/
-
 	var encoding ethermint.EncodingConfig
 	appCodec := encoding.Codec
 	k, _, _, _ := keeper.FungibleKeeper(t)
 	gasConfig := storetypes.TransientGasConfig()
 
-	/*
-		Contract and ABI tests
-	*/
+	t.Run("should create contract and check address and ABI", func(t *testing.T) {
+		contract := NewIPrototypeContract(k, appCodec, gasConfig)
+		require.NotNil(t, contract, "NewIPrototypeContract() should not return a nil contract")
 
-	// Create a new IPrototypeContract instance and get Address and Abi.
-	contract := NewIPrototypeContract(k, appCodec, gasConfig)
-	require.NotNil(t, contract, "NewIPrototypeContract() should not return a nil contract")
+		address := contract.Address()
+		require.Equal(t, ContractAddress, address, "contract address should match the precompiled address")
 
-	address := contract.Address()
-	require.Equal(t, ContractAddress, address, "contract address should match the precompiled address")
+		abi := contract.Abi()
+		require.NotNil(t, abi, "contract ABI should not be nil")
+	})
 
-	abi := contract.Abi()
-	require.NotNil(t, abi, "contract ABI should not be nil")
+	t.Run("should check methods are present in ABI", func(t *testing.T) {
+		contract := NewIPrototypeContract(k, appCodec, gasConfig)
+		abi := contract.Abi()
 
-	// Check all methods are present in the ABI.
-	bech32ToHex := abi.Methods[Bech32ToHexAddrMethodName]
-	require.NotNil(t, bech32ToHex, "bech32ToHexAddr method should be present in the ABI")
+		require.NotNil(t, abi.Methods[Bech32ToHexAddrMethodName], "bech32ToHexAddr method should be present in the ABI")
+		require.NotNil(t, abi.Methods[Bech32ifyMethodName], "bech32ify method should be present in the ABI")
+		require.NotNil(t, abi.Methods[GetGasStabilityPoolBalanceName], "getGasStabilityPoolBalance method should be present in the ABI")
+	})
 
-	bech32ify := abi.Methods[Bech32ifyMethodName]
-	require.NotNil(t, bech32ify, "bech32ify method should be present in the ABI")
+	t.Run("should check gas requirements for methods", func(t *testing.T) {
+		contract := NewIPrototypeContract(k, appCodec, gasConfig)
+		abi := contract.Abi()
+		var method [4]byte
 
-	getGasStabilityPoolBalance := abi.Methods[GetGasStabilityPoolBalanceName]
-	require.NotNil(t, getGasStabilityPoolBalance, "getGasStabilityPoolBalance method should be present in the ABI")
+		t.Run("bech32ToHexAddr", func(t *testing.T) {
+			gasBech32ToHex := contract.RequiredGas(abi.Methods[Bech32ToHexAddrMethodName].ID)
+			copy(method[:], abi.Methods[Bech32ToHexAddrMethodName].ID[:4])
+			baseCost := uint64(len(method)) * gasConfig.WriteCostPerByte
+			require.Equal(t, GasRequiredByMethod[method]+baseCost, gasBech32ToHex, "bech32ToHexAddr method should require %d gas, got %d", GasRequiredByMethod[method]+baseCost, gasBech32ToHex)
+		})
 
-	/*
-		Gas tests
-	*/
+		t.Run("bech32ify", func(t *testing.T) {
+			gasBech32ify := contract.RequiredGas(abi.Methods[Bech32ifyMethodName].ID)
+			copy(method[:], abi.Methods[Bech32ifyMethodName].ID[:4])
+			baseCost := uint64(len(method)) * gasConfig.WriteCostPerByte
+			require.Equal(t, GasRequiredByMethod[method]+baseCost, gasBech32ify, "bech32ify method should require %d gas, got %d", GasRequiredByMethod[method]+baseCost, gasBech32ify)
+		})
 
-	// Check all methods use the correct gas amount.
-	var method [4]byte
+		t.Run("getGasStabilityPoolBalance", func(t *testing.T) {
+			gasGetGasStabilityPoolBalance := contract.RequiredGas(abi.Methods[GetGasStabilityPoolBalanceName].ID)
+			copy(method[:], abi.Methods[GetGasStabilityPoolBalanceName].ID[:4])
+			baseCost := uint64(len(method)) * gasConfig.WriteCostPerByte
+			require.Equal(t, GasRequiredByMethod[method]+baseCost, gasGetGasStabilityPoolBalance, "getGasStabilityPoolBalance method should require %d gas, got %d", GasRequiredByMethod[method]+baseCost, gasGetGasStabilityPoolBalance)
+		})
 
-	gasBech32ToHex := contract.RequiredGas(bech32ToHex.ID)
-	copy(method[:], bech32ToHex.ID[:4])
-	baseCost := uint64(len(method)) * gasConfig.WriteCostPerByte
-	require.Equal(
-		t,
-		GasRequiredByMethod[method]+baseCost,
-		gasBech32ToHex,
-		"bech32ToHexAddr method should require %d gas, got %d",
-		GasRequiredByMethod[method]+baseCost,
-		gasBech32ToHex)
-
-	gasBech32ify := contract.RequiredGas(bech32ify.ID)
-	copy(method[:], bech32ify.ID[:4])
-	baseCost = uint64(len(method)) * gasConfig.WriteCostPerByte
-	require.Equal(
-		t,
-		GasRequiredByMethod[method]+baseCost,
-		gasBech32ify,
-		"bech32ify method should require %d gas, got %d",
-		GasRequiredByMethod[method]+baseCost,
-		gasBech32ify)
-
-	gasGetGasStabilityPoolBalance := contract.RequiredGas(getGasStabilityPoolBalance.ID)
-	copy(method[:], getGasStabilityPoolBalance.ID[:4])
-	baseCost = uint64(len(method)) * gasConfig.WriteCostPerByte
-	require.Equal(
-		t,
-		GasRequiredByMethod[method]+baseCost,
-		gasGetGasStabilityPoolBalance,
-		"getGasStabilityPoolBalance method should require %d gas, got %d",
-		GasRequiredByMethod[method]+baseCost,
-		gasGetGasStabilityPoolBalance)
-
-	// Can not happen, but check the gas for an invalid method.
-	// At runtime if the method does not exist in the ABI, it returns an error.
-	invalidMethodBytes := []byte("invalidMethod")
-	gasInvalidMethod := contract.RequiredGas(invalidMethodBytes)
-	baseCost = uint64(len(method)) * gasConfig.WriteCostPerByte
-	require.Equal(
-		t,
-		uint64(0),
-		gasInvalidMethod,
-		"invalid method should require %d gas, got %d",
-		uint64(0),
-		gasInvalidMethod)
+		t.Run("invalid method", func(t *testing.T) {
+			invalidMethodBytes := []byte("invalidMethod")
+			gasInvalidMethod := contract.RequiredGas(invalidMethodBytes)
+			require.Equal(t, uint64(0), gasInvalidMethod, "invalid method should require %d gas, got %d", uint64(0), gasInvalidMethod)
+		})
+	})
 }
 
 func Test_Bech32ToHexAddress(t *testing.T) {
-	/*
-		Configuration
-	*/
-
 	var encoding ethermint.EncodingConfig
 	appCodec := encoding.Codec
 	k, _, _, _ := keeper.FungibleKeeper(t)
 	gasConfig := storetypes.TransientGasConfig()
 
-	// Create contract and get ABI.
 	contract := NewIPrototypeContract(k, appCodec, gasConfig)
 	require.NotNil(t, contract, "NewIPrototypeContract() should not return a nil contract")
 
 	abi := contract.Abi()
 	require.NotNil(t, abi, "contract ABI should not be nil")
 
-	// Test Bech32HexAddr method. Should succeed.
 	methodID := abi.Methods[Bech32ToHexAddrMethodName]
-	args := make([]interface{}, 0)
-	args = append(args, "zeta1h8duy2dltz9xz0qqhm5wvcnj02upy887fyn43u")
 
-	rawBytes, err := contract.Bech32ToHexAddr(&methodID, args)
-	require.NoError(t, err, "Bech32ToHexAddr should not return an error")
+	t.Run("should succeed with valid bech32 address", func(t *testing.T) {
+		args := []interface{}{"zeta1h8duy2dltz9xz0qqhm5wvcnj02upy887fyn43u"}
 
-	// Discard the first 12 bytes, the address is the last 20 bytes.
-	addr := common.BytesToAddress(rawBytes[12:])
-	require.Equal(
-		t,
-		common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE"),
-		addr,
-		"Bech32ToHexAddr should return the correct address, got: %v",
-		addr,
-	)
+		rawBytes, err := contract.Bech32ToHexAddr(&methodID, args)
+		require.NoError(t, err, "Bech32ToHexAddr should not return an error")
 
-	// Test Bech32HexAddr method. Should fail with invalid argument type..
-	args[0] = 1
-	rawBytes, err = contract.Bech32ToHexAddr(&methodID, args)
-	require.Error(t, err, "expected invalid argument; wanted string; got: %T", args[0])
+		addr := common.BytesToAddress(rawBytes[12:])
+		require.Equal(t, common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE"), addr, "Bech32ToHexAddr should return the correct address, got: %v", addr)
+	})
 
-	// Test Bech32HexAddr method. Should fail because it's not a valid bech32 address.
-	args[0] = "foobar"
-	rawBytes, err = contract.Bech32ToHexAddr(&methodID, args)
-	require.Error(t, err, "expected error; invalid bech32 address")
+	t.Run("should fail if invalid argument type", func(t *testing.T) {
+		args := []interface{}{1}
 
-	// Test Bech32HexAddr method. Should fail with invalid prefix.
-	args[0] = "foobar1"
-	rawBytes, err = contract.Bech32ToHexAddr(&methodID, args)
-	require.Error(t, err, "expected error; invalid bech32 addresss")
+		_, err := contract.Bech32ToHexAddr(&methodID, args)
+		require.Error(t, err, "expected invalid argument; wanted string; got: %T", args[0])
+	})
 
-	// Test Bech32HexAddr method. Should fail with invalid prefix.
-	args[0] = "foobar1foobar"
-	rawBytes, err = contract.Bech32ToHexAddr(&methodID, args)
-	require.Error(t, err, "expected error; decoding bech32 failed")
+	t.Run("should fail if invalid bech32 address", func(t *testing.T) {
+		t.Run("invalid bech32 format", func(t *testing.T) {
+			args := []interface{}{"foobar"}
+			_, err := contract.Bech32ToHexAddr(&methodID, args)
+			require.Error(t, err, "expected error; invalid bech32 address")
+		})
 
-	// Test Bech32HexAddr method. Should fail with invalid number of arguments.
-	args = append(args, "second argument")
-	_, err = contract.Bech32ToHexAddr(&methodID, args)
-	require.Error(t, err, "expected invalid number of arguments; expected 1; got: 2")
-	require.IsType(t, &types.ErrInvalidNumberOfArgs{}, err, "expected error type: ErrInvalidNumberOfArgs, got: %T", err)
+		t.Run("invalid bech32 prefix", func(t *testing.T) {
+			args := []interface{}{"foobar1"}
+			_, err := contract.Bech32ToHexAddr(&methodID, args)
+			require.Error(t, err, "expected error; invalid bech32 addresss")
+		})
 
-	// Test Bech32HexAddr method. Should fail with invalid address.
-	argsInvalid := make([]interface{}, 0)
-	argsInvalid = append(argsInvalid, "")
-	_, errInvalid := contract.Bech32ToHexAddr(&methodID, argsInvalid)
-	require.Error(t, errInvalid, "expected error invalid bech32 address: %v", argsInvalid[0])
+		t.Run("invalid bech32 decoding", func(t *testing.T) {
+			args := []interface{}{"foobar1foobar"}
+			_, err := contract.Bech32ToHexAddr(&methodID, args)
+			require.Error(t, err, "expected error; decoding bech32 failed")
+		})
+
+		t.Run("invalid number of arguments", func(t *testing.T) {
+			args := []interface{}{"zeta1h8duy2dltz9xz0qqhm5wvcnj02upy887fyn43u", "second argument"}
+			_, err := contract.Bech32ToHexAddr(&methodID, args)
+			require.Error(t, err, "expected invalid number of arguments; expected 1; got: 2")
+			require.IsType(t, &types.ErrInvalidNumberOfArgs{}, err, "expected error type: ErrInvalidNumberOfArgs, got: %T", err)
+		})
+	})
+
+	t.Run("should fail if empty address argument", func(t *testing.T) {
+		args := []interface{}{""}
+		_, err := contract.Bech32ToHexAddr(&methodID, args)
+		require.Error(t, err, "expected error invalid bech32 address: %v", args[0])
+	})
 }
 
 func Test_Bech32ify(t *testing.T) {
-	/*
-		Configuration
-	*/
-
 	var encoding ethermint.EncodingConfig
 	appCodec := encoding.Codec
 	k, _, _, _ := keeper.FungibleKeeper(t)
 	gasConfig := storetypes.TransientGasConfig()
 
-	// Create contract and get ABI.
 	contract := NewIPrototypeContract(k, appCodec, gasConfig)
 	require.NotNil(t, contract, "NewIPrototypeContract() should not return a nil contract")
 
 	abi := contract.Abi()
 	require.NotNil(t, abi, "contract ABI should not be nil")
 
-	// Test Bech32ify method with a zeta HRP.
 	methodID := abi.Methods[Bech32ifyMethodName]
-	args := make([]interface{}, 0)
-	args = append(args, "zeta")
-	args = append(args, common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE"))
 
-	rawBytes, err := contract.Bech32ify(&methodID, args)
-	require.NoError(t, err, "Bech32ify prefix zeta should not return an error")
+	t.Run("should succeed with zeta HRP", func(t *testing.T) {
+		args := []interface{}{"zeta", common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE")}
 
-	// Manually extract the address from the raw bytes.
-	zetaAddr := string(rawBytes[64:107])
-	require.Equal(
-		t,
-		"zeta1h8duy2dltz9xz0qqhm5wvcnj02upy887fyn43u",
-		string(zetaAddr),
-		"Bech32ify prefix zeta should return the correct address, got: %v",
-		zetaAddr,
-	)
+		rawBytes, err := contract.Bech32ify(&methodID, args)
+		require.NoError(t, err, "Bech32ify prefix zeta should not return an error")
 
-	// Test Bech32ify method with a cosmos HRP.
-	args[0] = "cosmos"
-	rawBytes, err = contract.Bech32ify(&methodID, args)
-	require.NoError(t, err, "Bech32ify prefix cosmos should not return an error")
+		zetaAddr := string(rawBytes[64:107])
+		require.Equal(t, "zeta1h8duy2dltz9xz0qqhm5wvcnj02upy887fyn43u", zetaAddr, "Bech32ify prefix zeta should return the correct address, got: %v", zetaAddr)
+	})
 
-	zetaAddr = string(rawBytes[64:107])
-	require.Equal(
-		t,
-		"cosmos1h8duy2dltz9xz0qqhm5wvcnj02upy887lqaq",
-		string(zetaAddr),
-		"Bech32ify prefix cosmos should return the correct address, got: %v",
-		zetaAddr,
-	)
+	t.Run("should succeed with cosmos HRP", func(t *testing.T) {
+		args := []interface{}{"cosmos", common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE")}
 
-	// Test for invalid number of arguments.
-	args = append(args, "third argument")
-	_, err = contract.Bech32ify(&methodID, args)
-	require.Error(t, err, "expected invalid number of arguments; expected 2; got: 3")
-	require.IsType(t, &types.ErrInvalidNumberOfArgs{}, err, "expected error type: ErrInvalidNumberOfArgs, got: %T", err)
+		rawBytes, err := contract.Bech32ify(&methodID, args)
+		require.NoError(t, err, "Bech32ify prefix cosmos should not return an error")
 
-	// Test for invalid bech32 human readable prefix.
-	argsInvalidBech32 := make([]interface{}, 0)
-	argsInvalidBech32 = append(argsInvalidBech32, 1337)
-	argsInvalidBech32 = append(argsInvalidBech32, common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE"))
-	_, errInvalidBech32 := contract.Bech32ify(&methodID, argsInvalidBech32)
-	require.Error(t, errInvalidBech32, "expected error invalid bech32 human readable prefix (HRP)")
+		zetaAddr := string(rawBytes[64:107])
+		require.Equal(t, "cosmos1h8duy2dltz9xz0qqhm5wvcnj02upy887lqaq", zetaAddr, "Bech32ify prefix cosmos should return the correct address, got: %v", zetaAddr)
+	})
 
-	// Test for invalid hex address.
-	argsInvalidHexAddress := make([]interface{}, 0)
-	argsInvalidHexAddress = append(argsInvalidHexAddress, "zeta")
-	argsInvalidHexAddress = append(argsInvalidHexAddress, 1337)
-	_, errInvalidHexAddress := contract.Bech32ify(&methodID, argsInvalidHexAddress)
-	require.Error(t, errInvalidHexAddress, "expected error invalid hex address")
+	t.Run("should fail with invalid arguments", func(t *testing.T) {
+		t.Run("too many arguments", func(t *testing.T) {
+			args := []interface{}{"zeta", common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE"), "third argument"}
+			_, err := contract.Bech32ify(&methodID, args)
+			require.Error(t, err, "expected invalid number of arguments; expected 2; got: 3")
+			require.IsType(t, &types.ErrInvalidNumberOfArgs{}, err, "expected error type: ErrInvalidNumberOfArgs, got: %T", err)
+		})
 
-	// Test for invalid bech32 human readable prefix.
-	argsInvalidEmptyPrefix := make([]interface{}, 0)
-	argsInvalidEmptyPrefix = append(argsInvalidEmptyPrefix, "")
-	argsInvalidEmptyPrefix = append(
-		argsInvalidEmptyPrefix,
-		common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE"),
-	)
-	_, errInvalidEmptyPrefix := contract.Bech32ify(&methodID, argsInvalidEmptyPrefix)
-	require.Error(
-		t,
-		errInvalidEmptyPrefix,
-		"expected error invalid bech32 human readable prefix (HRP). Please provide a either an account, validator or consensus address prefix (eg: cosmos, cosmosvaloper, cosmosvalcons)",
-	)
+		t.Run("invalid HRP", func(t *testing.T) {
+			args := []interface{}{1337, common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE")}
+			_, err := contract.Bech32ify(&methodID, args)
+			require.Error(t, err, "expected error invalid bech32 human readable prefix (HRP)")
+		})
+
+		t.Run("invalid hex address", func(t *testing.T) {
+			args := []interface{}{"zeta", 1337}
+			_, err := contract.Bech32ify(&methodID, args)
+			require.Error(t, err, "expected error invalid hex address")
+		})
+
+		t.Run("empty HRP", func(t *testing.T) {
+			args := []interface{}{"", common.HexToAddress("0xB9Dbc229Bf588A613C00BEE8e662727AB8121cfE")}
+			_, err := contract.Bech32ify(&methodID, args)
+			require.Error(t, err, "expected error invalid bech32 human readable prefix (HRP). Please provide either an account, validator, or consensus address prefix (eg: cosmos, cosmosvaloper, cosmosvalcons)")
+		})
+	})
 }
 
 func Test_GetGasStabilityPoolBalance(t *testing.T) {
-	/*
-		Configuration
-	*/
-
+	// Only check the function is called correctly inside the contract, and it returns the expected error.
+	// Configuring a local environment for this contract would require deploying system contracts and gas pools.
+	// This method is tested thoroughly in the e2e tests.
 	var encoding ethermint.EncodingConfig
 	appCodec := encoding.Codec
 	k, ctx, _, _ := keeper.FungibleKeeper(t)
 	gasConfig := storetypes.TransientGasConfig()
 
-	// Create contract and get ABI.
 	contract := NewIPrototypeContract(k, appCodec, gasConfig)
 	require.NotNil(t, contract, "NewIPrototypeContract() should not return a nil contract")
 
 	abi := contract.Abi()
 	require.NotNil(t, abi, "contract ABI should not be nil")
 
-	// Test GetGasStabilityPoolBalance method.
-	// Only check the function is called correctly inside the contract, and it returns the expected error.
-	// Configuring a local environment for this contract would require deploying system contracts and gas pools.
-	// This method is tested thoroughly in the e2e tests.
 	methodID := abi.Methods[GetGasStabilityPoolBalanceName]
-	args := make([]interface{}, 0)
-	args = append(args, int64(1337))
+
+	args := []interface{}{int64(1337)}
 
 	_, err := contract.GetGasStabilityPoolBalance(ctx, &methodID, args)
-	require.Error(
-		t,
-		err,
-		"error calling fungible keeper: failed to get system contract variable: state variable not found",
-	)
+	require.Error(t, err, "error calling fungible keeper: failed to get system contract variable: state variable not found")
 
-	// Test for invalid number of arguments.
-	args = append(args, "second argument")
-	_, err = contract.GetGasStabilityPoolBalance(ctx, &methodID, args)
-	require.Error(t, err, "expected invalid number of arguments; expected 2; got: 3")
-	require.IsType(t, &types.ErrInvalidNumberOfArgs{}, err, "expected error type: ErrInvalidNumberOfArgs, got: %T", err)
+	t.Run("should fail with invalid arguments", func(t *testing.T) {
 
-	// Test for invalid chainID.
-	argsInvalid := make([]interface{}, 0)
-	argsInvalid = append(argsInvalid, "foobar")
-	_, errInvalid := contract.GetGasStabilityPoolBalance(ctx, &methodID, argsInvalid)
-	require.Error(t, errInvalid, "expected int64, got: %T", argsInvalid[0])
-	require.IsType(
-		t,
-		types.ErrInvalidArgument{},
-		errInvalid,
-		"expected error type: ErrInvalidArgument, got: %T",
-		errInvalid,
-	)
+		t.Run("invalid number of arguments", func(t *testing.T) {
+			args := []interface{}{int64(1337), "second argument"}
+			_, err := contract.GetGasStabilityPoolBalance(ctx, &methodID, args)
+			require.Error(t, err, "expected invalid number of arguments; expected 2; got: 3")
+			require.IsType(t, &types.ErrInvalidNumberOfArgs{}, err, "expected error type: ErrInvalidNumberOfArgs, got: %T", err)
+		})
+
+		t.Run("invalid chainID", func(t *testing.T) {
+			args := []interface{}{"foobar"}
+			_, err := contract.GetGasStabilityPoolBalance(ctx, &methodID, args)
+			require.Error(t, err, "expected int64, got: %T", args[0])
+			require.IsType(t, types.ErrInvalidArgument{}, err, "expected error type: ErrInvalidArgument, got: %T", err)
+		})
+	})
 }
 
 func Test_InvalidMethod(t *testing.T) {
-	/*
-		Configuration
-	*/
-
 	var encoding ethermint.EncodingConfig
 	appCodec := encoding.Codec
 	k, _, _, _ := keeper.FungibleKeeper(t)
 	gasConfig := storetypes.TransientGasConfig()
 
-	// Create contract and get ABI.
 	contract := NewIPrototypeContract(k, appCodec, gasConfig)
 	require.NotNil(t, contract, "NewIPrototypeContract() should not return a nil contract")
 
 	abi := contract.Abi()
 	require.NotNil(t, abi, "contract ABI should not be nil")
 
-	// Test for non existent method.
 	_, doNotExist := abi.Methods["invalidMethod"]
 	require.False(t, doNotExist, "invalidMethod should not be present in the ABI")
 }
