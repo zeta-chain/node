@@ -69,9 +69,9 @@ func (signer *Signer) SignWithdrawTx(ctx context.Context, msg contracts.MsgWithd
 	attachWithdrawAccounts(&inst, privkey.PublicKey(), signer.pda, msg.To(), signer.gatewayID)
 
 	// get a recent blockhash
-	recent, err := signer.client.GetRecentBlockhash(ctx, rpc.CommitmentFinalized)
+	recent, err := signer.client.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
 	if err != nil {
-		return nil, errors.Wrap(err, "GetRecentBlockhash error")
+		return nil, errors.Wrap(err, "GetLatestBlockhash error")
 	}
 
 	// create a transaction that wraps the instruction
