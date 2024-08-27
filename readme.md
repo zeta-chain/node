@@ -17,7 +17,7 @@ smart contracts and messaging between any blockchain.
 ZetaChain is built with [Cosmos SDK](https://github.com/cosmos/cosmos-sdk), a
 modular framework for building blockchain and
 [Ethermint](https://github.com/zeta-chain/ethermint), a module that implements
-EVM-compatibility.
+EVM-compatibility (ZetaChain fork).
 
 - [zeta-node](https://github.com/zeta-chain/zeta-node) (this repository)
   contains the source code for the ZetaChain node (`zetacored`) and the

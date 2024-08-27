@@ -31,12 +31,12 @@ func StatefulContracts(
 
 	// Define the regular contract function.
 	if EnabledStatefulContracts[prototype.ContractAddress] {
-		prototype := func(_ sdktypes.Context, _ ethparams.Rules) vm.PrecompiledContract {
+		prototypeContract := func(_ sdktypes.Context, _ ethparams.Rules) vm.PrecompiledContract {
 			return prototype.NewIPrototypeContract(fungibleKeeper, cdc, gasConfig)
 		}
 
 		// Append the regular contract to the precompiledContracts slice.
-		precompiledContracts = append(precompiledContracts, prototype)
+		precompiledContracts = append(precompiledContracts, prototypeContract)
 	}
 
 	return precompiledContracts
