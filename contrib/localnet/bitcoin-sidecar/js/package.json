@@ -1,0 +1,23 @@
+{
+  "name": "zeta-btc-client",
+  "version": "0.0.1",
+  "description": "The Zetachain BTC client",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bip32": "^4.0.0",
+    "bitcoinjs-lib": "^6.1.6",
+    "ecpair": "^2.1.0",
+    "express": "^4.19.2",
+    "randombytes": "^2.1.0",
+    "tiny-secp256k1": "^2.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.11",
+    "typescript": "^5.5.3"
+  }
+}
