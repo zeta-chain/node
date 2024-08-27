@@ -23,7 +23,7 @@ import (
 
 var _ interfaces.ChainSigner = (*Signer)(nil)
 
-// Signer deals with signing BTC transactions and implements the ChainSigner interface
+// Signer deals with signing Solana transactions and implements the ChainSigner interface
 type Signer struct {
 	*base.Signer
 
@@ -41,7 +41,7 @@ type Signer struct {
 	pda solana.PublicKey
 }
 
-// NewSigner creates a new Bitcoin signer
+// NewSigner creates a new Solana signer
 func NewSigner(
 	chain chains.Chain,
 	chainParams observertypes.ChainParams,
