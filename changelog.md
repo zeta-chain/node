@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## V19.2.1
+
+### Features
+
+* [2778](https://github.com/zeta-chain/node/pull/2778) - ask for 3 accounts (signer, pda, system_program) on solana gateway deposit
+
 ## v19.2.0
 
 ### Features
