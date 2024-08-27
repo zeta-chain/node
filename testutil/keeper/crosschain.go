@@ -219,9 +219,8 @@ func CrosschainKeeperWithMocks(
 	}
 	k.SetIBCCrosschainKeeper(ibcCrosschainKeeperTmp)
 
-	// Seal the IBC router.
-	// TODO: Is this really necessary?
-	// sdkKeepers.IBCKeeper.SetRouter(sdkKeepers.IBCRouter)
+	// seal the IBC router
+	sdkKeepers.IBCKeeper.SetRouter(sdkKeepers.IBCRouter)
 
 	// load the latest version of the state store
 	require.NoError(t, stateStore.LoadLatestVersion())
