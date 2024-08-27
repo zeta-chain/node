@@ -25,18 +25,6 @@ jobs:
           sudo apt-get install solc
           go install github.com/ethereum/go-ethereum/cmd/abigen@latest
 
-      - name: Print solc version
-        run: |
-          solc --version
-
-      - name: Print abigen version
-        run: |
-          abigen --version
-
-      - name: Print jq version
-        run: |
-          jq --version
-
       - name: Generate Go code, docs and specs
         env:
           TEST_ENV: ${{ github.workspace }}
