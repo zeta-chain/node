@@ -42,9 +42,9 @@ func initABI() {
 		copy(methodID[:], ABI.Methods[methodName].ID[:4])
 		switch methodName {
 		case Bech32ToHexAddrMethodName:
-			GasRequiredByMethod[methodID] = 10000
+			GasRequiredByMethod[methodID] = 500
 		case Bech32ifyMethodName:
-			GasRequiredByMethod[methodID] = 10000
+			GasRequiredByMethod[methodID] = 500
 		case GetGasStabilityPoolBalanceName:
 			GasRequiredByMethod[methodID] = 10000
 		default:
