@@ -320,7 +320,7 @@ start-upgrade-v2-migration-test: zetanode-upgrade
 	@echo "--> Starting v2 migration upgrade test"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=90 && \
-	export E2E_ARGS="--skip-regular --test-v2-migration --verbose" && \
+	export E2E_ARGS="--test-v2-migration" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
 

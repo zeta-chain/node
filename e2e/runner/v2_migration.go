@@ -34,13 +34,13 @@ func (r *E2ERunner) RunV2Migration() {
 	r.Logger.Info("Part 2: Deploying v2 contracts on EVM chain")
 	r.SetupEVMV2()
 
-	// Part 3: deploy gateway on ZetaChain
-	r.Logger.Info("Part 3: Deploying Gateway ZEVM")
-	r.SetZEVMContractsV2()
-
-	// Part 4: upgrade all ZRC20s
-	r.Logger.Info("Part 4: Upgrading ZRC20s")
+	// Part 3: upgrade all ZRC20s
+	r.Logger.Info("Part 3: Upgrading ZRC20s")
 	r.upgradeZRC20s()
+
+	// Part 4: deploy gateway on ZetaChain
+	r.Logger.Info("Part 4: Deploying Gateway ZEVM")
+	r.SetZEVMContractsV2()
 
 	// Part 5: migrate ERC20 custody funds
 	r.Logger.Info("Part 5: Migrating ERC20 custody funds")
@@ -99,7 +99,7 @@ func (r *E2ERunner) upgradeZRC20(
 		coinType,
 		big.NewInt(100_000),
 		r.SystemContractAddr,
-		r.GatewayZEVMAddr,
+		r.SystemContractAddr, // gateway is not deployed yet, gateway will be set during MsgUpdateGatewayContract phase by the protocol
 	)
 	require.NoError(r, err)
 

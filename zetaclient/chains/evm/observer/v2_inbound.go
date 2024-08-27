@@ -90,11 +90,6 @@ func (ob *Observer) ObserveGatewayDeposit(ctx context.Context, startBlock, toBlo
 	// increment prom counter
 	metrics.GetFilterLogsPerChain.WithLabelValues(ob.Chain().Name).Inc()
 
-	// TODO: remove in this PR
-	ob.Logger().
-		Inbound.Info().
-		Msgf("ObserveGatewayDeposit: observing deposits with gateway contract %s", gatewayAddr.Hex())
-
 	// post to zetacore
 	lastScanned := uint64(0)
 	for _, event := range events {
