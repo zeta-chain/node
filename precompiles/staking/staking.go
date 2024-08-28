@@ -202,8 +202,6 @@ func (c *Contract) Undelegate(
 		return nil, err
 	}
 
-	fmt.Println("undelegate res", res)
-
 	return method.Outputs.Pack(res.GetCompletionTime().UTC().Unix())
 }
 
