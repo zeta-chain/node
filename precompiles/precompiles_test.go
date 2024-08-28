@@ -11,7 +11,7 @@ import (
 )
 
 func Test_StatefulContracts(t *testing.T) {
-	k, ctx, _, _ := keeper.FungibleKeeper(t)
+	k, ctx, sdkk, _ := keeper.FungibleKeeper(t)
 	gasConfig := storetypes.TransientGasConfig()
 
 	var encoding ethermint.EncodingConfig
@@ -25,7 +25,7 @@ func Test_StatefulContracts(t *testing.T) {
 	}
 
 	// StatefulContracts() should return all the enabled contracts.
-	contracts := StatefulContracts(k, appCodec, gasConfig)
+	contracts := StatefulContracts(k, &sdkk.StakingKeeper, appCodec, gasConfig)
 	require.NotNil(t, contracts, "StatefulContracts() should not return a nil slice")
 	require.Len(t, contracts, expectedContracts, "StatefulContracts() should return all the enabled contracts")
 
