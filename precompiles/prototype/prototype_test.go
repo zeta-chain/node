@@ -296,7 +296,6 @@ func Test_GetGasStabilityPoolBalance(t *testing.T) {
 	)
 
 	t.Run("should fail with invalid arguments", func(t *testing.T) {
-
 		t.Run("invalid number of arguments", func(t *testing.T) {
 			args := []interface{}{int64(1337), "second argument"}
 			_, err := contract.GetGasStabilityPoolBalance(ctx, &methodID, args)

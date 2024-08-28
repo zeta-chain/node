@@ -44,7 +44,8 @@ func initABI() {
 		var methodID [4]byte
 		copy(methodID[:], ABI.Methods[methodName].ID[:4])
 		switch methodName {
-		// TODO: just temporary
+		// TODO: just temporary values, double check these flat values
+		// can we just use WriteCostFlat from gas config?
 		case DelegateMethodName:
 			GasRequiredByMethod[methodID] = 10000
 		case UndelegateMethodName:
@@ -245,7 +246,7 @@ func (c *Contract) Redelegate(
 		return nil, err
 	}
 
-	fmt.Println("undelegate res", res)
+	fmt.Println("redelegate res", res)
 
 	return method.Outputs.Pack(res.GetCompletionTime().UTC().Unix())
 }
