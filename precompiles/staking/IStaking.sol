@@ -33,13 +33,13 @@ interface IStaking {
 
     /// @dev Redelegate coins from validatorSrd to validatorDst
     /// @param delegator Delegator address
-    /// @param validatorSrd Validator from address
+    /// @param validatorSrc Validator from address
     /// @param validatorDst Validator to address
     /// @param amount Coins amount
     /// @return completionTime Time when redelegation is done
     function redelegate(
         address delegator,
-        string memory validatorSrd,
+        string memory validatorSrc,
         string memory validatorDst,
         uint256 amount
     ) external returns (int64 completionTime);

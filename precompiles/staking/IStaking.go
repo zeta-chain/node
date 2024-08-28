@@ -31,7 +31,7 @@ var (
 
 // IStakingMetaData contains all meta data concerning the IStaking contract.
 var IStakingMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"delegator\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"delegate\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"delegator\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validatorSrd\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"validatorDst\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"redelegate\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"delegator\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"undelegate\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"delegator\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"delegate\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"delegator\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validatorSrc\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"validatorDst\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"redelegate\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"delegator\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"undelegate\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // IStakingABI is the input ABI used to generate the binding from.
@@ -203,23 +203,23 @@ func (_IStaking *IStakingTransactorSession) Delegate(delegator common.Address, v
 
 // Redelegate is a paid mutator transaction binding the contract method 0x54b826f5.
 //
-// Solidity: function redelegate(address delegator, string validatorSrd, string validatorDst, uint256 amount) returns(int64 completionTime)
-func (_IStaking *IStakingTransactor) Redelegate(opts *bind.TransactOpts, delegator common.Address, validatorSrd string, validatorDst string, amount *big.Int) (*types.Transaction, error) {
-	return _IStaking.contract.Transact(opts, "redelegate", delegator, validatorSrd, validatorDst, amount)
+// Solidity: function redelegate(address delegator, string validatorSrc, string validatorDst, uint256 amount) returns(int64 completionTime)
+func (_IStaking *IStakingTransactor) Redelegate(opts *bind.TransactOpts, delegator common.Address, validatorSrc string, validatorDst string, amount *big.Int) (*types.Transaction, error) {
+	return _IStaking.contract.Transact(opts, "redelegate", delegator, validatorSrc, validatorDst, amount)
 }
 
 // Redelegate is a paid mutator transaction binding the contract method 0x54b826f5.
 //
-// Solidity: function redelegate(address delegator, string validatorSrd, string validatorDst, uint256 amount) returns(int64 completionTime)
-func (_IStaking *IStakingSession) Redelegate(delegator common.Address, validatorSrd string, validatorDst string, amount *big.Int) (*types.Transaction, error) {
-	return _IStaking.Contract.Redelegate(&_IStaking.TransactOpts, delegator, validatorSrd, validatorDst, amount)
+// Solidity: function redelegate(address delegator, string validatorSrc, string validatorDst, uint256 amount) returns(int64 completionTime)
+func (_IStaking *IStakingSession) Redelegate(delegator common.Address, validatorSrc string, validatorDst string, amount *big.Int) (*types.Transaction, error) {
+	return _IStaking.Contract.Redelegate(&_IStaking.TransactOpts, delegator, validatorSrc, validatorDst, amount)
 }
 
 // Redelegate is a paid mutator transaction binding the contract method 0x54b826f5.
 //
-// Solidity: function redelegate(address delegator, string validatorSrd, string validatorDst, uint256 amount) returns(int64 completionTime)
-func (_IStaking *IStakingTransactorSession) Redelegate(delegator common.Address, validatorSrd string, validatorDst string, amount *big.Int) (*types.Transaction, error) {
-	return _IStaking.Contract.Redelegate(&_IStaking.TransactOpts, delegator, validatorSrd, validatorDst, amount)
+// Solidity: function redelegate(address delegator, string validatorSrc, string validatorDst, uint256 amount) returns(int64 completionTime)
+func (_IStaking *IStakingTransactorSession) Redelegate(delegator common.Address, validatorSrc string, validatorDst string, amount *big.Int) (*types.Transaction, error) {
+	return _IStaking.Contract.Redelegate(&_IStaking.TransactOpts, delegator, validatorSrc, validatorDst, amount)
 }
 
 // Undelegate is a paid mutator transaction binding the contract method 0x3edab33c.

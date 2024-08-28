@@ -38,7 +38,7 @@
         },
         {
           "internalType": "string",
-          "name": "validatorSrd",
+          "name": "validatorSrc",
           "type": "string"
         },
         {

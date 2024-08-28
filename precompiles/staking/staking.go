@@ -257,8 +257,6 @@ func (c *Contract) Redelegate(
 		return nil, err
 	}
 
-	fmt.Println("redelegate res", res)
-
 	return method.Outputs.Pack(res.GetCompletionTime().UTC().Unix())
 }
 

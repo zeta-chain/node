@@ -536,3 +536,270 @@ func Test_Undelegate(t *testing.T) {
 		require.Error(t, err)
 	})
 }
+
+func Test_Redelegate(t *testing.T) {
+	var encoding ethermint.EncodingConfig
+	appCodec := encoding.Codec
+
+	cdc := keeper.NewCodec()
+
+	db := tmdb.NewMemDB()
+	stateStore := store.NewCommitMultiStore(db)
+	sdkKeepers := keeper.NewSDKKeepers(cdc, db, stateStore)
+	gasConfig := storetypes.TransientGasConfig()
+	ctx := keeper.NewContext(stateStore)
+	require.NoError(t, stateStore.LoadLatestVersion())
+
+	stakingGenesisState := stakingtypes.DefaultGenesisState()
+	stakingGenesisState.Params.BondDenom = config.BaseDenom
+	sdkKeepers.StakingKeeper.InitGenesis(ctx, stakingGenesisState)
+
+	contract := NewIStakingContract(&sdkKeepers.StakingKeeper, appCodec, gasConfig)
+	require.NotNil(t, contract, "NewIStakingContract() should not return a nil contract")
+
+	abi := contract.Abi()
+	require.NotNil(t, abi, "contract ABI should not be nil")
+
+	methodID := abi.Methods[RedelegateMethodName]
+
+	t.Run("should fail if validator dest doesn't exist", func(t *testing.T) {
+		r := rand.New(rand.NewSource(42))
+		validatorSrc := sample.Validator(t, r)
+		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
+		validatorDest := sample.Validator(t, r)
+
+		delegator := sample.Bech32AccAddress()
+		delegatorEthAddr := common.BytesToAddress(delegator.Bytes())
+		coins := sample.Coins()
+		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+		require.NoError(t, err)
+		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, delegator, coins)
+		require.NoError(t, err)
+
+		delegatorAddr := common.BytesToAddress(delegator.Bytes())
+
+		argsDelegate := []interface{}{delegatorEthAddr, validatorSrc.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+
+		// delegate to validator src
+		delegateMethodID := abi.Methods[DelegateMethodName]
+		_, err = contract.Delegate(ctx, delegatorAddr, &delegateMethodID, argsDelegate)
+		require.NoError(t, err)
+
+		argsRedelegate := []interface{}{delegatorEthAddr, validatorSrc.OperatorAddress, validatorDest.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+
+		_, err = contract.Redelegate(ctx, delegatorAddr, &methodID, argsRedelegate)
+		require.Error(t, err)
+	})
+
+	t.Run("should redelegate", func(t *testing.T) {
+		r := rand.New(rand.NewSource(42))
+		validatorSrc := sample.Validator(t, r)
+		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
+		validatorDest := sample.Validator(t, r)
+		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
+
+		delegator := sample.Bech32AccAddress()
+		delegatorEthAddr := common.BytesToAddress(delegator.Bytes())
+		coins := sample.Coins()
+		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+		require.NoError(t, err)
+		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, delegator, coins)
+		require.NoError(t, err)
+
+		delegatorAddr := common.BytesToAddress(delegator.Bytes())
+
+		argsDelegate := []interface{}{delegatorEthAddr, validatorSrc.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+
+		// delegate to validator src
+		delegateMethodID := abi.Methods[DelegateMethodName]
+		_, err = contract.Delegate(ctx, delegatorAddr, &delegateMethodID, argsDelegate)
+		require.NoError(t, err)
+
+		argsRedelegate := []interface{}{delegatorEthAddr, validatorSrc.OperatorAddress, validatorDest.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+
+		// redelegate to validator dest
+		_, err = contract.Redelegate(ctx, delegatorAddr, &methodID, argsRedelegate)
+		require.NoError(t, err)
+	})
+
+	t.Run("should fail if delegator is invalid arg", func(t *testing.T) {
+		r := rand.New(rand.NewSource(42))
+		validatorSrc := sample.Validator(t, r)
+		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
+		validatorDest := sample.Validator(t, r)
+		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
+
+		delegator := sample.Bech32AccAddress()
+		delegatorEthAddr := common.BytesToAddress(delegator.Bytes())
+		coins := sample.Coins()
+		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+		require.NoError(t, err)
+		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, delegator, coins)
+		require.NoError(t, err)
+
+		delegatorAddr := common.BytesToAddress(delegator.Bytes())
+
+		argsDelegate := []interface{}{delegatorEthAddr, validatorSrc.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+
+		// delegate to validator src
+		delegateMethodID := abi.Methods[DelegateMethodName]
+		_, err = contract.Delegate(ctx, delegatorAddr, &delegateMethodID, argsDelegate)
+		require.NoError(t, err)
+
+		argsRedelegate := []interface{}{42, validatorSrc.OperatorAddress, validatorDest.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+
+		_, err = contract.Redelegate(ctx, delegatorAddr, &methodID, argsRedelegate)
+		require.Error(t, err)
+	})
+
+	t.Run("should fail if validator src is invalid arg", func(t *testing.T) {
+		r := rand.New(rand.NewSource(42))
+		validatorSrc := sample.Validator(t, r)
+		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
+		validatorDest := sample.Validator(t, r)
+		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
+
+		delegator := sample.Bech32AccAddress()
+		delegatorEthAddr := common.BytesToAddress(delegator.Bytes())
+		coins := sample.Coins()
+		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+		require.NoError(t, err)
+		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, delegator, coins)
+		require.NoError(t, err)
+
+		delegatorAddr := common.BytesToAddress(delegator.Bytes())
+
+		argsDelegate := []interface{}{delegatorEthAddr, validatorSrc.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+
+		// delegate to validator src
+		delegateMethodID := abi.Methods[DelegateMethodName]
+		_, err = contract.Delegate(ctx, delegatorAddr, &delegateMethodID, argsDelegate)
+		require.NoError(t, err)
+
+		argsRedelegate := []interface{}{delegatorEthAddr, 42, validatorDest.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+
+		_, err = contract.Redelegate(ctx, delegatorAddr, &methodID, argsRedelegate)
+		require.Error(t, err)
+	})
+
+	t.Run("should fail if validator dest is invalid arg", func(t *testing.T) {
+		r := rand.New(rand.NewSource(42))
+		validatorSrc := sample.Validator(t, r)
+		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
+		validatorDest := sample.Validator(t, r)
+		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
+
+		delegator := sample.Bech32AccAddress()
+		delegatorEthAddr := common.BytesToAddress(delegator.Bytes())
+		coins := sample.Coins()
+		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+		require.NoError(t, err)
+		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, delegator, coins)
+		require.NoError(t, err)
+
+		delegatorAddr := common.BytesToAddress(delegator.Bytes())
+
+		argsDelegate := []interface{}{delegatorEthAddr, validatorSrc.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+
+		// delegate to validator src
+		delegateMethodID := abi.Methods[DelegateMethodName]
+		_, err = contract.Delegate(ctx, delegatorAddr, &delegateMethodID, argsDelegate)
+		require.NoError(t, err)
+
+		argsRedelegate := []interface{}{delegatorEthAddr, validatorSrc.OperatorAddress, validatorDest.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+
+		_, err = contract.Redelegate(ctx, delegatorAddr, &methodID, argsRedelegate)
+		require.NoError(t, err)
+	})
+
+	t.Run("should fail if amount is invalid arg", func(t *testing.T) {
+		r := rand.New(rand.NewSource(42))
+		validatorSrc := sample.Validator(t, r)
+		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
+		validatorDest := sample.Validator(t, r)
+		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
+
+		delegator := sample.Bech32AccAddress()
+		delegatorEthAddr := common.BytesToAddress(delegator.Bytes())
+		coins := sample.Coins()
+		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+		require.NoError(t, err)
+		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, delegator, coins)
+		require.NoError(t, err)
+
+		delegatorAddr := common.BytesToAddress(delegator.Bytes())
+
+		argsDelegate := []interface{}{delegatorEthAddr, validatorSrc.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+
+		// delegate to validator src
+		delegateMethodID := abi.Methods[DelegateMethodName]
+		_, err = contract.Delegate(ctx, delegatorAddr, &delegateMethodID, argsDelegate)
+		require.NoError(t, err)
+
+		argsRedelegate := []interface{}{delegatorEthAddr, validatorSrc.OperatorAddress, validatorDest.OperatorAddress, coins.AmountOf(config.BaseDenom).Uint64()}
+
+		_, err = contract.Redelegate(ctx, delegatorAddr, &methodID, argsRedelegate)
+		require.Error(t, err)
+	})
+
+	t.Run("should fail if wrong args amount", func(t *testing.T) {
+		r := rand.New(rand.NewSource(42))
+		validatorSrc := sample.Validator(t, r)
+		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
+		validatorDest := sample.Validator(t, r)
+		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
+
+		delegator := sample.Bech32AccAddress()
+		delegatorEthAddr := common.BytesToAddress(delegator.Bytes())
+		coins := sample.Coins()
+		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+		require.NoError(t, err)
+		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, delegator, coins)
+		require.NoError(t, err)
+
+		delegatorAddr := common.BytesToAddress(delegator.Bytes())
+
+		argsDelegate := []interface{}{delegatorEthAddr, validatorSrc.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+
+		// delegate to validator src
+		delegateMethodID := abi.Methods[DelegateMethodName]
+		_, err = contract.Delegate(ctx, delegatorAddr, &delegateMethodID, argsDelegate)
+		require.NoError(t, err)
+
+		argsRedelegate := []interface{}{delegatorEthAddr, validatorSrc.OperatorAddress, validatorDest.OperatorAddress}
+
+		_, err = contract.Redelegate(ctx, delegatorAddr, &methodID, argsRedelegate)
+		require.Error(t, err)
+	})
+
+	t.Run("should fail if origin is not delegator", func(t *testing.T) {
+		r := rand.New(rand.NewSource(42))
+		validatorSrc := sample.Validator(t, r)
+		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
+		validatorDest := sample.Validator(t, r)
+		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
+
+		delegator := sample.Bech32AccAddress()
+		delegatorEthAddr := common.BytesToAddress(delegator.Bytes())
+		coins := sample.Coins()
+		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+		require.NoError(t, err)
+		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, delegator, coins)
+		require.NoError(t, err)
+
+		delegatorAddr := common.BytesToAddress(delegator.Bytes())
+
+		argsDelegate := []interface{}{delegatorEthAddr, validatorSrc.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+
+		// delegate to validator src
+		delegateMethodID := abi.Methods[DelegateMethodName]
+		_, err = contract.Delegate(ctx, delegatorAddr, &delegateMethodID, argsDelegate)
+		require.NoError(t, err)
+
+		argsRedelegate := []interface{}{delegatorEthAddr, validatorSrc.OperatorAddress, validatorDest.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+
+		originEthAddr := common.BytesToAddress(sample.Bech32AccAddress().Bytes())
+		_, err = contract.Redelegate(ctx, originEthAddr, &methodID, argsRedelegate)
+		require.ErrorContains(t, err, "origin is not delegator")
+	})
+}
