@@ -141,7 +141,7 @@ func (c *Contract) Delegate(
 		return nil, fmt.Errorf("invalid argument, wanted an int64, got %T", args[2])
 	}
 
-	res, err := msgServer.Delegate(ctx, &stakingtypes.MsgDelegate{
+	_, err := msgServer.Delegate(ctx, &stakingtypes.MsgDelegate{
 		DelegatorAddress: sdk.AccAddress(delegatorAddress.Bytes()).String(),
 		ValidatorAddress: validatorAddress,
 		Amount: sdk.Coin{
@@ -152,8 +152,6 @@ func (c *Contract) Delegate(
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println("delegate res", res)
 
 	return method.Outputs.Pack(true)
 }
