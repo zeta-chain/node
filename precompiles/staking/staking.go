@@ -109,7 +109,7 @@ func (c *Contract) RequiredGas(input []byte) uint64 {
 
 func (c *Contract) Delegate(
 	ctx sdk.Context,
-	contract *vm.Contract,
+	origin common.Address,
 	method *abi.Method,
 	args []interface{},
 ) ([]byte, error) {
@@ -127,8 +127,8 @@ func (c *Contract) Delegate(
 		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[0])
 	}
 
-	if contract.CallerAddress != delegatorAddress {
-		return nil, fmt.Errorf("caller is not delegator address")
+	if origin != delegatorAddress {
+		return nil, fmt.Errorf("origin is not delegator address")
 	}
 
 	validatorAddress, ok := args[1].(string)
@@ -160,7 +160,7 @@ func (c *Contract) Delegate(
 
 func (c *Contract) Undelegate(
 	ctx sdk.Context,
-	contract *vm.Contract,
+	origin common.Address,
 	method *abi.Method,
 	args []interface{},
 ) ([]byte, error) {
@@ -178,8 +178,8 @@ func (c *Contract) Undelegate(
 		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[0])
 	}
 
-	if contract.CallerAddress != delegatorAddress {
-		return nil, fmt.Errorf("caller is not delegator address")
+	if origin != delegatorAddress {
+		return nil, fmt.Errorf("origin is not delegator address")
 	}
 
 	validatorAddress, ok := args[1].(string)
@@ -211,7 +211,7 @@ func (c *Contract) Undelegate(
 
 func (c *Contract) Redelegate(
 	ctx sdk.Context,
-	contract *vm.Contract,
+	origin common.Address,
 	method *abi.Method,
 	args []interface{},
 ) ([]byte, error) {
@@ -229,8 +229,8 @@ func (c *Contract) Redelegate(
 		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[0])
 	}
 
-	if contract.CallerAddress != delegatorAddress {
-		return nil, fmt.Errorf("caller is not delegator address")
+	if origin != delegatorAddress {
+		return nil, fmt.Errorf("origin is not delegator address")
 	}
 
 	validatorSrcAddress, ok := args[1].(string)
@@ -285,7 +285,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, erro
 	case DelegateMethodName:
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-			res, err = c.Delegate(ctx, contract, method, args)
+			res, err = c.Delegate(ctx, evm.Origin, method, args)
 			return err
 		})
 		if execErr != nil {
@@ -295,7 +295,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, erro
 	case UndelegateMethodName:
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-			res, err = c.Undelegate(ctx, contract, method, args)
+			res, err = c.Undelegate(ctx, evm.Origin, method, args)
 			return err
 		})
 		if execErr != nil {
@@ -305,7 +305,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, erro
 	case RedelegateMethodName:
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-			res, err = c.Redelegate(ctx, contract, method, args)
+			res, err = c.Redelegate(ctx, evm.Origin, method, args)
 			return err
 		})
 		if execErr != nil {
