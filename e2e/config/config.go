@@ -12,6 +12,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
+	"gopkg.in/yaml.v3"
 )
 
 // DoubleQuotedString forces a string to be double quoted when marshaling to yaml.

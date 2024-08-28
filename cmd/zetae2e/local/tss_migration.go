@@ -83,7 +83,7 @@ func TSSMigration(deployerRunner *runner.E2ERunner, logger *runner.Logger, verbo
 	// Run migration
 	// migrationRoutine runs migration e2e test , which migrates funds from the older TSS to the new one
 	// The zetaclient restarts required for this process are managed by the background workers in zetaclient (TSSListener)
-	fn := migrationRoutine(conf, deployerRunner, verbose, e2etests.TestMigrateTSSName)
+	fn := tssMigrationTestRoutine(conf, deployerRunner, verbose, e2etests.TestMigrateTSSName)
 
 	if err := fn(); err != nil {
 		logger.Print("❌ %v", err)
