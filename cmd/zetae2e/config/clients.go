@@ -73,7 +73,7 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, account confi
 	if err != nil {
 		return E2EClients{}, fmt.Errorf("failed to get evm client: %w", err)
 	}
-	zetaChainClients, err := getZetaClients(
+	zetaChainClients, err := GetZetaClients(
 		conf.RPCs.ZetaCoreGRPC,
 	)
 	if err != nil {
@@ -152,8 +152,8 @@ func getEVMClient(
 	return evmClient, evmAuth, nil
 }
 
-// getZetaClients get zeta clients
-func getZetaClients(rpc string) (
+// GetZetaClients get zeta clients
+func GetZetaClients(rpc string) (
 	zetaChainClients,
 	error,
 ) {
