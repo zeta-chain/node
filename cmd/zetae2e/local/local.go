@@ -42,6 +42,7 @@ const (
 	flagSkipHeaderProof   = "skip-header-proof"
 	flagTestV2            = "test-v2"
 	flagSkipTrackerCheck  = "skip-tracker-check"
+	flagSkipPrecompiles   = "skip-precompiles"
 )
 
 var (
@@ -76,6 +77,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestTSSMigration, false, "set to true to include a migration test at the end")
 	cmd.Flags().Bool(flagTestV2, false, "set to true to run tests for v2 contracts")
 	cmd.Flags().Bool(flagSkipTrackerCheck, false, "set to true to skip tracker check at the end of the tests")
+	cmd.Flags().Bool(flagSkipPrecompiles, false, "set to true to skip stateful precompiled contracts test")
 
 	return cmd
 }
@@ -100,6 +102,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipTrackerCheck  = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
 		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
 		testV2            = must(cmd.Flags().GetBool(flagTestV2))
+		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
 	)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
@@ -292,6 +295,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		ethereumAdvancedTests := []string{
 			e2etests.TestEtherWithdrawRestrictedName,
 		}
+		precompiledContractTests := []string{}
+
+		if !skipPrecompiles {
+			precompiledContractTests = []string{
+				e2etests.TestZetaPrecompilesPrototypeName,
+			}
+		}
 
 		if !light {
 			erc20Tests = append(erc20Tests, erc20AdvancedTests...)
@@ -301,6 +311,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
 		}
 
+		eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose, precompiledContractTests...))
 		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
 		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
 		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))

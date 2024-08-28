@@ -69,11 +69,10 @@ func IBCCrosschainKeeperWithMocks(
 	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)
 
 	// Create zeta keepers
-	authorityKeeper := initAuthorityKeeper(cdc, db, stateStore)
-	lightclientKeeper := initLightclientKeeper(cdc, db, stateStore, authorityKeeper)
+	authorityKeeper := initAuthorityKeeper(cdc, stateStore)
+	lightclientKeeper := initLightclientKeeper(cdc, stateStore, authorityKeeper)
 	observerKeeper := initObserverKeeper(
 		cdc,
-		db,
 		stateStore,
 		sdkKeepers.StakingKeeper,
 		sdkKeepers.SlashingKeeper,
@@ -82,7 +81,6 @@ func IBCCrosschainKeeperWithMocks(
 	)
 	fungibleKeeper := initFungibleKeeper(
 		cdc,
-		db,
 		stateStore,
 		sdkKeepers.AuthKeeper,
 		sdkKeepers.BankKeeper,

@@ -8,16 +8,16 @@ import (
 	"sync"
 	"time"
 
-	"cosmossdk.io/simapp/params"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	cosmosclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	etherminttypes "github.com/zeta-chain/ethermint/types"
+	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -48,7 +48,7 @@ type Client struct {
 	accountNumber map[authz.KeyType]uint64
 	seqNumber     map[authz.KeyType]uint64
 
-	encodingCfg          params.EncodingConfig
+	encodingCfg          etherminttypes.EncodingConfig
 	keys                 keyinterfaces.ObserverKeys
 	chainID              string
 	chain                chains.Chain
@@ -178,7 +178,7 @@ func buildCosmosClientContext(
 	chainID string,
 	keys keyinterfaces.ObserverKeys,
 	config config.ClientConfiguration,
-	encodingConfig params.EncodingConfig,
+	encodingConfig etherminttypes.EncodingConfig,
 	opts constructOpts,
 ) (cosmosclient.Context, error) {
 	if keys == nil {

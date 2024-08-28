@@ -12,7 +12,7 @@ import (
 	"encoding/json"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 )
 
 type CompiledContract struct {

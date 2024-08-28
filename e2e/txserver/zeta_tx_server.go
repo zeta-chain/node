@@ -33,9 +33,9 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/evmos/ethermint/crypto/hd"
-	etherminttypes "github.com/evmos/ethermint/types"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/zeta-chain/ethermint/crypto/hd"
+	etherminttypes "github.com/zeta-chain/ethermint/types"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
