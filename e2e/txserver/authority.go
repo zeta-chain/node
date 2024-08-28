@@ -26,7 +26,7 @@ func (zts ZetaTxServer) AddAuthorization(msgURL string) error {
 		authoritytypes.PolicyType_groupAdmin,
 	))
 	if err != nil {
-		return fmt.Errorf("failed to add authorization: %s", err.Error())
+		return fmt.Errorf("failed to add authorization: %w", err)
 	}
 
 	return nil
