@@ -61,7 +61,7 @@ func tssMigrationTestRoutine(
 
 		tssMigrationTestRunner.Logger.Print("🍾 TSS migration tests completed in %s", time.Since(startTime).String())
 
-		return err
+		return nil
 	}
 }
 
