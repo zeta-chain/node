@@ -425,6 +425,19 @@ func GetBtcEvent(
 				return nil, nil
 			}
 
+			// switch to depositor fee V2 if
+			// 1. it is bitcoin testnet, or
+			// 2. it is bitcoin mainnet and upgrade height is reached
+			// TODO: remove CalcDepositorFeeV1 and below conditions after the upgrade height
+			// https://github.com/zeta-chain/node/issues/2766
+			if netParams.Name == chaincfg.TestNet3Params.Name ||
+				(netParams.Name == chaincfg.MainNetParams.Name && blockNumber >= bitcoin.DynamicDepositorFeeHeightV2) {
+				depositorFee, err = bitcoin.CalcDepositorFeeV2(rpcClient, &tx, netParams)
+				if err != nil {
+					return nil, errors.Wrapf(err, "error calculating depositor fee V2 for inbound: %s", tx.Txid)
+				}
+			}
+
 			// deposit amount has to be no less than the minimum depositor fee
 			if vout0.Value < depositorFee {
 				logger.Info().

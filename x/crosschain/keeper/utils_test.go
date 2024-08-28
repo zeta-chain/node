@@ -2,17 +2,19 @@
 package keeper_test
 
 import (
+	"math/big"
+	"testing"
+
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/zetacore/pkg/contracts/erc1967proxy"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	"math/big"
-	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/ethereum/go-ethereum/common"
-	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	"github.com/stretchr/testify/require"
+
+	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"

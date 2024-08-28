@@ -13,9 +13,9 @@ import (
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/ethereum/go-ethereum/common"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 )
 
 // testPubKey is a dummy implementation of PubKey used for testing.

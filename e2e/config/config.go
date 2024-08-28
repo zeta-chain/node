@@ -12,7 +12,6 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
-	"gopkg.in/yaml.v3"
 )
 
 // DoubleQuotedString forces a string to be double quoted when marshaling to yaml.
@@ -70,6 +69,7 @@ type AdditionalAccounts struct {
 	UserMisc          Account `yaml:"user_misc"`
 	UserAdmin         Account `yaml:"user_admin"`
 	UserMigration     Account `yaml:"user_migration"` // used for TSS migration
+	UserPrecompile    Account `yaml:"user_precompile"`
 	UserV2Ether       Account `yaml:"user_v2_ether"`
 	UserV2ERC20       Account `yaml:"user_v2_erc20"`
 	UserV2EtherRevert Account `yaml:"user_v2_ether_revert"`
@@ -229,6 +229,7 @@ func (a AdditionalAccounts) AsSlice() []Account {
 		a.UserMisc,
 		a.UserAdmin,
 		a.UserMigration,
+		a.UserPrecompile,
 		a.UserV2Ether,
 		a.UserV2ERC20,
 		a.UserV2EtherRevert,
@@ -322,6 +323,10 @@ func (c *Config) GenerateKeys() error {
 		return err
 	}
 	c.AdditionalAccounts.UserMigration, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserPrecompile, err = generateAccount()
 	if err != nil {
 		return err
 	}

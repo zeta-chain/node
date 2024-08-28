@@ -250,7 +250,7 @@ func MigrateFundCmdCCTX(
 		gasLimit,
 		gasPrice,
 		priorityFee.MulUint64(2).String(),
-		newTSSPubKey,
+		currentTSSPubKey,
 	), nil
 }
 

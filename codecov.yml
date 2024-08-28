@@ -76,3 +76,8 @@ ignore:
   - "testutil"
   - "tool"
   - "typescript/**/*"
+  - "precompiles/**/bindings.go"
+  - "precompiles/**/*.abi"
+  - "precompiles/**/*.json"
+  - "precompiles/**/*.sol"
+  - "precompiles/prototype/IPrototype.go"

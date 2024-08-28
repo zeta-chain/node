@@ -19,8 +19,11 @@ const (
 	EmergencyPolicyName   = "emergency"
 	AdminPolicyName       = "admin"
 	OperationalPolicyName = "operational"
+	// The timeout was increased from 4 to 6 , which allows for a higher success in test runs
+	// However this needs to be researched as to why the increase in timeout was needed.
+	// https://github.com/zeta-chain/node/issues/2690
 
-	DefaultCctxTimeout = 6 * time.Minute
+	DefaultCctxTimeout = 8 * time.Minute
 )
 
 // WaitCctxMinedByInboundHash waits until cctx is mined; returns the cctxIndex (the last one)

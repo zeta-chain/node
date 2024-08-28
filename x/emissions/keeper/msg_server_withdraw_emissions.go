@@ -50,7 +50,7 @@ func (k msgServer) WithdrawEmission(
 		SendCoinsFromModuleToAccount(ctx, types.UndistributedObserverRewardsPool, address, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, msg.Amount)))
 	if err != nil {
 		ctx.Logger().
-			Error(fmt.Sprintf("Error while processing withdraw of emission to adresss %s for amount %s : err %s", address, msg.Amount, err))
+			Error(fmt.Sprintf("Error while processing withdraw of emission to address %s for amount %s : err %s", address, msg.Amount, err))
 		return nil, errorsmod.Wrap(types.ErrUnableToWithdrawEmissions, err.Error())
 	}
 
