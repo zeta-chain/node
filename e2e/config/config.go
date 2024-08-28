@@ -69,7 +69,7 @@ type AdditionalAccounts struct {
 	UserEther         Account `yaml:"user_ether"`
 	UserMisc          Account `yaml:"user_misc"`
 	UserAdmin         Account `yaml:"user_admin"`
-	UserMigration     Account `yaml:"user_migration"` // used for TSS migration
+	UserMigration     Account `yaml:"user_migration"` // used for TSS migration, TODO: rename (https://github.com/zeta-chain/node/issues/2780)
 	UserPrecompile    Account `yaml:"user_precompile"`
 	UserV2Ether       Account `yaml:"user_v2_ether"`
 	UserV2ERC20       Account `yaml:"user_v2_erc20"`

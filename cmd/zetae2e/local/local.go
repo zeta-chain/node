@@ -3,7 +3,6 @@ package local
 import (
 	"context"
 	"errors"
-	"math/big"
 	"os"
 	"path/filepath"
 	"time"
@@ -243,15 +242,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// run the v2 migration
 	if testV2Migration {
-		// deposit erc20 to ensure that the custody contract has funds to migrate
-		oneThousand := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1000))
-		erc20Deposit := deployerRunner.DepositERC20WithAmountAndMessage(
-			deployerRunner.EVMAddress(),
-			oneThousand,
-			[]byte{},
-		)
-		deployerRunner.WaitForMinedCCTX(erc20Deposit)
-
 		deployerRunner.RunV2Migration()
 	}
 

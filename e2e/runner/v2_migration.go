@@ -19,6 +19,15 @@ import (
 
 // RunV2Migration runs the process for the v2 migration
 func (r *E2ERunner) RunV2Migration() {
+	// prepare for v2 migration: deposit erc20 to ensure that the custody contract has funds to migrate
+	oneThousand := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1000))
+	erc20Deposit := r.DepositERC20WithAmountAndMessage(
+		r.EVMAddress(),
+		oneThousand,
+		[]byte{},
+	)
+	r.WaitForMinedCCTX(erc20Deposit)
+
 	// Part 1: add new admin authorization
 	r.Logger.Info("Part 1: Adding authorization for new v2 contracts")
 	err := r.ZetaTxServer.AddAuthorization("/zetachain.zetacore.crosschain.MsgUpdateERC20CustodyPauseStatus")

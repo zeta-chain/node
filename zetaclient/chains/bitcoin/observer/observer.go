@@ -456,8 +456,12 @@ func (ob *Observer) WatchUTXOs(ctx context.Context) error {
 			}
 			err := ob.FetchUTXOs(ctx)
 			if err != nil {
+				// log debug log if the error if no wallet is loaded
+				// this is to prevent extensive logging in localnet when the wallet is not loaded for non-Bitcoin test
 				if !strings.Contains(err.Error(), "No wallet is loaded") {
 					ob.logger.UTXOs.Error().Err(err).Msg("error fetching btc utxos")
+				} else {
+					ob.logger.UTXOs.Debug().Msg("No wallet is loaded; retrying...")
 				}
 			}
 			ticker.UpdateInterval(ob.GetChainParams().WatchUtxoTicker, ob.logger.UTXOs)
