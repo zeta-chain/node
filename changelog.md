@@ -15,6 +15,7 @@
 * [2644](https://github.com/zeta-chain/node/pull/2644) - add created_timestamp to cctx status
 * [2673](https://github.com/zeta-chain/node/pull/2673) - add relayer key importer, encryption and decryption
 * [2633](https://github.com/zeta-chain/node/pull/2633) - support for stateful precompiled contracts.
+* [2787](https://github.com/zeta-chain/node/pull/2787) - ask for 3 accounts (signer, pda, system_program) on solana gateway deposit
 
 ### Refactor
 

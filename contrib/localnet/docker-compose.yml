@@ -170,6 +170,9 @@ services:
     image: zetanode:latest
     container_name: zetaclient3
     hostname: zetaclient3
+    profiles:
+      - stress
+      - all
     networks:
       mynetwork:
         ipv4_address: 172.20.0.24
