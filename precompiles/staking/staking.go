@@ -19,7 +19,9 @@ import (
 )
 
 const (
-	DelegateMethodName = "delegate"
+	DelegateMethodName   = "delegate"
+	UndelegateMethodName = "undelegate"
+	RedelegateMethodName = "redelegate"
 )
 
 var (
@@ -44,6 +46,10 @@ func initABI() {
 		switch methodName {
 		// TODO: just temporary
 		case DelegateMethodName:
+			GasRequiredByMethod[methodID] = 10000
+		case UndelegateMethodName:
+			GasRequiredByMethod[methodID] = 10000
+		case RedelegateMethodName:
 			GasRequiredByMethod[methodID] = 10000
 		default:
 			GasRequiredByMethod[methodID] = 0
@@ -264,6 +270,26 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, erro
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
 			res, err = c.Delegate(ctx, method, args)
+			return err
+		})
+		if execErr != nil {
+			return nil, err
+		}
+		return res, nil
+	case UndelegateMethodName:
+		var res []byte
+		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
+			res, err = c.Undelegate(ctx, method, args)
+			return err
+		})
+		if execErr != nil {
+			return nil, err
+		}
+		return res, nil
+	case RedelegateMethodName:
+		var res []byte
+		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
+			res, err = c.Redelegate(ctx, method, args)
 			return err
 		})
 		if execErr != nil {
