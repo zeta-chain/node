@@ -1,6 +1,9 @@
 package staking
 
 import (
+	"fmt"
+	"math/big"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,6 +12,9 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	"cosmossdk.io/math"
 	ptypes "github.com/zeta-chain/zetacore/precompiles/types"
 )
 
@@ -99,14 +105,143 @@ func (c *Contract) Delegate(
 	method *abi.Method,
 	args []interface{},
 ) ([]byte, error) {
-	if len(args) != 1 {
+	if len(args) != 3 {
 		return nil, &(ptypes.ErrInvalidNumberOfArgs{
 			Got:    len(args),
-			Expect: 1,
+			Expect: 3,
 		})
 	}
 
-	return []byte{}, nil
+	msgServer := stakingkeeper.NewMsgServerImpl(&c.stakingKeeper)
+
+	delegatorAddress, ok := args[0].(common.Address)
+	if !ok {
+		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[0])
+	}
+
+	validatorAddress, ok := args[1].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[1])
+	}
+
+	amount, ok := args[2].(int64)
+	if !ok {
+		return nil, fmt.Errorf("invalid argument, wanted an int64, got %T", args[2])
+	}
+
+	res, err := msgServer.Delegate(ctx, &stakingtypes.MsgDelegate{
+		DelegatorAddress: sdk.AccAddress(delegatorAddress.Bytes()).String(),
+		ValidatorAddress: validatorAddress,
+		Amount: sdk.Coin{
+			Denom:  c.stakingKeeper.BondDenom(ctx),
+			Amount: math.NewIntFromBigInt(big.NewInt(amount)),
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("delegate res", res)
+
+	return method.Outputs.Pack(true)
+}
+
+func (c *Contract) Undelegate(
+	ctx sdk.Context,
+	method *abi.Method,
+	args []interface{},
+) ([]byte, error) {
+	if len(args) != 3 {
+		return nil, &(ptypes.ErrInvalidNumberOfArgs{
+			Got:    len(args),
+			Expect: 3,
+		})
+	}
+
+	msgServer := stakingkeeper.NewMsgServerImpl(&c.stakingKeeper)
+
+	delegatorAddress, ok := args[0].(common.Address)
+	if !ok {
+		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[0])
+	}
+
+	validatorAddress, ok := args[1].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[1])
+	}
+
+	amount, ok := args[2].(int64)
+	if !ok {
+		return nil, fmt.Errorf("invalid argument, wanted an int64, got %T", args[2])
+	}
+
+	res, err := msgServer.Undelegate(ctx, &stakingtypes.MsgUndelegate{
+		DelegatorAddress: sdk.AccAddress(delegatorAddress.Bytes()).String(),
+		ValidatorAddress: validatorAddress,
+		Amount: sdk.Coin{
+			Denom:  c.stakingKeeper.BondDenom(ctx),
+			Amount: math.NewIntFromBigInt(big.NewInt(amount)),
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("undelegate res", res)
+
+	return method.Outputs.Pack(res.GetCompletionTime().UTC().Unix())
+}
+
+func (c *Contract) Redelegate(
+	ctx sdk.Context,
+	method *abi.Method,
+	args []interface{},
+) ([]byte, error) {
+	if len(args) != 4 {
+		return nil, &(ptypes.ErrInvalidNumberOfArgs{
+			Got:    len(args),
+			Expect: 4,
+		})
+	}
+
+	msgServer := stakingkeeper.NewMsgServerImpl(&c.stakingKeeper)
+
+	delegatorAddress, ok := args[0].(common.Address)
+	if !ok {
+		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[0])
+	}
+
+	validatorSrcAddress, ok := args[1].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[1])
+	}
+
+	validatorDstAddress, ok := args[2].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[1])
+	}
+
+	amount, ok := args[3].(int64)
+	if !ok {
+		return nil, fmt.Errorf("invalid argument, wanted an int64, got %T", args[2])
+	}
+
+	res, err := msgServer.BeginRedelegate(ctx, &stakingtypes.MsgBeginRedelegate{
+		DelegatorAddress:    sdk.AccAddress(delegatorAddress.Bytes()).String(),
+		ValidatorSrcAddress: validatorSrcAddress,
+		ValidatorDstAddress: validatorDstAddress,
+		Amount: sdk.Coin{
+			Denom:  c.stakingKeeper.BondDenom(ctx),
+			Amount: math.NewIntFromBigInt(big.NewInt(amount)),
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("undelegate res", res)
+
+	return method.Outputs.Pack(res.GetCompletionTime().UTC().Unix())
 }
 
 // Run is the entrypoint of the precompiled contract, it switches over the input method,

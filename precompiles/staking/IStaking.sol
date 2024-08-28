@@ -9,7 +9,7 @@ IStaking constant ISTAKING_CONTRACT = IStaking(
 );
 
 interface IStaking {
-    /// @dev Delegate coin to validator
+    /// @dev Delegate coins to validator
     /// @param delegator Delegator address
     /// @param validator Validator address
     /// @param amount Coins amount
@@ -19,4 +19,28 @@ interface IStaking {
         string memory validator,
         uint256 amount
     ) external returns (bool success);
+
+    /// @dev Undelegate coins from validator
+    /// @param delegator Delegator address
+    /// @param validator Validator address
+    /// @param amount Coins amount
+    /// @return completionTime Time when undelegation is done
+    function undelegate(
+        address delegator,
+        string memory validator,
+        uint256 amount
+    ) external returns (int64 completionTime);
+
+    /// @dev Redelegate coins from validatorSrd to validatorDst
+    /// @param delegator Delegator address
+    /// @param validatorSrd Validator from address
+    /// @param validatorDst Validator to address
+    /// @param amount Coins amount
+    /// @return completionTime Time when redelegation is done
+    function redelegate(
+        address delegator,
+        string memory validatorSrd,
+        string memory validatorDst,
+        uint256 amount
+    ) external returns (int64 completionTime);
 }
