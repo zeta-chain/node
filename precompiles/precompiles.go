@@ -44,12 +44,12 @@ func StatefulContracts(
 	}
 
 	// Define the staking contract function.
-	if EnabledStatefulContracts[prototype.ContractAddress] {
+	if EnabledStatefulContracts[staking.ContractAddress] {
 		stakingContract := func(_ sdktypes.Context, _ ethparams.Rules) vm.PrecompiledContract {
 			return staking.NewIStakingContract(stakingKeeper, cdc, gasConfig)
 		}
 
-		// Append the prototype contract to the precompiledContracts slice.
+		// Append the staking contract to the precompiledContracts slice.
 		precompiledContracts = append(precompiledContracts, stakingContract)
 	}
 

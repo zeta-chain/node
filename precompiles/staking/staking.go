@@ -18,9 +18,14 @@ import (
 )
 
 const (
+	// write
 	StakeMethodName         = "stake"
 	UnstakeMethodName       = "unstake"
 	TransferStakeMethodName = "transferStake"
+
+	// read
+	GetAllValidatorsMethodName = "getAllValidators"
+	GetStakesMethodName        = "getStakes"
 )
 
 var (
@@ -51,6 +56,10 @@ func initABI() {
 			GasRequiredByMethod[methodID] = 10000
 		case TransferStakeMethodName:
 			GasRequiredByMethod[methodID] = 10000
+		case GetAllValidatorsMethodName:
+			GasRequiredByMethod[methodID] = 0
+		case GetStakesMethodName:
+			GasRequiredByMethod[methodID] = 0
 		default:
 			GasRequiredByMethod[methodID] = 0
 		}
@@ -92,6 +101,7 @@ func (c *Contract) Abi() abi.ABI {
 // The gas has to be calculated deterministically based on the input.
 func (c *Contract) RequiredGas(input []byte) uint64 {
 	// base cost to prevent large input size
+	// TODO: 0 for read methods
 	baseCost := uint64(len(input)) * c.kvGasConfig.WriteCostPerByte
 
 	// get methodID (first 4 bytes)
@@ -104,6 +114,66 @@ func (c *Contract) RequiredGas(input []byte) uint64 {
 
 	// Can not happen, but return 0 if the method is not found.
 	return 0
+}
+
+func (c *Contract) GetAllValidators(
+	ctx sdk.Context,
+	method *abi.Method,
+) ([]byte, error) {
+	validators := c.stakingKeeper.GetAllValidators(ctx)
+
+	validatorsRes := []Validator{}
+	for _, v := range validators {
+		validatorsRes = append(validatorsRes, Validator{
+			OperatorAddress: v.OperatorAddress,
+		})
+	}
+
+	return method.Outputs.Pack(validatorsRes)
+}
+
+func (c *Contract) GetStake(
+	ctx sdk.Context,
+	method *abi.Method,
+	args []interface{},
+) ([]byte, error) {
+	if len(args) != 2 {
+		return nil, &(ptypes.ErrInvalidNumberOfArgs{
+			Got:    len(args),
+			Expect: 2,
+		})
+	}
+	stakerAddress, ok := args[0].(common.Address)
+	if !ok {
+		return nil, ptypes.ErrInvalidArgument{
+			Got: args[0],
+		}
+	}
+
+	validatorAddress, ok := args[1].(string)
+	if !ok {
+		return nil, ptypes.ErrInvalidArgument{
+			Got: args[1],
+		}
+	}
+
+	staker, err := sdk.AccAddressFromBech32(sdk.AccAddress(stakerAddress.Bytes()).String())
+	if err != nil {
+		return nil, err
+	}
+
+	validator, err := sdk.ValAddressFromBech32(validatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	delegation := c.stakingKeeper.Delegation(ctx, staker, validator)
+	shares := big.NewInt(0)
+	if delegation != nil {
+		shares = delegation.GetShares().BigInt()
+	}
+
+	return method.Outputs.Pack(shares)
 }
 
 func (c *Contract) Stake(
@@ -137,7 +207,7 @@ func (c *Contract) Stake(
 		}
 	}
 
-	amount, ok := args[2].(int64)
+	amount, ok := args[2].(*big.Int)
 	if !ok {
 		return nil, ptypes.ErrInvalidArgument{
 			Got: args[2],
@@ -150,7 +220,7 @@ func (c *Contract) Stake(
 		ValidatorAddress: validatorAddress,
 		Amount: sdk.Coin{
 			Denom:  c.stakingKeeper.BondDenom(ctx),
-			Amount: math.NewIntFromBigInt(big.NewInt(amount)),
+			Amount: math.NewIntFromBigInt(amount),
 		},
 	})
 	if err != nil {
@@ -191,7 +261,7 @@ func (c *Contract) Unstake(
 		}
 	}
 
-	amount, ok := args[2].(int64)
+	amount, ok := args[2].(*big.Int)
 	if !ok {
 		return nil, ptypes.ErrInvalidArgument{
 			Got: args[2],
@@ -204,7 +274,7 @@ func (c *Contract) Unstake(
 		ValidatorAddress: validatorAddress,
 		Amount: sdk.Coin{
 			Denom:  c.stakingKeeper.BondDenom(ctx),
-			Amount: math.NewIntFromBigInt(big.NewInt(amount)),
+			Amount: math.NewIntFromBigInt(amount),
 		},
 	})
 	if err != nil {
@@ -252,7 +322,7 @@ func (c *Contract) TransferStake(
 		}
 	}
 
-	amount, ok := args[3].(int64)
+	amount, ok := args[3].(*big.Int)
 	if !ok {
 		return nil, ptypes.ErrInvalidArgument{
 			Got: args[3],
@@ -266,7 +336,7 @@ func (c *Contract) TransferStake(
 		ValidatorDstAddress: validatorDstAddress,
 		Amount: sdk.Coin{
 			Denom:  c.stakingKeeper.BondDenom(ctx),
-			Amount: math.NewIntFromBigInt(big.NewInt(amount)),
+			Amount: math.NewIntFromBigInt(amount),
 		},
 	})
 	if err != nil {
@@ -292,6 +362,26 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, erro
 	stateDB := evm.StateDB.(ptypes.ExtStateDB)
 
 	switch method.Name {
+	case GetAllValidatorsMethodName:
+		var res []byte
+		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
+			res, err = c.GetAllValidators(ctx, method)
+			return err
+		})
+		if execErr != nil {
+			return nil, err
+		}
+		return res, nil
+	case GetStakesMethodName:
+		var res []byte
+		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
+			res, err = c.GetStake(ctx, method, args)
+			return err
+		})
+		if execErr != nil {
+			return nil, err
+		}
+		return res, nil
 	case StakeMethodName:
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {

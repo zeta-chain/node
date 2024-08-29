@@ -8,6 +8,10 @@ IStaking constant ISTAKING_CONTRACT = IStaking(
     ISTAKING_PRECOMPILE_ADDRESS
 );
 
+struct Validator {
+    string operatorAddress;
+}
+
 interface IStaking {
     /// @dev Stake coins to validator
     /// @param staker Staker address
@@ -43,4 +47,8 @@ interface IStaking {
         string memory validatorDst,
         uint256 amount
     ) external returns (int64 completionTime);
+
+    function getAllValidators() external view returns (Validator[] calldata);
+
+    function getStakes(address staker, string memory validator) external view returns (uint256);
 }

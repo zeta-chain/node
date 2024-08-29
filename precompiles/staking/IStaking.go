@@ -29,9 +29,14 @@ var (
 	_ = abi.ConvertType
 )
 
+// Validator is an auto generated low-level Go binding around an user-defined struct.
+type Validator struct {
+	OperatorAddress string
+}
+
 // IStakingMetaData contains all meta data concerning the IStaking contract.
 var IStakingMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"stake\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validatorSrc\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"validatorDst\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transferStake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"unstake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[],\"name\":\"getAllValidators\",\"outputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"operatorAddress\",\"type\":\"string\"}],\"internalType\":\"structValidator[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"}],\"name\":\"getStakes\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"stake\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validatorSrc\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"validatorDst\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transferStake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"unstake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // IStakingABI is the input ABI used to generate the binding from.
@@ -178,6 +183,68 @@ func (_IStaking *IStakingTransactorRaw) Transfer(opts *bind.TransactOpts) (*type
 // Transact invokes the (paid) contract method with params as input values.
 func (_IStaking *IStakingTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 	return _IStaking.Contract.contract.Transact(opts, method, params...)
+}
+
+// GetAllValidators is a free data retrieval call binding the contract method 0xf3513a37.
+//
+// Solidity: function getAllValidators() view returns((string)[])
+func (_IStaking *IStakingCaller) GetAllValidators(opts *bind.CallOpts) ([]Validator, error) {
+	var out []interface{}
+	err := _IStaking.contract.Call(opts, &out, "getAllValidators")
+
+	if err != nil {
+		return *new([]Validator), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]Validator)).(*[]Validator)
+
+	return out0, err
+
+}
+
+// GetAllValidators is a free data retrieval call binding the contract method 0xf3513a37.
+//
+// Solidity: function getAllValidators() view returns((string)[])
+func (_IStaking *IStakingSession) GetAllValidators() ([]Validator, error) {
+	return _IStaking.Contract.GetAllValidators(&_IStaking.CallOpts)
+}
+
+// GetAllValidators is a free data retrieval call binding the contract method 0xf3513a37.
+//
+// Solidity: function getAllValidators() view returns((string)[])
+func (_IStaking *IStakingCallerSession) GetAllValidators() ([]Validator, error) {
+	return _IStaking.Contract.GetAllValidators(&_IStaking.CallOpts)
+}
+
+// GetStakes is a free data retrieval call binding the contract method 0xf668d543.
+//
+// Solidity: function getStakes(address staker, string validator) view returns(uint256)
+func (_IStaking *IStakingCaller) GetStakes(opts *bind.CallOpts, staker common.Address, validator string) (*big.Int, error) {
+	var out []interface{}
+	err := _IStaking.contract.Call(opts, &out, "getStakes", staker, validator)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GetStakes is a free data retrieval call binding the contract method 0xf668d543.
+//
+// Solidity: function getStakes(address staker, string validator) view returns(uint256)
+func (_IStaking *IStakingSession) GetStakes(staker common.Address, validator string) (*big.Int, error) {
+	return _IStaking.Contract.GetStakes(&_IStaking.CallOpts, staker, validator)
+}
+
+// GetStakes is a free data retrieval call binding the contract method 0xf668d543.
+//
+// Solidity: function getStakes(address staker, string validator) view returns(uint256)
+func (_IStaking *IStakingCallerSession) GetStakes(staker common.Address, validator string) (*big.Int, error) {
+	return _IStaking.Contract.GetStakes(&_IStaking.CallOpts, staker, validator)
 }
 
 // Stake is a paid mutator transaction binding the contract method 0x90b8436f.
