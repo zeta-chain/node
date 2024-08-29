@@ -5,6 +5,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go/rpc"
+
 	zetacore_rpc "github.com/zeta-chain/zetacore/pkg/rpc"
 )
 

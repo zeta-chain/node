@@ -8,12 +8,12 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go/rpc"
-	zetacore_rpc "github.com/zeta-chain/zetacore/pkg/rpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/runner"
+	zetacore_rpc "github.com/zeta-chain/zetacore/pkg/rpc"
 )
 
 // getClientsFromConfig get clients from config
@@ -108,7 +108,10 @@ func getEVMClient(
 
 func GetZetacoreClient(ctx context.Context, conf config.Config) (zetacore_rpc.Clients, error) {
 	if conf.RPCs.ZetaCoreGRPC != "" {
-		return zetacore_rpc.NewGRPCClients(conf.RPCs.ZetaCoreGRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		return zetacore_rpc.NewGRPCClients(
+			conf.RPCs.ZetaCoreGRPC,
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		)
 	}
 	if conf.RPCs.ZetaCoreRPC != "" {
 		return zetacore_rpc.NewCometBFTClients(conf.RPCs.ZetaCoreRPC)

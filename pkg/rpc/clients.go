@@ -9,9 +9,9 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 	"google.golang.org/grpc"
 
-	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 	etherminttypes "github.com/zeta-chain/zetacore/rpc/types"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -21,6 +21,8 @@ import (
 )
 
 // Clients contains RPC client interfaces to interact with ZetaCore
+//
+// Clients also has some high level wrappers for the clients
 type Clients struct {
 	// Cosmos SDK clients
 

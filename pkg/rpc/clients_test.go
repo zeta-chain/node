@@ -9,12 +9,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	tmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/require"
@@ -70,29 +68,6 @@ func setupMockServer(
 	})
 
 	return server
-}
-
-func withDummyServer(zetaBlockHeight int64) []grpcmock.ServerOption {
-	return []grpcmock.ServerOption{
-		grpcmock.RegisterService(crosschaintypes.RegisterQueryServer),
-		grpcmock.RegisterService(crosschaintypes.RegisterMsgServer),
-		grpcmock.RegisterService(feemarkettypes.RegisterQueryServer),
-		grpcmock.RegisterService(authtypes.RegisterQueryServer),
-		grpcmock.RegisterService(abci.RegisterABCIApplicationServer),
-		func(s *grpcmock.Server) {
-			// Block Height
-			s.ExpectUnary("/zetachain.zetacore.crosschain.Query/LastZetaHeight").
-				UnlimitedTimes().
-				Return(crosschaintypes.QueryLastZetaHeightResponse{Height: zetaBlockHeight})
-
-			// London Base Fee
-			s.ExpectUnary("/ethermint.feemarket.v1.Query/Params").
-				UnlimitedTimes().
-				Return(feemarkettypes.QueryParamsResponse{
-					Params: feemarkettypes.Params{BaseFee: types.NewInt(100)},
-				})
-		},
-	}
 }
 
 func setupZetacoreClients(t *testing.T) Clients {
