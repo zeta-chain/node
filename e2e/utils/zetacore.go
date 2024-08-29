@@ -41,6 +41,20 @@ func WaitCctxMinedByInboundHash(
 	return cctxs[len(cctxs)-1]
 }
 
+// EnsureNoCctxMinedByInboundHash ensures no cctx is mined by inbound hash
+func EnsureNoCctxMinedByInboundHash(
+	ctx context.Context,
+	inboundHash string,
+	client crosschaintypes.QueryClient,
+) {
+	t := TestingFromContext(ctx)
+
+	// query cctx by inbound hash
+	in := &crosschaintypes.QueryGetInboundHashToCctxRequest{InboundHash: inboundHash}
+	_, err := client.InboundHashToCctx(ctx, in)
+	require.ErrorIs(t, err, status.Error(codes.NotFound, "not found"))
+}
+
 // WaitCctxsMinedByInboundHash waits until cctx is mined; returns the cctxIndex (the last one)
 func WaitCctxsMinedByInboundHash(
 	ctx context.Context,

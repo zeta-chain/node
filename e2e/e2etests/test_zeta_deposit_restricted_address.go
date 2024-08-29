@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 )
 
@@ -15,5 +16,11 @@ func TestZetaDepositRestricted(r *runner.E2ERunner, args []string) {
 	amount := parseBigInt(r, args[0])
 
 	// Deposit amount to restricted address
-	r.DepositZetaWithAmount(ethcommon.HexToAddress(sample.RestrictedEVMAddressTest), amount)
+	txHash := r.DepositZetaWithAmount(ethcommon.HexToAddress(sample.RestrictedEVMAddressTest), amount)
+
+	// wait for 5 zeta blocks
+	r.WaitForBlocks(5)
+
+	// no cctx should be created
+	utils.EnsureNoCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient)
 }

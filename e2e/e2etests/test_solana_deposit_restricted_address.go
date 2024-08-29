@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
 func TestSolanaDepositRestricted(r *runner.E2ERunner, args []string) {
@@ -17,5 +18,11 @@ func TestSolanaDepositRestricted(r *runner.E2ERunner, args []string) {
 	depositAmount := parseBigInt(r, args[1])
 
 	// execute the deposit transaction
-	r.SOLDepositAndCall(nil, receiverRestricted, depositAmount, nil)
+	sig := r.SOLDepositAndCall(nil, receiverRestricted, depositAmount, nil)
+
+	// wait for 5 zeta blocks
+	r.WaitForBlocks(5)
+
+	// no cctx should be created
+	utils.EnsureNoCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient)
 }
