@@ -16,10 +16,14 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/e2etests"
 	"github.com/zeta-chain/zetacore/e2e/runner"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 const flagVerbose = "verbose"
 const flagConfig = "config"
+const flagERC20ChainName = "erc20-chain-name"
+const flagERC20Symbol = "erc20-symbol"
 
 // NewRunCmd returns the run command
 // which runs the E2E from a config file describing the tests, networks, and accounts
@@ -40,6 +44,9 @@ For example: zetae2e run deposit:1000 withdraw: --config config.yml`,
 		fmt.Println("Error marking flag as required")
 		os.Exit(1)
 	}
+
+	cmd.Flags().String(flagERC20ChainName, "", "chain_name from /zeta-chain/observer/supportedChains")
+	cmd.Flags().String(flagERC20Symbol, "", "symbol from /zeta-chain/fungible/foreign_coins")
 
 	// Retain the verbose flag
 	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
@@ -66,6 +73,29 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 
 	// initialize logger
 	logger := runner.NewLogger(verbose, color.FgHiCyan, "e2e")
+
+	// update config with dynamic ERC20
+	erc20ChainName, err := cmd.Flags().GetString(flagERC20ChainName)
+	if err != nil {
+		return err
+	}
+	erc20Symbol, err := cmd.Flags().GetString(flagERC20Symbol)
+	if err != nil {
+		return err
+	}
+	if erc20ChainName != "" && erc20Symbol != "" {
+		erc20Asset, zrc20ContractAddress, err := findERC20(
+			cmd.Context(),
+			conf,
+			erc20ChainName,
+			erc20Symbol,
+		)
+		if err != nil {
+			return err
+		}
+		conf.Contracts.EVM.ERC20 = config.DoubleQuotedString(erc20Asset)
+		conf.Contracts.ZEVM.ERC20ZRC20Addr = config.DoubleQuotedString(zrc20ContractAddress)
+	}
 
 	// set config
 	app.SetConfig()
@@ -99,11 +129,6 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	testRunner.CctxTimeout = 60 * time.Minute
 	testRunner.ReceiptTimeout = 60 * time.Minute
 
-	balancesBefore, err := testRunner.GetAccountBalances(true)
-	if err != nil {
-		return err
-	}
-
 	// parse test names and arguments from cmd args and run them
 	userTestsConfigs, err := parseCmdArgsToE2ETestRunConfig(args)
 	if err != nil {
@@ -119,15 +144,9 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	balancesAfter, err := testRunner.GetAccountBalances(true)
-	if err != nil {
-		return err
-	}
-
 	// Print tests completion info
 	logger.Print("tests finished successfully in %s", time.Since(testStartTime).String())
 	testRunner.Logger.SetColor(color.FgHiRed)
-	testRunner.PrintTotalDiff(runner.GetAccountBalancesDiff(balancesBefore, balancesAfter))
 	testRunner.Logger.SetColor(color.FgHiGreen)
 	testRunner.PrintTestReports(reports)
 
@@ -156,4 +175,44 @@ func parseCmdArgsToE2ETestRunConfig(args []string) ([]runner.E2ETestRunConfig, e
 		})
 	}
 	return tests, nil
+}
+
+// findERC20 loads ERC20 addresses via gRPC given CLI flags
+func findERC20(ctx context.Context, conf config.Config, erc20ChainName, erc20Symbol string) (string, string, error) {
+	clients, err := zetae2econfig.GetZetacoreClient(conf)
+	if err != nil {
+		return "", "", fmt.Errorf("get zeta clients: %w", err)
+	}
+
+	supportedChainsRes, err := clients.Observer.SupportedChains(ctx, &observertypes.QuerySupportedChains{})
+	if err != nil {
+		return "", "", fmt.Errorf("get chain params: %w", err)
+	}
+
+	chainID := int64(0)
+	for _, chain := range supportedChainsRes.Chains {
+		if chain.Name == erc20ChainName {
+			chainID = chain.ChainId
+			break
+		}
+	}
+	if chainID == 0 {
+		return "", "", fmt.Errorf("chain %s not found", erc20ChainName)
+	}
+
+	foreignCoinsRes, err := clients.Fungible.ForeignCoinsAll(ctx, &fungibletypes.QueryAllForeignCoinsRequest{})
+	if err != nil {
+		return "", "", fmt.Errorf("get foreign coins: %w", err)
+	}
+
+	for _, coin := range foreignCoinsRes.ForeignCoins {
+		if coin.ForeignChainId != chainID {
+			continue
+		}
+		// sometimes symbol is USDT, sometimes it's like USDT.SEPOLIA
+		if strings.HasPrefix(coin.Symbol, erc20Symbol) || strings.HasSuffix(coin.Symbol, erc20Symbol) {
+			return coin.Asset, coin.Zrc20ContractAddress, nil
+		}
+	}
+	return "", "", fmt.Errorf("erc20 %s not found on %s", erc20Symbol, erc20ChainName)
 }

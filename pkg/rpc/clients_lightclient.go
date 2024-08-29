@@ -1,4 +1,4 @@
-package zetacore
+package rpc
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 )
 
 // GetBlockHeaderEnabledChains returns the enabled chains for block headers
-func (c *Client) GetBlockHeaderEnabledChains(ctx context.Context) ([]types.HeaderSupportedChain, error) {
-	resp, err := c.client.light.HeaderEnabledChains(ctx, &types.QueryHeaderEnabledChainsRequest{})
+func (c *Clients) GetBlockHeaderEnabledChains(ctx context.Context) ([]types.HeaderSupportedChain, error) {
+	resp, err := c.Lightclient.HeaderEnabledChains(ctx, &types.QueryHeaderEnabledChainsRequest{})
 	if err != nil {
 		return []types.HeaderSupportedChain{}, err
 	}
@@ -20,10 +20,10 @@ func (c *Client) GetBlockHeaderEnabledChains(ctx context.Context) ([]types.Heade
 }
 
 // GetBlockHeaderChainState returns the block header chain state
-func (c *Client) GetBlockHeaderChainState(ctx context.Context, chainID int64) (*types.ChainState, error) {
+func (c *Clients) GetBlockHeaderChainState(ctx context.Context, chainID int64) (*types.ChainState, error) {
 	in := &types.QueryGetChainStateRequest{ChainId: chainID}
 
-	resp, err := c.client.light.ChainState(ctx, in)
+	resp, err := c.Lightclient.ChainState(ctx, in)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get chain state")
 	}
@@ -32,7 +32,7 @@ func (c *Client) GetBlockHeaderChainState(ctx context.Context, chainID int64) (*
 }
 
 // Prove returns whether a proof is valid
-func (c *Client) Prove(
+func (c *Clients) Prove(
 	ctx context.Context,
 	blockHash string,
 	txHash string,
@@ -48,7 +48,7 @@ func (c *Client) Prove(
 		TxHash:    txHash,
 	}
 
-	resp, err := c.client.light.Prove(ctx, in)
+	resp, err := c.Lightclient.Prove(ctx, in)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to prove")
 	}

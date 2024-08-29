@@ -166,7 +166,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	noError(err)
 
 	// set the authority client to the zeta tx server to be able to query message permissions
-	deployerRunner.ZetaTxServer.SetAuthorityClient(deployerRunner.AutorithyClient)
+	deployerRunner.ZetaTxServer.SetAuthorityClient(deployerRunner.AuthorityClient)
 
 	// wait for keygen to be completed
 	// if setup is skipped, we assume that the keygen is already completed
