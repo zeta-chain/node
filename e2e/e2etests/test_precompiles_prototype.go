@@ -8,7 +8,7 @@ import (
 	"github.com/zeta-chain/zetacore/precompiles/prototype"
 )
 
-func TestPrecompilesRegular(r *runner.E2ERunner, args []string) {
+func TestPrecompilesPrototype(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0, "No arguments expected")
 
 	iPrototype, err := prototype.NewIPrototype(prototype.ContractAddress, r.ZEVMClient)

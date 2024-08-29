@@ -817,6 +817,6 @@ var AllE2ETests = []runner.E2ETest{
 		TestZetaPrecompilesPrototypeName,
 		"test stateful precompiled contracts prototype",
 		[]runner.ArgDefinition{},
-		TestPrecompilesRegular,
+		TestPrecompilesPrototype,
 	),
 }
