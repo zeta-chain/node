@@ -67,7 +67,7 @@ func (r *E2ERunner) SetTSSAddresses() error {
 
 // SetZEVMSystemContracts set system contracts for the ZEVM
 func (r *E2ERunner) SetZEVMSystemContracts() {
-	r.Logger.Print("⚙️ deploying system contracts and ZRC20s on ZEVM")
+	r.Logger.Print("⚙️ deploying system contracts on ZEVM")
 	startTime := time.Now()
 	defer func() {
 		r.Logger.Info("System contract deployments took %s\n", time.Since(startTime))
@@ -168,7 +168,7 @@ func (r *E2ERunner) SetZEVMSystemContracts() {
 
 // SetZEVMZRC20s set ZRC20 for the ZEVM
 func (r *E2ERunner) SetZEVMZRC20s() {
-	r.Logger.Print("⚙️ deploying system contracts and ZRC20s on ZEVM")
+	r.Logger.Print("⚙️ deploying ZRC20s on ZEVM")
 	startTime := time.Now()
 	defer func() {
 		r.Logger.Info("System contract deployments took %s\n", time.Since(startTime))

@@ -16,6 +16,7 @@ import (
 	contracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
 	"github.com/zeta-chain/zetacore/zetaclient/logs"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
@@ -158,6 +159,12 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 	outboundAmount := new(big.Int).SetUint64(inst.TokenAmount())
 	// status was already verified as successful in CheckFinalizedTx
 	outboundStatus := chains.ReceiveStatus_success
+
+	// compliance check, special handling the cancelled cctx
+	if compliance.IsCctxRestricted(cctx) {
+		// use cctx's amount to bypass the amount check in zetacore
+		outboundAmount = cctx.GetCurrentOutboundParam().Amount.BigInt()
+	}
 
 	// post vote to zetacore
 	ob.PostVoteOutbound(ctx, cctx.Index, txSig.String(), txResult, outboundAmount, outboundStatus, nonce, coinType)

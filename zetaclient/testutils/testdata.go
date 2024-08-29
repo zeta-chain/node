@@ -15,17 +15,14 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 	testcctx "github.com/zeta-chain/zetacore/zetaclient/testdata/cctx"
 )
 
 const (
-	TestDataPathEVM          = "testdata/evm"
-	TestDataPathBTC          = "testdata/btc"
-	TestDataPathSolana       = "testdata/solana"
-	TestDataPathCctx         = "testdata/cctx"
-	RestrictedEVMAddressTest = "0x8a81Ba8eCF2c418CAe624be726F505332DF119C6"
-	RestrictedBtcAddressTest = "bcrt1qzp4gt6fc7zkds09kfzaf9ln9c5rvrzxmy6qmpp"
+	TestDataPathEVM    = "testdata/evm"
+	TestDataPathBTC    = "testdata/btc"
+	TestDataPathSolana = "testdata/solana"
+	TestDataPathCctx   = "testdata/cctx"
 )
 
 // cloneCctx returns a deep copy of the cctx
@@ -48,14 +45,6 @@ func LoadObjectFromJSONFile(t *testing.T, obj interface{}, filename string) {
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&obj)
 	require.NoError(t, err)
-}
-
-// ComplianceConfigTest returns a test compliance config
-// TODO(revamp): move to sample package
-func ComplianceConfigTest() config.ComplianceConfig {
-	return config.ComplianceConfig{
-		RestrictedAddresses: []string{RestrictedEVMAddressTest, RestrictedBtcAddressTest},
-	}
 }
 
 // LoadCctxByInbound loads archived cctx by inbound

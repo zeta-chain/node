@@ -5,7 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 )
 
 func TestZetaDepositRestricted(r *runner.E2ERunner, args []string) {
@@ -15,5 +15,5 @@ func TestZetaDepositRestricted(r *runner.E2ERunner, args []string) {
 	amount := parseBigInt(r, args[0])
 
 	// Deposit amount to restricted address
-	r.DepositZetaWithAmount(ethcommon.HexToAddress(testutils.RestrictedEVMAddressTest), amount)
+	r.DepositZetaWithAmount(ethcommon.HexToAddress(sample.RestrictedEVMAddressTest), amount)
 }

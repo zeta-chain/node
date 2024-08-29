@@ -18,12 +18,18 @@ func (signer *Signer) SignMsgWithdraw(
 	ctx context.Context,
 	params *types.OutboundParams,
 	height uint64,
+	cancelTx bool,
 ) (*contracts.MsgWithdraw, error) {
 	chain := signer.Chain()
 	// #nosec G115 always positive
 	chainID := uint64(signer.Chain().ChainId)
 	nonce := params.TssNonce
 	amount := params.Amount.Uint64()
+
+	// zero out the amount if cancelTx is set. It's legal to withdraw 0 lamports thru the gateway.
+	if cancelTx {
+		amount = 0
+	}
 
 	// check receiver address
 	to, err := chains.DecodeSolanaWalletAddress(params.Receiver)
@@ -116,7 +122,6 @@ func attachWithdrawAccounts(
 	accountSlice = append(accountSlice, solana.Meta(signer).WRITE().SIGNER())
 	accountSlice = append(accountSlice, solana.Meta(pda).WRITE())
 	accountSlice = append(accountSlice, solana.Meta(to).WRITE())
-	accountSlice = append(accountSlice, solana.Meta(gatewayID))
 	inst.ProgID = gatewayID
 
 	inst.AccountValues = accountSlice

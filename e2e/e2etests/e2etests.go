@@ -2,6 +2,7 @@ package e2etests
 
 import (
 	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 )
 
 // List of all e2e test names to be used in zetae2e
@@ -58,6 +59,8 @@ const (
 	TestSolanaWithdrawName             = "solana_withdraw"
 	TestSolanaDepositAndCallName       = "solana_deposit_and_call"
 	TestSolanaDepositAndCallRefundName = "solana_deposit_and_call_refund"
+	TestSolanaDepositRestrictedName    = "solana_deposit_restricted"
+	TestSolanaWithdrawRestrictedName   = "solana_withdraw_restricted"
 
 	/*
 	 Bitcoin tests
@@ -372,7 +375,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestSolanaDepositName,
 		"deposit SOL into ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount in lamport", DefaultValue: "1200000"},
+			{Description: "amount in lamport", DefaultValue: "12000000"},
 		},
 		TestSolanaDeposit,
 	),
@@ -399,6 +402,24 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1200000"},
 		},
 		TestSolanaDepositAndCallRefund,
+	),
+	runner.NewE2ETest(
+		TestSolanaDepositRestrictedName,
+		"deposit SOL into ZEVM restricted address",
+		[]runner.ArgDefinition{
+			{Description: "receiver", DefaultValue: sample.RestrictedEVMAddressTest},
+			{Description: "amount in lamport", DefaultValue: "1200000"},
+		},
+		TestSolanaDepositRestricted,
+	),
+	runner.NewE2ETest(
+		TestSolanaWithdrawRestrictedName,
+		"withdraw SOL from ZEVM to restricted address",
+		[]runner.ArgDefinition{
+			{Description: "receiver", DefaultValue: sample.RestrictedSolAddressTest},
+			{Description: "amount in lamport", DefaultValue: "1000000"},
+		},
+		TestSolanaWithdrawRestricted,
 	),
 	/*
 	 Bitcoin tests

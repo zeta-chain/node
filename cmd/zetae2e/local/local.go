@@ -360,6 +360,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSolanaWithdrawName,
 			e2etests.TestSolanaDepositAndCallName,
 			e2etests.TestSolanaDepositAndCallRefundName,
+			e2etests.TestSolanaDepositRestrictedName,
+			e2etests.TestSolanaWithdrawRestrictedName,
 		}
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
 	}

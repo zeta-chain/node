@@ -145,7 +145,11 @@ func (r *E2ERunner) SOLDepositAndCall(
 }
 
 // WithdrawSOLZRC20 withdraws an amount of ZRC20 SOL tokens
-func (r *E2ERunner) WithdrawSOLZRC20(to solana.PublicKey, amount *big.Int, approveAmount *big.Int) {
+func (r *E2ERunner) WithdrawSOLZRC20(
+	to solana.PublicKey,
+	amount *big.Int,
+	approveAmount *big.Int,
+) *crosschaintypes.CrossChainTx {
 	// approve
 	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.SOLZRC20Addr, approveAmount)
 	require.NoError(r, err)
@@ -165,4 +169,6 @@ func (r *E2ERunner) WithdrawSOLZRC20(to solana.PublicKey, amount *big.Int, appro
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+
+	return cctx
 }
