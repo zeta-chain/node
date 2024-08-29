@@ -75,13 +75,26 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	logger := runner.NewLogger(verbose, color.FgHiCyan, "e2e")
 
 	// update config with dynamic ERC20
-	erc20ChainName, _ := cmd.Flags().GetString(flagERC20ChainName)
-	erc20Symbol, _ := cmd.Flags().GetString(flagERC20Symbol)
+	erc20ChainName, err := cmd.Flags().GetString(flagERC20ChainName)
+	if err != nil {
+		return err
+	}
+	erc20Symbol, err := cmd.Flags().GetString(flagERC20Symbol)
+	if err != nil {
+		return err
+	}
 	if erc20ChainName != "" && erc20Symbol != "" {
-		err := updateConfigWithDynamicERC20(cmd.Context(), &conf, erc20ChainName, erc20Symbol)
+		erc20Asset, zrc20ContractAddress, err := findERC20(
+			cmd.Context(),
+			conf.RPCs.ZetaCoreGRPC,
+			erc20ChainName,
+			erc20Symbol,
+		)
 		if err != nil {
 			return err
 		}
+		conf.Contracts.EVM.ERC20 = config.DoubleQuotedString(erc20Asset)
+		conf.Contracts.ZEVM.ERC20ZRC20Addr = config.DoubleQuotedString(zrc20ContractAddress)
 	}
 
 	// set config
@@ -164,16 +177,16 @@ func parseCmdArgsToE2ETestRunConfig(args []string) ([]runner.E2ETestRunConfig, e
 	return tests, nil
 }
 
-// updateConfigWithDynamicERC20 loads ERC20 addresses via gRPC given CLI flags
-func updateConfigWithDynamicERC20(ctx context.Context, conf *config.Config, erc20ChainName, erc20Symbol string) error {
-	clients, err := zetae2econfig.GetZetaClients(conf.RPCs.ZetaCoreGRPC)
+// findERC20 loads ERC20 addresses via gRPC given CLI flags
+func findERC20(ctx context.Context, zetaCoreGRPCURL, erc20ChainName, erc20Symbol string) (string, string, error) {
+	clients, err := zetae2econfig.GetZetaClients(zetaCoreGRPCURL)
 	if err != nil {
-		return fmt.Errorf("get zeta clients: %w", err)
+		return "", "", fmt.Errorf("get zeta clients: %w", err)
 	}
 
 	supportedChainsRes, err := clients.ObserverClient.SupportedChains(ctx, &observertypes.QuerySupportedChains{})
 	if err != nil {
-		return fmt.Errorf("get chain params: %w", err)
+		return "", "", fmt.Errorf("get chain params: %w", err)
 	}
 
 	chainID := int64(0)
@@ -184,12 +197,12 @@ func updateConfigWithDynamicERC20(ctx context.Context, conf *config.Config, erc2
 		}
 	}
 	if chainID == 0 {
-		return fmt.Errorf("chain %s not found", erc20ChainName)
+		return "", "", fmt.Errorf("chain %s not found", erc20ChainName)
 	}
 
 	foreignCoinsRes, err := clients.FungibleClient.ForeignCoinsAll(ctx, &fungibletypes.QueryAllForeignCoinsRequest{})
 	if err != nil {
-		return fmt.Errorf("get foreign coins: %w", err)
+		return "", "", fmt.Errorf("get foreign coins: %w", err)
 	}
 
 	for _, coin := range foreignCoinsRes.ForeignCoins {
@@ -197,11 +210,9 @@ func updateConfigWithDynamicERC20(ctx context.Context, conf *config.Config, erc2
 			continue
 		}
 		// sometimes symbol is USDT, sometimes it's like USDT.SEPOLIA
-		if strings.Contains(coin.Symbol, erc20Symbol) {
-			conf.Contracts.EVM.ERC20 = config.DoubleQuotedString(coin.Asset)
-			conf.Contracts.ZEVM.ERC20ZRC20Addr = config.DoubleQuotedString(coin.Zrc20ContractAddress)
-			return nil
+		if strings.HasPrefix(coin.Symbol, erc20Symbol) || strings.HasSuffix(coin.Symbol, erc20Symbol) {
+			return coin.Asset, coin.Zrc20ContractAddress, nil
 		}
 	}
-	return fmt.Errorf("erc20 %s not found on %s", erc20Symbol, erc20ChainName)
+	return "", "", fmt.Errorf("erc20 %s not found on %s", erc20Symbol, erc20ChainName)
 }
