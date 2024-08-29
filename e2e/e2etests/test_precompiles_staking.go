@@ -52,7 +52,13 @@ func TestPrecompilesStaking(r *runner.E2ERunner, args []string) {
 	require.Equal(r, big.NewInt(2e18).String(), stakesAfterVal1.String())
 
 	// transfer 1 stake from validator1 to validator2
-	tx, err = stakingContract.TransferStake(r.ZEVMAuth, r.ZEVMAuth.From, validators[0].OperatorAddress, validators[1].OperatorAddress, big.NewInt(1))
+	tx, err = stakingContract.TransferStake(
+		r.ZEVMAuth,
+		r.ZEVMAuth.From,
+		validators[0].OperatorAddress,
+		validators[1].OperatorAddress,
+		big.NewInt(1),
+	)
 	require.NoError(r, err)
 
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
