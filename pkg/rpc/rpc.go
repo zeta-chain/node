@@ -5,6 +5,7 @@ import (
 
 	rpcclient "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"google.golang.org/grpc"
@@ -36,25 +37,31 @@ type Clients struct {
 	Fungible fungibletypes.QueryClient
 	// Observer is a github.com/zeta-chain/zetacore/x/observer/types QueryClient
 	Observer observertypes.QueryClient
-	// Light is a github.com/zeta-chain/zetacore/x/lightclient/types QueryClient
-	Light lightclienttypes.QueryClient
+	// Lightclient is a github.com/zeta-chain/zetacore/x/lightclient/types QueryClient
+	Lightclient lightclienttypes.QueryClient
 
 	// Ethermint specific clients
 
 	// Ethermint is a github.com/zeta-chain/zetacore/rpc/types QueryClient
 	Ethermint *etherminttypes.QueryClient
+
+	// Tendermint specific clients
+
+	// Tendermint is a github.com/cosmos/cosmos-sdk/client/grpc/tmservice QueryClient
+	Tendermint tmservice.ServiceClient
 }
 
 func newClients(ctx client.Context) (Clients, error) {
 	return Clients{
-		Authority:  authoritytypes.NewQueryClient(ctx),
-		Crosschain: crosschaintypes.NewQueryClient(ctx),
-		Fungible:   fungibletypes.NewQueryClient(ctx),
-		Auth:       authtypes.NewQueryClient(ctx),
-		Bank:       banktypes.NewQueryClient(ctx),
-		Observer:   observertypes.NewQueryClient(ctx),
-		Light:      lightclienttypes.NewQueryClient(ctx),
-		Ethermint:  etherminttypes.NewQueryClient(ctx),
+		Authority:   authoritytypes.NewQueryClient(ctx),
+		Crosschain:  crosschaintypes.NewQueryClient(ctx),
+		Fungible:    fungibletypes.NewQueryClient(ctx),
+		Auth:        authtypes.NewQueryClient(ctx),
+		Bank:        banktypes.NewQueryClient(ctx),
+		Observer:    observertypes.NewQueryClient(ctx),
+		Lightclient: lightclienttypes.NewQueryClient(ctx),
+		Ethermint:   etherminttypes.NewQueryClient(ctx),
+		Tendermint:  tmservice.NewServiceClient(ctx),
 	}, nil
 }
 

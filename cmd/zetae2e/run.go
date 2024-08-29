@@ -86,7 +86,7 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	if erc20ChainName != "" && erc20Symbol != "" {
 		erc20Asset, zrc20ContractAddress, err := findERC20(
 			cmd.Context(),
-			conf.RPCs.ZetaCoreGRPC,
+			conf,
 			erc20ChainName,
 			erc20Symbol,
 		)
@@ -178,13 +178,13 @@ func parseCmdArgsToE2ETestRunConfig(args []string) ([]runner.E2ETestRunConfig, e
 }
 
 // findERC20 loads ERC20 addresses via gRPC given CLI flags
-func findERC20(ctx context.Context, zetaCoreGRPCURL, erc20ChainName, erc20Symbol string) (string, string, error) {
-	clients, err := zetae2econfig.GetZetaClients(zetaCoreGRPCURL)
+func findERC20(ctx context.Context, conf config.Config, erc20ChainName, erc20Symbol string) (string, string, error) {
+	clients, err := zetae2econfig.GetZetacoreClient(ctx, conf)
 	if err != nil {
 		return "", "", fmt.Errorf("get zeta clients: %w", err)
 	}
 
-	supportedChainsRes, err := clients.ObserverClient.SupportedChains(ctx, &observertypes.QuerySupportedChains{})
+	supportedChainsRes, err := clients.Observer.SupportedChains(ctx, &observertypes.QuerySupportedChains{})
 	if err != nil {
 		return "", "", fmt.Errorf("get chain params: %w", err)
 	}
@@ -200,7 +200,7 @@ func findERC20(ctx context.Context, zetaCoreGRPCURL, erc20ChainName, erc20Symbol
 		return "", "", fmt.Errorf("chain %s not found", erc20ChainName)
 	}
 
-	foreignCoinsRes, err := clients.FungibleClient.ForeignCoinsAll(ctx, &fungibletypes.QueryAllForeignCoinsRequest{})
+	foreignCoinsRes, err := clients.Fungible.ForeignCoinsAll(ctx, &fungibletypes.QueryAllForeignCoinsRequest{})
 	if err != nil {
 		return "", "", fmt.Errorf("get foreign coins: %w", err)
 	}
