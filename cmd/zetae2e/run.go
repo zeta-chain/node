@@ -179,7 +179,7 @@ func parseCmdArgsToE2ETestRunConfig(args []string) ([]runner.E2ETestRunConfig, e
 
 // findERC20 loads ERC20 addresses via gRPC given CLI flags
 func findERC20(ctx context.Context, conf config.Config, erc20ChainName, erc20Symbol string) (string, string, error) {
-	clients, err := zetae2econfig.GetZetacoreClient(ctx, conf)
+	clients, err := zetae2econfig.GetZetacoreClient(conf)
 	if err != nil {
 		return "", "", fmt.Errorf("get zeta clients: %w", err)
 	}
