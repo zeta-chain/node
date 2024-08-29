@@ -9,6 +9,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"google.golang.org/grpc"
 
+	etherminttypes "github.com/zeta-chain/zetacore/rpc/types"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
@@ -18,24 +19,42 @@ import (
 
 // Clients contains RPC client interfaces to interact with zetacored
 type Clients struct {
-	AuthorityClient authoritytypes.QueryClient
-	CctxClient      crosschaintypes.QueryClient
-	FungibleClient  fungibletypes.QueryClient
-	AuthClient      authtypes.QueryClient
-	BankClient      banktypes.QueryClient
-	ObserverClient  observertypes.QueryClient
-	LightClient     lightclienttypes.QueryClient
+	// Cosmos SDK clients
+
+	// Auth is a github.com/cosmos/cosmos-sdk/x/auth/types QueryClient
+	Auth authtypes.QueryClient
+	// Bank is a github.com/cosmos/cosmos-sdk/x/bank/types QueryClient
+	Bank banktypes.QueryClient
+
+	// ZetaCore specific clients
+
+	// Authority is a github.com/zeta-chain/zetacore/x/authority/types QueryClient
+	Authority authoritytypes.QueryClient
+	// Crosschain is a github.com/zeta-chain/zetacore/x/crosschain/types QueryClient
+	Crosschain crosschaintypes.QueryClient
+	// Fungible is a github.com/zeta-chain/zetacore/x/fungible/types QueryClient
+	Fungible fungibletypes.QueryClient
+	// Observer is a github.com/zeta-chain/zetacore/x/observer/types QueryClient
+	Observer observertypes.QueryClient
+	// Light is a github.com/zeta-chain/zetacore/x/lightclient/types QueryClient
+	Light lightclienttypes.QueryClient
+
+	// Ethermint specific clients
+
+	// Ethermint is a github.com/zeta-chain/zetacore/rpc/types QueryClient
+	Ethermint *etherminttypes.QueryClient
 }
 
 func newClients(ctx client.Context) (Clients, error) {
 	return Clients{
-		AuthorityClient: authoritytypes.NewQueryClient(ctx),
-		CctxClient:      crosschaintypes.NewQueryClient(ctx),
-		FungibleClient:  fungibletypes.NewQueryClient(ctx),
-		AuthClient:      authtypes.NewQueryClient(ctx),
-		BankClient:      banktypes.NewQueryClient(ctx),
-		ObserverClient:  observertypes.NewQueryClient(ctx),
-		LightClient:     lightclienttypes.NewQueryClient(ctx),
+		Authority:  authoritytypes.NewQueryClient(ctx),
+		Crosschain: crosschaintypes.NewQueryClient(ctx),
+		Fungible:   fungibletypes.NewQueryClient(ctx),
+		Auth:       authtypes.NewQueryClient(ctx),
+		Bank:       banktypes.NewQueryClient(ctx),
+		Observer:   observertypes.NewQueryClient(ctx),
+		Light:      lightclienttypes.NewQueryClient(ctx),
+		Ethermint:  etherminttypes.NewQueryClient(ctx),
 	}, nil
 }
 
