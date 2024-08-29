@@ -20,7 +20,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// Clients contains RPC client interfaces to interact with zetacored
+// Clients contains RPC client interfaces to interact with ZetaCore
 type Clients struct {
 	// Cosmos SDK clients
 
