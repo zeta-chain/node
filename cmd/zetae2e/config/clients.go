@@ -43,8 +43,8 @@ type E2EClients struct {
 	ZevmAuth   *bind.TransactOpts
 }
 
-// zetaChainClients contains all the RPC clients and gRPC clients for ZetaChain
-type zetaChainClients struct {
+// ZetaChainClients contains all the RPC clients and gRPC clients for ZetaChain
+type ZetaChainClients struct {
 	AuthorityClient authoritytypes.QueryClient
 	CctxClient      crosschaintypes.QueryClient
 	FungibleClient  fungibletypes.QueryClient
@@ -73,7 +73,7 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, account confi
 	if err != nil {
 		return E2EClients{}, fmt.Errorf("failed to get evm client: %w", err)
 	}
-	zetaChainClients, err := getZetaClients(
+	zetaChainClients, err := GetZetaClients(
 		conf.RPCs.ZetaCoreGRPC,
 	)
 	if err != nil {
@@ -152,14 +152,14 @@ func getEVMClient(
 	return evmClient, evmAuth, nil
 }
 
-// getZetaClients get zeta clients
-func getZetaClients(rpc string) (
-	zetaChainClients,
+// GetZetaClients get zeta clients
+func GetZetaClients(rpc string) (
+	ZetaChainClients,
 	error,
 ) {
 	grpcConn, err := grpc.Dial(rpc, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return zetaChainClients{}, err
+		return ZetaChainClients{}, err
 	}
 
 	authorityClient := authoritytypes.NewQueryClient(grpcConn)
@@ -170,7 +170,7 @@ func getZetaClients(rpc string) (
 	observerClient := observertypes.NewQueryClient(grpcConn)
 	lightclientClient := lightclienttypes.NewQueryClient(grpcConn)
 
-	return zetaChainClients{
+	return ZetaChainClients{
 		AuthorityClient: authorityClient,
 		CctxClient:      cctxClient,
 		FungibleClient:  fungibleClient,
