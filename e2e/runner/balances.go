@@ -8,7 +8,10 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/pkg/errors"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 )
+
+var errNilZRC20 = errors.New("zrc20 contract is nil")
 
 // AccountBalances is a struct that contains the balances of the accounts used in the E2E test
 type AccountBalances struct {
@@ -31,6 +34,13 @@ type AccountBalancesDiff struct {
 	ERC20 *big.Int
 }
 
+func (r *E2ERunner) getZRC20BalanceSafe(z *zrc20.ZRC20) (*big.Int, error) {
+	if z == nil {
+		return new(big.Int), errNilZRC20
+	}
+	return z.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+}
+
 // GetAccountBalances returns the account balances of the accounts used in the E2E test
 func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	// zevm
@@ -42,21 +52,21 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	if err != nil {
 		return AccountBalances{}, err
 	}
-	zetaEth, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	zetaEth, err := r.getZRC20BalanceSafe(r.ETHZRC20)
 	if err != nil {
 		return AccountBalances{}, err
 	}
-	zetaErc20, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	zetaErc20, err := r.getZRC20BalanceSafe(r.ERC20ZRC20)
 	if err != nil {
 		return AccountBalances{}, err
 	}
-	zetaBtc, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	zetaBtc, err := r.getZRC20BalanceSafe(r.BTCZRC20)
 	if err != nil {
 		return AccountBalances{}, err
 	}
-	zetaSol, err := r.SOLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	zetaSol, err := r.getZRC20BalanceSafe(r.SOLZRC20)
 	if err != nil {
-		return AccountBalances{}, err
+		r.Logger.Error("get SOL balance: %v", err)
 	}
 
 	// evm
