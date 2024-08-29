@@ -63,6 +63,16 @@ func (k msgServer) VoteOutbound(
 ) (*types.MsgVoteOutboundResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	// Check if TSS exists
+	// It is almost impossible to reach this point without a TSS,
+	// as the check for TSS was already done when creating the inbound, but we check anyway.
+	// We also expect the tss.Pubkey to be the same as the one in the outbound params,
+	// As we would have processed all CCTXs before migrating
+	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
+	if !found {
+		return nil, cosmoserrors.Wrap(types.ErrCannotFindTSSKeys, voteOutboundID)
+	}
+
 	// Validate the message params to verify it against an existing CCTX.
 	cctx, err := k.ValidateOutboundMessage(ctx, *msg)
 	if err != nil {
@@ -92,6 +102,7 @@ func (k msgServer) VoteOutbound(
 
 	// Set the finalized ballot to the current outbound params.
 	cctx.SetOutboundBallotIndex(ballotIndex)
+
 	// If ballot is successful, the value received should be the out tx amount.
 	err = cctx.AddOutbound(ctx, *msg, ballot.BallotStatus)
 	if err != nil {
@@ -101,13 +112,13 @@ func (k msgServer) VoteOutbound(
 	// Fund the gas stability pool with the remaining funds.
 	k.FundStabilityPool(ctx, &cctx)
 
+	// We use the current TSS pubkey to finalize the outbound.
 	err = k.ValidateOutboundObservers(ctx, &cctx, ballot.BallotStatus, msg.ValueReceived.String())
 	if err != nil {
-		k.SaveFailedOutbound(ctx, &cctx, err.Error())
+		k.SaveFailedOutbound(ctx, &cctx, err.Error(), tss.TssPubkey)
 		return &types.MsgVoteOutboundResponse{}, nil
 	}
-
-	k.SaveSuccessfulOutbound(ctx, &cctx)
+	k.SaveSuccessfulOutbound(ctx, &cctx, tss.TssPubkey)
 	return &types.MsgVoteOutboundResponse{}, nil
 }
 
@@ -173,17 +184,17 @@ SaveFailedOutbound saves a failed outbound transaction.It does the following thi
  2. Save the outbound
 */
 
-func (k Keeper) SaveFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx, errMessage string) {
+func (k Keeper) SaveFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx, errMessage string, tssPubkey string) {
 	cctx.SetAbort(errMessage)
 	ctx.Logger().Error(errMessage)
-	k.SaveOutbound(ctx, cctx)
+	k.SaveOutbound(ctx, cctx, tssPubkey)
 }
 
 // SaveSuccessfulOutbound saves a successful outbound transaction.
 // This function does not set the CCTX status, therefore all successful outbound transactions need
 // to have their status set during processing
-func (k Keeper) SaveSuccessfulOutbound(ctx sdk.Context, cctx *types.CrossChainTx) {
-	k.SaveOutbound(ctx, cctx)
+func (k Keeper) SaveSuccessfulOutbound(ctx sdk.Context, cctx *types.CrossChainTx, tssPubkey string) {
+	k.SaveOutbound(ctx, cctx, tssPubkey)
 }
 
 /*
@@ -197,16 +208,15 @@ SaveOutbound saves the outbound transaction.It does the following things in one 
 
  4. Set the cctx and nonce to cctx and inboundHash to cctx
 */
-func (k Keeper) SaveOutbound(ctx sdk.Context, cctx *types.CrossChainTx) {
+func (k Keeper) SaveOutbound(ctx sdk.Context, cctx *types.CrossChainTx, tssPubkey string) {
 	// #nosec G115 always in range
 	for _, outboundParams := range cctx.OutboundParams {
 		k.GetObserverKeeper().
 			RemoveFromPendingNonces(ctx, outboundParams.TssPubkey, outboundParams.ReceiverChainId, int64(outboundParams.TssNonce))
 		k.RemoveOutboundTrackerFromStore(ctx, outboundParams.ReceiverChainId, outboundParams.TssNonce)
 	}
-
 	// This should set nonce to cctx only if a new revert is created.
-	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *cctx)
+	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *cctx, tssPubkey)
 }
 
 func (k Keeper) ValidateOutboundMessage(ctx sdk.Context, msg types.MsgVoteOutbound) (types.CrossChainTx, error) {
@@ -226,12 +236,6 @@ func (k Keeper) ValidateOutboundMessage(ctx sdk.Context, msg types.MsgVoteOutbou
 			msg.OutboundTssNonce,
 			cctx.GetCurrentOutboundParam().TssNonce,
 		)
-	}
-
-	// Do not process an outbound vote if TSS is not found.
-	_, found = k.zetaObserverKeeper.GetTSS(ctx)
-	if !found {
-		return types.CrossChainTx{}, cosmoserrors.Wrap(types.ErrCannotFindTSSKeys, voteOutboundID)
 	}
 
 	if cctx.GetCurrentOutboundParam().ReceiverChainId != msg.OutboundChain {
