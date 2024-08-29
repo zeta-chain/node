@@ -19,9 +19,9 @@ import (
 )
 
 const (
-	DelegateMethodName   = "delegate"
-	UndelegateMethodName = "undelegate"
-	RedelegateMethodName = "redelegate"
+	StakeMethodName         = "stake"
+	UnstakeMethodName       = "unstake"
+	TransferStakeMethodName = "transferStake"
 )
 
 var (
@@ -46,11 +46,11 @@ func initABI() {
 		switch methodName {
 		// TODO: just temporary values, double check these flat values
 		// can we just use WriteCostFlat from gas config?
-		case DelegateMethodName:
+		case StakeMethodName:
 			GasRequiredByMethod[methodID] = 10000
-		case UndelegateMethodName:
+		case UnstakeMethodName:
 			GasRequiredByMethod[methodID] = 10000
-		case RedelegateMethodName:
+		case TransferStakeMethodName:
 			GasRequiredByMethod[methodID] = 10000
 		default:
 			GasRequiredByMethod[methodID] = 0
@@ -107,7 +107,7 @@ func (c *Contract) RequiredGas(input []byte) uint64 {
 	return 0
 }
 
-func (c *Contract) Delegate(
+func (c *Contract) Stake(
 	ctx sdk.Context,
 	origin common.Address,
 	method *abi.Method,
@@ -122,13 +122,13 @@ func (c *Contract) Delegate(
 
 	msgServer := stakingkeeper.NewMsgServerImpl(&c.stakingKeeper)
 
-	delegatorAddress, ok := args[0].(common.Address)
+	stakerAddress, ok := args[0].(common.Address)
 	if !ok {
 		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[0])
 	}
 
-	if origin != delegatorAddress {
-		return nil, fmt.Errorf("origin is not delegator address")
+	if origin != stakerAddress {
+		return nil, fmt.Errorf("origin is not staker address")
 	}
 
 	validatorAddress, ok := args[1].(string)
@@ -142,7 +142,7 @@ func (c *Contract) Delegate(
 	}
 
 	_, err := msgServer.Delegate(ctx, &stakingtypes.MsgDelegate{
-		DelegatorAddress: sdk.AccAddress(delegatorAddress.Bytes()).String(),
+		DelegatorAddress: sdk.AccAddress(stakerAddress.Bytes()).String(),
 		ValidatorAddress: validatorAddress,
 		Amount: sdk.Coin{
 			Denom:  c.stakingKeeper.BondDenom(ctx),
@@ -156,7 +156,7 @@ func (c *Contract) Delegate(
 	return method.Outputs.Pack(true)
 }
 
-func (c *Contract) Undelegate(
+func (c *Contract) Unstake(
 	ctx sdk.Context,
 	origin common.Address,
 	method *abi.Method,
@@ -171,13 +171,13 @@ func (c *Contract) Undelegate(
 
 	msgServer := stakingkeeper.NewMsgServerImpl(&c.stakingKeeper)
 
-	delegatorAddress, ok := args[0].(common.Address)
+	stakerAddress, ok := args[0].(common.Address)
 	if !ok {
 		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[0])
 	}
 
-	if origin != delegatorAddress {
-		return nil, fmt.Errorf("origin is not delegator address")
+	if origin != stakerAddress {
+		return nil, fmt.Errorf("origin is not staker address")
 	}
 
 	validatorAddress, ok := args[1].(string)
@@ -191,7 +191,7 @@ func (c *Contract) Undelegate(
 	}
 
 	res, err := msgServer.Undelegate(ctx, &stakingtypes.MsgUndelegate{
-		DelegatorAddress: sdk.AccAddress(delegatorAddress.Bytes()).String(),
+		DelegatorAddress: sdk.AccAddress(stakerAddress.Bytes()).String(),
 		ValidatorAddress: validatorAddress,
 		Amount: sdk.Coin{
 			Denom:  c.stakingKeeper.BondDenom(ctx),
@@ -205,7 +205,7 @@ func (c *Contract) Undelegate(
 	return method.Outputs.Pack(res.GetCompletionTime().UTC().Unix())
 }
 
-func (c *Contract) Redelegate(
+func (c *Contract) TransferStake(
 	ctx sdk.Context,
 	origin common.Address,
 	method *abi.Method,
@@ -220,13 +220,13 @@ func (c *Contract) Redelegate(
 
 	msgServer := stakingkeeper.NewMsgServerImpl(&c.stakingKeeper)
 
-	delegatorAddress, ok := args[0].(common.Address)
+	stakerAddress, ok := args[0].(common.Address)
 	if !ok {
 		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[0])
 	}
 
-	if origin != delegatorAddress {
-		return nil, fmt.Errorf("origin is not delegator address")
+	if origin != stakerAddress {
+		return nil, fmt.Errorf("origin is not staker address")
 	}
 
 	validatorSrcAddress, ok := args[1].(string)
@@ -245,7 +245,7 @@ func (c *Contract) Redelegate(
 	}
 
 	res, err := msgServer.BeginRedelegate(ctx, &stakingtypes.MsgBeginRedelegate{
-		DelegatorAddress:    sdk.AccAddress(delegatorAddress.Bytes()).String(),
+		DelegatorAddress:    sdk.AccAddress(stakerAddress.Bytes()).String(),
 		ValidatorSrcAddress: validatorSrcAddress,
 		ValidatorDstAddress: validatorDstAddress,
 		Amount: sdk.Coin{
@@ -276,30 +276,30 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, erro
 	stateDB := evm.StateDB.(ptypes.ExtStateDB)
 
 	switch method.Name {
-	case DelegateMethodName:
+	case StakeMethodName:
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-			res, err = c.Delegate(ctx, evm.Origin, method, args)
+			res, err = c.Stake(ctx, evm.Origin, method, args)
 			return err
 		})
 		if execErr != nil {
 			return nil, err
 		}
 		return res, nil
-	case UndelegateMethodName:
+	case UnstakeMethodName:
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-			res, err = c.Undelegate(ctx, evm.Origin, method, args)
+			res, err = c.Unstake(ctx, evm.Origin, method, args)
 			return err
 		})
 		if execErr != nil {
 			return nil, err
 		}
 		return res, nil
-	case RedelegateMethodName:
+	case TransferStakeMethodName:
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-			res, err = c.Redelegate(ctx, evm.Origin, method, args)
+			res, err = c.TransferStake(ctx, evm.Origin, method, args)
 			return err
 		})
 		if execErr != nil {

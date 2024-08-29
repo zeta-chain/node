@@ -3,7 +3,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "delegator",
+        "name": "staker",
         "type": "address"
       },
       {
@@ -17,7 +17,7 @@
         "type": "uint256"
       }
     ],
-    "name": "delegate",
+    "name": "stake",
     "outputs": [
       {
         "internalType": "bool",
@@ -32,7 +32,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "delegator",
+        "name": "staker",
         "type": "address"
       },
       {
@@ -51,7 +51,7 @@
         "type": "uint256"
       }
     ],
-    "name": "redelegate",
+    "name": "transferStake",
     "outputs": [
       {
         "internalType": "int64",
@@ -66,7 +66,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "delegator",
+        "name": "staker",
         "type": "address"
       },
       {
@@ -80,7 +80,7 @@
         "type": "uint256"
       }
     ],
-    "name": "undelegate",
+    "name": "unstake",
     "outputs": [
       {
         "internalType": "int64",

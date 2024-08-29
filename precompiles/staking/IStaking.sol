@@ -9,36 +9,36 @@ IStaking constant ISTAKING_CONTRACT = IStaking(
 );
 
 interface IStaking {
-    /// @dev Delegate coins to validator
-    /// @param delegator Delegator address
+    /// @dev Stake coins to validator
+    /// @param staker Staker address
     /// @param validator Validator address
     /// @param amount Coins amount
-    /// @return success Delegation success
-    function delegate(
-        address delegator,
+    /// @return success Staking success
+    function stake(
+        address staker,
         string memory validator,
         uint256 amount
     ) external returns (bool success);
 
-    /// @dev Undelegate coins from validator
-    /// @param delegator Delegator address
+    /// @dev Unstake coins from validator
+    /// @param staker Staker address
     /// @param validator Validator address
     /// @param amount Coins amount
-    /// @return completionTime Time when undelegation is done
-    function undelegate(
-        address delegator,
+    /// @return completionTime Time when unstaking is done
+    function unstake(
+        address staker,
         string memory validator,
         uint256 amount
     ) external returns (int64 completionTime);
 
-    /// @dev Redelegate coins from validatorSrd to validatorDst
-    /// @param delegator Delegator address
+    /// @dev Transfer coins from validatorSrc to validatorDst
+    /// @param staker Staker address
     /// @param validatorSrc Validator from address
     /// @param validatorDst Validator to address
     /// @param amount Coins amount
-    /// @return completionTime Time when redelegation is done
-    function redelegate(
-        address delegator,
+    /// @return completionTime Time when staket transfer is done
+    function transferStake(
+        address staker,
         string memory validatorSrc,
         string memory validatorDst,
         uint256 amount
