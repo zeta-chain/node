@@ -4,12 +4,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 	ethparams "github.com/ethereum/go-ethereum/params"
 	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
 
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/zeta-chain/zetacore/precompiles/prototype"
 	"github.com/zeta-chain/zetacore/precompiles/staking"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
