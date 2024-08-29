@@ -8,8 +8,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"google.golang.org/grpc"
 
+	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 	etherminttypes "github.com/zeta-chain/zetacore/rpc/types"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -26,6 +28,8 @@ type Clients struct {
 	Auth authtypes.QueryClient
 	// Bank is a github.com/cosmos/cosmos-sdk/x/bank/types QueryClient
 	Bank banktypes.QueryClient
+	// Upgrade is a github.com/cosmos/cosmos-sdk/x/upgrade/types QueryClient
+	Upgrade upgradetypes.QueryClient
 
 	// ZetaCore specific clients
 
@@ -44,6 +48,8 @@ type Clients struct {
 
 	// Ethermint is a github.com/zeta-chain/zetacore/rpc/types QueryClient
 	Ethermint *etherminttypes.QueryClient
+	// EthermintFeeMarket is a github.com/zeta-chain/ethermint/x/feemarket/types QueryClient
+	EthermintFeeMarket feemarkettypes.QueryClient
 
 	// Tendermint specific clients
 
@@ -53,15 +59,21 @@ type Clients struct {
 
 func newClients(ctx client.Context) (Clients, error) {
 	return Clients{
-		Authority:   authoritytypes.NewQueryClient(ctx),
+		// Cosmos SDK clients
+		Auth:      authtypes.NewQueryClient(ctx),
+		Bank:      banktypes.NewQueryClient(ctx),
+		Upgrade:   upgradetypes.NewQueryClient(ctx),
+		Authority: authoritytypes.NewQueryClient(ctx),
+		// ZetaCore specific clients
 		Crosschain:  crosschaintypes.NewQueryClient(ctx),
 		Fungible:    fungibletypes.NewQueryClient(ctx),
-		Auth:        authtypes.NewQueryClient(ctx),
-		Bank:        banktypes.NewQueryClient(ctx),
 		Observer:    observertypes.NewQueryClient(ctx),
 		Lightclient: lightclienttypes.NewQueryClient(ctx),
-		Ethermint:   etherminttypes.NewQueryClient(ctx),
-		Tendermint:  tmservice.NewServiceClient(ctx),
+		// Ethermint specific clients
+		Ethermint:          etherminttypes.NewQueryClient(ctx),
+		EthermintFeeMarket: feemarkettypes.NewQueryClient(ctx),
+		// Tendermint specific clients
+		Tendermint: tmservice.NewServiceClient(ctx),
 	}, nil
 }
 
