@@ -119,11 +119,11 @@ func (c *Contract) Stake(
 		})
 	}
 
-	msgServer := stakingkeeper.NewMsgServerImpl(&c.stakingKeeper)
-
 	stakerAddress, ok := args[0].(common.Address)
 	if !ok {
-		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[0])
+		return nil, ptypes.ErrInvalidArgument{
+			Got: args[0],
+		}
 	}
 
 	if origin != stakerAddress {
@@ -132,14 +132,19 @@ func (c *Contract) Stake(
 
 	validatorAddress, ok := args[1].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[1])
+		return nil, ptypes.ErrInvalidArgument{
+			Got: args[1],
+		}
 	}
 
 	amount, ok := args[2].(int64)
 	if !ok {
-		return nil, fmt.Errorf("invalid argument, wanted an int64, got %T", args[2])
+		return nil, ptypes.ErrInvalidArgument{
+			Got: args[2],
+		}
 	}
 
+	msgServer := stakingkeeper.NewMsgServerImpl(&c.stakingKeeper)
 	_, err := msgServer.Delegate(ctx, &stakingtypes.MsgDelegate{
 		DelegatorAddress: sdk.AccAddress(stakerAddress.Bytes()).String(),
 		ValidatorAddress: validatorAddress,
@@ -168,11 +173,11 @@ func (c *Contract) Unstake(
 		})
 	}
 
-	msgServer := stakingkeeper.NewMsgServerImpl(&c.stakingKeeper)
-
 	stakerAddress, ok := args[0].(common.Address)
 	if !ok {
-		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[0])
+		return nil, ptypes.ErrInvalidArgument{
+			Got: args[0],
+		}
 	}
 
 	if origin != stakerAddress {
@@ -181,14 +186,19 @@ func (c *Contract) Unstake(
 
 	validatorAddress, ok := args[1].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[1])
+		return nil, ptypes.ErrInvalidArgument{
+			Got: args[1],
+		}
 	}
 
 	amount, ok := args[2].(int64)
 	if !ok {
-		return nil, fmt.Errorf("invalid argument, wanted an int64, got %T", args[2])
+		return nil, ptypes.ErrInvalidArgument{
+			Got: args[2],
+		}
 	}
 
+	msgServer := stakingkeeper.NewMsgServerImpl(&c.stakingKeeper)
 	res, err := msgServer.Undelegate(ctx, &stakingtypes.MsgUndelegate{
 		DelegatorAddress: sdk.AccAddress(stakerAddress.Bytes()).String(),
 		ValidatorAddress: validatorAddress,
@@ -217,11 +227,11 @@ func (c *Contract) TransferStake(
 		})
 	}
 
-	msgServer := stakingkeeper.NewMsgServerImpl(&c.stakingKeeper)
-
 	stakerAddress, ok := args[0].(common.Address)
 	if !ok {
-		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[0])
+		return nil, ptypes.ErrInvalidArgument{
+			Got: args[0],
+		}
 	}
 
 	if origin != stakerAddress {
@@ -230,19 +240,26 @@ func (c *Contract) TransferStake(
 
 	validatorSrcAddress, ok := args[1].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[1])
+		return nil, ptypes.ErrInvalidArgument{
+			Got: args[1],
+		}
 	}
 
 	validatorDstAddress, ok := args[2].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid argument, wanted a string, got: %T", args[1])
+		return nil, ptypes.ErrInvalidArgument{
+			Got: args[2],
+		}
 	}
 
 	amount, ok := args[3].(int64)
 	if !ok {
-		return nil, fmt.Errorf("invalid argument, wanted an int64, got %T", args[2])
+		return nil, ptypes.ErrInvalidArgument{
+			Got: args[3],
+		}
 	}
 
+	msgServer := stakingkeeper.NewMsgServerImpl(&c.stakingKeeper)
 	res, err := msgServer.BeginRedelegate(ctx, &stakingtypes.MsgBeginRedelegate{
 		DelegatorAddress:    sdk.AccAddress(stakerAddress.Bytes()).String(),
 		ValidatorSrcAddress: validatorSrcAddress,
