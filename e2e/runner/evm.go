@@ -185,7 +185,7 @@ func (r *E2ERunner) ApproveERC20OnEVM(allowed ethcommon.Address) {
 // check if allowance is zero before calling this method
 // allow a high amount to avoid multiple approvals
 func (r *E2ERunner) ApproveETHZRC20(allowed ethcommon.Address) {
-	allowance, err := r.ETHZRC20.Allowance(&bind.CallOpts{}, r.Account.EVMAddress(), r.GatewayEVMAddr)
+	allowance, err := r.ETHZRC20.Allowance(&bind.CallOpts{}, r.Account.EVMAddress(), allowed)
 	require.NoError(r, err)
 
 	// approve 1M*1e18 if allowance is below 1k
@@ -202,7 +202,7 @@ func (r *E2ERunner) ApproveETHZRC20(allowed ethcommon.Address) {
 // check if allowance is zero before calling this method
 // allow a high amount to avoid multiple approvals
 func (r *E2ERunner) ApproveERC20ZRC20(allowed ethcommon.Address) {
-	allowance, err := r.ERC20ZRC20.Allowance(&bind.CallOpts{}, r.Account.EVMAddress(), r.GatewayEVMAddr)
+	allowance, err := r.ERC20ZRC20.Allowance(&bind.CallOpts{}, r.Account.EVMAddress(), allowed)
 	require.NoError(r, err)
 
 	// approve 1M*1e18 if allowance is below 1k
