@@ -10,7 +10,7 @@ import (
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/systemcontract.sol"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/node/pkg/coin"
 )
 
 // ProcessV2Deposit handles a deposit from an inbound tx with protocol version 2

@@ -15,7 +15,7 @@ import (
 	"github.com/zeta-chain/ethermint/indexer"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
+	"github.com/zeta-chain/node/rpc/backend/mocks"
 )
 
 func (suite *BackendTestSuite) TestTraceTransaction() {

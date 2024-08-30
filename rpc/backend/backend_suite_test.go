@@ -25,8 +25,8 @@ import (
 	"github.com/zeta-chain/ethermint/tests"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
-	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
+	"github.com/zeta-chain/node/rpc/backend/mocks"
+	rpctypes "github.com/zeta-chain/node/rpc/types"
 )
 
 type BackendTestSuite struct {

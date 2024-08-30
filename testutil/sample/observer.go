@@ -9,10 +9,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/cosmos"
-	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
-	"github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/cosmos"
+	zetacrypto "github.com/zeta-chain/node/pkg/crypto"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 func Ballot(t *testing.T, index string) *types.Ballot {

@@ -8,11 +8,11 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/proofs"
-	"github.com/zeta-chain/zetacore/pkg/proofs/ethereum"
-	"github.com/zeta-chain/zetacore/testutil/testdata"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/proofs"
+	"github.com/zeta-chain/node/pkg/proofs/ethereum"
+	"github.com/zeta-chain/node/testutil/testdata"
+	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
 )
 
 func BlockHeader(blockHash []byte) proofs.BlockHeader {

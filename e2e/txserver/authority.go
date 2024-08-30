@@ -3,8 +3,8 @@ package txserver
 import (
 	"fmt"
 
-	e2eutils "github.com/zeta-chain/zetacore/e2e/utils"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
+	e2eutils "github.com/zeta-chain/node/e2e/utils"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 )
 
 // AddAuthorization adds a new authorization in the authority module for admin message

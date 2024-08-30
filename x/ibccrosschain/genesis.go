@@ -3,8 +3,8 @@ package ibccrosschain
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/x/ibccrosschain/keeper"
-	"github.com/zeta-chain/zetacore/x/ibccrosschain/types"
+	"github.com/zeta-chain/node/x/ibccrosschain/keeper"
+	"github.com/zeta-chain/node/x/ibccrosschain/types"
 )
 
 // InitGenesis initializes the ibccrosschain module's state from a provided genesis state

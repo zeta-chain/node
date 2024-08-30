@@ -19,9 +19,9 @@ import (
 	"github.com/stretchr/testify/require"
 	. "gopkg.in/check.v1"
 
-	"github.com/zeta-chain/zetacore/cmd"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/cmd"
+	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
 type KeysSuite struct{}

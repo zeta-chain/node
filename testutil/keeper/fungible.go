@@ -18,17 +18,17 @@ import (
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	fungiblemocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/fungible"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	authoritykeeper "github.com/zeta-chain/zetacore/x/authority/keeper"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"
-	"github.com/zeta-chain/zetacore/x/fungible/keeper"
-	"github.com/zeta-chain/zetacore/x/fungible/types"
-	lightclientkeeper "github.com/zeta-chain/zetacore/x/lightclient/keeper"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	fungiblemocks "github.com/zeta-chain/node/testutil/keeper/mocks/fungible"
+	"github.com/zeta-chain/node/testutil/sample"
+	authoritykeeper "github.com/zeta-chain/node/x/authority/keeper"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	fungiblemodule "github.com/zeta-chain/node/x/fungible"
+	"github.com/zeta-chain/node/x/fungible/keeper"
+	"github.com/zeta-chain/node/x/fungible/types"
+	lightclientkeeper "github.com/zeta-chain/node/x/lightclient/keeper"
+	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
+	observerkeeper "github.com/zeta-chain/node/x/observer/keeper"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 type FungibleMockOptions struct {

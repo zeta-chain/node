@@ -3,7 +3,7 @@ package testutils
 import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/node/pkg/chains"
 )
 
 const (

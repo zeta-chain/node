@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	zetaos "github.com/zeta-chain/zetacore/pkg/os"
+	zetaos "github.com/zeta-chain/node/pkg/os"
 )
 
 func Test_PromptPassword(t *testing.T) {

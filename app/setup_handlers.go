@@ -20,10 +20,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"golang.org/x/exp/slices"
 
-	"github.com/zeta-chain/zetacore/pkg/constant"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/pkg/constant"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 func SetupHandlers(app *App) {

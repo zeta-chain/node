@@ -1,7 +1,7 @@
 package e2etests
 
 import (
-	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/node/e2e/runner"
 )
 
 // List of all e2e test names to be used in zetae2e

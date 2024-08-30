@@ -7,7 +7,7 @@ import (
 	ethparams "github.com/ethereum/go-ethereum/params"
 	"github.com/stretchr/testify/require"
 	ethermint "github.com/zeta-chain/ethermint/types"
-	"github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/node/testutil/keeper"
 )
 
 func Test_StatefulContracts(t *testing.T) {

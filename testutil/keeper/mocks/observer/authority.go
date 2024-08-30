@@ -3,8 +3,8 @@
 package mocks
 
 import (
-	chains "github.com/zeta-chain/zetacore/pkg/chains"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
+	chains "github.com/zeta-chain/node/pkg/chains"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 
 	mock "github.com/stretchr/testify/mock"
 

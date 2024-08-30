@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	zetacore "github.com/zeta-chain/zetacore/cmd/zetacored"
+	zetacore "github.com/zeta-chain/node/cmd/zetacored"
 )
 
 // alwaysErrorValue allows to test f.Value.Set failure

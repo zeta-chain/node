@@ -3,7 +3,7 @@ package zetachain.zetacore.pkg.chains;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/pkg/chains";
+option go_package = "github.com/zeta-chain/node/pkg/chains";
 
 // ReceiveStatus represents the status of an outbound
 // TODO: Rename and move

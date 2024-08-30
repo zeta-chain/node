@@ -3,7 +3,7 @@ package crypto
 import (
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/zeta-chain/zetacore/pkg/constant"
+	"github.com/zeta-chain/node/pkg/constant"
 )
 
 // IsEmptyAddress returns true if the address is empty

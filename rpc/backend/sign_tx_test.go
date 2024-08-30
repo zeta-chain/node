@@ -18,7 +18,7 @@ import (
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
+	"github.com/zeta-chain/node/rpc/backend/mocks"
 )
 
 func (suite *BackendTestSuite) TestSendTransaction() {

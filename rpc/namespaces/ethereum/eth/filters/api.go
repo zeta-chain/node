@@ -32,7 +32,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	"github.com/zeta-chain/zetacore/rpc/types"
+	"github.com/zeta-chain/node/rpc/types"
 )
 
 // FilterAPI gathers

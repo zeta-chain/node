@@ -15,13 +15,13 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/constant"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	zetabitcoin "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
-	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/signer"
+	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 )
 
 // ListDeployerUTXOs list the deployer's UTXOs

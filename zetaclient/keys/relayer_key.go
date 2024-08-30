@@ -7,9 +7,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/crypto"
-	zetaos "github.com/zeta-chain/zetacore/pkg/os"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/crypto"
+	zetaos "github.com/zeta-chain/node/pkg/os"
 )
 
 // RelayerKey is the structure that holds the relayer private key

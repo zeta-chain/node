@@ -4,7 +4,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/node/e2e/runner"
 )
 
 func TestBitcoinWithdrawLegacy(r *runner.E2ERunner, args []string) {

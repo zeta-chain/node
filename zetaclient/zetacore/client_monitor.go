@@ -8,8 +8,8 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/zetacore/pkg/retry"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/pkg/retry"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // MonitorVoteOutboundResult monitors the result of a vote outbound tx

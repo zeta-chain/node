@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/app"
+	"github.com/zeta-chain/node/app"
 )
 
 func CollectObserverInfoCmd() *cobra.Command {

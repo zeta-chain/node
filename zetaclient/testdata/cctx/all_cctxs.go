@@ -1,8 +1,8 @@
 package cctx
 
 import (
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/pkg/coin"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // CCtxByNonceMap maps the [chainID, nonce] to the cross chain transaction

@@ -6,12 +6,12 @@ import (
 	"github.com/pkg/errors"
 	"gitlab.com/thorchain/tss/go-tss/blame"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/proofs"
-	"github.com/zeta-chain/zetacore/pkg/retry"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/proofs"
+	"github.com/zeta-chain/node/pkg/retry"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
 )
 
 // PostVoteBlockHeader posts a vote on an observed block header

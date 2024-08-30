@@ -10,9 +10,9 @@ import (
 	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	solanacontract "github.com/zeta-chain/zetacore/pkg/contracts/solana"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/e2e/utils"
+	solanacontract "github.com/zeta-chain/node/pkg/contracts/solana"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // ComputePdaAddress computes the PDA address for the gateway program

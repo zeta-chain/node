@@ -8,7 +8,7 @@ import "zetachain/zetacore/pkg/proofs/proofs.proto";
 import "zetachain/zetacore/crosschain/rate_limiter_flags.proto";
 import "zetachain/zetacore/crosschain/cross_chain_tx.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
+option go_package = "github.com/zeta-chain/node/x/crosschain/types";
 
 // Msg defines the Msg service.
 service Msg {
