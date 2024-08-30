@@ -6,11 +6,11 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/contracts/testconnectorzevm"
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	"github.com/zeta-chain/node/e2e/contracts/testconnectorzevm"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
 // TestUpdateBytecodeConnector tests updating the bytecode of a connector and interact with it

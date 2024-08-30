@@ -28,7 +28,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
+	zetamempool "github.com/zeta-chain/node/pkg/mempool"
 )
 
 type testValidator struct {

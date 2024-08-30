@@ -10,9 +10,9 @@ import (
 	"github.com/onrik/ethrpc"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
 // the relative path to the testdata directory

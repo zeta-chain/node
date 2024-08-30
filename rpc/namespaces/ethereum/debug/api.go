@@ -37,9 +37,9 @@ import (
 	stderrors "github.com/pkg/errors"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	zetaos "github.com/zeta-chain/zetacore/pkg/os"
-	"github.com/zeta-chain/zetacore/rpc/backend"
-	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
+	zetaos "github.com/zeta-chain/node/pkg/os"
+	"github.com/zeta-chain/node/rpc/backend"
+	rpctypes "github.com/zeta-chain/node/rpc/types"
 )
 
 // HandlerT keeps track of the cpu profiler and trace execution

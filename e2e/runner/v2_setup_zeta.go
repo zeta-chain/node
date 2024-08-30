@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/pkg/contracts/erc1967proxy"
-	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
+	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // SetZEVMContractsV2 set contracts for the ZEVM

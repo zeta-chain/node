@@ -7,15 +7,15 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/observer"
+	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/testutils"
+	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
 
 // getContractsByChainID is a helper func to get contracts and addresses by chainID

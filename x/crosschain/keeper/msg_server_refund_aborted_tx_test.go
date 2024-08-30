@@ -1,21 +1,21 @@
 package keeper_test
 
 import (
-	"github.com/zeta-chain/zetacore/pkg/constant"
+	"github.com/zeta-chain/node/pkg/constant"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	"github.com/zeta-chain/node/pkg/coin"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/testutil/sample"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	"github.com/zeta-chain/node/x/crosschain/keeper"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
 func Test_GetRefundAddress(t *testing.T) {

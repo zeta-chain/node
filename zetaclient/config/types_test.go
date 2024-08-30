@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/config"
 )
 
 func Test_GetRelayerKeyPath(t *testing.T) {

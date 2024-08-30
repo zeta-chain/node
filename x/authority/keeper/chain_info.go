@@ -4,8 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/x/authority/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/x/authority/types"
 )
 
 // SetChainInfo sets the chain info to the store

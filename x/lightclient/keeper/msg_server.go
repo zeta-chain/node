@@ -1,6 +1,6 @@
 package keeper
 
-import "github.com/zeta-chain/zetacore/x/lightclient/types"
+import "github.com/zeta-chain/node/x/lightclient/types"
 
 type msgServer struct {
 	Keeper

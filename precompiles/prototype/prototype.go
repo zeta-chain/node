@@ -11,8 +11,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 
-	ptypes "github.com/zeta-chain/zetacore/precompiles/types"
-	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
+	ptypes "github.com/zeta-chain/node/precompiles/types"
+	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
 )
 
 const (

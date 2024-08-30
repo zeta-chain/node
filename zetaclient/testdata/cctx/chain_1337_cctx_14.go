@@ -3,7 +3,7 @@ package cctx
 import (
 	sdkmath "cosmossdk.io/math"
 
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // This cctx was generated in local e2e tests, see original json text attached at end of file

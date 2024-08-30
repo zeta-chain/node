@@ -43,7 +43,7 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
 )
 
 // package-wide network lock to only allow one test network at a time

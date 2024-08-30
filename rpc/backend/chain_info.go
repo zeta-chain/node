@@ -33,7 +33,7 @@ import (
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 
-	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
+	rpctypes "github.com/zeta-chain/node/rpc/types"
 )
 
 // ChainID is the EIP-155 replay-protection chain id for the current ethereum chain config.

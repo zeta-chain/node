@@ -22,7 +22,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 
-	"github.com/zeta-chain/zetacore/pkg/constant"
+	"github.com/zeta-chain/node/pkg/constant"
 )
 
 // PublicAPI is the web3_ prefixed set of APIs in the Web3 JSON-RPC spec.

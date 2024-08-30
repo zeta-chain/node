@@ -10,9 +10,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/proofs"
-	"github.com/zeta-chain/zetacore/x/lightclient/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/proofs"
+	"github.com/zeta-chain/node/x/lightclient/types"
 )
 
 // Prove checks two things:

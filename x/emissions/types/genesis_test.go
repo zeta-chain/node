@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/x/emissions/types"
+	"github.com/zeta-chain/node/x/emissions/types"
 )
 
 func TestGenesisState_Validate(t *testing.T) {

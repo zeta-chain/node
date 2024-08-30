@@ -12,7 +12,7 @@ import (
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/node/pkg/chains"
 )
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)

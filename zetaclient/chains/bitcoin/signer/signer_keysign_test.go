@@ -16,9 +16,9 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
 type BTCSignTestSuite struct {

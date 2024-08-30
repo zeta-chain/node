@@ -4,7 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func (k Keeper) SetFinalizedInbound(ctx sdk.Context, finalizedInboundIndex string) {

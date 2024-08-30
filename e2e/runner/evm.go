@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/node/e2e/utils"
 )
 
 // WaitForTxReceiptOnEvm waits for a tx receipt on EVM

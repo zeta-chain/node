@@ -6,8 +6,8 @@ import (
 	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	"github.com/zeta-chain/zetacore/x/observer/types"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 // UpdateChainParams updates chain parameters for a specific chain, or add a new one.

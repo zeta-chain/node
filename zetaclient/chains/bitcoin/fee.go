@@ -14,10 +14,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	clientcommon "github.com/zeta-chain/node/zetaclient/common"
 )
 
 const (

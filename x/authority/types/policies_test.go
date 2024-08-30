@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/app"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/authority/types"
+	"github.com/zeta-chain/node/app"
+	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/authority/types"
 )
 
 // setConfig sets the global config to use zeta chain's bech32 prefixes

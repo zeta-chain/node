@@ -3,7 +3,7 @@ package config
 import (
 	"sync"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/node/pkg/chains"
 )
 
 const (

@@ -1,7 +1,7 @@
 syntax = "proto3";
 package zetachain.zetacore.pkg.proofs.bitcoin;
 
-option go_package = "github.com/zeta-chain/zetacore/pkg/proofs/bitcoin";
+option go_package = "github.com/zeta-chain/node/pkg/proofs/bitcoin";
 
 message Proof {
   bytes tx_bytes = 1;

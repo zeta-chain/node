@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/x/fungible/types"
+	"github.com/zeta-chain/node/x/fungible/types"
 )
 
 // EnsureGasStabilityPoolAccountCreated ensures the gas stability pool account exists

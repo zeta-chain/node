@@ -15,14 +15,14 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
-	keyinterfaces "github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
+	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
 const skipMethod = "skip"

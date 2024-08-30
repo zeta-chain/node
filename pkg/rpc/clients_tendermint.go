@@ -6,7 +6,7 @@ import (
 	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 
-	"github.com/zeta-chain/zetacore/pkg/retry"
+	"github.com/zeta-chain/node/pkg/retry"
 )
 
 // GetLatestZetaBlock returns the latest zeta block

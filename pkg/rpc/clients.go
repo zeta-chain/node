@@ -12,12 +12,12 @@ import (
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 	"google.golang.org/grpc"
 
-	etherminttypes "github.com/zeta-chain/zetacore/rpc/types"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	etherminttypes "github.com/zeta-chain/node/rpc/types"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // Clients contains RPC client interfaces to interact with ZetaCore

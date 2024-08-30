@@ -6,7 +6,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	appcontext "github.com/zeta-chain/zetacore/zetaclient/context"
+	appcontext "github.com/zeta-chain/node/zetaclient/context"
 )
 
 var logSampler = &zerolog.BasicSampler{N: 10}

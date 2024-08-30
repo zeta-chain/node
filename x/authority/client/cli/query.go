@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/x/authority/types"
+	"github.com/zeta-chain/node/x/authority/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module

@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	"github.com/zeta-chain/zetacore/pkg/proofs"
+	"github.com/zeta-chain/node/pkg/proofs"
 )
 
 // DefaultGenesis returns the default lightclient genesis state

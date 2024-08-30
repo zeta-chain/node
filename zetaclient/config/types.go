@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/node/pkg/chains"
 )
 
 // KeyringBackend is the type of keyring backend to use for the hotkey

@@ -13,15 +13,15 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/pkg/constant"
-	solanacontracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	solanarpc "github.com/zeta-chain/zetacore/zetaclient/chains/solana/rpc"
-	"github.com/zeta-chain/zetacore/zetaclient/compliance"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
-	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
-	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/constant"
+	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
+	"github.com/zeta-chain/node/zetaclient/compliance"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
+	clienttypes "github.com/zeta-chain/node/zetaclient/types"
+	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 const (

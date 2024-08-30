@@ -22,12 +22,12 @@ import (
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 const (

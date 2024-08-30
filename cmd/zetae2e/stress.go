@@ -18,13 +18,13 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 	"google.golang.org/grpc"
 
-	"github.com/zeta-chain/zetacore/app"
-	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
-	"github.com/zeta-chain/zetacore/cmd/zetae2e/local"
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/testutil"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/app"
+	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
+	"github.com/zeta-chain/node/cmd/zetae2e/local"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/testutil"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 const (

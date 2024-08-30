@@ -15,10 +15,10 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/x/emissions/client/cli"
-	"github.com/zeta-chain/zetacore/x/emissions/exported"
-	"github.com/zeta-chain/zetacore/x/emissions/keeper"
-	"github.com/zeta-chain/zetacore/x/emissions/types"
+	"github.com/zeta-chain/node/x/emissions/client/cli"
+	"github.com/zeta-chain/node/x/emissions/exported"
+	"github.com/zeta-chain/node/x/emissions/keeper"
+	"github.com/zeta-chain/node/x/emissions/types"
 )
 
 var (

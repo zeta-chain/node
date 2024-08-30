@@ -8,7 +8,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
 )
 
 // GetUpgradePlan returns the current upgrade plan.

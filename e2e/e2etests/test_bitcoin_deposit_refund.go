@@ -5,10 +5,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	zetabitcoin "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 )
 
 func TestBitcoinDepositRefund(r *runner.E2ERunner, args []string) {
