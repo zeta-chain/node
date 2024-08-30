@@ -32,6 +32,7 @@ var (
 	ABI                 abi.ABI
 	ContractAddress     = common.HexToAddress("0x0000000000000000000000000000000000000066")
 	GasRequiredByMethod = map[[4]byte]uint64{}
+	ViewMethod          = map[[4]byte]bool{}
 )
 
 func init() {
@@ -48,8 +49,8 @@ func initABI() {
 		var methodID [4]byte
 		copy(methodID[:], ABI.Methods[methodName].ID[:4])
 		switch methodName {
-		// TODO: just temporary values, double check these flat values
-		// can we just use WriteCostFlat from gas config?
+		// TODO: just temporary flat values, double check these flat values
+		// can we just use WriteCostFlat/ReadCostFlat from gas config for flat values?
 		case StakeMethodName:
 			GasRequiredByMethod[methodID] = 10000
 		case UnstakeMethodName:
@@ -58,8 +59,10 @@ func initABI() {
 			GasRequiredByMethod[methodID] = 10000
 		case GetAllValidatorsMethodName:
 			GasRequiredByMethod[methodID] = 0
+			ViewMethod[methodID] = true
 		case GetStakesMethodName:
 			GasRequiredByMethod[methodID] = 0
+			ViewMethod[methodID] = true
 		default:
 			GasRequiredByMethod[methodID] = 0
 		}
@@ -100,13 +103,15 @@ func (c *Contract) Abi() abi.ABI {
 // RequiredGas is required to implement the PrecompiledContract interface.
 // The gas has to be calculated deterministically based on the input.
 func (c *Contract) RequiredGas(input []byte) uint64 {
-	// base cost to prevent large input size
-	// TODO: 0 for read methods
-	baseCost := uint64(len(input)) * c.kvGasConfig.WriteCostPerByte
 
 	// get methodID (first 4 bytes)
 	var methodID [4]byte
 	copy(methodID[:], input[:4])
+	// base cost to prevent large input size
+	baseCost := uint64(len(input)) * c.kvGasConfig.WriteCostPerByte
+	if ViewMethod[methodID] {
+		baseCost = uint64(len(input)) * c.kvGasConfig.ReadCostPerByte
+	}
 
 	if requiredGas, ok := GasRequiredByMethod[methodID]; ok {
 		return requiredGas + baseCost
@@ -126,6 +131,9 @@ func (c *Contract) GetAllValidators(
 	for _, v := range validators {
 		validatorsRes = append(validatorsRes, Validator{
 			OperatorAddress: v.OperatorAddress,
+			ConsensusPubKey: v.ConsensusPubkey.String(),
+			BondStatus:      uint8(v.Status),
+			Jailed:          v.Jailed,
 		})
 	}
 

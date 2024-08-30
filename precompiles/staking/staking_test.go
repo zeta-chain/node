@@ -51,6 +51,9 @@ func Test_IStakingContract(t *testing.T) {
 			abi.Methods[TransferStakeMethodName],
 			"transferStake method should be present in the ABI",
 		)
+
+		require.NotNil(t, abi.Methods[GetAllValidatorsMethodName], "getAllValidators method should be present in the ABI")
+		require.NotNil(t, abi.Methods[GetStakesMethodName], "getStakes method should be present in the ABI")
 	})
 
 	t.Run("should check gas requirements for methods", func(t *testing.T) {
@@ -97,6 +100,34 @@ func Test_IStakingContract(t *testing.T) {
 				"transferStake method should require %d gas, got %d",
 				GasRequiredByMethod[method]+baseCost,
 				transferStake,
+			)
+		})
+
+		t.Run("getAllValidators", func(t *testing.T) {
+			getAllValidators := contract.RequiredGas(abi.Methods[GetAllValidatorsMethodName].ID)
+			copy(method[:], abi.Methods[GetAllValidatorsMethodName].ID[:4])
+			baseCost := uint64(len(method)) * gasConfig.ReadCostPerByte
+			require.Equal(
+				t,
+				GasRequiredByMethod[method]+baseCost,
+				getAllValidators,
+				"getAllValidators method should require %d gas, got %d",
+				GasRequiredByMethod[method]+baseCost,
+				getAllValidators,
+			)
+		})
+
+		t.Run("getStakes", func(t *testing.T) {
+			getStakes := contract.RequiredGas(abi.Methods[GetStakesMethodName].ID)
+			copy(method[:], abi.Methods[GetStakesMethodName].ID[:4])
+			baseCost := uint64(len(method)) * gasConfig.ReadCostPerByte
+			require.Equal(
+				t,
+				GasRequiredByMethod[method]+baseCost,
+				getStakes,
+				"getStakes method should require %d gas, got %d",
+				GasRequiredByMethod[method]+baseCost,
+				getStakes,
 			)
 		})
 

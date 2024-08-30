@@ -9,10 +9,25 @@
             "internalType": "string",
             "name": "operatorAddress",
             "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "consensusPubKey",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "jailed",
+            "type": "bool"
+          },
+          {
+            "internalType": "enum BondStatus",
+            "name": "bondStatus",
+            "type": "uint8"
           }
         ],
         "internalType": "struct Validator[]",
-        "name": "",
+        "name": "validators",
         "type": "tuple[]"
       }
     ],
@@ -36,7 +51,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "stakes",
         "type": "uint256"
       }
     ],

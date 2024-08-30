@@ -8,12 +8,24 @@ IStaking constant ISTAKING_CONTRACT = IStaking(
     ISTAKING_PRECOMPILE_ADDRESS
 );
 
+/// @notice Bond status for validator
+enum BondStatus {
+    Unspecified,
+    Unbonded,
+    Unbonding,
+    Bonded
+}
+
+/// @notice Validator info
 struct Validator {
     string operatorAddress;
+    string consensusPubKey;
+    bool jailed;
+    BondStatus bondStatus;
 }
 
 interface IStaking {
-    /// @dev Stake coins to validator
+    /// @notice Stake coins to validator
     /// @param staker Staker address
     /// @param validator Validator address
     /// @param amount Coins amount
@@ -24,7 +36,7 @@ interface IStaking {
         uint256 amount
     ) external returns (bool success);
 
-    /// @dev Unstake coins from validator
+    /// @notice Unstake coins from validator
     /// @param staker Staker address
     /// @param validator Validator address
     /// @param amount Coins amount
@@ -35,7 +47,7 @@ interface IStaking {
         uint256 amount
     ) external returns (int64 completionTime);
 
-    /// @dev Transfer coins from validatorSrc to validatorDst
+    /// @notice Transfer coins from validatorSrc to validatorDst
     /// @param staker Staker address
     /// @param validatorSrc Validator from address
     /// @param validatorDst Validator to address
@@ -48,7 +60,11 @@ interface IStaking {
         uint256 amount
     ) external returns (int64 completionTime);
 
-    function getAllValidators() external view returns (Validator[] calldata);
+    /// @notice Get all validators
+    /// @return validators All validators
+    function getAllValidators() external view returns (Validator[] calldata validators);
 
-    function getStakes(address staker, string memory validator) external view returns (uint256);
+    /// @notice Get stakes for staker in validator
+    /// @return stakes Staker stakes in validator
+    function getStakes(address staker, string memory validator) external view returns (uint256 stakes);
 }
