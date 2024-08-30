@@ -86,7 +86,7 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 }
 
 func (chain Chain) IsEVMChain() bool {
-	return chain.Consensus == Consensus_ethereum
+	return chain.Vm == Vm_evm
 }
 
 func (chain Chain) IsBitcoinChain() bool {
@@ -109,11 +109,15 @@ func DecodeAddressFromChainID(chainID int64, addr string, additionalChains []Cha
 	}
 }
 
-// IsEVMChain returns true if the chain is an EVM chain or uses the ethereum consensus mechanism for block finality
+// IsEVMChain returns true if the chain is an EVM chain
 // additionalChains is a list of additional chains to search from
 // in practice, it is used in the protocol to dynamically support new chains without doing an upgrade
 func IsEVMChain(chainID int64, additionalChains []Chain) bool {
-	return ChainIDInChainList(chainID, ChainListByConsensus(Consensus_ethereum, additionalChains))
+	chain, found := GetChainFromChainID(chainID, additionalChains)
+	if !found {
+		return false
+	}
+	return chain.IsEVMChain()
 }
 
 // IsBitcoinChain returns true if the chain is a Bitcoin-based chain or uses the bitcoin consensus mechanism for block finality

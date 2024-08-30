@@ -216,11 +216,12 @@ func TestKeeper_RefundAmountOnZetaChainZeta(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		sender := sample.EthAddress()
+		chainID := getValidBtcChainID()
 
 		err := k.RefundAmountOnZetaChainZeta(ctx, types.CrossChainTx{
 			InboundParams: &types.InboundParams{
 				CoinType:      coin.CoinType_Gas,
-				SenderChainId: 101,
+				SenderChainId: chainID,
 				Sender:        sender.String(),
 				TxOrigin:      sender.String(),
 				Amount:        math.NewUint(20),
