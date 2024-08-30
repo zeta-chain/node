@@ -257,6 +257,18 @@ then
 # precompiles tester
   address=$(yq -r '.additional_accounts.user_precompile.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+# v2 ether tester
+  address=$(yq -r '.additional_accounts.user_v2_ether.bech32_address' /root/config.yml)
+  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+# v2 erc20 tester
+  address=$(yq -r '.additional_accounts.user_v2_erc20.bech32_address' /root/config.yml)
+  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+# v2 ether revert tester
+  address=$(yq -r '.additional_accounts.user_v2_ether_revert.bech32_address' /root/config.yml)
+  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+# v2 erc20 revert tester
+  address=$(yq -r '.additional_accounts.user_v2_erc20_revert.bech32_address' /root/config.yml)
+  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
 
 # 3. Copy the genesis.json to all the nodes .And use it to create a gentx for every node
   zetacored gentx operator 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING --gas-prices 20000000000azeta

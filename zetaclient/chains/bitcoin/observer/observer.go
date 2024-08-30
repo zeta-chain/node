@@ -8,6 +8,7 @@ import (
 	"math"
 	"math/big"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
@@ -455,7 +456,15 @@ func (ob *Observer) WatchUTXOs(ctx context.Context) error {
 			}
 			err := ob.FetchUTXOs(ctx)
 			if err != nil {
-				ob.logger.UTXOs.Error().Err(err).Msg("error fetching btc utxos")
+				// log debug log if the error if no wallet is loaded
+				// this is to prevent extensive logging in localnet when the wallet is not loaded for non-Bitcoin test
+				// TODO: prevent this routine from running if Bitcoin node is not enabled
+				// https://github.com/zeta-chain/node/issues/2790
+				if !strings.Contains(err.Error(), "No wallet is loaded") {
+					ob.logger.UTXOs.Error().Err(err).Msg("error fetching btc utxos")
+				} else {
+					ob.logger.UTXOs.Debug().Err(err).Msg("No wallet is loaded")
+				}
 			}
 			ticker.UpdateInterval(ob.GetChainParams().WatchUtxoTicker, ob.logger.UTXOs)
 		case <-ob.StopChannel():

@@ -25,9 +25,6 @@ func TestMigrateERC20CustodyFunds(r *runner.E2ERunner, _ []string) {
 	newAddr := sample.EthAddress()
 
 	// send MigrateERC20CustodyFunds command
-	// NOTE: we currently use a random address for the destination as a sufficient way to check migration
-	// TODO: makes the test more complete and perform a withdraw to new custody once the contract V2 architecture is integrated
-	// https://github.com/zeta-chain/node/issues/2474
 	msg := crosschaintypes.NewMsgMigrateERC20CustodyFunds(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		chainID.Int64(),

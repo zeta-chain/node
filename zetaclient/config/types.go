@@ -20,6 +20,9 @@ const (
 
 	// KeyringBackendFile is the file Cosmos keyring backend
 	KeyringBackendFile KeyringBackend = "file"
+
+	// DefaultRelayerKeyPath is the default path that relayer keys are stored
+	DefaultRelayerKeyPath = "~/.zetacored/relayer-keys"
 )
 
 // ClientConfiguration is a subset of zetaclient config that is used by zetacore client
@@ -163,6 +166,11 @@ func (c Config) GetKeyringBackend() KeyringBackend {
 func (c Config) GetRelayerKeyPath() string {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
+
+	// use default path if not configured
+	if c.RelayerKeyPath == "" {
+		return DefaultRelayerKeyPath
+	}
 	return c.RelayerKeyPath
 }
 

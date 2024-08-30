@@ -115,9 +115,10 @@ func (signer *Signer) SetERC20CustodyAddress(addr ethcommon.Address) {
 }
 
 // SetGatewayAddress sets the gateway address
-func (signer *Signer) SetGatewayAddress(_ string) {
-	// Note: do nothing for now
-	// gateway address will be needed in the future contract architecture
+func (signer *Signer) SetGatewayAddress(addr string) {
+	signer.Lock()
+	defer signer.Unlock()
+	signer.gatewayAddress = ethcommon.HexToAddress(addr)
 }
 
 // GetZetaConnectorAddress returns the zeta connector address

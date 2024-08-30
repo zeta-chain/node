@@ -170,11 +170,18 @@ func (r *E2ERunner) checkERC20TSSBalance() error {
 	if err != nil {
 		return err
 	}
-	custodyV2Balance, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.ERC20CustodyV2Addr)
-	if err != nil {
-		return err
+
+	custodyFullBalance := custodyBalance
+
+	// take into account the balance of the new ERC20 custody contract as v2 test use this contract
+	// if both addresses are equal, then there is no need to check the balance of the new contract
+	if r.ERC20CustodyAddr.Hex() != r.ERC20CustodyV2Addr.Hex() {
+		custodyV2Balance, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.ERC20CustodyV2Addr)
+		if err != nil {
+			return err
+		}
+		custodyFullBalance = big.NewInt(0).Add(custodyBalance, custodyV2Balance)
 	}
-	custodyFullBalance := big.NewInt(0).Add(custodyBalance, custodyV2Balance)
 
 	erc20zrc20Supply, err := r.ERC20ZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
