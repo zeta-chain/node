@@ -28,6 +28,7 @@
 * [2661](https://github.com/zeta-chain/node/pull/2661) - update connector and erc20Custody addresses in tss migration e2e tests
 * [2726](https://github.com/zeta-chain/node/pull/2726) - add e2e tests for deposit and call, deposit and revert
 * [2703](https://github.com/zeta-chain/node/pull/2703) - add e2e tests for stateful precompiled contracts
+* [2763](https://github.com/zeta-chain/node/pull/2763) - add V2 contracts migration test
 
 ### Fixes
 
