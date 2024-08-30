@@ -4,7 +4,7 @@ package zetachain.zetacore.authority;
 import "zetachain/zetacore/pkg/chains/chains.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/authority/types";
+option go_package = "github.com/zeta-chain/node/x/authority/types";
 
 // ChainInfo contains static information about the chains
 // This structure is used to dynamically update these info on a live network

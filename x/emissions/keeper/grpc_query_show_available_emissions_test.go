@@ -6,10 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/emissions/types"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/emissions/types"
 )
 
 func TestKeeper_ShowAvailableEmissions(t *testing.T) {

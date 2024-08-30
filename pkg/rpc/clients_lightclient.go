@@ -5,8 +5,8 @@ import (
 
 	"cosmossdk.io/errors"
 
-	"github.com/zeta-chain/zetacore/pkg/proofs"
-	"github.com/zeta-chain/zetacore/x/lightclient/types"
+	"github.com/zeta-chain/node/pkg/proofs"
+	"github.com/zeta-chain/node/x/lightclient/types"
 )
 
 // GetBlockHeaderEnabledChains returns the enabled chains for block headers

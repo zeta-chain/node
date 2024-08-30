@@ -4,8 +4,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/precompiles/prototype"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/precompiles/prototype"
 )
 
 func TestPrecompilesRegular(r *runner.E2ERunner, args []string) {

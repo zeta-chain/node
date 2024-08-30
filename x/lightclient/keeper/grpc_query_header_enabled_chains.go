@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/zeta-chain/zetacore/x/lightclient/types"
+	"github.com/zeta-chain/node/x/lightclient/types"
 )
 
 // HeaderSupportedChains implements the Query/HeaderEnabledChains gRPC method

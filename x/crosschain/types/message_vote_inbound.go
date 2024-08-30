@@ -9,8 +9,8 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 
-	"github.com/zeta-chain/zetacore/pkg/authz"
-	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/node/pkg/authz"
+	"github.com/zeta-chain/node/pkg/coin"
 )
 
 // MaxMessageLength is the maximum length of a message in a cctx

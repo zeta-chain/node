@@ -7,12 +7,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/ratelimiter"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/testutil/sample"
+	crosschainkeeper "github.com/zeta-chain/node/x/crosschain/keeper"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/ratelimiter"
 )
 
 func Test_NewInput(t *testing.T) {

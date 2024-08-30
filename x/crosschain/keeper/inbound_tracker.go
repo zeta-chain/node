@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func getInboundTrackerKey(chainID int64, txHash string) string {

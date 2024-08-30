@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/zeta-chain/zetacore/x/emissions/types"
+	"github.com/zeta-chain/node/x/emissions/types"
 )
 
 // UpdateParams defines a governance operation for updating the x/emissions module parameters.

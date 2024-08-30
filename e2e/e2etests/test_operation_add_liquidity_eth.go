@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/node/e2e/runner"
 )
 
 // TestOperationAddLiquidityETH is an operational test to add liquidity in gas token

@@ -10,9 +10,9 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/constant"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
 // the relative path to the testdata directory

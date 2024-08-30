@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/mock"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	keyinterfaces "github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
+	"github.com/zeta-chain/node/pkg/chains"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 )
 
 var errSomethingIsWrong = errors.New("oopsie")

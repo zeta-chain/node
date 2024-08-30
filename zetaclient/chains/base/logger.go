@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/config"
 )
 
 const (

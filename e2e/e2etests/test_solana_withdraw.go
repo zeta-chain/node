@@ -7,7 +7,7 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/node/e2e/runner"
 )
 
 func TestSolanaWithdraw(r *runner.E2ERunner, args []string) {

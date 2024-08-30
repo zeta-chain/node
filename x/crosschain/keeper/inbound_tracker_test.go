@@ -9,11 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/testutil/nullify"
-	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/pkg/coin"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/testutil/nullify"
+	"github.com/zeta-chain/node/x/crosschain/keeper"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func createNInboundTracker(keeper *keeper.Keeper, ctx sdk.Context, n int, chainID int64) []types.InboundTracker {

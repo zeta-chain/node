@@ -12,8 +12,8 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
 
-	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	zetacrypto "github.com/zeta-chain/node/pkg/crypto"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 const (

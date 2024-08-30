@@ -4,7 +4,7 @@ package zetachain.zetacore.observer;
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
+option go_package = "github.com/zeta-chain/node/x/observer/types";
 
 message GasPriceIncreaseFlags {
   int64 epochLength = 1;

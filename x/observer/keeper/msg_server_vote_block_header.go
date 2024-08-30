@@ -6,8 +6,8 @@ import (
 	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	"github.com/zeta-chain/zetacore/x/observer/types"
+	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 const voteBlockHeaderID = "Vote BlockHeader"

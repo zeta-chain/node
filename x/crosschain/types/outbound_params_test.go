@@ -7,7 +7,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/node/testutil/sample"
 )
 
 func TestOutboundParams_Validate(t *testing.T) {

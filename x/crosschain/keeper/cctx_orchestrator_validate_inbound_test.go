@@ -6,13 +6,13 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/pkg/crypto"
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/crypto"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	observerTypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestKeeper_ValidateInbound(t *testing.T) {

@@ -3,14 +3,14 @@
 package mocks
 
 import (
-	chains "github.com/zeta-chain/zetacore/pkg/chains"
-	coin "github.com/zeta-chain/zetacore/pkg/coin"
+	chains "github.com/zeta-chain/node/pkg/chains"
+	coin "github.com/zeta-chain/node/pkg/coin"
 
 	context "context"
 
 	mock "github.com/stretchr/testify/mock"
 
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 
 	types "github.com/cosmos/cosmos-sdk/types"
 )

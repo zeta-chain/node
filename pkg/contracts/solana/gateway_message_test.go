@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/gagliardetto/solana-go"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	contracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
+	"github.com/zeta-chain/node/pkg/chains"
+	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 )
 
 func Test_MsgWithdrawHash(t *testing.T) {

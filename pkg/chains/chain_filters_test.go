@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/node/pkg/chains"
 )
 
 func TestFilterChains(t *testing.T) {

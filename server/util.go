@@ -31,7 +31,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/net/netutil"
 
-	"github.com/zeta-chain/zetacore/server/config"
+	"github.com/zeta-chain/node/server/config"
 )
 
 // AddCommands adds server commands

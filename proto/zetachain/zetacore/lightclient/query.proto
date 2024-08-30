@@ -8,7 +8,7 @@ import "zetachain/zetacore/lightclient/block_header_verification.proto";
 import "zetachain/zetacore/lightclient/chain_state.proto";
 import "zetachain/zetacore/pkg/proofs/proofs.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/lightclient/types";
+option go_package = "github.com/zeta-chain/node/x/lightclient/types";
 
 // Query defines the gRPC querier service.
 service Query {

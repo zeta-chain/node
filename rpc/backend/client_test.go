@@ -21,8 +21,8 @@ import (
 	"github.com/stretchr/testify/require"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
-	rpc "github.com/zeta-chain/zetacore/rpc/types"
+	"github.com/zeta-chain/node/rpc/backend/mocks"
+	rpc "github.com/zeta-chain/node/rpc/types"
 )
 
 // Client defines a mocked object that implements the Tendermint JSON-RPC Client

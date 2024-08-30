@@ -13,10 +13,10 @@ package cli_test
 //	"google.golang.org/grpc/codes"
 //	"google.golang.org/grpc/status"
 //
-//	"github.com/zeta-chain/zetacore/testutil/network"
-//	"github.com/zeta-chain/zetacore/testutil/nullify"
-//	"github.com/zeta-chain/zetacore/x/fungible/client/cli"
-//	"github.com/zeta-chain/zetacore/x/fungible/types"
+//	"github.com/zeta-chain/node/testutil/network"
+//	"github.com/zeta-chain/node/testutil/nullify"
+//	"github.com/zeta-chain/node/x/fungible/client/cli"
+//	"github.com/zeta-chain/node/x/fungible/types"
 //)
 //
 //// Prevent strconv unused error

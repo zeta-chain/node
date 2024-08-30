@@ -3,9 +3,9 @@ package sample
 import (
 	"testing"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/x/fungible/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/x/fungible/types"
 )
 
 func ForeignCoins(t *testing.T, address string) types.ForeignCoins {

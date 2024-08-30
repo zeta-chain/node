@@ -11,12 +11,12 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	"github.com/zeta-chain/node/pkg/coin"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
 func TestKeeper_RefundAmountOnZetaChainGas(t *testing.T) {
@@ -216,11 +216,12 @@ func TestKeeper_RefundAmountOnZetaChainZeta(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		sender := sample.EthAddress()
+		chainID := getValidBtcChainID()
 
 		err := k.RefundAmountOnZetaChainZeta(ctx, types.CrossChainTx{
 			InboundParams: &types.InboundParams{
 				CoinType:      coin.CoinType_Gas,
-				SenderChainId: 101,
+				SenderChainId: chainID,
 				Sender:        sender.String(),
 				TxOrigin:      sender.String(),
 				Amount:        math.NewUint(20),

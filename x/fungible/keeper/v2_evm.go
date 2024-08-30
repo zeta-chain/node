@@ -11,8 +11,8 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
-	"github.com/zeta-chain/zetacore/pkg/crypto"
-	"github.com/zeta-chain/zetacore/x/fungible/types"
+	"github.com/zeta-chain/node/pkg/crypto"
+	"github.com/zeta-chain/node/x/fungible/types"
 )
 
 // CallUpdateGatewayAddress calls the updateGatewayAddress function on the ZRC20 contract

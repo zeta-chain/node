@@ -9,9 +9,9 @@ import (
 	eth "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // VerifyInboundBody validates the tx body for an inbound

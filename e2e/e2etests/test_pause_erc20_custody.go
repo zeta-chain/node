@@ -4,10 +4,10 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/txserver"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/txserver"
+	"github.com/zeta-chain/node/e2e/utils"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // TestPauseERC20Custody tests the pausing and unpausing of ERC20 custody contracts on the EVM chain

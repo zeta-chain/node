@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/zeta-chain/zetacore/x/fungible/types"
+	"github.com/zeta-chain/node/x/fungible/types"
 )
 
 // CodeHash returns the code hash of an account if it exists

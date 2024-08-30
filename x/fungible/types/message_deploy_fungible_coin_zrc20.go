@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/node/pkg/coin"
 )
 
 const TypeMsgDeployFungibleCoinZRC20 = "deploy_fungible_coin_zrc_20"

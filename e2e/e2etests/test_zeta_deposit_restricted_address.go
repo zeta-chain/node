@@ -4,8 +4,8 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
 func TestZetaDepositRestricted(r *runner.E2ERunner, args []string) {

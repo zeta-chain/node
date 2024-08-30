@@ -9,10 +9,10 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // SetObserverOutboundInfo sets the CCTX outbound nonce to the next available nonce for the TSS address, and updates the nonce of blockchain state.

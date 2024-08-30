@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	fungibleModuleTypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	fungibleModuleTypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
 func (k Keeper) GetAllForeignCoins(ctx sdk.Context) []fungibleModuleTypes.ForeignCoins {

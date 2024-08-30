@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestMsgEnableCCTX_ValidateBasic(t *testing.T) {

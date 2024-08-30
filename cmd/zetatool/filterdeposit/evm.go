@@ -16,9 +16,9 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
 
-	"github.com/zeta-chain/zetacore/cmd/zetatool/config"
-	"github.com/zeta-chain/zetacore/pkg/constant"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/cmd/zetatool/config"
+	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/zetaclient/chains/evm"
 )
 
 const (

@@ -6,8 +6,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
 )
 
 func TestKeeper_GetParams(t *testing.T) {

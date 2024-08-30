@@ -8,9 +8,9 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
 
-	"github.com/zeta-chain/zetacore/pkg/constant"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils"
+	"github.com/zeta-chain/node/pkg/constant"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
 func MockChainParams(chainID int64, confirmation uint64) observertypes.ChainParams {

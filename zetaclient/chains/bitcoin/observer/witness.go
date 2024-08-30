@@ -9,8 +9,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 )
 
 // GetBtcEventWithWitness either returns a valid BTCInboundEvent or nil.

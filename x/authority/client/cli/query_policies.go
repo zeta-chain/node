@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/x/authority/types"
+	"github.com/zeta-chain/node/x/authority/types"
 )
 
 // CmdShowPolicies returns the command to show the policies

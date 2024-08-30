@@ -18,17 +18,17 @@ import (
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/compliance"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
-	"github.com/zeta-chain/zetacore/zetaclient/logs"
-	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
-	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	crosschainkeeper "github.com/zeta-chain/node/x/crosschain/keeper"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/compliance"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
+	clienttypes "github.com/zeta-chain/node/zetaclient/types"
+	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 // WatchOutbound watches evm chain for outgoing txs status

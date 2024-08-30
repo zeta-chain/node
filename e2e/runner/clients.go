@@ -6,7 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go/rpc"
 
-	zetacore_rpc "github.com/zeta-chain/zetacore/pkg/rpc"
+	zetacore_rpc "github.com/zeta-chain/node/pkg/rpc"
 )
 
 // Clients contains all the RPC clients and gRPC clients for E2E tests

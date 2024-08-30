@@ -8,14 +8,14 @@ import (
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
-	v5 "github.com/zeta-chain/zetacore/x/crosschain/migrations/v5"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/testutil/sample"
+	crosschainkeeper "github.com/zeta-chain/node/x/crosschain/keeper"
+	v5 "github.com/zeta-chain/node/x/crosschain/migrations/v5"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestMigrateStore(t *testing.T) {

@@ -8,14 +8,14 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/proofs"
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	mocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/observer"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	"github.com/zeta-chain/zetacore/x/observer/keeper"
-	"github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/proofs"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	mocks "github.com/zeta-chain/node/testutil/keeper/mocks/observer"
+	"github.com/zeta-chain/node/testutil/sample"
+	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
+	"github.com/zeta-chain/node/x/observer/keeper"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 func mockCheckNewBlockHeader(m *mocks.ObserverLightclientKeeper, err error) {

@@ -1,14 +1,14 @@
 package keeper_test
 
 import (
-	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/node/pkg/chains"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/authority/types"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/authority/types"
 )
 
 func TestKeeper_ChainInfo(t *testing.T) {

@@ -12,9 +12,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	lightclientmocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/lightclient"
-	"github.com/zeta-chain/zetacore/x/lightclient/keeper"
-	"github.com/zeta-chain/zetacore/x/lightclient/types"
+	lightclientmocks "github.com/zeta-chain/node/testutil/keeper/mocks/lightclient"
+	"github.com/zeta-chain/node/x/lightclient/keeper"
+	"github.com/zeta-chain/node/x/lightclient/types"
 )
 
 // LightclientMockOptions represents options for instantiating a lightclient keeper with mocks

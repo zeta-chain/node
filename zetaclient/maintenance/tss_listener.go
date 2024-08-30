@@ -8,10 +8,10 @@ import (
 	"cosmossdk.io/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/zetacore/pkg/bg"
-	"github.com/zeta-chain/zetacore/pkg/retry"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/pkg/bg"
+	"github.com/zeta-chain/node/pkg/retry"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 )
 
 const tssListenerTicker = 5 * time.Second

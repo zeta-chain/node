@@ -20,13 +20,13 @@ import (
 	"github.com/rs/zerolog"
 	"gitlab.com/thorchain/tss/go-tss/blame"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/proofs"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	keyinterfaces "github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/proofs"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
+	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 )
 
 type Order string

@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/config"
+	"github.com/zeta-chain/node/e2e/config"
 )
 
 func TestReadConfig(t *testing.T) {

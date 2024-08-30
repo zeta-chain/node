@@ -6,7 +6,7 @@ import "zetachain/zetacore/authority/authorization.proto";
 import "zetachain/zetacore/authority/chain_info.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/authority/types";
+option go_package = "github.com/zeta-chain/node/x/authority/types";
 
 // GenesisState defines the authority module's genesis state.
 message GenesisState {

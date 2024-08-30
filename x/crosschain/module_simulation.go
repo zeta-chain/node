@@ -5,7 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // GenerateGenesisState creates a randomized GenState of the module

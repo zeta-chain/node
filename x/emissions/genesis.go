@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/x/emissions/keeper"
-	"github.com/zeta-chain/zetacore/x/emissions/types"
+	"github.com/zeta-chain/node/x/emissions/keeper"
+	"github.com/zeta-chain/node/x/emissions/types"
 )
 
 // InitGenesis initializes the emissions module's state from a provided genesis
