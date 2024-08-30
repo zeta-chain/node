@@ -64,7 +64,7 @@ interface IStaking {
     /// @return validators All validators
     function getAllValidators() external view returns (Validator[] calldata validators);
 
-    /// @notice Get stakes for staker in validator
-    /// @return stakes Staker stakes in validator
-    function getStakes(address staker, string memory validator) external view returns (uint256 stakes);
+    /// @notice Get shares for staker in validator
+    /// @return shares Staker shares in validator
+    function getShares(address staker, string memory validator) external view returns (uint256 shares);
 }

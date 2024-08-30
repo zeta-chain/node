@@ -39,7 +39,7 @@ type Validator struct {
 
 // IStakingMetaData contains all meta data concerning the IStaking contract.
 var IStakingMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"name\":\"getAllValidators\",\"outputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"operatorAddress\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"consensusPubKey\",\"type\":\"string\"},{\"internalType\":\"bool\",\"name\":\"jailed\",\"type\":\"bool\"},{\"internalType\":\"enumBondStatus\",\"name\":\"bondStatus\",\"type\":\"uint8\"}],\"internalType\":\"structValidator[]\",\"name\":\"validators\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"}],\"name\":\"getStakes\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"stakes\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"stake\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validatorSrc\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"validatorDst\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transferStake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"unstake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[],\"name\":\"getAllValidators\",\"outputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"operatorAddress\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"consensusPubKey\",\"type\":\"string\"},{\"internalType\":\"bool\",\"name\":\"jailed\",\"type\":\"bool\"},{\"internalType\":\"enumBondStatus\",\"name\":\"bondStatus\",\"type\":\"uint8\"}],\"internalType\":\"structValidator[]\",\"name\":\"validators\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"}],\"name\":\"getShares\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"shares\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"stake\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validatorSrc\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"validatorDst\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transferStake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"unstake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // IStakingABI is the input ABI used to generate the binding from.
@@ -219,12 +219,12 @@ func (_IStaking *IStakingCallerSession) GetAllValidators() ([]Validator, error) 
 	return _IStaking.Contract.GetAllValidators(&_IStaking.CallOpts)
 }
 
-// GetStakes is a free data retrieval call binding the contract method 0xf668d543.
+// GetShares is a free data retrieval call binding the contract method 0x0d1b3daf.
 //
-// Solidity: function getStakes(address staker, string validator) view returns(uint256 stakes)
-func (_IStaking *IStakingCaller) GetStakes(opts *bind.CallOpts, staker common.Address, validator string) (*big.Int, error) {
+// Solidity: function getShares(address staker, string validator) view returns(uint256 shares)
+func (_IStaking *IStakingCaller) GetShares(opts *bind.CallOpts, staker common.Address, validator string) (*big.Int, error) {
 	var out []interface{}
-	err := _IStaking.contract.Call(opts, &out, "getStakes", staker, validator)
+	err := _IStaking.contract.Call(opts, &out, "getShares", staker, validator)
 
 	if err != nil {
 		return *new(*big.Int), err
@@ -236,18 +236,18 @@ func (_IStaking *IStakingCaller) GetStakes(opts *bind.CallOpts, staker common.Ad
 
 }
 
-// GetStakes is a free data retrieval call binding the contract method 0xf668d543.
+// GetShares is a free data retrieval call binding the contract method 0x0d1b3daf.
 //
-// Solidity: function getStakes(address staker, string validator) view returns(uint256 stakes)
-func (_IStaking *IStakingSession) GetStakes(staker common.Address, validator string) (*big.Int, error) {
-	return _IStaking.Contract.GetStakes(&_IStaking.CallOpts, staker, validator)
+// Solidity: function getShares(address staker, string validator) view returns(uint256 shares)
+func (_IStaking *IStakingSession) GetShares(staker common.Address, validator string) (*big.Int, error) {
+	return _IStaking.Contract.GetShares(&_IStaking.CallOpts, staker, validator)
 }
 
-// GetStakes is a free data retrieval call binding the contract method 0xf668d543.
+// GetShares is a free data retrieval call binding the contract method 0x0d1b3daf.
 //
-// Solidity: function getStakes(address staker, string validator) view returns(uint256 stakes)
-func (_IStaking *IStakingCallerSession) GetStakes(staker common.Address, validator string) (*big.Int, error) {
-	return _IStaking.Contract.GetStakes(&_IStaking.CallOpts, staker, validator)
+// Solidity: function getShares(address staker, string validator) view returns(uint256 shares)
+func (_IStaking *IStakingCallerSession) GetShares(staker common.Address, validator string) (*big.Int, error) {
+	return _IStaking.Contract.GetShares(&_IStaking.CallOpts, staker, validator)
 }
 
 // Stake is a paid mutator transaction binding the contract method 0x90b8436f.

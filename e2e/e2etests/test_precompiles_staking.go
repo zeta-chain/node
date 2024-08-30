@@ -22,34 +22,34 @@ func TestPrecompilesStaking(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	require.GreaterOrEqual(r, len(validators), 2)
 
-	// stakes are 0 for both validators at the start
-	stakesBeforeVal1, err := stakingContract.GetStakes(nil, r.ZEVMAuth.From, validators[0].OperatorAddress)
+	// shares are 0 for both validators at the start
+	sharesBeforeVal1, err := stakingContract.GetShares(nil, r.ZEVMAuth.From, validators[0].OperatorAddress)
 	require.NoError(r, err)
-	require.Equal(r, int64(0), stakesBeforeVal1.Int64())
+	require.Equal(r, int64(0), sharesBeforeVal1.Int64())
 
-	stakesBeforeVal2, err := stakingContract.GetStakes(nil, r.ZEVMAuth.From, validators[1].OperatorAddress)
+	sharesBeforeVal2, err := stakingContract.GetShares(nil, r.ZEVMAuth.From, validators[1].OperatorAddress)
 	require.NoError(r, err)
-	require.Equal(r, int64(0), stakesBeforeVal2.Int64())
+	require.Equal(r, int64(0), sharesBeforeVal2.Int64())
 
 	// stake 3 to validator1
 	tx, err := stakingContract.Stake(r.ZEVMAuth, r.ZEVMAuth.From, validators[0].OperatorAddress, big.NewInt(3))
 	require.NoError(r, err)
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 
-	// check stakes are set to 3
-	stakesAfterVal1, err := stakingContract.GetStakes(nil, r.ZEVMAuth.From, validators[0].OperatorAddress)
+	// check shares are set to 3
+	sharesAfterVal1, err := stakingContract.GetShares(nil, r.ZEVMAuth.From, validators[0].OperatorAddress)
 	require.NoError(r, err)
-	require.Equal(r, big.NewInt(3e18).String(), stakesAfterVal1.String())
+	require.Equal(r, big.NewInt(3e18).String(), sharesAfterVal1.String())
 
 	// unstake 1 from validator1
 	tx, err = stakingContract.Unstake(r.ZEVMAuth, r.ZEVMAuth.From, validators[0].OperatorAddress, big.NewInt(1))
 	require.NoError(r, err)
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 
-	// check stakes are set to 2
-	stakesAfterVal1, err = stakingContract.GetStakes(nil, r.ZEVMAuth.From, validators[0].OperatorAddress)
+	// check shares are set to 2
+	sharesAfterVal1, err = stakingContract.GetShares(nil, r.ZEVMAuth.From, validators[0].OperatorAddress)
 	require.NoError(r, err)
-	require.Equal(r, big.NewInt(2e18).String(), stakesAfterVal1.String())
+	require.Equal(r, big.NewInt(2e18).String(), sharesAfterVal1.String())
 
 	// transfer 1 stake from validator1 to validator2
 	tx, err = stakingContract.TransferStake(
@@ -63,12 +63,12 @@ func TestPrecompilesStaking(r *runner.E2ERunner, args []string) {
 
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 
-	// check stakes for both validator1 and validator2 are 1
-	stakesAfterVal1, err = stakingContract.GetStakes(nil, r.ZEVMAuth.From, validators[0].OperatorAddress)
+	// check shares for both validator1 and validator2 are 1
+	sharesAfterVal1, err = stakingContract.GetShares(nil, r.ZEVMAuth.From, validators[0].OperatorAddress)
 	require.NoError(r, err)
-	require.Equal(r, big.NewInt(1e18).String(), stakesAfterVal1.String())
+	require.Equal(r, big.NewInt(1e18).String(), sharesAfterVal1.String())
 
-	stakesAfterVal2, err := stakingContract.GetStakes(nil, r.ZEVMAuth.From, validators[1].OperatorAddress)
+	sharesAfterVal2, err := stakingContract.GetShares(nil, r.ZEVMAuth.From, validators[1].OperatorAddress)
 	require.NoError(r, err)
-	require.Equal(r, big.NewInt(1e18).String(), stakesAfterVal2.String())
+	require.Equal(r, big.NewInt(1e18).String(), sharesAfterVal2.String())
 }

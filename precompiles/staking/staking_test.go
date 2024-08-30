@@ -47,6 +47,9 @@ func setup(t *testing.T) (sdk.Context, *Contract, abi.ABI, keeper.SDKKeepers) {
 	abi := contract.Abi()
 	require.NotNil(t, abi, "contract ABI should not be nil")
 
+	address := contract.Address()
+	require.NotNil(t, address, "contract address should not be nil")
+
 	return ctx, contract, abi, sdkKeepers
 }
 
@@ -68,7 +71,7 @@ func Test_IStakingContract(t *testing.T) {
 			abi.Methods[GetAllValidatorsMethodName],
 			"getAllValidators method should be present in the ABI",
 		)
-		require.NotNil(t, abi.Methods[GetStakesMethodName], "getStakes method should be present in the ABI")
+		require.NotNil(t, abi.Methods[GetSharesMethodName], "getShares method should be present in the ABI")
 	})
 
 	t.Run("should check gas requirements for methods", func(t *testing.T) {
@@ -130,17 +133,17 @@ func Test_IStakingContract(t *testing.T) {
 			)
 		})
 
-		t.Run("getStakes", func(t *testing.T) {
-			getStakes := contract.RequiredGas(abi.Methods[GetStakesMethodName].ID)
-			copy(method[:], abi.Methods[GetStakesMethodName].ID[:4])
+		t.Run("getShares", func(t *testing.T) {
+			getShares := contract.RequiredGas(abi.Methods[GetSharesMethodName].ID)
+			copy(method[:], abi.Methods[GetSharesMethodName].ID[:4])
 			baseCost := uint64(len(method)) * gasConfig.ReadCostPerByte
 			require.Equal(
 				t,
 				GasRequiredByMethod[method]+baseCost,
-				getStakes,
-				"getStakes method should require %d gas, got %d",
+				getShares,
+				"getShares method should require %d gas, got %d",
 				GasRequiredByMethod[method]+baseCost,
-				getStakes,
+				getShares,
 			)
 		})
 
@@ -719,12 +722,12 @@ func Test_TransferStake(t *testing.T) {
 		argsTransferStake := []interface{}{
 			stakerEthAddr,
 			validatorSrc.OperatorAddress,
-			validatorDest.OperatorAddress,
+			42,
 			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
 		_, err = contract.TransferStake(ctx, stakerAddr, &methodID, argsTransferStake)
-		require.NoError(t, err)
+		require.Error(t, err)
 	})
 
 	t.Run("should fail if amount is invalid arg", func(t *testing.T) {
@@ -870,9 +873,9 @@ func Test_GetAllValidators(t *testing.T) {
 	})
 }
 
-func Test_GetStakes(t *testing.T) {
+func Test_GetShares(t *testing.T) {
 	ctx, contract, abi, sdkKeepers := setup(t)
-	methodID := abi.Methods[GetStakesMethodName]
+	methodID := abi.Methods[GetSharesMethodName]
 
 	t.Run("should return stakes", func(t *testing.T) {
 		r := rand.New(rand.NewSource(42))
@@ -896,7 +899,7 @@ func Test_GetStakes(t *testing.T) {
 		require.NoError(t, err)
 
 		args := []interface{}{stakerEthAddr, validator.OperatorAddress}
-		stakes, err := contract.GetStake(ctx, &methodID, args)
+		stakes, err := contract.GetShares(ctx, &methodID, args)
 		require.NoError(t, err)
 
 		res, err := methodID.Outputs.Unpack(stakes)
@@ -913,7 +916,7 @@ func Test_GetStakes(t *testing.T) {
 		stakerEthAddr := common.BytesToAddress(staker.Bytes())
 
 		args := []interface{}{stakerEthAddr}
-		_, err := contract.GetStake(ctx, &methodID, args)
+		_, err := contract.GetShares(ctx, &methodID, args)
 		require.Error(t, err)
 	})
 
@@ -922,7 +925,7 @@ func Test_GetStakes(t *testing.T) {
 		validator := sample.Validator(t, r)
 
 		args := []interface{}{42, validator.OperatorAddress}
-		_, err := contract.GetStake(ctx, &methodID, args)
+		_, err := contract.GetShares(ctx, &methodID, args)
 		require.Error(t, err)
 	})
 
@@ -930,8 +933,8 @@ func Test_GetStakes(t *testing.T) {
 		staker := sample.Bech32AccAddress()
 		stakerEthAddr := common.BytesToAddress(staker.Bytes())
 
-		args := []interface{}{stakerEthAddr, staker}
-		_, err := contract.GetStake(ctx, &methodID, args)
+		args := []interface{}{stakerEthAddr, staker.String()}
+		_, err := contract.GetShares(ctx, &methodID, args)
 		require.Error(t, err)
 	})
 }

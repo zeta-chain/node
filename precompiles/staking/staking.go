@@ -25,7 +25,7 @@ const (
 
 	// read
 	GetAllValidatorsMethodName = "getAllValidators"
-	GetStakesMethodName        = "getStakes"
+	GetSharesMethodName        = "getShares"
 )
 
 var (
@@ -60,7 +60,7 @@ func initABI() {
 		case GetAllValidatorsMethodName:
 			GasRequiredByMethod[methodID] = 0
 			ViewMethod[methodID] = true
-		case GetStakesMethodName:
+		case GetSharesMethodName:
 			GasRequiredByMethod[methodID] = 0
 			ViewMethod[methodID] = true
 		default:
@@ -139,7 +139,7 @@ func (c *Contract) GetAllValidators(
 	return method.Outputs.Pack(validatorsRes)
 }
 
-func (c *Contract) GetStake(
+func (c *Contract) GetShares(
 	ctx sdk.Context,
 	method *abi.Method,
 	args []interface{},
@@ -379,10 +379,10 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, erro
 			return nil, err
 		}
 		return res, nil
-	case GetStakesMethodName:
+	case GetSharesMethodName:
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-			res, err = c.GetStake(ctx, method, args)
+			res, err = c.GetShares(ctx, method, args)
 			return err
 		})
 		if execErr != nil {
