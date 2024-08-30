@@ -3,12 +3,12 @@ package chains_test
 import (
 	"testing"
 
-	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/node/testutil/sample"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/node/pkg/chains"
 )
 
 func TestChain_Validate(t *testing.T) {

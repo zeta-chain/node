@@ -8,8 +8,8 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
-	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
+	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
 // WatchInboundTracker watches zetacore for Solana inbound trackers

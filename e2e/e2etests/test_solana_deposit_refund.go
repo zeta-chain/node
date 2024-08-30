@@ -3,10 +3,10 @@ package e2etests
 import (
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	testcontract "github.com/zeta-chain/node/testutil/contracts"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // TestSolanaDepositAndCallRefund tests deposit of lamports calling a example contract

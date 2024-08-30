@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "zetachain/zetacore/observer/crosschain_flags.proto";
 import "zetachain/zetacore/observer/observer.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
+option go_package = "github.com/zeta-chain/node/x/observer/types";
 
 message EventBallotCreated {
   string msg_type_url = 1;

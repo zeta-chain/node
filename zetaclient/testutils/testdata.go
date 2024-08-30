@@ -13,10 +13,10 @@ import (
 	"github.com/onrik/ethrpc"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	testcctx "github.com/zeta-chain/zetacore/zetaclient/testdata/cctx"
+	"github.com/zeta-chain/node/pkg/coin"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/config"
+	testcctx "github.com/zeta-chain/node/zetaclient/testdata/cctx"
 )
 
 const (

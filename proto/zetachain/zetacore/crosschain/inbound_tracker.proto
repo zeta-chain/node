@@ -3,7 +3,7 @@ package zetachain.zetacore.crosschain;
 
 import "zetachain/zetacore/pkg/coin/coin.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
+option go_package = "github.com/zeta-chain/node/x/crosschain/types";
 
 message InboundTracker {
   int64 chain_id = 1;

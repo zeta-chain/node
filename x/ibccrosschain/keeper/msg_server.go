@@ -1,6 +1,6 @@
 package keeper
 
-import "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
+import "github.com/zeta-chain/node/x/ibccrosschain/types"
 
 type msgServer struct {
 	Keeper

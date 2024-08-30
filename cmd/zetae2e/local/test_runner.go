@@ -1,9 +1,9 @@
 package local
 
 import (
-	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
-	"github.com/zeta-chain/zetacore/e2e/config"
-	"github.com/zeta-chain/zetacore/e2e/runner"
+	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
+	"github.com/zeta-chain/node/e2e/config"
+	"github.com/zeta-chain/node/e2e/runner"
 )
 
 // initTestRunner initializes a runner form tests

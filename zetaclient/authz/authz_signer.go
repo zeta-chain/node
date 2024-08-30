@@ -5,8 +5,8 @@ package authz
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/pkg/authz"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/pkg/authz"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // Signer represents a signer for a grantee key

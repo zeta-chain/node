@@ -17,15 +17,15 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/zeta-chain/zetacore/app"
-	"github.com/zeta-chain/zetacore/pkg/authz"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	zetacore_rpc "github.com/zeta-chain/zetacore/pkg/rpc"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
-	keyinterfaces "github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
+	"github.com/zeta-chain/node/app"
+	"github.com/zeta-chain/node/pkg/authz"
+	"github.com/zeta-chain/node/pkg/chains"
+	zetacore_rpc "github.com/zeta-chain/node/pkg/rpc"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/config"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
+	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 )
 
 var _ interfaces.ZetacoreClient = &Client{}

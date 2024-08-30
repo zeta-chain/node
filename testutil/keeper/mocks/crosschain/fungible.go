@@ -6,13 +6,13 @@ import (
 	big "math/big"
 
 	common "github.com/ethereum/go-ethereum/common"
-	coin "github.com/zeta-chain/zetacore/pkg/coin"
+	coin "github.com/zeta-chain/node/pkg/coin"
 
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 
 	mock "github.com/stretchr/testify/mock"
 

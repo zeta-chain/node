@@ -35,8 +35,8 @@ import (
 	ethermint "github.com/zeta-chain/ethermint/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
-	"github.com/zeta-chain/zetacore/server/config"
+	rpctypes "github.com/zeta-chain/node/rpc/types"
+	"github.com/zeta-chain/node/server/config"
 )
 
 // BackendI implements the Cosmos and EVM backend.

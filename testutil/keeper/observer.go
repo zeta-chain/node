@@ -18,9 +18,9 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	observermocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/observer"
-	"github.com/zeta-chain/zetacore/x/observer/keeper"
-	"github.com/zeta-chain/zetacore/x/observer/types"
+	observermocks "github.com/zeta-chain/node/testutil/keeper/mocks/observer"
+	"github.com/zeta-chain/node/x/observer/keeper"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 // ObserverMockOptions represents options for instantiating an observer keeper with mocks

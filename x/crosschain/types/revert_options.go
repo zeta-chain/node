@@ -6,7 +6,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 
-	"github.com/zeta-chain/zetacore/pkg/crypto"
+	"github.com/zeta-chain/node/pkg/crypto"
 )
 
 // NewEmptyRevertOptions initializes a new empty RevertOptions

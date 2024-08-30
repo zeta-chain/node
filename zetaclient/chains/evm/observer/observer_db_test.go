@@ -12,7 +12,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
+	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
 const TempSQLiteDbPath = "file::memory:?cache=shared"

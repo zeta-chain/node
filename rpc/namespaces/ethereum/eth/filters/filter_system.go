@@ -35,7 +35,7 @@ import (
 	"github.com/pkg/errors"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	"github.com/zeta-chain/zetacore/rpc/ethereum/pubsub"
+	"github.com/zeta-chain/node/rpc/ethereum/pubsub"
 )
 
 var (

@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/x/authority/client/cli"
-	"github.com/zeta-chain/zetacore/x/authority/types"
+	"github.com/zeta-chain/node/x/authority/client/cli"
+	"github.com/zeta-chain/node/x/authority/types"
 )
 
 func Test_GetPolicyType(t *testing.T) {

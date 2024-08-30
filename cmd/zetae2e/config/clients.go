@@ -11,9 +11,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/zeta-chain/zetacore/e2e/config"
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	zetacore_rpc "github.com/zeta-chain/zetacore/pkg/rpc"
+	"github.com/zeta-chain/node/e2e/config"
+	"github.com/zeta-chain/node/e2e/runner"
+	zetacore_rpc "github.com/zeta-chain/node/pkg/rpc"
 )
 
 // getClientsFromConfig get clients from config

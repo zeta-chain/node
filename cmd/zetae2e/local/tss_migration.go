@@ -8,10 +8,10 @@ import (
 	"github.com/fatih/color"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/config"
-	"github.com/zeta-chain/zetacore/e2e/e2etests"
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/e2e/config"
+	"github.com/zeta-chain/node/e2e/e2etests"
+	"github.com/zeta-chain/node/e2e/runner"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // tssMigrationTestRoutine runs TSS migration related e2e tests

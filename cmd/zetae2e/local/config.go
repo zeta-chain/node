@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/app"
-	"github.com/zeta-chain/zetacore/e2e/config"
+	"github.com/zeta-chain/node/app"
+	"github.com/zeta-chain/node/e2e/config"
 )
 
 // GetConfig returns config from file from the command line flag

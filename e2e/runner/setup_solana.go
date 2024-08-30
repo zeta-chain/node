@@ -7,8 +7,8 @@ import (
 	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	solanacontracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
+	"github.com/zeta-chain/node/pkg/chains"
+	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
 )
 
 // SetupSolanaAccount imports the deployer's private key

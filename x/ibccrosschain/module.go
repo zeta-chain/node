@@ -14,9 +14,9 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/x/ibccrosschain/client/cli"
-	"github.com/zeta-chain/zetacore/x/ibccrosschain/keeper"
-	"github.com/zeta-chain/zetacore/x/ibccrosschain/types"
+	"github.com/zeta-chain/node/x/ibccrosschain/client/cli"
+	"github.com/zeta-chain/node/x/ibccrosschain/keeper"
+	"github.com/zeta-chain/node/x/ibccrosschain/types"
 )
 
 var (

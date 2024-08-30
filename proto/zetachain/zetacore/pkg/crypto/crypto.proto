@@ -3,7 +3,7 @@ package zetachain.zetacore.pkg.crypto;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/pkg/crypto";
+option go_package = "github.com/zeta-chain/node/pkg/crypto";
 
 // PubKeySet contains two pub keys , secp256k1 and ed25519
 message PubKeySet {

@@ -8,9 +8,9 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	contracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // SignMsgWithdraw signs a withdraw message (for gateway withdraw/withdraw_spl instruction) with TSS.

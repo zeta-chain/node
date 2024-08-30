@@ -1,4 +1,4 @@
-module github.com/zeta-chain/zetacore
+module github.com/zeta-chain/node
 
 go 1.22.2
 

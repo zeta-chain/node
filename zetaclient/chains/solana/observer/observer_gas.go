@@ -7,8 +7,8 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 
-	zetamath "github.com/zeta-chain/zetacore/pkg/math"
-	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
+	zetamath "github.com/zeta-chain/node/pkg/math"
+	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
 const (

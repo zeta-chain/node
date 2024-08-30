@@ -3,7 +3,7 @@ package zetachain.zetacore.ibccrosschain;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/ibccrosschain/types";
+option go_package = "github.com/zeta-chain/node/x/ibccrosschain/types";
 
 // Msg defines the Msg service.
 service Msg {}

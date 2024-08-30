@@ -5,7 +5,7 @@ import "zetachain/zetacore/emissions/params.proto";
 import "zetachain/zetacore/emissions/withdrawable_emissions.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/emissions/types";
+option go_package = "github.com/zeta-chain/node/x/emissions/types";
 
 // GenesisState defines the emissions module's genesis state.
 message GenesisState {

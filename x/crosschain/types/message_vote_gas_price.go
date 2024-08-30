@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/zeta-chain/zetacore/pkg/authz"
+	"github.com/zeta-chain/node/pkg/authz"
 )
 
 var _ sdk.Msg = &MsgVoteGasPrice{}

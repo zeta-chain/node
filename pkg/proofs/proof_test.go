@@ -16,9 +16,9 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/pkg/proofs/bitcoin"
-	"github.com/zeta-chain/zetacore/pkg/proofs/ethereum"
-	"github.com/zeta-chain/zetacore/testutil/testdata"
+	"github.com/zeta-chain/node/pkg/proofs/bitcoin"
+	"github.com/zeta-chain/node/pkg/proofs/ethereum"
+	"github.com/zeta-chain/node/testutil/testdata"
 )
 
 const (

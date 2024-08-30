@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	v2 "github.com/zeta-chain/zetacore/x/authority/migrations/v2"
-	"github.com/zeta-chain/zetacore/x/authority/types"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	v2 "github.com/zeta-chain/node/x/authority/migrations/v2"
+	"github.com/zeta-chain/node/x/authority/types"
 )
 
 func TestMigrateStore(t *testing.T) {
