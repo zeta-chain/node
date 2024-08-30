@@ -63,7 +63,11 @@ func Test_IStakingContract(t *testing.T) {
 			"transferStake method should be present in the ABI",
 		)
 
-		require.NotNil(t, abi.Methods[GetAllValidatorsMethodName], "getAllValidators method should be present in the ABI")
+		require.NotNil(
+			t,
+			abi.Methods[GetAllValidatorsMethodName],
+			"getAllValidators method should be present in the ABI",
+		)
 		require.NotNil(t, abi.Methods[GetStakesMethodName], "getStakes method should be present in the ABI")
 	})
 
@@ -897,7 +901,11 @@ func Test_GetStakes(t *testing.T) {
 
 		res, err := methodID.Outputs.Unpack(stakes)
 		require.NoError(t, err)
-		require.Equal(t, fmt.Sprintf("%d000000000000000000", coins.AmountOf(config.BaseDenom).BigInt().Int64()), res[0].(*big.Int).String())
+		require.Equal(
+			t,
+			fmt.Sprintf("%d000000000000000000", coins.AmountOf(config.BaseDenom).BigInt().Int64()),
+			res[0].(*big.Int).String(),
+		)
 	})
 
 	t.Run("should fail if wrong args amount", func(t *testing.T) {
