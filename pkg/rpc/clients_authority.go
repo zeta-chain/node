@@ -1,4 +1,4 @@
-package zetacore
+package rpc
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 )
 
 // GetAdditionalChains returns the additional chains
-func (c *Client) GetAdditionalChains(ctx context.Context) ([]chains.Chain, error) {
-	resp, err := c.client.authority.ChainInfo(ctx, &authoritytypes.QueryGetChainInfoRequest{})
+func (c *Clients) GetAdditionalChains(ctx context.Context) ([]chains.Chain, error) {
+	resp, err := c.Authority.ChainInfo(ctx, &authoritytypes.QueryGetChainInfoRequest{})
 	if err != nil {
 		return nil, err
 	}

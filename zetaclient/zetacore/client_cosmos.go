@@ -8,7 +8,6 @@ import (
 	tmhttp "github.com/cometbft/cometbft/rpc/client/http"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
@@ -42,31 +41,6 @@ func (c *Client) GetGenesisSupply(ctx context.Context) (sdkmath.Int, error) {
 	return bankstate.Supply.AmountOf(config.BaseDenom), nil
 }
 
-// GetUpgradePlan returns the current upgrade plan.
-// if there is no active upgrade plan, plan will be nil, err will be nil as well.
-func (c *Client) GetUpgradePlan(ctx context.Context) (*upgradetypes.Plan, error) {
-	in := &upgradetypes.QueryCurrentPlanRequest{}
-
-	resp, err := c.client.upgrade.CurrentPlan(ctx, in)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get current upgrade plan")
-	}
-
-	return resp.Plan, nil
-}
-
-// GetZetaTokenSupplyOnNode returns the zeta token supply on the node
-func (c *Client) GetZetaTokenSupplyOnNode(ctx context.Context) (sdkmath.Int, error) {
-	in := &banktypes.QuerySupplyOfRequest{Denom: config.BaseDenom}
-
-	resp, err := c.client.bank.SupplyOf(ctx, in)
-	if err != nil {
-		return sdkmath.ZeroInt(), errors.Wrap(err, "failed to get zeta token supply")
-	}
-
-	return resp.GetAmount().Amount, nil
-}
-
 // GetZetaHotKeyBalance returns the zeta hot key balance
 func (c *Client) GetZetaHotKeyBalance(ctx context.Context) (sdkmath.Int, error) {
 	address, err := c.keys.GetAddress()
@@ -79,7 +53,7 @@ func (c *Client) GetZetaHotKeyBalance(ctx context.Context) (sdkmath.Int, error) 
 		Denom:   config.BaseDenom,
 	}
 
-	resp, err := c.client.bank.Balance(ctx, in)
+	resp, err := c.Clients.Bank.Balance(ctx, in)
 	if err != nil {
 		return sdkmath.ZeroInt(), errors.Wrap(err, "failed to get zeta hot key balance")
 	}
