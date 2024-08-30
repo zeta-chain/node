@@ -45,10 +45,3 @@ func ValidateHashForChain(hash string, chainID int64) error {
 	}
 	return fmt.Errorf("invalid chain id %d", chainID)
 }
-
-// ValidateAddressForChain validates the address for the chain
-// NOTE: since these checks are currently not used, we don't provide additional chains for simplicity
-// TODO: use authorityKeeper.GetChainInfo to provide additional chains
-// https://github.com/zeta-chain/node/issues/2234
-// https://github.com/zeta-chain/node/issues/2385
-// NOTE: We should eventually not using these hard-coded checks at all for same reasons as above

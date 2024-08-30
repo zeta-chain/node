@@ -65,6 +65,9 @@ func TestValidateAddressForChain(t *testing.T) {
 	allChains := appendChains(evmChains, zetaChains, baseChains, solanaChains, opChains, bitcoinChains)
 	require.ElementsMatch(t, allChains, chains.DefaultChainsList())
 
+	//test for invalid chain
+	require.ErrorContains(t, address.ValidateAddressForChain("0x123", 123, additionalChains), "chain id 123 not supported")
+
 	// test for evm chain chains
 	for _, chain := range evmChains {
 		require.Error(t, address.ValidateAddressForChain("0x123", chain.ChainId, additionalChains))
@@ -113,7 +116,6 @@ func TestValidateAddressForChain(t *testing.T) {
 	}
 
 	// test for btc chain
-
 	require.NoError(
 		t,
 		address.ValidateAddressForChain(

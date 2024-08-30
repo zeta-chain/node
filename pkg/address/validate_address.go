@@ -7,6 +7,12 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
+// ValidateAddressForChain validates the address for the chain
+// NOTE: since these checks are currently not used, we don't provide additional chains for simplicity
+// https://github.com/zeta-chain/node/issues/2234
+// https://github.com/zeta-chain/node/issues/2385
+// NOTE: We should eventually not using these hard-coded checks at all for same reasons as above
+
 // TODO : Use this function to validate Sender and Receiver address for CCTX
 // https://github.com/zeta-chain/node/issues/2697
 func ValidateAddressForChain(address string, chainID int64, additionalChains []chains.Chain) error {
