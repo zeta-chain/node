@@ -10,9 +10,9 @@ import (
 	ethparams "github.com/ethereum/go-ethereum/params"
 	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
 
-	"github.com/zeta-chain/zetacore/precompiles/prototype"
-	"github.com/zeta-chain/zetacore/precompiles/staking"
-	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
+	"github.com/zeta-chain/node/precompiles/prototype"
+	"github.com/zeta-chain/node/precompiles/staking"
+	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
 )
 
 // EnabledStatefulContracts contains the list of all enabled stateful precompiles.

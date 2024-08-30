@@ -18,10 +18,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	ethermint "github.com/zeta-chain/ethermint/types"
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	"github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/testutil/sample"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
 func setup(t *testing.T) (sdk.Context, *Contract, abi.ABI, keeper.SDKKeepers) {

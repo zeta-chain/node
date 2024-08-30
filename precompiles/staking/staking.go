@@ -14,7 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 
-	ptypes "github.com/zeta-chain/zetacore/precompiles/types"
+	ptypes "github.com/zeta-chain/node/precompiles/types"
 )
 
 const (
