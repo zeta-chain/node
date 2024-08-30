@@ -252,11 +252,6 @@ func (ob *Observer) WithLastTxScanned(txHash string) *Observer {
 	return ob
 }
 
-// RPCAlertLatency returns the RPC alert latency for the observer.
-func (ob *Observer) RPCAlertLatency() time.Duration {
-	return ob.rpcAlertLatency
-}
-
 // BlockCache returns the block cache for the observer.
 func (ob *Observer) BlockCache() *lru.Cache {
 	return ob.blockCache
@@ -461,6 +456,27 @@ func (ob *Observer) PostVoteInbound(
 	}
 
 	return ballot, err
+}
+
+// AlertOnRPCLatency prints an alert if the RPC latency exceeds the threshold.
+// Returns true if the RPC latency is too high.
+func (ob *Observer) AlertOnRPCLatency(latestBlockTime time.Time, defaultAlertLatency time.Duration) bool {
+	// use configured alert latency if set
+	alertLatency := defaultAlertLatency
+	if ob.rpcAlertLatency > 0 {
+		alertLatency = ob.rpcAlertLatency
+	}
+
+	// latest block should not be too old
+	elapsedTime := time.Since(latestBlockTime)
+	if elapsedTime > alertLatency {
+		ob.logger.Chain.Error().
+			Msgf("RPC is stale: latest block is %.0f seconds old, RPC down or chain stuck (check explorer)?", elapsedTime.Seconds())
+		return true
+	}
+
+	ob.logger.Chain.Info().Msgf("RPC is OK: latest block is %.0f seconds old", elapsedTime.Seconds())
+	return false
 }
 
 // EnvVarLatestBlockByChain returns the environment variable for the last block by chain.

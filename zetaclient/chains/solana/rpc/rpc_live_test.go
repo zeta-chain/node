@@ -6,7 +6,6 @@ import (
 
 	"github.com/gagliardetto/solana-go"
 	solanarpc "github.com/gagliardetto/solana-go/rpc"
-	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/solana/rpc"
 	"github.com/zeta-chain/zetacore/zetaclient/common"
@@ -68,6 +67,6 @@ func LiveTest_CheckRPCStatus(t *testing.T) {
 
 	// check the RPC status
 	ctx := context.Background()
-	err := rpc.CheckRPCStatus(ctx, client, rpc.RPCAlertLatency, log.Logger)
+	_, err := rpc.CheckRPCStatus(ctx, client, false)
 	require.NoError(t, err)
 }

@@ -4,13 +4,14 @@ import (
 	"context"
 	"time"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/solana/rpc"
 	"github.com/zeta-chain/zetacore/zetaclient/common"
 )
 
-// WatchRPCStatus watches the RPC status of the solana chain
-func (ob *Observer) WatchRPCStatus(ctx context.Context) error {
-	ob.Logger().Chain.Info().Msgf("WatchRPCStatus started for chain %d", ob.Chain().ChainId)
+// watchRPCStatus watches the RPC status of the Solana chain
+func (ob *Observer) watchRPCStatus(ctx context.Context) error {
+	ob.Logger().Chain.Info().Msgf("watchRPCStatus started for chain %d", ob.Chain().ChainId)
 
 	ticker := time.NewTicker(common.RPCStatusCheckInterval)
 	for {
@@ -20,13 +21,25 @@ func (ob *Observer) WatchRPCStatus(ctx context.Context) error {
 				continue
 			}
 
-			alertLatency := ob.RPCAlertLatency()
-			err := rpc.CheckRPCStatus(ctx, ob.solClient, alertLatency, ob.Logger().Chain)
-			if err != nil {
-				ob.Logger().Chain.Error().Err(err).Msg("RPC Status error")
-			}
+			ob.checkRPCStatus(ctx)
 		case <-ob.StopChannel():
 			return nil
 		}
 	}
+}
+
+// checkRPCStatus checks the RPC status of the Solana chain
+func (ob *Observer) checkRPCStatus(ctx context.Context) {
+	// Solana privnet doesn't have RPC 'GetHealth', need to differentiate
+	privnet := ob.Chain().NetworkType == chains.NetworkType_privnet
+
+	// check the RPC status
+	blockTime, err := rpc.CheckRPCStatus(ctx, ob.solClient, privnet)
+	if err != nil {
+		ob.Logger().Chain.Error().Err(err).Msg("CheckRPCStatus failed")
+		return
+	}
+
+	// alert if RPC latency is too high
+	ob.AlertOnRPCLatency(blockTime, rpc.RPCAlertLatency)
 }

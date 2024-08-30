@@ -8,8 +8,8 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/common"
 )
 
-// WatchRPCStatus watches the RPC status of the Bitcoin chain
-func (ob *Observer) WatchRPCStatus(_ context.Context) error {
+// watchRPCStatus watches the RPC status of the Bitcoin chain
+func (ob *Observer) watchRPCStatus(_ context.Context) error {
 	ob.Logger().Chain.Info().Msgf("WatchRPCStatus started for chain %d", ob.Chain().ChainId)
 
 	ticker := time.NewTicker(common.RPCStatusCheckInterval)
@@ -20,15 +20,22 @@ func (ob *Observer) WatchRPCStatus(_ context.Context) error {
 				continue
 			}
 
-			alertLatency := ob.RPCAlertLatency()
-			tssAddress := ob.TSS().BTCAddressWitnessPubkeyHash()
-			err := rpc.CheckRPCStatus(ob.btcClient, alertLatency, tssAddress, ob.Logger().Chain)
-			if err != nil {
-				ob.Logger().Chain.Error().Err(err).Msg("RPC Status error")
-			}
-
+			ob.checkRPCStatus()
 		case <-ob.StopChannel():
 			return nil
 		}
 	}
+}
+
+// checkRPCStatus checks the RPC status of the Bitcoin chain
+func (ob *Observer) checkRPCStatus() {
+	tssAddress := ob.TSS().BTCAddressWitnessPubkeyHash()
+	blockTime, err := rpc.CheckRPCStatus(ob.btcClient, tssAddress)
+	if err != nil {
+		ob.Logger().Chain.Error().Err(err).Msg("CheckRPCStatus failed")
+		return
+	}
+
+	// alert if RPC latency is too high
+	ob.AlertOnRPCLatency(blockTime, rpc.RPCAlertLatency)
 }

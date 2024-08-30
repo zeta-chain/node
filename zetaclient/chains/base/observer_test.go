@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/rs/zerolog"
@@ -23,8 +24,13 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
 
+const (
+	// defaultAlertLatency is the default alert latency for unit tests
+	defaultAlertLatency = 60 * time.Second
+)
+
 // createObserver creates a new observer for testing
-func createObserver(t *testing.T, chain chains.Chain) *base.Observer {
+func createObserver(t *testing.T, chain chains.Chain, alertLatency time.Duration) *base.Observer {
 	// constructor parameters
 	chainParams := *sample.ChainParams(chain.ChainId)
 	zetacoreClient := mocks.NewZetacoreClient(t)
@@ -41,7 +47,7 @@ func createObserver(t *testing.T, chain chains.Chain) *base.Observer {
 		tss,
 		base.DefaultBlockCacheSize,
 		base.DefaultHeaderCacheSize,
-		60,
+		alertLatency,
 		nil,
 		database,
 		logger,
@@ -143,7 +149,7 @@ func TestNewObserver(t *testing.T) {
 func TestStop(t *testing.T) {
 	t.Run("should be able to stop observer", func(t *testing.T) {
 		// create observer and initialize db
-		ob := createObserver(t, chains.Ethereum)
+		ob := createObserver(t, chains.Ethereum, defaultAlertLatency)
 
 		// stop observer
 		ob.Stop()
@@ -154,7 +160,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 	chain := chains.Ethereum
 
 	t.Run("should be able to update chain", func(t *testing.T) {
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// update chain
 		newChain := chains.BscMainnet
@@ -163,7 +169,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 	})
 
 	t.Run("should be able to update chain params", func(t *testing.T) {
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// update chain params
 		newChainParams := *sample.ChainParams(chains.BscMainnet.ChainId)
@@ -172,7 +178,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 	})
 
 	t.Run("should be able to update zetacore client", func(t *testing.T) {
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// update zetacore client
 		newZetacoreClient := mocks.NewZetacoreClient(t)
@@ -181,7 +187,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 	})
 
 	t.Run("should be able to update tss", func(t *testing.T) {
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// update tss
 		newTSS := mocks.NewTSSAthens3()
@@ -190,7 +196,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 	})
 
 	t.Run("should be able to update last block", func(t *testing.T) {
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// update last block
 		newLastBlock := uint64(100)
@@ -199,7 +205,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 	})
 
 	t.Run("should be able to update last block scanned", func(t *testing.T) {
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// update last block scanned
 		newLastBlockScanned := uint64(100)
@@ -208,7 +214,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 	})
 
 	t.Run("should be able to update last tx scanned", func(t *testing.T) {
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// update last tx scanned
 		newLastTxScanned := sample.EthAddress().String()
@@ -216,15 +222,8 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		require.Equal(t, newLastTxScanned, ob.LastTxScanned())
 	})
 
-	t.Run("should be able to get rpc alert latency", func(t *testing.T) {
-		ob := createObserver(t, chain)
-
-		// get rpc alert latency
-		require.EqualValues(t, 60, ob.RPCAlertLatency())
-	})
-
 	t.Run("should be able to replace block cache", func(t *testing.T) {
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// update block cache
 		newBlockCache, err := lru.New(200)
@@ -235,7 +234,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 	})
 
 	t.Run("should be able to replace header cache", func(t *testing.T) {
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// update headers cache
 		newHeadersCache, err := lru.New(200)
@@ -246,7 +245,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 	})
 
 	t.Run("should be able to update telemetry server", func(t *testing.T) {
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// update telemetry server
 		newServer := metrics.NewTelemetryServer()
@@ -255,7 +254,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 	})
 
 	t.Run("should be able to get logger", func(t *testing.T) {
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 		logger := ob.Logger()
 
 		// should be able to print log
@@ -293,7 +292,7 @@ func TestOutboundID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// create observer
-			ob := createObserver(t, tt.chain)
+			ob := createObserver(t, tt.chain, defaultAlertLatency)
 			ob = ob.WithTSS(tt.tss)
 
 			// get outbound id
@@ -315,7 +314,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 
 	t.Run("should be able to load last block scanned", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// create db and write 100 as last block scanned
 		err := ob.WriteLastBlockScannedToDB(100)
@@ -329,7 +328,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 
 	t.Run("latest block scanned should be 0 if not found in db", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// read last block scanned
 		err := ob.LoadLastBlockScanned(log.Logger)
@@ -339,7 +338,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 
 	t.Run("should overwrite last block scanned if env var is set", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// create db and write 100 as last block scanned
 		ob.WriteLastBlockScannedToDB(100)
@@ -355,7 +354,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 
 	t.Run("last block scanned should remain 0 if env var is set to latest", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// create db and write 100 as last block scanned
 		ob.WriteLastBlockScannedToDB(100)
@@ -371,7 +370,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 
 	t.Run("should return error on invalid env var", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// set invalid env var
 		os.Setenv(envvar, "invalid")
@@ -385,7 +384,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 func TestSaveLastBlockScanned(t *testing.T) {
 	t.Run("should be able to save last block scanned", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chains.Ethereum)
+		ob := createObserver(t, chains.Ethereum, defaultAlertLatency)
 
 		// save 100 as last block scanned
 		err := ob.SaveLastBlockScanned(100)
@@ -405,7 +404,7 @@ func TestReadWriteDBLastBlockScanned(t *testing.T) {
 	chain := chains.Ethereum
 	t.Run("should be able to write and read last block scanned to db", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// write last block scanned
 		err := ob.WriteLastBlockScannedToDB(100)
@@ -418,7 +417,7 @@ func TestReadWriteDBLastBlockScanned(t *testing.T) {
 
 	t.Run("should return error when last block scanned not found in db", func(t *testing.T) {
 		// create empty db
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		lastScannedBlock, err := ob.ReadLastBlockScannedFromDB()
 		require.Error(t, err)
@@ -432,7 +431,7 @@ func TestLoadLastTxScanned(t *testing.T) {
 
 	t.Run("should be able to load last tx scanned", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// create db and write sample hash as last tx scanned
 		ob.WriteLastTxScannedToDB(lastTx)
@@ -444,7 +443,7 @@ func TestLoadLastTxScanned(t *testing.T) {
 
 	t.Run("latest tx scanned should be empty if not found in db", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// read last tx scanned
 		ob.LoadLastTxScanned()
@@ -453,7 +452,7 @@ func TestLoadLastTxScanned(t *testing.T) {
 
 	t.Run("should overwrite last tx scanned if env var is set", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// create db and write sample hash as last tx scanned
 		ob.WriteLastTxScannedToDB(lastTx)
@@ -472,7 +471,7 @@ func TestSaveLastTxScanned(t *testing.T) {
 	chain := chains.SolanaDevnet
 	t.Run("should be able to save last tx scanned", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// save random tx hash
 		lastSlot := uint64(100)
@@ -495,7 +494,7 @@ func TestReadWriteDBLastTxScanned(t *testing.T) {
 	chain := chains.SolanaDevnet
 	t.Run("should be able to write and read last tx scanned to db", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// write last tx scanned
 		lastTx := "5LuQMorgd11p8GWEw6pmyHCDtA26NUyeNFhLWPNk2oBoM9pkag1LzhwGSRos3j4TJLhKjswFhZkGtvSGdLDkmqsk"
@@ -509,7 +508,7 @@ func TestReadWriteDBLastTxScanned(t *testing.T) {
 
 	t.Run("should return error when last tx scanned not found in db", func(t *testing.T) {
 		// create empty db
-		ob := createObserver(t, chain)
+		ob := createObserver(t, chain, defaultAlertLatency)
 
 		lastTxScanned, err := ob.ReadLastTxScannedFromDB()
 		require.Error(t, err)
@@ -520,7 +519,7 @@ func TestReadWriteDBLastTxScanned(t *testing.T) {
 func TestPostVoteInbound(t *testing.T) {
 	t.Run("should be able to post vote inbound", func(t *testing.T) {
 		// create observer
-		ob := createObserver(t, chains.Ethereum)
+		ob := createObserver(t, chains.Ethereum, defaultAlertLatency)
 
 		// create mock zetacore client
 		zetacoreClient := mocks.NewZetacoreClient(t)
@@ -533,6 +532,53 @@ func TestPostVoteInbound(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, "sampleBallotIndex", ballot)
 	})
+}
+
+func TestAlertOnRPCLatency(t *testing.T) {
+	now := time.Now()
+
+	tests := []struct {
+		name         string
+		blockTime    time.Time
+		alertLatency time.Duration
+		alerted      bool
+	}{
+		{
+			name:         "should alert on high RPC latency",
+			blockTime:    now.Add(-60 * time.Second),
+			alertLatency: 55,
+			alerted:      true,
+		},
+		{
+			name:         "should not alert on normal RPC latency",
+			blockTime:    now.Add(-60 * time.Second),
+			alertLatency: 65,
+			alerted:      false,
+		},
+		{
+			name:         "should alert on higher RPC latency then default",
+			blockTime:    now.Add(-65 * time.Second),
+			alertLatency: 0, // 0 means not set
+			alerted:      true,
+		},
+		{
+			name:         "should not alert on normal RPC latency compared to default",
+			blockTime:    now.Add(-55 * time.Second),
+			alertLatency: 0, // 0 means not set
+			alerted:      false,
+		},
+	}
+
+	// run tests
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// create observer
+			ob := createObserver(t, chains.Ethereum, tt.alertLatency)
+
+			alerted := ob.AlertOnRPCLatency(tt.blockTime, defaultAlertLatency)
+			require.Equal(t, tt.alerted, alerted)
+		})
+	}
 }
 
 func createDatabase(t *testing.T) *db.DB {

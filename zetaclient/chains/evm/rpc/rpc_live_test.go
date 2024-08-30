@@ -5,7 +5,6 @@ import (
 	"math"
 
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/rpc"
 	"github.com/zeta-chain/zetacore/zetaclient/common"
@@ -56,6 +55,6 @@ func LiveTest_CheckRPCStatus(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	err = rpc.CheckRPCStatus(ctx, client, rpc.RPCAlertLatency, log.Logger)
+	_, err = rpc.CheckRPCStatus(ctx, client)
 	require.NoError(t, err)
 }

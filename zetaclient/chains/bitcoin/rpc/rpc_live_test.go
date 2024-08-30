@@ -265,7 +265,7 @@ func LiveTestCheckRPCStatus(t *testing.T) {
 	require.NoError(t, err)
 
 	// check RPC status
-	err = rpc.CheckRPCStatus(client, rpc.RPCAlertLatency, tssAddress, log.Logger)
+	_, err = rpc.CheckRPCStatus(client, tssAddress)
 	require.NoError(t, err)
 }
 

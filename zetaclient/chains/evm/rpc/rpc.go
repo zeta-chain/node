@@ -7,7 +7,6 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 )
@@ -61,48 +60,28 @@ func IsTxConfirmed(
 }
 
 // CheckRPCStatus checks the RPC status of the evm chain
-func CheckRPCStatus(
-	ctx context.Context,
-	client interfaces.EVMRPCClient,
-	alertLatency time.Duration,
-	logger zerolog.Logger,
-) error {
+func CheckRPCStatus(ctx context.Context, client interfaces.EVMRPCClient) (time.Time, error) {
 	// query latest block number
 	bn, err := client.BlockNumber(ctx)
 	if err != nil {
-		return errors.Wrap(err, "RPC error onBlockNumber: RPC down?")
+		return time.Time{}, errors.Wrap(err, "RPC failed on BlockNumber, RPC down?")
 	}
 
 	// query suggested gas price
-	gasPrice, err := client.SuggestGasPrice(ctx)
+	_, err = client.SuggestGasPrice(ctx)
 	if err != nil {
-		return errors.Wrap(err, "RPC error onSuggestGasPrice: RPC down?")
+		return time.Time{}, errors.Wrap(err, "RPC failed on SuggestGasPrice, RPC down?")
 	}
 
 	// query latest block header
 	header, err := client.HeaderByNumber(ctx, new(big.Int).SetUint64(bn))
 	if err != nil {
-		return errors.Wrap(err, "RPC error onHeaderByNumber: RPC down?")
+		return time.Time{}, errors.Wrap(err, "RPC failed on HeaderByNumber, RPC down?")
 	}
 
-	// use default alert latency if not provided
-	if alertLatency <= 0 {
-		alertLatency = RPCAlertLatency
-	}
-
-	// latest block should not be too old
+	// convert block time to UTC
 	// #nosec G115 always in range
 	blockTime := time.Unix(int64(header.Time), 0).UTC()
-	elapsedTime := time.Since(blockTime)
-	if elapsedTime > alertLatency {
-		return errors.Errorf(
-			"Latest block %d is %.0fs old, RPC stale or chain stuck (check explorer)?",
-			bn,
-			elapsedTime.Seconds(),
-		)
-	}
 
-	logger.Info().
-		Msgf("RPC Status [OK]: latest block %d, timestamp %s (%.0fs ago), gas price %s", header.Number, blockTime.String(), elapsedTime.Seconds(), gasPrice.String())
-	return nil
+	return blockTime, nil
 }

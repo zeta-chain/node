@@ -7,7 +7,6 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 )
@@ -124,46 +123,26 @@ func GetSignaturesForAddressUntil(
 }
 
 // CheckRPCStatus checks the RPC status of the solana chain
-func CheckRPCStatus(
-	ctx context.Context,
-	client interfaces.SolanaRPCClient,
-	alertLatency time.Duration,
-	logger zerolog.Logger,
-) error {
+func CheckRPCStatus(ctx context.Context, client interfaces.SolanaRPCClient, privnet bool) (time.Time, error) {
 	// query solana health (always return "ok" unless --trusted-validator is provided)
-	_, err := client.GetHealth(ctx)
-	if err != nil {
-		return errors.Wrap(err, "RPC error onGetHealth: RPC down?")
+	if !privnet {
+		_, err := client.GetHealth(ctx)
+		if err != nil {
+			return time.Time{}, errors.Wrap(err, "RPC failed on GetHealth, RPC down?")
+		}
 	}
 
 	// query latest slot
 	slot, err := client.GetSlot(ctx, rpc.CommitmentFinalized)
 	if err != nil {
-		return errors.Wrap(err, "RPC error onGetSlot: RPC down?")
+		return time.Time{}, errors.Wrap(err, "RPC failed on GetSlot, RPC down?")
 	}
 
 	// query latest block time
 	blockTime, err := client.GetBlockTime(ctx, slot)
 	if err != nil {
-		return errors.Wrap(err, "RPC error onGetBlockTime: RPC down?")
+		return time.Time{}, errors.Wrap(err, "RPC failed on GetBlockTime, RPC down?")
 	}
 
-	// use default alert latency if not provided
-	if alertLatency <= 0 {
-		alertLatency = RPCAlertLatency
-	}
-
-	// latest block should not be too old
-	elapsedTime := time.Since(blockTime.Time())
-	if elapsedTime > alertLatency {
-		return errors.Errorf(
-			"Latest slot %d is %.0fs old, RPC stale or chain stuck (check explorer)?",
-			slot,
-			elapsedTime.Seconds(),
-		)
-	}
-
-	logger.Info().
-		Msgf("RPC Status [OK]: latest slot %d, timestamp %s (%.0fs ago)", slot, blockTime.String(), elapsedTime.Seconds())
-	return nil
+	return blockTime.Time(), nil
 }

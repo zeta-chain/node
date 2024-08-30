@@ -10,7 +10,6 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
@@ -165,59 +164,36 @@ func GetRecentFeeRate(rpcClient interfaces.BTCRPCClient, netParams *chaincfg.Par
 	return uint64(highestRate), nil
 }
 
-// CheckRPCStatus checks the RPC status of the evm chain
-func CheckRPCStatus(
-	client interfaces.BTCRPCClient,
-	alertLatency time.Duration,
-	tssAddress btcutil.Address,
-	logger zerolog.Logger,
-) error {
+// CheckRPCStatus checks the RPC status of the bitcoin chain
+func CheckRPCStatus(client interfaces.BTCRPCClient, tssAddress btcutil.Address) (time.Time, error) {
 	// query latest block number
 	bn, err := client.GetBlockCount()
 	if err != nil {
-		return errors.Wrap(err, "RPC error onGetBlockCount: RPC down?")
+		return time.Time{}, errors.Wrap(err, "RPC failed on GetBlockCount, RPC down?")
 	}
 
 	// query latest block header
 	hash, err := client.GetBlockHash(bn)
 	if err != nil {
-		return errors.Wrap(err, "RPC error onGetBlockHash: RPC down?")
+		return time.Time{}, errors.Wrap(err, "RPC failed on GetBlockHash, RPC down?")
 	}
 
 	// query latest block header thru hash
 	header, err := client.GetBlockHeader(hash)
 	if err != nil {
-		return errors.Wrap(err, "RPC error onGetBlockHeader: RPC down?")
-	}
-
-	// use default alert latency if not provided
-	if alertLatency <= 0 {
-		alertLatency = RPCAlertLatency
-	}
-
-	// latest block should not be too old
-	blockTime := header.Timestamp
-	elapsedTime := time.Since(blockTime)
-	if elapsedTime > alertLatency {
-		return errors.Errorf(
-			"Latest block %d is %.0fs old, RPC stale or chain stuck (check explorer)?",
-			bn,
-			elapsedTime.Seconds(),
-		)
+		return time.Time{}, errors.Wrap(err, "RPC failed on GetBlockHeader, RPC down?")
 	}
 
 	// should be able to list utxos owned by TSS address
 	res, err := client.ListUnspentMinMaxAddresses(0, 1000000, []btcutil.Address{tssAddress})
 	if err != nil {
-		return errors.Wrap(err, "can't list utxos of TSS address; TSS address is not imported?")
+		return time.Time{}, errors.Wrap(err, "can't list utxos of TSS address; TSS address is not imported?")
 	}
 
 	// TSS address should have utxos
 	if len(res) == 0 {
-		return errors.New("TSS address has no utxos; TSS address is not imported?")
+		return time.Time{}, errors.New("TSS address has no utxos; TSS address is not imported?")
 	}
 
-	logger.Info().
-		Msgf("RPC Status [OK]: latest block %d, timestamp %s (%.fs ago), tss addr %s, #utxos: %d", bn, blockTime, elapsedTime.Seconds(), tssAddress, len(res))
-	return nil
+	return header.Timestamp, nil
 }
