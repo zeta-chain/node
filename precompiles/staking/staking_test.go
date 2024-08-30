@@ -2,8 +2,10 @@ package staking
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
+	"math/big"
 	"math/rand"
 
 	tmdb "github.com/cometbft/cometbft-db"
@@ -899,5 +901,111 @@ func Test_TransferStake(t *testing.T) {
 		originEthAddr := common.BytesToAddress(sample.Bech32AccAddress().Bytes())
 		_, err = contract.TransferStake(ctx, originEthAddr, &methodID, argsTransferStake)
 		require.ErrorContains(t, err, "origin is not staker")
+	})
+}
+
+func Test_GetAllValidators(t *testing.T) {
+	var encoding ethermint.EncodingConfig
+	appCodec := encoding.Codec
+
+	cdc := keeper.NewCodec()
+
+	db := tmdb.NewMemDB()
+	stateStore := store.NewCommitMultiStore(db)
+	sdkKeepers := keeper.NewSDKKeepers(cdc, db, stateStore)
+	gasConfig := storetypes.TransientGasConfig()
+	ctx := keeper.NewContext(stateStore)
+	require.NoError(t, stateStore.LoadLatestVersion())
+
+	stakingGenesisState := stakingtypes.DefaultGenesisState()
+	stakingGenesisState.Params.BondDenom = config.BaseDenom
+	sdkKeepers.StakingKeeper.InitGenesis(ctx, stakingGenesisState)
+
+	contract := NewIStakingContract(&sdkKeepers.StakingKeeper, appCodec, gasConfig)
+	require.NotNil(t, contract, "NewIStakingContract() should not return a nil contract")
+
+	abi := contract.Abi()
+	require.NotNil(t, abi, "contract ABI should not be nil")
+
+	methodID := abi.Methods[GetAllValidatorsMethodName]
+
+	t.Run("should return empty array if validators not set", func(t *testing.T) {
+		validators, err := contract.GetAllValidators(ctx, &methodID)
+		require.NoError(t, err)
+
+		res, err := methodID.Outputs.Unpack(validators)
+		require.NoError(t, err)
+
+		require.Empty(t, res[0])
+	})
+
+	t.Run("should return validators if set", func(t *testing.T) {
+		r := rand.New(rand.NewSource(42))
+		validator := sample.Validator(t, r)
+		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+
+		validators, err := contract.GetAllValidators(ctx, &methodID)
+		require.NoError(t, err)
+
+		res, err := methodID.Outputs.Unpack(validators)
+		require.NoError(t, err)
+
+		require.NotEmpty(t, res[0])
+	})
+}
+
+func Test_GetStakes(t *testing.T) {
+	var encoding ethermint.EncodingConfig
+	appCodec := encoding.Codec
+
+	cdc := keeper.NewCodec()
+
+	db := tmdb.NewMemDB()
+	stateStore := store.NewCommitMultiStore(db)
+	sdkKeepers := keeper.NewSDKKeepers(cdc, db, stateStore)
+	gasConfig := storetypes.TransientGasConfig()
+	ctx := keeper.NewContext(stateStore)
+	require.NoError(t, stateStore.LoadLatestVersion())
+
+	stakingGenesisState := stakingtypes.DefaultGenesisState()
+	stakingGenesisState.Params.BondDenom = config.BaseDenom
+	sdkKeepers.StakingKeeper.InitGenesis(ctx, stakingGenesisState)
+
+	contract := NewIStakingContract(&sdkKeepers.StakingKeeper, appCodec, gasConfig)
+	require.NotNil(t, contract, "NewIStakingContract() should not return a nil contract")
+
+	abi := contract.Abi()
+	require.NotNil(t, abi, "contract ABI should not be nil")
+
+	methodID := abi.Methods[GetStakesMethodName]
+
+	t.Run("should return stakes", func(t *testing.T) {
+		r := rand.New(rand.NewSource(42))
+		validator := sample.Validator(t, r)
+		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+
+		staker := sample.Bech32AccAddress()
+		stakerEthAddr := common.BytesToAddress(staker.Bytes())
+		coins := sample.Coins()
+		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+		require.NoError(t, err)
+		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+		require.NoError(t, err)
+
+		stakerAddr := common.BytesToAddress(staker.Bytes())
+
+		stakeArgs := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
+
+		stakeMethodID := abi.Methods[StakeMethodName]
+		_, err = contract.Stake(ctx, stakerAddr, &stakeMethodID, stakeArgs)
+		require.NoError(t, err)
+
+		args := []interface{}{stakerEthAddr, validator.OperatorAddress}
+		stakes, err := contract.GetStake(ctx, &methodID, args)
+		require.NoError(t, err)
+
+		res, err := methodID.Outputs.Unpack(stakes)
+		require.NoError(t, err)
+		require.Equal(t, fmt.Sprintf("%d000000000000000000", coins.AmountOf(config.BaseDenom).BigInt().Int64()), res[0].(*big.Int).String())
 	})
 }
