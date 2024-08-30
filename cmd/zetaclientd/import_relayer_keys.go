@@ -12,6 +12,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/crypto"
 	zetaos "github.com/zeta-chain/zetacore/pkg/os"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 )
 
@@ -52,8 +53,7 @@ func init() {
 	RootCmd.AddCommand(CmdRelayerAddress)
 
 	// resolve default relayer key path
-	defaultRelayerKeyPath := "~/.zetacored/relayer-keys"
-	defaultRelayerKeyPath, err := zetaos.ExpandHomeDir(defaultRelayerKeyPath)
+	defaultRelayerKeyPath, err := zetaos.ExpandHomeDir(config.DefaultRelayerKeyPath)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to resolve default relayer key path")
 	}

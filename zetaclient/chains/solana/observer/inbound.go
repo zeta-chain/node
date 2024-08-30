@@ -285,10 +285,13 @@ func (ob *Observer) ParseInboundAsDeposit(
 		return nil, nil
 	}
 
-	// get the sender address (the signer must exist)
+	// get the sender address (skip if unable to parse signer address)
 	sender, err := ob.GetSignerDeposit(tx, &instruction)
 	if err != nil {
-		return nil, errors.Wrap(err, "error GetSignerDeposit")
+		ob.Logger().
+			Inbound.Err(err).
+			Msgf("unable to get signer for sig %s instruction %d", tx.Signatures[0], instructionIndex)
+		return nil, nil
 	}
 
 	// build inbound event
@@ -323,13 +326,13 @@ func (ob *Observer) ParseInboundAsDepositSPL(
 // GetSignerDeposit returns the signer address of the deposit instruction
 // Note: solana-go is not able to parse the AccountMeta 'is_signer' ATM. This is a workaround.
 func (ob *Observer) GetSignerDeposit(tx *solana.Transaction, inst *solana.CompiledInstruction) (string, error) {
-	// there should be 4 accounts for a deposit instruction
+	// there should be 3 accounts for a deposit instruction
 	if len(inst.Accounts) != solanacontracts.AccountsNumDeposit {
 		return "", fmt.Errorf("want %d accounts, got %d", solanacontracts.AccountsNumDeposit, len(inst.Accounts))
 	}
 
-	// the accounts are [signer, pda, system_program, gateway_program]
-	signerIndex, pdaIndex, systemIndex, gatewayIndex := -1, -1, -1, -1
+	// the accounts are [signer, pda, system_program]
+	signerIndex, pdaIndex, systemIndex := -1, -1, -1
 
 	// try to find the indexes of all above accounts
 	for _, accIndex := range inst.Accounts {
@@ -340,8 +343,6 @@ func (ob *Observer) GetSignerDeposit(tx *solana.Transaction, inst *solana.Compil
 		switch accKey {
 		case ob.pda:
 			pdaIndex = accIndexInt
-		case ob.gatewayID:
-			gatewayIndex = accIndexInt
 		case solana.SystemProgramID:
 			systemIndex = accIndexInt
 		default:
@@ -351,7 +352,7 @@ func (ob *Observer) GetSignerDeposit(tx *solana.Transaction, inst *solana.Compil
 	}
 
 	// all above accounts must be found
-	if signerIndex == -1 || pdaIndex == -1 || systemIndex == -1 || gatewayIndex == -1 {
+	if signerIndex == -1 || pdaIndex == -1 || systemIndex == -1 {
 		return "", fmt.Errorf("invalid accounts for deposit instruction")
 	}
 
