@@ -6,9 +6,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	observerTypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // SetCctxAndNonceToCctxAndInboundHashToCctx does the following things in one function:
@@ -16,11 +16,11 @@ import (
 // 2. set the mapping inboundHash -> cctxIndex , one inboundHash can be connected to multiple cctxindex
 // 3. set the mapping nonce => cctx
 // 4. update the zeta accounting
-func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(ctx sdk.Context, cctx types.CrossChainTx) {
-	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
-	if !found {
-		return
-	}
+func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(
+	ctx sdk.Context,
+	cctx types.CrossChainTx,
+	tssPubkey string,
+) {
 	// set mapping nonce => cctxIndex
 	if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound ||
 		cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
@@ -29,7 +29,7 @@ func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(ctx sdk.Context, cctx 
 			// #nosec G115 always in range
 			Nonce:     int64(cctx.GetCurrentOutboundParam().TssNonce),
 			CctxIndex: cctx.Index,
-			Tss:       tss.TssPubkey,
+			Tss:       tssPubkey,
 		})
 	}
 
@@ -37,7 +37,7 @@ func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(ctx sdk.Context, cctx 
 	// set mapping inboundHash -> cctxIndex
 	in, _ := k.GetInboundHashToCctx(ctx, cctx.InboundParams.ObservedHash)
 	in.InboundHash = cctx.InboundParams.ObservedHash
-	found = false
+	found := false
 	for _, cctxIndex := range in.CctxIndex {
 		if cctxIndex == cctx.Index {
 			found = true

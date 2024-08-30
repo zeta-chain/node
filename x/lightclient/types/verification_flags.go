@@ -1,6 +1,6 @@
 package types
 
-import "github.com/zeta-chain/zetacore/pkg/chains"
+import "github.com/zeta-chain/node/pkg/chains"
 
 func DefaultBlockHeaderVerification() BlockHeaderVerification {
 	return BlockHeaderVerification{

@@ -1,4 +1,4 @@
-package zetacore
+package rpc
 
 import (
 	"context"
@@ -6,12 +6,12 @@ import (
 	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 
-	"github.com/zeta-chain/zetacore/pkg/retry"
+	"github.com/zeta-chain/node/pkg/retry"
 )
 
 // GetLatestZetaBlock returns the latest zeta block
-func (c *Client) GetLatestZetaBlock(ctx context.Context) (*tmservice.Block, error) {
-	res, err := c.client.tendermint.GetLatestBlock(ctx, &tmservice.GetLatestBlockRequest{})
+func (c *Clients) GetLatestZetaBlock(ctx context.Context) (*tmservice.Block, error) {
+	res, err := c.Tendermint.GetLatestBlock(ctx, &tmservice.GetLatestBlockRequest{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get latest zeta block")
 	}
@@ -20,11 +20,11 @@ func (c *Client) GetLatestZetaBlock(ctx context.Context) (*tmservice.Block, erro
 }
 
 // GetNodeInfo returns the node info
-func (c *Client) GetNodeInfo(ctx context.Context) (*tmservice.GetNodeInfoResponse, error) {
+func (c *Clients) GetNodeInfo(ctx context.Context) (*tmservice.GetNodeInfoResponse, error) {
 	var err error
 
 	res, err := retry.DoTypedWithRetry(func() (*tmservice.GetNodeInfoResponse, error) {
-		return c.client.tendermint.GetNodeInfo(ctx, &tmservice.GetNodeInfoRequest{})
+		return c.Tendermint.GetNodeInfo(ctx, &tmservice.GetNodeInfoRequest{})
 	})
 
 	if err != nil {

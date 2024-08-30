@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/zetaclient/types"
+	"github.com/zeta-chain/node/zetaclient/types"
 )
 
 func TestNew(t *testing.T) {

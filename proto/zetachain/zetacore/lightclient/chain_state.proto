@@ -3,7 +3,7 @@ package zetachain.zetacore.lightclient;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/lightclient/types";
+option go_package = "github.com/zeta-chain/node/x/lightclient/types";
 
 // ChainState defines the overall state of the block headers for a given chain
 message ChainState {

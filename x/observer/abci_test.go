@@ -6,10 +6,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/observer"
-	"github.com/zeta-chain/zetacore/x/observer/types"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/observer"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestBeginBlocker(t *testing.T) {

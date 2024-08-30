@@ -6,13 +6,13 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/pkg/crypto"
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/crypto"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	observerTypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestKeeper_ValidateInbound(t *testing.T) {
@@ -212,80 +212,6 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 
 		_, err := k.ValidateInbound(ctx, &msg, false)
 		require.ErrorIs(t, err, types.ErrCannotFindReceiverNonce)
-	})
-
-	t.Run("does not set cctx if SetCctxAndNonceToCctxAndInboundHashToCctx fails", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t,
-			keepertest.CrosschainMockOptions{
-				UseObserverMock:  true,
-				UseFungibleMock:  true,
-				UseAuthorityMock: true,
-			})
-
-		// Setup mock data
-		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		receiver := sample.EthAddress()
-		creator := sample.AccAddress()
-		amount := sdkmath.NewUint(42)
-		message := "test"
-		inboundBlockHeight := uint64(420)
-		inboundHash := sample.Hash()
-		gasLimit := uint64(100)
-		asset := "test-asset"
-		eventIndex := uint64(1)
-		cointType := coin.CoinType_ERC20
-		tss := sample.Tss()
-		receiverChain := chains.Goerli
-		senderChain := chains.Goerli
-		sender := sample.EthAddress()
-		tssList := sample.TssList(3)
-
-		// Set up mocks for CheckIfTSSMigrationTransfer
-		observerMock.On("GetAllTSS", ctx).Return(tssList)
-		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).Return(senderChain, true)
-		authorityMock.On("GetAdditionalChainList", ctx).Return([]chains.Chain{})
-		// setup Mocks for GetTSS
-		observerMock.On("GetTSS", mock.Anything).Return(tss, true).Twice()
-		// setup Mocks for IsInboundEnabled
-		observerMock.On("IsInboundEnabled", ctx).Return(true)
-		// setup mocks for Initiate Outbound
-		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).
-			Return(observerTypes.ChainNonces{Nonce: 1}, true)
-		observerMock.On("GetPendingNonces", mock.Anything, mock.Anything, mock.Anything).
-			Return(observerTypes.PendingNonces{NonceHigh: 1}, true)
-		observerMock.On("SetChainNonces", mock.Anything, mock.Anything).Return(nil)
-		observerMock.On("SetPendingNonces", mock.Anything, mock.Anything).Return(nil)
-		// setup Mocks for SetCctxAndNonceToCctxAndInboundHashToCctx
-		observerMock.On("GetTSS", mock.Anything).Return(tss, false).Once()
-
-		k.SetGasPrice(ctx, types.GasPrice{
-			ChainId:     senderChain.ChainId,
-			MedianIndex: 0,
-			Prices:      []uint64{100},
-		})
-
-		// call InitiateOutbound
-		msg := types.MsgVoteInbound{
-			Creator:            creator,
-			Sender:             sender.String(),
-			SenderChainId:      senderChain.ChainId,
-			Receiver:           receiver.String(),
-			ReceiverChain:      receiverChain.ChainId,
-			Amount:             amount,
-			Message:            message,
-			InboundHash:        inboundHash.String(),
-			InboundBlockHeight: inboundBlockHeight,
-			GasLimit:           gasLimit,
-			CoinType:           cointType,
-			TxOrigin:           sender.String(),
-			Asset:              asset,
-			EventIndex:         eventIndex,
-		}
-
-		_, err := k.ValidateInbound(ctx, &msg, false)
-		require.NoError(t, err)
-		require.Len(t, k.GetAllCrossChainTx(ctx), 0)
 	})
 
 	t.Run("fail if inbound is disabled", func(t *testing.T) {

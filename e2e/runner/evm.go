@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/node/e2e/utils"
 )
 
 // WaitForTxReceiptOnEvm waits for a tx receipt on EVM
@@ -185,11 +185,12 @@ func (r *E2ERunner) ApproveERC20OnEVM(allowed ethcommon.Address) {
 // check if allowance is zero before calling this method
 // allow a high amount to avoid multiple approvals
 func (r *E2ERunner) ApproveETHZRC20(allowed ethcommon.Address) {
-	allowance, err := r.ETHZRC20.Allowance(&bind.CallOpts{}, r.Account.EVMAddress(), r.GatewayEVMAddr)
+	allowance, err := r.ETHZRC20.Allowance(&bind.CallOpts{}, r.Account.EVMAddress(), allowed)
 	require.NoError(r, err)
 
-	// approve 1M*1e18 if allowance is zero
-	if allowance.Cmp(big.NewInt(0)) == 0 {
+	// approve 1M*1e18 if allowance is below 1k
+	thousand := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1000))
+	if allowance.Cmp(thousand) < 0 {
 		tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, allowed, big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1000000)))
 		require.NoError(r, err)
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
@@ -201,11 +202,12 @@ func (r *E2ERunner) ApproveETHZRC20(allowed ethcommon.Address) {
 // check if allowance is zero before calling this method
 // allow a high amount to avoid multiple approvals
 func (r *E2ERunner) ApproveERC20ZRC20(allowed ethcommon.Address) {
-	allowance, err := r.ERC20ZRC20.Allowance(&bind.CallOpts{}, r.Account.EVMAddress(), r.GatewayEVMAddr)
+	allowance, err := r.ERC20ZRC20.Allowance(&bind.CallOpts{}, r.Account.EVMAddress(), allowed)
 	require.NoError(r, err)
 
-	// approve 1M*1e18 if allowance is zero
-	if allowance.Cmp(big.NewInt(0)) == 0 {
+	// approve 1M*1e18 if allowance is below 1k
+	thousand := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1000))
+	if allowance.Cmp(thousand) < 0 {
 		tx, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, allowed, big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1000000)))
 		require.NoError(r, err)
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)

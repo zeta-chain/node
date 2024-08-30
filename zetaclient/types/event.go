@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/node/pkg/coin"
 )
 
 // InboundEvent represents an inbound event

@@ -4,8 +4,8 @@ import (
 	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 // VoteOnInboundBallot casts a vote on an inbound transaction observed on a connected chain. If this

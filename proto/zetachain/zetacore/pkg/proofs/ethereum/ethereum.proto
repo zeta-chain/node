@@ -1,7 +1,7 @@
 syntax = "proto3";
 package zetachain.zetacore.pkg.proofs.ethereum;
 
-option go_package = "github.com/zeta-chain/zetacore/pkg/proofs/ethereum";
+option go_package = "github.com/zeta-chain/node/pkg/proofs/ethereum";
 
 message Proof {
   repeated bytes keys = 1;

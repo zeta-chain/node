@@ -9,10 +9,10 @@ import (
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/pkg/constant"
-	"github.com/zeta-chain/zetacore/pkg/contracts/erc1967proxy"
-	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
+	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
+	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
 )
 
 // SetupEVMV2 setup contracts on EVM with v2 contracts
@@ -22,7 +22,7 @@ func (r *E2ERunner) SetupEVMV2() {
 		r.requireTxSuccessful(receipt, failMessage)
 	}
 
-	r.Logger.Print("⚙️ setting up EVM v2 network")
+	r.Logger.Info("⚙️ setting up EVM v2 network")
 	startTime := time.Now()
 	defer func() {
 		r.Logger.Info("EVM v2 setup took %s\n", time.Since(startTime))
@@ -104,5 +104,10 @@ func (r *E2ERunner) SetupEVMV2() {
 	txWhitelist, err := r.ERC20CustodyV2.Whitelist(r.EVMAuth, r.ERC20Addr)
 	require.NoError(r, err)
 
+	// set legacy supported (calling deposit directly in ERC20Custody)
+	txSetLegacySupported, err := r.ERC20CustodyV2.SetSupportsLegacy(r.EVMAuth, true)
+	require.NoError(r, err)
+
 	ensureTxReceipt(txWhitelist, "ERC20 whitelist failed")
+	ensureTxReceipt(txSetLegacySupported, "Set legacy support failed")
 }

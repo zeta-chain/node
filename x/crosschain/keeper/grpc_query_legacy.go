@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // OutTxTrackerAll

@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 type msgServer struct {

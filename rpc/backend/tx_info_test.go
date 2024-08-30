@@ -12,14 +12,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/evmos/ethermint/indexer"
-	ethermint "github.com/evmos/ethermint/types"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/zeta-chain/ethermint/indexer"
+	ethermint "github.com/zeta-chain/ethermint/types"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
-	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
-	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/node/rpc/backend/mocks"
+	rpctypes "github.com/zeta-chain/node/rpc/types"
+	"github.com/zeta-chain/node/testutil/sample"
 )
 
 func (suite *BackendTestSuite) TestGetSyntheticTransactionByHash() {

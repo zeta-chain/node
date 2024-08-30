@@ -9,13 +9,13 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	emissionsModule "github.com/zeta-chain/zetacore/x/emissions"
-	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	"github.com/zeta-chain/node/pkg/coin"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/testutil/sample"
+	emissionsModule "github.com/zeta-chain/node/x/emissions"
+	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
+	observerTypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestBeginBlocker(t *testing.T) {

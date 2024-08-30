@@ -8,8 +8,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common/math"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 const voteTSSid = "Vote TSS"
@@ -40,11 +40,6 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 	keygen, found := k.GetKeygen(ctx)
 	if !found {
 		return &types.MsgVoteTSSResponse{}, errorsmod.Wrap(types.ErrKeygenNotFound, voteTSSid)
-	}
-
-	// Use a separate transaction to update keygen status to pending when trying to change the TSS address.
-	if keygen.Status == types.KeygenStatus_KeyGenSuccess {
-		return &types.MsgVoteTSSResponse{}, errorsmod.Wrap(types.ErrKeygenCompleted, voteTSSid)
 	}
 
 	// GetBallot checks against the supported chains list before querying for Ballot.
@@ -87,6 +82,30 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 
 	ballot, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
 	if !isFinalized {
+		return &types.MsgVoteTSSResponse{
+			VoteFinalized: isFinalized,
+			BallotCreated: ballotCreated,
+			KeygenSuccess: false,
+		}, nil
+	}
+
+	// The ballot is finalized, we check if this is the correct ballot for updating the TSS
+	// The requirements are
+	// 1. The keygen is still pending
+	// 2. The keygen block number matches the ballot block number ,which makes sure this the correct ballot for the current keygen
+
+	// Return without an error so the vote is added to the ballot
+	if keygen.Status != types.KeygenStatus_PendingKeygen {
+		// The response is used for testing only.Setting false for keygen success as the keygen has already been finalized and it doesnt matter what the final status is.We are just asserting that the keygen was previously finalized and is not in pending status.
+		return &types.MsgVoteTSSResponse{
+			VoteFinalized: isFinalized,
+			BallotCreated: ballotCreated,
+			KeygenSuccess: false,
+		}, nil
+	}
+
+	// For cases when an observer tries to vote for an older pending ballot, associated with a keygen that was discarded , we would return at this check while still adding the vote to the ballot
+	if msg.KeygenZetaHeight != keygen.BlockNumber {
 		return &types.MsgVoteTSSResponse{
 			VoteFinalized: isFinalized,
 			BallotCreated: ballotCreated,

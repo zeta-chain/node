@@ -12,7 +12,7 @@
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/evmos/ethermint/blob/main/LICENSE
+// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package debug
 
 import (
@@ -22,7 +22,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/server"
 
-	zetaos "github.com/zeta-chain/zetacore/pkg/os"
+	zetaos "github.com/zeta-chain/node/pkg/os"
 )
 
 // isCPUProfileConfigurationActivated checks if cpuprofile was configured via flag

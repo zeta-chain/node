@@ -91,6 +91,26 @@ address=$(yq -r '.additional_accounts.user_migration.evm_address' config.yml)
 echo "funding migration tester address ${address} with 10000 Ether"
 geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
+# unlock v2 ethers tests accounts
+address=$(yq -r '.additional_accounts.user_v2_ether.evm_address' config.yml)
+echo "funding v2 ethers tester address ${address} with 10000 Ether"
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
+
+# unlock v2 erc20 tests accounts
+address=$(yq -r '.additional_accounts.user_v2_erc20.evm_address' config.yml)
+echo "funding v2 erc20 tester address ${address} with 10000 Ether"
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
+
+# unlock v2 ethers revert tests accounts
+address=$(yq -r '.additional_accounts.user_v2_ether_revert.evm_address' config.yml)
+echo "funding v2 ethers revert tester address ${address} with 10000 Ether"
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
+
+# unlock v2 erc20 revert tests accounts
+address=$(yq -r '.additional_accounts.user_v2_erc20_revert.evm_address' config.yml)
+echo "funding v2 erc20 revert tester address ${address} with 10000 Ether"
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
+
 # unlock local solana relayer accounts
 if host solana > /dev/null; then
   solana_url=$(yq -r '.rpcs.solana' config.yml)
@@ -170,7 +190,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
     echo "running E2E command to setup the networks and populate the state..."
 
     # Use light flag to ensure tests can complete before the upgrade height
-    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --light ${COMMON_ARGS}
+    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --light --skip-precompiles ${COMMON_ARGS}
     if [ $? -ne 0 ]; then
       echo "first e2e failed"
       exit 1
@@ -209,9 +229,9 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   # When the upgrade height is greater than 100 for upgrade test, the Bitcoin tests have been run once, therefore the Bitcoin wallet is already set up
   # Use light flag to skip advanced tests
   if [ "$UPGRADE_HEIGHT" -lt 100 ]; then
-    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --light ${COMMON_ARGS}
+    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --light --skip-precompiles ${COMMON_ARGS}
   else
-    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --skip-bitcoin-setup --light ${COMMON_ARGS}
+    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --skip-bitcoin-setup --light --skip-precompiles ${COMMON_ARGS}
   fi
 
   ZETAE2E_EXIT_CODE=$?

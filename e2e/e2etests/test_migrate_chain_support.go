@@ -14,15 +14,15 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
-	"github.com/zeta-chain/zetacore/e2e/config"
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/txserver"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/e2e/config"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/txserver"
+	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // EVM2RPCURL is the RPC URL for the additional EVM localnet
@@ -201,19 +201,7 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 		"admin-evm2",
 		r.CtxCancel,
 		r.Account,
-		r.EVMClient,
-		r.ZEVMClient,
-		r.AutorithyClient,
-		r.CctxClient,
-		r.FungibleClient,
-		r.AuthClient,
-		r.BankClient,
-		r.ObserverClient,
-		r.LightclientClient,
-		r.EVMAuth,
-		r.ZEVMAuth,
-		r.BtcRPCClient,
-		r.SolanaClient,
+		r.Clients,
 		runner.NewLogger(true, color.FgHiYellow, "admin-evm2"),
 		runner.WithZetaTxServer(r.ZetaTxServer),
 	)

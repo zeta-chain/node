@@ -1,43 +1,37 @@
-package zetacore
+package rpc
 
 import (
 	"context"
 	"net"
 	"testing"
 
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	tmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
-	cosmosclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
-	"github.com/golang/mock/gomock"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
-	keyinterfaces "github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
+	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/testutil/sample"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 )
 
 const skipMethod = "skip"
+const gRPCListenPath = "127.0.0.1:47392"
 
 // setupMockServer setup mock zetacore GRPC server
 func setupMockServer(
@@ -45,7 +39,7 @@ func setupMockServer(
 	serviceFunc any, method string, input any, expectedOutput any,
 	extra ...grpcmock.ServerOption,
 ) *grpcmock.Server {
-	listener, err := net.Listen("tcp", "127.0.0.1:9090")
+	listener, err := net.Listen("tcp", gRPCListenPath)
 	require.NoError(t, err)
 
 	opts := []grpcmock.ServerOption{
@@ -76,91 +70,8 @@ func setupMockServer(
 	return server
 }
 
-func withDummyServer(zetaBlockHeight int64) []grpcmock.ServerOption {
-	return []grpcmock.ServerOption{
-		grpcmock.RegisterService(crosschaintypes.RegisterQueryServer),
-		grpcmock.RegisterService(crosschaintypes.RegisterMsgServer),
-		grpcmock.RegisterService(feemarkettypes.RegisterQueryServer),
-		grpcmock.RegisterService(authtypes.RegisterQueryServer),
-		grpcmock.RegisterService(abci.RegisterABCIApplicationServer),
-		func(s *grpcmock.Server) {
-			// Block Height
-			s.ExpectUnary("/zetachain.zetacore.crosschain.Query/LastZetaHeight").
-				UnlimitedTimes().
-				Return(crosschaintypes.QueryLastZetaHeightResponse{Height: zetaBlockHeight})
-
-			// London Base Fee
-			s.ExpectUnary("/ethermint.feemarket.v1.Query/Params").
-				UnlimitedTimes().
-				Return(feemarkettypes.QueryParamsResponse{
-					Params: feemarkettypes.Params{BaseFee: types.NewInt(100)},
-				})
-		},
-	}
-}
-
-type clientTestConfig struct {
-	keys keyinterfaces.ObserverKeys
-	opts []Opt
-}
-
-type clientTestOpt func(*clientTestConfig)
-
-func withObserverKeys(keys keyinterfaces.ObserverKeys) clientTestOpt {
-	return func(cfg *clientTestConfig) { cfg.keys = keys }
-}
-
-func withDefaultObserverKeys() clientTestOpt {
-	var (
-		key     = mocks.TestKeyringPair
-		address = types.AccAddress(key.PubKey().Address().Bytes())
-		keyRing = mocks.NewKeyring()
-	)
-
-	return withObserverKeys(keys.NewKeysWithKeybase(keyRing, address, testSigner, ""))
-}
-
-func withTendermint(client cosmosclient.TendermintRPC) clientTestOpt {
-	return func(cfg *clientTestConfig) { cfg.opts = append(cfg.opts, WithTendermintClient(client)) }
-}
-
-func withAccountRetriever(t *testing.T, accNum uint64, accSeq uint64) clientTestOpt {
-	ctrl := gomock.NewController(t)
-	ac := mock.NewMockAccountRetriever(ctrl)
-	ac.EXPECT().
-		GetAccountNumberSequence(gomock.Any(), gomock.Any()).
-		AnyTimes().
-		Return(accNum, accSeq, nil)
-
-	return func(cfg *clientTestConfig) {
-		cfg.opts = append(cfg.opts, WithCustomAccountRetriever(ac))
-	}
-}
-
-func setupZetacoreClient(t *testing.T, opts ...clientTestOpt) *Client {
-	const (
-		chainIP = "127.0.0.1"
-		signer  = testSigner
-		chainID = "zetachain_7000-1"
-	)
-
-	var cfg clientTestConfig
-	for _, opt := range opts {
-		opt(&cfg)
-	}
-
-	if cfg.keys == nil {
-		cfg.keys = &keys.Keys{}
-	}
-
-	c, err := NewClient(
-		cfg.keys,
-		chainIP, signer,
-		chainID,
-		false,
-		zerolog.Nop(),
-		cfg.opts...,
-	)
+func setupZetacoreClients(t *testing.T) Clients {
+	c, err := NewGRPCClients(gRPCListenPath, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 	require.NoError(t, err)
 
@@ -180,7 +91,7 @@ func TestZetacore_GetBallot(t *testing.T) {
 	method := "/zetachain.zetacore.observer.Query/BallotByIdentifier"
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetBallotByID(ctx, "123")
 	require.NoError(t, err)
@@ -199,7 +110,7 @@ func TestZetacore_GetCrosschainFlags(t *testing.T) {
 	method := "/zetachain.zetacore.observer.Query/CrosschainFlags"
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetCrosschainFlags(ctx)
 	require.NoError(t, err)
@@ -220,7 +131,7 @@ func TestZetacore_GetRateLimiterFlags(t *testing.T) {
 	method := "/zetachain.zetacore.crosschain.Query/RateLimiterFlags"
 	setupMockServer(t, crosschaintypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	// query
 	resp, err := client.GetRateLimiterFlags(ctx)
@@ -247,7 +158,7 @@ func TestZetacore_HeaderEnabledChains(t *testing.T) {
 	method := "/zetachain.zetacore.lightclient.Query/HeaderEnabledChains"
 	setupMockServer(t, lightclienttypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetBlockHeaderEnabledChains(ctx)
 	require.NoError(t, err)
@@ -266,7 +177,7 @@ func TestZetacore_GetChainParamsForChainID(t *testing.T) {
 	method := "/zetachain.zetacore.observer.Query/GetChainParamsForChain"
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetChainParamsForChainID(ctx, 123)
 	require.NoError(t, err)
@@ -289,7 +200,7 @@ func TestZetacore_GetChainParams(t *testing.T) {
 	method := "/zetachain.zetacore.observer.Query/GetChainParams"
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetChainParams(ctx)
 	require.NoError(t, err)
@@ -309,7 +220,7 @@ func TestZetacore_GetUpgradePlan(t *testing.T) {
 	method := "/cosmos.upgrade.v1beta1.Query/CurrentPlan"
 	setupMockServer(t, upgradetypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetUpgradePlan(ctx)
 	require.NoError(t, err)
@@ -331,7 +242,7 @@ func TestZetacore_GetAllCctx(t *testing.T) {
 	method := "/zetachain.zetacore.crosschain.Query/CctxAll"
 	setupMockServer(t, crosschaintypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetAllCctx(ctx)
 	require.NoError(t, err)
@@ -350,7 +261,7 @@ func TestZetacore_GetCctxByHash(t *testing.T) {
 	method := "/zetachain.zetacore.crosschain.Query/Cctx"
 	setupMockServer(t, crosschaintypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetCctxByHash(ctx, "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3")
 	require.NoError(t, err)
@@ -370,7 +281,7 @@ func TestZetacore_GetCctxByNonce(t *testing.T) {
 	method := "/zetachain.zetacore.crosschain.Query/CctxByNonce"
 	setupMockServer(t, crosschaintypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetCctxByNonce(ctx, 7000, 55)
 	require.NoError(t, err)
@@ -391,7 +302,7 @@ func TestZetacore_GetObserverList(t *testing.T) {
 	method := "/zetachain.zetacore.observer.Query/ObserverSet"
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetObserverList(ctx)
 	require.NoError(t, err)
@@ -414,7 +325,7 @@ func TestZetacore_GetRateLimiterInput(t *testing.T) {
 	method := "/zetachain.zetacore.crosschain.Query/RateLimiterInput"
 	setupMockServer(t, crosschaintypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetRateLimiterInput(ctx, 10)
 	require.NoError(t, err)
@@ -436,7 +347,7 @@ func TestZetacore_ListPendingCctx(t *testing.T) {
 	method := "/zetachain.zetacore.crosschain.Query/ListPendingCctx"
 	setupMockServer(t, crosschaintypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, totalPending, err := client.ListPendingCCTX(ctx, 7000)
 	require.NoError(t, err)
@@ -452,7 +363,7 @@ func TestZetacore_GetAbortedZetaAmount(t *testing.T) {
 	method := "/zetachain.zetacore.crosschain.Query/ZetaAccounting"
 	setupMockServer(t, crosschaintypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetAbortedZetaAmount(ctx)
 	require.NoError(t, err)
@@ -475,7 +386,7 @@ func TestZetacore_GetZetaTokenSupplyOnNode(t *testing.T) {
 	method := "/cosmos.bank.v1beta1.Query/SupplyOf"
 	setupMockServer(t, banktypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetZetaTokenSupplyOnNode(ctx)
 	require.NoError(t, err)
@@ -491,9 +402,7 @@ func TestZetacore_GetBlockHeight(t *testing.T) {
 
 	setupMockServer(t, crosschaintypes.RegisterQueryServer, method, input, output)
 
-	client := setupZetacoreClient(t,
-		withDefaultObserverKeys(),
-	)
+	client := setupZetacoreClients(t)
 
 	t.Run("last block height", func(t *testing.T) {
 		height, err := client.GetBlockHeight(ctx)
@@ -517,7 +426,7 @@ func TestZetacore_GetLatestZetaBlock(t *testing.T) {
 	method := "/cosmos.base.tendermint.v1beta1.Service/GetLatestBlock"
 	setupMockServer(t, tmservice.RegisterServiceServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetLatestZetaBlock(ctx)
 	require.NoError(t, err)
@@ -535,7 +444,7 @@ func TestZetacore_GetNodeInfo(t *testing.T) {
 	method := "/cosmos.base.tendermint.v1beta1.Service/GetNodeInfo"
 	setupMockServer(t, tmservice.RegisterServiceServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetNodeInfo(ctx)
 	require.NoError(t, err)
@@ -554,7 +463,7 @@ func TestZetacore_GetBaseGasPrice(t *testing.T) {
 	method := "/ethermint.feemarket.v1.Query/Params"
 	setupMockServer(t, feemarkettypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetBaseGasPrice(ctx)
 	require.NoError(t, err)
@@ -578,7 +487,7 @@ func TestZetacore_GetNonceByChain(t *testing.T) {
 	method := "/zetachain.zetacore.observer.Query/ChainNonces"
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetNonceByChain(ctx, chain)
 	require.NoError(t, err)
@@ -602,7 +511,7 @@ func TestZetacore_GetAllNodeAccounts(t *testing.T) {
 	method := "/zetachain.zetacore.observer.Query/NodeAccountAll"
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetAllNodeAccounts(ctx)
 	require.NoError(t, err)
@@ -622,7 +531,7 @@ func TestZetacore_GetKeyGen(t *testing.T) {
 	method := "/zetachain.zetacore.observer.Query/Keygen"
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetKeyGen(ctx)
 	require.NoError(t, err)
@@ -639,7 +548,7 @@ func TestZetacore_GetBallotByID(t *testing.T) {
 	method := "/zetachain.zetacore.observer.Query/BallotByIdentifier"
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetBallot(ctx, "ballot1235")
 	require.NoError(t, err)
@@ -663,7 +572,7 @@ func TestZetacore_GetInboundTrackersForChain(t *testing.T) {
 	method := "/zetachain.zetacore.crosschain.Query/InboundTrackerAllByChain"
 	setupMockServer(t, crosschaintypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetInboundTrackersForChain(ctx, chainID)
 	require.NoError(t, err)
@@ -686,7 +595,7 @@ func TestZetacore_GetTss(t *testing.T) {
 	method := "/zetachain.zetacore.observer.Query/TSS"
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetTSS(ctx)
 	require.NoError(t, err)
@@ -704,7 +613,7 @@ func TestZetacore_GetEthTssAddress(t *testing.T) {
 	method := "/zetachain.zetacore.observer.Query/GetTssAddress"
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetEVMTSSAddress(ctx)
 	require.NoError(t, err)
@@ -722,7 +631,7 @@ func TestZetacore_GetBtcTssAddress(t *testing.T) {
 	method := "/zetachain.zetacore.observer.Query/GetTssAddress"
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetBTCTSSAddress(ctx, 8332)
 	require.NoError(t, err)
@@ -747,7 +656,7 @@ func TestZetacore_GetTssHistory(t *testing.T) {
 	method := "/zetachain.zetacore.observer.Query/TssHistory"
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetTSSHistory(ctx)
 	require.NoError(t, err)
@@ -771,7 +680,7 @@ func TestZetacore_GetOutboundTracker(t *testing.T) {
 	method := "/zetachain.zetacore.crosschain.Query/OutboundTracker"
 	setupMockServer(t, crosschaintypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	ctx := context.Background()
 	resp, err := client.GetOutboundTracker(ctx, chain, 456)
@@ -806,7 +715,7 @@ func TestZetacore_GetAllOutboundTrackerByChain(t *testing.T) {
 	method := "/zetachain.zetacore.crosschain.Query/OutboundTrackerAllByChain"
 	setupMockServer(t, crosschaintypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetAllOutboundTrackerByChain(ctx, chain.ChainId, interfaces.Ascending)
 	require.NoError(t, err)
@@ -832,7 +741,7 @@ func TestZetacore_GetPendingNoncesByChain(t *testing.T) {
 	method := "/zetachain.zetacore.observer.Query/PendingNoncesByChain"
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetPendingNoncesByChain(ctx, chains.Ethereum.ChainId)
 	require.NoError(t, err)
@@ -853,7 +762,7 @@ func TestZetacore_GetBlockHeaderChainState(t *testing.T) {
 	method := "/zetachain.zetacore.lightclient.Query/ChainState"
 	setupMockServer(t, lightclienttypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetBlockHeaderChainState(ctx, chainID)
 	require.NoError(t, err)
@@ -889,7 +798,7 @@ func TestZetacore_GetSupportedChains(t *testing.T) {
 	method := "/zetachain.zetacore.observer.Query/SupportedChains"
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetSupportedChains(ctx)
 	require.NoError(t, err)
@@ -912,11 +821,7 @@ func TestZetacore_GetAdditionalChains(t *testing.T) {
 
 	setupMockServer(t, authoritytypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t,
-		withDefaultObserverKeys(),
-		withAccountRetriever(t, 100, 100),
-		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0).SetBroadcastTxHash(sampleHash)),
-	)
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetAdditionalChains(ctx)
 	require.NoError(t, err)
@@ -940,7 +845,7 @@ func TestZetacore_GetPendingNonces(t *testing.T) {
 	method := "/zetachain.zetacore.observer.Query/PendingNoncesAll"
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.GetPendingNonces(ctx)
 	require.NoError(t, err)
@@ -967,7 +872,7 @@ func TestZetacore_Prove(t *testing.T) {
 	method := "/zetachain.zetacore.lightclient.Query/Prove"
 	setupMockServer(t, lightclienttypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.Prove(ctx, blockHash, txHash, int64(txIndex), nil, chainId)
 	require.NoError(t, err)
@@ -985,40 +890,9 @@ func TestZetacore_HasVoted(t *testing.T) {
 	method := "/zetachain.zetacore.observer.Query/HasVoted"
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClients(t)
 
 	resp, err := client.HasVoted(ctx, "123456asdf", "zeta1l40mm7meacx03r4lp87s9gkxfan32xnznp42u6")
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.HasVoted, resp)
-}
-
-func TestZetacore_GetZetaHotKeyBalance(t *testing.T) {
-	ctx := context.Background()
-
-	expectedOutput := banktypes.QueryBalanceResponse{
-		Balance: &types.Coin{
-			Denom:  config.BaseDenom,
-			Amount: types.NewInt(55646484),
-		},
-	}
-	input := banktypes.QueryBalanceRequest{
-		Address: types.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes()).String(),
-		Denom:   config.BaseDenom,
-	}
-	method := "/cosmos.bank.v1beta1.Query/Balance"
-	setupMockServer(t, banktypes.RegisterQueryServer, method, input, expectedOutput)
-
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
-
-	// should be able to get balance of signer
-	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), types.AccAddress{}, "bob", "")
-	resp, err := client.GetZetaHotKeyBalance(ctx)
-	require.NoError(t, err)
-	require.Equal(t, expectedOutput.Balance.Amount, resp)
-
-	// should return error on empty signer
-	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), types.AccAddress{}, "", "")
-	resp, err = client.GetZetaHotKeyBalance(ctx)
-	require.Error(t, err)
-	require.Equal(t, types.ZeroInt(), resp)
 }

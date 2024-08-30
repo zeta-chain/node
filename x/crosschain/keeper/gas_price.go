@@ -7,8 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	slicemath "github.com/zeta-chain/zetacore/pkg/math"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	slicemath "github.com/zeta-chain/node/pkg/math"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // SetGasPrice set a specific gasPrice in the store from its index

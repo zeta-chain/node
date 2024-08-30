@@ -9,10 +9,11 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/crypto"
-	zetaos "github.com/zeta-chain/zetacore/pkg/os"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/crypto"
+	zetaos "github.com/zeta-chain/node/pkg/os"
+	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/keys"
 )
 
 var CmdImportRelayerKey = &cobra.Command{
@@ -52,8 +53,7 @@ func init() {
 	RootCmd.AddCommand(CmdRelayerAddress)
 
 	// resolve default relayer key path
-	defaultRelayerKeyPath := "~/.zetacored/relayer-keys"
-	defaultRelayerKeyPath, err := zetaos.ExpandHomeDir(defaultRelayerKeyPath)
+	defaultRelayerKeyPath, err := zetaos.ExpandHomeDir(config.DefaultRelayerKeyPath)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to resolve default relayer key path")
 	}

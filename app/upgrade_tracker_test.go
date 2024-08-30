@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/stretchr/testify/require"
 
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
 )
 
 func TestUpgradeTracker(t *testing.T) {

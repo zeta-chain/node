@@ -1,12 +1,12 @@
 package mocks
 
 import (
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	ibccrosschaintypes "github.com/zeta-chain/node/x/ibccrosschain/types"
+	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 /**

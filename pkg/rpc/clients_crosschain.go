@@ -1,4 +1,4 @@
-package zetacore
+package rpc
 
 import (
 	"context"
@@ -8,17 +8,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 )
 
 // 32MB
 var maxSizeOption = grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
 
 // GetLastBlockHeight returns the zetachain block height
-func (c *Client) GetLastBlockHeight(ctx context.Context) (uint64, error) {
-	resp, err := c.client.crosschain.LastBlockHeight(ctx, &types.QueryGetLastBlockHeightRequest{})
+func (c *Clients) GetLastBlockHeight(ctx context.Context) (uint64, error) {
+	resp, err := c.Crosschain.LastBlockHeight(ctx, &types.QueryGetLastBlockHeightRequest{})
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to get block height")
 	}
@@ -27,8 +27,8 @@ func (c *Client) GetLastBlockHeight(ctx context.Context) (uint64, error) {
 }
 
 // GetBlockHeight returns the zetachain block height
-func (c *Client) GetBlockHeight(ctx context.Context) (int64, error) {
-	resp, err := c.client.crosschain.LastZetaHeight(ctx, &types.QueryLastZetaHeightRequest{})
+func (c *Clients) GetBlockHeight(ctx context.Context) (int64, error) {
+	resp, err := c.Crosschain.LastZetaHeight(ctx, &types.QueryLastZetaHeightRequest{})
 	if err != nil {
 		return 0, err
 	}
@@ -37,8 +37,8 @@ func (c *Client) GetBlockHeight(ctx context.Context) (int64, error) {
 }
 
 // GetAbortedZetaAmount returns the amount of zeta that has been aborted
-func (c *Client) GetAbortedZetaAmount(ctx context.Context) (string, error) {
-	resp, err := c.client.crosschain.ZetaAccounting(ctx, &types.QueryZetaAccountingRequest{})
+func (c *Clients) GetAbortedZetaAmount(ctx context.Context) (string, error) {
+	resp, err := c.Crosschain.ZetaAccounting(ctx, &types.QueryZetaAccountingRequest{})
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get aborted zeta amount")
 	}
@@ -47,8 +47,8 @@ func (c *Client) GetAbortedZetaAmount(ctx context.Context) (string, error) {
 }
 
 // GetRateLimiterFlags returns the rate limiter flags
-func (c *Client) GetRateLimiterFlags(ctx context.Context) (types.RateLimiterFlags, error) {
-	resp, err := c.client.crosschain.RateLimiterFlags(ctx, &types.QueryRateLimiterFlagsRequest{})
+func (c *Clients) GetRateLimiterFlags(ctx context.Context) (types.RateLimiterFlags, error) {
+	resp, err := c.Crosschain.RateLimiterFlags(ctx, &types.QueryRateLimiterFlagsRequest{})
 	if err != nil {
 		return types.RateLimiterFlags{}, errors.Wrap(err, "failed to get rate limiter flags")
 	}
@@ -57,10 +57,10 @@ func (c *Client) GetRateLimiterFlags(ctx context.Context) (types.RateLimiterFlag
 }
 
 // GetRateLimiterInput returns input data for the rate limit checker
-func (c *Client) GetRateLimiterInput(ctx context.Context, window int64) (*types.QueryRateLimiterInputResponse, error) {
+func (c *Clients) GetRateLimiterInput(ctx context.Context, window int64) (*types.QueryRateLimiterInputResponse, error) {
 	in := &types.QueryRateLimiterInputRequest{Window: window}
 
-	resp, err := c.client.crosschain.RateLimiterInput(ctx, in, maxSizeOption)
+	resp, err := c.Crosschain.RateLimiterInput(ctx, in, maxSizeOption)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get rate limiter input")
 	}
@@ -69,8 +69,8 @@ func (c *Client) GetRateLimiterInput(ctx context.Context, window int64) (*types.
 }
 
 // GetAllCctx returns all cross chain transactions
-func (c *Client) GetAllCctx(ctx context.Context) ([]*types.CrossChainTx, error) {
-	resp, err := c.client.crosschain.CctxAll(ctx, &types.QueryAllCctxRequest{})
+func (c *Clients) GetAllCctx(ctx context.Context) ([]*types.CrossChainTx, error) {
+	resp, err := c.Crosschain.CctxAll(ctx, &types.QueryAllCctxRequest{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get all cross chain transactions")
 	}
@@ -78,9 +78,9 @@ func (c *Client) GetAllCctx(ctx context.Context) ([]*types.CrossChainTx, error) 
 	return resp.CrossChainTx, nil
 }
 
-func (c *Client) GetCctxByHash(ctx context.Context, sendHash string) (*types.CrossChainTx, error) {
+func (c *Clients) GetCctxByHash(ctx context.Context, sendHash string) (*types.CrossChainTx, error) {
 	in := &types.QueryGetCctxRequest{Index: sendHash}
-	resp, err := c.client.crosschain.Cctx(ctx, in)
+	resp, err := c.Crosschain.Cctx(ctx, in)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get cctx by hash")
 	}
@@ -89,8 +89,8 @@ func (c *Client) GetCctxByHash(ctx context.Context, sendHash string) (*types.Cro
 }
 
 // GetCctxByNonce returns a cross chain transaction by nonce
-func (c *Client) GetCctxByNonce(ctx context.Context, chainID int64, nonce uint64) (*types.CrossChainTx, error) {
-	resp, err := c.client.crosschain.CctxByNonce(ctx, &types.QueryGetCctxByNonceRequest{
+func (c *Clients) GetCctxByNonce(ctx context.Context, chainID int64, nonce uint64) (*types.CrossChainTx, error) {
+	resp, err := c.Crosschain.CctxByNonce(ctx, &types.QueryGetCctxByNonceRequest{
 		ChainID: chainID,
 		Nonce:   nonce,
 	})
@@ -104,12 +104,12 @@ func (c *Client) GetCctxByNonce(ctx context.Context, chainID int64, nonce uint64
 // ListPendingCCTXWithinRateLimit returns a list of pending cctxs that do not exceed the outbound rate limit
 //   - The max size of the list is crosschainkeeper.MaxPendingCctxs
 //   - The returned `rateLimitExceeded` flag indicates if the rate limit is exceeded or not
-func (c *Client) ListPendingCCTXWithinRateLimit(
+func (c *Clients) ListPendingCCTXWithinRateLimit(
 	ctx context.Context,
 ) (*types.QueryListPendingCctxWithinRateLimitResponse, error) {
 	in := &types.QueryListPendingCctxWithinRateLimitRequest{}
 
-	resp, err := c.client.crosschain.ListPendingCctxWithinRateLimit(ctx, in, maxSizeOption)
+	resp, err := c.Crosschain.ListPendingCctxWithinRateLimit(ctx, in, maxSizeOption)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get pending cctxs within rate limit")
 	}
@@ -119,10 +119,10 @@ func (c *Client) ListPendingCCTXWithinRateLimit(
 
 // ListPendingCCTX returns a list of pending cctxs for a given chainID
 //   - The max size of the list is crosschainkeeper.MaxPendingCctxs
-func (c *Client) ListPendingCCTX(ctx context.Context, chainID int64) ([]*types.CrossChainTx, uint64, error) {
+func (c *Clients) ListPendingCCTX(ctx context.Context, chainID int64) ([]*types.CrossChainTx, uint64, error) {
 	in := &types.QueryListPendingCctxRequest{ChainId: chainID}
 
-	resp, err := c.client.crosschain.ListPendingCctx(ctx, in, maxSizeOption)
+	resp, err := c.Crosschain.ListPendingCctx(ctx, in, maxSizeOption)
 	if err != nil {
 		return nil, 0, errors.Wrap(err, "failed to get pending cctxs")
 	}
@@ -131,14 +131,14 @@ func (c *Client) ListPendingCCTX(ctx context.Context, chainID int64) ([]*types.C
 }
 
 // GetOutboundTracker returns the outbound tracker for a chain and nonce
-func (c *Client) GetOutboundTracker(
+func (c *Clients) GetOutboundTracker(
 	ctx context.Context,
 	chain chains.Chain,
 	nonce uint64,
 ) (*types.OutboundTracker, error) {
 	in := &types.QueryGetOutboundTrackerRequest{ChainID: chain.ChainId, Nonce: nonce}
 
-	resp, err := c.client.crosschain.OutboundTracker(ctx, in)
+	resp, err := c.Crosschain.OutboundTracker(ctx, in)
 	if err != nil {
 		return nil, err
 	}
@@ -147,10 +147,10 @@ func (c *Client) GetOutboundTracker(
 }
 
 // GetInboundTrackersForChain returns the inbound trackers for a chain
-func (c *Client) GetInboundTrackersForChain(ctx context.Context, chainID int64) ([]types.InboundTracker, error) {
+func (c *Clients) GetInboundTrackersForChain(ctx context.Context, chainID int64) ([]types.InboundTracker, error) {
 	in := &types.QueryAllInboundTrackerByChainRequest{ChainId: chainID}
 
-	resp, err := c.client.crosschain.InboundTrackerAllByChain(ctx, in)
+	resp, err := c.Crosschain.InboundTrackerAllByChain(ctx, in)
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +159,7 @@ func (c *Client) GetInboundTrackersForChain(ctx context.Context, chainID int64) 
 }
 
 // GetAllOutboundTrackerByChain returns all outbound trackers for a chain
-func (c *Client) GetAllOutboundTrackerByChain(
+func (c *Clients) GetAllOutboundTrackerByChain(
 	ctx context.Context,
 	chainID int64,
 	order interfaces.Order,
@@ -175,7 +175,7 @@ func (c *Client) GetAllOutboundTrackerByChain(
 		},
 	}
 
-	resp, err := c.client.crosschain.OutboundTrackerAllByChain(ctx, in)
+	resp, err := c.Crosschain.OutboundTrackerAllByChain(ctx, in)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get all outbound trackers")
 	}

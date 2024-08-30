@@ -6,7 +6,7 @@ import (
 	types2 "github.com/coinbase/rosetta-sdk-go/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	types "github.com/zeta-chain/zetacore/x/observer/types"
+	types "github.com/zeta-chain/node/x/observer/types"
 )
 
 func EmitEventBallotCreated(ctx sdk.Context, ballot types.Ballot, observationHash, observationChain string) {

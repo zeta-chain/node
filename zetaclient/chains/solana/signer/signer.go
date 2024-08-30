@@ -8,22 +8,22 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	contracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
-	"github.com/zeta-chain/zetacore/pkg/crypto"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
+	"github.com/zeta-chain/node/pkg/crypto"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 )
 
 var _ interfaces.ChainSigner = (*Signer)(nil)
 
-// Signer deals with signing BTC transactions and implements the ChainSigner interface
+// Signer deals with signing Solana transactions and implements the ChainSigner interface
 type Signer struct {
 	*base.Signer
 
@@ -41,7 +41,7 @@ type Signer struct {
 	pda solana.PublicKey
 }
 
-// NewSigner creates a new Bitcoin signer
+// NewSigner creates a new Solana signer
 func NewSigner(
 	chain chains.Chain,
 	chainParams observertypes.ChainParams,

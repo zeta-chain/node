@@ -18,7 +18,7 @@ import "zetachain/zetacore/pkg/chains/chains.proto";
 import "zetachain/zetacore/pkg/proofs/proofs.proto";
 import "zetachain/zetacore/observer/tss_funds_migrator.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
+option go_package = "github.com/zeta-chain/node/x/observer/types";
 
 // Query defines the gRPC querier service.
 service Query {

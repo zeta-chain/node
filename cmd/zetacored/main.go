@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 
-	"github.com/zeta-chain/zetacore/app"
-	cmdcfg "github.com/zeta-chain/zetacore/cmd/zetacored/config"
+	"github.com/zeta-chain/node/app"
+	cmdcfg "github.com/zeta-chain/node/cmd/zetacored/config"
 )
 
 func main() {

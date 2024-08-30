@@ -15,9 +15,9 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/x/authority/client/cli"
-	"github.com/zeta-chain/zetacore/x/authority/keeper"
-	"github.com/zeta-chain/zetacore/x/authority/types"
+	"github.com/zeta-chain/node/x/authority/client/cli"
+	"github.com/zeta-chain/node/x/authority/keeper"
+	"github.com/zeta-chain/node/x/authority/types"
 )
 
 var (

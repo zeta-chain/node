@@ -10,7 +10,7 @@ import (
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 
-	"github.com/zeta-chain/zetacore/e2e/config"
+	"github.com/zeta-chain/node/e2e/config"
 )
 
 var errWrongTxPriority = errors.New("wrong tx priority, system tx not on top")
