@@ -8,7 +8,9 @@ import (
 	common "github.com/ethereum/go-ethereum/common"
 	coin "github.com/zeta-chain/zetacore/pkg/coin"
 
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 
@@ -416,6 +418,24 @@ func (_m *CrosschainFungibleKeeper) GetUniswapV2Router02Address(ctx types.Contex
 	return r0, r1
 }
 
+// ProcessV2RevertDeposit provides a mock function with given fields: ctx, amount, chainID, coinType, asset, revertAddress, callOnRevert, revertMessage
+func (_m *CrosschainFungibleKeeper) ProcessV2RevertDeposit(ctx types.Context, amount *big.Int, chainID int64, coinType coin.CoinType, asset string, revertAddress common.Address, callOnRevert bool, revertMessage []byte) error {
+	ret := _m.Called(ctx, amount, chainID, coinType, asset, revertAddress, callOnRevert, revertMessage)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ProcessV2RevertDeposit")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, *big.Int, int64, coin.CoinType, string, common.Address, bool, []byte) error); ok {
+		r0 = rf(ctx, amount, chainID, coinType, asset, revertAddress, callOnRevert, revertMessage)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // QueryGasLimit provides a mock function with given fields: ctx, contract
 func (_m *CrosschainFungibleKeeper) QueryGasLimit(ctx types.Context, contract common.Address) (*big.Int, error) {
 	ret := _m.Called(ctx, contract)
@@ -677,9 +697,9 @@ func (_m *CrosschainFungibleKeeper) ZETARevertAndCallContract(ctx types.Context,
 	return r0, r1
 }
 
-// ZRC20DepositAndCallContract provides a mock function with given fields: ctx, from, to, amount, senderChainID, data, coinType, asset
-func (_m *CrosschainFungibleKeeper) ZRC20DepositAndCallContract(ctx types.Context, from []byte, to common.Address, amount *big.Int, senderChainID int64, data []byte, coinType coin.CoinType, asset string) (*evmtypes.MsgEthereumTxResponse, bool, error) {
-	ret := _m.Called(ctx, from, to, amount, senderChainID, data, coinType, asset)
+// ZRC20DepositAndCallContract provides a mock function with given fields: ctx, from, to, amount, senderChainID, data, coinType, asset, protocolContractVersion
+func (_m *CrosschainFungibleKeeper) ZRC20DepositAndCallContract(ctx types.Context, from []byte, to common.Address, amount *big.Int, senderChainID int64, data []byte, coinType coin.CoinType, asset string, protocolContractVersion crosschaintypes.ProtocolContractVersion) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+	ret := _m.Called(ctx, from, to, amount, senderChainID, data, coinType, asset, protocolContractVersion)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ZRC20DepositAndCallContract")
@@ -688,25 +708,25 @@ func (_m *CrosschainFungibleKeeper) ZRC20DepositAndCallContract(ctx types.Contex
 	var r0 *evmtypes.MsgEthereumTxResponse
 	var r1 bool
 	var r2 error
-	if rf, ok := ret.Get(0).(func(types.Context, []byte, common.Address, *big.Int, int64, []byte, coin.CoinType, string) (*evmtypes.MsgEthereumTxResponse, bool, error)); ok {
-		return rf(ctx, from, to, amount, senderChainID, data, coinType, asset)
+	if rf, ok := ret.Get(0).(func(types.Context, []byte, common.Address, *big.Int, int64, []byte, coin.CoinType, string, crosschaintypes.ProtocolContractVersion) (*evmtypes.MsgEthereumTxResponse, bool, error)); ok {
+		return rf(ctx, from, to, amount, senderChainID, data, coinType, asset, protocolContractVersion)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, []byte, common.Address, *big.Int, int64, []byte, coin.CoinType, string) *evmtypes.MsgEthereumTxResponse); ok {
-		r0 = rf(ctx, from, to, amount, senderChainID, data, coinType, asset)
+	if rf, ok := ret.Get(0).(func(types.Context, []byte, common.Address, *big.Int, int64, []byte, coin.CoinType, string, crosschaintypes.ProtocolContractVersion) *evmtypes.MsgEthereumTxResponse); ok {
+		r0 = rf(ctx, from, to, amount, senderChainID, data, coinType, asset, protocolContractVersion)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*evmtypes.MsgEthereumTxResponse)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, []byte, common.Address, *big.Int, int64, []byte, coin.CoinType, string) bool); ok {
-		r1 = rf(ctx, from, to, amount, senderChainID, data, coinType, asset)
+	if rf, ok := ret.Get(1).(func(types.Context, []byte, common.Address, *big.Int, int64, []byte, coin.CoinType, string, crosschaintypes.ProtocolContractVersion) bool); ok {
+		r1 = rf(ctx, from, to, amount, senderChainID, data, coinType, asset, protocolContractVersion)
 	} else {
 		r1 = ret.Get(1).(bool)
 	}
 
-	if rf, ok := ret.Get(2).(func(types.Context, []byte, common.Address, *big.Int, int64, []byte, coin.CoinType, string) error); ok {
-		r2 = rf(ctx, from, to, amount, senderChainID, data, coinType, asset)
+	if rf, ok := ret.Get(2).(func(types.Context, []byte, common.Address, *big.Int, int64, []byte, coin.CoinType, string, crosschaintypes.ProtocolContractVersion) error); ok {
+		r2 = rf(ctx, from, to, amount, senderChainID, data, coinType, asset, protocolContractVersion)
 	} else {
 		r2 = ret.Error(2)
 	}

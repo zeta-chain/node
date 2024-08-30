@@ -146,9 +146,6 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		// Successfully mock VoteOnOutboundBallot
 		keepertest.MockVoteOnOutboundSuccessBallot(observerMock, ctx, cctx, senderChain, observer)
 
-		// Successfully mock GetOutbound
-		keepertest.MockGetOutbound(observerMock, ctx)
-
 		// Successfully mock SaveSuccessfulOutbound
 		expectedNumberOfOutboundParams := 1
 		keepertest.MockSaveOutbound(observerMock, ctx, cctx, tss, expectedNumberOfOutboundParams)
@@ -176,6 +173,44 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		require.Len(t, c.OutboundParams, expectedNumberOfOutboundParams)
 	})
 
+	t.Run("vote on outbound tx fails if tss is not found", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseObserverMock: true,
+		})
+
+		// Setup mock data
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		senderChain := getValidEthChain()
+		asset := ""
+		observer := sample.AccAddress()
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{ObserverList: []string{observer}})
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
+		cctx.GetCurrentOutboundParam().TssPubkey = tss.TssPubkey
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		k.SetCrossChainTx(ctx, *cctx)
+		observerMock.On("GetTSS", ctx).Return(observertypes.TSS{}, false).Once()
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+		msg := types.MsgVoteOutbound{
+			CctxHash:                          cctx.Index,
+			OutboundTssNonce:                  cctx.GetCurrentOutboundParam().TssNonce,
+			OutboundChain:                     cctx.GetCurrentOutboundParam().ReceiverChainId,
+			Status:                            chains.ReceiveStatus_success,
+			Creator:                           observer,
+			ObservedOutboundHash:              sample.Hash().String(),
+			ValueReceived:                     cctx.GetCurrentOutboundParam().Amount,
+			ObservedOutboundBlockHeight:       10,
+			ObservedOutboundEffectiveGasPrice: math.NewInt(21),
+			ObservedOutboundGasUsed:           21,
+			CoinType:                          cctx.InboundParams.CoinType,
+		}
+		_, err := msgServer.VoteOutbound(ctx, &msg)
+		require.ErrorIs(t, err, types.ErrCannotFindTSSKeys)
+	})
+
 	t.Run("successfully vote on outbound tx, vote-type failed", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseObserverMock: true,
@@ -200,9 +235,6 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 
 		// Successfully mock VoteOnOutboundBallot
 		keepertest.MockVoteOnOutboundFailedBallot(observerMock, ctx, cctx, senderChain, observer)
-
-		// Successfully mock GetOutbound
-		keepertest.MockGetOutbound(observerMock, ctx)
 
 		// Successfully mock ProcessOutbound
 		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 100)
@@ -263,9 +295,6 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 
 		// Successfully mock VoteOnOutboundBallot
 		keepertest.MockVoteOnOutboundFailedBallot(observerMock, ctx, cctx, senderChain, observer)
-
-		// Successfully mock GetOutbound
-		keepertest.MockGetOutbound(observerMock, ctx)
 
 		// Mock Failed ProcessOutbound
 		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, senderChain, 100)
@@ -333,9 +362,6 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 
 		// Successfully mock VoteOnOutboundBallot
 		keepertest.MockVoteOnOutboundFailedBallot(observerMock, ctx, cctx, senderChain, observer)
-
-		// Successfully mock GetOutbound
-		keepertest.MockGetOutbound(observerMock, ctx)
 
 		// Fail ProcessOutbound so that changes are not committed to the state
 		fungibleMock.On("GetForeignCoinFromAsset", mock.Anything, mock.Anything, mock.Anything).
@@ -472,6 +498,7 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 
 func TestKeeper_SaveFailedOutbound(t *testing.T) {
 	t.Run("successfully save failed outbound", func(t *testing.T) {
+		//ARRANGE
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		cctx := sample.CrossChainTx(t, "test")
 		k.SetOutboundTracker(ctx, types.OutboundTracker{
@@ -481,7 +508,11 @@ func TestKeeper_SaveFailedOutbound(t *testing.T) {
 			HashList: nil,
 		})
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-		k.SaveFailedOutbound(ctx, cctx, sample.String())
+
+		//ACT
+		k.SaveFailedOutbound(ctx, cctx, sample.String(), sample.Tss().TssPubkey)
+
+		//ASSERT
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
 		_, found := k.GetOutboundTracker(
 			ctx,
@@ -492,6 +523,7 @@ func TestKeeper_SaveFailedOutbound(t *testing.T) {
 	})
 
 	t.Run("successfully save failed outbound with multiple trackers", func(t *testing.T) {
+		//ARRANGE
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		cctx := sample.CrossChainTx(t, "test")
 		for _, outboundParams := range cctx.OutboundParams {
@@ -503,9 +535,12 @@ func TestKeeper_SaveFailedOutbound(t *testing.T) {
 			})
 		}
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-		k.SaveFailedOutbound(ctx, cctx, sample.String())
-		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
 
+		//ACT
+		k.SaveFailedOutbound(ctx, cctx, sample.String(), sample.Tss().TssPubkey)
+
+		//ASSERT
+		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
 		for _, outboundParams := range cctx.OutboundParams {
 			_, found := k.GetOutboundTracker(
 				ctx,
@@ -514,12 +549,12 @@ func TestKeeper_SaveFailedOutbound(t *testing.T) {
 			)
 			require.False(t, found)
 		}
-
 	})
 }
 
 func TestKeeper_SaveSuccessfulOutbound(t *testing.T) {
 	t.Run("successfully save successful outbound", func(t *testing.T) {
+		//ARRANGE
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		cctx := sample.CrossChainTx(t, "test")
 		k.SetOutboundTracker(ctx, types.OutboundTracker{
@@ -529,8 +564,11 @@ func TestKeeper_SaveSuccessfulOutbound(t *testing.T) {
 			HashList: nil,
 		})
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-		k.SaveSuccessfulOutbound(ctx, cctx)
 
+		//ACT
+		k.SaveSuccessfulOutbound(ctx, cctx, sample.Tss().TssPubkey)
+
+		//ASSERT
 		_, found := k.GetOutboundTracker(
 			ctx,
 			cctx.GetCurrentOutboundParam().ReceiverChainId,
@@ -540,6 +578,7 @@ func TestKeeper_SaveSuccessfulOutbound(t *testing.T) {
 	})
 
 	t.Run("successfully save successful outbound with multiple trackers", func(t *testing.T) {
+		//ARRANGE
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		cctx := sample.CrossChainTx(t, "test")
 		for _, outboundParams := range cctx.OutboundParams {
@@ -551,8 +590,11 @@ func TestKeeper_SaveSuccessfulOutbound(t *testing.T) {
 			})
 		}
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-		k.SaveSuccessfulOutbound(ctx, cctx)
 
+		//ACT
+		k.SaveSuccessfulOutbound(ctx, cctx, sample.Tss().TssPubkey)
+
+		//ASSERT
 		for _, outboundParams := range cctx.OutboundParams {
 			_, found := k.GetOutboundTracker(
 				ctx,
@@ -566,8 +608,8 @@ func TestKeeper_SaveSuccessfulOutbound(t *testing.T) {
 
 func TestKeeper_SaveOutbound(t *testing.T) {
 	t.Run("successfully save outbound", func(t *testing.T) {
+		//ARRANGE
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-
 		// setup state for crosschain and observer modules
 		cctx := sample.CrossChainTx(t, "test")
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
@@ -577,7 +619,6 @@ func TestKeeper_SaveOutbound(t *testing.T) {
 			Nonce:    cctx.GetCurrentOutboundParam().TssNonce,
 			HashList: nil,
 		})
-
 		zk.ObserverKeeper.SetPendingNonces(ctx, observertypes.PendingNonces{
 			NonceLow:  int64(cctx.GetCurrentOutboundParam().TssNonce) - 1,
 			NonceHigh: int64(cctx.GetCurrentOutboundParam().TssNonce) + 1,
@@ -588,8 +629,11 @@ func TestKeeper_SaveOutbound(t *testing.T) {
 			TssPubkey: cctx.GetCurrentOutboundParam().TssPubkey,
 		})
 
+		//ACT
 		// Save outbound and assert all values are successfully saved
-		k.SaveOutbound(ctx, cctx)
+		k.SaveOutbound(ctx, cctx, cctx.GetCurrentOutboundParam().TssPubkey)
+
+		//ASSERT
 		_, found := k.GetOutboundTracker(
 			ctx,
 			cctx.GetCurrentOutboundParam().ReceiverChainId,
@@ -616,8 +660,8 @@ func TestKeeper_SaveOutbound(t *testing.T) {
 	})
 
 	t.Run("successfully save outbound with multiple trackers", func(t *testing.T) {
+		//ARRANGE
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-
 		// setup state for crosschain and observer modules
 		cctx := sample.CrossChainTx(t, "test")
 		for _, outboundParams := range cctx.OutboundParams {
@@ -635,15 +679,16 @@ func TestKeeper_SaveOutbound(t *testing.T) {
 			})
 		}
 		cctx.CctxStatus.Status = types.CctxStatus_PendingRevert
-
 		tssPubkey := cctx.GetCurrentOutboundParam().TssPubkey
 		zk.ObserverKeeper.SetTSS(ctx, observertypes.TSS{
 			TssPubkey: tssPubkey,
 		})
 
+		//ACT
 		// Save outbound and assert all values are successfully saved
-		k.SaveOutbound(ctx, cctx)
+		k.SaveOutbound(ctx, cctx, cctx.GetCurrentOutboundParam().TssPubkey)
 
+		//ASSERT
 		for _, outboundParams := range cctx.OutboundParams {
 			_, found := k.GetOutboundTracker(
 				ctx,
@@ -715,17 +760,6 @@ func TestKeeper_ValidateOutboundMessage(t *testing.T) {
 				cctx.GetCurrentOutboundParam().TssNonce,
 			),
 		)
-	})
-
-	t.Run("failed to validate outbound message if tss not found", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := sample.CrossChainTx(t, "test")
-		k.SetCrossChainTx(ctx, *cctx)
-		_, err := k.ValidateOutboundMessage(ctx, types.MsgVoteOutbound{
-			CctxHash:         cctx.Index,
-			OutboundTssNonce: cctx.GetCurrentOutboundParam().TssNonce,
-		})
-		require.ErrorIs(t, err, types.ErrCannotFindTSSKeys)
 	})
 
 	t.Run("failed to validate outbound message if chain does not match", func(t *testing.T) {

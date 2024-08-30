@@ -17,8 +17,8 @@ import (
 	"github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
 
 	"github.com/zeta-chain/zetacore/pkg/bg"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -223,6 +223,22 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 		return errors.Wrap(err, "unable to observe TSSReceive")
 	}
 
+	// query the gateway logs
+	// TODO: refactor in a more declarative design. Example: storing the list of contract and events to listen in an array
+	// https://github.com/zeta-chain/node/issues/2493
+	lastScannedGatewayDeposit, err := ob.ObserveGatewayDeposit(ctx, startBlock, toBlock)
+	if err != nil {
+		ob.Logger().Inbound.Error().
+			Err(err).
+			Msgf("ObserveInbound: error observing deposit events from Gateway contract")
+	}
+	lastScannedGatewayCall, err := ob.ObserveGatewayCall(ctx, startBlock, toBlock)
+	if err != nil {
+		ob.Logger().Inbound.Error().
+			Err(err).
+			Msgf("ObserveInbound: error observing call events from Gateway contract")
+	}
+
 	// note: using lowest height for all 3 events is not perfect, but it's simple and good enough
 	lastScannedLowest := lastScannedZetaSent
 	if lastScannedDeposited < lastScannedLowest {
@@ -230,6 +246,12 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 	}
 	if lastScannedTssRecvd < lastScannedLowest {
 		lastScannedLowest = lastScannedTssRecvd
+	}
+	if lastScannedGatewayDeposit < lastScannedLowest {
+		lastScannedLowest = lastScannedGatewayDeposit
+	}
+	if lastScannedGatewayCall < lastScannedLowest {
+		lastScannedLowest = lastScannedGatewayCall
 	}
 
 	// update last scanned block height for all 3 events (ZetaSent, Deposited, TssRecvd), ignore db error

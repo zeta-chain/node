@@ -108,6 +108,13 @@ func parseInt(t require.TestingT, s string) int {
 	return v
 }
 
+func parseBigInt(t require.TestingT, s string) *big.Int {
+	v, ok := big.NewInt(0).SetString(s, 10)
+	require.True(t, ok, "unable to parse big.Int from %q", s)
+
+	return v
+}
+
 // bigIntFromFloat64 takes float64 (e.g. 0.001) that represents btc amount
 // and converts it to big.Int for downstream usage.
 func btcAmountFromFloat64(t require.TestingT, amount float64) *big.Int {

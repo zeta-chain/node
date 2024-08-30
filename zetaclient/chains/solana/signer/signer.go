@@ -11,25 +11,28 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	contracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
+	"github.com/zeta-chain/zetacore/pkg/crypto"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
 )
 
 var _ interfaces.ChainSigner = (*Signer)(nil)
 
-// Signer deals with signing BTC transactions and implements the ChainSigner interface
+// Signer deals with signing Solana transactions and implements the ChainSigner interface
 type Signer struct {
 	*base.Signer
 
 	// client is the Solana RPC client that interacts with the Solana chain
 	client interfaces.SolanaRPCClient
 
-	// solanaFeePayerKey is the private key of the fee payer account on Solana chain
-	solanaFeePayerKey solana.PrivateKey
+	// relayerKey is the private key of the relayer account for Solana chain
+	// relayerKey is optional, the signer will not relay transactions if it is not set
+	relayerKey *solana.PrivateKey
 
 	// gatewayID is the program ID of gateway program on Solana chain
 	gatewayID solana.PublicKey
@@ -38,13 +41,13 @@ type Signer struct {
 	pda solana.PublicKey
 }
 
-// NewSigner creates a new Bitcoin signer
+// NewSigner creates a new Solana signer
 func NewSigner(
 	chain chains.Chain,
 	chainParams observertypes.ChainParams,
 	solClient interfaces.SolanaRPCClient,
 	tss interfaces.TSSSigner,
-	solanaKey solana.PrivateKey,
+	relayerKey *keys.RelayerKey,
 	ts *metrics.TelemetryServer,
 	logger base.Logger,
 ) (*Signer, error) {
@@ -56,16 +59,32 @@ func NewSigner(
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
 	}
-	logger.Std.Info().Msgf("Solana fee payer address: %s", solanaKey.PublicKey())
 
-	// create solana observer
-	return &Signer{
-		Signer:            baseSigner,
-		client:            solClient,
-		solanaFeePayerKey: solanaKey,
-		gatewayID:         gatewayID,
-		pda:               pda,
-	}, nil
+	// create Solana signer
+	signer := &Signer{
+		Signer:    baseSigner,
+		client:    solClient,
+		gatewayID: gatewayID,
+		pda:       pda,
+	}
+
+	// construct Solana private key if present
+	if relayerKey != nil {
+		signer.relayerKey, err = crypto.SolanaPrivateKeyFromString(relayerKey.PrivateKey)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to construct solana private key")
+		}
+		logger.Std.Info().Msgf("Solana relayer address: %s", signer.relayerKey.PublicKey())
+	} else {
+		logger.Std.Info().Msg("Solana relayer key is not provided")
+	}
+
+	return signer, nil
+}
+
+// HasRelayerKey returns true if the signer has a relayer key
+func (signer *Signer) HasRelayerKey() bool {
+	return signer.relayerKey != nil
 }
 
 // TryProcessOutbound - signer interface implementation
@@ -114,10 +133,18 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 
-	// sign the withdraw transaction by fee payer
+	// skip relaying the transaction if this signer hasn't set the relayer key
+	if !signer.HasRelayerKey() {
+		return
+	}
+
+	// set relayer balance metrics
+	signer.SetRelayerBalanceMetrics(ctx)
+
+	// sign the withdraw transaction by relayer key
 	tx, err := signer.SignWithdrawTx(ctx, *msg)
 	if err != nil {
-		logger.Error().Err(err).Msgf("TryProcessOutbound: SignWithdrawTx error for chain %d nonce %d", chainID, nonce)
+		logger.Error().Err(err).Msgf("TryProcessOutbound: SignGasWithdraw error for chain %d nonce %d", chainID, nonce)
 		return
 	}
 
@@ -165,6 +192,21 @@ func (signer *Signer) GetGatewayAddress() string {
 	signer.Lock()
 	defer signer.Unlock()
 	return signer.gatewayID.String()
+}
+
+// SetRelayerBalanceMetrics sets the relayer balance metrics
+func (signer *Signer) SetRelayerBalanceMetrics(ctx context.Context) {
+	if !signer.HasRelayerKey() {
+		return
+	}
+
+	result, err := signer.client.GetBalance(ctx, signer.relayerKey.PublicKey(), rpc.CommitmentFinalized)
+	if err != nil {
+		signer.Logger().Std.Error().Err(err).Msg("GetBalance error")
+		return
+	}
+	solBalance := float64(result.Value) / float64(solana.LAMPORTS_PER_SOL)
+	metrics.RelayerKeyBalance.WithLabelValues(signer.Chain().Name).Set(solBalance)
 }
 
 // TODO: get rid of below four functions for Solana and Bitcoin

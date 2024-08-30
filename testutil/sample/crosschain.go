@@ -14,7 +14,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
-	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -50,33 +50,6 @@ func RateLimiterFlags() types.RateLimiterFlags {
 				Rate:  sdk.NewDec(r.Int63()),
 			},
 		},
-	}
-}
-
-// CustomRateLimiterFlags creates a custom rate limiter flags with the given parameters
-func CustomRateLimiterFlags(
-	enabled bool,
-	window int64,
-	rate math.Uint,
-	conversions []types.Conversion,
-) types.RateLimiterFlags {
-	return types.RateLimiterFlags{
-		Enabled:     enabled,
-		Window:      window,
-		Rate:        rate,
-		Conversions: conversions,
-	}
-}
-
-func AssetRate() types.AssetRate {
-	r := Rand()
-
-	return types.AssetRate{
-		ChainId:  r.Int63(),
-		Asset:    EthAddress().Hex(),
-		Decimals: uint32(r.Uint64()),
-		CoinType: coin.CoinType_ERC20,
-		Rate:     sdk.NewDec(r.Int63()),
 	}
 }
 
@@ -124,6 +97,19 @@ func GasPrice(t *testing.T, index string) *types.GasPrice {
 		Creator:     AccAddress(),
 		Index:       index,
 		ChainId:     r.Int63(),
+		Signers:     []string{AccAddress(), AccAddress()},
+		BlockNums:   []uint64{r.Uint64(), r.Uint64()},
+		Prices:      []uint64{r.Uint64(), r.Uint64()},
+		MedianIndex: 0,
+	}
+}
+
+func GasPriceWithChainID(t *testing.T, chainID int64) types.GasPrice {
+	r := newRandFromStringSeed(t, fmt.Sprintf("%d", chainID))
+
+	return types.GasPrice{
+		Creator:     AccAddress(),
+		ChainId:     chainID,
 		Signers:     []string{AccAddress(), AccAddress()},
 		BlockNums:   []uint64{r.Uint64(), r.Uint64()},
 		Prices:      []uint64{r.Uint64(), r.Uint64()},
@@ -196,10 +182,13 @@ func OutboundParamsValidChainID(r *rand.Rand) *types.OutboundParams {
 func Status(t *testing.T, index string) *types.Status {
 	r := newRandFromStringSeed(t, index)
 
+	createdAt := r.Int63()
+
 	return &types.Status{
 		Status:              types.CctxStatus(r.Intn(100)),
 		StatusMessage:       String(),
-		LastUpdateTimestamp: r.Int63(),
+		CreatedTimestamp:    createdAt,
+		LastUpdateTimestamp: createdAt,
 	}
 }
 
@@ -211,13 +200,15 @@ func CrossChainTx(t *testing.T, index string) *types.CrossChainTx {
 	r := newRandFromStringSeed(t, index)
 
 	return &types.CrossChainTx{
-		Creator:        AccAddress(),
-		Index:          GetCctxIndexFromString(index),
-		ZetaFees:       math.NewUint(uint64(r.Int63())),
-		RelayedMessage: StringRandom(r, 32),
-		CctxStatus:     Status(t, index),
-		InboundParams:  InboundParams(r),
-		OutboundParams: []*types.OutboundParams{OutboundParams(r), OutboundParams(r)},
+		Creator:                 AccAddress(),
+		Index:                   GetCctxIndexFromString(index),
+		ZetaFees:                math.NewUint(uint64(r.Int63())),
+		RelayedMessage:          StringRandom(r, 32),
+		CctxStatus:              Status(t, index),
+		InboundParams:           InboundParams(r),
+		OutboundParams:          []*types.OutboundParams{OutboundParams(r), OutboundParams(r)},
+		ProtocolContractVersion: types.ProtocolContractVersion_V1,
+		RevertOptions:           types.NewEmptyRevertOptions(),
 	}
 }
 
@@ -302,7 +293,7 @@ func ZRC20Withdrawal(to []byte, value *big.Int) *zrc20.ZRC20Withdrawal {
 		From:            EthAddress(),
 		To:              to,
 		Value:           value,
-		Gasfee:          big.NewInt(Int64InRange(100000, 10000000)),
+		GasFee:          big.NewInt(Int64InRange(100000, 10000000)),
 		ProtocolFlatFee: big.NewInt(Int64InRange(100000, 10000000)),
 	}
 }

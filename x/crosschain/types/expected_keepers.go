@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -145,7 +145,18 @@ type FungibleKeeper interface {
 		data []byte,
 		coinType coin.CoinType,
 		asset string,
+		protocolContractVersion ProtocolContractVersion,
 	) (*evmtypes.MsgEthereumTxResponse, bool, error)
+	ProcessV2RevertDeposit(
+		ctx sdk.Context,
+		amount *big.Int,
+		chainID int64,
+		coinType coin.CoinType,
+		asset string,
+		revertAddress ethcommon.Address,
+		callOnRevert bool,
+		revertMessage []byte,
+	) error
 	CallUniswapV2RouterSwapExactTokensForTokens(
 		ctx sdk.Context,
 		sender ethcommon.Address,

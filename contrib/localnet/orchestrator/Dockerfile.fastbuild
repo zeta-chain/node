@@ -2,13 +2,15 @@
 # check=error=true
 FROM zetanode:latest AS zeta
 FROM ghcr.io/zeta-chain/ethereum-client-go:v1.10.26 AS geth
+FROM ghcr.io/zeta-chain/solana-docker:1.18.15 AS solana
 FROM ghcr.io/zeta-chain/golang:1.22.5-bookworm AS orchestrator
 
 RUN apt update && \
-    apt install -yq jq yq curl tmux python3 openssh-server iputils-ping iproute2 && \
+    apt install -yq jq yq curl tmux python3 openssh-server iputils-ping iproute2 bind9-host && \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=geth /usr/local/bin/geth /usr/local/bin/
+COPY --from=solana /usr/bin/solana /usr/local/bin/
 COPY --from=zeta /usr/local/bin/zetacored /usr/local/bin/zetaclientd /usr/local/bin/zetae2e /usr/local/bin/
 
 COPY contrib/localnet/orchestrator/start-zetae2e.sh /work/

@@ -1,12 +1,14 @@
 package runner
 
 import (
+	"encoding/hex"
 	"fmt"
 	"sync"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/fatih/color"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -55,7 +57,7 @@ func (l *Logger) Print(message string, args ...interface{}) {
 
 	text := fmt.Sprintf(message, args...)
 	// #nosec G104 - we are not using user input
-	l.logger.Printf(l.getPrefixWithPadding() + loggerSeparator + text + "\n")
+	l.logger.Print(l.getPrefixWithPadding() + loggerSeparator + text + "\n")
 }
 
 // PrintNoPrefix prints a message to the logger without the prefix
@@ -65,7 +67,7 @@ func (l *Logger) PrintNoPrefix(message string, args ...interface{}) {
 
 	text := fmt.Sprintf(message, args...)
 	// #nosec G104 - we are not using user input
-	l.logger.Printf(text + "\n")
+	_, _ = l.logger.Print(text + "\n")
 }
 
 // Info prints a message to the logger if verbose is true
@@ -76,7 +78,7 @@ func (l *Logger) Info(message string, args ...interface{}) {
 	if l.verbose {
 		text := fmt.Sprintf(message, args...)
 		// #nosec G104 - we are not using user input
-		l.logger.Printf(l.getPrefixWithPadding() + loggerSeparator + "[INFO]" + text + "\n")
+		_, _ = l.logger.Print(l.getPrefixWithPadding() + loggerSeparator + "[INFO]" + text + "\n")
 	}
 }
 
@@ -88,11 +90,11 @@ func (l *Logger) InfoLoud(message string, args ...interface{}) {
 	if l.verbose {
 		text := fmt.Sprintf(message, args...)
 		// #nosec G104 - we are not using user input
-		l.logger.Printf(l.getPrefixWithPadding() + loggerSeparator + "[INFO] =======================================")
+		l.logger.Print(l.getPrefixWithPadding() + loggerSeparator + "[INFO] =======================================")
 		// #nosec G104 - we are not using user input
-		l.logger.Printf(l.getPrefixWithPadding() + loggerSeparator + "[INFO]" + text + "\n")
+		l.logger.Print(l.getPrefixWithPadding() + loggerSeparator + "[INFO]" + text + "\n")
 		// #nosec G104 - we are not using user input
-		l.logger.Printf(l.getPrefixWithPadding() + loggerSeparator + "[INFO] =======================================")
+		l.logger.Print(l.getPrefixWithPadding() + loggerSeparator + "[INFO] =======================================")
 	}
 }
 
@@ -103,7 +105,7 @@ func (l *Logger) Error(message string, args ...interface{}) {
 
 	text := fmt.Sprintf(message, args...)
 	// #nosec G104 - we are not using user input
-	l.logger.Printf(l.getPrefixWithPadding() + loggerSeparator + "[ERROR]" + text + "\n")
+	l.logger.Print(l.getPrefixWithPadding() + loggerSeparator + "[ERROR]" + text + "\n")
 }
 
 // CCTX prints a CCTX
@@ -194,8 +196,33 @@ func (l *Logger) ZRC20Withdrawal(
 			event.From.Hex(),
 			event.To,
 			event.Value,
-			event.Gasfee,
+			event.GasFee,
 		)
+	}
+}
+
+type depositParser interface {
+	ParseDeposited(ethtypes.Log) (*gatewayevm.GatewayEVMDeposited, error)
+}
+
+// GatewayDeposit prints a GatewayDeposit event
+func (l *Logger) GatewayDeposit(
+	contract depositParser,
+	receipt ethtypes.Receipt,
+	name string,
+) {
+	for _, log := range receipt.Logs {
+		event, err := contract.ParseDeposited(*log)
+		if err != nil {
+			continue
+		}
+
+		l.Info(" Gateway Deposit: %s", name)
+		l.Info("  Sender: %s", event.Sender.Hex())
+		l.Info("  Receiver: %s", event.Receiver.Hex())
+		l.Info("  Amount: %s", event.Amount.String())
+		l.Info("  Asset: %s", event.Asset.Hex())
+		l.Info("  Payload: %s", hex.EncodeToString(event.Payload))
 	}
 }
 

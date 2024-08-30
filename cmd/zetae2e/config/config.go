@@ -30,19 +30,7 @@ func RunnerFromConfig(
 		name,
 		ctxCancel,
 		account,
-		e2eClients.EvmClient,
-		e2eClients.ZevmClient,
-		e2eClients.AuthorityClient,
-		e2eClients.CctxClient,
-		e2eClients.FungibleClient,
-		e2eClients.AuthClient,
-		e2eClients.BankClient,
-		e2eClients.ObserverClient,
-		e2eClients.LightClient,
-		e2eClients.EvmAuth,
-		e2eClients.ZevmAuth,
-		e2eClients.BtcRPCClient,
-		e2eClients.SolanaClient,
+		e2eClients,
 
 		logger,
 		opts...,
@@ -87,6 +75,14 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	conf.Contracts.ZEVM.ZEVMSwapAppAddr = config.DoubleQuotedString(r.ZEVMSwapAppAddr.Hex())
 	conf.Contracts.ZEVM.ContextAppAddr = config.DoubleQuotedString(r.ContextAppAddr.Hex())
 	conf.Contracts.ZEVM.TestDappAddr = config.DoubleQuotedString(r.ZevmTestDAppAddr.Hex())
+
+	// v2
+	conf.Contracts.EVM.Gateway = config.DoubleQuotedString(r.GatewayEVMAddr.Hex())
+	conf.Contracts.EVM.ERC20CustodyNew = config.DoubleQuotedString(r.ERC20CustodyV2Addr.Hex())
+	conf.Contracts.EVM.TestDAppV2Addr = config.DoubleQuotedString(r.TestDAppV2EVMAddr.Hex())
+
+	conf.Contracts.ZEVM.Gateway = config.DoubleQuotedString(r.GatewayZEVMAddr.Hex())
+	conf.Contracts.ZEVM.TestDAppV2Addr = config.DoubleQuotedString(r.TestDAppV2ZEVMAddr.Hex())
 
 	return conf
 }

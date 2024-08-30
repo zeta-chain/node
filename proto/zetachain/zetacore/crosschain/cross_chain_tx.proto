@@ -89,6 +89,28 @@ message Status {
   string status_message = 2;
   int64 lastUpdate_timestamp = 3;
   bool isAbortRefunded = 4;
+  // when the CCTX was created. only populated on new transactions.
+  int64 created_timestamp = 5;
+}
+
+// ProtocolContractVersion represents the version of the protocol contract used
+// for cctx workflow
+enum ProtocolContractVersion {
+  option (gogoproto.goproto_enum_stringer) = true;
+  V1 = 0;
+  V2 = 1;
+}
+
+// RevertOptions represents the options for reverting a cctx
+message RevertOptions {
+  string revert_address = 1;
+  bool call_on_revert = 2;
+  string abort_address = 3;
+  bytes revert_message = 4;
+  string revert_gas_limit = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message CrossChainTx {
@@ -103,4 +125,6 @@ message CrossChainTx {
   Status cctx_status = 8;
   InboundParams inbound_params = 9;
   repeated OutboundParams outbound_params = 10;
+  ProtocolContractVersion protocol_contract_version = 11;
+  RevertOptions revert_options = 12 [ (gogoproto.nullable) = false ];
 }

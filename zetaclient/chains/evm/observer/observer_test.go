@@ -59,7 +59,7 @@ func getAppContext(
 	logger := zerolog.New(zerolog.NewTestWriter(t))
 
 	// create AppContext
-	appContext := zctx.New(cfg, logger)
+	appContext := zctx.New(cfg, nil, logger)
 	chainParams := map[int64]*observertypes.ChainParams{
 		evmChain.ChainId: evmChainParams,
 		chains.ZetaChainMainnet.ChainId: ptr.Ptr(

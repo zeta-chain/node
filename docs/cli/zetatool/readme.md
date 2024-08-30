@@ -11,7 +11,7 @@ configure an ethereum rpc endpoint, then you will have to find an evm rpc endpoi
 `EthRPCURL`
 
 #### Zeta URL
-You will need to find an enpoint for zetachain and set the field: `ZetaURL`
+You will need to find an endpoint for zetachain and set the field: `ZetaURL`
 
 #### Contract Addresses
 Depending on the network, connector and custody contract addresses must be set using these fields: `ConnectorAddress`,

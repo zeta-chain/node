@@ -5,7 +5,7 @@ go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.16.
 go mod download
 
 COSMOS_SDK="github.com/cosmos/cosmos-sdk"
-ETHERMINT="github.com/evmos/ethermint"
+ETHERMINT="github.com/zeta-chain/ethermint"
 PROTO_TEMPLATE="proto/buf.openapi.yaml"
 OUTPUT_DIR="./docs/openapi"
 MERGED_SWAGGER_FILE="openapi.swagger.yaml"

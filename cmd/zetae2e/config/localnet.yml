@@ -41,6 +41,10 @@ additional_accounts:
     bech32_address: "zeta1pvtxa708yvdmszn687nne6nl8qn704daf420xz"
     evm_address: "0x0B166ef9e7231Bb80A7A3FA73CEA7F3827E7D5BD"
     private_key: "0bcc2fa28b526f90e1d54648d612db901e860bf68248555593f91ea801c6b482"
+  user_precompile:
+    bech32_address: "zeta1k4f0l2e9qqjccxnstwj0uaarxvn44lj990she9"
+    evm_address: "0xb552FFAb2500258C1A705Ba4Fe77A333275AFE45"
+    private_key: "bd6b74387f11b31d21e87c2ae7a23ec269aee08a355dad6c508a6fceb79d1f48"
 policy_accounts:
   emergency_policy_account:
     bech32_address: "zeta16m2cnrdwtgweq4njc6t470vl325gw4kp6s7tap"
@@ -54,6 +58,12 @@ policy_accounts:
     bech32_address: "zeta142ds9x7raljv2qz9euys93e64gjmgdfnc47dwq"
     evm_address: "0xAa9b029BC3EFe4c50045Cf0902c73aAa25b43533"
     private_key: "0595CB0CD9BF5264A85A603EC8E43C30ADBB5FD2D9E2EF84C374EA4A65BB616C"
+observer_relayer_accounts:
+  relayer_accounts:
+    - solana_address: "2qBVcNBZCubcnSR3NyCnFjCfkCVUB3G7ECPoaW5rxVjx"
+      solana_private_key: "3EMjCcCJg53fMEGVj13UPQpo6py9AKKyLE2qroR4yL1SvAN2tUznBvDKRYjntw7m6Jof1R2CSqjTddL27rEb6sFQ"
+    - solana_address: "4kkCV8H38xirwQTkE5kL6FHNtYGHnMQQ7SkCjAxibHFK"
+      solana_private_key: "5SSv7jWzamtjWNKGiKf3gvCPHcq9mE5x6LhYgzJCKNSxoQ83gFpmMgmg2JS2zdKcBEdwy7y9bvWgX4LBiUpvnrPf"
 rpcs:
   zevm: "http://zetacore0:8545"
   evm: "http://eth:8545"
@@ -67,5 +77,4 @@ rpcs:
   solana: "http://solana:8899"
   zetacore_grpc: "zetacore0:9090"
   zetacore_rpc: "http://zetacore0:26657"
-
 # contracts will be populated on first run

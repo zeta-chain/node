@@ -12,7 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fatih/color"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/runner"
@@ -201,19 +201,7 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 		"admin-evm2",
 		r.CtxCancel,
 		r.Account,
-		r.EVMClient,
-		r.ZEVMClient,
-		r.AutorithyClient,
-		r.CctxClient,
-		r.FungibleClient,
-		r.AuthClient,
-		r.BankClient,
-		r.ObserverClient,
-		r.LightclientClient,
-		r.EVMAuth,
-		r.ZEVMAuth,
-		r.BtcRPCClient,
-		r.SolanaClient,
+		r.Clients,
 		runner.NewLogger(true, color.FgHiYellow, "admin-evm2"),
 		runner.WithZetaTxServer(r.ZetaTxServer),
 	)

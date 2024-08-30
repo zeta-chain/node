@@ -81,6 +81,24 @@ export declare enum TxFinalizationStatus {
 }
 
 /**
+ * ProtocolContractVersion represents the version of the protocol contract used
+ * for cctx workflow
+ *
+ * @generated from enum zetachain.zetacore.crosschain.ProtocolContractVersion
+ */
+export declare enum ProtocolContractVersion {
+  /**
+   * @generated from enum value: V1 = 0;
+   */
+  V1 = 0,
+
+  /**
+   * @generated from enum value: V2 = 1;
+   */
+  V2 = 1,
+}
+
+/**
  * @generated from message zetachain.zetacore.crosschain.InboundParams
  */
 export declare class InboundParams extends Message<InboundParams> {
@@ -315,6 +333,13 @@ export declare class Status extends Message<Status> {
    */
   isAbortRefunded: boolean;
 
+  /**
+   * when the CCTX was created. only populated on new transactions.
+   *
+   * @generated from field: int64 created_timestamp = 5;
+   */
+  createdTimestamp: bigint;
+
   constructor(data?: PartialMessage<Status>);
 
   static readonly runtime: typeof proto3;
@@ -328,6 +353,52 @@ export declare class Status extends Message<Status> {
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Status;
 
   static equals(a: Status | PlainMessage<Status> | undefined, b: Status | PlainMessage<Status> | undefined): boolean;
+}
+
+/**
+ * RevertOptions represents the options for reverting a cctx
+ *
+ * @generated from message zetachain.zetacore.crosschain.RevertOptions
+ */
+export declare class RevertOptions extends Message<RevertOptions> {
+  /**
+   * @generated from field: string revert_address = 1;
+   */
+  revertAddress: string;
+
+  /**
+   * @generated from field: bool call_on_revert = 2;
+   */
+  callOnRevert: boolean;
+
+  /**
+   * @generated from field: string abort_address = 3;
+   */
+  abortAddress: string;
+
+  /**
+   * @generated from field: bytes revert_message = 4;
+   */
+  revertMessage: Uint8Array;
+
+  /**
+   * @generated from field: string revert_gas_limit = 5;
+   */
+  revertGasLimit: string;
+
+  constructor(data?: PartialMessage<RevertOptions>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.RevertOptions";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RevertOptions;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): RevertOptions;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): RevertOptions;
+
+  static equals(a: RevertOptions | PlainMessage<RevertOptions> | undefined, b: RevertOptions | PlainMessage<RevertOptions> | undefined): boolean;
 }
 
 /**
@@ -370,6 +441,16 @@ export declare class CrossChainTx extends Message<CrossChainTx> {
    * @generated from field: repeated zetachain.zetacore.crosschain.OutboundParams outbound_params = 10;
    */
   outboundParams: OutboundParams[];
+
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.ProtocolContractVersion protocol_contract_version = 11;
+   */
+  protocolContractVersion: ProtocolContractVersion;
+
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.RevertOptions revert_options = 12;
+   */
+  revertOptions?: RevertOptions;
 
   constructor(data?: PartialMessage<CrossChainTx>);
 
