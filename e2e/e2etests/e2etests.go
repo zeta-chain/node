@@ -143,6 +143,11 @@ const (
 	TestDeploy                         = "deploy"
 	TestOperationAddLiquidityETHName   = "add_liquidity_eth"
 	TestOperationAddLiquidityERC20Name = "add_liquidity_erc20"
+
+	/*
+	 Stateful precompiled contracts tests
+	*/
+	TestZetaPrecompilesPrototypeName = "precompile_contracts_prototype"
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -804,5 +809,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amountERC20", DefaultValue: "50000000000000000000"},
 		},
 		TestOperationAddLiquidityERC20,
+	),
+	/*
+	 Stateful precompiled contracts tests
+	*/
+	runner.NewE2ETest(
+		TestZetaPrecompilesPrototypeName,
+		"test stateful precompiled contracts prototype",
+		[]runner.ArgDefinition{},
+		TestPrecompilesRegular,
 	),
 }

@@ -10,7 +10,7 @@ import (
 
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 

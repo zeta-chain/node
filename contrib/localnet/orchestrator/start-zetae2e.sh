@@ -107,6 +107,45 @@ fi
 
 ### Run zetae2e command depending on the option passed
 
+# Mode migrate is used to run the e2e tests before and after the TSS migration
+# It runs the e2e tests with the migrate flag which triggers a TSS migration at the end of the tests. Once the migrationis done the first e2e test is complete
+# The second e2e test is run after the migration to ensure the network is still working as expected with the new tss address
+if [ "$LOCALNET_MODE" == "tss-migrate" ]; then
+  if [[ ! -f deployed.yml ]]; then
+    zetae2e local $E2E_ARGS --setup-only --config config.yml --config-out deployed.yml --skip-header-proof
+    if [ $? -ne 0 ]; then
+      echo "e2e setup failed"
+      exit 1
+    fi
+  else
+    echo "skipping e2e setup because it has already been completed"
+  fi
+
+  echo "running e2e test before migrating TSS"
+  zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --skip-header-proof
+  if [ $? -ne 0 ]; then
+    echo "first e2e failed"
+    exit 1
+  fi
+
+  echo "waiting 10 seconds for node to restart"
+    sleep 10
+
+  zetae2e local --skip-setup --config deployed.yml --skip-bitcoin-setup --light --skip-header-proof
+  ZETAE2E_EXIT_CODE=$?
+  if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
+    echo "E2E passed after migration"
+    exit 0
+  else
+    echo "E2E failed after migration"
+    exit 1
+  fi
+fi
+
+
+# Mode upgrade is used to run the e2e tests before and after the upgrade
+# It runs the e2e tests , waits for the upgrade height to be reached, and then runs the e2e tests again once the ungrade is done.
+# The second e2e test is run after the upgrade to ensure the network is still working as expected with the new version
 if [ "$LOCALNET_MODE" == "upgrade" ]; then
 
   # Run the e2e tests, then restart zetaclientd at upgrade height and run the e2e tests again
@@ -131,7 +170,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
     echo "running E2E command to setup the networks and populate the state..."
 
     # Use light flag to ensure tests can complete before the upgrade height
-    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --light ${COMMON_ARGS}
+    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --light --skip-precompiles ${COMMON_ARGS}
     if [ $? -ne 0 ]; then
       echo "first e2e failed"
       exit 1
@@ -170,9 +209,9 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   # When the upgrade height is greater than 100 for upgrade test, the Bitcoin tests have been run once, therefore the Bitcoin wallet is already set up
   # Use light flag to skip advanced tests
   if [ "$UPGRADE_HEIGHT" -lt 100 ]; then
-    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --light ${COMMON_ARGS}
+    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --light --skip-precompiles ${COMMON_ARGS}
   else
-    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --skip-bitcoin-setup --light ${COMMON_ARGS}
+    zetae2e local $E2E_ARGS --skip-setup --config deployed.yml --skip-bitcoin-setup --light --skip-precompiles ${COMMON_ARGS}
   fi
 
   ZETAE2E_EXIT_CODE=$?
@@ -185,8 +224,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   fi
 
 else
-
-  # Run the e2e tests normally
+  # If no mode is passed, run the e2e tests normally
   echo "running e2e setup..."
 
   if [[ ! -f deployed.yml ]]; then

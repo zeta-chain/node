@@ -8,25 +8,19 @@ import (
 	"sync"
 	"time"
 
-	"cosmossdk.io/simapp/params"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	cosmosclient "github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	etherminttypes "github.com/zeta-chain/ethermint/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/chains"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
+	zetacore_rpc "github.com/zeta-chain/zetacore/pkg/rpc"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -38,17 +32,18 @@ var _ interfaces.ZetacoreClient = &Client{}
 
 // Client is the client to send tx to zetacore
 type Client struct {
+	zetacore_rpc.Clients
+
 	logger zerolog.Logger
 	config config.ClientConfiguration
 
-	client              clients
 	cosmosClientContext cosmosclient.Context
 
 	blockHeight   int64
 	accountNumber map[authz.KeyType]uint64
 	seqNumber     map[authz.KeyType]uint64
 
-	encodingCfg          params.EncodingConfig
+	encodingCfg          etherminttypes.EncodingConfig
 	keys                 keyinterfaces.ObserverKeys
 	chainID              string
 	chain                chains.Chain
@@ -56,17 +51,6 @@ type Client struct {
 	onBeforeStopCallback []func()
 
 	mu sync.RWMutex
-}
-
-type clients struct {
-	observer   observertypes.QueryClient
-	light      lightclienttypes.QueryClient
-	crosschain crosschaintypes.QueryClient
-	bank       banktypes.QueryClient
-	upgrade    upgradetypes.QueryClient
-	fees       feemarkettypes.QueryClient
-	authority  authoritytypes.QueryClient
-	tendermint tmservice.ServiceClient
 }
 
 var unsecureGRPC = grpc.WithTransportCredentials(insecure.NewCredentials())
@@ -129,7 +113,7 @@ func NewClient(
 
 	encodingCfg := app.MakeEncodingConfig()
 
-	grpcConn, err := grpc.Dial(cosmosGRPC(chainIP), unsecureGRPC)
+	zetacoreClients, err := zetacore_rpc.NewGRPCClients(cosmosGRPC(chainIP), unsecureGRPC)
 	if err != nil {
 		return nil, errors.Wrap(err, "grpc dial fail")
 	}
@@ -147,20 +131,11 @@ func NewClient(
 	}
 
 	return &Client{
-		logger: log,
-		config: cfg,
+		Clients: zetacoreClients,
+		logger:  log,
+		config:  cfg,
 
 		cosmosClientContext: cosmosContext,
-		client: clients{
-			observer:   observertypes.NewQueryClient(grpcConn),
-			light:      lightclienttypes.NewQueryClient(grpcConn),
-			crosschain: crosschaintypes.NewQueryClient(grpcConn),
-			bank:       banktypes.NewQueryClient(grpcConn),
-			upgrade:    upgradetypes.NewQueryClient(grpcConn),
-			fees:       feemarkettypes.NewQueryClient(grpcConn),
-			authority:  authoritytypes.NewQueryClient(grpcConn),
-			tendermint: tmservice.NewServiceClient(grpcConn),
-		},
 
 		accountNumber: accountsMap,
 		seqNumber:     seqMap,
@@ -178,7 +153,7 @@ func buildCosmosClientContext(
 	chainID string,
 	keys keyinterfaces.ObserverKeys,
 	config config.ClientConfiguration,
-	encodingConfig params.EncodingConfig,
+	encodingConfig etherminttypes.EncodingConfig,
 	opts constructOpts,
 ) (cosmosclient.Context, error) {
 	if keys == nil {

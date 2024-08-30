@@ -165,24 +165,24 @@ func (_m *SolanaRPCClient) GetHealth(ctx context.Context) (string, error) {
 	return r0, r1
 }
 
-// GetRecentBlockhash provides a mock function with given fields: ctx, commitment
-func (_m *SolanaRPCClient) GetRecentBlockhash(ctx context.Context, commitment rpc.CommitmentType) (*rpc.GetRecentBlockhashResult, error) {
+// GetLatestBlockhash provides a mock function with given fields: ctx, commitment
+func (_m *SolanaRPCClient) GetLatestBlockhash(ctx context.Context, commitment rpc.CommitmentType) (*rpc.GetLatestBlockhashResult, error) {
 	ret := _m.Called(ctx, commitment)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetRecentBlockhash")
+		panic("no return value specified for GetLatestBlockhash")
 	}
 
-	var r0 *rpc.GetRecentBlockhashResult
+	var r0 *rpc.GetLatestBlockhashResult
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, rpc.CommitmentType) (*rpc.GetRecentBlockhashResult, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, rpc.CommitmentType) (*rpc.GetLatestBlockhashResult, error)); ok {
 		return rf(ctx, commitment)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, rpc.CommitmentType) *rpc.GetRecentBlockhashResult); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, rpc.CommitmentType) *rpc.GetLatestBlockhashResult); ok {
 		r0 = rf(ctx, commitment)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*rpc.GetRecentBlockhashResult)
+			r0 = ret.Get(0).(*rpc.GetLatestBlockhashResult)
 		}
 	}
 

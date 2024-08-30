@@ -68,7 +68,7 @@ func (ob *Observer) WatchInbound(ctx context.Context) error {
 	}
 }
 
-// ObserveInbound observes the Bitcoin chain for inbounds and post votes to zetacore.
+// ObserveInbound observes the Solana chain for inbounds and post votes to zetacore.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
 	pageLimit := solanarpc.DefaultPageLimit

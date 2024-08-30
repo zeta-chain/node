@@ -23,7 +23,6 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/db"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -566,7 +565,7 @@ func (ob *Observer) specialHandleFeeRate() (uint64, error) {
 		// hardcode gas price for regnet
 		return 1, nil
 	case chains.NetworkType_testnet:
-		feeRateEstimated, err := rpc.GetRecentFeeRate(ob.btcClient, ob.netParams)
+		feeRateEstimated, err := bitcoin.GetRecentFeeRate(ob.btcClient, ob.netParams)
 		if err != nil {
 			return 0, errors.Wrapf(err, "error GetRecentFeeRate")
 		}

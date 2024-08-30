@@ -5,24 +5,16 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
 const (
-	// feeRateCountBackBlocks is the default number of blocks to look back for fee rate estimation
-	feeRateCountBackBlocks = 2
-
-	// defaultTestnetFeeRate is the default fee rate for testnet, 10 sat/byte
-	defaultTestnetFeeRate = 10
-
 	// RPCAlertLatency is the default threshold for RPC latency to be considered unhealthy and trigger an alert.
 	// Bitcoin block time is 10 minutes, 1200s (20 minutes) is a reasonable threshold for Bitcoin
 	RPCAlertLatency = time.Duration(1200) * time.Second
@@ -67,6 +59,20 @@ func GetTxResultByHash(
 		return nil, nil, errors.Wrapf(err, "GetTxResultByHash: error GetTransaction %s", hash.String())
 	}
 	return hash, txResult, nil
+}
+
+// GetTXRawResultByHash gets the raw transaction by hash
+func GetRawTxByHash(rpcClient interfaces.BTCRPCClient, txID string) (*btcutil.Tx, error) {
+	hash, err := chainhash.NewHashFromStr(txID)
+	if err != nil {
+		return nil, errors.Wrapf(err, "GetRawTxByHash: error NewHashFromStr: %s", txID)
+	}
+
+	tx, err := rpcClient.GetRawTransaction(hash)
+	if err != nil {
+		return nil, errors.Wrapf(err, "GetRawTxByHash: error GetRawTransaction %s", txID)
+	}
+	return tx, nil
 }
 
 // GetBlockHeightByHash gets the block height by block hash
@@ -124,44 +130,55 @@ func GetRawTxResult(
 	return btcjson.TxRawResult{}, fmt.Errorf("GetRawTxResult: tx %s not included yet", hash)
 }
 
-// GetRecentFeeRate gets the highest fee rate from recent blocks
-// Note: this method is only used for testnet
-func GetRecentFeeRate(rpcClient interfaces.BTCRPCClient, netParams *chaincfg.Params) (uint64, error) {
-	blockNumber, err := rpcClient.GetBlockCount()
+// GetTransactionFeeAndRate gets the transaction fee and rate for a given tx result
+func GetTransactionFeeAndRate(rpcClient interfaces.BTCRPCClient, rawResult *btcjson.TxRawResult) (int64, int64, error) {
+	var (
+		totalInputValue  int64
+		totalOutputValue int64
+	)
+
+	// make sure the tx Vsize is not zero (should not happen)
+	if rawResult.Vsize <= 0 {
+		return 0, 0, fmt.Errorf("tx %s has non-positive Vsize: %d", rawResult.Txid, rawResult.Vsize)
+	}
+
+	// sum up total input value
+	for _, vin := range rawResult.Vin {
+		prevTx, err := GetRawTxByHash(rpcClient, vin.Txid)
+		if err != nil {
+			return 0, 0, errors.Wrapf(err, "failed to get previous tx: %s", vin.Txid)
+		}
+		totalInputValue += prevTx.MsgTx().TxOut[vin.Vout].Value
+	}
+
+	// query the raw tx
+	tx, err := GetRawTxByHash(rpcClient, rawResult.Txid)
 	if err != nil {
-		return 0, err
+		return 0, 0, errors.Wrapf(err, "failed to get tx: %s", rawResult.Txid)
 	}
 
-	// get the highest fee rate among recent 'countBack' blocks to avoid underestimation
-	highestRate := int64(0)
-	for i := int64(0); i < feeRateCountBackBlocks; i++ {
-		// get the block
-		hash, err := rpcClient.GetBlockHash(blockNumber - i)
-		if err != nil {
-			return 0, err
-		}
-		block, err := rpcClient.GetBlockVerboseTx(hash)
-		if err != nil {
-			return 0, err
-		}
-
-		// computes the average fee rate of the block and take the higher rate
-		avgFeeRate, err := bitcoin.CalcBlockAvgFeeRate(block, netParams)
-		if err != nil {
-			return 0, err
-		}
-		if avgFeeRate > highestRate {
-			highestRate = avgFeeRate
-		}
+	// sum up total output value
+	for _, vout := range tx.MsgTx().TxOut {
+		totalOutputValue += vout.Value
 	}
 
-	// use 10 sat/byte as default estimation if recent fee rate drops to 0
-	if highestRate == 0 {
-		highestRate = defaultTestnetFeeRate
+	// calculate the transaction fee in satoshis
+	fee := totalInputValue - totalOutputValue
+	if fee < 0 { // never happens
+		return 0, 0, fmt.Errorf("got negative fee: %d", fee)
 	}
 
+	// Note: the calculation uses 'Vsize' returned by RPC to simplify dev experience:
+	// 	- 1. the devs could use the same value returned by their RPC endpoints to estimate deposit fee.
+	// 	- 2. the devs don't have to bother 'Vsize' calculation, even though there is more accurate formula.
+	//		 Moreoever, the accurate 'Vsize' is usually an adjusted size (float value) by Bitcoin Core.
+	//	- 3. the 'Vsize' calculation could depend on program language and the library used.
+	//
+	// calculate the fee rate in satoshis/vByte
 	// #nosec G115 always in range
-	return uint64(highestRate), nil
+	feeRate := fee / int64(rawResult.Vsize)
+
+	return fee, feeRate, nil
 }
 
 // CheckRPCStatus checks the RPC status of the bitcoin chain
