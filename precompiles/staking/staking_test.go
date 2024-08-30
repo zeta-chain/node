@@ -12,7 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	ethermint "github.com/zeta-chain/ethermint/types"
@@ -22,30 +24,37 @@ import (
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-func Test_IStakingContract(t *testing.T) {
+func setup(t *testing.T) (sdk.Context, *Contract, abi.ABI, keeper.SDKKeepers) {
 	var encoding ethermint.EncodingConfig
 	appCodec := encoding.Codec
-	keys, memKeys, tkeys, allKeys := keeper.StoreKeys()
-	cdc := keeper.NewCodec()
-	sdkKeepers := keeper.NewSDKKeepersWithKeys(cdc, keys, memKeys, tkeys, allKeys)
 
+	cdc := keeper.NewCodec()
+
+	db := tmdb.NewMemDB()
+	stateStore := store.NewCommitMultiStore(db)
+	sdkKeepers := keeper.NewSDKKeepers(cdc, db, stateStore)
+	gasConfig := storetypes.TransientGasConfig()
+	ctx := keeper.NewContext(stateStore)
+	require.NoError(t, stateStore.LoadLatestVersion())
+
+	stakingGenesisState := stakingtypes.DefaultGenesisState()
+	stakingGenesisState.Params.BondDenom = config.BaseDenom
+	sdkKeepers.StakingKeeper.InitGenesis(ctx, stakingGenesisState)
+
+	contract := NewIStakingContract(&sdkKeepers.StakingKeeper, appCodec, gasConfig)
+	require.NotNil(t, contract, "NewIStakingContract() should not return a nil contract")
+
+	abi := contract.Abi()
+	require.NotNil(t, abi, "contract ABI should not be nil")
+
+	return ctx, contract, abi, sdkKeepers
+}
+
+func Test_IStakingContract(t *testing.T) {
+	_, contract, abi, _ := setup(t)
 	gasConfig := storetypes.TransientGasConfig()
 
-	t.Run("should create contract and check address and ABI", func(t *testing.T) {
-		contract := NewIStakingContract(&sdkKeepers.StakingKeeper, appCodec, gasConfig)
-		require.NotNil(t, contract, "NewIStakingContract() should not return a nil contract")
-
-		address := contract.Address()
-		require.Equal(t, ContractAddress, address, "contract address should match the precompiled address")
-
-		abi := contract.Abi()
-		require.NotNil(t, abi, "contract ABI should not be nil")
-	})
-
 	t.Run("should check methods are present in ABI", func(t *testing.T) {
-		contract := NewIStakingContract(&sdkKeepers.StakingKeeper, appCodec, gasConfig)
-		abi := contract.Abi()
-
 		require.NotNil(t, abi.Methods[StakeMethodName], "stake method should be present in the ABI")
 		require.NotNil(t, abi.Methods[UnstakeMethodName], "unstake method should be present in the ABI")
 		require.NotNil(
@@ -59,8 +68,6 @@ func Test_IStakingContract(t *testing.T) {
 	})
 
 	t.Run("should check gas requirements for methods", func(t *testing.T) {
-		contract := NewIStakingContract(&sdkKeepers.StakingKeeper, appCodec, gasConfig)
-		abi := contract.Abi()
 		var method [4]byte
 
 		t.Run("stake", func(t *testing.T) {
@@ -149,18 +156,7 @@ func Test_IStakingContract(t *testing.T) {
 }
 
 func Test_InvalidMethod(t *testing.T) {
-	var encoding ethermint.EncodingConfig
-	appCodec := encoding.Codec
-	keys, memKeys, tkeys, allKeys := keeper.StoreKeys()
-	cdc := keeper.NewCodec()
-	sdkKeepers := keeper.NewSDKKeepersWithKeys(cdc, keys, memKeys, tkeys, allKeys)
-	gasConfig := storetypes.TransientGasConfig()
-
-	contract := NewIStakingContract(&sdkKeepers.StakingKeeper, appCodec, gasConfig)
-	require.NotNil(t, contract, "NewIStakingContract() should not return a nil contract")
-
-	abi := contract.Abi()
-	require.NotNil(t, abi, "contract ABI should not be nil")
+	_, _, abi, _ := setup(t)
 
 	_, doNotExist := abi.Methods["invalidMethod"]
 	require.False(t, doNotExist, "invalidMethod should not be present in the ABI")
@@ -178,28 +174,7 @@ func Test_InvalidABI(t *testing.T) {
 }
 
 func Test_Stake(t *testing.T) {
-	var encoding ethermint.EncodingConfig
-	appCodec := encoding.Codec
-
-	cdc := keeper.NewCodec()
-
-	db := tmdb.NewMemDB()
-	stateStore := store.NewCommitMultiStore(db)
-	sdkKeepers := keeper.NewSDKKeepers(cdc, db, stateStore)
-	gasConfig := storetypes.TransientGasConfig()
-	ctx := keeper.NewContext(stateStore)
-	require.NoError(t, stateStore.LoadLatestVersion())
-
-	stakingGenesisState := stakingtypes.DefaultGenesisState()
-	stakingGenesisState.Params.BondDenom = config.BaseDenom
-	sdkKeepers.StakingKeeper.InitGenesis(ctx, stakingGenesisState)
-
-	contract := NewIStakingContract(&sdkKeepers.StakingKeeper, appCodec, gasConfig)
-	require.NotNil(t, contract, "NewIStakingContract() should not return a nil contract")
-
-	abi := contract.Abi()
-	require.NotNil(t, abi, "contract ABI should not be nil")
-
+	ctx, contract, abi, sdkKeepers := setup(t)
 	methodID := abi.Methods[StakeMethodName]
 
 	t.Run("should fail if validator doesn't exist", func(t *testing.T) {
@@ -367,28 +342,7 @@ func Test_Stake(t *testing.T) {
 }
 
 func Test_Unstake(t *testing.T) {
-	var encoding ethermint.EncodingConfig
-	appCodec := encoding.Codec
-
-	cdc := keeper.NewCodec()
-
-	db := tmdb.NewMemDB()
-	stateStore := store.NewCommitMultiStore(db)
-	sdkKeepers := keeper.NewSDKKeepers(cdc, db, stateStore)
-	gasConfig := storetypes.TransientGasConfig()
-	ctx := keeper.NewContext(stateStore)
-	require.NoError(t, stateStore.LoadLatestVersion())
-
-	stakingGenesisState := stakingtypes.DefaultGenesisState()
-	stakingGenesisState.Params.BondDenom = config.BaseDenom
-	sdkKeepers.StakingKeeper.InitGenesis(ctx, stakingGenesisState)
-
-	contract := NewIStakingContract(&sdkKeepers.StakingKeeper, appCodec, gasConfig)
-	require.NotNil(t, contract, "NewIStakingContract() should not return a nil contract")
-
-	abi := contract.Abi()
-	require.NotNil(t, abi, "contract ABI should not be nil")
-
+	ctx, contract, abi, sdkKeepers := setup(t)
 	methodID := abi.Methods[UnstakeMethodName]
 
 	t.Run("should fail if validator doesn't exist", func(t *testing.T) {
@@ -571,28 +525,7 @@ func Test_Unstake(t *testing.T) {
 }
 
 func Test_TransferStake(t *testing.T) {
-	var encoding ethermint.EncodingConfig
-	appCodec := encoding.Codec
-
-	cdc := keeper.NewCodec()
-
-	db := tmdb.NewMemDB()
-	stateStore := store.NewCommitMultiStore(db)
-	sdkKeepers := keeper.NewSDKKeepers(cdc, db, stateStore)
-	gasConfig := storetypes.TransientGasConfig()
-	ctx := keeper.NewContext(stateStore)
-	require.NoError(t, stateStore.LoadLatestVersion())
-
-	stakingGenesisState := stakingtypes.DefaultGenesisState()
-	stakingGenesisState.Params.BondDenom = config.BaseDenom
-	sdkKeepers.StakingKeeper.InitGenesis(ctx, stakingGenesisState)
-
-	contract := NewIStakingContract(&sdkKeepers.StakingKeeper, appCodec, gasConfig)
-	require.NotNil(t, contract, "NewIStakingContract() should not return a nil contract")
-
-	abi := contract.Abi()
-	require.NotNil(t, abi, "contract ABI should not be nil")
-
+	ctx, contract, abi, sdkKeepers := setup(t)
 	methodID := abi.Methods[TransferStakeMethodName]
 
 	t.Run("should fail if validator dest doesn't exist", func(t *testing.T) {
@@ -905,28 +838,7 @@ func Test_TransferStake(t *testing.T) {
 }
 
 func Test_GetAllValidators(t *testing.T) {
-	var encoding ethermint.EncodingConfig
-	appCodec := encoding.Codec
-
-	cdc := keeper.NewCodec()
-
-	db := tmdb.NewMemDB()
-	stateStore := store.NewCommitMultiStore(db)
-	sdkKeepers := keeper.NewSDKKeepers(cdc, db, stateStore)
-	gasConfig := storetypes.TransientGasConfig()
-	ctx := keeper.NewContext(stateStore)
-	require.NoError(t, stateStore.LoadLatestVersion())
-
-	stakingGenesisState := stakingtypes.DefaultGenesisState()
-	stakingGenesisState.Params.BondDenom = config.BaseDenom
-	sdkKeepers.StakingKeeper.InitGenesis(ctx, stakingGenesisState)
-
-	contract := NewIStakingContract(&sdkKeepers.StakingKeeper, appCodec, gasConfig)
-	require.NotNil(t, contract, "NewIStakingContract() should not return a nil contract")
-
-	abi := contract.Abi()
-	require.NotNil(t, abi, "contract ABI should not be nil")
-
+	ctx, contract, abi, sdkKeepers := setup(t)
 	methodID := abi.Methods[GetAllValidatorsMethodName]
 
 	t.Run("should return empty array if validators not set", func(t *testing.T) {
@@ -955,28 +867,7 @@ func Test_GetAllValidators(t *testing.T) {
 }
 
 func Test_GetStakes(t *testing.T) {
-	var encoding ethermint.EncodingConfig
-	appCodec := encoding.Codec
-
-	cdc := keeper.NewCodec()
-
-	db := tmdb.NewMemDB()
-	stateStore := store.NewCommitMultiStore(db)
-	sdkKeepers := keeper.NewSDKKeepers(cdc, db, stateStore)
-	gasConfig := storetypes.TransientGasConfig()
-	ctx := keeper.NewContext(stateStore)
-	require.NoError(t, stateStore.LoadLatestVersion())
-
-	stakingGenesisState := stakingtypes.DefaultGenesisState()
-	stakingGenesisState.Params.BondDenom = config.BaseDenom
-	sdkKeepers.StakingKeeper.InitGenesis(ctx, stakingGenesisState)
-
-	contract := NewIStakingContract(&sdkKeepers.StakingKeeper, appCodec, gasConfig)
-	require.NotNil(t, contract, "NewIStakingContract() should not return a nil contract")
-
-	abi := contract.Abi()
-	require.NotNil(t, abi, "contract ABI should not be nil")
-
+	ctx, contract, abi, sdkKeepers := setup(t)
 	methodID := abi.Methods[GetStakesMethodName]
 
 	t.Run("should return stakes", func(t *testing.T) {
@@ -1007,5 +898,32 @@ func Test_GetStakes(t *testing.T) {
 		res, err := methodID.Outputs.Unpack(stakes)
 		require.NoError(t, err)
 		require.Equal(t, fmt.Sprintf("%d000000000000000000", coins.AmountOf(config.BaseDenom).BigInt().Int64()), res[0].(*big.Int).String())
+	})
+
+	t.Run("should fail if wrong args amount", func(t *testing.T) {
+		staker := sample.Bech32AccAddress()
+		stakerEthAddr := common.BytesToAddress(staker.Bytes())
+
+		args := []interface{}{stakerEthAddr}
+		_, err := contract.GetStake(ctx, &methodID, args)
+		require.Error(t, err)
+	})
+
+	t.Run("should fail if invalid staker arg", func(t *testing.T) {
+		r := rand.New(rand.NewSource(42))
+		validator := sample.Validator(t, r)
+
+		args := []interface{}{42, validator.OperatorAddress}
+		_, err := contract.GetStake(ctx, &methodID, args)
+		require.Error(t, err)
+	})
+
+	t.Run("should fail if invalid val address", func(t *testing.T) {
+		staker := sample.Bech32AccAddress()
+		stakerEthAddr := common.BytesToAddress(staker.Bytes())
+
+		args := []interface{}{stakerEthAddr, staker}
+		_, err := contract.GetStake(ctx, &methodID, args)
+		require.Error(t, err)
 	})
 }

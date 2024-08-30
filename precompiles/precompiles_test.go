@@ -29,11 +29,12 @@ func Test_StatefulContracts(t *testing.T) {
 	require.NotNil(t, contracts, "StatefulContracts() should not return a nil slice")
 	require.Len(t, contracts, expectedContracts, "StatefulContracts() should return all the enabled contracts")
 
-	// Extract the contract function from the first contract.
-	customContractFn := contracts[0]
-	contract := customContractFn(ctx, ethparams.Rules{})
+	for _, customContractFn := range contracts {
+		// Extract the contract function.
+		contract := customContractFn(ctx, ethparams.Rules{})
 
-	// Check the contract function returns a valid address.
-	contractAddr := contract.Address()
-	require.NotNil(t, contractAddr, "The called contract should have a valid address")
+		// Check the contract function returns a valid address.
+		contractAddr := contract.Address()
+		require.NotNil(t, contractAddr, "The called contract should have a valid address")
+	}
 }

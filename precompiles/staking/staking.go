@@ -103,7 +103,6 @@ func (c *Contract) Abi() abi.ABI {
 // RequiredGas is required to implement the PrecompiledContract interface.
 // The gas has to be calculated deterministically based on the input.
 func (c *Contract) RequiredGas(input []byte) uint64 {
-
 	// get methodID (first 4 bytes)
 	var methodID [4]byte
 	copy(methodID[:], input[:4])
