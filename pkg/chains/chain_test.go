@@ -222,7 +222,7 @@ func TestChain_IsEVMChain(t *testing.T) {
 		{"Goerli Testnet", chains.Goerli, true},
 		{"Sepolia Testnet", chains.Sepolia, true},
 		{"Non-EVM", chains.BitcoinMainnet, false},
-		{"Zeta Mainnet", chains.ZetaChainMainnet, false},
+		{"Zeta Mainnet", chains.ZetaChainMainnet, true},
 	}
 
 	for _, tt := range tests {
@@ -331,7 +331,7 @@ func TestIsEVMChain(t *testing.T) {
 		{"Goerli Testnet", chains.Goerli.ChainId, true},
 		{"Sepolia Testnet", chains.Sepolia.ChainId, true},
 		{"Non-EVM", chains.BitcoinMainnet.ChainId, false},
-		{"Zeta Mainnet", chains.ZetaChainMainnet.ChainId, false},
+		{"Zeta Mainnet", chains.ZetaChainMainnet.ChainId, true},
 	}
 
 	for _, tt := range tests {
