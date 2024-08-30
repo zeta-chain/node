@@ -183,7 +183,7 @@ func Test_Stake(t *testing.T) {
 
 		stakerAddr := common.BytesToAddress(staker.Bytes())
 
-		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
 		_, err = contract.Stake(ctx, stakerAddr, &methodID, args)
 		require.Error(t, err)
@@ -204,7 +204,7 @@ func Test_Stake(t *testing.T) {
 
 		stakerAddr := common.BytesToAddress(staker.Bytes())
 
-		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
 		_, err = contract.Stake(ctx, stakerAddr, &methodID, args)
 		require.NoError(t, err)
@@ -226,7 +226,7 @@ func Test_Stake(t *testing.T) {
 
 		originEthAddr := common.BytesToAddress(sample.Bech32AccAddress().Bytes())
 
-		args := []interface{}{originEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+		args := []interface{}{originEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
 		_, err = contract.Stake(ctx, stakerAddr, &methodID, args)
 		require.ErrorContains(t, err, "origin is not staker address")
@@ -284,7 +284,7 @@ func Test_Stake(t *testing.T) {
 
 		stakerAddr := common.BytesToAddress(staker.Bytes())
 
-		args := []interface{}{staker, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+		args := []interface{}{staker, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
 		_, err = contract.Stake(ctx, stakerAddr, &methodID, args)
 		require.Error(t, err)
@@ -305,7 +305,7 @@ func Test_Stake(t *testing.T) {
 
 		stakerAddr := common.BytesToAddress(staker.Bytes())
 
-		args := []interface{}{stakerEthAddr, 42, coins.AmountOf(config.BaseDenom).Int64()}
+		args := []interface{}{stakerEthAddr, 42, coins.AmountOf(config.BaseDenom).BigInt()}
 
 		_, err = contract.Stake(ctx, stakerAddr, &methodID, args)
 		require.Error(t, err)
@@ -372,7 +372,7 @@ func Test_Unstake(t *testing.T) {
 
 		stakerAddr := common.BytesToAddress(staker.Bytes())
 
-		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
 		_, err = contract.Unstake(ctx, stakerAddr, &methodID, args)
 		require.Error(t, err)
@@ -393,7 +393,7 @@ func Test_Unstake(t *testing.T) {
 
 		stakerAddr := common.BytesToAddress(staker.Bytes())
 
-		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
 		// stake first
 		stakeMethodID := abi.Methods[StakeMethodName]
@@ -419,7 +419,7 @@ func Test_Unstake(t *testing.T) {
 
 		stakerAddr := common.BytesToAddress(staker.Bytes())
 
-		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
 		// stake first
 		stakeMethodID := abi.Methods[StakeMethodName]
@@ -447,7 +447,7 @@ func Test_Unstake(t *testing.T) {
 
 		stakerAddr := common.BytesToAddress(staker.Bytes())
 
-		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
 		_, err = contract.Unstake(ctx, stakerAddr, &methodID, args)
 		require.Error(t, err)
@@ -488,7 +488,7 @@ func Test_Unstake(t *testing.T) {
 
 		stakerAddr := common.BytesToAddress(staker.Bytes())
 
-		args := []interface{}{staker, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).Int64()}
+		args := []interface{}{staker, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
 		_, err = contract.Unstake(ctx, stakerAddr, &methodID, args)
 		require.Error(t, err)
@@ -509,7 +509,7 @@ func Test_Unstake(t *testing.T) {
 
 		stakerAddr := common.BytesToAddress(staker.Bytes())
 
-		args := []interface{}{stakerEthAddr, 42, coins.AmountOf(config.BaseDenom).Int64()}
+		args := []interface{}{stakerEthAddr, 42, coins.AmountOf(config.BaseDenom).BigInt()}
 
 		_, err = contract.Unstake(ctx, stakerAddr, &methodID, args)
 		require.Error(t, err)
@@ -581,7 +581,7 @@ func Test_TransferStake(t *testing.T) {
 		argsStake := []interface{}{
 			stakerEthAddr,
 			validatorSrc.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).Int64(),
+			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
 		// stake to validator src
@@ -593,7 +593,7 @@ func Test_TransferStake(t *testing.T) {
 			stakerEthAddr,
 			validatorSrc.OperatorAddress,
 			validatorDest.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).Int64(),
+			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
 		_, err = contract.TransferStake(ctx, stakerAddr, &methodID, argsTransferStake)
@@ -620,7 +620,7 @@ func Test_TransferStake(t *testing.T) {
 		argsStake := []interface{}{
 			stakerEthAddr,
 			validatorSrc.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).Int64(),
+			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
 		// stake to validator src
@@ -632,7 +632,7 @@ func Test_TransferStake(t *testing.T) {
 			stakerEthAddr,
 			validatorSrc.OperatorAddress,
 			validatorDest.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).Int64(),
+			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
 		// transfer stake to validator dest
@@ -660,7 +660,7 @@ func Test_TransferStake(t *testing.T) {
 		argsStake := []interface{}{
 			stakerEthAddr,
 			validatorSrc.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).Int64(),
+			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
 		// stake to validator src
@@ -672,7 +672,7 @@ func Test_TransferStake(t *testing.T) {
 			42,
 			validatorSrc.OperatorAddress,
 			validatorDest.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).Int64(),
+			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
 		_, err = contract.TransferStake(ctx, stakerAddr, &methodID, argsTransferStake)
@@ -699,7 +699,7 @@ func Test_TransferStake(t *testing.T) {
 		argsStake := []interface{}{
 			stakerEthAddr,
 			validatorSrc.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).Int64(),
+			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
 		// stake to validator src
@@ -711,7 +711,7 @@ func Test_TransferStake(t *testing.T) {
 			stakerEthAddr,
 			42,
 			validatorDest.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).Int64(),
+			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
 		_, err = contract.TransferStake(ctx, stakerAddr, &methodID, argsTransferStake)
@@ -738,7 +738,7 @@ func Test_TransferStake(t *testing.T) {
 		argsStake := []interface{}{
 			stakerEthAddr,
 			validatorSrc.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).Int64(),
+			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
 		// stake to validator src
@@ -750,7 +750,7 @@ func Test_TransferStake(t *testing.T) {
 			stakerEthAddr,
 			validatorSrc.OperatorAddress,
 			validatorDest.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).Int64(),
+			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
 		_, err = contract.TransferStake(ctx, stakerAddr, &methodID, argsTransferStake)
@@ -777,7 +777,7 @@ func Test_TransferStake(t *testing.T) {
 		argsStake := []interface{}{
 			stakerEthAddr,
 			validatorSrc.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).Int64(),
+			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
 		// stake to validator src
@@ -816,7 +816,7 @@ func Test_TransferStake(t *testing.T) {
 		argsStake := []interface{}{
 			stakerEthAddr,
 			validatorSrc.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).Int64(),
+			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
 		// stake to validator src
@@ -850,7 +850,7 @@ func Test_TransferStake(t *testing.T) {
 		argsStake := []interface{}{
 			stakerEthAddr,
 			validatorSrc.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).Int64(),
+			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
 		// stake to validator src
@@ -862,7 +862,7 @@ func Test_TransferStake(t *testing.T) {
 			stakerEthAddr,
 			validatorSrc.OperatorAddress,
 			validatorDest.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).Int64(),
+			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
 		originEthAddr := common.BytesToAddress(sample.Bech32AccAddress().Bytes())
