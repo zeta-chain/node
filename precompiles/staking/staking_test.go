@@ -62,8 +62,8 @@ func Test_IStakingContract(t *testing.T) {
 		require.NotNil(t, abi.Methods[UnstakeMethodName], "unstake method should be present in the ABI")
 		require.NotNil(
 			t,
-			abi.Methods[TransferStakeMethodName],
-			"transferStake method should be present in the ABI",
+			abi.Methods[MoveStakeMethodName],
+			"moveStake method should be present in the ABI",
 		)
 
 		require.NotNil(
@@ -78,7 +78,9 @@ func Test_IStakingContract(t *testing.T) {
 		var method [4]byte
 
 		t.Run("stake", func(t *testing.T) {
+			// ACT
 			stake := contract.RequiredGas(abi.Methods[StakeMethodName].ID)
+			// ASSERT
 			copy(method[:], abi.Methods[StakeMethodName].ID[:4])
 			baseCost := uint64(len(method)) * gasConfig.WriteCostPerByte
 			require.Equal(
@@ -92,7 +94,9 @@ func Test_IStakingContract(t *testing.T) {
 		})
 
 		t.Run("unstake", func(t *testing.T) {
+			// ACT
 			unstake := contract.RequiredGas(abi.Methods[UnstakeMethodName].ID)
+			// ASSERT
 			copy(method[:], abi.Methods[UnstakeMethodName].ID[:4])
 			baseCost := uint64(len(method)) * gasConfig.WriteCostPerByte
 			require.Equal(
@@ -105,22 +109,26 @@ func Test_IStakingContract(t *testing.T) {
 			)
 		})
 
-		t.Run("transferStake", func(t *testing.T) {
-			transferStake := contract.RequiredGas(abi.Methods[TransferStakeMethodName].ID)
-			copy(method[:], abi.Methods[TransferStakeMethodName].ID[:4])
+		t.Run("moveStake", func(t *testing.T) {
+			// ACT
+			moveStake := contract.RequiredGas(abi.Methods[MoveStakeMethodName].ID)
+			// ASSERT
+			copy(method[:], abi.Methods[MoveStakeMethodName].ID[:4])
 			baseCost := uint64(len(method)) * gasConfig.WriteCostPerByte
 			require.Equal(
 				t,
 				GasRequiredByMethod[method]+baseCost,
-				transferStake,
-				"transferStake method should require %d gas, got %d",
+				moveStake,
+				"moveStake method should require %d gas, got %d",
 				GasRequiredByMethod[method]+baseCost,
-				transferStake,
+				moveStake,
 			)
 		})
 
 		t.Run("getAllValidators", func(t *testing.T) {
+			// ACT
 			getAllValidators := contract.RequiredGas(abi.Methods[GetAllValidatorsMethodName].ID)
+			// ASSERT
 			copy(method[:], abi.Methods[GetAllValidatorsMethodName].ID[:4])
 			baseCost := uint64(len(method)) * gasConfig.ReadCostPerByte
 			require.Equal(
@@ -134,7 +142,9 @@ func Test_IStakingContract(t *testing.T) {
 		})
 
 		t.Run("getShares", func(t *testing.T) {
+			// ACT
 			getShares := contract.RequiredGas(abi.Methods[GetSharesMethodName].ID)
+			// ASSERT
 			copy(method[:], abi.Methods[GetSharesMethodName].ID[:4])
 			baseCost := uint64(len(method)) * gasConfig.ReadCostPerByte
 			require.Equal(
@@ -148,8 +158,11 @@ func Test_IStakingContract(t *testing.T) {
 		})
 
 		t.Run("invalid method", func(t *testing.T) {
+			// ARRANGE
 			invalidMethodBytes := []byte("invalidMethod")
+			// ACT
 			gasInvalidMethod := contract.RequiredGas(invalidMethodBytes)
+			// ASSERT
 			require.Equal(
 				t,
 				uint64(0),
@@ -185,6 +198,7 @@ func Test_Stake(t *testing.T) {
 	methodID := abi.Methods[StakeMethodName]
 
 	t.Run("should fail if validator doesn't exist", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 
@@ -200,11 +214,15 @@ func Test_Stake(t *testing.T) {
 
 		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
+		// ACT
 		_, err = contract.Stake(ctx, stakerAddr, &methodID, args)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 
 	t.Run("should stake", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
@@ -221,11 +239,15 @@ func Test_Stake(t *testing.T) {
 
 		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
+		// ACT
 		_, err = contract.Stake(ctx, stakerAddr, &methodID, args)
+
+		// ASSERT
 		require.NoError(t, err)
 	})
 
 	t.Run("should fail if origin is not staker", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
@@ -243,11 +265,15 @@ func Test_Stake(t *testing.T) {
 
 		args := []interface{}{originEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
+		// ACT
 		_, err = contract.Stake(ctx, stakerAddr, &methodID, args)
+
+		// ASSERT
 		require.ErrorContains(t, err, "origin is not staker address")
 	})
 
 	t.Run("should fail if staking fails", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
@@ -260,11 +286,15 @@ func Test_Stake(t *testing.T) {
 
 		args := []interface{}{stakerEthAddr, validator.OperatorAddress, int64(42)}
 
+		// ACT
 		_, err := contract.Stake(ctx, stakerAddr, &methodID, args)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 
 	t.Run("should fail if wrong args amount", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
@@ -281,11 +311,15 @@ func Test_Stake(t *testing.T) {
 
 		args := []interface{}{stakerEthAddr, validator.OperatorAddress}
 
+		// ACT
 		_, err = contract.Stake(ctx, stakerAddr, &methodID, args)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 
 	t.Run("should fail if staker is not eth addr", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
@@ -301,11 +335,15 @@ func Test_Stake(t *testing.T) {
 
 		args := []interface{}{staker, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
+		// ACT
 		_, err = contract.Stake(ctx, stakerAddr, &methodID, args)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 
 	t.Run("should fail if validator is not valid string", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
@@ -322,11 +360,15 @@ func Test_Stake(t *testing.T) {
 
 		args := []interface{}{stakerEthAddr, 42, coins.AmountOf(config.BaseDenom).BigInt()}
 
+		// ACT
 		_, err = contract.Stake(ctx, stakerAddr, &methodID, args)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 
 	t.Run("should fail if amount is not int64", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
@@ -343,7 +385,10 @@ func Test_Stake(t *testing.T) {
 
 		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).Uint64()}
 
+		// ACT
 		_, err = contract.Stake(ctx, stakerAddr, &methodID, args)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 }
@@ -353,6 +398,7 @@ func Test_Unstake(t *testing.T) {
 	methodID := abi.Methods[UnstakeMethodName]
 
 	t.Run("should fail if validator doesn't exist", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 
@@ -368,11 +414,15 @@ func Test_Unstake(t *testing.T) {
 
 		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
+		// ACT
 		_, err = contract.Unstake(ctx, stakerAddr, &methodID, args)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 
 	t.Run("should unstake", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
@@ -394,11 +444,15 @@ func Test_Unstake(t *testing.T) {
 		_, err = contract.Stake(ctx, stakerAddr, &stakeMethodID, args)
 		require.NoError(t, err)
 
+		// ACT
 		_, err = contract.Unstake(ctx, stakerAddr, &methodID, args)
+
+		// ASSERT
 		require.NoError(t, err)
 	})
 
 	t.Run("should fail if origin is not staker", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
@@ -422,11 +476,15 @@ func Test_Unstake(t *testing.T) {
 
 		originEthAddr := common.BytesToAddress(sample.Bech32AccAddress().Bytes())
 
+		// ACT
 		_, err = contract.Unstake(ctx, originEthAddr, &methodID, args)
+
+		// ASSERT
 		require.ErrorContains(t, err, "origin is not staker address")
 	})
 
 	t.Run("should fail if no previous staking", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
@@ -443,11 +501,15 @@ func Test_Unstake(t *testing.T) {
 
 		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
+		// ACT
 		_, err = contract.Unstake(ctx, stakerAddr, &methodID, args)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 
 	t.Run("should fail if wrong args amount", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
@@ -464,11 +526,15 @@ func Test_Unstake(t *testing.T) {
 
 		args := []interface{}{stakerEthAddr, validator.OperatorAddress}
 
+		// ACT
 		_, err = contract.Unstake(ctx, stakerAddr, &methodID, args)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 
 	t.Run("should fail if staker is not eth addr", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
@@ -484,11 +550,15 @@ func Test_Unstake(t *testing.T) {
 
 		args := []interface{}{staker, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
+		// ACT
 		_, err = contract.Unstake(ctx, stakerAddr, &methodID, args)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 
 	t.Run("should fail if validator is not valid string", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
@@ -505,11 +575,15 @@ func Test_Unstake(t *testing.T) {
 
 		args := []interface{}{stakerEthAddr, 42, coins.AmountOf(config.BaseDenom).BigInt()}
 
+		// ACT
 		_, err = contract.Unstake(ctx, stakerAddr, &methodID, args)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 
 	t.Run("should fail if amount is not int64", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
@@ -526,16 +600,20 @@ func Test_Unstake(t *testing.T) {
 
 		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).Uint64()}
 
+		// ACT
 		_, err = contract.Unstake(ctx, stakerAddr, &methodID, args)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 }
 
-func Test_TransferStake(t *testing.T) {
+func Test_MoveStake(t *testing.T) {
 	ctx, contract, abi, sdkKeepers := setup(t)
-	methodID := abi.Methods[TransferStakeMethodName]
+	methodID := abi.Methods[MoveStakeMethodName]
 
 	t.Run("should fail if validator dest doesn't exist", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validatorSrc := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
@@ -562,18 +640,22 @@ func Test_TransferStake(t *testing.T) {
 		_, err = contract.Stake(ctx, stakerAddr, &stakeMethodID, argsStake)
 		require.NoError(t, err)
 
-		argsTransferStake := []interface{}{
+		argsMoveStake := []interface{}{
 			stakerEthAddr,
 			validatorSrc.OperatorAddress,
 			validatorDest.OperatorAddress,
 			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
-		_, err = contract.TransferStake(ctx, stakerAddr, &methodID, argsTransferStake)
+		// ACT
+		_, err = contract.MoveStake(ctx, stakerAddr, &methodID, argsMoveStake)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 
-	t.Run("should transfer stake", func(t *testing.T) {
+	t.Run("should move stake", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validatorSrc := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
@@ -601,19 +683,23 @@ func Test_TransferStake(t *testing.T) {
 		_, err = contract.Stake(ctx, stakerAddr, &stakeMethodID, argsStake)
 		require.NoError(t, err)
 
-		argsTransferStake := []interface{}{
+		argsMoveStake := []interface{}{
 			stakerEthAddr,
 			validatorSrc.OperatorAddress,
 			validatorDest.OperatorAddress,
 			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
-		// transfer stake to validator dest
-		_, err = contract.TransferStake(ctx, stakerAddr, &methodID, argsTransferStake)
+		// ACT
+		// move stake to validator dest
+		_, err = contract.MoveStake(ctx, stakerAddr, &methodID, argsMoveStake)
+
+		// ASSERT
 		require.NoError(t, err)
 	})
 
 	t.Run("should fail if staker is invalid arg", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validatorSrc := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
@@ -641,18 +727,22 @@ func Test_TransferStake(t *testing.T) {
 		_, err = contract.Stake(ctx, stakerAddr, &stakeMethodID, argsStake)
 		require.NoError(t, err)
 
-		argsTransferStake := []interface{}{
+		argsMoveStake := []interface{}{
 			42,
 			validatorSrc.OperatorAddress,
 			validatorDest.OperatorAddress,
 			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
-		_, err = contract.TransferStake(ctx, stakerAddr, &methodID, argsTransferStake)
+		// ACT
+		_, err = contract.MoveStake(ctx, stakerAddr, &methodID, argsMoveStake)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 
 	t.Run("should fail if validator src is invalid arg", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validatorSrc := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
@@ -680,18 +770,22 @@ func Test_TransferStake(t *testing.T) {
 		_, err = contract.Stake(ctx, stakerAddr, &stakeMethodID, argsStake)
 		require.NoError(t, err)
 
-		argsTransferStake := []interface{}{
+		argsMoveStake := []interface{}{
 			stakerEthAddr,
 			42,
 			validatorDest.OperatorAddress,
 			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
-		_, err = contract.TransferStake(ctx, stakerAddr, &methodID, argsTransferStake)
+		// ACT
+		_, err = contract.MoveStake(ctx, stakerAddr, &methodID, argsMoveStake)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 
 	t.Run("should fail if validator dest is invalid arg", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validatorSrc := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
@@ -719,18 +813,22 @@ func Test_TransferStake(t *testing.T) {
 		_, err = contract.Stake(ctx, stakerAddr, &stakeMethodID, argsStake)
 		require.NoError(t, err)
 
-		argsTransferStake := []interface{}{
+		argsMoveStake := []interface{}{
 			stakerEthAddr,
 			validatorSrc.OperatorAddress,
 			42,
 			coins.AmountOf(config.BaseDenom).BigInt(),
 		}
 
-		_, err = contract.TransferStake(ctx, stakerAddr, &methodID, argsTransferStake)
+		// ACT
+		_, err = contract.MoveStake(ctx, stakerAddr, &methodID, argsMoveStake)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 
 	t.Run("should fail if amount is invalid arg", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validatorSrc := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
@@ -758,18 +856,22 @@ func Test_TransferStake(t *testing.T) {
 		_, err = contract.Stake(ctx, stakerAddr, &stakeMethodID, argsStake)
 		require.NoError(t, err)
 
-		argsTransferStake := []interface{}{
+		argsMoveStake := []interface{}{
 			stakerEthAddr,
 			validatorSrc.OperatorAddress,
 			validatorDest.OperatorAddress,
 			coins.AmountOf(config.BaseDenom).Uint64(),
 		}
 
-		_, err = contract.TransferStake(ctx, stakerAddr, &methodID, argsTransferStake)
+		// ACT
+		_, err = contract.MoveStake(ctx, stakerAddr, &methodID, argsMoveStake)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 
 	t.Run("should fail if wrong args amount", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validatorSrc := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
@@ -797,13 +899,17 @@ func Test_TransferStake(t *testing.T) {
 		_, err = contract.Stake(ctx, stakerAddr, &stakeMethodID, argsStake)
 		require.NoError(t, err)
 
-		argsTransferStake := []interface{}{stakerEthAddr, validatorSrc.OperatorAddress, validatorDest.OperatorAddress}
+		argsMoveStake := []interface{}{stakerEthAddr, validatorSrc.OperatorAddress, validatorDest.OperatorAddress}
 
-		_, err = contract.TransferStake(ctx, stakerAddr, &methodID, argsTransferStake)
+		// ACT
+		_, err = contract.MoveStake(ctx, stakerAddr, &methodID, argsMoveStake)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 
 	t.Run("should fail if origin is not staker", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validatorSrc := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
@@ -831,7 +937,7 @@ func Test_TransferStake(t *testing.T) {
 		_, err = contract.Stake(ctx, stakerAddr, &stakeMethodID, argsStake)
 		require.NoError(t, err)
 
-		argsTransferStake := []interface{}{
+		argsMoveStake := []interface{}{
 			stakerEthAddr,
 			validatorSrc.OperatorAddress,
 			validatorDest.OperatorAddress,
@@ -839,7 +945,11 @@ func Test_TransferStake(t *testing.T) {
 		}
 
 		originEthAddr := common.BytesToAddress(sample.Bech32AccAddress().Bytes())
-		_, err = contract.TransferStake(ctx, originEthAddr, &methodID, argsTransferStake)
+
+		// ACT
+		_, err = contract.MoveStake(ctx, originEthAddr, &methodID, argsMoveStake)
+
+		// ASSERT
 		require.ErrorContains(t, err, "origin is not staker")
 	})
 }
@@ -849,7 +959,10 @@ func Test_GetAllValidators(t *testing.T) {
 	methodID := abi.Methods[GetAllValidatorsMethodName]
 
 	t.Run("should return empty array if validators not set", func(t *testing.T) {
+		// ACT
 		validators, err := contract.GetAllValidators(ctx, &methodID)
+
+		// ASSERT
 		require.NoError(t, err)
 
 		res, err := methodID.Outputs.Unpack(validators)
@@ -859,11 +972,15 @@ func Test_GetAllValidators(t *testing.T) {
 	})
 
 	t.Run("should return validators if set", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
 
+		// ACT
 		validators, err := contract.GetAllValidators(ctx, &methodID)
+
+		// ASSERT
 		require.NoError(t, err)
 
 		res, err := methodID.Outputs.Unpack(validators)
@@ -878,6 +995,7 @@ func Test_GetShares(t *testing.T) {
 	methodID := abi.Methods[GetSharesMethodName]
 
 	t.Run("should return stakes", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
@@ -895,9 +1013,12 @@ func Test_GetShares(t *testing.T) {
 		stakeArgs := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
 		stakeMethodID := abi.Methods[StakeMethodName]
+
+		// ACT
 		_, err = contract.Stake(ctx, stakerAddr, &stakeMethodID, stakeArgs)
 		require.NoError(t, err)
 
+		// ASSERT
 		args := []interface{}{stakerEthAddr, validator.OperatorAddress}
 		stakes, err := contract.GetShares(ctx, &methodID, args)
 		require.NoError(t, err)
@@ -912,29 +1033,41 @@ func Test_GetShares(t *testing.T) {
 	})
 
 	t.Run("should fail if wrong args amount", func(t *testing.T) {
+		// ARRANGE
 		staker := sample.Bech32AccAddress()
 		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-
 		args := []interface{}{stakerEthAddr}
+
+		// ACT
 		_, err := contract.GetShares(ctx, &methodID, args)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 
 	t.Run("should fail if invalid staker arg", func(t *testing.T) {
+		// ARRANGE
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
-
 		args := []interface{}{42, validator.OperatorAddress}
+
+		// ACT
 		_, err := contract.GetShares(ctx, &methodID, args)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 
 	t.Run("should fail if invalid val address", func(t *testing.T) {
+		// ARRANGE
 		staker := sample.Bech32AccAddress()
 		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-
 		args := []interface{}{stakerEthAddr, staker.String()}
+
+		// ACT
 		_, err := contract.GetShares(ctx, &methodID, args)
+
+		// ASSERT
 		require.Error(t, err)
 	})
 }

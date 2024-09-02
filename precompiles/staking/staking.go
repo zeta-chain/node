@@ -19,9 +19,9 @@ import (
 
 const (
 	// write
-	StakeMethodName         = "stake"
-	UnstakeMethodName       = "unstake"
-	TransferStakeMethodName = "transferStake"
+	StakeMethodName     = "stake"
+	UnstakeMethodName   = "unstake"
+	MoveStakeMethodName = "moveStake"
 
 	// read
 	GetAllValidatorsMethodName = "getAllValidators"
@@ -55,7 +55,7 @@ func initABI() {
 			GasRequiredByMethod[methodID] = 10000
 		case UnstakeMethodName:
 			GasRequiredByMethod[methodID] = 10000
-		case TransferStakeMethodName:
+		case MoveStakeMethodName:
 			GasRequiredByMethod[methodID] = 10000
 		case GetAllValidatorsMethodName:
 			GasRequiredByMethod[methodID] = 0
@@ -126,7 +126,7 @@ func (c *Contract) GetAllValidators(
 ) ([]byte, error) {
 	validators := c.stakingKeeper.GetAllValidators(ctx)
 
-	validatorsRes := []Validator{}
+	validatorsRes := make([]Validator, len(validators))
 	for _, v := range validators {
 		validatorsRes = append(validatorsRes, Validator{
 			OperatorAddress: v.OperatorAddress,
@@ -291,7 +291,7 @@ func (c *Contract) Unstake(
 	return method.Outputs.Pack(res.GetCompletionTime().UTC().Unix())
 }
 
-func (c *Contract) TransferStake(
+func (c *Contract) MoveStake(
 	ctx sdk.Context,
 	origin common.Address,
 	method *abi.Method,
@@ -409,10 +409,10 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, erro
 			return nil, err
 		}
 		return res, nil
-	case TransferStakeMethodName:
+	case MoveStakeMethodName:
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-			res, err = c.TransferStake(ctx, evm.Origin, method, args)
+			res, err = c.MoveStake(ctx, evm.Origin, method, args)
 			return err
 		})
 		if execErr != nil {

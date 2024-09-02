@@ -67,6 +67,40 @@
       },
       {
         "internalType": "string",
+        "name": "validatorSrc",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "validatorDst",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "moveStake",
+    "outputs": [
+      {
+        "internalType": "int64",
+        "name": "completionTime",
+        "type": "int64"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "staker",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
         "name": "validator",
         "type": "string"
       },
@@ -82,40 +116,6 @@
         "internalType": "bool",
         "name": "success",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "staker",
-        "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "validatorSrc",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "validatorDst",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "transferStake",
-    "outputs": [
-      {
-        "internalType": "int64",
-        "name": "completionTime",
-        "type": "int64"
       }
     ],
     "stateMutability": "nonpayable",

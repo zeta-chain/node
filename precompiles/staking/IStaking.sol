@@ -47,13 +47,13 @@ interface IStaking {
         uint256 amount
     ) external returns (int64 completionTime);
 
-    /// @notice Transfer coins from validatorSrc to validatorDst
+    /// @notice Move coins from validatorSrc to validatorDst
     /// @param staker Staker address
     /// @param validatorSrc Validator from address
     /// @param validatorDst Validator to address
     /// @param amount Coins amount
-    /// @return completionTime Time when staket transfer is done
-    function transferStake(
+    /// @return completionTime Time when stake move is done
+    function moveStake(
         address staker,
         string memory validatorSrc,
         string memory validatorDst,

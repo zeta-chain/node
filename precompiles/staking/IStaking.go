@@ -39,7 +39,7 @@ type Validator struct {
 
 // IStakingMetaData contains all meta data concerning the IStaking contract.
 var IStakingMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"name\":\"getAllValidators\",\"outputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"operatorAddress\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"consensusPubKey\",\"type\":\"string\"},{\"internalType\":\"bool\",\"name\":\"jailed\",\"type\":\"bool\"},{\"internalType\":\"enumBondStatus\",\"name\":\"bondStatus\",\"type\":\"uint8\"}],\"internalType\":\"structValidator[]\",\"name\":\"validators\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"}],\"name\":\"getShares\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"shares\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"stake\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validatorSrc\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"validatorDst\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transferStake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"unstake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[],\"name\":\"getAllValidators\",\"outputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"operatorAddress\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"consensusPubKey\",\"type\":\"string\"},{\"internalType\":\"bool\",\"name\":\"jailed\",\"type\":\"bool\"},{\"internalType\":\"enumBondStatus\",\"name\":\"bondStatus\",\"type\":\"uint8\"}],\"internalType\":\"structValidator[]\",\"name\":\"validators\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"}],\"name\":\"getShares\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"shares\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validatorSrc\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"validatorDst\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"moveStake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"stake\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"unstake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // IStakingABI is the input ABI used to generate the binding from.
@@ -250,6 +250,27 @@ func (_IStaking *IStakingCallerSession) GetShares(staker common.Address, validat
 	return _IStaking.Contract.GetShares(&_IStaking.CallOpts, staker, validator)
 }
 
+// MoveStake is a paid mutator transaction binding the contract method 0xd11a93d0.
+//
+// Solidity: function moveStake(address staker, string validatorSrc, string validatorDst, uint256 amount) returns(int64 completionTime)
+func (_IStaking *IStakingTransactor) MoveStake(opts *bind.TransactOpts, staker common.Address, validatorSrc string, validatorDst string, amount *big.Int) (*types.Transaction, error) {
+	return _IStaking.contract.Transact(opts, "moveStake", staker, validatorSrc, validatorDst, amount)
+}
+
+// MoveStake is a paid mutator transaction binding the contract method 0xd11a93d0.
+//
+// Solidity: function moveStake(address staker, string validatorSrc, string validatorDst, uint256 amount) returns(int64 completionTime)
+func (_IStaking *IStakingSession) MoveStake(staker common.Address, validatorSrc string, validatorDst string, amount *big.Int) (*types.Transaction, error) {
+	return _IStaking.Contract.MoveStake(&_IStaking.TransactOpts, staker, validatorSrc, validatorDst, amount)
+}
+
+// MoveStake is a paid mutator transaction binding the contract method 0xd11a93d0.
+//
+// Solidity: function moveStake(address staker, string validatorSrc, string validatorDst, uint256 amount) returns(int64 completionTime)
+func (_IStaking *IStakingTransactorSession) MoveStake(staker common.Address, validatorSrc string, validatorDst string, amount *big.Int) (*types.Transaction, error) {
+	return _IStaking.Contract.MoveStake(&_IStaking.TransactOpts, staker, validatorSrc, validatorDst, amount)
+}
+
 // Stake is a paid mutator transaction binding the contract method 0x90b8436f.
 //
 // Solidity: function stake(address staker, string validator, uint256 amount) returns(bool success)
@@ -269,27 +290,6 @@ func (_IStaking *IStakingSession) Stake(staker common.Address, validator string,
 // Solidity: function stake(address staker, string validator, uint256 amount) returns(bool success)
 func (_IStaking *IStakingTransactorSession) Stake(staker common.Address, validator string, amount *big.Int) (*types.Transaction, error) {
 	return _IStaking.Contract.Stake(&_IStaking.TransactOpts, staker, validator, amount)
-}
-
-// TransferStake is a paid mutator transaction binding the contract method 0x26d67892.
-//
-// Solidity: function transferStake(address staker, string validatorSrc, string validatorDst, uint256 amount) returns(int64 completionTime)
-func (_IStaking *IStakingTransactor) TransferStake(opts *bind.TransactOpts, staker common.Address, validatorSrc string, validatorDst string, amount *big.Int) (*types.Transaction, error) {
-	return _IStaking.contract.Transact(opts, "transferStake", staker, validatorSrc, validatorDst, amount)
-}
-
-// TransferStake is a paid mutator transaction binding the contract method 0x26d67892.
-//
-// Solidity: function transferStake(address staker, string validatorSrc, string validatorDst, uint256 amount) returns(int64 completionTime)
-func (_IStaking *IStakingSession) TransferStake(staker common.Address, validatorSrc string, validatorDst string, amount *big.Int) (*types.Transaction, error) {
-	return _IStaking.Contract.TransferStake(&_IStaking.TransactOpts, staker, validatorSrc, validatorDst, amount)
-}
-
-// TransferStake is a paid mutator transaction binding the contract method 0x26d67892.
-//
-// Solidity: function transferStake(address staker, string validatorSrc, string validatorDst, uint256 amount) returns(int64 completionTime)
-func (_IStaking *IStakingTransactorSession) TransferStake(staker common.Address, validatorSrc string, validatorDst string, amount *big.Int) (*types.Transaction, error) {
-	return _IStaking.Contract.TransferStake(&_IStaking.TransactOpts, staker, validatorSrc, validatorDst, amount)
 }
 
 // Unstake is a paid mutator transaction binding the contract method 0x57c6ea3e.
