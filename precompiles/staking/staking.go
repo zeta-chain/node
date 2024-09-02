@@ -49,7 +49,8 @@ func initABI() {
 		var methodID [4]byte
 		copy(methodID[:], ABI.Methods[methodName].ID[:4])
 		switch methodName {
-		// TODO: just temporary flat values, double check these flat values
+		// TODO: https://github.com/zeta-chain/node/issues/2812
+		// just temporary flat values, double check these flat values
 		// can we just use WriteCostFlat/ReadCostFlat from gas config for flat values?
 		case StakeMethodName:
 			GasRequiredByMethod[methodID] = 10000
