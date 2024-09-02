@@ -10,6 +10,7 @@ import (
 	"github.com/zeta-chain/node/pkg/proofs"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	observerclient "github.com/zeta-chain/node/x/observer/client/cli"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 )
@@ -109,7 +110,7 @@ func (c *Client) PostVoteBlameData(
 	zetaBlame := observertypes.Blame{
 		Index:         index,
 		FailureReason: blame.FailReason,
-		Nodes:         observertypes.ConvertNodes(blame.BlameNodes),
+		Nodes:         observerclient.ConvertNodes(blame.BlameNodes),
 	}
 	msg := observertypes.NewMsgVoteBlameMsg(signerAddress, chainID, zetaBlame)
 
