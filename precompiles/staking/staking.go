@@ -128,13 +128,13 @@ func (c *Contract) GetAllValidators(
 	validators := c.stakingKeeper.GetAllValidators(ctx)
 
 	validatorsRes := make([]Validator, len(validators))
-	for _, v := range validators {
-		validatorsRes = append(validatorsRes, Validator{
+	for i, v := range validators {
+		validatorsRes[i] = Validator{
 			OperatorAddress: v.OperatorAddress,
 			ConsensusPubKey: v.ConsensusPubkey.String(),
 			BondStatus:      uint8(v.Status),
 			Jailed:          v.Jailed,
-		})
+		}
 	}
 
 	return method.Outputs.Pack(validatorsRes)
@@ -187,6 +187,7 @@ func (c *Contract) GetShares(
 func (c *Contract) Stake(
 	ctx sdk.Context,
 	origin common.Address,
+	contract *vm.Contract,
 	method *abi.Method,
 	args []interface{},
 ) ([]byte, error) {
@@ -393,7 +394,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, erro
 	case StakeMethodName:
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-			res, err = c.Stake(ctx, evm.Origin, method, args)
+			res, err = c.Stake(ctx, evm.Origin, contract, method, args)
 			return err
 		})
 		if execErr != nil {
