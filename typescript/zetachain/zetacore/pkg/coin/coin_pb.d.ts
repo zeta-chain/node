@@ -27,10 +27,17 @@ export declare enum CoinType {
   ERC20 = 2,
 
   /**
-   * not a real coin, rather a command
+   * no asset, used for admin command
    *
    * @generated from enum value: Cmd = 3;
    */
   Cmd = 3,
+
+  /**
+   * no asset, used for contract call
+   *
+   * @generated from enum value: NoAssetCall = 4;
+   */
+  NoAssetCall = 4,
 }
 

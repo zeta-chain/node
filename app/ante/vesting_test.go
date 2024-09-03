@@ -11,9 +11,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/app"
-	"github.com/zeta-chain/zetacore/app/ante"
-	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/node/app"
+	"github.com/zeta-chain/node/app/ante"
+	"github.com/zeta-chain/node/testutil/sample"
 )
 
 func TestVesting_AnteHandle(t *testing.T) {

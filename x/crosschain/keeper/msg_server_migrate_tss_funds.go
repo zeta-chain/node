@@ -11,9 +11,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // MigrateTssFunds migrates the funds from the current TSS to the new TSS
@@ -106,6 +106,12 @@ func (k Keeper) initiateMigrateTSSFundsCCTX(
 		return err
 	}
 
+	// Set the CCTX and the nonce for the outbound migration
+	err = k.SetObserverOutboundInfo(ctx, chainID, &cctx)
+	if err != nil {
+		return errorsmod.Wrap(types.ErrUnableToSetOutboundInfo, err.Error())
+	}
+
 	// The migrate funds can be run again to update the migration cctx index if the migration fails
 	// This should be used after carefully calculating the amount again
 	existingMigrationInfo, found := k.zetaObserverKeeper.GetFundMigrator(ctx, chainID)
@@ -128,7 +134,7 @@ func (k Keeper) initiateMigrateTSSFundsCCTX(
 		}
 	}
 
-	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx)
+	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx, currentTss.TssPubkey)
 	k.zetaObserverKeeper.SetFundMigrator(ctx, observertypes.TssFundMigratorInfo{
 		ChainId:            chainID,
 		MigrationCctxIndex: cctx.Index,

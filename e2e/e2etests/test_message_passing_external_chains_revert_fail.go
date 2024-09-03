@@ -6,11 +6,11 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	cctxtypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // TestMessagePassingRevertFailExternalChains tests message passing with failing revert between external EVM chains
@@ -19,8 +19,8 @@ import (
 func TestMessagePassingRevertFailExternalChains(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok, "Invalid amount specified for TestMessagePassingRevertFail.")
+	// parse the amount
+	amount := parseBigInt(r, args[0])
 
 	chainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err)
@@ -65,7 +65,6 @@ func TestMessagePassingRevertFailExternalChains(r *runner.E2ERunner, args []stri
 			r.Logger.Info("    Zeta Value: %d", sentLog.ZetaValueAndGas)
 		}
 	}
-
 	// expect revert tx to fail
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutboundParam().Hash))

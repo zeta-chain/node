@@ -6,7 +6,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
 
-	"github.com/zeta-chain/zetacore/pkg/proofs"
+	"github.com/zeta-chain/node/pkg/proofs"
 )
 
 var _ sdk.Msg = &MsgVoteBlockHeader{}
@@ -55,7 +55,7 @@ func (msg *MsgVoteBlockHeader) GetSignBytes() []byte {
 func (msg *MsgVoteBlockHeader) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, err.Error())
+		return cosmoserrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
 	}
 
 	if len(msg.BlockHash) != 32 {

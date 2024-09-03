@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/zeta-chain/zetacore/x/emissions/types"
+	"github.com/zeta-chain/node/x/emissions/types"
 )
 
 // UpdateParams defines a governance operation for updating the x/emissions module parameters.
@@ -28,7 +28,7 @@ func (k msgServer) UpdateParams(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	err := k.SetParams(ctx, msg.Params)
 	if err != nil {
-		return nil, errors.Wrapf(types.ErrUnableToSetParams, err.Error())
+		return nil, errors.Wrap(types.ErrUnableToSetParams, err.Error())
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil

@@ -5,22 +5,21 @@ import (
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
 
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils"
+	"github.com/zeta-chain/node/pkg/constant"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
 func MockChainParams(chainID int64, confirmation uint64) observertypes.ChainParams {
-	const zeroAddress = "0x0000000000000000000000000000000000000000"
-
-	connectorAddr := zeroAddress
+	connectorAddr := constant.EVMZeroAddress
 	if a, ok := testutils.ConnectorAddresses[chainID]; ok {
 		connectorAddr = a.Hex()
 	}
 
-	erc20CustodyAddr := zeroAddress
+	erc20CustodyAddr := constant.EVMZeroAddress
 	if a, ok := testutils.CustodyAddresses[chainID]; ok {
 		erc20CustodyAddr = a.Hex()
 	}
@@ -28,7 +27,7 @@ func MockChainParams(chainID int64, confirmation uint64) observertypes.ChainPara
 	return observertypes.ChainParams{
 		ChainId:                     chainID,
 		ConfirmationCount:           confirmation,
-		ZetaTokenContractAddress:    zeroAddress,
+		ZetaTokenContractAddress:    constant.EVMZeroAddress,
 		ConnectorContractAddress:    connectorAddr,
 		Erc20CustodyContractAddress: erc20CustodyAddr,
 		InboundTicker:               12,

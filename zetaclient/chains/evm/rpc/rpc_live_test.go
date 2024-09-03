@@ -6,7 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/rpc"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/rpc"
 
 	"testing"
 )

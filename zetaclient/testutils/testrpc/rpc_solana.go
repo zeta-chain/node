@@ -3,7 +3,7 @@ package testrpc
 import (
 	"testing"
 
-	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/config"
 )
 
 // SolanaServer represents httptest for SOL RPC.

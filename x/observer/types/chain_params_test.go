@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	. "gopkg.in/check.v1"
 
-	"github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestChainParamsList_Validate(t *testing.T) {
@@ -68,6 +68,7 @@ func (s *UpdateChainParamsSuite) SetupTest() {
 		BallotThreshold:             types.DefaultBallotThreshold,
 		MinObserverDelegation:       types.DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		GatewayAddress:              "0xF0deebCB0E9C829519C4baa794c5445171973826",
 	}
 	s.btcParams = &types.ChainParams{
 		ConfirmationCount:           1,

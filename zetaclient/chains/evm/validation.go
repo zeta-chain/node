@@ -14,7 +14,7 @@ import (
 // ValidateEvmTxLog checks the basics of an EVM tx log
 func ValidateEvmTxLog(vLog *ethtypes.Log, wantAddress ethcommon.Address, wantHash string, wantTopics int) error {
 	if vLog.Removed {
-		return fmt.Errorf("log is removed, chain reorg?")
+		return fmt.Errorf("log is removed, it might be related to a chain reorganization")
 	}
 	if vLog.Address != wantAddress {
 		return fmt.Errorf("log emitter address mismatch: want %s got %s", wantAddress.Hex(), vLog.Address.Hex())

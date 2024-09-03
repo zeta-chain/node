@@ -20,13 +20,13 @@ import (
 	"github.com/rs/zerolog"
 	"gitlab.com/thorchain/tss/go-tss/blame"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/proofs"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	keyinterfaces "github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/proofs"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
+	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 )
 
 type Order string
@@ -195,7 +195,12 @@ type SolanaRPCClient interface {
 	GetHealth(ctx context.Context) (string, error)
 	GetSlot(ctx context.Context, commitment solrpc.CommitmentType) (uint64, error)
 	GetAccountInfo(ctx context.Context, account solana.PublicKey) (*solrpc.GetAccountInfoResult, error)
-	GetRecentBlockhash(ctx context.Context, commitment solrpc.CommitmentType) (*solrpc.GetRecentBlockhashResult, error)
+	GetBalance(
+		ctx context.Context,
+		account solana.PublicKey,
+		commitment solrpc.CommitmentType,
+	) (*solrpc.GetBalanceResult, error)
+	GetLatestBlockhash(ctx context.Context, commitment solrpc.CommitmentType) (*solrpc.GetLatestBlockhashResult, error)
 	GetRecentPrioritizationFees(
 		ctx context.Context,
 		accounts solana.PublicKeySlice,

@@ -18,6 +18,10 @@ jobs:
         run: |
           echo "$HOME/go/bin" >> $GITHUB_PATH
 
+      - name: Install solc-select
+        run: |
+          pip3 install solc-select
+
       - name: Generate Go code, docs and specs
         env:
           TEST_ENV: ${{ github.workspace }}

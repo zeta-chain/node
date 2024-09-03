@@ -9,12 +9,12 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
-	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zetaconnectorzevm.sol"
+	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
+	connectorzevm "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zetaconnectorzevm.sol"
 
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/pkg/retry"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/retry"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func (r *E2ERunner) WaitForBlocks(n int64) {
@@ -244,7 +244,7 @@ func (r *E2ERunner) WithdrawERC20(amount *big.Int) *ethtypes.Transaction {
 			event.From.Hex(),
 			event.To,
 			event.Value,
-			event.Gasfee,
+			event.GasFee,
 		)
 	}
 

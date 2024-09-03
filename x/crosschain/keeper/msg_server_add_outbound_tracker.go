@@ -8,10 +8,10 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // MaxOutboundTrackerHashes is the maximum number of hashes that can be stored in the outbound transaction tracker
@@ -132,7 +132,7 @@ func (k msgServer) AddOutboundTracker(
 func verifyProofAndOutboundBody(ctx sdk.Context, k msgServer, msg *types.MsgAddOutboundTracker) error {
 	txBytes, err := k.lightclientKeeper.VerifyProof(ctx, msg.Proof, msg.ChainId, msg.BlockHash, msg.TxIndex)
 	if err != nil {
-		return types.ErrProofVerificationFail.Wrapf(err.Error())
+		return types.ErrProofVerificationFail.Wrap(err.Error())
 	}
 
 	// get tss address
@@ -145,14 +145,14 @@ func verifyProofAndOutboundBody(ctx sdk.Context, k msgServer, msg *types.MsgAddO
 		BitcoinChainId: bitcoinChainID,
 	})
 	if err != nil {
-		return observertypes.ErrTssNotFound.Wrapf(err.Error())
+		return observertypes.ErrTssNotFound.Wrap(err.Error())
 	}
 	if tss == nil {
 		return observertypes.ErrTssNotFound.Wrapf("tss address nil")
 	}
 
 	if err := types.VerifyOutboundBody(*msg, txBytes, *tss); err != nil {
-		return types.ErrTxBodyVerificationFail.Wrapf(err.Error())
+		return types.ErrTxBodyVerificationFail.Wrap(err.Error())
 	}
 
 	return nil

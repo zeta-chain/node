@@ -7,16 +7,16 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func TestEtherDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	value, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok, "Invalid amount specified for TestEtherDepositAndCallRefund.")
+	// parse the deposit amount
+	value := parseBigInt(r, args[0])
 
 	evmClient := r.EVMClient
 

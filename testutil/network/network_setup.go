@@ -43,7 +43,7 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
 )
 
 // package-wide network lock to only allow one test network at a time
@@ -553,7 +553,7 @@ func (n *Network) LatestHeight() (int64, error) {
 	for {
 		select {
 		case <-timeout.C:
-			return latestHeight, errors.New("timeout exceeded waiting for block")
+			return latestHeight, errors.New("LatestHeight: timeout exceeded waiting for block")
 		case <-ticker.C:
 			res, err := queryClient.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})
 			if err == nil && res != nil {
@@ -590,7 +590,7 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 	for {
 		select {
 		case <-timeout.C:
-			return latestHeight, errors.New("timeout exceeded waiting for block")
+			return latestHeight, errors.New("WaitForHeightWithTimeout: timeout exceeded waiting for block")
 		case <-ticker.C:
 
 			res, err := queryClient.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})

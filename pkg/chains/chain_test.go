@@ -3,12 +3,12 @@ package chains_test
 import (
 	"testing"
 
-	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/node/testutil/sample"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/node/pkg/chains"
 )
 
 func TestChain_Validate(t *testing.T) {
@@ -222,7 +222,7 @@ func TestChain_IsEVMChain(t *testing.T) {
 		{"Goerli Testnet", chains.Goerli, true},
 		{"Sepolia Testnet", chains.Sepolia, true},
 		{"Non-EVM", chains.BitcoinMainnet, false},
-		{"Zeta Mainnet", chains.ZetaChainMainnet, false},
+		{"Zeta Mainnet", chains.ZetaChainMainnet, true},
 	}
 
 	for _, tt := range tests {
@@ -331,7 +331,7 @@ func TestIsEVMChain(t *testing.T) {
 		{"Goerli Testnet", chains.Goerli.ChainId, true},
 		{"Sepolia Testnet", chains.Sepolia.ChainId, true},
 		{"Non-EVM", chains.BitcoinMainnet.ChainId, false},
-		{"Zeta Mainnet", chains.ZetaChainMainnet.ChainId, false},
+		{"Zeta Mainnet", chains.ZetaChainMainnet.ChainId, true},
 	}
 
 	for _, tt := range tests {
@@ -400,7 +400,7 @@ func TestGetChainFromChainID(t *testing.T) {
 	chain, found := chains.GetChainFromChainID(chains.ZetaChainMainnet.ChainId, []chains.Chain{})
 	require.EqualValues(t, chains.ZetaChainMainnet, chain)
 	require.True(t, found)
-	chain, found = chains.GetChainFromChainID(9999, []chains.Chain{})
+	_, found = chains.GetChainFromChainID(9999, []chains.Chain{})
 	require.False(t, found)
 }
 

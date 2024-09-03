@@ -5,7 +5,7 @@ package mocks
 import (
 	mock "github.com/stretchr/testify/mock"
 
-	proofs "github.com/zeta-chain/zetacore/pkg/proofs"
+	proofs "github.com/zeta-chain/node/pkg/proofs"
 
 	types "github.com/cosmos/cosmos-sdk/types"
 )

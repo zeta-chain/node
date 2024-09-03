@@ -10,17 +10,17 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // TestStressEtherWithdraw tests the stressing withdraw of ether
 func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
-	withdrawalAmount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok, "Invalid withdrawal amount specified for TestStressEtherWithdraw.")
+	// parse withdraw amount and number of withdraws
+	withdrawalAmount := parseBigInt(r, args[0])
 
 	numWithdraws, err := strconv.Atoi(args[1])
 	require.NoError(r, err)

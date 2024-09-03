@@ -14,13 +14,13 @@ import (
 	"gitlab.com/thorchain/tss/go-tss/tss"
 	"golang.org/x/crypto/sha3"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
-	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
+	"github.com/zeta-chain/node/pkg/chains"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/metrics"
+	mc "github.com/zeta-chain/node/zetaclient/tss"
+	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 // GenerateTSS generates a new TSS if keygen is set.

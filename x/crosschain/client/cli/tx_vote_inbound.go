@@ -10,16 +10,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func CmdVoteInbound() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "vote-inbound [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message" +
-			"] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex]",
+			"] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex] [protocolContractVersion]",
 		Short: "Broadcast message to vote an inbound",
-		Args:  cobra.ExactArgs(12),
+		Args:  cobra.ExactArgs(13),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsSender := args[0]
 			argsSenderChain, err := strconv.ParseInt(args[1], 10, 64)
@@ -62,6 +62,11 @@ func CmdVoteInbound() *cobra.Command {
 				return err
 			}
 
+			protocolContractVersion, err := parseProtocolContractVersion(args[12])
+			if err != nil {
+				return err
+			}
+
 			msg := types.NewMsgVoteInbound(
 				clientCtx.GetFromAddress().String(),
 				argsSender,
@@ -77,6 +82,7 @@ func CmdVoteInbound() *cobra.Command {
 				argsCoinType,
 				argsAsset,
 				uint(argsEventIndex),
+				protocolContractVersion,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -86,4 +92,17 @@ func CmdVoteInbound() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
+}
+
+func parseProtocolContractVersion(version string) (types.ProtocolContractVersion, error) {
+	switch version {
+	case "V1":
+		return types.ProtocolContractVersion_V1, nil
+	case "V2":
+		return types.ProtocolContractVersion_V2, nil
+	default:
+		return types.ProtocolContractVersion_V1, fmt.Errorf(
+			"invalid protocol contract version, specify either V1 or V2",
+		)
+	}
 }

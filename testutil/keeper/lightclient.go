@@ -4,15 +4,17 @@ import (
 	"testing"
 
 	tmdb "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	lightclientmocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/lightclient"
-	"github.com/zeta-chain/zetacore/x/lightclient/keeper"
-	"github.com/zeta-chain/zetacore/x/lightclient/types"
+	lightclientmocks "github.com/zeta-chain/node/testutil/keeper/mocks/lightclient"
+	"github.com/zeta-chain/node/x/lightclient/keeper"
+	"github.com/zeta-chain/node/x/lightclient/types"
 )
 
 // LightclientMockOptions represents options for instantiating a lightclient keeper with mocks
@@ -29,14 +31,13 @@ var (
 
 func initLightclientKeeper(
 	cdc codec.Codec,
-	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 	authorityKeeper types.AuthorityKeeper,
 ) keeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
-	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
-	ss.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, db)
+	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, nil)
+	ss.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, nil)
 
 	return keeper.NewKeeper(cdc, storeKey, memKey, authorityKeeper)
 }
@@ -51,16 +52,16 @@ func LightclientKeeperWithMocks(
 
 	// Initialize local store
 	db := tmdb.NewMemDB()
-	stateStore := store.NewCommitMultiStore(db)
+	stateStore := rootmulti.NewStore(db, log.NewNopLogger())
 	cdc := NewCodec()
 
-	authorityKeeperTmp := initAuthorityKeeper(cdc, db, stateStore)
+	authorityKeeperTmp := initAuthorityKeeper(cdc, stateStore)
 
 	// Create regular keepers
 	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)
 
 	// Create the observer keeper
-	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, nil)
 	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
 	require.NoError(t, stateStore.LoadLatestVersion())
 

@@ -14,19 +14,19 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 
-	"github.com/zeta-chain/zetacore/pkg/bg"
-	"github.com/zeta-chain/zetacore/pkg/constant"
-	zetamath "github.com/zeta-chain/zetacore/pkg/math"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
-	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	solanaobserver "github.com/zeta-chain/zetacore/zetaclient/chains/solana/observer"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
-	"github.com/zeta-chain/zetacore/zetaclient/ratelimiter"
+	"github.com/zeta-chain/node/pkg/bg"
+	"github.com/zeta-chain/node/pkg/constant"
+	zetamath "github.com/zeta-chain/node/pkg/math"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
+	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	solanaobserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
+	"github.com/zeta-chain/node/zetaclient/ratelimiter"
 )
 
 const (
@@ -161,7 +161,7 @@ func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chainID int64) (inte
 	case chain.IsEVM():
 		params := chain.Params()
 
-		// update zeta connector and ERC20 custody addresses
+		// update zeta connector, ERC20 custody, and gateway addresses
 		zetaConnectorAddress := ethcommon.HexToAddress(params.GetConnectorContractAddress())
 		if zetaConnectorAddress != signer.GetZetaConnectorAddress() {
 			signer.SetZetaConnectorAddress(zetaConnectorAddress)
@@ -169,18 +169,24 @@ func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chainID int64) (inte
 				Str("signer.connector_address", zetaConnectorAddress.String()).
 				Msgf("updated zeta connector address for chain %d", chainID)
 		}
-
 		erc20CustodyAddress := ethcommon.HexToAddress(params.GetErc20CustodyContractAddress())
 		if erc20CustodyAddress != signer.GetERC20CustodyAddress() {
 			signer.SetERC20CustodyAddress(erc20CustodyAddress)
 			oc.logger.Info().
 				Str("signer.erc20_custody", erc20CustodyAddress.String()).
-				Msgf("updated zeta connector address for chain %d", chainID)
+				Msgf("updated erc20 custody address for chain %d", chainID)
 		}
+		if params.GatewayAddress != signer.GetGatewayAddress() {
+			signer.SetGatewayAddress(params.GatewayAddress)
+			oc.logger.Info().
+				Str("signer.gateway_address", params.GatewayAddress).
+				Msgf("updated gateway address for chain %d", chainID)
+		}
+
 	case chain.IsSolana():
 		params := chain.Params()
 
-		// update solana gateway address
+		// update gateway address
 		if params.GatewayAddress != signer.GetGatewayAddress() {
 			signer.SetGatewayAddress(params.GatewayAddress)
 			oc.logger.Info().
@@ -368,17 +374,6 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 
 						chainID := chain.ID()
 
-						// get cctxs from map and set pending transactions prometheus gauge
-						cctxList := cctxMap[chainID]
-
-						metrics.PendingTxsPerChain.
-							WithLabelValues(chain.Name()).
-							Set(float64(len(cctxList)))
-
-						if len(cctxList) == 0 {
-							continue
-						}
-
 						// update chain parameters for signer and chain observer
 						signer, err := oc.resolveSigner(app, chainID)
 						if err != nil {
@@ -391,6 +386,17 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 						if err != nil {
 							oc.logger.Error().Err(err).
 								Msgf("runScheduler: resolveObserver failed for chain %d", chainID)
+							continue
+						}
+
+						// get cctxs from map and set pending transactions prometheus gauge
+						cctxList := cctxMap[chainID]
+
+						metrics.PendingTxsPerChain.
+							WithLabelValues(chain.Name()).
+							Set(float64(len(cctxList)))
+
+						if len(cctxList) == 0 {
 							continue
 						}
 

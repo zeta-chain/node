@@ -6,8 +6,8 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/context"
 )
 
 func TestFromContext(t *testing.T) {
@@ -24,7 +24,7 @@ func TestFromContext(t *testing.T) {
 
 	// ARRANGE #2
 	// Given basic app
-	app := context.New(config.New(false), zerolog.Nop())
+	app := context.New(config.New(false), nil, zerolog.Nop())
 
 	// That is included in the ctx
 	ctx = context.WithAppContext(ctx, app)
@@ -42,7 +42,7 @@ func TestFromContext(t *testing.T) {
 func TestCopy(t *testing.T) {
 	// ARRANGE
 	var (
-		app  = context.New(config.New(false), zerolog.Nop())
+		app  = context.New(config.New(false), nil, zerolog.Nop())
 		ctx1 = context.WithAppContext(goctx.Background(), app)
 	)
 

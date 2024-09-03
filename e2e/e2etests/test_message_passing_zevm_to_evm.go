@@ -7,17 +7,17 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/contracts/testdapp"
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/e2e/contracts/testdapp"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	cctxtypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func TestMessagePassingZEVMtoEVM(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok, "Invalid amount specified for TestMessagePassingZEVMtoEVM.")
+	// parse the amount
+	amount := parseBigInt(r, args[0])
 
 	// Set destination details
 	EVMChainID, err := r.EVMClient.ChainID(r.Ctx)

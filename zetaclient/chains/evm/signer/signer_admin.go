@@ -8,9 +8,9 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 
-	"github.com/zeta-chain/zetacore/pkg/constant"
+	"github.com/zeta-chain/node/pkg/constant"
 )
 
 // SignAdminTx signs a admin cmd transaction based on the given command
@@ -58,7 +58,7 @@ func (signer *Signer) signWhitelistERC20Cmd(
 		txData.to,
 		zeroValue,
 		txData.gas,
-		txData.outboundParams.TssNonce,
+		txData.nonce,
 		txData.height,
 	)
 	if err != nil {
@@ -99,7 +99,7 @@ func (signer *Signer) signMigrateERC20CustodyFundsCmd(
 		txData.to,
 		zeroValue,
 		txData.gas,
-		txData.outboundParams.TssNonce,
+		txData.nonce,
 		txData.height,
 	)
 	if err != nil {
@@ -143,7 +143,7 @@ func (signer *Signer) signUpdateERC20CustodyPauseStatusCmd(
 		txData.to,
 		zeroValue,
 		txData.gas,
-		txData.outboundParams.TssNonce,
+		txData.nonce,
 		txData.height,
 	)
 	if err != nil {

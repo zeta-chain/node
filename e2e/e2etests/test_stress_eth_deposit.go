@@ -2,25 +2,23 @@ package e2etests
 
 import (
 	"fmt"
-	"math/big"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // TestStressEtherDeposit tests the stressing deposit of ether
 func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
-	depositAmount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok)
-
+	// parse deposit amount and number of deposits
+	depositAmount := parseBigInt(r, args[0])
 	numDeposits := parseInt(r, args[1])
 
 	r.Logger.Print("starting stress test of %d deposits", numDeposits)

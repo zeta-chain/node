@@ -8,9 +8,32 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
+
+// GetEVMRevertAddress returns the EVM revert address
+// If a revert address is specified in the revert options, it returns the address
+// Otherwise returns sender address
+func (m CrossChainTx) GetEVMRevertAddress() ethcommon.Address {
+	addr, valid := m.RevertOptions.GetEVMRevertAddress()
+	if valid {
+		return addr
+	}
+	return ethcommon.HexToAddress(m.InboundParams.Sender)
+}
+
+// GetEVMAbortAddress returns the EVM abort address
+// If an abort address is specified in the revert options, it returns the address
+// Otherwise returns sender address
+func (m CrossChainTx) GetEVMAbortAddress() ethcommon.Address {
+	addr, valid := m.RevertOptions.GetEVMAbortAddress()
+	if valid {
+		return addr
+	}
+	return ethcommon.HexToAddress(m.InboundParams.Sender)
+}
 
 // GetCurrentOutboundParam returns the current outbound params.
 // There can only be one active outbound.
@@ -82,8 +105,19 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 		return fmt.Errorf("cannot revert before trying to process an outbound tx")
 	}
 
+	// in protocol contract V2, developers can specify a specific address to receive the revert
+	// if not specified, the sender address is used
+	// note: this option is current only support for EVM type chains
+	revertReceiver := m.InboundParams.Sender
+	if m.ProtocolContractVersion == ProtocolContractVersion_V2 {
+		revertAddress, valid := m.RevertOptions.GetEVMRevertAddress()
+		if valid {
+			revertReceiver = revertAddress.Hex()
+		}
+	}
+
 	revertTxParams := &OutboundParams{
-		Receiver:        m.InboundParams.Sender,
+		Receiver:        revertReceiver,
 		ReceiverChainId: m.InboundParams.SenderChainId,
 		Amount:          m.GetCurrentOutboundParam().Amount,
 		GasLimit:        gasLimit,
@@ -168,6 +202,7 @@ func (m CrossChainTx) SetOutboundBallotIndex(index string) {
 	m.GetCurrentOutboundParam().BallotIndex = index
 }
 
+// GetCctxIndexFromBytes returns the CCTX index from a byte array.
 func GetCctxIndexFromBytes(sendHash [32]byte) string {
 	return fmt.Sprintf("0x%s", hex.EncodeToString(sendHash[:]))
 }
@@ -215,13 +250,15 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		IsAbortRefunded:     false,
 	}
 	cctx := CrossChainTx{
-		Creator:        msg.Creator,
-		Index:          index,
-		ZetaFees:       sdkmath.ZeroUint(),
-		RelayedMessage: msg.Message,
-		CctxStatus:     status,
-		InboundParams:  inboundParams,
-		OutboundParams: []*OutboundParams{outboundParams},
+		Creator:                 msg.Creator,
+		Index:                   index,
+		ZetaFees:                sdkmath.ZeroUint(),
+		RelayedMessage:          msg.Message,
+		CctxStatus:              status,
+		InboundParams:           inboundParams,
+		OutboundParams:          []*OutboundParams{outboundParams},
+		ProtocolContractVersion: msg.ProtocolContractVersion,
+		RevertOptions:           msg.RevertOptions,
 	}
 
 	// TODO: remove this validate call

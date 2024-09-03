@@ -2,14 +2,13 @@ package e2etests
 
 import (
 	"bytes"
-	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
 )
 
 // TestContextUpgrade tests sending ETH on ZetaChain and check context data
@@ -17,8 +16,7 @@ func TestContextUpgrade(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// parse the value from the provided arguments
-	value, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok, "Invalid value specified for TestContextUpgrade.")
+	value := parseBigInt(r, args[0])
 
 	data := make([]byte, 0, 32)
 	data = append(data, r.ContextAppAddr.Bytes()...)

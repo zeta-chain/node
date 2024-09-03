@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	observer "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/pkg/chains"
+	observer "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
 func TestChainRegistry(t *testing.T) {
@@ -35,7 +35,7 @@ func TestChainRegistry(t *testing.T) {
 
 	t.Run("Sample Flow", func(t *testing.T) {
 		// Given registry
-		r := NewChainRegistry()
+		r := NewChainRegistry(nil)
 
 		// With some chains added
 		require.NoError(t, r.Set(btc.ChainId, btc, btcParams))

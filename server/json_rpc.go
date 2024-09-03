@@ -12,7 +12,7 @@
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/evmos/ethermint/blob/main/LICENSE
+// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package server
 
 import (
@@ -24,12 +24,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	ethlog "github.com/ethereum/go-ethereum/log"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
-	ethermint "github.com/evmos/ethermint/types"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
+	ethermint "github.com/zeta-chain/ethermint/types"
 
-	"github.com/zeta-chain/zetacore/rpc"
-	"github.com/zeta-chain/zetacore/server/config"
+	"github.com/zeta-chain/node/rpc"
+	"github.com/zeta-chain/node/server/config"
 )
 
 // StartJSONRPC starts the JSON-RPC server

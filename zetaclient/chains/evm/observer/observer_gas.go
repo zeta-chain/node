@@ -7,7 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
+	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
 // WatchGasPrice watches evm chain for gas prices and post to zetacore

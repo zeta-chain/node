@@ -6,8 +6,9 @@ import "zetachain/zetacore/pkg/chains/chains.proto";
 import "zetachain/zetacore/pkg/coin/coin.proto";
 import "zetachain/zetacore/pkg/proofs/proofs.proto";
 import "zetachain/zetacore/crosschain/rate_limiter_flags.proto";
+import "zetachain/zetacore/crosschain/cross_chain_tx.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
+option go_package = "github.com/zeta-chain/node/x/crosschain/types";
 
 // Msg defines the Msg service.
 service Msg {
@@ -168,6 +169,12 @@ message MsgVoteInbound {
   string asset = 14;
   // event index of the sent asset in the observed tx
   uint64 event_index = 15;
+
+  // protocol contract version to use for the cctx workflow
+  ProtocolContractVersion protocol_contract_version = 16;
+
+  // revert options provided by the sender
+  RevertOptions revert_options = 17 [ (gogoproto.nullable) = false ];
 }
 
 message MsgVoteInboundResponse {}

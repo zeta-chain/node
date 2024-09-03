@@ -12,7 +12,7 @@
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/evmos/ethermint/blob/main/LICENSE
+// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package filters
 
 import (
@@ -29,8 +29,8 @@ import (
 	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/zetacore/rpc/backend"
-	"github.com/zeta-chain/zetacore/rpc/types"
+	"github.com/zeta-chain/node/rpc/backend"
+	"github.com/zeta-chain/node/rpc/types"
 )
 
 // BloomIV represents the bit indexes and value inside the bloom filter that belong

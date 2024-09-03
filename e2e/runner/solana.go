@@ -10,9 +10,9 @@ import (
 	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	solanacontract "github.com/zeta-chain/zetacore/pkg/contracts/solana"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/e2e/utils"
+	solanacontract "github.com/zeta-chain/node/pkg/contracts/solana"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // ComputePdaAddress computes the PDA address for the gateway program
@@ -31,6 +31,7 @@ func (r *E2ERunner) ComputePdaAddress() solana.PublicKey {
 func (r *E2ERunner) CreateDepositInstruction(
 	signer solana.PublicKey,
 	receiver ethcommon.Address,
+	data []byte,
 	amount uint64,
 ) solana.Instruction {
 	// compute the gateway PDA address
@@ -43,7 +44,6 @@ func (r *E2ERunner) CreateDepositInstruction(
 	accountSlice = append(accountSlice, solana.Meta(signer).WRITE().SIGNER())
 	accountSlice = append(accountSlice, solana.Meta(pdaComputed).WRITE())
 	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
-	accountSlice = append(accountSlice, solana.Meta(programID))
 	inst.ProgID = programID
 	inst.AccountValues = accountSlice
 
@@ -51,7 +51,7 @@ func (r *E2ERunner) CreateDepositInstruction(
 	inst.DataBytes, err = borsh.Serialize(solanacontract.DepositInstructionParams{
 		Discriminator: solanacontract.DiscriminatorDeposit(),
 		Amount:        amount,
-		Memo:          receiver.Bytes(),
+		Memo:          append(receiver.Bytes(), data...),
 	})
 	require.NoError(r, err)
 
@@ -64,7 +64,7 @@ func (r *E2ERunner) CreateSignedTransaction(
 	privateKey solana.PrivateKey,
 ) *solana.Transaction {
 	// get a recent blockhash
-	recent, err := r.SolanaClient.GetRecentBlockhash(r.Ctx, rpc.CommitmentFinalized)
+	recent, err := r.SolanaClient.GetLatestBlockhash(r.Ctx, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 
 	// create the initialize transaction
@@ -96,9 +96,16 @@ func (r *E2ERunner) BroadcastTxSync(tx *solana.Transaction) (solana.Signature, *
 	require.NoError(r, err)
 	r.Logger.Info("broadcast success! tx sig %s; waiting for confirmation...", sig)
 
+	var (
+		start   = time.Now()
+		timeout = 2 * time.Minute // Solana tx expires automatically after 2 minutes
+	)
+
 	// wait for the transaction to be finalized
 	var out *rpc.GetTransactionResult
 	for {
+		require.False(r, time.Since(start) > timeout, "waiting solana tx timeout")
+
 		time.Sleep(1 * time.Second)
 		out, err = r.SolanaClient.GetTransaction(r.Ctx, sig, &rpc.GetTransactionOpts{})
 		if err == nil {
@@ -107,6 +114,33 @@ func (r *E2ERunner) BroadcastTxSync(tx *solana.Transaction) (solana.Signature, *
 	}
 
 	return sig, out
+}
+
+// SOLDepositAndCall deposits an amount of ZRC20 SOL tokens (in lamports) and calls a contract (if data is provided)
+func (r *E2ERunner) SOLDepositAndCall(
+	signerPrivKey *solana.PrivateKey,
+	receiver ethcommon.Address,
+	amount *big.Int,
+	data []byte,
+) solana.Signature {
+	// if signer is not provided, use the runner account as default
+	if signerPrivKey == nil {
+		privkey, err := solana.PrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
+		require.NoError(r, err)
+		signerPrivKey = &privkey
+	}
+
+	// create 'deposit' instruction
+	instruction := r.CreateDepositInstruction(signerPrivKey.PublicKey(), receiver, data, amount.Uint64())
+
+	// create and sign the transaction
+	signedTx := r.CreateSignedTransaction([]solana.Instruction{instruction}, *signerPrivKey)
+
+	// broadcast the transaction and wait for finalization
+	sig, out := r.BroadcastTxSync(signedTx)
+	r.Logger.Info("deposit logs: %v", out.Meta.LogMessages)
+
+	return sig
 }
 
 // WithdrawSOLZRC20 withdraws an amount of ZRC20 SOL tokens

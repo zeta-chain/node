@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/testutil/testdata"
-	"github.com/zeta-chain/zetacore/x/authority/client/cli"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
+	"github.com/zeta-chain/node/testutil/testdata"
+	"github.com/zeta-chain/node/x/authority/client/cli"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 )
 
 func TestReadPoliciesFromFile(t *testing.T) {

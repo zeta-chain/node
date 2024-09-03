@@ -12,7 +12,7 @@
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/evmos/ethermint/blob/main/LICENSE
+// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package server
 
 import (
@@ -52,15 +52,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethmetricsexp "github.com/ethereum/go-ethereum/metrics/exp"
-	"github.com/evmos/ethermint/indexer"
-	ethermint "github.com/evmos/ethermint/types"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/ethermint/indexer"
+	ethermint "github.com/zeta-chain/ethermint/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	ethdebug "github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/debug"
-	"github.com/zeta-chain/zetacore/server/config"
-	srvflags "github.com/zeta-chain/zetacore/server/flags"
+	zetaos "github.com/zeta-chain/node/pkg/os"
+	"github.com/zeta-chain/node/server/config"
+	srvflags "github.com/zeta-chain/node/server/flags"
 )
 
 // DBOpener is a function to open `application.db`, potentially with customized options.
@@ -337,7 +337,7 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 	logger := ctx.Logger
 
 	if cpuProfile := ctx.Viper.GetString(srvflags.CPUProfile); cpuProfile != "" {
-		fp, err := ethdebug.ExpandHome(cpuProfile)
+		fp, err := zetaos.ExpandHomeDir(cpuProfile)
 		if err != nil {
 			ctx.Logger.Debug("failed to get filepath for the CPU profile file", "error", err.Error())
 			return err

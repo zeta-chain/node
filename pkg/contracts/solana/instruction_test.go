@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	contracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
+	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 )
 
 const (

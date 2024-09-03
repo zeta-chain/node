@@ -2,7 +2,6 @@ package e2etests
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"strconv"
 	"time"
@@ -12,12 +11,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/chains"
+	zetacrypto "github.com/zeta-chain/node/pkg/crypto"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
@@ -146,9 +145,9 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 		btcTSSBalanceNew += utxo.Amount
 	}
 
-	r.Logger.Info(fmt.Sprintf("BTC Balance Old: %f", btcTSSBalanceOld*1e8))
-	r.Logger.Info(fmt.Sprintf("BTC Balance New: %f", btcTSSBalanceNew*1e8))
-	r.Logger.Info(fmt.Sprintf("Migrator amount : %s", cctxBTC.GetCurrentOutboundParam().Amount))
+	r.Logger.Info("BTC Balance Old: %f", btcTSSBalanceOld*1e8)
+	r.Logger.Info("BTC Balance New: %f", btcTSSBalanceNew*1e8)
+	r.Logger.Info("Migrator amount : %s", cctxBTC.GetCurrentOutboundParam().Amount)
 
 	// btcTSSBalanceNew should be less than btcTSSBalanceOld as there is some loss of funds during migration
 	// #nosec G701 e2eTest - always in range
@@ -160,14 +159,13 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	require.LessOrEqual(r, btcTSSBalanceNew*1e8, btcTSSBalanceOld*1e8)
 
 	// ETH
-
 	r.TSSAddress = common.HexToAddress(newTss.Eth)
 	ethTSSBalanceNew, err := r.EVMClient.BalanceAt(context.Background(), r.TSSAddress, nil)
 	require.NoError(r, err)
 
-	r.Logger.Info(fmt.Sprintf("TSS Balance Old: %s", ethTSSBalanceOld.String()))
-	r.Logger.Info(fmt.Sprintf("TSS Balance New: %s", ethTSSBalanceNew.String()))
-	r.Logger.Info(fmt.Sprintf("Migrator amount : %s", cctxETH.GetCurrentOutboundParam().Amount.String()))
+	r.Logger.Info("TSS Balance Old: %s", ethTSSBalanceOld.String())
+	r.Logger.Info("TSS Balance New: %s", ethTSSBalanceNew.String())
+	r.Logger.Info("Migrator amount : %s", cctxETH.GetCurrentOutboundParam().Amount.String())
 
 	// ethTSSBalanceNew should be less than ethTSSBalanceOld as there is some loss of funds during migration
 	require.Equal(r, ethTSSBalanceNew.String(), cctxETH.GetCurrentOutboundParam().Amount.String())

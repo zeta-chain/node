@@ -7,10 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/x/emissions/exported"
-	v3 "github.com/zeta-chain/zetacore/x/emissions/migrations/v3"
-	"github.com/zeta-chain/zetacore/x/emissions/types"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/x/emissions/exported"
+	v3 "github.com/zeta-chain/node/x/emissions/migrations/v3"
+	"github.com/zeta-chain/node/x/emissions/types"
 )
 
 type mockSubspace struct {

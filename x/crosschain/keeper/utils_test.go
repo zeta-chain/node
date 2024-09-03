@@ -5,20 +5,25 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/ethereum/go-ethereum/common"
-	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	"github.com/zeta-chain/node/pkg/chains"
+	testkeeper "github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // getValidEthChainID get a valid eth chain id
@@ -67,6 +72,44 @@ func assertContractDeployment(t *testing.T, k *evmkeeper.Keeper, ctx sdk.Context
 	require.NotEmpty(t, code)
 }
 
+// deploy upgradable gateway contract and return its address
+func deployGatewayContract(
+	t *testing.T,
+	ctx sdk.Context,
+	k *fungiblekeeper.Keeper,
+	evmk *evmkeeper.Keeper,
+	wzeta, admin common.Address,
+) common.Address {
+	// Deploy the gateway contract
+	implAddr, err := k.DeployContract(ctx, gatewayzevm.GatewayZEVMMetaData)
+	require.NoError(t, err)
+	require.NotEmpty(t, implAddr)
+	assertContractDeployment(t, evmk, ctx, implAddr)
+
+	// Deploy the proxy contract
+	gatewayABI, err := gatewayzevm.GatewayZEVMMetaData.GetAbi()
+	require.NoError(t, err)
+
+	// Encode the initializer data
+	initializerData, err := gatewayABI.Pack("initialize", wzeta, admin)
+	require.NoError(t, err)
+
+	gatewayContract, err := k.DeployContract(ctx, erc1967proxy.ERC1967ProxyMetaData, implAddr, initializerData)
+	require.NoError(t, err)
+	require.NotEmpty(t, gatewayContract)
+	assertContractDeployment(t, evmk, ctx, gatewayContract)
+
+	// store the gateway in the system contract object
+	sys, found := k.GetSystemContract(ctx)
+	if !found {
+		sys = fungibletypes.SystemContract{}
+	}
+	sys.Gateway = gatewayContract.Hex()
+	k.SetSystemContract(ctx, sys)
+
+	return gatewayContract
+}
+
 // deploySystemContracts deploys the system contracts and returns their addresses.
 func deploySystemContracts(
 	t *testing.T,
@@ -100,6 +143,10 @@ func deploySystemContracts(
 	require.NoError(t, err)
 	require.NotEmpty(t, systemContract)
 	assertContractDeployment(t, evmk, ctx, systemContract)
+
+	// deploy the gateway contract
+	contract := deployGatewayContract(t, ctx, k, evmk, wzeta, sample.EthAddress())
+	require.NotEmpty(t, contract)
 
 	return
 }

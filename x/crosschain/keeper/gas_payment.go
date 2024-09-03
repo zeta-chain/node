@@ -10,11 +10,11 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // ChainGasParams represents the parameters to calculate the fees for gas for a chain.
@@ -169,11 +169,19 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 	if _, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); !found {
 		return observertypes.ErrSupportedChains
 	}
+
 	// get gas params
 	gas, err := k.ChainGasParams(ctx, chainID)
 	if err != nil {
 		return cosmoserrors.Wrap(types.ErrCannotFindGasParams, err.Error())
 	}
+
+	// with V2 protocol, reverts on connected chains can eventually call a onRevert function which can require a higher gas limit
+	if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 && cctx.RevertOptions.CallOnRevert &&
+		!cctx.RevertOptions.RevertGasLimit.IsZero() {
+		gas.GasLimit = cctx.RevertOptions.RevertGasLimit
+	}
+
 	outTxGasFee := gas.GasLimit.Mul(gas.GasPrice).Add(gas.ProtocolFlatFee)
 	// get address of the zrc20
 	fc, found := k.fungibleKeeper.GetForeignCoinFromAsset(ctx, cctx.InboundParams.Asset, chainID)

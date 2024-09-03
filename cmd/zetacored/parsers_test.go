@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/app"
-	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/node/app"
+	"github.com/zeta-chain/node/testutil/sample"
 )
 
 func TestParsefileToObserverMapper(t *testing.T) {

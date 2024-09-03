@@ -3,8 +3,8 @@ package cctx
 import (
 	sdkmath "cosmossdk.io/math"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/pkg/coin"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // https://zetachain-mainnet-archive.allthatnode.com:1317/zeta-chain/crosschain/cctx/0x477544c4b8c8be544b23328b21286125c89cd6bb5d1d6d388d91eea8ea1a6f1f
@@ -28,7 +28,7 @@ var chain_1_cctx_inbound_Zeta_0xf393520 = &crosschaintypes.CrossChainTx{
 		Amount:                 sdkmath.NewUintFromString("20000000000000000000"),
 		ObservedHash:           "0xf3935200c80f98502d5edc7e871ffc40ca898e134525c42c2ae3cbc5725f9d76",
 		ObservedExternalHeight: 19273702,
-		BallotIndex:            "0x9039e8b0493d58ee4db876ffd0785970019d7eb515e2f71b00fe670bb6a8e6ce",
+		BallotIndex:            "0xa4efd2d7293e1c2c557eb527c7ad7f2f8754cce413d3f72929a17e02b537b0af",
 		FinalizedZetaHeight:    1851403,
 		TxFinalizationStatus:   crosschaintypes.TxFinalizationStatus_Executed,
 	},

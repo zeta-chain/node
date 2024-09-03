@@ -9,12 +9,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/pkg/proofs"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	clientauthz "github.com/zeta-chain/zetacore/zetaclient/authz"
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/proofs"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	clientauthz "github.com/zeta-chain/node/zetaclient/authz"
+	clientcommon "github.com/zeta-chain/node/zetaclient/common"
 )
 
 // GetInboundVoteMessage returns a new MsgVoteInbound
@@ -50,6 +50,7 @@ func GetInboundVoteMessage(
 		coinType,
 		asset,
 		eventIndex,
+		types.ProtocolContractVersion_V1,
 	)
 	return msg
 }

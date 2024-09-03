@@ -3,8 +3,8 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/x/emissions/exported"
-	v3 "github.com/zeta-chain/zetacore/x/emissions/migrations/v3"
+	"github.com/zeta-chain/node/x/emissions/exported"
+	v3 "github.com/zeta-chain/node/x/emissions/migrations/v3"
 )
 
 // Migrator is a struct for handling in-place store migrations.

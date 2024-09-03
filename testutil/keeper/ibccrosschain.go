@@ -11,9 +11,9 @@ import (
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	"github.com/stretchr/testify/require"
 
-	ibccrosschainmocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/ibccrosschain"
-	"github.com/zeta-chain/zetacore/x/ibccrosschain/keeper"
-	"github.com/zeta-chain/zetacore/x/ibccrosschain/types"
+	ibccrosschainmocks "github.com/zeta-chain/node/testutil/keeper/mocks/ibccrosschain"
+	"github.com/zeta-chain/node/x/ibccrosschain/keeper"
+	"github.com/zeta-chain/node/x/ibccrosschain/types"
 )
 
 type IBCCroscchainMockOptions struct {
@@ -69,11 +69,10 @@ func IBCCrosschainKeeperWithMocks(
 	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)
 
 	// Create zeta keepers
-	authorityKeeper := initAuthorityKeeper(cdc, db, stateStore)
-	lightclientKeeper := initLightclientKeeper(cdc, db, stateStore, authorityKeeper)
+	authorityKeeper := initAuthorityKeeper(cdc, stateStore)
+	lightclientKeeper := initLightclientKeeper(cdc, stateStore, authorityKeeper)
 	observerKeeper := initObserverKeeper(
 		cdc,
-		db,
 		stateStore,
 		sdkKeepers.StakingKeeper,
 		sdkKeepers.SlashingKeeper,
@@ -82,7 +81,6 @@ func IBCCrosschainKeeperWithMocks(
 	)
 	fungibleKeeper := initFungibleKeeper(
 		cdc,
-		db,
 		stateStore,
 		sdkKeepers.AuthKeeper,
 		sdkKeepers.BankKeeper,

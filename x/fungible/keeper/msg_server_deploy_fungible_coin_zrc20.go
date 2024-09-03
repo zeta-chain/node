@@ -8,9 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	"github.com/zeta-chain/zetacore/x/fungible/types"
+	"github.com/zeta-chain/node/pkg/coin"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	"github.com/zeta-chain/node/x/fungible/types"
 )
 
 // DeployFungibleCoinZRC20 deploys a fungible coin from a connected chains as a ZRC20 on ZetaChain.
@@ -64,7 +64,16 @@ func (k msgServer) DeployFungibleCoinZRC20(
 		}
 	} else {
 		// #nosec G115 always in range
-		address, err = k.DeployZRC20Contract(ctx, msg.Name, msg.Symbol, uint8(msg.Decimals), msg.ForeignChainId, msg.CoinType, msg.ERC20, big.NewInt(msg.GasLimit))
+		address, err = k.DeployZRC20Contract(
+			ctx,
+			msg.Name,
+			msg.Symbol,
+			uint8(msg.Decimals),
+			msg.ForeignChainId,
+			msg.CoinType,
+			msg.ERC20,
+			big.NewInt(msg.GasLimit),
+		)
 		if err != nil {
 			return nil, err
 		}

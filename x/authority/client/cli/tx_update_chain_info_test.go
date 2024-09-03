@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/testutil/testdata"
-	"github.com/zeta-chain/zetacore/x/authority/client/cli"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/testutil/testdata"
+	"github.com/zeta-chain/node/x/authority/client/cli"
 )
 
 func TestReadChainInfoFromFile(t *testing.T) {

@@ -5,23 +5,33 @@ import (
 	"testing"
 
 	tmdb "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	crosschainmocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/crosschain"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	crosschainmocks "github.com/zeta-chain/node/testutil/keeper/mocks/crosschain"
+	"github.com/zeta-chain/node/testutil/sample"
+	authoritykeeper "github.com/zeta-chain/node/x/authority/keeper"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	"github.com/zeta-chain/node/x/crosschain/keeper"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	lightclientkeeper "github.com/zeta-chain/node/x/lightclient/keeper"
+	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
+	observerkeeper "github.com/zeta-chain/node/x/observer/keeper"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 type CrosschainMockOptions struct {
@@ -85,40 +95,54 @@ func CrosschainKeeperWithMocks(
 	t testing.TB,
 	mockOptions CrosschainMockOptions,
 ) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
-	SetConfig(false)
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
-	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
+	keys, memKeys, tkeys, allKeys := StoreKeys()
 
 	// Initialize local store
 	db := tmdb.NewMemDB()
-	stateStore := store.NewCommitMultiStore(db)
+	logger := log.NewNopLogger()
+	stateStore := rootmulti.NewStore(db, logger)
 	cdc := NewCodec()
 
 	// Create regular keepers
-	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)
+	sdkKeepers := NewSDKKeepersWithKeys(cdc, keys, memKeys, tkeys, allKeys)
 
 	// Create zeta keepers
-	authorityKeeperTmp := initAuthorityKeeper(cdc, db, stateStore)
-	lightclientKeeperTmp := initLightclientKeeper(cdc, db, stateStore, authorityKeeperTmp)
-	observerKeeperTmp := initObserverKeeper(
+	authorityKeeperTmp := authoritykeeper.NewKeeper(
 		cdc,
-		db,
-		stateStore,
+		keys[authoritytypes.StoreKey],
+		memKeys[authoritytypes.MemStoreKey],
+		AuthorityGovAddress,
+	)
+
+	lightclientKeeperTmp := lightclientkeeper.NewKeeper(
+		cdc,
+		keys[lightclienttypes.StoreKey],
+		memKeys[lightclienttypes.MemStoreKey],
+		authorityKeeperTmp,
+	)
+
+	observerKeeperTmp := observerkeeper.NewKeeper(
+		cdc,
+		keys[observertypes.StoreKey],
+		memKeys[observertypes.MemStoreKey],
 		sdkKeepers.StakingKeeper,
 		sdkKeepers.SlashingKeeper,
 		authorityKeeperTmp,
 		lightclientKeeperTmp,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	fungibleKeeperTmp := initFungibleKeeper(
+
+	fungibleKeeperTmp := fungiblekeeper.NewKeeper(
 		cdc,
-		db,
-		stateStore,
+		keys[types.StoreKey],
+		memKeys[types.MemStoreKey],
 		sdkKeepers.AuthKeeper,
-		sdkKeepers.BankKeeper,
 		sdkKeepers.EvmKeeper,
+		sdkKeepers.BankKeeper,
 		observerKeeperTmp,
 		authorityKeeperTmp,
 	)
+
 	zetaKeepers := ZetaKeepers{
 		ObserverKeeper:  observerKeeperTmp,
 		FungibleKeeper:  fungibleKeeperTmp,
@@ -129,9 +153,15 @@ func CrosschainKeeperWithMocks(
 	var observerKeeper types.ObserverKeeper = observerKeeperTmp
 	var fungibleKeeper types.FungibleKeeper = fungibleKeeperTmp
 
-	// Create the crosschain keeper
-	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
-	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
+	for _, key := range keys {
+		stateStore.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
+	}
+	for _, key := range tkeys {
+		stateStore.MountStoreWithDB(key, storetypes.StoreTypeTransient, nil)
+	}
+	for _, key := range memKeys {
+		stateStore.MountStoreWithDB(key, storetypes.StoreTypeMemory, nil)
+	}
 
 	// Initialize mocks for mocked keepers
 	var authKeeper types.AccountKeeper = sdkKeepers.AuthKeeper
@@ -163,8 +193,8 @@ func CrosschainKeeperWithMocks(
 	// create crosschain keeper
 	k := keeper.NewKeeper(
 		cdc,
-		storeKey,
-		memStoreKey,
+		keys[types.StoreKey],
+		memKeys[types.MemStoreKey],
 		stakingKeeper,
 		authKeeper,
 		bankKeeper,
@@ -190,7 +220,7 @@ func CrosschainKeeperWithMocks(
 	k.SetIBCCrosschainKeeper(ibcCrosschainKeeperTmp)
 
 	// seal the IBC router
-	sdkKeepers.IBCKeeper.SetRouter(sdkKeepers.IBCRouter)
+	// sdkKeepers.IBCKeeper.SetRouter(sdkKeepers.IBCRouter)
 
 	// load the latest version of the state store
 	require.NoError(t, stateStore.LoadLatestVersion())
@@ -359,6 +389,7 @@ func MockRevertForHandleEVMDeposit(
 		mock.Anything,
 		coin.CoinType_ERC20,
 		mock.Anything,
+		mock.Anything,
 	).Return(&evmtypes.MsgEthereumTxResponse{VmError: "reverted"}, false, errDeposit)
 }
 
@@ -386,10 +417,6 @@ func MockVoteOnOutboundFailedBallot(
 		Once()
 }
 
-func MockGetOutbound(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context) {
-	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true).Once()
-}
-
 func MockSaveOutbound(
 	m *crosschainmocks.CrosschainObserverKeeper,
 	ctx sdk.Context,
@@ -400,7 +427,6 @@ func MockSaveOutbound(
 	m.On("RemoveFromPendingNonces",
 		ctx, tss.TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId, mock.Anything).
 		Return().Times(expectedNumberOfOutboundParams)
-	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true)
 }
 
 func MockSaveOutboundNewRevertCreated(

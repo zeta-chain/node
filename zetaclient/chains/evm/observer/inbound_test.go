@@ -10,17 +10,17 @@ import (
 	"github.com/onrik/ethrpc"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/keys"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/pkg/constant"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
-	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/testutils"
+	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
 func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
@@ -501,7 +501,7 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 
 func makeAppContext(t *testing.T) (context.Context, *zctx.AppContext) {
 	var (
-		app = zctx.New(config.New(false), zerolog.New(zerolog.NewTestWriter(t)))
+		app = zctx.New(config.New(false), nil, zerolog.New(zerolog.NewTestWriter(t)))
 		ctx = context.Background()
 	)
 

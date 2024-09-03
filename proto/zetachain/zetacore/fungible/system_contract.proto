@@ -3,7 +3,7 @@ package zetachain.zetacore.fungible;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
+option go_package = "github.com/zeta-chain/node/x/fungible/types";
 
 message SystemContract {
   string system_contract = 1;

@@ -1,24 +1,21 @@
 package e2etests
 
 import (
-	"math/big"
-
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	testcontract "github.com/zeta-chain/node/testutil/contracts"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // TestEtherDepositAndCall tests deposit of ethers calling a example contract
 func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	value, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok, "Invalid amount specified for TestEtherDepositAndCall.")
+	// parse deposit amount
+	value := parseBigInt(r, args[0])
 
 	r.Logger.Info("Deploying example contract")
 	exampleAddr, _, exampleContract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)
@@ -57,16 +54,7 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_OutboundMined)
 
 	// Checking example contract has been called, bar value should be set to amount
-	bar, err := exampleContract.Bar(&bind.CallOpts{})
-	require.NoError(r, err)
-	require.Equal(
-		r,
-		0,
-		bar.Cmp(value),
-		"cross-chain call failed bar value %s should be equal to amount %s",
-		bar.String(),
-		value.String(),
-	)
+	utils.MustHaveCalledExampleContract(r, exampleContract, value)
 	r.Logger.Info("Cross-chain call succeeded")
 
 	r.Logger.Info("Deploying reverter contract")
@@ -100,6 +88,5 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("Cross-chain call to reverter reverted")
 
 	// check the status message contains revert error hash in case of revert
-	// 0xbfb4ebcf is the hash of "Foo()"
-	require.Contains(r, cctx.CctxStatus.StatusMessage, "0xbfb4ebcf")
+	require.Contains(r, cctx.CctxStatus.StatusMessage, utils.ErrHashRevertFoo)
 }

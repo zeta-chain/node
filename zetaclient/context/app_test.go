@@ -6,9 +6,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/config"
 	"golang.org/x/exp/maps"
 )
 
@@ -57,7 +57,7 @@ func TestAppContext(t *testing.T) {
 
 	t.Run("Update", func(t *testing.T) {
 		// Given AppContext
-		appContext := New(testCfg, logger)
+		appContext := New(testCfg, nil, logger)
 
 		// With expected default behavior
 		_, err := appContext.GetChain(123)

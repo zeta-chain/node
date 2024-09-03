@@ -10,8 +10,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/config"
 )
 
 func waitForZetaCore(config config.Config, logger zerolog.Logger) {
@@ -20,7 +21,7 @@ func waitForZetaCore(config config.Config, logger zerolog.Logger) {
 	for {
 		_, err := grpc.Dial(
 			fmt.Sprintf("%s:9090", config.ZetaCoreURL),
-			grpc.WithInsecure(),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
 		if err != nil {
 			logger.Warn().Err(err).Msg("grpc dial fail")

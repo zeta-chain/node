@@ -8,8 +8,8 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/zetacore/pkg/retry"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/pkg/retry"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // MonitorVoteOutboundResult monitors the result of a vote outbound tx
@@ -150,10 +150,11 @@ func (c *Client) monitorVoteInboundResult(
 
 		if retryGasLimit > 0 {
 			// new retryGasLimit set to 0 to prevent reentering this function
-			if _, _, err := c.PostVoteInbound(ctx, retryGasLimit, 0, msg); err != nil {
+			if resentTxHash, _, err := c.PostVoteInbound(ctx, retryGasLimit, 0, msg); err != nil {
 				c.logger.Error().Err(err).Fields(logFields).Msg("monitorVoteInboundResult: failed to resend tx")
 			} else {
-				c.logger.Info().Fields(logFields).Msg("monitorVoteInboundResult: successfully resent tx")
+				logFields["inbound.resent_hash"] = resentTxHash
+				c.logger.Info().Fields(logFields).Msgf("monitorVoteInboundResult: successfully resent tx")
 			}
 		}
 

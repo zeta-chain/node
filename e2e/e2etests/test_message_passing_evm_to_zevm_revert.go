@@ -7,10 +7,10 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/contracts/testdapp"
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/e2e/contracts/testdapp"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	cctxtypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // fungibleModuleAddress is a constant representing the EVM address of the Fungible module account
@@ -22,8 +22,8 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 	fungibleEthAddress := ethcommon.HexToAddress(fungibleModuleAddress)
 	require.True(r, fungibleEthAddress != ethcommon.Address{}, "invalid fungible module address")
 
-	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok)
+	// parse the amount
+	amount := parseBigInt(r, args[0])
 
 	// Set destination details
 	zEVMChainID, err := r.ZEVMClient.ChainID(r.Ctx)

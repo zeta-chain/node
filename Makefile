@@ -1,5 +1,6 @@
 .PHONY: build
 
+PACKAGE_NAME := github.com/zeta-chain/node
 VERSION := $(shell ./version.sh)
 COMMIT := $(shell [ -z "${COMMIT_ID}" ] && git log -1 --format='%H' || echo ${COMMIT_ID} )
 BUILDTIME := $(shell date -u +"%Y%m%d.%H%M%S" )
@@ -8,22 +9,24 @@ DOCKER ?= docker
 # useful for setting profiles
 DOCKER_COMPOSE ?= $(DOCKER) compose $(COMPOSE_ARGS)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
-GOFLAGS:=""
+GOFLAGS := ""
+GOLANG_CROSS_VERSION ?= v1.22.4
+GOPATH ?= '$(HOME)/go'
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/cosmos/cosmos-sdk/version.ServerName=zetacored \
 	-X github.com/cosmos/cosmos-sdk/version.ClientName=zetaclientd \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-	-X github.com/zeta-chain/zetacore/pkg/constant.Name=zetacored \
-	-X github.com/zeta-chain/zetacore/pkg/constant.Version=$(VERSION) \
-	-X github.com/zeta-chain/zetacore/pkg/constant.CommitHash=$(COMMIT) \
-	-X github.com/zeta-chain/zetacore/pkg/constant.BuildTime=$(BUILDTIME) \
+	-X github.com/zeta-chain/node/pkg/constant.Name=zetacored \
+	-X github.com/zeta-chain/node/pkg/constant.Version=$(VERSION) \
+	-X github.com/zeta-chain/node/pkg/constant.CommitHash=$(COMMIT) \
+	-X github.com/zeta-chain/node/pkg/constant.BuildTime=$(BUILDTIME) \
 	-X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 
 BUILD_FLAGS := -ldflags '$(ldflags)' -tags pebbledb,ledger
 
-TEST_DIR?="./..."
+TEST_DIR ?= "./..."
 TEST_BUILD_FLAGS := -tags pebbledb,ledger
 HSM_BUILD_FLAGS := -tags pebbledb,ledger,hsm_test
 
@@ -53,10 +56,10 @@ go.sum: go.mod
 ###                             Test commands                               ###
 ###############################################################################
 
+test: clean-test-dir run-test
+
 run-test:
 	@go test ${TEST_BUILD_FLAGS} ${TEST_DIR}
-
-test :clean-test-dir run-test
 
 test-hsm:
 	@go test ${HSM_BUILD_FLAGS} ${TEST_DIR}
@@ -199,8 +202,13 @@ mocks:
 	@bash ./scripts/mocks-generate.sh
 .PHONY: mocks
 
+precompiles:
+	@echo "--> Generating bindings for precompiled contracts"
+	@bash ./scripts/bindings-stateful-precompiles.sh
+.PHONY: precompiles
+
 # generate also includes Go code formatting
-generate: proto-gen openapi specs typescript docs-zetacored mocks fmt
+generate: proto-gen openapi specs typescript docs-zetacored mocks precompiles fmt
 .PHONY: generate
 
 
@@ -262,7 +270,8 @@ start-stress-test: zetanode
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress -f docker-compose.yml up -d
 
 start-tss-migration-test: zetanode
-	@echo "--> Starting migration test"
+	@echo "--> Starting tss migration test"
+	export LOCALNET_MODE=tss-migrate && \
 	export E2E_ARGS="--test-tss-migration" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
@@ -270,6 +279,11 @@ start-solana-test: zetanode solana
 	@echo "--> Starting solana test"
 	export E2E_ARGS="--skip-regular --test-solana" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana -f docker-compose.yml up -d
+
+start-v2-test: zetanode
+	@echo "--> Starting e2e smart contracts v2 test"
+	export E2E_ARGS="--skip-regular --test-v2" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) -f docker-compose.yml up -d
 
 ###############################################################################
 ###                         Upgrade Tests              						###
@@ -288,7 +302,6 @@ zetanode-upgrade: zetanode
 .PHONY: zetanode-upgrade
 endif
 
-
 start-upgrade-test: zetanode-upgrade
 	@echo "--> Starting upgrade test"
 	export LOCALNET_MODE=upgrade && \
@@ -301,13 +314,22 @@ start-upgrade-test-light: zetanode-upgrade
 	export UPGRADE_HEIGHT=90 && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
-
 start-upgrade-test-admin: zetanode-upgrade
 	@echo "--> Starting admin upgrade test"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=90 && \
 	export E2E_ARGS="--skip-regular --test-admin" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+
+# this test upgrades from v18 and execute the v2 contracts migration process
+# this tests is part of upgrade test part because it should run the upgrade from v18 to fully replicate the upgrade process
+start-upgrade-v2-migration-test: zetanode-upgrade
+	@echo "--> Starting v2 migration upgrade test"
+	export LOCALNET_MODE=upgrade && \
+	export UPGRADE_HEIGHT=90 && \
+	export E2E_ARGS="--test-v2-migration" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+
 
 start-upgrade-import-mainnet-test: zetanode-upgrade
 	@echo "--> Starting import-data upgrade test"
@@ -321,9 +343,6 @@ start-upgrade-import-mainnet-test: zetanode-upgrade
 ###                                GoReleaser  		                        ###
 ###############################################################################
 
-PACKAGE_NAME          := github.com/zeta-chain/node
-GOLANG_CROSS_VERSION  ?= v1.22.4
-GOPATH ?= '$(HOME)/go'
 release-dry-run:
 	docker run \
 		--rm \

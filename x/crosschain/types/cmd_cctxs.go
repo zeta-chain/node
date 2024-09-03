@@ -8,11 +8,11 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/pkg/constant"
-	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
-	"github.com/zeta-chain/zetacore/pkg/gas"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/constant"
+	zetacrypto "github.com/zeta-chain/node/pkg/crypto"
+	"github.com/zeta-chain/node/pkg/gas"
 )
 
 const (
@@ -250,7 +250,7 @@ func MigrateFundCmdCCTX(
 		gasLimit,
 		gasPrice,
 		priorityFee.MulUint64(2).String(),
-		newTSSPubKey,
+		currentTSSPubKey,
 	), nil
 }
 

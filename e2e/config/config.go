@@ -41,12 +41,13 @@ func (s DoubleQuotedString) AsEVMAddress() (ethcommon.Address, error) {
 // Config contains the configuration for the e2e test
 type Config struct {
 	// Default account to use when running tests and running setup
-	DefaultAccount     Account            `yaml:"default_account"`
-	AdditionalAccounts AdditionalAccounts `yaml:"additional_accounts"`
-	PolicyAccounts     PolicyAccounts     `yaml:"policy_accounts"`
-	RPCs               RPCs               `yaml:"rpcs"`
-	Contracts          Contracts          `yaml:"contracts"`
-	ZetaChainID        string             `yaml:"zeta_chain_id"`
+	DefaultAccount          Account                 `yaml:"default_account"`
+	AdditionalAccounts      AdditionalAccounts      `yaml:"additional_accounts"`
+	PolicyAccounts          PolicyAccounts          `yaml:"policy_accounts"`
+	ObserverRelayerAccounts ObserverRelayerAccounts `yaml:"observer_relayer_accounts"`
+	RPCs                    RPCs                    `yaml:"rpcs"`
+	Contracts               Contracts               `yaml:"contracts"`
+	ZetaChainID             string                  `yaml:"zeta_chain_id"`
 }
 
 // Account contains configuration for an account
@@ -54,26 +55,38 @@ type Account struct {
 	RawBech32Address DoubleQuotedString `yaml:"bech32_address"`
 	RawEVMAddress    DoubleQuotedString `yaml:"evm_address"`
 	RawPrivateKey    DoubleQuotedString `yaml:"private_key"`
+	SolanaAddress    DoubleQuotedString `yaml:"solana_address"`
 	SolanaPrivateKey DoubleQuotedString `yaml:"solana_private_key"`
 }
 
 // AdditionalAccounts are extra accounts required to run specific tests
 type AdditionalAccounts struct {
-	UserERC20      Account `yaml:"user_erc20"`
-	UserZetaTest   Account `yaml:"user_zeta_test"`
-	UserZEVMMPTest Account `yaml:"user_zevm_mp_test"`
-	UserBitcoin    Account `yaml:"user_bitcoin"`
-	UserSolana     Account `yaml:"user_solana"`
-	UserEther      Account `yaml:"user_ether"`
-	UserMisc       Account `yaml:"user_misc"`
-	UserAdmin      Account `yaml:"user_admin"`
-	UserMigration  Account `yaml:"user_migration"`
+	UserERC20         Account `yaml:"user_erc20"`
+	UserZetaTest      Account `yaml:"user_zeta_test"`
+	UserZEVMMPTest    Account `yaml:"user_zevm_mp_test"`
+	UserBitcoin       Account `yaml:"user_bitcoin"`
+	UserSolana        Account `yaml:"user_solana"`
+	UserEther         Account `yaml:"user_ether"`
+	UserMisc          Account `yaml:"user_misc"`
+	UserAdmin         Account `yaml:"user_admin"`
+	UserMigration     Account `yaml:"user_migration"` // used for TSS migration, TODO: rename (https://github.com/zeta-chain/node/issues/2780)
+	UserPrecompile    Account `yaml:"user_precompile"`
+	UserV2Ether       Account `yaml:"user_v2_ether"`
+	UserV2ERC20       Account `yaml:"user_v2_erc20"`
+	UserV2EtherRevert Account `yaml:"user_v2_ether_revert"`
+	UserV2ERC20Revert Account `yaml:"user_v2_erc20_revert"`
 }
 
 type PolicyAccounts struct {
 	EmergencyPolicyAccount   Account `yaml:"emergency_policy_account"`
 	OperationalPolicyAccount Account `yaml:"operational_policy_account"`
 	AdminPolicyAccount       Account `yaml:"admin_policy_account"`
+}
+
+// ObserverRelayerAccounts are the accounts used by the observers to interact with gateway contracts in non-EVM chains (e.g. Solana)
+type ObserverRelayerAccounts struct {
+	// RelayerAccounts contains two relayer accounts used by zetaclient0 and zetaclient1
+	RelayerAccounts [2]Account `yaml:"relayer_accounts"`
 }
 
 // RPCs contains the configuration for the RPC endpoints
@@ -115,6 +128,9 @@ type EVM struct {
 	CustodyAddr      DoubleQuotedString `yaml:"custody"`
 	ERC20            DoubleQuotedString `yaml:"erc20"`
 	TestDappAddr     DoubleQuotedString `yaml:"test_dapp"`
+	Gateway          DoubleQuotedString `yaml:"gateway"`
+	ERC20CustodyNew  DoubleQuotedString `yaml:"erc20_custody_new"`
+	TestDAppV2Addr   DoubleQuotedString `yaml:"test_dapp_v2"`
 }
 
 // ZEVM contains the addresses of predeployed contracts on the zEVM chain
@@ -131,6 +147,8 @@ type ZEVM struct {
 	ZEVMSwapAppAddr    DoubleQuotedString `yaml:"zevm_swap_app"`
 	ContextAppAddr     DoubleQuotedString `yaml:"context_app"`
 	TestDappAddr       DoubleQuotedString `yaml:"test_dapp"`
+	Gateway            DoubleQuotedString `yaml:"gateway"`
+	TestDAppV2Addr     DoubleQuotedString `yaml:"test_dapp_v2"`
 }
 
 // DefaultConfig returns the default config using values for localnet testing
@@ -212,6 +230,11 @@ func (a AdditionalAccounts) AsSlice() []Account {
 		a.UserMisc,
 		a.UserAdmin,
 		a.UserMigration,
+		a.UserPrecompile,
+		a.UserV2Ether,
+		a.UserV2ERC20,
+		a.UserV2EtherRevert,
+		a.UserV2ERC20Revert,
 	}
 }
 
@@ -301,6 +324,26 @@ func (c *Config) GenerateKeys() error {
 		return err
 	}
 	c.AdditionalAccounts.UserMigration, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserPrecompile, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserV2Ether, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserV2ERC20, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserV2EtherRevert, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserV2ERC20Revert, err = generateAccount()
 	if err != nil {
 		return err
 	}

@@ -6,9 +6,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	testcontract "github.com/zeta-chain/node/testutil/contracts"
 )
 
 func TestMultipleERC20Withdraws(r *runner.E2ERunner, args []string) {
@@ -16,17 +16,15 @@ func TestMultipleERC20Withdraws(r *runner.E2ERunner, args []string) {
 
 	approvedAmount := big.NewInt(1e18)
 
-	withdrawalAmount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok)
+	// parse the withdrawal amount and number of withdrawals
+	withdrawalAmount := parseBigInt(r, args[0])
 	require.Equal(
 		r,
 		-1,
 		withdrawalAmount.Cmp(approvedAmount),
 		"Invalid withdrawal amount specified for TestMultipleWithdraws.",
 	)
-
-	numberOfWithdrawals, ok := big.NewInt(0).SetString(args[1], 10)
-	require.True(r, ok)
+	numberOfWithdrawals := parseBigInt(r, args[1])
 	require.NotEmpty(r, numberOfWithdrawals.Int64())
 
 	// calculate total withdrawal to ensure it doesn't exceed approved amount.

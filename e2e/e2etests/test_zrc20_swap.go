@@ -8,8 +8,8 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
 )
 
 func TestZRC20Swap(r *runner.E2ERunner, _ []string) {
@@ -19,7 +19,7 @@ func TestZRC20Swap(r *runner.E2ERunner, _ []string) {
 	// if the tx fails due to already initialized, it will be ignored
 	tx, err := r.UniswapV2Factory.CreatePair(r.ZEVMAuth, r.ERC20ZRC20Addr, r.ETHZRC20Addr)
 	if err != nil {
-		r.Logger.Print("ℹ️create pair error")
+		r.Logger.Print("ℹ️ create pair error")
 	} else {
 		utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	}

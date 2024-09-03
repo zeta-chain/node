@@ -9,8 +9,8 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rlp"
 
-	"github.com/zeta-chain/zetacore/pkg/proofs/bitcoin"
-	"github.com/zeta-chain/zetacore/pkg/proofs/ethereum"
+	"github.com/zeta-chain/node/pkg/proofs/bitcoin"
+	"github.com/zeta-chain/node/pkg/proofs/ethereum"
 )
 
 // ErrInvalidProof is a error type for invalid proofs embedding the underlying error

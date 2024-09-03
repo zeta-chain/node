@@ -3,8 +3,8 @@ package crosschain
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/x/crosschain/keeper"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // InitGenesis initializes the crosschain module's state from a provided genesis
@@ -43,9 +43,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	// Set all the cross-chain txs
-	for _, elem := range genState.CrossChainTxs {
-		if elem != nil {
-			k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *elem)
+	tss, found := k.GetObserverKeeper().GetTSS(ctx)
+	if found {
+		for _, elem := range genState.CrossChainTxs {
+			if elem != nil {
+				k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *elem, tss.TssPubkey)
+			}
 		}
 	}
 	for _, elem := range genState.FinalizedInbounds {

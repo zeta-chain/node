@@ -1,16 +1,14 @@
 package e2etests
 
 import (
-	"math/big"
-
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/contracts/testdapp"
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/e2e/contracts/testdapp"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	cctxtypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // TestMessagePassingRevertSuccessExternalChains tests message passing with successful revert between external EVM chains
@@ -19,8 +17,8 @@ import (
 func TestMessagePassingRevertSuccessExternalChains(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok)
+	// parse the amount
+	amount := parseBigInt(r, args[0])
 
 	chainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err)

@@ -6,17 +6,17 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/contracts/testdappnorevert"
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/e2e/contracts/testdappnorevert"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	cctxtypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func TestMessagePassingZEVMtoEVMRevertFail(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok, "Invalid amount specified for TestMessagePassingZEVMtoEVMRevertFail.")
+	// parse the amount
+	amount := parseBigInt(r, args[0])
 
 	// Deploying a test contract not containing a logic for reverting the cctx
 	testDappNoRevertAddr, tx, testDappNoRevert, err := testdappnorevert.DeployTestDAppNoRevert(
