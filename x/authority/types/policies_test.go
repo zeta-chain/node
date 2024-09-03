@@ -5,13 +5,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/pkg/sdkconfig"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/authority/types"
 )
 
 func TestPolicies_Validate(t *testing.T) {
-	keeper.SetConfig(true)
+	sdkconfig.SetDefault(true)
 	// use table driven tests to test the validation of policies
 	tests := []struct {
 		name        string
