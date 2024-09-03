@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
+
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 )
