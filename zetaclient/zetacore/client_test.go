@@ -9,12 +9,15 @@ import (
 	cosmosclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/golang/mock/gomock"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
@@ -188,4 +191,42 @@ func TestZetacore_GetZetaHotKeyBalance(t *testing.T) {
 	resp, err = client.GetZetaHotKeyBalance(ctx)
 	require.Error(t, err)
 	require.Equal(t, types.ZeroInt(), resp)
+}
+
+func TestZetacore_GetAllOutboundTrackerByChain(t *testing.T) {
+	ctx := context.Background()
+
+	chain := chains.BscMainnet
+	expectedOutput := crosschaintypes.QueryAllOutboundTrackerByChainResponse{
+		OutboundTracker: []crosschaintypes.OutboundTracker{
+			{
+				Index:    "tracker23456",
+				ChainId:  chain.ChainId,
+				Nonce:    123456,
+				HashList: nil,
+			},
+		},
+	}
+	input := crosschaintypes.QueryAllOutboundTrackerByChainRequest{
+		Chain: chain.ChainId,
+		Pagination: &query.PageRequest{
+			Key:        nil,
+			Offset:     0,
+			Limit:      2000,
+			CountTotal: false,
+			Reverse:    false,
+		},
+	}
+	method := "/zetachain.zetacore.crosschain.Query/OutboundTrackerAllByChain"
+	setupMockServer(t, crosschaintypes.RegisterQueryServer, method, input, expectedOutput)
+
+	client := setupZetacoreClient(t)
+
+	resp, err := client.GetAllOutboundTrackerByChain(ctx, chain.ChainId, interfaces.Ascending)
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.OutboundTracker, resp)
+
+	resp, err = client.GetAllOutboundTrackerByChain(ctx, chain.ChainId, interfaces.Descending)
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.OutboundTracker, resp)
 }
