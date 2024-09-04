@@ -38,6 +38,9 @@ func MigrateStore(
 
 	currParams.ObserverSlashAmount = types.ObserverSlashAmount
 	currParams.BallotMaturityBlocks = int64(types.BallotMaturityBlocks)
+
+	// BlockRewardAmount is a new parameter introduced in version 4
+	currParams.BlockRewardAmount = types.BlockReward
 	err := currParams.Validate()
 	if err != nil {
 		return err

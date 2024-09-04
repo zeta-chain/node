@@ -44,6 +44,7 @@ func TestMigrate(t *testing.T) {
 		require.True(t, found)
 		legacyParams.ObserverSlashAmount = sdkmath.NewInt(100000000000000000)
 		legacyParams.BallotMaturityBlocks = 100
+		legacyParams.BlockRewardAmount = types.BlockReward
 		require.Equal(t, legacyParams, params)
 	})
 
@@ -67,7 +68,7 @@ func TestMigrate(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 
 		legacyParams := types.Params{
-			ValidatorEmissionPercentage: "00.50",
+			ValidatorEmissionPercentage: "-00.50",
 			ObserverEmissionPercentage:  "00.35",
 			TssSignerEmissionPercentage: "00.15",
 			ObserverSlashAmount:         sdk.ZeroInt(),
@@ -75,6 +76,6 @@ func TestMigrate(t *testing.T) {
 		legacySubspace := newMockSubspace(legacyParams)
 
 		err := v3.MigrateStore(ctx, k, legacySubspace)
-		require.ErrorContains(t, err, "min bond factor cannot be lower that 0.75")
+		require.ErrorContains(t, err, "validator emission percentage cannot be less than 0 percent")
 	})
 }

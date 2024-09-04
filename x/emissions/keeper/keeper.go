@@ -57,7 +57,10 @@ func NewKeeper(
 
 func (k Keeper) GetCodec() codec.BinaryCodec {
 	return k.cdc
+}
 
+func (k Keeper) GetStoreKey() storetypes.StoreKey {
+	return k.storeKey
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
