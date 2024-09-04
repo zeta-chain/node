@@ -19,6 +19,39 @@ import (
 )
 
 func TestBeginBlocker(t *testing.T) {
+	t.Run("no distribution happens if params are not found", func(t *testing.T) {
+		//Arrange
+		k, ctx, _, zk := keepertest.EmissionsKeeper(t)
+		_, found := k.GetParams(ctx)
+		require.True(t, found)
+		store := ctx.KVStore(k.GetStoreKey())
+		store.Delete(emissionstypes.KeyPrefix(emissionstypes.ParamsKey))
+
+		var ballotIdentifiers []string
+		observerSet := sample.ObserverSet(10)
+		zk.ObserverKeeper.SetObserverSet(ctx, observerSet)
+		ballotList := sample.BallotList(10, observerSet.ObserverList)
+		for _, ballot := range ballotList {
+			zk.ObserverKeeper.SetBallot(ctx, &ballot)
+			ballotIdentifiers = append(ballotIdentifiers, ballot.BallotIdentifier)
+		}
+		zk.ObserverKeeper.SetBallotList(ctx, &observerTypes.BallotListForHeight{
+			Height:           0,
+			BallotsIndexList: ballotIdentifiers,
+		})
+
+		//Act
+		for i := 0; i < 100; i++ {
+			emissionsModule.BeginBlocker(ctx, *k)
+			ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+		}
+
+		//Assert
+		for _, observer := range observerSet.ObserverList {
+			_, found := k.GetWithdrawableEmission(ctx, observer)
+			require.False(t, found)
+		}
+	})
 	t.Run("no observer distribution happens if emissions module account is empty", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.EmissionsKeeper(t)
 		var ballotIdentifiers []string
@@ -44,6 +77,7 @@ func TestBeginBlocker(t *testing.T) {
 			require.False(t, found)
 		}
 	})
+
 	t.Run("no validator distribution happens if emissions module account is empty", func(t *testing.T) {
 		k, ctx, sk, _ := keepertest.EmissionsKeeper(t)
 		feeCollectorAddress := sk.AuthKeeper.GetModuleAccount(ctx, types.FeeCollectorName).GetAddress()
@@ -53,6 +87,7 @@ func TestBeginBlocker(t *testing.T) {
 		}
 		require.True(t, sk.BankKeeper.GetBalance(ctx, feeCollectorAddress, config.BaseDenom).Amount.IsZero())
 	})
+
 	t.Run("tmp ctx is not committed if any of the distribution fails", func(t *testing.T) {
 		k, ctx, sk, _ := keepertest.EmissionsKeeper(t)
 		// Fund the emission pool to start the emission process
@@ -84,6 +119,7 @@ func TestBeginBlocker(t *testing.T) {
 			),
 		)
 	})
+
 	t.Run("begin blocker returns early if validator distribution fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionKeeperWithMockOptions(t, keepertest.EmissionMockOptions{
 			UseBankMock: true,

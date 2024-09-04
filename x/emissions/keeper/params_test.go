@@ -112,7 +112,30 @@ func TestKeeper_GetParams(t *testing.T) {
 			},
 			constainsErr: "tss emission percentage cannot be less than 0 percent",
 		},
-		// TODO: add more test cases
+		{
+			name: "ballot maturity blocks too low",
+			params: emissionstypes.Params{
+				ValidatorEmissionPercentage: "00.50",
+				ObserverEmissionPercentage:  "00.25",
+				TssSignerEmissionPercentage: "00.25",
+				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
+				BallotMaturityBlocks:        -100,
+				BlockRewardAmount:           emissionstypes.BlockReward,
+			},
+			constainsErr: "ballot maturity types must be gte 0",
+		},
+		{
+			name: "block reward amount too low",
+			params: emissionstypes.Params{
+				ValidatorEmissionPercentage: "00.50",
+				ObserverEmissionPercentage:  "00.25",
+				TssSignerEmissionPercentage: "00.25",
+				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
+				BallotMaturityBlocks:        int64(emissionstypes.BallotMaturityBlocks),
+				BlockRewardAmount:           sdkmath.LegacyMustNewDecFromStr("-10.00"),
+			},
+			constainsErr: "block reward amount cannot be less than 0",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

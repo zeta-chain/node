@@ -95,7 +95,6 @@ func (m *Params) GetBallotMaturityBlocks() int64 {
 }
 
 // Deprecated: Do not use. Use Params.
-// TODO: Add release version when this change is going to be applied. (v20?)
 type LegacyParams struct {
 	MaxBondFactor               string                                 `protobuf:"bytes,1,opt,name=max_bond_factor,json=maxBondFactor,proto3" json:"max_bond_factor,omitempty"`
 	MinBondFactor               string                                 `protobuf:"bytes,2,opt,name=min_bond_factor,json=minBondFactor,proto3" json:"min_bond_factor,omitempty"`

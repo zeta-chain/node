@@ -21,7 +21,6 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		return
 	}
 
-	// Use the fixed block reward amount set in params.
 	blockRewards := params.BlockRewardAmount
 	if blockRewards.GT(emissionPoolBalance) {
 		ctx.Logger().

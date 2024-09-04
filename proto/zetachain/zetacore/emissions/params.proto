@@ -27,7 +27,6 @@ message Params {
 }
 
 // Deprecated: Do not use. Use Params.
-// TODO: Add release version when this change is going to be applied. (v20?)
 message LegacyParams {
   option (gogoproto.goproto_stringer) = false;
   string max_bond_factor = 1;

@@ -21,6 +21,17 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
 	})
 
+	t.Run("invalid if params are invalid", func(t *testing.T) {
+		params := types.NewParams()
+		params.BlockRewardAmount = sdk.MustNewDecFromStr("-10.0")
+		msg := types.MsgUpdateParams{
+			Authority: sample.AccAddress(),
+			Params:    params,
+		}
+		err := msg.ValidateBasic()
+		require.ErrorContains(t, err, "block reward amount cannot be less than 0")
+	})
+
 	t.Run("valid", func(t *testing.T) {
 		msg := types.MsgUpdateParams{
 			Authority: sample.AccAddress(),

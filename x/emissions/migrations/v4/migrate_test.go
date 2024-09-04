@@ -94,8 +94,10 @@ func TestMigrateStore(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 		store := ctx.KVStore(k.GetStoreKey())
 		store.Delete(types.KeyPrefix(types.ParamsKey))
+
 		//Act
 		err := v4.MigrateStore(ctx, k)
+
 		//Assert
 		require.ErrorIs(t, err, types.ErrMigrationFailed)
 		require.ErrorContains(t, err, "failed to get legacy params")
@@ -110,15 +112,71 @@ func TestMigrateStore(t *testing.T) {
 		mainnetParams.ObserverSlashAmount = sdkmath.NewInt(-100000000000000000)
 		err := SetLegacyParams(ctx, emissionsStoreKey, cdc, mainnetParams)
 		require.NoError(t, err)
+
 		//Act
 		err = v4.MigrateStore(ctx, k)
+
 		//Assert
 		require.ErrorIs(t, err, types.ErrMigrationFailed)
 		require.ErrorContains(t, err, "slash amount cannot be less than 0")
 	})
 }
 
-func SetLegacyParams(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, params types.LegacyParams) error {
+func TestGetParamsLegacy(t *testing.T) {
+	t.Run("should successfully get legacy params", func(t *testing.T) {
+		//Arrange
+		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
+		cdc := k.GetCodec()
+		emissionsStoreKey := k.GetStoreKey()
+		mainnetParams := LegacyMainnetParams()
+		err := SetLegacyParams(ctx, emissionsStoreKey, cdc, mainnetParams)
+		require.NoError(t, err)
+
+		//Act
+		params, found := v4.GetParamsLegacy(ctx, emissionsStoreKey, cdc)
+
+		//Assert
+		require.True(t, found)
+		require.Equal(t, mainnetParams, params)
+	})
+
+	t.Run("should return false if legacy params are not found", func(t *testing.T) {
+		//Arrange
+		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
+		store := ctx.KVStore(k.GetStoreKey())
+		store.Delete(types.KeyPrefix(types.ParamsKey))
+
+		//Act
+		params, found := v4.GetParamsLegacy(ctx, k.GetStoreKey(), k.GetCodec())
+
+		//Assert
+		require.False(t, found)
+		require.Equal(t, types.LegacyParams{}, params)
+	})
+
+	t.Run("should return false if unable to unmarshal legacy params", func(t *testing.T) {
+		//Arrange
+		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
+		cdc := k.GetCodec()
+		emissionsStoreKey := k.GetStoreKey()
+		store := ctx.KVStore(emissionsStoreKey)
+		store.Set(types.KeyPrefix(types.ParamsKey), []byte{0x00})
+
+		//Act
+		params, found := v4.GetParamsLegacy(ctx, emissionsStoreKey, cdc)
+
+		//Assert
+		require.False(t, found)
+		require.Equal(t, types.LegacyParams{}, params)
+	})
+}
+
+func SetLegacyParams(
+	ctx sdk.Context,
+	storeKey storetypes.StoreKey,
+	cdc codec.BinaryCodec,
+	params types.LegacyParams,
+) error {
 	store := ctx.KVStore(storeKey)
 	bz, err := cdc.Marshal(&params)
 	if err != nil {

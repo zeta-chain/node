@@ -15,10 +15,9 @@ type EmissionsKeeper interface {
 	GetStoreKey() storetypes.StoreKey
 }
 
-// Migrate migrates the x/emissions module state from the consensus version 2 to
-// version 3. Specifically, it takes the parameters that are currently stored
-// and managed by the x/params modules and stores them directly into the x/emissions
-// module state.
+// MigrateStore migrates the store from v3 to v4
+// The v3 params are copied to the v4 params , and the v4 params are set in the store
+// v4 introduces a new parameter, BlockRewardAmount, which is set to the default value
 func MigrateStore(
 	ctx sdk.Context,
 	emissionsKeeper EmissionsKeeper,
@@ -48,7 +47,11 @@ func MigrateStore(
 	return nil
 }
 
-func GetParamsLegacy(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) (params types.LegacyParams, found bool) {
+func GetParamsLegacy(
+	ctx sdk.Context,
+	storeKey storetypes.StoreKey,
+	cdc codec.BinaryCodec,
+) (params types.LegacyParams, found bool) {
 	store := ctx.KVStore(storeKey)
 	bz := store.Get(types.KeyPrefix(types.ParamsKey))
 	if bz == nil {
