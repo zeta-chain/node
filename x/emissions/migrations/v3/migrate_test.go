@@ -9,8 +9,9 @@ import (
 
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/x/emissions/exported"
-	v3 "github.com/zeta-chain/node/x/emissions/migrations/v3"
 	"github.com/zeta-chain/node/x/emissions/types"
+
+	v3 "github.com/zeta-chain/node/x/emissions/migrations/v3"
 )
 
 type mockSubspace struct {
