@@ -64,7 +64,7 @@ func (r *E2ERunner) CreateSignedTransaction(
 	privateKey solana.PrivateKey,
 ) *solana.Transaction {
 	// get a recent blockhash
-	recent, err := r.SolanaClient.GetRecentBlockhash(r.Ctx, rpc.CommitmentFinalized)
+	recent, err := r.SolanaClient.GetLatestBlockhash(r.Ctx, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 
 	// create the initialize transaction

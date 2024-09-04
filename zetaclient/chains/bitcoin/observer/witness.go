@@ -16,6 +16,8 @@ import (
 // GetBtcEventWithWitness either returns a valid BTCInboundEvent or nil.
 // This method supports data with more than 80 bytes by scanning the witness for possible presence of a tapscript.
 // It will first prioritize OP_RETURN over tapscript.
+//
+// Note: the caller should rescan the tx on error (e.g., GetSenderAddressByVin RPC failed)
 func GetBtcEventWithWitness(
 	client interfaces.BTCRPCClient,
 	tx btcjson.TxRawResult,
@@ -34,9 +36,24 @@ func GetBtcEventWithWitness(
 		return nil, nil
 	}
 
-	if err := isValidRecipient(tx.Vout[0].ScriptPubKey.Hex, tssAddress, netParams); err != nil {
+	// check if the recipient is the tss address
+	err := isValidRecipient(tx.Vout[0].ScriptPubKey.Hex, tssAddress, netParams)
+	if err != nil {
 		logger.Debug().Msgf("irrelevant recipient %s for tx %s, err: %s", tx.Vout[0].ScriptPubKey.Hex, tx.Txid, err)
 		return nil, nil
+	}
+
+	// switch to depositor fee V2 if
+	// 1. it is bitcoin testnet, or
+	// 2. it is bitcoin mainnet and upgrade height is reached
+	// TODO: remove CalcDepositorFeeV1 and below conditions after the upgrade height
+	// https://github.com/zeta-chain/node/issues/2766
+	if netParams.Name == chaincfg.TestNet3Params.Name ||
+		(netParams.Name == chaincfg.MainNetParams.Name && blockNumber >= bitcoin.DynamicDepositorFeeHeightV2) {
+		depositorFee, err = bitcoin.CalcDepositorFeeV2(client, &tx, netParams)
+		if err != nil {
+			return nil, errors.Wrapf(err, "error calculating depositor fee V2 for inbound: %s", tx.Txid)
+		}
 	}
 
 	isAmountValid, amount := isValidAmount(tx.Vout[0].Value, depositorFee)
@@ -52,13 +69,13 @@ func GetBtcEventWithWitness(
 	var memo []byte
 	if candidate := tryExtractOpRet(tx, logger); candidate != nil {
 		memo = candidate
-		logger.Debug().
+		logger.Info().
 			Msgf("GetBtcEventWithWitness: found OP_RETURN memo %s in tx %s", hex.EncodeToString(memo), tx.Txid)
 	} else if candidate = tryExtractInscription(tx, logger); candidate != nil {
 		memo = candidate
-		logger.Debug().Msgf("GetBtcEventWithWitness: found inscription memo %s in tx %s", hex.EncodeToString(memo), tx.Txid)
+		logger.Info().Msgf("GetBtcEventWithWitness: found inscription memo %s in tx %s", hex.EncodeToString(memo), tx.Txid)
 	} else {
-		return nil, errors.Errorf("error getting memo for inbound: %s", tx.Txid)
+		return nil, nil
 	}
 
 	// event found, get sender address
@@ -116,7 +133,7 @@ func ParseScriptFromWitness(witness []string, logger zerolog.Logger) []byte {
 	return script
 }
 
-// / Try to extract the memo from the OP_RETURN
+// Try to extract the memo from the OP_RETURN
 func tryExtractOpRet(tx btcjson.TxRawResult, logger zerolog.Logger) []byte {
 	if len(tx.Vout) < 2 {
 		logger.Debug().Msgf("txn %s has fewer than 2 outputs, not target OP_RETURN txn", tx.Txid)
@@ -135,7 +152,7 @@ func tryExtractOpRet(tx btcjson.TxRawResult, logger zerolog.Logger) []byte {
 	return nil
 }
 
-// / Try to extract the memo from inscription
+// Try to extract the memo from inscription
 func tryExtractInscription(tx btcjson.TxRawResult, logger zerolog.Logger) []byte {
 	for i, input := range tx.Vin {
 		script := ParseScriptFromWitness(input.Witness, logger)
