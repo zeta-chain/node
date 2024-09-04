@@ -14,6 +14,7 @@
 * [2681](https://github.com/zeta-chain/node/pull/2681) - implement `MsgUpdateERC20CustodyPauseStatus` to pause or unpause ERC20 Custody contract (to be used for the migration process for smart contract V2)
 * [2644](https://github.com/zeta-chain/node/pull/2644) - add created_timestamp to cctx status
 * [2673](https://github.com/zeta-chain/node/pull/2673) - add relayer key importer, encryption and decryption
+* [2825](https://github.com/zeta-chain/node/pull/2825) - add Bitcoin inscriptions support
 
 ### Refactor
 
@@ -28,6 +29,7 @@
 
 * [2654](https://github.com/zeta-chain/node/pull/2654) - add validation for authorization list in when validating genesis state for authorization module
 * [2672](https://github.com/zeta-chain/node/pull/2672) - check observer set for duplicates when adding a new observer or updating an existing one
+* [2824](https://github.com/zeta-chain/node/pull/2824) - fix Solana deposit number
 
 ## v19.0.0
 

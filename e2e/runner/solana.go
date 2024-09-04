@@ -44,7 +44,6 @@ func (r *E2ERunner) CreateDepositInstruction(
 	accountSlice = append(accountSlice, solana.Meta(signer).WRITE().SIGNER())
 	accountSlice = append(accountSlice, solana.Meta(pdaComputed).WRITE())
 	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
-	accountSlice = append(accountSlice, solana.Meta(programID))
 	inst.ProgID = programID
 	inst.AccountValues = accountSlice
 
@@ -65,7 +64,7 @@ func (r *E2ERunner) CreateSignedTransaction(
 	privateKey solana.PrivateKey,
 ) *solana.Transaction {
 	// get a recent blockhash
-	recent, err := r.SolanaClient.GetRecentBlockhash(r.Ctx, rpc.CommitmentFinalized)
+	recent, err := r.SolanaClient.GetLatestBlockhash(r.Ctx, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 
 	// create the initialize transaction
