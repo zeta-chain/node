@@ -70,7 +70,6 @@ type AdditionalAccounts struct {
 	UserMisc          Account `yaml:"user_misc"`
 	UserAdmin         Account `yaml:"user_admin"`
 	UserMigration     Account `yaml:"user_migration"`
-	UserPrecompile    Account `yaml:"user_precompile"`
 	UserV2Ether       Account `yaml:"user_v2_ether"`
 	UserV2ERC20       Account `yaml:"user_v2_erc20"`
 	UserV2EtherRevert Account `yaml:"user_v2_ether_revert"`
