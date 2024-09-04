@@ -13,9 +13,9 @@ const (
 	// PDASeed is the seed for the Solana gateway program derived address
 	PDASeed = "meta"
 
-	// AccountsNumberOfDeposit is the number of accounts required for Solana gateway deposit instruction
-	// [signer, pda, system_program, gateway_program]
-	AccountsNumDeposit = 4
+	// AccountsNumDeposit is the number of accounts required for Solana gateway deposit instruction
+	// [signer, pda, system_program]
+	AccountsNumDeposit = 3
 )
 
 // DiscriminatorInitialize returns the discriminator for Solana gateway 'initialize' instruction

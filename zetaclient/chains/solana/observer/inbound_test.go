@@ -26,8 +26,8 @@ var (
 
 func Test_FilterInboundEventAndVote(t *testing.T) {
 	// load archived inbound vote tx result
-	// https://explorer.solana.com/tx/5LuQMorgd11p8GWEw6pmyHCDtA26NUyeNFhLWPNk2oBoM9pkag1LzhwGSRos3j4TJLhKjswFhZkGtvSGdLDkmqsk?cluster=devnet
-	txHash := "5LuQMorgd11p8GWEw6pmyHCDtA26NUyeNFhLWPNk2oBoM9pkag1LzhwGSRos3j4TJLhKjswFhZkGtvSGdLDkmqsk"
+	// https://explorer.solana.com/tx/MS3MPLN7hkbyCZFwKqXcg8fmEvQMD74fN6Ps2LSWXJoRxPW5ehaxBorK9q1JFVbqnAvu9jXm6ertj7kT7HpYw1j?cluster=devnet
+	txHash := "MS3MPLN7hkbyCZFwKqXcg8fmEvQMD74fN6Ps2LSWXJoRxPW5ehaxBorK9q1JFVbqnAvu9jXm6ertj7kT7HpYw1j"
 	chain := chains.SolanaDevnet
 	txResult := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHash, false)
 
@@ -51,8 +51,8 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 
 func Test_FilterInboundEvents(t *testing.T) {
 	// load archived inbound deposit tx result
-	// https://explorer.solana.com/tx/5LuQMorgd11p8GWEw6pmyHCDtA26NUyeNFhLWPNk2oBoM9pkag1LzhwGSRos3j4TJLhKjswFhZkGtvSGdLDkmqsk?cluster=devnet
-	txHash := "5LuQMorgd11p8GWEw6pmyHCDtA26NUyeNFhLWPNk2oBoM9pkag1LzhwGSRos3j4TJLhKjswFhZkGtvSGdLDkmqsk"
+	// https://explorer.solana.com/tx/MS3MPLN7hkbyCZFwKqXcg8fmEvQMD74fN6Ps2LSWXJoRxPW5ehaxBorK9q1JFVbqnAvu9jXm6ertj7kT7HpYw1j?cluster=devnet
+	txHash := "MS3MPLN7hkbyCZFwKqXcg8fmEvQMD74fN6Ps2LSWXJoRxPW5ehaxBorK9q1JFVbqnAvu9jXm6ertj7kT7HpYw1j"
 	chain := chains.SolanaDevnet
 	txResult := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHash, false)
 
@@ -61,20 +61,20 @@ func Test_FilterInboundEvents(t *testing.T) {
 
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
-	chainParams.GatewayAddress = GatewayAddressTest
+	chainParams.GatewayAddress = testutils.GatewayAddresses[chain.ChainId]
 
 	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, database, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	// expected result
-	sender := "AKbG83jg2V65R7XvaPFrnUvUTWsFENEzDPbLJFEiAk6L"
+	sender := "AS48jKNQsDGkEdDvfwu1QpqjtqbCadrAq9nGXjFmdX3Z"
 	eventExpected := &clienttypes.InboundEvent{
 		SenderChainID: chain.ChainId,
 		Sender:        sender,
 		Receiver:      sender,
 		TxOrigin:      sender,
-		Amount:        1280,
-		Memo:          []byte("hello this is a good memo for you to enjoy"),
+		Amount:        100000,
+		Memo:          []byte("0x7F8ae2ABb69A558CE6bAd546f25F0464D9e09e5B4955a3F38ff86ae92A914445099caa8eA2B9bA32"),
 		BlockNumber:   txResult.Slot,
 		TxHash:        txHash,
 		Index:         0, // not a EVM smart contract call
@@ -156,8 +156,8 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 
 func Test_ParseInboundAsDeposit(t *testing.T) {
 	// load archived inbound deposit tx result
-	// https://explorer.solana.com/tx/5LuQMorgd11p8GWEw6pmyHCDtA26NUyeNFhLWPNk2oBoM9pkag1LzhwGSRos3j4TJLhKjswFhZkGtvSGdLDkmqsk?cluster=devnet
-	txHash := "5LuQMorgd11p8GWEw6pmyHCDtA26NUyeNFhLWPNk2oBoM9pkag1LzhwGSRos3j4TJLhKjswFhZkGtvSGdLDkmqsk"
+	// https://explorer.solana.com/tx/MS3MPLN7hkbyCZFwKqXcg8fmEvQMD74fN6Ps2LSWXJoRxPW5ehaxBorK9q1JFVbqnAvu9jXm6ertj7kT7HpYw1j?cluster=devnet
+	txHash := "MS3MPLN7hkbyCZFwKqXcg8fmEvQMD74fN6Ps2LSWXJoRxPW5ehaxBorK9q1JFVbqnAvu9jXm6ertj7kT7HpYw1j"
 	chain := chains.SolanaDevnet
 
 	txResult := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHash, false)
@@ -169,19 +169,19 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
-	chainParams.GatewayAddress = GatewayAddressTest
+	chainParams.GatewayAddress = testutils.GatewayAddresses[chain.ChainId]
 	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, database, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	// expected result
-	sender := "AKbG83jg2V65R7XvaPFrnUvUTWsFENEzDPbLJFEiAk6L"
+	sender := "AS48jKNQsDGkEdDvfwu1QpqjtqbCadrAq9nGXjFmdX3Z"
 	eventExpected := &clienttypes.InboundEvent{
 		SenderChainID: chain.ChainId,
 		Sender:        sender,
 		Receiver:      sender,
 		TxOrigin:      sender,
-		Amount:        1280,
-		Memo:          []byte("hello this is a good memo for you to enjoy"),
+		Amount:        100000,
+		Memo:          []byte("0x7F8ae2ABb69A558CE6bAd546f25F0464D9e09e5B4955a3F38ff86ae92A914445099caa8eA2B9bA32"),
 		BlockNumber:   txResult.Slot,
 		TxHash:        txHash,
 		Index:         0, // not a EVM smart contract call
