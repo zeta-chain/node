@@ -2,22 +2,21 @@ package openapi
 
 import (
 	"embed"
-	"html/template"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
 const (
-	apiFile      = "openapi.swagger.yaml"
-	templateFile = "template.tpl"
+	apiFile  = "openapi.swagger.yaml"
+	htmlFile = "openapi.html"
 )
 
 //go:embed openapi.swagger.yaml
 var staticFS embed.FS
 
-//go:embed template.tpl
-var templateFS embed.FS
+//go:embed openapi.html
+var html []byte
 
 func RegisterOpenAPIService(router *mux.Router) {
 	router.Handle("/"+apiFile, http.FileServer(http.FS(staticFS)))
@@ -25,19 +24,8 @@ func RegisterOpenAPIService(router *mux.Router) {
 }
 
 func openAPIHandler() http.HandlerFunc {
-	tmpl, err := template.ParseFS(templateFS, templateFile)
-	if err != nil {
-		panic(err)
-	}
-
 	return func(w http.ResponseWriter, _ *http.Request) {
-		err := tmpl.Execute(w, struct {
-			URL string
-		}{
-			"/" + apiFile,
-		})
-		if err != nil {
-			http.Error(w, "Failed to render template", http.StatusInternalServerError)
-		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_, _ = w.Write(html)
 	}
 }
