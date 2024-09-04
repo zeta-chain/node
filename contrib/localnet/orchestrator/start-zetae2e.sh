@@ -116,6 +116,9 @@ fund_eth_from_config '.additional_accounts.user_admin.evm_address' 10000 "admin 
 # unlock migration tests accounts
 fund_eth_from_config '.additional_accounts.user_migration.evm_address' 10000 "migration tester"
 
+# unlock precompile tests accounts
+fund_eth_from_config '.additional_accounts.user_precompile.evm_address' 10000 "precompile tester"
+
 # unlock v2 ethers tests accounts
 fund_eth_from_config '.additional_accounts.user_v2_ether.evm_address' 10000  "V2 ethers tester"
 
