@@ -16,6 +16,10 @@ message Params {
     (gogoproto.nullable) = false
   ];
   int64 ballot_maturity_blocks = 10;
+  string block_reward_amount = 11 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
 
   // not used. do not edit.
   reserved 1 to 4;

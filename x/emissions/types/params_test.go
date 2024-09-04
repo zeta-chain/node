@@ -98,6 +98,12 @@ func TestValidate(t *testing.T) {
 		params.BallotMaturityBlocks = -100
 		require.Error(t, params.Validate())
 	})
+
+	t.Run("should error for negative block reward amount", func(t *testing.T) {
+		params := NewParams()
+		params.BlockRewardAmount = sdkmath.LegacyMustNewDecFromStr("-1.30")
+		require.ErrorContains(t, params.Validate(), "block reward amount cannot be less than 0")
+	})
 }
 func TestParamsString(t *testing.T) {
 	params := DefaultParams()

@@ -14,8 +14,9 @@ func NewParams() Params {
 		ValidatorEmissionPercentage: "00.50",
 		ObserverEmissionPercentage:  "00.25",
 		TssSignerEmissionPercentage: "00.25",
-		ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
-		BallotMaturityBlocks:        100,
+		ObserverSlashAmount:         ObserverSlashAmount,
+		BallotMaturityBlocks:        int64(BallotMaturityBlocks),
+		BlockRewardAmount:           BlockReward,
 	}
 }
 
@@ -36,6 +37,9 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateBallotMaturityBlocks(p.BallotMaturityBlocks); err != nil {
+		return err
+	}
+	if err := validateBlockRewardsAmount(p.BlockRewardAmount); err != nil {
 		return err
 	}
 	return validateObserverSlashAmount(p.ObserverSlashAmount)
@@ -116,5 +120,16 @@ func validateBallotMaturityBlocks(i interface{}) error {
 		return fmt.Errorf("ballot maturity types must be gte 0")
 	}
 
+	return nil
+}
+
+func validateBlockRewardsAmount(i interface{}) error {
+	v, ok := i.(sdkmath.LegacyDec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v.LT(sdkmath.LegacyZeroDec()) {
+		return fmt.Errorf("block reward amount cannot be less than 0")
+	}
 	return nil
 }
