@@ -44,7 +44,6 @@ func (r *E2ERunner) CreateDepositInstruction(
 	accountSlice = append(accountSlice, solana.Meta(signer).WRITE().SIGNER())
 	accountSlice = append(accountSlice, solana.Meta(pdaComputed).WRITE())
 	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
-	accountSlice = append(accountSlice, solana.Meta(programID))
 	inst.ProgID = programID
 	inst.AccountValues = accountSlice
 

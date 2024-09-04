@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## v20.0.0
 
 ### Features
 
@@ -27,6 +27,7 @@
 
 * [2654](https://github.com/zeta-chain/node/pull/2654) - add validation for authorization list in when validating genesis state for authorization module
 * [2672](https://github.com/zeta-chain/node/pull/2672) - check observer set for duplicates when adding a new observer or updating an existing one
+* [2824](https://github.com/zeta-chain/node/pull/2824) - fix Solana deposit number
 
 ## v19.0.0
 
