@@ -2,11 +2,11 @@ package rpc
 
 import (
 	"fmt"
-	"github.com/btcsuite/btcutil"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
+	"github.com/btcsuite/btcutil"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
