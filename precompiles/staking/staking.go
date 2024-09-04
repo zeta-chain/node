@@ -17,6 +17,7 @@ import (
 	ptypes "github.com/zeta-chain/node/precompiles/types"
 )
 
+// method names
 const (
 	// write
 	StakeMethodName     = "stake"
@@ -128,13 +129,13 @@ func (c *Contract) GetAllValidators(
 	validators := c.stakingKeeper.GetAllValidators(ctx)
 
 	validatorsRes := make([]Validator, len(validators))
-	for _, v := range validators {
-		validatorsRes = append(validatorsRes, Validator{
+	for i, v := range validators {
+		validatorsRes[i] = Validator{
 			OperatorAddress: v.OperatorAddress,
 			ConsensusPubKey: v.ConsensusPubkey.String(),
 			BondStatus:      uint8(v.Status),
 			Jailed:          v.Jailed,
-		})
+		}
 	}
 
 	return method.Outputs.Pack(validatorsRes)
