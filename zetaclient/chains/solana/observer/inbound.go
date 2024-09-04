@@ -288,7 +288,9 @@ func (ob *Observer) ParseInboundAsDeposit(
 	// get the sender address (skip if unable to parse signer address)
 	sender, err := ob.GetSignerDeposit(tx, &instruction)
 	if err != nil {
-		ob.Logger().Inbound.Err(err).Msgf("unable to get signer for sig %s instruction %d", tx.Signatures[0], instructionIndex)
+		ob.Logger().
+			Inbound.Err(err).
+			Msgf("unable to get signer for sig %s instruction %d", tx.Signatures[0], instructionIndex)
 		return nil, nil
 	}
 
