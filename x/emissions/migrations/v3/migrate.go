@@ -26,19 +26,6 @@ func MigrateStore(
 
 	defaultParams := types.NewParams()
 
-	// ensure params are set with default values if not present in legacy params
-	if currParams.AvgBlockTime == "" {
-		currParams.AvgBlockTime = defaultParams.AvgBlockTime
-	}
-	if currParams.MaxBondFactor == "" {
-		currParams.MaxBondFactor = defaultParams.MaxBondFactor
-	}
-	if currParams.MinBondFactor == "" {
-		currParams.MinBondFactor = defaultParams.MinBondFactor
-	}
-	if currParams.TargetBondRatio == "" {
-		currParams.TargetBondRatio = defaultParams.TargetBondRatio
-	}
 	if currParams.ValidatorEmissionPercentage == "" {
 		currParams.ValidatorEmissionPercentage = defaultParams.ValidatorEmissionPercentage
 	}
@@ -47,9 +34,6 @@ func MigrateStore(
 	}
 	if currParams.TssSignerEmissionPercentage == "" {
 		currParams.TssSignerEmissionPercentage = defaultParams.TssSignerEmissionPercentage
-	}
-	if currParams.DurationFactorConstant == "" {
-		currParams.DurationFactorConstant = defaultParams.DurationFactorConstant
 	}
 
 	currParams.ObserverSlashAmount = types.ObserverSlashAmount

@@ -19,14 +19,9 @@ func TestKeeper_GetParams(t *testing.T) {
 		{
 			name: "Successfully set params",
 			params: emissionstypes.Params{
-				MaxBondFactor:               "1.25",
-				MinBondFactor:               "0.75",
-				AvgBlockTime:                "6.00",
-				TargetBondRatio:             "00.67",
 				ValidatorEmissionPercentage: "00.50",
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
-				DurationFactorConstant:      "0.001877876953694702",
 				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
 			constainsErr: "",
@@ -34,14 +29,9 @@ func TestKeeper_GetParams(t *testing.T) {
 		{
 			name: "negative observer slashed amount",
 			params: emissionstypes.Params{
-				MaxBondFactor:               "1.25",
-				MinBondFactor:               "0.75",
-				AvgBlockTime:                "6.00",
-				TargetBondRatio:             "00.67",
 				ValidatorEmissionPercentage: "00.50",
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
-				DurationFactorConstant:      "0.001877876953694702",
 				ObserverSlashAmount:         sdkmath.NewInt(-100000000000000000),
 			},
 			constainsErr: "slash amount cannot be less than 0",
@@ -49,14 +39,9 @@ func TestKeeper_GetParams(t *testing.T) {
 		{
 			name: "MaxBondFactor too high",
 			params: emissionstypes.Params{
-				MaxBondFactor:               "1.35",
-				MinBondFactor:               "0.85",
-				AvgBlockTime:                "6.00",
-				TargetBondRatio:             "00.67",
 				ValidatorEmissionPercentage: "00.50",
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
-				DurationFactorConstant:      "0.001877876953694702",
 				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
 			constainsErr: "max bond factor cannot be higher that 1.25",
@@ -64,14 +49,9 @@ func TestKeeper_GetParams(t *testing.T) {
 		{
 			name: "MinBondFactor too low",
 			params: emissionstypes.Params{
-				MaxBondFactor:               "1.25",
-				MinBondFactor:               "0.35",
-				AvgBlockTime:                "6.00",
-				TargetBondRatio:             "00.67",
 				ValidatorEmissionPercentage: "00.50",
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
-				DurationFactorConstant:      "0.001877876953694702",
 				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
 			constainsErr: "min bond factor cannot be lower that 0.75",
@@ -79,14 +59,9 @@ func TestKeeper_GetParams(t *testing.T) {
 		{
 			name: "invalid block time",
 			params: emissionstypes.Params{
-				MaxBondFactor:               "1.25",
-				MinBondFactor:               "0.75",
-				AvgBlockTime:                "invalidTime",
-				TargetBondRatio:             "00.67",
 				ValidatorEmissionPercentage: "00.50",
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
-				DurationFactorConstant:      "0.001877876953694702",
 				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
 			constainsErr: "invalid block time",
@@ -94,14 +69,9 @@ func TestKeeper_GetParams(t *testing.T) {
 		{
 			name: "invalid block time less than 0",
 			params: emissionstypes.Params{
-				MaxBondFactor:               "1.25",
-				MinBondFactor:               "0.75",
-				AvgBlockTime:                "-2",
-				TargetBondRatio:             "00.67",
 				ValidatorEmissionPercentage: "00.50",
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
-				DurationFactorConstant:      "0.001877876953694702",
 				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
 			constainsErr: "block time cannot be less than or equal to 0",
@@ -109,14 +79,9 @@ func TestKeeper_GetParams(t *testing.T) {
 		{
 			name: "bond ratio too high",
 			params: emissionstypes.Params{
-				MaxBondFactor:               "1.25",
-				MinBondFactor:               "0.75",
-				AvgBlockTime:                "6.00",
-				TargetBondRatio:             "2.67",
 				ValidatorEmissionPercentage: "00.50",
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
-				DurationFactorConstant:      "0.001877876953694702",
 				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
 			constainsErr: "target bond ratio cannot be more than 100 percent",
@@ -124,14 +89,9 @@ func TestKeeper_GetParams(t *testing.T) {
 		{
 			name: "bond ratio too low",
 			params: emissionstypes.Params{
-				MaxBondFactor:               "1.25",
-				MinBondFactor:               "0.75",
-				AvgBlockTime:                "6.00",
-				TargetBondRatio:             "-1.00",
 				ValidatorEmissionPercentage: "00.50",
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
-				DurationFactorConstant:      "0.001877876953694702",
 				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
 			constainsErr: "target bond ratio cannot be less than 0 percent",
@@ -139,14 +99,9 @@ func TestKeeper_GetParams(t *testing.T) {
 		{
 			name: "validator emission percentage too high",
 			params: emissionstypes.Params{
-				MaxBondFactor:               "1.25",
-				MinBondFactor:               "0.75",
-				AvgBlockTime:                "6.00",
-				TargetBondRatio:             "00.67",
 				ValidatorEmissionPercentage: "1.50",
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
-				DurationFactorConstant:      "0.001877876953694702",
 				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
 			constainsErr: "validator emission percentage cannot be more than 100 percent",
@@ -154,14 +109,9 @@ func TestKeeper_GetParams(t *testing.T) {
 		{
 			name: "validator emission percentage too low",
 			params: emissionstypes.Params{
-				MaxBondFactor:               "1.25",
-				MinBondFactor:               "0.75",
-				AvgBlockTime:                "6.00",
-				TargetBondRatio:             "00.67",
 				ValidatorEmissionPercentage: "-1.50",
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
-				DurationFactorConstant:      "0.001877876953694702",
 				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
 			constainsErr: "validator emission percentage cannot be less than 0 percent",
@@ -169,14 +119,9 @@ func TestKeeper_GetParams(t *testing.T) {
 		{
 			name: "observer percentage too low",
 			params: emissionstypes.Params{
-				MaxBondFactor:               "1.25",
-				MinBondFactor:               "0.75",
-				AvgBlockTime:                "6.00",
-				TargetBondRatio:             "00.67",
 				ValidatorEmissionPercentage: "00.50",
 				ObserverEmissionPercentage:  "-00.25",
 				TssSignerEmissionPercentage: "00.25",
-				DurationFactorConstant:      "0.001877876953694702",
 				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
 			constainsErr: "observer emission percentage cannot be less than 0 percent",
@@ -184,14 +129,9 @@ func TestKeeper_GetParams(t *testing.T) {
 		{
 			name: "observer percentage too high",
 			params: emissionstypes.Params{
-				MaxBondFactor:               "1.25",
-				MinBondFactor:               "0.75",
-				AvgBlockTime:                "6.00",
-				TargetBondRatio:             "00.67",
 				ValidatorEmissionPercentage: "00.50",
 				ObserverEmissionPercentage:  "150.25",
 				TssSignerEmissionPercentage: "00.25",
-				DurationFactorConstant:      "0.001877876953694702",
 				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
 			constainsErr: "observer emission percentage cannot be more than 100 percent",
@@ -199,14 +139,9 @@ func TestKeeper_GetParams(t *testing.T) {
 		{
 			name: "tss signer percentage too high",
 			params: emissionstypes.Params{
-				MaxBondFactor:               "1.25",
-				MinBondFactor:               "0.75",
-				AvgBlockTime:                "6.00",
-				TargetBondRatio:             "00.67",
 				ValidatorEmissionPercentage: "00.50",
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "102.22",
-				DurationFactorConstant:      "0.001877876953694702",
 				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
 			constainsErr: "tss emission percentage cannot be more than 100 percent",
@@ -214,14 +149,9 @@ func TestKeeper_GetParams(t *testing.T) {
 		{
 			name: "tss signer percentage too low",
 			params: emissionstypes.Params{
-				MaxBondFactor:               "1.25",
-				MinBondFactor:               "0.75",
-				AvgBlockTime:                "6.00",
-				TargetBondRatio:             "00.67",
 				ValidatorEmissionPercentage: "00.50",
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "-102.22",
-				DurationFactorConstant:      "0.001877876953694702",
 				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
 			constainsErr: "tss emission percentage cannot be less than 0 percent",
