@@ -147,8 +147,9 @@ const (
 	/*
 	 Stateful precompiled contracts tests
 	*/
-	TestPrecompilesPrototypeName = "precompile_contracts_prototype"
-	TestPrecompilesStakingName   = "precompile_contracts_staking"
+	TestPrecompilesPrototypeName                = "precompile_contracts_prototype"
+	TestPrecompilesPrototypeThroughContractName = "precompile_contracts_prototype_through_contract"
+	TestPrecompilesStakingName                  = "precompile_contracts_staking"
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -819,6 +820,12 @@ var AllE2ETests = []runner.E2ETest{
 		"test stateful precompiled contracts prototype",
 		[]runner.ArgDefinition{},
 		TestPrecompilesPrototype,
+	),
+	runner.NewE2ETest(
+		TestPrecompilesPrototypeThroughContractName,
+		"test stateful precompiled contracts prototype through contract",
+		[]runner.ArgDefinition{},
+		TestPrecompilesPrototypeThroughContract,
 	),
 	runner.NewE2ETest(
 		TestPrecompilesStakingName,
