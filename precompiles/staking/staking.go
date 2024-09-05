@@ -165,17 +165,12 @@ func (c *Contract) GetShares(
 		}
 	}
 
-	staker, err := sdk.AccAddressFromBech32(sdk.AccAddress(stakerAddress.Bytes()).String())
-	if err != nil {
-		return nil, err
-	}
-
 	validator, err := sdk.ValAddressFromBech32(validatorAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	delegation := c.stakingKeeper.Delegation(ctx, staker, validator)
+	delegation := c.stakingKeeper.Delegation(ctx, sdk.AccAddress(stakerAddress.Bytes()), validator)
 	shares := big.NewInt(0)
 	if delegation != nil {
 		shares = delegation.GetShares().BigInt()

@@ -1204,6 +1204,21 @@ func Test_GetShares(t *testing.T) {
 		// ASSERT
 		require.Error(t, err)
 	})
+
+	t.Run("should fail if invalid val address format", func(t *testing.T) {
+		// ARRANGE
+		ctx, contract, abi, _, _, _ := setup(t)
+		methodID := abi.Methods[GetSharesMethodName]
+		staker := sample.Bech32AccAddress()
+		stakerEthAddr := common.BytesToAddress(staker.Bytes())
+		args := []interface{}{stakerEthAddr, 42}
+
+		// ACT
+		_, err := contract.GetShares(ctx, &methodID, args)
+
+		// ASSERT
+		require.Error(t, err)
+	})
 }
 
 func Test_RunInvalidMethod(t *testing.T) {

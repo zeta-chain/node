@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -24,16 +25,16 @@ func TestPrecompilesStaking(r *runner.E2ERunner, args []string) {
 		r.ZEVMAuth.GasLimit = previousGasLimit
 	}()
 
-	validators, err := stakingContract.GetAllValidators(nil)
+	validators, err := stakingContract.GetAllValidators(&bind.CallOpts{})
 	require.NoError(r, err)
 	require.GreaterOrEqual(r, len(validators), 2)
 
 	// shares are 0 for both validators at the start
-	sharesBeforeVal1, err := stakingContract.GetShares(nil, r.ZEVMAuth.From, validators[0].OperatorAddress)
+	sharesBeforeVal1, err := stakingContract.GetShares(&bind.CallOpts{}, r.ZEVMAuth.From, validators[0].OperatorAddress)
 	require.NoError(r, err)
 	require.Equal(r, int64(0), sharesBeforeVal1.Int64())
 
-	sharesBeforeVal2, err := stakingContract.GetShares(nil, r.ZEVMAuth.From, validators[1].OperatorAddress)
+	sharesBeforeVal2, err := stakingContract.GetShares(&bind.CallOpts{}, r.ZEVMAuth.From, validators[1].OperatorAddress)
 	require.NoError(r, err)
 	require.Equal(r, int64(0), sharesBeforeVal2.Int64())
 
@@ -43,7 +44,7 @@ func TestPrecompilesStaking(r *runner.E2ERunner, args []string) {
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 
 	// check shares are set to 3
-	sharesAfterVal1, err := stakingContract.GetShares(nil, r.ZEVMAuth.From, validators[0].OperatorAddress)
+	sharesAfterVal1, err := stakingContract.GetShares(&bind.CallOpts{}, r.ZEVMAuth.From, validators[0].OperatorAddress)
 	require.NoError(r, err)
 	require.Equal(r, big.NewInt(3e18).String(), sharesAfterVal1.String())
 
@@ -61,7 +62,7 @@ func TestPrecompilesStaking(r *runner.E2ERunner, args []string) {
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 
 	// check shares are set to 2
-	sharesAfterVal1, err = stakingContract.GetShares(nil, r.ZEVMAuth.From, validators[0].OperatorAddress)
+	sharesAfterVal1, err = stakingContract.GetShares(&bind.CallOpts{}, r.ZEVMAuth.From, validators[0].OperatorAddress)
 	require.NoError(r, err)
 	require.Equal(r, big.NewInt(2e18).String(), sharesAfterVal1.String())
 
@@ -85,11 +86,11 @@ func TestPrecompilesStaking(r *runner.E2ERunner, args []string) {
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 
 	// check shares for both validator1 and validator2 are 1
-	sharesAfterVal1, err = stakingContract.GetShares(nil, r.ZEVMAuth.From, validators[0].OperatorAddress)
+	sharesAfterVal1, err = stakingContract.GetShares(&bind.CallOpts{}, r.ZEVMAuth.From, validators[0].OperatorAddress)
 	require.NoError(r, err)
 	require.Equal(r, big.NewInt(1e18).String(), sharesAfterVal1.String())
 
-	sharesAfterVal2, err := stakingContract.GetShares(nil, r.ZEVMAuth.From, validators[1].OperatorAddress)
+	sharesAfterVal2, err := stakingContract.GetShares(&bind.CallOpts{}, r.ZEVMAuth.From, validators[1].OperatorAddress)
 	require.NoError(r, err)
 	require.Equal(r, big.NewInt(1e18).String(), sharesAfterVal2.String())
 
