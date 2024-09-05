@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
-	"github.com/zeta-chain/node/pkg/coin"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	emissionsModule "github.com/zeta-chain/node/x/emissions"
@@ -91,10 +90,11 @@ func TestBeginBlocker(t *testing.T) {
 	t.Run("tmp ctx is not committed if any of the distribution fails", func(t *testing.T) {
 		k, ctx, sk, _ := keepertest.EmissionsKeeper(t)
 		// Fund the emission pool to start the emission process
+		blockRewards := emissionstypes.BlockReward
 		err := sk.BankKeeper.MintCoins(
 			ctx,
 			emissionstypes.ModuleName,
-			sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(1000000000000))),
+			sdk.NewCoins(sdk.NewCoin(config.BaseDenom, blockRewards.TruncateInt())),
 		)
 		require.NoError(t, err)
 		// Setup module accounts for emission pools except for observer pool , so that the observer distribution fails
@@ -115,7 +115,7 @@ func TestBeginBlocker(t *testing.T) {
 				emissionstypes.EmissionsModuleAddress,
 				config.BaseDenom,
 			).Amount.Equal(
-				sdk.NewInt(1000000000000),
+				blockRewards.TruncateInt(),
 			),
 		)
 	})
@@ -124,11 +124,10 @@ func TestBeginBlocker(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionKeeperWithMockOptions(t, keepertest.EmissionMockOptions{
 			UseBankMock: true,
 		})
-		// Total block rewards is the fixed amount of rewards that are distributed
-		totalBlockRewards, err := coin.GetAzetaDecFromAmountInZeta(emissionstypes.BlockRewardsInZeta)
-		totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalBlockRewards.TruncateInt()))
-		require.NoError(t, err)
-
+		// Over funding the emission pool to avoid any errors due to truncated values
+		blockRewards := emissionstypes.BlockReward
+		totalRewardAmount := blockRewards.TruncateInt().Mul(sdk.NewInt(2))
+		totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalRewardAmount))
 		bankMock := keepertest.GetEmissionsBankMock(t, k)
 		bankMock.On("GetBalance",
 			ctx, mock.Anything, config.BaseDenom).
@@ -147,11 +146,10 @@ func TestBeginBlocker(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionKeeperWithMockOptions(t, keepertest.EmissionMockOptions{
 			UseBankMock: true,
 		})
-		// Total block rewards is the fixed amount of rewards that are distributed
-		totalBlockRewards, err := coin.GetAzetaDecFromAmountInZeta(emissionstypes.BlockRewardsInZeta)
-		totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalBlockRewards.TruncateInt()))
-		require.NoError(t, err)
-
+		// Over funding the emission pool to avoid any errors due to truncated values
+		blockRewards := emissionstypes.BlockReward
+		totalRewardAmount := blockRewards.TruncateInt().Mul(sdk.NewInt(2))
+		totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalRewardAmount))
 		bankMock := keepertest.GetEmissionsBankMock(t, k)
 		bankMock.On("GetBalance",
 			ctx, mock.Anything, config.BaseDenom).
@@ -175,11 +173,11 @@ func TestBeginBlocker(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionKeeperWithMockOptions(t, keepertest.EmissionMockOptions{
 			UseBankMock: true,
 		})
-		// Total block rewards is the fixed amount of rewards that are distributed
-		totalBlockRewards, err := coin.GetAzetaDecFromAmountInZeta(emissionstypes.BlockRewardsInZeta)
-		totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalBlockRewards.TruncateInt()))
-		require.NoError(t, err)
 
+		// Over funding the emission pool to avoid any errors due to truncated values
+		blockRewards := emissionstypes.BlockReward
+		totalRewardAmount := blockRewards.TruncateInt().Mul(sdk.NewInt(2))
+		totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalRewardAmount))
 		bankMock := keepertest.GetEmissionsBankMock(t, k)
 		bankMock.On("GetBalance",
 			ctx, mock.Anything, config.BaseDenom).
@@ -222,12 +220,12 @@ func TestBeginBlocker(t *testing.T) {
 			BallotsIndexList: ballotIdentifiers,
 		})
 
-		// Total block rewards is the fixed amount of rewards that are distributed
-		totalBlockRewards, err := coin.GetAzetaDecFromAmountInZeta(emissionstypes.BlockRewardsInZeta)
-		totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalBlockRewards.TruncateInt()))
-		require.NoError(t, err)
 		// Fund the emission pool to start the emission process
-		err = sk.BankKeeper.MintCoins(ctx, emissionstypes.ModuleName, totalRewardCoins)
+		blockRewards := emissionstypes.BlockReward
+		totalRewardAmount := blockRewards.TruncateInt().Mul(sdk.NewInt(int64(numberOfTestBlocks)))
+		totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalRewardAmount))
+
+		err := sk.BankKeeper.MintCoins(ctx, emissionstypes.ModuleName, totalRewardCoins)
 		require.NoError(t, err)
 
 		// Setup module accounts for emission pools
@@ -240,15 +238,13 @@ func TestBeginBlocker(t *testing.T) {
 
 		params, found := k.GetParams(ctx)
 		require.True(t, found)
-		blockRewards := emissionstypes.BlockReward
-		observerRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(params.ObserverEmissionPercentage)).
-			TruncateInt()
-		validatorRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(params.ValidatorEmissionPercentage)).
-			TruncateInt()
-		tssSignerRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(params.TssSignerEmissionPercentage)).
-			TruncateInt()
-		distributedRewards := observerRewardsForABlock.Add(validatorRewardsForABlock).Add(tssSignerRewardsForABlock)
 
+		// Get the rewards distribution, this is a fixed amount based on total block rewards and distribution percentages
+		validatorRewardsForABlock, observerRewardsForABlock, tssSignerRewardsForABlock := emissionstypes.GetRewardsDistributions(
+			params,
+		)
+
+		distributedRewards := observerRewardsForABlock.Add(validatorRewardsForABlock).Add(tssSignerRewardsForABlock)
 		require.True(t, blockRewards.TruncateInt().GT(distributedRewards))
 
 		for i := 0; i < numberOfTestBlocks; i++ {
@@ -262,6 +258,7 @@ func TestBeginBlocker(t *testing.T) {
 				emissionPool,
 				config.BaseDenom,
 			).Amount
+
 			require.True(
 				t,
 				emissionPoolBeforeBlockDistribution.Sub(emissionPoolBalanceAfterBlockDistribution).
@@ -452,12 +449,11 @@ func TestDistributeObserverRewards(t *testing.T) {
 			zk.ObserverKeeper.SetObserverSet(ctx, observerSet)
 
 			// Total block rewards is the fixed amount of rewards that are distributed
-			totalBlockRewards, err := coin.GetAzetaDecFromAmountInZeta(emissionstypes.BlockRewardsInZeta)
-			totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalBlockRewards.TruncateInt()))
-			require.NoError(t, err)
+			totalBlockRewards := emissionstypes.BlockReward.TruncateInt()
+			totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalBlockRewards))
 
 			// Fund the emission pool to start the emission process
-			err = sk.BankKeeper.MintCoins(ctx, emissionstypes.ModuleName, totalRewardCoins)
+			err := sk.BankKeeper.MintCoins(ctx, emissionstypes.ModuleName, totalRewardCoins)
 			require.NoError(t, err)
 
 			// Set starting emission for all observers to 100 so that we can calculate the rewards and slashes

@@ -18,9 +18,9 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	// Get the block rewards from the params
 	params, found := keeper.GetParams(ctx)
 	if !found {
+		ctx.Logger().Error("Params not found")
 		return
 	}
-
 	blockRewards := params.BlockRewardAmount
 	if blockRewards.GT(emissionPoolBalance) {
 		ctx.Logger().

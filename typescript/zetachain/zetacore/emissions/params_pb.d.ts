@@ -58,7 +58,7 @@ export declare class Params extends Message<Params> {
 }
 
 /**
- * Deprecated: Do not use. Use Params Instead
+ * Deprecated (v20): Do not use. Use Params Instead
  *
  * @generated from message zetachain.zetacore.emissions.LegacyParams
  */

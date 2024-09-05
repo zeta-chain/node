@@ -2,6 +2,7 @@ package v4
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,6 +29,7 @@ func MigrateStore(
 		return errorsmod.Wrap(types.ErrMigrationFailed, "failed to get legacy params")
 	}
 
+	// New params initializes v4 params with default values
 	v4Params := types.NewParams()
 	if v3Params.ValidatorEmissionPercentage != "" {
 		v4Params.ValidatorEmissionPercentage = v3Params.ValidatorEmissionPercentage
@@ -38,8 +40,12 @@ func MigrateStore(
 	if v3Params.TssSignerEmissionPercentage != "" {
 		v4Params.TssSignerEmissionPercentage = v3Params.TssSignerEmissionPercentage
 	}
-	v4Params.ObserverSlashAmount = v3Params.ObserverSlashAmount
-	v4Params.BallotMaturityBlocks = v3Params.BallotMaturityBlocks
+	if v3Params.ObserverSlashAmount.GTE(sdkmath.ZeroInt()) {
+		v4Params.ObserverSlashAmount = v3Params.ObserverSlashAmount
+	}
+	if v3Params.BallotMaturityBlocks > 0 {
+		v4Params.BallotMaturityBlocks = v3Params.BallotMaturityBlocks
+	}
 
 	err := emissionsKeeper.SetParams(ctx, v4Params)
 	if err != nil {

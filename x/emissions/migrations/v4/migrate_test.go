@@ -152,6 +152,66 @@ func TestMigrateStore(t *testing.T) {
 		},
 	)
 
+	t.Run(
+		"should successfully migrate using default values if legacy param for ObserverSlashAmount is not available",
+		func(t *testing.T) {
+			//Arrange
+			k, ctx, _, _ := keepertest.EmissionsKeeper(t)
+			cdc := k.GetCodec()
+			emissionsStoreKey := k.GetStoreKey()
+
+			mainnetParams := LegacyMainnetParams()
+			mainnetParams.ObserverSlashAmount = sdkmath.NewInt(-1)
+			err := SetLegacyParams(ctx, emissionsStoreKey, cdc, mainnetParams)
+			require.NoError(t, err)
+
+			//Act
+			err = v4.MigrateStore(ctx, k)
+			require.NoError(t, err)
+
+			//Assert
+			defaultParams := types.DefaultParams()
+			params, found := k.GetParams(ctx)
+			require.True(t, found)
+			require.Equal(t, mainnetParams.ValidatorEmissionPercentage, params.ValidatorEmissionPercentage)
+			require.Equal(t, mainnetParams.ObserverEmissionPercentage, params.ObserverEmissionPercentage)
+			require.Equal(t, mainnetParams.TssSignerEmissionPercentage, params.TssSignerEmissionPercentage)
+			require.Equal(t, defaultParams.ObserverSlashAmount.String(), params.ObserverSlashAmount.String())
+			require.Equal(t, mainnetParams.BallotMaturityBlocks, params.BallotMaturityBlocks)
+			require.Equal(t, types.BlockReward, params.BlockRewardAmount)
+		},
+	)
+
+	t.Run(
+		"should successfully migrate using default values if legacy param for BallotMaturityBlocks is not available",
+		func(t *testing.T) {
+			//Arrange
+			k, ctx, _, _ := keepertest.EmissionsKeeper(t)
+			cdc := k.GetCodec()
+			emissionsStoreKey := k.GetStoreKey()
+
+			mainnetParams := LegacyMainnetParams()
+			mainnetParams.BallotMaturityBlocks = -1
+			err := SetLegacyParams(ctx, emissionsStoreKey, cdc, mainnetParams)
+			require.NoError(t, err)
+
+			//Act
+			err = v4.MigrateStore(ctx, k)
+			require.NoError(t, err)
+
+			//Assert
+			defaultParams := types.DefaultParams()
+			params, found := k.GetParams(ctx)
+			require.True(t, found)
+			require.Equal(t, mainnetParams.ValidatorEmissionPercentage, params.ValidatorEmissionPercentage)
+			require.Equal(t, mainnetParams.ObserverEmissionPercentage, params.ObserverEmissionPercentage)
+			require.Equal(t, mainnetParams.TssSignerEmissionPercentage, params.TssSignerEmissionPercentage)
+			require.Equal(t, mainnetParams.ObserverSlashAmount, params.ObserverSlashAmount)
+			require.Equal(t, defaultParams.BallotMaturityBlocks, params.BallotMaturityBlocks)
+			require.Equal(t, types.BlockReward, params.BlockRewardAmount)
+		},
+	)
+
 	t.Run("fail to migrate if legacy params are not found", func(t *testing.T) {
 		//Arrange
 		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
@@ -166,13 +226,14 @@ func TestMigrateStore(t *testing.T) {
 		require.ErrorContains(t, err, "failed to get legacy params")
 	})
 
+	// This scenario is hypothetical as the legacy params have valid values.
 	t.Run("fail to migrate if params are not valid", func(t *testing.T) {
 		//Arrange
 		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 		cdc := k.GetCodec()
 		emissionsStoreKey := k.GetStoreKey()
 		mainnetParams := LegacyMainnetParams()
-		mainnetParams.ObserverSlashAmount = sdkmath.NewInt(-100000000000000000)
+		mainnetParams.TssSignerEmissionPercentage = "2.0"
 		err := SetLegacyParams(ctx, emissionsStoreKey, cdc, mainnetParams)
 		require.NoError(t, err)
 
@@ -181,7 +242,7 @@ func TestMigrateStore(t *testing.T) {
 
 		//Assert
 		require.ErrorIs(t, err, types.ErrMigrationFailed)
-		require.ErrorContains(t, err, "slash amount cannot be less than 0")
+		require.ErrorContains(t, err, "tss emission percentage cannot be more than 100 percent")
 	})
 }
 
