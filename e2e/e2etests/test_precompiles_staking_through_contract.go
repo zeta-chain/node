@@ -46,7 +46,11 @@ func TestPrecompilesStakingThroughContract(r *runner.E2ERunner, args []string) {
 	require.Error(r, err)
 
 	r.ZEVMAuth.Value = big.NewInt(1000000000000)
+	previousGasLimit := r.ZEVMAuth.GasLimit
 	r.ZEVMAuth.GasLimit = 10000000
+	defer func() {
+		r.ZEVMAuth.GasLimit = previousGasLimit
+	}()
 
 	// fund testStaking contract with azeta
 	tx, err := testStaking.DepositWZETA(r.ZEVMAuth)

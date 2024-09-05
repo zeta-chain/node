@@ -37,7 +37,6 @@ func setup(t *testing.T) (sdk.Context, *Contract, abi.ABI, keeper.SDKKeepers, *v
 
 	db := tmdb.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db)
-	// sdkKeepers := keeper.NewSDKKeepers(cdc, db, stateStore)
 	keys, memKeys, tkeys, allKeys := keeper.StoreKeys()
 	sdkKeepers := keeper.NewSDKKeepersWithKeys(cdc, keys, memKeys, tkeys, allKeys)
 	for _, key := range keys {
