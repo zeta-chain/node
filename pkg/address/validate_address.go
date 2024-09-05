@@ -26,16 +26,7 @@ func ValidateAddressForChain(address string, chainID int64, additionalChains []c
 	case chains.Network_zeta:
 		return nil
 	case chains.Network_btc:
-		{
-			addr, err := chains.DecodeBtcAddress(address, chainID)
-			if err != nil {
-				return fmt.Errorf("invalid address %s , chain %d: %s", address, chainID, err)
-			}
-			if !chains.IsBtcAddressSupported(addr) {
-				return fmt.Errorf("unsupported address %s", address)
-			}
-			return nil
-		}
+		return ValidateBTCAddress(address, chainID)
 	case chains.Network_polygon:
 		return ValidateEthereumAddress(address)
 	case chains.Network_bsc:
@@ -54,6 +45,17 @@ func ValidateAddressForChain(address string, chainID int64, additionalChains []c
 func ValidateEthereumAddress(address string) error {
 	if !ethcommon.IsHexAddress(address) {
 		return fmt.Errorf("invalid address %s ", address)
+	}
+	return nil
+}
+
+func ValidateBTCAddress(address string, chainID int64) error {
+	addr, err := chains.DecodeBtcAddress(address, chainID)
+	if err != nil {
+		return fmt.Errorf("invalid address %s , chain %d: %s", address, chainID, err)
+	}
+	if !chains.IsBtcAddressSupported(addr) {
+		return fmt.Errorf("unsupported address %s", address)
 	}
 	return nil
 }
