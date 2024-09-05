@@ -4,9 +4,8 @@ import (
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/contracts/teststaking"
@@ -17,7 +16,11 @@ import (
 func TestPrecompilesStakingThroughContract(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0, "No arguments expected")
 
-	testStakingAddr, testStakingTx, testStaking, err := teststaking.DeployTestStaking(r.ZEVMAuth, r.ZEVMClient, r.WZetaAddr)
+	testStakingAddr, testStakingTx, testStaking, err := teststaking.DeployTestStaking(
+		r.ZEVMAuth,
+		r.ZEVMClient,
+		r.WZetaAddr,
+	)
 	require.NoError(r, err)
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, testStakingTx, r.Logger, r.ReceiptTimeout)
 

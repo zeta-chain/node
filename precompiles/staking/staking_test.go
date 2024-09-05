@@ -68,8 +68,19 @@ func setup(t *testing.T) (sdk.Context, *Contract, abi.ABI, keeper.SDKKeepers, *v
 	address := contract.Address()
 	require.NotNil(t, address, "contract address should not be nil")
 
-	mockEVM := vm.NewEVM(vm.BlockContext{}, vm.TxContext{}, statedb.New(ctx, sdkKeepers.EvmKeeper, statedb.TxConfig{}), &params.ChainConfig{}, vm.Config{})
-	mockVMContract := vm.NewContract(contractRef{address: common.Address{}}, contractRef{address: ContractAddress}, big.NewInt(0), 0)
+	mockEVM := vm.NewEVM(
+		vm.BlockContext{},
+		vm.TxContext{},
+		statedb.New(ctx, sdkKeepers.EvmKeeper, statedb.TxConfig{}),
+		&params.ChainConfig{},
+		vm.Config{},
+	)
+	mockVMContract := vm.NewContract(
+		contractRef{address: common.Address{}},
+		contractRef{address: ContractAddress},
+		big.NewInt(0),
+		0,
+	)
 	return ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract
 }
 
