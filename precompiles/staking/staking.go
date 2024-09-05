@@ -186,7 +186,6 @@ func (c *Contract) GetShares(
 
 func (c *Contract) Stake(
 	ctx sdk.Context,
-	origin common.Address,
 	contract *vm.Contract,
 	method *abi.Method,
 	args []interface{},
@@ -205,8 +204,8 @@ func (c *Contract) Stake(
 		}
 	}
 
-	if origin != stakerAddress {
-		return nil, fmt.Errorf("origin is not staker address")
+	if contract.CallerAddress != stakerAddress {
+		return nil, fmt.Errorf("caller is not staker address")
 	}
 
 	validatorAddress, ok := args[1].(string)
@@ -241,7 +240,7 @@ func (c *Contract) Stake(
 
 func (c *Contract) Unstake(
 	ctx sdk.Context,
-	origin common.Address,
+	contract *vm.Contract,
 	method *abi.Method,
 	args []interface{},
 ) ([]byte, error) {
@@ -259,8 +258,8 @@ func (c *Contract) Unstake(
 		}
 	}
 
-	if origin != stakerAddress {
-		return nil, fmt.Errorf("origin is not staker address")
+	if contract.CallerAddress != stakerAddress {
+		return nil, fmt.Errorf("caller is not staker address")
 	}
 
 	validatorAddress, ok := args[1].(string)
@@ -295,7 +294,7 @@ func (c *Contract) Unstake(
 
 func (c *Contract) MoveStake(
 	ctx sdk.Context,
-	origin common.Address,
+	contract *vm.Contract,
 	method *abi.Method,
 	args []interface{},
 ) ([]byte, error) {
@@ -313,8 +312,8 @@ func (c *Contract) MoveStake(
 		}
 	}
 
-	if origin != stakerAddress {
-		return nil, fmt.Errorf("origin is not staker address")
+	if contract.CallerAddress != stakerAddress {
+		return nil, fmt.Errorf("caller is not staker address")
 	}
 
 	validatorSrcAddress, ok := args[1].(string)
@@ -394,7 +393,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, erro
 	case StakeMethodName:
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-			res, err = c.Stake(ctx, evm.Origin, contract, method, args)
+			res, err = c.Stake(ctx, contract, method, args)
 			return err
 		})
 		if execErr != nil {
@@ -404,7 +403,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, erro
 	case UnstakeMethodName:
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-			res, err = c.Unstake(ctx, evm.Origin, method, args)
+			res, err = c.Unstake(ctx, contract, method, args)
 			return err
 		})
 		if execErr != nil {
@@ -414,7 +413,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, erro
 	case MoveStakeMethodName:
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-			res, err = c.MoveStake(ctx, evm.Origin, method, args)
+			res, err = c.MoveStake(ctx, contract, method, args)
 			return err
 		})
 		if execErr != nil {

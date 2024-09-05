@@ -2,60 +2,55 @@
   {
     "inputs": [
       {
-        "internalType": "string",
-        "name": "bech32",
-        "type": "string"
-      }
-    ],
-    "name": "bech32CallFn",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      },
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "bech32",
-        "type": "string"
-      }
-    ],
-    "name": "bech32Fn",
-    "outputs": [
-      {
         "internalType": "address",
-        "name": "addr",
+        "name": "_wzeta",
         "type": "address"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "fallback"
+  },
+  {
+    "inputs": [],
+    "name": "depositWZETA",
+    "outputs": [],
+    "stateMutability": "payable",
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "bech32",
-        "type": "string"
-      }
-    ],
-    "name": "bech32StaticFn",
+    "inputs": [],
+    "name": "getAllValidators",
     "outputs": [
       {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
+        "components": [
+          {
+            "internalType": "string",
+            "name": "operatorAddress",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "consensusPubKey",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "jailed",
+            "type": "bool"
+          },
+          {
+            "internalType": "enum BondStatus",
+            "name": "bondStatus",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct Validator[]",
+        "name": "validators",
+        "type": "tuple[]"
       }
     ],
     "stateMutability": "view",
@@ -88,6 +83,45 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "staker",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "validatorSrc",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "validatorDst",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "moveStake",
+    "outputs": [
+      {
+        "internalType": "int64",
+        "name": "completionTime",
+        "type": "int64"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "staker",
+        "type": "address"
+      },
+      {
         "internalType": "string",
         "name": "validator",
         "type": "string"
@@ -99,8 +133,60 @@
       }
     ],
     "name": "stake",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "staker",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "validator",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "unstake",
+    "outputs": [
+      {
+        "internalType": "int64",
+        "name": "completionTime",
+        "type": "int64"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "wad",
+        "type": "uint256"
+      }
+    ],
+    "name": "withdrawWZETA",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
   }
 ]
