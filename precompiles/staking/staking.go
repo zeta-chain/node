@@ -17,6 +17,7 @@ import (
 	ptypes "github.com/zeta-chain/node/precompiles/types"
 )
 
+// method names
 const (
 	// write
 	StakeMethodName     = "stake"
