@@ -23,6 +23,7 @@
 ### Tests
 
 * [2726](https://github.com/zeta-chain/node/pull/2726) - add e2e tests for deposit and call, deposit and revert
+* [2821](https://github.com/zeta-chain/node/pull/2821) - V2 protocol contracts migration e2e tests
 
 ### Fixes
 
