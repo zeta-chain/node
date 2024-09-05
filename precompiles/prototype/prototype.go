@@ -41,6 +41,7 @@ func initABI() {
 		var methodID [4]byte
 		copy(methodID[:], ABI.Methods[methodName].ID[:4])
 		switch methodName {
+		// TODO: https://github.com/zeta-chain/node/issues/2812
 		case Bech32ToHexAddrMethodName:
 			GasRequiredByMethod[methodID] = 500
 		case Bech32ifyMethodName:

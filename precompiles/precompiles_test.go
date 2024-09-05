@@ -11,7 +11,7 @@ import (
 )
 
 func Test_StatefulContracts(t *testing.T) {
-	k, ctx, _, _ := keeper.FungibleKeeper(t)
+	k, ctx, sdkk, _ := keeper.FungibleKeeper(t)
 	gasConfig := storetypes.TransientGasConfig()
 
 	var encoding ethermint.EncodingConfig
@@ -25,15 +25,16 @@ func Test_StatefulContracts(t *testing.T) {
 	}
 
 	// StatefulContracts() should return all the enabled contracts.
-	contracts := StatefulContracts(k, appCodec, gasConfig)
+	contracts := StatefulContracts(k, &sdkk.StakingKeeper, appCodec, gasConfig)
 	require.NotNil(t, contracts, "StatefulContracts() should not return a nil slice")
 	require.Len(t, contracts, expectedContracts, "StatefulContracts() should return all the enabled contracts")
 
-	// Extract the contract function from the first contract.
-	customContractFn := contracts[0]
-	contract := customContractFn(ctx, ethparams.Rules{})
+	for _, customContractFn := range contracts {
+		// Extract the contract function.
+		contract := customContractFn(ctx, ethparams.Rules{})
 
-	// Check the contract function returns a valid address.
-	contractAddr := contract.Address()
-	require.NotNil(t, contractAddr, "The called contract should have a valid address")
+		// Check the contract function returns a valid address.
+		contractAddr := contract.Address()
+		require.NotNil(t, contractAddr, "The called contract should have a valid address")
+	}
 }

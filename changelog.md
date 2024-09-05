@@ -14,8 +14,9 @@
 * [2681](https://github.com/zeta-chain/node/pull/2681) - implement `MsgUpdateERC20CustodyPauseStatus` to pause or unpause ERC20 Custody contract (to be used for the migration process for smart contract V2)
 * [2644](https://github.com/zeta-chain/node/pull/2644) - add created_timestamp to cctx status
 * [2673](https://github.com/zeta-chain/node/pull/2673) - add relayer key importer, encryption and decryption
-* [2633](https://github.com/zeta-chain/node/pull/2633) - support for stateful precompiled contracts.
+* [2633](https://github.com/zeta-chain/node/pull/2633) - support for stateful precompiled contracts
 * [2788](https://github.com/zeta-chain/node/pull/2788) - add common importable zetacored rpc package
+* [2784](https://github.com/zeta-chain/node/pull/2784) - staking precompiled contract
 
 ### Refactor
 
