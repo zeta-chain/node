@@ -25,11 +25,11 @@ func TestPrecompilesStakingThroughContract(r *runner.E2ERunner, args []string) {
 	require.GreaterOrEqual(r, len(validators), 2)
 
 	// shares are 0 for both validators at the start
-	sharesBeforeVal1, err := testStaking.GetShares(nil, r.ZEVMAuth.From, validators[0].OperatorAddress)
+	sharesBeforeVal1, err := testStaking.GetShares(nil, testStakingAddr, validators[0].OperatorAddress)
 	require.NoError(r, err)
 	require.Equal(r, int64(0), sharesBeforeVal1.Int64())
 
-	sharesBeforeVal2, err := testStaking.GetShares(nil, r.ZEVMAuth.From, validators[1].OperatorAddress)
+	sharesBeforeVal2, err := testStaking.GetShares(nil, testStakingAddr, validators[1].OperatorAddress)
 	require.NoError(r, err)
 	require.Equal(r, int64(0), sharesBeforeVal2.Int64())
 
