@@ -254,6 +254,9 @@ then
 # migration tester
   address=$(yq -r '.additional_accounts.user_migration.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+# precompiles tester
+  address=$(yq -r '.additional_accounts.user_precompile.bech32_address' /root/config.yml)
+  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
 # v2 ether tester
   address=$(yq -r '.additional_accounts.user_v2_ether.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta

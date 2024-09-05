@@ -48,7 +48,7 @@ func CmdVoteBlame() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			blameNodes := types.ConvertNodes(nodes)
+			blameNodes := ConvertNodes(nodes)
 			blameInfo := types.Blame{
 				Index:         index,
 				FailureReason: failureReason,
