@@ -20,6 +20,8 @@ func TestNewParams(t *testing.T) {
 		params.ObserverSlashAmount,
 		"ObserverSlashAmount should be set to 100000000000000000",
 	)
+	require.Equal(t, int64(100), params.BallotMaturityBlocks, "BallotMaturityBlocks should be set to 100")
+	require.Equal(t, BlockReward, params.BlockRewardAmount, "BlockRewardAmount should be set to 0")
 }
 
 func TestDefaultParams(t *testing.T) {
@@ -61,6 +63,15 @@ func TestValidateBallotMaturityBlocks(t *testing.T) {
 	require.Error(t, validateBallotMaturityBlocks("10"))
 	require.Error(t, validateBallotMaturityBlocks(-100))
 	require.NoError(t, validateBallotMaturityBlocks(int64(100)))
+}
+
+func TestValidateBlockRewardAmount(t *testing.T) {
+	require.Error(t, validateBlockRewardsAmount("0.50"))
+	require.Error(t, validateBlockRewardsAmount("-0.50"))
+	require.Error(t, validateBlockRewardsAmount(sdkmath.LegacyMustNewDecFromStr("-0.50")))
+	require.NoError(t, validateBlockRewardsAmount(sdkmath.LegacyMustNewDecFromStr("0.50")))
+	require.NoError(t, validateBlockRewardsAmount(sdkmath.LegacyZeroDec()))
+	require.NoError(t, validateBlockRewardsAmount(BlockReward))
 }
 
 func TestValidate(t *testing.T) {

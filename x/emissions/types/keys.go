@@ -25,11 +25,7 @@ const (
 	MemStoreKey              = "mem_emissions"
 	WithdrawableEmissionsKey = "WithdrawableEmissions-value-"
 
-	SecsInMonth        = 30 * 24 * 60 * 60
 	BlockRewardsInZeta = "210000000"
-
-	EmissionScheduledYears = 4
-	AvgBlockTime           = "5.7"
 
 	ParamsKey = "Params-value-"
 )
@@ -40,14 +36,9 @@ func KeyPrefix(p string) []byte {
 
 const (
 	EmissionsTrackerKey              = "EmissionsTracker-value-"
-	ParamMaxBondFactor               = "MaxBondFactor"
-	ParamMinBondFactor               = "MinBondFactor"
-	ParamAvgBlockTime                = "AvgBlockTime"
-	ParamTargetBondRatio             = "TargetBondRation"
 	ParamValidatorEmissionPercentage = "ValidatorEmissionPercentage"
 	ParamObserverEmissionPercentage  = "ObserverEmissionPercentage"
 	ParamTssSignerEmissionPercentage = "SignerEmissionPercentage"
-	ParamDurationFactorConstant      = "DurationFactorConstant"
 	ParamObserverSlashAmount         = "ObserverSlashAmount"
 )
 

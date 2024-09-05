@@ -16,31 +16,32 @@ type EmissionsKeeper interface {
 }
 
 // MigrateStore migrates the store from v3 to v4
-// The v3 params are copied to the v4 params , and the v4 params are set in the store
+// The v3 params are copied to the v4 params, and the v4 params are set in the store
+// v4 params removes unused parameters from v3; these values are discarded.
 // v4 introduces a new parameter, BlockRewardAmount, which is set to the default value
 func MigrateStore(
 	ctx sdk.Context,
 	emissionsKeeper EmissionsKeeper,
 ) error {
-	currentParams, found := GetParamsLegacy(ctx, emissionsKeeper.GetStoreKey(), emissionsKeeper.GetCodec())
+	v3Params, found := GetParamsLegacy(ctx, emissionsKeeper.GetStoreKey(), emissionsKeeper.GetCodec())
 	if !found {
 		return errorsmod.Wrap(types.ErrMigrationFailed, "failed to get legacy params")
 	}
 
-	defaultParams := types.NewParams()
-	if currentParams.ValidatorEmissionPercentage != "" {
-		defaultParams.ValidatorEmissionPercentage = currentParams.ValidatorEmissionPercentage
+	v4Params := types.NewParams()
+	if v3Params.ValidatorEmissionPercentage != "" {
+		v4Params.ValidatorEmissionPercentage = v3Params.ValidatorEmissionPercentage
 	}
-	if currentParams.ObserverEmissionPercentage != "" {
-		defaultParams.ObserverEmissionPercentage = currentParams.ObserverEmissionPercentage
+	if v3Params.ObserverEmissionPercentage != "" {
+		v4Params.ObserverEmissionPercentage = v3Params.ObserverEmissionPercentage
 	}
-	if currentParams.TssSignerEmissionPercentage != "" {
-		defaultParams.TssSignerEmissionPercentage = currentParams.TssSignerEmissionPercentage
+	if v3Params.TssSignerEmissionPercentage != "" {
+		v4Params.TssSignerEmissionPercentage = v3Params.TssSignerEmissionPercentage
 	}
-	defaultParams.ObserverSlashAmount = currentParams.ObserverSlashAmount
-	defaultParams.BallotMaturityBlocks = currentParams.BallotMaturityBlocks
+	v4Params.ObserverSlashAmount = v3Params.ObserverSlashAmount
+	v4Params.BallotMaturityBlocks = v3Params.BallotMaturityBlocks
 
-	err := emissionsKeeper.SetParams(ctx, defaultParams)
+	err := emissionsKeeper.SetParams(ctx, v4Params)
 	if err != nil {
 		return errorsmod.Wrap(types.ErrMigrationFailed, err.Error())
 	}
