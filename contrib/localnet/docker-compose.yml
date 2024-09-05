@@ -241,6 +241,20 @@ services:
         ipv4_address: 172.20.0.103
     entrypoint: [ "/usr/bin/start-solana.sh" ]
 
+  ton:
+    image: ton-local:latest
+    container_name: ton
+    hostname: ton
+    profiles:
+      - ton
+      - all
+    ports:
+      - "8111:8000" # sidecar
+      - "4443:4443" # lite client
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.104
+
   orchestrator:
     image: orchestrator:latest
     tty: true

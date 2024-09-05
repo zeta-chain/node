@@ -245,6 +245,11 @@ solana:
 	@echo "Building solana docker image"
 	$(DOCKER) build -t solana-local -f contrib/localnet/solana/Dockerfile contrib/localnet/solana/
 
+ton:
+	@echo "Building ton docker image"
+	contrib/localnet/ton/download-jar.sh
+	$(DOCKER) buildx build --platform linux/amd64 -t ton-local -f contrib/localnet/ton/Dockerfile contrib/localnet/ton/
+
 start-e2e-test: zetanode
 	@echo "--> Starting e2e test"
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d 
