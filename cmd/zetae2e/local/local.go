@@ -309,7 +309,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		if !skipPrecompiles {
 			precompiledContractTests = []string{
-				e2etests.TestZetaPrecompilesPrototypeName,
+				e2etests.TestPrecompilesPrototypeName,
+				e2etests.TestPrecompilesPrototypeThroughContractName,
+				e2etests.TestPrecompilesStakingName,
+				e2etests.TestPrecompilesStakingThroughContractName,
 			}
 		}
 

@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 	"google.golang.org/grpc"
@@ -30,6 +31,8 @@ type Clients struct {
 	Auth authtypes.QueryClient
 	// Bank is a github.com/cosmos/cosmos-sdk/x/bank/types QueryClient
 	Bank banktypes.QueryClient
+	// Bank is a github.com/cosmos/cosmos-sdk/x/staking/types QueryClient
+	Staking stakingtypes.QueryClient
 	// Upgrade is a github.com/cosmos/cosmos-sdk/x/upgrade/types QueryClient
 	Upgrade upgradetypes.QueryClient
 
@@ -64,6 +67,7 @@ func newClients(ctx client.Context) (Clients, error) {
 		// Cosmos SDK clients
 		Auth:      authtypes.NewQueryClient(ctx),
 		Bank:      banktypes.NewQueryClient(ctx),
+		Staking:   stakingtypes.NewQueryClient(ctx),
 		Upgrade:   upgradetypes.NewQueryClient(ctx),
 		Authority: authoritytypes.NewQueryClient(ctx),
 		// ZetaCore specific clients

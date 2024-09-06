@@ -43,8 +43,10 @@ function bindings() {
     cd $1
     go generate > /dev/null 2>&1
     echo "Generated bindings for $1"
+    cd - > /dev/null 2>&1
 }
 
 # List of bindings to generate
 bindings ./precompiles/prototype
+bindings ./precompiles/staking
 
