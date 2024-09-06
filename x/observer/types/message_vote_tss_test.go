@@ -102,5 +102,5 @@ func TestMsgVoteTSS_GetSignBytes(t *testing.T) {
 
 func TestMsgVoteTSS_Digest(t *testing.T) {
 	msg := types.NewMsgVoteTSS(sample.AccAddress(), "pubkey", 1, chains.ReceiveStatus_success)
-	require.Equal(t, "1-tss-keygen", msg.Digest())
+	require.Equal(t, "1-pubkey-tss-keygen", msg.Digest())
 }
