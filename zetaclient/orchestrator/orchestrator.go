@@ -503,10 +503,14 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 
 		if outboundScheduleInterval == 0 {
 			// TODO: clean up this log when issue is resolved
-			// logging observer chain id to be sure that observer is resolved correctly for the same chain
+			// logging observer chain params to help with debugging if issue happens again
 			oc.logger.Error().
 				Err(err).
 				Msgf("ScheduleCctxEVM: outboundScheduleInterval set to 0 for chain %d using observer for chain %d", chainID, observer.GetChainParams().ChainId)
+
+			oc.logger.Info().
+				Interface("observer.chain_params", observer.GetChainParams()).
+				Msgf("chain params for chainID %d", chainID)
 			return
 		}
 
