@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v19.1.2
+
+### Fixes
+
+* [2840](https://github.com/zeta-chain/node/pull/2840) - prevent division by 0 in ScheduleCctxEVM
+
+## v19.1.1
+
+Fix release CI build
+
 ## v19.1.0
 
 * [2524](https://github.com/zeta-chain/node/pull/2524) - add inscription envolop parsing
