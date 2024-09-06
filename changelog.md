@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v19.3.0
+
+### Refactor
+
+* [2838](https://github.com/zeta-chain/node/pull/2838) - disable Bitcoin witness support for mainnet
+
+### Fixes
+
+* [2837](https://github.com/zeta-chain/node/pull/2837) - prevent division by 0 in ScheduleCctxEVM
+
 ## V19.2.1
 
 ### Features
