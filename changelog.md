@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v19.1.4
+
+### Fixes
+
+* [2843](https://github.com/zeta-chain/node/pull/2843) - move interval assignment out of cctx loop
+
 ## v19.1.3
 
 ### Fixes
