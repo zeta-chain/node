@@ -348,7 +348,15 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
 
 		// get BTC event
-		event, err := observer.GetBtcEventWithoutWitness(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
+		event, err := observer.GetBtcEventWithoutWitness(
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			depositorFee,
+		)
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
 	})
@@ -363,7 +371,15 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
 
 		// get BTC event
-		event, err := observer.GetBtcEventWithoutWitness(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
+		event, err := observer.GetBtcEventWithoutWitness(
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			depositorFee,
+		)
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
 	})
@@ -378,7 +394,15 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
 
 		// get BTC event
-		event, err := observer.GetBtcEventWithoutWitness(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
+		event, err := observer.GetBtcEventWithoutWitness(
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			depositorFee,
+		)
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
 	})
@@ -393,7 +417,15 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
 
 		// get BTC event
-		event, err := observer.GetBtcEventWithoutWitness(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
+		event, err := observer.GetBtcEventWithoutWitness(
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			depositorFee,
+		)
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
 	})
@@ -408,7 +440,15 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
 
 		// get BTC event
-		event, err := observer.GetBtcEventWithoutWitness(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
+		event, err := observer.GetBtcEventWithoutWitness(
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			depositorFee,
+		)
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
 	})
@@ -419,7 +459,15 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 
 		// get BTC event
 		rpcClient := mocks.NewMockBTCRPCClient()
-		event, err := observer.GetBtcEventWithoutWitness(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
+		event, err := observer.GetBtcEventWithoutWitness(
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			depositorFee,
+		)
 		require.NoError(t, err)
 		require.Nil(t, event)
 	})
@@ -430,13 +478,29 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 
 		// modify the tx to have Vout[0] a P2SH output
 		tx.Vout[0].ScriptPubKey.Hex = strings.Replace(tx.Vout[0].ScriptPubKey.Hex, "0014", "a914", 1)
-		event, err := observer.GetBtcEventWithoutWitness(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
+		event, err := observer.GetBtcEventWithoutWitness(
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			depositorFee,
+		)
 		require.NoError(t, err)
 		require.Nil(t, event)
 
 		// append 1 byte to script to make it longer than 22 bytes
 		tx.Vout[0].ScriptPubKey.Hex = tx.Vout[0].ScriptPubKey.Hex + "00"
-		event, err = observer.GetBtcEventWithoutWitness(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
+		event, err = observer.GetBtcEventWithoutWitness(
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			depositorFee,
+		)
 		require.NoError(t, err)
 		require.Nil(t, event)
 	})
@@ -447,7 +511,15 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 
 		// get BTC event
 		rpcClient := mocks.NewMockBTCRPCClient()
-		event, err := observer.GetBtcEventWithoutWitness(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
+		event, err := observer.GetBtcEventWithoutWitness(
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			depositorFee,
+		)
 		require.NoError(t, err)
 		require.Nil(t, event)
 	})
@@ -458,7 +530,15 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 
 		// get BTC event
 		rpcClient := mocks.NewMockBTCRPCClient()
-		event, err := observer.GetBtcEventWithoutWitness(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
+		event, err := observer.GetBtcEventWithoutWitness(
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			depositorFee,
+		)
 		require.NoError(t, err)
 		require.Nil(t, event)
 	})
@@ -469,7 +549,15 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 
 		// get BTC event
 		rpcClient := mocks.NewMockBTCRPCClient()
-		event, err := observer.GetBtcEventWithoutWitness(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
+		event, err := observer.GetBtcEventWithoutWitness(
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			depositorFee,
+		)
 		require.NoError(t, err)
 		require.Nil(t, event)
 	})
@@ -480,7 +568,15 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 
 		// get BTC event
 		rpcClient := mocks.NewMockBTCRPCClient()
-		event, err := observer.GetBtcEventWithoutWitness(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
+		event, err := observer.GetBtcEventWithoutWitness(
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			depositorFee,
+		)
 		require.NoError(t, err)
 		require.Nil(t, event)
 	})
@@ -503,7 +599,15 @@ func TestGetBtcEventErrors(t *testing.T) {
 
 		// get BTC event
 		rpcClient := mocks.NewMockBTCRPCClient()
-		event, err := observer.GetBtcEventWithoutWitness(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
+		event, err := observer.GetBtcEventWithoutWitness(
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			depositorFee,
+		)
 		require.Error(t, err)
 		require.Nil(t, event)
 	})
@@ -514,7 +618,15 @@ func TestGetBtcEventErrors(t *testing.T) {
 
 		// get BTC event
 		rpcClient := mocks.NewMockBTCRPCClient()
-		event, err := observer.GetBtcEventWithoutWitness(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
+		event, err := observer.GetBtcEventWithoutWitness(
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			depositorFee,
+		)
 		require.Error(t, err)
 		require.Nil(t, event)
 	})
@@ -524,7 +636,15 @@ func TestGetBtcEventErrors(t *testing.T) {
 		rpcClient := mocks.NewMockBTCRPCClient()
 
 		// get BTC event
-		event, err := observer.GetBtcEventWithoutWitness(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
+		event, err := observer.GetBtcEventWithoutWitness(
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			depositorFee,
+		)
 		require.Error(t, err)
 		require.Nil(t, event)
 	})
