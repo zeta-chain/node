@@ -501,6 +501,15 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 			outboundScheduleInterval = nonCriticalInterval
 		}
 
+		if outboundScheduleInterval == 0 {
+			// TODO: clean up this log when issue is resolved
+			// logging observer chain params to help with debugging if issue happens again
+			oc.logger.Error().
+				Interface("observer.chain_params", observer.GetChainParams()).
+				Msgf("ScheduleCctxEVM: outboundScheduleInterval set to 0 for chain %d", chainID)
+			return
+		}
+
 		// otherwise, the normal interval is used
 		if nonce%outboundScheduleInterval == zetaHeight%outboundScheduleInterval &&
 			!oc.outboundProc.IsOutboundActive(outboundID) {
