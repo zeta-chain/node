@@ -510,7 +510,6 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 				Interface("observer.chain_params", observer.GetChainParams()).
 				Msgf("ScheduleCctxEVM: outboundScheduleInterval set to 0 for chain %d, hardcoding to 64", chainID)
 			outboundScheduleInterval = 64
-			return
 		}
 
 		// otherwise, the normal interval is used
