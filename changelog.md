@@ -38,6 +38,7 @@
 * [2674](https://github.com/zeta-chain/node/pull/2674) - allow operators to vote on ballots associated with discarded keygen without affecting the status of the current keygen.
 * [2672](https://github.com/zeta-chain/node/pull/2672) - check observer set for duplicates when adding a new observer or updating an existing one
 * [2787](https://github.com/zeta-chain/node/pull/2787) - ask for 3 accounts (signer, pda, system_program) on solana gateway deposit
+* [2842](https://github.com/zeta-chain/node/pull/2842) - fix: move interval assignment out of cctx loop in EVM outbound tx scheduler
 
 ## v19.0.0
 
