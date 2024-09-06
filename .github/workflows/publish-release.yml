@@ -44,7 +44,7 @@ jobs:
           echo "${{ github.ref }}"
 
   check-goreleaser:
-    if: inputs.skip_checks != 'true'
+    if: inputs.skip_checks != true
     runs-on: ${{ vars.RELEASE_RUNNER }}
     steps:
       - uses: actions/checkout@v4
@@ -59,13 +59,13 @@ jobs:
     steps:
 
       - name: Checkout code
-        if: inputs.skip_checks != 'true'
+        if: inputs.skip_checks != true
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Get latest commit SHA of Develop & Current Branch
-        if: inputs.skip_checks != 'true'
+        if: inputs.skip_checks != true
         id: get-develop-sha
         run: |
           SHA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
@@ -74,7 +74,7 @@ jobs:
           echo "CURRENT_BRANCH_SHA=${{ github.sha }}" >> ${GITHUB_ENV}
 
       - name: Check for CHANGELOG.md changes
-        if: inputs.skip_checks != 'true'
+        if: inputs.skip_checks != true
         run: |
           echo "Check the changelog has actually been updated from whats in develop"
           echo "DEVELOP BRANCH SHA: ${DEVELOP_SHA}"
@@ -89,7 +89,7 @@ jobs:
           fi
 
       - name: Mark Job Complete Skipped
-        if: inputs.skip_checks == 'true'
+        if: inputs.skip_checks == true
         shell: bash
         run: |
           echo "continue"
@@ -102,12 +102,12 @@ jobs:
     steps:
 
       - uses: actions/checkout@v4
-        if: inputs.skip_checks != 'true'
+        if: inputs.skip_checks != true
         with:
           fetch-depth: 0
 
       - name: Major Version in Upgrade Handler Must Match Tag
-        if: inputs.skip_checks != 'true'
+        if: inputs.skip_checks != true
         run: |
           UPGRADE_HANDLER_MAJOR_VERSION=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"' | cut -d '.' -f 1 | tr -d '\n')
           USER_INPUT_VERSION=$(echo "${{ inputs.version }}" | cut -d '.' -f 1 | tr -d '\n')
@@ -121,7 +121,7 @@ jobs:
           echo "The major version found in 'releaseVersion' in app/setup_handlers.go matches this tagged release - Moving Forward!"
 
       - name: Mark Job Complete Skipped
-        if: inputs.skip_checks == 'true'
+        if: inputs.skip_checks == true
         shell: bash
         run: |
           echo "continue"
@@ -131,7 +131,7 @@ jobs:
       id-token: write
       contents: write
       attestations: write
-    if: inputs.skip_release == 'false'
+    if: inputs.skip_release != true
     needs:
       - check-changelog
       - check-upgrade-handler-updated
