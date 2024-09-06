@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v19.1.3
+
+### Fixes
+
+* [2841](https://github.com/zeta-chain/node/pull/2841) - hardcode outboundScheduleInterval if it's 0
+
 ## v19.1.2
 
 ### Fixes
