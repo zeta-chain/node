@@ -18,19 +18,19 @@ import (
 func ValidateAddressForChain(address string, chainID int64, additionalChains []chains.Chain) error {
 	chain, found := chains.GetChainFromChainID(chainID, additionalChains)
 	if !found {
-		return fmt.Errorf("chain id %d not supported", chainID)
+		return &InvalidChainError{ChainID: chainID, Msg: "chain not supported"}
 	}
 	switch chain.Network {
 	case chains.Network_eth:
-		return ValidateEthereumAddress(address)
+		return ValidateEVMAddress(address)
 	case chains.Network_zeta:
 		return nil
 	case chains.Network_btc:
 		return ValidateBTCAddress(address, chainID)
 	case chains.Network_polygon:
-		return ValidateEthereumAddress(address)
+		return ValidateEVMAddress(address)
 	case chains.Network_bsc:
-		return ValidateEthereumAddress(address)
+		return ValidateEVMAddress(address)
 	case chains.Network_optimism:
 		return nil
 	case chains.Network_base:
@@ -38,13 +38,16 @@ func ValidateAddressForChain(address string, chainID int64, additionalChains []c
 	case chains.Network_solana:
 		return nil
 	default:
-		return fmt.Errorf("invalid network %d", chain.Network)
+		return &InvalidNetworkError{Network: chain.Network.String(), Msg: "network not supported"}
 	}
 }
 
-func ValidateEthereumAddress(address string) error {
+func ValidateEVMAddress(address string) error {
 	if !ethcommon.IsHexAddress(address) {
-		return fmt.Errorf("invalid address %s ", address)
+		return &InvalidAddressError{Address: address, Msg: "not a valid hex address"}
+	}
+	if ethcommon.HexToAddress(address) == (ethcommon.Address{}) {
+		return &InvalidAddressError{Address: address, Msg: "empty address"}
 	}
 	return nil
 }
@@ -52,10 +55,10 @@ func ValidateEthereumAddress(address string) error {
 func ValidateBTCAddress(address string, chainID int64) error {
 	addr, err := chains.DecodeBtcAddress(address, chainID)
 	if err != nil {
-		return fmt.Errorf("invalid address %s , chain %d: %s", address, chainID, err)
+		return &InvalidAddressError{Address: address, Msg: fmt.Sprintf("failed to decode address: %s chainId %d", err, chainID)}
 	}
 	if !chains.IsBtcAddressSupported(addr) {
-		return fmt.Errorf("unsupported address %s", address)
+		return &InvalidAddressError{Address: address, Msg: "address not supported"}
 	}
 	return nil
 }

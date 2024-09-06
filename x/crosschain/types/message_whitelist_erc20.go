@@ -54,7 +54,7 @@ func (msg *MsgWhitelistERC20) ValidateBasic() error {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	// check if the system contract address is valid
-	err = address.ValidateEthereumAddress(msg.Erc20Address)
+	err = address.ValidateEVMAddress(msg.Erc20Address)
 	if err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid erc20 address (%s): %s", msg.Erc20Address, err)
 	}

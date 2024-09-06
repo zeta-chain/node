@@ -66,7 +66,7 @@ func TestValidateAddressForChain(t *testing.T) {
 	require.ElementsMatch(t, allChains, chains.DefaultChainsList())
 
 	//test for invalid chain
-	require.ErrorContains(t, address.ValidateAddressForChain("0x123", 123, additionalChains), "chain id 123 not supported")
+	require.ErrorContains(t, address.ValidateAddressForChain("0x123", 123, additionalChains), "chain not supported")
 
 	// test for evm chain chains
 	for _, chain := range evmChains {

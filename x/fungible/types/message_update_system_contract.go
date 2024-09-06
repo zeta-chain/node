@@ -45,7 +45,7 @@ func (msg *MsgUpdateSystemContract) ValidateBasic() error {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	// check if the system contract address is valid
-	err = address.ValidateEthereumAddress(msg.NewSystemContractAddress)
+	err = address.ValidateEVMAddress(msg.NewSystemContractAddress)
 	if err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid system contract address (%s): %s", msg.NewSystemContractAddress, err)
 	}

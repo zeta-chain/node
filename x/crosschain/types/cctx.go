@@ -208,10 +208,10 @@ func (m CrossChainTx) SetOutboundBallotIndex(index string) {
 func (m CrossChainTx) GetValidReceiverAddress() (ethcommon.Address, error) {
 	inboundCoinType := m.InboundParams.CoinType
 	switch inboundCoinType {
-	// For coin type ZETA the receiver is added to the receiver field of the inbound vote so we can use it directly
-	case coin.CoinType_Zeta:
+	// For coin type ZETA or ERC20 the receiver is added to the receiver field of the inbound vote so we can use it directly
+	case coin.CoinType_Zeta, coin.CoinType_ERC20:
 		{
-			err := address.ValidateEthereumAddress(m.GetCurrentOutboundParam().Receiver)
+			err := address.ValidateEVMAddress(m.GetCurrentOutboundParam().Receiver)
 			if err != nil {
 				return ethcommon.Address{}, cosmoserrors.Wrap(ErrInvalidReceiverAddress, err.Error())
 			}
@@ -230,20 +230,11 @@ func (m CrossChainTx) GetValidReceiverAddress() (ethcommon.Address, error) {
 			if parsedAddress != (ethcommon.Address{}) {
 				to = parsedAddress.String()
 			}
-			err = address.ValidateEthereumAddress(to)
+			err = address.ValidateEVMAddress(to)
 			if err != nil {
 				return ethcommon.Address{}, cosmoserrors.Wrap(ErrInvalidReceiverAddress, err.Error())
 			}
-			return ethcommon.HexToAddress(m.GetCurrentOutboundParam().Receiver), nil
-		}
-	// For coin type ERC20 we can use the receiver field of the inbound vote
-	case coin.CoinType_ERC20:
-		{
-			err := address.ValidateEthereumAddress(m.GetCurrentOutboundParam().Receiver)
-			if err != nil {
-				return ethcommon.Address{}, cosmoserrors.Wrap(ErrInvalidReceiverAddress, err.Error())
-			}
-			return ethcommon.HexToAddress(m.GetCurrentOutboundParam().Receiver), nil
+			return ethcommon.HexToAddress(to), nil
 		}
 	default:
 		return ethcommon.Address{}, fmt.Errorf("invalid coin type %s", inboundCoinType)
