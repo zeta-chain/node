@@ -449,6 +449,8 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 	outboundScheduleLookback := uint64(float64(outboundScheduleLookahead) * evmOutboundLookbackFactor)
 	// #nosec G115 positive
 	outboundScheduleInterval := uint64(observer.GetChainParams().OutboundScheduleInterval)
+	oc.logger.Info().
+		Msgf("outboundScheduleInterval set to %d from params %d", outboundScheduleInterval, observer.GetChainParams().OutboundScheduleInterval)
 
 	for idx, cctx := range cctxList {
 		params := cctx.GetCurrentOutboundParam()
@@ -506,8 +508,8 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 			// logging observer chain params to help with debugging if issue happens again
 			oc.logger.Error().
 				Interface("observer.chain_params", observer.GetChainParams()).
-				Msgf("ScheduleCctxEVM: outboundScheduleInterval set to 0 for chain %d", chainID)
-			return
+				Msgf("ScheduleCctxEVM: outboundScheduleInterval set to 0 for chain %d, hardcoding to 64", chainID)
+			outboundScheduleInterval = 64
 		}
 
 		// otherwise, the normal interval is used
