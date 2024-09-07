@@ -450,6 +450,12 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 	// #nosec G115 positive
 	outboundScheduleInterval := uint64(observer.GetChainParams().OutboundScheduleInterval)
 
+	// determining critical outbound; if it satisfies following criteria
+	// 1. it's the first pending outbound for this chain
+	// 2. the following 5 nonces have been in tracker
+	criticalInterval := uint64(10)                      // for critical pending outbound we reduce re-try interval
+	nonCriticalInterval := outboundScheduleInterval * 2 // for non-critical pending outbound we increase re-try interval
+
 	for idx, cctx := range cctxList {
 		params := cctx.GetCurrentOutboundParam()
 		nonce := params.TssNonce
@@ -480,11 +486,6 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 			continue
 		}
 
-		// determining critical outbound; if it satisfies following criteria
-		// 1. it's the first pending outbound for this chain
-		// 2. the following 5 nonces have been in tracker
-		criticalInterval := uint64(10)                      // for critical pending outbound we reduce re-try interval
-		nonCriticalInterval := outboundScheduleInterval * 2 // for non-critical pending outbound we increase re-try interval
 		if nonce%criticalInterval == zetaHeight%criticalInterval {
 			count := 0
 			for i := nonce + 1; i <= nonce+10; i++ {
