@@ -1740,8 +1740,8 @@ github.com/zeta-chain/ethermint v0.0.0-20240531172701-61d040058c94 h1:M54ljayJvy
 github.com/zeta-chain/ethermint v0.0.0-20240531172701-61d040058c94/go.mod h1:s1zA6OpXv3Tb5I0M6M6j5fo/AssaZL/pgkc7G0W2kN8=
 github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4 h1:FmO3HfVdZ7LzxBUfg6sVzV7ilKElQU2DZm8PxJ7KcYI=
 github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4/go.mod h1:TBv5NY/CqWYIfUstXO1fDWrt4bDoqgCw79yihqBspg8=
-github.com/zeta-chain/go-tss v0.0.0-20240729195411-9f5ae8189449 h1:4U+4g2QQjbrmeLU1ZdCDU6CYsE5kbwMOKZ/PACR/vN8=
-github.com/zeta-chain/go-tss v0.0.0-20240729195411-9f5ae8189449/go.mod h1:LN1IBRN8xQkKgdgLhl5BDGZyPm70QOTbVLejdS2FVpo=
+github.com/zeta-chain/go-tss v0.0.0-20240907163312-b576693642e0 h1:OMuw0XgFcX0RQ8+B3gtreV4H/JPglCSfG2PfVi7bONM=
+github.com/zeta-chain/go-tss v0.0.0-20240907163312-b576693642e0/go.mod h1:LN1IBRN8xQkKgdgLhl5BDGZyPm70QOTbVLejdS2FVpo=
 github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2 h1:gd2uE0X+ZbdFJ8DubxNqLbOVlCB12EgWdzSNRAR82tM=
 github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2/go.mod h1:x7Bkwbzt2W2lQfjOirnff0Dj+tykdbTG1FMJPVPZsvE=
 github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240418181724-c222fd3ae1f5 h1:ljM7xka3WZvth9k1uYxrG3/FKQQTkR96FZlIjUKOoYw=
