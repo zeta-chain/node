@@ -3,6 +3,8 @@ package e2etests
 import (
 	"math/big"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
@@ -46,6 +48,14 @@ func TestPrecompilesStaking(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	require.Equal(r, big.NewInt(3e18).String(), sharesAfterVal1.String())
 
+	// check delegation amount using staking keeper query client
+	delegationAfterVal1, err := r.StakingClient.Delegation(r.Ctx, &types.QueryDelegationRequest{
+		DelegatorAddr: sdk.AccAddress(r.ZEVMAuth.From.Bytes()).String(),
+		ValidatorAddr: validators[0].OperatorAddress,
+	})
+	require.NoError(r, err)
+	require.Equal(r, int64(3), delegationAfterVal1.DelegationResponse.Balance.Amount.Int64())
+
 	// unstake 1 from validator1
 	tx, err = stakingContract.Unstake(r.ZEVMAuth, r.ZEVMAuth.From, validators[0].OperatorAddress, big.NewInt(1))
 	require.NoError(r, err)
@@ -56,6 +66,14 @@ func TestPrecompilesStaking(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	require.Equal(r, big.NewInt(2e18).String(), sharesAfterVal1.String())
 
+	// check delegation amount using staking keeper query client
+	delegationAfterVal1, err = r.StakingClient.Delegation(r.Ctx, &types.QueryDelegationRequest{
+		DelegatorAddr: sdk.AccAddress(r.ZEVMAuth.From.Bytes()).String(),
+		ValidatorAddr: validators[0].OperatorAddress,
+	})
+	require.NoError(r, err)
+	require.Equal(r, int64(2), delegationAfterVal1.DelegationResponse.Balance.Amount.Int64())
+
 	// move 1 stake from validator1 to validator2
 	tx, err = stakingContract.MoveStake(
 		r.ZEVMAuth,
@@ -65,7 +83,6 @@ func TestPrecompilesStaking(r *runner.E2ERunner, args []string) {
 		big.NewInt(1),
 	)
 	require.NoError(r, err)
-
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 
 	// check shares for both validator1 and validator2 are 1
@@ -76,4 +93,19 @@ func TestPrecompilesStaking(r *runner.E2ERunner, args []string) {
 	sharesAfterVal2, err := stakingContract.GetShares(&bind.CallOpts{}, r.ZEVMAuth.From, validators[1].OperatorAddress)
 	require.NoError(r, err)
 	require.Equal(r, big.NewInt(1e18).String(), sharesAfterVal2.String())
+
+	// check delegation amount using staking keeper query client
+	delegationAfterVal1, err = r.StakingClient.Delegation(r.Ctx, &types.QueryDelegationRequest{
+		DelegatorAddr: sdk.AccAddress(r.ZEVMAuth.From.Bytes()).String(),
+		ValidatorAddr: validators[0].OperatorAddress,
+	})
+	require.NoError(r, err)
+	require.Equal(r, int64(1), delegationAfterVal1.DelegationResponse.Balance.Amount.Int64())
+
+	delegationAfterVal2, err := r.StakingClient.Delegation(r.Ctx, &types.QueryDelegationRequest{
+		DelegatorAddr: sdk.AccAddress(r.ZEVMAuth.From.Bytes()).String(),
+		ValidatorAddr: validators[1].OperatorAddress,
+	})
+	require.NoError(r, err)
+	require.Equal(r, int64(1), delegationAfterVal2.DelegationResponse.Balance.Amount.Int64())
 }
