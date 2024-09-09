@@ -6,6 +6,13 @@ import "gogoproto/gogo.proto";
 option go_package = "github.com/zeta-chain/node/x/emissions/types";
 
 // Params defines the parameters for the module.
+// Sample values:
+//    ValidatorEmissionPercentage: "00.50",
+//    ObserverEmissionPercentage:  "00.25",
+//    TssSignerEmissionPercentage: "00.25",
+//    ObserverSlashAmount:         100000000000000000,
+//    BallotMaturityBlocks:        100,
+//    BlockRewardAmount:           9620949074074074074.074070733466756687,
 message Params {
   option (gogoproto.goproto_stringer) = false;
   string validator_emission_percentage = 5;

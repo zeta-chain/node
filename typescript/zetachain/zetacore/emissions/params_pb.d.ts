@@ -8,6 +8,13 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 
 /**
  * Params defines the parameters for the module.
+ * Sample values:
+ *    ValidatorEmissionPercentage: "00.50",
+ *    ObserverEmissionPercentage:  "00.25",
+ *    TssSignerEmissionPercentage: "00.25",
+ *    ObserverSlashAmount:         100000000000000000,
+ *    BallotMaturityBlocks:        100,
+ *    BlockRewardAmount:           9620949074074074074.074070733466756687,
  *
  * @generated from message zetachain.zetacore.emissions.Params
  */
