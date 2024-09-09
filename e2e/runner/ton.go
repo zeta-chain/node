@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+
 	"github.com/zeta-chain/node/e2e/runner/ton"
 )
 

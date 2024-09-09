@@ -9,12 +9,12 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go/rpc"
 	ton "github.com/tonkeeper/tongo/liteapi"
-	tonrunner "github.com/zeta-chain/node/e2e/runner/ton"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/runner"
+	tonrunner "github.com/zeta-chain/node/e2e/runner/ton"
 	zetacore_rpc "github.com/zeta-chain/node/pkg/rpc"
 	tonconfig "github.com/zeta-chain/node/zetaclient/chains/ton"
 )

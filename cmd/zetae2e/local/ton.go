@@ -5,6 +5,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
+
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/e2etests"
 	"github.com/zeta-chain/node/e2e/runner"

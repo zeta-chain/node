@@ -18,7 +18,7 @@ func ConfigFromURL(ctx context.Context, url string) (*config.GlobalConfiguration
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -27,6 +27,8 @@ func ConfigFromURL(ctx context.Context, url string) (*config.GlobalConfiguration
 	if err != nil {
 		return nil, err
 	}
+
+	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to download config file: %s", res.Status)
