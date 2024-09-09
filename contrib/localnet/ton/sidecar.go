@@ -1,16 +1,20 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 )
 
 const (
-	port = ":8000"
+	port       = ":8000"
+	dockerPort = ":8111"
 
 	basePath             = "/opt/my-local-ton/myLocalTon"
 	liteClientConfigPath = basePath + "/genesis/db/my-ton-local.config.json"
@@ -49,10 +53,24 @@ func faucetHandler(w http.ResponseWriter, _ *http.Request) error {
 	return nil
 }
 
+// liteClientHandler returns lite json client config
+// and alters localhost to docker IP if needed.
 func liteClientHandler(w http.ResponseWriter, _ *http.Request) error {
 	data, err := os.ReadFile(liteClientConfigPath)
 	if err != nil {
 		return fmt.Errorf("could not read lite client config: %w", err)
+	}
+
+	dockerIP := os.Getenv("DOCKER_IP")
+
+	if dockerIP != "" {
+		altered, err := alterConfigIP(data, dockerIP)
+		if err != nil {
+			errResponse(w, http.StatusInternalServerError, err)
+			return nil
+		}
+
+		data = altered
 	}
 
 	jsonResponse(w, http.StatusOK, json.RawMessage(data))
@@ -111,14 +129,42 @@ func errResponse(w http.ResponseWriter, status int, err error) {
 }
 
 func jsonResponse(w http.ResponseWriter, status int, data any) {
-	bytes, err := json.Marshal(data)
+	b, err := json.Marshal(data)
 	if err != nil {
-		bytes = []byte("Failed to marshal JSON")
+		b = []byte("Failed to marshal JSON")
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 
 	//nolint:errcheck
-	w.Write(bytes)
+	w.Write(b)
+}
+
+// TON's lite client config contains the IP of the node.
+// And it's localhost, we need to change it to the docker IP.
+func alterConfigIP(config []byte, ipString string) ([]byte, error) {
+	const localhost = uint32(2130706433)
+
+	ip := net.ParseIP(ipString)
+	if ip == nil {
+		return nil, fmt.Errorf("failed to parse IP: %q", ipString)
+	}
+
+	return bytes.ReplaceAll(
+		config,
+		uint32ToBytes(localhost),
+		uint32ToBytes(ip2int(ip)),
+	), nil
+}
+
+func ip2int(ip net.IP) uint32 {
+	if len(ip) == 16 {
+		return binary.BigEndian.Uint32(ip[12:16])
+	}
+	return binary.BigEndian.Uint32(ip)
+}
+
+func uint32ToBytes(n uint32) []byte {
+	return []byte(fmt.Sprintf("%d", n))
 }

@@ -251,6 +251,8 @@ services:
     ports:
       - "8111:8000" # sidecar
       - "4443:4443" # lite client
+    environment:
+      DOCKER_IP: 172.20.0.104
     networks:
       mynetwork:
         ipv4_address: 172.20.0.104
