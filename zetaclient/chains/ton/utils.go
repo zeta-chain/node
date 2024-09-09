@@ -1,17 +1,29 @@
 package ton
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/tonkeeper/tongo/config"
 )
 
-// ConfigFromURL downloads & parses config.
+// ConfigFromURL downloads & parses lite server config.
 //
 //nolint:gosec
-func ConfigFromURL(url string) (*config.GlobalConfigurationFile, error) {
-	res, err := http.Get(url)
+func ConfigFromURL(ctx context.Context, url string) (*config.GlobalConfigurationFile, error) {
+	const timeout = 3 * time.Second
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

@@ -13,8 +13,7 @@ import (
 )
 
 const (
-	port       = ":8000"
-	dockerPort = ":8111"
+	port = ":8000"
 
 	basePath             = "/opt/my-local-ton/myLocalTon"
 	liteClientConfigPath = basePath + "/genesis/db/my-ton-local.config.json"

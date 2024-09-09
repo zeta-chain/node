@@ -5,6 +5,8 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go/rpc"
+	ton "github.com/tonkeeper/tongo/liteapi"
+	tonrunner "github.com/zeta-chain/node/e2e/runner/ton"
 
 	zetacore_rpc "github.com/zeta-chain/node/pkg/rpc"
 )
@@ -14,10 +16,12 @@ type Clients struct {
 	Zetacore zetacore_rpc.Clients
 
 	// the RPC clients for external chains in the localnet
-	BtcRPC  *rpcclient.Client
-	Solana  *rpc.Client
-	Evm     *ethclient.Client
-	EvmAuth *bind.TransactOpts
+	BtcRPC     *rpcclient.Client
+	Solana     *rpc.Client
+	Evm        *ethclient.Client
+	EvmAuth    *bind.TransactOpts
+	TON        *ton.Client
+	TONSidecar *tonrunner.SidecarClient
 
 	// the RPC clients for ZetaChain
 	Zevm     *ethclient.Client
