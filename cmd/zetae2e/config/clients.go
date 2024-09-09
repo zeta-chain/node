@@ -16,7 +16,7 @@ import (
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/runner"
 	zetacore_rpc "github.com/zeta-chain/node/pkg/rpc"
-	tonutil "github.com/zeta-chain/node/zetaclient/chains/ton"
+	tonconfig "github.com/zeta-chain/node/zetaclient/chains/ton"
 )
 
 // getClientsFromConfig get clients from config
@@ -129,7 +129,7 @@ func getEVMClient(
 }
 
 func getTONClient(ctx context.Context, configURL string) (*ton.Client, error) {
-	cfg, err := tonutil.ConfigFromURL(ctx, configURL)
+	cfg, err := tonconfig.ConfigFromURL(ctx, configURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ton config: %w", err)
 	}
