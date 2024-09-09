@@ -232,8 +232,9 @@ func (c *Contract) Stake(
 		return nil, err
 	}
 
-	// if caller is not the same as origin it means call is coming through smart contract
-	// in that case, manually reduce amount in stateDB so it is properly reflected in bank module
+	// if caller is not the same as origin it means call is coming through smart contract,
+	// and because state of smart contract calling precompile might be updated as well
+	// manually reduce amount in stateDB, so it is properly reflected in bank module
 	stateDB := evm.StateDB.(ptypes.ExtStateDB)
 	if contract.CallerAddress != evm.Origin {
 		stateDB.SubBalance(stakerAddress, amount)
