@@ -56,6 +56,7 @@ var Skip = map[string]bool{
 	// Skipping evm this is done to reduce the size of the genesis file evm module uses the majority of the space due to smart contract data
 	evmtypes.ModuleName: true,
 	// Skipping staking as new validators would be created for the new chain
+	stakingtypes.ModuleName: true,
 	// Skipping genutil as new gentxs would be created
 	genutiltypes.ModuleName: true,
 	// Skipping auth as new accounts would be created for the new chain. This also needs to be done as we are skipping evm module
@@ -79,7 +80,6 @@ var Skip = map[string]bool{
 var Modify = map[string]bool{
 	observertypes.ModuleName:   true,
 	crosschaintypes.ModuleName: true,
-	stakingtypes.ModuleName:    true,
 }
 
 func CmdParseGenesisFile() *cobra.Command {
@@ -157,11 +157,6 @@ func ImportDataIntoFile(
 				if err != nil {
 					return err
 				}
-			case stakingtypes.ModuleName:
-				err := ModifyStakingState(appState, cdc)
-				if err != nil {
-					return err
-				}
 			default:
 				return fmt.Errorf("modify function for %s not found", m)
 			}
@@ -174,18 +169,6 @@ func ImportDataIntoFile(
 	}
 	genDoc.AppState = appStateJSON
 
-	return nil
-}
-
-func ModifyStakingState(
-	importAppState map[string]json.RawMessage,
-	cdc codec.Codec) error {
-	importedStakingGenState := stakingtypes.GetGenesisStateFromAppState(cdc, importAppState)
-	fmt.Println("Validators :", len(importedStakingGenState.Validators))
-	fmt.Println("Delegations :", len(importedStakingGenState.Delegations))
-	fmt.Println("UnbondingDelegations :", len(importedStakingGenState.UnbondingDelegations))
-	fmt.Println("Redelegations :", len(importedStakingGenState.Redelegations))
-	fmt.Println("LastValidatorPower :", len(importedStakingGenState.LastValidatorPowers))
 	return nil
 }
 
