@@ -7,7 +7,7 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/zetaclient/testutils"
+	"github.com/zeta-chain/node/testutil/sample"
 )
 
 func TestBitcoinWithdrawRestricted(r *runner.E2ERunner, args []string) {
@@ -24,7 +24,7 @@ func TestBitcoinWithdrawRestricted(r *runner.E2ERunner, args []string) {
 func withdrawBitcoinRestricted(r *runner.E2ERunner, amount *big.Int) {
 	// use restricted BTC P2WPKH address
 	addressRestricted, err := chains.DecodeBtcAddress(
-		testutils.RestrictedBtcAddressTest,
+		sample.RestrictedBtcAddressTest,
 		chains.BitcoinRegtest.ChainId,
 	)
 	require.NoError(r, err)
