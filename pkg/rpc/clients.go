@@ -8,16 +8,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 	"google.golang.org/grpc"
 
-	etherminttypes "github.com/zeta-chain/zetacore/rpc/types"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	etherminttypes "github.com/zeta-chain/node/rpc/types"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // Clients contains RPC client interfaces to interact with ZetaCore
@@ -30,6 +31,8 @@ type Clients struct {
 	Auth authtypes.QueryClient
 	// Bank is a github.com/cosmos/cosmos-sdk/x/bank/types QueryClient
 	Bank banktypes.QueryClient
+	// Bank is a github.com/cosmos/cosmos-sdk/x/staking/types QueryClient
+	Staking stakingtypes.QueryClient
 	// Upgrade is a github.com/cosmos/cosmos-sdk/x/upgrade/types QueryClient
 	Upgrade upgradetypes.QueryClient
 
@@ -64,6 +67,7 @@ func newClients(ctx client.Context) (Clients, error) {
 		// Cosmos SDK clients
 		Auth:      authtypes.NewQueryClient(ctx),
 		Bank:      banktypes.NewQueryClient(ctx),
+		Staking:   stakingtypes.NewQueryClient(ctx),
 		Upgrade:   upgradetypes.NewQueryClient(ctx),
 		Authority: authoritytypes.NewQueryClient(ctx),
 		// ZetaCore specific clients

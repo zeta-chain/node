@@ -18,10 +18,10 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/cosmos/cosmos-sdk/version.ClientName=zetaclientd \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-	-X github.com/zeta-chain/zetacore/pkg/constant.Name=zetacored \
-	-X github.com/zeta-chain/zetacore/pkg/constant.Version=$(VERSION) \
-	-X github.com/zeta-chain/zetacore/pkg/constant.CommitHash=$(COMMIT) \
-	-X github.com/zeta-chain/zetacore/pkg/constant.BuildTime=$(BUILDTIME) \
+	-X github.com/zeta-chain/node/pkg/constant.Name=zetacored \
+	-X github.com/zeta-chain/node/pkg/constant.Version=$(VERSION) \
+	-X github.com/zeta-chain/node/pkg/constant.CommitHash=$(COMMIT) \
+	-X github.com/zeta-chain/node/pkg/constant.BuildTime=$(BUILDTIME) \
 	-X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 
 BUILD_FLAGS := -ldflags '$(ldflags)' -tags pebbledb,ledger
@@ -293,12 +293,12 @@ start-v2-test: zetanode
 ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade from source"
-	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source --build-arg OLD_VERSION='release/v18' .
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source --build-arg OLD_VERSION='release/v19' .
 .PHONY: zetanode-upgrade
 else
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade from binaries"
-	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v18.0.0' .
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v19.1.1' .
 .PHONY: zetanode-upgrade
 endif
 
@@ -320,6 +320,16 @@ start-upgrade-test-admin: zetanode-upgrade
 	export UPGRADE_HEIGHT=90 && \
 	export E2E_ARGS="--skip-regular --test-admin" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+
+# this test upgrades from v18 and execute the v2 contracts migration process
+# this tests is part of upgrade test part because it should run the upgrade from v18 to fully replicate the upgrade process
+start-upgrade-v2-migration-test: zetanode-upgrade
+	@echo "--> Starting v2 migration upgrade test"
+	export LOCALNET_MODE=upgrade && \
+	export UPGRADE_HEIGHT=90 && \
+	export E2E_ARGS="--test-v2-migration" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+
 
 start-upgrade-import-mainnet-test: zetanode-upgrade
 	@echo "--> Starting import-data upgrade test"

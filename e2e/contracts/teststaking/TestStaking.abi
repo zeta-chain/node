@@ -1,0 +1,192 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_wzeta",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "fallback"
+  },
+  {
+    "inputs": [],
+    "name": "depositWZETA",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getAllValidators",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "string",
+            "name": "operatorAddress",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "consensusPubKey",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "jailed",
+            "type": "bool"
+          },
+          {
+            "internalType": "enum BondStatus",
+            "name": "bondStatus",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct Validator[]",
+        "name": "validators",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "staker",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "validator",
+        "type": "string"
+      }
+    ],
+    "name": "getShares",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "shares",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "staker",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "validatorSrc",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "validatorDst",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "moveStake",
+    "outputs": [
+      {
+        "internalType": "int64",
+        "name": "completionTime",
+        "type": "int64"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "staker",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "validator",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "stake",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "staker",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "validator",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "unstake",
+    "outputs": [
+      {
+        "internalType": "int64",
+        "name": "completionTime",
+        "type": "int64"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "wad",
+        "type": "uint256"
+      }
+    ],
+    "name": "withdrawWZETA",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
+  }
+]

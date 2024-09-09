@@ -8,10 +8,10 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	zetachains "github.com/zeta-chain/zetacore/pkg/chains"
-	mathpkg "github.com/zeta-chain/zetacore/pkg/math"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	zetachains "github.com/zeta-chain/node/pkg/chains"
+	mathpkg "github.com/zeta-chain/node/pkg/math"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 const (

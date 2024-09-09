@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/testutil/sample"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // EnsureNoTrackers ensures that there are no trackers left on zetacore

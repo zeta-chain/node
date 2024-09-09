@@ -54,10 +54,10 @@ builds:
       - -X github.com/cosmos/cosmos-sdk/version.ClientName=zetaclientd
       - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
       - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .FullCommit }}
-      - -X github.com/zeta-chain/zetacore/pkg/constant.Name=zetacored
-      - -X github.com/zeta-chain/zetacore/pkg/constant.Version={{ .Version }}
-      - -X github.com/zeta-chain/zetacore/pkg/constant.CommitHash={{ .FullCommit }}
-      - -X github.com/zeta-chain/zetacore/pkg/constant.BuildTime={{ .Env.BUILDTIME }}
+      - -X github.com/zeta-chain/node/pkg/constant.Name=zetacored
+      - -X github.com/zeta-chain/node/pkg/constant.Version={{ .Version }}
+      - -X github.com/zeta-chain/node/pkg/constant.CommitHash={{ .FullCommit }}
+      - -X github.com/zeta-chain/node/pkg/constant.BuildTime={{ .Env.BUILDTIME }}
       - -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 
   - id: "zetaclientd"

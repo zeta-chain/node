@@ -10,7 +10,7 @@ import "zetachain/zetacore/crosschain/outbound_tracker.proto";
 import "zetachain/zetacore/crosschain/rate_limiter_flags.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
+option go_package = "github.com/zeta-chain/node/x/crosschain/types";
 
 // GenesisState defines the crosschain module's genesis state.
 message GenesisState {

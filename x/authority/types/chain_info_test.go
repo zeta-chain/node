@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/authority/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/authority/types"
 )
 
 func TestDefaultChainInfo(t *testing.T) {

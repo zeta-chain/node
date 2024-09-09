@@ -12,11 +12,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/testutil/nullify"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/testutil/nullify"
+	"github.com/zeta-chain/node/testutil/sample"
+	crosschainkeeper "github.com/zeta-chain/node/x/crosschain/keeper"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func TestInboundHashToCctxQuerySingle(t *testing.T) {

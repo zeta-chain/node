@@ -16,14 +16,14 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
-	evmobserver "github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
-	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/testutil/sample"
+	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	evmobserver "github.com/zeta-chain/node/zetaclient/chains/evm/observer"
+	"github.com/zeta-chain/node/zetaclient/config"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 var debugArgs = debugArguments{}

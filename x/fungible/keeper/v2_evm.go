@@ -9,10 +9,37 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/revert.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
-	"github.com/zeta-chain/zetacore/pkg/crypto"
-	"github.com/zeta-chain/zetacore/x/fungible/types"
+	"github.com/zeta-chain/node/pkg/crypto"
+	"github.com/zeta-chain/node/x/fungible/types"
 )
+
+// CallUpdateGatewayAddress calls the updateGatewayAddress function on the ZRC20 contract
+// function updateGatewayAddress(address addr)
+func (k Keeper) CallUpdateGatewayAddress(
+	ctx sdk.Context,
+	zrc20Address common.Address,
+	newGatewayAddress common.Address,
+) (*evmtypes.MsgEthereumTxResponse, error) {
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	return k.CallEVM(
+		ctx,
+		*zrc20ABI,
+		types.ModuleAddressEVM,
+		zrc20Address,
+		BigIntZero,
+		nil,
+		true,
+		false,
+		"updateGatewayAddress",
+		newGatewayAddress,
+	)
+}
 
 // CallDepositAndCallZRC20 calls the depositAndCall (ZRC20 version) function on the gateway contract
 // Callable only by the fungible module account
@@ -166,13 +193,14 @@ func (k Keeper) CallExecuteRevert(
 
 // CallDepositAndRevert calls the depositAndRevert function on the gateway contract
 //
-//function depositAndRevert(
+// function depositAndRevert(
+//
 //	address zrc20,
 //	uint256 amount,
 //	address target,
 //	RevertContext revertContext
-//)
-
+//
+// )
 func (k Keeper) CallDepositAndRevert(
 	ctx sdk.Context,
 	zrc20 common.Address,

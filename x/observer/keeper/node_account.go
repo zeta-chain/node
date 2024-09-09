@@ -4,7 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 // SetNodeAccount set a specific nodeAccount in the store from its index

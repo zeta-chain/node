@@ -1,9 +1,9 @@
 package sample
 
 import (
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/types"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/types"
 )
 
 const (

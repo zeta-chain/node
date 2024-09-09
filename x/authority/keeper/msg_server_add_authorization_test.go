@@ -6,10 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/authority/keeper"
-	"github.com/zeta-chain/zetacore/x/authority/types"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/authority/keeper"
+	"github.com/zeta-chain/node/x/authority/types"
 )
 
 func TestMsgServer_AddAuthorization(t *testing.T) {

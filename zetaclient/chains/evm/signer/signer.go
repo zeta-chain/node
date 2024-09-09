@@ -20,18 +20,18 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/compliance"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
-	"github.com/zeta-chain/zetacore/zetaclient/logs"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/outboundprocessor"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
-	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/compliance"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
+	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 const (
@@ -115,9 +115,10 @@ func (signer *Signer) SetERC20CustodyAddress(addr ethcommon.Address) {
 }
 
 // SetGatewayAddress sets the gateway address
-func (signer *Signer) SetGatewayAddress(_ string) {
-	// Note: do nothing for now
-	// gateway address will be needed in the future contract architecture
+func (signer *Signer) SetGatewayAddress(addr string) {
+	signer.Lock()
+	defer signer.Unlock()
+	signer.gatewayAddress = ethcommon.HexToAddress(addr)
 }
 
 // GetZetaConnectorAddress returns the zeta connector address

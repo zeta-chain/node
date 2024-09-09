@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/testutil/sample"
 )
 
 func TestBitcoinWithdrawRestricted(r *runner.E2ERunner, args []string) {

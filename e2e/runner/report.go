@@ -9,9 +9,9 @@ import (
 	sdkmath "cosmossdk.io/math"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/e2e/txserver"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	"github.com/zeta-chain/node/e2e/txserver"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // TestReport is a struct that contains the report for a specific e2e test

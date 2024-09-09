@@ -11,6 +11,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -30,18 +31,18 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
-	"github.com/zeta-chain/zetacore/e2e/config"
-	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
-	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
-	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
-	"github.com/zeta-chain/zetacore/e2e/txserver"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/e2e/config"
+	"github.com/zeta-chain/node/e2e/contracts/contextapp"
+	"github.com/zeta-chain/node/e2e/contracts/erc20"
+	"github.com/zeta-chain/node/e2e/contracts/zevmswap"
+	"github.com/zeta-chain/node/e2e/txserver"
+	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 type E2ERunnerOption func(*E2ERunner)
@@ -86,6 +87,7 @@ type E2ERunner struct {
 	FungibleClient    fungibletypes.QueryClient
 	AuthClient        authtypes.QueryClient
 	BankClient        banktypes.QueryClient
+	StakingClient     stakingtypes.QueryClient
 	ObserverClient    observertypes.QueryClient
 	LightclientClient lightclienttypes.QueryClient
 
@@ -188,6 +190,7 @@ func NewE2ERunner(
 		FungibleClient:    clients.Zetacore.Fungible,
 		AuthClient:        clients.Zetacore.Auth,
 		BankClient:        clients.Zetacore.Bank,
+		StakingClient:     clients.Zetacore.Staking,
 		ObserverClient:    clients.Zetacore.Observer,
 		LightclientClient: clients.Zetacore.Lightclient,
 

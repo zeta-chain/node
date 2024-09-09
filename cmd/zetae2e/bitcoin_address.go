@@ -6,10 +6,10 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/app"
-	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
-	"github.com/zeta-chain/zetacore/e2e/config"
-	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/node/app"
+	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
+	"github.com/zeta-chain/node/e2e/config"
+	"github.com/zeta-chain/node/e2e/runner"
 )
 
 const flagPrivKey = "privkey"

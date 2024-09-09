@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/zeta-chain/zetacore/e2e/config"
-	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/node/e2e/config"
+	"github.com/zeta-chain/node/e2e/runner"
 )
 
 // RunnerFromConfig create test runner from config

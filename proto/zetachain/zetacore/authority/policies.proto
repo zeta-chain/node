@@ -3,7 +3,7 @@ package zetachain.zetacore.authority;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/authority/types";
+option go_package = "github.com/zeta-chain/node/x/authority/types";
 
 // PolicyType defines the type of policy
 enum PolicyType {

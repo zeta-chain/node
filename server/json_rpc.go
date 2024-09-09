@@ -28,8 +28,8 @@ import (
 	"github.com/rs/cors"
 	ethermint "github.com/zeta-chain/ethermint/types"
 
-	"github.com/zeta-chain/zetacore/rpc"
-	"github.com/zeta-chain/zetacore/server/config"
+	"github.com/zeta-chain/node/rpc"
+	"github.com/zeta-chain/node/server/config"
 )
 
 // StartJSONRPC starts the JSON-RPC server

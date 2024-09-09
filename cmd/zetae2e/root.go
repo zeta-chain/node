@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/cmd/zetae2e/local"
+	"github.com/zeta-chain/node/cmd/zetae2e/local"
 )
 
 var asciiArt = `

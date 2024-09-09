@@ -4,7 +4,7 @@ import (
 	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/node/pkg/chains"
 )
 
 func (m *ObserverSet) Len() int {

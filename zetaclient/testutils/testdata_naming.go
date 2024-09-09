@@ -3,7 +3,7 @@ package testutils
 import (
 	"fmt"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/node/pkg/coin"
 )
 
 // FileNameEVMBlock returns unified archive file name for block

@@ -17,7 +17,7 @@ import (
 	ethermint "github.com/zeta-chain/ethermint/types"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
+	"github.com/zeta-chain/node/rpc/backend/mocks"
 )
 
 func (suite *BackendTestSuite) TestRPCMinGasPrice() {

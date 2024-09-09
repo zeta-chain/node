@@ -12,15 +12,15 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/pkg/constant"
-	"github.com/zeta-chain/zetacore/pkg/crypto"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
-	"github.com/zeta-chain/zetacore/zetaclient/compliance"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/pkg/crypto"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/zetaclient/compliance"
+	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 // checkEventProcessability checks if the event is processable

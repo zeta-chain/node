@@ -1,4 +1,4 @@
-package types_test
+package cli
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gitlab.com/thorchain/tss/go-tss/blame"
 
-	"github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestConvertNodes(t *testing.T) {
@@ -49,7 +49,7 @@ func TestConvertNodes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := types.ConvertNodes(tt.input)
+			result := ConvertNodes(tt.input)
 			require.Equal(t, tt.expected, result)
 		})
 	}

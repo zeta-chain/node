@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	"github.com/zeta-chain/zetacore/x/fungible/types"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	"github.com/zeta-chain/node/x/fungible/types"
 )
 
 // RemoveForeignCoin removes a coin from the list of foreign coins in the

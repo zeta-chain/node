@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	emissionskeeper "github.com/zeta-chain/zetacore/x/emissions/keeper"
-	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	emissionskeeper "github.com/zeta-chain/node/x/emissions/keeper"
+	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
 )
 
 func TestKeeper_CalculateFixedValidatorRewards(t *testing.T) {

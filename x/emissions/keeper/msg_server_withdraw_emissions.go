@@ -7,8 +7,8 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/x/emissions/types"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	"github.com/zeta-chain/node/x/emissions/types"
 )
 
 // WithdrawEmission allows the user to withdraw from their withdrawable emissions.

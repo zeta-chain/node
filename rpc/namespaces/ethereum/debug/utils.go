@@ -22,7 +22,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/server"
 
-	zetaos "github.com/zeta-chain/zetacore/pkg/os"
+	zetaos "github.com/zeta-chain/node/pkg/os"
 )
 
 // isCPUProfileConfigurationActivated checks if cpuprofile was configured via flag

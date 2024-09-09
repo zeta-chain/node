@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "zetachain/zetacore/pkg/proofs/bitcoin/bitcoin.proto";
 import "zetachain/zetacore/pkg/proofs/ethereum/ethereum.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/pkg/proofs";
+option go_package = "github.com/zeta-chain/node/pkg/proofs";
 
 message BlockHeader {
   int64 height = 1;

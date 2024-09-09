@@ -13,9 +13,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/constant"
-	"github.com/zeta-chain/zetacore/zetaclient/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/zetaclient/types"
 )
 
 // TelemetryServer provides http endpoint for Tss server

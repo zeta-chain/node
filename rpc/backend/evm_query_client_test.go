@@ -21,8 +21,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
-	rpc "github.com/zeta-chain/zetacore/rpc/types"
+	"github.com/zeta-chain/node/rpc/backend/mocks"
+	rpc "github.com/zeta-chain/node/rpc/types"
 )
 
 // QueryClient defines a mocked object that implements the ethermint GRPC
