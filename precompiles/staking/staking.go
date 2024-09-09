@@ -182,6 +182,7 @@ func (c *Contract) GetShares(
 
 func (c *Contract) Stake(
 	ctx sdk.Context,
+	evm *vm.EVM,
 	contract *vm.Contract,
 	method *abi.Method,
 	args []interface{},
@@ -229,6 +230,13 @@ func (c *Contract) Stake(
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	// if caller is not the same as origin it means call is coming through smart contract
+	// in that case, manually reduce amount in stateDB so it is properly reflected in bank module
+	stateDB := evm.StateDB.(ptypes.ExtStateDB)
+	if contract.CallerAddress != evm.Origin {
+		stateDB.SubBalance(stakerAddress, amount)
 	}
 
 	return method.Outputs.Pack(true)
@@ -389,7 +397,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, erro
 	case StakeMethodName:
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-			res, err = c.Stake(ctx, contract, method, args)
+			res, err = c.Stake(ctx, evm, contract, method, args)
 			return err
 		})
 		if execErr != nil {
