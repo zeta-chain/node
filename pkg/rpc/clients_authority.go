@@ -3,8 +3,8 @@ package rpc
 import (
 	"context"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 )
 
 // GetAdditionalChains returns the additional chains

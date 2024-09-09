@@ -7,8 +7,8 @@ import (
 	"github.com/gagliardetto/solana-go"
 	solanarpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/solana/rpc"
-	"github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
+	"github.com/zeta-chain/node/zetaclient/common"
 )
 
 // Test_SolanaRPCLive is a phony test to run all live tests

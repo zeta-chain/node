@@ -11,15 +11,15 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	contracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
-	"github.com/zeta-chain/zetacore/zetaclient/logs"
-	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
-	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
+	clienttypes "github.com/zeta-chain/node/zetaclient/types"
+	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 // WatchOutbound watches solana chain for outgoing txs status

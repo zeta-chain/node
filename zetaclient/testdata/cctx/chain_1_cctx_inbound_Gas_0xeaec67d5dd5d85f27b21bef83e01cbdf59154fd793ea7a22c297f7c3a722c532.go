@@ -3,8 +3,8 @@ package cctx
 import (
 	sdkmath "cosmossdk.io/math"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/pkg/coin"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // https://zetachain-mainnet-archive.allthatnode.com:1317/zeta-chain/crosschain/cctx/0x0210925c7dceeff563e6e240d6d650a5f0e8fca6f5b76044a6cf106d21f27098

@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/authority/types"
+	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/authority/types"
 )
 
 func TestMsgUpdatePolicies_ValidateBasic(t *testing.T) {

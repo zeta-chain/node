@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	ecdsakeygen "gitlab.com/thorchain/tss/tss-lib/ecdsa/keygen"
 
-	"github.com/zeta-chain/zetacore/app"
-	"github.com/zeta-chain/zetacore/cmd"
+	"github.com/zeta-chain/node/app"
+	"github.com/zeta-chain/node/cmd"
 )
 
 var (

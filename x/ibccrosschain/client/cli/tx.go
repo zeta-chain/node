@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/x/ibccrosschain/types"
+	"github.com/zeta-chain/node/x/ibccrosschain/types"
 )
 
 // GetTxCmd returns the transaction commands for ibccrosschain module

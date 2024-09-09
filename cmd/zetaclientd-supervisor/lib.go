@@ -19,7 +19,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/config"
 )
 
 const zetaclientdBinaryName = "zetaclientd"

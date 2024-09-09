@@ -8,8 +8,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	ethermint "github.com/zeta-chain/ethermint/types"
-	"github.com/zeta-chain/zetacore/precompiles/types"
-	"github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/node/precompiles/types"
+	"github.com/zeta-chain/node/testutil/keeper"
 )
 
 func Test_IPrototypeContract(t *testing.T) {
@@ -296,7 +296,6 @@ func Test_GetGasStabilityPoolBalance(t *testing.T) {
 	)
 
 	t.Run("should fail with invalid arguments", func(t *testing.T) {
-
 		t.Run("invalid number of arguments", func(t *testing.T) {
 			args := []interface{}{int64(1337), "second argument"}
 			_, err := contract.GetGasStabilityPoolBalance(ctx, &methodID, args)

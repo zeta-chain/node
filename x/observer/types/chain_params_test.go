@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	. "gopkg.in/check.v1"
 
-	"github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestChainParamsList_Validate(t *testing.T) {

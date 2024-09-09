@@ -15,7 +15,7 @@ import "zetachain/zetacore/observer/pending_nonces.proto";
 import "zetachain/zetacore/observer/tss.proto";
 import "zetachain/zetacore/observer/tss_funds_migrator.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
+option go_package = "github.com/zeta-chain/node/x/observer/types";
 
 message GenesisState {
   repeated Ballot ballots = 1;

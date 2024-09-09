@@ -33,11 +33,11 @@ import (
 	"github.com/zeta-chain/ethermint/crypto/hd"
 	"github.com/zeta-chain/ethermint/types"
 
-	"github.com/zeta-chain/zetacore/app"
-	zetacoredconfig "github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
-	zevmserver "github.com/zeta-chain/zetacore/server"
-	servercfg "github.com/zeta-chain/zetacore/server/config"
+	"github.com/zeta-chain/node/app"
+	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
+	zetamempool "github.com/zeta-chain/node/pkg/mempool"
+	zevmserver "github.com/zeta-chain/node/server"
+	servercfg "github.com/zeta-chain/node/server/config"
 )
 
 const EnvPrefix = "zetacore"

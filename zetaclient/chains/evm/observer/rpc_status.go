@@ -5,8 +5,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/rpc"
-	"github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/rpc"
+	"github.com/zeta-chain/node/zetaclient/common"
 )
 
 // watchRPCStatus watches the RPC status of the EVM chain

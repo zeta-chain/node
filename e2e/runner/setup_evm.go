@@ -11,13 +11,13 @@ import (
 	zetaeth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
 
-	"github.com/zeta-chain/zetacore/e2e/config"
-	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
-	"github.com/zeta-chain/zetacore/e2e/contracts/testdapp"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/constant"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/e2e/config"
+	"github.com/zeta-chain/node/e2e/contracts/erc20"
+	"github.com/zeta-chain/node/e2e/contracts/testdapp"
+	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 const (

@@ -8,9 +8,9 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"golang.org/x/net/context"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/pkg/coin"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // RefundAbortedCCTX refunds the aborted CCTX.

@@ -30,7 +30,7 @@ import (
 	"github.com/pkg/errors"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
+	rpctypes "github.com/zeta-chain/node/rpc/types"
 )
 
 // GetCode returns the contract code at the given address and block number.

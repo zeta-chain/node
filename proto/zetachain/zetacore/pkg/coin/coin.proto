@@ -3,7 +3,7 @@ package zetachain.zetacore.pkg.coin;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/pkg/coin";
+option go_package = "github.com/zeta-chain/node/pkg/coin";
 
 enum CoinType {
   option (gogoproto.goproto_enum_stringer) = true;

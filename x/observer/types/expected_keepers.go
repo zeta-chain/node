@@ -5,9 +5,9 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/proofs"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/proofs"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 )
 
 type StakingKeeper interface {

@@ -8,8 +8,8 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
-	ethrpc "github.com/zeta-chain/zetacore/rpc/types"
+	"github.com/zeta-chain/node/rpc/backend/mocks"
+	ethrpc "github.com/zeta-chain/node/rpc/types"
 )
 
 func (suite *BackendTestSuite) TestGetLogs() {

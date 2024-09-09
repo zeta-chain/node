@@ -10,7 +10,7 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
 )
 
 // GetGenesisSupply returns the genesis supply.

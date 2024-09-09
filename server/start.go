@@ -58,9 +58,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	zetaos "github.com/zeta-chain/zetacore/pkg/os"
-	"github.com/zeta-chain/zetacore/server/config"
-	srvflags "github.com/zeta-chain/zetacore/server/flags"
+	zetaos "github.com/zeta-chain/node/pkg/os"
+	"github.com/zeta-chain/node/server/config"
+	srvflags "github.com/zeta-chain/node/server/flags"
 )
 
 // DBOpener is a function to open `application.db`, potentially with customized options.

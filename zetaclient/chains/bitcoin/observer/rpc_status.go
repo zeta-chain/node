@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
-	"github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
+	"github.com/zeta-chain/node/zetaclient/common"
 )
 
 // watchRPCStatus watches the RPC status of the Bitcoin chain

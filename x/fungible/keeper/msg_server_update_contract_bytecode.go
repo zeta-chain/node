@@ -8,8 +8,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	"github.com/zeta-chain/zetacore/x/fungible/types"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	"github.com/zeta-chain/node/x/fungible/types"
 )
 
 // UpdateContractBytecode updates the bytecode of a contract from the bytecode

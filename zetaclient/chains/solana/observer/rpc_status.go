@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/solana/rpc"
-	"github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
+	"github.com/zeta-chain/node/zetaclient/common"
 )
 
 // watchRPCStatus watches the RPC status of the Solana chain

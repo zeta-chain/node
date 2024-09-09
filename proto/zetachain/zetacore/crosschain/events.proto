@@ -3,7 +3,7 @@ package zetachain.zetacore.crosschain;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
+option go_package = "github.com/zeta-chain/node/x/crosschain/types";
 
 message EventInboundFinalized {
   string msg_type_url = 1;

@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/pkg/crypto"
+	"github.com/zeta-chain/node/pkg/crypto"
 )
 
 var encTssCmd = &cobra.Command{

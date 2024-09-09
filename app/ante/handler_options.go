@@ -33,7 +33,7 @@ import (
 	ethermint "github.com/zeta-chain/ethermint/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
+	observerkeeper "github.com/zeta-chain/node/x/observer/keeper"
 )
 
 type HandlerOptions struct {

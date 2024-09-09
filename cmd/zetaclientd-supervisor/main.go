@@ -14,9 +14,9 @@ import (
 	"cosmossdk.io/errors"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/zeta-chain/zetacore/app"
-	zetaos "github.com/zeta-chain/zetacore/pkg/os"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/node/app"
+	zetaos "github.com/zeta-chain/node/pkg/os"
+	"github.com/zeta-chain/node/zetaclient/config"
 )
 
 func main() {

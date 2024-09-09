@@ -6,8 +6,8 @@ import (
 	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	crosschainTypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/x/observer/types"
+	crosschainTypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 const voteBlameID = "Vote Blame"

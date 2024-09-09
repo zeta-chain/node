@@ -4,7 +4,7 @@ package zetachain.zetacore.crosschain;
 import "gogoproto/gogo.proto";
 import "zetachain/zetacore/pkg/coin/coin.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
+option go_package = "github.com/zeta-chain/node/x/crosschain/types";
 
 message RateLimiterFlags {
   bool enabled = 1;

@@ -10,8 +10,8 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/config"
 )
 
 const (

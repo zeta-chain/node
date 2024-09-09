@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/node/pkg/chains"
 )
 
 // DefaultChainInfo returns the structure with an empty list of chains

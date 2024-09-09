@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 	"gitlab.com/thorchain/tss/go-tss/blame"
 
-	"github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 func CmdVoteBlame() *cobra.Command {
@@ -48,7 +48,7 @@ func CmdVoteBlame() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			blameNodes := types.ConvertNodes(nodes)
+			blameNodes := ConvertNodes(nodes)
 			blameInfo := types.Blame{
 				Index:         index,
 				FailureReason: failureReason,

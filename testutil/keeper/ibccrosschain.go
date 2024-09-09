@@ -11,9 +11,9 @@ import (
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	"github.com/stretchr/testify/require"
 
-	ibccrosschainmocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/ibccrosschain"
-	"github.com/zeta-chain/zetacore/x/ibccrosschain/keeper"
-	"github.com/zeta-chain/zetacore/x/ibccrosschain/types"
+	ibccrosschainmocks "github.com/zeta-chain/node/testutil/keeper/mocks/ibccrosschain"
+	"github.com/zeta-chain/node/x/ibccrosschain/keeper"
+	"github.com/zeta-chain/node/x/ibccrosschain/types"
 )
 
 type IBCCroscchainMockOptions struct {

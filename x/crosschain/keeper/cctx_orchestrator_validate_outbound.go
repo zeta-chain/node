@@ -12,11 +12,11 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 /*

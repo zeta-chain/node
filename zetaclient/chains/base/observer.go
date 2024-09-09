@@ -13,15 +13,15 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/db"
-	"github.com/zeta-chain/zetacore/zetaclient/logs"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
-	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
+	"github.com/zeta-chain/node/pkg/chains"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
+	clienttypes "github.com/zeta-chain/node/zetaclient/types"
+	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 const (

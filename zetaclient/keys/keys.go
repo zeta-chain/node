@@ -16,10 +16,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/rs/zerolog/log"
 
-	"github.com/zeta-chain/zetacore/pkg/cosmos"
-	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
+	"github.com/zeta-chain/node/pkg/cosmos"
+	zetacrypto "github.com/zeta-chain/node/pkg/crypto"
+	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/keys/interfaces"
 )
 
 var (

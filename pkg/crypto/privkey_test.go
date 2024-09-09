@@ -5,7 +5,7 @@ import (
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg/crypto"
+	"github.com/zeta-chain/node/pkg/crypto"
 )
 
 func Test_SolanaPrivateKeyFromString(t *testing.T) {

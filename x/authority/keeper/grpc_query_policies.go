@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/zeta-chain/zetacore/x/authority/types"
+	"github.com/zeta-chain/node/x/authority/types"
 )
 
 // Policies queries policies

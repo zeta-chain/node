@@ -44,7 +44,7 @@ linters-settings:
     sections:
       - standard
       - default
-      - prefix(github.com/zeta-chain/zetacore)
+      - prefix(github.com/zeta-chain/node)
     skip-generated: true
 
 issues:

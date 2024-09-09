@@ -6,7 +6,7 @@ import "zetachain/zetacore/pkg/coin/coin.proto";
 
 // TODO : fix the descriptor numbers for the fields
 //  https://github.com/zeta-chain/node/issues/1951
-option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
+option go_package = "github.com/zeta-chain/node/x/crosschain/types";
 
 enum CctxStatus {
   option (gogoproto.goproto_enum_stringer) = true;

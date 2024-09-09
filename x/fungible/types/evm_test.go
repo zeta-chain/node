@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	"github.com/zeta-chain/zetacore/x/fungible/types"
+	"github.com/zeta-chain/node/x/fungible/types"
 )
 
 func TestIsContractReverted(t *testing.T) {

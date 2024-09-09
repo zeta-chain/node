@@ -7,9 +7,9 @@ import (
 	"github.com/fatih/color"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/zeta-chain/zetacore/e2e/config"
-	"github.com/zeta-chain/zetacore/e2e/e2etests"
-	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/node/e2e/config"
+	"github.com/zeta-chain/node/e2e/e2etests"
+	"github.com/zeta-chain/node/e2e/runner"
 )
 
 // startV2Tests starts v2 related tests in parallel
