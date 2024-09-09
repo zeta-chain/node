@@ -11,20 +11,32 @@ on:
         type: boolean
         required: false
         default: false
-        description: 'Use this to skip: check-changelog and check-upgrade-handler-updated go straight to approval step.'
+        description: 'Skip pre-release checks and skip straight to the actual release'
       skip_release:
         type: boolean
         required: false
         default: false
-        description: 'If this is true it will simply execute all the steps for a release prior to actually cutting the release, then stop'
+        description: 'Only run pre-release checks'
 
 concurrency:
   group: publish-release
   cancel-in-progress: false
 
 jobs:
+  log:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: "Log inputs"
+        env:
+          INPUTS: ${{ toJson(inputs) }}
+        run: echo "${INPUTS}" | jq -r
+      - name: "Log event"
+        env:
+          EVENT: ${{ toJson(github.event) }}
+        run: echo "${EVENT}" | jq -r
+
   check-branch:
-    if: ${{ (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v')) }}
+    if: (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/heads/hotfix/v'))
     runs-on: ubuntu-22.04
     steps:
       - name: Branch
@@ -32,7 +44,7 @@ jobs:
           echo "${{ github.ref }}"
 
   check-goreleaser:
-    if: ${{ github.event.inputs.skip_checks != 'true' }}
+    if: inputs.skip_checks != true
     runs-on: ${{ vars.RELEASE_RUNNER }}
     steps:
       - uses: actions/checkout@v4
@@ -47,13 +59,13 @@ jobs:
     steps:
 
       - name: Checkout code
-        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        if: inputs.skip_checks != true
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Get latest commit SHA of Develop & Current Branch
-        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        if: inputs.skip_checks != true
         id: get-develop-sha
         run: |
           SHA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
@@ -62,7 +74,7 @@ jobs:
           echo "CURRENT_BRANCH_SHA=${{ github.sha }}" >> ${GITHUB_ENV}
 
       - name: Check for CHANGELOG.md changes
-        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        if: inputs.skip_checks != true
         run: |
           echo "Check the changelog has actually been updated from whats in develop"
           echo "DEVELOP BRANCH SHA: ${DEVELOP_SHA}"
@@ -77,7 +89,7 @@ jobs:
           fi
 
       - name: Mark Job Complete Skipped
-        if: ${{ github.event.inputs.skip_checks == 'true' }}
+        if: inputs.skip_checks == true
         shell: bash
         run: |
           echo "continue"
@@ -90,15 +102,15 @@ jobs:
     steps:
 
       - uses: actions/checkout@v4
-        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        if: inputs.skip_checks != true
         with:
           fetch-depth: 0
 
       - name: Major Version in Upgrade Handler Must Match Tag
-        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        if: inputs.skip_checks != true
         run: |
           UPGRADE_HANDLER_MAJOR_VERSION=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"' | cut -d '.' -f 1 | tr -d '\n')
-          USER_INPUT_VERSION=$(echo "${{ github.event.inputs.version }}" | cut -d '.' -f 1 | tr -d '\n')
+          USER_INPUT_VERSION=$(echo "${{ inputs.version }}" | cut -d '.' -f 1 | tr -d '\n')
           echo "Upgrade Handler Major Version: ${UPGRADE_HANDLER_MAJOR_VERSION}"
           echo "User Inputted Release Version: ${USER_INPUT_VERSION}"
           if [ ${USER_INPUT_VERSION} != $UPGRADE_HANDLER_MAJOR_VERSION ]; then
@@ -109,7 +121,7 @@ jobs:
           echo "The major version found in 'releaseVersion' in app/setup_handlers.go matches this tagged release - Moving Forward!"
 
       - name: Mark Job Complete Skipped
-        if: ${{ github.event.inputs.skip_checks == 'true' }}
+        if: inputs.skip_checks == true
         shell: bash
         run: |
           echo "continue"
@@ -119,7 +131,7 @@ jobs:
       id-token: write
       contents: write
       attestations: write
-    if: ${{ github.event.inputs.skip_release == 'false' }}
+    if: inputs.skip_release != true
     needs:
       - check-changelog
       - check-upgrade-handler-updated
@@ -131,15 +143,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Pipeline Dependencies
-        uses: ./.github/actions/install-dependencies
-        timeout-minutes: 8
-        with:
-          cpu_architecture: ${{ env.CPU_ARCH }}
-          skip_python: "true"
-          skip_aws_cli: "true"
-          skip_docker_compose: "true"
-
       - name: Change Log Release Notes.
         id: release_notes
         run: |
@@ -148,19 +151,7 @@ jobs:
 
       - name: Set Version
         run: |
-          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.inputs.version }}" >> ${GITHUB_ENV}
-
-      - name: Set CPU Architecture
-        shell: bash
-        run: |
-          if [ "$(uname -m)" == "aarch64" ]; then
-            echo "CPU_ARCH=arm64" >> $GITHUB_ENV
-          elif [ "$(uname -m)" == "x86_64" ]; then
-            echo "CPU_ARCH=amd64" >> $GITHUB_ENV
-          else
-            echo "Unsupported architecture" >&2
-            exit 1
-          fi
+          echo "GITHUB_TAG_MAJOR_VERSION=${{ inputs.version }}" >> ${GITHUB_ENV}
 
       - name: Create Release Tag
         shell: bash
