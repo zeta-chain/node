@@ -24,14 +24,14 @@ func (r *E2ERunner) EnsureNoTrackers() {
 	require.Empty(r, res.OutboundTracker, "there should be no trackers at the end of the test")
 }
 
-// EnsureZeroBalanceOnRestrictedAddress ensures that the balance of the restricted address is zero
-func (r *E2ERunner) EnsureZeroBalanceOnRestrictedAddress() {
+// EnsureZeroBalanceAddressZEVM ensures that the balance of the address is zero in the ZEVM
+func (r *E2ERunner) EnsureZeroBalanceAddressZEVM() {
 	restrictedAddress := ethcommon.HexToAddress(sample.RestrictedEVMAddressTest)
 
 	// ensure ZETA balance is zero
 	balance, err := r.WZeta.BalanceOf(&bind.CallOpts{}, restrictedAddress)
 	require.NoError(r, err)
-	require.Zero(r, balance.Cmp(big.NewInt(0)), "the wZETA balance of the restricted address should be zero")
+	require.Zero(r, balance.Cmp(big.NewInt(0)), "the wZETA balance of the address should be zero")
 
 	// ensure ZRC20 ETH balance is zero
 	ensureZRC20ZeroBalance(r, r.ETHZRC20, restrictedAddress)
