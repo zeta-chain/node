@@ -52,6 +52,9 @@ contract TestStaking {
     WZETA wzeta;
     address owner;
 
+    // @dev used to test state change in smart contract
+    uint256 public counter = 0;
+
     constructor(address _wzeta) {
         wzeta = WZETA(_wzeta);
         owner = msg.sender;
@@ -74,6 +77,20 @@ contract TestStaking {
 
     function stake(address staker, string memory validator, uint256 amount) external onlyOwner returns (bool)  {
         return staking.stake(staker, validator, amount);
+    }
+
+    function stakeWithStateUpdate(address staker, string memory validator, uint256 amount) external onlyOwner returns (bool)  {
+        counter = counter + 1;
+        bool success = staking.stake(staker, validator, amount);
+        counter = counter + 1;
+        return success;
+    }
+
+    function stakeAndRevert(address staker, string memory validator, uint256 amount) external onlyOwner returns (bool)  {
+        counter = counter + 1;
+        staking.stake(staker, validator, amount);
+        counter = counter + 1;
+        revert("testrevert");
     }
 
     function unstake(

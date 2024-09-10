@@ -17,12 +17,14 @@
 * [2633](https://github.com/zeta-chain/node/pull/2633) - support for stateful precompiled contracts
 * [2788](https://github.com/zeta-chain/node/pull/2788) - add common importable zetacored rpc package
 * [2784](https://github.com/zeta-chain/node/pull/2784) - staking precompiled contract
+* [2795](https://github.com/zeta-chain/node/pull/2795) - support restricted address in Solana
 
 ### Refactor
 
 * [2615](https://github.com/zeta-chain/node/pull/2615) - Refactor cleanup of outbound trackers
 * [2749](https://github.com/zeta-chain/node/pull/2749) - fix all lint errors from govet
 * [2725](https://github.com/zeta-chain/node/pull/2725) - refactor SetCctxAndNonceToCctxAndInboundHashToCctx to receive tsspubkey as an argument
+* [2802](https://github.com/zeta-chain/node/pull/2802) - set default liquidity cap for new ZRC20s
 * [2826](https://github.com/zeta-chain/node/pull/2826) - remove unused code from emissions module and add new parameter for fixed block reward amount
 
 ### Tests
@@ -39,6 +41,8 @@
 * [2674](https://github.com/zeta-chain/node/pull/2674) - allow operators to vote on ballots associated with discarded keygen without affecting the status of the current keygen.
 * [2672](https://github.com/zeta-chain/node/pull/2672) - check observer set for duplicates when adding a new observer or updating an existing one
 * [2787](https://github.com/zeta-chain/node/pull/2787) - ask for 3 accounts (signer, pda, system_program) on solana gateway deposit
+* [2842](https://github.com/zeta-chain/node/pull/2842) - fix: move interval assignment out of cctx loop in EVM outbound tx scheduler
+* [2853](https://github.com/zeta-chain/node/pull/2853) - calling precompile through sc with sc state update
 
 ## v19.0.0
 
