@@ -15,9 +15,11 @@ import (
 	ethermint "github.com/zeta-chain/ethermint/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -38,10 +40,12 @@ func MakeEncodingConfig() ethermint.EncodingConfig {
 	crisistypes.RegisterInterfaces(registry)
 	evmtypes.RegisterInterfaces(registry)
 	ethermint.RegisterInterfaces(registry)
+	authoritytypes.RegisterInterfaces(registry)
 	crosschaintypes.RegisterInterfaces(registry)
 	emissionstypes.RegisterInterfaces(registry)
 	fungibletypes.RegisterInterfaces(registry)
 	observertypes.RegisterInterfaces(registry)
+	lightclienttypes.RegisterInterfaces(registry)
 
 	return encodingConfig
 }
