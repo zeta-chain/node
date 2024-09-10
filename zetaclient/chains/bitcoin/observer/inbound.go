@@ -266,7 +266,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 	}
 
 	// #nosec G115 always positive
-	event, err := GetBtcEventWithWitness(
+	event, err := GetBtcEvent(
 		ob.btcClient,
 		*tx,
 		tss,
@@ -328,7 +328,7 @@ func FilterAndParseIncomingTx(
 			continue // the first tx is coinbase; we do not process coinbase tx
 		}
 
-		inbound, err := GetBtcEventWithWitness(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
+		inbound, err := GetBtcEvent(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
 		if err != nil {
 			// unable to parse the tx, the caller should retry
 			return nil, errors.Wrapf(err, "error getting btc event for tx %s in block %d", tx.Txid, blockNumber)
@@ -390,10 +390,27 @@ func (ob *Observer) DoesInboundContainsRestrictedAddress(inTx *BTCInboundEvent) 
 	return false
 }
 
-// GetBtcEvent either returns a valid BTCInboundEvent or nil
+// GetBtcEvent returns a valid BTCInboundEvent or nil
+// it uses witness data to extract the sender address, except for mainnet
+func GetBtcEvent(
+	rpcClient interfaces.BTCRPCClient,
+	tx btcjson.TxRawResult,
+	tssAddress string,
+	blockNumber uint64,
+	logger zerolog.Logger,
+	netParams *chaincfg.Params,
+	depositorFee float64,
+) (*BTCInboundEvent, error) {
+	if netParams.Name == chaincfg.MainNetParams.Name {
+		return GetBtcEventWithoutWitness(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
+	}
+	return GetBtcEventWithWitness(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
+}
+
+// GetBtcEventWithoutWitness either returns a valid BTCInboundEvent or nil
 // Note: the caller should retry the tx on error (e.g., GetSenderAddressByVin failed)
 // TODO(revamp): simplify this function
-func GetBtcEvent(
+func GetBtcEventWithoutWitness(
 	rpcClient interfaces.BTCRPCClient,
 	tx btcjson.TxRawResult,
 	tssAddress string,
@@ -437,7 +454,7 @@ func GetBtcEvent(
 			// deposit amount has to be no less than the minimum depositor fee
 			if vout0.Value < depositorFee {
 				logger.Info().
-					Msgf("GetBtcEvent: btc deposit amount %v in txid %s is less than depositor fee %v", vout0.Value, tx.Txid, depositorFee)
+					Msgf("GetBtcEventWithoutWitness: btc deposit amount %v in txid %s is less than depositor fee %v", vout0.Value, tx.Txid, depositorFee)
 				return nil, nil
 			}
 			value = vout0.Value - depositorFee
@@ -446,7 +463,7 @@ func GetBtcEvent(
 			vout1 := tx.Vout[1]
 			memo, found, err = bitcoin.DecodeOpReturnMemo(vout1.ScriptPubKey.Hex, tx.Txid)
 			if err != nil {
-				logger.Error().Err(err).Msgf("GetBtcEvent: error decoding OP_RETURN memo: %s", vout1.ScriptPubKey.Hex)
+				logger.Error().Err(err).Msgf("GetBtcEventWithoutWitness: error decoding OP_RETURN memo: %s", vout1.ScriptPubKey.Hex)
 				return nil, nil
 			}
 		}
@@ -454,7 +471,7 @@ func GetBtcEvent(
 	// event found, get sender address
 	if found {
 		if len(tx.Vin) == 0 { // should never happen
-			return nil, fmt.Errorf("GetBtcEvent: no input found for inbound: %s", tx.Txid)
+			return nil, fmt.Errorf("GetBtcEventWithoutWitness: no input found for inbound: %s", tx.Txid)
 		}
 
 		fromAddress, err := GetSenderAddressByVin(rpcClient, tx.Vin[0], netParams)
