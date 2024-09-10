@@ -3,8 +3,9 @@ package types
 import "fmt"
 
 /*
-Address related errors
+	Address related errors
 */
+
 type ErrInvalidAddr struct {
 	Got string
 }
@@ -14,8 +15,9 @@ func (e ErrInvalidAddr) Error() string {
 }
 
 /*
-Argument related errors
+	Argument related errors
 */
+
 type ErrInvalidNumberOfArgs struct {
 	Got, Expect int
 }
@@ -33,8 +35,23 @@ func (e ErrInvalidArgument) Error() string {
 }
 
 /*
-Method related errors
+	Coin related errors
 */
+
+type ErrInvalidCoin struct {
+	Got      string
+	Negative bool
+	Nil      bool
+}
+
+func (e ErrInvalidCoin) Error() string {
+	return fmt.Sprintf("invalid coin: denom: %s, is negative: %v, is nil: %v", e.Got, e.Negative, e.Nil)
+}
+
+/*
+	Method related errors
+*/
+
 type ErrInvalidMethod struct {
 	Method string
 }
