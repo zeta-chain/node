@@ -69,14 +69,11 @@ func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.O
 	if tss == nil {
 		tss = mocks.NewTSSMainnet()
 	}
-	cfg := config.New(false)
 
 	// prepare mock arguments to create observer
-	evmcfg := config.EVMConfig{Chain: chains.BscMainnet, Endpoint: "http://localhost:8545"}
 	evmClient := mocks.NewMockEvmClient().WithBlockNumber(1000)
-	params := mocks.MockChainParams(evmcfg.Chain.ChainId, 10)
-	cfg.EVMChainConfigs[chains.BscMainnet.ChainId] = evmcfg
-	//appContext := context.New(cfg, zerolog.Nop())
+	evmJSONRPCClient := mocks.NewMockJSONRPCClient()
+	params := mocks.MockChainParams(chains.BscMainnet.ChainId, 10)
 	logger := base.Logger{}
 	ts := &metrics.TelemetryServer{}
 
@@ -85,8 +82,9 @@ func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.O
 
 	return observer.NewObserver(
 		ctx,
-		evmcfg,
+		chains.BscMainnet,
 		evmClient,
+		evmJSONRPCClient,
 		params,
 		mocks.NewZetacoreClient(t),
 		tss,

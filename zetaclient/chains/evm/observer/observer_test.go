@@ -100,6 +100,11 @@ func MockEVMObserver(
 		evmClient = mocks.NewMockEvmClient().WithBlockNumber(1000)
 	}
 
+	// use default mock evm client if not provided
+	if evmJSONRPC == nil {
+		evmJSONRPC = mocks.NewMockJSONRPCClient()
+	}
+
 	// use default mock zetacore client if not provided
 	if zetacoreClient == nil {
 		zetacoreClient = mocks.NewZetacoreClient(t).
@@ -113,7 +118,7 @@ func MockEVMObserver(
 		tss = mocks.NewTSSMainnet()
 	}
 	// create AppContext
-	appContext, evmCfg := getAppContext(t, chain, "", &params)
+	appContext, _ := getAppContext(t, chain, "", &params)
 
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
@@ -122,9 +127,19 @@ func MockEVMObserver(
 	logger := base.Logger{Std: testLogger, Compliance: testLogger}
 
 	// create observer
-	ob, err := observer.NewObserver(ctx, evmCfg, evmClient, params, zetacoreClient, tss, database, logger, nil)
+	ob, err := observer.NewObserver(
+		ctx,
+		chain,
+		evmClient,
+		evmJSONRPC,
+		params,
+		zetacoreClient,
+		tss,
+		database,
+		logger,
+		nil,
+	)
 	require.NoError(t, err)
-	ob.WithEvmJSONRPC(evmJSONRPC)
 	ob.WithLastBlock(lastBlock)
 
 	return ob, appContext
@@ -143,6 +158,7 @@ func Test_NewObserver(t *testing.T) {
 		evmCfg      config.EVMConfig
 		chainParams observertypes.ChainParams
 		evmClient   interfaces.EVMRPCClient
+		evmJSONRPC  interfaces.EVMJSONRPCClient
 		tss         interfaces.TSSSigner
 		logger      base.Logger
 		before      func()
@@ -159,6 +175,7 @@ func Test_NewObserver(t *testing.T) {
 			},
 			chainParams: params,
 			evmClient:   mocks.NewMockEvmClient().WithBlockNumber(1000),
+			evmJSONRPC:  mocks.NewMockJSONRPCClient(),
 			tss:         mocks.NewTSSMainnet(),
 			logger:      base.Logger{},
 			ts:          nil,
@@ -172,6 +189,7 @@ func Test_NewObserver(t *testing.T) {
 			},
 			chainParams: params,
 			evmClient:   mocks.NewMockEvmClient().WithError(fmt.Errorf("error RPC")),
+			evmJSONRPC:  mocks.NewMockJSONRPCClient(),
 			tss:         mocks.NewTSSMainnet(),
 			logger:      base.Logger{},
 			ts:          nil,
@@ -186,6 +204,7 @@ func Test_NewObserver(t *testing.T) {
 			},
 			chainParams: params,
 			evmClient:   mocks.NewMockEvmClient().WithBlockNumber(1000),
+			evmJSONRPC:  mocks.NewMockJSONRPCClient(),
 			tss:         mocks.NewTSSMainnet(),
 			before: func() {
 				envVar := base.EnvVarLatestBlockByChain(chain)
@@ -222,8 +241,9 @@ func Test_NewObserver(t *testing.T) {
 			// create observer
 			ob, err := observer.NewObserver(
 				ctx,
-				tt.evmCfg,
+				chain,
 				tt.evmClient,
+				tt.evmJSONRPC,
 				tt.chainParams,
 				zetacoreClient,
 				tt.tss,
