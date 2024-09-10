@@ -38,16 +38,19 @@ func tonTestRoutine(
 			return errors.Wrap(err, "unable to get ton tests to run")
 		}
 
-		if err := tonRunner.RunE2ETests(tests); err != nil {
-			return errors.Wrap(err, "ton tests failed")
-		}
+		const bootstrapTimeout = 5 * time.Minute
 
-		if err := tonRunner.EnsureTONBootstrapped(5 * time.Minute); err != nil {
+		if err := tonRunner.EnsureTONBootstrapped(bootstrapTimeout); err != nil {
 			return errors.Wrap(err, "unable to bootstrap TON")
 		}
 
-		// todo setup deployer wallet
-		// todo deploy gateway
+		if err := tonRunner.SetupTON(); err != nil {
+			return errors.Wrap(err, "unable to setup TON account")
+		}
+
+		if err := tonRunner.RunE2ETests(tests); err != nil {
+			return errors.Wrap(err, "ton tests failed")
+		}
 
 		tonRunner.Logger.Print("🍾 ton tests completed in %s", time.Since(startTime).String())
 

@@ -34,6 +34,7 @@ import (
 	"github.com/zeta-chain/node/e2e/contracts/contextapp"
 	"github.com/zeta-chain/node/e2e/contracts/erc20"
 	"github.com/zeta-chain/node/e2e/contracts/zevmswap"
+	tonrunner "github.com/zeta-chain/node/e2e/runner/ton"
 	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
@@ -69,6 +70,7 @@ type E2ERunner struct {
 	BTCTSSAddress         btcutil.Address
 	BTCDeployerAddress    *btcutil.AddressWitnessPubKeyHash
 	SolanaDeployerAddress solana.PublicKey
+	TONDeployer           *tonrunner.Deployer
 
 	// all clients.
 	// a reference to this type is required to enable creating a new E2ERunner.
