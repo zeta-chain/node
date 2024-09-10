@@ -45,7 +45,7 @@ func TestParseScriptFromWitness(t *testing.T) {
 	})
 }
 
-func TestGetBtcEventFromInscription(t *testing.T) {
+func TestGetBtcEventWithWitness(t *testing.T) {
 	// load archived inbound P2WPKH raw result
 	// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
 	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
