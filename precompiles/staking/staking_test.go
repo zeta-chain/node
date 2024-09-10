@@ -376,7 +376,7 @@ func Test_Stake(t *testing.T) {
 
 	t.Run("should fail if wrong args amount", func(t *testing.T) {
 		// ARRANGE
-		ctx, contract, abi, sdkKeepers, _, _ := setup(t)
+		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
 		methodID := abi.Methods[StakeMethodName]
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
@@ -395,7 +395,7 @@ func Test_Stake(t *testing.T) {
 		args := []interface{}{stakerEthAddr, validator.OperatorAddress}
 
 		// ACT
-		_, err = contract.Stake(ctx, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
+		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
 
 		// ASSERT
 		require.Error(t, err)
@@ -403,7 +403,7 @@ func Test_Stake(t *testing.T) {
 
 	t.Run("should fail if staker is not eth addr", func(t *testing.T) {
 		// ARRANGE
-		ctx, contract, abi, sdkKeepers, _, _ := setup(t)
+		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
 		methodID := abi.Methods[StakeMethodName]
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
@@ -421,7 +421,7 @@ func Test_Stake(t *testing.T) {
 		args := []interface{}{staker, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
 		// ACT
-		_, err = contract.Stake(ctx, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
+		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
 
 		// ASSERT
 		require.Error(t, err)
@@ -429,7 +429,7 @@ func Test_Stake(t *testing.T) {
 
 	t.Run("should fail if validator is not valid string", func(t *testing.T) {
 		// ARRANGE
-		ctx, contract, abi, sdkKeepers, _, _ := setup(t)
+		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
 		methodID := abi.Methods[StakeMethodName]
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
@@ -448,7 +448,7 @@ func Test_Stake(t *testing.T) {
 		args := []interface{}{stakerEthAddr, 42, coins.AmountOf(config.BaseDenom).BigInt()}
 
 		// ACT
-		_, err = contract.Stake(ctx, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
+		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
 
 		// ASSERT
 		require.Error(t, err)
@@ -456,7 +456,7 @@ func Test_Stake(t *testing.T) {
 
 	t.Run("should fail if amount is not int64", func(t *testing.T) {
 		// ARRANGE
-		ctx, contract, abi, sdkKeepers, _, _ := setup(t)
+		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
 		methodID := abi.Methods[StakeMethodName]
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
@@ -475,7 +475,7 @@ func Test_Stake(t *testing.T) {
 		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).Uint64()}
 
 		// ACT
-		_, err = contract.Stake(ctx, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
+		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
 
 		// ASSERT
 		require.Error(t, err)
@@ -818,7 +818,7 @@ func Test_MoveStake(t *testing.T) {
 
 	t.Run("should fail if staker is invalid arg", func(t *testing.T) {
 		// ARRANGE
-		ctx, contract, abi, sdkKeepers, _, _ := setup(t)
+		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
 		methodID := abi.Methods[MoveStakeMethodName]
 		r := rand.New(rand.NewSource(42))
 		validatorSrc := sample.Validator(t, r)
@@ -844,7 +844,7 @@ func Test_MoveStake(t *testing.T) {
 
 		// stake to validator src
 		stakeMethodID := abi.Methods[StakeMethodName]
-		_, err = contract.Stake(ctx, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
+		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
 		require.NoError(t, err)
 
 		argsMoveStake := []interface{}{
@@ -863,7 +863,7 @@ func Test_MoveStake(t *testing.T) {
 
 	t.Run("should fail if validator src is invalid arg", func(t *testing.T) {
 		// ARRANGE
-		ctx, contract, abi, sdkKeepers, _, _ := setup(t)
+		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
 		methodID := abi.Methods[MoveStakeMethodName]
 		r := rand.New(rand.NewSource(42))
 		validatorSrc := sample.Validator(t, r)
@@ -889,7 +889,7 @@ func Test_MoveStake(t *testing.T) {
 
 		// stake to validator src
 		stakeMethodID := abi.Methods[StakeMethodName]
-		_, err = contract.Stake(ctx, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
+		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
 		require.NoError(t, err)
 
 		argsMoveStake := []interface{}{
@@ -908,7 +908,7 @@ func Test_MoveStake(t *testing.T) {
 
 	t.Run("should fail if validator dest is invalid arg", func(t *testing.T) {
 		// ARRANGE
-		ctx, contract, abi, sdkKeepers, _, _ := setup(t)
+		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
 		methodID := abi.Methods[MoveStakeMethodName]
 		r := rand.New(rand.NewSource(42))
 		validatorSrc := sample.Validator(t, r)
@@ -934,7 +934,7 @@ func Test_MoveStake(t *testing.T) {
 
 		// stake to validator src
 		stakeMethodID := abi.Methods[StakeMethodName]
-		_, err = contract.Stake(ctx, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
+		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
 		require.NoError(t, err)
 
 		argsMoveStake := []interface{}{
@@ -953,7 +953,7 @@ func Test_MoveStake(t *testing.T) {
 
 	t.Run("should fail if amount is invalid arg", func(t *testing.T) {
 		// ARRANGE
-		ctx, contract, abi, sdkKeepers, _, _ := setup(t)
+		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
 		methodID := abi.Methods[MoveStakeMethodName]
 		r := rand.New(rand.NewSource(42))
 		validatorSrc := sample.Validator(t, r)
@@ -979,7 +979,7 @@ func Test_MoveStake(t *testing.T) {
 
 		// stake to validator src
 		stakeMethodID := abi.Methods[StakeMethodName]
-		_, err = contract.Stake(ctx, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
+		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
 		require.NoError(t, err)
 
 		argsMoveStake := []interface{}{
@@ -998,7 +998,7 @@ func Test_MoveStake(t *testing.T) {
 
 	t.Run("should fail if wrong args amount", func(t *testing.T) {
 		// ARRANGE
-		ctx, contract, abi, sdkKeepers, _, _ := setup(t)
+		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
 		methodID := abi.Methods[MoveStakeMethodName]
 		r := rand.New(rand.NewSource(42))
 		validatorSrc := sample.Validator(t, r)
@@ -1024,7 +1024,7 @@ func Test_MoveStake(t *testing.T) {
 
 		// stake to validator src
 		stakeMethodID := abi.Methods[StakeMethodName]
-		_, err = contract.Stake(ctx, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
+		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
 		require.NoError(t, err)
 
 		argsMoveStake := []interface{}{stakerEthAddr, validatorSrc.OperatorAddress, validatorDest.OperatorAddress}
@@ -1152,7 +1152,7 @@ func Test_GetShares(t *testing.T) {
 		stakeMethodID := abi.Methods[StakeMethodName]
 
 		// ACT
-		_, err = contract.Stake(ctx, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, stakeArgs)
+		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, stakeArgs)
 		require.NoError(t, err)
 
 		// ASSERT

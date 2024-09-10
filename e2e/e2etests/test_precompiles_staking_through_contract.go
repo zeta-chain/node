@@ -4,10 +4,12 @@ import (
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
+	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/e2e/contracts/teststaking"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -58,14 +60,77 @@ func TestPrecompilesStakingThroughContract(r *runner.E2ERunner, args []string) {
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.ZEVMAuth.Value = big.NewInt(0)
 
-	tx, err = testStaking.WithdrawWZETA(r.ZEVMAuth, big.NewInt(100000000000))
+	stakeAmount := 100000000000
+	tx, err = testStaking.WithdrawWZETA(r.ZEVMAuth, big.NewInt(int64(stakeAmount)))
 	require.NoError(r, err)
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 
-	// stake 3 to validator1 using testStaking smart contract
-	tx, err = testStaking.Stake(r.ZEVMAuth, testStakingAddr, validators[0].OperatorAddress, big.NewInt(3))
+	// bank balance at the start
+	balanceBefore, err := r.BankClient.Balance(r.Ctx, &banktypes.QueryBalanceRequest{
+		Address: sdk.AccAddress(testStakingAddr.Bytes()).String(),
+		Denom:   config.BaseDenom,
+	})
+	require.NoError(r, err)
+	require.Equal(r, int64(stakeAmount), balanceBefore.Balance.Amount.Int64())
+
+	// stake 3 to validator1 and revert in same function
+	tx, err = testStaking.StakeAndRevert(r.ZEVMAuth, testStakingAddr, validators[0].OperatorAddress, big.NewInt(3))
 	require.NoError(r, err)
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+
+	// check that bank balance was not changed because of revert in testStaking contract
+	balanceAfterRevert, err := r.BankClient.Balance(r.Ctx, &banktypes.QueryBalanceRequest{
+		Address: sdk.AccAddress(testStakingAddr.Bytes()).String(),
+		Denom:   config.BaseDenom,
+	})
+	require.NoError(r, err)
+	require.Equal(r, balanceBefore.Balance.Amount.Int64(), balanceAfterRevert.Balance.Amount.Int64())
+
+	// check that counter was not updated
+	counter, err := testStaking.Counter(&bind.CallOpts{})
+	require.NoError(r, err)
+	require.Equal(r, int64(0), counter.Int64())
+
+	// check that shares are still 0
+	sharesAfterRevert, err := testStaking.GetShares(&bind.CallOpts{}, testStakingAddr, validators[0].OperatorAddress)
+	require.NoError(r, err)
+	require.Equal(r, int64(0), sharesAfterRevert.Int64())
+
+	// stake 1 to validator1 using testStaking smart contract without smart contract state update
+	tx, err = testStaking.Stake(r.ZEVMAuth, testStakingAddr, validators[0].OperatorAddress, big.NewInt(1))
+	require.NoError(r, err)
+	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+
+	// check that bank balance is reduced by 1
+	balanceAfterStake, err := r.BankClient.Balance(r.Ctx, &banktypes.QueryBalanceRequest{
+		Address: sdk.AccAddress(testStakingAddr.Bytes()).String(),
+		Denom:   config.BaseDenom,
+	})
+	require.NoError(r, err)
+	require.Equal(r, balanceBefore.Balance.Amount.Int64()-1, balanceAfterStake.Balance.Amount.Int64())
+
+	// stake 2 more to validator1 using testStaking smart contract with smart contract state update
+	tx, err = testStaking.StakeWithStateUpdate(
+		r.ZEVMAuth,
+		testStakingAddr,
+		validators[0].OperatorAddress,
+		big.NewInt(2),
+	)
+	require.NoError(r, err)
+	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+
+	// check that bank balance is reduced by 2 more, 3 in total
+	balanceAfterStake, err = r.BankClient.Balance(r.Ctx, &banktypes.QueryBalanceRequest{
+		Address: sdk.AccAddress(testStakingAddr.Bytes()).String(),
+		Denom:   config.BaseDenom,
+	})
+	require.NoError(r, err)
+	require.Equal(r, balanceBefore.Balance.Amount.Int64()-3, balanceAfterStake.Balance.Amount.Int64())
+
+	// check that counter is updated
+	counter, err = testStaking.Counter(&bind.CallOpts{})
+	require.NoError(r, err)
+	require.Equal(r, int64(2), counter.Int64())
 
 	// check shares are set to 3
 	sharesAfterVal1, err := testStaking.GetShares(&bind.CallOpts{}, testStakingAddr, validators[0].OperatorAddress)
