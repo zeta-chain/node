@@ -477,5 +477,110 @@ func Test_BuildRewardsDistribution(t *testing.T) {
 			require.Equal(t, test.expectedMap, rewardsMap)
 		})
 	}
+}
 
+func TestBallot_GenerateVoterList(t *testing.T) {
+	tt := []struct {
+		name              string
+		voters            []string
+		votes             []VoteType
+		expectedVoterList []VoterList
+	}{
+		{
+			name:   "Success observation",
+			voters: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
+			votes: []VoteType{
+				VoteType_SuccessObservation,
+				VoteType_SuccessObservation,
+				VoteType_SuccessObservation,
+				VoteType_SuccessObservation,
+			},
+			expectedVoterList: []VoterList{
+				{
+					VoterAddress: "Observer1",
+					VoteType:     VoteType_SuccessObservation,
+				},
+				{
+					VoterAddress: "Observer2",
+					VoteType:     VoteType_SuccessObservation,
+				},
+				{
+					VoterAddress: "Observer3",
+					VoteType:     VoteType_SuccessObservation,
+				},
+				{
+					VoterAddress: "Observer4",
+					VoteType:     VoteType_SuccessObservation,
+				},
+			},
+		},
+
+		{
+			name:   "Failure observation",
+			voters: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
+			votes: []VoteType{
+				VoteType_FailureObservation,
+				VoteType_FailureObservation,
+				VoteType_FailureObservation,
+				VoteType_FailureObservation,
+			},
+			expectedVoterList: []VoterList{
+				{
+					VoterAddress: "Observer1",
+					VoteType:     VoteType_FailureObservation,
+				},
+				{
+					VoterAddress: "Observer2",
+					VoteType:     VoteType_FailureObservation,
+				},
+				{
+					VoterAddress: "Observer3",
+					VoteType:     VoteType_FailureObservation,
+				},
+				{
+					VoterAddress: "Observer4",
+					VoteType:     VoteType_FailureObservation,
+				},
+			},
+		},
+
+		{
+			name:   "mixed observation",
+			voters: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
+			votes: []VoteType{
+				VoteType_FailureObservation,
+				VoteType_FailureObservation,
+				VoteType_SuccessObservation,
+				VoteType_SuccessObservation,
+			},
+			expectedVoterList: []VoterList{
+				{
+					VoterAddress: "Observer1",
+					VoteType:     VoteType_FailureObservation,
+				},
+				{
+					VoterAddress: "Observer2",
+					VoteType:     VoteType_FailureObservation,
+				},
+				{
+					VoterAddress: "Observer3",
+					VoteType:     VoteType_SuccessObservation,
+				},
+				{
+					VoterAddress: "Observer4",
+					VoteType:     VoteType_SuccessObservation,
+				},
+			},
+		},
+	}
+	for _, test := range tt {
+		t.Run(test.name, func(t *testing.T) {
+			ballot := Ballot{
+				VoterList: test.voters,
+				Votes:     test.votes,
+			}
+			voterList := ballot.GenerateVoterList()
+			require.Equal(t, test.expectedVoterList, voterList)
+		})
+	}
 }

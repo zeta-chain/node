@@ -15,9 +15,9 @@ type EmissionObserverKeeper struct {
 	mock.Mock
 }
 
-// ClearMaturedBallots provides a mock function with given fields: ctx, maturityBlocks
-func (_m *EmissionObserverKeeper) ClearMaturedBallots(ctx types.Context, maturityBlocks int64) {
-	_m.Called(ctx, maturityBlocks)
+// ClearMaturedBallots provides a mock function with given fields: ctx, ballots, maturityBlocks
+func (_m *EmissionObserverKeeper) ClearMaturedBallots(ctx types.Context, ballots []observertypes.Ballot, maturityBlocks int64) {
+	_m.Called(ctx, ballots, maturityBlocks)
 }
 
 // GetBallot provides a mock function with given fields: ctx, index

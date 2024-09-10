@@ -125,5 +125,6 @@ func (m Ballot) GenerateVoterList() []VoterList {
 		}
 		votersList[i] = voter
 	}
+
 	return votersList
 }
