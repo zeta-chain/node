@@ -19,6 +19,7 @@
 ### Refactor
 
 * [2615](https://github.com/zeta-chain/node/pull/2615) - Refactor cleanup of outbound trackers
+* [2855](https://github.com/zeta-chain/node/pull/2855) - disable Bitcoin witness support for mainnet
 
 ### Tests
 
