@@ -29498,21 +29498,6 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
-  /zeta-chain/emissions/get_emissions_factors:
-    get:
-      summary: Queries a list of GetEmmisonsFactors items.
-      operationId: Query_GetEmissionsFactors
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/emissionsQueryGetEmissionsFactorsResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      tags:
-        - Query
   /zeta-chain/emissions/list_addresses:
     get:
       summary: Queries a list of ListBalances items.
@@ -57609,15 +57594,6 @@ definitions:
     type: object
   emissionsMsgWithdrawEmissionResponse:
     type: object
-  emissionsQueryGetEmissionsFactorsResponse:
-    type: object
-    properties:
-      reservesFactor:
-        type: string
-      bondFactor:
-        type: string
-      durationFactor:
-        type: string
   emissionsQueryListPoolAddressesResponse:
     type: object
     properties:
@@ -58468,28 +58444,28 @@ definitions:
   zetacoreemissionsParams:
     type: object
     properties:
-      max_bond_factor:
-        type: string
-      min_bond_factor:
-        type: string
-      avg_block_time:
-        type: string
-      target_bond_ratio:
-        type: string
       validator_emission_percentage:
         type: string
       observer_emission_percentage:
         type: string
       tss_signer_emission_percentage:
         type: string
-      duration_factor_constant:
-        type: string
       observer_slash_amount:
         type: string
       ballot_maturity_blocks:
         type: string
         format: int64
-    description: Params defines the parameters for the module.
+      block_reward_amount:
+        type: string
+    title: |-
+      Params defines the parameters for the module.
+      Sample values:
+         ValidatorEmissionPercentage: "00.50",
+         ObserverEmissionPercentage:  "00.25",
+         TssSignerEmissionPercentage: "00.25",
+         ObserverSlashAmount:         100000000000000000,
+         BallotMaturityBlocks:        100,
+         BlockRewardAmount:           9620949074074074074.074070733466756687,
   ethermint.evm.v1.ChainConfig:
     type: object
     properties:
