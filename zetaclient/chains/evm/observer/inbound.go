@@ -223,6 +223,11 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 		return errors.Wrap(err, "unable to observe TSSReceive")
 	}
 
+	// task 4: filter the outbounds from TSS address to supplement outbound trackers
+	// TODO: make this a separate go routine in outbound.go after switching to smart contract V2
+	//
+	ob.FilterTSSOutbound(ctx, startBlock, toBlock)
+
 	// query the gateway logs
 	// TODO: refactor in a more declarative design. Example: storing the list of contract and events to listen in an array
 	// https://github.com/zeta-chain/node/issues/2493
@@ -445,14 +450,14 @@ func (ob *Observer) ObserverTSSReceive(ctx context.Context, startBlock, toBlock 
 
 	// query incoming gas asset
 	for bn := startBlock; bn <= toBlock; bn++ {
-		// observe TSS received gas token and outbounds txns signed by TSS in block 'bn'
-		err := ob.ObserveTSSReceiveInBlockAndOutbound(ctx, bn)
+		// observe TSS received gas token in block 'bn'
+		err := ob.ObserveTSSReceiveInBlock(ctx, bn)
 		if err != nil {
 			ob.Logger().Inbound.Error().
 				Err(err).
 				Int64("tss.chain_id", chainID).
 				Uint64("tss.block_number", bn).
-				Msg("ObserverTSSReceive: unable to ObserveTSSReceiveInBlockAndOutbound")
+				Msg("ObserverTSSReceive: unable to ObserveTSSReceiveInBlock")
 
 			// we have to re-scan from this block next time
 			return bn - 1, nil
@@ -770,9 +775,8 @@ func (ob *Observer) BuildInboundVoteMsgForTokenSentToTSS(
 	)
 }
 
-// ObserveTSSReceiveInBlockAndOutbound queries the incoming gas asset to TSS address in a single block and posts votes.
-// It also filters TSS outbounds indexed by nonce to supplement outtx tracker.
-func (ob *Observer) ObserveTSSReceiveInBlockAndOutbound(ctx context.Context, blockNumber uint64) error {
+// ObserveTSSReceiveInBlock queries the incoming gas asset to TSS address in a single block and posts votes
+func (ob *Observer) ObserveTSSReceiveInBlock(ctx context.Context, blockNumber uint64) error {
 	block, err := ob.GetBlockByNumberCached(blockNumber)
 	if err != nil {
 		return errors.Wrapf(err, "error getting block %d for chain %d", blockNumber, ob.Chain().ChainId)
@@ -793,14 +797,6 @@ func (ob *Observer) ObserveTSSReceiveInBlockAndOutbound(ctx context.Context, blo
 					tx.Hash,
 					ob.Chain().ChainId,
 				)
-			}
-		}
-		if ethcommon.HexToAddress(tx.From) == ob.TSS().EVMAddress() {
-			nonce := uint64(tx.Nonce)
-			if !ob.IsTxConfirmed(nonce) {
-				if receipt, txx, ok := ob.checkConfirmedTx(ctx, tx.Hash, nonce); ok {
-					ob.SetTxNReceipt(nonce, receipt, txx)
-				}
 			}
 		}
 	}
