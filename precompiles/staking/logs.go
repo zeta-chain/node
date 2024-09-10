@@ -18,23 +18,16 @@ func (c *Contract) AddStakeLog(
 	amount *big.Int,
 ) error {
 	event := c.Abi().Events["Stake"]
-	topics := []common.Hash{event.ID}
+
 	valAddr, err := sdk.ValAddressFromBech32(validator)
 	if err != nil {
 		return err
 	}
 
 	// staker and validator are indexed event params
-	topicsRes, err := abi.MakeTopics(
-		[]interface{}{staker},
-		[]interface{}{common.BytesToAddress(valAddr.Bytes())},
-	)
+	topics, err := makeTopics(event, []interface{}{staker}, []interface{}{common.BytesToAddress(valAddr.Bytes())})
 	if err != nil {
 		return err
-	}
-
-	for _, topic := range topicsRes {
-		topics = append(topics, topic[0])
 	}
 
 	// amount is part of event data
@@ -43,12 +36,7 @@ func (c *Contract) AddStakeLog(
 		return err
 	}
 
-	stateDB.AddLog(&types.Log{
-		Address:     c.Address(),
-		Topics:      topics,
-		Data:        data,
-		BlockNumber: uint64(ctx.BlockHeight()),
-	})
+	c.addLog(ctx, stateDB, topics, data)
 
 	return nil
 }
@@ -61,23 +49,15 @@ func (c *Contract) AddUnstakeLog(
 	amount *big.Int,
 ) error {
 	event := c.Abi().Events["Unstake"]
-	topics := []common.Hash{event.ID}
 	valAddr, err := sdk.ValAddressFromBech32(validator)
 	if err != nil {
 		return err
 	}
 
 	// staker and validator are indexed event params
-	topicsRes, err := abi.MakeTopics(
-		[]interface{}{staker},
-		[]interface{}{common.BytesToAddress(valAddr.Bytes())},
-	)
+	topics, err := makeTopics(event, []interface{}{staker}, []interface{}{common.BytesToAddress(valAddr.Bytes())})
 	if err != nil {
 		return err
-	}
-
-	for _, topic := range topicsRes {
-		topics = append(topics, topic[0])
 	}
 
 	// amount is part of event data
@@ -86,12 +66,7 @@ func (c *Contract) AddUnstakeLog(
 		return err
 	}
 
-	stateDB.AddLog(&types.Log{
-		Address:     c.Address(),
-		Topics:      topics,
-		Data:        data,
-		BlockNumber: uint64(ctx.BlockHeight()),
-	})
+	c.addLog(ctx, stateDB, topics, data)
 
 	return nil
 }
@@ -105,7 +80,6 @@ func (c *Contract) AddMoveStakeLog(
 	amount *big.Int,
 ) error {
 	event := c.Abi().Events["MoveStake"]
-	topics := []common.Hash{event.ID}
 	validatorSrcAddr, err := sdk.ValAddressFromBech32(validatorSrc)
 	if err != nil {
 		return err
@@ -117,7 +91,8 @@ func (c *Contract) AddMoveStakeLog(
 	}
 
 	// staker and validators are indexed event params
-	topicsRes, err := abi.MakeTopics(
+	topics, err := makeTopics(
+		event,
 		[]interface{}{staker},
 		[]interface{}{common.BytesToAddress(validatorSrcAddr.Bytes())},
 		[]interface{}{common.BytesToAddress(validatorDstAddr.Bytes())},
@@ -126,24 +101,41 @@ func (c *Contract) AddMoveStakeLog(
 		return err
 	}
 
-	for _, topic := range topicsRes {
-		topics = append(topics, topic[0])
-	}
-
 	// amount is part of event data
 	data, err := packAmount(amount)
 	if err != nil {
 		return err
 	}
 
+	c.addLog(ctx, stateDB, topics, data)
+
+	return nil
+}
+
+func (c *Contract) addLog(ctx sdk.Context, stateDB vm.StateDB, topics []common.Hash, data []byte) {
 	stateDB.AddLog(&types.Log{
 		Address:     c.Address(),
 		Topics:      topics,
 		Data:        data,
 		BlockNumber: uint64(ctx.BlockHeight()),
 	})
+}
 
-	return nil
+func makeTopics(event abi.Event, query ...[]interface{}) ([]common.Hash, error) {
+	topics := []common.Hash{event.ID}
+
+	topicsRes, err := abi.MakeTopics(
+		query...,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, topic := range topicsRes {
+		topics = append(topics, topic[0])
+	}
+
+	return topics, nil
 }
 
 // helper function to pack a uint256 amount
