@@ -21,11 +21,11 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/node/pkg/bg"
+	"github.com/zeta-chain/node/pkg/chains"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/evm"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
@@ -61,8 +61,9 @@ type priorityFeeConfig struct {
 // NewObserver returns a new EVM chain observer
 func NewObserver(
 	ctx context.Context,
-	evmCfg config.EVMConfig,
+	chain chains.Chain,
 	evmClient interfaces.EVMRPCClient,
+	evmJSONRPC interfaces.EVMJSONRPCClient,
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
@@ -72,7 +73,7 @@ func NewObserver(
 ) (*Observer, error) {
 	// create base observer
 	baseObserver, err := base.NewObserver(
-		evmCfg.Chain,
+		chain,
 		chainParams,
 		zetacoreClient,
 		tss,
@@ -90,7 +91,7 @@ func NewObserver(
 	ob := &Observer{
 		Observer:                      *baseObserver,
 		evmClient:                     evmClient,
-		evmJSONRPC:                    ethrpc.NewEthRPC(evmCfg.Endpoint),
+		evmJSONRPC:                    evmJSONRPC,
 		outboundConfirmedReceipts:     make(map[string]*ethtypes.Receipt),
 		outboundConfirmedTransactions: make(map[string]*ethtypes.Transaction),
 		priorityFeeConfig:             priorityFeeConfig{},
