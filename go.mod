@@ -362,7 +362,7 @@ replace (
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
 
-replace github.com/evmos/ethermint => github.com/zeta-chain/ethermint v0.0.0-20240531172701-61d040058c94
+replace github.com/evmos/ethermint => github.com/zeta-chain/ethermint v0.0.0-20240910000510-6248efa8bc4f
 
 replace github.com/libp2p/go-libp2p => github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4
 
