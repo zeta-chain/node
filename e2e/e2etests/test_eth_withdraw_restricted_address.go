@@ -8,8 +8,8 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
 // TestEtherWithdrawRestricted tests the withdrawal to a restricted receiver address
@@ -31,7 +31,7 @@ func TestEtherWithdrawRestricted(r *runner.E2ERunner, args []string) {
 	r.Logger.EVMReceipt(*receipt, "approve")
 
 	// withdraw
-	restrictedAddress := ethcommon.HexToAddress(testutils.RestrictedEVMAddressTest)
+	restrictedAddress := ethcommon.HexToAddress(sample.RestrictedEVMAddressTest)
 	tx, err = r.ETHZRC20.Withdraw(r.ZEVMAuth, restrictedAddress.Bytes(), withdrawalAmount)
 	require.NoError(r, err)
 
