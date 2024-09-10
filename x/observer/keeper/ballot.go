@@ -20,6 +20,16 @@ func (k Keeper) SetBallotList(ctx sdk.Context, ballotlist *types.BallotListForHe
 	store.Set(types.BallotListKeyPrefix(ballotlist.Height), b)
 }
 
+func (k Keeper) DeleteBallot(ctx sdk.Context, index string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VoterKey))
+	store.Delete([]byte(index))
+}
+
+func (k Keeper) DeleteBallotList(ctx sdk.Context, height int64) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BallotListKey))
+	store.Delete(types.BallotListKeyPrefix(height))
+}
+
 func (k Keeper) GetBallot(ctx sdk.Context, index string) (val types.Ballot, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VoterKey))
 	b := store.Get(types.KeyPrefix(index))
@@ -41,7 +51,7 @@ func (k Keeper) GetBallotList(ctx sdk.Context, height int64) (val types.BallotLi
 }
 
 func (k Keeper) GetMaturedBallots(ctx sdk.Context, maturityBlocks int64) (val types.BallotListForHeight, found bool) {
-	return k.GetBallotList(ctx, ctx.BlockHeight()-maturityBlocks)
+	return k.GetBallotList(ctx, GetMaturedBallotHeight(ctx, maturityBlocks))
 }
 
 func (k Keeper) GetAllBallots(ctx sdk.Context) (voters []*types.Ballot) {
@@ -64,4 +74,19 @@ func (k Keeper) AddBallotToList(ctx sdk.Context, ballot types.Ballot) {
 	}
 	list.BallotsIndexList = append(list.BallotsIndexList, ballot.BallotIdentifier)
 	k.SetBallotList(ctx, &list)
+}
+
+// ClearMaturedBallots deletes all matured ballots and the list of ballots for a given height.
+// It also emits an event for each ballot deleted.
+func (k Keeper) ClearMaturedBallots(ctx sdk.Context, ballots []types.Ballot, maturityBlocks int64) {
+	for _, ballot := range ballots {
+		k.DeleteBallot(ctx, ballot.BallotIdentifier)
+		EmitEventBallotDeleted(ctx, ballot)
+	}
+	k.DeleteBallotList(ctx, GetMaturedBallotHeight(ctx, maturityBlocks))
+	return
+}
+
+func GetMaturedBallotHeight(ctx sdk.Context, maturityBlocks int64) int64 {
+	return ctx.BlockHeight() - maturityBlocks
 }

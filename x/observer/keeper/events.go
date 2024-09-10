@@ -21,6 +21,18 @@ func EmitEventBallotCreated(ctx sdk.Context, ballot types.Ballot, observationHas
 	}
 }
 
+func EmitEventBallotDeleted(ctx sdk.Context, ballot types.Ballot) {
+	err := ctx.EventManager().EmitTypedEvent(&types.EventBallotDeleted{
+		MsgTypeUrl:       "zetachain.zetacore.observer.internal.BallotDeleted",
+		BallotIdentifier: ballot.BallotIdentifier,
+		BallotType:       ballot.ObservationType.String(),
+		Voters:           ballot.GenerateVoterList(),
+	})
+	if err != nil {
+		ctx.Logger().Error("failed to emit EventBallotDeleted : %s", err.Error())
+	}
+}
+
 func EmitEventKeyGenBlockUpdated(ctx sdk.Context, keygen *types.Keygen) {
 	err := ctx.EventManager().EmitTypedEvents(&types.EventKeygenBlockUpdated{
 		MsgTypeUrl:    sdk.MsgTypeURL(&types.MsgUpdateKeygen{}),

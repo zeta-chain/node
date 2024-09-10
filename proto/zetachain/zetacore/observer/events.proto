@@ -4,6 +4,7 @@ package zetachain.zetacore.observer;
 import "gogoproto/gogo.proto";
 import "zetachain/zetacore/observer/crosschain_flags.proto";
 import "zetachain/zetacore/observer/observer.proto";
+import "zetachain/zetacore/observer/ballot.proto";
 
 option go_package = "github.com/zeta-chain/node/x/observer/types";
 
@@ -13,6 +14,13 @@ message EventBallotCreated {
   string observation_hash = 3;
   string observation_chain = 4;
   string ballot_type = 5;
+}
+
+message EventBallotDeleted {
+  string msg_type_url = 1;
+  string ballot_identifier = 2;
+  string ballot_type = 3;
+  repeated VoterList voters = 4 [ (gogoproto.nullable) = false ];
 }
 
 message EventKeygenBlockUpdated {

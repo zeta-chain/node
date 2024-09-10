@@ -115,3 +115,15 @@ func (m Ballot) BuildRewardsDistribution(rewardsMap map[string]int64) int64 {
 	}
 	return totalRewardUnits
 }
+
+func (m Ballot) GenerateVoterList() []VoterList {
+	votersList := make([]VoterList, len(m.VoterList))
+	for i, voterAddress := range m.VoterList {
+		voter := VoterList{
+			VoterAddress: voterAddress,
+			VoteType:     m.Votes[m.GetVoterIndex(voterAddress)],
+		}
+		votersList[i] = voter
+	}
+	return votersList
+}

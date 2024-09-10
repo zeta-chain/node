@@ -41,18 +41,9 @@ func (k Keeper) BallotByIdentifier(
 		return nil, status.Error(codes.NotFound, "not found ballot")
 	}
 
-	votersList := make([]*types.VoterList, len(ballot.VoterList))
-	for i, voterAddress := range ballot.VoterList {
-		voter := types.VoterList{
-			VoterAddress: voterAddress,
-			VoteType:     ballot.Votes[ballot.GetVoterIndex(voterAddress)],
-		}
-		votersList[i] = &voter
-	}
-
 	return &types.QueryBallotByIdentifierResponse{
 		BallotIdentifier: ballot.BallotIdentifier,
-		Voters:           votersList,
+		Voters:           ballot.GenerateVoterList(),
 		ObservationType:  ballot.ObservationType,
 		BallotStatus:     ballot.BallotStatus,
 	}, nil

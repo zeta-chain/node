@@ -52,6 +52,45 @@ export declare class EventBallotCreated extends Message<EventBallotCreated> {
 }
 
 /**
+ * @generated from message zetachain.zetacore.observer.EventBallotDeleted
+ */
+export declare class EventBallotDeleted extends Message<EventBallotDeleted> {
+  /**
+   * @generated from field: string msg_type_url = 1;
+   */
+  msgTypeUrl: string;
+
+  /**
+   * @generated from field: string ballot_identifier = 2;
+   */
+  ballotIdentifier: string;
+
+  /**
+   * @generated from field: string ballot_type = 3;
+   */
+  ballotType: string;
+
+  /**
+   * @generated from field: string votes_collected = 4;
+   */
+  votesCollected: string;
+
+  constructor(data?: PartialMessage<EventBallotDeleted>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.EventBallotDeleted";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventBallotDeleted;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventBallotDeleted;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventBallotDeleted;
+
+  static equals(a: EventBallotDeleted | PlainMessage<EventBallotDeleted> | undefined, b: EventBallotDeleted | PlainMessage<EventBallotDeleted> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.observer.EventKeygenBlockUpdated
  */
 export declare class EventKeygenBlockUpdated extends Message<EventKeygenBlockUpdated> {

@@ -6,6 +6,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/x/emissions/keeper"
@@ -102,11 +103,13 @@ func DistributeObserverRewards(
 	if len(ballotIdentifiers) == 0 {
 		return nil
 	}
+	ballots := make([]observertypes.Ballot, 0, len(ballotIdentifiers))
 	for _, ballotIdentifier := range ballotIdentifiers {
 		ballot, found := keeper.GetObserverKeeper().GetBallot(ctx, ballotIdentifier)
 		if !found {
 			continue
 		}
+		ballots = append(ballots, ballot)
 		totalRewardsUnits += ballot.BuildRewardsDistribution(rewardsDistributer)
 	}
 	rewardPerUnit := sdkmath.ZeroInt()
@@ -161,8 +164,9 @@ func DistributeObserverRewards(
 		}
 	}
 	types.EmitObserverEmissions(ctx, finalDistributionList)
-	// TODO : Delete Ballots after distribution
-	// https://github.com/zeta-chain/node/issues/942
+
+	// Clear the matured ballots
+	keeper.GetObserverKeeper().ClearMaturedBallots(ctx, ballots, params.BallotMaturityBlocks)
 	return nil
 }
 
