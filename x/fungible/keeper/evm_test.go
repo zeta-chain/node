@@ -316,6 +316,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 		require.Equal(t, "bar", foreignCoins.Symbol)
 		require.Equal(t, coin.CoinType_Gas, foreignCoins.CoinType)
 		require.Equal(t, uint64(1000), foreignCoins.GasLimit)
+		require.True(t, foreignCoins.LiquidityCap.Equal(sdk.NewUint(types.DefaultLiquidityCap).MulUint64(8)))
 
 		// can get the zrc20 data
 		zrc20Data, err := k.QueryZRC20Data(ctx, addr)

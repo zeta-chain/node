@@ -24,6 +24,8 @@
 * [2615](https://github.com/zeta-chain/node/pull/2615) - Refactor cleanup of outbound trackers
 * [2749](https://github.com/zeta-chain/node/pull/2749) - fix all lint errors from govet
 * [2725](https://github.com/zeta-chain/node/pull/2725) - refactor SetCctxAndNonceToCctxAndInboundHashToCctx to receive tsspubkey as an argument
+* [2802](https://github.com/zeta-chain/node/pull/2802) - set default liquidity cap for new ZRC20s
+* [2826](https://github.com/zeta-chain/node/pull/2826) - remove unused code from emissions module and add new parameter for fixed block reward amount
 
 ### Tests
 
