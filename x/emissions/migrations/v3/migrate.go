@@ -26,19 +26,6 @@ func MigrateStore(
 
 	defaultParams := types.NewParams()
 
-	// ensure params are set with default values if not present in legacy params
-	if currParams.AvgBlockTime == "" {
-		currParams.AvgBlockTime = defaultParams.AvgBlockTime
-	}
-	if currParams.MaxBondFactor == "" {
-		currParams.MaxBondFactor = defaultParams.MaxBondFactor
-	}
-	if currParams.MinBondFactor == "" {
-		currParams.MinBondFactor = defaultParams.MinBondFactor
-	}
-	if currParams.TargetBondRatio == "" {
-		currParams.TargetBondRatio = defaultParams.TargetBondRatio
-	}
 	if currParams.ValidatorEmissionPercentage == "" {
 		currParams.ValidatorEmissionPercentage = defaultParams.ValidatorEmissionPercentage
 	}
@@ -48,12 +35,12 @@ func MigrateStore(
 	if currParams.TssSignerEmissionPercentage == "" {
 		currParams.TssSignerEmissionPercentage = defaultParams.TssSignerEmissionPercentage
 	}
-	if currParams.DurationFactorConstant == "" {
-		currParams.DurationFactorConstant = defaultParams.DurationFactorConstant
-	}
 
 	currParams.ObserverSlashAmount = types.ObserverSlashAmount
 	currParams.BallotMaturityBlocks = int64(types.BallotMaturityBlocks)
+
+	// BlockRewardAmount is a new parameter introduced in version 4
+	currParams.BlockRewardAmount = types.BlockReward
 	err := currParams.Validate()
 	if err != nil {
 		return err

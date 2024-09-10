@@ -24,14 +24,7 @@ const (
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey              = "mem_emissions"
 	WithdrawableEmissionsKey = "WithdrawableEmissions-value-"
-
-	SecsInMonth        = 30 * 24 * 60 * 60
-	BlockRewardsInZeta = "210000000"
-
-	EmissionScheduledYears = 4
-	AvgBlockTime           = "5.7"
-
-	ParamsKey = "Params-value-"
+	ParamsKey                = "Params-value-"
 )
 
 func KeyPrefix(p string) []byte {
@@ -40,14 +33,9 @@ func KeyPrefix(p string) []byte {
 
 const (
 	EmissionsTrackerKey              = "EmissionsTracker-value-"
-	ParamMaxBondFactor               = "MaxBondFactor"
-	ParamMinBondFactor               = "MinBondFactor"
-	ParamAvgBlockTime                = "AvgBlockTime"
-	ParamTargetBondRatio             = "TargetBondRation"
 	ParamValidatorEmissionPercentage = "ValidatorEmissionPercentage"
 	ParamObserverEmissionPercentage  = "ObserverEmissionPercentage"
 	ParamTssSignerEmissionPercentage = "SignerEmissionPercentage"
-	ParamDurationFactorConstant      = "DurationFactorConstant"
 	ParamObserverSlashAmount         = "ObserverSlashAmount"
 )
 
@@ -55,7 +43,9 @@ var (
 	EmissionsModuleAddress                  = authtypes.NewModuleAddress(ModuleName)
 	UndistributedObserverRewardsPoolAddress = authtypes.NewModuleAddress(UndistributedObserverRewardsPool)
 	UndistributedTssRewardsPoolAddress      = authtypes.NewModuleAddress(UndistributedTssRewardsPool)
-	BlockReward                             = sdk.MustNewDecFromStr("9620949074074074074.074070733466756687")
+	// BlockReward is an initial block reward amount when emissions module was initialized.
+	// The current value can be obtained from by querying the params
+	BlockReward = sdk.MustNewDecFromStr("9620949074074074074.074070733466756687")
 	// ObserverSlashAmount is the amount of tokens to be slashed from observer in case of incorrect vote
 	// by default it is set to 0.1 ZETA
 	ObserverSlashAmount = sdkmath.NewInt(100000000000000000)
