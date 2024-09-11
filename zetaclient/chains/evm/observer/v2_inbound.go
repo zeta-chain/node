@@ -152,15 +152,20 @@ func (ob *Observer) parseAndValidateDepositEvents(
 
 	// filter events from same tx
 	filtered := make([]*gatewayevm.GatewayEVMDeposited, 0)
-	guard := make(map[string]bool)
+	guard := make(map[string]gatewayevm.GatewayEVMDeposited)
 	for _, event := range events {
 		// guard against multiple events in the same tx
-		if guard[event.Raw.TxHash.Hex()] {
+		if found, ok := guard[event.Raw.TxHash.Hex()]; ok {
 			ob.Logger().Inbound.Warn().
-				Msgf("ObserveGateway: multiple remote call events detected in same tx %s", event.Raw.TxHash)
+				Msgf(
+					"ObserveGateway: multiple remote call events detected in same tx %s, existing event: %+v, new event  %+v",
+					event.Raw.TxHash,
+					found,
+					*event,
+				)
 			continue
 		}
-		guard[event.Raw.TxHash.Hex()] = true
+		guard[event.Raw.TxHash.Hex()] = *event
 		filtered = append(filtered, event)
 	}
 
@@ -292,15 +297,20 @@ func (ob *Observer) parseAndValidateCallEvents(
 
 	// filter events from same tx
 	filtered := make([]*gatewayevm.GatewayEVMCalled, 0)
-	guard := make(map[string]bool)
+	guard := make(map[string]gatewayevm.GatewayEVMCalled)
 	for _, event := range events {
 		// guard against multiple events in the same tx
-		if guard[event.Raw.TxHash.Hex()] {
+		if found, ok := guard[event.Raw.TxHash.Hex()]; ok {
 			ob.Logger().Inbound.Warn().
-				Msgf("ObserveGateway: multiple remote call events detected in same tx %s", event.Raw.TxHash)
+				Msgf(
+					"ObserveGateway: multiple remote call events detected in same tx %s, existing event: %+v, new event  %+v",
+					event.Raw.TxHash,
+					found,
+					*event,
+				)
 			continue
 		}
-		guard[event.Raw.TxHash.Hex()] = true
+		guard[event.Raw.TxHash.Hex()] = *event
 		filtered = append(filtered, event)
 	}
 
