@@ -1,6 +1,7 @@
 package bank
 
 import (
+	"fmt"
 	"math/big"
 
 	"cosmossdk.io/math"
@@ -184,6 +185,9 @@ func (c *Contract) deposit(
 	caller common.Address,
 	args []interface{},
 ) (result []byte, err error) {
+	// This function is developed using the
+	// Check - Effects - Interactions pattern:
+	// 1. Check everything is correct.
 	if len(args) != 2 {
 		return nil, &(ptypes.ErrInvalidNumberOfArgs{
 			Got:    len(args),
@@ -191,38 +195,39 @@ func (c *Contract) deposit(
 		})
 	}
 
-	// TODO: The origin tokens have to be:
-	// 1. Checked the caller has the right amount of original tokens.
-	// 2. burned or locked.
-	// Otherwise this deposit functions has the ability to infinite mint coins.
-
 	// function deposit(address zrc20, uint256 amount) external returns (bool success);
 	ZRC20Addr, amount := args[0].(common.Address), args[1].(*big.Int)
 
-
-	// Does ZRC20 exist?
-	ZRC20, err := zrc20.NewZRC20Caller(ZRC20Addr, c.ZEVMClient)
+	ZRC20, err := zrc20.NewZRC20(ZRC20Addr, c.ZEVMClient)
 	if err != nil {
-		return nil, err
+		return nil, &ptypes.ErrUnexpected{
+			When: "NewZRC20",
+			Got:  err.Error(),
+		}
 	}
 
-	// Is caller balance greater or equal to the amount it wants to spend?
 	balance, err := ZRC20.BalanceOf(&bind.CallOpts{Context: ctx}, caller)
 	if err != nil {
-		return nil, err
+		return nil, &ptypes.ErrUnexpected{
+			When: "BalanceOf",
+			Got:  err.Error(),
+		}
 	}
 
 	if balance.Cmp(amount) < 0 {
-		return nil, err
+		return nil, &ptypes.ErrUnexpected{
+			When: "Balance0f",
+			Got:  "not enough balance",
+		}
 	}
 
-	// Is the bank allowed to spend the specified amount?
 	allowance, err := ZRC20.Allowance(&bind.CallOpts{Context: ctx}, caller, ContractAddress)
 	if allowance.Cmp(amount) < 0 {
-		return nil, err
+		return nil, &ptypes.ErrUnexpected{
+			When: "Allowance",
+			Got:  "not enough allowance",
+		}
 	}
-
-	// TODO: lock or burn
 
 	// Handle the toAddr:
 	// check it's valid and not blocked.
@@ -275,6 +280,25 @@ func (c *Contract) deposit(
 		}
 	}
 
+	// 2. Effect: subtract balance.
+	tx, err := ZRC20.TransferFrom(&bind.TransactOpts{Context: ctx}, caller, ContractAddress, amount)
+	if err != nil {
+		return nil, err
+	}
+
+	r, err := bind.WaitMined(ctx, c.ZEVMClient, tx)
+	if err != nil {
+		return nil, err
+	}
+
+	if r.Status != 1 {
+		return nil, &ptypes.ErrUnexpected{
+			When: "ZRC20 transaction failed",
+			Got:  fmt.Sprintf("from: %s, to: %s", caller, ContractAddress),
+		}	
+	}
+
+	// 3. Interactions: create cosmos coin and send.
 	if err := c.bankKeeper.MintCoins(ctx, types.ModuleName, coinSet); err != nil {
 		return nil, &ptypes.ErrUnexpected{
 			When: "MintCoins",
