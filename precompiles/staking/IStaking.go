@@ -39,7 +39,7 @@ type Validator struct {
 
 // IStakingMetaData contains all meta data concerning the IStaking contract.
 var IStakingMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"name\":\"getAllValidators\",\"outputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"operatorAddress\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"consensusPubKey\",\"type\":\"string\"},{\"internalType\":\"bool\",\"name\":\"jailed\",\"type\":\"bool\"},{\"internalType\":\"enumBondStatus\",\"name\":\"bondStatus\",\"type\":\"uint8\"}],\"internalType\":\"structValidator[]\",\"name\":\"validators\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"}],\"name\":\"getShares\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"shares\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validatorSrc\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"validatorDst\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"moveStake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"stake\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"unstake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validatorSrc\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validatorDst\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"MoveStake\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validator\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Stake\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validator\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Unstake\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"getAllValidators\",\"outputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"operatorAddress\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"consensusPubKey\",\"type\":\"string\"},{\"internalType\":\"bool\",\"name\":\"jailed\",\"type\":\"bool\"},{\"internalType\":\"enumBondStatus\",\"name\":\"bondStatus\",\"type\":\"uint8\"}],\"internalType\":\"structValidator[]\",\"name\":\"validators\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"}],\"name\":\"getShares\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"shares\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validatorSrc\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"validatorDst\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"moveStake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"stake\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"unstake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // IStakingABI is the input ABI used to generate the binding from.
@@ -311,4 +311,475 @@ func (_IStaking *IStakingSession) Unstake(staker common.Address, validator strin
 // Solidity: function unstake(address staker, string validator, uint256 amount) returns(int64 completionTime)
 func (_IStaking *IStakingTransactorSession) Unstake(staker common.Address, validator string, amount *big.Int) (*types.Transaction, error) {
 	return _IStaking.Contract.Unstake(&_IStaking.TransactOpts, staker, validator, amount)
+}
+
+// IStakingMoveStakeIterator is returned from FilterMoveStake and is used to iterate over the raw logs and unpacked data for MoveStake events raised by the IStaking contract.
+type IStakingMoveStakeIterator struct {
+	Event *IStakingMoveStake // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *IStakingMoveStakeIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(IStakingMoveStake)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(IStakingMoveStake)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *IStakingMoveStakeIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *IStakingMoveStakeIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// IStakingMoveStake represents a MoveStake event raised by the IStaking contract.
+type IStakingMoveStake struct {
+	Staker       common.Address
+	ValidatorSrc common.Address
+	ValidatorDst common.Address
+	Amount       *big.Int
+	Raw          types.Log // Blockchain specific contextual infos
+}
+
+// FilterMoveStake is a free log retrieval operation binding the contract event 0x4dda2c731d442025256e6e47fbb109592bcd8baf3cf25996ebd09f1da7ec902b.
+//
+// Solidity: event MoveStake(address indexed staker, address indexed validatorSrc, address indexed validatorDst, uint256 amount)
+func (_IStaking *IStakingFilterer) FilterMoveStake(opts *bind.FilterOpts, staker []common.Address, validatorSrc []common.Address, validatorDst []common.Address) (*IStakingMoveStakeIterator, error) {
+
+	var stakerRule []interface{}
+	for _, stakerItem := range staker {
+		stakerRule = append(stakerRule, stakerItem)
+	}
+	var validatorSrcRule []interface{}
+	for _, validatorSrcItem := range validatorSrc {
+		validatorSrcRule = append(validatorSrcRule, validatorSrcItem)
+	}
+	var validatorDstRule []interface{}
+	for _, validatorDstItem := range validatorDst {
+		validatorDstRule = append(validatorDstRule, validatorDstItem)
+	}
+
+	logs, sub, err := _IStaking.contract.FilterLogs(opts, "MoveStake", stakerRule, validatorSrcRule, validatorDstRule)
+	if err != nil {
+		return nil, err
+	}
+	return &IStakingMoveStakeIterator{contract: _IStaking.contract, event: "MoveStake", logs: logs, sub: sub}, nil
+}
+
+// WatchMoveStake is a free log subscription operation binding the contract event 0x4dda2c731d442025256e6e47fbb109592bcd8baf3cf25996ebd09f1da7ec902b.
+//
+// Solidity: event MoveStake(address indexed staker, address indexed validatorSrc, address indexed validatorDst, uint256 amount)
+func (_IStaking *IStakingFilterer) WatchMoveStake(opts *bind.WatchOpts, sink chan<- *IStakingMoveStake, staker []common.Address, validatorSrc []common.Address, validatorDst []common.Address) (event.Subscription, error) {
+
+	var stakerRule []interface{}
+	for _, stakerItem := range staker {
+		stakerRule = append(stakerRule, stakerItem)
+	}
+	var validatorSrcRule []interface{}
+	for _, validatorSrcItem := range validatorSrc {
+		validatorSrcRule = append(validatorSrcRule, validatorSrcItem)
+	}
+	var validatorDstRule []interface{}
+	for _, validatorDstItem := range validatorDst {
+		validatorDstRule = append(validatorDstRule, validatorDstItem)
+	}
+
+	logs, sub, err := _IStaking.contract.WatchLogs(opts, "MoveStake", stakerRule, validatorSrcRule, validatorDstRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(IStakingMoveStake)
+				if err := _IStaking.contract.UnpackLog(event, "MoveStake", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseMoveStake is a log parse operation binding the contract event 0x4dda2c731d442025256e6e47fbb109592bcd8baf3cf25996ebd09f1da7ec902b.
+//
+// Solidity: event MoveStake(address indexed staker, address indexed validatorSrc, address indexed validatorDst, uint256 amount)
+func (_IStaking *IStakingFilterer) ParseMoveStake(log types.Log) (*IStakingMoveStake, error) {
+	event := new(IStakingMoveStake)
+	if err := _IStaking.contract.UnpackLog(event, "MoveStake", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// IStakingStakeIterator is returned from FilterStake and is used to iterate over the raw logs and unpacked data for Stake events raised by the IStaking contract.
+type IStakingStakeIterator struct {
+	Event *IStakingStake // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *IStakingStakeIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(IStakingStake)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(IStakingStake)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *IStakingStakeIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *IStakingStakeIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// IStakingStake represents a Stake event raised by the IStaking contract.
+type IStakingStake struct {
+	Staker    common.Address
+	Validator common.Address
+	Amount    *big.Int
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// FilterStake is a free log retrieval operation binding the contract event 0x99039fcf0a98f484616c5196ee8b2ecfa971babf0b519848289ea4db381f85f7.
+//
+// Solidity: event Stake(address indexed staker, address indexed validator, uint256 amount)
+func (_IStaking *IStakingFilterer) FilterStake(opts *bind.FilterOpts, staker []common.Address, validator []common.Address) (*IStakingStakeIterator, error) {
+
+	var stakerRule []interface{}
+	for _, stakerItem := range staker {
+		stakerRule = append(stakerRule, stakerItem)
+	}
+	var validatorRule []interface{}
+	for _, validatorItem := range validator {
+		validatorRule = append(validatorRule, validatorItem)
+	}
+
+	logs, sub, err := _IStaking.contract.FilterLogs(opts, "Stake", stakerRule, validatorRule)
+	if err != nil {
+		return nil, err
+	}
+	return &IStakingStakeIterator{contract: _IStaking.contract, event: "Stake", logs: logs, sub: sub}, nil
+}
+
+// WatchStake is a free log subscription operation binding the contract event 0x99039fcf0a98f484616c5196ee8b2ecfa971babf0b519848289ea4db381f85f7.
+//
+// Solidity: event Stake(address indexed staker, address indexed validator, uint256 amount)
+func (_IStaking *IStakingFilterer) WatchStake(opts *bind.WatchOpts, sink chan<- *IStakingStake, staker []common.Address, validator []common.Address) (event.Subscription, error) {
+
+	var stakerRule []interface{}
+	for _, stakerItem := range staker {
+		stakerRule = append(stakerRule, stakerItem)
+	}
+	var validatorRule []interface{}
+	for _, validatorItem := range validator {
+		validatorRule = append(validatorRule, validatorItem)
+	}
+
+	logs, sub, err := _IStaking.contract.WatchLogs(opts, "Stake", stakerRule, validatorRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(IStakingStake)
+				if err := _IStaking.contract.UnpackLog(event, "Stake", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseStake is a log parse operation binding the contract event 0x99039fcf0a98f484616c5196ee8b2ecfa971babf0b519848289ea4db381f85f7.
+//
+// Solidity: event Stake(address indexed staker, address indexed validator, uint256 amount)
+func (_IStaking *IStakingFilterer) ParseStake(log types.Log) (*IStakingStake, error) {
+	event := new(IStakingStake)
+	if err := _IStaking.contract.UnpackLog(event, "Stake", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// IStakingUnstakeIterator is returned from FilterUnstake and is used to iterate over the raw logs and unpacked data for Unstake events raised by the IStaking contract.
+type IStakingUnstakeIterator struct {
+	Event *IStakingUnstake // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *IStakingUnstakeIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(IStakingUnstake)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(IStakingUnstake)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *IStakingUnstakeIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *IStakingUnstakeIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// IStakingUnstake represents a Unstake event raised by the IStaking contract.
+type IStakingUnstake struct {
+	Staker    common.Address
+	Validator common.Address
+	Amount    *big.Int
+	Raw       types.Log // Blockchain specific contextual infos
+}
+
+// FilterUnstake is a free log retrieval operation binding the contract event 0x390b1276974b9463e5d66ab10df69b6f3d7b930eb066a0e66df327edd2cc811c.
+//
+// Solidity: event Unstake(address indexed staker, address indexed validator, uint256 amount)
+func (_IStaking *IStakingFilterer) FilterUnstake(opts *bind.FilterOpts, staker []common.Address, validator []common.Address) (*IStakingUnstakeIterator, error) {
+
+	var stakerRule []interface{}
+	for _, stakerItem := range staker {
+		stakerRule = append(stakerRule, stakerItem)
+	}
+	var validatorRule []interface{}
+	for _, validatorItem := range validator {
+		validatorRule = append(validatorRule, validatorItem)
+	}
+
+	logs, sub, err := _IStaking.contract.FilterLogs(opts, "Unstake", stakerRule, validatorRule)
+	if err != nil {
+		return nil, err
+	}
+	return &IStakingUnstakeIterator{contract: _IStaking.contract, event: "Unstake", logs: logs, sub: sub}, nil
+}
+
+// WatchUnstake is a free log subscription operation binding the contract event 0x390b1276974b9463e5d66ab10df69b6f3d7b930eb066a0e66df327edd2cc811c.
+//
+// Solidity: event Unstake(address indexed staker, address indexed validator, uint256 amount)
+func (_IStaking *IStakingFilterer) WatchUnstake(opts *bind.WatchOpts, sink chan<- *IStakingUnstake, staker []common.Address, validator []common.Address) (event.Subscription, error) {
+
+	var stakerRule []interface{}
+	for _, stakerItem := range staker {
+		stakerRule = append(stakerRule, stakerItem)
+	}
+	var validatorRule []interface{}
+	for _, validatorItem := range validator {
+		validatorRule = append(validatorRule, validatorItem)
+	}
+
+	logs, sub, err := _IStaking.contract.WatchLogs(opts, "Unstake", stakerRule, validatorRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(IStakingUnstake)
+				if err := _IStaking.contract.UnpackLog(event, "Unstake", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseUnstake is a log parse operation binding the contract event 0x390b1276974b9463e5d66ab10df69b6f3d7b930eb066a0e66df327edd2cc811c.
+//
+// Solidity: event Unstake(address indexed staker, address indexed validator, uint256 amount)
+func (_IStaking *IStakingFilterer) ParseUnstake(log types.Log) (*IStakingUnstake, error) {
+	event := new(IStakingUnstake)
+	if err := _IStaking.contract.UnpackLog(event, "Unstake", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
 }
