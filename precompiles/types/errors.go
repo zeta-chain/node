@@ -7,11 +7,12 @@ import "fmt"
 */
 
 type ErrInvalidAddr struct {
-	Got string
+	Got    string
+	Reason string
 }
 
 func (e ErrInvalidAddr) Error() string {
-	return fmt.Sprintf("invalid address %s", e.Got)
+	return fmt.Sprintf("invalid address %s, reason: %s", e.Got, e.Reason)
 }
 
 /*
@@ -58,4 +59,13 @@ type ErrInvalidMethod struct {
 
 func (e ErrInvalidMethod) Error() string {
 	return fmt.Sprintf("invalid method: %s", e.Method)
+}
+
+type ErrUnexpected struct {
+	When string
+	Got  string
+}
+
+func (e ErrUnexpected) Error() string {
+	return fmt.Sprintf("unexpected error in %s: %s", e.When, e.Got)
 }

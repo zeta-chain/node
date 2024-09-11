@@ -1,8 +1,9 @@
 package bank
 
 import (
-	"fmt"
+	"math/big"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,11 +11,15 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/zeta-chain/ethermint/x/evm/types"
 
 	ptypes "github.com/zeta-chain/node/precompiles/types"
 )
 
 const (
+	// ZEVM cosmos coins prefix.
+	ZEVMDenom = "zevm/"
+
 	// Write methods.
 	DepositMethodName  = "deposit"
 	WithdrawMethodName = "withdraw"
@@ -128,8 +133,15 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 			return nil, nil
 		}
 
-		return nil, nil
-		// TODO
+		var res []byte
+		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
+			res, err = c.deposit(ctx, method, contract.CallerAddress, args)
+			return err
+		})
+		if execErr != nil {
+			return nil, err
+		}
+		return res, nil
 
 	case WithdrawMethodName:
 		if readOnly {
@@ -157,6 +169,94 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 	}
 }
 
+func ZRC20ToCosmosDenom(ZRC20Address common.Address) string {
+	return ZEVMDenom + ZRC20Address.String()
+}
+
+func (c *Contract) deposit(
+	ctx sdk.Context,
+	method *abi.Method,
+	caller common.Address,
+	args []interface{},
+) (result []byte, err error) {
+	if len(args) != 2 {
+		return nil, &(ptypes.ErrInvalidNumberOfArgs{
+			Got:    len(args),
+			Expect: 2,
+		})
+	}
+
+	// function deposit(address zrc20, uint256 amount) external returns (bool success);
+	ZRC20Addr, amount := args[0].(common.Address), args[1].(*big.Int)
+
+	// Handle the toAddr:
+	// check it's valid and not blocked.
+	toAddr := sdk.AccAddress(caller.Bytes())
+	if toAddr.Empty() {
+		return nil, &ptypes.ErrInvalidAddr{
+			Got:    toAddr.String(),
+			Reason: "empty address",
+		}
+	}
+
+	if c.bankKeeper.BlockedAddr(toAddr) {
+		return nil, &ptypes.ErrInvalidAddr{
+			Got:    toAddr.String(),
+			Reason: "blocked by bank keeper",
+		}
+	}
+
+	// The process of creating a new cosmos coin is:
+	// - Generate the new coin denom using ZRC20 address,
+	//   this way we map ZRC20 addresses to cosmos denoms "zevm/0x12345".
+	// - Mint coins.
+	// - Send coins to the caller.
+	tokenDenom := ZRC20ToCosmosDenom(ZRC20Addr)
+	coin := sdk.NewCoin(tokenDenom, math.NewIntFromBigInt(amount))
+	if !coin.IsValid() {
+		return nil, &ptypes.ErrInvalidCoin{
+			Got:      coin.GetDenom(),
+			Negative: coin.IsNegative(),
+			Nil:      coin.IsNil(),
+		}
+	}
+
+	// A sdk.Coins (type []sdk.Coin) has to be created because it's the type expected by MintCoins
+	// and SendCoinsFromModuleToAccount.
+	// But sdk.Coins will only contain one coin, always.
+	coinSet := sdk.NewCoins(coin)
+	if !coinSet.IsValid() {
+		return nil, &ptypes.ErrInvalidCoin{
+			Got:      coinSet.Sort().GetDenomByIndex(0),
+			Negative: coinSet.IsAnyNegative(),
+			Nil:      coinSet.IsAnyNil(),
+		}
+	}
+
+	if !c.bankKeeper.IsSendEnabledCoin(ctx, coin) {
+		return nil, &ptypes.ErrUnexpected{
+			When: "IsSendEnabledCoins",
+			Got:  "coin not enabled to be sent",
+		}
+	}
+
+	if err := c.bankKeeper.MintCoins(ctx, types.ModuleName, coinSet); err != nil {
+		return nil, &ptypes.ErrUnexpected{
+			When: "MintCoins",
+			Got:  err.Error(),
+		}
+	}
+
+	if err := c.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, toAddr, coinSet); err != nil {
+		return nil, &ptypes.ErrUnexpected{
+			When: "SendCoinsFromModuleToAccount",
+			Got:  err.Error(),
+		}
+	}
+
+	return method.Outputs.Pack(true)
+}
+
 func (c *Contract) balanceOf(
 	ctx sdk.Context,
 	method *abi.Method,
@@ -169,18 +269,23 @@ func (c *Contract) balanceOf(
 		})
 	}
 
+	// function balanceOf(address zrc20, address user) external view returns (uint256 balance);
 	tokenAddr, addr := args[0].(common.Address), args[1].(common.Address)
 
-	accAddr, err := sdk.AccAddressFromHexUnsafe(addr.String())
-	if err != nil {
-		return nil, err
+	// common.Address has to be converted to AccAddress.
+	accAddr := sdk.AccAddress(addr.Bytes())
+	if accAddr.Empty() {
+		return nil, &ptypes.ErrInvalidAddr{
+			Got: accAddr.String(),
+		}
 	}
 
-	// TODO: Create a function to handle token denoms.
-	tokenDenom := fmt.Sprintf("evm/%s", tokenAddr.String())
+	// Convert ZRC20 address to a Cosmos denom formatted as "zevm/0x12345".
+	tokenDenom := ZRC20ToCosmosDenom(tokenAddr)
 
+	// Bank Keeper GetBalance returns the specified Cosmos coin balance for a given address.
+	// Check explicitly the balance is a non-negative non-nil value.
 	coin := c.bankKeeper.GetBalance(ctx, accAddr, tokenDenom)
-
 	if !coin.IsValid() {
 		return nil, &ptypes.ErrInvalidCoin{
 			Got:      coin.GetDenom(),
@@ -189,5 +294,5 @@ func (c *Contract) balanceOf(
 		}
 	}
 
-	return method.Outputs.Pack(coin.Amount)
+	return method.Outputs.Pack(coin.Amount.BigInt())
 }
