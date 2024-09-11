@@ -186,6 +186,11 @@ func (c *Contract) deposit(
 		})
 	}
 
+	// TODO: The origin tokens have to be:
+	// 1. Checked the caller has the right amount of original tokens.
+	// 2. burned or locked.
+	// Otherwise this deposit functions has the ability to infinite mint coins.
+
 	// function deposit(address zrc20, uint256 amount) external returns (bool success);
 	ZRC20Addr, amount := args[0].(common.Address), args[1].(*big.Int)
 
