@@ -3,12 +3,14 @@ package observer_test
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"testing"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/onrik/ethrpc"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/keys"
@@ -17,6 +19,7 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
@@ -461,42 +464,70 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 	blockNumber := receipt.BlockNumber.Uint64()
 	block := testutils.LoadEVMBlock(t, TestDataDir, chainID, blockNumber, true)
 
-	// create mock client
-	evmClient := mocks.NewMockEvmClient()
-	evmJSONRPC := mocks.NewMockJSONRPCClient()
+	// create mock zetacore client
 	tss := mocks.NewTSSMainnet()
 	lastBlock := receipt.BlockNumber.Uint64() + confirmation
-
 	zetacoreClient := mocks.NewZetacoreClient(t).
 		WithKeys(&keys.Keys{}).
 		WithZetaChain().
 		WithPostVoteInbound("", "").
 		WithPostVoteInbound("", "")
 
-	ctx := context.Background()
+	// test cases
+	tests := []struct {
+		name       string
+		evmClient  interfaces.EVMRPCClient
+		jsonClient interfaces.EVMJSONRPCClient
+		errMsg     string
+	}{
+		{
+			name: "should observe TSS receive in block",
+			evmClient: func() interfaces.EVMRPCClient {
+				// feed block number and receipt to mock client
+				evmClient := mocks.NewEVMRPCClient(t)
+				evmClient.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
+				evmClient.On("TransactionReceipt", mock.Anything, mock.Anything).Return(receipt, nil)
+				return evmClient
+			}(),
+			jsonClient: mocks.NewMockJSONRPCClient().WithBlock(block),
+			errMsg:     "",
+		},
+		{
+			name: "should not observe on error getting block",
+			evmClient: func() interfaces.EVMRPCClient {
+				// feed block number to allow construction of observer
+				evmClient := mocks.NewEVMRPCClient(t)
+				evmClient.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
+				return evmClient
+			}(),
+			jsonClient: mocks.NewMockJSONRPCClient(), // no block
+			errMsg:     "error getting block",
+		},
+		{
+			name: "should not observe on error getting receipt",
+			evmClient: func() interfaces.EVMRPCClient {
+				// feed block number but RPC error on getting receipt
+				evmClient := mocks.NewEVMRPCClient(t)
+				evmClient.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
+				evmClient.On("TransactionReceipt", mock.Anything, mock.Anything).Return(nil, errors.New("RPC error"))
+				return evmClient
+			}(),
+			jsonClient: mocks.NewMockJSONRPCClient().WithBlock(block),
+			errMsg:     "error getting receipt",
+		},
+	}
 
-	t.Run("should observe TSS receive in block", func(t *testing.T) {
-		ob, _ := MockEVMObserver(t, chain, evmClient, evmJSONRPC, zetacoreClient, tss, lastBlock, chainParam)
-
-		// feed archived block and receipt
-		evmJSONRPC.WithBlock(block)
-		evmClient.WithReceipt(receipt)
-		err := ob.ObserveTSSReceiveInBlock(ctx, blockNumber)
-		require.NoError(t, err)
-	})
-	t.Run("should not observe on error getting block", func(t *testing.T) {
-		ob, _ := MockEVMObserver(t, chain, evmClient, evmJSONRPC, zetacoreClient, tss, lastBlock, chainParam)
-		err := ob.ObserveTSSReceiveInBlock(ctx, blockNumber)
-		// error getting block is expected because the mock JSONRPC contains no block
-		require.ErrorContains(t, err, "error getting block")
-	})
-	t.Run("should not observe on error getting receipt", func(t *testing.T) {
-		ob, _ := MockEVMObserver(t, chain, evmClient, evmJSONRPC, zetacoreClient, tss, lastBlock, chainParam)
-		evmJSONRPC.WithBlock(block)
-		err := ob.ObserveTSSReceiveInBlock(ctx, blockNumber)
-		// error getting block is expected because the mock evmClient contains no receipt
-		require.ErrorContains(t, err, "error getting receipt")
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ob, _ := MockEVMObserver(t, chain, tt.evmClient, tt.jsonClient, zetacoreClient, tss, lastBlock, chainParam)
+			err := ob.ObserveTSSReceiveInBlock(context.Background(), blockNumber)
+			if tt.errMsg != "" {
+				require.ErrorContains(t, err, tt.errMsg)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }
 
 func makeAppContext(t *testing.T) (context.Context, *zctx.AppContext) {

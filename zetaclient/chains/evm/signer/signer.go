@@ -30,6 +30,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -98,6 +99,11 @@ func NewSigner(
 		er20CustodyAddress:   erc20CustodyAddress,
 		gatewayAddress:       gatewayAddress,
 	}, nil
+}
+
+// WithEvmClient attaches a new client to the signer
+func (signer *Signer) WithEvmClient(client interfaces.EVMRPCClient) {
+	signer.client = client
 }
 
 // SetZetaConnectorAddress sets the zeta connector address
@@ -545,10 +551,10 @@ func ErrorMsg(cctx *crosschaintypes.CrossChainTx) string {
 
 // getEVMRPC is a helper function to set up the client and signer, also initializes a mock client for unit tests
 func getEVMRPC(ctx context.Context, endpoint string) (interfaces.EVMRPCClient, ethtypes.Signer, error) {
-	if endpoint == mocks.EVMRPCEnabled {
+	if endpoint == testutils.MockEVMRPCEndpoint {
 		chainID := big.NewInt(chains.BscMainnet.ChainId)
 		ethSigner := ethtypes.NewLondonSigner(chainID)
-		client := &mocks.MockEvmClient{}
+		client := &mocks.EVMRPCClient{}
 		return client, ethSigner, nil
 	}
 	httpClient, err := metrics.GetInstrumentedHTTPClient(endpoint)
