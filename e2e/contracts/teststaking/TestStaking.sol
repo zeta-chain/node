@@ -48,6 +48,25 @@ interface WZETA {
 
 // @dev Purpose of this contract is to call staking precompile
 contract TestStaking {
+    event Stake(
+        address indexed staker,
+        address indexed validator,
+        uint256 amount
+    );
+
+    event Unstake(
+        address indexed staker,
+        address indexed validator,
+        uint256 amount
+    );
+
+    event MoveStake(
+        address indexed staker,
+        address indexed validatorSrc,
+        address indexed validatorDst,
+        uint256 amount
+    );
+
     IStaking staking = IStaking(0x0000000000000000000000000000000000000066);
     WZETA wzeta;
     address owner;

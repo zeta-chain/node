@@ -18,6 +18,7 @@
 * [2788](https://github.com/zeta-chain/node/pull/2788) - add common importable zetacored rpc package
 * [2784](https://github.com/zeta-chain/node/pull/2784) - staking precompiled contract
 * [2795](https://github.com/zeta-chain/node/pull/2795) - support restricted address in Solana
+* [2861](https://github.com/zeta-chain/node/pull/2861) - emit events from staking precompile
 
 ### Refactor
 

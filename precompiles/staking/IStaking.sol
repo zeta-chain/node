@@ -26,6 +26,38 @@ struct Validator {
 }
 
 interface IStaking {
+    /// @notice Stake event is emitted when stake function is called
+    /// @param staker Staker address
+    /// @param validator Validator address
+    /// @param amount Coins amount
+    event Stake(
+        address indexed staker,
+        address indexed validator,
+        uint256 amount
+    );
+
+    /// @notice Unstake event is emitted when unstake function is called
+    /// @param staker Staker address
+    /// @param validator Validator address
+    /// @param amount Coins amount
+    event Unstake(
+        address indexed staker,
+        address indexed validator,
+        uint256 amount
+    );
+
+    /// @notice MoveStake event is emitted when moveStake function is called
+    /// @param staker Staker address
+    /// @param validatorSrc Validator from address
+    /// @param validatorDst Validator to address
+    /// @param amount Coins amount
+    event MoveStake(
+        address indexed staker,
+        address indexed validatorSrc,
+        address indexed validatorDst,
+        uint256 amount
+    );
+
     /// @notice Stake coins to validator
     /// @param staker Staker address
     /// @param validator Validator address
