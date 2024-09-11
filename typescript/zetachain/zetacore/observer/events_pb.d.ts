@@ -5,6 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
+import type { VoterList } from "./ballot_pb.js";
 import type { GasPriceIncreaseFlags } from "./crosschain_flags_pb.js";
 
 /**
@@ -71,9 +72,9 @@ export declare class EventBallotDeleted extends Message<EventBallotDeleted> {
   ballotType: string;
 
   /**
-   * @generated from field: string votes_collected = 4;
+   * @generated from field: repeated zetachain.zetacore.observer.VoterList voters = 4;
    */
-  votesCollected: string;
+  voters: VoterList[];
 
   constructor(data?: PartialMessage<EventBallotDeleted>);
 

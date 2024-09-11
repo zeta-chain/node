@@ -10,7 +10,7 @@ import type { ChainNonces } from "./chain_nonces_pb.js";
 import type { PageRequest, PageResponse } from "../../../cosmos/base/query/v1beta1/pagination_pb.js";
 import type { PendingNonces } from "./pending_nonces_pb.js";
 import type { TSS } from "./tss_pb.js";
-import type { BallotStatus, VoteType } from "./ballot_pb.js";
+import type { BallotStatus, VoterList } from "./ballot_pb.js";
 import type { LastObserverCount, ObservationType } from "./observer_pb.js";
 import type { Chain } from "../pkg/chains/chains_pb.js";
 import type { ChainParams, ChainParamsList } from "./params_pb.js";
@@ -594,35 +594,6 @@ export declare class QueryBallotByIdentifierRequest extends Message<QueryBallotB
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryBallotByIdentifierRequest;
 
   static equals(a: QueryBallotByIdentifierRequest | PlainMessage<QueryBallotByIdentifierRequest> | undefined, b: QueryBallotByIdentifierRequest | PlainMessage<QueryBallotByIdentifierRequest> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.observer.VoterList
- */
-export declare class VoterList extends Message<VoterList> {
-  /**
-   * @generated from field: string voter_address = 1;
-   */
-  voterAddress: string;
-
-  /**
-   * @generated from field: zetachain.zetacore.observer.VoteType vote_type = 2;
-   */
-  voteType: VoteType;
-
-  constructor(data?: PartialMessage<VoterList>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.VoterList";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): VoterList;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): VoterList;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): VoterList;
-
-  static equals(a: VoterList | PlainMessage<VoterList> | undefined, b: VoterList | PlainMessage<VoterList> | undefined): boolean;
 }
 
 /**

@@ -26,6 +26,7 @@
 * [2725](https://github.com/zeta-chain/node/pull/2725) - refactor SetCctxAndNonceToCctxAndInboundHashToCctx to receive tsspubkey as an argument
 * [2802](https://github.com/zeta-chain/node/pull/2802) - set default liquidity cap for new ZRC20s
 * [2826](https://github.com/zeta-chain/node/pull/2826) - remove unused code from emissions module and add new parameter for fixed block reward amount
+* [2863](https://github.com/zeta-chain/node/pull/2863) - delete ballots after they mature
 
 ### Tests
 

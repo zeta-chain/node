@@ -6,11 +6,11 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/x/emissions/keeper"
 	"github.com/zeta-chain/node/x/emissions/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {

@@ -56,7 +56,11 @@ func TestEmitEventBallotDeleted(t *testing.T) {
 					if attr.Key == "voters" {
 						expectedString := ""
 						for _, voter := range ballot.GenerateVoterList() {
-							st := fmt.Sprintf("{\"voter_address\":\"%s\",\"vote_type\":\"%s\"}", voter.VoterAddress, voter.VoteType)
+							st := fmt.Sprintf(
+								"{\"voter_address\":\"%s\",\"vote_type\":\"%s\"}",
+								voter.VoterAddress,
+								voter.VoteType,
+							)
 							expectedString += st
 							expectedString += ","
 						}
