@@ -7,6 +7,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
@@ -99,7 +100,16 @@ func TestPrecompilesStakingThroughContract(r *runner.E2ERunner, args []string) {
 	// stake 1 to validator1 using testStaking smart contract without smart contract state update
 	tx, err = testStaking.Stake(r.ZEVMAuth, testStakingAddr, validators[0].OperatorAddress, big.NewInt(1))
 	require.NoError(r, err)
-	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+
+	// check that stake event was emitted
+	stakeEvent, err := testStaking.ParseStake(*receipt.Logs[0])
+	require.NoError(r, err)
+	expectedValAddr, err := sdk.ValAddressFromBech32(validators[0].OperatorAddress)
+	require.NoError(r, err)
+	require.Equal(r, big.NewInt(1).Uint64(), stakeEvent.Amount.Uint64())
+	require.Equal(r, common.BytesToAddress(expectedValAddr.Bytes()), stakeEvent.Validator)
+	require.Equal(r, testStakingAddr, stakeEvent.Staker)
 
 	// check that bank balance is reduced by 1
 	balanceAfterStake, err := r.BankClient.Balance(r.Ctx, &banktypes.QueryBalanceRequest{
@@ -117,7 +127,14 @@ func TestPrecompilesStakingThroughContract(r *runner.E2ERunner, args []string) {
 		big.NewInt(2),
 	)
 	require.NoError(r, err)
-	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+
+	// check that stake event was emitted
+	stakeEvent, err = testStaking.ParseStake(*receipt.Logs[0])
+	require.NoError(r, err)
+	require.Equal(r, big.NewInt(2).Uint64(), stakeEvent.Amount.Uint64())
+	require.Equal(r, common.BytesToAddress(expectedValAddr.Bytes()), stakeEvent.Validator)
+	require.Equal(r, testStakingAddr, stakeEvent.Staker)
 
 	// check that bank balance is reduced by 2 more, 3 in total
 	balanceAfterStake, err = r.BankClient.Balance(r.Ctx, &banktypes.QueryBalanceRequest{
@@ -148,7 +165,14 @@ func TestPrecompilesStakingThroughContract(r *runner.E2ERunner, args []string) {
 	// unstake 1 from validator1
 	tx, err = testStaking.Unstake(r.ZEVMAuth, testStakingAddr, validators[0].OperatorAddress, big.NewInt(1))
 	require.NoError(r, err)
-	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+
+	// check that unstake event was emitted
+	unstakeEvent, err := testStaking.ParseUnstake(*receipt.Logs[0])
+	require.NoError(r, err)
+	require.Equal(r, big.NewInt(1).Uint64(), unstakeEvent.Amount.Uint64())
+	require.Equal(r, common.BytesToAddress(expectedValAddr.Bytes()), unstakeEvent.Validator)
+	require.Equal(r, testStakingAddr, unstakeEvent.Staker)
 
 	// check shares are set to 2
 	sharesAfterVal1, err = testStaking.GetShares(&bind.CallOpts{}, testStakingAddr, validators[0].OperatorAddress)
@@ -172,7 +196,17 @@ func TestPrecompilesStakingThroughContract(r *runner.E2ERunner, args []string) {
 		big.NewInt(1),
 	)
 	require.NoError(r, err)
-	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+
+	// check that moveStake event was emitted
+	moveStake, err := testStaking.ParseMoveStake(*receipt.Logs[0])
+	require.NoError(r, err)
+	require.Equal(r, big.NewInt(1).Uint64(), moveStake.Amount.Uint64())
+	expectedValDstAddr, err := sdk.ValAddressFromBech32(validators[1].OperatorAddress)
+	require.NoError(r, err)
+	require.Equal(r, common.BytesToAddress(expectedValAddr.Bytes()), moveStake.ValidatorSrc)
+	require.Equal(r, common.BytesToAddress(expectedValDstAddr.Bytes()), moveStake.ValidatorDst)
+	require.Equal(r, testStakingAddr, moveStake.Staker)
 
 	// check shares for both validator1 and validator2 are 1
 	sharesAfterVal1, err = testStaking.GetShares(&bind.CallOpts{}, testStakingAddr, validators[0].OperatorAddress)
