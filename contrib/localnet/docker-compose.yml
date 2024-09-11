@@ -31,7 +31,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.200
-    entrypoint: ["zetacored", "rosetta", "--tendermint", "zetacore0:26657", "--grpc", "zetacore0:9090", "--network", "athens_101-1", "--blockchain",  "zetacore"]
+    entrypoint: [ "zetacored", "rosetta", "--tendermint", "zetacore0:26657", "--grpc", "zetacore0:9090", "--network", "athens_101-1", "--blockchain",  "zetacore" ]
     volumes:
       - ssh:/root/.ssh
 
@@ -48,7 +48,7 @@ services:
       - "9090:9090"
     healthcheck:
       # use the zevm endpoint for the healthcheck as it is the slowest to come up
-      test: ["CMD", "curl", "-f", "-X", "POST", "--data", '{"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":67}', "-H", "Content-Type: application/json", "http://localhost:8545"]
+      test: [ "CMD", "curl", "-f", "-X", "POST", "--data", '{"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":67}', "-H", "Content-Type: application/json", "http://localhost:8545" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -57,7 +57,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.11
-    entrypoint: ["/root/start-zetacored.sh"]
+    entrypoint: [ "/root/start-zetacored.sh" ]
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
@@ -73,7 +73,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.12
-    entrypoint: ["/root/start-zetacored.sh"]
+    entrypoint: [ "/root/start-zetacored.sh" ]
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
@@ -193,7 +193,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.100
-    entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2"]
+    entrypoint: [ "geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2" ]
 
   eth2:
     build:
@@ -242,7 +242,7 @@ services:
     entrypoint: [ "/usr/bin/start-solana.sh" ]
 
   ton:
-    image: ton-local:latest
+    image: ghcr.io/zeta-chain/ton-docker:latest
     container_name: ton
     hostname: ton
     profiles:
@@ -270,7 +270,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.2
-    entrypoint: ["/work/start-zetae2e.sh", "local"]
+    entrypoint: [ "/work/start-zetae2e.sh", "local" ]
     environment:
       - LOCALNET_MODE=${LOCALNET_MODE-}
       - E2E_ARGS=${E2E_ARGS-}
@@ -285,7 +285,7 @@ services:
     profiles:
       - upgrade
       - all
-    entrypoint: ["/root/start-upgrade-host.sh"]
+    entrypoint: [ "/root/start-upgrade-host.sh" ]
     networks:
       mynetwork:
         ipv4_address: 172.20.0.250
@@ -300,7 +300,7 @@ services:
     profiles:
       - upgrade
       - all
-    entrypoint: ["/root/start-upgrade-orchestrator.sh"]
+    entrypoint: [ "/root/start-upgrade-orchestrator.sh" ]
     networks:
       mynetwork:
         ipv4_address: 172.20.0.251
