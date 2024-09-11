@@ -78,7 +78,6 @@ func (r *E2ERunner) upgradeZRC20s() {
 	// upgrade SOL ZRC20
 	r.Logger.Info("Upgrading SOL ZRC20")
 	r.upgradeZRC20(r.SOLZRC20Addr, r.SOLZRC20, big.NewInt(902), uint8(coin.CoinType_Gas))
-
 }
 
 // zrc20Caller is an interface to call ZRC20 functions

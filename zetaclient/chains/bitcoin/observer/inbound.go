@@ -463,7 +463,9 @@ func GetBtcEventWithoutWitness(
 			vout1 := tx.Vout[1]
 			memo, found, err = bitcoin.DecodeOpReturnMemo(vout1.ScriptPubKey.Hex, tx.Txid)
 			if err != nil {
-				logger.Error().Err(err).Msgf("GetBtcEventWithoutWitness: error decoding OP_RETURN memo: %s", vout1.ScriptPubKey.Hex)
+				logger.Error().
+					Err(err).
+					Msgf("GetBtcEventWithoutWitness: error decoding OP_RETURN memo: %s", vout1.ScriptPubKey.Hex)
 				return nil, nil
 			}
 		}
