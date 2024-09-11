@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/x/observer/keeper"
 
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -54,25 +55,49 @@ func TestKeeper_GetBallot(t *testing.T) {
 }
 
 func TestKeeper_GetBallotList(t *testing.T) {
-	k, ctx, _, _ := keepertest.ObserverKeeper(t)
-	identifier := sample.ZetaIndex(t)
-	b := &types.Ballot{
-		Index:                "",
-		BallotIdentifier:     identifier,
-		VoterList:            nil,
-		ObservationType:      0,
-		BallotThreshold:      sdk.ZeroDec(),
-		BallotStatus:         0,
-		BallotCreationHeight: 1,
-	}
-	_, found := k.GetBallotList(ctx, 1)
-	require.False(t, found)
+	t.Run("get existing ballot list", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		identifier := sample.ZetaIndex(t)
+		b := &types.Ballot{
+			Index:                "",
+			BallotIdentifier:     identifier,
+			VoterList:            nil,
+			ObservationType:      0,
+			BallotThreshold:      sdk.ZeroDec(),
+			BallotStatus:         0,
+			BallotCreationHeight: 1,
+		}
+		_, found := k.GetBallotList(ctx, 1)
+		require.False(t, found)
 
-	k.AddBallotToList(ctx, *b)
-	list, found := k.GetBallotList(ctx, 1)
-	require.True(t, found)
-	require.Equal(t, 1, len(list.BallotsIndexList))
-	require.Equal(t, identifier, list.BallotsIndexList[0])
+		k.AddBallotToList(ctx, *b)
+		list, found := k.GetBallotList(ctx, 1)
+		require.True(t, found)
+		require.Equal(t, 1, len(list.BallotsIndexList))
+		require.Equal(t, identifier, list.BallotsIndexList[0])
+	})
+
+	t.Run("get non-existing ballot list", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		identifier := sample.ZetaIndex(t)
+		b := &types.Ballot{
+			Index:                "",
+			BallotIdentifier:     identifier,
+			VoterList:            nil,
+			ObservationType:      0,
+			BallotThreshold:      sdk.ZeroDec(),
+			BallotStatus:         0,
+			BallotCreationHeight: 1,
+		}
+		_, found := k.GetBallotList(ctx, 1)
+		require.False(t, found)
+
+		k.AddBallotToList(ctx, *b)
+		list, found := k.GetBallotList(ctx, -10)
+		require.False(t, found)
+		require.Nil(t, list.BallotsIndexList)
+	})
+
 }
 
 func TestKeeper_GetMaturedBallots(t *testing.T) {
@@ -307,4 +332,45 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 		}
 		require.Equal(t, numberOfBallots, eventCount)
 	})
+}
+
+func TestGetMaturedBallotHeight(t *testing.T) {
+	tt := []struct {
+		name           string
+		currentHeight  int64
+		maturityBlocks int64
+		expectedHeight int64
+	}{
+		{
+			name:           "maturity blocks is 0",
+			currentHeight:  10,
+			maturityBlocks: 0,
+			expectedHeight: 10,
+		},
+		{
+			name:           "maturity blocks is same as current height",
+			currentHeight:  10,
+			maturityBlocks: 10,
+			expectedHeight: 0,
+		},
+		{
+			name:           "maturity blocks is less than current height",
+			currentHeight:  10,
+			maturityBlocks: 5,
+			expectedHeight: 5,
+		},
+		{
+			name:           "maturity blocks is greater than current height",
+			currentHeight:  5,
+			maturityBlocks: 10,
+			expectedHeight: -5,
+		},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			_, ctx, _, _ := keepertest.ObserverKeeper(t)
+			ctx = ctx.WithBlockHeight(tc.currentHeight)
+			require.Equal(t, tc.expectedHeight, keeper.GetMaturedBallotHeight(ctx, tc.maturityBlocks))
+		})
+	}
 }

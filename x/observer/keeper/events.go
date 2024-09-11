@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"strconv"
 
 	types2 "github.com/coinbase/rosetta-sdk-go/types"
@@ -22,11 +23,17 @@ func EmitEventBallotCreated(ctx sdk.Context, ballot types.Ballot, observationHas
 }
 
 func EmitEventBallotDeleted(ctx sdk.Context, ballot types.Ballot) {
-	err := ctx.EventManager().EmitTypedEvent(&types.EventBallotDeleted{
+	var voterList []types.VoterList
+	voterList, err := ballot.GenerateVoterList()
+	if err != nil {
+		ctx.Logger().
+			Error(fmt.Sprintf("failed to generate voter list for ballot %s", ballot.BallotIdentifier), err.Error())
+	}
+	err = ctx.EventManager().EmitTypedEvent(&types.EventBallotDeleted{
 		MsgTypeUrl:       "zetachain.zetacore.observer.internal.BallotDeleted",
 		BallotIdentifier: ballot.BallotIdentifier,
 		BallotType:       ballot.ObservationType.String(),
-		Voters:           ballot.GenerateVoterList(),
+		Voters:           voterList,
 	})
 	if err != nil {
 		ctx.Logger().Error("failed to emit EventBallotDeleted : %s", err.Error())

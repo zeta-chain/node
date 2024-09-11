@@ -52,4 +52,6 @@ var (
 	ErrDuplicateObserver      = errorsmod.Register(ModuleName, 1135, "observer already exists")
 	ErrObserverNotFound       = errorsmod.Register(ModuleName, 1136, "observer not found")
 	ErrInvalidObserverAddress = errorsmod.Register(ModuleName, 1137, "invalid observer address")
+
+	ErrInvalidVoterList = errorsmod.Register(ModuleName, 1138, "invalid voter list for ballot")
 )

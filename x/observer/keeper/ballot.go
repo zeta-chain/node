@@ -44,7 +44,10 @@ func (k Keeper) GetBallotList(ctx sdk.Context, height int64) (val types.BallotLi
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BallotListKey))
 	b := store.Get(types.BallotListKeyPrefix(height))
 	if b == nil {
-		return val, false
+		return types.BallotListForHeight{
+			Height:           height,
+			BallotsIndexList: nil,
+		}, false
 	}
 	k.cdc.MustUnmarshal(b, &val)
 	return val, true

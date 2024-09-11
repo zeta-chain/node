@@ -40,10 +40,14 @@ func (k Keeper) BallotByIdentifier(
 	if !found {
 		return nil, status.Error(codes.NotFound, "not found ballot")
 	}
+	voterList, err := ballot.GenerateVoterList()
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 
 	return &types.QueryBallotByIdentifierResponse{
 		BallotIdentifier: ballot.BallotIdentifier,
-		Voters:           ballot.GenerateVoterList(),
+		Voters:           voterList,
 		ObservationType:  ballot.ObservationType,
 		BallotStatus:     ballot.BallotStatus,
 	}, nil

@@ -485,6 +485,7 @@ func TestBallot_GenerateVoterList(t *testing.T) {
 		voters            []string
 		votes             []VoteType
 		expectedVoterList []VoterList
+		err               require.ErrorAssertionFunc
 	}{
 		{
 			name:   "Success observation",
@@ -513,6 +514,7 @@ func TestBallot_GenerateVoterList(t *testing.T) {
 					VoteType:     VoteType_SuccessObservation,
 				},
 			},
+			err: require.NoError,
 		},
 
 		{
@@ -542,6 +544,7 @@ func TestBallot_GenerateVoterList(t *testing.T) {
 					VoteType:     VoteType_FailureObservation,
 				},
 			},
+			err: require.NoError,
 		},
 
 		{
@@ -571,6 +574,22 @@ func TestBallot_GenerateVoterList(t *testing.T) {
 					VoteType:     VoteType_SuccessObservation,
 				},
 			},
+			err: require.NoError,
+		},
+
+		{
+			name:   "voterList and votes length mismatch",
+			voters: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
+			votes: []VoteType{
+				VoteType_FailureObservation,
+				VoteType_FailureObservation,
+				VoteType_SuccessObservation,
+			},
+			expectedVoterList: nil,
+			err: func(t require.TestingT, err error, i ...interface{}) {
+				require.Error(t, err)
+				require.Equal(t, err, ErrInvalidVoterList)
+			},
 		},
 	}
 	for _, test := range tt {
@@ -579,7 +598,8 @@ func TestBallot_GenerateVoterList(t *testing.T) {
 				VoterList: test.voters,
 				Votes:     test.votes,
 			}
-			voterList := ballot.GenerateVoterList()
+			voterList, err := ballot.GenerateVoterList()
+			test.err(t, err)
 			require.Equal(t, test.expectedVoterList, voterList)
 		})
 	}
