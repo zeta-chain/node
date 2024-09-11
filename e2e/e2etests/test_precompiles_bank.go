@@ -30,8 +30,8 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	require.EqualValues(r, 1, receipt.Status, "Error approving allowance for bank contract")
 
 	// Call deposit with 100 coins
-	// _, err = bankContract.Deposit(r.ZEVMAuth, r.ERC20ZRC20Addr, big.NewInt(0))
-	// require.NoError(r, err, "Error calling deposit")
+	_, err = bankContract.Deposit(r.ZEVMAuth, r.ERC20ZRC20Addr, big.NewInt(100))
+	require.NoError(r, err, "Error calling deposit")
 
 	// Check the balance of the user_precompile in coins "zevm/0x12345"
 
