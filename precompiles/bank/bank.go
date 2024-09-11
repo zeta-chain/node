@@ -1,7 +1,6 @@
 package bank
 
 import (
-	"fmt"
 	"math/big"
 
 	"cosmossdk.io/math"
@@ -10,13 +9,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
+
 	ptypes "github.com/zeta-chain/node/precompiles/types"
+	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
 	"github.com/zeta-chain/node/x/fungible/types"
-	zrc20 "github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 )
 
 const (
@@ -67,24 +66,24 @@ func initABI() {
 type Contract struct {
 	ptypes.BaseContract
 
-	bankKeeper  bank.Keeper
-	ZEVMClient *ethclient.Client
-	cdc         codec.Codec
-	kvGasConfig storetypes.GasConfig
+	bankKeeper     bank.Keeper
+	fungibleKeeper fungiblekeeper.Keeper
+	cdc            codec.Codec
+	kvGasConfig    storetypes.GasConfig
 }
 
 func NewIBankContract(
 	bankKeeper bank.Keeper,
-	ZEVMClient *ethclient.Client,
+	fungibleKeeper fungiblekeeper.Keeper,
 	cdc codec.Codec,
 	kvGasConfig storetypes.GasConfig,
 ) *Contract {
 	return &Contract{
-		BaseContract: ptypes.NewBaseContract(ContractAddress),
-		bankKeeper:   bankKeeper,
-		ZEVMClient:   ZEVMClient,
-		cdc:          cdc,
-		kvGasConfig:  kvGasConfig,
+		BaseContract:   ptypes.NewBaseContract(ContractAddress),
+		bankKeeper:     bankKeeper,
+		fungibleKeeper: fungibleKeeper,
+		cdc:            cdc,
+		kvGasConfig:    kvGasConfig,
 	}
 }
 
@@ -198,33 +197,48 @@ func (c *Contract) deposit(
 	// function deposit(address zrc20, uint256 amount) external returns (bool success);
 	ZRC20Addr, amount := args[0].(common.Address), args[1].(*big.Int)
 
-	ZRC20, err := zrc20.NewZRC20(ZRC20Addr, c.ZEVMClient)
+	// Initialize the ZRC20 ABI, as we need to call the balanceOf and allowance methods.
+	ZRC20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	// Check for enough balance.
+	// function balanceOf(address account) public view virtual override returns (uint256)
+	argsBalanceOf := []interface{}{caller}
+
+	resBalanceOf, err := c.CallContract(ctx, ZRC20ABI, ZRC20Addr, "balanceOf", argsBalanceOf)
 	if err != nil {
 		return nil, &ptypes.ErrUnexpected{
-			When: "NewZRC20",
+			When: "CallContract",
 			Got:  err.Error(),
 		}
 	}
 
-	balance, err := ZRC20.BalanceOf(&bind.CallOpts{Context: ctx}, caller)
-	if err != nil {
-		return nil, &ptypes.ErrUnexpected{
-			When: "BalanceOf",
-			Got:  err.Error(),
-		}
-	}
-
+	balance := resBalanceOf[0].(*big.Int)
 	if balance.Cmp(amount) < 0 {
 		return nil, &ptypes.ErrUnexpected{
-			When: "Balance0f",
+			When: "balance0f",
 			Got:  "not enough balance",
 		}
 	}
 
-	allowance, err := ZRC20.Allowance(&bind.CallOpts{Context: ctx}, caller, ContractAddress)
+	// Check for enough allowance.
+	// function allowance(address owner, address spender) public view virtual override returns (uint256)
+	argsAllowance := []interface{}{caller, ContractAddress}
+
+	resAllowance, err := c.CallContract(ctx, ZRC20ABI, ZRC20Addr, "allowance", argsAllowance)
+	if err != nil {
+		return nil, &ptypes.ErrUnexpected{
+			When: "CallContract",
+			Got:  err.Error(),
+		}
+	}
+
+	allowance := resAllowance[0].(*big.Int)
 	if allowance.Cmp(amount) < 0 {
 		return nil, &ptypes.ErrUnexpected{
-			When: "Allowance",
+			When: "allowance",
 			Got:  "not enough allowance",
 		}
 	}
@@ -281,21 +295,23 @@ func (c *Contract) deposit(
 	}
 
 	// 2. Effect: subtract balance.
-	tx, err := ZRC20.TransferFrom(&bind.TransactOpts{Context: ctx}, caller, ContractAddress, amount)
-	if err != nil {
-		return nil, err
-	}
+	// function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool)
+	argsTransferFrom := []interface{}{caller, ContractAddress, amount}
 
-	r, err := bind.WaitMined(ctx, c.ZEVMClient, tx)
+	resTransferFrom, err := c.CallContract(ctx, ZRC20ABI, ZRC20Addr, "transferFrom", argsTransferFrom)
 	if err != nil {
-		return nil, err
-	}
-
-	if r.Status != 1 {
 		return nil, &ptypes.ErrUnexpected{
-			When: "ZRC20 transaction failed",
-			Got:  fmt.Sprintf("from: %s, to: %s", caller, ContractAddress),
-		}	
+			When: "CallContract",
+			Got:  err.Error(),
+		}
+	}
+
+	transferred := resTransferFrom[0].(bool)
+	if !transferred {
+		return nil, &ptypes.ErrUnexpected{
+			When: "TransferFrom",
+			Got:  "transfer not successful",
+		}
 	}
 
 	// 3. Interactions: create cosmos coin and send.
@@ -354,4 +370,58 @@ func (c *Contract) balanceOf(
 	}
 
 	return method.Outputs.Pack(coin.Amount.BigInt())
+}
+
+// CallContract calls a given contract on behalf of the precompiled contract.
+// Note that the precompile contract address is hardcoded.
+func (c *Contract) CallContract(
+	ctx sdk.Context,
+	abi *abi.ABI,
+	dst common.Address,
+	method string,
+	args []interface{},
+) ([]interface{}, error) {
+	input, err := abi.Methods[method].Inputs.Pack(args)
+	if err != nil {
+		return nil, &ptypes.ErrUnexpected{
+			When: "Pack " + method,
+			Got:  err.Error(),
+		}
+	}
+
+	res, err := c.fungibleKeeper.CallEVM(
+		ctx,
+		*abi,
+		ContractAddress,
+		dst,
+		big.NewInt(0),
+		nil,
+		true,
+		false,
+		method,
+		input,
+	)
+	if err != nil {
+		return nil, &ptypes.ErrUnexpected{
+			When: "CallEVM " + method,
+			Got:  err.Error(),
+		}
+	}
+
+	if res.VmError != "" {
+		return nil, &ptypes.ErrUnexpected{
+			When: "VmError " + method,
+			Got:  res.VmError,
+		}
+	}
+
+	ret, err := abi.Methods[method].Outputs.Unpack(res.Ret)
+	if err != nil {
+		return nil, &ptypes.ErrUnexpected{
+			When: "Unpack " + method,
+			Got:  err.Error(),
+		}
+	}
+
+	return ret, nil
 }
