@@ -10,6 +10,12 @@ import (
 	"github.com/zeta-chain/node/precompiles/logs"
 )
 
+const (
+	StakeEventName     = "Stake"
+	UnstakeEventName   = "Unstake"
+	MoveStakeEventName = "MoveStake"
+)
+
 func (c *Contract) AddStakeLog(
 	ctx sdk.Context,
 	stateDB vm.StateDB,
@@ -17,7 +23,7 @@ func (c *Contract) AddStakeLog(
 	validator string,
 	amount *big.Int,
 ) error {
-	event := c.Abi().Events["Stake"]
+	event := c.Abi().Events[StakeEventName]
 
 	valAddr, err := sdk.ValAddressFromBech32(validator)
 	if err != nil {
@@ -48,7 +54,7 @@ func (c *Contract) AddUnstakeLog(
 	validator string,
 	amount *big.Int,
 ) error {
-	event := c.Abi().Events["Unstake"]
+	event := c.Abi().Events[UnstakeEventName]
 	valAddr, err := sdk.ValAddressFromBech32(validator)
 	if err != nil {
 		return err
@@ -79,7 +85,7 @@ func (c *Contract) AddMoveStakeLog(
 	validatorDst string,
 	amount *big.Int,
 ) error {
-	event := c.Abi().Events["MoveStake"]
+	event := c.Abi().Events[MoveStakeEventName]
 	validatorSrcAddr, err := sdk.ValAddressFromBech32(validatorSrc)
 	if err != nil {
 		return err
