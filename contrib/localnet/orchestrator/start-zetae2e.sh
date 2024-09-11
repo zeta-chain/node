@@ -132,9 +132,7 @@ fund_eth_from_config '.additional_accounts.user_v2_ether_revert.evm_address' 100
 fund_eth_from_config '.additional_accounts.user_v2_erc20_revert.evm_address' 10000 "V2 ERC20 revert tester"
 
 # unlock precompile tests accounts
-address=$(yq -r '.additional_accounts.user_precompile.evm_address' config.yml)
-echo "funding precompile tester address ${address} with 10000 Ether"
-geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
+fund_eth_from_config '.additional_accounts.user_precompile.evm_address' 10000 "precompiles tester"
 
 # unlock local solana relayer accounts
 if host solana > /dev/null; then
