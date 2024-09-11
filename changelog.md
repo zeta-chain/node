@@ -34,7 +34,8 @@
 * [2726](https://github.com/zeta-chain/node/pull/2726) - add e2e tests for deposit and call, deposit and revert
 * [2703](https://github.com/zeta-chain/node/pull/2703) - add e2e tests for stateful precompiled contracts
 * [2763](https://github.com/zeta-chain/node/pull/2763) - add V2 contracts migration test
-* [2830] (https://github.com/zeta-chain/node/pull/2830) - extend staking precompile tests
+* [2830](https://github.com/zeta-chain/node/pull/2830) - extend staking precompile tests
+* [2867](https://github.com/zeta-chain/node/pull/2867) - skip precompiles test for tss migration
 
 ### Fixes
 
