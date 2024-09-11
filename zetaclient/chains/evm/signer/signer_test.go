@@ -10,6 +10,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
@@ -54,7 +55,7 @@ func getNewEvmSigner(tss interfaces.TSSSigner) (*Signer, error) {
 		tss,
 		nil,
 		logger,
-		mocks.EVMRPCEnabled,
+		testutils.MockEVMRPCEndpoint,
 		connectorAddress,
 		erc20CustodyAddress,
 		sample.EthAddress(),
@@ -73,10 +74,11 @@ func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.O
 
 	// prepare mock arguments to create observer
 	evmcfg := config.EVMConfig{Chain: chains.BscMainnet, Endpoint: "http://localhost:8545"}
-	evmClient := mocks.NewMockEvmClient().WithBlockNumber(1000)
+	evmClient := mocks.NewEVMRPCClient(t)
+	evmClient.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
+
 	params := mocks.MockChainParams(evmcfg.Chain.ChainId, 10)
 	cfg.EVMChainConfigs[chains.BscMainnet.ChainId] = evmcfg
-	//appContext := context.New(cfg, zerolog.Nop())
 	logger := base.Logger{}
 	ts := &metrics.TelemetryServer{}
 
@@ -162,12 +164,18 @@ func TestSigner_SetGetERC20CustodyAddress(t *testing.T) {
 func TestSigner_TryProcessOutbound(t *testing.T) {
 	ctx := makeCtx(t)
 
+	// Setup evm signer
 	evmSigner, err := getNewEvmSigner(nil)
 	require.NoError(t, err)
 	cctx := getCCTX(t)
 	processor := getNewOutboundProcessor()
 	mockObserver, err := getNewEvmChainObserver(t, nil)
 	require.NoError(t, err)
+
+	// Attach mock EVM client to the signer
+	evmClient := mocks.NewEVMRPCClient(t)
+	evmClient.On("SendTransaction", mock.Anything, mock.Anything).Return(nil)
+	evmSigner.WithEvmClient(evmClient)
 
 	// Test with mock client that has keys
 	client := mocks.NewZetacoreClient(t).
@@ -194,6 +202,11 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 	require.NoError(t, err)
 	require.False(t, skip)
+
+	// Attach mock EVM evmClient to the signer
+	evmClient := mocks.NewEVMRPCClient(t)
+	evmClient.On("SendTransaction", mock.Anything, mock.Anything).Return(nil)
+	evmSigner.WithEvmClient(evmClient)
 
 	t.Run("BroadcastOutbound - should successfully broadcast", func(t *testing.T) {
 		// Call SignERC20Withdraw
