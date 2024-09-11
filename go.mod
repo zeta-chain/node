@@ -58,7 +58,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.9.0
-	github.com/zeta-chain/ethermint v0.0.0-20240729121328-43bf9ddbf82f
+	github.com/zeta-chain/ethermint v0.0.0-20240909234716-2fad916e7179
 	github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2
 	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240819143729-b8229cd7b410
 	gitlab.com/thorchain/tss/go-tss v1.6.5
@@ -73,7 +73,7 @@ require (
 	google.golang.org/protobuf v1.32.0
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 	gopkg.in/yaml.v2 v2.4.0
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/sqlite v1.4.4
 	gorm.io/gorm v1.24.6
 )
