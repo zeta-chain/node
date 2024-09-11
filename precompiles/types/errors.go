@@ -36,7 +36,7 @@ func (e ErrInvalidArgument) Error() string {
 }
 
 /*
-	Coin related errors
+	Token related errors
 */
 
 type ErrInvalidCoin struct {
@@ -47,6 +47,14 @@ type ErrInvalidCoin struct {
 
 func (e ErrInvalidCoin) Error() string {
 	return fmt.Sprintf("invalid coin: denom: %s, is negative: %v, is nil: %v", e.Got, e.Negative, e.Nil)
+}
+
+type ErrInvalidAmount struct {
+	Got string
+}
+
+func (e ErrInvalidAmount) Error() string {
+	return fmt.Sprintf("invalid token amount: %s", e.Got)
 }
 
 /*
