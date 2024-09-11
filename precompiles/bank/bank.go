@@ -9,11 +9,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/zeta-chain/ethermint/x/evm/types"
-
+	"github.com/ethereum/go-ethereum/ethclient"
 	ptypes "github.com/zeta-chain/node/precompiles/types"
+	"github.com/zeta-chain/node/x/fungible/types"
+	zrc20 "github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 )
 
 const (
@@ -65,18 +67,21 @@ type Contract struct {
 	ptypes.BaseContract
 
 	bankKeeper  bank.Keeper
+	ZEVMClient *ethclient.Client
 	cdc         codec.Codec
 	kvGasConfig storetypes.GasConfig
 }
 
 func NewIBankContract(
 	bankKeeper bank.Keeper,
+	ZEVMClient *ethclient.Client,
 	cdc codec.Codec,
 	kvGasConfig storetypes.GasConfig,
 ) *Contract {
 	return &Contract{
 		BaseContract: ptypes.NewBaseContract(ContractAddress),
 		bankKeeper:   bankKeeper,
+		ZEVMClient:   ZEVMClient,
 		cdc:          cdc,
 		kvGasConfig:  kvGasConfig,
 	}
@@ -193,6 +198,31 @@ func (c *Contract) deposit(
 
 	// function deposit(address zrc20, uint256 amount) external returns (bool success);
 	ZRC20Addr, amount := args[0].(common.Address), args[1].(*big.Int)
+
+
+	// Does ZRC20 exist?
+	ZRC20, err := zrc20.NewZRC20Caller(ZRC20Addr, c.ZEVMClient)
+	if err != nil {
+		return nil, err
+	}
+
+	// Is caller balance greater or equal to the amount it wants to spend?
+	balance, err := ZRC20.BalanceOf(&bind.CallOpts{Context: ctx}, caller)
+	if err != nil {
+		return nil, err
+	}
+
+	if balance.Cmp(amount) < 0 {
+		return nil, err
+	}
+
+	// Is the bank allowed to spend the specified amount?
+	allowance, err := ZRC20.Allowance(&bind.CallOpts{Context: ctx}, caller, ContractAddress)
+	if allowance.Cmp(amount) < 0 {
+		return nil, err
+	}
+
+	// TODO: lock or burn
 
 	// Handle the toAddr:
 	// check it's valid and not blocked.
