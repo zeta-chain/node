@@ -3,6 +3,7 @@ package emissions_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
@@ -39,7 +40,7 @@ func TestGenesis(t *testing.T) {
 
 	t.Run("should error for invalid params", func(t *testing.T) {
 		params := types.DefaultParams()
-		params.MinBondFactor = "0.50"
+		params.ObserverSlashAmount = sdk.NewInt(-1)
 
 		genesisState := types.GenesisState{
 			Params: params,

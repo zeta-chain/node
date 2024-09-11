@@ -8,10 +8,68 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 
 /**
  * Params defines the parameters for the module.
+ * Sample values:
+ *    ValidatorEmissionPercentage: "00.50",
+ *    ObserverEmissionPercentage:  "00.25",
+ *    TssSignerEmissionPercentage: "00.25",
+ *    ObserverSlashAmount:         100000000000000000,
+ *    BallotMaturityBlocks:        100,
+ *    BlockRewardAmount:           9620949074074074074.074070733466756687,
  *
  * @generated from message zetachain.zetacore.emissions.Params
  */
 export declare class Params extends Message<Params> {
+  /**
+   * @generated from field: string validator_emission_percentage = 5;
+   */
+  validatorEmissionPercentage: string;
+
+  /**
+   * @generated from field: string observer_emission_percentage = 6;
+   */
+  observerEmissionPercentage: string;
+
+  /**
+   * @generated from field: string tss_signer_emission_percentage = 7;
+   */
+  tssSignerEmissionPercentage: string;
+
+  /**
+   * @generated from field: string observer_slash_amount = 9;
+   */
+  observerSlashAmount: string;
+
+  /**
+   * @generated from field: int64 ballot_maturity_blocks = 10;
+   */
+  ballotMaturityBlocks: bigint;
+
+  /**
+   * @generated from field: string block_reward_amount = 11;
+   */
+  blockRewardAmount: string;
+
+  constructor(data?: PartialMessage<Params>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.emissions.Params";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Params;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Params;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Params;
+
+  static equals(a: Params | PlainMessage<Params> | undefined, b: Params | PlainMessage<Params> | undefined): boolean;
+}
+
+/**
+ * Deprecated (v20): Do not use. Use Params Instead
+ *
+ * @generated from message zetachain.zetacore.emissions.LegacyParams
+ */
+export declare class LegacyParams extends Message<LegacyParams> {
   /**
    * @generated from field: string max_bond_factor = 1;
    */
@@ -62,18 +120,18 @@ export declare class Params extends Message<Params> {
    */
   ballotMaturityBlocks: bigint;
 
-  constructor(data?: PartialMessage<Params>);
+  constructor(data?: PartialMessage<LegacyParams>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.emissions.Params";
+  static readonly typeName = "zetachain.zetacore.emissions.LegacyParams";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Params;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): LegacyParams;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Params;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): LegacyParams;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Params;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): LegacyParams;
 
-  static equals(a: Params | PlainMessage<Params> | undefined, b: Params | PlainMessage<Params> | undefined): boolean;
+  static equals(a: LegacyParams | PlainMessage<LegacyParams> | undefined, b: LegacyParams | PlainMessage<LegacyParams> | undefined): boolean;
 }
 

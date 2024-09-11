@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 )
@@ -12,27 +11,17 @@ import (
 func TestNewParams(t *testing.T) {
 	params := NewParams()
 
-	// Verifying all parameters to ensure they are set correctly.
-	require.Equal(t, "1.25", params.MaxBondFactor, "MaxBondFactor should be set to 1.25")
-	require.Equal(t, "0.75", params.MinBondFactor, "MinBondFactor should be set to 0.75")
-	require.Equal(t, "6.00", params.AvgBlockTime, "AvgBlockTime should be set to 6.00")
-	require.Equal(t, "00.67", params.TargetBondRatio, "TargetBondRatio should be set to 00.67")
 	require.Equal(t, "00.50", params.ValidatorEmissionPercentage, "ValidatorEmissionPercentage should be set to 00.50")
 	require.Equal(t, "00.25", params.ObserverEmissionPercentage, "ObserverEmissionPercentage should be set to 00.25")
 	require.Equal(t, "00.25", params.TssSignerEmissionPercentage, "TssSignerEmissionPercentage should be set to 00.25")
-	require.Equal(
-		t,
-		"0.001877876953694702",
-		params.DurationFactorConstant,
-		"DurationFactorConstant should be set to 0.001877876953694702",
-	)
-
 	require.Equal(
 		t,
 		sdkmath.NewInt(100000000000000000),
 		params.ObserverSlashAmount,
 		"ObserverSlashAmount should be set to 100000000000000000",
 	)
+	require.Equal(t, int64(100), params.BallotMaturityBlocks, "BallotMaturityBlocks should be set to 100")
+	require.Equal(t, BlockReward, params.BlockRewardAmount, "BlockRewardAmount should be set to 0")
 }
 
 func TestDefaultParams(t *testing.T) {
@@ -40,39 +29,6 @@ func TestDefaultParams(t *testing.T) {
 
 	// The default parameters should match those set in NewParams
 	require.Equal(t, NewParams(), params)
-}
-
-func TestValidateDurationFactorConstant(t *testing.T) {
-	require.NoError(t, validateDurationFactorConstant("1"))
-	require.Error(t, validateDurationFactorConstant(1))
-}
-
-func TestValidateMaxBondFactor(t *testing.T) {
-	require.Error(t, validateMaxBondFactor(1))
-	require.NoError(t, validateMaxBondFactor("1.00"))
-	require.NoError(t, validateMaxBondFactor("1.25"))
-	require.Error(t, validateMaxBondFactor("1.30")) // Should fail as it's higher than 1.25
-}
-
-func TestValidateMinBondFactor(t *testing.T) {
-	require.Error(t, validateMinBondFactor(1))
-	require.NoError(t, validateMinBondFactor("0.75"))
-	require.Error(t, validateMinBondFactor("0.50")) // Should fail as it's lower than 0.75
-}
-
-func TestValidateAvgBlockTime(t *testing.T) {
-	require.Error(t, validateAvgBlockTime(6))
-	require.Error(t, validateAvgBlockTime("invalid"))
-	require.NoError(t, validateAvgBlockTime("6.00"))
-	require.Error(t, validateAvgBlockTime("-1")) // Negative time should fail
-	require.Error(t, validateAvgBlockTime("0"))  // Zero should also fail
-}
-
-func TestValidateTargetBondRatio(t *testing.T) {
-	require.Error(t, validateTargetBondRatio(0.5))
-	require.NoError(t, validateTargetBondRatio("0.50"))
-	require.Error(t, validateTargetBondRatio("-0.01")) // Less than 0 percent should fail
-	require.Error(t, validateTargetBondRatio("1.01"))  // More than 100 percent should fail
 }
 
 func TestValidateValidatorEmissionPercentage(t *testing.T) {
@@ -109,34 +65,19 @@ func TestValidateBallotMaturityBlocks(t *testing.T) {
 	require.NoError(t, validateBallotMaturityBlocks(int64(100)))
 }
 
+func TestValidateBlockRewardAmount(t *testing.T) {
+	require.Error(t, validateBlockRewardsAmount("0.50"))
+	require.Error(t, validateBlockRewardsAmount("-0.50"))
+	require.Error(t, validateBlockRewardsAmount(sdkmath.LegacyMustNewDecFromStr("-0.50")))
+	require.NoError(t, validateBlockRewardsAmount(sdkmath.LegacyMustNewDecFromStr("0.50")))
+	require.NoError(t, validateBlockRewardsAmount(sdkmath.LegacyZeroDec()))
+	require.NoError(t, validateBlockRewardsAmount(BlockReward))
+}
+
 func TestValidate(t *testing.T) {
 	t.Run("should validate", func(t *testing.T) {
 		params := NewParams()
 		require.NoError(t, params.Validate())
-	})
-
-	t.Run("should error for invalid max bond factor", func(t *testing.T) {
-		params := NewParams()
-		params.MaxBondFactor = "1.30"
-		require.Error(t, params.Validate())
-	})
-
-	t.Run("should error for invalid min bond factor", func(t *testing.T) {
-		params := NewParams()
-		params.MinBondFactor = "0.50"
-		require.Error(t, params.Validate())
-	})
-
-	t.Run("should error for invalid avg block time", func(t *testing.T) {
-		params := NewParams()
-		params.AvgBlockTime = "-1.30"
-		require.Error(t, params.Validate())
-	})
-
-	t.Run("should error for invalid target bond ratio", func(t *testing.T) {
-		params := NewParams()
-		params.TargetBondRatio = "-1.30"
-		require.Error(t, params.Validate())
 	})
 
 	t.Run("should error for invalid validator emissions percentage", func(t *testing.T) {
@@ -168,66 +109,16 @@ func TestValidate(t *testing.T) {
 		params.BallotMaturityBlocks = -100
 		require.Error(t, params.Validate())
 	})
-}
 
+	t.Run("should error for negative block reward amount", func(t *testing.T) {
+		params := NewParams()
+		params.BlockRewardAmount = sdkmath.LegacyMustNewDecFromStr("-1.30")
+		require.ErrorContains(t, params.Validate(), "block reward amount cannot be less than 0")
+	})
+}
 func TestParamsString(t *testing.T) {
 	params := DefaultParams()
 	out, err := yaml.Marshal(params)
 	require.NoError(t, err)
 	require.Equal(t, string(out), params.String())
-}
-
-func TestParams_GetDurationFactor(t *testing.T) {
-	t.Run("should return duration factor 0 if duration factor constant is 0", func(t *testing.T) {
-		params := DefaultParams()
-		params.DurationFactorConstant = "0"
-
-		duractionFactor := params.GetDurationFactor(1)
-		require.Equal(t, sdk.ZeroDec(), duractionFactor)
-	})
-
-	t.Run("should return duration factor for default params", func(t *testing.T) {
-		params := DefaultParams()
-		duractionFactor := params.GetDurationFactor(1)
-		// hardcoding actual expected value for default params, it will change if logic changes
-		require.Equal(t, sdk.MustNewDecFromStr("0.000000004346937374"), duractionFactor)
-	})
-}
-
-func TestParams_GetBondFactor(t *testing.T) {
-	t.Run("should return 0 if current bond ratio is 0", func(t *testing.T) {
-		params := DefaultParams()
-		bondFactor := params.GetBondFactor(sdk.ZeroDec())
-		require.Equal(t, sdk.ZeroDec(), bondFactor)
-	})
-
-	t.Run("should return max bond factor if bond factor exceeds max bond factor", func(t *testing.T) {
-		params := DefaultParams()
-		params.TargetBondRatio = "0.5"
-		params.MaxBondFactor = "1.1"
-		params.MinBondFactor = "0.9"
-
-		bondFactor := params.GetBondFactor(sdk.MustNewDecFromStr("0.25"))
-		require.Equal(t, sdk.MustNewDecFromStr(params.MaxBondFactor), bondFactor)
-	})
-
-	t.Run("should return min bond factor if bond factor below min bond factor", func(t *testing.T) {
-		params := DefaultParams()
-		params.TargetBondRatio = "0.5"
-		params.MaxBondFactor = "1.1"
-		params.MinBondFactor = "0.9"
-
-		bondFactor := params.GetBondFactor(sdk.MustNewDecFromStr("0.75"))
-		require.Equal(t, sdk.MustNewDecFromStr(params.MinBondFactor), bondFactor)
-	})
-
-	t.Run("should return calculated bond factor if bond factor in range", func(t *testing.T) {
-		params := DefaultParams()
-		params.TargetBondRatio = "0.5"
-		params.MaxBondFactor = "1.1"
-		params.MinBondFactor = "0.9"
-
-		bondFactor := params.GetBondFactor(sdk.MustNewDecFromStr("0.5"))
-		require.Equal(t, sdk.OneDec(), bondFactor)
-	})
 }

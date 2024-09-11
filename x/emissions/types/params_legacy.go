@@ -17,10 +17,6 @@ func ParamKeyTable() paramtypes.KeyTable {
 // ParamSetPairs get the params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyPrefix(ParamMaxBondFactor), &p.MaxBondFactor, validateMaxBondFactor),
-		paramtypes.NewParamSetPair(KeyPrefix(ParamMinBondFactor), &p.MinBondFactor, validateMinBondFactor),
-		paramtypes.NewParamSetPair(KeyPrefix(ParamAvgBlockTime), &p.AvgBlockTime, validateAvgBlockTime),
-		paramtypes.NewParamSetPair(KeyPrefix(ParamTargetBondRatio), &p.TargetBondRatio, validateTargetBondRatio),
 		paramtypes.NewParamSetPair(
 			KeyPrefix(ParamValidatorEmissionPercentage),
 			&p.ValidatorEmissionPercentage,
@@ -35,11 +31,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 			KeyPrefix(ParamTssSignerEmissionPercentage),
 			&p.TssSignerEmissionPercentage,
 			validateTssEmissionPercentage,
-		),
-		paramtypes.NewParamSetPair(
-			KeyPrefix(ParamDurationFactorConstant),
-			&p.DurationFactorConstant,
-			validateDurationFactorConstant,
 		),
 	}
 }
