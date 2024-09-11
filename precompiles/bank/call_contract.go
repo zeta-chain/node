@@ -19,25 +19,17 @@ func (c *Contract) CallContract(
 	method string,
 	args []interface{},
 ) ([]interface{}, error) {
-	input, err := abi.Methods[method].Inputs.Pack(args)
-	if err != nil {
-		return nil, &ptypes.ErrUnexpected{
-			When: "Pack " + method,
-			Got:  err.Error(),
-		}
-	}
-
 	res, err := c.fungibleKeeper.CallEVM(
-		ctx,
-		*abi,
-		ContractAddress,
-		dst,
-		big.NewInt(0),
-		nil,
-		true,
-		false,
-		method,
-		input,
+		ctx,             // ctx
+		*abi,            // abi
+		ContractAddress, // from
+		dst,             // to
+		big.NewInt(0),   // value
+		nil,             // gasLimit
+		true,            // commit
+		false,           // noEthereumTxEvent
+		method,          // method
+		args...,         // args
 	)
 	if err != nil {
 		return nil, &ptypes.ErrUnexpected{
