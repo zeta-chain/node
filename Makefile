@@ -271,8 +271,8 @@ start-stress-test: zetanode
 
 start-tss-migration-test: zetanode
 	@echo "--> Starting tss migration test"
-	export E2E_ARGS="--test-tss-migration" && \
 	export LOCALNET_MODE=tss-migrate && \
+	export E2E_ARGS="--test-tss-migration" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 start-solana-test: zetanode solana

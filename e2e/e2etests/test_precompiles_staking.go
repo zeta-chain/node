@@ -126,7 +126,12 @@ func CleanValidatorDelegations(r *runner.E2ERunner, stakingContract *staking.ISt
 
 		delegationAmount := delegation.DelegationResponse.Balance.Amount.Int64()
 		if delegationAmount > 0 && err == nil {
-			tx, err := stakingContract.Unstake(r.ZEVMAuth, r.ZEVMAuth.From, validator.OperatorAddress, big.NewInt(delegationAmount))
+			tx, err := stakingContract.Unstake(
+				r.ZEVMAuth,
+				r.ZEVMAuth.From,
+				validator.OperatorAddress,
+				big.NewInt(delegationAmount),
+			)
 			require.NoError(r, err)
 			utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 		}
