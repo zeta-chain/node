@@ -230,7 +230,7 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	btcChains := appContext.FilterChains(zctx.Chain.IsUTXO)
+	btcChains := appContext.FilterChains(zctx.Chain.IsBitcoin)
 	switch {
 	case len(btcChains) == 0:
 		return errors.New("no BTC chains found")

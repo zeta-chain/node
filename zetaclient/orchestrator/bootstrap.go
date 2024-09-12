@@ -136,16 +136,16 @@ func syncSignerMap(
 			}
 
 			addSigner(chainID, signer)
-		case chain.IsUTXO():
-			cfg, found := app.Config().GetBTCConfig()
+		case chain.IsBitcoin():
+			cfg, found := app.Config().GetBTCConfig(chainID)
 			if !found {
-				logger.Std.Warn().Msgf("Unable to find UTXO config for chain %d", chainID)
+				logger.Std.Warn().Msgf("Unable to find BTC config for chain %d signer", chainID)
 				continue
 			}
 
 			signer, err := btcsigner.NewSigner(*rawChain, tss, ts, logger, cfg)
 			if err != nil {
-				logger.Std.Error().Err(err).Msgf("Unable to construct signer for UTXO chain %d", chainID)
+				logger.Std.Error().Err(err).Msgf("Unable to construct signer for BTC chain %d", chainID)
 				continue
 			}
 
@@ -320,10 +320,10 @@ func syncObserverMap(
 			}
 
 			addObserver(chainID, observer)
-		case chain.IsUTXO():
-			cfg, found := app.Config().GetBTCConfig()
+		case chain.IsBitcoin():
+			cfg, found := app.Config().GetBTCConfig(chainID)
 			if !found {
-				logger.Std.Warn().Msgf("Unable to find chain params for BTC chain %d", chainID)
+				logger.Std.Warn().Msgf("Unable to find BTC config for chain %d observer", chainID)
 				continue
 			}
 

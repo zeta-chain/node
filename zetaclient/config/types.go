@@ -88,7 +88,7 @@ type Config struct {
 
 	// chain configs
 	EVMChainConfigs map[int64]EVMConfig `json:"EVMChainConfigs"`
-	BitcoinConfig   BTCConfig           `json:"BitcoinConfig"`
+	BTCChainConfigs map[int64]BTCConfig `json:"BTCChainConfigs"`
 	SolanaConfig    SolanaConfig        `json:"SolanaConfig"`
 
 	// compliance config
@@ -101,8 +101,9 @@ type Config struct {
 func (c Config) GetEVMConfig(chainID int64) (EVMConfig, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	evmCfg, found := c.EVMChainConfigs[chainID]
-	return evmCfg, found
+
+	evmCfg := c.EVMChainConfigs[chainID]
+	return evmCfg, !evmCfg.Empty()
 }
 
 // GetAllEVMConfigs returns a map of all EVM configs
@@ -118,12 +119,13 @@ func (c Config) GetAllEVMConfigs() map[int64]EVMConfig {
 	return copied
 }
 
-// GetBTCConfig returns the BTC config
-func (c Config) GetBTCConfig() (BTCConfig, bool) {
+// GetBTCConfig returns the BTC config for the given chain ID
+func (c Config) GetBTCConfig(chainID int64) (BTCConfig, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	return c.BitcoinConfig, c.BitcoinConfig != (BTCConfig{})
+	btcCfg := c.BTCChainConfigs[chainID]
+	return btcCfg, !btcCfg.Empty()
 }
 
 // GetSolanaConfig returns the Solana config
@@ -175,5 +177,9 @@ func (c Config) GetRelayerKeyPath() string {
 }
 
 func (c EVMConfig) Empty() bool {
-	return c.Endpoint == "" && c.Chain.IsEmpty()
+	return c.Endpoint == "" || c.Chain.IsEmpty()
+}
+
+func (c BTCConfig) Empty() bool {
+	return c.RPCHost == ""
 }

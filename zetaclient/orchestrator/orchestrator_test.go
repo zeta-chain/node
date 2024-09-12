@@ -518,16 +518,15 @@ func createAppContext(t *testing.T, chainsOrParams ...any) *zctx.AppContext {
 	cfg := config.New(false)
 
 	// Mock config
-	cfg.BitcoinConfig = config.BTCConfig{
-		RPCHost: "localhost",
-	}
-
 	for _, c := range supportedChains {
 		if chains.IsEVMChain(c.ChainId, nil) {
 			cfg.EVMChainConfigs[c.ChainId] = config.EVMConfig{Chain: c}
+		} else if chains.IsBitcoinChain(c.ChainId, nil) {
+			cfg.BTCChainConfigs[c.ChainId] = config.BTCConfig{RPCHost: "localhost"}
 		}
 	}
 
+	// chain params
 	params := map[int64]*observertypes.ChainParams{}
 	for i := range obsParams {
 		cp := obsParams[i]

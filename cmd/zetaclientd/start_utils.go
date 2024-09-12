@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net"
-	"net/url"
 	"strings"
 	"time"
 
@@ -53,41 +52,31 @@ func validatePeer(seedPeer string) error {
 	return nil
 }
 
-// maskCfg sensitive fields are masked, currently only the EVM endpoints and bitcoin credentials,
+// maskCfg sensitive fields are masked, currently only the endpoints and bitcoin credentials,
 //
 //	other fields can be added.
 func maskCfg(cfg config.Config) string {
+	// Make a copy of the config
 	maskedCfg := cfg
 
-	maskedCfg.BitcoinConfig = config.BTCConfig{
-		RPCUsername: cfg.BitcoinConfig.RPCUsername,
-		RPCPassword: cfg.BitcoinConfig.RPCPassword,
-		RPCHost:     cfg.BitcoinConfig.RPCHost,
-		RPCParams:   cfg.BitcoinConfig.RPCParams,
-	}
+	// Mask EVM endpoints
 	maskedCfg.EVMChainConfigs = map[int64]config.EVMConfig{}
 	for key, val := range cfg.EVMChainConfigs {
 		maskedCfg.EVMChainConfigs[key] = config.EVMConfig{
 			Chain:    val.Chain,
-			Endpoint: val.Endpoint,
+			Endpoint: "",
 		}
 	}
 
-	// Mask Sensitive data
-	for _, chain := range maskedCfg.EVMChainConfigs {
-		if chain.Endpoint == "" {
-			continue
+	// Mask BTC endpoints and credentials
+	maskedCfg.BTCChainConfigs = map[int64]config.BTCConfig{}
+	for key, val := range cfg.BTCChainConfigs {
+		maskedCfg.BTCChainConfigs[key] = config.BTCConfig{
+			RPCParams: val.RPCParams,
 		}
-		endpointURL, err := url.Parse(chain.Endpoint)
-		if err != nil {
-			continue
-		}
-		chain.Endpoint = endpointURL.Hostname()
 	}
 
-	// mask endpoints
-	maskedCfg.BitcoinConfig.RPCUsername = ""
-	maskedCfg.BitcoinConfig.RPCPassword = ""
+	// Mask Solana endpoint
 	maskedCfg.SolanaConfig.Endpoint = ""
 
 	return maskedCfg.String()

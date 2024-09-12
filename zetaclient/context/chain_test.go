@@ -73,7 +73,7 @@ func TestChainRegistry(t *testing.T) {
 		ethChain, err := r.Get(eth.ChainId)
 		require.NoError(t, err)
 		require.True(t, ethChain.IsEVM())
-		require.False(t, ethChain.IsUTXO())
+		require.False(t, ethChain.IsBitcoin())
 		require.False(t, ethChain.IsSolana())
 		require.Equal(t, ethParams, ethChain.Params())
 	})
