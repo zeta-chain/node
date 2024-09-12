@@ -66,6 +66,7 @@ func TestUpdateGasPriceIncreaseFlags(r *runner.E2ERunner) {
 func TestAddToInboundTracker(r *runner.E2ERunner) {
 	chainEth := chains.GoerliLocalnet
 	chainBtc := chains.BitcoinRegtest
+
 	msgEth := crosschaintypes.NewMsgAddInboundTracker(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.EmergencyPolicyName),
 		chainEth.ChainId,

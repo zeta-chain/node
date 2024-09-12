@@ -29,6 +29,8 @@ func TestPrecompilesStaking(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	require.GreaterOrEqual(r, len(validators), 2)
 
+	CleanValidatorDelegations(r, stakingContract, validators)
+
 	// shares are 0 for both validators at the start
 	sharesBeforeVal1, err := stakingContract.GetShares(&bind.CallOpts{}, r.ZEVMAuth.From, validators[0].OperatorAddress)
 	require.NoError(r, err)
@@ -108,4 +110,25 @@ func TestPrecompilesStaking(r *runner.E2ERunner, args []string) {
 	})
 	require.NoError(r, err)
 	require.Equal(r, int64(1), delegationAfterVal2.DelegationResponse.Balance.Amount.Int64())
+}
+
+// CleanValidatorDelegations unstakes all delegations from the given validators if delegations ar present
+func CleanValidatorDelegations(r *runner.E2ERunner, stakingContract *staking.IStaking, validators []staking.Validator) {
+	for _, validator := range validators {
+		delegator := sdk.AccAddress(r.ZEVMAuth.From.Bytes()).String()
+		delegation, err := r.StakingClient.Delegation(r.Ctx, &types.QueryDelegationRequest{
+			DelegatorAddr: delegator,
+			ValidatorAddr: validator.OperatorAddress,
+		})
+		if err != nil || delegation.DelegationResponse == nil {
+			continue
+		}
+
+		delegationAmount := delegation.DelegationResponse.Balance.Amount.Int64()
+		if delegationAmount > 0 && err == nil {
+			tx, err := stakingContract.Unstake(r.ZEVMAuth, r.ZEVMAuth.From, validator.OperatorAddress, big.NewInt(delegationAmount))
+			require.NoError(r, err)
+			utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+		}
+	}
 }
