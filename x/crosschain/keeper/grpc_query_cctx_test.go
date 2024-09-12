@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
 
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -283,5 +284,42 @@ func TestKeeper_CctxByNonce(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.Equal(t, cctx, res.CrossChainTx)
+	})
+}
+
+func TestKeeper_CctxAll(t *testing.T) {
+	t.Run("empty request", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		_, err := k.CctxAll(ctx, &types.QueryAllCctxRequest{})
+		require.NoError(t, err)
+	})
+
+	t.Run("default page size", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		chainID := getValidEthChainID()
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetTSS(ctx, tss)
+		_ = createCctxWithNonceRange(t, ctx, *k, 1000, 2000, chainID, tss, zk)
+
+		res, err := k.CctxAll(ctx, &types.QueryAllCctxRequest{})
+		require.NoError(t, err)
+		require.Len(t, res.CrossChainTx, keeper.DefaultPageSize)
+	})
+
+	t.Run("page size provided", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		chainID := getValidEthChainID()
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetTSS(ctx, tss)
+		_ = createCctxWithNonceRange(t, ctx, *k, 1000, 2000, chainID, tss, zk)
+		testPageSize := 200
+
+		res, err := k.CctxAll(ctx, &types.QueryAllCctxRequest{
+			Pagination: &query.PageRequest{
+				Limit: uint64(testPageSize),
+			},
+		})
+		require.NoError(t, err)
+		require.Len(t, res.CrossChainTx, testPageSize)
 	})
 }
