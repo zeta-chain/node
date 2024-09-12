@@ -1,6 +1,7 @@
 package bank
 
 import (
+	"fmt"
 	"math/big"
 
 	"cosmossdk.io/math"
@@ -19,8 +20,8 @@ func (c *Contract) deposit(
 	caller common.Address,
 	args []interface{},
 ) (result []byte, err error) {
-	// This function is developed using the
-	// Check - Effects - Interactions pattern:
+	fmt.Printf("DEBUG: deposit()\n")
+	// This function is developed using the Check - Effects - Interactions pattern:
 	// 1. Check everything is correct.
 	if len(args) != 2 {
 		return nil, &(ptypes.ErrInvalidNumberOfArgs{
@@ -29,48 +30,74 @@ func (c *Contract) deposit(
 		})
 	}
 
+	// Unpack parameters for function deposit.
 	// function deposit(address zrc20, uint256 amount) external returns (bool success);
-	zrc20Addr, amount := args[0].(common.Address), args[1].(*big.Int)
-	if amount.Sign() < 0 || amount == nil || amount == new(big.Int) {
+	zrc20Addr, ok := args[0].(common.Address)
+	if !ok {
+		return nil, &ptypes.ErrInvalidAddr{
+			Got: zrc20Addr.String(),
+		}
+	}
+
+	amount, ok := args[1].(*big.Int)
+	if !ok || amount.Sign() < 0 || amount == nil || amount == new(big.Int) {
 		return nil, &ptypes.ErrInvalidAmount{
 			Got: amount.String(),
 		}
 	}
+	fmt.Printf("DEBUG: deposit(): zrc20Addr (ERC20ZRC20) %s\n", zrc20Addr.String())
+	fmt.Printf("DEBUG: deposit(): caller %s\n", caller.String())
 
 	// Initialize the ZRC20 ABI, as we need to call the balanceOf and allowance methods.
 	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
+		fmt.Printf("DEBUG: deposit(): zrc20.ZRC20MetaData.GetAbi() error %s\n", err.Error())
 		return nil, &ptypes.ErrUnexpected{
-			When: "ZRC20MetaData.GetAbi",
+			When: "ZRC20MetaData.GetAbi()",
 			Got:  err.Error(),
 		}
 	}
+	fmt.Printf("DEBUG: deposit(): zrc20ABI %v\n", zrc20ABI)
 
 	// Check for enough balance.
 	// function balanceOf(address account) public view virtual override returns (uint256)
-	argsBalanceOf := []interface{}{caller}
-
-	resBalanceOf, err := c.CallContract(ctx, zrc20ABI, zrc20Addr, "balanceOf", argsBalanceOf)
+	resBalanceOf, err := c.CallContract(
+		ctx,
+		&c.fungibleKeeper,
+		zrc20ABI,
+		ContractAddress,
+		zrc20Addr,
+		"balanceOf",
+		[]interface{}{caller},
+	)
 	if err != nil {
+		fmt.Printf("DEBUG: deposit(): balanceOf c.CallContract error %s\n", err.Error())
 		return nil, &ptypes.ErrUnexpected{
 			When: "balanceOf",
 			Got:  err.Error(),
 		}
 	}
+	fmt.Printf("DEBUG: deposit(): resBalanceOf %v\n", resBalanceOf)
 
-	balance := resBalanceOf[0].(*big.Int)
-	if balance.Cmp(amount) < 0 {
-		return nil, &ptypes.ErrUnexpected{
-			When: "balance0f",
-			Got:  "not enough balance",
+	balance, ok := resBalanceOf[0].(*big.Int)
+	if !ok || balance.Cmp(amount) < 0 {
+		return nil, &ptypes.ErrInvalidAmount{
+			Got: "not enough balance",
 		}
 	}
+	fmt.Printf("DEBUG: deposit(): balanceOf caller %v\n", balance.Uint64())
 
 	// Check for enough allowance.
 	// function allowance(address owner, address spender) public view virtual override returns (uint256)
-	argsAllowance := []interface{}{caller, ContractAddress}
-
-	resAllowance, err := c.CallContract(ctx, zrc20ABI, zrc20Addr, "allowance", argsAllowance)
+	resAllowance, err := c.CallContract(
+		ctx,
+		&c.fungibleKeeper,
+		zrc20ABI,
+		ContractAddress,
+		zrc20Addr,
+		"allowance",
+		[]interface{}{caller, ContractAddress},
+	)
 	if err != nil {
 		return nil, &ptypes.ErrUnexpected{
 			When: "allowance",
@@ -78,13 +105,13 @@ func (c *Contract) deposit(
 		}
 	}
 
-	allowance := resAllowance[0].(*big.Int)
-	if allowance.Cmp(amount) < 0 {
-		return nil, &ptypes.ErrUnexpected{
-			When: "allowance",
-			Got:  "not enough allowance",
+	allowance, ok := resAllowance[0].(*big.Int)
+	if !ok || allowance.Cmp(amount) < 0 {
+		return nil, &ptypes.ErrInvalidAmount{
+			Got: "not enough allowance",
 		}
 	}
+	fmt.Printf("DEBUG: deposit(): allowance caller %v\n", allowance.Uint64())
 
 	// Handle the toAddr:
 	// check it's valid and not blocked.
@@ -95,11 +122,12 @@ func (c *Contract) deposit(
 			Reason: "empty address",
 		}
 	}
+	fmt.Printf("DEBUG: deposit(): caller toAddr %s\n", toAddr.String())
 
 	if c.bankKeeper.BlockedAddr(toAddr) {
 		return nil, &ptypes.ErrInvalidAddr{
 			Got:    toAddr.String(),
-			Reason: "blocked by bank keeper",
+			Reason: "destination address blocked by bank keeper",
 		}
 	}
 
@@ -109,6 +137,7 @@ func (c *Contract) deposit(
 	// - Mint coins.
 	// - Send coins to the caller.
 	tokenDenom := ZRC20ToCosmosDenom(zrc20Addr)
+
 	coin := sdk.NewCoin(tokenDenom, math.NewIntFromBigInt(amount))
 	if !coin.IsValid() {
 		return nil, &ptypes.ErrInvalidCoin{
@@ -132,9 +161,15 @@ func (c *Contract) deposit(
 
 	// 2. Effect: subtract balance.
 	// function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool)
-	argsTransferFrom := []interface{}{caller, ContractAddress, amount}
-
-	resTransferFrom, err := c.CallContract(ctx, zrc20ABI, zrc20Addr, "transferFrom", argsTransferFrom)
+	resTransferFrom, err := c.CallContract(
+		ctx,
+		&c.fungibleKeeper,
+		zrc20ABI,
+		ContractAddress,
+		zrc20Addr,
+		"transferFrom",
+		[]interface{}{caller, ContractAddress, amount},
+	)
 	if err != nil {
 		return nil, &ptypes.ErrUnexpected{
 			When: "transferFrom",
@@ -142,28 +177,35 @@ func (c *Contract) deposit(
 		}
 	}
 
-	transferred := resTransferFrom[0].(bool)
-	if !transferred {
+	transferred, ok := resTransferFrom[0].(bool)
+	if !ok || !transferred {
 		return nil, &ptypes.ErrUnexpected{
 			When: "transferFrom",
 			Got:  "transaction not successful",
 		}
 	}
+	fmt.Printf("DEBUG: deposit(): transferred %v\n", transferred)
 
 	// 3. Interactions: create cosmos coin and send.
-	if err := c.bankKeeper.MintCoins(ctx, types.ModuleName, coinSet); err != nil {
+	err = c.bankKeeper.MintCoins(ctx, types.ModuleName, coinSet)
+	if err != nil {
+		fmt.Printf("DEBUG: deposit(): MintCoins error %s\n", err.Error())
 		return nil, &ptypes.ErrUnexpected{
 			When: "MintCoins",
 			Got:  err.Error(),
 		}
 	}
+	fmt.Printf("DEBUG: deposit(): MintCoins finished\n")
 
-	if err := c.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, toAddr, coinSet); err != nil {
+	err = c.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, toAddr, coinSet)
+	if err != nil {
+		fmt.Printf("DEBUG: deposit(): SendCoinsFromModuleToAccount error %s\n", err.Error())
 		return nil, &ptypes.ErrUnexpected{
 			When: "SendCoinsFromModuleToAccount",
 			Got:  err.Error(),
 		}
 	}
+	fmt.Printf("DEBUG: deposit(): SendCoinsFromModuleToAccount finished\n")
 
 	return method.Outputs.Pack(true)
 }

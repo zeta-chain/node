@@ -1,6 +1,8 @@
 package bank
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -103,6 +105,7 @@ func (c *Contract) RequiredGas(input []byte) uint64 {
 // Run is the entrypoint of the precompiled contract, it switches over the input method,
 // and execute them accordingly.
 func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byte, error) {
+	fmt.Println("DEBUG: bank.Run()")
 	method, err := ABI.MethodById(contract.Input[:4])
 	if err != nil {
 		return nil, err
@@ -117,31 +120,40 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 
 	switch method.Name {
 	case DepositMethodName:
+		fmt.Println("DEBUG: bank.Run(): DepositMethodName")
 		if readOnly {
-			return nil, nil
+			return nil, ptypes.ErrUnexpected{
+				Got: "method not allowed in read-only mode " + method.Name,
+			}
 		}
 
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
+			fmt.Println("DEBUG: bank.Run(): DepositMethodName: ExecuteNativeAction c.deposit()")
 			res, err = c.deposit(ctx, method, contract.CallerAddress, args)
 			return err
 		})
 		if execErr != nil {
+			fmt.Printf("DEBUG: bank.Run(): execErr %s", execErr.Error())
 			return nil, err
 		}
 		return res, nil
 
 	case WithdrawMethodName:
 		if readOnly {
-			return nil, nil
+			return nil, ptypes.ErrUnexpected{
+				Got: "method not allowed in read-only mode " + method.Name,
+			}
 		}
 
 		return nil, nil
 		// TODO
 
 	case BalanceOfMethodName:
+		fmt.Println("DEBUG: bank.Run(): BalanceOfMethodName")
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
+			fmt.Println("DEBUG: bank.Run(): DepositMethodName: ExecuteNativeAction c.balanceOf()")
 			res, err = c.balanceOf(ctx, method, args)
 			return err
 		})
