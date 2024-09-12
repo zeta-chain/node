@@ -30,7 +30,7 @@ func (c *Contract) deposit(
 	}
 
 	// function deposit(address zrc20, uint256 amount) external returns (bool success);
-	ZRC20Addr, amount := args[0].(common.Address), args[1].(*big.Int)
+	zrc20Addr, amount := args[0].(common.Address), args[1].(*big.Int)
 	if amount.Sign() < 0 || amount == nil || amount == new(big.Int) {
 		return nil, &ptypes.ErrInvalidAmount{
 			Got: amount.String(),
@@ -38,7 +38,7 @@ func (c *Contract) deposit(
 	}
 
 	// Initialize the ZRC20 ABI, as we need to call the balanceOf and allowance methods.
-	ZRC20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
 		return nil, &ptypes.ErrUnexpected{
 			When: "ZRC20MetaData.GetAbi",
@@ -50,7 +50,7 @@ func (c *Contract) deposit(
 	// function balanceOf(address account) public view virtual override returns (uint256)
 	argsBalanceOf := []interface{}{caller}
 
-	resBalanceOf, err := c.CallContract(ctx, ZRC20ABI, ZRC20Addr, "balanceOf", argsBalanceOf)
+	resBalanceOf, err := c.CallContract(ctx, zrc20ABI, zrc20Addr, "balanceOf", argsBalanceOf)
 	if err != nil {
 		return nil, &ptypes.ErrUnexpected{
 			When: "balanceOf",
@@ -70,7 +70,7 @@ func (c *Contract) deposit(
 	// function allowance(address owner, address spender) public view virtual override returns (uint256)
 	argsAllowance := []interface{}{caller, ContractAddress}
 
-	resAllowance, err := c.CallContract(ctx, ZRC20ABI, ZRC20Addr, "allowance", argsAllowance)
+	resAllowance, err := c.CallContract(ctx, zrc20ABI, zrc20Addr, "allowance", argsAllowance)
 	if err != nil {
 		return nil, &ptypes.ErrUnexpected{
 			When: "allowance",
@@ -108,7 +108,7 @@ func (c *Contract) deposit(
 	//   this way we map ZRC20 addresses to cosmos denoms "zevm/0x12345".
 	// - Mint coins.
 	// - Send coins to the caller.
-	tokenDenom := ZRC20ToCosmosDenom(ZRC20Addr)
+	tokenDenom := ZRC20ToCosmosDenom(zrc20Addr)
 	coin := sdk.NewCoin(tokenDenom, math.NewIntFromBigInt(amount))
 	if !coin.IsValid() {
 		return nil, &ptypes.ErrInvalidCoin{
@@ -130,18 +130,11 @@ func (c *Contract) deposit(
 		}
 	}
 
-	if !c.bankKeeper.IsSendEnabledCoin(ctx, coin) {
-		return nil, &ptypes.ErrUnexpected{
-			When: "IsSendEnabledCoins",
-			Got:  "coin not enabled to be sent",
-		}
-	}
-
 	// 2. Effect: subtract balance.
 	// function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool)
 	argsTransferFrom := []interface{}{caller, ContractAddress, amount}
 
-	resTransferFrom, err := c.CallContract(ctx, ZRC20ABI, ZRC20Addr, "transferFrom", argsTransferFrom)
+	resTransferFrom, err := c.CallContract(ctx, zrc20ABI, zrc20Addr, "transferFrom", argsTransferFrom)
 	if err != nil {
 		return nil, &ptypes.ErrUnexpected{
 			When: "transferFrom",
