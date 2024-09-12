@@ -116,6 +116,9 @@ fund_eth_from_config '.additional_accounts.user_admin.evm_address' 10000 "admin 
 # unlock migration tests accounts
 fund_eth_from_config '.additional_accounts.user_migration.evm_address' 10000 "migration tester"
 
+# unlock precompile tests accounts
+fund_eth_from_config '.additional_accounts.user_precompile.evm_address' 10000 "precompile tester"
+
 # unlock v2 ethers tests accounts
 fund_eth_from_config '.additional_accounts.user_v2_ether.evm_address' 10000  "V2 ethers tester"
 
@@ -127,6 +130,16 @@ fund_eth_from_config '.additional_accounts.user_v2_ether_revert.evm_address' 100
 
 # unlock v2 erc20 revert tests accounts
 fund_eth_from_config '.additional_accounts.user_v2_erc20_revert.evm_address' 10000 "V2 ERC20 revert tester"
+
+# unlock precompile tests accounts
+address=$(yq -r '.additional_accounts.user_precompile.evm_address' config.yml)
+echo "funding precompile tester address ${address} with 10000 Ether"
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
+
+# unlock precompile tests accounts
+address=$(yq -r '.additional_accounts.user_precompile.evm_address' config.yml)
+echo "funding precompile tester address ${address} with 10000 Ether"
+geth --exec "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(10000,'ether')})" attach http://eth:8545 > /dev/null
 
 # unlock local solana relayer accounts
 if host solana > /dev/null; then
@@ -173,7 +186,7 @@ if [ "$LOCALNET_MODE" == "tss-migrate" ]; then
   echo "waiting 10 seconds for node to restart"
     sleep 10
 
-  zetae2e local --skip-setup --config deployed.yml --skip-bitcoin-setup --light --skip-header-proof
+  zetae2e local --skip-setup --config deployed.yml --skip-bitcoin-setup --light --skip-header-proof --skip-precompiles
   ZETAE2E_EXIT_CODE=$?
   if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
     echo "E2E passed after migration"

@@ -223,6 +223,11 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 		return errors.Wrap(err, "unable to observe TSSReceive")
 	}
 
+	// task 4: filter the outbounds from TSS address to supplement outbound trackers
+	// TODO: make this a separate go routine in outbound.go after switching to smart contract V2
+	//
+	ob.FilterTSSOutbound(ctx, startBlock, toBlock)
+
 	// query the gateway logs
 	// TODO: refactor in a more declarative design. Example: storing the list of contract and events to listen in an array
 	// https://github.com/zeta-chain/node/issues/2493

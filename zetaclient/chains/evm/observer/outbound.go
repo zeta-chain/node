@@ -427,6 +427,42 @@ func ParseAndCheckWithdrawnEvent(
 	return nil, errors.New("no ERC20 Withdrawn event found")
 }
 
+// FilterTSSOutbound filters the outbounds from TSS address to supplement outbound trackers
+func (ob *Observer) FilterTSSOutbound(ctx context.Context, startBlock, toBlock uint64) {
+	// filters the outbounds from TSS address block by block
+	for bn := startBlock; bn <= toBlock; bn++ {
+		ob.FilterTSSOutboundInBlock(ctx, bn)
+	}
+}
+
+// FilterTSSOutboundInBlock filters the outbounds in a single block to supplement outbound trackers
+func (ob *Observer) FilterTSSOutboundInBlock(ctx context.Context, blockNumber uint64) {
+	// query block and ignore error (we don't rescan as we are only supplementing outbound trackers)
+	block, err := ob.GetBlockByNumberCached(blockNumber)
+	if err != nil {
+		ob.Logger().
+			Outbound.Error().
+			Err(err).
+			Msgf("error getting block %d for chain %d", blockNumber, ob.Chain().ChainId)
+		return
+	}
+
+	for i := range block.Transactions {
+		tx := block.Transactions[i]
+		if ethcommon.HexToAddress(tx.From) == ob.TSS().EVMAddress() {
+			nonce := uint64(tx.Nonce)
+			if !ob.IsTxConfirmed(nonce) {
+				if receipt, txx, ok := ob.checkConfirmedTx(ctx, tx.Hash, nonce); ok {
+					ob.SetTxNReceipt(nonce, receipt, txx)
+					ob.Logger().
+						Outbound.Info().
+						Msgf("TSS outbound detected on chain %d nonce %d tx %s", ob.Chain().ChainId, nonce, tx.Hash)
+				}
+			}
+		}
+	}
+}
+
 // checkConfirmedTx checks if a txHash is confirmed
 // returns (receipt, transaction, true) if confirmed or (nil, nil, false) otherwise
 func (ob *Observer) checkConfirmedTx(

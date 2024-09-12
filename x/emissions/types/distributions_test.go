@@ -10,11 +10,11 @@ import (
 
 func TestKeeper_GetRewardsDistributions(t *testing.T) {
 	t.Run("Return fractions of block reward", func(t *testing.T) {
-		val, obs, tss := types.GetRewardsDistributions(types.Params{
-			ValidatorEmissionPercentage: "0.5",
-			ObserverEmissionPercentage:  "0.25",
-			TssSignerEmissionPercentage: "0.25",
-		})
+		params := types.NewParams()
+		params.ValidatorEmissionPercentage = "0.5"
+		params.ObserverEmissionPercentage = "0.25"
+		params.TssSignerEmissionPercentage = "0.25"
+		val, obs, tss := types.GetRewardsDistributions(params)
 
 		require.EqualValues(t, "4810474537037037037", val.String()) // 0.5 * block reward
 		require.EqualValues(t, "2405237268518518518", obs.String()) // 0.25 * block reward

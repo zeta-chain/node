@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
+	ethrpc2 "github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/zetaclient/chains/base"
@@ -298,11 +299,14 @@ func syncObserverMap(
 				continue
 			}
 
+			evmJSONRPCClient := ethrpc2.NewEthRPC(cfg.Endpoint, ethrpc2.WithHttpClient(httpClient))
+
 			// create EVM chain observer
 			observer, err := evmobserver.NewObserver(
 				ctx,
-				cfg,
+				*rawChain,
 				evmClient,
+				evmJSONRPCClient,
 				*params,
 				client,
 				tss,

@@ -23,13 +23,13 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 
 	t.Run("invalid if params are invalid", func(t *testing.T) {
 		params := types.NewParams()
-		params.MaxBondFactor = "1.50"
+		params.BlockRewardAmount = sdk.MustNewDecFromStr("-10.0")
 		msg := types.MsgUpdateParams{
 			Authority: sample.AccAddress(),
 			Params:    params,
 		}
 		err := msg.ValidateBasic()
-		require.ErrorContains(t, err, "max bond factor cannot be higher that 1.25")
+		require.ErrorContains(t, err, "block reward amount cannot be less than 0")
 	})
 
 	t.Run("valid", func(t *testing.T) {

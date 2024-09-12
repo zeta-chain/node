@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/zeta-chain/node/app"
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/e2etests"
@@ -146,8 +147,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		noError(utils.WaitForBlockHeight(ctx, waitForHeight, conf.RPCs.ZetaCoreRPC, logger))
 	}
 
-	// set account prefix to zeta
-	setCosmosConfig()
+	app.SetConfig()
 
 	zetaTxServer, err := txserver.NewZetaTxServer(
 		conf.RPCs.ZetaCoreRPC,
@@ -312,7 +312,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		if !skipPrecompiles {
 			precompiledContractTests = []string{
-				e2etests.TestZetaPrecompilesPrototypeName,
+				e2etests.TestPrecompilesPrototypeName,
+				e2etests.TestPrecompilesPrototypeThroughContractName,
+				e2etests.TestPrecompilesStakingName,
+				e2etests.TestPrecompilesStakingThroughContractName,
 			}
 		}
 
@@ -373,6 +376,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSolanaWithdrawName,
 			e2etests.TestSolanaDepositAndCallName,
 			e2etests.TestSolanaDepositAndCallRefundName,
+			e2etests.TestSolanaDepositRestrictedName,
+			e2etests.TestSolanaWithdrawRestrictedName,
 		}
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
 	}

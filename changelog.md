@@ -14,14 +14,19 @@
 * [2681](https://github.com/zeta-chain/node/pull/2681) - implement `MsgUpdateERC20CustodyPauseStatus` to pause or unpause ERC20 Custody contract (to be used for the migration process for smart contract V2)
 * [2644](https://github.com/zeta-chain/node/pull/2644) - add created_timestamp to cctx status
 * [2673](https://github.com/zeta-chain/node/pull/2673) - add relayer key importer, encryption and decryption
-* [2633](https://github.com/zeta-chain/node/pull/2633) - support for stateful precompiled contracts.
+* [2633](https://github.com/zeta-chain/node/pull/2633) - support for stateful precompiled contracts
 * [2788](https://github.com/zeta-chain/node/pull/2788) - add common importable zetacored rpc package
+* [2784](https://github.com/zeta-chain/node/pull/2784) - staking precompiled contract
+* [2795](https://github.com/zeta-chain/node/pull/2795) - support restricted address in Solana
+* [2861](https://github.com/zeta-chain/node/pull/2861) - emit events from staking precompile
 
 ### Refactor
 
 * [2615](https://github.com/zeta-chain/node/pull/2615) - Refactor cleanup of outbound trackers
 * [2749](https://github.com/zeta-chain/node/pull/2749) - fix all lint errors from govet
 * [2725](https://github.com/zeta-chain/node/pull/2725) - refactor SetCctxAndNonceToCctxAndInboundHashToCctx to receive tsspubkey as an argument
+* [2802](https://github.com/zeta-chain/node/pull/2802) - set default liquidity cap for new ZRC20s
+* [2826](https://github.com/zeta-chain/node/pull/2826) - remove unused code from emissions module and add new parameter for fixed block reward amount
 
 ### Tests
 
@@ -29,13 +34,18 @@
 * [2726](https://github.com/zeta-chain/node/pull/2726) - add e2e tests for deposit and call, deposit and revert
 * [2703](https://github.com/zeta-chain/node/pull/2703) - add e2e tests for stateful precompiled contracts
 * [2763](https://github.com/zeta-chain/node/pull/2763) - add V2 contracts migration test
+* [2830](https://github.com/zeta-chain/node/pull/2830) - extend staking precompile tests
+* [2867](https://github.com/zeta-chain/node/pull/2867) - skip precompiles test for tss migration
 
 ### Fixes
 
 * [2654](https://github.com/zeta-chain/node/pull/2654) - add validation for authorization list in when validating genesis state for authorization module
 * [2674](https://github.com/zeta-chain/node/pull/2674) - allow operators to vote on ballots associated with discarded keygen without affecting the status of the current keygen.
 * [2672](https://github.com/zeta-chain/node/pull/2672) - check observer set for duplicates when adding a new observer or updating an existing one
+* [2735](https://github.com/zeta-chain/node/pull/2735) - fix the outbound tracker blocking confirmation and outbound processing on EVM chains by locally index outbound txs in zetaclient
 * [2787](https://github.com/zeta-chain/node/pull/2787) - ask for 3 accounts (signer, pda, system_program) on solana gateway deposit
+* [2842](https://github.com/zeta-chain/node/pull/2842) - fix: move interval assignment out of cctx loop in EVM outbound tx scheduler
+* [2853](https://github.com/zeta-chain/node/pull/2853) - calling precompile through sc with sc state update
 
 ## v19.0.0
 

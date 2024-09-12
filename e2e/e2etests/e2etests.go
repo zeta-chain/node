@@ -2,6 +2,7 @@ package e2etests
 
 import (
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/testutil/sample"
 )
 
 // List of all e2e test names to be used in zetae2e
@@ -58,6 +59,8 @@ const (
 	TestSolanaWithdrawName             = "solana_withdraw"
 	TestSolanaDepositAndCallName       = "solana_deposit_and_call"
 	TestSolanaDepositAndCallRefundName = "solana_deposit_and_call_refund"
+	TestSolanaDepositRestrictedName    = "solana_deposit_restricted"
+	TestSolanaWithdrawRestrictedName   = "solana_withdraw_restricted"
 
 	/**
 	 * TON tests
@@ -152,7 +155,10 @@ const (
 	/*
 	 Stateful precompiled contracts tests
 	*/
-	TestZetaPrecompilesPrototypeName = "precompile_contracts_prototype"
+	TestPrecompilesPrototypeName                = "precompile_contracts_prototype"
+	TestPrecompilesPrototypeThroughContractName = "precompile_contracts_prototype_through_contract"
+	TestPrecompilesStakingName                  = "precompile_contracts_staking"
+	TestPrecompilesStakingThroughContractName   = "precompile_contracts_staking_through_contract"
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -377,7 +383,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestSolanaDepositName,
 		"deposit SOL into ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount in lamport", DefaultValue: "1200000"},
+			{Description: "amount in lamport", DefaultValue: "12000000"},
 		},
 		TestSolanaDeposit,
 	),
@@ -404,6 +410,24 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1200000"},
 		},
 		TestSolanaDepositAndCallRefund,
+	),
+	runner.NewE2ETest(
+		TestSolanaDepositRestrictedName,
+		"deposit SOL into ZEVM restricted address",
+		[]runner.ArgDefinition{
+			{Description: "receiver", DefaultValue: sample.RestrictedEVMAddressTest},
+			{Description: "amount in lamport", DefaultValue: "1200000"},
+		},
+		TestSolanaDepositRestricted,
+	),
+	runner.NewE2ETest(
+		TestSolanaWithdrawRestrictedName,
+		"withdraw SOL from ZEVM to restricted address",
+		[]runner.ArgDefinition{
+			{Description: "receiver", DefaultValue: sample.RestrictedSolAddressTest},
+			{Description: "amount in lamport", DefaultValue: "1000000"},
+		},
+		TestSolanaWithdrawRestricted,
 	),
 	/*
 	 TON tests
@@ -830,9 +854,27 @@ var AllE2ETests = []runner.E2ETest{
 	 Stateful precompiled contracts tests
 	*/
 	runner.NewE2ETest(
-		TestZetaPrecompilesPrototypeName,
+		TestPrecompilesPrototypeName,
 		"test stateful precompiled contracts prototype",
 		[]runner.ArgDefinition{},
-		TestPrecompilesRegular,
+		TestPrecompilesPrototype,
+	),
+	runner.NewE2ETest(
+		TestPrecompilesPrototypeThroughContractName,
+		"test stateful precompiled contracts prototype through contract",
+		[]runner.ArgDefinition{},
+		TestPrecompilesPrototypeThroughContract,
+	),
+	runner.NewE2ETest(
+		TestPrecompilesStakingName,
+		"test stateful precompiled contracts staking",
+		[]runner.ArgDefinition{},
+		TestPrecompilesStaking,
+	),
+	runner.NewE2ETest(
+		TestPrecompilesStakingThroughContractName,
+		"test stateful precompiled contracts staking through contract",
+		[]runner.ArgDefinition{},
+		TestPrecompilesStakingThroughContract,
 	),
 }

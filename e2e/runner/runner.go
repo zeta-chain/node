@@ -11,6 +11,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -90,6 +91,7 @@ type E2ERunner struct {
 	FungibleClient    fungibletypes.QueryClient
 	AuthClient        authtypes.QueryClient
 	BankClient        banktypes.QueryClient
+	StakingClient     stakingtypes.QueryClient
 	ObserverClient    observertypes.QueryClient
 	LightclientClient lightclienttypes.QueryClient
 
@@ -192,6 +194,7 @@ func NewE2ERunner(
 		FungibleClient:    clients.Zetacore.Fungible,
 		AuthClient:        clients.Zetacore.Auth,
 		BankClient:        clients.Zetacore.Bank,
+		StakingClient:     clients.Zetacore.Staking,
 		ObserverClient:    clients.Zetacore.Observer,
 		LightclientClient: clients.Zetacore.Lightclient,
 
