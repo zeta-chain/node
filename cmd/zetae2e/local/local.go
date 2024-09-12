@@ -139,6 +139,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	conf, err := GetConfig(cmd)
 	noError(err)
 
+	// temporary spaghetti to overcome e2e flags limitations
+	if !testTON {
+		conf.RPCs.TONSidecarURL = ""
+	}
+
 	// initialize context
 	ctx, cancel := context.WithCancel(context.Background())
 

@@ -41,14 +41,11 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, account confi
 
 	var tonClient *tonrunner.Client
 	if conf.RPCs.TONSidecarURL != "" {
-		sidecar := tonrunner.NewSidecarClient(conf.RPCs.TONSidecarURL)
-
-		client, err := getTONClient(ctx, sidecar.LiteServerURL())
+		c, err := getTONClient(ctx, conf.RPCs.TONSidecarURL)
 		if err != nil {
 			return runner.Clients{}, fmt.Errorf("failed to get ton client: %w", err)
 		}
-
-		tonClient = &tonrunner.Client{Client: client, SidecarClient: sidecar}
+		tonClient = c
 	}
 
 	zetaCoreClients, err := GetZetacoreClient(conf)
@@ -124,11 +121,17 @@ func getEVMClient(
 	return evmClient, evmAuth, nil
 }
 
-func getTONClient(ctx context.Context, configURL string) (*ton.Client, error) {
+func getTONClient(ctx context.Context, sidecarURL string) (*tonrunner.Client, error) {
+	if sidecarURL == "" {
+		return nil, fmt.Errorf("sidecar URL is empty")
+	}
+
+	sidecar := tonrunner.NewSidecarClient(sidecarURL)
+
 	// It might take some time to bootstrap the sidecar
 	cfg, err := retry.DoTypedWithRetry(
 		func() (*tonconfig.GlobalConfigurationFile, error) {
-			return tonconfig.ConfigFromURL(ctx, configURL)
+			return tonconfig.ConfigFromURL(ctx, sidecar.LiteServerURL())
 		},
 	)
 
@@ -136,7 +139,15 @@ func getTONClient(ctx context.Context, configURL string) (*ton.Client, error) {
 		return nil, fmt.Errorf("failed to get ton config: %w", err)
 	}
 
-	return ton.NewClient(ton.WithConfigurationFile(*cfg))
+	client, err := ton.NewClient(ton.WithConfigurationFile(*cfg))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create ton client: %w", err)
+	}
+
+	return &tonrunner.Client{
+		Client:        client,
+		SidecarClient: sidecar,
+	}, nil
 }
 
 func GetZetacoreClient(conf config.Config) (zetacore_rpc.Clients, error) {
