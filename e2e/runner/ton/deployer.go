@@ -155,7 +155,7 @@ func (d *Deployer) waitForNextSeqno(ctx context.Context, oldSeqno uint32, timeou
 
 	for ; time.Since(t) < timeout; time.Sleep(timeout / 10) {
 		newSeqno, err := d.Seqno(ctx)
-		if err == nil {
+		if err != nil {
 			return errors.Wrap(err, "failed to get seqno")
 		}
 
