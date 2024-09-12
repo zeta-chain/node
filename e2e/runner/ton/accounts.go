@@ -63,30 +63,6 @@ func ConstructWalletFromPrivateKey(pk ed25519.PrivateKey, client blockchain) (*A
 		return nil, nil, errors.Wrap(err, "failed to construct account")
 	}
 
-	//	// todo addresses don't match! Why?????
-	//	// todo probably state init doesn't match....
-	//	// ACC INIT ADDR 0:da797e6dcdfcbd3e05a35dd45a240287668890bb2981005ac0775b840eeb62af (EXISTS)
-	//	// WALLET ADDR 0:e071859fa4a95e41249e721f87717278ca7e68dcce74aace483c695284eb7284 (DOESN'T EXIST)
-	//
-	//	// todo
-	//	fmt.Println("ACC INIT ADDR", accInit.ID.ToRaw())
-	//	fmt.Println("WALLET ADDR", w.GetAddress().ToRaw())
-	//
-	//	// Double-check the balance
-	//	b, err := w.GetBalance(ctx)
-	//	if err != nil {
-	//		return nil, errors.Wrap(err, "failed to get balance")
-	//	}
-	//
-	//	balanceCoins := math.NewUint(b)
-	//	if !amount.Equal(balanceCoins) {
-	//		return nil, fmt.Errorf(
-	//			"unexpected balance for %s. Got %s, want %s",
-	//			w.GetAddress().ToRaw(),
-	//			FormatCoins(balanceCoins),
-	//			FormatCoins(amount))
-	//	}
-
 	// If state init and internal tongo's wallet.stateInit are the same,
 	// then addresses should match.
 	if accInit.ID.String() != w.GetAddress().String() {
