@@ -42,6 +42,7 @@ func NewDeployer(client blockchain, cfg Faucet) (*Deployer, error) {
 		return nil, errors.Wrap(err, "invalid mnemonic")
 	}
 
+	// #nosec G115 always in range
 	w, err := wallet.New(pk, version, client, wallet.WithSubWalletID(uint32(cfg.SubWalletId)))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create wallet")

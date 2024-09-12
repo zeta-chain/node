@@ -22,5 +22,6 @@ func UintToCoins(v math.Uint) tlb.Coins {
 }
 
 func FormatCoins(v math.Uint) string {
+	// #nosec G115 always in range
 	return utils.HumanFriendlyCoinsRepr(int64(v.Uint64()))
 }
