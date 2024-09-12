@@ -93,6 +93,7 @@ import (
 	"github.com/zeta-chain/node/docs/openapi"
 	zetamempool "github.com/zeta-chain/node/pkg/mempool"
 	"github.com/zeta-chain/node/precompiles"
+	bankprecompile "github.com/zeta-chain/node/precompiles/bank"
 	srvflags "github.com/zeta-chain/node/server/flags"
 	authoritymodule "github.com/zeta-chain/node/x/authority"
 	authoritykeeper "github.com/zeta-chain/node/x/authority/keeper"
@@ -1065,6 +1066,11 @@ func (app *App) BlockedAddrs() map[string]bool {
 	// Each enabled precompiled stateful contract should be added as a BlockedAddrs.
 	// That way it's marked as non payable by the bank keeper.
 	for addr, enabled := range precompiles.EnabledStatefulContracts {
+		// bank precompile has to be able to receive funds.
+		if addr == bankprecompile.ContractAddress {
+			continue
+		}
+
 		if enabled {
 			blockList[addr.String()] = enabled
 		}

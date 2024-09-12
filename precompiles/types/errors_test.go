@@ -4,7 +4,7 @@ import "testing"
 
 func Test_ErrInvalidAddr(t *testing.T) {
 	e := ErrInvalidAddr{
-		Got: "foo",
+		Got:    "foo",
 		Reason: "bar",
 	}
 	got := e.Error()
