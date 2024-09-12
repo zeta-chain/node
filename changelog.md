@@ -36,6 +36,7 @@
 * [2763](https://github.com/zeta-chain/node/pull/2763) - add V2 contracts migration test
 * [2830](https://github.com/zeta-chain/node/pull/2830) - extend staking precompile tests
 * [2867](https://github.com/zeta-chain/node/pull/2867) - skip precompiles test for tss migration
+* [2833](https://github.com/zeta-chain/node/pull/2833) - add e2e framework for TON blockchain
 
 ### Fixes
 
