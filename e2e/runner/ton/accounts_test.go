@@ -7,6 +7,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
+	"github.com/tonkeeper/tongo/wallet"
 )
 
 func TestGateway(t *testing.T) {
@@ -29,7 +30,7 @@ func TestGateway(t *testing.T) {
 	t.Run("Build gateway deployment payload", func(t *testing.T) {
 		// ACT
 		codeCell, errCode := getGatewayCode()
-		stateCell, errState := buildGatewayState(tss)
+		stateCell, errState := buildGatewayData(tss)
 
 		// ASSERT
 		require.NoError(t, errCode)
@@ -49,4 +50,17 @@ func TestGateway(t *testing.T) {
 
 		require.Equal(t, expectedState, stateString)
 	})
+}
+
+func TestWalletConstruction(t *testing.T) {
+	// ARRANGE
+	seed := wallet.RandomSeed()
+
+	// ACT
+	accInit, w, err := ConstructWalletFromSeed(seed, nil)
+
+	// ASSERT
+	require.NoError(t, err)
+	require.NotNil(t, accInit)
+	require.NotNil(t, w)
 }

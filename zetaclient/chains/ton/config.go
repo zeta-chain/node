@@ -9,10 +9,12 @@ import (
 	"github.com/tonkeeper/tongo/config"
 )
 
+type GlobalConfigurationFile = config.GlobalConfigurationFile
+
 // ConfigFromURL downloads & parses lite server config.
 //
 //nolint:gosec
-func ConfigFromURL(ctx context.Context, url string) (*config.GlobalConfigurationFile, error) {
+func ConfigFromURL(ctx context.Context, url string) (*GlobalConfigurationFile, error) {
 	const timeout = 3 * time.Second
 
 	ctx, cancel := context.WithTimeout(ctx, timeout)

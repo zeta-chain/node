@@ -3,24 +3,40 @@ package e2etests
 import (
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
-	"github.com/tonkeeper/tongo/utils"
 
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/runner/ton"
 )
 
+// TestTONDeposit (!) This boilerplate is a demonstration of E2E capabilities for TON integration
+// Actual Deposit test is not implemented yet.
 func TestTONDeposit(r *runner.E2ERunner, _ []string) {
-	ctx := r.Ctx
+	ctx, deployer := r.Ctx, r.TONDeployer
 
-	deployerBalance, err := r.TONDeployer.GetBalance(ctx)
+	// Given deployer
+	deployerBalance, err := deployer.GetBalance(ctx)
 	require.NoError(r, err, "failed to get deployer balance")
+	require.NotZero(r, deployerBalance, "deployer balance is zero")
 
-	r.Logger.Print("TON deployer address %s", r.TONDeployer.Wallet().GetAddress().ToHuman(false, true))
+	// Given sample wallet with a balance of 50 TON
+	sender, err := deployer.CreateWallet(ctx, ton.TONCoins(50))
+	require.NoError(r, err)
 
-	require.False(r, deployerBalance.IsZero(), "deployer balance is zero")
+	// That was funded (again) but the faucet
+	_, err = deployer.Fund(ctx, sender.GetAddress(), ton.TONCoins(30))
+	require.NoError(r, err)
 
-	r.Logger.Print("TON deployer balance: %s", prettyPrintTON(deployerBalance))
-}
+	// Check sender balance
+	sb, err := sender.GetBalance(ctx)
+	require.NoError(r, err)
 
-func prettyPrintTON(v math.Uint) string {
-	return utils.HumanFriendlyCoinsRepr(int64(v.Uint64()))
+	senderBalance := math.NewUint(sb)
+
+	// note that it's not exactly 80 TON, but 79.99... due to gas fees
+	// We'll tackle gas math later.
+	r.Logger.Print(
+		"Balance of sender (%s): %s",
+		sender.GetAddress().ToHuman(false, true),
+		ton.FormatCoins(senderBalance),
+	)
 }

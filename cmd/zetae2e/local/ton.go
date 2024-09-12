@@ -38,12 +38,6 @@ func tonTestRoutine(
 			return errors.Wrap(err, "unable to get ton tests to run")
 		}
 
-		const bootstrapTimeout = 5 * time.Minute
-
-		if err := tonRunner.EnsureTONBootstrapped(bootstrapTimeout); err != nil {
-			return errors.Wrap(err, "unable to bootstrap TON")
-		}
-
 		if err := tonRunner.SetupTON(); err != nil {
 			return errors.Wrap(err, "unable to setup TON account")
 		}

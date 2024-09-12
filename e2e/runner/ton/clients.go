@@ -9,11 +9,51 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	ton "github.com/tonkeeper/tongo/liteapi"
 )
+
+type Client struct {
+	*ton.Client
+	*SidecarClient
+}
+
+func (c *Client) WaitForBlocks(ctx context.Context) error {
+	const (
+		blocksToWait = 3
+		interval     = 3 * time.Second
+	)
+
+	block, err := c.GetMasterchainInfo(ctx)
+	if err != nil {
+		return err
+	}
+
+	waitFor := block.Last.Seqno + blocksToWait
+
+	for {
+		freshBlock, err := c.GetMasterchainInfo(ctx)
+		if err != nil {
+			return err
+		}
+
+		if waitFor < freshBlock.Last.Seqno {
+			return nil
+		}
+
+		time.Sleep(interval)
+	}
+}
 
 type SidecarClient struct {
 	baseURL string
 	c       *http.Client
+}
+
+var ErrNotHealthy = fmt.Errorf("TON node is not healthy yet")
+
+func NewSidecarClient(baseURL string) *SidecarClient {
+	c := &http.Client{Timeout: 3 * time.Second}
+	return &SidecarClient{baseURL, c}
 }
 
 // Faucet represents the faucet information.
@@ -26,16 +66,9 @@ type Faucet struct {
 	WalletRawAddress string `json:"walletRawAddress"`
 	Mnemonic         string `json:"mnemonic"`
 	WalletVersion    string `json:"walletVersion"`
-	WorkChain        int    `json:"workChain"`
+	WorkChain        int32  `json:"workChain"`
 	SubWalletId      int    `json:"subWalletId"`
 	Created          bool   `json:"created"`
-}
-
-var ErrNotHealthy = fmt.Errorf("TON node is not healthy yet")
-
-func NewSidecarClient(baseURL string) *SidecarClient {
-	c := &http.Client{Timeout: 3 * time.Second}
-	return &SidecarClient{baseURL, c}
 }
 
 // LiteServerURL returns the URL to the lite server config

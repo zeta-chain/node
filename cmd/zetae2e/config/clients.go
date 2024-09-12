@@ -15,6 +15,7 @@ import (
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/runner"
 	tonrunner "github.com/zeta-chain/node/e2e/runner/ton"
+	"github.com/zeta-chain/node/pkg/retry"
 	zetacore_rpc "github.com/zeta-chain/node/pkg/rpc"
 	tonconfig "github.com/zeta-chain/node/zetaclient/chains/ton"
 )
@@ -38,20 +39,16 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, account confi
 		}
 	}
 
-	var (
-		tonClient        *ton.Client
-		tonSidecarClient *tonrunner.SidecarClient
-	)
-
+	var tonClient *tonrunner.Client
 	if conf.RPCs.TONSidecarURL != "" {
-		tonSidecarClient = tonrunner.NewSidecarClient(conf.RPCs.TONSidecarURL)
+		sidecar := tonrunner.NewSidecarClient(conf.RPCs.TONSidecarURL)
 
-		c, err := getTONClient(ctx, tonSidecarClient.LiteServerURL())
+		client, err := getTONClient(ctx, sidecar.LiteServerURL())
 		if err != nil {
 			return runner.Clients{}, fmt.Errorf("failed to get ton client: %w", err)
 		}
 
-		tonClient = c
+		tonClient = &tonrunner.Client{Client: client, SidecarClient: sidecar}
 	}
 
 	zetaCoreClients, err := GetZetacoreClient(conf)
@@ -65,15 +62,14 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, account confi
 	}
 
 	return runner.Clients{
-		Zetacore:   zetaCoreClients,
-		BtcRPC:     btcRPCClient,
-		Solana:     solanaClient,
-		TON:        tonClient,
-		TONSidecar: tonSidecarClient,
-		Evm:        evmClient,
-		EvmAuth:    evmAuth,
-		Zevm:       zevmClient,
-		ZevmAuth:   zevmAuth,
+		Zetacore: zetaCoreClients,
+		BtcRPC:   btcRPCClient,
+		Solana:   solanaClient,
+		TON:      tonClient,
+		Evm:      evmClient,
+		EvmAuth:  evmAuth,
+		Zevm:     zevmClient,
+		ZevmAuth: zevmAuth,
 	}, nil
 }
 
@@ -129,7 +125,13 @@ func getEVMClient(
 }
 
 func getTONClient(ctx context.Context, configURL string) (*ton.Client, error) {
-	cfg, err := tonconfig.ConfigFromURL(ctx, configURL)
+	// It might take some time to bootstrap the sidecar
+	cfg, err := retry.DoTypedWithRetry(
+		func() (*tonconfig.GlobalConfigurationFile, error) {
+			return tonconfig.ConfigFromURL(ctx, configURL)
+		},
+	)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ton config: %w", err)
 	}

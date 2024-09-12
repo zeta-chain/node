@@ -383,11 +383,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			os.Exit(1)
 		}
 
-		if deployerRunner.Clients.TONSidecar == nil {
-			logger.Print("❌ TON sidecar is nil")
-			os.Exit(1)
-		}
-
 		tonTests := []string{
 			e2etests.TestTONDepositName,
 		}
