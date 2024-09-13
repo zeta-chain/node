@@ -16,6 +16,7 @@ import (
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testrpc"
 )
@@ -40,12 +41,12 @@ func TestCreateSignerMap(t *testing.T) {
 
 		cfg.EVMChainConfigs[chains.Ethereum.ChainId] = config.EVMConfig{
 			Chain:    chains.Ethereum,
-			Endpoint: mocks.EVMRPCEnabled,
+			Endpoint: testutils.MockEVMRPCEndpoint,
 		}
 
 		cfg.EVMChainConfigs[chains.Polygon.ChainId] = config.EVMConfig{
 			Chain:    chains.Polygon,
-			Endpoint: mocks.EVMRPCEnabled,
+			Endpoint: testutils.MockEVMRPCEndpoint,
 		}
 
 		cfg.BTCChainConfigs[chains.BitcoinMainnet.ChainId] = btcConfig

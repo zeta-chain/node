@@ -2,13 +2,14 @@ package signer
 
 import (
 	"fmt"
+	"math/big"
+	"testing"
+
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
-	"math/big"
-	"testing"
 )
 
 func TestSigner_SignAdminTx(t *testing.T) {
