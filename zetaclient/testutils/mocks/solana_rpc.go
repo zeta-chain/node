@@ -77,6 +77,36 @@ func (_m *SolanaRPCClient) GetBalance(ctx context.Context, account solana.Public
 	return r0, r1
 }
 
+// GetBlockTime provides a mock function with given fields: ctx, block
+func (_m *SolanaRPCClient) GetBlockTime(ctx context.Context, block uint64) (*solana.UnixTimeSeconds, error) {
+	ret := _m.Called(ctx, block)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetBlockTime")
+	}
+
+	var r0 *solana.UnixTimeSeconds
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) (*solana.UnixTimeSeconds, error)); ok {
+		return rf(ctx, block)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) *solana.UnixTimeSeconds); ok {
+		r0 = rf(ctx, block)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*solana.UnixTimeSeconds)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
+		r1 = rf(ctx, block)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetConfirmedTransactionWithOpts provides a mock function with given fields: ctx, signature, opts
 func (_m *SolanaRPCClient) GetConfirmedTransactionWithOpts(ctx context.Context, signature solana.Signature, opts *rpc.GetTransactionOpts) (*rpc.TransactionWithMeta, error) {
 	ret := _m.Called(ctx, signature, opts)
