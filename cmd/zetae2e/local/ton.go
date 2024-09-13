@@ -23,7 +23,7 @@ func tonTestRoutine(
 			"ton",
 			conf,
 			deployerRunner,
-			conf.AdditionalAccounts.UserSolana,
+			conf.DefaultAccount,
 			runner.NewLogger(verbose, color.FgCyan, "ton"),
 		)
 		if err != nil {
