@@ -7,7 +7,6 @@ import (
 	"math"
 	"math/big"
 	"strings"
-	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -67,6 +66,7 @@ func NewObserver(
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
+	rpcAlertLatency int64,
 	database *db.DB,
 	logger base.Logger,
 	ts *metrics.TelemetryServer,
@@ -79,7 +79,7 @@ func NewObserver(
 		tss,
 		base.DefaultBlockCacheSize,
 		base.DefaultHeaderCacheSize,
-		time.Duration(evmCfg.RPCAlertLatency),
+		rpcAlertLatency,
 		ts,
 		database,
 		logger,

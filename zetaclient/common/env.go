@@ -2,7 +2,7 @@ package common
 
 import (
 	"os"
-	"strings"
+	"strconv"
 )
 
 const (
@@ -20,5 +20,11 @@ const (
 func LiveTestEnabled() bool {
 	value := os.Getenv(EnvEnableLiveTest)
 
-	return strings.ToLower(value) == "true" || value == "1"
+	// parse flag
+	enabled, err := strconv.ParseBool(value)
+	if err != nil {
+		return false
+	}
+
+	return enabled
 }

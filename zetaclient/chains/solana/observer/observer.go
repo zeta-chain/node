@@ -2,7 +2,6 @@ package observer
 
 import (
 	"context"
-	"time"
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -45,7 +44,7 @@ func NewObserver(
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
-	rpcAlertLatency time.Duration,
+	rpcAlertLatency int64,
 	db *db.DB,
 	logger base.Logger,
 	ts *metrics.TelemetryServer,

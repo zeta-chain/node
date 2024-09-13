@@ -96,7 +96,7 @@ func NewObserver(
 	tss interfaces.TSSSigner,
 	blockCacheSize int,
 	headerCacheSize int,
-	rpcAlertLatency time.Duration,
+	rpcAlertLatency int64,
 	ts *metrics.TelemetryServer,
 	database *db.DB,
 	logger Logger,
@@ -109,7 +109,7 @@ func NewObserver(
 		lastBlock:        0,
 		lastBlockScanned: 0,
 		lastTxScanned:    "",
-		rpcAlertLatency:  rpcAlertLatency * time.Second, // latency in seconds
+		rpcAlertLatency:  time.Duration(rpcAlertLatency) * time.Second,
 		ts:               ts,
 		db:               database,
 		mu:               &sync.Mutex{},

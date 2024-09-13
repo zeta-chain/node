@@ -25,12 +25,12 @@ import (
 )
 
 const (
-	// defaultAlertLatency is the default alert latency for unit tests
-	defaultAlertLatency = 60 * time.Second
+	// defaultAlertLatency is the default alert latency (in seconds) for unit tests
+	defaultAlertLatency = 60
 )
 
 // createObserver creates a new observer for testing
-func createObserver(t *testing.T, chain chains.Chain, alertLatency time.Duration) *base.Observer {
+func createObserver(t *testing.T, chain chains.Chain, alertLatency int64) *base.Observer {
 	// constructor parameters
 	chainParams := *sample.ChainParams(chain.ChainId)
 	zetacoreClient := mocks.NewZetacoreClient(t)
@@ -540,7 +540,7 @@ func TestAlertOnRPCLatency(t *testing.T) {
 	tests := []struct {
 		name         string
 		blockTime    time.Time
-		alertLatency time.Duration
+		alertLatency int64
 		alerted      bool
 	}{
 		{
@@ -562,7 +562,7 @@ func TestAlertOnRPCLatency(t *testing.T) {
 			alerted:      true,
 		},
 		{
-			name:         "should not alert on normal RPC latency compared to default",
+			name:         "should not alert on normal RPC latency when compared to default",
 			blockTime:    now.Add(-55 * time.Second),
 			alertLatency: 0, // 0 means not set
 			alerted:      false,
@@ -575,7 +575,7 @@ func TestAlertOnRPCLatency(t *testing.T) {
 			// create observer
 			ob := createObserver(t, chains.Ethereum, tt.alertLatency)
 
-			alerted := ob.AlertOnRPCLatency(tt.blockTime, defaultAlertLatency)
+			alerted := ob.AlertOnRPCLatency(tt.blockTime, time.Duration(defaultAlertLatency)*time.Second)
 			require.Equal(t, tt.alerted, alerted)
 		})
 	}
