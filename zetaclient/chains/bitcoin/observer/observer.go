@@ -240,26 +240,35 @@ func (ob *Observer) WatchRPCStatus(_ context.Context) error {
 
 			bn, err := ob.btcClient.GetBlockCount()
 			if err != nil {
-				ob.logger.Chain.Error().Err(err).Msg("RPC status check: RPC down? ")
+				ob.logger.Chain.Error().Err(err).Msg("RPC status check failed: GetBlockCount")
 				continue
 			}
 
 			hash, err := ob.btcClient.GetBlockHash(bn)
 			if err != nil {
-				ob.logger.Chain.Error().Err(err).Msg("RPC status check: RPC down? ")
+				ob.logger.Chain.Error().Err(err).
+					Int64("block_number", bn).
+					Msg("RPC status check failed: GetBlockHash")
 				continue
 			}
 
 			header, err := ob.btcClient.GetBlockHeader(hash)
 			if err != nil {
-				ob.logger.Chain.Error().Err(err).Msg("RPC status check: RPC down? ")
+				ob.logger.Chain.Error().
+					Err(err).
+					Int64("block_number", bn).
+					Msg("RPC status check failed: GetBlockHeader")
 				continue
 			}
 
 			blockTime := header.Timestamp
-			elapsedSeconds := time.Since(blockTime).Seconds()
-			if elapsedSeconds > 1200 {
-				ob.logger.Chain.Error().Err(err).Msg("RPC status check: RPC down? ")
+			blockAgeSeconds := time.Since(blockTime).Seconds()
+			if blockAgeSeconds > 1200 {
+				ob.logger.Chain.Error().
+					Err(err).
+					Int64("block_number", bn).
+					Float64("block_age_seconds", blockAgeSeconds).
+					Msg("RPC status check failed: block is old")
 				continue
 			}
 
@@ -280,7 +289,12 @@ func (ob *Observer) WatchRPCStatus(_ context.Context) error {
 			}
 
 			ob.logger.Chain.Info().
-				Msgf("[OK] RPC status check: latest block number %d, timestamp %s (%.fs ago), tss addr %s, #utxos: %d", bn, blockTime, elapsedSeconds, tssAddr, len(res))
+				Int64("block_number", bn).
+				Time("block_timestamp", blockTime).
+				Float64("block_age_seconds", blockAgeSeconds).
+				Str("tss_address", tssAddr.EncodeAddress()).
+				Int("utxo_count", len(res)).
+				Msg("RPC status OK")
 
 		case <-ob.StopChannel():
 			return nil

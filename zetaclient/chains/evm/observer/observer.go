@@ -217,29 +217,37 @@ func (ob *Observer) WatchRPCStatus(ctx context.Context) error {
 			}
 			bn, err := ob.evmClient.BlockNumber(ctx)
 			if err != nil {
-				ob.Logger().Chain.Error().Err(err).Msg("RPC Status Check error: RPC down?")
+				ob.Logger().Chain.Error().Err(err).Msg("RPC status check failed: BlockNumber")
 				continue
 			}
 			gasPrice, err := ob.evmClient.SuggestGasPrice(ctx)
 			if err != nil {
-				ob.Logger().Chain.Error().Err(err).Msg("RPC Status Check error: RPC down?")
+				ob.Logger().Chain.Error().
+					Uint64("block_number", bn).
+					Err(err).Msg("RPC status check failed: SuggestGasPrice")
 				continue
 			}
 			header, err := ob.evmClient.HeaderByNumber(ctx, new(big.Int).SetUint64(bn))
 			if err != nil {
-				ob.Logger().Chain.Error().Err(err).Msg("RPC Status Check error: RPC down?")
+				ob.Logger().Chain.Error().
+					Uint64("block_number", bn).
+					Err(err).Msg("RPC status check failed: HeaderByNumber")
 				continue
 			}
 			// #nosec G115 always in range
 			blockTime := time.Unix(int64(header.Time), 0).UTC()
-			elapsedSeconds := time.Since(blockTime).Seconds()
-			if elapsedSeconds > 100 {
+			blockAgeSeconds := time.Since(blockTime).Seconds()
+			if blockAgeSeconds > 100 {
 				ob.Logger().Chain.Warn().
-					Msgf("RPC Status Check warning: RPC stale or chain stuck (check explorer)? Latest block %d timestamp is %.0fs ago", bn, elapsedSeconds)
+					Msgf("RPC status check warning: RPC stale or chain stuck (check explorer)? Latest block %d timestamp is %.0fs ago", bn, blockAgeSeconds)
 				continue
 			}
 			ob.Logger().Chain.Info().
-				Msgf("[OK] RPC status: latest block num %d, timestamp %s ( %.0fs ago), suggested gas price %d", header.Number, blockTime.String(), elapsedSeconds, gasPrice.Uint64())
+				Uint64("block_number", header.Number.Uint64()).
+				Time("block_timestamp", blockTime).
+				Float64("block_age_seconds", blockAgeSeconds).
+				Uint64("suggested_gas_price", gasPrice.Uint64()).
+				Msg("RPC status OK")
 		case <-ob.StopChannel():
 			return nil
 		}
