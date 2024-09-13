@@ -142,3 +142,32 @@ export declare class BallotListForHeight extends Message<BallotListForHeight> {
   static equals(a: BallotListForHeight | PlainMessage<BallotListForHeight> | undefined, b: BallotListForHeight | PlainMessage<BallotListForHeight> | undefined): boolean;
 }
 
+/**
+ * @generated from message zetachain.zetacore.observer.VoterList
+ */
+export declare class VoterList extends Message<VoterList> {
+  /**
+   * @generated from field: string voter_address = 1;
+   */
+  voterAddress: string;
+
+  /**
+   * @generated from field: zetachain.zetacore.observer.VoteType vote_type = 2;
+   */
+  voteType: VoteType;
+
+  constructor(data?: PartialMessage<VoterList>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.VoterList";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): VoterList;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): VoterList;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): VoterList;
+
+  static equals(a: VoterList | PlainMessage<VoterList> | undefined, b: VoterList | PlainMessage<VoterList> | undefined): boolean;
+}
+

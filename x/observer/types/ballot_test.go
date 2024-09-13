@@ -477,5 +477,130 @@ func Test_BuildRewardsDistribution(t *testing.T) {
 			require.Equal(t, test.expectedMap, rewardsMap)
 		})
 	}
+}
 
+func TestBallot_GenerateVoterList(t *testing.T) {
+	tt := []struct {
+		name              string
+		voters            []string
+		votes             []VoteType
+		expectedVoterList []VoterList
+		err               require.ErrorAssertionFunc
+	}{
+		{
+			name:   "Success observation",
+			voters: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
+			votes: []VoteType{
+				VoteType_SuccessObservation,
+				VoteType_SuccessObservation,
+				VoteType_SuccessObservation,
+				VoteType_SuccessObservation,
+			},
+			expectedVoterList: []VoterList{
+				{
+					VoterAddress: "Observer1",
+					VoteType:     VoteType_SuccessObservation,
+				},
+				{
+					VoterAddress: "Observer2",
+					VoteType:     VoteType_SuccessObservation,
+				},
+				{
+					VoterAddress: "Observer3",
+					VoteType:     VoteType_SuccessObservation,
+				},
+				{
+					VoterAddress: "Observer4",
+					VoteType:     VoteType_SuccessObservation,
+				},
+			},
+			err: require.NoError,
+		},
+
+		{
+			name:   "Failure observation",
+			voters: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
+			votes: []VoteType{
+				VoteType_FailureObservation,
+				VoteType_FailureObservation,
+				VoteType_FailureObservation,
+				VoteType_FailureObservation,
+			},
+			expectedVoterList: []VoterList{
+				{
+					VoterAddress: "Observer1",
+					VoteType:     VoteType_FailureObservation,
+				},
+				{
+					VoterAddress: "Observer2",
+					VoteType:     VoteType_FailureObservation,
+				},
+				{
+					VoterAddress: "Observer3",
+					VoteType:     VoteType_FailureObservation,
+				},
+				{
+					VoterAddress: "Observer4",
+					VoteType:     VoteType_FailureObservation,
+				},
+			},
+			err: require.NoError,
+		},
+
+		{
+			name:   "mixed observation",
+			voters: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
+			votes: []VoteType{
+				VoteType_FailureObservation,
+				VoteType_FailureObservation,
+				VoteType_SuccessObservation,
+				VoteType_SuccessObservation,
+			},
+			expectedVoterList: []VoterList{
+				{
+					VoterAddress: "Observer1",
+					VoteType:     VoteType_FailureObservation,
+				},
+				{
+					VoterAddress: "Observer2",
+					VoteType:     VoteType_FailureObservation,
+				},
+				{
+					VoterAddress: "Observer3",
+					VoteType:     VoteType_SuccessObservation,
+				},
+				{
+					VoterAddress: "Observer4",
+					VoteType:     VoteType_SuccessObservation,
+				},
+			},
+			err: require.NoError,
+		},
+
+		{
+			name:   "voterList and votes length mismatch",
+			voters: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
+			votes: []VoteType{
+				VoteType_FailureObservation,
+				VoteType_FailureObservation,
+				VoteType_SuccessObservation,
+			},
+			expectedVoterList: nil,
+			err: func(t require.TestingT, err error, i ...interface{}) {
+				require.Error(t, err)
+				require.Equal(t, err, ErrInvalidVoterList)
+			},
+		},
+	}
+	for _, test := range tt {
+		t.Run(test.name, func(t *testing.T) {
+			ballot := Ballot{
+				VoterList: test.voters,
+				Votes:     test.votes,
+			}
+			voterList, err := ballot.GenerateVoterList()
+			test.err(t, err)
+			require.Equal(t, test.expectedVoterList, voterList)
+		})
+	}
 }
