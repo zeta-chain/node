@@ -63,29 +63,42 @@ func Test_GetEVMConfig(t *testing.T) {
 
 func Test_GetBTCConfig(t *testing.T) {
 	tests := []struct {
-		name     string
-		chainID  int64
-		chainCfg config.BTCConfig
-		want     bool
+		name    string
+		chainID int64
+		oldCfg  config.BTCConfig
+		btcCfg  *config.BTCConfig
+		want    bool
 	}{
 		{
 			name:    "should find non-empty btc config",
 			chainID: chains.BitcoinRegtest.ChainId,
-			chainCfg: config.BTCConfig{
-				RPCUsername: "",
-				RPCPassword: "",
-				RPCHost:     "localhost",
-				RPCParams:   "",
+			btcCfg: &config.BTCConfig{
+				RPCHost: "localhost",
 			},
 			want: true,
 		},
 		{
-			name:    "should not find btc config if rpc host is empty",
+			name:    "should fallback to old 'BitcoinConfig' if new config is not set",
 			chainID: chains.BitcoinRegtest.ChainId,
-			chainCfg: config.BTCConfig{
+			oldCfg: config.BTCConfig{
+				RPCHost: "old_host",
+			},
+			btcCfg: nil, // new config is not set
+			want:   true,
+		},
+		{
+			name:    "should fallback to old config but still can't find btc config as it's empty",
+			chainID: chains.BitcoinRegtest.ChainId,
+			oldCfg: config.BTCConfig{
 				RPCUsername: "user",
 				RPCPassword: "pass",
-				RPCHost:     "",
+				RPCHost:     "", // empty config
+				RPCParams:   "regtest",
+			},
+			btcCfg: &config.BTCConfig{
+				RPCUsername: "user",
+				RPCPassword: "pass",
+				RPCHost:     "", // empty config
 				RPCParams:   "regtest",
 			},
 			want: false,
@@ -97,8 +110,11 @@ func Test_GetBTCConfig(t *testing.T) {
 			// create config with defaults
 			cfg := config.New(true)
 
-			// set chain config
-			cfg.BTCChainConfigs[tt.chainID] = tt.chainCfg
+			// set both new and old btc config
+			cfg.BitcoinConfig = tt.oldCfg
+			if tt.btcCfg != nil {
+				cfg.BTCChainConfigs[tt.chainID] = *tt.btcCfg
+			}
 
 			// should return btc config
 			btcCfg, found := cfg.GetBTCConfig(tt.chainID)

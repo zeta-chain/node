@@ -19,6 +19,7 @@
 * [2784](https://github.com/zeta-chain/node/pull/2784) - staking precompiled contract
 * [2795](https://github.com/zeta-chain/node/pull/2795) - support restricted address in Solana
 * [2861](https://github.com/zeta-chain/node/pull/2861) - emit events from staking precompile
+* [2870](https://github.com/zeta-chain/node/pull/2870) - support for multiple Bitcoin chains in the zetaclient
 
 ### Refactor
 

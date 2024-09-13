@@ -89,7 +89,9 @@ type Config struct {
 	// chain configs
 	EVMChainConfigs map[int64]EVMConfig `json:"EVMChainConfigs"`
 	BTCChainConfigs map[int64]BTCConfig `json:"BTCChainConfigs"`
-	SolanaConfig    SolanaConfig        `json:"SolanaConfig"`
+	// Deprecated: the 'BitcoinConfig' will be removed once the 'BTCChainConfigs' is fully adopted
+	BitcoinConfig BTCConfig    `json:"BitcoinConfig"`
+	SolanaConfig  SolanaConfig `json:"SolanaConfig"`
 
 	// compliance config
 	ComplianceConfig ComplianceConfig `json:"ComplianceConfig"`
@@ -124,7 +126,13 @@ func (c Config) GetBTCConfig(chainID int64) (BTCConfig, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	btcCfg := c.BTCChainConfigs[chainID]
+	// we prefer 'BTCChainConfigs' over 'BitcoinConfig' but still fallback to be backward compatible
+	// this will allow new 'zetaclientd' binary to work with old config file
+	btcCfg, found := c.BTCChainConfigs[chainID]
+	if !found || btcCfg.Empty() {
+		btcCfg = c.BitcoinConfig
+	}
+
 	return btcCfg, !btcCfg.Empty()
 }
 

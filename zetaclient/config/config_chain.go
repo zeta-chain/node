@@ -31,7 +31,7 @@ func New(setDefaults bool) Config {
 // bitcoinConfigRegnet contains Bitcoin config for regnet
 func bitcoinConfigRegnet() BTCConfig {
 	return BTCConfig{
-		RPCUsername: "smoketest", // smoketest is the previous name for E2E test, we keep this name for compatibility between client versions in upgrade test
+		RPCUsername: "e2etest",
 		RPCPassword: "123",
 		RPCHost:     "bitcoin:18443",
 		RPCParams:   "regtest",

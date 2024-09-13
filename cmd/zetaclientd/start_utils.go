@@ -75,6 +75,9 @@ func maskCfg(cfg config.Config) string {
 			RPCParams: val.RPCParams,
 		}
 	}
+	maskedCfg.BitcoinConfig = config.BTCConfig{
+		RPCParams: cfg.BitcoinConfig.RPCParams,
+	}
 
 	// Mask Solana endpoint
 	maskedCfg.SolanaConfig.Endpoint = ""
