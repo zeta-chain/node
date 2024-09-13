@@ -20,6 +20,8 @@ const (
 
 	// MaxLookbackNonce is the maximum number of nonces to look back to find missed pending cctxs
 	MaxLookbackNonce = 1000
+
+	DefaultPageSize = 100
 )
 
 func (k Keeper) ZetaAccounting(
@@ -45,6 +47,13 @@ func (k Keeper) CctxAll(c context.Context, req *types.QueryAllCctxRequest) (*typ
 
 	store := ctx.KVStore(k.storeKey)
 	sendStore := prefix.NewStore(store, types.KeyPrefix(types.CCTXKey))
+
+	if req.Pagination == nil {
+		req.Pagination = &query.PageRequest{}
+	}
+	if req.Pagination.Limit == 0 {
+		req.Pagination.Limit = DefaultPageSize
+	}
 
 	pageRes, err := query.Paginate(sendStore, req.Pagination, func(_ []byte, value []byte) error {
 		var send types.CrossChainTx

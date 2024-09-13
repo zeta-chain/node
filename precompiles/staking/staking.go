@@ -240,11 +240,17 @@ func (c *Contract) Stake(
 		stateDB.SubBalance(stakerAddress, amount)
 	}
 
+	err = c.AddStakeLog(ctx, stateDB, stakerAddress, validatorAddress, amount)
+	if err != nil {
+		return nil, err
+	}
+
 	return method.Outputs.Pack(true)
 }
 
 func (c *Contract) Unstake(
 	ctx sdk.Context,
+	evm *vm.EVM,
 	contract *vm.Contract,
 	method *abi.Method,
 	args []interface{},
@@ -294,11 +300,18 @@ func (c *Contract) Unstake(
 		return nil, err
 	}
 
+	stateDB := evm.StateDB.(ptypes.ExtStateDB)
+	err = c.AddUnstakeLog(ctx, stateDB, stakerAddress, validatorAddress, amount)
+	if err != nil {
+		return nil, err
+	}
+
 	return method.Outputs.Pack(res.GetCompletionTime().UTC().Unix())
 }
 
 func (c *Contract) MoveStake(
 	ctx sdk.Context,
+	evm *vm.EVM,
 	contract *vm.Contract,
 	method *abi.Method,
 	args []interface{},
@@ -356,6 +369,12 @@ func (c *Contract) MoveStake(
 		return nil, err
 	}
 
+	stateDB := evm.StateDB.(ptypes.ExtStateDB)
+	err = c.AddMoveStakeLog(ctx, stateDB, stakerAddress, validatorSrcAddress, validatorDstAddress, amount)
+	if err != nil {
+		return nil, err
+	}
+
 	return method.Outputs.Pack(res.GetCompletionTime().UTC().Unix())
 }
 
@@ -408,7 +427,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, erro
 	case UnstakeMethodName:
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-			res, err = c.Unstake(ctx, contract, method, args)
+			res, err = c.Unstake(ctx, evm, contract, method, args)
 			return err
 		})
 		if execErr != nil {
@@ -418,7 +437,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, erro
 	case MoveStakeMethodName:
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-			res, err = c.MoveStake(ctx, contract, method, args)
+			res, err = c.MoveStake(ctx, evm, contract, method, args)
 			return err
 		})
 		if execErr != nil {

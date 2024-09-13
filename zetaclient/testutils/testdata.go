@@ -16,6 +16,7 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	testcctx "github.com/zeta-chain/node/zetaclient/testdata/cctx"
+	testtypes "github.com/zeta-chain/node/zetaclient/testutils/types"
 )
 
 const (
@@ -45,6 +46,20 @@ func LoadObjectFromJSONFile(t *testing.T, obj interface{}, filename string) {
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&obj)
 	require.NoError(t, err)
+}
+
+// LoadJSONRawMessageFromFile loads a raw JSON message from a file in JSON format
+func LoadJSONRawMessageFromFile(t *testing.T, filename string) json.RawMessage {
+	file, err := os.Open(filepath.Clean(filename))
+	require.NoError(t, err)
+	defer file.Close()
+
+	// read the JSON raw message from the file
+	decoder := json.NewDecoder(file)
+	var raw json.RawMessage
+	err = decoder.Decode(&raw)
+	require.NoError(t, err)
+	return raw
 }
 
 // LoadCctxByInbound loads archived cctx by inbound
@@ -81,9 +96,14 @@ func LoadCctxByNonce(
 // LoadEVMBlock loads archived evm block from file
 func LoadEVMBlock(t *testing.T, dir string, chainID int64, blockNumber uint64, trimmed bool) *ethrpc.Block {
 	name := path.Join(dir, TestDataPathEVM, FileNameEVMBlock(chainID, blockNumber, trimmed))
-	block := &ethrpc.Block{}
-	LoadObjectFromJSONFile(t, block, name)
-	return block
+
+	// load archived block
+	jsonMessage := LoadJSONRawMessageFromFile(t, name)
+	blockProxy := new(testtypes.ProxyBlockWithTransactions)
+	err := json.Unmarshal(jsonMessage, blockProxy)
+	require.NoError(t, err)
+
+	return blockProxy.ToBlock()
 }
 
 // LoadBTCTxRawResult loads archived Bitcoin tx raw result from file
