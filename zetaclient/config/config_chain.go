@@ -31,17 +31,19 @@ func New(setDefaults bool) Config {
 // bitcoinConfigRegnet contains Bitcoin config for regnet
 func bitcoinConfigRegnet() BTCConfig {
 	return BTCConfig{
-		RPCUsername: "e2etest",
-		RPCPassword: "123",
-		RPCHost:     "bitcoin:18443",
-		RPCParams:   "regtest",
+		RPCUsername:     "e2etest",
+		RPCPassword:     "123",
+		RPCHost:         "bitcoin:18443",
+		RPCParams:       "regtest",
+		RPCAlertLatency: 60,
 	}
 }
 
 // solanaConfigLocalnet contains config for Solana localnet
 func solanaConfigLocalnet() SolanaConfig {
 	return SolanaConfig{
-		Endpoint: "http://solana:8899",
+		Endpoint:        "http://solana:8899",
+		RPCAlertLatency: 60,
 	}
 }
 
@@ -72,8 +74,9 @@ func evmChainsConfigs() map[int64]EVMConfig {
 			Endpoint: "",
 		},
 		chains.GoerliLocalnet.ChainId: {
-			Chain:    chains.GoerliLocalnet,
-			Endpoint: "http://eth:8545",
+			Chain:           chains.GoerliLocalnet,
+			Endpoint:        "http://eth:8545",
+			RPCAlertLatency: 60,
 		},
 	}
 }

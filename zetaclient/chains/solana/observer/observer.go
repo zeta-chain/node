@@ -44,6 +44,7 @@ func NewObserver(
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
+	rpcAlertLatency int64,
 	db *db.DB,
 	logger base.Logger,
 	ts *metrics.TelemetryServer,
@@ -56,6 +57,7 @@ func NewObserver(
 		tss,
 		base.DefaultBlockCacheSize,
 		base.DefaultHeaderCacheSize,
+		rpcAlertLatency,
 		ts,
 		db,
 		logger,
@@ -130,6 +132,9 @@ func (ob *Observer) Start(ctx context.Context) {
 
 	// watch zetacore for Solana inbound trackers
 	bg.Work(ctx, ob.WatchInboundTracker, bg.WithName("WatchInboundTracker"), bg.WithLogger(ob.Logger().Inbound))
+
+	// watch RPC status of the Solana chain
+	bg.Work(ctx, ob.watchRPCStatus, bg.WithName("watchRPCStatus"), bg.WithLogger(ob.Logger().Chain))
 }
 
 // LoadLastTxScanned loads the last scanned tx from the database.
