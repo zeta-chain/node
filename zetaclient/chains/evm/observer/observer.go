@@ -315,6 +315,9 @@ func (ob *Observer) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
 	if err != nil {
 		return nil, err
 	}
+	if block == nil {
+		return nil, fmt.Errorf("block not found: %d", blockNumber)
+	}
 	for i := range block.Transactions {
 		err := evm.ValidateEvmTransaction(&block.Transactions[i])
 		if err != nil {
