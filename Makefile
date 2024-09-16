@@ -280,6 +280,11 @@ start-solana-test: zetanode solana
 	export E2E_ARGS="--skip-regular --test-solana" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana -f docker-compose.yml up -d
 
+start-ton-test: zetanode
+	@echo "--> Starting TON test"
+	export E2E_ARGS="--skip-regular --test-ton" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile ton -f docker-compose.yml up -d
+
 start-v2-test: zetanode
 	@echo "--> Starting e2e smart contracts v2 test"
 	export E2E_ARGS="--skip-regular --test-v2" && \

@@ -23,6 +23,7 @@
 * [2703](https://github.com/zeta-chain/node/pull/2703) - add e2e tests for stateful precompiled contracts
 * [2830](https://github.com/zeta-chain/node/pull/2830) - extend staking precompile tests
 * [2867](https://github.com/zeta-chain/node/pull/2867) - skip precompiles test for tss migration
+* [2833](https://github.com/zeta-chain/node/pull/2833) - add e2e framework for TON blockchain
 * [2874](https://github.com/zeta-chain/node/pull/2874) - add support for multiple runs for precompile tests
 
 ### Fixes
