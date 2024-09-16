@@ -9,11 +9,10 @@ require (
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/tools/rosetta v0.2.1
 	github.com/99designs/keyring v1.2.1
-	github.com/btcsuite/btcd v0.23.4
+	github.com/btcsuite/btcd v0.24.2
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
-	github.com/btcsuite/btcd/btcutil v1.1.3
-	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
-	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
+	github.com/btcsuite/btcd/btcutil v1.1.6
+	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/coinbase/rosetta-sdk-go v0.7.9
@@ -59,10 +58,9 @@ require (
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.9.0
 	github.com/zeta-chain/ethermint v0.0.0-20240909234716-2fad916e7179
-	github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2
+	github.com/zeta-chain/keystone/keys v0.0.0-20240826165841-3874f358c138
 	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240819143729-b8229cd7b410
 	gitlab.com/thorchain/tss/go-tss v1.6.5
-	gitlab.com/thorchain/tss/tss-lib v0.2.0
 	go.nhat.io/grpcmock v0.25.0
 	golang.org/x/crypto v0.23.0
 	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
@@ -165,7 +163,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/google/flatbuffers v1.12.1 // indirect
+	github.com/google/flatbuffers v2.0.8+incompatible // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
@@ -336,15 +334,19 @@ require (
 )
 
 require (
+	github.com/bnb-chain/tss-lib v1.5.0
+	github.com/tonkeeper/tongo v1.9.3
+)
+
+require (
+	github.com/decred/dcrd/crypto/blake256 v1.0.1 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20220328075252-7dd334e3daae // indirect
 	github.com/showa-93/go-mask v0.6.2 // indirect
 	github.com/snksoft/crc v1.1.0 // indirect
-	github.com/tonkeeper/tongo v1.9.3 // indirect
 )
 
 replace (
 	github.com/agl/ed25519 => github.com/binance-chain/edwards25519 v0.0.0-20200305024217-f36fc4b53d43
-	github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.22.3
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/rjeczalik/notify => github.com/rjeczalik/notify v0.9.3
@@ -356,7 +358,10 @@ replace (
 
 // ZetaChain maintained forks.
 replace (
+	// https://github.com/zeta-chain/tss-lib/tree/threshold-dep-updates
+	// which is a fork of https://github.com/threshold-network/tss-lib
+	github.com/bnb-chain/tss-lib => github.com/zeta-chain/tss-lib v0.0.0-20240916163010-2e6b438bd901
 	github.com/ethereum/go-ethereum => github.com/zeta-chain/go-ethereum v1.10.26-spc
 	github.com/libp2p/go-libp2p => github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4
-	gitlab.com/thorchain/tss/go-tss => github.com/zeta-chain/go-tss v0.0.0-20240910211949-05876ac6d66a
+	gitlab.com/thorchain/tss/go-tss => github.com/zeta-chain/go-tss v0.0.0-20240916173049-89fee4b0ae7f
 )

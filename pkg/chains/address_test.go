@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/btcsuite/btcutil"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/stretchr/testify/require"
 	. "gopkg.in/check.v1"
 )
