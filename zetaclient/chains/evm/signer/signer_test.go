@@ -90,6 +90,7 @@ func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.O
 		params,
 		mocks.NewZetacoreClient(t),
 		tss,
+		60,
 		database,
 		logger,
 		ts,
