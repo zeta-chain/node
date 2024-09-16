@@ -61,9 +61,8 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	tx, err = bankContract.Deposit(r.ZEVMAuth, r.WZetaAddr, big.NewInt(25))
 	fmt.Printf("DEBUG: bank.deposit() tx hash %s\n", tx.Hash().String())
 	require.NoError(r, err, "Error calling bank.deposit()")
+	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 
-	r.Logger.Info("Waiting for 5 blocks")
-	r.WaitForBlocks(5)
 	fmt.Printf("DEBUG: bank.deposit() tx %+v\n", tx)
 
 	// Check the balance of the spender in coins "zevm/WZetaAddr".

@@ -40,6 +40,7 @@ type ContractCaller interface {
 		from common.Address,
 		dst common.Address,
 		method string,
+		noEthereumTxEvent bool,
 		args []interface{}) ([]interface{}, error)
 }
 
@@ -74,19 +75,20 @@ func (c *baseContract) CallContract(
 	from common.Address,
 	dst common.Address,
 	method string,
+	noEthereumTxEvent bool,
 	args []interface{},
 ) ([]interface{}, error) {
 	res, err := fungibleKeeper.CallEVM(
-		ctx,           // ctx
-		*abi,          // abi
-		from,          // from
-		dst,           // to
-		big.NewInt(0), // value
-		nil,           // gasLimit
-		true,          // commit
-		false,         // noEthereumTxEvent
-		method,        // method
-		args...,       // args
+		ctx,               // ctx
+		*abi,              // abi
+		from,              // from
+		dst,               // to
+		big.NewInt(0),     // value
+		nil,               // gasLimit
+		true,              // commit
+		noEthereumTxEvent, // noEthereumTxEvent
+		method,            // method
+		args...,           // args
 	)
 	if err != nil {
 		return nil, &ErrUnexpected{

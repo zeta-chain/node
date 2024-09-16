@@ -68,6 +68,7 @@ func (c *Contract) deposit(
 		ContractAddress,
 		zrc20Addr,
 		"balanceOf",
+		true,
 		[]interface{}{caller},
 	)
 	if err != nil {
@@ -96,6 +97,7 @@ func (c *Contract) deposit(
 		ContractAddress,
 		zrc20Addr,
 		"allowance",
+		true,
 		[]interface{}{caller, ContractAddress},
 	)
 	if err != nil {
@@ -168,6 +170,7 @@ func (c *Contract) deposit(
 		ContractAddress,
 		zrc20Addr,
 		"transferFrom",
+		true,
 		[]interface{}{caller, ContractAddress, amount},
 	)
 	if err != nil {
