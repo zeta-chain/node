@@ -155,6 +155,11 @@ if host solana > /dev/null; then
   solana airdrop 100 "$relayer" > /dev/null
 fi
 
+# Wait for TON node to bootstrap
+if host ton > /dev/null; then
+  ./wait-for-ton.sh
+fi
+
 ### Run zetae2e command depending on the option passed
 
 # Mode migrate is used to run the e2e tests before and after the TSS migration

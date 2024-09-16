@@ -335,6 +335,12 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
+require (
+	github.com/oasisprotocol/curve25519-voi v0.0.0-20220328075252-7dd334e3daae // indirect
+	github.com/snksoft/crc v1.1.0 // indirect
+	github.com/tonkeeper/tongo v1.9.3 // indirect
+)
+
 replace (
 	github.com/agl/ed25519 => github.com/binance-chain/edwards25519 v0.0.0-20200305024217-f36fc4b53d43
 	github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.22.3
