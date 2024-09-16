@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -61,9 +62,15 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	tx, err = bankContract.Deposit(r.ZEVMAuth, r.WZetaAddr, big.NewInt(25))
 	fmt.Printf("DEBUG: bank.deposit() tx hash %s\n", tx.Hash().String())
 	require.NoError(r, err, "Error calling bank.deposit()")
-	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 
-	fmt.Printf("DEBUG: bank.deposit() tx %+v\n", tx)
+	// Deposit event should be emitted.
+	depositEvent, err := bankContract.ParseDeposit(*receipt.Logs[0])
+	require.NoError(r, err)
+	require.Equal(r, big.NewInt(25).Uint64(), depositEvent.Amount.Uint64())
+	require.Equal(r, common.BytesToAddress(spender.Bytes()), depositEvent.Depositor)
+	require.Equal(r, r.WZetaAddr, depositEvent.Token)
+	fmt.Println("Deposit event emitted ", depositEvent)
 
 	// Check the balance of the spender in coins "zevm/WZetaAddr".
 	retBalanceOf, err = bankContract.BalanceOf(&bind.CallOpts{Context: r.Ctx}, r.WZetaAddr, spender)

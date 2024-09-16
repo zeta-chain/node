@@ -37,7 +37,6 @@ type ContractCaller interface {
 	CallContract(ctx sdk.Context,
 		fungibleKeeper *fungiblekeeper.Keeper,
 		abi *abi.ABI,
-		from common.Address,
 		dst common.Address,
 		method string,
 		noEthereumTxEvent bool,
@@ -72,7 +71,6 @@ func (c *baseContract) CallContract(
 	ctx sdk.Context,
 	fungibleKeeper *fungiblekeeper.Keeper,
 	abi *abi.ABI,
-	from common.Address,
 	dst common.Address,
 	method string,
 	noEthereumTxEvent bool,
@@ -81,7 +79,7 @@ func (c *baseContract) CallContract(
 	res, err := fungibleKeeper.CallEVM(
 		ctx,               // ctx
 		*abi,              // abi
-		from,              // from
+		c.RegistryKey(),   // from
 		dst,               // to
 		big.NewInt(0),     // value
 		nil,               // gasLimit

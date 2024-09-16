@@ -130,7 +130,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
 			fmt.Println("DEBUG: bank.Run(): DepositMethodName: ExecuteNativeAction c.deposit()")
-			res, err = c.deposit(ctx, method, contract.CallerAddress, args)
+			res, err = c.deposit(ctx, evm, contract, method, args)
 			return err
 		})
 		if execErr != nil {

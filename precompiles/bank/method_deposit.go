@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
 	ptypes "github.com/zeta-chain/node/precompiles/types"
@@ -16,8 +17,9 @@ import (
 
 func (c *Contract) deposit(
 	ctx sdk.Context,
+	evm *vm.EVM,
+	contract *vm.Contract,
 	method *abi.Method,
-	caller common.Address,
 	args []interface{},
 ) (result []byte, err error) {
 	fmt.Printf("DEBUG: deposit()\n")
@@ -28,6 +30,13 @@ func (c *Contract) deposit(
 			Got:    len(args),
 			Expect: 2,
 		})
+	}
+
+	// caller is usually the CallerAddress, except when the call was made through a contract.
+	// For those cases set the caller to the evm.Origin.
+	caller := contract.CallerAddress
+	if contract.CallerAddress != evm.Origin {
+		caller = evm.Origin
 	}
 
 	// Unpack parameters for function deposit.
@@ -65,7 +74,6 @@ func (c *Contract) deposit(
 		ctx,
 		&c.fungibleKeeper,
 		zrc20ABI,
-		ContractAddress,
 		zrc20Addr,
 		"balanceOf",
 		true,
@@ -94,7 +102,6 @@ func (c *Contract) deposit(
 		ctx,
 		&c.fungibleKeeper,
 		zrc20ABI,
-		ContractAddress,
 		zrc20Addr,
 		"allowance",
 		true,
@@ -167,7 +174,6 @@ func (c *Contract) deposit(
 		ctx,
 		&c.fungibleKeeper,
 		zrc20ABI,
-		ContractAddress,
 		zrc20Addr,
 		"transferFrom",
 		true,
@@ -209,6 +215,13 @@ func (c *Contract) deposit(
 		}
 	}
 	fmt.Printf("DEBUG: deposit(): SendCoinsFromModuleToAccount finished\n")
+
+	if err := c.AddDepositLog(ctx, evm.StateDB, caller, zrc20Addr, amount); err != nil {
+		return nil, &ptypes.ErrUnexpected{
+			When: "AddDepositLog",
+			Got:  err.Error(),
+		}
+	}
 
 	return method.Outputs.Pack(true)
 }
