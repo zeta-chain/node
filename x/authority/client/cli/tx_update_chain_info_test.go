@@ -13,10 +13,9 @@ import (
 func TestReadChainInfoFromFile(t *testing.T) {
 	fs := testdata.TypesFiles
 
-	chainInfo, err := cli.ReadChainInfoFromFile(fs, "types/chain_info.json")
+	chain, err := cli.ReadChainFromFile(fs, "types/chain.json")
 	require.NoError(t, err)
 
-	require.Len(t, chainInfo.Chains, 2)
 	require.EqualValues(t, chains.Chain{
 		ChainId:     42,
 		Network:     chains.Network_eth,
@@ -26,15 +25,5 @@ func TestReadChainInfoFromFile(t *testing.T) {
 		IsExternal:  false,
 		CctxGateway: chains.CCTXGateway_zevm,
 		Name:        "foo",
-	}, chainInfo.Chains[0])
-	require.EqualValues(t, chains.Chain{
-		ChainId:     84,
-		Network:     chains.Network_zeta,
-		NetworkType: chains.NetworkType_testnet,
-		Vm:          chains.Vm_evm,
-		Consensus:   chains.Consensus_tendermint,
-		IsExternal:  true,
-		CctxGateway: chains.CCTXGateway_observers,
-		Name:        "bar",
-	}, chainInfo.Chains[1])
+	}, chain)
 }
