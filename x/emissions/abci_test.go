@@ -252,7 +252,7 @@ func TestBeginBlocker(t *testing.T) {
 		require.True(t, blockRewards.TruncateInt().GT(distributedRewards))
 
 		require.Len(t, zk.ObserverKeeper.GetAllBallots(ctx), len(ballotList))
-		_, found = zk.ObserverKeeper.GetBallotList(ctx, 0)
+		_, found = zk.ObserverKeeper.GetBallotListForHeight(ctx, 0)
 		require.True(t, found)
 
 		// Act
@@ -299,7 +299,7 @@ func TestBeginBlocker(t *testing.T) {
 
 		// 2 . Assert ballots and ballot list are deleted on maturity
 		require.Len(t, zk.ObserverKeeper.GetAllBallots(ctx), 0)
-		_, found = zk.ObserverKeeper.GetBallotList(ctx, 0)
+		_, found = zk.ObserverKeeper.GetBallotListForHeight(ctx, 0)
 		require.False(t, found)
 
 		//3. Assert amounts in undistributed pools

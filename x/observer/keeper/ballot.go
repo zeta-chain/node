@@ -25,7 +25,7 @@ func (k Keeper) DeleteBallot(ctx sdk.Context, index string) {
 	store.Delete([]byte(index))
 }
 
-func (k Keeper) DeleteBallotList(ctx sdk.Context, height int64) {
+func (k Keeper) DeleteBallotListForHeight(ctx sdk.Context, height int64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BallotListKey))
 	store.Delete(types.BallotListKeyPrefix(height))
 }
@@ -40,7 +40,7 @@ func (k Keeper) GetBallot(ctx sdk.Context, index string) (val types.Ballot, foun
 	return val, true
 }
 
-func (k Keeper) GetBallotList(ctx sdk.Context, height int64) (val types.BallotListForHeight, found bool) {
+func (k Keeper) GetBallotListForHeight(ctx sdk.Context, height int64) (val types.BallotListForHeight, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BallotListKey))
 	b := store.Get(types.BallotListKeyPrefix(height))
 	if b == nil {
@@ -54,7 +54,7 @@ func (k Keeper) GetBallotList(ctx sdk.Context, height int64) (val types.BallotLi
 }
 
 func (k Keeper) GetMaturedBallots(ctx sdk.Context, maturityBlocks int64) (val types.BallotListForHeight, found bool) {
-	return k.GetBallotList(ctx, GetMaturedBallotHeight(ctx, maturityBlocks))
+	return k.GetBallotListForHeight(ctx, GetMaturedBallotHeight(ctx, maturityBlocks))
 }
 
 func (k Keeper) GetAllBallots(ctx sdk.Context) (voters []*types.Ballot) {
@@ -71,7 +71,7 @@ func (k Keeper) GetAllBallots(ctx sdk.Context) (voters []*types.Ballot) {
 
 // AddBallotToList adds a ballot to the list of ballots for a given height.
 func (k Keeper) AddBallotToList(ctx sdk.Context, ballot types.Ballot) {
-	list, found := k.GetBallotList(ctx, ballot.BallotCreationHeight)
+	list, found := k.GetBallotListForHeight(ctx, ballot.BallotCreationHeight)
 	if !found {
 		list = types.BallotListForHeight{Height: ballot.BallotCreationHeight, BallotsIndexList: []string{}}
 	}
@@ -86,7 +86,7 @@ func (k Keeper) ClearMaturedBallots(ctx sdk.Context, ballots []types.Ballot, mat
 		k.DeleteBallot(ctx, ballot.BallotIdentifier)
 		EmitEventBallotDeleted(ctx, ballot)
 	}
-	k.DeleteBallotList(ctx, GetMaturedBallotHeight(ctx, maturityBlocks))
+	k.DeleteBallotListForHeight(ctx, GetMaturedBallotHeight(ctx, maturityBlocks))
 	return
 }
 

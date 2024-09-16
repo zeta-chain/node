@@ -67,11 +67,11 @@ func TestKeeper_GetBallotList(t *testing.T) {
 			BallotStatus:         0,
 			BallotCreationHeight: 1,
 		}
-		_, found := k.GetBallotList(ctx, 1)
+		_, found := k.GetBallotListForHeight(ctx, 1)
 		require.False(t, found)
 
 		k.AddBallotToList(ctx, *b)
-		list, found := k.GetBallotList(ctx, 1)
+		list, found := k.GetBallotListForHeight(ctx, 1)
 		require.True(t, found)
 		require.Equal(t, 1, len(list.BallotsIndexList))
 		require.Equal(t, identifier, list.BallotsIndexList[0])
@@ -89,11 +89,11 @@ func TestKeeper_GetBallotList(t *testing.T) {
 			BallotStatus:         0,
 			BallotCreationHeight: 1,
 		}
-		_, found := k.GetBallotList(ctx, 1)
+		_, found := k.GetBallotListForHeight(ctx, 1)
 		require.False(t, found)
 
 		k.AddBallotToList(ctx, *b)
-		list, found := k.GetBallotList(ctx, -10)
+		list, found := k.GetBallotListForHeight(ctx, -10)
 		require.False(t, found)
 		require.Nil(t, list.BallotsIndexList)
 	})
@@ -199,14 +199,14 @@ func TestKeeper_DeleteBallotList(t *testing.T) {
 			})
 		}
 
-		_, found := k.GetBallotList(ctx, 1)
+		_, found := k.GetBallotListForHeight(ctx, 1)
 		require.True(t, found)
 
 		//Act
-		k.DeleteBallotList(ctx, 1)
+		k.DeleteBallotListForHeight(ctx, 1)
 
 		//Assert
-		_, found = k.GetBallotList(ctx, 1)
+		_, found = k.GetBallotListForHeight(ctx, 1)
 		require.False(t, found)
 	})
 
@@ -221,14 +221,14 @@ func TestKeeper_DeleteBallotList(t *testing.T) {
 			})
 		}
 
-		_, found := k.GetBallotList(ctx, 1)
+		_, found := k.GetBallotListForHeight(ctx, 1)
 		require.True(t, found)
 
 		//Act
-		k.DeleteBallotList(ctx, 2)
+		k.DeleteBallotListForHeight(ctx, 2)
 
 		//Assert
-		_, found = k.GetBallotList(ctx, 1)
+		_, found = k.GetBallotListForHeight(ctx, 1)
 		require.True(t, found)
 	})
 }
@@ -248,7 +248,7 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 			k.SetBallot(ctx, &b)
 			ballots[i] = b
 		}
-		_, found := k.GetBallotList(ctx, 1)
+		_, found := k.GetBallotListForHeight(ctx, 1)
 		require.True(t, found)
 		require.Equal(t, numberOfBallots, len(k.GetAllBallots(ctx)))
 
@@ -260,7 +260,7 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 			_, found = k.GetBallot(ctx, b.BallotIdentifier)
 			require.False(t, found)
 		}
-		_, found = k.GetBallotList(ctx, 0)
+		_, found = k.GetBallotListForHeight(ctx, 0)
 		require.False(t, found)
 		eventCount := 0
 		for _, event := range ctx.EventManager().Events() {
@@ -284,7 +284,7 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 			k.AddBallotToList(ctx, b)
 			ballots[i] = b
 		}
-		_, found := k.GetBallotList(ctx, 1)
+		_, found := k.GetBallotListForHeight(ctx, 1)
 		require.True(t, found)
 		require.Equal(t, 0, len(k.GetAllBallots(ctx)))
 
@@ -292,7 +292,7 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 		k.ClearMaturedBallots(ctx, []types.Ballot{}, 0)
 
 		//Assert
-		_, found = k.GetBallotList(ctx, 1)
+		_, found = k.GetBallotListForHeight(ctx, 1)
 		require.False(t, found)
 		require.Equal(t, 0, len(k.GetAllBallots(ctx)))
 	})
@@ -311,7 +311,7 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 			ballots[i] = b
 		}
 		require.Equal(t, numberOfBallots, len(k.GetAllBallots(ctx)))
-		_, found := k.GetBallotList(ctx, 1)
+		_, found := k.GetBallotListForHeight(ctx, 1)
 		require.False(t, found)
 
 		//Act
@@ -322,7 +322,7 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 			_, found := k.GetBallot(ctx, b.BallotIdentifier)
 			require.False(t, found)
 		}
-		_, found = k.GetBallotList(ctx, 1)
+		_, found = k.GetBallotListForHeight(ctx, 1)
 		require.False(t, found)
 		eventCount := 0
 		for _, event := range ctx.EventManager().Events() {
