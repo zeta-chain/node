@@ -31,6 +31,7 @@
 * [2674](https://github.com/zeta-chain/node/pull/2674) - allow operators to vote on ballots associated with discarded keygen without affecting the status of the current keygen.
 * [2672](https://github.com/zeta-chain/node/pull/2672) - check observer set for duplicates when adding a new observer or updating an existing one
 * [2735](https://github.com/zeta-chain/node/pull/2735) - fix the outbound tracker blocking confirmation and outbound processing on EVM chains by locally index outbound txs in zetaclient
+* [2944](https://github.com/zeta-chain/node/pull/2844) - add tsspubkey to index for tss keygen voting
 * [2842](https://github.com/zeta-chain/node/pull/2842) - fix: move interval assignment out of cctx loop in EVM outbound tx scheduler
 * [2853](https://github.com/zeta-chain/node/pull/2853) - calling precompile through sc with sc state update
 
