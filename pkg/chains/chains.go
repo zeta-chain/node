@@ -171,7 +171,7 @@ var (
 
 	BitcoinSignetTestnet = Chain{
 		ChainName:   ChainName_btc_signet_testnet,
-		ChainId:     18332,
+		ChainId:     001,
 		Network:     Network_btc,
 		NetworkType: NetworkType_testnet,
 		Vm:          Vm_no_vm,
