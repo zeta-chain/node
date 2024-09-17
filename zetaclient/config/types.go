@@ -48,7 +48,7 @@ type BTCConfig struct {
 	RPCUsername     string
 	RPCPassword     string
 	RPCHost         string
-	RPCParams       string // "regtest", "mainnet", "testnet3"
+	RPCParams       string // "regtest", "mainnet", "testnet3" , "signet"
 	RPCAlertLatency int64
 }
 

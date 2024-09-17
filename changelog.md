@@ -9,6 +9,7 @@
 * [2784](https://github.com/zeta-chain/node/pull/2784) - staking precompiled contract
 * [2795](https://github.com/zeta-chain/node/pull/2795) - support restricted address in Solana
 * [2861](https://github.com/zeta-chain/node/pull/2861) - emit events from staking precompile
+* [2883](https://github.com/zeta-chain/node/pull/2883) - add chain static information for btc signet testnet
 
 ### Refactor
 
