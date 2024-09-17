@@ -53,14 +53,19 @@ const (
 	TestERC20DepositAndCallRefundName = "erc20_deposit_and_call_refund"
 
 	/*
-	 Solana tests
-	*/
+	 * Solana tests
+	 */
 	TestSolanaDepositName              = "solana_deposit"
 	TestSolanaWithdrawName             = "solana_withdraw"
 	TestSolanaDepositAndCallName       = "solana_deposit_and_call"
 	TestSolanaDepositAndCallRefundName = "solana_deposit_and_call_refund"
 	TestSolanaDepositRestrictedName    = "solana_deposit_restricted"
 	TestSolanaWithdrawRestrictedName   = "solana_withdraw_restricted"
+
+	/**
+	 * TON tests
+	 */
+	TestTONDepositName = "ton_deposit"
 
 	/*
 	 Bitcoin tests
@@ -423,6 +428,17 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSolanaWithdrawRestricted,
+	),
+	/*
+	 TON tests
+	*/
+	runner.NewE2ETest(
+		TestTONDepositName,
+		"deposit TON into ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in nano tons", DefaultValue: "900000000"}, // 0.9 TON
+		},
+		TestTONDeposit,
 	),
 	/*
 	 Bitcoin tests
