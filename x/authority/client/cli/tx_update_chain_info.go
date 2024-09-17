@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/authority/types"
 )
@@ -41,6 +42,8 @@ func CmdUpdateChainInfo() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
+
+// ReadChainFromFile reads a chain from a file and returns the chain object.
 func ReadChainFromFile(fsys fs.FS, filePath string) (chains.Chain, error) {
 	var c chains.Chain
 	chainBytes, err := fs.ReadFile(fsys, filePath)

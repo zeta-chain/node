@@ -56838,6 +56838,9 @@ definitions:
     description: |-
       MsgRemoveAuthorizationResponse defines the MsgRemoveAuthorizationResponse
       service.
+  authorityMsgRemoveChainInfoResponse:
+    type: object
+    description: MsgRemoveChainInfoResponse defines the MsgRemoveChainInfoResponse service.
   authorityMsgUpdateChainInfoResponse:
     type: object
     description: MsgUpdateChainInfoResponse defines the MsgUpdateChainInfoResponse service.

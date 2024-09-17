@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/node/x/authority/types"
 )
 
@@ -39,7 +40,7 @@ func (k msgServer) UpdateChainInfo(
 		}
 	}
 
-	// if the chain info does not exist, add the chain to the chain info
+	// if the chain info does not exist, add the chain to the chain info object
 	if !updatedChainInfo {
 		chainInfo.Chains = append(chainInfo.Chains, msg.Chain)
 	}

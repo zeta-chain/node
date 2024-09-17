@@ -5,10 +5,14 @@ import (
 
 	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/node/x/authority/types"
 )
 
-func (k msgServer) RemoveChainInfo(goCtx context.Context, msg *types.MsgRemoveChainInfo) (*types.MsgRemoveChainInfoResponse, error) {
+func (k msgServer) RemoveChainInfo(
+	goCtx context.Context,
+	msg *types.MsgRemoveChainInfo,
+) (*types.MsgRemoveChainInfoResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Check the authorization for this message against the authorization list
@@ -27,6 +31,8 @@ func (k msgServer) RemoveChainInfo(goCtx context.Context, msg *types.MsgRemoveCh
 	return &types.MsgRemoveChainInfoResponse{}, nil
 }
 
+// RemoveChain removes the chain with the given chainID from the chainInfo
+// If the chain does not exist, the chainInfo is returned as is
 func RemoveChain(chainInfo types.ChainInfo, chainID int64) types.ChainInfo {
 	updatedChainInfo := types.ChainInfo{}
 	for _, chain := range chainInfo.Chains {
