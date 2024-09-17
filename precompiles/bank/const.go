@@ -7,9 +7,11 @@ const (
 	// Write methods.
 	DepositMethodName = "deposit"
 	DepositMethodGas  = 200_000
+	DepositEventName  = "Deposit"
 
 	WithdrawMethodName = "withdraw"
 	WithdrawMethodGas  = 200_000
+	WithdrawEventName  = "Withdraw"
 
 	// Read methods.
 	BalanceOfMethodName = "balanceOf"
