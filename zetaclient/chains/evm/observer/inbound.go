@@ -39,7 +39,7 @@ import (
 // TODO(revamp): move ticker function to a separate file
 func (ob *Observer) WatchInbound(ctx context.Context) error {
 	sampledLogger := ob.Logger().Inbound.Sample(&zerolog.BasicSampler{N: 10})
-	interval := ticker.SecondsFromUint64(ob.GetChainParams().InboundTicker)
+	interval := ticker.SecondsFromUint64(ob.ChainParams().InboundTicker)
 	task := func(ctx context.Context, t *ticker.Ticker) error {
 		return ob.watchInboundOnce(ctx, t, sampledLogger)
 	}
@@ -74,7 +74,7 @@ func (ob *Observer) watchInboundOnce(ctx context.Context, t *ticker.Ticker, samp
 		ob.Logger().Inbound.Err(err).Msg("WatchInbound: observeInbound error")
 	}
 
-	newInterval := ticker.SecondsFromUint64(ob.GetChainParams().InboundTicker)
+	newInterval := ticker.SecondsFromUint64(ob.ChainParams().InboundTicker)
 	t.SetInterval(newInterval)
 
 	return nil
@@ -91,7 +91,7 @@ func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
 
 	ticker, err := clienttypes.NewDynamicTicker(
 		fmt.Sprintf("EVM_WatchInboundTracker_%d", ob.Chain().ChainId),
-		ob.GetChainParams().InboundTicker,
+		ob.ChainParams().InboundTicker,
 	)
 	if err != nil {
 		ob.Logger().Inbound.Err(err).Msg("error creating ticker")
@@ -110,7 +110,7 @@ func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
 			if err != nil {
 				ob.Logger().Inbound.Err(err).Msg("ProcessInboundTrackers error")
 			}
-			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.Logger().Inbound)
+			ticker.UpdateInterval(ob.ChainParams().InboundTicker, ob.Logger().Inbound)
 		case <-ob.StopChannel():
 			ob.Logger().Inbound.Info().Msgf("WatchInboundTracker stopped for chain %d", ob.Chain().ChainId)
 			return nil
@@ -191,10 +191,10 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 	metrics.GetBlockByNumberPerChain.WithLabelValues(ob.Chain().Name).Inc()
 
 	// skip if current height is too low
-	if blockNumber < ob.GetChainParams().ConfirmationCount {
+	if blockNumber < ob.ChainParams().ConfirmationCount {
 		return fmt.Errorf("observeInbound: skipping observer, current block number %d is too low", blockNumber)
 	}
-	confirmedBlockNum := blockNumber - ob.GetChainParams().ConfirmationCount
+	confirmedBlockNum := blockNumber - ob.ChainParams().ConfirmationCount
 
 	// skip if no new block is confirmed
 	lastScanned := ob.LastBlockScanned()
@@ -615,7 +615,7 @@ func (ob *Observer) CheckAndVoteInboundTokenGas(
 
 // HasEnoughConfirmations checks if the given receipt has enough confirmations
 func (ob *Observer) HasEnoughConfirmations(receipt *ethtypes.Receipt, lastHeight uint64) bool {
-	confHeight := receipt.BlockNumber.Uint64() + ob.GetChainParams().ConfirmationCount
+	confHeight := receipt.BlockNumber.Uint64() + ob.ChainParams().ConfirmationCount
 	return lastHeight >= confHeight
 }
 

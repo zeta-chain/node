@@ -35,7 +35,7 @@ func (ob *Observer) WatchInbound(ctx context.Context) error {
 		return err
 	}
 
-	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInbound", ob.GetChainParams().InboundTicker)
+	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInbound", ob.ChainParams().InboundTicker)
 	if err != nil {
 		ob.logger.Inbound.Error().Err(err).Msg("error creating ticker")
 		return err
@@ -65,7 +65,7 @@ func (ob *Observer) WatchInbound(ctx context.Context) error {
 					ob.logger.Inbound.Debug().Err(err).Msg("WatchInbound: Bitcoin node is not enabled")
 				}
 			}
-			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.logger.Inbound)
+			ticker.UpdateInterval(ob.ChainParams().InboundTicker, ob.logger.Inbound)
 		case <-ob.StopChannel():
 			ob.logger.Inbound.Info().Msgf("WatchInbound stopped for chain %d", ob.Chain().ChainId)
 			return nil
@@ -105,13 +105,13 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	ob.WithLastBlock(lastBlock)
 
 	// skip if current height is too low
-	if lastBlock < ob.GetChainParams().ConfirmationCount {
+	if lastBlock < ob.ChainParams().ConfirmationCount {
 		return fmt.Errorf("observeInboundBTC: skipping observer, current block number %d is too low", currentBlock)
 	}
 
 	// skip if no new block is confirmed
 	lastScanned := ob.LastBlockScanned()
-	if lastScanned >= lastBlock-ob.GetChainParams().ConfirmationCount {
+	if lastScanned >= lastBlock-ob.ChainParams().ConfirmationCount {
 		return nil
 	}
 
@@ -192,7 +192,7 @@ func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
 		return err
 	}
 
-	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInboundTracker", ob.GetChainParams().InboundTicker)
+	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInboundTracker", ob.ChainParams().InboundTicker)
 	if err != nil {
 		ob.logger.Inbound.Err(err).Msg("error creating ticker")
 		return err
@@ -211,7 +211,7 @@ func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
 					Err(err).
 					Msgf("error observing inbound tracker for chain %d", ob.Chain().ChainId)
 			}
-			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.logger.Inbound)
+			ticker.UpdateInterval(ob.ChainParams().InboundTicker, ob.logger.Inbound)
 		case <-ob.StopChannel():
 			ob.logger.Inbound.Info().Msgf("WatchInboundTracker stopped for chain %d", ob.Chain().ChainId)
 			return nil

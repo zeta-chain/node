@@ -186,13 +186,18 @@ func (ob *Observer) WithChain(chain chains.Chain) *Observer {
 
 // ChainParams returns the chain params for the observer.
 func (ob *Observer) ChainParams() observertypes.ChainParams {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
 	return ob.chainParams
 }
 
-// WithChainParams attaches a new chain params to the observer.
-func (ob *Observer) WithChainParams(params observertypes.ChainParams) *Observer {
+// SetChainParams attaches a new chain params to the observer.
+func (ob *Observer) SetChainParams(params observertypes.ChainParams) {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
 	ob.chainParams = params
-	return ob
 }
 
 // ZetacoreClient returns the zetacore client for the observer.

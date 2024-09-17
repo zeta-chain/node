@@ -41,13 +41,11 @@ const (
 type ChainObserver interface {
 	Start(ctx context.Context)
 	Stop()
-	VoteOutboundIfConfirmed(
-		ctx context.Context,
-		cctx *crosschaintypes.CrossChainTx,
-	) (bool, error)
+
+	ChainParams() observertypes.ChainParams
 	SetChainParams(observertypes.ChainParams)
-	GetChainParams() observertypes.ChainParams
-	WatchInboundTracker(ctx context.Context) error
+
+	VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschaintypes.CrossChainTx) (bool, error)
 }
 
 // ChainSigner is the interface to sign transactions for a chain

@@ -181,22 +181,6 @@ func (ob *Observer) WithBtcClient(client interfaces.BTCRPCClient) {
 	ob.btcClient = client
 }
 
-// SetChainParams sets the chain params for the observer
-// Note: chain params is accessed concurrently
-func (ob *Observer) SetChainParams(params observertypes.ChainParams) {
-	ob.Mu().Lock()
-	defer ob.Mu().Unlock()
-	ob.WithChainParams(params)
-}
-
-// GetChainParams returns the chain params for the observer
-// Note: chain params is accessed concurrently
-func (ob *Observer) GetChainParams() observertypes.ChainParams {
-	ob.Mu().Lock()
-	defer ob.Mu().Unlock()
-	return ob.ChainParams()
-}
-
 // Start starts the Go routine processes to observe the Bitcoin chain
 func (ob *Observer) Start(ctx context.Context) {
 	if noop := ob.Observer.Start(); noop {
@@ -238,12 +222,12 @@ func (ob *Observer) ConfirmationsThreshold(amount *big.Int) int64 {
 	if amount.Cmp(big.NewInt(BigValueSats)) >= 0 {
 		return BigValueConfirmationCount
 	}
-	if BigValueConfirmationCount < ob.GetChainParams().ConfirmationCount {
+	if BigValueConfirmationCount < ob.ChainParams().ConfirmationCount {
 		return BigValueConfirmationCount
 	}
 
 	// #nosec G115 always in range
-	return int64(ob.GetChainParams().ConfirmationCount)
+	return int64(ob.ChainParams().ConfirmationCount)
 }
 
 // WatchGasPrice watches Bitcoin chain for gas rate and post to zetacore
@@ -257,25 +241,25 @@ func (ob *Observer) WatchGasPrice(ctx context.Context) error {
 	}
 
 	// start gas price ticker
-	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchGasPrice", ob.GetChainParams().GasPriceTicker)
+	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchGasPrice", ob.ChainParams().GasPriceTicker)
 	if err != nil {
 		return errors.Wrapf(err, "NewDynamicTicker error")
 	}
 	ob.logger.GasPrice.Info().Msgf("WatchGasPrice started for chain %d with interval %d",
-		ob.Chain().ChainId, ob.GetChainParams().GasPriceTicker)
+		ob.Chain().ChainId, ob.ChainParams().GasPriceTicker)
 
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C():
-			if !ob.GetChainParams().IsSupported {
+			if !ob.ChainParams().IsSupported {
 				continue
 			}
 			err := ob.PostGasPrice(ctx)
 			if err != nil {
 				ob.logger.GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.Chain().ChainId)
 			}
-			ticker.UpdateInterval(ob.GetChainParams().GasPriceTicker, ob.logger.GasPrice)
+			ticker.UpdateInterval(ob.ChainParams().GasPriceTicker, ob.logger.GasPrice)
 		case <-ob.StopChannel():
 			ob.logger.GasPrice.Info().Msgf("WatchGasPrice stopped for chain %d", ob.Chain().ChainId)
 			return nil
@@ -378,7 +362,7 @@ func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, n
 // WatchUTXOs watches bitcoin chain for UTXOs owned by the TSS address
 // TODO(revamp): move ticker related functions to a specific file
 func (ob *Observer) WatchUTXOs(ctx context.Context) error {
-	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchUTXOs", ob.GetChainParams().WatchUtxoTicker)
+	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchUTXOs", ob.ChainParams().WatchUtxoTicker)
 	if err != nil {
 		ob.logger.UTXOs.Error().Err(err).Msg("error creating ticker")
 		return err
@@ -388,7 +372,7 @@ func (ob *Observer) WatchUTXOs(ctx context.Context) error {
 	for {
 		select {
 		case <-ticker.C():
-			if !ob.GetChainParams().IsSupported {
+			if !ob.ChainParams().IsSupported {
 				continue
 			}
 			err := ob.FetchUTXOs(ctx)
@@ -403,7 +387,7 @@ func (ob *Observer) WatchUTXOs(ctx context.Context) error {
 					ob.logger.UTXOs.Debug().Err(err).Msg("No wallet is loaded")
 				}
 			}
-			ticker.UpdateInterval(ob.GetChainParams().WatchUtxoTicker, ob.logger.UTXOs)
+			ticker.UpdateInterval(ob.ChainParams().WatchUtxoTicker, ob.logger.UTXOs)
 		case <-ob.StopChannel():
 			ob.logger.UTXOs.Info().Msgf("WatchUTXOs stopped for chain %d", ob.Chain().ChainId)
 			return nil

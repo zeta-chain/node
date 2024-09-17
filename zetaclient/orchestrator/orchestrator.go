@@ -228,7 +228,7 @@ func (oc *Orchestrator) resolveObserver(app *zctx.AppContext, chainID int64) (in
 
 	// update chain observer chain parameters
 	var (
-		curParams   = observer.GetChainParams()
+		curParams   = observer.ChainParams()
 		freshParams = chain.Params()
 	)
 
@@ -447,11 +447,11 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 	for _, v := range res {
 		trackerMap[v.Nonce] = true
 	}
-	outboundScheduleLookahead := observer.GetChainParams().OutboundScheduleLookahead
+	outboundScheduleLookahead := observer.ChainParams().OutboundScheduleLookahead
 	// #nosec G115 always in range
 	outboundScheduleLookback := uint64(float64(outboundScheduleLookahead) * evmOutboundLookbackFactor)
 	// #nosec G115 positive
-	outboundScheduleInterval := uint64(observer.GetChainParams().OutboundScheduleInterval)
+	outboundScheduleInterval := uint64(observer.ChainParams().OutboundScheduleInterval)
 	criticalInterval := uint64(10)                      // for critical pending outbound we reduce re-try interval
 	nonCriticalInterval := outboundScheduleInterval * 2 // for non-critical pending outbound we increase re-try interval
 
@@ -546,8 +546,8 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 		return
 	}
 	// #nosec G115 positive
-	interval := uint64(observer.GetChainParams().OutboundScheduleInterval)
-	lookahead := observer.GetChainParams().OutboundScheduleLookahead
+	interval := uint64(observer.ChainParams().OutboundScheduleInterval)
+	lookahead := observer.ChainParams().OutboundScheduleLookahead
 
 	// schedule at most one keysign per ticker
 	for idx, cctx := range cctxList {
@@ -618,7 +618,7 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 		return
 	}
 	// #nosec G701 positive
-	interval := uint64(observer.GetChainParams().OutboundScheduleInterval)
+	interval := uint64(observer.ChainParams().OutboundScheduleInterval)
 
 	// schedule keysign for each pending cctx
 	for _, cctx := range cctxList {
