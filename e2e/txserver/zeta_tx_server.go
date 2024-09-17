@@ -459,7 +459,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 	if err != nil {
 		return "", err
 	}
-	if err := zts.initializeLiquidityCap(zrc20); err != nil {
+	if err := zts.InitializeLiquidityCap(zrc20); err != nil {
 		return "", err
 	}
 
@@ -481,7 +481,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 	if err != nil {
 		return "", err
 	}
-	if err := zts.initializeLiquidityCap(zrc20); err != nil {
+	if err := zts.InitializeLiquidityCap(zrc20); err != nil {
 		return "", err
 	}
 
@@ -503,7 +503,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 	if err != nil {
 		return "", err
 	}
-	if err := zts.initializeLiquidityCap(zrc20); err != nil {
+	if err := zts.InitializeLiquidityCap(zrc20); err != nil {
 		return "", err
 	}
 
@@ -527,7 +527,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 	if err != nil {
 		return "", err
 	}
-	if err := zts.initializeLiquidityCap(erc20zrc20Addr); err != nil {
+	if err := zts.InitializeLiquidityCap(erc20zrc20Addr); err != nil {
 		return "", err
 	}
 
@@ -579,8 +579,8 @@ func (zts *ZetaTxServer) SetAuthorityClient(authorityClient authoritytypes.Query
 	zts.authorityClient = authorityClient
 }
 
-// initializeLiquidityCap initializes the liquidity cap for the given coin with a large value
-func (zts ZetaTxServer) initializeLiquidityCap(zrc20 string) error {
+// InitializeLiquidityCap initializes the liquidity cap for the given coin with a large value
+func (zts ZetaTxServer) InitializeLiquidityCap(zrc20 string) error {
 	liquidityCap := sdktypes.NewUint(1e18).MulUint64(1e12)
 
 	msg := fungibletypes.NewMsgUpdateZRC20LiquidityCap(
