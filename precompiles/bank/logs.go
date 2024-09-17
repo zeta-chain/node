@@ -4,7 +4,6 @@ import (
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 
@@ -38,27 +37,11 @@ func (c *Contract) AddDepositLog(
 		return err
 	}
 
-	// Amount and cosmos address are part of event data.
-	uint256Type, err := abi.NewType("uint256", "", nil)
-	if err != nil {
-		return err
-	}
-
-	stringType, err := abi.NewType("string", "", nil)
-	if err != nil {
-		return err
-	}
-
-	arguments := abi.Arguments{
-		{
-			Type: stringType,
-		},
-		{
-			Type: uint256Type,
-		},
-	}
-
-	data, err := arguments.Pack(cosmosAddr, amount)
+	// Pack cosmos address and amount as data.
+	data, err := logs.PackArguments([]logs.Argument{
+		{Type: "string", Value: cosmosAddr},
+		{Type: "uint256", Value: amount},
+	})
 	if err != nil {
 		return err
 	}
@@ -90,27 +73,11 @@ func (c *Contract) AddWithdrawLog(
 		return err
 	}
 
-	// Amount and cosmos address are part of event data.
-	uint256Type, err := abi.NewType("uint256", "", nil)
-	if err != nil {
-		return err
-	}
-
-	stringType, err := abi.NewType("string", "", nil)
-	if err != nil {
-		return err
-	}
-
-	arguments := abi.Arguments{
-		{
-			Type: stringType,
-		},
-		{
-			Type: uint256Type,
-		},
-	}
-
-	data, err := arguments.Pack(cosmosAddr, amount)
+	// Pack cosmos address and amount as data.
+	data, err := logs.PackArguments([]logs.Argument{
+		{Type: "string", Value: cosmosAddr},
+		{Type: "uint256", Value: amount},
+	})
 	if err != nil {
 		return err
 	}

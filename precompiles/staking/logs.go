@@ -37,7 +37,9 @@ func (c *Contract) AddStakeLog(
 	}
 
 	// amount is part of event data
-	data, err := logs.PackBigInt(amount)
+	data, err := logs.PackArguments([]logs.Argument{
+		{Type: "uint256", Value: amount},
+	})
 	if err != nil {
 		return err
 	}
@@ -67,7 +69,9 @@ func (c *Contract) AddUnstakeLog(
 	}
 
 	// amount is part of event data
-	data, err := logs.PackBigInt(amount)
+	data, err := logs.PackArguments([]logs.Argument{
+		{Type: "uint256", Value: amount},
+	})
 	if err != nil {
 		return err
 	}
@@ -108,7 +112,9 @@ func (c *Contract) AddMoveStakeLog(
 	}
 
 	// amount is part of event data
-	data, err := logs.PackBigInt(amount)
+	data, err := logs.PackArguments([]logs.Argument{
+		{Type: "uint256", Value: amount},
+	})
 	if err != nil {
 		return err
 	}

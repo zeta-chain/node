@@ -78,7 +78,19 @@ func Test_ErrUnexpected(t *testing.T) {
 		Got:  "bar",
 	}
 	got := e.Error()
-	expect := "unexpected foo, got: bar"
+	expect := "unexpected error in foo: bar"
+	if got != expect {
+		t.Errorf("Expected %v, got %v", expect, got)
+	}
+}
+
+func Test_ErrInsufficientBalance(t *testing.T) {
+	e := ErrInsufficientBalance{
+		Requested: "foo",
+		Got:       "bar",
+	}
+	got := e.Error()
+	expect := "insufficient balance: requested foo, current bar"
 	if got != expect {
 		t.Errorf("Expected %v, got %v", expect, got)
 	}
