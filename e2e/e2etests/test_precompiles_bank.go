@@ -34,7 +34,7 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 
 	// Initial WZETA spender balance should be 50.
 	initialBalance, err := r.WZeta.BalanceOf(&bind.CallOpts{Context: r.Ctx}, spender)
-	require.NoError(r, err, "Error approving allowance for bank contract")
+	require.NoError(r, err, "Error getting initial balance")
 	require.EqualValues(r, approveAmount, initialBalance, "spender balance should be 50")
 
 	// Initial cosmos coin spender balance should be 0.
@@ -57,6 +57,7 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	tx, err = bankContract.Deposit(r.ZEVMAuth, r.WZetaAddr, big.NewInt(25))
 	require.NoError(r, err, "Error calling bank.deposit()")
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt, "withdraw tx failed")
 
 	// Deposit event should be emitted.
 	depositEvent, err := bankContract.ParseDeposit(*receipt.Logs[0])
@@ -89,6 +90,7 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	tx, err = bankContract.Withdraw(r.ZEVMAuth, r.WZetaAddr, big.NewInt(15))
 	require.NoError(r, err, "Error calling bank.withdraw()")
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt, "withdraw tx failed")
 
 	// Withdraw event should be emitted.
 	withdrawEvent, err := bankContract.ParseWithdraw(*receipt.Logs[0])
@@ -97,7 +99,7 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	require.Equal(r, common.BytesToAddress(spender.Bytes()), withdrawEvent.Zrc20Withdrawer)
 	require.Equal(r, r.WZetaAddr, withdrawEvent.Zrc20Token)
 
-	// After withdraw, WZeta spender balance should be only 10 less than initial. (25 - 15 = 10e2e/e2etests/test_precompiles_bank.go )
+	// After withdraw, WZeta spender balance should be only 10 less than initial. (25 - 15 = 10)
 	afterWithdraw, err := r.WZeta.BalanceOf(&bind.CallOpts{Context: r.Ctx}, spender)
 	require.NoError(r, err, "Error retrieving final owner balance")
 	require.EqualValues(

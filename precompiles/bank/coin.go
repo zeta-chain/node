@@ -16,8 +16,6 @@ func ZRC20ToCosmosDenom(ZRC20Address common.Address) string {
 	return ZEVMDenom + ZRC20Address.String()
 }
 
-// createCoinSet creates a sdk.Coins from a tokenDenom and an amount.
-// It's mostly a helper function to avoid code duplication.
 func createCoinSet(tokenDenom string, amount *big.Int) (sdk.Coins, error) {
 	coin := sdk.NewCoin(tokenDenom, math.NewIntFromBigInt(amount))
 	if !coin.IsValid() {
