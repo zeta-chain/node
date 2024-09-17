@@ -20,7 +20,6 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
 
-	"github.com/zeta-chain/node/pkg/bg"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
@@ -44,18 +43,15 @@ func (ob *Observer) WatchInbound(ctx context.Context) error {
 		return ob.watchInboundOnce(ctx, t, sampledLogger)
 	}
 
-	t := ticker.New(interval, task)
-
-	bg.Work(ctx, func(_ context.Context) error {
-		<-ob.StopChannel()
-		t.Stop()
-		ob.Logger().Inbound.Info().Msg("WatchInbound stopped")
-		return nil
-	})
-
 	ob.Logger().Inbound.Info().Msgf("WatchInbound started")
 
-	return t.Run(ctx)
+	return ticker.Run(
+		ctx,
+		interval,
+		task,
+		ticker.WithStopChan(ob.StopChannel()),
+		ticker.WithLogger(ob.Logger().Inbound, "WatchInbound"),
+	)
 }
 
 func (ob *Observer) watchInboundOnce(ctx context.Context, t *ticker.Ticker, sampledLogger zerolog.Logger) error {
