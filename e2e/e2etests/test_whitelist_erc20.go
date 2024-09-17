@@ -50,6 +50,9 @@ func TestWhitelistERC20(r *runner.E2ERunner, _ []string) {
 	erc20zrc20Addr, err := txserver.FetchAttributeFromTxResponse(res, "zrc20_address")
 	require.NoError(r, err)
 
+	err = r.ZetaTxServer.InitializeLiquidityCap(erc20zrc20Addr)
+	require.NoError(r, err)
+
 	// ensure CCTX created
 	resCCTX, err := r.CctxClient.Cctx(r.Ctx, &crosschaintypes.QueryGetCctxRequest{Index: whitelistCCTXIndex})
 	require.NoError(r, err)
