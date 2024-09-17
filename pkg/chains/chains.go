@@ -113,6 +113,18 @@ var (
 		Name:        "solana_mainnet",
 	}
 
+	TONMainnet = Chain{
+		// T[20] O[15] N[14] mainnet[0] :)
+		ChainId:     2015140,
+		Network:     Network_ton,
+		NetworkType: NetworkType_mainnet,
+		Vm:          Vm_tvm,
+		Consensus:   Consensus_catchain_consensus,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+		Name:        "ton_mainnet",
+	}
+
 	/**
 	* Testnet chains
 	 */
@@ -225,6 +237,17 @@ var (
 		Name:        "solana_devnet",
 	}
 
+	TONTestnet = Chain{
+		ChainId:     2015141,
+		Network:     Network_ton,
+		NetworkType: NetworkType_testnet,
+		Vm:          Vm_tvm,
+		Consensus:   Consensus_catchain_consensus,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+		Name:        "ton_testnet",
+	}
+
 	/**
 	* Devnet chains
 	 */
@@ -301,6 +324,17 @@ var (
 		Name:        "solana_localnet",
 	}
 
+	TONLocalnet = Chain{
+		ChainId:     2015142,
+		Network:     Network_ton,
+		NetworkType: NetworkType_privnet,
+		Vm:          Vm_tvm,
+		Consensus:   Consensus_catchain_consensus,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+		Name:        "ton_localnet",
+	}
+
 	/**
 	* Deprecated chains
 	 */
@@ -366,6 +400,9 @@ func DefaultChainsList() []Chain {
 		SolanaMainnet,
 		SolanaDevnet,
 		SolanaLocalnet,
+		TONMainnet,
+		TONTestnet,
+		TONLocalnet,
 	}
 }
 
@@ -417,17 +454,6 @@ func ChainListByGateway(gateway CCTXGateway, additionalChains []Chain) []Chain {
 	var chainList []Chain
 	for _, chain := range CombineDefaultChainsList(additionalChains) {
 		if chain.CctxGateway == gateway {
-			chainList = append(chainList, chain)
-		}
-	}
-	return chainList
-}
-
-// ChainListForHeaderSupport returns a list of chains that support headers
-func ChainListForHeaderSupport(additionalChains []Chain) []Chain {
-	var chainList []Chain
-	for _, chain := range CombineDefaultChainsList(additionalChains) {
-		if chain.Consensus == Consensus_ethereum || chain.Consensus == Consensus_bitcoin {
 			chainList = append(chainList, chain)
 		}
 	}

@@ -11,7 +11,10 @@ import (
 func TestChain_Name(t *testing.T) {
 	t.Run("new Name field is compatible with ChainName enum", func(t *testing.T) {
 		for _, chain := range chains.DefaultChainsList() {
-			require.EqualValues(t, chain.Name, chain.ChainName.String())
+			chainName := chain.ChainName.String()
+			if chainName != "empty" {
+				require.EqualValues(t, chain.Name, chainName)
+			}
 		}
 	})
 }
@@ -34,6 +37,7 @@ func TestChainListByNetworkType(t *testing.T) {
 				chains.OptimismMainnet,
 				chains.BaseMainnet,
 				chains.SolanaMainnet,
+				chains.TONMainnet,
 			},
 		},
 		{
@@ -50,6 +54,7 @@ func TestChainListByNetworkType(t *testing.T) {
 				chains.OptimismSepolia,
 				chains.BaseSepolia,
 				chains.SolanaDevnet,
+				chains.TONTestnet,
 			},
 		},
 		{
@@ -60,6 +65,7 @@ func TestChainListByNetworkType(t *testing.T) {
 				chains.BitcoinRegtest,
 				chains.GoerliLocalnet,
 				chains.SolanaLocalnet,
+				chains.TONLocalnet,
 			},
 		},
 	}
@@ -156,6 +162,9 @@ func TestDefaultChainList(t *testing.T) {
 		chains.SolanaMainnet,
 		chains.SolanaDevnet,
 		chains.SolanaLocalnet,
+		chains.TONMainnet,
+		chains.TONTestnet,
+		chains.TONLocalnet,
 	}, chains.DefaultChainsList())
 }
 
@@ -188,6 +197,9 @@ func TestChainListByGateway(t *testing.T) {
 				chains.SolanaMainnet,
 				chains.SolanaDevnet,
 				chains.SolanaLocalnet,
+				chains.TONMainnet,
+				chains.TONTestnet,
+				chains.TONLocalnet,
 			},
 		},
 		{
@@ -230,6 +242,9 @@ func TestExternalChainList(t *testing.T) {
 		chains.SolanaMainnet,
 		chains.SolanaDevnet,
 		chains.SolanaLocalnet,
+		chains.TONMainnet,
+		chains.TONTestnet,
+		chains.TONLocalnet,
 	}, chains.ExternalChainList([]chains.Chain{}))
 }
 

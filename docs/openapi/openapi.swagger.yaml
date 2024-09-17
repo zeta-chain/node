@@ -56995,7 +56995,9 @@ definitions:
       - bitcoin
       - op_stack
       - solana_consensus
+      - catchain_consensus
     default: ethereum
+    description: '- catchain_consensus: ton'
     title: |-
       Consensus represents the consensus algorithm used by the chain
       this can represent the consensus of a L1
@@ -57011,6 +57013,7 @@ definitions:
       - optimism
       - base
       - solana
+      - ton
     default: eth
     title: |-
       Network represents the network of the chain
@@ -57045,6 +57048,7 @@ definitions:
       - no_vm
       - evm
       - svm
+      - tvm
     default: no_vm
     title: |-
       Vm represents the virtual machine type of the chain to support smart
