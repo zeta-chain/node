@@ -98,7 +98,7 @@ func (ob *Observer) WithSolClient(client interfaces.SolanaRPCClient) {
 
 // Start starts the Go routine processes to observe the Solana chain
 func (ob *Observer) Start(ctx context.Context) {
-	if noop := ob.Observer.Start(); noop {
+	if ok := ob.Observer.Start(); !ok {
 		ob.Logger().Chain.Info().Msgf("observer is already started for chain %d", ob.Chain().ChainId)
 		return
 	}

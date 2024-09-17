@@ -135,19 +135,19 @@ func NewObserver(
 	return &ob, nil
 }
 
-// Start starts the observer. Returns true if the observer was already started (noop).
+// Start starts the observer. Returns false started (noop).
 func (ob *Observer) Start() bool {
 	ob.mu.Lock()
 	defer ob.Mu().Unlock()
 
 	// noop
 	if ob.started {
-		return true
+		return false
 	}
 
 	ob.started = true
 
-	return false
+	return true
 }
 
 // Stop notifies all goroutines to stop and closes the database.

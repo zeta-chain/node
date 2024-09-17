@@ -183,7 +183,7 @@ func (ob *Observer) WithBtcClient(client interfaces.BTCRPCClient) {
 
 // Start starts the Go routine processes to observe the Bitcoin chain
 func (ob *Observer) Start(ctx context.Context) {
-	if noop := ob.Observer.Start(); noop {
+	if ok := ob.Observer.Start(); !ok {
 		ob.Logger().Chain.Info().Msgf("observer is already started for chain %d", ob.Chain().ChainId)
 		return
 	}
