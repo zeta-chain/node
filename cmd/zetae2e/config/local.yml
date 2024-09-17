@@ -85,7 +85,7 @@ rpcs:
   evm: "http://localhost:8545"
   bitcoin:
     host: "localhost:18443"
-    user: "smoketest"
+    user: "e2etest"
     pass: "123"
     http_post_mode: true
     disable_tls: true

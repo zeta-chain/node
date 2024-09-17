@@ -160,7 +160,7 @@ func DefaultConfig() Config {
 			EVM:  "http://eth:8545",
 			Bitcoin: BitcoinRPC{
 				Host:         "bitcoin:18443",
-				User:         "smoketest",
+				User:         "e2etest",
 				Pass:         "123",
 				HTTPPostMode: true,
 				DisableTLS:   true,
