@@ -359,6 +359,7 @@ func DefaultChainsList() []Chain {
 		BscMainnet,
 		Ethereum,
 		BitcoinTestnet,
+		BitcoinSignetTestnet,
 		Mumbai,
 		Amoy,
 		BscTestnet,

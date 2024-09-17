@@ -42,6 +42,7 @@ func TestChainListByNetworkType(t *testing.T) {
 			[]chains.Chain{
 				chains.ZetaChainTestnet,
 				chains.BitcoinTestnet,
+				chains.BitcoinSignetTestnet,
 				chains.Mumbai,
 				chains.Amoy,
 				chains.BscTestnet,
@@ -90,7 +91,7 @@ func TestChainListByNetwork(t *testing.T) {
 		{
 			"Btc",
 			chains.Network_btc,
-			[]chains.Chain{chains.BitcoinMainnet, chains.BitcoinTestnet, chains.BitcoinRegtest},
+			[]chains.Chain{chains.BitcoinMainnet, chains.BitcoinTestnet, chains.BitcoinSignetTestnet, chains.BitcoinRegtest},
 		},
 		{
 			"Eth",
@@ -137,6 +138,7 @@ func TestDefaultChainList(t *testing.T) {
 		chains.BscMainnet,
 		chains.Ethereum,
 		chains.BitcoinTestnet,
+		chains.BitcoinSignetTestnet,
 		chains.Mumbai,
 		chains.Amoy,
 		chains.BscTestnet,
@@ -173,6 +175,7 @@ func TestChainListByGateway(t *testing.T) {
 				chains.BscMainnet,
 				chains.Ethereum,
 				chains.BitcoinTestnet,
+				chains.BitcoinSignetTestnet,
 				chains.Mumbai,
 				chains.Amoy,
 				chains.BscTestnet,
@@ -215,6 +218,7 @@ func TestExternalChainList(t *testing.T) {
 		chains.BscMainnet,
 		chains.Ethereum,
 		chains.BitcoinTestnet,
+		chains.BitcoinSignetTestnet,
 		chains.Mumbai,
 		chains.Amoy,
 		chains.BscTestnet,
