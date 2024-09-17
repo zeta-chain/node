@@ -154,7 +154,7 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	startLogger.Info().Msgf("Config is updated from zetacore %s", maskCfg(cfg))
+	startLogger.Info().Msgf("Config is updated from zetacore\n %s", cfg.StringMasked())
 
 	go zetacoreClient.UpdateAppContextWorker(ctx, appContext)
 

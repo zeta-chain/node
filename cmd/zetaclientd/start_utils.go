@@ -51,36 +51,3 @@ func validatePeer(seedPeer string) error {
 
 	return nil
 }
-
-// maskCfg sensitive fields are masked, currently only the endpoints and bitcoin credentials,
-//
-//	other fields can be added.
-func maskCfg(cfg config.Config) string {
-	// Make a copy of the config
-	maskedCfg := cfg
-
-	// Mask EVM endpoints
-	maskedCfg.EVMChainConfigs = map[int64]config.EVMConfig{}
-	for key, val := range cfg.EVMChainConfigs {
-		maskedCfg.EVMChainConfigs[key] = config.EVMConfig{
-			Chain:    val.Chain,
-			Endpoint: "",
-		}
-	}
-
-	// Mask BTC endpoints and credentials
-	maskedCfg.BTCChainConfigs = map[int64]config.BTCConfig{}
-	for key, val := range cfg.BTCChainConfigs {
-		maskedCfg.BTCChainConfigs[key] = config.BTCConfig{
-			RPCParams: val.RPCParams,
-		}
-	}
-	maskedCfg.BitcoinConfig = config.BTCConfig{
-		RPCParams: cfg.BitcoinConfig.RPCParams,
-	}
-
-	// Mask Solana endpoint
-	maskedCfg.SolanaConfig.Endpoint = ""
-
-	return maskedCfg.String()
-}

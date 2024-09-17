@@ -123,3 +123,19 @@ func Test_GetBTCConfig(t *testing.T) {
 		})
 	}
 }
+
+func Test_StringMasked(t *testing.T) {
+	// create config with defaults
+	cfg := config.New(true)
+
+	// mask the config JSON string
+	masked := cfg.StringMasked()
+	require.NotEmpty(t, masked)
+
+	// should contain necessary fields
+	require.Contains(t, masked, "EVMChainConfigs")
+	require.Contains(t, masked, "BTCChainConfigs")
+
+	// should not contain endpoint
+	require.NotContains(t, masked, "http")
+}
