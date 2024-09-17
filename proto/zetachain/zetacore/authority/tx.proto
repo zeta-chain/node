@@ -13,7 +13,7 @@ option go_package = "github.com/zeta-chain/node/x/authority/types";
 service Msg {
   rpc UpdatePolicies(MsgUpdatePolicies) returns (MsgUpdatePoliciesResponse);
   rpc UpdateChainInfo(MsgUpdateChainInfo) returns (MsgUpdateChainInfoResponse);
-  rpc UpdateRemoveInfo(MsgRemoveChainInfo) returns (MsgRemoveChainInfoResponse);
+  rpc RemoveChainInfo(MsgRemoveChainInfo) returns (MsgRemoveChainInfoResponse);
   rpc AddAuthorization(MsgAddAuthorization)
       returns (MsgAddAuthorizationResponse);
   rpc RemoveAuthorization(MsgRemoveAuthorization)

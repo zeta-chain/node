@@ -5,8 +5,6 @@ import (
 
 	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/node/pkg/chains"
-
 	"github.com/zeta-chain/node/x/authority/types"
 )
 
@@ -25,21 +23,27 @@ func (k msgServer) UpdateChainInfo(
 	if err != nil {
 		return nil, errors.Wrap(types.ErrUnauthorized, err.Error())
 	}
-	// set chain info
-	chainInfo, found := k.GetChainInfo(ctx)
-	if !found {
-		k.SetChainInfo(ctx, types.ChainInfo{Chains: []chains.Chain{msg.Chain}})
-		return &types.MsgUpdateChainInfoResponse{}, nil
-	}
 
-	for _, chain := range chainInfo.Chains {
+	chainInfo := types.ChainInfo{}
+	updatedChainInfo := false
+	// set chain info
+	cf, found := k.GetChainInfo(ctx)
+	if found {
+		chainInfo = cf
+	}
+	// try to update a chain if the chain info already exists
+	for i, chain := range chainInfo.Chains {
 		if chain.ChainId == msg.Chain.ChainId {
-			chain = msg.Chain
-			return &types.MsgUpdateChainInfoResponse{}, nil
+			chainInfo.Chains[i] = msg.Chain
+			updatedChainInfo = true
 		}
 	}
 
-	chainInfo.Chains = append(chainInfo.Chains, msg.Chain)
+	// if the chain info does not exist, add the chain to the chain info
+	if !updatedChainInfo {
+		chainInfo.Chains = append(chainInfo.Chains, msg.Chain)
+	}
+
 	k.SetChainInfo(ctx, chainInfo)
 	return &types.MsgUpdateChainInfoResponse{}, nil
 }

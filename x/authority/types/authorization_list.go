@@ -39,6 +39,7 @@ var (
 		"/zetachain.zetacore.authority.MsgAddAuthorization",
 		"/zetachain.zetacore.authority.MsgRemoveAuthorization",
 		"/zetachain.zetacore.authority.MsgUpdateChainInfo",
+		"/zetachain.zetacore.authority.MsgRemoveChainInfo",
 		"/zetachain.zetacore.lightclient.MsgEnableHeaderVerification",
 	}
 	// EmergencyPolicyMessages keeps track of the message URLs that can, by default, only be executed by emergency policy address
