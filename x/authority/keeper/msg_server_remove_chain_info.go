@@ -9,6 +9,7 @@ import (
 	"github.com/zeta-chain/node/x/authority/types"
 )
 
+// RemoveChainInfo removes the chain info for the specified chain id
 func (k msgServer) RemoveChainInfo(
 	goCtx context.Context,
 	msg *types.MsgRemoveChainInfo,

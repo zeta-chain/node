@@ -9,8 +9,9 @@ import (
 	"github.com/zeta-chain/node/x/authority/types"
 )
 
-// UpdateChainInfo updates the chain info structure that adds new static chain info or overwrite existing chain info
-// on the hard-coded chain info
+// UpdateChainInfo updates the chain info object
+// If the provided chain does not exist in the chain info object, it is added
+// If the chain already exists in the chain info object, it is updated
 func (k msgServer) UpdateChainInfo(
 	goCtx context.Context,
 	msg *types.MsgUpdateChainInfo,
@@ -27,7 +28,7 @@ func (k msgServer) UpdateChainInfo(
 
 	chainInfo := types.ChainInfo{}
 	updatedChainInfo := false
-	// set chain info
+
 	cf, found := k.GetChainInfo(ctx)
 	if found {
 		chainInfo = cf

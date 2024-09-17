@@ -13,8 +13,9 @@ message MsgUpdatePolicies {
 
 ## MsgUpdateChainInfo
 
-UpdateChainInfo updates the chain info structure that adds new static chain info or overwrite existing chain info
-on the hard-coded chain info
+UpdateChainInfo updates the chain info object
+If the provided chain does not exist in the chain info object, it is added
+If the chain already exists in the chain info object, it is updated
 
 ```proto
 message MsgUpdateChainInfo {
@@ -24,6 +25,8 @@ message MsgUpdateChainInfo {
 ```
 
 ## MsgRemoveChainInfo
+
+RemoveChainInfo removes the chain info for the specified chain id
 
 ```proto
 message MsgRemoveChainInfo {

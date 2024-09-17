@@ -63,6 +63,39 @@ func TestMsgServer_RemoveChainInfo(t *testing.T) {
 		require.NotContains(t, storedChains.Chains, chainInfo.Chains[0])
 	})
 
+	t.Run("can remove chain from chain info containing only 1 chain", func(t *testing.T) {
+		// Arrange
+		k, ctx := keepertest.AuthorityKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
+		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
+
+		admin := sample.AccAddress()
+		k.SetPolicies(ctx, types.Policies{
+			Items: []*types.Policy{
+				{
+					PolicyType: types.PolicyType_groupAdmin,
+					Address:    admin,
+				},
+			},
+		})
+		chainID := int64(42)
+		chainInfo := types.ChainInfo{Chains: []chains.Chain{{ChainId: chainID}}}
+		k.SetChainInfo(ctx, chainInfo)
+
+		// Act
+		_, err := msgServer.RemoveChainInfo(sdk.WrapSDKContext(ctx), &types.MsgRemoveChainInfo{
+			Creator: admin,
+			ChainId: chainID,
+		})
+
+		// Assert
+		require.NoError(t, err)
+		storedChains, found := k.GetChainInfo(ctx)
+		require.True(t, found)
+		require.Len(t, storedChains.Chains, 0)
+		require.NotContains(t, storedChains.Chains, chainInfo.Chains[0])
+	})
+
 	t.Run("can't remove chain from chain info if chain info not found", func(t *testing.T) {
 		// Arrange
 		k, ctx := keepertest.AuthorityKeeper(t)
