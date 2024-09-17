@@ -21,22 +21,20 @@ func (c *Contract) balanceOf(
 	}
 
 	// function balanceOf(address zrc20, address user) external view returns (uint256 balance);
-	tokenAddr, addr := args[0].(common.Address), args[1].(common.Address)
-
-	// common.Address has to be converted to AccAddress.
-	accAddr := sdk.AccAddress(addr.Bytes())
-	if accAddr.Empty() {
-		return nil, &ptypes.ErrInvalidAddr{
-			Got: accAddr.String(),
-		}
+	zrc20Addr, addr, err := unpackBalanceOfArgs(args)
+	if err != nil {
+		return nil, err
 	}
 
-	// Convert ZRC20 address to a Cosmos denom formatted as "zevm/0x12345".
-	tokenDenom := ZRC20ToCosmosDenom(tokenAddr)
+	// Get the counterpart cosmos address.
+	toAddr, err := getCosmosAddress(c.bankKeeper, addr)
+	if err != nil {
+		return nil, err
+	}
 
 	// Bank Keeper GetBalance returns the specified Cosmos coin balance for a given address.
 	// Check explicitly the balance is a non-negative non-nil value.
-	coin := c.bankKeeper.GetBalance(ctx, accAddr, tokenDenom)
+	coin := c.bankKeeper.GetBalance(ctx, toAddr, ZRC20ToCosmosDenom(zrc20Addr))
 	if !coin.IsValid() {
 		return nil, &ptypes.ErrInvalidCoin{
 			Got:      coin.GetDenom(),
@@ -46,4 +44,22 @@ func (c *Contract) balanceOf(
 	}
 
 	return method.Outputs.Pack(coin.Amount.BigInt())
+}
+
+func unpackBalanceOfArgs(args []interface{}) (zrc20Addr common.Address, addr common.Address, err error) {
+	zrc20Addr, ok := args[0].(common.Address)
+	if !ok {
+		return common.Address{}, common.Address{}, &ptypes.ErrInvalidAddr{
+			Got: zrc20Addr.String(),
+		}
+	}
+
+	addr, ok = args[1].(common.Address)
+	if !ok {
+		return common.Address{}, common.Address{}, &ptypes.ErrInvalidAddr{
+			Got: addr.String(),
+		}
+	}
+
+	return zrc20Addr, addr, nil
 }

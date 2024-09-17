@@ -39,7 +39,6 @@ type ContractCaller interface {
 		abi *abi.ABI,
 		dst common.Address,
 		method string,
-		noEthereumTxEvent bool,
 		args []interface{}) ([]interface{}, error)
 }
 
@@ -67,26 +66,30 @@ func BytesToBigInt(data []byte) *big.Int {
 	return big.NewInt(0).SetBytes(data[:])
 }
 
+// CallContract calls a contract method on behalf of a precompiled contract.
+//   - noEtherumTxEvent is set to true because we don't want to emit EthereumTxEvent,
+//     as any MsgEthereumTx with more than one ethereum_tx will fail and the receipt
+//     won't be able to be retrieved.
+//   - from is set always to the precompiled contract address.
 func (c *baseContract) CallContract(
 	ctx sdk.Context,
 	fungibleKeeper *fungiblekeeper.Keeper,
 	abi *abi.ABI,
 	dst common.Address,
 	method string,
-	noEthereumTxEvent bool,
 	args []interface{},
 ) ([]interface{}, error) {
 	res, err := fungibleKeeper.CallEVM(
-		ctx,               // ctx
-		*abi,              // abi
-		c.RegistryKey(),   // from
-		dst,               // to
-		big.NewInt(0),     // value
-		nil,               // gasLimit
-		true,              // commit
-		noEthereumTxEvent, // noEthereumTxEvent
-		method,            // method
-		args...,           // args
+		ctx,             // ctx
+		*abi,            // abi
+		c.RegistryKey(), // from
+		dst,             // to
+		big.NewInt(0),   // value
+		nil,             // gasLimit
+		true,            // commit
+		true,            // noEthereumTxEvent
+		method,          // method
+		args...,         // args
 	)
 	if err != nil {
 		return nil, &ErrUnexpected{

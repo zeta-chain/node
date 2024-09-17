@@ -68,8 +68,8 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	depositEvent, err := bankContract.ParseDeposit(*receipt.Logs[0])
 	require.NoError(r, err)
 	require.Equal(r, big.NewInt(25).Uint64(), depositEvent.Amount.Uint64())
-	require.Equal(r, common.BytesToAddress(spender.Bytes()), depositEvent.Depositor)
-	require.Equal(r, r.WZetaAddr, depositEvent.Token)
+	require.Equal(r, common.BytesToAddress(spender.Bytes()), depositEvent.Zrc20Depositor)
+	require.Equal(r, r.WZetaAddr, depositEvent.Zrc20Token)
 	fmt.Println("Deposit event emitted ", depositEvent)
 
 	// Check the balance of the spender in coins "zevm/WZetaAddr".

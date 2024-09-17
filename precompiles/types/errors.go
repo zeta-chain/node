@@ -57,6 +57,15 @@ func (e ErrInvalidAmount) Error() string {
 	return fmt.Sprintf("invalid token amount: %s", e.Got)
 }
 
+type ErrInsufficientBalance struct {
+	Requested string
+	Got       string
+}
+
+func (e ErrInsufficientBalance) Error() string {
+	return fmt.Sprintf("insufficient balance: requested %s, current %s", e.Requested, e.Got)
+}
+
 /*
 	Method related errors
 */

@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
 	ptypes "github.com/zeta-chain/node/precompiles/types"
 	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
@@ -53,6 +54,7 @@ type Contract struct {
 
 	bankKeeper     bank.Keeper
 	fungibleKeeper fungiblekeeper.Keeper
+	zrc20ABI       *abi.ABI
 	cdc            codec.Codec
 	kvGasConfig    storetypes.GasConfig
 }
@@ -63,10 +65,18 @@ func NewIBankContract(
 	cdc codec.Codec,
 	kvGasConfig storetypes.GasConfig,
 ) *Contract {
+	// Instantiate the ZRC20 ABI only one time.
+	// This avoids instantiating it every time deposit or withdraw are called.
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return nil
+	}
+
 	return &Contract{
 		BaseContract:   ptypes.NewBaseContract(ContractAddress),
 		bankKeeper:     bankKeeper,
 		fungibleKeeper: fungibleKeeper,
+		zrc20ABI:       zrc20ABI,
 		cdc:            cdc,
 		kvGasConfig:    kvGasConfig,
 	}
@@ -105,7 +115,6 @@ func (c *Contract) RequiredGas(input []byte) uint64 {
 // Run is the entrypoint of the precompiled contract, it switches over the input method,
 // and execute them accordingly.
 func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byte, error) {
-	fmt.Println("DEBUG: bank.Run()")
 	method, err := ABI.MethodById(contract.Input[:4])
 	if err != nil {
 		return nil, err
@@ -119,8 +128,8 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 	stateDB := evm.StateDB.(ptypes.ExtStateDB)
 
 	switch method.Name {
-	case DepositMethodName:
-		fmt.Println("DEBUG: bank.Run(): DepositMethodName")
+	// Deposit and Withdraw methods are both not allowed in read-only mode.
+	case DepositMethodName, WithdrawMethodName:
 		if readOnly {
 			return nil, ptypes.ErrUnexpected{
 				Got: "method not allowed in read-only mode " + method.Name,
@@ -129,8 +138,13 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-			fmt.Println("DEBUG: bank.Run(): DepositMethodName: ExecuteNativeAction c.deposit()")
-			res, err = c.deposit(ctx, evm, contract, method, args)
+			if method.Name == DepositMethodName {
+				fmt.Println("DEBUG: bank.Run(): DepositMethodName: ExecuteNativeAction c.deposit()")
+				res, err = c.deposit(ctx, evm, contract, method, args)
+			} else {
+				fmt.Println("DEBUG: bank.Run(): WithdrawMethodName: ExecuteNativeAction c.withdraw()")
+				res, err = c.withdraw(ctx, evm, contract, method, args)
+			}
 			return err
 		})
 		if execErr != nil {
@@ -138,16 +152,6 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 			return nil, err
 		}
 		return res, nil
-
-	case WithdrawMethodName:
-		if readOnly {
-			return nil, ptypes.ErrUnexpected{
-				Got: "method not allowed in read-only mode " + method.Name,
-			}
-		}
-
-		return nil, nil
-		// TODO
 
 	case BalanceOfMethodName:
 		fmt.Println("DEBUG: bank.Run(): BalanceOfMethodName")
@@ -167,4 +171,38 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 			Method: method.Name,
 		}
 	}
+}
+
+// getEVMCallerAddress returns the caller address.
+// Usually the caller is the contract.CallerAddress, which is the address of the contract that called the precompiled contract.
+// If contract.CallerAddress != evm.Origin is true, it means the call was made through a contract,
+// on which case there is a need to set the caller to the evm.Origin.
+func getEVMCallerAddress(evm *vm.EVM, contract *vm.Contract) (common.Address, error) {
+	caller := contract.CallerAddress
+	if contract.CallerAddress != evm.Origin {
+		caller = evm.Origin
+	}
+
+	return caller, nil
+}
+
+// getCosmosAddress returns the counterpart cosmos address of the given ethereum address.
+// It checks if the address is empty or blocked by the bank keeper.
+func getCosmosAddress(bankKeeper bank.Keeper, addr common.Address) (sdk.AccAddress, error) {
+	toAddr := sdk.AccAddress(addr.Bytes())
+	if toAddr.Empty() {
+		return nil, &ptypes.ErrInvalidAddr{
+			Got:    toAddr.String(),
+			Reason: "empty address",
+		}
+	}
+
+	if bankKeeper.BlockedAddr(toAddr) {
+		return nil, &ptypes.ErrInvalidAddr{
+			Got:    toAddr.String(),
+			Reason: "destination address blocked by bank keeper",
+		}
+	}
+
+	return toAddr, nil
 }

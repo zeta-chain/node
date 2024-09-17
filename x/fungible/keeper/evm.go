@@ -668,7 +668,6 @@ func (k Keeper) CallEVM(
 	}
 
 	k.Logger(ctx).Debug("calling EVM", "from", from, "contract", contract, "value", value, "method", method)
-	fmt.Printf("DEBUG: CallEVM: calling EVM from %s contract %s value %s method %s\n", from, contract, value, method)
 	resp, err := k.CallEVMWithData(ctx, from, &contract, data, commit, noEthereumTxEvent, value, gasLimit)
 	if err != nil {
 		errMes := fmt.Sprintf(
@@ -708,30 +707,18 @@ func (k Keeper) CallEVMWithData(
 	value *big.Int,
 	gasLimit *big.Int,
 ) (*evmtypes.MsgEthereumTxResponse, error) {
-	fmt.Printf(
-		"DEBUG: CallEVMWithData with from %s, contract %s, commit %v, gasLimit %v, noEthereumTxEvent %v, value %v\n",
-		from,
-		contract,
-		commit,
-		gasLimit,
-		noEthereumTxEvent,
-		value,
-	)
 	nonce, err := k.authKeeper.GetSequence(ctx, from.Bytes())
 	if err != nil {
-		fmt.Printf("DEBUG: CallEVMWithData error GetSequence: %s\n", err.Error())
 		return nil, err
 	}
 	gasCap := config.DefaultGasCap
 	if commit && gasLimit == nil {
-		fmt.Printf("DEBUG: CallEVMWithData entered if commit and gasLimit == nil\n")
 		args, err := json.Marshal(evmtypes.TransactionArgs{
 			From: &from,
 			To:   contract,
 			Data: (*hexutil.Bytes)(&data),
 		})
 		if err != nil {
-			fmt.Printf("DEBUG: CallEVMWithData entered if commit and gasLimit == nil, ERROR: %s\n", err.Error())
 			return nil, cosmoserrors.Wrapf(sdkerrors.ErrJSONMarshal, "failed to marshal tx args: %s", err.Error())
 		}
 
@@ -740,7 +727,6 @@ func (k Keeper) CallEVMWithData(
 			GasCap: config.DefaultGasCap,
 		})
 		if err != nil {
-			fmt.Printf("DEBUG: CallEVMWithData error EstimateGas: %s\n", err.Error())
 			return nil, err
 		}
 		gasCap = gasRes.Gas
@@ -764,21 +750,13 @@ func (k Keeper) CallEVMWithData(
 	)
 	k.evmKeeper.WithChainID(ctx) //FIXME:  set chainID for signer; should not need to do this; but seems necessary. Why?
 	k.Logger(ctx).Debug("call evm", "gasCap", gasCap, "chainid", k.evmKeeper.ChainID(), "ctx.chainid", ctx.ChainID())
-	fmt.Printf(
-		"DEBUG: CallEVMWithData: call evm gasCap %d chainid %d ctx.chainid %d\n",
-		gasCap,
-		k.evmKeeper.ChainID(),
-		ctx.ChainID(),
-	)
 	res, err := k.evmKeeper.ApplyMessage(ctx, msg, evmtypes.NewNoOpTracer(), commit)
 	if err != nil {
-		fmt.Printf("DEBUG: ApplyMessage error: %s\n", err.Error())
 		return nil, err
 	}
 
 	// Emit events and log for the transaction if it is committed
 	if commit {
-		fmt.Printf("DEBUG: Enter commit\n")
 		msgBytes, err := json.Marshal(msg)
 		if err != nil {
 			return nil, cosmoserrors.Wrap(err, "failed to encode msg")
@@ -852,10 +830,8 @@ func (k Keeper) CallEVMWithData(
 			k.evmKeeper.SetLogSizeTransient(ctx, (k.evmKeeper.GetLogSizeTransient(ctx))+uint64(len(logs)))
 		}
 	}
-	fmt.Printf("DEBUG: Finish commit\n")
 
 	if res.Failed() {
-		fmt.Printf("DEBUG: Enter res.Failed()\n")
 		return res, cosmoserrors.Wrapf(evmtypes.ErrVMExecution, "%s: ret 0x%x", res.VmError, res.Ret)
 	}
 

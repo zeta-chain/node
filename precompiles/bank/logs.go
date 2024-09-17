@@ -18,17 +18,51 @@ const (
 func (c *Contract) AddDepositLog(
 	ctx sdk.Context,
 	stateDB vm.StateDB,
-	depositor common.Address,
-	token common.Address,
+	zrc20Depositor common.Address,
+	zrc20Token common.Address,
+	cosmosCoin string,
 	amount *big.Int,
 ) error {
 	event := c.Abi().Events[DepositEventName]
 
-	// depositor and ZRC20 address are indexed.
+	// ZRC20, cosmos coin and depositor.
 	topics, err := logs.MakeTopics(
 		event,
-		[]interface{}{common.BytesToAddress(depositor.Bytes())},
-		[]interface{}{common.BytesToAddress(token.Bytes())},
+		[]interface{}{common.BytesToAddress(zrc20Depositor.Bytes())},
+		[]interface{}{common.BytesToAddress(zrc20Token.Bytes())},
+		[]interface{}{cosmosCoin},
+	)
+	if err != nil {
+		return err
+	}
+
+	// amount is part of event data.
+	data, err := logs.PackBigInt(amount)
+	if err != nil {
+		return err
+	}
+
+	logs.AddLog(ctx, c.Address(), stateDB, topics, data)
+
+	return nil
+}
+
+func (c *Contract) AddWithdrawLog(
+	ctx sdk.Context,
+	stateDB vm.StateDB,
+	zrc20Withdrawer common.Address,
+	zrc20Token common.Address,
+	cosmosCoin string,
+	amount *big.Int,
+) error {
+	event := c.Abi().Events[WithdrawEventName]
+
+	// ZRC20, cosmos coin  and witgdrawer are indexed.
+	topics, err := logs.MakeTopics(
+		event,
+		[]interface{}{common.BytesToAddress(zrc20Withdrawer.Bytes())},
+		[]interface{}{common.BytesToAddress(zrc20Token.Bytes())},
+		[]interface{}{cosmosCoin},
 	)
 	if err != nil {
 		return err

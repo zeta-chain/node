@@ -15,12 +15,26 @@ IBank constant IBANK_CONTRACT = IBank(IBANK_PRECOMPILE_ADDRESS);
 /// @dev Interface for the IBank contract.
 interface IBank {
     /// @notice Deposit event is emitted when deposit function is called.
-    /// @param depositor Depositor address.
-    /// @param token ZRC20 address deposited.
+    /// @param zrc20_depositor Depositor EVM address.
+    /// @param zrc20_token ZRC20 address deposited.
+    /// @param cosmos_token Cosmos token denomination the tokens were converted into.
     /// @param amount Amount deposited.
     event Deposit(
-        address indexed depositor,
-        address indexed token,
+        address indexed zrc20_depositor,
+        address indexed zrc20_token,
+        string indexed cosmos_token,
+        uint256 amount
+    );
+
+    /// @notice Withdraw event is emitted when withdraw function is called.
+    /// @param zrc20_withdrawer Withdrawer EVM address.
+    /// @param zrc20_token ZRC20 address withdrawn.
+    /// @param cosmos_token Cosmos token denomination the tokens were converted from.
+    /// @param amount Amount withdrawn.
+    event Withdraw(
+        address indexed zrc20_withdrawer,
+        address indexed zrc20_token,
+        string indexed cosmos_token,
         uint256 amount
     );
 
