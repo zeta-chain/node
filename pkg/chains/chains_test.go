@@ -91,7 +91,12 @@ func TestChainListByNetwork(t *testing.T) {
 		{
 			"Btc",
 			chains.Network_btc,
-			[]chains.Chain{chains.BitcoinMainnet, chains.BitcoinTestnet, chains.BitcoinSignetTestnet, chains.BitcoinRegtest},
+			[]chains.Chain{
+				chains.BitcoinMainnet,
+				chains.BitcoinTestnet,
+				chains.BitcoinSignetTestnet,
+				chains.BitcoinRegtest,
+			},
 		},
 		{
 			"Eth",
