@@ -91,6 +91,7 @@ rpcs:
     disable_tls: true
     params: regnet
   solana: "http://solana:8899"
+  ton_sidecar_url: "http://ton:8000"
   zetacore_grpc: "zetacore0:9090"
   zetacore_rpc: "http://zetacore0:26657"
 # contracts will be populated on first run

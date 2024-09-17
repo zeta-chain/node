@@ -6,6 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go/rpc"
 
+	tonrunner "github.com/zeta-chain/node/e2e/runner/ton"
 	zetacore_rpc "github.com/zeta-chain/node/pkg/rpc"
 )
 
@@ -18,6 +19,7 @@ type Clients struct {
 	Solana  *rpc.Client
 	Evm     *ethclient.Client
 	EvmAuth *bind.TransactOpts
+	TON     *tonrunner.Client
 
 	// the RPC clients for ZetaChain
 	Zevm     *ethclient.Client

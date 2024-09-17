@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
@@ -60,6 +61,9 @@ type Observer struct {
 	// lastTxScanned is the last transaction hash scanned by the observer
 	lastTxScanned string
 
+	// rpcAlertLatency is the threshold of RPC latency to trigger an alert
+	rpcAlertLatency time.Duration
+
 	// blockCache is the cache for blocks
 	blockCache *lru.Cache
 
@@ -92,6 +96,7 @@ func NewObserver(
 	tss interfaces.TSSSigner,
 	blockCacheSize int,
 	headerCacheSize int,
+	rpcAlertLatency int64,
 	ts *metrics.TelemetryServer,
 	database *db.DB,
 	logger Logger,
@@ -104,6 +109,7 @@ func NewObserver(
 		lastBlock:        0,
 		lastBlockScanned: 0,
 		lastTxScanned:    "",
+		rpcAlertLatency:  time.Duration(rpcAlertLatency) * time.Second,
 		ts:               ts,
 		db:               database,
 		mu:               &sync.Mutex{},
@@ -450,6 +456,27 @@ func (ob *Observer) PostVoteInbound(
 	}
 
 	return ballot, err
+}
+
+// AlertOnRPCLatency prints an alert if the RPC latency exceeds the threshold.
+// Returns true if the RPC latency is too high.
+func (ob *Observer) AlertOnRPCLatency(latestBlockTime time.Time, defaultAlertLatency time.Duration) bool {
+	// use configured alert latency if set
+	alertLatency := defaultAlertLatency
+	if ob.rpcAlertLatency > 0 {
+		alertLatency = ob.rpcAlertLatency
+	}
+
+	// latest block should not be too old
+	elapsedTime := time.Since(latestBlockTime)
+	if elapsedTime > alertLatency {
+		ob.logger.Chain.Error().
+			Msgf("RPC is stale: latest block is %.0f seconds old, RPC down or chain stuck (check explorer)?", elapsedTime.Seconds())
+		return true
+	}
+
+	ob.logger.Chain.Info().Msgf("RPC is OK: latest block is %.0f seconds old", elapsedTime.Seconds())
+	return false
 }
 
 // EnvVarLatestBlockByChain returns the environment variable for the last block by chain.

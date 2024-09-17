@@ -37,22 +37,25 @@ type ClientConfiguration struct {
 
 // EVMConfig is the config for EVM chain
 type EVMConfig struct {
-	Chain    chains.Chain
-	Endpoint string
+	Chain           chains.Chain
+	Endpoint        string
+	RPCAlertLatency int64
 }
 
 // BTCConfig is the config for Bitcoin chain
 type BTCConfig struct {
 	// the following are rpcclient ConnConfig fields
-	RPCUsername string
-	RPCPassword string
-	RPCHost     string
-	RPCParams   string // "regtest", "mainnet", "testnet3" , "signet"
+	RPCUsername     string
+	RPCPassword     string
+	RPCHost         string
+	RPCParams       string // "regtest", "mainnet", "testnet3" , "signet"
+	RPCAlertLatency int64
 }
 
 // SolanaConfig is the config for Solana chain
 type SolanaConfig struct {
-	Endpoint string
+	Endpoint        string
+	RPCAlertLatency int64
 }
 
 // ComplianceConfig is the config for compliance
