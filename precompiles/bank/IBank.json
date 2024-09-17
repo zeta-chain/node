@@ -23,6 +23,12 @@
         },
         {
           "indexed": false,
+          "internalType": "string",
+          "name": "cosmos_address",
+          "type": "string"
+        },
+        {
+          "indexed": false,
           "internalType": "uint256",
           "name": "amount",
           "type": "uint256"
@@ -50,6 +56,12 @@
           "indexed": true,
           "internalType": "string",
           "name": "cosmos_token",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "cosmos_address",
           "type": "string"
         },
         {

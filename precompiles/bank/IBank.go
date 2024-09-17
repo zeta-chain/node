@@ -31,7 +31,7 @@ var (
 
 // IBankMetaData contains all meta data concerning the IBank contract.
 var IBankMetaData = &bind.MetaData{
-	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"zrc20_depositor\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"zrc20_token\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"string\",\"name\":\"cosmos_token\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Deposit\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"zrc20_withdrawer\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"zrc20_token\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"string\",\"name\":\"cosmos_token\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Withdraw\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"zrc20\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"balance\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"zrc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"deposit\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"zrc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"withdraw\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"zrc20_depositor\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"zrc20_token\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"string\",\"name\":\"cosmos_token\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"cosmos_address\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Deposit\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"zrc20_withdrawer\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"zrc20_token\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"string\",\"name\":\"cosmos_token\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"cosmos_address\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Withdraw\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"zrc20\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"balance\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"zrc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"deposit\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"zrc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"withdraw\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // IBankABI is the input ABI used to generate the binding from.
@@ -325,13 +325,14 @@ type IBankDeposit struct {
 	Zrc20Depositor common.Address
 	Zrc20Token     common.Address
 	CosmosToken    common.Hash
+	CosmosAddress  string
 	Amount         *big.Int
 	Raw            types.Log // Blockchain specific contextual infos
 }
 
-// FilterDeposit is a free log retrieval operation binding the contract event 0x2dc24880b34b2026fb1cd0231e65ef42ca1c78e4efdd9711b7629740206bfa46.
+// FilterDeposit is a free log retrieval operation binding the contract event 0xbd7d4de0b30a306221956a420cad57737ae9c1ee63072c96a4f1ab81e6eea264.
 //
-// Solidity: event Deposit(address indexed zrc20_depositor, address indexed zrc20_token, string indexed cosmos_token, uint256 amount)
+// Solidity: event Deposit(address indexed zrc20_depositor, address indexed zrc20_token, string indexed cosmos_token, string cosmos_address, uint256 amount)
 func (_IBank *IBankFilterer) FilterDeposit(opts *bind.FilterOpts, zrc20_depositor []common.Address, zrc20_token []common.Address, cosmos_token []string) (*IBankDepositIterator, error) {
 
 	var zrc20_depositorRule []interface{}
@@ -354,9 +355,9 @@ func (_IBank *IBankFilterer) FilterDeposit(opts *bind.FilterOpts, zrc20_deposito
 	return &IBankDepositIterator{contract: _IBank.contract, event: "Deposit", logs: logs, sub: sub}, nil
 }
 
-// WatchDeposit is a free log subscription operation binding the contract event 0x2dc24880b34b2026fb1cd0231e65ef42ca1c78e4efdd9711b7629740206bfa46.
+// WatchDeposit is a free log subscription operation binding the contract event 0xbd7d4de0b30a306221956a420cad57737ae9c1ee63072c96a4f1ab81e6eea264.
 //
-// Solidity: event Deposit(address indexed zrc20_depositor, address indexed zrc20_token, string indexed cosmos_token, uint256 amount)
+// Solidity: event Deposit(address indexed zrc20_depositor, address indexed zrc20_token, string indexed cosmos_token, string cosmos_address, uint256 amount)
 func (_IBank *IBankFilterer) WatchDeposit(opts *bind.WatchOpts, sink chan<- *IBankDeposit, zrc20_depositor []common.Address, zrc20_token []common.Address, cosmos_token []string) (event.Subscription, error) {
 
 	var zrc20_depositorRule []interface{}
@@ -404,9 +405,9 @@ func (_IBank *IBankFilterer) WatchDeposit(opts *bind.WatchOpts, sink chan<- *IBa
 	}), nil
 }
 
-// ParseDeposit is a log parse operation binding the contract event 0x2dc24880b34b2026fb1cd0231e65ef42ca1c78e4efdd9711b7629740206bfa46.
+// ParseDeposit is a log parse operation binding the contract event 0xbd7d4de0b30a306221956a420cad57737ae9c1ee63072c96a4f1ab81e6eea264.
 //
-// Solidity: event Deposit(address indexed zrc20_depositor, address indexed zrc20_token, string indexed cosmos_token, uint256 amount)
+// Solidity: event Deposit(address indexed zrc20_depositor, address indexed zrc20_token, string indexed cosmos_token, string cosmos_address, uint256 amount)
 func (_IBank *IBankFilterer) ParseDeposit(log types.Log) (*IBankDeposit, error) {
 	event := new(IBankDeposit)
 	if err := _IBank.contract.UnpackLog(event, "Deposit", log); err != nil {
@@ -488,13 +489,14 @@ type IBankWithdraw struct {
 	Zrc20Withdrawer common.Address
 	Zrc20Token      common.Address
 	CosmosToken     common.Hash
+	CosmosAddress   string
 	Amount          *big.Int
 	Raw             types.Log // Blockchain specific contextual infos
 }
 
-// FilterWithdraw is a free log retrieval operation binding the contract event 0x4b230e98ab931f2b86715011c55a66078553f7ae5933f387d1e23954b2b9d19a.
+// FilterWithdraw is a free log retrieval operation binding the contract event 0x1ad70707c91d850319aeab00514a0166569359f0b8dc5285bdd6e6b9c464b18e.
 //
-// Solidity: event Withdraw(address indexed zrc20_withdrawer, address indexed zrc20_token, string indexed cosmos_token, uint256 amount)
+// Solidity: event Withdraw(address indexed zrc20_withdrawer, address indexed zrc20_token, string indexed cosmos_token, string cosmos_address, uint256 amount)
 func (_IBank *IBankFilterer) FilterWithdraw(opts *bind.FilterOpts, zrc20_withdrawer []common.Address, zrc20_token []common.Address, cosmos_token []string) (*IBankWithdrawIterator, error) {
 
 	var zrc20_withdrawerRule []interface{}
@@ -517,9 +519,9 @@ func (_IBank *IBankFilterer) FilterWithdraw(opts *bind.FilterOpts, zrc20_withdra
 	return &IBankWithdrawIterator{contract: _IBank.contract, event: "Withdraw", logs: logs, sub: sub}, nil
 }
 
-// WatchWithdraw is a free log subscription operation binding the contract event 0x4b230e98ab931f2b86715011c55a66078553f7ae5933f387d1e23954b2b9d19a.
+// WatchWithdraw is a free log subscription operation binding the contract event 0x1ad70707c91d850319aeab00514a0166569359f0b8dc5285bdd6e6b9c464b18e.
 //
-// Solidity: event Withdraw(address indexed zrc20_withdrawer, address indexed zrc20_token, string indexed cosmos_token, uint256 amount)
+// Solidity: event Withdraw(address indexed zrc20_withdrawer, address indexed zrc20_token, string indexed cosmos_token, string cosmos_address, uint256 amount)
 func (_IBank *IBankFilterer) WatchWithdraw(opts *bind.WatchOpts, sink chan<- *IBankWithdraw, zrc20_withdrawer []common.Address, zrc20_token []common.Address, cosmos_token []string) (event.Subscription, error) {
 
 	var zrc20_withdrawerRule []interface{}
@@ -567,9 +569,9 @@ func (_IBank *IBankFilterer) WatchWithdraw(opts *bind.WatchOpts, sink chan<- *IB
 	}), nil
 }
 
-// ParseWithdraw is a log parse operation binding the contract event 0x4b230e98ab931f2b86715011c55a66078553f7ae5933f387d1e23954b2b9d19a.
+// ParseWithdraw is a log parse operation binding the contract event 0x1ad70707c91d850319aeab00514a0166569359f0b8dc5285bdd6e6b9c464b18e.
 //
-// Solidity: event Withdraw(address indexed zrc20_withdrawer, address indexed zrc20_token, string indexed cosmos_token, uint256 amount)
+// Solidity: event Withdraw(address indexed zrc20_withdrawer, address indexed zrc20_token, string indexed cosmos_token, string cosmos_address, uint256 amount)
 func (_IBank *IBankFilterer) ParseWithdraw(log types.Log) (*IBankWithdraw, error) {
 	event := new(IBankWithdraw)
 	if err := _IBank.contract.UnpackLog(event, "Withdraw", log); err != nil {

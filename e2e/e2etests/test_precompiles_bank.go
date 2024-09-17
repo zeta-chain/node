@@ -1,7 +1,6 @@
 package e2etests
 
 import (
-	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -25,24 +24,21 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 
 	spender, bankAddr := r.EVMAddress(), bank.ContractAddress
 
-	// Deposit and approve 50 WZETA for the test.
-	approveAmount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(50))
-	r.DepositAndApproveWZeta(approveAmount)
-	fmt.Printf("DEBUG: approveAmount %s\n", approveAmount.String())
-
-	initialBalance, err := r.WZeta.BalanceOf(&bind.CallOpts{Context: r.Ctx}, spender)
-	fmt.Printf("DEBUG: initialBalance %s\n", initialBalance.String())
-	require.NoError(r, err, "Error approving allowance for bank contract")
-	require.EqualValues(r, approveAmount, initialBalance, "spender balance should be 50")
-
 	// Create a bank contract caller.
 	bankContract, err := bank.NewIBank(bank.ContractAddress, r.ZEVMClient)
 	require.NoError(r, err, "Failed to create bank contract caller")
 
-	// Get the balance of the spender in coins "zevm/WZetaAddr". This calls bank.balanceOf().
-	// BalanceOf will convert the ZRC20 address to a Cosmos denom formatted as "zevm/0x12345".
+	// Deposit and approve 50 WZETA for the test.
+	approveAmount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(50))
+	r.DepositAndApproveWZeta(approveAmount)
+
+	// Initial WZETA spender balance should be 50.
+	initialBalance, err := r.WZeta.BalanceOf(&bind.CallOpts{Context: r.Ctx}, spender)
+	require.NoError(r, err, "Error approving allowance for bank contract")
+	require.EqualValues(r, approveAmount, initialBalance, "spender balance should be 50")
+
+	// Initial cosmos coin spender balance should be 0.
 	retBalanceOf, err := bankContract.BalanceOf(&bind.CallOpts{Context: r.Ctx}, r.WZetaAddr, spender)
-	fmt.Printf("DEBUG: initial bank.balanceOf() %s\n", retBalanceOf.String())
 	require.NoError(r, err, "Error calling bank.balanceOf()")
 	require.EqualValues(r, uint64(0), retBalanceOf.Uint64(), "Initial cosmos coins balance has to be 0")
 
@@ -54,13 +50,11 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 
 	// Check the allowance of the bank in WZeta tokens. Should be 25.
 	balance, err := r.WZeta.Allowance(&bind.CallOpts{Context: r.Ctx}, spender, bankAddr)
-	fmt.Printf("DEBUG: bank allowance %s\n", balance.String())
 	require.NoError(r, err, "Error retrieving bank allowance")
 	require.EqualValues(r, uint64(25), balance.Uint64(), "Error allowance for bank contract")
 
-	// Call deposit with 25 coins.
+	// Call Deposit with 25 coins.
 	tx, err = bankContract.Deposit(r.ZEVMAuth, r.WZetaAddr, big.NewInt(25))
-	fmt.Printf("DEBUG: bank.deposit() tx hash %s\n", tx.Hash().String())
 	require.NoError(r, err, "Error calling bank.deposit()")
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 
@@ -70,17 +64,14 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	require.Equal(r, big.NewInt(25).Uint64(), depositEvent.Amount.Uint64())
 	require.Equal(r, common.BytesToAddress(spender.Bytes()), depositEvent.Zrc20Depositor)
 	require.Equal(r, r.WZetaAddr, depositEvent.Zrc20Token)
-	fmt.Println("Deposit event emitted ", depositEvent)
 
-	// Check the balance of the spender in coins "zevm/WZetaAddr".
+	// After deposit, cosmos coin spender balance should be 25.
 	retBalanceOf, err = bankContract.BalanceOf(&bind.CallOpts{Context: r.Ctx}, r.WZetaAddr, spender)
-	fmt.Printf("DEBUG: final bank.balanceOf() tx %s\n", retBalanceOf.String())
 	require.NoError(r, err, "Error calling bank.balanceOf()")
 	require.EqualValues(r, uint64(25), retBalanceOf.Uint64(), "balanceOf result has to be 25")
 
-	// Check the balance of the spender in r.WZeta, should be 100 less.
+	// After deposit, WZeta spender balance should be 25 less than initial.
 	finalBalance, err := r.WZeta.BalanceOf(&bind.CallOpts{Context: r.Ctx}, spender)
-	fmt.Printf("DEBUG: final WZeta balance %s\n", finalBalance.String())
 	require.NoError(r, err, "Error retrieving final owner balance")
 	require.EqualValues(
 		r,
@@ -88,4 +79,41 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 		finalBalance.Uint64(),      // actual
 		"Final balance should be initial - 25",
 	)
+
+	// After deposit, WZeta bank balance should be 25.
+	balance, err = r.WZeta.BalanceOf(&bind.CallOpts{Context: r.Ctx}, bankAddr)
+	require.NoError(r, err, "Error retrieving bank's balance")
+	require.EqualValues(r, uint64(25), balance.Uint64(), "Wrong locked WZeta amount in bank contract")
+
+	// Withdraw 15 coins to spender.
+	tx, err = bankContract.Withdraw(r.ZEVMAuth, r.WZetaAddr, big.NewInt(15))
+	require.NoError(r, err, "Error calling bank.withdraw()")
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+
+	// Withdraw event should be emitted.
+	withdrawEvent, err := bankContract.ParseWithdraw(*receipt.Logs[0])
+	require.NoError(r, err)
+	require.Equal(r, big.NewInt(15).Uint64(), withdrawEvent.Amount.Uint64())
+	require.Equal(r, common.BytesToAddress(spender.Bytes()), withdrawEvent.Zrc20Withdrawer)
+	require.Equal(r, r.WZetaAddr, withdrawEvent.Zrc20Token)
+
+	// After withdraw, WZeta spender balance should be only 10 less than initial. (25 - 15 = 10e2e/e2etests/test_precompiles_bank.go )
+	afterWithdraw, err := r.WZeta.BalanceOf(&bind.CallOpts{Context: r.Ctx}, spender)
+	require.NoError(r, err, "Error retrieving final owner balance")
+	require.EqualValues(
+		r,
+		initialBalance.Uint64()-10, // expected
+		afterWithdraw.Uint64(),     // actual
+		"Balance after withdraw should be initial - 10",
+	)
+
+	// After withdraw, cosmos coin spender balance should be 10.
+	retBalanceOf, err = bankContract.BalanceOf(&bind.CallOpts{Context: r.Ctx}, r.WZetaAddr, spender)
+	require.NoError(r, err, "Error calling bank.balanceOf()")
+	require.EqualValues(r, uint64(10), retBalanceOf.Uint64(), "balanceOf result has to be 10")
+
+	// Final WZETA bank balance should be 10.
+	balance, err = r.WZeta.BalanceOf(&bind.CallOpts{Context: r.Ctx}, bankAddr)
+	require.NoError(r, err, "Error retrieving bank's allowance")
+	require.EqualValues(r, uint64(10), balance.Uint64(), "Wrong locked WZeta amount in bank contract")
 }

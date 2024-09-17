@@ -3,6 +3,7 @@ package bank
 import (
 	"math/big"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -12,15 +13,14 @@ import (
 	"github.com/zeta-chain/node/x/fungible/types"
 )
 
-// From IBank.sol: function deposit(address zrc20, uint256 amount) external returns (bool success);
-func (c *Contract) deposit(
+// From IBank.sol: function withdraw(address zrc20, uint256 amount) external returns (bool success);
+func (c *Contract) withdraw(
 	ctx sdk.Context,
 	evm *vm.EVM,
 	contract *vm.Contract,
 	method *abi.Method,
 	args []interface{},
 ) (result []byte, err error) {
-	// This function is developed using the Check - Effects - Interactions pattern:
 	// 1. Check everything is correct.
 	if len(args) != 2 {
 		return nil, &(ptypes.ErrInvalidNumberOfArgs{
@@ -29,9 +29,9 @@ func (c *Contract) deposit(
 		})
 	}
 
-	// Unpack parameters for function deposit.
-	// function deposit(address zrc20, uint256 amount) external returns (bool success);
-	zrc20Addr, amount, err := unpackDepositArgs(args)
+	// Unpack parameters for function withdraw.
+	// function withdraw(address zrc20, uint256 amount) external returns (bool success);
+	zrc20Addr, amount, err := unpackWithdrawArgs(args)
 	if err != nil {
 		return nil, err
 	}
@@ -43,12 +43,27 @@ func (c *Contract) deposit(
 	}
 
 	// Get the cosmos address of the caller.
-	toAddr, err := getCosmosAddress(c.bankKeeper, caller)
+	// This address should have enough cosmos coin balance as the requested amount.
+	fromAddr, err := getCosmosAddress(c.bankKeeper, caller)
 	if err != nil {
 		return nil, err
 	}
 
-	// Check for enough balance.
+	// Caller has to have enough cosmos coin balance to withdraw the requested amount.
+	coin := c.bankKeeper.GetBalance(ctx, fromAddr, ZRC20ToCosmosDenom(zrc20Addr))
+	if coin.Amount.LT(math.NewIntFromBigInt(amount)) {
+		return nil, &ptypes.ErrInsufficientBalance{
+			Requested: amount.String(),
+			Got:       coin.Amount.String(),
+		}
+	}
+
+	coinSet, err := createCoinSet(ZRC20ToCosmosDenom(zrc20Addr), amount)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check for bank's ZRC20 balance.
 	// function balanceOf(address account) public view virtual override returns (uint256)
 	resBalanceOf, err := c.CallContract(
 		ctx,
@@ -68,53 +83,19 @@ func (c *Contract) deposit(
 	balance, ok := resBalanceOf[0].(*big.Int)
 	if !ok || balance.Cmp(amount) < 0 {
 		return nil, &ptypes.ErrInvalidAmount{
-			Got: "not enough balance",
+			Got: "not enough bank balance",
 		}
 	}
 
-	// Check for enough bank's allowance.
-	// function allowance(address owner, address spender) public view virtual override returns (uint256)
-	resAllowance, err := c.CallContract(
-		ctx,
-		&c.fungibleKeeper,
-		c.zrc20ABI,
-		zrc20Addr,
-		"allowance",
-		[]interface{}{caller, ContractAddress},
-	)
-	if err != nil {
-		return nil, &ptypes.ErrUnexpected{
-			When: "allowance",
-			Got:  err.Error(),
-		}
-	}
-
-	allowance, ok := resAllowance[0].(*big.Int)
-	if !ok || allowance.Cmp(amount) < 0 {
-		return nil, &ptypes.ErrInvalidAmount{
-			Got: "not enough allowance",
-		}
-	}
-
-	// The process of creating a new cosmos coin is:
-	// - Generate the new coin denom using ZRC20 address,
-	//   this way we map ZRC20 addresses to cosmos denoms "zevm/0x12345".
-	// - Mint coins.
-	// - Send coins to the caller.
-	coinSet, err := createCoinSet(ZRC20ToCosmosDenom(zrc20Addr), amount)
-	if err != nil {
-		return nil, err
-	}
-
-	// 2. Effect: subtract balance.
-	// function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool)
+	// 2. Effect: transfer balance.
+	// function transferFrom(address sender, address recipient, uint256 amount)
 	resTransferFrom, err := c.CallContract(
 		ctx,
 		&c.fungibleKeeper,
 		c.zrc20ABI,
 		zrc20Addr,
 		"transferFrom",
-		[]interface{}{caller, ContractAddress, amount},
+		[]interface{}{ContractAddress /* sender */, caller /* receiver */, amount},
 	)
 	if err != nil {
 		return nil, &ptypes.ErrUnexpected{
@@ -131,26 +112,24 @@ func (c *Contract) deposit(
 		}
 	}
 
-	// 3. Interactions: create cosmos coin and send.
-	err = c.bankKeeper.MintCoins(ctx, types.ModuleName, coinSet)
-	if err != nil {
+	// 3. Interactions: send to module and burn.
+	if err := c.bankKeeper.SendCoinsFromAccountToModule(ctx, fromAddr, types.ModuleName, coinSet); err != nil {
 		return nil, &ptypes.ErrUnexpected{
-			When: "MintCoins",
+			When: "SendCoinsFromAccountToModule",
 			Got:  err.Error(),
 		}
 	}
 
-	err = c.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, toAddr, coinSet)
-	if err != nil {
+	if err := c.bankKeeper.BurnCoins(ctx, types.ModuleName, coinSet); err != nil {
 		return nil, &ptypes.ErrUnexpected{
-			When: "SendCoinsFromModuleToAccount",
+			When: "BurnCoins",
 			Got:  err.Error(),
 		}
 	}
 
-	if err := c.AddDepositLog(ctx, evm.StateDB, caller, zrc20Addr, toAddr.String(), coinSet.Denoms()[0], amount); err != nil {
+	if err := c.AddWithdrawLog(ctx, evm.StateDB, caller, zrc20Addr, fromAddr.String(), coinSet.Denoms()[0], amount); err != nil {
 		return nil, &ptypes.ErrUnexpected{
-			When: "AddDepositLog",
+			When: "AddWithdrawLog",
 			Got:  err.Error(),
 		}
 	}
@@ -158,7 +137,7 @@ func (c *Contract) deposit(
 	return method.Outputs.Pack(true)
 }
 
-func unpackDepositArgs(args []interface{}) (zrc20Addr common.Address, amount *big.Int, err error) {
+func unpackWithdrawArgs(args []interface{}) (zrc20Addr common.Address, amount *big.Int, err error) {
 	zrc20Addr, ok := args[0].(common.Address)
 	if !ok {
 		return common.Address{}, nil, &ptypes.ErrInvalidAddr{

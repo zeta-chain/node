@@ -18,11 +18,13 @@ interface IBank {
     /// @param zrc20_depositor Depositor EVM address.
     /// @param zrc20_token ZRC20 address deposited.
     /// @param cosmos_token Cosmos token denomination the tokens were converted into.
+    /// @param cosmos_address Cosmos address the tokens were deposited to.
     /// @param amount Amount deposited.
     event Deposit(
         address indexed zrc20_depositor,
         address indexed zrc20_token,
         string indexed cosmos_token,
+        string cosmos_address,
         uint256 amount
     );
 
@@ -30,11 +32,13 @@ interface IBank {
     /// @param zrc20_withdrawer Withdrawer EVM address.
     /// @param zrc20_token ZRC20 address withdrawn.
     /// @param cosmos_token Cosmos token denomination the tokens were converted from.
+    /// @param cosmos_address Cosmos address the tokens were withdrawn from.
     /// @param amount Amount withdrawn.
     event Withdraw(
         address indexed zrc20_withdrawer,
         address indexed zrc20_token,
         string indexed cosmos_token,
+        string cosmos_address,
         uint256 amount
     );
 
