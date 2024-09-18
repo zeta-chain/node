@@ -85,7 +85,7 @@ rpcs:
   evm: "http://eth:8545"
   bitcoin:
     host: "bitcoin:18443"
-    user: "e2etest"
+    user: "smoketest"
     pass: "123"
     http_post_mode: true
     disable_tls: true
