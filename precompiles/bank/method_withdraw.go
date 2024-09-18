@@ -49,6 +49,15 @@ func (c *Contract) withdraw(
 		return nil, err
 	}
 
+	// Safety check: token has to be a valid whitelisted ZRC20 and not be paused.
+	t, found := c.fungibleKeeper.GetForeignCoins(ctx, zrc20Addr.String())
+	if !found || t.Paused {
+		return nil, &ptypes.ErrInvalidToken{
+			Got:    zrc20Addr.String(),
+			Reason: "token is not a whitelisted ZRC20 or it's paused",
+		}
+	}
+
 	// Caller has to have enough cosmos coin balance to withdraw the requested amount.
 	coin := c.bankKeeper.GetBalance(ctx, fromAddr, ZRC20ToCosmosDenom(zrc20Addr))
 	if coin.Amount.IsNil() {

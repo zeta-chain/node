@@ -58,8 +58,8 @@ func StatefulContracts(
 	}
 
 	if EnabledStatefulContracts[bank.ContractAddress] {
-		bankContract := func(_ sdktypes.Context, _ ethparams.Rules) vm.PrecompiledContract {
-			return bank.NewIBankContract(bankKeeper, *fungibleKeeper, cdc, gasConfig)
+		bankContract := func(ctx sdktypes.Context, _ ethparams.Rules) vm.PrecompiledContract {
+			return bank.NewIBankContract(ctx, bankKeeper, *fungibleKeeper, cdc, gasConfig)
 		}
 
 		// Append the staking contract to the precompiledContracts slice.

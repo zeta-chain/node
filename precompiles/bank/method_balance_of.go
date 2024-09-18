@@ -32,6 +32,16 @@ func (c *Contract) balanceOf(
 		return nil, err
 	}
 
+	// Safety check: token has to be a valid whitelisted ZRC20 and not be paused.
+	// Do not check for t.Paused, as the balance is read only the EOA won't be able to operate.
+	_, found := c.fungibleKeeper.GetForeignCoins(ctx, zrc20Addr.String())
+	if !found {
+		return nil, &ptypes.ErrInvalidToken{
+			Got:    zrc20Addr.String(),
+			Reason: "token is not a whitelisted ZRC20",
+		}
+	}
+
 	// Bank Keeper GetBalance returns the specified Cosmos coin balance for a given address.
 	// Check explicitly the balance is a non-negative non-nil value.
 	coin := c.bankKeeper.GetBalance(ctx, toAddr, ZRC20ToCosmosDenom(zrc20Addr))

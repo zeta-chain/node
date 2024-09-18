@@ -95,3 +95,15 @@ func Test_ErrInsufficientBalance(t *testing.T) {
 		t.Errorf("Expected %v, got %v", expect, got)
 	}
 }
+
+func Test_ErrInvalidToken(t *testing.T) {
+	e := ErrInvalidToken{
+		Got:    "foo",
+		Reason: "bar",
+	}
+	got := e.Error()
+	expect := "invalid token foo: bar"
+	if got != expect {
+		t.Errorf("Expected %v, got %v", expect, got)
+	}
+}

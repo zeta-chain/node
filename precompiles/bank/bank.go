@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -58,11 +59,17 @@ type Contract struct {
 }
 
 func NewIBankContract(
+	ctx sdk.Context,
 	bankKeeper bank.Keeper,
 	fungibleKeeper fungiblekeeper.Keeper,
 	cdc codec.Codec,
 	kvGasConfig storetypes.GasConfig,
 ) *Contract {
+	accAddress := sdk.AccAddress(ContractAddress.Bytes())
+	if fungibleKeeper.GetAuthKeeper().GetAccount(ctx, accAddress) == nil {
+		fungibleKeeper.GetAuthKeeper().SetAccount(ctx, authtypes.NewBaseAccount(accAddress, nil, 0, 0))
+	}
+
 	// Instantiate the ZRC20 ABI only one time.
 	// This avoids instantiating it every time deposit or withdraw are called.
 	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()

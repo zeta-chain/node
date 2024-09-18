@@ -48,6 +48,15 @@ func (c *Contract) deposit(
 		return nil, err
 	}
 
+	// Safety check: token has to be a valid whitelisted ZRC20 and not be paused.
+	t, found := c.fungibleKeeper.GetForeignCoins(ctx, zrc20Addr.String())
+	if !found || t.Paused {
+		return nil, &ptypes.ErrInvalidToken{
+			Got:    zrc20Addr.String(),
+			Reason: "token is not a whitelisted ZRC20 or it's paused",
+		}
+	}
+
 	// Check for enough balance.
 	// function balanceOf(address account) public view virtual override returns (uint256)
 	resBalanceOf, err := c.CallContract(

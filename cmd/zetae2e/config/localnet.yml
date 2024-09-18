@@ -61,10 +61,6 @@ additional_accounts:
     bech32_address: "zeta1nry9yeg6njhjrp2ctppa8558vqxal9fxk69zxg"
     evm_address: "0x98c852651A9CAF2185585843d3D287600Ddf9526"
     private_key: "bf9456c679bb5a952a9a137fcfc920e0413efdb97c36de1e57455763084230cb"
-  user_bank_precompile:
-    bech32_address: "zeta1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr84sgapz"
-    evm_address: "0x0000000000000000000000000000000000000067"
-    private_key: ""
 policy_accounts:
   emergency_policy_account:
     bech32_address: "zeta16m2cnrdwtgweq4njc6t470vl325gw4kp6s7tap"

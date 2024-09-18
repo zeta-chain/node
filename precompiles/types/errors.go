@@ -39,6 +39,15 @@ func (e ErrInvalidArgument) Error() string {
 	Token related errors
 */
 
+type ErrInvalidToken struct {
+	Got    string
+	Reason string
+}
+
+func (e ErrInvalidToken) Error() string {
+	return fmt.Sprintf("invalid token %s: %s", e.Got, e.Reason)
+}
+
 type ErrInvalidCoin struct {
 	Got      string
 	Negative bool
