@@ -29,6 +29,8 @@ package ticker
 import (
 	"context"
 	"fmt"
+	"runtime/debug"
+	"strings"
 	"sync"
 	"time"
 
@@ -78,7 +80,14 @@ func SecondsFromUint64(d uint64) time.Duration {
 func (t *Ticker) Run(ctx context.Context) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("panic during ticker run: %v", r)
+			stack := string(debug.Stack())
+			lines := strings.Split(stack, "\n")
+			line := ""
+			// 8th line should be the actual line, see the unit tests
+			if len(lines) > 8 {
+				line = strings.TrimSpace(lines[8])
+			}
+			err = fmt.Errorf("panic during ticker run: %v at %s", r, line)
 		}
 	}()
 

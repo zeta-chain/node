@@ -90,7 +90,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.13
-    entrypoint: [ "/root/start-zetacored.sh", "4" ]
+    entrypoint: ["/root/start-zetacored.sh", "4"]
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
@@ -107,7 +107,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.14
-    entrypoint: [ "/root/start-zetacored.sh", "4" ]
+    entrypoint: ["/root/start-zetacored.sh", "4"]
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
@@ -239,7 +239,23 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.103
-    entrypoint: [ "/usr/bin/start-solana.sh" ]
+    entrypoint: ["/usr/bin/start-solana.sh"]
+
+  ton:
+    image: ghcr.io/zeta-chain/ton-docker:a69ea0f
+    container_name: ton
+    hostname: ton
+    profiles:
+      - ton
+      - all
+    ports:
+      - "8111:8000" # sidecar
+      - "4443:4443" # lite client
+    environment:
+      DOCKER_IP: 172.20.0.104
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.104
 
   orchestrator:
     image: orchestrator:latest

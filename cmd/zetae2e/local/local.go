@@ -34,6 +34,7 @@ const (
 	flagTestPerformance   = "test-performance"
 	flagTestCustom        = "test-custom"
 	flagTestSolana        = "test-solana"
+	flagTestTON           = "test-ton"
 	flagSkipRegular       = "skip-regular"
 	flagLight             = "light"
 	flagSetupOnly         = "setup-only"
@@ -69,6 +70,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestPerformance, false, "set to true to run performance tests")
 	cmd.Flags().Bool(flagTestCustom, false, "set to true to run custom tests")
 	cmd.Flags().Bool(flagTestSolana, false, "set to true to run solana tests")
+	cmd.Flags().Bool(flagTestTON, false, "set to true to run TON tests")
 	cmd.Flags().Bool(flagSkipRegular, false, "set to true to skip regular tests")
 	cmd.Flags().Bool(flagLight, false, "run the most basic regular tests, useful for quick checks")
 	cmd.Flags().Bool(flagSetupOnly, false, "set to true to only setup the networks")
@@ -98,6 +100,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testPerformance   = must(cmd.Flags().GetBool(flagTestPerformance))
 		testCustom        = must(cmd.Flags().GetBool(flagTestCustom))
 		testSolana        = must(cmd.Flags().GetBool(flagTestSolana))
+		testTON           = must(cmd.Flags().GetBool(flagTestTON))
 		skipRegular       = must(cmd.Flags().GetBool(flagSkipRegular))
 		light             = must(cmd.Flags().GetBool(flagLight))
 		setupOnly         = must(cmd.Flags().GetBool(flagSetupOnly))
@@ -135,6 +138,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// initialize tests config
 	conf, err := GetConfig(cmd)
 	noError(err)
+
+	// temporary spaghetti to overcome e2e flags limitations
+	if !testTON {
+		conf.RPCs.TONSidecarURL = ""
+	}
 
 	// initialize context
 	ctx, cancel := context.WithCancel(context.Background())
@@ -378,6 +386,19 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSolanaWithdrawRestrictedName,
 		}
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
+	}
+
+	if testTON {
+		if deployerRunner.Clients.TON == nil {
+			logger.Print("❌ TON client is nil, maybe TON lite-server config is not set")
+			os.Exit(1)
+		}
+
+		tonTests := []string{
+			e2etests.TestTONDepositName,
+		}
+
+		eg.Go(tonTestRoutine(conf, deployerRunner, verbose, tonTests...))
 	}
 
 	if testV2 {

@@ -14,15 +14,15 @@ const (
 func New(setDefaults bool) Config {
 	cfg := Config{
 		EVMChainConfigs: make(map[int64]EVMConfig),
-		BitcoinConfig:   BTCConfig{},
+		BTCChainConfigs: make(map[int64]BTCConfig),
 
 		mu: &sync.RWMutex{},
 	}
 
 	if setDefaults {
-		cfg.BitcoinConfig = bitcoinConfigRegnet()
-		cfg.SolanaConfig = solanaConfigLocalnet()
 		cfg.EVMChainConfigs = evmChainsConfigs()
+		cfg.BTCChainConfigs = btcChainsConfigs()
+		cfg.SolanaConfig = solanaConfigLocalnet()
 	}
 
 	return cfg
@@ -31,17 +31,19 @@ func New(setDefaults bool) Config {
 // bitcoinConfigRegnet contains Bitcoin config for regnet
 func bitcoinConfigRegnet() BTCConfig {
 	return BTCConfig{
-		RPCUsername: "smoketest", // smoketest is the previous name for E2E test, we keep this name for compatibility between client versions in upgrade test
-		RPCPassword: "123",
-		RPCHost:     "bitcoin:18443",
-		RPCParams:   "regtest",
+		RPCUsername:     "smoketest", // smoketest is the previous name for E2E test, we keep this name for compatibility between client versions in upgrade test
+		RPCPassword:     "123",
+		RPCHost:         "bitcoin:18443",
+		RPCParams:       "regtest",
+		RPCAlertLatency: 60,
 	}
 }
 
 // solanaConfigLocalnet contains config for Solana localnet
 func solanaConfigLocalnet() SolanaConfig {
 	return SolanaConfig{
-		Endpoint: "http://solana:8899",
+		Endpoint:        "http://solana:8899",
+		RPCAlertLatency: 60,
 	}
 }
 
@@ -72,8 +74,16 @@ func evmChainsConfigs() map[int64]EVMConfig {
 			Endpoint: "",
 		},
 		chains.GoerliLocalnet.ChainId: {
-			Chain:    chains.GoerliLocalnet,
-			Endpoint: "http://eth:8545",
+			Chain:           chains.GoerliLocalnet,
+			Endpoint:        "http://eth:8545",
+			RPCAlertLatency: 60,
 		},
+	}
+}
+
+// btcChainsConfigs contains BTC chain configs
+func btcChainsConfigs() map[int64]BTCConfig {
+	return map[int64]BTCConfig{
+		chains.BitcoinRegtest.ChainId: bitcoinConfigRegnet(),
 	}
 }
