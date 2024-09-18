@@ -290,12 +290,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestCrosschainSwapName,
 		}
 		bitcoinAdvancedTests := []string{
-			// e2etests.TestBitcoinWithdrawTaprootName,
-			// e2etests.TestBitcoinWithdrawLegacyName,
-			// e2etests.TestBitcoinWithdrawMultipleName,
-			// e2etests.TestBitcoinWithdrawP2SHName,
-			// e2etests.TestBitcoinWithdrawP2WSHName,
-			// e2etests.TestBitcoinWithdrawRestrictedName,
+			e2etests.TestBitcoinWithdrawTaprootName,
+			e2etests.TestBitcoinWithdrawLegacyName,
+			e2etests.TestBitcoinWithdrawMultipleName,
+			e2etests.TestBitcoinWithdrawP2SHName,
+			e2etests.TestBitcoinWithdrawP2WSHName,
+			e2etests.TestBitcoinWithdrawRestrictedName,
 		}
 		ethereumTests := []string{
 			e2etests.TestEtherWithdrawName,

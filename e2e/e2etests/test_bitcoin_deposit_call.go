@@ -1,6 +1,8 @@
 package e2etests
 
 import (
+	"math/big"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -30,27 +32,24 @@ func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.NotEmpty(r, utxos)
 
 	// deploy an example contract in ZEVM
-	contractAddr, _, _, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)
+	contractAddr, _, contract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
 	r.Logger.Print("Bitcoin: Example contract deployed at: %s", contractAddr.String())
 
 	// ACT
 	// Send BTC to TSS address with a dummy memo
-	data := []byte("hello shatoshi")
+	data := []byte("hello satoshi")
 	memo := append(contractAddr.Bytes(), data...)
 	txHash, err := r.SendToTSSFromDeployerWithMemo(amountTotal, utxos, memo)
 	require.NoError(r, err)
-	require.NotEmpty(r, txHash)
-	r.Logger.Print("Bitcoin: Sent %f BTC to TSS address", amountTotal)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "bitcoin_deposit_and_call")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
-	r.Logger.Print("Bitcoin: CCTX mined")
 
 	// check if example contract has been called, 'bar' value should be set to amount
-	// amoutSats, err := zetabitcoin.GetSatoshis(amount)
-	// require.NoError(r, err)
-	// utils.MustHaveCalledExampleContract(r, contract, big.NewInt(amoutSats))
+	amoutSats, err := zetabitcoin.GetSatoshis(amount)
+	require.NoError(r, err)
+	utils.MustHaveCalledExampleContract(r, contract, big.NewInt(amoutSats))
 }
