@@ -55,7 +55,10 @@ message MsgUpdatePoliciesResponse {}
 // MsgUpdateChainInfo defines the MsgUpdateChainInfo service.
 message MsgUpdateChainInfo {
   string creator = 1;
-  pkg.chains.Chain chain = 2 [ (gogoproto.nullable) = false ];
+  pkg.chains.Chain chain = 3 [ (gogoproto.nullable) = false ];
+
+  // Do not edit
+  reserved 2;
 }
 
 // MsgUpdateChainInfoResponse defines the MsgUpdateChainInfoResponse service.

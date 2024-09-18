@@ -20,7 +20,7 @@ If the chain already exists in the chain info object, it is updated
 ```proto
 message MsgUpdateChainInfo {
 	string creator = 1;
-	pkg.chains.Chain chain = 2;
+	pkg.chains.Chain chain = 3;
 }
 ```
 

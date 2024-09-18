@@ -27,22 +27,22 @@ func (k msgServer) UpdateChainInfo(
 	}
 
 	chainInfo := types.ChainInfo{}
-	updatedChainInfo := false
+	chainInfoExist := false
 
-	cf, found := k.GetChainInfo(ctx)
+	existingChainInfo, found := k.GetChainInfo(ctx)
 	if found {
-		chainInfo = cf
+		chainInfo = existingChainInfo
 	}
 	// try to update a chain if the chain info already exists
 	for i, chain := range chainInfo.Chains {
 		if chain.ChainId == msg.Chain.ChainId {
 			chainInfo.Chains[i] = msg.Chain
-			updatedChainInfo = true
+			chainInfoExist = true
 		}
 	}
 
 	// if the chain info does not exist, add the chain to the chain info object
-	if !updatedChainInfo {
+	if !chainInfoExist {
 		chainInfo.Chains = append(chainInfo.Chains, msg.Chain)
 	}
 

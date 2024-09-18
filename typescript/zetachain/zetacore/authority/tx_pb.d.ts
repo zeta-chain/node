@@ -185,7 +185,7 @@ export declare class MsgUpdateChainInfo extends Message<MsgUpdateChainInfo> {
   creator: string;
 
   /**
-   * @generated from field: zetachain.zetacore.pkg.chains.Chain chain = 2;
+   * @generated from field: zetachain.zetacore.pkg.chains.Chain chain = 3;
    */
   chain?: Chain;
 
