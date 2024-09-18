@@ -1,8 +1,6 @@
 package bank
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -139,25 +137,20 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
 			if method.Name == DepositMethodName {
-				fmt.Println("DEBUG: bank.Run(): DepositMethodName: ExecuteNativeAction c.deposit()")
 				res, err = c.deposit(ctx, evm, contract, method, args)
-			} else {
-				fmt.Println("DEBUG: bank.Run(): WithdrawMethodName: ExecuteNativeAction c.withdraw()")
+			} else if method.Name == WithdrawMethodName {
 				res, err = c.withdraw(ctx, evm, contract, method, args)
 			}
 			return err
 		})
 		if execErr != nil {
-			fmt.Printf("DEBUG: bank.Run(): execErr %s", execErr.Error())
 			return nil, err
 		}
 		return res, nil
 
 	case BalanceOfMethodName:
-		fmt.Println("DEBUG: bank.Run(): BalanceOfMethodName")
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-			fmt.Println("DEBUG: bank.Run(): DepositMethodName: ExecuteNativeAction c.balanceOf()")
 			res, err = c.balanceOf(ctx, method, args)
 			return err
 		})

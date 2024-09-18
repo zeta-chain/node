@@ -51,6 +51,13 @@ func (c *Contract) withdraw(
 
 	// Caller has to have enough cosmos coin balance to withdraw the requested amount.
 	coin := c.bankKeeper.GetBalance(ctx, fromAddr, ZRC20ToCosmosDenom(zrc20Addr))
+	if coin.Amount.IsNil() {
+		return nil, &ptypes.ErrInsufficientBalance{
+			Requested: amount.String(),
+			Got:       "nil",
+		}
+	}
+
 	if coin.Amount.LT(math.NewIntFromBigInt(amount)) {
 		return nil, &ptypes.ErrInsufficientBalance{
 			Requested: amount.String(),
