@@ -198,8 +198,11 @@ func (r *E2ERunner) SendToTSSFromDeployerWithMemo(
 		scriptPubkeys[i] = utxo.ScriptPubKey
 	}
 
+	// use static fee 0.0005 BTC to calculate change
 	feeSats := btcutil.Amount(0.0005 * btcutil.SatoshiPerBitcoin)
-	amountSats := btcutil.Amount(amount * btcutil.SatoshiPerBitcoin)
+	amountInt, err := zetabitcoin.GetSatoshis(amount)
+	require.NoError(r, err)
+	amountSats := btcutil.Amount(amountInt)
 	change := inputSats - feeSats - amountSats
 
 	if change < 0 {
