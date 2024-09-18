@@ -335,13 +335,13 @@ require (
 
 require (
 	github.com/bnb-chain/tss-lib v1.5.0
+	github.com/showa-93/go-mask v0.6.2
 	github.com/tonkeeper/tongo v1.9.3
 )
 
 require (
 	github.com/decred/dcrd/crypto/blake256 v1.0.1 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20220328075252-7dd334e3daae // indirect
-	github.com/showa-93/go-mask v0.6.2 // indirect
 	github.com/snksoft/crc v1.1.0 // indirect
 )
 
