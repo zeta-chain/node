@@ -167,12 +167,14 @@ func GetChainFromChainID(chainID int64, additionalChains []Chain) (Chain, bool) 
 // GetBTCChainParams returns the bitcoin chain config params from the chain ID
 func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 	switch chainID {
-	case 18444:
+	case BitcoinRegtest.ChainId:
 		return &chaincfg.RegressionNetParams, nil
-	case 18332:
+	case BitcoinTestnet.ChainId:
 		return &chaincfg.TestNet3Params, nil
-	case 8332:
+	case BitcoinMainnet.ChainId:
 		return &chaincfg.MainNetParams, nil
+	case BitcoinSignetTestnet.ChainId:
+		return &chaincfg.SigNetParams, nil
 	default:
 		return nil, fmt.Errorf("error chainID %d is not a bitcoin chain", chainID)
 	}
@@ -182,11 +184,13 @@ func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 func GetBTCChainIDFromChainParams(params *chaincfg.Params) (int64, error) {
 	switch params.Name {
 	case chaincfg.RegressionNetParams.Name:
-		return 18444, nil
+		return BitcoinRegtest.ChainId, nil
 	case chaincfg.TestNet3Params.Name:
-		return 18332, nil
+		return BitcoinTestnet.ChainId, nil
 	case chaincfg.MainNetParams.Name:
-		return 8332, nil
+		return BitcoinMainnet.ChainId, nil
+	case chaincfg.SigNetParams.Name:
+		return BitcoinSignetTestnet.ChainId, nil
 	default:
 		return 0, fmt.Errorf("error chain %s is not a bitcoin chain", params.Name)
 	}
