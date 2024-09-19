@@ -87,7 +87,7 @@ func (c *Contract) withdraw(
 		c.zrc20ABI,
 		zrc20Addr,
 		"balanceOf",
-		[]interface{}{caller},
+		[]interface{}{ContractAddress},
 	)
 	if err != nil {
 		return nil, &ptypes.ErrUnexpected{
@@ -97,21 +97,22 @@ func (c *Contract) withdraw(
 	}
 
 	balance, ok := resBalanceOf[0].(*big.Int)
-	if !ok || balance.Cmp(amount) < 0 {
+	if !ok || balance.Cmp(amount) == -1 {
 		return nil, &ptypes.ErrInvalidAmount{
 			Got: "not enough bank balance",
 		}
 	}
 
 	// 2. Effect: transfer balance.
-	// function transferFrom(address sender, address recipient, uint256 amount)
+
+	// function transfer(address recipient, uint256 amount) public virtual override returns (bool)
 	resTransferFrom, err := c.CallContract(
 		ctx,
 		&c.fungibleKeeper,
 		c.zrc20ABI,
 		zrc20Addr,
-		"transferFrom",
-		[]interface{}{ContractAddress /* sender */, caller /* receiver */, amount},
+		"transfer",
+		[]interface{}{caller /* sender */, amount},
 	)
 	if err != nil {
 		return nil, &ptypes.ErrUnexpected{

@@ -160,6 +160,7 @@ const (
 	TestPrecompilesStakingName                  = "precompile_contracts_staking"
 	TestPrecompilesStakingThroughContractName   = "precompile_contracts_staking_through_contract"
 	TestPrecompilesBankName                     = "precompile_contracts_bank"
+	TestPrecompilesBankFailName                 = "precompile_contracts_bank_fail"
 	TestPrecompilesBankThroughContractName      = "precompile_contracts_bank_through_contract"
 )
 
@@ -881,8 +882,14 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestPrecompilesBankName,
-		"test stateful precompiled contracts bank",
+		"test stateful precompiled contracts bank with ZRC20 tokens",
 		[]runner.ArgDefinition{},
 		TestPrecompilesBank,
+	),
+	runner.NewE2ETest(
+		TestPrecompilesBankFailName,
+		"test stateful precompiled contracts bank with non ZRC20 tokens",
+		[]runner.ArgDefinition{},
+		TestPrecompilesBankNonZRC20,
 	),
 }
