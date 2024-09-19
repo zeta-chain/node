@@ -34,7 +34,8 @@ type Registrable interface {
 }
 
 type ContractCaller interface {
-	CallContract(ctx sdk.Context,
+	CallContract(
+		ctx sdk.Context,
 		fungibleKeeper *fungiblekeeper.Keeper,
 		abi *abi.ABI,
 		dst common.Address,
