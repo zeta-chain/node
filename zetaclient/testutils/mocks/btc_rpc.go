@@ -4,7 +4,7 @@ package mocks
 
 import (
 	btcjson "github.com/btcsuite/btcd/btcjson"
-	btcutil "github.com/btcsuite/btcutil"
+	btcutil "github.com/btcsuite/btcd/btcutil"
 
 	chainhash "github.com/btcsuite/btcd/chaincfg/chainhash"
 
