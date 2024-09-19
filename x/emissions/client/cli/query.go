@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/x/emissions/types"
+	"github.com/zeta-chain/node/x/emissions/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module
@@ -22,8 +22,6 @@ func GetQueryCmd(_ string) *cobra.Command {
 
 	cmd.AddCommand(CmdQueryParams(),
 		CmdListPoolAddresses(),
-		CmdGetEmmisonsFactors(),
 		CmdShowAvailableEmissions())
-	// this line is used by starport scaffolding # 1
 	return cmd
 }

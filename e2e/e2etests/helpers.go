@@ -8,12 +8,15 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/chains"
+	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
@@ -91,6 +94,32 @@ func verifyTransferAmountFromCCTX(r *runner.E2ERunner, cctx *crosschaintypes.Cro
 		r.Logger.Info("  logs: from %s, to %s, value %d", event.From.Hex(), event.To.Hex(), event.Value)
 		require.Equal(r, amount, event.Value.Int64(), "value is not correct")
 	}
+}
+
+// verifySolanaWithdrawalAmountFromCCTX verifies the withdrawn amount on Solana for given CCTX
+func verifySolanaWithdrawalAmountFromCCTX(r *runner.E2ERunner, cctx *crosschaintypes.CrossChainTx, amount uint64) {
+	txHash := cctx.GetCurrentOutboundParam().Hash
+	r.Logger.Info("outbound hash %s", txHash)
+
+	// convert txHash to signature
+	sig, err := solana.SignatureFromBase58(txHash)
+	require.NoError(r, err)
+
+	// query transaction by signature
+	txResult, err := r.SolanaClient.GetTransaction(r.Ctx, sig, &rpc.GetTransactionOpts{})
+	require.NoError(r, err)
+
+	// unmarshal transaction
+	tx, err := txResult.Transaction.GetTransaction()
+	require.NoError(r, err)
+
+	// 1st instruction is the withdraw
+	instruction := tx.Message.Instructions[0]
+	instWithdrae, err := solanacontracts.ParseInstructionWithdraw(instruction)
+	require.NoError(r, err)
+
+	// verify the amount
+	require.Equal(r, amount, instWithdrae.TokenAmount(), "withdraw amount is not correct")
 }
 
 // Parse helpers ==========================================>

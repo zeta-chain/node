@@ -19,19 +19,19 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/pkg/authz"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/constant"
-	zetaos "github.com/zeta-chain/zetacore/pkg/os"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
-	"github.com/zeta-chain/zetacore/zetaclient/maintenance"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/orchestrator"
-	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
-	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
+	"github.com/zeta-chain/node/pkg/authz"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
+	zetaos "github.com/zeta-chain/node/pkg/os"
+	observerTypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/config"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/maintenance"
+	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/orchestrator"
+	mc "github.com/zeta-chain/node/zetaclient/tss"
+	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 var StartCmd = &cobra.Command{
@@ -154,7 +154,7 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	startLogger.Info().Msgf("Config is updated from zetacore %s", maskCfg(cfg))
+	startLogger.Info().Msgf("Config is updated from zetacore\n %s", cfg.StringMasked())
 
 	go zetacoreClient.UpdateAppContextWorker(ctx, appContext)
 
@@ -230,7 +230,7 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	btcChains := appContext.FilterChains(zctx.Chain.IsUTXO)
+	btcChains := appContext.FilterChains(zctx.Chain.IsBitcoin)
 	switch {
 	case len(btcChains) == 0:
 		return errors.New("no BTC chains found")

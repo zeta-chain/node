@@ -26,7 +26,7 @@ import (
 
 	stderrors "github.com/pkg/errors"
 
-	zetaos "github.com/zeta-chain/zetacore/pkg/os"
+	zetaos "github.com/zeta-chain/node/pkg/os"
 )
 
 // StartGoTrace turns on tracing, writing to the given file.

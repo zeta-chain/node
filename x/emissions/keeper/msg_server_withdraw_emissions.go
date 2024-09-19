@@ -7,8 +7,8 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/x/emissions/types"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	"github.com/zeta-chain/node/x/emissions/types"
 )
 
 // WithdrawEmission allows the user to withdraw from their withdrawable emissions.
@@ -50,7 +50,7 @@ func (k msgServer) WithdrawEmission(
 		SendCoinsFromModuleToAccount(ctx, types.UndistributedObserverRewardsPool, address, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, msg.Amount)))
 	if err != nil {
 		ctx.Logger().
-			Error(fmt.Sprintf("Error while processing withdraw of emission to adresss %s for amount %s : err %s", address, msg.Amount, err))
+			Error(fmt.Sprintf("Error while processing withdraw of emission to address %s for amount %s : err %s", address, msg.Amount, err))
 		return nil, errorsmod.Wrap(types.ErrUnableToWithdrawEmissions, err.Error())
 	}
 

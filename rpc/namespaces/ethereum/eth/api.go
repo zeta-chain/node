@@ -12,7 +12,7 @@
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/evmos/ethermint/blob/main/LICENSE
+// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package eth
 
 import (
@@ -23,11 +23,11 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rpc"
-	ethermint "github.com/evmos/ethermint/types"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	ethermint "github.com/zeta-chain/ethermint/types"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	"github.com/zeta-chain/zetacore/rpc/backend"
-	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
+	"github.com/zeta-chain/node/rpc/backend"
+	rpctypes "github.com/zeta-chain/node/rpc/types"
 )
 
 // The Ethereum API allows applications to connect to an Evmos node that is

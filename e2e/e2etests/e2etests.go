@@ -1,6 +1,9 @@
 package e2etests
 
-import "github.com/zeta-chain/zetacore/e2e/runner"
+import (
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/testutil/sample"
+)
 
 // List of all e2e test names to be used in zetae2e
 const (
@@ -50,12 +53,19 @@ const (
 	TestERC20DepositAndCallRefundName = "erc20_deposit_and_call_refund"
 
 	/*
-	 Solana tests
-	*/
+	 * Solana tests
+	 */
 	TestSolanaDepositName              = "solana_deposit"
 	TestSolanaWithdrawName             = "solana_withdraw"
 	TestSolanaDepositAndCallName       = "solana_deposit_and_call"
 	TestSolanaDepositAndCallRefundName = "solana_deposit_and_call_refund"
+	TestSolanaDepositRestrictedName    = "solana_deposit_restricted"
+	TestSolanaWithdrawRestrictedName   = "solana_withdraw_restricted"
+
+	/**
+	 * TON tests
+	 */
+	TestTONDepositName = "ton_deposit"
 
 	/*
 	 Bitcoin tests
@@ -63,6 +73,7 @@ const (
 	*/
 	TestBitcoinDepositName                = "bitcoin_deposit"
 	TestBitcoinDepositRefundName          = "bitcoin_deposit_refund"
+	TestBitcoinDepositAndCallName         = "bitcoin_deposit_and_call"
 	TestBitcoinWithdrawSegWitName         = "bitcoin_withdraw_segwit"
 	TestBitcoinWithdrawTaprootName        = "bitcoin_withdraw_taproot"
 	TestBitcoinWithdrawMultipleName       = "bitcoin_withdraw_multiple"
@@ -142,6 +153,14 @@ const (
 	TestDeploy                         = "deploy"
 	TestOperationAddLiquidityETHName   = "add_liquidity_eth"
 	TestOperationAddLiquidityERC20Name = "add_liquidity_erc20"
+
+	/*
+	 Stateful precompiled contracts tests
+	*/
+	TestPrecompilesPrototypeName                = "precompile_contracts_prototype"
+	TestPrecompilesPrototypeThroughContractName = "precompile_contracts_prototype_through_contract"
+	TestPrecompilesStakingName                  = "precompile_contracts_staking"
+	TestPrecompilesStakingThroughContractName   = "precompile_contracts_staking_through_contract"
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -366,7 +385,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestSolanaDepositName,
 		"deposit SOL into ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount in lamport", DefaultValue: "1200000"},
+			{Description: "amount in lamport", DefaultValue: "12000000"},
 		},
 		TestSolanaDeposit,
 	),
@@ -394,6 +413,35 @@ var AllE2ETests = []runner.E2ETest{
 		},
 		TestSolanaDepositAndCallRefund,
 	),
+	runner.NewE2ETest(
+		TestSolanaDepositRestrictedName,
+		"deposit SOL into ZEVM restricted address",
+		[]runner.ArgDefinition{
+			{Description: "receiver", DefaultValue: sample.RestrictedEVMAddressTest},
+			{Description: "amount in lamport", DefaultValue: "1200000"},
+		},
+		TestSolanaDepositRestricted,
+	),
+	runner.NewE2ETest(
+		TestSolanaWithdrawRestrictedName,
+		"withdraw SOL from ZEVM to restricted address",
+		[]runner.ArgDefinition{
+			{Description: "receiver", DefaultValue: sample.RestrictedSolAddressTest},
+			{Description: "amount in lamport", DefaultValue: "1000000"},
+		},
+		TestSolanaWithdrawRestricted,
+	),
+	/*
+	 TON tests
+	*/
+	runner.NewE2ETest(
+		TestTONDepositName,
+		"deposit TON into ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in nano tons", DefaultValue: "900000000"}, // 0.9 TON
+		},
+		TestTONDeposit,
+	),
 	/*
 	 Bitcoin tests
 	*/
@@ -411,6 +459,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.001"},
 		},
 		TestBitcoinDeposit,
+	),
+	runner.NewE2ETest(
+		TestBitcoinDepositAndCallName,
+		"deposit Bitcoin into ZEVM and call a contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinDepositAndCall,
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositRefundName,
@@ -810,5 +866,32 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amountERC20", DefaultValue: "50000000000000000000"},
 		},
 		TestOperationAddLiquidityERC20,
+	),
+	/*
+	 Stateful precompiled contracts tests
+	*/
+	runner.NewE2ETest(
+		TestPrecompilesPrototypeName,
+		"test stateful precompiled contracts prototype",
+		[]runner.ArgDefinition{},
+		TestPrecompilesPrototype,
+	),
+	runner.NewE2ETest(
+		TestPrecompilesPrototypeThroughContractName,
+		"test stateful precompiled contracts prototype through contract",
+		[]runner.ArgDefinition{},
+		TestPrecompilesPrototypeThroughContract,
+	),
+	runner.NewE2ETest(
+		TestPrecompilesStakingName,
+		"test stateful precompiled contracts staking",
+		[]runner.ArgDefinition{},
+		TestPrecompilesStaking,
+	),
+	runner.NewE2ETest(
+		TestPrecompilesStakingThroughContractName,
+		"test stateful precompiled contracts staking through contract",
+		[]runner.ArgDefinition{},
+		TestPrecompilesStakingThroughContract,
 	),
 }

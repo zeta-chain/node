@@ -8,9 +8,9 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	contracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // SignMsgWithdraw signs a withdraw message (for gateway withdraw/withdraw_spl instruction) with TSS.
@@ -18,12 +18,18 @@ func (signer *Signer) SignMsgWithdraw(
 	ctx context.Context,
 	params *types.OutboundParams,
 	height uint64,
+	cancelTx bool,
 ) (*contracts.MsgWithdraw, error) {
 	chain := signer.Chain()
 	// #nosec G115 always positive
 	chainID := uint64(signer.Chain().ChainId)
 	nonce := params.TssNonce
 	amount := params.Amount.Uint64()
+
+	// zero out the amount if cancelTx is set. It's legal to withdraw 0 lamports thru the gateway.
+	if cancelTx {
+		amount = 0
+	}
 
 	// check receiver address
 	to, err := chains.DecodeSolanaWalletAddress(params.Receiver)
@@ -69,9 +75,9 @@ func (signer *Signer) SignWithdrawTx(ctx context.Context, msg contracts.MsgWithd
 	attachWithdrawAccounts(&inst, privkey.PublicKey(), signer.pda, msg.To(), signer.gatewayID)
 
 	// get a recent blockhash
-	recent, err := signer.client.GetRecentBlockhash(ctx, rpc.CommitmentFinalized)
+	recent, err := signer.client.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
 	if err != nil {
-		return nil, errors.Wrap(err, "GetRecentBlockhash error")
+		return nil, errors.Wrap(err, "GetLatestBlockhash error")
 	}
 
 	// create a transaction that wraps the instruction
@@ -116,7 +122,6 @@ func attachWithdrawAccounts(
 	accountSlice = append(accountSlice, solana.Meta(signer).WRITE().SIGNER())
 	accountSlice = append(accountSlice, solana.Meta(pda).WRITE())
 	accountSlice = append(accountSlice, solana.Meta(to).WRITE())
-	accountSlice = append(accountSlice, solana.Meta(gatewayID))
 	inst.ProgID = gatewayID
 
 	inst.AccountValues = accountSlice

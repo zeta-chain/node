@@ -110,59 +110,6 @@ export declare class QueryListPoolAddressesResponse extends Message<QueryListPoo
 }
 
 /**
- * @generated from message zetachain.zetacore.emissions.QueryGetEmissionsFactorsRequest
- */
-export declare class QueryGetEmissionsFactorsRequest extends Message<QueryGetEmissionsFactorsRequest> {
-  constructor(data?: PartialMessage<QueryGetEmissionsFactorsRequest>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.emissions.QueryGetEmissionsFactorsRequest";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetEmissionsFactorsRequest;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetEmissionsFactorsRequest;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetEmissionsFactorsRequest;
-
-  static equals(a: QueryGetEmissionsFactorsRequest | PlainMessage<QueryGetEmissionsFactorsRequest> | undefined, b: QueryGetEmissionsFactorsRequest | PlainMessage<QueryGetEmissionsFactorsRequest> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.emissions.QueryGetEmissionsFactorsResponse
- */
-export declare class QueryGetEmissionsFactorsResponse extends Message<QueryGetEmissionsFactorsResponse> {
-  /**
-   * @generated from field: string reservesFactor = 1;
-   */
-  reservesFactor: string;
-
-  /**
-   * @generated from field: string bondFactor = 2;
-   */
-  bondFactor: string;
-
-  /**
-   * @generated from field: string durationFactor = 3;
-   */
-  durationFactor: string;
-
-  constructor(data?: PartialMessage<QueryGetEmissionsFactorsResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.emissions.QueryGetEmissionsFactorsResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetEmissionsFactorsResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetEmissionsFactorsResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetEmissionsFactorsResponse;
-
-  static equals(a: QueryGetEmissionsFactorsResponse | PlainMessage<QueryGetEmissionsFactorsResponse> | undefined, b: QueryGetEmissionsFactorsResponse | PlainMessage<QueryGetEmissionsFactorsResponse> | undefined): boolean;
-}
-
-/**
  * @generated from message zetachain.zetacore.emissions.QueryShowAvailableEmissionsRequest
  */
 export declare class QueryShowAvailableEmissionsRequest extends Message<QueryShowAvailableEmissionsRequest> {

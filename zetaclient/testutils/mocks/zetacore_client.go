@@ -3,26 +3,26 @@
 package mocks
 
 import (
-	chains "github.com/zeta-chain/zetacore/pkg/chains"
+	chains "github.com/zeta-chain/node/pkg/chains"
 	blame "gitlab.com/thorchain/tss/go-tss/blame"
 
 	context "context"
 
-	interfaces "github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
+	interfaces "github.com/zeta-chain/node/zetaclient/chains/interfaces"
 
-	keysinterfaces "github.com/zeta-chain/zetacore/zetaclient/keys/interfaces"
+	keysinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
+	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
 
 	math "cosmossdk.io/math"
 
 	mock "github.com/stretchr/testify/mock"
 
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 
-	proofs "github.com/zeta-chain/zetacore/pkg/proofs"
+	proofs "github.com/zeta-chain/node/pkg/proofs"
 
-	types "github.com/zeta-chain/zetacore/x/crosschain/types"
+	types "github.com/zeta-chain/node/x/crosschain/types"
 
 	zerolog "github.com/rs/zerolog"
 )

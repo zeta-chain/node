@@ -6,9 +6,9 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/testutil/sample"
+	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
 )
 
 func Test_WithdrawableEmissions(t *testing.T) {

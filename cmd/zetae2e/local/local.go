@@ -9,19 +9,19 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
 
-	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
-	"github.com/zeta-chain/zetacore/e2e/config"
-	"github.com/zeta-chain/zetacore/e2e/e2etests"
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/txserver"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/testutil"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/app"
+	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
+	"github.com/zeta-chain/node/e2e/config"
+	"github.com/zeta-chain/node/e2e/e2etests"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/txserver"
+	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/testutil"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 const (
@@ -34,6 +34,7 @@ const (
 	flagTestPerformance   = "test-performance"
 	flagTestCustom        = "test-custom"
 	flagTestSolana        = "test-solana"
+	flagTestTON           = "test-ton"
 	flagSkipRegular       = "skip-regular"
 	flagLight             = "light"
 	flagSetupOnly         = "setup-only"
@@ -42,7 +43,9 @@ const (
 	flagSkipBitcoinSetup  = "skip-bitcoin-setup"
 	flagSkipHeaderProof   = "skip-header-proof"
 	flagTestV2            = "test-v2"
+	flagTestV2Migration   = "test-v2-migration"
 	flagSkipTrackerCheck  = "skip-tracker-check"
+	flagSkipPrecompiles   = "skip-precompiles"
 )
 
 var (
@@ -67,6 +70,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestPerformance, false, "set to true to run performance tests")
 	cmd.Flags().Bool(flagTestCustom, false, "set to true to run custom tests")
 	cmd.Flags().Bool(flagTestSolana, false, "set to true to run solana tests")
+	cmd.Flags().Bool(flagTestTON, false, "set to true to run TON tests")
 	cmd.Flags().Bool(flagSkipRegular, false, "set to true to skip regular tests")
 	cmd.Flags().Bool(flagLight, false, "run the most basic regular tests, useful for quick checks")
 	cmd.Flags().Bool(flagSetupOnly, false, "set to true to only setup the networks")
@@ -76,11 +80,15 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSkipHeaderProof, false, "set to true to skip header proof tests")
 	cmd.Flags().Bool(flagTestTSSMigration, false, "set to true to include a migration test at the end")
 	cmd.Flags().Bool(flagTestV2, false, "set to true to run tests for v2 contracts")
+	cmd.Flags().Bool(flagTestV2Migration, false, "set to true to run tests for v2 contracts migration test")
 	cmd.Flags().Bool(flagSkipTrackerCheck, false, "set to true to skip tracker check at the end of the tests")
+	cmd.Flags().Bool(flagSkipPrecompiles, false, "set to true to skip stateful precompiled contracts test")
 
 	return cmd
 }
 
+// TODO: simplify this file: put the different type of tests in separate files
+// https://github.com/zeta-chain/node/issues/2762
 func localE2ETest(cmd *cobra.Command, _ []string) {
 	// fetch flags
 	var (
@@ -92,6 +100,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testPerformance   = must(cmd.Flags().GetBool(flagTestPerformance))
 		testCustom        = must(cmd.Flags().GetBool(flagTestCustom))
 		testSolana        = must(cmd.Flags().GetBool(flagTestSolana))
+		testTON           = must(cmd.Flags().GetBool(flagTestTON))
 		skipRegular       = must(cmd.Flags().GetBool(flagSkipRegular))
 		light             = must(cmd.Flags().GetBool(flagLight))
 		setupOnly         = must(cmd.Flags().GetBool(flagSetupOnly))
@@ -101,6 +110,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipTrackerCheck  = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
 		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
 		testV2            = must(cmd.Flags().GetBool(flagTestV2))
+		testV2Migration   = must(cmd.Flags().GetBool(flagTestV2Migration))
+		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
 	)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
@@ -128,6 +139,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	conf, err := GetConfig(cmd)
 	noError(err)
 
+	// temporary spaghetti to overcome e2e flags limitations
+	if !testTON {
+		conf.RPCs.TONSidecarURL = ""
+	}
+
 	// initialize context
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -136,8 +152,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		noError(utils.WaitForBlockHeight(ctx, waitForHeight, conf.RPCs.ZetaCoreRPC, logger))
 	}
 
-	// set account prefix to zeta
-	setCosmosConfig()
+	app.SetConfig()
 
 	zetaTxServer, err := txserver.NewZetaTxServer(
 		conf.RPCs.ZetaCoreRPC,
@@ -164,7 +179,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	noError(err)
 
 	// set the authority client to the zeta tx server to be able to query message permissions
-	deployerRunner.ZetaTxServer.SetAuthorityClient(deployerRunner.AutorithyClient)
+	deployerRunner.ZetaTxServer.SetAuthorityClient(deployerRunner.AuthorityClient)
 
 	// wait for keygen to be completed
 	// if setup is skipped, we assume that the keygen is already completed
@@ -233,6 +248,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		os.Exit(0)
 	}
 
+	// run the v2 migration
+	if testV2Migration {
+		deployerRunner.RunV2Migration()
+	}
+
 	// run tests
 	var eg errgroup.Group
 
@@ -270,6 +290,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		bitcoinTests := []string{
 			e2etests.TestBitcoinDepositName,
+			e2etests.TestBitcoinDepositAndCallName,
 			e2etests.TestBitcoinDepositRefundName,
 			e2etests.TestBitcoinWithdrawSegWitName,
 			e2etests.TestBitcoinWithdrawInvalidAddressName,
@@ -294,6 +315,16 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		ethereumAdvancedTests := []string{
 			e2etests.TestEtherWithdrawRestrictedName,
 		}
+		precompiledContractTests := []string{}
+
+		if !skipPrecompiles {
+			precompiledContractTests = []string{
+				e2etests.TestPrecompilesPrototypeName,
+				e2etests.TestPrecompilesPrototypeThroughContractName,
+				e2etests.TestPrecompilesStakingName,
+				e2etests.TestPrecompilesStakingThroughContractName,
+			}
+		}
 
 		if !light {
 			erc20Tests = append(erc20Tests, erc20AdvancedTests...)
@@ -303,6 +334,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
 		}
 
+		eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose, precompiledContractTests...))
 		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
 		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
 		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
@@ -329,7 +361,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 			// TestMigrateChainSupportName tests EVM chain migration. Currently this test doesn't work with Anvil because pre-EIP1559 txs are not supported
 			// See issue below for details
-			// TODO: renenable this test as per the issue below
+			// TODO: reenable this test as per the issue below
 			// https://github.com/zeta-chain/node/issues/1980
 			// e2etests.TestMigrateChainSupportName,
 		))
@@ -351,68 +383,33 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSolanaWithdrawName,
 			e2etests.TestSolanaDepositAndCallName,
 			e2etests.TestSolanaDepositAndCallRefundName,
+			e2etests.TestSolanaDepositRestrictedName,
+			e2etests.TestSolanaWithdrawRestrictedName,
 		}
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
 	}
+
+	if testTON {
+		if deployerRunner.Clients.TON == nil {
+			logger.Print("❌ TON client is nil, maybe TON lite-server config is not set")
+			os.Exit(1)
+		}
+
+		tonTests := []string{
+			e2etests.TestTONDepositName,
+		}
+
+		eg.Go(tonTestRoutine(conf, deployerRunner, verbose, tonTests...))
+	}
+
 	if testV2 {
 		// update the ERC20 custody contract for v2 tests
-		deployerRunner.UpdateChainParamsERC20CustodyContract()
+		// note: not run in testV2Migration because it is already run in the migration process
+		deployerRunner.UpdateChainParamsV2Contracts()
+	}
 
-		//// Test happy paths for gas token workflow
-		eg.Go(v2TestRoutine(conf, "eth", conf.AdditionalAccounts.UserEther, color.FgHiGreen, deployerRunner, verbose,
-			e2etests.TestV2ETHDepositName,
-			e2etests.TestV2ETHDepositAndCallName,
-			e2etests.TestV2ETHWithdrawName,
-			e2etests.TestV2ETHWithdrawAndCallName,
-			e2etests.TestV2ZEVMToEVMCallName,
-			e2etests.TestV2EVMToZEVMCallName,
-		))
-
-		//// Test happy paths for erc20 token workflow
-		eg.Go(v2TestRoutine(conf, "erc20", conf.AdditionalAccounts.UserERC20, color.FgHiBlue, deployerRunner, verbose,
-			e2etests.TestV2ETHDepositName, // necessary to pay fees on ZEVM
-			e2etests.TestV2ERC20DepositName,
-			e2etests.TestV2ERC20DepositAndCallName,
-			e2etests.TestV2ERC20WithdrawName,
-			e2etests.TestV2ERC20WithdrawAndCallName,
-		))
-
-		// Test revert cases for gas token workflow
-		eg.Go(
-			v2TestRoutine(
-				conf,
-				"eth-revert",
-				conf.AdditionalAccounts.UserZetaTest,
-				color.FgHiYellow,
-				deployerRunner,
-				verbose,
-				e2etests.TestV2ETHDepositName, // necessary to pay fees on ZEVM and withdraw
-				e2etests.TestV2ETHDepositAndCallRevertName,
-				e2etests.TestV2ETHDepositAndCallRevertWithCallName,
-				e2etests.TestV2ETHWithdrawAndCallRevertName,
-				e2etests.TestV2ETHWithdrawAndCallRevertWithCallName,
-			),
-		)
-
-		// Test revert cases for erc20 token workflow
-		eg.Go(
-			v2TestRoutine(
-				conf,
-				"erc20-revert",
-				conf.AdditionalAccounts.UserBitcoin,
-				color.FgHiRed,
-				deployerRunner,
-				verbose,
-				e2etests.TestV2ETHDepositName,   // necessary to pay fees on ZEVM
-				e2etests.TestV2ERC20DepositName, // necessary to have assets to withdraw
-				e2etests.TestOperationAddLiquidityETHName, // liquidity with gas and ERC20 are necessary for reverts
-				e2etests.TestOperationAddLiquidityERC20Name,
-				e2etests.TestV2ERC20DepositAndCallRevertName,
-				e2etests.TestV2ERC20DepositAndCallRevertWithCallName,
-				e2etests.TestV2ERC20WithdrawAndCallRevertName,
-				e2etests.TestV2ERC20WithdrawAndCallRevertWithCallName,
-			),
-		)
+	if testV2 || testV2Migration {
+		startV2Tests(&eg, conf, deployerRunner, verbose)
 	}
 
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
@@ -440,7 +437,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
 	if testTSSMigration {
-		runTSSMigrationTest(deployerRunner, logger, verbose, conf)
+		TSSMigration(deployerRunner, logger, verbose, conf)
 	}
 	// Verify that there are no trackers left over after tests complete
 	if !skipTrackerCheck {
@@ -494,48 +491,6 @@ func waitKeygenHeight(
 			break
 		}
 		logger.Info("Last ZetaHeight: %d", response.Height)
-	}
-}
-
-func runTSSMigrationTest(deployerRunner *runner.E2ERunner, logger *runner.Logger, verbose bool, conf config.Config) {
-	migrationStartTime := time.Now()
-	logger.Print("🏁 starting tss migration")
-
-	response, err := deployerRunner.CctxClient.LastZetaHeight(
-		deployerRunner.Ctx,
-		&crosschaintypes.QueryLastZetaHeightRequest{},
-	)
-	require.NoError(deployerRunner, err)
-	err = deployerRunner.ZetaTxServer.UpdateKeygen(response.Height)
-	require.NoError(deployerRunner, err)
-
-	// Generate new TSS
-	waitKeygenHeight(deployerRunner.Ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0)
-
-	// migration test is a blocking thread, we cannot run other tests in parallel
-	// The migration test migrates funds to a new TSS and then updates the TSS address on zetacore.
-	// The necessary restarts are done by the zetaclient supervisor
-	fn := migrationTestRoutine(conf, deployerRunner, verbose, e2etests.TestMigrateTSSName)
-
-	if err := fn(); err != nil {
-		logger.Print("❌ %v", err)
-		logger.Print("❌ tss migration failed")
-		os.Exit(1)
-	}
-
-	logger.Print("✅ migration completed in %s ", time.Since(migrationStartTime).String())
-	logger.Print("🏁 starting post migration tests")
-
-	tests := []string{
-		e2etests.TestBitcoinWithdrawSegWitName,
-		e2etests.TestEtherWithdrawName,
-	}
-	fn = postMigrationTestRoutine(conf, deployerRunner, verbose, tests...)
-
-	if err := fn(); err != nil {
-		logger.Print("❌ %v", err)
-		logger.Print("❌ post migration tests failed")
-		os.Exit(1)
 	}
 }
 

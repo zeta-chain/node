@@ -1,13 +1,14 @@
 package signer
 
 import (
+	"math/big"
+	"testing"
+
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
-	"math/big"
-	"testing"
+	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
 func TestSigner_SignConnectorOnReceive(t *testing.T) {

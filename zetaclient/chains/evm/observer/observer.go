@@ -7,7 +7,6 @@ import (
 	"math"
 	"math/big"
 	"strings"
-	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -20,14 +19,14 @@ import (
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
-	"github.com/zeta-chain/zetacore/pkg/bg"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/db"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/node/pkg/bg"
+	"github.com/zeta-chain/node/pkg/chains"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 var _ interfaces.ChainObserver = (*Observer)(nil)
@@ -61,23 +60,26 @@ type priorityFeeConfig struct {
 // NewObserver returns a new EVM chain observer
 func NewObserver(
 	ctx context.Context,
-	evmCfg config.EVMConfig,
+	chain chains.Chain,
 	evmClient interfaces.EVMRPCClient,
+	evmJSONRPC interfaces.EVMJSONRPCClient,
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
+	rpcAlertLatency int64,
 	database *db.DB,
 	logger base.Logger,
 	ts *metrics.TelemetryServer,
 ) (*Observer, error) {
 	// create base observer
 	baseObserver, err := base.NewObserver(
-		evmCfg.Chain,
+		chain,
 		chainParams,
 		zetacoreClient,
 		tss,
 		base.DefaultBlockCacheSize,
 		base.DefaultHeaderCacheSize,
+		rpcAlertLatency,
 		ts,
 		database,
 		logger,
@@ -90,7 +92,7 @@ func NewObserver(
 	ob := &Observer{
 		Observer:                      *baseObserver,
 		evmClient:                     evmClient,
-		evmJSONRPC:                    ethrpc.NewEthRPC(evmCfg.Endpoint),
+		evmJSONRPC:                    evmJSONRPC,
 		outboundConfirmedReceipts:     make(map[string]*ethtypes.Receipt),
 		outboundConfirmedTransactions: make(map[string]*ethtypes.Transaction),
 		priorityFeeConfig:             priorityFeeConfig{},
@@ -199,50 +201,7 @@ func (ob *Observer) Start(ctx context.Context) {
 	bg.Work(ctx, ob.WatchOutbound, bg.WithName("WatchOutbound"), bg.WithLogger(ob.Logger().Outbound))
 	bg.Work(ctx, ob.WatchGasPrice, bg.WithName("WatchGasPrice"), bg.WithLogger(ob.Logger().GasPrice))
 	bg.Work(ctx, ob.WatchInboundTracker, bg.WithName("WatchInboundTracker"), bg.WithLogger(ob.Logger().Inbound))
-	bg.Work(ctx, ob.WatchRPCStatus, bg.WithName("WatchRPCStatus"), bg.WithLogger(ob.Logger().Chain))
-}
-
-// WatchRPCStatus watches the RPC status of the evm chain
-// TODO(revamp): move ticker to ticker file
-// TODO(revamp): move inner logic to a separate function
-func (ob *Observer) WatchRPCStatus(ctx context.Context) error {
-	ob.Logger().Chain.Info().Msgf("Starting RPC status check for chain %d", ob.Chain().ChainId)
-	ticker := time.NewTicker(60 * time.Second)
-	for {
-		select {
-		case <-ticker.C:
-			if !ob.GetChainParams().IsSupported {
-				continue
-			}
-			bn, err := ob.evmClient.BlockNumber(ctx)
-			if err != nil {
-				ob.Logger().Chain.Error().Err(err).Msg("RPC Status Check error: RPC down?")
-				continue
-			}
-			gasPrice, err := ob.evmClient.SuggestGasPrice(ctx)
-			if err != nil {
-				ob.Logger().Chain.Error().Err(err).Msg("RPC Status Check error: RPC down?")
-				continue
-			}
-			header, err := ob.evmClient.HeaderByNumber(ctx, new(big.Int).SetUint64(bn))
-			if err != nil {
-				ob.Logger().Chain.Error().Err(err).Msg("RPC Status Check error: RPC down?")
-				continue
-			}
-			// #nosec G115 always in range
-			blockTime := time.Unix(int64(header.Time), 0).UTC()
-			elapsedSeconds := time.Since(blockTime).Seconds()
-			if elapsedSeconds > 100 {
-				ob.Logger().Chain.Warn().
-					Msgf("RPC Status Check warning: RPC stale or chain stuck (check explorer)? Latest block %d timestamp is %.0fs ago", bn, elapsedSeconds)
-				continue
-			}
-			ob.Logger().Chain.Info().
-				Msgf("[OK] RPC status: latest block num %d, timestamp %s ( %.0fs ago), suggested gas price %d", header.Number, blockTime.String(), elapsedSeconds, gasPrice.Uint64())
-		case <-ob.StopChannel():
-			return nil
-		}
-	}
+	bg.Work(ctx, ob.watchRPCStatus, bg.WithName("watchRPCStatus"), bg.WithLogger(ob.Logger().Chain))
 }
 
 // SetTxNReceipt sets the receipt and transaction in memory
@@ -355,6 +314,9 @@ func (ob *Observer) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
 	block, err := ob.evmJSONRPC.EthGetBlockByNumber(blockNumber, true)
 	if err != nil {
 		return nil, err
+	}
+	if block == nil {
+		return nil, fmt.Errorf("block not found: %d", blockNumber)
 	}
 	for i := range block.Transactions {
 		err := evm.ValidateEvmTransaction(&block.Transactions[i])

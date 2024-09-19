@@ -6,8 +6,8 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	observerTypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // MigrateStore migrates the x/crosschain module state from the consensus version 1 to 2

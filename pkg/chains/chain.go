@@ -86,7 +86,7 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 }
 
 func (chain Chain) IsEVMChain() bool {
-	return chain.Consensus == Consensus_ethereum
+	return chain.Vm == Vm_evm
 }
 
 func (chain Chain) IsBitcoinChain() bool {
@@ -109,11 +109,15 @@ func DecodeAddressFromChainID(chainID int64, addr string, additionalChains []Cha
 	}
 }
 
-// IsEVMChain returns true if the chain is an EVM chain or uses the ethereum consensus mechanism for block finality
+// IsEVMChain returns true if the chain is an EVM chain
 // additionalChains is a list of additional chains to search from
 // in practice, it is used in the protocol to dynamically support new chains without doing an upgrade
 func IsEVMChain(chainID int64, additionalChains []Chain) bool {
-	return ChainIDInChainList(chainID, ChainListByConsensus(Consensus_ethereum, additionalChains))
+	chain, found := GetChainFromChainID(chainID, additionalChains)
+	if !found {
+		return false
+	}
+	return chain.IsEVMChain()
 }
 
 // IsBitcoinChain returns true if the chain is a Bitcoin-based chain or uses the bitcoin consensus mechanism for block finality
@@ -163,12 +167,14 @@ func GetChainFromChainID(chainID int64, additionalChains []Chain) (Chain, bool) 
 // GetBTCChainParams returns the bitcoin chain config params from the chain ID
 func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 	switch chainID {
-	case 18444:
+	case BitcoinRegtest.ChainId:
 		return &chaincfg.RegressionNetParams, nil
-	case 18332:
+	case BitcoinTestnet.ChainId:
 		return &chaincfg.TestNet3Params, nil
-	case 8332:
+	case BitcoinMainnet.ChainId:
 		return &chaincfg.MainNetParams, nil
+	case BitcoinSignetTestnet.ChainId:
+		return &chaincfg.SigNetParams, nil
 	default:
 		return nil, fmt.Errorf("error chainID %d is not a bitcoin chain", chainID)
 	}
@@ -178,11 +184,13 @@ func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 func GetBTCChainIDFromChainParams(params *chaincfg.Params) (int64, error) {
 	switch params.Name {
 	case chaincfg.RegressionNetParams.Name:
-		return 18444, nil
+		return BitcoinRegtest.ChainId, nil
 	case chaincfg.TestNet3Params.Name:
-		return 18332, nil
+		return BitcoinTestnet.ChainId, nil
 	case chaincfg.MainNetParams.Name:
-		return 8332, nil
+		return BitcoinMainnet.ChainId, nil
+	case chaincfg.SigNetParams.Name:
+		return BitcoinSignetTestnet.ChainId, nil
 	default:
 		return 0, fmt.Errorf("error chain %s is not a bitcoin chain", params.Name)
 	}

@@ -17,12 +17,12 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
-	"github.com/zeta-chain/zetacore/e2e/config"
-	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
-	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
-	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
+	"github.com/zeta-chain/node/e2e/config"
+	"github.com/zeta-chain/node/e2e/contracts/contextapp"
+	"github.com/zeta-chain/node/e2e/contracts/erc20"
+	"github.com/zeta-chain/node/e2e/contracts/zevmswap"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
 )
 
 // setContractsFromConfig get EVM contracts from config

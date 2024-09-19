@@ -33,20 +33,21 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/evmos/ethermint/crypto/hd"
-	etherminttypes "github.com/evmos/ethermint/types"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/zeta-chain/ethermint/crypto/hd"
+	etherminttypes "github.com/zeta-chain/ethermint/types"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	"github.com/zeta-chain/zetacore/app"
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/app"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // SystemContractAddresses contains the addresses of the system contracts deployed
@@ -314,6 +315,7 @@ func (zts ZetaTxServer) UpdateGatewayAddress(account, gatewayAddr string) error 
 		addr.String(),
 		gatewayAddr,
 	))
+
 	return err
 }
 
@@ -440,7 +442,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 	}
 
 	// deploy eth zrc20
-	_, err = zts.BroadcastTx(deployerAccount, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+	res, err := zts.BroadcastTx(deployerAccount, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		deployerAddr,
 		"",
 		chains.GoerliLocalnet.ChainId,
@@ -453,9 +455,16 @@ func (zts ZetaTxServer) DeployZRC20s(
 	if err != nil {
 		return "", fmt.Errorf("failed to deploy eth zrc20: %s", err.Error())
 	}
+	zrc20, err := fetchZRC20FromDeployResponse(res)
+	if err != nil {
+		return "", err
+	}
+	if err := zts.InitializeLiquidityCap(zrc20); err != nil {
+		return "", err
+	}
 
 	// deploy btc zrc20
-	_, err = zts.BroadcastTx(deployerAccount, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+	res, err = zts.BroadcastTx(deployerAccount, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		deployerAddr,
 		"",
 		chains.BitcoinRegtest.ChainId,
@@ -468,9 +477,16 @@ func (zts ZetaTxServer) DeployZRC20s(
 	if err != nil {
 		return "", fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
 	}
+	zrc20, err = fetchZRC20FromDeployResponse(res)
+	if err != nil {
+		return "", err
+	}
+	if err := zts.InitializeLiquidityCap(zrc20); err != nil {
+		return "", err
+	}
 
 	// deploy sol zrc20
-	_, err = zts.BroadcastTx(deployerAccount, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+	res, err = zts.BroadcastTx(deployerAccount, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		deployerAddr,
 		"",
 		chains.SolanaLocalnet.ChainId,
@@ -483,9 +499,16 @@ func (zts ZetaTxServer) DeployZRC20s(
 	if err != nil {
 		return "", fmt.Errorf("failed to deploy sol zrc20: %s", err.Error())
 	}
+	zrc20, err = fetchZRC20FromDeployResponse(res)
+	if err != nil {
+		return "", err
+	}
+	if err := zts.InitializeLiquidityCap(zrc20); err != nil {
+		return "", err
+	}
 
 	// deploy erc20 zrc20
-	res, err := zts.BroadcastTx(deployerAccount, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+	res, err = zts.BroadcastTx(deployerAccount, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		deployerAddr,
 		erc20Addr,
 		chains.GoerliLocalnet.ChainId,
@@ -500,12 +523,12 @@ func (zts ZetaTxServer) DeployZRC20s(
 	}
 
 	// fetch the erc20 zrc20 contract address and remove the quotes
-	erc20zrc20Addr, err := FetchAttributeFromTxResponse(res, "Contract")
+	erc20zrc20Addr, err := fetchZRC20FromDeployResponse(res)
 	if err != nil {
-		return "", fmt.Errorf("failed to fetch erc20 zrc20 contract address: %s, %s", err.Error(), res.String())
+		return "", err
 	}
-	if !ethcommon.IsHexAddress(erc20zrc20Addr) {
-		return "", fmt.Errorf("invalid address in event: %s", erc20zrc20Addr)
+	if err := zts.InitializeLiquidityCap(erc20zrc20Addr); err != nil {
+		return "", err
 	}
 
 	return erc20zrc20Addr, nil
@@ -554,6 +577,33 @@ func (zts ZetaTxServer) UpdateKeygen(height int64) error {
 // SetAuthorityClient sets the authority client
 func (zts *ZetaTxServer) SetAuthorityClient(authorityClient authoritytypes.QueryClient) {
 	zts.authorityClient = authorityClient
+}
+
+// InitializeLiquidityCap initializes the liquidity cap for the given coin with a large value
+func (zts ZetaTxServer) InitializeLiquidityCap(zrc20 string) error {
+	liquidityCap := sdktypes.NewUint(1e18).MulUint64(1e12)
+
+	msg := fungibletypes.NewMsgUpdateZRC20LiquidityCap(
+		zts.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+		zrc20,
+		liquidityCap,
+	)
+	_, err := zts.BroadcastTx(utils.OperationalPolicyName, msg)
+	return err
+}
+
+// fetchZRC20FromDeployResponse fetches the zrc20 address from the response
+func fetchZRC20FromDeployResponse(res *sdktypes.TxResponse) (string, error) {
+	// fetch the erc20 zrc20 contract address and remove the quotes
+	zrc20Addr, err := FetchAttributeFromTxResponse(res, "Contract")
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch zrc20 contract address: %s, %s", err.Error(), res.String())
+	}
+	if !ethcommon.IsHexAddress(zrc20Addr) {
+		return "", fmt.Errorf("invalid address in event: %s", zrc20Addr)
+	}
+
+	return zrc20Addr, nil
 }
 
 // fetchMessagePermissions fetches the message permissions for a given message

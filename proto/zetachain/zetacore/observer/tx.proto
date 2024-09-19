@@ -11,7 +11,7 @@ import "zetachain/zetacore/observer/tss.proto";
 import "zetachain/zetacore/pkg/chains/chains.proto";
 import "zetachain/zetacore/pkg/proofs/proofs.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
+option go_package = "github.com/zeta-chain/node/x/observer/types";
 
 // Msg defines the Msg service.
 service Msg {

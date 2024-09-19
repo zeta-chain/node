@@ -4,8 +4,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils"
+	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/zetaclient/config"
 )
 
 var InitCmd = &cobra.Command{
@@ -110,7 +110,7 @@ func Initialize(_ *cobra.Command, _ []string) error {
 	configData.HsmMode = initArgs.HsmMode
 	configData.HsmHotKey = initArgs.HsmHotKey
 	configData.RelayerKeyPath = initArgs.RelayerKeyPath
-	configData.ComplianceConfig = testutils.ComplianceConfigTest()
+	configData.ComplianceConfig = sample.ComplianceConfig()
 
 	// Save config file
 	return config.Save(&configData, rootArgs.zetaCoreHome)

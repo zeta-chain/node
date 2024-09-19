@@ -6,7 +6,7 @@ import "zetachain/zetacore/emissions/params.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/emissions/types";
+option go_package = "github.com/zeta-chain/node/x/emissions/types";
 
 // Query defines the gRPC querier service.
 service Query {
@@ -18,13 +18,6 @@ service Query {
   rpc ListPoolAddresses(QueryListPoolAddressesRequest)
       returns (QueryListPoolAddressesResponse) {
     option (google.api.http).get = "/zeta-chain/emissions/list_addresses";
-  }
-
-  // Queries a list of GetEmmisonsFactors items.
-  rpc GetEmissionsFactors(QueryGetEmissionsFactorsRequest)
-      returns (QueryGetEmissionsFactorsResponse) {
-    option (google.api.http).get =
-        "/zeta-chain/emissions/get_emissions_factors";
   }
 
   // Queries a list of ShowAvailableEmissions items.
@@ -52,14 +45,6 @@ message QueryListPoolAddressesResponse {
   string undistributed_observer_balances_address = 1;
   string undistributed_tss_balances_address = 2;
   string emission_module_address = 3;
-}
-
-message QueryGetEmissionsFactorsRequest {}
-
-message QueryGetEmissionsFactorsResponse {
-  string reservesFactor = 1;
-  string bondFactor = 2;
-  string durationFactor = 3;
 }
 
 message QueryShowAvailableEmissionsRequest { string address = 1; }

@@ -10,7 +10,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 
-	"github.com/zeta-chain/zetacore/pkg/constant"
+	"github.com/zeta-chain/node/pkg/constant"
 )
 
 // SignAdminTx signs a admin cmd transaction based on the given command

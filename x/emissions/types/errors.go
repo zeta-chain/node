@@ -13,4 +13,5 @@ var (
 	)
 	ErrInvalidAmount     = errorsmod.Register(ModuleName, 1005, "invalid amount")
 	ErrUnableToSetParams = errorsmod.Register(ModuleName, 1006, "unable to set params")
+	ErrMigrationFailed   = errorsmod.Register(ModuleName, 1007, "migration failed")
 )

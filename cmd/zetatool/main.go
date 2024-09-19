@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/cmd/zetatool/config"
-	"github.com/zeta-chain/zetacore/cmd/zetatool/filterdeposit"
+	"github.com/zeta-chain/node/cmd/zetatool/config"
+	"github.com/zeta-chain/node/cmd/zetatool/filterdeposit"
 )
 
 var rootCmd = &cobra.Command{

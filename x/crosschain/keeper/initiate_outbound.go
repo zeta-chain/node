@@ -4,8 +4,8 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // TODO (https://github.com/zeta-chain/node/issues/2345): this is just a tmp solution because some flows require gas payment and others don't.

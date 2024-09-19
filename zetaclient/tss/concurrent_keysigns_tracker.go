@@ -7,7 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 // ConcurrentKeysignsTracker keeps track of concurrent keysigns performed by go-tss

@@ -3,7 +3,7 @@ package zetachain.zetacore.observer;
 
 import "zetachain/zetacore/observer/observer.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
+option go_package = "github.com/zeta-chain/node/x/observer/types";
 
 message Node {
   string pub_key = 1;

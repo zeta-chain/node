@@ -7,10 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/x/emissions/exported"
-	v3 "github.com/zeta-chain/zetacore/x/emissions/migrations/v3"
-	"github.com/zeta-chain/zetacore/x/emissions/types"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/x/emissions/exported"
+	"github.com/zeta-chain/node/x/emissions/types"
+
+	v3 "github.com/zeta-chain/node/x/emissions/migrations/v3"
 )
 
 type mockSubspace struct {
@@ -30,14 +31,9 @@ func TestMigrate(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 
 		legacyParams := types.Params{
-			MaxBondFactor:               "1",
-			MinBondFactor:               "0.75",
-			AvgBlockTime:                "5.00",
-			TargetBondRatio:             "00.50",
 			ValidatorEmissionPercentage: "00.50",
 			ObserverEmissionPercentage:  "00.35",
 			TssSignerEmissionPercentage: "00.15",
-			DurationFactorConstant:      "0.001877876953694702",
 			ObserverSlashAmount:         sdk.ZeroInt(),
 		}
 		legacySubspace := newMockSubspace(legacyParams)
@@ -48,6 +44,7 @@ func TestMigrate(t *testing.T) {
 		require.True(t, found)
 		legacyParams.ObserverSlashAmount = sdkmath.NewInt(100000000000000000)
 		legacyParams.BallotMaturityBlocks = 100
+		legacyParams.BlockRewardAmount = types.BlockReward
 		require.Equal(t, legacyParams, params)
 	})
 
@@ -71,19 +68,14 @@ func TestMigrate(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 
 		legacyParams := types.Params{
-			MaxBondFactor:               "1",
-			MinBondFactor:               "0.50",
-			AvgBlockTime:                "5.00",
-			TargetBondRatio:             "00.50",
-			ValidatorEmissionPercentage: "00.50",
+			ValidatorEmissionPercentage: "-00.50",
 			ObserverEmissionPercentage:  "00.35",
 			TssSignerEmissionPercentage: "00.15",
-			DurationFactorConstant:      "0.001877876953694702",
 			ObserverSlashAmount:         sdk.ZeroInt(),
 		}
 		legacySubspace := newMockSubspace(legacyParams)
 
 		err := v3.MigrateStore(ctx, k, legacySubspace)
-		require.ErrorContains(t, err, "min bond factor cannot be lower that 0.75")
+		require.ErrorContains(t, err, "validator emission percentage cannot be less than 0 percent")
 	})
 }

@@ -12,7 +12,7 @@
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/evmos/ethermint/blob/main/LICENSE
+// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package backend
 
 import (
@@ -29,13 +29,13 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
-	ethermint "github.com/evmos/ethermint/types"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
+	ethermint "github.com/zeta-chain/ethermint/types"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
+	rpctypes "github.com/zeta-chain/node/rpc/types"
 )
 
 // Resend accepts an existing transaction and a new gas price and limit. It will remove
@@ -89,7 +89,7 @@ func (b *Backend) Resend(
 	}
 
 	for _, tx := range pending {
-		// FIXME does Resend api possible at all?  https://github.com/evmos/ethermint/issues/905
+		// FIXME does Resend api possible at all?  https://github.com/zeta-chain/ethermint/issues/905
 		p, err := evmtypes.UnwrapEthereumMsg(tx, common.Hash{})
 		if err != nil {
 			// not valid ethereum tx

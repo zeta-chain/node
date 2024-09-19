@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 
-	appparams "cosmossdk.io/simapp/params"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	dbm "github.com/cometbft/cometbft-db"
 	tmcfg "github.com/cometbft/cometbft/config"
@@ -28,16 +27,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	ethermintclient "github.com/evmos/ethermint/client"
-	"github.com/evmos/ethermint/crypto/hd"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+	ethermintclient "github.com/zeta-chain/ethermint/client"
+	"github.com/zeta-chain/ethermint/crypto/hd"
+	"github.com/zeta-chain/ethermint/types"
 
-	"github.com/zeta-chain/zetacore/app"
-	zetacoredconfig "github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
-	zevmserver "github.com/zeta-chain/zetacore/server"
-	servercfg "github.com/zeta-chain/zetacore/server/config"
+	"github.com/zeta-chain/node/app"
+	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
+	zetamempool "github.com/zeta-chain/node/pkg/mempool"
+	zevmserver "github.com/zeta-chain/node/server"
+	servercfg "github.com/zeta-chain/node/server/config"
 )
 
 const EnvPrefix = "zetacore"
@@ -45,7 +45,7 @@ const EnvPrefix = "zetacore"
 // NewRootCmd creates a new root command for wasmd. It is called once in the
 // main function.
 
-func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
+func NewRootCmd() (*cobra.Command, types.EncodingConfig) {
 	encodingConfig := app.MakeEncodingConfig()
 
 	cfg := sdk.GetConfig()
@@ -119,7 +119,7 @@ func initTmConfig() *tmcfg.Config {
 	return cfg
 }
 
-func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig) {
+func initRootCmd(rootCmd *cobra.Command, encodingConfig types.EncodingConfig) {
 	ac := appCreator{
 		encCfg: encodingConfig,
 	}
@@ -236,7 +236,7 @@ func txCommand() *cobra.Command {
 }
 
 type appCreator struct {
-	encCfg appparams.EncodingConfig
+	encCfg types.EncodingConfig
 }
 
 func (ac appCreator) newApp(

@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	cctxtypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // TestMessagePassingExternalChains tests message passing between external EVM chains

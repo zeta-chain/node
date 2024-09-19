@@ -9,12 +9,12 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/db"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/testutils"
+	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
 // the relative path to the testdata directory
@@ -32,7 +32,7 @@ func MockBTCObserverMainnet(t *testing.T) *Observer {
 	require.NoError(t, err)
 
 	// create Bitcoin observer
-	ob, err := NewObserver(chain, btcClient, params, nil, tss, database, base.Logger{}, nil)
+	ob, err := NewObserver(chain, btcClient, params, nil, tss, 60, database, base.Logger{}, nil)
 	require.NoError(t, err)
 
 	return ob

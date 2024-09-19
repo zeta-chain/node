@@ -3,7 +3,7 @@ package zetachain.zetacore.emissions;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/emissions/types";
+option go_package = "github.com/zeta-chain/node/x/emissions/types";
 
 message WithdrawableEmissions {
   string address = 1;

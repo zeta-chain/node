@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 )
 
 // ZETADepositAndCallContract deposits native ZETA to the to address if its an account or if the account does not exist yet

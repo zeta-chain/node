@@ -19,7 +19,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/wzeta.sol"
 	zevmconnectorcontract "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zetaconnectorzevm.sol"
@@ -27,19 +27,17 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/server/config"
-	"github.com/zeta-chain/zetacore/x/fungible/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/server/config"
+	"github.com/zeta-chain/node/x/fungible/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
-// TODO USE string constant
 var (
 	BigIntZero                 = big.NewInt(0)
 	ZEVMGasLimitDepositAndCall = big.NewInt(1_000_000)
-
-	ZEVMGasLimitConnectorCall = big.NewInt(1_000_000)
+	ZEVMGasLimitConnectorCall  = big.NewInt(1_000_000)
 )
 
 // DeployContract deploys a new contract in the ZEVM
@@ -98,9 +96,6 @@ func (k Keeper) DeployContract(
 
 // DeployZRC20Contract creates and deploys an ERC20 contract on the EVM with the
 // erc20 module account as owner. Also adds itself to ForeignCoins fungible module state variable
-// TODO Unit test for these functions
-// https://github.com/zeta-chain/node/issues/864
-// TODO Remove repetitive code
 func (k Keeper) DeployZRC20Contract(
 	ctx sdk.Context,
 	name, symbol string,
@@ -154,17 +149,20 @@ func (k Keeper) DeployZRC20Contract(
 			err.Error(),
 		)
 	}
-	coin, _ := k.GetForeignCoins(ctx, contractAddr.Hex())
-	coin.CoinType = coinType
-	coin.Name = name
-	coin.Symbol = symbol
+
+	// create and set in the store the new foreign coin object
+	newCoin, _ := k.GetForeignCoins(ctx, contractAddr.Hex())
+	newCoin.CoinType = coinType
+	newCoin.Name = name
+	newCoin.Symbol = symbol
 	// #nosec G115 uint8 -> uint32 false positive
-	coin.Decimals = uint32(decimals)
-	coin.Asset = erc20Contract
-	coin.Zrc20ContractAddress = contractAddr.Hex()
-	coin.ForeignChainId = chain.ChainId
-	coin.GasLimit = gasLimit.Uint64()
-	k.SetForeignCoins(ctx, coin)
+	newCoin.Decimals = uint32(decimals)
+	newCoin.Asset = erc20Contract
+	newCoin.Zrc20ContractAddress = contractAddr.Hex()
+	newCoin.ForeignChainId = chain.ChainId
+	newCoin.GasLimit = gasLimit.Uint64()
+	newCoin.LiquidityCap = sdk.NewUint(types.DefaultLiquidityCap).MulUint64(uint64(newCoin.Decimals))
+	k.SetForeignCoins(ctx, newCoin)
 
 	return contractAddr, nil
 }

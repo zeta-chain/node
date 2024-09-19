@@ -11,9 +11,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
 )
 
 // OutboundData is a data structure containing input fields used to construct each type of transaction.

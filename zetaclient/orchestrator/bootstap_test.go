@@ -7,17 +7,18 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/ptr"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
-	"github.com/zeta-chain/zetacore/zetaclient/db"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/testrpc"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/ptr"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/config"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/testutils"
+	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/zetaclient/testutils/testrpc"
 )
 
 const solanaGatewayAddress = "2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s"
@@ -40,15 +41,15 @@ func TestCreateSignerMap(t *testing.T) {
 
 		cfg.EVMChainConfigs[chains.Ethereum.ChainId] = config.EVMConfig{
 			Chain:    chains.Ethereum,
-			Endpoint: mocks.EVMRPCEnabled,
+			Endpoint: testutils.MockEVMRPCEndpoint,
 		}
 
 		cfg.EVMChainConfigs[chains.Polygon.ChainId] = config.EVMConfig{
 			Chain:    chains.Polygon,
-			Endpoint: mocks.EVMRPCEnabled,
+			Endpoint: testutils.MockEVMRPCEndpoint,
 		}
 
-		cfg.BitcoinConfig = btcConfig
+		cfg.BTCChainConfigs[chains.BitcoinMainnet.ChainId] = btcConfig
 
 		// Given AppContext
 		app := zctx.New(cfg, nil, log)
@@ -226,7 +227,7 @@ func TestCreateChainObserverMap(t *testing.T) {
 			Endpoint: evmServer.Endpoint,
 		}
 
-		cfg.BitcoinConfig = btcConfig
+		cfg.BTCChainConfigs[chains.BitcoinMainnet.ChainId] = btcConfig
 		cfg.SolanaConfig = solConfig
 
 		// Given AppContext

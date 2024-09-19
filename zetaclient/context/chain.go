@@ -8,8 +8,8 @@ import (
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	observer "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	observer "github.com/zeta-chain/node/x/observer/types"
 )
 
 // ChainRegistry is a registry of supported chains
@@ -157,7 +157,7 @@ func (c Chain) IsZeta() bool {
 	return chains.IsZetaChain(c.ID(), c.registry.additionalChains)
 }
 
-func (c Chain) IsUTXO() bool {
+func (c Chain) IsBitcoin() bool {
 	return chains.IsBitcoinChain(c.ID(), c.registry.additionalChains)
 }
 

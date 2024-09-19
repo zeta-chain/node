@@ -19,9 +19,9 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/app"
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	types2 "github.com/zeta-chain/zetacore/x/emissions/types"
+	"github.com/zeta-chain/node/app"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	types2 "github.com/zeta-chain/node/x/emissions/types"
 )
 
 func Setup(isCheckTx bool) *app.App {

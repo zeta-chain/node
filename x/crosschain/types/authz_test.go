@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func TestGetAllAuthzZetaclientTxTypes(t *testing.T) {

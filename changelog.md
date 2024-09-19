@@ -4,6 +4,45 @@
 
 ### Features
 
+* [2633](https://github.com/zeta-chain/node/pull/2633) - support for stateful precompiled contracts
+* [2788](https://github.com/zeta-chain/node/pull/2788) - add common importable zetacored rpc package
+* [2784](https://github.com/zeta-chain/node/pull/2784) - staking precompiled contract
+* [2795](https://github.com/zeta-chain/node/pull/2795) - support restricted address in Solana
+* [2861](https://github.com/zeta-chain/node/pull/2861) - emit events from staking precompile
+* [2870](https://github.com/zeta-chain/node/pull/2870) - support for multiple Bitcoin chains in the zetaclient
+* [2883](https://github.com/zeta-chain/node/pull/2883) - add chain static information for btc signet testnet
+
+### Refactor
+
+* [2749](https://github.com/zeta-chain/node/pull/2749) - fix all lint errors from govet
+* [2725](https://github.com/zeta-chain/node/pull/2725) - refactor SetCctxAndNonceToCctxAndInboundHashToCctx to receive tsspubkey as an argument
+* [2802](https://github.com/zeta-chain/node/pull/2802) - set default liquidity cap for new ZRC20s
+* [2826](https://github.com/zeta-chain/node/pull/2826) - remove unused code from emissions module and add new parameter for fixed block reward amount
+
+### Tests
+
+* [2661](https://github.com/zeta-chain/node/pull/2661) - update connector and erc20Custody addresses in tss migration e2e tests
+* [2703](https://github.com/zeta-chain/node/pull/2703) - add e2e tests for stateful precompiled contracts
+* [2830](https://github.com/zeta-chain/node/pull/2830) - extend staking precompile tests
+* [2867](https://github.com/zeta-chain/node/pull/2867) - skip precompiles test for tss migration
+* [2833](https://github.com/zeta-chain/node/pull/2833) - add e2e framework for TON blockchain
+* [2874](https://github.com/zeta-chain/node/pull/2874) - add support for multiple runs for precompile tests
+* [2895](https://github.com/zeta-chain/node/pull/2895) - add e2e test for bitcoin deposit and call
+* [2894](https://github.com/zeta-chain/node/pull/2894) - increase gas limit for TSS vote tx
+
+### Fixes
+
+* [2674](https://github.com/zeta-chain/node/pull/2674) - allow operators to vote on ballots associated with discarded keygen without affecting the status of the current keygen.
+* [2672](https://github.com/zeta-chain/node/pull/2672) - check observer set for duplicates when adding a new observer or updating an existing one
+* [2735](https://github.com/zeta-chain/node/pull/2735) - fix the outbound tracker blocking confirmation and outbound processing on EVM chains by locally index outbound txs in zetaclient
+* [2944](https://github.com/zeta-chain/node/pull/2844) - add tsspubkey to index for tss keygen voting
+* [2842](https://github.com/zeta-chain/node/pull/2842) - fix: move interval assignment out of cctx loop in EVM outbound tx scheduler
+* [2853](https://github.com/zeta-chain/node/pull/2853) - calling precompile through sc with sc state update
+
+## v20.0.0
+
+### Features
+
 * [2578](https://github.com/zeta-chain/node/pull/2578) - add Gateway address in protocol contract list
 * [2630](https://github.com/zeta-chain/node/pull/2630) - implement `MsgMigrateERC20CustodyFunds` to migrate the funds from the ERC20Custody to a new contracts (to be used for the new ERC20Custody contract for smart contract V2)
 * [2578](https://github.com/zeta-chain/node/pull/2578) - Add Gateway address in protocol contract list
@@ -15,20 +54,28 @@
 * [2644](https://github.com/zeta-chain/node/pull/2644) - add created_timestamp to cctx status
 * [2673](https://github.com/zeta-chain/node/pull/2673) - add relayer key importer, encryption and decryption
 * [2727](https://github.com/zeta-chain/node/pull/2727) - enable op_return and inscription in memo detection
+* [2633](https://github.com/zeta-chain/node/pull/2633) - support for stateful precompiled contracts
+* [2751](https://github.com/zeta-chain/node/pull/2751) - add RPC status check for Solana chain
+* [2788](https://github.com/zeta-chain/node/pull/2788) - add common importable zetacored rpc package
+* [2784](https://github.com/zeta-chain/node/pull/2784) - staking precompiled contract
+* [2795](https://github.com/zeta-chain/node/pull/2795) - support restricted address in Solana
+* [2825](https://github.com/zeta-chain/node/pull/2825) - add Bitcoin inscriptions support
 
 ### Refactor
 
 * [2615](https://github.com/zeta-chain/node/pull/2615) - Refactor cleanup of outbound trackers
-* [2749](https://github.com/zeta-chain/node/pull/2749) - fix all lint errors from govet
+* [2855](https://github.com/zeta-chain/node/pull/2855) - disable Bitcoin witness support for mainnet
 
 ### Tests
 
 * [2726](https://github.com/zeta-chain/node/pull/2726) - add e2e tests for deposit and call, deposit and revert
+* [2821](https://github.com/zeta-chain/node/pull/2821) - V2 protocol contracts migration e2e tests
 
 ### Fixes
 
 * [2654](https://github.com/zeta-chain/node/pull/2654) - add validation for authorization list in when validating genesis state for authorization module
 * [2672](https://github.com/zeta-chain/node/pull/2672) - check observer set for duplicates when adding a new observer or updating an existing one
+* [2824](https://github.com/zeta-chain/node/pull/2824) - fix Solana deposit number
 
 ## v19.0.0
 
@@ -70,6 +117,7 @@
 * [2524](https://github.com/zeta-chain/node/pull/2524) - add inscription envelop parsing 
 * [2560](https://github.com/zeta-chain/node/pull/2560) - add support for Solana SOL token withdraw
 * [2533](https://github.com/zeta-chain/node/pull/2533) - parse memo from both OP_RETURN and inscription
+* [2765](https://github.com/zeta-chain/node/pull/2765) - bitcoin depositor fee improvement
 
 ### Refactor
 
@@ -81,7 +129,7 @@
 * [2118](https://github.com/zeta-chain/node/pull/2118) - consolidate inbound and outbound naming
 * [2124](https://github.com/zeta-chain/node/pull/2124) - removed unused variables and method
 * [2150](https://github.com/zeta-chain/node/pull/2150) - created `chains` `zetacore` `orchestrator` packages in zetaclient and reorganized source files accordingly
-* [2210](https://github.com/zeta-chain/node/pull/2210) - removed uncessary panics in the zetaclientd process
+* [2210](https://github.com/zeta-chain/node/pull/2210) - removed unnecessary panics in the zetaclientd process
 * [2205](https://github.com/zeta-chain/node/pull/2205) - remove deprecated variables pre-v17
 * [2226](https://github.com/zeta-chain/node/pull/2226) - improve Go formatting with imports standardization and max line length to 120
 * [2262](https://github.com/zeta-chain/node/pull/2262) - refactor MsgUpdateZRC20 into MsgPauseZrc20 and MsgUnPauseZRC20
@@ -149,7 +197,7 @@
 ### CI
 
 * [2388](https://github.com/zeta-chain/node/pull/2388) - added GitHub attestations of binaries produced in the release workflow. 
-* [2285](https://github.com/zeta-chain/node/pull/2285) - added nightly EVM performance testing pipeline, modified localnet testing docker image to utilitze debian:bookworm, removed build-jet runners where applicable, removed deprecated/removed upgrade path testing pipeline
+* [2285](https://github.com/zeta-chain/node/pull/2285) - added nightly EVM performance testing pipeline, modified localnet testing docker image to utilize debian:bookworm, removed build-jet runners where applicable, removed deprecated/removed upgrade path testing pipeline
 * [2268](https://github.com/zeta-chain/node/pull/2268) - updated the publish-release pipeline to utilize the Github Actions Ubuntu 20.04 Runners
 * [2070](https://github.com/zeta-chain/node/pull/2070) - Added commands to build binaries from the working branch as a live full node rpc to test non-governance changes
 * [2119](https://github.com/zeta-chain/node/pull/2119) - Updated the release pipeline to only run on hotfix/ and release/ branches. Added option to only run pre-checks and not cut release as well. Switched approval steps to use environments
@@ -355,8 +403,8 @@
 * [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
 * [1746](https://github.com/zeta-chain/node/pull/1746) - rename smoke tests to e2e tests
 * [1753](https://github.com/zeta-chain/node/pull/1753) - fix gosec errors on usage of rand package
-* [1762](https://github.com/zeta-chain/node/pull/1762) - improve coverage for fungibile module
-* [1782](https://github.com/zeta-chain/node/pull/1782) - improve coverage for fungibile module system contract
+* [1762](https://github.com/zeta-chain/node/pull/1762) - improve coverage for fungible module
+* [1782](https://github.com/zeta-chain/node/pull/1782) - improve coverage for fungible module system contract
 
 ### CI
 
@@ -458,7 +506,7 @@ Observer params and core params have been merged into chain params:
 * `GetCoreParams`: Renamed into `GetChainParams`. `/zeta-chain/observer/get_core_params` moved to `/zeta-chain/observer/get_chain_params`
 * `GetCoreParamsByChain`: Renamed into `GetChainParamsForChain`. `/zeta-chain/observer/get_core_params_by_chain` moved to `/zeta-chain/observer/get_chain_params_by_chain`
 
-Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin chain id:
+Getting the correct TSS address for Bitcoin now requires providing the Bitcoin chain id:
 * `GetTssAddress` : Changed from `/zeta-chain/observer/get_tss_address/` to `/zeta-chain/observer/getTssAddress/{bitcoin_chain_id}` . Optional bitcoin chain id can now be passed as a parameter to fetch the correct tss for required BTC chain. This parameter only affects the BTC tss address in the response
 
 ### Features
@@ -485,7 +533,7 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 * masked zetaclient config at startup
 * set limit for queried pending cctxs
 * add check to verify new tss has been produced when triggering tss funds migration
-* fix Athens-3 log print issue - avoid posting uncessary outtx confirmation
+* fix Athens-3 log print issue - avoid posting unnecessary outtx confirmation
 * fix docker build issues with version: golang:1.20-alpine3.18
 * [1525](https://github.com/zeta-chain/node/pull/1525) - relax EVM chain block header length check 1024->4096
 * [1522](https://github.com/zeta-chain/node/pull/1522/files) - block `distribution` module account from receiving zeta
@@ -522,7 +570,7 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 * [1446](https://github.com/zeta-chain/node/pull/1446) - renamed file `zetaclientd/aux.go` to `zetaclientd/utils.go` to avoid complaints from go package resolver
 * [1499](https://github.com/zeta-chain/node/pull/1499) - Add scripts to localnet to help test gov proposals
 * [1442](https://github.com/zeta-chain/node/pull/1442) - remove build types in `.goreleaser.yaml`
-* [1504](https://github.com/zeta-chain/node/pull/1504) - remove `-race` in the `make install` commmand
+* [1504](https://github.com/zeta-chain/node/pull/1504) - remove `-race` in the `make install` command
 * [1564](https://github.com/zeta-chain/node/pull/1564) - bump ti-actions/changed-files
 
 ### Tests
@@ -584,7 +632,7 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 * [1128](https://github.com/zeta-chain/node/pull/1228) - adding namespaces back in rpc
 * [1245](https://github.com/zeta-chain/node/pull/1245) - set unique index for generate cctx
 * [1250](https://github.com/zeta-chain/node/pull/1250) - remove error return in `IsAuthorized`
-* [1261](https://github.com/zeta-chain/node/pull/1261) - Ethereum comparaison checksum/non-checksum format
+* [1261](https://github.com/zeta-chain/node/pull/1261) - Ethereum comparison checksum/non-checksum format
 * [1264](https://github.com/zeta-chain/node/pull/1264) - Blame index update
 * [1243](https://github.com/zeta-chain/node/pull/1243) - feed sataoshi/B to zetacore and check actual outTx size
 * [1235](https://github.com/zeta-chain/node/pull/1235) - cherry pick all hotfix from v10.0.x (zero-amount, precision, etc.)

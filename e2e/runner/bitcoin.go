@@ -17,13 +17,13 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/constant"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	zetabitcoin "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
-	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/signer"
+	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 )
 
 // ListDeployerUTXOs list the deployer's UTXOs
@@ -208,8 +208,11 @@ func (r *E2ERunner) sendToAddrFromDeployerWithMemo(
 		scriptPubkeys[i] = utxo.ScriptPubKey
 	}
 
+	// use static fee 0.0005 BTC to calculate change
 	feeSats := btcutil.Amount(0.0005 * btcutil.SatoshiPerBitcoin)
-	amountSats := btcutil.Amount(amount * btcutil.SatoshiPerBitcoin)
+	amountInt, err := zetabitcoin.GetSatoshis(amount)
+	require.NoError(r, err)
+	amountSats := btcutil.Amount(amountInt)
 	change := inputSats - feeSats - amountSats
 
 	if change < 0 {

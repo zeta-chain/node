@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/x/lightclient/types"
+	"github.com/zeta-chain/node/x/lightclient/types"
 )
 
 // GetTxCmd returns the transaction commands for this module

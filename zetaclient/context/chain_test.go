@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	observer "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/pkg/chains"
+	observer "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
 func TestChainRegistry(t *testing.T) {
@@ -73,7 +73,7 @@ func TestChainRegistry(t *testing.T) {
 		ethChain, err := r.Get(eth.ChainId)
 		require.NoError(t, err)
 		require.True(t, ethChain.IsEVM())
-		require.False(t, ethChain.IsUTXO())
+		require.False(t, ethChain.IsBitcoin())
 		require.False(t, ethChain.IsSolana())
 		require.Equal(t, ethParams, ethChain.Params())
 	})

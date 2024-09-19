@@ -14,13 +14,13 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/trie"
-	"github.com/evmos/ethermint/tests"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/zeta-chain/ethermint/tests"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
-	ethrpc "github.com/zeta-chain/zetacore/rpc/types"
-	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/node/rpc/backend/mocks"
+	ethrpc "github.com/zeta-chain/node/rpc/types"
+	"github.com/zeta-chain/node/testutil/sample"
 )
 
 func (suite *BackendTestSuite) TestBlockNumber() {

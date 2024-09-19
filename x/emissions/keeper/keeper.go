@@ -8,7 +8,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/x/emissions/types"
+	"github.com/zeta-chain/node/x/emissions/types"
 )
 
 type (
@@ -53,6 +53,14 @@ func NewKeeper(
 		authKeeper:       authKeeper,
 		authority:        authority,
 	}
+}
+
+func (k Keeper) GetCodec() codec.BinaryCodec {
+	return k.cdc
+}
+
+func (k Keeper) GetStoreKey() storetypes.StoreKey {
+	return k.storeKey
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

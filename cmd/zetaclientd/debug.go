@@ -16,14 +16,14 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
-	evmobserver "github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
-	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/testutil/sample"
+	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	evmobserver "github.com/zeta-chain/node/zetaclient/chains/evm/observer"
+	"github.com/zeta-chain/node/zetaclient/config"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 var debugArgs = debugArguments{}
@@ -169,17 +169,21 @@ func debugCmd(_ *cobra.Command, args []string) error {
 			fmt.Println("CoinType not detected")
 		}
 		fmt.Println("CoinType : ", coinType)
-	} else if chain.IsUTXO() {
+	} else if chain.IsBitcoin() {
 		btcObserver := btcobserver.Observer{}
 		btcObserver.WithZetacoreClient(client)
 		btcObserver.WithChain(*chainProto)
+		btcConfig, found := cfg.GetBTCConfig(chainID)
+		if !found {
+			return fmt.Errorf("unable to find config for BTC chain %d", chainID)
+		}
 		connCfg := &rpcclient.ConnConfig{
-			Host:         cfg.BitcoinConfig.RPCHost,
-			User:         cfg.BitcoinConfig.RPCUsername,
-			Pass:         cfg.BitcoinConfig.RPCPassword,
+			Host:         btcConfig.RPCHost,
+			User:         btcConfig.RPCUsername,
+			Pass:         btcConfig.RPCPassword,
 			HTTPPostMode: true,
 			DisableTLS:   true,
-			Params:       cfg.BitcoinConfig.RPCParams,
+			Params:       btcConfig.RPCParams,
 		}
 
 		btcClient, err := rpcclient.New(connCfg, nil)

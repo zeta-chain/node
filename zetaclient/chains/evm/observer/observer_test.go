@@ -12,24 +12,25 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/onrik/ethrpc"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg/ptr"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
-	"github.com/zeta-chain/zetacore/zetaclient/db"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	"github.com/zeta-chain/node/pkg/ptr"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/keys"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/observer"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/testutils"
+	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
 // the relative path to the testdata directory
@@ -97,7 +98,14 @@ func MockEVMObserver(
 
 	// use default mock evm client if not provided
 	if evmClient == nil {
-		evmClient = mocks.NewMockEvmClient().WithBlockNumber(1000)
+		evmClientDefault := mocks.NewEVMRPCClient(t)
+		evmClientDefault.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
+		evmClient = evmClientDefault
+	}
+
+	// use default mock evm client if not provided
+	if evmJSONRPC == nil {
+		evmJSONRPC = mocks.NewMockJSONRPCClient()
 	}
 
 	// use default mock zetacore client if not provided
@@ -113,7 +121,7 @@ func MockEVMObserver(
 		tss = mocks.NewTSSMainnet()
 	}
 	// create AppContext
-	appContext, evmCfg := getAppContext(t, chain, "", &params)
+	appContext, _ := getAppContext(t, chain, "", &params)
 
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
@@ -122,9 +130,20 @@ func MockEVMObserver(
 	logger := base.Logger{Std: testLogger, Compliance: testLogger}
 
 	// create observer
-	ob, err := observer.NewObserver(ctx, evmCfg, evmClient, params, zetacoreClient, tss, database, logger, nil)
+	ob, err := observer.NewObserver(
+		ctx,
+		chain,
+		evmClient,
+		evmJSONRPC,
+		params,
+		zetacoreClient,
+		tss,
+		60,
+		database,
+		logger,
+		nil,
+	)
 	require.NoError(t, err)
-	ob.WithEvmJSONRPC(evmJSONRPC)
 	ob.WithLastBlock(lastBlock)
 
 	return ob, appContext
@@ -137,12 +156,17 @@ func Test_NewObserver(t *testing.T) {
 	chain := chains.Ethereum
 	params := mocks.MockChainParams(chain.ChainId, 10)
 
+	// create evm client with mocked block number 1000
+	evmClient := mocks.NewEVMRPCClient(t)
+	evmClient.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
+
 	// test cases
 	tests := []struct {
 		name        string
 		evmCfg      config.EVMConfig
 		chainParams observertypes.ChainParams
 		evmClient   interfaces.EVMRPCClient
+		evmJSONRPC  interfaces.EVMJSONRPCClient
 		tss         interfaces.TSSSigner
 		logger      base.Logger
 		before      func()
@@ -158,7 +182,8 @@ func Test_NewObserver(t *testing.T) {
 				Endpoint: "http://localhost:8545",
 			},
 			chainParams: params,
-			evmClient:   mocks.NewMockEvmClient().WithBlockNumber(1000),
+			evmClient:   evmClient,
+			evmJSONRPC:  mocks.NewMockJSONRPCClient(),
 			tss:         mocks.NewTSSMainnet(),
 			logger:      base.Logger{},
 			ts:          nil,
@@ -171,12 +196,18 @@ func Test_NewObserver(t *testing.T) {
 				Endpoint: "http://localhost:8545",
 			},
 			chainParams: params,
-			evmClient:   mocks.NewMockEvmClient().WithError(fmt.Errorf("error RPC")),
-			tss:         mocks.NewTSSMainnet(),
-			logger:      base.Logger{},
-			ts:          nil,
-			fail:        true,
-			message:     "error RPC",
+			evmClient: func() interfaces.EVMRPCClient {
+				// create mock evm client with RPC error
+				evmClient := mocks.NewEVMRPCClient(t)
+				evmClient.On("BlockNumber", mock.Anything).Return(uint64(0), fmt.Errorf("error RPC"))
+				return evmClient
+			}(),
+			evmJSONRPC: mocks.NewMockJSONRPCClient(),
+			tss:        mocks.NewTSSMainnet(),
+			logger:     base.Logger{},
+			ts:         nil,
+			fail:       true,
+			message:    "error RPC",
 		},
 		{
 			name: "should fail on invalid ENV var",
@@ -185,7 +216,8 @@ func Test_NewObserver(t *testing.T) {
 				Endpoint: "http://localhost:8545",
 			},
 			chainParams: params,
-			evmClient:   mocks.NewMockEvmClient().WithBlockNumber(1000),
+			evmClient:   evmClient,
+			evmJSONRPC:  mocks.NewMockJSONRPCClient(),
 			tss:         mocks.NewTSSMainnet(),
 			before: func() {
 				envVar := base.EnvVarLatestBlockByChain(chain)
@@ -205,8 +237,7 @@ func Test_NewObserver(t *testing.T) {
 	// run tests
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// create AppContext, client and tss
-			//zetacoreCtx, _ := getAppContext(tt.evmCfg.Chain, tt.evmCfg.Endpoint, &params)
+			// create mock zetacore client
 			zetacoreClient := mocks.NewZetacoreClient(t)
 
 			database, err := db.NewFromSqliteInMemory(true)
@@ -222,11 +253,13 @@ func Test_NewObserver(t *testing.T) {
 			// create observer
 			ob, err := observer.NewObserver(
 				ctx,
-				tt.evmCfg,
+				chain,
 				tt.evmClient,
+				tt.evmJSONRPC,
 				tt.chainParams,
 				zetacoreClient,
 				tt.tss,
+				60,
 				database,
 				tt.logger,
 				tt.ts,
@@ -252,7 +285,8 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 	params := mocks.MockChainParams(chain.ChainId, 10)
 
 	// create observer using mock evm client
-	evmClient := mocks.NewMockEvmClient().WithBlockNumber(100)
+	evmClient := mocks.NewEVMRPCClient(t)
+	evmClient.On("BlockNumber", mock.Anything).Return(uint64(100), nil)
 	ob, _ := MockEVMObserver(t, chain, evmClient, nil, nil, nil, 1, params)
 
 	t.Run("should load last block scanned", func(t *testing.T) {
@@ -281,8 +315,12 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 		// reset last block scanned to 0 so that it will be loaded from RPC
 		obOther.WithLastBlockScanned(0)
 
-		// set RPC error
-		evmClient.WithError(fmt.Errorf("error RPC"))
+		// create mock evm client with RPC error
+		evmClient := mocks.NewEVMRPCClient(t)
+		evmClient.On("BlockNumber", mock.Anything).Return(uint64(0), fmt.Errorf("error RPC"))
+
+		// attach mock evm client to observer
+		obOther.WithEvmClient(evmClient)
 
 		// load last block scanned
 		err := obOther.LoadLastBlockScanned(ctx)
@@ -369,12 +407,12 @@ func Test_HeaderCache(t *testing.T) {
 		ob.WithHeaderCache(headerCache)
 
 		// create mock evm client
-		evmClient := mocks.NewMockEvmClient()
+		evmClient := mocks.NewEVMRPCClient(t)
 		ob.WithEvmClient(evmClient)
 
 		// feed block header to evm client
 		header := &ethtypes.Header{Number: big.NewInt(100)}
-		evmClient.WithHeader(header)
+		evmClient.On("HeaderByNumber", mock.Anything, mock.Anything).Return(header, nil)
 
 		// get block header from observer
 		resHeader, err := ob.GetBlockHeaderCached(ctx, uint64(100))

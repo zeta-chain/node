@@ -6,9 +6,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/config"
 	"golang.org/x/exp/maps"
 )
 
@@ -30,7 +30,7 @@ func TestAppContext(t *testing.T) {
 		ttsPubKey = "tssPubKeyTest"
 	)
 
-	testCfg.BitcoinConfig.RPCUsername = "abc"
+	testCfg.BTCChainConfigs[111] = config.BTCConfig{RPCUsername: "satoshi"}
 
 	ethParams := types.GetDefaultEthMainnetChainParams()
 	ethParams.IsSupported = true
@@ -106,7 +106,7 @@ func TestAppContext(t *testing.T) {
 		ethChain, err := appContext.GetChain(1)
 		assert.NoError(t, err)
 		assert.True(t, ethChain.IsEVM())
-		assert.False(t, ethChain.IsUTXO())
+		assert.False(t, ethChain.IsBitcoin())
 		assert.False(t, ethChain.IsSolana())
 		assert.Equal(t, ethParams, ethChain.Params())
 
@@ -121,7 +121,7 @@ func TestAppContext(t *testing.T) {
 		assert.ElementsMatch(t, expectedIDs, appContext.ListChainIDs())
 
 		// Check config
-		assert.Equal(t, "abc", appContext.Config().BitcoinConfig.RPCUsername)
+		assert.Equal(t, "satoshi", appContext.Config().BTCChainConfigs[111].RPCUsername)
 
 		t.Run("edge-cases", func(t *testing.T) {
 			for _, tt := range []struct {

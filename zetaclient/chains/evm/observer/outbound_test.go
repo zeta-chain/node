@@ -5,17 +5,19 @@ import (
 	"testing"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/observer"
+	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/testutils"
+	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
 )
 
 // getContractsByChainID is a helper func to get contracts and addresses by chainID
@@ -410,6 +412,78 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 		withdrawn, err := observer.ParseAndCheckWithdrawnEvent(cctx, receipt, custodyAddress, custody)
 		require.ErrorContains(t, err, "no ERC20 Withdrawn event")
 		require.Nil(t, withdrawn)
+	})
+}
+
+func Test_FilterTSSOutbound(t *testing.T) {
+	// load archived evm block
+	// https://etherscan.io/block/19363323
+	chain := chains.Ethereum
+	chainID := chain.ChainId
+	chainParam := mocks.MockChainParams(chainID, 1)
+
+	// load archived evm block
+	// https://etherscan.io/block/19363323
+	blockNumber := uint64(19363323)
+	block := testutils.LoadEVMBlock(t, TestDataDir, chainID, blockNumber, true)
+
+	// the outbound to be tested
+	outboundNonce := uint64(7260)
+	outboundHash := ethcommon.HexToHash("0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3")
+	tx, receipt := testutils.LoadEVMOutboundNReceipt(t, TestDataDir, chainID, outboundHash.Hex(), coin.CoinType_Gas)
+
+	ctx := context.Background()
+
+	t.Run("should filter TSS outbound", func(t *testing.T) {
+		// create mock evm client with preloaded block, tx and receipt
+		evmClient := mocks.NewEVMRPCClient(t)
+		evmClient.On("BlockNumber", mock.Anything).Return(blockNumber+1, nil) // +1 confirmations
+		evmClient.On("TransactionByHash", mock.Anything, outboundHash).Return(tx, false, nil)
+		evmClient.On("TransactionReceipt", mock.Anything, outboundHash).Return(receipt, nil)
+
+		// create evm observer for testing
+		tss := mocks.NewTSSMainnet()
+		ob, _ := MockEVMObserver(t, chain, evmClient, nil, nil, tss, 1, chainParam)
+
+		// feed archived block to observer cache
+		blockCache, err := lru.New(1000)
+		require.NoError(t, err)
+		blockCache.Add(blockNumber, block)
+		ob.WithBlockCache(blockCache)
+
+		// filter TSS outbound
+		ob.FilterTSSOutbound(ctx, blockNumber, blockNumber)
+
+		// tx should be confirmed after filtering
+		found := ob.IsTxConfirmed(outboundNonce)
+		require.True(t, found)
+
+		// retrieve tx and receipt
+		receipt, tx := ob.GetTxNReceipt(outboundNonce)
+		require.NotNil(t, tx)
+		require.NotNil(t, receipt)
+		require.Equal(t, outboundHash, tx.Hash())
+		require.Equal(t, outboundNonce, tx.Nonce())
+	})
+
+	t.Run("should filter nothing on RPC error", func(t *testing.T) {
+		// create mock evm client block number
+		evmClient := mocks.NewEVMRPCClient(t)
+		evmClient.On("BlockNumber", mock.Anything).Return(blockNumber+1, nil)
+
+		// create evm JSON-RPC client without block to simulate RPC error
+		evmJSONRPC := mocks.NewMockJSONRPCClient()
+
+		// create evm observer for testing
+		tss := mocks.NewTSSMainnet()
+		ob, _ := MockEVMObserver(t, chain, evmClient, evmJSONRPC, nil, tss, 1, chainParam)
+
+		// filter TSS outbound
+		ob.FilterTSSOutbound(ctx, blockNumber, blockNumber)
+
+		// tx should be confirmed after filtering
+		found := ob.IsTxConfirmed(outboundNonce)
+		require.False(t, found)
 	})
 }
 

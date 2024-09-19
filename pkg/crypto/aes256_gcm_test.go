@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg/crypto"
+	"github.com/zeta-chain/node/pkg/crypto"
 )
 
 func Test_EncryptDecryptAES256GCM(t *testing.T) {

@@ -7,21 +7,22 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
+	ethrpc2 "github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
-	btcobserver "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/observer"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
-	btcsigner "github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/signer"
-	evmobserver "github.com/zeta-chain/zetacore/zetaclient/chains/evm/observer"
-	evmsigner "github.com/zeta-chain/zetacore/zetaclient/chains/evm/signer"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	solbserver "github.com/zeta-chain/zetacore/zetaclient/chains/solana/observer"
-	solanasigner "github.com/zeta-chain/zetacore/zetaclient/chains/solana/signer"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
-	"github.com/zeta-chain/zetacore/zetaclient/db"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
+	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
+	btcsigner "github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
+	evmobserver "github.com/zeta-chain/node/zetaclient/chains/evm/observer"
+	evmsigner "github.com/zeta-chain/node/zetaclient/chains/evm/signer"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	solbserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
+	solanasigner "github.com/zeta-chain/node/zetaclient/chains/solana/signer"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 // btcDatabaseFilename is the Bitcoin database file name now used in mainnet,
@@ -135,16 +136,16 @@ func syncSignerMap(
 			}
 
 			addSigner(chainID, signer)
-		case chain.IsUTXO():
-			cfg, found := app.Config().GetBTCConfig()
+		case chain.IsBitcoin():
+			cfg, found := app.Config().GetBTCConfig(chainID)
 			if !found {
-				logger.Std.Warn().Msgf("Unable to find UTXO config for chain %d", chainID)
+				logger.Std.Warn().Msgf("Unable to find BTC config for chain %d signer", chainID)
 				continue
 			}
 
 			signer, err := btcsigner.NewSigner(*rawChain, tss, ts, logger, cfg)
 			if err != nil {
-				logger.Std.Error().Err(err).Msgf("Unable to construct signer for UTXO chain %d", chainID)
+				logger.Std.Error().Err(err).Msgf("Unable to construct signer for BTC chain %d", chainID)
 				continue
 			}
 
@@ -298,14 +299,18 @@ func syncObserverMap(
 				continue
 			}
 
+			evmJSONRPCClient := ethrpc2.NewEthRPC(cfg.Endpoint, ethrpc2.WithHttpClient(httpClient))
+
 			// create EVM chain observer
 			observer, err := evmobserver.NewObserver(
 				ctx,
-				cfg,
+				*rawChain,
 				evmClient,
+				evmJSONRPCClient,
 				*params,
 				client,
 				tss,
+				cfg.RPCAlertLatency,
 				database,
 				logger,
 				ts,
@@ -316,10 +321,10 @@ func syncObserverMap(
 			}
 
 			addObserver(chainID, observer)
-		case chain.IsUTXO():
-			cfg, found := app.Config().GetBTCConfig()
+		case chain.IsBitcoin():
+			cfg, found := app.Config().GetBTCConfig(chainID)
 			if !found {
-				logger.Std.Warn().Msgf("Unable to find chain params for BTC chain %d", chainID)
+				logger.Std.Warn().Msgf("Unable to find BTC config for chain %d observer", chainID)
 				continue
 			}
 
@@ -341,6 +346,7 @@ func syncObserverMap(
 				*params,
 				client,
 				tss,
+				cfg.RPCAlertLatency,
 				database,
 				logger,
 				ts,
@@ -377,6 +383,7 @@ func syncObserverMap(
 				*params,
 				client,
 				tss,
+				cfg.RPCAlertLatency,
 				database,
 				logger,
 				ts,

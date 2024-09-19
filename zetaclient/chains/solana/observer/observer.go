@@ -7,14 +7,14 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/zetacore/pkg/bg"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	contracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/db"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/node/pkg/bg"
+	"github.com/zeta-chain/node/pkg/chains"
+	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 var _ interfaces.ChainObserver = (*Observer)(nil)
@@ -44,6 +44,7 @@ func NewObserver(
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
+	rpcAlertLatency int64,
 	db *db.DB,
 	logger base.Logger,
 	ts *metrics.TelemetryServer,
@@ -56,6 +57,7 @@ func NewObserver(
 		tss,
 		base.DefaultBlockCacheSize,
 		base.DefaultHeaderCacheSize,
+		rpcAlertLatency,
 		ts,
 		db,
 		logger,
@@ -130,6 +132,9 @@ func (ob *Observer) Start(ctx context.Context) {
 
 	// watch zetacore for Solana inbound trackers
 	bg.Work(ctx, ob.WatchInboundTracker, bg.WithName("WatchInboundTracker"), bg.WithLogger(ob.Logger().Inbound))
+
+	// watch RPC status of the Solana chain
+	bg.Work(ctx, ob.watchRPCStatus, bg.WithName("watchRPCStatus"), bg.WithLogger(ob.Logger().Chain))
 }
 
 // LoadLastTxScanned loads the last scanned tx from the database.

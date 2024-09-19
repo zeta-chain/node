@@ -10,19 +10,19 @@ import (
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	solanacontracts "github.com/zeta-chain/zetacore/pkg/contracts/solana"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
+	"github.com/zeta-chain/node/testutil/sample"
+	crosschainkeeper "github.com/zeta-chain/node/x/crosschain/keeper"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/testutils"
+	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
 func Test_GetUpdatedSigner(t *testing.T) {
@@ -518,16 +518,20 @@ func createAppContext(t *testing.T, chainsOrParams ...any) *zctx.AppContext {
 	cfg := config.New(false)
 
 	// Mock config
-	cfg.BitcoinConfig = config.BTCConfig{
-		RPCHost: "localhost",
-	}
-
 	for _, c := range supportedChains {
-		if chains.IsEVMChain(c.ChainId, nil) {
+		switch {
+		case chains.IsEVMChain(c.ChainId, nil):
 			cfg.EVMChainConfigs[c.ChainId] = config.EVMConfig{Chain: c}
+		case chains.IsBitcoinChain(c.ChainId, nil):
+			cfg.BTCChainConfigs[c.ChainId] = config.BTCConfig{RPCHost: "localhost"}
+		case chains.IsSolanaChain(c.ChainId, nil):
+			cfg.SolanaConfig = config.SolanaConfig{Endpoint: "localhost"}
+		default:
+			t.Fatalf("create app context: unsupported chain %d", c.ChainId)
 		}
 	}
 
+	// chain params
 	params := map[int64]*observertypes.ChainParams{}
 	for i := range obsParams {
 		cp := obsParams[i]

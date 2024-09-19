@@ -5,11 +5,11 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/txserver"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/txserver"
+	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/testutil/sample"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // TestMigrateERC20CustodyFunds tests the migration of ERC20 custody funds
@@ -25,9 +25,6 @@ func TestMigrateERC20CustodyFunds(r *runner.E2ERunner, _ []string) {
 	newAddr := sample.EthAddress()
 
 	// send MigrateERC20CustodyFunds command
-	// NOTE: we currently use a random address for the destination as a sufficient way to check migration
-	// TODO: makes the test more complete and perform a withdraw to new custody once the contract V2 architecture is integrated
-	// https://github.com/zeta-chain/node/issues/2474
 	msg := crosschaintypes.NewMsgMigrateERC20CustodyFunds(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		chainID.Int64(),

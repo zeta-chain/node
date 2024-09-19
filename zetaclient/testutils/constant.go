@@ -3,10 +3,13 @@ package testutils
 import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/node/pkg/chains"
 )
 
 const (
+	// MockEVMRPCEndpoint is the endpoint to enable the mock EVM RPC client
+	MockEVMRPCEndpoint = "MockEVMRPCEnabled"
+
 	// TSSAddressEVMMainnet the EVM TSS address for test purposes
 	// Note: public key is zetapub1addwnpepqtadxdyt037h86z60nl98t6zk56mw5zpnm79tsmvspln3hgt5phdc79kvfc
 	TSSAddressEVMMainnet = "0x70e967acFcC17c3941E87562161406d41676FD83"
@@ -36,7 +39,7 @@ const (
 // GatewayAddresses contains constants gateway addresses for testing
 var GatewayAddresses = map[int64]string{
 	// Gateway address on Solana devnet
-	chains.SolanaDevnet.ChainId: "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d",
+	chains.SolanaDevnet.ChainId: "ZETAjseVjuFsxdRxo6MmTCvqFwb3ZHUx56Co3vCmGis",
 }
 
 // ConnectorAddresses contains constants ERC20 connector addresses for testing

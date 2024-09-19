@@ -19,8 +19,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
-	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
-	"github.com/zeta-chain/zetacore/testutil/sample"
+	zetamempool "github.com/zeta-chain/node/pkg/mempool"
+	"github.com/zeta-chain/node/testutil/sample"
 )
 
 func TestOutOfOrder(t *testing.T) {

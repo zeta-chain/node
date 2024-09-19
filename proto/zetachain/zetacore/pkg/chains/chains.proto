@@ -3,7 +3,7 @@ package zetachain.zetacore.pkg.chains;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/pkg/chains";
+option go_package = "github.com/zeta-chain/node/pkg/chains";
 
 // ReceiveStatus represents the status of an outbound
 // TODO: Rename and move
@@ -48,6 +48,8 @@ enum ChainName {
   solana_mainnet = 21;
   solana_devnet = 22;
   solana_localnet = 23;
+
+  btc_signet_testnet = 24;
 }
 
 // Network represents the network of the chain

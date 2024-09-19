@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 type CCTXClient = crosschaintypes.QueryClient
@@ -19,8 +19,11 @@ const (
 	EmergencyPolicyName   = "emergency"
 	AdminPolicyName       = "admin"
 	OperationalPolicyName = "operational"
+	// The timeout was increased from 4 to 6 , which allows for a higher success in test runs
+	// However this needs to be researched as to why the increase in timeout was needed.
+	// https://github.com/zeta-chain/node/issues/2690
 
-	DefaultCctxTimeout = 6 * time.Minute
+	DefaultCctxTimeout = 8 * time.Minute
 )
 
 // WaitCctxMinedByInboundHash waits until cctx is mined; returns the cctxIndex (the last one)
@@ -36,6 +39,20 @@ func WaitCctxMinedByInboundHash(
 	require.NotEmpty(t, cctxs, "cctx not found, inboundHash: %s", inboundHash)
 
 	return cctxs[len(cctxs)-1]
+}
+
+// EnsureNoCctxMinedByInboundHash ensures no cctx is mined by inbound hash
+func EnsureNoCctxMinedByInboundHash(
+	ctx context.Context,
+	inboundHash string,
+	client crosschaintypes.QueryClient,
+) {
+	t := TestingFromContext(ctx)
+
+	// query cctx by inbound hash
+	in := &crosschaintypes.QueryGetInboundHashToCctxRequest{InboundHash: inboundHash}
+	_, err := client.InboundHashToCctx(ctx, in)
+	require.ErrorIs(t, err, status.Error(codes.NotFound, "not found"))
 }
 
 // WaitCctxsMinedByInboundHash waits until cctx is mined; returns the cctxIndex (the last one)

@@ -7,11 +7,11 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/zetacore/pkg/bg"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm/rpc"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/logs"
+	"github.com/zeta-chain/node/pkg/bg"
+	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/rpc"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // reportToOutboundTracker reports outboundHash to tracker only when tx receipt is available

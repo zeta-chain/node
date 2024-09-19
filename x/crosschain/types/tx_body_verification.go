@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/btcsuite/btcutil"
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcutil"
 	eth "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // VerifyInboundBody validates the tx body for an inbound
@@ -136,7 +136,7 @@ func verifyOutboundBodyBTC(msg MsgAddOutboundTracker, txBytes []byte, tssBtc str
 		if len(vin.Witness) != 2 { // outTx is SegWit transaction for now
 			return fmt.Errorf("not a SegWit transaction")
 		}
-		pubKey, err := btcec.ParsePubKey(vin.Witness[1], btcec.S256())
+		pubKey, err := btcec.ParsePubKey(vin.Witness[1])
 		if err != nil {
 			return fmt.Errorf("failed to parse public key")
 		}

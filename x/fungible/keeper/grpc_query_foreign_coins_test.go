@@ -10,9 +10,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/testutil/nullify"
-	"github.com/zeta-chain/zetacore/x/fungible/types"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/testutil/nullify"
+	"github.com/zeta-chain/node/x/fungible/types"
 )
 
 func TestForeignCoinsQuerySingle(t *testing.T) {

@@ -14,16 +14,16 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/compliance"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
-	"github.com/zeta-chain/zetacore/zetaclient/types"
-	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/compliance"
+	"github.com/zeta-chain/node/zetaclient/config"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/types"
+	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 // WatchInbound watches Bitcoin chain for inbounds on a ticker
@@ -56,7 +56,14 @@ func (ob *Observer) WatchInbound(ctx context.Context) error {
 			}
 			err := ob.ObserveInbound(ctx)
 			if err != nil {
-				ob.logger.Inbound.Error().Err(err).Msg("WatchInbound error observing in tx")
+				// skip showing log for block number 0 as it means Bitcoin node is not enabled
+				// TODO: prevent this routine from running if Bitcoin node is not enabled
+				// https://github.com/zeta-chain/node/issues/2790
+				if !errors.Is(err, bitcoin.ErrBitcoinNotEnabled) {
+					ob.logger.Inbound.Error().Err(err).Msg("WatchInbound error observing in tx")
+				} else {
+					ob.logger.Inbound.Debug().Err(err).Msg("WatchInbound: Bitcoin node is not enabled")
+				}
 			}
 			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.logger.Inbound)
 		case <-ob.StopChannel():
@@ -72,20 +79,26 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	zetaCoreClient := ob.ZetacoreClient()
 
 	// get and update latest block height
-	cnt, err := ob.btcClient.GetBlockCount()
+	currentBlock, err := ob.btcClient.GetBlockCount()
 	if err != nil {
 		return fmt.Errorf("observeInboundBTC: error getting block number: %s", err)
 	}
-	if cnt < 0 {
-		return fmt.Errorf("observeInboundBTC: block number is negative: %d", cnt)
+	if currentBlock < 0 {
+		return fmt.Errorf("observeInboundBTC: block number is negative: %d", currentBlock)
 	}
+
+	// 0 will be returned if the node is not synced
+	if currentBlock == 0 {
+		return errors.Wrap(bitcoin.ErrBitcoinNotEnabled, "observeInboundBTC: current block number 0 is too low")
+	}
+
 	// #nosec G115 checked positive
-	lastBlock := uint64(cnt)
+	lastBlock := uint64(currentBlock)
 
 	if lastBlock < ob.LastBlock() {
 		return fmt.Errorf(
 			"observeInboundBTC: block number should not decrease: current %d last %d",
-			cnt,
+			currentBlock,
 			ob.LastBlock(),
 		)
 	}
@@ -93,7 +106,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 	// skip if current height is too low
 	if lastBlock < ob.GetChainParams().ConfirmationCount {
-		return fmt.Errorf("observeInboundBTC: skipping observer, current block number %d is too low", cnt)
+		return fmt.Errorf("observeInboundBTC: skipping observer, current block number %d is too low", currentBlock)
 	}
 
 	// skip if no new block is confirmed
@@ -111,7 +124,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		return err
 	}
 	ob.logger.Inbound.Info().Msgf("observeInboundBTC: block %d has %d txs, current block %d, last block %d",
-		blockNumber, len(res.Block.Tx), cnt, lastScanned)
+		blockNumber, len(res.Block.Tx), currentBlock, lastScanned)
 
 	// add block header to zetacore
 	if len(res.Block.Tx) > 1 {
@@ -419,6 +432,19 @@ func GetBtcEvent(
 			// skip irrelevant tx to us
 			if receiver != tssAddress {
 				return nil, nil
+			}
+
+			// switch to depositor fee V2 if
+			// 1. it is bitcoin testnet, or
+			// 2. it is bitcoin mainnet and upgrade height is reached
+			// TODO: remove CalcDepositorFeeV1 and below conditions after the upgrade height
+			// https://github.com/zeta-chain/node/issues/2766
+			if netParams.Name == chaincfg.TestNet3Params.Name ||
+				(netParams.Name == chaincfg.MainNetParams.Name && blockNumber >= bitcoin.DynamicDepositorFeeHeightV2) {
+				depositorFee, err = bitcoin.CalcDepositorFeeV2(rpcClient, &tx, netParams)
+				if err != nil {
+					return nil, errors.Wrapf(err, "error calculating depositor fee V2 for inbound: %s", tx.Txid)
+				}
 			}
 
 			// deposit amount has to be no less than the minimum depositor fee

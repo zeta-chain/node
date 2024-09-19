@@ -18,17 +18,17 @@ import (
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/evm"
-	"github.com/zeta-chain/zetacore/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/compliance"
-	zctx "github.com/zeta-chain/zetacore/zetaclient/context"
-	"github.com/zeta-chain/zetacore/zetaclient/logs"
-	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
-	"github.com/zeta-chain/zetacore/zetaclient/zetacore"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	crosschainkeeper "github.com/zeta-chain/node/x/crosschain/keeper"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/compliance"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
+	clienttypes "github.com/zeta-chain/node/zetaclient/types"
+	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 // WatchOutbound watches evm chain for outgoing txs status
@@ -425,6 +425,42 @@ func ParseAndCheckWithdrawnEvent(
 		}
 	}
 	return nil, errors.New("no ERC20 Withdrawn event found")
+}
+
+// FilterTSSOutbound filters the outbounds from TSS address to supplement outbound trackers
+func (ob *Observer) FilterTSSOutbound(ctx context.Context, startBlock, toBlock uint64) {
+	// filters the outbounds from TSS address block by block
+	for bn := startBlock; bn <= toBlock; bn++ {
+		ob.FilterTSSOutboundInBlock(ctx, bn)
+	}
+}
+
+// FilterTSSOutboundInBlock filters the outbounds in a single block to supplement outbound trackers
+func (ob *Observer) FilterTSSOutboundInBlock(ctx context.Context, blockNumber uint64) {
+	// query block and ignore error (we don't rescan as we are only supplementing outbound trackers)
+	block, err := ob.GetBlockByNumberCached(blockNumber)
+	if err != nil {
+		ob.Logger().
+			Outbound.Error().
+			Err(err).
+			Msgf("error getting block %d for chain %d", blockNumber, ob.Chain().ChainId)
+		return
+	}
+
+	for i := range block.Transactions {
+		tx := block.Transactions[i]
+		if ethcommon.HexToAddress(tx.From) == ob.TSS().EVMAddress() {
+			nonce := uint64(tx.Nonce)
+			if !ob.IsTxConfirmed(nonce) {
+				if receipt, txx, ok := ob.checkConfirmedTx(ctx, tx.Hash, nonce); ok {
+					ob.SetTxNReceipt(nonce, receipt, txx)
+					ob.Logger().
+						Outbound.Info().
+						Msgf("TSS outbound detected on chain %d nonce %d tx %s", ob.Chain().ChainId, nonce, tx.Hash)
+				}
+			}
+		}
+	}
 }
 
 // checkConfirmedTx checks if a txHash is confirmed

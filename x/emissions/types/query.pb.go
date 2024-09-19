@@ -209,102 +209,6 @@ func (m *QueryListPoolAddressesResponse) GetEmissionModuleAddress() string {
 	return ""
 }
 
-type QueryGetEmissionsFactorsRequest struct {
-}
-
-func (m *QueryGetEmissionsFactorsRequest) Reset()         { *m = QueryGetEmissionsFactorsRequest{} }
-func (m *QueryGetEmissionsFactorsRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryGetEmissionsFactorsRequest) ProtoMessage()    {}
-func (*QueryGetEmissionsFactorsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cb9c0dfe78e2fb82, []int{4}
-}
-func (m *QueryGetEmissionsFactorsRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryGetEmissionsFactorsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryGetEmissionsFactorsRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryGetEmissionsFactorsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetEmissionsFactorsRequest.Merge(m, src)
-}
-func (m *QueryGetEmissionsFactorsRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryGetEmissionsFactorsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetEmissionsFactorsRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryGetEmissionsFactorsRequest proto.InternalMessageInfo
-
-type QueryGetEmissionsFactorsResponse struct {
-	ReservesFactor string `protobuf:"bytes,1,opt,name=reservesFactor,proto3" json:"reservesFactor,omitempty"`
-	BondFactor     string `protobuf:"bytes,2,opt,name=bondFactor,proto3" json:"bondFactor,omitempty"`
-	DurationFactor string `protobuf:"bytes,3,opt,name=durationFactor,proto3" json:"durationFactor,omitempty"`
-}
-
-func (m *QueryGetEmissionsFactorsResponse) Reset()         { *m = QueryGetEmissionsFactorsResponse{} }
-func (m *QueryGetEmissionsFactorsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryGetEmissionsFactorsResponse) ProtoMessage()    {}
-func (*QueryGetEmissionsFactorsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cb9c0dfe78e2fb82, []int{5}
-}
-func (m *QueryGetEmissionsFactorsResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryGetEmissionsFactorsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryGetEmissionsFactorsResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryGetEmissionsFactorsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetEmissionsFactorsResponse.Merge(m, src)
-}
-func (m *QueryGetEmissionsFactorsResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryGetEmissionsFactorsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetEmissionsFactorsResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryGetEmissionsFactorsResponse proto.InternalMessageInfo
-
-func (m *QueryGetEmissionsFactorsResponse) GetReservesFactor() string {
-	if m != nil {
-		return m.ReservesFactor
-	}
-	return ""
-}
-
-func (m *QueryGetEmissionsFactorsResponse) GetBondFactor() string {
-	if m != nil {
-		return m.BondFactor
-	}
-	return ""
-}
-
-func (m *QueryGetEmissionsFactorsResponse) GetDurationFactor() string {
-	if m != nil {
-		return m.DurationFactor
-	}
-	return ""
-}
-
 type QueryShowAvailableEmissionsRequest struct {
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 }
@@ -313,7 +217,7 @@ func (m *QueryShowAvailableEmissionsRequest) Reset()         { *m = QueryShowAva
 func (m *QueryShowAvailableEmissionsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryShowAvailableEmissionsRequest) ProtoMessage()    {}
 func (*QueryShowAvailableEmissionsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cb9c0dfe78e2fb82, []int{6}
+	return fileDescriptor_cb9c0dfe78e2fb82, []int{4}
 }
 func (m *QueryShowAvailableEmissionsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -357,7 +261,7 @@ func (m *QueryShowAvailableEmissionsResponse) Reset()         { *m = QueryShowAv
 func (m *QueryShowAvailableEmissionsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryShowAvailableEmissionsResponse) ProtoMessage()    {}
 func (*QueryShowAvailableEmissionsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cb9c0dfe78e2fb82, []int{7}
+	return fileDescriptor_cb9c0dfe78e2fb82, []int{5}
 }
 func (m *QueryShowAvailableEmissionsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -398,8 +302,6 @@ func init() {
 	proto.RegisterType((*QueryParamsResponse)(nil), "zetachain.zetacore.emissions.QueryParamsResponse")
 	proto.RegisterType((*QueryListPoolAddressesRequest)(nil), "zetachain.zetacore.emissions.QueryListPoolAddressesRequest")
 	proto.RegisterType((*QueryListPoolAddressesResponse)(nil), "zetachain.zetacore.emissions.QueryListPoolAddressesResponse")
-	proto.RegisterType((*QueryGetEmissionsFactorsRequest)(nil), "zetachain.zetacore.emissions.QueryGetEmissionsFactorsRequest")
-	proto.RegisterType((*QueryGetEmissionsFactorsResponse)(nil), "zetachain.zetacore.emissions.QueryGetEmissionsFactorsResponse")
 	proto.RegisterType((*QueryShowAvailableEmissionsRequest)(nil), "zetachain.zetacore.emissions.QueryShowAvailableEmissionsRequest")
 	proto.RegisterType((*QueryShowAvailableEmissionsResponse)(nil), "zetachain.zetacore.emissions.QueryShowAvailableEmissionsResponse")
 }
@@ -409,49 +311,43 @@ func init() {
 }
 
 var fileDescriptor_cb9c0dfe78e2fb82 = []byte{
-	// 661 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0x4b, 0x6f, 0xd3, 0x4c,
-	0x14, 0x8d, 0xfb, 0x7d, 0x04, 0x31, 0x48, 0x48, 0x4c, 0x4b, 0xa9, 0xac, 0xe2, 0x14, 0x13, 0x95,
-	0xf2, 0xa8, 0xdd, 0x87, 0x84, 0x10, 0xd0, 0xaa, 0x8d, 0x04, 0x48, 0x3c, 0x44, 0x29, 0xb0, 0x80,
-	0x8d, 0x35, 0x8e, 0x07, 0x67, 0x24, 0xdb, 0xe3, 0xfa, 0x8e, 0x5b, 0x0a, 0x62, 0xc3, 0x92, 0x15,
-	0xa2, 0x7f, 0x87, 0x1f, 0x50, 0x76, 0x95, 0xd8, 0xb0, 0x02, 0xd4, 0xf0, 0x33, 0x58, 0xa0, 0x8c,
-	0xc7, 0x26, 0x6f, 0x85, 0xb2, 0x9b, 0xc7, 0x39, 0xe7, 0x9e, 0x73, 0x7d, 0x47, 0x46, 0x73, 0xaf,
-	0xa9, 0x20, 0xf5, 0x06, 0x61, 0x91, 0x2d, 0x57, 0x3c, 0xa1, 0x36, 0x0d, 0x19, 0x00, 0xe3, 0x11,
-	0xd8, 0x5b, 0x29, 0x4d, 0x76, 0xad, 0x38, 0xe1, 0x82, 0xe3, 0xe9, 0x02, 0x69, 0xe5, 0x48, 0xab,
-	0x40, 0xea, 0x97, 0xeb, 0x1c, 0x42, 0x0e, 0xb6, 0x4b, 0x80, 0x66, 0x34, 0x7b, 0x7b, 0xd1, 0xa5,
-	0x82, 0x2c, 0xda, 0x31, 0xf1, 0x59, 0x44, 0x04, 0xe3, 0x51, 0xa6, 0xa4, 0x5f, 0x1a, 0x5a, 0x33,
-	0x26, 0x09, 0x09, 0x41, 0x41, 0x27, 0x7c, 0xee, 0x73, 0xb9, 0xb4, 0x5b, 0x2b, 0x75, 0x3a, 0xed,
-	0x73, 0xee, 0x07, 0xd4, 0x26, 0x31, 0xb3, 0x49, 0x14, 0x71, 0x21, 0xd5, 0x15, 0xc7, 0x9c, 0x40,
-	0xf8, 0x71, 0xcb, 0xc0, 0x86, 0x14, 0xda, 0xa4, 0x5b, 0x29, 0x05, 0x61, 0x3e, 0x47, 0xe3, 0x1d,
-	0xa7, 0x10, 0xf3, 0x08, 0x28, 0xae, 0xa1, 0x72, 0x56, 0x70, 0x4a, 0x9b, 0xd1, 0xe6, 0x4e, 0x2e,
-	0x55, 0xad, 0x61, 0x31, 0xad, 0x8c, 0x5d, 0xfb, 0x7f, 0xff, 0x5b, 0xa5, 0xb4, 0xa9, 0x98, 0x66,
-	0x05, 0x9d, 0x93, 0xd2, 0x0f, 0x18, 0x88, 0x0d, 0xce, 0x83, 0x75, 0xcf, 0x4b, 0x28, 0x00, 0x2d,
-	0x6a, 0xff, 0xd2, 0x90, 0x31, 0x08, 0xa1, 0x7c, 0x3c, 0x43, 0x17, 0xd3, 0xc8, 0x63, 0x20, 0x12,
-	0xe6, 0xa6, 0x82, 0x7a, 0x0e, 0x77, 0x81, 0x26, 0xdb, 0x34, 0x71, 0x5c, 0x12, 0x90, 0xa8, 0x4e,
-	0xc1, 0x21, 0x19, 0x49, 0x1a, 0x3d, 0xb1, 0x59, 0xed, 0x80, 0x3f, 0x52, 0xe8, 0x9a, 0x02, 0xab,
-	0x02, 0xf8, 0x3e, 0x32, 0x3b, 0x65, 0x05, 0x40, 0xaf, 0xe2, 0x98, 0x54, 0xac, 0x74, 0x20, 0x9f,
-	0x02, 0x74, 0x8b, 0x5d, 0x43, 0x67, 0xf3, 0x4e, 0x38, 0x21, 0xf7, 0xd2, 0x80, 0x16, 0x0a, 0xff,
-	0x49, 0x85, 0x33, 0xf9, 0xf5, 0x43, 0x79, 0xab, 0x78, 0xe6, 0x79, 0x54, 0x91, 0xe9, 0xef, 0x52,
-	0x71, 0x3b, 0xef, 0xe4, 0x1d, 0x52, 0x17, 0x3c, 0x29, 0x3a, 0xf4, 0x51, 0x43, 0x33, 0x83, 0x31,
-	0xaa, 0x47, 0xb3, 0xe8, 0x54, 0x42, 0x65, 0x4e, 0x75, 0xa5, 0x5a, 0xd1, 0x75, 0x8a, 0x0d, 0x84,
-	0x5c, 0x1e, 0x79, 0x0a, 0x93, 0x85, 0x6b, 0x3b, 0x69, 0xe9, 0x78, 0x69, 0x22, 0x67, 0x46, 0x61,
-	0x32, 0xfb, 0x5d, 0xa7, 0xe6, 0x2a, 0x32, 0xa5, 0xa7, 0x27, 0x0d, 0xbe, 0xb3, 0xbe, 0x4d, 0x58,
-	0x40, 0xdc, 0x80, 0x16, 0xee, 0x94, 0x75, 0x3c, 0x85, 0x8e, 0x77, 0x7e, 0x99, 0x7c, 0x6b, 0xae,
-	0xa0, 0x0b, 0x43, 0xf9, 0x2a, 0xd6, 0x24, 0x2a, 0x93, 0x90, 0xa7, 0x91, 0x50, 0x7c, 0xb5, 0x5b,
-	0x7a, 0x5f, 0x46, 0xc7, 0x24, 0x1f, 0xef, 0x69, 0xa8, 0x9c, 0x4d, 0x1e, 0x5e, 0x18, 0x3e, 0x9f,
-	0xbd, 0x83, 0xaf, 0x2f, 0xfe, 0x05, 0x23, 0x73, 0x64, 0x56, 0xdf, 0x7d, 0xf9, 0xb9, 0x37, 0x66,
-	0xe0, 0x69, 0xf9, 0x3e, 0xe7, 0xb3, 0xa7, 0xda, 0xfd, 0x42, 0xf1, 0x27, 0x0d, 0x9d, 0xee, 0x19,
-	0x68, 0x7c, 0x73, 0x84, 0x72, 0x83, 0x1e, 0x8a, 0x7e, 0xeb, 0x68, 0x64, 0x65, 0xfb, 0xaa, 0xb4,
-	0x3d, 0x8b, 0xab, 0xfd, 0x6d, 0x07, 0x0c, 0x44, 0x3e, 0xb0, 0x14, 0xf0, 0x67, 0x0d, 0x8d, 0xf7,
-	0x99, 0x36, 0xbc, 0x32, 0x82, 0x87, 0xc1, 0x93, 0xac, 0xaf, 0x1e, 0x95, 0xae, 0x42, 0x2c, 0xcb,
-	0x10, 0xf3, 0xf8, 0x4a, 0xff, 0x10, 0x3e, 0x15, 0x4e, 0xb1, 0x73, 0x5e, 0x2a, 0xcf, 0xdf, 0x35,
-	0x34, 0xd9, 0x7f, 0xca, 0xf0, 0xda, 0x08, 0x7e, 0x86, 0x0e, 0xb8, 0xbe, 0xfe, 0x0f, 0x0a, 0x2a,
-	0xd4, 0x9a, 0x0c, 0x75, 0x03, 0x5f, 0xef, 0x1f, 0x0a, 0x1a, 0x7c, 0xc7, 0x21, 0x39, 0xfd, 0x4f,
-	0x3e, 0xfb, 0x8d, 0xfa, 0x5c, 0x6f, 0x6b, 0xf7, 0xf6, 0x0f, 0x0d, 0xed, 0xe0, 0xd0, 0xd0, 0x7e,
-	0x1c, 0x1a, 0xda, 0x87, 0xa6, 0x51, 0x3a, 0x68, 0x1a, 0xa5, 0xaf, 0x4d, 0xa3, 0xf4, 0x62, 0xc1,
-	0x67, 0xa2, 0x91, 0xba, 0x56, 0x9d, 0x87, 0xed, 0xea, 0xc5, 0x9f, 0xe5, 0x55, 0x5b, 0x21, 0xb1,
-	0x1b, 0x53, 0x70, 0xcb, 0xf2, 0x3f, 0xb1, 0xfc, 0x3b, 0x00, 0x00, 0xff, 0xff, 0x47, 0x4f, 0xee,
-	0x4e, 0xfc, 0x06, 0x00, 0x00,
+	// 564 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0x4d, 0x6f, 0xd3, 0x40,
+	0x10, 0x8d, 0x4b, 0x09, 0x62, 0x39, 0xb1, 0x94, 0x52, 0x45, 0xc5, 0x45, 0x26, 0x82, 0x82, 0x8a,
+	0x4d, 0x8a, 0x84, 0x10, 0x5f, 0x6a, 0x22, 0xc1, 0x05, 0x10, 0x25, 0xc0, 0x01, 0x2e, 0xd6, 0x3a,
+	0x5e, 0x39, 0x2b, 0xd9, 0x3b, 0xae, 0x67, 0x9d, 0x52, 0x10, 0x17, 0x7e, 0x01, 0x52, 0xff, 0x0e,
+	0xe2, 0xdc, 0x63, 0x25, 0x2e, 0x9c, 0x00, 0x25, 0xfc, 0x0c, 0x0e, 0xa8, 0xeb, 0x75, 0x68, 0x9a,
+	0x34, 0x2a, 0x70, 0x5b, 0xef, 0xbe, 0xf7, 0xe6, 0xcd, 0xcc, 0x93, 0xc9, 0xf2, 0x5b, 0xae, 0x58,
+	0xa7, 0xcb, 0x84, 0xf4, 0xf4, 0x09, 0x32, 0xee, 0xf1, 0x44, 0x20, 0x0a, 0x90, 0xe8, 0x6d, 0xe4,
+	0x3c, 0xdb, 0x72, 0xd3, 0x0c, 0x14, 0xd0, 0xc5, 0x21, 0xd2, 0x2d, 0x91, 0xee, 0x10, 0x59, 0xbb,
+	0xda, 0x01, 0x4c, 0x00, 0xbd, 0x80, 0x21, 0x2f, 0x68, 0x5e, 0xaf, 0x11, 0x70, 0xc5, 0x1a, 0x5e,
+	0xca, 0x22, 0x21, 0x99, 0x12, 0x20, 0x0b, 0xa5, 0xda, 0x95, 0xa9, 0x35, 0x53, 0x96, 0xb1, 0x04,
+	0x0d, 0x74, 0x2e, 0x82, 0x08, 0xf4, 0xd1, 0xdb, 0x3b, 0x99, 0xdb, 0xc5, 0x08, 0x20, 0x8a, 0xb9,
+	0xc7, 0x52, 0xe1, 0x31, 0x29, 0x41, 0x69, 0x75, 0xc3, 0x71, 0xe6, 0x08, 0x7d, 0xb6, 0x67, 0x60,
+	0x5d, 0x0b, 0xb5, 0xf9, 0x46, 0xce, 0x51, 0x39, 0xaf, 0xc8, 0x99, 0x91, 0x5b, 0x4c, 0x41, 0x22,
+	0xa7, 0x2d, 0x52, 0x2d, 0x0a, 0x2e, 0x58, 0x17, 0xac, 0xe5, 0x53, 0xab, 0x75, 0x77, 0x5a, 0x9b,
+	0x6e, 0xc1, 0x6e, 0xcd, 0xee, 0x7c, 0x5b, 0xaa, 0xb4, 0x0d, 0xd3, 0x59, 0x22, 0xe7, 0xb5, 0xf4,
+	0x63, 0x81, 0x6a, 0x1d, 0x20, 0x6e, 0x86, 0x61, 0xc6, 0x11, 0xf9, 0xb0, 0xf6, 0x2f, 0x8b, 0xd8,
+	0x87, 0x21, 0x8c, 0x8f, 0x97, 0xe4, 0x72, 0x2e, 0x43, 0x81, 0x2a, 0x13, 0x41, 0xae, 0x78, 0xe8,
+	0x43, 0x80, 0x3c, 0xeb, 0xf1, 0xcc, 0x0f, 0x58, 0xcc, 0x64, 0x87, 0xa3, 0xcf, 0x0a, 0x92, 0x36,
+	0x7a, 0xb2, 0x5d, 0x1f, 0x81, 0x3f, 0x35, 0xe8, 0x96, 0x01, 0x9b, 0x02, 0xf4, 0x11, 0x71, 0x46,
+	0x65, 0x15, 0xe2, 0xb8, 0xe2, 0x8c, 0x56, 0x5c, 0x1a, 0x41, 0xbe, 0x40, 0x3c, 0x28, 0x76, 0x93,
+	0x9c, 0x2b, 0x27, 0xe1, 0x27, 0x10, 0xe6, 0x31, 0x1f, 0x2a, 0x1c, 0xd3, 0x0a, 0x67, 0xcb, 0xe7,
+	0x27, 0xfa, 0xd5, 0xf0, 0x9c, 0xfb, 0xc4, 0xd1, 0xdd, 0x3f, 0xef, 0xc2, 0x66, 0xb3, 0xc7, 0x44,
+	0xcc, 0x82, 0x98, 0x3f, 0x28, 0x67, 0x6a, 0x86, 0x44, 0x17, 0xc8, 0x89, 0xd1, 0x0e, 0xcb, 0x4f,
+	0xe7, 0x1e, 0xb9, 0x38, 0x95, 0x6f, 0x46, 0x38, 0x4f, 0xaa, 0x2c, 0x81, 0x5c, 0x2a, 0xc3, 0x37,
+	0x5f, 0xab, 0x9f, 0x67, 0xc9, 0x71, 0xcd, 0xa7, 0xdb, 0x16, 0xa9, 0x16, 0x1b, 0xa4, 0xd7, 0xa7,
+	0xef, 0x79, 0x3c, 0x40, 0xb5, 0xc6, 0x5f, 0x30, 0x0a, 0x47, 0x4e, 0xfd, 0xc3, 0x97, 0x9f, 0xdb,
+	0x33, 0x36, 0x5d, 0xd4, 0x39, 0xbf, 0x56, 0x44, 0xfe, 0x60, 0xd2, 0xe9, 0x27, 0x8b, 0x9c, 0x1e,
+	0x0b, 0x06, 0xbd, 0x73, 0x84, 0x72, 0x87, 0x05, 0xae, 0x76, 0xf7, 0xdf, 0xc8, 0xc6, 0xf6, 0x8a,
+	0xb6, 0x7d, 0x89, 0xd6, 0x27, 0xdb, 0x8e, 0x05, 0xaa, 0x72, 0xf1, 0x1c, 0xe9, 0x77, 0x8b, 0xcc,
+	0x4f, 0xde, 0x0c, 0x5d, 0x3b, 0x82, 0x8d, 0xa9, 0xa1, 0xa8, 0x35, 0xff, 0x43, 0xc1, 0x74, 0xb3,
+	0xa6, 0xbb, 0xb9, 0x4d, 0x6f, 0x4d, 0xee, 0x06, 0xbb, 0xb0, 0xe9, 0xb3, 0x92, 0xee, 0xff, 0x79,
+	0x78, 0x67, 0x5a, 0x7c, 0xdf, 0x7a, 0xb8, 0xd3, 0xb7, 0xad, 0xdd, 0xbe, 0x6d, 0xfd, 0xe8, 0xdb,
+	0xd6, 0xc7, 0x81, 0x5d, 0xd9, 0x1d, 0xd8, 0x95, 0xaf, 0x03, 0xbb, 0xf2, 0x7a, 0x25, 0x12, 0xaa,
+	0x9b, 0x07, 0x6e, 0x07, 0x92, 0xfd, 0xea, 0x12, 0x42, 0xee, 0xbd, 0xd9, 0x57, 0x44, 0x6d, 0xa5,
+	0x1c, 0x83, 0xaa, 0xfe, 0x3f, 0xdd, 0xf8, 0x1d, 0x00, 0x00, 0xff, 0xff, 0x10, 0x7c, 0x2f, 0xf2,
+	0x74, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -470,8 +366,6 @@ type QueryClient interface {
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Queries a list of ListBalances items.
 	ListPoolAddresses(ctx context.Context, in *QueryListPoolAddressesRequest, opts ...grpc.CallOption) (*QueryListPoolAddressesResponse, error)
-	// Queries a list of GetEmmisonsFactors items.
-	GetEmissionsFactors(ctx context.Context, in *QueryGetEmissionsFactorsRequest, opts ...grpc.CallOption) (*QueryGetEmissionsFactorsResponse, error)
 	// Queries a list of ShowAvailableEmissions items.
 	ShowAvailableEmissions(ctx context.Context, in *QueryShowAvailableEmissionsRequest, opts ...grpc.CallOption) (*QueryShowAvailableEmissionsResponse, error)
 }
@@ -502,15 +396,6 @@ func (c *queryClient) ListPoolAddresses(ctx context.Context, in *QueryListPoolAd
 	return out, nil
 }
 
-func (c *queryClient) GetEmissionsFactors(ctx context.Context, in *QueryGetEmissionsFactorsRequest, opts ...grpc.CallOption) (*QueryGetEmissionsFactorsResponse, error) {
-	out := new(QueryGetEmissionsFactorsResponse)
-	err := c.cc.Invoke(ctx, "/zetachain.zetacore.emissions.Query/GetEmissionsFactors", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *queryClient) ShowAvailableEmissions(ctx context.Context, in *QueryShowAvailableEmissionsRequest, opts ...grpc.CallOption) (*QueryShowAvailableEmissionsResponse, error) {
 	out := new(QueryShowAvailableEmissionsResponse)
 	err := c.cc.Invoke(ctx, "/zetachain.zetacore.emissions.Query/ShowAvailableEmissions", in, out, opts...)
@@ -526,8 +411,6 @@ type QueryServer interface {
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Queries a list of ListBalances items.
 	ListPoolAddresses(context.Context, *QueryListPoolAddressesRequest) (*QueryListPoolAddressesResponse, error)
-	// Queries a list of GetEmmisonsFactors items.
-	GetEmissionsFactors(context.Context, *QueryGetEmissionsFactorsRequest) (*QueryGetEmissionsFactorsResponse, error)
 	// Queries a list of ShowAvailableEmissions items.
 	ShowAvailableEmissions(context.Context, *QueryShowAvailableEmissionsRequest) (*QueryShowAvailableEmissionsResponse, error)
 }
@@ -541,9 +424,6 @@ func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsReq
 }
 func (*UnimplementedQueryServer) ListPoolAddresses(ctx context.Context, req *QueryListPoolAddressesRequest) (*QueryListPoolAddressesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListPoolAddresses not implemented")
-}
-func (*UnimplementedQueryServer) GetEmissionsFactors(ctx context.Context, req *QueryGetEmissionsFactorsRequest) (*QueryGetEmissionsFactorsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetEmissionsFactors not implemented")
 }
 func (*UnimplementedQueryServer) ShowAvailableEmissions(ctx context.Context, req *QueryShowAvailableEmissionsRequest) (*QueryShowAvailableEmissionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ShowAvailableEmissions not implemented")
@@ -589,24 +469,6 @@ func _Query_ListPoolAddresses_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_GetEmissionsFactors_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGetEmissionsFactorsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).GetEmissionsFactors(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/zetachain.zetacore.emissions.Query/GetEmissionsFactors",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetEmissionsFactors(ctx, req.(*QueryGetEmissionsFactorsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Query_ShowAvailableEmissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryShowAvailableEmissionsRequest)
 	if err := dec(in); err != nil {
@@ -636,10 +498,6 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListPoolAddresses",
 			Handler:    _Query_ListPoolAddresses_Handler,
-		},
-		{
-			MethodName: "GetEmissionsFactors",
-			Handler:    _Query_GetEmissionsFactors_Handler,
 		},
 		{
 			MethodName: "ShowAvailableEmissions",
@@ -773,73 +631,6 @@ func (m *QueryListPoolAddressesResponse) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryGetEmissionsFactorsRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryGetEmissionsFactorsRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryGetEmissionsFactorsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryGetEmissionsFactorsResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryGetEmissionsFactorsResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryGetEmissionsFactorsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.DurationFactor) > 0 {
-		i -= len(m.DurationFactor)
-		copy(dAtA[i:], m.DurationFactor)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.DurationFactor)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.BondFactor) > 0 {
-		i -= len(m.BondFactor)
-		copy(dAtA[i:], m.BondFactor)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.BondFactor)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.ReservesFactor) > 0 {
-		i -= len(m.ReservesFactor)
-		copy(dAtA[i:], m.ReservesFactor)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.ReservesFactor)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *QueryShowAvailableEmissionsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -955,36 +746,6 @@ func (m *QueryListPoolAddressesResponse) Size() (n int) {
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	l = len(m.EmissionModuleAddress)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *QueryGetEmissionsFactorsRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *QueryGetEmissionsFactorsResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.ReservesFactor)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	l = len(m.BondFactor)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	l = len(m.DurationFactor)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
@@ -1330,202 +1091,6 @@ func (m *QueryListPoolAddressesResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.EmissionModuleAddress = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryGetEmissionsFactorsRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetEmissionsFactorsRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetEmissionsFactorsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryGetEmissionsFactorsResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetEmissionsFactorsResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetEmissionsFactorsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ReservesFactor", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ReservesFactor = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BondFactor", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.BondFactor = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DurationFactor", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.DurationFactor = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

@@ -1,8 +1,8 @@
 package evm
 
 import (
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // OutboundType enumerate the different types of outbound transactions

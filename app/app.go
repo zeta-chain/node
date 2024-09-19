@@ -7,7 +7,6 @@ import (
 	"time"
 
 	cosmoserrors "cosmossdk.io/errors"
-	appparams "cosmossdk.io/simapp/params"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -78,41 +77,41 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	evmante "github.com/evmos/ethermint/app/ante"
-	ethermint "github.com/evmos/ethermint/types"
-	"github.com/evmos/ethermint/x/evm"
-	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"github.com/evmos/ethermint/x/evm/vm/geth"
-	"github.com/evmos/ethermint/x/feemarket"
-	feemarketkeeper "github.com/evmos/ethermint/x/feemarket/keeper"
-	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
+	evmante "github.com/zeta-chain/ethermint/app/ante"
+	ethermint "github.com/zeta-chain/ethermint/types"
+	"github.com/zeta-chain/ethermint/x/evm"
+	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	"github.com/zeta-chain/ethermint/x/feemarket"
+	feemarketkeeper "github.com/zeta-chain/ethermint/x/feemarket/keeper"
+	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 
-	"github.com/zeta-chain/zetacore/app/ante"
-	"github.com/zeta-chain/zetacore/docs/openapi"
-	zetamempool "github.com/zeta-chain/zetacore/pkg/mempool"
-	srvflags "github.com/zeta-chain/zetacore/server/flags"
-	authoritymodule "github.com/zeta-chain/zetacore/x/authority"
-	authoritykeeper "github.com/zeta-chain/zetacore/x/authority/keeper"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	crosschainmodule "github.com/zeta-chain/zetacore/x/crosschain"
-	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	emissionsmodule "github.com/zeta-chain/zetacore/x/emissions"
-	emissionskeeper "github.com/zeta-chain/zetacore/x/emissions/keeper"
-	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
-	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"
-	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	lightclientmodule "github.com/zeta-chain/zetacore/x/lightclient"
-	lightclientkeeper "github.com/zeta-chain/zetacore/x/lightclient/keeper"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	observermodule "github.com/zeta-chain/zetacore/x/observer"
-	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/app/ante"
+	"github.com/zeta-chain/node/docs/openapi"
+	zetamempool "github.com/zeta-chain/node/pkg/mempool"
+	"github.com/zeta-chain/node/precompiles"
+	srvflags "github.com/zeta-chain/node/server/flags"
+	authoritymodule "github.com/zeta-chain/node/x/authority"
+	authoritykeeper "github.com/zeta-chain/node/x/authority/keeper"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	crosschainmodule "github.com/zeta-chain/node/x/crosschain"
+	crosschainkeeper "github.com/zeta-chain/node/x/crosschain/keeper"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	emissionsmodule "github.com/zeta-chain/node/x/emissions"
+	emissionskeeper "github.com/zeta-chain/node/x/emissions/keeper"
+	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
+	fungiblemodule "github.com/zeta-chain/node/x/fungible"
+	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	lightclientmodule "github.com/zeta-chain/node/x/lightclient"
+	lightclientkeeper "github.com/zeta-chain/node/x/lightclient/keeper"
+	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
+	observermodule "github.com/zeta-chain/node/x/observer"
+	observerkeeper "github.com/zeta-chain/node/x/observer/keeper"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // TODO: enable back IBC
@@ -129,9 +128,9 @@ import (
 // ibctypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
 // ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 // ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
-// "github.com/zeta-chain/zetacore/x/ibccrosschain"
-// ibccrosschainkeeper "github.com/zeta-chain/zetacore/x/ibccrosschain/keeper"
-// ibccrosschaintypes "github.com/zeta-chain/zetacore/x/ibccrosschain/types"
+// "github.com/zeta-chain/node/x/ibccrosschain"
+// ibccrosschainkeeper "github.com/zeta-chain/node/x/ibccrosschain/keeper"
+// ibccrosschaintypes "github.com/zeta-chain/node/x/ibccrosschain/types"
 
 const Name = "zetacore"
 
@@ -146,16 +145,11 @@ func init() {
 var (
 	AccountAddressPrefix = "zeta"
 	NodeDir              = ".zetacored"
+	DefaultNodeHome      = os.ExpandEnv("$HOME/") + NodeDir
 
 	// AddrLen is the allowed length (in bytes) for an address.
-	//
 	// NOTE: In the SDK, the default value is 255.
 	AddrLen = 20
-)
-
-var (
-	// DefaultNodeHome default home directories for wasmd
-	DefaultNodeHome = os.ExpandEnv("$HOME/") + NodeDir
 
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
 	Bech32PrefixAccAddr = AccountAddressPrefix
@@ -315,7 +309,7 @@ func New(
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
 	invCheckPeriod uint,
-	encodingConfig appparams.EncodingConfig,
+	encodingConfig ethermint.EncodingConfig,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
@@ -356,9 +350,9 @@ func New(
 		consensusparamtypes.StoreKey,
 		crisistypes.StoreKey,
 	)
-	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
+	tKeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
 	memKeys := sdk.NewMemoryStoreKeys(
-	//capabilitytypes.MemStoreKey,
+	// capabilitytypes.MemStoreKey,
 	)
 
 	app := &App{
@@ -368,7 +362,7 @@ func New(
 		interfaceRegistry: interfaceRegistry,
 		invCheckPeriod:    invCheckPeriod,
 		keys:              keys,
-		tkeys:             tkeys,
+		tkeys:             tKeys,
 		memKeys:           memKeys,
 	}
 	if homePath == "" {
@@ -378,7 +372,7 @@ func New(
 	// get authority address
 	authAddr := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 
-	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
+	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tKeys[paramstypes.TStoreKey])
 	// set the BaseApp's parameter store
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamtypes.StoreKey], authAddr)
 	bApp.SetParamStore(&app.ConsensusParamsKeeper)
@@ -556,25 +550,31 @@ func New(
 		appCodec,
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		keys[feemarkettypes.StoreKey],
-		tkeys[feemarkettypes.TransientKey],
+		tKeys[feemarkettypes.TransientKey],
 		feeSs,
 		app.ConsensusParamsKeeper,
 	)
 	evmSs := app.GetSubspace(evmtypes.ModuleName)
+
 	app.EvmKeeper = evmkeeper.NewKeeper(
 		appCodec,
 		keys[evmtypes.StoreKey],
-		tkeys[evmtypes.TransientKey],
+		tKeys[evmtypes.TransientKey],
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
 		&app.FeeMarketKeeper,
-		nil,
-		geth.NewEVM,
 		tracer,
 		evmSs,
+		precompiles.StatefulContracts(
+			&app.FungibleKeeper,
+			app.StakingKeeper,
+			appCodec,
+			storetypes.TransientGasConfig(),
+		),
 		app.ConsensusParamsKeeper,
+		aggregateAllKeys(keys, tKeys, memKeys),
 	)
 
 	app.FungibleKeeper = *fungiblekeeper.NewKeeper(
@@ -813,7 +813,7 @@ func New(
 
 	// initialize stores
 	app.MountKVStores(keys)
-	app.MountTransientStores(tkeys)
+	app.MountTransientStores(tKeys)
 	app.MountMemoryStores(memKeys)
 
 	// initialize BaseApp
@@ -1055,9 +1055,42 @@ func (app *App) SimulationManager() *module.SimulationManager {
 
 func (app *App) BlockedAddrs() map[string]bool {
 	blockList := make(map[string]bool)
+
 	for k, v := range blockedReceivingModAcc {
 		addr := authtypes.NewModuleAddress(k)
 		blockList[addr.String()] = v
 	}
+
+	// Each enabled precompiled stateful contract should be added as a BlockedAddrs.
+	// That way it's marked as non payable by the bank keeper.
+	for addr, enabled := range precompiles.EnabledStatefulContracts {
+		if enabled {
+			blockList[addr.String()] = enabled
+		}
+	}
+
 	return blockList
+}
+
+// aggregateAllKeys aggregates all the keys in a single map.
+func aggregateAllKeys(
+	keys map[string]*storetypes.KVStoreKey,
+	tKeys map[string]*storetypes.TransientStoreKey,
+	memKeys map[string]*storetypes.MemoryStoreKey,
+) map[string]storetypes.StoreKey {
+	allKeys := make(map[string]storetypes.StoreKey, len(keys)+len(tKeys)+len(memKeys))
+
+	for k, v := range keys {
+		allKeys[k] = v
+	}
+
+	for k, v := range tKeys {
+		allKeys[k] = v
+	}
+
+	for k, v := range memKeys {
+		allKeys[k] = v
+	}
+
+	return allKeys
 }

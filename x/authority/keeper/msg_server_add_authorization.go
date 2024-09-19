@@ -6,7 +6,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/x/authority/types"
+	"github.com/zeta-chain/node/x/authority/types"
 )
 
 // AddAuthorization defines a method to add an authorization.If the authorization already exists, it will be overwritten with the provided policy.

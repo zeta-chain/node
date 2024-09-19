@@ -7,9 +7,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestMsgVoteTSS_ValidateBasic(t *testing.T) {
@@ -101,6 +101,21 @@ func TestMsgVoteTSS_GetSignBytes(t *testing.T) {
 }
 
 func TestMsgVoteTSS_Digest(t *testing.T) {
-	msg := types.NewMsgVoteTSS(sample.AccAddress(), "pubkey", 1, chains.ReceiveStatus_success)
-	require.Equal(t, "1-tss-keygen", msg.Digest())
+	vote1 := types.NewMsgVoteTSS(sample.AccAddress(), "pubkey", 1, chains.ReceiveStatus_success)
+	require.Equal(t, "1-pubkey-tss-keygen", vote1.Digest())
+
+	vote2 := types.NewMsgVoteTSS(sample.AccAddress(), "pubkey", 1, chains.ReceiveStatus_success)
+	require.Equal(t, "1-pubkey-tss-keygen", vote2.Digest())
+
+	require.Equal(t, vote1.Digest(), vote2.Digest())
+
+	vote3 := types.NewMsgVoteTSS(sample.AccAddress(), "pubkeyNew", 2, chains.ReceiveStatus_success)
+	require.Equal(t, "2-pubkeyNew-tss-keygen", vote3.Digest())
+	// Different pubkey changes digest
+	require.NotEqual(t, vote1.Digest(), vote3.Digest())
+
+	vote4 := types.NewMsgVoteTSS(sample.AccAddress(), "pubkey", 3, chains.ReceiveStatus_success)
+	require.Equal(t, "3-pubkey-tss-keygen", vote4.Digest())
+	// Different height changes digest
+	require.NotEqual(t, vote1.Digest(), vote4.Digest())
 }

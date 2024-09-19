@@ -11,12 +11,14 @@ import (
 	"github.com/btcsuite/btcutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/tonkeeper/tongo/ton"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 	zetaeth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
@@ -30,18 +32,19 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
-	"github.com/zeta-chain/zetacore/e2e/config"
-	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
-	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
-	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
-	"github.com/zeta-chain/zetacore/e2e/txserver"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/pkg/contracts/testdappv2"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	lightclienttypes "github.com/zeta-chain/zetacore/x/lightclient/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/node/e2e/config"
+	"github.com/zeta-chain/node/e2e/contracts/contextapp"
+	"github.com/zeta-chain/node/e2e/contracts/erc20"
+	"github.com/zeta-chain/node/e2e/contracts/zevmswap"
+	tonrunner "github.com/zeta-chain/node/e2e/runner/ton"
+	"github.com/zeta-chain/node/e2e/txserver"
+	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 type E2ERunnerOption func(*E2ERunner)
@@ -69,6 +72,12 @@ type E2ERunner struct {
 	BTCTSSAddress         btcutil.Address
 	BTCDeployerAddress    *btcutil.AddressWitnessPubKeyHash
 	SolanaDeployerAddress solana.PublicKey
+	TONDeployer           *tonrunner.Deployer
+	TONGateway            ton.AccountID
+
+	// all clients.
+	// a reference to this type is required to enable creating a new E2ERunner.
+	Clients Clients
 
 	// rpc clients
 	ZEVMClient   *ethclient.Client
@@ -76,12 +85,13 @@ type E2ERunner struct {
 	BtcRPCClient *rpcclient.Client
 	SolanaClient *rpc.Client
 
-	// grpc clients
-	AutorithyClient   authoritytypes.QueryClient
+	// zetacored grpc clients
+	AuthorityClient   authoritytypes.QueryClient
 	CctxClient        crosschaintypes.QueryClient
 	FungibleClient    fungibletypes.QueryClient
 	AuthClient        authtypes.QueryClient
 	BankClient        banktypes.QueryClient
+	StakingClient     stakingtypes.QueryClient
 	ObserverClient    observertypes.QueryClient
 	LightclientClient lightclienttypes.QueryClient
 
@@ -165,19 +175,7 @@ func NewE2ERunner(
 	name string,
 	ctxCancel context.CancelFunc,
 	account config.Account,
-	evmClient *ethclient.Client,
-	zevmClient *ethclient.Client,
-	authorityClient authoritytypes.QueryClient,
-	cctxClient crosschaintypes.QueryClient,
-	fungibleClient fungibletypes.QueryClient,
-	authClient authtypes.QueryClient,
-	bankClient banktypes.QueryClient,
-	observerClient observertypes.QueryClient,
-	lightclientClient lightclienttypes.QueryClient,
-	evmAuth *bind.TransactOpts,
-	zevmAuth *bind.TransactOpts,
-	btcRPCClient *rpcclient.Client,
-	solanaClient *rpc.Client,
+	clients Clients,
 	logger *Logger,
 	opts ...E2ERunnerOption,
 ) *E2ERunner {
@@ -187,20 +185,23 @@ func NewE2ERunner(
 
 		Account: account,
 
-		ZEVMClient:        zevmClient,
-		EVMClient:         evmClient,
-		AutorithyClient:   authorityClient,
-		CctxClient:        cctxClient,
-		FungibleClient:    fungibleClient,
-		AuthClient:        authClient,
-		BankClient:        bankClient,
-		ObserverClient:    observerClient,
-		LightclientClient: lightclientClient,
+		Clients: clients,
 
-		EVMAuth:      evmAuth,
-		ZEVMAuth:     zevmAuth,
-		BtcRPCClient: btcRPCClient,
-		SolanaClient: solanaClient,
+		ZEVMClient:        clients.Zevm,
+		EVMClient:         clients.Evm,
+		AuthorityClient:   clients.Zetacore.Authority,
+		CctxClient:        clients.Zetacore.Crosschain,
+		FungibleClient:    clients.Zetacore.Fungible,
+		AuthClient:        clients.Zetacore.Auth,
+		BankClient:        clients.Zetacore.Bank,
+		StakingClient:     clients.Zetacore.Staking,
+		ObserverClient:    clients.Zetacore.Observer,
+		LightclientClient: clients.Zetacore.Lightclient,
+
+		EVMAuth:      clients.EvmAuth,
+		ZEVMAuth:     clients.ZevmAuth,
+		BtcRPCClient: clients.BtcRPC,
+		SolanaClient: clients.Solana,
 
 		Logger: logger,
 	}

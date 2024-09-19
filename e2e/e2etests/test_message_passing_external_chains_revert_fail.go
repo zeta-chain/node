@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
 
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	cctxtypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // TestMessagePassingRevertFailExternalChains tests message passing with failing revert between external EVM chains
@@ -65,7 +65,6 @@ func TestMessagePassingRevertFailExternalChains(r *runner.E2ERunner, args []stri
 			r.Logger.Info("    Zeta Value: %d", sentLog.ZetaValueAndGas)
 		}
 	}
-
 	// expect revert tx to fail
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutboundParam().Hash))

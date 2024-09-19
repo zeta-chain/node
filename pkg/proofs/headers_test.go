@@ -17,7 +17,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/testutil/testdata"
+	"github.com/zeta-chain/node/testutil/testdata"
 )
 
 const numHeadersToTest = 100

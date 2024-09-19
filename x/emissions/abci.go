@@ -7,14 +7,21 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/x/emissions/keeper"
-	"github.com/zeta-chain/zetacore/x/emissions/types"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	"github.com/zeta-chain/node/x/emissions/keeper"
+	"github.com/zeta-chain/node/x/emissions/types"
 )
 
 func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	emissionPoolBalance := keeper.GetReservesFactor(ctx)
-	blockRewards := types.BlockReward
+
+	// Get the block rewards from the params
+	params, found := keeper.GetParams(ctx)
+	if !found {
+		ctx.Logger().Error("Params not found")
+		return
+	}
+	blockRewards := params.BlockRewardAmount
 	if blockRewards.GT(emissionPoolBalance) {
 		ctx.Logger().
 			Info(fmt.Sprintf("Block rewards %s are greater than emission pool balance %s", blockRewards.String(), emissionPoolBalance.String()))
@@ -22,11 +29,6 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	}
 
 	// Get the distribution of rewards
-	params, found := keeper.GetParams(ctx)
-	if !found {
-		return
-	}
-
 	validatorRewards, observerRewards, tssSignerRewards := types.GetRewardsDistributions(params)
 
 	// Use a tmpCtx, which is a cache-wrapped context to avoid writing to the store

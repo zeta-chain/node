@@ -8,18 +8,19 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/ethereum/go-ethereum/common"
-	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/systemcontract.sol"
 	uniswapv2router02 "github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
-	"github.com/zeta-chain/zetacore/x/fungible/types"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	keepertest "github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/testutil/sample"
+	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
+	"github.com/zeta-chain/node/x/fungible/types"
 )
 
 // setupGasCoin is a helper function to setup the gas coin for testing
@@ -42,6 +43,13 @@ func setupGasCoin(
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)
+
+	// increase the default liquidity cap
+	foreignCoin, found := k.GetForeignCoins(ctx, addr.Hex())
+	require.True(t, found)
+	foreignCoin.LiquidityCap = sdk.NewUint(1e18).MulUint64(1e12)
+	k.SetForeignCoins(ctx, foreignCoin)
+
 	return addr
 }
 
@@ -67,6 +75,13 @@ func deployZRC20(
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)
+
+	// increase the default liquidity cap
+	foreignCoin, found := k.GetForeignCoins(ctx, addr.Hex())
+	require.True(t, found)
+	foreignCoin.LiquidityCap = sdk.NewUint(1e18).MulUint64(1e12)
+	k.SetForeignCoins(ctx, foreignCoin)
+
 	return addr
 }
 

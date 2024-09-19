@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/config"
 )
 
 // BtcServer represents httptest for Bitcoin RPC.

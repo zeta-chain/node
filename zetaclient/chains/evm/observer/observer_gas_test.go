@@ -8,8 +8,8 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
 func TestPostGasPrice(t *testing.T) {
@@ -24,7 +24,8 @@ func TestPostGasPrice(t *testing.T) {
 	t.Run("Pre EIP-1559 doesn't support priorityFee", func(t *testing.T) {
 		// ARRANGE
 		// Given ETH rpc mock
-		ethRPC := mocks.NewMockEvmClient().WithBlockNumber(blockNumber)
+		ethRPC := mocks.NewEVMRPCClient(t)
+		ethRPC.On("BlockNumber", mock.Anything).Return(uint64(blockNumber), nil)
 
 		// Given zetacore client mock
 		zetacoreClient := mocks.NewZetacoreClient(t).WithZetaChain()
@@ -37,10 +38,11 @@ func TestPostGasPrice(t *testing.T) {
 		observer, _ := MockEVMObserver(t, chain, ethRPC, nil, zetacoreClient, nil, blockNumber, chainParam)
 
 		// Given empty baseFee from RPC
-		ethRPC.WithHeader(&ethtypes.Header{BaseFee: nil})
+		ethRPC.On("HeaderByNumber", anything, anything).Return(&ethtypes.Header{BaseFee: nil}, nil)
 
-		// Given gas price from RPC
-		ethRPC.WithSuggestGasPrice(big.NewInt(3 * gwei))
+		// Given gasPrice and priorityFee from RPC
+		ethRPC.On("SuggestGasPrice", anything).Return(big.NewInt(3*gwei), nil)
+		ethRPC.On("SuggestGasTipCap", anything).Return(big.NewInt(0), nil)
 
 		// Given mock collector for zetacore call
 		// PostVoteGasPrice(ctx, chain, gasPrice, priorityFee, blockNum)
@@ -69,7 +71,8 @@ func TestPostGasPrice(t *testing.T) {
 	t.Run("Post EIP-1559 supports priorityFee", func(t *testing.T) {
 		// ARRANGE
 		// Given ETH rpc mock
-		ethRPC := mocks.NewMockEvmClient().WithBlockNumber(blockNumber)
+		ethRPC := mocks.NewEVMRPCClient(t)
+		ethRPC.On("BlockNumber", mock.Anything).Return(uint64(blockNumber), nil)
 
 		// Given zetacore client mock
 		zetacoreClient := mocks.NewZetacoreClient(t).WithZetaChain()
@@ -82,12 +85,11 @@ func TestPostGasPrice(t *testing.T) {
 		observer, _ := MockEVMObserver(t, chain, ethRPC, nil, zetacoreClient, nil, blockNumber, chainParam)
 
 		// Given 1 gwei baseFee from RPC
-		ethRPC.WithHeader(&ethtypes.Header{BaseFee: big.NewInt(gwei)})
+		ethRPC.On("HeaderByNumber", anything, anything).Return(&ethtypes.Header{BaseFee: big.NewInt(gwei)}, nil)
 
 		// Given gasPrice and priorityFee from RPC
-		ethRPC.
-			WithSuggestGasPrice(big.NewInt(3 * gwei)).
-			WithSuggestGasTipCap(big.NewInt(2 * gwei))
+		ethRPC.On("SuggestGasPrice", anything).Return(big.NewInt(3*gwei), nil)
+		ethRPC.On("SuggestGasTipCap", anything).Return(big.NewInt(2*gwei), nil)
 
 		// Given mock collector for zetacore call
 		// PostVoteGasPrice(ctx, chain, gasPrice, priorityFee, blockNum)

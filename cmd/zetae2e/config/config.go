@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/zeta-chain/zetacore/e2e/config"
-	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/node/e2e/config"
+	"github.com/zeta-chain/node/e2e/runner"
 )
 
 // RunnerFromConfig create test runner from config
@@ -30,19 +30,7 @@ func RunnerFromConfig(
 		name,
 		ctxCancel,
 		account,
-		e2eClients.EvmClient,
-		e2eClients.ZevmClient,
-		e2eClients.AuthorityClient,
-		e2eClients.CctxClient,
-		e2eClients.FungibleClient,
-		e2eClients.AuthClient,
-		e2eClients.BankClient,
-		e2eClients.ObserverClient,
-		e2eClients.LightClient,
-		e2eClients.EvmAuth,
-		e2eClients.ZevmAuth,
-		e2eClients.BtcRPCClient,
-		e2eClients.SolanaClient,
+		e2eClients,
 
 		logger,
 		opts...,
