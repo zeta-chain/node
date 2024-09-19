@@ -157,7 +157,7 @@ func (c *Contract) deposit(
 		}
 	}
 
-	if err := c.addEventLog(ctx, evm.StateDB, DepositEventName, caller, zrc20Addr, toAddr.String(), coinSet.Denoms()[0], amount); err != nil {
+	if err := c.addEventLog(ctx, evm.StateDB, DepositEventName, eventData{caller, zrc20Addr, toAddr.String(), coinSet.Denoms()[0], amount}); err != nil {
 		return nil, &ptypes.ErrUnexpected{
 			When: "AddDepositLog",
 			Got:  err.Error(),

@@ -144,7 +144,7 @@ func (c *Contract) withdraw(
 		}
 	}
 
-	if err := c.addEventLog(ctx, evm.StateDB, WithdrawEventName, caller, zrc20Addr, fromAddr.String(), coinSet.Denoms()[0], amount); err != nil {
+	if err := c.addEventLog(ctx, evm.StateDB, WithdrawEventName, eventData{caller, zrc20Addr, fromAddr.String(), coinSet.Denoms()[0], amount}); err != nil {
 		return nil, &ptypes.ErrUnexpected{
 			When: "AddWithdrawLog",
 			Got:  err.Error(),
