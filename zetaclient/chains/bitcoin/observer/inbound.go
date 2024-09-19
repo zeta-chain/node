@@ -290,6 +290,11 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		return "", err
 	}
 
+	// check confirmation
+	if !ob.IsBlockConfirmed(uint64(blockVb.Height)) {
+		return "", fmt.Errorf("block %d is not confirmed yet", blockVb.Height)
+	}
+
 	// calculate depositor fee
 	depositorFee, err := bitcoin.CalcDepositorFee(ob.btcClient, tx, ob.netParams)
 	if err != nil {

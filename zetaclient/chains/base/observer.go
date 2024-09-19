@@ -229,9 +229,11 @@ func (ob *Observer) WithLastBlock(lastBlock uint64) *Observer {
 }
 
 // IsBlockConfirmed checks if the given block number is confirmed.
+//
+// Note: block 100 is confirmed if the last block is 100 and confirmation count is 1.
 func (ob *Observer) IsBlockConfirmed(blockNumber uint64) bool {
 	lastBlock := ob.LastBlock()
-	confBlock := blockNumber + ob.chainParams.ConfirmationCount
+	confBlock := blockNumber + ob.chainParams.ConfirmationCount - 1
 	return lastBlock >= confBlock
 }
 
