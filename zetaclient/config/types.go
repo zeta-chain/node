@@ -5,6 +5,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/showa-93/go-mask"
+
 	"github.com/zeta-chain/node/pkg/chains"
 )
 
@@ -38,23 +40,23 @@ type ClientConfiguration struct {
 // EVMConfig is the config for EVM chain
 type EVMConfig struct {
 	Chain           chains.Chain
-	Endpoint        string
+	Endpoint        string `mask:"filled"`
 	RPCAlertLatency int64
 }
 
 // BTCConfig is the config for Bitcoin chain
 type BTCConfig struct {
 	// the following are rpcclient ConnConfig fields
-	RPCUsername     string
-	RPCPassword     string
-	RPCHost         string
-	RPCParams       string // "regtest", "mainnet", "testnet3"
+	RPCUsername     string `mask:"filled"`
+	RPCPassword     string `mask:"filled"`
+	RPCHost         string `mask:"filled"`
+	RPCParams       string // "regtest", "mainnet", "testnet3" , "signet"
 	RPCAlertLatency int64
 }
 
 // SolanaConfig is the config for Solana chain
 type SolanaConfig struct {
-	Endpoint        string
+	Endpoint        string `mask:"filled"`
 	RPCAlertLatency int64
 }
 
@@ -91,8 +93,10 @@ type Config struct {
 
 	// chain configs
 	EVMChainConfigs map[int64]EVMConfig `json:"EVMChainConfigs"`
-	BitcoinConfig   BTCConfig           `json:"BitcoinConfig"`
-	SolanaConfig    SolanaConfig        `json:"SolanaConfig"`
+	BTCChainConfigs map[int64]BTCConfig `json:"BTCChainConfigs"`
+	// Deprecated: the 'BitcoinConfig' will be removed once the 'BTCChainConfigs' is fully adopted
+	BitcoinConfig BTCConfig    `json:"BitcoinConfig"`
+	SolanaConfig  SolanaConfig `json:"SolanaConfig"`
 
 	// compliance config
 	ComplianceConfig ComplianceConfig `json:"ComplianceConfig"`
@@ -104,8 +108,9 @@ type Config struct {
 func (c Config) GetEVMConfig(chainID int64) (EVMConfig, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	evmCfg, found := c.EVMChainConfigs[chainID]
-	return evmCfg, found
+
+	evmCfg := c.EVMChainConfigs[chainID]
+	return evmCfg, !evmCfg.Empty()
 }
 
 // GetAllEVMConfigs returns a map of all EVM configs
@@ -121,12 +126,19 @@ func (c Config) GetAllEVMConfigs() map[int64]EVMConfig {
 	return copied
 }
 
-// GetBTCConfig returns the BTC config
-func (c Config) GetBTCConfig() (BTCConfig, bool) {
+// GetBTCConfig returns the BTC config for the given chain ID
+func (c Config) GetBTCConfig(chainID int64) (BTCConfig, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	return c.BitcoinConfig, c.BitcoinConfig != (BTCConfig{})
+	// we prefer 'BTCChainConfigs' over 'BitcoinConfig' but still fallback to be backward compatible
+	// this will allow new 'zetaclientd' binary to work with old config file
+	btcCfg, found := c.BTCChainConfigs[chainID]
+	if !found || btcCfg.Empty() {
+		btcCfg = c.BitcoinConfig
+	}
+
+	return btcCfg, !btcCfg.Empty()
 }
 
 // GetSolanaConfig returns the Solana config
@@ -137,9 +149,20 @@ func (c Config) GetSolanaConfig() (SolanaConfig, bool) {
 	return c.SolanaConfig, c.SolanaConfig != (SolanaConfig{})
 }
 
-// String returns the string representation of the config
-func (c Config) String() string {
-	s, err := json.MarshalIndent(c, "", "\t")
+// StringMasked returns the string representation of the config with sensitive fields masked.
+// Currently only the endpoints and bitcoin credentials are masked.
+func (c Config) StringMasked() string {
+	// create a masker
+	masker := mask.NewMasker()
+	masker.RegisterMaskStringFunc(mask.MaskTypeFilled, masker.MaskFilledString)
+
+	// mask the config
+	masked, err := masker.Mask(c)
+	if err != nil {
+		return ""
+	}
+
+	s, err := json.MarshalIndent(masked, "", "\t")
 	if err != nil {
 		return ""
 	}
@@ -178,5 +201,9 @@ func (c Config) GetRelayerKeyPath() string {
 }
 
 func (c EVMConfig) Empty() bool {
-	return c.Endpoint == "" && c.Chain.IsEmpty()
+	return c.Endpoint == "" || c.Chain.IsEmpty()
+}
+
+func (c BTCConfig) Empty() bool {
+	return c.RPCHost == ""
 }

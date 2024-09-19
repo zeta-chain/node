@@ -337,6 +337,7 @@ require (
 
 require (
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20220328075252-7dd334e3daae // indirect
+	github.com/showa-93/go-mask v0.6.2 // indirect
 	github.com/snksoft/crc v1.1.0 // indirect
 	github.com/tonkeeper/tongo v1.9.3 // indirect
 )

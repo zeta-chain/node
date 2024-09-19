@@ -290,6 +290,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		bitcoinTests := []string{
 			e2etests.TestBitcoinDepositName,
+			e2etests.TestBitcoinDepositAndCallName,
 			e2etests.TestBitcoinDepositRefundName,
 			e2etests.TestBitcoinWithdrawSegWitName,
 			e2etests.TestBitcoinWithdrawInvalidAddressName,

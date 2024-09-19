@@ -89,7 +89,7 @@ func (c *Client) PostVoteTSS(
 	}
 
 	zetaTxHash, err := retry.DoTypedWithRetry(func() (string, error) {
-		return c.Broadcast(ctx, DefaultGasLimit, authzMsg, authzSigner)
+		return c.Broadcast(ctx, PostTSSGasLimit, authzMsg, authzSigner)
 	})
 
 	if err != nil {

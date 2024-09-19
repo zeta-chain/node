@@ -10,6 +10,8 @@
 * [2795](https://github.com/zeta-chain/node/pull/2795) - support restricted address in Solana
 * [2861](https://github.com/zeta-chain/node/pull/2861) - emit events from staking precompile
 * [2860](https://github.com/zeta-chain/node/pull/2860) - bank precompiled contract
+* [2870](https://github.com/zeta-chain/node/pull/2870) - support for multiple Bitcoin chains in the zetaclient
+* [2883](https://github.com/zeta-chain/node/pull/2883) - add chain static information for btc signet testnet
 
 ### Refactor
 
@@ -26,6 +28,8 @@
 * [2867](https://github.com/zeta-chain/node/pull/2867) - skip precompiles test for tss migration
 * [2833](https://github.com/zeta-chain/node/pull/2833) - add e2e framework for TON blockchain
 * [2874](https://github.com/zeta-chain/node/pull/2874) - add support for multiple runs for precompile tests
+* [2895](https://github.com/zeta-chain/node/pull/2895) - add e2e test for bitcoin deposit and call
+* [2894](https://github.com/zeta-chain/node/pull/2894) - increase gas limit for TSS vote tx
 
 ### Fixes
 
