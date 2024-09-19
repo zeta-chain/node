@@ -9,12 +9,13 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
+	btcecdsa "github.com/btcsuite/btcd/btcec/v2/ecdsa"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
@@ -269,7 +270,7 @@ func (signer *Signer) SignWithdrawTx(
 	}
 
 	// sign the tx
-	sigHashes := txscript.NewTxSigHashes(tx)
+	sigHashes := txscript.NewTxSigHashes(tx, txscript.NewCannedPrevOutputFetcher([]byte{}, 0))
 	witnessHashes := make([][]byte, len(tx.TxIn))
 	for ix := range tx.TxIn {
 		amt, err := bitcoin.GetSatoshis(prevOuts[ix].Amount)
@@ -293,12 +294,11 @@ func (signer *Signer) SignWithdrawTx(
 
 	for ix := range tx.TxIn {
 		sig65B := sig65Bs[ix]
-		R := big.NewInt(0).SetBytes(sig65B[:32])
-		S := big.NewInt(0).SetBytes(sig65B[32:64])
-		sig := btcec.Signature{
-			R: R,
-			S: S,
-		}
+		R := &btcec.ModNScalar{}
+		R.SetBytes((*[32]byte)(sig65B[:32]))
+		S := &btcec.ModNScalar{}
+		S.SetBytes((*[32]byte)(sig65B[32:64]))
+		sig := btcecdsa.NewSignature(R, S)
 
 		pkCompressed := signer.TSS().PubKeyCompressedBytes()
 		hashType := txscript.SigHashAll

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/btcsuite/btcutil"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 

@@ -8,9 +8,9 @@ import (
 	"strconv"
 
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
-	"github.com/btcsuite/btcutil"
 	"github.com/cosmos/btcutil/base58"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ripemd160"
