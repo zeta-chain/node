@@ -16,6 +16,7 @@ import (
 	clientcommon "github.com/zeta-chain/node/zetaclient/common"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/zetaclient/testutils/testrpc"
 )
 
 func TestParseScriptFromWitness(t *testing.T) {
@@ -81,7 +82,7 @@ func TestGetBtcEventFromInscription(t *testing.T) {
 		}
 
 		// load previous raw tx so so mock rpc client can return it
-		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
 
 		// get BTC event
 		event, err := observer.GetBtcEventWithWitness(
@@ -108,7 +109,7 @@ func TestGetBtcEventFromInscription(t *testing.T) {
 		tx.Vin[0].Vout = 2
 
 		// load previous raw tx so so mock rpc client can return it
-		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
 
 		// get BTC event
 		eventExpected := &observer.BTCInboundEvent{
@@ -147,7 +148,7 @@ func TestGetBtcEventFromInscription(t *testing.T) {
 		tx.Vin[0].Vout = 2
 
 		// load previous raw tx so so mock rpc client can return it
-		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
 
 		memo, _ := hex.DecodeString(
 			"72f080c854647755d0d9e6f6821f6931f855b9acffd53d87433395672756d58822fd143360762109ab898626556b1c3b8d3096d2361f1297df4a41c1b429471a9aa2fc9be5f27c13b3863d6ac269e4b587d8389f8fd9649859935b0d48dea88cdb40f20c",

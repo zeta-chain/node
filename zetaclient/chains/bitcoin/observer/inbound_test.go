@@ -21,33 +21,11 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	clientcommon "github.com/zeta-chain/node/zetaclient/common"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/zetaclient/testutils/testrpc"
 )
-
-// createRPCClientAndLoadTx is a helper function to load raw txs and feed them to mock rpc client
-func createRPCClientAndLoadTx(t *testing.T, chainId int64, txHashes ...string) interfaces.BTCRPCClient {
-	// create mock rpc client
-	rpcClient := mocks.NewBTCRPCClient(t)
-
-	// feed txs to mock rpc client
-	for _, txHash := range txHashes {
-		// file name for the archived MsgTx
-		nameMsgTx := path.Join(TestDataDir, testutils.TestDataPathBTC, testutils.FileNameBTCMsgTx(chainId, txHash))
-
-		// load archived MsgTx
-		var msgTx wire.MsgTx
-		testutils.LoadObjectFromJSONFile(t, &msgTx, nameMsgTx)
-
-		// mock rpc response
-		tx := btcutil.NewTx(&msgTx)
-		rpcClient.On("GetRawTransaction", tx.Hash()).Return(tx, nil)
-	}
-
-	return rpcClient
-}
 
 func TestAvgFeeRateBlock828440(t *testing.T) {
 	// load archived block 828440
@@ -169,7 +147,7 @@ func TestGetSenderAddressByVin(t *testing.T) {
 		// vin from the archived P2TR tx
 		// https://mempool.space/tx/3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867
 		txHash := "3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867"
-		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, txHash)
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, txHash)
 
 		// get sender address
 		txVin := btcjson.Vin{Txid: txHash, Vout: 2}
@@ -181,7 +159,7 @@ func TestGetSenderAddressByVin(t *testing.T) {
 		// vin from the archived P2WSH tx
 		// https://mempool.space/tx/d13de30b0cc53b5c4702b184ae0a0b0f318feaea283185c1cddb8b341c27c016
 		txHash := "d13de30b0cc53b5c4702b184ae0a0b0f318feaea283185c1cddb8b341c27c016"
-		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, txHash)
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, txHash)
 
 		// get sender address
 		txVin := btcjson.Vin{Txid: txHash, Vout: 0}
@@ -193,7 +171,7 @@ func TestGetSenderAddressByVin(t *testing.T) {
 		// vin from the archived P2WPKH tx
 		// https://mempool.space/tx/c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697
 		txHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
-		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, txHash)
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, txHash)
 
 		// get sender address
 		txVin := btcjson.Vin{Txid: txHash, Vout: 2}
@@ -205,7 +183,7 @@ func TestGetSenderAddressByVin(t *testing.T) {
 		// vin from the archived P2SH tx
 		// https://mempool.space/tx/211568441340fd5e10b1a8dcb211a18b9e853dbdf265ebb1c728f9b52813455a
 		txHash := "211568441340fd5e10b1a8dcb211a18b9e853dbdf265ebb1c728f9b52813455a"
-		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, txHash)
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, txHash)
 
 		// get sender address
 		txVin := btcjson.Vin{Txid: txHash, Vout: 0}
@@ -217,7 +195,7 @@ func TestGetSenderAddressByVin(t *testing.T) {
 		// vin from the archived P2PKH tx
 		// https://mempool.space/tx/781fc8d41b476dbceca283ebff9573fda52c8fdbba5e78152aeb4432286836a7
 		txHash := "781fc8d41b476dbceca283ebff9573fda52c8fdbba5e78152aeb4432286836a7"
-		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, txHash)
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, txHash)
 
 		// get sender address
 		txVin := btcjson.Vin{Txid: txHash, Vout: 1}
@@ -280,7 +258,7 @@ func TestGetSenderAddressByVinErrors(t *testing.T) {
 	})
 	t.Run("should return error on invalid output index", func(t *testing.T) {
 		// create mock rpc client with preloaded tx
-		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, txHash)
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, txHash)
 		// invalid output index
 		txVin := btcjson.Vin{Txid: txHash, Vout: 3}
 		sender, err := observer.GetSenderAddressByVin(rpcClient, txVin, net)
@@ -324,7 +302,7 @@ func TestGetBtcEvent(t *testing.T) {
 		tx.Vin[0].Vout = 2
 		eventExpected.FromAddress = "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e"
 		// load previous raw tx so so mock rpc client can return it
-		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
 
 		// get BTC event
 		event, err := observer.GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
@@ -339,7 +317,7 @@ func TestGetBtcEvent(t *testing.T) {
 		tx.Vin[0].Vout = 2
 		eventExpected.FromAddress = "bc1px3peqcd60hk7wqyqk36697u9hzugq0pd5lzvney93yzzrqy4fkpq6cj7m3"
 		// load previous raw tx so so mock rpc client can return it
-		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
 
 		// get BTC event
 		event, err := observer.GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
@@ -354,7 +332,7 @@ func TestGetBtcEvent(t *testing.T) {
 		tx.Vin[0].Vout = 0
 		eventExpected.FromAddress = "bc1q79kmcyc706d6nh7tpzhnn8lzp76rp0tepph3hqwrhacqfcy4lwxqft0ppq"
 		// load previous raw tx so so mock rpc client can return it
-		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
 
 		// get BTC event
 		event, err := observer.GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
@@ -369,7 +347,7 @@ func TestGetBtcEvent(t *testing.T) {
 		tx.Vin[0].Vout = 0
 		eventExpected.FromAddress = "3MqRRSP76qxdVD9K4cfFnVtSLVwaaAjm3t"
 		// load previous raw tx so so mock rpc client can return it
-		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
 
 		// get BTC event
 		event, err := observer.GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
@@ -384,7 +362,7 @@ func TestGetBtcEvent(t *testing.T) {
 		tx.Vin[0].Vout = 1
 		eventExpected.FromAddress = "1ESQp1WQi7fzSpzCNs2oBTqaUBmNjLQLoV"
 		// load previous raw tx so so mock rpc client can return it
-		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
 
 		// get BTC event
 		event, err := observer.GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
