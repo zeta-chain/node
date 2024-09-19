@@ -6,8 +6,8 @@ import (
 	"path"
 	"testing"
 
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcutil"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
