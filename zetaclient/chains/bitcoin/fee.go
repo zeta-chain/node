@@ -43,13 +43,6 @@ const (
 
 	// feeRateCountBackBlocks is the default number of blocks to look back for fee rate estimation
 	feeRateCountBackBlocks = 2
-
-	// DynamicDepositorFeeHeight is the mainnet height from which dynamic depositor fee V1 is applied
-	DynamicDepositorFeeHeight = 834500
-
-	// DynamicDepositorFeeHeightV2 is the mainnet height from which dynamic depositor fee V2 is applied
-	// Height 863400 is approximately a month away (2024-09-28) from the time of writing, allowing enough time for the upgrade
-	DynamicDepositorFeeHeightV2 = 863400
 )
 
 var (
