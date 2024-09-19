@@ -13,30 +13,39 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	clientcommon "github.com/zeta-chain/node/zetaclient/common"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
-// createRPCClientAndLoadTx is a helper function to load raw tx and feed it to mock rpc client
-func createRPCClientAndLoadTx(t *testing.T, chainId int64, txHash string) *mocks.MockBTCRPCClient {
-	// file name for the archived MsgTx
-	nameMsgTx := path.Join(TestDataDir, testutils.TestDataPathBTC, testutils.FileNameBTCMsgTx(chainId, txHash))
+// createRPCClientAndLoadTx is a helper function to load raw txs and feed them to mock rpc client
+func createRPCClientAndLoadTx(t *testing.T, chainId int64, txHashes ...string) interfaces.BTCRPCClient {
+	// create mock rpc client
+	rpcClient := mocks.NewBTCRPCClient(t)
 
-	// load archived MsgTx
-	var msgTx wire.MsgTx
-	testutils.LoadObjectFromJSONFile(t, &msgTx, nameMsgTx)
-	tx := btcutil.NewTx(&msgTx)
+	// feed txs to mock rpc client
+	for _, txHash := range txHashes {
+		// file name for the archived MsgTx
+		nameMsgTx := path.Join(TestDataDir, testutils.TestDataPathBTC, testutils.FileNameBTCMsgTx(chainId, txHash))
 
-	// feed tx to mock rpc client
-	rpcClient := mocks.NewMockBTCRPCClient()
-	rpcClient.WithRawTransaction(tx)
+		// load archived MsgTx
+		var msgTx wire.MsgTx
+		testutils.LoadObjectFromJSONFile(t, &msgTx, nameMsgTx)
+
+		// mock rpc response
+		tx := btcutil.NewTx(&msgTx)
+		rpcClient.On("GetRawTransaction", tx.Hash()).Return(tx, nil)
+	}
+
 	return rpcClient
 }
 
@@ -152,41 +161,6 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 	})
 }
 
-func TestCalcDepositorFee828440(t *testing.T) {
-	// load archived block 828440
-	var blockVb btcjson.GetBlockVerboseTxResult
-	testutils.LoadObjectFromJSONFile(
-		t,
-		&blockVb,
-		path.Join(TestDataDir, testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"),
-	)
-	avgGasRate := float64(32.0)
-	// #nosec G115 test - always in range
-
-	gasRate := int64(avgGasRate * clientcommon.BTCOutboundGasPriceMultiplier)
-	dynamicFee828440 := bitcoin.DepositorFee(gasRate)
-
-	// should return default fee if it's a regtest block
-	fee := bitcoin.CalcDepositorFee(&blockVb, 18444, &chaincfg.RegressionNetParams, log.Logger)
-	require.Equal(t, bitcoin.DefaultDepositorFee, fee)
-
-	// should return dynamic fee if it's a testnet block
-	fee = bitcoin.CalcDepositorFee(&blockVb, 18332, &chaincfg.TestNet3Params, log.Logger)
-	require.NotEqual(t, bitcoin.DefaultDepositorFee, fee)
-	require.Equal(t, dynamicFee828440, fee)
-
-	// mainnet should return default fee before upgrade height
-	blockVb.Height = bitcoin.DynamicDepositorFeeHeight - 1
-	fee = bitcoin.CalcDepositorFee(&blockVb, 8332, &chaincfg.MainNetParams, log.Logger)
-	require.Equal(t, bitcoin.DefaultDepositorFee, fee)
-
-	// mainnet should return dynamic fee after upgrade height
-	blockVb.Height = bitcoin.DynamicDepositorFeeHeight
-	fee = bitcoin.CalcDepositorFee(&blockVb, 8332, &chaincfg.MainNetParams, log.Logger)
-	require.NotEqual(t, bitcoin.DefaultDepositorFee, fee)
-	require.Equal(t, dynamicFee828440, fee)
-}
-
 func TestGetSenderAddressByVin(t *testing.T) {
 	chain := chains.BitcoinMainnet
 	net := &chaincfg.MainNetParams
@@ -268,8 +242,8 @@ func TestGetSenderAddressByVin(t *testing.T) {
 		tx := btcutil.NewTx(&msgTx)
 
 		// feed tx to mock rpc client
-		rpcClient := mocks.NewMockBTCRPCClient()
-		rpcClient.WithRawTransaction(tx)
+		rpcClient := mocks.NewBTCRPCClient(t)
+		rpcClient.On("GetRawTransaction", mock.Anything).Return(tx, nil)
 
 		// get sender address
 		txVin := btcjson.Vin{Txid: txHash, Vout: 1}
@@ -285,8 +259,8 @@ func TestGetSenderAddressByVinErrors(t *testing.T) {
 	chain := chains.BitcoinMainnet
 	net := &chaincfg.MainNetParams
 
-	t.Run("should get sender address from P2TR tx", func(t *testing.T) {
-		rpcClient := mocks.NewMockBTCRPCClient()
+	t.Run("should return error on invalid txHash", func(t *testing.T) {
+		rpcClient := mocks.NewBTCRPCClient(t)
 		// use invalid tx hash
 		txVin := btcjson.Vin{Txid: "invalid tx hash", Vout: 2}
 		sender, err := observer.GetSenderAddressByVin(rpcClient, txVin, net)
@@ -294,8 +268,11 @@ func TestGetSenderAddressByVinErrors(t *testing.T) {
 		require.Empty(t, sender)
 	})
 	t.Run("should return error when RPC client fails to get raw tx", func(t *testing.T) {
-		// create mock rpc client without preloaded tx
-		rpcClient := mocks.NewMockBTCRPCClient()
+		// create mock rpc client that returns rpc error
+		rpcClient := mocks.NewBTCRPCClient(t)
+		rpcClient.On("GetRawTransaction", mock.Anything).Return(nil, errors.New("rpc error"))
+
+		// get sender address
 		txVin := btcjson.Vin{Txid: txHash, Vout: 2}
 		sender, err := observer.GetSenderAddressByVin(rpcClient, txVin, net)
 		require.ErrorContains(t, err, "error getting raw transaction")
@@ -323,19 +300,21 @@ func TestGetBtcEvent(t *testing.T) {
 	tssAddress := testutils.TSSAddressBTCMainnet
 	blockNumber := uint64(835640)
 	net := &chaincfg.MainNetParams
-	// 2.992e-05, see avgFeeRate https://mempool.space/api/v1/blocks/835640
-	depositorFee := bitcoin.DepositorFee(22 * clientcommon.BTCOutboundGasPriceMultiplier)
+
+	// fee rate of above tx is 28 sat/vB
+	depositorFee := bitcoin.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
 
 	// expected result
 	memo, err := hex.DecodeString(tx.Vout[1].ScriptPubKey.Hex[4:])
 	require.NoError(t, err)
 	eventExpected := &observer.BTCInboundEvent{
-		FromAddress: "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e",
-		ToAddress:   tssAddress,
-		Value:       tx.Vout[0].Value - depositorFee, // 7008 sataoshis
-		MemoBytes:   memo,
-		BlockNumber: blockNumber,
-		TxHash:      tx.Txid,
+		FromAddress:  "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e",
+		ToAddress:    tssAddress,
+		Value:        tx.Vout[0].Value - depositorFee, // 6192 sataoshis
+		DepositorFee: depositorFee,
+		MemoBytes:    memo,
+		BlockNumber:  blockNumber,
+		TxHash:       tx.Txid,
 	}
 
 	t.Run("should get BTC inbound event from P2WPKH sender", func(t *testing.T) {
@@ -418,14 +397,14 @@ func TestGetBtcEvent(t *testing.T) {
 		tx.Vout = tx.Vout[:1]
 
 		// get BTC event
-		rpcClient := mocks.NewMockBTCRPCClient()
+		rpcClient := mocks.NewBTCRPCClient(t)
 		event, err := observer.GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
 		require.NoError(t, err)
 		require.Nil(t, event)
 	})
 	t.Run("should skip tx if Vout[0] is not a P2WPKH output", func(t *testing.T) {
 		// load tx
-		rpcClient := mocks.NewMockBTCRPCClient()
+		rpcClient := mocks.NewBTCRPCClient(t)
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 
 		// modify the tx to have Vout[0] a P2SH output
@@ -446,7 +425,7 @@ func TestGetBtcEvent(t *testing.T) {
 		tx.Vout[0].ScriptPubKey.Hex = "001471dc3cd95bf4fe0fb7ffd6bb29b865ddf5581196"
 
 		// get BTC event
-		rpcClient := mocks.NewMockBTCRPCClient()
+		rpcClient := mocks.NewBTCRPCClient(t)
 		event, err := observer.GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
 		require.NoError(t, err)
 		require.Nil(t, event)
@@ -457,7 +436,7 @@ func TestGetBtcEvent(t *testing.T) {
 		tx.Vout[0].Value = depositorFee - 1.0/1e8 // 1 satoshi less than depositor fee
 
 		// get BTC event
-		rpcClient := mocks.NewMockBTCRPCClient()
+		rpcClient := mocks.NewBTCRPCClient(t)
 		event, err := observer.GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
 		require.NoError(t, err)
 		require.Nil(t, event)
@@ -468,7 +447,7 @@ func TestGetBtcEvent(t *testing.T) {
 		tx.Vout[1].ScriptPubKey.Hex = strings.Replace(tx.Vout[1].ScriptPubKey.Hex, "6a", "51", 1)
 
 		// get BTC event
-		rpcClient := mocks.NewMockBTCRPCClient()
+		rpcClient := mocks.NewBTCRPCClient(t)
 		event, err := observer.GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
 		require.NoError(t, err)
 		require.Nil(t, event)
@@ -479,7 +458,7 @@ func TestGetBtcEvent(t *testing.T) {
 		tx.Vout[1].ScriptPubKey.Hex = strings.Replace(tx.Vout[1].ScriptPubKey.Hex, "6a14", "6a13", 1)
 
 		// get BTC event
-		rpcClient := mocks.NewMockBTCRPCClient()
+		rpcClient := mocks.NewBTCRPCClient(t)
 		event, err := observer.GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
 		require.NoError(t, err)
 		require.Nil(t, event)
@@ -494,7 +473,9 @@ func TestGetBtcEventErrors(t *testing.T) {
 	net := &chaincfg.MainNetParams
 	tssAddress := testutils.TSSAddressBTCMainnet
 	blockNumber := uint64(835640)
-	depositorFee := bitcoin.DepositorFee(22 * clientcommon.BTCOutboundGasPriceMultiplier)
+
+	// fee rate of above tx is 28 sat/vB
+	depositorFee := bitcoin.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
 
 	t.Run("should return error on invalid Vout[0] script", func(t *testing.T) {
 		// load tx and modify Vout[0] script to invalid script
@@ -502,7 +483,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 		tx.Vout[0].ScriptPubKey.Hex = "0014invalid000000000000000000000000000000000"
 
 		// get BTC event
-		rpcClient := mocks.NewMockBTCRPCClient()
+		rpcClient := mocks.NewBTCRPCClient(t)
 		event, err := observer.GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
 		require.Error(t, err)
 		require.Nil(t, event)
@@ -513,19 +494,22 @@ func TestGetBtcEventErrors(t *testing.T) {
 		tx.Vin = nil
 
 		// get BTC event
-		rpcClient := mocks.NewMockBTCRPCClient()
+		rpcClient := mocks.NewBTCRPCClient(t)
 		event, err := observer.GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
-		require.Error(t, err)
+		require.ErrorContains(t, err, "no input found")
 		require.Nil(t, event)
 	})
 	t.Run("should return error if RPC client fails to get raw tx", func(t *testing.T) {
 		// load tx and leave rpc client without preloaded tx
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
-		rpcClient := mocks.NewMockBTCRPCClient()
+
+		// create mock rpc client that returns rpc error
+		rpcClient := mocks.NewBTCRPCClient(t)
+		rpcClient.On("GetRawTransaction", mock.Anything).Return(nil, errors.New("rpc error"))
 
 		// get BTC event
 		event, err := observer.GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
-		require.Error(t, err)
+		require.ErrorContains(t, err, "error getting sender address")
 		require.Nil(t, event)
 	})
 }

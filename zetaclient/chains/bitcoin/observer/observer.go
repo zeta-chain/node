@@ -54,23 +54,6 @@ type Logger struct {
 	UTXOs zerolog.Logger
 }
 
-// BTCInboundEvent represents an incoming transaction event
-// TODO(revamp): Move to inbound
-type BTCInboundEvent struct {
-	// FromAddress is the first input address
-	FromAddress string
-
-	// ToAddress is the TSS address
-	ToAddress string
-
-	// Value is the amount of BTC
-	Value float64
-
-	MemoBytes   []byte
-	BlockNumber uint64
-	TxHash      string
-}
-
 // BTCBlockNHeader contains bitcoin block and the header
 type BTCBlockNHeader struct {
 	Header *wire.BlockHeader

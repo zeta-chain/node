@@ -228,6 +228,13 @@ func (ob *Observer) WithLastBlock(lastBlock uint64) *Observer {
 	return ob
 }
 
+// IsBlockConfirmed checks if the given block number is confirmed.
+func (ob *Observer) IsBlockConfirmed(blockNumber uint64) bool {
+	lastBlock := ob.LastBlock()
+	confBlock := blockNumber + ob.chainParams.ConfirmationCount
+	return lastBlock >= confBlock
+}
+
 // LastBlockScanned get last block scanned (not necessarily caught up with the chain; could be slow/paused).
 func (ob *Observer) LastBlockScanned() uint64 {
 	height := atomic.LoadUint64(&ob.lastBlockScanned)

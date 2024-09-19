@@ -24,9 +24,12 @@ var TestDataDir = "../../../"
 func MockBTCObserverMainnet(t *testing.T) *Observer {
 	// setup mock arguments
 	chain := chains.BitcoinMainnet
-	btcClient := mocks.NewMockBTCRPCClient().WithBlockCount(100)
 	params := mocks.MockChainParams(chain.ChainId, 10)
 	tss := mocks.NewTSSMainnet()
+
+	// create mock rpc client
+	btcClient := mocks.NewBTCRPCClient(t)
+	btcClient.On("GetBlockCount").Return(int64(100), nil)
 
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)

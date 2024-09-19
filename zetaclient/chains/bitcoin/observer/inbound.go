@@ -26,6 +26,30 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
+// BTCInboundEvent represents an incoming transaction event
+type BTCInboundEvent struct {
+	// FromAddress is the first input address
+	FromAddress string
+
+	// ToAddress is the TSS address
+	ToAddress string
+
+	// Value is the amount of BTC
+	Value float64
+
+	// DepositorFee is the deposit fee
+	DepositorFee float64
+
+	// MemoBytes is the memo of inbound
+	MemoBytes []byte
+
+	// BlockNumber is the block number of the inbound
+	BlockNumber uint64
+
+	// TxHash is the hash of the inbound
+	TxHash string
+}
+
 // WatchInbound watches Bitcoin chain for inbounds on a ticker
 // It starts a ticker and run ObserveInbound
 // TODO(revamp): move all ticker related methods in the same file
@@ -94,7 +118,6 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 	// #nosec G115 checked positive
 	lastBlock := uint64(currentBlock)
-
 	if lastBlock < ob.LastBlock() {
 		return fmt.Errorf(
 			"observeInboundBTC: block number should not decrease: current %d last %d",
@@ -104,45 +127,35 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	}
 	ob.WithLastBlock(lastBlock)
 
-	// skip if current height is too low
-	if lastBlock < ob.GetChainParams().ConfirmationCount {
-		return fmt.Errorf("observeInboundBTC: skipping observer, current block number %d is too low", currentBlock)
-	}
-
-	// skip if no new block is confirmed
-	lastScanned := ob.LastBlockScanned()
-	if lastScanned >= lastBlock-ob.GetChainParams().ConfirmationCount {
+	// check confirmation
+	blockNumber := ob.LastBlockScanned() + 1
+	if !ob.IsBlockConfirmed(blockNumber) {
 		return nil
 	}
 
 	// query incoming gas asset to TSS address
-	blockNumber := lastScanned + 1
 	// #nosec G115 always in range
 	res, err := ob.GetBlockByNumberCached(int64(blockNumber))
 	if err != nil {
 		ob.logger.Inbound.Error().Err(err).Msgf("observeInboundBTC: error getting bitcoin block %d", blockNumber)
 		return err
 	}
-	ob.logger.Inbound.Info().Msgf("observeInboundBTC: block %d has %d txs, current block %d, last block %d",
-		blockNumber, len(res.Block.Tx), currentBlock, lastScanned)
+	ob.logger.Inbound.Info().Msgf("observeInboundBTC: block %d has %d txs, current block %d, last scanned %d",
+		blockNumber, len(res.Block.Tx), currentBlock, blockNumber-1)
 
 	// add block header to zetacore
 	if len(res.Block.Tx) > 1 {
-		// get depositor fee
-		depositorFee := bitcoin.CalcDepositorFee(res.Block, ob.Chain().ChainId, ob.netParams, ob.logger.Inbound)
-
 		// filter incoming txs to TSS address
 		tssAddress := ob.TSS().BTCAddress()
 
 		// #nosec G115 always positive
-		inbounds, err := FilterAndParseIncomingTx(
+		events, err := FilterAndParseIncomingTx(
 			ob.btcClient,
 			res.Block.Tx,
 			uint64(res.Block.Height),
 			tssAddress,
 			ob.logger.Inbound,
 			ob.netParams,
-			depositorFee,
 		)
 		if err != nil {
 			ob.logger.Inbound.Error().
@@ -152,8 +165,8 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		}
 
 		// post inbound vote message to zetacore
-		for _, inbound := range inbounds {
-			msg := ob.GetInboundVoteMessageFromBtcEvent(inbound)
+		for _, event := range events {
+			msg := ob.GetInboundVoteMessageFromBtcEvent(event)
 			if msg != nil {
 				zetaHash, ballot, err := zetaCoreClient.PostVoteInbound(
 					ctx,
@@ -164,11 +177,11 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 				if err != nil {
 					ob.logger.Inbound.Error().
 						Err(err).
-						Msgf("observeInboundBTC: error posting to zetacore for tx %s", inbound.TxHash)
+						Msgf("observeInboundBTC: error posting to zetacore for tx %s", event.TxHash)
 					return err // we have to re-scan this block next time
 				} else if zetaHash != "" {
 					ob.logger.Inbound.Info().Msgf("observeInboundBTC: PostVoteInbound zeta tx hash: %s inbound %s ballot %s fee %v",
-						zetaHash, inbound.TxHash, ballot, depositorFee)
+						zetaHash, event.TxHash, ballot, event.DepositorFee)
 				}
 			}
 		}
@@ -272,10 +285,15 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		return "", fmt.Errorf("block %d has no transactions", blockVb.Height)
 	}
 
-	depositorFee := bitcoin.CalcDepositorFee(blockVb, ob.Chain().ChainId, ob.netParams, ob.logger.Inbound)
 	tss, err := ob.ZetacoreClient().GetBTCTSSAddress(ctx, ob.Chain().ChainId)
 	if err != nil {
 		return "", err
+	}
+
+	// calculate depositor fee
+	depositorFee, err := bitcoin.CalcDepositorFee(ob.btcClient, tx, ob.netParams)
+	if err != nil {
+		return "", errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
 	}
 
 	// #nosec G115 always positive
@@ -316,7 +334,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		return "", err
 	} else if zetaHash != "" {
 		ob.logger.Inbound.Info().Msgf("BTC deposit detected and reported: PostVoteInbound zeta tx hash: %s inbound %s ballot %s fee %v",
-			zetaHash, txHash, ballot, depositorFee)
+			zetaHash, txHash, ballot, event.DepositorFee)
 	}
 
 	return msg.Digest(), nil
@@ -333,26 +351,31 @@ func FilterAndParseIncomingTx(
 	tssAddress string,
 	logger zerolog.Logger,
 	netParams *chaincfg.Params,
-	depositorFee float64,
 ) ([]*BTCInboundEvent, error) {
-	inbounds := make([]*BTCInboundEvent, 0)
+	events := make([]*BTCInboundEvent, 0)
 	for idx, tx := range txs {
 		if idx == 0 {
 			continue // the first tx is coinbase; we do not process coinbase tx
 		}
 
-		inbound, err := GetBtcEvent(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
+		// calculate depositor fee
+		depositorFee, err := bitcoin.CalcDepositorFee(rpcClient, &txs[idx], netParams)
+		if err != nil {
+			return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
+		}
+
+		event, err := GetBtcEvent(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
 		if err != nil {
 			// unable to parse the tx, the caller should retry
 			return nil, errors.Wrapf(err, "error getting btc event for tx %s in block %d", tx.Txid, blockNumber)
 		}
 
-		if inbound != nil {
-			inbounds = append(inbounds, inbound)
+		if event != nil {
+			events = append(events, event)
 			logger.Info().Msgf("FilterAndParseIncomingTx: found btc event for tx %s in block %d", tx.Txid, blockNumber)
 		}
 	}
-	return inbounds, nil
+	return events, nil
 }
 
 // GetInboundVoteMessageFromBtcEvent converts a BTCInboundEvent to a MsgVoteInbound to enable voting on the inbound on zetacore
@@ -434,19 +457,6 @@ func GetBtcEvent(
 				return nil, nil
 			}
 
-			// switch to depositor fee V2 if
-			// 1. it is bitcoin testnet, or
-			// 2. it is bitcoin mainnet and upgrade height is reached
-			// TODO: remove CalcDepositorFeeV1 and below conditions after the upgrade height
-			// https://github.com/zeta-chain/node/issues/2766
-			if netParams.Name == chaincfg.TestNet3Params.Name ||
-				(netParams.Name == chaincfg.MainNetParams.Name && blockNumber >= bitcoin.DynamicDepositorFeeHeightV2) {
-				depositorFee, err = bitcoin.CalcDepositorFeeV2(rpcClient, &tx, netParams)
-				if err != nil {
-					return nil, errors.Wrapf(err, "error calculating depositor fee V2 for inbound: %s", tx.Txid)
-				}
-			}
-
 			// deposit amount has to be no less than the minimum depositor fee
 			if vout0.Value < depositorFee {
 				logger.Info().
@@ -476,12 +486,13 @@ func GetBtcEvent(
 		}
 
 		return &BTCInboundEvent{
-			FromAddress: fromAddress,
-			ToAddress:   tssAddress,
-			Value:       value,
-			MemoBytes:   memo,
-			BlockNumber: blockNumber,
-			TxHash:      tx.Txid,
+			FromAddress:  fromAddress,
+			ToAddress:    tssAddress,
+			Value:        value,
+			DepositorFee: depositorFee,
+			MemoBytes:    memo,
+			BlockNumber:  blockNumber,
+			TxHash:       tx.Txid,
 		}, nil
 	}
 	return nil, nil
