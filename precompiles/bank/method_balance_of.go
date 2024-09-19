@@ -8,6 +8,11 @@ import (
 	ptypes "github.com/zeta-chain/node/precompiles/types"
 )
 
+// balanceOf returns the balance of cosmos coins minted by the bank's deposit function,
+// for a given cosmos account calculated with toAddr := sdk.AccAddress(addr.Bytes()).
+// The denomination of the cosmos coin will be "zrc20/0x12345" where 0x12345 is the ZRC20 address.
+// Call this function using solidity with the following signature:
+// From IBank.sol: function balanceOf(address zrc20, address user) external view returns (uint256 balance);
 func (c *Contract) balanceOf(
 	ctx sdk.Context,
 	method *abi.Method,

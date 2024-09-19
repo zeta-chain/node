@@ -12,7 +12,18 @@ import (
 	"github.com/zeta-chain/node/x/fungible/types"
 )
 
-// From IBank.sol: function deposit(address zrc20, uint256 amount) external returns (bool success);
+// deposit is used to deposit ZRC20 into the bank contract, and receive the same amount of cosmos coins in exchange.
+// The denomination of the cosmos coin will be "zrc20/ZRC20Address", as an example depossiting an arbitrary ZRC20 token with
+// address 0x12345 will mint cosmos coins with the denomination "zrc20/0x12345".
+// The caller cosmos address will be calculated from the EVM caller address. by executing toAddr := sdk.AccAddress(addr.Bytes()).
+// This function can be think of a permissionless way of minting cosmos coins.
+// This is how deposit works:
+// - The caller has to allow the bank contract to spend a certain amount ZRC20 token coins on its behalf. This is mandatory.
+// - Then, the caller calls deposit(ZRC20 address, amount), to deposit the amount and receive cosmos coins.
+// - The bank will check there's enough balance, the caller is not a blocked address, and the token is a not paused ZRC20.
+// - Then the cosmos coins "zrc20/0x12345" will be minted and sent to the caller's cosmos address.
+// Call this function using solidity with the following signature:
+// - From IBank.sol: function deposit(address zrc20, uint256 amount) external returns (bool success);
 func (c *Contract) deposit(
 	ctx sdk.Context,
 	evm *vm.EVM,

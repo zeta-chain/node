@@ -13,7 +13,13 @@ import (
 	"github.com/zeta-chain/node/x/fungible/types"
 )
 
+// withdraw is used to withdraw cosmos coins minted using the bank's deposit function.
+// The caller has to have enough cosmos coin on its cosmos account balance to withdraw the requested amount.
+// After all check pass the bank will burn the cosmos coins and transfer the ZRC20 amount to the withdrawer.
+// The cosmos coins have the denomination of "zrc20/0x12345" where 0x12345 is the ZRC20 address.
+// Call this function using solidity with the following signature:
 // From IBank.sol: function withdraw(address zrc20, uint256 amount) external returns (bool success);
+// The address to be passed to the function is the ZRC20 address, like in 0x12345.
 func (c *Contract) withdraw(
 	ctx sdk.Context,
 	evm *vm.EVM,
