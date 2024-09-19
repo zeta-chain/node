@@ -3,7 +3,6 @@ package observer
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"math"
 	"math/big"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/pkg/errors"
@@ -313,49 +311,6 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// GetSenderAddressByVin get the sender address from the previous transaction
-// TODO(revamp): move in upper package to separate file (e.g., rpc.go)
-func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, net *chaincfg.Params) (string, error) {
-	// query previous raw transaction by txid
-	hash, err := chainhash.NewHashFromStr(vin.Txid)
-	if err != nil {
-		return "", err
-	}
-
-	// this requires running bitcoin node with 'txindex=1'
-	tx, err := rpcClient.GetRawTransaction(hash)
-	if err != nil {
-		return "", errors.Wrapf(err, "error getting raw transaction %s", vin.Txid)
-	}
-
-	// #nosec G115 - always in range
-	if len(tx.MsgTx().TxOut) <= int(vin.Vout) {
-		return "", fmt.Errorf("vout index %d out of range for tx %s", vin.Vout, vin.Txid)
-	}
-
-	// decode sender address from previous pkScript
-	pkScript := tx.MsgTx().TxOut[vin.Vout].PkScript
-	scriptHex := hex.EncodeToString(pkScript)
-	if bitcoin.IsPkScriptP2TR(pkScript) {
-		return bitcoin.DecodeScriptP2TR(scriptHex, net)
-	}
-	if bitcoin.IsPkScriptP2WSH(pkScript) {
-		return bitcoin.DecodeScriptP2WSH(scriptHex, net)
-	}
-	if bitcoin.IsPkScriptP2WPKH(pkScript) {
-		return bitcoin.DecodeScriptP2WPKH(scriptHex, net)
-	}
-	if bitcoin.IsPkScriptP2SH(pkScript) {
-		return bitcoin.DecodeScriptP2SH(scriptHex, net)
-	}
-	if bitcoin.IsPkScriptP2PKH(pkScript) {
-		return bitcoin.DecodeScriptP2PKH(scriptHex, net)
-	}
-
-	// sender address not found, return nil and move on to the next tx
-	return "", nil
 }
 
 // WatchUTXOs watches bitcoin chain for UTXOs owned by the TSS address
