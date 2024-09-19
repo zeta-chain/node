@@ -73,6 +73,7 @@ const (
 	*/
 	TestBitcoinDepositName                = "bitcoin_deposit"
 	TestBitcoinDepositRefundName          = "bitcoin_deposit_refund"
+	TestBitcoinDepositAndCallName         = "bitcoin_deposit_and_call"
 	TestBitcoinWithdrawSegWitName         = "bitcoin_withdraw_segwit"
 	TestBitcoinWithdrawTaprootName        = "bitcoin_withdraw_taproot"
 	TestBitcoinWithdrawMultipleName       = "bitcoin_withdraw_multiple"
@@ -450,6 +451,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.001"},
 		},
 		TestBitcoinDeposit,
+	),
+	runner.NewE2ETest(
+		TestBitcoinDepositAndCallName,
+		"deposit Bitcoin into ZEVM and call a contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinDepositAndCall,
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositRefundName,

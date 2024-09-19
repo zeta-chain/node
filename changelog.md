@@ -9,6 +9,8 @@
 * [2784](https://github.com/zeta-chain/node/pull/2784) - staking precompiled contract
 * [2795](https://github.com/zeta-chain/node/pull/2795) - support restricted address in Solana
 * [2861](https://github.com/zeta-chain/node/pull/2861) - emit events from staking precompile
+* [2870](https://github.com/zeta-chain/node/pull/2870) - support for multiple Bitcoin chains in the zetaclient
+* [2883](https://github.com/zeta-chain/node/pull/2883) - add chain static information for btc signet testnet
 
 ### Refactor
 
@@ -26,12 +28,15 @@
 * [2867](https://github.com/zeta-chain/node/pull/2867) - skip precompiles test for tss migration
 * [2833](https://github.com/zeta-chain/node/pull/2833) - add e2e framework for TON blockchain
 * [2874](https://github.com/zeta-chain/node/pull/2874) - add support for multiple runs for precompile tests
+* [2895](https://github.com/zeta-chain/node/pull/2895) - add e2e test for bitcoin deposit and call
+* [2894](https://github.com/zeta-chain/node/pull/2894) - increase gas limit for TSS vote tx
 
 ### Fixes
 
 * [2674](https://github.com/zeta-chain/node/pull/2674) - allow operators to vote on ballots associated with discarded keygen without affecting the status of the current keygen.
 * [2672](https://github.com/zeta-chain/node/pull/2672) - check observer set for duplicates when adding a new observer or updating an existing one
 * [2735](https://github.com/zeta-chain/node/pull/2735) - fix the outbound tracker blocking confirmation and outbound processing on EVM chains by locally index outbound txs in zetaclient
+* [2944](https://github.com/zeta-chain/node/pull/2844) - add tsspubkey to index for tss keygen voting
 * [2842](https://github.com/zeta-chain/node/pull/2842) - fix: move interval assignment out of cctx loop in EVM outbound tx scheduler
 * [2853](https://github.com/zeta-chain/node/pull/2853) - calling precompile through sc with sc state update
 

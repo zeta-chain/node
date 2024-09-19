@@ -66,11 +66,11 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		keygen.BlockNumber = 42
 		k.SetNodeAccount(ctx, *nodeAcc)
 		k.SetKeygen(ctx, *keygen)
-
+		tss := sample.Tss()
 		// ACT
 		_, err := srv.VoteTSS(ctx, &types.MsgVoteTSS{
 			Creator:          nodeAcc.Operator,
-			TssPubkey:        sample.Tss().TssPubkey,
+			TssPubkey:        tss.TssPubkey,
 			KeygenZetaHeight: 42,
 			Status:           chains.ReceiveStatus_success,
 		})
@@ -78,7 +78,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		// ASSERT
 		// keygen is already completed, but the vote can still be added if the operator has not voted yet
 		require.NoError(t, err)
-		ballot, found := k.GetBallot(ctx, fmt.Sprintf("%d-%s", 42, "tss-keygen"))
+		ballot, found := k.GetBallot(ctx, fmt.Sprintf("%d-%s-%s", 42, tss.TssPubkey, "tss-keygen"))
 		require.True(t, found)
 		require.EqualValues(t, types.BallotStatus_BallotFinalized_SuccessObservation, ballot.BallotStatus)
 		require.True(t, ballot.HasVoted(nodeAcc.Operator))
@@ -268,11 +268,12 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		k.SetNodeAccount(ctx, *nodeAcc)
 		k.SetNodeAccount(ctx, *sample.NodeAccount())
 		k.SetKeygen(ctx, *keygen)
+		tss := sample.Tss()
 
 		// add a first vote
 		res, err := srv.VoteTSS(ctx, &types.MsgVoteTSS{
 			Creator:          nodeAcc.Operator,
-			TssPubkey:        sample.Tss().TssPubkey,
+			TssPubkey:        tss.TssPubkey,
 			KeygenZetaHeight: 42,
 			Status:           chains.ReceiveStatus_success,
 		})
@@ -283,7 +284,7 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		// vote again: voting should fail
 		_, err = srv.VoteTSS(ctx, &types.MsgVoteTSS{
 			Creator:          nodeAcc.Operator,
-			TssPubkey:        sample.Tss().TssPubkey,
+			TssPubkey:        tss.TssPubkey,
 			KeygenZetaHeight: 42,
 			Status:           chains.ReceiveStatus_success,
 		})
@@ -415,11 +416,11 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		_, found = k.GetTSS(ctx)
 		require.False(t, found)
 
-		oldBallot, found := k.GetBallot(ctx, fmt.Sprintf("%d-%s", 42, "tss-keygen"))
+		oldBallot, found := k.GetBallot(ctx, fmt.Sprintf("%d-%s-%s", 42, tss.TssPubkey, "tss-keygen"))
 		require.True(t, found)
 		require.EqualValues(t, types.BallotStatus_BallotFinalized_SuccessObservation, oldBallot.BallotStatus)
 
-		newBallot, found := k.GetBallot(ctx, fmt.Sprintf("%d-%s", 52, "tss-keygen"))
+		newBallot, found := k.GetBallot(ctx, fmt.Sprintf("%d-%s-%s", 52, tss2.TssPubkey, "tss-keygen"))
 		require.True(t, found)
 		require.EqualValues(t, types.BallotStatus_BallotInProgress, newBallot.BallotStatus)
 	})
@@ -548,16 +549,16 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		require.EqualValues(t, finalizingHeight, newKeygen.BlockNumber)
 		require.EqualValues(t, types.KeygenStatus_KeyGenSuccess, newKeygen.Status)
 
-		tss, found = k.GetTSS(ctx)
+		tssQueried, found := k.GetTSS(ctx)
 		require.True(t, found)
-		require.Equal(t, tss.KeyGenZetaHeight, int64(52))
-		require.Equal(t, tss.FinalizedZetaHeight, finalizingHeight)
+		require.Equal(t, tssQueried.KeyGenZetaHeight, int64(52))
+		require.Equal(t, tssQueried.FinalizedZetaHeight, finalizingHeight)
 
-		oldBallot, found := k.GetBallot(ctx, fmt.Sprintf("%d-%s", 42, "tss-keygen"))
+		oldBallot, found := k.GetBallot(ctx, fmt.Sprintf("%d-%s-%s", 42, tss.TssPubkey, "tss-keygen"))
 		require.True(t, found)
 		require.EqualValues(t, types.BallotStatus_BallotInProgress, oldBallot.BallotStatus)
 
-		newBallot, found := k.GetBallot(ctx, fmt.Sprintf("%d-%s", 52, "tss-keygen"))
+		newBallot, found := k.GetBallot(ctx, fmt.Sprintf("%d-%s-%s", 52, tss2.TssPubkey, "tss-keygen"))
 		require.True(t, found)
 		require.EqualValues(t, types.BallotStatus_BallotFinalized_SuccessObservation, newBallot.BallotStatus)
 	})
@@ -714,5 +715,73 @@ func TestMsgServer_VoteTSS(t *testing.T) {
 		newKeygen, found = k.GetKeygen(ctx)
 		require.True(t, found)
 		require.EqualValues(t, types.KeygenStatus_KeyGenFailed, newKeygen.Status)
+	})
+
+	t.Run("unable to finalize tss if pubkey is different", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		ctx = ctx.WithBlockHeight(42)
+		srv := keeper.NewMsgServerImpl(*k)
+
+		// setup state with 3 node accounts
+		nodeAcc1 := sample.NodeAccount()
+		nodeAcc2 := sample.NodeAccount()
+		keygen := sample.Keygen(t)
+		keygen.BlockNumber = 42
+		keygen.Status = types.KeygenStatus_PendingKeygen
+		tss := sample.Tss()
+		k.SetNodeAccount(ctx, *nodeAcc1)
+		k.SetNodeAccount(ctx, *nodeAcc2)
+		k.SetKeygen(ctx, *keygen)
+
+		// ACT
+		// Add first vote
+		res, err := srv.VoteTSS(ctx, &types.MsgVoteTSS{
+			Creator:          nodeAcc1.Operator,
+			TssPubkey:        tss.TssPubkey,
+			KeygenZetaHeight: 42,
+			Status:           chains.ReceiveStatus_success,
+		})
+		require.NoError(t, err)
+
+		// check response
+		require.True(t, res.BallotCreated)
+		require.False(t, res.VoteFinalized)
+		require.False(t, res.KeygenSuccess)
+
+		// Add second vote with different pubkey should not finalize the tss
+		res, err = srv.VoteTSS(ctx, &types.MsgVoteTSS{
+			Creator:          nodeAcc2.Operator,
+			TssPubkey:        sample.Tss().TssPubkey,
+			KeygenZetaHeight: 42,
+			Status:           chains.ReceiveStatus_success,
+		})
+		require.NoError(t, err)
+
+		// ASSERT
+		require.True(t, res.BallotCreated) // New ballot created as pubkey is different
+		require.False(t, res.VoteFinalized)
+		require.False(t, res.KeygenSuccess)
+
+		// Add the second vote with correct pubkey should finalize the tss
+		finalizingHeight := int64(55)
+		ctx = ctx.WithBlockHeight(finalizingHeight)
+		res, err = srv.VoteTSS(ctx, &types.MsgVoteTSS{
+			Creator:          nodeAcc2.Operator,
+			TssPubkey:        tss.TssPubkey,
+			KeygenZetaHeight: 42,
+			Status:           chains.ReceiveStatus_success,
+		})
+		require.NoError(t, err)
+
+		// ASSERT
+		require.False(t, res.BallotCreated)
+		require.True(t, res.VoteFinalized)
+		require.True(t, res.KeygenSuccess)
+
+		tssQueried, found := k.GetTSS(ctx)
+		require.True(t, found)
+
+		require.Equal(t, finalizingHeight, tssQueried.FinalizedZetaHeight)
+		require.Equal(t, tss.TssPubkey, tssQueried.TssPubkey)
 	})
 }

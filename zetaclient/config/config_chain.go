@@ -14,15 +14,15 @@ const (
 func New(setDefaults bool) Config {
 	cfg := Config{
 		EVMChainConfigs: make(map[int64]EVMConfig),
-		BitcoinConfig:   BTCConfig{},
+		BTCChainConfigs: make(map[int64]BTCConfig),
 
 		mu: &sync.RWMutex{},
 	}
 
 	if setDefaults {
-		cfg.BitcoinConfig = bitcoinConfigRegnet()
-		cfg.SolanaConfig = solanaConfigLocalnet()
 		cfg.EVMChainConfigs = evmChainsConfigs()
+		cfg.BTCChainConfigs = btcChainsConfigs()
+		cfg.SolanaConfig = solanaConfigLocalnet()
 	}
 
 	return cfg
@@ -78,5 +78,12 @@ func evmChainsConfigs() map[int64]EVMConfig {
 			Endpoint:        "http://eth:8545",
 			RPCAlertLatency: 60,
 		},
+	}
+}
+
+// btcChainsConfigs contains BTC chain configs
+func btcChainsConfigs() map[int64]BTCConfig {
+	return map[int64]BTCConfig{
+		chains.BitcoinRegtest.ChainId: bitcoinConfigRegnet(),
 	}
 }

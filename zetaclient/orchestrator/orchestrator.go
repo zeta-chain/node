@@ -410,7 +410,7 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 						switch {
 						case chain.IsEVM():
 							oc.ScheduleCctxEVM(ctx, zetaHeight, chainID, cctxList, ob, signer)
-						case chain.IsUTXO():
+						case chain.IsBitcoin():
 							oc.ScheduleCctxBTC(ctx, zetaHeight, chainID, cctxList, ob, signer)
 						case chain.IsSolana():
 							oc.ScheduleCctxSolana(ctx, zetaHeight, chainID, cctxList, ob, signer)

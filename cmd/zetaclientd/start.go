@@ -154,7 +154,7 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	startLogger.Info().Msgf("Config is updated from zetacore %s", maskCfg(cfg))
+	startLogger.Info().Msgf("Config is updated from zetacore\n %s", cfg.StringMasked())
 
 	go zetacoreClient.UpdateAppContextWorker(ctx, appContext)
 
@@ -230,7 +230,7 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	btcChains := appContext.FilterChains(zctx.Chain.IsUTXO)
+	btcChains := appContext.FilterChains(zctx.Chain.IsBitcoin)
 	switch {
 	case len(btcChains) == 0:
 		return errors.New("no BTC chains found")
