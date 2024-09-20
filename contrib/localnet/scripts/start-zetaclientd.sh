@@ -109,4 +109,10 @@ then
   fi
 fi
 
+# merge extra-evm-chains.json into zetaclient_config.json if specified
+if [[ -f /root/extra-evm-chains.json ]]; then
+  jq '.EVMChainConfigs *= input' /root/.zetacored/config/zetaclient_config.json /root/extra-evm-chains.json > /tmp/merged_config.json
+  mv /tmp/merged_config.json /root/.zetacored/config/zetaclient_config.json
+fi
+
 zetaclientd-supervisor start < /root/password.file
