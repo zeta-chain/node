@@ -28,9 +28,13 @@ func TestV2ZEVMToEVMAuthenticatedCall(r *runner.E2ERunner, args []string) {
 	utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 
 	// perform the authenticated call
-	tx = r.V2ZEVMToEMVAuthenticatedCall(r.TestDAppV2EVMAddr, []byte(payloadMessageEVMAuthenticatedCall), gatewayzevm.RevertOptions{
-		OnRevertGasLimit: big.NewInt(0),
-	})
+	tx = r.V2ZEVMToEMVAuthenticatedCall(
+		r.TestDAppV2EVMAddr,
+		[]byte(payloadMessageEVMAuthenticatedCall),
+		gatewayzevm.RevertOptions{
+			OnRevertGasLimit: big.NewInt(0),
+		},
+	)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

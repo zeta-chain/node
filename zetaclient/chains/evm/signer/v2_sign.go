@@ -17,7 +17,11 @@ import (
 // function execute
 // address destination,
 // bytes calldata data
-func (signer *Signer) signGatewayExecute(ctx context.Context, sender string, txData *OutboundData) (*ethtypes.Transaction, error) {
+func (signer *Signer) signGatewayExecute(
+	ctx context.Context,
+	sender string,
+	txData *OutboundData,
+) (*ethtypes.Transaction, error) {
 	gatewayABI, err := gatewayevm.GatewayEVMMetaData.GetAbi()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get GatewayEVMMetaData ABI")

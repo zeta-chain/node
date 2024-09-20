@@ -27,7 +27,12 @@ func TestV2ETHWithdrawAndAuthenticatedCallThroughContract(r *runner.E2ERunner, a
 	require.True(r, ok, "Invalid amount specified for TestV2ETHWithdrawAndCall")
 
 	// deploy caller contract and send it gas zrc20 to pay gas fee
-	gatewayCallerAddr, tx, gatewayCaller, err := testgatewayzevmcaller.DeployTestGatewayZEVMCaller(r.ZEVMAuth, r.ZEVMClient, r.GatewayZEVMAddr, r.WZetaAddr)
+	gatewayCallerAddr, tx, gatewayCaller, err := testgatewayzevmcaller.DeployTestGatewayZEVMCaller(
+		r.ZEVMAuth,
+		r.ZEVMClient,
+		r.GatewayZEVMAddr,
+		r.WZetaAddr,
+	)
 	require.NoError(r, err)
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 
@@ -54,7 +59,10 @@ func TestV2ETHWithdrawAndAuthenticatedCallThroughContract(r *runner.E2ERunner, a
 	r.AssertTestDAppEVMCalled(true, payloadMessageAuthenticatedWithdrawETHThroughContract, amount)
 
 	// check expected sender was used
-	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(&bind.CallOpts{}, []byte(payloadMessageAuthenticatedWithdrawETHThroughContract))
+	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(
+		&bind.CallOpts{},
+		[]byte(payloadMessageAuthenticatedWithdrawETHThroughContract),
+	)
 	require.NoError(r, err)
 	require.Equal(r, gatewayCallerAddr, senderForMsg)
 

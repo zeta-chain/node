@@ -51,7 +51,10 @@ func TestV2ETHWithdrawAndAuthenticatedCall(r *runner.E2ERunner, args []string) {
 	r.AssertTestDAppEVMCalled(true, payloadMessageAuthenticatedWithdrawETH, amount)
 
 	// check expected sender was used
-	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(&bind.CallOpts{}, []byte(payloadMessageAuthenticatedWithdrawETH))
+	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(
+		&bind.CallOpts{},
+		[]byte(payloadMessageAuthenticatedWithdrawETH),
+	)
 	require.NoError(r, err)
 	require.Equal(r, r.ZEVMAuth.From, senderForMsg)
 }
