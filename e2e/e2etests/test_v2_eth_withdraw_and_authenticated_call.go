@@ -13,15 +13,23 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-const payloadMessageEVMAuthenticatedCall = "this is a test EVM authenticated call payload"
-const payloadMessageEVMAuthenticatedCallThroughContract = "this is a test EVM authenticated call payload through contract"
+const payloadMessageAuthenticatedWithdrawETH = "this is a test ETH withdraw and authenticated call payload"
+const payloadMessageAuthenticatedWithdrawETHThroughContract = "this is a test ETH withdraw and authenticated call payload through contract"
 
-func TestV2ZEVMToEVMAuthenticatedCall(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 0)
+func TestV2ETHWithdrawAndAuthenticatedCall(r *runner.E2ERunner, args []string) {
+	require.Len(r, args, 1)
 
-	r.AssertTestDAppEVMCalled(false, payloadMessageEVMAuthenticatedCall, big.NewInt(0))
+	previousGasLimit := r.ZEVMAuth.GasLimit
+	r.ZEVMAuth.GasLimit = 10000000
+	defer func() {
+		r.ZEVMAuth.GasLimit = previousGasLimit
+	}()
 
-	// necessary approval for fee payment
+	amount, ok := big.NewInt(0).SetString(args[0], 10)
+	require.True(r, ok, "Invalid amount specified for TestV2ETHWithdrawAndCall")
+
+	r.AssertTestDAppEVMCalled(false, payloadMessageAuthenticatedWithdrawETH, amount)
+
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// set expected sender
@@ -29,21 +37,23 @@ func TestV2ZEVMToEVMAuthenticatedCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 
-	// perform the authenticated call
-	tx = r.V2ZEVMToEMVAuthenticatedCall(r.TestDAppV2EVMAddr, []byte(payloadMessageEVMAuthenticatedCall), gatewayzevm.RevertOptions{
-		OnRevertGasLimit: big.NewInt(0),
-	})
+	// perform the withdraw
+	tx = r.V2ETHWithdrawAndAuthenticatedCall(
+		r.TestDAppV2EVMAddr,
+		amount,
+		[]byte(payloadMessageAuthenticatedWithdrawETH),
+		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+	)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "call")
+	r.Logger.CCTX(*cctx, "withdraw")
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
-	// check the payload was received on the contract
-	r.AssertTestDAppEVMCalled(true, payloadMessageEVMAuthenticatedCall, big.NewInt(0))
+	r.AssertTestDAppEVMCalled(true, payloadMessageAuthenticatedWithdrawETH, amount)
 
 	// check expected sender was used
-	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(&bind.CallOpts{}, []byte(payloadMessageEVMAuthenticatedCall))
+	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(&bind.CallOpts{}, []byte(payloadMessageAuthenticatedWithdrawETH))
 	require.NoError(r, err)
 	require.Equal(r, r.ZEVMAuth.From, senderForMsg)
 
@@ -62,18 +72,20 @@ func TestV2ZEVMToEVMAuthenticatedCall(r *runner.E2ERunner, args []string) {
 	utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 
 	// perform the authenticated call
-	tx = r.V2ZEVMToEMVAuthenticatedCallThroughContract(gatewayCaller, r.TestDAppV2EVMAddr, []byte(payloadMessageEVMAuthenticatedCallThroughContract), testgatewayzevmcaller.RevertOptions{
-		OnRevertGasLimit: big.NewInt(0),
-	})
+	tx = r.V2ETHWithdrawAndAuthenticatedCallThroughContract(gatewayCaller, r.TestDAppV2EVMAddr,
+		amount,
+		[]byte(payloadMessageAuthenticatedWithdrawETHThroughContract),
+		testgatewayzevmcaller.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "call")
+	r.Logger.CCTX(*cctx, "withdraw")
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
-	r.AssertTestDAppEVMCalled(true, payloadMessageEVMAuthenticatedCallThroughContract, big.NewInt(0))
+	r.AssertTestDAppEVMCalled(true, payloadMessageAuthenticatedWithdrawETHThroughContract, amount)
 
 	// check expected sender was used
-	senderForMsg, err = r.TestDAppV2EVM.SenderWithMessage(&bind.CallOpts{}, []byte(payloadMessageEVMAuthenticatedCallThroughContract))
+	senderForMsg, err = r.TestDAppV2EVM.SenderWithMessage(&bind.CallOpts{}, []byte(payloadMessageAuthenticatedWithdrawETHThroughContract))
 	require.NoError(r, err)
 	require.Equal(r, gatewayCallerAddr, senderForMsg)
 
@@ -83,11 +95,13 @@ func TestV2ZEVMToEVMAuthenticatedCall(r *runner.E2ERunner, args []string) {
 	utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 
 	// repeat authenticated call through contract, should revert because of wrong sender
-	tx = r.V2ZEVMToEMVAuthenticatedCallThroughContract(gatewayCaller, r.TestDAppV2EVMAddr, []byte(payloadMessageEVMAuthenticatedCallThroughContract), testgatewayzevmcaller.RevertOptions{
-		OnRevertGasLimit: big.NewInt(0),
-	})
+	tx = r.V2ETHWithdrawAndAuthenticatedCallThroughContract(gatewayCaller, r.TestDAppV2EVMAddr,
+		amount,
+		[]byte(payloadMessageAuthenticatedWithdrawETHThroughContract),
+		testgatewayzevmcaller.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "call")
+	r.Logger.CCTX(*cctx, "withdraw")
 	require.Equal(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
 }

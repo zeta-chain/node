@@ -68,12 +68,12 @@ func (k Keeper) ProcessZEVMInboundV2(
 
 		// create inbound object depending on the event type
 		if withdrawalEvent != nil {
-			inbound, err = k.newWithdrawalInbound(ctx, from, txOrigin, foreignCoin, withdrawalEvent)
+			inbound, err = k.newWithdrawalInbound(ctx, txOrigin, foreignCoin, withdrawalEvent)
 			if err != nil {
 				return err
 			}
 		} else {
-			inbound, err = k.newCallInbound(ctx, from, txOrigin, foreignCoin, gatewayEvent)
+			inbound, err = k.newCallInbound(ctx, txOrigin, foreignCoin, gatewayEvent)
 			if err != nil {
 				return err
 			}
@@ -159,7 +159,6 @@ func (k Keeper) parseGatewayCallEvent(
 // https://github.com/zeta-chain/node/issues/2658
 func (k Keeper) newWithdrawalInbound(
 	ctx sdk.Context,
-	from ethcommon.Address,
 	txOrigin string,
 	foreignCoin fungibletypes.ForeignCoins,
 	event *gatewayzevm.GatewayZEVMWithdrawn,
@@ -197,7 +196,7 @@ func (k Keeper) newWithdrawalInbound(
 
 	return types.NewMsgVoteInbound(
 		"",
-		from.Hex(),
+		event.Sender.Hex(),
 		senderChain.ChainId,
 		txOrigin,
 		toAddr,
@@ -222,7 +221,6 @@ func (k Keeper) newWithdrawalInbound(
 // https://github.com/zeta-chain/node/issues/2658
 func (k Keeper) newCallInbound(
 	ctx sdk.Context,
-	from ethcommon.Address,
 	txOrigin string,
 	foreignCoin fungibletypes.ForeignCoins,
 	event *gatewayzevm.GatewayZEVMCalled,
