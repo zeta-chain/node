@@ -17,25 +17,21 @@ type Client struct {
 	*liteapi.Client
 }
 
+const pageSize = 200
+
 // GetFirstTransaction scrolls through the transactions of the given account to find the first one.
-// Note that it will fail in case of old transactions. Ideally, use archival node.
-// Also returns the number of scrolled transactions for this account i.e. total transactions
+// Note that it might fail w/o using an archival node. Also returns the number of
+// scrolled transactions for this account i.e. total transactions
 func (c *Client) GetFirstTransaction(ctx context.Context, acc ton.AccountID) (*ton.Transaction, int, error) {
-	const pageSize = 100
-
-	state, err := c.GetAccountState(ctx, acc)
+	lt, hash, err := c.getLastTranHash(ctx, acc)
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "unable to get account state")
+		return nil, 0, err
 	}
 
-	if state.Account.Status() != tlb.AccountActive {
-		return nil, 0, errors.New("account is not active")
-	}
-
-	var tx *ton.Transaction
-
-	// logical time and hash of the last transaction
-	lt, hash, scrolled := state.LastTransLt, state.LastTransHash, 0
+	var (
+		tx       *ton.Transaction
+		scrolled int
+	)
 
 	for {
 		hashBits := ton.Bits256(hash)
@@ -63,6 +59,72 @@ func (c *Client) GetFirstTransaction(ctx context.Context, acc ton.AccountID) (*t
 	}
 
 	return tx, scrolled, nil
+}
+
+// GetTransactionsUntil returns all transactions in a range of (from,to] where from is "lt && hash".
+// - oldestLT && oldestHash tx is EXCLUDED from the result.
+// - ordered by DESC
+func (c *Client) GetTransactionsUntil(
+	ctx context.Context,
+	acc ton.AccountID,
+	oldestLT uint64,
+	oldestHash ton.Bits256,
+) ([]ton.Transaction, error) {
+	lt, hash, err := c.getLastTranHash(ctx, acc)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []ton.Transaction
+
+	for {
+		hashBits := ton.Bits256(hash)
+
+		txs, err := c.GetTransactions(ctx, pageSize, acc, lt, hashBits)
+		if err != nil {
+			return nil, errors.Wrapf(err, "unable to get transactions [lt %d, hash %s]", lt, hashBits.Hex())
+		}
+
+		if len(txs) == 0 {
+			break
+		}
+
+		for i := range txs {
+			found := txs[i].Lt == oldestLT && txs[i].Hash() == tlb.Bits256(oldestHash)
+			if !found {
+				continue
+			}
+
+			// early exit
+			result = append(result, txs[:i]...)
+
+			return result, nil
+		}
+
+		// otherwise, append all page results
+		result = append(result, txs...)
+
+		// prepare pagination params for the next page
+		oldestIndex := len(txs) - 1
+
+		lt, hash = txs[oldestIndex].PrevTransLt, txs[oldestIndex].PrevTransHash
+	}
+
+	return result, nil
+}
+
+// getLastTranHash returns logical time and hash of the last transaction
+func (c *Client) getLastTranHash(ctx context.Context, acc ton.AccountID) (uint64, tlb.Bits256, error) {
+	state, err := c.GetAccountState(ctx, acc)
+	if err != nil {
+		return 0, tlb.Bits256{}, errors.Wrap(err, "unable to get account state")
+	}
+
+	if state.Account.Status() != tlb.AccountActive {
+		return 0, tlb.Bits256{}, errors.New("account is not active")
+	}
+
+	return state.LastTransLt, state.LastTransHash, nil
 }
 
 func TransactionHashToString(lt uint64, hash ton.Bits256) string {

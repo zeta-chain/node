@@ -2,6 +2,8 @@ package liteapi
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -10,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/config"
 	"github.com/tonkeeper/tongo/liteapi"
+	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
 	"github.com/zeta-chain/node/zetaclient/common"
 )
@@ -52,6 +55,42 @@ func TestClient(t *testing.T) {
 
 		t.Logf("Time taken %s; transactions scanned: %d", finish.String(), scrolled)
 	})
+
+	t.Run("GetTransactionsUntil", func(t *testing.T) {
+		// ARRANGE
+		// Given sample account id (a dev wallet)
+		// https://tonviewer.com/UQCVlMcZ7EyV9maDsvscoLCd5KQfb7CHukyNJluWpMzlD0vr?section=transactions
+		accountID, err := ton.ParseAccountID("UQCVlMcZ7EyV9maDsvscoLCd5KQfb7CHukyNJluWpMzlD0vr")
+		require.NoError(t, err)
+
+		const getUntilLT = uint64(48645164000001)
+		const getUntilHash = `2e107215e634bbc3492bdf4b1466d59432623295072f59ab526d15737caa9531`
+
+		// as of 2024-09-20
+		const expectedTX = 3
+
+		var hash ton.Bits256
+		require.NoError(t, hash.FromHex(getUntilHash))
+
+		start := time.Now()
+
+		// ACT
+		// https://tonviewer.com/UQCVlMcZ7EyV9maDsvscoLCd5KQfb7CHukyNJluWpMzlD0vr?section=transactions
+		txs, err := client.GetTransactionsUntil(ctx, accountID, getUntilLT, hash)
+
+		finish := time.Since(start)
+
+		// ASSERT
+		require.NoError(t, err)
+
+		t.Logf("Time taken %s; transactions fetched: %d", finish.String(), len(txs))
+		for _, tx := range txs {
+			printTx(t, tx)
+		}
+
+		mustContainTX(t, txs, "a6672a0e80193c1f705ef1cf45a5883441b8252523b1d08f7656c80e400c74a8")
+		assert.GreaterOrEqual(t, len(txs), expectedTX)
+	})
 }
 
 func mustCreateClient(t *testing.T) *liteapi.Client {
@@ -79,4 +118,36 @@ func mustFetchConfig(t *testing.T) config.GlobalConfigurationFile {
 	require.NoError(t, err)
 
 	return *conf
+}
+
+func mustContainTX(t *testing.T, txs []ton.Transaction, hash string) {
+	var h ton.Bits256
+	require.NoError(t, h.FromHex(hash))
+
+	for _, tx := range txs {
+		if tx.Hash() == tlb.Bits256(h) {
+			return
+		}
+	}
+
+	t.Fatalf("transaction %q not found", hash)
+}
+
+func printTx(t *testing.T, tx ton.Transaction) {
+	b, err := json.MarshalIndent(simplifyTx(tx), "", "  ")
+	require.NoError(t, err)
+
+	t.Logf("TX %s", string(b))
+}
+
+func simplifyTx(tx ton.Transaction) map[string]any {
+	return map[string]any{
+		"block":            fmt.Sprintf("shard: %d, seqno: %d", tx.BlockID.Shard, tx.BlockID.Seqno),
+		"hash":             tx.Hash().Hex(),
+		"logicalTime":      tx.Lt,
+		"unixTime":         time.Unix(int64(tx.Transaction.Now), 0).UTC().String(),
+		"outMessagesCount": tx.OutMsgCnt,
+		// "inMessageInfo":    tx.Msgs.InMsg.Value.Value.Info.IntMsgInfo,
+		// "outMessages":      tx.Msgs.OutMsgs,
+	}
 }
