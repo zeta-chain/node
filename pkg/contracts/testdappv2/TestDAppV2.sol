@@ -29,12 +29,12 @@ contract TestDAppV2 {
         address sender;
     }
 
+    address public expectedOnCallSender;
+
     // these structures allow to assess contract calls
     mapping(bytes32 => bool) public calledWithMessage;
-    mapping(address => bool) public calledWithSender;
+    mapping(bytes => address) public senderWithMessage;
     mapping(bytes32 => uint256) public amountWithMessage;
-
-    address[] public senders;
 
     function setCalledWithMessage(string memory message) internal {
         calledWithMessage[keccak256(abi.encodePacked(message))] = true;
@@ -103,9 +103,14 @@ contract TestDAppV2 {
         setAmountWithMessage(string(revertContext.revertMessage), 0);
     }
 
+    function setExpectedOnCallSender(address _expectedOnCallSender) external {
+        expectedOnCallSender = _expectedOnCallSender;
+    }
+
     function onCall(MessageContext calldata messageContext, bytes calldata message) external returns (bytes memory) {
+        require(messageContext.sender == expectedOnCallSender, "unauthenticated sender");
         setCalledWithMessage(string(message));
-        senders.push(messageContext.sender);
+        senderWithMessage[message] = messageContext.sender;
     }
 
     receive() external payable {}
