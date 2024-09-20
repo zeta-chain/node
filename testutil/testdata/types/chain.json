@@ -1,0 +1,9 @@
+{
+  "chain_id": 1,
+  "network": 1,
+  "network_type": 3,
+  "vm": 2,
+  "consensus": 4,
+  "is_external": true,
+  "name": "testchain"
+}

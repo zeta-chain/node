@@ -6,30 +6,24 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/authority/types"
 )
 
-func TestMsgUpdateChainInfo_ValidateBasic(t *testing.T) {
+func TestMsgRemoveChainInfo_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name        string
-		msg         *types.MsgUpdateChainInfo
+		msg         *types.MsgRemoveChainInfo
 		errContains string
 	}{
 		{
 			name: "valid message",
-			msg:  types.NewMsgUpdateChainInfo(sample.AccAddress(), sample.Chain(42)),
+			msg:  types.NewMsgRemoveChainInfo(sample.AccAddress(), 42),
 		},
 		{
 			name:        "invalid creator address",
-			msg:         types.NewMsgUpdateChainInfo("invalid", sample.Chain(42)),
+			msg:         types.NewMsgRemoveChainInfo("invalid", 42),
 			errContains: "invalid creator address",
-		},
-		{
-			name:        "invalid chain",
-			msg:         types.NewMsgUpdateChainInfo(sample.AccAddress(), chains.Chain{ChainId: -1}),
-			errContains: "invalid chain",
 		},
 	}
 
@@ -45,21 +39,21 @@ func TestMsgUpdateChainInfo_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgUpdateChainInfo_GetSigners(t *testing.T) {
+func TestMsgRemoveChainInfo_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    *types.MsgUpdateChainInfo
+		msg    *types.MsgRemoveChainInfo
 		panics bool
 	}{
 		{
 			name:   "valid signer",
-			msg:    types.NewMsgUpdateChainInfo(signer, sample.Chain(42)),
+			msg:    types.NewMsgRemoveChainInfo(signer, 42),
 			panics: false,
 		},
 		{
 			name:   "invalid signer",
-			msg:    types.NewMsgUpdateChainInfo("invalid", sample.Chain(42)),
+			msg:    types.NewMsgRemoveChainInfo("invalid", 42),
 			panics: true,
 		},
 	}
@@ -78,18 +72,18 @@ func TestMsgUpdateChainInfo_GetSigners(t *testing.T) {
 	}
 }
 
-func TestMsgUpdateChainInfo_Type(t *testing.T) {
-	msg := types.NewMsgUpdateChainInfo(sample.AccAddress(), sample.Chain(42))
-	require.Equal(t, types.TypeMsgUpdateChainInfo, msg.Type())
+func TestMsgRemoveChainInfo_Type(t *testing.T) {
+	msg := types.NewMsgRemoveChainInfo(sample.AccAddress(), 42)
+	require.Equal(t, types.TypeMsgRemoveChainInfo, msg.Type())
 }
 
-func TestMsgUpdateChainInfo_Route(t *testing.T) {
-	msg := types.NewMsgUpdateChainInfo(sample.AccAddress(), sample.Chain(42))
+func TestMsgRemoveChainInfo_Route(t *testing.T) {
+	msg := types.NewMsgRemoveChainInfo(sample.AccAddress(), 42)
 	require.Equal(t, types.RouterKey, msg.Route())
 }
 
-func TestMsgUpdateChainInfo_GetSignBytes(t *testing.T) {
-	msg := types.NewMsgUpdateChainInfo(sample.AccAddress(), sample.Chain(42))
+func TestMsgRemoveChainInfo_GetSignBytes(t *testing.T) {
+	msg := types.NewMsgRemoveChainInfo(sample.AccAddress(), 42)
 	require.NotPanics(t, func() {
 		msg.GetSignBytes()
 	})

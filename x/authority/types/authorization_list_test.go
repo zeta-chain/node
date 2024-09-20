@@ -430,6 +430,7 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&types.MsgAddAuthorization{}),
 			sdk.MsgTypeURL(&types.MsgRemoveAuthorization{}),
 			sdk.MsgTypeURL(&types.MsgUpdateChainInfo{}),
+			sdk.MsgTypeURL(&types.MsgRemoveChainInfo{}),
 			sdk.MsgTypeURL(&lightclienttypes.MsgEnableHeaderVerification{}),
 		}
 		defaultList := types.DefaultAuthorizationsList()
