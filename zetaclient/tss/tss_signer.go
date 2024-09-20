@@ -14,8 +14,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bnb-chain/tss-lib/ecdsa/keygen"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcutil"
 	tmcrypto "github.com/cometbft/cometbft/crypto"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -26,7 +27,6 @@ import (
 	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
 	"gitlab.com/thorchain/tss/go-tss/keysign"
 	"gitlab.com/thorchain/tss/go-tss/tss"
-	"gitlab.com/thorchain/tss/tss-lib/ecdsa/keygen"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/cosmos"

@@ -5,15 +5,15 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"math/big"
 	"testing"
 
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
+	btcecdsa "github.com/btcsuite/btcd/btcec/v2/ecdsa"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcutil"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
@@ -101,11 +101,9 @@ func buildTX() (*wire.MsgTx, *txscript.TxSigHashes, int, int64, []byte, *btcec.P
 	txOut := wire.NewTxOut(47000, pkScript)
 	tx.AddTxOut(txOut)
 
-	txSigHashes := txscript.NewTxSigHashes(tx)
+	txSigHashes := txscript.NewTxSigHashes(tx, txscript.NewCannedPrevOutputFetcher([]byte{}, 0))
 
-	privKey := btcec.PrivateKey(*wif.PrivKey.ToECDSA())
-
-	return tx, txSigHashes, int(0), int64(65236), pkScript, &privKey, wif.CompressPubKey, nil
+	return tx, txSigHashes, int(0), int64(65236), pkScript, wif.PrivKey, wif.CompressPubKey, nil
 }
 
 func getWalletTX(
@@ -150,12 +148,12 @@ func getTSSTX(
 	}
 
 	sig65B, err := tss.Sign(ctx, witnessHash, 10, 10, 0, "")
-	R := big.NewInt(0).SetBytes(sig65B[:32])
-	S := big.NewInt(0).SetBytes(sig65B[32:64])
-	sig := btcec.Signature{
-		R: R,
-		S: S,
-	}
+	R := &btcec.ModNScalar{}
+	R.SetBytes((*[32]byte)(sig65B[:32]))
+	S := &btcec.ModNScalar{}
+	S.SetBytes((*[32]byte)(sig65B[32:64]))
+	sig := btcecdsa.NewSignature(R, S)
+
 	if err != nil {
 		return "", err
 	}

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/btcsuite/btcutil"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/stretchr/testify/require"
 	. "gopkg.in/check.v1"
 )
@@ -45,7 +45,7 @@ func TestAddress(t *testing.T) {
 func TestDecodeBtcAddress(t *testing.T) {
 	t.Run("invalid string", func(t *testing.T) {
 		_, err := DecodeBtcAddress("�U�ڷ���i߭����꿚�l", BitcoinTestnet.ChainId)
-		require.ErrorContains(t, err, "runtime error: index out of range")
+		require.ErrorContains(t, err, "decode address failed: decoded address is of unknown format")
 	})
 	t.Run("invalid chain", func(t *testing.T) {
 		_, err := DecodeBtcAddress("14CEjTd5ci3228J45GdnGeUKLSSeCWUQxK", 0)

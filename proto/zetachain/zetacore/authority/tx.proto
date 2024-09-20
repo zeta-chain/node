@@ -4,6 +4,7 @@ package zetachain.zetacore.authority;
 import "zetachain/zetacore/authority/policies.proto";
 import "zetachain/zetacore/authority/chain_info.proto";
 import "zetachain/zetacore/authority/authorization.proto";
+import "zetachain/zetacore/pkg/chains/chains.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/node/x/authority/types";
@@ -12,6 +13,7 @@ option go_package = "github.com/zeta-chain/node/x/authority/types";
 service Msg {
   rpc UpdatePolicies(MsgUpdatePolicies) returns (MsgUpdatePoliciesResponse);
   rpc UpdateChainInfo(MsgUpdateChainInfo) returns (MsgUpdateChainInfoResponse);
+  rpc RemoveChainInfo(MsgRemoveChainInfo) returns (MsgRemoveChainInfoResponse);
   rpc AddAuthorization(MsgAddAuthorization)
       returns (MsgAddAuthorizationResponse);
   rpc RemoveAuthorization(MsgRemoveAuthorization)
@@ -53,8 +55,20 @@ message MsgUpdatePoliciesResponse {}
 // MsgUpdateChainInfo defines the MsgUpdateChainInfo service.
 message MsgUpdateChainInfo {
   string creator = 1;
-  ChainInfo chain_info = 2 [ (gogoproto.nullable) = false ];
+  pkg.chains.Chain chain = 3 [ (gogoproto.nullable) = false ];
+
+  // Do not edit
+  reserved 2;
 }
 
 // MsgUpdateChainInfoResponse defines the MsgUpdateChainInfoResponse service.
 message MsgUpdateChainInfoResponse {}
+
+// MsgRemoveChainInfo defines the MsgRemoveChainInfo service.
+message MsgRemoveChainInfo {
+  string creator = 1;
+  int64 chain_id = 2;
+}
+
+// MsgRemoveChainInfoResponse defines the MsgRemoveChainInfoResponse service.
+message MsgRemoveChainInfoResponse {}
