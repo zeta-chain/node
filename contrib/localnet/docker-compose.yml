@@ -313,7 +313,7 @@ services:
       - ssh:/root/.ssh
 
   grafana:
-    image: grafana/grafana:10.4.8
+    image: grafana/grafana:11.2.0
     container_name: grafana
     hostname: grafana
     profiles:
