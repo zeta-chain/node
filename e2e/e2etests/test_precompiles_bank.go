@@ -19,6 +19,13 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	r.ZEVMAuth.GasLimit = 10_000_000
 	defer func() {
 		r.ZEVMAuth.GasLimit = previousGasLimit
+
+		// Reset the allowance to 0; this is needed when running upgrade tests where
+		// this test runs twice.
+		tx, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, bank.ContractAddress, big.NewInt(0))
+		require.NoError(r, err)
+		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+		utils.RequireTxSuccessful(r, receipt, "Resetting allowance failed")
 	}()
 
 	totalAmount := big.NewInt(1e3)
@@ -53,8 +60,8 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequiredTxFailed(r, receipt, "Depositting an amount higher than allowed should fail")
 
-	// Add 500 to allowance for a total of 1000 ERC20ZRC20 tokens.
-	tx, err = r.ERC20ZRC20.Approve(r.ZEVMAuth, bank.ContractAddress, depositAmount)
+	// Approve allowance of 1000 ERC20ZRC20 tokens.
+	tx, err = r.ERC20ZRC20.Approve(r.ZEVMAuth, bank.ContractAddress, big.NewInt(1e3))
 	require.NoError(r, err)
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "Approve ETHZRC20 bank allowance tx failed")
