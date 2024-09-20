@@ -5,7 +5,6 @@ interface IERC20 {
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
 }
 
-
 contract TestDAppV2 {
     struct zContext {
         bytes origin;
