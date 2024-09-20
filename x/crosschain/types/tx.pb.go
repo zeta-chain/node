@@ -1000,9 +1000,8 @@ type MsgVoteInbound struct {
 	// protocol contract version to use for the cctx workflow
 	ProtocolContractVersion ProtocolContractVersion `protobuf:"varint,16,opt,name=protocol_contract_version,json=protocolContractVersion,proto3,enum=zetachain.zetacore.crosschain.ProtocolContractVersion" json:"protocol_contract_version,omitempty"`
 	// revert options provided by the sender
-	RevertOptions RevertOptions `protobuf:"bytes,17,opt,name=revert_options,json=revertOptions,proto3" json:"revert_options"`
-	// TODO: maybe group with gasLimit into CallOptions?
-	IsArbitraryCall bool `protobuf:"varint,18,opt,name=is_arbitrary_call,json=isArbitraryCall,proto3" json:"is_arbitrary_call,omitempty"`
+	RevertOptions   RevertOptions `protobuf:"bytes,17,opt,name=revert_options,json=revertOptions,proto3" json:"revert_options"`
+	IsArbitraryCall bool          `protobuf:"varint,18,opt,name=is_arbitrary_call,json=isArbitraryCall,proto3" json:"is_arbitrary_call,omitempty"`
 }
 
 func (m *MsgVoteInbound) Reset()         { *m = MsgVoteInbound{} }

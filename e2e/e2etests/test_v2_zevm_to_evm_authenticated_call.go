@@ -20,7 +20,7 @@ func TestV2ZEVMToEVMAuthenticatedCall(r *runner.E2ERunner, args []string) {
 
 	r.AssertTestDAppEVMCalled(false, payloadMessageEVMAuthenticatedCall, big.NewInt(0))
 
-	// Necessary approval for fee payment
+	// necessary approval for fee payment
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// set expected sender
@@ -50,8 +50,6 @@ func TestV2ZEVMToEVMAuthenticatedCall(r *runner.E2ERunner, args []string) {
 	gatewayCallerAddr, tx, gatewayCaller, err := testgatewayzevmcaller.DeployTestGatewayZEVMCaller(r.ZEVMAuth, r.ZEVMClient, r.GatewayZEVMAddr)
 	require.NoError(r, err)
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-
-	r.ZEVMAuth.GasLimit = 10000000
 
 	tx, err = r.ETHZRC20.Transfer(r.ZEVMAuth, gatewayCallerAddr, big.NewInt(100000000000000000))
 	require.NoError(r, err)
