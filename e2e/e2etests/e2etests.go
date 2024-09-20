@@ -126,25 +126,28 @@ const (
 	/*
 	 V2 smart contract tests
 	*/
-	TestV2ETHDepositName                         = "v2_eth_deposit"
-	TestV2ETHDepositAndCallName                  = "v2_eth_deposit_and_call"
-	TestV2ETHDepositAndCallRevertName            = "v2_eth_deposit_and_call_revert"
-	TestV2ETHDepositAndCallRevertWithCallName    = "v2_eth_deposit_and_call_revert_with_call"
-	TestV2ETHWithdrawName                        = "v2_eth_withdraw"
-	TestV2ETHWithdrawAndCallName                 = "v2_eth_withdraw_and_call"
-	TestV2ETHWithdrawAndCallRevertName           = "v2_eth_withdraw_and_call_revert"
-	TestV2ETHWithdrawAndCallRevertWithCallName   = "v2_eth_withdraw_and_call_revert_with_call"
-	TestV2ERC20DepositName                       = "v2_erc20_deposit"
-	TestV2ERC20DepositAndCallName                = "v2_erc20_deposit_and_call"
-	TestV2ERC20DepositAndCallRevertName          = "v2_erc20_deposit_and_call_revert"
-	TestV2ERC20DepositAndCallRevertWithCallName  = "v2_erc20_deposit_and_call_revert_with_call"
-	TestV2ERC20WithdrawName                      = "v2_erc20_withdraw"
-	TestV2ERC20WithdrawAndCallName               = "v2_erc20_withdraw_and_call"
-	TestV2ERC20WithdrawAndCallRevertName         = "v2_erc20_withdraw_and_call_revert"
-	TestV2ERC20WithdrawAndCallRevertWithCallName = "v2_erc20_withdraw_and_call_revert_with_call"
-	TestV2ZEVMToEVMCallName                      = "v2_zevm_to_evm_call"
-	TestV2ZEVMToEVMAuthenticatedCallName         = "v2_zevm_to_evm_authenticated_call"
-	TestV2EVMToZEVMCallName                      = "v2_evm_to_zevm_call"
+	TestV2ETHDepositName                                     = "v2_eth_deposit"
+	TestV2ETHDepositAndCallName                              = "v2_eth_deposit_and_call"
+	TestV2ETHDepositAndCallRevertName                        = "v2_eth_deposit_and_call_revert"
+	TestV2ETHDepositAndCallRevertWithCallName                = "v2_eth_deposit_and_call_revert_with_call"
+	TestV2ETHWithdrawName                                    = "v2_eth_withdraw"
+	TestV2ETHWithdrawAndCallName                             = "v2_eth_withdraw_and_call"
+	TestV2ETHWithdrawAndAuthenticatedCallName                = "v2_eth_withdraw_and_authenticated_call"
+	TestV2ETHWithdrawAndAuthenticatedCallThroughContractName = "v2_eth_withdraw_and_authenticated_call_through_contract"
+	TestV2ETHWithdrawAndCallRevertName                       = "v2_eth_withdraw_and_call_revert"
+	TestV2ETHWithdrawAndCallRevertWithCallName               = "v2_eth_withdraw_and_call_revert_with_call"
+	TestV2ERC20DepositName                                   = "v2_erc20_deposit"
+	TestV2ERC20DepositAndCallName                            = "v2_erc20_deposit_and_call"
+	TestV2ERC20DepositAndCallRevertName                      = "v2_erc20_deposit_and_call_revert"
+	TestV2ERC20DepositAndCallRevertWithCallName              = "v2_erc20_deposit_and_call_revert_with_call"
+	TestV2ERC20WithdrawName                                  = "v2_erc20_withdraw"
+	TestV2ERC20WithdrawAndCallName                           = "v2_erc20_withdraw_and_call"
+	TestV2ERC20WithdrawAndCallRevertName                     = "v2_erc20_withdraw_and_call_revert"
+	TestV2ERC20WithdrawAndCallRevertWithCallName             = "v2_erc20_withdraw_and_call_revert_with_call"
+	TestV2ZEVMToEVMCallName                                  = "v2_zevm_to_evm_call"
+	TestV2ZEVMToEVMAuthenticatedCallName                     = "v2_zevm_to_evm_authenticated_call"
+	TestV2ZEVMToEVMAuthenticatedCallThroughContractName      = "v2_zevm_to_evm_authenticated_call_through_contract"
+	TestV2EVMToZEVMCallName                                  = "v2_evm_to_zevm_call"
 
 	/*
 	 Operational tests
@@ -740,6 +743,22 @@ var AllE2ETests = []runner.E2ETest{
 		TestV2ETHWithdrawAndCall,
 	),
 	runner.NewE2ETest(
+		TestV2ETHWithdrawAndAuthenticatedCallName,
+		"withdraw Ether from ZEVM and authenticated call a contract using V2 contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000"},
+		},
+		TestV2ETHWithdrawAndAuthenticatedCall,
+	),
+	runner.NewE2ETest(
+		TestV2ETHWithdrawAndAuthenticatedCallThroughContractName,
+		"withdraw Ether from ZEVM and authenticated call a contract using V2 contract through intermediary contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000"},
+		},
+		TestV2ETHWithdrawAndAuthenticatedCallThroughContract,
+	),
+	runner.NewE2ETest(
 		TestV2ETHWithdrawAndCallRevertName,
 		"withdraw Ether from ZEVM and call a contract using V2 contract that reverts",
 		[]runner.ArgDefinition{
@@ -830,6 +849,12 @@ var AllE2ETests = []runner.E2ETest{
 		"zevm -> evm call using V2 contract",
 		[]runner.ArgDefinition{},
 		TestV2ZEVMToEVMAuthenticatedCall,
+	),
+	runner.NewE2ETest(
+		TestV2ZEVMToEVMAuthenticatedCallThroughContractName,
+		"zevm -> evm call using V2 contract through intermediary contract",
+		[]runner.ArgDefinition{},
+		TestV2ZEVMToEVMAuthenticatedCallThroughContract,
 	),
 	runner.NewE2ETest(
 		TestV2EVMToZEVMCallName,
