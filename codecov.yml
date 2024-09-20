@@ -80,6 +80,4 @@ ignore:
   - "precompiles/**/*.abi"
   - "precompiles/**/*.json"
   - "precompiles/**/*.sol"
-  - "precompiles/prototype/IPrototype.go"
-  - "precompiles/staking/IStaking.go"
-  - "precompiles/bank/IBank.go"
+  - "precompiles/**/*.gen.go"
