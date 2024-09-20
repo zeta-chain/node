@@ -189,6 +189,7 @@ message MsgVoteInbound {
 	uint64 event_index = 15;
 	ProtocolContractVersion protocol_contract_version = 16;
 	RevertOptions revert_options = 17;
+	bool is_arbitrary_call = 18;
 }
 ```
 

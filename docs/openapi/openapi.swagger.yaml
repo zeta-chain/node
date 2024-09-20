@@ -57303,6 +57303,8 @@ definitions:
         type: string
       tx_finalization_status:
         $ref: '#/definitions/crosschainTxFinalizationStatus'
+      is_arbitrary_call:
+        type: boolean
   crosschainOutboundTracker:
     type: object
     properties:

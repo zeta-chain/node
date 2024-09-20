@@ -294,6 +294,11 @@ export declare class OutboundParams extends Message<OutboundParams> {
    */
   txFinalizationStatus: TxFinalizationStatus;
 
+  /**
+   * @generated from field: bool is_arbitrary_call = 24;
+   */
+  isArbitraryCall: boolean;
+
   constructor(data?: PartialMessage<OutboundParams>);
 
   static readonly runtime: typeof proto3;

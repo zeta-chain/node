@@ -656,6 +656,11 @@ export declare class MsgVoteInbound extends Message<MsgVoteInbound> {
    */
   revertOptions?: RevertOptions;
 
+  /**
+   * @generated from field: bool is_arbitrary_call = 18;
+   */
+  isArbitraryCall: boolean;
+
   constructor(data?: PartialMessage<MsgVoteInbound>);
 
   static readonly runtime: typeof proto3;
