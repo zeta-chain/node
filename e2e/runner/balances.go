@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/btcsuite/btcutil"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/pkg/errors"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
