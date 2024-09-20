@@ -485,9 +485,16 @@ func GetBtcEvent(
 			return nil, fmt.Errorf("GetBtcEvent: no input found for inbound: %s", tx.Txid)
 		}
 
+		// get sender address by input (vin)
 		fromAddress, err := GetSenderAddressByVin(rpcClient, tx.Vin[0], netParams)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error getting sender address for inbound: %s", tx.Txid)
+		}
+
+		// skip this tx and move on (e.g., due to unknown script type)
+		// we don't know whom to refund if this tx gets reverted in zetacore
+		if fromAddress == "" {
+			return nil, nil
 		}
 
 		return &BTCInboundEvent{
@@ -503,7 +510,7 @@ func GetBtcEvent(
 	return nil, nil
 }
 
-// GetSenderAddressByVin get the sender address from the previous transaction
+// GetSenderAddressByVin get the sender address from the transaction input (vin)
 func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, net *chaincfg.Params) (string, error) {
 	// query previous raw transaction by txid
 	hash, err := chainhash.NewHashFromStr(vin.Txid)
@@ -524,23 +531,6 @@ func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, n
 
 	// decode sender address from previous pkScript
 	pkScript := tx.MsgTx().TxOut[vin.Vout].PkScript
-	scriptHex := hex.EncodeToString(pkScript)
-	if bitcoin.IsPkScriptP2TR(pkScript) {
-		return bitcoin.DecodeScriptP2TR(scriptHex, net)
-	}
-	if bitcoin.IsPkScriptP2WSH(pkScript) {
-		return bitcoin.DecodeScriptP2WSH(scriptHex, net)
-	}
-	if bitcoin.IsPkScriptP2WPKH(pkScript) {
-		return bitcoin.DecodeScriptP2WPKH(scriptHex, net)
-	}
-	if bitcoin.IsPkScriptP2SH(pkScript) {
-		return bitcoin.DecodeScriptP2SH(scriptHex, net)
-	}
-	if bitcoin.IsPkScriptP2PKH(pkScript) {
-		return bitcoin.DecodeScriptP2PKH(scriptHex, net)
-	}
 
-	// sender address not found, return nil and move on to the next tx
-	return "", nil
+	return bitcoin.DecodeSenderFromScript(pkScript, net)
 }

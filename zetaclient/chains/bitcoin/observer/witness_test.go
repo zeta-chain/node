@@ -4,12 +4,13 @@ import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/stretchr/testify/mock"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
@@ -48,7 +49,7 @@ func TestParseScriptFromWitness(t *testing.T) {
 	})
 }
 
-func TestGetBtcEventFromInscription(t *testing.T) {
+func TestGetBtcEventWithWitness(t *testing.T) {
 	// load archived inbound P2WPKH raw result
 	// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
 	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
@@ -236,6 +237,40 @@ func TestGetBtcEventFromInscription(t *testing.T) {
 			depositorFee,
 		)
 		require.ErrorContains(t, err, "rpc error")
+		require.Nil(t, event)
+	})
+
+	t.Run("should skip tx if sender address is empty", func(t *testing.T) {
+		// load tx
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+
+		// https://mempool.space/tx/c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697
+		preVout := uint32(2)
+		preHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
+		tx.Vin[0].Txid = preHash
+		tx.Vin[0].Vout = preVout
+
+		// create mock rpc client
+		rpcClient := mocks.NewBTCRPCClient(t)
+
+		// load archived MsgTx and modify previous input script to invalid
+		msgTx := testutils.LoadBTCMsgTx(t, TestDataDir, chain.ChainId, preHash)
+		msgTx.TxOut[preVout].PkScript = []byte{0x00, 0x01}
+
+		// mock rpc response to return invalid tx msg
+		rpcClient.On("GetRawTransaction", mock.Anything).Return(btcutil.NewTx(msgTx), nil)
+
+		// get BTC event
+		event, err := observer.GetBtcEventWithWitness(
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			depositorFee,
+		)
+		require.NoError(t, err)
 		require.Nil(t, event)
 	})
 }

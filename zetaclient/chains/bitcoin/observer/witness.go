@@ -67,6 +67,12 @@ func GetBtcEventWithWitness(
 		return nil, errors.Wrapf(err, "error getting sender address for inbound: %s", tx.Txid)
 	}
 
+	// skip this tx and move on (e.g., due to unknown script type)
+	// we don't know whom to refund if this tx gets reverted in zetacore
+	if fromAddress == "" {
+		return nil, nil
+	}
+
 	return &BTCInboundEvent{
 		FromAddress:  fromAddress,
 		ToAddress:    tssAddress,

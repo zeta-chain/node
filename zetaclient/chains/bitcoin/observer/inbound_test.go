@@ -12,7 +12,6 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/wire"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/mock"
@@ -140,34 +139,12 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 }
 
 func TestGetSenderAddressByVin(t *testing.T) {
+	// https://mempool.space/tx/3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867
+	txHash := "3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867"
 	chain := chains.BitcoinMainnet
 	net := &chaincfg.MainNetParams
 
-	t.Run("should get sender address from P2TR tx", func(t *testing.T) {
-		// vin from the archived P2TR tx
-		// https://mempool.space/tx/3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867
-		txHash := "3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867"
-		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, txHash)
-
-		// get sender address
-		txVin := btcjson.Vin{Txid: txHash, Vout: 2}
-		sender, err := observer.GetSenderAddressByVin(rpcClient, txVin, net)
-		require.NoError(t, err)
-		require.Equal(t, "bc1px3peqcd60hk7wqyqk36697u9hzugq0pd5lzvney93yzzrqy4fkpq6cj7m3", sender)
-	})
-	t.Run("should get sender address from P2WSH tx", func(t *testing.T) {
-		// vin from the archived P2WSH tx
-		// https://mempool.space/tx/d13de30b0cc53b5c4702b184ae0a0b0f318feaea283185c1cddb8b341c27c016
-		txHash := "d13de30b0cc53b5c4702b184ae0a0b0f318feaea283185c1cddb8b341c27c016"
-		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, txHash)
-
-		// get sender address
-		txVin := btcjson.Vin{Txid: txHash, Vout: 0}
-		sender, err := observer.GetSenderAddressByVin(rpcClient, txVin, net)
-		require.NoError(t, err)
-		require.Equal(t, "bc1q79kmcyc706d6nh7tpzhnn8lzp76rp0tepph3hqwrhacqfcy4lwxqft0ppq", sender)
-	})
-	t.Run("should get sender address from P2WPKH tx", func(t *testing.T) {
+	t.Run("should get sender address from tx", func(t *testing.T) {
 		// vin from the archived P2WPKH tx
 		// https://mempool.space/tx/c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697
 		txHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
@@ -179,63 +156,6 @@ func TestGetSenderAddressByVin(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e", sender)
 	})
-	t.Run("should get sender address from P2SH tx", func(t *testing.T) {
-		// vin from the archived P2SH tx
-		// https://mempool.space/tx/211568441340fd5e10b1a8dcb211a18b9e853dbdf265ebb1c728f9b52813455a
-		txHash := "211568441340fd5e10b1a8dcb211a18b9e853dbdf265ebb1c728f9b52813455a"
-		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, txHash)
-
-		// get sender address
-		txVin := btcjson.Vin{Txid: txHash, Vout: 0}
-		sender, err := observer.GetSenderAddressByVin(rpcClient, txVin, net)
-		require.NoError(t, err)
-		require.Equal(t, "3MqRRSP76qxdVD9K4cfFnVtSLVwaaAjm3t", sender)
-	})
-	t.Run("should get sender address from P2PKH tx", func(t *testing.T) {
-		// vin from the archived P2PKH tx
-		// https://mempool.space/tx/781fc8d41b476dbceca283ebff9573fda52c8fdbba5e78152aeb4432286836a7
-		txHash := "781fc8d41b476dbceca283ebff9573fda52c8fdbba5e78152aeb4432286836a7"
-		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, txHash)
-
-		// get sender address
-		txVin := btcjson.Vin{Txid: txHash, Vout: 1}
-		sender, err := observer.GetSenderAddressByVin(rpcClient, txVin, net)
-		require.NoError(t, err)
-		require.Equal(t, "1ESQp1WQi7fzSpzCNs2oBTqaUBmNjLQLoV", sender)
-	})
-	t.Run("should get empty sender address on unknown script", func(t *testing.T) {
-		// vin from the archived P2PKH tx
-		// https://mempool.space/tx/781fc8d41b476dbceca283ebff9573fda52c8fdbba5e78152aeb4432286836a7
-		txHash := "781fc8d41b476dbceca283ebff9573fda52c8fdbba5e78152aeb4432286836a7"
-		nameMsgTx := path.Join(
-			TestDataDir,
-			testutils.TestDataPathBTC,
-			testutils.FileNameBTCMsgTx(chain.ChainId, txHash),
-		)
-		var msgTx wire.MsgTx
-		testutils.LoadObjectFromJSONFile(t, &msgTx, nameMsgTx)
-
-		// modify script to unknown script
-		msgTx.TxOut[1].PkScript = []byte{0x00, 0x01, 0x02, 0x03} // can be any invalid script bytes
-		tx := btcutil.NewTx(&msgTx)
-
-		// feed tx to mock rpc client
-		rpcClient := mocks.NewBTCRPCClient(t)
-		rpcClient.On("GetRawTransaction", mock.Anything).Return(tx, nil)
-
-		// get sender address
-		txVin := btcjson.Vin{Txid: txHash, Vout: 1}
-		sender, err := observer.GetSenderAddressByVin(rpcClient, txVin, net)
-		require.NoError(t, err)
-		require.Empty(t, sender)
-	})
-}
-
-func TestGetSenderAddressByVinErrors(t *testing.T) {
-	// https://mempool.space/tx/3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867
-	txHash := "3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867"
-	chain := chains.BitcoinMainnet
-	net := &chaincfg.MainNetParams
 
 	t.Run("should return error on invalid txHash", func(t *testing.T) {
 		rpcClient := mocks.NewBTCRPCClient(t)
@@ -245,6 +165,7 @@ func TestGetSenderAddressByVinErrors(t *testing.T) {
 		require.Error(t, err)
 		require.Empty(t, sender)
 	})
+
 	t.Run("should return error when RPC client fails to get raw tx", func(t *testing.T) {
 		// create mock rpc client that returns rpc error
 		rpcClient := mocks.NewBTCRPCClient(t)
@@ -256,6 +177,7 @@ func TestGetSenderAddressByVinErrors(t *testing.T) {
 		require.ErrorContains(t, err, "error getting raw transaction")
 		require.Empty(t, sender)
 	})
+
 	t.Run("should return error on invalid output index", func(t *testing.T) {
 		// create mock rpc client with preloaded tx
 		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, txHash)
@@ -309,6 +231,7 @@ func TestGetBtcEvent(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
 	})
+
 	t.Run("should get BTC inbound event from P2TR sender", func(t *testing.T) {
 		// replace vin with a P2TR vin, so the sender address will change
 		// https://mempool.space/tx/3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867
@@ -324,6 +247,7 @@ func TestGetBtcEvent(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
 	})
+
 	t.Run("should get BTC inbound event from P2WSH sender", func(t *testing.T) {
 		// replace vin with a P2WSH vin, so the sender address will change
 		// https://mempool.space/tx/d13de30b0cc53b5c4702b184ae0a0b0f318feaea283185c1cddb8b341c27c016
@@ -339,6 +263,7 @@ func TestGetBtcEvent(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
 	})
+
 	t.Run("should get BTC inbound event from P2SH sender", func(t *testing.T) {
 		// replace vin with a P2SH vin, so the sender address will change
 		// https://mempool.space/tx/211568441340fd5e10b1a8dcb211a18b9e853dbdf265ebb1c728f9b52813455a
@@ -354,6 +279,7 @@ func TestGetBtcEvent(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
 	})
+
 	t.Run("should get BTC inbound event from P2PKH sender", func(t *testing.T) {
 		// replace vin with a P2PKH vin, so the sender address will change
 		// https://mempool.space/tx/781fc8d41b476dbceca283ebff9573fda52c8fdbba5e78152aeb4432286836a7
@@ -369,6 +295,7 @@ func TestGetBtcEvent(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
 	})
+
 	t.Run("should skip tx if len(tx.Vout) < 2", func(t *testing.T) {
 		// load tx and modify the tx to have only 1 vout
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
@@ -380,6 +307,7 @@ func TestGetBtcEvent(t *testing.T) {
 		require.NoError(t, err)
 		require.Nil(t, event)
 	})
+
 	t.Run("should skip tx if Vout[0] is not a P2WPKH output", func(t *testing.T) {
 		// load tx
 		rpcClient := mocks.NewBTCRPCClient(t)
@@ -397,6 +325,7 @@ func TestGetBtcEvent(t *testing.T) {
 		require.NoError(t, err)
 		require.Nil(t, event)
 	})
+
 	t.Run("should skip tx if receiver address is not TSS address", func(t *testing.T) {
 		// load tx and modify receiver address to any non-tss address: bc1qw8wrek2m7nlqldll66ajnwr9mh64syvkt67zlu
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
@@ -408,6 +337,7 @@ func TestGetBtcEvent(t *testing.T) {
 		require.NoError(t, err)
 		require.Nil(t, event)
 	})
+
 	t.Run("should skip tx if amount is less than depositor fee", func(t *testing.T) {
 		// load tx and modify amount to less than depositor fee
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
@@ -419,6 +349,7 @@ func TestGetBtcEvent(t *testing.T) {
 		require.NoError(t, err)
 		require.Nil(t, event)
 	})
+
 	t.Run("should skip tx if 2nd vout is not OP_RETURN", func(t *testing.T) {
 		// load tx and modify memo OP_RETURN to OP_1
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
@@ -430,6 +361,7 @@ func TestGetBtcEvent(t *testing.T) {
 		require.NoError(t, err)
 		require.Nil(t, event)
 	})
+
 	t.Run("should skip tx if memo decoding fails", func(t *testing.T) {
 		// load tx and modify memo length to be 1 byte less than actual
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
@@ -437,6 +369,29 @@ func TestGetBtcEvent(t *testing.T) {
 
 		// get BTC event
 		rpcClient := mocks.NewBTCRPCClient(t)
+		event, err := observer.GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
+		require.NoError(t, err)
+		require.Nil(t, event)
+	})
+
+	t.Run("should skip tx if sender address is empty", func(t *testing.T) {
+		// https://mempool.space/tx/c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697
+		preVout := uint32(2)
+		preHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
+		tx.Vin[0].Txid = preHash
+		tx.Vin[0].Vout = preVout
+
+		// create mock rpc client
+		rpcClient := mocks.NewBTCRPCClient(t)
+
+		// load archived MsgTx and modify previous input script to invalid
+		msgTx := testutils.LoadBTCMsgTx(t, TestDataDir, chain.ChainId, preHash)
+		msgTx.TxOut[preVout].PkScript = []byte{0x00, 0x01}
+
+		// mock rpc response to return invalid tx msg
+		rpcClient.On("GetRawTransaction", mock.Anything).Return(btcutil.NewTx(msgTx), nil)
+
+		// get BTC event
 		event, err := observer.GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
 		require.NoError(t, err)
 		require.Nil(t, event)
@@ -466,6 +421,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, event)
 	})
+
 	t.Run("should return error if len(tx.Vin) < 1", func(t *testing.T) {
 		// load tx and remove vin
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
@@ -477,6 +433,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 		require.ErrorContains(t, err, "no input found")
 		require.Nil(t, event)
 	})
+
 	t.Run("should return error if RPC client fails to get raw tx", func(t *testing.T) {
 		// load tx and leave rpc client without preloaded tx
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)

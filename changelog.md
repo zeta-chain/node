@@ -18,6 +18,7 @@
 * [2725](https://github.com/zeta-chain/node/pull/2725) - refactor SetCctxAndNonceToCctxAndInboundHashToCctx to receive tsspubkey as an argument
 * [2802](https://github.com/zeta-chain/node/pull/2802) - set default liquidity cap for new ZRC20s
 * [2826](https://github.com/zeta-chain/node/pull/2826) - remove unused code from emissions module and add new parameter for fixed block reward amount
+* [2899](https://github.com/zeta-chain/node/pull/2899) - remove btc deposit fee v1 and improve unit tests
 
 ### Tests
 
@@ -38,10 +39,6 @@
 * [2944](https://github.com/zeta-chain/node/pull/2844) - add tsspubkey to index for tss keygen voting
 * [2842](https://github.com/zeta-chain/node/pull/2842) - fix: move interval assignment out of cctx loop in EVM outbound tx scheduler
 * [2853](https://github.com/zeta-chain/node/pull/2853) - calling precompile through sc with sc state update
-
-### Chores
-
-* [2899](https://github.com/zeta-chain/node/pull/2899) - remove btc deposit fee v1 and improve unit tests
 
 ## v20.0.0
 
