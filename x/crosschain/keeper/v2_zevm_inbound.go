@@ -26,8 +26,7 @@ import (
 func (k Keeper) ProcessZEVMInboundV2(
 	ctx sdk.Context,
 	log *ethtypes.Log,
-	gatewayAddr,
-	from ethcommon.Address,
+	gatewayAddr ethcommon.Address,
 	txOrigin string,
 ) error {
 	// try to parse a withdrawal event from the log
