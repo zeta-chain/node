@@ -11,6 +11,7 @@
 * [2861](https://github.com/zeta-chain/node/pull/2861) - emit events from staking precompile
 * [2870](https://github.com/zeta-chain/node/pull/2870) - support for multiple Bitcoin chains in the zetaclient
 * [2883](https://github.com/zeta-chain/node/pull/2883) - add chain static information for btc signet testnet
+* [2904](https://github.com/zeta-chain/node/pull/2904) - authenticated zevm -> evm call
 
 ### Refactor
 
