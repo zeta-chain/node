@@ -21,6 +21,7 @@ func startV2Tests(eg *errgroup.Group, conf config.Config, deployerRunner *runner
 		e2etests.TestV2ETHWithdrawName,
 		e2etests.TestV2ETHWithdrawAndCallName,
 		e2etests.TestV2ZEVMToEVMCallName,
+		e2etests.TestV2ZEVMToEVMAuthenticatedCallName,
 		e2etests.TestV2EVMToZEVMCallName,
 	))
 

@@ -6,6 +6,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
+	testgatewayzevmcaller "github.com/zeta-chain/node/pkg/contracts/testgatewayzevmcaller"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 )
 
@@ -103,12 +104,57 @@ func (r *E2ERunner) V2ZEVMToEMVCall(
 	payload []byte,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
-	tx, err := r.GatewayZEVM.Call(
+	tx, err := r.GatewayZEVM.Call0(
 		r.ZEVMAuth,
 		receiver.Bytes(),
 		r.ETHZRC20Addr,
 		payload,
 		gasLimit,
+		revertOptions,
+	)
+	require.NoError(r, err)
+
+	return tx
+}
+
+// V2ZEVMToEMVCall calls authenticated Call of Gateway on ZEVM
+func (r *E2ERunner) V2ZEVMToEMVAuthenticatedCall(
+	receiver ethcommon.Address,
+	payload []byte,
+	revertOptions gatewayzevm.RevertOptions,
+) *ethtypes.Transaction {
+	tx, err := r.GatewayZEVM.Call(
+		r.ZEVMAuth,
+		receiver.Bytes(),
+		r.ETHZRC20Addr,
+		payload,
+		gatewayzevm.CallOptions{
+			GasLimit:        gasLimit,
+			IsArbitraryCall: false,
+		},
+		revertOptions,
+	)
+	require.NoError(r, err)
+
+	return tx
+}
+
+// V2ZEVMToEMVCall calls authenticated Call of Gateway on ZEVM through contract
+func (r *E2ERunner) V2ZEVMToEMVAuthenticatedCallThroughContract(
+	gatewayZEVMCaller *testgatewayzevmcaller.TestGatewayZEVMCaller,
+	receiver ethcommon.Address,
+	payload []byte,
+	revertOptions testgatewayzevmcaller.RevertOptions,
+) *ethtypes.Transaction {
+	tx, err := gatewayZEVMCaller.CallGatewayZEVM(
+		r.ZEVMAuth,
+		receiver.Bytes(),
+		r.ETHZRC20Addr,
+		payload,
+		testgatewayzevmcaller.CallOptions{
+			GasLimit:        gasLimit,
+			IsArbitraryCall: false,
+		},
 		revertOptions,
 	)
 	require.NoError(r, err)

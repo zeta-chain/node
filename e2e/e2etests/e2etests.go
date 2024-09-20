@@ -143,6 +143,7 @@ const (
 	TestV2ERC20WithdrawAndCallRevertName         = "v2_erc20_withdraw_and_call_revert"
 	TestV2ERC20WithdrawAndCallRevertWithCallName = "v2_erc20_withdraw_and_call_revert_with_call"
 	TestV2ZEVMToEVMCallName                      = "v2_zevm_to_evm_call"
+	TestV2ZEVMToEVMAuthenticatedCallName         = "v2_zevm_to_evm_authenticated_call"
 	TestV2EVMToZEVMCallName                      = "v2_evm_to_zevm_call"
 
 	/*
@@ -823,6 +824,12 @@ var AllE2ETests = []runner.E2ETest{
 		"zevm -> evm call using V2 contract",
 		[]runner.ArgDefinition{},
 		TestV2ZEVMToEVMCall,
+	),
+	runner.NewE2ETest(
+		TestV2ZEVMToEVMAuthenticatedCallName,
+		"zevm -> evm call using V2 contract",
+		[]runner.ArgDefinition{},
+		TestV2ZEVMToEVMAuthenticatedCall,
 	),
 	runner.NewE2ETest(
 		TestV2EVMToZEVMCallName,

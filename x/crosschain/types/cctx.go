@@ -241,6 +241,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		Amount:                 sdkmath.ZeroUint(),
 		TssPubkey:              tssPubkey,
 		CoinType:               msg.CoinType,
+		IsArbitraryCall:        msg.IsArbitraryCall,
 	}
 	status := &Status{
 		Status:              CctxStatus_PendingInbound,

@@ -206,6 +206,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(
 		foreignCoin.Asset,
 		event.Raw.Index,
 		types.ProtocolContractVersion_V1,
+		true, // not relevant for v1
 	)
 
 	cctx, err := k.ValidateInbound(ctx, msg, false)
@@ -286,6 +287,7 @@ func (k Keeper) ProcessZetaSentEvent(
 		"",
 		event.Raw.Index,
 		types.ProtocolContractVersion_V1,
+		true, // not relevant for v1
 	)
 
 	cctx, err := k.ValidateInbound(ctx, msg, true)

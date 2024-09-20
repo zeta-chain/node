@@ -5,6 +5,7 @@ interface IERC20 {
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
 }
 
+
 contract TestDAppV2 {
     struct zContext {
         bytes origin;
@@ -22,9 +23,18 @@ contract TestDAppV2 {
         bytes revertMessage;
     }
 
+    /// @notice Message context passed to execute function.
+    /// @param sender Sender from omnichain contract.
+    struct MessageContext {
+        address sender;
+    }
+
     // these structures allow to assess contract calls
     mapping(bytes32 => bool) public calledWithMessage;
+    mapping(address => bool) public calledWithSender;
     mapping(bytes32 => uint256) public amountWithMessage;
+
+    address[] public senders;
 
     function setCalledWithMessage(string memory message) internal {
         calledWithMessage[keccak256(abi.encodePacked(message))] = true;
@@ -91,6 +101,11 @@ contract TestDAppV2 {
     function onRevert(RevertContext calldata revertContext) external {
         setCalledWithMessage(string(revertContext.revertMessage));
         setAmountWithMessage(string(revertContext.revertMessage), 0);
+    }
+
+    function onCall(MessageContext calldata messageContext, bytes calldata message) external returns (bytes memory) {
+        setCalledWithMessage(string(message));
+        senders.push(messageContext.sender);
     }
 
     receive() external payable {}

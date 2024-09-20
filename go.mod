@@ -60,7 +60,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/zeta-chain/ethermint v0.0.0-20240909234716-2fad916e7179
 	github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2
-	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240819143729-b8229cd7b410
+	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240918191829-6070d18de20a
 	gitlab.com/thorchain/tss/go-tss v1.6.5
 	gitlab.com/thorchain/tss/tss-lib v0.2.0
 	go.nhat.io/grpcmock v0.25.0
@@ -336,10 +336,13 @@ require (
 )
 
 require (
+	github.com/showa-93/go-mask v0.6.2
+	github.com/tonkeeper/tongo v1.9.3
+)
+
+require (
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20220328075252-7dd334e3daae // indirect
-	github.com/showa-93/go-mask v0.6.2 // indirect
 	github.com/snksoft/crc v1.1.0 // indirect
-	github.com/tonkeeper/tongo v1.9.3 // indirect
 )
 
 replace (

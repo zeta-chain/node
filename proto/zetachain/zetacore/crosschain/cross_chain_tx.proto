@@ -79,6 +79,7 @@ message OutboundParams {
   uint64 effective_gas_limit = 22;
   string tss_pubkey = 11;
   TxFinalizationStatus tx_finalization_status = 12;
+  bool is_arbitrary_call = 24;
 
   // not used. do not edit.
   reserved 13 to 19;

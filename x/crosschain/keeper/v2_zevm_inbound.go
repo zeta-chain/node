@@ -183,7 +183,7 @@ func (k Keeper) newWithdrawalInbound(
 		return nil, errors.Wrapf(err, "cannot encode address %v", event.Receiver)
 	}
 
-	gasLimit := event.GasLimit.Uint64()
+	gasLimit := event.CallOptions.GasLimit.Uint64()
 	if gasLimit == 0 {
 		gasLimitQueried, err := k.fungibleKeeper.QueryGasLimit(
 			ctx,
@@ -211,6 +211,7 @@ func (k Keeper) newWithdrawalInbound(
 		foreignCoin.Asset,
 		event.Raw.Index,
 		types.ProtocolContractVersion_V2,
+		event.CallOptions.IsArbitraryCall,
 		types.WithZEVMRevertOptions(event.RevertOptions),
 	), nil
 }
@@ -245,7 +246,7 @@ func (k Keeper) newCallInbound(
 		return nil, errors.Wrapf(err, "cannot encode address %v", event.Receiver)
 	}
 
-	gasLimit := event.GasLimit.Uint64()
+	gasLimit := event.CallOptions.GasLimit.Uint64()
 	if gasLimit == 0 {
 		gasLimitQueried, err := k.fungibleKeeper.QueryGasLimit(
 			ctx,
@@ -259,7 +260,7 @@ func (k Keeper) newCallInbound(
 
 	return types.NewMsgVoteInbound(
 		"",
-		from.Hex(),
+		event.Sender.Hex(),
 		senderChain.ChainId,
 		txOrigin,
 		toAddr,
@@ -273,6 +274,7 @@ func (k Keeper) newCallInbound(
 		"",
 		event.Raw.Index,
 		types.ProtocolContractVersion_V2,
+		event.CallOptions.IsArbitraryCall,
 		types.WithZEVMRevertOptions(event.RevertOptions),
 	), nil
 }

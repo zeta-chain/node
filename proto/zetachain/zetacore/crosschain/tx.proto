@@ -175,6 +175,9 @@ message MsgVoteInbound {
 
   // revert options provided by the sender
   RevertOptions revert_options = 17 [ (gogoproto.nullable) = false ];
+
+  // TODO: maybe group with gasLimit into CallOptions?
+  bool is_arbitrary_call = 18;
 }
 
 message MsgVoteInboundResponse {}

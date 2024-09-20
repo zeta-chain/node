@@ -83,6 +83,7 @@ func CmdVoteInbound() *cobra.Command {
 				argsAsset,
 				uint(argsEventIndex),
 				protocolContractVersion,
+				true, // TODO: do we need to provide this as arg?
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
