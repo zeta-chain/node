@@ -52,10 +52,17 @@ type ErrInvalidCoin struct {
 	Got      string
 	Negative bool
 	Nil      bool
+	Empty    bool
 }
 
 func (e ErrInvalidCoin) Error() string {
-	return fmt.Sprintf("invalid coin: denom: %s, is negative: %v, is nil: %v", e.Got, e.Negative, e.Nil)
+	return fmt.Sprintf(
+		"invalid coin: denom: %s, is negative: %v, is nil: %v, is empty: %v",
+		e.Got,
+		e.Negative,
+		e.Nil,
+		e.Empty,
+	)
 }
 
 type ErrInvalidAmount struct {

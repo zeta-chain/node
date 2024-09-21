@@ -86,9 +86,9 @@ func (c *Contract) deposit(
 	}
 
 	balance, ok := resBalanceOf[0].(*big.Int)
-	if !ok || balance.Cmp(amount) < 0 {
+	if !ok || balance.Cmp(amount) < 0 || balance.Cmp(big.NewInt(0)) <= 0 {
 		return nil, &ptypes.ErrInvalidAmount{
-			Got: "not enough balance",
+			Got: balance.String(),
 		}
 	}
 
@@ -110,9 +110,9 @@ func (c *Contract) deposit(
 	}
 
 	allowance, ok := resAllowance[0].(*big.Int)
-	if !ok || allowance.Cmp(amount) < 0 {
+	if !ok || allowance.Cmp(amount) < 0 || allowance.Cmp(big.NewInt(0)) <= 0 {
 		return nil, &ptypes.ErrInvalidAmount{
-			Got: "not enough allowance",
+			Got: allowance.String(),
 		}
 	}
 

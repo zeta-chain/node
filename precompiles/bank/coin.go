@@ -30,11 +30,12 @@ func createCoinSet(tokenDenom string, amount *big.Int) (sdk.Coins, error) {
 	// and SendCoinsFromModuleToAccount.
 	// But sdk.Coins will only contain one coin, always.
 	coinSet := sdk.NewCoins(coin)
-	if !coinSet.IsValid() {
+	if !coinSet.IsValid() || coinSet.Empty() || coinSet.IsAnyNil() || coinSet == nil {
 		return nil, &ptypes.ErrInvalidCoin{
-			Got:      coinSet.Sort().GetDenomByIndex(0),
+			Got:      coinSet.String(),
 			Negative: coinSet.IsAnyNegative(),
 			Nil:      coinSet.IsAnyNil(),
+			Empty:    coinSet.Empty(),
 		}
 	}
 

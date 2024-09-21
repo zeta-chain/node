@@ -16,7 +16,7 @@ func Test_ErrInvalidAddr(t *testing.T) {
 	if got != expect {
 		t.Errorf("Expected %v, got %v", expect, got)
 	}
-	require.ErrorIs(t,  ErrInvalidAddr{"foo", "bar"}, e)
+	require.ErrorIs(t, ErrInvalidAddr{"foo", "bar"}, e)
 }
 
 func Test_ErrInvalidNumberOfArgs(t *testing.T) {
@@ -29,7 +29,7 @@ func Test_ErrInvalidNumberOfArgs(t *testing.T) {
 	if got != expect {
 		t.Errorf("Expected %v, got %v", expect, got)
 	}
-	require.ErrorIs(t,  ErrInvalidNumberOfArgs{1, 2}, e)
+	require.ErrorIs(t, ErrInvalidNumberOfArgs{1, 2}, e)
 }
 
 func Test_ErrInvalidArgument(t *testing.T) {
@@ -41,7 +41,7 @@ func Test_ErrInvalidArgument(t *testing.T) {
 	if got != expect {
 		t.Errorf("Expected %v, got %v", expect, got)
 	}
-	require.ErrorIs(t,  ErrInvalidArgument{"foo"}, e)
+	require.ErrorIs(t, ErrInvalidArgument{"foo"}, e)
 }
 
 func Test_ErrInvalidMethod(t *testing.T) {
@@ -53,7 +53,7 @@ func Test_ErrInvalidMethod(t *testing.T) {
 	if got != expect {
 		t.Errorf("Expected %v, got %v", expect, got)
 	}
-	require.ErrorIs(t,  ErrInvalidMethod{"foo"}, e)
+	require.ErrorIs(t, ErrInvalidMethod{"foo"}, e)
 }
 
 func Test_ErrInvalidCoin(t *testing.T) {
@@ -61,13 +61,14 @@ func Test_ErrInvalidCoin(t *testing.T) {
 		Got:      "foo",
 		Negative: true,
 		Nil:      false,
+		Empty:    false,
 	}
 	got := e.Error()
-	expect := "invalid coin: denom: foo, is negative: true, is nil: false"
+	expect := "invalid coin: denom: foo, is negative: true, is nil: false, is empty: false"
 	if got != expect {
 		t.Errorf("Expected %v, got %v", expect, got)
 	}
-	require.ErrorIs(t,  ErrInvalidCoin{"foo", true, false}, e)
+	require.ErrorIs(t, ErrInvalidCoin{"foo", true, false, false}, e)
 }
 
 func Test_ErrInvalidAmount(t *testing.T) {
@@ -79,7 +80,7 @@ func Test_ErrInvalidAmount(t *testing.T) {
 	if got != expect {
 		t.Errorf("Expected %v, got %v", expect, got)
 	}
-	require.ErrorIs(t,  ErrInvalidAmount{"foo"}, e)
+	require.ErrorIs(t, ErrInvalidAmount{"foo"}, e)
 }
 
 func Test_ErrUnexpected(t *testing.T) {
@@ -92,7 +93,7 @@ func Test_ErrUnexpected(t *testing.T) {
 	if got != expect {
 		t.Errorf("Expected %v, got %v", expect, got)
 	}
-	require.ErrorIs(t,  ErrUnexpected{"foo", "bar"}, e)
+	require.ErrorIs(t, ErrUnexpected{"foo", "bar"}, e)
 }
 
 func Test_ErrInsufficientBalance(t *testing.T) {
@@ -105,7 +106,7 @@ func Test_ErrInsufficientBalance(t *testing.T) {
 	if got != expect {
 		t.Errorf("Expected %v, got %v", expect, got)
 	}
-	require.ErrorIs(t,  ErrInsufficientBalance{"foo", "bar"}, e)
+	require.ErrorIs(t, ErrInsufficientBalance{"foo", "bar"}, e)
 }
 
 func Test_ErrInvalidToken(t *testing.T) {
@@ -118,5 +119,5 @@ func Test_ErrInvalidToken(t *testing.T) {
 	if got != expect {
 		t.Errorf("Expected %v, got %v", expect, got)
 	}
-	require.ErrorIs(t,  ErrInvalidToken{"foo", "bar"}, e)
+	require.ErrorIs(t, ErrInvalidToken{"foo", "bar"}, e)
 }
