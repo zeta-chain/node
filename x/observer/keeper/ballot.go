@@ -79,9 +79,9 @@ func (k Keeper) AddBallotToList(ctx sdk.Context, ballot types.Ballot) {
 	k.SetBallotList(ctx, &list)
 }
 
-// ClearMaturedBallots deletes all matured ballots and the list of ballots for a given height.
+// ClearMaturedBallotsAndBallotList deletes all matured ballots and the list of ballots for a given height.
 // It also emits an event for each ballot deleted.
-func (k Keeper) ClearMaturedBallots(ctx sdk.Context, ballots []types.Ballot, maturityBlocks int64) {
+func (k Keeper) ClearMaturedBallotsAndBallotList(ctx sdk.Context, ballots []types.Ballot, maturityBlocks int64) {
 	for _, ballot := range ballots {
 		k.DeleteBallot(ctx, ballot.BallotIdentifier)
 		EmitEventBallotDeleted(ctx, ballot)

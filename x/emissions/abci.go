@@ -166,7 +166,7 @@ func DistributeObserverRewards(
 	types.EmitObserverEmissions(ctx, finalDistributionList)
 
 	// Clear the matured ballots
-	keeper.GetObserverKeeper().ClearMaturedBallots(ctx, ballots, params.BallotMaturityBlocks)
+	keeper.GetObserverKeeper().ClearMaturedBallotsAndBallotList(ctx, ballots, params.BallotMaturityBlocks)
 	return nil
 }
 

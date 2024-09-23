@@ -253,7 +253,7 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 		require.Equal(t, numberOfBallots, len(k.GetAllBallots(ctx)))
 
 		//Act
-		k.ClearMaturedBallots(ctx, ballots, 0)
+		k.ClearMaturedBallotsAndBallotList(ctx, ballots, 0)
 
 		//Assert
 		for _, b := range ballots {
@@ -289,7 +289,7 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 		require.Equal(t, 0, len(k.GetAllBallots(ctx)))
 
 		//Act
-		k.ClearMaturedBallots(ctx, []types.Ballot{}, 0)
+		k.ClearMaturedBallotsAndBallotList(ctx, []types.Ballot{}, 0)
 
 		//Assert
 		_, found = k.GetBallotListForHeight(ctx, 1)
@@ -315,7 +315,7 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 		require.False(t, found)
 
 		//Act
-		k.ClearMaturedBallots(ctx, ballots, 0)
+		k.ClearMaturedBallotsAndBallotList(ctx, ballots, 0)
 
 		//Assert
 		for _, b := range ballots {
