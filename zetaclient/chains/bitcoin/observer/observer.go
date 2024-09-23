@@ -369,12 +369,11 @@ func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 	maxConfirmations := int(bh)
 
 	// List all unspent UTXOs (160ms)
-	tssAddr := ob.TSS().BTCAddress()
-	address, err := chains.DecodeBtcAddress(tssAddr, ob.Chain().ChainId)
-	if err != nil {
-		return fmt.Errorf("btc: error decoding wallet address (%s) : %s", tssAddr, err.Error())
+	tssAddr := ob.TSS().BTCAddressWitnessPubkeyHash(ob.Chain().ChainId)
+	if tssAddr != nil {
+		return fmt.Errorf("error getting bitcoin tss address")
 	}
-	utxos, err := ob.btcClient.ListUnspentMinMaxAddresses(0, maxConfirmations, []btcutil.Address{address})
+	utxos, err := ob.btcClient.ListUnspentMinMaxAddresses(0, maxConfirmations, []btcutil.Address{tssAddr})
 	if err != nil {
 		return err
 	}

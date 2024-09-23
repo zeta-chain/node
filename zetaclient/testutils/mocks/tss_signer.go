@@ -112,7 +112,7 @@ func (s *TSS) EVMAddressList() []ethcommon.Address {
 	return []ethcommon.Address{s.EVMAddress()}
 }
 
-func (s *TSS) BTCAddress() string {
+func (s *TSS) BTCAddress(_ int64) string {
 	// force use btcAddress if set
 	if s.btcAddress != "" {
 		return s.btcAddress
@@ -125,7 +125,7 @@ func (s *TSS) BTCAddress() string {
 	return testnet3Addr.EncodeAddress()
 }
 
-func (s *TSS) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash {
+func (s *TSS) BTCAddressWitnessPubkeyHash(_ int64) *btcutil.AddressWitnessPubKeyHash {
 	// if privkey is set, use it to generate a segwit address
 	if s.PrivKey != nil {
 		pkBytes := crypto.FromECDSAPub(&s.PrivKey.PublicKey)
@@ -154,7 +154,7 @@ func (s *TSS) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash {
 		fmt.Printf("error getting btc chain params: %v", err)
 		return nil
 	}
-	tssAddress := s.BTCAddress()
+	tssAddress := s.BTCAddress(s.chain.ChainId)
 	addr, err := btcutil.DecodeAddress(tssAddress, net)
 	if err != nil {
 		return nil

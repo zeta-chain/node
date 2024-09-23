@@ -350,7 +350,7 @@ func TestOutboundID(t *testing.T) {
 			// expected outbound id
 			exepctedID := fmt.Sprintf("%d-%s-%d", tt.chain.ChainId, tt.tss.EVMAddress(), tt.nonce)
 			if tt.chain.Consensus == chains.Consensus_bitcoin {
-				exepctedID = fmt.Sprintf("%d-%s-%d", tt.chain.ChainId, tt.tss.BTCAddress(), tt.nonce)
+				exepctedID = fmt.Sprintf("%d-%s-%d", tt.chain.ChainId, tt.tss.BTCAddress(tt.chain.ChainId), tt.nonce)
 			}
 			require.Equal(t, exepctedID, outboundID)
 		})

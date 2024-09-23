@@ -16,6 +16,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
@@ -38,7 +39,7 @@ func (suite *BTCSignTestSuite) SetupTest() {
 	suite.testSigner = &mocks.TSS{ // fake TSS
 		PrivKey: privateKey.ToECDSA(),
 	}
-	addr := suite.testSigner.BTCAddressWitnessPubkeyHash()
+	addr := suite.testSigner.BTCAddressWitnessPubkeyHash(chains.BitcoinTestnet.ChainId)
 	suite.T().Logf("segwit addr: %s", addr)
 }
 

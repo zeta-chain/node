@@ -17,6 +17,7 @@ func TestBitcoinNetParamsFromChainID(t *testing.T) {
 		{"Regnet", BitcoinRegtest.ChainId, BitcoinRegnetParams, false},
 		{"Mainnet", BitcoinMainnet.ChainId, BitcoinMainnetParams, false},
 		{"Testnet", BitcoinTestnet.ChainId, BitcoinTestnetParams, false},
+		{"Signet", BitcoinSignetTestnet.ChainId, BitcoinSignetParams, false},
 		{"Unknown", -1, nil, true},
 	}
 
@@ -43,6 +44,7 @@ func TestBitcoinChainIDFromNetParams(t *testing.T) {
 		{"Regnet", BitcoinRegnetParams.Name, BitcoinRegtest.ChainId, false},
 		{"Mainnet", BitcoinMainnetParams.Name, BitcoinMainnet.ChainId, false},
 		{"Testnet", BitcoinTestnetParams.Name, BitcoinTestnet.ChainId, false},
+		{"Signet", BitcoinSignetParams.Name, BitcoinSignetTestnet.ChainId, false},
 		{"Unknown", "Unknown", 0, true},
 	}
 

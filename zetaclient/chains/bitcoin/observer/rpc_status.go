@@ -29,7 +29,7 @@ func (ob *Observer) watchRPCStatus(_ context.Context) error {
 
 // checkRPCStatus checks the RPC status of the Bitcoin chain
 func (ob *Observer) checkRPCStatus() {
-	tssAddress := ob.TSS().BTCAddressWitnessPubkeyHash()
+	tssAddress := ob.TSS().BTCAddressWitnessPubkeyHash(ob.Chain().ChainId)
 	blockTime, err := rpc.CheckRPCStatus(ob.btcClient, tssAddress)
 	if err != nil {
 		ob.Logger().Chain.Error().Err(err).Msg("CheckRPCStatus failed")

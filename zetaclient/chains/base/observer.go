@@ -289,7 +289,7 @@ func (ob *Observer) OutboundID(nonce uint64) string {
 	// all chains uses EVM address as part of the key except bitcoin
 	tssAddress := ob.tss.EVMAddress().String()
 	if ob.chain.Consensus == chains.Consensus_bitcoin {
-		tssAddress = ob.tss.BTCAddress()
+		tssAddress = ob.tss.BTCAddress(ob.Chain().ChainId)
 	}
 	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddress, nonce)
 }

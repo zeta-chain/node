@@ -17,6 +17,9 @@ const (
 	// TSSAddressBTCMainnet the BTC TSS address for test purposes
 	TSSAddressBTCMainnet = "bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y"
 
+	// TSSPubkeyAthens3 is the TSS public key in Athens3
+	TSSPubkeyAthens3 = "zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm76z3jncsnzz32rclangr2g35p"
+
 	// TSSAddressEVMAthens3 the EVM TSS address for test purposes
 	// Note: public key is zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm76z3jncsnzz32rclangr2g35p
 	TSSAddressEVMAthens3 = "0x8531a5aB847ff5B22D855633C25ED1DA3255247e"

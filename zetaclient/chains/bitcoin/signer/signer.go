@@ -154,7 +154,7 @@ func (signer *Signer) AddWithdrawTxOutputs(
 	}
 
 	// 1st output: the nonce-mark btc to TSS self
-	tssAddrP2WPKH := signer.TSS().BTCAddressWitnessPubkeyHash()
+	tssAddrP2WPKH := signer.TSS().BTCAddressWitnessPubkeyHash(signer.Chain().ChainId)
 	payToSelfScript, err := bitcoin.PayToAddrScript(tssAddrP2WPKH)
 	if err != nil {
 		return err
