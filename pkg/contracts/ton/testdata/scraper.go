@@ -20,8 +20,8 @@ func main() {
 	flag.BoolVar(&testnet, "testnet", false, "Use testnet network")
 	flag.Parse()
 
-	if len(flag.Args()) != 3 {
-		log.Fatalf("Usage: go run scrape.go <account> <lt> <hash> [--testnet]")
+	if len(flag.Args()) < 3 {
+		log.Fatalf("Usage: go run scrape.go [-testnet] <account> <lt> <hash>")
 	}
 
 	// Parse account

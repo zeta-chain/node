@@ -8,10 +8,10 @@ for further usage in test cases.
 ## Example usage
 
 ```sh
-go run pkg/contracts/ton/testdata/scraper.go \
-  kQCZfYicgVrqwhxH-Grg44OD78PDRjBnWC9iY61IxaFIW77M \
-  26023788000003 \
-  cbd6e2261334d08120e2fef428ecbb4e7773606ced878d0e6da204f2b4bf42bf | jq
+go run pkg/contracts/ton/testdata/scraper.go -testnet \
+    kQCZfYicgVrqwhxH-Grg44OD78PDRjBnWC9iY61IxaFIW77M \
+    26023788000003 \
+    cbd6e2261334d08120e2fef428ecbb4e7773606ced878d0e6da204f2b4bf42bf | jq
 ```
 
 Returns
@@ -23,7 +23,7 @@ Returns
     "description": "todo",
     "hash": "cbd6e2261334d08120e2fef428ecbb4e7773606ced878d0e6da204f2b4bf42bf",
     "logicalTime": 26023788000003,
-    "test": false
+    "test": true
 }
 ```
 
