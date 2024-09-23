@@ -169,6 +169,7 @@ var (
 		Name:        "btc_testnet",
 	}
 
+	// BitcoinSignetTestnet is Bitcoin Signet testnet
 	BitcoinSignetTestnet = Chain{
 		ChainName:   ChainName_btc_signet_testnet,
 		ChainId:     18333,
@@ -179,6 +180,19 @@ var (
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
 		Name:        "btc_signet_testnet",
+	}
+
+	// BitcoinTestnet4 is Bitcoin testnet4
+	BitcoinTestnet4 = Chain{
+		ChainName:   ChainName_btc_testnet4,
+		ChainId:     18334,
+		Network:     Network_btc,
+		NetworkType: NetworkType_testnet,
+		Vm:          Vm_no_vm,
+		Consensus:   Consensus_bitcoin,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+		Name:        "btc_testnet4",
 	}
 
 	// Amoy is Polygon amoy testnet
@@ -360,6 +374,7 @@ func DefaultChainsList() []Chain {
 		Ethereum,
 		BitcoinTestnet,
 		BitcoinSignetTestnet,
+		BitcoinTestnet4,
 		Mumbai,
 		Amoy,
 		BscTestnet,

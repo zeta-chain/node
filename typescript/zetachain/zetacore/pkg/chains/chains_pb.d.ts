@@ -153,6 +153,11 @@ export declare enum ChainName {
    * @generated from enum value: btc_signet_testnet = 24;
    */
   btc_signet_testnet = 24,
+
+  /**
+   * @generated from enum value: btc_testnet4 = 25;
+   */
+  btc_testnet4 = 25,
 }
 
 /**
