@@ -27,12 +27,16 @@ import (
 const (
 	// defaultAlertLatency is the default alert latency (in seconds) for unit tests
 	defaultAlertLatency = 60
+
+	// defaultConfirmationCount is the default confirmation count for unit tests
+	defaultConfirmationCount = 2
 )
 
 // createObserver creates a new observer for testing
 func createObserver(t *testing.T, chain chains.Chain, alertLatency int64) *base.Observer {
 	// constructor parameters
 	chainParams := *sample.ChainParams(chain.ChainId)
+	chainParams.ConfirmationCount = defaultConfirmationCount
 	zetacoreClient := mocks.NewZetacoreClient(t)
 	tss := mocks.NewTSSMainnet()
 
@@ -265,6 +269,51 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		logger.Headers.Info().Msg("print headers log")
 		logger.Compliance.Info().Msg("print compliance log")
 	})
+}
+
+func TestIsBlockConfirmed(t *testing.T) {
+	tests := []struct {
+		name      string
+		chain     chains.Chain
+		block     uint64
+		lastBlock uint64
+		confirmed bool
+	}{
+		{
+			name:      "should confirm block 100 when confirmation arrives 2",
+			chain:     chains.BitcoinMainnet,
+			block:     100,
+			lastBlock: 101, // got 2 confirmations
+			confirmed: true,
+		},
+		{
+			name:      "should not confirm block 100 when confirmation < 2",
+			chain:     chains.BitcoinMainnet,
+			block:     100,
+			lastBlock: 100, // got 1 confirmation, need one more
+			confirmed: false,
+		},
+		{
+			name:      "should confirm block 100 when confirmation arrives 2",
+			chain:     chains.Ethereum,
+			block:     100,
+			lastBlock: 99, // last block lagging behind, need to wait
+			confirmed: false,
+		},
+	}
+
+	// run tests
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// create observer
+			ob := createObserver(t, tt.chain, defaultAlertLatency)
+			ob = ob.WithLastBlock(tt.lastBlock)
+
+			// check if block is confirmed
+			confirmed := ob.IsBlockConfirmed(tt.block)
+			require.Equal(t, tt.confirmed, confirmed)
+		})
+	}
 }
 
 func TestOutboundID(t *testing.T) {
