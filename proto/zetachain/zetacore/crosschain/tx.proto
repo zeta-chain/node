@@ -119,7 +119,8 @@ message MsgVoteGasPrice {
 
   uint64 block_number = 4;
 
-  reserved 5; // deprecated `string supply`
+  // unused
+  string supply = 5;
 }
 
 message MsgVoteGasPriceResponse {}
