@@ -320,17 +320,19 @@ func TestMsgVoteInbound_Digest(t *testing.T) {
 	r := rand.New(rand.NewSource(42))
 
 	msg := types.MsgVoteInbound{
-		Creator:                 sample.AccAddress(),
-		Sender:                  sample.AccAddress(),
-		SenderChainId:           42,
-		TxOrigin:                sample.String(),
-		Receiver:                sample.String(),
-		ReceiverChain:           42,
-		Amount:                  math.NewUint(42),
-		Message:                 sample.String(),
-		InboundHash:             sample.String(),
-		InboundBlockHeight:      42,
-		GasLimit:                42,
+		Creator:            sample.AccAddress(),
+		Sender:             sample.AccAddress(),
+		SenderChainId:      42,
+		TxOrigin:           sample.String(),
+		Receiver:           sample.String(),
+		ReceiverChain:      42,
+		Amount:             math.NewUint(42),
+		Message:            sample.String(),
+		InboundHash:        sample.String(),
+		InboundBlockHeight: 42,
+		CallOptions: &types.CallOptions{
+			GasLimit: 42,
+		},
 		CoinType:                coin.CoinType_Zeta,
 		Asset:                   sample.String(),
 		EventIndex:              42,
@@ -401,7 +403,7 @@ func TestMsgVoteInbound_Digest(t *testing.T) {
 
 	// gas limit used
 	msg = msg
-	msg.GasLimit = 43
+	msg.CallOptions.GasLimit = 43
 	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "gas limit should change hash")
 

@@ -163,7 +163,7 @@ message MsgVoteInbound {
   string message = 8;
   string inbound_hash = 9;
   uint64 inbound_block_height = 10;
-  uint64 gas_limit = 11;
+  CallOptions callOptions = 11;
   pkg.coin.CoinType coin_type = 12;
   string tx_origin = 13;
   string asset = 14;
@@ -175,8 +175,6 @@ message MsgVoteInbound {
 
   // revert options provided by the sender
   RevertOptions revert_options = 17 [ (gogoproto.nullable) = false ];
-
-  bool is_arbitrary_call = 18;
 }
 
 message MsgVoteInboundResponse {}

@@ -61,11 +61,13 @@ func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int, tssPubkey string
 			FinalizedZetaHeight:    uint64(i),
 		}
 		items[i].OutboundParams = []*types.OutboundParams{{
-			Receiver:               fmt.Sprintf("%d", i),
-			ReceiverChainId:        int64(i),
-			Hash:                   fmt.Sprintf("%d", i),
-			TssNonce:               uint64(i),
-			GasLimit:               uint64(i),
+			Receiver:        fmt.Sprintf("%d", i),
+			ReceiverChainId: int64(i),
+			Hash:            fmt.Sprintf("%d", i),
+			TssNonce:        uint64(i),
+			CallOptions: &types.CallOptions{
+				GasLimit: uint64(i),
+			},
 			GasPrice:               fmt.Sprintf("%d", i),
 			BallotIndex:            fmt.Sprintf("%d", i),
 			ObservedExternalHeight: uint64(i),

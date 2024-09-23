@@ -29,7 +29,7 @@ func (signer *Signer) signGatewayExecute(
 
 	var data []byte
 
-	if txData.outboundParams.IsArbitraryCall {
+	if txData.outboundParams.CallOptions.IsArbitraryCall {
 		data, err = gatewayABI.Pack("execute", txData.to, txData.message)
 		if err != nil {
 			return nil, fmt.Errorf("execute pack error: %w", err)

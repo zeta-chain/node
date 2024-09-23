@@ -60,23 +60,25 @@ func NewMsgVoteInbound(
 	options ...InboundVoteOption,
 ) *MsgVoteInbound {
 	msg := &MsgVoteInbound{
-		Creator:                 creator,
-		Sender:                  sender,
-		SenderChainId:           senderChain,
-		TxOrigin:                txOrigin,
-		Receiver:                receiver,
-		ReceiverChain:           receiverChain,
-		Amount:                  amount,
-		Message:                 message,
-		InboundHash:             inboundHash,
-		InboundBlockHeight:      inboundBlockHeight,
-		GasLimit:                gasLimit,
+		Creator:            creator,
+		Sender:             sender,
+		SenderChainId:      senderChain,
+		TxOrigin:           txOrigin,
+		Receiver:           receiver,
+		ReceiverChain:      receiverChain,
+		Amount:             amount,
+		Message:            message,
+		InboundHash:        inboundHash,
+		InboundBlockHeight: inboundBlockHeight,
+		CallOptions: &CallOptions{
+			GasLimit:        gasLimit,
+			IsArbitraryCall: isArbitraryCall,
+		},
 		CoinType:                coinType,
 		Asset:                   asset,
 		EventIndex:              uint64(eventIndex),
 		ProtocolContractVersion: protocolContractVersion,
 		RevertOptions:           NewEmptyRevertOptions(),
-		IsArbitraryCall:         isArbitraryCall,
 	}
 
 	for _, option := range options {

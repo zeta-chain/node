@@ -120,8 +120,11 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 		Receiver:        revertReceiver,
 		ReceiverChainId: m.InboundParams.SenderChainId,
 		Amount:          m.GetCurrentOutboundParam().Amount,
-		GasLimit:        gasLimit,
-		TssPubkey:       m.GetCurrentOutboundParam().TssPubkey,
+		CallOptions: &CallOptions{
+			GasLimit:        gasLimit,
+			IsArbitraryCall: true,
+		},
+		TssPubkey: m.GetCurrentOutboundParam().TssPubkey,
 	}
 	// The original outbound has been finalized, the new outbound is pending
 	m.GetCurrentOutboundParam().TxFinalizationStatus = TxFinalizationStatus_Executed
@@ -233,7 +236,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		ReceiverChainId:        msg.ReceiverChain,
 		Hash:                   "",
 		TssNonce:               0,
-		GasLimit:               msg.GasLimit,
+		CallOptions:            msg.CallOptions,
 		GasPrice:               "",
 		GasPriorityFee:         "",
 		BallotIndex:            "",
@@ -241,7 +244,6 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		Amount:                 sdkmath.ZeroUint(),
 		TssPubkey:              tssPubkey,
 		CoinType:               msg.CoinType,
-		IsArbitraryCall:        msg.IsArbitraryCall,
 	}
 	status := &Status{
 		Status:              CctxStatus_PendingInbound,
