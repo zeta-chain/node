@@ -57,19 +57,26 @@ func (c *Contract) withdraw(
 
 	// Safety check: token has to be a valid whitelisted ZRC20 and not be paused.
 	t, found := c.fungibleKeeper.GetForeignCoins(ctx, zrc20Addr.String())
-	if !found || t.Paused {
+	if !found {
 		return nil, &ptypes.ErrInvalidToken{
 			Got:    zrc20Addr.String(),
-			Reason: "token is not a whitelisted ZRC20 or it's paused",
+			Reason: "token is not a whitelisted ZRC20",
+		}
+	}
+
+	if t.Paused {
+		return nil, &ptypes.ErrInvalidToken{
+			Got:    zrc20Addr.String(),
+			Reason: "token is paused",
 		}
 	}
 
 	// Caller has to have enough cosmos coin balance to withdraw the requested amount.
 	coin := c.bankKeeper.GetBalance(ctx, fromAddr, ZRC20ToCosmosDenom(zrc20Addr))
-	if coin.Amount.IsNil() {
+	if !coin.IsValid() {
 		return nil, &ptypes.ErrInsufficientBalance{
 			Requested: amount.String(),
-			Got:       "nil",
+			Got:       "invalid coin",
 		}
 	}
 
@@ -103,39 +110,19 @@ func (c *Contract) withdraw(
 	}
 
 	balance, ok := resBalanceOf[0].(*big.Int)
-	if !ok || balance.Cmp(amount) == -1 {
+	if !ok {
+		return nil, &ptypes.ErrUnexpected{
+			Got: "ZRC20 balanceOf returned an unexpected type",
+		}
+	}
+
+	if balance.Cmp(amount) == -1 {
 		return nil, &ptypes.ErrInvalidAmount{
-			Got: "not enough bank balance",
+			Got: balance.String(),
 		}
 	}
 
-	// 2. Effect: transfer balance.
-
-	// function transfer(address recipient, uint256 amount) public virtual override returns (bool)
-	resTransferFrom, err := c.CallContract(
-		ctx,
-		&c.fungibleKeeper,
-		c.zrc20ABI,
-		zrc20Addr,
-		"transfer",
-		[]interface{}{caller /* sender */, amount},
-	)
-	if err != nil {
-		return nil, &ptypes.ErrUnexpected{
-			When: "transferFrom",
-			Got:  err.Error(),
-		}
-	}
-
-	transferred, ok := resTransferFrom[0].(bool)
-	if !ok || !transferred {
-		return nil, &ptypes.ErrUnexpected{
-			When: "transferFrom",
-			Got:  "transaction not successful",
-		}
-	}
-
-	// 3. Interactions: send to module and burn.
+	// 2. Effect: burn cosmos coin balance.
 	if err := c.bankKeeper.SendCoinsFromAccountToModule(ctx, fromAddr, types.ModuleName, coinSet); err != nil {
 		return nil, &ptypes.ErrUnexpected{
 			When: "SendCoinsFromAccountToModule",
@@ -154,6 +141,38 @@ func (c *Contract) withdraw(
 		return nil, &ptypes.ErrUnexpected{
 			When: "AddWithdrawLog",
 			Got:  err.Error(),
+		}
+	}
+
+	// 3. Interactions: send to module and burn.
+
+	// function transfer(address recipient, uint256 amount) public virtual override returns (bool)
+	resTransfer, err := c.CallContract(
+		ctx,
+		&c.fungibleKeeper,
+		c.zrc20ABI,
+		zrc20Addr,
+		"transfer",
+		[]interface{}{caller /* sender */, amount},
+	)
+	if err != nil {
+		return nil, &ptypes.ErrUnexpected{
+			When: "transfer",
+			Got:  err.Error(),
+		}
+	}
+
+	transferred, ok := resTransfer[0].(bool)
+	if !ok {
+		return nil, &ptypes.ErrUnexpected{
+			Got: "ZRC20 transfer returned an unexpected type",
+		}
+	}
+
+	if !transferred {
+		return nil, &ptypes.ErrUnexpected{
+			When: "transfer",
+			Got:  "transaction not successful",
 		}
 	}
 

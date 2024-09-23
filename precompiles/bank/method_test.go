@@ -98,7 +98,14 @@ func Test_Methods(t *testing.T) {
 		)
 
 		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
-		require.NoError(t, err)
+		require.Error(t, err)
+		require.ErrorAs(
+			t, 
+			ptypes.ErrInvalidAmount{
+				Got: "0",
+			},
+			err,
+		)
 
 		res, err := ts.bankABI.Methods[DepositMethodName].Outputs.Unpack(success)
 		require.NoError(t, err)
@@ -127,7 +134,14 @@ func Test_Methods(t *testing.T) {
 		)
 
 		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
-		require.NoError(t, err)
+		require.Error(t, err)
+		require.ErrorAs(
+			t, 
+			ptypes.ErrInvalidAmount{
+				Got: "0",
+			},
+			err,
+		)
 
 		res, err := ts.bankABI.Methods[DepositMethodName].Outputs.Unpack(success)
 		require.NoError(t, err)
@@ -158,7 +172,14 @@ func Test_Methods(t *testing.T) {
 		)
 
 		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
-		require.NoError(t, err)
+		require.Error(t, err)
+		require.ErrorAs(
+			t, 
+			ptypes.ErrInvalidAmount{
+				Got: "500",
+			},
+			err,
+		)
 
 		res, err := ts.bankABI.Methods[DepositMethodName].Outputs.Unpack(success)
 		require.NoError(t, err)
@@ -205,7 +226,14 @@ func Test_Methods(t *testing.T) {
 		)
 
 		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
-		require.NoError(t, err)
+		require.Error(t, err)
+		require.ErrorAs(
+			t, 
+			ptypes.ErrInvalidAmount{
+				Got: "1000",
+			},
+			err,
+		)
 
 		res, err := ts.bankABI.Methods[DepositMethodName].Outputs.Unpack(success)
 		require.NoError(t, err)
@@ -409,7 +437,15 @@ func Test_Methods(t *testing.T) {
 		)
 
 		success, err = ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
-		require.NoError(t, err)
+		require.Error(t, err)
+		require.ErrorAs(
+			t, 
+			ptypes.ErrInsufficientBalance{
+				Requested: "501",
+				Got: "500",
+			},
+			err,
+		)
 
 		res, err = ts.bankABI.Methods[WithdrawMethodName].Outputs.Unpack(success)
 		require.NoError(t, err)

@@ -61,10 +61,17 @@ func (c *Contract) deposit(
 
 	// Safety check: token has to be a valid whitelisted ZRC20 and not be paused.
 	t, found := c.fungibleKeeper.GetForeignCoins(ctx, zrc20Addr.String())
-	if !found || t.Paused {
+	if !found {
 		return nil, &ptypes.ErrInvalidToken{
 			Got:    zrc20Addr.String(),
-			Reason: "token is not a whitelisted ZRC20 or it's paused",
+			Reason: "token is not a whitelisted ZRC20",
+		}
+	}
+
+	if t.Paused {
+		return nil, &ptypes.ErrInvalidToken{
+			Got:    zrc20Addr.String(),
+			Reason: "token is paused",
 		}
 	}
 
@@ -86,7 +93,13 @@ func (c *Contract) deposit(
 	}
 
 	balance, ok := resBalanceOf[0].(*big.Int)
-	if !ok || balance.Cmp(amount) < 0 || balance.Cmp(big.NewInt(0)) <= 0 {
+	if !ok {
+		return nil, &ptypes.ErrUnexpected{
+			Got: "ZRC20 balanceOf returned an unexpected type",
+		}
+	}
+
+	if balance.Cmp(amount) < 0 || balance.Cmp(big.NewInt(0)) <= 0 {
 		return nil, &ptypes.ErrInvalidAmount{
 			Got: balance.String(),
 		}
@@ -110,7 +123,13 @@ func (c *Contract) deposit(
 	}
 
 	allowance, ok := resAllowance[0].(*big.Int)
-	if !ok || allowance.Cmp(amount) < 0 || allowance.Cmp(big.NewInt(0)) <= 0 {
+	if !ok {
+		return nil, &ptypes.ErrUnexpected{
+			Got: "ZRC20 allowance returned an unexpected type",
+		}
+	}
+
+	if allowance.Cmp(amount) < 0 || allowance.Cmp(big.NewInt(0)) <= 0 {
 		return nil, &ptypes.ErrInvalidAmount{
 			Got: allowance.String(),
 		}
@@ -152,8 +171,7 @@ func (c *Contract) deposit(
 	}
 
 	// 3. Interactions: create cosmos coin and send.
-	err = c.bankKeeper.MintCoins(ctx, types.ModuleName, coinSet)
-	if err != nil {
+	if err := c.bankKeeper.MintCoins(ctx, types.ModuleName, coinSet); err != nil {
 		return nil, &ptypes.ErrUnexpected{
 			When: "MintCoins",
 			Got:  err.Error(),

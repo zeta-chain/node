@@ -151,7 +151,15 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 			return err
 		})
 		if execErr != nil {
-			return method.Outputs.Pack(false)
+			res, errPack := method.Outputs.Pack(false)
+			if errPack != nil {
+				return nil, errPack
+			}
+
+			// Return the proper result (true/false) and the error message.
+			// This way we make bank compliant with smart contracts which would expect a true/false.
+			// And also with Go bindings which would expect an error.
+			return res, err
 		}
 		return res, nil
 
