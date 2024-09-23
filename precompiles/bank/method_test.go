@@ -22,13 +22,14 @@ import (
 	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	gatewayzevm "github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 )
 
-func Test_Deposit(t *testing.T) {
+func Test_Methods(t *testing.T) {
 	t.Run("should fail when caller has 0 token balance", func(t *testing.T) {
 		ts := setupChain(t)
 
-		methodID := ts.abi.Methods[DepositMethodName]
+		methodID := ts.bankABI.Methods[DepositMethodName]
 
 		// Set CallerAddress and evm.Origin to the caller address.
 		// Caller does not have any balance, and bank does not have any allowance.
@@ -42,7 +43,7 @@ func Test_Deposit(t *testing.T) {
 			[]interface{}{ts.zrc20Address, big.NewInt(0)}...,
 		)
 
-		_, err := ts.contract.Run(ts.mockEVM, ts.mockVMContract, false)
+		_, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
 		require.ErrorAs(
 			t,
 			ptypes.ErrInvalidAmount{
@@ -56,7 +57,7 @@ func Test_Deposit(t *testing.T) {
 		ts := setupChain(t)
 		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, fungibletypes.ModuleAddressEVM, big.NewInt(1000))
 
-		methodID := ts.abi.Methods[DepositMethodName]
+		methodID := ts.bankABI.Methods[DepositMethodName]
 
 		// Set CallerAddress and evm.Origin to the caller address.
 		// Caller does not have any balance, and bank does not have any allowance.
@@ -70,7 +71,7 @@ func Test_Deposit(t *testing.T) {
 			[]interface{}{ts.zrc20Address, big.NewInt(0)}...,
 		)
 
-		_, err := ts.contract.Run(ts.mockEVM, ts.mockVMContract, false)
+		_, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
 		require.ErrorAs(
 			t,
 			ptypes.ErrInvalidAmount{
@@ -79,21 +80,223 @@ func Test_Deposit(t *testing.T) {
 			err,
 		)
 	})
+
+	t.Run("should fail when trying to deposit more than allowed to bank", func(t *testing.T) {
+		ts := setupChain(t)
+		caller := fungibletypes.ModuleAddressEVM
+		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, caller, big.NewInt(1000))
+		
+		// Allow bank to spend 500 ZRC20 tokens.
+		allowBank(t, ts, big.NewInt(500))
+
+		// Set CallerAddress and evm.Origin to the caller address.
+		ts.mockVMContract.CallerAddress = caller
+		ts.mockEVM.Origin = caller
+
+		// Prepare and call the deposit method.
+		methodID := ts.bankABI.Methods[DepositMethodName]
+
+		ts.mockVMContract.Input = packInputArgs(
+			t,
+			methodID,
+			[]interface{}{ts.zrc20Address, big.NewInt(501)}...,
+		)
+
+		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
+		require.Error(t, err)
+		require.Empty(t, success)
+
+		// Prepare and call the balanceOf method.
+		methodID = ts.bankABI.Methods[BalanceOfMethodName]
+		ts.mockVMContract.Input = packInputArgs(
+			t,
+			methodID,
+			[]interface{}{ts.zrc20Address, caller}...,
+		)
+
+		success, err = ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
+		resultBalanceOf, err := ts.bankABI.Methods[BalanceOfMethodName].Outputs.Unpack(success)
+		require.NoError(t, err)
+
+		balance, ok := resultBalanceOf[0].(*big.Int)
+		require.True(t, ok)
+		require.EqualValues(t, big.NewInt(0).Uint64(), balance.Uint64())
+	})
+
+	t.Run("should fail when trying to deposit more user balance", func(t *testing.T) {
+		ts := setupChain(t)
+		caller := fungibletypes.ModuleAddressEVM
+		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, caller, big.NewInt(1000))
+		
+		// Allow bank to spend 500 ZRC20 tokens.
+		allowBank(t, ts, big.NewInt(1000))
+
+		// Set CallerAddress and evm.Origin to the caller address.
+		ts.mockVMContract.CallerAddress = caller
+		ts.mockEVM.Origin = caller
+
+		// Prepare and call the deposit method.
+		methodID := ts.bankABI.Methods[DepositMethodName]
+
+		ts.mockVMContract.Input = packInputArgs(
+			t,
+			methodID,
+			[]interface{}{ts.zrc20Address, big.NewInt(1001)}...,
+		)
+
+		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
+		require.Error(t, err)
+		require.Empty(t, success)
+
+		// Prepare and call the balanceOf method.
+		methodID = ts.bankABI.Methods[BalanceOfMethodName]
+		ts.mockVMContract.Input = packInputArgs(
+			t,
+			methodID,
+			[]interface{}{ts.zrc20Address, caller}...,
+		)
+
+		success, err = ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
+		resultBalanceOf, err := ts.bankABI.Methods[BalanceOfMethodName].Outputs.Unpack(success)
+		require.NoError(t, err)
+
+		balance, ok := resultBalanceOf[0].(*big.Int)
+		require.True(t, ok)
+		require.EqualValues(t, big.NewInt(0).Uint64(), balance.Uint64())
+	})
+
+	t.Run("should deposit tokens and retrieve balance of cosmos coin", func(t *testing.T) {
+		ts := setupChain(t)
+		caller := fungibletypes.ModuleAddressEVM
+		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, caller, big.NewInt(1000))
+		methodID := ts.bankABI.Methods[DepositMethodName]
+		
+		// Allow bank to spend 500 ZRC20 tokens.
+		allowBank(t, ts, big.NewInt(500))
+
+		// Set CallerAddress and evm.Origin to the caller address.
+		ts.mockVMContract.CallerAddress = caller
+		ts.mockEVM.Origin = caller
+
+		// Prepare and call the deposit method.
+		ts.mockVMContract.Input = packInputArgs(
+			t,
+			methodID,
+			[]interface{}{ts.zrc20Address, big.NewInt(500)}...,
+		)
+
+		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
+		resultDeposit, err := ts.bankABI.Methods[DepositMethodName].Outputs.Unpack(success)
+		require.NoError(t, err)
+
+		deposit, ok := resultDeposit[0].(bool)
+		require.True(t, ok)
+		require.True(t, deposit)
+
+		// Prepare and call the balanceOf method.
+		methodID = ts.bankABI.Methods[BalanceOfMethodName]
+		ts.mockVMContract.Input = packInputArgs(
+			t,
+			methodID,
+			[]interface{}{ts.zrc20Address, caller}...,
+		)
+
+		success, err = ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
+		resultBalanceOf, err := ts.bankABI.Methods[BalanceOfMethodName].Outputs.Unpack(success)
+		require.NoError(t, err)
+
+		balance, ok := resultBalanceOf[0].(*big.Int)
+		require.True(t, ok)
+		require.Equal(t, big.NewInt(500), balance)
+	})
+
+	t.Run("should deposit tokens, withdraw and check with balanceOf", func(t *testing.T) {
+		ts := setupChain(t)
+		caller := fungibletypes.ModuleAddressEVM
+		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, caller, big.NewInt(1000))
+		methodID := ts.bankABI.Methods[DepositMethodName]
+		
+		// Allow bank to spend 500 ZRC20 tokens.
+		allowBank(t, ts, big.NewInt(500))
+
+		// Set CallerAddress and evm.Origin to the caller address.
+		ts.mockVMContract.CallerAddress = caller
+		ts.mockEVM.Origin = caller
+
+		// Prepare and call the deposit method.
+		ts.mockVMContract.Input = packInputArgs(
+			t,
+			methodID,
+			[]interface{}{ts.zrc20Address, big.NewInt(500)}...,
+		)
+
+		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
+		resultDeposit, err := ts.bankABI.Methods[DepositMethodName].Outputs.Unpack(success)
+		require.NoError(t, err)
+
+		deposit, ok := resultDeposit[0].(bool)
+		require.True(t, ok)
+		require.True(t, deposit)
+
+		// Prepare and call the balanceOf method.
+		methodID = ts.bankABI.Methods[BalanceOfMethodName]
+		ts.mockVMContract.Input = packInputArgs(
+			t,
+			methodID,
+			[]interface{}{ts.zrc20Address, caller}...,
+		)
+
+		success, err = ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
+		resultBalanceOf, err := ts.bankABI.Methods[BalanceOfMethodName].Outputs.Unpack(success)
+		require.NoError(t, err)
+
+		balance, ok := resultBalanceOf[0].(*big.Int)
+		require.True(t, ok)
+		require.Equal(t, big.NewInt(500).Uint64(), balance.Uint64())
+
+		// Prepare and call the withdraw method.
+		methodID = ts.bankABI.Methods[WithdrawMethodName]
+		ts.mockVMContract.Input = packInputArgs(
+			t,
+			methodID,
+			[]interface{}{ts.zrc20Address, big.NewInt(500)}...,
+		)
+
+		success, err = ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
+		require.NoError(t, err)
+
+		// Prepare and call the balanceOf method.
+		methodID = ts.bankABI.Methods[BalanceOfMethodName]
+		ts.mockVMContract.Input = packInputArgs(
+			t,
+			methodID,
+			[]interface{}{ts.zrc20Address, caller}...,
+		)
+
+		success, err = ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
+		resultBalanceOf, err = ts.bankABI.Methods[BalanceOfMethodName].Outputs.Unpack(success)
+		require.NoError(t, err)
+
+		balance, ok = resultBalanceOf[0].(*big.Int)
+		require.True(t, ok)
+		require.Equal(t, big.NewInt(0).Uint64(), balance.Uint64())
+	})
 }
 
 /*
-	Functions to set up the test environment.
+	Test utils.
 */
 
 type testSuite struct {
 	ctx              sdk.Context
 	fungibleKeeper   *fungiblekeeper.Keeper
 	sdkKeepers       keeper.SDKKeepers
-	contract         *Contract
-	abi              abi.ABI
+	bankContract     *Contract
+	bankABI          abi.ABI
 	mockEVM          *vm.EVM
 	mockVMContract   *vm.Contract
 	zrc20Address     common.Address
+	zrc20ABI         abi.ABI
 }
 
 func setupChain(t *testing.T) testSuite {
@@ -124,6 +327,11 @@ func setupChain(t *testing.T) testSuite {
 	address := contract.Address()
 	require.NotNil(t, address, "contract address should not be nil")
 
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return testSuite{}
+	}
+
 	mockEVM := vm.NewEVM(
 		vm.BlockContext{},
 		vm.TxContext{},
@@ -148,7 +356,57 @@ func setupChain(t *testing.T) testSuite {
 		mockEVM,
 		mockVMContract,
 		zrc20Address,
+		*zrc20ABI,
 	}
+}
+
+func allowBank(t *testing.T, ts testSuite, amount *big.Int) {
+	resAllowance, err := callEVM(
+		t,
+		ts.ctx,
+		ts.fungibleKeeper,
+		&ts.zrc20ABI,
+		fungibletypes.ModuleAddressEVM,
+		ts.zrc20Address,
+		"approve",
+		[]interface{}{ts.bankContract.Address(), amount},
+	)
+	require.NoError(t, err, "error allowing bank to spend ZRC20 tokens")
+
+	allowed, ok := resAllowance[0].(bool)
+	require.True(t, ok)
+	require.True(t, allowed)
+}
+
+func callEVM(
+	t *testing.T,
+	ctx sdk.Context,
+	fungibleKeeper *fungiblekeeper.Keeper,
+	abi *abi.ABI,
+	from common.Address,
+	dst common.Address,
+	method string,
+	args []interface{},
+	) ([]interface{}, error) {
+	res, err := fungibleKeeper.CallEVM(
+		ctx,             // ctx
+		*abi,            // abi
+		from,            // from
+		dst,             // to
+		big.NewInt(0),   // value
+		nil,             // gasLimit
+		true,            // commit
+		true,            // noEthereumTxEvent
+		method,          // method
+		args...,         // args
+	)
+	require.NoError(t, err, "CallEVM error")
+	require.Equal(t, "", res.VmError, "res.VmError should be empty")
+
+	ret, err := abi.Methods[method].Outputs.Unpack(res.Ret)
+	require.NoError(t, err, "Unpack error")
+
+	return ret, nil
 }
 
 // setupGasCoin is a helper function to setup the gas coin for testing
