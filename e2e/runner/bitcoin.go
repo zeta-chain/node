@@ -267,7 +267,6 @@ func (r *E2ERunner) SendToTSSFromDeployerWithMemo(
 	rawtx, err := btcRPC.GetRawTransactionVerbose(txid)
 	require.NoError(r, err)
 
-	depositorFee := zetabitcoin.DefaultDepositorFee
 	events, err := btcobserver.FilterAndParseIncomingTx(
 		btcRPC,
 		[]btcjson.TxRawResult{*rawtx},
@@ -275,7 +274,6 @@ func (r *E2ERunner) SendToTSSFromDeployerWithMemo(
 		r.BTCTSSAddress.EncodeAddress(),
 		log.Logger,
 		r.BitcoinParams,
-		depositorFee,
 	)
 	require.NoError(r, err)
 	r.Logger.Info("bitcoin inbound events:")
