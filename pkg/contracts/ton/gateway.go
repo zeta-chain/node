@@ -1,6 +1,8 @@
 package ton
 
 import (
+	"bytes"
+
 	"cosmossdk.io/math"
 	eth "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
@@ -64,7 +66,8 @@ func NewGateway(accountID ton.AccountID) *Gateway {
 
 func (gw *Gateway) ParseTransaction(tx ton.Transaction) (*Transaction, error) {
 	if !tx.IsSuccess() {
-		return nil, errors.Wrapf(ErrParse, "tx %s is not successful", tx.Hash().Hex())
+		exitCode := tx.Description.TransOrd.ComputePh.TrPhaseComputeVm.Vm.ExitCode
+		return nil, errors.Wrapf(ErrParse, "tx %s is not successful (exit code %d)", tx.Hash().Hex(), exitCode)
 	}
 
 	if tx.Msgs.InMsg.Exists {
@@ -223,13 +226,16 @@ func parseDepositAndCall(tx ton.Transaction, sender ton.AccountID, body *boc.Cel
 	}
 
 	var sd tlb.SnakeData
-	if err = sd.UnmarshalTLB(callDataCell, &tlb.Decoder{}); err != nil {
+	if err = unmarshalTLB(&sd, callDataCell); err != nil {
 		return DepositAndCall{}, errors.Wrap(err, "unable to unmarshal call data")
 	}
 
 	cd := boc.BitString(sd)
 
-	return DepositAndCall{Deposit: deposit, CallData: cd.Buffer()}, nil
+	// TLB operates with bits, so we (might) need to trim some "leftovers" (null chars)
+	callData := bytes.Trim(cd.Buffer(), "\x00")
+
+	return DepositAndCall{Deposit: deposit, CallData: callData}, nil
 }
 
 func (gw *Gateway) parseOutbound(_ ton.Transaction) (*Transaction, error) {

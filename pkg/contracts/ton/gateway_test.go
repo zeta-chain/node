@@ -59,7 +59,7 @@ func TestParsing(t *testing.T) {
 		// Check tx props
 		assert.Equal(t, int(OpDeposit), int(parsedTX.Operation))
 
-		// Check
+		// Check deposit
 		deposit, err := parsedTX.Deposit()
 		assert.NoError(t, err)
 
@@ -79,14 +79,74 @@ func TestParsing(t *testing.T) {
 	})
 
 	t.Run("Deposit and call", func(t *testing.T) {
-		// todo
+		// ARRANGE
+		// Given a tx
+		tx, fx := getFixtureTX(t, "02-deposit-and-call")
+
+		// Given a gateway contract
+		gw := NewGateway(ton.MustParseAccountID(fx.Account))
+
+		// ACT
+		parsedTX, err := gw.ParseTransaction(tx)
+
+		// ASSERT
+		require.NoError(t, err)
+
+		// Check tx props
+		assert.Equal(t, int(OpDepositAndCall), int(parsedTX.Operation))
+
+		// Check deposit and call
+		depositAndCall, err := parsedTX.DepositAndCall()
+		assert.NoError(t, err)
+
+		const (
+			expectedSender  = "0:9594c719ec4c95f66683b2fb1ca0b09de4a41f6fb087ba4c8d265b96a4cce50f"
+			vitalikDotETH   = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+			expectedDeposit = 490_000_000 // 0.49 TON
+		)
+
+		expectedCallData := readFixtureFile(t, "testdata/long-call-data.txt")
+
+		assert.Equal(t, expectedSender, depositAndCall.Sender.ToRaw())
+		assert.Equal(t, expectedDeposit, int(depositAndCall.Amount.Uint64()))
+		assert.Equal(t, vitalikDotETH, depositAndCall.Recipient.Hex())
+		assert.Equal(t, expectedCallData, depositAndCall.CallData)
 	})
 
 	t.Run("Irrelevant tx", func(t *testing.T) {
-		// todo
-	})
+		t.Run("Failed tx", func(t *testing.T) {
+			// ARRANGE
+			// Given a tx
+			tx, fx := getFixtureTX(t, "03-failed-tx")
 
-	// todo
+			// Given a gateway contract
+			gw := NewGateway(ton.MustParseAccountID(fx.Account))
+
+			// ACT
+			_, err := gw.ParseTransaction(tx)
+
+			assert.ErrorIs(t, err, ErrParse)
+
+			// 102 is 'unknown op'
+			// https://github.com/zeta-chain/protocol-contracts-ton/blob/main/contracts/common/errors.fc
+			assert.ErrorContains(t, err, "is not successful (exit code 102)")
+		})
+
+		t.Run("not a deposit nor withdrawal", func(t *testing.T) {
+			// actually, it's a bounce of the previous tx
+
+			// ARRANGE
+			// Given a tx
+			tx, fx := getFixtureTX(t, "04-bounced-msg")
+
+			// Given a gateway contract
+			gw := NewGateway(ton.MustParseAccountID(fx.Account))
+
+			// ACT
+			_, err := gw.ParseTransaction(tx)
+			assert.Error(t, err)
+		})
+	})
 }
 
 func TestFixtures(t *testing.T) {
@@ -114,10 +174,10 @@ type fixture struct {
 func getFixtureTX(t *testing.T, name string) (ton.Transaction, fixture) {
 	t.Helper()
 
-	filename := fmt.Sprintf("testdata/%s.json", name)
-
-	b, err := fixtures.ReadFile(filename)
-	require.NoError(t, err, filename)
+	var (
+		filename = fmt.Sprintf("testdata/%s.json", name)
+		b        = readFixtureFile(t, filename)
+	)
 
 	// bag of cells
 	var fx fixture
@@ -137,4 +197,13 @@ func getFixtureTX(t *testing.T, name string) (ton.Transaction, fixture) {
 	t.Logf("Loaded fixture %s\n%s", filename, fx.Description)
 
 	return tx, fx
+}
+
+func readFixtureFile(t *testing.T, filename string) []byte {
+	t.Helper()
+
+	b, err := fixtures.ReadFile(filename)
+	require.NoError(t, err, filename)
+
+	return b
 }
