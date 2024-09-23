@@ -97,12 +97,32 @@ func GenerateKeyshareFiles(n int, dir string) error {
 func Test_EVMAddress(t *testing.T) {
 	setupConfig()
 
-	// test Athens3 tss pubkey
-	tss := TSS{
-		CurrentPubkey: testutils.TSSPubkeyAthens3,
+	tests := []struct {
+		name            string
+		tssPubkey       string
+		expectedEVMAddr string
+	}{
+		{
+			name:            "should return Athens3 TSS EVM address",
+			tssPubkey:       testutils.TSSPubkeyAthens3,
+			expectedEVMAddr: testutils.TSSAddressEVMAthens3,
+		},
+		{
+			name:            "should return empty TSS EVM address on invalid TSS pubkey",
+			tssPubkey:       "invalidpubkey",
+			expectedEVMAddr: "0x0000000000000000000000000000000000000000",
+		},
 	}
-	evmAddr := tss.EVMAddress()
-	require.Equal(t, testutils.TSSAddressEVMAthens3, evmAddr.String())
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tss := TSS{
+				CurrentPubkey: tc.tssPubkey,
+			}
+			evmAddr := tss.EVMAddress()
+			require.Equal(t, tc.expectedEVMAddr, evmAddr.String())
+		})
+	}
 }
 
 func Test_BTCAddress(t *testing.T) {
@@ -126,6 +146,12 @@ func Test_BTCAddress(t *testing.T) {
 			btcChainID: chains.BitcoinRegtest.ChainId,
 			wantAddr:   "bcrt1q30ew8md3rd9fx6n4qx0a9tmz0mz44lzjwxppnu",
 		},
+		{
+			name:       "invalid tss pubkey",
+			tssPubkey:  "invalidpubkey",
+			btcChainID: chains.BitcoinTestnet.ChainId,
+			wantAddr:   "",
+		},
 	}
 
 	for _, tc := range tests {
@@ -133,11 +159,14 @@ func Test_BTCAddress(t *testing.T) {
 			tss := TSS{
 				CurrentPubkey: tc.tssPubkey,
 			}
-			btcAddr := tss.BTCAddress(tc.btcChainID)
-			require.Equal(t, tc.wantAddr, btcAddr)
+			address := tss.BTCAddress(tc.btcChainID)
+			if tc.wantAddr != "" {
+				require.Equal(t, tc.wantAddr, address.EncodeAddress())
+			} else {
+				require.Nil(t, address)
+			}
 		})
 	}
-
 }
 
 func Test_ValidateAddresses(t *testing.T) {

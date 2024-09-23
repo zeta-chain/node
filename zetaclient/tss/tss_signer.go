@@ -427,10 +427,10 @@ func (tss *TSS) ValidateAddresses(btcChainIDs []int64) error {
 
 	// validate TSS BTC address for each btc chain
 	for _, chainID := range btcChainIDs {
-		if tss.BTCAddressWitnessPubkeyHash(chainID) == nil {
+		if tss.BTCAddress(chainID) == nil {
 			return fmt.Errorf("cannot derive btc address for chain %d from tss pubkey %s", chainID, tss.CurrentPubkey)
 		}
-		log.Info().Msgf("tss.btc [chain %d]: %s", chainID, tss.BTCAddress(chainID))
+		log.Info().Msgf("tss.btc [chain %d]: %s", chainID, tss.BTCAddress(chainID).EncodeAddress())
 	}
 
 	return nil
@@ -460,17 +460,7 @@ func (tss *TSS) EVMAddressList() []ethcommon.Address {
 }
 
 // BTCAddress generates a bech32 p2wpkh address from pubkey
-func (tss *TSS) BTCAddress(chainID int64) string {
-	addr, err := GetTssAddrBTC(tss.CurrentPubkey, chainID)
-	if err != nil {
-		log.Error().Err(err).Msg("getKeyAddr error")
-		return ""
-	}
-	return addr
-}
-
-// BTCAddressWitnessPubkeyHash generates a bech32 p2wpkh address from pubkey
-func (tss *TSS) BTCAddressWitnessPubkeyHash(chainID int64) *btcutil.AddressWitnessPubKeyHash {
+func (tss *TSS) BTCAddress(chainID int64) *btcutil.AddressWitnessPubKeyHash {
 	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tss.CurrentPubkey, chainID)
 	if err != nil {
 		log.Error().Err(err).Msg("BTCAddressPubkeyHash error")
@@ -561,17 +551,6 @@ func (tss *TSS) LoadTssFilesFromDirectory(tssPath string) error {
 		log.Info().Msg("TSS Keyshare file NOT found")
 	}
 	return nil
-}
-
-// GetTssAddrBTC generates a bech32 p2wpkh address from pubkey
-func GetTssAddrBTC(tssPubkey string, bitcoinChainID int64) (string, error) {
-	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tssPubkey, bitcoinChainID)
-	if err != nil {
-		log.Fatal().Err(err)
-		return "", err
-	}
-
-	return addrWPKH.EncodeAddress(), nil
 }
 
 // GetTssAddrEVM generates an EVM address from pubkey

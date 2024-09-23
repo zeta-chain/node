@@ -61,7 +61,7 @@ func createObserverWithPrivateKey(t *testing.T) *Observer {
 func createObserverWithUTXOs(t *testing.T) *Observer {
 	// Create Bitcoin observer
 	ob := createObserverWithPrivateKey(t)
-	tssAddress := ob.TSS().BTCAddressWitnessPubkeyHash(chains.BitcoinTestnet.ChainId).EncodeAddress()
+	tssAddress := ob.TSS().BTCAddress(chains.BitcoinTestnet.ChainId).EncodeAddress()
 
 	// Create 10 dummy UTXOs (22.44 BTC in total)
 	ob.utxos = make([]btcjson.ListUnspentResult, 0, 10)
@@ -78,7 +78,7 @@ func mineTxNSetNonceMark(ob *Observer, nonce uint64, txid string, preMarkIndex i
 	ob.includedTxResults[outboundID] = &btcjson.GetTransactionResult{TxID: txid}
 
 	// Set nonce mark
-	tssAddress := ob.TSS().BTCAddressWitnessPubkeyHash(chains.BitcoinTestnet.ChainId).EncodeAddress()
+	tssAddress := ob.TSS().BTCAddress(chains.BitcoinTestnet.ChainId).EncodeAddress()
 	nonceMark := btcjson.ListUnspentResult{
 		TxID:    txid,
 		Address: tssAddress,

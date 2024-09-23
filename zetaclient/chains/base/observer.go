@@ -217,6 +217,18 @@ func (ob *Observer) WithTSS(tss interfaces.TSSSigner) *Observer {
 	return ob
 }
 
+// TSSAddress returns the TSS address for the chain.
+//
+// Note: all chains uses TSS EVM address except Bitcoin chain.
+func (ob *Observer) TSSAddress() string {
+	switch ob.chain.Consensus {
+	case chains.Consensus_bitcoin:
+		return ob.tss.BTCAddress(ob.Chain().ChainId).EncodeAddress()
+	default:
+		return ob.tss.EVMAddress().String()
+	}
+}
+
 // LastBlock get external last block height.
 func (ob *Observer) LastBlock() uint64 {
 	return atomic.LoadUint64(&ob.lastBlock)
@@ -286,11 +298,7 @@ func (ob *Observer) WithHeaderCache(cache *lru.Cache) *Observer {
 // OutboundID returns a unique identifier for the outbound transaction.
 // The identifier is now used as the key for maps that store outbound related data (e.g. transaction, receipt, etc).
 func (ob *Observer) OutboundID(nonce uint64) string {
-	// all chains uses EVM address as part of the key except bitcoin
-	tssAddress := ob.tss.EVMAddress().String()
-	if ob.chain.Consensus == chains.Consensus_bitcoin {
-		tssAddress = ob.tss.BTCAddress(ob.Chain().ChainId)
-	}
+	tssAddress := ob.TSSAddress()
 	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddress, nonce)
 }
 

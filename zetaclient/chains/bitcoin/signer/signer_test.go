@@ -238,7 +238,7 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 	require.NoError(t, err)
 
 	// tss address and script
-	tssAddr := signer.TSS().BTCAddressWitnessPubkeyHash(chains.BitcoinTestnet.ChainId)
+	tssAddr := signer.TSS().BTCAddress(chains.BitcoinTestnet.ChainId)
 	tssScript, err := bitcoin.PayToAddrScript(tssAddr)
 	require.NoError(t, err)
 	fmt.Printf("tss address: %s", tssAddr.EncodeAddress())

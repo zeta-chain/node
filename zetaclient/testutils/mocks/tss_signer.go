@@ -112,20 +112,19 @@ func (s *TSS) EVMAddressList() []ethcommon.Address {
 	return []ethcommon.Address{s.EVMAddress()}
 }
 
-func (s *TSS) BTCAddress(_ int64) string {
-	// force use btcAddress if set
+func (s *TSS) BTCAddress(_ int64) *btcutil.AddressWitnessPubKeyHash {
+	// force use static btcAddress if set
 	if s.btcAddress != "" {
-		return s.btcAddress
+		net, err := chains.GetBTCChainParams(s.chain.ChainId)
+		if err != nil {
+			return nil
+		}
+		addr, err := btcutil.DecodeAddress(s.btcAddress, net)
+		if err != nil {
+			return nil
+		}
+		return addr.(*btcutil.AddressWitnessPubKeyHash)
 	}
-
-	testnet3Addr := s.btcAddressPubkey()
-	if testnet3Addr == nil {
-		return ""
-	}
-	return testnet3Addr.EncodeAddress()
-}
-
-func (s *TSS) BTCAddressWitnessPubkeyHash(_ int64) *btcutil.AddressWitnessPubKeyHash {
 	// if privkey is set, use it to generate a segwit address
 	if s.PrivKey != nil {
 		pkBytes := crypto.FromECDSAPub(&s.PrivKey.PublicKey)
@@ -148,18 +147,7 @@ func (s *TSS) BTCAddressWitnessPubkeyHash(_ int64) *btcutil.AddressWitnessPubKey
 
 		return addrWPKH
 	}
-
-	net, err := chains.GetBTCChainParams(s.chain.ChainId)
-	if err != nil {
-		fmt.Printf("error getting btc chain params: %v", err)
-		return nil
-	}
-	tssAddress := s.BTCAddress(s.chain.ChainId)
-	addr, err := btcutil.DecodeAddress(tssAddress, net)
-	if err != nil {
-		return nil
-	}
-	return addr.(*btcutil.AddressWitnessPubKeyHash)
+	return nil
 }
 
 // PubKeyCompressedBytes returns 33B compressed pubkey
@@ -171,19 +159,6 @@ func (s *TSS) PubKeyCompressedBytes() []byte {
 		return nil
 	}
 	return pk.SerializeCompressed()
-}
-
-func (s *TSS) btcAddressPubkey() *btcutil.AddressPubKey {
-	pkBytes := crypto.FromECDSAPub(&s.PrivKey.PublicKey)
-	pk, err := btcec.ParsePubKey(pkBytes)
-	if err != nil {
-		return nil
-	}
-	testnet3Addr, err := btcutil.NewAddressPubKey(pk.SerializeCompressed(), &chaincfg.TestNet3Params)
-	if err != nil {
-		return nil
-	}
-	return testnet3Addr
 }
 
 // ----------------------------------------------------------------------------
