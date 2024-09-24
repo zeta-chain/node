@@ -45,10 +45,10 @@ func Test_Methods(t *testing.T) {
 
 		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, true)
 		require.ErrorIs(
-			t, 
+			t,
 			ptypes.ErrUnexpected{
 				Got: "method not allowed in read-only mode: deposit",
-			}, 
+			},
 			err)
 		require.Empty(t, success)
 	})
@@ -72,10 +72,10 @@ func Test_Methods(t *testing.T) {
 
 		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, true)
 		require.ErrorIs(
-			t, 
+			t,
 			ptypes.ErrUnexpected{
 				Got: "method not allowed in read-only mode: withdraw",
-			}, 
+			},
 			err)
 		require.Empty(t, success)
 	})
@@ -100,7 +100,7 @@ func Test_Methods(t *testing.T) {
 		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
 		require.Error(t, err)
 		require.ErrorAs(
-			t, 
+			t,
 			ptypes.ErrInvalidAmount{
 				Got: "0",
 			},
@@ -136,7 +136,7 @@ func Test_Methods(t *testing.T) {
 		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
 		require.Error(t, err)
 		require.ErrorAs(
-			t, 
+			t,
 			ptypes.ErrInvalidAmount{
 				Got: "0",
 			},
@@ -174,7 +174,7 @@ func Test_Methods(t *testing.T) {
 		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
 		require.Error(t, err)
 		require.ErrorAs(
-			t, 
+			t,
 			ptypes.ErrInvalidAmount{
 				Got: "500",
 			},
@@ -228,7 +228,7 @@ func Test_Methods(t *testing.T) {
 		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
 		require.Error(t, err)
 		require.ErrorAs(
-			t, 
+			t,
 			ptypes.ErrInvalidAmount{
 				Got: "1000",
 			},
@@ -439,10 +439,10 @@ func Test_Methods(t *testing.T) {
 		success, err = ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
 		require.Error(t, err)
 		require.ErrorAs(
-			t, 
+			t,
 			ptypes.ErrInsufficientBalance{
 				Requested: "501",
-				Got: "500",
+				Got:       "500",
 			},
 			err,
 		)

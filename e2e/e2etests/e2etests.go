@@ -901,4 +901,10 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{},
 		TestPrecompilesBankNonZRC20,
 	),
+	runner.NewE2ETest(
+		TestPrecompilesBankThroughContractName,
+		"test stateful precompiled contracts bank through contract",
+		[]runner.ArgDefinition{},
+		TestPrecompilesBankThroughContract,
+	),
 }
