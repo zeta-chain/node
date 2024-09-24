@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/tonkeeper/tongo/liteapi"
 	"github.com/tonkeeper/tongo/tlb"
@@ -13,11 +14,61 @@ import (
 )
 
 // Client extends tongo's liteapi.Client with some high-level tools
+// Reference: https://github.com/ton-blockchain/ton/blob/master/tl/generate/scheme/tonlib_api.tl
 type Client struct {
 	*liteapi.Client
+	blockCache *lru.Cache
 }
 
-const pageSize = 200
+const (
+	pageSize       = 200
+	blockCacheSize = 250
+)
+
+// New Client constructor.
+func New(client *liteapi.Client) *Client {
+	blockCache, _ := lru.New(blockCacheSize)
+
+	return &Client{Client: client, blockCache: blockCache}
+}
+
+// GetBlockHeader returns block header by block ID.
+// Uses LRU cache for network efficiency.
+// I haven't found what mode means but `0` works fine.
+func (c *Client) GetBlockHeader(ctx context.Context, blockID ton.BlockIDExt, mode uint32) (tlb.BlockInfo, error) {
+	if c.blockCache == nil {
+		return tlb.BlockInfo{}, errors.New("block cache is not initialized")
+	}
+
+	cached, ok := c.getBlockHeaderCache(blockID)
+	if ok {
+		return cached, nil
+	}
+
+	header, err := c.Client.GetBlockHeader(ctx, blockID, mode)
+	if err != nil {
+		return tlb.BlockInfo{}, err
+	}
+
+	c.setBlockHeaderCache(blockID, header)
+
+	return header, nil
+}
+
+func (c *Client) getBlockHeaderCache(blockID ton.BlockIDExt) (tlb.BlockInfo, bool) {
+	raw, ok := c.blockCache.Get(blockID.String())
+	if !ok {
+		return tlb.BlockInfo{}, false
+	}
+
+	header, ok := raw.(tlb.BlockInfo)
+
+	return header, ok
+}
+
+func (c *Client) setBlockHeaderCache(blockID ton.BlockIDExt, header tlb.BlockInfo) {
+	c.blockCache.Add(blockID.String(), header)
+}
 
 // GetFirstTransaction scrolls through the transactions of the given account to find the first one.
 // Note that it might fail w/o using an archival node. Also returns the number of

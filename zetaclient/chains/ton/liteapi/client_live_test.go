@@ -19,12 +19,12 @@ import (
 
 func TestClient(t *testing.T) {
 	if !common.LiveTestEnabled() {
-		t.Skip("Live tests are disabled")
+		//t.Skip("Live tests are disabled")
 	}
 
 	var (
 		ctx    = context.Background()
-		client = &Client{Client: mustCreateClient(t)}
+		client = New(mustCreateClient(t))
 	)
 
 	t.Run("GetFirstTransaction", func(t *testing.T) {
@@ -58,7 +58,7 @@ func TestClient(t *testing.T) {
 
 	t.Run("GetTransactionsUntil", func(t *testing.T) {
 		// ARRANGE
-		// Given sample account id (a dev wallet)
+		// Given sample account id (dev wallet)
 		// https://tonviewer.com/UQCVlMcZ7EyV9maDsvscoLCd5KQfb7CHukyNJluWpMzlD0vr?section=transactions
 		accountID, err := ton.ParseAccountID("UQCVlMcZ7EyV9maDsvscoLCd5KQfb7CHukyNJluWpMzlD0vr")
 		require.NoError(t, err)
@@ -90,6 +90,35 @@ func TestClient(t *testing.T) {
 
 		mustContainTX(t, txs, "a6672a0e80193c1f705ef1cf45a5883441b8252523b1d08f7656c80e400c74a8")
 		assert.GreaterOrEqual(t, len(txs), expectedTX)
+	})
+
+	t.Run("GetBlockHeader", func(t *testing.T) {
+		// ARRANGE
+		// Given sample account id (dev wallet)
+		// https://tonscan.org/address/UQCVlMcZ7EyV9maDsvscoLCd5KQfb7CHukyNJluWpMzlD0vr
+		accountID, err := ton.ParseAccountID("UQCVlMcZ7EyV9maDsvscoLCd5KQfb7CHukyNJluWpMzlD0vr")
+		require.NoError(t, err)
+
+		const getUntilLT = uint64(48645164000001)
+		const getUntilHash = `2e107215e634bbc3492bdf4b1466d59432623295072f59ab526d15737caa9531`
+
+		var hash ton.Bits256
+		require.NoError(t, hash.FromHex(getUntilHash))
+
+		txs, err := client.GetTransactions(ctx, 1, accountID, getUntilLT, hash)
+		require.NoError(t, err)
+		require.Len(t, txs, 1)
+
+		// Given a block
+		blockID := txs[0].BlockID
+
+		// ACT
+		header, err := client.GetBlockHeader(ctx, blockID, 0)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.NotZero(t, header.MinRefMcSeqno)
+		require.Equal(t, header.MinRefMcSeqno, header.MasterRef.Master.SeqNo)
 	})
 }
 

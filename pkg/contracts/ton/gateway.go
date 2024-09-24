@@ -11,6 +11,7 @@ import (
 	"github.com/tonkeeper/tongo/ton"
 )
 
+// Op operation code
 type Op uint32
 
 // github.com/zeta-chain/protocol-contracts-ton/blob/main/contracts/gateway.fc
@@ -29,24 +30,44 @@ const (
 	UpdateCode
 )
 
+// Gateway wrapper around zeta gateway contract on TON
 type Gateway struct {
 	accountID ton.AccountID
 }
 
+// Donation represents a donation operation
 type Donation struct {
 	Sender ton.AccountID
 	Amount math.Uint
 }
 
+// Deposit represents a deposit operation
 type Deposit struct {
 	Sender    ton.AccountID
 	Amount    math.Uint
 	Recipient eth.Address
 }
 
+// Memo casts deposit to memo bytes
+func (d Deposit) Memo() []byte {
+	return d.Recipient.Bytes()
+}
+
+// DepositAndCall represents a deposit and call operation
 type DepositAndCall struct {
 	Deposit
 	CallData []byte
+}
+
+// Memo casts deposit and call to memo bytes
+func (d DepositAndCall) Memo() []byte {
+	recipient := d.Recipient.Bytes()
+	out := make([]byte, 0, len(recipient)+len(d.CallData))
+
+	out = append(out, recipient...)
+	out = append(out, d.CallData...)
+
+	return out
 }
 
 const (
@@ -64,6 +85,11 @@ func NewGateway(accountID ton.AccountID) *Gateway {
 	return &Gateway{accountID}
 }
 
+func (gw *Gateway) AccountID() ton.AccountID {
+	return gw.accountID
+}
+
+// ParseTransaction parses transaction to Transaction
 func (gw *Gateway) ParseTransaction(tx ton.Transaction) (*Transaction, error) {
 	if !tx.IsSuccess() {
 		exitCode := tx.Description.TransOrd.ComputePh.TrPhaseComputeVm.Vm.ExitCode
@@ -107,10 +133,8 @@ func (gw *Gateway) ParseAndFilter(tx ton.Transaction, filter func(*Transaction) 
 	return parsedTX, false, nil
 }
 
-// FilterDeposit filters transactions with deposit operations
-func FilterDeposit(tx *Transaction) bool {
-	return tx.Operation == OpDeposit || tx.Operation == OpDepositAndCall
-}
+// FilterInbounds filters transactions with deposit operations
+func FilterInbounds(tx *Transaction) bool { return tx.IsInbound() }
 
 func (gw *Gateway) parseInbound(tx ton.Transaction) (*Transaction, error) {
 	body, err := parseInternalMessageBody(tx)

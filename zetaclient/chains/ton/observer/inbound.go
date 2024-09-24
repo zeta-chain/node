@@ -5,13 +5,17 @@ import (
 	"fmt"
 	"slices"
 
-	"cosmossdk.io/errors"
+	"cosmossdk.io/math"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/tonkeeper/tongo/ton"
 
+	"github.com/zeta-chain/node/pkg/coin"
+	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 const (
@@ -58,14 +62,6 @@ func (ob *Observer) watchInbound(ctx context.Context) error {
 	)
 }
 
-// Flow:
-// - [x] Ensure last scanned transaction is set
-// - [x] Get all transaction between [lastScannedTx; now]
-// - [ ] Filter only valid and inbound transactions
-// - [ ] For each transaction (ordered by *ASC*)
-//   - [ ] Construct crosschain cosmos message
-//   - [ ] Vote
-//   - [ ] Save last scanned tx
 func (ob *Observer) observeInbound(ctx context.Context, _ *zctx.AppContext) error {
 	if err := ob.ensureLastScannedTX(ctx); err != nil {
 		return errors.Wrap(err, "unable to ensure last scanned tx")
@@ -76,7 +72,7 @@ func (ob *Observer) observeInbound(ctx context.Context, _ *zctx.AppContext) erro
 		return errors.Wrapf(err, "unable to parse last scanned tx %q", ob.LastTxScanned())
 	}
 
-	txs, err := ob.client.GetTransactionsUntil(ctx, ob.gatewayID, lt, hashBits)
+	txs, err := ob.client.GetTransactionsUntil(ctx, ob.gateway.AccountID(), lt, hashBits)
 	if err != nil {
 		return errors.Wrap(err, "unable to get transactions")
 	}
@@ -97,50 +93,119 @@ func (ob *Observer) observeInbound(ctx context.Context, _ *zctx.AppContext) erro
 		ob.Logger().Inbound.Info().Msgf("ObserveInbound: got %d transactions", len(txs))
 	}
 
-	// todo deploy sample GW to testnet
-	// todo send some TON and test
+	for i := range txs {
+		tx := txs[i]
 
-	// todo FilterInboundEvent
+		parsedTX, skip, err := ob.gateway.ParseAndFilter(tx, toncontracts.FilterInbounds)
+		if err != nil {
+			return errors.Wrap(err, "unable to parse and filter tx")
+		}
 
-	for _, tx := range txs {
-		fmt.Println("TON TX", tx)
+		if skip {
+			ob.setLastScannedTX(&tx)
+			continue
+		}
+
+		if _, err := ob.voteInbound(ctx, parsedTX); err != nil {
+			return errors.Wrapf(err, "unable to vote inbound (hash %s)", parsedTX.Hash().Hex())
+		}
+
+		ob.setLastScannedTX(&parsedTX.Transaction)
 	}
 
-	/*
-		// loop signature from oldest to latest to filter inbound events
-		for i := len(signatures) - 1; i >= 0; i-- {
-			sig := signatures[i]
-			sigString := sig.Signature.String()
-
-			// process successfully signature only
-			if sig.Err == nil {
-				txResult, err := ob.solClient.GetTransaction(ctx, sig.Signature, &rpc.GetTransactionOpts{})
-				if err != nil {
-					// we have to re-scan this signature on next ticker
-					return errors.Wrapf(err, "error GetTransaction for chain %d sig %s", chainID, sigString)
-				}
-
-				// filter inbound events and vote
-				err = ob.FilterInboundEventsAndVote(ctx, txResult)
-				if err != nil {
-					// we have to re-scan this signature on next ticker
-					return errors.Wrapf(err, "error FilterInboundEventAndVote for chain %d sig %s", chainID, sigString)
-				}
-			}
-
-			// signature scanned; save last scanned signature to both memory and db, ignore db error
-			if err := ob.SaveLastTxScanned(sigString, sig.Slot); err != nil {
-				ob.Logger().
-					Inbound.Error().
-					Err(err).
-					Msgf("ObserveInbound: error saving last sig %s for chain %d", sigString, chainID)
-			}
-			ob.Logger().
-				Inbound.Info().
-				Msgf("ObserveInbound: last scanned sig is %s for chain %d in slot %d", sigString, chainID, sig.Slot)
-	*/
-
 	return nil
+}
+
+func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transaction) (string, error) {
+	// noop
+	if tx.Operation == toncontracts.OpDonate {
+		ob.Logger().Inbound.Info().
+			Uint64("tx.lt", tx.Lt).
+			Str("tx.hash", tx.Hash().Hex()).
+			Msg("Thank you rich folk for your donation!")
+
+		return "", nil
+	}
+
+	// todo add compliance check
+	//   https://github.com/zeta-chain/node/issues/2916
+
+	blockHeader, err := ob.client.GetBlockHeader(ctx, tx.BlockID, 0)
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to get block header %s", tx.BlockID.String())
+	}
+
+	sender, amount, memo, err := extractInboundData(tx)
+	if err != nil {
+		return "", err
+	}
+
+	seqno := blockHeader.MinRefMcSeqno
+
+	return ob.voteDeposit(ctx, tx, sender, amount, memo, seqno)
+}
+
+func extractInboundData(tx *toncontracts.Transaction) (string, math.Uint, []byte, error) {
+	if tx.Operation == toncontracts.OpDeposit {
+		d, err := tx.Deposit()
+		if err != nil {
+			return "", math.NewUint(0), nil, err
+		}
+
+		return d.Sender.ToRaw(), d.Amount, d.Memo(), nil
+	}
+
+	if tx.Operation == toncontracts.OpDepositAndCall {
+		d, err := tx.DepositAndCall()
+		if err != nil {
+			return "", math.NewUint(0), nil, err
+		}
+
+		return d.Sender.ToRaw(), d.Amount, d.Memo(), nil
+	}
+
+	return "", math.NewUint(0), nil, fmt.Errorf("unknown operation %d", tx.Operation)
+}
+
+func (ob *Observer) voteDeposit(
+	ctx context.Context,
+	tx *toncontracts.Transaction,
+	sender string,
+	amount math.Uint,
+	memo []byte,
+	seqno uint32,
+) (string, error) {
+	const (
+		eventIndex    = 0 // not a smart contract call
+		coinType      = coin.CoinType_Gas
+		asset         = "" // empty for gas coin
+		gasLimit      = 0
+		retryGasLimit = zetacore.PostVoteInboundExecutionGasLimit
+	)
+
+	var (
+		operatorAddress = ob.ZetacoreClient().GetKeys().GetOperatorAddress()
+		inboundHash     = liteapi.TransactionHashToString(tx.Lt, ton.Bits256(tx.Hash()))
+	)
+
+	msg := zetacore.GetInboundVoteMessage(
+		sender,
+		ob.Chain().ChainId,
+		sender,
+		sender,
+		ob.ZetacoreClient().Chain().ChainId,
+		amount,
+		string(memo),
+		inboundHash,
+		uint64(seqno),
+		gasLimit,
+		coinType,
+		asset,
+		operatorAddress.String(),
+		eventIndex,
+	)
+
+	return ob.PostVoteInbound(ctx, msg, retryGasLimit)
 }
 
 func (ob *Observer) ensureLastScannedTX(ctx context.Context) error {
@@ -149,14 +214,33 @@ func (ob *Observer) ensureLastScannedTX(ctx context.Context) error {
 		return nil
 	}
 
-	tx, _, err := ob.client.GetFirstTransaction(ctx, ob.gatewayID)
+	tx, _, err := ob.client.GetFirstTransaction(ctx, ob.gateway.AccountID())
 	if err != nil {
 		return err
 	}
 
+	ob.setLastScannedTX(tx)
+
+	return nil
+}
+
+func (ob *Observer) setLastScannedTX(tx *ton.Transaction) {
 	txHash := liteapi.TransactionHashToString(tx.Lt, ton.Bits256(tx.Hash()))
 
 	ob.WithLastTxScanned(txHash)
 
-	return ob.WriteLastTxScannedToDB(txHash)
+	if err := ob.WriteLastTxScannedToDB(txHash); err != nil {
+		ob.Logger().Inbound.Error().
+			Err(err).
+			Uint64("tx.lt", tx.Lt).
+			Str("tx.hash", tx.Hash().Hex()).
+			Msgf("ObserveInbound: unable to WriteLastTxScannedToDB")
+
+		return
+	}
+
+	ob.Logger().Inbound.Info().
+		Uint64("tx.lt", tx.Lt).
+		Str("tx.hash", tx.Hash().Hex()).
+		Msgf("ObserveInbound: WriteLastTxScannedToDB")
 }

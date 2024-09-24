@@ -2,10 +2,10 @@ package observer
 
 import (
 	"context"
-
-	"github.com/tonkeeper/tongo/ton"
+	"errors"
 
 	"github.com/zeta-chain/node/pkg/bg"
+	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
@@ -15,19 +15,19 @@ import (
 type Observer struct {
 	base.Observer
 
-	client    *liteapi.Client
-	gatewayID ton.AccountID
+	client  *liteapi.Client
+	gateway *toncontracts.Gateway
 }
 
 var _ interfaces.ChainObserver = (*Observer)(nil)
 
-func New(bo *base.Observer, client *liteapi.Client, gatewayID ton.AccountID) (*Observer, error) {
+func New(bo *base.Observer, client *liteapi.Client, gateway *toncontracts.Gateway) (*Observer, error) {
 	bo.LoadLastTxScanned()
 
 	return &Observer{
-		Observer:  *bo,
-		gatewayID: gatewayID,
-		client:    client,
+		Observer: *bo,
+		client:   client,
+		gateway:  gateway,
 	}, nil
 }
 
@@ -46,14 +46,12 @@ func (ob *Observer) Start(ctx context.Context) {
 	bg.Work(ctx, ob.watchInbound, bg.WithName("WatchInbound"), bg.WithLogger(ob.Logger().Inbound))
 
 	// todo
-	//  watchOutbound
-	//  watchGasPrice
 	//  watchInboundTracker
 	//  watchOutbound
+	//  watchGasPrice
 	//  watchRPCStatus
 }
 
-func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *types.CrossChainTx) (bool, error) {
-	// todo
-	return false, nil
+func (ob *Observer) VoteOutboundIfConfirmed(_ context.Context, _ *types.CrossChainTx) (bool, error) {
+	return false, errors.New("not implemented")
 }

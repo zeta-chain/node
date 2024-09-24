@@ -156,10 +156,8 @@ func TestFiltering(t *testing.T) {
 			skip  bool
 			error bool
 		}{
-			// donation is not a deposit :)
-			{"00-donation", true, false},
-
 			// Should be parsed and filtered
+			{"00-donation", false, false},
 			{"01-deposit", false, false},
 			{"02-deposit-and-call", false, false},
 
@@ -176,7 +174,7 @@ func TestFiltering(t *testing.T) {
 				gw := NewGateway(ton.MustParseAccountID(fx.Account))
 
 				// ACT
-				parsedTX, skip, err := gw.ParseAndFilter(tx, FilterDeposit)
+				parsedTX, skip, err := gw.ParseAndFilter(tx, FilterInbounds)
 
 				if tt.error {
 					require.Error(t, err)
