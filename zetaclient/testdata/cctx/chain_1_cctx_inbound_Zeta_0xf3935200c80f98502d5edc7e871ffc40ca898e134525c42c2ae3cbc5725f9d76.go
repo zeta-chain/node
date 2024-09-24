@@ -28,7 +28,7 @@ var chain_1_cctx_inbound_Zeta_0xf393520 = &crosschaintypes.CrossChainTx{
 		Amount:                 sdkmath.NewUintFromString("20000000000000000000"),
 		ObservedHash:           "0xf3935200c80f98502d5edc7e871ffc40ca898e134525c42c2ae3cbc5725f9d76",
 		ObservedExternalHeight: 19273702,
-		BallotIndex:            "0xdc658834e797e2ca4ccc91887b6720f075939e2e7b55157808447dd726578e1f",
+		BallotIndex:            "0xfb4aa9c7769b059de5055d325c753ec8f6345ac558761570b4a8890f1c7d69a0",
 		FinalizedZetaHeight:    1851403,
 		TxFinalizationStatus:   crosschaintypes.TxFinalizationStatus_Executed,
 	},
