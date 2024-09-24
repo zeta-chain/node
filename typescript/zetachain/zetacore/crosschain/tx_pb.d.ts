@@ -8,7 +8,7 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 import type { CoinType } from "../pkg/coin/coin_pb.js";
 import type { Proof } from "../pkg/proofs/proofs_pb.js";
 import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
-import type { ProtocolContractVersion, RevertOptions } from "./cross_chain_tx_pb.js";
+import type { CallOptions, ProtocolContractVersion, RevertOptions } from "./cross_chain_tx_pb.js";
 import type { RateLimiterFlags } from "./rate_limiter_flags_pb.js";
 
 /**
@@ -616,9 +616,9 @@ export declare class MsgVoteInbound extends Message<MsgVoteInbound> {
   inboundBlockHeight: bigint;
 
   /**
-   * @generated from field: uint64 gas_limit = 11;
+   * @generated from field: zetachain.zetacore.crosschain.CallOptions call_options = 11;
    */
-  gasLimit: bigint;
+  callOptions?: CallOptions;
 
   /**
    * @generated from field: zetachain.zetacore.pkg.coin.CoinType coin_type = 12;
@@ -655,11 +655,6 @@ export declare class MsgVoteInbound extends Message<MsgVoteInbound> {
    * @generated from field: zetachain.zetacore.crosschain.RevertOptions revert_options = 17;
    */
   revertOptions?: RevertOptions;
-
-  /**
-   * @generated from field: bool is_arbitrary_call = 18;
-   */
-  isArbitraryCall: boolean;
 
   constructor(data?: PartialMessage<MsgVoteInbound>);
 
