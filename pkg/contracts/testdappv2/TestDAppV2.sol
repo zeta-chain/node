@@ -13,10 +13,12 @@ contract TestDAppV2 {
     }
 
     /// @notice Struct containing revert context passed to onRevert.
+    /// @param sender Address of account that initiated smart contract call.
     /// @param asset Address of asset, empty if it's gas token.
     /// @param amount Amount specified with the transaction.
     /// @param revertMessage Arbitrary data sent back in onRevert.
     struct RevertContext {
+        address sender;
         address asset;
         uint64 amount;
         bytes revertMessage;
