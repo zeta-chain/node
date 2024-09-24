@@ -8,7 +8,7 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	testgatewayzevmcaller "github.com/zeta-chain/node/pkg/contracts/testgatewayzevmcaller"
+	gatewayzevmcaller "github.com/zeta-chain/node/pkg/contracts/gatewayzevmcaller"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -27,7 +27,7 @@ func TestV2ETHWithdrawAndAuthenticatedCallThroughContract(r *runner.E2ERunner, a
 	require.True(r, ok, "Invalid amount specified for TestV2ETHWithdrawAndCall")
 
 	// deploy caller contract and send it gas zrc20 to pay gas fee
-	gatewayCallerAddr, tx, gatewayCaller, err := testgatewayzevmcaller.DeployTestGatewayZEVMCaller(
+	gatewayCallerAddr, tx, gatewayCaller, err := gatewayzevmcaller.DeployGatewayZEVMCaller(
 		r.ZEVMAuth,
 		r.ZEVMClient,
 		r.GatewayZEVMAddr,
@@ -49,7 +49,7 @@ func TestV2ETHWithdrawAndAuthenticatedCallThroughContract(r *runner.E2ERunner, a
 	tx = r.V2ETHWithdrawAndAuthenticatedCallThroughContract(gatewayCaller, r.TestDAppV2EVMAddr,
 		amount,
 		[]byte(payloadMessageAuthenticatedWithdrawETHThroughContract),
-		testgatewayzevmcaller.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+		gatewayzevmcaller.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
@@ -75,7 +75,7 @@ func TestV2ETHWithdrawAndAuthenticatedCallThroughContract(r *runner.E2ERunner, a
 	tx = r.V2ETHWithdrawAndAuthenticatedCallThroughContract(gatewayCaller, r.TestDAppV2EVMAddr,
 		amount,
 		[]byte(payloadMessageAuthenticatedWithdrawETHThroughContract),
-		testgatewayzevmcaller.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+		gatewayzevmcaller.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

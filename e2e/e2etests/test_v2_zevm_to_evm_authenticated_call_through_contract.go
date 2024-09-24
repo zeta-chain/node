@@ -8,7 +8,7 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	testgatewayzevmcaller "github.com/zeta-chain/node/pkg/contracts/testgatewayzevmcaller"
+	gatewayzevmcaller "github.com/zeta-chain/node/pkg/contracts/gatewayzevmcaller"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -20,7 +20,7 @@ func TestV2ZEVMToEVMAuthenticatedCallThroughContract(r *runner.E2ERunner, args [
 	r.AssertTestDAppEVMCalled(false, payloadMessageEVMAuthenticatedCallThroughContract, big.NewInt(0))
 
 	// deploy caller contract and send it gas zrc20 to pay gas fee
-	gatewayCallerAddr, tx, gatewayCaller, err := testgatewayzevmcaller.DeployTestGatewayZEVMCaller(
+	gatewayCallerAddr, tx, gatewayCaller, err := gatewayzevmcaller.DeployGatewayZEVMCaller(
 		r.ZEVMAuth,
 		r.ZEVMClient,
 		r.GatewayZEVMAddr,
@@ -43,7 +43,7 @@ func TestV2ZEVMToEVMAuthenticatedCallThroughContract(r *runner.E2ERunner, args [
 		gatewayCaller,
 		r.TestDAppV2EVMAddr,
 		[]byte(payloadMessageEVMAuthenticatedCallThroughContract),
-		testgatewayzevmcaller.RevertOptions{
+		gatewayzevmcaller.RevertOptions{
 			OnRevertGasLimit: big.NewInt(0),
 		},
 	)
@@ -72,7 +72,7 @@ func TestV2ZEVMToEVMAuthenticatedCallThroughContract(r *runner.E2ERunner, args [
 		gatewayCaller,
 		r.TestDAppV2EVMAddr,
 		[]byte(payloadMessageEVMAuthenticatedCallThroughContract),
-		testgatewayzevmcaller.RevertOptions{
+		gatewayzevmcaller.RevertOptions{
 			OnRevertGasLimit: big.NewInt(0),
 		},
 	)

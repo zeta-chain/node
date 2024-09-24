@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 
-	testgatewayzevmcaller "github.com/zeta-chain/node/pkg/contracts/testgatewayzevmcaller"
+	gatewayzevmcaller "github.com/zeta-chain/node/pkg/contracts/gatewayzevmcaller"
 )
 
 var gasLimit = big.NewInt(1000000)
@@ -79,11 +79,11 @@ func (r *E2ERunner) V2ETHWithdrawAndAuthenticatedCall(
 // V2ETHWithdrawAndCall calls WithdrawAndCall of Gateway with gas token on ZEVM using authenticated call
 // through contract
 func (r *E2ERunner) V2ETHWithdrawAndAuthenticatedCallThroughContract(
-	gatewayZEVMCaller *testgatewayzevmcaller.TestGatewayZEVMCaller,
+	gatewayZEVMCaller *gatewayzevmcaller.GatewayZEVMCaller,
 	receiver ethcommon.Address,
 	amount *big.Int,
 	payload []byte,
-	revertOptions testgatewayzevmcaller.RevertOptions,
+	revertOptions gatewayzevmcaller.RevertOptions,
 ) *ethtypes.Transaction {
 	tx, err := gatewayZEVMCaller.WithdrawAndCallGatewayZEVM(
 		r.ZEVMAuth,
@@ -91,7 +91,7 @@ func (r *E2ERunner) V2ETHWithdrawAndAuthenticatedCallThroughContract(
 		amount,
 		r.ETHZRC20Addr,
 		payload,
-		testgatewayzevmcaller.CallOptions{
+		gatewayzevmcaller.CallOptions{
 			IsArbitraryCall: false,
 			GasLimit:        gasLimit,
 		},
@@ -192,17 +192,17 @@ func (r *E2ERunner) V2ZEVMToEMVAuthenticatedCall(
 
 // V2ZEVMToEMVCall calls authenticated Call of Gateway on ZEVM through contract
 func (r *E2ERunner) V2ZEVMToEMVAuthenticatedCallThroughContract(
-	gatewayZEVMCaller *testgatewayzevmcaller.TestGatewayZEVMCaller,
+	gatewayZEVMCaller *gatewayzevmcaller.GatewayZEVMCaller,
 	receiver ethcommon.Address,
 	payload []byte,
-	revertOptions testgatewayzevmcaller.RevertOptions,
+	revertOptions gatewayzevmcaller.RevertOptions,
 ) *ethtypes.Transaction {
 	tx, err := gatewayZEVMCaller.CallGatewayZEVM(
 		r.ZEVMAuth,
 		receiver.Bytes(),
 		r.ETHZRC20Addr,
 		payload,
-		testgatewayzevmcaller.CallOptions{
+		gatewayzevmcaller.CallOptions{
 			GasLimit:        gasLimit,
 			IsArbitraryCall: false,
 		},

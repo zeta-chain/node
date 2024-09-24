@@ -54,7 +54,7 @@ interface WZETA {
     function approve(address guy, uint256 wad) external returns (bool);
 }
 
-contract TestGatewayZEVMCaller {
+contract GatewayZEVMCaller {
     IGatewayZEVM private gatewayZEVM;
     WZETA wzeta;
     constructor(address gatewayZEVMAddress, address wzetaAddress) {
