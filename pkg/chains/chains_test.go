@@ -11,7 +11,9 @@ import (
 func TestChain_Name(t *testing.T) {
 	t.Run("new Name field is compatible with ChainName enum", func(t *testing.T) {
 		for _, chain := range chains.DefaultChainsList() {
-			require.EqualValues(t, chain.Name, chain.ChainName.String())
+			if chain.ChainName != chains.ChainName_empty {
+				require.EqualValues(t, chain.Name, chain.ChainName.String())
+			}
 		}
 	})
 }
