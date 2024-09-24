@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/cmd"
@@ -208,6 +209,7 @@ func Test_ValidateAddresses(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			tss := TSS{
+				logger:        log.Logger,
 				CurrentPubkey: tc.tssPubkey,
 			}
 			err := tss.ValidateAddresses(tc.btcChainIDs)

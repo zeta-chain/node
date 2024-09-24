@@ -415,7 +415,10 @@ func (tss *TSS) SignBatch(
 
 // ValidateAddresses try deriving both the EVM and BTC addresses from the pubkey and make sure they are valid.
 func (tss *TSS) ValidateAddresses(btcChainIDs []int64) error {
-	tss.logger.Info().Msgf("tss.pubkey: %s", tss.CurrentPubkey)
+	logger := tss.logger.With().
+		Str("method", "ValidateAddresses").
+		Str("tss.pubkey", tss.CurrentPubkey).
+		Logger()
 
 	// validate TSS EVM address
 	evmAddress := tss.EVMAddress()
@@ -423,7 +426,7 @@ func (tss *TSS) ValidateAddresses(btcChainIDs []int64) error {
 	if evmAddress == blankAddress {
 		return fmt.Errorf("blank tss evm address: %s", evmAddress.String())
 	}
-	tss.logger.Info().Msgf("tss.eth: %s", tss.EVMAddress().String())
+	logger.Info().Msgf("tss.eth: %s", evmAddress.String())
 
 	// validate TSS BTC address for each btc chain
 	for _, chainID := range btcChainIDs {
@@ -431,7 +434,7 @@ func (tss *TSS) ValidateAddresses(btcChainIDs []int64) error {
 		if err != nil {
 			return fmt.Errorf("cannot derive btc address for chain %d from tss pubkey %s", chainID, tss.CurrentPubkey)
 		}
-		tss.logger.Info().Msgf("tss.btc [chain %d]: %s", chainID, address.EncodeAddress())
+		logger.Info().Msgf("tss.btc [chain %d]: %s", chainID, address.EncodeAddress())
 	}
 
 	return nil
