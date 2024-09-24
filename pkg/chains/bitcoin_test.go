@@ -14,10 +14,10 @@ func TestBitcoinNetParamsFromChainID(t *testing.T) {
 		expected *chaincfg.Params
 		wantErr  bool
 	}{
-		{"Regnet", BitcoinRegtest.ChainId, BitcoinRegnetParams, false},
-		{"Mainnet", BitcoinMainnet.ChainId, BitcoinMainnetParams, false},
-		{"Testnet", BitcoinTestnet.ChainId, BitcoinTestnetParams, false},
-		{"Signet", BitcoinSignetTestnet.ChainId, BitcoinSignetParams, false},
+		{"Regnet", BitcoinRegtest.ChainId, &chaincfg.RegressionNetParams, false},
+		{"Mainnet", BitcoinMainnet.ChainId, &chaincfg.MainNetParams, false},
+		{"Testnet", BitcoinTestnet.ChainId, &chaincfg.TestNet3Params, false},
+		{"Signet", BitcoinSignetTestnet.ChainId, &chaincfg.SigNetParams, false},
 		{"Unknown", -1, nil, true},
 	}
 
@@ -26,9 +26,10 @@ func TestBitcoinNetParamsFromChainID(t *testing.T) {
 			params, err := BitcoinNetParamsFromChainID(tt.chainID)
 			if tt.wantErr {
 				require.Error(t, err)
+				require.Nil(t, params)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tt.expected, params)
+				require.EqualValues(t, tt.expected, params)
 			}
 		})
 	}
@@ -41,10 +42,10 @@ func TestBitcoinChainIDFromNetParams(t *testing.T) {
 		expectedChainID int64
 		wantErr         bool
 	}{
-		{"Regnet", BitcoinRegnetParams.Name, BitcoinRegtest.ChainId, false},
-		{"Mainnet", BitcoinMainnetParams.Name, BitcoinMainnet.ChainId, false},
-		{"Testnet", BitcoinTestnetParams.Name, BitcoinTestnet.ChainId, false},
-		{"Signet", BitcoinSignetParams.Name, BitcoinSignetTestnet.ChainId, false},
+		{"Regnet", chaincfg.RegressionNetParams.Name, BitcoinRegtest.ChainId, false},
+		{"Mainnet", chaincfg.MainNetParams.Name, BitcoinMainnet.ChainId, false},
+		{"Testnet", chaincfg.TestNet3Params.Name, BitcoinTestnet.ChainId, false},
+		{"Signet", chaincfg.SigNetParams.Name, BitcoinSignetTestnet.ChainId, false},
 		{"Unknown", "Unknown", 0, true},
 	}
 
