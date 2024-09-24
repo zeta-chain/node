@@ -149,6 +149,56 @@ func TestParsing(t *testing.T) {
 	})
 }
 
+func TestFiltering(t *testing.T) {
+	t.Run("Inbound", func(t *testing.T) {
+		for _, tt := range []struct {
+			name  string
+			skip  bool
+			error bool
+		}{
+			// donation is not a deposit :)
+			{"00-donation", true, false},
+
+			// Should be parsed and filtered
+			{"01-deposit", false, false},
+			{"02-deposit-and-call", false, false},
+
+			// Should be skipped
+			{"03-failed-tx", true, false},
+			{"04-bounced-msg", true, false},
+		} {
+			t.Run(tt.name, func(t *testing.T) {
+				// ARRANGE
+				// Given a tx
+				tx, fx := getFixtureTX(t, tt.name)
+
+				// Given a gateway
+				gw := NewGateway(ton.MustParseAccountID(fx.Account))
+
+				// ACT
+				parsedTX, skip, err := gw.ParseAndFilter(tx, FilterDeposit)
+
+				if tt.error {
+					require.Error(t, err)
+					assert.False(t, skip)
+					assert.Nil(t, parsedTX)
+					return
+				}
+
+				require.NoError(t, err)
+				assert.Equal(t, tt.skip, skip)
+
+				if tt.skip {
+					assert.Nil(t, parsedTX)
+					return
+				}
+
+				assert.NotNil(t, parsedTX)
+			})
+		}
+	})
+}
+
 func TestFixtures(t *testing.T) {
 	// ACT
 	tx, _ := getFixtureTX(t, "01-deposit")

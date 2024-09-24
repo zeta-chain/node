@@ -87,6 +87,31 @@ func (gw *Gateway) ParseTransaction(tx ton.Transaction) (*Transaction, error) {
 	return outbound, nil
 }
 
+// ParseAndFilter parses transaction and applies filter to it. Returns (tx, skip?, error)
+// If parse fails due to known error, skip is set to true
+func (gw *Gateway) ParseAndFilter(tx ton.Transaction, filter func(*Transaction) bool) (*Transaction, bool, error) {
+	parsedTX, err := gw.ParseTransaction(tx)
+	switch {
+	case errors.Is(err, ErrParse):
+		return nil, true, nil
+	case errors.Is(err, ErrUnknownOp):
+		return nil, true, nil
+	case err != nil:
+		return nil, false, err
+	}
+
+	if !filter(parsedTX) {
+		return nil, true, nil
+	}
+
+	return parsedTX, false, nil
+}
+
+// FilterDeposit filters transactions with deposit operations
+func FilterDeposit(tx *Transaction) bool {
+	return tx.Operation == OpDeposit || tx.Operation == OpDepositAndCall
+}
+
 func (gw *Gateway) parseInbound(tx ton.Transaction) (*Transaction, error) {
 	body, err := parseInternalMessageBody(tx)
 	if err != nil {
