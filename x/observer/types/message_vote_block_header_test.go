@@ -18,7 +18,7 @@ import (
 )
 
 func TestMsgVoteBlockHeader_ValidateBasic(t *testing.T) {
-	sdkconfig.SetDefault(true)
+	sdkconfig.SetDefault(false)
 	var header ethtypes.Header
 	file, err := os.Open("../../../testutil/testdata/eth_header_18495266.json")
 	require.NoError(t, err)

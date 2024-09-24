@@ -13,7 +13,7 @@ import (
 )
 
 func TestGenesisState_Validate(t *testing.T) {
-	sdkconfig.SetDefault(true)
+	sdkconfig.SetDefault(false)
 
 	tests := []struct {
 		name        string

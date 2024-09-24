@@ -312,7 +312,7 @@ func TestBeginBlocker(t *testing.T) {
 }
 
 func TestDistributeObserverRewards(t *testing.T) {
-	sdkconfig.SetDefault(true)
+	sdkconfig.SetDefault(false)
 	k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 	observerSet := sample.ObserverSet(4)
 

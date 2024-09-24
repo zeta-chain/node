@@ -12,7 +12,7 @@ import (
 )
 
 func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
-	sdkconfig.SetDefault(true)
+	sdkconfig.SetDefault(false)
 	tests := []struct {
 		name  string
 		msg   *types.MsgWhitelistERC20
