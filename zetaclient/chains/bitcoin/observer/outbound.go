@@ -414,7 +414,7 @@ func (ob *Observer) getOutboundIDByNonce(ctx context.Context, nonce uint64, test
 
 // findNonceMarkUTXO finds the nonce-mark UTXO in the list of UTXOs.
 func (ob *Observer) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
-	tssAddress := ob.TSSAddress()
+	tssAddress := ob.TSSAddressString()
 	amount := chains.NonceMarkAmount(nonce)
 	for i, utxo := range ob.utxos {
 		sats, err := bitcoin.GetSatoshis(utxo.Amount)
@@ -599,7 +599,7 @@ func (ob *Observer) checkTSSVout(params *crosschaintypes.OutboundParams, vouts [
 	}
 
 	nonce := params.TssNonce
-	tssAddress := ob.TSSAddress()
+	tssAddress := ob.TSSAddressString()
 	for _, vout := range vouts {
 		// decode receiver and amount from vout
 		receiverExpected := tssAddress
@@ -658,7 +658,7 @@ func (ob *Observer) checkTSSVoutCancelled(params *crosschaintypes.OutboundParams
 	}
 
 	nonce := params.TssNonce
-	tssAddress := ob.TSSAddress()
+	tssAddress := ob.TSSAddressString()
 	for _, vout := range vouts {
 		// decode receiver and amount from vout
 		receiverVout, amount, err := bitcoin.DecodeTSSVout(vout, tssAddress, ob.Chain())

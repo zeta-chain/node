@@ -112,18 +112,23 @@ func (s *TSS) EVMAddressList() []ethcommon.Address {
 	return []ethcommon.Address{s.EVMAddress()}
 }
 
-func (s *TSS) BTCAddress(_ int64) *btcutil.AddressWitnessPubKeyHash {
+func (s *TSS) BTCAddress(_ int64) (*btcutil.AddressWitnessPubKeyHash, error) {
+	// return error if tss is paused
+	if s.paused {
+		return nil, fmt.Errorf("tss is paused")
+	}
+
 	// force use static btcAddress if set
 	if s.btcAddress != "" {
 		net, err := chains.GetBTCChainParams(s.chain.ChainId)
 		if err != nil {
-			return nil
+			return nil, err
 		}
 		addr, err := btcutil.DecodeAddress(s.btcAddress, net)
 		if err != nil {
-			return nil
+			return nil, err
 		}
-		return addr.(*btcutil.AddressWitnessPubKeyHash)
+		return addr.(*btcutil.AddressWitnessPubKeyHash), nil
 	}
 	// if privkey is set, use it to generate a segwit address
 	if s.PrivKey != nil {
@@ -131,7 +136,7 @@ func (s *TSS) BTCAddress(_ int64) *btcutil.AddressWitnessPubKeyHash {
 		pk, err := btcec.ParsePubKey(pkBytes)
 		if err != nil {
 			fmt.Printf("error parsing pubkey: %v", err)
-			return nil
+			return nil, err
 		}
 
 		// witness program: https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#Witness_program
@@ -142,12 +147,12 @@ func (s *TSS) BTCAddress(_ int64) *btcutil.AddressWitnessPubKeyHash {
 		)
 		if err != nil {
 			fmt.Printf("error NewAddressWitnessPubKeyHash: %v", err)
-			return nil
+			return nil, err
 		}
 
-		return addrWPKH
+		return addrWPKH, nil
 	}
-	return nil
+	return nil, nil
 }
 
 // PubKeyCompressedBytes returns 33B compressed pubkey

@@ -256,6 +256,6 @@ type TSSSigner interface {
 
 	EVMAddress() ethcommon.Address
 	EVMAddressList() []ethcommon.Address
-	BTCAddress(chainID int64) *btcutil.AddressWitnessPubKeyHash
+	BTCAddress(chainID int64) (*btcutil.AddressWitnessPubKeyHash, error)
 	PubKeyCompressedBytes() []byte
 }

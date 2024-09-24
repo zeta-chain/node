@@ -274,13 +274,14 @@ func TestObserverGetterAndSetter(t *testing.T) {
 	})
 }
 
-func TestTSSAddress(t *testing.T) {
+func TestTSSAddressString(t *testing.T) {
 	testConfig := sdk.GetConfig()
 	testConfig.SetBech32PrefixForAccount(cmd.Bech32PrefixAccAddr, cmd.Bech32PrefixAccPub)
 
 	tests := []struct {
 		name         string
 		chain        chains.Chain
+		forceError   bool
 		addrExpected string
 	}{
 		{
@@ -298,6 +299,12 @@ func TestTSSAddress(t *testing.T) {
 			chain:        chains.SolanaDevnet,
 			addrExpected: testutils.TSSAddressEVMMainnet,
 		},
+		{
+			name:         "should return empty address for unknown BTC chain",
+			chain:        chains.BitcoinMainnet,
+			forceError:   true,
+			addrExpected: "",
+		},
 	}
 
 	// run tests
@@ -306,8 +313,16 @@ func TestTSSAddress(t *testing.T) {
 			// create observer
 			ob := createObserver(t, tt.chain, defaultAlertLatency)
 
+			// force error if needed
+			if tt.forceError {
+				// pause TSS to cause error
+				tss := mocks.NewTSSMainnet()
+				tss.Pause()
+				ob = ob.WithTSS(tss)
+			}
+
 			// get TSS address
-			addr := ob.TSSAddress()
+			addr := ob.TSSAddressString()
 			require.Equal(t, tt.addrExpected, addr)
 		})
 	}
@@ -390,7 +405,7 @@ func TestOutboundID(t *testing.T) {
 			outboundID := ob.OutboundID(tt.nonce)
 
 			// expected outbound id
-			exepctedID := fmt.Sprintf("%d-%s-%d", tt.chain.ChainId, ob.TSSAddress(), tt.nonce)
+			exepctedID := fmt.Sprintf("%d-%s-%d", tt.chain.ChainId, ob.TSSAddressString(), tt.nonce)
 			require.Equal(t, exepctedID, outboundID)
 		})
 	}

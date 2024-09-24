@@ -413,9 +413,9 @@ func (tss *TSS) SignBatch(
 	return sigBytes, nil
 }
 
-// ValidateAddresses validates the TSS EVM and BTC addresses
+// ValidateAddresses try deriving both the EVM and BTC addresses from the pubkey and make sure they are valid.
 func (tss *TSS) ValidateAddresses(btcChainIDs []int64) error {
-	log.Info().Msgf("tss.pubkey: %s", tss.CurrentPubkey)
+	tss.logger.Info().Msgf("tss.pubkey: %s", tss.CurrentPubkey)
 
 	// validate TSS EVM address
 	evmAddress := tss.EVMAddress()
@@ -423,14 +423,15 @@ func (tss *TSS) ValidateAddresses(btcChainIDs []int64) error {
 	if evmAddress == blankAddress {
 		return fmt.Errorf("blank tss evm address: %s", evmAddress.String())
 	}
-	log.Info().Msgf("tss.eth: %s", tss.EVMAddress().String())
+	tss.logger.Info().Msgf("tss.eth: %s", tss.EVMAddress().String())
 
 	// validate TSS BTC address for each btc chain
 	for _, chainID := range btcChainIDs {
-		if tss.BTCAddress(chainID) == nil {
+		address, err := tss.BTCAddress(chainID)
+		if err != nil {
 			return fmt.Errorf("cannot derive btc address for chain %d from tss pubkey %s", chainID, tss.CurrentPubkey)
 		}
-		log.Info().Msgf("tss.btc [chain %d]: %s", chainID, tss.BTCAddress(chainID).EncodeAddress())
+		tss.logger.Info().Msgf("tss.btc [chain %d]: %s", chainID, address.EncodeAddress())
 	}
 
 	return nil
@@ -460,13 +461,13 @@ func (tss *TSS) EVMAddressList() []ethcommon.Address {
 }
 
 // BTCAddress generates a bech32 p2wpkh address from pubkey
-func (tss *TSS) BTCAddress(chainID int64) *btcutil.AddressWitnessPubKeyHash {
+func (tss *TSS) BTCAddress(chainID int64) (*btcutil.AddressWitnessPubKeyHash, error) {
 	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tss.CurrentPubkey, chainID)
 	if err != nil {
 		log.Error().Err(err).Msg("BTCAddressPubkeyHash error")
-		return nil
+		return nil, err
 	}
-	return addrWPKH
+	return addrWPKH, nil
 }
 
 // PubKeyCompressedBytes returns the compressed bytes of the current pubkey

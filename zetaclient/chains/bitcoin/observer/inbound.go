@@ -146,7 +146,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	// add block header to zetacore
 	if len(res.Block.Tx) > 1 {
 		// filter incoming txs to TSS address
-		tssAddress := ob.TSSAddress()
+		tssAddress := ob.TSSAddressString()
 
 		// #nosec G115 always positive
 		events, err := FilterAndParseIncomingTx(

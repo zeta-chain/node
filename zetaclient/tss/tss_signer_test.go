@@ -12,6 +12,7 @@ import (
 
 	"github.com/zeta-chain/node/cmd"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/cosmos"
 	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/zetaclient/testutils"
@@ -110,7 +111,7 @@ func Test_EVMAddress(t *testing.T) {
 		{
 			name:            "should return empty TSS EVM address on invalid TSS pubkey",
 			tssPubkey:       "invalidpubkey",
-			expectedEVMAddr: "0x0000000000000000000000000000000000000000",
+			expectedEVMAddr: constant.EVMZeroAddress,
 		},
 	}
 
@@ -159,8 +160,9 @@ func Test_BTCAddress(t *testing.T) {
 			tss := TSS{
 				CurrentPubkey: tc.tssPubkey,
 			}
-			address := tss.BTCAddress(tc.btcChainID)
+			address, err := tss.BTCAddress(tc.btcChainID)
 			if tc.wantAddr != "" {
+				require.NoError(t, err)
 				require.Equal(t, tc.wantAddr, address.EncodeAddress())
 			} else {
 				require.Nil(t, address)

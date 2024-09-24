@@ -275,7 +275,8 @@ func start(_ *cobra.Command, _ []string) error {
 		btcChainIDs[i] = chain.ID()
 	}
 
-	// Make sure the TSS EVM/BTC addresses are well formed
+	// Make sure the TSS EVM/BTC addresses are well formed.
+	// Zetaclient should not start if TSS addresses cannot be properly derived.
 	tss.CurrentPubkey = currentTss.TssPubkey
 	err = tss.ValidateAddresses(btcChainIDs)
 	if err != nil {

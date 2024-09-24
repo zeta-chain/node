@@ -39,7 +39,8 @@ func (suite *BTCSignTestSuite) SetupTest() {
 	suite.testSigner = &mocks.TSS{ // fake TSS
 		PrivKey: privateKey.ToECDSA(),
 	}
-	addr := suite.testSigner.BTCAddress(chains.BitcoinTestnet.ChainId)
+	addr, err := suite.testSigner.BTCAddress(chains.BitcoinTestnet.ChainId)
+	suite.Require().NoError(err)
 	suite.T().Logf("segwit addr: %s", addr)
 }
 

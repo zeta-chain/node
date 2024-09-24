@@ -369,8 +369,8 @@ func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 	maxConfirmations := int(bh)
 
 	// List all unspent UTXOs (160ms)
-	tssAddr := ob.TSS().BTCAddress(ob.Chain().ChainId)
-	if tssAddr == nil {
+	tssAddr, err := ob.TSS().BTCAddress(ob.Chain().ChainId)
+	if err != nil {
 		return fmt.Errorf("error getting bitcoin tss address")
 	}
 	utxos, err := ob.btcClient.ListUnspentMinMaxAddresses(0, maxConfirmations, []btcutil.Address{tssAddr})

@@ -567,7 +567,7 @@ func TestKeeper_CheckMigration(t *testing.T) {
 		}
 
 		err := k.CheckIfTSSMigrationTransfer(ctx, &msg)
-		require.ErrorContains(t, err, "no Bitcoin net params for chain ID: 999")
+		require.ErrorContains(t, err, "no Bitcoin network params for chain ID: 999")
 	})
 
 	t.Run("fails if gateway is not observer ", func(t *testing.T) {
