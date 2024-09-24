@@ -220,7 +220,7 @@ func TestZetacore_GetAllOutboundTrackerByChain(t *testing.T) {
 	method := "/zetachain.zetacore.crosschain.Query/OutboundTrackerAllByChain"
 	setupMockServer(t, crosschaintypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t)
+	client := setupZetacoreClient(t, withDefaultObserverKeys())
 
 	resp, err := client.GetAllOutboundTrackerByChain(ctx, chain.ChainId, interfaces.Ascending)
 	require.NoError(t, err)

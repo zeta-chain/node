@@ -11,7 +11,7 @@ import (
 )
 
 func TestPolicies_Validate(t *testing.T) {
-	sdkconfig.SetDefault(true)
+	sdkconfig.SetDefault(false)
 	// use table driven tests to test the validation of policies
 	tests := []struct {
 		name        string

@@ -33,7 +33,7 @@ func EmissionKeeperWithMockOptions(
 	t testing.TB,
 	mockOptions EmissionMockOptions,
 ) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
-	sdkconfig.SetDefault(true)
+	sdkconfig.SetDefault(false)
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
