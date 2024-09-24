@@ -14,7 +14,7 @@ import (
 
 const payloadMessageAuthenticatedWithdrawETHThroughContract = "this is a test ETH withdraw and authenticated call payload through contract"
 
-func TestV2ETHWithdrawAndAuthenticatedCallThroughContract(r *runner.E2ERunner, args []string) {
+func TestV2ETHWithdrawAndCallThroughContract(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	previousGasLimit := r.ZEVMAuth.GasLimit

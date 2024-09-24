@@ -14,7 +14,7 @@ import (
 
 const payloadMessageEVMAuthenticatedCallThroughContract = "this is a test EVM authenticated call payload through contract"
 
-func TestV2ZEVMToEVMAuthenticatedCallThroughContract(r *runner.E2ERunner, args []string) {
+func TestV2ZEVMToEVMCallThroughContract(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0)
 
 	r.AssertTestDAppEVMCalled(false, payloadMessageEVMAuthenticatedCallThroughContract, big.NewInt(0))

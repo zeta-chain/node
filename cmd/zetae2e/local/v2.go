@@ -19,12 +19,12 @@ func startV2Tests(eg *errgroup.Group, conf config.Config, deployerRunner *runner
 		e2etests.TestV2ETHDepositName,
 		e2etests.TestV2ETHDepositAndCallName,
 		e2etests.TestV2ETHWithdrawName,
+		e2etests.TestV2ETHWithdrawAndArbitraryCallName,
 		e2etests.TestV2ETHWithdrawAndCallName,
-		e2etests.TestV2ETHWithdrawAndAuthenticatedCallName,
-		e2etests.TestV2ETHWithdrawAndAuthenticatedCallThroughContractName,
+		e2etests.TestV2ETHWithdrawAndCallThroughContractName,
+		e2etests.TestV2ZEVMToEVMArbitraryCallName,
 		e2etests.TestV2ZEVMToEVMCallName,
-		e2etests.TestV2ZEVMToEVMAuthenticatedCallName,
-		e2etests.TestV2ZEVMToEVMAuthenticatedCallThroughContractName,
+		e2etests.TestV2ZEVMToEVMCallThroughContractName,
 		e2etests.TestV2EVMToZEVMCallName,
 	))
 
