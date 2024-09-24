@@ -4172,8 +4172,8 @@ github.com/yvasiyarov/gorelic v0.0.0-20141212073537-a9bba5b9ab50/go.mod h1:NUSPS
 github.com/yvasiyarov/newrelic_platform_go v0.0.0-20140908184405-b21fdbd4370f/go.mod h1:GlGEuHIJweS1mbCqG+7vt2nvWLzLLnRHbXz5JKd/Qbg=
 github.com/zeebo/assert v1.3.0/go.mod h1:Pq9JiuJQpG8JLJdtkwrJESF0Foym2/D9XMU5ciN/wJ0=
 github.com/zeebo/xxh3 v1.0.2/go.mod h1:5NWz9Sef7zIDm2JHfFlcQvNekmcEl9ekUZQQKCYaDcA=
-github.com/zeta-chain/ethermint v0.0.0-20240909234716-2fad916e7179 h1:HykzQOeqBYFHPQCLrj7VAhoGOONtYJnt8IvyHNb9/d8=
-github.com/zeta-chain/ethermint v0.0.0-20240909234716-2fad916e7179/go.mod h1:NeQEwcKBpKAUxIsii2F+jfyOD94jN/3fzPMv/1kVF9M=
+github.com/zeta-chain/ethermint v0.0.0-20240924180551-9c12024cdc36 h1:QbXeSkgHDTKW90yQWO/23Mt/g0LWQt3WjJ7kKBkE+Xg=
+github.com/zeta-chain/ethermint v0.0.0-20240924180551-9c12024cdc36/go.mod h1:NeQEwcKBpKAUxIsii2F+jfyOD94jN/3fzPMv/1kVF9M=
 github.com/zeta-chain/go-ethereum v1.10.26-spc h1:NvY4rR9yw52wfxWt7YoFsWbaIwVMyOtTsWKqGAXk+sE=
 github.com/zeta-chain/go-ethereum v1.10.26-spc/go.mod h1:/6CsT5Ceen2WPLI/oCA3xMcZ5sWMF/D46SjM/ayY0Oo=
 github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4 h1:FmO3HfVdZ7LzxBUfg6sVzV7ilKElQU2DZm8PxJ7KcYI=
