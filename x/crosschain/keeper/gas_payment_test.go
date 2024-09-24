@@ -53,11 +53,11 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 				{
 					ReceiverChainId: chains.ZetaChainPrivnet.ChainId,
 					CoinType:        coin.CoinType_Gas,
-					CallOptions:     &types.CallOptions{},
+					CallOptions:     types.CallOptions{},
 				},
 				{
 					ReceiverChainId: chainID,
-					CallOptions:     &types.CallOptions{},
+					CallOptions:     types.CallOptions{},
 				},
 			},
 		}
@@ -478,7 +478,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 			OutboundParams: []*types.OutboundParams{
 				{
 					ReceiverChainId: chainID,
-					CallOptions: &types.CallOptions{
+					CallOptions: types.CallOptions{
 						GasLimit: 1000,
 					},
 				},
@@ -516,7 +516,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 			OutboundParams: []*types.OutboundParams{
 				{
 					ReceiverChainId: chainID,
-					CallOptions: &types.CallOptions{
+					CallOptions: types.CallOptions{
 						GasLimit: 1000,
 					},
 				},
@@ -588,7 +588,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 			OutboundParams: []*types.OutboundParams{
 				{
 					ReceiverChainId: chainID,
-					CallOptions: &types.CallOptions{
+					CallOptions: types.CallOptions{
 						GasLimit: 1000,
 					},
 				},
@@ -624,7 +624,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 			OutboundParams: []*types.OutboundParams{
 				{
 					ReceiverChainId: chainID,
-					CallOptions: &types.CallOptions{
+					CallOptions: types.CallOptions{
 						GasLimit: 1000,
 					},
 				},

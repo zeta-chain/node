@@ -39,7 +39,7 @@ var chain_56_cctx_68270 = &crosschaintypes.CrossChainTx{
 			CoinType:        coin.CoinType_Gas,
 			Amount:          sdkmath.NewUint(657177295293237048),
 			TssNonce:        68270,
-			CallOptions: &crosschaintypes.CallOptions{
+			CallOptions: crosschaintypes.CallOptions{
 				GasLimit: 21000,
 			},
 			GasPrice:               "6000000000",

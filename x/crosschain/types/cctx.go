@@ -120,7 +120,7 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 		Receiver:        revertReceiver,
 		ReceiverChainId: m.InboundParams.SenderChainId,
 		Amount:          m.GetCurrentOutboundParam().Amount,
-		CallOptions: &CallOptions{
+		CallOptions: CallOptions{
 			GasLimit: gasLimit,
 		},
 		TssPubkey: m.GetCurrentOutboundParam().TssPubkey,
@@ -235,7 +235,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		ReceiverChainId: msg.ReceiverChain,
 		Hash:            "",
 		TssNonce:        0,
-		CallOptions: &CallOptions{
+		CallOptions: CallOptions{
 			IsArbitraryCall: msg.CallOptions.IsArbitraryCall,
 			GasLimit:        msg.CallOptions.GasLimit,
 		},

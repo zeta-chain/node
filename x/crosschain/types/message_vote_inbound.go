@@ -70,7 +70,7 @@ func NewMsgVoteInbound(
 		Message:            message,
 		InboundHash:        inboundHash,
 		InboundBlockHeight: inboundBlockHeight,
-		CallOptions: &CallOptions{
+		CallOptions: CallOptions{
 			GasLimit:        gasLimit,
 			IsArbitraryCall: isArbitraryCall,
 		},

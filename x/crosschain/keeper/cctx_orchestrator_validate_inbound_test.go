@@ -78,7 +78,7 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 			Message:            message,
 			InboundHash:        inboundHash.String(),
 			InboundBlockHeight: inboundBlockHeight,
-			CallOptions: &types.CallOptions{
+			CallOptions: types.CallOptions{
 				GasLimit: gasLimit,
 			},
 			CoinType:   cointType,
@@ -138,7 +138,7 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 			Message:            message,
 			InboundHash:        inboundHash.String(),
 			InboundBlockHeight: inboundBlockHeight,
-			CallOptions: &types.CallOptions{
+			CallOptions: types.CallOptions{
 				GasLimit: gasLimit,
 			},
 			CoinType:   cointType,
@@ -207,7 +207,7 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 			Message:            message,
 			InboundHash:        inboundHash.String(),
 			InboundBlockHeight: inboundBlockHeight,
-			CallOptions: &types.CallOptions{
+			CallOptions: types.CallOptions{
 				GasLimit: gasLimit,
 			},
 			CoinType:   cointType,
@@ -273,7 +273,7 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 			Message:            message,
 			InboundHash:        inboundHash.String(),
 			InboundBlockHeight: inboundBlockHeight,
-			CallOptions: &types.CallOptions{
+			CallOptions: types.CallOptions{
 				GasLimit: gasLimit,
 			},
 			CoinType:   cointType,
@@ -337,7 +337,7 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 			Message:            message,
 			InboundHash:        inboundHash.String(),
 			InboundBlockHeight: inboundBlockHeight,
-			CallOptions: &types.CallOptions{
+			CallOptions: types.CallOptions{
 				GasLimit: gasLimit,
 			},
 			CoinType:   cointType,

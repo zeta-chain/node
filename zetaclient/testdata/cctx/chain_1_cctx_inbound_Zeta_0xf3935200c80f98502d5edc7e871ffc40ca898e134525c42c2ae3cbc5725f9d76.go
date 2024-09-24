@@ -39,7 +39,7 @@ var chain_1_cctx_inbound_Zeta_0xf393520 = &crosschaintypes.CrossChainTx{
 			CoinType:        coin.CoinType_Zeta,
 			Amount:          sdkmath.ZeroUint(),
 			TssNonce:        0,
-			CallOptions: &crosschaintypes.CallOptions{
+			CallOptions: crosschaintypes.CallOptions{
 				GasLimit: 100000,
 			},
 			GasPrice:               "",

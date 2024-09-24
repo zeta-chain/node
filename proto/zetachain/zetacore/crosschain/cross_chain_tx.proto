@@ -68,7 +68,7 @@ message OutboundParams {
     (gogoproto.nullable) = false
   ];
   uint64 tss_nonce = 5;
-  CallOptions call_options = 6;
+  CallOptions call_options = 6 [ (gogoproto.nullable) = false ];
   string gas_price = 7;
   string gas_priority_fee = 23;
   // the above are commands for zetaclients

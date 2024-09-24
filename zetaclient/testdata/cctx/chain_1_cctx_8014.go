@@ -39,7 +39,7 @@ var chain_1_cctx_8014 = &crosschaintypes.CrossChainTx{
 			CoinType:        coin.CoinType_ERC20,
 			Amount:          sdkmath.NewUint(23726342442),
 			TssNonce:        8014,
-			CallOptions: &crosschaintypes.CallOptions{
+			CallOptions: crosschaintypes.CallOptions{
 				GasLimit: 100000,
 			},
 			GasPrice:               "58619665744",
