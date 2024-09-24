@@ -426,7 +426,7 @@ func TestZetacore_PostVoteInbound(t *testing.T) {
 
 	expectedOutput := observertypes.QueryHasVotedResponse{HasVoted: false}
 	input := observertypes.QueryHasVotedRequest{
-		BallotIdentifier: "0xd204175fc8500bcea563049cce918fa55134bd2d415d3fe137144f55e572b5ff",
+		BallotIdentifier: "0x79967c1c93c668323c5f817ef54298c93b073b08a4b7681583fd45b8b1b31775",
 		VoterAddress:     address.String(),
 	}
 	method := "/zetachain.zetacore.observer.Query/HasVoted"
