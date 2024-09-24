@@ -255,9 +255,7 @@ type TSSSigner interface {
 	SignBatch(ctx context.Context, digests [][]byte, height uint64, nonce uint64, chainID int64) ([][65]byte, error)
 
 	EVMAddress() ethcommon.Address
-
 	EVMAddressList() []ethcommon.Address
-	BTCAddress() string
-	BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash
+	BTCAddress(chainID int64) (*btcutil.AddressWitnessPubKeyHash, error)
 	PubKeyCompressedBytes() []byte
 }
