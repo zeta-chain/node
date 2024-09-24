@@ -171,7 +171,6 @@ var (
 
 	// BitcoinSignetTestnet is Bitcoin Signet testnet
 	BitcoinSignetTestnet = Chain{
-		ChainName:   ChainName_btc_signet_testnet,
 		ChainId:     18333,
 		Network:     Network_btc,
 		NetworkType: NetworkType_testnet,
@@ -184,7 +183,6 @@ var (
 
 	// BitcoinTestnet4 is Bitcoin testnet4
 	BitcoinTestnet4 = Chain{
-		ChainName:   ChainName_btc_testnet4,
 		ChainId:     18334,
 		Network:     Network_btc,
 		NetworkType: NetworkType_testnet,
