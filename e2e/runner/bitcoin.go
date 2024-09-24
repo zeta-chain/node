@@ -8,6 +8,7 @@ import (
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
@@ -296,7 +297,7 @@ func (r *E2ERunner) GetBitcoinChainID() int64 {
 
 // IsLocalBitcoin returns true if the runner is running on a local bitcoin network
 func (r *E2ERunner) IsLocalBitcoin() bool {
-	return r.BitcoinParams.Name == chains.BitcoinRegnetParams.Name
+	return r.BitcoinParams.Name == chaincfg.RegressionNetParams.Name
 }
 
 // GenerateToAddressIfLocalBitcoin generates blocks to an address if the runner is interacting
