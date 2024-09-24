@@ -191,7 +191,7 @@ func getDestination(cctx *types.CrossChainTx, logger zerolog.Logger) (ethcommon.
 }
 
 func validateParams(params *types.OutboundParams) error {
-	if params == nil || params.CallOptions.GasLimit == 0 {
+	if params == nil || params.CallOptions == nil || params.CallOptions.GasLimit == 0 {
 		return errors.New("outboundParams is empty")
 	}
 

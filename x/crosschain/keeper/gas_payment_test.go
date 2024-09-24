@@ -53,9 +53,11 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 				{
 					ReceiverChainId: chains.ZetaChainPrivnet.ChainId,
 					CoinType:        coin.CoinType_Gas,
+					CallOptions:     &types.CallOptions{},
 				},
 				{
 					ReceiverChainId: chainID,
+					CallOptions:     &types.CallOptions{},
 				},
 			},
 		}
