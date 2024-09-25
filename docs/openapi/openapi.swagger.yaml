@@ -56986,7 +56986,6 @@ definitions:
       - solana_mainnet
       - solana_devnet
       - solana_localnet
-      - btc_signet_testnet
     default: empty
     title: |-
       ChainName represents the name of the chain

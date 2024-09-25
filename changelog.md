@@ -12,6 +12,7 @@
 * [2870](https://github.com/zeta-chain/node/pull/2870) - support for multiple Bitcoin chains in the zetaclient
 * [2883](https://github.com/zeta-chain/node/pull/2883) - add chain static information for btc signet testnet
 * [2907](https://github.com/zeta-chain/node/pull/2907) - derive Bitcoin tss address by chain id and added more Signet static info
+* [2911](https://github.com/zeta-chain/node/pull/2911) - add chain static information for btc testnet4
 
 ### Refactor
 
