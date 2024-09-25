@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -13,6 +14,12 @@ import (
 
 func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0, "No arguments expected")
+
+	totalAmount := big.NewInt(1e3)
+	depositAmount := big.NewInt(500)
+	higherBalanceAmount := big.NewInt(1001)
+	higherAllowanceAmount := big.NewInt(501)
+	spender := r.EVMAddress()
 
 	// Increase the gasLimit. It's required because of the gas consumed by precompiled functions.
 	previousGasLimit := r.ZEVMAuth.GasLimit
@@ -26,13 +33,17 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 		require.NoError(r, err)
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 		utils.RequireTxSuccessful(r, receipt, "Resetting allowance failed")
-	}()
 
-	totalAmount := big.NewInt(1e3)
-	depositAmount := big.NewInt(500)
-	higherBalanceAmount := big.NewInt(1001)
-	higherAllowanceAmount := big.NewInt(501)
-	spender := r.EVMAddress()
+		// Reset balance to 0; this is needed when running upgrade tests where this test runs twice.
+		tx, err = r.ERC20ZRC20.Transfer(
+			r.ZEVMAuth,
+			common.HexToAddress("0x000000000000000000000000000000000000dEaD"),
+			totalAmount,
+		)
+		require.NoError(r, err)
+		receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+		utils.RequireTxSuccessful(r, receipt, "Resetting balance failed")
+	}()
 
 	// Get ERC20ZRC20.
 	txHash := r.DepositERC20WithAmountAndMessage(r.EVMAddress(), totalAmount, []byte{})

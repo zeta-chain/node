@@ -44,6 +44,16 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 
 		// Reset the allowance to 0; this is needed when running upgrade tests where this test runs twice.
 		approveAllowance(r, bank.ContractAddress, big.NewInt(0))
+
+		// Reset balance to 0; this is needed when running upgrade tests where this test runs twice.
+		tx, err = r.ERC20ZRC20.Transfer(
+			r.ZEVMAuth,
+			common.HexToAddress("0x000000000000000000000000000000000000dEaD"),
+			oneThousand,
+		)
+		require.NoError(r, err)
+		receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+		utils.RequireTxSuccessful(r, receipt, "Resetting balance failed")
 	}()
 
 	// Check initial balances.
