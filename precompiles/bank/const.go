@@ -1,8 +1,8 @@
 package bank
 
 const (
-	// ZEVM cosmos coins prefix.
-	ZEVMDenom = "zrc20/"
+	// ZRC20DenomPrefix are ZRC20 cosmos coins prefix.
+	ZRC20DenomPrefix = "zrc20/"
 
 	// Write methods.
 	DepositMethodName = "deposit"
