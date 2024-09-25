@@ -12,6 +12,8 @@
 * [2860](https://github.com/zeta-chain/node/pull/2860) - bank precompiled contract
 * [2870](https://github.com/zeta-chain/node/pull/2870) - support for multiple Bitcoin chains in the zetaclient
 * [2883](https://github.com/zeta-chain/node/pull/2883) - add chain static information for btc signet testnet
+* [2907](https://github.com/zeta-chain/node/pull/2907) - derive Bitcoin tss address by chain id and added more Signet static info
+* [2911](https://github.com/zeta-chain/node/pull/2911) - add chain static information for btc testnet4
 
 ### Refactor
 
@@ -19,6 +21,8 @@
 * [2725](https://github.com/zeta-chain/node/pull/2725) - refactor SetCctxAndNonceToCctxAndInboundHashToCctx to receive tsspubkey as an argument
 * [2802](https://github.com/zeta-chain/node/pull/2802) - set default liquidity cap for new ZRC20s
 * [2826](https://github.com/zeta-chain/node/pull/2826) - remove unused code from emissions module and add new parameter for fixed block reward amount
+* [2890](https://github.com/zeta-chain/node/pull/2890) - refactor `MsgUpdateChainInfo` to accept a single chain, and add `MsgRemoveChainInfo` to remove a chain
+* [2899](https://github.com/zeta-chain/node/pull/2899) - remove btc deposit fee v1 and improve unit tests
 
 ### Tests
 

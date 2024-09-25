@@ -34,7 +34,7 @@ func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
 	// deploy an example contract in ZEVM
 	contractAddr, _, contract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
-	r.Logger.Print("Bitcoin: Example contract deployed at: %s", contractAddr.String())
+	r.Logger.Info("Bitcoin: Example contract deployed at: %s", contractAddr.String())
 
 	// ACT
 	// Send BTC to TSS address with a dummy memo

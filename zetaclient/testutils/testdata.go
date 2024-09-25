@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/wire"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/onrik/ethrpc"
@@ -104,6 +105,16 @@ func LoadEVMBlock(t *testing.T, dir string, chainID int64, blockNumber uint64, t
 	require.NoError(t, err)
 
 	return blockProxy.ToBlock()
+}
+
+// LoadBTCMsgTx loads archived Bitcoin MsgTx from file
+func LoadBTCMsgTx(t *testing.T, dir string, chainID int64, txHash string) *wire.MsgTx {
+	name := path.Join(dir, TestDataPathBTC, FileNameBTCMsgTx(chainID, txHash))
+
+	// load archived MsgTx
+	msgTx := &wire.MsgTx{}
+	LoadObjectFromJSONFile(t, msgTx, name)
+	return msgTx
 }
 
 // LoadBTCTxRawResult loads archived Bitcoin tx raw result from file

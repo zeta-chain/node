@@ -193,7 +193,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.100
-    entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2"]
+    entrypoint: ["geth", "--dev", "--datadir", "/root/data", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2", "--"]
 
   eth2:
     build:
@@ -313,7 +313,7 @@ services:
       - ssh:/root/.ssh
 
   grafana:
-    image: grafana/grafana:9.1.7
+    image: grafana/grafana:11.2.0
     container_name: grafana
     hostname: grafana
     profiles:
@@ -322,6 +322,7 @@ services:
     volumes:
       - ./grafana/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
       - ./grafana/dashboards/:/etc/grafana/provisioning/dashboards
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
       - grafana_storage:/var/lib/grafana
     ports:
       - "3000:3000"

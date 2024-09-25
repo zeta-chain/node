@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
+	ecdsakeygen "github.com/bnb-chain/tss-lib/ecdsa/keygen"
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/types"
-	ecdsakeygen "gitlab.com/thorchain/tss/tss-lib/ecdsa/keygen"
 
 	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/cmd"

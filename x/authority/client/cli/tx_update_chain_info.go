@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/authority/types"
 )
 
@@ -20,7 +21,7 @@ func CmdUpdateChainInfo() *cobra.Command {
 		Short: "Update the chain info",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			chainInfo, err := ReadChainInfoFromFile(os.DirFS("."), args[0])
+			chainInfo, err := ReadChainFromFile(os.DirFS("."), args[0])
 			if err != nil {
 				return err
 			}
@@ -42,14 +43,13 @@ func CmdUpdateChainInfo() *cobra.Command {
 	return cmd
 }
 
-// ReadChainInfoFromFile read the chain info from the file using os package and unmarshal it into the chain info variable
-func ReadChainInfoFromFile(fsys fs.FS, filePath string) (types.ChainInfo, error) {
-	var chainInfo types.ChainInfo
-	chainInfoBytes, err := fs.ReadFile(fsys, filePath)
+// ReadChainFromFile reads a chain from a file and returns the chain object.
+func ReadChainFromFile(fsys fs.FS, filePath string) (chains.Chain, error) {
+	var c chains.Chain
+	chainBytes, err := fs.ReadFile(fsys, filePath)
 	if err != nil {
-		return chainInfo, fmt.Errorf("failed to read file: %w", err)
+		return c, fmt.Errorf("failed to read file: %w", err)
 	}
-
-	err = json.Unmarshal(chainInfoBytes, &chainInfo)
-	return chainInfo, err
+	err = json.Unmarshal(chainBytes, &c)
+	return c, err
 }

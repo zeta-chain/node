@@ -8,9 +8,9 @@ import (
 	"strconv"
 
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
-	"github.com/btcsuite/btcutil"
 	"github.com/cosmos/btcutil/base58"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ripemd160"
@@ -231,6 +231,28 @@ func EncodeAddress(hash160 []byte, netID byte) string {
 	// Format is 1 byte for a network and address class (i.e. P2PKH vs
 	// P2SH), 20 bytes for a RIPEMD160 hash, and 4 bytes of checksum.
 	return base58.CheckEncode(hash160[:ripemd160.Size], netID)
+}
+
+// DecodeSenderFromScript decodes sender from a given script
+func DecodeSenderFromScript(pkScript []byte, net *chaincfg.Params) (string, error) {
+	scriptHex := hex.EncodeToString(pkScript)
+
+	// decode sender address from according to script type
+	switch {
+	case IsPkScriptP2TR(pkScript):
+		return DecodeScriptP2TR(scriptHex, net)
+	case IsPkScriptP2WSH(pkScript):
+		return DecodeScriptP2WSH(scriptHex, net)
+	case IsPkScriptP2WPKH(pkScript):
+		return DecodeScriptP2WPKH(scriptHex, net)
+	case IsPkScriptP2SH(pkScript):
+		return DecodeScriptP2SH(scriptHex, net)
+	case IsPkScriptP2PKH(pkScript):
+		return DecodeScriptP2PKH(scriptHex, net)
+	default:
+		// sender address not found, return nil and move on to the next tx
+		return "", nil
+	}
 }
 
 // DecodeTSSVout decodes receiver and amount from a given TSS vout

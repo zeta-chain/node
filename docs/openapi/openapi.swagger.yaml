@@ -56838,6 +56838,9 @@ definitions:
     description: |-
       MsgRemoveAuthorizationResponse defines the MsgRemoveAuthorizationResponse
       service.
+  authorityMsgRemoveChainInfoResponse:
+    type: object
+    description: MsgRemoveChainInfoResponse defines the MsgRemoveChainInfoResponse service.
   authorityMsgUpdateChainInfoResponse:
     type: object
     description: MsgUpdateChainInfoResponse defines the MsgUpdateChainInfoResponse service.
@@ -56983,7 +56986,6 @@ definitions:
       - solana_mainnet
       - solana_devnet
       - solana_localnet
-      - btc_signet_testnet
     default: empty
     title: |-
       ChainName represents the name of the chain

@@ -7,10 +7,10 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -255,9 +255,7 @@ type TSSSigner interface {
 	SignBatch(ctx context.Context, digests [][]byte, height uint64, nonce uint64, chainID int64) ([][65]byte, error)
 
 	EVMAddress() ethcommon.Address
-
 	EVMAddressList() []ethcommon.Address
-	BTCAddress() string
-	BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash
+	BTCAddress(chainID int64) (*btcutil.AddressWitnessPubKeyHash, error)
 	PubKeyCompressedBytes() []byte
 }

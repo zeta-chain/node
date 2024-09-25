@@ -133,8 +133,7 @@ func keygenTSS(
 	keygenLogger zerolog.Logger,
 ) (string, error) {
 	keygenLogger.Info().Msgf("Keygen at blocknum %d , TSS signers %s ", keyGen.BlockNumber, keyGen.GranteePubkeys)
-	var req keygen.Request
-	req = keygen.NewRequest(keyGen.GranteePubkeys, keyGen.BlockNumber, "0.14.0")
+	req := keygen.NewRequest(keyGen.GranteePubkeys, keyGen.BlockNumber, "0.14.0", tsscommon.ECDSA)
 	res, err := tssServer.Keygen(req)
 	if res.Status != tsscommon.Success || res.PubKey == "" {
 		keygenLogger.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)

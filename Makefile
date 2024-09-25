@@ -5,9 +5,10 @@ VERSION := $(shell ./version.sh)
 COMMIT := $(shell [ -z "${COMMIT_ID}" ] && git log -1 --format='%H' || echo ${COMMIT_ID} )
 BUILDTIME := $(shell date -u +"%Y%m%d.%H%M%S" )
 DOCKER ?= docker
-# allow setting of DOCKER_COMPOSE_ARGS to pass additional args to docker compose
-# useful for setting profiles
-DOCKER_COMPOSE ?= $(DOCKER) compose $(COMPOSE_ARGS)
+# allow setting of NODE_COMPOSE_ARGS to pass additional args to docker compose
+# useful for setting profiles and/ort optional overlays
+# example: NODE_COMPOSE_ARGS="--profile monitoring -f docker-compose-persistent.yml"
+DOCKER_COMPOSE ?= $(DOCKER) compose $(NODE_COMPOSE_ARGS)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 GOFLAGS := ""
 GOLANG_CROSS_VERSION ?= v1.22.4
@@ -224,7 +225,7 @@ start-localnet-skip-build:
 
 # stop-localnet should include all profiles so other containers are also removed
 stop-localnet:
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile all down --remove-orphans
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile all -f docker-compose.yml down --remove-orphans
 
 ###############################################################################
 ###                         E2E tests               						###

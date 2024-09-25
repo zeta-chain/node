@@ -7,10 +7,12 @@ import (
 	"testing"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/cmd"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -21,18 +23,23 @@ import (
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
 const (
 	// defaultAlertLatency is the default alert latency (in seconds) for unit tests
 	defaultAlertLatency = 60
+
+	// defaultConfirmationCount is the default confirmation count for unit tests
+	defaultConfirmationCount = 2
 )
 
 // createObserver creates a new observer for testing
 func createObserver(t *testing.T, chain chains.Chain, alertLatency int64) *base.Observer {
 	// constructor parameters
 	chainParams := *sample.ChainParams(chain.ChainId)
+	chainParams.ConfirmationCount = defaultConfirmationCount
 	zetacoreClient := mocks.NewZetacoreClient(t)
 	tss := mocks.NewTSSMainnet()
 
@@ -267,6 +274,105 @@ func TestObserverGetterAndSetter(t *testing.T) {
 	})
 }
 
+func TestTSSAddressString(t *testing.T) {
+	testConfig := sdk.GetConfig()
+	testConfig.SetBech32PrefixForAccount(cmd.Bech32PrefixAccAddr, cmd.Bech32PrefixAccPub)
+
+	tests := []struct {
+		name         string
+		chain        chains.Chain
+		forceError   bool
+		addrExpected string
+	}{
+		{
+			name:         "should return TSS BTC address for Bitcoin chain",
+			chain:        chains.BitcoinMainnet,
+			addrExpected: testutils.TSSAddressBTCMainnet,
+		},
+		{
+			name:         "should return TSS EVM address for EVM chain",
+			chain:        chains.Ethereum,
+			addrExpected: testutils.TSSAddressEVMMainnet,
+		},
+		{
+			name:         "should return TSS EVM address for other non-BTC chain",
+			chain:        chains.SolanaDevnet,
+			addrExpected: testutils.TSSAddressEVMMainnet,
+		},
+		{
+			name:         "should return empty address for unknown BTC chain",
+			chain:        chains.BitcoinMainnet,
+			forceError:   true,
+			addrExpected: "",
+		},
+	}
+
+	// run tests
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// create observer
+			ob := createObserver(t, tt.chain, defaultAlertLatency)
+
+			// force error if needed
+			if tt.forceError {
+				// pause TSS to cause error
+				tss := mocks.NewTSSMainnet()
+				tss.Pause()
+				ob = ob.WithTSS(tss)
+			}
+
+			// get TSS address
+			addr := ob.TSSAddressString()
+			require.Equal(t, tt.addrExpected, addr)
+		})
+	}
+}
+
+func TestIsBlockConfirmed(t *testing.T) {
+	tests := []struct {
+		name      string
+		chain     chains.Chain
+		block     uint64
+		lastBlock uint64
+		confirmed bool
+	}{
+		{
+			name:      "should confirm block 100 when confirmation arrives 2",
+			chain:     chains.BitcoinMainnet,
+			block:     100,
+			lastBlock: 101, // got 2 confirmations
+			confirmed: true,
+		},
+		{
+			name:      "should not confirm block 100 when confirmation < 2",
+			chain:     chains.BitcoinMainnet,
+			block:     100,
+			lastBlock: 100, // got 1 confirmation, need one more
+			confirmed: false,
+		},
+		{
+			name:      "should confirm block 100 when confirmation arrives 2",
+			chain:     chains.Ethereum,
+			block:     100,
+			lastBlock: 99, // last block lagging behind, need to wait
+			confirmed: false,
+		},
+	}
+
+	// run tests
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// create observer
+			ob := createObserver(t, tt.chain, defaultAlertLatency)
+			ob = ob.WithLastBlock(tt.lastBlock)
+
+			// check if block is confirmed
+			confirmed := ob.IsBlockConfirmed(tt.block)
+			require.Equal(t, tt.confirmed, confirmed)
+		})
+	}
+}
+
 func TestOutboundID(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -299,10 +405,7 @@ func TestOutboundID(t *testing.T) {
 			outboundID := ob.OutboundID(tt.nonce)
 
 			// expected outbound id
-			exepctedID := fmt.Sprintf("%d-%s-%d", tt.chain.ChainId, tt.tss.EVMAddress(), tt.nonce)
-			if tt.chain.Consensus == chains.Consensus_bitcoin {
-				exepctedID = fmt.Sprintf("%d-%s-%d", tt.chain.ChainId, tt.tss.BTCAddress(), tt.nonce)
-			}
+			exepctedID := fmt.Sprintf("%d-%s-%d", tt.chain.ChainId, ob.TSSAddressString(), tt.nonce)
 			require.Equal(t, exepctedID, outboundID)
 		})
 	}

@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/authority/keeper"
@@ -30,7 +29,7 @@ func TestMsgServer_UpdateChainInfo(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrUnauthorized)
 	})
 
-	t.Run("can set chain info when it doesn't exist", func(t *testing.T) {
+	t.Run("can set new chain info if it doesnt exist", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 		msgServer := keeper.NewMsgServerImpl(*k)
 
@@ -47,20 +46,20 @@ func TestMsgServer_UpdateChainInfo(t *testing.T) {
 				},
 			},
 		})
-		chainInfo := sample.ChainInfo(42)
+		chain := sample.Chain(42)
 
 		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
 
 		_, err := msgServer.UpdateChainInfo(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainInfo{
-			Creator:   admin,
-			ChainInfo: chainInfo,
+			Creator: admin,
+			Chain:   chain,
 		})
 		require.NoError(t, err)
 
 		// Check if the chain info is set
 		storedChainInfo, found := k.GetChainInfo(ctx)
 		require.True(t, found)
-		require.Equal(t, chainInfo, storedChainInfo)
+		require.Contains(t, storedChainInfo.Chains, chain)
 	})
 
 	t.Run("can update existing chain info", func(t *testing.T) {
@@ -79,22 +78,32 @@ func TestMsgServer_UpdateChainInfo(t *testing.T) {
 				},
 			},
 		})
-		chainInfo := sample.ChainInfo(84)
+		chainID := int64(42)
+		chainInfo := sample.ChainInfo(1)
+		chainInfo.Chains[0].ChainId = chainID
+
+		chainInfo.Chains[0].Name = "name"
+		k.SetChainInfo(ctx, chainInfo)
+		chainInfo.Chains[0].Name = "updated name"
 		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
 
 		_, err := msgServer.UpdateChainInfo(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainInfo{
-			Creator:   admin,
-			ChainInfo: chainInfo,
+			Creator: admin,
+			Chain:   chainInfo.Chains[0],
 		})
 		require.NoError(t, err)
 
-		// Check if the chain info is set
+		// Check if the chain info is set and updated
 		storedChainInfo, found := k.GetChainInfo(ctx)
 		require.True(t, found)
-		require.Equal(t, chainInfo, storedChainInfo)
+		for _, chain := range storedChainInfo.Chains {
+			if chain.ChainId == chainID {
+				require.Equal(t, "updated name", chain.Name)
+			}
+		}
 	})
 
-	t.Run("can remove chain info", func(t *testing.T) {
+	t.Run("add chain to chain info if chain dos not exist", func(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 		msgServer := keeper.NewMsgServerImpl(*k)
 
@@ -110,19 +119,20 @@ func TestMsgServer_UpdateChainInfo(t *testing.T) {
 				},
 			},
 		})
-		chainInfo := types.ChainInfo{}
+		chainID := int64(103)
+		newChain := sample.Chain(chainID)
 		k.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
 
 		_, err := msgServer.UpdateChainInfo(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainInfo{
-			Creator:   admin,
-			ChainInfo: chainInfo,
+			Creator: admin,
+			Chain:   newChain,
 		})
 		require.NoError(t, err)
 
-		// The structure should still exist but be empty
+		// Check if the chain info is set and updated
 		storedChainInfo, found := k.GetChainInfo(ctx)
 		require.True(t, found)
-		require.Equal(t, chainInfo, storedChainInfo)
+		require.Equal(t, 4, len(storedChainInfo.Chains))
+		require.Contains(t, storedChainInfo.Chains, newChain)
 	})
-
 }

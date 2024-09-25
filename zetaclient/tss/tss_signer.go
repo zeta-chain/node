@@ -14,8 +14,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bnb-chain/tss-lib/ecdsa/keygen"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcutil"
 	tmcrypto "github.com/cometbft/cometbft/crypto"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -26,7 +27,6 @@ import (
 	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
 	"gitlab.com/thorchain/tss/go-tss/keysign"
 	"gitlab.com/thorchain/tss/go-tss/tss"
-	"gitlab.com/thorchain/tss/tss-lib/ecdsa/keygen"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/cosmos"
@@ -83,10 +83,6 @@ type TSS struct {
 	Signers         []string
 	ZetacoreClient  interfaces.ZetacoreClient
 	KeysignsTracker *ConcurrentKeysignsTracker
-
-	// TODO: support multiple Bitcoin network, not just one network
-	// https://github.com/zeta-chain/node/issues/1397
-	BitcoinChainID int64
 }
 
 // NewTSS creates a new TSS instance which can be used to sign transactions
@@ -94,7 +90,6 @@ func NewTSS(
 	ctx context.Context,
 	client interfaces.ZetacoreClient,
 	tssHistoricalList []observertypes.TSS,
-	bitcoinChainID int64,
 	hotkeyPassword string,
 	tssServer *tss.TssServer,
 ) (*TSS, error) {
@@ -111,7 +106,6 @@ func NewTSS(
 		logger:          logger,
 		ZetacoreClient:  client,
 		KeysignsTracker: NewKeysignsTracker(logger),
-		BitcoinChainID:  bitcoinChainID,
 	}
 
 	err = newTss.LoadTssFilesFromDirectory(app.Config().TssPath)
@@ -419,17 +413,28 @@ func (tss *TSS) SignBatch(
 	return sigBytes, nil
 }
 
-// Validate validates the TSS
-func (tss *TSS) Validate() error {
+// ValidateAddresses try deriving both the EVM and BTC addresses from the pubkey and make sure they are valid.
+func (tss *TSS) ValidateAddresses(btcChainIDs []int64) error {
+	logger := tss.logger.With().
+		Str("method", "ValidateAddresses").
+		Str("tss.pubkey", tss.CurrentPubkey).
+		Logger()
+
+	// validate TSS EVM address
 	evmAddress := tss.EVMAddress()
 	blankAddress := ethcommon.Address{}
-
 	if evmAddress == blankAddress {
-		return fmt.Errorf("invalid evm address : %s", evmAddress.String())
+		return fmt.Errorf("blank tss evm address: %s", evmAddress.String())
 	}
+	logger.Info().Msgf("tss.eth: %s", evmAddress.String())
 
-	if tss.BTCAddressWitnessPubkeyHash() == nil {
-		return fmt.Errorf("invalid btc pub key hash : %s", tss.BTCAddress())
+	// validate TSS BTC address for each btc chain
+	for _, chainID := range btcChainIDs {
+		address, err := tss.BTCAddress(chainID)
+		if err != nil {
+			return fmt.Errorf("cannot derive btc address for chain %d from tss pubkey %s", chainID, tss.CurrentPubkey)
+		}
+		logger.Info().Msgf("tss.btc [chain %d]: %s", chainID, address.EncodeAddress())
 	}
 
 	return nil
@@ -459,23 +464,13 @@ func (tss *TSS) EVMAddressList() []ethcommon.Address {
 }
 
 // BTCAddress generates a bech32 p2wpkh address from pubkey
-func (tss *TSS) BTCAddress() string {
-	addr, err := GetTssAddrBTC(tss.CurrentPubkey, tss.BitcoinChainID)
-	if err != nil {
-		log.Error().Err(err).Msg("getKeyAddr error")
-		return ""
-	}
-	return addr
-}
-
-// BTCAddressWitnessPubkeyHash generates a bech32 p2wpkh address from pubkey
-func (tss *TSS) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash {
-	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tss.CurrentPubkey, tss.BitcoinChainID)
+func (tss *TSS) BTCAddress(chainID int64) (*btcutil.AddressWitnessPubKeyHash, error) {
+	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tss.CurrentPubkey, chainID)
 	if err != nil {
 		log.Error().Err(err).Msg("BTCAddressPubkeyHash error")
-		return nil
+		return nil, err
 	}
-	return addrWPKH
+	return addrWPKH, nil
 }
 
 // PubKeyCompressedBytes returns the compressed bytes of the current pubkey
@@ -560,17 +555,6 @@ func (tss *TSS) LoadTssFilesFromDirectory(tssPath string) error {
 		log.Info().Msg("TSS Keyshare file NOT found")
 	}
 	return nil
-}
-
-// GetTssAddrBTC generates a bech32 p2wpkh address from pubkey
-func GetTssAddrBTC(tssPubkey string, bitcoinChainID int64) (string, error) {
-	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tssPubkey, bitcoinChainID)
-	if err != nil {
-		log.Fatal().Err(err)
-		return "", err
-	}
-
-	return addrWPKH.EncodeAddress(), nil
 }
 
 // GetTssAddrEVM generates an EVM address from pubkey
