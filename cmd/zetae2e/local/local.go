@@ -46,6 +46,7 @@ const (
 	flagTestV2Migration   = "test-v2-migration"
 	flagSkipTrackerCheck  = "skip-tracker-check"
 	flagSkipPrecompiles   = "skip-precompiles"
+	flagUpgradeGateways   = "upgrade-gateways"
 )
 
 var (
@@ -83,6 +84,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestV2Migration, false, "set to true to run tests for v2 contracts migration test")
 	cmd.Flags().Bool(flagSkipTrackerCheck, false, "set to true to skip tracker check at the end of the tests")
 	cmd.Flags().Bool(flagSkipPrecompiles, false, "set to true to skip stateful precompiled contracts test")
+	cmd.Flags().Bool(flagUpgradeGateways, false, "set to true to upgrade gateways during setup for ZEVM and EVM")
 
 	return cmd
 }
@@ -112,6 +114,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testV2            = must(cmd.Flags().GetBool(flagTestV2))
 		testV2Migration   = must(cmd.Flags().GetBool(flagTestV2Migration))
 		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
+		upgradeGateways   = must(cmd.Flags().GetBool(flagUpgradeGateways))
 	)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
@@ -405,6 +408,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// update the ERC20 custody contract for v2 tests
 		// note: not run in testV2Migration because it is already run in the migration process
 		deployerRunner.UpdateChainParamsV2Contracts()
+	}
+
+	// upgrade gateways
+	if upgradeGateways {
+		//deployerRunner.UpgradeGateways()
 	}
 
 	if testV2 || testV2Migration {
