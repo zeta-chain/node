@@ -13,7 +13,7 @@ import (
 // ZRC20ToCosmosDenom returns the cosmos coin address for a given ZRC20 address.
 // This is converted to "zevm/{ZRC20Address}".
 func ZRC20ToCosmosDenom(ZRC20Address common.Address) string {
-	return ZEVMDenom + ZRC20Address.String()
+	return ZRC20DenomPrefix + ZRC20Address.String()
 }
 
 func createCoinSet(tokenDenom string, amount *big.Int) (sdk.Coins, error) {
