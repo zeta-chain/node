@@ -116,10 +116,10 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 
 	// Check the withdraw event.
 	eventWithdraw, err := bankContract.ParseWithdraw(*receipt.Logs[0])
-	require.NoError(r, err, "Parse Deposit event")
-	require.Equal(r, r.EVMAddress(), eventWithdraw.Zrc20Withdrawer, "Deposit event token should be r.EVMAddress()")
-	require.Equal(r, r.ERC20ZRC20Addr, eventWithdraw.Zrc20Token, "Deposit event token should be ERC20ZRC20Addr")
-	require.Equal(r, depositAmount, eventWithdraw.Amount, "Deposit event amount should be 500")
+	require.NoError(r, err, "Parse Withdraw event")
+	require.Equal(r, r.EVMAddress(), eventWithdraw.Zrc20Withdrawer, "Withdrawer should be r.EVMAddress()")
+	require.Equal(r, r.ERC20ZRC20Addr, eventWithdraw.Zrc20Token, "Withdraw event token should be ERC20ZRC20Addr")
+	require.Equal(r, depositAmount, eventWithdraw.Amount, "Withdraw event amount should be 500")
 
 	// Spender: cosmos coin balance should be 0 at this point.
 	cosmosBalance, err = bankContract.BalanceOf(&bind.CallOpts{Context: r.Ctx}, r.ERC20ZRC20Addr, spender)
