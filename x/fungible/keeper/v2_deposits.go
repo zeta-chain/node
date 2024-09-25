@@ -49,7 +49,7 @@ func (k Keeper) ProcessV2Deposit(
 // ProcessV2RevertDeposit handles a revert deposit from an inbound tx with protocol version 2
 func (k Keeper) ProcessV2RevertDeposit(
 	ctx sdk.Context,
-	sender string,
+	inboundSender string,
 	amount *big.Int,
 	chainID int64,
 	coinType coin.CoinType,
@@ -75,7 +75,7 @@ func (k Keeper) ProcessV2RevertDeposit(
 
 		if callOnRevert {
 			// no asset, call simple revert
-			_, err := k.CallExecuteRevert(ctx, sender, zrc20Addr, amount, revertAddress, revertMessage)
+			_, err := k.CallExecuteRevert(ctx, inboundSender, zrc20Addr, amount, revertAddress, revertMessage)
 			return err
 		} else {
 			// no asset, no call, do nothing
@@ -88,7 +88,7 @@ func (k Keeper) ProcessV2RevertDeposit(
 			// revert with a ZRC20 asset
 			_, err := k.CallDepositAndRevert(
 				ctx,
-				sender,
+				inboundSender,
 				zrc20Addr,
 				amount,
 				revertAddress,

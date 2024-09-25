@@ -153,7 +153,7 @@ func (k Keeper) CallExecute(
 //	)
 func (k Keeper) CallExecuteRevert(
 	ctx sdk.Context,
-	sender string,
+	inboundSender string,
 	zrc20 common.Address,
 	amount *big.Int,
 	target common.Address,
@@ -185,7 +185,7 @@ func (k Keeper) CallExecuteRevert(
 		"executeRevert",
 		target,
 		revert.RevertContext{
-			Sender:        common.HexToAddress(sender),
+			Sender:        common.HexToAddress(inboundSender),
 			Asset:         zrc20,
 			Amount:        amount.Uint64(),
 			RevertMessage: message,
@@ -205,7 +205,7 @@ func (k Keeper) CallExecuteRevert(
 // )
 func (k Keeper) CallDepositAndRevert(
 	ctx sdk.Context,
-	sender string,
+	inboundSender string,
 	zrc20 common.Address,
 	amount *big.Int,
 	target common.Address,
@@ -239,7 +239,7 @@ func (k Keeper) CallDepositAndRevert(
 		amount,
 		target,
 		revert.RevertContext{
-			Sender:        common.HexToAddress(sender),
+			Sender:        common.HexToAddress(inboundSender),
 			Asset:         zrc20,
 			Amount:        amount.Uint64(),
 			RevertMessage: message,
