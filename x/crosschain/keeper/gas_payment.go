@@ -139,7 +139,10 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 
 	// update cctx
 	cctx.GetCurrentOutboundParam().Amount = newAmount
-	cctx.GetCurrentOutboundParam().CallOptions.GasLimit = gas.GasLimit.Uint64()
+	currentGasLimit := cctx.GetCurrentOutboundParam().CallOptions.GasLimit
+	if currentGasLimit < gas.GasLimit.Uint64() {
+		cctx.GetCurrentOutboundParam().CallOptions.GasLimit = gas.GasLimit.Uint64()
+	}
 	cctx.GetCurrentOutboundParam().GasPrice = gas.GasPrice.String()
 	cctx.GetCurrentOutboundParam().GasPriorityFee = gas.PriorityFee.String()
 
@@ -296,7 +299,10 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 
 	// update cctx
 	cctx.GetCurrentOutboundParam().Amount = newAmount
-	cctx.GetCurrentOutboundParam().CallOptions.GasLimit = gas.GasLimit.Uint64()
+	currentGasLimit := cctx.GetCurrentOutboundParam().CallOptions.GasLimit
+	if currentGasLimit < gas.GasLimit.Uint64() {
+		cctx.GetCurrentOutboundParam().CallOptions.GasLimit = gas.GasLimit.Uint64()
+	}
 	cctx.GetCurrentOutboundParam().GasPrice = gas.GasPrice.String()
 	cctx.GetCurrentOutboundParam().GasPriorityFee = gas.PriorityFee.String()
 

@@ -102,6 +102,7 @@ contract TestDAppV2 {
     function onRevert(RevertContext calldata revertContext) external {
         setCalledWithMessage(string(revertContext.revertMessage));
         setAmountWithMessage(string(revertContext.revertMessage), 0);
+        senderWithMessage[revertContext.revertMessage] = revertContext.sender;
     }
 
     function setExpectedOnCallSender(address _expectedOnCallSender) external {

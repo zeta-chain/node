@@ -66,6 +66,7 @@ func (signer *Signer) signGatewayExecute(
 // bytes calldata data
 func (signer *Signer) signGatewayExecuteRevert(
 	ctx context.Context,
+	sender string,
 	txData *OutboundData,
 ) (*ethtypes.Transaction, error) {
 	gatewayABI, err := gatewayevm.GatewayEVMMetaData.GetAbi()
@@ -78,6 +79,7 @@ func (signer *Signer) signGatewayExecuteRevert(
 		txData.to,
 		txData.message,
 		revert.RevertContext{
+			Sender:        common.HexToAddress(sender),
 			Asset:         txData.asset,
 			Amount:        txData.amount.Uint64(),
 			RevertMessage: txData.revertOptions.RevertMessage,
@@ -182,6 +184,7 @@ func (signer *Signer) signERC20CustodyWithdrawAndCall(
 // bytes calldata data
 func (signer *Signer) signERC20CustodyWithdrawRevert(
 	ctx context.Context,
+	sender string,
 	txData *OutboundData,
 ) (*ethtypes.Transaction, error) {
 	erc20CustodyV2ABI, err := erc20custodyv2.ERC20CustodyMetaData.GetAbi()
@@ -196,6 +199,7 @@ func (signer *Signer) signERC20CustodyWithdrawRevert(
 		txData.amount,
 		txData.message,
 		revert.RevertContext{
+			Sender:        common.HexToAddress(sender),
 			Asset:         txData.asset,
 			Amount:        txData.amount.Uint64(),
 			RevertMessage: txData.revertOptions.RevertMessage,
