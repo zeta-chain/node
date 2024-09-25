@@ -52,7 +52,7 @@ func (r *E2ERunner) V2ETHWithdrawAndCall(
 	return tx
 }
 
-// V2ETHWithdrawAndCall calls WithdrawAndCall of Gateway with gas token on ZEVM using authenticated call
+// V2ETHWithdrawAndAuthenticatedCall calls WithdrawAndCall of Gateway with gas token on ZEVM using authenticated call
 func (r *E2ERunner) V2ETHWithdrawAndAuthenticatedCall(
 	receiver ethcommon.Address,
 	amount *big.Int,
@@ -76,7 +76,7 @@ func (r *E2ERunner) V2ETHWithdrawAndAuthenticatedCall(
 	return tx
 }
 
-// V2ETHWithdrawAndCall calls WithdrawAndCall of Gateway with gas token on ZEVM using authenticated call
+// V2ETHWithdrawAndAuthenticatedCallThroughContract calls WithdrawAndCall of Gateway with gas token on ZEVM using authenticated call
 // through contract
 func (r *E2ERunner) V2ETHWithdrawAndAuthenticatedCallThroughContract(
 	gatewayZEVMCaller *gatewayzevmcaller.GatewayZEVMCaller,
@@ -190,7 +190,7 @@ func (r *E2ERunner) V2ZEVMToEMVAuthenticatedCall(
 	return tx
 }
 
-// V2ZEVMToEMVCall calls authenticated Call of Gateway on ZEVM through contract
+// V2ZEVMToEMVAuthenticatedCallThroughContract calls authenticated Call of Gateway on ZEVM through contract
 func (r *E2ERunner) V2ZEVMToEMVAuthenticatedCallThroughContract(
 	gatewayZEVMCaller *gatewayzevmcaller.GatewayZEVMCaller,
 	receiver ethcommon.Address,
