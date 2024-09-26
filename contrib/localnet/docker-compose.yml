@@ -345,8 +345,7 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.31
     depends_on:
-      zetacore0:
-        condition: service_healthy
+      - zetacore0
 
   zetachain-exporter:
     image: zetachain/zetachain-exporter:v2.0.6
