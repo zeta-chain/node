@@ -92,6 +92,7 @@ func (k Keeper) ClearMaturedBallotsAndBallotList(ctx sdk.Context, ballots []type
 	return
 }
 
+// getMaturedBallotHeight returns the height at which a ballot is considered matured.
 func getMaturedBallotHeight(ctx sdk.Context, maturityBlocks int64) int64 {
 	return ctx.BlockHeight() - maturityBlocks
 }
