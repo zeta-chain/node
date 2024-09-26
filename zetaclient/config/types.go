@@ -50,7 +50,7 @@ type BTCConfig struct {
 	RPCUsername     string `mask:"filled"`
 	RPCPassword     string `mask:"filled"`
 	RPCHost         string `mask:"filled"`
-	RPCParams       string // "regtest", "mainnet", "testnet3" , "signet"
+	RPCParams       string // "regtest", "mainnet", "testnet3" , "signet", "testnet4"
 	RPCAlertLatency int64
 }
 

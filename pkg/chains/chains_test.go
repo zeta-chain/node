@@ -11,7 +11,9 @@ import (
 func TestChain_Name(t *testing.T) {
 	t.Run("new Name field is compatible with ChainName enum", func(t *testing.T) {
 		for _, chain := range chains.DefaultChainsList() {
-			require.EqualValues(t, chain.Name, chain.ChainName.String())
+			if chain.ChainName != chains.ChainName_empty {
+				require.EqualValues(t, chain.Name, chain.ChainName.String())
+			}
 		}
 	})
 }
@@ -43,6 +45,7 @@ func TestChainListByNetworkType(t *testing.T) {
 				chains.ZetaChainTestnet,
 				chains.BitcoinTestnet,
 				chains.BitcoinSignetTestnet,
+				chains.BitcoinTestnet4,
 				chains.Mumbai,
 				chains.Amoy,
 				chains.BscTestnet,
@@ -95,6 +98,7 @@ func TestChainListByNetwork(t *testing.T) {
 				chains.BitcoinMainnet,
 				chains.BitcoinTestnet,
 				chains.BitcoinSignetTestnet,
+				chains.BitcoinTestnet4,
 				chains.BitcoinRegtest,
 			},
 		},
@@ -144,6 +148,7 @@ func TestDefaultChainList(t *testing.T) {
 		chains.Ethereum,
 		chains.BitcoinTestnet,
 		chains.BitcoinSignetTestnet,
+		chains.BitcoinTestnet4,
 		chains.Mumbai,
 		chains.Amoy,
 		chains.BscTestnet,
@@ -181,6 +186,7 @@ func TestChainListByGateway(t *testing.T) {
 				chains.Ethereum,
 				chains.BitcoinTestnet,
 				chains.BitcoinSignetTestnet,
+				chains.BitcoinTestnet4,
 				chains.Mumbai,
 				chains.Amoy,
 				chains.BscTestnet,
@@ -224,6 +230,7 @@ func TestExternalChainList(t *testing.T) {
 		chains.Ethereum,
 		chains.BitcoinTestnet,
 		chains.BitcoinSignetTestnet,
+		chains.BitcoinTestnet4,
 		chains.Mumbai,
 		chains.Amoy,
 		chains.BscTestnet,
