@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
 
 	"cosmossdk.io/math"
@@ -109,16 +110,16 @@ func TestCCTXs(t *testing.T) {
 			OutboundMined:   10,
 			Reverted:        10,
 		},
-		// {
-		// 	TestName:        "test pending random",
-		// 	PendingInbound:  rand.Intn(300-10) + 10,
-		// 	PendingOutbound: rand.Intn(300-10) + 10,
-		// 	Confirmed:       rand.Intn(300-10) + 10,
-		// 	PendingRevert:   rand.Intn(300-10) + 10,
-		// 	Aborted:         rand.Intn(300-10) + 10,
-		// 	OutboundMined:   rand.Intn(300-10) + 10,
-		// 	Reverted:        rand.Intn(300-10) + 10,
-		// },
+		{
+			TestName:        "test pending random",
+			PendingInbound:  rand.Intn(300-10) + 10,
+			PendingOutbound: rand.Intn(300-10) + 10,
+			Confirmed:       rand.Intn(300-10) + 10,
+			PendingRevert:   rand.Intn(300-10) + 10,
+			Aborted:         rand.Intn(300-10) + 10,
+			OutboundMined:   rand.Intn(300-10) + 10,
+			Reverted:        rand.Intn(300-10) + 10,
+		},
 	}
 	for _, tt := range cctxsTest {
 		tt := tt
