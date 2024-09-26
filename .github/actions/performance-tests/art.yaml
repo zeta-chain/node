@@ -9,11 +9,9 @@ config:
   http:
     timeout: 60
   plugins:
+    expect: {}
     metrics-by-endpoint:
       useOnlyRequestNames: true
-    ensure:
-      - type: "failure"
-        threshold: 1
     publish-metrics:
       - type: prometheus
         pushgateway: 'https://pushgateway-testnet.rpc.zetachain.com/-=CLOUDFLARE_UUID=-'
@@ -26,6 +24,7 @@ config:
     - type: "html"
       filename: "artillery_report.html"
   logLevel: debug
+
 scenarios:
   - name: web3_clientVersion
     flow:
@@ -40,11 +39,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: web3_sha3
     flow:
@@ -60,11 +60,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: net_version
     flow:
@@ -79,11 +80,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: net_listening
     flow:
@@ -98,11 +100,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: net_peerCount
     flow:
@@ -117,11 +120,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_chainId
     flow:
@@ -136,11 +140,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_getStorageAt
     flow:
@@ -156,11 +161,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_getTransactionByBlockHashAndIndex
     flow:
@@ -176,11 +182,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_getTransactionByBlockNumberAndIndex
     flow:
@@ -197,11 +204,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_getUncleByBlockHashAndIndex
     flow:
@@ -217,11 +225,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_getUncleByBlockNumberAndIndex
     flow:
@@ -238,11 +247,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_newFilter
     flow:
@@ -253,21 +263,20 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_newFilter"
             params:
-              - {
-                fromBlock: "latest",
-                toBlock: "latest",
-                address: "0x0",
+              - fromBlock: "latest"
+                toBlock: "latest"
+                address: "0x0"
                 topics: []
-              }
           capture:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_getFilterChanges
     flow:
@@ -283,11 +292,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_getFilterLogs
     flow:
@@ -303,11 +313,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_blockNumber
     flow:
@@ -322,11 +333,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_getBlockByHash
     flow:
@@ -343,11 +355,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_getBlockByNumber
     flow:
@@ -364,11 +377,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_getBlockTransactionCountByHash
     flow:
@@ -384,11 +398,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_getBlockTransactionCountByNumber
     flow:
@@ -404,11 +419,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_getCode
     flow:
@@ -425,11 +441,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_getTransactionByHash
     flow:
@@ -445,11 +462,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_getTransactionReceipt
     flow:
@@ -465,11 +483,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_getLogs
     flow:
@@ -488,11 +507,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_getBalance
     flow:
@@ -509,11 +529,12 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
 
   - name: eth_estimateGas
     flow:
@@ -529,8 +550,9 @@ scenarios:
             - json: "$"
               as: "response"
           ensure:
-            - statusCode: 200
-            - statusCode: 201
-          assert:
-            - subject: response.error
-              equals: null
+            - statusCode:
+                - 200
+                - 201
+          expect:
+            - type: "null"
+              subject: "response.error"
