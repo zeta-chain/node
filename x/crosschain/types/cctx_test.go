@@ -188,7 +188,7 @@ func TestCrossChainTx_GetCurrentOutboundParam(t *testing.T) {
 	cctx := sample.CrossChainTx(t, "foo")
 
 	cctx.OutboundParams = []*types.OutboundParams{}
-	require.Equal(t, &types.OutboundParams{}, cctx.GetCurrentOutboundParam())
+	require.Equal(t, &types.OutboundParams{CallOptions: &types.CallOptions{}}, cctx.GetCurrentOutboundParam())
 
 	cctx.OutboundParams = []*types.OutboundParams{sample.OutboundParams(r)}
 	require.Equal(t, cctx.OutboundParams[0], cctx.GetCurrentOutboundParam())
