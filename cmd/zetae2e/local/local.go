@@ -412,7 +412,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// upgrade gateways
 	if upgradeGateways {
-		//deployerRunner.UpgradeGateways()
+		deployerRunner.UpgradeGateways()
 	}
 
 	if testV2 || testV2Migration {

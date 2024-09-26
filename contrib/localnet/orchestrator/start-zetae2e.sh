@@ -270,7 +270,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   if [ "$UPGRADE_HEIGHT" -lt 100 ]; then
     zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --light --upgrade-gateways ${COMMON_ARGS}
   else
-    zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --skip-bitcoin-setup --light --upgrade-gateways ${COMMON_ARGS}
+    zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --skip-bitcoin-setup --light --test-v2 --upgrade-gateways ${COMMON_ARGS}
   fi
 
   ZETAE2E_EXIT_CODE=$?
