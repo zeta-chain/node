@@ -370,7 +370,7 @@ func TestGetMaturedBallotHeight(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			_, ctx, _, _ := keepertest.ObserverKeeper(t)
 			ctx = ctx.WithBlockHeight(tc.currentHeight)
-			require.Equal(t, tc.expectedHeight, keeper.GetMaturedBallotHeight(ctx, tc.maturityBlocks))
+			require.Equal(t, tc.expectedHeight, keeper.GetMaturedBallotHeightFunc(ctx, tc.maturityBlocks))
 		})
 	}
 }

@@ -7,6 +7,8 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
+var GetMaturedBallotHeightFunc = getMaturedBallotHeight
+
 func (k Keeper) SetBallot(ctx sdk.Context, ballot *types.Ballot) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VoterKey))
 	ballot.Index = ballot.BallotIdentifier
@@ -54,7 +56,7 @@ func (k Keeper) GetBallotListForHeight(ctx sdk.Context, height int64) (val types
 }
 
 func (k Keeper) GetMaturedBallots(ctx sdk.Context, maturityBlocks int64) (val types.BallotListForHeight, found bool) {
-	return k.GetBallotListForHeight(ctx, GetMaturedBallotHeight(ctx, maturityBlocks))
+	return k.GetBallotListForHeight(ctx, getMaturedBallotHeight(ctx, maturityBlocks))
 }
 
 func (k Keeper) GetAllBallots(ctx sdk.Context) (voters []*types.Ballot) {
@@ -86,10 +88,10 @@ func (k Keeper) ClearMaturedBallotsAndBallotList(ctx sdk.Context, ballots []type
 		k.DeleteBallot(ctx, ballot.BallotIdentifier)
 		EmitEventBallotDeleted(ctx, ballot)
 	}
-	k.DeleteBallotListForHeight(ctx, GetMaturedBallotHeight(ctx, maturityBlocks))
+	k.DeleteBallotListForHeight(ctx, getMaturedBallotHeight(ctx, maturityBlocks))
 	return
 }
 
-func GetMaturedBallotHeight(ctx sdk.Context, maturityBlocks int64) int64 {
+func getMaturedBallotHeight(ctx sdk.Context, maturityBlocks int64) int64 {
 	return ctx.BlockHeight() - maturityBlocks
 }
