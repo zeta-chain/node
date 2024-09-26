@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"runtime/debug"
 	"time"
 
 	cosmoserrors "cosmossdk.io/errors"
@@ -91,6 +92,7 @@ import (
 
 	"github.com/zeta-chain/node/app/ante"
 	"github.com/zeta-chain/node/docs/openapi"
+	zetaconstant "github.com/zeta-chain/node/pkg/constant"
 	zetamempool "github.com/zeta-chain/node/pkg/mempool"
 	"github.com/zeta-chain/node/precompiles"
 	srvflags "github.com/zeta-chain/node/server/flags"
@@ -878,7 +880,10 @@ func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.Res
 	defer func() {
 		if r := recover(); r != nil {
 			ctx.Logger().Error("panic occurred during InitGenesis", "error", r)
-			ctx.Logger().Info("You cannot sync testnet or mainnet from block 1 using this version. You should sync your node from a snapshot")
+			ctx.Logger().Debug("stack trace", "stack", string(debug.Stack()))
+			ctx.Logger().
+				Info(zetaconstant.InitChainErrorMessage)
+			os.Exit(1)
 		}
 	}()
 	var genesisState GenesisState
