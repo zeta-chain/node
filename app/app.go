@@ -875,6 +875,12 @@ func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 
 // InitChainer application update at chain initialization
 func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+	defer func() {
+		if r := recover(); r != nil {
+			ctx.Logger().Error("panic occurred during InitGenesis", "error", r)
+			ctx.Logger().Info("You cannot sync testnet or mainnet from block 1 using this version. You should sync your node from a snapshot")
+		}
+	}()
 	var genesisState GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
