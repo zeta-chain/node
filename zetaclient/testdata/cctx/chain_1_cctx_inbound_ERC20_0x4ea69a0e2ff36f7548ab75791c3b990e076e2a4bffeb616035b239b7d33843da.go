@@ -28,7 +28,7 @@ var chain_1_cctx_inbound_ERC20_0x4ea69a0 = &crosschaintypes.CrossChainTx{
 		Amount:                 sdkmath.NewUintFromString("9992000000"),
 		ObservedHash:           "0x4ea69a0e2ff36f7548ab75791c3b990e076e2a4bffeb616035b239b7d33843da",
 		ObservedExternalHeight: 19320188,
-		BallotIndex:            "0xbeab1dbbc21156e2aac914a276f7e40d31c5c27047fafb163c85e3eedf5deb31",
+		BallotIndex:            "0x97101937e3927e124dffcaed1349af2599a8420ff34315288e96eac7f0033048",
 		FinalizedZetaHeight:    1944675,
 		TxFinalizationStatus:   crosschaintypes.TxFinalizationStatus_Executed,
 	},
@@ -39,7 +39,7 @@ var chain_1_cctx_inbound_ERC20_0x4ea69a0 = &crosschaintypes.CrossChainTx{
 			CoinType:        coin.CoinType_ERC20,
 			Amount:          sdkmath.NewUintFromString("0"),
 			TssNonce:        0,
-			CallOptions: crosschaintypes.CallOptions{
+			CallOptions: &crosschaintypes.CallOptions{
 				GasLimit: 1500000,
 			},
 			GasPrice:               "",

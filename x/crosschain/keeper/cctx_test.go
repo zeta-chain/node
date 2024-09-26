@@ -65,7 +65,7 @@ func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int, tssPubkey string
 			ReceiverChainId: int64(i),
 			Hash:            fmt.Sprintf("%d", i),
 			TssNonce:        uint64(i),
-			CallOptions: types.CallOptions{
+			CallOptions: &types.CallOptions{
 				GasLimit: uint64(i),
 			},
 			GasPrice:               fmt.Sprintf("%d", i),

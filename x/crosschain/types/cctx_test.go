@@ -90,7 +90,7 @@ func Test_NewCCTX(t *testing.T) {
 			Message:            message,
 			InboundHash:        inboundHash.String(),
 			InboundBlockHeight: inboundBlockHeight,
-			CallOptions: types.CallOptions{
+			CallOptions: &types.CallOptions{
 				GasLimit: gasLimit,
 			},
 			CoinType:                cointType,
@@ -145,7 +145,7 @@ func Test_NewCCTX(t *testing.T) {
 			Message:            message,
 			InboundHash:        inboundHash.String(),
 			InboundBlockHeight: inboundBlockHeight,
-			CallOptions: types.CallOptions{
+			CallOptions: &types.CallOptions{
 				GasLimit: gasLimit,
 			},
 			CoinType:   cointType,

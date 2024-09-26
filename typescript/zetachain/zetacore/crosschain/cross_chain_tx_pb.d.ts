@@ -266,9 +266,11 @@ export declare class OutboundParams extends Message<OutboundParams> {
   tssNonce: bigint;
 
   /**
-   * @generated from field: zetachain.zetacore.crosschain.CallOptions call_options = 6;
+   * Deprecated (v21), use CallOptions
+   *
+   * @generated from field: uint64 gas_limit = 6;
    */
-  callOptions?: CallOptions;
+  gasLimit: bigint;
 
   /**
    * @generated from field: string gas_price = 7;
@@ -322,6 +324,11 @@ export declare class OutboundParams extends Message<OutboundParams> {
    * @generated from field: zetachain.zetacore.crosschain.TxFinalizationStatus tx_finalization_status = 12;
    */
   txFinalizationStatus: TxFinalizationStatus;
+
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.CallOptions call_options = 24;
+   */
+  callOptions?: CallOptions;
 
   constructor(data?: PartialMessage<OutboundParams>);
 

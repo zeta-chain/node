@@ -43,7 +43,16 @@ func (m CrossChainTx) GetCurrentOutboundParam() *OutboundParams {
 	if len(m.OutboundParams) == 0 {
 		return &OutboundParams{}
 	}
-	return m.OutboundParams[len(m.OutboundParams)-1]
+
+	// TODO: Deprecated (V21) gasLimit should be removed and CallOptions should be mandatory
+	// this should never happen, but since it is optional, adding it just in case
+	outboundParams := m.OutboundParams[len(m.OutboundParams)-1]
+	if outboundParams.CallOptions == nil {
+		outboundParams.CallOptions = &CallOptions{
+			GasLimit: outboundParams.GasLimit,
+		}
+	}
+	return outboundParams
 }
 
 // IsCurrentOutboundRevert returns true if the current outbound is the revert tx.
@@ -120,7 +129,7 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 		Receiver:        revertReceiver,
 		ReceiverChainId: m.InboundParams.SenderChainId,
 		Amount:          m.GetCurrentOutboundParam().Amount,
-		CallOptions: CallOptions{
+		CallOptions: &CallOptions{
 			GasLimit: gasLimit,
 		},
 		TssPubkey: m.GetCurrentOutboundParam().TssPubkey,
@@ -235,7 +244,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		ReceiverChainId: msg.ReceiverChain,
 		Hash:            "",
 		TssNonce:        0,
-		CallOptions: CallOptions{
+		CallOptions: &CallOptions{
 			IsArbitraryCall: msg.CallOptions.IsArbitraryCall,
 			GasLimit:        msg.CallOptions.GasLimit,
 		},

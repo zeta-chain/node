@@ -28,7 +28,7 @@ var chain_1_cctx_inbound_Gas_0xeaec67d = &crosschaintypes.CrossChainTx{
 		Amount:                 sdkmath.NewUintFromString("4000000000000000"),
 		ObservedHash:           "0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532",
 		ObservedExternalHeight: 19330473,
-		BallotIndex:            "0xb68c75e560539bcd78a9a89ae85d12b083625c7c3942ed9675e537e0865b1726",
+		BallotIndex:            "0xdb5daf6a8471bc5a8f17c7e717dc6532719a89f082bd80694aebd654b7069609",
 		FinalizedZetaHeight:    1965579,
 		TxFinalizationStatus:   crosschaintypes.TxFinalizationStatus_Executed,
 	},
@@ -39,7 +39,7 @@ var chain_1_cctx_inbound_Gas_0xeaec67d = &crosschaintypes.CrossChainTx{
 			CoinType:        coin.CoinType_Gas,
 			Amount:          sdkmath.NewUint(0),
 			TssNonce:        0,
-			CallOptions: crosschaintypes.CallOptions{
+			CallOptions: &crosschaintypes.CallOptions{
 				GasLimit: 90000,
 			},
 			GasPrice:               "",
