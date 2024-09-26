@@ -40,10 +40,4 @@ const (
 
 	// OptionUnpause is the argument used in CmdUpdateERC20CustodyPauseStatus to unpause the ERC20 custody contract
 	OptionUnpause = "unpause"
-
-	// InitChainErrorMessage is the error message displayed when trying to sync testnet or mainnet from block 1
-	InitChainErrorMessage = "You cannot sync testnet or mainnet from block 1 using the latest version. " +
-		"You should sync your node from a snapshot. " +
-		"Refer to the documentation for more information: " +
-		"https://www.zetachain.com/docs/nodes/start-here/syncing/"
 )
