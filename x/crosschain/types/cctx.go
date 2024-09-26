@@ -40,12 +40,12 @@ func (m CrossChainTx) GetEVMAbortAddress() ethcommon.Address {
 // OutboundParams[0] is the original outbound, if it reverts, then
 // OutboundParams[1] is the new outbound.
 func (m CrossChainTx) GetCurrentOutboundParam() *OutboundParams {
-	if len(m.OutboundParams) == 0 {
-		return &OutboundParams{}
-	}
-
 	// TODO: Deprecated (V21) gasLimit should be removed and CallOptions should be mandatory
 	// this should never happen, but since it is optional, adding it just in case
+	if len(m.OutboundParams) == 0 {
+		return &OutboundParams{CallOptions: &CallOptions{}}
+	}
+
 	outboundParams := m.OutboundParams[len(m.OutboundParams)-1]
 	if outboundParams.CallOptions == nil {
 		outboundParams.CallOptions = &CallOptions{
