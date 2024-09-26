@@ -313,7 +313,7 @@ services:
       - ssh:/root/.ssh
 
   grafana:
-    image: grafana/grafana:11.2.0
+    image: ghcr.io/zeta-chain/grafana-grafana:11.2.0
     container_name: grafana
     hostname: grafana
     profiles:
@@ -333,7 +333,7 @@ services:
       - prometheus
 
   prometheus:
-    image: prom/prometheus:v2.53.1
+    image: ghcr.io/zeta-chain/prom-prometheus:v2.53.1
     container_name: prometheus
     hostname: prometheus
     profiles:
@@ -377,7 +377,7 @@ services:
 
   loki:
     container_name: loki
-    image: grafana/loki:3.1.0
+    image: ghcr.io/zeta-chain/grafana-loki:3.1.0
     hostname: loki
     profiles:
       - monitoring
@@ -389,7 +389,7 @@ services:
 
   promtail:
     container_name: promtail
-    image: grafana/promtail:2.9.9
+    image: ghcr.io/zeta-chain/grafana-promtail:2.9.9
     hostname: promtail
     profiles:
       - monitoring
@@ -401,6 +401,24 @@ services:
       - ./promtail/config.yaml:/etc/promtail/config.yaml:ro
       - /var/run/docker.sock:/var/run/docker.sock
     command: -config.file=/etc/promtail/config.yaml
+
+  grafana-cloudflared:
+    container_name: grafana-cloudflared
+    image: ghcr.io/zeta-chain/cloudflare-cloudflared:2024.9.1
+    hostname: grafana-cloudflared
+    profiles:
+      - monitoring-cloudflared
+      - all
+    command:
+      - tunnel
+      - --no-autoupdate
+      - --url
+      - http://grafana:3000
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.35
+    depends_on:
+      - grafana
 
 volumes:
   ssh:
