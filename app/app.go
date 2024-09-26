@@ -877,6 +877,10 @@ func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 
 // InitChainer application update at chain initialization
 func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+	// The defer is used to catch panics during InitChain
+	//and display a more meaningful message for people trying to sync a node from block 1 using the latest binary.
+	// We exit the process after displaying the message as we do not need to start a node with empty state.
+
 	defer func() {
 		if r := recover(); r != nil {
 			ctx.Logger().Error("panic occurred during InitGenesis", "error", r)
