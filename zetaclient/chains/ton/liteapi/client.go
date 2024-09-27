@@ -13,7 +13,7 @@ import (
 	"github.com/tonkeeper/tongo/ton"
 )
 
-// Client extends tongo's liteapi.Client with some high-level tools
+// Client extends liteapi.Client with some high-level tools
 // Reference: https://github.com/ton-blockchain/ton/blob/master/tl/generate/scheme/tonlib_api.tl
 type Client struct {
 	*liteapi.Client

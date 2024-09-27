@@ -4,24 +4,44 @@ import (
 	"context"
 	"errors"
 
+	"github.com/tonkeeper/tongo/tlb"
+	"github.com/tonkeeper/tongo/ton"
+
 	"github.com/zeta-chain/node/pkg/bg"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
 )
 
 type Observer struct {
 	base.Observer
 
-	client  *liteapi.Client
+	client  LiteClient
 	gateway *toncontracts.Gateway
+}
+
+// LiteClient represents a TON client
+//
+//go:generate mockery --name LiteClient --filename ton_liteclient.go --case underscore --output ../../../testutils/mocks
+type LiteClient interface {
+	GetBlockHeader(ctx context.Context, acc ton.BlockIDExt, mode int) (tlb.BlockInfo, error)
+	GetTransactionsUntil(ctx context.Context, acc ton.AccountID, lt uint64, bits ton.Bits256) ([]ton.Transaction, error)
+	GetFirstTransaction(ctx context.Context, id ton.AccountID) (*ton.Transaction, int, error)
 }
 
 var _ interfaces.ChainObserver = (*Observer)(nil)
 
-func New(bo *base.Observer, client *liteapi.Client, gateway *toncontracts.Gateway) (*Observer, error) {
+func New(bo *base.Observer, client LiteClient, gateway *toncontracts.Gateway) (*Observer, error) {
+	switch {
+	case !bo.Chain().IsTONChain():
+		return nil, errors.New("base observer chain is not TON")
+	case client == nil:
+		return nil, errors.New("liteapi client is nil")
+	case gateway == nil:
+		return nil, errors.New("gateway is nil")
+	}
+
 	bo.LoadLastTxScanned()
 
 	return &Observer{

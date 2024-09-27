@@ -19,7 +19,7 @@ import (
 
 func TestClient(t *testing.T) {
 	if !common.LiveTestEnabled() {
-		//t.Skip("Live tests are disabled")
+		t.Skip("Live tests are disabled")
 	}
 
 	var (

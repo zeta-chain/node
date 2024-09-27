@@ -43,7 +43,7 @@ func (ob *Observer) watchInbound(ctx context.Context) error {
 			return nil
 		}
 
-		if err := ob.observeInbound(ctx, app); err != nil {
+		if err := ob.observeInbound(ctx); err != nil {
 			ob.Logger().Inbound.Err(err).Msg("WatchInbound: observeInbound error")
 		}
 
@@ -62,7 +62,7 @@ func (ob *Observer) watchInbound(ctx context.Context) error {
 	)
 }
 
-func (ob *Observer) observeInbound(ctx context.Context, _ *zctx.AppContext) error {
+func (ob *Observer) observeInbound(ctx context.Context) error {
 	if err := ob.ensureLastScannedTX(ctx); err != nil {
 		return errors.Wrap(err, "unable to ensure last scanned tx")
 	}
