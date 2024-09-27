@@ -43,5 +43,9 @@ func errSuffix(msgAndArgs ...any) string {
 
 	template := "; " + msgAndArgs[0].(string)
 
+	if len(msgAndArgs) == 1 {
+		return template
+	}
+
 	return fmt.Sprintf(template, msgAndArgs[1:])
 }

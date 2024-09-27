@@ -126,12 +126,14 @@ func TestKeeper_VoteInbound(t *testing.T) {
 			Amount:             sdkmath.NewUintFromString("10000000"),
 			Message:            "",
 			InboundBlockHeight: 1,
-			GasLimit:           1000000000,
-			InboundHash:        "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
-			CoinType:           0, // zeta
-			TxOrigin:           "0x954598965C2aCdA2885B037561526260764095B8",
-			Asset:              "",
-			EventIndex:         1,
+			CallOptions: &types.CallOptions{
+				GasLimit: 1000000000,
+			},
+			InboundHash: "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
+			CoinType:    0, // zeta
+			TxOrigin:    "0x954598965C2aCdA2885B037561526260764095B8",
+			Asset:       "",
+			EventIndex:  1,
 		}
 		_, err := msgServer.VoteInbound(
 			ctx,
@@ -153,12 +155,14 @@ func TestKeeper_VoteInbound(t *testing.T) {
 			Amount:             sdkmath.NewUintFromString("10000000"),
 			Message:            "",
 			InboundBlockHeight: 1,
-			GasLimit:           1000000001, // <---- Change here
-			InboundHash:        "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
-			CoinType:           0,
-			TxOrigin:           "0x954598965C2aCdA2885B037561526260764095B8",
-			Asset:              "",
-			EventIndex:         1,
+			CallOptions: &types.CallOptions{
+				GasLimit: 1000000001, // <---- Change here
+			},
+			InboundHash: "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
+			CoinType:    0,
+			TxOrigin:    "0x954598965C2aCdA2885B037561526260764095B8",
+			Asset:       "",
+			EventIndex:  1,
 		}
 
 		_, err = msgServer.VoteInbound(

@@ -26,8 +26,7 @@ import (
 func (k Keeper) ProcessZEVMInboundV2(
 	ctx sdk.Context,
 	log *ethtypes.Log,
-	gatewayAddr,
-	from ethcommon.Address,
+	gatewayAddr ethcommon.Address,
 	txOrigin string,
 ) error {
 	// try to parse a withdrawal event from the log
@@ -68,12 +67,12 @@ func (k Keeper) ProcessZEVMInboundV2(
 
 		// create inbound object depending on the event type
 		if withdrawalEvent != nil {
-			inbound, err = k.newWithdrawalInbound(ctx, from, txOrigin, foreignCoin, withdrawalEvent)
+			inbound, err = k.newWithdrawalInbound(ctx, txOrigin, foreignCoin, withdrawalEvent)
 			if err != nil {
 				return err
 			}
 		} else {
-			inbound, err = k.newCallInbound(ctx, from, txOrigin, foreignCoin, gatewayEvent)
+			inbound, err = k.newCallInbound(ctx, txOrigin, foreignCoin, gatewayEvent)
 			if err != nil {
 				return err
 			}
@@ -159,7 +158,6 @@ func (k Keeper) parseGatewayCallEvent(
 // https://github.com/zeta-chain/node/issues/2658
 func (k Keeper) newWithdrawalInbound(
 	ctx sdk.Context,
-	from ethcommon.Address,
 	txOrigin string,
 	foreignCoin fungibletypes.ForeignCoins,
 	event *gatewayzevm.GatewayZEVMWithdrawn,
@@ -183,7 +181,7 @@ func (k Keeper) newWithdrawalInbound(
 		return nil, errors.Wrapf(err, "cannot encode address %v", event.Receiver)
 	}
 
-	gasLimit := event.GasLimit.Uint64()
+	gasLimit := event.CallOptions.GasLimit.Uint64()
 	if gasLimit == 0 {
 		gasLimitQueried, err := k.fungibleKeeper.QueryGasLimit(
 			ctx,
@@ -197,7 +195,7 @@ func (k Keeper) newWithdrawalInbound(
 
 	return types.NewMsgVoteInbound(
 		"",
-		from.Hex(),
+		event.Sender.Hex(),
 		senderChain.ChainId,
 		txOrigin,
 		toAddr,
@@ -211,6 +209,7 @@ func (k Keeper) newWithdrawalInbound(
 		foreignCoin.Asset,
 		event.Raw.Index,
 		types.ProtocolContractVersion_V2,
+		event.CallOptions.IsArbitraryCall,
 		types.WithZEVMRevertOptions(event.RevertOptions),
 	), nil
 }
@@ -221,7 +220,6 @@ func (k Keeper) newWithdrawalInbound(
 // https://github.com/zeta-chain/node/issues/2658
 func (k Keeper) newCallInbound(
 	ctx sdk.Context,
-	from ethcommon.Address,
 	txOrigin string,
 	foreignCoin fungibletypes.ForeignCoins,
 	event *gatewayzevm.GatewayZEVMCalled,
@@ -245,7 +243,7 @@ func (k Keeper) newCallInbound(
 		return nil, errors.Wrapf(err, "cannot encode address %v", event.Receiver)
 	}
 
-	gasLimit := event.GasLimit.Uint64()
+	gasLimit := event.CallOptions.GasLimit.Uint64()
 	if gasLimit == 0 {
 		gasLimitQueried, err := k.fungibleKeeper.QueryGasLimit(
 			ctx,
@@ -259,7 +257,7 @@ func (k Keeper) newCallInbound(
 
 	return types.NewMsgVoteInbound(
 		"",
-		from.Hex(),
+		event.Sender.Hex(),
 		senderChain.ChainId,
 		txOrigin,
 		toAddr,
@@ -273,6 +271,7 @@ func (k Keeper) newCallInbound(
 		"",
 		event.Raw.Index,
 		types.ProtocolContractVersion_V2,
+		event.CallOptions.IsArbitraryCall,
 		types.WithZEVMRevertOptions(event.RevertOptions),
 	), nil
 }

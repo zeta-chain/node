@@ -19,6 +19,10 @@ on:
         required: true
         type: string
         default: 'ubuntu-20.04'
+      enable-monitoring:
+        description: 'Enable the monitoring stack for this run'
+        type: boolean
+        default: false
 
 jobs:
   e2e:
@@ -80,8 +84,18 @@ jobs:
           cache-to: ${{ github.event_name == 'push' && env.CACHE_TO_CONFIG || '' }}
           target: latest-runtime
 
+      - name: Enable monitoring
+        if: inputs.enable-monitoring
+        run: |
+          echo "NODE_COMPOSE_ARGS=${NODE_COMPOSE_ARGS:-} --profile monitoring --profile monitoring-cloudflared" >> $GITHUB_ENV
+      
       - name: Start Test
         run: make ${{ inputs.make-target }}
+
+      - name: Get grafana URL
+        if: inputs.enable-monitoring
+        run: |
+          docker logs grafana-cloudflared 2>&1 | grep -oP 'https?://\S+\.trycloudflare\.com'
 
       # use docker logs -f rather than docker attach to make sure we get the initial logs
       - name: Watch Test

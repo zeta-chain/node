@@ -30,11 +30,13 @@ var chain_1337_cctx_14 = &crosschaintypes.CrossChainTx{
 	},
 	OutboundParams: []*crosschaintypes.OutboundParams{
 		{
-			Receiver:               "0xbff76e77d56b3c1202107f059425d56f0aef87ed",
-			ReceiverChainId:        1337,
-			Amount:                 sdkmath.NewUintFromString("7999999999995486459"),
-			TssNonce:               13,
-			GasLimit:               250000,
+			Receiver:        "0xbff76e77d56b3c1202107f059425d56f0aef87ed",
+			ReceiverChainId: 1337,
+			Amount:          sdkmath.NewUintFromString("7999999999995486459"),
+			TssNonce:        13,
+			CallOptions: &crosschaintypes.CallOptions{
+				GasLimit: 250000,
+			},
 			GasPrice:               "18",
 			Hash:                   "0x19f99459da6cb08f917f9b0ee2dac94a7be328371dff788ad46e64a24e8c06c9",
 			ObservedExternalHeight: 187,
@@ -45,11 +47,13 @@ var chain_1337_cctx_14 = &crosschaintypes.CrossChainTx{
 			TxFinalizationStatus:   crosschaintypes.TxFinalizationStatus_Executed,
 		},
 		{
-			Receiver:               "0xBFF76e77D56B3C1202107f059425D56f0AEF87Ed",
-			ReceiverChainId:        1337,
-			Amount:                 sdkmath.NewUintFromString("5999999999990972918"),
-			TssNonce:               14,
-			GasLimit:               250000,
+			Receiver:        "0xBFF76e77D56B3C1202107f059425D56f0AEF87Ed",
+			ReceiverChainId: 1337,
+			Amount:          sdkmath.NewUintFromString("5999999999990972918"),
+			TssNonce:        14,
+			CallOptions: &crosschaintypes.CallOptions{
+				GasLimit: 250000,
+			},
 			GasPrice:               "18",
 			Hash:                   "0x1487e6a31dd430306667250b72bf15b8390b73108b69f3de5c1b2efe456036a7",
 			BallotIndex:            "0xc36c689fdaf09a9b80a614420cd4fea4fec15044790df60080cdefca0090a9dc",
