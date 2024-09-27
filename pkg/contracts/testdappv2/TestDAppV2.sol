@@ -116,16 +116,5 @@ contract TestDAppV2 {
         senderWithMessage[message] = messageContext.sender;
     }
 
-    function setExpectedOnCallSender(address _expectedOnCallSender) external {
-        expectedOnCallSender = _expectedOnCallSender;
-    }
-
-    function onCall(MessageContext calldata messageContext, bytes calldata message) external payable returns (bytes memory) {
-        require(messageContext.sender == expectedOnCallSender, "unauthenticated sender");
-        setCalledWithMessage(string(message));
-        setAmountWithMessage(string(message), msg.value);
-        senderWithMessage[message] = messageContext.sender;
-    }
-
     receive() external payable {}
 }
