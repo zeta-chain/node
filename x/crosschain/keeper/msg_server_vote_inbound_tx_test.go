@@ -126,7 +126,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 			Amount:             sdkmath.NewUintFromString("10000000"),
 			Message:            "",
 			InboundBlockHeight: 1,
-			CallOptions: types.CallOptions{
+			CallOptions: &types.CallOptions{
 				GasLimit: 1000000000,
 			},
 			InboundHash: "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
@@ -155,7 +155,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 			Amount:             sdkmath.NewUintFromString("10000000"),
 			Message:            "",
 			InboundBlockHeight: 1,
-			CallOptions: types.CallOptions{
+			CallOptions: &types.CallOptions{
 				GasLimit: 1000000001, // <---- Change here
 			},
 			InboundHash: "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",

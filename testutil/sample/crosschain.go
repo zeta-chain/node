@@ -153,7 +153,7 @@ func OutboundParams(r *rand.Rand) *types.OutboundParams {
 		CoinType:        coin.CoinType(r.Intn(100)),
 		Amount:          math.NewUint(uint64(r.Int63())),
 		TssNonce:        r.Uint64(),
-		CallOptions: types.CallOptions{
+		CallOptions: &types.CallOptions{
 			GasLimit: r.Uint64(),
 		},
 		GasPrice:               math.NewUint(uint64(r.Int63())).String(),
@@ -171,7 +171,7 @@ func OutboundParamsValidChainID(r *rand.Rand) *types.OutboundParams {
 		ReceiverChainId: chains.Goerli.ChainId,
 		Amount:          math.NewUint(uint64(r.Int63())),
 		TssNonce:        r.Uint64(),
-		CallOptions: types.CallOptions{
+		CallOptions: &types.CallOptions{
 			GasLimit: r.Uint64(),
 		},
 		GasPrice:               math.NewUint(uint64(r.Int63())).String(),
@@ -283,7 +283,7 @@ func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteInbound {
 		Amount:             UintInRange(10000000, 1000000000),
 		Message:            base64.StdEncoding.EncodeToString(Bytes()),
 		InboundBlockHeight: Uint64InRange(1, 10000),
-		CallOptions: types.CallOptions{
+		CallOptions: &types.CallOptions{
 			GasLimit: 1000000000,
 		},
 		InboundHash: Hash().String(),

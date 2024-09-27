@@ -56986,7 +56986,6 @@ definitions:
       - solana_mainnet
       - solana_devnet
       - solana_localnet
-      - btc_signet_testnet
     default: empty
     title: |-
       ChainName represents the name of the chain
@@ -57282,8 +57281,10 @@ definitions:
       tss_nonce:
         type: string
         format: uint64
-      call_options:
-        $ref: '#/definitions/crosschainCallOptions'
+      gas_limit:
+        type: string
+        format: uint64
+        title: Deprecated (v21), use CallOptions
       gas_price:
         type: string
       gas_priority_fee:
@@ -57310,6 +57311,8 @@ definitions:
         type: string
       tx_finalization_status:
         $ref: '#/definitions/crosschainTxFinalizationStatus'
+      call_options:
+        $ref: '#/definitions/crosschainCallOptions'
   crosschainOutboundTracker:
     type: object
     properties:

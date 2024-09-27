@@ -68,7 +68,8 @@ message OutboundParams {
     (gogoproto.nullable) = false
   ];
   uint64 tss_nonce = 5;
-  CallOptions call_options = 6 [ (gogoproto.nullable) = false ];
+  // Deprecated (v21), use CallOptions
+  uint64 gas_limit = 6;
   string gas_price = 7;
   string gas_priority_fee = 23;
   // the above are commands for zetaclients
@@ -84,6 +85,8 @@ message OutboundParams {
   uint64 effective_gas_limit = 22;
   string tss_pubkey = 11;
   TxFinalizationStatus tx_finalization_status = 12;
+
+  CallOptions call_options = 24;
 
   // not used. do not edit.
   reserved 13 to 19;

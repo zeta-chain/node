@@ -330,7 +330,7 @@ func TestMsgVoteInbound_Digest(t *testing.T) {
 		Message:            sample.String(),
 		InboundHash:        sample.String(),
 		InboundBlockHeight: 42,
-		CallOptions: types.CallOptions{
+		CallOptions: &types.CallOptions{
 			GasLimit: 42,
 		},
 		CoinType:                coin.CoinType_Zeta,

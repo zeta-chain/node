@@ -182,13 +182,14 @@ message MsgVoteInbound {
 	string message = 8;
 	string inbound_hash = 9;
 	uint64 inbound_block_height = 10;
-	CallOptions call_options = 11;
+	uint64 gas_limit = 11;
 	pkg.coin.CoinType coin_type = 12;
 	string tx_origin = 13;
 	string asset = 14;
 	uint64 event_index = 15;
 	ProtocolContractVersion protocol_contract_version = 16;
 	RevertOptions revert_options = 17;
+	CallOptions call_options = 18;
 }
 ```
 

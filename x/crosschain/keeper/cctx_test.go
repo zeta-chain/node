@@ -37,7 +37,7 @@ func createNCctxWithStatus(
 		}
 		items[i].ZetaFees = math.OneUint()
 		items[i].InboundParams = &types.InboundParams{ObservedHash: fmt.Sprintf("%d", i), Amount: math.OneUint()}
-		items[i].OutboundParams = []*types.OutboundParams{{Amount: math.ZeroUint()}}
+		items[i].OutboundParams = []*types.OutboundParams{{Amount: math.ZeroUint(), CallOptions: &types.CallOptions{}}}
 		items[i].RevertOptions = types.NewEmptyRevertOptions()
 
 		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, items[i], tssPubkey)
@@ -65,7 +65,7 @@ func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int, tssPubkey string
 			ReceiverChainId: int64(i),
 			Hash:            fmt.Sprintf("%d", i),
 			TssNonce:        uint64(i),
-			CallOptions: types.CallOptions{
+			CallOptions: &types.CallOptions{
 				GasLimit: uint64(i),
 			},
 			GasPrice:               fmt.Sprintf("%d", i),

@@ -616,9 +616,11 @@ export declare class MsgVoteInbound extends Message<MsgVoteInbound> {
   inboundBlockHeight: bigint;
 
   /**
-   * @generated from field: zetachain.zetacore.crosschain.CallOptions call_options = 11;
+   * Deprecated (v21), use CallOptions
+   *
+   * @generated from field: uint64 gas_limit = 11;
    */
-  callOptions?: CallOptions;
+  gasLimit: bigint;
 
   /**
    * @generated from field: zetachain.zetacore.pkg.coin.CoinType coin_type = 12;
@@ -655,6 +657,11 @@ export declare class MsgVoteInbound extends Message<MsgVoteInbound> {
    * @generated from field: zetachain.zetacore.crosschain.RevertOptions revert_options = 17;
    */
   revertOptions?: RevertOptions;
+
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.CallOptions call_options = 18;
+   */
+  callOptions?: CallOptions;
 
   constructor(data?: PartialMessage<MsgVoteInbound>);
 

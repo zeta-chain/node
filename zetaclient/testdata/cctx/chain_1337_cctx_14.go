@@ -34,7 +34,7 @@ var chain_1337_cctx_14 = &crosschaintypes.CrossChainTx{
 			ReceiverChainId: 1337,
 			Amount:          sdkmath.NewUintFromString("7999999999995486459"),
 			TssNonce:        13,
-			CallOptions: crosschaintypes.CallOptions{
+			CallOptions: &crosschaintypes.CallOptions{
 				GasLimit: 250000,
 			},
 			GasPrice:               "18",
@@ -51,7 +51,7 @@ var chain_1337_cctx_14 = &crosschaintypes.CrossChainTx{
 			ReceiverChainId: 1337,
 			Amount:          sdkmath.NewUintFromString("5999999999990972918"),
 			TssNonce:        14,
-			CallOptions: crosschaintypes.CallOptions{
+			CallOptions: &crosschaintypes.CallOptions{
 				GasLimit: 250000,
 			},
 			GasPrice:               "18",
