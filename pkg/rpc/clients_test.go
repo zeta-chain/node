@@ -12,7 +12,6 @@ import (
 	tmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/require"
@@ -27,7 +26,6 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 )
 
 const skipMethod = "skip"
@@ -686,44 +684,6 @@ func TestZetacore_GetOutboundTracker(t *testing.T) {
 	resp, err := client.GetOutboundTracker(ctx, chain, 456)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.OutboundTracker, *resp)
-}
-
-func TestZetacore_GetAllOutboundTrackerByChain(t *testing.T) {
-	ctx := context.Background()
-
-	chain := chains.BscMainnet
-	expectedOutput := crosschaintypes.QueryAllOutboundTrackerByChainResponse{
-		OutboundTracker: []crosschaintypes.OutboundTracker{
-			{
-				Index:    "tracker23456",
-				ChainId:  chain.ChainId,
-				Nonce:    123456,
-				HashList: nil,
-			},
-		},
-	}
-	input := crosschaintypes.QueryAllOutboundTrackerByChainRequest{
-		Chain: chain.ChainId,
-		Pagination: &query.PageRequest{
-			Key:        nil,
-			Offset:     0,
-			Limit:      2000,
-			CountTotal: false,
-			Reverse:    false,
-		},
-	}
-	method := "/zetachain.zetacore.crosschain.Query/OutboundTrackerAllByChain"
-	setupMockServer(t, crosschaintypes.RegisterQueryServer, method, input, expectedOutput)
-
-	client := setupZetacoreClients(t)
-
-	resp, err := client.GetAllOutboundTrackerByChain(ctx, chain.ChainId, interfaces.Ascending)
-	require.NoError(t, err)
-	require.Equal(t, expectedOutput.OutboundTracker, resp)
-
-	resp, err = client.GetAllOutboundTrackerByChain(ctx, chain.ChainId, interfaces.Descending)
-	require.NoError(t, err)
-	require.Equal(t, expectedOutput.OutboundTracker, resp)
 }
 
 func TestZetacore_GetPendingNoncesByChain(t *testing.T) {
