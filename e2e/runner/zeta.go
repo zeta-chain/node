@@ -9,6 +9,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zetaconnectorzevm.sol"
 
@@ -31,6 +32,28 @@ func (r *E2ERunner) WaitForBlocks(n int64) {
 	err = retry.DoWithBackoff(call, boWithMaxRetries)
 	require.NoError(r, err, "failed to wait for %d blocks", n)
 }
+
+func (r *E2ERunner) WaitForTssGeneration(n int64) {
+	call := func() error {
+		return retry.Retry(r.waitForTssGeneration(n))
+	}
+	bo := backoff.NewConstantBackOff(time.Second * 5)
+	boWithMaxRetries := backoff.WithMaxRetries(bo, 10)
+	err := retry.DoWithBackoff(call, boWithMaxRetries)
+	require.NoError(r, err, "failed to wait for %d tss generation", n)
+}
+
+func (r *E2ERunner) waitForTssGeneration(n int64) error {
+	tssList, err := r.ObserverClient.TssHistory(r.Ctx, &observertypes.QueryTssHistoryRequest{})
+	if err != nil {
+		return err
+	}
+	if int64(len(tssList.TssList)) < n {
+		return fmt.Errorf("waiting for %d tss generation, number of TSS :%d", n, len(tssList.TssList))
+	}
+	return nil
+}
+
 func (r *E2ERunner) waitForBlock(n int64) error {
 	height, err := r.CctxClient.LastZetaHeight(r.Ctx, &types.QueryLastZetaHeightRequest{})
 	if err != nil {
