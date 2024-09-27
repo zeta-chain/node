@@ -191,6 +191,7 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited)
 		event.Asset.Hex(),
 		event.Raw.Index,
 		types.ProtocolContractVersion_V2,
+		false, // currently not relevant since calls are not arbitrary
 		types.WithEVMRevertOptions(event.RevertOptions),
 	)
 }
@@ -325,6 +326,7 @@ func (ob *Observer) newCallInboundVote(event *gatewayevm.GatewayEVMCalled) types
 		"",
 		event.Raw.Index,
 		types.ProtocolContractVersion_V2,
+		false, // currently not relevant since calls are not arbitrary
 		types.WithEVMRevertOptions(event.RevertOptions),
 	)
 }

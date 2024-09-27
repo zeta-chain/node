@@ -148,12 +148,14 @@ func InboundParamsValidChainID(r *rand.Rand) *types.InboundParams {
 
 func OutboundParams(r *rand.Rand) *types.OutboundParams {
 	return &types.OutboundParams{
-		Receiver:               EthAddress().String(),
-		ReceiverChainId:        r.Int63(),
-		CoinType:               coin.CoinType(r.Intn(100)),
-		Amount:                 math.NewUint(uint64(r.Int63())),
-		TssNonce:               r.Uint64(),
-		GasLimit:               r.Uint64(),
+		Receiver:        EthAddress().String(),
+		ReceiverChainId: r.Int63(),
+		CoinType:        coin.CoinType(r.Intn(100)),
+		Amount:          math.NewUint(uint64(r.Int63())),
+		TssNonce:        r.Uint64(),
+		CallOptions: &types.CallOptions{
+			GasLimit: r.Uint64(),
+		},
 		GasPrice:               math.NewUint(uint64(r.Int63())).String(),
 		Hash:                   StringRandom(r, 32),
 		BallotIndex:            StringRandom(r, 32),
@@ -165,11 +167,13 @@ func OutboundParams(r *rand.Rand) *types.OutboundParams {
 
 func OutboundParamsValidChainID(r *rand.Rand) *types.OutboundParams {
 	return &types.OutboundParams{
-		Receiver:               EthAddress().String(),
-		ReceiverChainId:        chains.Goerli.ChainId,
-		Amount:                 math.NewUint(uint64(r.Int63())),
-		TssNonce:               r.Uint64(),
-		GasLimit:               r.Uint64(),
+		Receiver:        EthAddress().String(),
+		ReceiverChainId: chains.Goerli.ChainId,
+		Amount:          math.NewUint(uint64(r.Int63())),
+		TssNonce:        r.Uint64(),
+		CallOptions: &types.CallOptions{
+			GasLimit: r.Uint64(),
+		},
 		GasPrice:               math.NewUint(uint64(r.Int63())).String(),
 		Hash:                   StringRandom(r, 32),
 		BallotIndex:            StringRandom(r, 32),
@@ -279,12 +283,14 @@ func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteInbound {
 		Amount:             UintInRange(10000000, 1000000000),
 		Message:            base64.StdEncoding.EncodeToString(Bytes()),
 		InboundBlockHeight: Uint64InRange(1, 10000),
-		GasLimit:           1000000000,
-		InboundHash:        Hash().String(),
-		CoinType:           coinType,
-		TxOrigin:           EthAddress().String(),
-		Asset:              "",
-		EventIndex:         EventIndex(),
+		CallOptions: &types.CallOptions{
+			GasLimit: 1000000000,
+		},
+		InboundHash: Hash().String(),
+		CoinType:    coinType,
+		TxOrigin:    EthAddress().String(),
+		Asset:       "",
+		EventIndex:  EventIndex(),
 	}
 }
 

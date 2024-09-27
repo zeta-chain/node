@@ -40,10 +40,19 @@ func (m CrossChainTx) GetEVMAbortAddress() ethcommon.Address {
 // OutboundParams[0] is the original outbound, if it reverts, then
 // OutboundParams[1] is the new outbound.
 func (m CrossChainTx) GetCurrentOutboundParam() *OutboundParams {
+	// TODO: Deprecated (V21) gasLimit should be removed and CallOptions should be mandatory
+	// this should never happen, but since it is optional, adding it just in case
 	if len(m.OutboundParams) == 0 {
-		return &OutboundParams{}
+		return &OutboundParams{CallOptions: &CallOptions{}}
 	}
-	return m.OutboundParams[len(m.OutboundParams)-1]
+
+	outboundParams := m.OutboundParams[len(m.OutboundParams)-1]
+	if outboundParams.CallOptions == nil {
+		outboundParams.CallOptions = &CallOptions{
+			GasLimit: outboundParams.GasLimit,
+		}
+	}
+	return outboundParams
 }
 
 // IsCurrentOutboundRevert returns true if the current outbound is the revert tx.
@@ -120,8 +129,10 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 		Receiver:        revertReceiver,
 		ReceiverChainId: m.InboundParams.SenderChainId,
 		Amount:          m.GetCurrentOutboundParam().Amount,
-		GasLimit:        gasLimit,
-		TssPubkey:       m.GetCurrentOutboundParam().TssPubkey,
+		CallOptions: &CallOptions{
+			GasLimit: gasLimit,
+		},
+		TssPubkey: m.GetCurrentOutboundParam().TssPubkey,
 	}
 	// The original outbound has been finalized, the new outbound is pending
 	m.GetCurrentOutboundParam().TxFinalizationStatus = TxFinalizationStatus_Executed
@@ -229,11 +240,14 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 	}
 
 	outboundParams := &OutboundParams{
-		Receiver:               msg.Receiver,
-		ReceiverChainId:        msg.ReceiverChain,
-		Hash:                   "",
-		TssNonce:               0,
-		GasLimit:               msg.GasLimit,
+		Receiver:        msg.Receiver,
+		ReceiverChainId: msg.ReceiverChain,
+		Hash:            "",
+		TssNonce:        0,
+		CallOptions: &CallOptions{
+			IsArbitraryCall: msg.CallOptions.IsArbitraryCall,
+			GasLimit:        msg.CallOptions.GasLimit,
+		},
 		GasPrice:               "",
 		GasPriorityFee:         "",
 		BallotIndex:            "",

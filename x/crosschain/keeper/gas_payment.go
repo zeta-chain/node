@@ -139,7 +139,7 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 
 	// update cctx
 	cctx.GetCurrentOutboundParam().Amount = newAmount
-	cctx.GetCurrentOutboundParam().GasLimit = gas.GasLimit.Uint64()
+	cctx.GetCurrentOutboundParam().CallOptions.GasLimit = gas.GasLimit.Uint64()
 	cctx.GetCurrentOutboundParam().GasPrice = gas.GasPrice.String()
 	cctx.GetCurrentOutboundParam().GasPriorityFee = gas.PriorityFee.String()
 
@@ -296,7 +296,7 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 
 	// update cctx
 	cctx.GetCurrentOutboundParam().Amount = newAmount
-	cctx.GetCurrentOutboundParam().GasLimit = gas.GasLimit.Uint64()
+	cctx.GetCurrentOutboundParam().CallOptions.GasLimit = gas.GasLimit.Uint64()
 	cctx.GetCurrentOutboundParam().GasPrice = gas.GasPrice.String()
 	cctx.GetCurrentOutboundParam().GasPriorityFee = gas.PriorityFee.String()
 
@@ -362,7 +362,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 	}
 
 	// get the gas fee in gas token
-	gasLimit := sdk.NewUint(cctx.GetCurrentOutboundParam().GasLimit)
+	gasLimit := sdk.NewUint(cctx.GetCurrentOutboundParam().CallOptions.GasLimit)
 	outTxGasFee := gasLimit.Mul(gasPrice)
 
 	// get the gas fee in Zeta using system uniswapv2 pool wzeta/gasZRC20 and adding the protocol fee

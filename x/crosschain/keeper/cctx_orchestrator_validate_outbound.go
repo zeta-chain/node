@@ -171,7 +171,7 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 		}
 		if gasLimit == 0 {
 			// use same gas limit of outbound as a fallback -- should not happen
-			gasLimit = cctx.OutboundParams[0].GasLimit
+			gasLimit = cctx.OutboundParams[0].CallOptions.GasLimit
 		}
 
 		// create new OutboundParams for the revert

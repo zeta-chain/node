@@ -53,9 +53,11 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 				{
 					ReceiverChainId: chains.ZetaChainPrivnet.ChainId,
 					CoinType:        coin.CoinType_Gas,
+					CallOptions:     &types.CallOptions{},
 				},
 				{
 					ReceiverChainId: chainID,
+					CallOptions:     &types.CallOptions{},
 				},
 			},
 		}
@@ -65,7 +67,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		err = k.PayGasNativeAndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount))
 		require.NoError(t, err)
 		require.Equal(t, uint64(9999999999957000), cctx.GetCurrentOutboundParam().Amount.Uint64())
-		require.Equal(t, uint64(21_000), cctx.GetCurrentOutboundParam().GasLimit)
+		require.Equal(t, uint64(21_000), cctx.GetCurrentOutboundParam().CallOptions.GasLimit)
 		require.Equal(t, "2", cctx.GetCurrentOutboundParam().GasPrice)
 	})
 
@@ -229,7 +231,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		err = k.PayGasInERC20AndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount), false)
 		require.NoError(t, err)
 		require.Equal(t, inputAmount-expectedInZRC20.Uint64(), cctx.GetCurrentOutboundParam().Amount.Uint64())
-		require.Equal(t, uint64(21_000), cctx.GetCurrentOutboundParam().GasLimit)
+		require.Equal(t, uint64(21_000), cctx.GetCurrentOutboundParam().CallOptions.GasLimit)
 		require.Equal(t, "2", cctx.GetCurrentOutboundParam().GasPrice)
 	})
 
@@ -476,7 +478,9 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 			OutboundParams: []*types.OutboundParams{
 				{
 					ReceiverChainId: chainID,
-					GasLimit:        1000,
+					CallOptions: &types.CallOptions{
+						GasLimit: 1000,
+					},
 				},
 			},
 			ZetaFees: math.NewUint(100),
@@ -512,7 +516,9 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 			OutboundParams: []*types.OutboundParams{
 				{
 					ReceiverChainId: chainID,
-					GasLimit:        1000,
+					CallOptions: &types.CallOptions{
+						GasLimit: 1000,
+					},
 				},
 			},
 		}
@@ -582,7 +588,9 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 			OutboundParams: []*types.OutboundParams{
 				{
 					ReceiverChainId: chainID,
-					GasLimit:        1000,
+					CallOptions: &types.CallOptions{
+						GasLimit: 1000,
+					},
 				},
 			},
 		}
@@ -616,7 +624,9 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 			OutboundParams: []*types.OutboundParams{
 				{
 					ReceiverChainId: chainID,
-					GasLimit:        1000,
+					CallOptions: &types.CallOptions{
+						GasLimit: 1000,
+					},
 				},
 			},
 			ZetaFees: math.NewUint(100),

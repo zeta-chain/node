@@ -81,16 +81,18 @@ func Test_NewCCTX(t *testing.T) {
 		cointType := coin.CoinType_ERC20
 		tss := sample.Tss()
 		msg := types.MsgVoteInbound{
-			Creator:                 creator,
-			Sender:                  sender.String(),
-			SenderChainId:           senderChain.ChainId,
-			Receiver:                receiver.String(),
-			ReceiverChain:           receiverChain.ChainId,
-			Amount:                  amount,
-			Message:                 message,
-			InboundHash:             inboundHash.String(),
-			InboundBlockHeight:      inboundBlockHeight,
-			GasLimit:                gasLimit,
+			Creator:            creator,
+			Sender:             sender.String(),
+			SenderChainId:      senderChain.ChainId,
+			Receiver:           receiver.String(),
+			ReceiverChain:      receiverChain.ChainId,
+			Amount:             amount,
+			Message:            message,
+			InboundHash:        inboundHash.String(),
+			InboundBlockHeight: inboundBlockHeight,
+			CallOptions: &types.CallOptions{
+				GasLimit: gasLimit,
+			},
 			CoinType:                cointType,
 			TxOrigin:                sender.String(),
 			Asset:                   asset,
@@ -107,7 +109,7 @@ func Test_NewCCTX(t *testing.T) {
 		require.Equal(t, message, cctx.RelayedMessage)
 		require.Equal(t, inboundHash.String(), cctx.GetInboundParams().ObservedHash)
 		require.Equal(t, inboundBlockHeight, cctx.GetInboundParams().ObservedExternalHeight)
-		require.Equal(t, gasLimit, cctx.GetCurrentOutboundParam().GasLimit)
+		require.Equal(t, gasLimit, cctx.GetCurrentOutboundParam().CallOptions.GasLimit)
 		require.Equal(t, asset, cctx.GetInboundParams().Asset)
 		require.Equal(t, cointType, cctx.InboundParams.CoinType)
 		require.Equal(t, uint64(0), cctx.GetCurrentOutboundParam().TssNonce)
@@ -143,11 +145,13 @@ func Test_NewCCTX(t *testing.T) {
 			Message:            message,
 			InboundHash:        inboundHash.String(),
 			InboundBlockHeight: inboundBlockHeight,
-			GasLimit:           gasLimit,
-			CoinType:           cointType,
-			TxOrigin:           sender.String(),
-			Asset:              asset,
-			EventIndex:         eventIndex,
+			CallOptions: &types.CallOptions{
+				GasLimit: gasLimit,
+			},
+			CoinType:   cointType,
+			TxOrigin:   sender.String(),
+			Asset:      asset,
+			EventIndex: eventIndex,
 		}
 		_, err := types.NewCCTX(ctx, msg, tss.TssPubkey)
 		require.ErrorContains(t, err, "sender cannot be empty")
@@ -184,7 +188,7 @@ func TestCrossChainTx_GetCurrentOutboundParam(t *testing.T) {
 	cctx := sample.CrossChainTx(t, "foo")
 
 	cctx.OutboundParams = []*types.OutboundParams{}
-	require.Equal(t, &types.OutboundParams{}, cctx.GetCurrentOutboundParam())
+	require.Equal(t, &types.OutboundParams{CallOptions: &types.CallOptions{}}, cctx.GetCurrentOutboundParam())
 
 	cctx.OutboundParams = []*types.OutboundParams{sample.OutboundParams(r)}
 	require.Equal(t, cctx.OutboundParams[0], cctx.GetCurrentOutboundParam())
@@ -291,7 +295,7 @@ func Test_SetRevertOutboundValues(t *testing.T) {
 		require.Equal(t, cctx.GetCurrentOutboundParam().Receiver, cctx.InboundParams.Sender)
 		require.Equal(t, cctx.GetCurrentOutboundParam().ReceiverChainId, cctx.InboundParams.SenderChainId)
 		require.Equal(t, cctx.GetCurrentOutboundParam().Amount, cctx.OutboundParams[0].Amount)
-		require.Equal(t, cctx.GetCurrentOutboundParam().GasLimit, uint64(100))
+		require.Equal(t, cctx.GetCurrentOutboundParam().CallOptions.GasLimit, uint64(100))
 		require.Equal(t, cctx.GetCurrentOutboundParam().TssPubkey, cctx.OutboundParams[0].TssPubkey)
 		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundParams[0].TxFinalizationStatus)
 	})
