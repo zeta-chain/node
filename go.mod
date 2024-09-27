@@ -59,7 +59,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/zeta-chain/ethermint v0.0.0-20240909234716-2fad916e7179
 	github.com/zeta-chain/keystone/keys v0.0.0-20240826165841-3874f358c138
-	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240819143729-b8229cd7b410
+	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240920151810-cabe34920d52
 	gitlab.com/thorchain/tss/go-tss v1.6.5
 	go.nhat.io/grpcmock v0.25.0
 	golang.org/x/crypto v0.23.0

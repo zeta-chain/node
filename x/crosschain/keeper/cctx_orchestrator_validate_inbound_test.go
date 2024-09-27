@@ -78,11 +78,13 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 			Message:            message,
 			InboundHash:        inboundHash.String(),
 			InboundBlockHeight: inboundBlockHeight,
-			GasLimit:           gasLimit,
-			CoinType:           cointType,
-			TxOrigin:           sender.String(),
-			Asset:              asset,
-			EventIndex:         eventIndex,
+			CallOptions: &types.CallOptions{
+				GasLimit: gasLimit,
+			},
+			CoinType:   cointType,
+			TxOrigin:   sender.String(),
+			Asset:      asset,
+			EventIndex: eventIndex,
 		}
 
 		_, err := k.ValidateInbound(ctx, &msg, false)
@@ -136,11 +138,13 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 			Message:            message,
 			InboundHash:        inboundHash.String(),
 			InboundBlockHeight: inboundBlockHeight,
-			GasLimit:           gasLimit,
-			CoinType:           cointType,
-			TxOrigin:           sender.String(),
-			Asset:              asset,
-			EventIndex:         eventIndex,
+			CallOptions: &types.CallOptions{
+				GasLimit: gasLimit,
+			},
+			CoinType:   cointType,
+			TxOrigin:   sender.String(),
+			Asset:      asset,
+			EventIndex: eventIndex,
 		}
 
 		_, err := k.ValidateInbound(ctx, &msg, false)
@@ -203,11 +207,13 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 			Message:            message,
 			InboundHash:        inboundHash.String(),
 			InboundBlockHeight: inboundBlockHeight,
-			GasLimit:           gasLimit,
-			CoinType:           cointType,
-			TxOrigin:           sender.String(),
-			Asset:              asset,
-			EventIndex:         eventIndex,
+			CallOptions: &types.CallOptions{
+				GasLimit: gasLimit,
+			},
+			CoinType:   cointType,
+			TxOrigin:   sender.String(),
+			Asset:      asset,
+			EventIndex: eventIndex,
 		}
 
 		_, err := k.ValidateInbound(ctx, &msg, false)
@@ -267,11 +273,13 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 			Message:            message,
 			InboundHash:        inboundHash.String(),
 			InboundBlockHeight: inboundBlockHeight,
-			GasLimit:           gasLimit,
-			CoinType:           cointType,
-			TxOrigin:           sender.String(),
-			Asset:              asset,
-			EventIndex:         eventIndex,
+			CallOptions: &types.CallOptions{
+				GasLimit: gasLimit,
+			},
+			CoinType:   cointType,
+			TxOrigin:   sender.String(),
+			Asset:      asset,
+			EventIndex: eventIndex,
 		}
 
 		_, err := k.ValidateInbound(ctx, &msg, false)
@@ -329,11 +337,13 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 			Message:            message,
 			InboundHash:        inboundHash.String(),
 			InboundBlockHeight: inboundBlockHeight,
-			GasLimit:           gasLimit,
-			CoinType:           cointType,
-			TxOrigin:           sender.String(),
-			Asset:              asset,
-			EventIndex:         eventIndex,
+			CallOptions: &types.CallOptions{
+				GasLimit: gasLimit,
+			},
+			CoinType:   cointType,
+			TxOrigin:   sender.String(),
+			Asset:      asset,
+			EventIndex: eventIndex,
 		}
 
 		_, err := k.ValidateInbound(ctx, &msg, false)

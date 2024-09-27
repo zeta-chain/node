@@ -384,7 +384,7 @@ func (signer *Signer) TryProcessOutbound(
 	}
 
 	// get size limit and gas price
-	sizelimit := params.GasLimit
+	sizelimit := params.CallOptions.GasLimit
 	gasprice, ok := new(big.Int).SetString(params.GasPrice, 10)
 	if !ok || gasprice.Cmp(big.NewInt(0)) < 0 {
 		logger.Error().Msgf("cannot convert gas price  %s ", params.GasPrice)
