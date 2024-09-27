@@ -1,10 +1,7 @@
 package ton
 
 import (
-	"bytes"
-
 	"cosmossdk.io/math"
-	eth "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/tonkeeper/tongo/boc"
 	"github.com/tonkeeper/tongo/tlb"
@@ -123,7 +120,7 @@ func (gw *Gateway) parseInbound(tx ton.Transaction) (*Transaction, error) {
 	switch opCode {
 	case OpDonate:
 		amount := intMsgInfo.Value.Grams - tx.TotalFees.Grams
-		content = Donation{Sender: sender, Amount: gramToUint(amount)}
+		content = Donation{Sender: sender, Amount: GramsToUint(amount)}
 	case OpDeposit:
 		content, errContent = parseDeposit(tx, sender, body)
 	case OpDepositAndCall:
@@ -151,7 +148,7 @@ func parseDeposit(tx ton.Transaction, sender ton.AccountID, body *boc.Cell) (Dep
 		return Deposit{}, err
 	}
 
-	recipient, err := readEVMAddress(body)
+	recipient, err := UnmarshalEVMAddress(body)
 	if err != nil {
 		return Deposit{}, errors.Wrap(err, "unable to read recipient")
 	}
@@ -187,26 +184,26 @@ func parseDepositLog(tx ton.Transaction) (depositLog, error) {
 	//        .store_uint(evm_recipient, size::evm_address)
 	//        .end_cell();
 
-	body, err := marshalCellRef(messages[0].Value.Body)
-	if err != nil {
-		return depositLog{}, errors.Wrap(err, "unable to read body cell")
-	}
+	var (
+		bodyValue = boc.Cell(messages[0].Value.Body.Value)
+		body      = &bodyValue
+	)
 
 	if err := body.Skip(sizeOpCode + sizeQueryID); err != nil {
 		return depositLog{}, errors.Wrap(err, "unable to skip bits")
 	}
 
 	// skip msg address (ton sender)
-	if err := unmarshalTLB(&tlb.MsgAddress{}, body); err != nil {
+	if err := UnmarshalTLB(&tlb.MsgAddress{}, body); err != nil {
 		return depositLog{}, errors.Wrap(err, "unable to read sender address")
 	}
 
 	var deposited tlb.Grams
-	if err := unmarshalTLB(&deposited, body); err != nil {
+	if err := UnmarshalTLB(&deposited, body); err != nil {
 		return depositLog{}, errors.Wrap(err, "unable to read deposited amount")
 	}
 
-	return depositLog{Amount: gramToUint(deposited)}, nil
+	return depositLog{Amount: GramsToUint(deposited)}, nil
 }
 
 func parseDepositAndCall(tx ton.Transaction, sender ton.AccountID, body *boc.Cell) (DepositAndCall, error) {
@@ -220,7 +217,7 @@ func parseDepositAndCall(tx ton.Transaction, sender ton.AccountID, body *boc.Cel
 		return DepositAndCall{}, errors.Wrap(err, "unable to read call data cell")
 	}
 
-	callData, err := unmarshalSnakeCell(callDataCell)
+	callData, err := UnmarshalSnakeCell(callDataCell)
 	if err != nil {
 		return DepositAndCall{}, errors.Wrap(err, "unable to unmarshal call data")
 	}
@@ -237,92 +234,10 @@ func parseInternalMessageBody(tx ton.Transaction) (*boc.Cell, error) {
 		return nil, errors.Wrap(ErrParse, "tx should have an internal message")
 	}
 
-	either := tx.Msgs.InMsg.Value.Value.Body
-	if either.IsRight {
-		return nil, errors.Wrap(ErrParse, "tx body should not be a Ref")
-	}
+	var (
+		inMsg = tx.Msgs.InMsg.Value.Value
+		body  = boc.Cell(inMsg.Body.Value)
+	)
 
-	body, err := marshalCell(&either.Value)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to read body cell")
-	}
-
-	return body, nil
-}
-
-func ErrCollect(errs ...error) error {
-	for i, err := range errs {
-		if err != nil {
-			return errors.Wrapf(err, "error at index %d", i)
-		}
-	}
-
-	return nil
-}
-
-func marshalCell(v tlb.MarshalerTLB) (*boc.Cell, error) {
-	cell := boc.NewCell()
-
-	if err := v.MarshalTLB(cell, &tlb.Encoder{}); err != nil {
-		return nil, err
-	}
-
-	return cell, nil
-}
-
-func marshalCellRef(v tlb.MarshalerTLB) (*boc.Cell, error) {
-	c, err := marshalCell(v)
-	if err != nil {
-		return nil, err
-	}
-
-	c, err = c.NextRef()
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to create ref cell")
-	}
-
-	return c, nil
-}
-
-func unmarshalTLB(t tlb.UnmarshalerTLB, cell *boc.Cell) error {
-	return t.UnmarshalTLB(cell, &tlb.Decoder{})
-}
-
-func unmarshalSnakeCell(cell *boc.Cell) ([]byte, error) {
-	var sd tlb.SnakeData
-
-	if err := unmarshalTLB(&sd, cell); err != nil {
-		return nil, err
-	}
-
-	cd := boc.BitString(sd)
-
-	// TLB operates with bits, so we (might) need to trim some "leftovers" (null chars)
-	return bytes.Trim(cd.Buffer(), "\x00"), nil
-}
-
-func marshalSnakeData(data []byte) (*boc.Cell, error) {
-	b := boc.NewCell()
-
-	wrapped := tlb.Bytes(data)
-	if err := wrapped.MarshalTLB(b, &tlb.Encoder{}); err != nil {
-		return nil, err
-	}
-
-	return b, nil
-}
-
-func gramToUint(g tlb.Grams) math.Uint {
-	return math.NewUint(uint64(g))
-}
-
-func readEVMAddress(cell *boc.Cell) (eth.Address, error) {
-	const evmAddrBits = 20 * 8
-
-	s, err := cell.ReadBits(evmAddrBits)
-	if err != nil {
-		return eth.Address{}, err
-	}
-
-	return eth.BytesToAddress(s.Buffer()), nil
+	return &body, nil
 }

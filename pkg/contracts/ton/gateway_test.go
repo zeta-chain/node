@@ -250,10 +250,10 @@ func TestSnakeData(t *testing.T) {
 	} {
 		a := []byte(tt)
 
-		cell, err := marshalSnakeData(a)
+		cell, err := MarshalSnakeCell(a)
 		require.NoError(t, err)
 
-		b, err := unmarshalSnakeCell(cell)
+		b, err := UnmarshalSnakeCell(cell)
 		require.NoError(t, err)
 
 		t.Logf(string(b))

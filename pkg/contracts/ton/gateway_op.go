@@ -86,7 +86,7 @@ func (d DepositAndCall) Memo() []byte {
 
 // AsBody casts struct to internal message body.
 func (d DepositAndCall) AsBody() (*boc.Cell, error) {
-	callDataCell, err := marshalSnakeData(d.CallData)
+	callDataCell, err := MarshalSnakeCell(d.CallData)
 	if err != nil {
 		return nil, err
 	}
