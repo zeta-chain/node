@@ -21,7 +21,6 @@ on:
         default: 'ubuntu-20.04'
       enable-monitoring:
         description: 'Enable the monitoring stack for this run'
-        required: true
         type: boolean
         default: false
 
