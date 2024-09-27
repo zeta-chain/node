@@ -205,18 +205,17 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("⚙️ setting up networks")
 		startTime := time.Now()
 
+		// TODO: merge v1 and v2 together
+		// https://github.com/zeta-chain/node/issues/2627
+
 		deployerRunner.SetupEVM(contractsDeployed, true)
 
-		if testV2 {
-			deployerRunner.SetupEVMV2()
-		}
+		deployerRunner.SetupEVMV2()
 
 		deployerRunner.SetZEVMSystemContracts()
 
-		if testV2 {
-			// NOTE: v2 (gateway) setup called here because system contract needs to be set first, then gateway, then zrc20
-			deployerRunner.SetZEVMContractsV2()
-		}
+		// NOTE: v2 (gateway) setup called here because system contract needs to be set first, then gateway, then zrc20
+		deployerRunner.SetZEVMContractsV2()
 
 		deployerRunner.SetZEVMZRC20s()
 
