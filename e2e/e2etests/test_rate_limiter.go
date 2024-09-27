@@ -122,7 +122,7 @@ func createAndWaitWithdraws(r *runner.E2ERunner, withdrawType withdrawType, with
 		return err
 	}
 
-	duration := time.Now().Sub(startTime).Seconds()
+	duration := time.Since(startTime).Seconds()
 	block, err := r.ZEVMClient.BlockNumber(r.Ctx)
 	if err != nil {
 		return fmt.Errorf("error getting block number: %w", err)
@@ -155,7 +155,7 @@ func waitForWithdrawMined(
 	}
 
 	// record the time for completion
-	duration := time.Now().Sub(startTime).Seconds()
+	duration := time.Since(startTime).Seconds()
 	block, err := r.ZEVMClient.BlockNumber(ctx)
 	if err != nil {
 		return err
