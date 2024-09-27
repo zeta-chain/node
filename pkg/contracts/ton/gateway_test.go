@@ -4,8 +4,10 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/boc"
@@ -14,6 +16,15 @@ import (
 )
 
 func TestParsing(t *testing.T) {
+	swapBodyAndParse := func(gw *Gateway, tx ton.Transaction, body *boc.Cell) *Transaction {
+		tx.Msgs.InMsg.Value.Value.Body.Value = tlb.Any(*body)
+
+		parsed, err := gw.ParseTransaction(tx)
+		require.NoError(t, err)
+
+		return parsed
+	}
+
 	t.Run("Donate", func(t *testing.T) {
 		// ARRANGE
 		// Given a tx
@@ -40,6 +51,14 @@ func TestParsing(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, expectedSender, donation.Sender.ToRaw())
 		assert.Equal(t, expectedDonation, int(donation.Amount.Uint64()))
+
+		// Check that AsBody works
+		var (
+			parsedTX2 = swapBodyAndParse(gw, tx, lo.Must(donation.AsBody()))
+			donation2 = lo.Must(parsedTX2.Donation())
+		)
+
+		assert.Equal(t, donation, donation2)
 	})
 
 	t.Run("Deposit", func(t *testing.T) {
@@ -76,6 +95,14 @@ func TestParsing(t *testing.T) {
 		// Check that other casting fails
 		_, err = parsedTX.Donation()
 		assert.ErrorIs(t, err, ErrCast)
+
+		// Check that AsBody works
+		var (
+			parsedTX2 = swapBodyAndParse(gw, tx, lo.Must(deposit.AsBody()))
+			deposit2  = lo.Must(parsedTX2.Deposit())
+		)
+
+		assert.Equal(t, deposit, deposit2)
 	})
 
 	t.Run("Deposit and call", func(t *testing.T) {
@@ -111,6 +138,14 @@ func TestParsing(t *testing.T) {
 		assert.Equal(t, expectedDeposit, int(depositAndCall.Amount.Uint64()))
 		assert.Equal(t, vitalikDotETH, depositAndCall.Recipient.Hex())
 		assert.Equal(t, expectedCallData, depositAndCall.CallData)
+
+		// Check that AsBody works
+		var (
+			parsedTX2       = swapBodyAndParse(gw, tx, lo.Must(depositAndCall.AsBody()))
+			depositAndCall2 = lo.Must(parsedTX2.DepositAndCall())
+		)
+
+		assert.Equal(t, depositAndCall, depositAndCall2)
 	})
 
 	t.Run("Irrelevant tx", func(t *testing.T) {
@@ -204,6 +239,27 @@ func TestFixtures(t *testing.T) {
 	// ASSERT
 	require.Equal(t, uint64(26023788000003), tx.Lt)
 	require.Equal(t, "cbd6e2261334d08120e2fef428ecbb4e7773606ced878d0e6da204f2b4bf42bf", tx.Hash().Hex())
+}
+
+func TestSnakeData(t *testing.T) {
+	for _, tt := range []string{
+		"Hello world",
+		"123",
+		strings.Repeat(`ZetaChain `, 300),
+		string(readFixtureFile(t, "testdata/long-call-data.txt")),
+	} {
+		a := []byte(tt)
+
+		cell, err := marshalSnakeData(a)
+		require.NoError(t, err)
+
+		b, err := unmarshalSnakeCell(cell)
+		require.NoError(t, err)
+
+		t.Logf(string(b))
+
+		assert.Equal(t, a, b, tt)
+	}
 }
 
 //go:embed testdata

@@ -12,6 +12,8 @@ import (
 	"github.com/tonkeeper/tongo/ton"
 	"github.com/tonkeeper/tongo/wallet"
 	"golang.org/x/crypto/ed25519"
+
+	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 )
 
 const workchainID = 0
@@ -138,7 +140,7 @@ func buildGatewayData(tss eth.Address) (*boc.Cell, error) {
 		cell      = boc.NewCell()
 	)
 
-	err := errCollect(
+	err := toncontracts.ErrCollect(
 		cell.WriteBit(true),             // deposits_enabled
 		zeroCoins.MarshalTLB(cell, enc), // total_locked
 		zeroCoins.MarshalTLB(cell, enc), // fees
@@ -151,16 +153,6 @@ func buildGatewayData(tss eth.Address) (*boc.Cell, error) {
 	}
 
 	return cell, nil
-}
-
-func errCollect(errs ...error) error {
-	for i, err := range errs {
-		if err != nil {
-			return errors.Wrapf(err, "error at index %d", i)
-		}
-	}
-
-	return nil
 }
 
 // copied from tongo wallets_common.go

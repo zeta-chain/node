@@ -11,63 +11,9 @@ import (
 	"github.com/tonkeeper/tongo/ton"
 )
 
-// Op operation code
-type Op uint32
-
-// github.com/zeta-chain/protocol-contracts-ton/blob/main/contracts/gateway.fc
-// Inbound operations
-const (
-	OpDonate Op = 100 + iota
-	OpDeposit
-	OpDepositAndCall
-)
-
-// Outbound operations
-const (
-	OpWithdraw Op = 200 + iota
-	SetDepositsEnabled
-	UpdateTSS
-	UpdateCode
-)
-
 // Gateway wrapper around zeta gateway contract on TON
 type Gateway struct {
 	accountID ton.AccountID
-}
-
-// Donation represents a donation operation
-type Donation struct {
-	Sender ton.AccountID
-	Amount math.Uint
-}
-
-// Deposit represents a deposit operation
-type Deposit struct {
-	Sender    ton.AccountID
-	Amount    math.Uint
-	Recipient eth.Address
-}
-
-// Memo casts deposit to memo bytes
-func (d Deposit) Memo() []byte {
-	return d.Recipient.Bytes()
-}
-
-// DepositAndCall represents a deposit and call operation
-type DepositAndCall struct {
-	Deposit
-	CallData []byte
-}
-
-// Memo casts deposit and call to memo bytes
-func (d DepositAndCall) Memo() []byte {
-	recipient := d.Recipient.Bytes()
-	out := make([]byte, 0, len(recipient)+len(d.CallData))
-
-	out = append(out, recipient...)
-	out = append(out, d.CallData...)
-
-	return out
 }
 
 const (
@@ -274,15 +220,10 @@ func parseDepositAndCall(tx ton.Transaction, sender ton.AccountID, body *boc.Cel
 		return DepositAndCall{}, errors.Wrap(err, "unable to read call data cell")
 	}
 
-	var sd tlb.SnakeData
-	if err = unmarshalTLB(&sd, callDataCell); err != nil {
+	callData, err := unmarshalSnakeCell(callDataCell)
+	if err != nil {
 		return DepositAndCall{}, errors.Wrap(err, "unable to unmarshal call data")
 	}
-
-	cd := boc.BitString(sd)
-
-	// TLB operates with bits, so we (might) need to trim some "leftovers" (null chars)
-	callData := bytes.Trim(cd.Buffer(), "\x00")
 
 	return DepositAndCall{Deposit: deposit, CallData: callData}, nil
 }
@@ -307,6 +248,16 @@ func parseInternalMessageBody(tx ton.Transaction) (*boc.Cell, error) {
 	}
 
 	return body, nil
+}
+
+func ErrCollect(errs ...error) error {
+	for i, err := range errs {
+		if err != nil {
+			return errors.Wrapf(err, "error at index %d", i)
+		}
+	}
+
+	return nil
 }
 
 func marshalCell(v tlb.MarshalerTLB) (*boc.Cell, error) {
@@ -335,6 +286,30 @@ func marshalCellRef(v tlb.MarshalerTLB) (*boc.Cell, error) {
 
 func unmarshalTLB(t tlb.UnmarshalerTLB, cell *boc.Cell) error {
 	return t.UnmarshalTLB(cell, &tlb.Decoder{})
+}
+
+func unmarshalSnakeCell(cell *boc.Cell) ([]byte, error) {
+	var sd tlb.SnakeData
+
+	if err := unmarshalTLB(&sd, cell); err != nil {
+		return nil, err
+	}
+
+	cd := boc.BitString(sd)
+
+	// TLB operates with bits, so we (might) need to trim some "leftovers" (null chars)
+	return bytes.Trim(cd.Buffer(), "\x00"), nil
+}
+
+func marshalSnakeData(data []byte) (*boc.Cell, error) {
+	b := boc.NewCell()
+
+	wrapped := tlb.Bytes(data)
+	if err := wrapped.MarshalTLB(b, &tlb.Encoder{}); err != nil {
+		return nil, err
+	}
+
+	return b, nil
 }
 
 func gramToUint(g tlb.Grams) math.Uint {
