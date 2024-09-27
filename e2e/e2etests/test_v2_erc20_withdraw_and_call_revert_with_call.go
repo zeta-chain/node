@@ -3,6 +3,7 @@ package e2etests
 import (
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 
@@ -43,4 +44,12 @@ func TestV2ERC20WithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string
 	require.Equal(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
 
 	r.AssertTestDAppZEVMCalled(true, payloadMessageWithdrawOnRevertERC20, big.NewInt(0))
+
+	// check expected sender was used
+	senderForMsg, err := r.TestDAppV2ZEVM.SenderWithMessage(
+		&bind.CallOpts{},
+		[]byte(payloadMessageWithdrawOnRevertERC20),
+	)
+	require.NoError(r, err)
+	require.Equal(r, r.ZEVMAuth.From, senderForMsg)
 }
