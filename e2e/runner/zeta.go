@@ -9,13 +9,13 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zetaconnectorzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // WaitForBlocks waits for a specific number of blocks to be generated
@@ -35,25 +35,25 @@ func (r *E2ERunner) WaitForBlocks(n int64) {
 	require.NoError(r, err, "failed to wait for %d blocks", n)
 }
 
-// WaitForTssGeneration waits for a specific number of TSS to be generated
+// WaitForTSSGeneration waits for a specific number of TSS to be generated
 // The parameter n is the number of TSS to wait for
-func (r *E2ERunner) WaitForTssGeneration(n int64) {
+func (r *E2ERunner) WaitForTSSGeneration(tssNumber int64) {
 	call := func() error {
-		return retry.Retry(r.waitForTssGeneration(n))
+		return retry.Retry(r.checkNumberOfTssGenerated(tssNumber))
 	}
 	bo := backoff.NewConstantBackOff(time.Second * 5)
 	boWithMaxRetries := backoff.WithMaxRetries(bo, 10)
 	err := retry.DoWithBackoff(call, boWithMaxRetries)
-	require.NoError(r, err, "failed to wait for %d tss generation", n)
+	require.NoError(r, err, "failed to wait for %d tss generation", tssNumber)
 }
 
-func (r *E2ERunner) waitForTssGeneration(n int64) error {
+func (r *E2ERunner) checkNumberOfTssGenerated(tssNumber int64) error {
 	tssList, err := r.ObserverClient.TssHistory(r.Ctx, &observertypes.QueryTssHistoryRequest{})
 	if err != nil {
 		return err
 	}
-	if int64(len(tssList.TssList)) < n {
-		return fmt.Errorf("waiting for %d tss generation, number of TSS :%d", n, len(tssList.TssList))
+	if int64(len(tssList.TssList)) < tssNumber {
+		return fmt.Errorf("waiting for %d tss generation, number of TSS :%d", tssNumber, len(tssList.TssList))
 	}
 	return nil
 }
