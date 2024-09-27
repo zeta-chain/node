@@ -121,6 +121,12 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 		return cosmoserrors.Wrap(types.ErrCannotFindGasParams, err.Error())
 	}
 
+	// with V2 protocol, reverts on connected chains can eventually call a onRevert function which can require a higher gas limit
+	if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 && cctx.RevertOptions.CallOnRevert &&
+		!cctx.RevertOptions.RevertGasLimit.IsZero() {
+		gas.GasLimit = cctx.RevertOptions.RevertGasLimit
+	}
+
 	// calculate the final gas fee
 	outTxGasFee := gas.GasLimit.Mul(gas.GasPrice).Add(gas.ProtocolFlatFee)
 

@@ -341,6 +341,7 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 		// process the revert on ZEVM
 		if err := k.fungibleKeeper.ProcessV2RevertDeposit(
 			ctx,
+			cctx.InboundParams.Sender,
 			cctx.GetCurrentOutboundParam().Amount.BigInt(),
 			chainID,
 			cctx.InboundParams.CoinType,

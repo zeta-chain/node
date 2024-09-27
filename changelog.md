@@ -15,6 +15,7 @@
 * [2907](https://github.com/zeta-chain/node/pull/2907) - derive Bitcoin tss address by chain id and added more Signet static info
 * [2911](https://github.com/zeta-chain/node/pull/2911) - add chain static information for btc testnet4
 * [2904](https://github.com/zeta-chain/node/pull/2904) - integrate authenticated calls smart contract functionality into protocol
+* [2919](https://github.com/zeta-chain/node/pull/2919) - add inbound sender to revert context
 
 ### Refactor
 
