@@ -198,7 +198,7 @@ specs:
 	@go run ./scripts/gen-spec.go
 .PHONY: specs
 
-docs-zetacored:
+docs-zetacored: install-zetacore
 	@echo "--> Generating zetacored documentation"
 	@bash ./scripts/gen-docs-zetacored.sh
 .PHONY: docs-zetacored
