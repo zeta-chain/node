@@ -35,6 +35,10 @@ func statefulPrecompilesTestRoutine(
 		precompileRunner.Logger.Print("🏃 starting stateful precompiled contracts tests")
 		startTime := time.Now()
 
+		// Send ERC20 that will be depositted into ERC20ZRC20 tokens.
+		txERC20Send := deployerRunner.SendERC20OnEvm(account.EVMAddress(), 10000)
+		precompileRunner.WaitForTxReceiptOnEvm(txERC20Send)
+
 		testsToRun, err := precompileRunner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
 			testNames...,
