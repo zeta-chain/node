@@ -110,6 +110,9 @@ jobs:
       - name: go mod tidy
         working-directory: contrib/rpcimportable
         run: go mod tidy
+      - name: show go.mod
+        working-directory: contrib/rpcimportable
+        run: cat go.mod
       - name: go test
         working-directory: contrib/rpcimportable
         run: go test ./...
