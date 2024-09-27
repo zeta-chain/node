@@ -93,6 +93,10 @@ func (chain Chain) IsBitcoinChain() bool {
 	return chain.Consensus == Consensus_bitcoin
 }
 
+func (chain Chain) IsTONChain() bool {
+	return IsTONChain(chain.ChainId, []Chain{chain})
+}
+
 // DecodeAddressFromChainID decode the address string to bytes
 // additionalChains is a list of additional chains to search from
 // in practice, it is used in the protocol to dynamically support new chains without doing an upgrade
@@ -130,6 +134,11 @@ func IsBitcoinChain(chainID int64, additionalChains []Chain) bool {
 // IsSolanaChain returns true if the chain is a Solana chain
 func IsSolanaChain(chainID int64, additionalChains []Chain) bool {
 	return ChainIDInChainList(chainID, ChainListByNetwork(Network_solana, additionalChains))
+}
+
+// IsTONChain returns true is the chain is TON chain
+func IsTONChain(chainID int64, additionalChains []Chain) bool {
+	return ChainIDInChainList(chainID, ChainListByNetwork(Network_ton, additionalChains))
 }
 
 // IsEthereumChain returns true if the chain is an Ethereum chain
