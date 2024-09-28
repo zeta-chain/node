@@ -115,7 +115,7 @@ jobs:
         run: cat go.mod
       - name: go test
         working-directory: contrib/rpcimportable
-        run: go test ./...
+        run: ./test.sh
   ci-ok:
     runs-on: ubuntu-22.04
     needs:
