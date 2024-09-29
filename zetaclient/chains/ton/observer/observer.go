@@ -15,7 +15,7 @@ import (
 )
 
 type Observer struct {
-	base.Observer
+	*base.Observer
 
 	client  LiteClient
 	gateway *toncontracts.Gateway
@@ -45,7 +45,7 @@ func New(bo *base.Observer, client LiteClient, gateway *toncontracts.Gateway) (*
 	bo.LoadLastTxScanned()
 
 	return &Observer{
-		Observer: *bo,
+		Observer: bo,
 		client:   client,
 		gateway:  gateway,
 	}, nil
@@ -66,10 +66,12 @@ func (ob *Observer) Start(ctx context.Context) {
 	bg.Work(ctx, ob.watchInbound, bg.WithName("WatchInbound"), bg.WithLogger(ob.Logger().Inbound))
 
 	// todo
-	//  watchInboundTracker
-	//  watchOutbound
-	//  watchGasPrice
-	//  watchRPCStatus
+	//  watchInboundTracker https://github.com/zeta-chain/node/issues/2935
+
+	// todo outbounds/withdrawals https://github.com/zeta-chain/node/issues/2807
+	//   watchOutbound
+	//   watchGasPrice
+	//   watchRPCStatus
 }
 
 func (ob *Observer) VoteOutboundIfConfirmed(_ context.Context, _ *types.CrossChainTx) (bool, error) {

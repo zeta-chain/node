@@ -2,8 +2,10 @@ package sample
 
 import (
 	"crypto/rand"
+	"reflect"
 	"testing"
 	"time"
+	"unsafe"
 
 	"cosmossdk.io/math"
 	eth "github.com/ethereum/go-ethereum/common"
@@ -46,6 +48,10 @@ type intMsgInfo struct {
 	CreatedAt   uint32
 }
 
+func TONDonation(t *testing.T, acc ton.AccountID, d toncontracts.Donation) ton.Transaction {
+	return TONTransaction(t, TONDonateProps(t, acc, d))
+}
+
 func TONDonateProps(t *testing.T, acc ton.AccountID, d toncontracts.Donation) TONTransactionProps {
 	body, err := d.AsBody()
 	require.NoError(t, err)
@@ -64,6 +70,10 @@ func TONDonateProps(t *testing.T, acc ton.AccountID, d toncontracts.Donation) TO
 			Body: tlb.EitherRef[tlb.Any]{Value: tlb.Any(*body)},
 		},
 	}
+}
+
+func TONDeposit(t *testing.T, acc ton.AccountID, d toncontracts.Deposit) ton.Transaction {
+	return TONTransaction(t, TONDepositProps(t, acc, d))
 }
 
 func TONDepositProps(t *testing.T, acc ton.AccountID, d toncontracts.Deposit) TONTransactionProps {
@@ -87,6 +97,10 @@ func TONDepositProps(t *testing.T, acc ton.AccountID, d toncontracts.Deposit) TO
 			Body: tlb.EitherRef[tlb.Any]{IsRight: true, Value: tlb.Any(*logBody)},
 		},
 	}
+}
+
+func TONDepositAndCall(t *testing.T, acc ton.AccountID, d toncontracts.DepositAndCall) ton.Transaction {
+	return TONTransaction(t, TONDepositAndCallProps(t, acc, d))
 }
 
 func TONDepositAndCallProps(t *testing.T, acc ton.AccountID, d toncontracts.DepositAndCall) TONTransactionProps {
@@ -149,7 +163,7 @@ func TONTransaction(t *testing.T, p TONTransactionProps) ton.Transaction {
 		OutMsgs tlb.HashmapE[tlb.Uint15, tlb.Ref[tlb.Message]]
 	}
 
-	return ton.Transaction{
+	tx := ton.Transaction{
 		BlockID: p.BlockID,
 		Transaction: tlb.Transaction{
 			AccountAddr: p.Account.Address,
@@ -160,6 +174,10 @@ func TONTransaction(t *testing.T, p TONTransactionProps) ton.Transaction {
 			Msgs:        messages{InMsg: input, OutMsgs: outputs},
 		},
 	}
+
+	setTXHash(&tx.Transaction, Hash())
+
+	return tx
 }
 
 func GenerateTONAccountID() ton.AccountID {
@@ -241,4 +259,14 @@ func depositLogMock(
 	}
 
 	return b
+}
+
+// well, tlb.Transaction has unexported field `hash` that we need to set OUTSIDE tlb package.
+// It's a hack, but it works for testing purposes.
+func setTXHash(tx *tlb.Transaction, hash [32]byte) {
+	field := reflect.ValueOf(tx).Elem().FieldByName("hash")
+	ptr := unsafe.Pointer(field.UnsafeAddr())
+
+	arrPtr := (*[32]byte)(ptr)
+	*arrPtr = hash
 }
