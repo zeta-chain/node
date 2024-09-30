@@ -219,6 +219,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		deployerRunner.SetZEVMZRC20s()
 
+		// Update the chain params to use v2 contract for ERC20Custody
+		// TODO: this function should be removed and the chain params should be directly set to use v2 contract
+		// https://github.com/zeta-chain/node/issues/2627
+		deployerRunner.UpdateChainParamsV2Contracts()
+		deployerRunner.ERC20CustodyAddr = deployerRunner.ERC20CustodyV2Addr
+
 		if testSolana {
 			deployerRunner.SetSolanaContracts(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
 		}
@@ -404,12 +410,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 
 		eg.Go(tonTestRoutine(conf, deployerRunner, verbose, tonTests...))
-	}
-
-	if testV2 {
-		// update the ERC20 custody contract for v2 tests
-		// note: not run in testV2Migration because it is already run in the migration process
-		deployerRunner.UpdateChainParamsV2Contracts()
 	}
 
 	// upgrade gateways
