@@ -11,6 +11,8 @@ import (
 	"github.com/tonkeeper/tongo/liteapi"
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
+
+	zetaton "github.com/zeta-chain/node/zetaclient/chains/ton"
 )
 
 // Client extends liteapi.Client with some high-level tools
@@ -30,6 +32,24 @@ func New(client *liteapi.Client) *Client {
 	blockCache, _ := lru.New(blockCacheSize)
 
 	return &Client{Client: client, blockCache: blockCache}
+}
+
+// NewFromAny creates a new client from a URL or a file path.
+func NewFromAny(ctx context.Context, urlOrPath string) (*Client, error) {
+	cfg, err := zetaton.ConfigFromAny(ctx, urlOrPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get config")
+	}
+
+	client, err := liteapi.NewClient(
+		liteapi.WithConfigurationFile(*cfg),
+		liteapi.WithDetectArchiveNodes(),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create client")
+	}
+
+	return New(client), nil
 }
 
 // GetBlockHeader returns block header by block ID.

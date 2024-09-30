@@ -14,6 +14,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 )
 
+// Observer is a TON observer.
 type Observer struct {
 	*base.Observer
 
@@ -25,13 +26,14 @@ type Observer struct {
 //
 //go:generate mockery --name LiteClient --filename ton_liteclient.go --case underscore --output ../../../testutils/mocks
 type LiteClient interface {
-	GetBlockHeader(ctx context.Context, acc ton.BlockIDExt, mode int) (tlb.BlockInfo, error)
+	GetBlockHeader(ctx context.Context, blockID ton.BlockIDExt, mode uint32) (tlb.BlockInfo, error)
 	GetTransactionsUntil(ctx context.Context, acc ton.AccountID, lt uint64, bits ton.Bits256) ([]ton.Transaction, error)
 	GetFirstTransaction(ctx context.Context, id ton.AccountID) (*ton.Transaction, int, error)
 }
 
 var _ interfaces.ChainObserver = (*Observer)(nil)
 
+// New constructor for TON Observer.
 func New(bo *base.Observer, client LiteClient, gateway *toncontracts.Gateway) (*Observer, error) {
 	switch {
 	case !bo.Chain().IsTONChain():
@@ -51,6 +53,7 @@ func New(bo *base.Observer, client LiteClient, gateway *toncontracts.Gateway) (*
 	}, nil
 }
 
+// Start starts the observer. This method is NOT blocking.
 func (ob *Observer) Start(ctx context.Context) {
 	if ok := ob.Observer.Start(); !ok {
 		ob.Logger().Chain.Info().Msgf("observer is already started for chain %d", ob.Chain().ChainId)

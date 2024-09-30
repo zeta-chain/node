@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/tonkeeper/tongo/config"
@@ -37,4 +38,16 @@ func ConfigFromURL(ctx context.Context, url string) (*GlobalConfigurationFile, e
 	}
 
 	return config.ParseConfig(res.Body)
+}
+
+func ConfigFromPath(path string) (*GlobalConfigurationFile, error) {
+	return config.ParseConfigFile(path)
+}
+
+func ConfigFromAny(ctx context.Context, urlOrPath string) (*GlobalConfigurationFile, error) {
+	if u, err := url.Parse(urlOrPath); err == nil {
+		return ConfigFromURL(ctx, u.String())
+	}
+
+	return ConfigFromPath(urlOrPath)
 }

@@ -17,9 +17,9 @@ type LiteClient struct {
 	mock.Mock
 }
 
-// GetBlockHeader provides a mock function with given fields: ctx, acc, mode
-func (_m *LiteClient) GetBlockHeader(ctx context.Context, acc ton.BlockIDExt, mode int) (tlb.BlockInfo, error) {
-	ret := _m.Called(ctx, acc, mode)
+// GetBlockHeader provides a mock function with given fields: ctx, blockID, mode
+func (_m *LiteClient) GetBlockHeader(ctx context.Context, blockID ton.BlockIDExt, mode uint32) (tlb.BlockInfo, error) {
+	ret := _m.Called(ctx, blockID, mode)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetBlockHeader")
@@ -27,17 +27,17 @@ func (_m *LiteClient) GetBlockHeader(ctx context.Context, acc ton.BlockIDExt, mo
 
 	var r0 tlb.BlockInfo
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, ton.BlockIDExt, int) (tlb.BlockInfo, error)); ok {
-		return rf(ctx, acc, mode)
+	if rf, ok := ret.Get(0).(func(context.Context, ton.BlockIDExt, uint32) (tlb.BlockInfo, error)); ok {
+		return rf(ctx, blockID, mode)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, ton.BlockIDExt, int) tlb.BlockInfo); ok {
-		r0 = rf(ctx, acc, mode)
+	if rf, ok := ret.Get(0).(func(context.Context, ton.BlockIDExt, uint32) tlb.BlockInfo); ok {
+		r0 = rf(ctx, blockID, mode)
 	} else {
 		r0 = ret.Get(0).(tlb.BlockInfo)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, ton.BlockIDExt, int) error); ok {
-		r1 = rf(ctx, acc, mode)
+	if rf, ok := ret.Get(1).(func(context.Context, ton.BlockIDExt, uint32) error); ok {
+		r1 = rf(ctx, blockID, mode)
 	} else {
 		r1 = ret.Error(1)
 	}

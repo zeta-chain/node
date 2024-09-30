@@ -92,7 +92,8 @@ func newTestSuite(t *testing.T) *testSuite {
 	}
 
 	// Setup mocks
-	ts.zetacore.On("Chain").Return(chain)
+	ts.zetacore.On("Chain").Return(chain).Maybe()
+
 	setupVotesBag(ts)
 
 	return ts
@@ -126,7 +127,7 @@ func (ts *testSuite) OnGetTransactionsUntil(
 	err error,
 ) *mock.Call {
 	return ts.liteClient.
-		On("GetTransactionsUntil", ts.ctx, acc, lt, hash).
+		On("GetTransactionsUntil", mock.Anything, acc, lt, hash).
 		Return(txs, err)
 }
 
@@ -136,7 +137,9 @@ func (ts *testSuite) MockGetBlockHeader(id ton.BlockIDExt) *mock.Call {
 		BlockInfoPart: tlb.BlockInfoPart{MinRefMcSeqno: id.Seqno},
 	}
 
-	return ts.liteClient.On("GetBlockHeader", ts.ctx, id, 0).Return(blockInfo, nil)
+	return ts.liteClient.
+		On("GetBlockHeader", mock.Anything, id, uint32(0)).
+		Return(blockInfo, nil)
 }
 
 // parses string to TON
@@ -165,6 +168,7 @@ func setupVotesBag(ts *testSuite) {
 	}
 	ts.zetacore.
 		On("PostVoteInbound", ts.ctx, mock.Anything, mock.Anything, mock.Anything).
+		Maybe().
 		Run(catcher).
 		Return("", "", nil) // zeta hash, ballot index, error
 }
