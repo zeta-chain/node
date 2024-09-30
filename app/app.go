@@ -877,11 +877,12 @@ func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 // InitChainer application update at chain initialization
 func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	// InitChainErrorMessage is the error message displayed when trying to sync testnet or mainnet from block 1 using the latest binary.
-	InitChainErrorMessage := `
+	const InitChainErrorMessage = `
 Unable to sync testnet or mainnet from block 1 using the latest version.
 Please use a snapshot to sync your node.
 Refer to the documentation for more information:
 https://www.zetachain.com/docs/nodes/start-here/syncing/`
+
 	// The defer is used to catch panics during InitChain
 	// and display a more meaningful message for people trying to sync a node from block 1 using the latest binary.
 	// We exit the process after displaying the message as we do not need to start a node with empty state.
