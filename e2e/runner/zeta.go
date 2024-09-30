@@ -39,7 +39,7 @@ func (r *E2ERunner) WaitForBlocks(n int64) {
 // The parameter n is the number of TSS to wait for
 func (r *E2ERunner) WaitForTSSGeneration(tssNumber int64) {
 	call := func() error {
-		return retry.Retry(r.checkNumberOfTssGenerated(tssNumber))
+		return retry.Retry(r.checkNumberOfTSSGenerated(tssNumber))
 	}
 	bo := backoff.NewConstantBackOff(time.Second * 5)
 	boWithMaxRetries := backoff.WithMaxRetries(bo, 10)
@@ -47,7 +47,9 @@ func (r *E2ERunner) WaitForTSSGeneration(tssNumber int64) {
 	require.NoError(r, err, "failed to wait for %d tss generation", tssNumber)
 }
 
-func (r *E2ERunner) checkNumberOfTssGenerated(tssNumber int64) error {
+// checkNumberOfTSSGenerated checks the number of TSS generated
+// if the number of tss is less that the `tssNumber` provided we return an error
+func (r *E2ERunner) checkNumberOfTSSGenerated(tssNumber int64) error {
 	tssList, err := r.ObserverClient.TssHistory(r.Ctx, &observertypes.QueryTssHistoryRequest{})
 	if err != nil {
 		return err
