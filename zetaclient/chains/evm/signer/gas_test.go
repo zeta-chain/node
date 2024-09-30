@@ -14,7 +14,7 @@ func TestGasFromCCTX(t *testing.T) {
 
 	makeCCTX := func(gasLimit uint64, price, priorityFee string) *types.CrossChainTx {
 		cctx := getCCTX(t)
-		cctx.GetOutboundParams()[0].GasLimit = gasLimit
+		cctx.GetOutboundParams()[0].CallOptions.GasLimit = gasLimit
 		cctx.GetOutboundParams()[0].GasPrice = price
 		cctx.GetOutboundParams()[0].GasPriorityFee = priorityFee
 

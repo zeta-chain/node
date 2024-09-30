@@ -571,6 +571,7 @@ func New(
 		precompiles.StatefulContracts(
 			&app.FungibleKeeper,
 			app.StakingKeeper,
+			app.BankKeeper,
 			appCodec,
 			storetypes.TransientGasConfig(),
 		),

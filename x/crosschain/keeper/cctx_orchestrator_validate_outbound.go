@@ -171,7 +171,7 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 		}
 		if gasLimit == 0 {
 			// use same gas limit of outbound as a fallback -- should not happen
-			gasLimit = cctx.OutboundParams[0].GasLimit
+			gasLimit = cctx.OutboundParams[0].CallOptions.GasLimit
 		}
 
 		// create new OutboundParams for the revert
@@ -341,6 +341,7 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 		// process the revert on ZEVM
 		if err := k.fungibleKeeper.ProcessV2RevertDeposit(
 			ctx,
+			cctx.InboundParams.Sender,
 			cctx.GetCurrentOutboundParam().Amount.BigInt(),
 			chainID,
 			cctx.InboundParams.CoinType,

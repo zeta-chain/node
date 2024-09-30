@@ -1,8 +1,10 @@
 package types_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"fmt"
+	"testing"
+
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -10,7 +12,6 @@ import (
 	"github.com/zeta-chain/node/pkg/gas"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"testing"
 )
 
 func TestMigrateERC20CustodyFundsCmdCCTX(t *testing.T) {
@@ -93,7 +94,7 @@ func TestMigrateERC20CustodyFundsCmdCCTX(t *testing.T) {
 		require.EqualValues(t, chainID, cctx.OutboundParams[0].ReceiverChainId)
 		require.EqualValues(t, coin.CoinType_Cmd, cctx.OutboundParams[0].CoinType)
 		require.EqualValues(t, sdkmath.NewUint(0), cctx.OutboundParams[0].Amount)
-		require.EqualValues(t, 100_000, cctx.OutboundParams[0].GasLimit)
+		require.EqualValues(t, 100_000, cctx.OutboundParams[0].CallOptions.GasLimit)
 		require.EqualValues(t, gasPrice, cctx.OutboundParams[0].GasPrice)
 		require.EqualValues(t, priorityFee, cctx.OutboundParams[0].GasPriorityFee)
 		require.EqualValues(t, tssPubKey, cctx.OutboundParams[0].TssPubkey)
@@ -222,7 +223,7 @@ func TestUpdateERC20CustodyPauseStatusCmdCCTX(t *testing.T) {
 		require.EqualValues(t, chainID, cctx.OutboundParams[0].ReceiverChainId)
 		require.EqualValues(t, coin.CoinType_Cmd, cctx.OutboundParams[0].CoinType)
 		require.EqualValues(t, sdkmath.NewUint(0), cctx.OutboundParams[0].Amount)
-		require.EqualValues(t, 100_000, cctx.OutboundParams[0].GasLimit)
+		require.EqualValues(t, 100_000, cctx.OutboundParams[0].CallOptions.GasLimit)
 		require.EqualValues(t, gasPrice, cctx.OutboundParams[0].GasPrice)
 		require.EqualValues(t, priorityFee, cctx.OutboundParams[0].GasPriorityFee)
 		require.EqualValues(t, tssPubKey, cctx.OutboundParams[0].TssPubkey)
@@ -317,7 +318,7 @@ func TestWhitelistERC20CmdCCTX(t *testing.T) {
 		require.EqualValues(t, chainID, cctx.OutboundParams[0].ReceiverChainId)
 		require.EqualValues(t, coin.CoinType_Cmd, cctx.OutboundParams[0].CoinType)
 		require.EqualValues(t, sdkmath.NewUint(0), cctx.OutboundParams[0].Amount)
-		require.EqualValues(t, 100_000, cctx.OutboundParams[0].GasLimit)
+		require.EqualValues(t, 100_000, cctx.OutboundParams[0].CallOptions.GasLimit)
 		require.EqualValues(t, gasPrice, cctx.OutboundParams[0].GasPrice)
 		require.EqualValues(t, priorityFee, cctx.OutboundParams[0].GasPriorityFee)
 		require.EqualValues(t, tssPubKey, cctx.OutboundParams[0].TssPubkey)
@@ -371,7 +372,7 @@ func TestMigrateFundCmdCCTX(t *testing.T) {
 		require.EqualValues(t, chains.Ethereum.ChainId, cctx.OutboundParams[0].ReceiverChainId)
 		require.EqualValues(t, coin.CoinType_Cmd, cctx.OutboundParams[0].CoinType)
 		require.False(t, cctx.OutboundParams[0].Amount.IsZero())
-		require.EqualValues(t, gas.EVMSend, cctx.OutboundParams[0].GasLimit)
+		require.EqualValues(t, gas.EVMSend, cctx.OutboundParams[0].CallOptions.GasLimit)
 		require.NotEmpty(t, cctx.OutboundParams[0].GasPrice)
 		require.NotEmpty(t, cctx.OutboundParams[0].GasPriorityFee)
 	})
@@ -419,7 +420,7 @@ func TestMigrateFundCmdCCTX(t *testing.T) {
 		require.EqualValues(t, chains.BitcoinMainnet.ChainId, cctx.OutboundParams[0].ReceiverChainId)
 		require.EqualValues(t, coin.CoinType_Cmd, cctx.OutboundParams[0].CoinType)
 		require.False(t, cctx.OutboundParams[0].Amount.IsZero())
-		require.EqualValues(t, uint64(1_000_000), cctx.OutboundParams[0].GasLimit)
+		require.EqualValues(t, uint64(1_000_000), cctx.OutboundParams[0].CallOptions.GasLimit)
 		require.NotEmpty(t, cctx.OutboundParams[0].GasPrice)
 		require.NotEmpty(t, cctx.OutboundParams[0].GasPriorityFee)
 	})
