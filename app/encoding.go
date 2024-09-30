@@ -14,7 +14,6 @@ import (
 	evmenc "github.com/zeta-chain/ethermint/encoding"
 	ethermint "github.com/zeta-chain/ethermint/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
