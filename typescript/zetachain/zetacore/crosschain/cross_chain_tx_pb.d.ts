@@ -208,6 +208,35 @@ export declare class ZetaAccounting extends Message<ZetaAccounting> {
 }
 
 /**
+ * @generated from message zetachain.zetacore.crosschain.CallOptions
+ */
+export declare class CallOptions extends Message<CallOptions> {
+  /**
+   * @generated from field: uint64 gas_limit = 1;
+   */
+  gasLimit: bigint;
+
+  /**
+   * @generated from field: bool is_arbitrary_call = 2;
+   */
+  isArbitraryCall: boolean;
+
+  constructor(data?: PartialMessage<CallOptions>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.CallOptions";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CallOptions;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CallOptions;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CallOptions;
+
+  static equals(a: CallOptions | PlainMessage<CallOptions> | undefined, b: CallOptions | PlainMessage<CallOptions> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.crosschain.OutboundParams
  */
 export declare class OutboundParams extends Message<OutboundParams> {
@@ -237,6 +266,8 @@ export declare class OutboundParams extends Message<OutboundParams> {
   tssNonce: bigint;
 
   /**
+   * Deprecated (v21), use CallOptions
+   *
    * @generated from field: uint64 gas_limit = 6;
    */
   gasLimit: bigint;
@@ -293,6 +324,11 @@ export declare class OutboundParams extends Message<OutboundParams> {
    * @generated from field: zetachain.zetacore.crosschain.TxFinalizationStatus tx_finalization_status = 12;
    */
   txFinalizationStatus: TxFinalizationStatus;
+
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.CallOptions call_options = 24;
+   */
+  callOptions?: CallOptions;
 
   constructor(data?: PartialMessage<OutboundParams>);
 

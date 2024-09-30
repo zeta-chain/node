@@ -1,11 +1,12 @@
 package types_test
 
 import (
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 	"math/big"
 	"math/rand"
 	"testing"
+
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,6 +37,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			sample.String(),
 			42,
 			types.ProtocolContractVersion_V1,
+			true,
 		)
 		require.EqualValues(t, types.NewEmptyRevertOptions(), msg.RevertOptions)
 	})
@@ -61,6 +63,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			sample.String(),
 			42,
 			types.ProtocolContractVersion_V1,
+			true,
 			types.WithZEVMRevertOptions(gatewayzevm.RevertOptions{
 				RevertAddress:    revertAddress,
 				CallOnRevert:     true,
@@ -94,6 +97,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			sample.String(),
 			42,
 			types.ProtocolContractVersion_V1,
+			true,
 			types.WithZEVMRevertOptions(gatewayzevm.RevertOptions{
 				RevertAddress: revertAddress,
 				CallOnRevert:  true,
@@ -131,6 +135,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			sample.String(),
 			42,
 			types.ProtocolContractVersion_V1,
+			true,
 			types.WithEVMRevertOptions(gatewayevm.RevertOptions{
 				RevertAddress:    revertAddress,
 				CallOnRevert:     true,
@@ -163,6 +168,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			sample.String(),
 			42,
 			types.ProtocolContractVersion_V1,
+			true,
 			types.WithEVMRevertOptions(gatewayevm.RevertOptions{
 				RevertAddress: revertAddress,
 				CallOnRevert:  true,
@@ -206,6 +212,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				sample.String(),
 				42,
 				types.ProtocolContractVersion_V1,
+				true,
 			),
 		},
 		{
@@ -226,6 +233,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				sample.String(),
 				42,
 				types.ProtocolContractVersion_V1,
+				true,
 			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
@@ -247,6 +255,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				sample.String(),
 				42,
 				types.ProtocolContractVersion_V1,
+				true,
 			),
 			err: types.ErrInvalidChainID,
 		},
@@ -268,6 +277,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				sample.String(),
 				42,
 				types.ProtocolContractVersion_V1,
+				true,
 			),
 			err: types.ErrInvalidChainID,
 		},
@@ -289,6 +299,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				sample.String(),
 				42,
 				types.ProtocolContractVersion_V1,
+				true,
 			),
 			err: sdkerrors.ErrInvalidRequest,
 		},
@@ -309,17 +320,19 @@ func TestMsgVoteInbound_Digest(t *testing.T) {
 	r := rand.New(rand.NewSource(42))
 
 	msg := types.MsgVoteInbound{
-		Creator:                 sample.AccAddress(),
-		Sender:                  sample.AccAddress(),
-		SenderChainId:           42,
-		TxOrigin:                sample.String(),
-		Receiver:                sample.String(),
-		ReceiverChain:           42,
-		Amount:                  math.NewUint(42),
-		Message:                 sample.String(),
-		InboundHash:             sample.String(),
-		InboundBlockHeight:      42,
-		GasLimit:                42,
+		Creator:            sample.AccAddress(),
+		Sender:             sample.AccAddress(),
+		SenderChainId:      42,
+		TxOrigin:           sample.String(),
+		Receiver:           sample.String(),
+		ReceiverChain:      42,
+		Amount:             math.NewUint(42),
+		Message:            sample.String(),
+		InboundHash:        sample.String(),
+		InboundBlockHeight: 42,
+		CallOptions: &types.CallOptions{
+			GasLimit: 42,
+		},
 		CoinType:                coin.CoinType_Zeta,
 		Asset:                   sample.String(),
 		EventIndex:              42,
@@ -390,7 +403,7 @@ func TestMsgVoteInbound_Digest(t *testing.T) {
 
 	// gas limit used
 	msg = msg
-	msg.GasLimit = 43
+	msg.CallOptions.GasLimit = 43
 	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "gas limit should change hash")
 

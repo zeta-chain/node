@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
@@ -16,15 +17,31 @@ import (
 // function execute
 // address destination,
 // bytes calldata data
-func (signer *Signer) signGatewayExecute(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
+func (signer *Signer) signGatewayExecute(
+	ctx context.Context,
+	sender string,
+	txData *OutboundData,
+) (*ethtypes.Transaction, error) {
 	gatewayABI, err := gatewayevm.GatewayEVMMetaData.GetAbi()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get GatewayEVMMetaData ABI")
 	}
 
-	data, err := gatewayABI.Pack("execute", txData.to, txData.message)
-	if err != nil {
-		return nil, fmt.Errorf("execute pack error: %w", err)
+	var data []byte
+
+	if txData.outboundParams.CallOptions.IsArbitraryCall {
+		data, err = gatewayABI.Pack("execute", txData.to, txData.message)
+		if err != nil {
+			return nil, fmt.Errorf("execute pack error: %w", err)
+		}
+	} else {
+		messageContext := gatewayevm.MessageContext{
+			Sender: common.HexToAddress(sender),
+		}
+		data, err = gatewayABI.Pack("execute0", messageContext, txData.to, txData.message)
+		if err != nil {
+			return nil, fmt.Errorf("execute0 pack error: %w", err)
+		}
 	}
 
 	tx, _, _, err := signer.Sign(
@@ -49,6 +66,7 @@ func (signer *Signer) signGatewayExecute(ctx context.Context, txData *OutboundDa
 // bytes calldata data
 func (signer *Signer) signGatewayExecuteRevert(
 	ctx context.Context,
+	inboundSender string,
 	txData *OutboundData,
 ) (*ethtypes.Transaction, error) {
 	gatewayABI, err := gatewayevm.GatewayEVMMetaData.GetAbi()
@@ -61,6 +79,7 @@ func (signer *Signer) signGatewayExecuteRevert(
 		txData.to,
 		txData.message,
 		revert.RevertContext{
+			Sender:        common.HexToAddress(inboundSender),
 			Asset:         txData.asset,
 			Amount:        txData.amount.Uint64(),
 			RevertMessage: txData.revertOptions.RevertMessage,
@@ -165,6 +184,7 @@ func (signer *Signer) signERC20CustodyWithdrawAndCall(
 // bytes calldata data
 func (signer *Signer) signERC20CustodyWithdrawRevert(
 	ctx context.Context,
+	inboundSender string,
 	txData *OutboundData,
 ) (*ethtypes.Transaction, error) {
 	erc20CustodyV2ABI, err := erc20custodyv2.ERC20CustodyMetaData.GetAbi()
@@ -179,6 +199,7 @@ func (signer *Signer) signERC20CustodyWithdrawRevert(
 		txData.amount,
 		txData.message,
 		revert.RevertContext{
+			Sender:        common.HexToAddress(inboundSender),
 			Asset:         txData.asset,
 			Amount:        txData.amount.Uint64(),
 			RevertMessage: txData.revertOptions.RevertMessage,

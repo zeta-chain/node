@@ -149,6 +149,7 @@ type FungibleKeeper interface {
 	) (*evmtypes.MsgEthereumTxResponse, bool, error)
 	ProcessV2RevertDeposit(
 		ctx sdk.Context,
+		inboundSender string,
 		amount *big.Int,
 		chainID int64,
 		coinType coin.CoinType,

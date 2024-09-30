@@ -3,6 +3,7 @@ package e2etests
 import (
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 
@@ -11,23 +12,34 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-const payloadMessageWithdrawETH = "this is a test ETH withdraw and call payload"
+const payloadMessageAuthenticatedWithdrawETH = "this is a test ETH withdraw and authenticated call payload"
 
 func TestV2ETHWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
+	previousGasLimit := r.ZEVMAuth.GasLimit
+	r.ZEVMAuth.GasLimit = 10000000
+	defer func() {
+		r.ZEVMAuth.GasLimit = previousGasLimit
+	}()
+
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
 	require.True(r, ok, "Invalid amount specified for TestV2ETHWithdrawAndCall")
 
-	r.AssertTestDAppEVMCalled(false, payloadMessageWithdrawETH, amount)
+	r.AssertTestDAppEVMCalled(false, payloadMessageAuthenticatedWithdrawETH, amount)
 
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
+	// set expected sender
+	tx, err := r.TestDAppV2EVM.SetExpectedOnCallSender(r.EVMAuth, r.ZEVMAuth.From)
+	require.NoError(r, err)
+	utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+
 	// perform the withdraw
-	tx := r.V2ETHWithdrawAndCall(
+	tx = r.V2ETHWithdrawAndAuthenticatedCall(
 		r.TestDAppV2EVMAddr,
 		amount,
-		r.EncodeGasCall(payloadMessageWithdrawETH),
+		[]byte(payloadMessageAuthenticatedWithdrawETH),
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 
@@ -36,5 +48,13 @@ func TestV2ETHWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "withdraw")
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
-	r.AssertTestDAppEVMCalled(true, payloadMessageWithdrawETH, amount)
+	r.AssertTestDAppEVMCalled(true, payloadMessageAuthenticatedWithdrawETH, amount)
+
+	// check expected sender was used
+	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(
+		&bind.CallOpts{},
+		[]byte(payloadMessageAuthenticatedWithdrawETH),
+	)
+	require.NoError(r, err)
+	require.Equal(r, r.ZEVMAuth.From, senderForMsg)
 }

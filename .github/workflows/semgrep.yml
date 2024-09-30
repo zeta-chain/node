@@ -15,8 +15,26 @@ jobs:
     env:
       SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
     container:
-      image: semgrep/semgrep
+      image: ghcr.io/zeta-chain/semgrep-semgrep:1.90.0
+        
     if: (github.actor != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@v4
-      - run: semgrep ci
+      - uses: actions/checkout@v4    
+      - name: Checkout semgrep-utilities repo
+        uses: actions/checkout@v4
+        with:
+          repository: zeta-chain/semgrep-utilities
+          path: semgrep-utilities
+          
+      # uses json for semgrep script for transformation in the next step
+      - run: semgrep ci --json --output semgrep-findings.json 
+      
+      # transforms the the output from the above into a GHAS compatible SARIF 
+      # SARIF output by "semgrep --sarif" doesn't integrate well with GHAS dashboard
+      # Example: the event name uses segmrep rules name/ID, severities are [error, warning, info], tags are a bit confusing)
+      - run: python semgrep-utilities/utilities/github-sarif-helper/src/semgrep-json-to-sarif.py --json semgrep-findings.json --sarif semgrep-github.sarif
+
+      - name: Upload SARIF file for GitHub Advanced Security Dashboard
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep-github.sarif
