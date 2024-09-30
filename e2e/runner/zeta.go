@@ -15,8 +15,11 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
+// WaitForBlocks waits for a specific number of blocks to be generated
+// The parameter n is the number of blocks to wait for
 func (r *E2ERunner) WaitForBlocks(n int64) {
 	height, err := r.CctxClient.LastZetaHeight(r.Ctx, &types.QueryLastZetaHeightRequest{})
 	if err != nil {
@@ -31,6 +34,32 @@ func (r *E2ERunner) WaitForBlocks(n int64) {
 	err = retry.DoWithBackoff(call, boWithMaxRetries)
 	require.NoError(r, err, "failed to wait for %d blocks", n)
 }
+
+// WaitForTSSGeneration waits for a specific number of TSS to be generated
+// The parameter n is the number of TSS to wait for
+func (r *E2ERunner) WaitForTSSGeneration(tssNumber int64) {
+	call := func() error {
+		return retry.Retry(r.checkNumberOfTSSGenerated(tssNumber))
+	}
+	bo := backoff.NewConstantBackOff(time.Second * 5)
+	boWithMaxRetries := backoff.WithMaxRetries(bo, 10)
+	err := retry.DoWithBackoff(call, boWithMaxRetries)
+	require.NoError(r, err, "failed to wait for %d tss generation", tssNumber)
+}
+
+// checkNumberOfTSSGenerated checks the number of TSS generated
+// if the number of tss is less that the `tssNumber` provided we return an error
+func (r *E2ERunner) checkNumberOfTSSGenerated(tssNumber int64) error {
+	tssList, err := r.ObserverClient.TssHistory(r.Ctx, &observertypes.QueryTssHistoryRequest{})
+	if err != nil {
+		return err
+	}
+	if int64(len(tssList.TssList)) < tssNumber {
+		return fmt.Errorf("waiting for %d tss generation, number of TSS :%d", tssNumber, len(tssList.TssList))
+	}
+	return nil
+}
+
 func (r *E2ERunner) waitForBlock(n int64) error {
 	height, err := r.CctxClient.LastZetaHeight(r.Ctx, &types.QueryLastZetaHeightRequest{})
 	if err != nil {
