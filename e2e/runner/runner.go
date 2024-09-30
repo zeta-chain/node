@@ -127,6 +127,8 @@ type E2ERunner struct {
 	BTCZRC20             *zrc20.ZRC20
 	SOLZRC20Addr         ethcommon.Address
 	SOLZRC20             *zrc20.ZRC20
+	TONZRC20Addr         ethcommon.Address
+	TONZRC20             *zrc20.ZRC20
 	UniswapV2FactoryAddr ethcommon.Address
 	UniswapV2Factory     *uniswapv2factory.UniswapV2Factory
 	UniswapV2RouterAddr  ethcommon.Address
