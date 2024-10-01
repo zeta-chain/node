@@ -93,11 +93,11 @@ func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 		return Gas{}, errors.Wrap(err, "unable to parse priorityFee")
 	case gasPrice.Cmp(priorityFee) == -1:
 		logger.Warn().
-			Uint64("cctx.initial_priority_fee", priorityFee.Uint64()).
-			Uint64("cctx.forced_priority_fee", gasPrice.Uint64()).
+			Str("cctx.initial_priority_fee", priorityFee.String()).
+			Str("cctx.forced_priority_fee", gasPrice.String()).
 			Msg("gasPrice is less than priorityFee, setting priorityFee = gasPrice")
 
-		priorityFee = gasPrice
+		priorityFee = big.NewInt(0).Set(gasPrice)
 	}
 
 	return Gas{
