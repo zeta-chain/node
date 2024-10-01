@@ -78,17 +78,6 @@ func AppStateFn(cdc codec.Codec, simManager *module.SimulationManager, genesisSt
 
 		default:
 			appParams := make(simtypes.AppParams)
-
-			genutilGenesis, ok := genesisState[genutiltypes.ModuleName]
-			if !ok {
-				panic("genutil genesis state is missing")
-			}
-			genutilState := new(genutiltypes.GenesisState)
-			err := cdc.UnmarshalJSON(genutilGenesis, genutilState)
-			if err != nil {
-				panic(err)
-			}
-			fmt.Println("Genesis transactions:", len(genutilState.GenTxs))
 			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
 		}
 
@@ -97,22 +86,6 @@ func AppStateFn(cdc codec.Codec, simManager *module.SimulationManager, genesisSt
 		if err != nil {
 			panic(err)
 		}
-
-		//genutilGenesis, ok := rawState[genutiltypes.ModuleName]
-		//if !ok {
-		//	panic("genutil genesis state is missing")
-		//}
-		//genutilState := new(genutiltypes.GenesisState)
-		//err = cdc.UnmarshalJSON(genutilGenesis, genutilState)
-		//if err != nil {
-		//	panic(err)
-		//}
-		//
-		//fmt.Println("Genesis transactions:", len(genutilState.GenTxs))
-		//
-		//for _, acc := range genutilState.GenTxs {
-		//	fmt.Println(acc)
-		//}
 
 		stakingStateBz, ok := rawState[stakingtypes.ModuleName]
 		if !ok {
@@ -159,6 +132,38 @@ func AppStateFn(cdc codec.Codec, simManager *module.SimulationManager, genesisSt
 				Coins:   sdk.NewCoins(notBondedCoins),
 			})
 		}
+
+		genustilStateBz, ok := rawState[genutiltypes.ModuleName]
+		if !ok {
+			panic("staking genesis state is missing")
+		}
+
+		genutilState := new(genutiltypes.GenesisState)
+		err = cdc.UnmarshalJSON(genustilStateBz, genutilState)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("------------------------------------------------")
+		fmt.Println("Genesis trasnactions :", len(genutilState.GenTxs))
+		fmt.Println("Validators :", len(stakingState.Validators))
+		max := 3
+		for i, val := range stakingState.Validators {
+			if i == max {
+				break
+			}
+			fmt.Println("Validator :", val.OperatorAddress, val.Tokens, val.GetStatus())
+		}
+		fmt.Println("Exported", stakingState.Exported)
+		fmt.Println("Bond Denom :", stakingState.Params.BondDenom)
+		fmt.Println("maxValidators", stakingState.Params.MaxValidators)
+		max = 3
+		for i, val := range stakingState.LastValidatorPowers {
+			if i == max {
+				break
+			}
+			fmt.Println("LastValidatorPowers :", val.Address, val.Power)
+		}
+		fmt.Println("------------------------------------------------")
 
 		// change appState back
 		rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
@@ -220,6 +225,8 @@ func AppStateRandomizedFn(
 		NumBonded:    numInitiallyBonded,
 		GenTimestamp: genesisTimestamp,
 	}
+
+	fmt.Println("Generating genesis states...")
 
 	simManager.GenerateGenesisStates(simState)
 
