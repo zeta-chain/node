@@ -10,11 +10,9 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/ethermint/app"
 	evmante "github.com/zeta-chain/ethermint/app/ante"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	zetaapp "github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/app/ante"
 
@@ -179,33 +177,48 @@ func TestAppStateDeterminism(t *testing.T) {
 	}
 }
 
-func CFn(app *zetaapp.App) simulation2.AppStateFn {
-	var bondDenom string
-	return simtestutil.AppStateFnWithExtendedCbs(
+func TestFullAppSimulation(t *testing.T) {
+	config := sim.NewConfigFromFlags()
+	config.ChainID = SimAppChainID
+	config.BlockMaxGas = SimBlockMaxGas
+	config.DBBackend = "memdb"
+	//config.ExportStatePath = "/Users/tanmay/.zetacored/simulation_state_export.json"
+
+	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, "mem-db", "Simulation", sim.FlagVerboseValue, sim.FlagEnabledValue)
+	if skip {
+		t.Skip("skipping application simulation")
+	}
+	require.NoError(t, err, "simulation setup failed")
+
+	defer func() {
+		require.NoError(t, db.Close())
+		require.NoError(t, os.RemoveAll(dir))
+	}()
+	appOptions := make(simtestutil.AppOptionsMap, 0)
+	appOptions[server.FlagInvCheckPeriod] = sim.FlagPeriodValue
+
+	app, err := NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	require.NoError(t, err)
+
+	blockedAddresses := app.ModuleAccountAddrs()
+	_, _, simerr := simulation.SimulateFromSeed(
+		t,
+		os.Stdout,
+		app.BaseApp,
+		sim.AppStateFn(app.AppCodec(), app.SimulationManager(), app.ModuleBasics.DefaultGenesis(app.AppCodec())),
+		simulation2.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+		simtestutil.SimulationOperations(app, app.AppCodec(), config),
+		blockedAddresses,
+		config,
 		app.AppCodec(),
-		app.SimulationManager(),
-		app.ModuleBasics.DefaultGenesis(app.AppCodec()),
-		func(moduleName string, genesisState interface{}) {
-			if moduleName == stakingtypes.ModuleName {
-				stakingState := genesisState.(*stakingtypes.GenesisState)
-				bondDenom = stakingState.Params.BondDenom
-			}
-		},
-		func(rawState map[string]json.RawMessage) {
-
-			evmStateBz, ok := rawState[evmtypes.ModuleName]
-			if !ok {
-				panic("evm genesis state is missing")
-			}
-
-			evmState := new(evmtypes.GenesisState)
-			app.AppCodec().MustUnmarshalJSON(evmStateBz, evmState)
-
-			// we should replace the EvmDenom with BondDenom
-			evmState.Params.EvmDenom = bondDenom
-
-			// change appState back
-			rawState[evmtypes.ModuleName] = app.AppCodec().MustMarshalJSON(evmState)
-		},
 	)
+	require.NoError(t, simerr)
+
+	// check export works as expected
+	_, err = app.ExportAppStateAndValidators(false, nil, nil)
+	require.NoError(t, err)
+
+	if config.Commit {
+		simtestutil.PrintStats(db)
+	}
 }
