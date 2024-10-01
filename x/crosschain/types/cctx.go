@@ -170,29 +170,42 @@ func (m *CrossChainTx) AddOutbound(
 	return nil
 }
 
+func (m *CrossChainTx) ChangeStatus(newStatus CctxStatus, isError bool, msg string) {
+	switch {
+	case isError && msg == "":
+		m.CctxStatus.ChangeStatus(newStatus, "")
+		m.Error = "unexpected error"
+	case isError && msg != "":
+		m.CctxStatus.ChangeStatus(newStatus, "")
+		m.Error = msg
+	case !isError:
+		m.CctxStatus.ChangeStatus(newStatus, msg)
+	}
+}
+
 // SetAbort sets the CCTX status to Aborted with the given error message.
-func (m CrossChainTx) SetAbort(message string) {
-	m.CctxStatus.ChangeStatus(CctxStatus_Aborted, message)
+func (m *CrossChainTx) SetAbort(isError bool, msg string) {
+	m.ChangeStatus(CctxStatus_Aborted, isError, msg)
 }
 
 // SetPendingRevert sets the CCTX status to PendingRevert with the given error message.
-func (m CrossChainTx) SetPendingRevert(message string) {
-	m.CctxStatus.ChangeStatus(CctxStatus_PendingRevert, message)
+func (m *CrossChainTx) SetPendingRevert(isError bool, msg string) {
+	m.ChangeStatus(CctxStatus_PendingRevert, isError, msg)
 }
 
 // SetPendingOutbound sets the CCTX status to PendingOutbound with the given error message.
-func (m CrossChainTx) SetPendingOutbound(message string) {
-	m.CctxStatus.ChangeStatus(CctxStatus_PendingOutbound, message)
+func (m *CrossChainTx) SetPendingOutbound(isError bool, msg string) {
+	m.ChangeStatus(CctxStatus_PendingOutbound, isError, msg)
 }
 
 // SetOutboundMined sets the CCTX status to OutboundMined with the given error message.
-func (m CrossChainTx) SetOutboundMined(message string) {
-	m.CctxStatus.ChangeStatus(CctxStatus_OutboundMined, message)
+func (m *CrossChainTx) SetOutboundMined(isError bool, msg string) {
+	m.ChangeStatus(CctxStatus_OutboundMined, isError, msg)
 }
 
 // SetReverted sets the CCTX status to Reverted with the given error message.
-func (m CrossChainTx) SetReverted(message string) {
-	m.CctxStatus.ChangeStatus(CctxStatus_Reverted, message)
+func (m *CrossChainTx) SetReverted(isError bool, msg string) {
+	m.ChangeStatus(CctxStatus_Reverted, isError, msg)
 }
 
 func (m CrossChainTx) GetCCTXIndexBytes() ([32]byte, error) {
@@ -273,6 +286,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		OutboundParams:          []*OutboundParams{outboundParams},
 		ProtocolContractVersion: msg.ProtocolContractVersion,
 		RevertOptions:           msg.RevertOptions,
+		Error:                   "",
 	}
 
 	// TODO: remove this validate call

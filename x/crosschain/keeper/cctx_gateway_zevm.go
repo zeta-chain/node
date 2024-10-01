@@ -28,7 +28,7 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 
 	if err != nil && !isContractReverted {
 		// exceptional case; internal error; should abort CCTX
-		config.CCTX.SetAbort(err.Error())
+		config.CCTX.SetAbort(true, err.Error())
 		return types.CctxStatus_Aborted, err
 	}
 

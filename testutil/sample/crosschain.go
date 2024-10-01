@@ -213,6 +213,7 @@ func CrossChainTx(t *testing.T, index string) *types.CrossChainTx {
 		OutboundParams:          []*types.OutboundParams{OutboundParams(r), OutboundParams(r)},
 		ProtocolContractVersion: types.ProtocolContractVersion_V1,
 		RevertOptions:           types.NewEmptyRevertOptions(),
+		Error:                   "",
 	}
 }
 
