@@ -15,7 +15,7 @@ import (
 	evmante "github.com/zeta-chain/ethermint/app/ante"
 	zetaapp "github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/app/ante"
-	sim2 "github.com/zeta-chain/node/tests/simulation/sim"
+	simutils "github.com/zeta-chain/node/tests/simulation/sim"
 
 	dbm "github.com/cometbft/cometbft-db"
 
@@ -24,16 +24,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
+	cosmossimutils "github.com/cosmos/cosmos-sdk/testutil/sims"
+	cosmossim "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
+	cosmossimcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 )
 
 // AppChainID hardcoded chainID for simulation
 
 func init() {
-	sim2.GetSimulatorFlags()
+	simutils.GetSimulatorFlags()
 }
 
 const (
@@ -92,31 +92,32 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
 // and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
-	if !sim2.FlagEnabledValue {
+	if !simutils.FlagEnabledValue {
 		t.Skip("skipping application simulation")
 	}
 
-	config := sim2.NewConfigFromFlags()
+	config := simutils.NewConfigFromFlags()
 	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
 	config.OnOperation = false
 	config.AllInvariants = false
 	config.ChainID = SimAppChainID
+	config.DBBackend = "goleveldb"
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
 
 	// We will be overriding the random seed and just run a single simulation on the provided seed value
-	if config.Seed != simcli.DefaultSeedValue {
+	if config.Seed != cosmossimcli.DefaultSeedValue {
 		numSeeds = 1
 	}
 
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
-	appOptions := make(simtestutil.AppOptionsMap, 0)
-	appOptions[server.FlagInvCheckPeriod] = sim2.FlagPeriodValue
+	appOptions := make(cosmossimutils.AppOptionsMap, 0)
+	appOptions[server.FlagInvCheckPeriod] = simutils.FlagPeriodValue
 
 	for i := 0; i < numSeeds; i++ {
-		if config.Seed == simcli.DefaultSeedValue {
+		if config.Seed == cosmossimcli.DefaultSeedValue {
 			config.Seed = rand.Int63()
 		}
 
@@ -124,14 +125,16 @@ func TestAppStateDeterminism(t *testing.T) {
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
-			if sim2.FlagVerboseValue {
+			if simutils.FlagVerboseValue {
 				logger = log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 			} else {
 				logger = log.NewNopLogger()
 			}
 
-			db := dbm.NewMemDB()
-			dir, err := os.MkdirTemp("", "zeta-simulation")
+			db, dir, logger, skip, err := cosmossimutils.SetupSimulation(config, "level-db", "Simulation", simutils.FlagVerboseValue, simutils.FlagEnabledValue)
+			if skip {
+				t.Skip("skipping application simulation")
+			}
 			require.NoError(t, err)
 			appOptions[flags.FlagHome] = dir
 
@@ -148,9 +151,9 @@ func TestAppStateDeterminism(t *testing.T) {
 				t,
 				os.Stdout,
 				app.BaseApp,
-				sim2.AppStateFn(app.AppCodec(), app.SimulationManager(), app.ModuleBasics.DefaultGenesis(app.AppCodec())),
-				simulation2.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-				simtestutil.SimulationOperations(app, app.AppCodec(), config),
+				simutils.AppStateFn(app.AppCodec(), app.SimulationManager(), app.ModuleBasics.DefaultGenesis(app.AppCodec())),
+				cosmossim.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+				cosmossimutils.SimulationOperations(app, app.AppCodec(), config),
 				blockedAddresses,
 				config,
 				app.AppCodec(),
@@ -158,7 +161,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			require.NoError(t, err)
 
 			if config.Commit {
-				sim2.PrintStats(db)
+				simutils.PrintStats(db)
 			}
 
 			appHash := app.LastCommitID().Hash
@@ -175,13 +178,13 @@ func TestAppStateDeterminism(t *testing.T) {
 }
 
 func TestFullAppSimulation(t *testing.T) {
-	config := sim2.NewConfigFromFlags()
+	config := simutils.NewConfigFromFlags()
 	config.ChainID = SimAppChainID
 	config.BlockMaxGas = SimBlockMaxGas
-	config.DBBackend = "memdb"
+	config.DBBackend = "goleveldb"
 	//config.ExportStatePath = "/Users/tanmay/.zetacored/simulation_state_export.json"
 
-	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, "mem-db", "Simulation", sim2.FlagVerboseValue, sim2.FlagEnabledValue)
+	db, dir, logger, skip, err := cosmossimutils.SetupSimulation(config, "level-db", "Simulation", simutils.FlagVerboseValue, simutils.FlagEnabledValue)
 	if skip {
 		t.Skip("skipping application simulation")
 	}
@@ -191,8 +194,8 @@ func TestFullAppSimulation(t *testing.T) {
 		require.NoError(t, db.Close())
 		require.NoError(t, os.RemoveAll(dir))
 	}()
-	appOptions := make(simtestutil.AppOptionsMap, 0)
-	appOptions[server.FlagInvCheckPeriod] = sim2.FlagPeriodValue
+	appOptions := make(cosmossimutils.AppOptionsMap, 0)
+	appOptions[server.FlagInvCheckPeriod] = simutils.FlagPeriodValue
 
 	app, err := NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 	require.NoError(t, err)
@@ -202,9 +205,9 @@ func TestFullAppSimulation(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		sim2.AppStateFn(app.AppCodec(), app.SimulationManager(), app.ModuleBasics.DefaultGenesis(app.AppCodec())),
-		simulation2.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simtestutil.SimulationOperations(app, app.AppCodec(), config),
+		simutils.AppStateFn(app.AppCodec(), app.SimulationManager(), app.ModuleBasics.DefaultGenesis(app.AppCodec())),
+		cosmossim.RandomAccounts,
+		cosmossimutils.SimulationOperations(app, app.AppCodec(), config),
 		blockedAddresses,
 		config,
 		app.AppCodec(),
@@ -216,6 +219,6 @@ func TestFullAppSimulation(t *testing.T) {
 	require.NoError(t, err)
 
 	if config.Commit {
-		simtestutil.PrintStats(db)
+		cosmossimutils.PrintStats(db)
 	}
 }
