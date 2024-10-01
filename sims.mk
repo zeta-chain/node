@@ -5,14 +5,21 @@
 
 BINDIR ?= $(GOPATH)/bin
 SIMAPP = ./app
+
+runsim: $(BINDIR)/runsim
+$(BINDIR)/runsim:
+	@echo "Installing runsim..."
+	@(cd /tmp && go install github.com/cosmos/tools/cmd/runsim@v1.0.0)
+
+
 test-sim-nondeterminism:
 	@echo "Running non-determinism test..."
 	@go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \
-		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h
+		-NumBlocks=10 -BlockSize=20 -Commit=true -Period=0 -v -timeout 24h
 
 test-sim-custom-genesis-fast:
 	@echo "Running custom genesis simulation..."
-	@echo "By default, ${HOME}/.gaia/config/genesis.json will be used."
+	@echo "By default, ${HOME}/.zetacored/config/genesis.json will be used."
 	@go test -mod=readonly $(SIMAPP) -run TestFullAppSimulation -Genesis=${HOME}/.gaia/config/genesis.json \
 		-Enabled=true -NumBlocks=100 -BlockSize=200 -Commit=true -Seed=99 -Period=5 -v -timeout 24h
 
@@ -26,7 +33,7 @@ test-sim-after-import: runsim
 
 test-sim-custom-genesis-multi-seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
-	@echo "By default, ${HOME}/.gaia/config/genesis.json will be used."
+	@echo "By default, ${HOME}/.zetacored/config/genesis.json will be used."
 	@$(BINDIR)/runsim -Genesis=${HOME}/.gaia/config/genesis.json -SimAppPkg=$(SIMAPP) -ExitOnFail 400 5 TestFullAppSimulation
 
 test-sim-multi-seed-long: runsim

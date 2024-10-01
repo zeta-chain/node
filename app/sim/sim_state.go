@@ -18,8 +18,8 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	zetaapp "github.com/zeta-chain/node/app"
 )
@@ -97,6 +97,7 @@ func AppStateFn(cdc codec.Codec, simManager *module.SimulationManager, genesisSt
 		if err != nil {
 			panic(err)
 		}
+
 		// compute not bonded balance
 		notBondedTokens := math.ZeroInt()
 		for _, val := range stakingState.Validators {
@@ -133,39 +134,19 @@ func AppStateFn(cdc codec.Codec, simManager *module.SimulationManager, genesisSt
 			})
 		}
 
-		genustilStateBz, ok := rawState[genutiltypes.ModuleName]
+		evmStateBz, ok := rawState[evmtypes.ModuleName]
 		if !ok {
-			panic("staking genesis state is missing")
+			panic("evm genesis state is missing")
 		}
 
-		genutilState := new(genutiltypes.GenesisState)
-		err = cdc.UnmarshalJSON(genustilStateBz, genutilState)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("------------------------------------------------")
-		fmt.Println("Genesis trasnactions :", len(genutilState.GenTxs))
-		fmt.Println("Validators :", len(stakingState.Validators))
-		max := 3
-		for i, val := range stakingState.Validators {
-			if i == max {
-				break
-			}
-			fmt.Println("Validator :", val.OperatorAddress, val.Tokens, val.GetStatus())
-		}
-		fmt.Println("Exported", stakingState.Exported)
-		fmt.Println("Bond Denom :", stakingState.Params.BondDenom)
-		fmt.Println("maxValidators", stakingState.Params.MaxValidators)
-		max = 3
-		for i, val := range stakingState.LastValidatorPowers {
-			if i == max {
-				break
-			}
-			fmt.Println("LastValidatorPowers :", val.Address, val.Power)
-		}
-		fmt.Println("------------------------------------------------")
+		evmState := new(evmtypes.GenesisState)
+		cdc.MustUnmarshalJSON(evmStateBz, evmState)
+
+		// we should replace the EvmDenom with BondDenom
+		evmState.Params.EvmDenom = stakingState.Params.BondDenom
 
 		// change appState back
+		rawState[evmtypes.ModuleName] = cdc.MustMarshalJSON(evmState)
 		rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
 		rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
 

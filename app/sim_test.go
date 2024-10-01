@@ -9,6 +9,7 @@ import (
 
 	"github.com/cometbft/cometbft/libs/log"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/ethermint/app"
@@ -62,6 +63,7 @@ func NewSimApp(logger log.Logger, db dbm.DB, appOptions servertypes.AppOptions, 
 		appOptions,
 		baseAppOptions...,
 	)
+	sdk.DefaultPowerReduction = sdk.OneInt()
 	// disable feemarket on native tx
 	options := ante.HandlerOptions{
 		AccountKeeper:   app.AccountKeeper,
