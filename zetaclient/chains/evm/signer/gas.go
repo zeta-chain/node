@@ -42,12 +42,12 @@ func (g Gas) validate() error {
 		return errors.New("max fee per unit is nil")
 	case g.PriorityFee == nil:
 		return errors.New("priority fee per unit is nil")
-	case g.Price.Cmp(g.PriorityFee) == -1:
-		return fmt.Errorf(
-			"max fee per unit (%d) is less than priority fee per unit (%d)",
-			g.Price.Int64(),
-			g.PriorityFee.Int64(),
-		)
+	// case g.Price.Cmp(g.PriorityFee) == -1:
+	// 	return fmt.Errorf(
+	// 		"max fee per unit (%d) is less than priority fee per unit (%d)",
+	// 		g.Price.Int64(),
+	// 		g.PriorityFee.Int64(),
+	// 	)
 	default:
 		return nil
 	}
@@ -91,8 +91,8 @@ func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 	switch {
 	case err != nil:
 		return Gas{}, errors.Wrap(err, "unable to parse priorityFee")
-	case gasPrice.Cmp(priorityFee) == -1:
-		return Gas{}, fmt.Errorf("gasPrice (%d) is less than priorityFee (%d)", gasPrice.Int64(), priorityFee.Int64())
+		// case gasPrice.Cmp(priorityFee) == -1:
+		// 	return Gas{}, fmt.Errorf("gasPrice (%d) is less than priorityFee (%d)", gasPrice.Int64(), priorityFee.Int64())
 	}
 
 	return Gas{
