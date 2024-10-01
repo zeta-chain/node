@@ -299,12 +299,12 @@ start-v2-test: zetanode
 ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade from source"
-	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source --build-arg OLD_VERSION='release/v19' .
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source --build-arg OLD_VERSION='release/v20' .
 .PHONY: zetanode-upgrade
 else
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade from binaries"
-	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v19.1.1' .
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v20.0.2' .
 .PHONY: zetanode-upgrade
 endif
 
