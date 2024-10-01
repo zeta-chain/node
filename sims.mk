@@ -4,7 +4,7 @@
 ### Simulations
 
 BINDIR ?= $(GOPATH)/bin
-SIMAPP = ./app
+SIMAPP = ./tests/simulation
 
 runsim: $(BINDIR)/runsim
 $(BINDIR)/runsim:

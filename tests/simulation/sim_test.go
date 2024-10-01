@@ -1,4 +1,4 @@
-package app_test
+package simulation_test
 
 import (
 	"encoding/json"
@@ -15,6 +15,7 @@ import (
 	evmante "github.com/zeta-chain/ethermint/app/ante"
 	zetaapp "github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/app/ante"
+	sim2 "github.com/zeta-chain/node/tests/simulation/sim"
 
 	dbm "github.com/cometbft/cometbft-db"
 
@@ -27,16 +28,12 @@ import (
 	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
-
-	// "github.com/cosmos/gaia/v11/app/helpers"
-	// "github.com/cosmos/gaia/v11/app/params"
-	"github.com/zeta-chain/node/app/sim"
 )
 
 // AppChainID hardcoded chainID for simulation
 
 func init() {
-	sim.GetSimulatorFlags()
+	sim2.GetSimulatorFlags()
 }
 
 const (
@@ -95,11 +92,11 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
 // and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
-	if !sim.FlagEnabledValue {
+	if !sim2.FlagEnabledValue {
 		t.Skip("skipping application simulation")
 	}
 
-	config := sim.NewConfigFromFlags()
+	config := sim2.NewConfigFromFlags()
 	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
 	config.OnOperation = false
@@ -116,7 +113,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 	appOptions := make(simtestutil.AppOptionsMap, 0)
-	appOptions[server.FlagInvCheckPeriod] = sim.FlagPeriodValue
+	appOptions[server.FlagInvCheckPeriod] = sim2.FlagPeriodValue
 
 	for i := 0; i < numSeeds; i++ {
 		if config.Seed == simcli.DefaultSeedValue {
@@ -127,7 +124,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
-			if sim.FlagVerboseValue {
+			if sim2.FlagVerboseValue {
 				logger = log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 			} else {
 				logger = log.NewNopLogger()
@@ -151,7 +148,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				t,
 				os.Stdout,
 				app.BaseApp,
-				sim.AppStateFn(app.AppCodec(), app.SimulationManager(), app.ModuleBasics.DefaultGenesis(app.AppCodec())),
+				sim2.AppStateFn(app.AppCodec(), app.SimulationManager(), app.ModuleBasics.DefaultGenesis(app.AppCodec())),
 				simulation2.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 				simtestutil.SimulationOperations(app, app.AppCodec(), config),
 				blockedAddresses,
@@ -161,7 +158,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			require.NoError(t, err)
 
 			if config.Commit {
-				sim.PrintStats(db)
+				sim2.PrintStats(db)
 			}
 
 			appHash := app.LastCommitID().Hash
@@ -178,13 +175,13 @@ func TestAppStateDeterminism(t *testing.T) {
 }
 
 func TestFullAppSimulation(t *testing.T) {
-	config := sim.NewConfigFromFlags()
+	config := sim2.NewConfigFromFlags()
 	config.ChainID = SimAppChainID
 	config.BlockMaxGas = SimBlockMaxGas
 	config.DBBackend = "memdb"
 	//config.ExportStatePath = "/Users/tanmay/.zetacored/simulation_state_export.json"
 
-	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, "mem-db", "Simulation", sim.FlagVerboseValue, sim.FlagEnabledValue)
+	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, "mem-db", "Simulation", sim2.FlagVerboseValue, sim2.FlagEnabledValue)
 	if skip {
 		t.Skip("skipping application simulation")
 	}
@@ -195,7 +192,7 @@ func TestFullAppSimulation(t *testing.T) {
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 	appOptions := make(simtestutil.AppOptionsMap, 0)
-	appOptions[server.FlagInvCheckPeriod] = sim.FlagPeriodValue
+	appOptions[server.FlagInvCheckPeriod] = sim2.FlagPeriodValue
 
 	app, err := NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 	require.NoError(t, err)
@@ -205,7 +202,7 @@ func TestFullAppSimulation(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		sim.AppStateFn(app.AppCodec(), app.SimulationManager(), app.ModuleBasics.DefaultGenesis(app.AppCodec())),
+		sim2.AppStateFn(app.AppCodec(), app.SimulationManager(), app.ModuleBasics.DefaultGenesis(app.AppCodec())),
 		simulation2.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		simtestutil.SimulationOperations(app, app.AppCodec(), config),
 		blockedAddresses,

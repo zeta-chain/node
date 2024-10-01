@@ -4,12 +4,10 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -64,7 +62,7 @@ func simulationModules(
 	_ bool,
 ) []module.AppModuleSimulation {
 	return []module.AppModuleSimulation{
-		auth.NewAppModule(appCodec, app.AccountKeeper, RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
+		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
 		//gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
@@ -83,42 +81,4 @@ func simulationModules(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 	}
-}
-
-// RandomGenesisAccounts defines the default RandomGenesisAccountsFn used on the SDK.
-// It creates a slice of BaseAccount, ContinuousVestingAccount and DelayedVestingAccount.
-func RandomGenesisAccounts(simState *module.SimulationState) authtypes.GenesisAccounts {
-	genesisAccs := make(authtypes.GenesisAccounts, len(simState.Accounts))
-	for i, acc := range simState.Accounts {
-		bacc := authtypes.NewBaseAccountWithAddress(acc.Address)
-
-		// Only consider making a vesting account once the initial bonded validator
-		// set is exhausted due to needing to track DelegatedVesting.
-		if !(int64(i) > simState.NumBonded && simState.Rand.Intn(100) < 50) {
-			genesisAccs[i] = bacc
-			continue
-		}
-
-		initialVesting := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, simState.Rand.Int63n(simState.InitialStake.Int64())))
-		var endTime int64
-
-		startTime := simState.GenTimestamp.Unix()
-
-		// Allow for some vesting accounts to vest very quickly while others very slowly.
-		if simState.Rand.Intn(100) < 50 {
-			endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime)+1, int(startTime+(60*60*24*30))))
-		} else {
-			endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime)+1, int(startTime+(60*60*12))))
-		}
-
-		bva := vestingtypes.NewBaseVestingAccount(bacc, initialVesting, endTime)
-
-		if simState.Rand.Intn(100) < 50 {
-			genesisAccs[i] = vestingtypes.NewContinuousVestingAccountRaw(bva, startTime)
-		} else {
-			genesisAccs[i] = vestingtypes.NewDelayedVestingAccountRaw(bva)
-		}
-	}
-
-	return genesisAccs
 }
