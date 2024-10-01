@@ -17,6 +17,7 @@ import (
 	"github.com/zeta-chain/node/pkg/bg"
 	"github.com/zeta-chain/node/pkg/constant"
 	zetamath "github.com/zeta-chain/node/pkg/math"
+	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
@@ -666,28 +667,18 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 // runObserverSignerSync runs a blocking ticker that observes chain changes from zetacore
 // and optionally (de)provisions respective observers and signers.
 func (oc *Orchestrator) runObserverSignerSync(ctx context.Context) error {
-	// sync observers and signers right away to speed up zetaclient startup
-	if err := oc.syncObserverSigner(ctx); err != nil {
-		oc.logger.Error().Err(err).Msg("runObserverSignerSync: syncObserverSigner failed for initial sync")
-	}
+	// every other block
+	const cadence = 2 * constant.ZetaBlockTime
 
-	// sync observer and signer every 10 blocks (approx. 1 minute)
-	const cadence = 10 * constant.ZetaBlockTime
-
-	ticker := time.NewTicker(cadence)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-oc.stop:
-			oc.logger.Warn().Msg("runObserverSignerSync: stopped")
-			return nil
-		case <-ticker.C:
-			if err := oc.syncObserverSigner(ctx); err != nil {
-				oc.logger.Error().Err(err).Msg("runObserverSignerSync: syncObserverSigner failed")
-			}
+	task := func(ctx context.Context, _ *ticker.Ticker) error {
+		if err := oc.syncObserverSigner(ctx); err != nil {
+			oc.logger.Error().Err(err).Msg("syncObserverSigner failed")
 		}
+
+		return nil
 	}
+
+	return ticker.Run(ctx, cadence, task, ticker.WithLogger(oc.logger.Logger, "SyncObserverSigner"))
 }
 
 // syncs and provisions observers & signers.

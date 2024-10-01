@@ -26,6 +26,7 @@ import (
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
@@ -75,7 +76,7 @@ func syncSignerMap(
 		presentChainIDs = make([]int64, 0)
 
 		onAfterAdd = func(chainID int64, _ interfaces.ChainSigner) {
-			logger.Std.Info().Msgf("Added signer for chain %d", chainID)
+			logger.Std.Info().Int64(logs.FieldChain, chainID).Msg("Added signer")
 			added++
 		}
 
@@ -84,7 +85,7 @@ func syncSignerMap(
 		}
 
 		onBeforeRemove = func(chainID int64, _ interfaces.ChainSigner) {
-			logger.Std.Info().Msgf("Removing signer for chain %d", chainID)
+			logger.Std.Info().Int64(logs.FieldChain, chainID).Msg("Removing signer")
 			removed++
 		}
 	)
@@ -245,7 +246,8 @@ func syncObserverMap(
 
 		presentChainIDs = make([]int64, 0)
 
-		onAfterAdd = func(_ int64, ob interfaces.ChainObserver) {
+		onAfterAdd = func(chainID int64, ob interfaces.ChainObserver) {
+			logger.Std.Info().Int64(logs.FieldChain, chainID).Msg("Added observer")
 			ob.Start(ctx)
 			added++
 		}
@@ -254,7 +256,8 @@ func syncObserverMap(
 			mapSet[int64, interfaces.ChainObserver](observerMap, chainID, ob, onAfterAdd)
 		}
 
-		onBeforeRemove = func(_ int64, ob interfaces.ChainObserver) {
+		onBeforeRemove = func(chainID int64, ob interfaces.ChainObserver) {
+			logger.Std.Info().Int64(logs.FieldChain, chainID).Msg("Removing observer")
 			ob.Stop()
 			removed++
 		}
