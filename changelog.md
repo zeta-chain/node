@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v20.0.1
+
+### Fixes
+
+* [2949](https://github.com/zeta-chain/node/pull/2949) - disable the check on gasPrice vs. priorityFee
+
 ## v20.0.0
 
 ### Features
