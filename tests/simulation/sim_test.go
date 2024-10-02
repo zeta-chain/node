@@ -7,17 +7,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/ethermint/app"
-	evmante "github.com/zeta-chain/ethermint/app/ante"
-	zetaapp "github.com/zeta-chain/node/app"
-	"github.com/zeta-chain/node/app/ante"
 	simutils "github.com/zeta-chain/node/tests/simulation/sim"
-
-	dbm "github.com/cometbft/cometbft-db"
 
 	"github.com/cosmos/cosmos-sdk/store"
 
@@ -43,51 +34,6 @@ const (
 	SimDBName      = "simulation"
 )
 
-func NewSimApp(logger log.Logger, db dbm.DB, appOptions servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) (*zetaapp.App, error) {
-
-	encCdc := zetaapp.MakeEncodingConfig()
-
-	// Set load latest version to false as we manually set it later.
-	zetaApp := zetaapp.New(
-		logger,
-		db,
-		nil,
-		false,
-		map[int64]bool{},
-		app.DefaultNodeHome,
-		5,
-		encCdc,
-		appOptions,
-		baseAppOptions...,
-	)
-
-	// Set power reduction to 1 to make sure all bonded validators are added to the validator set
-	sdk.DefaultPowerReduction = sdk.OneInt()
-
-	// use zeta antehandler
-	options := ante.HandlerOptions{
-		AccountKeeper:   zetaApp.AccountKeeper,
-		BankKeeper:      zetaApp.BankKeeper,
-		EvmKeeper:       zetaApp.EvmKeeper,
-		FeeMarketKeeper: zetaApp.FeeMarketKeeper,
-		SignModeHandler: encCdc.TxConfig.SignModeHandler(),
-		SigGasConsumer:  evmante.DefaultSigVerificationGasConsumer,
-		MaxTxGasWanted:  0,
-		ObserverKeeper:  zetaApp.ObserverKeeper,
-	}
-
-	anteHandler, err := ante.NewAnteHandler(options)
-	if err != nil {
-		panic(err)
-	}
-
-	zetaApp.SetAnteHandler(anteHandler)
-	if err := zetaApp.LoadLatestVersion(); err != nil {
-		return nil, err
-	}
-	return zetaApp, nil
-}
-
 // interBlockCacheOpt returns a BaseApp option function that sets the persistent
 // inter-block write-through cache.
 func interBlockCacheOpt() func(*baseapp.BaseApp) {
@@ -97,7 +43,7 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 // TestAppStateDeterminism runs a full application simulation , and produces multiple blocks as per the config
 // It checks the determinism of the application by comparing the apphash at the end of each run to other runs
 // The following test certifies that , for the same set of operations ( irrespective of what the operations are ) ,
-// we would reach the same final state
+// we would reach the same final state if the initital state is the same
 func TestAppStateDeterminism(t *testing.T) {
 	if !simutils.FlagEnabledValue {
 		t.Skip("skipping application simulation")
@@ -121,7 +67,6 @@ func TestAppStateDeterminism(t *testing.T) {
 		numSeeds = 1
 	}
 
-	// For the same seed, the app hash produced at the end of each run should be the same
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
@@ -133,15 +78,13 @@ func TestAppStateDeterminism(t *testing.T) {
 		if config.Seed == cosmossimcli.DefaultSeedValue {
 			config.Seed = rand.Int63()
 		}
-
-		//dbPrefix := fmt.Sprintf("%s-%d", SimDBBackend, i)
 		// For the same seed, the app hash produced at the end of each run should be the same
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			db, dir, logger, _, err := cosmossimutils.SetupSimulation(config, SimDBBackend, SimDBName, simutils.FlagVerboseValue, simutils.FlagEnabledValue)
 			require.NoError(t, err)
 			appOptions[flags.FlagHome] = dir
 
-			simApp, err := NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+			simApp, err := simutils.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
@@ -150,6 +93,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			blockedAddresses := simApp.ModuleAccountAddrs()
 
+			// Random seed is used to produce a random initial state for the simulation
 			_, _, err = simulation.SimulateFromSeed(
 				t,
 				os.Stdout,
@@ -202,7 +146,7 @@ func TestFullAppSimulation(t *testing.T) {
 	appOptions[server.FlagInvCheckPeriod] = simutils.FlagPeriodValue
 	appOptions[flags.FlagHome] = dir
 
-	simApp, err := NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	simApp, err := simutils.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 	require.NoError(t, err)
 
 	blockedAddresses := simApp.ModuleAccountAddrs()

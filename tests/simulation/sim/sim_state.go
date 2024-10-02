@@ -188,6 +188,9 @@ func AppStateRandomizedFn(
 		numInitiallyBonded = numAccs
 	}
 
+	// Set the default power reduction to be one less than the initial stake so that all randomised validators are part of the validator set
+	sdk.DefaultPowerReduction = initialStake.Sub(sdk.OneInt())
+
 	fmt.Printf(
 		`Selected randomly generated parameters for simulated genesis:
 {
