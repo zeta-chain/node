@@ -59,5 +59,5 @@ func NewSimApp(logger log.Logger, db dbm.DB, appOptions servertypes.AppOptions, 
 func PrintStats(db dbm.DB) {
 	fmt.Println("\nDB Stats")
 	fmt.Println(db.Stats()["leveldb.stats"])
-	fmt.Println("LevelDB cached block size", db.Stats()["leveldb.cachedblock"])
+	fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 }

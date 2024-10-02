@@ -171,5 +171,5 @@ func TestFullAppSimulation(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	cosmossimutils.PrintStats(db)
+	simutils.PrintStats(db)
 }
