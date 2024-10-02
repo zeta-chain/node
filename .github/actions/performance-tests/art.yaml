@@ -174,6 +174,7 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_getTransactionByBlockHashAndIndex"
             params:
+              - "0xbd8bd16e5d4375ed4bab633c4fb8aca58fdf7ed6c340853b20cfa91ed9a3b9e1"
               - "0x0"
           capture:
             - json: "$"
@@ -215,6 +216,7 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_getUncleByBlockHashAndIndex"
             params:
+              - "0xbd8bd16e5d4375ed4bab633c4fb8aca58fdf7ed6c340853b20cfa91ed9a3b9e1"
               - "0x0"
           capture:
             - json: "$"
@@ -258,7 +260,7 @@ scenarios:
             params:
               - fromBlock: "latest"
                 toBlock: "latest"
-                address: "0x0"
+                address: "0x81eF14691E9ea2f711cf56a9f0889c49C5Fe995a"
                 topics: []
           capture:
             - json: "$"
@@ -279,7 +281,7 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_getFilterChanges"
             params:
-              - "0x0"
+              - "0xbd8bd16e5d4375ed4bab633c4fb8aca58fdf7ed6c340853b20cfa91ed9a3b9e1"
           capture:
             - json: "$"
               as: response
@@ -299,7 +301,7 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_getFilterLogs"
             params:
-              - "0x0"
+              - "0xbd8bd16e5d4375ed4bab633c4fb8aca58fdf7ed6c340853b20cfa91ed9a3b9e1"
           capture:
             - json: "$"
               as: response
@@ -338,7 +340,7 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_getBlockByHash"
             params:
-              - "0x0"
+              - "0x8716674e0acdbe87bab4595ecd33436f8a1a1b32fcda721362fe98dfc764affe"
               - true
           capture:
             - json: "$"
@@ -380,7 +382,7 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_getBlockTransactionCountByHash"
             params:
-              - "0x0"
+              - "0x8716674e0acdbe87bab4595ecd33436f8a1a1b32fcda721362fe98dfc764affe"
           capture:
             - json: "$"
               as: response
@@ -420,7 +422,7 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_getCode"
             params:
-              - "0x05BA149A7bd6dC1F937fA9046A9e05C05f3b18b0"
+              - "0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a"
               - "latest"
           capture:
             - json: "$"
@@ -441,7 +443,7 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_getTransactionByHash"
             params:
-              - "0x0"
+              - "0x1a363840b12fa22aae5920edf11e2c59dde5260ffe5c9bc108250fe8380f5e75"
           capture:
             - json: "$"
               as: response
@@ -461,7 +463,7 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_getTransactionReceipt"
             params:
-              - "0x0"
+              - "0x1a363840b12fa22aae5920edf11e2c59dde5260ffe5c9bc108250fe8380f5e75"
           capture:
             - json: "$"
               as: response
@@ -481,7 +483,7 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_getLogs"
             params:
-              - address: "0x05BA149A7bd6dC1F937fA9046A9e05C05f3b18b0"
+              - address: "0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a"
           capture:
             - json: "$"
               as: response
@@ -501,7 +503,7 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_getBalance"
             params:
-              - "0x05BA149A7bd6dC1F937fA9046A9e05C05f3b18b0"
+              - "0x735b14BB79463307AAcBED86DAf3322B1e6226aB"
               - "latest"
           capture:
             - json: "$"
@@ -523,7 +525,7 @@ scenarios:
             method: "eth_estimateGas"
             params:
               - from: "0x239e96c8f17C85c30100AC26F635Ea15f23E9c67"
-                to: "0x05BA149A7bd6dC1F937fA9046A9e05C05f3b18b0"
+                to: "0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a"
           capture:
             - json: "$"
               as: response
