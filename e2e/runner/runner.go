@@ -232,6 +232,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	r.ETHZRC20Addr = other.ETHZRC20Addr
 	r.BTCZRC20Addr = other.BTCZRC20Addr
 	r.SOLZRC20Addr = other.SOLZRC20Addr
+	r.TONZRC20Addr = other.TONZRC20Addr
 	r.UniswapV2FactoryAddr = other.UniswapV2FactoryAddr
 	r.UniswapV2RouterAddr = other.UniswapV2RouterAddr
 	r.ConnectorZEVMAddr = other.ConnectorZEVMAddr
@@ -274,6 +275,10 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 		return err
 	}
 	r.SOLZRC20, err = zrc20.NewZRC20(r.SOLZRC20Addr, r.ZEVMClient)
+	if err != nil {
+		return err
+	}
+	r.TONZRC20, err = zrc20.NewZRC20(r.TONZRC20Addr, r.ZEVMClient)
 	if err != nil {
 		return err
 	}
@@ -361,6 +366,7 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("ERC20ZRC20:     %s", r.ERC20ZRC20Addr.Hex())
 	r.Logger.Print("BTCZRC20:       %s", r.BTCZRC20Addr.Hex())
 	r.Logger.Print("SOLZRC20:       %s", r.SOLZRC20Addr.Hex())
+	r.Logger.Print("TONZRC20:       %s", r.TONZRC20Addr.Hex())
 	r.Logger.Print("UniswapFactory: %s", r.UniswapV2FactoryAddr.Hex())
 	r.Logger.Print("UniswapRouter:  %s", r.UniswapV2RouterAddr.Hex())
 	r.Logger.Print("ConnectorZEVM:  %s", r.ConnectorZEVMAddr.Hex())

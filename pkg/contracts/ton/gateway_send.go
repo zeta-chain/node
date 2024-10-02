@@ -16,11 +16,9 @@ type Sender interface {
 	Send(ctx context.Context, messages ...wallet.Sendable) error
 }
 
+// see https://docs.ton.org/develop/smart-contracts/messages#message-modes
 const (
-	SendModeDefault = uint8(0)
-)
-
-const (
+	SendFlagSeparateFees = uint8(1)
 	SendFlagIgnoreErrors = uint8(2)
 )
 

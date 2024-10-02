@@ -1,6 +1,7 @@
 package e2etests
 
 import (
+	"errors"
 	"time"
 
 	"cosmossdk.io/math"
@@ -15,6 +16,12 @@ import (
 	crosschainTypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
+// we need to use this send mode due to how wallet V5 works
+//
+//	https://github.com/tonkeeper/w5/blob/main/contracts/wallet_v5.fc#L82
+//	https://docs.ton.org/develop/smart-contracts/guidelines/message-modes-cookbook
+const tonDepositSendCode = toncontracts.SendFlagSeparateFees + toncontracts.SendFlagIgnoreErrors
+
 // TestTONDeposit (!) This boilerplate is a demonstration of E2E capabilities for TON integration
 // Actual Deposit test is not implemented yet.
 func TestTONDeposit(r *runner.E2ERunner, args []string) {
@@ -28,6 +35,10 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 
 	// Given amount
 	amount := math.NewUintFromBigInt(parseBigInt(r, args[0]))
+
+	// https://github.com/zeta-chain/protocol-contracts-ton/blob/main/contracts/gateway.fc#L28
+	// (will be optimized & dynamic in the future)
+	depositFee := math.NewUint(10_000_000)
 
 	// Given TON Gateway
 	gw := toncontracts.NewGateway(r.TONGateway)
@@ -47,26 +58,28 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 		recipient.Hex(),
 	)
 
-	// we need to include this send mode due to how wallet V5 works
-	//  https://github.com/tonkeeper/w5/blob/main/contracts/wallet_v5.fc#L82
-	err = gw.SendDeposit(ctx, sender, amount, recipient, toncontracts.SendFlagIgnoreErrors)
+	err = gw.SendDeposit(ctx, sender, amount, recipient, tonDepositSendCode)
 
 	// ASSERT
 	require.NoError(r, err)
 
 	// Wait for CCTX mining
-	cctxs := catchPendingCCTX(r, chain.ChainId, time.Minute)
+	filter := func(cctx *crosschainTypes.CrossChainTx) bool {
+		return cctx.InboundParams.SenderChainId == chain.ChainId &&
+			cctx.InboundParams.Sender == sender.GetAddress().ToRaw()
+	}
+
+	cctxs, err := waitForSpecificCCTX(r, filter, time.Minute)
+	require.NoError(r, err)
 	require.Len(r, cctxs, 1)
 
+	// Check CCTX
 	cctx := cctxs[0]
 
-	// Check cctx props
-	require.NotNil(r, cctx.InboundParams)
-	require.NotNil(r, cctx.InboundParams.Sender)
-	//require.NoError(r, cctx.InboundParams.)
-	//cctx
+	expectedDeposit := amount.Sub(depositFee)
 
-	// todo validate CCTX
+	require.Equal(r, sender.GetAddress().ToRaw(), cctx.InboundParams.Sender)
+	require.Equal(r, expectedDeposit.Uint64(), cctx.InboundParams.Amount.Uint64())
 
 	r.WaitForMinedCCTXFromIndex(cctx.Index)
 
@@ -74,28 +87,42 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	balance, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, recipient)
 	require.NoError(r, err)
 
-	r.Logger.Print("recipient's zEVM TON balance after deposit: %d", balance)
+	r.Logger.Print("Recipient's zEVM TON balance after deposit: %d", balance.Uint64())
 
-	// todo check balance equals to cctx.amount
+	require.Equal(r, expectedDeposit.Uint64(), balance.Uint64())
 }
 
-// use another method - this returns pending only pending OUTBOUNDS
-func catchPendingCCTX(r *runner.E2ERunner, chainID int64, timeout time.Duration) []*crosschainTypes.CrossChainTx {
-	in := &crosschainTypes.QueryListPendingCctxRequest{ChainId: chainID}
-
-	start := time.Now()
+func waitForSpecificCCTX(
+	r *runner.E2ERunner,
+	filter func(*crosschainTypes.CrossChainTx) bool,
+	timeout time.Duration,
+) ([]crosschainTypes.CrossChainTx, error) {
+	var (
+		ctx   = r.Ctx
+		start = time.Now()
+		query = &crosschainTypes.QueryAllCctxRequest{}
+		out   []crosschainTypes.CrossChainTx
+	)
 
 	for time.Since(start) < timeout {
-		res, err := r.CctxClient.ListPendingCctx(r.Ctx, in)
-		if err == nil && len(res.CrossChainTx) > 0 {
-			return res.CrossChainTx
+		res, err := r.CctxClient.CctxAll(ctx, query)
+		if err != nil {
+			return nil, err
+		}
+
+		for i := range res.CrossChainTx {
+			tx := res.CrossChainTx[i]
+			if filter(tx) {
+				out = append(out, *tx)
+			}
+		}
+
+		if len(out) > 0 {
+			return out, nil
 		}
 
 		time.Sleep(time.Second)
 	}
 
-	r.Logger.Error("Timeout waiting for pending CCTX for chain %d", chainID)
-	r.FailNow()
-
-	return nil
+	return nil, errors.New("timeout waiting for CCTX")
 }

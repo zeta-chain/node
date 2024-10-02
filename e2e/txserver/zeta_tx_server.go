@@ -514,7 +514,7 @@ func (zts ZetaTxServer) DeployZRC20s(accountOperational, accountAdmin, erc20Addr
 		100_000,
 	))
 	if err != nil {
-		return "", fmt.Errorf("failed to deploy ton zrc20: %s", err.Error())
+		return "", fmt.Errorf("failed to deploy ton zrc20: %w", err)
 	}
 
 	// deploy erc20 zrc20
