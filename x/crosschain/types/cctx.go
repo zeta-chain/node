@@ -172,27 +172,27 @@ func (m *CrossChainTx) AddOutbound(
 
 // SetAbort sets the CCTX status to Aborted with the given error message.
 func (m CrossChainTx) SetAbort(statusMsg, errorMsg string) {
-	m.CctxStatus.UpdateCctxStatus(CctxStatus_Aborted, true, statusMsg, errorMsg)
+	m.CctxStatus.UpdateCctxMessages(CctxStatus_Aborted, true, statusMsg, errorMsg)
 }
 
 // SetPendingRevert sets the CCTX status to PendingRevert with the given error message.
 func (m CrossChainTx) SetPendingRevert(statusMsg, errorMsg string) {
-	m.CctxStatus.UpdateCctxStatus(CctxStatus_PendingRevert, true, statusMsg, errorMsg)
+	m.CctxStatus.UpdateCctxMessages(CctxStatus_PendingRevert, true, statusMsg, errorMsg)
 }
 
 // SetPendingOutbound sets the CCTX status to PendingOutbound with the given error message.
 func (m CrossChainTx) SetPendingOutbound(statusMsg string) {
-	m.CctxStatus.UpdateCctxStatus(CctxStatus_PendingOutbound, false, statusMsg, "")
+	m.CctxStatus.UpdateCctxMessages(CctxStatus_PendingOutbound, false, statusMsg, "")
 }
 
 // SetOutboundMined sets the CCTX status to OutboundMined with the given error message.
 func (m CrossChainTx) SetOutboundMined(statusMsg string) {
-	m.CctxStatus.UpdateCctxStatus(CctxStatus_OutboundMined, false, statusMsg, "")
+	m.CctxStatus.UpdateCctxMessages(CctxStatus_OutboundMined, false, statusMsg, "")
 }
 
 // SetReverted sets the CCTX status to Reverted with the given error message.
 func (m CrossChainTx) SetReverted(statusMsg, errorMsg string) {
-	m.CctxStatus.UpdateCctxStatus(CctxStatus_Reverted, true, statusMsg, errorMsg)
+	m.CctxStatus.UpdateCctxMessages(CctxStatus_Reverted, true, statusMsg, errorMsg)
 }
 
 func (m CrossChainTx) GetCCTXIndexBytes() ([32]byte, error) {
@@ -259,6 +259,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 	status := &Status{
 		Status:              CctxStatus_PendingInbound,
 		StatusMessage:       "",
+		ErrorMessage:        "",
 		CreatedTimestamp:    ctx.BlockHeader().Time.Unix(),
 		LastUpdateTimestamp: ctx.BlockHeader().Time.Unix(),
 		IsAbortRefunded:     false,

@@ -9,21 +9,14 @@ func (m *Status) AbortRefunded() {
 	m.StatusMessage = "CCTX aborted and Refunded"
 }
 
-// UpdateCctxStatus transitions the Status.
-// In case of an error, ErrorMessage is updated.
-// In case of no error, StatusMessage is updated.
-func (m *Status) UpdateCctxStatus(newStatus CctxStatus, isError bool, statusMsg, errorMsg string) {
-	m.ChangeStatus(newStatus, statusMsg)
-
-	if isError && errorMsg != "" {
-		m.ErrorMessage = errorMsg
-	} else if isError && errorMsg == "" {
-		m.ErrorMessage = "unknown error"
-	}
+// UpdateCctxMessages transitions the Status and Error messages.
+func (m *Status) UpdateCctxMessages(newStatus CctxStatus, isError bool, statusMsg, errorMsg string) {
+	m.UpdateStatusMessage(newStatus, statusMsg)
+	m.UpdateErrorMessage(isError, errorMsg)
 }
 
-// ChangeStatus changes the status of the cross chain transaction.
-func (m *Status) ChangeStatus(newStatus CctxStatus, statusMsg string) {
+// UpdateStatusMessage updates cctx.status.status_message.
+func (m *Status) UpdateStatusMessage(newStatus CctxStatus, statusMsg string) {
 	if !m.ValidateTransition(newStatus) {
 		m.StatusMessage = fmt.Sprintf(
 			"Failed to transition status from %s to %s",
@@ -35,13 +28,27 @@ func (m *Status) ChangeStatus(newStatus CctxStatus, statusMsg string) {
 		return
 	}
 
-	if statusMsg == "" {
-		m.StatusMessage = fmt.Sprintf("Status changed from %s to %s", m.Status.String(), newStatus.String())
-	} else {
-		m.StatusMessage = statusMsg
+	m.StatusMessage = fmt.Sprintf("Status changed from %s to %s", m.Status.String(), newStatus.String())
+
+	if statusMsg != "" {
+		m.StatusMessage += fmt.Sprintf(" - %s", statusMsg)
 	}
 
 	m.Status = newStatus
+}
+
+// UpdateErrorMessage updates cctx.status.error_message.
+func (m *Status) UpdateErrorMessage(isError bool, errorMsg string) {
+	if !isError {
+		return
+	}
+
+	errMsg := errorMsg
+	if errMsg == "" {
+		errMsg = "unknown error"
+	}
+
+	m.ErrorMessage = errMsg
 }
 
 func (m *Status) ValidateTransition(newStatus CctxStatus) bool {

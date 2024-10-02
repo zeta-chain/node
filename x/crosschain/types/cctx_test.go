@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -151,7 +152,8 @@ func Test_SetRevertOutboundValues(t *testing.T) {
 func TestCrossChainTx_SetAbort(t *testing.T) {
 	cctx := sample.CrossChainTx(t, "test")
 	cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-	cctx.SetAbort("test", "test")
+	cctx.SetAbort("test", fmt.Sprintf("deposit: %s, error: %s", "foo", "bar"))
+	fmt.Printf("DEBUG: %+v\n", cctx.CctxStatus)
 	require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 	require.Contains(t, cctx.CctxStatus.StatusMessage, "test")
 	require.Contains(t, cctx.CctxStatus.ErrorMessage, "test")
