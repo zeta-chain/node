@@ -4,8 +4,6 @@ DIR=docs/cli/zetacored
 
 rm -rf $DIR
 
-go install ./cmd/zetacored
-
 zetacored docs --path $DIR
 
 # Recursive function to process files
