@@ -58,13 +58,8 @@ func (d Deposit) Memo() []byte {
 // AsBody casts struct as internal message body.
 func (d Deposit) AsBody() (*boc.Cell, error) {
 	b := boc.NewCell()
-	err := ErrCollect(
-		b.WriteUint(uint64(OpDeposit), sizeOpCode),
-		b.WriteUint(0, sizeQueryID),
-		b.WriteBytes(d.Recipient.Bytes()),
-	)
 
-	return b, err
+	return b, writeDepositBody(b, d.Recipient)
 }
 
 // DepositAndCall represents a deposit and call operation
@@ -100,4 +95,12 @@ func (d DepositAndCall) AsBody() (*boc.Cell, error) {
 	)
 
 	return b, err
+}
+
+func writeDepositBody(b *boc.Cell, recipient eth.Address) error {
+	return ErrCollect(
+		b.WriteUint(uint64(OpDeposit), sizeOpCode),
+		b.WriteUint(0, sizeQueryID),
+		b.WriteBytes(recipient.Bytes()),
+	)
 }

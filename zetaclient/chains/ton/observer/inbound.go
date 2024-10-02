@@ -86,11 +86,11 @@ func (ob *Observer) observeInbound(ctx context.Context) error {
 		return nil
 	case len(txs) > MaxTransactionsPerTick:
 		ob.Logger().Inbound.Info().
-			Msgf("ObserveInbound: got %d transactions. Taking first %d", len(txs), MaxTransactionsPerTick)
+			Msgf("observeInbound: got %d transactions. Taking first %d", len(txs), MaxTransactionsPerTick)
 
 		txs = txs[:MaxTransactionsPerTick]
 	default:
-		ob.Logger().Inbound.Info().Msgf("ObserveInbound: got %d transactions", len(txs))
+		ob.Logger().Inbound.Info().Msgf("observeInbound: got %d transactions", len(txs))
 	}
 
 	for i := range txs {
@@ -102,12 +102,19 @@ func (ob *Observer) observeInbound(ctx context.Context) error {
 		}
 
 		if skip {
+			ob.Logger().Inbound.Info().Fields(txLogFields(&tx)).Msg("observeInbound: skipping tx")
 			ob.setLastScannedTX(&tx)
+
 			continue
 		}
 
 		if _, err := ob.voteInbound(ctx, parsedTX); err != nil {
-			return errors.Wrapf(err, "unable to vote inbound (hash %s)", parsedTX.Hash().Hex())
+			ob.Logger().Inbound.
+				Error().Err(err).
+				Fields(txLogFields(&tx)).
+				Msg("observeInbound: unable to vote for tx")
+
+			return errors.Wrapf(err, "unable to vote for inbound tx %s", tx.Hash().Hex())
 		}
 
 		ob.setLastScannedTX(&parsedTX.Transaction)
@@ -232,15 +239,21 @@ func (ob *Observer) setLastScannedTX(tx *ton.Transaction) {
 	if err := ob.WriteLastTxScannedToDB(txHash); err != nil {
 		ob.Logger().Inbound.Error().
 			Err(err).
-			Uint64("tx.lt", tx.Lt).
-			Str("tx.hash", tx.Hash().Hex()).
-			Msgf("ObserveInbound: unable to WriteLastTxScannedToDB")
+			Fields(txLogFields(tx)).
+			Msgf("setLastScannedTX: unable to WriteLastTxScannedToDB")
 
 		return
 	}
 
 	ob.Logger().Inbound.Info().
-		Uint64("tx.lt", tx.Lt).
-		Str("tx.hash", tx.Hash().Hex()).
-		Msgf("ObserveInbound: WriteLastTxScannedToDB")
+		Fields(txLogFields(tx)).
+		Msg("setLastScannedTX: WriteLastTxScannedToDB")
+}
+
+func txLogFields(tx *ton.Transaction) map[string]any {
+	return map[string]any{
+		"inbound.ton.lt":       tx.Lt,
+		"inbound.ton.hash":     tx.Hash().Hex(),
+		"inbound.ton.block_id": tx.BlockID.String(),
+	}
 }

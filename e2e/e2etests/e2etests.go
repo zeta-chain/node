@@ -436,7 +436,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestTONDepositName,
 		"deposit TON into ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount in nano tons", DefaultValue: "900000000"}, // 0.9 TON
+			{Description: "amount in nano tons", DefaultValue: "1000000000"}, // 1.0 TON
 		},
 		TestTONDeposit,
 	),

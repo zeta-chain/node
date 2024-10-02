@@ -451,22 +451,35 @@ func (ob *Observer) PostVoteInbound(
 	msg *crosschaintypes.MsgVoteInbound,
 	retryGasLimit uint64,
 ) (string, error) {
-	txHash := msg.InboundHash
-	coinType := msg.CoinType
-	chainID := ob.Chain().ChainId
-	zetaHash, ballot, err := ob.ZetacoreClient().
-		PostVoteInbound(ctx, zetacore.PostVoteInboundGasLimit, retryGasLimit, msg)
-	if err != nil {
-		ob.logger.Inbound.Err(err).
-			Msgf("inbound detected: error posting vote for chain %d token %s inbound %s", chainID, coinType, txHash)
-		return "", err
-	} else if zetaHash != "" {
-		ob.logger.Inbound.Info().Msgf("inbound detected: chain %d token %s inbound %s vote %s ballot %s", chainID, coinType, txHash, zetaHash, ballot)
-	} else {
-		ob.logger.Inbound.Info().Msgf("inbound detected: chain %d token %s inbound %s already voted on ballot %s", chainID, coinType, txHash, ballot)
+	const gasLimit = zetacore.PostVoteInboundGasLimit
+
+	var (
+		txHash   = msg.InboundHash
+		coinType = msg.CoinType
+		chainID  = ob.Chain().ChainId
+	)
+
+	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctx, gasLimit, retryGasLimit, msg)
+
+	lf := map[string]any{
+		"inbound.chain_id":         chainID,
+		"inbound.coin_type":        coinType.String(),
+		"inbound.external_tx_hash": txHash,
+		"inbound.ballot_index":     ballot,
+		"inbound.zeta_tx_hash":     zetaHash,
 	}
 
-	return ballot, err
+	switch {
+	case err != nil:
+		ob.logger.Inbound.Error().Err(err).Fields(lf).Msg("inbound detected: error posting vote")
+		return "", err
+	case zetaHash == "":
+		ob.logger.Inbound.Info().Fields(lf).Msg("inbound detected: already voted on ballot")
+	default:
+		ob.logger.Inbound.Info().Fields(lf).Msgf("inbound detected: vote posted")
+	}
+
+	return ballot, nil
 }
 
 // AlertOnRPCLatency prints an alert if the RPC latency exceeds the threshold.
