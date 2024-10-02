@@ -33,7 +33,11 @@ const (
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
-func AppStateFn(cdc codec.Codec, simManager *module.SimulationManager, genesisState map[string]json.RawMessage) simtypes.AppStateFn {
+func AppStateFn(
+	cdc codec.Codec,
+	simManager *module.SimulationManager,
+	genesisState map[string]json.RawMessage,
+) simtypes.AppStateFn {
 	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
 		if FlagGenesisTimeValue == 0 {
@@ -74,11 +78,27 @@ func AppStateFn(cdc codec.Codec, simManager *module.SimulationManager, genesisSt
 			if err != nil {
 				panic(err)
 			}
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
+			appState, simAccs = AppStateRandomizedFn(
+				simManager,
+				r,
+				cdc,
+				accs,
+				genesisTimestamp,
+				appParams,
+				genesisState,
+			)
 
 		default:
 			appParams := make(simtypes.AppParams)
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
+			appState, simAccs = AppStateRandomizedFn(
+				simManager,
+				r,
+				cdc,
+				accs,
+				genesisTimestamp,
+				appParams,
+				genesisState,
+			)
 		}
 
 		rawState := make(map[string]json.RawMessage)
@@ -223,7 +243,11 @@ func AppStateRandomizedFn(
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file.
-func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile string) (tmtypes.GenesisDoc, []simtypes.Account, error) {
+func AppStateFromGenesisFileFn(
+	r io.Reader,
+	cdc codec.JSONCodec,
+	genesisFile string,
+) (tmtypes.GenesisDoc, []simtypes.Account, error) {
 	bytes, err := os.ReadFile(genesisFile)
 	if err != nil {
 		panic(err)

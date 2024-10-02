@@ -80,11 +80,23 @@ func TestAppStateDeterminism(t *testing.T) {
 		}
 		// For the same seed, the app hash produced at the end of each run should be the same
 		for j := 0; j < numTimesToRunPerSeed; j++ {
-			db, dir, logger, _, err := cosmossimutils.SetupSimulation(config, SimDBBackend, SimDBName, simutils.FlagVerboseValue, simutils.FlagEnabledValue)
+			db, dir, logger, _, err := cosmossimutils.SetupSimulation(
+				config,
+				SimDBBackend,
+				SimDBName,
+				simutils.FlagVerboseValue,
+				simutils.FlagEnabledValue,
+			)
 			require.NoError(t, err)
 			appOptions[flags.FlagHome] = dir
 
-			simApp, err := simutils.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+			simApp, err := simutils.NewSimApp(
+				logger,
+				db,
+				appOptions,
+				interBlockCacheOpt(),
+				baseapp.SetChainID(SimAppChainID),
+			)
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
@@ -98,7 +110,11 @@ func TestAppStateDeterminism(t *testing.T) {
 				t,
 				os.Stdout,
 				simApp.BaseApp,
-				simutils.AppStateFn(simApp.AppCodec(), simApp.SimulationManager(), simApp.ModuleBasics.DefaultGenesis(simApp.AppCodec())),
+				simutils.AppStateFn(
+					simApp.AppCodec(),
+					simApp.SimulationManager(),
+					simApp.ModuleBasics.DefaultGenesis(simApp.AppCodec()),
+				),
 				cosmossim.RandomAccounts,
 				cosmossimutils.SimulationOperations(simApp, simApp.AppCodec(), config),
 				blockedAddresses,
@@ -114,8 +130,15 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			if j != 0 {
 				require.Equal(
-					t, string(appHashList[0]), string(appHashList[j]),
-					"non-determinism in seed %d: %d/%d, attempt: %d/%d\n", config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
+					t,
+					string(appHashList[0]),
+					string(appHashList[j]),
+					"non-determinism in seed %d: %d/%d, attempt: %d/%d\n",
+					config.Seed,
+					i+1,
+					numSeeds,
+					j+1,
+					numTimesToRunPerSeed,
 				)
 			}
 		}
@@ -132,7 +155,13 @@ func TestFullAppSimulation(t *testing.T) {
 	config.BlockMaxGas = SimBlockMaxGas
 	config.DBBackend = SimDBBackend
 
-	db, dir, logger, skip, err := cosmossimutils.SetupSimulation(config, SimDBBackend, SimDBName, simutils.FlagVerboseValue, simutils.FlagEnabledValue)
+	db, dir, logger, skip, err := cosmossimutils.SetupSimulation(
+		config,
+		SimDBBackend,
+		SimDBName,
+		simutils.FlagVerboseValue,
+		simutils.FlagEnabledValue,
+	)
 	if skip {
 		t.Skip("skipping application simulation")
 	}
@@ -154,7 +183,11 @@ func TestFullAppSimulation(t *testing.T) {
 		t,
 		os.Stdout,
 		simApp.BaseApp,
-		simutils.AppStateFn(simApp.AppCodec(), simApp.SimulationManager(), simApp.ModuleBasics.DefaultGenesis(simApp.AppCodec())),
+		simutils.AppStateFn(
+			simApp.AppCodec(),
+			simApp.SimulationManager(),
+			simApp.ModuleBasics.DefaultGenesis(simApp.AppCodec()),
+		),
 		cosmossim.RandomAccounts,
 		cosmossimutils.SimulationOperations(simApp, simApp.AppCodec(), config),
 		blockedAddresses,

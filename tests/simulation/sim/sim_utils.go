@@ -9,12 +9,17 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/zeta-chain/ethermint/app"
 	evmante "github.com/zeta-chain/ethermint/app/ante"
+
 	zetaapp "github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/app/ante"
 )
 
-func NewSimApp(logger log.Logger, db dbm.DB, appOptions servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) (*zetaapp.App, error) {
-
+func NewSimApp(
+	logger log.Logger,
+	db dbm.DB,
+	appOptions servertypes.AppOptions,
+	baseAppOptions ...func(*baseapp.BaseApp),
+) (*zetaapp.App, error) {
 	encCdc := zetaapp.MakeEncodingConfig()
 
 	// Set load latest version to false as we manually set it later.
