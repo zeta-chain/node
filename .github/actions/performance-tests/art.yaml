@@ -10,6 +10,7 @@ config:
     timeout: 60
   plugins:
     expect: {}
+    ensure: {}
     metrics-by-endpoint:
       useOnlyRequestNames: true
     publish-metrics:
@@ -37,14 +38,13 @@ scenarios:
             params: []
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: web3_sha3
     flow:
@@ -58,14 +58,13 @@ scenarios:
               - "0x68656c6c6f20776f726c64"
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+          - notHasProperty: "{{ response.error }}"
 
   - name: net_version
     flow:
@@ -78,14 +77,13 @@ scenarios:
             params: []
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: net_listening
     flow:
@@ -98,14 +96,16 @@ scenarios:
             params: []
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
+            - equals:
+                - "true"
+                - "{{ response.result }}"
 
   - name: net_peerCount
     flow:
@@ -118,14 +118,13 @@ scenarios:
             params: []
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_chainId
     flow:
@@ -138,14 +137,13 @@ scenarios:
             params: []
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_getStorageAt
     flow:
@@ -159,14 +157,13 @@ scenarios:
               - "latest"
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_getTransactionByBlockHashAndIndex
     flow:
@@ -180,14 +177,13 @@ scenarios:
               - "0x0"
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_getTransactionByBlockNumberAndIndex
     flow:
@@ -202,14 +198,13 @@ scenarios:
               - "0x0"
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_getUncleByBlockHashAndIndex
     flow:
@@ -223,14 +218,13 @@ scenarios:
               - "0x0"
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_getUncleByBlockNumberAndIndex
     flow:
@@ -245,14 +239,13 @@ scenarios:
               - "0x0"
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_newFilter
     flow:
@@ -269,14 +262,13 @@ scenarios:
                 topics: []
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_getFilterChanges
     flow:
@@ -290,14 +282,13 @@ scenarios:
               - "0x0"
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_getFilterLogs
     flow:
@@ -311,14 +302,13 @@ scenarios:
               - "0x0"
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_blockNumber
     flow:
@@ -331,14 +321,13 @@ scenarios:
             params: []
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_getBlockByHash
     flow:
@@ -353,14 +342,13 @@ scenarios:
               - true
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_getBlockByNumber
     flow:
@@ -375,14 +363,13 @@ scenarios:
               - true
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_getBlockTransactionCountByHash
     flow:
@@ -396,14 +383,13 @@ scenarios:
               - "0x0"
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_getBlockTransactionCountByNumber
     flow:
@@ -417,14 +403,13 @@ scenarios:
               - "latest"
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_getCode
     flow:
@@ -435,18 +420,17 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_getCode"
             params:
-              - "0x0"
+              - "0x05BA149A7bd6dC1F937fA9046A9e05C05f3b18b0"
               - "latest"
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_getTransactionByHash
     flow:
@@ -460,14 +444,13 @@ scenarios:
               - "0x0"
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_getTransactionReceipt
     flow:
@@ -481,14 +464,13 @@ scenarios:
               - "0x0"
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_getLogs
     flow:
@@ -499,20 +481,16 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_getLogs"
             params:
-              - fromBlock: "0x1"
-                toBlock: "latest"
-                address: "0x0"
-                topics: ["0x0"]
+              - address: "0x05BA149A7bd6dC1F937fA9046A9e05C05f3b18b0"
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_getBalance
     flow:
@@ -523,18 +501,17 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_getBalance"
             params:
-              - "0x0"
+              - "0x05BA149A7bd6dC1F937fA9046A9e05C05f3b18b0"
               - "latest"
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
 
   - name: eth_estimateGas
     flow:
@@ -545,14 +522,14 @@ scenarios:
             jsonrpc: "2.0"
             method: "eth_estimateGas"
             params:
-              - from: "0x0"
+              - from: "0x239e96c8f17C85c30100AC26F635Ea15f23E9c67"
+                to: "0x05BA149A7bd6dC1F937fA9046A9e05C05f3b18b0"
           capture:
             - json: "$"
-              as: "response"
+              as: response
           ensure:
             - statusCode:
                 - 200
                 - 201
           expect:
-            - type: "null"
-              subject: "response.error"
+            - notHasProperty: "{{ response.error }}"
