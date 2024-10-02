@@ -142,7 +142,7 @@ func TestStatus_ChangeStatus(t *testing.T) {
 
 		s.UpdateStatusMessage(types.CctxStatus_PendingOutbound, "msg")
 		assert.Equal(t, s.Status, types.CctxStatus_PendingOutbound)
-		assert.Equal(t, s.StatusMessage, "msg")
+		assert.Equal(t, s.StatusMessage, "Status changed from PendingInbound to PendingOutbound: msg")
 	})
 
 	t.Run("should change status if transition is valid", func(t *testing.T) {

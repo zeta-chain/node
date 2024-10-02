@@ -15,7 +15,7 @@ func (m *Status) UpdateCctxMessages(newStatus CctxStatus, isError bool, statusMs
 	m.UpdateErrorMessage(isError, errorMsg)
 }
 
-// UpdateStatusMessage updates cctx.status.status_message.
+// UpdateStatusMessage updates the cctx status and cctx.status.status_message.
 func (m *Status) UpdateStatusMessage(newStatus CctxStatus, statusMsg string) {
 	if !m.ValidateTransition(newStatus) {
 		m.StatusMessage = fmt.Sprintf(
@@ -31,7 +31,7 @@ func (m *Status) UpdateStatusMessage(newStatus CctxStatus, statusMsg string) {
 	m.StatusMessage = fmt.Sprintf("Status changed from %s to %s", m.Status.String(), newStatus.String())
 
 	if statusMsg != "" {
-		m.StatusMessage += fmt.Sprintf(" - %s", statusMsg)
+		m.StatusMessage += fmt.Sprintf(": %s", statusMsg)
 	}
 
 	m.Status = newStatus
