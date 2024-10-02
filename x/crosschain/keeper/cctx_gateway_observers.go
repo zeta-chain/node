@@ -75,7 +75,7 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 	}()
 	if err != nil {
 		// do not commit anything here as the CCTX should be aborted
-		config.CCTX.SetAbort(true, err.Error())
+		config.CCTX.SetAbort("", err.Error())
 		return types.CctxStatus_Aborted, err
 	}
 	commit()

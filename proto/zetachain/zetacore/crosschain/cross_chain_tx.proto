@@ -95,6 +95,7 @@ message OutboundParams {
 message Status {
   CctxStatus status = 1;
   string status_message = 2;
+  string error_message = 6;
   int64 lastUpdate_timestamp = 3;
   bool isAbortRefunded = 4;
   // when the CCTX was created. only populated on new transactions.
@@ -135,5 +136,4 @@ message CrossChainTx {
   repeated OutboundParams outbound_params = 10;
   ProtocolContractVersion protocol_contract_version = 11;
   RevertOptions revert_options = 12 [ (gogoproto.nullable) = false ];
-  string error = 13;
 }

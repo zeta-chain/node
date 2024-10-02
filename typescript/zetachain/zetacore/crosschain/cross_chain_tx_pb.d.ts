@@ -360,6 +360,11 @@ export declare class Status extends Message<Status> {
   statusMessage: string;
 
   /**
+   * @generated from field: string error_message = 6;
+   */
+  errorMessage: string;
+
+  /**
    * @generated from field: int64 lastUpdate_timestamp = 3;
    */
   lastUpdateTimestamp: bigint;

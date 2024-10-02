@@ -58446,6 +58446,8 @@ definitions:
         $ref: '#/definitions/crosschainCctxStatus'
       status_message:
         type: string
+      error_message:
+        type: string
       lastUpdate_timestamp:
         type: string
         format: int64

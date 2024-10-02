@@ -9,28 +9,40 @@ func (m *Status) AbortRefunded() {
 	m.StatusMessage = "CCTX aborted and Refunded"
 }
 
-// ChangeStatus changes the status of the cross chain transaction
-// empty msg does not overwrite old status message
-func (m *Status) ChangeStatus(newStatus CctxStatus, msg string) {
-	if len(msg) > 0 {
-		if m.StatusMessage != "" {
-			m.StatusMessage = fmt.Sprintf("%s : %s", m.StatusMessage, msg)
-		} else {
-			m.StatusMessage = msg
-		}
+// UpdateCctxStatus transitions the Status.
+// In case of an error, ErrorMessage is updated.
+// In case of no error, StatusMessage is updated.
+func (m *Status) UpdateCctxStatus(newStatus CctxStatus, isError bool, statusMsg, errorMsg string) {
+	m.ChangeStatus(newStatus, statusMsg)
+
+	if isError && errorMsg != "" {
+		m.ErrorMessage = errorMsg
+	} else if isError && errorMsg == "" {
+		m.ErrorMessage = "unknown error"
 	}
+}
+
+// ChangeStatus changes the status of the cross chain transaction.
+func (m *Status) ChangeStatus(newStatus CctxStatus, statusMsg string) {
 	if !m.ValidateTransition(newStatus) {
 		m.StatusMessage = fmt.Sprintf(
-			"Failed to transition : OldStatus %s , NewStatus %s , MSG : %s :",
+			"Failed to transition status from %s to %s",
 			m.Status.String(),
 			newStatus.String(),
-			msg,
 		)
+
 		m.Status = CctxStatus_Aborted
 		return
 	}
+
+	if statusMsg == "" {
+		m.StatusMessage = fmt.Sprintf("Status changed from %s to %s", m.Status.String(), newStatus.String())
+	} else {
+		m.StatusMessage = statusMsg
+	}
+
 	m.Status = newStatus
-} //nolint:typecheck
+}
 
 func (m *Status) ValidateTransition(newStatus CctxStatus) bool {
 	stateTransitionMap := stateTransitionMap()

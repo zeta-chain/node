@@ -9441,7 +9441,7 @@ zetacored tx crosschain vote-gas-price [chain] [price] [priorityFee] [blockNumbe
 Broadcast message to vote an inbound
 
 ```
-zetacored tx crosschain vote-inbound [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex] [protocolContractVersion] [isArbitraryCall] [flags]
+zetacored tx crosschain vote-inbound [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex] [protocolContractVersion] [flags]
 ```
 
 ### Options
