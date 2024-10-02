@@ -14,7 +14,7 @@ GOFLAGS := ""
 GOLANG_CROSS_VERSION ?= v1.22.4
 GOPATH ?= '$(HOME)/go'
 
-ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
+build_ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/cosmos/cosmos-sdk/version.ServerName=zetacored \
 	-X github.com/cosmos/cosmos-sdk/version.ClientName=zetaclientd \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(NODE_VERSION) \
@@ -25,11 +25,17 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/zeta-chain/node/pkg/constant.BuildTime=$(BUILDTIME) \
 	-X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 
-BUILD_FLAGS := -ldflags '$(ldflags)' -tags pebbledb,ledger
+# --allow-multiple-definitions need to be set when you are importing both cosmos-sdk
+# and go-ethereum: https://github.com/cosmos/cosmos-sdk/tree/release/v0.47.x/crypto/keys/secp256k1/internal/secp256k1
+all_ldflags = -extldflags=-Wl,--allow-multiple-definition
+
+# enable libsecp256k1_sdk to bypass the btcec breaking change:
+# https://github.com/btcsuite/btcd/issues/2243
+BUILD_FLAGS := -ldflags '$(build_ldflags) $(all_ldflags)' -tags pebbledb,ledger,libsecp256k1_sdk
 
 TEST_DIR ?= "./..."
-TEST_BUILD_FLAGS := -tags pebbledb,ledger
-HSM_BUILD_FLAGS := -tags pebbledb,ledger,hsm_test
+TEST_BUILD_FLAGS := -ldflags='$(all_ldflags)' -tags pebbledb,ledger,libsecp256k1_sdk
+HSM_BUILD_FLAGS := -ldflags='$(all_ldflags)' -tags pebbledb,ledger,libsecp256k1_sdk,hsm_test
 
 export DOCKER_BUILDKIT := 1
 
@@ -193,7 +199,7 @@ specs:
 	@go run ./scripts/gen-spec.go
 .PHONY: specs
 
-docs-zetacored:
+docs-zetacored: install-zetacore
 	@echo "--> Generating zetacored documentation"
 	@bash ./scripts/gen-docs-zetacored.sh
 .PHONY: docs-zetacored

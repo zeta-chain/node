@@ -1,6 +1,7 @@
 package context
 
 import (
+	"cmp"
 	"fmt"
 	"sync"
 
@@ -65,7 +66,7 @@ func (cr *ChainRegistry) Get(chainID int64) (Chain, error) {
 func (cr *ChainRegistry) All() []Chain {
 	items := maps.Values(cr.chains)
 
-	slices.SortFunc(items, func(a, b Chain) bool { return a.ID() < b.ID() })
+	slices.SortFunc(items, func(a, b Chain) int { return cmp.Compare(a.ID(), b.ID()) })
 
 	return items
 }
