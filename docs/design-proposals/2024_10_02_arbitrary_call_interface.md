@@ -84,7 +84,7 @@ Even with the renaming, the argument’s dual purpose might still cause confusio
 
 ### **2. New Functions for Arbitrary Calls**
 
-Introduce new functions specifically for arbitrary calls. These functions would include an additional argument to specify the method to be called, eliminating the need for the isArbitraryCall option.
+Introduce new functions specifically for arbitrary calls. These functions would include an additional argument to specify the method to be called, eliminating the need for the `isArbitraryCall` option.
 
 ```solidity
 // regular
@@ -114,7 +114,7 @@ call(
 
 ### **3 - add method name in CallOptions**
 
-Rather than introducing a new function, the function name for arbitrary calls can be specified within the CallOptions. This change would replace the isArbitraryCall flag with a more explicit option, arbitraryCallFunctionName.
+Rather than introducing a new function, the function name for arbitrary calls can be specified within the `CallOptions`. This change would replace the `isArbitraryCall` flag with a more explicit option, `arbitraryCallFunctionName`.
 
 ```solidity
 call(receiver, zrc20, argumentForOnCall, callOptions{arbitraryCallFunctiondName: "swap"}, revertOptions{})
@@ -135,4 +135,4 @@ call(
 
 **Cons**
 
-This approach might be confusing because the method name is not just an option but a fundamental part of the call for arbitrary calls. Treating it as an option in CallOptions could obscure its importance and make it harder for developers to understand its role in the process.
+This approach might be confusing because the method name is not just an option but a fundamental part of the call for arbitrary calls. Treating it as an option in `CallOptions` could obscure its importance and make it harder for developers to understand its role in the process.
