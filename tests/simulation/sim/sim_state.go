@@ -107,9 +107,9 @@ func AppStateFn(cdc codec.Codec, simManager *module.SimulationManager, genesisSt
 			notBondedTokens = notBondedTokens.Add(val.GetTokens())
 		}
 		notBondedCoins := sdk.NewCoin(stakingState.Params.BondDenom, notBondedTokens)
+
 		// edit bank state to make it have the not bonded pool tokens
 		bankStateBz, ok := rawState[banktypes.ModuleName]
-		// TODO(fdymylja/jonathan): should we panic in this case
 		if !ok {
 			panic("bank genesis state is missing")
 		}
@@ -134,6 +134,7 @@ func AppStateFn(cdc codec.Codec, simManager *module.SimulationManager, genesisSt
 			})
 		}
 
+		// Set the bond denom in the EVM genesis state
 		evmStateBz, ok := rawState[evmtypes.ModuleName]
 		if !ok {
 			panic("evm genesis state is missing")
@@ -206,8 +207,6 @@ func AppStateRandomizedFn(
 		NumBonded:    numInitiallyBonded,
 		GenTimestamp: genesisTimestamp,
 	}
-
-	fmt.Println("Generating genesis states...")
 
 	simManager.GenerateGenesisStates(simState)
 

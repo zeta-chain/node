@@ -39,14 +39,16 @@ func init() {
 const (
 	SimAppChainID  = "simulation_777-1"
 	SimBlockMaxGas = 815000000
-	TestAppChainID = "zetachain_777-1"
+	SimDBBackend   = "goleveldb"
+	SimDBName      = "simulation"
 )
 
-// NewSimApp disable feemarket on native tx, otherwise the cosmos-sdk simulation tests will fail.
 func NewSimApp(logger log.Logger, db dbm.DB, appOptions servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) (*zetaapp.App, error) {
 
 	encCdc := zetaapp.MakeEncodingConfig()
-	app := zetaapp.New(
+
+	// Set load latest version to false as we manually set it later.
+	zetaApp := zetaapp.New(
 		logger,
 		db,
 		nil,
@@ -58,17 +60,20 @@ func NewSimApp(logger log.Logger, db dbm.DB, appOptions servertypes.AppOptions, 
 		appOptions,
 		baseAppOptions...,
 	)
+
+	// Set power reduction to 1 to make sure all bonded validators are added to the validator set
 	sdk.DefaultPowerReduction = sdk.OneInt()
-	// disable feemarket on native tx
+
+	// use zeta antehandler
 	options := ante.HandlerOptions{
-		AccountKeeper:   app.AccountKeeper,
-		BankKeeper:      app.BankKeeper,
-		EvmKeeper:       app.EvmKeeper,
-		FeeMarketKeeper: app.FeeMarketKeeper,
+		AccountKeeper:   zetaApp.AccountKeeper,
+		BankKeeper:      zetaApp.BankKeeper,
+		EvmKeeper:       zetaApp.EvmKeeper,
+		FeeMarketKeeper: zetaApp.FeeMarketKeeper,
 		SignModeHandler: encCdc.TxConfig.SignModeHandler(),
 		SigGasConsumer:  evmante.DefaultSigVerificationGasConsumer,
 		MaxTxGasWanted:  0,
-		ObserverKeeper:  app.ObserverKeeper,
+		ObserverKeeper:  zetaApp.ObserverKeeper,
 	}
 
 	anteHandler, err := ante.NewAnteHandler(options)
@@ -76,11 +81,11 @@ func NewSimApp(logger log.Logger, db dbm.DB, appOptions servertypes.AppOptions, 
 		panic(err)
 	}
 
-	app.SetAnteHandler(anteHandler)
-	if err := app.LoadLatestVersion(); err != nil {
+	zetaApp.SetAnteHandler(anteHandler)
+	if err := zetaApp.LoadLatestVersion(); err != nil {
 		return nil, err
 	}
-	return app, nil
+	return zetaApp, nil
 }
 
 // interBlockCacheOpt returns a BaseApp option function that sets the persistent
@@ -89,20 +94,24 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 
-// TODO: Make another test for the fuzzer itself, which just has noOp txs
-// and doesn't depend on the application.
+// TestAppStateDeterminism runs a full application simulation , and produces multiple blocks as per the config
+// It checks the determinism of the application by comparing the apphash at the end of each run to other runs
+// The following test certifies that , for the same set of operations ( irrespective of what the operations are ) ,
+// we would reach the same final state
 func TestAppStateDeterminism(t *testing.T) {
 	if !simutils.FlagEnabledValue {
 		t.Skip("skipping application simulation")
 	}
 
 	config := simutils.NewConfigFromFlags()
+
 	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
 	config.OnOperation = false
 	config.AllInvariants = false
 	config.ChainID = SimAppChainID
-	config.DBBackend = "goleveldb"
+	config.DBBackend = SimDBBackend
+	config.BlockMaxGas = SimBlockMaxGas
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
@@ -112,59 +121,51 @@ func TestAppStateDeterminism(t *testing.T) {
 		numSeeds = 1
 	}
 
+	// For the same seed, the app hash produced at the end of each run should be the same
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
+
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
 	appOptions[server.FlagInvCheckPeriod] = simutils.FlagPeriodValue
+
+	fmt.Println("Running tests for numSeeds: ", numSeeds, " numTimesToRunPerSeed: ", numTimesToRunPerSeed)
 
 	for i := 0; i < numSeeds; i++ {
 		if config.Seed == cosmossimcli.DefaultSeedValue {
 			config.Seed = rand.Int63()
 		}
 
-		fmt.Println("config.Seed: ", config.Seed)
-
+		//dbPrefix := fmt.Sprintf("%s-%d", SimDBBackend, i)
+		// For the same seed, the app hash produced at the end of each run should be the same
 		for j := 0; j < numTimesToRunPerSeed; j++ {
-			var logger log.Logger
-			if simutils.FlagVerboseValue {
-				logger = log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-			} else {
-				logger = log.NewNopLogger()
-			}
-
-			db, dir, logger, skip, err := cosmossimutils.SetupSimulation(config, "level-db", "Simulation", simutils.FlagVerboseValue, simutils.FlagEnabledValue)
-			if skip {
-				t.Skip("skipping application simulation")
-			}
+			db, dir, logger, _, err := cosmossimutils.SetupSimulation(config, SimDBBackend, SimDBName, simutils.FlagVerboseValue, simutils.FlagEnabledValue)
 			require.NoError(t, err)
 			appOptions[flags.FlagHome] = dir
 
-			app, err := NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+			simApp, err := NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
 
-			blockedAddresses := app.ModuleAccountAddrs()
+			blockedAddresses := simApp.ModuleAccountAddrs()
 
 			_, _, err = simulation.SimulateFromSeed(
 				t,
 				os.Stdout,
-				app.BaseApp,
-				simutils.AppStateFn(app.AppCodec(), app.SimulationManager(), app.ModuleBasics.DefaultGenesis(app.AppCodec())),
-				cosmossim.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-				cosmossimutils.SimulationOperations(app, app.AppCodec(), config),
+				simApp.BaseApp,
+				simutils.AppStateFn(simApp.AppCodec(), simApp.SimulationManager(), simApp.ModuleBasics.DefaultGenesis(simApp.AppCodec())),
+				cosmossim.RandomAccounts,
+				cosmossimutils.SimulationOperations(simApp, simApp.AppCodec(), config),
 				blockedAddresses,
 				config,
-				app.AppCodec(),
+				simApp.AppCodec(),
 			)
 			require.NoError(t, err)
 
-			if config.Commit {
-				simutils.PrintStats(db)
-			}
+			simutils.PrintStats(db)
 
-			appHash := app.LastCommitID().Hash
+			appHash := simApp.LastCommitID().Hash
 			appHashList[j] = appHash
 
 			if j != 0 {
@@ -177,14 +178,17 @@ func TestAppStateDeterminism(t *testing.T) {
 	}
 }
 
+// TestFullAppSimulation runs a full app simulation with the provided configuration.
+// At the end of the run it tries to export the genesis state to make sure the export works.
 func TestFullAppSimulation(t *testing.T) {
+
 	config := simutils.NewConfigFromFlags()
+
 	config.ChainID = SimAppChainID
 	config.BlockMaxGas = SimBlockMaxGas
-	config.DBBackend = "goleveldb"
-	//config.ExportStatePath = "/Users/tanmay/.zetacored/simulation_state_export.json"
+	config.DBBackend = SimDBBackend
 
-	db, dir, logger, skip, err := cosmossimutils.SetupSimulation(config, "level-db", "Simulation", simutils.FlagVerboseValue, simutils.FlagEnabledValue)
+	db, dir, logger, skip, err := cosmossimutils.SetupSimulation(config, SimDBBackend, SimDBName, simutils.FlagVerboseValue, simutils.FlagEnabledValue)
 	if skip {
 		t.Skip("skipping application simulation")
 	}
@@ -196,29 +200,32 @@ func TestFullAppSimulation(t *testing.T) {
 	}()
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
 	appOptions[server.FlagInvCheckPeriod] = simutils.FlagPeriodValue
+	appOptions[flags.FlagHome] = dir
 
-	app, err := NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	simApp, err := NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 	require.NoError(t, err)
 
-	blockedAddresses := app.ModuleAccountAddrs()
+	blockedAddresses := simApp.ModuleAccountAddrs()
 	_, _, simerr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
-		app.BaseApp,
-		simutils.AppStateFn(app.AppCodec(), app.SimulationManager(), app.ModuleBasics.DefaultGenesis(app.AppCodec())),
+		simApp.BaseApp,
+		simutils.AppStateFn(simApp.AppCodec(), simApp.SimulationManager(), simApp.ModuleBasics.DefaultGenesis(simApp.AppCodec())),
 		cosmossim.RandomAccounts,
-		cosmossimutils.SimulationOperations(app, app.AppCodec(), config),
+		cosmossimutils.SimulationOperations(simApp, simApp.AppCodec(), config),
 		blockedAddresses,
 		config,
-		app.AppCodec(),
+		simApp.AppCodec(),
 	)
 	require.NoError(t, simerr)
 
 	// check export works as expected
-	_, err = app.ExportAppStateAndValidators(false, nil, nil)
+	exported, err := simApp.ExportAppStateAndValidators(false, nil, nil)
 	require.NoError(t, err)
-
-	if config.Commit {
-		cosmossimutils.PrintStats(db)
+	if config.ExportStatePath != "" {
+		err := os.WriteFile(config.ExportStatePath, exported.AppState, 0o600)
+		require.NoError(t, err)
 	}
+
+	cosmossimutils.PrintStats(db)
 }
