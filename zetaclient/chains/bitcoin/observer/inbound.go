@@ -302,7 +302,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 	}
 
 	// #nosec G115 always positive
-	event, err := GetBtcEventWithWitness(
+	event, err := GetBtcEvent(
 		ob.btcClient,
 		*tx,
 		tss,
@@ -369,7 +369,7 @@ func FilterAndParseIncomingTx(
 			return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
 		}
 
-		event, err := GetBtcEventWithWitness(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
+		event, err := GetBtcEvent(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
 		if err != nil {
 			// unable to parse the tx, the caller should retry
 			return nil, errors.Wrapf(err, "error getting btc event for tx %s in block %d", tx.Txid, blockNumber)
@@ -431,10 +431,27 @@ func (ob *Observer) DoesInboundContainsRestrictedAddress(inTx *BTCInboundEvent) 
 	return false
 }
 
-// GetBtcEvent either returns a valid BTCInboundEvent or nil
+// GetBtcEvent returns a valid BTCInboundEvent or nil
+// it uses witness data to extract the sender address, except for mainnet
+func GetBtcEvent(
+	rpcClient interfaces.BTCRPCClient,
+	tx btcjson.TxRawResult,
+	tssAddress string,
+	blockNumber uint64,
+	logger zerolog.Logger,
+	netParams *chaincfg.Params,
+	depositorFee float64,
+) (*BTCInboundEvent, error) {
+	if netParams.Name == chaincfg.MainNetParams.Name {
+		return GetBtcEventWithoutWitness(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
+	}
+	return GetBtcEventWithWitness(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
+}
+
+// GetBtcEventWithoutWitness either returns a valid BTCInboundEvent or nil
 // Note: the caller should retry the tx on error (e.g., GetSenderAddressByVin failed)
 // TODO(revamp): simplify this function
-func GetBtcEvent(
+func GetBtcEventWithoutWitness(
 	rpcClient interfaces.BTCRPCClient,
 	tx btcjson.TxRawResult,
 	tssAddress string,
