@@ -76,7 +76,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		require.ErrorContains(t, err, "deposit error")
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Equal(t, types.CctxStatus_Aborted, newStatus)
-		require.Equal(t, "deposit error", cctx.CctxStatus.StatusMessage)
+		require.Equal(t, "deposit error", cctx.CctxStatus.ErrorMessage)
 	})
 
 	t.Run(
@@ -111,7 +111,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			require.Equal(t, types.CctxStatus_Aborted, newStatus)
 			require.Contains(
 				t,
-				cctx.CctxStatus.StatusMessage,
+				cctx.CctxStatus.ErrorMessage,
 				"chain not supported",
 			)
 		},
@@ -151,7 +151,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		require.Equal(t, types.CctxStatus_Aborted, newStatus)
 		require.Contains(
 			t,
-			cctx.CctxStatus.StatusMessage,
+			cctx.CctxStatus.ErrorMessage,
 			"GetRevertGasLimit: foreign coin not found for sender chain",
 		)
 	})
@@ -194,7 +194,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			require.Equal(t, types.CctxStatus_Aborted, newStatus)
 			require.Contains(
 				t,
-				cctx.CctxStatus.StatusMessage,
+				cctx.CctxStatus.ErrorMessage,
 				"chain not supported",
 			)
 		},
@@ -239,7 +239,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			require.Equal(t, types.CctxStatus_Aborted, newStatus)
 			require.Contains(
 				t,
-				cctx.CctxStatus.StatusMessage,
+				cctx.CctxStatus.ErrorMessage,
 				"chain not supported",
 			)
 		},
@@ -284,7 +284,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Equal(t, types.CctxStatus_Aborted, newStatus)
-		require.Contains(t, cctx.CctxStatus.StatusMessage, "cannot find receiver chain nonce")
+		require.Contains(t, cctx.CctxStatus.ErrorMessage, "cannot find receiver chain nonce")
 	})
 
 	t.Run("unable to process zevm deposit HandleEVMDeposit revert successfully", func(t *testing.T) {
@@ -321,7 +321,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, types.CctxStatus_PendingRevert, cctx.CctxStatus.Status)
 		require.Equal(t, types.CctxStatus_PendingRevert, newStatus)
-		require.Equal(t, errDeposit.Error(), cctx.CctxStatus.StatusMessage)
+		require.Equal(t, errDeposit.Error(), cctx.CctxStatus.ErrorMessage)
 		require.Equal(t, updatedNonce, cctx.GetCurrentOutboundParam().TssNonce)
 	})
 
@@ -361,7 +361,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			require.Equal(t, types.CctxStatus_Aborted, newStatus)
 			require.Contains(
 				t,
-				cctx.CctxStatus.StatusMessage,
+				cctx.CctxStatus.ErrorMessage,
 				"cannot revert a revert tx",
 			)
 		},
@@ -427,7 +427,7 @@ func TestKeeper_InitiateOutboundProcessCrosschainMsgPassing(t *testing.T) {
 		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Equal(t, types.CctxStatus_Aborted, newStatus)
-		require.Equal(t, observertypes.ErrSupportedChains.Error(), cctx.CctxStatus.StatusMessage)
+		require.Equal(t, observertypes.ErrSupportedChains.Error(), cctx.CctxStatus.ErrorMessage)
 	})
 
 	t.Run("unable to process crosschain msg passing UpdateNonce fails", func(t *testing.T) {
@@ -456,7 +456,7 @@ func TestKeeper_InitiateOutboundProcessCrosschainMsgPassing(t *testing.T) {
 		require.ErrorContains(t, err, "cannot find receiver chain nonce")
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Equal(t, types.CctxStatus_Aborted, newStatus)
-		require.Contains(t, cctx.CctxStatus.StatusMessage, "cannot find receiver chain nonce")
+		require.Contains(t, cctx.CctxStatus.ErrorMessage, "cannot find receiver chain nonce")
 	})
 }
 
