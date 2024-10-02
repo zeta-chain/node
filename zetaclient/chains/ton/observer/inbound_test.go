@@ -1,6 +1,7 @@
 package observer
 
 import (
+	"encoding/hex"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -157,7 +158,7 @@ func TestInbound(t *testing.T) {
 
 		assert.Equal(t, "", cctx.Asset)
 		assert.Equal(t, deposit.Amount.Uint64(), cctx.Amount.Uint64())
-		assert.Equal(t, string(deposit.Recipient.Bytes()), cctx.Message)
+		assert.Equal(t, hex.EncodeToString(deposit.Recipient.Bytes()), cctx.Message)
 
 		// Check hash & block height
 		expectedHash := liteapi.TransactionHashToString(depositTX.Lt, txHash(depositTX))
@@ -219,7 +220,13 @@ func TestInbound(t *testing.T) {
 
 		assert.Equal(t, "", cctx.Asset)
 		assert.Equal(t, depositAndCall.Amount.Uint64(), cctx.Amount.Uint64())
-		assert.Equal(t, string(depositAndCall.Recipient.Bytes())+callData, cctx.Message)
+
+		expectedMessage := hex.EncodeToString(append(
+			depositAndCall.Recipient.Bytes(),
+			[]byte(callData)...,
+		))
+
+		assert.Equal(t, expectedMessage, cctx.Message)
 
 		// Check hash & block height
 		expectedHash := liteapi.TransactionHashToString(depositAndCallTX.Lt, txHash(depositAndCallTX))

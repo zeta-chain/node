@@ -2,6 +2,7 @@ package observer
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"slices"
 
@@ -202,7 +203,7 @@ func (ob *Observer) voteDeposit(
 		sender,
 		ob.ZetacoreClient().Chain().ChainId,
 		amount,
-		string(memo),
+		hex.EncodeToString(memo),
 		inboundHash,
 		uint64(seqno),
 		gasLimit,
@@ -254,6 +255,6 @@ func txLogFields(tx *ton.Transaction) map[string]any {
 	return map[string]any{
 		"inbound.ton.lt":       tx.Lt,
 		"inbound.ton.hash":     tx.Hash().Hex(),
-		"inbound.ton.block_id": tx.BlockID.String(),
+		"inbound.ton.block_id": tx.BlockID.BlockID.String(),
 	}
 }

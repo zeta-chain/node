@@ -301,6 +301,12 @@ func TestDecodeAddressFromChainID(t *testing.T) {
 			want:    []byte("DCAK36VfExkPdAkYUQg6ewgxyinvcEyPLyHjRbmveKFw"),
 		},
 		{
+			name:    "TON",
+			chainID: chains.TONMainnet.ChainId,
+			addr:    "0:55798cb7b87168251a7c39f6806b8c202f6caa0f617a76f4070b3fdacfd056a1",
+			want:    []byte("0:55798cb7b87168251a7c39f6806b8c202f6caa0f617a76f4070b3fdacfd056a1"),
+		},
+		{
 			name:    "Non-supported chain",
 			chainID: 9999,
 			wantErr: true,

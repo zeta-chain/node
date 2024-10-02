@@ -108,6 +108,8 @@ func DecodeAddressFromChainID(chainID int64, addr string, additionalChains []Cha
 		return []byte(addr), nil
 	case IsSolanaChain(chainID, additionalChains):
 		return []byte(addr), nil
+	case IsTONChain(chainID, additionalChains):
+		return []byte(addr), nil
 	default:
 		return nil, fmt.Errorf("chain (%d) not supported", chainID)
 	}
