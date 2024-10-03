@@ -16,6 +16,7 @@
 * [2911](https://github.com/zeta-chain/node/pull/2911) - add chain static information for btc testnet4
 * [2904](https://github.com/zeta-chain/node/pull/2904) - integrate authenticated calls smart contract functionality into protocol
 * [2919](https://github.com/zeta-chain/node/pull/2919) - add inbound sender to revert context
+* [2896](https://github.com/zeta-chain/node/pull/2896) - add TON inbound observation
 
 ### Refactor
 
