@@ -141,13 +141,13 @@ func simulationModules(
 			app.GetSubspace(authtypes.ModuleName),
 		),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
-		//gov.NewAppModule(
-		//	appCodec,
-		//	&app.GovKeeper,
-		//	app.AccountKeeper,
-		//	app.BankKeeper,
-		//	app.GetSubspace(govtypes.ModuleName),
-		//),
+		gov.NewAppModule(
+			appCodec,
+			&app.GovKeeper,
+			app.AccountKeeper,
+			app.BankKeeper,
+			app.GetSubspace(govtypes.ModuleName),
+		),
 		staking.NewAppModule(
 			appCodec,
 			app.StakingKeeper,
