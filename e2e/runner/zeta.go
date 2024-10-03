@@ -67,12 +67,49 @@ func (r *E2ERunner) WaitForMinedCCTX(txHash ethcommon.Hash) {
 }
 
 // WaitForMinedCCTXFromIndex waits for a cctx to be mined from its index
-func (r *E2ERunner) WaitForMinedCCTXFromIndex(index string) {
+func (r *E2ERunner) WaitForMinedCCTXFromIndex(index string) *types.CrossChainTx {
 	r.Lock()
 	defer r.Unlock()
 
 	cctx := utils.WaitCCTXMinedByIndex(r.Ctx, index, r.CctxClient, r.Logger, r.CctxTimeout)
 	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_OutboundMined)
+
+	return cctx
+}
+
+func (r *E2ERunner) WaitForSpecificCCTX(
+	filter func(*types.CrossChainTx) bool,
+	timeout time.Duration,
+) []types.CrossChainTx {
+	var (
+		ctx   = r.Ctx
+		start = time.Now()
+		query = &types.QueryAllCctxRequest{}
+		out   []types.CrossChainTx
+	)
+
+	for time.Since(start) < timeout {
+		res, err := r.CctxClient.CctxAll(ctx, query)
+		require.NoError(r, err)
+
+		for i := range res.CrossChainTx {
+			tx := res.CrossChainTx[i]
+			if filter(tx) {
+				out = append(out, *tx)
+			}
+		}
+
+		if len(out) > 0 {
+			return out
+		}
+
+		time.Sleep(time.Second)
+	}
+
+	r.Logger.Error("WaitForSpecificCCTX: No CCTX found. Timed out")
+	r.FailNow()
+
+	return nil
 }
 
 // SendZetaOnEvm sends ZETA to an address on EVM

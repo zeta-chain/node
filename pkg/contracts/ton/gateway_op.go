@@ -1,6 +1,8 @@
 package ton
 
 import (
+	"errors"
+
 	"cosmossdk.io/math"
 	eth "github.com/ethereum/go-ethereum/common"
 	"github.com/tonkeeper/tongo/boc"
@@ -81,20 +83,9 @@ func (d DepositAndCall) Memo() []byte {
 
 // AsBody casts struct to internal message body.
 func (d DepositAndCall) AsBody() (*boc.Cell, error) {
-	callDataCell, err := MarshalSnakeCell(d.CallData)
-	if err != nil {
-		return nil, err
-	}
-
 	b := boc.NewCell()
-	err = ErrCollect(
-		b.WriteUint(uint64(OpDepositAndCall), sizeOpCode),
-		b.WriteUint(0, sizeQueryID),
-		b.WriteBytes(d.Recipient.Bytes()),
-		b.AddRef(callDataCell),
-	)
 
-	return b, err
+	return b, writeDepositAndCallBody(b, d.Recipient, d.CallData)
 }
 
 func writeDepositBody(b *boc.Cell, recipient eth.Address) error {
@@ -102,5 +93,23 @@ func writeDepositBody(b *boc.Cell, recipient eth.Address) error {
 		b.WriteUint(uint64(OpDeposit), sizeOpCode),
 		b.WriteUint(0, sizeQueryID),
 		b.WriteBytes(recipient.Bytes()),
+	)
+}
+
+func writeDepositAndCallBody(b *boc.Cell, recipient eth.Address, callData []byte) error {
+	if len(callData) == 0 {
+		return errors.New("call data is empty")
+	}
+
+	callDataCell, err := MarshalSnakeCell(callData)
+	if err != nil {
+		return err
+	}
+
+	return ErrCollect(
+		b.WriteUint(uint64(OpDepositAndCall), sizeOpCode),
+		b.WriteUint(0, sizeQueryID),
+		b.WriteBytes(recipient.Bytes()),
+		b.AddRef(callDataCell),
 	)
 }

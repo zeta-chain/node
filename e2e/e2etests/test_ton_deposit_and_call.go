@@ -9,19 +9,14 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/runner/ton"
+	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
-	"github.com/zeta-chain/node/testutil/sample"
+	testcontract "github.com/zeta-chain/node/testutil/contracts"
 	crosschainTypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// we need to use this send mode due to how wallet V5 works
-//
-//	https://github.com/tonkeeper/w5/blob/main/contracts/wallet_v5.fc#L82
-//	https://docs.ton.org/develop/smart-contracts/guidelines/message-modes-cookbook
-const tonDepositSendCode = toncontracts.SendFlagSeparateFees + toncontracts.SendFlagIgnoreErrors
-
-func TestTONDeposit(r *runner.E2ERunner, args []string) {
+func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// Given deployer
@@ -41,18 +36,24 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	sender, err := deployer.CreateWallet(ctx, ton.TONCoins(50))
 	require.NoError(r, err)
 
-	// Given sample EVM address
-	recipient := sample.EthAddress()
+	// Given sample zEVM contract
+	contractAddr, _, contract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)
+	require.NoError(r, err)
+	r.Logger.Info("Example zevm contract deployed at: %s", contractAddr.String())
+
+	// Given call data
+	callData := []byte("hello from TON!")
 
 	// ACT
 	r.Logger.Info(
-		"Sending deposit of %s TON from %s to zEVM %s",
+		"Sending deposit of %s TON from %s to zEVM %s and calling contract with %q",
 		amount.String(),
 		sender.GetAddress().ToRaw(),
-		recipient.Hex(),
+		contractAddr.Hex(),
+		string(callData),
 	)
 
-	err = gw.SendDeposit(ctx, sender, amount, recipient, tonDepositSendCode)
+	err = gw.SendDepositAndCall(ctx, sender, amount, contractAddr, callData, tonDepositSendCode)
 
 	// ASSERT
 	require.NoError(r, err)
@@ -66,19 +67,18 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	cctxs := r.WaitForSpecificCCTX(filter, time.Minute)
 	require.Len(r, cctxs, 1)
 
-	cctx := r.WaitForMinedCCTXFromIndex(cctxs[0].Index)
+	r.WaitForMinedCCTXFromIndex(cctxs[0].Index)
 
-	// Check CCTX
 	expectedDeposit := amount.Sub(depositFee)
 
-	require.Equal(r, sender.GetAddress().ToRaw(), cctx.InboundParams.Sender)
-	require.Equal(r, expectedDeposit.Uint64(), cctx.InboundParams.Amount.Uint64())
+	// check if example contract has been called, bar value should be set to amount
+	utils.MustHaveCalledExampleContract(r, contract, expectedDeposit.BigInt())
 
 	// Check sender's balance
-	balance, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, recipient)
+	balance, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, contractAddr)
 	require.NoError(r, err)
 
-	r.Logger.Info("Recipient's zEVM TON balance after deposit: %d", balance.Uint64())
+	r.Logger.Info("Contract's zEVM TON balance after deposit: %d", balance.Uint64())
 
 	require.Equal(r, expectedDeposit.Uint64(), balance.Uint64())
 }

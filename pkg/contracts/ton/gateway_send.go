@@ -39,6 +39,25 @@ func (gw *Gateway) SendDeposit(
 	return gw.send(ctx, s, amount, body, sendMode)
 }
 
+// SendDepositAndCall sends a deposit operation to the gateway on behalf of the sender
+// with a callData to the recipient.
+func (gw *Gateway) SendDepositAndCall(
+	ctx context.Context,
+	s Sender,
+	amount math.Uint,
+	zevmRecipient eth.Address,
+	callData []byte,
+	sendMode uint8,
+) error {
+	body := boc.NewCell()
+
+	if err := writeDepositAndCallBody(body, zevmRecipient, callData); err != nil {
+		return errors.Wrap(err, "failed to write depositAndCall body")
+	}
+
+	return gw.send(ctx, s, amount, body, sendMode)
+}
+
 func (gw *Gateway) send(ctx context.Context, s Sender, amount math.Uint, body *boc.Cell, sendMode uint8) error {
 	if body == nil {
 		return errors.New("body is nil")
