@@ -88,3 +88,10 @@ func evmChainsConfigs() map[int64]EVMConfig {
 		},
 	}
 }
+
+// btcChainsConfigs contains BTC chain configs
+func btcChainsConfigs() map[int64]BTCConfig {
+	return map[int64]BTCConfig{
+		chains.BitcoinRegtest.ChainId: bitcoinConfigRegnet(),
+	}
+}

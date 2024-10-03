@@ -151,7 +151,7 @@ func TestTicker(t *testing.T) {
 		// ASSERT
 		assert.ErrorContains(t, err, "panic during ticker run: oops")
 		// assert that we get error with the correct line number
-		assert.ErrorContains(t, err, "ticker_test.go:142")
+		assert.ErrorContains(t, err, "ticker_test.go:145")
 	})
 
 	t.Run("Nil panic", func(t *testing.T) {
@@ -176,7 +176,7 @@ func TestTicker(t *testing.T) {
 			"panic during ticker run: runtime error: invalid memory address or nil pointer dereference",
 		)
 		// assert that we get error with the correct line number
-		assert.ErrorContains(t, err, "ticker_test.go:162")
+		assert.ErrorContains(t, err, "ticker_test.go:165")
 	})
 
 	t.Run("Run as a single call", func(t *testing.T) {
