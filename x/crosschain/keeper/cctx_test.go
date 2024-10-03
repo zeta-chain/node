@@ -169,8 +169,13 @@ func TestCCTXs(t *testing.T) {
 				send, found := keeper.GetCrossChainTx(ctx, s.Index)
 				require.True(t, found)
 				require.Equal(t, s, send)
+				err, found := keeper.GetCrossChainTxError(ctx, s.Index)
+				require.True(t, found)
+				require.Equal(t, "", err)
 			}
-
+			err, found := keeper.GetCrossChainTxError(ctx, "does-not-exist")
+			require.False(t, found)
+			require.Equal(t, "", err)
 		})
 	}
 }

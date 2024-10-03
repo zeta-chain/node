@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gotest.tools/assert"
 
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -140,7 +140,7 @@ func TestStatus_ChangeStatus(t *testing.T) {
 	t.Run("should change status and msg if transition is valid", func(t *testing.T) {
 		s := types.Status{Status: types.CctxStatus_PendingInbound}
 
-		s.UpdateStatusMessage(types.CctxStatus_PendingOutbound, "msg")
+		s.UpdateStatus(types.CctxStatus_PendingOutbound, "msg")
 		assert.Equal(t, s.Status, types.CctxStatus_PendingOutbound)
 		assert.Equal(t, s.StatusMessage, "Status changed from PendingInbound to PendingOutbound: msg")
 	})
@@ -148,7 +148,7 @@ func TestStatus_ChangeStatus(t *testing.T) {
 	t.Run("should change status if transition is valid", func(t *testing.T) {
 		s := types.Status{Status: types.CctxStatus_PendingInbound}
 
-		s.UpdateStatusMessage(types.CctxStatus_PendingOutbound, "")
+		s.UpdateStatus(types.CctxStatus_PendingOutbound, "")
 		fmt.Printf("%+v\n", s)
 		assert.Equal(t, s.Status, types.CctxStatus_PendingOutbound)
 		assert.Equal(t, s.StatusMessage, fmt.Sprintf(
@@ -161,7 +161,7 @@ func TestStatus_ChangeStatus(t *testing.T) {
 	t.Run("should change status to aborted and msg if transition is invalid", func(t *testing.T) {
 		s := types.Status{Status: types.CctxStatus_PendingOutbound}
 
-		s.UpdateStatusMessage(types.CctxStatus_PendingInbound, "msg")
+		s.UpdateStatus(types.CctxStatus_PendingInbound, "msg")
 		assert.Equal(t, s.Status, types.CctxStatus_Aborted)
 		assert.Equal(
 			t,

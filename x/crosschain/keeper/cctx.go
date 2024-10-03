@@ -81,6 +81,23 @@ func (k Keeper) GetCrossChainTx(ctx sdk.Context, index string) (val types.CrossC
 	return val, true
 }
 
+// GetCrossChainTxError returns the error message for a given cctx index.
+func (k Keeper) GetCrossChainTxError(ctx sdk.Context, index string) (errMsg string, found bool) {
+	var cctx types.CrossChainTx
+
+	p := types.KeyPrefix(fmt.Sprintf("%s", types.CCTXKey))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
+
+	b := store.Get(types.KeyPrefix(index))
+	if b == nil {
+		return "", false
+	}
+
+	k.cdc.MustUnmarshal(b, &cctx)
+
+	return cctx.CctxStatus.ErrorMessage, true
+}
+
 // GetAllCrossChainTx returns all cctxs
 func (k Keeper) GetAllCrossChainTx(ctx sdk.Context) (list []types.CrossChainTx) {
 	p := types.KeyPrefix(fmt.Sprintf("%s", types.CCTXKey))

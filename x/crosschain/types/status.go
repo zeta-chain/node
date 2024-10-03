@@ -9,14 +9,14 @@ func (m *Status) AbortRefunded() {
 	m.StatusMessage = "CCTX aborted and Refunded"
 }
 
-// UpdateCctxMessages transitions the Status and Error messages.
-func (m *Status) UpdateCctxMessages(newStatus CctxStatus, isError bool, statusMsg, errorMsg string) {
-	m.UpdateStatusMessage(newStatus, statusMsg)
+// UpdateStatusAndErrorMessages transitions the Status and Error messages.
+func (m *Status) UpdateStatusAndErrorMessages(newStatus CctxStatus, isError bool, statusMsg, errorMsg string) {
+	m.UpdateStatus(newStatus, statusMsg)
 	m.UpdateErrorMessage(isError, errorMsg)
 }
 
-// UpdateStatusMessage updates the cctx status and cctx.status.status_message.
-func (m *Status) UpdateStatusMessage(newStatus CctxStatus, statusMsg string) {
+// UpdateStatus updates the cctx status and cctx.status.status_message.
+func (m *Status) UpdateStatus(newStatus CctxStatus, statusMsg string) {
 	if !m.ValidateTransition(newStatus) {
 		m.StatusMessage = fmt.Sprintf(
 			"Failed to transition status from %s to %s",

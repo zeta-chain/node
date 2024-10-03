@@ -337,7 +337,6 @@ require (
 	github.com/bnb-chain/tss-lib v1.5.0
 	github.com/showa-93/go-mask v0.6.2
 	github.com/tonkeeper/tongo v1.9.3
-	gotest.tools v2.2.0+incompatible
 )
 
 require (
