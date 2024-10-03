@@ -48,10 +48,6 @@
 * [2853](https://github.com/zeta-chain/node/pull/2853) - calling precompile through sc with sc state update
 * [2925](https://github.com/zeta-chain/node/pull/2925) - add recover to init chainer to diplay informative message when starting a node from block 1
 
-### Docs
-
-* [2963](https://github.com/zeta-chain/node/pull/2963) - added doc for design of non-evm chain inbound memo format.
-
 ## v20.0.0
 
 ### Features
