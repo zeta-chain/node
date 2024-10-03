@@ -126,10 +126,12 @@ func (gw *Gateway) parseInbound(tx ton.Transaction) (*Transaction, error) {
 	case OpDepositAndCall:
 		content, errContent = parseDepositAndCall(tx, sender, body)
 	default:
+		// #nosec G115 always in range
 		return nil, errors.Wrapf(ErrUnknownOp, "op code %d", int64(op))
 	}
 
 	if errContent != nil {
+		// #nosec G115 always in range
 		return nil, errors.Wrapf(ErrParse, "unable to parse content for op code %d: %s", int64(op), errContent.Error())
 	}
 
