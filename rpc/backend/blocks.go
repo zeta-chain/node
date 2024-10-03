@@ -339,6 +339,7 @@ func (b *Backend) parseSyntheticTxFromBlockResults(
 		return nil, nil
 	}
 	if additional == nil || res == nil {
+		b.logger.Debug("synthetic ethereum tx not found in msgs: block %d, index %d", block.Height, i)
 		return nil, nil
 	}
 	return b.parseSyntethicTxFromAdditionalFields(additional), additional
