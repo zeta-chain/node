@@ -38,6 +38,7 @@ import (
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"github.com/zeta-chain/ethermint/x/feemarket"
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
+
 	authoritymodule "github.com/zeta-chain/node/x/authority"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	crosschainmodule "github.com/zeta-chain/node/x/crosschain"
@@ -126,6 +127,7 @@ func InitGenesisModuleList() []string {
 	}
 }
 
+// simulationModules returns a list of modules to include in the simulation
 func simulationModules(
 	app *App,
 	appCodec codec.Codec,
@@ -139,13 +141,13 @@ func simulationModules(
 			app.GetSubspace(authtypes.ModuleName),
 		),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
-		gov.NewAppModule(
-			appCodec,
-			&app.GovKeeper,
-			app.AccountKeeper,
-			app.BankKeeper,
-			app.GetSubspace(govtypes.ModuleName),
-		),
+		//gov.NewAppModule(
+		//	appCodec,
+		//	&app.GovKeeper,
+		//	app.AccountKeeper,
+		//	app.BankKeeper,
+		//	app.GetSubspace(govtypes.ModuleName),
+		//),
 		staking.NewAppModule(
 			appCodec,
 			app.StakingKeeper,

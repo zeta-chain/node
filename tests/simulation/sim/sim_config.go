@@ -6,6 +6,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
+const (
+	defaultSeed          = 42
+	defaultNumBlocks     = 500
+	defaultInitialHeight = 1
+	defaultBlockSize     = 200
+)
+
 // List of available flags for the simulator
 var (
 	FlagGenesisFileValue        string
@@ -68,10 +75,10 @@ func GetSimulatorFlags() {
 		"",
 		"custom file path to save the exported simulation statistics JSON",
 	)
-	flag.Int64Var(&FlagSeedValue, "Seed", 42, "simulation random seed")
-	flag.IntVar(&FlagInitialBlockHeightValue, "InitialBlockHeight", 1, "initial block to start the simulation")
-	flag.IntVar(&FlagNumBlocksValue, "NumBlocks", 500, "number of new blocks to simulate from the initial block height")
-	flag.IntVar(&FlagBlockSizeValue, "BlockSize", 200, "operations per block")
+	flag.Int64Var(&FlagSeedValue, "Seed", defaultSeed, "simulation random seed")
+	flag.IntVar(&FlagInitialBlockHeightValue, "InitialBlockHeight", defaultInitialHeight, "initial block to start the simulation")
+	flag.IntVar(&FlagNumBlocksValue, "NumBlocks", defaultNumBlocks, "number of new blocks to simulate from the initial block height")
+	flag.IntVar(&FlagBlockSizeValue, "BlockSize", defaultBlockSize, "operations per block")
 	flag.BoolVar(&FlagLeanValue, "Lean", false, "lean simulation log output")
 	flag.BoolVar(&FlagCommitValue, "Commit", false, "have the simulation commit")
 	flag.BoolVar(&FlagOnOperationValue, "SimulateEveryOperation", false, "run slow invariants every operation")

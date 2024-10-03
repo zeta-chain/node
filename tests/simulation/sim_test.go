@@ -128,6 +128,10 @@ func TestAppStateDeterminism(t *testing.T) {
 			appHash := simApp.LastCommitID().Hash
 			appHashList[j] = appHash
 
+			// Clean up resources
+			require.NoError(t, db.Close())
+			require.NoError(t, os.RemoveAll(dir))
+
 			if j != 0 {
 				require.Equal(
 					t,

@@ -10,27 +10,32 @@ SIMAPP = ./tests/simulation
 # Run sim is a cosmos tool which helps us to run multiple simulations in parallel.
 runsim: $(BINDIR)/runsim
 $(BINDIR)/runsim:
-	@echo "Installing runsim..."
-	@(cd /tmp && go install github.com/cosmos/tools/cmd/runsim@v1.0.0)
+	@echo 'Installing runsim...'
+	@TEMP_DIR=$$(mktemp -d) && \
+	cd $$TEMP_DIR && \
+	go install github.com/cosmos/tools/cmd/runsim@v1.0.0 && \
+	rm -rf $$TEMP_DIR || (echo 'Failed to install runsim' && exit 1)
+	@echo 'runsim installed successfully'
 
+
+define run-sim-test
+	@echo "Running $(1)..."
+	@go test -mod=readonly $(SIMAPP) -run $(2) -Enabled=true \
+		-NumBlocks=$(3) -BlockSize=$(4) -Commit=true -Period=0 -v -timeout $(5)
+endef
 
 test-sim-nondeterminism:
-	@echo "Running non-determinism test..."
-	@go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \
-		-NumBlocks=10 -BlockSize=20 -Commit=true -Period=0 -v -timeout 24h
-
+	$(call run-sim-test,"non-determinism test",TestAppStateDeterminism,100,200,2h)
 
 test-sim-fullappsimulation:
-	@echo "Running TestFullAppSimulation."
-	@go test -mod=readonly $(SIMAPP) -run TestFullAppSimulation -Enabled=true \
-		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h
+	$(call run-sim-test,"TestFullAppSimulation",TestFullAppSimulation,100,200,2h)
 
 test-sim-multi-seed-long: runsim
-	@echo "Running long multi-seed application simulation. This may take awhile!"
+	@echo "Running long multi-seed application simulation."
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 500 50 TestFullAppSimulation
 
 test-sim-multi-seed-short: runsim
-	@echo "Running short multi-seed application simulation. This may take awhile!"
+	@echo "Running short multi-seed application simulation."
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 50 10 TestFullAppSimulation
 
 
