@@ -1,4 +1,4 @@
-# Interface for arbitrary call
+# Interface for Arbitrary Calls in Protocol Contracts
 
 ## **Context**
 
