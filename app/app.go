@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"os"
@@ -177,64 +178,33 @@ func getGovProposalHandlers() []govclient.ProposalHandler {
 	return govProposalHandlers
 }
 
-var (
-	ModuleBasics = module.NewBasicManager(
-		auth.AppModuleBasic{},
-		genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
-		bank.AppModuleBasic{},
-		//capability.AppModuleBasic{},
-		staking.AppModuleBasic{},
-		distr.AppModuleBasic{},
-		gov.NewAppModuleBasic(getGovProposalHandlers()),
-		params.AppModuleBasic{},
-		crisis.AppModuleBasic{},
-		slashing.AppModuleBasic{},
-		//ibc.AppModuleBasic{},
-		//ibctm.AppModuleBasic{},
-		upgrade.AppModuleBasic{},
-		evidence.AppModuleBasic{},
-		//transfer.AppModuleBasic{},
-		vesting.AppModuleBasic{},
-		consensus.AppModuleBasic{},
-		evm.AppModuleBasic{},
-		feemarket.AppModuleBasic{},
-		authoritymodule.AppModuleBasic{},
-		lightclientmodule.AppModuleBasic{},
-		crosschainmodule.AppModuleBasic{},
-		//ibccrosschain.AppModuleBasic{},
-		observermodule.AppModuleBasic{},
-		fungiblemodule.AppModuleBasic{},
-		emissionsmodule.AppModuleBasic{},
-		groupmodule.AppModuleBasic{},
-		authzmodule.AppModuleBasic{},
-	)
+type GenesisState map[string]json.RawMessage
 
-	// module account permissions
-	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:     nil,
-		distrtypes.ModuleName:          nil,
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:            {authtypes.Burner},
-		//ibctransfertypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
-		crosschaintypes.ModuleName: {authtypes.Minter, authtypes.Burner},
-		//ibccrosschaintypes.ModuleName:                   nil,
-		evmtypes.ModuleName:                             {authtypes.Minter, authtypes.Burner},
-		fungibletypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
-		emissionstypes.ModuleName:                       nil,
-		emissionstypes.UndistributedObserverRewardsPool: nil,
-		emissionstypes.UndistributedTssRewardsPool:      nil,
-	}
+// module account permissions
+var maccPerms = map[string][]string{
+	authtypes.FeeCollectorName:     nil,
+	distrtypes.ModuleName:          nil,
+	stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
+	stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+	govtypes.ModuleName:            {authtypes.Burner},
+	//ibctransfertypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
+	crosschaintypes.ModuleName: {authtypes.Minter, authtypes.Burner},
+	//ibccrosschaintypes.ModuleName:                   nil,
+	evmtypes.ModuleName:                             {authtypes.Minter, authtypes.Burner},
+	fungibletypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
+	emissionstypes.ModuleName:                       nil,
+	emissionstypes.UndistributedObserverRewardsPool: nil,
+	emissionstypes.UndistributedTssRewardsPool:      nil,
+}
 
-	// module accounts that are NOT allowed to receive tokens
-	blockedReceivingModAcc = map[string]bool{
-		distrtypes.ModuleName:          true,
-		authtypes.FeeCollectorName:     true,
-		stakingtypes.BondedPoolName:    true,
-		stakingtypes.NotBondedPoolName: true,
-		govtypes.ModuleName:            true,
-	}
-)
+// module accounts that are NOT allowed to receive tokens
+var blockedReceivingModAcc = map[string]bool{
+	distrtypes.ModuleName:          true,
+	authtypes.FeeCollectorName:     true,
+	stakingtypes.BondedPoolName:    true,
+	stakingtypes.NotBondedPoolName: true,
+	govtypes.ModuleName:            true,
+}
 
 var (
 	_ runtime.AppI            = (*App)(nil)
@@ -738,7 +708,7 @@ func New(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 	)
 
-	app.ModuleBasics = newBasicManagerFromManager(app)
+	app.ModuleBasics = ModuleBasics
 
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
@@ -906,7 +876,7 @@ func (app *App) ModuleAccountAddrs() map[string]bool {
 	return modAccAddrs
 }
 
-// LegacyAmino returns SimApp's amino codec.
+// LegacyAmino returns app's amino codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.

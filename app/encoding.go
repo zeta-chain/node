@@ -14,7 +14,6 @@ import (
 	evmenc "github.com/zeta-chain/ethermint/encoding"
 	ethermint "github.com/zeta-chain/ethermint/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
@@ -28,6 +27,7 @@ func MakeEncodingConfig() ethermint.EncodingConfig {
 	encodingConfig := evmenc.MakeConfig(ModuleBasics)
 	registry := encodingConfig.InterfaceRegistry
 
+	// TODO test if we need to register these interfaces again as MakeConfig already registers them
 	cryptocodec.RegisterInterfaces(registry)
 	authtypes.RegisterInterfaces(registry)
 	authz.RegisterInterfaces(registry)
