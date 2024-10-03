@@ -209,8 +209,4 @@ func TestFullAppSimulation(t *testing.T) {
 	}
 
 	simutils.PrintStats(db)
-
-	// Clean up resources
-	require.NoError(t, db.Close())
-	require.NoError(t, os.RemoveAll(dir))
 }
