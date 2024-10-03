@@ -20,7 +20,7 @@ var (
 	FlagBlockSizeValue          int
 	FlagLeanValue               bool
 	FlagCommitValue             bool
-	FlagOnOperationValue        bool
+	FlagOnOperationValue        bool // TODO: Remove in favor of binary search for invariant violation
 	FlagAllInvariantsValue      bool
 
 	FlagEnabledValue     bool
