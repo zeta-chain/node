@@ -28,32 +28,48 @@ func TestClient(t *testing.T) {
 	)
 
 	t.Run("GetFirstTransaction", func(t *testing.T) {
-		// ARRANGE
-		// Given sample account id (a dev wallet)
-		// https://tonviewer.com/UQCVlMcZ7EyV9maDsvscoLCd5KQfb7CHukyNJluWpMzlD0vr?section=transactions
-		accountID, err := ton.ParseAccountID("UQCVlMcZ7EyV9maDsvscoLCd5KQfb7CHukyNJluWpMzlD0vr")
-		require.NoError(t, err)
+		t.Run("Account doesn't exist", func(t *testing.T) {
+			// ARRANGE
+			accountID, err := ton.ParseAccountID("0:55798cb7b87168251a7c39f6806b8c202f6caa0f617a76f4070b3fdacfd056a2")
+			require.NoError(t, err)
 
-		// Given expected hash for the first tx
-		const expect = "b73df4853ca02a040df46f56635d6b8f49b554d5f556881ab389111bbfce4498"
+			// ACT
+			tx, scrolled, err := client.GetFirstTransaction(ctx, accountID)
 
-		// as of 2024-09-18
-		const expectedTransactions = 23
+			// ASSERT
+			require.ErrorContains(t, err, "account is not active")
+			require.Zero(t, scrolled)
+			require.Nil(t, tx)
+		})
 
-		start := time.Now()
+		t.Run("All good", func(t *testing.T) {
+			// ARRANGE
+			// Given sample account id (a dev wallet)
+			// https://tonviewer.com/UQCVlMcZ7EyV9maDsvscoLCd5KQfb7CHukyNJluWpMzlD0vr?section=transactions
+			accountID, err := ton.ParseAccountID("UQCVlMcZ7EyV9maDsvscoLCd5KQfb7CHukyNJluWpMzlD0vr")
+			require.NoError(t, err)
 
-		// ACT
-		tx, scrolled, err := client.GetFirstTransaction(ctx, accountID)
+			// Given expected hash for the first tx
+			const expect = "b73df4853ca02a040df46f56635d6b8f49b554d5f556881ab389111bbfce4498"
 
-		finish := time.Since(start)
+			// as of 2024-09-18
+			const expectedTransactions = 23
 
-		// ASSERT
-		require.NoError(t, err)
+			start := time.Now()
 
-		assert.GreaterOrEqual(t, scrolled, expectedTransactions)
-		assert.Equal(t, expect, tx.Hash().Hex())
+			// ACT
+			tx, scrolled, err := client.GetFirstTransaction(ctx, accountID)
 
-		t.Logf("Time taken %s; transactions scanned: %d", finish.String(), scrolled)
+			finish := time.Since(start)
+
+			// ASSERT
+			require.NoError(t, err)
+
+			assert.GreaterOrEqual(t, scrolled, expectedTransactions)
+			assert.Equal(t, expect, tx.Hash().Hex())
+
+			t.Logf("Time taken %s; transactions scanned: %d", finish.String(), scrolled)
+		})
 	})
 
 	t.Run("GetTransactionsUntil", func(t *testing.T) {

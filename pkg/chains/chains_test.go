@@ -135,6 +135,11 @@ func TestChainListByNetwork(t *testing.T) {
 			chains.Network_solana,
 			[]chains.Chain{chains.SolanaMainnet, chains.SolanaDevnet, chains.SolanaLocalnet},
 		},
+		{
+			"TON",
+			chains.Network_ton,
+			[]chains.Chain{chains.TONMainnet, chains.TONTestnet, chains.TONLocalnet},
+		},
 	}
 
 	for _, lt := range listTests {
