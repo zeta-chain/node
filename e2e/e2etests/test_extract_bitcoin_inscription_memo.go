@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
-	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 )
 
@@ -41,7 +40,6 @@ func TestExtractBitcoinInscriptionMemo(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("obtained reveal txn id %s", txid)
 
 	dummyCoinbaseTxn := rawtx
-	depositorFee := zetabitcoin.DefaultDepositorFee
 	events, err := btcobserver.FilterAndParseIncomingTx(
 		r.BtcRPCClient,
 		[]btcjson.TxRawResult{*dummyCoinbaseTxn, *rawtx},
@@ -49,7 +47,6 @@ func TestExtractBitcoinInscriptionMemo(r *runner.E2ERunner, args []string) {
 		r.BTCTSSAddress.String(),
 		log.Logger,
 		r.BitcoinParams,
-		depositorFee,
 	)
 	require.NoError(r, err)
 

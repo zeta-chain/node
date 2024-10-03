@@ -609,33 +609,47 @@ func TestGetBtcEvent(t *testing.T) {
 		// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
 		txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
 		chain := chains.BitcoinMainnet
+
 		// GetBtcEventWithoutWitness arguments
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		tssAddress := testutils.TSSAddressBTCMainnet
 		blockNumber := uint64(835640)
 		net := &chaincfg.MainNetParams
-		// 2.992e-05, see avgFeeRate https://mempool.space/api/v1/blocks/835640
-		depositorFee := bitcoin.DepositorFee(22 * clientcommon.BTCOutboundGasPriceMultiplier)
+
+		// fee rate of above tx is 28 sat/vB
+		depositorFee := bitcoin.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
+
 		// expected result
 		memo, err := hex.DecodeString(tx.Vout[1].ScriptPubKey.Hex[4:])
 		require.NoError(t, err)
 		eventExpected := &observer.BTCInboundEvent{
-			FromAddress: "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e",
-			ToAddress:   tssAddress,
-			Value:       tx.Vout[0].Value - depositorFee, // 7008 sataoshis
-			MemoBytes:   memo,
-			BlockNumber: blockNumber,
-			TxHash:      tx.Txid,
+			FromAddress:  "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e",
+			ToAddress:    tssAddress,
+			Value:        tx.Vout[0].Value - depositorFee, // 6192 sataoshis
+			DepositorFee: depositorFee,
+			MemoBytes:    memo,
+			BlockNumber:  blockNumber,
+			TxHash:       tx.Txid,
 		}
+
 		// https://mempool.space/tx/c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697
 		preHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
 		tx.Vin[0].Txid = preHash
 		tx.Vin[0].Vout = 2
 		eventExpected.FromAddress = "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e"
 		// load previous raw tx so so mock rpc client can return it
-		rpcClient := mocks.NewBTCRPCClient(t)
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
+
 		// get BTC event
-		event, err := observer.GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
+		event, err := observer.GetBtcEvent(
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			depositorFee,
+		)
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
 	})
