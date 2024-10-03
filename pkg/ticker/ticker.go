@@ -43,10 +43,9 @@ type Task func(ctx context.Context, t *Ticker) error
 // Ticker represents a ticker that will run a function periodically.
 // It also invokes BEFORE ticker starts.
 type Ticker struct {
-	interval         time.Duration
-	ticker           *time.Ticker
-	task             Task
-	internalStopChan chan struct{}
+	interval time.Duration
+	ticker   *time.Ticker
+	task     Task
 
 	// runnerMu is a mutex to prevent double run
 	runnerMu sync.Mutex
@@ -54,7 +53,8 @@ type Ticker struct {
 	// stateMu is a mutex to prevent concurrent SetInterval calls
 	stateMu sync.Mutex
 
-	stopped bool
+	stopped   bool
+	ctxCancel context.CancelFunc
 
 	externalStopChan <-chan struct{}
 	logger           zerolog.Logger
@@ -120,8 +120,8 @@ func (t *Ticker) Run(ctx context.Context) (err error) {
 	defer t.runnerMu.Unlock()
 
 	// setup
+	ctx, t.ctxCancel = context.WithCancel(ctx)
 	t.ticker = time.NewTicker(t.interval)
-	t.internalStopChan = make(chan struct{})
 	t.stopped = false
 
 	// initial run
@@ -133,15 +133,20 @@ func (t *Ticker) Run(ctx context.Context) (err error) {
 	for {
 		select {
 		case <-ctx.Done():
+			// if task is finished (i.e. last tick completed BEFORE ticker.Stop(),
+			// then we need to return nil)
+			if t.stopped {
+				return nil
+			}
 			return ctx.Err()
 		case <-t.ticker.C:
+			// If another goroutine calls ticker.Stop() while the current tick is running,
+			// Then it's okay to return ctx error
 			if err := t.task(ctx, t); err != nil {
 				return fmt.Errorf("ticker task failed: %w", err)
 			}
 		case <-t.externalStopChan:
 			t.Stop()
-			return nil
-		case <-t.internalStopChan:
 			return nil
 		}
 	}
@@ -167,11 +172,11 @@ func (t *Ticker) Stop() {
 	defer t.stateMu.Unlock()
 
 	// noop
-	if t.stopped || t.internalStopChan == nil {
+	if t.stopped {
 		return
 	}
 
-	close(t.internalStopChan)
+	t.ctxCancel()
 	t.stopped = true
 	t.ticker.Stop()
 
