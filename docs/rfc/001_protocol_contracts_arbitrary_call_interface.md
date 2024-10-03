@@ -50,7 +50,7 @@ The third argument, bytes message, can represent different things depending on t
 
 This dual-purpose usage of the same argument might be confusing for developers, as the meaning of message changes depending on the type of call.
 
-## Alternatives to consider
+## Alternatives to Consider
 
 ### **1. Keep the Current Approach**
 
@@ -112,7 +112,7 @@ call(
 
 (Stefan) i would add that user still need to pack data, but just arguments, and we would need to pack whole selector + already packed args in smart contract, which increases complexity a bit on our end, but keeps similar complexity for user
 
-### **3 - add method name in CallOptions**
+### **3 - Add Method Name in CallOptions**
 
 Rather than introducing a new function, the function name for arbitrary calls can be specified within the `CallOptions`. This change would replace the `isArbitraryCall` flag with a more explicit option, `arbitraryCallFunctionName`.
 
