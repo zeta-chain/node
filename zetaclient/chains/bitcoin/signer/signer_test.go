@@ -7,12 +7,13 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
+	btcecdsa "github.com/btcsuite/btcd/btcec/v2/ecdsa"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 	. "gopkg.in/check.v1"
@@ -63,7 +64,7 @@ func (s *BTCSignerSuite) TestP2PH(c *C) {
 		"d4f8720ee63e502ee2869afab7de234b80c")
 	c.Assert(err, IsNil)
 
-	privKey, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), privKeyBytes)
+	privKey, pubKey := btcec.PrivKeyFromBytes(privKeyBytes)
 	pubKeyHash := btcutil.Hash160(pubKey.SerializeCompressed())
 	addr, err := btcutil.NewAddressPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
 	c.Assert(err, IsNil)
@@ -118,7 +119,7 @@ func (s *BTCSignerSuite) TestP2PH(c *C) {
 		txscript.ScriptStrictMultiSig |
 		txscript.ScriptDiscourageUpgradableNops
 	vm, err := txscript.NewEngine(originTx.TxOut[0].PkScript, redeemTx, 0,
-		flags, nil, nil, -1)
+		flags, nil, nil, -1, txscript.NewMultiPrevOutFetcher(nil))
 	c.Assert(err, IsNil)
 
 	err = vm.Execute()
@@ -134,7 +135,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 		"d4f8720ee63e502ee2869afab7de234b80c")
 	c.Assert(err, IsNil)
 
-	privKey, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), privKeyBytes)
+	privKey, pubKey := btcec.PrivKeyFromBytes(privKeyBytes)
 	pubKeyHash := btcutil.Hash160(pubKey.SerializeCompressed())
 	//addr, err := btcutil.NewAddressPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
 	addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
@@ -167,7 +168,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 	// but for this example don't bother.
 	txOut = wire.NewTxOut(0, nil)
 	redeemTx.AddTxOut(txOut)
-	txSigHashes := txscript.NewTxSigHashes(redeemTx)
+	txSigHashes := txscript.NewTxSigHashes(redeemTx, txscript.NewCannedPrevOutputFetcher([]byte{}, 0))
 	pkScript, err = bitcoin.PayToAddrScript(addr)
 	c.Assert(err, IsNil)
 
@@ -190,7 +191,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 			txscript.ScriptStrictMultiSig |
 			txscript.ScriptDiscourageUpgradableNops
 		vm, err := txscript.NewEngine(originTx.TxOut[0].PkScript, redeemTx, 0,
-			flags, nil, nil, -1)
+			flags, nil, nil, -1, txscript.NewCannedPrevOutputFetcher([]byte{}, 0))
 		c.Assert(err, IsNil)
 
 		err = vm.Execute()
@@ -207,8 +208,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 			100000000,
 		)
 		c.Assert(err, IsNil)
-		sig, err := privKey.Sign(witnessHash)
-		c.Assert(err, IsNil)
+		sig := btcecdsa.Sign(privKey, witnessHash)
 		txWitness := wire.TxWitness{append(sig.Serialize(), byte(txscript.SigHashAll)), pubKeyHash}
 		redeemTx.TxIn[0].Witness = txWitness
 
@@ -216,7 +216,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 			txscript.ScriptStrictMultiSig |
 			txscript.ScriptDiscourageUpgradableNops
 		vm, err := txscript.NewEngine(originTx.TxOut[0].PkScript, redeemTx, 0,
-			flags, nil, nil, -1)
+			flags, nil, nil, -1, txscript.NewMultiPrevOutFetcher(nil))
 		c.Assert(err, IsNil)
 
 		err = vm.Execute()
@@ -238,7 +238,8 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 	require.NoError(t, err)
 
 	// tss address and script
-	tssAddr := signer.TSS().BTCAddressWitnessPubkeyHash()
+	tssAddr, err := signer.TSS().BTCAddress(chains.BitcoinTestnet.ChainId)
+	require.NoError(t, err)
 	tssScript, err := bitcoin.PayToAddrScript(tssAddr)
 	require.NoError(t, err)
 	fmt.Printf("tss address: %s", tssAddr.EncodeAddress())

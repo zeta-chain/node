@@ -169,17 +169,21 @@ func debugCmd(_ *cobra.Command, args []string) error {
 			fmt.Println("CoinType not detected")
 		}
 		fmt.Println("CoinType : ", coinType)
-	} else if chain.IsUTXO() {
+	} else if chain.IsBitcoin() {
 		btcObserver := btcobserver.Observer{}
 		btcObserver.WithZetacoreClient(client)
 		btcObserver.WithChain(*chainProto)
+		btcConfig, found := cfg.GetBTCConfig(chainID)
+		if !found {
+			return fmt.Errorf("unable to find config for BTC chain %d", chainID)
+		}
 		connCfg := &rpcclient.ConnConfig{
-			Host:         cfg.BitcoinConfig.RPCHost,
-			User:         cfg.BitcoinConfig.RPCUsername,
-			Pass:         cfg.BitcoinConfig.RPCPassword,
+			Host:         btcConfig.RPCHost,
+			User:         btcConfig.RPCUsername,
+			Pass:         btcConfig.RPCPassword,
 			HTTPPostMode: true,
 			DisableTLS:   true,
-			Params:       cfg.BitcoinConfig.RPCParams,
+			Params:       btcConfig.RPCParams,
 		}
 
 		btcClient, err := rpcclient.New(connCfg, nil)

@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -154,7 +153,7 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	startLogger.Info().Msgf("Config is updated from zetacore %s", maskCfg(cfg))
+	startLogger.Info().Msgf("Config is updated from zetacore\n %s", cfg.StringMasked())
 
 	go zetacoreClient.UpdateAppContextWorker(ctx, appContext)
 
@@ -230,21 +229,10 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	btcChains := appContext.FilterChains(zctx.Chain.IsUTXO)
-	switch {
-	case len(btcChains) == 0:
-		return errors.New("no BTC chains found")
-	case len(btcChains) > 1:
-		// In the future we might support multiple UTXO chains;
-		// right now we only support BTC. Let's make sure there are no surprises.
-		return errors.New("more than one BTC chain found")
-	}
-
 	tss, err := mc.NewTSS(
 		ctx,
 		zetacoreClient,
 		tssHistoricalList,
-		btcChains[0].ID(),
 		hotkeyPass,
 		server,
 	)
@@ -280,16 +268,20 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// Defensive check: Make sure the tss address is set to the current TSS address and not the newly generated one
+	// Filter supported BTC chain IDs
+	btcChains := appContext.FilterChains(zctx.Chain.IsBitcoin)
+	btcChainIDs := make([]int64, len(btcChains))
+	for i, chain := range btcChains {
+		btcChainIDs[i] = chain.ID()
+	}
+
+	// Make sure the TSS EVM/BTC addresses are well formed.
+	// Zetaclient should not start if TSS addresses cannot be properly derived.
 	tss.CurrentPubkey = currentTss.TssPubkey
-	if tss.EVMAddress() == (ethcommon.Address{}) || tss.BTCAddress() == "" {
-		startLogger.Error().Msg("TSS address is not set in zetacore")
-	} else {
-		startLogger.Info().
-			Str("tss.eth", tss.EVMAddress().String()).
-			Str("tss.btc", tss.BTCAddress()).
-			Str("tss.pub_key", tss.CurrentPubkey).
-			Msg("Current TSS")
+	err = tss.ValidateAddresses(btcChainIDs)
+	if err != nil {
+		startLogger.Error().Err(err).Msg("TSS address validation failed")
+		return err
 	}
 
 	if len(appContext.ListChainIDs()) == 0 {

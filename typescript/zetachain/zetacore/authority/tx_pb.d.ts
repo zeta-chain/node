@@ -6,7 +6,7 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { Policies, PolicyType } from "./policies_pb.js";
-import type { ChainInfo } from "./chain_info_pb.js";
+import type { Chain } from "../pkg/chains/chains_pb.js";
 
 /**
  * MsgAddAuthorization defines the MsgAddAuthorization service.
@@ -185,9 +185,9 @@ export declare class MsgUpdateChainInfo extends Message<MsgUpdateChainInfo> {
   creator: string;
 
   /**
-   * @generated from field: zetachain.zetacore.authority.ChainInfo chain_info = 2;
+   * @generated from field: zetachain.zetacore.pkg.chains.Chain chain = 3;
    */
-  chainInfo?: ChainInfo;
+  chain?: Chain;
 
   constructor(data?: PartialMessage<MsgUpdateChainInfo>);
 
@@ -223,5 +223,57 @@ export declare class MsgUpdateChainInfoResponse extends Message<MsgUpdateChainIn
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateChainInfoResponse;
 
   static equals(a: MsgUpdateChainInfoResponse | PlainMessage<MsgUpdateChainInfoResponse> | undefined, b: MsgUpdateChainInfoResponse | PlainMessage<MsgUpdateChainInfoResponse> | undefined): boolean;
+}
+
+/**
+ * MsgRemoveChainInfo defines the MsgRemoveChainInfo service.
+ *
+ * @generated from message zetachain.zetacore.authority.MsgRemoveChainInfo
+ */
+export declare class MsgRemoveChainInfo extends Message<MsgRemoveChainInfo> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: int64 chain_id = 2;
+   */
+  chainId: bigint;
+
+  constructor(data?: PartialMessage<MsgRemoveChainInfo>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.authority.MsgRemoveChainInfo";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgRemoveChainInfo;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgRemoveChainInfo;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRemoveChainInfo;
+
+  static equals(a: MsgRemoveChainInfo | PlainMessage<MsgRemoveChainInfo> | undefined, b: MsgRemoveChainInfo | PlainMessage<MsgRemoveChainInfo> | undefined): boolean;
+}
+
+/**
+ * MsgRemoveChainInfoResponse defines the MsgRemoveChainInfoResponse service.
+ *
+ * @generated from message zetachain.zetacore.authority.MsgRemoveChainInfoResponse
+ */
+export declare class MsgRemoveChainInfoResponse extends Message<MsgRemoveChainInfoResponse> {
+  constructor(data?: PartialMessage<MsgRemoveChainInfoResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.authority.MsgRemoveChainInfoResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgRemoveChainInfoResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgRemoveChainInfoResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRemoveChainInfoResponse;
+
+  static equals(a: MsgRemoveChainInfoResponse | PlainMessage<MsgRemoveChainInfoResponse> | undefined, b: MsgRemoveChainInfoResponse | PlainMessage<MsgRemoveChainInfoResponse> | undefined): boolean;
 }
 

@@ -109,4 +109,10 @@ then
   fi
 fi
 
+# merge zetaclient-config-overlay.json into zetaclient_config.json if specified
+if [[ -f /root/zetaclient-config-overlay.json ]]; then
+  jq -s '.[0] * .[1]' /root/.zetacored/config/zetaclient_config.json /root/zetaclient-config-overlay.json > /tmp/merged_config.json
+  mv /tmp/merged_config.json /root/.zetacored/config/zetaclient_config.json
+fi
+
 zetaclientd-supervisor start < /root/password.file

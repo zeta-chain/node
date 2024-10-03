@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/btcsuite/btcutil"
+	"github.com/btcsuite/btcd/btcutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
@@ -66,7 +66,7 @@ func monitorBTCWithdraw(r *runner.E2ERunner, tx *ethtypes.Transaction, index int
 			cctx.Index,
 		)
 	}
-	timeToComplete := time.Now().Sub(startTime)
+	timeToComplete := time.Since(startTime)
 	r.Logger.Print("index %d: withdraw cctx success in %s", index, timeToComplete.String())
 
 	return nil

@@ -153,6 +153,7 @@ func (l *Logger) CCTX(cctx crosschaintypes.CrossChainTx, name string) {
 		l.Info("  TxHeight: %d", outTxParam.ObservedExternalHeight)
 		l.Info("  BallotIndex: %s", outTxParam.BallotIndex)
 		l.Info("  TSSNonce: %d", outTxParam.TssNonce)
+		l.Info("  CallOptions: %+v", outTxParam.CallOptions)
 		l.Info("  GasLimit: %d", outTxParam.GasLimit)
 		l.Info("  GasPrice: %s", outTxParam.GasPrice)
 		l.Info("  GasUsed: %d", outTxParam.GasUsed)

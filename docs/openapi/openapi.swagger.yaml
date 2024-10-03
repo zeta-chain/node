@@ -56838,6 +56838,9 @@ definitions:
     description: |-
       MsgRemoveAuthorizationResponse defines the MsgRemoveAuthorizationResponse
       service.
+  authorityMsgRemoveChainInfoResponse:
+    type: object
+    description: MsgRemoveChainInfoResponse defines the MsgRemoveChainInfoResponse service.
   authorityMsgUpdateChainInfoResponse:
     type: object
     description: MsgUpdateChainInfoResponse defines the MsgUpdateChainInfoResponse service.
@@ -57067,6 +57070,14 @@ definitions:
        - ERC20: ERC20 token
        - Cmd: no asset, used for admin command
        - NoAssetCall: no asset, used for contract call
+  crosschainCallOptions:
+    type: object
+    properties:
+      gas_limit:
+        type: string
+        format: uint64
+      is_arbitrary_call:
+        type: boolean
   crosschainCctxStatus:
     type: string
     enum:
@@ -57277,6 +57288,7 @@ definitions:
       gas_limit:
         type: string
         format: uint64
+        title: Deprecated (v21), use CallOptions
       gas_price:
         type: string
       gas_priority_fee:
@@ -57303,6 +57315,8 @@ definitions:
         type: string
       tx_finalization_status:
         $ref: '#/definitions/crosschainTxFinalizationStatus'
+      call_options:
+        $ref: '#/definitions/crosschainCallOptions'
   crosschainOutboundTracker:
     type: object
     properties:

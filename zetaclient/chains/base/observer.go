@@ -222,6 +222,22 @@ func (ob *Observer) WithTSS(tss interfaces.TSSSigner) *Observer {
 	return ob
 }
 
+// TSSAddressString returns the TSS address for the chain.
+//
+// Note: all chains uses TSS EVM address except Bitcoin chain.
+func (ob *Observer) TSSAddressString() string {
+	switch ob.chain.Consensus {
+	case chains.Consensus_bitcoin:
+		address, err := ob.tss.BTCAddress(ob.Chain().ChainId)
+		if err != nil {
+			return ""
+		}
+		return address.EncodeAddress()
+	default:
+		return ob.tss.EVMAddress().String()
+	}
+}
+
 // LastBlock get external last block height.
 func (ob *Observer) LastBlock() uint64 {
 	return atomic.LoadUint64(&ob.lastBlock)
@@ -231,6 +247,15 @@ func (ob *Observer) LastBlock() uint64 {
 func (ob *Observer) WithLastBlock(lastBlock uint64) *Observer {
 	atomic.StoreUint64(&ob.lastBlock, lastBlock)
 	return ob
+}
+
+// IsBlockConfirmed checks if the given block number is confirmed.
+//
+// Note: block 100 is confirmed if the last block is 100 and confirmation count is 1.
+func (ob *Observer) IsBlockConfirmed(blockNumber uint64) bool {
+	lastBlock := ob.LastBlock()
+	confBlock := blockNumber + ob.chainParams.ConfirmationCount - 1
+	return lastBlock >= confBlock
 }
 
 // LastBlockScanned get last block scanned (not necessarily caught up with the chain; could be slow/paused).
@@ -282,11 +307,7 @@ func (ob *Observer) WithHeaderCache(cache *lru.Cache) *Observer {
 // OutboundID returns a unique identifier for the outbound transaction.
 // The identifier is now used as the key for maps that store outbound related data (e.g. transaction, receipt, etc).
 func (ob *Observer) OutboundID(nonce uint64) string {
-	// all chains uses EVM address as part of the key except bitcoin
-	tssAddress := ob.tss.EVMAddress().String()
-	if ob.chain.Consensus == chains.Consensus_bitcoin {
-		tssAddress = ob.tss.BTCAddress()
-	}
+	tssAddress := ob.TSSAddressString()
 	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddress, nonce)
 }
 

@@ -8,11 +8,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/cmd"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/cosmos"
 	"github.com/zeta-chain/node/pkg/crypto"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
 func setupConfig() {
@@ -90,4 +94,130 @@ func GenerateKeyshareFiles(n int, dir string) error {
 		}
 	}
 	return nil
+}
+
+func Test_EVMAddress(t *testing.T) {
+	setupConfig()
+
+	tests := []struct {
+		name            string
+		tssPubkey       string
+		expectedEVMAddr string
+	}{
+		{
+			name:            "should return Athens3 TSS EVM address",
+			tssPubkey:       testutils.TSSPubkeyAthens3,
+			expectedEVMAddr: testutils.TSSAddressEVMAthens3,
+		},
+		{
+			name:            "should return empty TSS EVM address on invalid TSS pubkey",
+			tssPubkey:       "invalidpubkey",
+			expectedEVMAddr: constant.EVMZeroAddress,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tss := TSS{
+				CurrentPubkey: tc.tssPubkey,
+			}
+			evmAddr := tss.EVMAddress()
+			require.Equal(t, tc.expectedEVMAddr, evmAddr.String())
+		})
+	}
+}
+
+func Test_BTCAddress(t *testing.T) {
+	setupConfig()
+
+	tests := []struct {
+		name       string
+		tssPubkey  string
+		btcChainID int64
+		wantAddr   string
+	}{
+		{
+			name:       "Athens3 tss pubkey",
+			tssPubkey:  testutils.TSSPubkeyAthens3,
+			btcChainID: chains.BitcoinTestnet.ChainId,
+			wantAddr:   testutils.TSSAddressBTCAthens3,
+		},
+		{
+			name:       "local network tss pubkey",
+			tssPubkey:  "zetapub1addwnpepqdax2apf4qmqcaxzae7t4m9xz76mungtppsyw5shvznd52ldy6sjjsjfa3z",
+			btcChainID: chains.BitcoinRegtest.ChainId,
+			wantAddr:   "bcrt1q30ew8md3rd9fx6n4qx0a9tmz0mz44lzjwxppnu",
+		},
+		{
+			name:       "invalid tss pubkey",
+			tssPubkey:  "invalidpubkey",
+			btcChainID: chains.BitcoinTestnet.ChainId,
+			wantAddr:   "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tss := TSS{
+				CurrentPubkey: tc.tssPubkey,
+			}
+			address, err := tss.BTCAddress(tc.btcChainID)
+			if tc.wantAddr != "" {
+				require.NoError(t, err)
+				require.Equal(t, tc.wantAddr, address.EncodeAddress())
+			} else {
+				require.Nil(t, address)
+			}
+		})
+	}
+}
+
+func Test_ValidateAddresses(t *testing.T) {
+	setupConfig()
+
+	tests := []struct {
+		name        string
+		tssPubkey   string
+		btcChainIDs []int64
+		errMsg      string
+	}{
+		{
+			name:      "Validation success",
+			tssPubkey: testutils.TSSPubkeyAthens3,
+			btcChainIDs: []int64{
+				chains.BitcoinTestnet.ChainId,
+				chains.BitcoinSignetTestnet.ChainId,
+			},
+			errMsg: "",
+		},
+		{
+			name:        "Validation failed on EVM address",
+			tssPubkey:   "invalidpubkey", // to make EVMAddress() failed
+			btcChainIDs: []int64{},
+			errMsg:      "blank tss evm address",
+		},
+		{
+			name:      "Validation failed on BTC address",
+			tssPubkey: testutils.TSSPubkeyAthens3,
+			btcChainIDs: []int64{
+				chains.BitcoinTestnet.ChainId,
+				100, // unknown BTC chain ID
+			},
+			errMsg: "cannot derive btc address",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tss := TSS{
+				logger:        log.Logger,
+				CurrentPubkey: tc.tssPubkey,
+			}
+			err := tss.ValidateAddresses(tc.btcChainIDs)
+			if tc.errMsg != "" {
+				require.Contains(t, err.Error(), tc.errMsg)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }

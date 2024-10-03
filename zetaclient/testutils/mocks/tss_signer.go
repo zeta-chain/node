@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 
@@ -112,27 +112,31 @@ func (s *TSS) EVMAddressList() []ethcommon.Address {
 	return []ethcommon.Address{s.EVMAddress()}
 }
 
-func (s *TSS) BTCAddress() string {
-	// force use btcAddress if set
+func (s *TSS) BTCAddress(_ int64) (*btcutil.AddressWitnessPubKeyHash, error) {
+	// return error if tss is paused
+	if s.paused {
+		return nil, fmt.Errorf("tss is paused")
+	}
+
+	// force use static btcAddress if set
 	if s.btcAddress != "" {
-		return s.btcAddress
+		net, err := chains.GetBTCChainParams(s.chain.ChainId)
+		if err != nil {
+			return nil, err
+		}
+		addr, err := btcutil.DecodeAddress(s.btcAddress, net)
+		if err != nil {
+			return nil, err
+		}
+		return addr.(*btcutil.AddressWitnessPubKeyHash), nil
 	}
-
-	testnet3Addr := s.btcAddressPubkey()
-	if testnet3Addr == nil {
-		return ""
-	}
-	return testnet3Addr.EncodeAddress()
-}
-
-func (s *TSS) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash {
 	// if privkey is set, use it to generate a segwit address
 	if s.PrivKey != nil {
 		pkBytes := crypto.FromECDSAPub(&s.PrivKey.PublicKey)
 		pk, err := btcec.ParsePubKey(pkBytes)
 		if err != nil {
 			fmt.Printf("error parsing pubkey: %v", err)
-			return nil
+			return nil, err
 		}
 
 		// witness program: https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#Witness_program
@@ -143,23 +147,12 @@ func (s *TSS) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash {
 		)
 		if err != nil {
 			fmt.Printf("error NewAddressWitnessPubKeyHash: %v", err)
-			return nil
+			return nil, err
 		}
 
-		return addrWPKH
+		return addrWPKH, nil
 	}
-
-	net, err := chains.GetBTCChainParams(s.chain.ChainId)
-	if err != nil {
-		fmt.Printf("error getting btc chain params: %v", err)
-		return nil
-	}
-	tssAddress := s.BTCAddress()
-	addr, err := btcutil.DecodeAddress(tssAddress, net)
-	if err != nil {
-		return nil
-	}
-	return addr.(*btcutil.AddressWitnessPubKeyHash)
+	return nil, nil
 }
 
 // PubKeyCompressedBytes returns 33B compressed pubkey
@@ -171,19 +164,6 @@ func (s *TSS) PubKeyCompressedBytes() []byte {
 		return nil
 	}
 	return pk.SerializeCompressed()
-}
-
-func (s *TSS) btcAddressPubkey() *btcutil.AddressPubKey {
-	pkBytes := crypto.FromECDSAPub(&s.PrivKey.PublicKey)
-	pk, err := btcec.ParsePubKey(pkBytes)
-	if err != nil {
-		return nil
-	}
-	testnet3Addr, err := btcutil.NewAddressPubKey(pk.SerializeCompressed(), &chaincfg.TestNet3Params)
-	if err != nil {
-		return nil
-	}
-	return testnet3Addr
 }
 
 // ----------------------------------------------------------------------------

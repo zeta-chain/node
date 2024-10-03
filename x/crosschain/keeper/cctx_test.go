@@ -6,17 +6,21 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 func createNCctxWithStatus(
@@ -37,7 +41,7 @@ func createNCctxWithStatus(
 		}
 		items[i].ZetaFees = math.OneUint()
 		items[i].InboundParams = &types.InboundParams{ObservedHash: fmt.Sprintf("%d", i), Amount: math.OneUint()}
-		items[i].OutboundParams = []*types.OutboundParams{{Amount: math.ZeroUint()}}
+		items[i].OutboundParams = []*types.OutboundParams{{Amount: math.ZeroUint(), CallOptions: &types.CallOptions{}}}
 		items[i].RevertOptions = types.NewEmptyRevertOptions()
 
 		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, items[i], tssPubkey)
@@ -61,11 +65,13 @@ func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int, tssPubkey string
 			FinalizedZetaHeight:    uint64(i),
 		}
 		items[i].OutboundParams = []*types.OutboundParams{{
-			Receiver:               fmt.Sprintf("%d", i),
-			ReceiverChainId:        int64(i),
-			Hash:                   fmt.Sprintf("%d", i),
-			TssNonce:               uint64(i),
-			GasLimit:               uint64(i),
+			Receiver:        fmt.Sprintf("%d", i),
+			ReceiverChainId: int64(i),
+			Hash:            fmt.Sprintf("%d", i),
+			TssNonce:        uint64(i),
+			CallOptions: &types.CallOptions{
+				GasLimit: uint64(i),
+			},
 			GasPrice:               fmt.Sprintf("%d", i),
 			BallotIndex:            fmt.Sprintf("%d", i),
 			ObservedExternalHeight: uint64(i),
@@ -287,4 +293,164 @@ func TestKeeper_RemoveCrossChainTx(t *testing.T) {
 	keeper.RemoveCrossChainTx(ctx, txs[0].Index)
 	txs = keeper.GetAllCrossChainTx(ctx)
 	require.Equal(t, 4, len(txs))
+}
+
+func TestCrossChainTx_AddOutbound(t *testing.T) {
+	t.Run("successfully get outbound tx", func(t *testing.T) {
+		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		cctx := sample.CrossChainTx(t, "test")
+		hash := sample.Hash().String()
+
+		err := cctx.AddOutbound(ctx, types.MsgVoteOutbound{
+			ValueReceived:                     cctx.GetCurrentOutboundParam().Amount,
+			ObservedOutboundHash:              hash,
+			ObservedOutboundBlockHeight:       10,
+			ObservedOutboundGasUsed:           100,
+			ObservedOutboundEffectiveGasPrice: sdkmath.NewInt(100),
+			ObservedOutboundEffectiveGasLimit: 20,
+		}, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
+		require.NoError(t, err)
+		require.Equal(t, cctx.GetCurrentOutboundParam().Hash, hash)
+		require.Equal(t, cctx.GetCurrentOutboundParam().GasUsed, uint64(100))
+		require.Equal(t, cctx.GetCurrentOutboundParam().EffectiveGasPrice, sdkmath.NewInt(100))
+		require.Equal(t, cctx.GetCurrentOutboundParam().EffectiveGasLimit, uint64(20))
+		require.Equal(t, cctx.GetCurrentOutboundParam().ObservedExternalHeight, uint64(10))
+	})
+
+	t.Run("successfully get outbound tx for failed ballot without amount check", func(t *testing.T) {
+		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		cctx := sample.CrossChainTx(t, "test")
+		hash := sample.Hash().String()
+
+		err := cctx.AddOutbound(ctx, types.MsgVoteOutbound{
+			ObservedOutboundHash:              hash,
+			ObservedOutboundBlockHeight:       10,
+			ObservedOutboundGasUsed:           100,
+			ObservedOutboundEffectiveGasPrice: sdkmath.NewInt(100),
+			ObservedOutboundEffectiveGasLimit: 20,
+		}, observertypes.BallotStatus_BallotFinalized_FailureObservation)
+		require.NoError(t, err)
+		require.Equal(t, cctx.GetCurrentOutboundParam().Hash, hash)
+		require.Equal(t, cctx.GetCurrentOutboundParam().GasUsed, uint64(100))
+		require.Equal(t, cctx.GetCurrentOutboundParam().EffectiveGasPrice, sdkmath.NewInt(100))
+		require.Equal(t, cctx.GetCurrentOutboundParam().EffectiveGasLimit, uint64(20))
+		require.Equal(t, cctx.GetCurrentOutboundParam().ObservedExternalHeight, uint64(10))
+	})
+
+	t.Run("failed to get outbound tx if amount does not match value received", func(t *testing.T) {
+		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
+
+		cctx := sample.CrossChainTx(t, "test")
+		hash := sample.Hash().String()
+
+		err := cctx.AddOutbound(ctx, types.MsgVoteOutbound{
+			ValueReceived:                     sdkmath.NewUint(100),
+			ObservedOutboundHash:              hash,
+			ObservedOutboundBlockHeight:       10,
+			ObservedOutboundGasUsed:           100,
+			ObservedOutboundEffectiveGasPrice: sdkmath.NewInt(100),
+			ObservedOutboundEffectiveGasLimit: 20,
+		}, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
+		require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
+	})
+}
+
+func Test_NewCCTX(t *testing.T) {
+	t.Run("should return a cctx with correct values", func(t *testing.T) {
+		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		senderChain := chains.Goerli
+		sender := sample.EthAddress()
+		receiverChain := chains.Goerli
+		receiver := sample.EthAddress()
+		creator := sample.AccAddress()
+		amount := sdkmath.NewUint(42)
+		message := "test"
+		inboundBlockHeight := uint64(420)
+		inboundHash := sample.Hash()
+		gasLimit := uint64(100)
+		asset := "test-asset"
+		eventIndex := uint64(1)
+		cointType := coin.CoinType_ERC20
+		tss := sample.Tss()
+		msg := types.MsgVoteInbound{
+			Creator:            creator,
+			Sender:             sender.String(),
+			SenderChainId:      senderChain.ChainId,
+			Receiver:           receiver.String(),
+			ReceiverChain:      receiverChain.ChainId,
+			Amount:             amount,
+			Message:            message,
+			InboundHash:        inboundHash.String(),
+			InboundBlockHeight: inboundBlockHeight,
+			CallOptions: &types.CallOptions{
+				GasLimit: gasLimit,
+			},
+			CoinType:                cointType,
+			TxOrigin:                sender.String(),
+			Asset:                   asset,
+			EventIndex:              eventIndex,
+			ProtocolContractVersion: types.ProtocolContractVersion_V2,
+		}
+		cctx, err := types.NewCCTX(ctx, msg, tss.TssPubkey)
+		require.NoError(t, err)
+		require.Equal(t, receiver.String(), cctx.GetCurrentOutboundParam().Receiver)
+		require.Equal(t, receiverChain.ChainId, cctx.GetCurrentOutboundParam().ReceiverChainId)
+		require.Equal(t, sender.String(), cctx.GetInboundParams().Sender)
+		require.Equal(t, senderChain.ChainId, cctx.GetInboundParams().SenderChainId)
+		require.Equal(t, amount, cctx.GetInboundParams().Amount)
+		require.Equal(t, message, cctx.RelayedMessage)
+		require.Equal(t, inboundHash.String(), cctx.GetInboundParams().ObservedHash)
+		require.Equal(t, inboundBlockHeight, cctx.GetInboundParams().ObservedExternalHeight)
+		require.Equal(t, gasLimit, cctx.GetCurrentOutboundParam().CallOptions.GasLimit)
+		require.Equal(t, asset, cctx.GetInboundParams().Asset)
+		require.Equal(t, cointType, cctx.InboundParams.CoinType)
+		require.Equal(t, uint64(0), cctx.GetCurrentOutboundParam().TssNonce)
+		require.Equal(t, sdkmath.ZeroUint(), cctx.GetCurrentOutboundParam().Amount)
+		require.Equal(t, types.CctxStatus_PendingInbound, cctx.CctxStatus.Status)
+		require.Equal(t, false, cctx.CctxStatus.IsAbortRefunded)
+		require.Equal(t, types.ProtocolContractVersion_V2, cctx.ProtocolContractVersion)
+	})
+
+	t.Run("should return an error if the cctx is invalid", func(t *testing.T) {
+		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		senderChain := chains.Goerli
+		sender := sample.EthAddress()
+		receiverChain := chains.Goerli
+		receiver := sample.EthAddress()
+		creator := sample.AccAddress()
+		amount := sdkmath.NewUint(42)
+		message := "test"
+		inboundBlockHeight := uint64(420)
+		inboundHash := sample.Hash()
+		gasLimit := uint64(100)
+		asset := "test-asset"
+		eventIndex := uint64(1)
+		cointType := coin.CoinType_ERC20
+		tss := sample.Tss()
+		msg := types.MsgVoteInbound{
+			Creator:            creator,
+			Sender:             "",
+			SenderChainId:      senderChain.ChainId,
+			Receiver:           receiver.String(),
+			ReceiverChain:      receiverChain.ChainId,
+			Amount:             amount,
+			Message:            message,
+			InboundHash:        inboundHash.String(),
+			InboundBlockHeight: inboundBlockHeight,
+			CallOptions: &types.CallOptions{
+				GasLimit: gasLimit,
+			},
+			CoinType:   cointType,
+			TxOrigin:   sender.String(),
+			Asset:      asset,
+			EventIndex: eventIndex,
+		}
+		_, err := types.NewCCTX(ctx, msg, tss.TssPubkey)
+		require.ErrorContains(t, err, "sender cannot be empty")
+	})
+
+	t.Run("zero value for protocol contract version gives V1", func(t *testing.T) {
+		cctx := types.CrossChainTx{}
+		require.Equal(t, types.ProtocolContractVersion_V1, cctx.ProtocolContractVersion)
+	})
 }

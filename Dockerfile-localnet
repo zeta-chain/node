@@ -19,9 +19,13 @@ COPY go.sum .
 RUN go mod download
 COPY version.sh .
 COPY --exclude=*.sh --exclude=*.md --exclude=*.yml . .
+ARG NODE_VERSION
+ARG NODE_COMMIT
 
-RUN --mount=type=cache,target="/root/.cache/go-build" make install
-RUN --mount=type=cache,target="/root/.cache/go-build" make install-zetae2e
+RUN --mount=type=cache,target="/root/.cache/go-build" \
+    NODE_VERSION=${NODE_VERSION} \
+    NODE_COMMIT=${NODE_COMMIT} \
+    make install install-zetae2e
 
 FROM ghcr.io/zeta-chain/golang:1.22.5-bookworm AS cosmovisor-build
 RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.6.0
@@ -59,7 +63,7 @@ EXPOSE 22
 FROM base-runtime AS latest-runtime
 
 COPY --from=cosmovisor-build /go/bin/cosmovisor /usr/local/bin
-COPY --from=latest-build /go/bin/zetacored /go/bin/zetaclientd /go/bin/zetaclientd-supervisor /go/bin/zetae2e /usr/local/bin
+COPY --from=latest-build /go/bin/zetacored /go/bin/zetaclientd /go/bin/zetaclientd-supervisor /go/bin/zetae2e /usr/local/bin/
 
 # Optional old version build (from source). This old build is used as the genesis version in the upgrade tests. 
 # Use --target latest-runtime to skip.
@@ -75,7 +79,7 @@ RUN cd node && make install
 FROM base-runtime AS old-runtime-source
 
 COPY --from=cosmovisor-build /go/bin/cosmovisor /usr/local/bin
-COPY --from=old-build-source /go/bin/zetacored /go/bin/zetaclientd /usr/local/bin
+COPY --from=old-build-source /go/bin/zetacored /go/bin/zetaclientd /usr/local/bin/
 COPY --from=latest-build /go/bin/zetaclientd-supervisor /usr/local/bin
 
 # Optional old version build (from binary).

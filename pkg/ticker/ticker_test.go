@@ -150,6 +150,33 @@ func TestTicker(t *testing.T) {
 
 		// ASSERT
 		assert.ErrorContains(t, err, "panic during ticker run: oops")
+		// assert that we get error with the correct line number
+		assert.ErrorContains(t, err, "ticker_test.go:142")
+	})
+
+	t.Run("Nil panic", func(t *testing.T) {
+		// ARRANGE
+		// Given a context
+		ctx := context.Background()
+
+		// And a ticker
+		ticker := New(durSmall, func(_ context.Context, _ *Ticker) error {
+			var a func()
+			a()
+			return nil
+		})
+
+		// ACT
+		err := ticker.Run(ctx)
+
+		// ASSERT
+		assert.ErrorContains(
+			t,
+			err,
+			"panic during ticker run: runtime error: invalid memory address or nil pointer dereference",
+		)
+		// assert that we get error with the correct line number
+		assert.ErrorContains(t, err, "ticker_test.go:162")
 	})
 
 	t.Run("Run as a single call", func(t *testing.T) {

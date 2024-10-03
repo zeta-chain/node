@@ -14,14 +14,14 @@ const (
 func New(setDefaults bool) Config {
 	cfg := Config{
 		EVMChainConfigs: make(map[int64]EVMConfig),
-		BitcoinConfig:   BTCConfig{},
+		BTCChainConfigs: make(map[int64]BTCConfig),
 
 		mu: &sync.RWMutex{},
 	}
 
 	if setDefaults {
-		cfg.BitcoinConfig = bitcoinConfigRegnet()
 		cfg.EVMChainConfigs = evmChainsConfigs()
+		cfg.BTCChainConfigs = btcChainsConfigs()
 		cfg.SolanaConfig = solanaConfigLocalnet()
 		cfg.TONConfig = tonConfigLocalnet()
 	}

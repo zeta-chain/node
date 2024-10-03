@@ -7,10 +7,11 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
@@ -198,8 +199,11 @@ func (r *E2ERunner) SendToTSSFromDeployerWithMemo(
 		scriptPubkeys[i] = utxo.ScriptPubKey
 	}
 
+	// use static fee 0.0005 BTC to calculate change
 	feeSats := btcutil.Amount(0.0005 * btcutil.SatoshiPerBitcoin)
-	amountSats := btcutil.Amount(amount * btcutil.SatoshiPerBitcoin)
+	amountInt, err := zetabitcoin.GetSatoshis(amount)
+	require.NoError(r, err)
+	amountSats := btcutil.Amount(amountInt)
 	change := inputSats - feeSats - amountSats
 
 	if change < 0 {
@@ -264,7 +268,6 @@ func (r *E2ERunner) SendToTSSFromDeployerWithMemo(
 	rawtx, err := btcRPC.GetRawTransactionVerbose(txid)
 	require.NoError(r, err)
 
-	depositorFee := zetabitcoin.DefaultDepositorFee
 	events, err := btcobserver.FilterAndParseIncomingTx(
 		btcRPC,
 		[]btcjson.TxRawResult{*rawtx},
@@ -272,7 +275,6 @@ func (r *E2ERunner) SendToTSSFromDeployerWithMemo(
 		r.BTCTSSAddress.EncodeAddress(),
 		log.Logger,
 		r.BitcoinParams,
-		depositorFee,
 	)
 	require.NoError(r, err)
 	r.Logger.Info("bitcoin inbound events:")
@@ -295,7 +297,7 @@ func (r *E2ERunner) GetBitcoinChainID() int64 {
 
 // IsLocalBitcoin returns true if the runner is running on a local bitcoin network
 func (r *E2ERunner) IsLocalBitcoin() bool {
-	return r.BitcoinParams.Name == chains.BitcoinRegnetParams.Name
+	return r.BitcoinParams.Name == chaincfg.RegressionNetParams.Name
 }
 
 // GenerateToAddressIfLocalBitcoin generates blocks to an address if the runner is interacting

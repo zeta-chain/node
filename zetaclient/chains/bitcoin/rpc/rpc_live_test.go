@@ -137,7 +137,6 @@ func LiveTest_FilterAndParseIncomingTx(t *testing.T) {
 		"tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2",
 		log.Logger,
 		&chaincfg.TestNet3Params,
-		0.0,
 	)
 	require.NoError(t, err)
 	require.Len(t, inbounds, 1)
@@ -175,7 +174,6 @@ func LiveTest_FilterAndParseIncomingTx_Nop(t *testing.T) {
 		"tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2",
 		log.Logger,
 		&chaincfg.TestNet3Params,
-		0.0,
 	)
 
 	require.NoError(t, err)
@@ -583,7 +581,7 @@ func LiveTest_GetTransactionFeeAndRate(t *testing.T) {
 	}
 }
 
-func LiveTest_CalcDepositorFeeV2(t *testing.T) {
+func LiveTest_CalcDepositorFee(t *testing.T) {
 	// setup Bitcoin client
 	client, err := createRPCClient(chains.BitcoinMainnet.ChainId)
 	require.NoError(t, err)
@@ -598,13 +596,13 @@ func LiveTest_CalcDepositorFeeV2(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("should return default depositor fee", func(t *testing.T) {
-		depositorFee, err := bitcoin.CalcDepositorFeeV2(client, rawResult, &chaincfg.RegressionNetParams)
+		depositorFee, err := bitcoin.CalcDepositorFee(client, rawResult, &chaincfg.RegressionNetParams)
 		require.NoError(t, err)
 		require.Equal(t, bitcoin.DefaultDepositorFee, depositorFee)
 	})
 
 	t.Run("should return correct depositor fee for a given tx", func(t *testing.T) {
-		depositorFee, err := bitcoin.CalcDepositorFeeV2(client, rawResult, &chaincfg.MainNetParams)
+		depositorFee, err := bitcoin.CalcDepositorFee(client, rawResult, &chaincfg.MainNetParams)
 		require.NoError(t, err)
 
 		// the actual fee rate is 860 sat/vByte

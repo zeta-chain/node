@@ -3,6 +3,7 @@ package e2etests
 import (
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
@@ -38,4 +39,12 @@ func TestV2ETHDepositAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 
 	// check the payload was received on the contract
 	r.AssertTestDAppEVMCalled(true, payloadMessageDepositOnRevertETH, big.NewInt(0))
+
+	// check expected sender was used
+	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(
+		&bind.CallOpts{},
+		[]byte(payloadMessageDepositOnRevertETH),
+	)
+	require.NoError(r, err)
+	require.Equal(r, r.EVMAuth.From, senderForMsg)
 }

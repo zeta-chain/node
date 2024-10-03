@@ -53,7 +53,7 @@ func TestCreateSignerMap(t *testing.T) {
 			Endpoint: testutils.MockEVMRPCEndpoint,
 		}
 
-		cfg.BitcoinConfig = btcConfig
+		cfg.BTCChainConfigs[chains.BitcoinMainnet.ChainId] = btcConfig
 
 		// Given AppContext
 		app := zctx.New(cfg, nil, log)
@@ -234,7 +234,7 @@ func TestCreateChainObserverMap(t *testing.T) {
 			Endpoint: evmServer.Endpoint,
 		}
 
-		cfg.BitcoinConfig = btcConfig
+		cfg.BTCChainConfigs[chains.BitcoinMainnet.ChainId] = btcConfig
 		cfg.SolanaConfig = solConfig
 		cfg.TONConfig = tonConfig
 

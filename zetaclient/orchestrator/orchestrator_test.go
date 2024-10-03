@@ -518,16 +518,20 @@ func createAppContext(t *testing.T, chainsOrParams ...any) *zctx.AppContext {
 	cfg := config.New(false)
 
 	// Mock config
-	cfg.BitcoinConfig = config.BTCConfig{
-		RPCHost: "localhost",
-	}
-
 	for _, c := range supportedChains {
-		if chains.IsEVMChain(c.ChainId, nil) {
+		switch {
+		case chains.IsEVMChain(c.ChainId, nil):
 			cfg.EVMChainConfigs[c.ChainId] = config.EVMConfig{Chain: c}
+		case chains.IsBitcoinChain(c.ChainId, nil):
+			cfg.BTCChainConfigs[c.ChainId] = config.BTCConfig{RPCHost: "localhost"}
+		case chains.IsSolanaChain(c.ChainId, nil):
+			cfg.SolanaConfig = config.SolanaConfig{Endpoint: "localhost"}
+		default:
+			t.Fatalf("create app context: unsupported chain %d", c.ChainId)
 		}
 	}
 
+	// chain params
 	params := map[int64]*observertypes.ChainParams{}
 	for i := range obsParams {
 		cp := obsParams[i]

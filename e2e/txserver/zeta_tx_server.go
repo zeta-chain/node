@@ -450,7 +450,7 @@ func (zts ZetaTxServer) DeployZRC20s(accountOperational, accountAdmin, erc20Addr
 			return "", fmt.Errorf("unable to fetch zrc20 from deploy response: %w", err)
 		}
 
-		if err := zts.initializeLiquidityCap(addr); err != nil {
+		if err := zts.InitializeLiquidityCap(addr); err != nil {
 			return "", fmt.Errorf("unable to initialize liquidity cap: %w", err)
 		}
 
@@ -580,8 +580,8 @@ func (zts *ZetaTxServer) SetAuthorityClient(authorityClient authoritytypes.Query
 	zts.authorityClient = authorityClient
 }
 
-// initializeLiquidityCap initializes the liquidity cap for the given coin with a large value
-func (zts ZetaTxServer) initializeLiquidityCap(zrc20 string) error {
+// InitializeLiquidityCap initializes the liquidity cap for the given coin with a large value
+func (zts ZetaTxServer) InitializeLiquidityCap(zrc20 string) error {
 	liquidityCap := sdktypes.NewUint(1e18).MulUint64(1e12)
 
 	msg := fungibletypes.NewMsgUpdateZRC20LiquidityCap(

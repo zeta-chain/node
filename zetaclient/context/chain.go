@@ -157,7 +157,7 @@ func (c Chain) IsZeta() bool {
 	return chains.IsZetaChain(c.ID(), c.registry.additionalChains)
 }
 
-func (c Chain) IsUTXO() bool {
+func (c Chain) IsBitcoin() bool {
 	return chains.IsBitcoinChain(c.ID(), c.registry.additionalChains)
 }
 
