@@ -98,7 +98,7 @@ func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 			Msg("gasPrice is less than priorityFee, setting priorityFee = gasPrice")
 
 		// this should in theory never happen, but this reported bug might be a cause: https://github.com/zeta-chain/node/issues/2954
-		// in this case we lower the priorityFee to the gasFeecCap to ensure the transaction is valid
+		// in this case we lower the priorityFee to the gasPrice to ensure the transaction is valid
 		// the only potential issue is the transaction might not cover the baseFee
 		// the gas stability pool mechanism help to mitigate this issue
 		priorityFee = big.NewInt(0).Set(gasPrice)
