@@ -3,6 +3,7 @@ package liteapi
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -34,9 +35,9 @@ func New(client *liteapi.Client) *Client {
 	return &Client{Client: client, blockCache: blockCache}
 }
 
-// NewFromAny creates a new client from a URL or a file path.
-func NewFromAny(ctx context.Context, urlOrPath string) (*Client, error) {
-	cfg, err := zetaton.ConfigFromAny(ctx, urlOrPath)
+// NewFromSource creates a new client from a URL or a file path.
+func NewFromSource(ctx context.Context, urlOrPath string) (*Client, error) {
+	cfg, err := zetaton.ConfigFromSource(ctx, urlOrPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get config")
 	}
@@ -94,7 +95,7 @@ func (c *Client) setBlockHeaderCache(blockID ton.BlockIDExt, header tlb.BlockInf
 // Note that it might fail w/o using an archival node. Also returns the number of
 // scrolled transactions for this account i.e. total transactions
 func (c *Client) GetFirstTransaction(ctx context.Context, acc ton.AccountID) (*ton.Transaction, int, error) {
-	lt, hash, err := c.getLastTranHash(ctx, acc)
+	lt, hash, err := c.getLastTransactionHash(ctx, acc)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -132,16 +133,15 @@ func (c *Client) GetFirstTransaction(ctx context.Context, acc ton.AccountID) (*t
 	return tx, scrolled, nil
 }
 
-// GetTransactionsUntil returns all transactions in a range of (from,to] where from is "lt && hash".
-// - oldestLT && oldestHash tx is EXCLUDED from the result.
-// - ordered by DESC
-func (c *Client) GetTransactionsUntil(
+// GetTransactionsSince returns all account transactions since the given logicalTime and hash (exclusive).
+// The result is ordered from oldest to newest. Used to detect new txs to observe.
+func (c *Client) GetTransactionsSince(
 	ctx context.Context,
 	acc ton.AccountID,
 	oldestLT uint64,
 	oldestHash ton.Bits256,
 ) ([]ton.Transaction, error) {
-	lt, hash, err := c.getLastTranHash(ctx, acc)
+	lt, hash, err := c.getLastTransactionHash(ctx, acc)
 	if err != nil {
 		return nil, err
 	}
@@ -151,6 +151,8 @@ func (c *Client) GetTransactionsUntil(
 	for {
 		hashBits := ton.Bits256(hash)
 
+		// note that ton liteapi works in the reverse order.
+		// Here we go from the LATEST txs to the oldest at N txs per page
 		txs, err := c.GetTransactions(ctx, pageSize, acc, lt, hashBits)
 		if err != nil {
 			return nil, errors.Wrapf(err, "unable to get transactions [lt %d, hash %s]", lt, hashBits.Hex())
@@ -181,11 +183,14 @@ func (c *Client) GetTransactionsUntil(
 		lt, hash = txs[oldestIndex].PrevTransLt, txs[oldestIndex].PrevTransHash
 	}
 
+	// reverse the result to get the oldest tx first
+	slices.Reverse(result)
+
 	return result, nil
 }
 
-// getLastTranHash returns logical time and hash of the last transaction
-func (c *Client) getLastTranHash(ctx context.Context, acc ton.AccountID) (uint64, tlb.Bits256, error) {
+// getLastTransactionHash returns logical time and hash of the last transaction
+func (c *Client) getLastTransactionHash(ctx context.Context, acc ton.AccountID) (uint64, tlb.Bits256, error) {
 	state, err := c.GetAccountState(ctx, acc)
 	if err != nil {
 		return 0, tlb.Bits256{}, errors.Wrap(err, "unable to get account state")
@@ -198,14 +203,16 @@ func (c *Client) getLastTranHash(ctx context.Context, acc ton.AccountID) (uint64
 	return state.LastTransLt, state.LastTransHash, nil
 }
 
+// TransactionHashToString converts logicalTime and hash to string
 func TransactionHashToString(lt uint64, hash ton.Bits256) string {
 	return fmt.Sprintf("%d:%s", lt, hash.Hex())
 }
 
-func TransactionHashFromString(hash string) (uint64, ton.Bits256, error) {
-	parts := strings.Split(hash, ":")
+// TransactionHashFromString parses encoded string into logicalTime and hash
+func TransactionHashFromString(encoded string) (uint64, ton.Bits256, error) {
+	parts := strings.Split(encoded, ":")
 	if len(parts) != 2 {
-		return 0, ton.Bits256{}, fmt.Errorf("invalid hash string format")
+		return 0, ton.Bits256{}, fmt.Errorf("invalid encoded string format")
 	}
 
 	lt, err := strconv.ParseUint(parts[0], 10, 64)

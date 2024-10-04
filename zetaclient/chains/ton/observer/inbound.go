@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"slices"
 
 	"cosmossdk.io/math"
 	"github.com/pkg/errors"
@@ -68,18 +67,16 @@ func (ob *Observer) observeInbound(ctx context.Context) error {
 		return errors.Wrap(err, "unable to ensure last scanned tx")
 	}
 
+	// extract logicalTime and tx hash from last scanned tx
 	lt, hashBits, err := liteapi.TransactionHashFromString(ob.LastTxScanned())
 	if err != nil {
 		return errors.Wrapf(err, "unable to parse last scanned tx %q", ob.LastTxScanned())
 	}
 
-	txs, err := ob.client.GetTransactionsUntil(ctx, ob.gateway.AccountID(), lt, hashBits)
+	txs, err := ob.client.GetTransactionsSince(ctx, ob.gateway.AccountID(), lt, hashBits)
 	if err != nil {
 		return errors.Wrap(err, "unable to get transactions")
 	}
-
-	// Process from oldest to latest (ASC)
-	slices.Reverse(txs)
 
 	switch {
 	case len(txs) == 0:

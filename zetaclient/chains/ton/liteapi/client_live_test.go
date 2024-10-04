@@ -92,7 +92,7 @@ func TestClient(t *testing.T) {
 
 		// ACT
 		// https://tonviewer.com/UQCVlMcZ7EyV9maDsvscoLCd5KQfb7CHukyNJluWpMzlD0vr?section=transactions
-		txs, err := client.GetTransactionsUntil(ctx, accountID, getUntilLT, hash)
+		txs, err := client.GetTransactionsSince(ctx, accountID, getUntilLT, hash)
 
 		finish := time.Since(start)
 

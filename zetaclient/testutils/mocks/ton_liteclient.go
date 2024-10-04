@@ -82,12 +82,12 @@ func (_m *LiteClient) GetFirstTransaction(ctx context.Context, id ton.AccountID)
 	return r0, r1, r2
 }
 
-// GetTransactionsUntil provides a mock function with given fields: ctx, acc, lt, bits
-func (_m *LiteClient) GetTransactionsUntil(ctx context.Context, acc ton.AccountID, lt uint64, bits ton.Bits256) ([]ton.Transaction, error) {
+// GetTransactionsSince provides a mock function with given fields: ctx, acc, lt, bits
+func (_m *LiteClient) GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, bits ton.Bits256) ([]ton.Transaction, error) {
 	ret := _m.Called(ctx, acc, lt, bits)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetTransactionsUntil")
+		panic("no return value specified for GetTransactionsSince")
 	}
 
 	var r0 []ton.Transaction

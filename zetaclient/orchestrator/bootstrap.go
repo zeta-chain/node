@@ -435,7 +435,7 @@ func syncObserverMap(
 				continue
 			}
 
-			tonClient, err := liteapi.NewFromAny(ctx, cfg.LiteClientConfigURL)
+			tonClient, err := liteapi.NewFromSource(ctx, cfg.LiteClientConfigURL)
 			if err != nil {
 				logger.Std.Error().Err(err).Msgf("Unable to create TON liteapi for chain %d", chainID)
 				continue

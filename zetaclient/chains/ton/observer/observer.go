@@ -27,7 +27,7 @@ type Observer struct {
 //go:generate mockery --name LiteClient --filename ton_liteclient.go --case underscore --output ../../../testutils/mocks
 type LiteClient interface {
 	GetBlockHeader(ctx context.Context, blockID ton.BlockIDExt, mode uint32) (tlb.BlockInfo, error)
-	GetTransactionsUntil(ctx context.Context, acc ton.AccountID, lt uint64, bits ton.Bits256) ([]ton.Transaction, error)
+	GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, bits ton.Bits256) ([]ton.Transaction, error)
 	GetFirstTransaction(ctx context.Context, id ton.AccountID) (*ton.Transaction, int, error)
 }
 

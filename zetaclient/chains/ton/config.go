@@ -44,7 +44,8 @@ func ConfigFromPath(path string) (*GlobalConfigurationFile, error) {
 	return config.ParseConfigFile(path)
 }
 
-func ConfigFromAny(ctx context.Context, urlOrPath string) (*GlobalConfigurationFile, error) {
+// ConfigFromSource returns a parsed configuration file from a URL or a file path.
+func ConfigFromSource(ctx context.Context, urlOrPath string) (*GlobalConfigurationFile, error) {
 	if u, err := url.Parse(urlOrPath); err == nil {
 		return ConfigFromURL(ctx, u.String())
 	}

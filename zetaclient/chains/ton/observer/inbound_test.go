@@ -51,7 +51,7 @@ func TestInbound(t *testing.T) {
 			})
 
 			ts.OnGetFirstTransaction(gw.AccountID(), &firstTX, 0, nil).Once()
-			ts.OnGetTransactionsUntil(gw.AccountID(), firstTX.Lt, txHash(firstTX), nil, nil).Once()
+			ts.OnGetTransactionsSince(gw.AccountID(), firstTX.Lt, txHash(firstTX), nil, nil).Once()
 
 			// Given observer
 			ob, err := New(ts.baseObserver, ts.liteClient, gw)
@@ -95,7 +95,7 @@ func TestInbound(t *testing.T) {
 		txs := []ton.Transaction{donation}
 
 		ts.
-			OnGetTransactionsUntil(gw.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
+			OnGetTransactionsSince(gw.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
 			Once()
 
 		// ACT
@@ -133,7 +133,7 @@ func TestInbound(t *testing.T) {
 		txs := []ton.Transaction{depositTX}
 
 		ts.
-			OnGetTransactionsUntil(gw.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
+			OnGetTransactionsSince(gw.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
 			Once()
 
 		ts.MockGetBlockHeader(depositTX.BlockID)
@@ -195,7 +195,7 @@ func TestInbound(t *testing.T) {
 		txs := []ton.Transaction{depositAndCallTX}
 
 		ts.
-			OnGetTransactionsUntil(gw.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
+			OnGetTransactionsSince(gw.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
 			Once()
 
 		ts.MockGetBlockHeader(depositAndCallTX.BlockID)
@@ -281,7 +281,7 @@ func TestInbound(t *testing.T) {
 		}
 
 		ts.
-			OnGetTransactionsUntil(gw.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
+			OnGetTransactionsSince(gw.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
 			Once()
 
 		for _, tx := range txs {

@@ -119,7 +119,7 @@ func (ts *testSuite) OnGetFirstTransaction(acc ton.AccountID, tx *ton.Transactio
 		Return(tx, scanned, err)
 }
 
-func (ts *testSuite) OnGetTransactionsUntil(
+func (ts *testSuite) OnGetTransactionsSince(
 	acc ton.AccountID,
 	lt uint64,
 	hash ton.Bits256,
@@ -127,7 +127,7 @@ func (ts *testSuite) OnGetTransactionsUntil(
 	err error,
 ) *mock.Call {
 	return ts.liteClient.
-		On("GetTransactionsUntil", mock.Anything, acc, lt, hash).
+		On("GetTransactionsSince", mock.Anything, acc, lt, hash).
 		Return(txs, err)
 }
 

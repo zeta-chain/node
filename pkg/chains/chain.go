@@ -94,7 +94,7 @@ func (chain Chain) IsBitcoinChain() bool {
 }
 
 func (chain Chain) IsTONChain() bool {
-	return IsTONChain(chain.ChainId, []Chain{chain})
+	return chain.Consensus == Consensus_catchain_consensus
 }
 
 // DecodeAddressFromChainID decode the address string to bytes
