@@ -88,5 +88,5 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("Cross-chain call to reverter reverted")
 
 	// Check the error carries the revert executed.
-	require.Contains(r, cctx.CctxStatus.ErrorMessage, "Revert executed")
+	require.Contains(r, cctx.CctxStatus.ErrorMessage, "revert executed")
 }

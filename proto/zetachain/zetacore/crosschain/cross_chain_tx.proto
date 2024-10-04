@@ -94,8 +94,8 @@ message OutboundParams {
 
 message Status {
   CctxStatus status = 1;
-  // status_message carries information about the status transitions
-  // specifying the old status and new status
+  // status_message carries information about the status transitions:
+  // why they were triggered, old and new status.
   string status_message = 2;
   // error_message carries information about the error that caused the tx
   // to be PendingRevert, Reverted or Aborted.

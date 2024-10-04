@@ -227,7 +227,7 @@ func (k Keeper) processSuccessfulOutbound(
 	oldStatus := cctx.CctxStatus.Status
 	switch oldStatus {
 	case types.CctxStatus_PendingRevert:
-		cctx.SetReverted("Reverted as part of a successful outbound", "Revert executed")
+		cctx.SetReverted("", "revert executed")
 	case types.CctxStatus_PendingOutbound:
 		cctx.SetOutboundMined("")
 	default:
@@ -292,7 +292,7 @@ func (k Keeper) processFailedZETAOutboundOnZEVM(ctx sdk.Context, cctx *types.Cro
 		return fmt.Errorf("failed ZETARevertAndCallContract: %s", err.Error())
 	}
 
-	cctx.SetReverted("", "Outbound failed")
+	cctx.SetReverted("", "outbound failed")
 	if len(ctx.TxBytes()) > 0 {
 		// add event for tendermint transaction hash format
 		hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
@@ -356,7 +356,7 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 		}
 
 		// tx is reverted
-		cctx.SetReverted("", "Outbound failed")
+		cctx.SetReverted("", "outbound failed")
 
 		// add event for tendermint transaction hash format
 		if len(ctx.TxBytes()) > 0 {
