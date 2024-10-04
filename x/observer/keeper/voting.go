@@ -2,10 +2,10 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 
 	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/observer/types"
