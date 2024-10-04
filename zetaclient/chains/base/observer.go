@@ -135,7 +135,7 @@ func NewObserver(
 	return &ob, nil
 }
 
-// Start starts the observer. Returns false started (noop).
+// Start starts the observer. Returns false if it's already started (noop).
 func (ob *Observer) Start() bool {
 	ob.mu.Lock()
 	defer ob.Mu().Unlock()
