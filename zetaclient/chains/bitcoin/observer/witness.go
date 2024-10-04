@@ -58,7 +58,7 @@ func GetBtcEventWithWitness(
 		memo = candidate
 		logger.Debug().Msgf("GetBtcEventWithWitness: found inscription memo %s in tx %s", hex.EncodeToString(memo), tx.Txid)
 	} else {
-		return nil, errors.Errorf("error getting memo for inbound: %s", tx.Txid)
+		return nil, nil
 	}
 
 	// event found, get sender address
