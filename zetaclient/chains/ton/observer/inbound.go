@@ -132,8 +132,8 @@ func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transactio
 		return "", nil
 	}
 
-	// todo add compliance check
-	//   https://github.com/zeta-chain/node/issues/2916
+	// TODO: Add compliance check
+	// https://github.com/zeta-chain/node/issues/2916
 
 	blockHeader, err := ob.client.GetBlockHeader(ctx, tx.BlockID, 0)
 	if err != nil {
@@ -150,6 +150,7 @@ func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transactio
 	return ob.voteDeposit(ctx, tx, sender, amount, memo, seqno)
 }
 
+// extractInboundData parses Gateway tx into deposit (TON sender, amount, memo)
 func extractInboundData(tx *toncontracts.Transaction) (string, math.Uint, []byte, error) {
 	if tx.Operation == toncontracts.OpDeposit {
 		d, err := tx.Deposit()
@@ -192,6 +193,9 @@ func (ob *Observer) voteDeposit(
 		operatorAddress = ob.ZetacoreClient().GetKeys().GetOperatorAddress()
 		inboundHash     = liteapi.TransactionHashToString(tx.Lt, ton.Bits256(tx.Hash()))
 	)
+
+	// TODO: use protocol contract v2 for deposit
+	// https://github.com/zeta-chain/node/issues/2967
 
 	msg := zetacore.GetInboundVoteMessage(
 		sender,

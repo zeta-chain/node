@@ -68,13 +68,11 @@ func (ob *Observer) Start(ctx context.Context) {
 	// watch for incoming txs and post votes to zetacore
 	bg.Work(ctx, ob.watchInbound, bg.WithName("WatchInbound"), bg.WithLogger(ob.Logger().Inbound))
 
-	// todo
-	//  watchInboundTracker https://github.com/zeta-chain/node/issues/2935
+	// TODO: watchInboundTracker
+	// https://github.com/zeta-chain/node/issues/2935
 
-	// todo outbounds/withdrawals https://github.com/zeta-chain/node/issues/2807
-	//   watchOutbound
-	//   watchGasPrice
-	//   watchRPCStatus
+	// TODO: outbounds/withdrawals: (watchOutbound, watchGasPrice, watchRPCStatus)
+	// https://github.com/zeta-chain/node/issues/2807
 }
 
 func (ob *Observer) VoteOutboundIfConfirmed(_ context.Context, _ *types.CrossChainTx) (bool, error) {
