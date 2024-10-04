@@ -28,7 +28,7 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 
 	if err != nil && !isContractReverted {
 		// exceptional case; internal error; should abort CCTX
-		config.CCTX.SetAbort("Aborted while trying to handle EVM deposit", err.Error())
+		config.CCTX.SetAbort("error during deposit that is not smart contract revert", err.Error())
 		return types.CctxStatus_Aborted, err
 	}
 
