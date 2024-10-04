@@ -10,6 +10,7 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
+	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -65,7 +66,7 @@ func (r *E2ERunner) SetupTON() error {
 	}
 
 	r.TONDeployer = deployer
-	r.TONGateway = gwAccount.ID
+	r.TONGateway = toncontracts.NewGateway(gwAccount.ID)
 
 	return r.ensureTONChainParams(gwAccount)
 }

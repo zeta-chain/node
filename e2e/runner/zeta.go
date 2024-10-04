@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
+	query "github.com/cosmos/cosmos-sdk/types/query"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
@@ -106,30 +107,28 @@ func (r *E2ERunner) WaitForMinedCCTXFromIndex(index string) *types.CrossChainTx 
 	return cctx
 }
 
+// WaitForSpecificCCTX scans for cctx by filters and ensures it's mined
 func (r *E2ERunner) WaitForSpecificCCTX(
 	filter func(*types.CrossChainTx) bool,
 	timeout time.Duration,
-) []types.CrossChainTx {
+) *types.CrossChainTx {
 	var (
-		ctx   = r.Ctx
-		start = time.Now()
-		query = &types.QueryAllCctxRequest{}
-		out   []types.CrossChainTx
+		ctx      = r.Ctx
+		start    = time.Now()
+		reqQuery = &types.QueryAllCctxRequest{
+			Pagination: &query.PageRequest{Reverse: true},
+		}
 	)
 
 	for time.Since(start) < timeout {
-		res, err := r.CctxClient.CctxAll(ctx, query)
+		res, err := r.CctxClient.CctxAll(ctx, reqQuery)
 		require.NoError(r, err)
 
 		for i := range res.CrossChainTx {
 			tx := res.CrossChainTx[i]
 			if filter(tx) {
-				out = append(out, *tx)
+				return r.WaitForMinedCCTXFromIndex(tx.Index)
 			}
-		}
-
-		if len(out) > 0 {
-			return out
 		}
 
 		time.Sleep(time.Second)

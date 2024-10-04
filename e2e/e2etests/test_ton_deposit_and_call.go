@@ -11,9 +11,8 @@ import (
 	"github.com/zeta-chain/node/e2e/runner/ton"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
-	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	testcontract "github.com/zeta-chain/node/testutil/contracts"
-	crosschainTypes "github.com/zeta-chain/node/x/crosschain/types"
+	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
@@ -29,9 +28,6 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	// (will be optimized & dynamic in the future)
 	depositFee := math.NewUint(10_000_000)
 
-	// Given TON Gateway
-	gw := toncontracts.NewGateway(r.TONGateway)
-
 	// Given sample wallet with a balance of 50 TON
 	sender, err := deployer.CreateWallet(ctx, ton.TONCoins(50))
 	require.NoError(r, err)
@@ -45,29 +41,18 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	callData := []byte("hello from TON!")
 
 	// ACT
-	r.Logger.Info(
-		"Sending deposit of %s TON from %s to zEVM %s and calling contract with %q",
-		amount.String(),
-		sender.GetAddress().ToRaw(),
-		contractAddr.Hex(),
-		string(callData),
-	)
-
-	err = gw.SendDepositAndCall(ctx, sender, amount, contractAddr, callData, tonDepositSendCode)
+	err = r.TONDepositAndCall(sender, amount, contractAddr, callData)
 
 	// ASSERT
 	require.NoError(r, err)
 
 	// Wait for CCTX mining
-	filter := func(cctx *crosschainTypes.CrossChainTx) bool {
+	filter := func(cctx *cctypes.CrossChainTx) bool {
 		return cctx.InboundParams.SenderChainId == chain.ChainId &&
 			cctx.InboundParams.Sender == sender.GetAddress().ToRaw()
 	}
 
-	cctxs := r.WaitForSpecificCCTX(filter, time.Minute)
-	require.Len(r, cctxs, 1)
-
-	r.WaitForMinedCCTXFromIndex(cctxs[0].Index)
+	r.WaitForSpecificCCTX(filter, time.Minute)
 
 	expectedDeposit := amount.Sub(depositFee)
 
