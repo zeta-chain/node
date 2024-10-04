@@ -139,15 +139,20 @@ func TestKeeper_AfterDelegationModified(t *testing.T) {
 }
 
 func TestKeeper_BeforeValidatorSlashed(t *testing.T) {
-	t.Run("should error if validator not found", func(t *testing.T) {
+	t.Run("should not error if validator not found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
+		os := sample.ObserverSet(10)
+		k.SetObserverSet(ctx, os)
 
 		hooks := k.Hooks()
 		err := hooks.BeforeValidatorSlashed(ctx, validator.GetOperator(), sdk.NewDec(1))
-		require.Error(t, err)
+		require.NoError(t, err)
+		storedOs, found := k.GetObserverSet(ctx)
+		require.True(t, found)
+		require.Equal(t, os, storedOs)
 	})
 
 	t.Run("should not error if observer set not found", func(t *testing.T) {
