@@ -488,11 +488,15 @@ func (m *OutboundParams) GetCallOptions() *CallOptions {
 }
 
 type Status struct {
-	Status              CctxStatus `protobuf:"varint,1,opt,name=status,proto3,enum=zetachain.zetacore.crosschain.CctxStatus" json:"status,omitempty"`
-	StatusMessage       string     `protobuf:"bytes,2,opt,name=status_message,json=statusMessage,proto3" json:"status_message,omitempty"`
-	ErrorMessage        string     `protobuf:"bytes,6,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
-	LastUpdateTimestamp int64      `protobuf:"varint,3,opt,name=lastUpdate_timestamp,json=lastUpdateTimestamp,proto3" json:"lastUpdate_timestamp,omitempty"`
-	IsAbortRefunded     bool       `protobuf:"varint,4,opt,name=isAbortRefunded,proto3" json:"isAbortRefunded,omitempty"`
+	Status CctxStatus `protobuf:"varint,1,opt,name=status,proto3,enum=zetachain.zetacore.crosschain.CctxStatus" json:"status,omitempty"`
+	// status_message carries information about the status transitions:
+	// why they were triggered, old and new status.
+	StatusMessage string `protobuf:"bytes,2,opt,name=status_message,json=statusMessage,proto3" json:"status_message,omitempty"`
+	// error_message carries information about the error that caused the tx
+	// to be PendingRevert, Reverted or Aborted.
+	ErrorMessage        string `protobuf:"bytes,6,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	LastUpdateTimestamp int64  `protobuf:"varint,3,opt,name=lastUpdate_timestamp,json=lastUpdateTimestamp,proto3" json:"lastUpdate_timestamp,omitempty"`
+	IsAbortRefunded     bool   `protobuf:"varint,4,opt,name=isAbortRefunded,proto3" json:"isAbortRefunded,omitempty"`
 	// when the CCTX was created. only populated on new transactions.
 	CreatedTimestamp int64 `protobuf:"varint,5,opt,name=created_timestamp,json=createdTimestamp,proto3" json:"created_timestamp,omitempty"`
 }

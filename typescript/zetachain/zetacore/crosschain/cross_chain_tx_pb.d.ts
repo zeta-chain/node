@@ -355,11 +355,17 @@ export declare class Status extends Message<Status> {
   status: CctxStatus;
 
   /**
+   * status_message carries information about the status transitions:
+   * why they were triggered, old and new status.
+   *
    * @generated from field: string status_message = 2;
    */
   statusMessage: string;
 
   /**
+   * error_message carries information about the error that caused the tx
+   * to be PendingRevert, Reverted or Aborted.
+   *
    * @generated from field: string error_message = 6;
    */
   errorMessage: string;

@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -32,7 +30,7 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 		// exceptional case; internal error; should abort CCTX
 		config.CCTX.SetAbort(
 			"aborted because of an error during deposit that is not smart contract revert",
-			fmt.Sprintf("deposit error: %s", err.Error()))
+			err.Error())
 		return types.CctxStatus_Aborted, err
 	}
 

@@ -58446,8 +58446,14 @@ definitions:
         $ref: '#/definitions/crosschainCctxStatus'
       status_message:
         type: string
+        description: |-
+          status_message carries information about the status transitions:
+          why they were triggered, old and new status.
       error_message:
         type: string
+        description: |-
+          error_message carries information about the error that caused the tx
+          to be PendingRevert, Reverted or Aborted.
       lastUpdate_timestamp:
         type: string
         format: int64
