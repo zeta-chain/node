@@ -9,8 +9,14 @@
 * [2784](https://github.com/zeta-chain/node/pull/2784) - staking precompiled contract
 * [2795](https://github.com/zeta-chain/node/pull/2795) - support restricted address in Solana
 * [2861](https://github.com/zeta-chain/node/pull/2861) - emit events from staking precompile
+* [2860](https://github.com/zeta-chain/node/pull/2860) - bank precompiled contract
 * [2870](https://github.com/zeta-chain/node/pull/2870) - support for multiple Bitcoin chains in the zetaclient
 * [2883](https://github.com/zeta-chain/node/pull/2883) - add chain static information for btc signet testnet
+* [2907](https://github.com/zeta-chain/node/pull/2907) - derive Bitcoin tss address by chain id and added more Signet static info
+* [2911](https://github.com/zeta-chain/node/pull/2911) - add chain static information for btc testnet4
+* [2904](https://github.com/zeta-chain/node/pull/2904) - integrate authenticated calls smart contract functionality into protocol
+* [2919](https://github.com/zeta-chain/node/pull/2919) - add inbound sender to revert context
+* [2957](https://github.com/zeta-chain/node/pull/2957) - enable Bitcoin inscription support on testnet
 
 ### Refactor
 
@@ -31,6 +37,7 @@
 * [2874](https://github.com/zeta-chain/node/pull/2874) - add support for multiple runs for precompile tests
 * [2895](https://github.com/zeta-chain/node/pull/2895) - add e2e test for bitcoin deposit and call
 * [2894](https://github.com/zeta-chain/node/pull/2894) - increase gas limit for TSS vote tx
+* [2932](https://github.com/zeta-chain/node/pull/2932) - add gateway upgrade as part of the upgrade test
 
 ### Fixes
 
@@ -40,6 +47,7 @@
 * [2944](https://github.com/zeta-chain/node/pull/2844) - add tsspubkey to index for tss keygen voting
 * [2842](https://github.com/zeta-chain/node/pull/2842) - fix: move interval assignment out of cctx loop in EVM outbound tx scheduler
 * [2853](https://github.com/zeta-chain/node/pull/2853) - calling precompile through sc with sc state update
+* [2925](https://github.com/zeta-chain/node/pull/2925) - add recover to init chainer to diplay informative message when starting a node from block 1
 
 ## v20.0.0
 

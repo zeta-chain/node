@@ -53,7 +53,7 @@ func monitorBTCDeposit(r *runner.E2ERunner, hash *chainhash.Hash, index int, sta
 			cctx.Index,
 		)
 	}
-	timeToComplete := time.Now().Sub(startTime)
+	timeToComplete := time.Since(startTime)
 	r.Logger.Print("index %d: deposit cctx success in %s", index, timeToComplete.String())
 
 	return nil

@@ -1,8 +1,8 @@
 .PHONY: build
 
 PACKAGE_NAME := github.com/zeta-chain/node
-VERSION := $(shell ./version.sh)
-COMMIT := $(shell [ -z "${COMMIT_ID}" ] && git log -1 --format='%H' || echo ${COMMIT_ID} )
+NODE_VERSION := $(shell ./version.sh)
+NODE_COMMIT := $(shell [ -z "${NODE_COMMIT}" ] && git log -1 --format='%H' || echo ${NODE_COMMIT} )
 BUILDTIME := $(shell date -u +"%Y%m%d.%H%M%S" )
 DOCKER ?= docker
 # allow setting of NODE_COMPOSE_ARGS to pass additional args to docker compose
@@ -17,11 +17,11 @@ GOPATH ?= '$(HOME)/go'
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/cosmos/cosmos-sdk/version.ServerName=zetacored \
 	-X github.com/cosmos/cosmos-sdk/version.ClientName=zetaclientd \
-	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
-	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
+	-X github.com/cosmos/cosmos-sdk/version.Version=$(NODE_VERSION) \
+	-X github.com/cosmos/cosmos-sdk/version.Commit=$(NODE_COMMIT) \
 	-X github.com/zeta-chain/node/pkg/constant.Name=zetacored \
-	-X github.com/zeta-chain/node/pkg/constant.Version=$(VERSION) \
-	-X github.com/zeta-chain/node/pkg/constant.CommitHash=$(COMMIT) \
+	-X github.com/zeta-chain/node/pkg/constant.Version=$(NODE_VERSION) \
+	-X github.com/zeta-chain/node/pkg/constant.CommitHash=$(NODE_COMMIT) \
 	-X github.com/zeta-chain/node/pkg/constant.BuildTime=$(BUILDTIME) \
 	-X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 
@@ -233,7 +233,7 @@ stop-localnet:
 
 zetanode:
 	@echo "Building zetanode"
-	$(DOCKER) build -t zetanode --target latest-runtime -f ./Dockerfile-localnet .
+	$(DOCKER) build -t zetanode --build-arg NODE_VERSION=$(NODE_VERSION) --build-arg NODE_COMMIT=$(NODE_COMMIT) --target latest-runtime -f ./Dockerfile-localnet .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 .PHONY: zetanode
 
@@ -299,12 +299,12 @@ start-v2-test: zetanode
 ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade from source"
-	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source --build-arg OLD_VERSION='release/v19' .
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source --build-arg OLD_VERSION='release/v20' .
 .PHONY: zetanode-upgrade
 else
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade from binaries"
-	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v19.1.1' .
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v20.0.2' .
 .PHONY: zetanode-upgrade
 endif
 

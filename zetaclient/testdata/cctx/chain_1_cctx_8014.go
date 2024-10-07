@@ -34,12 +34,14 @@ var chain_1_cctx_8014 = &crosschaintypes.CrossChainTx{
 	},
 	OutboundParams: []*crosschaintypes.OutboundParams{
 		{
-			Receiver:               "0x8d8D67A8B71c141492825CAE5112Ccd8581073f2",
-			ReceiverChainId:        1,
-			CoinType:               coin.CoinType_ERC20,
-			Amount:                 sdkmath.NewUint(23726342442),
-			TssNonce:               8014,
-			GasLimit:               100000,
+			Receiver:        "0x8d8D67A8B71c141492825CAE5112Ccd8581073f2",
+			ReceiverChainId: 1,
+			CoinType:        coin.CoinType_ERC20,
+			Amount:          sdkmath.NewUint(23726342442),
+			TssNonce:        8014,
+			CallOptions: &crosschaintypes.CallOptions{
+				GasLimit: 100000,
+			},
 			GasPrice:               "58619665744",
 			Hash:                   "0xd2eba7ac3da1b62800165414ea4bcaf69a3b0fb9b13a0fc32f4be11bfef79146",
 			BallotIndex:            "0x4213f2c335758301b8bbb09d9891949ed6ffeea5dd95e5d9eaa8d410baaa0884",

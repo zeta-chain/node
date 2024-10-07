@@ -271,7 +271,7 @@ func ParseTxBlockResult(
 	}
 
 	if len(txs.Txs) == 0 {
-		return nil, nil, fmt.Errorf("ethereum tx not found in msgs: block %d, index %d", height, txIndex)
+		return nil, nil, nil
 	}
 	parsedTx := txs.Txs[0]
 	if parsedTx.Type == CosmosEVMTxType {

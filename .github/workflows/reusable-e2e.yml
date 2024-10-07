@@ -19,6 +19,10 @@ on:
         required: true
         type: string
         default: 'ubuntu-20.04'
+      enable-monitoring:
+        description: 'Enable the monitoring stack for this run'
+        type: boolean
+        default: false
 
 jobs:
   e2e:
@@ -65,6 +69,14 @@ jobs:
             }
           skip-extraction: ${{ steps.restore-go-cache.outputs.cache-hit || github.event_name != 'push' }}
 
+      # this ensures that the version is consistent between cache build and make build
+      - name: Set version for cache
+        run: |
+          NODE_VERSION=$(./version.sh)
+          echo "NODE_VERSION=$NODE_VERSION" >> $GITHUB_ENV
+          NODE_COMMIT=$(git log -1 --format='%H')
+          echo "NODE_COMMIT=$NODE_COMMIT" >> $GITHUB_ENV
+
       # build zetanode with cache options
       - name: Build zetanode for cache
         uses: docker/build-push-action@v6
@@ -79,9 +91,22 @@ jobs:
           cache-from: ${{ env.CACHE_FROM_CONFIG }}
           cache-to: ${{ github.event_name == 'push' && env.CACHE_TO_CONFIG || '' }}
           target: latest-runtime
+          build-args: |
+            NODE_VERSION=${{ env.NODE_VERSION }}
+            NODE_COMMIT=${{ env.NODE_COMMIT }}
 
+      - name: Enable monitoring
+        if: inputs.enable-monitoring
+        run: |
+          echo "NODE_COMPOSE_ARGS=${NODE_COMPOSE_ARGS:-} --profile monitoring --profile monitoring-cloudflared" >> $GITHUB_ENV
+      
       - name: Start Test
         run: make ${{ inputs.make-target }}
+
+      - name: Get grafana URL
+        if: inputs.enable-monitoring
+        run: |
+          docker logs grafana-cloudflared 2>&1 | grep -oP 'https?://\S+\.trycloudflare\.com'
 
       # use docker logs -f rather than docker attach to make sure we get the initial logs
       - name: Watch Test

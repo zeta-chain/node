@@ -15,7 +15,7 @@ type Hooks struct {
 func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) error {
 	err := h.k.CleanObservers(ctx, valAddr)
 	if err != nil {
-		return err
+		ctx.Logger().Error("Error cleaning observer set", "error", err)
 	}
 	return nil
 }
@@ -23,7 +23,7 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 func (h Hooks) AfterValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) error {
 	err := h.k.CheckAndCleanObserver(ctx, valAddr)
 	if err != nil {
-		return err
+		ctx.Logger().Error("Error cleaning observer set", "error", err)
 	}
 	return nil
 }
@@ -31,7 +31,7 @@ func (h Hooks) AfterValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, 
 func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	err := h.k.CheckAndCleanObserverDelegator(ctx, valAddr, delAddr)
 	if err != nil {
-		return err
+		ctx.Logger().Error("Error cleaning observer set", "error", err)
 	}
 	return nil
 }
@@ -39,7 +39,7 @@ func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, 
 func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
 	err := h.k.CleanSlashedValidator(ctx, valAddr, fraction)
 	if err != nil {
-		return err
+		ctx.Logger().Error("Error cleaning observer set", "error", err)
 	}
 	return nil
 }

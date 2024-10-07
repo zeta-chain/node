@@ -70,7 +70,7 @@ func monitorEtherWithdraw(r *runner.E2ERunner, tx *ethtypes.Transaction, index i
 			cctx.Index,
 		)
 	}
-	timeToComplete := time.Now().Sub(startTime)
+	timeToComplete := time.Since(startTime)
 	r.Logger.Print("index %d: withdraw cctx success in %s", index, timeToComplete.String())
 
 	return nil
