@@ -55,7 +55,7 @@ func (c *Contract) withdraw(
 		return nil, err
 	}
 
-	// Safety check: token has to be a valid whitelisted ZRC20 and not be paused.
+	// Safety check: token has to be a non-paused whitelisted ZRC20.
 	if err := c.fungibleKeeper.IsValidZRC20(ctx, zrc20Addr); err != nil {
 		return nil, &ptypes.ErrInvalidToken{
 			Got:    zrc20Addr.String(),

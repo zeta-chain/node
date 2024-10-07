@@ -32,6 +32,14 @@ func (k Keeper) UnlockZRC20(
 		return fmt.Errorf("zrc20 address cannot be zero")
 	}
 
+	if err := k.IsValidZRC20(ctx, zrc20Address); err != nil {
+		return err
+	}
+
+	if err := k.CheckFungibleZRC20Balance(ctx, zrc20ABI, zrc20Address, amount); err != nil {
+		return err
+	}
+
 	args := []interface{}{to, amount}
 	res, err := k.CallEVM(
 		ctx,
