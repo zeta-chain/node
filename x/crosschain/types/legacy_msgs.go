@@ -150,3 +150,32 @@ func (msg *MsgRemoveFromOutTxTracker) GetSignBytes() []byte {
 func (msg *MsgRemoveFromOutTxTracker) ValidateBasic() error {
 	return nil
 }
+
+// MsgGasPriceVoter
+
+var _ sdk.Msg = &MsgGasPriceVoter{}
+
+func (msg *MsgGasPriceVoter) Route() string {
+	return RouterKey
+}
+
+func (msg *MsgGasPriceVoter) Type() string {
+	return "GasPriceVoter"
+}
+
+func (msg *MsgGasPriceVoter) GetSigners() []sdk.AccAddress {
+	creator, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{creator}
+}
+
+func (msg *MsgGasPriceVoter) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg *MsgGasPriceVoter) ValidateBasic() error {
+	return nil
+}

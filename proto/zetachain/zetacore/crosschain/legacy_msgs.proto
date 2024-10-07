@@ -90,3 +90,13 @@ message MsgVoteOnObservedInboundTx {
   // event index of the sent asset in the observed tx
   uint64 event_index = 15;
 }
+
+// legacy MsgVoteGasPrice
+// defined to keep codec compatibility
+message MsgGasPriceVoter {
+  string creator = 1;
+  int64 chain_id = 2;
+  uint64 price = 3;
+  uint64 block_number = 4;
+  string supply = 5;
+}

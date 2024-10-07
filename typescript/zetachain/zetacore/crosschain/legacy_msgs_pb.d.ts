@@ -340,3 +340,50 @@ export declare class MsgVoteOnObservedInboundTx extends Message<MsgVoteOnObserve
   static equals(a: MsgVoteOnObservedInboundTx | PlainMessage<MsgVoteOnObservedInboundTx> | undefined, b: MsgVoteOnObservedInboundTx | PlainMessage<MsgVoteOnObservedInboundTx> | undefined): boolean;
 }
 
+/**
+ * legacy MsgVoteGasPrice
+ * defined to keep codec compatibility
+ *
+ * @generated from message zetachain.zetacore.crosschain.MsgGasPriceVoter
+ */
+export declare class MsgGasPriceVoter extends Message<MsgGasPriceVoter> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: int64 chain_id = 2;
+   */
+  chainId: bigint;
+
+  /**
+   * @generated from field: uint64 price = 3;
+   */
+  price: bigint;
+
+  /**
+   * @generated from field: uint64 block_number = 4;
+   */
+  blockNumber: bigint;
+
+  /**
+   * @generated from field: string supply = 5;
+   */
+  supply: string;
+
+  constructor(data?: PartialMessage<MsgGasPriceVoter>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgGasPriceVoter";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgGasPriceVoter;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgGasPriceVoter;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgGasPriceVoter;
+
+  static equals(a: MsgGasPriceVoter | PlainMessage<MsgGasPriceVoter> | undefined, b: MsgGasPriceVoter | PlainMessage<MsgGasPriceVoter> | undefined): boolean;
+}
+
