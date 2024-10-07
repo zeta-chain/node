@@ -19,6 +19,13 @@ func TestInbound(t *testing.T) {
 		ton.MustParseAccountID("0:997d889c815aeac21c47f86ae0e38383efc3c3463067582f6263ad48c5a1485b"),
 	)
 
+	t.Run("No gateway provided", func(t *testing.T) {
+		ts := newTestSuite(t)
+
+		_, err := New(ts.baseObserver, ts.liteClient, nil)
+		require.Error(t, err)
+	})
+
 	t.Run("Ensure last scanned tx", func(t *testing.T) {
 		t.Run("Unable to get first tx", func(t *testing.T) {
 			// ARRANGE

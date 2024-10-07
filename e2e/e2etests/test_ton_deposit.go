@@ -54,7 +54,7 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	require.Equal(r, sender.GetAddress().ToRaw(), cctx.InboundParams.Sender)
 	require.Equal(r, expectedDeposit.Uint64(), cctx.InboundParams.Amount.Uint64())
 
-	// Check sender's balance
+	// Check receiver's balance
 	balance, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, recipient)
 	require.NoError(r, err)
 

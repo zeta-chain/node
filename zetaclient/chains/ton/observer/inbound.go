@@ -152,25 +152,24 @@ func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transactio
 
 // extractInboundData parses Gateway tx into deposit (TON sender, amount, memo)
 func extractInboundData(tx *toncontracts.Transaction) (string, math.Uint, []byte, error) {
-	if tx.Operation == toncontracts.OpDeposit {
+	switch tx.Operation {
+	case toncontracts.OpDeposit:
 		d, err := tx.Deposit()
 		if err != nil {
 			return "", math.NewUint(0), nil, err
 		}
 
 		return d.Sender.ToRaw(), d.Amount, d.Memo(), nil
-	}
-
-	if tx.Operation == toncontracts.OpDepositAndCall {
+	case toncontracts.OpDepositAndCall:
 		d, err := tx.DepositAndCall()
 		if err != nil {
 			return "", math.NewUint(0), nil, err
 		}
 
 		return d.Sender.ToRaw(), d.Amount, d.Memo(), nil
+	default:
+		return "", math.NewUint(0), nil, fmt.Errorf("unknown operation %d", tx.Operation)
 	}
-
-	return "", math.NewUint(0), nil, fmt.Errorf("unknown operation %d", tx.Operation)
 }
 
 func (ob *Observer) voteDeposit(

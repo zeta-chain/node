@@ -1,3 +1,4 @@
+// Package ton provider bindings for TON blockchain including Gateway contract wrapper.
 package ton
 
 import (
@@ -8,7 +9,17 @@ import (
 	"github.com/tonkeeper/tongo/ton"
 )
 
-// Gateway wrapper around zeta gateway contract on TON
+// Gateway represents bindings for Zeta Gateway contract on TON
+//
+// Gateway.ParseTransaction parses Gateway transaction.
+// The parser reads tx body cell and decodes it based on Operation code (op)
+//   - inbound transactions: deposit, donate, depositAndCall
+//   - outbound transactions: not implemented yet
+//   - errors for all other transactions
+//
+// `Send*` methods work the same way by constructing (& signing) tx body cell that is expected by the contract
+//
+// @see https://github.com/zeta-chain/protocol-contracts-ton/blob/main/contracts/gateway.fc
 type Gateway struct {
 	accountID ton.AccountID
 }
@@ -24,10 +35,12 @@ var (
 	ErrCast      = errors.New("unable to cast tx content")
 )
 
+// NewGateway Gateway constructor
 func NewGateway(accountID ton.AccountID) *Gateway {
 	return &Gateway{accountID}
 }
 
+// AccountID returns gateway address
 func (gw *Gateway) AccountID() ton.AccountID {
 	return gw.accountID
 }

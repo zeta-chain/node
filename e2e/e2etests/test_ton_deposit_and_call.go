@@ -59,7 +59,7 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	// check if example contract has been called, bar value should be set to amount
 	utils.MustHaveCalledExampleContract(r, contract, expectedDeposit.BigInt())
 
-	// Check sender's balance
+	// Check receiver's balance
 	balance, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, contractAddr)
 	require.NoError(r, err)
 
