@@ -7,6 +7,7 @@ import (
 
 	"github.com/btcsuite/btcd/chaincfg"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/tonkeeper/tongo/ton"
 )
 
 // Validate checks whether the chain is valid
@@ -109,7 +110,13 @@ func DecodeAddressFromChainID(chainID int64, addr string, additionalChains []Cha
 	case IsSolanaChain(chainID, additionalChains):
 		return []byte(addr), nil
 	case IsTONChain(chainID, additionalChains):
-		return []byte(addr), nil
+		// e.g. `0:55798cb7b87168251a7c39f6806b8c202f6caa0f617a76f4070b3fdacfd056a1`
+		acc, err := ton.ParseAccountID(addr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid TON address %q: %w", addr, err)
+		}
+
+		return []byte(acc.ToRaw()), nil
 	default:
 		return nil, fmt.Errorf("chain (%d) not supported", chainID)
 	}

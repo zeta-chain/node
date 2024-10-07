@@ -160,9 +160,7 @@ func setupVotesBag(ts *testSuite) {
 	catcher := func(args mock.Arguments) {
 		vote := args.Get(3)
 		cctx, ok := vote.(*cctxtypes.MsgVoteInbound)
-		if !ok {
-			panic("unexpected cctx type")
-		}
+		require.True(ts.t, ok, "unexpected cctx type")
 
 		ts.votesBag = append(ts.votesBag, cctx)
 	}

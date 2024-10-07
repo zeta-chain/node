@@ -21,7 +21,7 @@ func main() {
 	flag.Parse()
 
 	if len(flag.Args()) < 3 {
-		log.Fatalf("Usage: go run scrape.go [-testnet] <account> <lt> <hash>")
+		log.Fatalf("Usage: go run scraper.go [-testnet] <account> <lt> <hash>")
 	}
 
 	// Parse account
@@ -53,7 +53,7 @@ func main() {
 	case len(txs) == 0:
 		fail("Not found")
 	case len(txs) > 1:
-		fail("invalid tx list length (got %d, want 1); lt %d, hash %s", len(txs), hash.Hex())
+		fail("invalid tx list length (got %d, want 1); lt %d, hash %s", len(txs), lt, hash.Hex())
 	}
 
 	// Print the transaction
@@ -83,7 +83,7 @@ func getClient(testnet bool) *liteapi.Client {
 		return c
 	}
 
-	c, err := liteapi.NewClientWithDefaultTestnet()
+	c, err := liteapi.NewClientWithDefaultMainnet()
 	must(err, "unable to create mainnet lite client")
 
 	return c
