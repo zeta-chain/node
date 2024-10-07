@@ -166,7 +166,7 @@ func TestStatus_ChangeStatus(t *testing.T) {
 		assert.Equal(
 			t,
 			fmt.Sprintf(
-				"Failed to transition status from %s to %s",
+				"Failed to transition status from %s to %s: msg",
 				types.CctxStatus_PendingOutbound.String(),
 				types.CctxStatus_PendingInbound.String(),
 			),

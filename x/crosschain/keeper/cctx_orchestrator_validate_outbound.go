@@ -54,8 +54,8 @@ func (k Keeper) ValidateOutboundZEVM(
 		)
 		if err != nil {
 			cctx.SetAbort(
-				"aborted because revert failed",
-				fmt.Sprintf("deposit error: %s, processing error: %s", depositErr, err.Error()))
+				"revert failed",
+				fmt.Sprintf("deposit error: %s, processing error: %s", depositErr.Error(), err.Error()))
 			return types.CctxStatus_Aborted
 		}
 

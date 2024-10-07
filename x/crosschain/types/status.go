@@ -10,14 +10,20 @@ func (m *Status) AbortRefunded() {
 }
 
 // UpdateStatusAndErrorMessages transitions the Status and Error messages.
-func (m *Status) UpdateStatusAndErrorMessages(newStatus CctxStatus, isError bool, statusMsg, errorMsg string) {
+func (m *Status) UpdateStatusAndErrorMessages(newStatus CctxStatus, statusMsg, errorMsg string) {
 	m.UpdateStatus(newStatus, statusMsg)
-	m.UpdateErrorMessage(isError, errorMsg)
+
+	if newStatus == CctxStatus_Aborted || newStatus == CctxStatus_Reverted || newStatus == CctxStatus_PendingRevert {
+		m.UpdateErrorMessage(errorMsg)
+	}
 }
 
 // UpdateStatus updates the cctx status and cctx.status.status_message.
 func (m *Status) UpdateStatus(newStatus CctxStatus, statusMsg string) {
-	if !m.ValidateTransition(newStatus) {
+	if m.ValidateTransition(newStatus) {
+		m.StatusMessage = fmt.Sprintf("Status changed from %s to %s", m.Status.String(), newStatus.String())
+		m.Status = newStatus
+	} else {
 		m.StatusMessage = fmt.Sprintf(
 			"Failed to transition status from %s to %s",
 			m.Status.String(),
@@ -25,25 +31,17 @@ func (m *Status) UpdateStatus(newStatus CctxStatus, statusMsg string) {
 		)
 
 		m.Status = CctxStatus_Aborted
-		return
 	}
-
-	m.StatusMessage = fmt.Sprintf("Status changed from %s to %s", m.Status.String(), newStatus.String())
 
 	if statusMsg != "" {
 		m.StatusMessage += fmt.Sprintf(": %s", statusMsg)
 	}
-
-	m.Status = newStatus
 }
 
 // UpdateErrorMessage updates cctx.status.error_message.
-func (m *Status) UpdateErrorMessage(isError bool, errorMsg string) {
-	if !isError {
-		return
-	}
-
+func (m *Status) UpdateErrorMessage(errorMsg string) {
 	errMsg := errorMsg
+
 	if errMsg == "" {
 		errMsg = "unknown error"
 	}
