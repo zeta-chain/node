@@ -431,10 +431,27 @@ func (ob *Observer) DoesInboundContainsRestrictedAddress(inTx *BTCInboundEvent) 
 	return false
 }
 
-// GetBtcEvent either returns a valid BTCInboundEvent or nil
+// GetBtcEvent returns a valid BTCInboundEvent or nil
+// it uses witness data to extract the sender address, except for mainnet
+func GetBtcEvent(
+	rpcClient interfaces.BTCRPCClient,
+	tx btcjson.TxRawResult,
+	tssAddress string,
+	blockNumber uint64,
+	logger zerolog.Logger,
+	netParams *chaincfg.Params,
+	depositorFee float64,
+) (*BTCInboundEvent, error) {
+	if netParams.Name == chaincfg.MainNetParams.Name {
+		return GetBtcEventWithoutWitness(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
+	}
+	return GetBtcEventWithWitness(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
+}
+
+// GetBtcEventWithoutWitness either returns a valid BTCInboundEvent or nil
 // Note: the caller should retry the tx on error (e.g., GetSenderAddressByVin failed)
 // TODO(revamp): simplify this function
-func GetBtcEvent(
+func GetBtcEventWithoutWitness(
 	rpcClient interfaces.BTCRPCClient,
 	tx btcjson.TxRawResult,
 	tssAddress string,

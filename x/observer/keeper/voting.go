@@ -5,6 +5,7 @@ import (
 
 	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/observer/types"
@@ -134,12 +135,12 @@ func (k Keeper) CheckObserverSelfDelegation(ctx sdk.Context, accAddress string) 
 	}
 	validator, found := k.stakingKeeper.GetValidator(ctx, valAddress)
 	if !found {
-		return types.ErrNotValidator
+		return errors.Wrapf(types.ErrNotValidator, "validator : %s", valAddress)
 	}
 
 	delegation, found := k.stakingKeeper.GetDelegation(ctx, selfdelAddr, valAddress)
 	if !found {
-		return types.ErrSelfDelegation
+		return errors.Wrapf(types.ErrSelfDelegation, "self delegation : %s , valAddres : %s", selfdelAddr, valAddress)
 	}
 
 	minDelegation, err := types.GetMinObserverDelegationDec()

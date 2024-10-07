@@ -2,7 +2,9 @@ package runner
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
+	"net/http"
 	"sort"
 	"time"
 
@@ -178,8 +180,16 @@ func (r *E2ERunner) SendToTSSFromDeployerWithMemo(
 	inputUTXOs []btcjson.ListUnspentResult,
 	memo []byte,
 ) (*chainhash.Hash, error) {
+	return r.sendToAddrFromDeployerWithMemo(amount, r.BTCTSSAddress, inputUTXOs, memo)
+}
+
+func (r *E2ERunner) sendToAddrFromDeployerWithMemo(
+	amount float64,
+	to btcutil.Address,
+	inputUTXOs []btcjson.ListUnspentResult,
+	memo []byte,
+) (*chainhash.Hash, error) {
 	btcRPC := r.BtcRPCClient
-	to := r.BTCTSSAddress
 	btcDeployerAddress := r.BTCDeployerAddress
 	require.NotNil(r, r.BTCDeployerAddress, "btcDeployerAddress is nil")
 
@@ -286,6 +296,49 @@ func (r *E2ERunner) SendToTSSFromDeployerWithMemo(
 		r.Logger.Info("  Memo: %x", event.MemoBytes)
 	}
 	return txid, nil
+}
+
+// InscribeToTSSFromDeployerWithMemo creates an inscription that is sent to the tss address with the corresponding memo
+func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
+	amount float64,
+	inputUTXOs []btcjson.ListUnspentResult,
+	memo []byte,
+) *chainhash.Hash {
+	// TODO: replace builder with Go function to enable instructions
+	// https://github.com/zeta-chain/node/issues/2759
+	builder := InscriptionBuilder{sidecarURL: "http://bitcoin-node-sidecar:8000", client: http.Client{}}
+
+	address, err := builder.GenerateCommitAddress(memo)
+	require.NoError(r, err)
+	r.Logger.Info("received inscription commit address %s", address)
+
+	receiver, err := chains.DecodeBtcAddress(address, r.GetBitcoinChainID())
+	require.NoError(r, err)
+
+	txnHash, err := r.sendToAddrFromDeployerWithMemo(amount, receiver, inputUTXOs, []byte(constant.DonationMessage))
+	require.NoError(r, err)
+	r.Logger.Info("obtained inscription commit txn hash %s", txnHash.String())
+
+	// sendToAddrFromDeployerWithMemo makes sure index is 0
+	outpointIdx := 0
+	hexTx, err := builder.GenerateRevealTxn(r.BTCTSSAddress.String(), txnHash.String(), outpointIdx, amount)
+	require.NoError(r, err)
+
+	// Decode the hex string into raw bytes
+	rawTxBytes, err := hex.DecodeString(hexTx)
+	require.NoError(r, err)
+
+	// Deserialize the raw bytes into a wire.MsgTx structure
+	msgTx := wire.NewMsgTx(wire.TxVersion)
+	err = msgTx.Deserialize(bytes.NewReader(rawTxBytes))
+	require.NoError(r, err)
+	r.Logger.Info("recovered inscription reveal txn %s", hexTx)
+
+	txid, err := r.BtcRPCClient.SendRawTransaction(msgTx, true)
+	require.NoError(r, err)
+	r.Logger.Info("txid: %+v", txid)
+
+	return txid
 }
 
 // GetBitcoinChainID gets the bitcoin chain ID from the network params
