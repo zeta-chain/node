@@ -107,33 +107,33 @@ func (c *Contract) deposit(
 
 	// Check for enough bank's allowance.
 	// function allowance(address owner, address spender) public view virtual override returns (uint256)
-	resAllowance, err := c.CallContract(
-		ctx,
-		&c.fungibleKeeper,
-		c.zrc20ABI,
-		zrc20Addr,
-		"allowance",
-		[]interface{}{caller, ContractAddress},
-	)
-	if err != nil {
-		return nil, &ptypes.ErrUnexpected{
-			When: "allowance",
-			Got:  err.Error(),
-		}
-	}
+	// resAllowance, err := c.CallContract(
+	// 	ctx,
+	// 	&c.fungibleKeeper,
+	// 	c.zrc20ABI,
+	// 	zrc20Addr,
+	// 	"allowance",
+	// 	[]interface{}{caller, ContractAddress},
+	// )
+	// if err != nil {
+	// 	return nil, &ptypes.ErrUnexpected{
+	// 		When: "allowance",
+	// 		Got:  err.Error(),
+	// 	}
+	// }
 
-	allowance, ok := resAllowance[0].(*big.Int)
-	if !ok {
-		return nil, &ptypes.ErrUnexpected{
-			Got: "ZRC20 allowance returned an unexpected type",
-		}
-	}
+	// allowance, ok := resAllowance[0].(*big.Int)
+	// if !ok {
+	// 	return nil, &ptypes.ErrUnexpected{
+	// 		Got: "ZRC20 allowance returned an unexpected type",
+	// 	}
+	// }
 
-	if allowance.Cmp(amount) < 0 || allowance.Cmp(big.NewInt(0)) <= 0 {
-		return nil, &ptypes.ErrInvalidAmount{
-			Got: allowance.String(),
-		}
-	}
+	// if allowance.Cmp(amount) < 0 || allowance.Cmp(big.NewInt(0)) <= 0 {
+	// 	return nil, &ptypes.ErrInvalidAmount{
+	// 		Got: allowance.String(),
+	// 	}
+	// }
 
 	// The process of creating a new cosmos coin is:
 	// - Generate the new coin denom using ZRC20 address,
@@ -146,27 +146,10 @@ func (c *Contract) deposit(
 	}
 
 	// 2. Effect: subtract balance.
-	// function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool)
-	resTransferFrom, err := c.CallContract(
-		ctx,
-		&c.fungibleKeeper,
-		c.zrc20ABI,
-		zrc20Addr,
-		"transferFrom",
-		[]interface{}{caller, ContractAddress, amount},
-	)
-	if err != nil {
+	if err := c.fungibleKeeper.LockZRC20InBank(ctx, c.zrc20ABI, zrc20Addr, caller, amount); err != nil {
 		return nil, &ptypes.ErrUnexpected{
-			When: "transferFrom",
+			When: "LockZRC20InBank",
 			Got:  err.Error(),
-		}
-	}
-
-	transferred, ok := resTransferFrom[0].(bool)
-	if !ok || !transferred {
-		return nil, &ptypes.ErrUnexpected{
-			When: "transferFrom",
-			Got:  "transaction not successful",
 		}
 	}
 

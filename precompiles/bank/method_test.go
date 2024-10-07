@@ -137,8 +137,8 @@ func Test_Methods(t *testing.T) {
 		require.Error(t, err)
 		require.ErrorAs(
 			t,
-			ptypes.ErrInvalidAmount{
-				Got: "0",
+			ptypes.ErrInvalidCoin{
+				Empty: true,
 			},
 			err,
 		)
@@ -173,13 +173,7 @@ func Test_Methods(t *testing.T) {
 
 		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
 		require.Error(t, err)
-		require.ErrorAs(
-			t,
-			ptypes.ErrInvalidAmount{
-				Got: "500",
-			},
-			err,
-		)
+		require.Contains(t, err.Error(), "unexpected error in LockZRC20InBank: invalid allowance, got: 500")
 
 		res, err := ts.bankABI.Methods[DepositMethodName].Outputs.Unpack(success)
 		require.NoError(t, err)
