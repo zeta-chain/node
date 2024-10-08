@@ -142,7 +142,7 @@ func unpackDepositArgs(args []interface{}) (zrc20Addr common.Address, amount *bi
 	}
 
 	amount, ok = args[1].(*big.Int)
-	if !ok || amount.Sign() < 0 || amount == nil || amount == new(big.Int) {
+	if !ok || amount.Sign() <= 0 || amount == nil || amount == new(big.Int) {
 		return common.Address{}, nil, &ptypes.ErrInvalidAmount{
 			Got: amount.String(),
 		}
