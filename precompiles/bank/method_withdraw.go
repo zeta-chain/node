@@ -86,9 +86,9 @@ func (c *Contract) withdraw(
 
 	// Check if fungible address has enough ZRC20 balance.
 	if err := c.fungibleKeeper.CheckFungibleZRC20Balance(ctx, c.zrc20ABI, zrc20Addr, amount); err != nil {
-		return nil, &ptypes.ErrUnexpected{
-			When: "balanceOf",
-			Got:  err.Error(),
+		return nil, &ptypes.ErrInsufficientBalance{
+			Requested: amount.String(),
+			Got:       err.Error(),
 		}
 	}
 
@@ -134,7 +134,7 @@ func unpackWithdrawArgs(args []interface{}) (zrc20Addr common.Address, amount *b
 	}
 
 	amount, ok = args[1].(*big.Int)
-	if !ok || amount.Sign() <= 0 || amount == nil || amount == new(big.Int) {
+	if !ok || amount == nil || amount.Sign() <= 0 {
 		return common.Address{}, nil, &ptypes.ErrInvalidAmount{
 			Got: amount.String(),
 		}
