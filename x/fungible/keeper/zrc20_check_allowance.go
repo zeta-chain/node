@@ -33,11 +33,11 @@ func (k Keeper) CheckFungibleZRC20Allowance(
 		return fmt.Errorf("zrc20 address cannot be zero")
 	}
 
-	args := []interface{}{from, fungibletypes.ModuleAddressEVM}
+	args := []interface{}{from, fungibletypes.ModuleAddressZEVM}
 	res, err := k.CallEVM(
 		ctx,
 		*zrc20ABI,
-		fungibletypes.ModuleAddressEVM,
+		fungibletypes.ModuleAddressZEVM,
 		zrc20Address,
 		big.NewInt(0),
 		nil,

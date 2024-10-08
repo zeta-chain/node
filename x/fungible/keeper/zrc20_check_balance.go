@@ -32,14 +32,14 @@ func (k Keeper) CheckFungibleZRC20Balance(
 	res, err := k.CallEVM(
 		ctx,
 		*zrc20ABI,
-		fungibletypes.ModuleAddressEVM,
+		fungibletypes.ModuleAddressZEVM,
 		zrc20Address,
 		big.NewInt(0),
 		nil,
 		true,
 		true,
 		balanceOf,
-		fungibletypes.ModuleAddressEVM,
+		fungibletypes.ModuleAddressZEVM,
 	)
 	if err != nil {
 		return err

@@ -17,6 +17,7 @@
 * [2904](https://github.com/zeta-chain/node/pull/2904) - integrate authenticated calls smart contract functionality into protocol
 * [2919](https://github.com/zeta-chain/node/pull/2919) - add inbound sender to revert context
 * [2957](https://github.com/zeta-chain/node/pull/2957) - enable Bitcoin inscription support on testnet
+* [2979](https://github.com/zeta-chain/node/pull/2979) - add fungible keeper ability to lock/unlock ZRC20 tokens
 
 ### Refactor
 

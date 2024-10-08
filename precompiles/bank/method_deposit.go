@@ -18,7 +18,7 @@ import (
 // The caller cosmos address will be calculated from the EVM caller address. by executing toAddr := sdk.AccAddress(addr.Bytes()).
 // This function can be think of a permissionless way of minting cosmos coins.
 // This is how deposit works:
-// - The caller has to allow the bank contract to spend a certain amount ZRC20 token coins on its behalf. This is mandatory.
+// - The caller has to allow the Fungible ZEVM address to spend a certain amount ZRC20 token coins on its behalf. This is mandatory.
 // - Then, the caller calls deposit(ZRC20 address, amount), to deposit the amount and receive cosmos coins.
 // - The bank will check there's enough balance, the caller is not a blocked address, and the token is a not paused ZRC20.
 // - Then the cosmos coins "zrc20/0x12345" will be minted and sent to the caller's cosmos address.

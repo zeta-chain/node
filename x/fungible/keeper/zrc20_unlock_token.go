@@ -44,7 +44,7 @@ func (k Keeper) UnlockZRC20(
 	res, err := k.CallEVM(
 		ctx,
 		*zrc20ABI,
-		fungibletypes.ModuleAddressEVM,
+		fungibletypes.ModuleAddressZEVM,
 		zrc20Address,
 		big.NewInt(0),
 		nil,
@@ -61,7 +61,7 @@ func (k Keeper) UnlockZRC20(
 		return fmt.Errorf("%s", res.VmError)
 	}
 
-	ret, err := zrc20ABI.Methods[transferFrom].Outputs.Unpack(res.Ret)
+	ret, err := zrc20ABI.Methods[transfer].Outputs.Unpack(res.Ret)
 	if err != nil {
 		return err
 	}

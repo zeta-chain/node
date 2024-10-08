@@ -12,6 +12,7 @@ import (
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/precompiles/bank"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
 func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
@@ -59,7 +60,7 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	// Check initial balances.
 	balanceShouldBe(r, 0, checkCosmosBalance(r, testBank, zrc20Address, spender))
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spender))
-	balanceShouldBe(r, 0, checkZRC20Balance(r, bank.ContractAddress))
+	balanceShouldBe(r, 0, checkZRC20Balance(r, fungibletypes.ModuleAddressZEVM))
 
 	// Deposit without previous alllowance should fail.
 	receipt = depositThroughTestBank(r, testBank, zrc20Address, oneThousand)
@@ -68,10 +69,10 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	// Check balances, should be the same.
 	balanceShouldBe(r, 0, checkCosmosBalance(r, testBank, zrc20Address, spender))
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spender))
-	balanceShouldBe(r, 0, checkZRC20Balance(r, bank.ContractAddress))
+	balanceShouldBe(r, 0, checkZRC20Balance(r, fungibletypes.ModuleAddressZEVM))
 
 	// Allow 500 ZRC20 to bank precompile.
-	approveAllowance(r, bank.ContractAddress, fiveHundred)
+	approveAllowance(r, fungibletypes.ModuleAddressZEVM, fiveHundred)
 
 	// Deposit 501 ERC20ZRC20 tokens to the bank contract, through TestBank.
 	// It's higher than allowance but lower than balance, should fail.
@@ -81,10 +82,10 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	// Balances shouldn't change.
 	balanceShouldBe(r, 0, checkCosmosBalance(r, testBank, zrc20Address, spender))
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spender))
-	balanceShouldBe(r, 0, checkZRC20Balance(r, bank.ContractAddress))
+	balanceShouldBe(r, 0, checkZRC20Balance(r, fungibletypes.ModuleAddressZEVM))
 
 	// Allow 1000 ZRC20 to bank precompile.
-	approveAllowance(r, bank.ContractAddress, oneThousand)
+	approveAllowance(r, fungibletypes.ModuleAddressZEVM, oneThousand)
 
 	// Deposit 1001 ERC20ZRC20 tokens to the bank contract.
 	// It's higher than spender balance but within approved allowance, should fail.
@@ -94,7 +95,7 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	// Balances shouldn't change.
 	balanceShouldBe(r, 0, checkCosmosBalance(r, testBank, zrc20Address, spender))
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spender))
-	balanceShouldBe(r, 0, checkZRC20Balance(r, bank.ContractAddress))
+	balanceShouldBe(r, 0, checkZRC20Balance(r, fungibletypes.ModuleAddressZEVM))
 
 	// Deposit 500 ERC20ZRC20 tokens to the bank contract, it's within allowance and balance. Should pass.
 	receipt = depositThroughTestBank(r, testBank, zrc20Address, fiveHundred)
@@ -103,7 +104,7 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	// Balances should be transferred. Bank now locks 500 ZRC20 tokens.
 	balanceShouldBe(r, 500, checkCosmosBalance(r, testBank, zrc20Address, spender))
 	balanceShouldBe(r, 500, checkZRC20Balance(r, spender))
-	balanceShouldBe(r, 500, checkZRC20Balance(r, bank.ContractAddress))
+	balanceShouldBe(r, 500, checkZRC20Balance(r, fungibletypes.ModuleAddressZEVM))
 
 	// Check the deposit event.
 	eventDeposit, err := bankPrecompileCaller.ParseDeposit(*receipt.Logs[0])
@@ -119,7 +120,7 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	// Balances shouldn't change.
 	balanceShouldBe(r, 500, checkCosmosBalance(r, testBank, zrc20Address, spender))
 	balanceShouldBe(r, 500, checkZRC20Balance(r, spender))
-	balanceShouldBe(r, 500, checkZRC20Balance(r, bank.ContractAddress))
+	balanceShouldBe(r, 500, checkZRC20Balance(r, fungibletypes.ModuleAddressZEVM))
 
 	// Try to withdraw 500 ERC20ZRC20 tokens. Should pass.
 	receipt = withdrawThroughTestBank(r, testBank, zrc20Address, fiveHundred)
@@ -128,7 +129,7 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	// Balances should be reverted to initial state.
 	balanceShouldBe(r, 0, checkCosmosBalance(r, testBank, zrc20Address, spender))
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spender))
-	balanceShouldBe(r, 0, checkZRC20Balance(r, bank.ContractAddress))
+	balanceShouldBe(r, 0, checkZRC20Balance(r, fungibletypes.ModuleAddressZEVM))
 
 	// Check the withdraw event.
 	eventWithdraw, err := bankPrecompileCaller.ParseWithdraw(*receipt.Logs[0])

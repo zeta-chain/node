@@ -43,11 +43,11 @@ func (k Keeper) LockZRC20(
 		return err
 	}
 
-	args := []interface{}{from, fungibletypes.ModuleAddressEVM, amount}
+	args := []interface{}{from, fungibletypes.ModuleAddressZEVM, amount}
 	res, err := k.CallEVM(
 		ctx,
 		*zrc20ABI,
-		fungibletypes.ModuleAddressEVM,
+		fungibletypes.ModuleAddressZEVM,
 		zrc20Address,
 		big.NewInt(0),
 		nil,
