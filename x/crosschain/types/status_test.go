@@ -140,31 +140,35 @@ func TestStatus_ChangeStatus(t *testing.T) {
 	t.Run("should change status and msg if transition is valid", func(t *testing.T) {
 		s := types.Status{Status: types.CctxStatus_PendingInbound}
 
-		s.ChangeStatus(types.CctxStatus_PendingOutbound, "msg")
+		s.UpdateStatus(types.CctxStatus_PendingOutbound, "msg")
 		assert.Equal(t, s.Status, types.CctxStatus_PendingOutbound)
-		assert.Equal(t, s.StatusMessage, "msg")
+		assert.Equal(t, s.StatusMessage, "Status changed from PendingInbound to PendingOutbound: msg")
 	})
 
 	t.Run("should change status if transition is valid", func(t *testing.T) {
 		s := types.Status{Status: types.CctxStatus_PendingInbound}
 
-		s.ChangeStatus(types.CctxStatus_PendingOutbound, "")
+		s.UpdateStatus(types.CctxStatus_PendingOutbound, "")
+		fmt.Printf("%+v\n", s)
 		assert.Equal(t, s.Status, types.CctxStatus_PendingOutbound)
-		assert.Equal(t, s.StatusMessage, "")
+		assert.Equal(t, s.StatusMessage, fmt.Sprintf(
+			"Status changed from %s to %s",
+			types.CctxStatus_PendingInbound.String(),
+			types.CctxStatus_PendingOutbound.String()),
+		)
 	})
 
 	t.Run("should change status to aborted and msg if transition is invalid", func(t *testing.T) {
 		s := types.Status{Status: types.CctxStatus_PendingOutbound}
 
-		s.ChangeStatus(types.CctxStatus_PendingInbound, "msg")
+		s.UpdateStatus(types.CctxStatus_PendingInbound, "msg")
 		assert.Equal(t, s.Status, types.CctxStatus_Aborted)
 		assert.Equal(
 			t,
 			fmt.Sprintf(
-				"Failed to transition : OldStatus %s , NewStatus %s , MSG : %s :",
+				"Failed to transition status from %s to %s: msg",
 				types.CctxStatus_PendingOutbound.String(),
 				types.CctxStatus_PendingInbound.String(),
-				"msg",
 			),
 			s.StatusMessage,
 		)
