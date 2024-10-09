@@ -27,6 +27,7 @@
 * [2826](https://github.com/zeta-chain/node/pull/2826) - remove unused code from emissions module and add new parameter for fixed block reward amount
 * [2890](https://github.com/zeta-chain/node/pull/2890) - refactor `MsgUpdateChainInfo` to accept a single chain, and add `MsgRemoveChainInfo` to remove a chain
 * [2899](https://github.com/zeta-chain/node/pull/2899) - remove btc deposit fee v1 and improve unit tests
+* [2952](https://github.com/zeta-chain/node/pull/2952) - add error_message to cctx.status
 
 ### Tests
 
