@@ -33,22 +33,6 @@ const (
 	InboundOpCodeMax            uint8 = 0b011 // operation max value
 )
 
-// Encoder is the interface for outbound memo encoders
-type Encoder func(memo *InboundMemo) ([]byte, error)
-
-// Decoder is the interface for inbound memo decoders
-type Decoder func(data []byte, memo *InboundMemo) error
-
-// memoEncoderRegistry contains all registered memo encoders
-var memoEncoderRegistry = map[uint8]Encoder{
-	0: FieldsEncoderV0,
-}
-
-// memoDecoderRegistry contains all registered memo decoders
-var memoDecoderRegistry = map[uint8]Decoder{
-	0: FieldsDecoderV0,
-}
-
 // InboundMemo represents the memo structure for non-EVM chains
 type InboundMemo struct {
 	// Version is the memo Version
@@ -61,37 +45,64 @@ type InboundMemo struct {
 	OpCode uint8
 
 	// FieldsV0 contains the memo fields V0
-	// Note: add a MemoFieldsV1 if major change is needed in the future
+	// Note: add a FieldsV1 if major update is needed in the future
 	FieldsV0
 }
 
-// EncodeMemoToBytes encodes a InboundMemo struct to raw bytes
-func EncodeMemoToBytes(memo *InboundMemo) ([]byte, error) {
-	// get registered memo encoder by version
-	encoder, found := memoEncoderRegistry[memo.Version]
-	if !found {
-		return nil, fmt.Errorf("encoder not found for memo version: %d", memo.Version)
-	}
-
+// EncodeToBytes encodes a InboundMemo struct to raw bytes
+func EncodeToBytes(memo *InboundMemo) ([]byte, error) {
 	// encode memo basics
-	basics := EncodeMemoBasics(memo)
+	basics := encodeBasics(memo)
 
-	// encode memo fields using the encoder
-	data, err := encoder(memo)
+	// encode memo fields based on version
+	var data []byte
+	var err error
+	switch memo.Version {
+	case 0:
+		data, err = memo.FieldsV0.Pack(memo.EncodingFormat)
+	default:
+		return nil, fmt.Errorf("unsupported memo version: %d", memo.Version)
+	}
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to encode memo fields")
+		return nil, errors.Wrapf(err, "failed to pack memo fields version: %d", memo.Version)
 	}
 
 	return append(basics, data...), nil
 }
 
-// EncodeMemoBasics encodes the version, encoding format and operation code
-func EncodeMemoBasics(memo *InboundMemo) []byte {
-	// create 3-byte header
-	head := make([]byte, HeaderSize)
+// DecodeFromBytes decodes a InboundMemo struct from raw bytes
+//
+// Returns an error if given data is not a valid memo
+func DecodeFromBytes(data []byte) (*InboundMemo, error) {
+	memo := &InboundMemo{}
+
+	// decode memo basics
+	err := decodeBasics(data, memo)
+	if err != nil {
+		return nil, err
+	}
+
+	// decode memo fields based on version
+	switch memo.Version {
+	case 0:
+		err = memo.FieldsV0.Unpack(data, memo.EncodingFormat)
+	default:
+		return nil, fmt.Errorf("unsupported memo version: %d", memo.Version)
+	}
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to unpack memo fields version: %d", memo.Version)
+	}
+
+	return memo, nil
+}
+
+// encodeBasics encodes the version, encoding format and operation code
+func encodeBasics(memo *InboundMemo) []byte {
+	// 2 bytes: [identifier + ctrlByte]
+	basics := make([]byte, HeaderSize-1)
 
 	// set byte-0 as memo identifier
-	head[0] = MemoIdentifier
+	basics[0] = MemoIdentifier
 
 	// set version # and encoding format
 	var ctrlByte byte
@@ -100,40 +111,13 @@ func EncodeMemoBasics(memo *InboundMemo) []byte {
 	ctrlByte = zetamath.SetBits(ctrlByte, BitMaskOpCode, memo.OpCode)
 
 	// set ctrlByte to byte-1
-	head[1] = ctrlByte
+	basics[1] = ctrlByte
 
-	return head
+	return basics
 }
 
-// DecodeMemoFromBytes decodes a InboundMemo struct from raw bytes
-//
-// Returns an error if given data is not a valid memo
-func DecodeMemoFromBytes(data []byte) (*InboundMemo, error) {
-	memo := &InboundMemo{}
-
-	// decode memo basics
-	err := DecodeMemoBasics(data, memo)
-	if err != nil {
-		return nil, err
-	}
-
-	// get registered memo decoder by version
-	decoder, found := memoDecoderRegistry[memo.Version]
-	if !found {
-		return nil, fmt.Errorf("decoder not found for memo version: %d", memo.Version)
-	}
-
-	// decode memo fields using the decoer
-	err = decoder(data, memo)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to decode memo fields")
-	}
-
-	return memo, nil
-}
-
-// DecodeMemoBasics decodes version, encoding format and operation code
-func DecodeMemoBasics(data []byte, memo *InboundMemo) error {
+// decodeBasics decodes version, encoding format and operation code
+func decodeBasics(data []byte, memo *InboundMemo) error {
 	// memo data must be longer than the header size
 	if len(data) <= HeaderSize {
 		return errors.New("memo data too short")

@@ -22,8 +22,11 @@ func ABIPack(t *testing.T, args ...memo.CodecArg) []byte {
 	// 2. pack actual data for each fixed-length field (address)
 	for _, arg := range args {
 		switch arg.Type {
-		case memo.ArgTypeBytes: // left-pad for uint8
-			offsetData := abiPad32(t, []byte{byte(offset)}, true)
+		case memo.ArgTypeBytes:
+			// left-pad length as uint16
+			buff := make([]byte, 2)
+			binary.BigEndian.PutUint16(buff, uint16(offset))
+			offsetData := abiPad32(t, buff, true)
 			packedData = append(packedData, offsetData...)
 
 			argLen := len(arg.Arg.([]byte))
@@ -33,8 +36,11 @@ func ABIPack(t *testing.T, args ...memo.CodecArg) []byte {
 				offset += memo.ABIAlignment // only [length]
 			}
 
-		case memo.ArgTypeString: // left-pad for uint8
-			offsetData := abiPad32(t, []byte{byte(offset)}, true)
+		case memo.ArgTypeString:
+			// left-pad length as uint16
+			buff := make([]byte, 2)
+			binary.BigEndian.PutUint16(buff, uint16(offset))
+			offsetData := abiPad32(t, buff, true)
 			packedData = append(packedData, offsetData...)
 
 			argLen := len([]byte(arg.Arg.(string)))
