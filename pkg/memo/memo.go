@@ -12,25 +12,31 @@ const (
 	// MemoIdentifier is the ASCII code of 'Z' (0x5A)
 	MemoIdentifier byte = 0x5A
 
-	// HeaderSize is the size of the memo header
-	HeaderSize = 3
+	// MemoHeaderSize is the size of the memo header: [identifier + ctrlByte1+ ctrlByte2 + dataFlags]
+	MemoHeaderSize = 4
 
-	// MaskVersion is the mask for the version bits(5~7)
-	BitMaskVersion byte = 0b11100000
+	// MemoBasicsSize is the size of the memo basics: [identifier + ctrlByte1 + ctrlByte2]
+	MemoBasicsSize = 3
 
-	// BitMaskEncodingFormat is the mask for the encoding format bits(3~4)
-	BitMaskEncodingFormat byte = 0b00011000
+	// MaskVersion is the mask for the version bits(upper 4 bits)
+	MaskVersion byte = 0b11110000
 
-	// BitMaskOpCode is the mask for the operation code bits(0~2)
-	BitMaskOpCode byte = 0b00000111
+	// MaskEncodingFormat is the mask for the encoding format bits(lower 4 bits)
+	MaskEncodingFormat byte = 0b00001111
+
+	// MaskOpCode is the mask for the operation code bits(upper 4 bits)
+	MaskOpCode byte = 0b11110000
+
+	// MaskCtrlReserved is the mask for reserved control bits (lower 4 bits)
+	MaskCtrlReserved byte = 0b00001111
 )
 
-// Enum for non-EVM chain inbound operation code (3 bits)
+// Enum for non-EVM chain inbound operation code (4 bits)
 const (
-	InboundOpCodeDeposit        uint8 = 0b000 // operation 'deposit'
-	InboundOpCodeDepositAndCall uint8 = 0b001 // operation 'deposit_and_call'
-	InboundOpCodeCall           uint8 = 0b010 // operation 'call'
-	InboundOpCodeMax            uint8 = 0b011 // operation max value
+	OpCodeDeposit        uint8 = 0b0000 // operation 'deposit'
+	OpCodeDepositAndCall uint8 = 0b0001 // operation 'deposit_and_call'
+	OpCodeCall           uint8 = 0b0010 // operation 'call'
+	OpCodeMax            uint8 = 0b0011 // operation max value
 )
 
 // InboundMemo represents the memo structure for non-EVM chains
@@ -44,27 +50,35 @@ type InboundMemo struct {
 	// OpCode is the inbound operation code
 	OpCode uint8
 
+	// Reserved is the reserved control bits
+	Reserved uint8
+
 	// FieldsV0 contains the memo fields V0
 	// Note: add a FieldsV1 if major update is needed in the future
 	FieldsV0
 }
 
 // EncodeToBytes encodes a InboundMemo struct to raw bytes
-func EncodeToBytes(memo *InboundMemo) ([]byte, error) {
+func (m *InboundMemo) EncodeToBytes() ([]byte, error) {
+	// validate memo basics
+	err := m.ValidateBasics()
+	if err != nil {
+		return nil, err
+	}
+
 	// encode memo basics
-	basics := encodeBasics(memo)
+	basics := m.EncodeBasics()
 
 	// encode memo fields based on version
 	var data []byte
-	var err error
-	switch memo.Version {
+	switch m.Version {
 	case 0:
-		data, err = memo.FieldsV0.Pack(memo.EncodingFormat)
+		data, err = m.FieldsV0.Pack(m.EncodingFormat)
 	default:
-		return nil, fmt.Errorf("unsupported memo version: %d", memo.Version)
+		return nil, fmt.Errorf("invalid memo version: %d", m.Version)
 	}
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to pack memo fields version: %d", memo.Version)
+		return nil, errors.Wrapf(err, "failed to pack memo fields version: %d", m.Version)
 	}
 
 	return append(basics, data...), nil
@@ -77,7 +91,13 @@ func DecodeFromBytes(data []byte) (*InboundMemo, error) {
 	memo := &InboundMemo{}
 
 	// decode memo basics
-	err := decodeBasics(data, memo)
+	err := memo.DecodeBasics(data)
+	if err != nil {
+		return nil, err
+	}
+
+	// validate memo basics
+	err = memo.ValidateBasics()
 	if err != nil {
 		return nil, err
 	}
@@ -85,9 +105,9 @@ func DecodeFromBytes(data []byte) (*InboundMemo, error) {
 	// decode memo fields based on version
 	switch memo.Version {
 	case 0:
-		err = memo.FieldsV0.Unpack(data, memo.EncodingFormat)
+		err = memo.FieldsV0.Unpack(data[MemoBasicsSize:], memo.EncodingFormat)
 	default:
-		return nil, fmt.Errorf("unsupported memo version: %d", memo.Version)
+		return nil, fmt.Errorf("invalid memo version: %d", memo.Version)
 	}
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to unpack memo fields version: %d", memo.Version)
@@ -96,58 +116,68 @@ func DecodeFromBytes(data []byte) (*InboundMemo, error) {
 	return memo, nil
 }
 
-// encodeBasics encodes the version, encoding format and operation code
-func encodeBasics(memo *InboundMemo) []byte {
-	// 2 bytes: [identifier + ctrlByte]
-	basics := make([]byte, HeaderSize-1)
+// Validate checks if the memo is valid
+func (m *InboundMemo) ValidateBasics() error {
+	if m.EncodingFormat >= EncodingFmtMax {
+		return fmt.Errorf("invalid encoding format: %d", m.EncodingFormat)
+	}
+
+	if m.OpCode >= OpCodeMax {
+		return fmt.Errorf("invalid operation code: %d", m.OpCode)
+	}
+
+	// reserved control bits must be zero
+	if m.Reserved != 0 {
+		return fmt.Errorf("reserved control bits are not zero: %d", m.Reserved)
+	}
+
+	return nil
+}
+
+// EncodeBasics encodes theidentifier, version, encoding format and operation code
+func (m *InboundMemo) EncodeBasics() []byte {
+	// basics: [identifier + ctrlByte1 + ctrlByte2]
+	basics := make([]byte, MemoBasicsSize)
 
 	// set byte-0 as memo identifier
 	basics[0] = MemoIdentifier
 
-	// set version # and encoding format
-	var ctrlByte byte
-	ctrlByte = zetamath.SetBits(ctrlByte, BitMaskVersion, memo.Version)
-	ctrlByte = zetamath.SetBits(ctrlByte, BitMaskEncodingFormat, memo.EncodingFormat)
-	ctrlByte = zetamath.SetBits(ctrlByte, BitMaskOpCode, memo.OpCode)
+	// set version #, encoding format
+	var ctrlByte1 byte
+	ctrlByte1 = zetamath.SetBits(ctrlByte1, MaskVersion, m.Version)
+	ctrlByte1 = zetamath.SetBits(ctrlByte1, MaskEncodingFormat, m.EncodingFormat)
+	basics[1] = ctrlByte1
 
-	// set ctrlByte to byte-1
-	basics[1] = ctrlByte
+	// set operation code, reserved bits
+	var ctrlByte2 byte
+	ctrlByte2 = zetamath.SetBits(ctrlByte2, MaskOpCode, m.OpCode)
+	ctrlByte2 = zetamath.SetBits(ctrlByte2, MaskCtrlReserved, m.Reserved)
+	basics[2] = ctrlByte2
 
 	return basics
 }
 
-// decodeBasics decodes version, encoding format and operation code
-func decodeBasics(data []byte, memo *InboundMemo) error {
+// DecodeBasics decodes the identifier, version, encoding format and operation code
+func (m *InboundMemo) DecodeBasics(data []byte) error {
 	// memo data must be longer than the header size
-	if len(data) <= HeaderSize {
-		return errors.New("memo data too short")
+	if len(data) <= MemoHeaderSize {
+		return errors.New("memo is too short")
 	}
 
 	// byte-0 is the memo identifier
 	if data[0] != MemoIdentifier {
-		return errors.New("memo identifier mismatch")
+		return fmt.Errorf("invalid memo identifier: %d", data[0])
 	}
 
-	// byte-1 is the control byte
-	ctrlByte := data[1]
+	// extract version #, encoding format
+	ctrlByte1 := data[1]
+	m.Version = zetamath.GetBits(ctrlByte1, MaskVersion)
+	m.EncodingFormat = zetamath.GetBits(ctrlByte1, MaskEncodingFormat)
 
-	// extract version #
-	memo.Version = zetamath.GetBits(ctrlByte, BitMaskVersion)
-	if memo.Version != 0 {
-		return fmt.Errorf("unsupported memo version: %d", memo.Version)
-	}
-
-	// extract encoding format
-	memo.EncodingFormat = zetamath.GetBits(ctrlByte, BitMaskEncodingFormat)
-	if memo.EncodingFormat >= EncodingFmtMax {
-		return fmt.Errorf("invalid encoding format: %d", memo.EncodingFormat)
-	}
-
-	// extract operation code
-	memo.OpCode = zetamath.GetBits(ctrlByte, BitMaskOpCode)
-	if memo.OpCode >= InboundOpCodeMax {
-		return fmt.Errorf("invalid operation code: %d", memo.OpCode)
-	}
+	// extract operation code, reserved bits
+	ctrlByte2 := data[2]
+	m.OpCode = zetamath.GetBits(ctrlByte2, MaskOpCode)
+	m.Reserved = zetamath.GetBits(ctrlByte2, MaskCtrlReserved)
 
 	return nil
 }

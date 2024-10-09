@@ -59,7 +59,7 @@ func Test_V0_Pack(t *testing.T) {
 				},
 			},
 			expectedFlags: 0b00001111, // all fields are set
-			expectedData: sample.CompactPack(t,
+			expectedData: sample.CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes),
@@ -144,7 +144,7 @@ func Test_V0_Unpack(t *testing.T) {
 			name:           "unpack all fields with compact encoding",
 			encodingFormat: memo.EncodingFmtCompactShort,
 			flags:          0b00001111, // all fields are set
-			data: sample.CompactPack(t,
+			data: sample.CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes),
@@ -178,7 +178,7 @@ func Test_V0_Unpack(t *testing.T) {
 			name:           "unpack empty compact encoded payload if flag is not set",
 			encodingFormat: memo.EncodingFmtCompactShort,
 			flags:          0b00000001, // payload flag is set
-			data: sample.CompactPack(t,
+			data: sample.CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload([]byte{})), // empty payload
@@ -195,6 +195,15 @@ func Test_V0_Unpack(t *testing.T) {
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes)),
 			errMsg: "failed to unpack arguments",
+		},
+		{
+			name:           "failed to unpack data if reserved flag is not zero",
+			encodingFormat: memo.EncodingFmtABI,
+			flags:          0b00100001, // payload flag and reserved bit5 are set
+			data: sample.ABIPack(t,
+				memo.ArgReceiver(fAddress),
+				memo.ArgPayload(fBytes)),
+			errMsg: "reserved flag bits are not zero",
 		},
 	}
 

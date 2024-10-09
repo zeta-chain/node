@@ -10,6 +10,17 @@ import (
 	"github.com/zeta-chain/node/pkg/memo"
 )
 
+// MemoHead is a helper function to create a memo head
+// Note: all arguments are assume to be <= 0b1111 for simplicity.
+func MemoHead(version, encodingFmt, opCode, reserved, flags uint8) []byte {
+	head := make([]byte, memo.MemoHeaderSize)
+	head[0] = memo.MemoIdentifier
+	head[1] = version<<4 | encodingFmt
+	head[2] = opCode<<4 | reserved
+	head[3] = flags
+	return head
+}
+
 // ABIPack is a helper function to simulates the abi.Pack function.
 // Note: all arguments are assumed to be <= 32 bytes for simplicity.
 func ABIPack(t *testing.T, args ...memo.CodecArg) []byte {
@@ -65,7 +76,7 @@ func ABIPack(t *testing.T, args ...memo.CodecArg) []byte {
 
 // CompactPack is a helper function to pack arguments into compact encoded data
 // Note: all arguments are assumed to be <= 65535 bytes for simplicity.
-func CompactPack(_ *testing.T, encodingFmt uint8, args ...memo.CodecArg) []byte {
+func CompactPack(encodingFmt uint8, args ...memo.CodecArg) []byte {
 	var (
 		length     int
 		packedData []byte

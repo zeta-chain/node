@@ -1,6 +1,8 @@
 package memo
 
 import (
+	"fmt"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
@@ -15,6 +17,11 @@ const (
 	bitPosRevertAddress uint8 = 1 // revertAddress
 	bitPosAbortAddress  uint8 = 2 // abortAddress
 	bitPosRevertMessage uint8 = 3 // revertMessage
+)
+
+const (
+	// MaskFlagReserved is the mask for reserved data flags
+	MaskFlagReserved = 0b11110000
 )
 
 var _ Fields = (*FieldsV0)(nil)
@@ -113,14 +120,20 @@ func (f *FieldsV0) unpackFields(codec Codec, data []byte) error {
 
 	// add 'abortAddress' argument optionally
 	var abortAddress common.Address
-	if zetamath.IsBitSet(dataFlags, bitPosRevertMessage) {
+	if zetamath.IsBitSet(dataFlags, bitPosAbortAddress) {
 		codec.AddArguments(ArgAbortAddress(&abortAddress))
 	}
 
 	// add 'revertMessage' argument optionally
-	f.RevertOptions.CallOnRevert = zetamath.IsBitSet(dataFlags, bitPosAbortAddress)
+	f.RevertOptions.CallOnRevert = zetamath.IsBitSet(dataFlags, bitPosRevertMessage)
 	if f.RevertOptions.CallOnRevert {
 		codec.AddArguments(ArgRevertMessage(&f.RevertOptions.RevertMessage))
+	}
+
+	// all reserved flag bits must be zero
+	reserved := zetamath.GetBits(dataFlags, MaskFlagReserved)
+	if reserved != 0 {
+		return fmt.Errorf("reserved flag bits are not zero: %d", reserved)
 	}
 
 	// unpack the data (after flags) into codec arguments
