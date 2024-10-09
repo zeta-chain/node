@@ -61,6 +61,8 @@ func (msg *MsgWithdraw) Hash() [32]byte {
 	var message []byte
 	buff := make([]byte, 8)
 
+	message = append(message, []byte("withdraw")...)
+
 	binary.BigEndian.PutUint64(buff, msg.chainID)
 	message = append(message, buff...)
 

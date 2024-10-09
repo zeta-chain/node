@@ -122,12 +122,13 @@ func (signer *Signer) TryProcessOutbound(
 	chainID := signer.Chain().ChainId
 	nonce := params.TssNonce
 	coinType := cctx.InboundParams.CoinType
-	relayedMsg := strings.Split(cctx.RelayedMessage, ":")
-	if len(relayedMsg) != 2 {
-		return
-	}
 
 	if coinType == coin.CoinType_Cmd {
+		relayedMsg := strings.Split(cctx.RelayedMessage, ":")
+		if len(relayedMsg) != 2 {
+			return
+		}
+
 		pk, err := solana.PublicKeyFromBase58(relayedMsg[1])
 		if err != nil {
 			signer.Logger().
