@@ -296,15 +296,24 @@ start-v2-test: zetanode
 ###############################################################################
 
 # build from source only if requested
+# NODE_VERSION and NODE_COMMIT must be set as old-runtime depends on lastest-runtime
 ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade from source"
-	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source --build-arg OLD_VERSION='release/v20' .
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source \
+		--build-arg OLD_VERSION='release/v20' \
+		--build-arg NODE_VERSION=$(NODE_VERSION) \
+		--build-arg NODE_COMMIT=$(NODE_COMMIT)
+		.
 .PHONY: zetanode-upgrade
 else
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade from binaries"
-	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime --build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v20.0.2' .
+	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime \
+	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v20.0.2' \
+	--build-arg NODE_VERSION=$(NODE_VERSION) \
+	--build-arg NODE_COMMIT=$(NODE_COMMIT) \
+	.
 .PHONY: zetanode-upgrade
 endif
 
