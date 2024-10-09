@@ -175,15 +175,6 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		require.Equal(t, newChain, ob.Chain())
 	})
 
-	t.Run("should be able to update chain params", func(t *testing.T) {
-		ob := createObserver(t, chain, defaultAlertLatency)
-
-		// update chain params
-		newChainParams := *sample.ChainParams(chains.BscMainnet.ChainId)
-		ob = ob.WithChainParams(newChainParams)
-		require.True(t, observertypes.ChainParamsEqual(newChainParams, ob.ChainParams()))
-	})
-
 	t.Run("should be able to update zetacore client", func(t *testing.T) {
 		ob := createObserver(t, chain, defaultAlertLatency)
 
