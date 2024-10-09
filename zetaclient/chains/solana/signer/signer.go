@@ -151,7 +151,9 @@ func (signer *Signer) TryProcessOutbound(
 		// sign the withdraw transaction by relayer key
 		tx, err := signer.SignWhitelistTx(ctx, contracts.NewMsgWhitelist(pk, whitelistEntryPDA))
 		if err != nil {
-			logger.Error().Err(err).Msgf("TryProcessOutbound: SignWhitelistTx error for chain %d nonce %d", chainID, nonce)
+			logger.Error().
+				Err(err).
+				Msgf("TryProcessOutbound: SignWhitelistTx error for chain %d nonce %d", chainID, nonce)
 			return
 		}
 

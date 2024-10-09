@@ -3,6 +3,7 @@ package e2etests
 import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"

@@ -117,7 +117,11 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey) *solana.Wallet {
 		tokenAccount.PublicKey(),
 	).Build()
 
-	signedTx := r.CreateSignedTransaction([]solana.Instruction{createAccountInstruction, initializeMintInstruction}, *privateKey, []solana.PrivateKey{tokenAccount.PrivateKey})
+	signedTx := r.CreateSignedTransaction(
+		[]solana.Instruction{createAccountInstruction, initializeMintInstruction},
+		*privateKey,
+		[]solana.PrivateKey{tokenAccount.PrivateKey},
+	)
 
 	// broadcast the transaction and wait for finalization
 	_, out := r.BroadcastTxSync(signedTx)

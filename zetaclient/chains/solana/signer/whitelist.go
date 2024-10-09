@@ -7,6 +7,7 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
+
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 )
 
@@ -24,7 +25,14 @@ func (signer *Signer) SignWhitelistTx(ctx context.Context, msg *contracts.MsgWhi
 
 	// attach required accounts to the instruction
 	privkey := signer.relayerKey
-	attachWhitelistAccounts(&inst, privkey.PublicKey(), signer.pda, msg.WhitelistCandidate(), msg.WhitelistEntry(), signer.gatewayID)
+	attachWhitelistAccounts(
+		&inst,
+		privkey.PublicKey(),
+		signer.pda,
+		msg.WhitelistCandidate(),
+		msg.WhitelistEntry(),
+		signer.gatewayID,
+	)
 
 	// get a recent blockhash
 	recent, err := signer.client.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
