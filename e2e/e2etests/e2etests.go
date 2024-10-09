@@ -61,7 +61,7 @@ const (
 	TestSolanaDepositAndCallRefundName = "solana_deposit_and_call_refund"
 	TestSolanaDepositRestrictedName    = "solana_deposit_restricted"
 	TestSolanaWithdrawRestrictedName   = "solana_withdraw_restricted"
-
+	TestSolanaWhitelistSPLName         = "solana_whitelist_spl"
 	/**
 	 * TON tests
 	 */
@@ -437,6 +437,12 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSolanaWithdrawRestricted,
+	),
+	runner.NewE2ETest(
+		TestSolanaWhitelistSPLName,
+		"whitelist SPL",
+		[]runner.ArgDefinition{},
+		TestSolanaWhitelistSPL,
 	),
 	/*
 	 TON tests

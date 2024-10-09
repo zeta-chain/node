@@ -42,7 +42,7 @@ const (
 // GatewayAddresses contains constants gateway addresses for testing
 var GatewayAddresses = map[int64]string{
 	// Gateway address on Solana devnet
-	chains.SolanaDevnet.ChainId: "ZETAjseVjuFsxdRxo6MmTCvqFwb3ZHUx56Co3vCmGis",
+	chains.SolanaDevnet.ChainId: "BaDmykPHVwPQNY9SXQnJU8JPXdN89z3ib7qEfhNfkWRg",
 }
 
 // ConnectorAddresses contains constants ERC20 connector addresses for testing

@@ -2,6 +2,8 @@ package signer
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"cosmossdk.io/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -121,6 +123,49 @@ func (signer *Signer) TryProcessOutbound(
 	chainID := signer.Chain().ChainId
 	nonce := params.TssNonce
 	coinType := cctx.InboundParams.CoinType
+	relayedMsg := strings.Split(cctx.RelayedMessage, ":")
+	if len(relayedMsg) != 2 {
+		return
+	}
+	fmt.Println("debug ", coinType, relayedMsg[1])
+
+	if coinType == coin.CoinType_Cmd {
+		pk, err := solana.PublicKeyFromBase58(relayedMsg[1])
+		if err != nil {
+			fmt.Println("err decoding ", err.Error())
+		}
+
+		// sign the withdraw transaction by relayer key
+		tx, err := signer.SignWhitelistTx(ctx, contracts.NewMsgWhitelist(pk))
+		if err != nil {
+			logger.Error().Err(err).Msgf("TryProcessOutbound: SignGasWithdraw error for chain %d nonce %d", chainID, nonce)
+			return
+		}
+
+		// broadcast the signed tx to the Solana network with preflight check
+		txSig, err := signer.client.SendTransactionWithOpts(
+			ctx,
+			tx,
+			// Commitment "finalized" is too conservative for preflight check and
+			// it results in repeated broadcast attempts that only 1 will succeed.
+			// Commitment "processed" will simulate tx against more recent state
+			// thus fails faster once a tx is already broadcasted and processed by the cluster.
+			// This reduces the number of "failed" txs due to repeated broadcast attempts.
+			rpc.TransactionOpts{PreflightCommitment: rpc.CommitmentProcessed},
+		)
+		if err != nil {
+			signer.Logger().
+				Std.Warn().
+				Err(err).
+				Msgf("TryProcessOutbound: broadcast error for chain %d nonce %d", chainID, nonce)
+			return
+		}
+
+		// report the outbound to the outbound tracker
+		signer.reportToOutboundTracker(ctx, zetacoreClient, chainID, nonce, txSig, logger)
+		return
+	}
+
 	if coinType != coin.CoinType_Gas {
 		logger.Error().
 			Msgf("TryProcessOutbound: can only send SOL to the Solana network for chain %d nonce %d", chainID, nonce)

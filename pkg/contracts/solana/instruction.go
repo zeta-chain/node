@@ -116,3 +116,27 @@ func RecoverSigner(msgHash []byte, msgSig []byte) (signer common.Address, err er
 
 	return crypto.PubkeyToAddress(*pubKey), nil
 }
+
+// WhitelistInstructionParams contains the parameters for a gateway whitelist_spl_mint instruction
+type WhitelistInstructionParams struct {
+	// Discriminator is the unique identifier for the whitelist_spl_mint instruction
+	Discriminator [8]byte
+}
+
+// ParseInstructionWhitelist tries to parse the instruction as a 'whitelist_spl_mint'.
+// It returns nil if the instruction can't be parsed as a 'whitelist_spl_mint'.
+func ParseInstructionWhitelist(instruction solana.CompiledInstruction) (*WhitelistInstructionParams, error) {
+	// try deserializing instruction as a 'whitelist_spl_mint'
+	inst := &WhitelistInstructionParams{}
+	err := borsh.Deserialize(inst, instruction.Data)
+	if err != nil {
+		return nil, errors.Wrap(err, "error deserializing instruction")
+	}
+
+	// check the discriminator to ensure it's a 'whitelist_spl_mint' instruction
+	if inst.Discriminator != DiscriminatorWhitelistSplMint() {
+		return nil, fmt.Errorf("not a whitelist_spl_mint instruction: %v", inst.Discriminator)
+	}
+
+	return inst, nil
+}

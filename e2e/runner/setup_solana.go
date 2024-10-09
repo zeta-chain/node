@@ -55,7 +55,7 @@ func (r *E2ERunner) SetSolanaContracts(deployerPrivateKey string) {
 	require.NoError(r, err)
 
 	// create and sign the transaction
-	signedTx := r.CreateSignedTransaction([]solana.Instruction{&inst}, privkey)
+	signedTx := r.CreateSignedTransaction([]solana.Instruction{&inst}, privkey, []solana.PrivateKey{})
 
 	// broadcast the transaction and wait for finalization
 	_, out := r.BroadcastTxSync(signedTx)
