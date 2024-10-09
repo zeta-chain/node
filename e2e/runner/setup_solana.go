@@ -43,7 +43,6 @@ func (r *E2ERunner) SetSolanaContracts(deployerPrivateKey string) {
 	accountSlice = append(accountSlice, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
 	accountSlice = append(accountSlice, solana.Meta(pdaComputed).WRITE())
 	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
-	accountSlice = append(accountSlice, solana.Meta(r.GatewayProgram))
 	inst.ProgID = r.GatewayProgram
 	inst.AccountValues = accountSlice
 

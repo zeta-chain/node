@@ -24,7 +24,7 @@ func (signer *Signer) SignWhitelistTx(ctx context.Context, msg *contracts.MsgWhi
 
 	// attach required accounts to the instruction
 	privkey := signer.relayerKey
-	attachWhitelistAccounts(&inst, privkey.PublicKey(), signer.pda, msg.WhitelistCandidate(), signer.gatewayID)
+	attachWhitelistAccounts(&inst, privkey.PublicKey(), signer.pda, msg.WhitelistCandidate(), msg.WhitelistEntry(), signer.gatewayID)
 
 	// get a recent blockhash
 	recent, err := signer.client.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
@@ -67,10 +67,12 @@ func attachWhitelistAccounts(
 	signer solana.PublicKey,
 	pda solana.PublicKey,
 	whitelistCandidate solana.PublicKey,
+	whitelistEntry solana.PublicKey,
 	gatewayID solana.PublicKey,
 ) {
 	// attach required accounts to the instruction
 	var accountSlice []*solana.AccountMeta
+	accountSlice = append(accountSlice, solana.Meta(whitelistEntry).WRITE())
 	accountSlice = append(accountSlice, solana.Meta(whitelistCandidate))
 	accountSlice = append(accountSlice, solana.Meta(pda).WRITE())
 	accountSlice = append(accountSlice, solana.Meta(signer).WRITE().SIGNER())

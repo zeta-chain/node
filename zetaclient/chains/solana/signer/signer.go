@@ -2,7 +2,6 @@ package signer
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"cosmossdk.io/errors"
@@ -127,18 +126,31 @@ func (signer *Signer) TryProcessOutbound(
 	if len(relayedMsg) != 2 {
 		return
 	}
-	fmt.Println("debug ", coinType, relayedMsg[1])
 
 	if coinType == coin.CoinType_Cmd {
 		pk, err := solana.PublicKeyFromBase58(relayedMsg[1])
 		if err != nil {
-			fmt.Println("err decoding ", err.Error())
+			signer.Logger().
+				Std.Error().
+				Err(err).
+				Msgf("TryProcessOutbound: error decoding spl from relayed msg")
+			return
+		}
+
+		seed := [][]byte{[]byte("whitelist"), pk.Bytes()}
+		whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, signer.gatewayID)
+		if err != nil {
+			signer.Logger().
+				Std.Error().
+				Err(err).
+				Msgf("TryProcessOutbound: error calculating whitelistEntry pda")
+			return
 		}
 
 		// sign the withdraw transaction by relayer key
-		tx, err := signer.SignWhitelistTx(ctx, contracts.NewMsgWhitelist(pk))
+		tx, err := signer.SignWhitelistTx(ctx, contracts.NewMsgWhitelist(pk, whitelistEntryPDA))
 		if err != nil {
-			logger.Error().Err(err).Msgf("TryProcessOutbound: SignGasWithdraw error for chain %d nonce %d", chainID, nonce)
+			logger.Error().Err(err).Msgf("TryProcessOutbound: SignWhitelistTx error for chain %d nonce %d", chainID, nonce)
 			return
 		}
 

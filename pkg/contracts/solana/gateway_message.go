@@ -110,14 +110,19 @@ func (msg *MsgWithdraw) Signer() (common.Address, error) {
 type MsgWhitelist struct {
 	// whitelistCandidate is the whitelist candidate
 	whitelistCandidate solana.PublicKey
+	whitelistEntry     solana.PublicKey
 }
 
 // NewMsgWhitelist returns a new whitelist_spl_mint message
-func NewMsgWhitelist(whitelistCandidate solana.PublicKey) *MsgWhitelist {
-	return &MsgWhitelist{whitelistCandidate: whitelistCandidate}
+func NewMsgWhitelist(whitelistCandidate solana.PublicKey, whitelistEntry solana.PublicKey) *MsgWhitelist {
+	return &MsgWhitelist{whitelistCandidate: whitelistCandidate, whitelistEntry: whitelistEntry}
 }
 
 // To returns the recipient address of the message
 func (msg *MsgWhitelist) WhitelistCandidate() solana.PublicKey {
 	return msg.whitelistCandidate
+}
+
+func (msg *MsgWhitelist) WhitelistEntry() solana.PublicKey {
+	return msg.whitelistEntry
 }
