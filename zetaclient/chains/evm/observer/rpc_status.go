@@ -17,7 +17,7 @@ func (ob *Observer) watchRPCStatus(ctx context.Context) error {
 	for {
 		select {
 		case <-ticker.C:
-			if !ob.GetChainParams().IsSupported {
+			if !ob.ChainParams().IsSupported {
 				continue
 			}
 

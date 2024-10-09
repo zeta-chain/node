@@ -1,12 +1,15 @@
 package ticker
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"testing"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTicker(t *testing.T) {
@@ -148,7 +151,7 @@ func TestTicker(t *testing.T) {
 		// ASSERT
 		assert.ErrorContains(t, err, "panic during ticker run: oops")
 		// assert that we get error with the correct line number
-		assert.ErrorContains(t, err, "ticker_test.go:142")
+		assert.ErrorContains(t, err, "ticker_test.go:145")
 	})
 
 	t.Run("Nil panic", func(t *testing.T) {
@@ -173,7 +176,7 @@ func TestTicker(t *testing.T) {
 			"panic during ticker run: runtime error: invalid memory address or nil pointer dereference",
 		)
 		// assert that we get error with the correct line number
-		assert.ErrorContains(t, err, "ticker_test.go:162")
+		assert.ErrorContains(t, err, "ticker_test.go:165")
 	})
 
 	t.Run("Run as a single call", func(t *testing.T) {
@@ -196,5 +199,52 @@ func TestTicker(t *testing.T) {
 		// ASSERT
 		assert.ErrorIs(t, err, context.DeadlineExceeded)
 		assert.Equal(t, 2, counter)
+	})
+
+	t.Run("With stop channel", func(t *testing.T) {
+		// ARRANGE
+		var (
+			tickerInterval = 100 * time.Millisecond
+			counter        = 0
+
+			stopChan        = make(chan struct{})
+			sleepBeforeStop = 5*tickerInterval + (10 * time.Millisecond)
+		)
+
+		task := func(ctx context.Context, _ *Ticker) error {
+			t.Logf("Tick %d", counter)
+			counter++
+
+			return nil
+		}
+
+		// ACT
+		go func() {
+			time.Sleep(sleepBeforeStop)
+			close(stopChan)
+		}()
+
+		err := Run(context.Background(), tickerInterval, task, WithStopChan(stopChan))
+
+		// ASSERT
+		require.NoError(t, err)
+		require.Equal(t, 6, counter) // initial tick + 5 more ticks
+	})
+
+	t.Run("With logger", func(t *testing.T) {
+		// ARRANGE
+		out := &bytes.Buffer{}
+		logger := zerolog.New(out)
+
+		// ACT
+		task := func(ctx context.Context, _ *Ticker) error {
+			return fmt.Errorf("hey")
+		}
+
+		err := Run(context.Background(), time.Second, task, WithLogger(logger, "my-task"))
+
+		// ARRANGE
+		require.ErrorContains(t, err, "hey")
+		require.Contains(t, out.String(), `{"level":"info","ticker_name":"my-task","message":"Ticker stopped"}`)
 	})
 }

@@ -73,7 +73,7 @@ func TestChain_Validate(t *testing.T) {
 			chain: chains.Chain{
 				ChainId:     42,
 				Name:        "foo",
-				Network:     chains.Network_solana + 1,
+				Network:     chains.Network_ton + 1,
 				NetworkType: chains.NetworkType_testnet,
 				Vm:          chains.Vm_evm,
 				Consensus:   chains.Consensus_op_stack,
@@ -101,7 +101,7 @@ func TestChain_Validate(t *testing.T) {
 				Name:        "foo",
 				Network:     chains.Network_base,
 				NetworkType: chains.NetworkType_devnet,
-				Vm:          chains.Vm_svm + 1,
+				Vm:          chains.Vm_tvm + 1,
 				Consensus:   chains.Consensus_op_stack,
 				IsExternal:  true,
 			},
@@ -115,7 +115,7 @@ func TestChain_Validate(t *testing.T) {
 				Network:     chains.Network_base,
 				NetworkType: chains.NetworkType_devnet,
 				Vm:          chains.Vm_evm,
-				Consensus:   chains.Consensus_solana_consensus + 1,
+				Consensus:   chains.Consensus_catchain_consensus + 1,
 				IsExternal:  true,
 			},
 			errStr: "invalid consensus",
@@ -300,6 +300,19 @@ func TestDecodeAddressFromChainID(t *testing.T) {
 			chainID: chains.SolanaMainnet.ChainId,
 			addr:    "DCAK36VfExkPdAkYUQg6ewgxyinvcEyPLyHjRbmveKFw",
 			want:    []byte("DCAK36VfExkPdAkYUQg6ewgxyinvcEyPLyHjRbmveKFw"),
+		},
+		{
+			name:    "TON",
+			chainID: chains.TONMainnet.ChainId,
+			addr:    "0:55798cb7b87168251a7c39f6806b8c202f6caa0f617a76f4070b3fdacfd056a1",
+			want:    []byte("0:55798cb7b87168251a7c39f6806b8c202f6caa0f617a76f4070b3fdacfd056a1"),
+		},
+		{
+			name:    "TON",
+			chainID: chains.TONMainnet.ChainId,
+			// human friendly address should be always represented in raw format
+			addr: "EQB3ncyBUTjZUA5EnFKR5_EnOMI9V1tTEAAPaiU71gc4TiUt",
+			want: []byte("0:779dcc815138d9500e449c5291e7f12738c23d575b5310000f6a253bd607384e"),
 		},
 		{
 			name:    "Non-supported chain",
