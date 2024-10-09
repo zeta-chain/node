@@ -406,7 +406,10 @@ func (zts ZetaTxServer) DeploySystemContracts(
 
 // DeployZRC20s deploys the ZRC20 contracts
 // returns the addresses of erc20 zrc20
-func (zts ZetaTxServer) DeployZRC20s(accountOperational, accountAdmin, erc20Addr string) (string, error) {
+func (zts ZetaTxServer) DeployZRC20s(
+	accountOperational, accountAdmin, erc20Addr string,
+	skipChain func(chainID int64) bool,
+) (string, error) {
 	// retrieve account
 	accOperational, err := zts.clientCtx.Keyring.Key(accountOperational)
 	if err != nil {
@@ -440,6 +443,11 @@ func (zts ZetaTxServer) DeployZRC20s(accountOperational, accountAdmin, erc20Addr
 	}
 
 	deploy := func(msg *fungibletypes.MsgDeployFungibleCoinZRC20) (string, error) {
+		// noop
+		if skipChain(msg.ForeignChainId) {
+			return "", nil
+		}
+
 		res, err := zts.BroadcastTx(deployerAccount, msg)
 		if err != nil {
 			return "", fmt.Errorf("failed to deploy eth zrc20: %w", err)

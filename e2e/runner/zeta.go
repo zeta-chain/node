@@ -14,6 +14,7 @@ import (
 	connectorzevm "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zetaconnectorzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -314,4 +315,15 @@ func (r *E2ERunner) WithdrawERC20(amount *big.Int) *ethtypes.Transaction {
 	}
 
 	return tx
+}
+
+// skipChainOperations checks if the chain operations should be skipped for E2E
+func (r *E2ERunner) skipChainOperations(chainID int64) bool {
+	skip := r.IsRunningUpgrade() && chains.IsTONChain(chainID, nil)
+
+	if skip {
+		r.Logger.Print("Skipping chain operations for chain %d", chainID)
+	}
+
+	return skip
 }
