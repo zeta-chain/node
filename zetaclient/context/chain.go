@@ -165,6 +165,10 @@ func (c Chain) IsSolana() bool {
 	return chains.IsSolanaChain(c.ID(), c.registry.additionalChains)
 }
 
+func (c Chain) IsTON() bool {
+	return chains.IsTONChain(c.ID(), c.registry.additionalChains)
+}
+
 // RelayerKeyPassword returns the relayer key password for the chain
 func (c Chain) RelayerKeyPassword() string {
 	network := c.RawChain().Network

@@ -96,7 +96,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 
 		from, err := chains.DecodeAddressFromChainID(inboundSenderChainID, inboundSender, k.GetAuthorityKeeper().GetAdditionalChainList(ctx))
 		if err != nil {
-			return false, fmt.Errorf("HandleEVMDeposit: unable to decode address: %s", err.Error())
+			return false, fmt.Errorf("HandleEVMDeposit: unable to decode address: %w", err)
 		}
 
 		evmTxResponse, contractCall, err := k.fungibleKeeper.ZRC20DepositAndCallContract(

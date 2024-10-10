@@ -32,5 +32,10 @@ func TestSolanaDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 
 	// Check the error carries the revert executed.
-	require.Contains(r, cctx.CctxStatus.ErrorMessage, "revert executed")
+	// tolerate the error in both the ErrorMessage field and the StatusMessage field
+	if cctx.CctxStatus.ErrorMessage != "" {
+		require.Contains(r, cctx.CctxStatus.ErrorMessage, "revert executed")
+	} else {
+		require.Contains(r, cctx.CctxStatus.StatusMessage, utils.ErrHashRevertFoo)
+	}
 }

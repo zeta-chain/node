@@ -39,15 +39,21 @@ const (
 
 // ChainObserver is the interface for chain observer
 type ChainObserver interface {
+	// Start starts the observer
 	Start(ctx context.Context)
+
+	// Stop stops the observer
 	Stop()
-	VoteOutboundIfConfirmed(
-		ctx context.Context,
-		cctx *crosschaintypes.CrossChainTx,
-	) (bool, error)
+
+	// ChainParams returns observer chain params (might be out of date with zetacore)
+	ChainParams() observertypes.ChainParams
+
+	// SetChainParams sets observer chain params
 	SetChainParams(observertypes.ChainParams)
-	GetChainParams() observertypes.ChainParams
-	WatchInboundTracker(ctx context.Context) error
+
+	// VoteOutboundIfConfirmed checks outbound status and returns (continueKeySign, error)
+	// todo we should make this simpler.
+	VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschaintypes.CrossChainTx) (bool, error)
 }
 
 // ChainSigner is the interface to sign transactions for a chain

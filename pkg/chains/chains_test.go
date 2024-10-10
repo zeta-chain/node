@@ -36,6 +36,7 @@ func TestChainListByNetworkType(t *testing.T) {
 				chains.OptimismMainnet,
 				chains.BaseMainnet,
 				chains.SolanaMainnet,
+				chains.TONMainnet,
 			},
 		},
 		{
@@ -54,6 +55,7 @@ func TestChainListByNetworkType(t *testing.T) {
 				chains.OptimismSepolia,
 				chains.BaseSepolia,
 				chains.SolanaDevnet,
+				chains.TONTestnet,
 			},
 		},
 		{
@@ -64,6 +66,7 @@ func TestChainListByNetworkType(t *testing.T) {
 				chains.BitcoinRegtest,
 				chains.GoerliLocalnet,
 				chains.SolanaLocalnet,
+				chains.TONLocalnet,
 			},
 		},
 	}
@@ -132,6 +135,11 @@ func TestChainListByNetwork(t *testing.T) {
 			chains.Network_solana,
 			[]chains.Chain{chains.SolanaMainnet, chains.SolanaDevnet, chains.SolanaLocalnet},
 		},
+		{
+			"TON",
+			chains.Network_ton,
+			[]chains.Chain{chains.TONMainnet, chains.TONTestnet, chains.TONLocalnet},
+		},
 	}
 
 	for _, lt := range listTests {
@@ -168,6 +176,9 @@ func TestDefaultChainList(t *testing.T) {
 		chains.SolanaMainnet,
 		chains.SolanaDevnet,
 		chains.SolanaLocalnet,
+		chains.TONMainnet,
+		chains.TONTestnet,
+		chains.TONLocalnet,
 	}, chains.DefaultChainsList())
 }
 
@@ -202,6 +213,9 @@ func TestChainListByGateway(t *testing.T) {
 				chains.SolanaMainnet,
 				chains.SolanaDevnet,
 				chains.SolanaLocalnet,
+				chains.TONMainnet,
+				chains.TONTestnet,
+				chains.TONLocalnet,
 			},
 		},
 		{
@@ -246,6 +260,9 @@ func TestExternalChainList(t *testing.T) {
 		chains.SolanaMainnet,
 		chains.SolanaDevnet,
 		chains.SolanaLocalnet,
+		chains.TONMainnet,
+		chains.TONTestnet,
+		chains.TONLocalnet,
 	}, chains.ExternalChainList([]chains.Chain{}))
 }
 

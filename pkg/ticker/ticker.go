@@ -34,16 +34,18 @@ import (
 	"sync"
 	"time"
 
-	"cosmossdk.io/errors"
+	"github.com/rs/zerolog"
 )
+
+// Task is a function that will be called by the Ticker
+type Task func(ctx context.Context, t *Ticker) error
 
 // Ticker represents a ticker that will run a function periodically.
 // It also invokes BEFORE ticker starts.
 type Ticker struct {
-	interval   time.Duration
-	ticker     *time.Ticker
-	task       Task
-	signalChan chan struct{}
+	interval time.Duration
+	ticker   *time.Ticker
+	task     Task
 
 	// runnerMu is a mutex to prevent double run
 	runnerMu sync.Mutex
@@ -51,25 +53,47 @@ type Ticker struct {
 	// stateMu is a mutex to prevent concurrent SetInterval calls
 	stateMu sync.Mutex
 
-	stopped bool
+	stopped   bool
+	ctxCancel context.CancelFunc
+
+	externalStopChan <-chan struct{}
+	logger           zerolog.Logger
 }
 
-// Task is a function that will be called by the Ticker
-type Task func(ctx context.Context, t *Ticker) error
+// Opt is a configuration option for the Ticker.
+type Opt func(*Ticker)
+
+// WithLogger sets the logger for the Ticker.
+func WithLogger(log zerolog.Logger, name string) Opt {
+	return func(t *Ticker) {
+		t.logger = log.With().Str("ticker_name", name).Logger()
+	}
+}
+
+// WithStopChan sets the stop channel for the Ticker.
+// Please note that stopChan is NOT signalChan.
+// Stop channel is a trigger for invoking ticker.Stop();
+func WithStopChan(stopChan <-chan struct{}) Opt {
+	return func(cfg *Ticker) { cfg.externalStopChan = stopChan }
+}
 
 // New creates a new Ticker.
-func New(interval time.Duration, runner Task) *Ticker {
-	return &Ticker{interval: interval, task: runner}
+func New(interval time.Duration, task Task, opts ...Opt) *Ticker {
+	t := &Ticker{
+		interval: interval,
+		task:     task,
+	}
+
+	for _, opt := range opts {
+		opt(t)
+	}
+
+	return t
 }
 
 // Run creates and runs a new Ticker.
-func Run(ctx context.Context, interval time.Duration, task Task) error {
-	return New(interval, task).Run(ctx)
-}
-
-// SecondsFromUint64 converts uint64 to time.Duration in seconds.
-func SecondsFromUint64(d uint64) time.Duration {
-	return time.Duration(d) * time.Second
+func Run(ctx context.Context, interval time.Duration, task Task, opts ...Opt) error {
+	return New(interval, task, opts...).Run(ctx)
 }
 
 // Run runs the ticker by blocking current goroutine. It also invokes BEFORE ticker starts.
@@ -96,24 +120,33 @@ func (t *Ticker) Run(ctx context.Context) (err error) {
 	defer t.runnerMu.Unlock()
 
 	// setup
+	ctx, t.ctxCancel = context.WithCancel(ctx)
 	t.ticker = time.NewTicker(t.interval)
-	t.signalChan = make(chan struct{})
 	t.stopped = false
 
 	// initial run
 	if err := t.task(ctx, t); err != nil {
-		return errors.Wrap(err, "ticker task failed")
+		t.Stop()
+		return fmt.Errorf("ticker task failed (initial run): %w", err)
 	}
 
 	for {
 		select {
 		case <-ctx.Done():
+			// if task is finished (i.e. last tick completed BEFORE ticker.Stop(),
+			// then we need to return nil)
+			if t.stopped {
+				return nil
+			}
 			return ctx.Err()
 		case <-t.ticker.C:
+			// If another goroutine calls ticker.Stop() while the current tick is running,
+			// Then it's okay to return ctx error
 			if err := t.task(ctx, t); err != nil {
-				return errors.Wrap(err, "ticker task failed")
+				return fmt.Errorf("ticker task failed: %w", err)
 			}
-		case <-t.signalChan:
+		case <-t.externalStopChan:
+			t.Stop()
 			return nil
 		}
 	}
@@ -139,11 +172,18 @@ func (t *Ticker) Stop() {
 	defer t.stateMu.Unlock()
 
 	// noop
-	if t.stopped || t.signalChan == nil {
+	if t.stopped {
 		return
 	}
 
-	close(t.signalChan)
+	t.ctxCancel()
 	t.stopped = true
 	t.ticker.Stop()
+
+	t.logger.Info().Msgf("Ticker stopped")
+}
+
+// SecondsFromUint64 converts uint64 to time.Duration in seconds.
+func SecondsFromUint64(d uint64) time.Duration {
+	return time.Duration(d) * time.Second
 }

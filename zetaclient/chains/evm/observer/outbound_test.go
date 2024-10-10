@@ -105,7 +105,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		ob.SetTxNReceipt(nonce, receipt, outbound)
 
 		// set connector contract address to an arbitrary address to make event parsing fail
-		chainParamsNew := ob.GetChainParams()
+		chainParamsNew := ob.ChainParams()
 		chainParamsNew.ConnectorContractAddress = sample.EthAddress().Hex()
 		ob.SetChainParams(chainParamsNew)
 		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
