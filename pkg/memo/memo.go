@@ -22,8 +22,8 @@ type InboundMemo struct {
 //   - Any provided 'DataFlags' is ignored as they are calculated based on the fields set in the memo.
 //   - The 'RevertGasLimit' is not used for now for non-EVM chains.
 func (m *InboundMemo) EncodeToBytes() ([]byte, error) {
-	// encode header
-	header, err := m.Header.EncodeToBytes()
+	// encode head
+	head, err := m.Header.EncodeToBytes()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to encode memo header")
 	}
@@ -41,9 +41,9 @@ func (m *InboundMemo) EncodeToBytes() ([]byte, error) {
 	}
 
 	// update data flags with the calculated value
-	header[3] = m.DataFlags
+	head[3] = m.DataFlags
 
-	return append(header, data...), nil
+	return append(head, data...), nil
 }
 
 // DecodeFromBytes decodes a InboundMemo struct from raw bytes
@@ -55,7 +55,7 @@ func DecodeFromBytes(data []byte) (*InboundMemo, error) {
 	// decode header
 	err := memo.Header.DecodeFromBytes(data)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to decode memo header")
 	}
 
 	// decode fields based on version

@@ -221,10 +221,10 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 			},
 		},
 		{
-			name:   "failed to decode if basic validation fails",
+			name:   "failed to decode memo header",
 			head:   sample.MemoHead(0, memo.EncodingFmtABI, memo.OpCodeMax, 0, 0),
 			data:   sample.ABIPack(t, memo.ArgReceiver(fAddress)),
-			errMsg: "invalid operation code",
+			errMsg: "failed to decode memo header",
 		},
 		{
 			name:   "failed to decode if version is invalid",
@@ -233,7 +233,6 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 			errMsg: "invalid memo version",
 		},
 		{
-
 			name: "failed to decode compact encoded data with ABI encoding format",
 			head: sample.MemoHead(
 				0,
@@ -241,7 +240,7 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 				memo.OpCodeDepositAndCall,
 				0,
 				0,
-			), // head says ABI encoding
+			), // header says ABI encoding
 			data: sample.CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(fAddress),

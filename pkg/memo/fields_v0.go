@@ -18,8 +18,8 @@ const (
 )
 
 const (
-	// MaskFlagReserved is the mask for reserved data flags
-	MaskFlagReserved = 0b11110000
+	// MaskFlagsReserved is the mask for reserved data flags
+	MaskFlagsReserved = 0b11110000
 )
 
 var _ Fields = (*FieldsV0)(nil)
