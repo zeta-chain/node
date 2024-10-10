@@ -296,6 +296,19 @@ func Test_V0_Validate(t *testing.T) {
 			},
 			errMsg: "payload is not allowed for deposit operation",
 		},
+		{
+			name:   "revert message is not allowed when CallOnRevert is false",
+			opCode: memo.OpCodeDeposit,
+			fields: memo.FieldsV0{
+				Receiver: fAddress,
+				RevertOptions: crosschaintypes.RevertOptions{
+					RevertAddress: fString,
+					CallOnRevert:  false,                    // CallOnRevert is false
+					RevertMessage: []byte("revert message"), // revert message is mistakenly set
+				},
+			},
+			errMsg: "revert message is not allowed when CallOnRevert is false",
+		},
 	}
 
 	for _, tc := range tests {

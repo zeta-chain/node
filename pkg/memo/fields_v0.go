@@ -74,9 +74,16 @@ func (f *FieldsV0) Validate(opCode uint8) error {
 		return errors.New("receiver address is empty")
 	}
 
-	// ensure payload is not set for deposit operation
+	// payload is not allowed for deposit operation
 	if opCode == OpCodeDeposit && len(f.Payload) > 0 {
 		return errors.New("payload is not allowed for deposit operation")
+	}
+
+	// revert message is not allowed when CallOnRevert is false
+	// 1. it's a good-to-have check to make the fields semantically correct.
+	// 2. unpacking won't hit this error as the codec will catch it earlier.
+	if !f.RevertOptions.CallOnRevert && len(f.RevertOptions.RevertMessage) > 0 {
+		return errors.New("revert message is not allowed when CallOnRevert is false")
 	}
 
 	return nil
