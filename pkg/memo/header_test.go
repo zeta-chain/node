@@ -67,7 +67,7 @@ func Test_Header_DecodeFromBytes(t *testing.T) {
 		},
 		{
 			name:   "memo is too short",
-			data:   []byte{0x01, 0x02, 0x03, 0x04},
+			data:   []byte{0x01, 0x02, 0x03},
 			errMsg: "memo is too short",
 		},
 		{

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/memo"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -41,11 +42,17 @@ func Test_NewCodecCompact(t *testing.T) {
 }
 
 func Test_CodecCompact_AddArguments(t *testing.T) {
-	codec := memo.NewCodecABI()
+	codec, err := memo.NewCodecCompact(memo.EncodingFmtCompactLong)
+	require.NoError(t, err)
 	require.NotNil(t, codec)
 
 	address := sample.EthAddress()
-	codec.AddArguments(memo.ArgReceiver(&address))
+	codec.AddArguments(memo.ArgReceiver(address))
+
+	// attempt to pack the arguments, result should not be nil
+	packedData, err := codec.PackArguments()
+	require.NoError(t, err)
+	require.True(t, len(packedData) == common.AddressLength)
 }
 
 func Test_CodecCompact_PackArguments(t *testing.T) {

@@ -46,8 +46,8 @@ func Test_Memo_EncodeToBytes(t *testing.T) {
 				memo.EncodingFmtABI,
 				memo.OpCodeDepositAndCall,
 				0,
-				0b00001111,
-			), // all fields are set
+				flagsAllFieldsSet, // all fields are set
+			),
 			expectedData: sample.ABIPack(t,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes),
@@ -79,8 +79,8 @@ func Test_Memo_EncodeToBytes(t *testing.T) {
 				memo.EncodingFmtCompactShort,
 				memo.OpCodeDepositAndCall,
 				0,
-				0b00001111,
-			), // all fields are set
+				flagsAllFieldsSet, // all fields are set
+			),
 			expectedData: sample.CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(fAddress),
@@ -158,8 +158,8 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 				memo.EncodingFmtABI,
 				memo.OpCodeDepositAndCall,
 				0,
-				0b00001111,
-			), // all fields are set
+				flagsAllFieldsSet, // all fields are set
+			),
 			data: sample.ABIPack(t,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes),
@@ -192,8 +192,8 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 				memo.EncodingFmtCompactLong,
 				memo.OpCodeDepositAndCall,
 				0,
-				0b00001111,
-			), // all fields are set
+				flagsAllFieldsSet, // all fields are set
+			),
 			data: sample.CompactPack(
 				memo.EncodingFmtCompactLong,
 				memo.ArgReceiver(fAddress),

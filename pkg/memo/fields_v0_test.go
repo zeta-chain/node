@@ -11,6 +11,11 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
+const (
+	// flagsAllFieldsSet sets all fields: [payload, revert address, abort address, CallOnRevert]
+	flagsAllFieldsSet = 0b00001111
+)
+
 func Test_V0_Pack(t *testing.T) {
 	// create sample fields
 	fAddress := sample.EthAddress()
@@ -40,7 +45,7 @@ func Test_V0_Pack(t *testing.T) {
 					RevertMessage: fBytes,
 				},
 			},
-			expectedFlags: 0b00001111, // all fields are set
+			expectedFlags: flagsAllFieldsSet, // all fields are set
 			expectedData: sample.ABIPack(t,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes),
@@ -62,7 +67,7 @@ func Test_V0_Pack(t *testing.T) {
 					RevertMessage: fBytes,
 				},
 			},
-			expectedFlags: 0b00001111, // all fields are set
+			expectedFlags: flagsAllFieldsSet, // all fields are set
 			expectedData: sample.CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(fAddress),
@@ -144,7 +149,7 @@ func Test_V0_Unpack(t *testing.T) {
 			name:           "unpack all fields with ABI encoding",
 			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtABI,
-			flags:          0b00001111, // all fields are set
+			flags:          flagsAllFieldsSet, // all fields are set
 			data: sample.ABIPack(t,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes),
@@ -166,7 +171,7 @@ func Test_V0_Unpack(t *testing.T) {
 			name:           "unpack all fields with compact encoding",
 			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtCompactShort,
-			flags:          0b00001111, // all fields are set
+			flags:          flagsAllFieldsSet, // all fields are set
 			data: sample.CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(fAddress),

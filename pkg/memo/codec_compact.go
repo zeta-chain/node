@@ -52,11 +52,11 @@ func (c *CodecCompact) PackArguments() ([]byte, error) {
 			}
 			data = append(data, dataBytes...)
 		case ArgTypeAddress:
-			dateAddress, err := c.packAddress(arg.Arg)
+			dataAddress, err := c.packAddress(arg.Arg)
 			if err != nil {
 				return nil, errors.Wrapf(err, "failed to pack address argument: %s", arg.Name)
 			}
-			data = append(data, dateAddress...)
+			data = append(data, dataAddress...)
 		case ArgTypeString:
 			dataString, err := c.packString(arg.Arg)
 			if err != nil {

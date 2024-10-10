@@ -16,7 +16,7 @@ const (
 )
 
 // MemoHead is a helper function to create a memo head
-// Note: all arguments are assume to be <= 0b1111 for simplicity.
+// Note: all arguments are assumed to be <= 0b1111 for simplicity.
 func MemoHead(version, encodingFmt, opCode, reserved, flags uint8) []byte {
 	head := make([]byte, memo.HeaderSize)
 	head[0] = memo.Identifier
@@ -26,7 +26,7 @@ func MemoHead(version, encodingFmt, opCode, reserved, flags uint8) []byte {
 	return head
 }
 
-// ABIPack is a helper function to simulates the abi.Pack function.
+// ABIPack is a helper function that simulates the abi.Pack function.
 // Note: all arguments are assumed to be <= 32 bytes for simplicity.
 func ABIPack(t *testing.T, args ...memo.CodecArg) []byte {
 	packedData := make([]byte, 0)
@@ -145,7 +145,7 @@ func abiPad32(t *testing.T, data []byte, left bool) []byte {
 	return padded
 }
 
-// apiPackDynamicData is a helper function to pack dynamic-length data
+// abiPackDynamicData is a helper function to pack dynamic-length data
 func abiPackDynamicData(t *testing.T, args ...memo.CodecArg) []byte {
 	packedData := make([]byte, 0)
 

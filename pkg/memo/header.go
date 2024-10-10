@@ -88,7 +88,7 @@ func (h *Header) EncodeToBytes() ([]byte, error) {
 // DecodeFromBytes decodes the memo header from the given data
 func (h *Header) DecodeFromBytes(data []byte) error {
 	// memo data must be longer than the header size
-	if len(data) <= HeaderSize {
+	if len(data) < HeaderSize {
 		return errors.New("memo is too short")
 	}
 

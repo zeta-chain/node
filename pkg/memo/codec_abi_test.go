@@ -33,7 +33,7 @@ func ensureArgEquality(t *testing.T, expected, actual interface{}) {
 	case string:
 		require.Equal(t, v, *actual.(*string))
 	default:
-		t.Fatalf("unexpected argument type: %T", v)
+		require.FailNow(t, "unexpected argument type", "Type: %T", v)
 	}
 }
 
@@ -48,6 +48,11 @@ func Test_CodecABI_AddArguments(t *testing.T) {
 
 	address := sample.EthAddress()
 	codec.AddArguments(memo.ArgReceiver(&address))
+
+	// attempt to pack the arguments, result should not be nil
+	packedData, err := codec.PackArguments()
+	require.NoError(t, err)
+	require.True(t, len(packedData) > 0)
 }
 
 func Test_CodecABI_PackArgument(t *testing.T) {
