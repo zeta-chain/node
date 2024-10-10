@@ -1,8 +1,6 @@
 package memo
 
 import (
-	"fmt"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
@@ -39,29 +37,55 @@ type FieldsV0 struct {
 }
 
 // Pack encodes the memo fields
-func (f *FieldsV0) Pack(encodingFormat uint8) ([]byte, error) {
+func (f *FieldsV0) Pack(opCode uint8, encodingFormat uint8) (byte, []byte, error) {
+	// validate fields
+	err := f.Validate(opCode)
+	if err != nil {
+		return 0, nil, err
+	}
+
 	codec, err := GetCodec(encodingFormat)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to get codec")
+		return 0, nil, errors.Wrap(err, "unable to get codec")
 	}
 
 	return f.packFields(codec)
 }
 
 // Unpack decodes the memo fields
-func (f *FieldsV0) Unpack(data []byte, encodingFormat uint8) error {
+func (f *FieldsV0) Unpack(opCode uint8, encodingFormat uint8, dataFlags byte, data []byte) error {
 	codec, err := GetCodec(encodingFormat)
 	if err != nil {
 		return errors.Wrap(err, "unable to get codec")
 	}
 
-	return f.unpackFields(codec, data)
+	err = f.unpackFields(codec, dataFlags, data)
+	if err != nil {
+		return err
+	}
+
+	return f.Validate(opCode)
+}
+
+// Validate checks if the fields are valid
+func (f *FieldsV0) Validate(opCode uint8) error {
+	// check if receiver is empty
+	if crypto.IsEmptyAddress(f.Receiver) {
+		return errors.New("receiver address is empty")
+	}
+
+	// ensure payload is not set for deposit operation
+	if opCode == OpCodeDeposit && len(f.Payload) > 0 {
+		return errors.New("payload is not allowed for deposit operation")
+	}
+
+	return nil
 }
 
 // packFieldsV0 packs the memo fields for version 0
-func (f *FieldsV0) packFields(codec Codec) ([]byte, error) {
+func (f *FieldsV0) packFields(codec Codec) (byte, []byte, error) {
 	// create data flags byte
-	dataFlags := byte(0)
+	var dataFlags byte
 
 	// add 'receiver' as the first argument
 	codec.AddArguments(ArgReceiver(f.Receiver))
@@ -94,17 +118,14 @@ func (f *FieldsV0) packFields(codec Codec) ([]byte, error) {
 	// pack the codec arguments into data
 	data, err := codec.PackArguments()
 	if err != nil { // never happens
-		return nil, errors.Wrap(err, "failed to pack arguments")
+		return 0, nil, errors.Wrap(err, "failed to pack arguments")
 	}
 
-	return append([]byte{dataFlags}, data...), nil
+	return dataFlags, data, nil
 }
 
 // unpackFields unpacks the memo fields for version 0
-func (f *FieldsV0) unpackFields(codec Codec, data []byte) error {
-	// get data flags
-	dataFlags := data[0]
-
+func (f *FieldsV0) unpackFields(codec Codec, dataFlags byte, data []byte) error {
 	// add 'receiver' as the first argument
 	codec.AddArguments(ArgReceiver(&f.Receiver))
 
@@ -130,14 +151,8 @@ func (f *FieldsV0) unpackFields(codec Codec, data []byte) error {
 		codec.AddArguments(ArgRevertMessage(&f.RevertOptions.RevertMessage))
 	}
 
-	// all reserved flag bits must be zero
-	reserved := zetamath.GetBits(dataFlags, MaskFlagReserved)
-	if reserved != 0 {
-		return fmt.Errorf("reserved flag bits are not zero: %d", reserved)
-	}
-
 	// unpack the data (after flags) into codec arguments
-	err := codec.UnpackArguments(data[1:])
+	err := codec.UnpackArguments(data)
 	if err != nil {
 		return errors.Wrap(err, "failed to unpack arguments")
 	}

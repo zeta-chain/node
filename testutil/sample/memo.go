@@ -13,8 +13,8 @@ import (
 // MemoHead is a helper function to create a memo head
 // Note: all arguments are assume to be <= 0b1111 for simplicity.
 func MemoHead(version, encodingFmt, opCode, reserved, flags uint8) []byte {
-	head := make([]byte, memo.MemoHeaderSize)
-	head[0] = memo.MemoIdentifier
+	head := make([]byte, memo.HeaderSize)
+	head[0] = memo.Identifier
 	head[1] = version<<4 | encodingFmt
 	head[2] = opCode<<4 | reserved
 	head[3] = flags

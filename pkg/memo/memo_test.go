@@ -9,7 +9,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func Test_EncodeToBytes(t *testing.T) {
+func Test_Memo_EncodeToBytes(t *testing.T) {
 	// create sample fields
 	fAddress := sample.EthAddress()
 	fBytes := []byte("here_s_some_bytes_field")
@@ -25,9 +25,11 @@ func Test_EncodeToBytes(t *testing.T) {
 		{
 			name: "encode memo with ABI encoding",
 			memo: &memo.InboundMemo{
-				Version:        0,
-				EncodingFormat: memo.EncodingFmtABI,
-				OpCode:         memo.OpCodeDepositAndCall,
+				Header: memo.Header{
+					Version:        0,
+					EncodingFormat: memo.EncodingFmtABI,
+					OpCode:         memo.OpCodeDepositAndCall,
+				},
 				FieldsV0: memo.FieldsV0{
 					Receiver: fAddress,
 					Payload:  fBytes,
@@ -56,9 +58,11 @@ func Test_EncodeToBytes(t *testing.T) {
 		{
 			name: "encode memo with compact encoding",
 			memo: &memo.InboundMemo{
-				Version:        0,
-				EncodingFormat: memo.EncodingFmtCompactShort,
-				OpCode:         memo.OpCodeDepositAndCall,
+				Header: memo.Header{
+					Version:        0,
+					EncodingFormat: memo.EncodingFmtCompactShort,
+					OpCode:         memo.OpCodeDepositAndCall,
+				},
 				FieldsV0: memo.FieldsV0{
 					Receiver: fAddress,
 					Payload:  fBytes,
@@ -86,18 +90,37 @@ func Test_EncodeToBytes(t *testing.T) {
 				memo.ArgRevertMessage(fBytes)),
 		},
 		{
-			name: "failed to encode if basic validation fails",
+			name: "failed to encode memo header",
 			memo: &memo.InboundMemo{
-				EncodingFormat: memo.EncodingFmtMax,
+				Header: memo.Header{
+					OpCode: memo.OpCodeMax, // invalid operation code
+				},
 			},
-			errMsg: "invalid encoding format",
+			errMsg: "failed to encode memo header",
 		},
 		{
 			name: "failed to encode if version is invalid",
 			memo: &memo.InboundMemo{
-				Version: 1,
+				Header: memo.Header{
+					Version: 1,
+				},
 			},
 			errMsg: "invalid memo version",
+		},
+		{
+			name: "failed to pack memo fields",
+			memo: &memo.InboundMemo{
+				Header: memo.Header{
+					Version:        0,
+					EncodingFormat: memo.EncodingFmtABI,
+					OpCode:         memo.OpCodeDeposit,
+				},
+				FieldsV0: memo.FieldsV0{
+					Receiver: fAddress,
+					Payload:  fBytes, // payload is not allowed for deposit
+				},
+			},
+			errMsg: "failed to pack memo fields version: 0",
 		},
 	}
 
@@ -106,6 +129,7 @@ func Test_EncodeToBytes(t *testing.T) {
 			data, err := tt.memo.EncodeToBytes()
 			if tt.errMsg != "" {
 				require.ErrorContains(t, err, tt.errMsg)
+				require.Nil(t, data)
 				return
 			}
 			require.NoError(t, err)
@@ -114,7 +138,7 @@ func Test_EncodeToBytes(t *testing.T) {
 	}
 }
 
-func Test_DecodeFromBytes(t *testing.T) {
+func Test_Memo_DecodeFromBytes(t *testing.T) {
 	// create sample fields
 	fAddress := sample.EthAddress()
 	fBytes := []byte("here_s_some_bytes_field")
@@ -143,9 +167,12 @@ func Test_DecodeFromBytes(t *testing.T) {
 				memo.ArgAbortAddress(fAddress),
 				memo.ArgRevertMessage(fBytes)),
 			expectedMemo: memo.InboundMemo{
-				Version:        0,
-				EncodingFormat: memo.EncodingFmtABI,
-				OpCode:         memo.OpCodeDepositAndCall,
+				Header: memo.Header{
+					Version:        0,
+					EncodingFormat: memo.EncodingFmtABI,
+					OpCode:         memo.OpCodeDepositAndCall,
+					DataFlags:      0b00001111,
+				},
 				FieldsV0: memo.FieldsV0{
 					Receiver: fAddress,
 					Payload:  fBytes,
@@ -175,9 +202,12 @@ func Test_DecodeFromBytes(t *testing.T) {
 				memo.ArgAbortAddress(fAddress),
 				memo.ArgRevertMessage(fBytes)),
 			expectedMemo: memo.InboundMemo{
-				Version:        0,
-				EncodingFormat: memo.EncodingFmtCompactLong,
-				OpCode:         memo.OpCodeDepositAndCall,
+				Header: memo.Header{
+					Version:        0,
+					EncodingFormat: memo.EncodingFmtCompactLong,
+					OpCode:         memo.OpCodeDepositAndCall,
+					DataFlags:      0b00001111,
+				},
 				FieldsV0: memo.FieldsV0{
 					Receiver: fAddress,
 					Payload:  fBytes,
@@ -230,125 +260,6 @@ func Test_DecodeFromBytes(t *testing.T) {
 			}
 			require.NoError(t, err)
 			require.Equal(t, tt.expectedMemo, *memo)
-		})
-	}
-}
-
-func Test_ValidateBasics(t *testing.T) {
-	tests := []struct {
-		name   string
-		memo   *memo.InboundMemo
-		errMsg string
-	}{
-		{
-			name: "valid memo",
-			memo: &memo.InboundMemo{
-				Version:        0,
-				EncodingFormat: memo.EncodingFmtCompactShort,
-				OpCode:         memo.OpCodeDepositAndCall,
-			},
-		},
-		{
-			name: "invalid encoding format",
-			memo: &memo.InboundMemo{
-				EncodingFormat: memo.EncodingFmtMax,
-			},
-			errMsg: "invalid encoding format",
-		},
-		{
-			name: "invalid operation code",
-			memo: &memo.InboundMemo{
-				OpCode: memo.OpCodeMax,
-			},
-			errMsg: "invalid operation code",
-		},
-		{
-			name: "reserved field is not zero",
-			memo: &memo.InboundMemo{
-				Reserved: 1,
-			},
-			errMsg: "reserved control bits are not zero",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.memo.ValidateBasics()
-			if tt.errMsg != "" {
-				require.ErrorContains(t, err, tt.errMsg)
-				return
-			}
-			require.NoError(t, err)
-		})
-	}
-}
-
-func Test_EncodeBasics(t *testing.T) {
-	tests := []struct {
-		name     string
-		memo     *memo.InboundMemo
-		expected []byte
-		errMsg   string
-	}{
-		{
-			name: "it works",
-			memo: &memo.InboundMemo{
-				Version:        1,
-				EncodingFormat: memo.EncodingFmtABI,
-				OpCode:         memo.OpCodeCall,
-				Reserved:       15,
-			},
-			expected: []byte{memo.MemoIdentifier, 0b00010000, 0b00101111},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			basics := tt.memo.EncodeBasics()
-			require.Equal(t, tt.expected, basics)
-		})
-	}
-}
-
-func Test_DecodeBasics(t *testing.T) {
-	tests := []struct {
-		name     string
-		data     []byte
-		expected memo.InboundMemo
-		errMsg   string
-	}{
-		{
-			name: "it works",
-			data: append(sample.MemoHead(1, memo.EncodingFmtABI, memo.OpCodeCall, 15, 0), []byte{0x01, 0x02}...),
-			expected: memo.InboundMemo{
-				Version:        1,
-				EncodingFormat: memo.EncodingFmtABI,
-				OpCode:         memo.OpCodeCall,
-				Reserved:       15,
-			},
-		},
-		{
-			name:   "memo is too short",
-			data:   []byte{0x01, 0x02, 0x03, 0x04},
-			errMsg: "memo is too short",
-		},
-		{
-			name:   "invalid memo identifier",
-			data:   []byte{'M', 0x02, 0x03, 0x04, 0x05},
-			errMsg: "invalid memo identifier",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			memo := &memo.InboundMemo{}
-			err := memo.DecodeBasics(tt.data)
-			if tt.errMsg != "" {
-				require.ErrorContains(t, err, tt.errMsg)
-				return
-			}
-			require.NoError(t, err)
-			require.Equal(t, tt.expected, *memo)
 		})
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/memo"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -18,6 +19,7 @@ func Test_V0_Pack(t *testing.T) {
 
 	tests := []struct {
 		name           string
+		opCode         uint8
 		encodingFormat uint8
 		fields         memo.FieldsV0
 		expectedFlags  byte
@@ -26,6 +28,7 @@ func Test_V0_Pack(t *testing.T) {
 	}{
 		{
 			name:           "pack all fields with ABI encoding",
+			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtABI,
 			fields: memo.FieldsV0{
 				Receiver: fAddress,
@@ -47,6 +50,7 @@ func Test_V0_Pack(t *testing.T) {
 		},
 		{
 			name:           "pack all fields with compact encoding",
+			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtCompactShort,
 			fields: memo.FieldsV0{
 				Receiver: fAddress,
@@ -69,6 +73,7 @@ func Test_V0_Pack(t *testing.T) {
 		},
 		{
 			name:           "should not pack invalid abort address",
+			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtABI,
 			fields: memo.FieldsV0{
 				Receiver: fAddress,
@@ -80,7 +85,20 @@ func Test_V0_Pack(t *testing.T) {
 			expectedData:  sample.ABIPack(t, memo.ArgReceiver(fAddress)),
 		},
 		{
-			name:           "unable to get codec on invalid encoding format",
+			name:           "fields validation failed due to empty receiver address",
+			opCode:         memo.OpCodeDepositAndCall,
+			encodingFormat: memo.EncodingFmtABI,
+			fields: memo.FieldsV0{
+				Receiver: common.Address{},
+			},
+			errMsg: "receiver address is empty",
+		},
+		{
+			name:   "unable to get codec on invalid encoding format",
+			opCode: memo.OpCodeDepositAndCall,
+			fields: memo.FieldsV0{
+				Receiver: fAddress,
+			},
 			encodingFormat: 0x0F,
 			errMsg:         "unable to get codec",
 		},
@@ -89,18 +107,20 @@ func Test_V0_Pack(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// pack the fields
-			data, err := tc.fields.Pack(tc.encodingFormat)
+			flags, data, err := tc.fields.Pack(tc.opCode, tc.encodingFormat)
 
 			// validate the error message
 			if tc.errMsg != "" {
 				require.ErrorContains(t, err, tc.errMsg)
+				require.Zero(t, flags)
+				require.Nil(t, data)
 				return
 			}
 
 			// compare the fields
 			require.NoError(t, err)
-			require.Equal(t, tc.expectedFlags, data[0])
-			require.True(t, bytes.Equal(tc.expectedData, data[1:]))
+			require.Equal(t, tc.expectedFlags, flags)
+			require.True(t, bytes.Equal(tc.expectedData, data))
 		})
 	}
 }
@@ -113,6 +133,7 @@ func Test_V0_Unpack(t *testing.T) {
 
 	tests := []struct {
 		name           string
+		opCode         uint8
 		encodingFormat uint8
 		flags          byte
 		data           []byte
@@ -121,6 +142,7 @@ func Test_V0_Unpack(t *testing.T) {
 	}{
 		{
 			name:           "unpack all fields with ABI encoding",
+			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtABI,
 			flags:          0b00001111, // all fields are set
 			data: sample.ABIPack(t,
@@ -142,6 +164,7 @@ func Test_V0_Unpack(t *testing.T) {
 		},
 		{
 			name:           "unpack all fields with compact encoding",
+			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtCompactShort,
 			flags:          0b00001111, // all fields are set
 			data: sample.CompactPack(
@@ -164,6 +187,7 @@ func Test_V0_Unpack(t *testing.T) {
 		},
 		{
 			name:           "unpack empty ABI encoded payload if flag is set",
+			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtABI,
 			flags:          0b00000001, // payload flag is set
 			data: sample.ABIPack(t,
@@ -176,6 +200,7 @@ func Test_V0_Unpack(t *testing.T) {
 		},
 		{
 			name:           "unpack empty compact encoded payload if flag is not set",
+			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtCompactShort,
 			flags:          0b00000001, // payload flag is set
 			data: sample.CompactPack(
@@ -189,6 +214,7 @@ func Test_V0_Unpack(t *testing.T) {
 		},
 		{
 			name:           "failed to unpack ABI encoded data with compact encoding format",
+			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtCompactShort,
 			flags:          0b00000001,
 			data: sample.ABIPack(t,
@@ -197,24 +223,22 @@ func Test_V0_Unpack(t *testing.T) {
 			errMsg: "failed to unpack arguments",
 		},
 		{
-			name:           "failed to unpack data if reserved flag is not zero",
+			name:           "fields validation failed due to empty receiver address",
+			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtABI,
-			flags:          0b00100001, // payload flag and reserved bit5 are set
+			flags:          0b00000001,
 			data: sample.ABIPack(t,
-				memo.ArgReceiver(fAddress),
+				memo.ArgReceiver(common.Address{}),
 				memo.ArgPayload(fBytes)),
-			errMsg: "reserved flag bits are not zero",
+			errMsg: "receiver address is empty",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			// attach data flags
-			tc.data = append([]byte{tc.flags}, tc.data...)
-
 			// unpack the fields
 			fields := memo.FieldsV0{}
-			err := fields.Unpack(tc.data, tc.encodingFormat)
+			err := fields.Unpack(tc.opCode, tc.encodingFormat, tc.flags, tc.data)
 
 			// validate the error message
 			if tc.errMsg != "" {
@@ -225,6 +249,66 @@ func Test_V0_Unpack(t *testing.T) {
 			// compare the fields
 			require.NoError(t, err)
 			require.Equal(t, tc.expected, fields)
+		})
+	}
+}
+
+func Test_V0_Validate(t *testing.T) {
+	// create sample fields
+	fAddress := sample.EthAddress()
+	fBytes := []byte("here_s_some_bytes_field")
+	fString := "this_is_a_string_field"
+
+	tests := []struct {
+		name   string
+		opCode uint8
+		fields memo.FieldsV0
+		errMsg string
+	}{
+		{
+			name:   "valid fields",
+			opCode: memo.OpCodeDepositAndCall,
+			fields: memo.FieldsV0{
+				Receiver: fAddress,
+				Payload:  fBytes,
+				RevertOptions: crosschaintypes.RevertOptions{
+					RevertAddress: fString,
+					CallOnRevert:  true,
+					AbortAddress:  fAddress.String(),
+					RevertMessage: fBytes,
+				},
+			},
+		},
+		{
+			name:   "invalid receiver address",
+			opCode: memo.OpCodeCall,
+			fields: memo.FieldsV0{
+				Receiver: common.Address{}, // empty receiver address
+			},
+			errMsg: "receiver address is empty",
+		},
+		{
+			name:   "payload is not allowed when opCode is deposit",
+			opCode: memo.OpCodeDeposit,
+			fields: memo.FieldsV0{
+				Receiver: fAddress,
+				Payload:  fBytes, // payload is mistakenly set
+			},
+			errMsg: "payload is not allowed for deposit operation",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// validate the fields
+			err := tc.fields.Validate(tc.opCode)
+
+			// validate the error message
+			if tc.errMsg != "" {
+				require.ErrorContains(t, err, tc.errMsg)
+				return
+			}
+			require.NoError(t, err)
 		})
 	}
 }
