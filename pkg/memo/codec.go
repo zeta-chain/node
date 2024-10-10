@@ -15,8 +15,8 @@ const (
 	// EncodingFmtCompactLong represents 'compact long' encoding format
 	EncodingFmtCompactLong uint8 = 0b0010
 
-	// EncodingFmtMax is the max value of encoding format
-	EncodingFmtMax uint8 = 0b0011
+	// EncodingFmtInvalid represents invalid encoding format
+	EncodingFmtInvalid uint8 = 0b0011
 )
 
 // Enum for length of bytes used to encode compact data

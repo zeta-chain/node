@@ -33,7 +33,7 @@ const (
 	OpCodeDeposit        uint8 = 0b0000 // operation 'deposit'
 	OpCodeDepositAndCall uint8 = 0b0001 // operation 'deposit_and_call'
 	OpCodeCall           uint8 = 0b0010 // operation 'call'
-	OpCodeMax            uint8 = 0b0011 // operation max value
+	OpCodeInvalid        uint8 = 0b0011 // invalid operation code
 )
 
 // Header represent the memo header
@@ -120,11 +120,11 @@ func (h *Header) Validate() error {
 		return fmt.Errorf("invalid memo version: %d", h.Version)
 	}
 
-	if h.EncodingFormat >= EncodingFmtMax {
+	if h.EncodingFormat >= EncodingFmtInvalid {
 		return fmt.Errorf("invalid encoding format: %d", h.EncodingFormat)
 	}
 
-	if h.OpCode >= OpCodeMax {
+	if h.OpCode >= OpCodeInvalid {
 		return fmt.Errorf("invalid operation code: %d", h.OpCode)
 	}
 

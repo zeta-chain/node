@@ -10,6 +10,11 @@ import (
 	"github.com/zeta-chain/node/pkg/memo"
 )
 
+const (
+	// abiAlignment is the number of bytes used to align the ABI encoded data
+	abiAlignment = 32
+)
+
 // MemoHead is a helper function to create a memo head
 // Note: all arguments are assume to be <= 0b1111 for simplicity.
 func MemoHead(version, encodingFmt, opCode, reserved, flags uint8) []byte {
@@ -27,7 +32,7 @@ func ABIPack(t *testing.T, args ...memo.CodecArg) []byte {
 	packedData := make([]byte, 0)
 
 	// data offset for 1st dynamic-length field
-	offset := memo.ABIAlignment * len(args)
+	offset := abiAlignment * len(args)
 
 	// 1. pack 32-byte offset for each dynamic-length field (bytes, string)
 	// 2. pack actual data for each fixed-length field (address)
@@ -42,9 +47,9 @@ func ABIPack(t *testing.T, args ...memo.CodecArg) []byte {
 
 			argLen := len(arg.Arg.([]byte))
 			if argLen > 0 {
-				offset += memo.ABIAlignment * 2 // [length + data]
+				offset += abiAlignment * 2 // [length + data]
 			} else {
-				offset += memo.ABIAlignment // only [length]
+				offset += abiAlignment // only [length]
 			}
 
 		case memo.ArgTypeString:
@@ -56,9 +61,9 @@ func ABIPack(t *testing.T, args ...memo.CodecArg) []byte {
 
 			argLen := len([]byte(arg.Arg.(string)))
 			if argLen > 0 {
-				offset += memo.ABIAlignment * 2 // [length + data]
+				offset += abiAlignment * 2 // [length + data]
 			} else {
-				offset += memo.ABIAlignment // only [length]
+				offset += abiAlignment // only [length]
 			}
 
 		case memo.ArgTypeAddress: // left-pad for address
@@ -127,7 +132,7 @@ func abiPad32(t *testing.T, data []byte, left bool) []byte {
 		return []byte{}
 	}
 
-	require.LessOrEqual(t, len(data), memo.ABIAlignment)
+	require.LessOrEqual(t, len(data), abiAlignment)
 	padded := make([]byte, 32)
 
 	if left {

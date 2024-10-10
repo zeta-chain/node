@@ -9,9 +9,6 @@ import (
 )
 
 const (
-	// ABIAlignment is the number of bytes used to align the ABI encoded data
-	ABIAlignment = 32
-
 	// selectorLength is the length of the selector in bytes
 	selectorLength = 4
 
@@ -62,6 +59,11 @@ func (c *CodecABI) PackArguments() ([]byte, error) {
 	data, err := parsedABI.Pack(codecMethod, c.abiArgs...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to pack ABI arguments")
+	}
+
+	// this never happens
+	if len(data) < selectorLength {
+		return nil, errors.New("packed data less than selector length")
 	}
 
 	return data[selectorLength:], nil

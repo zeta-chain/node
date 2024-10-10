@@ -93,7 +93,7 @@ func Test_Memo_EncodeToBytes(t *testing.T) {
 			name: "failed to encode memo header",
 			memo: &memo.InboundMemo{
 				Header: memo.Header{
-					OpCode: memo.OpCodeMax, // invalid operation code
+					OpCode: memo.OpCodeInvalid, // invalid operation code
 				},
 			},
 			errMsg: "failed to encode memo header",
@@ -222,7 +222,7 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 		},
 		{
 			name:   "failed to decode memo header",
-			head:   sample.MemoHead(0, memo.EncodingFmtABI, memo.OpCodeMax, 0, 0),
+			head:   sample.MemoHead(0, memo.EncodingFmtABI, memo.OpCodeInvalid, 0, 0),
 			data:   sample.ABIPack(t, memo.ArgReceiver(fAddress)),
 			errMsg: "failed to decode memo header",
 		},

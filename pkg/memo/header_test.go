@@ -78,7 +78,7 @@ func Test_Header_DecodeFromBytes(t *testing.T) {
 		{
 			name: "header validation failed",
 			data: append(
-				sample.MemoHead(0, memo.EncodingFmtMax, memo.OpCodeCall, 0, 0),
+				sample.MemoHead(0, memo.EncodingFmtInvalid, memo.OpCodeCall, 0, 0),
 				[]byte{0x01, 0x02}...), // invalid encoding format
 			errMsg: "invalid encoding format",
 		},
@@ -122,14 +122,14 @@ func Test_Header_Validate(t *testing.T) {
 		{
 			name: "invalid encoding format",
 			header: memo.Header{
-				EncodingFormat: memo.EncodingFmtMax,
+				EncodingFormat: memo.EncodingFmtInvalid,
 			},
 			errMsg: "invalid encoding format",
 		},
 		{
 			name: "invalid operation code",
 			header: memo.Header{
-				OpCode: memo.OpCodeMax,
+				OpCode: memo.OpCodeInvalid,
 			},
 			errMsg: "invalid operation code",
 		},
