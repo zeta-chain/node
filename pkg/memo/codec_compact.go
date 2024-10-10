@@ -122,6 +122,7 @@ func (c *CodecCompact) packLength(length int) ([]byte, error) {
 		if length > math.MaxUint16 {
 			return nil, fmt.Errorf("data length %d exceeds %d bytes", length, math.MaxUint16)
 		}
+		// #nosec G115 range checked
 		binary.LittleEndian.PutUint16(data, uint16(length))
 	}
 	return data, nil
