@@ -90,8 +90,8 @@ The ASCII code `0x5A` of letter `'Z'` is used as the identifier of the standard 
 
 |                 | bit 7         | bit 6        | bit 5         | bit 4             | bit 3            | bit 2            | bit 1             | bit 0            |
 |-----------------|---------------|--------------|---------------|-------------------|------------------|------------------|-------------------|------------------|
-| **Name**        | flag reserved | flag reserved| flag reserved | flag reserved     | flag AbortAddress| flag CallOnRevert| flag RevertAddress| flag Payload     |
-| **Optional**    | --            | --           | --            | Yes               | Yes              | Yes              | Yes               | Yes              |
+| **Name**        | flag reserved | flag reserved| flag reserved | flag reserved     | flag CallOnRevert| flag AbortAddress| flag RevertAddress| flag Payload     |
+| **Optional**    | --            | --           | --            | --                | Yes              | Yes              | Yes               | Yes              |
 <br>
 
 Supported `operation codes` :
