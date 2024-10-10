@@ -2,23 +2,21 @@ package memo
 
 import (
 	"fmt"
-
-	"github.com/pkg/errors"
 )
 
 // Enum for non-EVM chain memo encoding format (2 bits)
 const (
 	// EncodingFmtABI represents ABI encoding format
-	EncodingFmtABI uint8 = 0b00
+	EncodingFmtABI uint8 = 0b0000
 
 	// EncodingFmtCompactShort represents 'compact short' encoding format
-	EncodingFmtCompactShort uint8 = 0b01
+	EncodingFmtCompactShort uint8 = 0b0001
 
 	// EncodingFmtCompactLong represents 'compact long' encoding format
-	EncodingFmtCompactLong uint8 = 0b10
+	EncodingFmtCompactLong uint8 = 0b0010
 
 	// EncodingFmtMax is the max value of encoding format
-	EncodingFmtMax uint8 = 0b11
+	EncodingFmtMax uint8 = 0b0011
 )
 
 // Enum for length of bytes used to encode compact data
@@ -59,6 +57,6 @@ func GetCodec(encodingFormat uint8) (Codec, error) {
 	case EncodingFmtCompactShort, EncodingFmtCompactLong:
 		return NewCodecCompact(encodingFormat)
 	default:
-		return nil, errors.New("unsupported encoding format")
+		return nil, fmt.Errorf("invalid encoding format %d", encodingFormat)
 	}
 }

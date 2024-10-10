@@ -71,8 +71,8 @@ func Test_GetCodec(t *testing.T) {
 		},
 		{
 			name:        "should fail to get codec",
-			encodingFmt: 0b11,
-			errMsg:      "unsupported",
+			encodingFmt: 0b0011,
+			errMsg:      "invalid encoding format",
 		},
 	}
 
