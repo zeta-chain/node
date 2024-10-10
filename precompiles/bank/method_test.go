@@ -572,7 +572,7 @@ func allowBank(t *testing.T, ts testSuite, amount *big.Int) {
 		fungibletypes.ModuleAddressZEVM,
 		ts.zrc20Address,
 		"approve",
-		[]interface{}{fungibletypes.ModuleAddressZEVM, amount},
+		[]interface{}{ts.bankContract.Address(), amount},
 	)
 	require.NoError(t, err, "error allowing bank to spend ZRC20 tokens")
 

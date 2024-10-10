@@ -12,226 +12,108 @@ import (
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
-const (
-	transferFrom = "transferFrom"
-	transfer     = "transfer"
-	balanceOf    = "balanceOf"
-	allowance    = "allowance"
-)
-
-var (
-	ErrZRC20ZeroAddress    = fmt.Errorf("ZRC20 address cannot be zero")
-	ErrZRC20NotWhiteListed = fmt.Errorf("ZRC20 is not whitelisted")
-	ErrZRC20Paused         = fmt.Errorf("ZRC20 is paused")
-	ErrZRC20NilABI         = fmt.Errorf("ZRC20 ABI is nil")
-	ErrZeroAddress         = fmt.Errorf("address cannot be zero")
-	ErrInvalidAmount       = fmt.Errorf("amount must be positive")
-)
-
-// LockZRC20 locks ZRC20 tokens in the bank contract.
-// The caller must have approved the bank contract to spend the amount of ZRC20 tokens.
+// LockZRC20 locks ZRC20 tokens in the specified address
+// The caller must have approved the locker contract to spend the amount of ZRC20 tokens.
+// Warning: This function does not mint cosmos coins, if the depositor needs to be rewarded
+// it has to be implemented by the caller of this function.
 func (k Keeper) LockZRC20(
 	ctx sdk.Context,
 	zrc20ABI *abi.ABI,
-	zrc20Address, from common.Address,
+	zrc20Address, owner, locker common.Address,
 	amount *big.Int,
 ) error {
-	if zrc20ABI == nil {
-		return ErrZRC20NilABI
-	}
-
-	if amount.Sign() <= 0 || amount == nil {
-		return ErrInvalidAmount
-	}
-
-	if crypto.IsEmptyAddress(from) {
-		return ErrZeroAddress
-	}
-
-	if crypto.IsEmptyAddress(zrc20Address) {
-		return ErrZRC20ZeroAddress
-	}
-
-	if err := k.IsValidZRC20(ctx, zrc20Address); err != nil {
+	// owner is the EOA owner of the ZRC20 tokens.
+	// locker is the address that will lock the ZRC20 tokens, i.e: bank precompile.
+	if err := k.CheckZRC20Allowance(ctx, zrc20ABI, owner, locker, zrc20Address, amount); err != nil {
 		return err
 	}
 
-	if err := k.CheckFungibleZRC20Allowance(ctx, zrc20ABI, from, zrc20Address, amount); err != nil {
-		return err
-	}
-
-	args := []interface{}{from, fungibletypes.ModuleAddressZEVM, amount}
-	res, err := k.CallEVM(
-		ctx,
-		*zrc20ABI,
-		fungibletypes.ModuleAddressZEVM,
-		zrc20Address,
-		big.NewInt(0),
-		nil,
-		true,
-		true,
-		transferFrom,
-		args...,
-	)
+	// Check amount_to_be_locked <= total_erc20_balance - already_locked
+	// Max amount of ZRC20 tokens that exists in zEVM are the total supply.
+	totalSupply, err := k.ZRC20TotalSupply(ctx, zrc20ABI, zrc20Address)
 	if err != nil {
 		return err
 	}
 
-	if res.VmError != "" {
-		return fmt.Errorf("EVM execution error in LockZRC20: %s", res.VmError)
-	}
-
-	ret, err := zrc20ABI.Methods[transferFrom].Outputs.Unpack(res.Ret)
+	// The alreadyLocked amount is the amount of ZRC20 tokens that have been locked by the locker.
+	// TODO: Implement list of whitelisted locker addresses.
+	alreadyLocked, err := k.ZRC20BalanceOf(ctx, zrc20ABI, zrc20Address, locker)
 	if err != nil {
 		return err
 	}
 
-	if len(ret) == 0 {
-		return fmt.Errorf("no data returned from 'transferFrom' method")
+	if !k.IsValidDepositAmount(totalSupply, alreadyLocked, amount) {
+		return fungibletypes.ErrInvalidAmount
 	}
 
-	transferred, ok := ret[0].(bool)
-	if !ok {
-		return fmt.Errorf("transferFrom returned an unexpected value")
+	// Initiate a transferFrom the owner to the locker. This will lock the ZRC20 tokens.
+	// locker has to initiate the transaction and have enough allowance from owner.
+	transferred, err := k.ZRC20TransferFrom(ctx, zrc20ABI, zrc20Address, owner, locker, amount)
+	if err != nil {
+		return err
 	}
 
 	if !transferred {
-		return fmt.Errorf("transferFrom not successful")
+		return fmt.Errorf("lock ZRC20 not successful")
 	}
 
 	return nil
 }
 
-// UnlockZRC20 unlocks ZRC20 tokens and sends them to the "to" address.
+// UnlockZRC20 unlocks ZRC20 tokens and sends them to the owner.
+// Warning: Before unlocking ZRC20 tokens, the caller must check if
+// the owner has enough collateral (cosmos coins) to be exchanged (burnt) for the ZRC20 tokens.
 func (k Keeper) UnlockZRC20(
 	ctx sdk.Context,
 	zrc20ABI *abi.ABI,
-	zrc20Address, to common.Address,
+	zrc20Address, owner, locker common.Address,
+	amount *big.Int,
+) error {
+	// Check if the account locking the ZRC20 tokens has enough balance.
+	if err := k.CheckZRC20Balance(ctx, zrc20ABI, zrc20Address, locker, amount); err != nil {
+		return err
+	}
+
+	// transfer from the EOA locking the assets to the owner.
+	transferred, err := k.ZRC20Transfer(ctx, zrc20ABI, zrc20Address, locker, owner, amount)
+	if err != nil {
+		return err
+	}
+
+	if !transferred {
+		return fmt.Errorf("unlock ZRC20 not successful")
+	}
+
+	return nil
+}
+
+// CheckZRC20Allowance checks if the allowance of ZRC20 tokens,
+// is equal or greater than the provided amount.
+func (k Keeper) CheckZRC20Allowance(
+	ctx sdk.Context,
+	zrc20ABI *abi.ABI,
+	owner, spender, zrc20Address common.Address,
 	amount *big.Int,
 ) error {
 	if zrc20ABI == nil {
-		return ErrZRC20NilABI
+		return fungibletypes.ErrZRC20NilABI
 	}
 
 	if amount.Sign() <= 0 || amount == nil {
-		return ErrInvalidAmount
+		return fungibletypes.ErrInvalidAmount
 	}
 
-	if crypto.IsEmptyAddress(to) {
-		return ErrZeroAddress
-	}
-
-	if crypto.IsEmptyAddress(zrc20Address) {
-		return ErrZRC20ZeroAddress
+	if crypto.IsEmptyAddress(owner) || crypto.IsEmptyAddress(spender) {
+		return fungibletypes.ErrZeroAddress
 	}
 
 	if err := k.IsValidZRC20(ctx, zrc20Address); err != nil {
 		return err
 	}
 
-	if err := k.CheckFungibleZRC20Balance(ctx, zrc20ABI, zrc20Address, amount); err != nil {
-		return err
-	}
-
-	args := []interface{}{to, amount}
-	res, err := k.CallEVM(
-		ctx,
-		*zrc20ABI,
-		fungibletypes.ModuleAddressZEVM,
-		zrc20Address,
-		big.NewInt(0),
-		nil,
-		true,
-		true,
-		transfer,
-		args...,
-	)
+	allowanceValue, err := k.ZRC20Allowance(ctx, zrc20ABI, zrc20Address, owner, spender)
 	if err != nil {
 		return err
-	}
-
-	if res.VmError != "" {
-		return fmt.Errorf("EVM execution error in UnlockZRC20: %s", res.VmError)
-	}
-
-	ret, err := zrc20ABI.Methods[transfer].Outputs.Unpack(res.Ret)
-	if err != nil {
-		return err
-	}
-
-	if len(ret) == 0 {
-		return fmt.Errorf("no data returned from 'transfer' method")
-	}
-
-	transferred, ok := ret[0].(bool)
-	if !ok {
-		return fmt.Errorf("transfer returned an unexpected value")
-	}
-
-	if !transferred {
-		return fmt.Errorf("transfer not successful")
-	}
-
-	return nil
-}
-
-// CheckFungibleZRC20Allowance checks if the allowance of ZRC20 tokens,
-// is equal or greater than the provided amount.
-func (k Keeper) CheckFungibleZRC20Allowance(
-	ctx sdk.Context,
-	zrc20ABI *abi.ABI,
-	from, zrc20Address common.Address,
-	amount *big.Int,
-) error {
-	if zrc20ABI == nil {
-		return ErrZRC20NilABI
-	}
-
-	if amount.Sign() <= 0 || amount == nil {
-		return ErrInvalidAmount
-	}
-
-	if crypto.IsEmptyAddress(from) {
-		return ErrZeroAddress
-	}
-
-	if crypto.IsEmptyAddress(zrc20Address) {
-		return ErrZRC20ZeroAddress
-	}
-
-	args := []interface{}{from, fungibletypes.ModuleAddressZEVM}
-	res, err := k.CallEVM(
-		ctx,
-		*zrc20ABI,
-		fungibletypes.ModuleAddressZEVM,
-		zrc20Address,
-		big.NewInt(0),
-		nil,
-		true,
-		true,
-		allowance,
-		args...,
-	)
-	if err != nil {
-		return err
-	}
-
-	if res.VmError != "" {
-		return fmt.Errorf("EVM execution error calling allowance: %s", res.VmError)
-	}
-
-	ret, err := zrc20ABI.Methods[allowance].Outputs.Unpack(res.Ret)
-	if err != nil {
-		return err
-	}
-
-	if len(ret) == 0 {
-		return fmt.Errorf("no data returned from 'allowance' method")
-	}
-
-	allowanceValue, ok := ret[0].(*big.Int)
-	if !ok {
-		return fmt.Errorf("ZRC20 allowance returned an unexpected type")
 	}
 
 	if allowanceValue.Cmp(amount) < 0 || allowanceValue.Cmp(big.NewInt(0)) <= 0 {
@@ -241,58 +123,35 @@ func (k Keeper) CheckFungibleZRC20Allowance(
 	return nil
 }
 
-// CheckFungibleZRC20Balance checks if the balance of ZRC20 tokens,
+// CheckZRC20Balance checks if the balance of ZRC20 tokens,
 // is equal or greater than the provided amount.
-func (k Keeper) CheckFungibleZRC20Balance(
+func (k Keeper) CheckZRC20Balance(
 	ctx sdk.Context,
 	zrc20ABI *abi.ABI,
-	zrc20Address common.Address,
+	zrc20Address, owner common.Address,
 	amount *big.Int,
 ) error {
 	if zrc20ABI == nil {
-		return ErrZRC20NilABI
+		return fungibletypes.ErrZRC20NilABI
 	}
 
 	if amount.Sign() <= 0 || amount == nil {
-		return ErrInvalidAmount
+		return fungibletypes.ErrInvalidAmount
 	}
 
-	if crypto.IsEmptyAddress(zrc20Address) {
-		return ErrZRC20ZeroAddress
-	}
-
-	res, err := k.CallEVM(
-		ctx,
-		*zrc20ABI,
-		fungibletypes.ModuleAddressZEVM,
-		zrc20Address,
-		big.NewInt(0),
-		nil,
-		true,
-		true,
-		balanceOf,
-		fungibletypes.ModuleAddressZEVM,
-	)
-	if err != nil {
+	if err := k.IsValidZRC20(ctx, zrc20Address); err != nil {
 		return err
 	}
 
-	if res.VmError != "" {
-		return fmt.Errorf("EVM execution error calling balanceOf: %s", res.VmError)
+	if crypto.IsEmptyAddress(owner) {
+		return fungibletypes.ErrZeroAddress
 	}
 
-	ret, err := zrc20ABI.Methods[balanceOf].Outputs.Unpack(res.Ret)
+	// Check the ZRC20 balance of a given account.
+	// function balanceOf(address account)
+	balance, err := k.ZRC20BalanceOf(ctx, zrc20ABI, zrc20Address, owner)
 	if err != nil {
 		return err
-	}
-
-	if len(ret) == 0 {
-		return fmt.Errorf("no data returned from 'balanceOf' method")
-	}
-
-	balance, ok := ret[0].(*big.Int)
-	if !ok {
-		return fmt.Errorf("ZRC20 balanceOf returned an unexpected type")
 	}
 
 	if balance.Cmp(amount) == -1 {
@@ -305,17 +164,28 @@ func (k Keeper) CheckFungibleZRC20Balance(
 // IsValidZRC20 returns an error whenever a ZRC20 is not whitelisted or paused.
 func (k Keeper) IsValidZRC20(ctx sdk.Context, zrc20Address common.Address) error {
 	if crypto.IsEmptyAddress(zrc20Address) {
-		return ErrZRC20ZeroAddress
+		return fungibletypes.ErrZRC20ZeroAddress
 	}
 
 	t, found := k.GetForeignCoins(ctx, zrc20Address.String())
 	if !found {
-		return ErrZRC20NotWhiteListed
+		return fungibletypes.ErrZRC20NotWhiteListed
 	}
 
 	if t.Paused {
-		return ErrZRC20Paused
+		return fungibletypes.ErrPausedZRC20
 	}
 
 	return nil
+}
+
+// IsValidDepositAmount checks "totalSupply >= amount_to_be_deposited + amount_already_locked".
+// A failure here means the user is trying to lock more than the available ZRC20 supply.
+// This suggests that an actor is minting ZRC20 tokens out of thin air.
+func (k Keeper) IsValidDepositAmount(totalSupply, alreadyLocked, amountToDeposit *big.Int) bool {
+	if totalSupply == nil || alreadyLocked == nil || amountToDeposit == nil {
+		return false
+	}
+
+	return totalSupply.Cmp(alreadyLocked.Add(alreadyLocked, amountToDeposit)) >= 0
 }
