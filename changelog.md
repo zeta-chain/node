@@ -18,6 +18,7 @@
 * [2919](https://github.com/zeta-chain/node/pull/2919) - add inbound sender to revert context
 * [2957](https://github.com/zeta-chain/node/pull/2957) - enable Bitcoin inscription support on testnet
 * [2896](https://github.com/zeta-chain/node/pull/2896) - add TON inbound observation
+* [2987](https://github.com/zeta-chain/node/pull/2987) - add non-EVM standard inbound memo package
 
 ### Refactor
 
