@@ -59,7 +59,7 @@ func (s *Server) httpHandler(w http.ResponseWriter, r *http.Request) {
 	// Decode request
 	raw, err := io.ReadAll(r.Body)
 	require.NoError(s.t, err)
-	require.NoError(s.t, json.Unmarshal(raw, &req), "unable to unmarshal request")
+	require.NoError(s.t, json.Unmarshal(raw, &req), "unable to unmarshal request for %s", s.name)
 
 	// Process request
 	res := s.rpcHandler(req)

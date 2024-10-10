@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"strconv"
 
+	"cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -142,6 +143,10 @@ func parseBigInt(t require.TestingT, s string) *big.Int {
 	require.True(t, ok, "unable to parse big.Int from %q", s)
 
 	return v
+}
+
+func parseUint(t require.TestingT, s string) math.Uint {
+	return math.NewUintFromBigInt(parseBigInt(t, s))
 }
 
 // bigIntFromFloat64 takes float64 (e.g. 0.001) that represents btc amount

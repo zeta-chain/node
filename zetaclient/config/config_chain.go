@@ -23,6 +23,7 @@ func New(setDefaults bool) Config {
 		cfg.EVMChainConfigs = evmChainsConfigs()
 		cfg.BTCChainConfigs = btcChainsConfigs()
 		cfg.SolanaConfig = solanaConfigLocalnet()
+		cfg.TONConfig = tonConfigLocalnet()
 	}
 
 	return cfg
@@ -44,6 +45,13 @@ func solanaConfigLocalnet() SolanaConfig {
 	return SolanaConfig{
 		Endpoint:        "http://solana:8899",
 		RPCAlertLatency: 60,
+	}
+}
+
+func tonConfigLocalnet() TONConfig {
+	return TONConfig{
+		LiteClientConfigURL: "http://ton:8000/lite-client.json",
+		RPCAlertLatency:     60,
 	}
 }
 

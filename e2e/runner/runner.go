@@ -18,7 +18,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/tonkeeper/tongo/ton"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 	zetaeth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
@@ -40,6 +39,7 @@ import (
 	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
+	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
@@ -73,7 +73,7 @@ type E2ERunner struct {
 	BTCDeployerAddress    *btcutil.AddressWitnessPubKeyHash
 	SolanaDeployerAddress solana.PublicKey
 	TONDeployer           *tonrunner.Deployer
-	TONGateway            ton.AccountID
+	TONGateway            *toncontracts.Gateway
 
 	// all clients.
 	// a reference to this type is required to enable creating a new E2ERunner.
@@ -127,6 +127,8 @@ type E2ERunner struct {
 	BTCZRC20             *zrc20.ZRC20
 	SOLZRC20Addr         ethcommon.Address
 	SOLZRC20             *zrc20.ZRC20
+	TONZRC20Addr         ethcommon.Address
+	TONZRC20             *zrc20.ZRC20
 	UniswapV2FactoryAddr ethcommon.Address
 	UniswapV2Factory     *uniswapv2factory.UniswapV2Factory
 	UniswapV2RouterAddr  ethcommon.Address
@@ -230,6 +232,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	r.ETHZRC20Addr = other.ETHZRC20Addr
 	r.BTCZRC20Addr = other.BTCZRC20Addr
 	r.SOLZRC20Addr = other.SOLZRC20Addr
+	r.TONZRC20Addr = other.TONZRC20Addr
 	r.UniswapV2FactoryAddr = other.UniswapV2FactoryAddr
 	r.UniswapV2RouterAddr = other.UniswapV2RouterAddr
 	r.ConnectorZEVMAddr = other.ConnectorZEVMAddr
@@ -272,6 +275,10 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 		return err
 	}
 	r.SOLZRC20, err = zrc20.NewZRC20(r.SOLZRC20Addr, r.ZEVMClient)
+	if err != nil {
+		return err
+	}
+	r.TONZRC20, err = zrc20.NewZRC20(r.TONZRC20Addr, r.ZEVMClient)
 	if err != nil {
 		return err
 	}
@@ -359,6 +366,7 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("ERC20ZRC20:     %s", r.ERC20ZRC20Addr.Hex())
 	r.Logger.Print("BTCZRC20:       %s", r.BTCZRC20Addr.Hex())
 	r.Logger.Print("SOLZRC20:       %s", r.SOLZRC20Addr.Hex())
+	r.Logger.Print("TONZRC20:       %s", r.TONZRC20Addr.Hex())
 	r.Logger.Print("UniswapFactory: %s", r.UniswapV2FactoryAddr.Hex())
 	r.Logger.Print("UniswapRouter:  %s", r.UniswapV2RouterAddr.Hex())
 	r.Logger.Print("ConnectorZEVM:  %s", r.ConnectorZEVMAddr.Hex())

@@ -68,6 +68,7 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	conf.Contracts.ZEVM.ERC20ZRC20Addr = config.DoubleQuotedString(r.ERC20ZRC20Addr.Hex())
 	conf.Contracts.ZEVM.BTCZRC20Addr = config.DoubleQuotedString(r.BTCZRC20Addr.Hex())
 	conf.Contracts.ZEVM.SOLZRC20Addr = config.DoubleQuotedString(r.SOLZRC20Addr.Hex())
+	conf.Contracts.ZEVM.TONZRC20Addr = config.DoubleQuotedString(r.TONZRC20Addr.Hex())
 	conf.Contracts.ZEVM.UniswapFactoryAddr = config.DoubleQuotedString(r.UniswapV2FactoryAddr.Hex())
 	conf.Contracts.ZEVM.UniswapRouterAddr = config.DoubleQuotedString(r.UniswapV2RouterAddr.Hex())
 	conf.Contracts.ZEVM.ConnectorZEVMAddr = config.DoubleQuotedString(r.ConnectorZEVMAddr.Hex())

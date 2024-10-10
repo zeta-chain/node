@@ -16,6 +16,8 @@
 * [2911](https://github.com/zeta-chain/node/pull/2911) - add chain static information for btc testnet4
 * [2904](https://github.com/zeta-chain/node/pull/2904) - integrate authenticated calls smart contract functionality into protocol
 * [2919](https://github.com/zeta-chain/node/pull/2919) - add inbound sender to revert context
+* [2957](https://github.com/zeta-chain/node/pull/2957) - enable Bitcoin inscription support on testnet
+* [2896](https://github.com/zeta-chain/node/pull/2896) - add TON inbound observation
 
 ### Refactor
 
@@ -25,6 +27,7 @@
 * [2826](https://github.com/zeta-chain/node/pull/2826) - remove unused code from emissions module and add new parameter for fixed block reward amount
 * [2890](https://github.com/zeta-chain/node/pull/2890) - refactor `MsgUpdateChainInfo` to accept a single chain, and add `MsgRemoveChainInfo` to remove a chain
 * [2899](https://github.com/zeta-chain/node/pull/2899) - remove btc deposit fee v1 and improve unit tests
+* [2952](https://github.com/zeta-chain/node/pull/2952) - add error_message to cctx.status
 
 ### Tests
 
