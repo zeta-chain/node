@@ -235,6 +235,15 @@ func Test_CodecCompact_UnpackArguments(t *testing.T) {
 			},
 		},
 		{
+			name:        "failed to unpack address if data length < 20 bytes",
+			encodingFmt: memo.EncodingFmtCompactShort,
+			data:        []byte{0x01, 0x02, 0x03, 0x04, 0x05},
+			expected: []memo.CodecArg{
+				memo.ArgReceiver(argAddress),
+			},
+			errMsg: "expected address, got 5 bytes",
+		},
+		{
 			name:        "failed to unpack string if data length < 1 byte",
 			encodingFmt: memo.EncodingFmtCompactShort,
 			data:        []byte{},

@@ -213,6 +213,14 @@ func Test_V0_Unpack(t *testing.T) {
 			},
 		},
 		{
+			name:           "unable to get codec on invalid encoding format",
+			opCode:         memo.OpCodeDepositAndCall,
+			encodingFormat: 0x0F,
+			flags:          0b00000001,
+			data:           []byte{},
+			errMsg:         "unable to get codec",
+		},
+		{
 			name:           "failed to unpack ABI encoded data with compact encoding format",
 			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtCompactShort,
