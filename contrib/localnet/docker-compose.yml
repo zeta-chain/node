@@ -228,8 +228,7 @@ services:
       -txindex=1
 
   bitcoin-node-sidecar:
-    build:
-      dockerfile: ./bitcoin-sidecar/Dockerfile
+    image: ghcr.io/zeta-chain/node-localnet-bitcoin-sidecar:e0205d7
     container_name: bitcoin-node-sidecar
     hostname: bitcoin-node-sidecar
     networks:
