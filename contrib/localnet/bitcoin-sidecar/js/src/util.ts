@@ -1,1 +1,0 @@
-export const toXOnly = pubKey => (pubKey.length === 32 ? pubKey : pubKey.slice(1, 33));
