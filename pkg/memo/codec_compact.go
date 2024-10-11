@@ -233,8 +233,10 @@ func (c *CodecCompact) unpackBytes(data []byte, output interface{}) (int, error)
 	}
 
 	// make a copy of the data
-	*pSlice = make([]byte, dataLen)
-	copy(*pSlice, data[c.lenBytes:c.lenBytes+dataLen])
+	if dataLen > 0 {
+		*pSlice = make([]byte, dataLen)
+		copy(*pSlice, data[c.lenBytes:c.lenBytes+dataLen])
+	}
 
 	return c.lenBytes + dataLen, nil
 }

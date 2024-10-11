@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	// flagsAllFieldsSet sets all fields: [payload, revert address, abort address, CallOnRevert]
-	flagsAllFieldsSet = 0b00001111
+	// flagsAllFieldsSet sets all fields: [receiver, payload, revert address, abort address, CallOnRevert]
+	flagsAllFieldsSet = 0b00011111
 )
 
 func Test_V0_Pack(t *testing.T) {
@@ -26,6 +26,7 @@ func Test_V0_Pack(t *testing.T) {
 		name           string
 		opCode         uint8
 		encodingFormat uint8
+		dataFlags      uint8
 		fields         memo.FieldsV0
 		expectedFlags  byte
 		expectedData   []byte
@@ -35,6 +36,7 @@ func Test_V0_Pack(t *testing.T) {
 			name:           "pack all fields with ABI encoding",
 			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtABI,
+			dataFlags:      flagsAllFieldsSet, // all fields are set
 			fields: memo.FieldsV0{
 				Receiver: fAddress,
 				Payload:  fBytes,
@@ -45,7 +47,6 @@ func Test_V0_Pack(t *testing.T) {
 					RevertMessage: fBytes,
 				},
 			},
-			expectedFlags: flagsAllFieldsSet, // all fields are set
 			expectedData: sample.ABIPack(t,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes),
@@ -57,6 +58,7 @@ func Test_V0_Pack(t *testing.T) {
 			name:           "pack all fields with compact encoding",
 			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtCompactShort,
+			dataFlags:      flagsAllFieldsSet, // all fields are set
 			fields: memo.FieldsV0{
 				Receiver: fAddress,
 				Payload:  fBytes,
@@ -67,7 +69,6 @@ func Test_V0_Pack(t *testing.T) {
 					RevertMessage: fBytes,
 				},
 			},
-			expectedFlags: flagsAllFieldsSet, // all fields are set
 			expectedData: sample.CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(fAddress),
@@ -77,22 +78,10 @@ func Test_V0_Pack(t *testing.T) {
 				memo.ArgRevertMessage(fBytes)),
 		},
 		{
-			name:           "should not pack invalid abort address",
-			opCode:         memo.OpCodeDepositAndCall,
-			encodingFormat: memo.EncodingFmtABI,
-			fields: memo.FieldsV0{
-				Receiver: fAddress,
-				RevertOptions: crosschaintypes.RevertOptions{
-					AbortAddress: "invalid_address",
-				},
-			},
-			expectedFlags: 0b00000000, // no flag is set
-			expectedData:  sample.ABIPack(t, memo.ArgReceiver(fAddress)),
-		},
-		{
 			name:           "fields validation failed due to empty receiver address",
 			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtABI,
+			dataFlags:      0b00000001, // receiver flag is set
 			fields: memo.FieldsV0{
 				Receiver: common.Address{},
 			},
@@ -112,19 +101,17 @@ func Test_V0_Pack(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// pack the fields
-			flags, data, err := tc.fields.Pack(tc.opCode, tc.encodingFormat)
+			data, err := tc.fields.Pack(tc.opCode, tc.encodingFormat, tc.dataFlags)
 
 			// validate the error message
 			if tc.errMsg != "" {
 				require.ErrorContains(t, err, tc.errMsg)
-				require.Zero(t, flags)
 				require.Nil(t, data)
 				return
 			}
 
 			// compare the fields
 			require.NoError(t, err)
-			require.Equal(t, tc.expectedFlags, flags)
 			require.True(t, bytes.Equal(tc.expectedData, data))
 		})
 	}
@@ -140,7 +127,7 @@ func Test_V0_Unpack(t *testing.T) {
 		name           string
 		opCode         uint8
 		encodingFormat uint8
-		flags          byte
+		dataFlags      byte
 		data           []byte
 		expected       memo.FieldsV0
 		errMsg         string
@@ -149,7 +136,7 @@ func Test_V0_Unpack(t *testing.T) {
 			name:           "unpack all fields with ABI encoding",
 			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtABI,
-			flags:          flagsAllFieldsSet, // all fields are set
+			dataFlags:      flagsAllFieldsSet, // all fields are set
 			data: sample.ABIPack(t,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes),
@@ -171,7 +158,7 @@ func Test_V0_Unpack(t *testing.T) {
 			name:           "unpack all fields with compact encoding",
 			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtCompactShort,
-			flags:          flagsAllFieldsSet, // all fields are set
+			dataFlags:      flagsAllFieldsSet, // all fields are set
 			data: sample.CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(fAddress),
@@ -194,34 +181,26 @@ func Test_V0_Unpack(t *testing.T) {
 			name:           "unpack empty ABI encoded payload if flag is set",
 			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtABI,
-			flags:          0b00000001, // payload flag is set
+			dataFlags:      0b00000010, // payload flags are set
 			data: sample.ABIPack(t,
-				memo.ArgReceiver(fAddress),
 				memo.ArgPayload([]byte{})), // empty payload
-			expected: memo.FieldsV0{
-				Receiver: fAddress,
-				Payload:  []byte{},
-			},
+			expected: memo.FieldsV0{},
 		},
 		{
-			name:           "unpack empty compact encoded payload if flag is not set",
+			name:           "unpack empty compact encoded payload if flag is set",
 			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtCompactShort,
-			flags:          0b00000001, // payload flag is set
+			dataFlags:      0b00000010, // payload flag is set
 			data: sample.CompactPack(
 				memo.EncodingFmtCompactShort,
-				memo.ArgReceiver(fAddress),
 				memo.ArgPayload([]byte{})), // empty payload
-			expected: memo.FieldsV0{
-				Receiver: fAddress,
-				Payload:  []byte{},
-			},
+			expected: memo.FieldsV0{},
 		},
 		{
 			name:           "unable to get codec on invalid encoding format",
 			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: 0x0F,
-			flags:          0b00000001,
+			dataFlags:      0b00000001,
 			data:           []byte{},
 			errMsg:         "unable to get codec",
 		},
@@ -229,7 +208,7 @@ func Test_V0_Unpack(t *testing.T) {
 			name:           "failed to unpack ABI encoded data with compact encoding format",
 			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtCompactShort,
-			flags:          0b00000001,
+			dataFlags:      0b00000011, // receiver and payload flags are set
 			data: sample.ABIPack(t,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes)),
@@ -239,7 +218,7 @@ func Test_V0_Unpack(t *testing.T) {
 			name:           "fields validation failed due to empty receiver address",
 			opCode:         memo.OpCodeDepositAndCall,
 			encodingFormat: memo.EncodingFmtABI,
-			flags:          0b00000001,
+			dataFlags:      0b00000011, // receiver and payload flags are set
 			data: sample.ABIPack(t,
 				memo.ArgReceiver(common.Address{}),
 				memo.ArgPayload(fBytes)),
@@ -251,7 +230,7 @@ func Test_V0_Unpack(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// unpack the fields
 			fields := memo.FieldsV0{}
-			err := fields.Unpack(tc.opCode, tc.encodingFormat, tc.flags, tc.data)
+			err := fields.Unpack(tc.opCode, tc.encodingFormat, tc.dataFlags, tc.data)
 
 			// validate the error message
 			if tc.errMsg != "" {
@@ -273,14 +252,16 @@ func Test_V0_Validate(t *testing.T) {
 	fString := "this_is_a_string_field"
 
 	tests := []struct {
-		name   string
-		opCode uint8
-		fields memo.FieldsV0
-		errMsg string
+		name      string
+		opCode    uint8
+		dataFlags uint8
+		fields    memo.FieldsV0
+		errMsg    string
 	}{
 		{
-			name:   "valid fields",
-			opCode: memo.OpCodeDepositAndCall,
+			name:      "valid fields",
+			opCode:    memo.OpCodeDepositAndCall,
+			dataFlags: flagsAllFieldsSet, // all fields are set
 			fields: memo.FieldsV0{
 				Receiver: fAddress,
 				Payload:  fBytes,
@@ -293,10 +274,11 @@ func Test_V0_Validate(t *testing.T) {
 			},
 		},
 		{
-			name:   "invalid receiver address",
-			opCode: memo.OpCodeCall,
+			name:      "invalid receiver address",
+			opCode:    memo.OpCodeCall,
+			dataFlags: 0b00000001, // receiver flag is set
 			fields: memo.FieldsV0{
-				Receiver: common.Address{}, // empty receiver address
+				Receiver: common.Address{}, // provide empty receiver address
 			},
 			errMsg: "receiver address is empty",
 		},
@@ -308,6 +290,17 @@ func Test_V0_Validate(t *testing.T) {
 				Payload:  fBytes, // payload is mistakenly set
 			},
 			errMsg: "payload is not allowed for deposit operation",
+		},
+		{
+			name:      "abort address is invalid",
+			opCode:    memo.OpCodeDeposit,
+			dataFlags: 0b00001000, // abort address flag is set
+			fields: memo.FieldsV0{
+				RevertOptions: crosschaintypes.RevertOptions{
+					AbortAddress: "invalid abort address",
+				},
+			},
+			errMsg: "invalid abort address",
 		},
 		{
 			name:   "revert message is not allowed when CallOnRevert is false",
@@ -327,7 +320,7 @@ func Test_V0_Validate(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// validate the fields
-			err := tc.fields.Validate(tc.opCode)
+			err := tc.fields.Validate(tc.opCode, tc.dataFlags)
 
 			// validate the error message
 			if tc.errMsg != "" {
@@ -335,6 +328,61 @@ func Test_V0_Validate(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
+		})
+	}
+}
+
+func Test_V0_DataFlags(t *testing.T) {
+	// create sample fields
+	fAddress := sample.EthAddress()
+	fBytes := []byte("here_s_some_bytes_field")
+	fString := "this_is_a_string_field"
+
+	tests := []struct {
+		name          string
+		fields        memo.FieldsV0
+		expectedFlags uint8
+	}{
+		{
+			name: "all fields set",
+			fields: memo.FieldsV0{
+				Receiver: fAddress,
+				Payload:  fBytes,
+				RevertOptions: crosschaintypes.RevertOptions{
+					RevertAddress: fString,
+					CallOnRevert:  true,
+					AbortAddress:  fAddress.String(),
+					RevertMessage: fBytes,
+				},
+			},
+			expectedFlags: flagsAllFieldsSet,
+		},
+		{
+			name:          "no fields set",
+			fields:        memo.FieldsV0{},
+			expectedFlags: 0b00000000,
+		},
+		{
+			name: "a few fields set",
+			fields: memo.FieldsV0{
+				Receiver: fAddress,
+				RevertOptions: crosschaintypes.RevertOptions{
+					RevertAddress: fString,
+					CallOnRevert:  true,
+					RevertMessage: fBytes,
+				},
+			},
+			expectedFlags: 0b00010101,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// get the data flags
+			flags := tc.fields.DataFlags()
+
+			// compare the flags
+			require.Equal(t, tc.expectedFlags, flags)
 		})
 	}
 }

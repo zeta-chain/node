@@ -171,7 +171,7 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 					Version:        0,
 					EncodingFormat: memo.EncodingFmtABI,
 					OpCode:         memo.OpCodeDepositAndCall,
-					DataFlags:      0b00001111,
+					DataFlags:      0b00011111,
 				},
 				FieldsV0: memo.FieldsV0{
 					Receiver: fAddress,
@@ -206,7 +206,7 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 					Version:        0,
 					EncodingFormat: memo.EncodingFmtCompactLong,
 					OpCode:         memo.OpCodeDepositAndCall,
-					DataFlags:      0b00001111,
+					DataFlags:      0b00011111,
 				},
 				FieldsV0: memo.FieldsV0{
 					Receiver: fAddress,

@@ -21,9 +21,9 @@ func Test_Header_EncodeToBytes(t *testing.T) {
 				Version:        0,
 				EncodingFormat: memo.EncodingFmtABI,
 				OpCode:         memo.OpCodeCall,
-				DataFlags:      0b00001111,
+				DataFlags:      0b00011111,
 			},
-			expected: []byte{memo.Identifier, 0b00000000, 0b00100000, 0b00001111},
+			expected: []byte{memo.Identifier, 0b00000000, 0b00100000, 0b00011111},
 		},
 		{
 			name: "header validation failed",

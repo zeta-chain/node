@@ -22,6 +22,10 @@ type InboundMemo struct {
 //   - Any provided 'DataFlags' is ignored as they are calculated based on the fields set in the memo.
 //   - The 'RevertGasLimit' is not used for now for non-EVM chains.
 func (m *InboundMemo) EncodeToBytes() ([]byte, error) {
+	// build fields flags
+	dataFlags := m.FieldsV0.DataFlags()
+	m.Header.DataFlags = dataFlags
+
 	// encode head
 	head, err := m.Header.EncodeToBytes()
 	if err != nil {
@@ -32,16 +36,13 @@ func (m *InboundMemo) EncodeToBytes() ([]byte, error) {
 	var data []byte
 	switch m.Version {
 	case 0:
-		m.DataFlags, data, err = m.FieldsV0.Pack(m.OpCode, m.EncodingFormat)
+		data, err = m.FieldsV0.Pack(m.OpCode, m.EncodingFormat, dataFlags)
 	default:
 		return nil, fmt.Errorf("invalid memo version: %d", m.Version)
 	}
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to pack memo fields version: %d", m.Version)
 	}
-
-	// update data flags with the calculated value
-	head[3] = m.DataFlags
 
 	return append(head, data...), nil
 }
@@ -61,7 +62,7 @@ func DecodeFromBytes(data []byte) (*InboundMemo, error) {
 	// decode fields based on version
 	switch memo.Version {
 	case 0:
-		err = memo.FieldsV0.Unpack(memo.OpCode, memo.EncodingFormat, memo.DataFlags, data[HeaderSize:])
+		err = memo.FieldsV0.Unpack(memo.OpCode, memo.EncodingFormat, memo.Header.DataFlags, data[HeaderSize:])
 	default:
 		return nil, fmt.Errorf("invalid memo version: %d", memo.Version)
 	}
