@@ -63,7 +63,7 @@ func validateValidatorEmissionPercentage(i interface{}) error {
 	if dec.GT(sdk.OneDec()) {
 		return fmt.Errorf("validator emission percentage cannot be more than 100 percent")
 	}
-	if dec.LT(sdk.ZeroDec()) {
+	if dec.IsNegative() {
 		return fmt.Errorf("validator emission percentage cannot be less than 0 percent")
 	}
 	return nil
@@ -78,7 +78,7 @@ func validateObserverEmissionPercentage(i interface{}) error {
 	if dec.GT(sdk.OneDec()) {
 		return fmt.Errorf("observer emission percentage cannot be more than 100 percent")
 	}
-	if dec.LT(sdk.ZeroDec()) {
+	if dec.IsNegative() {
 		return fmt.Errorf("observer emission percentage cannot be less than 0 percent")
 	}
 	return nil
@@ -93,7 +93,7 @@ func validateTssEmissionPercentage(i interface{}) error {
 	if dec.GT(sdk.OneDec()) {
 		return fmt.Errorf("tss emission percentage cannot be more than 100 percent")
 	}
-	if dec.LT(sdk.ZeroDec()) {
+	if dec.IsNegative() {
 		return fmt.Errorf("tss emission percentage cannot be less than 0 percent")
 	}
 	return nil
@@ -104,8 +104,11 @@ func validateObserverSlashAmount(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	if v.LT(sdk.ZeroInt()) {
-		return fmt.Errorf("slash amount cannot be less than 0")
+	if v.IsNil() {
+		return fmt.Errorf("observer slash amount cannot be nil")
+	}
+	if v.IsNegative() {
+		return fmt.Errorf("slash amount must not be negative")
 	}
 	return nil
 }
@@ -117,7 +120,7 @@ func validateBallotMaturityBlocks(i interface{}) error {
 	}
 
 	if v < 0 {
-		return fmt.Errorf("ballot maturity types must be gte 0")
+		return fmt.Errorf("ballot maturity types must not be negative")
 	}
 
 	return nil
@@ -128,8 +131,11 @@ func validateBlockRewardsAmount(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	if v.LT(sdkmath.LegacyZeroDec()) {
-		return fmt.Errorf("block reward amount cannot be less than 0")
+	if v.IsNil() {
+		return fmt.Errorf("block reward amount cannot be nil")
+	}
+	if v.IsNegative() {
+		return fmt.Errorf("block reward amount must not be negative")
 	}
 	return nil
 }
