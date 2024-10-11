@@ -224,7 +224,7 @@ var (
 		fungibletypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
 		emissionstypes.ModuleName:                       nil,
 		emissionstypes.UndistributedObserverRewardsPool: nil,
-		emissionstypes.UndistributedTssRewardsPool:      nil,
+		emissionstypes.UndistributedTSSRewardsPool:      nil,
 	}
 
 	// module accounts that are NOT allowed to receive tokens
