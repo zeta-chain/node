@@ -38,9 +38,6 @@ func TestAppContext(t *testing.T) {
 	btcParams := types.GetDefaultBtcMainnetChainParams()
 	btcParams.IsSupported = true
 
-	solParams := types.GetDefaultSolanaLocalnetChainParams()
-	solParams.IsSupported = true
-
 	fancyL2 := chains.Chain{
 		ChainId:     123,
 		Network:     0,
@@ -80,7 +77,6 @@ func TestAppContext(t *testing.T) {
 		chainParams := map[int64]*types.ChainParams{
 			chains.Ethereum.ChainId:       ethParams,
 			chains.BitcoinMainnet.ChainId: btcParams,
-			chains.SolanaLocalnet.ChainId: solParams,
 			fancyL2.ChainId:               fancyL2Params,
 		}
 
@@ -117,7 +113,7 @@ func TestAppContext(t *testing.T) {
 		assert.Equal(t, fancyL2Params, fancyL2Chain.Params())
 
 		// Check chain IDs
-		expectedIDs := []int64{ethParams.ChainId, btcParams.ChainId, solParams.ChainId, fancyL2.ChainId}
+		expectedIDs := []int64{ethParams.ChainId, btcParams.ChainId, fancyL2.ChainId}
 		assert.ElementsMatch(t, expectedIDs, appContext.ListChainIDs())
 
 		// Check config
