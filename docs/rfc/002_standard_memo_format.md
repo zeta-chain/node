@@ -54,7 +54,7 @@ The raw-byte representation of a standard non-EVM memo contains `9` sections (2 
 | **Name**        | Header     | Receiver    | Payload     | RevertAddress  | CallOnRevert | AbortAddress | RevertMessage | reserved    | reserved    |
 | **Size (byte)** | 4          | 20          | variable    | variable       | 1            | 20           | variable      | --          | --          |
 | **Type**        | [4]byte    | ZEVM address| bytes       | non-EVM address| bool         | ZEVM address | bytes         | --          | --          |
-| **Optional**    | No         | No          | Yes         | Yes            | Yes          | Yes          | Yes           | --          | --          |
+| **Optional**    | No         | Yes         | Yes         | Yes            | Yes          | Yes          | Yes           | --          | --          |
 <br><br>
 
 
@@ -88,10 +88,10 @@ The ASCII code `0x5A` of letter `'Z'` is used as the identifier of the standard 
 
 ### `byte-3`: Data Flags
 
-|                 | bit 7         | bit 6        | bit 5         | bit 4             | bit 3            | bit 2            | bit 1             | bit 0            |
-|-----------------|---------------|--------------|---------------|-------------------|------------------|------------------|-------------------|------------------|
-| **Name**        | flag reserved | flag reserved| flag reserved | flag reserved     | flag CallOnRevert| flag AbortAddress| flag RevertAddress| flag Payload     |
-| **Optional**    | --            | --           | --            | --                | Yes              | Yes              | Yes               | Yes              |
+|                 | bit 7         | bit 6        | bit 5         | bit 4             | bit 3            | bit 2             | bit 1           | bit 0            |
+|-----------------|---------------|--------------|---------------|-------------------|------------------|-------------------|-----------------|------------------|
+| **Name**        | flag reserved | flag reserved| flag reserved | flag CallOnRevert | flag AbortAddress| flag RevertAddress| flag Payload    | flag Receiver    |
+| **Optional**    | --            | --           | --            | --                | Yes              | Yes               | Yes             | Yes              |
 <br>
 
 Supported `operation codes` :
@@ -153,7 +153,7 @@ func MakeHead() []byte {
 	header[0] = 'Z'
 	header[1] = 0<<4 | 0b0010 // version + encoding format (e.g. compact long)
 	header[2] = 0b0001 << 4   // operation code (e.g. DepositAndCall)
-	header[3] = 0b00000011    // payload and revertAddress are set
+	header[3] = 0b00000111    // receiver, payload and revertAddress are set
 	return header
 }
 ```
