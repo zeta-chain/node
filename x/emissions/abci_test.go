@@ -1,7 +1,6 @@
 package emissions_test
 
 import (
-	emissionskeeper "github.com/zeta-chain/node/x/emissions/keeper"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
@@ -14,9 +13,10 @@ import (
 	"github.com/zeta-chain/node/pkg/sdkconfig"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
-	emissionsModule "github.com/zeta-chain/node/x/emissions"
+	"github.com/zeta-chain/node/x/emissions"
+	emissionskeeper "github.com/zeta-chain/node/x/emissions/keeper"
 	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
-	observerTypes "github.com/zeta-chain/node/x/observer/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestBeginBlocker(t *testing.T) {
@@ -36,14 +36,14 @@ func TestBeginBlocker(t *testing.T) {
 			zk.ObserverKeeper.SetBallot(ctx, &ballot)
 			ballotIdentifiers = append(ballotIdentifiers, ballot.BallotIdentifier)
 		}
-		zk.ObserverKeeper.SetBallotList(ctx, &observerTypes.BallotListForHeight{
+		zk.ObserverKeeper.SetBallotList(ctx, &observertypes.BallotListForHeight{
 			Height:           0,
 			BallotsIndexList: ballotIdentifiers,
 		})
 
 		//Act
 		for i := 0; i < 100; i++ {
-			emissionsModule.BeginBlocker(ctx, *k)
+			emissions.BeginBlocker(ctx, *k)
 			ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 		}
 
@@ -65,12 +65,12 @@ func TestBeginBlocker(t *testing.T) {
 			zk.ObserverKeeper.SetBallot(ctx, &ballot)
 			ballotIdentifiers = append(ballotIdentifiers, ballot.BallotIdentifier)
 		}
-		zk.ObserverKeeper.SetBallotList(ctx, &observerTypes.BallotListForHeight{
+		zk.ObserverKeeper.SetBallotList(ctx, &observertypes.BallotListForHeight{
 			Height:           0,
 			BallotsIndexList: ballotIdentifiers,
 		})
 		for i := 0; i < 100; i++ {
-			emissionsModule.BeginBlocker(ctx, *k)
+			emissions.BeginBlocker(ctx, *k)
 			ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 		}
 		for _, observer := range observerSet.ObserverList {
@@ -83,7 +83,7 @@ func TestBeginBlocker(t *testing.T) {
 		k, ctx, sk, _ := keepertest.EmissionsKeeper(t)
 		feeCollectorAddress := sk.AuthKeeper.GetModuleAccount(ctx, types.FeeCollectorName).GetAddress()
 		for i := 0; i < 100; i++ {
-			emissionsModule.BeginBlocker(ctx, *k)
+			emissions.BeginBlocker(ctx, *k)
 			ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 		}
 		require.True(t, sk.BankKeeper.GetBalance(ctx, feeCollectorAddress, config.BaseDenom).Amount.IsZero())
@@ -106,7 +106,7 @@ func TestBeginBlocker(t *testing.T) {
 
 		for i := 0; i < 100; i++ {
 			// produce a block
-			emissionsModule.BeginBlocker(ctx, *k)
+			emissions.BeginBlocker(ctx, *k)
 			ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 		}
 		require.True(t, sk.BankKeeper.GetBalance(ctx, feeCollectorAddress, config.BaseDenom).Amount.IsZero())
@@ -139,7 +139,7 @@ func TestBeginBlocker(t *testing.T) {
 		bankMock.On("SendCoinsFromModuleToModule",
 			mock.Anything, emissionstypes.ModuleName, k.GetFeeCollector(), mock.Anything).
 			Return(emissionstypes.ErrUnableToWithdrawEmissions).Once()
-		emissionsModule.BeginBlocker(ctx, *k)
+		emissions.BeginBlocker(ctx, *k)
 
 		bankMock.AssertNumberOfCalls(t, "SendCoinsFromModuleToModule", 1)
 	})
@@ -166,7 +166,7 @@ func TestBeginBlocker(t *testing.T) {
 		bankMock.On("SendCoinsFromModuleToModule",
 			mock.Anything, emissionstypes.ModuleName, emissionstypes.UndistributedObserverRewardsPool, mock.Anything).
 			Return(emissionstypes.ErrUnableToWithdrawEmissions).Once()
-		emissionsModule.BeginBlocker(ctx, *k)
+		emissions.BeginBlocker(ctx, *k)
 
 		bankMock.AssertNumberOfCalls(t, "SendCoinsFromModuleToModule", 2)
 	})
@@ -199,7 +199,7 @@ func TestBeginBlocker(t *testing.T) {
 		bankMock.On("SendCoinsFromModuleToModule",
 			mock.Anything, emissionstypes.ModuleName, emissionstypes.UndistributedTSSRewardsPool, mock.Anything).
 			Return(emissionstypes.ErrUnableToWithdrawEmissions).Once()
-		emissionsModule.BeginBlocker(ctx, *k)
+		emissions.BeginBlocker(ctx, *k)
 
 		bankMock.AssertNumberOfCalls(t, "SendCoinsFromModuleToModule", 3)
 	})
@@ -217,7 +217,7 @@ func TestBeginBlocker(t *testing.T) {
 			zk.ObserverKeeper.SetBallot(ctx, &ballot)
 			ballotIdentifiers = append(ballotIdentifiers, ballot.BallotIdentifier)
 		}
-		zk.ObserverKeeper.SetBallotList(ctx, &observerTypes.BallotListForHeight{
+		zk.ObserverKeeper.SetBallotList(ctx, &observertypes.BallotListForHeight{
 			Height:           0,
 			BallotsIndexList: ballotIdentifiers,
 		})
@@ -252,7 +252,7 @@ func TestBeginBlocker(t *testing.T) {
 		for i := 0; i < numberOfTestBlocks; i++ {
 			emissionPoolBeforeBlockDistribution := sk.BankKeeper.GetBalance(ctx, emissionPool, config.BaseDenom).Amount
 			// produce a block
-			emissionsModule.BeginBlocker(ctx, *k)
+			emissions.BeginBlocker(ctx, *k)
 
 			// require distribution amount
 			emissionPoolBalanceAfterBlockDistribution := sk.BankKeeper.GetBalance(
@@ -318,22 +318,22 @@ func TestDistributeObserverRewards(t *testing.T) {
 
 	tt := []struct {
 		name                      string
-		votes                     [][]observerTypes.VoteType
+		votes                     [][]observertypes.VoteType
 		observerStartingEmissions sdkmath.Int
 		totalRewardsForBlock      sdkmath.Int
 		expectedRewards           map[string]int64
-		ballotStatus              observerTypes.BallotStatus
+		ballotStatus              observertypes.BallotStatus
 		slashAmount               sdkmath.Int
 		rewardsPerBlock           sdkmath.LegacyDec
 	}{
 		{
 			name: "all observers rewarded correctly",
-			votes: [][]observerTypes.VoteType{
+			votes: [][]observertypes.VoteType{
 				{
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
 				},
 			},
 			observerStartingEmissions: sdkmath.NewInt(100),
@@ -345,18 +345,18 @@ func TestDistributeObserverRewards(t *testing.T) {
 				observerSet.ObserverList[2]: 125,
 				observerSet.ObserverList[3]: 125,
 			},
-			ballotStatus:    observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
+			ballotStatus:    observertypes.BallotStatus_BallotFinalized_SuccessObservation,
 			slashAmount:     sdkmath.NewInt(25),
 			rewardsPerBlock: emissionstypes.BlockReward,
 		},
 		{
 			name: "one observer slashed",
-			votes: [][]observerTypes.VoteType{
+			votes: [][]observertypes.VoteType{
 				{
-					observerTypes.VoteType_FailureObservation,
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
+					observertypes.VoteType_FailureObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
 				},
 			},
 			observerStartingEmissions: sdkmath.NewInt(100),
@@ -368,18 +368,18 @@ func TestDistributeObserverRewards(t *testing.T) {
 				observerSet.ObserverList[2]: 125,
 				observerSet.ObserverList[3]: 125,
 			},
-			ballotStatus:    observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
+			ballotStatus:    observertypes.BallotStatus_BallotFinalized_SuccessObservation,
 			slashAmount:     sdkmath.NewInt(25),
 			rewardsPerBlock: emissionstypes.BlockReward,
 		},
 		{
 			name: "all observer slashed",
-			votes: [][]observerTypes.VoteType{
+			votes: [][]observertypes.VoteType{
 				{
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
 				},
 			},
 			observerStartingEmissions: sdkmath.NewInt(100),
@@ -391,18 +391,18 @@ func TestDistributeObserverRewards(t *testing.T) {
 				observerSet.ObserverList[2]: 75,
 				observerSet.ObserverList[3]: 75,
 			},
-			ballotStatus:    observerTypes.BallotStatus_BallotFinalized_FailureObservation,
+			ballotStatus:    observertypes.BallotStatus_BallotFinalized_FailureObservation,
 			slashAmount:     sdkmath.NewInt(25),
 			rewardsPerBlock: emissionstypes.BlockReward,
 		},
 		{
 			name: "slashed to zero if slash amount is greater than available emissions",
-			votes: [][]observerTypes.VoteType{
+			votes: [][]observertypes.VoteType{
 				{
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
 				},
 			},
 			observerStartingEmissions: sdkmath.NewInt(100),
@@ -414,24 +414,24 @@ func TestDistributeObserverRewards(t *testing.T) {
 				observerSet.ObserverList[2]: 0,
 				observerSet.ObserverList[3]: 0,
 			},
-			ballotStatus:    observerTypes.BallotStatus_BallotFinalized_FailureObservation,
+			ballotStatus:    observertypes.BallotStatus_BallotFinalized_FailureObservation,
 			slashAmount:     sdkmath.NewInt(2500),
 			rewardsPerBlock: emissionstypes.BlockReward,
 		},
 		{
 			name: "withdraw able emissions unchanged if rewards and slashes are equal",
-			votes: [][]observerTypes.VoteType{
+			votes: [][]observertypes.VoteType{
 				{
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
 				},
 				{
-					observerTypes.VoteType_FailureObservation,
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
+					observertypes.VoteType_FailureObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
 				},
 			},
 			observerStartingEmissions: sdkmath.NewInt(100),
@@ -443,18 +443,18 @@ func TestDistributeObserverRewards(t *testing.T) {
 				observerSet.ObserverList[2]: 120,
 				observerSet.ObserverList[3]: 120,
 			},
-			ballotStatus:    observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
+			ballotStatus:    observertypes.BallotStatus_BallotFinalized_SuccessObservation,
 			slashAmount:     sdkmath.NewInt(25),
 			rewardsPerBlock: emissionstypes.BlockReward,
 		},
 		{
 			name: "no rewards if block reward is nil",
-			votes: [][]observerTypes.VoteType{
+			votes: [][]observertypes.VoteType{
 				{
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
 				},
 			},
 			observerStartingEmissions: sdkmath.NewInt(0),
@@ -466,18 +466,18 @@ func TestDistributeObserverRewards(t *testing.T) {
 				observerSet.ObserverList[2]: 0,
 				observerSet.ObserverList[3]: 0,
 			},
-			ballotStatus: observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
+			ballotStatus: observertypes.BallotStatus_BallotFinalized_SuccessObservation,
 			slashAmount:  sdkmath.NewInt(25),
 			//rewardsPerBlock: nil,
 		},
 		{
 			name: "no rewards if block reward is negative",
-			votes: [][]observerTypes.VoteType{
+			votes: [][]observertypes.VoteType{
 				{
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
 				},
 			},
 			observerStartingEmissions: sdkmath.NewInt(0),
@@ -489,18 +489,18 @@ func TestDistributeObserverRewards(t *testing.T) {
 				observerSet.ObserverList[2]: 0,
 				observerSet.ObserverList[3]: 0,
 			},
-			ballotStatus:    observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
+			ballotStatus:    observertypes.BallotStatus_BallotFinalized_SuccessObservation,
 			slashAmount:     sdkmath.NewInt(25),
 			rewardsPerBlock: sdk.NewDec(1).NegMut(),
 		},
 		{
 			name: "no rewards if block reward is zero",
-			votes: [][]observerTypes.VoteType{
+			votes: [][]observertypes.VoteType{
 				{
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
-					observerTypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_SuccessObservation,
 				},
 			},
 			observerStartingEmissions: sdkmath.NewInt(0),
@@ -512,7 +512,7 @@ func TestDistributeObserverRewards(t *testing.T) {
 				observerSet.ObserverList[2]: 0,
 				observerSet.ObserverList[3]: 0,
 			},
-			ballotStatus:    observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
+			ballotStatus:    observertypes.BallotStatus_BallotFinalized_SuccessObservation,
 			slashAmount:     sdkmath.NewInt(25),
 			rewardsPerBlock: sdk.ZeroDec(),
 		},
@@ -548,7 +548,7 @@ func TestDistributeObserverRewards(t *testing.T) {
 			// Set the ballot list
 			ballotIdentifiers := []string{}
 			for i, votes := range tc.votes {
-				ballot := observerTypes.Ballot{
+				ballot := observertypes.Ballot{
 					BallotIdentifier: "ballot" + string(rune(i)),
 					BallotStatus:     tc.ballotStatus,
 					VoterList:        observerSet.ObserverList,
@@ -557,14 +557,14 @@ func TestDistributeObserverRewards(t *testing.T) {
 				zk.ObserverKeeper.SetBallot(ctx, &ballot)
 				ballotIdentifiers = append(ballotIdentifiers, ballot.BallotIdentifier)
 			}
-			zk.ObserverKeeper.SetBallotList(ctx, &observerTypes.BallotListForHeight{
+			zk.ObserverKeeper.SetBallotList(ctx, &observertypes.BallotListForHeight{
 				Height:           0,
 				BallotsIndexList: ballotIdentifiers,
 			})
 			ctx = ctx.WithBlockHeight(100)
 
 			// Distribute the rewards and check if the rewards are distributed correctly
-			err = emissionsModule.DistributeObserverRewards(ctx, tc.totalRewardsForBlock, *k, params)
+			err = emissions.DistributeObserverRewards(ctx, tc.totalRewardsForBlock, *k, params)
 			require.NoError(t, err)
 
 			for i, observer := range observerSet.ObserverList {
