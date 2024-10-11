@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -21,6 +22,7 @@ const (
 )
 
 // ZRC20Allowance returns the ZRC20 allowance for a given spender.
+// The allowance has to be previously approved by the ZRC20 tokens owner.
 func (k Keeper) ZRC20Allowance(
 	ctx sdk.Context,
 	zrc20ABI *abi.ABI,
@@ -53,7 +55,7 @@ func (k Keeper) ZRC20Allowance(
 		args...,
 	)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "EVM error calling ZRC20 allowance function")
 	}
 
 	if res.VmError != "" {
@@ -62,7 +64,7 @@ func (k Keeper) ZRC20Allowance(
 
 	ret, err := zrc20ABI.Methods[allowance].Outputs.Unpack(res.Ret)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to unpack ZRC20 allowance return value")
 	}
 
 	if len(ret) == 0 {
@@ -95,6 +97,7 @@ func (k Keeper) ZRC20BalanceOf(
 		return nil, err
 	}
 
+	// function balanceOf(address account)
 	res, err := k.CallEVM(
 		ctx,
 		*zrc20ABI,
@@ -108,7 +111,7 @@ func (k Keeper) ZRC20BalanceOf(
 		owner,
 	)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "EVM error calling ZRC20 balanceOf function")
 	}
 
 	if res.VmError != "" {
@@ -117,7 +120,7 @@ func (k Keeper) ZRC20BalanceOf(
 
 	ret, err := zrc20ABI.Methods[balanceOf].Outputs.Unpack(res.Ret)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to unpack ZRC20 balanceOf return value")
 	}
 
 	if len(ret) == 0 {
@@ -159,7 +162,7 @@ func (k Keeper) ZRC20TotalSupply(
 		totalSupply,
 	)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "EVM error calling ZRC20 totalSupply function")
 	}
 
 	if res.VmError != "" {
@@ -168,7 +171,7 @@ func (k Keeper) ZRC20TotalSupply(
 
 	ret, err := zrc20ABI.Methods[totalSupply].Outputs.Unpack(res.Ret)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to unpack ZRC20 totalSupply return value")
 	}
 
 	if len(ret) == 0 {
@@ -202,7 +205,7 @@ func (k Keeper) ZRC20Transfer(
 		return false, err
 	}
 
-	// transfer from the EOA locking the assets to the owner.
+	// function transfer(address recipient, uint256 amount)
 	args := []interface{}{to, amount}
 	res, err := k.CallEVM(
 		ctx,
@@ -217,7 +220,7 @@ func (k Keeper) ZRC20Transfer(
 		args...,
 	)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "EVM error calling ZRC20 transfer function")
 	}
 
 	if res.VmError != "" {
@@ -226,7 +229,7 @@ func (k Keeper) ZRC20Transfer(
 
 	ret, err := zrc20ABI.Methods[transfer].Outputs.Unpack(res.Ret)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "failed to unpack ZRC20 transfer return value")
 	}
 
 	if len(ret) == 0 {
@@ -241,20 +244,20 @@ func (k Keeper) ZRC20Transfer(
 	return transferred, nil
 }
 
-// ZRC20TransferFrom transfers ZRC20 tokens from the owner to the spender.
+// ZRC20TransferFrom transfers ZRC20 tokens "from" to the EOA "to".
 // The transaction is started by the spender.
-// This requires the spender to have been approved by the owner.
+// Requisite: the original EOA must have approved the spender to spend the tokens.
 func (k Keeper) ZRC20TransferFrom(
 	ctx sdk.Context,
 	zrc20ABI *abi.ABI,
-	zrc20Address, from, to common.Address,
+	zrc20Address, spender, from, to common.Address,
 	amount *big.Int,
 ) (bool, error) {
 	if zrc20ABI == nil {
 		return false, fungibletypes.ErrZRC20NilABI
 	}
 
-	if crypto.IsEmptyAddress(from) || crypto.IsEmptyAddress(to) {
+	if crypto.IsEmptyAddress(from) || crypto.IsEmptyAddress(to) || crypto.IsEmptyAddress(spender) {
 		return false, fungibletypes.ErrZeroAddress
 	}
 
@@ -262,11 +265,12 @@ func (k Keeper) ZRC20TransferFrom(
 		return false, err
 	}
 
+	// function transferFrom(address sender, address recipient, uint256 amount)
 	args := []interface{}{from, to, amount}
 	res, err := k.CallEVM(
 		ctx,
 		*zrc20ABI,
-		to,
+		spender,
 		zrc20Address,
 		big.NewInt(0),
 		nil,
@@ -276,7 +280,7 @@ func (k Keeper) ZRC20TransferFrom(
 		args...,
 	)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "EVM error calling ZRC20 transferFrom function")
 	}
 
 	if res.VmError != "" {
@@ -285,7 +289,7 @@ func (k Keeper) ZRC20TransferFrom(
 
 	ret, err := zrc20ABI.Methods[transferFrom].Outputs.Unpack(res.Ret)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "failed to unpack ZRC20 transferFrom return value")
 	}
 
 	if len(ret) == 0 {

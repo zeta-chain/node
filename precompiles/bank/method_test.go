@@ -135,7 +135,7 @@ func Test_Methods(t *testing.T) {
 
 		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "invalid allowance, got: 0")
+		require.Contains(t, err.Error(), "invalid allowance, got 0")
 
 		res, err := ts.bankABI.Methods[DepositMethodName].Outputs.Unpack(success)
 		require.NoError(t, err)
@@ -194,7 +194,11 @@ func Test_Methods(t *testing.T) {
 
 		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "unexpected error in LockZRC20InBank: invalid allowance, got: 500")
+		require.Contains(
+			t,
+			err.Error(),
+			"unexpected error in LockZRC20InBank: failed allowance check: invalid allowance, got 500, wanted 501",
+		)
 
 		res, err := ts.bankABI.Methods[DepositMethodName].Outputs.Unpack(success)
 		require.NoError(t, err)

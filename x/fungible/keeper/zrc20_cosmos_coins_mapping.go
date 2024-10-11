@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -19,42 +20,42 @@ import (
 func (k Keeper) LockZRC20(
 	ctx sdk.Context,
 	zrc20ABI *abi.ABI,
-	zrc20Address, owner, locker common.Address,
+	zrc20Address, spender, owner, locker common.Address,
 	amount *big.Int,
 ) error {
 	// owner is the EOA owner of the ZRC20 tokens.
 	// locker is the address that will lock the ZRC20 tokens, i.e: bank precompile.
 	if err := k.CheckZRC20Allowance(ctx, zrc20ABI, owner, locker, zrc20Address, amount); err != nil {
-		return err
+		return errors.Wrap(err, "failed allowance check")
 	}
 
 	// Check amount_to_be_locked <= total_erc20_balance - already_locked
 	// Max amount of ZRC20 tokens that exists in zEVM are the total supply.
 	totalSupply, err := k.ZRC20TotalSupply(ctx, zrc20ABI, zrc20Address)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed totalSupply check")
 	}
 
 	// The alreadyLocked amount is the amount of ZRC20 tokens that have been locked by the locker.
-	// TODO: Implement list of whitelisted locker addresses.
+	// TODO: Implement list of whitelisted locker addresses (https://github.com/zeta-chain/node/issues/2991)
 	alreadyLocked, err := k.ZRC20BalanceOf(ctx, zrc20ABI, zrc20Address, locker)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed getting the ZRC20 already locked amount")
 	}
 
 	if !k.IsValidDepositAmount(totalSupply, alreadyLocked, amount) {
-		return fungibletypes.ErrInvalidAmount
+		return errors.Wrap(fungibletypes.ErrInvalidAmount, "amount to be locked is not valid")
 	}
 
 	// Initiate a transferFrom the owner to the locker. This will lock the ZRC20 tokens.
 	// locker has to initiate the transaction and have enough allowance from owner.
-	transferred, err := k.ZRC20TransferFrom(ctx, zrc20ABI, zrc20Address, owner, locker, amount)
+	transferred, err := k.ZRC20TransferFrom(ctx, zrc20ABI, zrc20Address, spender, owner, locker, amount)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed executing transferFrom")
 	}
 
 	if !transferred {
-		return fmt.Errorf("lock ZRC20 not successful")
+		return fmt.Errorf("transferFrom returned false (no success)")
 	}
 
 	return nil
@@ -71,17 +72,17 @@ func (k Keeper) UnlockZRC20(
 ) error {
 	// Check if the account locking the ZRC20 tokens has enough balance.
 	if err := k.CheckZRC20Balance(ctx, zrc20ABI, zrc20Address, locker, amount); err != nil {
-		return err
+		return errors.Wrap(err, "failed balance check")
 	}
 
 	// transfer from the EOA locking the assets to the owner.
 	transferred, err := k.ZRC20Transfer(ctx, zrc20ABI, zrc20Address, locker, owner, amount)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed executing transfer")
 	}
 
 	if !transferred {
-		return fmt.Errorf("unlock ZRC20 not successful")
+		return fmt.Errorf("transfer returned false (no success)")
 	}
 
 	return nil
@@ -108,16 +109,16 @@ func (k Keeper) CheckZRC20Allowance(
 	}
 
 	if err := k.IsValidZRC20(ctx, zrc20Address); err != nil {
-		return err
+		return errors.Wrap(err, "ZRC20 is not valid")
 	}
 
 	allowanceValue, err := k.ZRC20Allowance(ctx, zrc20ABI, zrc20Address, owner, spender)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed while checking spender's allowance")
 	}
 
 	if allowanceValue.Cmp(amount) < 0 || allowanceValue.Cmp(big.NewInt(0)) <= 0 {
-		return fmt.Errorf("invalid allowance, got: %s", allowanceValue.String())
+		return fmt.Errorf("invalid allowance, got %s, wanted %s", allowanceValue.String(), amount.String())
 	}
 
 	return nil
@@ -140,7 +141,7 @@ func (k Keeper) CheckZRC20Balance(
 	}
 
 	if err := k.IsValidZRC20(ctx, zrc20Address); err != nil {
-		return err
+		return errors.Wrap(err, "ZRC20 is not valid")
 	}
 
 	if crypto.IsEmptyAddress(owner) {
@@ -151,11 +152,11 @@ func (k Keeper) CheckZRC20Balance(
 	// function balanceOf(address account)
 	balance, err := k.ZRC20BalanceOf(ctx, zrc20ABI, zrc20Address, owner)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed getting owner's ZRC20 balance")
 	}
 
-	if balance.Cmp(amount) == -1 {
-		return fmt.Errorf("invalid balance, got: %s", balance.String())
+	if balance.Cmp(amount) < 0 {
+		return fmt.Errorf("invalid balance, got %s, wanted %s", balance.String(), amount.String())
 	}
 
 	return nil
@@ -179,7 +180,7 @@ func (k Keeper) IsValidZRC20(ctx sdk.Context, zrc20Address common.Address) error
 	return nil
 }
 
-// IsValidDepositAmount checks "totalSupply >= amount_to_be_deposited + amount_already_locked".
+// IsValidDepositAmount checks "totalSupply >= amount_to_be_locked + amount_already_locked".
 // A failure here means the user is trying to lock more than the available ZRC20 supply.
 // This suggests that an actor is minting ZRC20 tokens out of thin air.
 func (k Keeper) IsValidDepositAmount(totalSupply, alreadyLocked, amountToDeposit *big.Int) bool {

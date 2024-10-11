@@ -38,28 +38,28 @@ func Test_LockZRC20(t *testing.T) {
 
 	t.Run("should fail when trying to lock zero amount", func(t *testing.T) {
 		// Check lock with zero amount.
-		err = ts.fungibleKeeper.LockZRC20(ts.ctx, zrc20ABI, ts.zrc20Address, owner, locker, big.NewInt(0))
+		err = ts.fungibleKeeper.LockZRC20(ts.ctx, zrc20ABI, ts.zrc20Address, locker, owner, locker, big.NewInt(0))
 		require.Error(t, err)
 		require.ErrorIs(t, err, fungibletypes.ErrInvalidAmount)
 	})
 
 	t.Run("should fail when ZRC20 ABI is not properly initialized", func(t *testing.T) {
 		// Check lock with nil ABI.
-		err = ts.fungibleKeeper.LockZRC20(ts.ctx, nil, ts.zrc20Address, owner, locker, big.NewInt(10))
+		err = ts.fungibleKeeper.LockZRC20(ts.ctx, nil, ts.zrc20Address, locker, owner, locker, big.NewInt(10))
 		require.Error(t, err)
 		require.ErrorIs(t, err, fungibletypes.ErrZRC20NilABI)
 	})
 
 	t.Run("should fail when trying to lock a zero address ZRC20", func(t *testing.T) {
 		// Check lock with ZRC20 zero address.
-		err = ts.fungibleKeeper.LockZRC20(ts.ctx, zrc20ABI, common.Address{}, owner, locker, big.NewInt(10))
+		err = ts.fungibleKeeper.LockZRC20(ts.ctx, zrc20ABI, common.Address{}, locker, owner, locker, big.NewInt(10))
 		require.Error(t, err)
 		require.ErrorIs(t, err, fungibletypes.ErrZRC20ZeroAddress)
 	})
 
 	t.Run("should fail when trying to lock a non whitelisted ZRC20", func(t *testing.T) {
 		// Check lock with non whitelisted ZRC20.
-		err = ts.fungibleKeeper.LockZRC20(ts.ctx, zrc20ABI, sample.EthAddress(), owner, locker, big.NewInt(10))
+		err = ts.fungibleKeeper.LockZRC20(ts.ctx, zrc20ABI, sample.EthAddress(), locker, owner, locker, big.NewInt(10))
 		require.Error(t, err)
 		require.ErrorIs(t, err, fungibletypes.ErrZRC20NotWhiteListed)
 	})
@@ -72,6 +72,7 @@ func Test_LockZRC20(t *testing.T) {
 			ts.ctx,
 			zrc20ABI,
 			ts.zrc20Address,
+			locker,
 			owner,
 			locker,
 			big.NewInt(1000000000000000),
@@ -84,7 +85,7 @@ func Test_LockZRC20(t *testing.T) {
 		approveAllowance(t, ts, zrc20ABI, owner, locker, big.NewInt(1001))
 
 		// Check allowance smaller, equal and bigger than the amount.
-		err = ts.fungibleKeeper.LockZRC20(ts.ctx, zrc20ABI, ts.zrc20Address, owner, locker, big.NewInt(1001))
+		err = ts.fungibleKeeper.LockZRC20(ts.ctx, zrc20ABI, ts.zrc20Address, locker, owner, locker, big.NewInt(1001))
 		require.Error(t, err)
 
 		// We do not check in LockZRC20 explicitly if the amount is bigger than the balance.
@@ -96,15 +97,15 @@ func Test_LockZRC20(t *testing.T) {
 		approveAllowance(t, ts, zrc20ABI, owner, locker, allowanceTotal)
 
 		// Check allowance smaller, equal and bigger than the amount.
-		err = ts.fungibleKeeper.LockZRC20(ts.ctx, zrc20ABI, ts.zrc20Address, owner, locker, higherThanAllowance)
+		err = ts.fungibleKeeper.LockZRC20(ts.ctx, zrc20ABI, ts.zrc20Address, locker, owner, locker, higherThanAllowance)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "invalid allowance, got: 100")
+		require.Contains(t, err.Error(), "invalid allowance, got 100")
 	})
 
 	t.Run("should pass when trying to lock a valid approved amount", func(t *testing.T) {
 		approveAllowance(t, ts, zrc20ABI, owner, locker, allowanceTotal)
 
-		err = ts.fungibleKeeper.LockZRC20(ts.ctx, zrc20ABI, ts.zrc20Address, owner, locker, allowanceTotal)
+		err = ts.fungibleKeeper.LockZRC20(ts.ctx, zrc20ABI, ts.zrc20Address, locker, owner, locker, allowanceTotal)
 		require.NoError(t, err)
 
 		ownerBalance, err := ts.fungibleKeeper.ZRC20BalanceOf(ts.ctx, zrc20ABI, ts.zrc20Address, owner)
@@ -119,7 +120,15 @@ func Test_LockZRC20(t *testing.T) {
 	t.Run("should pass when trying to lock an amount smaller than approved", func(t *testing.T) {
 		approveAllowance(t, ts, zrc20ABI, owner, locker, allowanceTotal)
 
-		err = ts.fungibleKeeper.LockZRC20(ts.ctx, zrc20ABI, ts.zrc20Address, owner, locker, smallerThanAllowance)
+		err = ts.fungibleKeeper.LockZRC20(
+			ts.ctx,
+			zrc20ABI,
+			ts.zrc20Address,
+			locker,
+			owner,
+			locker,
+			smallerThanAllowance,
+		)
 		require.NoError(t, err)
 
 		// Note that balances are cumulative for all tests. That's why we check 801 and 199 here.
@@ -155,7 +164,7 @@ func Test_UnlockZRC20(t *testing.T) {
 	approveAllowance(t, ts, zrc20ABI, owner, locker, allowanceTotal)
 
 	// Lock 100 ZRC20.
-	err = ts.fungibleKeeper.LockZRC20(ts.ctx, zrc20ABI, ts.zrc20Address, owner, locker, allowanceTotal)
+	err = ts.fungibleKeeper.LockZRC20(ts.ctx, zrc20ABI, ts.zrc20Address, locker, owner, locker, allowanceTotal)
 	require.NoError(t, err)
 
 	t.Run("should fail when trying to unlock zero amount", func(t *testing.T) {
@@ -185,7 +194,7 @@ func Test_UnlockZRC20(t *testing.T) {
 	t.Run("should fail when trying to unlock an amount bigger than locker's balance", func(t *testing.T) {
 		err = ts.fungibleKeeper.UnlockZRC20(ts.ctx, zrc20ABI, ts.zrc20Address, owner, locker, big.NewInt(1001))
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "invalid balance, got: 100")
+		require.Contains(t, err.Error(), "invalid balance, got 100")
 	})
 
 	t.Run("should pass when trying to unlock a correct amount", func(t *testing.T) {
@@ -231,7 +240,7 @@ func Test_CheckZRC20Allowance(t *testing.T) {
 	t.Run("should fail when allowance is not approved", func(t *testing.T) {
 		err = ts.fungibleKeeper.CheckZRC20Allowance(ts.ctx, zrc20ABI, owner, spender, ts.zrc20Address, big.NewInt(10))
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "invalid allowance, got: 0")
+		require.Contains(t, err.Error(), "invalid allowance, got 0")
 	})
 
 	t.Run("should fail when checking a higher amount than approved", func(t *testing.T) {
@@ -246,7 +255,7 @@ func Test_CheckZRC20Allowance(t *testing.T) {
 			higherThanAllowance,
 		)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "invalid allowance, got: 100")
+		require.Contains(t, err.Error(), "invalid allowance, got 100")
 	})
 
 	t.Run("should pass when checking the same amount as approved", func(t *testing.T) {

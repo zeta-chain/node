@@ -100,7 +100,7 @@ func (c *Contract) deposit(
 	}
 
 	// 2. Effect: subtract balance.
-	if err := c.fungibleKeeper.LockZRC20(ctx, c.zrc20ABI, zrc20Addr, caller, c.Address(), amount); err != nil {
+	if err := c.fungibleKeeper.LockZRC20(ctx, c.zrc20ABI, zrc20Addr, c.Address(), caller, c.Address(), amount); err != nil {
 		return nil, &ptypes.ErrUnexpected{
 			When: "LockZRC20InBank",
 			Got:  err.Error(),

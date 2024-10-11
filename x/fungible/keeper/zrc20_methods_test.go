@@ -239,19 +239,35 @@ func Test_ZRC20TransferFrom(t *testing.T) {
 			ts.zrc20Address,
 			common.Address{},
 			common.Address{},
+			common.Address{},
 			big.NewInt(0),
 		)
 		require.Error(t, err)
 		require.ErrorAs(t, err, &fungibletypes.ErrZRC20NilABI)
 	})
 
-	t.Run("should fail when owner is zero address", func(t *testing.T) {
+	t.Run("should fail when from is zero address", func(t *testing.T) {
 		_, err := ts.fungibleKeeper.ZRC20TransferFrom(
 			ts.ctx,
 			zrc20ABI,
 			ts.zrc20Address,
+			sample.EthAddress(),
 			common.Address{},
 			sample.EthAddress(),
+			big.NewInt(0),
+		)
+		require.Error(t, err)
+		require.ErrorAs(t, err, &fungibletypes.ErrZeroAddress)
+	})
+
+	t.Run("should fail when to is zero address", func(t *testing.T) {
+		_, err := ts.fungibleKeeper.ZRC20TransferFrom(
+			ts.ctx,
+			zrc20ABI,
+			ts.zrc20Address,
+			sample.EthAddress(),
+			sample.EthAddress(),
+			common.Address{},
 			big.NewInt(0),
 		)
 		require.Error(t, err)
@@ -263,8 +279,9 @@ func Test_ZRC20TransferFrom(t *testing.T) {
 			ts.ctx,
 			zrc20ABI,
 			ts.zrc20Address,
-			sample.EthAddress(),
 			common.Address{},
+			sample.EthAddress(),
+			sample.EthAddress(),
 			big.NewInt(0),
 		)
 		require.Error(t, err)
@@ -276,6 +293,7 @@ func Test_ZRC20TransferFrom(t *testing.T) {
 			ts.ctx,
 			zrc20ABI,
 			common.Address{},
+			sample.EthAddress(),
 			sample.EthAddress(),
 			fungibletypes.ModuleAddressZEVM,
 			big.NewInt(0),
@@ -293,6 +311,7 @@ func Test_ZRC20TransferFrom(t *testing.T) {
 			ts.ctx,
 			zrc20ABI,
 			ts.zrc20Address,
+			fungibletypes.ModuleAddressZEVM,
 			sample.EthAddress(),
 			fungibletypes.ModuleAddressZEVM,
 			big.NewInt(10),
@@ -312,6 +331,7 @@ func Test_ZRC20TransferFrom(t *testing.T) {
 			ts.ctx,
 			zrc20ABI,
 			ts.zrc20Address,
+			fungibletypes.ModuleAddressZEVM,
 			sample.EthAddress(),
 			fungibletypes.ModuleAddressZEVM,
 			big.NewInt(10),
