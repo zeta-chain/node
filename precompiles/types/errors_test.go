@@ -121,3 +121,15 @@ func Test_ErrInvalidToken(t *testing.T) {
 	}
 	require.ErrorIs(t, ErrInvalidToken{"foo", "bar"}, e)
 }
+
+func Test_ErrWriteMethod(t *testing.T) {
+	e := ErrWriteMethod{
+		Method: "foo",
+	}
+	got := e.Error()
+	expect := "method not allowed in read-only mode: foo"
+	if got != expect {
+		t.Errorf("Expected %v, got %v", expect, got)
+	}
+	require.ErrorIs(t, ErrWriteMethod{"foo"}, e)
+}
