@@ -15,6 +15,15 @@ import (
 func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	emissionPoolBalance := keeper.GetReservesFactor(ctx)
 
+	// reduce frequency of log messages
+	logEach10Blocks := func(message string) {
+		if ctx.BlockHeight()%10 == 0 {
+			ctx.Logger().Info(message)
+		} else {
+			ctx.Logger().Debug(message)
+		}
+	}
+
 	// Get the block rewards from the params
 	params, found := keeper.GetParams(ctx)
 	if !found {
@@ -22,9 +31,17 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		return
 	}
 	blockRewards := params.BlockRewardAmount
+
+	// skip if block rewards are nil or not positive
+	if blockRewards.IsNil() || !blockRewards.IsPositive() {
+		logEach10Blocks("Block rewards are nil or not positive")
+		return
+	}
+
 	if blockRewards.GT(emissionPoolBalance) {
-		ctx.Logger().
-			Info(fmt.Sprintf("Block rewards %s are greater than emission pool balance %s", blockRewards.String(), emissionPoolBalance.String()))
+		logEach10Blocks(fmt.Sprintf("Block rewards %s are greater than emission pool balance %s",
+			blockRewards.String(), emissionPoolBalance.String()),
+		)
 		return
 	}
 
@@ -44,7 +61,7 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		ctx.Logger().Error(fmt.Sprintf("Error while distributing observer rewards %s", err))
 		return
 	}
-	err = DistributeTssRewards(tmpCtx, tssSignerRewards, keeper.GetBankKeeper())
+	err = DistributeTSSRewards(tmpCtx, tssSignerRewards, keeper.GetBankKeeper())
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("Error while distributing tss signer rewards %s", err))
 		return
@@ -166,9 +183,9 @@ func DistributeObserverRewards(
 	return nil
 }
 
-// DistributeTssRewards trasferes the allocated rewards to the Undistributed Tss Rewards Pool.
+// DistributeTSSRewards trasferes the allocated rewards to the Undistributed Tss Rewards Pool.
 // This is done so that the reserves factor is properly calculated in the next block
-func DistributeTssRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.BankKeeper) error {
+func DistributeTSSRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.BankKeeper) error {
 	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
-	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedTssRewardsPool, coin)
+	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedTSSRewardsPool, coin)
 }

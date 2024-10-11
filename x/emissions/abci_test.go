@@ -1,6 +1,7 @@
 package emissions_test
 
 import (
+	emissionskeeper "github.com/zeta-chain/node/x/emissions/keeper"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
@@ -99,7 +100,7 @@ func TestBeginBlocker(t *testing.T) {
 		)
 		require.NoError(t, err)
 		// Setup module accounts for emission pools except for observer pool , so that the observer distribution fails
-		_ = sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedTssRewardsPool).GetAddress()
+		_ = sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedTSSRewardsPool).GetAddress()
 		feeCollectorAddress := sk.AuthKeeper.GetModuleAccount(ctx, types.FeeCollectorName).GetAddress()
 		_ = sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.ModuleName).GetAddress()
 
@@ -196,7 +197,7 @@ func TestBeginBlocker(t *testing.T) {
 
 		// fail third distribution
 		bankMock.On("SendCoinsFromModuleToModule",
-			mock.Anything, emissionstypes.ModuleName, emissionstypes.UndistributedTssRewardsPool, mock.Anything).
+			mock.Anything, emissionstypes.ModuleName, emissionstypes.UndistributedTSSRewardsPool, mock.Anything).
 			Return(emissionstypes.ErrUnableToWithdrawEmissions).Once()
 		emissionsModule.BeginBlocker(ctx, *k)
 
@@ -232,7 +233,7 @@ func TestBeginBlocker(t *testing.T) {
 		// Setup module accounts for emission pools
 		undistributedObserverPoolAddress := sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedObserverRewardsPool).
 			GetAddress()
-		undistributedTssPoolAddress := sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedTssRewardsPool).
+		undistributedTssPoolAddress := sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedTSSRewardsPool).
 			GetAddress()
 		feeCollecterAddress := sk.AuthKeeper.GetModuleAccount(ctx, types.FeeCollectorName).GetAddress()
 		emissionPool := sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.ModuleName).GetAddress()
@@ -313,16 +314,17 @@ func TestBeginBlocker(t *testing.T) {
 
 func TestDistributeObserverRewards(t *testing.T) {
 	sdkconfig.SetDefault(false)
-	k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 	observerSet := sample.ObserverSet(4)
 
 	tt := []struct {
-		name                 string
-		votes                [][]observerTypes.VoteType
-		totalRewardsForBlock sdkmath.Int
-		expectedRewards      map[string]int64
-		ballotStatus         observerTypes.BallotStatus
-		slashAmount          sdkmath.Int
+		name                      string
+		votes                     [][]observerTypes.VoteType
+		observerStartingEmissions sdkmath.Int
+		totalRewardsForBlock      sdkmath.Int
+		expectedRewards           map[string]int64
+		ballotStatus              observerTypes.BallotStatus
+		slashAmount               sdkmath.Int
+		rewardsPerBlock           sdkmath.LegacyDec
 	}{
 		{
 			name: "all observers rewarded correctly",
@@ -334,6 +336,7 @@ func TestDistributeObserverRewards(t *testing.T) {
 					observerTypes.VoteType_SuccessObservation,
 				},
 			},
+			observerStartingEmissions: sdkmath.NewInt(100),
 			// total reward units would be 4 as all votes match the ballot status
 			totalRewardsForBlock: sdkmath.NewInt(100),
 			expectedRewards: map[string]int64{
@@ -342,8 +345,9 @@ func TestDistributeObserverRewards(t *testing.T) {
 				observerSet.ObserverList[2]: 125,
 				observerSet.ObserverList[3]: 125,
 			},
-			ballotStatus: observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
-			slashAmount:  sdkmath.NewInt(25),
+			ballotStatus:    observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
+			slashAmount:     sdkmath.NewInt(25),
+			rewardsPerBlock: emissionstypes.BlockReward,
 		},
 		{
 			name: "one observer slashed",
@@ -355,6 +359,7 @@ func TestDistributeObserverRewards(t *testing.T) {
 					observerTypes.VoteType_SuccessObservation,
 				},
 			},
+			observerStartingEmissions: sdkmath.NewInt(100),
 			// total reward units would be 3 as 3 votes match the ballot status
 			totalRewardsForBlock: sdkmath.NewInt(75),
 			expectedRewards: map[string]int64{
@@ -363,8 +368,9 @@ func TestDistributeObserverRewards(t *testing.T) {
 				observerSet.ObserverList[2]: 125,
 				observerSet.ObserverList[3]: 125,
 			},
-			ballotStatus: observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
-			slashAmount:  sdkmath.NewInt(25),
+			ballotStatus:    observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
+			slashAmount:     sdkmath.NewInt(25),
+			rewardsPerBlock: emissionstypes.BlockReward,
 		},
 		{
 			name: "all observer slashed",
@@ -376,6 +382,7 @@ func TestDistributeObserverRewards(t *testing.T) {
 					observerTypes.VoteType_SuccessObservation,
 				},
 			},
+			observerStartingEmissions: sdkmath.NewInt(100),
 			// total reward units would be 0 as no votes match the ballot status
 			totalRewardsForBlock: sdkmath.NewInt(100),
 			expectedRewards: map[string]int64{
@@ -384,8 +391,9 @@ func TestDistributeObserverRewards(t *testing.T) {
 				observerSet.ObserverList[2]: 75,
 				observerSet.ObserverList[3]: 75,
 			},
-			ballotStatus: observerTypes.BallotStatus_BallotFinalized_FailureObservation,
-			slashAmount:  sdkmath.NewInt(25),
+			ballotStatus:    observerTypes.BallotStatus_BallotFinalized_FailureObservation,
+			slashAmount:     sdkmath.NewInt(25),
+			rewardsPerBlock: emissionstypes.BlockReward,
 		},
 		{
 			name: "slashed to zero if slash amount is greater than available emissions",
@@ -397,6 +405,7 @@ func TestDistributeObserverRewards(t *testing.T) {
 					observerTypes.VoteType_SuccessObservation,
 				},
 			},
+			observerStartingEmissions: sdkmath.NewInt(100),
 			// total reward units would be 0 as no votes match the ballot status
 			totalRewardsForBlock: sdkmath.NewInt(100),
 			expectedRewards: map[string]int64{
@@ -405,8 +414,9 @@ func TestDistributeObserverRewards(t *testing.T) {
 				observerSet.ObserverList[2]: 0,
 				observerSet.ObserverList[3]: 0,
 			},
-			ballotStatus: observerTypes.BallotStatus_BallotFinalized_FailureObservation,
-			slashAmount:  sdkmath.NewInt(2500),
+			ballotStatus:    observerTypes.BallotStatus_BallotFinalized_FailureObservation,
+			slashAmount:     sdkmath.NewInt(2500),
+			rewardsPerBlock: emissionstypes.BlockReward,
 		},
 		{
 			name: "withdraw able emissions unchanged if rewards and slashes are equal",
@@ -424,6 +434,7 @@ func TestDistributeObserverRewards(t *testing.T) {
 					observerTypes.VoteType_SuccessObservation,
 				},
 			},
+			observerStartingEmissions: sdkmath.NewInt(100),
 			// total reward units would be 7 as 7 votes match the ballot status, including both ballots
 			totalRewardsForBlock: sdkmath.NewInt(70),
 			expectedRewards: map[string]int64{
@@ -432,19 +443,82 @@ func TestDistributeObserverRewards(t *testing.T) {
 				observerSet.ObserverList[2]: 120,
 				observerSet.ObserverList[3]: 120,
 			},
+			ballotStatus:    observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
+			slashAmount:     sdkmath.NewInt(25),
+			rewardsPerBlock: emissionstypes.BlockReward,
+		},
+		{
+			name: "no rewards if block reward is nil",
+			votes: [][]observerTypes.VoteType{
+				{
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+				},
+			},
+			observerStartingEmissions: sdkmath.NewInt(0),
+			// total reward units would be 4 as all votes match the ballot status
+			totalRewardsForBlock: sdkmath.NewInt(0),
+			expectedRewards: map[string]int64{
+				observerSet.ObserverList[0]: 0,
+				observerSet.ObserverList[1]: 0,
+				observerSet.ObserverList[2]: 0,
+				observerSet.ObserverList[3]: 0,
+			},
 			ballotStatus: observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
 			slashAmount:  sdkmath.NewInt(25),
+			//rewardsPerBlock: nil,
+		},
+		{
+			name: "no rewards if block reward is negative",
+			votes: [][]observerTypes.VoteType{
+				{
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+				},
+			},
+			observerStartingEmissions: sdkmath.NewInt(0),
+			// total reward units would be 4 as all votes match the ballot status
+			totalRewardsForBlock: sdkmath.NewInt(0),
+			expectedRewards: map[string]int64{
+				observerSet.ObserverList[0]: 0,
+				observerSet.ObserverList[1]: 0,
+				observerSet.ObserverList[2]: 0,
+				observerSet.ObserverList[3]: 0,
+			},
+			ballotStatus:    observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
+			slashAmount:     sdkmath.NewInt(25),
+			rewardsPerBlock: sdk.NewDec(1).NegMut(),
+		},
+		{
+			name: "no rewards if block reward is zero",
+			votes: [][]observerTypes.VoteType{
+				{
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+					observerTypes.VoteType_SuccessObservation,
+				},
+			},
+			observerStartingEmissions: sdkmath.NewInt(0),
+			// total reward units would be 4 as all votes match the ballot status
+			totalRewardsForBlock: sdkmath.NewInt(0),
+			expectedRewards: map[string]int64{
+				observerSet.ObserverList[0]: 0,
+				observerSet.ObserverList[1]: 0,
+				observerSet.ObserverList[2]: 0,
+				observerSet.ObserverList[3]: 0,
+			},
+			ballotStatus:    observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
+			slashAmount:     sdkmath.NewInt(25),
+			rewardsPerBlock: sdk.ZeroDec(),
 		},
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			for _, observer := range observerSet.ObserverList {
-				k.SetWithdrawableEmission(ctx, emissionstypes.WithdrawableEmissions{
-					Address: observer,
-					Amount:  sdkmath.NewInt(100),
-				})
-			}
-
 			// Keeper initialization
 			k, ctx, sk, zk := keepertest.EmissionsKeeper(t)
 			zk.ObserverKeeper.SetObserverSet(ctx, observerSet)
@@ -457,19 +531,19 @@ func TestDistributeObserverRewards(t *testing.T) {
 			err := sk.BankKeeper.MintCoins(ctx, emissionstypes.ModuleName, totalRewardCoins)
 			require.NoError(t, err)
 
-			// Set starting emission for all observers to 100 so that we can calculate the rewards and slashes
+			// Set starting emission for all observers to a specified value so that we can calculate the rewards and slashes
 			for _, observer := range observerSet.ObserverList {
 				k.SetWithdrawableEmission(ctx, emissionstypes.WithdrawableEmissions{
 					Address: observer,
-					Amount:  sdkmath.NewInt(100),
+					Amount:  tc.observerStartingEmissions,
 				})
 			}
 
 			// Set the params
 			params := emissionstypes.DefaultParams()
 			params.ObserverSlashAmount = tc.slashAmount
-			err = k.SetParams(ctx, params)
-			require.NoError(t, err)
+			params.BlockRewardAmount = tc.rewardsPerBlock
+			setEmissionsParams(t, ctx, *k, params)
 
 			// Set the ballot list
 			ballotIdentifiers := []string{}
@@ -506,4 +580,15 @@ func TestDistributeObserverRewards(t *testing.T) {
 			}
 		})
 	}
+}
+
+// setEmissionsParams sets the emissions params in the store without validation
+func setEmissionsParams(t *testing.T, ctx sdk.Context, k emissionskeeper.Keeper, params emissionstypes.Params) {
+	store := ctx.KVStore(k.GetStoreKey())
+	bz, err := k.GetCodec().Marshal(&params)
+	if err != nil {
+		require.NoError(t, err)
+	}
+
+	store.Set(emissionstypes.KeyPrefix(emissionstypes.ParamsKey), bz)
 }
