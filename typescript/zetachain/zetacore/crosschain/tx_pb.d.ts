@@ -431,9 +431,8 @@ export declare class MsgVoteGasPrice extends Message<MsgVoteGasPrice> {
   blockNumber: bigint;
 
   /**
-   * unused
-   *
-   * @generated from field: string supply = 5;
+   * @generated from field: string supply = 5 [deprecated = true];
+   * @deprecated
    */
   supply: string;
 
