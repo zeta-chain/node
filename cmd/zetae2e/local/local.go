@@ -226,7 +226,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.ERC20CustodyAddr = deployerRunner.ERC20CustodyV2Addr
 
 		if testSolana {
-			deployerRunner.SetSolanaContracts(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
+			deployerRunner.SetupSolana(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
 		}
 		noError(deployerRunner.FundEmissionsPool())
 
@@ -407,6 +407,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		tonTests := []string{
 			e2etests.TestTONDepositName,
+			e2etests.TestTONDepositAndCallName,
 		}
 
 		eg.Go(tonTestRoutine(conf, deployerRunner, verbose, tonTests...))

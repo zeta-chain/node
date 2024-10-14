@@ -265,7 +265,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 	})
 }
 
-func TestStatus_ChangeStatus(t *testing.T) {
+func TestStatus_UpdateCctxStatus(t *testing.T) {
 	tt := []struct {
 		Name         string
 		Status       types.Status
@@ -302,7 +302,7 @@ func TestStatus_ChangeStatus(t *testing.T) {
 	for _, test := range tt {
 		test := test
 		t.Run(test.Name, func(t *testing.T) {
-			test.Status.ChangeStatus(test.NonErrStatus, test.Msg)
+			test.Status.UpdateStatusAndErrorMessages(test.NonErrStatus, test.Msg, "")
 			if test.IsErr {
 				require.Equal(t, test.ErrStatus, test.Status.Status)
 			} else {

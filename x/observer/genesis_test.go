@@ -68,15 +68,12 @@ func TestGenesis(t *testing.T) {
 		btcChainParams.IsSupported = true
 		goerliChainParams := types.GetDefaultGoerliLocalnetChainParams()
 		goerliChainParams.IsSupported = true
-		solanaChainParams := types.GetDefaultSolanaLocalnetChainParams()
-		solanaChainParams.IsSupported = true
 		zetaPrivnetChainParams := types.GetDefaultZetaPrivnetChainParams()
 		zetaPrivnetChainParams.IsSupported = true
 		localnetChainParams := types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
 				btcChainParams,
 				goerliChainParams,
-				solanaChainParams,
 				zetaPrivnetChainParams,
 			},
 		}
@@ -107,15 +104,12 @@ func TestGenesis(t *testing.T) {
 		btcChainParams.IsSupported = true
 		goerliChainParams := types.GetDefaultGoerliLocalnetChainParams()
 		goerliChainParams.IsSupported = true
-		solanaChainParams := types.GetDefaultSolanaLocalnetChainParams()
-		solanaChainParams.IsSupported = true
 		zetaPrivnetChainParams := types.GetDefaultZetaPrivnetChainParams()
 		zetaPrivnetChainParams.IsSupported = true
 		localnetChainParams := types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
 				btcChainParams,
 				goerliChainParams,
-				solanaChainParams,
 				zetaPrivnetChainParams,
 			},
 		}

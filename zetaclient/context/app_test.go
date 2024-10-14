@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"golang.org/x/exp/maps"
@@ -38,8 +39,7 @@ func TestAppContext(t *testing.T) {
 	btcParams := types.GetDefaultBtcMainnetChainParams()
 	btcParams.IsSupported = true
 
-	solParams := types.GetDefaultSolanaLocalnetChainParams()
-	solParams.IsSupported = true
+	solParams := sample.ChainParamsSupported(chains.SolanaLocalnet.ChainId)
 
 	fancyL2 := chains.Chain{
 		ChainId:     123,

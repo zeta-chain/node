@@ -63,6 +63,7 @@ enum Network {
   optimism = 5;
   base = 6;
   solana = 7;
+  ton = 8;
 }
 
 // NetworkType represents the network type of the chain
@@ -82,6 +83,7 @@ enum Vm {
   no_vm = 0;
   evm = 1;
   svm = 2;
+  tvm = 3;
 }
 
 // Consensus represents the consensus algorithm used by the chain
@@ -94,6 +96,7 @@ enum Consensus {
   bitcoin = 2;
   op_stack = 3;
   solana_consensus = 4;
+  catchain_consensus = 5; // ton
 }
 
 // CCTXGateway describes for the chain the gateway used to handle CCTX outbounds

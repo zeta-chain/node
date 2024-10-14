@@ -9,7 +9,6 @@ import (
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -26,7 +25,7 @@ func (k msgServer) MigrateTssFunds(
 	// check if authorized
 	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
 	if err != nil {
-		return nil, errors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
+		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
 	if k.zetaObserverKeeper.IsInboundEnabled(ctx) {

@@ -17,7 +17,7 @@ enum CctxStatus {
   Reverted = 5;        // inbound reverted.
   Aborted =
       6; // inbound tx error or invalid paramters and cannot revert; just abort.
-  // But the amount can be refunded to zetachain using and admin proposal
+         // But the amount can be refunded to zetachain using and admin proposal
 }
 
 enum TxFinalizationStatus {
@@ -94,7 +94,12 @@ message OutboundParams {
 
 message Status {
   CctxStatus status = 1;
+  // status_message carries information about the status transitions:
+  // why they were triggered, old and new status.
   string status_message = 2;
+  // error_message carries information about the error that caused the tx
+  // to be PendingRevert, Reverted or Aborted.
+  string error_message = 6;
   int64 lastUpdate_timestamp = 3;
   bool isAbortRefunded = 4;
   // when the CCTX was created. only populated on new transactions.

@@ -17,6 +17,7 @@ import (
 	"github.com/zeta-chain/node/pkg/bg"
 	"github.com/zeta-chain/node/pkg/constant"
 	zetamath "github.com/zeta-chain/node/pkg/math"
+	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
@@ -228,7 +229,7 @@ func (oc *Orchestrator) resolveObserver(app *zctx.AppContext, chainID int64) (in
 
 	// update chain observer chain parameters
 	var (
-		curParams   = observer.GetChainParams()
+		curParams   = observer.ChainParams()
 		freshParams = chain.Params()
 	)
 
@@ -447,11 +448,11 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 	for _, v := range res {
 		trackerMap[v.Nonce] = true
 	}
-	outboundScheduleLookahead := observer.GetChainParams().OutboundScheduleLookahead
+	outboundScheduleLookahead := observer.ChainParams().OutboundScheduleLookahead
 	// #nosec G115 always in range
 	outboundScheduleLookback := uint64(float64(outboundScheduleLookahead) * evmOutboundLookbackFactor)
 	// #nosec G115 positive
-	outboundScheduleInterval := uint64(observer.GetChainParams().OutboundScheduleInterval)
+	outboundScheduleInterval := uint64(observer.ChainParams().OutboundScheduleInterval)
 	criticalInterval := uint64(10)                      // for critical pending outbound we reduce re-try interval
 	nonCriticalInterval := outboundScheduleInterval * 2 // for non-critical pending outbound we increase re-try interval
 
@@ -546,8 +547,8 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 		return
 	}
 	// #nosec G115 positive
-	interval := uint64(observer.GetChainParams().OutboundScheduleInterval)
-	lookahead := observer.GetChainParams().OutboundScheduleLookahead
+	interval := uint64(observer.ChainParams().OutboundScheduleInterval)
+	lookahead := observer.ChainParams().OutboundScheduleLookahead
 
 	// schedule at most one keysign per ticker
 	for idx, cctx := range cctxList {
@@ -618,7 +619,7 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 		return
 	}
 	// #nosec G701 positive
-	interval := uint64(observer.GetChainParams().OutboundScheduleInterval)
+	interval := uint64(observer.ChainParams().OutboundScheduleInterval)
 
 	// schedule keysign for each pending cctx
 	for _, cctx := range cctxList {
@@ -666,28 +667,18 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 // runObserverSignerSync runs a blocking ticker that observes chain changes from zetacore
 // and optionally (de)provisions respective observers and signers.
 func (oc *Orchestrator) runObserverSignerSync(ctx context.Context) error {
-	// sync observers and signers right away to speed up zetaclient startup
-	if err := oc.syncObserverSigner(ctx); err != nil {
-		oc.logger.Error().Err(err).Msg("runObserverSignerSync: syncObserverSigner failed for initial sync")
-	}
+	// every other block
+	const cadence = 2 * constant.ZetaBlockTime
 
-	// sync observer and signer every 10 blocks (approx. 1 minute)
-	const cadence = 10 * constant.ZetaBlockTime
-
-	ticker := time.NewTicker(cadence)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-oc.stop:
-			oc.logger.Warn().Msg("runObserverSignerSync: stopped")
-			return nil
-		case <-ticker.C:
-			if err := oc.syncObserverSigner(ctx); err != nil {
-				oc.logger.Error().Err(err).Msg("runObserverSignerSync: syncObserverSigner failed")
-			}
+	task := func(ctx context.Context, _ *ticker.Ticker) error {
+		if err := oc.syncObserverSigner(ctx); err != nil {
+			oc.logger.Error().Err(err).Msg("syncObserverSigner failed")
 		}
+
+		return nil
 	}
+
+	return ticker.Run(ctx, cadence, task, ticker.WithLogger(oc.logger.Logger, "SyncObserverSigner"))
 }
 
 // syncs and provisions observers & signers.
