@@ -123,7 +123,10 @@ func (signer *Signer) TryProcessOutbound(
 	nonce := params.TssNonce
 	coinType := cctx.InboundParams.CoinType
 
-	if coinType == coin.CoinType_Cmd {
+	var tx *solana.Transaction
+
+	switch coinType {
+	case coin.CoinType_Cmd:
 		relayedMsg := strings.Split(cctx.RelayedMessage, ":")
 		if len(relayedMsg) != 2 {
 			return
@@ -149,7 +152,7 @@ func (signer *Signer) TryProcessOutbound(
 		}
 
 		// sign the withdraw transaction by relayer key
-		tx, err := signer.SignWhitelistTx(ctx, contracts.NewMsgWhitelist(pk, whitelistEntryPDA))
+		tx, err = signer.SignWhitelistTx(ctx, contracts.NewMsgWhitelist(pk, whitelistEntryPDA))
 		if err != nil {
 			logger.Error().
 				Err(err).
@@ -157,70 +160,47 @@ func (signer *Signer) TryProcessOutbound(
 			return
 		}
 
-		// broadcast the signed tx to the Solana network with preflight check
-		txSig, err := signer.client.SendTransactionWithOpts(
-			ctx,
-			tx,
-			// Commitment "finalized" is too conservative for preflight check and
-			// it results in repeated broadcast attempts that only 1 will succeed.
-			// Commitment "processed" will simulate tx against more recent state
-			// thus fails faster once a tx is already broadcasted and processed by the cluster.
-			// This reduces the number of "failed" txs due to repeated broadcast attempts.
-			rpc.TransactionOpts{PreflightCommitment: rpc.CommitmentProcessed},
-		)
+	case coin.CoinType_Gas:
+		// compliance check
+		cancelTx := compliance.IsCctxRestricted(cctx)
+		if cancelTx {
+			compliance.PrintComplianceLog(
+				logger,
+				signer.Logger().Compliance,
+				true,
+				chainID,
+				cctx.Index,
+				cctx.InboundParams.Sender,
+				params.Receiver,
+				"SOL",
+			)
+		}
+
+		// sign gateway withdraw message by TSS
+		msg, err := signer.SignMsgWithdraw(ctx, params, height, cancelTx)
 		if err != nil {
-			signer.Logger().
-				Std.Warn().
-				Err(err).
-				Msgf("TryProcessOutbound: broadcast error for chain %d nonce %d", chainID, nonce)
+			logger.Error().Err(err).Msgf("TryProcessOutbound: SignMsgWithdraw error for chain %d nonce %d", chainID, nonce)
 			return
 		}
 
-		// report the outbound to the outbound tracker
-		signer.reportToOutboundTracker(ctx, zetacoreClient, chainID, nonce, txSig, logger)
-		return
-	}
+		// skip relaying the transaction if this signer hasn't set the relayer key
+		if !signer.HasRelayerKey() {
+			return
+		}
 
-	if coinType != coin.CoinType_Gas {
+		// set relayer balance metrics
+		signer.SetRelayerBalanceMetrics(ctx)
+
+		// sign the withdraw transaction by relayer key
+		tx, err = signer.SignWithdrawTx(ctx, *msg)
+		if err != nil {
+			logger.Error().Err(err).Msgf("TryProcessOutbound: SignGasWithdraw error for chain %d nonce %d", chainID, nonce)
+			return
+		}
+
+	default:
 		logger.Error().
 			Msgf("TryProcessOutbound: can only send SOL to the Solana network for chain %d nonce %d", chainID, nonce)
-		return
-	}
-
-	// compliance check
-	cancelTx := compliance.IsCctxRestricted(cctx)
-	if cancelTx {
-		compliance.PrintComplianceLog(
-			logger,
-			signer.Logger().Compliance,
-			true,
-			chainID,
-			cctx.Index,
-			cctx.InboundParams.Sender,
-			params.Receiver,
-			"SOL",
-		)
-	}
-
-	// sign gateway withdraw message by TSS
-	msg, err := signer.SignMsgWithdraw(ctx, params, height, cancelTx)
-	if err != nil {
-		logger.Error().Err(err).Msgf("TryProcessOutbound: SignMsgWithdraw error for chain %d nonce %d", chainID, nonce)
-		return
-	}
-
-	// skip relaying the transaction if this signer hasn't set the relayer key
-	if !signer.HasRelayerKey() {
-		return
-	}
-
-	// set relayer balance metrics
-	signer.SetRelayerBalanceMetrics(ctx)
-
-	// sign the withdraw transaction by relayer key
-	tx, err := signer.SignWithdrawTx(ctx, *msg)
-	if err != nil {
-		logger.Error().Err(err).Msgf("TryProcessOutbound: SignGasWithdraw error for chain %d nonce %d", chainID, nonce)
 		return
 	}
 
