@@ -20,7 +20,7 @@ contract TestDAppV2 {
     struct RevertContext {
         address sender;
         address asset;
-        uint64 amount;
+        uint256 amount;
         bytes revertMessage;
     }
 

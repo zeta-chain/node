@@ -81,7 +81,7 @@ func (signer *Signer) signGatewayExecuteRevert(
 		revert.RevertContext{
 			Sender:        common.HexToAddress(inboundSender),
 			Asset:         txData.asset,
-			Amount:        txData.amount.Uint64(),
+			Amount:        txData.amount,
 			RevertMessage: txData.revertOptions.RevertMessage,
 		},
 	)
@@ -201,7 +201,7 @@ func (signer *Signer) signERC20CustodyWithdrawRevert(
 		revert.RevertContext{
 			Sender:        common.HexToAddress(inboundSender),
 			Asset:         txData.asset,
-			Amount:        txData.amount.Uint64(),
+			Amount:        txData.amount,
 			RevertMessage: txData.revertOptions.RevertMessage,
 		},
 	)
