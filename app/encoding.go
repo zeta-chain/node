@@ -29,6 +29,7 @@ func MakeEncodingConfig() ethermint.EncodingConfig {
 	registry := encodingConfig.InterfaceRegistry
 
 	// TODO test if we need to register these interfaces again as MakeConfig already registers them
+	// https://github.com/zeta-chain/node/issues/3003
 	cryptocodec.RegisterInterfaces(registry)
 	authtypes.RegisterInterfaces(registry)
 	authz.RegisterInterfaces(registry)

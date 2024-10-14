@@ -2,7 +2,6 @@ package simulation_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/rand"
 	"os"
 	"testing"
@@ -30,8 +29,10 @@ func init() {
 const (
 	SimAppChainID  = "simulation_777-1"
 	SimBlockMaxGas = 815000000
-	SimDBBackend   = "goleveldb"
-	SimDBName      = "simulation"
+	//github.com/zeta-chain/node/issues/3004
+	// TODO : Support pebbleDB for simulation tests
+	SimDBBackend = "goleveldb"
+	SimDBName    = "simulation"
 )
 
 // interBlockCacheOpt returns a BaseApp option function that sets the persistent
@@ -43,7 +44,7 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 // TestAppStateDeterminism runs a full application simulation , and produces multiple blocks as per the config
 // It checks the determinism of the application by comparing the apphash at the end of each run to other runs
 // The following test certifies that , for the same set of operations ( irrespective of what the operations are ) ,
-// we would reach the same final state if the initital state is the same
+// we would reach the same final state if the initial state is the same
 func TestAppStateDeterminism(t *testing.T) {
 	if !simutils.FlagEnabledValue {
 		t.Skip("skipping application simulation")
@@ -72,7 +73,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
 	appOptions[server.FlagInvCheckPeriod] = simutils.FlagPeriodValue
 
-	fmt.Println("Running tests for numSeeds: ", numSeeds, " numTimesToRunPerSeed: ", numTimesToRunPerSeed)
+	t.Log("Running tests for numSeeds: ", numSeeds, " numTimesToRunPerSeed: ", numTimesToRunPerSeed)
 
 	for i := 0; i < numSeeds; i++ {
 		if config.Seed == cosmossimcli.DefaultSeedValue {
@@ -98,7 +99,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				baseapp.SetChainID(SimAppChainID),
 			)
 
-			fmt.Printf(
+			t.Logf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
