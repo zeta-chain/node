@@ -26,9 +26,9 @@ func Test_Memo_EncodeToBytes(t *testing.T) {
 			name: "encode memo with ABI encoding",
 			memo: &memo.InboundMemo{
 				Header: memo.Header{
-					Version:        0,
-					EncodingFormat: memo.EncodingFmtABI,
-					OpCode:         memo.OpCodeDepositAndCall,
+					Version:     0,
+					EncodingFmt: memo.EncodingFmtABI,
+					OpCode:      memo.OpCodeDepositAndCall,
 				},
 				FieldsV0: memo.FieldsV0{
 					Receiver: fAddress,
@@ -43,8 +43,8 @@ func Test_Memo_EncodeToBytes(t *testing.T) {
 			},
 			expectedHead: sample.MemoHead(
 				0,
-				memo.EncodingFmtABI,
-				memo.OpCodeDepositAndCall,
+				uint8(memo.EncodingFmtABI),
+				uint8(memo.OpCodeDepositAndCall),
 				0,
 				flagsAllFieldsSet, // all fields are set
 			),
@@ -59,9 +59,9 @@ func Test_Memo_EncodeToBytes(t *testing.T) {
 			name: "encode memo with compact encoding",
 			memo: &memo.InboundMemo{
 				Header: memo.Header{
-					Version:        0,
-					EncodingFormat: memo.EncodingFmtCompactShort,
-					OpCode:         memo.OpCodeDepositAndCall,
+					Version:     0,
+					EncodingFmt: memo.EncodingFmtCompactShort,
+					OpCode:      memo.OpCodeDepositAndCall,
 				},
 				FieldsV0: memo.FieldsV0{
 					Receiver: fAddress,
@@ -76,8 +76,8 @@ func Test_Memo_EncodeToBytes(t *testing.T) {
 			},
 			expectedHead: sample.MemoHead(
 				0,
-				memo.EncodingFmtCompactShort,
-				memo.OpCodeDepositAndCall,
+				uint8(memo.EncodingFmtCompactShort),
+				uint8(memo.OpCodeDepositAndCall),
 				0,
 				flagsAllFieldsSet, // all fields are set
 			),
@@ -111,9 +111,9 @@ func Test_Memo_EncodeToBytes(t *testing.T) {
 			name: "failed to pack memo fields",
 			memo: &memo.InboundMemo{
 				Header: memo.Header{
-					Version:        0,
-					EncodingFormat: memo.EncodingFmtABI,
-					OpCode:         memo.OpCodeDeposit,
+					Version:     0,
+					EncodingFmt: memo.EncodingFmtABI,
+					OpCode:      memo.OpCodeDeposit,
 				},
 				FieldsV0: memo.FieldsV0{
 					Receiver: fAddress,
@@ -134,6 +134,11 @@ func Test_Memo_EncodeToBytes(t *testing.T) {
 			}
 			require.NoError(t, err)
 			require.Equal(t, append(tt.expectedHead, tt.expectedData...), data)
+
+			// decode the memo and compare with the original
+			decodedMemo, err := memo.DecodeFromBytes(data)
+			require.NoError(t, err)
+			require.Equal(t, tt.memo, decodedMemo)
 		})
 	}
 }
@@ -148,6 +153,8 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 		name         string
 		head         []byte
 		data         []byte
+		headHex      string
+		dataHex      string
 		expectedMemo memo.InboundMemo
 		errMsg       string
 	}{
@@ -155,8 +162,8 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 			name: "decode memo with ABI encoding",
 			head: sample.MemoHead(
 				0,
-				memo.EncodingFmtABI,
-				memo.OpCodeDepositAndCall,
+				uint8(memo.EncodingFmtABI),
+				uint8(memo.OpCodeDepositAndCall),
 				0,
 				flagsAllFieldsSet, // all fields are set
 			),
@@ -168,10 +175,10 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 				memo.ArgRevertMessage(fBytes)),
 			expectedMemo: memo.InboundMemo{
 				Header: memo.Header{
-					Version:        0,
-					EncodingFormat: memo.EncodingFmtABI,
-					OpCode:         memo.OpCodeDepositAndCall,
-					DataFlags:      0b00011111,
+					Version:     0,
+					EncodingFmt: memo.EncodingFmtABI,
+					OpCode:      memo.OpCodeDepositAndCall,
+					DataFlags:   0b00011111,
 				},
 				FieldsV0: memo.FieldsV0{
 					Receiver: fAddress,
@@ -189,8 +196,8 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 			name: "decode memo with compact encoding",
 			head: sample.MemoHead(
 				0,
-				memo.EncodingFmtCompactLong,
-				memo.OpCodeDepositAndCall,
+				uint8(memo.EncodingFmtCompactLong),
+				uint8(memo.OpCodeDepositAndCall),
 				0,
 				flagsAllFieldsSet, // all fields are set
 			),
@@ -203,10 +210,10 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 				memo.ArgRevertMessage(fBytes)),
 			expectedMemo: memo.InboundMemo{
 				Header: memo.Header{
-					Version:        0,
-					EncodingFormat: memo.EncodingFmtCompactLong,
-					OpCode:         memo.OpCodeDepositAndCall,
-					DataFlags:      0b00011111,
+					Version:     0,
+					EncodingFmt: memo.EncodingFmtCompactLong,
+					OpCode:      memo.OpCodeDepositAndCall,
+					DataFlags:   0b00011111,
 				},
 				FieldsV0: memo.FieldsV0{
 					Receiver: fAddress,
@@ -222,13 +229,13 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 		},
 		{
 			name:   "failed to decode memo header",
-			head:   sample.MemoHead(0, memo.EncodingFmtABI, memo.OpCodeInvalid, 0, 0),
+			head:   sample.MemoHead(0, uint8(memo.EncodingFmtABI), uint8(memo.OpCodeInvalid), 0, 0),
 			data:   sample.ABIPack(t, memo.ArgReceiver(fAddress)),
 			errMsg: "failed to decode memo header",
 		},
 		{
 			name:   "failed to decode if version is invalid",
-			head:   sample.MemoHead(1, memo.EncodingFmtABI, memo.OpCodeDeposit, 0, 0),
+			head:   sample.MemoHead(1, uint8(memo.EncodingFmtABI), uint8(memo.OpCodeDeposit), 0, 0),
 			data:   sample.ABIPack(t, memo.ArgReceiver(fAddress)),
 			errMsg: "invalid memo version",
 		},
@@ -236,8 +243,8 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 			name: "failed to decode compact encoded data with ABI encoding format",
 			head: sample.MemoHead(
 				0,
-				memo.EncodingFmtABI,
-				memo.OpCodeDepositAndCall,
+				uint8(memo.EncodingFmtABI),
+				uint8(memo.OpCodeDepositAndCall),
 				0,
 				0,
 			), // header says ABI encoding

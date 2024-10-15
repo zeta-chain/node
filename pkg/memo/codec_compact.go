@@ -12,6 +12,9 @@ import (
 var _ Codec = (*CodecCompact)(nil)
 
 // CodecCompact is a coder/decoder for compact encoded memo fields
+//
+// This encoding format concatenates the memo fields into a single byte array
+// with zero padding to minimize the total size of the memo.
 type CodecCompact struct {
 	// lenBytes is the number of bytes used to encode the length of the data
 	lenBytes int
@@ -21,7 +24,7 @@ type CodecCompact struct {
 }
 
 // NewCodecCompact creates a new compact codec
-func NewCodecCompact(encodingFmt uint8) (*CodecCompact, error) {
+func NewCodecCompact(encodingFmt EncodingFormat) (*CodecCompact, error) {
 	lenBytes, err := GetLenBytes(encodingFmt)
 	if err != nil {
 		return nil, err

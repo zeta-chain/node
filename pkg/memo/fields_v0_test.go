@@ -23,20 +23,20 @@ func Test_V0_Pack(t *testing.T) {
 	fString := "this_is_a_string_field"
 
 	tests := []struct {
-		name           string
-		opCode         uint8
-		encodingFormat uint8
-		dataFlags      uint8
-		fields         memo.FieldsV0
-		expectedFlags  byte
-		expectedData   []byte
-		errMsg         string
+		name          string
+		opCode        memo.OpCode
+		encodeFmt     memo.EncodingFormat
+		dataFlags     uint8
+		fields        memo.FieldsV0
+		expectedFlags byte
+		expectedData  []byte
+		errMsg        string
 	}{
 		{
-			name:           "pack all fields with ABI encoding",
-			opCode:         memo.OpCodeDepositAndCall,
-			encodingFormat: memo.EncodingFmtABI,
-			dataFlags:      flagsAllFieldsSet, // all fields are set
+			name:      "pack all fields with ABI encoding",
+			opCode:    memo.OpCodeDepositAndCall,
+			encodeFmt: memo.EncodingFmtABI,
+			dataFlags: flagsAllFieldsSet, // all fields are set
 			fields: memo.FieldsV0{
 				Receiver: fAddress,
 				Payload:  fBytes,
@@ -55,10 +55,10 @@ func Test_V0_Pack(t *testing.T) {
 				memo.ArgRevertMessage(fBytes)),
 		},
 		{
-			name:           "pack all fields with compact encoding",
-			opCode:         memo.OpCodeDepositAndCall,
-			encodingFormat: memo.EncodingFmtCompactShort,
-			dataFlags:      flagsAllFieldsSet, // all fields are set
+			name:      "pack all fields with compact encoding",
+			opCode:    memo.OpCodeDepositAndCall,
+			encodeFmt: memo.EncodingFmtCompactShort,
+			dataFlags: flagsAllFieldsSet, // all fields are set
 			fields: memo.FieldsV0{
 				Receiver: fAddress,
 				Payload:  fBytes,
@@ -78,10 +78,10 @@ func Test_V0_Pack(t *testing.T) {
 				memo.ArgRevertMessage(fBytes)),
 		},
 		{
-			name:           "fields validation failed due to empty receiver address",
-			opCode:         memo.OpCodeDepositAndCall,
-			encodingFormat: memo.EncodingFmtABI,
-			dataFlags:      0b00000001, // receiver flag is set
+			name:      "fields validation failed due to empty receiver address",
+			opCode:    memo.OpCodeDepositAndCall,
+			encodeFmt: memo.EncodingFmtABI,
+			dataFlags: 0b00000001, // receiver flag is set
 			fields: memo.FieldsV0{
 				Receiver: common.Address{},
 			},
@@ -93,15 +93,15 @@ func Test_V0_Pack(t *testing.T) {
 			fields: memo.FieldsV0{
 				Receiver: fAddress,
 			},
-			encodingFormat: 0x0F,
-			errMsg:         "unable to get codec",
+			encodeFmt: 0x0F,
+			errMsg:    "unable to get codec",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// pack the fields
-			data, err := tc.fields.Pack(tc.opCode, tc.encodingFormat, tc.dataFlags)
+			data, err := tc.fields.Pack(tc.opCode, tc.encodeFmt, tc.dataFlags)
 
 			// validate the error message
 			if tc.errMsg != "" {
@@ -124,19 +124,19 @@ func Test_V0_Unpack(t *testing.T) {
 	fString := "this_is_a_string_field"
 
 	tests := []struct {
-		name           string
-		opCode         uint8
-		encodingFormat uint8
-		dataFlags      byte
-		data           []byte
-		expected       memo.FieldsV0
-		errMsg         string
+		name      string
+		opCode    memo.OpCode
+		encodeFmt memo.EncodingFormat
+		dataFlags byte
+		data      []byte
+		expected  memo.FieldsV0
+		errMsg    string
 	}{
 		{
-			name:           "unpack all fields with ABI encoding",
-			opCode:         memo.OpCodeDepositAndCall,
-			encodingFormat: memo.EncodingFmtABI,
-			dataFlags:      flagsAllFieldsSet, // all fields are set
+			name:      "unpack all fields with ABI encoding",
+			opCode:    memo.OpCodeDepositAndCall,
+			encodeFmt: memo.EncodingFmtABI,
+			dataFlags: flagsAllFieldsSet, // all fields are set
 			data: sample.ABIPack(t,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes),
@@ -155,10 +155,10 @@ func Test_V0_Unpack(t *testing.T) {
 			},
 		},
 		{
-			name:           "unpack all fields with compact encoding",
-			opCode:         memo.OpCodeDepositAndCall,
-			encodingFormat: memo.EncodingFmtCompactShort,
-			dataFlags:      flagsAllFieldsSet, // all fields are set
+			name:      "unpack all fields with compact encoding",
+			opCode:    memo.OpCodeDepositAndCall,
+			encodeFmt: memo.EncodingFmtCompactShort,
+			dataFlags: flagsAllFieldsSet, // all fields are set
 			data: sample.CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(fAddress),
@@ -178,47 +178,47 @@ func Test_V0_Unpack(t *testing.T) {
 			},
 		},
 		{
-			name:           "unpack empty ABI encoded payload if flag is set",
-			opCode:         memo.OpCodeDepositAndCall,
-			encodingFormat: memo.EncodingFmtABI,
-			dataFlags:      0b00000010, // payload flags are set
+			name:      "unpack empty ABI encoded payload if flag is set",
+			opCode:    memo.OpCodeDepositAndCall,
+			encodeFmt: memo.EncodingFmtABI,
+			dataFlags: 0b00000010, // payload flags are set
 			data: sample.ABIPack(t,
 				memo.ArgPayload([]byte{})), // empty payload
 			expected: memo.FieldsV0{},
 		},
 		{
-			name:           "unpack empty compact encoded payload if flag is set",
-			opCode:         memo.OpCodeDepositAndCall,
-			encodingFormat: memo.EncodingFmtCompactShort,
-			dataFlags:      0b00000010, // payload flag is set
+			name:      "unpack empty compact encoded payload if flag is set",
+			opCode:    memo.OpCodeDepositAndCall,
+			encodeFmt: memo.EncodingFmtCompactShort,
+			dataFlags: 0b00000010, // payload flag is set
 			data: sample.CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgPayload([]byte{})), // empty payload
 			expected: memo.FieldsV0{},
 		},
 		{
-			name:           "unable to get codec on invalid encoding format",
-			opCode:         memo.OpCodeDepositAndCall,
-			encodingFormat: 0x0F,
-			dataFlags:      0b00000001,
-			data:           []byte{},
-			errMsg:         "unable to get codec",
+			name:      "unable to get codec on invalid encoding format",
+			opCode:    memo.OpCodeDepositAndCall,
+			encodeFmt: 0x0F,
+			dataFlags: 0b00000001,
+			data:      []byte{},
+			errMsg:    "unable to get codec",
 		},
 		{
-			name:           "failed to unpack ABI encoded data with compact encoding format",
-			opCode:         memo.OpCodeDepositAndCall,
-			encodingFormat: memo.EncodingFmtCompactShort,
-			dataFlags:      0b00000011, // receiver and payload flags are set
+			name:      "failed to unpack ABI encoded data with compact encoding format",
+			opCode:    memo.OpCodeDepositAndCall,
+			encodeFmt: memo.EncodingFmtCompactShort,
+			dataFlags: 0b00000011, // receiver and payload flags are set
 			data: sample.ABIPack(t,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes)),
 			errMsg: "failed to unpack arguments",
 		},
 		{
-			name:           "fields validation failed due to empty receiver address",
-			opCode:         memo.OpCodeDepositAndCall,
-			encodingFormat: memo.EncodingFmtABI,
-			dataFlags:      0b00000011, // receiver and payload flags are set
+			name:      "fields validation failed due to empty receiver address",
+			opCode:    memo.OpCodeDepositAndCall,
+			encodeFmt: memo.EncodingFmtABI,
+			dataFlags: 0b00000011, // receiver and payload flags are set
 			data: sample.ABIPack(t,
 				memo.ArgReceiver(common.Address{}),
 				memo.ArgPayload(fBytes)),
@@ -230,7 +230,7 @@ func Test_V0_Unpack(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// unpack the fields
 			fields := memo.FieldsV0{}
-			err := fields.Unpack(tc.opCode, tc.encodingFormat, tc.dataFlags, tc.data)
+			err := fields.Unpack(tc.opCode, tc.encodeFmt, tc.dataFlags, tc.data)
 
 			// validate the error message
 			if tc.errMsg != "" {
@@ -253,7 +253,7 @@ func Test_V0_Validate(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		opCode    uint8
+		opCode    memo.OpCode
 		dataFlags uint8
 		fields    memo.FieldsV0
 		errMsg    string

@@ -4,19 +4,21 @@ import (
 	"fmt"
 )
 
+type EncodingFormat uint8
+
 // Enum for non-EVM chain memo encoding format (2 bits)
 const (
 	// EncodingFmtABI represents ABI encoding format
-	EncodingFmtABI uint8 = 0b0000
+	EncodingFmtABI EncodingFormat = 0b0000
 
 	// EncodingFmtCompactShort represents 'compact short' encoding format
-	EncodingFmtCompactShort uint8 = 0b0001
+	EncodingFmtCompactShort EncodingFormat = 0b0001
 
 	// EncodingFmtCompactLong represents 'compact long' encoding format
-	EncodingFmtCompactLong uint8 = 0b0010
+	EncodingFmtCompactLong EncodingFormat = 0b0010
 
 	// EncodingFmtInvalid represents invalid encoding format
-	EncodingFmtInvalid uint8 = 0b0011
+	EncodingFmtInvalid EncodingFormat = 0b0011
 )
 
 // Enum for length of bytes used to encode compact data
@@ -38,7 +40,7 @@ type Codec interface {
 }
 
 // GetLenBytes returns the number of bytes used to encode the length of the data
-func GetLenBytes(encodingFmt uint8) (int, error) {
+func GetLenBytes(encodingFmt EncodingFormat) (int, error) {
 	switch encodingFmt {
 	case EncodingFmtCompactShort:
 		return LenBytesShort, nil
@@ -50,13 +52,13 @@ func GetLenBytes(encodingFmt uint8) (int, error) {
 }
 
 // GetCodec returns the codec based on the encoding format
-func GetCodec(encodingFormat uint8) (Codec, error) {
-	switch encodingFormat {
+func GetCodec(encodingFmt EncodingFormat) (Codec, error) {
+	switch encodingFmt {
 	case EncodingFmtABI:
 		return NewCodecABI(), nil
 	case EncodingFmtCompactShort, EncodingFmtCompactLong:
-		return NewCodecCompact(encodingFormat)
+		return NewCodecCompact(encodingFmt)
 	default:
-		return nil, fmt.Errorf("invalid encoding format %d", encodingFormat)
+		return nil, fmt.Errorf("invalid encoding format %d", encodingFmt)
 	}
 }

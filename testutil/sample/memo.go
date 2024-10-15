@@ -81,7 +81,7 @@ func ABIPack(t *testing.T, args ...memo.CodecArg) []byte {
 
 // CompactPack is a helper function to pack arguments into compact encoded data
 // Note: all arguments are assumed to be <= 65535 bytes for simplicity.
-func CompactPack(encodingFmt uint8, args ...memo.CodecArg) []byte {
+func CompactPack(encodingFmt memo.EncodingFormat, args ...memo.CodecArg) []byte {
 	var (
 		length     int
 		packedData []byte

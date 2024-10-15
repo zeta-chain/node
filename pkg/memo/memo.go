@@ -36,7 +36,7 @@ func (m *InboundMemo) EncodeToBytes() ([]byte, error) {
 	var data []byte
 	switch m.Version {
 	case 0:
-		data, err = m.FieldsV0.Pack(m.OpCode, m.EncodingFormat, dataFlags)
+		data, err = m.FieldsV0.Pack(m.OpCode, m.EncodingFmt, dataFlags)
 	default:
 		return nil, fmt.Errorf("invalid memo version: %d", m.Version)
 	}
@@ -62,7 +62,7 @@ func DecodeFromBytes(data []byte) (*InboundMemo, error) {
 	// decode fields based on version
 	switch memo.Version {
 	case 0:
-		err = memo.FieldsV0.Unpack(memo.OpCode, memo.EncodingFormat, memo.Header.DataFlags, data[HeaderSize:])
+		err = memo.FieldsV0.Unpack(memo.OpCode, memo.EncodingFmt, memo.Header.DataFlags, data[HeaderSize:])
 	default:
 		return nil, fmt.Errorf("invalid memo version: %d", memo.Version)
 	}

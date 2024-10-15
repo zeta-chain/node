@@ -5,7 +5,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/crypto"
-	zetamath "github.com/zeta-chain/node/pkg/math"
+	zetabits "github.com/zeta-chain/node/pkg/math/bits"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -38,14 +38,14 @@ type FieldsV0 struct {
 }
 
 // Pack encodes the memo fields
-func (f *FieldsV0) Pack(opCode uint8, encodingFormat uint8, dataFlags uint8) ([]byte, error) {
+func (f *FieldsV0) Pack(opCode OpCode, encodingFmt EncodingFormat, dataFlags uint8) ([]byte, error) {
 	// validate fields
 	err := f.Validate(opCode, dataFlags)
 	if err != nil {
 		return nil, err
 	}
 
-	codec, err := GetCodec(encodingFormat)
+	codec, err := GetCodec(encodingFmt)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get codec")
 	}
@@ -54,8 +54,8 @@ func (f *FieldsV0) Pack(opCode uint8, encodingFormat uint8, dataFlags uint8) ([]
 }
 
 // Unpack decodes the memo fields
-func (f *FieldsV0) Unpack(opCode uint8, encodingFormat uint8, dataFlags uint8, data []byte) error {
-	codec, err := GetCodec(encodingFormat)
+func (f *FieldsV0) Unpack(opCode OpCode, encodingFmt EncodingFormat, dataFlags uint8, data []byte) error {
+	codec, err := GetCodec(encodingFmt)
 	if err != nil {
 		return errors.Wrap(err, "unable to get codec")
 	}
@@ -69,9 +69,9 @@ func (f *FieldsV0) Unpack(opCode uint8, encodingFormat uint8, dataFlags uint8, d
 }
 
 // Validate checks if the fields are valid
-func (f *FieldsV0) Validate(opCode uint8, dataFlags uint8) error {
+func (f *FieldsV0) Validate(opCode OpCode, dataFlags uint8) error {
 	// receiver address must be a valid address
-	if zetamath.IsBitSet(dataFlags, bitPosReceiver) && crypto.IsEmptyAddress(f.Receiver) {
+	if zetabits.IsBitSet(dataFlags, bitPosReceiver) && crypto.IsEmptyAddress(f.Receiver) {
 		return errors.New("receiver address is empty")
 	}
 
@@ -81,7 +81,7 @@ func (f *FieldsV0) Validate(opCode uint8, dataFlags uint8) error {
 	}
 
 	// abort address must be a valid address
-	if zetamath.IsBitSet(dataFlags, bitPosAbortAddress) && !common.IsHexAddress(f.RevertOptions.AbortAddress) {
+	if zetabits.IsBitSet(dataFlags, bitPosAbortAddress) && !common.IsHexAddress(f.RevertOptions.AbortAddress) {
 		return errors.New("invalid abort address")
 	}
 
@@ -101,27 +101,27 @@ func (f *FieldsV0) DataFlags() uint8 {
 
 	// set 'receiver' flag if provided
 	if !crypto.IsEmptyAddress(f.Receiver) {
-		zetamath.SetBit(&dataFlags, bitPosReceiver)
+		zetabits.SetBit(&dataFlags, bitPosReceiver)
 	}
 
 	// set 'payload' flag if provided
 	if len(f.Payload) > 0 {
-		zetamath.SetBit(&dataFlags, bitPosPayload)
+		zetabits.SetBit(&dataFlags, bitPosPayload)
 	}
 
 	// set 'revertAddress' flag if provided
 	if f.RevertOptions.RevertAddress != "" {
-		zetamath.SetBit(&dataFlags, bitPosRevertAddress)
+		zetabits.SetBit(&dataFlags, bitPosRevertAddress)
 	}
 
 	// set 'abortAddress' flag if provided
 	if f.RevertOptions.AbortAddress != "" {
-		zetamath.SetBit(&dataFlags, bitPosAbortAddress)
+		zetabits.SetBit(&dataFlags, bitPosAbortAddress)
 	}
 
 	// set 'revertMessage' flag if provided
 	if f.RevertOptions.CallOnRevert {
-		zetamath.SetBit(&dataFlags, bitPosRevertMessage)
+		zetabits.SetBit(&dataFlags, bitPosRevertMessage)
 	}
 
 	return dataFlags
@@ -130,23 +130,23 @@ func (f *FieldsV0) DataFlags() uint8 {
 // packFieldsV0 packs the memo fields for version 0
 func (f *FieldsV0) packFields(codec Codec, dataFlags uint8) ([]byte, error) {
 	// add 'receiver' argument optionally
-	if zetamath.IsBitSet(dataFlags, bitPosReceiver) {
+	if zetabits.IsBitSet(dataFlags, bitPosReceiver) {
 		codec.AddArguments(ArgReceiver(f.Receiver))
 	}
 
 	// add 'payload' argument optionally
-	if zetamath.IsBitSet(dataFlags, bitPosPayload) {
+	if zetabits.IsBitSet(dataFlags, bitPosPayload) {
 		codec.AddArguments(ArgPayload(f.Payload))
 	}
 
 	// add 'revertAddress' argument optionally
-	if zetamath.IsBitSet(dataFlags, bitPosRevertAddress) {
+	if zetabits.IsBitSet(dataFlags, bitPosRevertAddress) {
 		codec.AddArguments(ArgRevertAddress(f.RevertOptions.RevertAddress))
 	}
 
 	// add 'abortAddress' argument optionally
 	abortAddress := common.HexToAddress(f.RevertOptions.AbortAddress)
-	if zetamath.IsBitSet(dataFlags, bitPosAbortAddress) {
+	if zetabits.IsBitSet(dataFlags, bitPosAbortAddress) {
 		codec.AddArguments(ArgAbortAddress(abortAddress))
 	}
 
@@ -167,28 +167,28 @@ func (f *FieldsV0) packFields(codec Codec, dataFlags uint8) ([]byte, error) {
 // unpackFields unpacks the memo fields for version 0
 func (f *FieldsV0) unpackFields(codec Codec, dataFlags byte, data []byte) error {
 	// add 'receiver' argument optionally
-	if zetamath.IsBitSet(dataFlags, bitPosReceiver) {
+	if zetabits.IsBitSet(dataFlags, bitPosReceiver) {
 		codec.AddArguments(ArgReceiver(&f.Receiver))
 	}
 
 	// add 'payload' argument optionally
-	if zetamath.IsBitSet(dataFlags, bitPosPayload) {
+	if zetabits.IsBitSet(dataFlags, bitPosPayload) {
 		codec.AddArguments(ArgPayload(&f.Payload))
 	}
 
 	// add 'revertAddress' argument optionally
-	if zetamath.IsBitSet(dataFlags, bitPosRevertAddress) {
+	if zetabits.IsBitSet(dataFlags, bitPosRevertAddress) {
 		codec.AddArguments(ArgRevertAddress(&f.RevertOptions.RevertAddress))
 	}
 
 	// add 'abortAddress' argument optionally
 	var abortAddress common.Address
-	if zetamath.IsBitSet(dataFlags, bitPosAbortAddress) {
+	if zetabits.IsBitSet(dataFlags, bitPosAbortAddress) {
 		codec.AddArguments(ArgAbortAddress(&abortAddress))
 	}
 
 	// add 'revertMessage' argument optionally
-	f.RevertOptions.CallOnRevert = zetamath.IsBitSet(dataFlags, bitPosRevertMessage)
+	f.RevertOptions.CallOnRevert = zetabits.IsBitSet(dataFlags, bitPosRevertMessage)
 	if f.RevertOptions.CallOnRevert {
 		codec.AddArguments(ArgRevertMessage(&f.RevertOptions.RevertMessage))
 	}

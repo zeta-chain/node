@@ -5,8 +5,10 @@ import (
 
 	"github.com/pkg/errors"
 
-	zetamath "github.com/zeta-chain/node/pkg/math"
+	zetabits "github.com/zeta-chain/node/pkg/math/bits"
 )
+
+type OpCode uint8
 
 const (
 	// Identifier is the ASCII code of 'Z' (0x5A)
@@ -15,25 +17,25 @@ const (
 	// HeaderSize is the size of the memo header: [identifier + ctrlByte1+ ctrlByte2 + dataFlags]
 	HeaderSize = 4
 
-	// MaskVersion is the mask for the version bits(upper 4 bits)
-	MaskVersion byte = 0b11110000
+	// maskVersion is the mask for the version bits(upper 4 bits)
+	maskVersion byte = 0b11110000
 
-	// MaskEncodingFormat is the mask for the encoding format bits(lower 4 bits)
-	MaskEncodingFormat byte = 0b00001111
+	// maskEncodingFormat is the mask for the encoding format bits(lower 4 bits)
+	maskEncodingFormat byte = 0b00001111
 
-	// MaskOpCode is the mask for the operation code bits(upper 4 bits)
-	MaskOpCode byte = 0b11110000
+	// maskOpCode is the mask for the operation code bits(upper 4 bits)
+	maskOpCode byte = 0b11110000
 
-	// MaskCtrlReserved is the mask for reserved control bits (lower 4 bits)
-	MaskCtrlReserved byte = 0b00001111
+	// maskCtrlReserved is the mask for reserved control bits (lower 4 bits)
+	maskCtrlReserved byte = 0b00001111
 )
 
 // Enum for non-EVM chain inbound operation code (4 bits)
 const (
-	OpCodeDeposit        uint8 = 0b0000 // operation 'deposit'
-	OpCodeDepositAndCall uint8 = 0b0001 // operation 'deposit_and_call'
-	OpCodeCall           uint8 = 0b0010 // operation 'call'
-	OpCodeInvalid        uint8 = 0b0011 // invalid operation code
+	OpCodeDeposit        OpCode = 0b0000 // operation 'deposit'
+	OpCodeDepositAndCall OpCode = 0b0001 // operation 'deposit_and_call'
+	OpCodeCall           OpCode = 0b0010 // operation 'call'
+	OpCodeInvalid        OpCode = 0b0011 // invalid operation code
 )
 
 // Header represent the memo header
@@ -41,11 +43,11 @@ type Header struct {
 	// Version is the memo Version
 	Version uint8
 
-	// EncodingFormat is the memo encoding format
-	EncodingFormat uint8
+	// EncodingFmt is the memo encoding format
+	EncodingFmt EncodingFormat
 
 	// OpCode is the inbound operation code
-	OpCode uint8
+	OpCode OpCode
 
 	// Reserved is the reserved control bits
 	Reserved uint8
@@ -69,14 +71,14 @@ func (h *Header) EncodeToBytes() ([]byte, error) {
 
 	// set version #, encoding format
 	var ctrlByte1 byte
-	ctrlByte1 = zetamath.SetBits(ctrlByte1, MaskVersion, h.Version)
-	ctrlByte1 = zetamath.SetBits(ctrlByte1, MaskEncodingFormat, h.EncodingFormat)
+	ctrlByte1 = zetabits.SetBits(ctrlByte1, maskVersion, h.Version)
+	ctrlByte1 = zetabits.SetBits(ctrlByte1, maskEncodingFormat, byte(h.EncodingFmt))
 	data[1] = ctrlByte1
 
 	// set operation code, reserved bits
 	var ctrlByte2 byte
-	ctrlByte2 = zetamath.SetBits(ctrlByte2, MaskOpCode, h.OpCode)
-	ctrlByte2 = zetamath.SetBits(ctrlByte2, MaskCtrlReserved, h.Reserved)
+	ctrlByte2 = zetabits.SetBits(ctrlByte2, maskOpCode, byte(h.OpCode))
+	ctrlByte2 = zetabits.SetBits(ctrlByte2, maskCtrlReserved, h.Reserved)
 	data[2] = ctrlByte2
 
 	// set data flags
@@ -99,13 +101,13 @@ func (h *Header) DecodeFromBytes(data []byte) error {
 
 	// extract version #, encoding format
 	ctrlByte1 := data[1]
-	h.Version = zetamath.GetBits(ctrlByte1, MaskVersion)
-	h.EncodingFormat = zetamath.GetBits(ctrlByte1, MaskEncodingFormat)
+	h.Version = zetabits.GetBits(ctrlByte1, maskVersion)
+	h.EncodingFmt = EncodingFormat(zetabits.GetBits(ctrlByte1, maskEncodingFormat))
 
 	// extract operation code, reserved bits
 	ctrlByte2 := data[2]
-	h.OpCode = zetamath.GetBits(ctrlByte2, MaskOpCode)
-	h.Reserved = zetamath.GetBits(ctrlByte2, MaskCtrlReserved)
+	h.OpCode = OpCode(zetabits.GetBits(ctrlByte2, maskOpCode))
+	h.Reserved = zetabits.GetBits(ctrlByte2, maskCtrlReserved)
 
 	// extract data flags
 	h.DataFlags = data[3]
@@ -120,8 +122,8 @@ func (h *Header) Validate() error {
 		return fmt.Errorf("invalid memo version: %d", h.Version)
 	}
 
-	if h.EncodingFormat >= EncodingFmtInvalid {
-		return fmt.Errorf("invalid encoding format: %d", h.EncodingFormat)
+	if h.EncodingFmt >= EncodingFmtInvalid {
+		return fmt.Errorf("invalid encoding format: %d", h.EncodingFmt)
 	}
 
 	if h.OpCode >= OpCodeInvalid {

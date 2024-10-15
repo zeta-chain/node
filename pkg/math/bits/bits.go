@@ -9,6 +9,10 @@ func SetBit(b *byte, position uint8) {
 	if position > 7 {
 		return
 	}
+
+	// Example: given b = 0b00000000 and position = 3
+	// step-1: shift value 1 to left by 3 times: 1 << 3 = 0b00001000
+	// step-2: make an OR operation with original byte to set the bit: 0b00000000 | 0b00001000 = 0b00001000
 	*b |= 1 << position
 }
 

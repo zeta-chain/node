@@ -18,10 +18,10 @@ func Test_Header_EncodeToBytes(t *testing.T) {
 		{
 			name: "it works",
 			header: memo.Header{
-				Version:        0,
-				EncodingFormat: memo.EncodingFmtABI,
-				OpCode:         memo.OpCodeCall,
-				DataFlags:      0b00011111,
+				Version:     0,
+				EncodingFmt: memo.EncodingFmtABI,
+				OpCode:      memo.OpCodeCall,
+				DataFlags:   0b00011111,
 			},
 			expected: []byte{memo.Identifier, 0b00000000, 0b00100000, 0b00011111},
 		},
@@ -57,12 +57,14 @@ func Test_Header_DecodeFromBytes(t *testing.T) {
 	}{
 		{
 			name: "it works",
-			data: append(sample.MemoHead(0, memo.EncodingFmtABI, memo.OpCodeCall, 0, 0), []byte{0x01, 0x02}...),
+			data: append(
+				sample.MemoHead(0, uint8(memo.EncodingFmtABI), uint8(memo.OpCodeCall), 0, 0),
+				[]byte{0x01, 0x02}...),
 			expected: memo.Header{
-				Version:        0,
-				EncodingFormat: memo.EncodingFmtABI,
-				OpCode:         memo.OpCodeCall,
-				Reserved:       0,
+				Version:     0,
+				EncodingFmt: memo.EncodingFmtABI,
+				OpCode:      memo.OpCodeCall,
+				Reserved:    0,
 			},
 		},
 		{
@@ -78,7 +80,7 @@ func Test_Header_DecodeFromBytes(t *testing.T) {
 		{
 			name: "header validation failed",
 			data: append(
-				sample.MemoHead(0, memo.EncodingFmtInvalid, memo.OpCodeCall, 0, 0),
+				sample.MemoHead(0, uint8(memo.EncodingFmtInvalid), uint8(memo.OpCodeCall), 0, 0),
 				[]byte{0x01, 0x02}...), // invalid encoding format
 			errMsg: "invalid encoding format",
 		},
@@ -107,9 +109,9 @@ func Test_Header_Validate(t *testing.T) {
 		{
 			name: "valid header",
 			header: memo.Header{
-				Version:        0,
-				EncodingFormat: memo.EncodingFmtCompactShort,
-				OpCode:         memo.OpCodeDepositAndCall,
+				Version:     0,
+				EncodingFmt: memo.EncodingFmtCompactShort,
+				OpCode:      memo.OpCodeDepositAndCall,
 			},
 		},
 		{
@@ -122,7 +124,7 @@ func Test_Header_Validate(t *testing.T) {
 		{
 			name: "invalid encoding format",
 			header: memo.Header{
-				EncodingFormat: memo.EncodingFmtInvalid,
+				EncodingFmt: memo.EncodingFmtInvalid,
 			},
 			errMsg: "invalid encoding format",
 		},
