@@ -626,7 +626,7 @@ func New(
 		),
 	)
 	// Set legacy router for backwards compatibility with gov v1beta1
-	app.GovKeeper.SetLegacyRouter(govRouter)
+	// app.GovKeeper.SetLegacyRouter(govRouter)
 
 	// Create evidence Keeper for to register the IBC light client misbehaviour evidence route
 	evidenceKeeper := evidencekeeper.NewKeeper(

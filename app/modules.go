@@ -141,13 +141,15 @@ func simulationModules(
 			app.GetSubspace(authtypes.ModuleName),
 		),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
-		gov.NewAppModule(
-			appCodec,
-			&app.GovKeeper,
-			app.AccountKeeper,
-			app.BankKeeper,
-			app.GetSubspace(govtypes.ModuleName),
-		),
+		// Todo : Enable gov module simulation
+		// https://github.com/zeta-chain/node/issues/3007
+		//gov.NewAppModule(
+		//	appCodec,
+		//	&app.GovKeeper,
+		//	app.AccountKeeper,
+		//	app.BankKeeper,
+		//	app.GetSubspace(govtypes.ModuleName),
+		//),
 		staking.NewAppModule(
 			appCodec,
 			app.StakingKeeper,
