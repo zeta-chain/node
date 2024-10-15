@@ -1,8 +1,10 @@
 package memo_test
 
 import (
+	"encoding/hex"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/memo"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -153,8 +155,6 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 		name         string
 		head         []byte
 		data         []byte
-		headHex      string
-		dataHex      string
 		expectedMemo memo.InboundMemo
 		errMsg       string
 	}{
@@ -266,6 +266,42 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 			}
 			require.NoError(t, err)
 			require.Equal(t, tt.expectedMemo, *memo)
+		})
+	}
+}
+
+func Test_DecodeLegacyMemoHex(t *testing.T) {
+	expectedShortMsgResult, err := hex.DecodeString("1a2b3c4d5e6f708192a3b4c5d6e7f808")
+	require.NoError(t, err)
+	tests := []struct {
+		name       string
+		message    string
+		expectAddr common.Address
+		expectData []byte
+		wantErr    bool
+	}{
+		{
+			"valid msg",
+			"95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5",
+			common.HexToAddress("95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5"),
+			[]byte{},
+			false,
+		},
+		{"empty msg", "", common.Address{}, nil, false},
+		{"invalid hex", "invalidHex", common.Address{}, nil, true},
+		{"short msg", "1a2b3c4d5e6f708192a3b4c5d6e7f808", common.Address{}, expectedShortMsgResult, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			addr, data, err := memo.DecodeLegacyMemoHex(tt.message)
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.expectAddr, addr)
+				require.Equal(t, tt.expectData, data)
+			}
 		})
 	}
 }

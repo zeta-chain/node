@@ -1,8 +1,10 @@
 package memo
 
 import (
+	"encoding/hex"
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 )
 
@@ -71,4 +73,26 @@ func DecodeFromBytes(data []byte) (*InboundMemo, error) {
 	}
 
 	return memo, nil
+}
+
+// DecodeLegacyMemoHex decodes hex encoded memo message into address and calldata
+//
+// The layout of legacy memo is: [20-byte address, variable calldata]
+func DecodeLegacyMemoHex(message string) (common.Address, []byte, error) {
+	if len(message) == 0 {
+		return common.Address{}, nil, nil
+	}
+
+	data, err := hex.DecodeString(message)
+	if err != nil {
+		return common.Address{}, nil, errors.Wrap(err, "message should be a hex encoded string")
+	}
+
+	if len(data) < common.AddressLength {
+		return common.Address{}, data, nil
+	}
+
+	address := common.BytesToAddress(data[:common.AddressLength])
+	data = data[common.AddressLength:]
+	return address, data, nil
 }
