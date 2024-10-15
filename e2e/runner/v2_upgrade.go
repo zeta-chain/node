@@ -10,9 +10,9 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 )
 
-// UpgradeContracts upgrades contracts
-// It deploys new contract implementation with the current imported artifacts and upgrade the contract
-func (r *E2ERunner) UpgradeContracts() {
+// UpgradeGatewaysAndERC20Custody upgrades gateways and ERC20Custody contracts
+// It deploys new contract implementation with the current imported artifacts and upgrades the contract
+func (r *E2ERunner) UpgradeGatewaysAndERC20Custody() {
 	r.UpgradeGatewayZEVM()
 	r.UpgradeGatewayEVM()
 	r.UpgradeERC20Custody()

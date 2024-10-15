@@ -84,7 +84,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestV2Migration, false, "set to true to run tests for v2 contracts migration test")
 	cmd.Flags().Bool(flagSkipTrackerCheck, false, "set to true to skip tracker check at the end of the tests")
 	cmd.Flags().Bool(flagSkipPrecompiles, false, "set to true to skip stateful precompiled contracts test")
-	cmd.Flags().Bool(flagUpgradeContracts, false, "set to true to upgrade gateways during setup for ZEVM and EVM")
+	cmd.Flags().Bool(flagUpgradeContracts, false, "set to true to upgrade Gateways and ERC20Custody contracts during setup for ZEVM and EVM")
 
 	return cmd
 }
@@ -413,9 +413,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		eg.Go(tonTestRoutine(conf, deployerRunner, verbose, tonTests...))
 	}
 
-	// upgrade contracts
 	if upgradeContracts {
-		deployerRunner.UpgradeContracts()
+		deployerRunner.UpgradeGatewaysAndERC20Custody()
 	}
 
 	if testV2 || testV2Migration {
