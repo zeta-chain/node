@@ -7,13 +7,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/memo"
-	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func Test_Memo_EncodeToBytes(t *testing.T) {
 	// create sample fields
-	fAddress := sample.EthAddress()
+	fAddress := common.HexToAddress("0xEA9808f0Ac504d1F521B5BbdfC33e6f1953757a7")
 	fBytes := []byte("here_s_some_bytes_field")
 	fString := "this_is_a_string_field"
 
@@ -43,14 +42,14 @@ func Test_Memo_EncodeToBytes(t *testing.T) {
 					},
 				},
 			},
-			expectedHead: sample.MemoHead(
+			expectedHead: MakeHead(
 				0,
 				uint8(memo.EncodingFmtABI),
 				uint8(memo.OpCodeDepositAndCall),
 				0,
 				flagsAllFieldsSet, // all fields are set
 			),
-			expectedData: sample.ABIPack(t,
+			expectedData: ABIPack(t,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes),
 				memo.ArgRevertAddress(fString),
@@ -76,14 +75,14 @@ func Test_Memo_EncodeToBytes(t *testing.T) {
 					},
 				},
 			},
-			expectedHead: sample.MemoHead(
+			expectedHead: MakeHead(
 				0,
 				uint8(memo.EncodingFmtCompactShort),
 				uint8(memo.OpCodeDepositAndCall),
 				0,
 				flagsAllFieldsSet, // all fields are set
 			),
-			expectedData: sample.CompactPack(
+			expectedData: CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes),
@@ -147,7 +146,7 @@ func Test_Memo_EncodeToBytes(t *testing.T) {
 
 func Test_Memo_DecodeFromBytes(t *testing.T) {
 	// create sample fields
-	fAddress := sample.EthAddress()
+	fAddress := common.HexToAddress("0xEA9808f0Ac504d1F521B5BbdfC33e6f1953757a7")
 	fBytes := []byte("here_s_some_bytes_field")
 	fString := "this_is_a_string_field"
 
@@ -160,14 +159,14 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 	}{
 		{
 			name: "decode memo with ABI encoding",
-			head: sample.MemoHead(
+			head: MakeHead(
 				0,
 				uint8(memo.EncodingFmtABI),
 				uint8(memo.OpCodeDepositAndCall),
 				0,
 				flagsAllFieldsSet, // all fields are set
 			),
-			data: sample.ABIPack(t,
+			data: ABIPack(t,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes),
 				memo.ArgRevertAddress(fString),
@@ -194,14 +193,14 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 		},
 		{
 			name: "decode memo with compact encoding",
-			head: sample.MemoHead(
+			head: MakeHead(
 				0,
 				uint8(memo.EncodingFmtCompactLong),
 				uint8(memo.OpCodeDepositAndCall),
 				0,
 				flagsAllFieldsSet, // all fields are set
 			),
-			data: sample.CompactPack(
+			data: CompactPack(
 				memo.EncodingFmtCompactLong,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes),
@@ -229,26 +228,26 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 		},
 		{
 			name:   "failed to decode memo header",
-			head:   sample.MemoHead(0, uint8(memo.EncodingFmtABI), uint8(memo.OpCodeInvalid), 0, 0),
-			data:   sample.ABIPack(t, memo.ArgReceiver(fAddress)),
+			head:   MakeHead(0, uint8(memo.EncodingFmtABI), uint8(memo.OpCodeInvalid), 0, 0),
+			data:   ABIPack(t, memo.ArgReceiver(fAddress)),
 			errMsg: "failed to decode memo header",
 		},
 		{
 			name:   "failed to decode if version is invalid",
-			head:   sample.MemoHead(1, uint8(memo.EncodingFmtABI), uint8(memo.OpCodeDeposit), 0, 0),
-			data:   sample.ABIPack(t, memo.ArgReceiver(fAddress)),
+			head:   MakeHead(1, uint8(memo.EncodingFmtABI), uint8(memo.OpCodeDeposit), 0, 0),
+			data:   ABIPack(t, memo.ArgReceiver(fAddress)),
 			errMsg: "invalid memo version",
 		},
 		{
 			name: "failed to decode compact encoded data with ABI encoding format",
-			head: sample.MemoHead(
+			head: MakeHead(
 				0,
 				uint8(memo.EncodingFmtABI),
 				uint8(memo.OpCodeDepositAndCall),
 				0,
 				0,
 			), // header says ABI encoding
-			data: sample.CompactPack(
+			data: CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(fAddress),
 			), // but data is compact encoded

@@ -2,13 +2,60 @@ package memo_test
 
 import (
 	"bytes"
+	"encoding/binary"
+	"strings"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/memo"
-	"github.com/zeta-chain/node/testutil/sample"
 )
+
+// CompactPack is a helper function to pack arguments into compact encoded data
+// Note: all arguments are assumed to be <= 65535 bytes for simplicity.
+func CompactPack(encodingFmt memo.EncodingFormat, args ...memo.CodecArg) []byte {
+	var (
+		length     int
+		packedData []byte
+	)
+
+	for _, arg := range args {
+		// get length of argument
+		switch arg.Type {
+		case memo.ArgTypeBytes:
+			length = len(arg.Arg.([]byte))
+		case memo.ArgTypeString:
+			length = len([]byte(arg.Arg.(string)))
+		default:
+			// skip length for other types
+			length = -1
+		}
+
+		// append length in bytes
+		if length != -1 {
+			switch encodingFmt {
+			case memo.EncodingFmtCompactShort:
+				packedData = append(packedData, byte(length))
+			case memo.EncodingFmtCompactLong:
+				buff := make([]byte, 2)
+				binary.LittleEndian.PutUint16(buff, uint16(length))
+				packedData = append(packedData, buff...)
+			}
+		}
+
+		// append actual data in bytes
+		switch arg.Type {
+		case memo.ArgTypeBytes:
+			packedData = append(packedData, arg.Arg.([]byte)...)
+		case memo.ArgTypeAddress:
+			packedData = append(packedData, arg.Arg.(common.Address).Bytes()...)
+		case memo.ArgTypeString:
+			packedData = append(packedData, []byte(arg.Arg.(string))...)
+		}
+	}
+
+	return packedData
+}
 
 func Test_NewCodecCompact(t *testing.T) {
 	tests := []struct {
@@ -46,7 +93,7 @@ func Test_CodecCompact_AddArguments(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, codec)
 
-	address := sample.EthAddress()
+	address := common.HexToAddress("0x855EfD3C54F9Ed106C6c3FB343539c89Df042e0B")
 	codec.AddArguments(memo.ArgReceiver(address))
 
 	// attempt to pack the arguments, result should not be nil
@@ -57,7 +104,7 @@ func Test_CodecCompact_AddArguments(t *testing.T) {
 
 func Test_CodecCompact_PackArguments(t *testing.T) {
 	// create sample arguments
-	argAddress := sample.EthAddress()
+	argAddress := common.HexToAddress("0x855EfD3C54F9Ed106C6c3FB343539c89Df042e0B")
 	argBytes := []byte("here is a bytes argument")
 	argString := "some other string argument"
 
@@ -93,7 +140,7 @@ func Test_CodecCompact_PackArguments(t *testing.T) {
 			name:      "pack long string (> 255 bytes) with compact-long format",
 			encodeFmt: memo.EncodingFmtCompactLong,
 			args: []memo.CodecArg{
-				memo.ArgPayload([]byte(sample.StringRandom(sample.Rand(), 256))),
+				memo.ArgPayload([]byte(strings.Repeat("a", 256))),
 			},
 			expectedLen: 2 + 256,
 		},
@@ -101,7 +148,7 @@ func Test_CodecCompact_PackArguments(t *testing.T) {
 			name:      "pack long string (> 255 bytes) with compact-short format should fail",
 			encodeFmt: memo.EncodingFmtCompactShort,
 			args: []memo.CodecArg{
-				memo.ArgPayload([]byte(sample.StringRandom(sample.Rand(), 256))),
+				memo.ArgPayload([]byte(strings.Repeat("b", 256))),
 			},
 			errMsg: "exceeds 255 bytes",
 		},
@@ -109,7 +156,7 @@ func Test_CodecCompact_PackArguments(t *testing.T) {
 			name:      "pack long string (> 65535 bytes) with compact-long format should fail",
 			encodeFmt: memo.EncodingFmtCompactLong,
 			args: []memo.CodecArg{
-				memo.ArgPayload([]byte(sample.StringRandom(sample.Rand(), 65536))),
+				memo.ArgPayload([]byte(strings.Repeat("c", 65536))),
 			},
 			errMsg: "exceeds 65535 bytes",
 		},
@@ -176,7 +223,7 @@ func Test_CodecCompact_PackArguments(t *testing.T) {
 			require.Equal(t, tc.expectedLen, len(packedData))
 
 			// calc expected data for comparison
-			expectedData := sample.CompactPack(tc.encodeFmt, tc.args...)
+			expectedData := CompactPack(tc.encodeFmt, tc.args...)
 
 			// validate the packed data
 			require.True(t, bytes.Equal(expectedData, packedData), "compact encoded data mismatch")
@@ -186,7 +233,7 @@ func Test_CodecCompact_PackArguments(t *testing.T) {
 
 func Test_CodecCompact_UnpackArguments(t *testing.T) {
 	// create sample arguments
-	argAddress := sample.EthAddress()
+	argAddress := common.HexToAddress("0x855EfD3C54F9Ed106C6c3FB343539c89Df042e0B")
 	argBytes := []byte("some test bytes argument")
 	argString := "some other string argument"
 
@@ -201,7 +248,7 @@ func Test_CodecCompact_UnpackArguments(t *testing.T) {
 		{
 			name:      "unpack arguments of [address, bytes, string] in compact-short format",
 			encodeFmt: memo.EncodingFmtCompactShort,
-			data: sample.CompactPack(
+			data: CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(argAddress),
 				memo.ArgPayload(argBytes),
@@ -216,7 +263,7 @@ func Test_CodecCompact_UnpackArguments(t *testing.T) {
 		{
 			name:      "unpack arguments of [string, address, bytes] in compact-long format",
 			encodeFmt: memo.EncodingFmtCompactLong,
-			data: sample.CompactPack(
+			data: CompactPack(
 				memo.EncodingFmtCompactLong,
 				memo.ArgRevertAddress(argString),
 				memo.ArgReceiver(argAddress),
@@ -231,7 +278,7 @@ func Test_CodecCompact_UnpackArguments(t *testing.T) {
 		{
 			name:      "unpack empty byte array and string argument",
 			encodeFmt: memo.EncodingFmtCompactShort,
-			data: sample.CompactPack(
+			data: CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgPayload([]byte{}),
 				memo.ArgRevertAddress(""),
@@ -271,7 +318,7 @@ func Test_CodecCompact_UnpackArguments(t *testing.T) {
 		{
 			name:      "failed to unpack bytes argument if string is passed",
 			encodeFmt: memo.EncodingFmtCompactShort,
-			data: sample.CompactPack(
+			data: CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgPayload(argBytes),
 			),
@@ -283,7 +330,7 @@ func Test_CodecCompact_UnpackArguments(t *testing.T) {
 		{
 			name:      "failed to unpack address argument if bytes is passed",
 			encodeFmt: memo.EncodingFmtCompactShort,
-			data: sample.CompactPack(
+			data: CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(argAddress),
 			),
@@ -295,7 +342,7 @@ func Test_CodecCompact_UnpackArguments(t *testing.T) {
 		{
 			name:      "failed to unpack string argument if address is passed",
 			encodeFmt: memo.EncodingFmtCompactShort,
-			data: sample.CompactPack(
+			data: CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgRevertAddress(argString),
 			),
@@ -317,7 +364,7 @@ func Test_CodecCompact_UnpackArguments(t *testing.T) {
 			name:      "unpacking should fail if not all data is consumed",
 			encodeFmt: memo.EncodingFmtCompactShort,
 			data: func() []byte {
-				data := sample.CompactPack(
+				data := CompactPack(
 					memo.EncodingFmtCompactShort,
 					memo.ArgReceiver(argAddress),
 					memo.ArgPayload(argBytes),

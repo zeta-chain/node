@@ -5,8 +5,18 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/memo"
-	"github.com/zeta-chain/node/testutil/sample"
 )
+
+// MakeHead is a helper function to create a memo head
+// Note: all arguments are assumed to be <= 0b1111 for simplicity.
+func MakeHead(version, encodingFmt, opCode, reserved, flags uint8) []byte {
+	head := make([]byte, memo.HeaderSize)
+	head[0] = memo.Identifier
+	head[1] = version<<4 | encodingFmt
+	head[2] = opCode<<4 | reserved
+	head[3] = flags
+	return head
+}
 
 func Test_Header_EncodeToBytes(t *testing.T) {
 	tests := []struct {
@@ -58,7 +68,7 @@ func Test_Header_DecodeFromBytes(t *testing.T) {
 		{
 			name: "it works",
 			data: append(
-				sample.MemoHead(0, uint8(memo.EncodingFmtABI), uint8(memo.OpCodeCall), 0, 0),
+				MakeHead(0, uint8(memo.EncodingFmtABI), uint8(memo.OpCodeCall), 0, 0),
 				[]byte{0x01, 0x02}...),
 			expected: memo.Header{
 				Version:     0,
@@ -80,7 +90,7 @@ func Test_Header_DecodeFromBytes(t *testing.T) {
 		{
 			name: "header validation failed",
 			data: append(
-				sample.MemoHead(0, uint8(memo.EncodingFmtInvalid), uint8(memo.OpCodeCall), 0, 0),
+				MakeHead(0, uint8(memo.EncodingFmtInvalid), uint8(memo.OpCodeCall), 0, 0),
 				[]byte{0x01, 0x02}...), // invalid encoding format
 			errMsg: "invalid encoding format",
 		},

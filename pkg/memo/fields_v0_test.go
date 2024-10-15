@@ -47,7 +47,7 @@ func Test_V0_Pack(t *testing.T) {
 					RevertMessage: fBytes,
 				},
 			},
-			expectedData: sample.ABIPack(t,
+			expectedData: ABIPack(t,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes),
 				memo.ArgRevertAddress(fString),
@@ -69,7 +69,7 @@ func Test_V0_Pack(t *testing.T) {
 					RevertMessage: fBytes,
 				},
 			},
-			expectedData: sample.CompactPack(
+			expectedData: CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes),
@@ -119,7 +119,7 @@ func Test_V0_Pack(t *testing.T) {
 
 func Test_V0_Unpack(t *testing.T) {
 	// create sample fields
-	fAddress := sample.EthAddress()
+	fAddress := common.HexToAddress("0xA029D053E13223E2442E28be80b3CeDA27ecbE31")
 	fBytes := []byte("here_s_some_bytes_field")
 	fString := "this_is_a_string_field"
 
@@ -137,7 +137,7 @@ func Test_V0_Unpack(t *testing.T) {
 			opCode:    memo.OpCodeDepositAndCall,
 			encodeFmt: memo.EncodingFmtABI,
 			dataFlags: flagsAllFieldsSet, // all fields are set
-			data: sample.ABIPack(t,
+			data: ABIPack(t,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes),
 				memo.ArgRevertAddress(fString),
@@ -159,7 +159,7 @@ func Test_V0_Unpack(t *testing.T) {
 			opCode:    memo.OpCodeDepositAndCall,
 			encodeFmt: memo.EncodingFmtCompactShort,
 			dataFlags: flagsAllFieldsSet, // all fields are set
-			data: sample.CompactPack(
+			data: CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes),
@@ -182,7 +182,7 @@ func Test_V0_Unpack(t *testing.T) {
 			opCode:    memo.OpCodeDepositAndCall,
 			encodeFmt: memo.EncodingFmtABI,
 			dataFlags: 0b00000010, // payload flags are set
-			data: sample.ABIPack(t,
+			data: ABIPack(t,
 				memo.ArgPayload([]byte{})), // empty payload
 			expected: memo.FieldsV0{},
 		},
@@ -191,7 +191,7 @@ func Test_V0_Unpack(t *testing.T) {
 			opCode:    memo.OpCodeDepositAndCall,
 			encodeFmt: memo.EncodingFmtCompactShort,
 			dataFlags: 0b00000010, // payload flag is set
-			data: sample.CompactPack(
+			data: CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgPayload([]byte{})), // empty payload
 			expected: memo.FieldsV0{},
@@ -209,7 +209,7 @@ func Test_V0_Unpack(t *testing.T) {
 			opCode:    memo.OpCodeDepositAndCall,
 			encodeFmt: memo.EncodingFmtCompactShort,
 			dataFlags: 0b00000011, // receiver and payload flags are set
-			data: sample.ABIPack(t,
+			data: ABIPack(t,
 				memo.ArgReceiver(fAddress),
 				memo.ArgPayload(fBytes)),
 			errMsg: "failed to unpack arguments",
@@ -219,7 +219,7 @@ func Test_V0_Unpack(t *testing.T) {
 			opCode:    memo.OpCodeDepositAndCall,
 			encodeFmt: memo.EncodingFmtABI,
 			dataFlags: 0b00000011, // receiver and payload flags are set
-			data: sample.ABIPack(t,
+			data: ABIPack(t,
 				memo.ArgReceiver(common.Address{}),
 				memo.ArgPayload(fBytes)),
 			errMsg: "receiver address is empty",
@@ -247,7 +247,7 @@ func Test_V0_Unpack(t *testing.T) {
 
 func Test_V0_Validate(t *testing.T) {
 	// create sample fields
-	fAddress := sample.EthAddress()
+	fAddress := common.HexToAddress("0xA029D053E13223E2442E28be80b3CeDA27ecbE31")
 	fBytes := []byte("here_s_some_bytes_field")
 	fString := "this_is_a_string_field"
 
@@ -334,7 +334,7 @@ func Test_V0_Validate(t *testing.T) {
 
 func Test_V0_DataFlags(t *testing.T) {
 	// create sample fields
-	fAddress := sample.EthAddress()
+	fAddress := common.HexToAddress("0xA029D053E13223E2442E28be80b3CeDA27ecbE31")
 	fBytes := []byte("here_s_some_bytes_field")
 	fString := "this_is_a_string_field"
 

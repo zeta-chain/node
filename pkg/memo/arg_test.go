@@ -3,15 +3,15 @@ package memo_test
 import (
 	"testing"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/memo"
-	"github.com/zeta-chain/node/testutil/sample"
 )
 
 func Test_NewArg(t *testing.T) {
-	argAddress := sample.EthAddress()
-	argString := sample.String()
-	argBytes := sample.Bytes()
+	argAddress := common.HexToAddress("0x0B85C56e5453e0f4273d1D1BF3091d43B08B38CE")
+	argString := "some other string argument"
+	argBytes := []byte("here is a bytes argument")
 
 	tests := []struct {
 		name    string
