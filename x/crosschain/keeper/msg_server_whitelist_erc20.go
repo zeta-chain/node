@@ -6,7 +6,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/zeta-chain/node/pkg/coin"
@@ -31,28 +30,28 @@ func (k msgServer) WhitelistERC20(
 		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
-	erc20Addr := ethcommon.HexToAddress(msg.Erc20Address)
-	if erc20Addr == (ethcommon.Address{}) {
-		return nil, errorsmod.Wrapf(
-			sdkerrors.ErrInvalidAddress,
-			"invalid ERC20 contract address (%s)",
-			msg.Erc20Address,
-		)
-	}
+	// erc20Addr := ethcommon.HexToAddress(msg.Erc20Address)
+	// if erc20Addr == (ethcommon.Address{}) {
+	// 	return nil, errorsmod.Wrapf(
+	// 		sdkerrors.ErrInvalidAddress,
+	// 		"invalid ERC20 contract address (%s)",
+	// 		msg.Erc20Address,
+	// 	)
+	// }
 
-	// check if the erc20 is already whitelisted
-	foreignCoins := k.fungibleKeeper.GetAllForeignCoins(ctx)
-	for _, fCoin := range foreignCoins {
-		assetAddr := ethcommon.HexToAddress(fCoin.Asset)
-		if assetAddr == erc20Addr && fCoin.ForeignChainId == msg.ChainId {
-			return nil, errorsmod.Wrapf(
-				fungibletypes.ErrForeignCoinAlreadyExist,
-				"ERC20 contract address (%s) already whitelisted on chain (%d)",
-				msg.Erc20Address,
-				msg.ChainId,
-			)
-		}
-	}
+	// // check if the erc20 is already whitelisted
+	// foreignCoins := k.fungibleKeeper.GetAllForeignCoins(ctx)
+	// for _, fCoin := range foreignCoins {
+	// 	assetAddr := ethcommon.HexToAddress(fCoin.Asset)
+	// 	if assetAddr == erc20Addr && fCoin.ForeignChainId == msg.ChainId {
+	// 		return nil, errorsmod.Wrapf(
+	// 			fungibletypes.ErrForeignCoinAlreadyExist,
+	// 			"ERC20 contract address (%s) already whitelisted on chain (%d)",
+	// 			msg.Erc20Address,
+	// 			msg.ChainId,
+	// 		)
+	// 	}
+	// }
 
 	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {

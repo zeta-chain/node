@@ -2,6 +2,7 @@ package signer
 
 import (
 	"context"
+	"strings"
 
 	"cosmossdk.io/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -121,46 +122,85 @@ func (signer *Signer) TryProcessOutbound(
 	chainID := signer.Chain().ChainId
 	nonce := params.TssNonce
 	coinType := cctx.InboundParams.CoinType
-	if coinType != coin.CoinType_Gas {
+
+	var tx *solana.Transaction
+
+	switch coinType {
+	case coin.CoinType_Cmd:
+		relayedMsg := strings.Split(cctx.RelayedMessage, ":")
+		if len(relayedMsg) != 2 {
+			return
+		}
+
+		pk, err := solana.PublicKeyFromBase58(relayedMsg[1])
+		if err != nil {
+			signer.Logger().
+				Std.Error().
+				Err(err).
+				Msgf("TryProcessOutbound: error decoding spl from relayed msg")
+			return
+		}
+
+		seed := [][]byte{[]byte("whitelist"), pk.Bytes()}
+		whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, signer.gatewayID)
+		if err != nil {
+			signer.Logger().
+				Std.Error().
+				Err(err).
+				Msgf("TryProcessOutbound: error calculating whitelistEntry pda")
+			return
+		}
+
+		// sign the withdraw transaction by relayer key
+		tx, err = signer.SignWhitelistTx(ctx, contracts.NewMsgWhitelist(pk, whitelistEntryPDA))
+		if err != nil {
+			logger.Error().
+				Err(err).
+				Msgf("TryProcessOutbound: SignWhitelistTx error for chain %d nonce %d", chainID, nonce)
+			return
+		}
+
+	case coin.CoinType_Gas:
+		// compliance check
+		cancelTx := compliance.IsCctxRestricted(cctx)
+		if cancelTx {
+			compliance.PrintComplianceLog(
+				logger,
+				signer.Logger().Compliance,
+				true,
+				chainID,
+				cctx.Index,
+				cctx.InboundParams.Sender,
+				params.Receiver,
+				"SOL",
+			)
+		}
+
+		// sign gateway withdraw message by TSS
+		msg, err := signer.SignMsgWithdraw(ctx, params, height, cancelTx)
+		if err != nil {
+			logger.Error().Err(err).Msgf("TryProcessOutbound: SignMsgWithdraw error for chain %d nonce %d", chainID, nonce)
+			return
+		}
+
+		// skip relaying the transaction if this signer hasn't set the relayer key
+		if !signer.HasRelayerKey() {
+			return
+		}
+
+		// set relayer balance metrics
+		signer.SetRelayerBalanceMetrics(ctx)
+
+		// sign the withdraw transaction by relayer key
+		tx, err = signer.SignWithdrawTx(ctx, *msg)
+		if err != nil {
+			logger.Error().Err(err).Msgf("TryProcessOutbound: SignGasWithdraw error for chain %d nonce %d", chainID, nonce)
+			return
+		}
+
+	default:
 		logger.Error().
 			Msgf("TryProcessOutbound: can only send SOL to the Solana network for chain %d nonce %d", chainID, nonce)
-		return
-	}
-
-	// compliance check
-	cancelTx := compliance.IsCctxRestricted(cctx)
-	if cancelTx {
-		compliance.PrintComplianceLog(
-			logger,
-			signer.Logger().Compliance,
-			true,
-			chainID,
-			cctx.Index,
-			cctx.InboundParams.Sender,
-			params.Receiver,
-			"SOL",
-		)
-	}
-
-	// sign gateway withdraw message by TSS
-	msg, err := signer.SignMsgWithdraw(ctx, params, height, cancelTx)
-	if err != nil {
-		logger.Error().Err(err).Msgf("TryProcessOutbound: SignMsgWithdraw error for chain %d nonce %d", chainID, nonce)
-		return
-	}
-
-	// skip relaying the transaction if this signer hasn't set the relayer key
-	if !signer.HasRelayerKey() {
-		return
-	}
-
-	// set relayer balance metrics
-	signer.SetRelayerBalanceMetrics(ctx)
-
-	// sign the withdraw transaction by relayer key
-	tx, err := signer.SignWithdrawTx(ctx, *msg)
-	if err != nil {
-		logger.Error().Err(err).Msgf("TryProcessOutbound: SignGasWithdraw error for chain %d nonce %d", chainID, nonce)
 		return
 	}
 

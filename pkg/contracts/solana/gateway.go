@@ -8,7 +8,7 @@ import (
 
 const (
 	// SolanaGatewayProgramID is the program ID of the Solana gateway program
-	SolanaGatewayProgramID = "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
+	SolanaGatewayProgramID = "BaDmykPHVwPQNY9SXQnJU8JPXdN89z3ib7qEfhNfkWRg"
 
 	// PDASeed is the seed for the Solana gateway program derived address
 	PDASeed = "meta"
@@ -41,6 +41,11 @@ func DiscriminatorWithdraw() [8]byte {
 // DiscriminatorWithdrawSPL returns the discriminator for Solana gateway 'withdraw_spl_token' instruction
 func DiscriminatorWithdrawSPL() [8]byte {
 	return [8]byte{156, 234, 11, 89, 235, 246, 32}
+}
+
+// DiscriminatorWhitelist returns the discriminator for Solana gateway 'whitelist_spl_mint' instruction
+func DiscriminatorWhitelistSplMint() [8]byte {
+	return [8]byte{30, 110, 162, 42, 208, 147, 254, 219}
 }
 
 // ParseGatewayAddressAndPda parses the gateway id and program derived address from the given string
