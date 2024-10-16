@@ -38,13 +38,13 @@ func (r *E2ERunner) V2ETHWithdrawAndCall(
 	payload []byte,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
-	tx, err := r.GatewayZEVM.WithdrawAndCall(
+	tx, err := r.GatewayZEVM.WithdrawAndCall0(
 		r.ZEVMAuth,
 		receiver.Bytes(),
 		amount,
 		r.ETHZRC20Addr,
 		payload,
-		gasLimit,
+		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: true},
 		revertOptions,
 	)
 	require.NoError(r, err)
@@ -59,7 +59,7 @@ func (r *E2ERunner) V2ETHWithdrawAndAuthenticatedCall(
 	payload []byte,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
-	tx, err := r.GatewayZEVM.WithdrawAndCall2(
+	tx, err := r.GatewayZEVM.WithdrawAndCall0(
 		r.ZEVMAuth,
 		receiver.Bytes(),
 		amount,
@@ -135,13 +135,13 @@ func (r *E2ERunner) V2ERC20WithdrawAndCall(
 		r.ZEVMAuth.GasLimit = previousGasLimit
 	}()
 
-	tx, err := r.GatewayZEVM.WithdrawAndCall(
+	tx, err := r.GatewayZEVM.WithdrawAndCall0(
 		r.ZEVMAuth,
 		receiver.Bytes(),
 		amount,
 		r.ERC20ZRC20Addr,
 		payload,
-		gasLimit,
+		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: true},
 		revertOptions,
 	)
 	require.NoError(r, err)
@@ -155,12 +155,12 @@ func (r *E2ERunner) V2ZEVMToEMVCall(
 	payload []byte,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
-	tx, err := r.GatewayZEVM.Call0(
+	tx, err := r.GatewayZEVM.Call(
 		r.ZEVMAuth,
 		receiver.Bytes(),
 		r.ETHZRC20Addr,
 		payload,
-		gasLimit,
+		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: true},
 		revertOptions,
 	)
 	require.NoError(r, err)

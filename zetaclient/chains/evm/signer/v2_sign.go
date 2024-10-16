@@ -29,19 +29,17 @@ func (signer *Signer) signGatewayExecute(
 
 	var data []byte
 
+	// only set sender if it's authenticated call
+	messageContext := gatewayevm.MessageContext{
+		Sender: common.HexToAddress(sender),
+	}
 	if txData.outboundParams.CallOptions.IsArbitraryCall {
-		data, err = gatewayABI.Pack("execute", txData.to, txData.message)
-		if err != nil {
-			return nil, fmt.Errorf("execute pack error: %w", err)
-		}
-	} else {
-		messageContext := gatewayevm.MessageContext{
-			Sender: common.HexToAddress(sender),
-		}
-		data, err = gatewayABI.Pack("execute0", messageContext, txData.to, txData.message)
-		if err != nil {
-			return nil, fmt.Errorf("execute0 pack error: %w", err)
-		}
+		messageContext.Sender = common.Address{}
+	}
+
+	data, err = gatewayABI.Pack("execute", messageContext, txData.to, txData.message)
+	if err != nil {
+		return nil, fmt.Errorf("execute pack error: %w", err)
 	}
 
 	tx, _, _, err := signer.Sign(
@@ -148,6 +146,7 @@ func (signer *Signer) signERC20CustodyWithdraw(
 // bytes calldata data
 func (signer *Signer) signERC20CustodyWithdrawAndCall(
 	ctx context.Context,
+	sender string,
 	txData *OutboundData,
 ) (*ethtypes.Transaction, error) {
 	erc20CustodyV2ABI, err := erc20custodyv2.ERC20CustodyMetaData.GetAbi()
@@ -155,7 +154,15 @@ func (signer *Signer) signERC20CustodyWithdrawAndCall(
 		return nil, errors.Wrap(err, "unable to get ERC20CustodyMetaData ABI")
 	}
 
-	data, err := erc20CustodyV2ABI.Pack("withdrawAndCall", txData.to, txData.asset, txData.amount, txData.message)
+	// only set sender if it's authenticated call
+	messageContext := gatewayevm.MessageContext{
+		Sender: common.HexToAddress(sender),
+	}
+	if txData.outboundParams.CallOptions.IsArbitraryCall {
+		messageContext.Sender = common.Address{}
+	}
+
+	data, err := erc20CustodyV2ABI.Pack("withdrawAndCall", messageContext, txData.to, txData.asset, txData.amount, txData.message)
 	if err != nil {
 		return nil, fmt.Errorf("withdraw pack error: %w", err)
 	}
