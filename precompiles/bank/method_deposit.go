@@ -92,8 +92,8 @@ func (c *Contract) deposit(
 	// The process of creating a new cosmos coin is:
 	// - Generate the new coin denom using ZRC20 address,
 	//   this way we map ZRC20 addresses to cosmos denoms "zevm/0x12345".
-	// - Mint coins.
-	// - Send coins to the caller.
+	// - Mint coins to the fungible module.
+	// - Send coins from fungible to the caller.
 	coinSet, err := createCoinSet(ZRC20ToCosmosDenom(zrc20Addr), amount)
 	if err != nil {
 		return nil, err

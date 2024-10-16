@@ -45,7 +45,7 @@ func (k Keeper) ZRC20Allowance(
 	res, err := k.CallEVM(
 		ctx,
 		*zrc20ABI,
-		fungibletypes.ModuleAddressZEVM,
+		fungibletypes.ModuleAddressEVM,
 		zrc20Address,
 		big.NewInt(0),
 		nil,
@@ -101,7 +101,7 @@ func (k Keeper) ZRC20BalanceOf(
 	res, err := k.CallEVM(
 		ctx,
 		*zrc20ABI,
-		fungibletypes.ModuleAddressZEVM,
+		fungibletypes.ModuleAddressEVM,
 		zrc20Address,
 		big.NewInt(0),
 		nil,
@@ -153,7 +153,7 @@ func (k Keeper) ZRC20TotalSupply(
 	res, err := k.CallEVM(
 		ctx,
 		*zrc20ABI,
-		fungibletypes.ModuleAddressZEVM,
+		fungibletypes.ModuleAddressEVM,
 		zrc20Address,
 		big.NewInt(0),
 		nil,
