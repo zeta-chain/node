@@ -10,7 +10,7 @@ const (
 	// ModuleName defines the module name
 	ModuleName                       = "emissions"
 	UndistributedObserverRewardsPool = ModuleName + "Observers"
-	UndistributedTssRewardsPool      = ModuleName + "Tss"
+	UndistributedTSSRewardsPool      = ModuleName + "Tss"
 
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
@@ -42,7 +42,7 @@ const (
 var (
 	EmissionsModuleAddress                  = authtypes.NewModuleAddress(ModuleName)
 	UndistributedObserverRewardsPoolAddress = authtypes.NewModuleAddress(UndistributedObserverRewardsPool)
-	UndistributedTssRewardsPoolAddress      = authtypes.NewModuleAddress(UndistributedTssRewardsPool)
+	UndistributedTssRewardsPoolAddress      = authtypes.NewModuleAddress(UndistributedTSSRewardsPool)
 	// BlockReward is an initial block reward amount when emissions module was initialized.
 	// The current value can be obtained from by querying the params
 	BlockReward = sdk.MustNewDecFromStr("9620949074074074074.074070733466756687")

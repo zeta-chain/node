@@ -29,7 +29,7 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 			Params:    params,
 		}
 		err := msg.ValidateBasic()
-		require.ErrorContains(t, err, "block reward amount cannot be less than 0")
+		require.ErrorContains(t, err, "block reward amount must not be negative")
 	})
 
 	t.Run("valid", func(t *testing.T) {
