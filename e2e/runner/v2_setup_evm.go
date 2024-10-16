@@ -48,8 +48,8 @@ func (r *E2ERunner) SetupEVMV2() {
 	initializerData, err := gatewayEVMABI.Pack("initialize", r.TSSAddress, r.ZetaEthAddr, r.Account.EVMAddress())
 	require.NoError(r, err)
 
-	// Deploy the proxy contract
-	proxyAddress, txProxy, _, err := erc1967proxy.DeployERC1967Proxy(
+	// Deploy gateway proxy contract
+	gatewayProxyAddress, gatewayProxyTx, _, err := erc1967proxy.DeployERC1967Proxy(
 		r.EVMAuth,
 		r.EVMClient,
 		gatewayEVMAddr,
@@ -57,33 +57,47 @@ func (r *E2ERunner) SetupEVMV2() {
 	)
 	require.NoError(r, err)
 
-	r.GatewayEVMAddr = proxyAddress
-	r.GatewayEVM, err = gatewayevm.NewGatewayEVM(proxyAddress, r.EVMClient)
+	r.GatewayEVMAddr = gatewayProxyAddress
+	r.GatewayEVM, err = gatewayevm.NewGatewayEVM(gatewayProxyAddress, r.EVMClient)
 	require.NoError(r, err)
 	r.Logger.Info("Gateway EVM contract address: %s, tx hash: %s", gatewayEVMAddr.Hex(), txGateway.Hash().Hex())
 
+	// Deploy erc20custody proxy contract
 	r.Logger.Info("Deploying ERC20Custody contract")
-	erc20CustodyNewAddr, txCustody, erc20CustodyNew, err := erc20custodyv2.DeployERC20Custody(
+	erc20CustodyAddr, txCustody, _, err := erc20custodyv2.DeployERC20Custody(r.EVMAuth, r.EVMClient)
+	require.NoError(r, err)
+
+	ensureTxReceipt(txCustody, "ERC20Custody deployment failed")
+
+	erc20CustodyABI, err := erc20custodyv2.ERC20CustodyMetaData.GetAbi()
+	require.NoError(r, err)
+
+	// Encode the initializer data
+	initializerData, err = erc20CustodyABI.Pack("initialize", r.GatewayEVMAddr, r.TSSAddress, r.Account.EVMAddress())
+	require.NoError(r, err)
+
+	// Deploy erc20custody proxy contract
+	erc20CustodyProxyAddress, erc20ProxyTx, _, err := erc1967proxy.DeployERC1967Proxy(
 		r.EVMAuth,
 		r.EVMClient,
-		r.GatewayEVMAddr,
-		r.TSSAddress,
-		r.Account.EVMAddress(),
+		erc20CustodyAddr,
+		initializerData,
 	)
 	require.NoError(r, err)
 
-	r.ERC20CustodyV2Addr = erc20CustodyNewAddr
-	r.ERC20CustodyV2 = erc20CustodyNew
+	r.ERC20CustodyV2Addr = erc20CustodyProxyAddress
+	r.ERC20CustodyV2, err = erc20custodyv2.NewERC20Custody(erc20CustodyProxyAddress, r.EVMClient)
+	require.NoError(r, err)
 	r.Logger.Info(
 		"ERC20CustodyV2 contract address: %s, tx hash: %s",
-		erc20CustodyNewAddr.Hex(),
+		erc20CustodyAddr.Hex(),
 		txCustody.Hash().Hex(),
 	)
 
 	ensureTxReceipt(txCustody, "ERC20CustodyV2 deployment failed")
 
 	// set custody contract in gateway
-	txSetCustody, err := r.GatewayEVM.SetCustody(r.EVMAuth, erc20CustodyNewAddr)
+	txSetCustody, err := r.GatewayEVM.SetCustody(r.EVMAuth, erc20CustodyProxyAddress)
 	require.NoError(r, err)
 
 	// deploy test dapp v2
@@ -96,7 +110,8 @@ func (r *E2ERunner) SetupEVMV2() {
 
 	// check contract deployment receipt
 	ensureTxReceipt(txDonation, "EVM donation tx failed")
-	ensureTxReceipt(txProxy, "Gateway proxy deployment failed")
+	ensureTxReceipt(gatewayProxyTx, "Gateway proxy deployment failed")
+	ensureTxReceipt(erc20ProxyTx, "ERC20Custody proxy deployment failed")
 	ensureTxReceipt(txSetCustody, "Set custody in Gateway failed")
 	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
 

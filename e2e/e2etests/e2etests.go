@@ -720,7 +720,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestV2ERC20DepositAndCallName,
 		"deposit ERC20 into ZEVM and call a contract using V2 contract",
 		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "100000"},
+			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestV2ERC20DepositAndCall,
 	),
