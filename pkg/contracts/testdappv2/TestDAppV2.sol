@@ -53,7 +53,7 @@ contract TestDAppV2 {
     }
 
     // Universal contract interface
-    function onCrossChainCall(
+    function onCall(
         zContext calldata _context,
         address _zrc20,
         uint256 amount,
