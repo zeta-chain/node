@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/pkg/math"
+	zetabits "github.com/zeta-chain/node/pkg/math/bits"
 )
 
 func TestSetBit(t *testing.T) {
@@ -37,7 +37,7 @@ func TestSetBit(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			b := tt.initial
-			math.SetBit(&b, tt.position)
+			zetabits.SetBit(&b, tt.position)
 			require.Equal(t, tt.expected, b)
 		})
 	}
@@ -78,7 +78,7 @@ func TestIsBitSet(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := math.IsBitSet(tt.b, tt.position)
+			result := zetabits.IsBitSet(tt.b, tt.position)
 			require.Equal(t, tt.expected, result)
 		})
 	}
@@ -125,7 +125,7 @@ func TestGetBits(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := math.GetBits(tt.b, tt.mask)
+			result := zetabits.GetBits(tt.b, tt.mask)
 			require.Equal(t, tt.expected, result)
 		})
 	}
@@ -164,7 +164,7 @@ func TestSetBits(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := math.SetBits(tt.b, tt.mask, tt.value)
+			result := zetabits.SetBits(tt.b, tt.mask, tt.value)
 			require.Equal(t, tt.expected, result)
 		})
 	}
