@@ -43,14 +43,14 @@ func (c *Contract) withdraw(
 	}
 
 	// Get the correct caller address.
-	caller, err := getEVMCallerAddress(evm, contract)
+	caller, err := ptypes.GetEVMCallerAddress(evm, contract)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get the cosmos address of the caller.
 	// This address should have enough cosmos coin balance as the requested amount.
-	fromAddr, err := getCosmosAddress(c.bankKeeper, caller)
+	fromAddr, err := ptypes.GetCosmosAddress(c.bankKeeper, caller)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (c *Contract) withdraw(
 	}
 
 	// Caller has to have enough cosmos coin balance to withdraw the requested amount.
-	coin := c.bankKeeper.GetBalance(ctx, fromAddr, ZRC20ToCosmosDenom(zrc20Addr))
+	coin := c.bankKeeper.GetBalance(ctx, fromAddr, ptypes.ZRC20ToCosmosDenom(zrc20Addr))
 	if !coin.IsValid() {
 		return nil, &ptypes.ErrInsufficientBalance{
 			Requested: amount.String(),
@@ -79,7 +79,7 @@ func (c *Contract) withdraw(
 		}
 	}
 
-	coinSet, err := createCoinSet(ZRC20ToCosmosDenom(zrc20Addr), amount)
+	coinSet, err := ptypes.CreateCoinSet(ptypes.ZRC20ToCosmosDenom(zrc20Addr), amount)
 	if err != nil {
 		return nil, err
 	}

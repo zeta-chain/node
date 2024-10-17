@@ -1,4 +1,4 @@
-package bank
+package types
 
 import (
 	"math/big"
@@ -19,7 +19,7 @@ func Test_createCoinSet(t *testing.T) {
 	tokenDenom := "zrc20/0x0000000000000000000000000000000000003039"
 	amount := big.NewInt(100)
 
-	coinSet, err := createCoinSet(tokenDenom, amount)
+	coinSet, err := CreateCoinSet(tokenDenom, amount)
 	require.NoError(t, err, "createCoinSet should not return an error")
 	require.NotNil(t, coinSet, "coinSet should not be nil")
 
