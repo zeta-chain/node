@@ -29,7 +29,7 @@ func TestV2ERC20WithdrawAndCallRevert(r *runner.E2ERunner, args []string) {
 	require.EqualValues(r, int64(0), balance.Int64())
 
 	// perform the withdraw
-	tx := r.V2ERC20WithdrawAndCall(
+	tx := r.V2ERC20WithdrawAndArbitraryCall(
 		r.TestDAppV2EVMAddr,
 		amount,
 		r.EncodeERC20CallRevert(r.ERC20Addr, amount),

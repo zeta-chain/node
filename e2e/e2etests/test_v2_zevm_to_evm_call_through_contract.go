@@ -39,7 +39,7 @@ func TestV2ZEVMToEVMCallThroughContract(r *runner.E2ERunner, args []string) {
 	utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 
 	// perform the authenticated call
-	tx = r.V2ZEVMToEMVAuthenticatedCallThroughContract(
+	tx = r.V2ZEVMToEMVCallThroughContract(
 		gatewayCaller,
 		r.TestDAppV2EVMAddr,
 		[]byte(payloadMessageEVMAuthenticatedCallThroughContract),
@@ -68,7 +68,7 @@ func TestV2ZEVMToEVMCallThroughContract(r *runner.E2ERunner, args []string) {
 	utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 
 	// repeat authenticated call through contract, should revert because of wrong sender
-	tx = r.V2ZEVMToEMVAuthenticatedCallThroughContract(
+	tx = r.V2ZEVMToEMVCallThroughContract(
 		gatewayCaller,
 		r.TestDAppV2EVMAddr,
 		[]byte(payloadMessageEVMAuthenticatedCallThroughContract),

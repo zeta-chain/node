@@ -28,7 +28,7 @@ func TestV2ZEVMToEVMCall(r *runner.E2ERunner, args []string) {
 	utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 
 	// perform the authenticated call
-	tx = r.V2ZEVMToEMVAuthenticatedCall(
+	tx = r.V2ZEVMToEMVCall(
 		r.TestDAppV2EVMAddr,
 		[]byte(payloadMessageEVMAuthenticatedCall),
 		gatewayzevm.RevertOptions{

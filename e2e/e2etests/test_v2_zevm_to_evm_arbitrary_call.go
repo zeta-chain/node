@@ -22,7 +22,7 @@ func TestV2ZEVMToEVMArbitraryCall(r *runner.E2ERunner, args []string) {
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// perform the call
-	tx := r.V2ZEVMToEMVCall(r.TestDAppV2EVMAddr, r.EncodeSimpleCall(payloadMessageEVMCall), gatewayzevm.RevertOptions{
+	tx := r.V2ZEVMToEMVArbitraryCall(r.TestDAppV2EVMAddr, r.EncodeSimpleCall(payloadMessageEVMCall), gatewayzevm.RevertOptions{
 		OnRevertGasLimit: big.NewInt(0),
 	})
 

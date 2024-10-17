@@ -46,7 +46,7 @@ func TestV2ETHWithdrawAndCallThroughContract(r *runner.E2ERunner, args []string)
 	utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 
 	// perform the authenticated call
-	tx = r.V2ETHWithdrawAndAuthenticatedCallThroughContract(gatewayCaller, r.TestDAppV2EVMAddr,
+	tx = r.V2ETHWithdrawAndCallThroughContract(gatewayCaller, r.TestDAppV2EVMAddr,
 		amount,
 		[]byte(payloadMessageAuthenticatedWithdrawETHThroughContract),
 		gatewayzevmcaller.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
@@ -72,7 +72,7 @@ func TestV2ETHWithdrawAndCallThroughContract(r *runner.E2ERunner, args []string)
 	utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 
 	// repeat authenticated call through contract, should revert because of wrong sender
-	tx = r.V2ETHWithdrawAndAuthenticatedCallThroughContract(gatewayCaller, r.TestDAppV2EVMAddr,
+	tx = r.V2ETHWithdrawAndCallThroughContract(gatewayCaller, r.TestDAppV2EVMAddr,
 		amount,
 		[]byte(payloadMessageAuthenticatedWithdrawETHThroughContract),
 		gatewayzevmcaller.RevertOptions{OnRevertGasLimit: big.NewInt(0)})

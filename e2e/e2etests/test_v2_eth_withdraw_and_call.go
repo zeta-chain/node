@@ -36,7 +36,7 @@ func TestV2ETHWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 
 	// perform the withdraw
-	tx = r.V2ETHWithdrawAndAuthenticatedCall(
+	tx = r.V2ETHWithdrawAndCall(
 		r.TestDAppV2EVMAddr,
 		amount,
 		[]byte(payloadMessageAuthenticatedWithdrawETH),
