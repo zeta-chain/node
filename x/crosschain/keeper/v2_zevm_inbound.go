@@ -30,8 +30,8 @@ func (k Keeper) ProcessZEVMInboundV2(
 	txOrigin string,
 ) error {
 	// try to parse a withdrawal event from the log
-	withdrawalEvent, gatewayEvent, err := k.parseGatewayEvent(*log, gatewayAddr)
-	if err == nil && (withdrawalEvent != nil || gatewayEvent != nil) {
+	withdrawalEvent, callEvent, withdrawalAndCallEvent, err := k.parseGatewayEvent(*log, gatewayAddr)
+	if err == nil && (withdrawalEvent != nil || callEvent != nil || withdrawalAndCallEvent != nil) {
 		var inbound *types.MsgVoteInbound
 
 		// parse data from event and validate
@@ -44,11 +44,16 @@ func (k Keeper) ProcessZEVMInboundV2(
 			value = withdrawalEvent.Value
 			receiver = withdrawalEvent.Receiver
 			contractAddress = withdrawalEvent.Raw.Address
-		} else {
-			zrc20 = gatewayEvent.Zrc20
+		} else if callEvent != nil {
+			zrc20 = callEvent.Zrc20
 			value = big.NewInt(0)
-			receiver = gatewayEvent.Receiver
-			contractAddress = gatewayEvent.Raw.Address
+			receiver = callEvent.Receiver
+			contractAddress = callEvent.Raw.Address
+		} else {
+			zrc20 = withdrawalAndCallEvent.Zrc20
+			value = withdrawalAndCallEvent.Value
+			receiver = withdrawalAndCallEvent.Receiver
+			contractAddress = withdrawalAndCallEvent.Raw.Address
 		}
 
 		k.Logger(ctx).Error(fmt.Sprintf("processing inbound. zrc20: %s", zrc20.Hex()))
@@ -71,8 +76,13 @@ func (k Keeper) ProcessZEVMInboundV2(
 			if err != nil {
 				return err
 			}
+		} else if callEvent != nil {
+			inbound, err = k.newCallInbound(ctx, txOrigin, foreignCoin, callEvent)
+			if err != nil {
+				return err
+			}
 		} else {
-			inbound, err = k.newCallInbound(ctx, txOrigin, foreignCoin, gatewayEvent)
+			inbound, err = k.newWithdrawAndCallInbound(ctx, txOrigin, foreignCoin, withdrawalAndCallEvent)
 			if err != nil {
 				return err
 			}
@@ -101,23 +111,27 @@ func (k Keeper) ProcessZEVMInboundV2(
 func (k Keeper) parseGatewayEvent(
 	log ethtypes.Log,
 	gatewayAddr ethcommon.Address,
-) (*gatewayzevm.GatewayZEVMWithdrawn, *gatewayzevm.GatewayZEVMCalled, error) {
+) (*gatewayzevm.GatewayZEVMWithdrawn, *gatewayzevm.GatewayZEVMCalled, *gatewayzevm.GatewayZEVMWithdrawnAndCalled, error) {
 	if len(log.Topics) == 0 {
-		return nil, nil, errors.New("ParseGatewayCallEvent: invalid log - no topics")
+		return nil, nil, nil, errors.New("ParseGatewayCallEvent: invalid log - no topics")
 	}
 	filterer, err := gatewayzevm.NewGatewayZEVMFilterer(log.Address, bind.ContractFilterer(nil))
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	withdrawalEvent, err := k.parseGatewayWithdrawalEvent(log, gatewayAddr, filterer)
 	if err == nil {
-		return withdrawalEvent, nil, nil
+		return withdrawalEvent, nil, nil, nil
 	}
 	callEvent, err := k.parseGatewayCallEvent(log, gatewayAddr, filterer)
 	if err == nil {
-		return nil, callEvent, nil
+		return nil, callEvent, nil, nil
 	}
-	return nil, nil, errors.New("ParseGatewayEvent: invalid log - no event found")
+	withdrawAndCallEvent, err := k.parseGatewayWithdrawAndCallEvent(log, gatewayAddr, filterer)
+	if err == nil {
+		return nil, nil, withdrawAndCallEvent, nil
+	}
+	return nil, nil, nil, errors.New("ParseGatewayEvent: invalid log - no event found")
 }
 
 // parseGatewayWithdrawalEvent parses the GatewayZEVMWithdrawal event from the log
@@ -148,6 +162,22 @@ func (k Keeper) parseGatewayCallEvent(
 	}
 	if event.Raw.Address != gatewayAddr {
 		return nil, errors.New("ParseGatewayCallEvent: invalid log - wrong contract address")
+	}
+	return event, nil
+}
+
+// parseGatewayWithdrawAndCallEvent parses the GatewayZEVMWithdrawAndCall event from the log
+func (k Keeper) parseGatewayWithdrawAndCallEvent(
+	log ethtypes.Log,
+	gatewayAddr ethcommon.Address,
+	filterer *gatewayzevm.GatewayZEVMFilterer,
+) (*gatewayzevm.GatewayZEVMWithdrawnAndCalled, error) {
+	event, err := filterer.ParseWithdrawnAndCalled(log)
+	if err != nil {
+		return nil, err
+	}
+	if event.Raw.Address != gatewayAddr {
+		return nil, errors.New("ParseGatewayWithdrawAndCallEvent: invalid log - wrong contract address")
 	}
 	return event, nil
 }
@@ -193,6 +223,12 @@ func (k Keeper) newWithdrawalInbound(
 		gasLimit = gasLimitQueried.Uint64()
 	}
 
+	// if the message is not empty, specify cross-chain call for backward compatibility with the Withdraw event
+	isCrossChainCall := false
+	if len(event.Message) > 0 {
+		isCrossChainCall = true
+	}
+
 	return types.NewMsgVoteInbound(
 		"",
 		event.Sender.Hex(),
@@ -211,6 +247,7 @@ func (k Keeper) newWithdrawalInbound(
 		types.ProtocolContractVersion_V2,
 		event.CallOptions.IsArbitraryCall,
 		types.WithZEVMRevertOptions(event.RevertOptions),
+		types.WithCrossChainCall(isCrossChainCall),
 	), nil
 }
 
@@ -273,5 +310,68 @@ func (k Keeper) newCallInbound(
 		types.ProtocolContractVersion_V2,
 		event.CallOptions.IsArbitraryCall,
 		types.WithZEVMRevertOptions(event.RevertOptions),
+	), nil
+}
+
+// newWithdrawAndCallInbound creates a new inbound object for a withdraw and call
+// currently inbound data is represented with a MsgVoteInbound message
+// TODO: replace with a more appropriate object
+// https://github.com/zeta-chain/node/issues/2658
+func (k Keeper) newWithdrawAndCallInbound(
+	ctx sdk.Context,
+	txOrigin string,
+	foreignCoin fungibletypes.ForeignCoins,
+	event *gatewayzevm.GatewayZEVMWithdrawnAndCalled,
+) (*types.MsgVoteInbound, error) {
+	receiverChain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, foreignCoin.ForeignChainId)
+	if !found {
+		return nil, errorsmod.Wrapf(
+			observertypes.ErrSupportedChains,
+			"chain with chainID %d not supported",
+			foreignCoin.ForeignChainId,
+		)
+	}
+
+	senderChain, err := chains.ZetaChainFromCosmosChainID(ctx.ChainID())
+	if err != nil {
+		return nil, errors.Wrapf(err, "ProcessZEVMInboundV2: failed to convert chainID %s", ctx.ChainID())
+	}
+
+	toAddr, err := receiverChain.EncodeAddress(event.Receiver)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot encode address %v", event.Receiver)
+	}
+
+	gasLimit := event.CallOptions.GasLimit.Uint64()
+	if gasLimit == 0 {
+		gasLimitQueried, err := k.fungibleKeeper.QueryGasLimit(
+			ctx,
+			ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress),
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, "cannot query gas limit")
+		}
+		gasLimit = gasLimitQueried.Uint64()
+	}
+
+	return types.NewMsgVoteInbound(
+		"",
+		event.Sender.Hex(),
+		senderChain.ChainId,
+		txOrigin,
+		toAddr,
+		foreignCoin.ForeignChainId,
+		math.ZeroUint(),
+		hex.EncodeToString(event.Message),
+		event.Raw.TxHash.String(),
+		event.Raw.BlockNumber,
+		gasLimit,
+		coin.CoinType_NoAssetCall,
+		"",
+		event.Raw.Index,
+		types.ProtocolContractVersion_V2,
+		event.CallOptions.IsArbitraryCall,
+		types.WithZEVMRevertOptions(event.RevertOptions),
+		types.WithCrossChainCall(true),
 	), nil
 }

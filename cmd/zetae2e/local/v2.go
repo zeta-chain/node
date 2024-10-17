@@ -27,6 +27,7 @@ func startV2Tests(eg *errgroup.Group, conf config.Config, deployerRunner *runner
 		//e2etests.TestV2ZEVMToEVMCallThroughContractName,
 		//e2etests.TestV2EVMToZEVMCallName,
 		e2etests.TestV2ETHDepositAndCallNoMessageName,
+		e2etests.TestV2ETHWithdrawAndCallNoMessageName,
 	))
 
 	// Test happy paths for erc20 token workflow
