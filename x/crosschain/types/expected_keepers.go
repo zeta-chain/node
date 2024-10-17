@@ -146,6 +146,7 @@ type FungibleKeeper interface {
 		coinType coin.CoinType,
 		asset string,
 		protocolContractVersion ProtocolContractVersion,
+		isCrossChainCall bool,
 	) (*evmtypes.MsgEthereumTxResponse, bool, error)
 	ProcessV2RevertDeposit(
 		ctx sdk.Context,

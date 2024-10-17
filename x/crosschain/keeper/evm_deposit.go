@@ -110,6 +110,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			inboundCoinType,
 			cctx.InboundParams.Asset,
 			cctx.ProtocolContractVersion,
+			cctx.InboundParams.IsCrossChainCall,
 		)
 		if fungibletypes.IsContractReverted(evmTxResponse, err) || errShouldRevertCctx(err) {
 			return true, err

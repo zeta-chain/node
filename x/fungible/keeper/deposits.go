@@ -35,6 +35,7 @@ func (k Keeper) ZRC20DepositAndCallContract(
 	coinType coin.CoinType,
 	asset string,
 	protocolContractVersion crosschaintypes.ProtocolContractVersion,
+	isCrossChainCall bool,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	// get ZRC20 contract
 	zrc20Contract, _, err := k.getAndCheckZRC20(ctx, amount, senderChainID, coinType, asset)
@@ -44,7 +45,17 @@ func (k Keeper) ZRC20DepositAndCallContract(
 
 	// handle the deposit for protocol contract version 2
 	if protocolContractVersion == crosschaintypes.ProtocolContractVersion_V2 {
-		return k.ProcessV2Deposit(ctx, from, senderChainID, zrc20Contract, to, amount, message, coinType)
+		return k.ProcessV2Deposit(
+			ctx,
+			from,
+			senderChainID,
+			zrc20Contract,
+			to,
+			amount,
+			message,
+			coinType,
+			isCrossChainCall,
+		)
 	}
 
 	// check if the receiver is a contract

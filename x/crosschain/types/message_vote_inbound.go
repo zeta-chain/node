@@ -38,6 +38,13 @@ func WithEVMRevertOptions(revertOptions gatewayevm.RevertOptions) InboundVoteOpt
 	}
 }
 
+// WithCrossChainCall sets the cross chain call to true for the inbound vote message
+func WithCrossChainCall(isCrossChainCall bool) InboundVoteOption {
+	return func(msg *MsgVoteInbound) {
+		msg.IsCrossChainCall = isCrossChainCall
+	}
+}
+
 var _ sdk.Msg = &MsgVoteInbound{}
 
 func NewMsgVoteInbound(
@@ -79,6 +86,7 @@ func NewMsgVoteInbound(
 		EventIndex:              uint64(eventIndex),
 		ProtocolContractVersion: protocolContractVersion,
 		RevertOptions:           NewEmptyRevertOptions(),
+		IsCrossChainCall:        false,
 	}
 
 	for _, option := range options {

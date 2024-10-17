@@ -105,6 +105,41 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 			big.NewInt(42),
 			[]byte{},
 			coin.CoinType_Gas,
+			false,
+		)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.False(t, contractCall)
+
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, receiver)
+		require.NoError(t, err)
+		require.Equal(t, big.NewInt(42), balance)
+	})
+
+	t.Run("should process no-call deposit, message should be ignored", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := chains.DefaultChainsList()[0].ChainId
+		receiver := sample.EthAddress()
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+		// ACT
+		_, contractCall, err := k.ProcessV2Deposit(
+			ctx,
+			sample.EthAddress().Bytes(),
+			chainID,
+			zrc20,
+			receiver,
+			big.NewInt(42),
+			[]byte("foo"),
+			coin.CoinType_Gas,
+			false,
 		)
 
 		// ASSERT
@@ -140,6 +175,7 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 			big.NewInt(82),
 			[]byte("foo"),
 			coin.CoinType_Gas,
+			true,
 		)
 
 		// ASSERT
@@ -149,5 +185,41 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, big.NewInt(82), balance)
 		assertTestDAppV2MessageAndAmount(t, ctx, k, testDapp, "foo", 82)
+	})
+
+	t.Run("should process deposit and call with no message", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := chains.DefaultChainsList()[0].ChainId
+
+		// deploy test dapp
+		testDapp := deployTestDAppV2(t, ctx, k, sdkk.EvmKeeper)
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+		// ACT
+		_, contractCall, err := k.ProcessV2Deposit(
+			ctx,
+			sample.EthAddress().Bytes(),
+			chainID,
+			zrc20,
+			testDapp,
+			big.NewInt(82),
+			[]byte{},
+			coin.CoinType_Gas,
+			true,
+		)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.True(t, contractCall)
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, testDapp)
+		require.NoError(t, err)
+		require.Equal(t, big.NewInt(82), balance)
+		assertTestDAppV2MessageAndAmount(t, ctx, k, testDapp, "called with no message", 82)
 	})
 }
