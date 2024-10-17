@@ -25,6 +25,7 @@ func tonTestRoutine(
 			deployerRunner,
 			conf.DefaultAccount,
 			runner.NewLogger(verbose, color.FgCyan, "ton"),
+			runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
 		)
 		if err != nil {
 			return errors.Wrap(err, "unable to init ton test runner")

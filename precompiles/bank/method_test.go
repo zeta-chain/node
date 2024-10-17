@@ -46,8 +46,8 @@ func Test_Methods(t *testing.T) {
 		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, true)
 		require.ErrorIs(
 			t,
-			ptypes.ErrUnexpected{
-				Got: "method not allowed in read-only mode: deposit",
+			ptypes.ErrWriteMethod{
+				Method: "deposit",
 			},
 			err)
 		require.Empty(t, success)
@@ -73,8 +73,8 @@ func Test_Methods(t *testing.T) {
 		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, true)
 		require.ErrorIs(
 			t,
-			ptypes.ErrUnexpected{
-				Got: "method not allowed in read-only mode: withdraw",
+			ptypes.ErrWriteMethod{
+				Method: "withdraw",
 			},
 			err)
 		require.Empty(t, success)

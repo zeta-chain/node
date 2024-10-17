@@ -196,7 +196,7 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		chainOb, err := orchestrator.resolveObserver(appContext, evmChain.ChainId)
 		require.NoError(t, err)
 		require.NotNil(t, chainOb)
-		require.True(t, observertypes.ChainParamsEqual(*evmChainParamsNew, chainOb.GetChainParams()))
+		require.True(t, observertypes.ChainParamsEqual(*evmChainParamsNew, chainOb.ChainParams()))
 	})
 
 	t.Run("btc chain observer should not be found", func(t *testing.T) {
@@ -244,7 +244,7 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		chainOb, err := orchestrator.resolveObserver(appContext, btcChain.ChainId)
 		require.NoError(t, err)
 		require.NotNil(t, chainOb)
-		require.True(t, observertypes.ChainParamsEqual(*btcChainParamsNew, chainOb.GetChainParams()))
+		require.True(t, observertypes.ChainParamsEqual(*btcChainParamsNew, chainOb.ChainParams()))
 	})
 	t.Run("solana chain observer should not be found", func(t *testing.T) {
 		orchestrator := mockOrchestrator(
@@ -282,7 +282,7 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		chainOb, err := orchestrator.resolveObserver(appContext, solChain.ChainId)
 		require.NoError(t, err)
 		require.NotNil(t, chainOb)
-		require.True(t, observertypes.ChainParamsEqual(*solChainParamsNew, chainOb.GetChainParams()))
+		require.True(t, observertypes.ChainParamsEqual(*solChainParamsNew, chainOb.ChainParams()))
 	})
 }
 

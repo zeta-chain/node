@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/math"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -29,8 +29,8 @@ const (
 	CCTXIndexLength = 66
 )
 
-func GetProtocolFee() sdk.Uint {
-	return sdk.NewUint(ProtocolFee)
+func GetProtocolFee() math.Uint {
+	return math.NewUint(ProtocolFee)
 }
 
 func KeyPrefix(p string) []byte {

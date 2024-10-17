@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -263,7 +262,7 @@ func TestConvertCctxValue(t *testing.T) {
 		erc20AssetRates map[int64]map[string]types.AssetRate
 
 		// output
-		expectedValue sdkmath.Int
+		expectedValue math.Int
 	}{
 		{
 			name:            "should convert cctx ZETA value correctly",

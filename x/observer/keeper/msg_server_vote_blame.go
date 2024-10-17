@@ -6,7 +6,7 @@ import (
 	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	crosschainTypes "github.com/zeta-chain/node/x/crosschain/types"
+	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -21,9 +21,7 @@ func (k msgServer) VoteBlame(
 	// GetChainFromChainID makes sure we are getting only supported chains , if a chain support has been turned on using gov proposal, this function returns nil
 	observationChain, found := k.GetSupportedChainFromChainID(ctx, msg.ChainId)
 	if !found {
-		return nil, sdkerrors.Wrapf(
-			crosschainTypes.ErrUnsupportedChain,
-			"%s, ChainID %d", voteBlameID, msg.ChainId)
+		return nil, sdkerrors.Wrapf(cctypes.ErrUnsupportedChain, "%s, ChainID %d", voteBlameID, msg.ChainId)
 	}
 
 	if ok := k.IsNonTombstonedObserver(ctx, msg.Creator); !ok {

@@ -1,42 +1,64 @@
 package e2etests
 
 import (
+	"time"
+
 	"cosmossdk.io/math"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/runner/ton"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/testutil/sample"
+	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestTONDeposit (!) This boilerplate is a demonstration of E2E capabilities for TON integration
-// Actual Deposit test is not implemented yet.
-func TestTONDeposit(r *runner.E2ERunner, _ []string) {
-	ctx, deployer := r.Ctx, r.TONDeployer
+func TestTONDeposit(r *runner.E2ERunner, args []string) {
+	require.Len(r, args, 1)
 
 	// Given deployer
-	deployerBalance, err := deployer.GetBalance(ctx)
-	require.NoError(r, err, "failed to get deployer balance")
-	require.NotZero(r, deployerBalance, "deployer balance is zero")
+	ctx, deployer, chain := r.Ctx, r.TONDeployer, chains.TONLocalnet
+
+	// Given amount
+	amount := parseUint(r, args[0])
+
+	// https://github.com/zeta-chain/protocol-contracts-ton/blob/main/contracts/gateway.fc#L28
+	// (will be optimized & dynamic in the future)
+	depositFee := math.NewUint(10_000_000)
 
 	// Given sample wallet with a balance of 50 TON
 	sender, err := deployer.CreateWallet(ctx, ton.TONCoins(50))
 	require.NoError(r, err)
 
-	// That was funded (again) but the faucet
-	_, err = deployer.Fund(ctx, sender.GetAddress(), ton.TONCoins(30))
+	// Given sample EVM address
+	recipient := sample.EthAddress()
+
+	// ACT
+	err = r.TONDeposit(sender, amount, recipient)
+
+	// ASSERT
 	require.NoError(r, err)
 
-	// Check sender balance
-	sb, err := sender.GetBalance(ctx)
+	// Wait for CCTX mining
+	filter := func(cctx *cctypes.CrossChainTx) bool {
+		return cctx.InboundParams.SenderChainId == chain.ChainId &&
+			cctx.InboundParams.Sender == sender.GetAddress().ToRaw()
+	}
+
+	cctx := r.WaitForSpecificCCTX(filter, time.Minute)
+
+	// Check CCTX
+	expectedDeposit := amount.Sub(depositFee)
+
+	require.Equal(r, sender.GetAddress().ToRaw(), cctx.InboundParams.Sender)
+	require.Equal(r, expectedDeposit.Uint64(), cctx.InboundParams.Amount.Uint64())
+
+	// Check receiver's balance
+	balance, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, recipient)
 	require.NoError(r, err)
 
-	senderBalance := math.NewUint(sb)
+	r.Logger.Info("Recipient's zEVM TON balance after deposit: %d", balance.Uint64())
 
-	// note that it's not exactly 80 TON, but 79.99... due to gas fees
-	// We'll tackle gas math later.
-	r.Logger.Print(
-		"Balance of sender (%s): %s",
-		sender.GetAddress().ToHuman(false, true),
-		ton.FormatCoins(senderBalance),
-	)
+	require.Equal(r, expectedDeposit.Uint64(), balance.Uint64())
 }

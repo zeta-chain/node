@@ -94,6 +94,14 @@ func (e ErrInvalidMethod) Error() string {
 	return fmt.Sprintf("invalid method: %s", e.Method)
 }
 
+type ErrWriteMethod struct {
+	Method string
+}
+
+func (e ErrWriteMethod) Error() string {
+	return fmt.Sprintf("method not allowed in read-only mode: %s", e.Method)
+}
+
 type ErrUnexpected struct {
 	When string
 	Got  string

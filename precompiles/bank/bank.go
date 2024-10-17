@@ -136,8 +136,8 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 	// Deposit and Withdraw methods are both not allowed in read-only mode.
 	case DepositMethodName, WithdrawMethodName:
 		if readOnly {
-			return nil, ptypes.ErrUnexpected{
-				Got: "method not allowed in read-only mode: " + method.Name,
+			return nil, ptypes.ErrWriteMethod{
+				Method: method.Name,
 			}
 		}
 

@@ -191,6 +191,7 @@ func Status(t *testing.T, index string) *types.Status {
 	return &types.Status{
 		Status:              types.CctxStatus(r.Intn(100)),
 		StatusMessage:       String(),
+		ErrorMessage:        String(),
 		CreatedTimestamp:    createdAt,
 		LastUpdateTimestamp: createdAt,
 	}

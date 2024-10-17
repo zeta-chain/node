@@ -128,6 +128,8 @@ func Test_StringMasked(t *testing.T) {
 	// create config with defaults
 	cfg := config.New(true)
 
+	cfg.SolanaConfig.Endpoint += "?api-key=123"
+
 	// mask the config JSON string
 	masked := cfg.StringMasked()
 	require.NotEmpty(t, masked)
@@ -137,5 +139,5 @@ func Test_StringMasked(t *testing.T) {
 	require.Contains(t, masked, "BTCChainConfigs")
 
 	// should not contain endpoint
-	require.NotContains(t, masked, "http")
+	require.NotContains(t, masked, "?api-key=123")
 }
