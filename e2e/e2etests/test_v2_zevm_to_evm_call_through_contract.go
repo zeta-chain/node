@@ -33,13 +33,8 @@ func TestV2ZEVMToEVMCallThroughContract(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 
-	// set expected sender
-	tx, err = r.TestDAppV2EVM.SetExpectedOnCallSender(r.EVMAuth, gatewayCallerAddr)
-	require.NoError(r, err)
-	utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-
 	// perform the authenticated call
-	tx = r.V2ZEVMToEMVAuthenticatedCallThroughContract(
+	tx = r.V2ZEVMToEMVCallThroughContract(
 		gatewayCaller,
 		r.TestDAppV2EVMAddr,
 		[]byte(payloadMessageEVMAuthenticatedCallThroughContract),
@@ -61,23 +56,4 @@ func TestV2ZEVMToEVMCallThroughContract(r *runner.E2ERunner, args []string) {
 	)
 	require.NoError(r, err)
 	require.Equal(r, gatewayCallerAddr, senderForMsg)
-
-	// set expected sender to wrong one
-	tx, err = r.TestDAppV2EVM.SetExpectedOnCallSender(r.EVMAuth, r.ZEVMAuth.From)
-	require.NoError(r, err)
-	utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-
-	// repeat authenticated call through contract, should revert because of wrong sender
-	tx = r.V2ZEVMToEMVAuthenticatedCallThroughContract(
-		gatewayCaller,
-		r.TestDAppV2EVMAddr,
-		[]byte(payloadMessageEVMAuthenticatedCallThroughContract),
-		gatewayzevmcaller.RevertOptions{
-			OnRevertGasLimit: big.NewInt(0),
-		},
-	)
-	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "call")
-	require.Equal(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
 }

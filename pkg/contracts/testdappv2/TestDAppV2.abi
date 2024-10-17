@@ -61,19 +61,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "expectedOnCallSender",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "string",
@@ -129,37 +116,6 @@
       {
         "components": [
           {
-            "internalType": "address",
-            "name": "sender",
-            "type": "address"
-          }
-        ],
-        "internalType": "struct TestDAppV2.MessageContext",
-        "name": "messageContext",
-        "type": "tuple"
-      },
-      {
-        "internalType": "bytes",
-        "name": "message",
-        "type": "bytes"
-      }
-    ],
-    "name": "onCall",
-    "outputs": [
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      }
-    ],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
             "internalType": "bytes",
             "name": "origin",
             "type": "bytes"
@@ -195,9 +151,40 @@
         "type": "bytes"
       }
     ],
-    "name": "onCrossChainCall",
+    "name": "onCall",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "sender",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct TestDAppV2.MessageContext",
+        "name": "messageContext",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes",
+        "name": "message",
+        "type": "bytes"
+      }
+    ],
+    "name": "onCall",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -252,19 +239,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_expectedOnCallSender",
-        "type": "address"
-      }
-    ],
-    "name": "setExpectedOnCallSender",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
