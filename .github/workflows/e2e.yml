@@ -89,7 +89,6 @@ jobs:
               core.setOutput('SOLANA_TESTS', true);
               core.setOutput('TON_TESTS', true);
               core.setOutput('V2_TESTS', true); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
-              core.setOutput('V2_MIGRATION_TESTS', true); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
             } else if (context.eventName === 'schedule') {
               core.setOutput('DEFAULT_TESTS', true);
               core.setOutput('UPGRADE_TESTS', true);
@@ -102,7 +101,6 @@ jobs:
               core.setOutput('SOLANA_TESTS', true);
               core.setOutput('TON_TESTS', true);
               core.setOutput('V2_TESTS', true); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
-              core.setOutput('V2_MIGRATION_TESTS', true); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
             } else if (context.eventName === 'workflow_dispatch') {
               const makeTargets = context.payload.inputs['make-targets'].split(',');
               core.setOutput('DEFAULT_TESTS', makeTargets.includes('default-test'));
