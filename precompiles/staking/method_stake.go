@@ -11,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/holiman/uint256"
 
 	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 )
@@ -67,12 +68,19 @@ func (c *Contract) Stake(
 		return nil, err
 	}
 
+	amountUint256, overflowed := uint256.FromBig(amount)
+	if overflowed {
+		return nil, precompiletypes.ErrInvalidArgument{
+			Got: args[2],
+		}
+	}
+
 	// if caller is not the same as origin it means call is coming through smart contract,
 	// and because state of smart contract calling precompile might be updated as well
 	// manually reduce amount in stateDB, so it is properly reflected in bank module
 	stateDB := evm.StateDB.(precompiletypes.ExtStateDB)
 	if contract.CallerAddress != evm.Origin {
-		stateDB.SubBalance(stakerAddress, amount)
+		stateDB.SubBalance(stakerAddress, amountUint256)
 	}
 
 	err = c.addStakeLog(ctx, stateDB, stakerAddress, validatorAddress, amount)
