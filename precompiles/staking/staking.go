@@ -380,7 +380,7 @@ func (c *Contract) MoveStake(
 
 // Run is the entrypoint of the precompiled contract, it switches over the input method,
 // and execute them accordingly.
-func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, error) {
+func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byte, error) {
 	method, err := ABI.MethodById(contract.Input[:4])
 	if err != nil {
 		return nil, err
@@ -414,54 +414,69 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, erro
 			return nil, err
 		}
 		return res, nil
-	// case StakeMethodName:
-	// 	if readOnly {
-	// 		return nil, ptypes.ErrWriteMethod{
-	// 			Method: method.Name,
-	// 		}
-	// 	}
+	case StakeMethodName:
+		// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
+		return nil, ptypes.ErrDisabledMethod{
+			Method: method.Name,
+		}
 
-	// 	var res []byte
-	// 	execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-	// 		res, err = c.Stake(ctx, evm, contract, method, args)
-	// 		return err
-	// 	})
-	// 	if execErr != nil {
-	// 		return nil, err
-	// 	}
-	// 	return res, nil
-	// case UnstakeMethodName:
-	// 	if readOnly {
-	// 		return nil, ptypes.ErrWriteMethod{
-	// 			Method: method.Name,
-	// 		}
-	// 	}
+		if readOnly {
+			return nil, ptypes.ErrWriteMethod{
+				Method: method.Name,
+			}
+		}
 
-	// 	var res []byte
-	// 	execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-	// 		res, err = c.Unstake(ctx, evm, contract, method, args)
-	// 		return err
-	// 	})
-	// 	if execErr != nil {
-	// 		return nil, err
-	// 	}
-	// 	return res, nil
-	// case MoveStakeMethodName:
-	// 	if readOnly {
-	// 		return nil, ptypes.ErrWriteMethod{
-	// 			Method: method.Name,
-	// 		}
-	// 	}
+		var res []byte
+		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
+			res, err = c.Stake(ctx, evm, contract, method, args)
+			return err
+		})
+		if execErr != nil {
+			return nil, err
+		}
+		return res, nil
+	case UnstakeMethodName:
+		// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
+		return nil, ptypes.ErrDisabledMethod{
+			Method: method.Name,
+		}
 
-	// 	var res []byte
-	// 	execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-	// 		res, err = c.MoveStake(ctx, evm, contract, method, args)
-	// 		return err
-	// 	})
-	// 	if execErr != nil {
-	// 		return nil, err
-	// 	}
-	// 	return res, nil
+		if readOnly {
+			return nil, ptypes.ErrWriteMethod{
+				Method: method.Name,
+			}
+		}
+
+		var res []byte
+		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
+			res, err = c.Unstake(ctx, evm, contract, method, args)
+			return err
+		})
+		if execErr != nil {
+			return nil, err
+		}
+		return res, nil
+	case MoveStakeMethodName:
+		// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
+		return nil, ptypes.ErrDisabledMethod{
+			Method: method.Name,
+		}
+
+		if readOnly {
+			return nil, ptypes.ErrWriteMethod{
+				Method: method.Name,
+			}
+		}
+
+		var res []byte
+		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
+			res, err = c.MoveStake(ctx, evm, contract, method, args)
+			return err
+		})
+		if execErr != nil {
+			return nil, err
+		}
+		return res, nil
 
 	default:
 		return nil, ptypes.ErrInvalidMethod{
