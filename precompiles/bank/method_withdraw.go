@@ -55,19 +55,11 @@ func (c *Contract) withdraw(
 		return nil, err
 	}
 
-	// Safety check: token has to be a valid whitelisted ZRC20 and not be paused.
-	t, found := c.fungibleKeeper.GetForeignCoins(ctx, zrc20Addr.String())
-	if !found {
+	// Safety check: token has to be a non-paused whitelisted ZRC20.
+	if err := c.fungibleKeeper.IsValidZRC20(ctx, zrc20Addr); err != nil {
 		return nil, &ptypes.ErrInvalidToken{
 			Got:    zrc20Addr.String(),
-			Reason: "token is not a whitelisted ZRC20",
-		}
-	}
-
-	if t.Paused {
-		return nil, &ptypes.ErrInvalidToken{
-			Got:    zrc20Addr.String(),
-			Reason: "token is paused",
+			Reason: err.Error(),
 		}
 	}
 
@@ -92,33 +84,11 @@ func (c *Contract) withdraw(
 		return nil, err
 	}
 
-	// Check for bank's ZRC20 balance.
-	// function balanceOf(address account) public view virtual override returns (uint256)
-	resBalanceOf, err := c.CallContract(
-		ctx,
-		&c.fungibleKeeper,
-		c.zrc20ABI,
-		zrc20Addr,
-		"balanceOf",
-		[]interface{}{ContractAddress},
-	)
-	if err != nil {
-		return nil, &ptypes.ErrUnexpected{
-			When: "balanceOf",
-			Got:  err.Error(),
-		}
-	}
-
-	balance, ok := resBalanceOf[0].(*big.Int)
-	if !ok {
-		return nil, &ptypes.ErrUnexpected{
-			Got: "ZRC20 balanceOf returned an unexpected type",
-		}
-	}
-
-	if balance.Cmp(amount) == -1 {
-		return nil, &ptypes.ErrInvalidAmount{
-			Got: balance.String(),
+	// Check if bank address has enough ZRC20 balance.
+	if err := c.fungibleKeeper.CheckZRC20Balance(ctx, c.zrc20ABI, zrc20Addr, c.Address(), amount); err != nil {
+		return nil, &ptypes.ErrInsufficientBalance{
+			Requested: amount.String(),
+			Got:       err.Error(),
 		}
 	}
 
@@ -137,42 +107,18 @@ func (c *Contract) withdraw(
 		}
 	}
 
+	// 3. Interactions: send ZRC20.
+	if err := c.fungibleKeeper.UnlockZRC20(ctx, c.zrc20ABI, zrc20Addr, caller, c.Address(), amount); err != nil {
+		return nil, &ptypes.ErrUnexpected{
+			When: "UnlockZRC20InBank",
+			Got:  err.Error(),
+		}
+	}
+
 	if err := c.addEventLog(ctx, evm.StateDB, WithdrawEventName, eventData{caller, zrc20Addr, fromAddr.String(), coinSet.Denoms()[0], amount}); err != nil {
 		return nil, &ptypes.ErrUnexpected{
 			When: "AddWithdrawLog",
 			Got:  err.Error(),
-		}
-	}
-
-	// 3. Interactions: send to module and burn.
-
-	// function transfer(address recipient, uint256 amount) public virtual override returns (bool)
-	resTransfer, err := c.CallContract(
-		ctx,
-		&c.fungibleKeeper,
-		c.zrc20ABI,
-		zrc20Addr,
-		"transfer",
-		[]interface{}{caller /* sender */, amount},
-	)
-	if err != nil {
-		return nil, &ptypes.ErrUnexpected{
-			When: "transfer",
-			Got:  err.Error(),
-		}
-	}
-
-	transferred, ok := resTransfer[0].(bool)
-	if !ok {
-		return nil, &ptypes.ErrUnexpected{
-			Got: "ZRC20 transfer returned an unexpected type",
-		}
-	}
-
-	if !transferred {
-		return nil, &ptypes.ErrUnexpected{
-			When: "transfer",
-			Got:  "transaction not successful",
 		}
 	}
 
@@ -188,7 +134,7 @@ func unpackWithdrawArgs(args []interface{}) (zrc20Addr common.Address, amount *b
 	}
 
 	amount, ok = args[1].(*big.Int)
-	if !ok || amount.Sign() < 0 || amount == nil || amount == new(big.Int) {
+	if !ok || amount == nil || amount.Sign() <= 0 {
 		return common.Address{}, nil, &ptypes.ErrInvalidAmount{
 			Got: amount.String(),
 		}

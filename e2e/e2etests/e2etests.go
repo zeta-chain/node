@@ -937,7 +937,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestPrecompilesStakingName,
 		"test stateful precompiled contracts staking",
 		[]runner.ArgDefinition{},
-		TestPrecompilesStaking,
+		TestPrecompilesStakingIsDisabled,
 	),
 	runner.NewE2ETest(
 		TestPrecompilesStakingThroughContractName,
