@@ -61,19 +61,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "expectedOnCallSender",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "string",
@@ -252,19 +239,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_expectedOnCallSender",
-        "type": "address"
-      }
-    ],
-    "name": "setExpectedOnCallSender",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

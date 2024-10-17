@@ -30,13 +30,8 @@ func TestV2ETHWithdrawAndCall(r *runner.E2ERunner, args []string) {
 
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
-	// set expected sender
-	tx, err := r.TestDAppV2EVM.SetExpectedOnCallSender(r.EVMAuth, r.ZEVMAuth.From)
-	require.NoError(r, err)
-	utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-
 	// perform the withdraw
-	tx = r.V2ETHWithdrawAndCall(
+	tx := r.V2ETHWithdrawAndCall(
 		r.TestDAppV2EVMAddr,
 		amount,
 		[]byte(payloadMessageAuthenticatedWithdrawETH),
