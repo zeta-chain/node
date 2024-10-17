@@ -1,12 +1,15 @@
 package ton
 
 import (
+	"crypto/ecdsa"
 	"embed"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -269,6 +272,46 @@ func TestSnakeData(t *testing.T) {
 
 		assert.Equal(t, a, b, tt)
 	}
+}
+
+func TestDeployment(t *testing.T) {
+	// ARRANGE
+	// Given TSS address & Authority address
+	const (
+		sampleTSSPrivateKey = "0xb984cd65727cfd03081fc7bf33bf5c208bca697ce16139b5ded275887e81395a"
+		sampleAuthority     = "0:4686a2c066c784a915f3e01c853d3195ed254c948e21adbb3e4a9b3f5f3c74d7"
+	)
+
+	pkBytes, err := hex.DecodeString(sampleTSSPrivateKey[2:])
+	require.NoError(t, err)
+
+	privateKey, err := crypto.ToECDSA(pkBytes)
+	require.NoError(t, err)
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	require.True(t, ok)
+
+	tss := crypto.PubkeyToAddress(*publicKeyECDSA)
+
+	// ACT
+	code := GatewayCode()
+	stateInit := GatewayStateInit(ton.MustParseAccountID(sampleAuthority), tss, true)
+
+	// ASSERT
+	codeString, err := code.ToBocStringCustom(false, true, false, 0)
+	require.NoError(t, err)
+
+	stateString, err := stateInit.ToBocStringCustom(false, true, false, 0)
+	require.NoError(t, err)
+
+	t.Logf("Gateway code: %s", codeString)
+	t.Logf("Gateway state: %s", stateString)
+
+	// Taken from jest tests in protocol-contracts-ton (using the same vars for initState config)
+	const expectedState = "b5ee9c7241010101003c000074800000000124d38a790fdf1d9311fae87d4b21aeffd77bc26c004686a2c066c784a915f3e01c853d3195ed254c948e21adbb3e4a9b3f5f3c74d746f17671"
+
+	require.Equal(t, expectedState, stateString)
 }
 
 //go:embed testdata

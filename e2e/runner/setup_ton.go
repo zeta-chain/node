@@ -36,15 +36,13 @@ func (r *E2ERunner) SetupTON() error {
 	depAddr := deployer.GetAddress()
 	r.Logger.Print("💎TON Deployer %s (%s)", depAddr.ToRaw(), depAddr.ToHuman(false, true))
 
-	gwAccount, err := ton.ConstructGatewayAccount(r.TSSAddress)
+	// 2. Deploy Gateway
+	gwAccount, err := ton.ConstructGatewayAccount(depAddr, r.TSSAddress)
 	if err != nil {
 		return errors.Wrap(err, "unable to initialize TON gateway")
 	}
 
-	// 2. Deploy Gateway
-	initStateAmount := ton.TONCoins(10)
-
-	if err := deployer.Deploy(ctx, gwAccount, initStateAmount); err != nil {
+	if err = deployer.Deploy(ctx, gwAccount, toncontracts.Coins(1)); err != nil {
 		return errors.Wrapf(err, "unable to deploy TON gateway")
 	}
 
