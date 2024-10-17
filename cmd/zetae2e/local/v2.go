@@ -17,15 +17,15 @@ func startV2Tests(eg *errgroup.Group, conf config.Config, deployerRunner *runner
 	// Test happy paths for gas token workflow
 	eg.Go(v2TestRoutine(conf, "eth", conf.AdditionalAccounts.UserV2Ether, color.FgHiGreen, deployerRunner, verbose,
 		e2etests.TestV2ETHDepositName,
-		//e2etests.TestV2ETHDepositAndCallName,
-		//e2etests.TestV2ETHWithdrawName,
-		//e2etests.TestV2ETHWithdrawAndArbitraryCallName,
-		//e2etests.TestV2ETHWithdrawAndCallName,
-		//e2etests.TestV2ETHWithdrawAndCallThroughContractName,
-		//e2etests.TestV2ZEVMToEVMArbitraryCallName,
-		//e2etests.TestV2ZEVMToEVMCallName,
-		//e2etests.TestV2ZEVMToEVMCallThroughContractName,
-		//e2etests.TestV2EVMToZEVMCallName,
+		e2etests.TestV2ETHDepositAndCallName,
+		e2etests.TestV2ETHWithdrawName,
+		e2etests.TestV2ETHWithdrawAndArbitraryCallName,
+		e2etests.TestV2ETHWithdrawAndCallName,
+		e2etests.TestV2ETHWithdrawAndCallThroughContractName,
+		e2etests.TestV2ZEVMToEVMArbitraryCallName,
+		e2etests.TestV2ZEVMToEVMCallName,
+		e2etests.TestV2ZEVMToEVMCallThroughContractName,
+		e2etests.TestV2EVMToZEVMCallName,
 		e2etests.TestV2ETHDepositAndCallNoMessageName,
 		e2etests.TestV2ETHWithdrawAndCallNoMessageName,
 	))
@@ -33,10 +33,10 @@ func startV2Tests(eg *errgroup.Group, conf config.Config, deployerRunner *runner
 	// Test happy paths for erc20 token workflow
 	eg.Go(v2TestRoutine(conf, "erc20", conf.AdditionalAccounts.UserV2ERC20, color.FgHiBlue, deployerRunner, verbose,
 		e2etests.TestV2ETHDepositName, // necessary to pay fees on ZEVM
-		//e2etests.TestV2ERC20DepositName,
-		//e2etests.TestV2ERC20DepositAndCallName,
-		//e2etests.TestV2ERC20WithdrawName,
-		//e2etests.TestV2ERC20WithdrawAndCallName,
+		e2etests.TestV2ERC20DepositName,
+		e2etests.TestV2ERC20DepositAndCallName,
+		e2etests.TestV2ERC20WithdrawName,
+		e2etests.TestV2ERC20WithdrawAndCallName,
 		e2etests.TestV2ERC20DepositAndCallNoMessageName,
 	))
 
@@ -50,10 +50,10 @@ func startV2Tests(eg *errgroup.Group, conf config.Config, deployerRunner *runner
 			deployerRunner,
 			verbose,
 			e2etests.TestV2ETHDepositName, // necessary to pay fees on ZEVM and withdraw
-			//e2etests.TestV2ETHDepositAndCallRevertName,
-			//e2etests.TestV2ETHDepositAndCallRevertWithCallName,
-			//e2etests.TestV2ETHWithdrawAndCallRevertName,
-			//e2etests.TestV2ETHWithdrawAndCallRevertWithCallName,
+			e2etests.TestV2ETHDepositAndCallRevertName,
+			e2etests.TestV2ETHDepositAndCallRevertWithCallName,
+			e2etests.TestV2ETHWithdrawAndCallRevertName,
+			e2etests.TestV2ETHWithdrawAndCallRevertWithCallName,
 		),
 	)
 
@@ -69,11 +69,11 @@ func startV2Tests(eg *errgroup.Group, conf config.Config, deployerRunner *runner
 			e2etests.TestV2ETHDepositName,   // necessary to pay fees on ZEVM
 			e2etests.TestV2ERC20DepositName, // necessary to have assets to withdraw
 			e2etests.TestOperationAddLiquidityETHName, // liquidity with gas and ERC20 are necessary for reverts
-			//e2etests.TestOperationAddLiquidityERC20Name,
-			//e2etests.TestV2ERC20DepositAndCallRevertName,
-			//e2etests.TestV2ERC20DepositAndCallRevertWithCallName,
-			//e2etests.TestV2ERC20WithdrawAndCallRevertName,
-			//e2etests.TestV2ERC20WithdrawAndCallRevertWithCallName,
+			e2etests.TestOperationAddLiquidityERC20Name,
+			e2etests.TestV2ERC20DepositAndCallRevertName,
+			e2etests.TestV2ERC20DepositAndCallRevertWithCallName,
+			e2etests.TestV2ERC20WithdrawAndCallRevertName,
+			e2etests.TestV2ERC20WithdrawAndCallRevertWithCallName,
 		),
 	)
 }
