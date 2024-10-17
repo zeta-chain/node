@@ -23,6 +23,7 @@ import (
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/precompiles/prototype"
+	ptypes "github.com/zeta-chain/node/precompiles/types"
 	"github.com/zeta-chain/node/testutil/keeper"
 
 	ptypes "github.com/zeta-chain/node/precompiles/types"
