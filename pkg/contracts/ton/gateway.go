@@ -2,6 +2,8 @@
 package ton
 
 import (
+	"context"
+
 	"cosmossdk.io/math"
 	"github.com/pkg/errors"
 	"github.com/tonkeeper/tongo/boc"
@@ -22,6 +24,10 @@ import (
 // @see https://github.com/zeta-chain/protocol-contracts-ton/blob/main/contracts/gateway.fc
 type Gateway struct {
 	accountID ton.AccountID
+}
+
+type MethodRunner interface {
+	RunSmcMethod(ctx context.Context, acc ton.AccountID, method string, params tlb.VmStack) (uint32, tlb.VmStack, error)
 }
 
 const (
@@ -181,7 +187,8 @@ func parseDeposit(tx ton.Transaction, sender ton.AccountID, body *boc.Cell) (Dep
 }
 
 type depositLog struct {
-	Amount math.Uint
+	Amount     math.Uint
+	DepositFee math.Uint
 }
 
 func parseDepositLog(tx ton.Transaction) (depositLog, error) {
@@ -192,33 +199,29 @@ func parseDepositLog(tx ton.Transaction) (depositLog, error) {
 
 	// stored as ref
 	// cell log = begin_cell()
-	//        .store_uint(op::internal::deposit, size::op_code_size)
-	//        .store_uint(0, size::query_id_size)
-	//        .store_slice(sender)
-	//        .store_coins(deposit_amount)
-	//        .store_uint(evm_recipient, size::evm_address)
-	//        .end_cell();
+	//     .store_coins(deposit_amount)
+	//     .store_coins(tx_fee)
+	//     .end_cell();
 
 	var (
 		bodyValue = boc.Cell(messages[0].Value.Body.Value)
 		body      = &bodyValue
 	)
 
-	if err := body.Skip(sizeOpCode + sizeQueryID); err != nil {
-		return depositLog{}, errors.Wrap(err, "unable to skip bits")
-	}
-
-	// skip msg address (ton sender)
-	if err := UnmarshalTLB(&tlb.MsgAddress{}, body); err != nil {
-		return depositLog{}, errors.Wrap(err, "unable to read sender address")
-	}
-
 	var deposited tlb.Grams
 	if err := UnmarshalTLB(&deposited, body); err != nil {
 		return depositLog{}, errors.Wrap(err, "unable to read deposited amount")
 	}
 
-	return depositLog{Amount: GramsToUint(deposited)}, nil
+	var depositFee tlb.Grams
+	if err := UnmarshalTLB(&depositFee, body); err != nil {
+		return depositLog{}, errors.Wrap(err, "unable to read deposit fee")
+	}
+
+	return depositLog{
+		Amount:     GramsToUint(deposited),
+		DepositFee: GramsToUint(depositFee),
+	}, nil
 }
 
 func parseDepositAndCall(tx ton.Transaction, sender ton.AccountID, body *boc.Cell) (DepositAndCall, error) {
@@ -255,4 +258,31 @@ func parseInternalMessageBody(tx ton.Transaction) (*boc.Cell, error) {
 	)
 
 	return &body, nil
+}
+
+// GetTxFee returns maximum transaction fee for the given operation.
+// Real fee may be lower.
+func (gw *Gateway) GetTxFee(ctx context.Context, client MethodRunner, op Op) (math.Uint, error) {
+	const (
+		method  = "calculate_gas_fee"
+		symType = "VmStkTinyInt"
+	)
+
+	query := tlb.VmStack{{SumType: symType, VmStkTinyInt: int64(op)}}
+
+	exitCode, res, err := client.RunSmcMethod(ctx, gw.accountID, method, query)
+	switch {
+	case err != nil:
+		return math.NewUint(0), err
+	case exitCode != 0:
+		return math.NewUint(0), errors.Errorf("calculate_gas_fee failed with exit code %d", exitCode)
+	case len(res) == 0:
+		return math.NewUint(0), errors.New("empty result")
+	case res[0].SumType != symType:
+		return math.NewUint(0), errors.Errorf("res is not %s (got %s)", symType, res[0].SumType)
+	case res[0].VmStkTinyInt <= 0:
+		return math.NewUint(0), errors.New("fee is zero or negative")
+	}
+
+	return math.NewUint(uint64(res[0].VmStkTinyInt)), nil
 }
