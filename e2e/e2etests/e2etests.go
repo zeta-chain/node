@@ -846,9 +846,7 @@ var AllE2ETests = []runner.E2ETest{
 	runner.NewE2ETest(
 		TestV2ERC20WithdrawAndCallName,
 		"withdraw ERC20 from ZEVM and authenticated call a contract using V2 contract",
-		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "1000"},
-		},
+		[]runner.ArgDefinition{},
 		TestV2ERC20WithdrawAndCall,
 	),
 	runner.NewE2ETest(

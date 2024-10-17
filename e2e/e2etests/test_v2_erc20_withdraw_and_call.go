@@ -14,11 +14,16 @@ import (
 
 const payloadMessageWithdrawAuthenticatedCallERC20 = "this is a test ERC20 withdraw and authenticated call payload"
 
-func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
+func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, _ []string) {
+	previousGasLimit := r.ZEVMAuth.GasLimit
+	r.ZEVMAuth.GasLimit = 10000000
+	defer func() {
+		r.ZEVMAuth.GasLimit = previousGasLimit
+	}()
 
-	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok, "Invalid amount specified for TestV2ERC20WithdrawAndCall")
+	// called with 0 amount since onCall implementation is for TestDappV2 is simple and generic without decoding the payload and amount handling for erc20
+	// and purpose of test is to verify that onCall is called with correct sender and payload
+	amount := big.NewInt(0)
 
 	r.AssertTestDAppEVMCalled(false, payloadMessageWithdrawAuthenticatedCallERC20, amount)
 
@@ -34,7 +39,7 @@ func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, args []string) {
 	tx = r.V2ERC20WithdrawAndCall(
 		r.TestDAppV2EVMAddr,
 		amount,
-		r.EncodeERC20Call(r.ERC20Addr, amount, payloadMessageWithdrawAuthenticatedCallERC20),
+		[]byte(payloadMessageWithdrawAuthenticatedCallERC20),
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 
