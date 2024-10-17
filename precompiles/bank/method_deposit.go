@@ -48,13 +48,13 @@ func (c *Contract) deposit(
 	}
 
 	// Get the correct caller address.
-	caller, err := getEVMCallerAddress(evm, contract)
+	caller, err := ptypes.GetEVMCallerAddress(evm, contract)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get the cosmos address of the caller.
-	toAddr, err := getCosmosAddress(c.bankKeeper, caller)
+	toAddr, err := ptypes.GetCosmosAddress(c.bankKeeper, caller)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (c *Contract) deposit(
 	//   this way we map ZRC20 addresses to cosmos denoms "zevm/0x12345".
 	// - Mint coins to the fungible module.
 	// - Send coins from fungible to the caller.
-	coinSet, err := createCoinSet(ZRC20ToCosmosDenom(zrc20Addr), amount)
+	coinSet, err := ptypes.CreateCoinSet(ptypes.ZRC20ToCosmosDenom(zrc20Addr), amount)
 	if err != nil {
 		return nil, err
 	}

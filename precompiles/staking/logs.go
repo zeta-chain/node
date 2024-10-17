@@ -16,7 +16,7 @@ const (
 	MoveStakeEventName = "MoveStake"
 )
 
-func (c *Contract) AddStakeLog(
+func (c *Contract) addStakeLog(
 	ctx sdk.Context,
 	stateDB vm.StateDB,
 	staker common.Address,
@@ -49,7 +49,7 @@ func (c *Contract) AddStakeLog(
 	return nil
 }
 
-func (c *Contract) AddUnstakeLog(
+func (c *Contract) addUnstakeLog(
 	ctx sdk.Context,
 	stateDB vm.StateDB,
 	staker common.Address,
@@ -81,7 +81,7 @@ func (c *Contract) AddUnstakeLog(
 	return nil
 }
 
-func (c *Contract) AddMoveStakeLog(
+func (c *Contract) addMoveStakeLog(
 	ctx sdk.Context,
 	stateDB vm.StateDB,
 	staker common.Address,
@@ -112,6 +112,36 @@ func (c *Contract) AddMoveStakeLog(
 	}
 
 	// amount is part of event data
+	data, err := logs.PackArguments([]logs.Argument{
+		{Type: "uint256", Value: amount},
+	})
+	if err != nil {
+		return err
+	}
+
+	logs.AddLog(ctx, c.Address(), stateDB, topics, data)
+
+	return nil
+}
+
+func (c *Contract) addDistributeLog(
+	ctx sdk.Context,
+	stateDB vm.StateDB,
+	distributor common.Address,
+	zrc20Token common.Address,
+	amount *big.Int,
+) error {
+	event := c.Abi().Events[MoveStakeEventName]
+
+	topics, err := logs.MakeTopics(
+		event,
+		[]interface{}{distributor},
+		[]interface{}{zrc20Token},
+	)
+	if err != nil {
+		return err
+	}
+
 	data, err := logs.PackArguments([]logs.Argument{
 		{Type: "uint256", Value: amount},
 	})
