@@ -26,7 +26,6 @@ import (
 	ptypes "github.com/zeta-chain/node/precompiles/types"
 	"github.com/zeta-chain/node/testutil/keeper"
 
-	ptypes "github.com/zeta-chain/node/precompiles/types"
 	"github.com/zeta-chain/node/testutil/sample"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
