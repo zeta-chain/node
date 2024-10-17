@@ -14,8 +14,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/memo"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
@@ -419,7 +419,7 @@ func (ob *Observer) GetInboundVoteMessageFromBtcEvent(inbound *BTCInboundEvent) 
 // TODO(revamp): move all compliance related functions in a specific file
 func (ob *Observer) DoesInboundContainsRestrictedAddress(inTx *BTCInboundEvent) bool {
 	receiver := ""
-	parsedAddress, _, err := chains.ParseAddressAndData(hex.EncodeToString(inTx.MemoBytes))
+	parsedAddress, _, err := memo.DecodeLegacyMemoHex(hex.EncodeToString(inTx.MemoBytes))
 	if err == nil && parsedAddress != (ethcommon.Address{}) {
 		receiver = parsedAddress.Hex()
 	}

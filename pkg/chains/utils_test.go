@@ -1,7 +1,6 @@
 package chains
 
 import (
-	"encoding/hex"
 	"testing"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -62,42 +61,6 @@ func TestStringToHash(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tt.expect, result)
-			}
-		})
-	}
-}
-
-func TestParseAddressAndData(t *testing.T) {
-	expectedShortMsgResult, err := hex.DecodeString("1a2b3c4d5e6f708192a3b4c5d6e7f808")
-	require.NoError(t, err)
-	tests := []struct {
-		name       string
-		message    string
-		expectAddr ethcommon.Address
-		expectData []byte
-		wantErr    bool
-	}{
-		{
-			"valid msg",
-			"95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5",
-			ethcommon.HexToAddress("95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5"),
-			[]byte{},
-			false,
-		},
-		{"empty msg", "", ethcommon.Address{}, nil, false},
-		{"invalid hex", "invalidHex", ethcommon.Address{}, nil, true},
-		{"short msg", "1a2b3c4d5e6f708192a3b4c5d6e7f808", ethcommon.Address{}, expectedShortMsgResult, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			addr, data, err := ParseAddressAndData(tt.message)
-			if tt.wantErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tt.expectAddr, addr)
-				require.Equal(t, tt.expectData, data)
 			}
 		})
 	}
