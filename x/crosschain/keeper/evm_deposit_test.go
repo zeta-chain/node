@@ -107,6 +107,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			coin.CoinType_ERC20,
 			mock.Anything,
 			mock.Anything,
+			mock.Anything,
 		).Return(&evmtypes.MsgEthereumTxResponse{}, false, nil)
 
 		// call HandleEVMDeposit
@@ -151,6 +152,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 				senderChain,
 				mock.Anything,
 				coin.CoinType_ERC20,
+				mock.Anything,
 				mock.Anything,
 				mock.Anything,
 			).Return(&evmtypes.MsgEthereumTxResponse{
@@ -214,6 +216,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 				senderChain,
 				mock.Anything,
 				coin.CoinType_ERC20,
+				mock.Anything,
 				mock.Anything,
 				mock.Anything,
 			).Return(&evmtypes.MsgEthereumTxResponse{
@@ -306,6 +309,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			coin.CoinType_ERC20,
 			mock.Anything,
 			mock.Anything,
+			mock.Anything,
 		).Return(&evmtypes.MsgEthereumTxResponse{}, false, errDeposit)
 
 		// call HandleEVMDeposit
@@ -349,6 +353,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			senderChain,
 			mock.Anything,
 			coin.CoinType_ERC20,
+			mock.Anything,
 			mock.Anything,
 			mock.Anything,
 		).Return(&evmtypes.MsgEthereumTxResponse{VmError: "reverted"}, false, errDeposit)
@@ -395,6 +400,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			coin.CoinType_ERC20,
 			mock.Anything,
 			mock.Anything,
+			mock.Anything,
 		).Return(&evmtypes.MsgEthereumTxResponse{}, false, fungibletypes.ErrForeignCoinCapReached)
 
 		// call HandleEVMDeposit
@@ -439,6 +445,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			coin.CoinType_ERC20,
 			mock.Anything,
 			mock.Anything,
+			mock.Anything,
 		).Return(&evmtypes.MsgEthereumTxResponse{}, false, fungibletypes.ErrPausedZRC20)
 
 		// call HandleEVMDeposit
@@ -481,6 +488,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 				senderChain,
 				mock.Anything,
 				coin.CoinType_ERC20,
+				mock.Anything,
 				mock.Anything,
 				mock.Anything,
 			).Return(&evmtypes.MsgEthereumTxResponse{}, false, fungibletypes.ErrCallNonContract)
@@ -553,6 +561,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			coin.CoinType_ERC20,
 			mock.Anything,
 			mock.Anything,
+			mock.Anything,
 		).Return(&evmtypes.MsgEthereumTxResponse{}, false, nil)
 
 		cctx.GetCurrentOutboundParam().Receiver = sample.EthAddress().String()
@@ -594,6 +603,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			senderChain,
 			data,
 			coin.CoinType_ERC20,
+			mock.Anything,
 			mock.Anything,
 			mock.Anything,
 		).Return(&evmtypes.MsgEthereumTxResponse{}, false, nil)

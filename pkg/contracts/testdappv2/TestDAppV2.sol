@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.26;
 
 interface IERC20 {
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
 }
 
 contract TestDAppV2 {
+    string public constant NO_MESSAGE_CALL = "called with no message";
+
     struct zContext {
         bytes origin;
         address sender;
@@ -53,6 +55,24 @@ contract TestDAppV2 {
     }
 
     // Universal contract interface
+    function onCall(
+        zContext calldata _context,
+        address _zrc20,
+        uint256 amount,
+        bytes calldata message
+    )
+    external
+    {
+        require(!isRevertMessage(string(message)));
+
+        // if the message is empty we set the message to NO_MESSAGE_CALL
+        string memory messageStr = message.length == 0 ? NO_MESSAGE_CALL : string(message);
+
+        setCalledWithMessage(messageStr);
+        setAmountWithMessage(messageStr, amount);
+    }
+
+    // Legacy universal contract interface
     function onCrossChainCall(
         zContext calldata _context,
         address _zrc20,
@@ -63,8 +83,11 @@ contract TestDAppV2 {
     {
         require(!isRevertMessage(string(message)));
 
-        setCalledWithMessage(string(message));
-        setAmountWithMessage(string(message), amount);
+        // if the message is empty we set the message to NO_MESSAGE_CALL
+        string memory messageStr = message.length == 0 ? NO_MESSAGE_CALL : string(message);
+
+        setCalledWithMessage(messageStr);
+        setAmountWithMessage(messageStr, amount);
     }
 
     // called with gas token
@@ -111,9 +134,15 @@ contract TestDAppV2 {
 
     function onCall(MessageContext calldata messageContext, bytes calldata message) external payable returns (bytes memory) {
         require(messageContext.sender == expectedOnCallSender, "unauthenticated sender");
-        setCalledWithMessage(string(message));
-        setAmountWithMessage(string(message), msg.value);
-        senderWithMessage[message] = messageContext.sender;
+
+        // if the message is empty we set the message to NO_MESSAGE_CALL
+        string memory messageStr = message.length == 0 ? NO_MESSAGE_CALL : string(message);
+
+        setCalledWithMessage(messageStr);
+        setAmountWithMessage(messageStr, msg.value);
+        senderWithMessage[bytes(messageStr)] = messageContext.sender;
+
+        return "";
     }
 
     receive() external payable {}

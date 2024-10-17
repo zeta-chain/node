@@ -102,7 +102,7 @@ func SetupStateForProcessLogs(
 
 func TestParseZRC20WithdrawalEvent(t *testing.T) {
 	t.Run("unable to parse an event with an invalid address in event log", func(t *testing.T) {
-		for i, log := range sample.GetInvalidZRC20WithdrawToExternal(t).Logs {
+		for i, log := range sample.InvalidZRC20WithdrawToExternalReceipt(t).Logs {
 			event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*log)
 			if i < 3 {
 				require.ErrorContains(t, err, "event signature mismatch")
@@ -116,7 +116,7 @@ func TestParseZRC20WithdrawalEvent(t *testing.T) {
 	})
 
 	t.Run("successfully parse event for a valid BTC withdrawal", func(t *testing.T) {
-		for i, log := range sample.GetValidZRC20WithdrawToBTC(t).Logs {
+		for i, log := range sample.ValidZRC20WithdrawToBTCReceipt(t).Logs {
 			event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*log)
 			if i < 3 {
 				require.ErrorContains(t, err, "event signature mismatch")
@@ -131,7 +131,7 @@ func TestParseZRC20WithdrawalEvent(t *testing.T) {
 	})
 
 	t.Run("successfully parse valid event for ETH withdrawal", func(t *testing.T) {
-		for i, log := range sample.GetValidZrc20WithdrawToETH(t).Logs {
+		for i, log := range sample.ValidZrc20WithdrawToETHReceipt(t).Logs {
 			event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*log)
 			if i != 11 {
 				require.ErrorContains(t, err, "event signature mismatch")
@@ -146,7 +146,7 @@ func TestParseZRC20WithdrawalEvent(t *testing.T) {
 	})
 
 	t.Run("failed to parse event with a valid address but no topic present", func(t *testing.T) {
-		for _, log := range sample.GetValidZRC20WithdrawToBTC(t).Logs {
+		for _, log := range sample.ValidZRC20WithdrawToBTCReceipt(t).Logs {
 			log.Topics = nil
 			event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*log)
 			require.ErrorContains(t, err, "invalid log - no topics")
@@ -158,7 +158,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 	t.Run("successfully validate a valid event", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		btcMainNetWithdrawalEvent, err := crosschainkeeper.ParseZRC20WithdrawalEvent(
-			*sample.GetValidZRC20WithdrawToBTC(t).Logs[3],
+			*sample.ValidZRC20WithdrawToBTCReceipt(t).Logs[3],
 		)
 		require.NoError(t, err)
 		err = k.ValidateZrc20WithdrawEvent(ctx, btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
@@ -168,7 +168,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 	t.Run("unable to validate a btc withdrawal event with an invalid amount", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		btcMainNetWithdrawalEvent, err := crosschainkeeper.ParseZRC20WithdrawalEvent(
-			*sample.GetValidZRC20WithdrawToBTC(t).Logs[3],
+			*sample.ValidZRC20WithdrawToBTCReceipt(t).Logs[3],
 		)
 		require.NoError(t, err)
 
@@ -186,7 +186,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 	t.Run("unable to validate a event with an invalid chain ID", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		btcMainNetWithdrawalEvent, err := crosschainkeeper.ParseZRC20WithdrawalEvent(
-			*sample.GetValidZRC20WithdrawToBTC(t).Logs[3],
+			*sample.ValidZRC20WithdrawToBTCReceipt(t).Logs[3],
 		)
 		require.NoError(t, err)
 		err = k.ValidateZrc20WithdrawEvent(ctx, btcMainNetWithdrawalEvent, chains.BitcoinTestnet.ChainId)
@@ -196,7 +196,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 	t.Run("unable to validate an unsupported address type", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		btcMainNetWithdrawalEvent, err := crosschainkeeper.ParseZRC20WithdrawalEvent(
-			*sample.GetValidZRC20WithdrawToBTC(t).Logs[3],
+			*sample.ValidZRC20WithdrawToBTCReceipt(t).Logs[3],
 		)
 		require.NoError(t, err)
 		btcMainNetWithdrawalEvent.To = []byte("04b2891ba8cb491828db3ebc8a780d43b169e7b3974114e6e50f9bab6ec" +
@@ -248,7 +248,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 
-		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.GetValidZRC20WithdrawToBTC(t).Logs[3])
+		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.ValidZRC20WithdrawToBTCReceipt(t).Logs[3])
 		require.NoError(t, err)
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "bitcoin", "BTC")
 		event.Raw.Address = zrc20
@@ -274,7 +274,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 
-		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.GetValidZrc20WithdrawToETH(t).Logs[11])
+		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.ValidZrc20WithdrawToETHReceipt(t).Logs[11])
 		require.NoError(t, err)
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "ethereum", "ETH")
 		event.Raw.Address = zrc20
@@ -299,7 +299,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 
-		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.GetValidZrc20WithdrawToETH(t).Logs[11])
+		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.ValidZrc20WithdrawToETHReceipt(t).Logs[11])
 		require.NoError(t, err)
 		setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "ethereum", "ETH")
 		emittingContract := sample.EthAddress()
@@ -318,7 +318,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		chainID := chain.ChainId
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 
-		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.GetValidZrc20WithdrawToETH(t).Logs[11])
+		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.ValidZrc20WithdrawToETHReceipt(t).Logs[11])
 		require.NoError(t, err)
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "ethereum", "ETH")
 		event.Raw.Address = zrc20
@@ -339,7 +339,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 
-		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.GetValidZrc20WithdrawToETH(t).Logs[11])
+		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.ValidZrc20WithdrawToETHReceipt(t).Logs[11])
 		require.NoError(t, err)
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "ethereum", "ETH")
 		event.Raw.Address = zrc20
@@ -362,7 +362,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 
-		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.GetValidZrc20WithdrawToETH(t).Logs[11])
+		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.ValidZrc20WithdrawToETHReceipt(t).Logs[11])
 		require.NoError(t, err)
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "ethereum", "ETH")
 		event.Raw.Address = zrc20
@@ -387,7 +387,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 
-		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.GetValidZrc20WithdrawToETH(t).Logs[11])
+		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.ValidZrc20WithdrawToETHReceipt(t).Logs[11])
 		require.NoError(t, err)
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "ethereum", "ETH")
 		event.Raw.Address = zrc20
@@ -415,7 +415,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 		k.RemoveGasPrice(ctx, strconv.FormatInt(chainID, 10))
 
-		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.GetValidZrc20WithdrawToETH(t).Logs[11])
+		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.ValidZrc20WithdrawToETHReceipt(t).Logs[11])
 		require.NoError(t, err)
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "ethereum", "ETH")
 		event.Raw.Address = zrc20
@@ -441,7 +441,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 			Nonce:   1,
 		})
 
-		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.GetValidZrc20WithdrawToETH(t).Logs[11])
+		event, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.ValidZrc20WithdrawToETHReceipt(t).Logs[11])
 		require.NoError(t, err)
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "ethereum", "ETH")
 		event.Raw.Address = zrc20
@@ -456,7 +456,7 @@ func TestKeeper_ProcessZRC20WithdrawalEvent(t *testing.T) {
 
 func TestKeeper_ParseZetaSentEvent(t *testing.T) {
 	t.Run("successfully parse a valid event", func(t *testing.T) {
-		logs := sample.GetValidZetaSentDestinationExternal(t).Logs
+		logs := sample.ValidZetaSentDestinationExternalReceipt(t).Logs
 		for i, log := range logs {
 			connector := log.Address
 			event, err := crosschainkeeper.ParseZetaSentEvent(*log, connector)
@@ -473,7 +473,7 @@ func TestKeeper_ParseZetaSentEvent(t *testing.T) {
 	})
 
 	t.Run("unable to parse if topics field is empty", func(t *testing.T) {
-		logs := sample.GetValidZetaSentDestinationExternal(t).Logs
+		logs := sample.ValidZetaSentDestinationExternalReceipt(t).Logs
 		for _, log := range logs {
 			connector := log.Address
 			log.Topics = nil
@@ -484,7 +484,7 @@ func TestKeeper_ParseZetaSentEvent(t *testing.T) {
 	})
 
 	t.Run("unable to parse if connector address does not match", func(t *testing.T) {
-		logs := sample.GetValidZetaSentDestinationExternal(t).Logs
+		logs := sample.ValidZetaSentDestinationExternalReceipt(t).Logs
 		for i, log := range logs {
 			event, err := crosschainkeeper.ParseZetaSentEvent(*log, sample.EthAddress())
 			if i < 4 {
@@ -522,8 +522,8 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		require.NoError(t, err)
 
 		event, err := crosschainkeeper.ParseZetaSentEvent(
-			*sample.GetValidZetaSentDestinationExternal(t).Logs[4],
-			sample.GetValidZetaSentDestinationExternal(t).Logs[4].Address,
+			*sample.ValidZetaSentDestinationExternalReceipt(t).Logs[4],
+			sample.ValidZetaSentDestinationExternalReceipt(t).Logs[4].Address,
 		)
 		require.NoError(t, err)
 		emittingContract := sample.EthAddress()
@@ -558,8 +558,8 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain, admin)
 
 		event, err := crosschainkeeper.ParseZetaSentEvent(
-			*sample.GetValidZetaSentDestinationExternal(t).Logs[4],
-			sample.GetValidZetaSentDestinationExternal(t).Logs[4].Address,
+			*sample.ValidZetaSentDestinationExternalReceipt(t).Logs[4],
+			sample.ValidZetaSentDestinationExternalReceipt(t).Logs[4].Address,
 		)
 		require.NoError(t, err)
 		emittingContract := sample.EthAddress()
@@ -588,8 +588,8 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		require.NoError(t, err)
 
 		event, err := crosschainkeeper.ParseZetaSentEvent(
-			*sample.GetValidZetaSentDestinationExternal(t).Logs[4],
-			sample.GetValidZetaSentDestinationExternal(t).Logs[4].Address,
+			*sample.ValidZetaSentDestinationExternalReceipt(t).Logs[4],
+			sample.ValidZetaSentDestinationExternalReceipt(t).Logs[4].Address,
 		)
 		require.NoError(t, err)
 		emittingContract := sample.EthAddress()
@@ -620,8 +620,8 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		require.NoError(t, err)
 
 		event, err := crosschainkeeper.ParseZetaSentEvent(
-			*sample.GetValidZetaSentDestinationExternal(t).Logs[4],
-			sample.GetValidZetaSentDestinationExternal(t).Logs[4].Address,
+			*sample.ValidZetaSentDestinationExternalReceipt(t).Logs[4],
+			sample.ValidZetaSentDestinationExternalReceipt(t).Logs[4].Address,
 		)
 		require.NoError(t, err)
 		emittingContract := sample.EthAddress()
@@ -651,8 +651,8 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		)
 		require.NoError(t, err)
 		event, err := crosschainkeeper.ParseZetaSentEvent(
-			*sample.GetValidZetaSentDestinationExternal(t).Logs[4],
-			sample.GetValidZetaSentDestinationExternal(t).Logs[4].Address,
+			*sample.ValidZetaSentDestinationExternalReceipt(t).Logs[4],
+			sample.ValidZetaSentDestinationExternalReceipt(t).Logs[4].Address,
 		)
 		require.NoError(t, err)
 		emittingContract := sample.EthAddress()
@@ -689,8 +689,8 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		require.NoError(t, err)
 
 		event, err := crosschainkeeper.ParseZetaSentEvent(
-			*sample.GetValidZetaSentDestinationExternal(t).Logs[4],
-			sample.GetValidZetaSentDestinationExternal(t).Logs[4].Address,
+			*sample.ValidZetaSentDestinationExternalReceipt(t).Logs[4],
+			sample.ValidZetaSentDestinationExternalReceipt(t).Logs[4].Address,
 		)
 		require.NoError(t, err)
 		emittingContract := sample.EthAddress()
@@ -712,7 +712,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 
-		block := sample.GetValidZRC20WithdrawToBTC(t)
+		block := sample.ValidZRC20WithdrawToBTCReceipt(t)
 		gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "bitcoin", "BTC")
 		for _, log := range block.Logs {
 			log.Address = gasZRC20
@@ -749,7 +749,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 			sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount)),
 		)
 		require.NoError(t, err)
-		block := sample.GetValidZetaSentDestinationExternal(t)
+		block := sample.ValidZetaSentDestinationExternalReceipt(t)
 		system, found := zk.FungibleKeeper.GetSystemContract(ctx)
 		require.True(t, found)
 		for _, log := range block.Logs {
@@ -779,7 +779,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		err := k.ProcessLogs(ctx, sample.GetValidZRC20WithdrawToBTC(t).Logs, sample.EthAddress(), "")
+		err := k.ProcessLogs(ctx, sample.ValidZRC20WithdrawToBTCReceipt(t).Logs, sample.EthAddress(), "")
 		require.ErrorContains(t, err, "cannot find system contract")
 		cctxList := k.GetAllCrossChainTx(ctx)
 		require.Len(t, cctxList, 0)
@@ -794,7 +794,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 
-		block := sample.GetValidZRC20WithdrawToBTC(t)
+		block := sample.ValidZRC20WithdrawToBTCReceipt(t)
 		gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "bitcoin", "BTC")
 		for _, log := range block.Logs {
 			log.Address = gasZRC20
@@ -817,7 +817,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 			setSupportedChain(ctx, zk, chainID)
 			SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 
-			block := sample.GetValidZRC20WithdrawToBTC(t)
+			block := sample.ValidZRC20WithdrawToBTCReceipt(t)
 			setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "bitcoin", "BTC")
 			for _, log := range block.Logs {
 				log.Address = sample.EthAddress()
@@ -840,7 +840,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 
-		block := sample.GetValidZRC20WithdrawToBTC(t)
+		block := sample.ValidZRC20WithdrawToBTCReceipt(t)
 		gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "bitcoin", "BTC")
 		for _, log := range block.Logs {
 			log.Address = gasZRC20
@@ -865,7 +865,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 
-		block := sample.GetInvalidZRC20WithdrawToExternal(t)
+		block := sample.InvalidZRC20WithdrawToExternalReceipt(t)
 		gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "bitcoin", "BTC")
 		for _, log := range block.Logs {
 			log.Address = gasZRC20
@@ -886,7 +886,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
 
-		block := sample.GetValidZRC20WithdrawToBTC(t)
+		block := sample.ValidZRC20WithdrawToBTCReceipt(t)
 		gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "bitcoin", "BTC")
 		for _, log := range block.Logs {
 			log.Address = gasZRC20

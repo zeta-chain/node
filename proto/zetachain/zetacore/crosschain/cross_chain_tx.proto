@@ -43,6 +43,10 @@ message InboundParams {
   string ballot_index = 9;
   uint64 finalized_zeta_height = 10;
   TxFinalizationStatus tx_finalization_status = 11;
+
+  // this field describes if a smart contract call should be made for a inbound
+  // with assets only used for protocol contract version 2
+  bool is_cross_chain_call = 12;
 }
 
 message ZetaAccounting {

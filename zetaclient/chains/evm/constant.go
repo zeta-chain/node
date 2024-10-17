@@ -47,6 +47,10 @@ const (
 	// [signature, sender, receiver]
 	TopicsGatewayDeposit = 3
 
+	// TopicsGatewayDepositAndCall is the number of topics for a gateway deposit and call event
+	// [signature, sender, receiver]
+	TopicsGatewayDepositAndCall = 3
+
 	// TopicsGatewayCall is the number of topics for a gateway call event
 	// [signature, sender, receiver]
 	TopicsGatewayCall = 3
