@@ -48,7 +48,7 @@ func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, _ []string) {
 	// check expected sender was used
 	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(
 		&bind.CallOpts{},
-		[]byte(payloadMessageAuthenticatedWithdrawETH),
+		[]byte(payloadMessageWithdrawAuthenticatedCallERC20),
 	)
 	require.NoError(r, err)
 	require.Equal(r, r.ZEVMAuth.From, senderForMsg)
