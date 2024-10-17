@@ -7,11 +7,12 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 )
 
-func TestBitcoinDepositRefund(r *runner.E2ERunner, args []string) {
+func TestBitcoinDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	// ARRANGE
 	// Given BTC address
 	r.SetBtcAddress(r.Name, false)
@@ -32,7 +33,10 @@ func TestBitcoinDepositRefund(r *runner.E2ERunner, args []string) {
 
 	// ACT
 	// Send BTC to TSS address with a dummy memo
-	txHash, err := r.SendToTSSFromDeployerWithMemo(amount, utxos, []byte("gibberish-memo"))
+	// zetacore should revert cctx if call is made on a non-existing address
+	nonExistReceiver := sample.EthAddress()
+	badMemo := append(nonExistReceiver.Bytes(), []byte("gibberish-memo")...)
+	txHash, err := r.SendToTSSFromDeployerWithMemo(amount, utxos, badMemo)
 	require.NoError(r, err)
 	require.NotEmpty(r, txHash)
 

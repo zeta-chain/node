@@ -72,18 +72,21 @@ const (
 	 Bitcoin tests
 	 Test transfer of Bitcoin asset across chains
 	*/
-	TestBitcoinDepositName                = "bitcoin_deposit"
-	TestBitcoinDepositRefundName          = "bitcoin_deposit_refund"
-	TestBitcoinDepositAndCallName         = "bitcoin_deposit_and_call"
-	TestBitcoinWithdrawSegWitName         = "bitcoin_withdraw_segwit"
-	TestBitcoinWithdrawTaprootName        = "bitcoin_withdraw_taproot"
-	TestBitcoinWithdrawMultipleName       = "bitcoin_withdraw_multiple"
-	TestBitcoinWithdrawLegacyName         = "bitcoin_withdraw_legacy"
-	TestBitcoinWithdrawP2WSHName          = "bitcoin_withdraw_p2wsh"
-	TestBitcoinWithdrawP2SHName           = "bitcoin_withdraw_p2sh"
-	TestBitcoinWithdrawInvalidAddressName = "bitcoin_withdraw_invalid"
-	TestBitcoinWithdrawRestrictedName     = "bitcoin_withdraw_restricted"
-	TestExtractBitcoinInscriptionMemoName = "bitcoin_memo_from_inscription"
+	TestBitcoinDepositName                 = "bitcoin_deposit"
+	TestBitcoinDepositAndCallName          = "bitcoin_deposit_and_call"
+	TestBitcoinDepositAndCallRevertName    = "bitcoin_deposit_and_call_revert"
+	TestStdBitcoinDepositName              = "std_bitcoin_deposit"
+	TestStdBitcoinDepositAndCallName       = "std_bitcoin_deposit_and_call"
+	TestStdBitcoinDepositAndCallRevertName = "std_bitcoin_deposit_and_call_revert"
+	TestBitcoinWithdrawSegWitName          = "bitcoin_withdraw_segwit"
+	TestBitcoinWithdrawTaprootName         = "bitcoin_withdraw_taproot"
+	TestBitcoinWithdrawMultipleName        = "bitcoin_withdraw_multiple"
+	TestBitcoinWithdrawLegacyName          = "bitcoin_withdraw_legacy"
+	TestBitcoinWithdrawP2WSHName           = "bitcoin_withdraw_p2wsh"
+	TestBitcoinWithdrawP2SHName            = "bitcoin_withdraw_p2sh"
+	TestBitcoinWithdrawInvalidAddressName  = "bitcoin_withdraw_invalid"
+	TestBitcoinWithdrawRestrictedName      = "bitcoin_withdraw_restricted"
+	TestExtractBitcoinInscriptionMemoName  = "bitcoin_memo_from_inscription"
 
 	/*
 	 Application tests
@@ -485,11 +488,11 @@ var AllE2ETests = []runner.E2ETest{
 		TestBitcoinDepositAndCall,
 	),
 	runner.NewE2ETest(
-		TestBitcoinDepositRefundName,
+		TestBitcoinDepositAndCallRevertName,
 		"deposit Bitcoin into ZEVM; expect refund", []runner.ArgDefinition{
 			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
-		TestBitcoinDepositRefund,
+		TestBitcoinDepositAndCallRevert,
 	),
 	runner.NewE2ETest(
 		TestBitcoinWithdrawSegWitName,
