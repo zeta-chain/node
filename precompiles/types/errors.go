@@ -94,6 +94,14 @@ func (e ErrInvalidMethod) Error() string {
 	return fmt.Sprintf("invalid method: %s", e.Method)
 }
 
+type ErrDisabledMethod struct {
+	Method string
+}
+
+func (e ErrDisabledMethod) Error() string {
+	return fmt.Sprintf("method %s is disabled", e.Method)
+}
+
 type ErrWriteMethod struct {
 	Method string
 }
