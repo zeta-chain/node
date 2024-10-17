@@ -55,6 +55,24 @@ contract TestDAppV2 {
     }
 
     // Universal contract interface
+    function onCall(
+        zContext calldata _context,
+        address _zrc20,
+        uint256 amount,
+        bytes calldata message
+    )
+    external
+    {
+        require(!isRevertMessage(string(message)));
+
+        // if the message is empty we set the message to NO_MESSAGE_CALL
+        string memory messageStr = message.length == 0 ? NO_MESSAGE_CALL : string(message);
+
+        setCalledWithMessage(messageStr);
+        setAmountWithMessage(messageStr, amount);
+    }
+
+    // Legacy universal contract interface
     function onCrossChainCall(
         zContext calldata _context,
         address _zrc20,
