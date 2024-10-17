@@ -237,6 +237,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		FinalizedZetaHeight:    0,
 		BallotIndex:            index,
 		CoinType:               msg.CoinType,
+		IsCrossChainCall:       msg.IsCrossChainCall,
 	}
 
 	outboundParams := &OutboundParams{
