@@ -29,7 +29,8 @@ func (signer *Signer) signGatewayExecute(
 
 	var data []byte
 
-	// only set sender if it's authenticated call
+	// if sender is provided in messageContext call is authenticated and target is Callable.onCall
+	// otherwise, call is arbitrary
 	messageContext := gatewayevm.MessageContext{
 		Sender: common.HexToAddress(sender),
 	}
@@ -154,7 +155,8 @@ func (signer *Signer) signERC20CustodyWithdrawAndCall(
 		return nil, errors.Wrap(err, "unable to get ERC20CustodyMetaData ABI")
 	}
 
-	// only set sender if it's authenticated call
+	// if sender is provided in messageContext call is authenticated and target is Callable.onCall
+	// otherwise, call is arbitrary
 	messageContext := gatewayevm.MessageContext{
 		Sender: common.HexToAddress(sender),
 	}
