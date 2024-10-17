@@ -103,6 +103,7 @@ contract TestDAppV2 {
         senderWithMessage[revertContext.revertMessage] = revertContext.sender;
     }
 
+    // Callable interface
     function onCall(MessageContext calldata messageContext, bytes calldata message) external payable returns (bytes memory) {
         setCalledWithMessage(string(message));
         setAmountWithMessage(string(message), msg.value);

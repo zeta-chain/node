@@ -21,9 +21,9 @@ func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, _ []string) {
 		r.ZEVMAuth.GasLimit = previousGasLimit
 	}()
 
-	// called with 0 amount since onCall implementation is for TestDappV2 is simple and generic without decoding the payload and amount handling for erc20
-	// and purpose of test is to verify that onCall is called with correct sender and payload
-	amount := big.NewInt(0)
+	// called with fixed amount without arg since onCall implementation is for TestDappV2 is simple and generic
+	// without decoding the payload and amount handling for erc20, purpose of test is to verify correct sender and payload are used
+	amount := big.NewInt(10000)
 
 	r.AssertTestDAppEVMCalled(false, payloadMessageWithdrawAuthenticatedCallERC20, amount)
 
@@ -43,7 +43,7 @@ func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, _ []string) {
 	r.Logger.CCTX(*cctx, "withdraw")
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
-	r.AssertTestDAppEVMCalled(true, payloadMessageWithdrawAuthenticatedCallERC20, amount)
+	r.AssertTestDAppEVMCalled(true, payloadMessageWithdrawAuthenticatedCallERC20, big.NewInt(0))
 
 	// check expected sender was used
 	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(
