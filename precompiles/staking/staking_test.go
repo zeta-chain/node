@@ -263,7 +263,6 @@ func Test_Stake(t *testing.T) {
 		_, err = contract.Run(mockEVM, mockVMContract, true)
 
 		// ASSERT
-		require.Error(t, err)
 		require.ErrorIs(t, err, ptypes.ErrWriteMethod{Method: StakeMethodName})
 	})
 
@@ -537,7 +536,6 @@ func Test_Unstake(t *testing.T) {
 		_, err = contract.Run(mockEVM, mockVMContract, true)
 
 		// ASSERT
-		require.Error(t, err)
 		require.ErrorIs(t, err, ptypes.ErrWriteMethod{Method: UnstakeMethodName})
 	})
 
@@ -823,7 +821,6 @@ func Test_MoveStake(t *testing.T) {
 		_, err = contract.Run(mockEVM, mockVMContract, true)
 
 		// ASSERT
-		require.Error(t, err)
 		require.ErrorIs(t, err, ptypes.ErrWriteMethod{Method: MoveStakeMethodName})
 	})
 
