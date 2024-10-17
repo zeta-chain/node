@@ -420,6 +420,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 			Method: method.Name,
 		}
 
+		//nolint:govet
 		if readOnly {
 			return nil, ptypes.ErrWriteMethod{
 				Method: method.Name,
@@ -441,6 +442,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 			Method: method.Name,
 		}
 
+		//nolint:govet
 		if readOnly {
 			return nil, ptypes.ErrWriteMethod{
 				Method: method.Name,
@@ -462,6 +464,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 			Method: method.Name,
 		}
 
+		//nolint:govet
 		if readOnly {
 			return nil, ptypes.ErrWriteMethod{
 				Method: method.Name,
