@@ -181,7 +181,8 @@ func parseDeposit(tx ton.Transaction, sender ton.AccountID, body *boc.Cell) (Dep
 }
 
 type depositLog struct {
-	Amount math.Uint
+	Amount     math.Uint
+	DepositFee math.Uint
 }
 
 func parseDepositLog(tx ton.Transaction) (depositLog, error) {
@@ -192,33 +193,29 @@ func parseDepositLog(tx ton.Transaction) (depositLog, error) {
 
 	// stored as ref
 	// cell log = begin_cell()
-	//        .store_uint(op::internal::deposit, size::op_code_size)
-	//        .store_uint(0, size::query_id_size)
-	//        .store_slice(sender)
-	//        .store_coins(deposit_amount)
-	//        .store_uint(evm_recipient, size::evm_address)
-	//        .end_cell();
+	//     .store_coins(deposit_amount)
+	//     .store_coins(tx_fee)
+	//     .end_cell();
 
 	var (
 		bodyValue = boc.Cell(messages[0].Value.Body.Value)
 		body      = &bodyValue
 	)
 
-	if err := body.Skip(sizeOpCode + sizeQueryID); err != nil {
-		return depositLog{}, errors.Wrap(err, "unable to skip bits")
-	}
-
-	// skip msg address (ton sender)
-	if err := UnmarshalTLB(&tlb.MsgAddress{}, body); err != nil {
-		return depositLog{}, errors.Wrap(err, "unable to read sender address")
-	}
-
 	var deposited tlb.Grams
 	if err := UnmarshalTLB(&deposited, body); err != nil {
 		return depositLog{}, errors.Wrap(err, "unable to read deposited amount")
 	}
 
-	return depositLog{Amount: GramsToUint(deposited)}, nil
+	var depositFee tlb.Grams
+	if err := UnmarshalTLB(&depositFee, body); err != nil {
+		return depositLog{}, errors.Wrap(err, "unable to read deposit fee")
+	}
+
+	return depositLog{
+		Amount:     GramsToUint(deposited),
+		DepositFee: GramsToUint(depositFee),
+	}, nil
 }
 
 func parseDepositAndCall(tx ton.Transaction, sender ton.AccountID, body *boc.Cell) (DepositAndCall, error) {

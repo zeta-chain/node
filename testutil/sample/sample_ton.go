@@ -8,7 +8,6 @@ import (
 	"unsafe"
 
 	"cosmossdk.io/math"
-	eth "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/boc"
 	"github.com/tonkeeper/tongo/tlb"
@@ -18,16 +17,17 @@ import (
 )
 
 const (
-	tonWorkchainID    = 0
-	tonShardID        = 123
-	tonDepositFee     = 10_000_000 // 0.01 TON
-	tonSampleGasUsage = 50_000_000 // 0.05 TON
+	tonWorkchainID   = 0
+	tonShardID       = 123
+	tonSampleTXFee   = 006_500_000 // 0.0065 TON
+	tonSampleGasUsed = 8500
 )
 
 type TONTransactionProps struct {
-	Account ton.AccountID
-	GasUsed uint64
-	BlockID ton.BlockIDExt
+	Account      ton.AccountID
+	GasUsed      uint64
+	TotalTONFees uint64
+	BlockID      ton.BlockIDExt
 
 	// For simplicity let's have only one input
 	// and one output (both optional)
@@ -56,7 +56,7 @@ func TONDonateProps(t *testing.T, acc ton.AccountID, d toncontracts.Donation) TO
 	body, err := d.AsBody()
 	require.NoError(t, err)
 
-	deposited := tonSampleGasUsage + d.Amount.Uint64()
+	tonSent := tonSampleTXFee + d.Amount.Uint64()
 
 	return TONTransactionProps{
 		Account: acc,
@@ -65,7 +65,7 @@ func TONDonateProps(t *testing.T, acc ton.AccountID, d toncontracts.Donation) TO
 				Bounce: true,
 				Src:    d.Sender.ToMsgAddress(),
 				Dest:   acc.ToMsgAddress(),
-				Value:  tlb.CurrencyCollection{Grams: tlb.Grams(deposited)},
+				Value:  tlb.CurrencyCollection{Grams: tlb.Grams(tonSent)},
 			}),
 			Body: tlb.EitherRef[tlb.Any]{Value: tlb.Any(*body)},
 		},
@@ -80,7 +80,7 @@ func TONDepositProps(t *testing.T, acc ton.AccountID, d toncontracts.Deposit) TO
 	body, err := d.AsBody()
 	require.NoError(t, err)
 
-	logBody := depositLogMock(t, d.Sender, d.Amount.Uint64(), d.Recipient, nil)
+	logBody := depositLogMock(t, d.Amount.Uint64(), tonSampleTXFee)
 
 	return TONTransactionProps{
 		Account: acc,
@@ -107,7 +107,7 @@ func TONDepositAndCallProps(t *testing.T, acc ton.AccountID, d toncontracts.Depo
 	body, err := d.AsBody()
 	require.NoError(t, err)
 
-	logBody := depositLogMock(t, d.Sender, d.Amount.Uint64(), d.Recipient, d.CallData)
+	logBody := depositLogMock(t, d.Amount.Uint64(), tonSampleTXFee)
 
 	return TONTransactionProps{
 		Account: acc,
@@ -134,7 +134,11 @@ func TONTransaction(t *testing.T, p TONTransactionProps) ton.Transaction {
 	now := time.Now().UTC()
 
 	if p.GasUsed == 0 {
-		p.GasUsed = tonSampleGasUsage
+		p.GasUsed = tonSampleGasUsed
+	}
+
+	if p.TotalTONFees == 0 {
+		p.TotalTONFees = tonSampleTXFee
 	}
 
 	if p.BlockID.BlockID.Seqno == 0 {
@@ -170,7 +174,7 @@ func TONTransaction(t *testing.T, p TONTransactionProps) ton.Transaction {
 			Lt:          lt,
 			Now:         uint32(now.Unix()),
 			OutMsgCnt:   tlb.Uint15(len(outputs.Keys())),
-			TotalFees:   tlb.CurrencyCollection{Grams: tlb.Grams(p.GasUsed)},
+			TotalFees:   tlb.CurrencyCollection{Grams: tlb.Grams(p.TotalTONFees)},
 			Msgs:        messages{InMsg: input, OutMsgs: outputs},
 		},
 	}
@@ -221,42 +225,19 @@ func tonBlockID(now time.Time) ton.BlockIDExt {
 }
 
 func fakeDepositAmount(v math.Uint) tlb.Grams {
-	return tlb.Grams(v.Uint64() + tonDepositFee)
+	return tlb.Grams(v.Uint64() + tonSampleTXFee)
 }
 
-func depositLogMock(
-	t *testing.T,
-	sender ton.AccountID,
-	amount uint64,
-	recipient eth.Address,
-	callData []byte,
-) *boc.Cell {
-	//     cell log = begin_cell()
-	//        .store_uint(op::internal::deposit_and_call, size::op_code_size)
-	//        .store_uint(0, size::query_id_size)
-	//        .store_slice(sender)
-	//        .store_coins(deposit_amount)
-	//        .store_uint(evm_recipient, size::evm_address)
-	//        .store_ref(call_data) // only for DepositAndCall
-	//        .end_cell();
+func depositLogMock(t *testing.T, depositAmount, txFee uint64) *boc.Cell {
+	//  cell log = begin_cell()
+	//    .store_coins(deposit_amount)
+	//    .store_coins(tx_fee)
+	//    .end_cell();
 
 	b := boc.NewCell()
-	require.NoError(t, b.WriteUint(0, 32+64))
 
-	// skip
-	msgAddr := sender.ToMsgAddress()
-	require.NoError(t, tlb.Marshal(b, msgAddr))
-
-	coins := tlb.Grams(amount)
-	require.NoError(t, coins.MarshalTLB(b, nil))
-
-	require.NoError(t, b.WriteBytes(recipient.Bytes()))
-
-	if callData != nil {
-		callDataCell, err := toncontracts.MarshalSnakeCell(callData)
-		require.NoError(t, err)
-		require.NoError(t, b.AddRef(callDataCell))
-	}
+	require.NoError(t, tlb.Grams(depositAmount).MarshalTLB(b, nil))
+	require.NoError(t, tlb.Grams(txFee).MarshalTLB(b, nil))
 
 	return b
 }
