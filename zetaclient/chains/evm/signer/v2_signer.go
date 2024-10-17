@@ -23,11 +23,11 @@ func (signer *Signer) SignOutboundFromCCTXV2(
 	case evm.OutboundTypeERC20Withdraw, evm.OutboundTypeERC20WithdrawRevert:
 		return signer.signERC20CustodyWithdraw(ctx, outboundData)
 	case evm.OutboundTypeERC20WithdrawAndCall:
-		return signer.signERC20CustodyWithdrawAndCall(ctx, cctx.InboundParams.Sender, outboundData)
+		return signer.signERC20CustodyWithdrawAndCall(ctx, outboundData)
 	case evm.OutboundTypeGasWithdrawAndCall, evm.OutboundTypeCall:
 		// both gas withdraw and call and no-asset call uses gateway execute
 		// no-asset call simply hash msg.value == 0
-		return signer.signGatewayExecute(ctx, cctx.InboundParams.Sender, outboundData)
+		return signer.signGatewayExecute(ctx, outboundData)
 	case evm.OutboundTypeGasWithdrawRevertAndCallOnRevert:
 		return signer.signGatewayExecuteRevert(ctx, cctx.InboundParams.Sender, outboundData)
 	case evm.OutboundTypeERC20WithdrawRevertAndCallOnRevert:

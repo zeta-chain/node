@@ -19,7 +19,6 @@ import (
 // bytes calldata data
 func (signer *Signer) signGatewayExecute(
 	ctx context.Context,
-	sender string,
 	txData *OutboundData,
 ) (*ethtypes.Transaction, error) {
 	gatewayABI, err := gatewayevm.GatewayEVMMetaData.GetAbi()
@@ -27,16 +26,12 @@ func (signer *Signer) signGatewayExecute(
 		return nil, errors.Wrap(err, "unable to get GatewayEVMMetaData ABI")
 	}
 
-	var data []byte
+	messageContext, err := txData.MessageContext()
+	if err != nil {
+		return nil, err
+	}
 
-	// if sender is provided in messageContext call is authenticated and target is Callable.onCall
-	// otherwise, call is arbitrary
-	messageContext := gatewayevm.MessageContext{
-		Sender: common.HexToAddress(sender),
-	}
-	if txData.outboundParams.CallOptions.IsArbitraryCall {
-		messageContext.Sender = common.Address{}
-	}
+	var data []byte
 
 	data, err = gatewayABI.Pack("execute", messageContext, txData.to, txData.message)
 	if err != nil {
@@ -147,7 +142,6 @@ func (signer *Signer) signERC20CustodyWithdraw(
 // bytes calldata data
 func (signer *Signer) signERC20CustodyWithdrawAndCall(
 	ctx context.Context,
-	sender string,
 	txData *OutboundData,
 ) (*ethtypes.Transaction, error) {
 	erc20CustodyV2ABI, err := erc20custodyv2.ERC20CustodyMetaData.GetAbi()
@@ -155,13 +149,9 @@ func (signer *Signer) signERC20CustodyWithdrawAndCall(
 		return nil, errors.Wrap(err, "unable to get ERC20CustodyMetaData ABI")
 	}
 
-	// if sender is provided in messageContext call is authenticated and target is Callable.onCall
-	// otherwise, call is arbitrary
-	messageContext := gatewayevm.MessageContext{
-		Sender: common.HexToAddress(sender),
-	}
-	if txData.outboundParams.CallOptions.IsArbitraryCall {
-		messageContext.Sender = common.Address{}
+	messageContext, err := txData.MessageContext()
+	if err != nil {
+		return nil, err
 	}
 
 	data, err := erc20CustodyV2ABI.Pack(
