@@ -18,7 +18,7 @@ import (
 // The caller cosmos address will be calculated from the EVM caller address. by executing toAddr := sdk.AccAddress(addr.Bytes()).
 // This function can be think of a permissionless way of minting cosmos coins.
 // This is how deposit works:
-// - The caller has to allow the bank contract to spend a certain amount ZRC20 token coins on its behalf. This is mandatory.
+// - The caller has to allow the bank precompile address to spend a certain amount ZRC20 token coins on its behalf. This is mandatory.
 // - Then, the caller calls deposit(ZRC20 address, amount), to deposit the amount and receive cosmos coins.
 // - The bank will check there's enough balance, the caller is not a blocked address, and the token is a not paused ZRC20.
 // - Then the cosmos coins "zrc20/0x12345" will be minted and sent to the caller's cosmos address.
@@ -59,22 +59,6 @@ func (c *Contract) deposit(
 		return nil, err
 	}
 
-	// Safety check: token has to be a valid whitelisted ZRC20 and not be paused.
-	t, found := c.fungibleKeeper.GetForeignCoins(ctx, zrc20Addr.String())
-	if !found {
-		return nil, &ptypes.ErrInvalidToken{
-			Got:    zrc20Addr.String(),
-			Reason: "token is not a whitelisted ZRC20",
-		}
-	}
-
-	if t.Paused {
-		return nil, &ptypes.ErrInvalidToken{
-			Got:    zrc20Addr.String(),
-			Reason: "token is paused",
-		}
-	}
-
 	// Check for enough balance.
 	// function balanceOf(address account) public view virtual override returns (uint256)
 	resBalanceOf, err := c.CallContract(
@@ -105,68 +89,21 @@ func (c *Contract) deposit(
 		}
 	}
 
-	// Check for enough bank's allowance.
-	// function allowance(address owner, address spender) public view virtual override returns (uint256)
-	resAllowance, err := c.CallContract(
-		ctx,
-		&c.fungibleKeeper,
-		c.zrc20ABI,
-		zrc20Addr,
-		"allowance",
-		[]interface{}{caller, ContractAddress},
-	)
-	if err != nil {
-		return nil, &ptypes.ErrUnexpected{
-			When: "allowance",
-			Got:  err.Error(),
-		}
-	}
-
-	allowance, ok := resAllowance[0].(*big.Int)
-	if !ok {
-		return nil, &ptypes.ErrUnexpected{
-			Got: "ZRC20 allowance returned an unexpected type",
-		}
-	}
-
-	if allowance.Cmp(amount) < 0 || allowance.Cmp(big.NewInt(0)) <= 0 {
-		return nil, &ptypes.ErrInvalidAmount{
-			Got: allowance.String(),
-		}
-	}
-
 	// The process of creating a new cosmos coin is:
 	// - Generate the new coin denom using ZRC20 address,
 	//   this way we map ZRC20 addresses to cosmos denoms "zevm/0x12345".
-	// - Mint coins.
-	// - Send coins to the caller.
+	// - Mint coins to the fungible module.
+	// - Send coins from fungible to the caller.
 	coinSet, err := createCoinSet(ZRC20ToCosmosDenom(zrc20Addr), amount)
 	if err != nil {
 		return nil, err
 	}
 
 	// 2. Effect: subtract balance.
-	// function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool)
-	resTransferFrom, err := c.CallContract(
-		ctx,
-		&c.fungibleKeeper,
-		c.zrc20ABI,
-		zrc20Addr,
-		"transferFrom",
-		[]interface{}{caller, ContractAddress, amount},
-	)
-	if err != nil {
+	if err := c.fungibleKeeper.LockZRC20(ctx, c.zrc20ABI, zrc20Addr, c.Address(), caller, c.Address(), amount); err != nil {
 		return nil, &ptypes.ErrUnexpected{
-			When: "transferFrom",
+			When: "LockZRC20InBank",
 			Got:  err.Error(),
-		}
-	}
-
-	transferred, ok := resTransferFrom[0].(bool)
-	if !ok || !transferred {
-		return nil, &ptypes.ErrUnexpected{
-			When: "transferFrom",
-			Got:  "transaction not successful",
 		}
 	}
 
@@ -205,7 +142,7 @@ func unpackDepositArgs(args []interface{}) (zrc20Addr common.Address, amount *bi
 	}
 
 	amount, ok = args[1].(*big.Int)
-	if !ok || amount.Sign() < 0 || amount == nil || amount == new(big.Int) {
+	if !ok || amount == nil || amount.Sign() <= 0 {
 		return common.Address{}, nil, &ptypes.ErrInvalidAmount{
 			Got: amount.String(),
 		}
