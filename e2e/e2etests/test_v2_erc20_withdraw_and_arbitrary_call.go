@@ -13,7 +13,7 @@ import (
 
 const payloadMessageWithdrawERC20 = "this is a test ERC20 withdraw and call payload"
 
-func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, args []string) {
+func TestV2ERC20WithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	amount, ok := big.NewInt(0).SetString(args[0], 10)

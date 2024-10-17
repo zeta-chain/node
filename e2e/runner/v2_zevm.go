@@ -149,6 +149,35 @@ func (r *E2ERunner) V2ERC20WithdrawAndCall(
 	return tx
 }
 
+// V2ERC20WithdrawAndCall calls authenticated WithdrawAndCall of Gateway with erc20 token on ZEVM
+func (r *E2ERunner) V2ERC20WithdrawAndAuthenticatedCall(
+	receiver ethcommon.Address,
+	amount *big.Int,
+	payload []byte,
+	revertOptions gatewayzevm.RevertOptions,
+) *ethtypes.Transaction {
+	// this function take more gas than default 500k
+	// so we need to increase the gas limit
+	previousGasLimit := r.ZEVMAuth.GasLimit
+	r.ZEVMAuth.GasLimit = 10000000
+	defer func() {
+		r.ZEVMAuth.GasLimit = previousGasLimit
+	}()
+
+	tx, err := r.GatewayZEVM.WithdrawAndCall0(
+		r.ZEVMAuth,
+		receiver.Bytes(),
+		amount,
+		r.ERC20ZRC20Addr,
+		payload,
+		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: false},
+		revertOptions,
+	)
+	require.NoError(r, err)
+
+	return tx
+}
+
 // V2ZEVMToEMVCall calls Call of Gateway on ZEVM
 func (r *E2ERunner) V2ZEVMToEMVCall(
 	receiver ethcommon.Address,
