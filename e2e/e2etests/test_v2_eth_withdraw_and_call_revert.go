@@ -28,10 +28,15 @@ func TestV2ETHWithdrawAndCallRevert(r *runner.E2ERunner, args []string) {
 	require.EqualValues(r, int64(0), balance.Int64())
 
 	// perform the withdraw
-	tx := r.V2ETHWithdrawAndArbitraryCall(r.TestDAppV2EVMAddr, amount, r.EncodeGasCall("revert"), gatewayzevm.RevertOptions{
-		RevertAddress:    revertAddress,
-		OnRevertGasLimit: big.NewInt(0),
-	})
+	tx := r.V2ETHWithdrawAndArbitraryCall(
+		r.TestDAppV2EVMAddr,
+		amount,
+		r.EncodeGasCall("revert"),
+		gatewayzevm.RevertOptions{
+			RevertAddress:    revertAddress,
+			OnRevertGasLimit: big.NewInt(0),
+		},
+	)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

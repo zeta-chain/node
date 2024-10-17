@@ -164,7 +164,14 @@ func (signer *Signer) signERC20CustodyWithdrawAndCall(
 		messageContext.Sender = common.Address{}
 	}
 
-	data, err := erc20CustodyV2ABI.Pack("withdrawAndCall", messageContext, txData.to, txData.asset, txData.amount, txData.message)
+	data, err := erc20CustodyV2ABI.Pack(
+		"withdrawAndCall",
+		messageContext,
+		txData.to,
+		txData.asset,
+		txData.amount,
+		txData.message,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("withdraw pack error: %w", err)
 	}

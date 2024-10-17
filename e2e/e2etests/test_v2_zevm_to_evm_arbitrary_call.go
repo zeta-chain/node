@@ -22,9 +22,13 @@ func TestV2ZEVMToEVMArbitraryCall(r *runner.E2ERunner, args []string) {
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// perform the call
-	tx := r.V2ZEVMToEMVArbitraryCall(r.TestDAppV2EVMAddr, r.EncodeSimpleCall(payloadMessageEVMCall), gatewayzevm.RevertOptions{
-		OnRevertGasLimit: big.NewInt(0),
-	})
+	tx := r.V2ZEVMToEMVArbitraryCall(
+		r.TestDAppV2EVMAddr,
+		r.EncodeSimpleCall(payloadMessageEVMCall),
+		gatewayzevm.RevertOptions{
+			OnRevertGasLimit: big.NewInt(0),
+		},
+	)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
