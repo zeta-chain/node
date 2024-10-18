@@ -6,6 +6,7 @@ import (
 	context "context"
 
 	mock "github.com/stretchr/testify/mock"
+	liteclient "github.com/tonkeeper/tongo/liteclient"
 
 	tlb "github.com/tonkeeper/tongo/tlb"
 
@@ -80,6 +81,34 @@ func (_m *LiteClient) GetFirstTransaction(ctx context.Context, id ton.AccountID)
 	}
 
 	return r0, r1, r2
+}
+
+// GetMasterchainInfo provides a mock function with given fields: ctx
+func (_m *LiteClient) GetMasterchainInfo(ctx context.Context) (liteclient.LiteServerMasterchainInfoC, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMasterchainInfo")
+	}
+
+	var r0 liteclient.LiteServerMasterchainInfoC
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (liteclient.LiteServerMasterchainInfoC, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) liteclient.LiteServerMasterchainInfoC); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(liteclient.LiteServerMasterchainInfoC)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetTransactionsSince provides a mock function with given fields: ctx, acc, lt, bits

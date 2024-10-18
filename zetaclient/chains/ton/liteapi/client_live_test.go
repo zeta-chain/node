@@ -136,6 +136,34 @@ func TestClient(t *testing.T) {
 		require.NotZero(t, header.MinRefMcSeqno)
 		require.Equal(t, header.MinRefMcSeqno, header.MasterRef.Master.SeqNo)
 	})
+
+	t.Run("GetMasterchainInfo", func(t *testing.T) {
+		// ARRANGE
+		// all bits are 1 (0xFFF...) or also `-1` in TON's notation
+		const masterChain = uint32(1<<32 - 1)
+
+		// ACT #1
+		mc, err := client.GetMasterchainInfo(ctx)
+
+		// ASSERT #1
+		require.NoError(t, err)
+		require.Equal(t, masterChain, mc.Last.Workchain)
+
+		// ACT #2
+		block, err := client.GetBlockHeader(ctx, mc.Last.ToBlockIdExt(), 0)
+
+		// ASSERT #2
+		require.NoError(t, err)
+		require.False(t, block.NotMaster)
+
+		// Check that block was generated less than 10 seconds ago
+		blockTime := time.Unix(int64(block.GenUtime), 0).UTC()
+		since := time.Since(blockTime)
+
+		assert.LessOrEqual(t, since, 20*time.Second)
+
+		t.Logf("Masterchain block #%d is generated at %q (%s ago)", block.SeqNo, blockTime, since.String())
+	})
 }
 
 func mustCreateClient(t *testing.T) *liteapi.Client {
