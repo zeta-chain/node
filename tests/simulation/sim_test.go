@@ -114,7 +114,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				simutils.AppStateFn(
 					simApp.AppCodec(),
 					simApp.SimulationManager(),
-					simApp.ModuleBasics.DefaultGenesis(simApp.AppCodec()),
+					simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
 				),
 				cosmossim.RandomAccounts,
 				cosmossimutils.SimulationOperations(simApp, simApp.AppCodec(), config),
@@ -191,7 +191,7 @@ func TestFullAppSimulation(t *testing.T) {
 		simutils.AppStateFn(
 			simApp.AppCodec(),
 			simApp.SimulationManager(),
-			simApp.ModuleBasics.DefaultGenesis(simApp.AppCodec()),
+			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
 		),
 		cosmossim.RandomAccounts,
 		cosmossimutils.SimulationOperations(simApp, simApp.AppCodec(), config),

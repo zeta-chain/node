@@ -229,7 +229,7 @@ type App struct {
 
 	mm           *module.Manager
 	sm           *module.SimulationManager
-	ModuleBasics module.BasicManager
+	mb           module.BasicManager
 	configurator module.Configurator
 
 	// sdk keepers
@@ -712,7 +712,7 @@ func New(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 	)
 
-	app.ModuleBasics = ModuleBasics
+	app.mb = ModuleBasics
 
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
@@ -943,7 +943,7 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register legacy and grpc-gateway routes for all modules.
-	app.ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	app.mb.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// register app's OpenAPI routes.
 	if apiConfig.Swagger {
@@ -1033,6 +1033,11 @@ func VerifyAddressFormat(bz []byte) error {
 // SimulationManager implements the SimulationApp interface
 func (app *App) SimulationManager() *module.SimulationManager {
 	return app.sm
+}
+
+func (app *App) BasicManager() module.BasicManager {
+	return app.mb
+
 }
 
 func (app *App) BlockedAddrs() map[string]bool {
