@@ -45,7 +45,7 @@ type OutboundData struct {
 	revertOptions types.RevertOptions
 
 	// callOptions field determinenes if call is arbitrary or authenticated and contains gasLimit
-	callOptions *types.CallOptions
+	callOptions types.CallOptions
 }
 
 // NewOutboundData creates OutboundData from the given CCTX.
@@ -147,12 +147,12 @@ func NewOutboundData(
 
 		revertOptions: cctx.RevertOptions,
 
-		callOptions: callOptions,
+		callOptions: *callOptions,
 	}, false, nil
 }
 
 func (o OutboundData) MessageContext() (gatewayevm.MessageContext, error) {
-	if o.callOptions == nil {
+	if o.callOptions == (types.CallOptions{}) {
 		return gatewayevm.MessageContext{}, errors.New("call options not found")
 	}
 	// if sender is provided in messageContext call is authenticated and target is Callable.onCall
