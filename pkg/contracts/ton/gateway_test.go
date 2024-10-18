@@ -1,12 +1,15 @@
 package ton
 
 import (
+	"crypto/ecdsa"
 	"embed"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,7 +19,8 @@ import (
 )
 
 func TestParsing(t *testing.T) {
-	swapBodyAndParse := func(gw *Gateway, tx ton.Transaction, body *boc.Cell) *Transaction {
+	// small helpers that allows to alter inMsg body and parse it again
+	alterBodyAndParse := func(gw *Gateway, tx ton.Transaction, body *boc.Cell) *Transaction {
 		tx.Msgs.InMsg.Value.Value.Body.Value = tlb.Any(*body)
 
 		parsed, err := gw.ParseTransaction(tx)
@@ -44,7 +48,7 @@ func TestParsing(t *testing.T) {
 
 		const (
 			expectedSender   = "0:9594c719ec4c95f66683b2fb1ca0b09de4a41f6fb087ba4c8d265b96a4cce50f"
-			expectedDonation = 1_499_432_947 // 1.49... TON
+			expectedDonation = 599_509_877 // ~0.6 TON
 		)
 
 		donation, err := parsedTX.Donation()
@@ -54,7 +58,7 @@ func TestParsing(t *testing.T) {
 
 		// Check that AsBody works
 		var (
-			parsedTX2 = swapBodyAndParse(gw, tx, lo.Must(donation.AsBody()))
+			parsedTX2 = alterBodyAndParse(gw, tx, lo.Must(donation.AsBody()))
 			donation2 = lo.Must(parsedTX2.Donation())
 		)
 
@@ -84,13 +88,13 @@ func TestParsing(t *testing.T) {
 
 		const (
 			expectedSender  = "0:9594c719ec4c95f66683b2fb1ca0b09de4a41f6fb087ba4c8d265b96a4cce50f"
-			vitalikDotETH   = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
-			expectedDeposit = 990_000_000 // 0.99 TON
+			zevmRecipient   = "0xA1eb8D65b765D259E7520B791bc4783AdeFDd998"
+			expectedDeposit = 996_000_000 // 0.996 TON
 		)
 
 		assert.Equal(t, expectedSender, deposit.Sender.ToRaw())
 		assert.Equal(t, expectedDeposit, int(deposit.Amount.Uint64()))
-		assert.Equal(t, vitalikDotETH, deposit.Recipient.Hex())
+		assert.Equal(t, zevmRecipient, deposit.Recipient.Hex())
 
 		// Check that other casting fails
 		_, err = parsedTX.Donation()
@@ -98,7 +102,7 @@ func TestParsing(t *testing.T) {
 
 		// Check that AsBody works
 		var (
-			parsedTX2 = swapBodyAndParse(gw, tx, lo.Must(deposit.AsBody()))
+			parsedTX2 = alterBodyAndParse(gw, tx, lo.Must(deposit.AsBody()))
 			deposit2  = lo.Must(parsedTX2.Deposit())
 		)
 
@@ -127,25 +131,33 @@ func TestParsing(t *testing.T) {
 		assert.NoError(t, err)
 
 		const (
-			expectedSender  = "0:9594c719ec4c95f66683b2fb1ca0b09de4a41f6fb087ba4c8d265b96a4cce50f"
-			vitalikDotETH   = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
-			expectedDeposit = 490_000_000 // 0.49 TON
+			expectedSender   = "0:9594c719ec4c95f66683b2fb1ca0b09de4a41f6fb087ba4c8d265b96a4cce50f"
+			zevmRecipient    = "0xA1eb8D65b765D259E7520B791bc4783AdeFDd998"
+			expectedDeposit  = 394_800_000 // 0.4 TON - tx fee
+			expectedCallData = `These "NFTs" - are they in the room with us right now?`
 		)
-
-		expectedCallData := readFixtureFile(t, "testdata/long-call-data.txt")
 
 		assert.Equal(t, expectedSender, depositAndCall.Sender.ToRaw())
 		assert.Equal(t, expectedDeposit, int(depositAndCall.Amount.Uint64()))
-		assert.Equal(t, vitalikDotETH, depositAndCall.Recipient.Hex())
-		assert.Equal(t, expectedCallData, depositAndCall.CallData)
+		assert.Equal(t, zevmRecipient, depositAndCall.Recipient.Hex())
+		assert.Equal(t, []byte(expectedCallData), depositAndCall.CallData)
 
-		// Check that AsBody works
-		var (
-			parsedTX2       = swapBodyAndParse(gw, tx, lo.Must(depositAndCall.AsBody()))
-			depositAndCall2 = lo.Must(parsedTX2.DepositAndCall())
-		)
+		t.Run("Long call data", func(t *testing.T) {
+			// ARRANGE
+			longCallData := readFixtureFile(t, "testdata/long-call-data.txt")
+			depositAndCall.CallData = longCallData
 
-		assert.Equal(t, depositAndCall, depositAndCall2)
+			// ACT
+			parsedTX = alterBodyAndParse(gw, tx, lo.Must(depositAndCall.AsBody()))
+
+			depositAndCall2, err := parsedTX.DepositAndCall()
+
+			// ASSERT
+			require.NoError(t, err)
+
+			assert.Equal(t, longCallData, depositAndCall2.CallData)
+		})
+
 	})
 
 	t.Run("Irrelevant tx", func(t *testing.T) {
@@ -167,7 +179,7 @@ func TestParsing(t *testing.T) {
 			assert.ErrorContains(t, err, "is not successful (exit code 102)")
 		})
 
-		t.Run("not a deposit nor withdrawal", func(t *testing.T) {
+		t.Run("not a deposit nor a withdrawal", func(t *testing.T) {
 			// actually, it's a bounce of the previous tx
 
 			// ARRANGE
@@ -237,8 +249,8 @@ func TestFixtures(t *testing.T) {
 	tx, _ := getFixtureTX(t, "01-deposit")
 
 	// ASSERT
-	require.Equal(t, uint64(26023788000003), tx.Lt)
-	require.Equal(t, "cbd6e2261334d08120e2fef428ecbb4e7773606ced878d0e6da204f2b4bf42bf", tx.Hash().Hex())
+	require.Equal(t, uint64(27040013000003), tx.Lt)
+	require.Equal(t, "f893d7ed7fc3d73aedb44ca7c350026a5d27e679cf85c0c8df9e69db28387b06", tx.Hash().Hex())
 }
 
 func TestSnakeData(t *testing.T) {
@@ -260,6 +272,46 @@ func TestSnakeData(t *testing.T) {
 
 		assert.Equal(t, a, b, tt)
 	}
+}
+
+func TestDeployment(t *testing.T) {
+	// ARRANGE
+	// Given TSS address & Authority address
+	const (
+		sampleTSSPrivateKey = "0xb984cd65727cfd03081fc7bf33bf5c208bca697ce16139b5ded275887e81395a"
+		sampleAuthority     = "0:4686a2c066c784a915f3e01c853d3195ed254c948e21adbb3e4a9b3f5f3c74d7"
+	)
+
+	pkBytes, err := hex.DecodeString(sampleTSSPrivateKey[2:])
+	require.NoError(t, err)
+
+	privateKey, err := crypto.ToECDSA(pkBytes)
+	require.NoError(t, err)
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	require.True(t, ok)
+
+	tss := crypto.PubkeyToAddress(*publicKeyECDSA)
+
+	// ACT
+	code := GatewayCode()
+	stateInit := GatewayStateInit(ton.MustParseAccountID(sampleAuthority), tss, true)
+
+	// ASSERT
+	codeString, err := code.ToBocStringCustom(false, true, false, 0)
+	require.NoError(t, err)
+
+	stateString, err := stateInit.ToBocStringCustom(false, true, false, 0)
+	require.NoError(t, err)
+
+	t.Logf("Gateway code: %s", codeString)
+	t.Logf("Gateway state: %s", stateString)
+
+	// Taken from jest tests in protocol-contracts-ton (using the same vars for initState config)
+	const expectedState = "b5ee9c7241010101003c000074800000000124d38a790fdf1d9311fae87d4b21aeffd77bc26c004686a2c066c784a915f3e01c853d3195ed254c948e21adbb3e4a9b3f5f3c74d746f17671"
+
+	require.Equal(t, expectedState, stateString)
 }
 
 //go:embed testdata

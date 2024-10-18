@@ -7,7 +7,10 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/tonkeeper/tongo/config"
+	"github.com/tonkeeper/tongo/liteapi"
+	"github.com/tonkeeper/tongo/tlb"
 )
 
 type GlobalConfigurationFile = config.GlobalConfigurationFile
@@ -51,4 +54,52 @@ func ConfigFromSource(ctx context.Context, urlOrPath string) (*GlobalConfigurati
 	}
 
 	return ConfigFromPath(urlOrPath)
+}
+
+// ConfigGetter represents LiteAPI config getter.
+type ConfigGetter interface {
+	GetConfigParams(ctx context.Context, mode liteapi.ConfigMode, params []uint32) (tlb.ConfigParams, error)
+}
+
+// FetchGasConfig fetches gas price from the config.
+func FetchGasConfig(ctx context.Context, getter ConfigGetter) (tlb.GasLimitsPrices, error) {
+	// https://docs.ton.org/develop/howto/blockchain-configs
+	// https://tonviewer.com/config#21
+	const configKeyGas = 21
+
+	response, err := getter.GetConfigParams(ctx, 0, []uint32{configKeyGas})
+	if err != nil {
+		return tlb.GasLimitsPrices{}, errors.Wrap(err, "failed to get config params")
+	}
+
+	ref, ok := response.Config.Get(configKeyGas)
+	if !ok {
+		return tlb.GasLimitsPrices{}, errors.Errorf("config key %d not found", configKeyGas)
+	}
+
+	var cfg tlb.ConfigParam21
+	if err = tlb.Unmarshal(&ref.Value, &cfg); err != nil {
+		return tlb.GasLimitsPrices{}, errors.Wrap(err, "failed to unmarshal config param")
+	}
+
+	return cfg.GasLimitsPrices, nil
+}
+
+// ParseGasPrice parses gas price from the config and returns price in tons per 1 gas unit.
+func ParseGasPrice(cfg tlb.GasLimitsPrices) (uint64, error) {
+	// from TON docs: gas_price: This parameter reflects
+	// the price of gas in the network, in nano tons per 65536 gas units (2^16).
+	switch cfg.SumType {
+	case "GasPrices":
+		return cfg.GasPrices.GasPrice >> 16, nil
+	case "GasPricesExt":
+		return cfg.GasPricesExt.GasPrice >> 16, nil
+	case "GasFlatPfx":
+		if cfg.GasFlatPfx.Other == nil {
+			return 0, errors.New("GasFlatPfx.Other is nil")
+		}
+		return ParseGasPrice(*cfg.GasFlatPfx.Other)
+	default:
+		return 0, errors.Errorf("unknown SumType: %q", cfg.SumType)
+	}
 }

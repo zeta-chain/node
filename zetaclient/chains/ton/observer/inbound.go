@@ -30,16 +30,15 @@ func (ob *Observer) watchInbound(ctx context.Context) error {
 	}
 
 	var (
-		chainID         = ob.Chain().ChainId
 		initialInterval = ticker.SecondsFromUint64(ob.ChainParams().InboundTicker)
 		sampledLogger   = ob.Logger().Inbound.Sample(&zerolog.BasicSampler{N: 10})
 	)
 
-	ob.Logger().Inbound.Info().Msgf("WatchInbound started for chain %d", chainID)
+	ob.Logger().Inbound.Info().Msgf("WatchInbound started")
 
 	task := func(ctx context.Context, t *ticker.Ticker) error {
 		if !app.IsInboundObservationEnabled() {
-			sampledLogger.Info().Msgf("WatchInbound: inbound observation is disabled for chain %d", chainID)
+			sampledLogger.Info().Msg("WatchInbound: inbound observation is disabled")
 			return nil
 		}
 
