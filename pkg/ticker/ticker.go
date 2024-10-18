@@ -66,7 +66,7 @@ type Opt func(*Ticker)
 // WithLogger sets the logger for the Ticker.
 func WithLogger(log zerolog.Logger, name string) Opt {
 	return func(t *Ticker) {
-		t.logger = log.With().Str("ticker_name", name).Logger()
+		t.logger = log.With().Str("ticker.name", name).Logger()
 	}
 }
 
@@ -82,6 +82,7 @@ func New(interval time.Duration, task Task, opts ...Opt) *Ticker {
 	t := &Ticker{
 		interval: interval,
 		task:     task,
+		logger:   zerolog.Nop(),
 	}
 
 	for _, opt := range opts {
@@ -161,6 +162,11 @@ func (t *Ticker) SetInterval(interval time.Duration) {
 	if t.interval == interval || t.ticker == nil {
 		return
 	}
+
+	t.logger.Info().
+		Dur("ticker.old_interval", t.interval).
+		Dur("ticker.new_interval", interval).
+		Msg("Changing interval")
 
 	t.interval = interval
 	t.ticker.Reset(interval)

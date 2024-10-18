@@ -16,6 +16,7 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	zetaton "github.com/zeta-chain/node/zetaclient/chains/ton"
 	"github.com/zeta-chain/node/zetaclient/common"
 )
 
@@ -28,9 +29,11 @@ type Observer struct {
 }
 
 // LiteClient represents a TON client
+// see https://github.com/ton-blockchain/ton/blob/master/tl/generate/scheme/tonlib_api.tl
 //
 //go:generate mockery --name LiteClient --filename ton_liteclient.go --case underscore --output ../../../testutils/mocks
 type LiteClient interface {
+	zetaton.ConfigGetter
 	GetMasterchainInfo(ctx context.Context) (liteclient.LiteServerMasterchainInfoC, error)
 	GetBlockHeader(ctx context.Context, blockID ton.BlockIDExt, mode uint32) (tlb.BlockInfo, error)
 	GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, bits ton.Bits256) ([]ton.Transaction, error)
@@ -88,9 +91,54 @@ func (ob *Observer) VoteOutboundIfConfirmed(_ context.Context, _ *types.CrossCha
 }
 
 // watchGasPrice observes TON gas price and votes it to Zetacore.
-func (ob *Observer) watchGasPrice(_ context.Context) error {
-	// todo implement me
-	return nil
+func (ob *Observer) watchGasPrice(ctx context.Context) error {
+	task := func(ctx context.Context, t *ticker.Ticker) error {
+		if err := ob.postGasPrice(ctx); err != nil {
+			ob.Logger().GasPrice.Err(err).Msg("reportGasPrice error")
+		}
+
+		newInternal := ticker.SecondsFromUint64(ob.ChainParams().GasPriceTicker)
+		t.SetInterval(newInternal)
+
+		return nil
+	}
+
+	ob.Logger().GasPrice.Info().Msgf("WatchGasPrice started")
+
+	return ticker.Run(
+		ctx,
+		ticker.SecondsFromUint64(ob.ChainParams().GasPriceTicker),
+		task,
+		ticker.WithStopChan(ob.StopChannel()),
+		ticker.WithLogger(ob.Logger().GasPrice, "WatchGasPrice"),
+	)
+}
+
+// postGasPrice fetches on-chain gas config and reports it to Zetacore.
+func (ob *Observer) postGasPrice(ctx context.Context) error {
+	cfg, err := zetaton.FetchGasConfig(ctx, ob.client)
+	if err != nil {
+		return errors.Wrap(err, "failed to fetch gas config")
+	}
+
+	gasPrice, err := zetaton.ParseGasPrice(cfg)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse gas price")
+	}
+
+	blockID, err := ob.getLatestMasterchainBlock(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get latest masterchain block")
+	}
+
+	// There's no concept of priority fee in TON
+	const priorityFee = 0
+
+	_, errVote := ob.
+		ZetacoreClient().
+		PostVoteGasPrice(ctx, ob.Chain(), gasPrice, priorityFee, uint64(blockID.Seqno))
+
+	return errVote
 }
 
 // watchRPCStatus observes TON RPC status.
@@ -114,20 +162,18 @@ func (ob *Observer) watchRPCStatus(ctx context.Context) error {
 
 // checkRPCStatus checks TON RPC status and alerts if necessary.
 func (ob *Observer) checkRPCStatus(ctx context.Context) error {
-	mc, err := ob.client.GetMasterchainInfo(ctx)
+	blockID, err := ob.getLatestMasterchainBlock(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to get masterchain info")
+		return errors.Wrap(err, "failed to get latest masterchain block")
 	}
 
-	blockID := mc.Last
-
-	block, err := ob.client.GetBlockHeader(ctx, blockID.ToBlockIdExt(), 0)
+	block, err := ob.client.GetBlockHeader(ctx, blockID, 0)
 	if err != nil {
 		return errors.Wrap(err, "failed to get masterchain block header")
 	}
 
 	if block.NotMaster {
-		return errors.Errorf("block %q is not a master block", blockID.ToBlockIdExt().BlockID.String())
+		return errors.Errorf("block %q is not a master block", blockID.BlockID.String())
 	}
 
 	blockTime := time.Unix(int64(block.GenUtime), 0).UTC()
@@ -138,4 +184,13 @@ func (ob *Observer) checkRPCStatus(ctx context.Context) error {
 	ob.AlertOnRPCLatency(blockTime, defaultAlertLatency)
 
 	return nil
+}
+
+func (ob *Observer) getLatestMasterchainBlock(ctx context.Context) (ton.BlockIDExt, error) {
+	mc, err := ob.client.GetMasterchainInfo(ctx)
+	if err != nil {
+		return ton.BlockIDExt{}, errors.Wrap(err, "failed to get masterchain info")
+	}
+
+	return mc.Last.ToBlockIdExt(), nil
 }

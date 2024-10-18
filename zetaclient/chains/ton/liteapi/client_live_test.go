@@ -8,12 +8,15 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/config"
 	"github.com/tonkeeper/tongo/liteapi"
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
+	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
+	zetaton "github.com/zeta-chain/node/zetaclient/chains/ton"
 	"github.com/zeta-chain/node/zetaclient/common"
 )
 
@@ -163,6 +166,27 @@ func TestClient(t *testing.T) {
 		assert.LessOrEqual(t, since, 20*time.Second)
 
 		t.Logf("Masterchain block #%d is generated at %q (%s ago)", block.SeqNo, blockTime, since.String())
+	})
+
+	t.Run("GetGasConfig", func(t *testing.T) {
+		// ACT #1
+		gas, err := zetaton.FetchGasConfig(ctx, client)
+
+		// ASSERT #1
+		require.NoError(t, err)
+		require.NotEmpty(t, gas)
+
+		// ACT #2
+		gasPrice, err := zetaton.ParseGasPrice(gas)
+
+		// ASSERT #2
+		require.NoError(t, err)
+		require.NotEmpty(t, gasPrice)
+
+		gasPricePer1000 := math.NewUint(1000 * gasPrice)
+
+		t.Logf("Gas cost: %s per 1000 gas", toncontracts.FormatCoins(gasPricePer1000))
+		t.Logf("Compare with https://tonwhales.com/explorer/network")
 	})
 }
 

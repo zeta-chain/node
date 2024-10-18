@@ -5,8 +5,10 @@ package mocks
 import (
 	context "context"
 
-	mock "github.com/stretchr/testify/mock"
+	liteapi "github.com/tonkeeper/tongo/liteapi"
 	liteclient "github.com/tonkeeper/tongo/liteclient"
+
+	mock "github.com/stretchr/testify/mock"
 
 	tlb "github.com/tonkeeper/tongo/tlb"
 
@@ -39,6 +41,34 @@ func (_m *LiteClient) GetBlockHeader(ctx context.Context, blockID ton.BlockIDExt
 
 	if rf, ok := ret.Get(1).(func(context.Context, ton.BlockIDExt, uint32) error); ok {
 		r1 = rf(ctx, blockID, mode)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetConfigParams provides a mock function with given fields: ctx, mode, params
+func (_m *LiteClient) GetConfigParams(ctx context.Context, mode liteapi.ConfigMode, params []uint32) (tlb.ConfigParams, error) {
+	ret := _m.Called(ctx, mode, params)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetConfigParams")
+	}
+
+	var r0 tlb.ConfigParams
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, liteapi.ConfigMode, []uint32) (tlb.ConfigParams, error)); ok {
+		return rf(ctx, mode, params)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, liteapi.ConfigMode, []uint32) tlb.ConfigParams); ok {
+		r0 = rf(ctx, mode, params)
+	} else {
+		r0 = ret.Get(0).(tlb.ConfigParams)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, liteapi.ConfigMode, []uint32) error); ok {
+		r1 = rf(ctx, mode, params)
 	} else {
 		r1 = ret.Error(1)
 	}
