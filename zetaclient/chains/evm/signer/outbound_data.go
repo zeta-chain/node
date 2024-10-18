@@ -73,14 +73,14 @@ func NewOutboundData(
 	var (
 		to          ethcommon.Address
 		toChainID   *big.Int
-		callOptions *types.CallOptions
+		callOptions types.CallOptions
 	)
 
 	// in protocol contract v2, receiver is always set in the outbound
 	if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 {
 		to = ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
 		toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
-		callOptions = cctx.GetCurrentOutboundParam().CallOptions
+		callOptions = *cctx.GetCurrentOutboundParam().CallOptions
 	} else {
 		// recipient + destination chain
 		var skip bool
@@ -147,7 +147,7 @@ func NewOutboundData(
 
 		revertOptions: cctx.RevertOptions,
 
-		callOptions: *callOptions,
+		callOptions: callOptions,
 	}, false, nil
 }
 
