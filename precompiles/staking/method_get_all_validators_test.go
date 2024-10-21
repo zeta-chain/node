@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/testutil/sample"
 )
@@ -17,7 +16,7 @@ func Test_GetAllValidators(t *testing.T) {
 		validatorsList := ts.sdkKeepers.StakingKeeper.GetAllValidators(ts.ctx)
 		for _, v := range validatorsList {
 			fmt.Println(v.OperatorAddress)
-			ts.sdkKeepers.StakingKeeper.RemoveValidator(ts.ctx, types.ValAddress(v.OperatorAddress))
+			ts.sdkKeepers.StakingKeeper.RemoveValidator(ts.ctx, v.GetOperator())
 		}
 
 		methodID := ts.contractABI.Methods[GetAllValidatorsMethodName]
