@@ -1,13 +1,14 @@
 package types_test
 
 import (
+	"math/big"
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"math/big"
-	"testing"
 )
 
 // TODO: Complete tests for this file
