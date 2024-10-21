@@ -35,7 +35,9 @@ func TestV2ETHDepositAndCallNoMessage(r *runner.E2ERunner, args []string) {
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
 	// check the payload was received on the contract
-	r.AssertTestDAppZEVMCalled(true, payloadNoMessage, amount)
+	messageIndex, err := r.TestDAppV2ZEVM.GetNoMessageIndex(&bind.CallOpts{}, r.EVMAddress())
+	require.NoError(r, err)
+	r.AssertTestDAppZEVMCalled(true, messageIndex, amount)
 
 	// check the balance was updated
 	newBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)

@@ -70,6 +70,9 @@ func (k Keeper) ProcessZEVMInboundV2(
 			ctx,
 			ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress),
 		)
+		if err != nil {
+			return err
+		}
 
 		// validate data of the withdrawal event
 		if err := k.validateZRC20Withdrawal(ctx, foreignCoin.ForeignChainId, value, receiver); err != nil {

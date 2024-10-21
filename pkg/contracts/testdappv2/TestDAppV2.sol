@@ -37,9 +37,17 @@ contract TestDAppV2 {
     mapping(bytes => address) public senderWithMessage;
     mapping(bytes32 => uint256) public amountWithMessage;
 
+    // return the index used for the "WithMessage" mapping when the message for calls is empty
+    // this allows testing the message with empty message
+    // this function includes the sender of the message to avoid collisions when running parallel tests with different senders
+    function getNoMessageIndex(address sender) pure public returns (string memory) {
+        return string(abi.encodePacked(NO_MESSAGE_CALL, sender));
+    }
+
     function setCalledWithMessage(string memory message) internal {
         calledWithMessage[keccak256(abi.encodePacked(message))] = true;
     }
+
     function setAmountWithMessage(string memory message, uint256 amount) internal {
         amountWithMessage[keccak256(abi.encodePacked(message))] = amount;
     }
@@ -52,7 +60,7 @@ contract TestDAppV2 {
         return amountWithMessage[keccak256(abi.encodePacked(message))];
     }
 
-    // Universal contract interface
+    // Universal contract interface on ZEVM
     function onCall(
         zContext calldata _context,
         address _zrc20,
@@ -63,8 +71,7 @@ contract TestDAppV2 {
     {
         require(!isRevertMessage(string(message)));
 
-        // if the message is empty we set the message to NO_MESSAGE_CALL
-        string memory messageStr = message.length == 0 ? NO_MESSAGE_CALL : string(message);
+        string memory messageStr = message.length == 0 ? getNoMessageIndex(_context.sender) : string(message);
 
         setCalledWithMessage(messageStr);
         setAmountWithMessage(messageStr, amount);
@@ -108,10 +115,9 @@ contract TestDAppV2 {
         senderWithMessage[revertContext.revertMessage] = revertContext.sender;
     }
 
-    // Callable interface
+    // Callable interface on connected EVM chains
     function onCall(MessageContext calldata messageContext, bytes calldata message) external payable returns (bytes memory) {
-        // if the message is empty we set the message to NO_MESSAGE_CALL
-        string memory messageStr = message.length == 0 ? NO_MESSAGE_CALL : string(message);
+        string memory messageStr = message.length == 0 ? getNoMessageIndex(messageContext.sender) : string(message);
 
         setCalledWithMessage(messageStr);
         setAmountWithMessage(messageStr, msg.value);

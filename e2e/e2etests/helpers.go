@@ -20,9 +20,6 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// payloadNoMessage is the constant used in test contract when no message is passed
-const payloadNoMessage = "called with no message"
-
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
 	tx, err := r.BTCZRC20.Approve(
 		r.ZEVMAuth,

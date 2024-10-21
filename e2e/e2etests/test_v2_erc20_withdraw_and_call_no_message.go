@@ -12,7 +12,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestV2ETHWithdrawAndCallNoMessage(r *runner.E2ERunner, args []string) {
+func TestV2ERC20WithdrawAndCallNoMessage(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	previousGasLimit := r.ZEVMAuth.GasLimit
@@ -22,12 +22,13 @@ func TestV2ETHWithdrawAndCallNoMessage(r *runner.E2ERunner, args []string) {
 	}()
 
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok, "Invalid amount specified for TestV2ETHWithdrawAndCallNoMessage")
+	require.True(r, ok, "Invalid amount specified for TestV2ERC20WithdrawAndCallNoMessage")
 
+	r.ApproveERC20ZRC20(r.GatewayZEVMAddr)
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw
-	tx := r.V2ETHWithdrawAndCall(
+	tx := r.V2ERC20WithdrawAndCall(
 		r.TestDAppV2EVMAddr,
 		amount,
 		[]byte{},

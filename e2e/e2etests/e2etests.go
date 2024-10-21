@@ -148,6 +148,7 @@ const (
 	TestV2ERC20WithdrawName                      = "v2_erc20_withdraw"
 	TestV2ERC20WithdrawAndArbitraryCallName      = "v2_erc20_withdraw_and_arbitrary_call"
 	TestV2ERC20WithdrawAndCallName               = "v2_erc20_withdraw_and_call"
+	TestV2ERC20WithdrawAndCallNoMessageName      = "v2_erc20_withdraw_and_call_no_message"
 	TestV2ERC20WithdrawAndCallRevertName         = "v2_erc20_withdraw_and_call_revert"
 	TestV2ERC20WithdrawAndCallRevertWithCallName = "v2_erc20_withdraw_and_call_revert_with_call"
 	TestV2ZEVMToEVMArbitraryCallName             = "v2_zevm_to_evm_arbitrary_call"
@@ -875,6 +876,12 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw ERC20 from ZEVM and authenticated call a contract using V2 contract",
 		[]runner.ArgDefinition{},
 		TestV2ERC20WithdrawAndCall,
+	),
+	runner.NewE2ETest(
+		TestV2ERC20WithdrawAndCallNoMessageName,
+		"withdraw ERC20 from ZEVM and authenticated call a contract using V2 contract with no message",
+		[]runner.ArgDefinition{},
+		TestV2ERC20WithdrawAndCallNoMessage,
 	),
 	runner.NewE2ETest(
 		TestV2ERC20WithdrawAndCallRevertName,
