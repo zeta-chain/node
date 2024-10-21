@@ -188,7 +188,7 @@ func Test_Distribute(t *testing.T) {
 		require.False(t, ok)
 	})
 
-	t.Run("should distribute and lock ZRC20 under the bank account", func(t *testing.T) {
+	t.Run("should distribute and lock ZRC20", func(t *testing.T) {
 		// Setup test.
 		s := newTestSuite(t)
 
@@ -217,9 +217,8 @@ func Test_Distribute(t *testing.T) {
 		ok := res[0].(bool)
 		require.True(t, ok)
 
-		// balance, err := s.fungibleKeeper.ZRC20BalanceOf(s.ctx, s.zrc20ABI, s.zrc20Address, s.defaultCaller)
-		// require.NoError(t, err)
-
-		// check it was really distributed
+		// feeCollectorAddress := s.sdkKeepers.AuthKeeper.GetModuleAccount(s.ctx, types.FeeCollectorName).GetAddress()
+		// coin := s.sdkKeepers.BankKeeper.GetBalance(s.ctx, feeCollectorAddress, ptypes.ZRC20ToCosmosDenom(s.zrc20Address))
+		// fmt.Println(coin)
 	})
 }
