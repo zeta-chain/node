@@ -1,7 +1,6 @@
 package staking
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 
@@ -12,18 +11,19 @@ import (
 func Test_GetAllValidators(t *testing.T) {
 	t.Run("should return empty array if validators not set", func(t *testing.T) {
 		// ARRANGE
-		ts := newTestSuite(t)
-		validatorsList := ts.sdkKeepers.StakingKeeper.GetAllValidators(ts.ctx)
+		s := newTestSuite(t)
+
+		// Clean all validators.
+		validatorsList := s.sdkKeepers.StakingKeeper.GetAllValidators(s.ctx)
 		for _, v := range validatorsList {
-			fmt.Println(v.OperatorAddress)
-			ts.sdkKeepers.StakingKeeper.RemoveValidator(ts.ctx, v.GetOperator())
+			s.sdkKeepers.StakingKeeper.RemoveValidator(s.ctx, v.GetOperator())
 		}
 
-		methodID := ts.contractABI.Methods[GetAllValidatorsMethodName]
-		ts.mockVMContract.Input = methodID.ID
+		methodID := s.contractABI.Methods[GetAllValidatorsMethodName]
+		s.mockVMContract.Input = methodID.ID
 
 		// ACT
-		validators, err := ts.contract.Run(ts.mockEVM, ts.mockVMContract, false)
+		validators, err := s.contract.Run(s.mockEVM, s.mockVMContract, false)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -36,15 +36,15 @@ func Test_GetAllValidators(t *testing.T) {
 
 	t.Run("should return validators if set", func(t *testing.T) {
 		// ARRANGE
-		ts := newTestSuite(t)
-		methodID := ts.contractABI.Methods[GetAllValidatorsMethodName]
-		ts.mockVMContract.Input = methodID.ID
+		s := newTestSuite(t)
+		methodID := s.contractABI.Methods[GetAllValidatorsMethodName]
+		s.mockVMContract.Input = methodID.ID
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
-		ts.sdkKeepers.StakingKeeper.SetValidator(ts.ctx, validator)
+		s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, validator)
 
 		// ACT
-		validators, err := ts.contract.Run(ts.mockEVM, ts.mockVMContract, false)
+		validators, err := s.contract.Run(s.mockEVM, s.mockVMContract, false)
 
 		// ASSERT
 		require.NoError(t, err)

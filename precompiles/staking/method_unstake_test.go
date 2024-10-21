@@ -16,27 +16,27 @@ func Test_Unstake(t *testing.T) {
 	// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
 	t.Run("should fail with error disabled", func(t *testing.T) {
 		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
-		methodID := abi.Methods[UnstakeMethodName]
+		s := newTestSuite(t)
+		methodID := s.contractABI.Methods[UnstakeMethodName]
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 
 		staker := sample.Bech32AccAddress()
 		stakerEthAddr := common.BytesToAddress(staker.Bytes())
 		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+		err := s.sdkKeepers.BankKeeper.MintCoins(s.ctx, fungibletypes.ModuleName, sample.Coins())
 		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+		err = s.sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(s.ctx, fungibletypes.ModuleName, staker, coins)
 		require.NoError(t, err)
 
 		stakerAddr := common.BytesToAddress(staker.Bytes())
-		mockVMContract.CallerAddress = stakerAddr
+		s.mockVMContract.CallerAddress = stakerAddr
 
 		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
-		mockVMContract.Input = packInputArgs(t, methodID, args...)
+		s.mockVMContract.Input = packInputArgs(t, methodID, args...)
 
 		// ACT
-		_, err = contract.Run(mockEVM, mockVMContract, false)
+		_, err = s.contract.Run(s.mockEVM, s.mockVMContract, false)
 
 		// ASSERT
 		require.Error(t, err)
