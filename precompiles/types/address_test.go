@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 )
 
-func Test_getEVMCallerAddress(t *testing.T) {
+func Test_GetEVMCallerAddress(t *testing.T) {
 	mockEVM := vm.EVM{
 		TxContext: vm.TxContext{
 			Origin: common.Address{},

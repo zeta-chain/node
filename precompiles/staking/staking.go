@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -71,12 +72,18 @@ type Contract struct {
 }
 
 func NewIStakingContract(
+	ctx sdk.Context,
 	stakingKeeper *stakingkeeper.Keeper,
 	fungibleKeeper fungiblekeeper.Keeper,
 	bankKeeper bankkeeper.Keeper,
 	cdc codec.Codec,
 	kvGasConfig storetypes.GasConfig,
 ) *Contract {
+	accAddress := sdk.AccAddress(ContractAddress.Bytes())
+	if fungibleKeeper.GetAuthKeeper().GetAccount(ctx, accAddress) == nil {
+		fungibleKeeper.GetAuthKeeper().SetAccount(ctx, authtypes.NewBaseAccount(accAddress, nil, 0, 0))
+	}
+
 	// Instantiate the ZRC20 ABI only one time.
 	// This avoids instantiating it every time deposit or withdraw are called.
 	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
@@ -174,6 +181,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 			Method: method.Name,
 		}
 
+		//nolint:govet
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
 			res, err = c.Stake(ctx, evm, contract, method, args)
@@ -189,6 +197,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 			Method: method.Name,
 		}
 
+		//nolint:govet
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
 			res, err = c.Unstake(ctx, evm, contract, method, args)
@@ -204,6 +213,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 			Method: method.Name,
 		}
 
+		//nolint:govet
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
 			res, err = c.MoveStake(ctx, evm, contract, method, args)
@@ -220,7 +230,12 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 			return err
 		})
 		if execErr != nil {
-			return nil, err
+			res, errPack := method.Outputs.Pack(false)
+			if errPack != nil {
+				return nil, errPack
+			}
+
+			return res, err
 		}
 		return res, nil
 	default:

@@ -7,7 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 )
 
-// getEVMCallerAddress returns the caller address.
+// GetEVMCallerAddress returns the caller address.
 // Usually the caller is the contract.CallerAddress, which is the address of the contract that called the precompiled contract.
 // If contract.CallerAddress != evm.Origin is true, it means the call was made through a contract,
 // on which case there is a need to set the caller to the evm.Origin.
@@ -20,7 +20,7 @@ func GetEVMCallerAddress(evm *vm.EVM, contract *vm.Contract) (common.Address, er
 	return caller, nil
 }
 
-// getCosmosAddress returns the counterpart cosmos address of the given ethereum address.
+// GetCosmosAddress returns the counterpart cosmos address of the given ethereum address.
 // It checks if the address is empty or blocked by the bank keeper.
 func GetCosmosAddress(bankKeeper bank.Keeper, addr common.Address) (sdk.AccAddress, error) {
 	toAddr := sdk.AccAddress(addr.Bytes())

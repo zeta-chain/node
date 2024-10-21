@@ -13,6 +13,10 @@ import (
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
+var (
+	zrc20lockerAddress = common.HexToAddress("0x0000000000000000000000000000000000000067")
+)
+
 // function distribute(address zrc20, uint256 amount) external returns (bool success)
 func (c *Contract) distribute(
 	ctx sdk.Context,
@@ -48,7 +52,10 @@ func (c *Contract) distribute(
 
 	// LockZRC20 locks the ZRC20 under the locker address.
 	// It performs all the necessary checks such as allowance in order to execute a transferFrom.
-	if err := c.fungibleKeeper.LockZRC20(ctx, c.zrc20ABI, zrc20Addr, c.Address(), caller, c.Address(), amount); err != nil {
+	// - spender is the staking contract address (c.Address()).
+	// - owner is the caller address.
+	// - locker is the bank address. Assets are locked under this address to prevent liquidity fragmentation.
+	if err := c.fungibleKeeper.LockZRC20(ctx, c.zrc20ABI, zrc20Addr, c.Address(), caller, zrc20lockerAddress, amount); err != nil {
 		return nil, &ptypes.ErrUnexpected{
 			When: "LockZRC20InBank",
 			Got:  err.Error(),
