@@ -25,79 +25,11 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
-	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
-
-// BTCInboundEvent represents an incoming transaction event
-type BTCInboundEvent struct {
-	// FromAddress is the first input address
-	FromAddress string
-
-	// ToAddress is the TSS address
-	ToAddress string
-
-	// Value is the amount of BTC
-	Value float64
-
-	// DepositorFee is the deposit fee
-	DepositorFee float64
-
-	// MemoBytes is the memo of inbound
-	MemoBytes []byte
-
-	// MemoStd is the standard inbound memo if it can be decoded
-	MemoStd *memo.InboundMemo
-
-	// BlockNumber is the block number of the inbound
-	BlockNumber uint64
-
-	// TxHash is the hash of the inbound
-	TxHash string
-}
-
-// InboundProcessability is an enum representing the processability of an inbound
-type InboundProcessability int
-
-const (
-	// InboundProcessabilityGood represents a processable inbound
-	InboundProcessabilityGood InboundProcessability = iota
-
-	// InboundProcessabilityDonation represents a donation inbound
-	InboundProcessabilityDonation
-
-	// InboundProcessabilityComplianceViolation represents a compliance violation
-	InboundProcessabilityComplianceViolation
-)
-
-// IsProcessable checks if the inbound event is processable
-func (event *BTCInboundEvent) CheckProcessability() InboundProcessability {
-	// compliance check on sender and receiver addresses
-	if config.ContainRestrictedAddress(event.FromAddress, event.ToAddress) {
-		return InboundProcessabilityComplianceViolation
-	}
-
-	// compliance check on receiver, revert/abort addresses in standard memo
-	if event.MemoStd != nil {
-		if config.ContainRestrictedAddress(
-			event.MemoStd.Receiver.Hex(),
-			event.MemoStd.RevertOptions.RevertAddress,
-			event.MemoStd.RevertOptions.AbortAddress,
-		) {
-			return InboundProcessabilityComplianceViolation
-		}
-	}
-
-	// donation check
-	if bytes.Equal(event.MemoBytes, []byte(constant.DonationMessage)) {
-		return InboundProcessabilityDonation
-	}
-
-	return InboundProcessabilityGood
-}
 
 // WatchInbound watches Bitcoin chain for inbounds on a ticker
 // It starts a ticker and run ObserveInbound
@@ -442,11 +374,15 @@ func (ob *Observer) CheckEventProcessability(event *BTCInboundEvent) bool {
 	return true
 }
 
-// DecodeMemoBytes decodes the memo bytes as either standard or legacy memo
-func (ob *Observer) DecodeMemoBytes(event *BTCInboundEvent) error {
-	var receiver ethcommon.Address
+// DecodeEventMemoBytes decodes the memo bytes as either standard or legacy memo
+func (ob *Observer) DecodeEventMemoBytes(event *BTCInboundEvent) error {
+	// skip decoding donation tx as it won't go through zetacore
+	if bytes.Equal(event.MemoBytes, []byte(constant.DonationMessage)) {
+		return nil
+	}
 
 	// try to decode the standard memo as the preferred format
+	var receiver ethcommon.Address
 	memoStd, err := memo.DecodeFromBytes(event.MemoBytes)
 	if err == nil {
 		event.MemoStd = memoStd
@@ -467,14 +403,14 @@ func (ob *Observer) DecodeMemoBytes(event *BTCInboundEvent) error {
 	event.ToAddress = receiver.Hex()
 
 	// ensure the revert address is valid and supported
-	if event.MemoStd != nil {
-		revertAddressStr := memoStd.RevertOptions.RevertAddress
-		revertAddressBtc, err := chains.DecodeBtcAddress(revertAddressStr, ob.Chain().ChainId)
+	revertAddress := memoStd.RevertOptions.RevertAddress
+	if event.MemoStd != nil && revertAddress != "" {
+		btcAddress, err := chains.DecodeBtcAddress(revertAddress, ob.Chain().ChainId)
 		if err != nil {
-			return errors.Wrapf(err, "invalid revert address in memo: %s", revertAddressStr)
+			return errors.Wrapf(err, "invalid revert address in memo: %s", revertAddress)
 		}
-		if !chains.IsBtcAddressSupported(revertAddressBtc) {
-			return fmt.Errorf("unsupported revert address in memo: %s", revertAddressStr)
+		if !chains.IsBtcAddressSupported(btcAddress) {
+			return fmt.Errorf("unsupported revert address in memo: %s", revertAddress)
 		}
 	}
 
@@ -491,8 +427,8 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 		logs.FieldTx:     event.TxHash,
 	}
 
-	// decode memo from bytes
-	err := ob.DecodeMemoBytes(event)
+	// decode event memo bytes
+	err := ob.DecodeEventMemoBytes(event)
 	if err != nil {
 		ob.Logger().Inbound.Info().Fields(lf).Msgf("invalid memo bytes: %s", hex.EncodeToString(event.MemoBytes))
 		return nil
@@ -634,7 +570,7 @@ func GetBtcEventWithoutWitness(
 
 			// 2nd vout must be a valid OP_RETURN memo
 			vout1 := tx.Vout[1]
-			memo, found, err = bitcoin.DecodeOpReturnMemo(vout1.ScriptPubKey.Hex, tx.Txid)
+			memo, found, err = bitcoin.DecodeOpReturnMemo(vout1.ScriptPubKey.Hex)
 			if err != nil {
 				logger.Error().Err(err).Msgf("GetBtcEvent: error decoding OP_RETURN memo: %s", vout1.ScriptPubKey.Hex)
 				return nil, nil

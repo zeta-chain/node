@@ -204,6 +204,27 @@ type waitConfig struct {
 	matchFunction func(tx crosschaintypes.CrossChainTx) bool
 }
 
+// WaitCctxRevertedByInboundHash waits until cctx is reverted by inbound hash.
+func WaitCctxRevertedByInboundHash(
+	ctx context.Context,
+	t require.TestingT,
+	hash string,
+	c CCTXClient,
+) crosschaintypes.CrossChainTx {
+	// criteria for reverted cctx
+	searchForCCTXReverted := Matches(func(tx crosschaintypes.CrossChainTx) bool {
+		return tx.GetCctxStatus().Status == crosschaintypes.CctxStatus_Reverted &&
+			len(tx.OutboundParams) == 2 &&
+			tx.OutboundParams[1].Hash != ""
+	})
+
+	// wait for cctx to be reverted
+	cctxs := WaitCctxByInboundHash(ctx, t, hash, c, searchForCCTXReverted)
+	require.Len(t, cctxs, 1)
+
+	return cctxs[0]
+}
+
 // WaitCctxByInboundHash waits until cctx appears by inbound hash.
 func WaitCctxByInboundHash(
 	ctx context.Context,

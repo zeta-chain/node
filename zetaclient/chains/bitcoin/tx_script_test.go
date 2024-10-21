@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 )
@@ -341,24 +340,26 @@ func TestDecodeOpReturnMemo(t *testing.T) {
 	require.Equal(t, scriptHex, rawResult.Vout[1].ScriptPubKey.Hex)
 
 	t.Run("should decode memo from OP_RETURN output", func(t *testing.T) {
-		memo, found, err := bitcoin.DecodeOpReturnMemo(rawResult.Vout[1].ScriptPubKey.Hex, txHash)
+		memo, found, err := bitcoin.DecodeOpReturnMemo(rawResult.Vout[1].ScriptPubKey.Hex)
 		require.NoError(t, err)
 		require.True(t, found)
 		// [OP_RETURN, 0x14,<20-byte-hash>]
 		require.Equal(t, scriptHex[4:], hex.EncodeToString(memo))
 	})
+
 	t.Run("should return nil memo non-OP_RETURN output", func(t *testing.T) {
 		// modify the OP_RETURN to OP_1
 		scriptInvalid := strings.Replace(scriptHex, "6a", "51", 1)
-		memo, found, err := bitcoin.DecodeOpReturnMemo(scriptInvalid, txHash)
+		memo, found, err := bitcoin.DecodeOpReturnMemo(scriptInvalid)
 		require.NoError(t, err)
 		require.False(t, found)
 		require.Nil(t, memo)
 	})
-	t.Run("should return nil memo on invalid script", func(t *testing.T) {
+
+	t.Run("should return nil memo on script less than 2 byte", func(t *testing.T) {
 		// use known short script
 		scriptInvalid := "00"
-		memo, found, err := bitcoin.DecodeOpReturnMemo(scriptInvalid, txHash)
+		memo, found, err := bitcoin.DecodeOpReturnMemo(scriptInvalid)
 		require.NoError(t, err)
 		require.False(t, found)
 		require.Nil(t, memo)
@@ -366,45 +367,48 @@ func TestDecodeOpReturnMemo(t *testing.T) {
 }
 
 func TestDecodeOpReturnMemoErrors(t *testing.T) {
-	// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
-	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
-	scriptHex := "6a1467ed0bcc4e1256bc2ce87d22e190d63a120114bf"
+	tests := []struct {
+		name      string
+		scriptHex string
+		errMsg    string
+	}{
+		{
+			name:      "should return error on invalid hex",
+			scriptHex: "6a14xy",
+			errMsg:    "error decoding script hex",
+		},
+		{
+			name: "should return error on memo size < 76 (OP_PUSHDATA1) mismatch",
+			scriptHex: "6a15" + // 20 bytes memo, but length is set to 21(0x15)
+				"67ed0bcc4e1256bc2ce87d22e190d63a120114bf",
+			errMsg: "memo size mismatch",
+		},
+		{
+			name:      "should return error when memo size >= 76 (OP_PUSHDATA1) but script is too short",
+			scriptHex: "6a4c", // 2 bytes only, requires at least 3 bytes
+			errMsg:    "script too short",
+		},
+		{
+			name: "should return error on memo size >= 76 (OP_PUSHDATA1) mismatch",
+			scriptHex: "6a4c4e" + // 79 bytes memo, but length is set to 78(0x4e)
+				"5a0110070a30d55c1031d30dab3b3d85f47b8f1d03df2d480961207061796c6f61642c626372743171793970716d6b32706439737636336732376a7438723635377779306439756565347832647432",
+			errMsg: "memo size mismatch",
+		},
+		{
+			name:      "should return error on invalid OP_RETURN",
+			scriptHex: "6a4d0001", // OP_PUSHDATA2, length is set to 256 (0x0001, little-endian)
+			errMsg:    "invalid OP_RETURN script",
+		},
+	}
 
-	t.Run("should return error on invalid memo size", func(t *testing.T) {
-		// use invalid memo size
-		scriptInvalid := strings.Replace(scriptHex, "6a14", "6axy", 1)
-		memo, found, err := bitcoin.DecodeOpReturnMemo(scriptInvalid, txHash)
-		require.ErrorContains(t, err, "error decoding memo size")
-		require.False(t, found)
-		require.Nil(t, memo)
-	})
-
-	t.Run("should return error on memo size mismatch", func(t *testing.T) {
-		// use wrong memo size
-		scriptInvalid := strings.Replace(scriptHex, "6a14", "6a13", 1)
-		memo, found, err := bitcoin.DecodeOpReturnMemo(scriptInvalid, txHash)
-		require.ErrorContains(t, err, "memo size mismatch")
-		require.False(t, found)
-		require.Nil(t, memo)
-	})
-
-	t.Run("should return error on invalid hex", func(t *testing.T) {
-		// use invalid hex
-		scriptInvalid := strings.Replace(scriptHex, "6a1467", "6a14xy", 1)
-		memo, found, err := bitcoin.DecodeOpReturnMemo(scriptInvalid, txHash)
-		require.ErrorContains(t, err, "error hex decoding memo")
-		require.False(t, found)
-		require.Nil(t, memo)
-	})
-
-	t.Run("should return nil memo on donation tx", func(t *testing.T) {
-		// use donation sctipt "6a0a4920616d207269636821"
-		scriptDonation := "6a0a" + hex.EncodeToString([]byte(constant.DonationMessage))
-		memo, found, err := bitcoin.DecodeOpReturnMemo(scriptDonation, txHash)
-		require.ErrorContains(t, err, "donation tx")
-		require.False(t, found)
-		require.Nil(t, memo)
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			memo, found, err := bitcoin.DecodeOpReturnMemo(tt.scriptHex)
+			require.ErrorContains(t, err, tt.errMsg)
+			require.False(t, found)
+			require.Nil(t, memo)
+		})
+	}
 }
 
 func TestDecodeSenderFromScript(t *testing.T) {
