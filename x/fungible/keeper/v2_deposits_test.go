@@ -15,6 +15,40 @@ import (
 	"testing"
 )
 
+// getTestDAppNoMessageIndex queries the no message index of the test dapp v2 contract
+func getTestDAppNoMessageIndex(
+	t *testing.T,
+	ctx sdk.Context,
+	k fungiblekeeper.Keeper,
+	contract,
+	account common.Address,
+) string {
+	testDAppABI, err := testdappv2.TestDAppV2MetaData.GetAbi()
+	require.NoError(t, err)
+	res, err := k.CallEVM(
+		ctx,
+		*testDAppABI,
+		types.ModuleAddressEVM,
+		contract,
+		fungiblekeeper.BigIntZero,
+		nil,
+		false,
+		false,
+		"getNoMessageIndex",
+		account,
+	)
+	require.NoError(t, err)
+
+	unpacked, err := testDAppABI.Unpack("getNoMessageIndex", res.Ret)
+	require.NoError(t, err)
+	require.Len(t, unpacked, 1)
+
+	index, ok := unpacked[0].(string)
+	require.True(t, ok)
+
+	return index
+}
+
 // deployTestDAppV2 deploys the test dapp v2 contract and returns its address
 func deployTestDAppV2(t *testing.T, ctx sdk.Context, k *fungiblekeeper.Keeper, evmk types.EVMKeeper) common.Address {
 	testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData)
@@ -201,10 +235,12 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 
+		sender := sample.EthAddress()
+
 		// ACT
 		_, contractCall, err := k.ProcessV2Deposit(
 			ctx,
-			sample.EthAddress().Bytes(),
+			sender.Bytes(),
 			chainID,
 			zrc20,
 			testDapp,
@@ -220,6 +256,16 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 		balance, err := k.BalanceOfZRC4(ctx, zrc20, testDapp)
 		require.NoError(t, err)
 		require.Equal(t, big.NewInt(82), balance)
-		assertTestDAppV2MessageAndAmount(t, ctx, k, testDapp, "called with no message", 82)
+
+		messageIndex := getTestDAppNoMessageIndex(t, ctx, *k, testDapp, sender)
+
+		assertTestDAppV2MessageAndAmount(
+			t,
+			ctx,
+			k,
+			testDapp,
+			messageIndex,
+			82,
+		)
 	})
 }

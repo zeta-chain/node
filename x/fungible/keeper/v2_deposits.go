@@ -28,8 +28,8 @@ func (k Keeper) ProcessV2Deposit(
 	isCrossChainCall bool,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	context := systemcontract.ZContext{
-		Origin:  from,
-		Sender:  ethcommon.Address{},
+		Origin:  []byte{},
+		Sender:  ethcommon.BytesToAddress(from),
 		ChainID: big.NewInt(senderChainID),
 	}
 
