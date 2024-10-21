@@ -28,6 +28,8 @@ type Observer struct {
 	gateway *toncontracts.Gateway
 }
 
+var _ interfaces.ChainObserver = (*Observer)(nil)
+
 // LiteClient represents a TON client
 // see https://github.com/ton-blockchain/ton/blob/master/tl/generate/scheme/tonlib_api.tl
 //
@@ -36,8 +38,8 @@ type LiteClient interface {
 	zetaton.ConfigGetter
 	GetMasterchainInfo(ctx context.Context) (liteclient.LiteServerMasterchainInfoC, error)
 	GetBlockHeader(ctx context.Context, blockID ton.BlockIDExt, mode uint32) (tlb.BlockInfo, error)
-	GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, bits ton.Bits256) ([]ton.Transaction, error)
-	GetFirstTransaction(ctx context.Context, id ton.AccountID) (*ton.Transaction, int, error)
+	GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) ([]ton.Transaction, error)
+	GetFirstTransaction(ctx context.Context, acc ton.AccountID) (*ton.Transaction, int, error)
 }
 
 var _ interfaces.ChainObserver = (*Observer)(nil)

@@ -76,9 +76,9 @@ func (_m *LiteClient) GetConfigParams(ctx context.Context, mode liteapi.ConfigMo
 	return r0, r1
 }
 
-// GetFirstTransaction provides a mock function with given fields: ctx, id
-func (_m *LiteClient) GetFirstTransaction(ctx context.Context, id ton.AccountID) (*ton.Transaction, int, error) {
-	ret := _m.Called(ctx, id)
+// GetFirstTransaction provides a mock function with given fields: ctx, acc
+func (_m *LiteClient) GetFirstTransaction(ctx context.Context, acc ton.AccountID) (*ton.Transaction, int, error) {
+	ret := _m.Called(ctx, acc)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetFirstTransaction")
@@ -88,10 +88,10 @@ func (_m *LiteClient) GetFirstTransaction(ctx context.Context, id ton.AccountID)
 	var r1 int
 	var r2 error
 	if rf, ok := ret.Get(0).(func(context.Context, ton.AccountID) (*ton.Transaction, int, error)); ok {
-		return rf(ctx, id)
+		return rf(ctx, acc)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, ton.AccountID) *ton.Transaction); ok {
-		r0 = rf(ctx, id)
+		r0 = rf(ctx, acc)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*ton.Transaction)
@@ -99,13 +99,13 @@ func (_m *LiteClient) GetFirstTransaction(ctx context.Context, id ton.AccountID)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, ton.AccountID) int); ok {
-		r1 = rf(ctx, id)
+		r1 = rf(ctx, acc)
 	} else {
 		r1 = ret.Get(1).(int)
 	}
 
 	if rf, ok := ret.Get(2).(func(context.Context, ton.AccountID) error); ok {
-		r2 = rf(ctx, id)
+		r2 = rf(ctx, acc)
 	} else {
 		r2 = ret.Error(2)
 	}
@@ -141,9 +141,9 @@ func (_m *LiteClient) GetMasterchainInfo(ctx context.Context) (liteclient.LiteSe
 	return r0, r1
 }
 
-// GetTransactionsSince provides a mock function with given fields: ctx, acc, lt, bits
-func (_m *LiteClient) GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, bits ton.Bits256) ([]ton.Transaction, error) {
-	ret := _m.Called(ctx, acc, lt, bits)
+// GetTransactionsSince provides a mock function with given fields: ctx, acc, lt, hash
+func (_m *LiteClient) GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) ([]ton.Transaction, error) {
+	ret := _m.Called(ctx, acc, lt, hash)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetTransactionsSince")
@@ -152,10 +152,10 @@ func (_m *LiteClient) GetTransactionsSince(ctx context.Context, acc ton.AccountI
 	var r0 []ton.Transaction
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, ton.AccountID, uint64, ton.Bits256) ([]ton.Transaction, error)); ok {
-		return rf(ctx, acc, lt, bits)
+		return rf(ctx, acc, lt, hash)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, ton.AccountID, uint64, ton.Bits256) []ton.Transaction); ok {
-		r0 = rf(ctx, acc, lt, bits)
+		r0 = rf(ctx, acc, lt, hash)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]ton.Transaction)
@@ -163,7 +163,7 @@ func (_m *LiteClient) GetTransactionsSince(ctx context.Context, acc ton.AccountI
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, ton.AccountID, uint64, ton.Bits256) error); ok {
-		r1 = rf(ctx, acc, lt, bits)
+		r1 = rf(ctx, acc, lt, hash)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -33,6 +33,7 @@ type MethodRunner interface {
 const (
 	sizeOpCode  = 32
 	sizeQueryID = 64
+	sizeSeqno   = 32
 )
 
 var (

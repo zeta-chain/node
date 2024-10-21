@@ -8,12 +8,23 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tonkeeper/tongo/boc"
 	"github.com/tonkeeper/tongo/tlb"
+	"github.com/tonkeeper/tongo/ton"
 	"github.com/tonkeeper/tongo/wallet"
 )
 
-// Sender TON tx sender.
+// Sender TON tx sender. Usually an interface to a wallet.
 type Sender interface {
 	Send(ctx context.Context, messages ...wallet.Sendable) error
+}
+
+// Client represents a sender what allow sending an arbitrary external message to the network.
+type Client interface {
+	SendMessage(ctx context.Context, payload []byte) (uint32, error)
+}
+
+type ExternalMsg interface {
+	emptySig() bool
+	AsBody() (*boc.Cell, error)
 }
 
 // see https://docs.ton.org/develop/smart-contracts/messages#message-modes
@@ -69,4 +80,47 @@ func (gw *Gateway) send(ctx context.Context, s Sender, amount math.Uint, body *b
 		Body:    body,
 		Mode:    sendMode,
 	})
+}
+
+// SendExternalMessage sends an external message to the Gateway.
+func (gw *Gateway) SendExternalMessage(ctx context.Context, s Client, msg ExternalMsg) error {
+	return sendExternalMessage(ctx, s, gw.accountID, msg)
+}
+
+// inspired by tongo's wallet.Wallet{}.RawSendV2()
+func sendExternalMessage(ctx context.Context, via Client, to ton.AccountID, msg ExternalMsg) error {
+	if msg.emptySig() {
+		return errors.New("empty signature")
+	}
+
+	body, err := msg.AsBody()
+	if err != nil {
+		return err
+	}
+
+	extMsg, err := ton.CreateExternalMessage(to, body, nil, tlb.VarUInteger16{})
+	if err != nil {
+		return errors.Wrap(err, "unable to create external message")
+	}
+
+	extMsgCell := boc.NewCell()
+	err = tlb.Marshal(extMsgCell, extMsg)
+	if err != nil {
+		return errors.Wrap(err, "can not marshal wallet external message")
+	}
+
+	payload, err := extMsgCell.ToBocCustom(false, false, false, 0)
+	if err != nil {
+		return errors.Wrap(err, "can not serialize external message cell")
+	}
+
+	exitCode, err := via.SendMessage(ctx, payload)
+	switch {
+	case err != nil:
+		return errors.Wrap(err, "unable to send external message")
+	case exitCode != 0:
+		return errors.Errorf("unexpected exit code %d", exitCode)
+	}
+
+	return nil
 }

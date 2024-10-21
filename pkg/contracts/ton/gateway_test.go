@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"strings"
 	"testing"
 
@@ -196,6 +197,76 @@ func TestParsing(t *testing.T) {
 	})
 }
 
+func TestWithdrawal(t *testing.T) {
+	// FYI: asserts are checks with protocol-contracts-ton tests (Typescript lib)
+
+	// ARRANGE
+	// Given a withdrawal msg
+	withdrawal := &Withdrawal{
+		Recipient: ton.MustParseAccountID("0:552f6db5da0cae7f0b3ab4ab58d85927f6beb962cda426a6a6ee751c82cead1f"),
+		Amount:    Coins(5),
+		Seqno:     2,
+	}
+
+	const expectedHash = "e8eddf26276c747bd14d5161d18bc235c5c1a050187ab468996572d34e2f8f30"
+
+	// ACT
+	hash, err := withdrawal.Hash()
+
+	// ASSERT
+	require.NoError(t, err)
+	require.Equal(t, expectedHash, fmt.Sprintf("%x", hash[:]))
+
+	t.Run("Sign", func(t *testing.T) {
+		// ARRANGE
+		// Given a sample EVM wallet (simulates TSS)
+		privateKey := evmWallet(t, "0xb984cd65727cfd03081fc7bf33bf5c208bca697ce16139b5ded275887e81395a")
+
+		// Given ECDSA signature ...
+		sig, err := crypto.Sign(hash[:], privateKey)
+		require.NoError(t, err)
+
+		var sigArray [65]byte
+		copy(sigArray[:], sig)
+
+		// That is set in withdrawal
+		withdrawal.SetSignature(sigArray)
+
+		// ACT
+		// Convert withdrawal to external-message's body
+		body, err := withdrawal.AsBody()
+		require.NoError(t, err)
+
+		// ASSERT
+		// Check that sig is not empty
+		require.False(t, withdrawal.emptySig())
+
+		// Ensure that signature has the right format when decoding
+		var (
+			r = big.NewInt(0).SetBytes(sig[:32])
+			s = big.NewInt(0).SetBytes(sig[32:64])
+			v = sig[64]
+		)
+
+		t.Logf("expected:\n  r: %s\n  s: %s\n  v: %d", r.String(), s.String(), v)
+
+		actualV, err := body.ReadUint(8)
+		require.NoError(t, err)
+
+		actualR, err := body.ReadBigUint(256)
+		require.NoError(t, err)
+
+		actualS, err := body.ReadBigUint(256)
+		require.NoError(t, err)
+
+		assert.Equal(t, 0, r.Cmp(actualR))
+		assert.Equal(t, 0, s.Cmp(actualS))
+		assert.Equal(t, uint64(v), actualV)
+
+		t.Logf("actual:\n  r: %s\n  s: %s\n  v: %d", actualR.String(), actualS.String(), actualV)
+	})
+}
+
 func TestFiltering(t *testing.T) {
 	t.Run("Inbound", func(t *testing.T) {
 		for _, tt := range []struct {
@@ -282,12 +353,7 @@ func TestDeployment(t *testing.T) {
 		sampleAuthority     = "0:4686a2c066c784a915f3e01c853d3195ed254c948e21adbb3e4a9b3f5f3c74d7"
 	)
 
-	pkBytes, err := hex.DecodeString(sampleTSSPrivateKey[2:])
-	require.NoError(t, err)
-
-	privateKey, err := crypto.ToECDSA(pkBytes)
-	require.NoError(t, err)
-
+	privateKey := evmWallet(t, sampleTSSPrivateKey)
 	publicKey := privateKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
 	require.True(t, ok)
@@ -362,4 +428,14 @@ func readFixtureFile(t *testing.T, filename string) []byte {
 	require.NoError(t, err, filename)
 
 	return b
+}
+
+func evmWallet(t *testing.T, privateKey string) *ecdsa.PrivateKey {
+	pkBytes, err := hex.DecodeString(privateKey[2:])
+	require.NoError(t, err)
+
+	pk, err := crypto.ToECDSA(pkBytes)
+	require.NoError(t, err)
+
+	return pk
 }
