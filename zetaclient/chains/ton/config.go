@@ -15,6 +15,15 @@ import (
 
 type GlobalConfigurationFile = config.GlobalConfigurationFile
 
+// ConfigGetter represents LiteAPI config params getter.
+// Don't be confused because config param in this case represent on-chain params,
+// not lite-client's ADNL json config to connect to the network.
+//
+// Read more at https://docs.ton.org/develop/howto/blockchain-configs
+type ConfigGetter interface {
+	GetConfigParams(ctx context.Context, mode liteapi.ConfigMode, params []uint32) (tlb.ConfigParams, error)
+}
+
 // ConfigFromURL downloads & parses lite server config.
 //
 //nolint:gosec
@@ -54,11 +63,6 @@ func ConfigFromSource(ctx context.Context, urlOrPath string) (*GlobalConfigurati
 	}
 
 	return ConfigFromPath(urlOrPath)
-}
-
-// ConfigGetter represents LiteAPI config getter.
-type ConfigGetter interface {
-	GetConfigParams(ctx context.Context, mode liteapi.ConfigMode, params []uint32) (tlb.ConfigParams, error)
 }
 
 // FetchGasConfig fetches gas price from the config.

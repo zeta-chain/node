@@ -25,6 +25,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	solanaobserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 	"github.com/zeta-chain/node/zetaclient/ratelimiter"
@@ -379,14 +380,16 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 						signer, err := oc.resolveSigner(app, chainID)
 						if err != nil {
 							oc.logger.Error().Err(err).
-								Msgf("runScheduler: unable to resolve signer for chain %d", chainID)
+								Int64(logs.FieldChain, chainID).
+								Msg("runScheduler: unable to resolve signer")
 							continue
 						}
 
 						ob, err := oc.resolveObserver(app, chainID)
 						if err != nil {
 							oc.logger.Error().Err(err).
-								Msgf("runScheduler: resolveObserver failed for chain %d", chainID)
+								Int64(logs.FieldChain, chainID).
+								Msgf("runScheduler: unable to resolve observer")
 							continue
 						}
 
