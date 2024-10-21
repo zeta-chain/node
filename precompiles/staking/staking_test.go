@@ -23,6 +23,7 @@ import (
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/precompiles/prototype"
+	ptypes "github.com/zeta-chain/node/precompiles/types"
 	"github.com/zeta-chain/node/testutil/keeper"
 
 	"github.com/zeta-chain/node/testutil/sample"
@@ -238,7 +239,8 @@ func Test_InvalidABI(t *testing.T) {
 }
 
 func Test_Stake(t *testing.T) {
-	t.Run("should fail if validator doesn't exist", func(t *testing.T) {
+	// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
+	t.Run("should fail with error disabled", func(t *testing.T) {
 		// ARRANGE
 		ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
 		methodID := abi.Methods[StakeMethodName]
@@ -263,227 +265,285 @@ func Test_Stake(t *testing.T) {
 
 		// ASSERT
 		require.Error(t, err)
+		require.ErrorIs(t, err, ptypes.ErrDisabledMethod{
+			Method: StakeMethodName,
+		})
 	})
 
-	t.Run("should stake", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
-		methodID := abi.Methods[StakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validator := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+	// t.Run("should fail in read only mode", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
+	// 	methodID := abi.Methods[StakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validator := sample.Validator(t, r)
 
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
-		mockVMContract.CallerAddress = stakerAddr
-		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
-		mockVMContract.Input = packInputArgs(t, methodID, args...)
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	mockVMContract.CallerAddress = stakerAddr
+	// 	args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
+	// 	mockVMContract.Input = packInputArgs(t, methodID, args...)
 
-		// ACT
-		_, err = contract.Run(mockEVM, mockVMContract, false)
+	// 	// ACT
+	// 	_, err = contract.Run(mockEVM, mockVMContract, true)
 
-		// ASSERT
-		require.NoError(t, err)
-	})
+	// 	// ASSERT
+	// 	require.ErrorIs(t, err, ptypes.ErrWriteMethod{Method: StakeMethodName})
+	// })
 
-	t.Run("should fail if no input args", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
-		methodID := abi.Methods[StakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validator := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+	// t.Run("should fail if validator doesn't exist", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
+	// 	methodID := abi.Methods[StakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validator := sample.Validator(t, r)
 
-		staker := sample.Bech32AccAddress()
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
-		mockVMContract.CallerAddress = stakerAddr
-		mockVMContract.Input = methodID.ID
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	mockVMContract.CallerAddress = stakerAddr
+	// 	args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
+	// 	mockVMContract.Input = packInputArgs(t, methodID, args...)
 
-		// ACT
-		_, err = contract.Run(mockEVM, mockVMContract, false)
+	// 	// ACT
+	// 	_, err = contract.Run(mockEVM, mockVMContract, false)
 
-		// ASSERT
-		require.Error(t, err)
-	})
+	// 	// ASSERT
+	// 	require.Error(t, err)
+	// })
 
-	t.Run("should fail if caller is not staker", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
-		methodID := abi.Methods[StakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validator := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+	// t.Run("should stake", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
+	// 	methodID := abi.Methods[StakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validator := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
 
-		staker := sample.Bech32AccAddress()
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
-		mockVMContract.CallerAddress = stakerAddr
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	mockVMContract.CallerAddress = stakerAddr
+	// 	args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
+	// 	mockVMContract.Input = packInputArgs(t, methodID, args...)
 
-		nonStakerAddr := common.BytesToAddress(sample.Bech32AccAddress().Bytes())
-		args := []interface{}{nonStakerAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
-		mockVMContract.Input = packInputArgs(t, methodID, args...)
+	// 	// ACT
+	// 	_, err = contract.Run(mockEVM, mockVMContract, false)
 
-		// ACT
-		_, err = contract.Run(mockEVM, mockVMContract, false)
+	// 	// ASSERT
+	// 	require.NoError(t, err)
+	// })
 
-		// ASSERT
-		require.ErrorContains(t, err, "caller is not staker address")
-	})
+	// t.Run("should fail if no input args", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
+	// 	methodID := abi.Methods[StakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validator := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
 
-	t.Run("should fail if staking fails", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
-		methodID := abi.Methods[StakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validator := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+	// 	staker := sample.Bech32AccAddress()
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-		// staker without funds
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	mockVMContract.CallerAddress = stakerAddr
+	// 	mockVMContract.Input = methodID.ID
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
-		mockVMContract.CallerAddress = stakerAddr
+	// 	// ACT
+	// 	_, err = contract.Run(mockEVM, mockVMContract, false)
 
-		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
-		mockVMContract.Input = packInputArgs(t, methodID, args...)
+	// 	// ASSERT
+	// 	require.Error(t, err)
+	// })
 
-		// ACT
-		_, err := contract.Run(mockEVM, mockVMContract, false)
+	// t.Run("should fail if caller is not staker", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
+	// 	methodID := abi.Methods[StakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validator := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
 
-		// ASSERT
-		require.Error(t, err)
-	})
+	// 	staker := sample.Bech32AccAddress()
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-	t.Run("should fail if wrong args amount", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
-		methodID := abi.Methods[StakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validator := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	mockVMContract.CallerAddress = stakerAddr
 
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// 	nonStakerAddr := common.BytesToAddress(sample.Bech32AccAddress().Bytes())
+	// 	args := []interface{}{nonStakerAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
+	// 	mockVMContract.Input = packInputArgs(t, methodID, args...)
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	// ACT
+	// 	_, err = contract.Run(mockEVM, mockVMContract, false)
 
-		args := []interface{}{stakerEthAddr, validator.OperatorAddress}
+	// 	// ASSERT
+	// 	require.ErrorContains(t, err, "caller is not staker address")
+	// })
 
-		// ACT
-		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
+	// t.Run("should fail if staking fails", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
+	// 	methodID := abi.Methods[StakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validator := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
 
-		// ASSERT
-		require.Error(t, err)
-	})
+	// 	// staker without funds
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
 
-	t.Run("should fail if staker is not eth addr", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
-		methodID := abi.Methods[StakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validator := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	mockVMContract.CallerAddress = stakerAddr
 
-		staker := sample.Bech32AccAddress()
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// 	args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
+	// 	mockVMContract.Input = packInputArgs(t, methodID, args...)
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	// ACT
+	// 	_, err := contract.Run(mockEVM, mockVMContract, false)
 
-		args := []interface{}{staker, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
+	// 	// ASSERT
+	// 	require.Error(t, err)
+	// })
 
-		// ACT
-		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
+	// t.Run("should fail if wrong args amount", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
+	// 	methodID := abi.Methods[StakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validator := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
 
-		// ASSERT
-		require.Error(t, err)
-	})
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-	t.Run("should fail if validator is not valid string", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
-		methodID := abi.Methods[StakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validator := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
 
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// 	args := []interface{}{stakerEthAddr, validator.OperatorAddress}
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	// ACT
+	// 	_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
 
-		args := []interface{}{stakerEthAddr, 42, coins.AmountOf(config.BaseDenom).BigInt()}
+	// 	// ASSERT
+	// 	require.Error(t, err)
+	// })
 
-		// ACT
-		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
+	// t.Run("should fail if staker is not eth addr", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
+	// 	methodID := abi.Methods[StakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validator := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
 
-		// ASSERT
-		require.Error(t, err)
-	})
+	// 	staker := sample.Bech32AccAddress()
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-	t.Run("should fail if amount is not int64", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
-		methodID := abi.Methods[StakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validator := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
 
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// 	args := []interface{}{staker, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	// ACT
+	// 	_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
 
-		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).Uint64()}
+	// 	// ASSERT
+	// 	require.Error(t, err)
+	// })
 
-		// ACT
-		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
+	// t.Run("should fail if validator is not valid string", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
+	// 	methodID := abi.Methods[StakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validator := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
 
-		// ASSERT
-		require.Error(t, err)
-	})
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
+
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+
+	// 	args := []interface{}{stakerEthAddr, 42, coins.AmountOf(config.BaseDenom).BigInt()}
+
+	// 	// ACT
+	// 	_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
+
+	// 	// ASSERT
+	// 	require.Error(t, err)
+	// })
+
+	// t.Run("should fail if amount is not int64", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
+	// 	methodID := abi.Methods[StakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validator := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
+
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+
+	// 	args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).Uint64()}
+
+	// 	// ACT
+	// 	_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
+
+	// 	// ASSERT
+	// 	require.Error(t, err)
+	// })
 }
 
 func Test_Unstake(t *testing.T) {
-	t.Run("should fail if validator doesn't exist", func(t *testing.T) {
+	// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
+	t.Run("should fail with error disabled", func(t *testing.T) {
 		// ARRANGE
 		ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
 		methodID := abi.Methods[UnstakeMethodName]
@@ -509,219 +569,279 @@ func Test_Unstake(t *testing.T) {
 
 		// ASSERT
 		require.Error(t, err)
+		require.ErrorIs(t, err, ptypes.ErrDisabledMethod{
+			Method: UnstakeMethodName,
+		})
 	})
 
-	t.Run("should unstake", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
-		methodID := abi.Methods[UnstakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validator := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+	// t.Run("should fail in read only method", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
+	// 	methodID := abi.Methods[UnstakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validator := sample.Validator(t, r)
 
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
-		mockVMContract.CallerAddress = stakerAddr
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	mockVMContract.CallerAddress = stakerAddr
 
-		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
+	// 	args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
+	// 	mockVMContract.Input = packInputArgs(t, methodID, args...)
 
-		// stake first
-		stakeMethodID := abi.Methods[StakeMethodName]
-		mockVMContract.Input = packInputArgs(t, stakeMethodID, args...)
-		_, err = contract.Run(mockEVM, mockVMContract, false)
-		require.NoError(t, err)
+	// 	// ACT
+	// 	_, err = contract.Run(mockEVM, mockVMContract, true)
 
-		// ACT
-		mockVMContract.Input = packInputArgs(t, methodID, args...)
-		_, err = contract.Run(mockEVM, mockVMContract, false)
+	// 	// ASSERT
+	// 	require.ErrorIs(t, err, ptypes.ErrWriteMethod{Method: UnstakeMethodName})
+	// })
 
-		// ASSERT
-		require.NoError(t, err)
-	})
+	// t.Run("should fail if validator doesn't exist", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
+	// 	methodID := abi.Methods[UnstakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validator := sample.Validator(t, r)
 
-	t.Run("should fail if caller is not staker", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
-		methodID := abi.Methods[UnstakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validator := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	mockVMContract.CallerAddress = stakerAddr
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
-		mockVMContract.CallerAddress = stakerAddr
+	// 	args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
+	// 	mockVMContract.Input = packInputArgs(t, methodID, args...)
 
-		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
-		// stake first
-		stakeMethodID := abi.Methods[StakeMethodName]
-		mockVMContract.Input = packInputArgs(t, stakeMethodID, args...)
-		_, err = contract.Run(mockEVM, mockVMContract, false)
-		require.NoError(t, err)
+	// 	// ACT
+	// 	_, err = contract.Run(mockEVM, mockVMContract, false)
 
-		callerEthAddr := common.BytesToAddress(sample.Bech32AccAddress().Bytes())
-		mockVMContract.CallerAddress = callerEthAddr
-		mockVMContract.Input = packInputArgs(t, methodID, args...)
+	// 	// ASSERT
+	// 	require.Error(t, err)
+	// })
 
-		// ACT
-		_, err = contract.Run(mockEVM, mockVMContract, false)
+	// t.Run("should unstake", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
+	// 	methodID := abi.Methods[UnstakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validator := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
 
-		// ASSERT
-		require.ErrorContains(t, err, "caller is not staker address")
-	})
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-	t.Run("should fail if no previous staking", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
-		methodID := abi.Methods[UnstakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validator := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	mockVMContract.CallerAddress = stakerAddr
 
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// 	args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
-		mockVMContract.CallerAddress = stakerAddr
+	// 	// stake first
+	// 	stakeMethodID := abi.Methods[StakeMethodName]
+	// 	mockVMContract.Input = packInputArgs(t, stakeMethodID, args...)
+	// 	_, err = contract.Run(mockEVM, mockVMContract, false)
+	// 	require.NoError(t, err)
 
-		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
-		mockVMContract.Input = packInputArgs(t, methodID, args...)
+	// 	// ACT
+	// 	mockVMContract.Input = packInputArgs(t, methodID, args...)
+	// 	_, err = contract.Run(mockEVM, mockVMContract, false)
 
-		// ACT
-		_, err = contract.Run(mockEVM, mockVMContract, false)
+	// 	// ASSERT
+	// 	require.NoError(t, err)
+	// })
 
-		// ASSERT
-		require.Error(t, err)
-	})
+	// t.Run("should fail if caller is not staker", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
+	// 	methodID := abi.Methods[UnstakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validator := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
 
-	t.Run("should fail if wrong args amount", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
-		methodID := abi.Methods[UnstakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validator := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	mockVMContract.CallerAddress = stakerAddr
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
+	// 	// stake first
+	// 	stakeMethodID := abi.Methods[StakeMethodName]
+	// 	mockVMContract.Input = packInputArgs(t, stakeMethodID, args...)
+	// 	_, err = contract.Run(mockEVM, mockVMContract, false)
+	// 	require.NoError(t, err)
 
-		args := []interface{}{stakerEthAddr, validator.OperatorAddress}
+	// 	callerEthAddr := common.BytesToAddress(sample.Bech32AccAddress().Bytes())
+	// 	mockVMContract.CallerAddress = callerEthAddr
+	// 	mockVMContract.Input = packInputArgs(t, methodID, args...)
 
-		// ACT
-		_, err = contract.Unstake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
+	// 	// ACT
+	// 	_, err = contract.Run(mockEVM, mockVMContract, false)
 
-		// ASSERT
-		require.Error(t, err)
-	})
+	// 	// ASSERT
+	// 	require.ErrorContains(t, err, "caller is not staker address")
+	// })
 
-	t.Run("should fail if staker is not eth addr", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
-		methodID := abi.Methods[UnstakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validator := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+	// t.Run("should fail if no previous staking", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
+	// 	methodID := abi.Methods[UnstakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validator := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
 
-		staker := sample.Bech32AccAddress()
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	mockVMContract.CallerAddress = stakerAddr
 
-		args := []interface{}{staker, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
+	// 	args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
+	// 	mockVMContract.Input = packInputArgs(t, methodID, args...)
 
-		// ACT
-		_, err = contract.Unstake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
+	// 	// ACT
+	// 	_, err = contract.Run(mockEVM, mockVMContract, false)
 
-		// ASSERT
-		require.Error(t, err)
-	})
+	// 	// ASSERT
+	// 	require.Error(t, err)
+	// })
 
-	t.Run("should fail if validator is not valid string", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
-		methodID := abi.Methods[UnstakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validator := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+	// t.Run("should fail if wrong args amount", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
+	// 	methodID := abi.Methods[UnstakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validator := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
 
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
 
-		args := []interface{}{stakerEthAddr, 42, coins.AmountOf(config.BaseDenom).BigInt()}
+	// 	args := []interface{}{stakerEthAddr, validator.OperatorAddress}
 
-		// ACT
-		_, err = contract.Unstake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
+	// 	// ACT
+	// 	_, err = contract.Unstake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
 
-		// ASSERT
-		require.Error(t, err)
-	})
+	// 	// ASSERT
+	// 	require.Error(t, err)
+	// })
 
-	t.Run("should fail if amount is not int64", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
-		methodID := abi.Methods[UnstakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validator := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+	// t.Run("should fail if staker is not eth addr", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
+	// 	methodID := abi.Methods[UnstakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validator := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
 
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// 	staker := sample.Bech32AccAddress()
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
 
-		args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).Uint64()}
+	// 	args := []interface{}{staker, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
-		// ACT
-		_, err = contract.Unstake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
+	// 	// ACT
+	// 	_, err = contract.Unstake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
 
-		// ASSERT
-		require.Error(t, err)
-	})
+	// 	// ASSERT
+	// 	require.Error(t, err)
+	// })
+
+	// t.Run("should fail if validator is not valid string", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
+	// 	methodID := abi.Methods[UnstakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validator := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
+
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+
+	// 	args := []interface{}{stakerEthAddr, 42, coins.AmountOf(config.BaseDenom).BigInt()}
+
+	// 	// ACT
+	// 	_, err = contract.Unstake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
+
+	// 	// ASSERT
+	// 	require.Error(t, err)
+	// })
+
+	// t.Run("should fail if amount is not int64", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
+	// 	methodID := abi.Methods[UnstakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validator := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
+
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
+
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+
+	// 	args := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).Uint64()}
+
+	// 	// ACT
+	// 	_, err = contract.Unstake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, args)
+
+	// 	// ASSERT
+	// 	require.Error(t, err)
+	// })
 }
 
 func Test_MoveStake(t *testing.T) {
-	t.Run("should fail if validator dest doesn't exist", func(t *testing.T) {
+	// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
+	t.Run("should fail with error disabled", func(t *testing.T) {
 		// ARRANGE
 		ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
 		methodID := abi.Methods[MoveStakeMethodName]
@@ -751,7 +871,10 @@ func Test_MoveStake(t *testing.T) {
 		stakeMethodID := abi.Methods[StakeMethodName]
 		mockVMContract.Input = packInputArgs(t, stakeMethodID, argsStake...)
 		_, err = contract.Run(mockEVM, mockVMContract, false)
-		require.NoError(t, err)
+		require.Error(t, err)
+		require.ErrorIs(t, err, ptypes.ErrDisabledMethod{
+			Method: StakeMethodName,
+		})
 
 		argsMoveStake := []interface{}{
 			stakerEthAddr,
@@ -766,325 +889,422 @@ func Test_MoveStake(t *testing.T) {
 
 		// ASSERT
 		require.Error(t, err)
+		require.ErrorIs(t, err, ptypes.ErrDisabledMethod{
+			Method: MoveStakeMethodName,
+		})
 	})
 
-	t.Run("should move stake", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
-		methodID := abi.Methods[MoveStakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validatorSrc := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
-		validatorDest := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
+	// t.Run("should fail in read only method", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
+	// 	methodID := abi.Methods[MoveStakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validatorSrc := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
+	// 	validatorDest := sample.Validator(t, r)
 
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
-		mockVMContract.CallerAddress = stakerAddr
-		argsStake := []interface{}{
-			stakerEthAddr,
-			validatorSrc.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).BigInt(),
-		}
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	mockVMContract.CallerAddress = stakerAddr
 
-		// stake to validator src
-		stakeMethodID := abi.Methods[StakeMethodName]
-		mockVMContract.Input = packInputArgs(t, stakeMethodID, argsStake...)
-		_, err = contract.Run(mockEVM, mockVMContract, false)
-		require.NoError(t, err)
+	// 	argsStake := []interface{}{
+	// 		stakerEthAddr,
+	// 		validatorSrc.OperatorAddress,
+	// 		coins.AmountOf(config.BaseDenom).BigInt(),
+	// 	}
 
-		argsMoveStake := []interface{}{
-			stakerEthAddr,
-			validatorSrc.OperatorAddress,
-			validatorDest.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).BigInt(),
-		}
-		mockVMContract.Input = packInputArgs(t, methodID, argsMoveStake...)
+	// 	// stake to validator src
+	// 	stakeMethodID := abi.Methods[StakeMethodName]
+	// 	mockVMContract.Input = packInputArgs(t, stakeMethodID, argsStake...)
+	// 	_, err = contract.Run(mockEVM, mockVMContract, false)
+	// 	require.NoError(t, err)
 
-		// ACT
-		// move stake to validator dest
-		_, err = contract.Run(mockEVM, mockVMContract, false)
+	// 	argsMoveStake := []interface{}{
+	// 		stakerEthAddr,
+	// 		validatorSrc.OperatorAddress,
+	// 		validatorDest.OperatorAddress,
+	// 		coins.AmountOf(config.BaseDenom).BigInt(),
+	// 	}
+	// 	mockVMContract.Input = packInputArgs(t, methodID, argsMoveStake...)
 
-		// ASSERT
-		require.NoError(t, err)
-	})
+	// 	// ACT
+	// 	_, err = contract.Run(mockEVM, mockVMContract, true)
 
-	t.Run("should fail if staker is invalid arg", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
-		methodID := abi.Methods[MoveStakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validatorSrc := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
-		validatorDest := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
+	// 	// ASSERT
+	// 	require.ErrorIs(t, err, ptypes.ErrWriteMethod{Method: MoveStakeMethodName})
+	// })
 
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// t.Run("should fail if validator dest doesn't exist", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
+	// 	methodID := abi.Methods[MoveStakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validatorSrc := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
+	// 	validatorDest := sample.Validator(t, r)
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-		argsStake := []interface{}{
-			stakerEthAddr,
-			validatorSrc.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).BigInt(),
-		}
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	mockVMContract.CallerAddress = stakerAddr
 
-		// stake to validator src
-		stakeMethodID := abi.Methods[StakeMethodName]
-		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
-		require.NoError(t, err)
+	// 	argsStake := []interface{}{
+	// 		stakerEthAddr,
+	// 		validatorSrc.OperatorAddress,
+	// 		coins.AmountOf(config.BaseDenom).BigInt(),
+	// 	}
 
-		argsMoveStake := []interface{}{
-			42,
-			validatorSrc.OperatorAddress,
-			validatorDest.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).BigInt(),
-		}
+	// 	// stake to validator src
+	// 	stakeMethodID := abi.Methods[StakeMethodName]
+	// 	mockVMContract.Input = packInputArgs(t, stakeMethodID, argsStake...)
+	// 	_, err = contract.Run(mockEVM, mockVMContract, false)
+	// 	require.NoError(t, err)
 
-		// ACT
-		_, err = contract.MoveStake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, argsMoveStake)
+	// 	argsMoveStake := []interface{}{
+	// 		stakerEthAddr,
+	// 		validatorSrc.OperatorAddress,
+	// 		validatorDest.OperatorAddress,
+	// 		coins.AmountOf(config.BaseDenom).BigInt(),
+	// 	}
+	// 	mockVMContract.Input = packInputArgs(t, methodID, argsMoveStake...)
 
-		// ASSERT
-		require.Error(t, err)
-	})
+	// 	// ACT
+	// 	_, err = contract.Run(mockEVM, mockVMContract, false)
 
-	t.Run("should fail if validator src is invalid arg", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
-		methodID := abi.Methods[MoveStakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validatorSrc := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
-		validatorDest := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
+	// 	// ASSERT
+	// 	require.Error(t, err)
+	// })
 
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// t.Run("should move stake", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
+	// 	methodID := abi.Methods[MoveStakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validatorSrc := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
+	// 	validatorDest := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-		argsStake := []interface{}{
-			stakerEthAddr,
-			validatorSrc.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).BigInt(),
-		}
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	mockVMContract.CallerAddress = stakerAddr
+	// 	argsStake := []interface{}{
+	// 		stakerEthAddr,
+	// 		validatorSrc.OperatorAddress,
+	// 		coins.AmountOf(config.BaseDenom).BigInt(),
+	// 	}
 
-		// stake to validator src
-		stakeMethodID := abi.Methods[StakeMethodName]
-		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
-		require.NoError(t, err)
+	// 	// stake to validator src
+	// 	stakeMethodID := abi.Methods[StakeMethodName]
+	// 	mockVMContract.Input = packInputArgs(t, stakeMethodID, argsStake...)
+	// 	_, err = contract.Run(mockEVM, mockVMContract, false)
+	// 	require.NoError(t, err)
 
-		argsMoveStake := []interface{}{
-			stakerEthAddr,
-			42,
-			validatorDest.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).BigInt(),
-		}
+	// 	argsMoveStake := []interface{}{
+	// 		stakerEthAddr,
+	// 		validatorSrc.OperatorAddress,
+	// 		validatorDest.OperatorAddress,
+	// 		coins.AmountOf(config.BaseDenom).BigInt(),
+	// 	}
+	// 	mockVMContract.Input = packInputArgs(t, methodID, argsMoveStake...)
 
-		// ACT
-		_, err = contract.MoveStake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, argsMoveStake)
+	// 	// ACT
+	// 	// move stake to validator dest
+	// 	_, err = contract.Run(mockEVM, mockVMContract, false)
 
-		// ASSERT
-		require.Error(t, err)
-	})
+	// 	// ASSERT
+	// 	require.NoError(t, err)
+	// })
 
-	t.Run("should fail if validator dest is invalid arg", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
-		methodID := abi.Methods[MoveStakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validatorSrc := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
-		validatorDest := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
+	// t.Run("should fail if staker is invalid arg", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
+	// 	methodID := abi.Methods[MoveStakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validatorSrc := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
+	// 	validatorDest := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
 
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
 
-		argsStake := []interface{}{
-			stakerEthAddr,
-			validatorSrc.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).BigInt(),
-		}
+	// 	argsStake := []interface{}{
+	// 		stakerEthAddr,
+	// 		validatorSrc.OperatorAddress,
+	// 		coins.AmountOf(config.BaseDenom).BigInt(),
+	// 	}
 
-		// stake to validator src
-		stakeMethodID := abi.Methods[StakeMethodName]
-		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
-		require.NoError(t, err)
+	// 	// stake to validator src
+	// 	stakeMethodID := abi.Methods[StakeMethodName]
+	// 	_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
+	// 	require.NoError(t, err)
 
-		argsMoveStake := []interface{}{
-			stakerEthAddr,
-			validatorSrc.OperatorAddress,
-			42,
-			coins.AmountOf(config.BaseDenom).BigInt(),
-		}
+	// 	argsMoveStake := []interface{}{
+	// 		42,
+	// 		validatorSrc.OperatorAddress,
+	// 		validatorDest.OperatorAddress,
+	// 		coins.AmountOf(config.BaseDenom).BigInt(),
+	// 	}
 
-		// ACT
-		_, err = contract.MoveStake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, argsMoveStake)
+	// 	// ACT
+	// 	_, err = contract.MoveStake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, argsMoveStake)
 
-		// ASSERT
-		require.Error(t, err)
-	})
+	// 	// ASSERT
+	// 	require.Error(t, err)
+	// })
 
-	t.Run("should fail if amount is invalid arg", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
-		methodID := abi.Methods[MoveStakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validatorSrc := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
-		validatorDest := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
+	// t.Run("should fail if validator src is invalid arg", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
+	// 	methodID := abi.Methods[MoveStakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validatorSrc := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
+	// 	validatorDest := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
 
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
 
-		argsStake := []interface{}{
-			stakerEthAddr,
-			validatorSrc.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).BigInt(),
-		}
+	// 	argsStake := []interface{}{
+	// 		stakerEthAddr,
+	// 		validatorSrc.OperatorAddress,
+	// 		coins.AmountOf(config.BaseDenom).BigInt(),
+	// 	}
 
-		// stake to validator src
-		stakeMethodID := abi.Methods[StakeMethodName]
-		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
-		require.NoError(t, err)
+	// 	// stake to validator src
+	// 	stakeMethodID := abi.Methods[StakeMethodName]
+	// 	_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
+	// 	require.NoError(t, err)
 
-		argsMoveStake := []interface{}{
-			stakerEthAddr,
-			validatorSrc.OperatorAddress,
-			validatorDest.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).Uint64(),
-		}
+	// 	argsMoveStake := []interface{}{
+	// 		stakerEthAddr,
+	// 		42,
+	// 		validatorDest.OperatorAddress,
+	// 		coins.AmountOf(config.BaseDenom).BigInt(),
+	// 	}
 
-		// ACT
-		_, err = contract.MoveStake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, argsMoveStake)
+	// 	// ACT
+	// 	_, err = contract.MoveStake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, argsMoveStake)
 
-		// ASSERT
-		require.Error(t, err)
-	})
+	// 	// ASSERT
+	// 	require.Error(t, err)
+	// })
 
-	t.Run("should fail if wrong args amount", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
-		methodID := abi.Methods[MoveStakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validatorSrc := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
-		validatorDest := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
+	// t.Run("should fail if validator dest is invalid arg", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
+	// 	methodID := abi.Methods[MoveStakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validatorSrc := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
+	// 	validatorDest := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
 
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
 
-		argsStake := []interface{}{
-			stakerEthAddr,
-			validatorSrc.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).BigInt(),
-		}
+	// 	argsStake := []interface{}{
+	// 		stakerEthAddr,
+	// 		validatorSrc.OperatorAddress,
+	// 		coins.AmountOf(config.BaseDenom).BigInt(),
+	// 	}
 
-		// stake to validator src
-		stakeMethodID := abi.Methods[StakeMethodName]
-		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
-		require.NoError(t, err)
+	// 	// stake to validator src
+	// 	stakeMethodID := abi.Methods[StakeMethodName]
+	// 	_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
+	// 	require.NoError(t, err)
 
-		argsMoveStake := []interface{}{stakerEthAddr, validatorSrc.OperatorAddress, validatorDest.OperatorAddress}
+	// 	argsMoveStake := []interface{}{
+	// 		stakerEthAddr,
+	// 		validatorSrc.OperatorAddress,
+	// 		42,
+	// 		coins.AmountOf(config.BaseDenom).BigInt(),
+	// 	}
 
-		// ACT
-		_, err = contract.MoveStake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, argsMoveStake)
+	// 	// ACT
+	// 	_, err = contract.MoveStake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, argsMoveStake)
 
-		// ASSERT
-		require.Error(t, err)
-	})
+	// 	// ASSERT
+	// 	require.Error(t, err)
+	// })
 
-	t.Run("should fail if caller is not staker", func(t *testing.T) {
-		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
-		methodID := abi.Methods[MoveStakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validatorSrc := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
-		validatorDest := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
+	// t.Run("should fail if amount is invalid arg", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
+	// 	methodID := abi.Methods[MoveStakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validatorSrc := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
+	// 	validatorDest := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
 
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
 
-		stakerAddr := common.BytesToAddress(staker.Bytes())
-		mockVMContract.CallerAddress = stakerAddr
-		argsStake := []interface{}{
-			stakerEthAddr,
-			validatorSrc.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).BigInt(),
-		}
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
 
-		// stake to validator src
-		stakeMethodID := abi.Methods[StakeMethodName]
-		mockVMContract.Input = packInputArgs(t, stakeMethodID, argsStake...)
-		_, err = contract.Run(mockEVM, mockVMContract, false)
-		require.NoError(t, err)
+	// 	argsStake := []interface{}{
+	// 		stakerEthAddr,
+	// 		validatorSrc.OperatorAddress,
+	// 		coins.AmountOf(config.BaseDenom).BigInt(),
+	// 	}
 
-		argsMoveStake := []interface{}{
-			stakerEthAddr,
-			validatorSrc.OperatorAddress,
-			validatorDest.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).BigInt(),
-		}
-		mockVMContract.Input = packInputArgs(t, methodID, argsMoveStake...)
+	// 	// stake to validator src
+	// 	stakeMethodID := abi.Methods[StakeMethodName]
+	// 	_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
+	// 	require.NoError(t, err)
 
-		callerEthAddr := common.BytesToAddress(sample.Bech32AccAddress().Bytes())
-		mockVMContract.CallerAddress = callerEthAddr
+	// 	argsMoveStake := []interface{}{
+	// 		stakerEthAddr,
+	// 		validatorSrc.OperatorAddress,
+	// 		validatorDest.OperatorAddress,
+	// 		coins.AmountOf(config.BaseDenom).Uint64(),
+	// 	}
 
-		// ACT
-		_, err = contract.Run(mockEVM, mockVMContract, false)
+	// 	// ACT
+	// 	_, err = contract.MoveStake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, argsMoveStake)
 
-		// ASSERT
-		require.ErrorContains(t, err, "caller is not staker")
-	})
+	// 	// ASSERT
+	// 	require.Error(t, err)
+	// })
+
+	// t.Run("should fail if wrong args amount", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, _ := setup(t)
+	// 	methodID := abi.Methods[MoveStakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validatorSrc := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
+	// 	validatorDest := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
+
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
+
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+
+	// 	argsStake := []interface{}{
+	// 		stakerEthAddr,
+	// 		validatorSrc.OperatorAddress,
+	// 		coins.AmountOf(config.BaseDenom).BigInt(),
+	// 	}
+
+	// 	// stake to validator src
+	// 	stakeMethodID := abi.Methods[StakeMethodName]
+	// 	_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, argsStake)
+	// 	require.NoError(t, err)
+
+	// 	argsMoveStake := []interface{}{stakerEthAddr, validatorSrc.OperatorAddress, validatorDest.OperatorAddress}
+
+	// 	// ACT
+	// 	_, err = contract.MoveStake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &methodID, argsMoveStake)
+
+	// 	// ASSERT
+	// 	require.Error(t, err)
+	// })
+
+	// t.Run("should fail if caller is not staker", func(t *testing.T) {
+	// 	// ARRANGE
+	// 	ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
+	// 	methodID := abi.Methods[MoveStakeMethodName]
+	// 	r := rand.New(rand.NewSource(42))
+	// 	validatorSrc := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validatorSrc)
+	// 	validatorDest := sample.Validator(t, r)
+	// 	sdkKeepers.StakingKeeper.SetValidator(ctx, validatorDest)
+
+	// 	staker := sample.Bech32AccAddress()
+	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	// 	coins := sample.Coins()
+	// 	err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+	// 	require.NoError(t, err)
+	// 	err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	// 	require.NoError(t, err)
+
+	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+	// 	mockVMContract.CallerAddress = stakerAddr
+	// 	argsStake := []interface{}{
+	// 		stakerEthAddr,
+	// 		validatorSrc.OperatorAddress,
+	// 		coins.AmountOf(config.BaseDenom).BigInt(),
+	// 	}
+
+	// 	// stake to validator src
+	// 	stakeMethodID := abi.Methods[StakeMethodName]
+	// 	mockVMContract.Input = packInputArgs(t, stakeMethodID, argsStake...)
+	// 	_, err = contract.Run(mockEVM, mockVMContract, false)
+	// 	require.NoError(t, err)
+
+	// 	argsMoveStake := []interface{}{
+	// 		stakerEthAddr,
+	// 		validatorSrc.OperatorAddress,
+	// 		validatorDest.OperatorAddress,
+	// 		coins.AmountOf(config.BaseDenom).BigInt(),
+	// 	}
+	// 	mockVMContract.Input = packInputArgs(t, methodID, argsMoveStake...)
+
+	// 	callerEthAddr := common.BytesToAddress(sample.Bech32AccAddress().Bytes())
+	// 	mockVMContract.CallerAddress = callerEthAddr
+
+	// 	// ACT
+	// 	_, err = contract.Run(mockEVM, mockVMContract, false)
+
+	// 	// ASSERT
+	// 	require.ErrorContains(t, err, "caller is not staker")
+	// })
 }
 
 func Test_GetAllValidators(t *testing.T) {

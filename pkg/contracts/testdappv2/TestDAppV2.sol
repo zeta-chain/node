@@ -32,8 +32,6 @@ contract TestDAppV2 {
         address sender;
     }
 
-    address public expectedOnCallSender;
-
     // these structures allow to assess contract calls
     mapping(bytes32 => bool) public calledWithMessage;
     mapping(bytes => address) public senderWithMessage;
@@ -56,24 +54,6 @@ contract TestDAppV2 {
 
     // Universal contract interface
     function onCall(
-        zContext calldata _context,
-        address _zrc20,
-        uint256 amount,
-        bytes calldata message
-    )
-    external
-    {
-        require(!isRevertMessage(string(message)));
-
-        // if the message is empty we set the message to NO_MESSAGE_CALL
-        string memory messageStr = message.length == 0 ? NO_MESSAGE_CALL : string(message);
-
-        setCalledWithMessage(messageStr);
-        setAmountWithMessage(messageStr, amount);
-    }
-
-    // Legacy universal contract interface
-    function onCrossChainCall(
         zContext calldata _context,
         address _zrc20,
         uint256 amount,
@@ -128,13 +108,8 @@ contract TestDAppV2 {
         senderWithMessage[revertContext.revertMessage] = revertContext.sender;
     }
 
-    function setExpectedOnCallSender(address _expectedOnCallSender) external {
-        expectedOnCallSender = _expectedOnCallSender;
-    }
-
+    // Callable interface
     function onCall(MessageContext calldata messageContext, bytes calldata message) external payable returns (bytes memory) {
-        require(messageContext.sender == expectedOnCallSender, "unauthenticated sender");
-
         // if the message is empty we set the message to NO_MESSAGE_CALL
         string memory messageStr = message.length == 0 ? NO_MESSAGE_CALL : string(message);
 

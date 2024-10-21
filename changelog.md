@@ -19,6 +19,8 @@
 * [2957](https://github.com/zeta-chain/node/pull/2957) - enable Bitcoin inscription support on testnet
 * [2896](https://github.com/zeta-chain/node/pull/2896) - add TON inbound observation
 * [2987](https://github.com/zeta-chain/node/pull/2987) - add non-EVM standard inbound memo package
+* [2979](https://github.com/zeta-chain/node/pull/2979) - add fungible keeper ability to lock/unlock ZRC20 tokens
+* [3012](https://github.com/zeta-chain/node/pull/3012) - integrate authenticated calls erc20 smart contract functionality into protocol
 
 ### Refactor
 

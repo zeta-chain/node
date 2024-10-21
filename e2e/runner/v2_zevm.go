@@ -31,8 +31,8 @@ func (r *E2ERunner) V2ETHWithdraw(
 	return tx
 }
 
-// V2ETHWithdrawAndCall calls WithdrawAndCall of Gateway with gas token on ZEVM
-func (r *E2ERunner) V2ETHWithdrawAndCall(
+// V2ETHWithdrawAndCall calls WithdrawAndCall of Gateway with gas token on ZEVM using arbitrary call
+func (r *E2ERunner) V2ETHWithdrawAndArbitraryCall(
 	receiver ethcommon.Address,
 	amount *big.Int,
 	payload []byte,
@@ -44,10 +44,7 @@ func (r *E2ERunner) V2ETHWithdrawAndCall(
 		amount,
 		r.ETHZRC20Addr,
 		payload,
-		gatewayzevm.CallOptions{
-			IsArbitraryCall: true,
-			GasLimit:        gasLimit,
-		},
+		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: true},
 		revertOptions,
 	)
 	require.NoError(r, err)
@@ -55,8 +52,8 @@ func (r *E2ERunner) V2ETHWithdrawAndCall(
 	return tx
 }
 
-// V2ETHWithdrawAndAuthenticatedCall calls WithdrawAndCall of Gateway with gas token on ZEVM using authenticated call
-func (r *E2ERunner) V2ETHWithdrawAndAuthenticatedCall(
+// V2ETHWithdrawAndCall calls WithdrawAndCall of Gateway with gas token on ZEVM using authenticated call
+func (r *E2ERunner) V2ETHWithdrawAndCall(
 	receiver ethcommon.Address,
 	amount *big.Int,
 	payload []byte,
@@ -79,9 +76,9 @@ func (r *E2ERunner) V2ETHWithdrawAndAuthenticatedCall(
 	return tx
 }
 
-// V2ETHWithdrawAndAuthenticatedCallThroughContract calls WithdrawAndCall of Gateway with gas token on ZEVM using authenticated call
+// V2ETHWithdrawAndCallThroughContract calls WithdrawAndCall of Gateway with gas token on ZEVM using authenticated call
 // through contract
-func (r *E2ERunner) V2ETHWithdrawAndAuthenticatedCallThroughContract(
+func (r *E2ERunner) V2ETHWithdrawAndCallThroughContract(
 	gatewayZEVMCaller *gatewayzevmcaller.GatewayZEVMCaller,
 	receiver ethcommon.Address,
 	amount *big.Int,
@@ -123,7 +120,36 @@ func (r *E2ERunner) V2ERC20Withdraw(
 	return tx
 }
 
-// V2ERC20WithdrawAndCall calls WithdrawAndCall of Gateway with erc20 token on ZEVM
+// V2ERC20WithdrawAndArbitraryCall calls WithdrawAndCall of Gateway with erc20 token on ZEVM using arbitrary call
+func (r *E2ERunner) V2ERC20WithdrawAndArbitraryCall(
+	receiver ethcommon.Address,
+	amount *big.Int,
+	payload []byte,
+	revertOptions gatewayzevm.RevertOptions,
+) *ethtypes.Transaction {
+	// this function take more gas than default 500k
+	// so we need to increase the gas limit
+	previousGasLimit := r.ZEVMAuth.GasLimit
+	r.ZEVMAuth.GasLimit = 10000000
+	defer func() {
+		r.ZEVMAuth.GasLimit = previousGasLimit
+	}()
+
+	tx, err := r.GatewayZEVM.WithdrawAndCall0(
+		r.ZEVMAuth,
+		receiver.Bytes(),
+		amount,
+		r.ERC20ZRC20Addr,
+		payload,
+		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: true},
+		revertOptions,
+	)
+	require.NoError(r, err)
+
+	return tx
+}
+
+// V2ERC20WithdrawAndCall calls WithdrawAndCall of Gateway with erc20 token on ZEVM using authenticated call
 func (r *E2ERunner) V2ERC20WithdrawAndCall(
 	receiver ethcommon.Address,
 	amount *big.Int,
@@ -144,10 +170,7 @@ func (r *E2ERunner) V2ERC20WithdrawAndCall(
 		amount,
 		r.ERC20ZRC20Addr,
 		payload,
-		gatewayzevm.CallOptions{
-			GasLimit:        gasLimit,
-			IsArbitraryCall: true,
-		},
+		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: false},
 		revertOptions,
 	)
 	require.NoError(r, err)
@@ -155,8 +178,8 @@ func (r *E2ERunner) V2ERC20WithdrawAndCall(
 	return tx
 }
 
-// V2ZEVMToEMVCall calls Call of Gateway on ZEVM
-func (r *E2ERunner) V2ZEVMToEMVCall(
+// V2ZEVMToEMVArbitraryCall calls Call of Gateway on ZEVM using arbitrary call
+func (r *E2ERunner) V2ZEVMToEMVArbitraryCall(
 	receiver ethcommon.Address,
 	payload []byte,
 	revertOptions gatewayzevm.RevertOptions,
@@ -166,10 +189,7 @@ func (r *E2ERunner) V2ZEVMToEMVCall(
 		receiver.Bytes(),
 		r.ETHZRC20Addr,
 		payload,
-		gatewayzevm.CallOptions{
-			GasLimit:        gasLimit,
-			IsArbitraryCall: true,
-		},
+		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: true},
 		revertOptions,
 	)
 	require.NoError(r, err)
@@ -177,8 +197,8 @@ func (r *E2ERunner) V2ZEVMToEMVCall(
 	return tx
 }
 
-// V2ZEVMToEMVAuthenticatedCall calls authenticated Call of Gateway on ZEVM
-func (r *E2ERunner) V2ZEVMToEMVAuthenticatedCall(
+// V2ZEVMToEMVCall calls authenticated Call of Gateway on ZEVM using authenticated call
+func (r *E2ERunner) V2ZEVMToEMVCall(
 	receiver ethcommon.Address,
 	payload []byte,
 	revertOptions gatewayzevm.RevertOptions,
@@ -199,8 +219,8 @@ func (r *E2ERunner) V2ZEVMToEMVAuthenticatedCall(
 	return tx
 }
 
-// V2ZEVMToEMVAuthenticatedCallThroughContract calls authenticated Call of Gateway on ZEVM through contract
-func (r *E2ERunner) V2ZEVMToEMVAuthenticatedCallThroughContract(
+// V2ZEVMToEMVCallThroughContract calls authenticated Call of Gateway on ZEVM through contract using authenticated call
+func (r *E2ERunner) V2ZEVMToEMVCallThroughContract(
 	gatewayZEVMCaller *gatewayzevmcaller.GatewayZEVMCaller,
 	receiver ethcommon.Address,
 	payload []byte,

@@ -130,24 +130,45 @@ func Test_Methods(t *testing.T) {
 		ts.mockVMContract.Input = packInputArgs(
 			t,
 			methodID,
-			[]interface{}{ts.zrc20Address, big.NewInt(0)}...,
+			[]interface{}{ts.zrc20Address, big.NewInt(1000)}...,
 		)
 
 		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
 		require.Error(t, err)
-		require.ErrorAs(
-			t,
-			ptypes.ErrInvalidAmount{
-				Got: "0",
-			},
-			err,
-		)
+		require.Contains(t, err.Error(), "invalid allowance, got 0")
 
 		res, err := ts.bankABI.Methods[DepositMethodName].Outputs.Unpack(success)
 		require.NoError(t, err)
 
 		ok := res[0].(bool)
 		require.False(t, ok)
+	})
+
+	t.Run("should fail when trying to deposit 0", func(t *testing.T) {
+		ts := setupChain(t)
+		caller := fungibletypes.ModuleAddressEVM
+		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, caller, big.NewInt(1000))
+
+		methodID := ts.bankABI.Methods[DepositMethodName]
+
+		// Allow bank to spend 500 ZRC20 tokens.
+		allowBank(t, ts, big.NewInt(500))
+
+		// Set CallerAddress and evm.Origin to the caller address.
+		// Caller does not have any balance, and bank does not have any allowance.
+		ts.mockVMContract.CallerAddress = caller
+		ts.mockEVM.Origin = caller
+
+		// Set the input arguments for the deposit method.
+		ts.mockVMContract.Input = packInputArgs(
+			t,
+			methodID,
+			[]interface{}{ts.zrc20Address, big.NewInt(0)}...,
+		)
+
+		_, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid token amount: 0")
 	})
 
 	t.Run("should fail when trying to deposit more than allowed to bank", func(t *testing.T) {
@@ -173,12 +194,10 @@ func Test_Methods(t *testing.T) {
 
 		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, false)
 		require.Error(t, err)
-		require.ErrorAs(
+		require.Contains(
 			t,
-			ptypes.ErrInvalidAmount{
-				Got: "500",
-			},
-			err,
+			err.Error(),
+			"unexpected error in LockZRC20InBank: failed allowance check: invalid allowance, got 500, wanted 501",
 		)
 
 		res, err := ts.bankABI.Methods[DepositMethodName].Outputs.Unpack(success)
