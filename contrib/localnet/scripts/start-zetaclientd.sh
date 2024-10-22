@@ -14,6 +14,11 @@ set_sepolia_endpoint() {
   jq '.EVMChainConfigs."11155111".Endpoint = "http://eth2:8545"' /root/.zetacored/config/zetaclient_config.json > tmp.json && mv tmp.json /root/.zetacored/config/zetaclient_config.json
 }
 
+# this is just for local development, to be removed and initialized whitelistPeers with zetaclient0 and zetaclient1 peerID
+set_disable_whitelist() {
+  jq '.DisableWhitelist = true' /root/.zetacored/config/zetaclient_config.json > tmp.json && mv tmp.json /root/.zetacored/config/zetaclient_config.json
+}
+
 # import a relayer private key (e.g. Solana relayer key)
 import_relayer_key() {
     local num="$1"
@@ -78,6 +83,8 @@ then
     # import relayer private key for zetaclient0
     import_relayer_key 0
 
+    set_disable_whitelist
+
     # if eth2 is enabled, set the endpoint in the zetaclient_config.json
     # in this case, the additional evm is represented with the sepolia chain, we set manually the eth2 endpoint to the sepolia chain (11155111 -> http://eth2:8545)
     # in /root/.zetacored/config/zetaclient_config.json
@@ -100,6 +107,8 @@ then
 
   # import relayer private key for zetaclient{$num}
   import_relayer_key "${num}"
+
+  set_disable_whitelist
 
   # check if the option is additional-evm
   # in this case, the additional evm is represented with the sepolia chain, we set manually the eth2 endpoint to the sepolia chain (11155111 -> http://eth2:8545)
