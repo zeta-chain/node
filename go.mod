@@ -366,4 +366,4 @@ replace github.com/evmos/ethermint => github.com/zeta-chain/ethermint v0.0.0-202
 
 replace github.com/libp2p/go-libp2p => github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4
 
-replace gitlab.com/thorchain/tss/go-tss => github.com/zeta-chain/go-tss v0.0.0-20240907163312-b576693642e0
+replace gitlab.com/thorchain/tss/go-tss => github.com/zeta-chain/go-tss v0.0.0-20241022120736-f4e1f77ec142
