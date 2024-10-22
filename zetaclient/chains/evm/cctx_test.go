@@ -1,12 +1,13 @@
 package evm_test
 
 import (
-	"github.com/zeta-chain/node/pkg/coin"
-	"github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/evm"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/evm"
 )
 
 func TestParseOutboundTypeFromCCTX(t *testing.T) {
