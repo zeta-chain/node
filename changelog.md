@@ -54,6 +54,7 @@
 * [2853](https://github.com/zeta-chain/node/pull/2853) - calling precompile through sc with sc state update
 * [2925](https://github.com/zeta-chain/node/pull/2925) - add recover to init chainer to diplay informative message when starting a node from block 1
 * [2909](https://github.com/zeta-chain/node/pull/2909) - add legacy messages back to codec for querier backward compatibility
+* [3018](https://github.com/zeta-chain/node/pull/3018) - support `DepositAndCall` and `WithdrawAndCall` with empty payload
 
 ## v20.0.0
 
