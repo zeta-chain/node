@@ -197,8 +197,6 @@ func (r *E2ERunner) DepositBTCWithStandardMemo(
 	memoBytes, err := memoStd.EncodeToBytes()
 	require.NoError(r, err)
 
-	r.Logger.Print("Standard memoBytes: %s, length: %d", hex.EncodeToString(memoBytes), len(memoBytes))
-
 	return r.SendToTSSFromDeployerWithMemo(amount, inputUTXOs, memoBytes)
 }
 

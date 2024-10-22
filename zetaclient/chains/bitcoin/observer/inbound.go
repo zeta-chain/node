@@ -1,30 +1,22 @@
 package observer
 
 import (
-	"bytes"
 	"context"
 	"encoding/hex"
 	"fmt"
 	"math/big"
 
-	cosmosmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
-	"github.com/zeta-chain/node/pkg/constant"
-	"github.com/zeta-chain/node/pkg/crypto"
-	"github.com/zeta-chain/node/pkg/memo"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/node/zetaclient/compliance"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/types"
@@ -351,72 +343,6 @@ func FilterAndParseIncomingTx(
 	return events, nil
 }
 
-// CheckEventProcessability checks if the inbound event is processable
-func (ob *Observer) CheckEventProcessability(event *BTCInboundEvent) bool {
-	// check if the event is processable
-	result := event.CheckProcessability()
-	switch result {
-	case InboundProcessabilityGood:
-		return true
-	case InboundProcessabilityDonation:
-		logFields := map[string]any{
-			logs.FieldChain: ob.Chain().ChainId,
-			logs.FieldTx:    event.TxHash,
-		}
-		ob.Logger().Inbound.Info().Fields(logFields).Msgf("thank you rich folk for your donation!")
-		return false
-	case InboundProcessabilityComplianceViolation:
-		compliance.PrintComplianceLog(ob.logger.Inbound, ob.logger.Compliance,
-			false, ob.Chain().ChainId, event.TxHash, event.FromAddress, event.ToAddress, "BTC")
-		return false
-	}
-
-	return true
-}
-
-// DecodeEventMemoBytes decodes the memo bytes as either standard or legacy memo
-func (ob *Observer) DecodeEventMemoBytes(event *BTCInboundEvent) error {
-	// skip decoding donation tx as it won't go through zetacore
-	if bytes.Equal(event.MemoBytes, []byte(constant.DonationMessage)) {
-		return nil
-	}
-
-	// try to decode the standard memo as the preferred format
-	var receiver ethcommon.Address
-	memoStd, err := memo.DecodeFromBytes(event.MemoBytes)
-	if err == nil {
-		event.MemoStd = memoStd
-		receiver = memoStd.Receiver
-	} else {
-		// fallback to legacy memo if standard memo decoding fails
-		parsedAddress, _, err := memo.DecodeLegacyMemoHex(hex.EncodeToString(event.MemoBytes))
-		if err != nil {
-			return errors.Wrap(err, "invalid legacy memo")
-		}
-		receiver = parsedAddress
-	}
-
-	// ensure the receiver is valid
-	if crypto.IsEmptyAddress(receiver) {
-		return errors.New("got empty receiver address from memo")
-	}
-	event.ToAddress = receiver.Hex()
-
-	// ensure the revert address is valid and supported
-	revertAddress := memoStd.RevertOptions.RevertAddress
-	if event.MemoStd != nil && revertAddress != "" {
-		btcAddress, err := chains.DecodeBtcAddress(revertAddress, ob.Chain().ChainId)
-		if err != nil {
-			return errors.Wrapf(err, "invalid revert address in memo: %s", revertAddress)
-		}
-		if !chains.IsBtcAddressSupported(btcAddress) {
-			return fmt.Errorf("unsupported revert address in memo: %s", revertAddress)
-		}
-	}
-
-	return nil
-}
-
 // GetInboundVoteFromBtcEvent converts a BTCInboundEvent to a MsgVoteInbound to enable voting on the inbound on zetacore
 func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosschaintypes.MsgVoteInbound {
 	// prepare logger fields
@@ -451,65 +377,6 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 
 	// create inbound vote message for standard memo
 	return ob.NewInboundVoteMemoStd(event, amountInt)
-}
-
-// NewInboundVoteV1 creates a MsgVoteInbound message for inbound that uses legacy memo
-func (ob *Observer) NewInboundVoteV1(event *BTCInboundEvent, amountSats *big.Int) *crosschaintypes.MsgVoteInbound {
-	message := hex.EncodeToString(event.MemoBytes)
-
-	return crosschaintypes.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
-		event.FromAddress,
-		ob.Chain().ChainId,
-		event.FromAddress,
-		event.ToAddress,
-		ob.ZetacoreClient().Chain().ChainId,
-		cosmosmath.NewUintFromBigInt(amountSats),
-		message,
-		event.TxHash,
-		event.BlockNumber,
-		0,
-		coin.CoinType_Gas,
-		"",
-		0,
-		crosschaintypes.ProtocolContractVersion_V1,
-		false, // not relevant for v1
-	)
-}
-
-// NewInboundVoteMemoStd creates a MsgVoteInbound message for inbound that uses standard memo
-// TODO: rename this function as 'EventToInboundVoteV2' to use ProtocolContractVersion_V2 and enable more options
-// https://github.com/zeta-chain/node/issues/2711
-func (ob *Observer) NewInboundVoteMemoStd(event *BTCInboundEvent, amountSats *big.Int) *crosschaintypes.MsgVoteInbound {
-	// replace 'sender' with 'revertAddress' if specified in the memo, so that
-	// zetacore will refund to the address specified by the user in the revert options.
-	sender := event.FromAddress
-	if event.MemoStd.RevertOptions.RevertAddress != "" {
-		sender = event.MemoStd.RevertOptions.RevertAddress
-	}
-
-	// make a legacy message so that zetacore can process it
-	msgBytes := append(event.MemoStd.Receiver.Bytes(), event.MemoStd.Payload...)
-	message := hex.EncodeToString(msgBytes)
-
-	return crosschaintypes.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
-		sender,
-		ob.Chain().ChainId,
-		event.FromAddress,
-		event.ToAddress,
-		ob.ZetacoreClient().Chain().ChainId,
-		cosmosmath.NewUintFromBigInt(amountSats),
-		message,
-		event.TxHash,
-		event.BlockNumber,
-		0,
-		coin.CoinType_Gas,
-		"",
-		0,
-		crosschaintypes.ProtocolContractVersion_V1,
-		false, // not relevant for v1
-	)
 }
 
 // GetBtcEvent returns a valid BTCInboundEvent or nil

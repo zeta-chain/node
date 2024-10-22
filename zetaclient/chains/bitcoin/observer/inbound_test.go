@@ -2,9 +2,7 @@ package observer_test
 
 import (
 	"bytes"
-	"encoding/binary"
 	"encoding/hex"
-	"fmt"
 	"math"
 	"path"
 	"strings"
@@ -14,16 +12,19 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/txscript"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/testutil"
+	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	clientcommon "github.com/zeta-chain/node/zetaclient/common"
+	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testrpc"
@@ -141,6 +142,69 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 	})
 }
 
+func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
+	// can use any bitcoin chain for testing
+	chain := chains.BitcoinMainnet
+	params := mocks.MockChainParams(chain.ChainId, 10)
+
+	// create test observer
+	ob := MockBTCObserver(t, chain, params, nil)
+	zetacoreClient := mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{}).WithZetaChain()
+	ob.WithZetacoreClient(zetacoreClient)
+
+	// test cases
+	tests := []struct {
+		name    string
+		event   *observer.BTCInboundEvent
+		nilVote bool
+	}{
+		{
+			name: "should return vote for standard memo",
+			event: &observer.BTCInboundEvent{
+				FromAddress: sample.BtcAddressP2WPKH(t, &chaincfg.MainNetParams),
+				// a deposit and call
+				MemoBytes: testutil.HexToBytes(
+					t,
+					"5a0110032d07a9cbd57dcca3e2cf966c88bc874445b6e3b60d68656c6c6f207361746f736869",
+				),
+			},
+		},
+		{
+			name: "should return vote for legacy memo",
+			event: &observer.BTCInboundEvent{
+				// raw address + payload
+				MemoBytes: testutil.HexToBytes(t, "2d07a9cbd57dcca3e2cf966c88bc874445b6e3b668656c6c6f207361746f736869"),
+			},
+		},
+		{
+			name: "should return nil if unable to decode memo",
+			event: &observer.BTCInboundEvent{
+				// standard memo that carries payload only, receiver address is empty
+				MemoBytes: testutil.HexToBytes(t, "5a0110020d68656c6c6f207361746f736869"),
+			},
+			nilVote: true,
+		},
+		{
+			name: "should return nil on donation message",
+			event: &observer.BTCInboundEvent{
+				MemoBytes: []byte(constant.DonationMessage),
+			},
+			nilVote: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msg := ob.GetInboundVoteFromBtcEvent(tt.event)
+			if tt.nilVote {
+				require.Nil(t, msg)
+			} else {
+				require.NotNil(t, msg)
+			}
+		})
+	}
+}
+
 func TestGetSenderAddressByVin(t *testing.T) {
 	// https://mempool.space/tx/3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867
 	txHash := "3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867"
@@ -189,40 +253,6 @@ func TestGetSenderAddressByVin(t *testing.T) {
 		sender, err := observer.GetSenderAddressByVin(rpcClient, txVin, net)
 		require.ErrorContains(t, err, "out of range")
 		require.Empty(t, sender)
-	})
-}
-
-func Test_DecodeEventMemoBytes(t *testing.T) {
-	// can use any bitcoin chain for testing
-	chain := chains.BitcoinRegtest
-	params := mocks.MockChainParams(chain.ChainId, 10)
-
-	// create test observer
-	ob := MockBTCObserver(t, chain, params, nil)
-
-	buf := make([]byte, 2)
-	binary.LittleEndian.PutUint16(buf, uint16(256))
-
-	t.Run("should decode standard memo bytes", func(t *testing.T) {
-		// create test standard memo bytes
-		//memoHex := "5a010001283d810090edf4043e75247eaebce848806237fd"
-		memoHex := "5a01100757bcbefff7c37b24602e378ce938a1a1851513e40961207061796c6f61642c626372743171793970716d6b32706439737636336732376a7438723635377779306439756565347832647432" +
-			"5a01100757bcbefff7c37b24602e378ce938a1a1851513e40961207061796c6f61642c626372743171793970716d6b3270"
-		memo, _ := hex.DecodeString(memoHex)
-		nullData, err := txscript.NullDataScript(memo)
-		require.NoError(t, err)
-		fmt.Printf("nullData: %s\n", hex.EncodeToString(nullData))
-
-		memoBytes, err := hex.DecodeString(memoHex)
-		require.NoError(t, err)
-
-		event := &observer.BTCInboundEvent{
-			MemoBytes: memoBytes,
-		}
-
-		// decode memo bytes
-		err = ob.DecodeEventMemoBytes(event)
-		require.NoError(t, err)
 	})
 }
 

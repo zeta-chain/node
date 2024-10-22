@@ -20,6 +20,7 @@
 * [2896](https://github.com/zeta-chain/node/pull/2896) - add TON inbound observation
 * [2987](https://github.com/zeta-chain/node/pull/2987) - add non-EVM standard inbound memo package
 * [2979](https://github.com/zeta-chain/node/pull/2979) - add fungible keeper ability to lock/unlock ZRC20 tokens
+* [3025](https://github.com/zeta-chain/node/pull/3025) - standard memo for Bitcoin inbound
 
 ### Refactor
 
