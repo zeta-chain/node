@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -298,8 +299,8 @@ func TestAppImportExport(t *testing.T) {
 
 	newDB, newDir, _, _, err := cosmossimutils.SetupSimulation(
 		config,
-		SimDBBackend,
-		SimDBName,
+		SimDBBackend+"_new",
+		SimDBName+"_new",
 		simutils.FlagVerboseValue,
 		simutils.FlagEnabledValue,
 	)
@@ -368,7 +369,115 @@ func TestAppImportExport(t *testing.T) {
 		failedKVAs, failedKVBs := simutils.DiffKVStores(storeA, storeB, skp.Prefixes)
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
 
-		fmt.Printf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
+		t.Logf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
 		require.Equal(t, 0, len(failedKVAs), cosmossimutils.GetSimulationLog(skp.A.Name(), simApp.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
 	}
+}
+
+func TestAppSimulationAfterImport(t *testing.T) {
+	config := simutils.NewConfigFromFlags()
+
+	config.ChainID = SimAppChainID
+	config.BlockMaxGas = SimBlockMaxGas
+	config.DBBackend = SimDBBackend
+
+	db, dir, logger, skip, err := cosmossimutils.SetupSimulation(
+		config,
+		SimDBBackend,
+		SimDBName,
+		simutils.FlagVerboseValue,
+		simutils.FlagEnabledValue,
+	)
+	if skip {
+		t.Skip("skipping application simulation")
+	}
+	require.NoError(t, err, "simulation setup failed")
+
+	defer func() {
+		require.NoError(t, db.Close())
+		require.NoError(t, os.RemoveAll(dir))
+	}()
+
+	appOptions := make(cosmossimutils.AppOptionsMap, 0)
+	appOptions[server.FlagInvCheckPeriod] = simutils.FlagPeriodValue
+	appOptions[flags.FlagHome] = dir
+	simApp, err := simutils.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	require.NoError(t, err)
+
+	// Run randomized simulation
+	blockedAddresses := simApp.ModuleAccountAddrs()
+	stopEarly, simParams, simerr := simulation.SimulateFromSeed(
+		t,
+		os.Stdout,
+		simApp.BaseApp,
+		simutils.AppStateFn(
+			simApp.AppCodec(),
+			simApp.SimulationManager(),
+			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
+		),
+		cosmossim.RandomAccounts,
+		cosmossimutils.SimulationOperations(simApp, simApp.AppCodec(), config),
+		blockedAddresses,
+		config,
+		simApp.AppCodec(),
+	)
+	require.NoError(t, simerr)
+
+	// export state and simParams before the simulation error is checked
+	err = simutils.CheckExportSimulation(simApp, config, simParams)
+	require.NoError(t, err)
+
+	simutils.PrintStats(db)
+
+	if stopEarly {
+		t.Log("can't export or import a zero-validator genesis, exiting test")
+		return
+	}
+
+	t.Log("exporting genesis")
+
+	exported, err := simApp.ExportAppStateAndValidators(true, []string{}, []string{})
+	require.NoError(t, err)
+
+	t.Log("importing genesis")
+
+	newDB, newDir, _, _, err := cosmossimutils.SetupSimulation(
+		config,
+		SimDBBackend+"_new",
+		SimDBName+"_new",
+		simutils.FlagVerboseValue,
+		simutils.FlagEnabledValue,
+	)
+
+	require.NoError(t, err, "simulation setup failed")
+
+	defer func() {
+		require.NoError(t, newDB.Close())
+		require.NoError(t, os.RemoveAll(newDir))
+	}()
+
+	newSimApp, err := simutils.NewSimApp(logger, newDB, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	require.NoError(t, err)
+
+	newSimApp.InitChain(abci.RequestInitChain{
+		ChainId:       SimAppChainID,
+		AppStateBytes: exported.AppState,
+	})
+
+	stopEarly, simParams, simerr = simulation.SimulateFromSeed(
+		t,
+		os.Stdout,
+		newSimApp.BaseApp,
+		simutils.AppStateFn(
+			simApp.AppCodec(),
+			simApp.SimulationManager(),
+			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
+		),
+		cosmossim.RandomAccounts,
+		cosmossimutils.SimulationOperations(newSimApp, newSimApp.AppCodec(), config),
+		blockedAddresses,
+		config,
+		simApp.AppCodec(),
+	)
+	require.NoError(t, err)
 }

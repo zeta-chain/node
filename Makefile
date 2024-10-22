@@ -392,6 +392,12 @@ test-sim-nondeterminism:
 test-sim-fullappsimulation:
 	$(call run-sim-test,"TestFullAppSimulation",TestFullAppSimulation,100,200,2h)
 
+test-sim-import-export-local:
+	$(call run-sim-test,"test-import",TestAppImportExport,10,20,2h)
+
+test-sim-after-import-local:
+	$(call run-sim-test,"test-sim-after-import",TestAppSimulationAfterImport,10,20,2h)
+
 test-sim-multi-seed-long: runsim
 	@echo "Running long multi-seed application simulation."
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 500 50 TestFullAppSimulation
@@ -400,8 +406,6 @@ test-sim-multi-seed-short: runsim
 	@echo "Running short multi-seed application simulation."
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 50 10 TestFullAppSimulation
 
-test-sim-import:
-	$(call run-sim-test,"test-import",TestAppImportExport,10,20,2h)
 
 test-sim-import-export: export GOFLAGS=-tags=objstore
 test-sim-import-export: runsim
