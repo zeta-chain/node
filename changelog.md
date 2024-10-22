@@ -36,7 +36,7 @@
 * [2874](https://github.com/zeta-chain/node/pull/2874) - add support for multiple runs for precompile tests
 * [2895](https://github.com/zeta-chain/node/pull/2895) - add e2e test for bitcoin deposit and call
 * [2894](https://github.com/zeta-chain/node/pull/2894) - increase gas limit for TSS vote tx
-* [2947](https://github.com/zeta-chain/node/pull/2947/) - initialize simulation tests
+* [2947](https://github.com/zeta-chain/node/pull/2947) - initialize simulation tests
 
 ### Fixes
 
