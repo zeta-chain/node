@@ -37,7 +37,7 @@ event Called(
 
 ## 1. The Memo Diagram
 
-![](images/002_layout.png)<br><br>
+![](images/001_layout.png)<br><br>
 
 
 ## 2. The memo structure
