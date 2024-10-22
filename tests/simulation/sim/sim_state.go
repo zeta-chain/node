@@ -248,7 +248,7 @@ func AppStateFromGenesisFileFn(
 	cdc codec.JSONCodec,
 	genesisFile string,
 ) (tmtypes.GenesisDoc, []simtypes.Account, error) {
-	bytes, err := os.ReadFile(genesisFile)
+	bytes, err := os.ReadFile(genesisFile) // #nosec G304 -- genesisFile value is controlled
 	if err != nil {
 		panic(err)
 	}
