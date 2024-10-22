@@ -93,10 +93,8 @@ func New(
 		return nil, errors.New("signerMap or observerMap is nil")
 	}
 
-	log := multiLogger{
-		Logger:  logger.Std.With().Str("module", "orchestrator").Logger(),
-		Sampled: logger.Std.With().Str("module", "orchestrator").Logger().Sample(defaultLogSampler),
-	}
+	logging := logger.Std.With().Str(logs.FieldModule, "orchestrator").Logger()
+	log := multiLogger{Logger: logging, Sampled: logging.Sample(defaultLogSampler)}
 
 	balance, err := client.GetZetaHotKeyBalance(ctx)
 	if err != nil {
@@ -712,8 +710,8 @@ func (oc *Orchestrator) syncObserverSigner(ctx context.Context) error {
 
 	if added+removed > 0 {
 		oc.logger.Info().
-			Int("signers.added", added).
-			Int("signers.removed", removed).
+			Int("signer.added", added).
+			Int("signer.removed", removed).
 			Msg("synced signers")
 	}
 
