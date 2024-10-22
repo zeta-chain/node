@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
@@ -82,6 +83,7 @@ func TestParsing(t *testing.T) {
 
 		// Check tx props
 		assert.Equal(t, int(OpDeposit), int(parsedTX.Operation))
+		assert.Zero(t, parsedTX.ExitCode)
 
 		// Check deposit
 		deposit, err := parsedTX.Deposit()
@@ -161,6 +163,46 @@ func TestParsing(t *testing.T) {
 
 	})
 
+	t.Run("Withdrawal", func(t *testing.T) {
+		// ARRANGE
+		// Given a tx
+		tx, fx := getFixtureTX(t, "06-withdrawal")
+
+		// Given a gateway contract
+		gw := NewGateway(ton.MustParseAccountID(fx.Account))
+
+		// ACT
+		parsedTX, err := gw.ParseTransaction(tx)
+
+		// ASSERT
+		require.NoError(t, err)
+		assert.Equal(t, OpWithdraw, parsedTX.Operation)
+		assert.Zero(t, parsedTX.ExitCode)
+
+		// 0.01 TON
+		const expectedAmount = 10_000_000
+
+		actualAmount := parsedTX.Msgs.OutMsgs.Values()[0].Value.Info.IntMsgInfo.Value.Grams
+		assert.Equal(t, tlb.Coins(expectedAmount), actualAmount)
+
+		// Check withdrawal
+		w, err := parsedTX.Withdrawal()
+		require.NoError(t, err)
+
+		expectedRecipient := ton.MustParseAccountID("0QDQ51yWafHKgOjMF4ZwOfGsxnQ2yx_InZQG1NGwMfs2y62E")
+
+		assert.Equal(t, expectedRecipient, w.Recipient)
+		assert.Equal(t, uint32(1), w.Seqno)
+		assert.Equal(t, math.NewUint(expectedAmount), w.Amount)
+
+		// Expect TSS signer address
+		signer, err := w.Signer()
+		require.NoError(t, err)
+
+		const expectedTSS = "0xFA033cebd2EB4A800F74d70C10dfc8710fF0d148"
+		assert.Equal(t, expectedTSS, signer.Hex())
+	})
+
 	t.Run("Irrelevant tx", func(t *testing.T) {
 		t.Run("Failed tx", func(t *testing.T) {
 			// ARRANGE
@@ -173,11 +215,11 @@ func TestParsing(t *testing.T) {
 			// ACT
 			_, err := gw.ParseTransaction(tx)
 
-			assert.ErrorIs(t, err, ErrParse)
+			assert.ErrorIs(t, err, ErrUnknownOp)
 
 			// 102 is 'unknown op'
 			// https://github.com/zeta-chain/protocol-contracts-ton/blob/main/contracts/common/errors.fc
-			assert.ErrorContains(t, err, "is not successful (exit code 102)")
+			assert.ErrorContains(t, err, "unknown op")
 		})
 
 		t.Run("not a deposit nor a withdrawal", func(t *testing.T) {

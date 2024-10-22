@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/math"
 	eth "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/tonkeeper/tongo/boc"
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
@@ -21,10 +22,7 @@ const (
 	OpDepositAndCall
 )
 
-// Outbound operations
-const (
-	OpWithdraw Op = 200
-)
+const OpWithdraw Op = 200
 
 // Donation represents a donation operation
 type Donation struct {
@@ -140,6 +138,30 @@ func (w *Withdrawal) SetSignature(sig [65]byte) {
 	copy(w.Sig[:], sig[:])
 }
 
+// Signer returns EVM address of the signer (e.g. TSS)
+func (w *Withdrawal) Signer() (eth.Address, error) {
+	hash, err := w.Hash()
+	if err != nil {
+		return eth.Address{}, err
+	}
+
+	var sig [65]byte
+	copy(sig[:], w.Sig[:])
+
+	// recovery id
+	// https://bitcoin.stackexchange.com/questions/38351/ecdsa-v-r-s-what-is-v
+	if sig[64] >= 27 {
+		sig[64] -= 27
+	}
+
+	pub, err := crypto.SigToPub(hash[:], sig[:])
+	if err != nil {
+		return eth.Address{}, err
+	}
+
+	return crypto.PubkeyToAddress(*pub), nil
+}
+
 func (w *Withdrawal) AsBody() (*boc.Cell, error) {
 	payload, err := w.payload()
 	if err != nil {
@@ -182,12 +204,12 @@ func (w *Withdrawal) payload() (*boc.Cell, error) {
 	return payload, nil
 }
 
-// Ton Virtual Machine (TVM) uses different order of signature params (v,r,s)
-// let's split them as required
+// Ton Virtual Machine (TVM) uses different order of signature params (v,r,s) instead of (r,s,v);
+// Let's split them as required.
 func splitSignature(sig [65]byte) (v byte, r [32]byte, s [32]byte) {
-	v = sig[64]
 	copy(r[:], sig[:32])
 	copy(s[:], sig[32:64])
+	v = sig[64]
 
 	return v, r, s
 }
