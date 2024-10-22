@@ -2,11 +2,27 @@ package simulation_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"os"
+	"runtime/debug"
+	"strings"
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/app"
 	simutils "github.com/zeta-chain/node/tests/simulation/sim"
 
 	"github.com/cosmos/cosmos-sdk/store"
@@ -24,6 +40,12 @@ import (
 
 func init() {
 	simutils.GetSimulatorFlags()
+}
+
+type StoreKeysPrefixes struct {
+	A        storetypes.StoreKey
+	B        storetypes.StoreKey
+	Prefixes [][]byte
 }
 
 const (
@@ -79,7 +101,7 @@ func TestAppStateDeterminism(t *testing.T) {
 		if config.Seed == cosmossimcli.DefaultSeedValue {
 			config.Seed = rand.Int63()
 		}
-		// For the same seed, the app hash produced at the end of each run should be the same
+		// For the same seed, the simApp hash produced at the end of each run should be the same
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			db, dir, logger, _, err := cosmossimutils.SetupSimulation(
 				config,
@@ -150,7 +172,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	}
 }
 
-// TestFullAppSimulation runs a full app simulation with the provided configuration.
+// TestFullAppSimulation runs a full simApp simulation with the provided configuration.
 // At the end of the run it tries to export the genesis state to make sure the export works.
 func TestFullAppSimulation(t *testing.T) {
 
@@ -210,4 +232,143 @@ func TestFullAppSimulation(t *testing.T) {
 	}
 
 	simutils.PrintStats(db)
+}
+
+func TestAppImportExport(t *testing.T) {
+	config := simutils.NewConfigFromFlags()
+
+	config.ChainID = SimAppChainID
+	config.BlockMaxGas = SimBlockMaxGas
+	config.DBBackend = SimDBBackend
+
+	db, dir, logger, skip, err := cosmossimutils.SetupSimulation(
+		config,
+		SimDBBackend,
+		SimDBName,
+		simutils.FlagVerboseValue,
+		simutils.FlagEnabledValue,
+	)
+	if skip {
+		t.Skip("skipping application simulation")
+	}
+	require.NoError(t, err, "simulation setup failed")
+
+	defer func() {
+		require.NoError(t, db.Close())
+		require.NoError(t, os.RemoveAll(dir))
+	}()
+
+	appOptions := make(cosmossimutils.AppOptionsMap, 0)
+	appOptions[server.FlagInvCheckPeriod] = simutils.FlagPeriodValue
+	appOptions[flags.FlagHome] = dir
+	simApp, err := simutils.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	require.NoError(t, err)
+
+	// Run randomized simulation
+	blockedAddresses := simApp.ModuleAccountAddrs()
+	_, simparams, simerr := simulation.SimulateFromSeed(
+		t,
+		os.Stdout,
+		simApp.BaseApp,
+		simutils.AppStateFn(
+			simApp.AppCodec(),
+			simApp.SimulationManager(),
+			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
+		),
+		cosmossim.RandomAccounts,
+		cosmossimutils.SimulationOperations(simApp, simApp.AppCodec(), config),
+		blockedAddresses,
+		config,
+		simApp.AppCodec(),
+	)
+	require.NoError(t, simerr)
+
+	// export state and simParams before the simulation error is checked
+	err = simutils.CheckExportSimulation(simApp, config, simparams)
+	require.NoError(t, err)
+
+	simutils.PrintStats(db)
+
+	t.Log("exporting genesis")
+
+	exported, err := simApp.ExportAppStateAndValidators(false, []string{}, []string{})
+	require.NoError(t, err)
+
+	t.Log("importing genesis")
+
+	newDB, newDir, _, _, err := cosmossimutils.SetupSimulation(
+		config,
+		SimDBBackend,
+		SimDBName,
+		simutils.FlagVerboseValue,
+		simutils.FlagEnabledValue,
+	)
+
+	require.NoError(t, err, "simulation setup failed")
+
+	defer func() {
+		require.NoError(t, newDB.Close())
+		require.NoError(t, os.RemoveAll(newDir))
+	}()
+
+	newSimApp, err := simutils.NewSimApp(logger, newDB, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	require.NoError(t, err)
+
+	var genesisState app.GenesisState
+	err = json.Unmarshal(exported.AppState, &genesisState)
+	require.NoError(t, err)
+
+	defer func() {
+		if r := recover(); r != nil {
+			err := fmt.Sprintf("%v", r)
+			if !strings.Contains(err, "validator set is empty after InitGenesis") {
+				panic(r)
+			}
+			logger.Info("Skipping simulation as all validators have been unbonded")
+			logger.Info("err", err, "stacktrace", string(debug.Stack()))
+		}
+	}()
+
+	ctxA := simApp.NewContext(true, tmproto.Header{
+		Height:  simApp.LastBlockHeight(),
+		ChainID: SimAppChainID,
+	}).WithChainID(SimAppChainID)
+	ctxB := newSimApp.NewContext(true, tmproto.Header{
+		Height:  simApp.LastBlockHeight(),
+		ChainID: SimAppChainID,
+	}).WithChainID(SimAppChainID)
+	newSimApp.ModuleManager().InitGenesis(ctxB, newSimApp.AppCodec(), genesisState)
+	newSimApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
+
+	t.Log("comparing stores")
+
+	storeKeysPrefixes := []StoreKeysPrefixes{
+
+		{simApp.GetKey(authtypes.StoreKey), newSimApp.GetKey(authtypes.StoreKey), [][]byte{}},
+		{
+			simApp.GetKey(stakingtypes.StoreKey), newSimApp.GetKey(stakingtypes.StoreKey),
+			[][]byte{
+				stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
+				stakingtypes.HistoricalInfoKey, stakingtypes.UnbondingIDKey, stakingtypes.UnbondingIndexKey, stakingtypes.UnbondingTypeKey, stakingtypes.ValidatorUpdatesKey,
+			},
+		}, // ordering may change but it doesn't matter
+		{simApp.GetKey(slashingtypes.StoreKey), newSimApp.GetKey(slashingtypes.StoreKey), [][]byte{}},
+		{simApp.GetKey(distrtypes.StoreKey), newSimApp.GetKey(distrtypes.StoreKey), [][]byte{}},
+		{simApp.GetKey(banktypes.StoreKey), newSimApp.GetKey(banktypes.StoreKey), [][]byte{banktypes.BalancesPrefix}},
+		{simApp.GetKey(paramtypes.StoreKey), newSimApp.GetKey(paramtypes.StoreKey), [][]byte{}},
+		{simApp.GetKey(govtypes.StoreKey), newSimApp.GetKey(govtypes.StoreKey), [][]byte{}},
+		{simApp.GetKey(evidencetypes.StoreKey), newSimApp.GetKey(evidencetypes.StoreKey), [][]byte{}},
+		{simApp.GetKey(evmtypes.StoreKey), newSimApp.GetKey(evmtypes.StoreKey), [][]byte{}},
+	}
+
+	for _, skp := range storeKeysPrefixes {
+		storeA := ctxA.KVStore(skp.A)
+		storeB := ctxB.KVStore(skp.B)
+
+		failedKVAs, failedKVBs := simutils.DiffKVStores(storeA, storeB, skp.Prefixes)
+		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
+
+		fmt.Printf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
+		require.Equal(t, 0, len(failedKVAs), cosmossimutils.GetSimulationLog(skp.A.Name(), simApp.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
+	}
 }

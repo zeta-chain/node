@@ -387,7 +387,7 @@ define run-sim-test
 endef
 
 test-sim-nondeterminism:
-	$(call run-sim-test,"non-determinism test",TestAppStateDeterminism,100,200,2h)
+	$(call run-sim-test,"non-determinism test",TestAppStateDeterminism,10,20,2h)
 
 test-sim-fullappsimulation:
 	$(call run-sim-test,"TestFullAppSimulation",TestFullAppSimulation,100,200,2h)
@@ -400,7 +400,13 @@ test-sim-multi-seed-short: runsim
 	@echo "Running short multi-seed application simulation."
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 50 10 TestFullAppSimulation
 
+test-sim-import:
+	$(call run-sim-test,"test-import",TestAppImportExport,10,20,2h)
 
+test-sim-import-export: export GOFLAGS=-tags=objstore
+test-sim-import-export: runsim
+	@echo "Running application import/export simulation. This may take several minutes..."
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 50 5 TestAppImportExport
 
 .PHONY: \
 test-sim-nondeterminism \

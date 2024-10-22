@@ -929,6 +929,10 @@ func (app *App) GetKey(storeKey string) *storetypes.KVStoreKey {
 	return app.keys[storeKey]
 }
 
+func (app *App) GetKeys() map[string]*storetypes.KVStoreKey {
+	return app.keys
+}
+
 // GetTKey returns the TransientStoreKey for the provided store key.
 //
 // NOTE: This is solely to be used for testing purposes.
@@ -1058,6 +1062,10 @@ func (app *App) SimulationManager() *module.SimulationManager {
 
 func (app *App) BasicManager() module.BasicManager {
 	return app.mb
+}
+
+func (app *App) ModuleManager() *module.Manager {
+	return app.mm
 }
 
 func (app *App) BlockedAddrs() map[string]bool {
