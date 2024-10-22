@@ -365,7 +365,7 @@ $(BINDIR)/runsim:
 	@echo 'runsim installed successfully'
 
 
-# Configuaration parameters for simulation tests
+# Configuration parameters for simulation tests
 # NumBlocks: Number of blocks to simulate
 # BlockSize: Number of transactions in a block
 # Commit: Whether to commit the block or not
