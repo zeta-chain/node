@@ -185,6 +185,8 @@ func SetupTSSServer(
 		preParams, // use pre-generated pre-params if non-nil
 		IP,        // for docker test
 		tssPassword,
+		cfg.WhitelistedPeers,
+		cfg.DisableWhitelist,
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("NewTSS error")
