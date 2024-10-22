@@ -116,39 +116,23 @@ func (ob *Observer) WithEvmJSONRPC(client interfaces.EVMJSONRPCClient) {
 	ob.evmJSONRPC = client
 }
 
-// SetChainParams sets the chain params for the observer
-// Note: chain params is accessed concurrently
-func (ob *Observer) SetChainParams(params observertypes.ChainParams) {
-	ob.Mu().Lock()
-	defer ob.Mu().Unlock()
-	ob.WithChainParams(params)
-}
-
-// GetChainParams returns the chain params for the observer
-// Note: chain params is accessed concurrently
-func (ob *Observer) GetChainParams() observertypes.ChainParams {
-	ob.Mu().Lock()
-	defer ob.Mu().Unlock()
-	return ob.ChainParams()
-}
-
 // GetConnectorContract returns the non-Eth connector address and binder
 func (ob *Observer) GetConnectorContract() (ethcommon.Address, *zetaconnector.ZetaConnectorNonEth, error) {
-	addr := ethcommon.HexToAddress(ob.GetChainParams().ConnectorContractAddress)
+	addr := ethcommon.HexToAddress(ob.ChainParams().ConnectorContractAddress)
 	contract, err := zetaconnector.NewZetaConnectorNonEth(addr, ob.evmClient)
 	return addr, contract, err
 }
 
 // GetConnectorContractEth returns the Eth connector address and binder
 func (ob *Observer) GetConnectorContractEth() (ethcommon.Address, *zetaconnectoreth.ZetaConnectorEth, error) {
-	addr := ethcommon.HexToAddress(ob.GetChainParams().ConnectorContractAddress)
+	addr := ethcommon.HexToAddress(ob.ChainParams().ConnectorContractAddress)
 	contract, err := FetchConnectorContractEth(addr, ob.evmClient)
 	return addr, contract, err
 }
 
 // GetERC20CustodyContract returns ERC20Custody contract address and binder
 func (ob *Observer) GetERC20CustodyContract() (ethcommon.Address, *erc20custody.ERC20Custody, error) {
-	addr := ethcommon.HexToAddress(ob.GetChainParams().Erc20CustodyContractAddress)
+	addr := ethcommon.HexToAddress(ob.ChainParams().Erc20CustodyContractAddress)
 	contract, err := erc20custody.NewERC20Custody(addr, ob.evmClient)
 	return addr, contract, err
 }
@@ -158,14 +142,14 @@ func (ob *Observer) GetERC20CustodyContract() (ethcommon.Address, *erc20custody.
 // this simplify the migration process v1 will be completely removed in the future
 // currently the ABI for withdraw is identical, therefore both contract instances can be used
 func (ob *Observer) GetERC20CustodyV2Contract() (ethcommon.Address, *erc20custodyv2.ERC20Custody, error) {
-	addr := ethcommon.HexToAddress(ob.GetChainParams().Erc20CustodyContractAddress)
+	addr := ethcommon.HexToAddress(ob.ChainParams().Erc20CustodyContractAddress)
 	contract, err := erc20custodyv2.NewERC20Custody(addr, ob.evmClient)
 	return addr, contract, err
 }
 
 // GetGatewayContract returns the gateway contract address and binder
 func (ob *Observer) GetGatewayContract() (ethcommon.Address, *gatewayevm.GatewayEVM, error) {
-	addr := ethcommon.HexToAddress(ob.GetChainParams().GatewayAddress)
+	addr := ethcommon.HexToAddress(ob.ChainParams().GatewayAddress)
 	contract, err := gatewayevm.NewGatewayEVM(addr, ob.evmClient)
 	return addr, contract, err
 }
@@ -190,7 +174,7 @@ func FetchZetaTokenContract(
 
 // Start all observation routines for the evm chain
 func (ob *Observer) Start(ctx context.Context) {
-	if noop := ob.Observer.Start(); noop {
+	if ok := ob.Observer.Start(); !ok {
 		ob.Logger().Chain.Info().Msgf("observer is already started for chain %d", ob.Chain().ChainId)
 		return
 	}

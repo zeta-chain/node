@@ -96,25 +96,9 @@ func (ob *Observer) WithSolClient(client interfaces.SolanaRPCClient) {
 	ob.solClient = client
 }
 
-// SetChainParams sets the chain params for the observer
-// Note: chain params is accessed concurrently
-func (ob *Observer) SetChainParams(params observertypes.ChainParams) {
-	ob.Mu().Lock()
-	defer ob.Mu().Unlock()
-	ob.WithChainParams(params)
-}
-
-// GetChainParams returns the chain params for the observer
-// Note: chain params is accessed concurrently
-func (ob *Observer) GetChainParams() observertypes.ChainParams {
-	ob.Mu().Lock()
-	defer ob.Mu().Unlock()
-	return ob.ChainParams()
-}
-
 // Start starts the Go routine processes to observe the Solana chain
 func (ob *Observer) Start(ctx context.Context) {
-	if noop := ob.Observer.Start(); noop {
+	if ok := ob.Observer.Start(); !ok {
 		ob.Logger().Chain.Info().Msgf("observer is already started for chain %d", ob.Chain().ChainId)
 		return
 	}

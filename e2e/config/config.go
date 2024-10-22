@@ -141,6 +141,7 @@ type ZEVM struct {
 	ERC20ZRC20Addr     DoubleQuotedString `yaml:"erc20_zrc20"`
 	BTCZRC20Addr       DoubleQuotedString `yaml:"btc_zrc20"`
 	SOLZRC20Addr       DoubleQuotedString `yaml:"sol_zrc20"`
+	TONZRC20Addr       DoubleQuotedString `yaml:"ton_zrc20"`
 	UniswapFactoryAddr DoubleQuotedString `yaml:"uniswap_factory"`
 	UniswapRouterAddr  DoubleQuotedString `yaml:"uniswap_router"`
 	ConnectorZEVMAddr  DoubleQuotedString `yaml:"connector_zevm"`

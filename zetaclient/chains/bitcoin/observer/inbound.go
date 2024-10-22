@@ -14,8 +14,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/memo"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
@@ -59,7 +59,7 @@ func (ob *Observer) WatchInbound(ctx context.Context) error {
 		return err
 	}
 
-	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInbound", ob.GetChainParams().InboundTicker)
+	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInbound", ob.ChainParams().InboundTicker)
 	if err != nil {
 		ob.logger.Inbound.Error().Err(err).Msg("error creating ticker")
 		return err
@@ -89,7 +89,7 @@ func (ob *Observer) WatchInbound(ctx context.Context) error {
 					ob.logger.Inbound.Debug().Err(err).Msg("WatchInbound: Bitcoin node is not enabled")
 				}
 			}
-			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.logger.Inbound)
+			ticker.UpdateInterval(ob.ChainParams().InboundTicker, ob.logger.Inbound)
 		case <-ob.StopChannel():
 			ob.logger.Inbound.Info().Msgf("WatchInbound stopped for chain %d", ob.Chain().ChainId)
 			return nil
@@ -205,7 +205,7 @@ func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
 		return err
 	}
 
-	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInboundTracker", ob.GetChainParams().InboundTicker)
+	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInboundTracker", ob.ChainParams().InboundTicker)
 	if err != nil {
 		ob.logger.Inbound.Err(err).Msg("error creating ticker")
 		return err
@@ -224,7 +224,7 @@ func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
 					Err(err).
 					Msgf("error observing inbound tracker for chain %d", ob.Chain().ChainId)
 			}
-			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.logger.Inbound)
+			ticker.UpdateInterval(ob.ChainParams().InboundTicker, ob.logger.Inbound)
 		case <-ob.StopChannel():
 			ob.logger.Inbound.Info().Msgf("WatchInboundTracker stopped for chain %d", ob.Chain().ChainId)
 			return nil
@@ -419,7 +419,7 @@ func (ob *Observer) GetInboundVoteMessageFromBtcEvent(inbound *BTCInboundEvent) 
 // TODO(revamp): move all compliance related functions in a specific file
 func (ob *Observer) DoesInboundContainsRestrictedAddress(inTx *BTCInboundEvent) bool {
 	receiver := ""
-	parsedAddress, _, err := chains.ParseAddressAndData(hex.EncodeToString(inTx.MemoBytes))
+	parsedAddress, _, err := memo.DecodeLegacyMemoHex(hex.EncodeToString(inTx.MemoBytes))
 	if err == nil && parsedAddress != (ethcommon.Address{}) {
 		receiver = parsedAddress.Hex()
 	}
@@ -431,10 +431,27 @@ func (ob *Observer) DoesInboundContainsRestrictedAddress(inTx *BTCInboundEvent) 
 	return false
 }
 
-// GetBtcEvent either returns a valid BTCInboundEvent or nil
+// GetBtcEvent returns a valid BTCInboundEvent or nil
+// it uses witness data to extract the sender address, except for mainnet
+func GetBtcEvent(
+	rpcClient interfaces.BTCRPCClient,
+	tx btcjson.TxRawResult,
+	tssAddress string,
+	blockNumber uint64,
+	logger zerolog.Logger,
+	netParams *chaincfg.Params,
+	depositorFee float64,
+) (*BTCInboundEvent, error) {
+	if netParams.Name == chaincfg.MainNetParams.Name {
+		return GetBtcEventWithoutWitness(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
+	}
+	return GetBtcEventWithWitness(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
+}
+
+// GetBtcEventWithoutWitness either returns a valid BTCInboundEvent or nil
 // Note: the caller should retry the tx on error (e.g., GetSenderAddressByVin failed)
 // TODO(revamp): simplify this function
-func GetBtcEvent(
+func GetBtcEventWithoutWitness(
 	rpcClient interfaces.BTCRPCClient,
 	tx btcjson.TxRawResult,
 	tssAddress string,

@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"runtime/debug"
 	"time"
 
 	cosmoserrors "cosmossdk.io/errors"
@@ -194,7 +195,7 @@ var maccPerms = map[string][]string{
 	fungibletypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
 	emissionstypes.ModuleName:                       nil,
 	emissionstypes.UndistributedObserverRewardsPool: nil,
-	emissionstypes.UndistributedTssRewardsPool:      nil,
+	emissionstypes.UndistributedTSSRewardsPool:      nil,
 }
 
 // module accounts that are NOT allowed to receive tokens
@@ -857,6 +858,26 @@ func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 
 // InitChainer application update at chain initialization
 func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+	// InitChainErrorMessage is the error message displayed when trying to sync testnet or mainnet from block 1 using the latest binary.
+	const InitChainErrorMessage = `
+Unable to sync testnet or mainnet from block 1 using the latest version.
+Please use a snapshot to sync your node.
+Refer to the documentation for more information:
+https://www.zetachain.com/docs/nodes/start-here/syncing/`
+
+	// The defer is used to catch panics during InitChain
+	// and display a more meaningful message for people trying to sync a node from block 1 using the latest binary.
+	// We exit the process after displaying the message as we do not need to start a node with empty state.
+
+	defer func() {
+		if r := recover(); r != nil {
+			ctx.Logger().Error("panic occurred during InitGenesis", "error", r)
+			ctx.Logger().Debug("stack trace", "stack", string(debug.Stack()))
+			ctx.Logger().
+				Info(InitChainErrorMessage)
+			os.Exit(1)
+		}
+	}()
 	var genesisState GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)

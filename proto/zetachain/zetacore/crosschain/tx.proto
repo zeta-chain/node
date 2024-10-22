@@ -119,7 +119,7 @@ message MsgVoteGasPrice {
 
   uint64 block_number = 4;
 
-  reserved 5; // deprecated `string supply`
+  string supply = 5 [ deprecated = true ];
 }
 
 message MsgVoteGasPriceResponse {}
@@ -178,6 +178,9 @@ message MsgVoteInbound {
   RevertOptions revert_options = 17 [ (gogoproto.nullable) = false ];
 
   CallOptions call_options = 18;
+
+  // define if a smart contract call should be made with asset
+  bool is_cross_chain_call = 19;
 }
 
 message MsgVoteInboundResponse {}

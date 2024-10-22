@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
+	query "github.com/cosmos/cosmos-sdk/types/query"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
@@ -13,10 +14,14 @@ import (
 	connectorzevm "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zetaconnectorzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
+// WaitForBlocks waits for a specific number of blocks to be generated
+// The parameter n is the number of blocks to wait for
 func (r *E2ERunner) WaitForBlocks(n int64) {
 	height, err := r.CctxClient.LastZetaHeight(r.Ctx, &types.QueryLastZetaHeightRequest{})
 	if err != nil {
@@ -31,6 +36,32 @@ func (r *E2ERunner) WaitForBlocks(n int64) {
 	err = retry.DoWithBackoff(call, boWithMaxRetries)
 	require.NoError(r, err, "failed to wait for %d blocks", n)
 }
+
+// WaitForTSSGeneration waits for a specific number of TSS to be generated
+// The parameter n is the number of TSS to wait for
+func (r *E2ERunner) WaitForTSSGeneration(tssNumber int64) {
+	call := func() error {
+		return retry.Retry(r.checkNumberOfTSSGenerated(tssNumber))
+	}
+	bo := backoff.NewConstantBackOff(time.Second * 5)
+	boWithMaxRetries := backoff.WithMaxRetries(bo, 10)
+	err := retry.DoWithBackoff(call, boWithMaxRetries)
+	require.NoError(r, err, "failed to wait for %d tss generation", tssNumber)
+}
+
+// checkNumberOfTSSGenerated checks the number of TSS generated
+// if the number of tss is less that the `tssNumber` provided we return an error
+func (r *E2ERunner) checkNumberOfTSSGenerated(tssNumber int64) error {
+	tssList, err := r.ObserverClient.TssHistory(r.Ctx, &observertypes.QueryTssHistoryRequest{})
+	if err != nil {
+		return err
+	}
+	if int64(len(tssList.TssList)) < tssNumber {
+		return fmt.Errorf("waiting for %d tss generation, number of TSS :%d", tssNumber, len(tssList.TssList))
+	}
+	return nil
+}
+
 func (r *E2ERunner) waitForBlock(n int64) error {
 	height, err := r.CctxClient.LastZetaHeight(r.Ctx, &types.QueryLastZetaHeightRequest{})
 	if err != nil {
@@ -67,12 +98,47 @@ func (r *E2ERunner) WaitForMinedCCTX(txHash ethcommon.Hash) {
 }
 
 // WaitForMinedCCTXFromIndex waits for a cctx to be mined from its index
-func (r *E2ERunner) WaitForMinedCCTXFromIndex(index string) {
+func (r *E2ERunner) WaitForMinedCCTXFromIndex(index string) *types.CrossChainTx {
 	r.Lock()
 	defer r.Unlock()
 
 	cctx := utils.WaitCCTXMinedByIndex(r.Ctx, index, r.CctxClient, r.Logger, r.CctxTimeout)
 	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_OutboundMined)
+
+	return cctx
+}
+
+// WaitForSpecificCCTX scans for cctx by filters and ensures it's mined
+func (r *E2ERunner) WaitForSpecificCCTX(
+	filter func(*types.CrossChainTx) bool,
+	timeout time.Duration,
+) *types.CrossChainTx {
+	var (
+		ctx      = r.Ctx
+		start    = time.Now()
+		reqQuery = &types.QueryAllCctxRequest{
+			Pagination: &query.PageRequest{Reverse: true},
+		}
+	)
+
+	for time.Since(start) < timeout {
+		res, err := r.CctxClient.CctxAll(ctx, reqQuery)
+		require.NoError(r, err)
+
+		for i := range res.CrossChainTx {
+			tx := res.CrossChainTx[i]
+			if filter(tx) {
+				return r.WaitForMinedCCTXFromIndex(tx.Index)
+			}
+		}
+
+		time.Sleep(time.Second)
+	}
+
+	r.Logger.Error("WaitForSpecificCCTX: No CCTX found. Timed out")
+	r.FailNow()
+
+	return nil
 }
 
 // SendZetaOnEvm sends ZETA to an address on EVM
@@ -249,4 +315,15 @@ func (r *E2ERunner) WithdrawERC20(amount *big.Int) *ethtypes.Transaction {
 	}
 
 	return tx
+}
+
+// skipChainOperations checks if the chain operations should be skipped for E2E
+func (r *E2ERunner) skipChainOperations(chainID int64) bool {
+	skip := r.IsRunningUpgrade() && chains.IsTONChain(chainID, nil)
+
+	if skip {
+		r.Logger.Print("Skipping chain operations for chain %d", chainID)
+	}
+
+	return skip
 }

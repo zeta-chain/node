@@ -7,6 +7,7 @@ import (
 
 	"github.com/btcsuite/btcd/chaincfg"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/tonkeeper/tongo/ton"
 )
 
 // Validate checks whether the chain is valid
@@ -93,6 +94,10 @@ func (chain Chain) IsBitcoinChain() bool {
 	return chain.Consensus == Consensus_bitcoin
 }
 
+func (chain Chain) IsTONChain() bool {
+	return chain.Consensus == Consensus_catchain_consensus
+}
+
 // DecodeAddressFromChainID decode the address string to bytes
 // additionalChains is a list of additional chains to search from
 // in practice, it is used in the protocol to dynamically support new chains without doing an upgrade
@@ -104,6 +109,14 @@ func DecodeAddressFromChainID(chainID int64, addr string, additionalChains []Cha
 		return []byte(addr), nil
 	case IsSolanaChain(chainID, additionalChains):
 		return []byte(addr), nil
+	case IsTONChain(chainID, additionalChains):
+		// e.g. `0:55798cb7b87168251a7c39f6806b8c202f6caa0f617a76f4070b3fdacfd056a1`
+		acc, err := ton.ParseAccountID(addr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid TON address %q: %w", addr, err)
+		}
+
+		return []byte(acc.ToRaw()), nil
 	default:
 		return nil, fmt.Errorf("chain (%d) not supported", chainID)
 	}
@@ -130,6 +143,11 @@ func IsBitcoinChain(chainID int64, additionalChains []Chain) bool {
 // IsSolanaChain returns true if the chain is a Solana chain
 func IsSolanaChain(chainID int64, additionalChains []Chain) bool {
 	return ChainIDInChainList(chainID, ChainListByNetwork(Network_solana, additionalChains))
+}
+
+// IsTONChain returns true is the chain is TON chain
+func IsTONChain(chainID int64, additionalChains []Chain) bool {
+	return ChainIDInChainList(chainID, ChainListByNetwork(Network_ton, additionalChains))
 }
 
 // IsEthereumChain returns true if the chain is an Ethereum chain

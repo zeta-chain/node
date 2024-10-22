@@ -25,15 +25,27 @@ func RequireCCTXStatus(
 // RequireTxSuccessful checks if the receipt status is successful.
 // Currently, it accepts eth receipt, but we can make this more generic by using type assertion.
 func RequireTxSuccessful(t require.TestingT, receipt *ethtypes.Receipt, msgAndArgs ...any) {
-	msg := "receipt status is not successful"
-	require.Equal(t, ethtypes.ReceiptStatusSuccessful, receipt.Status, msg+errSuffix(msgAndArgs...))
+	msg := "receipt status is not successful: %s"
+	require.Equal(
+		t,
+		ethtypes.ReceiptStatusSuccessful,
+		receipt.Status,
+		msg+errSuffix(msgAndArgs...),
+		receipt.TxHash.String(),
+	)
 }
 
 // RequiredTxFailed checks if the receipt status is failed.
 // Currently, it accepts eth receipt, but we can make this more generic by using type assertion.
 func RequiredTxFailed(t require.TestingT, receipt *ethtypes.Receipt, msgAndArgs ...any) {
-	msg := "receipt status is not successful"
-	require.Equal(t, ethtypes.ReceiptStatusFailed, receipt.Status, msg+errSuffix(msgAndArgs...))
+	msg := "receipt status is not successful: %s"
+	require.Equal(
+		t,
+		ethtypes.ReceiptStatusFailed,
+		receipt.Status,
+		msg+errSuffix(msgAndArgs...),
+		receipt.TxHash.String(),
+	)
 }
 
 func errSuffix(msgAndArgs ...any) string {

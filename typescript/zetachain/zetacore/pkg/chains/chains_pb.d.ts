@@ -197,6 +197,11 @@ export declare enum Network {
    * @generated from enum value: solana = 7;
    */
   solana = 7,
+
+  /**
+   * @generated from enum value: ton = 8;
+   */
+  ton = 8,
 }
 
 /**
@@ -248,6 +253,11 @@ export declare enum Vm {
    * @generated from enum value: svm = 2;
    */
   svm = 2,
+
+  /**
+   * @generated from enum value: tvm = 3;
+   */
+  tvm = 3,
 }
 
 /**
@@ -282,6 +292,13 @@ export declare enum Consensus {
    * @generated from enum value: solana_consensus = 4;
    */
   solana_consensus = 4,
+
+  /**
+   * ton
+   *
+   * @generated from enum value: catchain_consensus = 5;
+   */
+  catchain_consensus = 5,
 }
 
 /**

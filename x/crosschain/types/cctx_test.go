@@ -150,17 +150,20 @@ func Test_SetRevertOutboundValues(t *testing.T) {
 
 func TestCrossChainTx_SetAbort(t *testing.T) {
 	cctx := sample.CrossChainTx(t, "test")
-	cctx.SetAbort("test")
+	cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+	cctx.SetAbort("test", "test")
 	require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
-	require.Equal(t, "test", "test")
+	require.Contains(t, cctx.CctxStatus.StatusMessage, "test")
+	require.Contains(t, cctx.CctxStatus.ErrorMessage, "test")
 }
 
 func TestCrossChainTx_SetPendingRevert(t *testing.T) {
 	cctx := sample.CrossChainTx(t, "test")
 	cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-	cctx.SetPendingRevert("test")
+	cctx.SetPendingRevert("test", "test")
 	require.Equal(t, types.CctxStatus_PendingRevert, cctx.CctxStatus.Status)
 	require.Contains(t, cctx.CctxStatus.StatusMessage, "test")
+	require.Contains(t, cctx.CctxStatus.ErrorMessage, "test")
 }
 
 func TestCrossChainTx_SetPendingOutbound(t *testing.T) {
@@ -169,6 +172,7 @@ func TestCrossChainTx_SetPendingOutbound(t *testing.T) {
 	cctx.SetPendingOutbound("test")
 	require.Equal(t, types.CctxStatus_PendingOutbound, cctx.CctxStatus.Status)
 	require.Contains(t, cctx.CctxStatus.StatusMessage, "test")
+	require.NotContains(t, cctx.CctxStatus.ErrorMessage, "test")
 }
 
 func TestCrossChainTx_SetOutboundMined(t *testing.T) {
@@ -177,12 +181,14 @@ func TestCrossChainTx_SetOutboundMined(t *testing.T) {
 	cctx.SetOutboundMined("test")
 	require.Equal(t, types.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 	require.Contains(t, cctx.CctxStatus.StatusMessage, "test")
+	require.NotContains(t, cctx.CctxStatus.ErrorMessage, "test")
 }
 
 func TestCrossChainTx_SetReverted(t *testing.T) {
 	cctx := sample.CrossChainTx(t, "test")
 	cctx.CctxStatus.Status = types.CctxStatus_PendingRevert
-	cctx.SetReverted("test")
+	cctx.SetReverted("test", "test")
 	require.Equal(t, types.CctxStatus_Reverted, cctx.CctxStatus.Status)
 	require.Contains(t, cctx.CctxStatus.StatusMessage, "test")
+	require.Contains(t, cctx.CctxStatus.ErrorMessage, "test")
 }

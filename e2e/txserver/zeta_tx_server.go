@@ -408,6 +408,7 @@ func (zts ZetaTxServer) DeploySystemContracts(
 // returns the addresses of erc20 zrc20
 func (zts ZetaTxServer) DeployZRC20s(
 	accountOperational, accountAdmin, erc20Addr string,
+	skipChain func(chainID int64) bool,
 ) (string, error) {
 	// retrieve account
 	accOperational, err := zts.clientCtx.Keyring.Key(accountOperational)
@@ -441,8 +442,31 @@ func (zts ZetaTxServer) DeployZRC20s(
 		deployerAddr = addrOperational.String()
 	}
 
+	deploy := func(msg *fungibletypes.MsgDeployFungibleCoinZRC20) (string, error) {
+		// noop
+		if skipChain(msg.ForeignChainId) {
+			return "", nil
+		}
+
+		res, err := zts.BroadcastTx(deployerAccount, msg)
+		if err != nil {
+			return "", fmt.Errorf("failed to deploy eth zrc20: %w", err)
+		}
+
+		addr, err := fetchZRC20FromDeployResponse(res)
+		if err != nil {
+			return "", fmt.Errorf("unable to fetch zrc20 from deploy response: %w", err)
+		}
+
+		if err := zts.InitializeLiquidityCap(addr); err != nil {
+			return "", fmt.Errorf("unable to initialize liquidity cap: %w", err)
+		}
+
+		return addr, nil
+	}
+
 	// deploy eth zrc20
-	res, err := zts.BroadcastTx(deployerAccount, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+	_, err = deploy(fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		deployerAddr,
 		"",
 		chains.GoerliLocalnet.ChainId,
@@ -455,16 +479,9 @@ func (zts ZetaTxServer) DeployZRC20s(
 	if err != nil {
 		return "", fmt.Errorf("failed to deploy eth zrc20: %s", err.Error())
 	}
-	zrc20, err := fetchZRC20FromDeployResponse(res)
-	if err != nil {
-		return "", err
-	}
-	if err := zts.InitializeLiquidityCap(zrc20); err != nil {
-		return "", err
-	}
 
 	// deploy btc zrc20
-	res, err = zts.BroadcastTx(deployerAccount, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+	_, err = deploy(fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		deployerAddr,
 		"",
 		chains.BitcoinRegtest.ChainId,
@@ -477,16 +494,9 @@ func (zts ZetaTxServer) DeployZRC20s(
 	if err != nil {
 		return "", fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
 	}
-	zrc20, err = fetchZRC20FromDeployResponse(res)
-	if err != nil {
-		return "", err
-	}
-	if err := zts.InitializeLiquidityCap(zrc20); err != nil {
-		return "", err
-	}
 
 	// deploy sol zrc20
-	res, err = zts.BroadcastTx(deployerAccount, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+	_, err = deploy(fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		deployerAddr,
 		"",
 		chains.SolanaLocalnet.ChainId,
@@ -499,16 +509,24 @@ func (zts ZetaTxServer) DeployZRC20s(
 	if err != nil {
 		return "", fmt.Errorf("failed to deploy sol zrc20: %s", err.Error())
 	}
-	zrc20, err = fetchZRC20FromDeployResponse(res)
+
+	// deploy ton zrc20
+	_, err = deploy(fungibletypes.NewMsgDeployFungibleCoinZRC20(
+		deployerAddr,
+		"",
+		chains.TONLocalnet.ChainId,
+		9,
+		"TON",
+		"TON",
+		coin.CoinType_Gas,
+		100_000,
+	))
 	if err != nil {
-		return "", err
-	}
-	if err := zts.InitializeLiquidityCap(zrc20); err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to deploy ton zrc20: %w", err)
 	}
 
 	// deploy erc20 zrc20
-	res, err = zts.BroadcastTx(deployerAccount, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+	erc20zrc20Addr, err := deploy(fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		deployerAddr,
 		erc20Addr,
 		chains.GoerliLocalnet.ChainId,
@@ -520,15 +538,6 @@ func (zts ZetaTxServer) DeployZRC20s(
 	))
 	if err != nil {
 		return "", fmt.Errorf("failed to deploy erc20 zrc20: %s", err.Error())
-	}
-
-	// fetch the erc20 zrc20 contract address and remove the quotes
-	erc20zrc20Addr, err := fetchZRC20FromDeployResponse(res)
-	if err != nil {
-		return "", err
-	}
-	if err := zts.InitializeLiquidityCap(erc20zrc20Addr); err != nil {
-		return "", err
 	}
 
 	return erc20zrc20Addr, nil

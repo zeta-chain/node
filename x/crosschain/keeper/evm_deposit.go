@@ -14,6 +14,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/memo"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
@@ -78,7 +79,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 		// in protocol version 2, the destination of the deposit is always the to address, the message is the data to be sent to the contract
 		if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V1 {
 			var parsedAddress ethcommon.Address
-			parsedAddress, message, err = chains.ParseAddressAndData(cctx.RelayedMessage)
+			parsedAddress, message, err = memo.DecodeLegacyMemoHex(cctx.RelayedMessage)
 			if err != nil {
 				return false, errors.Wrap(types.ErrUnableToParseAddress, err.Error())
 			}
@@ -96,7 +97,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 
 		from, err := chains.DecodeAddressFromChainID(inboundSenderChainID, inboundSender, k.GetAuthorityKeeper().GetAdditionalChainList(ctx))
 		if err != nil {
-			return false, fmt.Errorf("HandleEVMDeposit: unable to decode address: %s", err.Error())
+			return false, fmt.Errorf("HandleEVMDeposit: unable to decode address: %w", err)
 		}
 
 		evmTxResponse, contractCall, err := k.fungibleKeeper.ZRC20DepositAndCallContract(
@@ -109,6 +110,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			inboundCoinType,
 			cctx.InboundParams.Asset,
 			cctx.ProtocolContractVersion,
+			cctx.InboundParams.IsCrossChainCall,
 		)
 		if fungibletypes.IsContractReverted(evmTxResponse, err) || errShouldRevertCctx(err) {
 			return true, err

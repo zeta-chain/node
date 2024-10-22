@@ -135,19 +135,19 @@ func NewObserver(
 	return &ob, nil
 }
 
-// Start starts the observer. Returns true if the observer was already started (noop).
+// Start starts the observer. Returns false if it's already started (noop).
 func (ob *Observer) Start() bool {
 	ob.mu.Lock()
 	defer ob.Mu().Unlock()
 
 	// noop
 	if ob.started {
-		return true
+		return false
 	}
 
 	ob.started = true
 
-	return false
+	return true
 }
 
 // Stop notifies all goroutines to stop and closes the database.
@@ -186,13 +186,18 @@ func (ob *Observer) WithChain(chain chains.Chain) *Observer {
 
 // ChainParams returns the chain params for the observer.
 func (ob *Observer) ChainParams() observertypes.ChainParams {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
 	return ob.chainParams
 }
 
-// WithChainParams attaches a new chain params to the observer.
-func (ob *Observer) WithChainParams(params observertypes.ChainParams) *Observer {
+// SetChainParams attaches a new chain params to the observer.
+func (ob *Observer) SetChainParams(params observertypes.ChainParams) {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
 	ob.chainParams = params
-	return ob
 }
 
 // ZetacoreClient returns the zetacore client for the observer.
@@ -329,7 +334,12 @@ func (ob *Observer) Logger() *ObserverLogger {
 
 // WithLogger attaches a new logger to the observer.
 func (ob *Observer) WithLogger(logger Logger) *Observer {
-	chainLogger := logger.Std.With().Int64(logs.FieldChain, ob.chain.ChainId).Logger()
+	chainLogger := logger.Std.
+		With().
+		Int64(logs.FieldChain, ob.chain.ChainId).
+		Str(logs.FieldChainNetwork, ob.chain.Network.String()).
+		Logger()
+
 	ob.logger = ObserverLogger{
 		Chain:      chainLogger,
 		Inbound:    chainLogger.With().Str(logs.FieldModule, logs.ModNameInbound).Logger(),
@@ -338,6 +348,7 @@ func (ob *Observer) WithLogger(logger Logger) *Observer {
 		Headers:    chainLogger.With().Str(logs.FieldModule, logs.ModNameHeaders).Logger(),
 		Compliance: logger.Compliance,
 	}
+
 	return ob
 }
 
@@ -461,22 +472,35 @@ func (ob *Observer) PostVoteInbound(
 	msg *crosschaintypes.MsgVoteInbound,
 	retryGasLimit uint64,
 ) (string, error) {
-	txHash := msg.InboundHash
-	coinType := msg.CoinType
-	chainID := ob.Chain().ChainId
-	zetaHash, ballot, err := ob.ZetacoreClient().
-		PostVoteInbound(ctx, zetacore.PostVoteInboundGasLimit, retryGasLimit, msg)
-	if err != nil {
-		ob.logger.Inbound.Err(err).
-			Msgf("inbound detected: error posting vote for chain %d token %s inbound %s", chainID, coinType, txHash)
-		return "", err
-	} else if zetaHash != "" {
-		ob.logger.Inbound.Info().Msgf("inbound detected: chain %d token %s inbound %s vote %s ballot %s", chainID, coinType, txHash, zetaHash, ballot)
-	} else {
-		ob.logger.Inbound.Info().Msgf("inbound detected: chain %d token %s inbound %s already voted on ballot %s", chainID, coinType, txHash, ballot)
+	const gasLimit = zetacore.PostVoteInboundGasLimit
+
+	var (
+		txHash   = msg.InboundHash
+		coinType = msg.CoinType
+		chainID  = ob.Chain().ChainId
+	)
+
+	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctx, gasLimit, retryGasLimit, msg)
+
+	lf := map[string]any{
+		"inbound.chain_id":         chainID,
+		"inbound.coin_type":        coinType.String(),
+		"inbound.external_tx_hash": txHash,
+		"inbound.ballot_index":     ballot,
+		"inbound.zeta_tx_hash":     zetaHash,
 	}
 
-	return ballot, err
+	switch {
+	case err != nil:
+		ob.logger.Inbound.Error().Err(err).Fields(lf).Msg("inbound detected: error posting vote")
+		return "", err
+	case zetaHash == "":
+		ob.logger.Inbound.Info().Fields(lf).Msg("inbound detected: already voted on ballot")
+	default:
+		ob.logger.Inbound.Info().Fields(lf).Msgf("inbound detected: vote posted")
+	}
+
+	return ballot, nil
 }
 
 // AlertOnRPCLatency prints an alert if the RPC latency exceeds the threshold.

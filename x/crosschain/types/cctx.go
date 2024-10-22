@@ -171,28 +171,28 @@ func (m *CrossChainTx) AddOutbound(
 }
 
 // SetAbort sets the CCTX status to Aborted with the given error message.
-func (m CrossChainTx) SetAbort(message string) {
-	m.CctxStatus.ChangeStatus(CctxStatus_Aborted, message)
+func (m CrossChainTx) SetAbort(statusMsg, errorMsg string) {
+	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_Aborted, statusMsg, errorMsg)
 }
 
 // SetPendingRevert sets the CCTX status to PendingRevert with the given error message.
-func (m CrossChainTx) SetPendingRevert(message string) {
-	m.CctxStatus.ChangeStatus(CctxStatus_PendingRevert, message)
+func (m CrossChainTx) SetPendingRevert(statusMsg, errorMsg string) {
+	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_PendingRevert, statusMsg, errorMsg)
 }
 
 // SetPendingOutbound sets the CCTX status to PendingOutbound with the given error message.
-func (m CrossChainTx) SetPendingOutbound(message string) {
-	m.CctxStatus.ChangeStatus(CctxStatus_PendingOutbound, message)
+func (m CrossChainTx) SetPendingOutbound(statusMsg string) {
+	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_PendingOutbound, statusMsg, "")
 }
 
 // SetOutboundMined sets the CCTX status to OutboundMined with the given error message.
-func (m CrossChainTx) SetOutboundMined(message string) {
-	m.CctxStatus.ChangeStatus(CctxStatus_OutboundMined, message)
+func (m CrossChainTx) SetOutboundMined(statusMsg string) {
+	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_OutboundMined, statusMsg, "")
 }
 
 // SetReverted sets the CCTX status to Reverted with the given error message.
-func (m CrossChainTx) SetReverted(message string) {
-	m.CctxStatus.ChangeStatus(CctxStatus_Reverted, message)
+func (m CrossChainTx) SetReverted(statusMsg, errorMsg string) {
+	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_Reverted, statusMsg, errorMsg)
 }
 
 func (m CrossChainTx) GetCCTXIndexBytes() ([32]byte, error) {
@@ -237,6 +237,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		FinalizedZetaHeight:    0,
 		BallotIndex:            index,
 		CoinType:               msg.CoinType,
+		IsCrossChainCall:       msg.IsCrossChainCall,
 	}
 
 	outboundParams := &OutboundParams{
@@ -259,6 +260,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 	status := &Status{
 		Status:              CctxStatus_PendingInbound,
 		StatusMessage:       "",
+		ErrorMessage:        "",
 		CreatedTimestamp:    ctx.BlockHeader().Time.Unix(),
 		LastUpdateTimestamp: ctx.BlockHeader().Time.Unix(),
 		IsAbortRefunded:     false,

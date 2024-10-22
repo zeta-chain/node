@@ -98,9 +98,16 @@ func TestGasFromCCTX(t *testing.T) {
 			errorContains: "unable to parse priorityFee: big.Int is negative",
 		},
 		{
-			name:          "gasPrice is less than priorityFee",
-			cctx:          makeCCTX(123_000, gwei(4).String(), gwei(5).String()),
-			errorContains: "gasPrice (4000000000) is less than priorityFee (5000000000)",
+			name: "gasPrice is less than priorityFee",
+			cctx: makeCCTX(123_000, gwei(4).String(), gwei(5).String()),
+			assert: func(t *testing.T, g Gas) {
+				assert.False(t, g.isLegacy())
+				assertGasEquals(t, Gas{
+					Limit:       123_000,
+					Price:       gwei(4),
+					PriorityFee: gwei(4),
+				}, g)
+			},
 		},
 		{
 			name:          "gasPrice is invalid",

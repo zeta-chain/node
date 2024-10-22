@@ -153,7 +153,7 @@ func (r *E2ERunner) WithdrawSOLZRC20(
 	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.SOLZRC20Addr, approveAmount)
 	require.NoError(r, err)
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireTxSuccessful(r, receipt)
+	utils.RequireTxSuccessful(r, receipt, "approve")
 
 	// withdraw
 	tx, err = r.SOLZRC20.Withdraw(r.ZEVMAuth, []byte(to.String()), amount)
@@ -162,7 +162,7 @@ func (r *E2ERunner) WithdrawSOLZRC20(
 
 	// wait for tx receipt
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireTxSuccessful(r, receipt)
+	utils.RequireTxSuccessful(r, receipt, "withdraw")
 	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
 	// wait for the cctx to be mined

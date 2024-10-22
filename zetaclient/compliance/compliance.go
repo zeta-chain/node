@@ -7,7 +7,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/memo"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/config"
@@ -66,7 +66,7 @@ func PrintComplianceLog(
 func DoesInboundContainsRestrictedAddress(event *clienttypes.InboundEvent, logger *base.ObserverLogger) bool {
 	// parse memo-specified receiver
 	receiver := ""
-	parsedAddress, _, err := chains.ParseAddressAndData(hex.EncodeToString(event.Memo))
+	parsedAddress, _, err := memo.DecodeLegacyMemoHex(hex.EncodeToString(event.Memo))
 	if err == nil && parsedAddress != (ethcommon.Address{}) {
 		receiver = parsedAddress.Hex()
 	}

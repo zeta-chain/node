@@ -179,6 +179,7 @@ func (r *E2ERunner) SetZEVMZRC20s() {
 		e2eutils.OperationalPolicyName,
 		e2eutils.AdminPolicyName,
 		r.ERC20Addr.Hex(),
+		r.skipChainOperations,
 	)
 	require.NoError(r, err)
 
@@ -191,6 +192,7 @@ func (r *E2ERunner) SetZEVMZRC20s() {
 	r.SetupETHZRC20()
 	r.SetupBTCZRC20()
 	r.SetupSOLZRC20()
+	r.SetupTONZRC20()
 }
 
 // SetupETHZRC20 sets up the ETH ZRC20 in the runner from the values queried from the chain
@@ -240,6 +242,27 @@ func (r *E2ERunner) SetupSOLZRC20() {
 	SOLZRC20, err := zrc20.NewZRC20(SOLZRC20Addr, r.ZEVMClient)
 	require.NoError(r, err)
 	r.SOLZRC20 = SOLZRC20
+}
+
+// SetupTONZRC20 sets up the TON ZRC20 in the runner from the values queried from the chain
+func (r *E2ERunner) SetupTONZRC20() {
+	chainID := chains.TONLocalnet.ChainId
+
+	// noop
+	if r.skipChainOperations(chainID) {
+		return
+	}
+
+	TONZRC20Addr, err := r.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(chainID))
+	require.NoError(r, err)
+
+	r.TONZRC20Addr = TONZRC20Addr
+	r.Logger.Info("TON ZRC20 address: %s", TONZRC20Addr.Hex())
+
+	TONZRC20, err := zrc20.NewZRC20(TONZRC20Addr, r.ZEVMClient)
+	require.NoError(r, err)
+
+	r.TONZRC20 = TONZRC20
 }
 
 // EnableHeaderVerification enables the header verification for the given chain IDs

@@ -56,6 +56,7 @@ func TestValidateObserverSlashAmount(t *testing.T) {
 	require.Error(t, validateObserverSlashAmount(10))
 	require.Error(t, validateObserverSlashAmount("10"))
 	require.Error(t, validateObserverSlashAmount(sdkmath.NewInt(-10))) // Less than 0
+	require.Error(t, validateObserverSlashAmount(nil))
 	require.NoError(t, validateObserverSlashAmount(sdkmath.NewInt(10)))
 }
 
@@ -69,6 +70,7 @@ func TestValidateBlockRewardAmount(t *testing.T) {
 	require.Error(t, validateBlockRewardsAmount("0.50"))
 	require.Error(t, validateBlockRewardsAmount("-0.50"))
 	require.Error(t, validateBlockRewardsAmount(sdkmath.LegacyMustNewDecFromStr("-0.50")))
+	require.Error(t, validateBlockRewardsAmount(nil))
 	require.NoError(t, validateBlockRewardsAmount(sdkmath.LegacyMustNewDecFromStr("0.50")))
 	require.NoError(t, validateBlockRewardsAmount(sdkmath.LegacyZeroDec()))
 	require.NoError(t, validateBlockRewardsAmount(BlockReward))
@@ -113,7 +115,7 @@ func TestValidate(t *testing.T) {
 	t.Run("should error for negative block reward amount", func(t *testing.T) {
 		params := NewParams()
 		params.BlockRewardAmount = sdkmath.LegacyMustNewDecFromStr("-1.30")
-		require.ErrorContains(t, params.Validate(), "block reward amount cannot be less than 0")
+		require.ErrorContains(t, params.Validate(), "block reward amount must not be negative")
 	})
 }
 func TestParamsString(t *testing.T) {

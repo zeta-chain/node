@@ -4,6 +4,7 @@ yarn.lock
 .github/
 .gitignore
 dist/**
+.git
 
 # dockerfiles are not needed inside the docker build
 Dockerfile

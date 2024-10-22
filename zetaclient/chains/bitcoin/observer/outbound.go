@@ -32,7 +32,7 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get app from context")
 	}
 
-	ticker, err := types.NewDynamicTicker("Bitcoin_WatchOutbound", ob.GetChainParams().OutboundTicker)
+	ticker, err := types.NewDynamicTicker("Bitcoin_WatchOutbound", ob.ChainParams().OutboundTicker)
 	if err != nil {
 		return errors.Wrap(err, "unable to create dynamic ticker")
 	}
@@ -106,7 +106,7 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 					ob.logger.Outbound.Error().Msgf("WatchOutbound: included multiple (%d) outbound for chain %d nonce %d", txCount, chainID, tracker.Nonce)
 				}
 			}
-			ticker.UpdateInterval(ob.GetChainParams().OutboundTicker, ob.logger.Outbound)
+			ticker.UpdateInterval(ob.ChainParams().OutboundTicker, ob.logger.Outbound)
 		case <-ob.StopChannel():
 			ob.logger.Outbound.Info().Msgf("WatchOutbound stopped for chain %d", chainID)
 			return nil

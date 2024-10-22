@@ -19,9 +19,13 @@ COPY go.sum .
 RUN go mod download
 COPY version.sh .
 COPY --exclude=*.sh --exclude=*.md --exclude=*.yml . .
+ARG NODE_VERSION
+ARG NODE_COMMIT
 
-RUN --mount=type=cache,target="/root/.cache/go-build" make install
-RUN --mount=type=cache,target="/root/.cache/go-build" make install-zetae2e
+RUN --mount=type=cache,target="/root/.cache/go-build" \
+    NODE_VERSION=${NODE_VERSION} \
+    NODE_COMMIT=${NODE_COMMIT} \
+    make install install-zetae2e
 
 FROM ghcr.io/zeta-chain/golang:1.22.5-bookworm AS cosmovisor-build
 RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.6.0

@@ -16,6 +16,11 @@
 * [2911](https://github.com/zeta-chain/node/pull/2911) - add chain static information for btc testnet4
 * [2904](https://github.com/zeta-chain/node/pull/2904) - integrate authenticated calls smart contract functionality into protocol
 * [2919](https://github.com/zeta-chain/node/pull/2919) - add inbound sender to revert context
+* [2957](https://github.com/zeta-chain/node/pull/2957) - enable Bitcoin inscription support on testnet
+* [2896](https://github.com/zeta-chain/node/pull/2896) - add TON inbound observation
+* [2987](https://github.com/zeta-chain/node/pull/2987) - add non-EVM standard inbound memo package
+* [2979](https://github.com/zeta-chain/node/pull/2979) - add fungible keeper ability to lock/unlock ZRC20 tokens
+* [3012](https://github.com/zeta-chain/node/pull/3012) - integrate authenticated calls erc20 smart contract functionality into protocol
 
 ### Refactor
 
@@ -25,6 +30,7 @@
 * [2826](https://github.com/zeta-chain/node/pull/2826) - remove unused code from emissions module and add new parameter for fixed block reward amount
 * [2890](https://github.com/zeta-chain/node/pull/2890) - refactor `MsgUpdateChainInfo` to accept a single chain, and add `MsgRemoveChainInfo` to remove a chain
 * [2899](https://github.com/zeta-chain/node/pull/2899) - remove btc deposit fee v1 and improve unit tests
+* [2952](https://github.com/zeta-chain/node/pull/2952) - add error_message to cctx.status
 
 ### Tests
 
@@ -36,6 +42,7 @@
 * [2874](https://github.com/zeta-chain/node/pull/2874) - add support for multiple runs for precompile tests
 * [2895](https://github.com/zeta-chain/node/pull/2895) - add e2e test for bitcoin deposit and call
 * [2894](https://github.com/zeta-chain/node/pull/2894) - increase gas limit for TSS vote tx
+* [2932](https://github.com/zeta-chain/node/pull/2932) - add gateway upgrade as part of the upgrade test
 * [2947](https://github.com/zeta-chain/node/pull/2947) - initialize simulation tests
 
 ### Fixes
@@ -46,6 +53,9 @@
 * [2944](https://github.com/zeta-chain/node/pull/2844) - add tsspubkey to index for tss keygen voting
 * [2842](https://github.com/zeta-chain/node/pull/2842) - fix: move interval assignment out of cctx loop in EVM outbound tx scheduler
 * [2853](https://github.com/zeta-chain/node/pull/2853) - calling precompile through sc with sc state update
+* [2925](https://github.com/zeta-chain/node/pull/2925) - add recover to init chainer to diplay informative message when starting a node from block 1
+* [2909](https://github.com/zeta-chain/node/pull/2909) - add legacy messages back to codec for querier backward compatibility
+* [3018](https://github.com/zeta-chain/node/pull/3018) - support `DepositAndCall` and `WithdrawAndCall` with empty payload
 
 ## v20.0.0
 

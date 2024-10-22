@@ -2,62 +2,171 @@ package observer
 
 import (
 	"context"
-	"encoding/json"
-	"strings"
+	"strconv"
 	"testing"
 
+	"cosmossdk.io/math"
+	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/tonkeeper/tongo/config"
-	"github.com/tonkeeper/tongo/liteapi"
+	"github.com/tonkeeper/tongo/tlb"
+	"github.com/tonkeeper/tongo/ton"
+	"github.com/zeta-chain/node/pkg/chains"
+	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
+	"github.com/zeta-chain/node/testutil/sample"
+	cctxtypes "github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
-// todo tmp (will be resolved automatically)
-// taken from ton:8000/lite-client.json
-const configRaw = `{"@type":"config.global","dht":{"@type":"dht.config.global","k":3,"a":3,"static_nodes":
-{"@type":"dht.nodes","nodes":[]}},"liteservers":[{"id":{"key":"+DjLFqH/N5jO1ZO8PYVYU6a6e7EnnsF0GWFsteE+qy8=","@type":
-"pub.ed25519"},"port":4443,"ip":2130706433}],"validator":{"@type":"validator.config.global","zero_state":
-{"workchain":-1,"shard":-9223372036854775808,"seqno":0,"root_hash":"rR8EFZNlyj3rfYlMyQC8gT0A6ghDrbKe4aMmodiNw6I=",
-"file_hash":"fT2hXGv1OF7XDhraoAELrYz6wX3ue16QpSoWTiPrUAE="},"init_block":{"workchain":-1,"shard":-9223372036854775808,
-"seqno":0,"root_hash":"rR8EFZNlyj3rfYlMyQC8gT0A6ghDrbKe4aMmodiNw6I=",
-"file_hash":"fT2hXGv1OF7XDhraoAELrYz6wX3ue16QpSoWTiPrUAE="}}}`
+type testSuite struct {
+	ctx context.Context
+	t   *testing.T
 
-func TestObserver(t *testing.T) {
-	t.Skip("skip test")
+	chain       chains.Chain
+	chainParams *observertypes.ChainParams
 
-	ctx := context.Background()
+	liteClient *mocks.LiteClient
 
-	cfg, err := config.ParseConfig(strings.NewReader(configRaw))
-	require.NoError(t, err)
+	zetacore *mocks.ZetacoreClient
+	tss      *mocks.TSS
+	database *db.DB
 
-	client, err := liteapi.NewClient(liteapi.WithConfigurationFile(*cfg))
-	require.NoError(t, err)
+	baseObserver *base.Observer
 
-	res, err := client.GetMasterchainInfo(ctx)
-	require.NoError(t, err)
-
-	// Outputs:
-	// {
-	//          "Last": {
-	//            "Workchain": 4294967295,
-	//            "Shard": 9223372036854775808,
-	//            "Seqno": 915,
-	//            "RootHash": "2e9e312c5bd3b7b96d23ce1342ac76e5486012c9aac44781c2c25dbc55f5c8ad",
-	//            "FileHash": "d3745319bfaeebb168d9db6bb5b4752b6b28ab9041735c81d4a02fc820040851"
-	//          },
-	//          "StateRootHash": "02538fb9dc802004012285a90a7af9ba279706e2deea9ca635decd80e94a7045",
-	//          "Init": {
-	//            "Workchain": 4294967295,
-	//            "RootHash": "ad1f04159365ca3deb7d894cc900bc813d00ea0843adb29ee1a326a1d88dc3a2",
-	//            "FileHash": "7d3da15c6bf5385ed70e1adaa0010bad8cfac17dee7b5e90a52a164e23eb5001"
-	//          }
-	//        }
-	t.Logf("Masterchain info")
-	logJSON(t, res)
+	votesBag []*cctxtypes.MsgVoteInbound
 }
 
-func logJSON(t *testing.T, v any) {
-	b, err := json.MarshalIndent(v, "", "  ")
+func newTestSuite(t *testing.T) *testSuite {
+	var (
+		ctx = context.Background()
+
+		chain       = chains.TONTestnet
+		chainParams = sample.ChainParams(chain.ChainId)
+
+		liteClient = mocks.NewLiteClient(t)
+
+		tss      = mocks.NewTSSAthens3()
+		zetacore = mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
+
+		testLogger = zerolog.New(zerolog.NewTestWriter(t))
+		logger     = base.Logger{Std: testLogger, Compliance: testLogger}
+	)
+
+	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
 
-	t.Log(string(b))
+	baseObserver, err := base.NewObserver(
+		chain,
+		*chainParams,
+		zetacore,
+		tss,
+		1,
+		1,
+		60,
+		nil,
+		database,
+		logger,
+	)
+
+	require.NoError(t, err)
+
+	ts := &testSuite{
+		ctx: ctx,
+		t:   t,
+
+		chain:       chain,
+		chainParams: chainParams,
+
+		liteClient: liteClient,
+
+		zetacore: zetacore,
+		tss:      tss,
+		database: database,
+
+		baseObserver: baseObserver,
+	}
+
+	// Setup mocks
+	ts.zetacore.On("Chain").Return(chain).Maybe()
+
+	setupVotesBag(ts)
+
+	return ts
+}
+
+func (ts *testSuite) SetupLastScannedTX(gw ton.AccountID) ton.Transaction {
+	lastScannedTX := sample.TONDonation(ts.t, gw, toncontracts.Donation{
+		Sender: sample.GenerateTONAccountID(),
+		Amount: tonCoins(ts.t, "1"),
+	})
+
+	txHash := liteapi.TransactionHashToString(lastScannedTX.Lt, ton.Bits256(lastScannedTX.Hash()))
+
+	ts.baseObserver.WithLastTxScanned(txHash)
+	require.NoError(ts.t, ts.baseObserver.WriteLastTxScannedToDB(txHash))
+
+	return lastScannedTX
+}
+
+func (ts *testSuite) OnGetFirstTransaction(acc ton.AccountID, tx *ton.Transaction, scanned int, err error) *mock.Call {
+	return ts.liteClient.
+		On("GetFirstTransaction", ts.ctx, acc).
+		Return(tx, scanned, err)
+}
+
+func (ts *testSuite) OnGetTransactionsSince(
+	acc ton.AccountID,
+	lt uint64,
+	hash ton.Bits256,
+	txs []ton.Transaction,
+	err error,
+) *mock.Call {
+	return ts.liteClient.
+		On("GetTransactionsSince", mock.Anything, acc, lt, hash).
+		Return(txs, err)
+}
+
+func (ts *testSuite) MockGetBlockHeader(id ton.BlockIDExt) *mock.Call {
+	// let's pretend that block's masterchain ref has the same seqno
+	blockInfo := tlb.BlockInfo{
+		BlockInfoPart: tlb.BlockInfoPart{MinRefMcSeqno: id.Seqno},
+	}
+
+	return ts.liteClient.
+		On("GetBlockHeader", mock.Anything, id, uint32(0)).
+		Return(blockInfo, nil)
+}
+
+// parses string to TON
+func tonCoins(t *testing.T, raw string) math.Uint {
+	t.Helper()
+
+	const oneTON = 1_000_000_000
+
+	f, err := strconv.ParseFloat(raw, 64)
+	require.NoError(t, err)
+
+	f *= oneTON
+
+	return math.NewUint(uint64(f))
+}
+
+func setupVotesBag(ts *testSuite) {
+	catcher := func(args mock.Arguments) {
+		vote := args.Get(3)
+		cctx, ok := vote.(*cctxtypes.MsgVoteInbound)
+		require.True(ts.t, ok, "unexpected cctx type")
+
+		ts.votesBag = append(ts.votesBag, cctx)
+	}
+	ts.zetacore.
+		On("PostVoteInbound", ts.ctx, mock.Anything, mock.Anything, mock.Anything).
+		Maybe().
+		Run(catcher).
+		Return("", "", nil) // zeta hash, ballot index, error
 }

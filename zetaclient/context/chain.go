@@ -1,6 +1,7 @@
 package context
 
 import (
+	"cmp"
 	"fmt"
 	"sync"
 
@@ -65,7 +66,9 @@ func (cr *ChainRegistry) Get(chainID int64) (Chain, error) {
 func (cr *ChainRegistry) All() []Chain {
 	items := maps.Values(cr.chains)
 
-	slices.SortFunc(items, func(a, b Chain) bool { return a.ID() < b.ID() })
+	slices.SortFunc(items, func(a, b Chain) int {
+		return cmp.Compare(a.ID(), b.ID())
+	})
 
 	return items
 }
@@ -163,6 +166,10 @@ func (c Chain) IsBitcoin() bool {
 
 func (c Chain) IsSolana() bool {
 	return chains.IsSolanaChain(c.ID(), c.registry.additionalChains)
+}
+
+func (c Chain) IsTON() bool {
+	return chains.IsTONChain(c.ID(), c.registry.additionalChains)
 }
 
 // RelayerKeyPassword returns the relayer key password for the chain

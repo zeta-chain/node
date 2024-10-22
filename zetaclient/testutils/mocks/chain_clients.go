@@ -15,12 +15,12 @@ var _ interfaces.ChainObserver = (*EVMObserver)(nil)
 
 // EVMObserver is a mock of evm chain observer for testing
 type EVMObserver struct {
-	ChainParams observertypes.ChainParams
+	chainParams observertypes.ChainParams
 }
 
 func NewEVMObserver(chainParams *observertypes.ChainParams) *EVMObserver {
 	return &EVMObserver{
-		ChainParams: *chainParams,
+		chainParams: *chainParams,
 	}
 }
 
@@ -35,11 +35,11 @@ func (ob *EVMObserver) VoteOutboundIfConfirmed(
 }
 
 func (ob *EVMObserver) SetChainParams(chainParams observertypes.ChainParams) {
-	ob.ChainParams = chainParams
+	ob.chainParams = chainParams
 }
 
-func (ob *EVMObserver) GetChainParams() observertypes.ChainParams {
-	return ob.ChainParams
+func (ob *EVMObserver) ChainParams() observertypes.ChainParams {
+	return ob.chainParams
 }
 
 func (ob *EVMObserver) GetTxID(_ uint64) string {
@@ -57,12 +57,12 @@ var _ interfaces.ChainObserver = (*BTCObserver)(nil)
 
 // BTCObserver is a mock of btc chain observer for testing
 type BTCObserver struct {
-	ChainParams observertypes.ChainParams
+	chainParams observertypes.ChainParams
 }
 
 func NewBTCObserver(chainParams *observertypes.ChainParams) *BTCObserver {
 	return &BTCObserver{
-		ChainParams: *chainParams,
+		chainParams: *chainParams,
 	}
 }
 
@@ -78,11 +78,11 @@ func (ob *BTCObserver) VoteOutboundIfConfirmed(
 }
 
 func (ob *BTCObserver) SetChainParams(chainParams observertypes.ChainParams) {
-	ob.ChainParams = chainParams
+	ob.chainParams = chainParams
 }
 
-func (ob *BTCObserver) GetChainParams() observertypes.ChainParams {
-	return ob.ChainParams
+func (ob *BTCObserver) ChainParams() observertypes.ChainParams {
+	return ob.chainParams
 }
 
 func (ob *BTCObserver) GetTxID(_ uint64) string {
@@ -98,12 +98,12 @@ var _ interfaces.ChainObserver = (*SolanaObserver)(nil)
 
 // SolanaObserver is a mock of solana chain observer for testing
 type SolanaObserver struct {
-	ChainParams observertypes.ChainParams
+	chainParams observertypes.ChainParams
 }
 
 func NewSolanaObserver(chainParams *observertypes.ChainParams) *SolanaObserver {
 	return &SolanaObserver{
-		ChainParams: *chainParams,
+		chainParams: *chainParams,
 	}
 }
 
@@ -119,11 +119,11 @@ func (ob *SolanaObserver) VoteOutboundIfConfirmed(
 }
 
 func (ob *SolanaObserver) SetChainParams(chainParams observertypes.ChainParams) {
-	ob.ChainParams = chainParams
+	ob.chainParams = chainParams
 }
 
-func (ob *SolanaObserver) GetChainParams() observertypes.ChainParams {
-	return ob.ChainParams
+func (ob *SolanaObserver) ChainParams() observertypes.ChainParams {
+	return ob.chainParams
 }
 
 func (ob *SolanaObserver) GetTxID(_ uint64) string {

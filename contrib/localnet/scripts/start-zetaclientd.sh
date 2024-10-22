@@ -109,9 +109,9 @@ then
   fi
 fi
 
-# merge extra-evm-chains.json into zetaclient_config.json if specified
-if [[ -f /root/extra-evm-chains.json ]]; then
-  jq '.EVMChainConfigs *= input' /root/.zetacored/config/zetaclient_config.json /root/extra-evm-chains.json > /tmp/merged_config.json
+# merge zetaclient-config-overlay.json into zetaclient_config.json if specified
+if [[ -f /root/zetaclient-config-overlay.json ]]; then
+  jq -s '.[0] * .[1]' /root/.zetacored/config/zetaclient_config.json /root/zetaclient-config-overlay.json > /tmp/merged_config.json
   mv /tmp/merged_config.json /root/.zetacored/config/zetaclient_config.json
 fi
 

@@ -5,6 +5,7 @@ export * from "./genesis_pb";
 export * from "./inbound_hash_to_cctx_pb";
 export * from "./inbound_tracker_pb";
 export * from "./last_block_height_pb";
+export * from "./legacy_msgs_pb";
 export * from "./outbound_tracker_pb";
 export * from "./query_pb";
 export * from "./rate_limiter_flags_pb";

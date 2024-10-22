@@ -187,7 +187,7 @@ func (k Keeper) CallExecuteRevert(
 		revert.RevertContext{
 			Sender:        common.HexToAddress(inboundSender),
 			Asset:         zrc20,
-			Amount:        amount.Uint64(),
+			Amount:        amount,
 			RevertMessage: message,
 		},
 	)
@@ -241,7 +241,7 @@ func (k Keeper) CallDepositAndRevert(
 		revert.RevertContext{
 			Sender:        common.HexToAddress(inboundSender),
 			Asset:         zrc20,
-			Amount:        amount.Uint64(),
+			Amount:        amount,
 			RevertMessage: message,
 		},
 	)

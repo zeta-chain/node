@@ -56,4 +56,4 @@ contrib/localnet/addresses.txt
 
 # Config for e2e tests
 e2e_conf*
-contrib/localnet/scripts/extra-evm-chains.json
+contrib/localnet/scripts/zetaclient-config-overlay.json

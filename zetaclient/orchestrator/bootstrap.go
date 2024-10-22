@@ -9,7 +9,9 @@ import (
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	ethrpc2 "github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
+	"github.com/tonkeeper/tongo/ton"
 
+	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
@@ -19,9 +21,12 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	solbserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	solanasigner "github.com/zeta-chain/node/zetaclient/chains/solana/signer"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	tonobserver "github.com/zeta-chain/node/zetaclient/chains/ton/observer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
@@ -71,7 +76,7 @@ func syncSignerMap(
 		presentChainIDs = make([]int64, 0)
 
 		onAfterAdd = func(chainID int64, _ interfaces.ChainSigner) {
-			logger.Std.Info().Msgf("Added signer for chain %d", chainID)
+			logger.Std.Info().Int64(logs.FieldChain, chainID).Msg("Added signer")
 			added++
 		}
 
@@ -80,7 +85,7 @@ func syncSignerMap(
 		}
 
 		onBeforeRemove = func(chainID int64, _ interfaces.ChainSigner) {
-			logger.Std.Info().Msgf("Removing signer for chain %d", chainID)
+			logger.Std.Info().Int64(logs.FieldChain, chainID).Msg("Removing signer")
 			removed++
 		}
 	)
@@ -181,6 +186,9 @@ func syncSignerMap(
 			}
 
 			addSigner(chainID, signer)
+		case chain.IsTON():
+			logger.Std.Error().Err(err).Msgf("TON signer is not implemented yet for chain id %d", chainID)
+			continue
 		default:
 			logger.Std.Warn().
 				Int64("signer.chain_id", chain.ID()).
@@ -238,7 +246,8 @@ func syncObserverMap(
 
 		presentChainIDs = make([]int64, 0)
 
-		onAfterAdd = func(_ int64, ob interfaces.ChainObserver) {
+		onAfterAdd = func(chainID int64, ob interfaces.ChainObserver) {
+			logger.Std.Info().Int64(logs.FieldChain, chainID).Msg("Added observer")
 			ob.Start(ctx)
 			added++
 		}
@@ -247,7 +256,8 @@ func syncObserverMap(
 			mapSet[int64, interfaces.ChainObserver](observerMap, chainID, ob, onAfterAdd)
 		}
 
-		onBeforeRemove = func(_ int64, ob interfaces.ChainObserver) {
+		onBeforeRemove = func(chainID int64, ob interfaces.ChainObserver) {
+			logger.Std.Info().Int64(logs.FieldChain, chainID).Msg("Removing observer")
 			ob.Stop()
 			removed++
 		}
@@ -394,6 +404,58 @@ func syncObserverMap(
 			}
 
 			addObserver(chainID, solObserver)
+		case chain.IsTON():
+			cfg, found := app.Config().GetTONConfig()
+			if !found {
+				logger.Std.Warn().Msgf("Unable to find chain params for TON chain %d", chainID)
+				continue
+			}
+
+			database, err := db.NewFromSqlite(dbpath, chainName, true)
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("unable to open database for TON chain %d", chainID)
+				continue
+			}
+
+			baseObserver, err := base.NewObserver(
+				*rawChain,
+				*params,
+				client,
+				tss,
+				base.DefaultBlockCacheSize,
+				base.DefaultHeaderCacheSize,
+				cfg.RPCAlertLatency,
+				ts,
+				database,
+				logger,
+			)
+
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("Unable to create base observer for TON chain %d", chainID)
+				continue
+			}
+
+			tonClient, err := liteapi.NewFromSource(ctx, cfg.LiteClientConfigURL)
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("Unable to create TON liteapi for chain %d", chainID)
+				continue
+			}
+
+			gatewayID, err := ton.ParseAccountID(params.GatewayAddress)
+			if err != nil {
+				logger.Std.Error().Err(err).
+					Msgf("Unable to parse gateway address %q for chain %d", params.GatewayAddress, chainID)
+				continue
+			}
+
+			gw := toncontracts.NewGateway(gatewayID)
+			tonObserver, err := tonobserver.New(baseObserver, tonClient, gw)
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("Unable to create TON observer for chain %d", chainID)
+				continue
+			}
+
+			addObserver(chainID, tonObserver)
 		default:
 			logger.Std.Warn().
 				Int64("observer.chain_id", chain.ID()).

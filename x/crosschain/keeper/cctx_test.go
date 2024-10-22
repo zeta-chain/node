@@ -170,7 +170,6 @@ func TestCCTXs(t *testing.T) {
 				require.True(t, found)
 				require.Equal(t, s, send)
 			}
-
 		})
 	}
 }

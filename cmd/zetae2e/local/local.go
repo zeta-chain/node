@@ -46,6 +46,7 @@ const (
 	flagTestV2Migration   = "test-v2-migration"
 	flagSkipTrackerCheck  = "skip-tracker-check"
 	flagSkipPrecompiles   = "skip-precompiles"
+	flagUpgradeContracts  = "upgrade-contracts"
 )
 
 var (
@@ -83,6 +84,8 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestV2Migration, false, "set to true to run tests for v2 contracts migration test")
 	cmd.Flags().Bool(flagSkipTrackerCheck, false, "set to true to skip tracker check at the end of the tests")
 	cmd.Flags().Bool(flagSkipPrecompiles, false, "set to true to skip stateful precompiled contracts test")
+	cmd.Flags().
+		Bool(flagUpgradeContracts, false, "set to true to upgrade Gateways and ERC20Custody contracts during setup for ZEVM and EVM")
 
 	return cmd
 }
@@ -112,6 +115,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testV2            = must(cmd.Flags().GetBool(flagTestV2))
 		testV2Migration   = must(cmd.Flags().GetBool(flagTestV2Migration))
 		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
+		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
 	)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
@@ -202,23 +206,28 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("⚙️ setting up networks")
 		startTime := time.Now()
 
+		// TODO: merge v1 and v2 together
+		// https://github.com/zeta-chain/node/issues/2627
+
 		deployerRunner.SetupEVM(contractsDeployed, true)
 
-		if testV2 {
-			deployerRunner.SetupEVMV2()
-		}
+		deployerRunner.SetupEVMV2()
 
 		deployerRunner.SetZEVMSystemContracts()
 
-		if testV2 {
-			// NOTE: v2 (gateway) setup called here because system contract needs to be set first, then gateway, then zrc20
-			deployerRunner.SetZEVMContractsV2()
-		}
+		// NOTE: v2 (gateway) setup called here because system contract needs to be set first, then gateway, then zrc20
+		deployerRunner.SetZEVMContractsV2()
 
 		deployerRunner.SetZEVMZRC20s()
 
+		// Update the chain params to use v2 contract for ERC20Custody
+		// TODO: this function should be removed and the chain params should be directly set to use v2 contract
+		// https://github.com/zeta-chain/node/issues/2627
+		deployerRunner.UpdateChainParamsV2Contracts()
+		deployerRunner.ERC20CustodyAddr = deployerRunner.ERC20CustodyV2Addr
+
 		if testSolana {
-			deployerRunner.SetSolanaContracts(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
+			deployerRunner.SetupSolana(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
 		}
 		noError(deployerRunner.FundEmissionsPool())
 
@@ -321,7 +330,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				e2etests.TestPrecompilesPrototypeName,
 				e2etests.TestPrecompilesPrototypeThroughContractName,
 				e2etests.TestPrecompilesStakingName,
-				e2etests.TestPrecompilesStakingThroughContractName,
+				// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
+				// e2etests.TestPrecompilesStakingThroughContractName,
 				e2etests.TestPrecompilesBankName,
 				e2etests.TestPrecompilesBankFailName,
 				e2etests.TestPrecompilesBankThroughContractName,
@@ -399,15 +409,14 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		tonTests := []string{
 			e2etests.TestTONDepositName,
+			e2etests.TestTONDepositAndCallName,
 		}
 
 		eg.Go(tonTestRoutine(conf, deployerRunner, verbose, tonTests...))
 	}
 
-	if testV2 {
-		// update the ERC20 custody contract for v2 tests
-		// note: not run in testV2Migration because it is already run in the migration process
-		deployerRunner.UpdateChainParamsV2Contracts()
+	if upgradeContracts {
+		deployerRunner.UpgradeGatewaysAndERC20Custody()
 	}
 
 	if testV2 || testV2Migration {

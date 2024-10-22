@@ -227,6 +227,18 @@ services:
       -rpcauth=smoketest:63acf9b8dccecce914d85ff8c044b78b$$5892f9bbc84f4364e79f0970039f88bdd823f168d4acc76099ab97b14a766a99
       -txindex=1
 
+  bitcoin-node-sidecar:
+    image: ghcr.io/zeta-chain/node-localnet-bitcoin-sidecar:e0205d7
+    container_name: bitcoin-node-sidecar
+    hostname: bitcoin-node-sidecar
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.111
+    environment:
+      - PORT=8000
+    ports:
+      - "8000:8000"
+
   solana:
     image: solana-local:latest
     container_name: solana

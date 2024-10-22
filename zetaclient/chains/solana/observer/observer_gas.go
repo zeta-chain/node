@@ -42,26 +42,26 @@ func (ob *Observer) WatchGasPrice(ctx context.Context) error {
 	// start gas price ticker
 	ticker, err := clienttypes.NewDynamicTicker(
 		fmt.Sprintf("Solana_WatchGasPrice_%d", ob.Chain().ChainId),
-		ob.GetChainParams().GasPriceTicker,
+		ob.ChainParams().GasPriceTicker,
 	)
 	if err != nil {
 		return errors.Wrapf(err, "NewDynamicTicker error")
 	}
 	ob.Logger().GasPrice.Info().Msgf("WatchGasPrice started for chain %d with interval %d",
-		ob.Chain().ChainId, ob.GetChainParams().GasPriceTicker)
+		ob.Chain().ChainId, ob.ChainParams().GasPriceTicker)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ticker.C():
-			if !ob.GetChainParams().IsSupported {
+			if !ob.ChainParams().IsSupported {
 				continue
 			}
 			err = ob.PostGasPrice(ctx)
 			if err != nil {
 				ob.Logger().GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.Chain().ChainId)
 			}
-			ticker.UpdateInterval(ob.GetChainParams().GasPriceTicker, ob.Logger().GasPrice)
+			ticker.UpdateInterval(ob.ChainParams().GasPriceTicker, ob.Logger().GasPrice)
 		case <-ob.StopChannel():
 			ob.Logger().GasPrice.Info().Msgf("WatchGasPrice stopped for chain %d", ob.Chain().ChainId)
 			return nil

@@ -150,7 +150,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	InitGenesis(ctx, am.keeper, genState)
 
 	am.keeper.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
-	am.keeper.GetAuthKeeper().GetModuleAccount(ctx, types.UndistributedTssRewardsPool)
+	am.keeper.GetAuthKeeper().GetModuleAccount(ctx, types.UndistributedTSSRewardsPool)
 	am.keeper.GetAuthKeeper().GetModuleAccount(ctx, types.UndistributedObserverRewardsPool)
 
 	return []abci.ValidatorUpdate{}

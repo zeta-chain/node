@@ -21,7 +21,7 @@ func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
 
 	ticker, err := clienttypes.NewDynamicTicker(
 		fmt.Sprintf("Solana_WatchInboundTracker_%d", ob.Chain().ChainId),
-		ob.GetChainParams().InboundTicker,
+		ob.ChainParams().InboundTicker,
 	)
 	if err != nil {
 		ob.Logger().Inbound.Err(err).Msg("error creating ticker")
@@ -42,7 +42,7 @@ func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
 					Err(err).
 					Msgf("WatchInboundTracker: error ProcessInboundTrackers for chain %d", ob.Chain().ChainId)
 			}
-			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.Logger().Inbound)
+			ticker.UpdateInterval(ob.ChainParams().InboundTicker, ob.Logger().Inbound)
 		case <-ob.StopChannel():
 			ob.Logger().Inbound.Info().Msgf("WatchInboundTracker stopped for chain %d", ob.Chain().ChainId)
 			return nil
