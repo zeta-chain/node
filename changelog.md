@@ -43,6 +43,7 @@
 * [2895](https://github.com/zeta-chain/node/pull/2895) - add e2e test for bitcoin deposit and call
 * [2894](https://github.com/zeta-chain/node/pull/2894) - increase gas limit for TSS vote tx
 * [2932](https://github.com/zeta-chain/node/pull/2932) - add gateway upgrade as part of the upgrade test
+* [2947](https://github.com/zeta-chain/node/pull/2947) - initialize simulation tests
 
 ### Fixes
 
