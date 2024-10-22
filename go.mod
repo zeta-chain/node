@@ -43,7 +43,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2
-	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20240819143729-b8229cd7b410
+	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20241022142534-03043003e2b5
 	google.golang.org/genproto/googleapis/api v0.0.0-20231212172506-995d672761c0
 	gopkg.in/yaml.v2 v2.4.0
 )
