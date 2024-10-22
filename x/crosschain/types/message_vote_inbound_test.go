@@ -223,6 +223,71 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			RevertGasLimit: math.ZeroUint(),
 		}, msg.RevertOptions)
 	})
+
+	t.Run("can set is cross chain call options", func(t *testing.T) {
+		// false by default
+		msg := types.NewMsgVoteInbound(
+			sample.AccAddress(),
+			sample.AccAddress(),
+			42,
+			sample.String(),
+			sample.String(),
+			42,
+			math.NewUint(42),
+			sample.String(),
+			sample.String(),
+			42,
+			42,
+			coin.CoinType_Zeta,
+			sample.String(),
+			42,
+			types.ProtocolContractVersion_V1,
+			true,
+		)
+		require.False(t, msg.IsCrossChainCall)
+
+		msg = types.NewMsgVoteInbound(
+			sample.AccAddress(),
+			sample.AccAddress(),
+			42,
+			sample.String(),
+			sample.String(),
+			42,
+			math.NewUint(42),
+			sample.String(),
+			sample.String(),
+			42,
+			42,
+			coin.CoinType_Zeta,
+			sample.String(),
+			42,
+			types.ProtocolContractVersion_V1,
+			true,
+			types.WithCrossChainCall(true),
+		)
+		require.True(t, msg.IsCrossChainCall)
+
+		msg = types.NewMsgVoteInbound(
+			sample.AccAddress(),
+			sample.AccAddress(),
+			42,
+			sample.String(),
+			sample.String(),
+			42,
+			math.NewUint(42),
+			sample.String(),
+			sample.String(),
+			42,
+			42,
+			coin.CoinType_Zeta,
+			sample.String(),
+			42,
+			types.ProtocolContractVersion_V1,
+			true,
+			types.WithCrossChainCall(false),
+		)
+		require.False(t, msg.IsCrossChainCall)
+	})
 }
 
 func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
