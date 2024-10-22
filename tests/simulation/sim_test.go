@@ -207,7 +207,7 @@ func TestFullAppSimulation(t *testing.T) {
 	require.NoError(t, err)
 
 	blockedAddresses := simApp.ModuleAccountAddrs()
-	_, _, simerr := simulation.SimulateFromSeed(
+	_, _, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		simApp.BaseApp,
@@ -222,7 +222,7 @@ func TestFullAppSimulation(t *testing.T) {
 		config,
 		simApp.AppCodec(),
 	)
-	require.NoError(t, simerr)
+	require.NoError(t, simErr)
 
 	// check export works as expected
 	exported, err := simApp.ExportAppStateAndValidators(false, nil, nil)
@@ -267,7 +267,7 @@ func TestAppImportExport(t *testing.T) {
 
 	// Run randomized simulation
 	blockedAddresses := simApp.ModuleAccountAddrs()
-	_, simparams, simerr := simulation.SimulateFromSeed(
+	_, simParams, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		simApp.BaseApp,
@@ -282,10 +282,10 @@ func TestAppImportExport(t *testing.T) {
 		config,
 		simApp.AppCodec(),
 	)
-	require.NoError(t, simerr)
+	require.NoError(t, simErr)
 
 	// export state and simParams before the simulation error is checked
-	err = simutils.CheckExportSimulation(simApp, config, simparams)
+	err = simutils.CheckExportSimulation(simApp, config, simParams)
 	require.NoError(t, err)
 
 	simutils.PrintStats(db)
@@ -406,7 +406,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	// Run randomized simulation
 	blockedAddresses := simApp.ModuleAccountAddrs()
-	stopEarly, simParams, simerr := simulation.SimulateFromSeed(
+	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		simApp.BaseApp,
@@ -421,7 +421,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		config,
 		simApp.AppCodec(),
 	)
-	require.NoError(t, simerr)
+	require.NoError(t, simErr)
 
 	// export state and simParams before the simulation error is checked
 	err = simutils.CheckExportSimulation(simApp, config, simParams)
@@ -430,7 +430,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	simutils.PrintStats(db)
 
 	if stopEarly {
-		t.Log("can't export or import a zero-validator genesis, exiting test")
+		fmt.Println("can't export or import a zero-validator genesis, exiting test...")
 		return
 	}
 
@@ -464,7 +464,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		AppStateBytes: exported.AppState,
 	})
 
-	stopEarly, simParams, simerr = simulation.SimulateFromSeed(
+	stopEarly, simParams, simErr = simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		newSimApp.BaseApp,
