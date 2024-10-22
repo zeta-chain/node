@@ -1037,7 +1037,6 @@ func (app *App) SimulationManager() *module.SimulationManager {
 
 func (app *App) BasicManager() module.BasicManager {
 	return app.mb
-
 }
 
 func (app *App) BlockedAddrs() map[string]bool {
