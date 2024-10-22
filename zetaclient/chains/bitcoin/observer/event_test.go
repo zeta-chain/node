@@ -172,6 +172,17 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 			donation: true,
 		},
 		{
+			name: "should skip standard memo that contains improper data",
+			event: &observer.BTCInboundEvent{
+				// a deposit and call, receiver is empty ZEVM address
+				MemoBytes: testutil.HexToBytes(
+					t,
+					"5a01100300000000000000000000000000000000000000000d68656c6c6f207361746f736869",
+				),
+			},
+			errMsg: "standard memo contains improper data",
+		},
+		{
 			name: "NoAssetCall is not disabled at the moment",
 			event: &observer.BTCInboundEvent{
 				// a no asset call

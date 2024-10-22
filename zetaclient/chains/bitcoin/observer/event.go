@@ -90,16 +90,30 @@ func (event *BTCInboundEvent) CheckProcessability() InboundProcessability {
 
 // DecodeEventMemoBytes decodes the memo bytes as either standard or legacy memo
 func (ob *Observer) DecodeEventMemoBytes(event *BTCInboundEvent) error {
+	var (
+		err      error
+		memoStd  *memo.InboundMemo
+		receiver ethcommon.Address
+	)
+
 	// skip decoding donation tx as it won't go through zetacore
 	if bytes.Equal(event.MemoBytes, []byte(constant.DonationMessage)) {
 		return nil
 	}
 
 	// try to decode the standard memo as the preferred format
-	var receiver ethcommon.Address
-	memoStd, err := memo.DecodeFromBytes(event.MemoBytes)
+	// the standard memo is NOT enabled for Bitcoin mainnet
+	if ob.Chain().ChainId != chains.BitcoinMainnet.ChainId {
+		memoStd, err = memo.DecodeFromBytes(event.MemoBytes)
+	}
+
 	switch {
-	case err == nil:
+	case memoStd != nil:
+		// skip memo that carries improper data
+		if err != nil {
+			return errors.Wrap(err, "standard memo contains improper data")
+		}
+
 		// NoAssetCall will be disabled for Bitcoin until full V2 support
 		if memoStd.OpCode == memo.OpCodeCall {
 			return errors.New("NoAssetCall is disabled")

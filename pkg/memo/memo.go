@@ -51,7 +51,7 @@ func (m *InboundMemo) EncodeToBytes() ([]byte, error) {
 
 // DecodeFromBytes decodes a InboundMemo struct from raw bytes
 //
-// Returns an error if given data is not a valid memo
+// Returns nil memo if given data can't be decoded as a memo.
 func DecodeFromBytes(data []byte) (*InboundMemo, error) {
 	memo := &InboundMemo{}
 
@@ -64,15 +64,20 @@ func DecodeFromBytes(data []byte) (*InboundMemo, error) {
 	// decode fields based on version
 	switch memo.Version {
 	case 0:
-		err = memo.FieldsV0.Unpack(memo.OpCode, memo.EncodingFmt, memo.Header.DataFlags, data[HeaderSize:])
+		// unpack fields
+		err = memo.FieldsV0.Unpack(memo.EncodingFmt, memo.Header.DataFlags, data[HeaderSize:])
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to unpack memo FieldsV0")
+		}
+
+		// validate fields
+		// Note: a well-formatted memo may still contain improper field values
+		err = memo.FieldsV0.Validate(memo.OpCode, memo.Header.DataFlags)
 	default:
 		return nil, fmt.Errorf("invalid memo version: %d", memo.Version)
 	}
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to unpack memo fields version: %d", memo.Version)
-	}
 
-	return memo, nil
+	return memo, err
 }
 
 // DecodeLegacyMemoHex decodes hex encoded memo message into address and calldata

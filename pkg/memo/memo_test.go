@@ -155,6 +155,7 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 		head         []byte
 		data         []byte
 		expectedMemo memo.InboundMemo
+		invalidField bool
 		errMsg       string
 	}{
 		{
@@ -251,7 +252,22 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(fAddress),
 			), // but data is compact encoded
-			errMsg: "failed to unpack memo fields",
+			errMsg: "failed to unpack memo FieldsV0",
+		},
+		{
+			name: "should return both memo struct and error if fields validation fails",
+			head: MakeHead(
+				0,
+				uint8(memo.EncodingFmtABI),
+				uint8(memo.OpCodeDepositAndCall),
+				0,
+				0b00000011, // receiver flag is set
+			),
+			data: ABIPack(t,
+				memo.ArgReceiver(common.Address{}), // empty receiver address provided
+				memo.ArgPayload(fBytes)),
+			invalidField: true,
+			errMsg:       "receiver address is empty",
 		},
 	}
 
@@ -261,6 +277,13 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 			memo, err := memo.DecodeFromBytes(data)
 			if tt.errMsg != "" {
 				require.ErrorContains(t, err, tt.errMsg)
+
+				// invalid field values may still produce a memo
+				if tt.invalidField {
+					require.NotNil(t, memo)
+				} else {
+					require.Nil(t, memo)
+				}
 				return
 			}
 			require.NoError(t, err)
