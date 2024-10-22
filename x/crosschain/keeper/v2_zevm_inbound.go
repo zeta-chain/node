@@ -84,7 +84,8 @@ func (k Keeper) ProcessZEVMInboundV2(
 			inbound, err = types.NewWithdrawalInbound(
 				ctx,
 				txOrigin,
-				foreignCoin,
+				foreignCoin.CoinType,
+				foreignCoin.Asset,
 				withdrawalEvent,
 				receiverChain,
 				gasLimitQueried,
@@ -96,7 +97,6 @@ func (k Keeper) ProcessZEVMInboundV2(
 			inbound, err = types.NewCallInbound(
 				ctx,
 				txOrigin,
-				foreignCoin,
 				callEvent,
 				receiverChain,
 				gasLimitQueried,
@@ -108,7 +108,8 @@ func (k Keeper) ProcessZEVMInboundV2(
 			inbound, err = types.NewWithdrawAndCallInbound(
 				ctx,
 				txOrigin,
-				foreignCoin,
+				foreignCoin.CoinType,
+				foreignCoin.Asset,
 				withdrawalAndCallEvent,
 				receiverChain,
 				gasLimitQueried,

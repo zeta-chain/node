@@ -35,10 +35,13 @@ func TestNewWithdrawalInbound(t *testing.T) {
 		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		ctx = ctx.WithChainID("invalidChainID")
 
+		fc := sample.ForeignCoins(t, sample.EthAddress().Hex())
+
 		_, err := types.NewWithdrawalInbound(
 			ctx,
 			sample.EthAddress().Hex(),
-			sample.ForeignCoins(t, sample.EthAddress().Hex()),
+			fc.CoinType,
+			fc.Asset,
 			nil,
 			chains.GoerliLocalnet,
 			big.NewInt(1000),
@@ -57,7 +60,6 @@ func TestNewCallInbound(t *testing.T) {
 		_, err := types.NewCallInbound(
 			ctx,
 			sample.EthAddress().Hex(),
-			sample.ForeignCoins(t, sample.EthAddress().Hex()),
 			nil,
 			chains.GoerliLocalnet,
 			big.NewInt(1000),
@@ -73,10 +75,13 @@ func TestNewWithdrawAndCallInbound(t *testing.T) {
 		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		ctx = ctx.WithChainID("invalidChainID")
 
+		fc := sample.ForeignCoins(t, sample.EthAddress().Hex())
+
 		_, err := types.NewWithdrawAndCallInbound(
 			ctx,
 			sample.EthAddress().Hex(),
-			sample.ForeignCoins(t, sample.EthAddress().Hex()),
+			fc.CoinType,
+			fc.Asset,
 			nil,
 			chains.GoerliLocalnet,
 			big.NewInt(1000),

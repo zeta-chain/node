@@ -14,7 +14,6 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
-	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
 // ParseGatewayEvent parses the event from the gateway contract
@@ -100,7 +99,8 @@ func ParseGatewayWithdrawAndCallEvent(
 func NewWithdrawalInbound(
 	ctx sdk.Context,
 	txOrigin string,
-	foreignCoin fungibletypes.ForeignCoins,
+	coinType coin.CoinType,
+	asset string,
 	event *gatewayzevm.GatewayZEVMWithdrawn,
 	receiverChain chains.Chain,
 	gasLimitQueried *big.Int,
@@ -132,14 +132,14 @@ func NewWithdrawalInbound(
 		senderChain.ChainId,
 		txOrigin,
 		toAddr,
-		foreignCoin.ForeignChainId,
+		receiverChain.ChainId,
 		math.NewUintFromBigInt(event.Value),
 		hex.EncodeToString(event.Message),
 		event.Raw.TxHash.String(),
 		event.Raw.BlockNumber,
 		gasLimit,
-		foreignCoin.CoinType,
-		foreignCoin.Asset,
+		coinType,
+		asset,
 		event.Raw.Index,
 		ProtocolContractVersion_V2,
 		event.CallOptions.IsArbitraryCall,
@@ -155,7 +155,6 @@ func NewWithdrawalInbound(
 func NewCallInbound(
 	ctx sdk.Context,
 	txOrigin string,
-	foreignCoin fungibletypes.ForeignCoins,
 	event *gatewayzevm.GatewayZEVMCalled,
 	receiverChain chains.Chain,
 	gasLimitQueried *big.Int,
@@ -181,7 +180,7 @@ func NewCallInbound(
 		senderChain.ChainId,
 		txOrigin,
 		toAddr,
-		foreignCoin.ForeignChainId,
+		receiverChain.ChainId,
 		math.ZeroUint(),
 		hex.EncodeToString(event.Message),
 		event.Raw.TxHash.String(),
@@ -203,7 +202,8 @@ func NewCallInbound(
 func NewWithdrawAndCallInbound(
 	ctx sdk.Context,
 	txOrigin string,
-	foreignCoin fungibletypes.ForeignCoins,
+	coinType coin.CoinType,
+	asset string,
 	event *gatewayzevm.GatewayZEVMWithdrawnAndCalled,
 	receiverChain chains.Chain,
 	gasLimitQueried *big.Int,
@@ -229,14 +229,14 @@ func NewWithdrawAndCallInbound(
 		senderChain.ChainId,
 		txOrigin,
 		toAddr,
-		foreignCoin.ForeignChainId,
+		receiverChain.ChainId,
 		math.NewUintFromBigInt(event.Value),
 		hex.EncodeToString(event.Message),
 		event.Raw.TxHash.String(),
 		event.Raw.BlockNumber,
 		gasLimit,
-		foreignCoin.CoinType,
-		foreignCoin.Asset,
+		coinType,
+		asset,
 		event.Raw.Index,
 		ProtocolContractVersion_V2,
 		event.CallOptions.IsArbitraryCall,
