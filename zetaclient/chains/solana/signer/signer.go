@@ -192,7 +192,8 @@ func (signer *Signer) SetGatewayAddress(address string) {
 	// parse gateway ID and PDA
 	gatewayID, pda, err := contracts.ParseGatewayIDAndPda(address)
 	if err != nil {
-		signer.Logger().Std.Error().Err(err).Msgf("cannot parse gateway address %s", address)
+		signer.Logger().Std.Error().Err(err).Msgf("cannot parse gateway address: %s", address)
+		return
 	}
 
 	// update gateway ID and PDA
