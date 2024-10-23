@@ -285,14 +285,13 @@ func TestAppImportExport(t *testing.T) {
 	)
 	require.NoError(t, simErr)
 
-	// export state and simParams
 	err = simutils.CheckExportSimulation(simApp, config, simParams)
 	require.NoError(t, err)
 
 	simutils.PrintStats(db)
 
 	t.Log("exporting genesis")
-
+	// export state and simParams
 	exported, err := simApp.ExportAppStateAndValidators(false, []string{}, []string{})
 	require.NoError(t, err)
 
@@ -424,7 +423,6 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	)
 	require.NoError(t, simErr)
 
-	// export state and simParams before the simulation error is checked
 	err = simutils.CheckExportSimulation(simApp, config, simParams)
 	require.NoError(t, err)
 
@@ -437,6 +435,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	t.Log("exporting genesis")
 
+	// export state and simParams
 	exported, err := simApp.ExportAppStateAndValidators(true, []string{}, []string{})
 	require.NoError(t, err)
 
