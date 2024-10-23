@@ -1,17 +1,17 @@
 name: Simulation Tests Workflow
 
 on:
-  # The workflow runs when code is pushed to either the main or develop branches
-  push:
-    branches:
-      - main
-      - develop
-  # The workflow runs when a pull request is opened or updated
-  pull_request:
-  # Run daily at 6AM UTC Daily
-  schedule:
-    - cron: "0 6 * * *"
-  # It can be run manually targetting a specific test
+#  # The workflow runs when code is pushed to either the main or develop branches
+#  push:
+#    branches:
+#      - main
+#      - develop
+#  # The workflow runs when a pull request is opened or updated
+#  pull_request:
+#  # Run daily at 6AM UTC Daily
+#  schedule:
+#    - cron: "0 6 * * *"
+#  # It can be run manually targetting a specific test
   workflow_dispatch:
     inputs:
       test-target:
