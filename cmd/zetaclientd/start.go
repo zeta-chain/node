@@ -160,25 +160,6 @@ func start(_ *cobra.Command, _ []string) error {
 
 	go zetacoreClient.UpdateAppContextWorker(ctx, appContext)
 
-	keygen := appContext.GetKeygen()
-	cfg.WhitelistedPeers = []string{}
-	for _, pk := range keygen.GranteePubkeys {
-		pk, err := legacybech32.UnmarshalPubKey(legacybech32.AccPK, pk)
-		if err != nil {
-			return err
-		}
-		bz := pk.Bytes()
-		k, err := crypto2.UnmarshalSecp256k1PublicKey(bz)
-		if err != nil {
-			return err
-		}
-		pid, err := peer.IDFromPublicKey(k)
-		if err != nil {
-			return err
-		}
-		cfg.WhitelistedPeers = append(cfg.WhitelistedPeers, pid.String())
-	}
-
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
 	// The hotkeyPk is private key for the Hotkey. The Hotkey is used to sign all inbound transactions
 	// Each node processes a portion of the key stored in ~/.tss by default . Custom location can be specified in config file during init.
@@ -227,7 +208,26 @@ func start(_ *cobra.Command, _ []string) error {
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
 	// Create TSS server
-	server, err := mc.SetupTSSServer(peers, priKey, preParams, appContext.Config(), tssKeyPass, true)
+	keygen := appContext.GetKeygen()
+	whitelistedPeers := []string{}
+	for _, pk := range keygen.GranteePubkeys {
+		pk, err := legacybech32.UnmarshalPubKey(legacybech32.AccPK, pk)
+		if err != nil {
+			return err
+		}
+		bz := pk.Bytes()
+		k, err := crypto2.UnmarshalSecp256k1PublicKey(bz)
+		if err != nil {
+			return err
+		}
+		pid, err := peer.IDFromPublicKey(k)
+		if err != nil {
+			return err
+		}
+		whitelistedPeers = append(whitelistedPeers, pid.String())
+	}
+	fmt.Println("whitelisted peers", whitelistedPeers)
+	server, err := mc.SetupTSSServer(peers, priKey, preParams, appContext.Config(), tssKeyPass, true, whitelistedPeers)
 	if err != nil {
 		return fmt.Errorf("SetupTSSServer error: %w", err)
 	}

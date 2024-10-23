@@ -148,6 +148,7 @@ func SetupTSSServer(
 	cfg config.Config,
 	tssPassword string,
 	enableMonitor bool,
+	whitelistedPeers []string,
 ) (*tss.TssServer, error) {
 	bootstrapPeers := peer
 	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
@@ -185,8 +186,7 @@ func SetupTSSServer(
 		preParams, // use pre-generated pre-params if non-nil
 		IP,        // for docker test
 		tssPassword,
-		cfg.WhitelistedPeers,
-		cfg.DisableWhitelist,
+		whitelistedPeers,
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("NewTSS error")

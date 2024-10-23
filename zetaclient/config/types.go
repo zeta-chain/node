@@ -109,10 +109,6 @@ type Config struct {
 	// compliance config
 	ComplianceConfig ComplianceConfig `json:"ComplianceConfig"`
 
-	// whitelist config
-	WhitelistedPeers []string `json:"WhitelistedPeers"`
-	DisableWhitelist bool     `json:"DisableWhitelist"` // TODO: remove since this is just for local debugging
-
 	mu *sync.RWMutex
 }
 
