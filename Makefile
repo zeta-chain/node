@@ -387,16 +387,16 @@ define run-sim-test
 endef
 
 test-sim-nondeterminism:
-	$(call run-sim-test,"non-determinism test",TestAppStateDeterminism,10,20,2h)
+	$(call run-sim-test,"non-determinism test",TestAppStateDeterminism,100,200,30m)
 
 test-sim-fullappsimulation:
-	$(call run-sim-test,"TestFullAppSimulation",TestFullAppSimulation,100,200,2h)
+	$(call run-sim-test,"TestFullAppSimulation",TestFullAppSimulation,100,200,30m)
 
 test-sim-import-export:
-	$(call run-sim-test,"test-import-export",TestAppImportExport,10,20,2h)
+	$(call run-sim-test,"test-import-export",TestAppImportExport,100,200,30m)
 
 test-sim-after-import:
-	$(call run-sim-test,"test-sim-after-import",TestAppSimulationAfterImport,10,20,2h)
+	$(call run-sim-test,"test-sim-after-import",TestAppSimulationAfterImport,100,200,30m)
 
 test-sim-multi-seed-long: runsim
 	@echo "Running long multi-seed application simulation."
