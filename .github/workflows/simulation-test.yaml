@@ -48,12 +48,11 @@ jobs:
     strategy:
       matrix:
         # The matrix strategy allows running multiple simulation tests in parallel. In this case, it runs the following targets from the Makefile
-        test-target: [
-          "test-sim-nondeterminism",
-          "test-sim-fullappsimulation",
-          "test-sim-import-export",
-          "test-sim-after-import"
-        ]
+        test-target:
+          - "test-sim-nondeterminism"
+          - "test-sim-fullappsimulation"
+          - "test-sim-import-export"
+          - "test-sim-after-import"
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -71,8 +70,7 @@ jobs:
         uses: actions/checkout@v3
       # This job only runs if the workflow was triggered by a manual dispatch (workflow_dispatch)
       - name: Run Simulation Test - ${{ github.event.inputs.test-target }}
-        - name: Run Simulation Test - ${{ github.event.inputs.test-target }}
-          env:
-            TEST_TARGET: ${{ github.event.inputs.test-target }}
-          run: |
-            make "$TEST_TARGET"
+        env:
+          TEST_TARGET: ${{ github.event.inputs.test-target }}
+        run: |
+          make "$TEST_TARGET"
