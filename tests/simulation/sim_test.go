@@ -311,7 +311,13 @@ func TestAppImportExport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
-	newSimApp, err := simutils.NewSimApp(logger, newDB, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	newSimApp, err := simutils.NewSimApp(
+		logger,
+		newDB,
+		appOptions,
+		interBlockCacheOpt(),
+		baseapp.SetChainID(SimAppChainID),
+	)
 	require.NoError(t, err)
 
 	var genesisState app.GenesisState
@@ -370,7 +376,17 @@ func TestAppImportExport(t *testing.T) {
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
 
 		t.Logf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
-		require.Equal(t, 0, len(failedKVAs), cosmossimutils.GetSimulationLog(skp.A.Name(), simApp.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
+		require.Equal(
+			t,
+			0,
+			len(failedKVAs),
+			cosmossimutils.GetSimulationLog(
+				skp.A.Name(),
+				simApp.SimulationManager().StoreDecoders,
+				failedKVAs,
+				failedKVBs,
+			),
+		)
 	}
 }
 
@@ -456,7 +472,13 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
-	newSimApp, err := simutils.NewSimApp(logger, newDB, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	newSimApp, err := simutils.NewSimApp(
+		logger,
+		newDB,
+		appOptions,
+		interBlockCacheOpt(),
+		baseapp.SetChainID(SimAppChainID),
+	)
 	require.NoError(t, err)
 
 	newSimApp.InitChain(abci.RequestInitChain{
