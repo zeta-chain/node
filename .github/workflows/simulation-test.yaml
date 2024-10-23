@@ -1,0 +1,75 @@
+name: Simulation Tests Workflow
+
+on:
+  # The workflow runs when code is pushed to either the main or develop branches
+  push:
+    branches:
+      - main
+      - develop
+  # The workflow runs when a pull request is opened or updated
+  pull_request:
+  # Run daily at 6AM UTC Daily
+  schedule:
+    - cron: "0 6 * * *"
+  # It can be run manually targetting a specific test
+  workflow_dispatch:
+    inputs:
+      test-target:
+        description: 'Makefile test target to run (e.g., test-sim-nondeterminism)'
+        required: true
+        default: 'test-sim-fullappsimulation'
+
+concurrency:
+  # Ensures that only one run of this workflow is active per branch or commit
+  group: runsim-${{ github.head_ref || github.sha }}
+  # If a new run is triggered for the same branch/commit while an old one is still in progress, the previous run will be canceled
+  cancel-in-progress: true
+
+jobs:
+  # This job is responsible for setting up the environment and installing the necessary dependencies, including runsim
+  install-dependencies:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: Install runsim and dependencies
+        run: |
+          make runsim
+
+  run-simulation-tests:
+    needs: install-dependencies
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        # The matrix strategy allows running multiple simulation tests in parallel. In this case, it runs the following targets from the Makefile
+        test-target: [
+          "test-sim-nondeterminism",
+          "test-sim-fullappsimulation",
+          "test-sim-import-export",
+          "test-sim-after-import"
+        ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # It runs the specified test from the Makefile by calling make ${{ matrix.test-target }}, where test-target is one of the matrix values
+      - name: Run Simulation Test - ${{ matrix.test-target }}
+        run: |
+          make ${{ matrix.test-target }}
+
+  manual-run:
+    runs-on: ubuntu-22.04
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      # This job only runs if the workflow was triggered by a manual dispatch (workflow_dispatch)
+      - name: Run Simulation Test - ${{ github.event.inputs.test-target }}
+        run: |
+          make ${{ github.event.inputs.test-target }}
