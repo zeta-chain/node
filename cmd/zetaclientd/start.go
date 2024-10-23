@@ -205,7 +205,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
-	// Create TSS server
+
 	keygen := appContext.GetKeygen()
 	whitelistedPeers := []string{}
 	for _, pk := range keygen.GranteePubkeys {
@@ -215,7 +215,8 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 		whitelistedPeers = append(whitelistedPeers, pid.String())
 	}
-	fmt.Println("whitelisted peers", whitelistedPeers)
+
+	// Create TSS server
 	server, err := mc.SetupTSSServer(peers, priKey, preParams, appContext.Config(), tssKeyPass, true, whitelistedPeers)
 	if err != nil {
 		return fmt.Errorf("SetupTSSServer error: %w", err)
