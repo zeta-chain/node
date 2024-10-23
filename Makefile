@@ -406,22 +406,23 @@ test-sim-multi-seed-short: runsim
 	@echo "Running short multi-seed application simulation."
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 50 10 TestFullAppSimulation
 
-
-test-sim-import-export-long: export GOFLAGS=-tags=objstore
 test-sim-import-export-long: runsim
-	@echo "Running application import/export simulation. This may take several minutes..."
+	@echo "Running application import/export simulation. This may take several minutes"
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 50 5 TestAppImportExport
 
-test-sim-after-import-long: export GOFLAGS=-tags=objstore
 test-sim-after-import-long: runsim
-	@echo "Running application simulation-after-import. This may take several minutes..."
+	@echo "Running application simulation-after-import. This may take several minute"
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 50 5 TestAppSimulationAfterImport
 
 .PHONY: \
 test-sim-nondeterminism \
 test-sim-fullappsimulation \
 test-sim-multi-seed-long \
-test-sim-multi-seed-short
+test-sim-multi-seed-short \
+test-sim-import-export \
+test-sim-after-import \
+test-sim-import-export-long \
+test-sim-after-import-long
 
 
 ###############################################################################

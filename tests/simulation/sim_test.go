@@ -284,7 +284,7 @@ func TestAppImportExport(t *testing.T) {
 	)
 	require.NoError(t, simErr)
 
-	// export state and simParams before the simulation error is checked
+	// export state and simParams
 	err = simutils.CheckExportSimulation(simApp, config, simParams)
 	require.NoError(t, err)
 

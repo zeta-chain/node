@@ -20,15 +20,38 @@ At the end of the run it tries to export the genesis state to make sure the expo
 ```bash
 make test-sim-full-app
 ```
-
+### Import Export simulation test
+The import export simulation test runs a full application simulation
+and exports the application state at the end of the run.
+This state is then then imported into a new simulation.
+At the end of the run we compare the keys for the application state for both the simulations
+to make sure they are the same.
+```bash
+make test-sim-import-export
+```
+### Import and run simulation test
+This simulation test exports the application state at the end of the run and imports it into a new simulation.
+```bash
+make test-sim-import-export
+```
 ### Multi seed long test
 Multi seed long test runs a full application simulation with multiple seeds and multiple blocks.This runs the test for a longer duration compared to the multi seed short test
 ```bash
 make test-sim-multi-seed-long
 ```
-
 ### Multi seed short test
 Multi seed short test runs a full application simulation with multiple seeds and multiple blocks. This runs the test for a longer duration compared to the multi seed long test
 ```bash
 make test-sim-multi-seed-short
 ```
+### Import Export long test
+This test runs the import export simulation test for a longer duration.It uses the runsim tool to run the same test in parallel threads
+```bash
+make test-sim-import-export-long
+```
+### Import and run simulation test
+This test runs the import and run simulation test for a longer duration. It uses the runsim tool to run the same test in parallel threads
+```bash
+make test-sim-after-import-longg
+```
+
