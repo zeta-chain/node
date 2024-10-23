@@ -55,8 +55,7 @@ func (s *Signer) trackOutbound(
 			continue
 		}
 
-		tx := results[0]
-		txHash := liteapi.TransactionHashToString(tx.Lt, ton.Bits256(tx.Hash()))
+		txHash := liteapi.TransactionToHashString(&results[0].Transaction)
 
 		// Note that this method has a check for noop
 		_, err = zetacore.AddOutboundTracker(ctx, chainID, nonce, txHash, nil, "", 0)

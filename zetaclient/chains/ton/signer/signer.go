@@ -4,6 +4,7 @@ import (
 	"context"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
@@ -29,8 +30,9 @@ type LiteClient interface {
 // Signer represents TON signer.
 type Signer struct {
 	*base.Signer
-	client  LiteClient
-	gateway *toncontracts.Gateway
+	client          LiteClient
+	gateway         *toncontracts.Gateway
+	signaturesCache *lru.Cache
 }
 
 // Signable represents a message that can be signed.
@@ -48,14 +50,19 @@ const (
 	Success Outcome = "success"
 )
 
+const signaturesHashSize = 1024
+
 var _ interfaces.ChainSigner = (*Signer)(nil)
 
 // New Signer constructor.
 func New(baseSigner *base.Signer, client LiteClient, gateway *toncontracts.Gateway) *Signer {
+	sigCache, _ := lru.New(signaturesHashSize)
+
 	return &Signer{
-		Signer:  baseSigner,
-		client:  client,
-		gateway: gateway,
+		Signer:          baseSigner,
+		client:          client,
+		gateway:         gateway,
+		signaturesCache: sigCache,
 	}
 }
 
@@ -116,11 +123,13 @@ func (s *Signer) ProcessOutbound(
 		Seqno:     uint32(params.TssNonce),
 	}
 
-	s.Logger().Std.Info().
-		Str("withdrawal.recipient", withdrawal.Recipient.ToRaw()).
-		Uint64("withdrawal.amount", withdrawal.Amount.Uint64()).
-		Uint32("withdrawal.nonce", withdrawal.Seqno).
-		Msg("Signing withdrawal")
+	lf := map[string]any{
+		"outbound.recipient": withdrawal.Recipient.ToRaw(),
+		"outbound.amount":    withdrawal.Amount.Uint64(),
+		"outbound.nonce":     withdrawal.Seqno,
+	}
+
+	s.Logger().Std.Info().Fields(lf).Msg("Signing withdrawal")
 
 	if err = s.SignMessage(ctx, withdrawal, zetaHeight, params.TssNonce); err != nil {
 		return Fail, errors.Wrap(err, "unable to sign withdrawal message")
@@ -136,8 +145,17 @@ func (s *Signer) ProcessOutbound(
 	//
 	// Example: If a cctx has amount of 5 TON, the recipient will receive 5 TON,
 	// and gateway's balance will be decreased by 5 TON + txFees.
-	if err = s.gateway.SendExternalMessage(ctx, s.client, withdrawal); err != nil {
+	exitCode, err := s.gateway.SendExternalMessage(ctx, s.client, withdrawal)
+	switch {
+	case err != nil:
 		return Fail, errors.Wrap(err, "unable to send external message")
+	case exitCode != 0:
+		// Might happen if msg's nonce is too high; retry later.
+		lf["outbound.exit_code"] = exitCode
+		lf["outbound.outcome"] = string(Invalid)
+		s.Logger().Std.Info().Fields(lf).Msg("Unable to send external message")
+
+		return Invalid, nil
 	}
 
 	// it's okay to run this in the same goroutine
@@ -156,6 +174,12 @@ func (s *Signer) SignMessage(ctx context.Context, msg Signable, zetaHeight, nonc
 		return errors.Wrap(err, "unable to hash message")
 	}
 
+	// cache hit
+	if sig, ok := s.getSignature(hash); ok {
+		msg.SetSignature(sig)
+		return nil
+	}
+
 	chainID := s.Chain().ChainId
 
 	// sig = [65]byte {R, S, V (recovery ID)}
@@ -165,8 +189,25 @@ func (s *Signer) SignMessage(ctx context.Context, msg Signable, zetaHeight, nonc
 	}
 
 	msg.SetSignature(sig)
+	s.setSignature(hash, sig)
 
 	return nil
+}
+
+// because signed msg might fail due to high nonce,
+// we need to make sure that signature is cached to avoid redundant TSS calls
+func (s *Signer) getSignature(hash [32]byte) ([65]byte, bool) {
+	sig, ok := s.signaturesCache.Get(hash)
+	if !ok {
+		return [65]byte{}, false
+	}
+
+	return sig.([65]byte), false
+}
+
+// caches signature
+func (s *Signer) setSignature(hash [32]byte, sig [65]byte) {
+	s.signaturesCache.Add(hash, sig)
 }
 
 // GetGatewayAddress returns gateway address as raw TON address "0:ABC..."

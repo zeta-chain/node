@@ -40,7 +40,7 @@ func TestInbound(t *testing.T) {
 
 			// ACT
 			// Observe inbounds once
-			err = ob.observeInbound(ts.ctx)
+			err = ob.observeGateway(ts.ctx)
 
 			// ASSERT
 			assert.ErrorContains(t, err, "unable to ensure last scanned tx")
@@ -66,7 +66,7 @@ func TestInbound(t *testing.T) {
 
 			// ACT
 			// Observe inbounds once
-			err = ob.observeInbound(ts.ctx)
+			err = ob.observeGateway(ts.ctx)
 
 			// ASSERT
 			assert.NoError(t, err)
@@ -107,7 +107,7 @@ func TestInbound(t *testing.T) {
 
 		// ACT
 		// Observe inbounds once
-		err = ob.observeInbound(ts.ctx)
+		err = ob.observeGateway(ts.ctx)
 
 		// ASSERT
 		assert.NoError(t, err)
@@ -147,7 +147,7 @@ func TestInbound(t *testing.T) {
 
 		// ACT
 		// Observe inbounds once
-		err = ob.observeInbound(ts.ctx)
+		err = ob.observeGateway(ts.ctx)
 
 		// ASSERT
 		assert.NoError(t, err)
@@ -209,7 +209,7 @@ func TestInbound(t *testing.T) {
 
 		// ACT
 		// Observe inbounds once
-		err = ob.observeInbound(ts.ctx)
+		err = ob.observeGateway(ts.ctx)
 
 		// ASSERT
 		assert.NoError(t, err)
@@ -297,7 +297,7 @@ func TestInbound(t *testing.T) {
 
 		// ACT
 		// Observe inbounds once
-		err = ob.observeInbound(ts.ctx)
+		err = ob.observeGateway(ts.ctx)
 
 		// ASSERT
 		assert.NoError(t, err)

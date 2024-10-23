@@ -83,44 +83,36 @@ func (gw *Gateway) send(ctx context.Context, s Sender, amount math.Uint, body *b
 }
 
 // SendExternalMessage sends an external message to the Gateway.
-func (gw *Gateway) SendExternalMessage(ctx context.Context, s Client, msg ExternalMsg) error {
+func (gw *Gateway) SendExternalMessage(ctx context.Context, s Client, msg ExternalMsg) (uint32, error) {
 	return sendExternalMessage(ctx, s, gw.accountID, msg)
 }
 
 // inspired by tongo's wallet.Wallet{}.RawSendV2()
-func sendExternalMessage(ctx context.Context, via Client, to ton.AccountID, msg ExternalMsg) error {
+func sendExternalMessage(ctx context.Context, via Client, to ton.AccountID, msg ExternalMsg) (uint32, error) {
 	if msg.emptySig() {
-		return errors.New("empty signature")
+		return 0, errors.New("empty signature")
 	}
 
 	body, err := msg.AsBody()
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	extMsg, err := ton.CreateExternalMessage(to, body, nil, tlb.VarUInteger16{})
 	if err != nil {
-		return errors.Wrap(err, "unable to create external message")
+		return 0, errors.Wrap(err, "unable to create external message")
 	}
 
 	extMsgCell := boc.NewCell()
 	err = tlb.Marshal(extMsgCell, extMsg)
 	if err != nil {
-		return errors.Wrap(err, "can not marshal wallet external message")
+		return 0, errors.Wrap(err, "can not marshal wallet external message")
 	}
 
 	payload, err := extMsgCell.ToBocCustom(false, false, false, 0)
 	if err != nil {
-		return errors.Wrap(err, "can not serialize external message cell")
+		return 0, errors.Wrap(err, "can not serialize external message cell")
 	}
 
-	exitCode, err := via.SendMessage(ctx, payload)
-	switch {
-	case err != nil:
-		return errors.Wrap(err, "unable to send external message")
-	case exitCode != 0:
-		return errors.Errorf("unexpected exit code %d", exitCode)
-	}
-
-	return nil
+	return via.SendMessage(ctx, payload)
 }
