@@ -75,7 +75,6 @@ func PrintStats(db dbm.DB) {
 // if the export paths are defined.
 func CheckExportSimulation(app runtime.AppI, config simtypes.Config, params simtypes.Params) error {
 	if config.ExportStatePath != "" {
-		fmt.Println("exporting app state...")
 		exported, err := app.ExportAppStateAndValidators(false, nil, nil)
 		if err != nil {
 			return err
@@ -87,7 +86,6 @@ func CheckExportSimulation(app runtime.AppI, config simtypes.Config, params simt
 	}
 
 	if config.ExportParamsPath != "" {
-		fmt.Println("exporting simulation params...")
 		paramsBz, err := json.MarshalIndent(params, "", " ")
 		if err != nil {
 			return err
