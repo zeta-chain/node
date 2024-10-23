@@ -12,6 +12,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -296,7 +297,6 @@ func TestAppImportExport(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log("importing genesis")
-
 	newDB, newDir, _, _, err := cosmossimutils.SetupSimulation(
 		config,
 		SimDBBackend+"_new",
@@ -338,13 +338,14 @@ func TestAppImportExport(t *testing.T) {
 		Height:  simApp.LastBlockHeight(),
 		ChainID: SimAppChainID,
 	}).WithChainID(SimAppChainID)
+
+	// Use genesis state from the first app to initialize the second app
 	newSimApp.ModuleManager().InitGenesis(ctxB, newSimApp.AppCodec(), genesisState)
 	newSimApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
 
 	t.Log("comparing stores")
-
+	// The ordering of the keys is not important, we compare the same prefix for both simulations
 	storeKeysPrefixes := []StoreKeysPrefixes{
-
 		{simApp.GetKey(authtypes.StoreKey), newSimApp.GetKey(authtypes.StoreKey), [][]byte{}},
 		{
 			simApp.GetKey(stakingtypes.StoreKey), newSimApp.GetKey(stakingtypes.StoreKey),
@@ -352,7 +353,7 @@ func TestAppImportExport(t *testing.T) {
 				stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
 				stakingtypes.HistoricalInfoKey, stakingtypes.UnbondingIDKey, stakingtypes.UnbondingIndexKey, stakingtypes.UnbondingTypeKey, stakingtypes.ValidatorUpdatesKey,
 			},
-		}, // ordering may change but it doesn't matter
+		},
 		{simApp.GetKey(slashingtypes.StoreKey), newSimApp.GetKey(slashingtypes.StoreKey), [][]byte{}},
 		{simApp.GetKey(distrtypes.StoreKey), newSimApp.GetKey(distrtypes.StoreKey), [][]byte{}},
 		{simApp.GetKey(banktypes.StoreKey), newSimApp.GetKey(banktypes.StoreKey), [][]byte{banktypes.BalancesPrefix}},
@@ -366,7 +367,7 @@ func TestAppImportExport(t *testing.T) {
 		storeA := ctxA.KVStore(skp.A)
 		storeB := ctxB.KVStore(skp.B)
 
-		failedKVAs, failedKVBs := simutils.DiffKVStores(storeA, storeB, skp.Prefixes)
+		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, skp.Prefixes)
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
 
 		t.Logf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)

@@ -393,7 +393,7 @@ test-sim-fullappsimulation:
 	$(call run-sim-test,"TestFullAppSimulation",TestFullAppSimulation,100,200,2h)
 
 test-sim-import-export:
-	$(call run-sim-test,"test-import",TestAppImportExport,10,20,2h)
+	$(call run-sim-test,"test-import-export",TestAppImportExport,10,20,2h)
 
 test-sim-after-import:
 	$(call run-sim-test,"test-sim-after-import",TestAppSimulationAfterImport,10,20,2h)
