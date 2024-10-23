@@ -13,13 +13,11 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
-	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
-	crypto2 "github.com/libp2p/go-libp2p/core/crypto"
-	"github.com/libp2p/go-libp2p/core/peer"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"gitlab.com/thorchain/tss/go-tss/conversion"
 
 	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -211,16 +209,7 @@ func start(_ *cobra.Command, _ []string) error {
 	keygen := appContext.GetKeygen()
 	whitelistedPeers := []string{}
 	for _, pk := range keygen.GranteePubkeys {
-		pk, err := legacybech32.UnmarshalPubKey(legacybech32.AccPK, pk)
-		if err != nil {
-			return err
-		}
-		bz := pk.Bytes()
-		k, err := crypto2.UnmarshalSecp256k1PublicKey(bz)
-		if err != nil {
-			return err
-		}
-		pid, err := peer.IDFromPublicKey(k)
+		pid, err := conversion.Bech32PubkeyToPeerID(pk)
 		if err != nil {
 			return err
 		}
