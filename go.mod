@@ -241,7 +241,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mostynb/zstdpool-freelist v0.0.0-20201229113212-927304c0c3b1 // indirect
-	github.com/mr-tron/base58 v1.2.0 // indirect
+	github.com/mr-tron/base58 v1.2.0
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
 	github.com/multiformats/go-base36 v0.2.0 // indirect
@@ -334,6 +334,7 @@ require (
 
 require (
 	github.com/bnb-chain/tss-lib v1.5.0
+	github.com/libp2p/go-libp2p-core v0.20.1
 	github.com/showa-93/go-mask v0.6.2
 	github.com/tonkeeper/tongo v1.9.3
 )
@@ -367,5 +368,5 @@ replace (
 	github.com/bnb-chain/tss-lib => github.com/zeta-chain/tss-lib v0.0.0-20240916163010-2e6b438bd901
 	github.com/ethereum/go-ethereum => github.com/zeta-chain/go-ethereum v1.10.26-spc
 	github.com/libp2p/go-libp2p => github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4
-	gitlab.com/thorchain/tss/go-tss => github.com/zeta-chain/go-tss v0.0.0-20240916173049-89fee4b0ae7f
+	gitlab.com/thorchain/tss/go-tss => github.com/zeta-chain/go-tss v0.0.0-20241023185909-85fd6808d9fb
 )
