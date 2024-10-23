@@ -64,7 +64,7 @@ func (s *Signer) trackOutbound(
 			return errors.Wrap(err, "unable to add outbound tracker")
 		}
 
-		time.Sleep(tick)
+		return nil
 	}
 
 	return errors.Errorf("timeout exceeded (%s)", time.Since(start).String())

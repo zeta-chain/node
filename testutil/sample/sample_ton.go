@@ -126,6 +126,31 @@ func TONDepositAndCallProps(t *testing.T, acc ton.AccountID, d toncontracts.Depo
 	}
 }
 
+func TONWithdrawal(t *testing.T, acc ton.AccountID, w toncontracts.Withdrawal) ton.Transaction {
+	return TONTransaction(t, TONWithdrawalProps(t, acc, w))
+}
+
+func TONWithdrawalProps(t *testing.T, acc ton.AccountID, w toncontracts.Withdrawal) TONTransactionProps {
+	body, err := w.AsBody()
+	require.NoError(t, err)
+
+	return TONTransactionProps{
+		Account: acc,
+		Input: &tlb.Message{
+			Info: externalMessageInfo(acc),
+			Body: tlb.EitherRef[tlb.Any]{Value: tlb.Any(*body)},
+		},
+		Output: &tlb.Message{
+			Info: internalMessageInfo(&intMsgInfo{
+				IhrDisabled: true,
+				Src:         acc.ToMsgAddress(),
+				Dest:        w.Recipient.ToMsgAddress(),
+				Value:       tlb.CurrencyCollection{Grams: tlb.Coins(w.Amount.Uint64())},
+			}),
+		},
+	}
+}
+
 // TONTransaction creates a sample TON transaction.
 func TONTransaction(t *testing.T, p TONTransactionProps) ton.Transaction {
 	require.False(t, p.Account.IsZero(), "account address is empty")
@@ -209,6 +234,20 @@ func internalMessageInfo(info *intMsgInfo) tlb.CommonMsgInfo {
 			CreatedAt   uint32
 		})(info),
 	}
+}
+
+func externalMessageInfo(dest ton.AccountID) tlb.CommonMsgInfo {
+	ext := struct {
+		Src       tlb.MsgAddress
+		Dest      tlb.MsgAddress
+		ImportFee tlb.VarUInteger16
+	}{
+		Src:       tlb.MsgAddress{SumType: "AddrNone"},
+		Dest:      dest.ToMsgAddress(),
+		ImportFee: tlb.VarUInteger16{},
+	}
+
+	return tlb.CommonMsgInfo{SumType: "ExtInMsgInfo", ExtInMsgInfo: &ext}
 }
 
 func tonBlockID(now time.Time) ton.BlockIDExt {

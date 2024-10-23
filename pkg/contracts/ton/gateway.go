@@ -77,7 +77,7 @@ func (gw *Gateway) ParseAndFilter(tx ton.Transaction, filter Filter) (*Transacti
 	}
 
 	if !filter(parsedTX) {
-		return nil, true, nil
+		return parsedTX, true, nil
 	}
 
 	return parsedTX, false, nil

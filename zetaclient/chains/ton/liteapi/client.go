@@ -203,6 +203,10 @@ func (c *Client) getLastTransactionHash(ctx context.Context, acc ton.AccountID) 
 	return state.LastTransLt, state.LastTransHash, nil
 }
 
+func TransactionToHashString(tx *ton.Transaction) string {
+	return TransactionHashToString(tx.Lt, ton.Bits256(tx.Hash()))
+}
+
 // TransactionHashToString converts logicalTime and hash to string
 func TransactionHashToString(lt uint64, hash ton.Bits256) string {
 	return fmt.Sprintf("%d:%s", lt, hash.Hex())

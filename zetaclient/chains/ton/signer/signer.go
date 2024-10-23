@@ -16,7 +16,10 @@ import (
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 )
 
-// LiteClient represents a subset of tongo's lite client  methods.
+// LiteClient represents a TON client
+// see https://github.com/ton-blockchain/ton/blob/master/tl/generate/scheme/tonlib_api.tl
+//
+//go:generate mockery --name LiteClient --structname SignerLiteClient --filename ton_signerliteclient.go --case underscore --output ../../../testutils/mocks
 type LiteClient interface {
 	GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) ([]ton.Transaction, error)
 	GetAccountState(ctx context.Context, accountID ton.AccountID) (tlb.ShardAccount, error)
