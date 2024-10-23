@@ -159,7 +159,12 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 	counter := int16(0)
 
 	for ; iter.Valid(); iter.Next() {
-		addr := sdk.ValAddress(iter.Key()[2:])
+		key := iter.Key()
+		if len(key) <= 2 {
+			app.Logger().Error("unexpected key in staking store", "key", key)
+			continue
+		}
+		addr := sdk.ValAddress(key[2:])
 		validator, found := app.StakingKeeper.GetValidator(ctx, addr)
 		if !found {
 			panic("expected validator, not found")

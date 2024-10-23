@@ -77,10 +77,10 @@ func CheckExportSimulation(app runtime.AppI, config simtypes.Config, params simt
 	if config.ExportStatePath != "" {
 		exported, err := app.ExportAppStateAndValidators(false, nil, nil)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to export app state: %w", err)
 		}
 
-		if err := os.WriteFile(config.ExportStatePath, []byte(exported.AppState), 0o600); err != nil {
+		if err := os.WriteFile(config.ExportStatePath, exported.AppState, 0o600); err != nil {
 			return err
 		}
 	}
@@ -88,7 +88,7 @@ func CheckExportSimulation(app runtime.AppI, config simtypes.Config, params simt
 	if config.ExportParamsPath != "" {
 		paramsBz, err := json.MarshalIndent(params, "", " ")
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to write app state to %s: %w", config.ExportStatePath, err)
 		}
 
 		if err := os.WriteFile(config.ExportParamsPath, paramsBz, 0o600); err != nil {

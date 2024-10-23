@@ -197,8 +197,12 @@ func TestFullAppSimulation(t *testing.T) {
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
-		require.NoError(t, db.Close())
-		require.NoError(t, os.RemoveAll(dir))
+		if err := db.Close(); err != nil {
+			t.Errorf("Error closing new database: %v", err)
+		}
+		if err := os.RemoveAll(dir); err != nil {
+			t.Errorf("Error removing directory %s: %v", dir, err)
+		}
 	}()
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
 	appOptions[server.FlagInvCheckPeriod] = simutils.FlagPeriodValue
@@ -256,8 +260,12 @@ func TestAppImportExport(t *testing.T) {
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
-		require.NoError(t, db.Close())
-		require.NoError(t, os.RemoveAll(dir))
+		if err := db.Close(); err != nil {
+			t.Errorf("Error closing new database: %v", err)
+		}
+		if err := os.RemoveAll(dir); err != nil {
+			t.Errorf("Error removing directory %s: %v", dir, err)
+		}
 	}()
 
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
@@ -307,8 +315,12 @@ func TestAppImportExport(t *testing.T) {
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
-		require.NoError(t, newDB.Close())
-		require.NoError(t, os.RemoveAll(newDir))
+		if err := newDB.Close(); err != nil {
+			t.Errorf("Error closing new database: %v", err)
+		}
+		if err := os.RemoveAll(newDir); err != nil {
+			t.Errorf("Error removing directory %s: %v", newDir, err)
+		}
 	}()
 
 	newSimApp, err := simutils.NewSimApp(
@@ -410,8 +422,12 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
-		require.NoError(t, db.Close())
-		require.NoError(t, os.RemoveAll(dir))
+		if err := db.Close(); err != nil {
+			t.Errorf("Error closing new database: %v", err)
+		}
+		if err := os.RemoveAll(dir); err != nil {
+			t.Errorf("Error removing directory %s: %v", dir, err)
+		}
 	}()
 
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
@@ -468,8 +484,12 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
-		require.NoError(t, newDB.Close())
-		require.NoError(t, os.RemoveAll(newDir))
+		if err := newDB.Close(); err != nil {
+			t.Errorf("Error closing new database: %v", err)
+		}
+		if err := os.RemoveAll(newDir); err != nil {
+			t.Errorf("Error removing directory %s: %v", newDir, err)
+		}
 	}()
 
 	newSimApp, err := simutils.NewSimApp(
