@@ -1,9 +1,10 @@
 name: Simulation Tests Workflow
 
 on:
-#  # The workflow runs when code is pushed to either the main or develop branches
-#  push:
-#    branches:
+  # The workflow runs when code is pushed to either the main or develop branches
+  push:
+    branches:
+      - sim-import-export
 #      - main
 #      - develop
 #  # The workflow runs when a pull request is opened or updated
