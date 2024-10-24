@@ -3,6 +3,7 @@ package e2etests
 import (
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 
@@ -11,15 +12,20 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-const payloadMessageWithdrawERC20 = "this is a test ERC20 withdraw and call payload"
+const payloadMessageWithdrawAuthenticatedCallERC20 = "this is a test ERC20 withdraw and authenticated call payload"
 
-func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
+func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, _ []string) {
+	previousGasLimit := r.ZEVMAuth.GasLimit
+	r.ZEVMAuth.GasLimit = 10000000
+	defer func() {
+		r.ZEVMAuth.GasLimit = previousGasLimit
+	}()
 
-	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok, "Invalid amount specified for TestV2ERC20WithdrawAndCall")
+	// called with fixed amount without arg since onCall implementation is for TestDappV2 is simple and generic
+	// without decoding the payload and amount handling for erc20, purpose of test is to verify correct sender and payload are used
+	amount := big.NewInt(10000)
 
-	r.AssertTestDAppEVMCalled(false, payloadMessageWithdrawERC20, amount)
+	r.AssertTestDAppEVMCalled(false, payloadMessageWithdrawAuthenticatedCallERC20, amount)
 
 	r.ApproveERC20ZRC20(r.GatewayZEVMAddr)
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
@@ -28,7 +34,7 @@ func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, args []string) {
 	tx := r.V2ERC20WithdrawAndCall(
 		r.TestDAppV2EVMAddr,
 		amount,
-		r.EncodeERC20Call(r.ERC20Addr, amount, payloadMessageWithdrawERC20),
+		[]byte(payloadMessageWithdrawAuthenticatedCallERC20),
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 
@@ -37,5 +43,13 @@ func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "withdraw")
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
-	r.AssertTestDAppEVMCalled(true, payloadMessageWithdrawERC20, amount)
+	r.AssertTestDAppEVMCalled(true, payloadMessageWithdrawAuthenticatedCallERC20, big.NewInt(0))
+
+	// check expected sender was used
+	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(
+		&bind.CallOpts{},
+		[]byte(payloadMessageWithdrawAuthenticatedCallERC20),
+	)
+	require.NoError(r, err)
+	require.Equal(r, r.ZEVMAuth.From, senderForMsg)
 }

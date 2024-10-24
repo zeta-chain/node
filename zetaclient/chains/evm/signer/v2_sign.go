@@ -19,7 +19,6 @@ import (
 // bytes calldata data
 func (signer *Signer) signGatewayExecute(
 	ctx context.Context,
-	sender string,
 	txData *OutboundData,
 ) (*ethtypes.Transaction, error) {
 	gatewayABI, err := gatewayevm.GatewayEVMMetaData.GetAbi()
@@ -27,21 +26,16 @@ func (signer *Signer) signGatewayExecute(
 		return nil, errors.Wrap(err, "unable to get GatewayEVMMetaData ABI")
 	}
 
+	messageContext, err := txData.MessageContext()
+	if err != nil {
+		return nil, err
+	}
+
 	var data []byte
 
-	if txData.outboundParams.CallOptions.IsArbitraryCall {
-		data, err = gatewayABI.Pack("execute", txData.to, txData.message)
-		if err != nil {
-			return nil, fmt.Errorf("execute pack error: %w", err)
-		}
-	} else {
-		messageContext := gatewayevm.MessageContext{
-			Sender: common.HexToAddress(sender),
-		}
-		data, err = gatewayABI.Pack("execute0", messageContext, txData.to, txData.message)
-		if err != nil {
-			return nil, fmt.Errorf("execute0 pack error: %w", err)
-		}
+	data, err = gatewayABI.Pack("execute", messageContext, txData.to, txData.message)
+	if err != nil {
+		return nil, fmt.Errorf("execute pack error: %w", err)
 	}
 
 	tx, _, _, err := signer.Sign(
@@ -81,7 +75,7 @@ func (signer *Signer) signGatewayExecuteRevert(
 		revert.RevertContext{
 			Sender:        common.HexToAddress(inboundSender),
 			Asset:         txData.asset,
-			Amount:        txData.amount.Uint64(),
+			Amount:        txData.amount,
 			RevertMessage: txData.revertOptions.RevertMessage,
 		},
 	)
@@ -155,7 +149,19 @@ func (signer *Signer) signERC20CustodyWithdrawAndCall(
 		return nil, errors.Wrap(err, "unable to get ERC20CustodyMetaData ABI")
 	}
 
-	data, err := erc20CustodyV2ABI.Pack("withdrawAndCall", txData.to, txData.asset, txData.amount, txData.message)
+	messageContext, err := txData.MessageContext()
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := erc20CustodyV2ABI.Pack(
+		"withdrawAndCall",
+		messageContext,
+		txData.to,
+		txData.asset,
+		txData.amount,
+		txData.message,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("withdraw pack error: %w", err)
 	}
@@ -201,7 +207,7 @@ func (signer *Signer) signERC20CustodyWithdrawRevert(
 		revert.RevertContext{
 			Sender:        common.HexToAddress(inboundSender),
 			Asset:         txData.asset,
-			Amount:        txData.amount.Uint64(),
+			Amount:        txData.amount,
 			RevertMessage: txData.revertOptions.RevertMessage,
 		},
 	)

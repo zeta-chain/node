@@ -136,7 +136,7 @@ var moduleAccountPerms = map[string][]string{
 	fungibletypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
 	emissionstypes.ModuleName:                       {authtypes.Minter},
 	emissionstypes.UndistributedObserverRewardsPool: nil,
-	emissionstypes.UndistributedTssRewardsPool:      nil,
+	emissionstypes.UndistributedTSSRewardsPool:      nil,
 	ibctransfertypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
 	ibccrosschaintypes.ModuleName:                   nil,
 }

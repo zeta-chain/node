@@ -27,16 +27,9 @@ func KeyPrefix(p string) []byte {
 }
 
 var (
-	ModuleAddress = authtypes.NewModuleAddress(ModuleName)
-	//ModuleAddressEVM common.EVMAddress
+	ModuleAddress    = authtypes.NewModuleAddress(ModuleName)
 	ModuleAddressEVM = common.BytesToAddress(ModuleAddress.Bytes())
-	AdminAddress     = "zeta1rx9r8hff0adaqhr5tuadkzj4e7ns2ntg446vtt"
 )
-
-func init() {
-	//fmt.Printf("ModuleAddressEVM of %s: %s\n", ModuleName, ModuleAddressEVM.String())
-	// 0x735b14BB79463307AAcBED86DAf3322B1e6226aB
-}
 
 const (
 	SystemContractKey = "SystemContract-value-"

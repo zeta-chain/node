@@ -8,7 +8,7 @@ DOCKER ?= docker
 # allow setting of NODE_COMPOSE_ARGS to pass additional args to docker compose
 # useful for setting profiles and/ort optional overlays
 # example: NODE_COMPOSE_ARGS="--profile monitoring -f docker-compose-persistent.yml"
-DOCKER_COMPOSE ?= $(DOCKER) compose $(NODE_COMPOSE_ARGS)
+DOCKER_COMPOSE ?= $(DOCKER) compose -f docker-compose.yml $(NODE_COMPOSE_ARGS)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 GOFLAGS := ""
 GOLANG_CROSS_VERSION ?= v1.22.4
@@ -221,11 +221,11 @@ start-localnet: zetanode start-localnet-skip-build
 start-localnet-skip-build:
 	@echo "--> Starting localnet"
 	export LOCALNET_MODE=setup-only && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) -f docker-compose.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 # stop-localnet should include all profiles so other containers are also removed
 stop-localnet:
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile all -f docker-compose.yml down --remove-orphans
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile all down --remove-orphans
 
 ###############################################################################
 ###                         E2E tests               						###
@@ -253,22 +253,22 @@ start-e2e-test: zetanode
 start-e2e-admin-test: zetanode
 	@echo "--> Starting e2e admin test"
 	export E2E_ARGS="--skip-regular --test-admin" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile eth2 -f docker-compose.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile eth2 up -d
 
 start-e2e-performance-test: zetanode
 	@echo "--> Starting e2e performance test"
 	export E2E_ARGS="--test-performance" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress -f docker-compose.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
 start-e2e-import-mainnet-test: zetanode
 	@echo "--> Starting e2e import-data test"
 	export ZETACORED_IMPORT_GENESIS_DATA=true && \
 	export ZETACORED_START_PERIOD=15m && \
-	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER_COMPOSE) -f docker-compose.yml up -d
+	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER_COMPOSE) up -d
 
 start-stress-test: zetanode
 	@echo "--> Starting stress test"
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress -f docker-compose.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
 start-tss-migration-test: zetanode
 	@echo "--> Starting tss migration test"
@@ -279,17 +279,17 @@ start-tss-migration-test: zetanode
 start-solana-test: zetanode solana
 	@echo "--> Starting solana test"
 	export E2E_ARGS="--skip-regular --test-solana" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana -f docker-compose.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana up -d
 
 start-ton-test: zetanode
 	@echo "--> Starting TON test"
 	export E2E_ARGS="--skip-regular --test-ton" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile ton -f docker-compose.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile ton up -d
 
 start-v2-test: zetanode
 	@echo "--> Starting e2e smart contracts v2 test"
 	export E2E_ARGS="--skip-regular --test-v2" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) -f docker-compose.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 ###############################################################################
 ###                         Upgrade Tests              						###
@@ -321,20 +321,20 @@ start-upgrade-test: zetanode-upgrade
 	@echo "--> Starting upgrade test"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=225 && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
 start-upgrade-test-light: zetanode-upgrade
 	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=90 && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
 start-upgrade-test-admin: zetanode-upgrade
 	@echo "--> Starting admin upgrade test"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=90 && \
 	export E2E_ARGS="--skip-regular --test-admin" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
 # this test upgrades from v18 and execute the v2 contracts migration process
 # this tests is part of upgrade test part because it should run the upgrade from v18 to fully replicate the upgrade process
@@ -343,7 +343,7 @@ start-upgrade-v2-migration-test: zetanode-upgrade
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=90 && \
 	export E2E_ARGS="--test-v2-migration" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
 
 start-upgrade-import-mainnet-test: zetanode-upgrade
@@ -352,7 +352,62 @@ start-upgrade-import-mainnet-test: zetanode-upgrade
 	export ZETACORED_IMPORT_GENESIS_DATA=true && \
 	export ZETACORED_START_PERIOD=15m && \
 	export UPGRADE_HEIGHT=225 && \
-	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
+
+
+###############################################################################
+###                         Simulation Tests              					###
+###############################################################################
+
+BINDIR ?= $(GOPATH)/bin
+SIMAPP = ./tests/simulation
+
+
+# Run sim is a cosmos tool which helps us to run multiple simulations in parallel.
+runsim: $(BINDIR)/runsim
+$(BINDIR)/runsim:
+	@echo 'Installing runsim...'
+	@TEMP_DIR=$$(mktemp -d) && \
+	cd $$TEMP_DIR && \
+	go install github.com/cosmos/tools/cmd/runsim@v1.0.0 && \
+	rm -rf $$TEMP_DIR || (echo 'Failed to install runsim' && exit 1)
+	@echo 'runsim installed successfully'
+
+
+# Configuration parameters for simulation tests
+# NumBlocks: Number of blocks to simulate
+# BlockSize: Number of transactions in a block
+# Commit: Whether to commit the block or not
+# Period: Invariant check period
+# Timeout: Timeout for the simulation test
+define run-sim-test
+	@echo "Running $(1)..."
+	@go test -mod=readonly $(SIMAPP) -run $(2) -Enabled=true \
+		-NumBlocks=$(3) -BlockSize=$(4) -Commit=true -Period=0 -v -timeout $(5)
+endef
+
+test-sim-nondeterminism:
+	$(call run-sim-test,"non-determinism test",TestAppStateDeterminism,100,200,2h)
+
+test-sim-fullappsimulation:
+	$(call run-sim-test,"TestFullAppSimulation",TestFullAppSimulation,100,200,2h)
+
+test-sim-multi-seed-long: runsim
+	@echo "Running long multi-seed application simulation."
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 500 50 TestFullAppSimulation
+
+test-sim-multi-seed-short: runsim
+	@echo "Running short multi-seed application simulation."
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 50 10 TestFullAppSimulation
+
+
+
+.PHONY: \
+test-sim-nondeterminism \
+test-sim-fullappsimulation \
+test-sim-multi-seed-long \
+test-sim-multi-seed-short
+
 
 ###############################################################################
 ###                                GoReleaser  		                        ###

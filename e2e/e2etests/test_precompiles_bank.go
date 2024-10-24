@@ -20,6 +20,7 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	higherBalanceAmount := big.NewInt(1001)
 	higherAllowanceAmount := big.NewInt(501)
 	spender := r.EVMAddress()
+	bankAddress := bank.ContractAddress
 
 	// Increase the gasLimit. It's required because of the gas consumed by precompiled functions.
 	previousGasLimit := r.ZEVMAuth.GasLimit
@@ -29,7 +30,7 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 
 		// Reset the allowance to 0; this is needed when running upgrade tests where
 		// this test runs twice.
-		tx, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, bank.ContractAddress, big.NewInt(0))
+		tx, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, bankAddress, big.NewInt(0))
 		require.NoError(r, err)
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 		utils.RequireTxSuccessful(r, receipt, "Resetting allowance failed")
@@ -59,7 +60,7 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	require.Equal(r, uint64(0), cosmosBalance.Uint64(), "spender cosmos coin balance should be 0")
 
 	// Approve allowance of 500 ERC20ZRC20 tokens for the bank contract. Should pass.
-	tx, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, bank.ContractAddress, depositAmount)
+	tx, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, bankAddress, depositAmount)
 	require.NoError(r, err)
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "Approve ETHZRC20 bank allowance tx failed")
@@ -72,7 +73,7 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	utils.RequiredTxFailed(r, receipt, "Depositting an amount higher than allowed should fail")
 
 	// Approve allowance of 1000 ERC20ZRC20 tokens.
-	tx, err = r.ERC20ZRC20.Approve(r.ZEVMAuth, bank.ContractAddress, big.NewInt(1e3))
+	tx, err = r.ERC20ZRC20.Approve(r.ZEVMAuth, bankAddress, big.NewInt(1e3))
 	require.NoError(r, err)
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "Approve ETHZRC20 bank allowance tx failed")
@@ -103,7 +104,7 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	require.Equal(r, uint64(500), cosmosBalance.Uint64(), "spender cosmos coin balance should be 500")
 
 	// Bank: ERC20ZRC20 balance should be 500 tokens locked.
-	bankZRC20Balance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{Context: r.Ctx}, bank.ContractAddress)
+	bankZRC20Balance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{Context: r.Ctx}, bankAddress)
 	require.NoError(r, err, "Call ERC20ZRC20.BalanceOf")
 	require.Equal(r, uint64(500), bankZRC20Balance.Uint64(), "bank ERC20ZRC20 balance should be 500")
 
@@ -115,7 +116,7 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 
 	// Bank: ERC20ZRC20 balance should be 500 tokens locked after a failed withdraw.
 	// No tokens should be unlocked with a failed withdraw.
-	bankZRC20Balance, err = r.ERC20ZRC20.BalanceOf(&bind.CallOpts{Context: r.Ctx}, bank.ContractAddress)
+	bankZRC20Balance, err = r.ERC20ZRC20.BalanceOf(&bind.CallOpts{Context: r.Ctx}, bankAddress)
 	require.NoError(r, err, "Call ERC20ZRC20.BalanceOf")
 	require.Equal(r, uint64(500), bankZRC20Balance.Uint64(), "bank ERC20ZRC20 balance should be 500")
 
@@ -143,7 +144,7 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	require.Equal(r, uint64(1000), zrc20Balance.Uint64(), "spender ERC20ZRC20 balance should be 1000")
 
 	// Bank: ERC20ZRC20 balance should be 0 tokens locked.
-	bankZRC20Balance, err = r.ERC20ZRC20.BalanceOf(&bind.CallOpts{Context: r.Ctx}, bank.ContractAddress)
+	bankZRC20Balance, err = r.ERC20ZRC20.BalanceOf(&bind.CallOpts{Context: r.Ctx}, bankAddress)
 	require.NoError(r, err, "Call ERC20ZRC20.BalanceOf")
 	require.Equal(r, uint64(0), bankZRC20Balance.Uint64(), "bank ERC20ZRC20 balance should be 0")
 }
@@ -158,7 +159,7 @@ func TestPrecompilesBankNonZRC20(r *runner.E2ERunner, args []string) {
 		r.ZEVMAuth.GasLimit = previousGasLimit
 	}()
 
-	spender, bankAddr := r.EVMAddress(), bank.ContractAddress
+	spender, bankAddress := r.EVMAddress(), bank.ContractAddress
 
 	// Create a bank contract caller.
 	bankContract, err := bank.NewIBank(bank.ContractAddress, r.ZEVMClient)
@@ -179,13 +180,13 @@ func TestPrecompilesBankNonZRC20(r *runner.E2ERunner, args []string) {
 	)
 
 	// Allow the bank contract to spend 25 WZeta tokens.
-	tx, err := r.WZeta.Approve(r.ZEVMAuth, bankAddr, big.NewInt(25))
+	tx, err := r.WZeta.Approve(r.ZEVMAuth, bankAddress, big.NewInt(25))
 	require.NoError(r, err, "Error approving allowance for bank contract")
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	require.EqualValues(r, uint64(1), receipt.Status, "approve allowance tx failed")
 
 	// Check the allowance of the bank in WZeta tokens. Should be 25.
-	allowance, err := r.WZeta.Allowance(&bind.CallOpts{Context: r.Ctx}, spender, bankAddr)
+	allowance, err := r.WZeta.Allowance(&bind.CallOpts{Context: r.Ctx}, spender, bankAddress)
 	require.NoError(r, err, "Error retrieving bank allowance")
 	require.EqualValues(r, uint64(25), allowance.Uint64(), "Error allowance for bank contract")
 

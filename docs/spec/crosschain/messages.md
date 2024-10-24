@@ -63,6 +63,7 @@ message MsgVoteGasPrice {
 	uint64 price = 3;
 	uint64 priority_fee = 6;
 	uint64 block_number = 4;
+	string supply = 5;
 }
 ```
 
@@ -190,6 +191,7 @@ message MsgVoteInbound {
 	ProtocolContractVersion protocol_contract_version = 16;
 	RevertOptions revert_options = 17;
 	CallOptions call_options = 18;
+	bool is_cross_chain_call = 19;
 }
 ```
 

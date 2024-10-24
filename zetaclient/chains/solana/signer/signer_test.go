@@ -102,6 +102,48 @@ func Test_NewSigner(t *testing.T) {
 	}
 }
 
+func Test_SetGatewayAddress(t *testing.T) {
+	// test parameters
+	chain := chains.SolanaDevnet
+	chainParams := sample.ChainParams(chain.ChainId)
+	chainParams.GatewayAddress = testutils.GatewayAddresses[chain.ChainId]
+
+	// helper functor to create signer
+	signerCreator := func() *signer.Signer {
+		s, err := signer.NewSigner(chain, *chainParams, nil, nil, nil, nil, base.DefaultLogger())
+		require.NoError(t, err)
+		return s
+	}
+
+	// test cases
+	tests := []struct {
+		name       string
+		signer     *signer.Signer
+		newAddress string
+		expected   string
+	}{
+		{
+			name:       "should set new gateway address",
+			signer:     signerCreator(),
+			newAddress: "9Z5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d",
+			expected:   "9Z5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d",
+		},
+		{
+			name:       "should not set invalid gateway address",
+			signer:     signerCreator(),
+			newAddress: "invalid",
+			expected:   chainParams.GatewayAddress,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.signer.SetGatewayAddress(tt.newAddress)
+			require.Equal(t, tt.expected, tt.signer.GetGatewayAddress())
+		})
+	}
+}
+
 func Test_SetRelayerBalanceMetrics(t *testing.T) {
 	// test parameters
 	chain := chains.SolanaDevnet

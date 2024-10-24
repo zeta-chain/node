@@ -430,6 +430,12 @@ export declare class MsgVoteGasPrice extends Message<MsgVoteGasPrice> {
    */
   blockNumber: bigint;
 
+  /**
+   * @generated from field: string supply = 5 [deprecated = true];
+   * @deprecated
+   */
+  supply: string;
+
   constructor(data?: PartialMessage<MsgVoteGasPrice>);
 
   static readonly runtime: typeof proto3;
@@ -662,6 +668,13 @@ export declare class MsgVoteInbound extends Message<MsgVoteInbound> {
    * @generated from field: zetachain.zetacore.crosschain.CallOptions call_options = 18;
    */
   callOptions?: CallOptions;
+
+  /**
+   * define if a smart contract call should be made with asset
+   *
+   * @generated from field: bool is_cross_chain_call = 19;
+   */
+  isCrossChainCall: boolean;
 
   constructor(data?: PartialMessage<MsgVoteInbound>);
 
