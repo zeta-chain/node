@@ -59,7 +59,7 @@ func (r *E2ERunner) PrintTestReports(tr TestReports) {
 	if err != nil {
 		r.Logger.Print("Error rendering test report: %s", err)
 	}
-	r.Logger.PrintNoPrefix(table)
+	r.Logger.PrintNoPrefix("%s", table)
 }
 
 // NetworkReport is a struct that contains the report for the network used after running e2e tests

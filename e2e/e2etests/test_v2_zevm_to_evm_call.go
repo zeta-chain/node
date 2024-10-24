@@ -22,13 +22,8 @@ func TestV2ZEVMToEVMCall(r *runner.E2ERunner, args []string) {
 	// necessary approval for fee payment
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
-	// set expected sender
-	tx, err := r.TestDAppV2EVM.SetExpectedOnCallSender(r.EVMAuth, r.ZEVMAuth.From)
-	require.NoError(r, err)
-	utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-
 	// perform the authenticated call
-	tx = r.V2ZEVMToEMVAuthenticatedCall(
+	tx := r.V2ZEVMToEMVCall(
 		r.TestDAppV2EVMAddr,
 		[]byte(payloadMessageEVMAuthenticatedCall),
 		gatewayzevm.RevertOptions{

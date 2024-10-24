@@ -165,6 +165,14 @@ export declare class InboundParams extends Message<InboundParams> {
    */
   txFinalizationStatus: TxFinalizationStatus;
 
+  /**
+   * this field describes if a smart contract call should be made for a inbound
+   * with assets only used for protocol contract version 2
+   *
+   * @generated from field: bool is_cross_chain_call = 12;
+   */
+  isCrossChainCall: boolean;
+
   constructor(data?: PartialMessage<InboundParams>);
 
   static readonly runtime: typeof proto3;

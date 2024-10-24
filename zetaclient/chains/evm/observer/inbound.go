@@ -239,6 +239,12 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 			Err(err).
 			Msgf("ObserveInbound: error observing call events from Gateway contract")
 	}
+	lastScannedGatewayDepositAndCall, err := ob.ObserveGatewayDepositAndCall(ctx, startBlock, toBlock)
+	if err != nil {
+		ob.Logger().Inbound.Error().
+			Err(err).
+			Msgf("ObserveInbound: error observing depositAndCall events from Gateway contract")
+	}
 
 	// note: using lowest height for all 3 events is not perfect, but it's simple and good enough
 	lastScannedLowest := lastScannedZetaSent
@@ -253,6 +259,9 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 	}
 	if lastScannedGatewayCall < lastScannedLowest {
 		lastScannedLowest = lastScannedGatewayCall
+	}
+	if lastScannedGatewayDepositAndCall < lastScannedLowest {
+		lastScannedLowest = lastScannedGatewayDepositAndCall
 	}
 
 	// update last scanned block height for all 3 events (ZetaSent, Deposited, TssRecvd), ignore db error
