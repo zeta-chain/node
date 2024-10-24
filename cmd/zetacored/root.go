@@ -274,42 +274,36 @@ func (ac appCreator) appExport(
 	appOpts servertypes.AppOptions,
 	modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
-	var anApp *app.App
+	var zetaApp *app.App
 
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
 	if !ok || homePath == "" {
 		return servertypes.ExportedApp{}, errors.New("application home not set")
 	}
 
+	loadlatest := true
 	if height != -1 {
-		anApp = app.New(
-			logger,
-			db,
-			traceStore,
-			false,
-			map[int64]bool{},
-			homePath,
-			uint(1),
-			ac.encCfg,
-			appOpts,
-		)
-
-		if err := anApp.LoadHeight(height); err != nil {
-			return servertypes.ExportedApp{}, err
-		}
-	} else {
-		anApp = app.New(
-			logger,
-			db,
-			traceStore,
-			true,
-			map[int64]bool{},
-			homePath,
-			uint(1),
-			ac.encCfg,
-			appOpts,
-		)
+		loadlatest = false
 	}
 
-	return anApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
+	zetaApp = app.New(
+		logger,
+		db,
+		traceStore,
+		loadlatest,
+		map[int64]bool{},
+		homePath,
+		uint(1),
+		ac.encCfg,
+		appOpts,
+	)
+
+	if height != -1 {
+		err := zetaApp.LoadHeight(height)
+		if err != nil {
+			return servertypes.ExportedApp{}, err
+		}
+	}
+
+	return zetaApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
 }
