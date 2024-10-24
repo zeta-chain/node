@@ -28,6 +28,8 @@ const (
 	blockCacheSize = 250
 )
 
+var ErrNotFound = errors.New("not found")
+
 // New Client constructor.
 func New(client *liteapi.Client) *Client {
 	blockCache, _ := lru.New(blockCacheSize)
@@ -187,6 +189,25 @@ func (c *Client) GetTransactionsSince(
 	slices.Reverse(result)
 
 	return result, nil
+}
+
+// GetTransaction returns a tx by logicalTime and hash.
+func (c *Client) GetTransaction(
+	ctx context.Context,
+	acc ton.AccountID,
+	lt uint64,
+	hash ton.Bits256,
+) (*ton.Transaction, error) {
+	txs, err := c.GetTransactions(ctx, 1, acc, lt, hash)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(txs) == 0 {
+		return nil, ErrNotFound
+	}
+
+	return &txs[0], nil
 }
 
 // getLastTransactionHash returns logical time and hash of the last transaction

@@ -247,42 +247,6 @@ func (ob *Observer) voteDeposit(
 	return ob.PostVoteInbound(ctx, msg, retryGasLimit)
 }
 
-// addOutboundTracker publishes outbound tracker to Zetacore.
-// In most cases will be a noop because the tracker is already published by the signer.
-// See Signer{}.trackOutbound(...) for more details.
-func (ob *Observer) addOutboundTracker(ctx context.Context, tx *toncontracts.Transaction) error {
-	w, err := tx.Withdrawal()
-	if err != nil {
-		return errors.Wrap(err, "tx is not a withdrawal")
-	}
-
-	signer, err := w.Signer()
-	switch {
-	case err != nil:
-		return errors.Wrap(err, "unable to get withdrawal signer")
-	case signer != ob.TSS().EVMAddress():
-		ob.Logger().Inbound.Warn().
-			Fields(txLogFields(tx)).
-			Str("transaction.ton.signer", signer.String()).
-			Msg("observeGateway: addOutboundTracker: withdrawal signer is not TSS. Skipping")
-
-		return nil
-	}
-
-	var (
-		chainID = ob.Chain().ChainId
-		nonce   = uint64(w.Seqno)
-		hash    = liteapi.TransactionToHashString(&tx.Transaction)
-	)
-
-	// note it has a check for noop
-	_, err = ob.
-		ZetacoreClient().
-		AddOutboundTracker(ctx, chainID, nonce, hash, nil, "", 0)
-
-	return err
-}
-
 func (ob *Observer) ensureLastScannedTX(ctx context.Context) error {
 	// noop
 	if ob.LastTxScanned() != "" {

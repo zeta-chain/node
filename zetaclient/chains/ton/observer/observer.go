@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/tonkeeper/tongo/liteclient"
@@ -13,7 +14,6 @@ import (
 	"github.com/zeta-chain/node/pkg/bg"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/pkg/ticker"
-	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	zetaton "github.com/zeta-chain/node/zetaclient/chains/ton"
@@ -26,9 +26,13 @@ type Observer struct {
 
 	client  LiteClient
 	gateway *toncontracts.Gateway
+
+	outbounds *lru.Cache
 }
 
 var _ interfaces.ChainObserver = (*Observer)(nil)
+
+const outboundsCacheSize = 1024
 
 // LiteClient represents a TON client
 // see https://github.com/ton-blockchain/ton/blob/master/tl/generate/scheme/tonlib_api.tl
@@ -40,6 +44,7 @@ type LiteClient interface {
 	GetBlockHeader(ctx context.Context, blockID ton.BlockIDExt, mode uint32) (tlb.BlockInfo, error)
 	GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) ([]ton.Transaction, error)
 	GetFirstTransaction(ctx context.Context, acc ton.AccountID) (*ton.Transaction, int, error)
+	GetTransaction(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) (*ton.Transaction, error)
 }
 
 var _ interfaces.ChainObserver = (*Observer)(nil)
@@ -55,12 +60,18 @@ func New(bo *base.Observer, client LiteClient, gateway *toncontracts.Gateway) (*
 		return nil, errors.New("gateway is nil")
 	}
 
+	outbounds, err := lru.New(outboundsCacheSize)
+	if err != nil {
+		return nil, err
+	}
+
 	bo.LoadLastTxScanned()
 
 	return &Observer{
-		Observer: bo,
-		client:   client,
-		gateway:  gateway,
+		Observer:  bo,
+		client:    client,
+		gateway:   gateway,
+		outbounds: outbounds,
 	}, nil
 }
 
@@ -86,10 +97,6 @@ func (ob *Observer) Start(ctx context.Context) {
 	start(ob.watchOutbound, "WatchOutbound", ob.Logger().Outbound)
 	start(ob.watchGasPrice, "WatchGasPrice", ob.Logger().GasPrice)
 	start(ob.watchRPCStatus, "WatchRPCStatus", ob.Logger().Chain)
-}
-
-func (ob *Observer) VoteOutboundIfConfirmed(_ context.Context, _ *types.CrossChainTx) (bool, error) {
-	return false, errors.New("not implemented")
 }
 
 // watchGasPrice observes TON gas price and votes it to Zetacore.

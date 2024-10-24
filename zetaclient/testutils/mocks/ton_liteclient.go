@@ -141,6 +141,36 @@ func (_m *LiteClient) GetMasterchainInfo(ctx context.Context) (liteclient.LiteSe
 	return r0, r1
 }
 
+// GetTransaction provides a mock function with given fields: ctx, acc, lt, hash
+func (_m *LiteClient) GetTransaction(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) (*ton.Transaction, error) {
+	ret := _m.Called(ctx, acc, lt, hash)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTransaction")
+	}
+
+	var r0 *ton.Transaction
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, ton.AccountID, uint64, ton.Bits256) (*ton.Transaction, error)); ok {
+		return rf(ctx, acc, lt, hash)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, ton.AccountID, uint64, ton.Bits256) *ton.Transaction); ok {
+		r0 = rf(ctx, acc, lt, hash)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ton.Transaction)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, ton.AccountID, uint64, ton.Bits256) error); ok {
+		r1 = rf(ctx, acc, lt, hash)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetTransactionsSince provides a mock function with given fields: ctx, acc, lt, hash
 func (_m *LiteClient) GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) ([]ton.Transaction, error) {
 	ret := _m.Called(ctx, acc, lt, hash)

@@ -15,7 +15,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/testutil/sample"
-	cctxtypes "github.com/zeta-chain/node/x/crosschain/types"
+	cc "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
@@ -39,7 +39,7 @@ type testSuite struct {
 
 	baseObserver *base.Observer
 
-	votesBag   []*cctxtypes.MsgVoteInbound
+	votesBag   []*cc.MsgVoteInbound
 	trackerBag []testTracker
 }
 
@@ -127,6 +127,18 @@ func (ts *testSuite) OnGetFirstTransaction(acc ton.AccountID, tx *ton.Transactio
 		Return(tx, scanned, err)
 }
 
+func (ts *testSuite) MockGetTransaction(acc ton.AccountID, tx ton.Transaction) *mock.Call {
+	return ts.liteClient.
+		On("GetTransaction", mock.Anything, acc, tx.Lt, ton.Bits256(tx.Hash())).
+		Return(&tx, nil)
+}
+
+func (ts *testSuite) MockCCTXByNonce(cctx *cc.CrossChainTx) *mock.Call {
+	nonce := cctx.GetCurrentOutboundParam().TssNonce
+
+	return ts.zetacore.On("GetCctxByNonce", ts.ctx, ts.chain.ChainId, nonce).Return(cctx, nil)
+}
+
 func (ts *testSuite) OnGetTransactionsSince(
 	acc ton.AccountID,
 	lt uint64,
@@ -137,6 +149,12 @@ func (ts *testSuite) OnGetTransactionsSince(
 	return ts.liteClient.
 		On("GetTransactionsSince", mock.Anything, acc, lt, hash).
 		Return(txs, err)
+}
+
+func (ts *testSuite) OnGetAllOutboundTrackerByChain(trackers []cc.OutboundTracker) *mock.Call {
+	return ts.zetacore.
+		On("GetAllOutboundTrackerByChain", mock.Anything, ts.chain.ChainId, mock.Anything).
+		Return(trackers, nil)
 }
 
 func (ts *testSuite) MockGetBlockHeader(id ton.BlockIDExt) *mock.Call {
@@ -188,7 +206,7 @@ func tonCoins(t *testing.T, raw string) math.Uint {
 func setupVotesBag(ts *testSuite) {
 	catcher := func(args mock.Arguments) {
 		vote := args.Get(3)
-		cctx, ok := vote.(*cctxtypes.MsgVoteInbound)
+		cctx, ok := vote.(*cc.MsgVoteInbound)
 		require.True(ts.t, ok, "unexpected cctx type")
 
 		ts.votesBag = append(ts.votesBag, cctx)
