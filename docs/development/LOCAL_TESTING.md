@@ -41,7 +41,7 @@ This uses `docker compose` to start the localnet and run standard e2e tests insi
 More options directly to `docker compose` via the `NODE_COMPOSE_ARGS` variable. This allows setting additional profiles or configuring an overlay. Example:
 
 ```
-example: NODE_COMPOSE_ARGS="--profile monitoring -f docker-compose-persistent.yml"`
+export NODE_COMPOSE_ARGS="--profile monitoring -f docker-compose-persistent.yml"
 make start-e2e-test
 ```
 
