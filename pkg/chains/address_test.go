@@ -179,7 +179,7 @@ func Test_IsBtcAddressSupported_P2TR(t *testing.T) {
 			// it should be a taproot address
 			addr, err := DecodeBtcAddress(tt.addr, tt.chainId)
 			require.NoError(t, err)
-			_, ok := addr.(*AddressTaproot)
+			_, ok := addr.(*btcutil.AddressTaproot)
 			require.True(t, ok)
 
 			// it should be supported

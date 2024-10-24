@@ -54,6 +54,7 @@ func ConvertRecoverToError(r interface{}) error {
 
 // DecodeBtcAddress decodes a BTC address from a given string and chainID
 func DecodeBtcAddress(inputAddress string, chainID int64) (address btcutil.Address, err error) {
+	// prevent potential panic from 'btcutil.DecodeAddress'
 	defer func() {
 		if r := recover(); r != nil {
 			err = ConvertRecoverToError(r)
@@ -68,19 +69,15 @@ func DecodeBtcAddress(inputAddress string, chainID int64) (address btcutil.Addre
 	if chainParams == nil {
 		return nil, fmt.Errorf("chain params not found")
 	}
-	// test taproot address type
-	address, err = DecodeTaprootAddress(inputAddress)
-	if err == nil {
-		if address.IsForNet(chainParams) {
-			return address, nil
-		}
-		return nil, fmt.Errorf("address %s is not for network %s", inputAddress, chainParams.Name)
-	}
-	// test taproot address failed; continue testing other types: P2WSH, P2WPKH, P2SH, P2PKH
+
+	// try decoding input address as a Bitcoin address.
+	// this will decode all types of Bitcoin addresses: P2PKH, P2SH, P2WPKH, P2WSH, P2TR, etc.
 	address, err = btcutil.DecodeAddress(inputAddress, chainParams)
 	if err != nil {
 		return nil, fmt.Errorf("decode address failed: %s, for input address %s", err.Error(), inputAddress)
 	}
+
+	// address must match the network
 	ok := address.IsForNet(chainParams)
 	if !ok {
 		return nil, fmt.Errorf("address %s is not for network %s", inputAddress, chainParams.Name)
@@ -109,7 +106,7 @@ func DecodeSolanaWalletAddress(inputAddress string) (pk solana.PublicKey, err er
 func IsBtcAddressSupported(addr btcutil.Address) bool {
 	switch addr.(type) {
 	// P2TR address
-	case *AddressTaproot,
+	case *btcutil.AddressTaproot,
 		// P2WSH address
 		*btcutil.AddressWitnessScriptHash,
 		// P2WPKH address

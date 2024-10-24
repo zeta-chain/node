@@ -158,7 +158,7 @@ func (signer *Signer) AddWithdrawTxOutputs(
 	if err != nil {
 		return err
 	}
-	payToSelfScript, err := bitcoin.PayToAddrScript(tssAddrP2WPKH)
+	payToSelfScript, err := txscript.PayToAddrScript(tssAddrP2WPKH)
 	if err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func (signer *Signer) AddWithdrawTxOutputs(
 
 	// 2nd output: the payment to the recipient
 	if !cancelTx {
-		pkScript, err := bitcoin.PayToAddrScript(to)
+		pkScript, err := txscript.PayToAddrScript(to)
 		if err != nil {
 			return err
 		}

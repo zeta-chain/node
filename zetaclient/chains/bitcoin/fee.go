@@ -13,7 +13,6 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	clientcommon "github.com/zeta-chain/node/zetaclient/common"
@@ -104,7 +103,7 @@ func EstimateOutboundSize(numInputs uint64, payees []btcutil.Address) (uint64, e
 // GetOutputSizeByAddress returns the size of a tx output in bytes by the given address
 func GetOutputSizeByAddress(to btcutil.Address) (uint64, error) {
 	switch addr := to.(type) {
-	case *chains.AddressTaproot:
+	case *btcutil.AddressTaproot:
 		if addr == nil {
 			return 0, nil
 		}

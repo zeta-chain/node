@@ -20,7 +20,6 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -76,7 +75,7 @@ func (s *BTCSignerSuite) TestP2PH(c *C) {
 	prevOut := wire.NewOutPoint(&chainhash.Hash{}, ^uint32(0))
 	txIn := wire.NewTxIn(prevOut, []byte{txscript.OP_0, txscript.OP_0}, nil)
 	originTx.AddTxIn(txIn)
-	pkScript, err := bitcoin.PayToAddrScript(addr)
+	pkScript, err := txscript.PayToAddrScript(addr)
 
 	c.Assert(err, IsNil)
 
@@ -148,7 +147,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 	prevOut := wire.NewOutPoint(&chainhash.Hash{}, ^uint32(0))
 	txIn := wire.NewTxIn(prevOut, []byte{txscript.OP_0, txscript.OP_0}, nil)
 	originTx.AddTxIn(txIn)
-	pkScript, err := bitcoin.PayToAddrScript(addr)
+	pkScript, err := txscript.PayToAddrScript(addr)
 	c.Assert(err, IsNil)
 	txOut := wire.NewTxOut(100000000, pkScript)
 	originTx.AddTxOut(txOut)
@@ -169,7 +168,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 	txOut = wire.NewTxOut(0, nil)
 	redeemTx.AddTxOut(txOut)
 	txSigHashes := txscript.NewTxSigHashes(redeemTx, txscript.NewCannedPrevOutputFetcher([]byte{}, 0))
-	pkScript, err = bitcoin.PayToAddrScript(addr)
+	pkScript, err = txscript.PayToAddrScript(addr)
 	c.Assert(err, IsNil)
 
 	{
@@ -240,7 +239,7 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 	// tss address and script
 	tssAddr, err := signer.TSS().BTCAddress(chains.BitcoinTestnet.ChainId)
 	require.NoError(t, err)
-	tssScript, err := bitcoin.PayToAddrScript(tssAddr)
+	tssScript, err := txscript.PayToAddrScript(tssAddr)
 	require.NoError(t, err)
 	fmt.Printf("tss address: %s", tssAddr.EncodeAddress())
 
@@ -248,7 +247,7 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 	receiver := "bc1qaxf82vyzy8y80v000e7t64gpten7gawewzu42y"
 	to, err := chains.DecodeBtcAddress(receiver, chains.BitcoinMainnet.ChainId)
 	require.NoError(t, err)
-	toScript, err := bitcoin.PayToAddrScript(to)
+	toScript, err := txscript.PayToAddrScript(to)
 	require.NoError(t, err)
 
 	// test cases
