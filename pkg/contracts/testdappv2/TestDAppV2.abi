@@ -151,7 +151,7 @@
         "type": "bytes"
       }
     ],
-    "name": "onCrossChainCall",
+    "name": "onCall",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

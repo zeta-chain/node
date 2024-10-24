@@ -44,9 +44,9 @@ func startV2Tests(eg *errgroup.Group, conf config.Config, deployerRunner *runner
 			verbose,
 			e2etests.TestV2ETHDepositName, // necessary to pay fees on ZEVM and withdraw
 			e2etests.TestV2ETHDepositAndCallRevertName,
-			e2etests.TestV2ETHDepositAndCallRevertWithCallName,
+			// e2etests.TestV2ETHDepositAndCallRevertWithCallName, // call on revert disabled
 			e2etests.TestV2ETHWithdrawAndCallRevertName,
-			e2etests.TestV2ETHWithdrawAndCallRevertWithCallName,
+			// e2etests.TestV2ETHWithdrawAndCallRevertWithCallName, // call on revert disabled
 		),
 	)
 
@@ -64,9 +64,9 @@ func startV2Tests(eg *errgroup.Group, conf config.Config, deployerRunner *runner
 			e2etests.TestOperationAddLiquidityETHName, // liquidity with gas and ERC20 are necessary for reverts
 			e2etests.TestOperationAddLiquidityERC20Name,
 			e2etests.TestV2ERC20DepositAndCallRevertName,
-			e2etests.TestV2ERC20DepositAndCallRevertWithCallName,
+			// e2etests.TestV2ERC20DepositAndCallRevertWithCallName, // call on revert disabled
 			e2etests.TestV2ERC20WithdrawAndCallRevertName,
-			e2etests.TestV2ERC20WithdrawAndCallRevertWithCallName,
+			// e2etests.TestV2ERC20WithdrawAndCallRevertWithCallName, // call on revert disabled
 		),
 	)
 }
