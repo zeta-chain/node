@@ -30,8 +30,8 @@ func createTestBtcEvent(
 	net *chaincfg.Params,
 	memo []byte,
 	memoStd *memo.InboundMemo,
-) *observer.BTCInboundEvent {
-	return &observer.BTCInboundEvent{
+) observer.BTCInboundEvent {
+	return observer.BTCInboundEvent{
 		FromAddress: sample.BtcAddressP2WPKH(t, net),
 		ToAddress:   sample.EthAddress().Hex(),
 		MemoBytes:   memo,
@@ -111,20 +111,13 @@ func Test_CheckProcessability(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := tt.event.CheckProcessability()
+			result := tt.event.Processability()
 			require.Equal(t, tt.expected, result)
 		})
 	}
 }
 
 func Test_DecodeEventMemoBytes(t *testing.T) {
-	// can use any bitcoin chain for testing
-	chain := chains.BitcoinTestnet
-	params := mocks.MockChainParams(chain.ChainId, 10)
-
-	// create test observer
-	ob := MockBTCObserver(t, chain, params, nil)
-
 	// test cases
 	tests := []struct {
 		name             string
@@ -229,7 +222,7 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ob.DecodeEventMemoBytes(tt.event)
+			err := tt.event.DecodeMemoBytes(chains.BitcoinTestnet.ChainId)
 			if tt.errMsg != "" {
 				require.Contains(t, err.Error(), tt.errMsg)
 				return
@@ -257,7 +250,7 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 
 func Test_CheckEventProcessability(t *testing.T) {
 	// can use any bitcoin chain for testing
-	chain := chains.BitcoinTestnet
+	chain := chains.BitcoinMainnet
 	params := mocks.MockChainParams(chain.ChainId, 10)
 
 	// create test observer
@@ -272,7 +265,7 @@ func Test_CheckEventProcessability(t *testing.T) {
 	// test cases
 	tests := []struct {
 		name   string
-		event  *observer.BTCInboundEvent
+		event  observer.BTCInboundEvent
 		result bool
 	}{
 		{
@@ -304,7 +297,7 @@ func Test_CheckEventProcessability(t *testing.T) {
 	}
 }
 
-func Test_NewInboundVoteV1(t *testing.T) {
+func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
 	// can use any bitcoin chain for testing
 	chain := chains.BitcoinMainnet
 	params := mocks.MockChainParams(chain.ChainId, 10)
@@ -341,12 +334,12 @@ func Test_NewInboundVoteV1(t *testing.T) {
 		}
 
 		// create new inbound vote V1
-		vote := ob.NewInboundVoteV1(event, amountSats)
+		vote := ob.NewInboundVoteFromLegacyMemo(&event, amountSats)
 		require.Equal(t, expectedVote, *vote)
 	})
 }
 
-func Test_NewInboundVoteMemoStd(t *testing.T) {
+func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 	// can use any bitcoin chain for testing
 	chain := chains.BitcoinMainnet
 	params := mocks.MockChainParams(chain.ChainId, 10)
@@ -395,7 +388,7 @@ func Test_NewInboundVoteMemoStd(t *testing.T) {
 		}
 
 		// create new inbound vote V1 with standard memo
-		vote := ob.NewInboundVoteMemoStd(event, amountSats)
+		vote := ob.NewInboundVoteFromStdMemo(&event, amountSats)
 		require.Equal(t, expectedVote, *vote)
 	})
 }

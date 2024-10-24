@@ -472,6 +472,13 @@ var AllE2ETests = []runner.E2ETest{
 	 Bitcoin tests
 	*/
 	runner.NewE2ETest(
+		TestBitcoinDonationName,
+		"donate Bitcoin to TSS address", []runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.1"},
+		},
+		TestBitcoinDonation,
+	),
+	runner.NewE2ETest(
 		TestExtractBitcoinInscriptionMemoName,
 		"extract memo from BTC inscription", []runner.ArgDefinition{
 			{Description: "amount in btc", DefaultValue: "0.1"},
@@ -502,17 +509,10 @@ var AllE2ETests = []runner.E2ETest{
 		TestBitcoinDepositAndCallRevert,
 	),
 	runner.NewE2ETest(
-		TestBitcoinDonationName,
-		"donate Bitcoin to TSS address", []runner.ArgDefinition{
-			{Description: "amount in btc", DefaultValue: "0.001"},
-		},
-		TestBitcoinDonation,
-	),
-	runner.NewE2ETest(
 		TestBitcoinStdMemoDepositName,
 		"deposit Bitcoin into ZEVM with standard memo",
 		[]runner.ArgDefinition{
-			{Description: "amount in btc", DefaultValue: "0.1"},
+			{Description: "amount in btc", DefaultValue: "0.2"},
 		},
 		TestBitcoinStdMemoDeposit,
 	),
@@ -520,7 +520,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestBitcoinStdMemoDepositAndCallName,
 		"deposit Bitcoin into ZEVM and call a contract with standard memo",
 		[]runner.ArgDefinition{
-			{Description: "amount in btc", DefaultValue: "0.1"},
+			{Description: "amount in btc", DefaultValue: "0.5"},
 		},
 		TestBitcoinStdMemoDepositAndCall,
 	),

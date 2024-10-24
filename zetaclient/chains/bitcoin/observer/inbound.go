@@ -7,7 +7,6 @@ import (
 	"math/big"
 
 	"github.com/btcsuite/btcd/btcjson"
-	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
@@ -348,35 +347,38 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 	// prepare logger fields
 	lf := map[string]any{
 		logs.FieldModule: logs.ModNameInbound,
-		logs.FieldMethod: "GetInboundVoteMessageFromBtcEvent",
+		logs.FieldMethod: "GetInboundVoteFromBtcEvent",
 		logs.FieldChain:  ob.Chain().ChainId,
 		logs.FieldTx:     event.TxHash,
 	}
 
 	// decode event memo bytes
-	err := ob.DecodeEventMemoBytes(event)
+	err := event.DecodeMemoBytes(ob.Chain().ChainId)
 	if err != nil {
 		ob.Logger().Inbound.Info().Fields(lf).Msgf("invalid memo bytes: %s", hex.EncodeToString(event.MemoBytes))
 		return nil
 	}
 
 	// check if the event is processable
-	if !ob.CheckEventProcessability(event) {
+	if !ob.CheckEventProcessability(*event) {
 		return nil
 	}
 
 	// convert the amount to integer (satoshis)
-	amount := big.NewFloat(event.Value)
-	amount = amount.Mul(amount, big.NewFloat(btcutil.SatoshiPerBitcoin))
-	amountInt, _ := amount.Int(nil)
+	amountSats, err := bitcoin.GetSatoshis(event.Value)
+	if err != nil {
+		ob.Logger().Inbound.Error().Err(err).Fields(lf).Msgf("can't convert value %f to satoshis", event.Value)
+		return nil
+	}
+	amountInt := big.NewInt(amountSats)
 
 	// create inbound vote message contract V1 for legacy memo
 	if event.MemoStd == nil {
-		return ob.NewInboundVoteV1(event, amountInt)
+		return ob.NewInboundVoteFromLegacyMemo(event, amountInt)
 	}
 
 	// create inbound vote message for standard memo
-	return ob.NewInboundVoteMemoStd(event, amountInt)
+	return ob.NewInboundVoteFromStdMemo(event, amountInt)
 }
 
 // GetBtcEvent returns a valid BTCInboundEvent or nil

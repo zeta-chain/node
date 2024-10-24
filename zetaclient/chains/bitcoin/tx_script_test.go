@@ -1,6 +1,7 @@
 package bitcoin_test
 
 import (
+	"bytes"
 	"encoding/hex"
 	"path"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/testutil"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 )
@@ -330,40 +332,50 @@ func TestDecodeVoutP2PKHErrors(t *testing.T) {
 }
 
 func TestDecodeOpReturnMemo(t *testing.T) {
-	// load archived inbound raw result
-	// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
-	chain := chains.BitcoinMainnet
-	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
-	scriptHex := "6a1467ed0bcc4e1256bc2ce87d22e190d63a120114bf"
-	rawResult := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
-	require.True(t, len(rawResult.Vout) >= 2)
-	require.Equal(t, scriptHex, rawResult.Vout[1].ScriptPubKey.Hex)
+	tests := []struct {
+		name      string
+		scriptHex string
+		found     bool
+		expected  []byte
+	}{
+		{
+			name:      "should decode memo from OP_RETURN data, size < 76(OP_PUSHDATA1)",
+			scriptHex: "6a1467ed0bcc4e1256bc2ce87d22e190d63a120114bf",
+			found:     true,
+			expected:  testutil.HexToBytes(t, "67ed0bcc4e1256bc2ce87d22e190d63a120114bf"),
+		},
+		{
+			name: "should decode memo from OP_RETURN data, size >= 76(OP_PUSHDATA1)",
+			scriptHex: "6a4c4f" + // 79 bytes memo
+				"5a0110070a30d55c1031d30dab3b3d85f47b8f1d03df2d480961207061796c6f61642c626372743171793970716d6b32706439737636336732376a7438723635377779306439756565347832647432",
+			found: true,
+			expected: testutil.HexToBytes(
+				t,
+				"5a0110070a30d55c1031d30dab3b3d85f47b8f1d03df2d480961207061796c6f61642c626372743171793970716d6b32706439737636336732376a7438723635377779306439756565347832647432",
+			),
+		},
+		{
+			name:      "should return nil memo for non-OP_RETURN script",
+			scriptHex: "511467ed0bcc4e1256bc2ce87d22e190d63a120114bf", // 0x51, OP_1
+			found:     false,
+			expected:  nil,
+		},
+		{
+			name:      "should return nil memo for script less than 2 bytes",
+			scriptHex: "00", // 1 byte only
+			found:     false,
+			expected:  nil,
+		},
+	}
 
-	t.Run("should decode memo from OP_RETURN output", func(t *testing.T) {
-		memo, found, err := bitcoin.DecodeOpReturnMemo(rawResult.Vout[1].ScriptPubKey.Hex)
-		require.NoError(t, err)
-		require.True(t, found)
-		// [OP_RETURN, 0x14,<20-byte-hash>]
-		require.Equal(t, scriptHex[4:], hex.EncodeToString(memo))
-	})
-
-	t.Run("should return nil memo non-OP_RETURN output", func(t *testing.T) {
-		// modify the OP_RETURN to OP_1
-		scriptInvalid := strings.Replace(scriptHex, "6a", "51", 1)
-		memo, found, err := bitcoin.DecodeOpReturnMemo(scriptInvalid)
-		require.NoError(t, err)
-		require.False(t, found)
-		require.Nil(t, memo)
-	})
-
-	t.Run("should return nil memo on script less than 2 byte", func(t *testing.T) {
-		// use known short script
-		scriptInvalid := "00"
-		memo, found, err := bitcoin.DecodeOpReturnMemo(scriptInvalid)
-		require.NoError(t, err)
-		require.False(t, found)
-		require.Nil(t, memo)
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			memo, found, err := bitcoin.DecodeOpReturnMemo(tt.scriptHex)
+			require.NoError(t, err)
+			require.Equal(t, tt.found, found)
+			require.True(t, bytes.Equal(tt.expected, memo))
+		})
+	}
 }
 
 func TestDecodeOpReturnMemoErrors(t *testing.T) {

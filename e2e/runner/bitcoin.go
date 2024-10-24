@@ -399,7 +399,7 @@ func (r *E2ERunner) QueryOutboundReceiverAndAmount(txid string) (string, int64) 
 	// query outbound raw transaction
 	revertTx, err := r.BtcRPCClient.GetRawTransaction(txHash)
 	require.NoError(r, err, revertTx)
-	require.True(r, len(revertTx.MsgTx().TxOut) >= 2)
+	require.True(r, len(revertTx.MsgTx().TxOut) >= 2, "bitcoin outbound must have at least two outputs")
 
 	// parse receiver address from pkScript
 	txOutput := revertTx.MsgTx().TxOut[1]

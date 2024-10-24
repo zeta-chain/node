@@ -49,5 +49,5 @@ func TestBitcoinStdMemoDepositAndCallRevert(r *runner.E2ERunner, args []string) 
 	assert.Equal(r, r.BTCDeployerAddress.EncodeAddress(), receiver)
 	assert.Positive(r, value)
 
-	r.Logger.Print("Sent %f BTC to TSS to call non-existing contract, got refund of %d satoshis", amount, value)
+	r.Logger.Info("Sent %f BTC to TSS to call non-existing contract, got refund of %d satoshis", amount, value)
 }

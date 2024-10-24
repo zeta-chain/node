@@ -8,6 +8,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	// version0 is the latest version of the memo
+	version0 uint8 = 0
+)
+
 // InboundMemo represents the inbound memo structure for non-EVM chains
 type InboundMemo struct {
 	// Header contains the memo header
@@ -37,7 +42,7 @@ func (m *InboundMemo) EncodeToBytes() ([]byte, error) {
 	// encode fields based on version
 	var data []byte
 	switch m.Version {
-	case 0:
+	case version0:
 		data, err = m.FieldsV0.Pack(m.OpCode, m.EncodingFmt, dataFlags)
 	default:
 		return nil, fmt.Errorf("invalid memo version: %d", m.Version)

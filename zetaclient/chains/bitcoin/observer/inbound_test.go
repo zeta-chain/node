@@ -191,6 +191,14 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 			},
 			nilVote: true,
 		},
+		{
+			name: "should return nil on invalid deposit value",
+			event: &observer.BTCInboundEvent{
+				Value:     -1, // invalid value
+				MemoBytes: testutil.HexToBytes(t, "2d07a9cbd57dcca3e2cf966c88bc874445b6e3b668656c6c6f207361746f736869"),
+			},
+			nilVote: true,
+		},
 	}
 
 	for _, tt := range tests {

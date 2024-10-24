@@ -62,8 +62,8 @@ type BTCInboundEvent struct {
 	TxHash string
 }
 
-// IsProcessable checks if the inbound event is processable
-func (event *BTCInboundEvent) CheckProcessability() InboundProcessability {
+// Processability returns the processability of the inbound event
+func (event *BTCInboundEvent) Processability() InboundProcessability {
 	// compliance check on sender and receiver addresses
 	if config.ContainRestrictedAddress(event.FromAddress, event.ToAddress) {
 		return InboundProcessabilityComplianceViolation
@@ -88,8 +88,8 @@ func (event *BTCInboundEvent) CheckProcessability() InboundProcessability {
 	return InboundProcessabilityGood
 }
 
-// DecodeEventMemoBytes decodes the memo bytes as either standard or legacy memo
-func (ob *Observer) DecodeEventMemoBytes(event *BTCInboundEvent) error {
+// DecodeMemoBytes decodes the contained memo bytes as either standard or legacy memo
+func (event *BTCInboundEvent) DecodeMemoBytes(chainID int64) error {
 	var (
 		err      error
 		memoStd  *memo.InboundMemo
@@ -103,7 +103,7 @@ func (ob *Observer) DecodeEventMemoBytes(event *BTCInboundEvent) error {
 
 	// try to decode the standard memo as the preferred format
 	// the standard memo is NOT enabled for Bitcoin mainnet
-	if ob.Chain().ChainId != chains.BitcoinMainnet.ChainId {
+	if chainID != chains.BitcoinMainnet.ChainId {
 		memoStd, err = memo.DecodeFromBytes(event.MemoBytes)
 	}
 
@@ -115,6 +115,7 @@ func (ob *Observer) DecodeEventMemoBytes(event *BTCInboundEvent) error {
 		}
 
 		// NoAssetCall will be disabled for Bitcoin until full V2 support
+		// https://github.com/zeta-chain/node/issues/2711
 		if memoStd.OpCode == memo.OpCodeCall {
 			return errors.New("NoAssetCall is disabled")
 		}
@@ -122,7 +123,7 @@ func (ob *Observer) DecodeEventMemoBytes(event *BTCInboundEvent) error {
 		// ensure the revert address is valid and supported
 		revertAddress := memoStd.RevertOptions.RevertAddress
 		if revertAddress != "" {
-			btcAddress, err := chains.DecodeBtcAddress(revertAddress, ob.Chain().ChainId)
+			btcAddress, err := chains.DecodeBtcAddress(revertAddress, chainID)
 			if err != nil {
 				return errors.Wrapf(err, "invalid revert address in memo: %s", revertAddress)
 			}
@@ -151,10 +152,9 @@ func (ob *Observer) DecodeEventMemoBytes(event *BTCInboundEvent) error {
 }
 
 // CheckEventProcessability checks if the inbound event is processable
-func (ob *Observer) CheckEventProcessability(event *BTCInboundEvent) bool {
+func (ob *Observer) CheckEventProcessability(event BTCInboundEvent) bool {
 	// check if the event is processable
-	result := event.CheckProcessability()
-	switch result {
+	switch result := event.Processability(); result {
 	case InboundProcessabilityGood:
 		return true
 	case InboundProcessabilityDonation:
@@ -168,13 +168,17 @@ func (ob *Observer) CheckEventProcessability(event *BTCInboundEvent) bool {
 		compliance.PrintComplianceLog(ob.logger.Inbound, ob.logger.Compliance,
 			false, ob.Chain().ChainId, event.TxHash, event.FromAddress, event.ToAddress, "BTC")
 		return false
+	default:
+		ob.Logger().Inbound.Error().Msgf("unreachable code got InboundProcessability: %v", result)
+		return false
 	}
-
-	return true
 }
 
-// NewInboundVoteV1 creates a MsgVoteInbound message for inbound that uses legacy memo
-func (ob *Observer) NewInboundVoteV1(event *BTCInboundEvent, amountSats *big.Int) *crosschaintypes.MsgVoteInbound {
+// NewInboundVoteFromLegacyMemo creates a MsgVoteInbound message for inbound that uses legacy memo
+func (ob *Observer) NewInboundVoteFromLegacyMemo(
+	event *BTCInboundEvent,
+	amountSats *big.Int,
+) *crosschaintypes.MsgVoteInbound {
 	message := hex.EncodeToString(event.MemoBytes)
 
 	return crosschaintypes.NewMsgVoteInbound(
@@ -197,10 +201,13 @@ func (ob *Observer) NewInboundVoteV1(event *BTCInboundEvent, amountSats *big.Int
 	)
 }
 
-// NewInboundVoteMemoStd creates a MsgVoteInbound message for inbound that uses standard memo
-// TODO: rename this function as 'EventToInboundVoteV2' to use ProtocolContractVersion_V2 and enable more options
+// NewInboundVoteFromStdMemo creates a MsgVoteInbound message for inbound that uses standard memo
+// TODO: upgrade to ProtocolContractVersion_V2 and enable more options
 // https://github.com/zeta-chain/node/issues/2711
-func (ob *Observer) NewInboundVoteMemoStd(event *BTCInboundEvent, amountSats *big.Int) *crosschaintypes.MsgVoteInbound {
+func (ob *Observer) NewInboundVoteFromStdMemo(
+	event *BTCInboundEvent,
+	amountSats *big.Int,
+) *crosschaintypes.MsgVoteInbound {
 	// replace 'sender' with 'revertAddress' if specified in the memo, so that
 	// zetacore will refund to the address specified by the user in the revert options.
 	sender := event.FromAddress
