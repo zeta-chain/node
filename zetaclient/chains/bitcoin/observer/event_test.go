@@ -165,7 +165,7 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 			donation: true,
 		},
 		{
-			name: "should skip standard memo that contains improper data",
+			name: "should return error if standard memo contains improper data",
 			event: &observer.BTCInboundEvent{
 				// a deposit and call, receiver is empty ZEVM address
 				MemoBytes: testutil.HexToBytes(
@@ -176,47 +176,15 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 			errMsg: "standard memo contains improper data",
 		},
 		{
-			name: "NoAssetCall is not disabled at the moment",
+			name: "should return error if standard memo validation failed",
 			event: &observer.BTCInboundEvent{
-				// a no asset call
+				// a no asset call opCode passed, not supported at the moment
 				MemoBytes: testutil.HexToBytes(
 					t,
 					"5a0120032d07a9cbd57dcca3e2cf966c88bc874445b6e3b60d68656c6c6f207361746f736869",
 				),
 			},
-			errMsg: "NoAssetCall is disabled",
-		},
-		{
-			name: "should return error on invalid revert address",
-			event: &observer.BTCInboundEvent{
-				// raw address + payload + revert address
-				// but the address is "bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2" which is not a testnet address
-				MemoBytes: testutil.HexToBytes(
-					t,
-					"5a0110075ab13400c33b83ca9d3ee5587486c26639a5ef190961207061796c6f61642c626372743171793970716d6b32706439737636336732376a7438723635377779306439756565347832647432",
-				),
-			},
-			errMsg: "invalid revert address in memo",
-		},
-		{
-			name: "should return error if revert address is not a supported address type",
-			event: &observer.BTCInboundEvent{
-				// raw address + payload + revert address
-				// but the revert address is "035e4ae279bd416b5da724972c9061ec6298dac020d1e3ca3f06eae715135cdbec" and it's not supported
-				MemoBytes: testutil.HexToBytes(
-					t,
-					"5a0110072d07a9cbd57dcca3e2cf966c88bc874445b6e3b60961207061796c6f616442303335653461653237396264343136623564613732343937326339303631656336323938646163303230643165336361336630366561653731353133356364626563",
-				),
-			},
-			errMsg: "unsupported revert address in memo",
-		},
-		{
-			name: "should return error on empty receiver address",
-			event: &observer.BTCInboundEvent{
-				// standard memo that carries payload only, receiver address is empty
-				MemoBytes: testutil.HexToBytes(t, "5a0110020d68656c6c6f207361746f736869"),
-			},
-			errMsg: "got empty receiver address from memo",
+			errMsg: "invalid standard memo for bitcoin",
 		},
 	}
 
@@ -244,6 +212,73 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 				// if it's a legacy memo, check receiver address only
 				require.Equal(t, tt.expectedReceiver.Hex(), tt.event.ToAddress)
 			}
+		})
+	}
+}
+
+func Test_ValidateStandardMemo(t *testing.T) {
+	// test cases
+	tests := []struct {
+		name   string
+		memo   memo.InboundMemo
+		errMsg string
+	}{
+		{
+			name: "validation should pass for a valid standard memo",
+			memo: memo.InboundMemo{
+				Header: memo.Header{
+					OpCode: memo.OpCodeDepositAndCall,
+				},
+				FieldsV0: memo.FieldsV0{
+					RevertOptions: crosschaintypes.RevertOptions{
+						RevertAddress: sample.BtcAddressP2WPKH(t, &chaincfg.TestNet3Params),
+					},
+				},
+			},
+		},
+		{
+			name: "NoAssetCall is disabled for Bitcoin",
+			memo: memo.InboundMemo{
+				Header: memo.Header{
+					OpCode: memo.OpCodeCall,
+				},
+			},
+			errMsg: "NoAssetCall is disabled for Bitcoin",
+		},
+		{
+			name: "should return error on invalid revert address",
+			memo: memo.InboundMemo{
+				FieldsV0: memo.FieldsV0{
+					RevertOptions: crosschaintypes.RevertOptions{
+						// not a BTC address
+						RevertAddress: "0x2D07A9CBd57DCca3E2cF966C88Bc874445b6E3B6",
+					},
+				},
+			},
+			errMsg: "invalid revert address in memo",
+		},
+		{
+			name: "should return error if revert address is not a supported address type",
+			memo: memo.InboundMemo{
+				FieldsV0: memo.FieldsV0{
+					RevertOptions: crosschaintypes.RevertOptions{
+						// address not supported
+						RevertAddress: "035e4ae279bd416b5da724972c9061ec6298dac020d1e3ca3f06eae715135cdbec",
+					},
+				},
+			},
+			errMsg: "unsupported revert address in memo",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := observer.ValidateStandardMemo(tt.memo, chains.BitcoinTestnet.ChainId)
+			if tt.errMsg != "" {
+				require.Contains(t, err.Error(), tt.errMsg)
+				return
+			}
+			require.NoError(t, err)
 		})
 	}
 }

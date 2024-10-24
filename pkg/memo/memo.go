@@ -56,33 +56,41 @@ func (m *InboundMemo) EncodeToBytes() ([]byte, error) {
 
 // DecodeFromBytes decodes a InboundMemo struct from raw bytes
 //
-// Returns nil memo if given data can't be decoded as a memo.
-func DecodeFromBytes(data []byte) (*InboundMemo, error) {
+// Returns:
+//   - [memo, true, nil] if given data is successfully decoded as a memo.
+//   - [nil,  true, err] if given data is successfully decoded as a memo but contains improper field values.
+//   - [nil, false, err] if given data can't be decoded as a memo.
+//
+// Note: we won't have to differentiate between the two 'true' cases if legacy memo phase out is completed.
+func DecodeFromBytes(data []byte) (*InboundMemo, bool, error) {
 	memo := &InboundMemo{}
 
 	// decode header
 	err := memo.Header.DecodeFromBytes(data)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to decode memo header")
+		return nil, false, errors.Wrap(err, "failed to decode memo header")
 	}
 
 	// decode fields based on version
 	switch memo.Version {
-	case 0:
+	case version0:
 		// unpack fields
 		err = memo.FieldsV0.Unpack(memo.EncodingFmt, memo.Header.DataFlags, data[HeaderSize:])
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to unpack memo FieldsV0")
+			return nil, false, errors.Wrap(err, "failed to unpack memo FieldsV0")
 		}
 
 		// validate fields
 		// Note: a well-formatted memo may still contain improper field values
 		err = memo.FieldsV0.Validate(memo.OpCode, memo.Header.DataFlags)
+		if err != nil {
+			return nil, true, errors.Wrap(err, "failed to validate memo FieldsV0")
+		}
 	default:
-		return nil, fmt.Errorf("invalid memo version: %d", memo.Version)
+		return nil, false, fmt.Errorf("invalid memo version: %d", memo.Version)
 	}
 
-	return memo, err
+	return memo, true, nil
 }
 
 // DecodeLegacyMemoHex decodes hex encoded memo message into address and calldata
