@@ -162,13 +162,15 @@ const (
 	/*
 	 Stateful precompiled contracts tests
 	*/
-	TestPrecompilesPrototypeName                = "precompile_contracts_prototype"
-	TestPrecompilesPrototypeThroughContractName = "precompile_contracts_prototype_through_contract"
-	TestPrecompilesStakingName                  = "precompile_contracts_staking"
-	TestPrecompilesStakingThroughContractName   = "precompile_contracts_staking_through_contract"
-	TestPrecompilesBankName                     = "precompile_contracts_bank"
-	TestPrecompilesBankFailName                 = "precompile_contracts_bank_fail"
-	TestPrecompilesBankThroughContractName      = "precompile_contracts_bank_through_contract"
+	TestPrecompilesPrototypeName                 = "precompile_contracts_prototype"
+	TestPrecompilesPrototypeThroughContractName  = "precompile_contracts_prototype_through_contract"
+	TestPrecompilesStakingName                   = "precompile_contracts_staking"
+	TestPrecompilesStakingThroughContractName    = "precompile_contracts_staking_through_contract"
+	TestPrecompilesBankName                      = "precompile_contracts_bank"
+	TestPrecompilesBankFailName                  = "precompile_contracts_bank_fail"
+	TestPrecompilesBankThroughContractName       = "precompile_contracts_bank_through_contract"
+	TestPrecompilesDistributeName                = "precompile_contracts_distribute"
+	TestPrecompilesDistributeThroughContractName = "precompile_contracts_distribute_through_contract"
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -955,5 +957,17 @@ var AllE2ETests = []runner.E2ETest{
 		"test stateful precompiled contracts bank through contract",
 		[]runner.ArgDefinition{},
 		TestPrecompilesBankThroughContract,
+	),
+	runner.NewE2ETest(
+		TestPrecompilesDistributeName,
+		"test stateful precompiled contracts distribute",
+		[]runner.ArgDefinition{},
+		TestPrecompilesDistribute,
+	),
+	runner.NewE2ETest(
+		TestPrecompilesDistributeThroughContractName,
+		"test stateful precompiled contracts distribute through contract",
+		[]runner.ArgDefinition{},
+		TestPrecompilesDistributeThroughContract,
 	),
 }

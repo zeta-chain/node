@@ -1,6 +1,7 @@
 package staking
 
 import (
+	"fmt"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -77,6 +78,14 @@ func (c *Contract) distribute(
 			Got:  err.Error(),
 		}
 	}
+
+	// Log similar message as in abci DistributeValidatorRewards function.
+	ctx.Logger().Info(
+		fmt.Sprintf("Distributing ZRC20 Validator Rewards Total:%s To FeeCollector : %s, Denom: %s",
+			amount.String(),
+			authtypes.FeeCollectorName,
+			ptypes.ZRC20ToCosmosDenom(zrc20Addr),
+		))
 
 	if err := c.addDistributeLog(ctx, evm.StateDB, caller, zrc20Addr, amount); err != nil {
 		return nil, &ptypes.ErrUnexpected{

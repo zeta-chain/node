@@ -223,7 +223,7 @@ func setup(t *testing.T) (sdk.Context, *Contract, abi.ABI, keeper.SDKKeepers, *v
 	var encoding ethermint.EncodingConfig
 	appCodec := encoding.Codec
 	gasConfig := storetypes.TransientGasConfig()
-	
+
 	stakingGenesisState := stakingtypes.DefaultGenesisState()
 	stakingGenesisState.Params.BondDenom = config.BaseDenom
 	sdkKeepers.StakingKeeper.InitGenesis(ctx, stakingGenesisState)

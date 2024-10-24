@@ -216,9 +216,5 @@ func Test_Distribute(t *testing.T) {
 
 		ok := res[0].(bool)
 		require.True(t, ok)
-
-		// feeCollectorAddress := s.sdkKeepers.AuthKeeper.GetModuleAccount(s.ctx, types.FeeCollectorName).GetAddress()
-		// coin := s.sdkKeepers.BankKeeper.GetBalance(s.ctx, feeCollectorAddress, ptypes.ZRC20ToCosmosDenom(s.zrc20Address))
-		// fmt.Println(coin)
 	})
 }
