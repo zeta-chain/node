@@ -187,10 +187,19 @@ func WaitCCTXMinedByIndex(
 
 type WaitOpts func(c *waitConfig)
 
-// MatchStatus waits for a specific CCTX status.
+// MatchStatus is the WaitOpts that matches CCTX with the given status.
 func MatchStatus(s crosschaintypes.CctxStatus) WaitOpts {
 	return Matches(func(tx crosschaintypes.CrossChainTx) bool {
 		return tx.CctxStatus != nil && tx.CctxStatus.Status == s
+	})
+}
+
+// MatchReverted is the WaitOpts that matches reverted CCTX.
+func MatchReverted() WaitOpts {
+	return Matches(func(tx crosschaintypes.CrossChainTx) bool {
+		return tx.GetCctxStatus().Status == crosschaintypes.CctxStatus_Reverted &&
+			len(tx.OutboundParams) == 2 &&
+			tx.OutboundParams[1].Hash != ""
 	})
 }
 
@@ -202,6 +211,20 @@ func Matches(fn func(tx crosschaintypes.CrossChainTx) bool) WaitOpts {
 
 type waitConfig struct {
 	matchFunction func(tx crosschaintypes.CrossChainTx) bool
+}
+
+// WaitCctxRevertedByInboundHash waits until cctx is reverted by inbound hash.
+func WaitCctxRevertedByInboundHash(
+	ctx context.Context,
+	t require.TestingT,
+	hash string,
+	c CCTXClient,
+) crosschaintypes.CrossChainTx {
+	// wait for cctx to be reverted
+	cctxs := WaitCctxByInboundHash(ctx, t, hash, c, MatchReverted())
+	require.Len(t, cctxs, 1)
+
+	return cctxs[0]
 }
 
 // WaitCctxByInboundHash waits until cctx appears by inbound hash.

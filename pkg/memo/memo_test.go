@@ -137,7 +137,8 @@ func Test_Memo_EncodeToBytes(t *testing.T) {
 			require.Equal(t, append(tt.expectedHead, tt.expectedData...), data)
 
 			// decode the memo and compare with the original
-			decodedMemo, err := memo.DecodeFromBytes(data)
+			decodedMemo, isMemo, err := memo.DecodeFromBytes(data)
+			require.True(t, isMemo)
 			require.NoError(t, err)
 			require.Equal(t, tt.memo, decodedMemo)
 		})
@@ -154,6 +155,7 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 		name         string
 		head         []byte
 		data         []byte
+		isMemo       bool
 		expectedMemo memo.InboundMemo
 		errMsg       string
 	}{
@@ -172,6 +174,7 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 				memo.ArgRevertAddress(fString),
 				memo.ArgAbortAddress(fAddress),
 				memo.ArgRevertMessage(fBytes)),
+			isMemo: true,
 			expectedMemo: memo.InboundMemo{
 				Header: memo.Header{
 					Version:     0,
@@ -207,6 +210,7 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 				memo.ArgRevertAddress(fString),
 				memo.ArgAbortAddress(fAddress),
 				memo.ArgRevertMessage(fBytes)),
+			isMemo: true,
 			expectedMemo: memo.InboundMemo{
 				Header: memo.Header{
 					Version:     0,
@@ -251,20 +255,51 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(fAddress),
 			), // but data is compact encoded
-			errMsg: "failed to unpack memo fields",
+			errMsg: "failed to unpack memo FieldsV0",
+		},
+		{
+			name: "should return [nil,  true, err] if fields validation fails",
+			head: MakeHead(
+				0,
+				uint8(memo.EncodingFmtABI),
+				uint8(memo.OpCodeDepositAndCall),
+				0,
+				0b00000011, // receiver flag is set
+			),
+			data: ABIPack(t,
+				memo.ArgReceiver(common.Address{}), // empty receiver address provided
+				memo.ArgPayload(fBytes)),
+			isMemo: true, // it's still a memo, but with invalid field values
+			errMsg: "failed to validate memo FieldsV0",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			data := append(tt.head, tt.data...)
-			memo, err := memo.DecodeFromBytes(data)
+			memo, isMemo, err := memo.DecodeFromBytes(data)
+
+			// check error message
 			if tt.errMsg != "" {
+				require.Nil(t, memo)
 				require.ErrorContains(t, err, tt.errMsg)
 				return
 			}
-			require.NoError(t, err)
-			require.Equal(t, tt.expectedMemo, *memo)
+
+			// a standard memo or not
+			require.Equal(t, tt.isMemo, isMemo)
+			if !isMemo {
+				require.Nil(t, memo)
+				return
+			}
+
+			// if it's a standard memo, depending on validation result
+			if err != nil {
+				require.Nil(t, memo)
+			} else {
+				require.NotNil(t, memo)
+				require.Equal(t, tt.expectedMemo, *memo)
+			}
 		})
 	}
 }

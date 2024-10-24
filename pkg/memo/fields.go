@@ -6,7 +6,7 @@ type Fields interface {
 	Pack(opCode OpCode, encodingFmt EncodingFormat, dataFlags uint8) ([]byte, error)
 
 	// Unpack decodes the memo fields
-	Unpack(opCode OpCode, encodingFmt EncodingFormat, dataFlags uint8, data []byte) error
+	Unpack(encodingFmt EncodingFormat, dataFlags uint8, data []byte) error
 
 	// Validate checks if the fields are valid
 	Validate(opCode OpCode, dataFlags uint8) error

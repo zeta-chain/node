@@ -42,6 +42,45 @@ func TestNewMsgVoteInbound(t *testing.T) {
 		require.EqualValues(t, types.NewEmptyRevertOptions(), msg.RevertOptions)
 	})
 
+	t.Run("can set revert options", func(t *testing.T) {
+		revertAddress := sample.EthAddress()
+		abortAddress := sample.EthAddress()
+		revertMessage := sample.Bytes()
+
+		msg := types.NewMsgVoteInbound(
+			sample.AccAddress(),
+			sample.AccAddress(),
+			31,
+			sample.String(),
+			sample.String(),
+			31,
+			math.NewUint(31),
+			sample.String(),
+			sample.String(),
+			31,
+			31,
+			coin.CoinType_Gas,
+			sample.String(),
+			31,
+			types.ProtocolContractVersion_V2,
+			true,
+			types.WithRevertOptions(types.RevertOptions{
+				RevertAddress:  revertAddress.Hex(),
+				CallOnRevert:   true,
+				AbortAddress:   abortAddress.Hex(),
+				RevertMessage:  revertMessage,
+				RevertGasLimit: math.NewUint(21000),
+			}),
+		)
+		require.EqualValues(t, types.RevertOptions{
+			RevertAddress:  revertAddress.Hex(),
+			CallOnRevert:   true,
+			AbortAddress:   abortAddress.Hex(),
+			RevertMessage:  revertMessage,
+			RevertGasLimit: math.NewUint(21000),
+		}, msg.RevertOptions)
+	})
+
 	t.Run("can set ZEVM revert options", func(t *testing.T) {
 		revertAddress := sample.EthAddress()
 		abortAddress := sample.EthAddress()

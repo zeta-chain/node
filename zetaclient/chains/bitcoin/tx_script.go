@@ -2,10 +2,8 @@ package bitcoin
 
 // #nosec G507 ripemd160 required for bitcoin address encoding
 import (
-	"bytes"
 	"encoding/hex"
 	"fmt"
-	"strconv"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
@@ -16,7 +14,6 @@ import (
 	"golang.org/x/crypto/ripemd160"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/constant"
 )
 
 const (
@@ -169,27 +166,49 @@ func DecodeScriptP2PKH(scriptHex string, net *chaincfg.Params) (string, error) {
 
 // DecodeOpReturnMemo decodes memo from OP_RETURN script
 // returns (memo, found, error)
-func DecodeOpReturnMemo(scriptHex string, txid string) ([]byte, bool, error) {
-	if len(scriptHex) >= 4 && scriptHex[:2] == "6a" { // OP_RETURN
-		memoSize, err := strconv.ParseInt(scriptHex[2:4], 16, 32)
-		if err != nil {
-			return nil, false, errors.Wrapf(err, "error decoding memo size: %s", scriptHex)
-		}
-		if int(memoSize) != (len(scriptHex)-4)/2 {
-			return nil, false, fmt.Errorf("memo size mismatch: %d != %d", memoSize, (len(scriptHex)-4)/2)
-		}
-
-		memoBytes, err := hex.DecodeString(scriptHex[4:])
-		if err != nil {
-			return nil, false, errors.Wrapf(err, "error hex decoding memo: %s", scriptHex)
-		}
-		if bytes.Equal(memoBytes, []byte(constant.DonationMessage)) {
-			return nil, false, fmt.Errorf("donation tx: %s", txid)
-		}
-		return memoBytes, true, nil
+func DecodeOpReturnMemo(scriptHex string) ([]byte, bool, error) {
+	// decode hex script
+	scriptBytes, err := hex.DecodeString(scriptHex)
+	if err != nil {
+		return nil, false, errors.Wrapf(err, "error decoding script hex: %s", scriptHex)
 	}
 
-	return nil, false, nil
+	// skip non-OP_RETURN script
+	// OP_RETURN script has to be at least 2 bytes: [OP_RETURN + dataLen]
+	if len(scriptBytes) < 2 || scriptBytes[0] != txscript.OP_RETURN {
+		return nil, false, nil
+	}
+
+	// extract appended data in the OP_RETURN script
+	var memoBytes []byte
+	var memoSize = scriptBytes[1]
+	switch {
+	case memoSize < txscript.OP_PUSHDATA1:
+		// memo size has to match the actual data
+		if int(memoSize) != (len(scriptBytes) - 2) {
+			return nil, false, fmt.Errorf("memo size mismatch: %d != %d", memoSize, (len(scriptBytes) - 2))
+		}
+		memoBytes = scriptBytes[2:]
+	case memoSize == txscript.OP_PUSHDATA1:
+		// when data size >= OP_PUSHDATA1 (76), Bitcoin uses 2 bytes to represent the length: [OP_PUSHDATA1 + dataLen]
+		// see: https://github.com/btcsuite/btcd/blob/master/txscript/scriptbuilder.go#L183
+		if len(scriptBytes) < 3 {
+			return nil, false, fmt.Errorf("script too short: %s", scriptHex)
+		}
+		memoSize = scriptBytes[2]
+
+		// memo size has to match the actual data
+		if int(memoSize) != (len(scriptBytes) - 3) {
+			return nil, false, fmt.Errorf("memo size mismatch: %d != %d", memoSize, (len(scriptBytes) - 3))
+		}
+		memoBytes = scriptBytes[3:]
+	default:
+		// should never happen
+		// OP_RETURN script won't carry more than 80 bytes
+		return nil, false, fmt.Errorf("invalid OP_RETURN script: %s", scriptHex)
+	}
+
+	return memoBytes, true, nil
 }
 
 // DecodeScript decodes memo wrapped in an inscription like script in witness
