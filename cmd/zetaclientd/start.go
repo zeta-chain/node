@@ -13,10 +13,12 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
+	"github.com/libp2p/go-libp2p/core/peer"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"gitlab.com/thorchain/tss/go-tss/conversion"
 
 	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -204,8 +206,19 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
+
+	keygen := appContext.GetKeygen()
+	whitelistedPeers := []peer.ID{}
+	for _, pk := range keygen.GranteePubkeys {
+		pid, err := conversion.Bech32PubkeyToPeerID(pk)
+		if err != nil {
+			return err
+		}
+		whitelistedPeers = append(whitelistedPeers, pid)
+	}
+
 	// Create TSS server
-	server, err := mc.SetupTSSServer(peers, priKey, preParams, appContext.Config(), tssKeyPass, true)
+	server, err := mc.SetupTSSServer(peers, priKey, preParams, appContext.Config(), tssKeyPass, true, whitelistedPeers)
 	if err != nil {
 		return fmt.Errorf("SetupTSSServer error: %w", err)
 	}
