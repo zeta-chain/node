@@ -6,11 +6,12 @@ import (
 	"github.com/tonkeeper/tongo/utils"
 )
 
-// TONCoins takes amount in nano tons and returns it in tons.
+// Coins takes amount in TON and returns it in nano tons.
+// Example Coins(5) return  math.Uint(5 * 10^9) nano tons.
 //
 //nolint:revive // in this context TON means 10^9 nano tons.
 //goland:noinspection GoNameStartsWithPackageName
-func TONCoins(amount uint64) math.Uint {
+func Coins(amount uint64) math.Uint {
 	// 1 ton = 10^9 nano tons
 	const mul = 1_000_000_000
 

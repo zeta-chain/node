@@ -31,12 +31,14 @@ func Test_GetUpdatedSigner(t *testing.T) {
 		evmChain = chains.Ethereum
 		btcChain = chains.BitcoinMainnet
 		solChain = chains.SolanaMainnet
+		tonChain = chains.TONMainnet
 	)
 
 	var (
 		evmChainParams = mocks.MockChainParams(evmChain.ChainId, 100)
 		btcChainParams = mocks.MockChainParams(btcChain.ChainId, 100)
 		solChainParams = mocks.MockChainParams(solChain.ChainId, 100)
+		tonChainParams = mocks.MockChainParams(tonChain.ChainId, 100)
 	)
 
 	solChainParams.GatewayAddress = solanacontracts.SolanaGatewayProgramID
@@ -49,6 +51,9 @@ func Test_GetUpdatedSigner(t *testing.T) {
 	// new solana chain params in AppContext
 	solChainParamsNew := mocks.MockChainParams(solChain.ChainId, 100)
 	solChainParamsNew.GatewayAddress = sample.SolanaAddress(t)
+
+	tonChainParamsNew := mocks.MockChainParams(tonChain.ChainId, 100)
+	tonChainParamsNew.GatewayAddress = sample.GenerateTONAccountID().ToRaw()
 
 	t.Run("signer should not be found", func(t *testing.T) {
 		orchestrator := mockOrchestrator(t, nil, evmChain, btcChain, evmChainParams, btcChainParams)
@@ -86,6 +91,23 @@ func Test_GetUpdatedSigner(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, solChainParamsNew.GatewayAddress, signer.GetGatewayAddress())
 	})
+
+	t.Run("should be able to update ton gateway address", func(t *testing.T) {
+		orchestrator := mockOrchestrator(t, nil,
+			evmChain, btcChain, solChain, tonChain,
+			evmChainParams, btcChainParams, solChainParams, tonChainParams,
+		)
+
+		appContext := createAppContext(t,
+			evmChain, btcChain, solChain, tonChain,
+			evmChainParams, btcChainParams, solChainParamsNew, tonChainParamsNew,
+		)
+
+		// update signer with new gateway address
+		signer, err := orchestrator.resolveSigner(appContext, tonChain.ChainId)
+		require.NoError(t, err)
+		require.Equal(t, tonChainParamsNew.GatewayAddress, signer.GetGatewayAddress())
+	})
 }
 
 func Test_GetUpdatedChainObserver(t *testing.T) {
@@ -94,15 +116,18 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		evmChain = chains.Ethereum
 		btcChain = chains.BitcoinMainnet
 		solChain = chains.SolanaMainnet
+		tonChain = chains.TONMainnet
 	)
 
 	var (
 		evmChainParams = mocks.MockChainParams(evmChain.ChainId, 100)
 		btcChainParams = mocks.MockChainParams(btcChain.ChainId, 100)
 		solChainParams = mocks.MockChainParams(solChain.ChainId, 100)
+		tonChainParams = mocks.MockChainParams(tonChain.ChainId, 100)
 	)
 
 	solChainParams.GatewayAddress = solanacontracts.SolanaGatewayProgramID
+	tonChainParams.GatewayAddress = sample.GenerateTONAccountID().ToRaw()
 
 	// new chain params in AppContext
 	evmChainParamsNew := &observertypes.ChainParams{
@@ -139,6 +164,22 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 	}
 	solChainParamsNew := &observertypes.ChainParams{
 		ChainId:                     solChain.ChainId,
+		ConfirmationCount:           10,
+		GasPriceTicker:              5,
+		InboundTicker:               6,
+		OutboundTicker:              6,
+		WatchUtxoTicker:             1,
+		ZetaTokenContractAddress:    "",
+		ConnectorContractAddress:    "",
+		Erc20CustodyContractAddress: "",
+		OutboundScheduleInterval:    10,
+		OutboundScheduleLookahead:   10,
+		BallotThreshold:             sdk.OneDec(),
+		MinObserverDelegation:       sdk.OneDec(),
+		IsSupported:                 true,
+	}
+	tonChainParamsNew := &observertypes.ChainParams{
+		ChainId:                     tonChain.ChainId,
 		ConfirmationCount:           10,
 		GasPriceTicker:              5,
 		InboundTicker:               6,
@@ -283,6 +324,43 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, chainOb)
 		require.True(t, observertypes.ChainParamsEqual(*solChainParamsNew, chainOb.ChainParams()))
+	})
+	t.Run("ton chain observer should not be found", func(t *testing.T) {
+		orchestrator := mockOrchestrator(
+			t,
+			nil,
+			evmChain, btcChain, solChain,
+			evmChainParams, btcChainParams, solChainParams,
+		)
+
+		appContext := createAppContext(
+			t,
+			evmChain,
+			btcChain,
+			solChain,
+			evmChainParams,
+			btcChainParams,
+			solChainParamsNew,
+		)
+
+		_, err := orchestrator.resolveObserver(appContext, tonChain.ChainId)
+		require.ErrorContains(t, err, "observer not found")
+	})
+	t.Run("chain params in ton chain observer should be updated successfully", func(t *testing.T) {
+		orchestrator := mockOrchestrator(t, nil,
+			evmChain, btcChain, tonChain,
+			evmChainParams, btcChainParams, tonChainParams,
+		)
+		appContext := createAppContext(t,
+			evmChain, btcChain, tonChain,
+			evmChainParams, btcChainParams, tonChainParamsNew,
+		)
+
+		// update solana chain observer with new chain params
+		chainOb, err := orchestrator.resolveObserver(appContext, tonChain.ChainId)
+		require.NoError(t, err)
+		require.NotNil(t, chainOb)
+		require.True(t, observertypes.ChainParamsEqual(*tonChainParamsNew, chainOb.ChainParams()))
 	})
 }
 
@@ -500,6 +578,9 @@ func mockOrchestrator(t *testing.T, zetaClient interfaces.ZetacoreClient, chains
 		case chains.IsSolanaChain(cp.ChainId, nil):
 			observers[cp.ChainId] = mocks.NewSolanaObserver(cp)
 			signers[cp.ChainId] = mocks.NewSolanaSigner()
+		case chains.IsTONChain(cp.ChainId, nil):
+			observers[cp.ChainId] = mocks.NewTONObserver(cp)
+			signers[cp.ChainId] = mocks.NewTONSigner()
 		default:
 			t.Fatalf("mock orcestrator: unsupported chain %d", cp.ChainId)
 		}
@@ -526,6 +607,8 @@ func createAppContext(t *testing.T, chainsOrParams ...any) *zctx.AppContext {
 			cfg.BTCChainConfigs[c.ChainId] = config.BTCConfig{RPCHost: "localhost"}
 		case chains.IsSolanaChain(c.ChainId, nil):
 			cfg.SolanaConfig = config.SolanaConfig{Endpoint: "localhost"}
+		case chains.IsTONChain(c.ChainId, nil):
+			cfg.TONConfig = config.TONConfig{LiteClientConfigURL: "localhost"}
 		default:
 			t.Fatalf("create app context: unsupported chain %d", c.ChainId)
 		}

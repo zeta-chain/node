@@ -10,6 +10,7 @@ import (
 type Transaction struct {
 	ton.Transaction
 	Operation Op
+	ExitCode  int32
 
 	content any
 	inbound bool
@@ -18,6 +19,11 @@ type Transaction struct {
 // IsInbound returns true if the transaction is inbound.
 func (tx *Transaction) IsInbound() bool {
 	return tx.inbound
+}
+
+// IsOutbound returns true if the transaction is outbound.
+func (tx *Transaction) IsOutbound() bool {
+	return !tx.inbound
 }
 
 // GasUsed returns the amount of gas used by the transaction.
@@ -38,6 +44,11 @@ func (tx *Transaction) Deposit() (Deposit, error) {
 // DepositAndCall casts the transaction content to a DepositAndCall.
 func (tx *Transaction) DepositAndCall() (DepositAndCall, error) {
 	return retrieveContent[DepositAndCall](tx)
+}
+
+// Withdrawal casts the transaction content to a Withdrawal.
+func (tx *Transaction) Withdrawal() (Withdrawal, error) {
+	return retrieveContent[Withdrawal](tx)
 }
 
 func retrieveContent[T any](tx *Transaction) (T, error) {
