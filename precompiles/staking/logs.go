@@ -10,12 +10,6 @@ import (
 	"github.com/zeta-chain/node/precompiles/logs"
 )
 
-const (
-	StakeEventName     = "Stake"
-	UnstakeEventName   = "Unstake"
-	MoveStakeEventName = "MoveStake"
-)
-
 func (c *Contract) addStakeLog(
 	ctx sdk.Context,
 	stateDB vm.StateDB,
@@ -131,7 +125,7 @@ func (c *Contract) addDistributeLog(
 	zrc20Token common.Address,
 	amount *big.Int,
 ) error {
-	event := c.Abi().Events[MoveStakeEventName]
+	event := c.Abi().Events[DisitributeEventName]
 
 	topics, err := logs.MakeTopics(
 		event,

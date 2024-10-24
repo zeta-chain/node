@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
@@ -108,20 +109,57 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 	balanceShouldBe(r, 500, checkZRC20Balance(r, lockerAddress))
 	balanceShouldBe(r, 500, checkCosmosBalance(r, feeCollectorAddress, zrc20Denom))
 
+	eventDitributed, err := dstrContract.ParseDistributed(*receipt.Logs[0])
+	require.NoError(r, err)
+	require.Equal(r, zrc20Address, eventDitributed.Zrc20Token)
+	require.Equal(r, spenderAddress, eventDitributed.Zrc20Distributor)
+	require.Equal(r, fiveHundred.Uint64(), eventDitributed.Amount.Uint64())
+
 	// After one block the rewards should have been distributed and fee collector should have 0 ZRC20 balance.
 	r.WaitForBlocks(1)
 	balanceShouldBe(r, 0, checkCosmosBalance(r, feeCollectorAddress, zrc20Denom))
+	res, err := r.DistributionClient.ValidatorDistributionInfo(
+		r.Ctx,
+		&distributiontypes.QueryValidatorDistributionInfoRequest{
+			ValidatorAddress: validators[0].OperatorAddress,
+		},
+	)
+	require.NoError(r, err)
+	fmt.Printf("Validator 0 distribution info: %+v\n", res)
 
-	accAddress := types.AccAddress("zetavaloper16vuh496n7wahw6m8dmzc0p5meymmctleuaz562")
-	valBal := checkCosmosBalance(r, accAddress, zrc20Denom)
-	fmt.Println(valBal)
+	res2, err := r.DistributionClient.ValidatorOutstandingRewards(r.Ctx, &distributiontypes.QueryValidatorOutstandingRewardsRequest{
+		ValidatorAddress: validators[0].OperatorAddress,
+	})
+	require.NoError(r, err)
+	fmt.Printf("Validator 0 outstanding rewards: %+v\n", res2)
 
-	accAddress = types.AccAddress(validators[0].OperatorAddress)
-	valBal = checkCosmosBalance(r, accAddress, zrc20Denom)
-	fmt.Println(valBal)
+	res3, err := r.DistributionClient.ValidatorCommission(r.Ctx, &distributiontypes.QueryValidatorCommissionRequest{
+		ValidatorAddress: validators[0].OperatorAddress,
+	})
+	require.NoError(r, err)
+	fmt.Printf("Validator 0 commission: %+v\n", res3)
 
-	coins := checkAllCosmosBalance(r, accAddress)
-	fmt.Printf("Coins: %+v\n", coins)
+	// Validator 1
+	res, err = r.DistributionClient.ValidatorDistributionInfo(
+		r.Ctx,
+		&distributiontypes.QueryValidatorDistributionInfoRequest{
+			ValidatorAddress: validators[1].OperatorAddress,
+		},
+	)
+	require.NoError(r, err)
+	fmt.Printf("Validator 1 distribution info: %+v\n", res)
+
+	res2, err = r.DistributionClient.ValidatorOutstandingRewards(r.Ctx, &distributiontypes.QueryValidatorOutstandingRewardsRequest{
+		ValidatorAddress: validators[1].OperatorAddress,
+	})
+	require.NoError(r, err)
+	fmt.Printf("Validator 1 outstanding rewards: %+v\n", res2)
+
+	res3, err = r.DistributionClient.ValidatorCommission(r.Ctx, &distributiontypes.QueryValidatorCommissionRequest{
+		ValidatorAddress: validators[1].OperatorAddress,
+	})
+	require.NoError(r, err)
+	fmt.Printf("Validator 1 commission: %+v\n", res3)
 }
 
 func checkCosmosBalance(r *runner.E2ERunner, address types.AccAddress, denom string) *big.Int {
@@ -132,16 +170,6 @@ func checkCosmosBalance(r *runner.E2ERunner, address types.AccAddress, denom str
 	require.NoError(r, err)
 
 	return bal.Balance.Amount.BigInt()
-}
-
-func checkAllCosmosBalance(r *runner.E2ERunner, address types.AccAddress) types.Coins {
-	bal, err := r.BankClient.AllBalances(
-		r.Ctx,
-		&banktypes.QueryAllBalancesRequest{Address: address.String()},
-	)
-	require.NoError(r, err)
-
-	return bal.Balances
 }
 
 func resetTest(r *runner.E2ERunner, lockerAddress common.Address, previousGasLimit uint64) {
