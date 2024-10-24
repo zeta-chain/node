@@ -1,8 +1,6 @@
 module github.com/zeta-chain/node
 
-go 1.22.2
-
-toolchain go1.22.5
+go 1.22.8
 
 require (
 	cosmossdk.io/errors v1.0.1
@@ -336,6 +334,7 @@ require (
 	github.com/bnb-chain/tss-lib v1.5.0
 	github.com/showa-93/go-mask v0.6.2
 	github.com/tonkeeper/tongo v1.9.3
+	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20241024230448-593397669504
 )
 
 require (

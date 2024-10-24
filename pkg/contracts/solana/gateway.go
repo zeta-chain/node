@@ -4,6 +4,7 @@ package solana
 import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/pkg/errors"
+	idlgateway "github.com/zeta-chain/protocol-contracts-solana/go-idl/generated"
 )
 
 const (
@@ -20,32 +21,32 @@ const (
 
 // DiscriminatorInitialize returns the discriminator for Solana gateway 'initialize' instruction
 func DiscriminatorInitialize() [8]byte {
-	return [8]byte{175, 175, 109, 31, 13, 152, 155, 237}
+	return idlgateway.IDLGateway.GetDiscriminator("initialize")
 }
 
 // DiscriminatorDeposit returns the discriminator for Solana gateway 'deposit' instruction
 func DiscriminatorDeposit() [8]byte {
-	return [8]byte{242, 35, 198, 137, 82, 225, 242, 182}
+	return idlgateway.IDLGateway.GetDiscriminator("deposit")
 }
 
 // DiscriminatorDepositSPL returns the discriminator for Solana gateway 'deposit_spl_token' instruction
 func DiscriminatorDepositSPL() [8]byte {
-	return [8]byte{86, 172, 212, 121, 63, 233, 96, 144}
+	return idlgateway.IDLGateway.GetDiscriminator("deposit_spl_token")
 }
 
 // DiscriminatorWithdraw returns the discriminator for Solana gateway 'withdraw' instruction
 func DiscriminatorWithdraw() [8]byte {
-	return [8]byte{183, 18, 70, 156, 148, 109, 161, 34}
+	return idlgateway.IDLGateway.GetDiscriminator("withdraw")
 }
 
 // DiscriminatorWithdrawSPL returns the discriminator for Solana gateway 'withdraw_spl_token' instruction
 func DiscriminatorWithdrawSPL() [8]byte {
-	return [8]byte{156, 234, 11, 89, 235, 246, 32}
+	return idlgateway.IDLGateway.GetDiscriminator("withdraw_spl_token")
 }
 
 // DiscriminatorWhitelist returns the discriminator for Solana gateway 'whitelist_spl_mint' instruction
 func DiscriminatorWhitelistSplMint() [8]byte {
-	return [8]byte{30, 110, 162, 42, 208, 147, 254, 219}
+	return idlgateway.IDLGateway.GetDiscriminator("whitelist_spl_mint")
 }
 
 // ParseGatewayAddressAndPda parses the gateway id and program derived address from the given string
