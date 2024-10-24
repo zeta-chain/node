@@ -26,6 +26,7 @@ func solanaTestRoutine(
 			deployerRunner,
 			conf.AdditionalAccounts.UserSolana,
 			runner.NewLogger(verbose, color.FgCyan, "solana"),
+			runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
 		)
 		if err != nil {
 			return err

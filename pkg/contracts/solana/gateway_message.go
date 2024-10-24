@@ -61,6 +61,8 @@ func (msg *MsgWithdraw) Hash() [32]byte {
 	var message []byte
 	buff := make([]byte, 8)
 
+	message = append(message, []byte("withdraw")...)
+
 	binary.BigEndian.PutUint64(buff, msg.chainID)
 	message = append(message, buff...)
 
@@ -104,4 +106,25 @@ func (msg *MsgWithdraw) Signer() (common.Address, error) {
 	msgSig := msg.SigRSV()
 
 	return RecoverSigner(msgHash[:], msgSig[:])
+}
+
+// MsgWhitelist is the message for the Solana gateway whitelist_spl_mint instruction
+type MsgWhitelist struct {
+	// whitelistCandidate is the whitelist candidate
+	whitelistCandidate solana.PublicKey
+	whitelistEntry     solana.PublicKey
+}
+
+// NewMsgWhitelist returns a new whitelist_spl_mint message
+func NewMsgWhitelist(whitelistCandidate solana.PublicKey, whitelistEntry solana.PublicKey) *MsgWhitelist {
+	return &MsgWhitelist{whitelistCandidate: whitelistCandidate, whitelistEntry: whitelistEntry}
+}
+
+// To returns the recipient address of the message
+func (msg *MsgWhitelist) WhitelistCandidate() solana.PublicKey {
+	return msg.whitelistCandidate
+}
+
+func (msg *MsgWhitelist) WhitelistEntry() solana.PublicKey {
+	return msg.whitelistEntry
 }
