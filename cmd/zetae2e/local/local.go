@@ -335,6 +335,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				e2etests.TestPrecompilesBankName,
 				e2etests.TestPrecompilesBankFailName,
 				e2etests.TestPrecompilesBankThroughContractName,
+				e2etests.TestPrecompilesDistributeName,
+				e2etests.TestPrecompilesDistributeThroughContractName,
 			}
 		}
 

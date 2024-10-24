@@ -38,7 +38,7 @@ func RequireTxSuccessful(t require.TestingT, receipt *ethtypes.Receipt, msgAndAr
 // RequiredTxFailed checks if the receipt status is failed.
 // Currently, it accepts eth receipt, but we can make this more generic by using type assertion.
 func RequiredTxFailed(t require.TestingT, receipt *ethtypes.Receipt, msgAndArgs ...any) {
-	msg := "receipt status is not successful: %s"
+	msg := "receipt status is not failed: %s"
 	require.Equal(
 		t,
 		ethtypes.ReceiptStatusFailed,

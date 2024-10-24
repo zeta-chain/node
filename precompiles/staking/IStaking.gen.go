@@ -39,7 +39,7 @@ type Validator struct {
 
 // IStakingMetaData contains all meta data concerning the IStaking contract.
 var IStakingMetaData = &bind.MetaData{
-	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validatorSrc\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validatorDst\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"MoveStake\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validator\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Stake\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validator\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Unstake\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"getAllValidators\",\"outputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"operatorAddress\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"consensusPubKey\",\"type\":\"string\"},{\"internalType\":\"bool\",\"name\":\"jailed\",\"type\":\"bool\"},{\"internalType\":\"enumBondStatus\",\"name\":\"bondStatus\",\"type\":\"uint8\"}],\"internalType\":\"structValidator[]\",\"name\":\"validators\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"}],\"name\":\"getShares\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"shares\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validatorSrc\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"validatorDst\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"moveStake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"stake\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"unstake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"zrc20_distributor\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"zrc20_token\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Distributed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validatorSrc\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validatorDst\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"MoveStake\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validator\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Stake\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validator\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Unstake\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"zrc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"distribute\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getAllValidators\",\"outputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"operatorAddress\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"consensusPubKey\",\"type\":\"string\"},{\"internalType\":\"bool\",\"name\":\"jailed\",\"type\":\"bool\"},{\"internalType\":\"enumBondStatus\",\"name\":\"bondStatus\",\"type\":\"uint8\"}],\"internalType\":\"structValidator[]\",\"name\":\"validators\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"}],\"name\":\"getShares\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"shares\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validatorSrc\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"validatorDst\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"moveStake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"stake\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"unstake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // IStakingABI is the input ABI used to generate the binding from.
@@ -250,6 +250,27 @@ func (_IStaking *IStakingCallerSession) GetShares(staker common.Address, validat
 	return _IStaking.Contract.GetShares(&_IStaking.CallOpts, staker, validator)
 }
 
+// Distribute is a paid mutator transaction binding the contract method 0xfb932108.
+//
+// Solidity: function distribute(address zrc20, uint256 amount) returns(bool success)
+func (_IStaking *IStakingTransactor) Distribute(opts *bind.TransactOpts, zrc20 common.Address, amount *big.Int) (*types.Transaction, error) {
+	return _IStaking.contract.Transact(opts, "distribute", zrc20, amount)
+}
+
+// Distribute is a paid mutator transaction binding the contract method 0xfb932108.
+//
+// Solidity: function distribute(address zrc20, uint256 amount) returns(bool success)
+func (_IStaking *IStakingSession) Distribute(zrc20 common.Address, amount *big.Int) (*types.Transaction, error) {
+	return _IStaking.Contract.Distribute(&_IStaking.TransactOpts, zrc20, amount)
+}
+
+// Distribute is a paid mutator transaction binding the contract method 0xfb932108.
+//
+// Solidity: function distribute(address zrc20, uint256 amount) returns(bool success)
+func (_IStaking *IStakingTransactorSession) Distribute(zrc20 common.Address, amount *big.Int) (*types.Transaction, error) {
+	return _IStaking.Contract.Distribute(&_IStaking.TransactOpts, zrc20, amount)
+}
+
 // MoveStake is a paid mutator transaction binding the contract method 0xd11a93d0.
 //
 // Solidity: function moveStake(address staker, string validatorSrc, string validatorDst, uint256 amount) returns(int64 completionTime)
@@ -311,6 +332,160 @@ func (_IStaking *IStakingSession) Unstake(staker common.Address, validator strin
 // Solidity: function unstake(address staker, string validator, uint256 amount) returns(int64 completionTime)
 func (_IStaking *IStakingTransactorSession) Unstake(staker common.Address, validator string, amount *big.Int) (*types.Transaction, error) {
 	return _IStaking.Contract.Unstake(&_IStaking.TransactOpts, staker, validator, amount)
+}
+
+// IStakingDistributedIterator is returned from FilterDistributed and is used to iterate over the raw logs and unpacked data for Distributed events raised by the IStaking contract.
+type IStakingDistributedIterator struct {
+	Event *IStakingDistributed // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *IStakingDistributedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(IStakingDistributed)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(IStakingDistributed)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *IStakingDistributedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *IStakingDistributedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// IStakingDistributed represents a Distributed event raised by the IStaking contract.
+type IStakingDistributed struct {
+	Zrc20Distributor common.Address
+	Zrc20Token       common.Address
+	Amount           *big.Int
+	Raw              types.Log // Blockchain specific contextual infos
+}
+
+// FilterDistributed is a free log retrieval operation binding the contract event 0xad4a9acf26d8bba7a8cf1a41160d59be042ee554578e256c98d2ab74cdd43542.
+//
+// Solidity: event Distributed(address indexed zrc20_distributor, address indexed zrc20_token, uint256 amount)
+func (_IStaking *IStakingFilterer) FilterDistributed(opts *bind.FilterOpts, zrc20_distributor []common.Address, zrc20_token []common.Address) (*IStakingDistributedIterator, error) {
+
+	var zrc20_distributorRule []interface{}
+	for _, zrc20_distributorItem := range zrc20_distributor {
+		zrc20_distributorRule = append(zrc20_distributorRule, zrc20_distributorItem)
+	}
+	var zrc20_tokenRule []interface{}
+	for _, zrc20_tokenItem := range zrc20_token {
+		zrc20_tokenRule = append(zrc20_tokenRule, zrc20_tokenItem)
+	}
+
+	logs, sub, err := _IStaking.contract.FilterLogs(opts, "Distributed", zrc20_distributorRule, zrc20_tokenRule)
+	if err != nil {
+		return nil, err
+	}
+	return &IStakingDistributedIterator{contract: _IStaking.contract, event: "Distributed", logs: logs, sub: sub}, nil
+}
+
+// WatchDistributed is a free log subscription operation binding the contract event 0xad4a9acf26d8bba7a8cf1a41160d59be042ee554578e256c98d2ab74cdd43542.
+//
+// Solidity: event Distributed(address indexed zrc20_distributor, address indexed zrc20_token, uint256 amount)
+func (_IStaking *IStakingFilterer) WatchDistributed(opts *bind.WatchOpts, sink chan<- *IStakingDistributed, zrc20_distributor []common.Address, zrc20_token []common.Address) (event.Subscription, error) {
+
+	var zrc20_distributorRule []interface{}
+	for _, zrc20_distributorItem := range zrc20_distributor {
+		zrc20_distributorRule = append(zrc20_distributorRule, zrc20_distributorItem)
+	}
+	var zrc20_tokenRule []interface{}
+	for _, zrc20_tokenItem := range zrc20_token {
+		zrc20_tokenRule = append(zrc20_tokenRule, zrc20_tokenItem)
+	}
+
+	logs, sub, err := _IStaking.contract.WatchLogs(opts, "Distributed", zrc20_distributorRule, zrc20_tokenRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(IStakingDistributed)
+				if err := _IStaking.contract.UnpackLog(event, "Distributed", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseDistributed is a log parse operation binding the contract event 0xad4a9acf26d8bba7a8cf1a41160d59be042ee554578e256c98d2ab74cdd43542.
+//
+// Solidity: event Distributed(address indexed zrc20_distributor, address indexed zrc20_token, uint256 amount)
+func (_IStaking *IStakingFilterer) ParseDistributed(log types.Log) (*IStakingDistributed, error) {
+	event := new(IStakingDistributed)
+	if err := _IStaking.contract.UnpackLog(event, "Distributed", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
 }
 
 // IStakingMoveStakeIterator is returned from FilterMoveStake and is used to iterate over the raw logs and unpacked data for MoveStake events raised by the IStaking contract.

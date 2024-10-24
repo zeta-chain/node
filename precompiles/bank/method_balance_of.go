@@ -32,7 +32,7 @@ func (c *Contract) balanceOf(
 	}
 
 	// Get the counterpart cosmos address.
-	toAddr, err := getCosmosAddress(c.bankKeeper, addr)
+	toAddr, err := ptypes.GetCosmosAddress(c.bankKeeper, addr)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (c *Contract) balanceOf(
 
 	// Bank Keeper GetBalance returns the specified Cosmos coin balance for a given address.
 	// Check explicitly the balance is a non-negative non-nil value.
-	coin := c.bankKeeper.GetBalance(ctx, toAddr, ZRC20ToCosmosDenom(zrc20Addr))
+	coin := c.bankKeeper.GetBalance(ctx, toAddr, ptypes.ZRC20ToCosmosDenom(zrc20Addr))
 	if !coin.IsValid() {
 		return nil, &ptypes.ErrInvalidCoin{
 			Got:      coin.GetDenom(),

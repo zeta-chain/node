@@ -28,8 +28,8 @@ func (c *Contract) addEventLog(
 
 	topics, err := logs.MakeTopics(
 		event,
-		[]interface{}{common.BytesToAddress(eventData.zrc20Addr.Bytes())},
-		[]interface{}{common.BytesToAddress(eventData.zrc20Token.Bytes())},
+		[]interface{}{eventData.zrc20Addr},
+		[]interface{}{eventData.zrc20Token},
 		[]interface{}{eventData.cosmosCoin},
 	)
 	if err != nil {
