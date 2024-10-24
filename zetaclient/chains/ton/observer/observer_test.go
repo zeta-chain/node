@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	eth "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -38,7 +39,13 @@ type testSuite struct {
 
 	baseObserver *base.Observer
 
-	votesBag []*cctxtypes.MsgVoteInbound
+	votesBag   []*cctxtypes.MsgVoteInbound
+	trackerBag []testTracker
+}
+
+type testTracker struct {
+	nonce uint64
+	hash  string
 }
 
 func newTestSuite(t *testing.T) *testSuite {
@@ -50,7 +57,7 @@ func newTestSuite(t *testing.T) *testSuite {
 
 		liteClient = mocks.NewLiteClient(t)
 
-		tss      = mocks.NewTSSAthens3()
+		tss      = mocks.NewGeneratedTSS(t, chain)
 		zetacore = mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
 
 		testLogger = zerolog.New(zerolog.NewTestWriter(t))
@@ -95,6 +102,7 @@ func newTestSuite(t *testing.T) *testSuite {
 	ts.zetacore.On("Chain").Return(chain).Maybe()
 
 	setupVotesBag(ts)
+	setupTrackersBag(ts)
 
 	return ts
 }
@@ -142,6 +150,27 @@ func (ts *testSuite) MockGetBlockHeader(id ton.BlockIDExt) *mock.Call {
 		Return(blockInfo, nil)
 }
 
+type signable interface {
+	Hash() ([32]byte, error)
+	SetSignature([65]byte)
+	Signer() (eth.Address, error)
+}
+
+func (ts *testSuite) sign(msg signable) {
+	hash, err := msg.Hash()
+	require.NoError(ts.t, err)
+
+	sig, err := ts.tss.Sign(ts.ctx, hash[:], 0, 0, 0, "")
+	require.NoError(ts.t, err)
+
+	msg.SetSignature(sig)
+
+	// double check
+	evmSigner, err := msg.Signer()
+	require.NoError(ts.t, err)
+	require.Equal(ts.t, ts.tss.EVMAddress().String(), evmSigner.String())
+}
+
 // parses string to TON
 func tonCoins(t *testing.T, raw string) math.Uint {
 	t.Helper()
@@ -169,4 +198,27 @@ func setupVotesBag(ts *testSuite) {
 		Maybe().
 		Run(catcher).
 		Return("", "", nil) // zeta hash, ballot index, error
+}
+
+func setupTrackersBag(ts *testSuite) {
+	catcher := func(args mock.Arguments) {
+		require.Equal(ts.t, ts.chain.ChainId, args.Get(1).(int64))
+		nonce := args.Get(2).(uint64)
+		txHash := args.Get(3).(string)
+
+		ts.t.Logf("Adding outbound tracker: nonce=%d, hash=%s", nonce, txHash)
+
+		ts.trackerBag = append(ts.trackerBag, testTracker{nonce, txHash})
+	}
+
+	ts.zetacore.On(
+		"AddOutboundTracker",
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+	).Maybe().Run(catcher).Return("", nil)
 }

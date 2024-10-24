@@ -245,6 +245,77 @@ func TestInbound(t *testing.T) {
 		assert.Equal(t, uint64(blockInfo.MinRefMcSeqno), cctx.InboundBlockHeight)
 	})
 
+	// Yep, it's possible to have withdrawals here because we scroll through all gateway's txs
+	t.Run("Withdrawal", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t)
+
+		// Given observer
+		ob, err := New(ts.baseObserver, ts.liteClient, gw)
+		require.NoError(t, err)
+
+		lastScanned := ts.SetupLastScannedTX(gw.AccountID())
+
+		// Given mocked lite client calls
+		withdrawal := toncontracts.Withdrawal{
+			Recipient: ton.MustParseAccountID("EQB5A1PJBbnxwf0YrA_bgWKyfuIv8GywEcfIAXrs3oZyqc1_"),
+			Amount:    toncontracts.Coins(5),
+			Seqno:     0,
+		}
+
+		ts.sign(&withdrawal)
+
+		withdrawalSigner, err := withdrawal.Signer()
+		require.NoError(t, err)
+		require.Equal(t, ob.TSS().EVMAddress().Hex(), withdrawalSigner.Hex())
+
+		withdrawalTX := sample.TONWithdrawal(t, gw.AccountID(), withdrawal)
+		txs := []ton.Transaction{withdrawalTX}
+
+		ts.
+			OnGetTransactionsSince(gw.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
+			Once()
+
+		// ACT
+		err = ob.observeGateway(ts.ctx)
+
+		// ASSERT
+		assert.NoError(t, err)
+
+		// Check that no votes were sent
+		require.Len(t, ts.votesBag, 0)
+
+		// But an outbound tracker was created
+		require.Len(t, ts.trackerBag, 1)
+
+		tracker := ts.trackerBag[0]
+
+		assert.Equal(t, uint64(withdrawal.Seqno), tracker.nonce)
+		assert.Equal(t, liteapi.TransactionToHashString(&withdrawalTX), tracker.hash)
+
+		//
+		//// Check CCTX
+		//cctx := ts.votesBag[0]
+		//
+		//assert.NotNil(t, cctx)
+		//
+		//assert.Equal(t, deposit.Sender.ToRaw(), cctx.Sender)
+		//assert.Equal(t, ts.chain.ChainId, cctx.SenderChainId)
+		//
+		//assert.Equal(t, "", cctx.Asset)
+		//assert.Equal(t, deposit.Amount.Uint64(), cctx.Amount.Uint64())
+		//assert.Equal(t, hex.EncodeToString(deposit.Recipient.Bytes()), cctx.Message)
+		//
+		//// Check hash & block height
+		//expectedHash := liteapi.TransactionHashToString(depositTX.Lt, txHash(depositTX))
+		//assert.Equal(t, expectedHash, cctx.InboundHash)
+		//
+		//blockInfo, err := ts.liteClient.GetBlockHeader(ts.ctx, depositTX.BlockID, 0)
+		//require.NoError(t, err)
+		//
+		//assert.Equal(t, uint64(blockInfo.MinRefMcSeqno), cctx.InboundBlockHeight)
+	})
+
 	t.Run("Multiple transactions", func(t *testing.T) {
 		// ARRANGE
 		ts := newTestSuite(t)
@@ -256,6 +327,13 @@ func TestInbound(t *testing.T) {
 		lastScanned := ts.SetupLastScannedTX(gw.AccountID())
 
 		// Given several transactions
+		withdrawal := toncontracts.Withdrawal{
+			Recipient: ton.MustParseAccountID("EQB5A1PJBbnxwf0YrA_bgWKyfuIv8GywEcfIAXrs3oZyqc1_"),
+			Amount:    toncontracts.Coins(5),
+			Seqno:     1,
+		}
+		ts.sign(&withdrawal)
+
 		txs := []ton.Transaction{
 			// should be skipped
 			sample.TONDonation(t, gw.AccountID(), toncontracts.Donation{
@@ -279,6 +357,8 @@ func TestInbound(t *testing.T) {
 				Amount:    tonCoins(t, "3"),
 				Recipient: sample.EthAddress(),
 			}),
+			// a tracker should be added
+			sample.TONWithdrawal(t, gw.AccountID(), withdrawal),
 			// should be skipped (invalid inbound/outbound messages)
 			sample.TONTransaction(t, sample.TONTransactionProps{
 				Account: gw.AccountID(),
@@ -323,6 +403,13 @@ func TestInbound(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, lastTX.Lt, lastLT)
 		assert.Equal(t, lastTX.Hash().Hex(), lastHash.Hex())
+
+		// Check that a tracker was added
+		assert.Len(t, ts.trackerBag, 1)
+		tracker := ts.trackerBag[0]
+
+		assert.Equal(t, uint64(withdrawal.Seqno), tracker.nonce)
+		assert.Equal(t, liteapi.TransactionToHashString(&txs[4]), tracker.hash)
 	})
 }
 

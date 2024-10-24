@@ -59,16 +59,9 @@ func TestSigner(t *testing.T) {
 		Recipient: receiver,
 		Amount:    amount,
 		Seqno:     nonce,
-		Sig:       [65]byte{},
 	}
 
-	withdrawalHash, err := withdrawal.Hash()
-	require.NoError(t, err)
-
-	tssSig, err := ts.tss.Sign(ts.ctx, withdrawalHash[:], 0, 0, 0, "")
-	require.NoError(t, err)
-
-	withdrawal.SetSignature(tssSig)
+	ts.Sign(&withdrawal)
 
 	// Given expected liteapi calls
 	lt, hash := uint64(400), decodeHash(t, "df8a01053f50a74503dffe6802f357bf0e665bd1f3d082faccfebdea93cddfeb")
@@ -154,7 +147,7 @@ func newTestSuite(t *testing.T) *testSuite {
 	// Setup mocks
 	ts.zetacore.On("Chain").Return(chain).Maybe()
 
-	setupVotesBag(ts)
+	setupTrackersBag(ts)
 
 	return ts
 }
@@ -177,6 +170,16 @@ func (ts *testSuite) OnGetTransactionsSince(
 	return ts.liteClient.
 		On("GetTransactionsSince", mock.Anything, acc, lt, hash).
 		Return(txs, err)
+}
+
+func (ts *testSuite) Sign(msg Signable) {
+	hash, err := msg.Hash()
+	require.NoError(ts.t, err)
+
+	sig, err := ts.tss.Sign(ts.ctx, hash[:], 0, 0, 0, "")
+	require.NoError(ts.t, err)
+
+	msg.SetSignature(sig)
 }
 
 // parses string to TON
@@ -206,7 +209,7 @@ func decodeHash(t *testing.T, raw string) tlb.Bits256 {
 	return hash
 }
 
-func setupVotesBag(ts *testSuite) {
+func setupTrackersBag(ts *testSuite) {
 	catcher := func(args mock.Arguments) {
 		require.Equal(ts.t, ts.chain.ChainId, args.Get(1).(int64))
 		nonce := args.Get(2).(uint64)
