@@ -1,14 +1,11 @@
 package e2etests
 
 import (
-	"fmt"
 	"math/big"
 
 	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
@@ -43,7 +40,7 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 	r.ZEVMAuth.GasLimit = 10_000_000
 
 	// Set the test to reset the state after it finishes.
-	defer resetTest(r, lockerAddress, previousGasLimit)
+	defer resetTest(r, lockerAddress, previousGasLimit, fiveHundred)
 
 	// Get ERC20ZRC20.
 	txHash := r.DepositERC20WithAmountAndMessage(spenderAddress, oneThousand, []byte{})
@@ -52,9 +49,10 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 	dstrContract, err := staking.NewIStaking(distributeContractAddress, r.ZEVMClient)
 	require.NoError(r, err, "failed to create distribute contract caller")
 
-	validators, err := dstrContract.GetAllValidators(&bind.CallOpts{})
-	require.NoError(r, err)
-	fmt.Println(validators)
+	// DO NOT REMOVE - will be used in a subsequent PR when the ability to withdraw delegator rewards is introduced.
+	// Get validators through staking contract.
+	// validators, err := dstrContract.GetAllValidators(&bind.CallOpts{})
+	// require.NoError(r, err)
 
 	// Check initial balances.
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spenderAddress))
@@ -118,48 +116,53 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 	// After one block the rewards should have been distributed and fee collector should have 0 ZRC20 balance.
 	r.WaitForBlocks(1)
 	balanceShouldBe(r, 0, checkCosmosBalance(r, feeCollectorAddress, zrc20Denom))
-	res, err := r.DistributionClient.ValidatorDistributionInfo(
-		r.Ctx,
-		&distributiontypes.QueryValidatorDistributionInfoRequest{
-			ValidatorAddress: validators[0].OperatorAddress,
-		},
-	)
-	require.NoError(r, err)
-	fmt.Printf("Validator 0 distribution info: %+v\n", res)
 
-	res2, err := r.DistributionClient.ValidatorOutstandingRewards(r.Ctx, &distributiontypes.QueryValidatorOutstandingRewardsRequest{
-		ValidatorAddress: validators[0].OperatorAddress,
-	})
-	require.NoError(r, err)
-	fmt.Printf("Validator 0 outstanding rewards: %+v\n", res2)
+	// DO NOT REMOVE THE FOLLOWING CODE
+	// This section is commented until a following PR introduces the ability to withdraw delegator rewards.
+	// This validator checks will be used then to complete the whole e2e.
 
-	res3, err := r.DistributionClient.ValidatorCommission(r.Ctx, &distributiontypes.QueryValidatorCommissionRequest{
-		ValidatorAddress: validators[0].OperatorAddress,
-	})
-	require.NoError(r, err)
-	fmt.Printf("Validator 0 commission: %+v\n", res3)
+	// res, err := r.DistributionClient.ValidatorDistributionInfo(
+	// 	r.Ctx,
+	// 	&distributiontypes.QueryValidatorDistributionInfoRequest{
+	// 		ValidatorAddress: validators[0].OperatorAddress,
+	// 	},
+	// )
+	// require.NoError(r, err)
+	// fmt.Printf("Validator 0 distribution info: %+v\n", res)
 
-	// Validator 1
-	res, err = r.DistributionClient.ValidatorDistributionInfo(
-		r.Ctx,
-		&distributiontypes.QueryValidatorDistributionInfoRequest{
-			ValidatorAddress: validators[1].OperatorAddress,
-		},
-	)
-	require.NoError(r, err)
-	fmt.Printf("Validator 1 distribution info: %+v\n", res)
+	// res2, err := r.DistributionClient.ValidatorOutstandingRewards(r.Ctx, &distributiontypes.QueryValidatorOutstandingRewardsRequest{
+	// 	ValidatorAddress: validators[0].OperatorAddress,
+	// })
+	// require.NoError(r, err)
+	// fmt.Printf("Validator 0 outstanding rewards: %+v\n", res2)
 
-	res2, err = r.DistributionClient.ValidatorOutstandingRewards(r.Ctx, &distributiontypes.QueryValidatorOutstandingRewardsRequest{
-		ValidatorAddress: validators[1].OperatorAddress,
-	})
-	require.NoError(r, err)
-	fmt.Printf("Validator 1 outstanding rewards: %+v\n", res2)
+	// res3, err := r.DistributionClient.ValidatorCommission(r.Ctx, &distributiontypes.QueryValidatorCommissionRequest{
+	// 	ValidatorAddress: validators[0].OperatorAddress,
+	// })
+	// require.NoError(r, err)
+	// fmt.Printf("Validator 0 commission: %+v\n", res3)
 
-	res3, err = r.DistributionClient.ValidatorCommission(r.Ctx, &distributiontypes.QueryValidatorCommissionRequest{
-		ValidatorAddress: validators[1].OperatorAddress,
-	})
-	require.NoError(r, err)
-	fmt.Printf("Validator 1 commission: %+v\n", res3)
+	// // Validator 1
+	// res, err = r.DistributionClient.ValidatorDistributionInfo(
+	// 	r.Ctx,
+	// 	&distributiontypes.QueryValidatorDistributionInfoRequest{
+	// 		ValidatorAddress: validators[1].OperatorAddress,
+	// 	},
+	// )
+	// require.NoError(r, err)
+	// fmt.Printf("Validator 1 distribution info: %+v\n", res)
+
+	// res2, err = r.DistributionClient.ValidatorOutstandingRewards(r.Ctx, &distributiontypes.QueryValidatorOutstandingRewardsRequest{
+	// 	ValidatorAddress: validators[1].OperatorAddress,
+	// })
+	// require.NoError(r, err)
+	// fmt.Printf("Validator 1 outstanding rewards: %+v\n", res2)
+
+	// res3, err = r.DistributionClient.ValidatorCommission(r.Ctx, &distributiontypes.QueryValidatorCommissionRequest{
+	// 	ValidatorAddress: validators[1].OperatorAddress,
+	// })
+	// require.NoError(r, err)
+	// fmt.Printf("Validator 1 commission: %+v\n", res3)
 }
 
 func checkCosmosBalance(r *runner.E2ERunner, address types.AccAddress, denom string) *big.Int {
@@ -172,7 +175,7 @@ func checkCosmosBalance(r *runner.E2ERunner, address types.AccAddress, denom str
 	return bal.Balance.Amount.BigInt()
 }
 
-func resetTest(r *runner.E2ERunner, lockerAddress common.Address, previousGasLimit uint64) {
+func resetTest(r *runner.E2ERunner, lockerAddress common.Address, previousGasLimit uint64, amount *big.Int) {
 	r.ZEVMAuth.GasLimit = previousGasLimit
 
 	// Reset the allowance to 0; this is needed when running upgrade tests where this test runs twice.
@@ -180,4 +183,14 @@ func resetTest(r *runner.E2ERunner, lockerAddress common.Address, previousGasLim
 	require.NoError(r, err)
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "Resetting allowance failed")
+
+	// Reset balance to 0 for spender; this is needed when running upgrade tests where this test runs twice.
+	tx, err = r.ERC20ZRC20.Transfer(
+		r.ZEVMAuth,
+		common.HexToAddress("0x000000000000000000000000000000000000dEaD"),
+		amount,
+	)
+	require.NoError(r, err)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt, "Resetting balance failed")
 }
