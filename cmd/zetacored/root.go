@@ -268,7 +268,7 @@ func (ac appCreator) newApp(
 	)
 }
 
-// appExport creates a new simapp (optionally at a given height)
+// appExport is used to export the state of the application for a genesis file.
 func (ac appCreator) appExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
 	appOpts servertypes.AppOptions,
