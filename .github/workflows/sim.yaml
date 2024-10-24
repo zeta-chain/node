@@ -1,0 +1,90 @@
+name: Simulation Tests Workflow
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      make-targets:
+        description: 'Comma separated list of make targets to run (e.g., test-sim-nondeterminism, test-sim-fullappsimulation)'
+        required: true
+        default: ''
+
+concurrency:
+  group: simulation-${{ github.head_ref || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  matrix-conditionals:
+    runs-on: ubuntu-22.04
+    outputs:
+      SIM_TEST_NOND: ${{ steps.matrix-conditionals.outputs.SIM_TEST_NOND }}
+      SIM_TEST_FULL: ${{ steps.matrix-conditionals.outputs.SIM_TEST_FULL }}
+      SIM_TEST_IMPORT_EXPORT: ${{ steps.matrix-conditionals.outputs.SIM_TEST_IMPORT_EXPORT }}
+      SIM_TEST_AFTER_IMPORT: ${{ steps.matrix-conditionals.outputs.SIM_TEST_AFTER_IMPORT }}
+    steps:
+      - id: matrix-conditionals
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const makeTargets = context.payload.inputs['make-targets'].split(',');
+            core.setOutput('SIM_TEST_NOND', makeTargets.includes('test-sim-nondeterminism'));
+            core.setOutput('SIM_TEST_FULL', makeTargets.includes('test-sim-fullappsimulation'));
+            core.setOutput('SIM_TEST_IMPORT_EXPORT', makeTargets.includes('test-sim-import-export'));
+            core.setOutput('SIM_TEST_AFTER_IMPORT', makeTargets.includes('test-sim-after-import'));
+
+  simulation-tests:
+    needs: matrix-conditionals
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - make-target: "test-sim-nondeterminism"
+            runs-on: ubuntu-22.04
+            run: ${{ needs.matrix-conditionals.outputs.SIM_TEST_NOND == 'true' }}
+          - make-target: "test-sim-fullappsimulation"
+            runs-on: ubuntu-22.04
+            run: ${{ needs.matrix-conditionals.outputs.SIM_TEST_FULL == 'true' }}
+          - make-target: "test-sim-import-export"
+            runs-on: ubuntu-22.04
+            run: ${{ needs.matrix-conditionals.outputs.SIM_TEST_IMPORT_EXPORT == 'true' }}
+          - make-target: "test-sim-after-import"
+            runs-on: ubuntu-22.04
+            run: ${{ needs.matrix-conditionals.outputs.SIM_TEST_AFTER_IMPORT == 'true' }}
+    name: ${{ matrix.make-target }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: Install dependencies
+        run: make runsim
+
+      - name: Run ${{ matrix.make-target }}
+        run: |
+          make ${{ matrix.make-target }}
+
+  sim-ok:
+    runs-on: ubuntu-22.04
+    needs:
+      - matrix-conditionals
+      - simulation-tests
+    if: always()
+    steps:
+      - name: Aggregate Results
+        run: |
+          result="${{ needs.simulation-tests.result }}"
+          if [[ $result == "success" || $result == "skipped" ]]; then
+            exit 0
+          else
+            exit 1
+          fi
