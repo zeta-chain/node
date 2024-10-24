@@ -136,7 +136,7 @@ func (t *Trie) GenerateProof(txIndex int) (*Proof, error) {
 	// #nosec G115 checked as non-negative
 	indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(txIndex))
 	proof := NewProof()
-	err := t.Prove(indexBuf, 0, proof)
+	err := t.Prove(indexBuf, proof)
 	if err != nil {
 		return nil, err
 	}
@@ -146,8 +146,7 @@ func (t *Trie) GenerateProof(txIndex int) (*Proof, error) {
 // NewTrie builds a trie from a DerivableList. The DerivableList must be types.Transactions
 // or types.Receipts.
 func NewTrie(list types.DerivableList) Trie {
-	hasher := new(trie.Trie)
-	hasher.Reset()
+	hasher := trie.NewEmpty(nil)
 
 	valueBuf := encodeBufferPool.Get().(*bytes.Buffer)
 	defer encodeBufferPool.Put(valueBuf)
@@ -160,18 +159,18 @@ func NewTrie(list types.DerivableList) Trie {
 		// #nosec G115 iterator
 		indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(i))
 		value := encodeForDerive(list, i, valueBuf)
-		hasher.Update(indexBuf, value)
+		_ = hasher.Update(indexBuf, value)
 	}
 	if list.Len() > 0 {
 		indexBuf = rlp.AppendUint64(indexBuf[:0], 0)
 		value := encodeForDerive(list, 0, valueBuf)
-		hasher.Update(indexBuf, value)
+		_ = hasher.Update(indexBuf, value)
 	}
 	for i := 0x80; i < list.Len(); i++ {
 		// #nosec G115 iterator
 		indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(i))
 		value := encodeForDerive(list, i, valueBuf)
-		hasher.Update(indexBuf, value)
+		_ = hasher.Update(indexBuf, value)
 	}
 	return Trie{hasher}
 }

@@ -27,7 +27,7 @@ type FungibleEVMKeeper struct {
 }
 
 // ApplyMessage provides a mock function with given fields: ctx, msg, tracer, commit
-func (_m *FungibleEVMKeeper) ApplyMessage(ctx types.Context, msg core.Message, tracer vm.EVMLogger, commit bool) (*evmtypes.MsgEthereumTxResponse, error) {
+func (_m *FungibleEVMKeeper) ApplyMessage(ctx types.Context, msg *core.Message, tracer vm.EVMLogger, commit bool) (*evmtypes.MsgEthereumTxResponse, error) {
 	ret := _m.Called(ctx, msg, tracer, commit)
 
 	if len(ret) == 0 {
@@ -36,10 +36,10 @@ func (_m *FungibleEVMKeeper) ApplyMessage(ctx types.Context, msg core.Message, t
 
 	var r0 *evmtypes.MsgEthereumTxResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, core.Message, vm.EVMLogger, bool) (*evmtypes.MsgEthereumTxResponse, error)); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, *core.Message, vm.EVMLogger, bool) (*evmtypes.MsgEthereumTxResponse, error)); ok {
 		return rf(ctx, msg, tracer, commit)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, core.Message, vm.EVMLogger, bool) *evmtypes.MsgEthereumTxResponse); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, *core.Message, vm.EVMLogger, bool) *evmtypes.MsgEthereumTxResponse); ok {
 		r0 = rf(ctx, msg, tracer, commit)
 	} else {
 		if ret.Get(0) != nil {
@@ -47,7 +47,7 @@ func (_m *FungibleEVMKeeper) ApplyMessage(ctx types.Context, msg core.Message, t
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, core.Message, vm.EVMLogger, bool) error); ok {
+	if rf, ok := ret.Get(1).(func(types.Context, *core.Message, vm.EVMLogger, bool) error); ok {
 		r1 = rf(ctx, msg, tracer, commit)
 	} else {
 		r1 = ret.Error(1)

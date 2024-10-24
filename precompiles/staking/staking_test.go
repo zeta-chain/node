@@ -10,6 +10,7 @@ import (
 
 	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/holiman/uint256"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -78,7 +79,7 @@ func setup(t *testing.T) (sdk.Context, *Contract, abi.ABI, keeper.SDKKeepers, *v
 	mockVMContract := vm.NewContract(
 		contractRef{address: common.Address{}},
 		contractRef{address: ContractAddress},
-		big.NewInt(0),
+		uint256.NewInt(0),
 		0,
 	)
 	return ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract

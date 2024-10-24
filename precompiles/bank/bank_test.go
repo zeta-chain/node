@@ -2,12 +2,12 @@ package bank
 
 import (
 	"encoding/json"
-	"math/big"
 	"testing"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/holiman/uint256"
 	"github.com/stretchr/testify/require"
 	ethermint "github.com/zeta-chain/ethermint/types"
 	"github.com/zeta-chain/node/testutil/keeper"
@@ -139,7 +139,7 @@ func Test_getEVMCallerAddress(t *testing.T) {
 	mockVMContract := vm.NewContract(
 		contractRef{address: common.Address{}},
 		contractRef{address: ContractAddress},
-		big.NewInt(0),
+		uint256.NewInt(0),
 		0,
 	)
 

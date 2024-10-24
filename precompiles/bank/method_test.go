@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/holiman/uint256"
 	"github.com/stretchr/testify/require"
 	ethermint "github.com/zeta-chain/ethermint/types"
 	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
@@ -550,7 +551,7 @@ func setupChain(t *testing.T) testSuite {
 	mockVMContract := vm.NewContract(
 		contractRef{address: common.Address{}},
 		contractRef{address: ContractAddress},
-		big.NewInt(0),
+		uint256.NewInt(0),
 		0,
 	)
 

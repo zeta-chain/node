@@ -11,5 +11,10 @@ replace (
     github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 )
 
+// go-ethereum fork must be used as it removes incompatible pebbledb version
+replace (
+    github.com/ethereum/go-ethereum => github.com/zeta-chain/go-ethereum v1.13.16-0.20241022183758-422c6ef93ccc
+)
+
 // uncomment this for local development/testing/debugging
 // replace github.com/zeta-chain/node => ../..
