@@ -2,7 +2,7 @@ package staking
 
 const (
 	DistributeMethodName = "distribute"
-	DisitributeEventName = "Distributed"
+	DistributeEventName  = "Distributed"
 	DistributeMethodGas  = 10000
 
 	GetAllValidatorsMethodName = "getAllValidators"

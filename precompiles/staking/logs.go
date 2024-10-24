@@ -125,7 +125,7 @@ func (c *Contract) addDistributeLog(
 	zrc20Token common.Address,
 	amount *big.Int,
 ) error {
-	event := c.Abi().Events[DisitributeEventName]
+	event := c.Abi().Events[DistributeEventName]
 
 	topics, err := logs.MakeTopics(
 		event,
