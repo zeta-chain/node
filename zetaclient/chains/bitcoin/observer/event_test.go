@@ -121,6 +121,7 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 	// test cases
 	tests := []struct {
 		name             string
+		chainID          int64
 		event            *observer.BTCInboundEvent
 		expectedMemoStd  *memo.InboundMemo
 		expectedReceiver common.Address
@@ -128,7 +129,8 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 		errMsg           string
 	}{
 		{
-			name: "should decode standard memo bytes successfully",
+			name:    "should decode standard memo bytes successfully",
+			chainID: chains.BitcoinTestnet.ChainId,
 			event: &observer.BTCInboundEvent{
 				// a deposit and call
 				MemoBytes: testutil.HexToBytes(
@@ -150,7 +152,8 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 			},
 		},
 		{
-			name: "should fall back to legacy memo successfully",
+			name:    "should fall back to legacy memo successfully",
+			chainID: chains.BitcoinTestnet.ChainId,
 			event: &observer.BTCInboundEvent{
 				// raw address + payload
 				MemoBytes: testutil.HexToBytes(t, "2d07a9cbd57dcca3e2cf966c88bc874445b6e3b668656c6c6f207361746f736869"),
@@ -158,14 +161,28 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 			expectedReceiver: common.HexToAddress("0x2D07A9CBd57DCca3E2cF966C88Bc874445b6E3B6"),
 		},
 		{
-			name: "should do nothing for donation message",
+			name:    "should disable standard memo for Bitcoin mainnet",
+			chainID: chains.BitcoinMainnet.ChainId,
+			event: &observer.BTCInboundEvent{
+				// a deposit and call
+				MemoBytes: testutil.HexToBytes(
+					t,
+					"5a0110032d07a9cbd57dcca3e2cf966c88bc874445b6e3b60d68656c6c6f207361746f736869",
+				),
+			},
+			expectedReceiver: common.HexToAddress("0x5A0110032d07A9cbd57dcCa3e2Cf966c88bC8744"),
+		},
+		{
+			name:    "should do nothing for donation message",
+			chainID: chains.BitcoinTestnet.ChainId,
 			event: &observer.BTCInboundEvent{
 				MemoBytes: []byte(constant.DonationMessage),
 			},
 			donation: true,
 		},
 		{
-			name: "should return error if standard memo contains improper data",
+			name:    "should return error if standard memo contains improper data",
+			chainID: chains.BitcoinTestnet.ChainId,
 			event: &observer.BTCInboundEvent{
 				// a deposit and call, receiver is empty ZEVM address
 				MemoBytes: testutil.HexToBytes(
@@ -176,7 +193,8 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 			errMsg: "standard memo contains improper data",
 		},
 		{
-			name: "should return error if standard memo validation failed",
+			name:    "should return error if standard memo validation failed",
+			chainID: chains.BitcoinTestnet.ChainId,
 			event: &observer.BTCInboundEvent{
 				// a no asset call opCode passed, not supported at the moment
 				MemoBytes: testutil.HexToBytes(
@@ -190,7 +208,7 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.event.DecodeMemoBytes(chains.BitcoinTestnet.ChainId)
+			err := tt.event.DecodeMemoBytes(tt.chainID)
 			if tt.errMsg != "" {
 				require.Contains(t, err.Error(), tt.errMsg)
 				return

@@ -77,7 +77,7 @@ func (r *E2ERunner) GetTop20UTXOsForTssAddress() ([]btcjson.ListUnspentResult, e
 	return utxos, nil
 }
 
-// DepositBTCWithAmount deposits BTC into ZetaChain with a specific amount
+// DepositBTCWithAmount deposits BTC into ZetaChain with a specific amount and memo
 func (r *E2ERunner) DepositBTCWithAmount(amount float64, memo *memo.InboundMemo) *chainhash.Hash {
 	// list deployer utxos
 	utxos, err := r.ListDeployerUTXOs()
@@ -176,16 +176,21 @@ func (r *E2ERunner) DepositBTC() {
 }
 
 // DepositBTCWithLegacyMemo deposits BTC from the deployer address to the TSS using legacy memo
+//
+// The legacy memo layout: [20-byte receiver] + [payload]
 func (r *E2ERunner) DepositBTCWithLegacyMemo(
 	amount float64,
 	inputUTXOs []btcjson.ListUnspentResult,
 ) (*chainhash.Hash, error) {
 	r.Logger.Info("⏳ depositing BTC into ZEVM with legacy memo")
 
-	return r.SendToTSSFromDeployerWithMemo(amount, inputUTXOs, r.EVMAddress().Bytes())
+	// payload is not needed for pure deposit
+	memoBytes := r.EVMAddress().Bytes()
+
+	return r.SendToTSSFromDeployerWithMemo(amount, inputUTXOs, memoBytes)
 }
 
-// DepositBTCWithStandardMemo deposits BTC from the deployer address to the TSS using standard memo
+// DepositBTCWithStandardMemo deposits BTC from the deployer address to the TSS using standard `InboundMemo` struct
 func (r *E2ERunner) DepositBTCWithStandardMemo(
 	amount float64,
 	inputUTXOs []btcjson.ListUnspentResult,
