@@ -183,7 +183,7 @@ func (gw *Gateway) parseOutbound(tx ton.Transaction) (*Transaction, error) {
 		return nil, errors.Wrapf(ErrUnknownOp, "op code %d", op)
 	}
 
-	withdrawal, err := parseWithdrawal(sig, payload)
+	withdrawal, err := parseWithdrawal(tx, sig, payload)
 	if err != nil {
 		return nil, errParse(err, "unable to parse withdrawal")
 	}
@@ -211,7 +211,7 @@ func parseExternalMessage(b *boc.Cell) ([65]byte, *boc.Cell, error) {
 	return sigArray, payload, err
 }
 
-func parseWithdrawal(sig [65]byte, payload *boc.Cell) (Withdrawal, error) {
+func parseWithdrawal(tx ton.Transaction, sig [65]byte, payload *boc.Cell) (Withdrawal, error) {
 	// Note that ECDSA sig has the following order: (v, r, s) but in EVM we have (r, s, v)
 	var sigFlipped [65]byte
 
@@ -233,14 +233,51 @@ func parseWithdrawal(sig [65]byte, payload *boc.Cell) (Withdrawal, error) {
 		return Withdrawal{}, errors.Wrap(err, "unable to unmarshal payload")
 	}
 
+	recipientAddr, err := parseAccount(recipient)
+	if err != nil {
+		return Withdrawal{}, errors.Wrap(err, "unable to parse recipient from payload")
+	}
+
+	// ensure that out msg contains the same amount as withdrawal
+	if tx.OutMsgCnt != 1 {
+		return Withdrawal{}, errors.Wrap(ErrParse, "invalid out messages count")
+	}
+
+	// tlb.Message
+	outMsg := tx.Msgs.OutMsgs.Values()[0].Value
+	if outMsg.Info.SumType != "IntMsgInfo" {
+		return Withdrawal{}, errors.Wrap(ErrParse, "invalid out message")
+	}
+
+	msgRecipientAddr, err := parseAccount(outMsg.Info.IntMsgInfo.Dest)
+
+	switch {
+	case err != nil:
+		return Withdrawal{}, errors.Wrap(err, "unable to parse recipient from out msg")
+	case recipientAddr != msgRecipientAddr:
+		// should not happen
+		return Withdrawal{}, errors.Wrap(ErrParse, "recipient mismatch")
+	case amount != outMsg.Info.IntMsgInfo.Value.Grams:
+		// should not happen
+		return Withdrawal{}, errors.Wrap(ErrParse, "amount mismatch")
+	}
+
 	return Withdrawal{
-		Recipient: ton.AccountID{
-			Workchain: int32(recipient.AddrStd.WorkchainId),
-			Address:   recipient.AddrStd.Address,
-		},
-		Amount: math.NewUint(uint64(amount)),
-		Seqno:  seqno,
-		Sig:    sigFlipped,
+		Recipient: recipientAddr,
+		Amount:    math.NewUint(uint64(amount)),
+		Seqno:     seqno,
+		Sig:       sigFlipped,
+	}, nil
+}
+
+func parseAccount(raw tlb.MsgAddress) (ton.AccountID, error) {
+	if raw.SumType != "AddrStd" {
+		return ton.AccountID{}, errors.Wrapf(ErrParse, "invalid address type %s", raw.SumType)
+	}
+
+	return ton.AccountID{
+		Workchain: int32(raw.AddrStd.WorkchainId),
+		Address:   raw.AddrStd.Address,
 	}, nil
 }
 
