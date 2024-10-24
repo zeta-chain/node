@@ -148,7 +148,7 @@ func SetupTSSServer(
 	cfg config.Config,
 	tssPassword string,
 	enableMonitor bool,
-	whitelistedPeers []string,
+	whitelistedPeers []gopeer.ID,
 ) (*tss.TssServer, error) {
 	bootstrapPeers := peer
 	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
