@@ -40,22 +40,19 @@ jobs:
 
   simulation-tests:
     needs: matrix-conditionals
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
         include:
           - make-target: "test-sim-nondeterminism"
-            runs-on: ubuntu-22.04
-            run: ${{ needs.matrix-conditionals.outputs.SIM_TEST_NOND == 'true' }}
+            condition: ${{ needs.matrix-conditionals.outputs.SIM_TEST_NOND == 'true' }}
           - make-target: "test-sim-fullappsimulation"
-            runs-on: ubuntu-22.04
-            run: ${{ needs.matrix-conditionals.outputs.SIM_TEST_FULL == 'true' }}
+            condition: ${{ needs.matrix-conditionals.outputs.SIM_TEST_FULL == 'true' }}
           - make-target: "test-sim-import-export"
-            runs-on: ubuntu-22.04
-            run: ${{ needs.matrix-conditionals.outputs.SIM_TEST_IMPORT_EXPORT == 'true' }}
+            condition: ${{ needs.matrix-conditionals.outputs.SIM_TEST_IMPORT_EXPORT == 'true' }}
           - make-target: "test-sim-after-import"
-            runs-on: ubuntu-22.04
-            run: ${{ needs.matrix-conditionals.outputs.SIM_TEST_AFTER_IMPORT == 'true' }}
+            condition: ${{ needs.matrix-conditionals.outputs.SIM_TEST_AFTER_IMPORT == 'true' }}
     name: ${{ matrix.make-target }}
     steps:
       - name: Checkout code
@@ -70,6 +67,7 @@ jobs:
         run: make runsim
 
       - name: Run ${{ matrix.make-target }}
+        if: ${{ matrix.condition }}
         run: |
           make ${{ matrix.make-target }}
 
