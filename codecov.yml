@@ -81,3 +81,4 @@ ignore:
   - "precompiles/**/*.json"
   - "precompiles/**/*.sol"
   - "precompiles/**/*.gen.go"
+  - "tests/simulation/**/*"

@@ -198,10 +198,10 @@ func TestFullAppSimulation(t *testing.T) {
 
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Errorf("Error closing new database: %v", err)
+			require.NoError(t, err, "Error closing new database")
 		}
 		if err := os.RemoveAll(dir); err != nil {
-			t.Errorf("Error removing directory %s: %v", dir, err)
+			require.NoError(t, err, "Error removing directory")
 		}
 	}()
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
@@ -261,10 +261,10 @@ func TestAppImportExport(t *testing.T) {
 
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Errorf("Error closing new database: %v", err)
+			require.NoError(t, err, "Error closing new database")
 		}
 		if err := os.RemoveAll(dir); err != nil {
-			t.Errorf("Error removing directory %s: %v", dir, err)
+			require.NoError(t, err, "Error removing directory")
 		}
 	}()
 
@@ -316,10 +316,10 @@ func TestAppImportExport(t *testing.T) {
 
 	defer func() {
 		if err := newDB.Close(); err != nil {
-			t.Errorf("Error closing new database: %v", err)
+			require.NoError(t, err, "Error closing new database")
 		}
 		if err := os.RemoveAll(newDir); err != nil {
-			t.Errorf("Error removing directory %s: %v", newDir, err)
+			require.NoError(t, err, "Error removing directory")
 		}
 	}()
 
@@ -342,23 +342,24 @@ func TestAppImportExport(t *testing.T) {
 			if !strings.Contains(err, "validator set is empty after InitGenesis") {
 				panic(r)
 			}
-			logger.Info("Skipping simulation as all validators have been unbonded")
-			logger.Info("err", err, "stacktrace", string(debug.Stack()))
+			t.Log("Skipping simulation as all validators have been unbonded")
+			t.Log("err", err, "stacktrace", string(debug.Stack()))
 		}
 	}()
 
-	ctxA := simApp.NewContext(true, tmproto.Header{
+	// Create context for the old and the new sim app, which can be used to compare keys
+	ctxSimApp := simApp.NewContext(true, tmproto.Header{
 		Height:  simApp.LastBlockHeight(),
 		ChainID: SimAppChainID,
 	}).WithChainID(SimAppChainID)
-	ctxB := newSimApp.NewContext(true, tmproto.Header{
+	ctxNewSimApp := newSimApp.NewContext(true, tmproto.Header{
 		Height:  simApp.LastBlockHeight(),
 		ChainID: SimAppChainID,
 	}).WithChainID(SimAppChainID)
 
 	// Use genesis state from the first app to initialize the second app
-	newSimApp.ModuleManager().InitGenesis(ctxB, newSimApp.AppCodec(), genesisState)
-	newSimApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
+	newSimApp.ModuleManager().InitGenesis(ctxNewSimApp, newSimApp.AppCodec(), genesisState)
+	newSimApp.StoreConsensusParams(ctxNewSimApp, exported.ConsensusParams)
 
 	t.Log("comparing stores")
 	// The ordering of the keys is not important, we compare the same prefix for both simulations
@@ -381,8 +382,8 @@ func TestAppImportExport(t *testing.T) {
 	}
 
 	for _, skp := range storeKeysPrefixes {
-		storeA := ctxA.KVStore(skp.A)
-		storeB := ctxB.KVStore(skp.B)
+		storeA := ctxSimApp.KVStore(skp.A)
+		storeB := ctxNewSimApp.KVStore(skp.B)
 
 		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, skp.Prefixes)
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
@@ -423,10 +424,10 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Errorf("Error closing new database: %v", err)
+			require.NoError(t, err, "Error closing new database")
 		}
 		if err := os.RemoveAll(dir); err != nil {
-			t.Errorf("Error removing directory %s: %v", dir, err)
+			require.NoError(t, err, "Error removing directory")
 		}
 	}()
 
@@ -485,10 +486,10 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	defer func() {
 		if err := newDB.Close(); err != nil {
-			t.Errorf("Error closing new database: %v", err)
+			require.NoError(t, err, "Error closing new database")
 		}
 		if err := os.RemoveAll(newDir); err != nil {
-			t.Errorf("Error removing directory %s: %v", newDir, err)
+			require.NoError(t, err, "Error removing directory")
 		}
 	}()
 
