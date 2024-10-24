@@ -32,7 +32,11 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const makeTargets = context.payload.inputs['make-targets'].split(',');
+            const makeTargetsInput = context.payload.inputs ? context.payload.inputs['make-targets'] : null;
+            const defaultTargets = ['test-sim-nondeterminism', 'test-sim-fullappsimulation', 'test-sim-import-export', 'test-sim-after-import'];
+
+            const makeTargets = makeTargetsInput ? makeTargetsInput.split(',') : defaultTargets;
+
             core.setOutput('SIM_TEST_NOND', makeTargets.includes('test-sim-nondeterminism'));
             core.setOutput('SIM_TEST_FULL', makeTargets.includes('test-sim-fullappsimulation'));
             core.setOutput('SIM_TEST_IMPORT_EXPORT', makeTargets.includes('test-sim-import-export'));
