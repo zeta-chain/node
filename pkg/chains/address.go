@@ -70,7 +70,8 @@ func DecodeBtcAddress(inputAddress string, chainID int64) (address btcutil.Addre
 		return nil, fmt.Errorf("chain params not found")
 	}
 
-	// try decoding input address as a Bitcoin address
+	// try decoding input address as a Bitcoin address.
+	// this will decode all types of Bitcoin addresses: P2PKH, P2SH, P2WPKH, P2WSH, P2TR, etc.
 	address, err = btcutil.DecodeAddress(inputAddress, chainParams)
 	if err != nil {
 		return nil, fmt.Errorf("decode address failed: %s, for input address %s", err.Error(), inputAddress)
