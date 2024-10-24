@@ -298,6 +298,8 @@ func (ac appCreator) appExport(
 		appOpts,
 	)
 
+	// If height is -1, it means we are using the latest height.
+	// For all other cases, we load the specified height from the Store
 	if height != -1 {
 		err := zetaApp.LoadHeight(height)
 		if err != nil {
