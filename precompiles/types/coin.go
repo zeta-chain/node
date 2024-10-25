@@ -28,7 +28,7 @@ func CreateCoinSet(tokenDenom string, amount *big.Int) (sdk.Coins, error) {
 
 	// A sdk.Coins (type []sdk.Coin) has to be created because it's the type expected by MintCoins
 	// and SendCoinsFromModuleToAccount.
-	// But sdk.Coins will only contain one coin, always.
+	// But coinSet will only contain one coin, always.
 	coinSet := sdk.NewCoins(coin)
 	if !coinSet.IsValid() || coinSet.Empty() || coinSet.IsAnyNil() || coinSet == nil {
 		return nil, &ErrInvalidCoin{
