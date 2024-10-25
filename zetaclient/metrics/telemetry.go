@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"net/http"
 	"sync"
 	"time"
@@ -30,6 +31,7 @@ type TelemetryServer struct {
 	status                 types.Status
 	ipAddress              string
 	HotKeyBurnRate         *BurnRate
+	connectedPeers         []peer.AddrInfo
 }
 
 // NewTelemetryServer should only listen to the loopback
@@ -39,6 +41,7 @@ func NewTelemetryServer() *TelemetryServer {
 		lastScannedBlockNumber: make(map[int64]uint64),
 		lastStartTimestamp:     time.Now(),
 		HotKeyBurnRate:         NewBurnRate(100),
+		connectedPeers:         make([]peer.AddrInfo, 0),
 	}
 	s := &http.Server{
 		Addr:              ":8123",
@@ -48,6 +51,18 @@ func NewTelemetryServer() *TelemetryServer {
 	}
 	hs.s = s
 	return hs
+}
+
+func (t *TelemetryServer) SetConnectedPeers(peers []peer.AddrInfo) {
+	t.mu.Lock()
+	t.connectedPeers = peers
+	t.mu.Unlock()
+}
+
+func (t *TelemetryServer) GetConnectedPeers() []peer.AddrInfo {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.connectedPeers
 }
 
 // SetP2PID sets p2pid
@@ -145,7 +160,7 @@ func (t *TelemetryServer) Handlers() http.Handler {
 	router.Handle("/status", http.HandlerFunc(t.statusHandler)).Methods(http.MethodGet)
 	router.Handle("/ip", http.HandlerFunc(t.ipHandler)).Methods(http.MethodGet)
 	router.Handle("/hotkeyburnrate", http.HandlerFunc(t.hotKeyFeeBurnRate)).Methods(http.MethodGet)
-
+	router.Handle("/connectedpeers", http.HandlerFunc(t.connectedPeersHandler)).Methods(http.MethodGet)
 	router.Use(logMiddleware())
 
 	return router
@@ -184,17 +199,14 @@ func (t *TelemetryServer) pingHandler(w http.ResponseWriter, _ *http.Request) {
 // p2pHandler returns the p2p id
 func (t *TelemetryServer) p2pHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	fmt.Fprintf(w, "%s", t.p2pid)
+	fmt.Fprintf(w, "%s", t.GetP2PID())
 }
 
 // ipHandler returns the ip address
 func (t *TelemetryServer) ipHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	fmt.Fprintf(w, "%s", t.ipAddress)
+
+	fmt.Fprintf(w, "%s", t.GetIPAddress())
 }
 
 func (t *TelemetryServer) lastScannedBlockHandler(w http.ResponseWriter, _ *http.Request) {
@@ -249,6 +261,13 @@ func (t *TelemetryServer) hotKeyFeeBurnRate(w http.ResponseWriter, _ *http.Reque
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	fmt.Fprintf(w, "%v", t.HotKeyBurnRate.GetBurnRate())
+}
+
+func (t *TelemetryServer) connectedPeersHandler(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	peers := t.GetConnectedPeers()
+	data, _ := json.Marshal(peers)
+	fmt.Fprintf(w, "%s", string(data))
 }
 
 // logMiddleware logs the incoming HTTP request

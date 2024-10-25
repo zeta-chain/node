@@ -236,8 +236,9 @@ func start(_ *cobra.Command, _ []string) error {
 	go func() {
 		for {
 			time.Sleep(10 * time.Second)
-			peers := server.GetKnownPeers()
-			metrics.NumConnectedPeers.Set(float64(len(peers)))
+			ps := server.GetKnownPeers()
+			metrics.NumConnectedPeers.Set(float64(len(ps)))
+			telemetryServer.SetConnectedPeers(ps)
 		}
 	}()
 
