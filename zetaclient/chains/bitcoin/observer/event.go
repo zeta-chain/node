@@ -63,7 +63,7 @@ type BTCInboundEvent struct {
 }
 
 // Processability returns the processability of the inbound event
-func (event BTCInboundEvent) Processability() InboundProcessability {
+func (event *BTCInboundEvent) Processability() InboundProcessability {
 	// compliance check on sender and receiver addresses
 	if config.ContainRestrictedAddress(event.FromAddress, event.ToAddress) {
 		return InboundProcessabilityComplianceViolation
