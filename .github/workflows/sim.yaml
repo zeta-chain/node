@@ -1,4 +1,4 @@
-name: Simulation Tests Workflow
+name: sim
 
 on:
   push:
