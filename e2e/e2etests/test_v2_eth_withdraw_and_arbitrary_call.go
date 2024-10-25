@@ -24,7 +24,7 @@ func TestV2ETHWithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw
-	tx := r.V2ETHWithdrawAndCall(
+	tx := r.V2ETHWithdrawAndArbitraryCall(
 		r.TestDAppV2EVMAddr,
 		amount,
 		r.EncodeGasCall(payloadMessageWithdrawETH),

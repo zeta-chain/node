@@ -20,9 +20,9 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/pkg/memo"
 	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/evm"
@@ -239,6 +239,12 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 			Err(err).
 			Msgf("ObserveInbound: error observing call events from Gateway contract")
 	}
+	lastScannedGatewayDepositAndCall, err := ob.ObserveGatewayDepositAndCall(ctx, startBlock, toBlock)
+	if err != nil {
+		ob.Logger().Inbound.Error().
+			Err(err).
+			Msgf("ObserveInbound: error observing depositAndCall events from Gateway contract")
+	}
 
 	// note: using lowest height for all 3 events is not perfect, but it's simple and good enough
 	lastScannedLowest := lastScannedZetaSent
@@ -253,6 +259,9 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 	}
 	if lastScannedGatewayCall < lastScannedLowest {
 		lastScannedLowest = lastScannedGatewayCall
+	}
+	if lastScannedGatewayDepositAndCall < lastScannedLowest {
+		lastScannedLowest = lastScannedGatewayDepositAndCall
 	}
 
 	// update last scanned block height for all 3 events (ZetaSent, Deposited, TssRecvd), ignore db error
@@ -622,7 +631,7 @@ func (ob *Observer) BuildInboundVoteMsgForDepositedEvent(
 ) *types.MsgVoteInbound {
 	// compliance check
 	maybeReceiver := ""
-	parsedAddress, _, err := chains.ParseAddressAndData(hex.EncodeToString(event.Message))
+	parsedAddress, _, err := memo.DecodeLegacyMemoHex(hex.EncodeToString(event.Message))
 	if err == nil && parsedAddress != (ethcommon.Address{}) {
 		maybeReceiver = parsedAddress.Hex()
 	}
@@ -732,7 +741,7 @@ func (ob *Observer) BuildInboundVoteMsgForTokenSentToTSS(
 
 	// compliance check
 	maybeReceiver := ""
-	parsedAddress, _, err := chains.ParseAddressAndData(message)
+	parsedAddress, _, err := memo.DecodeLegacyMemoHex(message)
 	if err == nil && parsedAddress != (ethcommon.Address{}) {
 		maybeReceiver = parsedAddress.Hex()
 	}

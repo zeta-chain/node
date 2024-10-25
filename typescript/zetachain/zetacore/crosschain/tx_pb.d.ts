@@ -669,6 +669,13 @@ export declare class MsgVoteInbound extends Message<MsgVoteInbound> {
    */
   callOptions?: CallOptions;
 
+  /**
+   * define if a smart contract call should be made with asset
+   *
+   * @generated from field: bool is_cross_chain_call = 19;
+   */
+  isCrossChainCall: boolean;
+
   constructor(data?: PartialMessage<MsgVoteInbound>);
 
   static readonly runtime: typeof proto3;

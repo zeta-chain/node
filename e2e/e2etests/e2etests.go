@@ -131,20 +131,25 @@ const (
 	*/
 	TestV2ETHDepositName                         = "v2_eth_deposit"
 	TestV2ETHDepositAndCallName                  = "v2_eth_deposit_and_call"
+	TestV2ETHDepositAndCallNoMessageName         = "v2_eth_deposit_and_call_no_message"
 	TestV2ETHDepositAndCallRevertName            = "v2_eth_deposit_and_call_revert"
 	TestV2ETHDepositAndCallRevertWithCallName    = "v2_eth_deposit_and_call_revert_with_call"
 	TestV2ETHWithdrawName                        = "v2_eth_withdraw"
 	TestV2ETHWithdrawAndArbitraryCallName        = "v2_eth_withdraw_and_arbitrary_call"
 	TestV2ETHWithdrawAndCallName                 = "v2_eth_withdraw_and_call"
+	TestV2ETHWithdrawAndCallNoMessageName        = "v2_eth_withdraw_and_call_no_message"
 	TestV2ETHWithdrawAndCallThroughContractName  = "v2_eth_withdraw_and_call_through_contract"
 	TestV2ETHWithdrawAndCallRevertName           = "v2_eth_withdraw_and_call_revert"
 	TestV2ETHWithdrawAndCallRevertWithCallName   = "v2_eth_withdraw_and_call_revert_with_call"
 	TestV2ERC20DepositName                       = "v2_erc20_deposit"
 	TestV2ERC20DepositAndCallName                = "v2_erc20_deposit_and_call"
+	TestV2ERC20DepositAndCallNoMessageName       = "v2_erc20_deposit_and_call_no_message"
 	TestV2ERC20DepositAndCallRevertName          = "v2_erc20_deposit_and_call_revert"
 	TestV2ERC20DepositAndCallRevertWithCallName  = "v2_erc20_deposit_and_call_revert_with_call"
 	TestV2ERC20WithdrawName                      = "v2_erc20_withdraw"
+	TestV2ERC20WithdrawAndArbitraryCallName      = "v2_erc20_withdraw_and_arbitrary_call"
 	TestV2ERC20WithdrawAndCallName               = "v2_erc20_withdraw_and_call"
+	TestV2ERC20WithdrawAndCallNoMessageName      = "v2_erc20_withdraw_and_call_no_message"
 	TestV2ERC20WithdrawAndCallRevertName         = "v2_erc20_withdraw_and_call_revert"
 	TestV2ERC20WithdrawAndCallRevertWithCallName = "v2_erc20_withdraw_and_call_revert_with_call"
 	TestV2ZEVMToEVMArbitraryCallName             = "v2_zevm_to_evm_arbitrary_call"
@@ -740,6 +745,14 @@ var AllE2ETests = []runner.E2ETest{
 		TestV2ETHDepositAndCall,
 	),
 	runner.NewE2ETest(
+		TestV2ETHDepositAndCallNoMessageName,
+		"deposit Ether into ZEVM and call a contract using V2 contract using no message content",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000"},
+		},
+		TestV2ETHDepositAndCallNoMessage,
+	),
+	runner.NewE2ETest(
 		TestV2ETHDepositAndCallRevertName,
 		"deposit Ether into ZEVM and call a contract using V2 contract that reverts",
 		[]runner.ArgDefinition{
@@ -778,6 +791,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
 		TestV2ETHWithdrawAndCall,
+	),
+	runner.NewE2ETest(
+		TestV2ETHWithdrawAndCallNoMessageName,
+		"withdraw Ether from ZEVM call a contract using V2 contract with no message content",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000"},
+		},
+		TestV2ETHWithdrawAndCallNoMessage,
 	),
 	runner.NewE2ETest(
 		TestV2ETHWithdrawAndCallThroughContractName,
@@ -820,6 +841,14 @@ var AllE2ETests = []runner.E2ETest{
 		TestV2ERC20DepositAndCall,
 	),
 	runner.NewE2ETest(
+		TestV2ERC20DepositAndCallNoMessageName,
+		"deposit ERC20 into ZEVM and call a contract using V2 contract with no message content",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100000"},
+		},
+		TestV2ERC20DepositAndCallNoMessage,
+	),
+	runner.NewE2ETest(
 		TestV2ERC20DepositAndCallRevertName,
 		"deposit ERC20 into ZEVM and call a contract using V2 contract that reverts",
 		[]runner.ArgDefinition{
@@ -844,12 +873,24 @@ var AllE2ETests = []runner.E2ETest{
 		TestV2ERC20Withdraw,
 	),
 	runner.NewE2ETest(
-		TestV2ERC20WithdrawAndCallName,
-		"withdraw ERC20 from ZEVM and call a contract using V2 contract",
+		TestV2ERC20WithdrawAndArbitraryCallName,
+		"withdraw ERC20 from ZEVM and arbitrary call a contract using V2 contract",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
 		},
+		TestV2ERC20WithdrawAndArbitraryCall,
+	),
+	runner.NewE2ETest(
+		TestV2ERC20WithdrawAndCallName,
+		"withdraw ERC20 from ZEVM and authenticated call a contract using V2 contract",
+		[]runner.ArgDefinition{},
 		TestV2ERC20WithdrawAndCall,
+	),
+	runner.NewE2ETest(
+		TestV2ERC20WithdrawAndCallNoMessageName,
+		"withdraw ERC20 from ZEVM and authenticated call a contract using V2 contract with no message",
+		[]runner.ArgDefinition{},
+		TestV2ERC20WithdrawAndCallNoMessage,
 	),
 	runner.NewE2ETest(
 		TestV2ERC20WithdrawAndCallRevertName,
@@ -939,7 +980,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestPrecompilesStakingName,
 		"test stateful precompiled contracts staking",
 		[]runner.ArgDefinition{},
-		TestPrecompilesStaking,
+		TestPrecompilesStakingIsDisabled,
 	),
 	runner.NewE2ETest(
 		TestPrecompilesStakingThroughContractName,

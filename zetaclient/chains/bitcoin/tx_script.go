@@ -36,17 +36,6 @@ const (
 	LengthScriptP2PKH = 25
 )
 
-// PayToAddrScript creates a new script to pay a transaction output to a the
-// specified address.
-func PayToAddrScript(addr btcutil.Address) ([]byte, error) {
-	switch addr := addr.(type) {
-	case *chains.AddressTaproot:
-		return chains.PayToWitnessTaprootScript(addr.ScriptAddress())
-	default:
-		return txscript.PayToAddrScript(addr)
-	}
-}
-
 // IsPkScriptP2TR checks if the given script is a P2TR script
 func IsPkScriptP2TR(script []byte) bool {
 	return len(script) == LengthScriptP2TR && script[0] == txscript.OP_1 && script[1] == 0x20
@@ -91,7 +80,7 @@ func DecodeScriptP2TR(scriptHex string, net *chaincfg.Params) (string, error) {
 	}
 
 	witnessProg := script[2:]
-	receiverAddress, err := chains.NewAddressTaproot(witnessProg, net)
+	receiverAddress, err := btcutil.NewAddressTaproot(witnessProg, net)
 	if err != nil { // should never happen
 		return "", errors.Wrapf(err, "error getting address from script %s", scriptHex)
 	}
@@ -278,7 +267,7 @@ func DecodeTSSVout(vout btcjson.Vout, receiverExpected string, chain chains.Chai
 	// parse receiver address from vout
 	var receiverVout string
 	switch addr.(type) {
-	case *chains.AddressTaproot:
+	case *btcutil.AddressTaproot:
 		receiverVout, err = DecodeScriptP2TR(vout.ScriptPubKey.Hex, chainParams)
 	case *btcutil.AddressWitnessScriptHash:
 		receiverVout, err = DecodeScriptP2WSH(vout.ScriptPubKey.Hex, chainParams)
