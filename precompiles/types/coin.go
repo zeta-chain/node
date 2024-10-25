@@ -11,12 +11,18 @@ import (
 const ZRC20DenomPrefix = "zrc20/"
 
 // ZRC20ToCosmosDenom returns the cosmos coin address for a given ZRC20 address.
-// This is converted to "zevm/{ZRC20Address}".
+// This is converted to "zrc20/{ZRC20Address}".
 func ZRC20ToCosmosDenom(ZRC20Address common.Address) string {
 	return ZRC20DenomPrefix + ZRC20Address.String()
 }
 
 func CreateCoinSet(tokenDenom string, amount *big.Int) (sdk.Coins, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			return
+		}
+	}()
+
 	coin := sdk.NewCoin(tokenDenom, math.NewIntFromBigInt(amount))
 	if !coin.IsValid() {
 		return nil, &ErrInvalidCoin{
