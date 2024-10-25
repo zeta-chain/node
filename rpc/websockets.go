@@ -32,6 +32,7 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/ethereum/go-ethereum/params"
@@ -417,6 +418,30 @@ func (api *pubSubAPI) subscribe(wsConn *wsConn, subID rpc.ID, params []interface
 	}
 }
 
+// https://github.com/ethereum/go-ethereum/blob/release/1.11/core/types/gen_header_json.go#L18
+type Header struct {
+	ParentHash common.Hash `json:"parentHash"       gencodec:"required"`
+	UncleHash  common.Hash `json:"sha3Uncles"       gencodec:"required"`
+	// update string avoid lost checksumed miner after MarshalText
+	Coinbase        string              `json:"miner"`
+	Root            common.Hash         `json:"stateRoot"        gencodec:"required"`
+	TxHash          common.Hash         `json:"transactionsRoot" gencodec:"required"`
+	ReceiptHash     common.Hash         `json:"receiptsRoot"     gencodec:"required"`
+	Bloom           ethtypes.Bloom      `json:"logsBloom"        gencodec:"required"`
+	Difficulty      *hexutil.Big        `json:"difficulty"       gencodec:"required"`
+	Number          *hexutil.Big        `json:"number"           gencodec:"required"`
+	GasLimit        hexutil.Uint64      `json:"gasLimit"         gencodec:"required"`
+	GasUsed         hexutil.Uint64      `json:"gasUsed"          gencodec:"required"`
+	Time            hexutil.Uint64      `json:"timestamp"        gencodec:"required"`
+	Extra           hexutil.Bytes       `json:"extraData"        gencodec:"required"`
+	MixDigest       common.Hash         `json:"mixHash"`
+	Nonce           ethtypes.BlockNonce `json:"nonce"`
+	BaseFee         *hexutil.Big        `json:"baseFeePerGas" rlp:"optional"`
+	WithdrawalsHash *common.Hash        `json:"withdrawalsRoot" rlp:"optional"`
+	// overwrite rlpHash
+	Hash common.Hash `json:"hash"`
+}
+
 func (api *pubSubAPI) subscribeNewHeads(wsConn *wsConn, subID rpc.ID) (pubsub.UnsubscribeFunc, error) {
 	sub, unsubFn, err := api.events.SubscribeNewHeads()
 	if err != nil {
@@ -444,13 +469,32 @@ func (api *pubSubAPI) subscribeNewHeads(wsConn *wsConn, subID rpc.ID) (pubsub.Un
 
 				header := types.EthHeaderFromTendermint(data.Header, ethtypes.Bloom{}, baseFee)
 
+				var enc Header
+				enc.ParentHash = header.ParentHash
+				enc.UncleHash = header.UncleHash
+				enc.Coinbase = header.Coinbase.Hex()
+				enc.Root = header.Root
+				enc.TxHash = header.TxHash
+				enc.ReceiptHash = header.ReceiptHash
+				enc.Bloom = header.Bloom
+				enc.Difficulty = (*hexutil.Big)(header.Difficulty)
+				enc.Number = (*hexutil.Big)(header.Number)
+				enc.GasLimit = hexutil.Uint64(header.GasLimit)
+				enc.GasUsed = hexutil.Uint64(header.GasUsed)
+				enc.Time = hexutil.Uint64(header.Time)
+				enc.Extra = header.Extra
+				enc.MixDigest = header.MixDigest
+				enc.Nonce = header.Nonce
+				enc.BaseFee = (*hexutil.Big)(header.BaseFee)
+				enc.Hash = common.BytesToHash(data.Header.Hash())
+
 				// write to ws conn
 				res := &SubscriptionNotification{
 					Jsonrpc: "2.0",
 					Method:  "eth_subscription",
 					Params: &SubscriptionResult{
 						Subscription: subID,
-						Result:       header,
+						Result:       enc,
 					},
 				}
 
