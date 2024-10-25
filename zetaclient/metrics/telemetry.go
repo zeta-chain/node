@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/libp2p/go-libp2p/core/peer"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
@@ -55,8 +56,8 @@ func NewTelemetryServer() *TelemetryServer {
 
 func (t *TelemetryServer) SetConnectedPeers(peers []peer.AddrInfo) {
 	t.mu.Lock()
+	defer t.mu.Unlock()
 	t.connectedPeers = peers
-	t.mu.Unlock()
 }
 
 func (t *TelemetryServer) GetConnectedPeers() []peer.AddrInfo {
@@ -266,7 +267,12 @@ func (t *TelemetryServer) hotKeyFeeBurnRate(w http.ResponseWriter, _ *http.Reque
 func (t *TelemetryServer) connectedPeersHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	peers := t.GetConnectedPeers()
-	data, _ := json.Marshal(peers)
+	data, err := json.Marshal(peers)
+	if err != nil {
+		t.logger.Error().Err(err).Msg("Failed to marshal connected peers")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	fmt.Fprintf(w, "%s", string(data))
 }
 
