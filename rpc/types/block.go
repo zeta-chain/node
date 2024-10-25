@@ -217,21 +217,20 @@ type Header struct {
 	ParentHash common.Hash `json:"parentHash"       gencodec:"required"`
 	UncleHash  common.Hash `json:"sha3Uncles"       gencodec:"required"`
 	// update string avoid lost checksumed miner after MarshalText
-	Coinbase        string              `json:"miner"`
-	Root            common.Hash         `json:"stateRoot"        gencodec:"required"`
-	TxHash          common.Hash         `json:"transactionsRoot" gencodec:"required"`
-	ReceiptHash     common.Hash         `json:"receiptsRoot"     gencodec:"required"`
-	Bloom           ethtypes.Bloom      `json:"logsBloom"        gencodec:"required"`
-	Difficulty      *hexutil.Big        `json:"difficulty"       gencodec:"required"`
-	Number          *hexutil.Big        `json:"number"           gencodec:"required"`
-	GasLimit        hexutil.Uint64      `json:"gasLimit"         gencodec:"required"`
-	GasUsed         hexutil.Uint64      `json:"gasUsed"          gencodec:"required"`
-	Time            hexutil.Uint64      `json:"timestamp"        gencodec:"required"`
-	Extra           hexutil.Bytes       `json:"extraData"        gencodec:"required"`
-	MixDigest       common.Hash         `json:"mixHash"`
-	Nonce           ethtypes.BlockNonce `json:"nonce"`
-	BaseFee         *hexutil.Big        `json:"baseFeePerGas"                        rlp:"optional"`
-	WithdrawalsHash *common.Hash        `json:"withdrawalsRoot"                      rlp:"optional"`
+	Coinbase    string              `json:"miner"`
+	Root        common.Hash         `json:"stateRoot"        gencodec:"required"`
+	TxHash      common.Hash         `json:"transactionsRoot" gencodec:"required"`
+	ReceiptHash common.Hash         `json:"receiptsRoot"     gencodec:"required"`
+	Bloom       ethtypes.Bloom      `json:"logsBloom"        gencodec:"required"`
+	Difficulty  *hexutil.Big        `json:"difficulty"       gencodec:"required"`
+	Number      *hexutil.Big        `json:"number"           gencodec:"required"`
+	GasLimit    hexutil.Uint64      `json:"gasLimit"         gencodec:"required"`
+	GasUsed     hexutil.Uint64      `json:"gasUsed"          gencodec:"required"`
+	Time        hexutil.Uint64      `json:"timestamp"        gencodec:"required"`
+	Extra       hexutil.Bytes       `json:"extraData"        gencodec:"required"`
+	MixDigest   common.Hash         `json:"mixHash"`
+	Nonce       ethtypes.BlockNonce `json:"nonce"`
+	BaseFee     *hexutil.Big        `json:"baseFeePerGas"                        rlp:"optional"`
 	// overwrite rlpHash
 	Hash common.Hash `json:"hash"`
 }
