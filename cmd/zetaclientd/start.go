@@ -13,10 +13,13 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/libp2p/go-libp2p/core/peer"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"gitlab.com/thorchain/tss/go-tss/conversion"
 
 	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -205,7 +208,16 @@ func start(_ *cobra.Command, _ []string) error {
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
 	// Create TSS server
-	server, err := mc.SetupTSSServer(peers, priKey, preParams, appContext.Config(), tssKeyPass, true)
+	keygen := appContext.GetKeygen()
+	whitelistedPeers := []peer.ID{}
+	for _, pk := range keygen.GranteePubkeys {
+		pid, err := conversion.Bech32PubkeyToPeerID(pk)
+		if err != nil {
+			return err
+		}
+		whitelistedPeers = append(whitelistedPeers, pid)
+	}
+	server, err := mc.SetupTSSServer(peers, priKey, preParams, appContext.Config(), tssKeyPass, true, whitelistedPeers)
 	if err != nil {
 		return fmt.Errorf("SetupTSSServer error: %w", err)
 	}
@@ -221,6 +233,17 @@ func start(_ *cobra.Command, _ []string) error {
 		masterLogger.Info().Msg("TSS listener received an action to shutdown zetaclientd.")
 		signalChannel <- syscall.SIGTERM
 	})
+	// debug: printout connected peers
+	go func() {
+		for {
+			time.Sleep(10 * time.Second)
+			peers := server.GetKnownPeers()
+			for _, p := range peers {
+				log.Info().Msgf("Connected peer(%d)", len(peers))
+				spew.Dump(p)
+			}
+		}
+	}()
 
 	// Generate a new TSS if keygen is set and add it into the tss server
 	// If TSS has already been generated, and keygen was successful ; we use the existing TSS
