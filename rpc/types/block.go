@@ -230,8 +230,8 @@ type Header struct {
 	Extra           hexutil.Bytes       `json:"extraData"        gencodec:"required"`
 	MixDigest       common.Hash         `json:"mixHash"`
 	Nonce           ethtypes.BlockNonce `json:"nonce"`
-	BaseFee         *hexutil.Big        `json:"baseFeePerGas" rlp:"optional"`
-	WithdrawalsHash *common.Hash        `json:"withdrawalsRoot" rlp:"optional"`
+	BaseFee         *hexutil.Big        `json:"baseFeePerGas"                        rlp:"optional"`
+	WithdrawalsHash *common.Hash        `json:"withdrawalsRoot"                      rlp:"optional"`
 	// overwrite rlpHash
 	Hash common.Hash `json:"hash"`
 }
