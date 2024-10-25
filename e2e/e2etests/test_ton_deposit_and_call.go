@@ -1,24 +1,20 @@
 package e2etests
 
 import (
-	"time"
-
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	"github.com/zeta-chain/node/pkg/chains"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	testcontract "github.com/zeta-chain/node/testutil/contracts"
-	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// Given deployer
-	ctx, deployer, chain := r.Ctx, r.TONDeployer, chains.TONLocalnet
+	ctx, deployer := r.Ctx, r.TONDeployer
 
 	// Given amount
 	amount := parseUint(r, args[0])
@@ -40,18 +36,10 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	callData := []byte("hello from TON!")
 
 	// ACT
-	err = r.TONDepositAndCall(sender, amount, contractAddr, callData)
+	_, err = r.TONDepositAndCall(sender, amount, contractAddr, callData)
 
 	// ASSERT
 	require.NoError(r, err)
-
-	// Wait for CCTX mining
-	filter := func(cctx *cctypes.CrossChainTx) bool {
-		return cctx.InboundParams.SenderChainId == chain.ChainId &&
-			cctx.InboundParams.Sender == sender.GetAddress().ToRaw()
-	}
-
-	r.WaitForSpecificCCTX(filter, time.Minute)
 
 	expectedDeposit := amount.Sub(depositFee)
 

@@ -67,6 +67,7 @@ const (
 	 */
 	TestTONDepositName        = "ton_deposit"
 	TestTONDepositAndCallName = "ton_deposit_and_call"
+	TestTONWithdrawName       = "ton_withdraw"
 
 	/*
 	 Bitcoin tests
@@ -457,6 +458,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in nano tons", DefaultValue: "1000000000"}, // 1.0 TON
 		},
 		TestTONDepositAndCall,
+	),
+	runner.NewE2ETest(
+		TestTONWithdrawName,
+		"withdraw TON from ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in nano tons", DefaultValue: "2000000000"}, // 2.0 TON
+		},
+		TestTONWithdraw,
 	),
 	/*
 	 Bitcoin tests
