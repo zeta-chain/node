@@ -4206,8 +4206,8 @@ github.com/zeta-chain/go-ethereum v1.10.26-spc h1:NvY4rR9yw52wfxWt7YoFsWbaIwVMyO
 github.com/zeta-chain/go-ethereum v1.10.26-spc/go.mod h1:/6CsT5Ceen2WPLI/oCA3xMcZ5sWMF/D46SjM/ayY0Oo=
 github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4 h1:FmO3HfVdZ7LzxBUfg6sVzV7ilKElQU2DZm8PxJ7KcYI=
 github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4/go.mod h1:TBv5NY/CqWYIfUstXO1fDWrt4bDoqgCw79yihqBspg8=
-github.com/zeta-chain/go-tss v0.0.0-20241025155731-064fcc671a27 h1:nUZ/fK91Cwh9yRfZhB5+TXybKshWboUw208jIVpHJDQ=
-github.com/zeta-chain/go-tss v0.0.0-20241025155731-064fcc671a27/go.mod h1:B1FDE6kHs8hozKSX1/iXgCdvlFbS6+FeAupoBHDK0Cc=
+github.com/zeta-chain/go-tss v0.0.0-20241025224600-50a27bdddfe8 h1:TyWTunrpRBCUr6nvEUyi6wEiC0Ui7/JHUoNfw3euCM8=
+github.com/zeta-chain/go-tss v0.0.0-20241025224600-50a27bdddfe8/go.mod h1:B1FDE6kHs8hozKSX1/iXgCdvlFbS6+FeAupoBHDK0Cc=
 github.com/zeta-chain/keystone/keys v0.0.0-20240826165841-3874f358c138 h1:vck/FcIIpFOvpBUm0NO17jbEtmSz/W/a5Y4jRuSJl6I=
 github.com/zeta-chain/keystone/keys v0.0.0-20240826165841-3874f358c138/go.mod h1:U494OsZTWsU75hqoriZgMdSsgSGP1mUL1jX+wN/Aez8=
 github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20241021075719-d40d2e28467c h1:ZoFxMMZtivRLquXVq1sEVlT45UnTPMO1MSXtc88nDv4=
