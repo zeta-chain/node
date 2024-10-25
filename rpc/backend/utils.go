@@ -36,6 +36,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/zeta-chain/node/rpc/types"
 )
 
@@ -317,4 +318,17 @@ func GetHexProofs(proof *crypto.ProofOps) []string {
 		proofs = append(proofs, proof)
 	}
 	return proofs
+}
+
+func GetValidatorAccount(header *tmtypes.Header, qc *types.QueryClient) (sdk.AccAddress, error) {
+	res, err := qc.ValidatorAccount(
+		types.ContextWithHeight(header.Height),
+		&evmtypes.QueryValidatorAccountRequest{
+			ConsAddress: sdk.ConsAddress(header.ProposerAddress).String(),
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get validator account %w", err)
+	}
+	return sdk.AccAddressFromBech32(res.AccountAddress)
 }

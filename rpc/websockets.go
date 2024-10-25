@@ -35,13 +35,13 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/filters"
-	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
+	"github.com/zeta-chain/node/rpc/backend"
 	"github.com/zeta-chain/node/rpc/ethereum/pubsub"
 	rpcfilters "github.com/zeta-chain/node/rpc/namespaces/ethereum/eth/filters"
 	"github.com/zeta-chain/node/rpc/types"
@@ -379,18 +379,21 @@ func (s *websocketsServer) tcpGetAndSendResponse(wsConn *wsConn, mb []byte) erro
 
 // pubSubAPI is the eth_ prefixed set of APIs in the Web3 JSON-RPC spec
 type pubSubAPI struct {
-	events    *rpcfilters.EventSystem
-	logger    log.Logger
-	clientCtx client.Context
+	events      *rpcfilters.EventSystem
+	logger      log.Logger
+	clientCtx   client.Context
+	queryClient *types.QueryClient
 }
 
 // newPubSubAPI creates an instance of the ethereum PubSub API.
 func newPubSubAPI(clientCtx client.Context, logger log.Logger, tmWSClient *rpcclient.WSClient) *pubSubAPI {
 	logger = logger.With("module", "websocket-client")
+	types.NewQueryClient(clientCtx)
 	return &pubSubAPI{
-		events:    rpcfilters.NewEventSystem(logger, tmWSClient),
-		logger:    logger,
-		clientCtx: clientCtx,
+		events:      rpcfilters.NewEventSystem(logger, tmWSClient),
+		logger:      logger,
+		clientCtx:   clientCtx,
+		queryClient: types.NewQueryClient(clientCtx),
 	}
 }
 
@@ -418,38 +421,11 @@ func (api *pubSubAPI) subscribe(wsConn *wsConn, subID rpc.ID, params []interface
 	}
 }
 
-// https://github.com/ethereum/go-ethereum/blob/release/1.11/core/types/gen_header_json.go#L18
-type Header struct {
-	ParentHash common.Hash `json:"parentHash"       gencodec:"required"`
-	UncleHash  common.Hash `json:"sha3Uncles"       gencodec:"required"`
-	// update string avoid lost checksumed miner after MarshalText
-	Coinbase        string              `json:"miner"`
-	Root            common.Hash         `json:"stateRoot"        gencodec:"required"`
-	TxHash          common.Hash         `json:"transactionsRoot" gencodec:"required"`
-	ReceiptHash     common.Hash         `json:"receiptsRoot"     gencodec:"required"`
-	Bloom           ethtypes.Bloom      `json:"logsBloom"        gencodec:"required"`
-	Difficulty      *hexutil.Big        `json:"difficulty"       gencodec:"required"`
-	Number          *hexutil.Big        `json:"number"           gencodec:"required"`
-	GasLimit        hexutil.Uint64      `json:"gasLimit"         gencodec:"required"`
-	GasUsed         hexutil.Uint64      `json:"gasUsed"          gencodec:"required"`
-	Time            hexutil.Uint64      `json:"timestamp"        gencodec:"required"`
-	Extra           hexutil.Bytes       `json:"extraData"        gencodec:"required"`
-	MixDigest       common.Hash         `json:"mixHash"`
-	Nonce           ethtypes.BlockNonce `json:"nonce"`
-	BaseFee         *hexutil.Big        `json:"baseFeePerGas" rlp:"optional"`
-	WithdrawalsHash *common.Hash        `json:"withdrawalsRoot" rlp:"optional"`
-	// overwrite rlpHash
-	Hash common.Hash `json:"hash"`
-}
-
 func (api *pubSubAPI) subscribeNewHeads(wsConn *wsConn, subID rpc.ID) (pubsub.UnsubscribeFunc, error) {
 	sub, unsubFn, err := api.events.SubscribeNewHeads()
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating block filter")
 	}
-
-	// TODO: use events
-	baseFee := big.NewInt(params.InitialBaseFee)
 
 	go func() {
 		headersCh := sub.Event()
@@ -467,9 +443,17 @@ func (api *pubSubAPI) subscribeNewHeads(wsConn *wsConn, subID rpc.ID) (pubsub.Un
 					continue
 				}
 
-				header := types.EthHeaderFromTendermint(data.Header, ethtypes.Bloom{}, baseFee)
+				validatorAccount, err := backend.GetValidatorAccount(&data.Header, api.queryClient)
+				if err != nil {
+					api.logger.Error("failed to get validator account", "err", err)
+					continue
+				}
 
-				var enc Header
+				baseFee := types.BaseFeeFromEvents(data.ResultBeginBlock.Events)
+
+				header := types.EthHeaderFromTendermint(data.Header, ethtypes.Bloom{}, baseFee, validatorAccount)
+
+				var enc types.Header
 				enc.ParentHash = header.ParentHash
 				enc.UncleHash = header.UncleHash
 				enc.Coinbase = header.Coinbase.Hex()
