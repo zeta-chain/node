@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/libp2p/go-libp2p/core/peer"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
@@ -238,10 +237,7 @@ func start(_ *cobra.Command, _ []string) error {
 		for {
 			time.Sleep(10 * time.Second)
 			peers := server.GetKnownPeers()
-			for _, p := range peers {
-				log.Info().Msgf("Connected peer(%d)", len(peers))
-				spew.Dump(p)
-			}
+			metrics.NumConnectedPeers.Set(float64(len(peers)))
 		}
 	}()
 
