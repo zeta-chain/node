@@ -66,7 +66,7 @@ func generateKeyPair(t *testing.T, net *chaincfg.Params) (*btcec.PrivateKey, btc
 	addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, net)
 	require.NoError(t, err)
 	//fmt.Printf("New address: %s\n", addr.EncodeAddress())
-	pkScript, err := PayToAddrScript(addr)
+	pkScript, err := txscript.PayToAddrScript(addr)
 	require.NoError(t, err)
 	return privateKey, addr, pkScript
 }
@@ -83,7 +83,7 @@ func getTestAddrScript(t *testing.T, scriptType string) btcutil.Address {
 
 // createPkScripts creates 10 random amount of scripts to the given address 'to'
 func createPkScripts(t *testing.T, to btcutil.Address, repeat int) ([]btcutil.Address, [][]byte) {
-	pkScript, err := PayToAddrScript(to)
+	pkScript, err := txscript.PayToAddrScript(to)
 	require.NoError(t, err)
 
 	addrs := []btcutil.Address{}
@@ -261,7 +261,7 @@ func TestOutboundSizeXIn3Out(t *testing.T) {
 
 func TestGetOutputSizeByAddress(t *testing.T) {
 	// test nil P2TR address and non-nil P2TR address
-	nilP2TR := (*chains.AddressTaproot)(nil)
+	nilP2TR := (*btcutil.AddressTaproot)(nil)
 	sizeNilP2TR, err := GetOutputSizeByAddress(nilP2TR)
 	require.NoError(t, err)
 	require.Equal(t, uint64(0), sizeNilP2TR)
