@@ -367,6 +367,6 @@ replace (
 	github.com/bnb-chain/tss-lib => github.com/zeta-chain/tss-lib v0.0.0-20240916163010-2e6b438bd901
 	github.com/ethereum/go-ethereum => github.com/zeta-chain/go-ethereum v1.10.26-spc
 	github.com/libp2p/go-libp2p => github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4
-	gitlab.com/thorchain/tss/go-tss => github.com/zeta-chain/go-tss v0.0.0-20241024003245-8938bc1e1b98
+	gitlab.com/thorchain/tss/go-tss => github.com/zeta-chain/go-tss v0.0.0-20241028184352-5558cea583cb
 
 )
