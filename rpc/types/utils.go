@@ -133,20 +133,24 @@ func FormatBlock(
 	}
 
 	result := map[string]interface{}{
-		"number":           hexutil.Uint64(header.Height),
-		"hash":             hexutil.Bytes(header.Hash()),
-		"parentHash":       common.BytesToHash(header.LastBlockID.Hash.Bytes()),
-		"nonce":            ethtypes.BlockNonce{},   // PoW specific
-		"sha3Uncles":       ethtypes.EmptyUncleHash, // No uncles in Tendermint
-		"logsBloom":        bloom,
-		"stateRoot":        hexutil.Bytes(header.AppHash),
-		"miner":            validatorAddr,
-		"mixHash":          common.Hash{},
-		"difficulty":       (*hexutil.Big)(big.NewInt(0)),
-		"extraData":        "0x",
-		"size":             hexutil.Uint64(size),
-		"gasLimit":         hexutil.Uint64(gasLimit), // Static gas limit
-		"gasUsed":          (*hexutil.Big)(gasUsed),
+		// #nosec G115 block height always positive
+		"number":     hexutil.Uint64(header.Height),
+		"hash":       hexutil.Bytes(header.Hash()),
+		"parentHash": common.BytesToHash(header.LastBlockID.Hash.Bytes()),
+		"nonce":      ethtypes.BlockNonce{},   // PoW specific
+		"sha3Uncles": ethtypes.EmptyUncleHash, // No uncles in Tendermint
+		"logsBloom":  bloom,
+		"stateRoot":  hexutil.Bytes(header.AppHash),
+		"miner":      validatorAddr,
+		"mixHash":    common.Hash{},
+		"difficulty": (*hexutil.Big)(big.NewInt(0)),
+		"extraData":  "0x",
+		// #nosec G115 size always positive
+		"size": hexutil.Uint64(size),
+		// #nosec G115 gasLimit always positive
+		"gasLimit": hexutil.Uint64(gasLimit), // Static gas limit
+		"gasUsed":  (*hexutil.Big)(gasUsed),
+		// #nosec G115 timestamp always positive
 		"timestamp":        hexutil.Uint64(header.Time.Unix()),
 		"transactionsRoot": transactionsRoot,
 		"receiptsRoot":     ethtypes.EmptyRootHash,

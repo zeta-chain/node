@@ -250,6 +250,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 	}
 
 	// check confirmation
+	// #nosec G115 block height always positive
 	if !ob.IsBlockConfirmed(uint64(blockVb.Height)) {
 		return "", fmt.Errorf("block %d is not confirmed yet", blockVb.Height)
 	}

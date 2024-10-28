@@ -59,5 +59,7 @@ func TestBitcoinStdMemoDeposit(r *runner.E2ERunner, args []string) {
 	amountIncreased := new(big.Int).Sub(balanceAfter, balanceBefore)
 	amountSatoshis, err := bitcoin.GetSatoshis(amount)
 	require.NoError(r, err)
+	require.Positive(r, amountSatoshis)
+	// #nosec G115 always positive
 	require.Equal(r, uint64(amountSatoshis), amountIncreased.Uint64())
 }
