@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v21.0.0
+
 ### Features
 
 * [2633](https://github.com/zeta-chain/node/pull/2633) - support for stateful precompiled contracts
@@ -59,6 +61,7 @@
 * [2909](https://github.com/zeta-chain/node/pull/2909) - add legacy messages back to codec for querier backward compatibility
 * [3018](https://github.com/zeta-chain/node/pull/3018) - support `DepositAndCall` and `WithdrawAndCall` with empty payload
 * [3030](https://github.com/zeta-chain/node/pull/3030) - Avoid storing invalid Solana gateway address in the `SetGatewayAddress`
+* [3047](https://github.com/zeta-chain/node/pull/3047) - wrong block hash in subscribe new heads
 
 ## v20.0.0
 
