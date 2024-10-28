@@ -183,7 +183,7 @@ func (t *Ticker) Stop() {
 	t.logger.Info().Msgf("Ticker stopped")
 }
 
-// DurationFromUint64Seconds converts uint64 of secodns to time.Duration.
+// DurationFromUint64Seconds converts uint64 of seconds to time.Duration.
 func DurationFromUint64Seconds(seconds uint64) time.Duration {
 	// #nosec G115 seconds should be in range and is not user controlled
 	return time.Duration(seconds) * time.Second
