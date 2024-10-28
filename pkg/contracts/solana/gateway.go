@@ -9,7 +9,7 @@ import (
 
 const (
 	// SolanaGatewayProgramID is the program ID of the Solana gateway program
-	SolanaGatewayProgramID = "BaDmykPHVwPQNY9SXQnJU8JPXdN89z3ib7qEfhNfkWRg"
+	SolanaGatewayProgramID = "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
 
 	// PDASeed is the seed for the Solana gateway program derived address
 	PDASeed = "meta"
