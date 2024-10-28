@@ -120,7 +120,8 @@ func (s *Signer) ProcessOutbound(
 	withdrawal := &toncontracts.Withdrawal{
 		Recipient: receiver,
 		Amount:    params.Amount,
-		Seqno:     uint32(params.TssNonce),
+		// #nosec G115 always in range
+		Seqno: uint32(params.TssNonce),
 	}
 
 	lf := map[string]any{

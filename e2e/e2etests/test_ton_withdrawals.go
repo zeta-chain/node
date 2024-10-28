@@ -88,6 +88,7 @@ func TestTONWithdraw(r *runner.E2ERunner, args []string) {
 		uint64(txs[0].Msgs.OutMsgs.Values()[0].Value.Info.IntMsgInfo.Value.Grams),
 	)
 
+	// #nosec G115 always in range
 	require.Equal(r, int(amount.Uint64()), int(inMsgAmount.Uint64()))
 }
 

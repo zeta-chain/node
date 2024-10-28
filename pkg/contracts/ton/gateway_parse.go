@@ -276,6 +276,7 @@ func parseAccount(raw tlb.MsgAddress) (ton.AccountID, error) {
 	}
 
 	return ton.AccountID{
+		// #nosec G115 always in range
 		Workchain: int32(raw.AddrStd.WorkchainId),
 		Address:   raw.AddrStd.Address,
 	}, nil
