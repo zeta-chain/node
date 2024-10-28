@@ -404,8 +404,12 @@ func (b *Backend) HeaderByNumber(blockNum rpctypes.BlockNumber) (*ethtypes.Heade
 		)
 	}
 
-	ethHeader := rpctypes.EthHeaderFromTendermint(resBlock.Block.Header, bloom, baseFee)
-	return ethHeader, nil
+	validatorAccount, err := GetValidatorAccount(&resBlock.Block.Header, b.queryClient)
+	if err != nil {
+		return nil, err
+	}
+
+	return rpctypes.EthHeaderFromTendermint(resBlock.Block.Header, bloom, baseFee, validatorAccount), nil
 }
 
 // HeaderByHash returns the block header identified by hash.
@@ -440,8 +444,12 @@ func (b *Backend) HeaderByHash(blockHash common.Hash) (*ethtypes.Header, error) 
 		)
 	}
 
-	ethHeader := rpctypes.EthHeaderFromTendermint(resBlock.Block.Header, bloom, baseFee)
-	return ethHeader, nil
+	validatorAccount, err := GetValidatorAccount(&resBlock.Block.Header, b.queryClient)
+	if err != nil {
+		return nil, err
+	}
+
+	return rpctypes.EthHeaderFromTendermint(resBlock.Block.Header, bloom, baseFee, validatorAccount), nil
 }
 
 // BlockBloom query block bloom filter from block results
@@ -613,7 +621,12 @@ func (b *Backend) EthBlockFromTendermintBlock(
 		)
 	}
 
-	ethHeader := rpctypes.EthHeaderFromTendermint(block.Header, bloom, baseFee)
+	validatorAccount, err := GetValidatorAccount(&resBlock.Block.Header, b.queryClient)
+	if err != nil {
+		return nil, err
+	}
+
+	ethHeader := rpctypes.EthHeaderFromTendermint(block.Header, bloom, baseFee, validatorAccount)
 	msgs, additionals := b.EthMsgsFromTendermintBlock(resBlock, blockRes)
 
 	txs := []*ethtypes.Transaction{}
