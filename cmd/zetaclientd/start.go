@@ -207,10 +207,10 @@ func start(_ *cobra.Command, _ []string) error {
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
 
-	keygen := appContext.GetKeygen()
+	nodeAccounts := appContext.GetNodeAccounts()
 	whitelistedPeers := []peer.ID{}
-	for _, pk := range keygen.GranteePubkeys {
-		pid, err := conversion.Bech32PubkeyToPeerID(pk)
+	for _, nodeAccount := range nodeAccounts {
+		pid, err := conversion.Bech32PubkeyToPeerID(nodeAccount.GranteePubkey.Secp256k1.String())
 		if err != nil {
 			return err
 		}

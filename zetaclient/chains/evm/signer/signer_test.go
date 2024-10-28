@@ -260,6 +260,7 @@ func makeCtx(t *testing.T) context.Context {
 		},
 		"tssPubKey",
 		observertypes.CrosschainFlags{},
+		[]*observertypes.NodeAccount{},
 	)
 	require.NoError(t, err, "unable to update app context")
 

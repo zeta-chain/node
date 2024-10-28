@@ -37,6 +37,9 @@ type AppContext struct {
 	// keygen is the current tss keygen state
 	keygen observertypes.Keygen
 
+	// nodeAccounts is array of current node accounts
+	nodeAccounts []*observertypes.NodeAccount
+
 	mu sync.RWMutex
 }
 
@@ -51,6 +54,7 @@ func New(cfg config.Config, relayerKeyPasswords map[string]string, logger zerolo
 		crosschainFlags:  observertypes.CrosschainFlags{},
 		currentTssPubKey: "",
 		keygen:           observertypes.Keygen{},
+		nodeAccounts:     []*observertypes.NodeAccount{},
 
 		mu: sync.RWMutex{},
 	}
@@ -120,6 +124,13 @@ func (a *AppContext) GetKeygen() observertypes.Keygen {
 	}
 }
 
+func (a *AppContext) GetNodeAccounts() []*observertypes.NodeAccount {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	return a.nodeAccounts
+}
+
 // GetCurrentTssPubKey returns the current tss pubKey.
 func (a *AppContext) GetCurrentTssPubKey() string {
 	a.mu.RLock()
@@ -144,6 +155,7 @@ func (a *AppContext) Update(
 	freshChainParams map[int64]*observertypes.ChainParams,
 	tssPubKey string,
 	crosschainFlags observertypes.CrosschainFlags,
+	nodeAccounts []*observertypes.NodeAccount,
 ) error {
 	// some sanity checks
 	switch {
@@ -173,6 +185,7 @@ func (a *AppContext) Update(
 	a.crosschainFlags = crosschainFlags
 	a.keygen = keygen
 	a.currentTssPubKey = tssPubKey
+	a.nodeAccounts = nodeAccounts
 
 	return nil
 }

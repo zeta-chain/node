@@ -453,6 +453,7 @@ func mustUpdateAppContext(
 		chainParams,
 		"tssPubKey",
 		app.GetCrossChainFlags(),
+		app.GetNodeAccounts(),
 	)
 
 	require.NoError(t, err)
