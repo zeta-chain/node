@@ -9,6 +9,7 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
+	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -75,6 +76,7 @@ type E2ERunner struct {
 	SolanaDeployerAddress solana.PublicKey
 	TONDeployer           *tonrunner.Deployer
 	TONGateway            *toncontracts.Gateway
+	FeeCollectorAddress   types.AccAddress
 
 	// all clients.
 	// a reference to this type is required to enable creating a new E2ERunner.
@@ -188,6 +190,8 @@ func NewE2ERunner(
 		CtxCancel: ctxCancel,
 
 		Account: account,
+
+		FeeCollectorAddress: authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 
 		Clients: clients,
 

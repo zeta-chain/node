@@ -4,7 +4,6 @@ import (
 	"math/big"
 
 	"github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
@@ -22,7 +21,6 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 	var (
 		spenderAddress            = r.EVMAddress()
 		distributeContractAddress = staking.ContractAddress
-		feeCollectorAddress       = authtypes.NewModuleAddress("fee_collector")
 		lockerAddress             = bank.ContractAddress
 
 		zrc20Address = r.ERC20ZRC20Addr
@@ -40,7 +38,7 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 	r.ZEVMAuth.GasLimit = 10_000_000
 
 	// Set the test to reset the state after it finishes.
-	defer resetTest(r, lockerAddress, previousGasLimit, fiveHundred)
+	defer resetDistributionTest(r, lockerAddress, previousGasLimit, fiveHundred)
 
 	// Get ERC20ZRC20.
 	txHash := r.DepositERC20WithAmountAndMessage(spenderAddress, oneThousand, []byte{})
@@ -57,7 +55,7 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 	// Check initial balances.
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spenderAddress))
 	balanceShouldBe(r, 0, checkZRC20Balance(r, lockerAddress))
-	balanceShouldBe(r, 0, checkCosmosBalance(r, feeCollectorAddress, zrc20Denom))
+	balanceShouldBe(r, 0, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	tx, err := dstrContract.Distribute(r.ZEVMAuth, zrc20Address, oneThousand)
 	require.NoError(r, err)
@@ -67,7 +65,7 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 	// Balances shouldn't change after a failed attempt.
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spenderAddress))
 	balanceShouldBe(r, 0, checkZRC20Balance(r, lockerAddress))
-	balanceShouldBe(r, 0, checkCosmosBalance(r, feeCollectorAddress, zrc20Denom))
+	balanceShouldBe(r, 0, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	// Allow 500.
 	approveAllowance(r, distributeContractAddress, fiveHundred)
@@ -81,7 +79,7 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 	// Balances shouldn't change after a failed attempt.
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spenderAddress))
 	balanceShouldBe(r, 0, checkZRC20Balance(r, lockerAddress))
-	balanceShouldBe(r, 0, checkCosmosBalance(r, feeCollectorAddress, zrc20Denom))
+	balanceShouldBe(r, 0, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	// Raise the allowance to 1000.
 	approveAllowance(r, distributeContractAddress, oneThousand)
@@ -95,7 +93,7 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 	// Balances shouldn't change after a failed attempt.
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spenderAddress))
 	balanceShouldBe(r, 0, checkZRC20Balance(r, lockerAddress))
-	balanceShouldBe(r, 0, checkCosmosBalance(r, feeCollectorAddress, zrc20Denom))
+	balanceShouldBe(r, 0, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	// Should be able to distribute 500, which is within balance and allowance.
 	tx, err = dstrContract.Distribute(r.ZEVMAuth, zrc20Address, fiveHundred)
@@ -105,7 +103,7 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 
 	balanceShouldBe(r, 500, checkZRC20Balance(r, spenderAddress))
 	balanceShouldBe(r, 500, checkZRC20Balance(r, lockerAddress))
-	balanceShouldBe(r, 500, checkCosmosBalance(r, feeCollectorAddress, zrc20Denom))
+	balanceShouldBe(r, 500, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	eventDitributed, err := dstrContract.ParseDistributed(*receipt.Logs[0])
 	require.NoError(r, err)
@@ -115,7 +113,7 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 
 	// After one block the rewards should have been distributed and fee collector should have 0 ZRC20 balance.
 	r.WaitForBlocks(1)
-	balanceShouldBe(r, 0, checkCosmosBalance(r, feeCollectorAddress, zrc20Denom))
+	balanceShouldBe(r, 0, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	// DO NOT REMOVE THE FOLLOWING CODE
 	// This section is commented until a following PR introduces the ability to withdraw delegator rewards.
@@ -165,6 +163,7 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 	// fmt.Printf("Validator 1 commission: %+v\n", res3)
 }
 
+// checkCosmosBalance checks the cosmos coin balance for an address. The coin is specified by its denom.
 func checkCosmosBalance(r *runner.E2ERunner, address types.AccAddress, denom string) *big.Int {
 	bal, err := r.BankClient.Balance(
 		r.Ctx,
@@ -175,7 +174,7 @@ func checkCosmosBalance(r *runner.E2ERunner, address types.AccAddress, denom str
 	return bal.Balance.Amount.BigInt()
 }
 
-func resetTest(r *runner.E2ERunner, lockerAddress common.Address, previousGasLimit uint64, amount *big.Int) {
+func resetDistributionTest(r *runner.E2ERunner, lockerAddress common.Address, previousGasLimit uint64, amount *big.Int) {
 	r.ZEVMAuth.GasLimit = previousGasLimit
 
 	// Reset the allowance to 0; this is needed when running upgrade tests where this test runs twice.

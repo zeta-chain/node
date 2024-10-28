@@ -24,6 +24,7 @@ func (k Keeper) LockZRC20(
 	amount *big.Int,
 ) error {
 	// owner is the EOA owner of the ZRC20 tokens.
+	// spender is the EOA allowed to spend ZRC20 on owner's behalf.
 	// locker is the address that will lock the ZRC20 tokens, i.e: bank precompile.
 	if err := k.CheckZRC20Allowance(ctx, zrc20ABI, owner, spender, zrc20Address, amount); err != nil {
 		return errors.Wrap(err, "failed allowance check")

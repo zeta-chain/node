@@ -6,14 +6,14 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-)
 
-const ZRC20DenomPrefix = "zrc20/"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+)
 
 // ZRC20ToCosmosDenom returns the cosmos coin address for a given ZRC20 address.
 // This is converted to "zrc20/{ZRC20Address}".
 func ZRC20ToCosmosDenom(ZRC20Address common.Address) string {
-	return ZRC20DenomPrefix + ZRC20Address.String()
+	return config.ZRC20DenomPrefix + ZRC20Address.String()
 }
 
 func CreateCoinSet(tokenDenom string, amount *big.Int) (sdk.Coins, error) {

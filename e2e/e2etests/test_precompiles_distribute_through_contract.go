@@ -3,7 +3,6 @@ package e2etests
 import (
 	"math/big"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
@@ -22,7 +21,6 @@ func TestPrecompilesDistributeThroughContract(r *runner.E2ERunner, args []string
 	var (
 		spenderAddress            = r.EVMAddress()
 		distributeContractAddress = staking.ContractAddress
-		feeCollectorAddress       = authtypes.NewModuleAddress("fee_collector")
 		lockerAddress             = bank.ContractAddress
 
 		zrc20Address = r.ERC20ZRC20Addr
@@ -52,12 +50,12 @@ func TestPrecompilesDistributeThroughContract(r *runner.E2ERunner, args []string
 	r.ZEVMAuth.GasLimit = 10_000_000
 
 	// Set the test to reset the state after it finishes.
-	defer resetTest(r, lockerAddress, previousGasLimit, fiveHundred)
+	defer resetDistributionTest(r, lockerAddress, previousGasLimit, fiveHundred)
 
 	// Check initial balances.
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spenderAddress))
 	balanceShouldBe(r, 500, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
-	balanceShouldBe(r, 0, checkCosmosBalance(r, feeCollectorAddress, zrc20Denom))
+	balanceShouldBe(r, 0, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	receipt = distributeThroughContract(r, testDstrContract, zrc20Address, oneThousand)
 	utils.RequiredTxFailed(r, receipt, "distribute should fail when there's no allowance")
@@ -65,7 +63,7 @@ func TestPrecompilesDistributeThroughContract(r *runner.E2ERunner, args []string
 	// Balances shouldn't change after a failed attempt.
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spenderAddress))
 	balanceShouldBe(r, 500, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
-	balanceShouldBe(r, 0, checkCosmosBalance(r, feeCollectorAddress, zrc20Denom))
+	balanceShouldBe(r, 0, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	// Allow 500.
 	approveAllowance(r, distributeContractAddress, fiveHundred)
@@ -76,7 +74,7 @@ func TestPrecompilesDistributeThroughContract(r *runner.E2ERunner, args []string
 	// Balances shouldn't change after a failed attempt.
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spenderAddress))
 	balanceShouldBe(r, 500, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
-	balanceShouldBe(r, 0, checkCosmosBalance(r, feeCollectorAddress, zrc20Denom))
+	balanceShouldBe(r, 0, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	// Raise the allowance to 1000.
 	approveAllowance(r, distributeContractAddress, oneThousand)
@@ -88,7 +86,7 @@ func TestPrecompilesDistributeThroughContract(r *runner.E2ERunner, args []string
 	// Balances shouldn't change after a failed attempt.
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spenderAddress))
 	balanceShouldBe(r, 500, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
-	balanceShouldBe(r, 0, checkCosmosBalance(r, feeCollectorAddress, zrc20Denom))
+	balanceShouldBe(r, 0, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	// Should be able to distribute 500, which is within balance and allowance.
 	receipt = distributeThroughContract(r, testDstrContract, zrc20Address, fiveHundred)
@@ -96,7 +94,7 @@ func TestPrecompilesDistributeThroughContract(r *runner.E2ERunner, args []string
 
 	balanceShouldBe(r, 500, checkZRC20Balance(r, spenderAddress))
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
-	balanceShouldBe(r, 500, checkCosmosBalance(r, feeCollectorAddress, zrc20Denom))
+	balanceShouldBe(r, 500, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	eventDitributed, err := dstrContract.ParseDistributed(*receipt.Logs[0])
 	require.NoError(r, err)
@@ -106,7 +104,7 @@ func TestPrecompilesDistributeThroughContract(r *runner.E2ERunner, args []string
 
 	// After one block the rewards should have been distributed and fee collector should have 0 ZRC20 balance.
 	r.WaitForBlocks(1)
-	balanceShouldBe(r, 0, checkCosmosBalance(r, feeCollectorAddress, zrc20Denom))
+	balanceShouldBe(r, 0, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 }
 
 func distributeThroughContract(

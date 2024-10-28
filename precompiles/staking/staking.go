@@ -88,6 +88,7 @@ func NewIStakingContract(
 	// This avoids instantiating it every time deposit or withdraw are called.
 	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
+		ctx.Logger().Error("staking contract failed to get ZRC20 ABI", "error", err)
 		return nil
 	}
 

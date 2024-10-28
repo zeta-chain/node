@@ -74,6 +74,7 @@ func NewIBankContract(
 	// This avoids instantiating it every time deposit or withdraw are called.
 	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
+		ctx.Logger().Error("bank contract failed to get ZRC20 ABI", "error", err)
 		return nil
 	}
 
