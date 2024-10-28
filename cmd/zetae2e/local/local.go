@@ -302,10 +302,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinDepositName,
 			e2etests.TestBitcoinDepositAndCallName,
 			e2etests.TestBitcoinDepositAndCallRevertName,
-			e2etests.TestBitcoinStdMemoDepositName,
-			e2etests.TestBitcoinStdMemoDepositAndCallName,
-			e2etests.TestBitcoinStdMemoDepositAndCallRevertName,
-			e2etests.TestBitcoinStdMemoDepositAndCallRevertOtherAddressName,
 			e2etests.TestBitcoinWithdrawSegWitName,
 			e2etests.TestBitcoinWithdrawInvalidAddressName,
 			e2etests.TestZetaWithdrawBTCRevertName,
@@ -318,6 +314,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinWithdrawP2SHName,
 			e2etests.TestBitcoinWithdrawP2WSHName,
 			e2etests.TestBitcoinWithdrawRestrictedName,
+			e2etests.TestBitcoinStdMemoDepositName,
+			e2etests.TestBitcoinStdMemoDepositAndCallName,
+			e2etests.TestBitcoinStdMemoDepositAndCallRevertName,
+			e2etests.TestBitcoinStdMemoDepositAndCallRevertOtherAddressName,
 		}
 		ethereumTests := []string{
 			e2etests.TestEtherWithdrawName,
