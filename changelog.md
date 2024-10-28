@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v21.0.0
+
 ### Features
 
 * [2633](https://github.com/zeta-chain/node/pull/2633) - support for stateful precompiled contracts
