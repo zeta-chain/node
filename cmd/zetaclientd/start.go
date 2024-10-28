@@ -13,6 +13,10 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
+	p2pcrypto "github.com/libp2p/go-libp2p-core/crypto"
+	"github.com/libp2p/go-libp2p-core/peer"
+	gopeer "github.com/libp2p/go-libp2p/core/peer"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -179,13 +183,6 @@ func start(_ *cobra.Command, _ []string) error {
 		log.Error().Err(err).Msg("peer address error")
 	}
 	initPreParams(cfg.PreParamsPath)
-	if cfg.P2PDiagnostic {
-		err := RunDiagnostics(startLogger, peers, hotkeyPk, cfg)
-		if err != nil {
-			startLogger.Error().Err(err).Msg("RunDiagnostics error")
-			return err
-		}
-	}
 
 	m, err := metrics.NewMetrics()
 	if err != nil {
@@ -205,7 +202,25 @@ func start(_ *cobra.Command, _ []string) error {
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
 	// Create TSS server
-	server, err := mc.SetupTSSServer(peers, priKey, preParams, appContext.Config(), tssKeyPass, true)
+	keygen := appContext.GetKeygen()
+	var whitelistedPeers []gopeer.ID
+	for _, pk := range keygen.GranteePubkeys {
+		pk, err := legacybech32.UnmarshalPubKey(legacybech32.AccPK, pk)
+		if err != nil {
+			startLogger.Error().Err(err).Msg("...")
+		}
+		bz := pk.Bytes()
+		k, err := p2pcrypto.UnmarshalSecp256k1PublicKey(bz)
+		if err != nil {
+			startLogger.Error().Err(err).Msg("...")
+		}
+		pid, err := peer.IDFromPublicKey(k)
+		if err != nil {
+			startLogger.Error().Err(err).Msg("...")
+		}
+		fmt.Println("PID", pid)
+	}
+	server, err := mc.SetupTSSServer(peers, priKey, preParams, appContext.Config(), tssKeyPass, true, whitelistedPeers)
 	if err != nil {
 		return fmt.Errorf("SetupTSSServer error: %w", err)
 	}
