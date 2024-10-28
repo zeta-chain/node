@@ -89,8 +89,8 @@ func TestAppContext(t *testing.T) {
 			fancyL2,
 		}
 
-		nodeAccounts := []*types.NodeAccount{
-			sample.NodeAccount(),
+		nodeAccounts := []types.NodeAccount{
+			*sample.NodeAccount(),
 		}
 
 		// ACT

@@ -76,7 +76,7 @@ func getAppContext(
 		chainParams,
 		"tssPubKey",
 		*sample.CrosschainFlags(),
-		[]*observertypes.NodeAccount{},
+		[]observertypes.NodeAccount{*sample.NodeAccount()},
 	)
 	require.NoError(t, err)
 
