@@ -409,8 +409,7 @@ func (b *Backend) HeaderByNumber(blockNum rpctypes.BlockNumber) (*ethtypes.Heade
 		return nil, err
 	}
 
-	ethHeader := rpctypes.EthHeaderFromTendermint(resBlock.Block.Header, bloom, baseFee, validatorAccount)
-	return ethHeader, nil
+	return rpctypes.EthHeaderFromTendermint(resBlock.Block.Header, bloom, baseFee, validatorAccount), nil
 }
 
 // HeaderByHash returns the block header identified by hash.
@@ -450,8 +449,7 @@ func (b *Backend) HeaderByHash(blockHash common.Hash) (*ethtypes.Header, error) 
 		return nil, err
 	}
 
-	ethHeader := rpctypes.EthHeaderFromTendermint(resBlock.Block.Header, bloom, baseFee, validatorAccount)
-	return ethHeader, nil
+	return rpctypes.EthHeaderFromTendermint(resBlock.Block.Header, bloom, baseFee, validatorAccount), nil
 }
 
 // BlockBloom query block bloom filter from block results
