@@ -343,6 +343,15 @@ func TestZetacore_UpdateAppContext(t *testing.T) {
 						},
 					},
 				})
+			method = "/zetachain.zetacore.observer.Query/NodeAccountAll"
+			s.ExpectUnary(method).
+				UnlimitedTimes().
+				WithPayload(observertypes.QueryAllNodeAccountRequest{}).
+				Return(observertypes.QueryAllNodeAccountResponse{
+					NodeAccount: []*observertypes.NodeAccount{
+						sample.NodeAccount(),
+					},
+				})
 		},
 	)(t)
 
