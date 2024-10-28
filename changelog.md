@@ -21,6 +21,7 @@
 * [2987](https://github.com/zeta-chain/node/pull/2987) - add non-EVM standard inbound memo package
 * [2979](https://github.com/zeta-chain/node/pull/2979) - add fungible keeper ability to lock/unlock ZRC20 tokens
 * [3012](https://github.com/zeta-chain/node/pull/3012) - integrate authenticated calls erc20 smart contract functionality into protocol
+* [3025](https://github.com/zeta-chain/node/pull/3025) - standard memo for Bitcoin inbound
 
 ### Refactor
 
@@ -31,6 +32,7 @@
 * [2890](https://github.com/zeta-chain/node/pull/2890) - refactor `MsgUpdateChainInfo` to accept a single chain, and add `MsgRemoveChainInfo` to remove a chain
 * [2899](https://github.com/zeta-chain/node/pull/2899) - remove btc deposit fee v1 and improve unit tests
 * [2952](https://github.com/zeta-chain/node/pull/2952) - add error_message to cctx.status
+* [3039](https://github.com/zeta-chain/node/pull/3039) - use `btcd` native APIs to handle Bitcoin Taproot address
 
 ### Tests
 
@@ -57,6 +59,7 @@
 * [2909](https://github.com/zeta-chain/node/pull/2909) - add legacy messages back to codec for querier backward compatibility
 * [3018](https://github.com/zeta-chain/node/pull/3018) - support `DepositAndCall` and `WithdrawAndCall` with empty payload
 * [3030](https://github.com/zeta-chain/node/pull/3030) - Avoid storing invalid Solana gateway address in the `SetGatewayAddress`
+* [3047](https://github.com/zeta-chain/node/pull/3047) - wrong block hash in subscribe new heads
 
 ## v20.0.0
 
