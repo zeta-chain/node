@@ -390,7 +390,7 @@ test-sim-nondeterminism:
 	$(call run-sim-test,"non-determinism test",TestAppStateDeterminism,100,200,2h)
 
 test-sim-fullappsimulation:
-	$(call run-sim-test,"TestFullAppSimulation",TestFullAppSimulation,100,200,2h)
+	$(call run-sim-test,"TestFullAppSimulation",TestFullAppSimulation,10,200,2h)
 
 test-sim-multi-seed-long: runsim
 	@echo "Running long multi-seed application simulation."

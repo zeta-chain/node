@@ -20,6 +20,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	"github.com/zeta-chain/node/testutil/sample"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 
 	zetaapp "github.com/zeta-chain/node/app"
 )
@@ -166,10 +168,34 @@ func AppStateFn(
 		// we should replace the EvmDenom with BondDenom
 		evmState.Params.EvmDenom = stakingState.Params.BondDenom
 
+		observers := []string{}
+		for _, validator := range stakingState.Validators {
+			accAddress, err := observertypes.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
+			if err != nil {
+				panic(err)
+			}
+			observers = append(observers, accAddress.String())
+		}
+		observers = observers[:5]
+
+		// update the observer genesis state
+		observerStateBz, ok := rawState[observertypes.ModuleName]
+		if !ok {
+			panic("observer genesis state is missing")
+		}
+		observerState := new(observertypes.GenesisState)
+		cdc.MustUnmarshalJSON(observerStateBz, observerState)
+		observerState.Observers.ObserverList = observers
+		observerState.CrosschainFlags.IsInboundEnabled = true
+		observerState.CrosschainFlags.IsOutboundEnabled = true
+		tss := sample.Tss()
+		observerState.Tss = &tss
+
 		// change appState back
 		rawState[evmtypes.ModuleName] = cdc.MustMarshalJSON(evmState)
 		rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
 		rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
+		rawState[observertypes.ModuleName] = cdc.MustMarshalJSON(observerState)
 
 		// replace appstate
 		appState, err = json.Marshal(rawState)

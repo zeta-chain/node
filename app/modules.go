@@ -179,5 +179,6 @@ func simulationModules(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		crosschainmodule.NewAppModule(appCodec, app.CrosschainKeeper),
+		observermodule.NewAppModule(appCodec, *app.ObserverKeeper),
 	}
 }

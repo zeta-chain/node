@@ -183,6 +183,8 @@ func TestFullAppSimulation(t *testing.T) {
 	simApp, err := simutils.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 	require.NoError(t, err)
 
+	//config.ExportStatsPath = os.TempDir() + "/stats.json"
+	// define a new write syncer to write the stats to a file
 	blockedAddresses := simApp.ModuleAccountAddrs()
 	_, _, simerr := simulation.SimulateFromSeed(
 		t,

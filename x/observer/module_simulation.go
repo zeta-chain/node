@@ -6,8 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
-	"github.com/zeta-chain/node/x/observer/types"
 )
 
 const (
@@ -18,12 +16,14 @@ const (
 
 // GenerateGenesisState creates a randomized GenState of the module
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	accs := make([]string, len(simState.Accounts))
-	for i, acc := range simState.Accounts {
-		accs[i] = acc.Address.String()
-	}
-	observerGenesis := types.GenesisState{}
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&observerGenesis)
+	//observers := make([]string, len(simState.Accounts))
+	//for _, account := range simState.Accounts {
+	//	observers = append(observers, account.Address.String())
+	//}
+	//observerGenesis := types.DefaultGenesis()
+	//observerGenesis.Observers = types.ObserverSet{ObserverList: observers}
+	//simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(observerGenesis)
+
 }
 
 // ProposalContents doesn't return any content functions for governance proposals
