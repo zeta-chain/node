@@ -103,7 +103,7 @@ func (ob *Observer) Start(ctx context.Context) {
 func (ob *Observer) watchGasPrice(ctx context.Context) error {
 	task := func(ctx context.Context, t *ticker.Ticker) error {
 		if err := ob.postGasPrice(ctx); err != nil {
-			ob.Logger().GasPrice.Err(err).Msg("reportGasPrice error")
+			ob.Logger().GasPrice.Err(err).Msg("WatchGasPrice: postGasPrice error")
 		}
 
 		newInterval := ticker.SecondsFromUint64(ob.ChainParams().GasPriceTicker)

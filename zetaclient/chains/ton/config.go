@@ -90,10 +90,21 @@ func FetchGasConfig(ctx context.Context, getter ConfigGetter) (tlb.GasLimitsPric
 }
 
 // ParseGasPrice parses gas price from the config and returns price in tons per 1 gas unit.
+// You can take a look at definitions here:
+// https://github.com/ton-blockchain/ton/blob/master/crypto/block/block.tlb
+// https://docs.ton.org/develop/howto/blockchain-configs#param-20-and-21
+//
+// gas_prices#dd gas_price:uint64 gas_limit:uint64 gas_credit:uint64
+// block_gas_limit:uint64 freeze_due_limit:uint64 delete_due_limit:uint64 = GasLimitsPrices;
+//
+// gas_prices_ext#de gas_price:uint64 gas_limit:uint64 special_gas_limit:uint64 gas_credit:uint64
+// block_gas_limit:uint64 freeze_due_limit:uint64 delete_due_limit:uint64 = GasLimitsPrices;
+//
+// gas_flat_pfx#d1 flat_gas_limit:uint64 flat_gas_price:uint64 other:GasLimitsPrices = GasLimitsPrices;
 func ParseGasPrice(cfg tlb.GasLimitsPrices) (uint64, error) {
 	// tongo lib uses a concept of "sum types"
-	// to represent different types of decoded entities.
-	// Basically, sumType is a struct property that is not empty (i.e. got decoded).
+	// to decode different (sub)type of entities.
+	// Basically, sumType is a struct property that is not empty (i.e. decoded).
 	const (
 		sumTypeGasPrices    = "GasPrices"
 		sumTypeGasPricesExt = "GasPricesExt"
@@ -102,6 +113,7 @@ func ParseGasPrice(cfg tlb.GasLimitsPrices) (uint64, error) {
 
 	// from TON docs: gas_price: This parameter reflects
 	// the price of gas in the network, in nano tons per 65536 gas units (2^16).
+	// We have 3 cases because TON node might return on of these 3 structs.
 	switch cfg.SumType {
 	case sumTypeGasPrices:
 		return cfg.GasPrices.GasPrice >> 16, nil
