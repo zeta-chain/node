@@ -23,7 +23,7 @@ func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, _ []string) {
 	// without decoding the payload and amount handling for erc20, purpose of test is to verify correct sender and payload are used
 	amount := big.NewInt(10000)
 
-	payload := randomText()
+	payload := randomText(r)
 
 	r.AssertTestDAppEVMCalled(false, payload, amount)
 

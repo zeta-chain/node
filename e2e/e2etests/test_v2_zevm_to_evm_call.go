@@ -15,7 +15,7 @@ import (
 func TestV2ZEVMToEVMCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0)
 
-	payload := randomText()
+	payload := randomText(r)
 
 	r.AssertTestDAppEVMCalled(false, payload, big.NewInt(0))
 

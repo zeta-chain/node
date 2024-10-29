@@ -2,8 +2,6 @@ package e2etests
 
 import (
 	"math/big"
-	"math/rand"
-	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
@@ -11,7 +9,6 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -23,14 +20,12 @@ func TestV2ERC20DepositAndCall(r *runner.E2ERunner, args []string) {
 
 	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
 
-	payload := randomText()
+	payload := randomText(r)
 
 	r.AssertTestDAppZEVMCalled(false, payload, amount)
 
 	oldBalance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
 	require.NoError(r, err)
-
-	sample.StringRandom(rand.New(rand.NewSource(time.Now().UnixNano())), 50)
 
 	// perform the deposit
 	tx := r.V2ERC20DepositAndCall(

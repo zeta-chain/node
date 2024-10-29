@@ -17,7 +17,7 @@ func TestV2ERC20WithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
 	require.True(r, ok, "Invalid amount specified for TestV2ERC20WithdrawAndCall")
 
-	payload := randomText()
+	payload := randomText(r)
 
 	r.AssertTestDAppEVMCalled(false, payload, amount)
 
