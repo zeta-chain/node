@@ -2,7 +2,9 @@ package e2etests
 
 import (
 	"math/big"
+	"math/rand"
 	"strconv"
+	"time"
 
 	"cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
@@ -17,8 +19,14 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
 	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
+	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
+
+func randomText() string {
+	// #nosec G404 test purpose - weak randomness is not an issue here
+	return sample.StringRandom(rand.New(rand.NewSource(time.Now().UnixNano())), 50)
+}
 
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
 	tx, err := r.BTCZRC20.Approve(

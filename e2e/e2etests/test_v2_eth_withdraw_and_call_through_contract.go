@@ -12,8 +12,6 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-const payloadMessageAuthenticatedWithdrawETHThroughContract = "this is a test ETH withdraw and authenticated call payload through contract"
-
 func TestV2ETHWithdrawAndCallThroughContract(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
@@ -40,10 +38,12 @@ func TestV2ETHWithdrawAndCallThroughContract(r *runner.E2ERunner, args []string)
 	require.NoError(r, err)
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 
+	payload := randomText()
+
 	// perform the authenticated call
 	tx = r.V2ETHWithdrawAndCallThroughContract(gatewayCaller, r.TestDAppV2EVMAddr,
 		amount,
-		[]byte(payloadMessageAuthenticatedWithdrawETHThroughContract),
+		[]byte(payload),
 		gatewayzevmcaller.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
@@ -51,12 +51,12 @@ func TestV2ETHWithdrawAndCallThroughContract(r *runner.E2ERunner, args []string)
 	r.Logger.CCTX(*cctx, "withdraw")
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
-	r.AssertTestDAppEVMCalled(true, payloadMessageAuthenticatedWithdrawETHThroughContract, amount)
+	r.AssertTestDAppEVMCalled(true, payload, amount)
 
 	// check expected sender was used
 	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(
 		&bind.CallOpts{},
-		[]byte(payloadMessageAuthenticatedWithdrawETHThroughContract),
+		[]byte(payload),
 	)
 	require.NoError(r, err)
 	require.Equal(r, gatewayCallerAddr, senderForMsg)

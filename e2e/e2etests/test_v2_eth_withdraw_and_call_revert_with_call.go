@@ -12,15 +12,15 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-const payloadMessageWithdrawOnRevertETH = "this is a test ETH withdraw and call on revert"
-
 func TestV2ETHWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
 	require.True(r, ok, "Invalid amount specified for TestV2ETHWithdrawAndCallRevertWithCall")
 
-	r.AssertTestDAppZEVMCalled(false, payloadMessageWithdrawOnRevertETH, amount)
+	payload := randomText()
+
+	r.AssertTestDAppZEVMCalled(false, payload, amount)
 
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
@@ -32,7 +32,7 @@ func TestV2ETHWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) 
 		gatewayzevm.RevertOptions{
 			RevertAddress:    r.TestDAppV2ZEVMAddr,
 			CallOnRevert:     true,
-			RevertMessage:    []byte(payloadMessageWithdrawOnRevertETH),
+			RevertMessage:    []byte(payload),
 			OnRevertGasLimit: big.NewInt(0),
 		},
 	)
@@ -42,12 +42,12 @@ func TestV2ETHWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) 
 	r.Logger.CCTX(*cctx, "withdraw")
 	require.Equal(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
 
-	r.AssertTestDAppZEVMCalled(true, payloadMessageWithdrawOnRevertETH, big.NewInt(0))
+	r.AssertTestDAppZEVMCalled(true, payload, big.NewInt(0))
 
 	// check expected sender was used
 	senderForMsg, err := r.TestDAppV2ZEVM.SenderWithMessage(
 		&bind.CallOpts{},
-		[]byte(payloadMessageWithdrawOnRevertETH),
+		[]byte(payload),
 	)
 	require.NoError(r, err)
 	require.Equal(r, r.ZEVMAuth.From, senderForMsg)

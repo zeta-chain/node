@@ -11,15 +11,15 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-const payloadMessageWithdrawETH = "this is a test ETH withdraw and call payload"
-
 func TestV2ETHWithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
 	require.True(r, ok, "Invalid amount specified for TestV2ETHWithdrawAndCall")
 
-	r.AssertTestDAppEVMCalled(false, payloadMessageWithdrawETH, amount)
+	payload := randomText()
+
+	r.AssertTestDAppEVMCalled(false, payload, amount)
 
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
@@ -27,7 +27,7 @@ func TestV2ETHWithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 	tx := r.V2ETHWithdrawAndArbitraryCall(
 		r.TestDAppV2EVMAddr,
 		amount,
-		r.EncodeGasCall(payloadMessageWithdrawETH),
+		r.EncodeGasCall(payload),
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 
@@ -36,5 +36,5 @@ func TestV2ETHWithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "withdraw")
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
-	r.AssertTestDAppEVMCalled(true, payloadMessageWithdrawETH, amount)
+	r.AssertTestDAppEVMCalled(true, payload, amount)
 }

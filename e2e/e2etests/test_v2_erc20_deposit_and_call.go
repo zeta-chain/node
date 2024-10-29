@@ -2,6 +2,8 @@ package e2etests
 
 import (
 	"math/big"
+	"math/rand"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
@@ -9,10 +11,9 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
-
-const payloadMessageDepositERC20 = "this is a test ERC20 deposit and call payload"
 
 func TestV2ERC20DepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
@@ -22,16 +23,20 @@ func TestV2ERC20DepositAndCall(r *runner.E2ERunner, args []string) {
 
 	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
 
-	r.AssertTestDAppZEVMCalled(false, payloadMessageDepositERC20, amount)
+	payload := randomText()
+
+	r.AssertTestDAppZEVMCalled(false, payload, amount)
 
 	oldBalance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
 	require.NoError(r, err)
+
+	sample.StringRandom(rand.New(rand.NewSource(time.Now().UnixNano())), 50)
 
 	// perform the deposit
 	tx := r.V2ERC20DepositAndCall(
 		r.TestDAppV2ZEVMAddr,
 		amount,
-		[]byte(payloadMessageDepositERC20),
+		[]byte(payload),
 		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 
@@ -41,7 +46,7 @@ func TestV2ERC20DepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
 	// check the payload was received on the contract
-	r.AssertTestDAppZEVMCalled(true, payloadMessageDepositERC20, amount)
+	r.AssertTestDAppZEVMCalled(true, payload, amount)
 
 	// check the balance was updated
 	newBalance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)

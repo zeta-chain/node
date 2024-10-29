@@ -12,12 +12,12 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-const payloadMessageEVMAuthenticatedCall = "this is a test EVM authenticated call payload"
-
 func TestV2ZEVMToEVMCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0)
 
-	r.AssertTestDAppEVMCalled(false, payloadMessageEVMAuthenticatedCall, big.NewInt(0))
+	payload := randomText()
+
+	r.AssertTestDAppEVMCalled(false, payload, big.NewInt(0))
 
 	// necessary approval for fee payment
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
@@ -25,7 +25,7 @@ func TestV2ZEVMToEVMCall(r *runner.E2ERunner, args []string) {
 	// perform the authenticated call
 	tx := r.V2ZEVMToEMVCall(
 		r.TestDAppV2EVMAddr,
-		[]byte(payloadMessageEVMAuthenticatedCall),
+		[]byte(payload),
 		gatewayzevm.RevertOptions{
 			OnRevertGasLimit: big.NewInt(0),
 		},
@@ -37,10 +37,10 @@ func TestV2ZEVMToEVMCall(r *runner.E2ERunner, args []string) {
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
 	// check the payload was received on the contract
-	r.AssertTestDAppEVMCalled(true, payloadMessageEVMAuthenticatedCall, big.NewInt(0))
+	r.AssertTestDAppEVMCalled(true, payload, big.NewInt(0))
 
 	// check expected sender was used
-	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(&bind.CallOpts{}, []byte(payloadMessageEVMAuthenticatedCall))
+	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(&bind.CallOpts{}, []byte(payload))
 	require.NoError(r, err)
 	require.Equal(r, r.ZEVMAuth.From, senderForMsg)
 }
