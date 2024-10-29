@@ -38,7 +38,7 @@ func TestV2ETHWithdrawAndCallThroughContract(r *runner.E2ERunner, args []string)
 	require.NoError(r, err)
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 
-	payload := randomText(r)
+	payload := randomPayload(r)
 
 	// perform the authenticated call
 	tx = r.V2ETHWithdrawAndCallThroughContract(gatewayCaller, r.TestDAppV2EVMAddr,

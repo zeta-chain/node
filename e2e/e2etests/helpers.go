@@ -22,7 +22,8 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func randomText(r *runner.E2ERunner) string {
+// randomPayload generates a random payload to be used in gateway calls for testing purposes
+func randomPayload(r *runner.E2ERunner) string {
 	bytes := make([]byte, 50)
 	_, err := rand.Read(bytes)
 	require.NoError(r, err)

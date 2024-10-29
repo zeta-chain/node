@@ -20,7 +20,7 @@ func TestV2ERC20DepositAndCall(r *runner.E2ERunner, args []string) {
 
 	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
 
-	payload := randomText(r)
+	payload := randomPayload(r)
 
 	r.AssertTestDAppZEVMCalled(false, payload, amount)
 

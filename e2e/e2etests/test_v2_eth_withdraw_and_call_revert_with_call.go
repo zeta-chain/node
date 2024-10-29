@@ -18,7 +18,7 @@ func TestV2ETHWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) 
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
 	require.True(r, ok, "Invalid amount specified for TestV2ETHWithdrawAndCallRevertWithCall")
 
-	payload := randomText(r)
+	payload := randomPayload(r)
 
 	r.AssertTestDAppZEVMCalled(false, payload, amount)
 
