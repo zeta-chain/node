@@ -450,6 +450,7 @@ func (ob *Observer) FilterTSSOutboundInBlock(ctx context.Context, blockNumber ui
 	for i := range block.Transactions {
 		tx := block.Transactions[i]
 		if ethcommon.HexToAddress(tx.From) == ob.TSS().EVMAddress() {
+			// #nosec G115 nonce always positive
 			nonce := uint64(tx.Nonce)
 			if !ob.IsTxConfirmed(nonce) {
 				if receipt, txx, ok := ob.checkConfirmedTx(ctx, tx.Hash, nonce); ok {

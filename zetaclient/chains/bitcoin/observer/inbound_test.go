@@ -18,9 +18,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/testutil"
+	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	clientcommon "github.com/zeta-chain/node/zetaclient/common"
+	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testrpc"
@@ -136,6 +140,77 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 		require.Error(t, err)
 		require.ErrorContains(t, err, "less than subsidy")
 	})
+}
+
+func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
+	// can use any bitcoin chain for testing
+	chain := chains.BitcoinMainnet
+	params := mocks.MockChainParams(chain.ChainId, 10)
+
+	// create test observer
+	ob := MockBTCObserver(t, chain, params, nil)
+	zetacoreClient := mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{}).WithZetaChain()
+	ob.WithZetacoreClient(zetacoreClient)
+
+	// test cases
+	tests := []struct {
+		name    string
+		event   *observer.BTCInboundEvent
+		nilVote bool
+	}{
+		{
+			name: "should return vote for standard memo",
+			event: &observer.BTCInboundEvent{
+				FromAddress: sample.BtcAddressP2WPKH(t, &chaincfg.MainNetParams),
+				// a deposit and call
+				MemoBytes: testutil.HexToBytes(
+					t,
+					"5a0110032d07a9cbd57dcca3e2cf966c88bc874445b6e3b60d68656c6c6f207361746f736869",
+				),
+			},
+		},
+		{
+			name: "should return vote for legacy memo",
+			event: &observer.BTCInboundEvent{
+				// raw address + payload
+				MemoBytes: testutil.HexToBytes(t, "2d07a9cbd57dcca3e2cf966c88bc874445b6e3b668656c6c6f207361746f736869"),
+			},
+		},
+		{
+			name: "should return nil if unable to decode memo",
+			event: &observer.BTCInboundEvent{
+				// standard memo that carries payload only, receiver address is empty
+				MemoBytes: testutil.HexToBytes(t, "5a0110020d68656c6c6f207361746f736869"),
+			},
+			nilVote: true,
+		},
+		{
+			name: "should return nil on donation message",
+			event: &observer.BTCInboundEvent{
+				MemoBytes: []byte(constant.DonationMessage),
+			},
+			nilVote: true,
+		},
+		{
+			name: "should return nil on invalid deposit value",
+			event: &observer.BTCInboundEvent{
+				Value:     -1, // invalid value
+				MemoBytes: testutil.HexToBytes(t, "2d07a9cbd57dcca3e2cf966c88bc874445b6e3b668656c6c6f207361746f736869"),
+			},
+			nilVote: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msg := ob.GetInboundVoteFromBtcEvent(tt.event)
+			if tt.nilVote {
+				require.Nil(t, msg)
+			} else {
+				require.NotNil(t, msg)
+			}
+		})
+	}
 }
 
 func TestGetSenderAddressByVin(t *testing.T) {

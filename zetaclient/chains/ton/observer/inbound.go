@@ -31,7 +31,7 @@ func (ob *Observer) watchInbound(ctx context.Context) error {
 
 	var (
 		chainID         = ob.Chain().ChainId
-		initialInterval = ticker.SecondsFromUint64(ob.ChainParams().InboundTicker)
+		initialInterval = ticker.DurationFromUint64Seconds(ob.ChainParams().InboundTicker)
 		sampledLogger   = ob.Logger().Inbound.Sample(&zerolog.BasicSampler{N: 10})
 	)
 
@@ -47,7 +47,7 @@ func (ob *Observer) watchInbound(ctx context.Context) error {
 			ob.Logger().Inbound.Err(err).Msg("WatchInbound: observeInbound error")
 		}
 
-		newInterval := ticker.SecondsFromUint64(ob.ChainParams().InboundTicker)
+		newInterval := ticker.DurationFromUint64Seconds(ob.ChainParams().InboundTicker)
 		t.SetInterval(newInterval)
 
 		return nil

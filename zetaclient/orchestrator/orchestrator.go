@@ -618,7 +618,7 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 		oc.logger.Error().Msgf("ScheduleCctxSolana: chain observer is not a solana observer")
 		return
 	}
-	// #nosec G701 positive
+	// #nosec G115 positive
 	interval := uint64(observer.ChainParams().OutboundScheduleInterval)
 
 	// schedule keysign for each pending cctx
