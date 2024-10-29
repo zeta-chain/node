@@ -22,12 +22,11 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-
-	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/app"
-	simutils "github.com/zeta-chain/node/tests/simulation/sim"
+	"github.com/zeta-chain/node/simulation/sim"
 
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/app"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -41,7 +40,7 @@ import (
 // AppChainID hardcoded chainID for simulation
 
 func init() {
-	simutils.GetSimulatorFlags()
+	sim.GetSimulatorFlags()
 }
 
 type StoreKeysPrefixes struct {
@@ -70,11 +69,11 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 // The following test certifies that , for the same set of operations ( irrespective of what the operations are ) ,
 // we would reach the same final state if the initial state is the same
 func TestAppStateDeterminism(t *testing.T) {
-	if !simutils.FlagEnabledValue {
+	if !sim.FlagEnabledValue {
 		t.Skip("skipping application simulation")
 	}
 
-	config := simutils.NewConfigFromFlags()
+	config := sim.NewConfigFromFlags()
 
 	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
@@ -95,7 +94,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
-	appOptions[server.FlagInvCheckPeriod] = simutils.FlagPeriodValue
+	appOptions[server.FlagInvCheckPeriod] = sim.FlagPeriodValue
 
 	t.Log("Running tests for numSeeds: ", numSeeds, " numTimesToRunPerSeed: ", numTimesToRunPerSeed)
 
@@ -109,13 +108,13 @@ func TestAppStateDeterminism(t *testing.T) {
 				config,
 				SimDBBackend,
 				SimDBName,
-				simutils.FlagVerboseValue,
-				simutils.FlagEnabledValue,
+				sim.FlagVerboseValue,
+				sim.FlagEnabledValue,
 			)
 			require.NoError(t, err)
 			appOptions[flags.FlagHome] = dir
 
-			simApp, err := simutils.NewSimApp(
+			simApp, err := sim.NewSimApp(
 				logger,
 				db,
 				appOptions,
@@ -135,7 +134,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				t,
 				os.Stdout,
 				simApp.BaseApp,
-				simutils.AppStateFn(
+				sim.AppStateFn(
 					simApp.AppCodec(),
 					simApp.SimulationManager(),
 					simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
@@ -148,14 +147,16 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			simutils.PrintStats(db)
+			sim.PrintStats(db)
 
 			appHash := simApp.LastCommitID().Hash
 			appHashList[j] = appHash
 
 			// Clean up resources
-			require.NoError(t, db.Close())
-			require.NoError(t, os.RemoveAll(dir))
+			t.Cleanup(func() {
+				require.NoError(t, db.Close())
+				require.NoError(t, os.RemoveAll(dir))
+			})
 
 			if j != 0 {
 				require.Equal(
@@ -178,7 +179,7 @@ func TestAppStateDeterminism(t *testing.T) {
 // At the end of the run it tries to export the genesis state to make sure the export works.
 func TestFullAppSimulation(t *testing.T) {
 
-	config := simutils.NewConfigFromFlags()
+	config := sim.NewConfigFromFlags()
 
 	config.ChainID = SimAppChainID
 	config.BlockMaxGas = SimBlockMaxGas
@@ -188,27 +189,27 @@ func TestFullAppSimulation(t *testing.T) {
 		config,
 		SimDBBackend,
 		SimDBName,
-		simutils.FlagVerboseValue,
-		simutils.FlagEnabledValue,
+		sim.FlagVerboseValue,
+		sim.FlagEnabledValue,
 	)
 	if skip {
 		t.Skip("skipping application simulation")
 	}
 	require.NoError(t, err, "simulation setup failed")
 
-	defer func() {
+	t.Cleanup(func() {
 		if err := db.Close(); err != nil {
 			require.NoError(t, err, "Error closing new database")
 		}
 		if err := os.RemoveAll(dir); err != nil {
 			require.NoError(t, err, "Error removing directory")
 		}
-	}()
+	})
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
-	appOptions[server.FlagInvCheckPeriod] = simutils.FlagPeriodValue
+	appOptions[server.FlagInvCheckPeriod] = sim.FlagPeriodValue
 	appOptions[flags.FlagHome] = dir
 
-	simApp, err := simutils.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	simApp, err := sim.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 	require.NoError(t, err)
 
 	blockedAddresses := simApp.ModuleAccountAddrs()
@@ -216,7 +217,7 @@ func TestFullAppSimulation(t *testing.T) {
 		t,
 		os.Stdout,
 		simApp.BaseApp,
-		simutils.AppStateFn(
+		sim.AppStateFn(
 			simApp.AppCodec(),
 			simApp.SimulationManager(),
 			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
@@ -237,11 +238,11 @@ func TestFullAppSimulation(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	simutils.PrintStats(db)
+	sim.PrintStats(db)
 }
 
 func TestAppImportExport(t *testing.T) {
-	config := simutils.NewConfigFromFlags()
+	config := sim.NewConfigFromFlags()
 
 	config.ChainID = SimAppChainID
 	config.BlockMaxGas = SimBlockMaxGas
@@ -251,27 +252,27 @@ func TestAppImportExport(t *testing.T) {
 		config,
 		SimDBBackend,
 		SimDBName,
-		simutils.FlagVerboseValue,
-		simutils.FlagEnabledValue,
+		sim.FlagVerboseValue,
+		sim.FlagEnabledValue,
 	)
 	if skip {
 		t.Skip("skipping application simulation")
 	}
 	require.NoError(t, err, "simulation setup failed")
 
-	defer func() {
+	t.Cleanup(func() {
 		if err := db.Close(); err != nil {
 			require.NoError(t, err, "Error closing new database")
 		}
 		if err := os.RemoveAll(dir); err != nil {
 			require.NoError(t, err, "Error removing directory")
 		}
-	}()
+	})
 
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
-	appOptions[server.FlagInvCheckPeriod] = simutils.FlagPeriodValue
+	appOptions[server.FlagInvCheckPeriod] = sim.FlagPeriodValue
 	appOptions[flags.FlagHome] = dir
-	simApp, err := simutils.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	simApp, err := sim.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 	require.NoError(t, err)
 
 	// Run randomized simulation
@@ -280,7 +281,7 @@ func TestAppImportExport(t *testing.T) {
 		t,
 		os.Stdout,
 		simApp.BaseApp,
-		simutils.AppStateFn(
+		sim.AppStateFn(
 			simApp.AppCodec(),
 			simApp.SimulationManager(),
 			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
@@ -293,10 +294,10 @@ func TestAppImportExport(t *testing.T) {
 	)
 	require.NoError(t, simErr)
 
-	err = simutils.CheckExportSimulation(simApp, config, simParams)
+	err = sim.CheckExportSimulation(simApp, config, simParams)
 	require.NoError(t, err)
 
-	simutils.PrintStats(db)
+	sim.PrintStats(db)
 
 	t.Log("exporting genesis")
 	// export state and simParams
@@ -308,22 +309,22 @@ func TestAppImportExport(t *testing.T) {
 		config,
 		SimDBBackend+"_new",
 		SimDBName+"_new",
-		simutils.FlagVerboseValue,
-		simutils.FlagEnabledValue,
+		sim.FlagVerboseValue,
+		sim.FlagEnabledValue,
 	)
 
 	require.NoError(t, err, "simulation setup failed")
 
-	defer func() {
+	t.Cleanup(func() {
 		if err := newDB.Close(); err != nil {
 			require.NoError(t, err, "Error closing new database")
 		}
 		if err := os.RemoveAll(newDir); err != nil {
 			require.NoError(t, err, "Error removing directory")
 		}
-	}()
+	})
 
-	newSimApp, err := simutils.NewSimApp(
+	newSimApp, err := sim.NewSimApp(
 		logger,
 		newDB,
 		appOptions,
@@ -404,7 +405,7 @@ func TestAppImportExport(t *testing.T) {
 }
 
 func TestAppSimulationAfterImport(t *testing.T) {
-	config := simutils.NewConfigFromFlags()
+	config := sim.NewConfigFromFlags()
 
 	config.ChainID = SimAppChainID
 	config.BlockMaxGas = SimBlockMaxGas
@@ -414,27 +415,27 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		config,
 		SimDBBackend,
 		SimDBName,
-		simutils.FlagVerboseValue,
-		simutils.FlagEnabledValue,
+		sim.FlagVerboseValue,
+		sim.FlagEnabledValue,
 	)
 	if skip {
 		t.Skip("skipping application simulation")
 	}
 	require.NoError(t, err, "simulation setup failed")
 
-	defer func() {
+	t.Cleanup(func() {
 		if err := db.Close(); err != nil {
 			require.NoError(t, err, "Error closing new database")
 		}
 		if err := os.RemoveAll(dir); err != nil {
 			require.NoError(t, err, "Error removing directory")
 		}
-	}()
+	})
 
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
-	appOptions[server.FlagInvCheckPeriod] = simutils.FlagPeriodValue
+	appOptions[server.FlagInvCheckPeriod] = sim.FlagPeriodValue
 	appOptions[flags.FlagHome] = dir
-	simApp, err := simutils.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	simApp, err := sim.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 	require.NoError(t, err)
 
 	// Run randomized simulation
@@ -443,7 +444,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		t,
 		os.Stdout,
 		simApp.BaseApp,
-		simutils.AppStateFn(
+		sim.AppStateFn(
 			simApp.AppCodec(),
 			simApp.SimulationManager(),
 			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
@@ -456,10 +457,10 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	)
 	require.NoError(t, simErr)
 
-	err = simutils.CheckExportSimulation(simApp, config, simParams)
+	err = sim.CheckExportSimulation(simApp, config, simParams)
 	require.NoError(t, err)
 
-	simutils.PrintStats(db)
+	sim.PrintStats(db)
 
 	if stopEarly {
 		t.Log("can't export or import a zero-validator genesis, exiting test")
@@ -478,22 +479,22 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		config,
 		SimDBBackend+"_new",
 		SimDBName+"_new",
-		simutils.FlagVerboseValue,
-		simutils.FlagEnabledValue,
+		sim.FlagVerboseValue,
+		sim.FlagEnabledValue,
 	)
 
 	require.NoError(t, err, "simulation setup failed")
 
-	defer func() {
+	t.Cleanup(func() {
 		if err := newDB.Close(); err != nil {
 			require.NoError(t, err, "Error closing new database")
 		}
 		if err := os.RemoveAll(newDir); err != nil {
 			require.NoError(t, err, "Error removing directory")
 		}
-	}()
+	})
 
-	newSimApp, err := simutils.NewSimApp(
+	newSimApp, err := sim.NewSimApp(
 		logger,
 		newDB,
 		appOptions,
@@ -511,7 +512,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		t,
 		os.Stdout,
 		newSimApp.BaseApp,
-		simutils.AppStateFn(
+		sim.AppStateFn(
 			simApp.AppCodec(),
 			simApp.SimulationManager(),
 			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),

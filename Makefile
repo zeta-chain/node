@@ -360,7 +360,7 @@ start-upgrade-import-mainnet-test: zetanode-upgrade
 ###############################################################################
 
 BINDIR ?= $(GOPATH)/bin
-SIMAPP = ./tests/simulation
+SIMAPP = ./simulation
 
 
 # Run sim is a cosmos tool which helps us to run multiple simulations in parallel.
