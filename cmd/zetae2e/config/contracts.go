@@ -266,7 +266,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		if err != nil {
 			return fmt.Errorf("invalid TestDAppV2Addr: %w", err)
 		}
-		r.TestDAppV2ZEVM, err = testdappv2.NewTestDAppV2(r.TestDAppV2ZEVMAddr, r.EVMClient)
+		r.TestDAppV2ZEVM, err = testdappv2.NewTestDAppV2(r.TestDAppV2ZEVMAddr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
