@@ -21,6 +21,7 @@ func (c *Client) UpdateAppContextWorker(ctx context.Context, app *appcontext.App
 	}()
 
 	var (
+		// #nosec G115 interval is in range and not user controlled
 		updateEvery = time.Duration(app.Config().ConfigUpdateTicker) * time.Second
 		ticker      = time.NewTicker(updateEvery)
 		logger      = c.logger.Sample(logSampler)
