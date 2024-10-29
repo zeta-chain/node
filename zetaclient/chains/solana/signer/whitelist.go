@@ -9,7 +9,37 @@ import (
 	"github.com/near/borsh-go"
 
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
+	"github.com/zeta-chain/node/x/crosschain/types"
 )
+
+// SignMsgWithdraw signs a withdraw message (for gateway withdraw/withdraw_spl instruction) with TSS.
+func (signer *Signer) SignMsgWhitelist(
+	ctx context.Context,
+	params *types.OutboundParams,
+	height uint64,
+	whitelistCandidate solana.PublicKey,
+	whitelistEntry solana.PublicKey,
+) (*contracts.MsgWhitelist, error) {
+	chain := signer.Chain()
+	// #nosec G115 always positive
+	chainID := uint64(signer.Chain().ChainId)
+	nonce := params.TssNonce
+
+	// prepare withdraw msg and compute hash
+	msg := contracts.NewMsgWhitelist(whitelistCandidate, whitelistEntry, chainID, nonce)
+	msgHash := msg.Hash()
+
+	// sign the message with TSS to get an ECDSA signature.
+	// the produced signature is in the [R || S || V] format where V is 0 or 1.
+	signature, err := signer.TSS().Sign(ctx, msgHash[:], height, nonce, chain.ChainId, "")
+	if err != nil {
+		return nil, errors.Wrap(err, "Key-sign failed")
+	}
+	signer.Logger().Std.Info().Msgf("Key-sign succeed for chain %d nonce %d", chainID, nonce)
+
+	// attach the signature and return
+	return msg.SetSignature(signature), nil
+}
 
 // SignWhitelistTx wraps the whitelist 'msg' into a Solana transaction and signs it with the relayer key.
 func (signer *Signer) SignWhitelistTx(ctx context.Context, msg *contracts.MsgWhitelist) (*solana.Transaction, error) {
@@ -18,6 +48,10 @@ func (signer *Signer) SignWhitelistTx(ctx context.Context, msg *contracts.MsgWhi
 	var inst solana.GenericInstruction
 	inst.DataBytes, err = borsh.Serialize(contracts.WhitelistInstructionParams{
 		Discriminator: contracts.DiscriminatorWhitelistSplMint(),
+		Signature:     msg.SigRS(),
+		RecoveryID:    msg.SigV(),
+		MessageHash:   msg.Hash(),
+		Nonce:         msg.Nonce(),
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot serialize whitelist_spl_mint instruction")

@@ -76,8 +76,8 @@ policy_accounts:
     private_key: "0595CB0CD9BF5264A85A603EC8E43C30ADBB5FD2D9E2EF84C374EA4A65BB616C"
 observer_relayer_accounts:
   relayer_accounts:
-    - solana_address: "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
-      solana_private_key: "4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C"
+    - solana_address: "2qBVcNBZCubcnSR3NyCnFjCfkCVUB3G7ECPoaW5rxVjx"
+      solana_private_key: "3EMjCcCJg53fMEGVj13UPQpo6py9AKKyLE2qroR4yL1SvAN2tUznBvDKRYjntw7m6Jof1R2CSqjTddL27rEb6sFQ"
     - solana_address: "4kkCV8H38xirwQTkE5kL6FHNtYGHnMQQ7SkCjAxibHFK"
       solana_private_key: "5SSv7jWzamtjWNKGiKf3gvCPHcq9mE5x6LhYgzJCKNSxoQ83gFpmMgmg2JS2zdKcBEdwy7y9bvWgX4LBiUpvnrPf"
 rpcs:

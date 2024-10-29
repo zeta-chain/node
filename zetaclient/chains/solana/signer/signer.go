@@ -151,8 +151,25 @@ func (signer *Signer) TryProcessOutbound(
 			return
 		}
 
+		// sign gateway withdraw message by TSS
+		msg, err := signer.SignMsgWhitelist(ctx, params, height, pk, whitelistEntryPDA)
+		if err != nil {
+			logger.Error().
+				Err(err).
+				Msgf("TryProcessOutbound: SignMsgWithdraw error for chain %d nonce %d", chainID, nonce)
+			return
+		}
+
+		// skip relaying the transaction if this signer hasn't set the relayer key
+		if !signer.HasRelayerKey() {
+			return
+		}
+
+		// set relayer balance metrics
+		signer.SetRelayerBalanceMetrics(ctx)
+
 		// sign the withdraw transaction by relayer key
-		tx, err = signer.SignWhitelistTx(ctx, contracts.NewMsgWhitelist(pk, whitelistEntryPDA))
+		tx, err = signer.SignWhitelistTx(ctx, msg)
 		if err != nil {
 			logger.Error().
 				Err(err).
