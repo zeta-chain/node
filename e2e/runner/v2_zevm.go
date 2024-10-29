@@ -11,7 +11,7 @@ import (
 	gatewayzevmcaller "github.com/zeta-chain/node/pkg/contracts/gatewayzevmcaller"
 )
 
-var gasLimit = big.NewInt(200000)
+var gasLimit = big.NewInt(250000)
 
 // V2ETHWithdraw calls Withdraw of Gateway with gas token on ZEVM
 func (r *E2ERunner) V2ETHWithdraw(
