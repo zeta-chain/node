@@ -304,8 +304,10 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 
 		// Inclusion information: These fields provide information about the inclusion of the
 		// transaction corresponding to this receipt.
-		"blockHash":        common.BytesToHash(resBlock.Block.Header.Hash()).Hex(),
-		"blockNumber":      hexutil.Uint64(res.Height),
+		"blockHash": common.BytesToHash(resBlock.Block.Header.Hash()).Hex(),
+		// #nosec G115 height always positive
+		"blockNumber": hexutil.Uint64(res.Height),
+		// #nosec G115 tx index always positive
 		"transactionIndex": hexutil.Uint64(res.EthTxIndex),
 
 		// sender and receiver (contract or EOA) addreses

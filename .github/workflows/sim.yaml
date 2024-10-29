@@ -1,9 +1,8 @@
-name: Simulation Tests Workflow
+name: sim
 
 on:
   push:
     branches:
-      - main
       - develop
   pull_request:
     types: [opened, synchronize, labeled]
@@ -14,7 +13,7 @@ on:
       make-targets:
         description: 'Comma separated list of make targets to run (e.g., test-sim-nondeterminism, test-sim-fullappsimulation)'
         required: true
-        default: ''
+        default: 'test-sim-nondeterminism'
 
 concurrency:
   group: simulation-${{ github.head_ref || github.sha }}
@@ -85,7 +84,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21'
+          go-version: '1.22'
 
       - name: Install dependencies
         run: make runsim

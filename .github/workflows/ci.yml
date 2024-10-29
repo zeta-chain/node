@@ -105,8 +105,9 @@ jobs:
       - name: go get node
         working-directory: contrib/rpcimportable
         run: go get github.com/zeta-chain/node@${{github.event.pull_request.head.sha || github.sha}}
-        env: 
+        env:
           GOPROXY: direct
+          GOSUMDB: off
       - name: go mod tidy
         working-directory: contrib/rpcimportable
         run: go mod tidy
