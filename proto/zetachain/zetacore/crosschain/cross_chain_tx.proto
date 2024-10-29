@@ -65,7 +65,7 @@ message CallOptions {
 
 message OutboundParams {
   string receiver = 1;
-  int64 receiver_chainId = 2;
+  int64 receiver_chain_id = 2;
   pkg.coin.CoinType coin_type = 3;
   string amount = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",

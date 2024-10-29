@@ -57280,7 +57280,7 @@ definitions:
     properties:
       receiver:
         type: string
-      receiver_chainId:
+      receiver_chain_id:
         type: string
         format: int64
       coin_type:
