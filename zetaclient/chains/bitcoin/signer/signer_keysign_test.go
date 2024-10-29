@@ -17,7 +17,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -96,7 +95,7 @@ func buildTX() (*wire.MsgTx, *txscript.TxSigHashes, int, int64, []byte, *btcec.P
 	txIn := wire.NewTxIn(outpoint, nil, nil)
 	tx.AddTxIn(txIn)
 
-	pkScript, err := bitcoin.PayToAddrScript(addr)
+	pkScript, err := txscript.PayToAddrScript(addr)
 	if err != nil {
 		return nil, nil, 0, 0, nil, nil, false, err
 	}

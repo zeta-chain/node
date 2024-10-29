@@ -124,6 +124,7 @@ func (gw *Gateway) parseInbound(tx ton.Transaction) (*Transaction, error) {
 
 	var (
 		sender = *sourceID
+		// #nosec G115 always in range
 		opCode = Op(op)
 
 		content    any

@@ -133,8 +133,9 @@ func (c *Contract) GetAllValidators(
 		validatorsRes[i] = Validator{
 			OperatorAddress: v.OperatorAddress,
 			ConsensusPubKey: v.ConsensusPubkey.String(),
-			BondStatus:      uint8(v.Status),
-			Jailed:          v.Jailed,
+			// #nosec G115 enum always in range
+			BondStatus: uint8(v.Status),
+			Jailed:     v.Jailed,
 		}
 	}
 

@@ -151,6 +151,7 @@ func RunDiagnostics(
 	startLogger.Info().Msgf("Successfully announced!")
 
 	// every 1min, print out the p2p diagnostic
+	// #nosec G115 interval is in range and not user controlled
 	ticker := time.NewTicker(time.Duration(cfg.P2PDiagnosticTicker) * time.Second)
 	round := 0
 
