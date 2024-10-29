@@ -238,12 +238,12 @@ func parseWithdrawal(tx ton.Transaction, sig [65]byte, payload *boc.Cell) (Withd
 		return Withdrawal{}, errors.Wrap(err, "unable to parse recipient from payload")
 	}
 
-	// ensure that out msg contains the same amount as withdrawal
+	// ensure a single outgoing message for the withdrawal
 	if tx.OutMsgCnt != 1 {
 		return Withdrawal{}, errors.Wrap(ErrParse, "invalid out messages count")
 	}
 
-	// tlb.Message
+	// tlb.Message{}
 	outMsg := tx.Msgs.OutMsgs.Values()[0].Value
 	if outMsg.Info.SumType != "IntMsgInfo" || outMsg.Info.IntMsgInfo == nil {
 		return Withdrawal{}, errors.Wrap(ErrParse, "invalid out message")
