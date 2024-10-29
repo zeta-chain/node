@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/ptr"
+	"github.com/zeta-chain/node/testutil/sample"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
@@ -453,7 +454,7 @@ func mustUpdateAppContext(
 		chainParams,
 		"tssPubKey",
 		app.GetCrossChainFlags(),
-		app.GetNodeAccounts(),
+		[]observertypes.NodeAccount{*sample.NodeAccount()},
 	)
 
 	require.NoError(t, err)
