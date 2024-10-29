@@ -254,7 +254,7 @@ services:
     entrypoint: ["/usr/bin/start-solana.sh"]
 
   ton:
-    image: ghcr.io/zeta-chain/ton-docker:a69ea0f
+    image: ghcr.io/zeta-chain/ton-docker:4f08c1d
     container_name: ton
     hostname: ton
     profiles:
