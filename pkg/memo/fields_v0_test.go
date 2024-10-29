@@ -125,7 +125,6 @@ func Test_V0_Unpack(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		opCode    memo.OpCode
 		encodeFmt memo.EncodingFormat
 		dataFlags byte
 		data      []byte
@@ -134,7 +133,6 @@ func Test_V0_Unpack(t *testing.T) {
 	}{
 		{
 			name:      "unpack all fields with ABI encoding",
-			opCode:    memo.OpCodeDepositAndCall,
 			encodeFmt: memo.EncodingFmtABI,
 			dataFlags: flagsAllFieldsSet, // all fields are set
 			data: ABIPack(t,
@@ -156,7 +154,6 @@ func Test_V0_Unpack(t *testing.T) {
 		},
 		{
 			name:      "unpack all fields with compact encoding",
-			opCode:    memo.OpCodeDepositAndCall,
 			encodeFmt: memo.EncodingFmtCompactShort,
 			dataFlags: flagsAllFieldsSet, // all fields are set
 			data: CompactPack(
@@ -179,7 +176,6 @@ func Test_V0_Unpack(t *testing.T) {
 		},
 		{
 			name:      "unpack empty ABI encoded payload if flag is set",
-			opCode:    memo.OpCodeDepositAndCall,
 			encodeFmt: memo.EncodingFmtABI,
 			dataFlags: 0b00000010, // payload flags are set
 			data: ABIPack(t,
@@ -188,7 +184,6 @@ func Test_V0_Unpack(t *testing.T) {
 		},
 		{
 			name:      "unpack empty compact encoded payload if flag is set",
-			opCode:    memo.OpCodeDepositAndCall,
 			encodeFmt: memo.EncodingFmtCompactShort,
 			dataFlags: 0b00000010, // payload flag is set
 			data: CompactPack(
@@ -198,7 +193,6 @@ func Test_V0_Unpack(t *testing.T) {
 		},
 		{
 			name:      "unable to get codec on invalid encoding format",
-			opCode:    memo.OpCodeDepositAndCall,
 			encodeFmt: 0x0F,
 			dataFlags: 0b00000001,
 			data:      []byte{},
@@ -206,7 +200,6 @@ func Test_V0_Unpack(t *testing.T) {
 		},
 		{
 			name:      "failed to unpack ABI encoded data with compact encoding format",
-			opCode:    memo.OpCodeDepositAndCall,
 			encodeFmt: memo.EncodingFmtCompactShort,
 			dataFlags: 0b00000011, // receiver and payload flags are set
 			data: ABIPack(t,
@@ -214,23 +207,13 @@ func Test_V0_Unpack(t *testing.T) {
 				memo.ArgPayload(fBytes)),
 			errMsg: "failed to unpack arguments",
 		},
-		{
-			name:      "fields validation failed due to empty receiver address",
-			opCode:    memo.OpCodeDepositAndCall,
-			encodeFmt: memo.EncodingFmtABI,
-			dataFlags: 0b00000011, // receiver and payload flags are set
-			data: ABIPack(t,
-				memo.ArgReceiver(common.Address{}),
-				memo.ArgPayload(fBytes)),
-			errMsg: "receiver address is empty",
-		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// unpack the fields
 			fields := memo.FieldsV0{}
-			err := fields.Unpack(tc.opCode, tc.encodeFmt, tc.dataFlags, tc.data)
+			err := fields.Unpack(tc.encodeFmt, tc.dataFlags, tc.data)
 
 			// validate the error message
 			if tc.errMsg != "" {

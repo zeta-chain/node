@@ -27,11 +27,13 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/ethereum/go-ethereum/rpc"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
+	"github.com/zeta-chain/node/rpc/backend"
 	"github.com/zeta-chain/node/rpc/types"
 )
 
@@ -81,12 +83,13 @@ type filter struct {
 // PublicFilterAPI offers support to create and manage filters. This will allow external clients to retrieve various
 // information related to the Ethereum protocol such as blocks, transactions and logs.
 type PublicFilterAPI struct {
-	logger    log.Logger
-	clientCtx client.Context
-	backend   Backend
-	events    *EventSystem
-	filtersMu sync.Mutex
-	filters   map[rpc.ID]*filter
+	logger      log.Logger
+	clientCtx   client.Context
+	backend     Backend
+	events      *EventSystem
+	filtersMu   sync.Mutex
+	filters     map[rpc.ID]*filter
+	queryClient *types.QueryClient
 }
 
 // NewPublicAPI returns a new PublicFilterAPI instance.
@@ -98,11 +101,12 @@ func NewPublicAPI(
 ) *PublicFilterAPI {
 	logger = logger.With("api", "filter")
 	api := &PublicFilterAPI{
-		logger:    logger,
-		clientCtx: clientCtx,
-		backend:   backend,
-		filters:   make(map[rpc.ID]*filter),
-		events:    NewEventSystem(logger, tmWSClient),
+		logger:      logger,
+		clientCtx:   clientCtx,
+		backend:     backend,
+		filters:     make(map[rpc.ID]*filter),
+		events:      NewEventSystem(logger, tmWSClient),
+		queryClient: types.NewQueryClient(clientCtx),
 	}
 
 	go api.timeoutLoop()
@@ -368,9 +372,35 @@ func (api *PublicFilterAPI) NewHeads(ctx context.Context) (*rpc.Subscription, er
 
 				baseFee := types.BaseFeeFromEvents(data.ResultBeginBlock.Events)
 
+				validatorAccount, err := backend.GetValidatorAccount(&data.Header, api.queryClient)
+				if err != nil {
+					api.logger.Error("failed to get validator account", "err", err)
+					continue
+				}
+
 				// TODO: fetch bloom from events
-				header := types.EthHeaderFromTendermint(data.Header, ethtypes.Bloom{}, baseFee)
-				err = notifier.Notify(rpcSub.ID, header)
+				header := types.EthHeaderFromTendermint(data.Header, ethtypes.Bloom{}, baseFee, validatorAccount)
+
+				var enc types.Header
+				enc.ParentHash = header.ParentHash
+				enc.UncleHash = header.UncleHash
+				enc.Coinbase = header.Coinbase.Hex()
+				enc.Root = header.Root
+				enc.TxHash = header.TxHash
+				enc.ReceiptHash = header.ReceiptHash
+				enc.Bloom = header.Bloom
+				enc.Difficulty = (*hexutil.Big)(header.Difficulty)
+				enc.Number = (*hexutil.Big)(header.Number)
+				enc.GasLimit = hexutil.Uint64(header.GasLimit)
+				enc.GasUsed = hexutil.Uint64(header.GasUsed)
+				enc.Time = hexutil.Uint64(header.Time)
+				enc.Extra = header.Extra
+				enc.MixDigest = header.MixDigest
+				enc.Nonce = header.Nonce
+				enc.BaseFee = (*hexutil.Big)(header.BaseFee)
+				enc.Hash = common.BytesToHash(data.Header.Hash())
+
+				err = notifier.Notify(rpcSub.ID, enc)
 				if err != nil {
 					api.logger.Debug("failed to notify", "error", err.Error())
 				}

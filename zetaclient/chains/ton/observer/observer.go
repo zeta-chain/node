@@ -106,7 +106,7 @@ func (ob *Observer) watchGasPrice(ctx context.Context) error {
 			ob.Logger().GasPrice.Err(err).Msg("WatchGasPrice: postGasPrice error")
 		}
 
-		newInterval := ticker.SecondsFromUint64(ob.ChainParams().GasPriceTicker)
+		newInterval := ticker.DurationFromUint64Seconds(ob.ChainParams().GasPriceTicker)
 		t.SetInterval(newInterval)
 
 		return nil
@@ -116,7 +116,7 @@ func (ob *Observer) watchGasPrice(ctx context.Context) error {
 
 	return ticker.Run(
 		ctx,
-		ticker.SecondsFromUint64(ob.ChainParams().GasPriceTicker),
+		ticker.DurationFromUint64Seconds(ob.ChainParams().GasPriceTicker),
 		task,
 		ticker.WithStopChan(ob.StopChannel()),
 		ticker.WithLogger(ob.Logger().GasPrice, "WatchGasPrice"),

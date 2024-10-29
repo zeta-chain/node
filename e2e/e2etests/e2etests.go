@@ -73,18 +73,23 @@ const (
 	 Bitcoin tests
 	 Test transfer of Bitcoin asset across chains
 	*/
-	TestBitcoinDepositName                = "bitcoin_deposit"
-	TestBitcoinDepositRefundName          = "bitcoin_deposit_refund"
-	TestBitcoinDepositAndCallName         = "bitcoin_deposit_and_call"
-	TestBitcoinWithdrawSegWitName         = "bitcoin_withdraw_segwit"
-	TestBitcoinWithdrawTaprootName        = "bitcoin_withdraw_taproot"
-	TestBitcoinWithdrawMultipleName       = "bitcoin_withdraw_multiple"
-	TestBitcoinWithdrawLegacyName         = "bitcoin_withdraw_legacy"
-	TestBitcoinWithdrawP2WSHName          = "bitcoin_withdraw_p2wsh"
-	TestBitcoinWithdrawP2SHName           = "bitcoin_withdraw_p2sh"
-	TestBitcoinWithdrawInvalidAddressName = "bitcoin_withdraw_invalid"
-	TestBitcoinWithdrawRestrictedName     = "bitcoin_withdraw_restricted"
-	TestExtractBitcoinInscriptionMemoName = "bitcoin_memo_from_inscription"
+	TestBitcoinDepositName                                 = "bitcoin_deposit"
+	TestBitcoinDepositAndCallName                          = "bitcoin_deposit_and_call"
+	TestBitcoinDepositAndCallRevertName                    = "bitcoin_deposit_and_call_revert"
+	TestBitcoinDonationName                                = "bitcoin_donation"
+	TestBitcoinStdMemoDepositName                          = "bitcoin_std_memo_deposit"
+	TestBitcoinStdMemoDepositAndCallName                   = "bitcoin_std_memo_deposit_and_call"
+	TestBitcoinStdMemoDepositAndCallRevertName             = "bitcoin_std_memo_deposit_and_call_revert"
+	TestBitcoinStdMemoDepositAndCallRevertOtherAddressName = "bitcoin_std_memo_deposit_and_call_revert_other_address"
+	TestBitcoinWithdrawSegWitName                          = "bitcoin_withdraw_segwit"
+	TestBitcoinWithdrawTaprootName                         = "bitcoin_withdraw_taproot"
+	TestBitcoinWithdrawMultipleName                        = "bitcoin_withdraw_multiple"
+	TestBitcoinWithdrawLegacyName                          = "bitcoin_withdraw_legacy"
+	TestBitcoinWithdrawP2WSHName                           = "bitcoin_withdraw_p2wsh"
+	TestBitcoinWithdrawP2SHName                            = "bitcoin_withdraw_p2sh"
+	TestBitcoinWithdrawInvalidAddressName                  = "bitcoin_withdraw_invalid"
+	TestBitcoinWithdrawRestrictedName                      = "bitcoin_withdraw_restricted"
+	TestExtractBitcoinInscriptionMemoName                  = "bitcoin_memo_from_inscription"
 
 	/*
 	 Application tests
@@ -476,6 +481,13 @@ var AllE2ETests = []runner.E2ETest{
 	 Bitcoin tests
 	*/
 	runner.NewE2ETest(
+		TestBitcoinDonationName,
+		"donate Bitcoin to TSS address", []runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.1"},
+		},
+		TestBitcoinDonation,
+	),
+	runner.NewE2ETest(
 		TestExtractBitcoinInscriptionMemoName,
 		"extract memo from BTC inscription", []runner.ArgDefinition{
 			{Description: "amount in btc", DefaultValue: "0.1"},
@@ -499,11 +511,43 @@ var AllE2ETests = []runner.E2ETest{
 		TestBitcoinDepositAndCall,
 	),
 	runner.NewE2ETest(
-		TestBitcoinDepositRefundName,
+		TestBitcoinDepositAndCallRevertName,
 		"deposit Bitcoin into ZEVM; expect refund", []runner.ArgDefinition{
 			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
-		TestBitcoinDepositRefund,
+		TestBitcoinDepositAndCallRevert,
+	),
+	runner.NewE2ETest(
+		TestBitcoinStdMemoDepositName,
+		"deposit Bitcoin into ZEVM with standard memo",
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.2"},
+		},
+		TestBitcoinStdMemoDeposit,
+	),
+	runner.NewE2ETest(
+		TestBitcoinStdMemoDepositAndCallName,
+		"deposit Bitcoin into ZEVM and call a contract with standard memo",
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.5"},
+		},
+		TestBitcoinStdMemoDepositAndCall,
+	),
+	runner.NewE2ETest(
+		TestBitcoinStdMemoDepositAndCallRevertName,
+		"deposit Bitcoin into ZEVM and call a contract with standard memo; expect revert",
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.1"},
+		},
+		TestBitcoinStdMemoDepositAndCallRevert,
+	),
+	runner.NewE2ETest(
+		TestBitcoinStdMemoDepositAndCallRevertOtherAddressName,
+		"deposit Bitcoin into ZEVM and call a contract with standard memo; expect revert to other address",
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.1"},
+		},
+		TestBitcoinStdMemoDepositAndCallRevertOtherAddress,
 	),
 	runner.NewE2ETest(
 		TestBitcoinWithdrawSegWitName,

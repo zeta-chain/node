@@ -59,7 +59,7 @@ func (ob *Observer) watchOutbound(ctx context.Context) error {
 	}
 
 	var (
-		initialInterval = ticker.SecondsFromUint64(ob.ChainParams().OutboundTicker)
+		initialInterval = ticker.DurationFromUint64Seconds(ob.ChainParams().OutboundTicker)
 		sampledLogger   = ob.Logger().Inbound.Sample(&zerolog.BasicSampler{N: 10})
 	)
 
@@ -73,7 +73,7 @@ func (ob *Observer) watchOutbound(ctx context.Context) error {
 			ob.Logger().Outbound.Err(err).Msg("WatchOutbound: observeOutboundTrackers error")
 		}
 
-		newInterval := ticker.SecondsFromUint64(ob.ChainParams().OutboundTicker)
+		newInterval := ticker.DurationFromUint64Seconds(ob.ChainParams().OutboundTicker)
 		t.SetInterval(newInterval)
 
 		return nil
