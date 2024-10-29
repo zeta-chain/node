@@ -1,8 +1,8 @@
 module github.com/zeta-chain/node
 
-go 1.22.2
+go 1.22.7
 
-toolchain go1.22.5
+toolchain go1.22.8
 
 require (
 	cosmossdk.io/errors v1.0.1
