@@ -1,8 +1,8 @@
 module github.com/zeta-chain/node
 
-go 1.22.2
+go 1.22.7
 
-toolchain go1.22.5
+toolchain go1.22.8
 
 require (
 	cosmossdk.io/errors v1.0.1
@@ -367,5 +367,5 @@ replace (
 	github.com/bnb-chain/tss-lib => github.com/zeta-chain/tss-lib v0.0.0-20240916163010-2e6b438bd901
 	github.com/ethereum/go-ethereum => github.com/zeta-chain/go-ethereum v1.10.26-spc
 	github.com/libp2p/go-libp2p => github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4
-	gitlab.com/thorchain/tss/go-tss => github.com/zeta-chain/go-tss v0.0.0-20240916173049-89fee4b0ae7f
+	gitlab.com/thorchain/tss/go-tss => github.com/zeta-chain/go-tss v0.0.0-20241028203048-62ae2bb54949
 )
