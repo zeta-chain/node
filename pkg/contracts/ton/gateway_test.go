@@ -290,8 +290,6 @@ func TestWithdrawal(t *testing.T) {
 			v = sig[64]
 		)
 
-		t.Logf("expected:\n  r: %s\n  s: %s\n  v: %d", r.String(), s.String(), v)
-
 		actualV, err := body.ReadUint(8)
 		require.NoError(t, err)
 
@@ -304,8 +302,6 @@ func TestWithdrawal(t *testing.T) {
 		assert.Equal(t, 0, r.Cmp(actualR))
 		assert.Equal(t, 0, s.Cmp(actualS))
 		assert.Equal(t, uint64(v), actualV)
-
-		t.Logf("actual:\n  r: %s\n  s: %s\n  v: %d", actualR.String(), actualS.String(), actualV)
 	})
 }
 
@@ -407,14 +403,11 @@ func TestDeployment(t *testing.T) {
 	stateInit := GatewayStateInit(ton.MustParseAccountID(sampleAuthority), tss, true)
 
 	// ASSERT
-	codeString, err := code.ToBocStringCustom(false, true, false, 0)
+	_, err := code.ToBocStringCustom(false, true, false, 0)
 	require.NoError(t, err)
 
 	stateString, err := stateInit.ToBocStringCustom(false, true, false, 0)
 	require.NoError(t, err)
-
-	t.Logf("Gateway code: %s", codeString)
-	t.Logf("Gateway state: %s", stateString)
 
 	// Taken from jest tests in protocol-contracts-ton (using the same vars for initState config)
 	const expectedState = "b5ee9c7241010101003c000074800000000124d38a790fdf1d9311fae87d4b21aeffd77bc26c004686a2c066c784a915f3e01c853d3195ed254c948e21adbb3e4a9b3f5f3c74d746f17671"

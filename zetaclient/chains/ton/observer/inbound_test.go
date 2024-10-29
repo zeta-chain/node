@@ -292,28 +292,6 @@ func TestInbound(t *testing.T) {
 
 		assert.Equal(t, uint64(withdrawal.Seqno), tracker.nonce)
 		assert.Equal(t, liteapi.TransactionToHashString(&withdrawalTX), tracker.hash)
-
-		//
-		//// Check CCTX
-		//cctx := ts.votesBag[0]
-		//
-		//assert.NotNil(t, cctx)
-		//
-		//assert.Equal(t, deposit.Sender.ToRaw(), cctx.Sender)
-		//assert.Equal(t, ts.chain.ChainId, cctx.SenderChainId)
-		//
-		//assert.Equal(t, "", cctx.Asset)
-		//assert.Equal(t, deposit.Amount.Uint64(), cctx.Amount.Uint64())
-		//assert.Equal(t, hex.EncodeToString(deposit.Recipient.Bytes()), cctx.Message)
-		//
-		//// Check hash & block height
-		//expectedHash := liteapi.TransactionHashToString(depositTX.Lt, txHash(depositTX))
-		//assert.Equal(t, expectedHash, cctx.InboundHash)
-		//
-		//blockInfo, err := ts.liteClient.GetBlockHeader(ts.ctx, depositTX.BlockID, 0)
-		//require.NoError(t, err)
-		//
-		//assert.Equal(t, uint64(blockInfo.MinRefMcSeqno), cctx.InboundBlockHeight)
 	})
 
 	t.Run("Multiple transactions", func(t *testing.T) {

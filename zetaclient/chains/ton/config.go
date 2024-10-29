@@ -91,14 +91,23 @@ func FetchGasConfig(ctx context.Context, getter ConfigGetter) (tlb.GasLimitsPric
 
 // ParseGasPrice parses gas price from the config and returns price in tons per 1 gas unit.
 func ParseGasPrice(cfg tlb.GasLimitsPrices) (uint64, error) {
+	// tongo lib uses a concept of "sum types"
+	// to represent different types of decoded entities.
+	// Basically, sumType is a struct property that is not empty (i.e. got decoded).
+	const (
+		sumTypeGasPrices    = "GasPrices"
+		sumTypeGasPricesExt = "GasPricesExt"
+		sumTypeGasFlatPfx   = "GasFlatPfx"
+	)
+
 	// from TON docs: gas_price: This parameter reflects
 	// the price of gas in the network, in nano tons per 65536 gas units (2^16).
 	switch cfg.SumType {
-	case "GasPrices":
+	case sumTypeGasPrices:
 		return cfg.GasPrices.GasPrice >> 16, nil
-	case "GasPricesExt":
+	case sumTypeGasPricesExt:
 		return cfg.GasPricesExt.GasPrice >> 16, nil
-	case "GasFlatPfx":
+	case sumTypeGasFlatPfx:
 		if cfg.GasFlatPfx.Other == nil {
 			return 0, errors.New("GasFlatPfx.Other is nil")
 		}

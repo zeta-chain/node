@@ -63,8 +63,18 @@ func (r *E2ERunner) SetupTON() error {
 		return fmt.Errorf("TON gateway balance is zero")
 	}
 
+	// 4. Deposit 100 TON deployer to Zevm Auth
+	gw := toncontracts.NewGateway(gwAccount.ID)
+	veryFirstDeposit := toncontracts.Coins(1000)
+	zevmRecipient := r.ZEVMAuth.From
+
+	err = gw.SendDeposit(ctx, &deployer.Wallet, veryFirstDeposit, zevmRecipient, 0)
+	if err != nil {
+		return errors.Wrap(err, "unable to send deposit to TON gateway")
+	}
+
 	r.TONDeployer = deployer
-	r.TONGateway = toncontracts.NewGateway(gwAccount.ID)
+	r.TONGateway = gw
 
 	return r.ensureTONChainParams(gwAccount)
 }

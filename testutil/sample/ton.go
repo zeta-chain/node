@@ -19,7 +19,7 @@ import (
 const (
 	tonWorkchainID   = 0
 	tonShardID       = 123
-	tonSampleTXFee   = 006_500_000 // 0.0065 TON
+	tonSampleTxFee   = 006_500_000 // 0.0065 TON
 	tonSampleGasUsed = 8500
 )
 
@@ -56,7 +56,7 @@ func TONDonateProps(t *testing.T, acc ton.AccountID, d toncontracts.Donation) TO
 	body, err := d.AsBody()
 	require.NoError(t, err)
 
-	tonSent := tonSampleTXFee + d.Amount.Uint64()
+	tonSent := tonSampleTxFee + d.Amount.Uint64()
 
 	return TONTransactionProps{
 		Account: acc,
@@ -80,7 +80,7 @@ func TONDepositProps(t *testing.T, acc ton.AccountID, d toncontracts.Deposit) TO
 	body, err := d.AsBody()
 	require.NoError(t, err)
 
-	logBody := depositLogMock(t, d.Amount.Uint64(), tonSampleTXFee)
+	logBody := depositLogMock(t, d.Amount.Uint64(), tonSampleTxFee)
 
 	return TONTransactionProps{
 		Account: acc,
@@ -107,7 +107,7 @@ func TONDepositAndCallProps(t *testing.T, acc ton.AccountID, d toncontracts.Depo
 	body, err := d.AsBody()
 	require.NoError(t, err)
 
-	logBody := depositLogMock(t, d.Amount.Uint64(), tonSampleTXFee)
+	logBody := depositLogMock(t, d.Amount.Uint64(), tonSampleTxFee)
 
 	return TONTransactionProps{
 		Account: acc,
@@ -163,7 +163,7 @@ func TONTransaction(t *testing.T, p TONTransactionProps) ton.Transaction {
 	}
 
 	if p.TotalTONFees == 0 {
-		p.TotalTONFees = tonSampleTXFee
+		p.TotalTONFees = tonSampleTxFee
 	}
 
 	if p.BlockID.BlockID.Seqno == 0 {
@@ -264,7 +264,7 @@ func tonBlockID(now time.Time) ton.BlockIDExt {
 }
 
 func fakeDepositAmount(v math.Uint) tlb.Grams {
-	return tlb.Grams(v.Uint64() + tonSampleTXFee)
+	return tlb.Grams(v.Uint64() + tonSampleTxFee)
 }
 
 func depositLogMock(t *testing.T, depositAmount, txFee uint64) *boc.Cell {
