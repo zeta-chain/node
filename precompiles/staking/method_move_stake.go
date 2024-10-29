@@ -12,7 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 
-	ptypes "github.com/zeta-chain/node/precompiles/types"
+	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 )
 
 func (c *Contract) MoveStake(
@@ -23,7 +23,7 @@ func (c *Contract) MoveStake(
 	args []interface{},
 ) ([]byte, error) {
 	if len(args) != 4 {
-		return nil, &(ptypes.ErrInvalidNumberOfArgs{
+		return nil, &(precompiletypes.ErrInvalidNumberOfArgs{
 			Got:    len(args),
 			Expect: 4,
 		})
@@ -31,7 +31,7 @@ func (c *Contract) MoveStake(
 
 	stakerAddress, ok := args[0].(common.Address)
 	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
+		return nil, precompiletypes.ErrInvalidArgument{
 			Got: args[0],
 		}
 	}
@@ -42,21 +42,21 @@ func (c *Contract) MoveStake(
 
 	validatorSrcAddress, ok := args[1].(string)
 	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
+		return nil, precompiletypes.ErrInvalidArgument{
 			Got: args[1],
 		}
 	}
 
 	validatorDstAddress, ok := args[2].(string)
 	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
+		return nil, precompiletypes.ErrInvalidArgument{
 			Got: args[2],
 		}
 	}
 
 	amount, ok := args[3].(*big.Int)
 	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
+		return nil, precompiletypes.ErrInvalidArgument{
 			Got: args[3],
 		}
 	}
@@ -75,7 +75,7 @@ func (c *Contract) MoveStake(
 		return nil, err
 	}
 
-	stateDB := evm.StateDB.(ptypes.ExtStateDB)
+	stateDB := evm.StateDB.(precompiletypes.ExtStateDB)
 	err = c.addMoveStakeLog(ctx, stateDB, stakerAddress, validatorSrcAddress, validatorDstAddress, amount)
 	if err != nil {
 		return nil, err

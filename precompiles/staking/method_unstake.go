@@ -12,7 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 
-	ptypes "github.com/zeta-chain/node/precompiles/types"
+	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 )
 
 func (c *Contract) Unstake(
@@ -23,7 +23,7 @@ func (c *Contract) Unstake(
 	args []interface{},
 ) ([]byte, error) {
 	if len(args) != 3 {
-		return nil, &(ptypes.ErrInvalidNumberOfArgs{
+		return nil, &(precompiletypes.ErrInvalidNumberOfArgs{
 			Got:    len(args),
 			Expect: 3,
 		})
@@ -31,7 +31,7 @@ func (c *Contract) Unstake(
 
 	stakerAddress, ok := args[0].(common.Address)
 	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
+		return nil, precompiletypes.ErrInvalidArgument{
 			Got: args[0],
 		}
 	}
@@ -42,14 +42,14 @@ func (c *Contract) Unstake(
 
 	validatorAddress, ok := args[1].(string)
 	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
+		return nil, precompiletypes.ErrInvalidArgument{
 			Got: args[1],
 		}
 	}
 
 	amount, ok := args[2].(*big.Int)
 	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
+		return nil, precompiletypes.ErrInvalidArgument{
 			Got: args[2],
 		}
 	}
@@ -67,7 +67,7 @@ func (c *Contract) Unstake(
 		return nil, err
 	}
 
-	stateDB := evm.StateDB.(ptypes.ExtStateDB)
+	stateDB := evm.StateDB.(precompiletypes.ExtStateDB)
 	err = c.addUnstakeLog(ctx, stateDB, stakerAddress, validatorAddress, amount)
 	if err != nil {
 		return nil, err

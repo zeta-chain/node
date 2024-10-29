@@ -7,7 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
-	ptypes "github.com/zeta-chain/node/precompiles/types"
+	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 	"github.com/zeta-chain/node/testutil/sample"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
@@ -40,7 +40,7 @@ func Test_Unstake(t *testing.T) {
 
 		// ASSERT
 		require.Error(t, err)
-		require.ErrorIs(t, err, ptypes.ErrDisabledMethod{
+		require.ErrorIs(t, err, precompiletypes.ErrDisabledMethod{
 			Method: UnstakeMethodName,
 		})
 	})

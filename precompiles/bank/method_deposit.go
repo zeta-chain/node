@@ -8,7 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 
-	ptypes "github.com/zeta-chain/node/precompiles/types"
+	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 	"github.com/zeta-chain/node/x/fungible/types"
 )
 
@@ -34,7 +34,7 @@ func (c *Contract) deposit(
 	// This function is developed using the Check - Effects - Interactions pattern:
 	// 1. Check everything is correct.
 	if len(args) != 2 {
-		return nil, &(ptypes.ErrInvalidNumberOfArgs{
+		return nil, &(precompiletypes.ErrInvalidNumberOfArgs{
 			Got:    len(args),
 			Expect: 2,
 		})
@@ -48,13 +48,13 @@ func (c *Contract) deposit(
 	}
 
 	// Get the correct caller address.
-	caller, err := ptypes.GetEVMCallerAddress(evm, contract)
+	caller, err := precompiletypes.GetEVMCallerAddress(evm, contract)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get the cosmos address of the caller.
-	toAddr, err := ptypes.GetCosmosAddress(c.bankKeeper, caller)
+	toAddr, err := precompiletypes.GetCosmosAddress(c.bankKeeper, caller)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func (c *Contract) deposit(
 		[]interface{}{caller},
 	)
 	if err != nil {
-		return nil, &ptypes.ErrUnexpected{
+		return nil, &precompiletypes.ErrUnexpected{
 			When: "balanceOf",
 			Got:  err.Error(),
 		}
@@ -78,13 +78,13 @@ func (c *Contract) deposit(
 
 	balance, ok := resBalanceOf[0].(*big.Int)
 	if !ok {
-		return nil, &ptypes.ErrUnexpected{
+		return nil, &precompiletypes.ErrUnexpected{
 			Got: "ZRC20 balanceOf returned an unexpected type",
 		}
 	}
 
 	if balance.Cmp(amount) < 0 || balance.Cmp(big.NewInt(0)) <= 0 {
-		return nil, &ptypes.ErrInvalidAmount{
+		return nil, &precompiletypes.ErrInvalidAmount{
 			Got: balance.String(),
 		}
 	}
@@ -94,14 +94,14 @@ func (c *Contract) deposit(
 	//   this way we map ZRC20 addresses to cosmos denoms "zevm/0x12345".
 	// - Mint coins to the fungible module.
 	// - Send coins from fungible to the caller.
-	coinSet, err := ptypes.CreateCoinSet(ptypes.ZRC20ToCosmosDenom(zrc20Addr), amount)
+	coinSet, err := precompiletypes.CreateCoinSet(precompiletypes.ZRC20ToCosmosDenom(zrc20Addr), amount)
 	if err != nil {
 		return nil, err
 	}
 
 	// 2. Effect: subtract balance.
 	if err := c.fungibleKeeper.LockZRC20(ctx, c.zrc20ABI, zrc20Addr, c.Address(), caller, c.Address(), amount); err != nil {
-		return nil, &ptypes.ErrUnexpected{
+		return nil, &precompiletypes.ErrUnexpected{
 			When: "LockZRC20InBank",
 			Got:  err.Error(),
 		}
@@ -109,7 +109,7 @@ func (c *Contract) deposit(
 
 	// 3. Interactions: create cosmos coin and send.
 	if err := c.bankKeeper.MintCoins(ctx, types.ModuleName, coinSet); err != nil {
-		return nil, &ptypes.ErrUnexpected{
+		return nil, &precompiletypes.ErrUnexpected{
 			When: "MintCoins",
 			Got:  err.Error(),
 		}
@@ -117,14 +117,14 @@ func (c *Contract) deposit(
 
 	err = c.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, toAddr, coinSet)
 	if err != nil {
-		return nil, &ptypes.ErrUnexpected{
+		return nil, &precompiletypes.ErrUnexpected{
 			When: "SendCoinsFromModuleToAccount",
 			Got:  err.Error(),
 		}
 	}
 
 	if err := c.addEventLog(ctx, evm.StateDB, DepositEventName, eventData{caller, zrc20Addr, toAddr.String(), coinSet.Denoms()[0], amount}); err != nil {
-		return nil, &ptypes.ErrUnexpected{
+		return nil, &precompiletypes.ErrUnexpected{
 			When: "AddDepositLog",
 			Got:  err.Error(),
 		}
@@ -136,14 +136,14 @@ func (c *Contract) deposit(
 func unpackDepositArgs(args []interface{}) (zrc20Addr common.Address, amount *big.Int, err error) {
 	zrc20Addr, ok := args[0].(common.Address)
 	if !ok {
-		return common.Address{}, nil, &ptypes.ErrInvalidAddr{
+		return common.Address{}, nil, &precompiletypes.ErrInvalidAddr{
 			Got: zrc20Addr.String(),
 		}
 	}
 
 	amount, ok = args[1].(*big.Int)
 	if !ok || amount == nil || amount.Sign() <= 0 {
-		return common.Address{}, nil, &ptypes.ErrInvalidAmount{
+		return common.Address{}, nil, &precompiletypes.ErrInvalidAmount{
 			Got: amount.String(),
 		}
 	}

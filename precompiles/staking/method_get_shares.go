@@ -7,7 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 
-	ptypes "github.com/zeta-chain/node/precompiles/types"
+	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 )
 
 func (c *Contract) GetShares(
@@ -16,21 +16,21 @@ func (c *Contract) GetShares(
 	args []interface{},
 ) ([]byte, error) {
 	if len(args) != 2 {
-		return nil, &(ptypes.ErrInvalidNumberOfArgs{
+		return nil, &(precompiletypes.ErrInvalidNumberOfArgs{
 			Got:    len(args),
 			Expect: 2,
 		})
 	}
 	stakerAddress, ok := args[0].(common.Address)
 	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
+		return nil, precompiletypes.ErrInvalidArgument{
 			Got: args[0],
 		}
 	}
 
 	validatorAddress, ok := args[1].(string)
 	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
+		return nil, precompiletypes.ErrInvalidArgument{
 			Got: args[1],
 		}
 	}

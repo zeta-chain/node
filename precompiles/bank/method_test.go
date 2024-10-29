@@ -16,7 +16,7 @@ import (
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 	"github.com/zeta-chain/node/pkg/chains"
 	erc1967proxy "github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
-	ptypes "github.com/zeta-chain/node/precompiles/types"
+	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 	"github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
@@ -46,7 +46,7 @@ func Test_Methods(t *testing.T) {
 		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, true)
 		require.ErrorIs(
 			t,
-			ptypes.ErrWriteMethod{
+			precompiletypes.ErrWriteMethod{
 				Method: "deposit",
 			},
 			err)
@@ -73,7 +73,7 @@ func Test_Methods(t *testing.T) {
 		success, err := ts.bankContract.Run(ts.mockEVM, ts.mockVMContract, true)
 		require.ErrorIs(
 			t,
-			ptypes.ErrWriteMethod{
+			precompiletypes.ErrWriteMethod{
 				Method: "withdraw",
 			},
 			err)
@@ -101,7 +101,7 @@ func Test_Methods(t *testing.T) {
 		require.Error(t, err)
 		require.ErrorAs(
 			t,
-			ptypes.ErrInvalidAmount{
+			precompiletypes.ErrInvalidAmount{
 				Got: "0",
 			},
 			err,
@@ -248,7 +248,7 @@ func Test_Methods(t *testing.T) {
 		require.Error(t, err)
 		require.ErrorAs(
 			t,
-			ptypes.ErrInvalidAmount{
+			precompiletypes.ErrInvalidAmount{
 				Got: "1000",
 			},
 			err,
@@ -459,7 +459,7 @@ func Test_Methods(t *testing.T) {
 		require.Error(t, err)
 		require.ErrorAs(
 			t,
-			ptypes.ErrInsufficientBalance{
+			precompiletypes.ErrInsufficientBalance{
 				Requested: "501",
 				Got:       "500",
 			},

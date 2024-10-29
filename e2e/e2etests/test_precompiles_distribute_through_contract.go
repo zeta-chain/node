@@ -12,7 +12,7 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/precompiles/bank"
 	"github.com/zeta-chain/node/precompiles/staking"
-	ptypes "github.com/zeta-chain/node/precompiles/types"
+	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 )
 
 func TestPrecompilesDistributeThroughContract(r *runner.E2ERunner, args []string) {
@@ -24,7 +24,7 @@ func TestPrecompilesDistributeThroughContract(r *runner.E2ERunner, args []string
 		lockerAddress             = bank.ContractAddress
 
 		zrc20Address = r.ERC20ZRC20Addr
-		zrc20Denom   = ptypes.ZRC20ToCosmosDenom(zrc20Address)
+		zrc20Denom   = precompiletypes.ZRC20ToCosmosDenom(zrc20Address)
 
 		oneThousand    = big.NewInt(1e3)
 		oneThousandOne = big.NewInt(1001)

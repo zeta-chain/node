@@ -5,7 +5,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 
-	ptypes "github.com/zeta-chain/node/precompiles/types"
+	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 )
 
 // balanceOf returns the balance of cosmos coins minted by the bank's deposit function,
@@ -19,7 +19,7 @@ func (c *Contract) balanceOf(
 	args []interface{},
 ) (result []byte, err error) {
 	if len(args) != 2 {
-		return nil, &(ptypes.ErrInvalidNumberOfArgs{
+		return nil, &(precompiletypes.ErrInvalidNumberOfArgs{
 			Got:    len(args),
 			Expect: 2,
 		})
@@ -32,7 +32,7 @@ func (c *Contract) balanceOf(
 	}
 
 	// Get the counterpart cosmos address.
-	toAddr, err := ptypes.GetCosmosAddress(c.bankKeeper, addr)
+	toAddr, err := precompiletypes.GetCosmosAddress(c.bankKeeper, addr)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (c *Contract) balanceOf(
 	// Do not check for t.Paused, as the balance is read only the EOA won't be able to operate.
 	_, found := c.fungibleKeeper.GetForeignCoins(ctx, zrc20Addr.String())
 	if !found {
-		return nil, &ptypes.ErrInvalidToken{
+		return nil, &precompiletypes.ErrInvalidToken{
 			Got:    zrc20Addr.String(),
 			Reason: "token is not a whitelisted ZRC20",
 		}
@@ -49,9 +49,9 @@ func (c *Contract) balanceOf(
 
 	// Bank Keeper GetBalance returns the specified Cosmos coin balance for a given address.
 	// Check explicitly the balance is a non-negative non-nil value.
-	coin := c.bankKeeper.GetBalance(ctx, toAddr, ptypes.ZRC20ToCosmosDenom(zrc20Addr))
+	coin := c.bankKeeper.GetBalance(ctx, toAddr, precompiletypes.ZRC20ToCosmosDenom(zrc20Addr))
 	if !coin.IsValid() {
-		return nil, &ptypes.ErrInvalidCoin{
+		return nil, &precompiletypes.ErrInvalidCoin{
 			Got:      coin.GetDenom(),
 			Negative: coin.IsNegative(),
 			Nil:      coin.IsNil(),
@@ -64,14 +64,14 @@ func (c *Contract) balanceOf(
 func unpackBalanceOfArgs(args []interface{}) (zrc20Addr common.Address, addr common.Address, err error) {
 	zrc20Addr, ok := args[0].(common.Address)
 	if !ok {
-		return common.Address{}, common.Address{}, &ptypes.ErrInvalidAddr{
+		return common.Address{}, common.Address{}, &precompiletypes.ErrInvalidAddr{
 			Got: zrc20Addr.String(),
 		}
 	}
 
 	addr, ok = args[1].(common.Address)
 	if !ok {
-		return common.Address{}, common.Address{}, &ptypes.ErrInvalidAddr{
+		return common.Address{}, common.Address{}, &precompiletypes.ErrInvalidAddr{
 			Got: addr.String(),
 		}
 	}

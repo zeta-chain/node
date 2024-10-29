@@ -12,7 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
-	ptypes "github.com/zeta-chain/node/precompiles/types"
+	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
 )
 
@@ -61,7 +61,7 @@ func initABI() {
 }
 
 type Contract struct {
-	ptypes.BaseContract
+	precompiletypes.BaseContract
 
 	stakingKeeper  stakingkeeper.Keeper
 	fungibleKeeper fungiblekeeper.Keeper
@@ -93,7 +93,7 @@ func NewIStakingContract(
 	}
 
 	return &Contract{
-		BaseContract:   ptypes.NewBaseContract(ContractAddress),
+		BaseContract:   precompiletypes.NewBaseContract(ContractAddress),
 		stakingKeeper:  *stakingKeeper,
 		fungibleKeeper: fungibleKeeper,
 		bankKeeper:     bankKeeper,
@@ -146,11 +146,11 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 		return nil, err
 	}
 
-	stateDB := evm.StateDB.(ptypes.ExtStateDB)
+	stateDB := evm.StateDB.(precompiletypes.ExtStateDB)
 
 	// If the method is not a view method, it should not be executed in read-only mode.
 	if _, isViewMethod := ViewMethod[[4]byte(method.ID)]; !isViewMethod && readOnly {
-		return nil, ptypes.ErrWriteMethod{
+		return nil, precompiletypes.ErrWriteMethod{
 			Method: method.Name,
 		}
 	}
@@ -178,7 +178,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 		return res, nil
 	case StakeMethodName:
 		// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
-		return nil, ptypes.ErrDisabledMethod{
+		return nil, precompiletypes.ErrDisabledMethod{
 			Method: method.Name,
 		}
 
@@ -194,7 +194,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 		return res, nil
 	case UnstakeMethodName:
 		// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
-		return nil, ptypes.ErrDisabledMethod{
+		return nil, precompiletypes.ErrDisabledMethod{
 			Method: method.Name,
 		}
 
@@ -210,7 +210,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 		return res, nil
 	case MoveStakeMethodName:
 		// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
-		return nil, ptypes.ErrDisabledMethod{
+		return nil, precompiletypes.ErrDisabledMethod{
 			Method: method.Name,
 		}
 
@@ -240,7 +240,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 		}
 		return res, nil
 	default:
-		return nil, ptypes.ErrInvalidMethod{
+		return nil, precompiletypes.ErrInvalidMethod{
 			Method: method.Name,
 		}
 	}

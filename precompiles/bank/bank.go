@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
-	ptypes "github.com/zeta-chain/node/precompiles/types"
+	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
 )
 
@@ -49,7 +49,7 @@ func initABI() {
 }
 
 type Contract struct {
-	ptypes.BaseContract
+	precompiletypes.BaseContract
 
 	bankKeeper     bank.Keeper
 	fungibleKeeper fungiblekeeper.Keeper
@@ -79,7 +79,7 @@ func NewIBankContract(
 	}
 
 	return &Contract{
-		BaseContract:   ptypes.NewBaseContract(ContractAddress),
+		BaseContract:   precompiletypes.NewBaseContract(ContractAddress),
 		bankKeeper:     bankKeeper,
 		fungibleKeeper: fungibleKeeper,
 		zrc20ABI:       zrc20ABI,
@@ -131,13 +131,13 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 		return nil, err
 	}
 
-	stateDB := evm.StateDB.(ptypes.ExtStateDB)
+	stateDB := evm.StateDB.(precompiletypes.ExtStateDB)
 
 	switch method.Name {
 	// Deposit and Withdraw methods are both not allowed in read-only mode.
 	case DepositMethodName, WithdrawMethodName:
 		if readOnly {
-			return nil, ptypes.ErrWriteMethod{
+			return nil, precompiletypes.ErrWriteMethod{
 				Method: method.Name,
 			}
 		}
@@ -176,7 +176,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 		return res, nil
 
 	default:
-		return nil, ptypes.ErrInvalidMethod{
+		return nil, precompiletypes.ErrInvalidMethod{
 			Method: method.Name,
 		}
 	}
