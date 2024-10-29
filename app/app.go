@@ -372,8 +372,6 @@ func New(
 		authAddr,
 	)
 
-	logger.Info("bank keeper blocklist addresses", "addresses", app.BlockedAddrs())
-
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
 		keys[banktypes.StoreKey],
