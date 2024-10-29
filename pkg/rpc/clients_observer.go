@@ -114,22 +114,13 @@ func (c *Clients) GetKeyGen(ctx context.Context) (types.Keygen, error) {
 }
 
 // GetAllNodeAccounts returns all node accounts
-func (c *Clients) GetAllNodeAccounts(ctx context.Context) ([]types.NodeAccount, error) {
+func (c *Clients) GetAllNodeAccounts(ctx context.Context) ([]*types.NodeAccount, error) {
 	resp, err := c.Observer.NodeAccountAll(ctx, &types.QueryAllNodeAccountRequest{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get all node accounts")
 	}
 
-	result := make([]types.NodeAccount, len(resp.NodeAccount))
-	for i, nodeAccount := range resp.NodeAccount {
-		if nodeAccount != nil {
-			result[i] = *nodeAccount
-		} else {
-			return nil, fmt.Errorf("node account is nil")
-		}
-	}
-
-	return result, nil
+	return resp.NodeAccount, nil
 }
 
 // GetBallot returns a ballot by ID

@@ -513,7 +513,7 @@ func TestZetacore_GetAllNodeAccounts(t *testing.T) {
 
 	resp, err := client.GetAllNodeAccounts(ctx)
 	require.NoError(t, err)
-	require.Equal(t, []observertypes.NodeAccount{*expectedOutput.NodeAccount[0]}, resp)
+	require.Equal(t, expectedOutput.NodeAccount, resp)
 }
 
 func TestZetacore_GetKeyGen(t *testing.T) {

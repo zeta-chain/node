@@ -551,7 +551,6 @@ func createAppContext(t *testing.T, chainsOrParams ...any) *zctx.AppContext {
 		params,
 		"tssPubKey",
 		*ccFlags,
-		[]observertypes.NodeAccount{*sample.NodeAccount()},
 	)
 	require.NoError(t, err, "failed to update app context")
 

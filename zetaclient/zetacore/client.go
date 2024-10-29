@@ -373,11 +373,6 @@ func (c *Client) UpdateAppContext(ctx context.Context, appContext *zctx.AppConte
 
 	freshParams := make(map[int64]*observertypes.ChainParams, len(chainParams))
 
-	nodeAccounts, err := c.GetAllNodeAccounts(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to fetch node accounts")
-	}
-
 	// check and update chain params for each chain
 	// Note that we are EXCLUDING ZetaChain from the chainParams if it's present
 	for i := range chainParams {
@@ -407,7 +402,6 @@ func (c *Client) UpdateAppContext(ctx context.Context, appContext *zctx.AppConte
 		freshParams,
 		tss.GetTssPubkey(),
 		crosschainFlags,
-		nodeAccounts,
 	)
 }
 
