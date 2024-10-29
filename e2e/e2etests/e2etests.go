@@ -175,6 +175,7 @@ const (
 	TestPrecompilesBankFailName                  = "precompile_contracts_bank_fail"
 	TestPrecompilesBankThroughContractName       = "precompile_contracts_bank_through_contract"
 	TestPrecompilesDistributeName                = "precompile_contracts_distribute"
+	TestPrecompilesDistributeNonZRC20Name        = "precompile_contracts_distribute_non_zrc20"
 	TestPrecompilesDistributeThroughContractName = "precompile_contracts_distribute_through_contract"
 )
 
@@ -1004,6 +1005,12 @@ var AllE2ETests = []runner.E2ETest{
 		"test stateful precompiled contracts distribute",
 		[]runner.ArgDefinition{},
 		TestPrecompilesDistribute,
+	),
+	runner.NewE2ETest(
+		TestPrecompilesDistributeNonZRC20Name,
+		"test stateful precompiled contracts distribute with non ZRC20 tokens",
+		[]runner.ArgDefinition{},
+		TestPrecompilesDistributeNonZRC20,
 	),
 	runner.NewE2ETest(
 		TestPrecompilesDistributeThroughContractName,

@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
@@ -161,6 +162,44 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 	// })
 	// require.NoError(r, err)
 	// fmt.Printf("Validator 1 commission: %+v\n", res3)
+}
+
+func TestPrecompilesDistributeNonZRC20(r *runner.E2ERunner, args []string) {
+	require.Len(r, args, 0, "No arguments expected")
+
+	// Increase the gasLimit. It's required because of the gas consumed by precompiled functions.
+	previousGasLimit := r.ZEVMAuth.GasLimit
+	r.ZEVMAuth.GasLimit = 10_000_000
+	defer func() {
+		r.ZEVMAuth.GasLimit = previousGasLimit
+	}()
+
+	spender, dstrAddress := r.EVMAddress(), staking.ContractAddress
+
+	// Create a staking contract caller.
+	dstrContract, err := staking.NewIStaking(dstrAddress, r.ZEVMClient)
+	require.NoError(r, err, "Failed to create staking contract caller")
+
+	// Deposit and approve 50 WZETA for the test.
+	approveAmount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(50))
+	r.DepositAndApproveWZeta(approveAmount)
+
+	// Allow the staking contract to spend 25 WZeta tokens.
+	tx, err := r.WZeta.Approve(r.ZEVMAuth, dstrAddress, big.NewInt(25))
+	require.NoError(r, err, "Error approving allowance for staking contract")
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	require.EqualValues(r, uint64(1), receipt.Status, "approve allowance tx failed")
+
+	// Check the allowance of the staking in WZeta tokens. Should be 25.
+	allowance, err := r.WZeta.Allowance(&bind.CallOpts{Context: r.Ctx}, spender, dstrAddress)
+	require.NoError(r, err, "Error retrieving staking allowance")
+	require.EqualValues(r, uint64(25), allowance.Uint64(), "Error allowance for staking contract")
+
+	// Call Distribute with 25 Non ZRC20 tokens. Should fail.
+	tx, err = dstrContract.Distribute(r.ZEVMAuth, r.WZetaAddr, big.NewInt(25))
+	require.NoError(r, err, "Error calling staking.distribute()")
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	require.Equal(r, uint64(0), receipt.Status, "Non ZRC20 deposit should fail")
 }
 
 // checkCosmosBalance checks the cosmos coin balance for an address. The coin is specified by its denom.
