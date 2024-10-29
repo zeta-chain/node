@@ -142,5 +142,6 @@ func (gw *Gateway) GetTxFee(ctx context.Context, client MethodRunner, op Op) (ma
 		return zero, errors.New("fee is zero or negative")
 	}
 
+	// #nosec G115 positive
 	return math.NewUint(uint64(res[0].VmStkTinyInt)), nil
 }

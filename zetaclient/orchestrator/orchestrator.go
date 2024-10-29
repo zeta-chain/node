@@ -704,7 +704,7 @@ func (oc *Orchestrator) ScheduleCCTXTON(
 	// runScheduler() guarantees that this function is called every zeta block.
 	// Note that TON blockchain is async and doesn't have a concept of confirmations
 	// i.e. tx is finalized as soon as it's included in the next block (less than 6 seconds)
-	// #nosec G701 positive
+	// #nosec G115 positive
 	interval := uint64(observer.ChainParams().OutboundScheduleInterval)
 
 	shouldProcessOutbounds := zetaHeight%interval == 0

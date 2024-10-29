@@ -39,8 +39,9 @@ func (gw *Gateway) parseInbound(tx ton.Transaction) (*Transaction, error) {
 	}
 
 	var (
-		sender = *sourceID
+		// #nosec G115 always in range
 		opCode = Op(op)
+		sender = *sourceID
 
 		content    any
 		errContent error
@@ -177,6 +178,7 @@ func (gw *Gateway) parseOutbound(tx ton.Transaction) (*Transaction, error) {
 		return nil, errParse(err, "unable to read op code")
 	}
 
+	// #nosec G115 always in range
 	opCode := Op(op)
 
 	if opCode != OpWithdraw {
