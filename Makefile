@@ -11,7 +11,7 @@ DOCKER ?= docker
 DOCKER_COMPOSE ?= $(DOCKER) compose -f docker-compose.yml $(NODE_COMPOSE_ARGS)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 GOFLAGS := ""
-GOLANG_CROSS_VERSION ?= v1.22.7
+GOLANG_CROSS_VERSION ?= v1.22.4
 GOPATH ?= '$(HOME)/go'
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
