@@ -89,7 +89,7 @@ func (ob *SolanaObserver) ChainParams() observertypes.ChainParams {
 }
 
 // ----------------------------------------------------------------------------
-// SolanaObserver
+// TONObserver
 // ----------------------------------------------------------------------------
 var _ interfaces.ChainObserver = (*TONObserver)(nil)
 

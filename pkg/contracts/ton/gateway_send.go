@@ -17,7 +17,7 @@ type Sender interface {
 	Send(ctx context.Context, messages ...wallet.Sendable) error
 }
 
-// Client represents a sender what allow sending an arbitrary external message to the network.
+// Client represents a sender that allows sending an arbitrary external message to the network.
 type Client interface {
 	SendMessage(ctx context.Context, payload []byte) (uint32, error)
 }
@@ -95,7 +95,7 @@ func sendExternalMessage(ctx context.Context, via Client, to ton.AccountID, msg 
 
 	body, err := msg.AsBody()
 	if err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, "unable to encode msg as cell")
 	}
 
 	extMsg, err := ton.CreateExternalMessage(to, body, nil, tlb.VarUInteger16{})

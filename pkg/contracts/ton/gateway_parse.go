@@ -67,7 +67,7 @@ func (gw *Gateway) parseInbound(tx ton.Transaction) (*Transaction, error) {
 	return &Transaction{
 		Transaction: tx,
 		Operation:   opCode,
-		ExitCode:    exitCode(tx),
+		ExitCode:    exitCodeFromTx(tx),
 
 		content: content,
 		inbound: true,
@@ -191,7 +191,7 @@ func (gw *Gateway) parseOutbound(tx ton.Transaction) (*Transaction, error) {
 	return &Transaction{
 		Transaction: tx,
 		Operation:   opCode,
-		ExitCode:    exitCode(tx),
+		ExitCode:    exitCodeFromTx(tx),
 		content:     withdrawal,
 	}, nil
 }
@@ -245,7 +245,7 @@ func parseWithdrawal(tx ton.Transaction, sig [65]byte, payload *boc.Cell) (Withd
 
 	// tlb.Message
 	outMsg := tx.Msgs.OutMsgs.Values()[0].Value
-	if outMsg.Info.SumType != "IntMsgInfo" {
+	if outMsg.Info.SumType != "IntMsgInfo" || outMsg.Info.IntMsgInfo == nil {
 		return Withdrawal{}, errors.Wrap(ErrParse, "invalid out message")
 	}
 
@@ -283,9 +283,9 @@ func parseAccount(raw tlb.MsgAddress) (ton.AccountID, error) {
 }
 
 func errParse(err error, msg string) error {
-	return errors.Wrapf(ErrParse, msg+" (%s)", err.Error())
+	return errors.Wrapf(ErrParse, "%s (%s)", msg, err.Error())
 }
 
-func exitCode(tx ton.Transaction) int32 {
+func exitCodeFromTx(tx ton.Transaction) int32 {
 	return tx.Description.TransOrd.ComputePh.TrPhaseComputeVm.Vm.ExitCode
 }

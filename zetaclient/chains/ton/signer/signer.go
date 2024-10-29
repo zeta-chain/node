@@ -203,7 +203,7 @@ func (s *Signer) getSignature(hash [32]byte) ([65]byte, bool) {
 		return [65]byte{}, false
 	}
 
-	return sig.([65]byte), false
+	return sig.([65]byte), true
 }
 
 // caches signature
@@ -226,6 +226,7 @@ func (s *Signer) SetGatewayAddress(addr string) {
 	acc, err := ton.ParseAccountID(addr)
 	if err != nil {
 		s.Logger().Std.Error().Err(err).Str("addr", addr).Msg("unable to parse gateway address")
+		return
 	}
 
 	s.Lock()

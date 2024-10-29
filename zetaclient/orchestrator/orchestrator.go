@@ -96,7 +96,7 @@ func New(
 	}
 
 	logging := logger.Std.With().Str(logs.FieldModule, "orchestrator").Logger()
-	log := multiLogger{Logger: logging, Sampled: logging.Sample(defaultLogSampler)}
+	multiLog := multiLogger{Logger: logging, Sampled: logging.Sample(defaultLogSampler)}
 
 	balance, err := client.GetZetaHotKeyBalance(ctx)
 	if err != nil {
@@ -117,7 +117,7 @@ func New(
 		dbDirectory: dbDirectory,
 		baseLogger:  logger,
 
-		logger: log,
+		logger: multiLog,
 		ts:     ts,
 		stop:   make(chan struct{}),
 	}, nil
@@ -203,7 +203,7 @@ func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chainID int64) (inte
 			oc.logger.Info().
 				Str("signer.new_gateway_address", newAddress).
 				Int64("signer.chain_id", chainID).
-				Msgf("set gateway address")
+				Msg("set gateway address")
 		}
 	}
 
@@ -400,7 +400,7 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 						if err != nil {
 							oc.logger.Error().Err(err).
 								Int64(logs.FieldChain, chainID).
-								Msgf("runScheduler: unable to resolve observer")
+								Msg("runScheduler: unable to resolve observer")
 							continue
 						}
 
@@ -691,12 +691,12 @@ func (oc *Orchestrator) ScheduleCCTXTON(
 ) {
 	// should never happen
 	if _, ok := observer.(*tonobserver.Observer); !ok {
-		oc.logger.Error().Msgf("ScheduleCCTXTON: observer is not TON")
+		oc.logger.Error().Msg("ScheduleCCTXTON: observer is not TON")
 		return
 	}
 
 	if _, ok := signer.(*tonsigner.Signer); !ok {
-		oc.logger.Error().Msgf("ScheduleCCTXTON: signer is not TON")
+		oc.logger.Error().Msg("ScheduleCCTXTON: signer is not TON")
 		return
 	}
 

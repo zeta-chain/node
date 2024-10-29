@@ -44,7 +44,7 @@ func (ob *Observer) watchInbound(ctx context.Context) error {
 		}
 
 		if err := ob.observeGateway(ctx); err != nil {
-			ob.Logger().Inbound.Err(err).Msg("WatchInbound: observeInbound error")
+			ob.Logger().Inbound.Err(err).Msg("WatchInbound: observeGateway error")
 		}
 
 		newInterval := ticker.SecondsFromUint64(ob.ChainParams().InboundTicker)
@@ -100,7 +100,7 @@ func (ob *Observer) observeGateway(ctx context.Context) error {
 
 		tx, err := ob.gateway.ParseTransaction(txs[i])
 		switch {
-		case errors.Is(err, toncontracts.ErrParse), errors.Is(err, toncontracts.ErrUnknownOp):
+		case errors.Is(err, toncontracts.ErrParse) || errors.Is(err, toncontracts.ErrUnknownOp):
 			skip = true
 		case err != nil:
 			return errors.Wrap(err, "unable to parse tx")

@@ -80,7 +80,7 @@ func New(bo *base.Observer, client LiteClient, gateway *toncontracts.Gateway) (*
 // baseObserver.Stop() was called (ticker.WithStopChan)
 func (ob *Observer) Start(ctx context.Context) {
 	if ok := ob.Observer.Start(); !ok {
-		ob.Logger().Chain.Info().Msgf("observer is already started")
+		ob.Logger().Chain.Info().Msg("observer is already started")
 		return
 	}
 
@@ -106,13 +106,13 @@ func (ob *Observer) watchGasPrice(ctx context.Context) error {
 			ob.Logger().GasPrice.Err(err).Msg("reportGasPrice error")
 		}
 
-		newInternal := ticker.SecondsFromUint64(ob.ChainParams().GasPriceTicker)
-		t.SetInterval(newInternal)
+		newInterval := ticker.SecondsFromUint64(ob.ChainParams().GasPriceTicker)
+		t.SetInterval(newInterval)
 
 		return nil
 	}
 
-	ob.Logger().GasPrice.Info().Msgf("WatchGasPrice started")
+	ob.Logger().GasPrice.Info().Msg("WatchGasPrice started")
 
 	return ticker.Run(
 		ctx,
@@ -165,7 +165,7 @@ func (ob *Observer) watchRPCStatus(ctx context.Context) error {
 		common.RPCStatusCheckInterval,
 		task,
 		ticker.WithStopChan(ob.StopChannel()),
-		ticker.WithLogger(ob.Logger().Inbound, "WatchRPCStatus"),
+		ticker.WithLogger(ob.Logger().Chain, "WatchRPCStatus"),
 	)
 }
 

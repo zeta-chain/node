@@ -191,7 +191,7 @@ func (c *Client) GetTransactionsSince(
 	return result, nil
 }
 
-// GetTransaction returns a tx by logicalTime and hash.
+// GetTransaction returns account's tx by logicalTime and hash or ErrNotFound.
 func (c *Client) GetTransaction(
 	ctx context.Context,
 	acc ton.AccountID,

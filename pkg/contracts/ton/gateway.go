@@ -116,28 +116,30 @@ func parseInternalMessageBody(tx ton.Transaction) (*boc.Cell, error) {
 	return &body, nil
 }
 
+var zero = math.NewUint(0)
+
 // GetTxFee returns maximum transaction fee for the given operation.
 // Real fee may be lower.
 func (gw *Gateway) GetTxFee(ctx context.Context, client MethodRunner, op Op) (math.Uint, error) {
 	const (
 		method  = "calculate_gas_fee"
-		symType = "VmStkTinyInt"
+		sumType = "VmStkTinyInt"
 	)
 
-	query := tlb.VmStack{{SumType: symType, VmStkTinyInt: int64(op)}}
+	query := tlb.VmStack{{SumType: sumType, VmStkTinyInt: int64(op)}}
 
 	exitCode, res, err := client.RunSmcMethod(ctx, gw.accountID, method, query)
 	switch {
 	case err != nil:
-		return math.NewUint(0), err
+		return zero, err
 	case exitCode != 0:
-		return math.NewUint(0), errors.Errorf("calculate_gas_fee failed with exit code %d", exitCode)
+		return zero, errors.Errorf("calculate_gas_fee failed with exit code %d", exitCode)
 	case len(res) == 0:
-		return math.NewUint(0), errors.New("empty result")
-	case res[0].SumType != symType:
-		return math.NewUint(0), errors.Errorf("res is not %s (got %s)", symType, res[0].SumType)
+		return zero, errors.New("empty result")
+	case res[0].SumType != sumType:
+		return zero, errors.Errorf("res is not %s (got %s)", sumType, res[0].SumType)
 	case res[0].VmStkTinyInt <= 0:
-		return math.NewUint(0), errors.New("fee is zero or negative")
+		return zero, errors.New("fee is zero or negative")
 	}
 
 	return math.NewUint(uint64(res[0].VmStkTinyInt)), nil
