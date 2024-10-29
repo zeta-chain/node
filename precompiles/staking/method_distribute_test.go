@@ -92,7 +92,8 @@ func Test_Distribute(t *testing.T) {
 		zrc20Denom := precompiletypes.ZRC20ToCosmosDenom(s.zrc20Address)
 
 		// Set caller balance.
-		s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000))
+		_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000))
+		require.NoError(t, err)
 
 		// Setup method input.
 		s.mockVMContract.Input = packInputArgs(
@@ -130,7 +131,8 @@ func Test_Distribute(t *testing.T) {
 		zrc20Denom := precompiletypes.ZRC20ToCosmosDenom(s.zrc20Address)
 
 		// Set caller balance.
-		s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000))
+		_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000))
+		require.NoError(t, err)
 
 		// Allow staking to spend ZRC20 tokens.
 		allowStaking(t, s, big.NewInt(1000))
@@ -171,7 +173,8 @@ func Test_Distribute(t *testing.T) {
 		zrc20Denom := precompiletypes.ZRC20ToCosmosDenom(s.zrc20Address)
 
 		// Set caller balance.
-		s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000))
+		_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000))
+		require.NoError(t, err)
 
 		// Allow staking to spend ZRC20 tokens.
 		allowStaking(t, s, big.NewInt(999))
@@ -212,7 +215,8 @@ func Test_Distribute(t *testing.T) {
 		zrc20Denom := precompiletypes.ZRC20ToCosmosDenom(s.zrc20Address)
 
 		// Set caller balance.
-		s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000))
+		_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000))
+		require.NoError(t, err)
 
 		// Allow staking to spend ZRC20 tokens.
 		allowStaking(t, s, big.NewInt(100000))
@@ -251,7 +255,8 @@ func Test_Distribute(t *testing.T) {
 		s := newTestSuite(t)
 
 		// Set caller balance.
-		s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000))
+		_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000))
+		require.NoError(t, err)
 
 		// Allow staking to spend ZRC20 tokens.
 		allowStaking(t, s, big.NewInt(1000))
