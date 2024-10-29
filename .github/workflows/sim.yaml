@@ -59,7 +59,8 @@ jobs:
             core.setOutput('SIM_TEST_AFTER_IMPORT', makeTargets.includes('test-sim-after-import'));
 
   simulation-tests:
-    needs: changed-files
+    needs:
+      - matrix-conditionals
     if: |
       contains(github.event.pull_request.labels.*.name, 'SIM_TESTS') || needs.changed-files.outputs.modified_files
     runs-on: ubuntu-22.04
@@ -94,7 +95,8 @@ jobs:
           make ${{ matrix.make-target }}
 
   sim-ok:
-    needs: changed-files
+    needs:
+      - simulation-tests
     if: |
       contains(github.event.pull_request.labels.*.name, 'simulation_tests') || needs.changed-files.outputs.modified_files
     runs-on: ubuntu-22.04
