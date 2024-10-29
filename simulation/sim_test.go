@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"os"
 	"runtime/debug"
-	"strings"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -340,9 +339,7 @@ func TestAppImportExport(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
 			err := fmt.Sprintf("%v", r)
-			if !strings.Contains(err, "validator set is empty after InitGenesis") {
-				panic(r)
-			}
+			require.Contains(t, err, "validator set is empty after InitGenesis", "unexpected error: %v", r)
 			t.Log("Skipping simulation as all validators have been unbonded")
 			t.Log("err", err, "stacktrace", string(debug.Stack()))
 		}
