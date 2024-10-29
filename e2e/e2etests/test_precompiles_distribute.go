@@ -213,7 +213,12 @@ func checkCosmosBalance(r *runner.E2ERunner, address types.AccAddress, denom str
 	return bal.Balance.Amount.BigInt()
 }
 
-func resetDistributionTest(r *runner.E2ERunner, lockerAddress common.Address, previousGasLimit uint64, amount *big.Int) {
+func resetDistributionTest(
+	r *runner.E2ERunner,
+	lockerAddress common.Address,
+	previousGasLimit uint64,
+	amount *big.Int,
+) {
 	r.ZEVMAuth.GasLimit = previousGasLimit
 
 	// Reset the allowance to 0; this is needed when running upgrade tests where this test runs twice.

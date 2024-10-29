@@ -16,8 +16,10 @@ func (c *Contract) GetAllValidators(
 		validatorsRes[i] = Validator{
 			OperatorAddress: v.OperatorAddress,
 			ConsensusPubKey: v.ConsensusPubkey.String(),
-			BondStatus:      uint8(v.Status),
-			Jailed:          v.Jailed,
+			// Safe casting from int32 to uint8, as BondStatus is an enum.
+			//nolint:gosec
+			BondStatus: uint8(v.Status),
+			Jailed:     v.Jailed,
 		}
 	}
 
