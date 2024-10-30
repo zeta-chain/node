@@ -10,6 +10,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -20,12 +21,10 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-	"github.com/zeta-chain/node/simulation/sim"
-
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/stretchr/testify/require"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"github.com/zeta-chain/node/app"
+	simulation2 "github.com/zeta-chain/node/simulation"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -39,7 +38,7 @@ import (
 // AppChainID hardcoded chainID for simulation
 
 func init() {
-	sim.GetSimulatorFlags()
+	simulation2.GetSimulatorFlags()
 }
 
 type StoreKeysPrefixes struct {
@@ -68,11 +67,11 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 // The following test certifies that , for the same set of operations ( irrespective of what the operations are ) ,
 // we would reach the same final state if the initial state is the same
 func TestAppStateDeterminism(t *testing.T) {
-	if !sim.FlagEnabledValue {
+	if !simulation2.FlagEnabledValue {
 		t.Skip("skipping application simulation")
 	}
 
-	config := sim.NewConfigFromFlags()
+	config := simulation2.NewConfigFromFlags()
 
 	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
@@ -93,7 +92,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
-	appOptions[server.FlagInvCheckPeriod] = sim.FlagPeriodValue
+	appOptions[server.FlagInvCheckPeriod] = simulation2.FlagPeriodValue
 
 	t.Log("Running tests for numSeeds: ", numSeeds, " numTimesToRunPerSeed: ", numTimesToRunPerSeed)
 
@@ -107,13 +106,13 @@ func TestAppStateDeterminism(t *testing.T) {
 				config,
 				SimDBBackend,
 				SimDBName,
-				sim.FlagVerboseValue,
-				sim.FlagEnabledValue,
+				simulation2.FlagVerboseValue,
+				simulation2.FlagEnabledValue,
 			)
 			require.NoError(t, err)
 			appOptions[flags.FlagHome] = dir
 
-			simApp, err := sim.NewSimApp(
+			simApp, err := simulation2.NewSimApp(
 				logger,
 				db,
 				appOptions,
@@ -133,7 +132,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				t,
 				os.Stdout,
 				simApp.BaseApp,
-				sim.AppStateFn(
+				simulation2.AppStateFn(
 					simApp.AppCodec(),
 					simApp.SimulationManager(),
 					simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
@@ -146,7 +145,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			sim.PrintStats(db)
+			simulation2.PrintStats(db)
 
 			appHash := simApp.LastCommitID().Hash
 			appHashList[j] = appHash
@@ -178,7 +177,7 @@ func TestAppStateDeterminism(t *testing.T) {
 // At the end of the run it tries to export the genesis state to make sure the export works.
 func TestFullAppSimulation(t *testing.T) {
 
-	config := sim.NewConfigFromFlags()
+	config := simulation2.NewConfigFromFlags()
 
 	config.ChainID = SimAppChainID
 	config.BlockMaxGas = SimBlockMaxGas
@@ -188,8 +187,8 @@ func TestFullAppSimulation(t *testing.T) {
 		config,
 		SimDBBackend,
 		SimDBName,
-		sim.FlagVerboseValue,
-		sim.FlagEnabledValue,
+		simulation2.FlagVerboseValue,
+		simulation2.FlagEnabledValue,
 	)
 	if skip {
 		t.Skip("skipping application simulation")
@@ -205,10 +204,10 @@ func TestFullAppSimulation(t *testing.T) {
 		}
 	})
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
-	appOptions[server.FlagInvCheckPeriod] = sim.FlagPeriodValue
+	appOptions[server.FlagInvCheckPeriod] = simulation2.FlagPeriodValue
 	appOptions[flags.FlagHome] = dir
 
-	simApp, err := sim.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	simApp, err := simulation2.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 	require.NoError(t, err)
 
 	blockedAddresses := simApp.ModuleAccountAddrs()
@@ -216,7 +215,7 @@ func TestFullAppSimulation(t *testing.T) {
 		t,
 		os.Stdout,
 		simApp.BaseApp,
-		sim.AppStateFn(
+		simulation2.AppStateFn(
 			simApp.AppCodec(),
 			simApp.SimulationManager(),
 			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
@@ -237,11 +236,11 @@ func TestFullAppSimulation(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	sim.PrintStats(db)
+	simulation2.PrintStats(db)
 }
 
 func TestAppImportExport(t *testing.T) {
-	config := sim.NewConfigFromFlags()
+	config := simulation2.NewConfigFromFlags()
 
 	config.ChainID = SimAppChainID
 	config.BlockMaxGas = SimBlockMaxGas
@@ -251,8 +250,8 @@ func TestAppImportExport(t *testing.T) {
 		config,
 		SimDBBackend,
 		SimDBName,
-		sim.FlagVerboseValue,
-		sim.FlagEnabledValue,
+		simulation2.FlagVerboseValue,
+		simulation2.FlagEnabledValue,
 	)
 	if skip {
 		t.Skip("skipping application simulation")
@@ -269,9 +268,9 @@ func TestAppImportExport(t *testing.T) {
 	})
 
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
-	appOptions[server.FlagInvCheckPeriod] = sim.FlagPeriodValue
+	appOptions[server.FlagInvCheckPeriod] = simulation2.FlagPeriodValue
 	appOptions[flags.FlagHome] = dir
-	simApp, err := sim.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	simApp, err := simulation2.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 	require.NoError(t, err)
 
 	// Run randomized simulation
@@ -280,7 +279,7 @@ func TestAppImportExport(t *testing.T) {
 		t,
 		os.Stdout,
 		simApp.BaseApp,
-		sim.AppStateFn(
+		simulation2.AppStateFn(
 			simApp.AppCodec(),
 			simApp.SimulationManager(),
 			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
@@ -293,10 +292,10 @@ func TestAppImportExport(t *testing.T) {
 	)
 	require.NoError(t, simErr)
 
-	err = sim.CheckExportSimulation(simApp, config, simParams)
+	err = simulation2.CheckExportSimulation(simApp, config, simParams)
 	require.NoError(t, err)
 
-	sim.PrintStats(db)
+	simulation2.PrintStats(db)
 
 	t.Log("exporting genesis")
 	// export state and simParams
@@ -308,8 +307,8 @@ func TestAppImportExport(t *testing.T) {
 		config,
 		SimDBBackend+"_new",
 		SimDBName+"_new",
-		sim.FlagVerboseValue,
-		sim.FlagEnabledValue,
+		simulation2.FlagVerboseValue,
+		simulation2.FlagEnabledValue,
 	)
 
 	require.NoError(t, err, "simulation setup failed")
@@ -323,7 +322,7 @@ func TestAppImportExport(t *testing.T) {
 		}
 	})
 
-	newSimApp, err := sim.NewSimApp(
+	newSimApp, err := simulation2.NewSimApp(
 		logger,
 		newDB,
 		appOptions,
@@ -402,7 +401,7 @@ func TestAppImportExport(t *testing.T) {
 }
 
 func TestAppSimulationAfterImport(t *testing.T) {
-	config := sim.NewConfigFromFlags()
+	config := simulation2.NewConfigFromFlags()
 
 	config.ChainID = SimAppChainID
 	config.BlockMaxGas = SimBlockMaxGas
@@ -412,8 +411,8 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		config,
 		SimDBBackend,
 		SimDBName,
-		sim.FlagVerboseValue,
-		sim.FlagEnabledValue,
+		simulation2.FlagVerboseValue,
+		simulation2.FlagEnabledValue,
 	)
 	if skip {
 		t.Skip("skipping application simulation")
@@ -430,9 +429,9 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	})
 
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
-	appOptions[server.FlagInvCheckPeriod] = sim.FlagPeriodValue
+	appOptions[server.FlagInvCheckPeriod] = simulation2.FlagPeriodValue
 	appOptions[flags.FlagHome] = dir
-	simApp, err := sim.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	simApp, err := simulation2.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 	require.NoError(t, err)
 
 	// Run randomized simulation
@@ -441,7 +440,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		t,
 		os.Stdout,
 		simApp.BaseApp,
-		sim.AppStateFn(
+		simulation2.AppStateFn(
 			simApp.AppCodec(),
 			simApp.SimulationManager(),
 			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
@@ -454,10 +453,10 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	)
 	require.NoError(t, simErr)
 
-	err = sim.CheckExportSimulation(simApp, config, simParams)
+	err = simulation2.CheckExportSimulation(simApp, config, simParams)
 	require.NoError(t, err)
 
-	sim.PrintStats(db)
+	simulation2.PrintStats(db)
 
 	if stopEarly {
 		t.Log("can't export or import a zero-validator genesis, exiting test")
@@ -476,8 +475,8 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		config,
 		SimDBBackend+"_new",
 		SimDBName+"_new",
-		sim.FlagVerboseValue,
-		sim.FlagEnabledValue,
+		simulation2.FlagVerboseValue,
+		simulation2.FlagEnabledValue,
 	)
 
 	require.NoError(t, err, "simulation setup failed")
@@ -491,7 +490,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		}
 	})
 
-	newSimApp, err := sim.NewSimApp(
+	newSimApp, err := simulation2.NewSimApp(
 		logger,
 		newDB,
 		appOptions,
@@ -509,7 +508,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		t,
 		os.Stdout,
 		newSimApp.BaseApp,
-		sim.AppStateFn(
+		simulation2.AppStateFn(
 			simApp.AppCodec(),
 			simApp.SimulationManager(),
 			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
