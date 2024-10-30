@@ -197,17 +197,17 @@ func (c *Client) GetTransaction(
 	acc ton.AccountID,
 	lt uint64,
 	hash ton.Bits256,
-) (*ton.Transaction, error) {
+) (ton.Transaction, error) {
 	txs, err := c.GetTransactions(ctx, 1, acc, lt, hash)
 	if err != nil {
-		return nil, err
+		return ton.Transaction{}, err
 	}
 
 	if len(txs) == 0 {
-		return nil, ErrNotFound
+		return ton.Transaction{}, ErrNotFound
 	}
 
-	return &txs[0], nil
+	return txs[0], nil
 }
 
 // getLastTransactionHash returns logical time and hash of the last transaction
@@ -224,7 +224,9 @@ func (c *Client) getLastTransactionHash(ctx context.Context, acc ton.AccountID) 
 	return state.LastTransLt, state.LastTransHash, nil
 }
 
-func TransactionToHashString(tx *ton.Transaction) string {
+// TransactionToHashString converts transaction's logicalTime and hash to string
+// This string is used to store the last scanned hash (e.g. "123:0x123...")
+func TransactionToHashString(tx ton.Transaction) string {
 	return TransactionHashToString(tx.Lt, ton.Bits256(tx.Hash()))
 }
 

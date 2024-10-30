@@ -44,7 +44,7 @@ type LiteClient interface {
 	GetBlockHeader(ctx context.Context, blockID ton.BlockIDExt, mode uint32) (tlb.BlockInfo, error)
 	GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) ([]ton.Transaction, error)
 	GetFirstTransaction(ctx context.Context, acc ton.AccountID) (*ton.Transaction, int, error)
-	GetTransaction(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) (*ton.Transaction, error)
+	GetTransaction(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) (ton.Transaction, error)
 }
 
 var _ interfaces.ChainObserver = (*Observer)(nil)

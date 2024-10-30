@@ -46,7 +46,7 @@ func TestOutbound(t *testing.T) {
 			Index:    "index123",
 			ChainId:  ts.chain.ChainId,
 			Nonce:    nonce,
-			HashList: []*cc.TxHash{{TxHash: liteapi.TransactionToHashString(&withdrawalTX)}},
+			HashList: []*cc.TxHash{{TxHash: liteapi.TransactionToHashString(withdrawalTX)}},
 		}
 
 		ts.OnGetAllOutboundTrackerByChain([]cc.OutboundTracker{tracker})

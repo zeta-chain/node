@@ -130,7 +130,7 @@ func (ts *testSuite) OnGetFirstTransaction(acc ton.AccountID, tx *ton.Transactio
 func (ts *testSuite) MockGetTransaction(acc ton.AccountID, tx ton.Transaction) *mock.Call {
 	return ts.liteClient.
 		On("GetTransaction", mock.Anything, acc, tx.Lt, ton.Bits256(tx.Hash())).
-		Return(&tx, nil)
+		Return(tx, nil)
 }
 
 func (ts *testSuite) MockCCTXByNonce(cctx *cc.CrossChainTx) *mock.Call {

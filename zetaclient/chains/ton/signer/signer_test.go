@@ -82,7 +82,7 @@ func TestSigner(t *testing.T) {
 	tracker := ts.trackerBag[0]
 
 	require.Equal(t, uint64(nonce), tracker.nonce)
-	require.Equal(t, liteapi.TransactionToHashString(&withdrawalTX), tracker.hash)
+	require.Equal(t, liteapi.TransactionToHashString(withdrawalTX), tracker.hash)
 }
 
 type testSuite struct {

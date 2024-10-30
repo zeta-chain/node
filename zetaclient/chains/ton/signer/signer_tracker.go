@@ -56,7 +56,7 @@ func (s *Signer) trackOutbound(
 		}
 
 		tx := results[0].Transaction
-		txHash := liteapi.TransactionToHashString(&results[0].Transaction)
+		txHash := liteapi.TransactionToHashString(results[0].Transaction)
 
 		if !tx.IsSuccess() {
 			// should not happen

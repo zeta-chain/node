@@ -42,7 +42,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *cc.CrossC
 	// TODO: Add compliance check
 	// https://github.com/zeta-chain/node/issues/2916
 
-	txHash := liteapi.TransactionToHashString(&outboundRes.tx.Transaction)
+	txHash := liteapi.TransactionToHashString(outboundRes.tx.Transaction)
 	if err = ob.postVoteOutbound(ctx, cctx, withdrawal, txHash, outboundRes.receiveStatus); err != nil {
 		return false, errors.Wrap(err, "unable to post vote")
 	}
@@ -151,7 +151,7 @@ func (ob *Observer) processOutboundTracker(ctx context.Context, cctx *cc.CrossCh
 		return errors.Wrap(err, "unable to get transaction form liteapi")
 	}
 
-	tx, err := ob.gateway.ParseTransaction(*rawTX)
+	tx, err := ob.gateway.ParseTransaction(rawTX)
 	if err != nil {
 		return errors.Wrap(err, "unable to parse transaction")
 	}
@@ -204,7 +204,7 @@ func (ob *Observer) addOutboundTracker(ctx context.Context, tx *toncontracts.Tra
 	var (
 		chainID = ob.Chain().ChainId
 		nonce   = uint64(w.Seqno)
-		hash    = liteapi.TransactionToHashString(&tx.Transaction)
+		hash    = liteapi.TransactionToHashString(tx.Transaction)
 	)
 
 	// note it has a check for noop

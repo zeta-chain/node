@@ -103,7 +103,8 @@ func (ob *Observer) observeGateway(ctx context.Context) error {
 		case errors.Is(err, toncontracts.ErrParse) || errors.Is(err, toncontracts.ErrUnknownOp):
 			skip = true
 		case err != nil:
-			return errors.Wrap(err, "unable to parse tx")
+			// should not happen
+			return errors.Wrap(err, "unexpected error")
 		case tx.ExitCode != 0:
 			skip = true
 			ob.Logger().Inbound.Warn().Fields(txLogFields(tx)).Msg("observeGateway: observed a failed tx")
@@ -111,7 +112,7 @@ func (ob *Observer) observeGateway(ctx context.Context) error {
 
 		if skip {
 			tx = &toncontracts.Transaction{Transaction: txs[i]}
-			txHash := liteapi.TransactionToHashString(&tx.Transaction)
+			txHash := liteapi.TransactionToHashString(tx.Transaction)
 			ob.Logger().Inbound.Warn().Str("transaction.hash", txHash).Msg("observeGateway: skipping tx")
 			ob.setLastScannedTX(tx)
 			continue
@@ -264,7 +265,7 @@ func (ob *Observer) ensureLastScannedTX(ctx context.Context) error {
 }
 
 func (ob *Observer) setLastScannedTX(tx *toncontracts.Transaction) {
-	txHash := liteapi.TransactionToHashString(&tx.Transaction)
+	txHash := liteapi.TransactionToHashString(tx.Transaction)
 
 	ob.WithLastTxScanned(txHash)
 
@@ -284,7 +285,7 @@ func (ob *Observer) setLastScannedTX(tx *toncontracts.Transaction) {
 
 func txLogFields(tx *toncontracts.Transaction) map[string]any {
 	return map[string]any{
-		"transaction.hash":           liteapi.TransactionToHashString(&tx.Transaction),
+		"transaction.hash":           liteapi.TransactionToHashString(tx.Transaction),
 		"transaction.ton.lt":         tx.Lt,
 		"transaction.ton.hash":       tx.Hash().Hex(),
 		"transaction.ton.block_id":   tx.BlockID.BlockID.String(),

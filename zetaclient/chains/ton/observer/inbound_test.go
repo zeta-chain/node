@@ -291,7 +291,7 @@ func TestInbound(t *testing.T) {
 		tracker := ts.trackerBag[0]
 
 		assert.Equal(t, uint64(withdrawal.Seqno), tracker.nonce)
-		assert.Equal(t, liteapi.TransactionToHashString(&withdrawalTX), tracker.hash)
+		assert.Equal(t, liteapi.TransactionToHashString(withdrawalTX), tracker.hash)
 	})
 
 	t.Run("Multiple transactions", func(t *testing.T) {
@@ -387,7 +387,7 @@ func TestInbound(t *testing.T) {
 		tracker := ts.trackerBag[0]
 
 		assert.Equal(t, uint64(withdrawal.Seqno), tracker.nonce)
-		assert.Equal(t, liteapi.TransactionToHashString(&txs[4]), tracker.hash)
+		assert.Equal(t, liteapi.TransactionToHashString(txs[4]), tracker.hash)
 	})
 }
 
