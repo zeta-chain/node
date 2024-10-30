@@ -79,7 +79,7 @@ func (c *Contract) withdraw(
 		}
 	}
 
-	coinSet, err := precompiletypes.CreateCoinSet(precompiletypes.ZRC20ToCosmosDenom(zrc20Addr), amount)
+	coinSet, err := precompiletypes.CreateCoinSet(zrc20Addr, amount)
 	if err != nil {
 		return nil, err
 	}

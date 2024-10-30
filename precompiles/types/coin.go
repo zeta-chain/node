@@ -16,14 +16,16 @@ func ZRC20ToCosmosDenom(ZRC20Address common.Address) string {
 	return config.ZRC20DenomPrefix + ZRC20Address.String()
 }
 
-func CreateCoinSet(tokenDenom string, amount *big.Int) (sdk.Coins, error) {
+func CreateCoinSet(zrc20address common.Address, amount *big.Int) (sdk.Coins, error) {
 	defer func() {
 		if r := recover(); r != nil {
 			return
 		}
 	}()
 
-	coin := sdk.NewCoin(tokenDenom, math.NewIntFromBigInt(amount))
+	denom := ZRC20ToCosmosDenom(zrc20address)
+
+	coin := sdk.NewCoin(denom, math.NewIntFromBigInt(amount))
 	if !coin.IsValid() {
 		return nil, &ErrInvalidCoin{
 			Got:      coin.GetDenom(),

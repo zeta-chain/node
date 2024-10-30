@@ -16,10 +16,11 @@ func Test_ZRC20ToCosmosDenom(t *testing.T) {
 }
 
 func Test_createCoinSet(t *testing.T) {
-	tokenDenom := "zrc20/0x0000000000000000000000000000000000003039"
+	tokenAddr := common.HexToAddress("0x0000000000000000000000000000000000003039")
+	tokenDenom := ZRC20ToCosmosDenom(tokenAddr)
 	amount := big.NewInt(100)
 
-	coinSet, err := CreateCoinSet(tokenDenom, amount)
+	coinSet, err := CreateCoinSet(tokenAddr, amount)
 	require.NoError(t, err, "createCoinSet should not return an error")
 	require.NotNil(t, coinSet, "coinSet should not be nil")
 
