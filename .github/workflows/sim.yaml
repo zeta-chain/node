@@ -36,7 +36,7 @@ jobs:
   matrix-conditionals:
     needs: changed-files
     if: |
-      contains(github.event.pull_request.labels.*.name, 'simulation_tests') || needs.changed-files.outputs.modified_files
+      contains(github.event.pull_request.labels.*.name, 'SIM_TESTS') || needs.changed-files.outputs.modified_files
     runs-on: ubuntu-22.04
     outputs:
       SIM_TEST_NOND: ${{ steps.matrix-conditionals.outputs.SIM_TEST_NOND }}
@@ -62,7 +62,7 @@ jobs:
     needs:
       - matrix-conditionals
     if: |
-      contains(github.event.pull_request.labels.*.name, 'simulation_tests') || needs.changed-files.outputs.modified_files
+      contains(github.event.pull_request.labels.*.name, 'SIM_TESTS') || needs.changed-files.outputs.modified_files
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
@@ -98,7 +98,7 @@ jobs:
     needs:
       - simulation-tests
     if: |
-      contains(github.event.pull_request.labels.*.name, 'simulation_tests') || needs.changed-files.outputs.modified_files
+      contains(github.event.pull_request.labels.*.name, 'SIM_TESTS') || needs.changed-files.outputs.modified_files
     runs-on: ubuntu-22.04
     steps:
       - name: Aggregate Results

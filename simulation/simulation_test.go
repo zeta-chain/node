@@ -24,7 +24,7 @@ import (
 	"github.com/stretchr/testify/require"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"github.com/zeta-chain/node/app"
-	simulation2 "github.com/zeta-chain/node/simulation"
+	zetasimulation "github.com/zeta-chain/node/simulation"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -38,7 +38,7 @@ import (
 // AppChainID hardcoded chainID for simulation
 
 func init() {
-	simulation2.GetSimulatorFlags()
+	zetasimulation.GetSimulatorFlags()
 }
 
 type StoreKeysPrefixes struct {
@@ -67,11 +67,11 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 // The following test certifies that , for the same set of operations ( irrespective of what the operations are ) ,
 // we would reach the same final state if the initial state is the same
 func TestAppStateDeterminism(t *testing.T) {
-	if !simulation2.FlagEnabledValue {
+	if !zetasimulation.FlagEnabledValue {
 		t.Skip("skipping application simulation")
 	}
 
-	config := simulation2.NewConfigFromFlags()
+	config := zetasimulation.NewConfigFromFlags()
 
 	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
@@ -92,7 +92,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
-	appOptions[server.FlagInvCheckPeriod] = simulation2.FlagPeriodValue
+	appOptions[server.FlagInvCheckPeriod] = zetasimulation.FlagPeriodValue
 
 	t.Log("Running tests for numSeeds: ", numSeeds, " numTimesToRunPerSeed: ", numTimesToRunPerSeed)
 
@@ -106,13 +106,13 @@ func TestAppStateDeterminism(t *testing.T) {
 				config,
 				SimDBBackend,
 				SimDBName,
-				simulation2.FlagVerboseValue,
-				simulation2.FlagEnabledValue,
+				zetasimulation.FlagVerboseValue,
+				zetasimulation.FlagEnabledValue,
 			)
 			require.NoError(t, err)
 			appOptions[flags.FlagHome] = dir
 
-			simApp, err := simulation2.NewSimApp(
+			simApp, err := zetasimulation.NewSimApp(
 				logger,
 				db,
 				appOptions,
@@ -132,7 +132,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				t,
 				os.Stdout,
 				simApp.BaseApp,
-				simulation2.AppStateFn(
+				zetasimulation.AppStateFn(
 					simApp.AppCodec(),
 					simApp.SimulationManager(),
 					simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
@@ -145,7 +145,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			simulation2.PrintStats(db)
+			zetasimulation.PrintStats(db)
 
 			appHash := simApp.LastCommitID().Hash
 			appHashList[j] = appHash
@@ -177,7 +177,7 @@ func TestAppStateDeterminism(t *testing.T) {
 // At the end of the run it tries to export the genesis state to make sure the export works.
 func TestFullAppSimulation(t *testing.T) {
 
-	config := simulation2.NewConfigFromFlags()
+	config := zetasimulation.NewConfigFromFlags()
 
 	config.ChainID = SimAppChainID
 	config.BlockMaxGas = SimBlockMaxGas
@@ -187,8 +187,8 @@ func TestFullAppSimulation(t *testing.T) {
 		config,
 		SimDBBackend,
 		SimDBName,
-		simulation2.FlagVerboseValue,
-		simulation2.FlagEnabledValue,
+		zetasimulation.FlagVerboseValue,
+		zetasimulation.FlagEnabledValue,
 	)
 	if skip {
 		t.Skip("skipping application simulation")
@@ -204,10 +204,10 @@ func TestFullAppSimulation(t *testing.T) {
 		}
 	})
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
-	appOptions[server.FlagInvCheckPeriod] = simulation2.FlagPeriodValue
+	appOptions[server.FlagInvCheckPeriod] = zetasimulation.FlagPeriodValue
 	appOptions[flags.FlagHome] = dir
 
-	simApp, err := simulation2.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	simApp, err := zetasimulation.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 	require.NoError(t, err)
 
 	blockedAddresses := simApp.ModuleAccountAddrs()
@@ -215,7 +215,7 @@ func TestFullAppSimulation(t *testing.T) {
 		t,
 		os.Stdout,
 		simApp.BaseApp,
-		simulation2.AppStateFn(
+		zetasimulation.AppStateFn(
 			simApp.AppCodec(),
 			simApp.SimulationManager(),
 			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
@@ -236,11 +236,11 @@ func TestFullAppSimulation(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	simulation2.PrintStats(db)
+	zetasimulation.PrintStats(db)
 }
 
 func TestAppImportExport(t *testing.T) {
-	config := simulation2.NewConfigFromFlags()
+	config := zetasimulation.NewConfigFromFlags()
 
 	config.ChainID = SimAppChainID
 	config.BlockMaxGas = SimBlockMaxGas
@@ -250,8 +250,8 @@ func TestAppImportExport(t *testing.T) {
 		config,
 		SimDBBackend,
 		SimDBName,
-		simulation2.FlagVerboseValue,
-		simulation2.FlagEnabledValue,
+		zetasimulation.FlagVerboseValue,
+		zetasimulation.FlagEnabledValue,
 	)
 	if skip {
 		t.Skip("skipping application simulation")
@@ -268,9 +268,9 @@ func TestAppImportExport(t *testing.T) {
 	})
 
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
-	appOptions[server.FlagInvCheckPeriod] = simulation2.FlagPeriodValue
+	appOptions[server.FlagInvCheckPeriod] = zetasimulation.FlagPeriodValue
 	appOptions[flags.FlagHome] = dir
-	simApp, err := simulation2.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	simApp, err := zetasimulation.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 	require.NoError(t, err)
 
 	// Run randomized simulation
@@ -279,7 +279,7 @@ func TestAppImportExport(t *testing.T) {
 		t,
 		os.Stdout,
 		simApp.BaseApp,
-		simulation2.AppStateFn(
+		zetasimulation.AppStateFn(
 			simApp.AppCodec(),
 			simApp.SimulationManager(),
 			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
@@ -292,10 +292,10 @@ func TestAppImportExport(t *testing.T) {
 	)
 	require.NoError(t, simErr)
 
-	err = simulation2.CheckExportSimulation(simApp, config, simParams)
+	err = zetasimulation.CheckExportSimulation(simApp, config, simParams)
 	require.NoError(t, err)
 
-	simulation2.PrintStats(db)
+	zetasimulation.PrintStats(db)
 
 	t.Log("exporting genesis")
 	// export state and simParams
@@ -307,8 +307,8 @@ func TestAppImportExport(t *testing.T) {
 		config,
 		SimDBBackend+"_new",
 		SimDBName+"_new",
-		simulation2.FlagVerboseValue,
-		simulation2.FlagEnabledValue,
+		zetasimulation.FlagVerboseValue,
+		zetasimulation.FlagEnabledValue,
 	)
 
 	require.NoError(t, err, "simulation setup failed")
@@ -322,7 +322,7 @@ func TestAppImportExport(t *testing.T) {
 		}
 	})
 
-	newSimApp, err := simulation2.NewSimApp(
+	newSimApp, err := zetasimulation.NewSimApp(
 		logger,
 		newDB,
 		appOptions,
@@ -401,7 +401,7 @@ func TestAppImportExport(t *testing.T) {
 }
 
 func TestAppSimulationAfterImport(t *testing.T) {
-	config := simulation2.NewConfigFromFlags()
+	config := zetasimulation.NewConfigFromFlags()
 
 	config.ChainID = SimAppChainID
 	config.BlockMaxGas = SimBlockMaxGas
@@ -411,8 +411,8 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		config,
 		SimDBBackend,
 		SimDBName,
-		simulation2.FlagVerboseValue,
-		simulation2.FlagEnabledValue,
+		zetasimulation.FlagVerboseValue,
+		zetasimulation.FlagEnabledValue,
 	)
 	if skip {
 		t.Skip("skipping application simulation")
@@ -429,9 +429,9 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	})
 
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
-	appOptions[server.FlagInvCheckPeriod] = simulation2.FlagPeriodValue
+	appOptions[server.FlagInvCheckPeriod] = zetasimulation.FlagPeriodValue
 	appOptions[flags.FlagHome] = dir
-	simApp, err := simulation2.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	simApp, err := zetasimulation.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 	require.NoError(t, err)
 
 	// Run randomized simulation
@@ -440,7 +440,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		t,
 		os.Stdout,
 		simApp.BaseApp,
-		simulation2.AppStateFn(
+		zetasimulation.AppStateFn(
 			simApp.AppCodec(),
 			simApp.SimulationManager(),
 			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
@@ -453,10 +453,10 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	)
 	require.NoError(t, simErr)
 
-	err = simulation2.CheckExportSimulation(simApp, config, simParams)
+	err = zetasimulation.CheckExportSimulation(simApp, config, simParams)
 	require.NoError(t, err)
 
-	simulation2.PrintStats(db)
+	zetasimulation.PrintStats(db)
 
 	if stopEarly {
 		t.Log("can't export or import a zero-validator genesis, exiting test")
@@ -475,8 +475,8 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		config,
 		SimDBBackend+"_new",
 		SimDBName+"_new",
-		simulation2.FlagVerboseValue,
-		simulation2.FlagEnabledValue,
+		zetasimulation.FlagVerboseValue,
+		zetasimulation.FlagEnabledValue,
 	)
 
 	require.NoError(t, err, "simulation setup failed")
@@ -490,7 +490,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		}
 	})
 
-	newSimApp, err := simulation2.NewSimApp(
+	newSimApp, err := zetasimulation.NewSimApp(
 		logger,
 		newDB,
 		appOptions,
@@ -508,7 +508,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		t,
 		os.Stdout,
 		newSimApp.BaseApp,
-		simulation2.AppStateFn(
+		zetasimulation.AppStateFn(
 			simApp.AppCodec(),
 			simApp.SimulationManager(),
 			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
