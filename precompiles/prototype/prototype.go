@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 
-	ptypes "github.com/zeta-chain/node/precompiles/types"
+	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
 )
 
@@ -55,7 +55,7 @@ func initABI() {
 }
 
 type Contract struct {
-	ptypes.BaseContract
+	precompiletypes.BaseContract
 
 	fungibleKeeper fungiblekeeper.Keeper
 	cdc            codec.Codec
@@ -68,7 +68,7 @@ func NewIPrototypeContract(
 	kvGasConfig storetypes.GasConfig,
 ) *Contract {
 	return &Contract{
-		BaseContract:   ptypes.NewBaseContract(ContractAddress),
+		BaseContract:   precompiletypes.NewBaseContract(ContractAddress),
 		fungibleKeeper: *fungibleKeeper,
 		cdc:            cdc,
 		kvGasConfig:    kvGasConfig,
@@ -106,7 +106,7 @@ func (c *Contract) RequiredGas(input []byte) uint64 {
 // Bech32ToHexAddr converts a bech32 address to a hex address.
 func (c *Contract) Bech32ToHexAddr(method *abi.Method, args []interface{}) ([]byte, error) {
 	if len(args) != 1 {
-		return nil, &ptypes.ErrInvalidNumberOfArgs{
+		return nil, &precompiletypes.ErrInvalidNumberOfArgs{
 			Got:    len(args),
 			Expect: 1,
 		}
@@ -144,7 +144,7 @@ func (c *Contract) Bech32ToHexAddr(method *abi.Method, args []interface{}) ([]by
 // Bech32ify converts a hex address to a bech32 address.
 func (c *Contract) Bech32ify(method *abi.Method, args []interface{}) ([]byte, error) {
 	if len(args) != 2 {
-		return nil, &ptypes.ErrInvalidNumberOfArgs{
+		return nil, &precompiletypes.ErrInvalidNumberOfArgs{
 			Got:    len(args),
 			Expect: 2,
 		}
@@ -198,7 +198,7 @@ func (c *Contract) GetGasStabilityPoolBalance(
 	args []interface{},
 ) ([]byte, error) {
 	if len(args) != 1 {
-		return nil, &(ptypes.ErrInvalidNumberOfArgs{
+		return nil, &(precompiletypes.ErrInvalidNumberOfArgs{
 			Got:    len(args),
 			Expect: 1,
 		})
@@ -207,7 +207,7 @@ func (c *Contract) GetGasStabilityPoolBalance(
 	// Unwrap arguments. The chainID is the first and unique argument.
 	chainID, ok := args[0].(int64)
 	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
+		return nil, precompiletypes.ErrInvalidArgument{
 			Got: chainID,
 		}
 	}
@@ -233,7 +233,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, erro
 		return nil, err
 	}
 
-	stateDB := evm.StateDB.(ptypes.ExtStateDB)
+	stateDB := evm.StateDB.(precompiletypes.ExtStateDB)
 
 	switch method.Name {
 	case GetGasStabilityPoolBalanceName:
@@ -252,7 +252,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, _ bool) ([]byte, erro
 	case Bech32ifyMethodName:
 		return c.Bech32ify(method, args)
 	default:
-		return nil, ptypes.ErrInvalidMethod{
+		return nil, precompiletypes.ErrInvalidMethod{
 			Method: method.Name,
 		}
 	}

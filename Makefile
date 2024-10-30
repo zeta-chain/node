@@ -11,7 +11,7 @@ DOCKER ?= docker
 DOCKER_COMPOSE ?= $(DOCKER) compose -f docker-compose.yml $(NODE_COMPOSE_ARGS)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 GOFLAGS := ""
-GOLANG_CROSS_VERSION ?= v1.22.4
+GOLANG_CROSS_VERSION ?= v1.22.7
 GOPATH ?= '$(HOME)/go'
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
@@ -301,7 +301,7 @@ ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade from source"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source \
-		--build-arg OLD_VERSION='release/v20' \
+		--build-arg OLD_VERSION='release/v21' \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
 		--build-arg NODE_COMMIT=$(NODE_COMMIT)
 		.
@@ -310,7 +310,7 @@ else
 zetanode-upgrade: zetanode
 	@echo "Building zetanode-upgrade from binaries"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime \
-	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v20.0.2' \
+	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v21.0.0' \
 	--build-arg NODE_VERSION=$(NODE_VERSION) \
 	--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 	.

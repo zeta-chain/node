@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
@@ -35,6 +36,8 @@ type Clients struct {
 	Staking stakingtypes.QueryClient
 	// Upgrade is a github.com/cosmos/cosmos-sdk/x/upgrade/types QueryClient
 	Upgrade upgradetypes.QueryClient
+	// Distribution is a "github.com/cosmos/cosmos-sdk/x/distribution/types" QueryClient
+	Distribution distributiontypes.QueryClient
 
 	// ZetaCore specific clients
 
@@ -65,11 +68,12 @@ type Clients struct {
 func newClients(ctx client.Context) (Clients, error) {
 	return Clients{
 		// Cosmos SDK clients
-		Auth:      authtypes.NewQueryClient(ctx),
-		Bank:      banktypes.NewQueryClient(ctx),
-		Staking:   stakingtypes.NewQueryClient(ctx),
-		Upgrade:   upgradetypes.NewQueryClient(ctx),
-		Authority: authoritytypes.NewQueryClient(ctx),
+		Auth:         authtypes.NewQueryClient(ctx),
+		Bank:         banktypes.NewQueryClient(ctx),
+		Staking:      stakingtypes.NewQueryClient(ctx),
+		Upgrade:      upgradetypes.NewQueryClient(ctx),
+		Authority:    authoritytypes.NewQueryClient(ctx),
+		Distribution: distributiontypes.NewQueryClient(ctx),
 		// ZetaCore specific clients
 		Crosschain:  crosschaintypes.NewQueryClient(ctx),
 		Fungible:    fungibletypes.NewQueryClient(ctx),

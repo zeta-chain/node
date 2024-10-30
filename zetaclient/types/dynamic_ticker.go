@@ -23,7 +23,8 @@ func NewDynamicTicker(name string, interval uint64) (*DynamicTicker, error) {
 	return &DynamicTicker{
 		name:     name,
 		interval: interval,
-		impl:     time.NewTicker(time.Duration(interval) * time.Second),
+		// #nosec G115 interval is in range and not user controlled
+		impl: time.NewTicker(time.Duration(interval) * time.Second),
 	}, nil
 }
 
@@ -38,6 +39,7 @@ func (t *DynamicTicker) UpdateInterval(newInterval uint64, logger zerolog.Logger
 		t.impl.Stop()
 		oldInterval := t.interval
 		t.interval = newInterval
+		// #nosec G115 interval is in range and not user controlled
 		t.impl = time.NewTicker(time.Duration(t.interval) * time.Second)
 		logger.Info().Msgf("%s ticker interval changed from %d to %d", t.name, oldInterval, newInterval)
 	}

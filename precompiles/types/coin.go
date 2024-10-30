@@ -1,4 +1,4 @@
-package bank
+package types
 
 import (
 	"math/big"
@@ -7,19 +7,27 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 
-	ptypes "github.com/zeta-chain/node/precompiles/types"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
 )
 
 // ZRC20ToCosmosDenom returns the cosmos coin address for a given ZRC20 address.
-// This is converted to "zevm/{ZRC20Address}".
+// This is converted to "zrc20/{ZRC20Address}".
 func ZRC20ToCosmosDenom(ZRC20Address common.Address) string {
-	return ZRC20DenomPrefix + ZRC20Address.String()
+	return config.ZRC20DenomPrefix + ZRC20Address.String()
 }
 
-func createCoinSet(tokenDenom string, amount *big.Int) (sdk.Coins, error) {
-	coin := sdk.NewCoin(tokenDenom, math.NewIntFromBigInt(amount))
+func CreateCoinSet(zrc20address common.Address, amount *big.Int) (sdk.Coins, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			return
+		}
+	}()
+
+	denom := ZRC20ToCosmosDenom(zrc20address)
+
+	coin := sdk.NewCoin(denom, math.NewIntFromBigInt(amount))
 	if !coin.IsValid() {
-		return nil, &ptypes.ErrInvalidCoin{
+		return nil, &ErrInvalidCoin{
 			Got:      coin.GetDenom(),
 			Negative: coin.IsNegative(),
 			Nil:      coin.IsNil(),
@@ -28,10 +36,10 @@ func createCoinSet(tokenDenom string, amount *big.Int) (sdk.Coins, error) {
 
 	// A sdk.Coins (type []sdk.Coin) has to be created because it's the type expected by MintCoins
 	// and SendCoinsFromModuleToAccount.
-	// But sdk.Coins will only contain one coin, always.
+	// But coinSet will only contain one coin, always.
 	coinSet := sdk.NewCoins(coin)
 	if !coinSet.IsValid() || coinSet.Empty() || coinSet.IsAnyNil() || coinSet == nil {
-		return nil, &ptypes.ErrInvalidCoin{
+		return nil, &ErrInvalidCoin{
 			Got:      coinSet.String(),
 			Negative: coinSet.IsAnyNegative(),
 			Nil:      coinSet.IsAnyNil(),
