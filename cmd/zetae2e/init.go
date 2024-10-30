@@ -20,12 +20,14 @@ func NewInitCmd() *cobra.Command {
 	}
 
 	InitCmd.Flags().StringVar(&initConf.RPCs.EVM, "ethURL", initConf.RPCs.EVM, "--ethURL http://eth:8545")
-	InitCmd.Flags().StringVar(&initConf.RPCs.ZetaCoreGRPC, "grpcURL", initConf.RPCs.ZetaCoreGRPC, "--grpcURL zetacore0:9090")
+	InitCmd.Flags().
+		StringVar(&initConf.RPCs.ZetaCoreGRPC, "grpcURL", initConf.RPCs.ZetaCoreGRPC, "--grpcURL zetacore0:9090")
 	InitCmd.Flags().
 		StringVar(&initConf.RPCs.ZetaCoreRPC, "rpcURL", initConf.RPCs.ZetaCoreRPC, "--rpcURL http://zetacore0:26657")
 	InitCmd.Flags().
 		StringVar(&initConf.RPCs.Zevm, "zevmURL", initConf.RPCs.Zevm, "--zevmURL http://zetacore0:8545")
-	InitCmd.Flags().StringVar(&initConf.RPCs.Bitcoin.Host, "btcURL", initConf.RPCs.Bitcoin.Host, "--grpcURL bitcoin:18443")
+	InitCmd.Flags().
+		StringVar(&initConf.RPCs.Bitcoin.Host, "btcURL", initConf.RPCs.Bitcoin.Host, "--btcURL bitcoin:18443")
 	InitCmd.Flags().
 		StringVar(&initConf.RPCs.Solana, "solanaURL", initConf.RPCs.Solana, "--solanaURL http://solana:8899")
 	InitCmd.Flags().

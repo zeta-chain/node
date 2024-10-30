@@ -215,6 +215,7 @@ func WriteConfig(file string, config Config) error {
 	defer fHandle.Close()
 
 	encoder := yaml.NewEncoder(fHandle)
+	defer encoder.Close()
 	encoder.SetIndent(2)
 	err = encoder.Encode(config)
 	if err != nil {
