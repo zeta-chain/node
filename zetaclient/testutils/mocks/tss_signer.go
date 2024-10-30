@@ -4,12 +4,14 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"fmt"
+	"testing"
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
@@ -59,6 +61,29 @@ func NewTSSMainnet() *TSS {
 
 func NewTSSAthens3() *TSS {
 	return NewMockTSS(chains.BscTestnet, testutils.TSSAddressEVMAthens3, testutils.TSSAddressBTCAthens3)
+}
+
+func NewGeneratedTSS(t *testing.T, chain chains.Chain) *TSS {
+	pk, err := crypto.GenerateKey()
+	require.NoError(t, err)
+
+	btcPub, err := btcec.ParsePubKey(crypto.FromECDSAPub(&pk.PublicKey))
+	require.NoError(t, err)
+
+	btcAddress, err := btcutil.NewAddressWitnessPubKeyHash(
+		btcutil.Hash160(btcPub.SerializeCompressed()),
+		&chaincfg.TestNet3Params,
+	)
+
+	require.NoError(t, err)
+
+	return &TSS{
+		paused:     false,
+		chain:      chain,
+		evmAddress: crypto.PubkeyToAddress(pk.PublicKey).Hex(),
+		btcAddress: btcAddress.String(),
+		PrivKey:    pk,
+	}
 }
 
 // WithPrivKey sets the private key for the TSS

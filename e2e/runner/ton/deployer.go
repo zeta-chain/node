@@ -10,6 +10,8 @@ import (
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
 	"github.com/tonkeeper/tongo/wallet"
+
+	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 )
 
 // Deployer represents a wrapper around ton Wallet with some helpful methods.
@@ -74,7 +76,7 @@ func (d *Deployer) GetBalanceOf(ctx context.Context, id ton.AccountID) (math.Uin
 // Fund sends the given amount of coins to the recipient. Returns tx hash and error.
 func (d *Deployer) Fund(ctx context.Context, recipient ton.AccountID, amount math.Uint) (ton.Bits256, error) {
 	msg := wallet.SimpleTransfer{
-		Amount:  UintToCoins(amount),
+		Amount:  toncontracts.UintToCoins(amount),
 		Address: recipient,
 	}
 
@@ -84,7 +86,7 @@ func (d *Deployer) Fund(ctx context.Context, recipient ton.AccountID, amount mat
 // Deploy deploys AccountInit with the given amount of coins. Returns tx hash and error.
 func (d *Deployer) Deploy(ctx context.Context, account *AccountInit, amount math.Uint) error {
 	msg := wallet.Message{
-		Amount:  UintToCoins(amount),
+		Amount:  toncontracts.UintToCoins(amount),
 		Address: account.ID,
 		Code:    account.Code,
 		Data:    account.Data,

@@ -12,12 +12,12 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-const payloadMessageEVMAuthenticatedCallThroughContract = "this is a test EVM authenticated call payload through contract"
-
 func TestV2ZEVMToEVMCallThroughContract(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0)
 
-	r.AssertTestDAppEVMCalled(false, payloadMessageEVMAuthenticatedCallThroughContract, big.NewInt(0))
+	payload := randomPayload(r)
+
+	r.AssertTestDAppEVMCalled(false, payload, big.NewInt(0))
 
 	// deploy caller contract and send it gas zrc20 to pay gas fee
 	gatewayCallerAddr, tx, gatewayCaller, err := gatewayzevmcaller.DeployGatewayZEVMCaller(
@@ -37,7 +37,7 @@ func TestV2ZEVMToEVMCallThroughContract(r *runner.E2ERunner, args []string) {
 	tx = r.V2ZEVMToEMVCallThroughContract(
 		gatewayCaller,
 		r.TestDAppV2EVMAddr,
-		[]byte(payloadMessageEVMAuthenticatedCallThroughContract),
+		[]byte(payload),
 		gatewayzevmcaller.RevertOptions{
 			OnRevertGasLimit: big.NewInt(0),
 		},
@@ -47,12 +47,12 @@ func TestV2ZEVMToEVMCallThroughContract(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "call")
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
-	r.AssertTestDAppEVMCalled(true, payloadMessageEVMAuthenticatedCallThroughContract, big.NewInt(0))
+	r.AssertTestDAppEVMCalled(true, payload, big.NewInt(0))
 
 	// check expected sender was used
 	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(
 		&bind.CallOpts{},
-		[]byte(payloadMessageEVMAuthenticatedCallThroughContract),
+		[]byte(payload),
 	)
 	require.NoError(r, err)
 	require.Equal(r, gatewayCallerAddr, senderForMsg)

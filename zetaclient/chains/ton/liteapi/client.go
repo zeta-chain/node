@@ -28,6 +28,8 @@ const (
 	blockCacheSize = 250
 )
 
+var ErrNotFound = errors.New("not found")
+
 // New Client constructor.
 func New(client *liteapi.Client) *Client {
 	blockCache, _ := lru.New(blockCacheSize)
@@ -189,6 +191,25 @@ func (c *Client) GetTransactionsSince(
 	return result, nil
 }
 
+// GetTransaction returns account's tx by logicalTime and hash or ErrNotFound.
+func (c *Client) GetTransaction(
+	ctx context.Context,
+	acc ton.AccountID,
+	lt uint64,
+	hash ton.Bits256,
+) (ton.Transaction, error) {
+	txs, err := c.GetTransactions(ctx, 1, acc, lt, hash)
+	if err != nil {
+		return ton.Transaction{}, err
+	}
+
+	if len(txs) == 0 {
+		return ton.Transaction{}, ErrNotFound
+	}
+
+	return txs[0], nil
+}
+
 // getLastTransactionHash returns logical time and hash of the last transaction
 func (c *Client) getLastTransactionHash(ctx context.Context, acc ton.AccountID) (uint64, tlb.Bits256, error) {
 	state, err := c.GetAccountState(ctx, acc)
@@ -201,6 +222,12 @@ func (c *Client) getLastTransactionHash(ctx context.Context, acc ton.AccountID) 
 	}
 
 	return state.LastTransLt, state.LastTransHash, nil
+}
+
+// TransactionToHashString converts transaction's logicalTime and hash to string
+// This string is used to store the last scanned hash (e.g. "123:0x123...")
+func TransactionToHashString(tx ton.Transaction) string {
+	return TransactionHashToString(tx.Lt, ton.Bits256(tx.Hash()))
 }
 
 // TransactionHashToString converts logicalTime and hash to string
