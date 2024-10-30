@@ -24,6 +24,8 @@
 * [2979](https://github.com/zeta-chain/node/pull/2979) - add fungible keeper ability to lock/unlock ZRC20 tokens
 * [3012](https://github.com/zeta-chain/node/pull/3012) - integrate authenticated calls erc20 smart contract functionality into protocol
 * [3025](https://github.com/zeta-chain/node/pull/3025) - standard memo for Bitcoin inbound
+* [3028](https://github.com/zeta-chain/node/pull/3028) - whitelist connection gater
+* [3019](https://github.com/zeta-chain/node/pull/3019) - add ditribute functions to staking precompile
 * [3020](https://github.com/zeta-chain/node/pull/3020) - add support for TON withdrawals
 
 ### Refactor

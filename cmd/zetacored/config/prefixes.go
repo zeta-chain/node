@@ -6,6 +6,9 @@ const (
 	// Bech32Prefix defines the Bech32 prefix used for Cronos Accounts
 	Bech32Prefix = "zeta"
 
+	// ZRC20DenomPrefix defines the prefix for ZRC20 tokens when converted to sdk.Coin.
+	ZRC20DenomPrefix = "zrc20/"
+
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
 	Bech32PrefixAccAddr = Bech32Prefix
 	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key

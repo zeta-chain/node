@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
-	ptypes "github.com/zeta-chain/node/precompiles/types"
+	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
 )
 
@@ -49,7 +49,7 @@ func initABI() {
 }
 
 type Contract struct {
-	ptypes.BaseContract
+	precompiletypes.BaseContract
 
 	bankKeeper     bank.Keeper
 	fungibleKeeper fungiblekeeper.Keeper
@@ -74,11 +74,12 @@ func NewIBankContract(
 	// This avoids instantiating it every time deposit or withdraw are called.
 	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
+		ctx.Logger().Error("bank contract failed to get ZRC20 ABI", "error", err)
 		return nil
 	}
 
 	return &Contract{
-		BaseContract:   ptypes.NewBaseContract(ContractAddress),
+		BaseContract:   precompiletypes.NewBaseContract(ContractAddress),
 		bankKeeper:     bankKeeper,
 		fungibleKeeper: fungibleKeeper,
 		zrc20ABI:       zrc20ABI,
@@ -130,13 +131,13 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 		return nil, err
 	}
 
-	stateDB := evm.StateDB.(ptypes.ExtStateDB)
+	stateDB := evm.StateDB.(precompiletypes.ExtStateDB)
 
 	switch method.Name {
 	// Deposit and Withdraw methods are both not allowed in read-only mode.
 	case DepositMethodName, WithdrawMethodName:
 		if readOnly {
-			return nil, ptypes.ErrWriteMethod{
+			return nil, precompiletypes.ErrWriteMethod{
 				Method: method.Name,
 			}
 		}
@@ -175,42 +176,8 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 		return res, nil
 
 	default:
-		return nil, ptypes.ErrInvalidMethod{
+		return nil, precompiletypes.ErrInvalidMethod{
 			Method: method.Name,
 		}
 	}
-}
-
-// getEVMCallerAddress returns the caller address.
-// Usually the caller is the contract.CallerAddress, which is the address of the contract that called the precompiled contract.
-// If contract.CallerAddress != evm.Origin is true, it means the call was made through a contract,
-// on which case there is a need to set the caller to the evm.Origin.
-func getEVMCallerAddress(evm *vm.EVM, contract *vm.Contract) (common.Address, error) {
-	caller := contract.CallerAddress
-	if contract.CallerAddress != evm.Origin {
-		caller = evm.Origin
-	}
-
-	return caller, nil
-}
-
-// getCosmosAddress returns the counterpart cosmos address of the given ethereum address.
-// It checks if the address is empty or blocked by the bank keeper.
-func getCosmosAddress(bankKeeper bank.Keeper, addr common.Address) (sdk.AccAddress, error) {
-	toAddr := sdk.AccAddress(addr.Bytes())
-	if toAddr.Empty() {
-		return nil, &ptypes.ErrInvalidAddr{
-			Got:    toAddr.String(),
-			Reason: "empty address",
-		}
-	}
-
-	if bankKeeper.BlockedAddr(toAddr) {
-		return nil, &ptypes.ErrInvalidAddr{
-			Got:    toAddr.String(),
-			Reason: "destination address blocked by bank keeper",
-		}
-	}
-
-	return toAddr, nil
 }

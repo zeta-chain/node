@@ -9,8 +9,10 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
+	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -74,6 +76,7 @@ type E2ERunner struct {
 	SolanaDeployerAddress solana.PublicKey
 	TONDeployer           *tonrunner.Deployer
 	TONGateway            *toncontracts.Gateway
+	FeeCollectorAddress   types.AccAddress
 
 	// all clients.
 	// a reference to this type is required to enable creating a new E2ERunner.
@@ -86,14 +89,15 @@ type E2ERunner struct {
 	SolanaClient *rpc.Client
 
 	// zetacored grpc clients
-	AuthorityClient   authoritytypes.QueryClient
-	CctxClient        crosschaintypes.QueryClient
-	FungibleClient    fungibletypes.QueryClient
-	AuthClient        authtypes.QueryClient
-	BankClient        banktypes.QueryClient
-	StakingClient     stakingtypes.QueryClient
-	ObserverClient    observertypes.QueryClient
-	LightclientClient lightclienttypes.QueryClient
+	AuthorityClient    authoritytypes.QueryClient
+	CctxClient         crosschaintypes.QueryClient
+	FungibleClient     fungibletypes.QueryClient
+	AuthClient         authtypes.QueryClient
+	BankClient         banktypes.QueryClient
+	StakingClient      stakingtypes.QueryClient
+	ObserverClient     observertypes.QueryClient
+	LightclientClient  lightclienttypes.QueryClient
+	DistributionClient distributiontypes.QueryClient
 
 	// optional zeta (cosmos) client
 	// typically only in test runners that need it
@@ -187,18 +191,21 @@ func NewE2ERunner(
 
 		Account: account,
 
+		FeeCollectorAddress: authtypes.NewModuleAddress(authtypes.FeeCollectorName),
+
 		Clients: clients,
 
-		ZEVMClient:        clients.Zevm,
-		EVMClient:         clients.Evm,
-		AuthorityClient:   clients.Zetacore.Authority,
-		CctxClient:        clients.Zetacore.Crosschain,
-		FungibleClient:    clients.Zetacore.Fungible,
-		AuthClient:        clients.Zetacore.Auth,
-		BankClient:        clients.Zetacore.Bank,
-		StakingClient:     clients.Zetacore.Staking,
-		ObserverClient:    clients.Zetacore.Observer,
-		LightclientClient: clients.Zetacore.Lightclient,
+		ZEVMClient:         clients.Zevm,
+		EVMClient:          clients.Evm,
+		AuthorityClient:    clients.Zetacore.Authority,
+		CctxClient:         clients.Zetacore.Crosschain,
+		FungibleClient:     clients.Zetacore.Fungible,
+		AuthClient:         clients.Zetacore.Auth,
+		BankClient:         clients.Zetacore.Bank,
+		StakingClient:      clients.Zetacore.Staking,
+		ObserverClient:     clients.Zetacore.Observer,
+		LightclientClient:  clients.Zetacore.Lightclient,
+		DistributionClient: clients.Zetacore.Distribution,
 
 		EVMAuth:      clients.EvmAuth,
 		ZEVMAuth:     clients.ZevmAuth,
