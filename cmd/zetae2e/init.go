@@ -9,7 +9,7 @@ import (
 	"github.com/zeta-chain/node/e2e/config"
 )
 
-var initConf = config.Config{}
+var initConf = config.DefaultConfig()
 var configFile = ""
 
 func NewInitCmd() *cobra.Command {
@@ -19,18 +19,18 @@ func NewInitCmd() *cobra.Command {
 		RunE:  initConfig,
 	}
 
-	InitCmd.Flags().StringVar(&initConf.RPCs.EVM, "ethURL", "http://eth:8545", "--ethURL http://eth:8545")
-	InitCmd.Flags().StringVar(&initConf.RPCs.ZetaCoreGRPC, "grpcURL", "zetacore0:9090", "--grpcURL zetacore0:9090")
+	InitCmd.Flags().StringVar(&initConf.RPCs.EVM, "ethURL", initConf.RPCs.EVM, "--ethURL http://eth:8545")
+	InitCmd.Flags().StringVar(&initConf.RPCs.ZetaCoreGRPC, "grpcURL", initConf.RPCs.ZetaCoreGRPC, "--grpcURL zetacore0:9090")
 	InitCmd.Flags().
-		StringVar(&initConf.RPCs.ZetaCoreRPC, "rpcURL", "http://zetacore0:26657", "--rpcURL http://zetacore0:26657")
+		StringVar(&initConf.RPCs.ZetaCoreRPC, "rpcURL", initConf.RPCs.ZetaCoreRPC, "--rpcURL http://zetacore0:26657")
 	InitCmd.Flags().
-		StringVar(&initConf.RPCs.Zevm, "zevmURL", "http://zetacore0:8545", "--zevmURL http://zetacore0:8545")
-	InitCmd.Flags().StringVar(&initConf.RPCs.Bitcoin.Host, "btcURL", "bitcoin:18443", "--grpcURL bitcoin:18443")
+		StringVar(&initConf.RPCs.Zevm, "zevmURL", initConf.RPCs.Zevm, "--zevmURL http://zetacore0:8545")
+	InitCmd.Flags().StringVar(&initConf.RPCs.Bitcoin.Host, "btcURL", initConf.RPCs.Bitcoin.Host, "--grpcURL bitcoin:18443")
 	InitCmd.Flags().
-		StringVar(&initConf.RPCs.Solana, "solanaURL", "http://solana:8899", "--solanaURL http://solana:8899")
+		StringVar(&initConf.RPCs.Solana, "solanaURL", initConf.RPCs.Solana, "--solanaURL http://solana:8899")
 	InitCmd.Flags().
-		StringVar(&initConf.RPCs.TONSidecarURL, "tonSidecarURL", "http://ton:8000", "--tonSidecarURL http://ton:8000")
-	InitCmd.Flags().StringVar(&initConf.ZetaChainID, "chainID", "athens_101-1", "--chainID athens_101-1")
+		StringVar(&initConf.RPCs.TONSidecarURL, "tonSidecarURL", initConf.RPCs.TONSidecarURL, "--tonSidecarURL http://ton:8000")
+	InitCmd.Flags().StringVar(&initConf.ZetaChainID, "chainID", initConf.ZetaChainID, "--chainID athens_101-1")
 	InitCmd.Flags().StringVar(&configFile, local.FlagConfigFile, "e2e.config", "--cfg ./e2e.config")
 
 	return InitCmd
