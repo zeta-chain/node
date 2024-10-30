@@ -1,32 +1,18 @@
 package staking
 
 import (
-	"fmt"
-	"math/big"
-
-	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 
-	ptypes "github.com/zeta-chain/node/precompiles/types"
-)
-
-// method names
-const (
-	// write
-	StakeMethodName     = "stake"
-	UnstakeMethodName   = "unstake"
-	MoveStakeMethodName = "moveStake"
-
-	// read
-	GetAllValidatorsMethodName = "getAllValidators"
-	GetSharesMethodName        = "getShares"
+	precompiletypes "github.com/zeta-chain/node/precompiles/types"
+	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
 )
 
 var (
@@ -54,11 +40,13 @@ func initABI() {
 		// just temporary flat values, double check these flat values
 		// can we just use WriteCostFlat/ReadCostFlat from gas config for flat values?
 		case StakeMethodName:
-			GasRequiredByMethod[methodID] = 10000
+			GasRequiredByMethod[methodID] = StakeMethodGas
 		case UnstakeMethodName:
-			GasRequiredByMethod[methodID] = 10000
+			GasRequiredByMethod[methodID] = UnstakeMethodGas
 		case MoveStakeMethodName:
-			GasRequiredByMethod[methodID] = 10000
+			GasRequiredByMethod[methodID] = MoveStakeMethodGas
+		case DistributeMethodName:
+			GasRequiredByMethod[methodID] = DistributeMethodGas
 		case GetAllValidatorsMethodName:
 			GasRequiredByMethod[methodID] = 0
 			ViewMethod[methodID] = true
@@ -72,23 +60,35 @@ func initABI() {
 }
 
 type Contract struct {
-	ptypes.BaseContract
+	precompiletypes.BaseContract
 
-	stakingKeeper stakingkeeper.Keeper
-	cdc           codec.Codec
-	kvGasConfig   storetypes.GasConfig
+	stakingKeeper  stakingkeeper.Keeper
+	fungibleKeeper fungiblekeeper.Keeper
+	bankKeeper     bankkeeper.Keeper
+	cdc            codec.Codec
+	kvGasConfig    storetypes.GasConfig
 }
 
 func NewIStakingContract(
+	ctx sdk.Context,
 	stakingKeeper *stakingkeeper.Keeper,
+	fungibleKeeper fungiblekeeper.Keeper,
+	bankKeeper bankkeeper.Keeper,
 	cdc codec.Codec,
 	kvGasConfig storetypes.GasConfig,
 ) *Contract {
+	accAddress := sdk.AccAddress(ContractAddress.Bytes())
+	if fungibleKeeper.GetAuthKeeper().GetAccount(ctx, accAddress) == nil {
+		fungibleKeeper.GetAuthKeeper().SetAccount(ctx, authtypes.NewBaseAccount(accAddress, nil, 0, 0))
+	}
+
 	return &Contract{
-		BaseContract:  ptypes.NewBaseContract(ContractAddress),
-		stakingKeeper: *stakingKeeper,
-		cdc:           cdc,
-		kvGasConfig:   kvGasConfig,
+		BaseContract:   precompiletypes.NewBaseContract(ContractAddress),
+		stakingKeeper:  *stakingKeeper,
+		fungibleKeeper: fungibleKeeper,
+		bankKeeper:     bankKeeper,
+		cdc:            cdc,
+		kvGasConfig:    kvGasConfig,
 	}
 }
 
@@ -122,263 +122,6 @@ func (c *Contract) RequiredGas(input []byte) uint64 {
 	return 0
 }
 
-func (c *Contract) GetAllValidators(
-	ctx sdk.Context,
-	method *abi.Method,
-) ([]byte, error) {
-	validators := c.stakingKeeper.GetAllValidators(ctx)
-
-	validatorsRes := make([]Validator, len(validators))
-	for i, v := range validators {
-		validatorsRes[i] = Validator{
-			OperatorAddress: v.OperatorAddress,
-			ConsensusPubKey: v.ConsensusPubkey.String(),
-			// #nosec G115 enum always in range
-			BondStatus: uint8(v.Status),
-			Jailed:     v.Jailed,
-		}
-	}
-
-	return method.Outputs.Pack(validatorsRes)
-}
-
-func (c *Contract) GetShares(
-	ctx sdk.Context,
-	method *abi.Method,
-	args []interface{},
-) ([]byte, error) {
-	if len(args) != 2 {
-		return nil, &(ptypes.ErrInvalidNumberOfArgs{
-			Got:    len(args),
-			Expect: 2,
-		})
-	}
-	stakerAddress, ok := args[0].(common.Address)
-	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
-			Got: args[0],
-		}
-	}
-
-	validatorAddress, ok := args[1].(string)
-	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
-			Got: args[1],
-		}
-	}
-
-	validator, err := sdk.ValAddressFromBech32(validatorAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	delegation := c.stakingKeeper.Delegation(ctx, sdk.AccAddress(stakerAddress.Bytes()), validator)
-	shares := big.NewInt(0)
-	if delegation != nil {
-		shares = delegation.GetShares().BigInt()
-	}
-
-	return method.Outputs.Pack(shares)
-}
-
-func (c *Contract) Stake(
-	ctx sdk.Context,
-	evm *vm.EVM,
-	contract *vm.Contract,
-	method *abi.Method,
-	args []interface{},
-) ([]byte, error) {
-	if len(args) != 3 {
-		return nil, &(ptypes.ErrInvalidNumberOfArgs{
-			Got:    len(args),
-			Expect: 3,
-		})
-	}
-
-	stakerAddress, ok := args[0].(common.Address)
-	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
-			Got: args[0],
-		}
-	}
-
-	if contract.CallerAddress != stakerAddress {
-		return nil, fmt.Errorf("caller is not staker address")
-	}
-
-	validatorAddress, ok := args[1].(string)
-	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
-			Got: args[1],
-		}
-	}
-
-	amount, ok := args[2].(*big.Int)
-	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
-			Got: args[2],
-		}
-	}
-
-	msgServer := stakingkeeper.NewMsgServerImpl(&c.stakingKeeper)
-	_, err := msgServer.Delegate(ctx, &stakingtypes.MsgDelegate{
-		DelegatorAddress: sdk.AccAddress(stakerAddress.Bytes()).String(),
-		ValidatorAddress: validatorAddress,
-		Amount: sdk.Coin{
-			Denom:  c.stakingKeeper.BondDenom(ctx),
-			Amount: math.NewIntFromBigInt(amount),
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	// if caller is not the same as origin it means call is coming through smart contract,
-	// and because state of smart contract calling precompile might be updated as well
-	// manually reduce amount in stateDB, so it is properly reflected in bank module
-	stateDB := evm.StateDB.(ptypes.ExtStateDB)
-	if contract.CallerAddress != evm.Origin {
-		stateDB.SubBalance(stakerAddress, amount)
-	}
-
-	err = c.AddStakeLog(ctx, stateDB, stakerAddress, validatorAddress, amount)
-	if err != nil {
-		return nil, err
-	}
-
-	return method.Outputs.Pack(true)
-}
-
-func (c *Contract) Unstake(
-	ctx sdk.Context,
-	evm *vm.EVM,
-	contract *vm.Contract,
-	method *abi.Method,
-	args []interface{},
-) ([]byte, error) {
-	if len(args) != 3 {
-		return nil, &(ptypes.ErrInvalidNumberOfArgs{
-			Got:    len(args),
-			Expect: 3,
-		})
-	}
-
-	stakerAddress, ok := args[0].(common.Address)
-	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
-			Got: args[0],
-		}
-	}
-
-	if contract.CallerAddress != stakerAddress {
-		return nil, fmt.Errorf("caller is not staker address")
-	}
-
-	validatorAddress, ok := args[1].(string)
-	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
-			Got: args[1],
-		}
-	}
-
-	amount, ok := args[2].(*big.Int)
-	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
-			Got: args[2],
-		}
-	}
-
-	msgServer := stakingkeeper.NewMsgServerImpl(&c.stakingKeeper)
-	res, err := msgServer.Undelegate(ctx, &stakingtypes.MsgUndelegate{
-		DelegatorAddress: sdk.AccAddress(stakerAddress.Bytes()).String(),
-		ValidatorAddress: validatorAddress,
-		Amount: sdk.Coin{
-			Denom:  c.stakingKeeper.BondDenom(ctx),
-			Amount: math.NewIntFromBigInt(amount),
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	stateDB := evm.StateDB.(ptypes.ExtStateDB)
-	err = c.AddUnstakeLog(ctx, stateDB, stakerAddress, validatorAddress, amount)
-	if err != nil {
-		return nil, err
-	}
-
-	return method.Outputs.Pack(res.GetCompletionTime().UTC().Unix())
-}
-
-func (c *Contract) MoveStake(
-	ctx sdk.Context,
-	evm *vm.EVM,
-	contract *vm.Contract,
-	method *abi.Method,
-	args []interface{},
-) ([]byte, error) {
-	if len(args) != 4 {
-		return nil, &(ptypes.ErrInvalidNumberOfArgs{
-			Got:    len(args),
-			Expect: 4,
-		})
-	}
-
-	stakerAddress, ok := args[0].(common.Address)
-	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
-			Got: args[0],
-		}
-	}
-
-	if contract.CallerAddress != stakerAddress {
-		return nil, fmt.Errorf("caller is not staker address")
-	}
-
-	validatorSrcAddress, ok := args[1].(string)
-	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
-			Got: args[1],
-		}
-	}
-
-	validatorDstAddress, ok := args[2].(string)
-	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
-			Got: args[2],
-		}
-	}
-
-	amount, ok := args[3].(*big.Int)
-	if !ok {
-		return nil, ptypes.ErrInvalidArgument{
-			Got: args[3],
-		}
-	}
-
-	msgServer := stakingkeeper.NewMsgServerImpl(&c.stakingKeeper)
-	res, err := msgServer.BeginRedelegate(ctx, &stakingtypes.MsgBeginRedelegate{
-		DelegatorAddress:    sdk.AccAddress(stakerAddress.Bytes()).String(),
-		ValidatorSrcAddress: validatorSrcAddress,
-		ValidatorDstAddress: validatorDstAddress,
-		Amount: sdk.Coin{
-			Denom:  c.stakingKeeper.BondDenom(ctx),
-			Amount: math.NewIntFromBigInt(amount),
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	stateDB := evm.StateDB.(ptypes.ExtStateDB)
-	err = c.AddMoveStakeLog(ctx, stateDB, stakerAddress, validatorSrcAddress, validatorDstAddress, amount)
-	if err != nil {
-		return nil, err
-	}
-
-	return method.Outputs.Pack(res.GetCompletionTime().UTC().Unix())
-}
-
 // Run is the entrypoint of the precompiled contract, it switches over the input method,
 // and execute them accordingly.
 func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byte, error) {
@@ -392,7 +135,14 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 		return nil, err
 	}
 
-	stateDB := evm.StateDB.(ptypes.ExtStateDB)
+	stateDB := evm.StateDB.(precompiletypes.ExtStateDB)
+
+	// If the method is not a view method, it should not be executed in read-only mode.
+	if _, isViewMethod := ViewMethod[[4]byte(method.ID)]; !isViewMethod && readOnly {
+		return nil, precompiletypes.ErrWriteMethod{
+			Method: method.Name,
+		}
+	}
 
 	switch method.Name {
 	case GetAllValidatorsMethodName:
@@ -417,17 +167,11 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 		return res, nil
 	case StakeMethodName:
 		// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
-		return nil, ptypes.ErrDisabledMethod{
+		return nil, precompiletypes.ErrDisabledMethod{
 			Method: method.Name,
 		}
 
 		//nolint:govet
-		if readOnly {
-			return nil, ptypes.ErrWriteMethod{
-				Method: method.Name,
-			}
-		}
-
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
 			res, err = c.Stake(ctx, evm, contract, method, args)
@@ -439,17 +183,11 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 		return res, nil
 	case UnstakeMethodName:
 		// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
-		return nil, ptypes.ErrDisabledMethod{
+		return nil, precompiletypes.ErrDisabledMethod{
 			Method: method.Name,
 		}
 
 		//nolint:govet
-		if readOnly {
-			return nil, ptypes.ErrWriteMethod{
-				Method: method.Name,
-			}
-		}
-
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
 			res, err = c.Unstake(ctx, evm, contract, method, args)
@@ -461,17 +199,11 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 		return res, nil
 	case MoveStakeMethodName:
 		// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
-		return nil, ptypes.ErrDisabledMethod{
+		return nil, precompiletypes.ErrDisabledMethod{
 			Method: method.Name,
 		}
 
 		//nolint:govet
-		if readOnly {
-			return nil, ptypes.ErrWriteMethod{
-				Method: method.Name,
-			}
-		}
-
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
 			res, err = c.MoveStake(ctx, evm, contract, method, args)
@@ -481,9 +213,23 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 			return nil, err
 		}
 		return res, nil
+	case DistributeMethodName:
+		var res []byte
+		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
+			res, err = c.distribute(ctx, evm, contract, method, args)
+			return err
+		})
+		if execErr != nil {
+			res, errPack := method.Outputs.Pack(false)
+			if errPack != nil {
+				return nil, errPack
+			}
 
+			return res, err
+		}
+		return res, nil
 	default:
-		return nil, ptypes.ErrInvalidMethod{
+		return nil, precompiletypes.ErrInvalidMethod{
 			Method: method.Name,
 		}
 	}

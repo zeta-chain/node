@@ -24,7 +24,10 @@ import (
 	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	solanaobserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
+	tonobserver "github.com/zeta-chain/node/zetaclient/chains/ton/observer"
+	tonsigner "github.com/zeta-chain/node/zetaclient/chains/ton/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 	"github.com/zeta-chain/node/zetaclient/ratelimiter"
@@ -92,10 +95,8 @@ func New(
 		return nil, errors.New("signerMap or observerMap is nil")
 	}
 
-	log := multiLogger{
-		Logger:  logger.Std.With().Str("module", "orchestrator").Logger(),
-		Sampled: logger.Std.With().Str("module", "orchestrator").Logger().Sample(defaultLogSampler),
-	}
+	logging := logger.Std.With().Str(logs.FieldModule, "orchestrator").Logger()
+	multiLog := multiLogger{Logger: logging, Sampled: logging.Sample(defaultLogSampler)}
 
 	balance, err := client.GetZetaHotKeyBalance(ctx)
 	if err != nil {
@@ -116,7 +117,7 @@ func New(
 		dbDirectory: dbDirectory,
 		baseLogger:  logger,
 
-		logger: log,
+		logger: multiLog,
 		ts:     ts,
 		stop:   make(chan struct{}),
 	}, nil
@@ -194,6 +195,16 @@ func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chainID int64) (inte
 				Str("signer.gateway_address", params.GatewayAddress).
 				Msgf("updated gateway address for chain %d", chainID)
 		}
+	case chain.IsTON():
+		newAddress := chain.Params().GatewayAddress
+
+		if newAddress != signer.GetGatewayAddress() {
+			signer.SetGatewayAddress(newAddress)
+			oc.logger.Info().
+				Str("signer.new_gateway_address", newAddress).
+				Int64("signer.chain_id", chainID).
+				Msg("set gateway address")
+		}
 	}
 
 	return signer, nil
@@ -236,8 +247,9 @@ func (oc *Orchestrator) resolveObserver(app *zctx.AppContext, chainID int64) (in
 	if !observertypes.ChainParamsEqual(curParams, *freshParams) {
 		observer.SetChainParams(*freshParams)
 		oc.logger.Info().
+			Int64("observer.chain_id", chainID).
 			Interface("observer.chain_params", *freshParams).
-			Msgf("updated chain params for chainID %d", chainID)
+			Msg("updated chain params")
 	}
 
 	return observer, nil
@@ -379,14 +391,16 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 						signer, err := oc.resolveSigner(app, chainID)
 						if err != nil {
 							oc.logger.Error().Err(err).
-								Msgf("runScheduler: unable to resolve signer for chain %d", chainID)
+								Int64(logs.FieldChain, chainID).
+								Msg("runScheduler: unable to resolve signer")
 							continue
 						}
 
 						ob, err := oc.resolveObserver(app, chainID)
 						if err != nil {
 							oc.logger.Error().Err(err).
-								Msgf("runScheduler: resolveObserver failed for chain %d", chainID)
+								Int64(logs.FieldChain, chainID).
+								Msg("runScheduler: unable to resolve observer")
 							continue
 						}
 
@@ -415,6 +429,8 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 							oc.ScheduleCctxBTC(ctx, zetaHeight, chainID, cctxList, ob, signer)
 						case chain.IsSolana():
 							oc.ScheduleCctxSolana(ctx, zetaHeight, chainID, cctxList, ob, signer)
+						case chain.IsTON():
+							oc.ScheduleCCTXTON(ctx, zetaHeight, chainID, cctxList, ob, signer)
 						default:
 							oc.logger.Error().Msgf("runScheduler: no scheduler found chain %d", chainID)
 							continue
@@ -664,6 +680,87 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 	}
 }
 
+// ScheduleCCTXTON schedules TON outbound keySign on each ZetaChain block
+func (oc *Orchestrator) ScheduleCCTXTON(
+	ctx context.Context,
+	zetaHeight uint64,
+	chainID int64,
+	cctxList []*types.CrossChainTx,
+	observer interfaces.ChainObserver,
+	signer interfaces.ChainSigner,
+) {
+	// should never happen
+	if _, ok := observer.(*tonobserver.Observer); !ok {
+		oc.logger.Error().Msg("ScheduleCCTXTON: observer is not TON")
+		return
+	}
+
+	if _, ok := signer.(*tonsigner.Signer); !ok {
+		oc.logger.Error().Msg("ScheduleCCTXTON: signer is not TON")
+		return
+	}
+
+	// Scheduler interval measured in zeta blocks.
+	// runScheduler() guarantees that this function is called every zeta block.
+	// Note that TON blockchain is async and doesn't have a concept of confirmations
+	// i.e. tx is finalized as soon as it's included in the next block (less than 6 seconds)
+	// #nosec G115 positive
+	interval := uint64(observer.ChainParams().OutboundScheduleInterval)
+
+	shouldProcessOutbounds := zetaHeight%interval == 0
+
+	for i := range cctxList {
+		var (
+			cctx       = cctxList[i]
+			params     = cctx.GetCurrentOutboundParam()
+			nonce      = params.TssNonce
+			outboundID = outboundprocessor.ToOutboundID(cctx.Index, params.ReceiverChainId, nonce)
+		)
+
+		if params.ReceiverChainId != chainID {
+			// should not happen
+			oc.logger.Error().Msgf("ScheduleCCTXTON: outbound chain id mismatch (got %d)", params.ReceiverChainId)
+			continue
+		}
+
+		// vote outbound if it's already confirmed
+		continueKeySign, err := observer.VoteOutboundIfConfirmed(ctx, cctx)
+
+		switch {
+		case err != nil:
+			oc.logger.Error().Err(err).Uint64("outbound.nonce", nonce).
+				Msg("ScheduleCCTXTON: VoteOutboundIfConfirmed failed")
+			continue
+		case !continueKeySign:
+			oc.logger.Info().Uint64("outbound.nonce", nonce).
+				Msg("ScheduleCCTXTON: outbound already processed")
+			continue
+		case !shouldProcessOutbounds:
+			// well, let's wait for another block to (probably) trigger the processing
+			continue
+		}
+
+		// try to sign and broadcast cctx to TON
+		task := func(ctx context.Context) error {
+			signer.TryProcessOutbound(
+				ctx,
+				cctx,
+				oc.outboundProc,
+				outboundID,
+				observer,
+				oc.zetacoreClient,
+				zetaHeight,
+			)
+
+			return nil
+		}
+
+		// fire async task
+		taskLogger := oc.logger.Logger.With().Str("outbound.id", outboundID).Logger()
+		bg.Work(ctx, task, bg.WithName("TryProcessOutbound"), bg.WithLogger(taskLogger))
+	}
+}
+
 // runObserverSignerSync runs a blocking ticker that observes chain changes from zetacore
 // and optionally (de)provisions respective observers and signers.
 func (oc *Orchestrator) runObserverSignerSync(ctx context.Context) error {
@@ -709,8 +806,8 @@ func (oc *Orchestrator) syncObserverSigner(ctx context.Context) error {
 
 	if added+removed > 0 {
 		oc.logger.Info().
-			Int("signers.added", added).
-			Int("signers.removed", removed).
+			Int("signer.added", added).
+			Int("signer.removed", removed).
 			Msg("synced signers")
 	}
 
