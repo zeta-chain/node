@@ -61,25 +61,11 @@ func (c *Contract) deposit(
 
 	// Check for enough balance.
 	// function balanceOf(address account) public view virtual override returns (uint256)
-	resBalanceOf, err := c.CallContract(
-		ctx,
-		&c.fungibleKeeper,
-		c.zrc20ABI,
-		zrc20Addr,
-		"balanceOf",
-		[]interface{}{caller},
-	)
+	balance, err := c.fungibleKeeper.ZRC20BalanceOf(ctx, zrc20Addr, caller)
 	if err != nil {
 		return nil, &precompiletypes.ErrUnexpected{
 			When: "balanceOf",
 			Got:  err.Error(),
-		}
-	}
-
-	balance, ok := resBalanceOf[0].(*big.Int)
-	if !ok {
-		return nil, &precompiletypes.ErrUnexpected{
-			Got: "ZRC20 balanceOf returned an unexpected type",
 		}
 	}
 
@@ -100,7 +86,7 @@ func (c *Contract) deposit(
 	}
 
 	// 2. Effect: subtract balance.
-	if err := c.fungibleKeeper.LockZRC20(ctx, c.zrc20ABI, zrc20Addr, c.Address(), caller, c.Address(), amount); err != nil {
+	if err := c.fungibleKeeper.LockZRC20(ctx, zrc20Addr, c.Address(), caller, c.Address(), amount); err != nil {
 		return nil, &precompiletypes.ErrUnexpected{
 			When: "LockZRC20InBank",
 			Got:  err.Error(),

@@ -85,7 +85,7 @@ func (c *Contract) withdraw(
 	}
 
 	// Check if bank address has enough ZRC20 balance.
-	if err := c.fungibleKeeper.CheckZRC20Balance(ctx, c.zrc20ABI, zrc20Addr, c.Address(), amount); err != nil {
+	if err := c.fungibleKeeper.CheckZRC20Balance(ctx, zrc20Addr, c.Address(), amount); err != nil {
 		return nil, &precompiletypes.ErrInsufficientBalance{
 			Requested: amount.String(),
 			Got:       err.Error(),
@@ -108,7 +108,7 @@ func (c *Contract) withdraw(
 	}
 
 	// 3. Interactions: send ZRC20.
-	if err := c.fungibleKeeper.UnlockZRC20(ctx, c.zrc20ABI, zrc20Addr, caller, c.Address(), amount); err != nil {
+	if err := c.fungibleKeeper.UnlockZRC20(ctx, zrc20Addr, caller, c.Address(), amount); err != nil {
 		return nil, &precompiletypes.ErrUnexpected{
 			When: "UnlockZRC20InBank",
 			Got:  err.Error(),

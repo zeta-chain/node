@@ -6,7 +6,6 @@ import (
 
 	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/zeta-chain/node/pkg/crypto"
@@ -19,27 +18,26 @@ import (
 // it has to be implemented by the caller of this function.
 func (k Keeper) LockZRC20(
 	ctx sdk.Context,
-	zrc20ABI *abi.ABI,
 	zrc20Address, spender, owner, locker common.Address,
 	amount *big.Int,
 ) error {
 	// owner is the EOA owner of the ZRC20 tokens.
 	// spender is the EOA allowed to spend ZRC20 on owner's behalf.
 	// locker is the address that will lock the ZRC20 tokens, i.e: bank precompile.
-	if err := k.CheckZRC20Allowance(ctx, zrc20ABI, owner, spender, zrc20Address, amount); err != nil {
+	if err := k.CheckZRC20Allowance(ctx, owner, spender, zrc20Address, amount); err != nil {
 		return errors.Wrap(err, "failed allowance check")
 	}
 
 	// Check amount_to_be_locked <= total_erc20_balance - already_locked
 	// Max amount of ZRC20 tokens that exists in zEVM are the total supply.
-	totalSupply, err := k.ZRC20TotalSupply(ctx, zrc20ABI, zrc20Address)
+	totalSupply, err := k.ZRC20TotalSupply(ctx, zrc20Address)
 	if err != nil {
 		return errors.Wrap(err, "failed totalSupply check")
 	}
 
 	// The alreadyLocked amount is the amount of ZRC20 tokens that have been locked by the locker.
 	// TODO: Implement list of whitelisted locker addresses (https://github.com/zeta-chain/node/issues/2991)
-	alreadyLocked, err := k.ZRC20BalanceOf(ctx, zrc20ABI, zrc20Address, locker)
+	alreadyLocked, err := k.ZRC20BalanceOf(ctx, zrc20Address, locker)
 	if err != nil {
 		return errors.Wrap(err, "failed getting the ZRC20 already locked amount")
 	}
@@ -50,7 +48,7 @@ func (k Keeper) LockZRC20(
 
 	// Initiate a transferFrom the owner to the locker. This will lock the ZRC20 tokens.
 	// locker has to initiate the transaction and have enough allowance from owner.
-	transferred, err := k.ZRC20TransferFrom(ctx, zrc20ABI, zrc20Address, spender, owner, locker, amount)
+	transferred, err := k.ZRC20TransferFrom(ctx, zrc20Address, spender, owner, locker, amount)
 	if err != nil {
 		return errors.Wrap(err, "failed executing transferFrom")
 	}
@@ -67,17 +65,16 @@ func (k Keeper) LockZRC20(
 // the owner has enough collateral (cosmos coins) to be exchanged (burnt) for the ZRC20 tokens.
 func (k Keeper) UnlockZRC20(
 	ctx sdk.Context,
-	zrc20ABI *abi.ABI,
 	zrc20Address, owner, locker common.Address,
 	amount *big.Int,
 ) error {
 	// Check if the account locking the ZRC20 tokens has enough balance.
-	if err := k.CheckZRC20Balance(ctx, zrc20ABI, zrc20Address, locker, amount); err != nil {
+	if err := k.CheckZRC20Balance(ctx, zrc20Address, locker, amount); err != nil {
 		return errors.Wrap(err, "failed balance check")
 	}
 
 	// transfer from the EOA locking the assets to the owner.
-	transferred, err := k.ZRC20Transfer(ctx, zrc20ABI, zrc20Address, locker, owner, amount)
+	transferred, err := k.ZRC20Transfer(ctx, zrc20Address, locker, owner, amount)
 	if err != nil {
 		return errors.Wrap(err, "failed executing transfer")
 	}
@@ -93,14 +90,9 @@ func (k Keeper) UnlockZRC20(
 // is equal or greater than the provided amount.
 func (k Keeper) CheckZRC20Allowance(
 	ctx sdk.Context,
-	zrc20ABI *abi.ABI,
 	owner, spender, zrc20Address common.Address,
 	amount *big.Int,
 ) error {
-	if zrc20ABI == nil {
-		return fungibletypes.ErrZRC20NilABI
-	}
-
 	if amount.Sign() <= 0 || amount == nil {
 		return fungibletypes.ErrInvalidAmount
 	}
@@ -113,7 +105,7 @@ func (k Keeper) CheckZRC20Allowance(
 		return errors.Wrap(err, "ZRC20 is not valid")
 	}
 
-	allowanceValue, err := k.ZRC20Allowance(ctx, zrc20ABI, zrc20Address, owner, spender)
+	allowanceValue, err := k.ZRC20Allowance(ctx, zrc20Address, owner, spender)
 	if err != nil {
 		return errors.Wrap(err, "failed while checking spender's allowance")
 	}
@@ -129,14 +121,9 @@ func (k Keeper) CheckZRC20Allowance(
 // is equal or greater than the provided amount.
 func (k Keeper) CheckZRC20Balance(
 	ctx sdk.Context,
-	zrc20ABI *abi.ABI,
 	zrc20Address, owner common.Address,
 	amount *big.Int,
 ) error {
-	if zrc20ABI == nil {
-		return fungibletypes.ErrZRC20NilABI
-	}
-
 	if amount.Sign() <= 0 || amount == nil {
 		return fungibletypes.ErrInvalidAmount
 	}
@@ -151,7 +138,7 @@ func (k Keeper) CheckZRC20Balance(
 
 	// Check the ZRC20 balance of a given account.
 	// function balanceOf(address account)
-	balance, err := k.ZRC20BalanceOf(ctx, zrc20ABI, zrc20Address, owner)
+	balance, err := k.ZRC20BalanceOf(ctx, zrc20Address, owner)
 	if err != nil {
 		return errors.Wrap(err, "failed getting owner's ZRC20 balance")
 	}

@@ -6,8 +6,8 @@ import (
 
 	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/pkg/crypto"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
@@ -25,11 +25,11 @@ const (
 // The allowance has to be previously approved by the ZRC20 tokens owner.
 func (k Keeper) ZRC20Allowance(
 	ctx sdk.Context,
-	zrc20ABI *abi.ABI,
 	zrc20Address, owner, spender common.Address,
 ) (*big.Int, error) {
-	if zrc20ABI == nil {
-		return nil, fungibletypes.ErrZRC20NilABI
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return nil, err
 	}
 
 	if crypto.IsEmptyAddress(owner) || crypto.IsEmptyAddress(spender) {
@@ -82,11 +82,11 @@ func (k Keeper) ZRC20Allowance(
 // ZRC20BalanceOf checks the ZRC20 balance of a given EOA.
 func (k Keeper) ZRC20BalanceOf(
 	ctx sdk.Context,
-	zrc20ABI *abi.ABI,
 	zrc20Address, owner common.Address,
 ) (*big.Int, error) {
-	if zrc20ABI == nil {
-		return nil, fungibletypes.ErrZRC20NilABI
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return nil, err
 	}
 
 	if crypto.IsEmptyAddress(owner) {
@@ -138,11 +138,11 @@ func (k Keeper) ZRC20BalanceOf(
 // ZRC20TotalSupply returns the total supply of a ZRC20 token.
 func (k Keeper) ZRC20TotalSupply(
 	ctx sdk.Context,
-	zrc20ABI *abi.ABI,
 	zrc20Address common.Address,
 ) (*big.Int, error) {
-	if zrc20ABI == nil {
-		return nil, fungibletypes.ErrZRC20NilABI
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return nil, err
 	}
 
 	if err := k.IsValidZRC20(ctx, zrc20Address); err != nil {
@@ -189,12 +189,12 @@ func (k Keeper) ZRC20TotalSupply(
 // ZRC20Transfer transfers ZRC20 tokens from the sender to the recipient.
 func (k Keeper) ZRC20Transfer(
 	ctx sdk.Context,
-	zrc20ABI *abi.ABI,
 	zrc20Address, from, to common.Address,
 	amount *big.Int,
 ) (bool, error) {
-	if zrc20ABI == nil {
-		return false, fungibletypes.ErrZRC20NilABI
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return false, err
 	}
 
 	if crypto.IsEmptyAddress(from) || crypto.IsEmptyAddress(to) {
@@ -249,12 +249,12 @@ func (k Keeper) ZRC20Transfer(
 // Requisite: the original EOA must have approved the spender to spend the tokens.
 func (k Keeper) ZRC20TransferFrom(
 	ctx sdk.Context,
-	zrc20ABI *abi.ABI,
 	zrc20Address, spender, from, to common.Address,
 	amount *big.Int,
 ) (bool, error) {
-	if zrc20ABI == nil {
-		return false, fungibletypes.ErrZRC20NilABI
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return false, err
 	}
 
 	if crypto.IsEmptyAddress(from) || crypto.IsEmptyAddress(to) || crypto.IsEmptyAddress(spender) {
