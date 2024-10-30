@@ -2,11 +2,13 @@ package app
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -75,7 +77,10 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 
 	// withdraw all validator commission
 	app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
-		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator())
+		_, err := app.DistrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator())
+		if !errors.Is(err, distributiontypes.ErrNoValidatorCommission) && err != nil {
+			panic(err)
+		}
 		return false
 	})
 
@@ -160,11 +165,12 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 
 	for ; iter.Valid(); iter.Next() {
 		key := iter.Key()
-		if len(key) <= 2 {
+		keyPrefixLength := 2
+		if len(key) <= keyPrefixLength {
 			app.Logger().Error("unexpected key in staking store", "key", key)
 			continue
 		}
-		addr := sdk.ValAddress(key[2:])
+		addr := sdk.ValAddress(key[keyPrefixLength:])
 		validator, found := app.StakingKeeper.GetValidator(ctx, addr)
 		if !found {
 			panic("expected validator, not found")
