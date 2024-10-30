@@ -55,7 +55,13 @@ func (s *Signer) trackOutbound(
 			continue
 		}
 
+		tx := results[0].Transaction
 		txHash := liteapi.TransactionToHashString(&results[0].Transaction)
+
+		if !tx.IsSuccess() {
+			// should not happen
+			return errors.Errorf("transaction %q is not successful", txHash)
+		}
 
 		// Note that this method has a check for noop
 		_, err = zetacore.AddOutboundTracker(ctx, chainID, nonce, txHash, nil, "", 0)
