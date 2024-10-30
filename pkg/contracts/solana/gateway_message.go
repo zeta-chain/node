@@ -125,8 +125,17 @@ type MsgWhitelist struct {
 }
 
 // NewMsgWhitelist returns a new whitelist_spl_mint message
-func NewMsgWhitelist(whitelistCandidate solana.PublicKey, whitelistEntry solana.PublicKey, chainID, nonce uint64) *MsgWhitelist {
-	return &MsgWhitelist{whitelistCandidate: whitelistCandidate, whitelistEntry: whitelistEntry, chainID: chainID, nonce: nonce}
+func NewMsgWhitelist(
+	whitelistCandidate solana.PublicKey,
+	whitelistEntry solana.PublicKey,
+	chainID, nonce uint64,
+) *MsgWhitelist {
+	return &MsgWhitelist{
+		whitelistCandidate: whitelistCandidate,
+		whitelistEntry:     whitelistEntry,
+		chainID:            chainID,
+		nonce:              nonce,
+	}
 }
 
 // To returns the recipient address of the message

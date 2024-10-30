@@ -6,6 +6,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/zeta-chain/node/pkg/coin"
@@ -30,37 +31,38 @@ func (k msgServer) WhitelistERC20(
 		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
-	// erc20Addr := ethcommon.HexToAddress(msg.Erc20Address)
-	// if erc20Addr == (ethcommon.Address{}) {
-	// 	return nil, errorsmod.Wrapf(
-	// 		sdkerrors.ErrInvalidAddress,
-	// 		"invalid ERC20 contract address (%s)",
-	// 		msg.Erc20Address,
-	// 	)
-	// }
+	chain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)
+	if !found {
+		return nil, errorsmod.Wrapf(types.ErrInvalidChainID, "chain id (%d) not supported", msg.ChainId)
+	}
 
-	// // check if the erc20 is already whitelisted
-	// foreignCoins := k.fungibleKeeper.GetAllForeignCoins(ctx)
-	// for _, fCoin := range foreignCoins {
-	// 	assetAddr := ethcommon.HexToAddress(fCoin.Asset)
-	// 	if assetAddr == erc20Addr && fCoin.ForeignChainId == msg.ChainId {
-	// 		return nil, errorsmod.Wrapf(
-	// 			fungibletypes.ErrForeignCoinAlreadyExist,
-	// 			"ERC20 contract address (%s) already whitelisted on chain (%d)",
-	// 			msg.Erc20Address,
-	// 			msg.ChainId,
-	// 		)
-	// 	}
-	// }
+	if chain.IsEVMChain() {
+		erc20Addr := ethcommon.HexToAddress(msg.Erc20Address)
+		if erc20Addr == (ethcommon.Address{}) {
+			return nil, errorsmod.Wrapf(
+				sdkerrors.ErrInvalidAddress,
+				"invalid ERC20 contract address (%s)",
+				msg.Erc20Address,
+			)
+		}
+	}
+
+	// check if the asset is already whitelisted
+	foreignCoins := k.fungibleKeeper.GetAllForeignCoins(ctx)
+	for _, fCoin := range foreignCoins {
+		if fCoin.Asset == msg.Erc20Address && fCoin.ForeignChainId == msg.ChainId {
+			return nil, errorsmod.Wrapf(
+				fungibletypes.ErrForeignCoinAlreadyExist,
+				"ERC20 contract address (%s) already whitelisted on chain (%d)",
+				msg.Erc20Address,
+				msg.ChainId,
+			)
+		}
+	}
 
 	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
 		return nil, errorsmod.Wrapf(types.ErrCannotFindTSSKeys, "Cannot create new admin cmd of type whitelistERC20")
-	}
-
-	chain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)
-	if !found {
-		return nil, errorsmod.Wrapf(types.ErrInvalidChainID, "chain id (%d) not supported", msg.ChainId)
 	}
 
 	// use a temporary context for the zrc20 deployment

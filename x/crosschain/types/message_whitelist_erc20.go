@@ -52,10 +52,9 @@ func (msg *MsgWhitelistERC20) ValidateBasic() error {
 	if err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	// check if the system contract address is valid
-	// if ethcommon.HexToAddress(msg.Erc20Address) == (ethcommon.Address{}) {
-	// 	return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid ERC20 contract address (%s)", msg.Erc20Address)
-	// }
+	if msg.Erc20Address == "" {
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "empty asset address")
+	}
 	if msg.Decimals > 128 {
 		return cosmoserrors.Wrapf(types.ErrInvalidDecimals, "invalid decimals (%d)", msg.Decimals)
 	}

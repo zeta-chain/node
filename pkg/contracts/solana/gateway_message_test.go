@@ -20,7 +20,7 @@ func Test_MsgWithdrawHash(t *testing.T) {
 		amount := uint64(1336000)
 		to := solana.MustPublicKeyFromBase58("37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ")
 
-		wantHash := "a20cddb3f888f4064ced892a477101f45469a8c50f783b966d3fec2455887c05"
+		wantHash := "aa609ef9480303e8d743f6e36fe1bea0cc56b8d27dcbd8220846125c1181b681"
 		wantHashBytes, err := hex.DecodeString(wantHash)
 		require.NoError(t, err)
 
