@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"sync"
 	"time"
 
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/montanaflynn/stats"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
 
@@ -36,6 +37,10 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 	// create a wait group to wait for all the withdraws to complete
 	var eg errgroup.Group
 
+	// store durations as float64 seconds like prometheus
+	withdrawDurations := []float64{}
+	withdrawDurationsLock := sync.Mutex{}
+
 	// send the withdraws
 	for i := 0; i < numWithdraws; i++ {
 		i := i
@@ -49,29 +54,42 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 		r.Logger.Print("index %d: starting withdraw, tx hash: %s", i, tx.Hash().Hex())
 
 		eg.Go(func() error {
-			return monitorEtherWithdraw(r, tx, i, time.Now())
+			startTime := time.Now()
+			cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.ReceiptTimeout)
+			if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
+				return fmt.Errorf(
+					"index %d: withdraw cctx failed with status %s, message %s, cctx index %s",
+					i,
+					cctx.CctxStatus.Status,
+					cctx.CctxStatus.StatusMessage,
+					cctx.Index,
+				)
+			}
+			timeToComplete := time.Since(startTime)
+			r.Logger.Print("index %d: withdraw cctx success in %s", i, timeToComplete.String())
+
+			withdrawDurationsLock.Lock()
+			withdrawDurations = append(withdrawDurations, timeToComplete.Seconds())
+			withdrawDurationsLock.Unlock()
+
+			return nil
 		})
 	}
 
-	require.NoError(r, eg.Wait())
+	err = eg.Wait()
+
+	desc, _ := stats.Describe(withdrawDurations, false, &[]float64{50.0, 75.0, 90.0, 95.0})
+
+	r.Logger.Print("Latency report:")
+	r.Logger.Print("min:  %.2f", desc.Min)
+	r.Logger.Print("max:  %.2f", desc.Max)
+	r.Logger.Print("mean: %.2f", desc.Mean)
+	r.Logger.Print("std:  %.2f", desc.Std)
+	for _, p := range desc.DescriptionPercentiles {
+		r.Logger.Print("p%.0f:  %.2f", p.Percentile, p.Value)
+	}
+
+	require.NoError(r, err)
 
 	r.Logger.Print("all withdraws completed")
-}
-
-// monitorEtherWithdraw monitors the withdraw of ether, returns once the withdraw is complete
-func monitorEtherWithdraw(r *runner.E2ERunner, tx *ethtypes.Transaction, index int, startTime time.Time) error {
-	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.ReceiptTimeout)
-	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
-		return fmt.Errorf(
-			"index %d: withdraw cctx failed with status %s, message %s, cctx index %s",
-			index,
-			cctx.CctxStatus.Status,
-			cctx.CctxStatus.StatusMessage,
-			cctx.Index,
-		)
-	}
-	timeToComplete := time.Since(startTime)
-	r.Logger.Print("index %d: withdraw cctx success in %s", index, timeToComplete.String())
-
-	return nil
 }
