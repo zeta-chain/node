@@ -11,8 +11,6 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-const payloadMessageDepositOnRevertERC20 = "this is a test ERC20 deposit and call on revert"
-
 func TestV2ERC20DepositAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
@@ -21,13 +19,15 @@ func TestV2ERC20DepositAndCallRevertWithCall(r *runner.E2ERunner, args []string)
 
 	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
 
-	r.AssertTestDAppEVMCalled(false, payloadMessageDepositOnRevertERC20, amount)
+	payload := randomPayload(r)
+
+	r.AssertTestDAppEVMCalled(false, payload, amount)
 
 	// perform the deposit
 	tx := r.V2ERC20DepositAndCall(r.TestDAppV2ZEVMAddr, amount, []byte("revert"), gatewayevm.RevertOptions{
 		RevertAddress:    r.TestDAppV2EVMAddr,
 		CallOnRevert:     true,
-		RevertMessage:    []byte(payloadMessageDepositOnRevertERC20),
+		RevertMessage:    []byte(payload),
 		OnRevertGasLimit: big.NewInt(200000),
 	})
 
@@ -37,5 +37,5 @@ func TestV2ERC20DepositAndCallRevertWithCall(r *runner.E2ERunner, args []string)
 	require.Equal(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
 
 	// check the payload was received on the contract
-	r.AssertTestDAppEVMCalled(true, payloadMessageDepositOnRevertERC20, big.NewInt(0))
+	r.AssertTestDAppEVMCalled(true, payload, big.NewInt(0))
 }

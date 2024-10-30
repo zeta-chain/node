@@ -1,6 +1,8 @@
 package e2etests
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"math/big"
 	"strconv"
 
@@ -15,6 +17,15 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
+
+// randomPayload generates a random payload to be used in gateway calls for testing purposes
+func randomPayload(r *runner.E2ERunner) string {
+	bytes := make([]byte, 50)
+	_, err := rand.Read(bytes)
+	require.NoError(r, err)
+
+	return hex.EncodeToString(bytes)
+}
 
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
 	tx, err := r.BTCZRC20.Approve(

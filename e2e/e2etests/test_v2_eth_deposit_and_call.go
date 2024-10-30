@@ -12,15 +12,15 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-const payloadMessageDepositETH = "this is a test ETH deposit and call payload"
-
 func TestV2ETHDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	amount, ok := big.NewInt(0).SetString(args[0], 10)
 	require.True(r, ok, "Invalid amount specified for TestV2ETHDepositAndCall")
 
-	r.AssertTestDAppZEVMCalled(false, payloadMessageDepositETH, amount)
+	payload := randomPayload(r)
+
+	r.AssertTestDAppZEVMCalled(false, payload, amount)
 
 	oldBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
 	require.NoError(r, err)
@@ -29,7 +29,7 @@ func TestV2ETHDepositAndCall(r *runner.E2ERunner, args []string) {
 	tx := r.V2ETHDepositAndCall(
 		r.TestDAppV2ZEVMAddr,
 		amount,
-		[]byte(payloadMessageDepositETH),
+		[]byte(payload),
 		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 
@@ -39,7 +39,7 @@ func TestV2ETHDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
 	// check the payload was received on the contract
-	r.AssertTestDAppZEVMCalled(true, payloadMessageDepositETH, amount)
+	r.AssertTestDAppZEVMCalled(true, payload, amount)
 
 	// check the balance was updated
 	newBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)

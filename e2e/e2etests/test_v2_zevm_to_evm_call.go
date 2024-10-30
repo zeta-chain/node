@@ -11,18 +11,18 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-const payloadMessageEVMCall = "this is a test EVM call payload"
-
 func TestV2ZEVMToEVMCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0)
 
-	r.AssertTestDAppEVMCalled(false, payloadMessageEVMCall, big.NewInt(0))
+	payload := randomPayload(r)
+
+	r.AssertTestDAppEVMCalled(false, payload, big.NewInt(0))
 
 	// Necessary approval for fee payment
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw
-	tx := r.V2ZEVMToEMVCall(r.TestDAppV2EVMAddr, r.EncodeSimpleCall(payloadMessageEVMCall), gatewayzevm.RevertOptions{
+	tx := r.V2ZEVMToEMVCall(r.TestDAppV2EVMAddr, r.EncodeSimpleCall(payload), gatewayzevm.RevertOptions{
 		OnRevertGasLimit: big.NewInt(0),
 	})
 
@@ -32,5 +32,5 @@ func TestV2ZEVMToEVMCall(r *runner.E2ERunner, args []string) {
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
 	// check the payload was received on the contract
-	r.AssertTestDAppEVMCalled(true, payloadMessageEVMCall, big.NewInt(0))
+	r.AssertTestDAppEVMCalled(true, payload, big.NewInt(0))
 }
