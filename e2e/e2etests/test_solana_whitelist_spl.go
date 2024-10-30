@@ -11,7 +11,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestSolanaWhitelistSPL(r *runner.E2ERunner, args []string) {
+func TestSolanaWhitelistSPL(r *runner.E2ERunner, _ []string) {
 	// Deploy a new SPL
 	r.Logger.Info("Deploying new SPL")
 
