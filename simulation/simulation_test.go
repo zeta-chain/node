@@ -207,7 +207,13 @@ func TestFullAppSimulation(t *testing.T) {
 	appOptions[server.FlagInvCheckPeriod] = zetasimulation.FlagPeriodValue
 	appOptions[flags.FlagHome] = dir
 
-	simApp, err := zetasimulation.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	simApp, err := zetasimulation.NewSimApp(
+		logger,
+		db,
+		appOptions,
+		interBlockCacheOpt(),
+		baseapp.SetChainID(SimAppChainID),
+	)
 	require.NoError(t, err)
 
 	blockedAddresses := simApp.ModuleAccountAddrs()
@@ -270,7 +276,13 @@ func TestAppImportExport(t *testing.T) {
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
 	appOptions[server.FlagInvCheckPeriod] = zetasimulation.FlagPeriodValue
 	appOptions[flags.FlagHome] = dir
-	simApp, err := zetasimulation.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	simApp, err := zetasimulation.NewSimApp(
+		logger,
+		db,
+		appOptions,
+		interBlockCacheOpt(),
+		baseapp.SetChainID(SimAppChainID),
+	)
 	require.NoError(t, err)
 
 	// Run randomized simulation
@@ -431,7 +443,13 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	appOptions := make(cosmossimutils.AppOptionsMap, 0)
 	appOptions[server.FlagInvCheckPeriod] = zetasimulation.FlagPeriodValue
 	appOptions[flags.FlagHome] = dir
-	simApp, err := zetasimulation.NewSimApp(logger, db, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	simApp, err := zetasimulation.NewSimApp(
+		logger,
+		db,
+		appOptions,
+		interBlockCacheOpt(),
+		baseapp.SetChainID(SimAppChainID),
+	)
 	require.NoError(t, err)
 
 	// Run randomized simulation
