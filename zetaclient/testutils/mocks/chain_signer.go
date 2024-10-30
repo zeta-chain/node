@@ -11,6 +11,26 @@ import (
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 )
 
+type DummySigner struct{}
+
+func (s *DummySigner) TryProcessOutbound(
+	_ context.Context,
+	_ *crosschaintypes.CrossChainTx,
+	_ *outboundprocessor.Processor,
+	_ string,
+	_ interfaces.ChainObserver,
+	_ interfaces.ZetacoreClient,
+	_ uint64,
+) {
+}
+
+func (s *DummySigner) SetGatewayAddress(_ string)                     {}
+func (s *DummySigner) GetGatewayAddress() (_ string)                  { return }
+func (s *DummySigner) SetZetaConnectorAddress(_ ethcommon.Address)    {}
+func (s *DummySigner) SetERC20CustodyAddress(_ ethcommon.Address)     {}
+func (s *DummySigner) GetZetaConnectorAddress() (_ ethcommon.Address) { return }
+func (s *DummySigner) GetERC20CustodyAddress() (_ ethcommon.Address)  { return }
+
 // ----------------------------------------------------------------------------
 // EVMSigner
 // ----------------------------------------------------------------------------
@@ -18,6 +38,7 @@ var _ interfaces.ChainSigner = (*EVMSigner)(nil)
 
 // EVMSigner is a mock of evm chain signer for testing
 type EVMSigner struct {
+	DummySigner
 	Chain                chains.Chain
 	ZetaConnectorAddress ethcommon.Address
 	ERC20CustodyAddress  ethcommon.Address
@@ -33,24 +54,6 @@ func NewEVMSigner(
 		ZetaConnectorAddress: zetaConnectorAddress,
 		ERC20CustodyAddress:  erc20CustodyAddress,
 	}
-}
-
-func (s *EVMSigner) TryProcessOutbound(
-	_ context.Context,
-	_ *crosschaintypes.CrossChainTx,
-	_ *outboundprocessor.Processor,
-	_ string,
-	_ interfaces.ChainObserver,
-	_ interfaces.ZetacoreClient,
-	_ uint64,
-) {
-}
-
-func (s *EVMSigner) SetGatewayAddress(_ string) {
-}
-
-func (s *EVMSigner) GetGatewayAddress() string {
-	return ""
 }
 
 func (s *EVMSigner) SetZetaConnectorAddress(address ethcommon.Address) {
@@ -75,43 +78,10 @@ func (s *EVMSigner) GetERC20CustodyAddress() ethcommon.Address {
 var _ interfaces.ChainSigner = (*BTCSigner)(nil)
 
 // BTCSigner is a mock of bitcoin chain signer for testing
-type BTCSigner struct {
-}
+type BTCSigner = DummySigner
 
 func NewBTCSigner() *BTCSigner {
 	return &BTCSigner{}
-}
-
-func (s *BTCSigner) TryProcessOutbound(
-	_ context.Context,
-	_ *crosschaintypes.CrossChainTx,
-	_ *outboundprocessor.Processor,
-	_ string,
-	_ interfaces.ChainObserver,
-	_ interfaces.ZetacoreClient,
-	_ uint64,
-) {
-}
-
-func (s *BTCSigner) SetGatewayAddress(_ string) {
-}
-
-func (s *BTCSigner) GetGatewayAddress() string {
-	return ""
-}
-
-func (s *BTCSigner) SetZetaConnectorAddress(_ ethcommon.Address) {
-}
-
-func (s *BTCSigner) SetERC20CustodyAddress(_ ethcommon.Address) {
-}
-
-func (s *BTCSigner) GetZetaConnectorAddress() ethcommon.Address {
-	return ethcommon.Address{}
-}
-
-func (s *BTCSigner) GetERC20CustodyAddress() ethcommon.Address {
-	return ethcommon.Address{}
 }
 
 // ----------------------------------------------------------------------------
@@ -121,22 +91,12 @@ var _ interfaces.ChainSigner = (*SolanaSigner)(nil)
 
 // SolanaSigner is a mock of solana chain signer for testing
 type SolanaSigner struct {
+	DummySigner
 	GatewayAddress string
 }
 
 func NewSolanaSigner() *SolanaSigner {
 	return &SolanaSigner{}
-}
-
-func (s *SolanaSigner) TryProcessOutbound(
-	_ context.Context,
-	_ *crosschaintypes.CrossChainTx,
-	_ *outboundprocessor.Processor,
-	_ string,
-	_ interfaces.ChainObserver,
-	_ interfaces.ZetacoreClient,
-	_ uint64,
-) {
 }
 
 func (s *SolanaSigner) SetGatewayAddress(address string) {
@@ -147,16 +107,25 @@ func (s *SolanaSigner) GetGatewayAddress() string {
 	return s.GatewayAddress
 }
 
-func (s *SolanaSigner) SetZetaConnectorAddress(_ ethcommon.Address) {
+// ----------------------------------------------------------------------------
+// TONSigner
+// ----------------------------------------------------------------------------
+var _ interfaces.ChainSigner = (*TONSigner)(nil)
+
+// TONSigner is a mock of TON chain signer for testing
+type TONSigner struct {
+	DummySigner
+	GatewayAddress string
 }
 
-func (s *SolanaSigner) SetERC20CustodyAddress(_ ethcommon.Address) {
+func NewTONSigner() *TONSigner {
+	return &TONSigner{}
 }
 
-func (s *SolanaSigner) GetZetaConnectorAddress() ethcommon.Address {
-	return ethcommon.Address{}
+func (s *TONSigner) SetGatewayAddress(address string) {
+	s.GatewayAddress = address
 }
 
-func (s *SolanaSigner) GetERC20CustodyAddress() ethcommon.Address {
-	return ethcommon.Address{}
+func (s *TONSigner) GetGatewayAddress() string {
+	return s.GatewayAddress
 }

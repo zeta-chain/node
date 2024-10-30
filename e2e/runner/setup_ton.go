@@ -36,15 +36,13 @@ func (r *E2ERunner) SetupTON() error {
 	depAddr := deployer.GetAddress()
 	r.Logger.Print("💎TON Deployer %s (%s)", depAddr.ToRaw(), depAddr.ToHuman(false, true))
 
-	gwAccount, err := ton.ConstructGatewayAccount(r.TSSAddress)
+	// 2. Deploy Gateway
+	gwAccount, err := ton.ConstructGatewayAccount(depAddr, r.TSSAddress)
 	if err != nil {
 		return errors.Wrap(err, "unable to initialize TON gateway")
 	}
 
-	// 2. Deploy Gateway
-	initStateAmount := ton.TONCoins(10)
-
-	if err := deployer.Deploy(ctx, gwAccount, initStateAmount); err != nil {
+	if err = deployer.Deploy(ctx, gwAccount, toncontracts.Coins(1)); err != nil {
 		return errors.Wrapf(err, "unable to deploy TON gateway")
 	}
 
@@ -65,8 +63,18 @@ func (r *E2ERunner) SetupTON() error {
 		return fmt.Errorf("TON gateway balance is zero")
 	}
 
+	// 4. Deposit 100 TON deployer to Zevm Auth
+	gw := toncontracts.NewGateway(gwAccount.ID)
+	veryFirstDeposit := toncontracts.Coins(1000)
+	zevmRecipient := r.ZEVMAuth.From
+
+	err = gw.SendDeposit(ctx, &deployer.Wallet, veryFirstDeposit, zevmRecipient, 0)
+	if err != nil {
+		return errors.Wrap(err, "unable to send deposit to TON gateway")
+	}
+
 	r.TONDeployer = deployer
-	r.TONGateway = toncontracts.NewGateway(gwAccount.ID)
+	r.TONGateway = gw
 
 	return r.ensureTONChainParams(gwAccount)
 }
@@ -101,6 +109,11 @@ func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
 
 	if _, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msg); err != nil {
 		return errors.Wrap(err, "unable to broadcast TON chain params tx")
+	}
+
+	resetMsg := observertypes.NewMsgResetChainNonces(creator, chainID, 0, 0)
+	if _, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, resetMsg); err != nil {
+		return errors.Wrap(err, "unable to broadcast TON chain nonce reset tx")
 	}
 
 	r.Logger.Print("💎Voted for adding TON chain params (localnet). Waiting for confirmation")

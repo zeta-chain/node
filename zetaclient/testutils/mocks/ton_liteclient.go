@@ -5,6 +5,9 @@ package mocks
 import (
 	context "context"
 
+	liteapi "github.com/tonkeeper/tongo/liteapi"
+	liteclient "github.com/tonkeeper/tongo/liteclient"
+
 	mock "github.com/stretchr/testify/mock"
 
 	tlb "github.com/tonkeeper/tongo/tlb"
@@ -45,9 +48,37 @@ func (_m *LiteClient) GetBlockHeader(ctx context.Context, blockID ton.BlockIDExt
 	return r0, r1
 }
 
-// GetFirstTransaction provides a mock function with given fields: ctx, id
-func (_m *LiteClient) GetFirstTransaction(ctx context.Context, id ton.AccountID) (*ton.Transaction, int, error) {
-	ret := _m.Called(ctx, id)
+// GetConfigParams provides a mock function with given fields: ctx, mode, params
+func (_m *LiteClient) GetConfigParams(ctx context.Context, mode liteapi.ConfigMode, params []uint32) (tlb.ConfigParams, error) {
+	ret := _m.Called(ctx, mode, params)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetConfigParams")
+	}
+
+	var r0 tlb.ConfigParams
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, liteapi.ConfigMode, []uint32) (tlb.ConfigParams, error)); ok {
+		return rf(ctx, mode, params)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, liteapi.ConfigMode, []uint32) tlb.ConfigParams); ok {
+		r0 = rf(ctx, mode, params)
+	} else {
+		r0 = ret.Get(0).(tlb.ConfigParams)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, liteapi.ConfigMode, []uint32) error); ok {
+		r1 = rf(ctx, mode, params)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetFirstTransaction provides a mock function with given fields: ctx, acc
+func (_m *LiteClient) GetFirstTransaction(ctx context.Context, acc ton.AccountID) (*ton.Transaction, int, error) {
+	ret := _m.Called(ctx, acc)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetFirstTransaction")
@@ -57,10 +88,10 @@ func (_m *LiteClient) GetFirstTransaction(ctx context.Context, id ton.AccountID)
 	var r1 int
 	var r2 error
 	if rf, ok := ret.Get(0).(func(context.Context, ton.AccountID) (*ton.Transaction, int, error)); ok {
-		return rf(ctx, id)
+		return rf(ctx, acc)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, ton.AccountID) *ton.Transaction); ok {
-		r0 = rf(ctx, id)
+		r0 = rf(ctx, acc)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*ton.Transaction)
@@ -68,13 +99,13 @@ func (_m *LiteClient) GetFirstTransaction(ctx context.Context, id ton.AccountID)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, ton.AccountID) int); ok {
-		r1 = rf(ctx, id)
+		r1 = rf(ctx, acc)
 	} else {
 		r1 = ret.Get(1).(int)
 	}
 
 	if rf, ok := ret.Get(2).(func(context.Context, ton.AccountID) error); ok {
-		r2 = rf(ctx, id)
+		r2 = rf(ctx, acc)
 	} else {
 		r2 = ret.Error(2)
 	}
@@ -82,9 +113,65 @@ func (_m *LiteClient) GetFirstTransaction(ctx context.Context, id ton.AccountID)
 	return r0, r1, r2
 }
 
-// GetTransactionsSince provides a mock function with given fields: ctx, acc, lt, bits
-func (_m *LiteClient) GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, bits ton.Bits256) ([]ton.Transaction, error) {
-	ret := _m.Called(ctx, acc, lt, bits)
+// GetMasterchainInfo provides a mock function with given fields: ctx
+func (_m *LiteClient) GetMasterchainInfo(ctx context.Context) (liteclient.LiteServerMasterchainInfoC, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMasterchainInfo")
+	}
+
+	var r0 liteclient.LiteServerMasterchainInfoC
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (liteclient.LiteServerMasterchainInfoC, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) liteclient.LiteServerMasterchainInfoC); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(liteclient.LiteServerMasterchainInfoC)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetTransaction provides a mock function with given fields: ctx, acc, lt, hash
+func (_m *LiteClient) GetTransaction(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) (ton.Transaction, error) {
+	ret := _m.Called(ctx, acc, lt, hash)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTransaction")
+	}
+
+	var r0 ton.Transaction
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, ton.AccountID, uint64, ton.Bits256) (ton.Transaction, error)); ok {
+		return rf(ctx, acc, lt, hash)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, ton.AccountID, uint64, ton.Bits256) ton.Transaction); ok {
+		r0 = rf(ctx, acc, lt, hash)
+	} else {
+		r0 = ret.Get(0).(ton.Transaction)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, ton.AccountID, uint64, ton.Bits256) error); ok {
+		r1 = rf(ctx, acc, lt, hash)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetTransactionsSince provides a mock function with given fields: ctx, acc, lt, hash
+func (_m *LiteClient) GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) ([]ton.Transaction, error) {
+	ret := _m.Called(ctx, acc, lt, hash)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetTransactionsSince")
@@ -93,10 +180,10 @@ func (_m *LiteClient) GetTransactionsSince(ctx context.Context, acc ton.AccountI
 	var r0 []ton.Transaction
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, ton.AccountID, uint64, ton.Bits256) ([]ton.Transaction, error)); ok {
-		return rf(ctx, acc, lt, bits)
+		return rf(ctx, acc, lt, hash)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, ton.AccountID, uint64, ton.Bits256) []ton.Transaction); ok {
-		r0 = rf(ctx, acc, lt, bits)
+		r0 = rf(ctx, acc, lt, hash)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]ton.Transaction)
@@ -104,7 +191,7 @@ func (_m *LiteClient) GetTransactionsSince(ctx context.Context, acc ton.AccountI
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, ton.AccountID, uint64, ton.Bits256) error); ok {
-		r1 = rf(ctx, acc, lt, bits)
+		r1 = rf(ctx, acc, lt, hash)
 	} else {
 		r1 = ret.Error(1)
 	}
