@@ -9,7 +9,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
 	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
@@ -53,7 +52,6 @@ type Contract struct {
 
 	bankKeeper     bank.Keeper
 	fungibleKeeper fungiblekeeper.Keeper
-	zrc20ABI       *abi.ABI
 	cdc            codec.Codec
 	kvGasConfig    storetypes.GasConfig
 }
@@ -70,19 +68,10 @@ func NewIBankContract(
 		fungibleKeeper.GetAuthKeeper().SetAccount(ctx, authtypes.NewBaseAccount(accAddress, nil, 0, 0))
 	}
 
-	// Instantiate the ZRC20 ABI only one time.
-	// This avoids instantiating it every time deposit or withdraw are called.
-	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
-	if err != nil {
-		ctx.Logger().Error("bank contract failed to get ZRC20 ABI", "error", err)
-		return nil
-	}
-
 	return &Contract{
 		BaseContract:   precompiletypes.NewBaseContract(ContractAddress),
 		bankKeeper:     bankKeeper,
 		fungibleKeeper: fungibleKeeper,
-		zrc20ABI:       zrc20ABI,
 		cdc:            cdc,
 		kvGasConfig:    kvGasConfig,
 	}

@@ -52,7 +52,7 @@ func (c *Contract) distribute(
 	// - spender is the staking contract address (c.Address()).
 	// - owner is the caller address.
 	// - locker is the bank address. Assets are locked under this address to prevent liquidity fragmentation.
-	if err := c.fungibleKeeper.LockZRC20(ctx, c.zrc20ABI, zrc20Addr, c.Address(), caller, bank.ContractAddress, amount); err != nil {
+	if err := c.fungibleKeeper.LockZRC20(ctx, zrc20Addr, c.Address(), caller, bank.ContractAddress, amount); err != nil {
 		return nil, &precompiletypes.ErrUnexpected{
 			When: "LockZRC20InBank",
 			Got:  err.Error(),
