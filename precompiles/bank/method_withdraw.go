@@ -9,7 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 
-	ptypes "github.com/zeta-chain/node/precompiles/types"
+	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 	"github.com/zeta-chain/node/x/fungible/types"
 )
 
@@ -29,7 +29,7 @@ func (c *Contract) withdraw(
 ) (result []byte, err error) {
 	// 1. Check everything is correct.
 	if len(args) != 2 {
-		return nil, &(ptypes.ErrInvalidNumberOfArgs{
+		return nil, &(precompiletypes.ErrInvalidNumberOfArgs{
 			Got:    len(args),
 			Expect: 2,
 		})
@@ -43,50 +43,50 @@ func (c *Contract) withdraw(
 	}
 
 	// Get the correct caller address.
-	caller, err := getEVMCallerAddress(evm, contract)
+	caller, err := precompiletypes.GetEVMCallerAddress(evm, contract)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get the cosmos address of the caller.
 	// This address should have enough cosmos coin balance as the requested amount.
-	fromAddr, err := getCosmosAddress(c.bankKeeper, caller)
+	fromAddr, err := precompiletypes.GetCosmosAddress(c.bankKeeper, caller)
 	if err != nil {
 		return nil, err
 	}
 
 	// Safety check: token has to be a non-paused whitelisted ZRC20.
 	if err := c.fungibleKeeper.IsValidZRC20(ctx, zrc20Addr); err != nil {
-		return nil, &ptypes.ErrInvalidToken{
+		return nil, &precompiletypes.ErrInvalidToken{
 			Got:    zrc20Addr.String(),
 			Reason: err.Error(),
 		}
 	}
 
 	// Caller has to have enough cosmos coin balance to withdraw the requested amount.
-	coin := c.bankKeeper.GetBalance(ctx, fromAddr, ZRC20ToCosmosDenom(zrc20Addr))
+	coin := c.bankKeeper.GetBalance(ctx, fromAddr, precompiletypes.ZRC20ToCosmosDenom(zrc20Addr))
 	if !coin.IsValid() {
-		return nil, &ptypes.ErrInsufficientBalance{
+		return nil, &precompiletypes.ErrInsufficientBalance{
 			Requested: amount.String(),
 			Got:       "invalid coin",
 		}
 	}
 
 	if coin.Amount.LT(math.NewIntFromBigInt(amount)) {
-		return nil, &ptypes.ErrInsufficientBalance{
+		return nil, &precompiletypes.ErrInsufficientBalance{
 			Requested: amount.String(),
 			Got:       coin.Amount.String(),
 		}
 	}
 
-	coinSet, err := createCoinSet(ZRC20ToCosmosDenom(zrc20Addr), amount)
+	coinSet, err := precompiletypes.CreateCoinSet(zrc20Addr, amount)
 	if err != nil {
 		return nil, err
 	}
 
 	// Check if bank address has enough ZRC20 balance.
 	if err := c.fungibleKeeper.CheckZRC20Balance(ctx, c.zrc20ABI, zrc20Addr, c.Address(), amount); err != nil {
-		return nil, &ptypes.ErrInsufficientBalance{
+		return nil, &precompiletypes.ErrInsufficientBalance{
 			Requested: amount.String(),
 			Got:       err.Error(),
 		}
@@ -94,14 +94,14 @@ func (c *Contract) withdraw(
 
 	// 2. Effect: burn cosmos coin balance.
 	if err := c.bankKeeper.SendCoinsFromAccountToModule(ctx, fromAddr, types.ModuleName, coinSet); err != nil {
-		return nil, &ptypes.ErrUnexpected{
+		return nil, &precompiletypes.ErrUnexpected{
 			When: "SendCoinsFromAccountToModule",
 			Got:  err.Error(),
 		}
 	}
 
 	if err := c.bankKeeper.BurnCoins(ctx, types.ModuleName, coinSet); err != nil {
-		return nil, &ptypes.ErrUnexpected{
+		return nil, &precompiletypes.ErrUnexpected{
 			When: "BurnCoins",
 			Got:  err.Error(),
 		}
@@ -109,14 +109,14 @@ func (c *Contract) withdraw(
 
 	// 3. Interactions: send ZRC20.
 	if err := c.fungibleKeeper.UnlockZRC20(ctx, c.zrc20ABI, zrc20Addr, caller, c.Address(), amount); err != nil {
-		return nil, &ptypes.ErrUnexpected{
+		return nil, &precompiletypes.ErrUnexpected{
 			When: "UnlockZRC20InBank",
 			Got:  err.Error(),
 		}
 	}
 
 	if err := c.addEventLog(ctx, evm.StateDB, WithdrawEventName, eventData{caller, zrc20Addr, fromAddr.String(), coinSet.Denoms()[0], amount}); err != nil {
-		return nil, &ptypes.ErrUnexpected{
+		return nil, &precompiletypes.ErrUnexpected{
 			When: "AddWithdrawLog",
 			Got:  err.Error(),
 		}
@@ -128,14 +128,14 @@ func (c *Contract) withdraw(
 func unpackWithdrawArgs(args []interface{}) (zrc20Addr common.Address, amount *big.Int, err error) {
 	zrc20Addr, ok := args[0].(common.Address)
 	if !ok {
-		return common.Address{}, nil, &ptypes.ErrInvalidAddr{
+		return common.Address{}, nil, &precompiletypes.ErrInvalidAddr{
 			Got: zrc20Addr.String(),
 		}
 	}
 
 	amount, ok = args[1].(*big.Int)
 	if !ok || amount == nil || amount.Sign() <= 0 {
-		return common.Address{}, nil, &ptypes.ErrInvalidAmount{
+		return common.Address{}, nil, &precompiletypes.ErrInvalidAmount{
 			Got: amount.String(),
 		}
 	}

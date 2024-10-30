@@ -25,6 +25,7 @@
 * [3012](https://github.com/zeta-chain/node/pull/3012) - integrate authenticated calls erc20 smart contract functionality into protocol
 * [3025](https://github.com/zeta-chain/node/pull/3025) - standard memo for Bitcoin inbound
 * [3028](https://github.com/zeta-chain/node/pull/3028) - whitelist connection gater
+* [3019](https://github.com/zeta-chain/node/pull/3019) - add ditribute functions to staking precompile
 
 ### Refactor
 
