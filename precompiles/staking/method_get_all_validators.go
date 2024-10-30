@@ -5,9 +5,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 )
 
-// Safe casting from int32 to uint8, as BondStatus is an enum.
-//
-//nolint:gosec
 func (c *Contract) GetAllValidators(
 	ctx sdk.Context,
 	method *abi.Method,
@@ -19,8 +16,10 @@ func (c *Contract) GetAllValidators(
 		validatorsRes[i] = Validator{
 			OperatorAddress: v.OperatorAddress,
 			ConsensusPubKey: v.ConsensusPubkey.String(),
-			BondStatus:      uint8(v.Status),
-			Jailed:          v.Jailed,
+			// Safe casting from int32 to uint8, as BondStatus is an enum.
+			// #nosec G115 always in range
+			BondStatus: uint8(v.Status),
+			Jailed:     v.Jailed,
 		}
 	}
 
