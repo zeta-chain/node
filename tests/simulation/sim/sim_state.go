@@ -20,10 +20,10 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-	"github.com/zeta-chain/node/testutil/sample"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
-
 	zetaapp "github.com/zeta-chain/node/app"
+	"github.com/zeta-chain/node/testutil/sample"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // Simulation parameter constants
@@ -187,7 +187,6 @@ func AppStateFn(
 			numObservers = len(observers)
 		}
 		observers = observers[:numObservers]
-
 		fmt.Println("Added random observers: ", len(observers))
 
 		// update the observer genesis state
@@ -203,11 +202,40 @@ func AppStateFn(
 		tss := sample.Tss()
 		observerState.Tss = &tss
 
+		authorityStateBz, ok := rawState[authoritytypes.ModuleName]
+		if !ok {
+			panic("authority genesis state is missing")
+		}
+		authorityState := new(authoritytypes.GenesisState)
+		cdc.MustUnmarshalJSON(authorityStateBz, authorityState)
+		randomAccount := accs[r.Intn(len(accs))]
+
+		fmt.Println("Adding random account to all policies: ", randomAccount.Address.String())
+
+		policies := authoritytypes.Policies{
+			Items: []*authoritytypes.Policy{
+				{
+					Address:    randomAccount.Address.String(),
+					PolicyType: authoritytypes.PolicyType_groupEmergency,
+				},
+				{
+					Address:    randomAccount.Address.String(),
+					PolicyType: authoritytypes.PolicyType_groupAdmin,
+				},
+				{
+					Address:    randomAccount.Address.String(),
+					PolicyType: authoritytypes.PolicyType_groupOperational,
+				},
+			},
+		}
+		authorityState.Policies = policies
+
 		// change appState back
 		rawState[evmtypes.ModuleName] = cdc.MustMarshalJSON(evmState)
 		rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
 		rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
 		rawState[observertypes.ModuleName] = cdc.MustMarshalJSON(observerState)
+		rawState[authoritytypes.ModuleName] = cdc.MustMarshalJSON(authorityState)
 
 		// replace appstate
 		appState, err = json.Marshal(rawState)

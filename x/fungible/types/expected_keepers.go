@@ -11,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
 )
@@ -33,6 +34,7 @@ type BankKeeper interface {
 		amt sdk.Coins,
 	) error
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 }
 
 type ObserverKeeper interface {
@@ -61,4 +63,5 @@ type EVMKeeper interface {
 type AuthorityKeeper interface {
 	CheckAuthorization(ctx sdk.Context, msg sdk.Msg) error
 	GetAdditionalChainList(ctx sdk.Context) (list []chains.Chain)
+	GetPolicies(ctx sdk.Context) (val authoritytypes.Policies, found bool)
 }

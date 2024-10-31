@@ -26,7 +26,7 @@ const (
 	DefaultWeightRemoveOutboundTracker  = 5
 	DefaultWeightVoteGasPrice           = 100
 	DefaultWeightVoteOutbound           = 50
-	DefaultWeightVoteInbound            = 10
+	DefaultWeightVoteInbound            = 100
 	DefaultWeightWhitelistERC20         = 1
 	DefaultWeightMigrateTssFunds        = 1
 	DefaultWeightUpdateTssAddress       = 1
@@ -330,7 +330,7 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
