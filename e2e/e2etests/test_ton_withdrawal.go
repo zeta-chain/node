@@ -12,9 +12,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
 )
 
-// TODO: Add "withdraw_many_concurrent" test
-// https://github.com/zeta-chain/node/issues/3044
-
 func TestTONWithdraw(r *runner.E2ERunner, args []string) {
 	// ARRANGE
 	require.Len(r, args, 1)
@@ -34,7 +31,7 @@ func TestTONWithdraw(r *runner.E2ERunner, args []string) {
 	tonRecipient, err := deployer.CreateWallet(r.Ctx, toncontracts.Coins(1))
 	require.NoError(r, err)
 
-	tonRecipientBalanceBefore, err := deployer.GetBalanceOf(r.Ctx, tonRecipient.GetAddress())
+	tonRecipientBalanceBefore, err := deployer.GetBalanceOf(r.Ctx, tonRecipient.GetAddress(), true)
 	require.NoError(r, err)
 
 	r.Logger.Info("Recipient's TON balance before withdrawal: %s", toncontracts.FormatCoins(tonRecipientBalanceBefore))
@@ -61,7 +58,7 @@ func TestTONWithdraw(r *runner.E2ERunner, args []string) {
 	)
 
 	// Make sure that recipient's TON balance has increased
-	tonRecipientBalanceAfter, err := deployer.GetBalanceOf(r.Ctx, tonRecipient.GetAddress())
+	tonRecipientBalanceAfter, err := deployer.GetBalanceOf(r.Ctx, tonRecipient.GetAddress(), true)
 	require.NoError(r, err)
 
 	r.Logger.Info("Recipient's balance after withdrawal: %s", toncontracts.FormatCoins(tonRecipientBalanceAfter))

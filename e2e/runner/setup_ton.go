@@ -54,7 +54,7 @@ func (r *E2ERunner) SetupTON() error {
 	)
 
 	// 3. Check that the gateway indeed was deployed and has desired TON balance.
-	gwBalance, err := deployer.GetBalanceOf(ctx, gwAccount.ID)
+	gwBalance, err := deployer.GetBalanceOf(ctx, gwAccount.ID, true)
 	if err != nil {
 		return errors.Wrap(err, "unable to get balance of TON gateway")
 	}

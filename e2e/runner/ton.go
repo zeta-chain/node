@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 	eth "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/ton"
@@ -101,8 +102,12 @@ func (r *E2ERunner) TONDepositAndCall(
 	return cctx, nil
 }
 
-// WithdrawTONZRC20 withdraws an amount of ZRC20 TON tokens
-func (r *E2ERunner) WithdrawTONZRC20(to ton.AccountID, amount *big.Int, approveAmount *big.Int) *cctypes.CrossChainTx {
+// SendWithdrawTONZRC20 sends withdraw tx of TON ZRC20 tokens
+func (r *E2ERunner) SendWithdrawTONZRC20(
+	to ton.AccountID,
+	amount *big.Int,
+	approveAmount *big.Int,
+) *ethtypes.Transaction {
 	// approve
 	tx, err := r.TONZRC20.Approve(r.ZEVMAuth, r.TONZRC20Addr, approveAmount)
 	require.NoError(r, err)
@@ -118,6 +123,13 @@ func (r *E2ERunner) WithdrawTONZRC20(to ton.AccountID, amount *big.Int, approveA
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "withdraw")
 	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
+
+	return tx
+}
+
+// WithdrawTONZRC20 withdraws an amount of ZRC20 TON tokens and waits for the cctx to be mined
+func (r *E2ERunner) WithdrawTONZRC20(to ton.AccountID, amount *big.Int, approveAmount *big.Int) *cctypes.CrossChainTx {
+	tx := r.SendWithdrawTONZRC20(to, amount, approveAmount)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
