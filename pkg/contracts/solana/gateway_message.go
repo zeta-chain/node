@@ -167,6 +167,8 @@ func (msg *MsgWhitelist) Hash() [32]byte {
 	binary.BigEndian.PutUint64(buff, msg.chainID)
 	message = append(message, buff...)
 
+	message = append(message, msg.whitelistCandidate.Bytes()...)
+
 	binary.BigEndian.PutUint64(buff, msg.nonce)
 	message = append(message, buff...)
 
