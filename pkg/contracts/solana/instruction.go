@@ -117,14 +117,14 @@ func RecoverSigner(msgHash []byte, msgSig []byte) (signer common.Address, err er
 	return crypto.PubkeyToAddress(*pubKey), nil
 }
 
-var _ OutboundInstruction = (*WithdrawInstructionParams)(nil)
+var _ OutboundInstruction = (*WhitelistInstructionParams)(nil)
 
 // WhitelistInstructionParams contains the parameters for a gateway whitelist_spl_mint instruction
 type WhitelistInstructionParams struct {
-	// Discriminator is the unique identifier for the withdraw instruction
+	// Discriminator is the unique identifier for the whitelist instruction
 	Discriminator [8]byte
 
-	// Signature is the ECDSA signature (by TSS) for the withdraw
+	// Signature is the ECDSA signature (by TSS) for the whitelist
 	Signature [64]byte
 
 	// RecoveryID is the recovery ID used to recover the public key from ECDSA signature
@@ -133,7 +133,7 @@ type WhitelistInstructionParams struct {
 	// MessageHash is the hash of the message signed by TSS
 	MessageHash [32]byte
 
-	// Nonce is the nonce for the withdraw
+	// Nonce is the nonce for the whitelist
 	Nonce uint64
 }
 

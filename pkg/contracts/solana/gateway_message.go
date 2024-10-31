@@ -157,7 +157,7 @@ func (msg *MsgWhitelist) Nonce() uint64 {
 	return msg.nonce
 }
 
-// Hash packs the withdraw message and computes the hash
+// Hash packs the whitelist message and computes the hash
 func (msg *MsgWhitelist) Hash() [32]byte {
 	var message []byte
 	buff := make([]byte, 8)
