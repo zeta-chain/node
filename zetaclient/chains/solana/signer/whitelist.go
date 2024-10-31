@@ -12,7 +12,7 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// SignMsgWithdraw signs a withdraw message (for gateway withdraw/withdraw_spl instruction) with TSS.
+// SignMsgWhitelist signs a whitelist message (for gateway whitelist_spl_mint instruction) with TSS.
 func (signer *Signer) SignMsgWhitelist(
 	ctx context.Context,
 	params *types.OutboundParams,
@@ -25,7 +25,7 @@ func (signer *Signer) SignMsgWhitelist(
 	chainID := uint64(signer.Chain().ChainId)
 	nonce := params.TssNonce
 
-	// prepare withdraw msg and compute hash
+	// prepare whitelist msg and compute hash
 	msg := contracts.NewMsgWhitelist(whitelistCandidate, whitelistEntry, chainID, nonce)
 	msgHash := msg.Hash()
 

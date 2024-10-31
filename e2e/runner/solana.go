@@ -101,6 +101,7 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey) *solana.Wallet {
 	lamport, err := r.SolanaClient.GetMinimumBalanceForRentExemption(r.Ctx, token.MINT_SIZE, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 
+	// to deploy new spl token, create account instruction and initialize mint instruction have to be in the same transaction
 	tokenAccount := solana.NewWallet()
 	createAccountInstruction := system.NewCreateAccountInstruction(
 		lamport,

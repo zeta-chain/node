@@ -42,6 +42,8 @@ const (
 // GatewayAddresses contains constants gateway addresses for testing
 var GatewayAddresses = map[int64]string{
 	// Gateway address on Solana devnet
+	// NOTE: currently different deployer key pair is used for development compared to live networks
+	// as live networks key pair is sensitive information at this point, can be unified once we have deployments completed
 	chains.SolanaDevnet.ChainId: "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d",
 }
 
