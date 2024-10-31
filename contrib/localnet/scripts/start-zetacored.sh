@@ -292,8 +292,13 @@ then
     echo "Importing data"
     zetacored parse-genesis-file /root/genesis_data/exported-genesis.json
   fi
-#  Update governance voting period to 100s , to ignore the voting period imported from mainnet.
-  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["voting_params"]["voting_period"]="100s"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+
+# Update governance voting parameters for localnet
+# this allows for quick upgrades and using more than two nodes
+  jq '.app_state["gov"]["params"]["voting_period"]="100s" |
+    .app_state["gov"]["params"]["quorum"]="0.1" |
+    .app_state["gov"]["params"]["threshold"]="0.1"' \
+  $HOME/.zetacored/config/genesis.json > tmp.json && mv tmp.json $HOME/.zetacored/config/genesis.json
 
 # 4. Collect all the gentx files in zetacore0 and create the final genesis.json
   zetacored collect-gentxs

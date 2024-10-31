@@ -13,14 +13,12 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
-	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
-	p2pcrypto "github.com/libp2p/go-libp2p-core/crypto"
-	"github.com/libp2p/go-libp2p-core/peer"
-	gopeer "github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/core/peer"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"gitlab.com/thorchain/tss/go-tss/conversion"
 
 	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -201,25 +199,18 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
-	// Create TSS server
+
 	keygen := appContext.GetKeygen()
-	var whitelistedPeers []gopeer.ID
+	whitelistedPeers := []peer.ID{}
 	for _, pk := range keygen.GranteePubkeys {
-		pk, err := legacybech32.UnmarshalPubKey(legacybech32.AccPK, pk)
+		pid, err := conversion.Bech32PubkeyToPeerID(pk)
 		if err != nil {
-			startLogger.Error().Err(err).Msg("...")
+			return err
 		}
-		bz := pk.Bytes()
-		k, err := p2pcrypto.UnmarshalSecp256k1PublicKey(bz)
-		if err != nil {
-			startLogger.Error().Err(err).Msg("...")
-		}
-		pid, err := peer.IDFromPublicKey(k)
-		if err != nil {
-			startLogger.Error().Err(err).Msg("...")
-		}
-		fmt.Println("PID", pid)
+		whitelistedPeers = append(whitelistedPeers, pid)
 	}
+
+	// Create TSS server
 	server, err := mc.SetupTSSServer(peers, priKey, preParams, appContext.Config(), tssKeyPass, true, whitelistedPeers)
 	if err != nil {
 		return fmt.Errorf("SetupTSSServer error: %w", err)

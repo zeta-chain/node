@@ -8,12 +8,15 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/config"
 	"github.com/tonkeeper/tongo/liteapi"
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
+	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
+	zetaton "github.com/zeta-chain/node/zetaclient/chains/ton"
 	"github.com/zeta-chain/node/zetaclient/common"
 )
 
@@ -135,6 +138,55 @@ func TestClient(t *testing.T) {
 		require.NoError(t, err)
 		require.NotZero(t, header.MinRefMcSeqno)
 		require.Equal(t, header.MinRefMcSeqno, header.MasterRef.Master.SeqNo)
+	})
+
+	t.Run("GetMasterchainInfo", func(t *testing.T) {
+		// ARRANGE
+		// all bits are 1 (0xFFF...) or also `-1` in TON's notation
+		const masterChain = uint32(1<<32 - 1)
+
+		// ACT #1
+		mc, err := client.GetMasterchainInfo(ctx)
+
+		// ASSERT #1
+		require.NoError(t, err)
+		require.Equal(t, masterChain, mc.Last.Workchain)
+
+		// ACT #2
+		block, err := client.GetBlockHeader(ctx, mc.Last.ToBlockIdExt(), 0)
+
+		// ASSERT #2
+		require.NoError(t, err)
+		require.False(t, block.NotMaster)
+
+		// Check that block was generated less than 10 seconds ago
+		blockTime := time.Unix(int64(block.GenUtime), 0).UTC()
+		since := time.Since(blockTime)
+
+		assert.LessOrEqual(t, since, 20*time.Second)
+
+		t.Logf("Masterchain block #%d is generated at %q (%s ago)", block.SeqNo, blockTime, since.String())
+	})
+
+	t.Run("GetGasConfig", func(t *testing.T) {
+		// ACT #1
+		gas, err := zetaton.FetchGasConfig(ctx, client)
+
+		// ASSERT #1
+		require.NoError(t, err)
+		require.NotEmpty(t, gas)
+
+		// ACT #2
+		gasPrice, err := zetaton.ParseGasPrice(gas)
+
+		// ASSERT #2
+		require.NoError(t, err)
+		require.NotEmpty(t, gasPrice)
+
+		gasPricePer1000 := math.NewUint(1000 * gasPrice)
+
+		t.Logf("Gas cost: %s per 1000 gas", toncontracts.FormatCoins(gasPricePer1000))
+		t.Logf("Compare with https://tonwhales.com/explorer/network")
 	})
 }
 

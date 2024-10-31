@@ -23,6 +23,7 @@ const (
 	MaxTransactionsPerTick = 100
 )
 
+// watchInbound watches for new txs to Gateway's account.
 func (ob *Observer) watchInbound(ctx context.Context) error {
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
@@ -30,24 +31,23 @@ func (ob *Observer) watchInbound(ctx context.Context) error {
 	}
 
 	var (
-		chainID         = ob.Chain().ChainId
-		initialInterval = ticker.SecondsFromUint64(ob.ChainParams().InboundTicker)
+		initialInterval = ticker.DurationFromUint64Seconds(ob.ChainParams().InboundTicker)
 		sampledLogger   = ob.Logger().Inbound.Sample(&zerolog.BasicSampler{N: 10})
 	)
 
-	ob.Logger().Inbound.Info().Msgf("WatchInbound started for chain %d", chainID)
+	ob.Logger().Inbound.Info().Msgf("WatchInbound started")
 
 	task := func(ctx context.Context, t *ticker.Ticker) error {
 		if !app.IsInboundObservationEnabled() {
-			sampledLogger.Info().Msgf("WatchInbound: inbound observation is disabled for chain %d", chainID)
+			sampledLogger.Info().Msg("WatchInbound: inbound observation is disabled")
 			return nil
 		}
 
-		if err := ob.observeInbound(ctx); err != nil {
-			ob.Logger().Inbound.Err(err).Msg("WatchInbound: observeInbound error")
+		if err := ob.observeGateway(ctx); err != nil {
+			ob.Logger().Inbound.Err(err).Msg("WatchInbound: observeGateway error")
 		}
 
-		newInterval := ticker.SecondsFromUint64(ob.ChainParams().InboundTicker)
+		newInterval := ticker.DurationFromUint64Seconds(ob.ChainParams().InboundTicker)
 		t.SetInterval(newInterval)
 
 		return nil
@@ -62,7 +62,11 @@ func (ob *Observer) watchInbound(ctx context.Context) error {
 	)
 }
 
-func (ob *Observer) observeInbound(ctx context.Context) error {
+// observeGateway observes Gateway's account for new transactions.
+// Due to TON architecture we have to scan for all net-new transactions.
+// The main purpose is to observe inbounds from TON.
+// Note that we might also have *outbounds* here (if a signer broadcasts a tx, it will be observed here).
+func (ob *Observer) observeGateway(ctx context.Context) error {
 	if err := ob.ensureLastScannedTX(ctx); err != nil {
 		return errors.Wrap(err, "unable to ensure last scanned tx")
 	}
@@ -84,51 +88,79 @@ func (ob *Observer) observeInbound(ctx context.Context) error {
 		return nil
 	case len(txs) > MaxTransactionsPerTick:
 		ob.Logger().Inbound.Info().
-			Msgf("observeInbound: got %d transactions. Taking first %d", len(txs), MaxTransactionsPerTick)
+			Msgf("observeGateway: got %d transactions. Taking first %d", len(txs), MaxTransactionsPerTick)
 
 		txs = txs[:MaxTransactionsPerTick]
 	default:
-		ob.Logger().Inbound.Info().Msgf("observeInbound: got %d transactions", len(txs))
+		ob.Logger().Inbound.Info().Msgf("observeGateway: got %d transactions", len(txs))
 	}
 
 	for i := range txs {
-		tx := txs[i]
+		var skip bool
 
-		parsedTX, skip, err := ob.gateway.ParseAndFilter(tx, toncontracts.FilterInbounds)
-		if err != nil {
-			return errors.Wrap(err, "unable to parse and filter tx")
+		tx, err := ob.gateway.ParseTransaction(txs[i])
+		switch {
+		case errors.Is(err, toncontracts.ErrParse) || errors.Is(err, toncontracts.ErrUnknownOp):
+			skip = true
+		case err != nil:
+			// should not happen
+			return errors.Wrap(err, "unexpected error")
+		case tx.ExitCode != 0:
+			skip = true
+			ob.Logger().Inbound.Warn().Fields(txLogFields(tx)).Msg("observeGateway: observed a failed tx")
 		}
 
 		if skip {
-			ob.Logger().Inbound.Info().Fields(txLogFields(&tx)).Msg("observeInbound: skipping tx")
-			ob.setLastScannedTX(&tx)
-
+			tx = &toncontracts.Transaction{Transaction: txs[i]}
+			txHash := liteapi.TransactionToHashString(tx.Transaction)
+			ob.Logger().Inbound.Warn().Str("transaction.hash", txHash).Msg("observeGateway: skipping tx")
+			ob.setLastScannedTX(tx)
 			continue
 		}
 
-		if _, err := ob.voteInbound(ctx, parsedTX); err != nil {
+		// Should not happen
+		//goland:noinspection GoDfaConstantCondition
+		if tx == nil {
+			return errors.New("tx is nil")
+		}
+
+		// As we might have outbounds here, let's ensure outbound tracker.
+		// TON signer broadcasts ExtInMsgInfo with `src=null, dest=gateway`, so it will be observed here
+		if tx.IsOutbound() {
+			if err = ob.addOutboundTracker(ctx, tx); err != nil {
+				ob.Logger().Inbound.
+					Error().Err(err).
+					Fields(txLogFields(tx)).
+					Msg("observeGateway: unable to add outbound tracker")
+
+				return errors.Wrap(err, "unable to add outbound tracker")
+			}
+
+			ob.setLastScannedTX(tx)
+			continue
+		}
+
+		// Ok, let's process a new inbound tx
+		if _, err := ob.voteInbound(ctx, tx); err != nil {
 			ob.Logger().Inbound.
 				Error().Err(err).
-				Fields(txLogFields(&tx)).
-				Msg("observeInbound: unable to vote for tx")
+				Fields(txLogFields(tx)).
+				Msg("observeGateway: unable to vote for inbound tx")
 
 			return errors.Wrapf(err, "unable to vote for inbound tx %s", tx.Hash().Hex())
 		}
 
-		ob.setLastScannedTX(&parsedTX.Transaction)
+		ob.setLastScannedTX(tx)
 	}
 
 	return nil
 }
 
+// Sends PostVoteInbound to zetacore
 func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transaction) (string, error) {
 	// noop
 	if tx.Operation == toncontracts.OpDonate {
-		ob.Logger().Inbound.Info().
-			Uint64("tx.lt", tx.Lt).
-			Str("tx.hash", tx.Hash().Hex()).
-			Msg("Thank you rich folk for your donation!")
-
+		ob.Logger().Inbound.Info().Fields(txLogFields(tx)).Msg("Thank you rich folk for your donation!")
 		return "", nil
 	}
 
@@ -222,18 +254,18 @@ func (ob *Observer) ensureLastScannedTX(ctx context.Context) error {
 		return nil
 	}
 
-	tx, _, err := ob.client.GetFirstTransaction(ctx, ob.gateway.AccountID())
+	rawTX, _, err := ob.client.GetFirstTransaction(ctx, ob.gateway.AccountID())
 	if err != nil {
 		return err
 	}
 
-	ob.setLastScannedTX(tx)
+	ob.setLastScannedTX(&toncontracts.Transaction{Transaction: *rawTX})
 
 	return nil
 }
 
-func (ob *Observer) setLastScannedTX(tx *ton.Transaction) {
-	txHash := liteapi.TransactionHashToString(tx.Lt, ton.Bits256(tx.Hash()))
+func (ob *Observer) setLastScannedTX(tx *toncontracts.Transaction) {
+	txHash := liteapi.TransactionToHashString(tx.Transaction)
 
 	ob.WithLastTxScanned(txHash)
 
@@ -251,10 +283,14 @@ func (ob *Observer) setLastScannedTX(tx *ton.Transaction) {
 		Msg("setLastScannedTX: WriteLastTxScannedToDB")
 }
 
-func txLogFields(tx *ton.Transaction) map[string]any {
+func txLogFields(tx *toncontracts.Transaction) map[string]any {
 	return map[string]any{
-		"inbound.ton.lt":       tx.Lt,
-		"inbound.ton.hash":     tx.Hash().Hex(),
-		"inbound.ton.block_id": tx.BlockID.BlockID.String(),
+		"transaction.hash":           liteapi.TransactionToHashString(tx.Transaction),
+		"transaction.ton.lt":         tx.Lt,
+		"transaction.ton.hash":       tx.Hash().Hex(),
+		"transaction.ton.block_id":   tx.BlockID.BlockID.String(),
+		"transaction.ton.is_inbound": tx.IsInbound(),
+		"transaction.ton.op_code":    tx.Operation,
+		"transaction.ton.exit_code":  tx.ExitCode,
 	}
 }

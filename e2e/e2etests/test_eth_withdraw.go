@@ -39,12 +39,8 @@ func TestEtherWithdraw(r *runner.E2ERunner, args []string) {
 
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
-	// Previous binary doesn't take EIP-1559 into account, so this will fail.
-	// Thus, we need to skip this check for upgrade tests
-	if !r.IsRunningUpgrade() {
-		withdrawalReceipt := mustFetchEthReceipt(r, cctx)
-		require.Equal(r, uint8(ethtypes.DynamicFeeTxType), withdrawalReceipt.Type, "receipt type mismatch")
-	}
+	withdrawalReceipt := mustFetchEthReceipt(r, cctx)
+	require.Equal(r, uint8(ethtypes.DynamicFeeTxType), withdrawalReceipt.Type, "receipt type mismatch")
 
 	r.Logger.Info("TestEtherWithdraw completed")
 }

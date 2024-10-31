@@ -1,11 +1,14 @@
 package testutil
 
 import (
+	"encoding/hex"
 	"fmt"
 	"os"
 	"strings"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const helpersFile = "testutil/helpers.go"
@@ -35,4 +38,11 @@ func exit(err error) {
 	}
 
 	os.Exit(1)
+}
+
+// HexToBytes convert hex string to bytes
+func HexToBytes(t *testing.T, hexStr string) []byte {
+	bytes, err := hex.DecodeString(hexStr)
+	require.NoError(t, err)
+	return bytes
 }

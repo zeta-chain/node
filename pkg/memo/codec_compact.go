@@ -120,6 +120,7 @@ func (c *CodecCompact) packLength(length int) ([]byte, error) {
 		if length > math.MaxUint8 {
 			return nil, fmt.Errorf("data length %d exceeds %d bytes", length, math.MaxUint8)
 		}
+		// #nosec G115 range checked
 		data[0] = uint8(length)
 	case LenBytesLong:
 		if length > math.MaxUint16 {

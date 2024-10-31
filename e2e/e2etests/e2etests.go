@@ -67,23 +67,29 @@ const (
 	 */
 	TestTONDepositName        = "ton_deposit"
 	TestTONDepositAndCallName = "ton_deposit_and_call"
+	TestTONWithdrawName       = "ton_withdraw"
 
 	/*
 	 Bitcoin tests
 	 Test transfer of Bitcoin asset across chains
 	*/
-	TestBitcoinDepositName                = "bitcoin_deposit"
-	TestBitcoinDepositRefundName          = "bitcoin_deposit_refund"
-	TestBitcoinDepositAndCallName         = "bitcoin_deposit_and_call"
-	TestBitcoinWithdrawSegWitName         = "bitcoin_withdraw_segwit"
-	TestBitcoinWithdrawTaprootName        = "bitcoin_withdraw_taproot"
-	TestBitcoinWithdrawMultipleName       = "bitcoin_withdraw_multiple"
-	TestBitcoinWithdrawLegacyName         = "bitcoin_withdraw_legacy"
-	TestBitcoinWithdrawP2WSHName          = "bitcoin_withdraw_p2wsh"
-	TestBitcoinWithdrawP2SHName           = "bitcoin_withdraw_p2sh"
-	TestBitcoinWithdrawInvalidAddressName = "bitcoin_withdraw_invalid"
-	TestBitcoinWithdrawRestrictedName     = "bitcoin_withdraw_restricted"
-	TestExtractBitcoinInscriptionMemoName = "bitcoin_memo_from_inscription"
+	TestBitcoinDepositName                                 = "bitcoin_deposit"
+	TestBitcoinDepositAndCallName                          = "bitcoin_deposit_and_call"
+	TestBitcoinDepositAndCallRevertName                    = "bitcoin_deposit_and_call_revert"
+	TestBitcoinDonationName                                = "bitcoin_donation"
+	TestBitcoinStdMemoDepositName                          = "bitcoin_std_memo_deposit"
+	TestBitcoinStdMemoDepositAndCallName                   = "bitcoin_std_memo_deposit_and_call"
+	TestBitcoinStdMemoDepositAndCallRevertName             = "bitcoin_std_memo_deposit_and_call_revert"
+	TestBitcoinStdMemoDepositAndCallRevertOtherAddressName = "bitcoin_std_memo_deposit_and_call_revert_other_address"
+	TestBitcoinWithdrawSegWitName                          = "bitcoin_withdraw_segwit"
+	TestBitcoinWithdrawTaprootName                         = "bitcoin_withdraw_taproot"
+	TestBitcoinWithdrawMultipleName                        = "bitcoin_withdraw_multiple"
+	TestBitcoinWithdrawLegacyName                          = "bitcoin_withdraw_legacy"
+	TestBitcoinWithdrawP2WSHName                           = "bitcoin_withdraw_p2wsh"
+	TestBitcoinWithdrawP2SHName                            = "bitcoin_withdraw_p2sh"
+	TestBitcoinWithdrawInvalidAddressName                  = "bitcoin_withdraw_invalid"
+	TestBitcoinWithdrawRestrictedName                      = "bitcoin_withdraw_restricted"
+	TestExtractBitcoinInscriptionMemoName                  = "bitcoin_memo_from_inscription"
 
 	/*
 	 Application tests
@@ -167,13 +173,16 @@ const (
 	/*
 	 Stateful precompiled contracts tests
 	*/
-	TestPrecompilesPrototypeName                = "precompile_contracts_prototype"
-	TestPrecompilesPrototypeThroughContractName = "precompile_contracts_prototype_through_contract"
-	TestPrecompilesStakingName                  = "precompile_contracts_staking"
-	TestPrecompilesStakingThroughContractName   = "precompile_contracts_staking_through_contract"
-	TestPrecompilesBankName                     = "precompile_contracts_bank"
-	TestPrecompilesBankFailName                 = "precompile_contracts_bank_fail"
-	TestPrecompilesBankThroughContractName      = "precompile_contracts_bank_through_contract"
+	TestPrecompilesPrototypeName                 = "precompile_contracts_prototype"
+	TestPrecompilesPrototypeThroughContractName  = "precompile_contracts_prototype_through_contract"
+	TestPrecompilesStakingName                   = "precompile_contracts_staking"
+	TestPrecompilesStakingThroughContractName    = "precompile_contracts_staking_through_contract"
+	TestPrecompilesBankName                      = "precompile_contracts_bank"
+	TestPrecompilesBankFailName                  = "precompile_contracts_bank_fail"
+	TestPrecompilesBankThroughContractName       = "precompile_contracts_bank_through_contract"
+	TestPrecompilesDistributeName                = "precompile_contracts_distribute"
+	TestPrecompilesDistributeNonZRC20Name        = "precompile_contracts_distribute_non_zrc20"
+	TestPrecompilesDistributeThroughContractName = "precompile_contracts_distribute_through_contract"
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -463,9 +472,24 @@ var AllE2ETests = []runner.E2ETest{
 		},
 		TestTONDepositAndCall,
 	),
+	runner.NewE2ETest(
+		TestTONWithdrawName,
+		"withdraw TON from ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in nano tons", DefaultValue: "2000000000"}, // 2.0 TON
+		},
+		TestTONWithdraw,
+	),
 	/*
 	 Bitcoin tests
 	*/
+	runner.NewE2ETest(
+		TestBitcoinDonationName,
+		"donate Bitcoin to TSS address", []runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.1"},
+		},
+		TestBitcoinDonation,
+	),
 	runner.NewE2ETest(
 		TestExtractBitcoinInscriptionMemoName,
 		"extract memo from BTC inscription", []runner.ArgDefinition{
@@ -490,11 +514,43 @@ var AllE2ETests = []runner.E2ETest{
 		TestBitcoinDepositAndCall,
 	),
 	runner.NewE2ETest(
-		TestBitcoinDepositRefundName,
+		TestBitcoinDepositAndCallRevertName,
 		"deposit Bitcoin into ZEVM; expect refund", []runner.ArgDefinition{
 			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
-		TestBitcoinDepositRefund,
+		TestBitcoinDepositAndCallRevert,
+	),
+	runner.NewE2ETest(
+		TestBitcoinStdMemoDepositName,
+		"deposit Bitcoin into ZEVM with standard memo",
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.2"},
+		},
+		TestBitcoinStdMemoDeposit,
+	),
+	runner.NewE2ETest(
+		TestBitcoinStdMemoDepositAndCallName,
+		"deposit Bitcoin into ZEVM and call a contract with standard memo",
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.5"},
+		},
+		TestBitcoinStdMemoDepositAndCall,
+	),
+	runner.NewE2ETest(
+		TestBitcoinStdMemoDepositAndCallRevertName,
+		"deposit Bitcoin into ZEVM and call a contract with standard memo; expect revert",
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.1"},
+		},
+		TestBitcoinStdMemoDepositAndCallRevert,
+	),
+	runner.NewE2ETest(
+		TestBitcoinStdMemoDepositAndCallRevertOtherAddressName,
+		"deposit Bitcoin into ZEVM and call a contract with standard memo; expect revert to other address",
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.1"},
+		},
+		TestBitcoinStdMemoDepositAndCallRevertOtherAddress,
 	),
 	runner.NewE2ETest(
 		TestBitcoinWithdrawSegWitName,
@@ -996,5 +1052,23 @@ var AllE2ETests = []runner.E2ETest{
 		"test stateful precompiled contracts bank through contract",
 		[]runner.ArgDefinition{},
 		TestPrecompilesBankThroughContract,
+	),
+	runner.NewE2ETest(
+		TestPrecompilesDistributeName,
+		"test stateful precompiled contracts distribute",
+		[]runner.ArgDefinition{},
+		TestPrecompilesDistribute,
+	),
+	runner.NewE2ETest(
+		TestPrecompilesDistributeNonZRC20Name,
+		"test stateful precompiled contracts distribute with non ZRC20 tokens",
+		[]runner.ArgDefinition{},
+		TestPrecompilesDistributeNonZRC20,
+	),
+	runner.NewE2ETest(
+		TestPrecompilesDistributeThroughContractName,
+		"test stateful precompiled contracts distribute through contract",
+		[]runner.ArgDefinition{},
+		TestPrecompilesDistributeThroughContract,
 	),
 }

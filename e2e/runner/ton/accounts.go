@@ -1,8 +1,6 @@
 package ton
 
 import (
-	_ "embed"
-	"encoding/json"
 	"fmt"
 
 	eth "github.com/ethereum/go-ethereum/common"
@@ -17,12 +15,6 @@ import (
 )
 
 const workchainID = 0
-
-// https://github.com/zeta-chain/protocol-contracts-ton
-// `make compile`
-//
-//go:embed gateway.compiled.json
-var tonGatewayCodeJSON []byte
 
 type AccountInit struct {
 	Code      *boc.Cell
@@ -90,69 +82,15 @@ func ConstructAccount(code, data *boc.Cell) (*AccountInit, error) {
 	}, nil
 }
 
-func ConstructGatewayAccount(tss eth.Address) (*AccountInit, error) {
-	code, err := getGatewayCode()
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get TON Gateway code")
-	}
-
-	data, err := buildGatewayData(tss)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to build TON Gateway data")
-	}
-
-	return ConstructAccount(code, data)
-}
-
-func getGatewayCode() (*boc.Cell, error) {
-	var code struct {
-		Hex string `json:"hex"`
-	}
-
-	if err := json.Unmarshal(tonGatewayCodeJSON, &code); err != nil {
-		return nil, errors.Wrap(err, "unable to unmarshal TON Gateway code")
-	}
-
-	cells, err := boc.DeserializeBocHex(code.Hex)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to deserialize TON Gateway code")
-	}
-
-	if len(cells) != 1 {
-		return nil, errors.New("invalid cells count")
-	}
-
-	return cells[0], nil
-}
-
-// buildGatewayState returns TON Gateway initial state data cell
-func buildGatewayData(tss eth.Address) (*boc.Cell, error) {
-	const evmAddressBits = 20 * 8
-
-	tssSlice := boc.NewBitString(evmAddressBits)
-	if err := tssSlice.WriteBytes(tss.Bytes()); err != nil {
-		return nil, errors.Wrap(err, "unable to convert TSS address to ton slice")
-	}
-
-	var (
-		zeroCoins = tlb.Coins(0)
-		enc       = &tlb.Encoder{}
-		cell      = boc.NewCell()
+// ConstructGatewayAccount constructs gateway AccountInit.
+// - Authority is the address of the gateway "admin".
+// - TSS is the EVM address of TSS.
+// - Deposits are enabled by default.
+func ConstructGatewayAccount(authority ton.AccountID, tss eth.Address) (*AccountInit, error) {
+	return ConstructAccount(
+		toncontracts.GatewayCode(),
+		toncontracts.GatewayStateInit(authority, tss, true),
 	)
-
-	err := toncontracts.ErrCollect(
-		cell.WriteBit(true),             // deposits_enabled
-		zeroCoins.MarshalTLB(cell, enc), // total_locked
-		zeroCoins.MarshalTLB(cell, enc), // fees
-		cell.WriteUint(0, 32),           // seqno
-		cell.WriteBitString(tssSlice),   // tss_address
-	)
-
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to write TON Gateway state cell")
-	}
-
-	return cell, nil
 }
 
 // copied from tongo wallets_common.go

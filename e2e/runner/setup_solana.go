@@ -56,7 +56,8 @@ func (r *E2ERunner) SetupSolana(deployerPrivateKey string) {
 	inst.DataBytes, err = borsh.Serialize(solanacontracts.InitializeParams{
 		Discriminator: solanacontracts.DiscriminatorInitialize(),
 		TssAddress:    r.TSSAddress,
-		ChainID:       uint64(chains.SolanaLocalnet.ChainId),
+		// #nosec G115 chain id always positive
+		ChainID: uint64(chains.SolanaLocalnet.ChainId),
 	})
 	require.NoError(r, err)
 

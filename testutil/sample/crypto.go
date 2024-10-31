@@ -7,6 +7,9 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -55,6 +58,18 @@ func PrivKeyAddressPair() (*ed25519.PrivKey, sdk.AccAddress) {
 // EthAddress returns a sample ethereum address
 func EthAddress() ethcommon.Address {
 	return ethcommon.BytesToAddress(sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address()).Bytes())
+}
+
+// BtcAddressP2WPKH returns a sample btc P2WPKH address
+func BtcAddressP2WPKH(t *testing.T, net *chaincfg.Params) string {
+	privateKey, err := btcec.NewPrivateKey()
+	require.NoError(t, err)
+
+	pubKeyHash := btcutil.Hash160(privateKey.PubKey().SerializeCompressed())
+	addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, net)
+	require.NoError(t, err)
+
+	return addr.String()
 }
 
 // SolanaPrivateKey returns a sample solana private key
