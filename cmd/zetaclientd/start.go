@@ -9,11 +9,13 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/p2p/protocol/ping"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -230,10 +232,35 @@ func start(_ *cobra.Command, _ []string) error {
 	// debug: printout connected peers
 	go func() {
 		for {
-			time.Sleep(10 * time.Second)
+			time.Sleep(30 * time.Second)
 			ps := server.GetKnownPeers()
 			metrics.NumConnectedPeers.Set(float64(len(ps)))
 			telemetryServer.SetConnectedPeers(ps)
+		}
+	}()
+	go func() {
+		host := server.GetP2PHost()
+		pingRTT := make(map[peer.ID]int64)
+		for {
+			var wg sync.WaitGroup
+			for _, p := range whitelistedPeers {
+				wg.Add(1)
+				go func(p peer.ID) {
+					defer wg.Done()
+					ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+					defer cancel()
+					result := <-ping.Ping(ctx, host, p)
+					if result.Error != nil {
+						masterLogger.Error().Err(result.Error).Msg("ping error")
+						pingRTT[p] = -1 // RTT -1 indicate ping error
+						return
+					}
+					pingRTT[p] = result.RTT.Milliseconds()
+				}(p)
+			}
+			wg.Wait()
+			telemetryServer.SetPingRTT(pingRTT)
+			time.Sleep(30 * time.Second)
 		}
 	}()
 

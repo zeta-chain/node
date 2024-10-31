@@ -32,6 +32,7 @@ type TelemetryServer struct {
 	ipAddress              string
 	HotKeyBurnRate         *BurnRate
 	connectedPeers         []peer.AddrInfo
+	rtt                    map[peer.ID]int64
 }
 
 // NewTelemetryServer should only listen to the loopback
@@ -42,6 +43,7 @@ func NewTelemetryServer() *TelemetryServer {
 		lastStartTimestamp:     time.Now(),
 		HotKeyBurnRate:         NewBurnRate(100),
 		connectedPeers:         make([]peer.AddrInfo, 0),
+		rtt:                    make(map[peer.ID]int64),
 	}
 	s := &http.Server{
 		Addr:              ":8123",
@@ -51,6 +53,18 @@ func NewTelemetryServer() *TelemetryServer {
 	}
 	hs.s = s
 	return hs
+}
+
+func (t *TelemetryServer) SetPingRTT(rtt map[peer.ID]int64) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.rtt = rtt
+}
+
+func (t *TelemetryServer) GetPingRTT() map[peer.ID]int64 {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.rtt
 }
 
 func (t *TelemetryServer) SetConnectedPeers(peers []peer.AddrInfo) {
@@ -161,6 +175,7 @@ func (t *TelemetryServer) Handlers() http.Handler {
 	router.Handle("/ip", http.HandlerFunc(t.ipHandler)).Methods(http.MethodGet)
 	router.Handle("/hotkeyburnrate", http.HandlerFunc(t.hotKeyFeeBurnRate)).Methods(http.MethodGet)
 	router.Handle("/connectedpeers", http.HandlerFunc(t.connectedPeersHandler)).Methods(http.MethodGet)
+	router.Handle("/pingrtt", http.HandlerFunc(t.pingRTTHandler)).Methods(http.MethodGet)
 	router.Use(logMiddleware())
 
 	return router
@@ -269,6 +284,18 @@ func (t *TelemetryServer) connectedPeersHandler(w http.ResponseWriter, _ *http.R
 	data, err := json.Marshal(peers)
 	if err != nil {
 		t.logger.Error().Err(err).Msg("Failed to marshal connected peers")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintf(w, "%s", string(data))
+}
+
+func (t *TelemetryServer) pingRTTHandler(w http.ResponseWriter, req *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	rtt := t.GetPingRTT()
+	data, err := json.Marshal(rtt)
+	if err != nil {
+		t.logger.Error().Err(err).Msg("Failed to marshal ping RTT")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
