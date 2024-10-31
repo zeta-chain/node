@@ -86,17 +86,16 @@ func (ob *Observer) Start(ctx context.Context) {
 
 	ob.Logger().Chain.Info().Msg("observer is starting")
 
-	start := func(job func(ctx context.Context) error, name string, log zerolog.Logger) {
-		bg.Work(ctx, job, bg.WithName(name), bg.WithLogger(log))
-	}
+	start(ctx, ob.watchInbound, "WatchInbound", ob.Logger().Inbound)
+	start(ctx, ob.watchInboundTracker, "WatchInboundTracker", ob.Logger().Inbound)
+	start(ctx, ob.watchOutbound, "WatchOutbound", ob.Logger().Outbound)
+	start(ctx, ob.watchGasPrice, "WatchGasPrice", ob.Logger().GasPrice)
+	start(ctx, ob.watchRPCStatus, "WatchRPCStatus", ob.Logger().Chain)
+}
 
-	// TODO: watchInboundTracker
-	// https://github.com/zeta-chain/node/issues/2935
-
-	start(ob.watchInbound, "WatchInbound", ob.Logger().Inbound)
-	start(ob.watchOutbound, "WatchOutbound", ob.Logger().Outbound)
-	start(ob.watchGasPrice, "WatchGasPrice", ob.Logger().GasPrice)
-	start(ob.watchRPCStatus, "WatchRPCStatus", ob.Logger().Chain)
+// fire goroutine  task
+func start(ctx context.Context, task func(ctx context.Context) error, name string, log zerolog.Logger) {
+	bg.Work(ctx, task, bg.WithName(name), bg.WithLogger(log))
 }
 
 // watchGasPrice observes TON gas price and votes it to Zetacore.
