@@ -78,7 +78,10 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 
 	err = eg.Wait()
 
-	desc, _ := stats.Describe(withdrawDurations, false, &[]float64{50.0, 75.0, 90.0, 95.0})
+	desc, descErr := stats.Describe(withdrawDurations, false, &[]float64{50.0, 75.0, 90.0, 95.0})
+	if descErr != nil {
+		r.Logger.Print("❌ failed to calculate latency report: %v", descErr)
+	}
 
 	r.Logger.Print("Latency report:")
 	r.Logger.Print("min:  %.2f", desc.Min)
