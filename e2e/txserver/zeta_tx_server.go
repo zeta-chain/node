@@ -32,6 +32,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/samber/lo"
 	"github.com/zeta-chain/ethermint/crypto/hd"
 	etherminttypes "github.com/zeta-chain/ethermint/types"
@@ -661,7 +662,7 @@ func newFactory(clientCtx client.Context) tx.Factory {
 }
 
 // EventsOfType gets events of a specified type
-func EventsOfType[T any](events []abci.Event) ([]T, bool) {
+func EventsOfType[T proto.Message](events []abci.Event) ([]T, bool) {
 	var filteredEvents []T
 	for _, ev := range events {
 		pEvent, err := sdktypes.ParseTypedEvent(ev)
@@ -676,7 +677,7 @@ func EventsOfType[T any](events []abci.Event) ([]T, bool) {
 }
 
 // EventOfType gets one event of a specific type
-func EventOfType[T any](events []abci.Event) (T, bool) {
+func EventOfType[T proto.Message](events []abci.Event) (T, bool) {
 	var event T
 	for _, ev := range events {
 		pEvent, err := sdktypes.ParseTypedEvent(ev)
