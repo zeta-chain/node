@@ -3,7 +3,6 @@ package txserver
 import (
 	"context"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
@@ -358,59 +357,25 @@ func (zts ZetaTxServer) DeploySystemContracts(
 		return SystemContractAddresses{}, fmt.Errorf("failed to deploy system contracts: %s", err.Error())
 	}
 
-	systemContractAddress, err := FetchAttributeFromTxResponse(res, "system_contract")
-	if err != nil {
-		return SystemContractAddresses{}, fmt.Errorf(
-			"failed to fetch system contract address: %s; rawlog %s",
-			err.Error(),
-			res.RawLog,
-		)
+	deployedEvent, ok := EventOfType[*fungibletypes.EventSystemContractsDeployed](res.Events)
+	if !ok {
+		return SystemContractAddresses{}, fmt.Errorf("no EventSystemContractsDeployed in %s", res.TxHash)
 	}
 
 	// get system contract
 	_, err = zts.BroadcastTx(
 		accountAdmin,
-		fungibletypes.NewMsgUpdateSystemContract(addrAdmin.String(), systemContractAddress),
+		fungibletypes.NewMsgUpdateSystemContract(addrAdmin.String(), deployedEvent.SystemContract),
 	)
 	if err != nil {
 		return SystemContractAddresses{}, fmt.Errorf("failed to set system contract: %s", err.Error())
 	}
 
-	// get uniswap contract addresses
-	uniswapV2FactoryAddr, err := FetchAttributeFromTxResponse(res, "uniswap_v2_factory")
-	if err != nil {
-		return SystemContractAddresses{}, fmt.Errorf("failed to fetch uniswap v2 factory address: %s", err.Error())
-	}
-	uniswapV2RouterAddr, err := FetchAttributeFromTxResponse(res, "uniswap_v2_router")
-	if err != nil {
-		return SystemContractAddresses{}, fmt.Errorf("failed to fetch uniswap v2 router address: %s", err.Error())
-	}
-
-	// get zevm connector address
-	zevmConnectorAddr, err := FetchAttributeFromTxResponse(res, "connector_zevm")
-	if err != nil {
-		return SystemContractAddresses{}, fmt.Errorf(
-			"failed to fetch zevm connector address: %s, txResponse: %s",
-			err.Error(),
-			res.String(),
-		)
-	}
-
-	// get wzeta address
-	wzetaAddr, err := FetchAttributeFromTxResponse(res, "wzeta")
-	if err != nil {
-		return SystemContractAddresses{}, fmt.Errorf(
-			"failed to fetch wzeta address: %s, txResponse: %s",
-			err.Error(),
-			res.String(),
-		)
-	}
-
 	return SystemContractAddresses{
-		UniswapV2FactoryAddr: uniswapV2FactoryAddr,
-		UniswapV2RouterAddr:  uniswapV2RouterAddr,
-		ZEVMConnectorAddr:    zevmConnectorAddr,
-		WZETAAddr:            wzetaAddr,
+		UniswapV2FactoryAddr: deployedEvent.UniswapV2Factory,
+		UniswapV2RouterAddr:  deployedEvent.UniswapV2Router,
+		ZEVMConnectorAddr:    deployedEvent.ConnectorZevm,
+		WZETAAddr:            deployedEvent.Wzeta,
 	}, nil
 }
 
@@ -521,14 +486,10 @@ func (zts ZetaTxServer) DeployZRC20s(
 		return "", fmt.Errorf("deploy zrc20s: %w", err)
 	}
 
-	deployedEvents := lo.FilterMap(res.Events, func(ev abci.Event, _ int) (*fungibletypes.EventZRC20Deployed, bool) {
-		pEvent, err := sdktypes.ParseTypedEvent(ev)
-		if err != nil {
-			return nil, false
-		}
-		deployedEvent, ok := pEvent.(*fungibletypes.EventZRC20Deployed)
-		return deployedEvent, ok
-	})
+	deployedEvents, ok := EventsOfType[*fungibletypes.EventZRC20Deployed](res.Events)
+	if !ok {
+		return "", fmt.Errorf("no EventZRC20Deployed in %s", res.TxHash)
+	}
 
 	zrc20Addrs := lo.Map(deployedEvents, func(ev *fungibletypes.EventZRC20Deployed, _ int) string {
 		return ev.Contract
@@ -699,48 +660,32 @@ func newFactory(clientCtx client.Context) tx.Factory {
 		WithFees("100000000000000000azeta")
 }
 
-type messageLog struct {
-	Events []event `json:"events"`
-}
-
-type event struct {
-	Type       string      `json:"type"`
-	Attributes []attribute `json:"attributes"`
-}
-
-type attribute struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
-}
-
-// FetchAttributeFromTxResponse fetches the attribute from the tx response
-func FetchAttributeFromTxResponse(res *sdktypes.TxResponse, key string) (string, error) {
-	var logs []messageLog
-	err := json.Unmarshal([]byte(res.RawLog), &logs)
-	if err != nil {
-		return "", fmt.Errorf("failed to unmarshal logs: %s, logs content: %s", err.Error(), res.RawLog)
-	}
-
-	var attributes []string
-	for _, log := range logs {
-		for _, event := range log.Events {
-			for _, attr := range event.Attributes {
-				attributes = append(attributes, attr.Key)
-				if strings.EqualFold(attr.Key, key) {
-					address := attr.Value
-
-					if len(address) < 2 {
-						return "", fmt.Errorf("invalid address: %s", address)
-					}
-
-					// trim the quotes
-					address = address[1 : len(address)-1]
-
-					return address, nil
-				}
-			}
+// EventsOfType gets events of a specified type
+func EventsOfType[T any](events []abci.Event) ([]T, bool) {
+	var filteredEvents []T
+	for _, ev := range events {
+		pEvent, err := sdktypes.ParseTypedEvent(ev)
+		if err != nil {
+			continue
+		}
+		if typedEvent, ok := pEvent.(T); ok {
+			filteredEvents = append(filteredEvents, typedEvent)
 		}
 	}
+	return filteredEvents, len(filteredEvents) > 0
+}
 
-	return "", fmt.Errorf("attribute %s not found, attributes:  %+v", key, attributes)
+// EventOfType gets one event of a specific type
+func EventOfType[T any](events []abci.Event) (T, bool) {
+	var event T
+	for _, ev := range events {
+		pEvent, err := sdktypes.ParseTypedEvent(ev)
+		if err != nil {
+			continue
+		}
+		if typedEvent, ok := pEvent.(T); ok {
+			return typedEvent, true
+		}
+	}
+	return event, false
 }
