@@ -176,7 +176,19 @@ func AppStateFn(
 			}
 			observers = append(observers, accAddress.String())
 		}
-		observers = observers[:5]
+
+		// Shuffle the observers list
+		r.Shuffle(len(observers), func(i, j int) {
+			observers[i], observers[j] = observers[j], observers[i]
+		})
+
+		numObservers := r.Intn(11) + 5
+		if numObservers > len(observers) {
+			numObservers = len(observers)
+		}
+		observers = observers[:numObservers]
+
+		fmt.Println("Added random observers: ", len(observers))
 
 		// update the observer genesis state
 		observerStateBz, ok := rawState[observertypes.ModuleName]

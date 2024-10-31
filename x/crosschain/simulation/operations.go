@@ -129,10 +129,10 @@ func WeightedOperations(
 	)
 
 	return simulation.WeightedOperations{
-		//simulation.NewWeightedOperation(
-		//	weightVoteGasPrice,
-		//	SimulateMsgVoteGasPrice(k),
-		//),
+		simulation.NewWeightedOperation(
+			weightVoteGasPrice,
+			SimulateMsgVoteGasPrice(k),
+		),
 		simulation.NewWeightedOperation(
 			weightVoteInbound,
 			SimulateVoteInbound(k),
@@ -140,13 +140,16 @@ func WeightedOperations(
 	}
 }
 
+// operationSimulateVoteInbound generates a MsgVoteInbound with a random vote and delivers it.
 func operationSimulateVoteInbound(k keeper.Keeper, msg types.MsgVoteInbound, simAccount simtypes.Account) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, chainID string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 
-		account := k.GetAuthKeeper().GetAccount(ctx, simAccount.Address)
-		spendable := k.GetBankKeeper().SpendableCoins(ctx, account.GetAddress())
+		// Fetch the account from the auth keeper which can then be used to fetch spendable coins
+		authAccount := k.GetAuthKeeper().GetAccount(ctx, simAccount.Address)
+		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
 
+		// Generate a transaction with a random fee and deliver it
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
@@ -175,7 +178,6 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 	// column 5: 15% vote
 	// column 6: noone votes
 	// All columns sum to 100 for simplicity, but this is arbitrary and
-	// feel free to change.
 	numVotesTransitionMatrix, _ := simulation.CreateTransitionMatrix([][]int{
 		{20, 10, 0, 0, 0, 0},
 		{55, 50, 20, 10, 0, 0},
@@ -282,7 +284,6 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 				Op:          operationSimulateVoteInbound(k, votingMsg, observerAccount),
 			})
 		}
-		//fmt.Println("\nActual votes : ", len(fops))
 
 		return opMsg, fops, nil
 	}
@@ -296,6 +297,8 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, authz.GasPriceVoter.String(), "unable to get random account and observer"), nil, err
 		}
+		authAccount := k.GetAuthKeeper().GetAccount(ctx, simAccount.Address)
+		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
 
 		supportedChains := k.GetObserverKeeper().GetSupportedChains(ctx)
 		if len(supportedChains) == 0 {
@@ -313,17 +316,18 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 		}
 
 		txCtx := simulation.OperationInput{
-			R:             r,
-			App:           app,
-			TxGen:         moduletestutil.MakeTestEncodingConfig().TxConfig,
-			Cdc:           nil,
-			Msg:           &msg,
-			MsgType:       msg.Type(),
-			Context:       ctx,
-			SimAccount:    simAccount,
-			AccountKeeper: k.GetAuthKeeper(),
-			Bankkeeper:    k.GetBankKeeper(),
-			ModuleName:    types.ModuleName,
+			R:               r,
+			App:             app,
+			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             &msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   k.GetAuthKeeper(),
+			Bankkeeper:      k.GetBankKeeper(),
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
 		}
 
 		return simulation.GenAndDeliverTxWithRandFees(txCtx)
