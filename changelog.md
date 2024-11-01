@@ -52,6 +52,7 @@
 * [2932](https://github.com/zeta-chain/node/pull/2932) - add gateway upgrade as part of the upgrade test
 * [2947](https://github.com/zeta-chain/node/pull/2947) - initialize simulation tests
 * [3075](https://github.com/zeta-chain/node/pull/3075) - ton: withdraw concurrent, deposit & revert.
+* [3033](https://github.com/zeta-chain/node/pull/3033) - initialize simulation tests for import and export
 
 ### Fixes
 

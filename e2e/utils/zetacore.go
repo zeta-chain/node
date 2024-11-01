@@ -81,7 +81,7 @@ func WaitCctxsMinedByInboundHash(
 		timedOut := time.Since(startTime) > timeout
 		require.False(t, timedOut, "waiting cctx timeout, cctx not mined, inbound hash: %s", inboundHash)
 
-		time.Sleep(1 * time.Second)
+		time.Sleep(500 * time.Millisecond)
 
 		// We use InTxHashToCctxData instead of InboundTrackerAllByChain to able to run these tests with the previous version
 		// for the update tests
@@ -90,7 +90,7 @@ func WaitCctxsMinedByInboundHash(
 		res, err := client.InTxHashToCctxData(ctx, in)
 		if err != nil {
 			// prevent spamming logs
-			if i%10 == 0 {
+			if i%20 == 0 {
 				logger.Info("Error getting cctx by inboundHash: %s", err.Error())
 			}
 			continue
@@ -113,7 +113,7 @@ func WaitCctxsMinedByInboundHash(
 			cctx := cctx
 			if !IsTerminalStatus(cctx.CctxStatus.Status) {
 				// prevent spamming logs
-				if i%10 == 0 {
+				if i%20 == 0 {
 					logger.Info(
 						"waiting for cctx index %d to be mined by inboundHash: %s, cctx status: %s, message: %s",
 						j,
@@ -154,7 +154,7 @@ func WaitCCTXMinedByIndex(
 		require.False(t, time.Since(startTime) > timeout, "waiting cctx timeout, cctx not mined, cctx: %s", cctxIndex)
 
 		if i > 0 {
-			time.Sleep(1 * time.Second)
+			time.Sleep(500 * time.Millisecond)
 		}
 
 		// fetch cctx by index
@@ -170,7 +170,7 @@ func WaitCCTXMinedByIndex(
 		cctx := res.CrossChainTx
 		if !IsTerminalStatus(cctx.CctxStatus.Status) {
 			// prevent spamming logs
-			if i%10 == 0 {
+			if i%20 == 0 {
 				logger.Info(
 					"waiting for cctx to be mined from index: %s, cctx status: %s, message: %s",
 					cctxIndex,
