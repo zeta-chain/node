@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"crypto/rand"
 	"fmt"
 
 	"github.com/btcsuite/btcd/btcec/v2"
@@ -172,12 +171,8 @@ func (s *TapscriptSpender) estimateFee(
 	}
 	txCopy.AddTxOut(wire.NewTxOut(amount, pkScript))
 
-	// create random 64-byte fake Schnorr signature
+	// create 64-byte fake Schnorr signature
 	sigBytes := make([]byte, 64)
-	_, err = rand.Read(sigBytes)
-	if err != nil {
-		return 0, err
-	}
 
 	// set the witness for the first input
 	txWitness := wire.TxWitness{sigBytes, s.tapLeaf.Script, s.ctrlBlockBytes}
