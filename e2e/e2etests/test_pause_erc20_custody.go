@@ -32,18 +32,19 @@ func TestPauseERC20Custody(r *runner.E2ERunner, _ []string) {
 	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msg)
 	require.NoError(r, err)
 
-	// fetch cctx index from tx response
-	cctxIndex, err := txserver.FetchAttributeFromTxResponse(res, "cctx_index")
-	require.NoError(r, err)
+	event, ok := txserver.EventOfType[*crosschaintypes.EventERC20CustodyPausing](res.Events)
+	require.True(r, ok, "no EventERC20CustodyPausing in %s", res.TxHash)
 
-	cctxRes, err := r.CctxClient.Cctx(r.Ctx, &crosschaintypes.QueryGetCctxRequest{Index: cctxIndex})
+	require.True(r, event.Pause, "should be paused")
+
+	cctxRes, err := r.CctxClient.Cctx(r.Ctx, &crosschaintypes.QueryGetCctxRequest{Index: event.CctxIndex})
 	require.NoError(r, err)
 
 	cctx := cctxRes.CrossChainTx
 	r.Logger.CCTX(*cctx, "pausing")
 
 	// wait for the cctx to be mined
-	r.WaitForMinedCCTXFromIndex(cctxIndex)
+	r.WaitForMinedCCTXFromIndex(event.CctxIndex)
 
 	// check ERC20 custody contract is paused
 	paused, err = r.ERC20Custody.Paused(&bind.CallOpts{})
@@ -61,18 +62,19 @@ func TestPauseERC20Custody(r *runner.E2ERunner, _ []string) {
 	res, err = r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msg)
 	require.NoError(r, err)
 
-	// fetch cctx index from tx response
-	cctxIndex, err = txserver.FetchAttributeFromTxResponse(res, "cctx_index")
-	require.NoError(r, err)
+	event, ok = txserver.EventOfType[*crosschaintypes.EventERC20CustodyPausing](res.Events)
+	require.True(r, ok, "no EventERC20CustodyPausing in %s", res.TxHash)
 
-	cctxRes, err = r.CctxClient.Cctx(r.Ctx, &crosschaintypes.QueryGetCctxRequest{Index: cctxIndex})
+	require.False(r, event.Pause, "should be unpaused")
+
+	cctxRes, err = r.CctxClient.Cctx(r.Ctx, &crosschaintypes.QueryGetCctxRequest{Index: event.CctxIndex})
 	require.NoError(r, err)
 
 	cctx = cctxRes.CrossChainTx
 	r.Logger.CCTX(*cctx, "unpausing")
 
 	// wait for the cctx to be mined
-	r.WaitForMinedCCTXFromIndex(cctxIndex)
+	r.WaitForMinedCCTXFromIndex(event.CctxIndex)
 
 	// check ERC20 custody contract is unpaused
 	paused, err = r.ERC20Custody.Paused(&bind.CallOpts{})
