@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"encoding/hex"
 	"math/big"
 	"time"
 
@@ -23,6 +24,20 @@ import (
 //	https://github.com/tonkeeper/w5/blob/main/contracts/wallet_v5.fc#L82
 //	https://docs.ton.org/develop/smart-contracts/guidelines/message-modes-cookbook
 const tonDepositSendCode = toncontracts.SendFlagSeparateFees + toncontracts.SendFlagIgnoreErrors
+
+// currently implemented only for DepositAndCall,
+// can be adopted for all TON ops
+type tonOpts struct {
+	expectedStatus cctypes.CctxStatus
+}
+
+type TONOpt func(t *tonOpts)
+
+func TONExpectStatus(status cctypes.CctxStatus) TONOpt {
+	return func(t *tonOpts) {
+		t.expectedStatus = status
+	}
+}
 
 // TONDeposit deposit TON to Gateway contract
 func (r *E2ERunner) TONDeposit(
@@ -57,7 +72,7 @@ func (r *E2ERunner) TONDeposit(
 	}
 
 	// Wait for cctx
-	cctx := r.WaitForSpecificCCTX(filter, time.Minute)
+	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, time.Minute)
 
 	return cctx, nil
 }
@@ -68,7 +83,13 @@ func (r *E2ERunner) TONDepositAndCall(
 	amount math.Uint,
 	zevmRecipient eth.Address,
 	callData []byte,
+	opts ...TONOpt,
 ) (*cctypes.CrossChainTx, error) {
+	cfg := &tonOpts{expectedStatus: cctypes.CctxStatus_OutboundMined}
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
 	chain := chains.TONLocalnet
 
 	require.NotNil(r, r.TONGateway, "TON Gateway is not initialized")
@@ -92,12 +113,16 @@ func (r *E2ERunner) TONDepositAndCall(
 	}
 
 	filter := func(cctx *cctypes.CrossChainTx) bool {
+		memo := zevmRecipient.Bytes()
+		memo = append(memo, callData...)
+
 		return cctx.InboundParams.SenderChainId == chain.ChainId &&
-			cctx.InboundParams.Sender == sender.GetAddress().ToRaw()
+			cctx.InboundParams.Sender == sender.GetAddress().ToRaw() &&
+			cctx.RelayedMessage == hex.EncodeToString(memo)
 	}
 
 	// Wait for cctx
-	cctx := r.WaitForSpecificCCTX(filter, time.Minute)
+	cctx := r.WaitForSpecificCCTX(filter, cfg.expectedStatus, time.Minute)
 
 	return cctx, nil
 }
