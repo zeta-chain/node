@@ -21,7 +21,7 @@ const (
 )
 
 var (
-	RunOnce = false
+	DeployedSystemContracts = false
 )
 
 func WeightedOperations(
@@ -44,7 +44,7 @@ func WeightedOperations(
 func SimulateMsgDeploySystemContracts(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, chainID string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
-		if RunOnce {
+		if DeployedSystemContracts {
 			return simtypes.OperationMsg{}, nil, nil
 		}
 
@@ -79,7 +79,7 @@ func SimulateMsgDeploySystemContracts(k keeper.Keeper) simtypes.Operation {
 			ModuleName:    types.ModuleName,
 		}
 
-		RunOnce = true
+		DeployedSystemContracts = true
 		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
