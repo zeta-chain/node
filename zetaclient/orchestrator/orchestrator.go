@@ -756,7 +756,12 @@ func (oc *Orchestrator) ScheduleCCTXTON(
 		}
 
 		// fire async task
-		taskLogger := oc.logger.Logger.With().Str("outbound.id", outboundID).Logger()
+		taskLogger := oc.logger.Logger.With().
+			Int64(logs.FieldChain, chainID).
+			Str("outbound.id", outboundID).
+			Uint64("outbound.nonce", cctx.GetCurrentOutboundParam().TssNonce).
+			Logger()
+
 		bg.Work(ctx, task, bg.WithName("TryProcessOutbound"), bg.WithLogger(taskLogger))
 	}
 }
