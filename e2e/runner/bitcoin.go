@@ -344,7 +344,7 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 	r.Logger.Info("received inscription commit address: %s", receiver)
 
 	// send funds to the commit address
-	commitTxHash, err := r.sendToAddrFromDeployerWithMemo(amount, receiver, utxos, []byte("any memo"))
+	commitTxHash, err := r.sendToAddrFromDeployerWithMemo(amount, receiver, utxos, nil)
 	require.NoError(r, err)
 	r.Logger.Info("obtained inscription commit txn hash: %s", commitTxHash.String())
 
