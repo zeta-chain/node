@@ -185,6 +185,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// set the authority client to the zeta tx server to be able to query message permissions
 	deployerRunner.ZetaTxServer.SetAuthorityClient(deployerRunner.AuthorityClient)
 
+	// run setup steps that do not require tss
+	if !skipSetup {
+		noError(deployerRunner.FundEmissionsPool())
+	}
+
 	// wait for keygen to be completed
 	// if setup is skipped, we assume that the keygen is already completed
 	if !skipSetup {
@@ -229,7 +234,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		if testSolana {
 			deployerRunner.SetupSolana(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
 		}
-		noError(deployerRunner.FundEmissionsPool())
 
 		deployerRunner.MintERC20OnEvm(1000000)
 
