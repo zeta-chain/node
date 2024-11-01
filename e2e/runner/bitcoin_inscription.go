@@ -46,7 +46,7 @@ func NewTapscriptSpender(net *chaincfg.Params) *TapscriptSpender {
 // GenerateCommitAddress generates a Taproot commit address for the given receiver and payload
 func (s *TapscriptSpender) GenerateCommitAddress(memo []byte) (*btcutil.AddressTaproot, error) {
 	// OP_RETURN is a better choice for memo <= 80 bytes
-	if len(memo) <= 80 {
+	if len(memo) <= txscript.MaxDataCarrierSize {
 		return nil, fmt.Errorf("OP_RETURN is a better choice for memo <= 80 bytes")
 	}
 
@@ -84,7 +84,7 @@ func (s *TapscriptSpender) BuildRevealTxn(
 	}
 	revealTx.AddTxOut(wire.NewTxOut(commitAmount-fee, pkScript))
 
-	// Step 5: compute the sighash for the P2TR input to be spent using script path
+	// Step 4: compute the sighash for the P2TR input to be spent using script path
 	commitScript, err := txscript.PayToAddrScript(s.taprootOutputAddr)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create commit pkScript")
@@ -103,7 +103,7 @@ func (s *TapscriptSpender) BuildRevealTxn(
 		return nil, errors.Wrap(err, "failed to calculate tapscript sighash")
 	}
 
-	// Step 6: sign the sighash with the internal key
+	// Step 5: sign the sighash with the internal key
 	sig, err := schnorr.Sign(s.internalKey, sigHash)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to sign sighash")
