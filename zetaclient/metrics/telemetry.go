@@ -290,7 +290,7 @@ func (t *TelemetryServer) connectedPeersHandler(w http.ResponseWriter, _ *http.R
 	fmt.Fprintf(w, "%s", string(data))
 }
 
-func (t *TelemetryServer) pingRTTHandler(w http.ResponseWriter, req *http.Request) {
+func (t *TelemetryServer) pingRTTHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	rtt := t.GetPingRTT()
 	data, err := json.Marshal(rtt)
