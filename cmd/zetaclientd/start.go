@@ -255,7 +255,7 @@ func start(_ *cobra.Command, _ []string) error {
 						pingRTT[p] = -1 // RTT -1 indicate ping error
 						return
 					}
-					pingRTT[p] = result.RTT.Milliseconds()
+					pingRTT[p] = result.RTT.Nanoseconds()
 				}(p)
 			}
 			wg.Wait()
