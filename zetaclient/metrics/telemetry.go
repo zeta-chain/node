@@ -293,7 +293,11 @@ func (t *TelemetryServer) connectedPeersHandler(w http.ResponseWriter, _ *http.R
 func (t *TelemetryServer) pingRTTHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	rtt := t.GetPingRTT()
-	data, err := json.Marshal(rtt)
+	rtt2 := make(map[string]int64)
+	for k, v := range rtt {
+		rtt2[k.String()] = v
+	}
+	data, err := json.Marshal(rtt2)
 	if err != nil {
 		t.logger.Error().Err(err).Msg("Failed to marshal ping RTT")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
