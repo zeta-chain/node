@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v22.0.0
+
+## Refactor
+
+* [3073](https://github.com/zeta-chain/node/pull/3073) - improve ZETA deposit check with max supply check
+
 ## v21.0.0
 
 ### Features

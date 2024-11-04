@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-const releaseVersion = "v21"
+const releaseVersion = "v22"
 
 func SetupHandlers(app *App) {
 	allUpgrades := upgradeTracker{

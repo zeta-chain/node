@@ -39,7 +39,7 @@ fi
 # get new zetacored version
 curl -L -o /tmp/zetacored.new "${ZETACORED_URL}"
 chmod +x /tmp/zetacored.new
-UPGRADE_NAME="v21"
+UPGRADE_NAME="v22"
 
 # if explicit upgrade height not provided, use dumb estimator
 if [[ -z $UPGRADE_HEIGHT ]]; then
