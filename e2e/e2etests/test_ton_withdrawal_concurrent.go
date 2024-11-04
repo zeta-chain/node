@@ -16,6 +16,9 @@ import (
 	cc "github.com/zeta-chain/node/x/crosschain/types"
 )
 
+// TestTONWithdrawConcurrent makes sure that multiple concurrent
+// withdrawals will be eventually processed by sequentially increasing Gateway nonce
+// and that zetaclient tolerates "invalid nonce" error from RPC.
 func TestTONWithdrawConcurrent(r *runner.E2ERunner, _ []string) {
 	// ARRANGE
 	// Given a deployer

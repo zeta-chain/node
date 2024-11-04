@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Tests
+* [3075](https://github.com/zeta-chain/node/pull/3075) - ton: withdraw concurrent, deposit & revert.
+
 ## v21.0.0
 
 ### Features
@@ -51,7 +54,6 @@
 * [2894](https://github.com/zeta-chain/node/pull/2894) - increase gas limit for TSS vote tx
 * [2932](https://github.com/zeta-chain/node/pull/2932) - add gateway upgrade as part of the upgrade test
 * [2947](https://github.com/zeta-chain/node/pull/2947) - initialize simulation tests
-* [3075](https://github.com/zeta-chain/node/pull/3075) - ton: withdraw concurrent, deposit & revert.
 
 ### Fixes
 

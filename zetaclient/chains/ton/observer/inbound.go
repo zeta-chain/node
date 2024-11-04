@@ -20,8 +20,11 @@ import (
 
 const (
 	// maximum number of transactions to process on a ticker
+	// TODO: move to config
+	// https://github.com/zeta-chain/node/issues/3086
 	maxTransactionsPerTick = 100
-	logSampleRate          = 10
+	// zero log sample rate for sampled logger (to avoid spamming logs)
+	logSampleRate = 10
 )
 
 // watchInbound watches for new txs to Gateway's account.
