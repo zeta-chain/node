@@ -208,13 +208,20 @@ func WriteConfig(file string, config Config) error {
 		return errors.New("file name cannot be empty")
 	}
 
-	b, err := yaml.Marshal(config)
+	// #nosec G304 -- the variable is expected to be controlled by the user
+	fHandle, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
-		return err
+		return fmt.Errorf("open file: %w", err)
 	}
-	err = os.WriteFile(file, b, 0600)
+	defer fHandle.Close()
+
+	// use a custom encoder so we can set the indentation level
+	encoder := yaml.NewEncoder(fHandle)
+	defer encoder.Close()
+	encoder.SetIndent(2)
+	err = encoder.Encode(config)
 	if err != nil {
-		return err
+		return fmt.Errorf("encode config: %w", err)
 	}
 	return nil
 }

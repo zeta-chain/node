@@ -360,7 +360,7 @@ start-upgrade-import-mainnet-test: zetanode-upgrade
 ###############################################################################
 
 BINDIR ?= $(GOPATH)/bin
-SIMAPP = ./tests/simulation
+SIMAPP = ./simulation
 
 
 # Run sim is a cosmos tool which helps us to run multiple simulations in parallel.
@@ -381,16 +381,22 @@ $(BINDIR)/runsim:
 # Period: Invariant check period
 # Timeout: Timeout for the simulation test
 define run-sim-test
-	@echo "Running $(1)..."
+	@echo "Running $(1)"
 	@go test -mod=readonly $(SIMAPP) -run $(2) -Enabled=true \
 		-NumBlocks=$(3) -BlockSize=$(4) -Commit=true -Period=0 -v -timeout $(5)
 endef
 
 test-sim-nondeterminism:
-	$(call run-sim-test,"non-determinism test",TestAppStateDeterminism,100,200,2h)
+	$(call run-sim-test,"non-determinism test",TestAppStateDeterminism,100,200,30m)
 
 test-sim-fullappsimulation:
-	$(call run-sim-test,"TestFullAppSimulation",TestFullAppSimulation,100,200,2h)
+	$(call run-sim-test,"TestFullAppSimulation",TestFullAppSimulation,100,200,30m)
+
+test-sim-import-export:
+	$(call run-sim-test,"test-import-export",TestAppImportExport,100,200,30m)
+
+test-sim-after-import:
+	$(call run-sim-test,"test-sim-after-import",TestAppSimulationAfterImport,100,200,30m)
 
 test-sim-multi-seed-long: runsim
 	@echo "Running long multi-seed application simulation."
@@ -400,13 +406,23 @@ test-sim-multi-seed-short: runsim
 	@echo "Running short multi-seed application simulation."
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 50 10 TestFullAppSimulation
 
+test-sim-import-export-long: runsim
+	@echo "Running application import/export simulation. This may take several minutes"
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 500 50 TestAppImportExport
 
+test-sim-after-import-long: runsim
+	@echo "Running application simulation-after-import. This may take several minute"
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 500 50 TestAppSimulationAfterImport
 
 .PHONY: \
 test-sim-nondeterminism \
 test-sim-fullappsimulation \
 test-sim-multi-seed-long \
-test-sim-multi-seed-short
+test-sim-multi-seed-short \
+test-sim-import-export \
+test-sim-after-import \
+test-sim-import-export-long \
+test-sim-after-import-long
 
 
 ###############################################################################
