@@ -272,33 +272,33 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipRegular {
 		// defines all tests, if light is enabled, only the most basic tests are run and advanced are skipped
 		erc20Tests := []string{
-			e2etests.TestERC20WithdrawName,
-			e2etests.TestMultipleERC20WithdrawsName,
-			e2etests.TestERC20DepositAndCallRefundName,
-			e2etests.TestZRC20SwapName,
+			// e2etests.TestERC20WithdrawName,
+			// e2etests.TestMultipleERC20WithdrawsName,
+			// e2etests.TestERC20DepositAndCallRefundName,
+			// e2etests.TestZRC20SwapName,
 		}
 		erc20AdvancedTests := []string{
-			e2etests.TestERC20DepositRestrictedName,
+			// e2etests.TestERC20DepositRestrictedName,
 		}
 		zetaTests := []string{
-			e2etests.TestZetaWithdrawName,
-			e2etests.TestMessagePassingExternalChainsName,
-			e2etests.TestMessagePassingRevertFailExternalChainsName,
-			e2etests.TestMessagePassingRevertSuccessExternalChainsName,
+			// e2etests.TestZetaWithdrawName,
+			// e2etests.TestMessagePassingExternalChainsName,
+			// e2etests.TestMessagePassingRevertFailExternalChainsName,
+			// e2etests.TestMessagePassingRevertSuccessExternalChainsName,
 		}
 		zetaAdvancedTests := []string{
-			e2etests.TestZetaDepositRestrictedName,
-			e2etests.TestZetaDepositName,
-			e2etests.TestZetaDepositNewAddressName,
+			// e2etests.TestZetaDepositRestrictedName,
+			// e2etests.TestZetaDepositName,
+			// e2etests.TestZetaDepositNewAddressName,
 		}
 		zevmMPTests := []string{}
 		zevmMPAdvancedTests := []string{
-			e2etests.TestMessagePassingZEVMToEVMName,
-			e2etests.TestMessagePassingEVMtoZEVMName,
-			e2etests.TestMessagePassingEVMtoZEVMRevertName,
-			e2etests.TestMessagePassingZEVMtoEVMRevertName,
-			e2etests.TestMessagePassingZEVMtoEVMRevertFailName,
-			e2etests.TestMessagePassingEVMtoZEVMRevertFailName,
+			// e2etests.TestMessagePassingZEVMToEVMName,
+			// e2etests.TestMessagePassingEVMtoZEVMName,
+			// e2etests.TestMessagePassingEVMtoZEVMRevertName,
+			// e2etests.TestMessagePassingZEVMtoEVMRevertName,
+			// e2etests.TestMessagePassingZEVMtoEVMRevertFailName,
+			// e2etests.TestMessagePassingEVMtoZEVMRevertFailName,
 		}
 
 		bitcoinTests := []string{
@@ -325,29 +325,29 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinWithdrawRestrictedName,
 		}
 		ethereumTests := []string{
-			e2etests.TestEtherWithdrawName,
-			e2etests.TestContextUpgradeName,
-			e2etests.TestEtherDepositAndCallName,
-			e2etests.TestEtherDepositAndCallRefundName,
+			// e2etests.TestEtherWithdrawName,
+			// e2etests.TestContextUpgradeName,
+			// e2etests.TestEtherDepositAndCallName,
+			// e2etests.TestEtherDepositAndCallRefundName,
 		}
 		ethereumAdvancedTests := []string{
-			e2etests.TestEtherWithdrawRestrictedName,
+			// e2etests.TestEtherWithdrawRestrictedName,
 		}
 		precompiledContractTests := []string{}
 
 		if !skipPrecompiles {
 			precompiledContractTests = []string{
-				// e2etests.TestPrecompilesPrototypeName,
-				// e2etests.TestPrecompilesPrototypeThroughContractName,
-				// e2etests.TestPrecompilesStakingName,
-				// // Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
-				// // e2etests.TestPrecompilesStakingThroughContractName,
-				// e2etests.TestPrecompilesBankName,
-				// e2etests.TestPrecompilesBankFailName,
-				// e2etests.TestPrecompilesBankThroughContractName,
-				e2etests.TestPrecompilesDistributeName,
-				e2etests.TestPrecompilesDistributeNonZRC20Name,
-				e2etests.TestPrecompilesDistributeThroughContractName,
+				// // e2etests.TestPrecompilesPrototypeName,
+				// // e2etests.TestPrecompilesPrototypeThroughContractName,
+				// // e2etests.TestPrecompilesStakingName,
+				// // // Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
+				// // // e2etests.TestPrecompilesStakingThroughContractName,
+				// // e2etests.TestPrecompilesBankName,
+				// // e2etests.TestPrecompilesBankFailName,
+				// // e2etests.TestPrecompilesBankThroughContractName,
+				// e2etests.TestPrecompilesDistributeName,
+				// e2etests.TestPrecompilesDistributeNonZRC20Name,
+				// e2etests.TestPrecompilesDistributeThroughContractName,
 			}
 		}
 

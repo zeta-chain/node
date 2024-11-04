@@ -142,27 +142,23 @@ func (r *E2ERunner) DepositBTC() {
 	r.Logger.Info("ListUnspent:")
 	r.Logger.Info("  spendableAmount: %f", spendableAmount)
 	r.Logger.Info("  spendableUTXOs: %d", spendableUTXOs)
-	r.Logger.Info("Now sending two txs to TSS address...")
+	r.Logger.Info("Now sending BTC to tester ZEVM address...")
 
-	// send two transactions to the TSS address
-	amount1 := 1.1 + zetabitcoin.DefaultDepositorFee
-	_, err = r.DepositBTCWithLegacyMemo(amount1, utxos[:2])
-	require.NoError(r, err)
-
-	amount2 := 0.05 + zetabitcoin.DefaultDepositorFee
-	txHash2, err := r.DepositBTCWithLegacyMemo(amount2, utxos[2:4])
+	// send initial BTC to the tester ZEVM address
+	amount1 := 1.15 + zetabitcoin.DefaultDepositorFee
+	txHash, err := r.DepositBTCWithLegacyMemo(amount1, utxos[:2])
 	require.NoError(r, err)
 
 	// send a donation to the TSS address to compensate for the funds minted automatically during pool creation
 	// and prevent accounting errors
-	_, err = r.SendToTSSFromDeployerWithMemo(0.11, utxos[4:5], []byte(constant.DonationMessage))
+	_, err = r.SendToTSSFromDeployerWithMemo(0.11, utxos[2:4], []byte(constant.DonationMessage))
 	require.NoError(r, err)
 
 	r.Logger.Info("testing if the deposit into BTC ZRC20 is successful...")
 
 	cctx := utils.WaitCctxMinedByInboundHash(
 		r.Ctx,
-		txHash2.String(),
+		txHash.String(),
 		r.CctxClient,
 		r.Logger,
 		r.CctxTimeout,
