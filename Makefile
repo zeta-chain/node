@@ -3,7 +3,6 @@
 PACKAGE_NAME := github.com/zeta-chain/node
 NODE_VERSION := $(shell ./version.sh)
 NODE_COMMIT := $(shell [ -z "${NODE_COMMIT}" ] && git log -1 --format='%H' || echo ${NODE_COMMIT} )
-NODE_BUILDTIME := "0000-00-00T00:00:00Z"
 DOCKER ?= docker
 # allow setting of NODE_COMPOSE_ARGS to pass additional args to docker compose
 # useful for setting profiles and/ort optional overlays
@@ -34,8 +33,6 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/zeta-chain/node/pkg/constant.Name=zetacored \
 	-X github.com/zeta-chain/node/pkg/constant.Version=$(NODE_VERSION) \
 	-X github.com/zeta-chain/node/pkg/constant.CommitHash=$(NODE_COMMIT) \
-	-X github.com/zeta-chain/node/pkg/constant.BuildTime=$(NODE_BUILDTIME) \
-	-X main.BuildTime=$(NODE_BUILDTIME) \
 	-buildid= \
 	-s -w
 
