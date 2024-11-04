@@ -42,6 +42,7 @@
 * [2899](https://github.com/zeta-chain/node/pull/2899) - remove btc deposit fee v1 and improve unit tests
 * [2952](https://github.com/zeta-chain/node/pull/2952) - add error_message to cctx.status
 * [3039](https://github.com/zeta-chain/node/pull/3039) - use `btcd` native APIs to handle Bitcoin Taproot address
+* [3082](https://github.com/zeta-chain/node/pull/3082) - replace docker-based bitcoin sidecar inscription build with Golang implementation
 
 ### Tests
 
