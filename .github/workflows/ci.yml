@@ -98,7 +98,7 @@ jobs:
     timeout-minutes: 15
     # do not run this on forks as they are not installable
     # it will still be check in the merge queue in this case
-    if: github.repository == 'zeta-chain/node'
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'zeta-chain/node'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Go
