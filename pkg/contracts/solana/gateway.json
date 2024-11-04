@@ -27,7 +27,20 @@
         },
         {
           "name": "pda",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "system_program",
@@ -40,22 +53,27 @@
           "type": "u64"
         },
         {
-          "name": "memo",
-          "type": "bytes"
+          "name": "receiver",
+          "type": {
+            "array": [
+              "u8",
+              20
+            ]
+          }
         }
       ]
     },
     {
-      "name": "deposit_spl_token",
+      "name": "deposit_and_call",
       "discriminator": [
-        86,
-        172,
-        212,
-        121,
-        63,
-        233,
-        96,
-        144
+        65,
+        33,
+        186,
+        198,
+        114,
+        223,
+        133,
+        57
       ],
       "accounts": [
         {
@@ -81,6 +99,93 @@
           }
         },
         {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "receiver",
+          "type": {
+            "array": [
+              "u8",
+              20
+            ]
+          }
+        },
+        {
+          "name": "message",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "deposit_spl_token",
+      "discriminator": [
+        86,
+        172,
+        212,
+        121,
+        63,
+        233,
+        96,
+        144
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "pda",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "whitelist_entry",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  104,
+                  105,
+                  116,
+                  101,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint_account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint_account"
+        },
+        {
           "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
@@ -99,7 +204,107 @@
           "type": "u64"
         },
         {
-          "name": "memo",
+          "name": "receiver",
+          "type": {
+            "array": [
+              "u8",
+              20
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "deposit_spl_token_and_call",
+      "discriminator": [
+        14,
+        181,
+        27,
+        187,
+        171,
+        61,
+        237,
+        147
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "pda",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "whitelist_entry",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  104,
+                  105,
+                  116,
+                  101,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint_account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint_account"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "from",
+          "writable": true
+        },
+        {
+          "name": "to",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "receiver",
+          "type": {
+            "array": [
+              "u8",
+              20
+            ]
+          }
+        },
+        {
+          "name": "message",
           "type": "bytes"
         }
       ]
@@ -153,6 +358,242 @@
               20
             ]
           }
+        },
+        {
+          "name": "chain_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initialize_rent_payer",
+      "discriminator": [
+        225,
+        73,
+        166,
+        180,
+        25,
+        245,
+        183,
+        96
+      ],
+      "accounts": [
+        {
+          "name": "rent_payer_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  110,
+                  116,
+                  45,
+                  112,
+                  97,
+                  121,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_deposit_paused",
+      "discriminator": [
+        98,
+        179,
+        141,
+        24,
+        246,
+        120,
+        164,
+        143
+      ],
+      "accounts": [
+        {
+          "name": "pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "deposit_paused",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "unwhitelist_spl_mint",
+      "discriminator": [
+        73,
+        142,
+        63,
+        191,
+        233,
+        238,
+        170,
+        104
+      ],
+      "accounts": [
+        {
+          "name": "whitelist_entry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  104,
+                  105,
+                  116,
+                  101,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "whitelist_candidate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "whitelist_candidate"
+        },
+        {
+          "name": "pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "signature",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          }
+        },
+        {
+          "name": "recovery_id",
+          "type": "u8"
+        },
+        {
+          "name": "message_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "update_authority",
+      "discriminator": [
+        32,
+        46,
+        64,
+        28,
+        149,
+        75,
+        243,
+        88
+      ],
+      "accounts": [
+        {
+          "name": "pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_authority_address",
+          "type": "pubkey"
         }
       ]
     },
@@ -171,7 +612,20 @@
       "accounts": [
         {
           "name": "pda",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "signer",
@@ -188,6 +642,104 @@
               20
             ]
           }
+        }
+      ]
+    },
+    {
+      "name": "whitelist_spl_mint",
+      "discriminator": [
+        30,
+        110,
+        162,
+        42,
+        208,
+        147,
+        254,
+        219
+      ],
+      "accounts": [
+        {
+          "name": "whitelist_entry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  104,
+                  105,
+                  116,
+                  101,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "whitelist_candidate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "whitelist_candidate"
+        },
+        {
+          "name": "pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "signature",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          }
+        },
+        {
+          "name": "recovery_id",
+          "type": "u8"
+        },
+        {
+          "name": "message_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
         }
       ]
     },
@@ -211,7 +763,20 @@
         },
         {
           "name": "pda",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "to",
@@ -287,19 +852,63 @@
           }
         },
         {
-          "name": "from",
+          "name": "pda_ata",
           "writable": true
         },
         {
-          "name": "to",
+          "name": "mint_account"
+        },
+        {
+          "name": "recipient"
+        },
+        {
+          "name": "recipient_ata",
+          "docs": [
+            "the validation will be done in the instruction processor."
+          ],
           "writable": true
+        },
+        {
+          "name": "rent_payer_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  110,
+                  116,
+                  45,
+                  112,
+                  97,
+                  121,
+                  101,
+                  114
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
+        {
+          "name": "decimals",
+          "type": "u8"
+        },
         {
           "name": "amount",
           "type": "u64"
@@ -346,6 +955,32 @@
         43,
         94
       ]
+    },
+    {
+      "name": "RentPayerPda",
+      "discriminator": [
+        48,
+        247,
+        192,
+        150,
+        46,
+        218,
+        14,
+        121
+      ]
+    },
+    {
+      "name": "WhitelistEntry",
+      "discriminator": [
+        51,
+        70,
+        173,
+        81,
+        219,
+        192,
+        234,
+        62
+      ]
     }
   ],
   "errors": [
@@ -388,6 +1023,16 @@
       "code": 6007,
       "name": "MemoLengthTooShort",
       "msg": "MemoLengthTooShort"
+    },
+    {
+      "code": 6008,
+      "name": "DepositPaused",
+      "msg": "DepositPaused"
+    },
+    {
+      "code": 6009,
+      "name": "SPLAtaAndMintAddressMismatch",
+      "msg": "SPLAtaAndMintAddressMismatch"
     }
   ],
   "types": [
@@ -412,8 +1057,30 @@
           {
             "name": "authority",
             "type": "pubkey"
+          },
+          {
+            "name": "chain_id",
+            "type": "u64"
+          },
+          {
+            "name": "deposit_paused",
+            "type": "bool"
           }
         ]
+      }
+    },
+    {
+      "name": "RentPayerPda",
+      "type": {
+        "kind": "struct",
+        "fields": []
+      }
+    },
+    {
+      "name": "WhitelistEntry",
+      "type": {
+        "kind": "struct",
+        "fields": []
       }
     }
   ]

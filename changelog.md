@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Features
+* [2984](https://github.com/zeta-chain/node/pull/2984) - add Whitelist message ability to whitelist SPL tokens on Solana
 
 ### Refactor
 
@@ -10,6 +11,7 @@
 
 ### Fixes
 * [3041](https://github.com/zeta-chain/node/pull/3041) - replace libp2p public DHT with private gossip peer discovery and connection gater for inbound connections
+
 
 ## v21.0.0
 
@@ -47,6 +49,7 @@
 * [2899](https://github.com/zeta-chain/node/pull/2899) - remove btc deposit fee v1 and improve unit tests
 * [2952](https://github.com/zeta-chain/node/pull/2952) - add error_message to cctx.status
 * [3039](https://github.com/zeta-chain/node/pull/3039) - use `btcd` native APIs to handle Bitcoin Taproot address
+* [3082](https://github.com/zeta-chain/node/pull/3082) - replace docker-based bitcoin sidecar inscription build with Golang implementation
 
 ### Tests
 
@@ -60,6 +63,7 @@
 * [2894](https://github.com/zeta-chain/node/pull/2894) - increase gas limit for TSS vote tx
 * [2932](https://github.com/zeta-chain/node/pull/2932) - add gateway upgrade as part of the upgrade test
 * [2947](https://github.com/zeta-chain/node/pull/2947) - initialize simulation tests
+* [3033](https://github.com/zeta-chain/node/pull/3033) - initialize simulation tests for import and export
 
 ### Fixes
 

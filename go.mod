@@ -234,7 +234,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mostynb/zstdpool-freelist v0.0.0-20201229113212-927304c0c3b1 // indirect
-	github.com/mr-tron/base58 v1.2.0
+	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
 	github.com/multiformats/go-base36 v0.2.0 // indirect
@@ -327,10 +327,13 @@ require (
 	github.com/montanaflynn/stats v0.7.1
 	github.com/showa-93/go-mask v0.6.2
 	github.com/tonkeeper/tongo v1.9.3
+	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20241025181051-d8d49e4fc85b
 )
 
 require (
+	github.com/aead/siphash v1.0.1 // indirect
 	github.com/decred/dcrd/crypto/blake256 v1.0.1 // indirect
+	github.com/kkdai/bstream v0.0.0-20161212061736-f391b8402d23 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20220328075252-7dd334e3daae // indirect
 	github.com/onsi/ginkgo/v2 v2.9.5 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect

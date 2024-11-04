@@ -6,6 +6,8 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/programs/system"
+	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
@@ -49,7 +51,7 @@ func (r *E2ERunner) CreateDepositInstruction(
 
 	var err error
 	inst.DataBytes, err = borsh.Serialize(solanacontract.DepositInstructionParams{
-		Discriminator: solanacontract.DiscriminatorDeposit(),
+		Discriminator: solanacontract.DiscriminatorDeposit,
 		Amount:        amount,
 		Memo:          append(receiver.Bytes(), data...),
 	})
@@ -62,6 +64,7 @@ func (r *E2ERunner) CreateDepositInstruction(
 func (r *E2ERunner) CreateSignedTransaction(
 	instructions []solana.Instruction,
 	privateKey solana.PrivateKey,
+	additionalPrivateKeys []solana.PrivateKey,
 ) *solana.Transaction {
 	// get a recent blockhash
 	recent, err := r.SolanaClient.GetLatestBlockhash(r.Ctx, rpc.CommitmentFinalized)
@@ -81,12 +84,51 @@ func (r *E2ERunner) CreateSignedTransaction(
 			if privateKey.PublicKey().Equals(key) {
 				return &privateKey
 			}
+			for _, apk := range additionalPrivateKeys {
+				if apk.PublicKey().Equals(key) {
+					return &apk
+				}
+			}
 			return nil
 		},
 	)
 	require.NoError(r, err)
 
 	return tx
+}
+
+func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey) *solana.Wallet {
+	lamport, err := r.SolanaClient.GetMinimumBalanceForRentExemption(r.Ctx, token.MINT_SIZE, rpc.CommitmentFinalized)
+	require.NoError(r, err)
+
+	// to deploy new spl token, create account instruction and initialize mint instruction have to be in the same transaction
+	tokenAccount := solana.NewWallet()
+	createAccountInstruction := system.NewCreateAccountInstruction(
+		lamport,
+		token.MINT_SIZE,
+		solana.TokenProgramID,
+		privateKey.PublicKey(),
+		tokenAccount.PublicKey(),
+	).Build()
+
+	initializeMintInstruction := token.NewInitializeMint2Instruction(
+		6,
+		privateKey.PublicKey(),
+		privateKey.PublicKey(),
+		tokenAccount.PublicKey(),
+	).Build()
+
+	signedTx := r.CreateSignedTransaction(
+		[]solana.Instruction{createAccountInstruction, initializeMintInstruction},
+		*privateKey,
+		[]solana.PrivateKey{tokenAccount.PrivateKey},
+	)
+
+	// broadcast the transaction and wait for finalization
+	_, out := r.BroadcastTxSync(signedTx)
+	r.Logger.Info("create spl logs: %v", out.Meta.LogMessages)
+
+	return tokenAccount
 }
 
 // BroadcastTxSync broadcasts a transaction and waits for it to be finalized
@@ -134,7 +176,7 @@ func (r *E2ERunner) SOLDepositAndCall(
 	instruction := r.CreateDepositInstruction(signerPrivKey.PublicKey(), receiver, data, amount.Uint64())
 
 	// create and sign the transaction
-	signedTx := r.CreateSignedTransaction([]solana.Instruction{instruction}, *signerPrivKey)
+	signedTx := r.CreateSignedTransaction([]solana.Instruction{instruction}, *signerPrivKey, []solana.PrivateKey{})
 
 	// broadcast the transaction and wait for finalization
 	sig, out := r.BroadcastTxSync(signedTx)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/txscript"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
@@ -104,7 +105,7 @@ func ParseScriptFromWitness(witness []string, logger zerolog.Logger) []byte {
 	// If there are at least two witness elements, and the first byte of
 	// the last element is 0x50, this last element is called annex a
 	// and is removed from the witness stack.
-	if length >= 2 && len(lastElement) > 0 && lastElement[0] == 0x50 {
+	if length >= 2 && len(lastElement) > 0 && lastElement[0] == txscript.TaprootAnnexTag {
 		// account for the extra item removed from the end
 		witness = witness[:length-1]
 	}

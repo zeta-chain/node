@@ -185,6 +185,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// set the authority client to the zeta tx server to be able to query message permissions
 	deployerRunner.ZetaTxServer.SetAuthorityClient(deployerRunner.AuthorityClient)
 
+	// run setup steps that do not require tss
+	if !skipSetup {
+		noError(deployerRunner.FundEmissionsPool())
+	}
+
 	// wait for keygen to be completed
 	// if setup is skipped, we assume that the keygen is already completed
 	if !skipSetup {
@@ -229,7 +234,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		if testSolana {
 			deployerRunner.SetupSolana(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
 		}
-		noError(deployerRunner.FundEmissionsPool())
 
 		deployerRunner.MintERC20OnEvm(1000000)
 
@@ -306,6 +310,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinStdMemoDepositAndCallName,
 			e2etests.TestBitcoinStdMemoDepositAndCallRevertName,
 			e2etests.TestBitcoinStdMemoDepositAndCallRevertOtherAddressName,
+			e2etests.TestBitcoinStdMemoInscribedDepositAndCallName,
 			e2etests.TestBitcoinWithdrawSegWitName,
 			e2etests.TestBitcoinWithdrawInvalidAddressName,
 			e2etests.TestZetaWithdrawBTCRevertName,
@@ -405,6 +410,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSolanaDepositAndCallRefundName,
 			e2etests.TestSolanaDepositRestrictedName,
 			e2etests.TestSolanaWithdrawRestrictedName,
+			// TODO move under admin tests
+			// https://github.com/zeta-chain/node/issues/3085
+			e2etests.TestSolanaWhitelistSPLName,
 		}
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
 	}
