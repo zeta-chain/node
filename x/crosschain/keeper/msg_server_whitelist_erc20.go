@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/gagliardetto/solana-go"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
@@ -36,7 +37,8 @@ func (k msgServer) WhitelistERC20(
 		return nil, errorsmod.Wrapf(types.ErrInvalidChainID, "chain id (%d) not supported", msg.ChainId)
 	}
 
-	if chain.IsEVMChain() {
+	switch {
+	case chain.IsEVMChain():
 		erc20Addr := ethcommon.HexToAddress(msg.Erc20Address)
 		if erc20Addr == (ethcommon.Address{}) {
 			return nil, errorsmod.Wrapf(
@@ -45,6 +47,23 @@ func (k msgServer) WhitelistERC20(
 				msg.Erc20Address,
 			)
 		}
+
+	case chain.IsSVMChain():
+		_, err := solana.PublicKeyFromBase58(msg.Erc20Address)
+		if err != nil {
+			return nil, errorsmod.Wrapf(
+				sdkerrors.ErrInvalidAddress,
+				"invalid solana contract address (%s)",
+				msg.Erc20Address,
+			)
+		}
+
+	default:
+		return nil, errorsmod.Wrapf(
+			sdkerrors.ErrInvalidChainID,
+			"whitelist for chain id (%d) not supported",
+			msg.ChainId,
+		)
 	}
 
 	// check if the asset is already whitelisted

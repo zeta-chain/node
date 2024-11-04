@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Features
+
+* [2984](https://github.com/zeta-chain/node/pull/2984) - add Whitelist message ability to whitelist SPL tokens on Solana
+
 ## v21.0.0
 
 ### Features
@@ -27,7 +31,6 @@
 * [3028](https://github.com/zeta-chain/node/pull/3028) - whitelist connection gater
 * [3019](https://github.com/zeta-chain/node/pull/3019) - add ditribute functions to staking precompile
 * [3020](https://github.com/zeta-chain/node/pull/3020) - add support for TON withdrawals
-* [2984](https://github.com/zeta-chain/node/pull/2984) - whitelist spl tokens
 
 ### Refactor
 

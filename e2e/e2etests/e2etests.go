@@ -61,7 +61,7 @@ const (
 	TestSolanaDepositAndCallRefundName = "solana_deposit_and_call_refund"
 	TestSolanaDepositRestrictedName    = "solana_deposit_restricted"
 	TestSolanaWithdrawRestrictedName   = "solana_withdraw_restricted"
-	TestSolanaWhitelistSPLName         = "solana_whitelist_spl"
+
 	/**
 	 * TON tests
 	 */
@@ -130,6 +130,7 @@ const (
 	TestPauseERC20CustodyName         = "pause_erc20_custody"
 	TestMigrateERC20CustodyFundsName  = "migrate_erc20_custody_funds"
 	TestMigrateTSSName                = "migrate_TSS"
+	TestSolanaWhitelistSPLName        = "solana_whitelist_spl"
 
 	/*
 	 V2 smart contract tests

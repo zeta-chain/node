@@ -2,12 +2,14 @@ package signer
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"cosmossdk.io/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -123,107 +125,39 @@ func (signer *Signer) TryProcessOutbound(
 	nonce := params.TssNonce
 	coinType := cctx.InboundParams.CoinType
 
+	// skip relaying the transaction if this signer hasn't set the relayer key
+	if !signer.HasRelayerKey() {
+		return
+	}
+
 	var tx *solana.Transaction
 
 	switch coinType {
 	case coin.CoinType_Cmd:
-		relayedMsg := strings.Split(cctx.RelayedMessage, ":")
-		if len(relayedMsg) != 2 {
-			return
-		}
-
-		pk, err := solana.PublicKeyFromBase58(relayedMsg[1])
+		whitelistTx, err := signer.prepareWhitelistTx(ctx, cctx, height)
 		if err != nil {
-			signer.Logger().
-				Std.Error().
-				Err(err).
-				Msgf("TryProcessOutbound: error decoding spl from relayed msg")
+			logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign whitelist outbound")
 			return
 		}
 
-		seed := [][]byte{[]byte("whitelist"), pk.Bytes()}
-		whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, signer.gatewayID)
-		if err != nil {
-			signer.Logger().
-				Std.Error().
-				Err(err).
-				Msgf("TryProcessOutbound: error calculating whitelistEntry pda")
-			return
-		}
-
-		// sign gateway whitelist message by TSS
-		msg, err := signer.SignMsgWhitelist(ctx, params, height, pk, whitelistEntryPDA)
-		if err != nil {
-			logger.Error().
-				Err(err).
-				Msgf("TryProcessOutbound: SignMsgWhitelist error for chain %d nonce %d", chainID, nonce)
-			return
-		}
-
-		// skip relaying the transaction if this signer hasn't set the relayer key
-		if !signer.HasRelayerKey() {
-			return
-		}
-
-		// set relayer balance metrics
-		signer.SetRelayerBalanceMetrics(ctx)
-
-		// sign the whitelist transaction by relayer key
-		tx, err = signer.SignWhitelistTx(ctx, msg)
-		if err != nil {
-			logger.Error().
-				Err(err).
-				Msgf("TryProcessOutbound: SignWhitelistTx error for chain %d nonce %d", chainID, nonce)
-			return
-		}
+		tx = whitelistTx
 
 	case coin.CoinType_Gas:
-		// compliance check
-		cancelTx := compliance.IsCctxRestricted(cctx)
-		if cancelTx {
-			compliance.PrintComplianceLog(
-				logger,
-				signer.Logger().Compliance,
-				true,
-				chainID,
-				cctx.Index,
-				cctx.InboundParams.Sender,
-				params.Receiver,
-				"SOL",
-			)
-		}
-
-		// sign gateway withdraw message by TSS
-		msg, err := signer.SignMsgWithdraw(ctx, params, height, cancelTx)
+		withdrawTx, err := signer.prepareWithdrawTx(ctx, cctx, height, logger)
 		if err != nil {
-			logger.Error().
-				Err(err).
-				Msgf("TryProcessOutbound: SignMsgWithdraw error for chain %d nonce %d", chainID, nonce)
+			logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign withdraw outbound")
 			return
 		}
 
-		// skip relaying the transaction if this signer hasn't set the relayer key
-		if !signer.HasRelayerKey() {
-			return
-		}
-
-		// set relayer balance metrics
-		signer.SetRelayerBalanceMetrics(ctx)
-
-		// sign the withdraw transaction by relayer key
-		tx, err = signer.SignWithdrawTx(ctx, *msg)
-		if err != nil {
-			logger.Error().
-				Err(err).
-				Msgf("TryProcessOutbound: SignGasWithdraw error for chain %d nonce %d", chainID, nonce)
-			return
-		}
-
+		tx = withdrawTx
 	default:
 		logger.Error().
 			Msgf("TryProcessOutbound: can only send SOL to the Solana network for chain %d nonce %d", chainID, nonce)
 		return
 	}
+
+	// set relayer balance metrics
+	signer.SetRelayerBalanceMetrics(ctx)
 
 	// broadcast the signed tx to the Solana network with preflight check
 	txSig, err := signer.client.SendTransactionWithOpts(
@@ -246,6 +180,80 @@ func (signer *Signer) TryProcessOutbound(
 
 	// report the outbound to the outbound tracker
 	signer.reportToOutboundTracker(ctx, zetacoreClient, chainID, nonce, txSig, logger)
+}
+
+func (signer *Signer) prepareWithdrawTx(
+	ctx context.Context,
+	cctx *types.CrossChainTx,
+	height uint64,
+	logger zerolog.Logger,
+) (*solana.Transaction, error) {
+	params := cctx.GetCurrentOutboundParam()
+	// compliance check
+	cancelTx := compliance.IsCctxRestricted(cctx)
+	if cancelTx {
+		compliance.PrintComplianceLog(
+			logger,
+			signer.Logger().Compliance,
+			true,
+			signer.Chain().ChainId,
+			cctx.Index,
+			cctx.InboundParams.Sender,
+			params.Receiver,
+			"SOL",
+		)
+	}
+
+	// sign gateway withdraw message by TSS
+	msg, err := signer.SignMsgWithdraw(ctx, params, height, cancelTx)
+	if err != nil {
+		return nil, err
+	}
+
+	// sign the withdraw transaction by relayer key
+	tx, err := signer.SignWithdrawTx(ctx, *msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
+}
+
+func (signer *Signer) prepareWhitelistTx(
+	ctx context.Context,
+	cctx *types.CrossChainTx,
+	height uint64,
+) (*solana.Transaction, error) {
+	params := cctx.GetCurrentOutboundParam()
+	relayedMsg := strings.Split(cctx.RelayedMessage, ":")
+	if len(relayedMsg) != 2 {
+		return nil, fmt.Errorf("TryProcessOutbound: invalid relayed msg")
+	}
+
+	pk, err := solana.PublicKeyFromBase58(relayedMsg[1])
+	if err != nil {
+		return nil, err
+	}
+
+	seed := [][]byte{[]byte("whitelist"), pk.Bytes()}
+	whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, signer.gatewayID)
+	if err != nil {
+		return nil, err
+	}
+
+	// sign gateway whitelist message by TSS
+	msg, err := signer.SignMsgWhitelist(ctx, params, height, pk, whitelistEntryPDA)
+	if err != nil {
+		return nil, err
+	}
+
+	// sign the whitelist transaction by relayer key
+	tx, err := signer.SignWhitelistTx(ctx, msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
 }
 
 // SetGatewayAddress sets the gateway address
