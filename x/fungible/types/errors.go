@@ -34,5 +34,4 @@ var (
 	ErrZRC20NilABI             = cosmoserrors.Register(ModuleName, 1132, "ZRC20 ABI is nil")
 	ErrZeroAddress             = cosmoserrors.Register(ModuleName, 1133, "address cannot be zero")
 	ErrInvalidAmount           = cosmoserrors.Register(ModuleName, 1134, "invalid amount")
-	ErrMaxSupplyReached        = cosmoserrors.Register(ModuleName, 1135, "max supply reached")
 )
