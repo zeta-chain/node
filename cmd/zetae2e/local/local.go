@@ -376,7 +376,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestCriticalAdminTransactionsName,
 			e2etests.TestPauseERC20CustodyName,
 			e2etests.TestMigrateERC20CustodyFundsName,
-			e2etests.TestSolanaWhitelistSPLName,
 
 			// Test the rate limiter functionalities
 			// this test is currently incomplete and takes 10m to run
@@ -410,6 +409,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSolanaDepositAndCallRefundName,
 			e2etests.TestSolanaDepositRestrictedName,
 			e2etests.TestSolanaWithdrawRestrictedName,
+			// TODO move under admin tests
+			// https://github.com/zeta-chain/node/issues/3085
+			e2etests.TestSolanaWhitelistSPLName,
 		}
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
 	}
