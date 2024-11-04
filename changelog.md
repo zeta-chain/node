@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Features
+
+* [2984](https://github.com/zeta-chain/node/pull/2984) - add Whitelist message ability to whitelist SPL tokens on Solana
+
 ## v21.0.0
 
 ### Features

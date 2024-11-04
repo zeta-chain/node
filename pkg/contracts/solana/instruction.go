@@ -99,7 +99,7 @@ func ParseInstructionWithdraw(instruction solana.CompiledInstruction) (*Withdraw
 	}
 
 	// check the discriminator to ensure it's a 'withdraw' instruction
-	if inst.Discriminator != DiscriminatorWithdraw() {
+	if inst.Discriminator != DiscriminatorWithdraw {
 		return nil, fmt.Errorf("not a withdraw instruction: %v", inst.Discriminator)
 	}
 
@@ -115,4 +115,61 @@ func RecoverSigner(msgHash []byte, msgSig []byte) (signer common.Address, err er
 	}
 
 	return crypto.PubkeyToAddress(*pubKey), nil
+}
+
+var _ OutboundInstruction = (*WhitelistInstructionParams)(nil)
+
+// WhitelistInstructionParams contains the parameters for a gateway whitelist_spl_mint instruction
+type WhitelistInstructionParams struct {
+	// Discriminator is the unique identifier for the whitelist instruction
+	Discriminator [8]byte
+
+	// Signature is the ECDSA signature (by TSS) for the whitelist
+	Signature [64]byte
+
+	// RecoveryID is the recovery ID used to recover the public key from ECDSA signature
+	RecoveryID uint8
+
+	// MessageHash is the hash of the message signed by TSS
+	MessageHash [32]byte
+
+	// Nonce is the nonce for the whitelist
+	Nonce uint64
+}
+
+// Signer returns the signer of the signature contained
+func (inst *WhitelistInstructionParams) Signer() (signer common.Address, err error) {
+	var signature [65]byte
+	copy(signature[:], inst.Signature[:64])
+	signature[64] = inst.RecoveryID
+
+	return RecoverSigner(inst.MessageHash[:], signature[:])
+}
+
+// GatewayNonce returns the nonce of the instruction
+func (inst *WhitelistInstructionParams) GatewayNonce() uint64 {
+	return inst.Nonce
+}
+
+// TokenAmount returns the amount of the instruction
+func (inst *WhitelistInstructionParams) TokenAmount() uint64 {
+	return 0
+}
+
+// ParseInstructionWhitelist tries to parse the instruction as a 'whitelist_spl_mint'.
+// It returns nil if the instruction can't be parsed as a 'whitelist_spl_mint'.
+func ParseInstructionWhitelist(instruction solana.CompiledInstruction) (*WhitelistInstructionParams, error) {
+	// try deserializing instruction as a 'whitelist_spl_mint'
+	inst := &WhitelistInstructionParams{}
+	err := borsh.Deserialize(inst, instruction.Data)
+	if err != nil {
+		return nil, errors.Wrap(err, "error deserializing instruction")
+	}
+
+	// check the discriminator to ensure it's a 'whitelist_spl_mint' instruction
+	if inst.Discriminator != DiscriminatorWhitelistSplMint {
+		return nil, fmt.Errorf("not a whitelist_spl_mint instruction: %v", inst.Discriminator)
+	}
+
+	return inst, nil
 }

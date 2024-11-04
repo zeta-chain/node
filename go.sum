@@ -2186,6 +2186,8 @@ github.com/fzipp/gocyclo v0.5.1/go.mod h1:rXPyn8fnlpa0R2csP/31uerbiVBugk5whMdlya
 github.com/fzipp/gocyclo v0.6.0/go.mod h1:rXPyn8fnlpa0R2csP/31uerbiVBugk5whMdlyaLkLoA=
 github.com/gagliardetto/binary v0.8.0 h1:U9ahc45v9HW0d15LoN++vIXSJyqR/pWw8DDlhd7zvxg=
 github.com/gagliardetto/binary v0.8.0/go.mod h1:2tfj51g5o9dnvsc+fL3Jxr22MuWzYXwx9wEoN0XQ7/c=
+github.com/gagliardetto/gofuzz v1.2.2 h1:XL/8qDMzcgvR4+CyRQW9UGdwPRPMHVJfqQ/uMvSUuQw=
+github.com/gagliardetto/gofuzz v1.2.2/go.mod h1:bkH/3hYLZrMLbfYWA0pWzXmi5TTRZnu4pMGZBkqMKvY=
 github.com/gagliardetto/solana-go v1.10.0 h1:lDuHGC+XLxw9j8fCHBZM9tv4trI0PVhev1m9NAMaIdM=
 github.com/gagliardetto/solana-go v1.10.0/go.mod h1:afBEcIRrDLJst3lvAahTr63m6W2Ns6dajZxe2irF7Jg=
 github.com/gagliardetto/treeout v0.1.4 h1:ozeYerrLCmCubo1TcIjFiOWTTGteOOHND1twdFpgwaw=
@@ -4212,6 +4214,8 @@ github.com/zeta-chain/keystone/keys v0.0.0-20240826165841-3874f358c138 h1:vck/Fc
 github.com/zeta-chain/keystone/keys v0.0.0-20240826165841-3874f358c138/go.mod h1:U494OsZTWsU75hqoriZgMdSsgSGP1mUL1jX+wN/Aez8=
 github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20241021075719-d40d2e28467c h1:ZoFxMMZtivRLquXVq1sEVlT45UnTPMO1MSXtc88nDv4=
 github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20241021075719-d40d2e28467c/go.mod h1:SjT7QirtJE8stnAe1SlNOanxtfSfijJm3MGJ+Ax7w7w=
+github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20241025181051-d8d49e4fc85b h1:w4YVBbWxk9TI+7HM8hTvK66IgOo5XvEFsmH7n6WgW50=
+github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20241025181051-d8d49e4fc85b/go.mod h1:DcDY828o773soiU/h0XpC+naxitrIMFVZqEvq/EJxMA=
 github.com/zeta-chain/tss-lib v0.0.0-20240916163010-2e6b438bd901 h1:9whtN5fjYHfk4yXIuAsYP2EHxImwDWDVUOnZJ2pfL3w=
 github.com/zeta-chain/tss-lib v0.0.0-20240916163010-2e6b438bd901/go.mod h1:d2iTC62s9JwKiCMPhcDDXbIZmuzAyJ4lwso0H5QyRbk=
 github.com/zondax/hid v0.9.1/go.mod h1:l5wttcP0jwtdLjqjMMWFVEE7d1zO0jvSPA9OPZxWpEM=
