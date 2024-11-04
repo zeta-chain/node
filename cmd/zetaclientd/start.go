@@ -229,7 +229,7 @@ func start(_ *cobra.Command, _ []string) error {
 		masterLogger.Info().Msg("TSS listener received an action to shutdown zetaclientd.")
 		signalChannel <- syscall.SIGTERM
 	})
-	// debug: printout connected peers
+
 	go func() {
 		for {
 			time.Sleep(30 * time.Second)
