@@ -443,7 +443,7 @@ test-sim-after-import-long
 release-snapshot:
 	$(GORELEASER) --clean --skip=validate --skip=publish --snapshot
 
-release-dry-run:
+release-build-only:
 	$(GORELEASER) --clean --skip=validate --skip=publish
 
 release:
