@@ -334,14 +334,16 @@ require (
 
 require (
 	github.com/bnb-chain/tss-lib v1.5.0
+	github.com/montanaflynn/stats v0.7.1
 	github.com/showa-93/go-mask v0.6.2
 	github.com/tonkeeper/tongo v1.9.3
 	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20241025181051-d8d49e4fc85b
 )
 
 require (
+	github.com/aead/siphash v1.0.1 // indirect
 	github.com/decred/dcrd/crypto/blake256 v1.0.1 // indirect
-	github.com/montanaflynn/stats v0.7.1 // indirect
+	github.com/kkdai/bstream v0.0.0-20161212061736-f391b8402d23 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20220328075252-7dd334e3daae // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
