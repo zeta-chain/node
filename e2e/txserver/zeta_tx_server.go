@@ -3,7 +3,6 @@ package txserver
 import (
 	"context"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
@@ -11,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -32,7 +32,8 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/samber/lo"
 	"github.com/zeta-chain/ethermint/crypto/hd"
 	etherminttypes "github.com/zeta-chain/ethermint/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
@@ -192,7 +193,7 @@ func (zts ZetaTxServer) GetAccountMnemonic(index int) string {
 
 // BroadcastTx broadcasts a tx to ZetaChain with the provided msg from the account
 // and waiting for blockTime for tx to be included in the block
-func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes.TxResponse, error) {
+func (zts ZetaTxServer) BroadcastTx(account string, msgs ...sdktypes.Msg) (*sdktypes.TxResponse, error) {
 	// Find number and sequence and set it
 	acc, err := zts.clientCtx.Keyring.Key(account)
 	if err != nil {
@@ -208,10 +209,13 @@ func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes
 	}
 	zts.txFactory = zts.txFactory.WithAccountNumber(accountNumber).WithSequence(accountSeq)
 
-	txBuilder, err := zts.txFactory.BuildUnsignedTx(msg)
+	txBuilder, err := zts.txFactory.BuildUnsignedTx(msgs...)
 	if err != nil {
 		return nil, err
 	}
+	// increase gas and fees if multiple messages are provided
+	txBuilder.SetGasLimit(zts.txFactory.Gas() * uint64(len(msgs)))
+	txBuilder.SetFeeAmount(zts.txFactory.Fees().MulInt(sdktypes.NewInt(int64(len(msgs)))))
 
 	// Sign tx
 	err = tx.Sign(zts.txFactory, account, txBuilder, true)
@@ -237,6 +241,9 @@ func broadcastWithBlockTimeout(zts ZetaTxServer, txBytes []byte) (*sdktypes.TxRe
 			TxHash:    res.TxHash,
 		}, err
 	}
+	if res.Code != 0 {
+		return res, fmt.Errorf("broadcast failed: %s", res.RawLog)
+	}
 
 	exitAfter := time.After(zts.blockTimeout)
 	hash, err := hex.DecodeString(res.TxHash)
@@ -261,6 +268,9 @@ func mkTxResult(
 	clientCtx client.Context,
 	resTx *coretypes.ResultTx,
 ) (*sdktypes.TxResponse, error) {
+	if resTx.TxResult.Code != 0 {
+		return nil, fmt.Errorf("tx failed: %s", resTx.TxResult.Log)
+	}
 	txb, err := clientCtx.TxConfig.TxDecoder()(resTx.Tx)
 	if err != nil {
 		return nil, err
@@ -348,59 +358,25 @@ func (zts ZetaTxServer) DeploySystemContracts(
 		return SystemContractAddresses{}, fmt.Errorf("failed to deploy system contracts: %s", err.Error())
 	}
 
-	systemContractAddress, err := FetchAttributeFromTxResponse(res, "system_contract")
-	if err != nil {
-		return SystemContractAddresses{}, fmt.Errorf(
-			"failed to fetch system contract address: %s; rawlog %s",
-			err.Error(),
-			res.RawLog,
-		)
+	deployedEvent, ok := EventOfType[*fungibletypes.EventSystemContractsDeployed](res.Events)
+	if !ok {
+		return SystemContractAddresses{}, fmt.Errorf("no EventSystemContractsDeployed in %s", res.TxHash)
 	}
 
 	// get system contract
 	_, err = zts.BroadcastTx(
 		accountAdmin,
-		fungibletypes.NewMsgUpdateSystemContract(addrAdmin.String(), systemContractAddress),
+		fungibletypes.NewMsgUpdateSystemContract(addrAdmin.String(), deployedEvent.SystemContract),
 	)
 	if err != nil {
 		return SystemContractAddresses{}, fmt.Errorf("failed to set system contract: %s", err.Error())
 	}
 
-	// get uniswap contract addresses
-	uniswapV2FactoryAddr, err := FetchAttributeFromTxResponse(res, "uniswap_v2_factory")
-	if err != nil {
-		return SystemContractAddresses{}, fmt.Errorf("failed to fetch uniswap v2 factory address: %s", err.Error())
-	}
-	uniswapV2RouterAddr, err := FetchAttributeFromTxResponse(res, "uniswap_v2_router")
-	if err != nil {
-		return SystemContractAddresses{}, fmt.Errorf("failed to fetch uniswap v2 router address: %s", err.Error())
-	}
-
-	// get zevm connector address
-	zevmConnectorAddr, err := FetchAttributeFromTxResponse(res, "connector_zevm")
-	if err != nil {
-		return SystemContractAddresses{}, fmt.Errorf(
-			"failed to fetch zevm connector address: %s, txResponse: %s",
-			err.Error(),
-			res.String(),
-		)
-	}
-
-	// get wzeta address
-	wzetaAddr, err := FetchAttributeFromTxResponse(res, "wzeta")
-	if err != nil {
-		return SystemContractAddresses{}, fmt.Errorf(
-			"failed to fetch wzeta address: %s, txResponse: %s",
-			err.Error(),
-			res.String(),
-		)
-	}
-
 	return SystemContractAddresses{
-		UniswapV2FactoryAddr: uniswapV2FactoryAddr,
-		UniswapV2RouterAddr:  uniswapV2RouterAddr,
-		ZEVMConnectorAddr:    zevmConnectorAddr,
-		WZETAAddr:            wzetaAddr,
+		UniswapV2FactoryAddr: deployedEvent.UniswapV2Factory,
+		UniswapV2RouterAddr:  deployedEvent.UniswapV2Router,
+		ZEVMConnectorAddr:    deployedEvent.ConnectorZevm,
+		WZETAAddr:            deployedEvent.Wzeta,
 	}, nil
 }
 
@@ -442,105 +418,98 @@ func (zts ZetaTxServer) DeployZRC20s(
 		deployerAddr = addrOperational.String()
 	}
 
-	deploy := func(msg *fungibletypes.MsgDeployFungibleCoinZRC20) (string, error) {
-		// noop
-		if skipChain(msg.ForeignChainId) {
-			return "", nil
-		}
-
-		res, err := zts.BroadcastTx(deployerAccount, msg)
-		if err != nil {
-			return "", fmt.Errorf("failed to deploy eth zrc20: %w", err)
-		}
-
-		addr, err := fetchZRC20FromDeployResponse(res)
-		if err != nil {
-			return "", fmt.Errorf("unable to fetch zrc20 from deploy response: %w", err)
-		}
-
-		if err := zts.InitializeLiquidityCap(addr); err != nil {
-			return "", fmt.Errorf("unable to initialize liquidity cap: %w", err)
-		}
-
-		return addr, nil
+	deployMsgs := []*fungibletypes.MsgDeployFungibleCoinZRC20{
+		fungibletypes.NewMsgDeployFungibleCoinZRC20(
+			deployerAddr,
+			"",
+			chains.GoerliLocalnet.ChainId,
+			18,
+			"ETH",
+			"gETH",
+			coin.CoinType_Gas,
+			100000,
+		),
+		fungibletypes.NewMsgDeployFungibleCoinZRC20(
+			deployerAddr,
+			"",
+			chains.BitcoinRegtest.ChainId,
+			8,
+			"BTC",
+			"tBTC",
+			coin.CoinType_Gas,
+			100000,
+		),
+		fungibletypes.NewMsgDeployFungibleCoinZRC20(
+			deployerAddr,
+			"",
+			chains.SolanaLocalnet.ChainId,
+			9,
+			"Solana",
+			"SOL",
+			coin.CoinType_Gas,
+			100000,
+		),
+		fungibletypes.NewMsgDeployFungibleCoinZRC20(
+			deployerAddr,
+			"",
+			chains.TONLocalnet.ChainId,
+			9,
+			"TON",
+			"TON",
+			coin.CoinType_Gas,
+			100_000,
+		),
+		fungibletypes.NewMsgDeployFungibleCoinZRC20(
+			deployerAddr,
+			erc20Addr,
+			chains.GoerliLocalnet.ChainId,
+			6,
+			"USDT",
+			"USDT",
+			coin.CoinType_ERC20,
+			100000,
+		),
 	}
 
-	// deploy eth zrc20
-	_, err = deploy(fungibletypes.NewMsgDeployFungibleCoinZRC20(
-		deployerAddr,
-		"",
-		chains.GoerliLocalnet.ChainId,
-		18,
-		"ETH",
-		"gETH",
-		coin.CoinType_Gas,
-		100000,
-	))
+	// apply skipChain filter and convert to sdk.Msg
+	deployMsgsIface := lo.FilterMap(
+		deployMsgs,
+		func(msg *fungibletypes.MsgDeployFungibleCoinZRC20, _ int) (sdktypes.Msg, bool) {
+			if skipChain(msg.ForeignChainId) {
+				return nil, false
+			}
+			return msg, true
+		},
+	)
+
+	res, err := zts.BroadcastTx(deployerAccount, deployMsgsIface...)
 	if err != nil {
-		return "", fmt.Errorf("failed to deploy eth zrc20: %s", err.Error())
+		return "", fmt.Errorf("deploy zrc20s: %w", err)
 	}
 
-	// deploy btc zrc20
-	_, err = deploy(fungibletypes.NewMsgDeployFungibleCoinZRC20(
-		deployerAddr,
-		"",
-		chains.BitcoinRegtest.ChainId,
-		8,
-		"BTC",
-		"tBTC",
-		coin.CoinType_Gas,
-		100000,
-	))
+	deployedEvents, ok := EventsOfType[*fungibletypes.EventZRC20Deployed](res.Events)
+	if !ok {
+		return "", fmt.Errorf("no EventZRC20Deployed in %s", res.TxHash)
+	}
+
+	zrc20Addrs := lo.Map(deployedEvents, func(ev *fungibletypes.EventZRC20Deployed, _ int) string {
+		return ev.Contract
+	})
+
+	err = zts.InitializeLiquidityCaps(zrc20Addrs...)
 	if err != nil {
-		return "", fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
+		return "", fmt.Errorf("initialize liquidity cap: %w", err)
 	}
 
-	// deploy sol zrc20
-	_, err = deploy(fungibletypes.NewMsgDeployFungibleCoinZRC20(
-		deployerAddr,
-		"",
-		chains.SolanaLocalnet.ChainId,
-		9,
-		"Solana",
-		"SOL",
-		coin.CoinType_Gas,
-		100000,
-	))
-	if err != nil {
-		return "", fmt.Errorf("failed to deploy sol zrc20: %s", err.Error())
+	// find erc20 zrc20
+	erc20zrc20, ok := lo.Find(deployedEvents, func(ev *fungibletypes.EventZRC20Deployed) bool {
+		return ev.ChainId == chains.GoerliLocalnet.ChainId && ev.CoinType == coin.CoinType_ERC20
+	})
+	if !ok {
+		return "", fmt.Errorf("unable to find erc20 zrc20")
 	}
 
-	// deploy ton zrc20
-	_, err = deploy(fungibletypes.NewMsgDeployFungibleCoinZRC20(
-		deployerAddr,
-		"",
-		chains.TONLocalnet.ChainId,
-		9,
-		"TON",
-		"TON",
-		coin.CoinType_Gas,
-		100_000,
-	))
-	if err != nil {
-		return "", fmt.Errorf("failed to deploy ton zrc20: %w", err)
-	}
-
-	// deploy erc20 zrc20
-	erc20zrc20Addr, err := deploy(fungibletypes.NewMsgDeployFungibleCoinZRC20(
-		deployerAddr,
-		erc20Addr,
-		chains.GoerliLocalnet.ChainId,
-		6,
-		"USDT",
-		"USDT",
-		coin.CoinType_ERC20,
-		100000,
-	))
-	if err != nil {
-		return "", fmt.Errorf("failed to deploy erc20 zrc20: %s", err.Error())
-	}
-
-	return erc20zrc20Addr, nil
+	return erc20zrc20.Contract, nil
 }
 
 // FundEmissionsPool funds the emissions pool with the given amount
@@ -588,31 +557,20 @@ func (zts *ZetaTxServer) SetAuthorityClient(authorityClient authoritytypes.Query
 	zts.authorityClient = authorityClient
 }
 
-// InitializeLiquidityCap initializes the liquidity cap for the given coin with a large value
-func (zts ZetaTxServer) InitializeLiquidityCap(zrc20 string) error {
+// InitializeLiquidityCaps initializes the liquidity cap for the given coin with a large value
+func (zts ZetaTxServer) InitializeLiquidityCaps(zrc20s ...string) error {
 	liquidityCap := sdktypes.NewUint(1e18).MulUint64(1e12)
 
-	msg := fungibletypes.NewMsgUpdateZRC20LiquidityCap(
-		zts.MustGetAccountAddressFromName(utils.OperationalPolicyName),
-		zrc20,
-		liquidityCap,
-	)
-	_, err := zts.BroadcastTx(utils.OperationalPolicyName, msg)
+	msgs := make([]sdktypes.Msg, len(zrc20s))
+	for i, zrc20 := range zrc20s {
+		msgs[i] = fungibletypes.NewMsgUpdateZRC20LiquidityCap(
+			zts.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+			zrc20,
+			liquidityCap,
+		)
+	}
+	_, err := zts.BroadcastTx(utils.OperationalPolicyName, msgs...)
 	return err
-}
-
-// fetchZRC20FromDeployResponse fetches the zrc20 address from the response
-func fetchZRC20FromDeployResponse(res *sdktypes.TxResponse) (string, error) {
-	// fetch the erc20 zrc20 contract address and remove the quotes
-	zrc20Addr, err := FetchAttributeFromTxResponse(res, "Contract")
-	if err != nil {
-		return "", fmt.Errorf("failed to fetch zrc20 contract address: %s, %s", err.Error(), res.String())
-	}
-	if !ethcommon.IsHexAddress(zrc20Addr) {
-		return "", fmt.Errorf("invalid address in event: %s", zrc20Addr)
-	}
-
-	return zrc20Addr, nil
 }
 
 // fetchMessagePermissions fetches the message permissions for a given message
@@ -703,48 +661,32 @@ func newFactory(clientCtx client.Context) tx.Factory {
 		WithFees("100000000000000000azeta")
 }
 
-type messageLog struct {
-	Events []event `json:"events"`
-}
-
-type event struct {
-	Type       string      `json:"type"`
-	Attributes []attribute `json:"attributes"`
-}
-
-type attribute struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
-}
-
-// FetchAttributeFromTxResponse fetches the attribute from the tx response
-func FetchAttributeFromTxResponse(res *sdktypes.TxResponse, key string) (string, error) {
-	var logs []messageLog
-	err := json.Unmarshal([]byte(res.RawLog), &logs)
-	if err != nil {
-		return "", fmt.Errorf("failed to unmarshal logs: %s, logs content: %s", err.Error(), res.RawLog)
-	}
-
-	var attributes []string
-	for _, log := range logs {
-		for _, event := range log.Events {
-			for _, attr := range event.Attributes {
-				attributes = append(attributes, attr.Key)
-				if strings.EqualFold(attr.Key, key) {
-					address := attr.Value
-
-					if len(address) < 2 {
-						return "", fmt.Errorf("invalid address: %s", address)
-					}
-
-					// trim the quotes
-					address = address[1 : len(address)-1]
-
-					return address, nil
-				}
-			}
+// EventsOfType gets events of a specified type
+func EventsOfType[T proto.Message](events []abci.Event) ([]T, bool) {
+	var filteredEvents []T
+	for _, ev := range events {
+		pEvent, err := sdktypes.ParseTypedEvent(ev)
+		if err != nil {
+			continue
+		}
+		if typedEvent, ok := pEvent.(T); ok {
+			filteredEvents = append(filteredEvents, typedEvent)
 		}
 	}
+	return filteredEvents, len(filteredEvents) > 0
+}
 
-	return "", fmt.Errorf("attribute %s not found, attributes:  %+v", key, attributes)
+// EventOfType gets one event of a specific type
+func EventOfType[T proto.Message](events []abci.Event) (T, bool) {
+	var event T
+	for _, ev := range events {
+		pEvent, err := sdktypes.ParseTypedEvent(ev)
+		if err != nil {
+			continue
+		}
+		if typedEvent, ok := pEvent.(T); ok {
+			return typedEvent, true
+		}
+	}
+	return event, false
 }

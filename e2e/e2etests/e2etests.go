@@ -81,6 +81,7 @@ const (
 	TestBitcoinStdMemoDepositAndCallName                   = "bitcoin_std_memo_deposit_and_call"
 	TestBitcoinStdMemoDepositAndCallRevertName             = "bitcoin_std_memo_deposit_and_call_revert"
 	TestBitcoinStdMemoDepositAndCallRevertOtherAddressName = "bitcoin_std_memo_deposit_and_call_revert_other_address"
+	TestBitcoinStdMemoInscribedDepositAndCallName          = "bitcoin_std_memo_inscribed_deposit_and_call"
 	TestBitcoinWithdrawSegWitName                          = "bitcoin_withdraw_segwit"
 	TestBitcoinWithdrawTaprootName                         = "bitcoin_withdraw_taproot"
 	TestBitcoinWithdrawMultipleName                        = "bitcoin_withdraw_multiple"
@@ -89,7 +90,6 @@ const (
 	TestBitcoinWithdrawP2SHName                            = "bitcoin_withdraw_p2sh"
 	TestBitcoinWithdrawInvalidAddressName                  = "bitcoin_withdraw_invalid"
 	TestBitcoinWithdrawRestrictedName                      = "bitcoin_withdraw_restricted"
-	TestExtractBitcoinInscriptionMemoName                  = "bitcoin_memo_from_inscription"
 
 	/*
 	 Application tests
@@ -130,6 +130,7 @@ const (
 	TestPauseERC20CustodyName         = "pause_erc20_custody"
 	TestMigrateERC20CustodyFundsName  = "migrate_erc20_custody_funds"
 	TestMigrateTSSName                = "migrate_TSS"
+	TestSolanaWhitelistSPLName        = "solana_whitelist_spl"
 
 	/*
 	 V2 smart contract tests
@@ -453,6 +454,12 @@ var AllE2ETests = []runner.E2ETest{
 		},
 		TestSolanaWithdrawRestricted,
 	),
+	runner.NewE2ETest(
+		TestSolanaWhitelistSPLName,
+		"whitelist SPL",
+		[]runner.ArgDefinition{},
+		TestSolanaWhitelistSPL,
+	),
 	/*
 	 TON tests
 	*/
@@ -489,13 +496,6 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
 		TestBitcoinDonation,
-	),
-	runner.NewE2ETest(
-		TestExtractBitcoinInscriptionMemoName,
-		"extract memo from BTC inscription", []runner.ArgDefinition{
-			{Description: "amount in btc", DefaultValue: "0.1"},
-		},
-		TestExtractBitcoinInscriptionMemo,
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositName,
@@ -551,6 +551,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
 		TestBitcoinStdMemoDepositAndCallRevertOtherAddress,
+	),
+	runner.NewE2ETest(
+		TestBitcoinStdMemoInscribedDepositAndCallName,
+		"deposit Bitcoin into ZEVM and call a contract with inscribed standard memo",
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.1"},
+			{Description: "fee rate", DefaultValue: "10"},
+		},
+		TestBitcoinStdMemoInscribedDepositAndCall,
 	),
 	runner.NewE2ETest(
 		TestBitcoinWithdrawSegWitName,

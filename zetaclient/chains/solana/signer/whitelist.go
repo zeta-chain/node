@@ -8,37 +8,25 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// createAndSignMsgWithdraw creates and signs a withdraw message (for gateway withdraw/withdraw_spl instruction) with TSS.
-func (signer *Signer) createAndSignMsgWithdraw(
+// createAndSignMsgWhitelist creates and signs a whitelist message (for gateway whitelist_spl_mint instruction) with TSS.
+func (signer *Signer) createAndSignMsgWhitelist(
 	ctx context.Context,
 	params *types.OutboundParams,
 	height uint64,
-	cancelTx bool,
-) (*contracts.MsgWithdraw, error) {
+	whitelistCandidate solana.PublicKey,
+	whitelistEntry solana.PublicKey,
+) (*contracts.MsgWhitelist, error) {
 	chain := signer.Chain()
 	// #nosec G115 always positive
 	chainID := uint64(signer.Chain().ChainId)
 	nonce := params.TssNonce
-	amount := params.Amount.Uint64()
 
-	// zero out the amount if cancelTx is set. It's legal to withdraw 0 lamports thru the gateway.
-	if cancelTx {
-		amount = 0
-	}
-
-	// check receiver address
-	to, err := chains.DecodeSolanaWalletAddress(params.Receiver)
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot decode receiver address %s", params.Receiver)
-	}
-
-	// prepare withdraw msg and compute hash
-	msg := contracts.NewMsgWithdraw(chainID, nonce, amount, to)
+	// prepare whitelist msg and compute hash
+	msg := contracts.NewMsgWhitelist(whitelistCandidate, whitelistEntry, chainID, nonce)
 	msgHash := msg.Hash()
 
 	// sign the message with TSS to get an ECDSA signature.
@@ -53,26 +41,32 @@ func (signer *Signer) createAndSignMsgWithdraw(
 	return msg.SetSignature(signature), nil
 }
 
-// signWithdrawTx wraps the withdraw 'msg' into a Solana transaction and signs it with the relayer key.
-func (signer *Signer) signWithdrawTx(ctx context.Context, msg contracts.MsgWithdraw) (*solana.Transaction, error) {
-	// create withdraw instruction with program call data
+// signWhitelistTx wraps the whitelist 'msg' into a Solana transaction and signs it with the relayer key.
+func (signer *Signer) signWhitelistTx(ctx context.Context, msg *contracts.MsgWhitelist) (*solana.Transaction, error) {
+	// create whitelist_spl_mint instruction with program call data
 	var err error
 	var inst solana.GenericInstruction
-	inst.DataBytes, err = borsh.Serialize(contracts.WithdrawInstructionParams{
-		Discriminator: contracts.DiscriminatorWithdraw,
-		Amount:        msg.Amount(),
+	inst.DataBytes, err = borsh.Serialize(contracts.WhitelistInstructionParams{
+		Discriminator: contracts.DiscriminatorWhitelistSplMint,
 		Signature:     msg.SigRS(),
 		RecoveryID:    msg.SigV(),
 		MessageHash:   msg.Hash(),
 		Nonce:         msg.Nonce(),
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot serialize withdraw instruction")
+		return nil, errors.Wrap(err, "cannot serialize whitelist_spl_mint instruction")
 	}
 
 	// attach required accounts to the instruction
 	privkey := signer.relayerKey
-	attachWithdrawAccounts(&inst, privkey.PublicKey(), signer.pda, msg.To(), signer.gatewayID)
+	attachWhitelistAccounts(
+		&inst,
+		privkey.PublicKey(),
+		signer.pda,
+		msg.WhitelistCandidate(),
+		msg.WhitelistEntry(),
+		signer.gatewayID,
+	)
 
 	// get a recent blockhash
 	recent, err := signer.client.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
@@ -109,19 +103,22 @@ func (signer *Signer) signWithdrawTx(ctx context.Context, msg contracts.MsgWithd
 	return tx, nil
 }
 
-// attachWithdrawAccounts attaches the required accounts for the gateway withdraw instruction.
-func attachWithdrawAccounts(
+// attachWhitelistAccounts attaches the required accounts for the gateway whitelist instruction.
+func attachWhitelistAccounts(
 	inst *solana.GenericInstruction,
 	signer solana.PublicKey,
 	pda solana.PublicKey,
-	to solana.PublicKey,
+	whitelistCandidate solana.PublicKey,
+	whitelistEntry solana.PublicKey,
 	gatewayID solana.PublicKey,
 ) {
 	// attach required accounts to the instruction
 	var accountSlice []*solana.AccountMeta
-	accountSlice = append(accountSlice, solana.Meta(signer).WRITE().SIGNER())
+	accountSlice = append(accountSlice, solana.Meta(whitelistEntry).WRITE())
+	accountSlice = append(accountSlice, solana.Meta(whitelistCandidate))
 	accountSlice = append(accountSlice, solana.Meta(pda).WRITE())
-	accountSlice = append(accountSlice, solana.Meta(to).WRITE())
+	accountSlice = append(accountSlice, solana.Meta(signer).WRITE().SIGNER())
+	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
 	inst.ProgID = gatewayID
 
 	inst.AccountValues = accountSlice
