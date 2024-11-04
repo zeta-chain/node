@@ -29,6 +29,12 @@ var (
 	_ = abi.ConvertType
 )
 
+// DecCoin is an auto generated low-level Go binding around an user-defined struct.
+type DecCoin struct {
+	Denom  string
+	Amount *big.Int
+}
+
 // Validator is an auto generated low-level Go binding around an user-defined struct.
 type Validator struct {
 	OperatorAddress string
@@ -39,7 +45,7 @@ type Validator struct {
 
 // IStakingMetaData contains all meta data concerning the IStaking contract.
 var IStakingMetaData = &bind.MetaData{
-	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"zrc20_distributor\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"zrc20_token\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Distributed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validatorSrc\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validatorDst\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"MoveStake\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validator\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Stake\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validator\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Unstake\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"zrc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"distribute\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getAllValidators\",\"outputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"operatorAddress\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"consensusPubKey\",\"type\":\"string\"},{\"internalType\":\"bool\",\"name\":\"jailed\",\"type\":\"bool\"},{\"internalType\":\"enumBondStatus\",\"name\":\"bondStatus\",\"type\":\"uint8\"}],\"internalType\":\"structValidator[]\",\"name\":\"validators\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"}],\"name\":\"getShares\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"shares\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validatorSrc\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"validatorDst\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"moveStake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"stake\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"unstake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"claim_address\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"zrc20_token\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"ClaimedRewards\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"zrc20_distributor\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"zrc20_token\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Distributed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validatorSrc\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validatorDst\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"MoveStake\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validator\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Stake\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"validator\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Unstake\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"delegator\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"}],\"name\":\"claimRewards\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"zrc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"distribute\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getAllValidators\",\"outputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"operatorAddress\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"consensusPubKey\",\"type\":\"string\"},{\"internalType\":\"bool\",\"name\":\"jailed\",\"type\":\"bool\"},{\"internalType\":\"enumBondStatus\",\"name\":\"bondStatus\",\"type\":\"uint8\"}],\"internalType\":\"structValidator[]\",\"name\":\"validators\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"delegator\",\"type\":\"address\"}],\"name\":\"getDelegatorValidators\",\"outputs\":[{\"internalType\":\"string[]\",\"name\":\"validators\",\"type\":\"string[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"delegator\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"}],\"name\":\"getRewards\",\"outputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"denom\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"internalType\":\"structDecCoin[]\",\"name\":\"rewards\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"}],\"name\":\"getShares\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"shares\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validatorSrc\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"validatorDst\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"moveStake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"stake\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"validator\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"unstake\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"completionTime\",\"type\":\"int64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // IStakingABI is the input ABI used to generate the binding from.
@@ -219,6 +225,68 @@ func (_IStaking *IStakingCallerSession) GetAllValidators() ([]Validator, error) 
 	return _IStaking.Contract.GetAllValidators(&_IStaking.CallOpts)
 }
 
+// GetDelegatorValidators is a free data retrieval call binding the contract method 0xb6a216ae.
+//
+// Solidity: function getDelegatorValidators(address delegator) view returns(string[] validators)
+func (_IStaking *IStakingCaller) GetDelegatorValidators(opts *bind.CallOpts, delegator common.Address) ([]string, error) {
+	var out []interface{}
+	err := _IStaking.contract.Call(opts, &out, "getDelegatorValidators", delegator)
+
+	if err != nil {
+		return *new([]string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]string)).(*[]string)
+
+	return out0, err
+
+}
+
+// GetDelegatorValidators is a free data retrieval call binding the contract method 0xb6a216ae.
+//
+// Solidity: function getDelegatorValidators(address delegator) view returns(string[] validators)
+func (_IStaking *IStakingSession) GetDelegatorValidators(delegator common.Address) ([]string, error) {
+	return _IStaking.Contract.GetDelegatorValidators(&_IStaking.CallOpts, delegator)
+}
+
+// GetDelegatorValidators is a free data retrieval call binding the contract method 0xb6a216ae.
+//
+// Solidity: function getDelegatorValidators(address delegator) view returns(string[] validators)
+func (_IStaking *IStakingCallerSession) GetDelegatorValidators(delegator common.Address) ([]string, error) {
+	return _IStaking.Contract.GetDelegatorValidators(&_IStaking.CallOpts, delegator)
+}
+
+// GetRewards is a free data retrieval call binding the contract method 0x93428792.
+//
+// Solidity: function getRewards(address delegator, string validator) view returns((string,uint256)[] rewards)
+func (_IStaking *IStakingCaller) GetRewards(opts *bind.CallOpts, delegator common.Address, validator string) ([]DecCoin, error) {
+	var out []interface{}
+	err := _IStaking.contract.Call(opts, &out, "getRewards", delegator, validator)
+
+	if err != nil {
+		return *new([]DecCoin), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]DecCoin)).(*[]DecCoin)
+
+	return out0, err
+
+}
+
+// GetRewards is a free data retrieval call binding the contract method 0x93428792.
+//
+// Solidity: function getRewards(address delegator, string validator) view returns((string,uint256)[] rewards)
+func (_IStaking *IStakingSession) GetRewards(delegator common.Address, validator string) ([]DecCoin, error) {
+	return _IStaking.Contract.GetRewards(&_IStaking.CallOpts, delegator, validator)
+}
+
+// GetRewards is a free data retrieval call binding the contract method 0x93428792.
+//
+// Solidity: function getRewards(address delegator, string validator) view returns((string,uint256)[] rewards)
+func (_IStaking *IStakingCallerSession) GetRewards(delegator common.Address, validator string) ([]DecCoin, error) {
+	return _IStaking.Contract.GetRewards(&_IStaking.CallOpts, delegator, validator)
+}
+
 // GetShares is a free data retrieval call binding the contract method 0x0d1b3daf.
 //
 // Solidity: function getShares(address staker, string validator) view returns(uint256 shares)
@@ -248,6 +316,27 @@ func (_IStaking *IStakingSession) GetShares(staker common.Address, validator str
 // Solidity: function getShares(address staker, string validator) view returns(uint256 shares)
 func (_IStaking *IStakingCallerSession) GetShares(staker common.Address, validator string) (*big.Int, error) {
 	return _IStaking.Contract.GetShares(&_IStaking.CallOpts, staker, validator)
+}
+
+// ClaimRewards is a paid mutator transaction binding the contract method 0x54dbdc38.
+//
+// Solidity: function claimRewards(address delegator, string validator) returns(bool success)
+func (_IStaking *IStakingTransactor) ClaimRewards(opts *bind.TransactOpts, delegator common.Address, validator string) (*types.Transaction, error) {
+	return _IStaking.contract.Transact(opts, "claimRewards", delegator, validator)
+}
+
+// ClaimRewards is a paid mutator transaction binding the contract method 0x54dbdc38.
+//
+// Solidity: function claimRewards(address delegator, string validator) returns(bool success)
+func (_IStaking *IStakingSession) ClaimRewards(delegator common.Address, validator string) (*types.Transaction, error) {
+	return _IStaking.Contract.ClaimRewards(&_IStaking.TransactOpts, delegator, validator)
+}
+
+// ClaimRewards is a paid mutator transaction binding the contract method 0x54dbdc38.
+//
+// Solidity: function claimRewards(address delegator, string validator) returns(bool success)
+func (_IStaking *IStakingTransactorSession) ClaimRewards(delegator common.Address, validator string) (*types.Transaction, error) {
+	return _IStaking.Contract.ClaimRewards(&_IStaking.TransactOpts, delegator, validator)
 }
 
 // Distribute is a paid mutator transaction binding the contract method 0xfb932108.
@@ -332,6 +421,160 @@ func (_IStaking *IStakingSession) Unstake(staker common.Address, validator strin
 // Solidity: function unstake(address staker, string validator, uint256 amount) returns(int64 completionTime)
 func (_IStaking *IStakingTransactorSession) Unstake(staker common.Address, validator string, amount *big.Int) (*types.Transaction, error) {
 	return _IStaking.Contract.Unstake(&_IStaking.TransactOpts, staker, validator, amount)
+}
+
+// IStakingClaimedRewardsIterator is returned from FilterClaimedRewards and is used to iterate over the raw logs and unpacked data for ClaimedRewards events raised by the IStaking contract.
+type IStakingClaimedRewardsIterator struct {
+	Event *IStakingClaimedRewards // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *IStakingClaimedRewardsIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(IStakingClaimedRewards)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(IStakingClaimedRewards)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *IStakingClaimedRewardsIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *IStakingClaimedRewardsIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// IStakingClaimedRewards represents a ClaimedRewards event raised by the IStaking contract.
+type IStakingClaimedRewards struct {
+	ClaimAddress common.Address
+	Zrc20Token   common.Address
+	Amount       *big.Int
+	Raw          types.Log // Blockchain specific contextual infos
+}
+
+// FilterClaimedRewards is a free log retrieval operation binding the contract event 0x2ef606d064225d24c1514dc94907c134faee1237445c2f63f410cce0852b2054.
+//
+// Solidity: event ClaimedRewards(address indexed claim_address, address indexed zrc20_token, uint256 amount)
+func (_IStaking *IStakingFilterer) FilterClaimedRewards(opts *bind.FilterOpts, claim_address []common.Address, zrc20_token []common.Address) (*IStakingClaimedRewardsIterator, error) {
+
+	var claim_addressRule []interface{}
+	for _, claim_addressItem := range claim_address {
+		claim_addressRule = append(claim_addressRule, claim_addressItem)
+	}
+	var zrc20_tokenRule []interface{}
+	for _, zrc20_tokenItem := range zrc20_token {
+		zrc20_tokenRule = append(zrc20_tokenRule, zrc20_tokenItem)
+	}
+
+	logs, sub, err := _IStaking.contract.FilterLogs(opts, "ClaimedRewards", claim_addressRule, zrc20_tokenRule)
+	if err != nil {
+		return nil, err
+	}
+	return &IStakingClaimedRewardsIterator{contract: _IStaking.contract, event: "ClaimedRewards", logs: logs, sub: sub}, nil
+}
+
+// WatchClaimedRewards is a free log subscription operation binding the contract event 0x2ef606d064225d24c1514dc94907c134faee1237445c2f63f410cce0852b2054.
+//
+// Solidity: event ClaimedRewards(address indexed claim_address, address indexed zrc20_token, uint256 amount)
+func (_IStaking *IStakingFilterer) WatchClaimedRewards(opts *bind.WatchOpts, sink chan<- *IStakingClaimedRewards, claim_address []common.Address, zrc20_token []common.Address) (event.Subscription, error) {
+
+	var claim_addressRule []interface{}
+	for _, claim_addressItem := range claim_address {
+		claim_addressRule = append(claim_addressRule, claim_addressItem)
+	}
+	var zrc20_tokenRule []interface{}
+	for _, zrc20_tokenItem := range zrc20_token {
+		zrc20_tokenRule = append(zrc20_tokenRule, zrc20_tokenItem)
+	}
+
+	logs, sub, err := _IStaking.contract.WatchLogs(opts, "ClaimedRewards", claim_addressRule, zrc20_tokenRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(IStakingClaimedRewards)
+				if err := _IStaking.contract.UnpackLog(event, "ClaimedRewards", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseClaimedRewards is a log parse operation binding the contract event 0x2ef606d064225d24c1514dc94907c134faee1237445c2f63f410cce0852b2054.
+//
+// Solidity: event ClaimedRewards(address indexed claim_address, address indexed zrc20_token, uint256 amount)
+func (_IStaking *IStakingFilterer) ParseClaimedRewards(log types.Log) (*IStakingClaimedRewards, error) {
+	event := new(IStakingClaimedRewards)
+	if err := _IStaking.contract.UnpackLog(event, "ClaimedRewards", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
 }
 
 // IStakingDistributedIterator is returned from FilterDistributed and is used to iterate over the raw logs and unpacked data for Distributed events raised by the IStaking contract.

@@ -240,6 +240,7 @@ func setup(t *testing.T) (sdk.Context, *Contract, abi.ABI, keeper.SDKKeepers, *v
 		&sdkKeepers.StakingKeeper,
 		*fungibleKeeper,
 		sdkKeepers.BankKeeper,
+		sdkKeepers.DistributionKeeper,
 		appCodec,
 		gasConfig,
 	)
@@ -313,6 +314,7 @@ func newTestSuite(t *testing.T) testSuite {
 		&sdkKeepers.StakingKeeper,
 		*fungibleKeeper,
 		sdkKeepers.BankKeeper,
+		sdkKeepers.DistributionKeeper,
 		appCodec,
 		gasConfig,
 	)

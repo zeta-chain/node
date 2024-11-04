@@ -2,6 +2,7 @@ package types
 
 import (
 	"math/big"
+	"strings"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,4 +49,9 @@ func CreateCoinSet(zrc20address common.Address, amount *big.Int) (sdk.Coins, err
 	}
 
 	return coinSet, nil
+}
+
+// CoinIsZRC20 checks if a given coin is a ZRC20 coin based on its denomination.
+func CoinIsZRC20(denom string) bool {
+	return strings.HasPrefix(denom, config.ZRC20DenomPrefix)
 }
