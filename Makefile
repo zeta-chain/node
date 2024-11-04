@@ -3,7 +3,7 @@
 PACKAGE_NAME := github.com/zeta-chain/node
 NODE_VERSION := $(shell ./version.sh)
 NODE_COMMIT := $(shell [ -z "${NODE_COMMIT}" ] && git log -1 --format='%H' || echo ${NODE_COMMIT} )
-BUILDTIME := $(shell date -u +"%Y%m%d.%H%M%S" )
+NODE_BUILDTIME := "0000-00-00T00:00:00Z"
 DOCKER ?= docker
 # allow setting of NODE_COMPOSE_ARGS to pass additional args to docker compose
 # useful for setting profiles and/ort optional overlays
@@ -11,19 +11,33 @@ DOCKER ?= docker
 DOCKER_COMPOSE ?= $(DOCKER) compose -f docker-compose.yml $(NODE_COMPOSE_ARGS)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 GOFLAGS := ""
-GOLANG_CROSS_VERSION ?= v1.22.7
 GOPATH ?= '$(HOME)/go'
+
+# common goreaser command definition
+GOLANG_CROSS_VERSION ?= v1.22.7@sha256:24b2d75007f0ec8e35d01f3a8efa40c197235b200a1a91422d78b851f67ecce4
+GORELEASER := $(DOCKER) run \
+	--rm \
+	--privileged \
+	-e CGO_ENABLED=1 \
+	-v /var/run/docker.sock:/var/run/docker.sock \
+	-v `pwd`:/go/src/$(PACKAGE_NAME) \
+	-w /go/src/$(PACKAGE_NAME) \
+	-e "GITHUB_TOKEN=${GITHUB_TOKEN}" \
+	ghcr.io/goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION}
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/cosmos/cosmos-sdk/version.ServerName=zetacored \
 	-X github.com/cosmos/cosmos-sdk/version.ClientName=zetaclientd \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(NODE_VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(NODE_COMMIT) \
+	-X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb \
 	-X github.com/zeta-chain/node/pkg/constant.Name=zetacored \
 	-X github.com/zeta-chain/node/pkg/constant.Version=$(NODE_VERSION) \
 	-X github.com/zeta-chain/node/pkg/constant.CommitHash=$(NODE_COMMIT) \
-	-X github.com/zeta-chain/node/pkg/constant.BuildTime=$(BUILDTIME) \
-	-X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
+	-X github.com/zeta-chain/node/pkg/constant.BuildTime=$(NODE_BUILDTIME) \
+	-X main.BuildTime=$(NODE_BUILDTIME) \
+	-buildid= \
+	-s -w
 
 BUILD_FLAGS := -ldflags '$(ldflags)' -tags pebbledb,ledger
 
@@ -429,33 +443,18 @@ test-sim-after-import-long
 ###                                GoReleaser  		                        ###
 ###############################################################################
 
+release-snapshot:
+	$(GORELEASER) --clean --skip=validate --skip=publish --snapshot
+
 release-dry-run:
-	docker run \
-		--rm \
-		--privileged \
-		-e CGO_ENABLED=1 \
-		-v /var/run/docker.sock:/var/run/docker.sock \
-		-v `pwd`:/go/src/$(PACKAGE_NAME) \
-		-v ${GOPATH}/pkg:/go/pkg \
-		-w /go/src/$(PACKAGE_NAME) \
-		ghcr.io/goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
-		--clean --skip=validate --skip=publish --snapshot
+	$(GORELEASER) --clean --skip=validate --skip=publish
 
 release:
 	@if [ ! -f ".release-env" ]; then \
 		echo "\033[91m.release-env is required for release\033[0m";\
 		exit 1;\
 	fi
-	docker run \
-		--rm \
-		--privileged \
-		-e CGO_ENABLED=1 \
-		-e "GITHUB_TOKEN=${GITHUB_TOKEN}" \
-		-v /var/run/docker.sock:/var/run/docker.sock \
-		-v `pwd`:/go/src/$(PACKAGE_NAME) \
-		-w /go/src/$(PACKAGE_NAME) \
-		ghcr.io/goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
-		release --clean --skip=validate
+	$(GORELEASER) --clean --skip=validate
 
 ###############################################################################
 ###                     Local Mainnet Development                           ###
