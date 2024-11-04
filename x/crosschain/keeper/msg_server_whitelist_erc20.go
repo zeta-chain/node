@@ -48,7 +48,7 @@ func (k msgServer) WhitelistERC20(
 			)
 		}
 
-	case chain.IsSVMChain():
+	case chain.IsSolanaChain():
 		_, err := solana.PublicKeyFromBase58(msg.Erc20Address)
 		if err != nil {
 			return nil, errorsmod.Wrapf(

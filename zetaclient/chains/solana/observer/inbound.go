@@ -281,7 +281,7 @@ func (ob *Observer) ParseInboundAsDeposit(
 	}
 
 	// check if the instruction is a deposit or not
-	if inst.Discriminator != solanacontracts.DiscriminatorDeposit() {
+	if inst.Discriminator != solanacontracts.DiscriminatorDeposit {
 		return nil, nil
 	}
 

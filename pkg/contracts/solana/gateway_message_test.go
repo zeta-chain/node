@@ -29,3 +29,21 @@ func Test_MsgWithdrawHash(t *testing.T) {
 		require.True(t, bytes.Equal(hash[:], wantHashBytes))
 	})
 }
+
+func Test_MsgWhitelistHash(t *testing.T) {
+	t.Run("should pass for archived inbound, receipt and cctx", func(t *testing.T) {
+		// #nosec G115 always positive
+		chainID := uint64(chains.SolanaLocalnet.ChainId)
+		nonce := uint64(0)
+		whitelistCandidate := solana.MustPublicKeyFromBase58("37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ")
+		whitelistEntry := solana.MustPublicKeyFromBase58("2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s")
+
+		wantHash := "cde8fa3ab24b50320db1c47f30492e789177d28e76208176f0a52b8ed54ce2dd"
+		wantHashBytes, err := hex.DecodeString(wantHash)
+		require.NoError(t, err)
+
+		// create new withdraw message
+		hash := contracts.NewMsgWhitelist(whitelistCandidate, whitelistEntry, chainID, nonce).Hash()
+		require.True(t, bytes.Equal(hash[:], wantHashBytes))
+	})
+}

@@ -99,7 +99,7 @@ func ParseInstructionWithdraw(instruction solana.CompiledInstruction) (*Withdraw
 	}
 
 	// check the discriminator to ensure it's a 'withdraw' instruction
-	if inst.Discriminator != DiscriminatorWithdraw() {
+	if inst.Discriminator != DiscriminatorWithdraw {
 		return nil, fmt.Errorf("not a withdraw instruction: %v", inst.Discriminator)
 	}
 
@@ -167,7 +167,7 @@ func ParseInstructionWhitelist(instruction solana.CompiledInstruction) (*Whiteli
 	}
 
 	// check the discriminator to ensure it's a 'whitelist_spl_mint' instruction
-	if inst.Discriminator != DiscriminatorWhitelistSplMint() {
+	if inst.Discriminator != DiscriminatorWhitelistSplMint {
 		return nil, fmt.Errorf("not a whitelist_spl_mint instruction: %v", inst.Discriminator)
 	}
 

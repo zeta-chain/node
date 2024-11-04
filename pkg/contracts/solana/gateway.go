@@ -19,35 +19,20 @@ const (
 	AccountsNumDeposit = 3
 )
 
-// DiscriminatorInitialize returns the discriminator for Solana gateway 'initialize' instruction
-func DiscriminatorInitialize() [8]byte {
-	return idlgateway.IDLGateway.GetDiscriminator("initialize")
-}
-
-// DiscriminatorDeposit returns the discriminator for Solana gateway 'deposit' instruction
-func DiscriminatorDeposit() [8]byte {
-	return idlgateway.IDLGateway.GetDiscriminator("deposit")
-}
-
-// DiscriminatorDepositSPL returns the discriminator for Solana gateway 'deposit_spl_token' instruction
-func DiscriminatorDepositSPL() [8]byte {
-	return idlgateway.IDLGateway.GetDiscriminator("deposit_spl_token")
-}
-
-// DiscriminatorWithdraw returns the discriminator for Solana gateway 'withdraw' instruction
-func DiscriminatorWithdraw() [8]byte {
-	return idlgateway.IDLGateway.GetDiscriminator("withdraw")
-}
-
-// DiscriminatorWithdrawSPL returns the discriminator for Solana gateway 'withdraw_spl_token' instruction
-func DiscriminatorWithdrawSPL() [8]byte {
-	return idlgateway.IDLGateway.GetDiscriminator("withdraw_spl_token")
-}
-
-// DiscriminatorWhitelist returns the discriminator for Solana gateway 'whitelist_spl_mint' instruction
-func DiscriminatorWhitelistSplMint() [8]byte {
-	return idlgateway.IDLGateway.GetDiscriminator("whitelist_spl_mint")
-}
+var (
+	// DiscriminatorInitialize returns the discriminator for Solana gateway 'initialize' instruction
+	DiscriminatorInitialize = idlgateway.IDLGateway.GetDiscriminator("initialize")
+	// DiscriminatorDeposit returns the discriminator for Solana gateway 'deposit' instruction
+	DiscriminatorDeposit = idlgateway.IDLGateway.GetDiscriminator("deposit")
+	// DiscriminatorDepositSPL returns the discriminator for Solana gateway 'deposit_spl_token' instruction
+	DiscriminatorDepositSPL = idlgateway.IDLGateway.GetDiscriminator("deposit_spl_token")
+	// DiscriminatorWithdraw returns the discriminator for Solana gateway 'withdraw' instruction
+	DiscriminatorWithdraw = idlgateway.IDLGateway.GetDiscriminator("withdraw")
+	// DiscriminatorWithdrawSPL returns the discriminator for Solana gateway 'withdraw_spl_token' instruction
+	DiscriminatorWithdrawSPL = idlgateway.IDLGateway.GetDiscriminator("withdraw_spl_token")
+	// DiscriminatorWhitelist returns the discriminator for Solana gateway 'whitelist_spl_mint' instruction
+	DiscriminatorWhitelistSplMint = idlgateway.IDLGateway.GetDiscriminator("whitelist_spl_mint")
+)
 
 // ParseGatewayAddressAndPda parses the gateway id and program derived address from the given string
 func ParseGatewayIDAndPda(address string) (solana.PublicKey, solana.PublicKey, error) {

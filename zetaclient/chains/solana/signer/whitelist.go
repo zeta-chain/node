@@ -12,8 +12,8 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// SignMsgWhitelist signs a whitelist message (for gateway whitelist_spl_mint instruction) with TSS.
-func (signer *Signer) SignMsgWhitelist(
+// createAndSignMsgWhitelist creates and signs a whitelist message (for gateway whitelist_spl_mint instruction) with TSS.
+func (signer *Signer) createAndSignMsgWhitelist(
 	ctx context.Context,
 	params *types.OutboundParams,
 	height uint64,
@@ -41,13 +41,13 @@ func (signer *Signer) SignMsgWhitelist(
 	return msg.SetSignature(signature), nil
 }
 
-// SignWhitelistTx wraps the whitelist 'msg' into a Solana transaction and signs it with the relayer key.
-func (signer *Signer) SignWhitelistTx(ctx context.Context, msg *contracts.MsgWhitelist) (*solana.Transaction, error) {
+// signWhitelistTx wraps the whitelist 'msg' into a Solana transaction and signs it with the relayer key.
+func (signer *Signer) signWhitelistTx(ctx context.Context, msg *contracts.MsgWhitelist) (*solana.Transaction, error) {
 	// create whitelist_spl_mint instruction with program call data
 	var err error
 	var inst solana.GenericInstruction
 	inst.DataBytes, err = borsh.Serialize(contracts.WhitelistInstructionParams{
-		Discriminator: contracts.DiscriminatorWhitelistSplMint(),
+		Discriminator: contracts.DiscriminatorWhitelistSplMint,
 		Signature:     msg.SigRS(),
 		RecoveryID:    msg.SigV(),
 		MessageHash:   msg.Hash(),

@@ -51,7 +51,7 @@ func (r *E2ERunner) CreateDepositInstruction(
 
 	var err error
 	inst.DataBytes, err = borsh.Serialize(solanacontract.DepositInstructionParams{
-		Discriminator: solanacontract.DiscriminatorDeposit(),
+		Discriminator: solanacontract.DiscriminatorDeposit,
 		Amount:        amount,
 		Memo:          append(receiver.Bytes(), data...),
 	})

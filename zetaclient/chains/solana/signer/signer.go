@@ -127,6 +127,7 @@ func (signer *Signer) TryProcessOutbound(
 
 	// skip relaying the transaction if this signer hasn't set the relayer key
 	if !signer.HasRelayerKey() {
+		logger.Warn().Msgf("TryProcessOutbound: no relayer key configured")
 		return
 	}
 
@@ -152,7 +153,7 @@ func (signer *Signer) TryProcessOutbound(
 		tx = withdrawTx
 	default:
 		logger.Error().
-			Msgf("TryProcessOutbound: can only send SOL to the Solana network for chain %d nonce %d", chainID, nonce)
+			Msgf("TryProcessOutbound: can only send SOL to the Solana network")
 		return
 	}
 
@@ -171,10 +172,9 @@ func (signer *Signer) TryProcessOutbound(
 		rpc.TransactionOpts{PreflightCommitment: rpc.CommitmentProcessed},
 	)
 	if err != nil {
-		signer.Logger().
-			Std.Warn().
+		logger.Error().
 			Err(err).
-			Msgf("TryProcessOutbound: broadcast error for chain %d nonce %d", chainID, nonce)
+			Msgf("TryProcessOutbound: broadcast error")
 		return
 	}
 
@@ -205,13 +205,13 @@ func (signer *Signer) prepareWithdrawTx(
 	}
 
 	// sign gateway withdraw message by TSS
-	msg, err := signer.SignMsgWithdraw(ctx, params, height, cancelTx)
+	msg, err := signer.createAndSignMsgWithdraw(ctx, params, height, cancelTx)
 	if err != nil {
 		return nil, err
 	}
 
 	// sign the withdraw transaction by relayer key
-	tx, err := signer.SignWithdrawTx(ctx, *msg)
+	tx, err := signer.signWithdrawTx(ctx, *msg)
 	if err != nil {
 		return nil, err
 	}
@@ -242,13 +242,13 @@ func (signer *Signer) prepareWhitelistTx(
 	}
 
 	// sign gateway whitelist message by TSS
-	msg, err := signer.SignMsgWhitelist(ctx, params, height, pk, whitelistEntryPDA)
+	msg, err := signer.createAndSignMsgWhitelist(ctx, params, height, pk, whitelistEntryPDA)
 	if err != nil {
 		return nil, err
 	}
 
 	// sign the whitelist transaction by relayer key
-	tx, err := signer.SignWhitelistTx(ctx, msg)
+	tx, err := signer.signWhitelistTx(ctx, msg)
 	if err != nil {
 		return nil, err
 	}

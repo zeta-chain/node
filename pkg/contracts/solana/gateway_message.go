@@ -110,9 +110,11 @@ func (msg *MsgWithdraw) Signer() (common.Address, error) {
 
 // MsgWhitelist is the message for the Solana gateway whitelist_spl_mint instruction
 type MsgWhitelist struct {
-	// whitelistCandidate is the whitelist candidate
+	// whitelistCandidate is the SPL token to be whitelisted in gateway program
 	whitelistCandidate solana.PublicKey
-	whitelistEntry     solana.PublicKey
+
+	// whitelistEntry is the entry in gateway program representing whitelisted SPL token
+	whitelistEntry solana.PublicKey
 
 	// chainID is the chain ID of Solana chain
 	chainID uint64
