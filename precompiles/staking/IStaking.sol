@@ -23,7 +23,7 @@ struct Validator {
     BondStatus bondStatus;
 }
 
-/// @notice Cosmos coin representation.abi
+/// @notice Cosmos coin representation.
 /// ref: https://github.com/cosmos/cosmos-sdk/blob/470e0859462b28a53adb411843539561d11d7bf5/x/distribution/README.md?plain=1#L139
 struct DecCoin {
     string denom;
@@ -74,7 +74,7 @@ interface IStaking {
     );
 
     /// @notice ClaimedRewards is emitted when a delegator claims ZRC20.
-    /// @param claim_address Distributor address.
+    /// @param claim_address Delegator address where the funds were withdrawed.
     /// @param zrc20_token ZRC20 token address.
     /// @param amount Claimed amount.
     event ClaimedRewards(

@@ -81,12 +81,7 @@ func (c *Contract) claimRewards(
 	// - Unlock the ZRC20 coins.
 	for _, coin := range coins {
 		// Filter out invalid coins.
-		if !coin.IsValid() || !coin.Amount.IsPositive() {
-			continue
-		}
-
-		// Filter out non-ZRC20 coins.
-		if !precompiletypes.CoinIsZRC20(coin.Denom) {
+		if !coin.IsValid() || !coin.Amount.IsPositive() || !precompiletypes.CoinIsZRC20(coin.Denom) {
 			continue
 		}
 
