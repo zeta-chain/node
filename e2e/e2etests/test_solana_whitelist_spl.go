@@ -43,14 +43,12 @@ func TestSolanaWhitelistSPL(r *runner.E2ERunner, _ []string) {
 	))
 	require.NoError(r, err)
 
-	// retrieve zrc20 and cctx from event
-	whitelistCCTXIndex, err := txserver.FetchAttributeFromTxResponse(res, "whitelist_cctx_index")
-	require.NoError(r, err)
+	event, ok := txserver.EventOfType[*crosschaintypes.EventERC20Whitelist](res.Events)
+	require.True(r, ok, "no EventERC20Whitelist in %s", res.TxHash)
+	erc20zrc20Addr := event.Zrc20Address
+	whitelistCCTXIndex := event.WhitelistCctxIndex
 
-	zrc20Addr, err := txserver.FetchAttributeFromTxResponse(res, "zrc20_address")
-	require.NoError(r, err)
-
-	err = r.ZetaTxServer.InitializeLiquidityCap(zrc20Addr)
+	err = r.ZetaTxServer.InitializeLiquidityCaps(erc20zrc20Addr)
 	require.NoError(r, err)
 
 	// ensure CCTX created
