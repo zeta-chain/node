@@ -132,6 +132,7 @@ const (
 	TestPauseERC20CustodyName         = "pause_erc20_custody"
 	TestMigrateERC20CustodyFundsName  = "migrate_erc20_custody_funds"
 	TestMigrateTSSName                = "migrate_TSS"
+	TestSolanaWhitelistSPLName        = "solana_whitelist_spl"
 
 	/*
 	 V2 smart contract tests
@@ -454,6 +455,12 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSolanaWithdrawRestricted,
+	),
+	runner.NewE2ETest(
+		TestSolanaWhitelistSPLName,
+		"whitelist SPL",
+		[]runner.ArgDefinition{},
+		TestSolanaWhitelistSPL,
 	),
 	/*
 	 TON tests

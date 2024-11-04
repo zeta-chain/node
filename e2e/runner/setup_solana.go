@@ -49,12 +49,11 @@ func (r *E2ERunner) SetupSolana(deployerPrivateKey string) {
 	accountSlice = append(accountSlice, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
 	accountSlice = append(accountSlice, solana.Meta(pdaComputed).WRITE())
 	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
-	accountSlice = append(accountSlice, solana.Meta(r.GatewayProgram))
 	inst.ProgID = r.GatewayProgram
 	inst.AccountValues = accountSlice
 
 	inst.DataBytes, err = borsh.Serialize(solanacontracts.InitializeParams{
-		Discriminator: solanacontracts.DiscriminatorInitialize(),
+		Discriminator: solanacontracts.DiscriminatorInitialize,
 		TssAddress:    r.TSSAddress,
 		// #nosec G115 chain id always positive
 		ChainID: uint64(chains.SolanaLocalnet.ChainId),
@@ -62,7 +61,7 @@ func (r *E2ERunner) SetupSolana(deployerPrivateKey string) {
 	require.NoError(r, err)
 
 	// create and sign the transaction
-	signedTx := r.CreateSignedTransaction([]solana.Instruction{&inst}, privkey)
+	signedTx := r.CreateSignedTransaction([]solana.Instruction{&inst}, privkey, []solana.PrivateKey{})
 
 	// broadcast the transaction and wait for finalization
 	_, out := r.BroadcastTxSync(signedTx)

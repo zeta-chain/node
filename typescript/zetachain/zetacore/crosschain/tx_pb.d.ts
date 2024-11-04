@@ -186,6 +186,8 @@ export declare class MsgAddInboundTrackerResponse extends Message<MsgAddInboundT
 }
 
 /**
+ * TODO: https://github.com/zeta-chain/node/issues/3083
+ *
  * @generated from message zetachain.zetacore.crosschain.MsgWhitelistERC20
  */
 export declare class MsgWhitelistERC20 extends Message<MsgWhitelistERC20> {

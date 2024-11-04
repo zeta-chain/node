@@ -71,6 +71,7 @@ message MsgAddInboundTracker {
 }
 message MsgAddInboundTrackerResponse {}
 
+// TODO: https://github.com/zeta-chain/node/issues/3083
 message MsgWhitelistERC20 {
   string creator = 1;
   string erc20_address = 2;

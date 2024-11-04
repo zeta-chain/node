@@ -96,6 +96,10 @@ func (chain Chain) IsEVMChain() bool {
 	return chain.Vm == Vm_evm
 }
 
+func (chain Chain) IsSolanaChain() bool {
+	return chain.Consensus == Consensus_solana_consensus
+}
+
 func (chain Chain) IsBitcoinChain() bool {
 	return chain.Consensus == Consensus_bitcoin
 }

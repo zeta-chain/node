@@ -337,6 +337,7 @@ func (m *MsgAddInboundTrackerResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddInboundTrackerResponse proto.InternalMessageInfo
 
+// TODO: https://github.com/zeta-chain/node/issues/3083
 type MsgWhitelistERC20 struct {
 	Creator      string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	Erc20Address string `protobuf:"bytes,2,opt,name=erc20_address,json=erc20Address,proto3" json:"erc20_address,omitempty"`
