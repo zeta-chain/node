@@ -88,19 +88,20 @@ func (s *Signer) TryProcessOutbound(
 	}()
 
 	outcome, err := s.ProcessOutbound(ctx, cctx, zetacore, zetaBlockHeight)
+
+	lf := map[string]any{
+		"outbound.id":      outboundID,
+		"outbound.nonce":   cctx.GetCurrentOutboundParam().TssNonce,
+		"outbound.outcome": string(outcome),
+	}
+
 	switch {
 	case err != nil:
-		s.Logger().Std.Error().Err(err).
-			Str("outbound.id", outboundID).
-			Uint64("outbound.nonce", cctx.GetCurrentOutboundParam().TssNonce).
-			Str("outbound.outcome", string(outcome)).
-			Msg("Unable to ProcessOutbound")
+		s.Logger().Std.Error().Err(err).Fields(lf).Msg("Unable to ProcessOutbound")
 	case outcome != Success:
-		s.Logger().Std.Warn().
-			Str("outbound.id", outboundID).
-			Uint64("outbound.nonce", cctx.GetCurrentOutboundParam().TssNonce).
-			Str("outbound.outcome", string(outcome)).
-			Msg("Unsuccessful outcome for ProcessOutbound")
+		s.Logger().Std.Warn().Fields(lf).Msg("Unsuccessful outcome for ProcessOutbound")
+	default:
+		s.Logger().Std.Info().Fields(lf).Msg("Processed outbound")
 	}
 }
 

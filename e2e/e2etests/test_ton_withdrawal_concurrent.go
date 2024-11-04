@@ -25,44 +25,35 @@ func TestTONWithdrawConcurrent(r *runner.E2ERunner, _ []string) {
 	_, deployer := r.Ctx, r.TONDeployer
 
 	const recipientsCount = 10
-	type withdrawal struct {
-		recipient ton.AccountID
-		amount    math.Uint
-	}
 
-	var (
-		testCases []withdrawal
-		wg        sync.WaitGroup
-	)
-
-	// Given multiple recipients WITHOUT deployed wallet-contracts
-	// and sample withdrawal amounts between 1 and 5 TON
-	for i := 0; i < recipientsCount; i++ {
-		// #nosec G404: it's a test
-		amount := 1 + rand.Intn(5)
-		testCases = append(testCases, withdrawal{
-			// #nosec G115 test - always in range
-			amount:    toncontracts.Coins(uint64(amount)),
-			recipient: sample.GenerateTONAccountID(),
-		})
-	}
-
-	// ACT
 	// Fire withdrawals. Note that zevm sender is r.ZEVMAuth
-	for i, tc := range testCases {
+	var wg sync.WaitGroup
+	for i := 0; i < recipientsCount; i++ {
+		// ARRANGE
+		// Given multiple recipients WITHOUT deployed wallet-contracts
+		// and withdrawal amounts between 1 and 5 TON
+		var (
+			// #nosec G404: it's a test
+			amountCoins = 1 + rand.Intn(5)
+			// #nosec G115 test - always in range
+			amount    = toncontracts.Coins(uint64(amountCoins))
+			recipient = sample.GenerateTONAccountID()
+		)
+
+		// ACT
 		r.Logger.Info(
 			"Withdrawal #%d: sending %s to %s",
 			i+1,
-			toncontracts.FormatCoins(tc.amount),
-			tc.recipient.ToRaw(),
+			toncontracts.FormatCoins(amount),
+			recipient.ToRaw(),
 		)
 
-		approvedAmount := tc.amount.Add(toncontracts.Coins(1))
-		tx := r.SendWithdrawTONZRC20(tc.recipient, tc.amount.BigInt(), approvedAmount.BigInt())
+		approvedAmount := amount.Add(toncontracts.Coins(1))
+		tx := r.SendWithdrawTONZRC20(recipient, amount.BigInt(), approvedAmount.BigInt())
 
 		wg.Add(1)
 
-		go func(number int, tx *ethtypes.Transaction) {
+		go func(number int, recipient ton.AccountID, amount math.Uint, tx *ethtypes.Transaction) {
 			defer wg.Done()
 
 			// wait for the cctx to be mined
@@ -73,10 +64,10 @@ func TestTONWithdrawConcurrent(r *runner.E2ERunner, _ []string) {
 			r.Logger.Info("Withdrawal #%d complete! cctx index: %s", number, cctx.Index)
 
 			// Check recipient's balance ON TON
-			balance, err := deployer.GetBalanceOf(r.Ctx, tc.recipient, false)
-			require.NoError(r, err, "failed to get balance of %s", tc.recipient.ToRaw())
-			require.Equal(r, tc.amount.Uint64(), balance.Uint64())
-		}(i+1, tx)
+			balance, err := deployer.GetBalanceOf(r.Ctx, recipient, false)
+			require.NoError(r, err, "failed to get balance of %s", recipient.ToRaw())
+			require.Equal(r, amount.Uint64(), balance.Uint64())
+		}(i+1, recipient, amount, tx)
 	}
 
 	wg.Wait()
