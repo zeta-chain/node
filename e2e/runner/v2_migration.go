@@ -149,9 +149,9 @@ func (r *E2ERunner) migrateERC20CustodyFunds() {
 	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msgPausing)
 	require.NoError(r, err)
 
-	// fetch cctx index from tx response
-	cctxIndex, err := txserver.FetchAttributeFromTxResponse(res, "cctx_index")
-	require.NoError(r, err)
+	migrationEvent, ok := txserver.EventOfType[*crosschaintypes.EventERC20CustodyFundsMigration](res.Events)
+	require.True(r, ok, "no EventERC20CustodyFundsMigration in %s", res.TxHash)
+	cctxIndex := migrationEvent.CctxIndex
 
 	cctxRes, err := r.CctxClient.Cctx(r.Ctx, &crosschaintypes.QueryGetCctxRequest{Index: cctxIndex})
 	require.NoError(r, err)
@@ -188,9 +188,9 @@ func (r *E2ERunner) migrateERC20CustodyFunds() {
 	res, err = r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msgMigration)
 	require.NoError(r, err)
 
-	// fetch cctx index from tx response
-	cctxIndex, err = txserver.FetchAttributeFromTxResponse(res, "cctx_index")
-	require.NoError(r, err)
+	migrationEvent, ok = txserver.EventOfType[*crosschaintypes.EventERC20CustodyFundsMigration](res.Events)
+	require.True(r, ok, "no EventERC20CustodyFundsMigration in %s", res.TxHash)
+	cctxIndex = migrationEvent.CctxIndex
 
 	cctxRes, err = r.CctxClient.Cctx(r.Ctx, &crosschaintypes.QueryGetCctxRequest{Index: cctxIndex})
 	require.NoError(r, err)
