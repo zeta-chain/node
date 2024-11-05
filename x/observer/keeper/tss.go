@@ -66,6 +66,7 @@ func (k Keeper) RemoveTSS(ctx sdk.Context) {
 	store.Delete([]byte{0})
 }
 
+// TODO define a type for a list of TSS isntead of using []types.TSS
 // GetAllTSS returns all tss historical information from the store
 func (k Keeper) GetAllTSS(ctx sdk.Context) (list []types.TSS) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSHistoryKey))

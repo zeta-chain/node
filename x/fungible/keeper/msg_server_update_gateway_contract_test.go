@@ -1,10 +1,11 @@
 package keeper_test
 
 import (
+	"testing"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
@@ -24,7 +25,7 @@ func TestKeeper_UpdateGatewayContract(t *testing.T) {
 			})
 
 			msgServer := keeper.NewMsgServerImpl(*k)
-			k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+			k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 			admin := sample.AccAddress()
 
 			authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
@@ -100,7 +101,7 @@ func TestKeeper_UpdateGatewayContract(t *testing.T) {
 			})
 
 			msgServer := keeper.NewMsgServerImpl(*k)
-			k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+			k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 			admin := sample.AccAddress()
 
 			authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
@@ -137,7 +138,7 @@ func TestKeeper_UpdateGatewayContract(t *testing.T) {
 		})
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
@@ -160,7 +161,7 @@ func TestKeeper_UpdateGatewayContract(t *testing.T) {
 		})
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)

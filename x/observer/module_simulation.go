@@ -1,11 +1,11 @@
 package observer
 
 import (
-	"math/rand"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/zeta-chain/node/x/observer/simulation"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 const (
@@ -16,13 +16,7 @@ const (
 
 // GenerateGenesisState creates a randomized GenState of the module
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	//observers := make([]string, len(simState.Accounts))
-	//for _, account := range simState.Accounts {
-	//	observers = append(observers, account.Address.String())
-	//}
-	//observerGenesis := types.DefaultGenesis()
-	//observerGenesis.Observers = types.ObserverSet{ObserverList: observers}
-	//simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(observerGenesis)
+	simulation.RandomizedGenState(simState)
 
 }
 
@@ -36,18 +30,13 @@ func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedPropo
 }
 
 // RegisterStoreDecoder registers a decoder
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+}
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	operations := make([]simtypes.WeightedOperation, 0)
-
-	var weightMsgUpdateClientParams int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgUpdateClientParams, &weightMsgUpdateClientParams, nil,
-		func(_ *rand.Rand) {
-			weightMsgUpdateClientParams = defaultWeightMsgUpdateClientParams
-		},
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.Cdc, am.keeper,
 	)
-
-	return operations
 }

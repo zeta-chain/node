@@ -24,7 +24,7 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 		})
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
 
@@ -47,7 +47,7 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 		})
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 		nonadmin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
 
@@ -64,7 +64,7 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 			UseEVMMock:       true,
 		})
 		msgServer := keeper.NewMsgServerImpl(*k)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
 
@@ -83,7 +83,7 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 			UseEVMMock:       true,
 		})
 		msgServer := keeper.NewMsgServerImpl(*k)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
 
@@ -105,7 +105,7 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 			UseEVMMock:       true,
 		})
 		msgServer := keeper.NewMsgServerImpl(*k)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
@@ -128,7 +128,7 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 			UseEVMMock:       true,
 		})
 		msgServer := keeper.NewMsgServerImpl(*k)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
 
@@ -153,7 +153,7 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 			UseEVMMock:       true,
 		})
 		msgServer := keeper.NewMsgServerImpl(*k)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
 

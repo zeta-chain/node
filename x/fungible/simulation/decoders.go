@@ -23,7 +23,7 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvB.Value, &foreignCoinsB)
 			return fmt.Sprintf("%v\n%v", foreignCoinsA, foreignCoinsB)
 		default:
-			panic(fmt.Sprintf("invalid funcgible key prefix %X", kvA.Key[:1]))
+			panic(fmt.Sprintf("invalid fungible key prefix %X", kvA.Key[:1]))
 		}
 	}
 }

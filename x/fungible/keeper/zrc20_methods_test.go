@@ -151,7 +151,7 @@ func Test_ZRC20Transfer(t *testing.T) {
 
 	// Make sure sample.EthAddress() exists as an ethermint account in state.
 	accAddress := sdk.AccAddress(sample.EthAddress().Bytes())
-	ts.fungibleKeeper.GetAuthKeeper().SetAccount(ts.ctx, authtypes.NewBaseAccount(accAddress, nil, 0, 0))
+	ts.fungibleKeeper.GetAccountKeeper().SetAccount(ts.ctx, authtypes.NewBaseAccount(accAddress, nil, 0, 0))
 
 	t.Run("should fail when ZRC20ABI is nil", func(t *testing.T) {
 		_, err := ts.fungibleKeeper.ZRC20Transfer(
@@ -230,7 +230,7 @@ func Test_ZRC20TransferFrom(t *testing.T) {
 
 	// Make sure sample.EthAddress() exists as an ethermint account in state.
 	accAddress := sdk.AccAddress(sample.EthAddress().Bytes())
-	ts.fungibleKeeper.GetAuthKeeper().SetAccount(ts.ctx, authtypes.NewBaseAccount(accAddress, nil, 0, 0))
+	ts.fungibleKeeper.GetAccountKeeper().SetAccount(ts.ctx, authtypes.NewBaseAccount(accAddress, nil, 0, 0))
 
 	t.Run("should fail when ZRC20ABI is nil", func(t *testing.T) {
 		_, err := ts.fungibleKeeper.ZRC20TransferFrom(

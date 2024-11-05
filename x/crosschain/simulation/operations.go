@@ -293,6 +293,10 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, chainID string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 
+		if ctx.BlockHeight() <= 1 {
+			return simtypes.NoOpMsg(types.ModuleName, authz.GasPriceVoter.String(), "block height less than 1"), nil, nil
+		}
+
 		simAccount, randomObserver, err := GetRandomAccountAndObserver(r, ctx, k, accounts)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, authz.GasPriceVoter.String(), "unable to get random account and observer"), nil, err
@@ -330,7 +334,7 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 			CoinsSpentInMsg: spendable,
 		}
 
-		return GenAndDeliverTxWithRandFees(txCtx)
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 

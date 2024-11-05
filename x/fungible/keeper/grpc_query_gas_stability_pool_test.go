@@ -52,7 +52,7 @@ func TestKeeper_GasStabilityPoolBalance(t *testing.T) {
 	t.Run("should return balance", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		chainID := 5
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		setupGasCoin(t, ctx, k, sdkk.EvmKeeper, int64(chainID), "foobar", "foobar")
@@ -107,7 +107,7 @@ func TestKeeper_GasStabilityPoolBalanceAll(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseObserverMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		observerMock := keepertest.GetFungibleObserverMock(t, k)
 		chainID := 5

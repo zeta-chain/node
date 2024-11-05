@@ -16,7 +16,7 @@ import (
 
 func TestKeeper_SetGasPrice(t *testing.T) {
 	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 	_, _, _, _, system := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
@@ -50,7 +50,7 @@ func TestKeeper_SetGasPrice(t *testing.T) {
 
 func TestKeeper_SetGasPriceContractNotFound(t *testing.T) {
 	k, ctx, _, _ := keepertest.FungibleKeeper(t)
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 	_, err := k.SetGasPrice(ctx, big.NewInt(1), big.NewInt(42))
 	require.ErrorIs(t, err, types.ErrContractNotFound)
@@ -58,7 +58,7 @@ func TestKeeper_SetGasPriceContractNotFound(t *testing.T) {
 
 func TestKeeper_SetNilGasPrice(t *testing.T) {
 	k, ctx, _, _ := keepertest.FungibleKeeper(t)
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 	_, err := k.SetGasPrice(ctx, big.NewInt(1), nil)
 	require.ErrorIs(t, err, types.ErrNilGasPrice)
@@ -66,7 +66,7 @@ func TestKeeper_SetNilGasPrice(t *testing.T) {
 
 func TestKeeper_SetGasPriceContractIs0x0(t *testing.T) {
 	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 	deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 	k.SetSystemContract(ctx, types.SystemContract{})
@@ -79,7 +79,7 @@ func TestKeeper_SetGasPriceReverts(t *testing.T) {
 	k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 		UseEVMMock: true,
 	})
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
@@ -91,7 +91,7 @@ func TestKeeper_SetGasPriceReverts(t *testing.T) {
 
 func TestKeeper_SetGasCoin(t *testing.T) {
 	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 	gas := sample.EthAddress()
 
 	deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -105,7 +105,7 @@ func TestKeeper_SetGasCoin(t *testing.T) {
 
 func TestKeeper_SetGasCoinContractNotFound(t *testing.T) {
 	k, ctx, _, _ := keepertest.FungibleKeeper(t)
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 	gas := sample.EthAddress()
 
 	err := k.SetGasCoin(ctx, big.NewInt(1), gas)
@@ -114,7 +114,7 @@ func TestKeeper_SetGasCoinContractNotFound(t *testing.T) {
 
 func TestKeeper_SetGasCoinContractIs0x0(t *testing.T) {
 	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 	gas := sample.EthAddress()
 
 	deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -128,7 +128,7 @@ func TestKeeper_SetGasCoinReverts(t *testing.T) {
 	k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 		UseEVMMock: true,
 	})
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
@@ -140,7 +140,7 @@ func TestKeeper_SetGasCoinReverts(t *testing.T) {
 
 func TestKeeper_SetGasZetaPool(t *testing.T) {
 	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 	zrc20 := sample.EthAddress()
 
 	_, _, _, _, system := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -175,7 +175,7 @@ func TestKeeper_SetGasZetaPool(t *testing.T) {
 
 func TestKeeper_SetGasZetaPoolContractNotFound(t *testing.T) {
 	k, ctx, _, _ := keepertest.FungibleKeeper(t)
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 	zrc20 := sample.EthAddress()
 
 	err := k.SetGasZetaPool(ctx, big.NewInt(1), zrc20)
@@ -184,7 +184,7 @@ func TestKeeper_SetGasZetaPoolContractNotFound(t *testing.T) {
 
 func TestKeeper_SetGasZetaPoolContractIs0x0(t *testing.T) {
 	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 	zrc20 := sample.EthAddress()
 
 	deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -198,7 +198,7 @@ func TestKeeper_SetGasZetaPoolReverts(t *testing.T) {
 	k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 		UseEVMMock: true,
 	})
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)

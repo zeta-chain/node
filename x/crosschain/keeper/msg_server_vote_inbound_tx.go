@@ -74,7 +74,6 @@ func (k msgServer) VoteInbound(
 		msg.InboundHash,
 	)
 	if err != nil {
-		//fmt.Println("Error in voting on inbound ballot", err)
 		return nil, sdkerrors.Wrap(err, voteInboundID)
 	}
 

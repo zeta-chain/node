@@ -53,7 +53,7 @@ var (
 func initFungibleKeeper(
 	cdc codec.Codec,
 	ss store.CommitMultiStore,
-	authKeeper types.AccountKeeper,
+	accountKeeper types.AccountKeeper,
 	bankKeepr types.BankKeeper,
 	evmKeeper types.EVMKeeper,
 	observerKeeper types.ObserverKeeper,
@@ -68,7 +68,7 @@ func initFungibleKeeper(
 		cdc,
 		storeKey,
 		memKey,
-		authKeeper,
+		accountKeeper,
 		evmKeeper,
 		bankKeepr,
 		observerKeeper,
@@ -116,6 +116,8 @@ func FungibleKeeperWithMocks(
 		sdkKeepers.SlashingKeeper,
 		authorityKeeperTmp,
 		lightclientKeeperTmp,
+		sdkKeepers.BankKeeper,
+		sdkKeepers.AuthKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
@@ -205,7 +207,7 @@ func GetFungibleAuthorityMock(t testing.TB, keeper *keeper.Keeper) *fungiblemock
 }
 
 func GetFungibleAccountMock(t testing.TB, keeper *keeper.Keeper) *fungiblemocks.FungibleAccountKeeper {
-	fak, ok := keeper.GetAuthKeeper().(*fungiblemocks.FungibleAccountKeeper)
+	fak, ok := keeper.GetAccountKeeper().(*fungiblemocks.FungibleAccountKeeper)
 	require.True(t, ok)
 	return fak
 }

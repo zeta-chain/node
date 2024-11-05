@@ -119,6 +119,7 @@ func ChainParamsList() (cpl types.ChainParamsList) {
 	return
 }
 
+// TODO rename to TSS
 func Tss() types.TSS {
 	_, pubKey, _ := testdata.KeyTestPubAddr()
 	spk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)

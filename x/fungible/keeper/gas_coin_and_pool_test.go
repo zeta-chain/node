@@ -155,7 +155,7 @@ func setupZRC20Pool(
 func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 	t.Run("can setup a new chain gas coin", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
 
@@ -172,7 +172,7 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 
 	t.Run("should error if system contracts not deployed", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
 
@@ -194,7 +194,7 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 		})
 		bankMock := keepertest.GetFungibleBankMock(t, k)
 		bankMock.On("MintCoins", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New("err"))
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
 
@@ -216,7 +216,7 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
@@ -244,7 +244,7 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
@@ -275,7 +275,7 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
@@ -307,7 +307,7 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
@@ -340,7 +340,7 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
@@ -380,7 +380,7 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
@@ -423,7 +423,7 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)

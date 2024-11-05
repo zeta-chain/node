@@ -223,7 +223,7 @@ func assertExampleBarValue(
 func TestKeeper_DeployZRC20Contract(t *testing.T) {
 	t.Run("should error if chain not found", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
@@ -243,7 +243,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 
 	t.Run("should error if system contracts not deployed", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
 
@@ -265,7 +265,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
@@ -288,7 +288,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 
 	t.Run("can deploy the zrc20 contract", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -344,7 +344,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 
 	t.Run("can deploy the zrc20 contract without a gateway address", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -408,7 +408,7 @@ func TestKeeper_DeploySystemContracts(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		wzeta, uniswapV2Factory, uniswapV2Router, _, _ := deploySystemContractsWithMockEvmKeeper(
@@ -428,7 +428,7 @@ func TestKeeper_DeploySystemContracts(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockFailedContractDeployment(ctx, t, k)
 
@@ -441,7 +441,7 @@ func TestKeeper_DeploySystemContracts(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockFailedContractDeployment(ctx, t, k)
 
@@ -454,7 +454,7 @@ func TestKeeper_DeploySystemContracts(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockFailedContractDeployment(ctx, t, k)
 
@@ -465,7 +465,7 @@ func TestKeeper_DeploySystemContracts(t *testing.T) {
 
 	t.Run("can deploy the system contracts", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// deploy the system contracts
 		wzeta, uniswapV2Factory, uniswapV2Router, _, systemContract := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -493,7 +493,7 @@ func TestKeeper_DeploySystemContracts(t *testing.T) {
 
 	t.Run("can deposit into wzeta", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		wzeta, _, _, _, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
@@ -523,7 +523,7 @@ func TestKeeper_DeploySystemContracts(t *testing.T) {
 func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 	t.Run("should error if system contracts not deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
 
@@ -549,7 +549,7 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 
 	t.Run("should deposit and call the contract", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -602,7 +602,7 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 
 	t.Run("should return a revert error when the underlying contract call revert", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -633,7 +633,7 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 
 	t.Run("should revert if the underlying contract doesn't exist", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -658,7 +658,7 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 func TestKeeper_CallEVMWithData(t *testing.T) {
 	t.Run("should return a revert error when the contract call revert", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// Deploy example
 		contract, err := k.DeployContract(ctx, contracts.ExampleMetaData)
@@ -955,7 +955,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 func TestKeeper_DeployContract(t *testing.T) {
 	t.Run("should error if pack ctor args fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 		addr, err := k.DeployContract(ctx, zrc20.ZRC20MetaData, "")
 		require.ErrorIs(t, err, types.ErrABIGet)
 		require.Empty(t, addr)
@@ -963,7 +963,7 @@ func TestKeeper_DeployContract(t *testing.T) {
 
 	t.Run("should error if metadata bin empty", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 		metadata := &bind.MetaData{
 			ABI: wzeta.WETH9MetaData.ABI,
 			Bin: "",
@@ -975,7 +975,7 @@ func TestKeeper_DeployContract(t *testing.T) {
 
 	t.Run("should error if metadata cant be decoded", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 		metadata := &bind.MetaData{
 			ABI: wzeta.WETH9MetaData.ABI,
 			Bin: "0x1",
@@ -998,7 +998,7 @@ func TestKeeper_QueryProtocolFlatFee(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1014,7 +1014,7 @@ func TestKeeper_QueryProtocolFlatFee(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1031,7 +1031,7 @@ func TestKeeper_QueryProtocolFlatFee(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1055,7 +1055,7 @@ func TestKeeper_QueryGasLimit(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1071,7 +1071,7 @@ func TestKeeper_QueryGasLimit(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1088,7 +1088,7 @@ func TestKeeper_QueryGasLimit(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1112,7 +1112,7 @@ func TestKeeper_QueryChainIDFromContract(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1128,7 +1128,7 @@ func TestKeeper_QueryChainIDFromContract(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1145,7 +1145,7 @@ func TestKeeper_QueryChainIDFromContract(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1169,7 +1169,7 @@ func TestKeeper_TotalSupplyZRC4(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1185,7 +1185,7 @@ func TestKeeper_TotalSupplyZRC4(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1202,7 +1202,7 @@ func TestKeeper_TotalSupplyZRC4(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1226,7 +1226,7 @@ func TestKeeper_BalanceOfZRC4(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1242,7 +1242,7 @@ func TestKeeper_BalanceOfZRC4(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1259,7 +1259,7 @@ func TestKeeper_BalanceOfZRC4(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1283,7 +1283,7 @@ func TestKeeper_QueryZRC20Data(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1299,7 +1299,7 @@ func TestKeeper_QueryZRC20Data(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1316,7 +1316,7 @@ func TestKeeper_QueryZRC20Data(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1339,7 +1339,7 @@ func TestKeeper_QueryZRC20Data(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1362,7 +1362,7 @@ func TestKeeper_QueryZRC20Data(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1389,7 +1389,7 @@ func TestKeeper_QueryZRC20Data(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1416,7 +1416,7 @@ func TestKeeper_QueryZRC20Data(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
@@ -1447,7 +1447,7 @@ func TestKeeper_QueryZRC20Data(t *testing.T) {
 func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 	t.Run("should call on receive on connector which calls onZetaMessage on sample DAPP", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
@@ -1498,7 +1498,7 @@ func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 
 	t.Run("should error if system contract not found", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
 		require.NoError(t, err)
@@ -1514,7 +1514,7 @@ func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 
 	t.Run("should error in contract call reverts", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		dAppContract, err := k.DeployContract(ctx, contracts.DappReverterMetaData)
@@ -1533,7 +1533,7 @@ func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
 	t.Run("should call on revert on connector which calls onZetaRevert on sample DAPP", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
@@ -1582,7 +1582,7 @@ func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
 
 	t.Run("should error if system contract not found", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
 		require.NoError(t, err)
@@ -1599,7 +1599,7 @@ func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
 
 	t.Run("should error in contract call reverts", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		dAppContract, err := k.DeployContract(ctx, contracts.DappReverterMetaData)

@@ -66,8 +66,8 @@ func NewIBankContract(
 	kvGasConfig storetypes.GasConfig,
 ) *Contract {
 	accAddress := sdk.AccAddress(ContractAddress.Bytes())
-	if fungibleKeeper.GetAuthKeeper().GetAccount(ctx, accAddress) == nil {
-		fungibleKeeper.GetAuthKeeper().SetAccount(ctx, authtypes.NewBaseAccount(accAddress, nil, 0, 0))
+	if fungibleKeeper.GetAccountKeeper().GetAccount(ctx, accAddress) == nil {
+		fungibleKeeper.GetAccountKeeper().SetAccount(ctx, authtypes.NewBaseAccount(accAddress, nil, 0, 0))
 	}
 
 	// Instantiate the ZRC20 ABI only one time.

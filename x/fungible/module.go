@@ -138,7 +138,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	InitGenesis(ctx, am.keeper, genState)
 
 	// ensure fungible module account is set on genesis
-	if acc := am.keeper.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName); acc == nil {
+	if acc := am.keeper.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName); acc == nil {
 		// NOTE: shouldn't occur
 		panic("the fungible module account has not been set")
 	}

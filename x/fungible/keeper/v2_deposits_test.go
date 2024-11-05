@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"math/big"
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
@@ -11,8 +14,6 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
 	"github.com/zeta-chain/node/x/fungible/types"
-	"math/big"
-	"testing"
 )
 
 // getTestDAppNoMessageIndex queries the no message index of the test dapp v2 contract
@@ -120,7 +121,7 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 	t.Run("should process no-call deposit", func(t *testing.T) {
 		// ARRANGE
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := chains.DefaultChainsList()[0].ChainId
 		receiver := sample.EthAddress()
@@ -154,7 +155,7 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 	t.Run("should process no-call deposit, message should be ignored", func(t *testing.T) {
 		// ARRANGE
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := chains.DefaultChainsList()[0].ChainId
 		receiver := sample.EthAddress()
@@ -188,7 +189,7 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 	t.Run("should process deposit and call", func(t *testing.T) {
 		// ARRANGE
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := chains.DefaultChainsList()[0].ChainId
 
@@ -224,7 +225,7 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 	t.Run("should process deposit and call with no message", func(t *testing.T) {
 		// ARRANGE
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := chains.DefaultChainsList()[0].ChainId
 

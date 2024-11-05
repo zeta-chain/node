@@ -27,7 +27,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		chainID := getValidChainID(t)
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// set coin admin
 		admin := sample.AccAddress()
@@ -163,7 +163,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		})
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// setup
 		admin := sample.AccAddress()
@@ -190,7 +190,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 			UseAuthorityMock: true,
 		})
 		msgServer := keeper.NewMsgServerImpl(*k)
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 
 		// setup
@@ -240,7 +240,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 			UseEVMMock:       true,
 			UseAuthorityMock: true,
 		})
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/simulation"
@@ -40,20 +41,20 @@ func TestDecodeStore(t *testing.T) {
 		name        string
 		expectedLog string
 	}{
-		{"CrossChainTx", ""},
-		{"LastBlockHeight", ""},
-		{"GasPrice", ""},
-		{"OutboundTracker", ""},
-		{"InboundTracker", ""},
-		{"ZetaAccounting", ""},
-		{"RateLimiterFlags", ""},
-		{"FinalizedInbounds", ""},
+		{"CrossChainTx", fmt.Sprintf("%v\n%v", *cctx, *cctx)},
+		{"LastBlockHeight", fmt.Sprintf("%v\n%v", *lastBlockHeight, *lastBlockHeight)},
+		{"GasPrice", fmt.Sprintf("%v\n%v", *gasPrice, *gasPrice)},
+		{"OutboundTracker", fmt.Sprintf("%v\n%v", outboundTracker, outboundTracker)},
+		{"InboundTracker", fmt.Sprintf("%v\n%v", inboundTracker, inboundTracker)},
+		{"ZetaAccounting", fmt.Sprintf("%v\n%v", zetaAccounting, zetaAccounting)},
+		{"RateLimiterFlags", fmt.Sprintf("%v\n%v", rateLimiterFlags, rateLimiterFlags)},
+		{"FinalizedInbounds", fmt.Sprintf("%v\n%v", []byte{1}, []byte{1})},
 	}
 
 	for i, tt := range tests {
 		i, tt := i, tt
 		t.Run(tt.name, func(t *testing.T) {
-			fmt.Println(dec(kvPairs.Pairs[i], kvPairs.Pairs[i]))
+			require.Equal(t, tt.expectedLog, dec(kvPairs.Pairs[i], kvPairs.Pairs[i]))
 		})
 	}
 }

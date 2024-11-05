@@ -188,7 +188,7 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 
 	t.Run("successfully revert failed outbound if original sender is a contract", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
-		_ = zk.FungibleKeeper.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+		_ = zk.FungibleKeeper.GetAccountKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.Goerli, "", big.NewInt(42))
 		cctx.InboundParams.CoinType = coin.CoinType_Zeta

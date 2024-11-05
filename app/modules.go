@@ -146,7 +146,7 @@ func simulationModules(
 		//gov.NewAppModule(
 		//	appCodec,
 		//	&app.GovKeeper,
-		//	app.AccountKeeper,
+		//	app.GetAuthKeeper,
 		//	app.BankKeeper,
 		//	app.GetSubspace(govtypes.ModuleName),
 		//),

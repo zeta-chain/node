@@ -34,7 +34,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseAuthorityMock: true,
 		})
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 		msgServer := keeper.NewMsgServerImpl(*k)
 
@@ -166,7 +166,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseAuthorityMock: true,
 		})
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 		msgServer := keeper.NewMsgServerImpl(*k)
 
@@ -267,7 +267,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			UseAuthorityMock: true,
 		})
 		msgServer := keeper.NewMsgServerImpl(*k)
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
 		wzeta, _, _, _, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -288,7 +288,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			UseAuthorityMock: true,
 		})
 		msgServer := keeper.NewMsgServerImpl(*k)
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)

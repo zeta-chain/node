@@ -446,7 +446,7 @@ func New(
 	//	app.IBCKeeper.ChannelKeeper,
 	//	app.IBCKeeper.ChannelKeeper,
 	//	&app.IBCKeeper.PortKeeper,
-	//	app.AccountKeeper,
+	//	app.GetAuthKeeper,
 	//	app.BankKeeper,
 	//	scopedTransferKeeper,
 	//)
@@ -483,6 +483,8 @@ func New(
 		app.SlashingKeeper,
 		app.AuthorityKeeper,
 		app.LightclientKeeper,
+		app.BankKeeper,
+		app.AccountKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 

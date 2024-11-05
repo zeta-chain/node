@@ -12,7 +12,7 @@ import (
 func (k Keeper) EnsureGasStabilityPoolAccountCreated(ctx sdk.Context) {
 	address := types.GasStabilityPoolAddress()
 
-	ak := k.GetAuthKeeper()
+	ak := k.GetAccountKeeper()
 	accExists := ak.HasAccount(ctx, address)
 	if !accExists {
 		ak.SetAccount(ctx, ak.NewAccountWithAddress(ctx, address))

@@ -20,7 +20,7 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 		})
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		admin := sample.AccAddress()
 
@@ -49,7 +49,7 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 		})
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 		chainID := getValidChainID(t)
 
 		admin := sample.AccAddress()
@@ -72,7 +72,7 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 		})
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
 

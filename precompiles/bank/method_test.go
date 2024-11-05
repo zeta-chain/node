@@ -513,7 +513,7 @@ func setupChain(t *testing.T) testSuite {
 
 	// Make sure the account store is initialized.
 	// This is completely needed for accounts to be created in the state.
-	fungibleKeeper.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+	fungibleKeeper.GetAccountKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 	// Deploy system contracts in order to deploy a ZRC20 token.
 	deploySystemContracts(t, ctx, fungibleKeeper, *sdkKeepers.EvmKeeper)

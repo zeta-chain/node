@@ -21,7 +21,7 @@ import (
 func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 	t.Run("successfully call ZETADepositAndCallContract on connector contract ", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
@@ -70,7 +70,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 
 	t.Run("successfully deposit coin if account is not a contract", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zetaTxSender := sample.EthAddress()
@@ -103,7 +103,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 
 	t.Run("automatically deposit coin  if account not found", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		zetaTxSender := sample.EthAddress()
 		zetaTxReceiver := sample.EthAddress()
@@ -128,7 +128,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 
 	t.Run("fail ZETADepositAndCallContract if Deposit Fails", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{UseBankMock: true})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		bankMock := keepertest.GetFungibleBankMock(t, k)
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -164,7 +164,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 	t.Run("successfully call ZETARevertAndCallContract if receiver is a contract", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
@@ -215,7 +215,7 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 
 	t.Run("successfully deposit coin if account is not a contract", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zetaTxSender := sample.EthAddress()
@@ -250,7 +250,7 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 
 	t.Run("automatically deposit coin if account not found", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		zetaTxSender := sample.EthAddress()
 		zetaTxReceiver := sample.EthAddress()
@@ -277,7 +277,7 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 
 	t.Run("fail ZETARevertAndCallContract if Deposit Fails", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{UseBankMock: true})
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		bankMock := keepertest.GetFungibleBankMock(t, k)
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -313,7 +313,7 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 
 	t.Run("fail ZETARevertAndCallContract if ZevmOnRevert fails", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		dAppContract, err := k.DeployContract(ctx, contracts.DappReverterMetaData)
 		require.NoError(t, err)
