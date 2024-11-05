@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -15,11 +14,19 @@ import (
 	observerTypes "github.com/zeta-chain/node/x/observer/types"
 )
 
+// Simulation operation weights constants
+// Operation weights are used by the simulation program to simulate the weight of different operations.
+// This decides what percentage of a certain type of operation is part of a block.
+// Based on the weights assigned in the cosmos sdk modules , 100 seems to the max weight used , and therefore guarantees that at least one operation of that type is present in a block.
+// TODO Add more details to comment based on what the number represents in terms of percentage of operations in a block
+// https://github.com/zeta-chain/node/issues/3100
 const (
 	OpWeightMsgDeploySystemContracts      = "op_weight_msg_deploy_system_contracts"
 	DefaultWeightMsgDeploySystemContracts = 100
 )
 
+// DeployedSystemContracts Use a flag to ensure that the system contracts are deployed only once
+// https://github.com/zeta-chain/node/issues/3102
 var (
 	DeployedSystemContracts = false
 )
@@ -41,6 +48,7 @@ func WeightedOperations(
 	}
 }
 
+// SimulateMsgDeploySystemContracts deploy system contracts.It is run only once in first block.
 func SimulateMsgDeploySystemContracts(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, chainID string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
@@ -50,18 +58,18 @@ func SimulateMsgDeploySystemContracts(k keeper.Keeper) simtypes.Operation {
 
 		policies, found := k.GetAuthorityKeeper().GetPolicies(ctx)
 		if !found {
-			fmt.Println("Policies not found")
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeploySystemContracts, "policies not found"), nil, nil
 		}
 
 		admin := policies.Items[0].Address
+
 		address, err := observerTypes.GetOperatorAddressFromAccAddress(admin)
 		if err != nil {
-			panic(err)
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeploySystemContracts, "unable to get operator address"), nil, err
 		}
 		simAccount, found := simtypes.FindAccount(accounts, address)
 		if !found {
-			// TODO : remove panic
-			panic("admin account not found")
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeploySystemContracts, "sim account for admin address not found"), nil, nil
 		}
 
 		msg := types.MsgDeploySystemContracts{Creator: admin}

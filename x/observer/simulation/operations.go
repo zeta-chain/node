@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -14,8 +13,17 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
+// Simulation operation weights constants
+// Operation weights are used by the simulation program to simulate the weight of different operations.
+// This decides what percentage of a certain type of operation is part of a block.
+// Based on the weights assigned in the cosmos sdk modules , 100 seems to the max weight used , and therefore guarantees that at least one operation of that type is present in a block.
+// TODO Add more details to comment based on what the number represents in terms of percentage of operations in a block
+// https://github.com/zeta-chain/node/issues/3100
 const (
-	OpWeightMsgTypeMsgEnableCCTX      = "op_weight_msg_enable_crosschain_flags"
+	OpWeightMsgTypeMsgEnableCCTX = "op_weight_msg_enable_crosschain_flags"
+	// DefaultWeightMsgTypeMsgEnableCCTX We ues a hight weight for this operation
+	// to ensure that it is present in the block more number of time than any operation that changes the validator state
+	// Arrived at this number based on the weights used in the cosmos sdk staking module and through some trial and error
 	DefaultWeightMsgTypeMsgEnableCCTX = 650
 )
 
@@ -38,16 +46,16 @@ func WeightedOperations(
 	}
 }
 
+// SimulateMsgTypeMsgEnableCCTX generates a MsgEnableCCTX and delivers it.
 func SimulateMsgTypeMsgEnableCCTX(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, chainID string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 
 		policies, found := k.GetAuthorityKeeper().GetPolicies(ctx)
 		if !found {
-			fmt.Println("Policies not found")
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgEnableCCTX, "policies not found"), nil, nil
 		}
 
-		// TODO setup simutils package
 		admin := policies.Items[0].Address
 		address, err := types.GetOperatorAddressFromAccAddress(admin)
 		if err != nil {
@@ -55,8 +63,7 @@ func SimulateMsgTypeMsgEnableCCTX(k keeper.Keeper) simtypes.Operation {
 		}
 		simAccount, found := simtypes.FindAccount(accounts, address)
 		if !found {
-			// TODO : remove panic
-			panic("admin account not found")
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgEnableCCTX, "admin account not found"), nil, nil
 		}
 
 		msg := types.MsgEnableCCTX{

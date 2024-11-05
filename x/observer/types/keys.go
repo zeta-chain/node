@@ -49,6 +49,7 @@ func ChainNoncesKeyPrefix(chainID int64) []byte {
 	return []byte(strconv.FormatInt(chainID, 10))
 }
 
+// Address TODOS for name changes: https://github.com/zeta-chain/node/issues/3098
 const (
 	BlameKey = "Blame-"
 	// TODO change identifier for VoterKey to BallotKey
