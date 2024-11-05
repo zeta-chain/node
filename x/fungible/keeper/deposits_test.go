@@ -437,10 +437,6 @@ func TestKeeper_DepositCoinZeta(t *testing.T) {
 		b := sdkk.BankKeeper.GetBalance(ctx, zetaToAddress, config.BaseDenom)
 		require.Equal(t, int64(0), b.Amount.Int64())
 		errorMint := errors.New("", 1, "error minting coins")
-
-		bankMock.On("GetSupply", ctx, mock.Anything, mock.Anything).
-			Return(sdk.NewCoin(config.BaseDenom, sdk.NewInt(0))).
-			Once()
 		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
 		err := k.DepositCoinZeta(ctx, to, amount)
 		require.ErrorIs(t, err, errorMint)
