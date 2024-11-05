@@ -17,7 +17,9 @@ jobs:
     container:
       image: ghcr.io/zeta-chain/semgrep-semgrep:1.90.0
         
-    if: github.actor != 'dependabot[bot]' || github.repository == 'zeta-chain/node'
+    if: |
+      github.actor != 'dependabot[bot]' &&
+      (github.repository == 'zeta-chain/node' || github.event.pull_request.head.repo.full_name == 'zeta-chain/node')
     steps:
       - uses: actions/checkout@v4    
       - name: Checkout semgrep-utilities repo
