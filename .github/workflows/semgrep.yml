@@ -19,7 +19,7 @@ jobs:
         
     if: |
       github.actor != 'dependabot[bot]' &&
-      (github.repository == 'zeta-chain/node' || github.event.pull_request.head.repo.full_name == 'zeta-chain/node')
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'zeta-chain/node')
     steps:
       - uses: actions/checkout@v4    
       - name: Checkout semgrep-utilities repo
