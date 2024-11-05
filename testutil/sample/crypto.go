@@ -106,7 +106,7 @@ func SolanaSignature(t *testing.T) solana.Signature {
 
 // Hash returns a sample hash
 func Hash() ethcommon.Hash {
-	return EthAddress().Hash()
+	return ethcommon.BytesToHash(EthAddress().Bytes())
 }
 
 // BtcHash returns a sample btc hash

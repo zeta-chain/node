@@ -1,11 +1,13 @@
 package runner
 
 import (
+	"encoding/hex"
 	"math/big"
 	"time"
 
 	"cosmossdk.io/math"
 	eth "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/ton"
@@ -22,6 +24,20 @@ import (
 //	https://github.com/tonkeeper/w5/blob/main/contracts/wallet_v5.fc#L82
 //	https://docs.ton.org/develop/smart-contracts/guidelines/message-modes-cookbook
 const tonDepositSendCode = toncontracts.SendFlagSeparateFees + toncontracts.SendFlagIgnoreErrors
+
+// currently implemented only for DepositAndCall,
+// can be adopted for all TON ops
+type tonOpts struct {
+	expectedStatus cctypes.CctxStatus
+}
+
+type TONOpt func(t *tonOpts)
+
+func TONExpectStatus(status cctypes.CctxStatus) TONOpt {
+	return func(t *tonOpts) {
+		t.expectedStatus = status
+	}
+}
 
 // TONDeposit deposit TON to Gateway contract
 func (r *E2ERunner) TONDeposit(
@@ -56,7 +72,7 @@ func (r *E2ERunner) TONDeposit(
 	}
 
 	// Wait for cctx
-	cctx := r.WaitForSpecificCCTX(filter, time.Minute)
+	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, time.Minute)
 
 	return cctx, nil
 }
@@ -67,7 +83,13 @@ func (r *E2ERunner) TONDepositAndCall(
 	amount math.Uint,
 	zevmRecipient eth.Address,
 	callData []byte,
+	opts ...TONOpt,
 ) (*cctypes.CrossChainTx, error) {
+	cfg := &tonOpts{expectedStatus: cctypes.CctxStatus_OutboundMined}
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
 	chain := chains.TONLocalnet
 
 	require.NotNil(r, r.TONGateway, "TON Gateway is not initialized")
@@ -91,18 +113,26 @@ func (r *E2ERunner) TONDepositAndCall(
 	}
 
 	filter := func(cctx *cctypes.CrossChainTx) bool {
+		memo := zevmRecipient.Bytes()
+		memo = append(memo, callData...)
+
 		return cctx.InboundParams.SenderChainId == chain.ChainId &&
-			cctx.InboundParams.Sender == sender.GetAddress().ToRaw()
+			cctx.InboundParams.Sender == sender.GetAddress().ToRaw() &&
+			cctx.RelayedMessage == hex.EncodeToString(memo)
 	}
 
 	// Wait for cctx
-	cctx := r.WaitForSpecificCCTX(filter, time.Minute)
+	cctx := r.WaitForSpecificCCTX(filter, cfg.expectedStatus, time.Minute)
 
 	return cctx, nil
 }
 
-// WithdrawTONZRC20 withdraws an amount of ZRC20 TON tokens
-func (r *E2ERunner) WithdrawTONZRC20(to ton.AccountID, amount *big.Int, approveAmount *big.Int) *cctypes.CrossChainTx {
+// SendWithdrawTONZRC20 sends withdraw tx of TON ZRC20 tokens
+func (r *E2ERunner) SendWithdrawTONZRC20(
+	to ton.AccountID,
+	amount *big.Int,
+	approveAmount *big.Int,
+) *ethtypes.Transaction {
 	// approve
 	tx, err := r.TONZRC20.Approve(r.ZEVMAuth, r.TONZRC20Addr, approveAmount)
 	require.NoError(r, err)
@@ -118,6 +148,13 @@ func (r *E2ERunner) WithdrawTONZRC20(to ton.AccountID, amount *big.Int, approveA
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "withdraw")
 	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
+
+	return tx
+}
+
+// WithdrawTONZRC20 withdraws an amount of ZRC20 TON tokens and waits for the cctx to be mined
+func (r *E2ERunner) WithdrawTONZRC20(to ton.AccountID, amount *big.Int, approveAmount *big.Int) *cctypes.CrossChainTx {
+	tx := r.SendWithdrawTONZRC20(to, amount, approveAmount)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
