@@ -9,6 +9,7 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
+// TODO Add comments in this pr to explain the purpose of the function
 func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {

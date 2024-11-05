@@ -81,7 +81,6 @@ func (k msgServer) VoteInbound(
 	// This may happen if the same inbound is observed twice where msg.Digest gives a different index
 	// This check prevents double spending
 	if isNew {
-		//fmt.Println("\nNew Ballot")
 		if k.IsFinalizedInbound(tmpCtx, msg.InboundHash, msg.SenderChainId, msg.EventIndex) {
 			return nil, sdkerrors.Wrapf(
 				types.ErrObservedTxAlreadyFinalized,
@@ -95,9 +94,6 @@ func (k msgServer) VoteInbound(
 	}
 	commit()
 
-	//if !finalized && !isNew {
-	//	fmt.Println("\nNot Finalized Ballot")
-	//}
 	// If the ballot is not finalized return nil here to add vote to commit state
 	if !finalized {
 		return &types.MsgVoteInboundResponse{}, nil
@@ -109,7 +105,7 @@ func (k msgServer) VoteInbound(
 	}
 	// Save the inbound CCTX to the store. This is called irrespective of the status of the CCTX or the outcome of the process function.
 	k.SaveObservedInboundInformation(ctx, cctx, msg.EventIndex)
-	//fmt.Println("Saved Inbound successfully :", cctx.Index)
+
 	return &types.MsgVoteInboundResponse{}, nil
 }
 

@@ -15,18 +15,18 @@ func TestKeeper_EnsureGasStabilityPoolAccountCreated(t *testing.T) {
 		k, ctx, _, _ := testkeeper.FungibleKeeper(t)
 
 		// account doesn't exist
-		acc := k.GetAccountKeeper().GetAccount(ctx, types.GasStabilityPoolAddress())
+		acc := k.GetAuthKeeper().GetAccount(ctx, types.GasStabilityPoolAddress())
 		require.Nil(t, acc)
 
 		// create the account
 		k.EnsureGasStabilityPoolAccountCreated(ctx)
-		acc = k.GetAccountKeeper().GetAccount(ctx, types.GasStabilityPoolAddress())
+		acc = k.GetAuthKeeper().GetAccount(ctx, types.GasStabilityPoolAddress())
 		require.NotNil(t, acc)
 		require.Equal(t, types.GasStabilityPoolAddress(), acc.GetAddress())
 
 		// can call the method again without side effects
 		k.EnsureGasStabilityPoolAccountCreated(ctx)
-		acc2 := k.GetAccountKeeper().GetAccount(ctx, types.GasStabilityPoolAddress())
+		acc2 := k.GetAuthKeeper().GetAccount(ctx, types.GasStabilityPoolAddress())
 		require.NotNil(t, acc2)
 		require.True(t, acc.GetAddress().Equals(acc2.GetAddress()))
 		require.Equal(t, acc.GetAccountNumber(), acc2.GetAccountNumber())
@@ -37,7 +37,7 @@ func TestKeeper_EnsureGasStabilityPoolAccountCreated(t *testing.T) {
 func TestKeeper_FundGasStabilityPool(t *testing.T) {
 	t.Run("should error if system contracts not deployed", func(t *testing.T) {
 		k, ctx, _, _ := testkeeper.FungibleKeeper(t)
-		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
 
@@ -54,7 +54,7 @@ func TestKeeper_FundGasStabilityPool(t *testing.T) {
 
 	t.Run("can fund the gas stability pool and withdraw", func(t *testing.T) {
 		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
-		_ = k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
 

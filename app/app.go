@@ -446,7 +446,7 @@ func New(
 	//	app.IBCKeeper.ChannelKeeper,
 	//	app.IBCKeeper.ChannelKeeper,
 	//	&app.IBCKeeper.PortKeeper,
-	//	app.GetAuthKeeper,
+	//	app.AccountKeeper,
 	//	app.BankKeeper,
 	//	scopedTransferKeeper,
 	//)

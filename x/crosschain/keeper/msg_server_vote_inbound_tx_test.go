@@ -50,6 +50,8 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		validatorList := setObservers(t, k, ctx, zk)
+
+		// https://github.com/zeta-chain/node/issues/3101
 		to, from := int64(1337), int64(101)
 		supportedChains := zk.ObserverKeeper.GetSupportedChains(ctx)
 		for _, chain := range supportedChains {
@@ -60,9 +62,9 @@ func TestKeeper_VoteInbound(t *testing.T) {
 				to = chain.ChainId
 			}
 		}
-		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 
 		msg := sample.InboundVote(0, from, to)
+		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 
 		err := sdkk.EvmKeeper.SetAccount(ctx, ethcommon.HexToAddress(msg.Receiver), statedb.Account{
 			Nonce:    0,

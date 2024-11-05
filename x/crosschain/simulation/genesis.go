@@ -6,8 +6,8 @@ import (
 )
 
 func RandomizedGenState(simState *module.SimulationState) {
-	// We do not have any params that we need to randomize for this module
-	// The default state is empty which is sufficient for now , this can be modified later weh we add operations that need existing state data to be processed
+	// Randomization is primarily done for params present in the application state
+	// We do not need to randomize the genesis state for the crosschain module for now.
 	crosschainGenesis := types.DefaultGenesis()
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(crosschainGenesis)
 }

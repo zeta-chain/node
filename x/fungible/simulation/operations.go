@@ -75,7 +75,7 @@ func SimulateMsgDeploySystemContracts(k keeper.Keeper) simtypes.Operation {
 			MsgType:       msg.Type(),
 			Context:       ctx,
 			SimAccount:    simAccount,
-			AccountKeeper: k.GetAccountKeeper(),
+			AccountKeeper: k.GetAuthKeeper(),
 			Bankkeeper:    k.GetBankKeeper(),
 			ModuleName:    types.ModuleName,
 		}

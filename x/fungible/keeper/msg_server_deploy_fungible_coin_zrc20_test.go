@@ -23,7 +23,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			UseAuthorityMock: true,
 		})
 		msgServer := keeper.NewMsgServerImpl(*k)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 		chainID := getValidChainID(t)
 
@@ -101,7 +101,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseAuthorityMock: true,
 		})
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		chainID := getValidChainID(t)
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
@@ -129,7 +129,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseAuthorityMock: true,
 		})
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		admin := sample.AccAddress()
 		chainID := getValidChainID(t)
@@ -156,7 +156,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseAuthorityMock: true,
 		})
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
@@ -185,7 +185,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseAuthorityMock: true,
 		})
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)

@@ -21,7 +21,7 @@ func TestKeeper_CodeHash(t *testing.T) {
 
 	t.Run("should return code hash", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		wzeta, _, _, _, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		acc := sdkk.EvmKeeper.GetAccount(ctx, wzeta)
@@ -57,7 +57,7 @@ func TestKeeper_CodeHash(t *testing.T) {
 
 	t.Run("should return error if account is not a contract", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		_, err := k.CodeHash(ctx, &types.QueryCodeHashRequest{
 			Address: types.ModuleAddressEVM.Hex(),

@@ -31,7 +31,7 @@ func TestKeeper_GetSystemContract(t *testing.T) {
 func TestKeeper_GetSystemContractAddress(t *testing.T) {
 	t.Run("should fail to get system contract address if system contracts are not deployed", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		_, err := k.GetSystemContractAddress(ctx)
 		require.Error(t, err)
@@ -40,7 +40,7 @@ func TestKeeper_GetSystemContractAddress(t *testing.T) {
 
 	t.Run("should get system contract address if system contracts are deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		_, _, _, _, systemContract := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		found, err := k.GetSystemContractAddress(ctx)
@@ -52,7 +52,7 @@ func TestKeeper_GetSystemContractAddress(t *testing.T) {
 func TestKeeper_GetWZetaContractAddress(t *testing.T) {
 	t.Run("should fail to get wzeta contract address if system contracts are not deployed", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		_, err := k.GetWZetaContractAddress(ctx)
 		require.Error(t, err)
@@ -61,7 +61,7 @@ func TestKeeper_GetWZetaContractAddress(t *testing.T) {
 
 	t.Run("should get wzeta contract address if system contracts are deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		wzeta, _, _, _, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		found, err := k.GetWZetaContractAddress(ctx)
@@ -71,7 +71,7 @@ func TestKeeper_GetWZetaContractAddress(t *testing.T) {
 
 	t.Run("should fail if wzeta not deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
 			DeployWZeta:            false,
@@ -88,7 +88,7 @@ func TestKeeper_GetWZetaContractAddress(t *testing.T) {
 			UseEVMMock: true,
 		})
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
@@ -103,7 +103,7 @@ func TestKeeper_GetWZetaContractAddress(t *testing.T) {
 			UseEVMMock: true,
 		})
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
@@ -119,7 +119,7 @@ func TestKeeper_GetUniswapV2FactoryAddress(t *testing.T) {
 		"should fail to get uniswapfactory contract address if system contracts are not deployed",
 		func(t *testing.T) {
 			k, ctx, _, _ := keepertest.FungibleKeeper(t)
-			k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+			k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 			_, err := k.GetUniswapV2FactoryAddress(ctx)
 			require.Error(t, err)
@@ -129,7 +129,7 @@ func TestKeeper_GetUniswapV2FactoryAddress(t *testing.T) {
 
 	t.Run("should get uniswapfactory contract address if system contracts are deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		_, factory, _, _, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		found, err := k.GetUniswapV2FactoryAddress(ctx)
@@ -139,7 +139,7 @@ func TestKeeper_GetUniswapV2FactoryAddress(t *testing.T) {
 
 	t.Run("should fail in factory not deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
 			DeployWZeta:            true,
@@ -156,7 +156,7 @@ func TestKeeper_GetUniswapV2FactoryAddress(t *testing.T) {
 			UseEVMMock: true,
 		})
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
@@ -171,7 +171,7 @@ func TestKeeper_GetUniswapV2FactoryAddress(t *testing.T) {
 			UseEVMMock: true,
 		})
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
@@ -185,7 +185,7 @@ func TestKeeper_GetUniswapV2FactoryAddress(t *testing.T) {
 func TestKeeper_GetUniswapV2Router02Address(t *testing.T) {
 	t.Run("should fail to get uniswaprouter contract address if system contracts are not deployed", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		_, err := k.GetUniswapV2Router02Address(ctx)
 		require.Error(t, err)
@@ -194,7 +194,7 @@ func TestKeeper_GetUniswapV2Router02Address(t *testing.T) {
 
 	t.Run("should get uniswaprouter contract address if system contracts are deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		_, _, router, _, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		found, err := k.GetUniswapV2Router02Address(ctx)
@@ -204,7 +204,7 @@ func TestKeeper_GetUniswapV2Router02Address(t *testing.T) {
 
 	t.Run("should fail in router not deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
 			DeployWZeta:            true,
@@ -221,7 +221,7 @@ func TestKeeper_GetUniswapV2Router02Address(t *testing.T) {
 			UseEVMMock: true,
 		})
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
@@ -236,7 +236,7 @@ func TestKeeper_GetUniswapV2Router02Address(t *testing.T) {
 			UseEVMMock: true,
 		})
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
@@ -250,7 +250,7 @@ func TestKeeper_GetUniswapV2Router02Address(t *testing.T) {
 func TestKeeper_CallWZetaDeposit(t *testing.T) {
 	t.Run("should fail to deposit if system contracts are not deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// mint tokens
 		addr := sample.Bech32AccAddress()
@@ -268,7 +268,7 @@ func TestKeeper_CallWZetaDeposit(t *testing.T) {
 
 	t.Run("should deposit if system contracts are deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// mint tokens
 		addr := sample.Bech32AccAddress()
@@ -294,7 +294,7 @@ func TestKeeper_CallWZetaDeposit(t *testing.T) {
 func TestKeeper_QueryWZetaBalanceOf(t *testing.T) {
 	t.Run("should fail if system contracts are not deployed", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// fail if no system contract
 		_, err := k.QueryWZetaBalanceOf(ctx, sample.EthAddress())
@@ -305,7 +305,7 @@ func TestKeeper_QueryWZetaBalanceOf(t *testing.T) {
 func TestKeeper_QuerySystemContractGasCoinZRC20(t *testing.T) {
 	t.Run("should fail if system contracts are not deployed", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		chainID := getValidChainID(t)
 
 		_, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
@@ -315,7 +315,7 @@ func TestKeeper_QuerySystemContractGasCoinZRC20(t *testing.T) {
 
 	t.Run("should query if system contracts are deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		chainID := getValidChainID(t)
 
 		_, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
@@ -332,7 +332,7 @@ func TestKeeper_QuerySystemContractGasCoinZRC20(t *testing.T) {
 
 	t.Run("should fail if gas coin not setup", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		chainID := getValidChainID(t)
 
 		_, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
@@ -350,7 +350,7 @@ func TestKeeper_QuerySystemContractGasCoinZRC20(t *testing.T) {
 			UseEVMMock: true,
 		})
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
@@ -365,7 +365,7 @@ func TestKeeper_QuerySystemContractGasCoinZRC20(t *testing.T) {
 			UseEVMMock: true,
 		})
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
@@ -379,7 +379,7 @@ func TestKeeper_QuerySystemContractGasCoinZRC20(t *testing.T) {
 func TestKeeper_CallUniswapV2RouterSwapExactETHForToken(t *testing.T) {
 	t.Run("should fail if system contracts are not deployed", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// fail if no system contract
 		_, err := k.CallUniswapV2RouterSwapExactETHForToken(
@@ -395,7 +395,7 @@ func TestKeeper_CallUniswapV2RouterSwapExactETHForToken(t *testing.T) {
 
 	t.Run("should swap if system contracts are deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		chainID := getValidChainID(t)
 
 		// deploy system contracts and swap exact eth for 1 token
@@ -428,7 +428,7 @@ func TestKeeper_CallUniswapV2RouterSwapExactETHForToken(t *testing.T) {
 
 	t.Run("should fail if missing zeta balance", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		chainID := getValidChainID(t)
 
 		// deploy system contracts and swap 1 token fails because of missing wrapped balance
@@ -451,7 +451,7 @@ func TestKeeper_CallUniswapV2RouterSwapExactETHForToken(t *testing.T) {
 
 	t.Run("should fail if wzeta not deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
 			DeployWZeta:            false,
@@ -472,7 +472,7 @@ func TestKeeper_CallUniswapV2RouterSwapExactETHForToken(t *testing.T) {
 
 	t.Run("should fail if router not deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
 			DeployWZeta:            true,
@@ -495,7 +495,7 @@ func TestKeeper_CallUniswapV2RouterSwapExactETHForToken(t *testing.T) {
 func TestKeeper_CallUniswapV2RouterSwapEthForExactToken(t *testing.T) {
 	t.Run("should fail if system contracts are not deployed", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// fail if no system contract
 		_, err := k.CallUniswapV2RouterSwapExactETHForToken(
@@ -505,7 +505,7 @@ func TestKeeper_CallUniswapV2RouterSwapEthForExactToken(t *testing.T) {
 
 	t.Run("should swap if system contracts are deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		chainID := getValidChainID(t)
 
 		// deploy system contracts and swap exact 1 token
@@ -538,7 +538,7 @@ func TestKeeper_CallUniswapV2RouterSwapEthForExactToken(t *testing.T) {
 
 	t.Run("should fail if missing zeta balance", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		chainID := getValidChainID(t)
 
 		// deploy system contracts and swap 1 token fails because of missing wrapped balance
@@ -562,7 +562,7 @@ func TestKeeper_CallUniswapV2RouterSwapEthForExactToken(t *testing.T) {
 
 	t.Run("should fail if wzeta not deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
 			DeployWZeta:            false,
@@ -583,7 +583,7 @@ func TestKeeper_CallUniswapV2RouterSwapEthForExactToken(t *testing.T) {
 
 	t.Run("should fail if router not deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
 			DeployWZeta:            true,
@@ -606,7 +606,7 @@ func TestKeeper_CallUniswapV2RouterSwapEthForExactToken(t *testing.T) {
 func TestKeeper_CallUniswapV2RouterSwapExactTokensForETH(t *testing.T) {
 	t.Run("should fail if system contracts are not deployed", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// fail if no system contract
 		_, err := k.CallUniswapV2RouterSwapExactTokensForETH(
@@ -622,7 +622,7 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForETH(t *testing.T) {
 
 	t.Run("should swap if system contracts are deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		chainID := getValidChainID(t)
 
 		// fail if no system contract
@@ -671,7 +671,7 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForETH(t *testing.T) {
 
 	t.Run("should fail if missing tokens balance", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		chainID := getValidChainID(t)
 
 		// fail if no system contract
@@ -700,7 +700,7 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForETH(t *testing.T) {
 
 	t.Run("should fail if wzeta not deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
 			DeployWZeta:            false,
@@ -720,7 +720,7 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForETH(t *testing.T) {
 
 	t.Run("should fail if router not deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
 			DeployWZeta:            true,
@@ -742,7 +742,7 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForETH(t *testing.T) {
 func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokens(t *testing.T) {
 	t.Run("should fail if system contracts are not deployed", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// fail if no system contract
 		_, err := k.CallUniswapV2RouterSwapExactTokensForTokens(
@@ -759,7 +759,7 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokens(t *testing.T) {
 
 	t.Run("should swap if system contracts are deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		chainID := getValidChainID(t)
 
 		// fail if no system contract
@@ -806,7 +806,7 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokens(t *testing.T) {
 
 	t.Run("should fail if missing tokens balance", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		chainID := getValidChainID(t)
 
 		// deploy system contracts and swap fails because of missing balance
@@ -835,7 +835,7 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokens(t *testing.T) {
 
 	t.Run("should fail if wzeta not deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// fail if no system contract
 		_, err := k.CallUniswapV2RouterSwapExactTokensForTokens(
@@ -870,7 +870,7 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokens(t *testing.T) {
 
 	t.Run("should fail if router not deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// fail if no system contract
 		_, err := k.CallUniswapV2RouterSwapExactTokensForTokens(
@@ -908,7 +908,7 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokens(t *testing.T) {
 func TestKeeper_QueryUniswapV2RouterGetZRC4AmountsIn(t *testing.T) {
 	t.Run("should fail if no amounts out", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
@@ -918,7 +918,7 @@ func TestKeeper_QueryUniswapV2RouterGetZRC4AmountsIn(t *testing.T) {
 
 	t.Run("should fail if wzeta not deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
 			DeployWZeta:            false,
@@ -932,7 +932,7 @@ func TestKeeper_QueryUniswapV2RouterGetZRC4AmountsIn(t *testing.T) {
 
 	t.Run("should fail if router not deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
 			DeployWZeta:            true,
@@ -948,7 +948,7 @@ func TestKeeper_QueryUniswapV2RouterGetZRC4AmountsIn(t *testing.T) {
 func TestKeeper_QueryUniswapV2RouterGetZetaAmountsIn(t *testing.T) {
 	t.Run("should fail if no amounts out", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
@@ -958,7 +958,7 @@ func TestKeeper_QueryUniswapV2RouterGetZetaAmountsIn(t *testing.T) {
 
 	t.Run("should fail if wzeta not deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
 			DeployWZeta:            false,
@@ -972,7 +972,7 @@ func TestKeeper_QueryUniswapV2RouterGetZetaAmountsIn(t *testing.T) {
 
 	t.Run("should fail if router not deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
 			DeployWZeta:            true,
@@ -988,7 +988,7 @@ func TestKeeper_QueryUniswapV2RouterGetZetaAmountsIn(t *testing.T) {
 func TestKeeper_QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(t *testing.T) {
 	t.Run("should fail if no amounts out", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
@@ -1003,7 +1003,7 @@ func TestKeeper_QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(t *testing.T) {
 
 	t.Run("should fail if wzeta not deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
 			DeployWZeta:            false,
@@ -1022,7 +1022,7 @@ func TestKeeper_QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(t *testing.T) {
 
 	t.Run("should fail if router not deployed", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
 			DeployWZeta:            true,
@@ -1046,7 +1046,7 @@ func TestKeeper_CallZRC20Burn(t *testing.T) {
 			UseEVMMock: true,
 		})
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
@@ -1062,7 +1062,7 @@ func TestKeeper_CallZRC20Approve(t *testing.T) {
 			UseEVMMock: true,
 		})
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
@@ -1085,7 +1085,7 @@ func TestKeeper_CallZRC20Deposit(t *testing.T) {
 			UseEVMMock: true,
 		})
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 

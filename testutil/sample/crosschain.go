@@ -217,30 +217,6 @@ func CrossChainTx(t *testing.T, index string) *types.CrossChainTx {
 	}
 }
 
-func RandomCCTX(r *rand.Rand) types.CrossChainTx {
-	index := StringRandom(r, 32)
-	status := &types.Status{
-		Status:              types.CctxStatus_PendingInbound,
-		StatusMessage:       "",
-		ErrorMessage:        "",
-		LastUpdateTimestamp: 0,
-		IsAbortRefunded:     false,
-		CreatedTimestamp:    0,
-	}
-
-	return types.CrossChainTx{
-		Creator:                 AccAddress(),
-		Index:                   GetCctxIndexFromString(index),
-		ZetaFees:                math.NewUint(uint64(r.Int63())),
-		RelayedMessage:          StringRandom(r, 32),
-		CctxStatus:              status,
-		InboundParams:           InboundParams(r),
-		OutboundParams:          []*types.OutboundParams{OutboundParams(r), OutboundParams(r)},
-		ProtocolContractVersion: types.ProtocolContractVersion_V1,
-		RevertOptions:           types.NewEmptyRevertOptions(),
-	}
-}
-
 // CustomCctxsInBlockRange create 1 cctx per block in block range [lowBlock, highBlock] (inclusive)
 func CustomCctxsInBlockRange(
 	t *testing.T,

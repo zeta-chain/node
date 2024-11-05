@@ -20,6 +20,12 @@ import (
 	observerTypes "github.com/zeta-chain/node/x/observer/types"
 )
 
+// Simulation operation weights constants
+// Operation weights are used by the simulation program to simulate the weight of different operations.
+// This decides what percentage of a certain type of operation is part of a block.
+// Based on the weights assigned in the cosmos sdk modules , 100 seems to the max weight used , and therefore guarantees that at least one operation of that type is present in a block.
+// TODO Add more details to comment based on what the number represents in terms of percentage of operations in a block
+// https://github.com/zeta-chain/node/issues/3100
 const (
 	DefaultWeightMsgAddOutboundTracker  = 50
 	DefaultWeightAddInboundTracker      = 50
@@ -165,6 +171,10 @@ func operationSimulateVoteInbound(k keeper.Keeper, msg types.MsgVoteInbound, sim
 			CoinsSpentInMsg: spendable,
 		}
 
+		// Generate and deliver the transaction using the function defined by us instead of using the default function provided by the cosmos-sdk
+		// The main difference between the two functions is that the one defined by us does not error out if the vote fails.
+		// We need this behaviour as the votes are assigned to future operations, i.e., they are scheduled to be executed in a future block. We do not know at the time of scheduling if the vote will be successful or not.
+		// There might be multiple reasons for a vote to fail , like the observer not being present in the observer set, the observer not being an observer, etc.
 		return GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
@@ -177,7 +187,7 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 	// column 4: 40% vote
 	// column 5: 15% vote
 	// column 6: noone votes
-	// All columns sum to 100 for simplicity, but this is arbitrary and
+	// All columns sum to 100 for simplicity, but this is arbitrary and can be changed
 	numVotesTransitionMatrix, _ := simulation.CreateTransitionMatrix([][]int{
 		{20, 10, 0, 0, 0, 0},
 		{55, 50, 20, 10, 0, 0},
@@ -198,20 +208,24 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 		chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 
-		//var (
-		//	randomChainSender   = GetRandomChainID(r, supportedChains)
-		//	randomChainReceiver = GetRandomChainID(r, supportedChains)
-		//	sender              = sample.EthAddress()
-		//	receiver            = sample.EthAddress()
-		//	amount              = r.Uint64()
-		//	coinType            = coin.CoinType_Gas
-		//	hash                = sample.Hash().String()
-		//	gasLimit            = r.Uint64()
-		//)
 		// TODO : randomize these values
-		to, from := int64(101), int64(101)
-		msg := sample.InboundVote(0, from, to)
+		// Right now we use a constant value for cctx creation , this is the same as the one used in unit tests for the successful condition.
+		// TestKeeper_VoteInbound/successfully vote on evm deposit
+		// But this can improved by adding more randomization
 
+		//https://github.com/zeta-chain/node/issues/3101
+		to, from := int64(1337), int64(101)
+		supportedChains := k.GetObserverKeeper().GetSupportedChains(ctx)
+		for _, chain := range supportedChains {
+			if chains.IsEVMChain(chain.ChainId, []chains.Chain{}) {
+				from = chain.ChainId
+			}
+			if chains.IsZetaChain(chain.ChainId, []chains.Chain{}) {
+				to = chain.ChainId
+			}
+		}
+		msg := sample.InboundVote(0, from, to)
+		// Pick a random observer to create the ballot
 		simAccount, firstVoter, err := GetRandomAccountAndObserver(r, ctx, k, accs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, authz.InboundVoter.String(), "unable to get random account and observer"), nil, nil
@@ -221,6 +235,11 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 		account := k.GetAuthKeeper().GetAccount(ctx, simAccount.Address)
 		firstMsg := msg
 		firstMsg.Creator = firstVoter
+
+		err = firstMsg.ValidateBasic()
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate first inbound vote"), nil, err
+		}
 
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
@@ -237,7 +256,8 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
-		// We can return error here as we we can guarantee that the first vote will be successful. Since we query the observer set before adding votes
+		// We can return error here as we  can guarantee that the first vote will be successful.
+		// Since we query the observer set before adding votes
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
@@ -256,17 +276,13 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 		curNumVotesState = numVotesTransitionMatrix.NextState(r, curNumVotesState)
 		numVotes := int(math.Ceil(float64(len(observerSet.ObserverList)) * statePercentageArray[curNumVotesState]))
 
-		// 1.2) select who votes and when
+		// 1.2) select who votes
 		whoVotes := r.Perm(len(observerSet.ObserverList))
 		// didntVote := whoVotes[numVotes:]
 		whoVotes = whoVotes[:numVotes]
-		//ballotMaturityPeriod := 20
+
 		var fops []simtypes.FutureOperation
 
-		//fmt.Printf("\nScheduling %d votes for ballot : %s at height : %d", numVotes, msg.Digest(), ctx.BlockHeight()+1)
-		//if numVotes > 3 {
-		//	fmt.Printf("More than 3 votes : %s", msg.Digest())
-		//}
 		for _, observerIdx := range whoVotes {
 			observerAddress := observerSet.ObserverList[observerIdx]
 			if observerAddress == firstVoter {
@@ -279,24 +295,33 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 			// 1.3) schedule the vote
 			votingMsg := msg
 			votingMsg.Creator = observerAddress
+
+			e := votingMsg.ValidateBasic()
+			if e != nil {
+				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate voting msg"), nil, err
+			}
+
 			fops = append(fops, simtypes.FutureOperation{
+				// Submit all subsequent votes in the next block
 				BlockHeight: int(ctx.BlockHeight() + 1),
 				Op:          operationSimulateVoteInbound(k, votingMsg, observerAccount),
 			})
 		}
-
 		return opMsg, fops, nil
 	}
 }
 
+// SimulateMsgVoteGasPrice generates a MsgVoteGasPrice and delivers it
 func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, chainID string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 
+		// System contracts are deployed on the first block , so we cannot vote on gas prices before that
 		if ctx.BlockHeight() <= 1 {
 			return simtypes.NoOpMsg(types.ModuleName, authz.GasPriceVoter.String(), "block height less than 1"), nil, nil
 		}
 
+		// Get a random account and observer
 		simAccount, randomObserver, err := GetRandomAccountAndObserver(r, ctx, k, accounts)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, authz.GasPriceVoter.String(), "unable to get random account and observer"), nil, err
@@ -310,6 +335,8 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 		}
 		randomChainID := GetRandomChainID(r, supportedChains)
 
+		// Vote for random gas price. Gas prices do not use a ballot system, so we can vote directly without having to schedule future operations.
+		// The random nature of the price might create weird gas prices for the chain, but it is fine for now. We can remove the randomness if needed
 		msg := types.MsgVoteGasPrice{
 			Creator:     randomObserver,
 			ChainId:     randomChainID,
@@ -317,6 +344,11 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 			PriorityFee: r.Uint64(),
 			BlockNumber: r.Uint64(),
 			Supply:      fmt.Sprintf("%d", r.Int63()),
+		}
+
+		err = msg.ValidateBasic()
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate vote gas price  msg"), nil, err
 		}
 
 		txCtx := simulation.OperationInput{
@@ -348,6 +380,7 @@ func GetRandomChainID(r *rand.Rand, chains []chains.Chain) int64 {
 	return chains[idx].ChainId
 }
 
+// GetRandomAccountAndObserver returns a random account and the associated observer address
 func GetRandomAccountAndObserver(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, accounts []simtypes.Account) (simtypes.Account, string, error) {
 	observers, found := k.GetObserverKeeper().GetObserverSet(ctx)
 	if !found {
@@ -360,19 +393,14 @@ func GetRandomAccountAndObserver(r *rand.Rand, ctx sdk.Context, k keeper.Keeper,
 
 	randomObserver := GetRandomObserver(r, observers.ObserverList)
 
-	// TODO : use GetObserverAccount
-	operatorAddress, err := observerTypes.GetOperatorAddressFromAccAddress(randomObserver)
+	simAccount, err := GetObserverAccount(randomObserver, accounts)
 	if err != nil {
-		return simtypes.Account{}, "", fmt.Errorf("validator not found for observer ")
-	}
-
-	simAccount, found := simtypes.FindAccount(accounts, operatorAddress)
-	if !found {
-		return simtypes.Account{}, "", fmt.Errorf("operator account not found")
+		return simtypes.Account{}, "", err
 	}
 	return simAccount, randomObserver, nil
 }
 
+// GetObserverAccount returns the account associated with the observer address from the list of accounts provided
 func GetObserverAccount(observerAddress string, accounts []simtypes.Account) (simtypes.Account, error) {
 	operatorAddress, err := observerTypes.GetOperatorAddressFromAccAddress(observerAddress)
 	if err != nil {
@@ -406,7 +434,8 @@ func GenAndDeliverTxWithRandFees(txCtx simulation.OperationInput) (simtypes.Oper
 	return GenAndDeliverTx(txCtx, fees)
 }
 
-// GenAndDeliverTx generates a transactions and delivers it.
+// GenAndDeliverTx generates a transactions and delivers it with the provided fees.
+// This function does not return an error if the transaction fails to deliver.
 func GenAndDeliverTx(txCtx simulation.OperationInput, fees sdk.Coins) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
 	tx, err := simtestutil.GenSignedMockTx(

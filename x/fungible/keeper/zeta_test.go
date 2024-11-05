@@ -17,7 +17,7 @@ import (
 func TestKeeper_MintZetaToEVMAccount(t *testing.T) {
 	t.Run("should mint the token in the specified balance", func(t *testing.T) {
 		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		acc := sample.Bech32AccAddress()
 		bal := sdkk.BankKeeper.GetBalance(ctx, acc, config.BaseDenom)

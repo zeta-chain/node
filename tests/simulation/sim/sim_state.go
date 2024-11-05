@@ -35,6 +35,7 @@ const (
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
+// All modifications to the genesis state should be done in this function.
 func AppStateFn(
 	cdc codec.Codec,
 	simManager *module.SimulationManager,
@@ -168,11 +169,13 @@ func AppStateFn(
 		// we should replace the EvmDenom with BondDenom
 		evmState.Params.EvmDenom = stakingState.Params.BondDenom
 
-		observers := []string{}
+		observers := make([]string, 0)
+		// Get all the operator addresses of the validators.
+		// The observer set can be a subset of the validator set
 		for _, validator := range stakingState.Validators {
 			accAddress, err := observertypes.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 			if err != nil {
-				panic(err)
+				continue
 			}
 			observers = append(observers, accAddress.String())
 		}
@@ -182,12 +185,12 @@ func AppStateFn(
 			observers[i], observers[j] = observers[j], observers[i]
 		})
 
+		// Pick a random number of observers to add to the observer set
 		numObservers := r.Intn(11) + 5
 		if numObservers > len(observers) {
 			numObservers = len(observers)
 		}
 		observers = observers[:numObservers]
-		fmt.Println("Added random observers: ", len(observers))
 
 		// update the observer genesis state
 		observerStateBz, ok := rawState[observertypes.ModuleName]
@@ -202,16 +205,16 @@ func AppStateFn(
 		tss := sample.Tss()
 		observerState.Tss = &tss
 
+		// Pick a random account to be the admin of all policies
+		randomAccount := accs[r.Intn(len(accs))]
 		authorityStateBz, ok := rawState[authoritytypes.ModuleName]
 		if !ok {
 			panic("authority genesis state is missing")
 		}
+
+		// update the authority genesis state
 		authorityState := new(authoritytypes.GenesisState)
 		cdc.MustUnmarshalJSON(authorityStateBz, authorityState)
-		randomAccount := accs[r.Intn(len(accs))]
-
-		fmt.Println("Adding random account to all policies: ", randomAccount.Address.String())
-
 		policies := authoritytypes.Policies{
 			Items: []*authoritytypes.Policy{
 				{

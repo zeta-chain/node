@@ -25,7 +25,7 @@ func TestKeeper_UpdateGatewayContract(t *testing.T) {
 			})
 
 			msgServer := keeper.NewMsgServerImpl(*k)
-			k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+			k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 			admin := sample.AccAddress()
 
 			authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
@@ -101,7 +101,7 @@ func TestKeeper_UpdateGatewayContract(t *testing.T) {
 			})
 
 			msgServer := keeper.NewMsgServerImpl(*k)
-			k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+			k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 			admin := sample.AccAddress()
 
 			authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
@@ -138,7 +138,7 @@ func TestKeeper_UpdateGatewayContract(t *testing.T) {
 		})
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
@@ -161,7 +161,7 @@ func TestKeeper_UpdateGatewayContract(t *testing.T) {
 		})
 
 		msgServer := keeper.NewMsgServerImpl(*k)
-		k.GetAccountKeeper().GetModuleAccount(ctx, types.ModuleName)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)

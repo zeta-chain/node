@@ -120,6 +120,7 @@ func ChainParamsList() (cpl types.ChainParamsList) {
 }
 
 // TODO rename to TSS
+// https://github.com/zeta-chain/node/issues/3098
 func Tss() types.TSS {
 	_, pubKey, _ := testdata.KeyTestPubAddr()
 	spk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
