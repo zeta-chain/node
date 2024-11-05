@@ -13,6 +13,7 @@ import (
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/testutil/sample"
 	cc "github.com/zeta-chain/node/x/crosschain/types"
@@ -31,6 +32,7 @@ type testSuite struct {
 	chain       chains.Chain
 	chainParams *observertypes.ChainParams
 
+	gateway    *toncontracts.Gateway
 	liteClient *mocks.LiteClient
 
 	zetacore *mocks.ZetacoreClient
@@ -54,6 +56,10 @@ func newTestSuite(t *testing.T) *testSuite {
 
 		chain       = chains.TONTestnet
 		chainParams = sample.ChainParams(chain.ChainId)
+
+		gateway = toncontracts.NewGateway(ton.MustParseAccountID(
+			"0:997d889c815aeac21c47f86ae0e38383efc3c3463067582f6263ad48c5a1485b",
+		))
 
 		liteClient = mocks.NewLiteClient(t)
 
@@ -90,6 +96,7 @@ func newTestSuite(t *testing.T) *testSuite {
 		chainParams: chainParams,
 
 		liteClient: liteClient,
+		gateway:    gateway,
 
 		zetacore: zetacore,
 		tss:      tss,
@@ -166,6 +173,20 @@ func (ts *testSuite) MockGetBlockHeader(id ton.BlockIDExt) *mock.Call {
 	return ts.liteClient.
 		On("GetBlockHeader", mock.Anything, id, uint32(0)).
 		Return(blockInfo, nil)
+}
+
+func (ts *testSuite) OnGetInboundTrackersForChain(trackers []cc.InboundTracker) *mock.Call {
+	return ts.zetacore.
+		On("GetInboundTrackersForChain", mock.Anything, ts.chain.ChainId).
+		Return(trackers, nil)
+}
+
+func (ts *testSuite) TxToInboundTracker(tx ton.Transaction) cc.InboundTracker {
+	return cc.InboundTracker{
+		ChainId:  ts.chain.ChainId,
+		TxHash:   liteapi.TransactionToHashString(tx),
+		CoinType: coin.CoinType_Gas,
+	}
 }
 
 type signable interface {

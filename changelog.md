@@ -6,6 +6,9 @@
 
 * [2984](https://github.com/zeta-chain/node/pull/2984) - add Whitelist message ability to whitelist SPL tokens on Solana
 
+### Tests
+* [3075](https://github.com/zeta-chain/node/pull/3075) - ton: withdraw concurrent, deposit & revert.
+
 ## v21.0.0
 
 ### Features
