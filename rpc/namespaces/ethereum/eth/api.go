@@ -21,6 +21,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	ethmath "github.com/ethereum/go-ethereum/common/math"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rpc"
 	ethermint "github.com/zeta-chain/ethermint/types"
@@ -98,7 +99,7 @@ type EthereumAPI interface {
 	GasPrice() (*hexutil.Big, error)
 	EstimateGas(args evmtypes.TransactionArgs, blockNrOptional *rpctypes.BlockNumber) (hexutil.Uint64, error)
 	FeeHistory(
-		blockCount rpc.DecimalOrHex,
+		blockCount ethmath.HexOrDecimal64,
 		lastBlock rpc.BlockNumber,
 		rewardPercentiles []float64,
 	) (*rpctypes.FeeHistoryResult, error)
@@ -350,7 +351,7 @@ func (e *PublicAPI) EstimateGas(
 	return e.backend.EstimateGas(args, blockNrOptional)
 }
 
-func (e *PublicAPI) FeeHistory(blockCount rpc.DecimalOrHex,
+func (e *PublicAPI) FeeHistory(blockCount ethmath.HexOrDecimal64,
 	lastBlock rpc.BlockNumber,
 	rewardPercentiles []float64,
 ) (*rpctypes.FeeHistoryResult, error) {

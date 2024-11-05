@@ -2,10 +2,14 @@ package signer
 
 import (
 	"context"
+	"regexp"
+	"strconv"
+	"strings"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
+	"github.com/tonkeeper/tongo/liteclient"
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
 
@@ -84,13 +88,20 @@ func (s *Signer) TryProcessOutbound(
 	}()
 
 	outcome, err := s.ProcessOutbound(ctx, cctx, zetacore, zetaBlockHeight)
-	if err != nil {
-		s.Logger().Std.Error().
-			Err(err).
-			Str("outbound.id", outboundID).
-			Uint64("outbound.nonce", cctx.GetCurrentOutboundParam().TssNonce).
-			Str("outbound.outcome", string(outcome)).
-			Msg("Unable to ProcessOutbound")
+
+	lf := map[string]any{
+		"outbound.id":      outboundID,
+		"outbound.nonce":   cctx.GetCurrentOutboundParam().TssNonce,
+		"outbound.outcome": string(outcome),
+	}
+
+	switch {
+	case err != nil:
+		s.Logger().Std.Error().Err(err).Fields(lf).Msg("Unable to ProcessOutbound")
+	case outcome != Success:
+		s.Logger().Std.Warn().Fields(lf).Msg("Unsuccessful outcome for ProcessOutbound")
+	default:
+		s.Logger().Std.Info().Fields(lf).Msg("Processed outbound")
 	}
 }
 
@@ -147,16 +158,8 @@ func (s *Signer) ProcessOutbound(
 	// Example: If a cctx has amount of 5 TON, the recipient will receive 5 TON,
 	// and gateway's balance will be decreased by 5 TON + txFees.
 	exitCode, err := s.gateway.SendExternalMessage(ctx, s.client, withdrawal)
-	switch {
-	case err != nil:
-		return Fail, errors.Wrap(err, "unable to send external message")
-	case exitCode != 0:
-		// Might happen if msg's nonce is too high; retry later.
-		lf["outbound.exit_code"] = exitCode
-		lf["outbound.outcome"] = string(Invalid)
-		s.Logger().Std.Info().Fields(lf).Msg("Unable to send external message")
-
-		return Invalid, nil
+	if err != nil || exitCode != 0 {
+		return s.handleSendError(exitCode, err, lf)
 	}
 
 	// it's okay to run this in the same goroutine
@@ -209,6 +212,62 @@ func (s *Signer) getSignature(hash [32]byte) ([65]byte, bool) {
 // caches signature
 func (s *Signer) setSignature(hash [32]byte, sig [65]byte) {
 	s.signaturesCache.Add(hash, sig)
+}
+
+// Sample (from local ton):
+// error code: 0 message: cannot apply external message to current state:
+// External message was not accepted Cannot run message on account:
+// inbound external message rejected by transaction ...: exitcode=109, steps=108, gas_used=0\
+// VM Log (truncated): ...
+var exitCodeErrorRegex = regexp.MustCompile(`exitcode=(\d+)`)
+
+// handleSendError tries to figure out the reason of the send error.
+func (s *Signer) handleSendError(exitCode uint32, err error, logFields map[string]any) (Outcome, error) {
+	if err != nil {
+		// Might be possible if 2 concurrent zeta clients
+		// are trying to broadcast the same message.
+		if strings.Contains(err.Error(), "duplicate message") {
+			s.Logger().Std.Warn().Fields(logFields).Msg("Message already sent")
+			return Invalid, nil
+		}
+
+		var errLiteClient liteclient.LiteServerErrorC
+		if errors.As(err, &errLiteClient) {
+			logFields["outbound.error.message"] = errLiteClient.Message
+			exitCode = errLiteClient.Code
+		}
+
+		if code, ok := extractExitCode(err.Error()); ok {
+			exitCode = code
+		}
+	}
+
+	switch {
+	case exitCode == uint32(toncontracts.ExitCodeInvalidSeqno):
+		// Might be possible if zeta clients send several seq. numbers concurrently.
+		// In the current implementation, Gateway supports only 1 nonce per block.
+		logFields["outbound.error.exit_code"] = exitCode
+		s.Logger().Std.Warn().Fields(logFields).Msg("Invalid nonce, retry later")
+		return Invalid, nil
+	case err != nil:
+		return Fail, errors.Wrap(err, "unable to send external message")
+	default:
+		return Fail, errors.Errorf("unable to send external message: exit code %d", exitCode)
+	}
+}
+
+func extractExitCode(text string) (uint32, bool) {
+	match := exitCodeErrorRegex.FindStringSubmatch(text)
+	if len(match) < 2 {
+		return 0, false
+	}
+
+	exitCode, err := strconv.ParseUint(match[1], 10, 32)
+	if err != nil {
+		return 0, false
+	}
+
+	return uint32(exitCode), true
 }
 
 // GetGatewayAddress returns gateway address as raw TON address "0:ABC..."
