@@ -69,6 +69,9 @@ struct MessageContext {
 }
 
 contract TestDAppV2 {
+    // used to simulate gas consumption
+    uint256[] private storageArray;
+
     string public constant NO_MESSAGE_CALL = "called with no message";
     string public constant WITHDRAW = "withdraw";
 
@@ -118,6 +121,10 @@ contract TestDAppV2 {
             require(feeToken == zrc20, "zrc20 is not gas token");
             require(feeAmount <= amount, "fee amount is higher than the amount");
             uint256 withdrawAmount = amount - feeAmount;
+
+            // in the E2E test doing a withdraw, we want to test the gas usage for processing the outbound
+            // this function allow to represent more accurate use case where gas would be consumed in the onCall hook
+            consumeGas();
 
             IZRC20(zrc20).approve(msg.sender, amount);
 
@@ -188,6 +195,22 @@ contract TestDAppV2 {
         senderWithMessage[bytes(messageStr)] = messageContext.sender;
 
         return "";
+    }
+
+    function consumeGas() internal {
+        // Approximate target gas consumption
+        uint256 targetGas = 500000;
+        // Approximate gas cost for a single storage write
+        uint256 storageWriteGasCost = 20000;
+        uint256 iterations = targetGas / storageWriteGasCost;
+
+        // Perform the storage writes
+        for (uint256 i = 0; i < iterations; i++) {
+            storageArray.push(i);
+        }
+
+        // Reset the storage array to avoid accumulation of storage cost
+        delete storageArray;
     }
 
     receive() external payable {}
