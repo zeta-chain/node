@@ -198,6 +198,7 @@ jobs:
     needs:
       - build-zetanode
       - matrix-conditionals
+    if: always()
     strategy:
       fail-fast: false
       matrix:
