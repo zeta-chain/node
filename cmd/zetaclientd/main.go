@@ -14,11 +14,6 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 )
 
-// globalOptions defines the global options for all commands.
-type globalOptions struct {
-	ZetacoreHome string
-}
-
 var (
 	RootCmd = &cobra.Command{
 		Use:   "zetaclientd",
@@ -29,21 +24,20 @@ var (
 		Short: "prints version",
 		Run:   func(_ *cobra.Command, _ []string) { fmt.Print(constant.Version) },
 	}
-	StartCmd = &cobra.Command{
-		Use:   "start",
-		Short: "Start ZetaClient Observer",
-		RunE:  Start,
-	}
+
 	InitializeConfigCmd = &cobra.Command{
 		Use:     "init-config",
 		Aliases: []string{"init"},
 		Short:   "Initialize Zetaclient Configuration file",
 		RunE:    InitializeConfig,
 	}
-	TSSCmd = &cobra.Command{
-		Use:   "tss",
-		Short: "TSS commands",
+	StartCmd = &cobra.Command{
+		Use:   "start",
+		Short: "Start ZetaClient Observer",
+		RunE:  Start,
 	}
+
+	TSSCmd        = &cobra.Command{Use: "tss", Short: "TSS commands"}
 	TSSEncryptCmd = &cobra.Command{
 		Use:   "encrypt [file-path] [secret-key]",
 		Short: "Utility command to encrypt existing tss key-share file",
@@ -56,7 +50,24 @@ var (
 		Args:  cobra.ExactArgs(1),
 		RunE:  TSSGeneratePreParams,
 	}
+
+	RelayerCmd          = &cobra.Command{Use: "relayer", Short: "Relayer commands"}
+	RelayerImportKeyCmd = &cobra.Command{
+		Use:   "import-key --network=<net> --private-key=<pk> --password=<pass> --relayer-key-path=<path>",
+		Short: "Import a relayer private key",
+		RunE:  RelayerImportKey,
+	}
+	RelayerShowAddressCmd = &cobra.Command{
+		Use:   "show-address --network=<new> --password=<pass> --relayer-key-path=<path>",
+		Short: "Show relayer address",
+		RunE:  RelayerShowAddress,
+	}
 )
+
+// globalOptions defines the global options for all commands.
+type globalOptions struct {
+	ZetacoreHome string
+}
 
 var (
 	preParams  *ecdsakeygen.LocalPreParams
@@ -78,6 +89,7 @@ func init() {
 	// Setup options
 	setupGlobalOptions()
 	setupInitializeConfigOptions()
+	setupRelayerOptions()
 
 	// Define commands
 	RootCmd.AddCommand(VersionCmd)
@@ -87,6 +99,10 @@ func init() {
 	RootCmd.AddCommand(TSSCmd)
 	TSSCmd.AddCommand(TSSEncryptCmd)
 	TSSCmd.AddCommand(TSSGeneratePreParamsCmd)
+
+	RootCmd.AddCommand(RelayerCmd)
+	RelayerCmd.AddCommand(RelayerImportKeyCmd)
+	RelayerCmd.AddCommand(RelayerShowAddressCmd)
 }
 
 func setupGlobalOptions() {
