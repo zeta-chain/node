@@ -247,7 +247,7 @@ ifdef ZETANODE_IMAGE
 zetanode:
 	@echo "Pulling zetanode image"
 	$(DOCKER) pull $(ZETANODE_IMAGE)
-	$(DOCKER) tag $(ZETANODE_IMAGE) zetanode
+	$(DOCKER) tag $(ZETANODE_IMAGE) zetanode:latest
 .PHONY: zetanode
 else
 zetanode:
