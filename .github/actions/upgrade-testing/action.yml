@@ -14,7 +14,7 @@ runs:
       with:
         python-version: 'pypy3.9'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4 #v3 reaches deprecation on November 30, 2024
       with:
         name: binaries-${{ github.sha }}
         path: ./
