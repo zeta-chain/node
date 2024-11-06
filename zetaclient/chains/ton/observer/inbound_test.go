@@ -2,6 +2,7 @@ package observer
 
 import (
 	"encoding/hex"
+	"fmt"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -11,14 +12,11 @@ import (
 	"github.com/tonkeeper/tongo/ton"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/testutil/sample"
+	cc "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
 )
 
 func TestInbound(t *testing.T) {
-	gw := toncontracts.NewGateway(
-		ton.MustParseAccountID("0:997d889c815aeac21c47f86ae0e38383efc3c3463067582f6263ad48c5a1485b"),
-	)
-
 	t.Run("No gateway provided", func(t *testing.T) {
 		ts := newTestSuite(t)
 
@@ -32,11 +30,11 @@ func TestInbound(t *testing.T) {
 			ts := newTestSuite(t)
 
 			// Given observer
-			ob, err := New(ts.baseObserver, ts.liteClient, gw)
+			ob, err := New(ts.baseObserver, ts.liteClient, ts.gateway)
 			require.NoError(t, err)
 
 			// Given mocked lite client call
-			ts.OnGetFirstTransaction(gw.AccountID(), nil, 0, errors.New("oops")).Once()
+			ts.OnGetFirstTransaction(ts.gateway.AccountID(), nil, 0, errors.New("oops")).Once()
 
 			// ACT
 			// Observe inbounds once
@@ -52,16 +50,16 @@ func TestInbound(t *testing.T) {
 			ts := newTestSuite(t)
 
 			// Given mocked lite client calls
-			firstTX := sample.TONDonation(t, gw.AccountID(), toncontracts.Donation{
+			firstTX := sample.TONDonation(t, ts.gateway.AccountID(), toncontracts.Donation{
 				Sender: sample.GenerateTONAccountID(),
 				Amount: tonCoins(t, "1"),
 			})
 
-			ts.OnGetFirstTransaction(gw.AccountID(), &firstTX, 0, nil).Once()
-			ts.OnGetTransactionsSince(gw.AccountID(), firstTX.Lt, txHash(firstTX), nil, nil).Once()
+			ts.OnGetFirstTransaction(ts.gateway.AccountID(), &firstTX, 0, nil).Once()
+			ts.OnGetTransactionsSince(ts.gateway.AccountID(), firstTX.Lt, txHash(firstTX), nil, nil).Once()
 
 			// Given observer
-			ob, err := New(ts.baseObserver, ts.liteClient, gw)
+			ob, err := New(ts.baseObserver, ts.liteClient, ts.gateway)
 			require.NoError(t, err)
 
 			// ACT
@@ -88,13 +86,13 @@ func TestInbound(t *testing.T) {
 		ts := newTestSuite(t)
 
 		// Given observer
-		ob, err := New(ts.baseObserver, ts.liteClient, gw)
+		ob, err := New(ts.baseObserver, ts.liteClient, ts.gateway)
 		require.NoError(t, err)
 
-		lastScanned := ts.SetupLastScannedTX(gw.AccountID())
+		lastScanned := ts.SetupLastScannedTX(ts.gateway.AccountID())
 
 		// Given mocked lite client calls
-		donation := sample.TONDonation(t, gw.AccountID(), toncontracts.Donation{
+		donation := sample.TONDonation(t, ts.gateway.AccountID(), toncontracts.Donation{
 			Sender: sample.GenerateTONAccountID(),
 			Amount: tonCoins(t, "12"),
 		})
@@ -102,7 +100,7 @@ func TestInbound(t *testing.T) {
 		txs := []ton.Transaction{donation}
 
 		ts.
-			OnGetTransactionsSince(gw.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
+			OnGetTransactionsSince(ts.gateway.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
 			Once()
 
 		// ACT
@@ -124,10 +122,10 @@ func TestInbound(t *testing.T) {
 		ts := newTestSuite(t)
 
 		// Given observer
-		ob, err := New(ts.baseObserver, ts.liteClient, gw)
+		ob, err := New(ts.baseObserver, ts.liteClient, ts.gateway)
 		require.NoError(t, err)
 
-		lastScanned := ts.SetupLastScannedTX(gw.AccountID())
+		lastScanned := ts.SetupLastScannedTX(ts.gateway.AccountID())
 
 		// Given mocked lite client calls
 		deposit := toncontracts.Deposit{
@@ -136,11 +134,11 @@ func TestInbound(t *testing.T) {
 			Recipient: sample.EthAddress(),
 		}
 
-		depositTX := sample.TONDeposit(t, gw.AccountID(), deposit)
+		depositTX := sample.TONDeposit(t, ts.gateway.AccountID(), deposit)
 		txs := []ton.Transaction{depositTX}
 
 		ts.
-			OnGetTransactionsSince(gw.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
+			OnGetTransactionsSince(ts.gateway.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
 			Once()
 
 		ts.MockGetBlockHeader(depositTX.BlockID)
@@ -182,10 +180,10 @@ func TestInbound(t *testing.T) {
 		ts := newTestSuite(t)
 
 		// Given observer
-		ob, err := New(ts.baseObserver, ts.liteClient, gw)
+		ob, err := New(ts.baseObserver, ts.liteClient, ts.gateway)
 		require.NoError(t, err)
 
-		lastScanned := ts.SetupLastScannedTX(gw.AccountID())
+		lastScanned := ts.SetupLastScannedTX(ts.gateway.AccountID())
 
 		// Given mocked lite client calls
 		const callData = "hey there"
@@ -198,11 +196,11 @@ func TestInbound(t *testing.T) {
 			CallData: []byte(callData),
 		}
 
-		depositAndCallTX := sample.TONDepositAndCall(t, gw.AccountID(), depositAndCall)
+		depositAndCallTX := sample.TONDepositAndCall(t, ts.gateway.AccountID(), depositAndCall)
 		txs := []ton.Transaction{depositAndCallTX}
 
 		ts.
-			OnGetTransactionsSince(gw.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
+			OnGetTransactionsSince(ts.gateway.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
 			Once()
 
 		ts.MockGetBlockHeader(depositAndCallTX.BlockID)
@@ -251,10 +249,10 @@ func TestInbound(t *testing.T) {
 		ts := newTestSuite(t)
 
 		// Given observer
-		ob, err := New(ts.baseObserver, ts.liteClient, gw)
+		ob, err := New(ts.baseObserver, ts.liteClient, ts.gateway)
 		require.NoError(t, err)
 
-		lastScanned := ts.SetupLastScannedTX(gw.AccountID())
+		lastScanned := ts.SetupLastScannedTX(ts.gateway.AccountID())
 
 		// Given mocked lite client calls
 		withdrawal := toncontracts.Withdrawal{
@@ -269,11 +267,11 @@ func TestInbound(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, ob.TSS().EVMAddress().Hex(), withdrawalSigner.Hex())
 
-		withdrawalTX := sample.TONWithdrawal(t, gw.AccountID(), withdrawal)
+		withdrawalTX := sample.TONWithdrawal(t, ts.gateway.AccountID(), withdrawal)
 		txs := []ton.Transaction{withdrawalTX}
 
 		ts.
-			OnGetTransactionsSince(gw.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
+			OnGetTransactionsSince(ts.gateway.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
 			Once()
 
 		// ACT
@@ -299,10 +297,10 @@ func TestInbound(t *testing.T) {
 		ts := newTestSuite(t)
 
 		// Given observer
-		ob, err := New(ts.baseObserver, ts.liteClient, gw)
+		ob, err := New(ts.baseObserver, ts.liteClient, ts.gateway)
 		require.NoError(t, err)
 
-		lastScanned := ts.SetupLastScannedTX(gw.AccountID())
+		lastScanned := ts.SetupLastScannedTX(ts.gateway.AccountID())
 
 		// Given several transactions
 		withdrawal := toncontracts.Withdrawal{
@@ -314,39 +312,39 @@ func TestInbound(t *testing.T) {
 
 		txs := []ton.Transaction{
 			// should be skipped
-			sample.TONDonation(t, gw.AccountID(), toncontracts.Donation{
+			sample.TONDonation(t, ts.gateway.AccountID(), toncontracts.Donation{
 				Sender: sample.GenerateTONAccountID(),
 				Amount: tonCoins(t, "1"),
 			}),
 			// should be voted
-			sample.TONDeposit(t, gw.AccountID(), toncontracts.Deposit{
+			sample.TONDeposit(t, ts.gateway.AccountID(), toncontracts.Deposit{
 				Sender:    sample.GenerateTONAccountID(),
 				Amount:    tonCoins(t, "3"),
 				Recipient: sample.EthAddress(),
 			}),
 			// should be skipped (invalid inbound message)
 			sample.TONTransaction(t, sample.TONTransactionProps{
-				Account: gw.AccountID(),
+				Account: ts.gateway.AccountID(),
 				Input:   &tlb.Message{},
 			}),
 			// should be voted
-			sample.TONDeposit(t, gw.AccountID(), toncontracts.Deposit{
+			sample.TONDeposit(t, ts.gateway.AccountID(), toncontracts.Deposit{
 				Sender:    sample.GenerateTONAccountID(),
 				Amount:    tonCoins(t, "3"),
 				Recipient: sample.EthAddress(),
 			}),
 			// a tracker should be added
-			sample.TONWithdrawal(t, gw.AccountID(), withdrawal),
+			sample.TONWithdrawal(t, ts.gateway.AccountID(), withdrawal),
 			// should be skipped (invalid inbound/outbound messages)
 			sample.TONTransaction(t, sample.TONTransactionProps{
-				Account: gw.AccountID(),
+				Account: ts.gateway.AccountID(),
 				Input:   &tlb.Message{},
 				Output:  &tlb.Message{},
 			}),
 		}
 
 		ts.
-			OnGetTransactionsSince(gw.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
+			OnGetTransactionsSince(ts.gateway.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
 			Once()
 
 		for _, tx := range txs {
@@ -389,6 +387,58 @@ func TestInbound(t *testing.T) {
 		assert.Equal(t, uint64(withdrawal.Seqno), tracker.nonce)
 		assert.Equal(t, liteapi.TransactionToHashString(txs[4]), tracker.hash)
 	})
+}
+
+func TestInboundTracker(t *testing.T) {
+	// ARRANGE
+	ts := newTestSuite(t)
+
+	// Given observer
+	ob, err := New(ts.baseObserver, ts.liteClient, ts.gateway)
+	require.NoError(t, err)
+
+	// Given TON gateway transactions
+	// should be voted
+	deposit := toncontracts.Deposit{
+		Sender:    sample.GenerateTONAccountID(),
+		Amount:    toncontracts.Coins(5),
+		Recipient: sample.EthAddress(),
+	}
+
+	txDeposit := sample.TONDeposit(t, ts.gateway.AccountID(), deposit)
+	ts.MockGetTransaction(ts.gateway.AccountID(), txDeposit)
+	ts.MockGetBlockHeader(txDeposit.BlockID)
+
+	// Should be skipped (I doubt anyone would vote for this gov proposal, but let’s still put up rail guards)
+	txWithdrawal := sample.TONWithdrawal(t, ts.gateway.AccountID(), toncontracts.Withdrawal{
+		Recipient: sample.GenerateTONAccountID(),
+		Amount:    toncontracts.Coins(5),
+		Seqno:     1,
+	})
+	ts.MockGetTransaction(ts.gateway.AccountID(), txWithdrawal)
+	ts.MockGetBlockHeader(txWithdrawal.BlockID)
+
+	// Given inbound trackers from zetacore
+	trackers := []cc.InboundTracker{
+		ts.TxToInboundTracker(txDeposit),
+		ts.TxToInboundTracker(txWithdrawal),
+	}
+
+	ts.OnGetInboundTrackersForChain(trackers).Once()
+
+	// ACT
+	err = ob.processInboundTrackers(ts.ctx)
+
+	// ARRANGE
+	require.NoError(t, err)
+	require.Len(t, ts.votesBag, 1)
+
+	vote := ts.votesBag[0]
+	assert.Equal(t, deposit.Amount, vote.Amount)
+	assert.Equal(t, deposit.Sender.ToRaw(), vote.Sender)
+
+	// zevm recipient bytes == memo bytes
+	assert.Equal(t, fmt.Sprintf("%x", deposit.Recipient), vote.Message)
 }
 
 func txHash(tx ton.Transaction) ton.Bits256 {

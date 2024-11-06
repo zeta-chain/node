@@ -22,7 +22,7 @@ func (k Keeper) EVMHooks() EVMHooks {
 }
 
 // PostTxProcessing is a wrapper for calling the EVM PostTxProcessing hook on the module keeper
-func (h EVMHooks) PostTxProcessing(ctx sdk.Context, _ core.Message, receipt *ethtypes.Receipt) error {
+func (h EVMHooks) PostTxProcessing(ctx sdk.Context, _ *core.Message, receipt *ethtypes.Receipt) error {
 	return h.k.checkPausedZRC20(ctx, receipt)
 }
 

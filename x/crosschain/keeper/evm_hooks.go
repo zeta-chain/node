@@ -40,21 +40,21 @@ func (k Keeper) Hooks() Hooks {
 
 // PostTxProcessing is a wrapper for calling the EVM PostTxProcessing hook on
 // the module keeper
-func (h Hooks) PostTxProcessing(ctx sdk.Context, msg core.Message, receipt *ethtypes.Receipt) error {
+func (h Hooks) PostTxProcessing(ctx sdk.Context, msg *core.Message, receipt *ethtypes.Receipt) error {
 	return h.k.PostTxProcessing(ctx, msg, receipt)
 }
 
 // PostTxProcessing implements EvmHooks.PostTxProcessing.
 func (k Keeper) PostTxProcessing(
 	ctx sdk.Context,
-	msg core.Message,
+	msg *core.Message,
 	receipt *ethtypes.Receipt,
 ) error {
 	var emittingContract ethcommon.Address
-	if msg.To() != nil {
-		emittingContract = *msg.To()
+	if msg.To != nil {
+		emittingContract = *msg.To
 	}
-	return k.ProcessLogs(ctx, receipt.Logs, emittingContract, msg.From().Hex())
+	return k.ProcessLogs(ctx, receipt.Logs, emittingContract, msg.From.Hex())
 }
 
 // ProcessLogs post-processes logs emitted by a zEVM contract; if the log contains Withdrawal event

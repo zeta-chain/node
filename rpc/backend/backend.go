@@ -28,6 +28,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/common/math"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -131,7 +132,7 @@ type EVMBackend interface {
 	PendingTransactions() ([]*sdk.Tx, error)
 	GetCoinbase() (sdk.AccAddress, error)
 	FeeHistory(
-		blockCount rpc.DecimalOrHex,
+		blockCount math.HexOrDecimal64,
 		lastBlock rpc.BlockNumber,
 		rewardPercentiles []float64,
 	) (*rpctypes.FeeHistoryResult, error)
