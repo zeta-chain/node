@@ -176,7 +176,6 @@ func SetupTSSServer(
 		bootstrapPeers,
 		6668,
 		privkey,
-		"MetaMetaOpenTheDoor",
 		tsspath,
 		thorcommon.TssConfig{
 			EnableMonitor:   enableMonitor,
