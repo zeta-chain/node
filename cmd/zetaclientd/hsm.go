@@ -55,8 +55,6 @@ func init() {
 }
 
 func GetHsmAddress(_ *cobra.Command, _ []string) error {
-	SetupConfigForTest()
-
 	config, err := hsm.GetPKCS11Config()
 	if err != nil {
 		return err

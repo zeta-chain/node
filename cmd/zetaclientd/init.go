@@ -41,7 +41,6 @@ type initArguments struct {
 
 func init() {
 	RootCmd.AddCommand(InitCmd)
-	RootCmd.AddCommand(VersionCmd)
 
 	InitCmd.Flags().
 		StringVar(&initArgs.peer, "peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
@@ -75,11 +74,6 @@ func init() {
 }
 
 func Initialize(_ *cobra.Command, _ []string) error {
-	err := setHomeDir()
-	if err != nil {
-		return err
-	}
-
 	//Create new config struct
 	configData := config.New(true)
 
@@ -113,5 +107,5 @@ func Initialize(_ *cobra.Command, _ []string) error {
 	configData.ComplianceConfig = sample.ComplianceConfig()
 
 	// Save config file
-	return config.Save(&configData, rootArgs.zetaCoreHome)
+	return config.Save(&configData, globalOpts.ZetacoreHome)
 }

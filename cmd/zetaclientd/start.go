@@ -35,23 +35,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-var StartCmd = &cobra.Command{
-	Use:   "start",
-	Short: "Start ZetaClient Observer",
-	RunE:  start,
-}
-
-func init() {
-	RootCmd.AddCommand(StartCmd)
-}
-
-func start(_ *cobra.Command, _ []string) error {
-	if err := setHomeDir(); err != nil {
-		return err
-	}
-
-	SetupConfigForTest()
-
+func Start(_ *cobra.Command, _ []string) error {
 	// Prompt for Hotkey, TSS key-share and relayer key passwords
 	titles := []string{"HotKey", "TSS", "Solana Relayer Key"}
 	passwords, err := zetaos.PromptPasswords(titles)
@@ -64,7 +48,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	//Load Config file given path
-	cfg, err := config.Load(rootArgs.zetaCoreHome)
+	cfg, err := config.Load(globalOpts.ZetacoreHome)
 	if err != nil {
 		return err
 	}
@@ -102,10 +86,9 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// CreateZetacoreClient:  zetacore client is used for all communication to zetacore , which this client connects to.
 	// Zetacore accumulates votes , and provides a centralized source of truth for all clients
-	zetacoreClient, err := CreateZetacoreClient(cfg, hotkeyPass, masterLogger)
+	zetacoreClient, err := createZetacoreClient(cfg, hotkeyPass, masterLogger)
 	if err != nil {
-		startLogger.Error().Err(err).Msg("CreateZetacoreClient error")
-		return err
+		return errors.Wrap(err, "unable to create zetacore client")
 	}
 
 	// Wait until zetacore is ready to create blocks
@@ -143,16 +126,15 @@ func start(_ *cobra.Command, _ []string) error {
 	// This is to ensure that the user does not need to keep their operator key online , and can use a cold key to sign votes
 	signerAddress, err := zetacoreClient.GetKeys().GetAddress()
 	if err != nil {
-		startLogger.Error().Err(err).Msg("error getting signer address")
-		return err
+		return errors.Wrap(err, "error getting signer address")
 	}
-	CreateAuthzSigner(zetacoreClient.GetKeys().GetOperatorAddress().String(), signerAddress)
-	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
+
+	createAuthzSigner(zetacoreClient.GetKeys().GetOperatorAddress().String(), signerAddress)
+	startLogger.Debug().Msgf("createAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore
 	if err = zetacoreClient.UpdateAppContext(ctx, appContext, startLogger); err != nil {
-		startLogger.Error().Err(err).Msg("Error getting core parameters")
-		return err
+		return errors.Wrap(err, "unable to update app context")
 	}
 
 	startLogger.Info().Msgf("Config is updated from zetacore\n %s", cfg.StringMasked())
