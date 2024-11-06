@@ -381,27 +381,27 @@ func (zts ZetaTxServer) DeploySystemContracts(
 }
 
 // DeployZRC20s deploys the ZRC20 contracts
-// returns the addresses of erc20 zrc20
+// returns the addresses of erc20 and spl zrc20
 func (zts ZetaTxServer) DeployZRC20s(
-	accountOperational, accountAdmin, erc20Addr string,
+	accountOperational, accountAdmin, erc20Addr string, splAddr string,
 	skipChain func(chainID int64) bool,
-) (string, error) {
+) (string, string, error) {
 	// retrieve account
 	accOperational, err := zts.clientCtx.Keyring.Key(accountOperational)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	addrOperational, err := accOperational.GetAddress()
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	accAdmin, err := zts.clientCtx.Keyring.Key(accountAdmin)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	addrAdmin, err := accAdmin.GetAddress()
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	// authorization for deploying new ZRC20 has changed from accountOperational to accountAdmin in v19
@@ -411,7 +411,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 	deployerAddr := addrAdmin.String()
 	authorization, preV19, err := zts.fetchMessagePermissions(&fungibletypes.MsgDeployFungibleCoinZRC20{})
 	if err != nil {
-		return "", fmt.Errorf("failed to fetch message permissions: %s", err.Error())
+		return "", "", fmt.Errorf("failed to fetch message permissions: %s", err.Error())
 	}
 	if preV19 || authorization == authoritytypes.PolicyType_groupOperational {
 		deployerAccount = accountOperational
@@ -451,6 +451,16 @@ func (zts ZetaTxServer) DeployZRC20s(
 		),
 		fungibletypes.NewMsgDeployFungibleCoinZRC20(
 			deployerAddr,
+			splAddr,
+			chains.SolanaLocalnet.ChainId,
+			9,
+			"USDT",
+			"USDT",
+			coin.CoinType_ERC20,
+			100000,
+		),
+		fungibletypes.NewMsgDeployFungibleCoinZRC20(
+			deployerAddr,
 			"",
 			chains.TONLocalnet.ChainId,
 			9,
@@ -484,12 +494,12 @@ func (zts ZetaTxServer) DeployZRC20s(
 
 	res, err := zts.BroadcastTx(deployerAccount, deployMsgsIface...)
 	if err != nil {
-		return "", fmt.Errorf("deploy zrc20s: %w", err)
+		return "", "", fmt.Errorf("deploy zrc20s: %w", err)
 	}
 
 	deployedEvents, ok := EventsOfType[*fungibletypes.EventZRC20Deployed](res.Events)
 	if !ok {
-		return "", fmt.Errorf("no EventZRC20Deployed in %s", res.TxHash)
+		return "", "", fmt.Errorf("no EventZRC20Deployed in %s", res.TxHash)
 	}
 
 	zrc20Addrs := lo.Map(deployedEvents, func(ev *fungibletypes.EventZRC20Deployed, _ int) string {
@@ -498,7 +508,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 
 	err = zts.InitializeLiquidityCaps(zrc20Addrs...)
 	if err != nil {
-		return "", fmt.Errorf("initialize liquidity cap: %w", err)
+		return "", "", fmt.Errorf("initialize liquidity cap: %w", err)
 	}
 
 	// find erc20 zrc20
@@ -506,10 +516,18 @@ func (zts ZetaTxServer) DeployZRC20s(
 		return ev.ChainId == chains.GoerliLocalnet.ChainId && ev.CoinType == coin.CoinType_ERC20
 	})
 	if !ok {
-		return "", fmt.Errorf("unable to find erc20 zrc20")
+		return "", "", fmt.Errorf("unable to find erc20 zrc20")
 	}
 
-	return erc20zrc20.Contract, nil
+	// find spl zrc20
+	splzrc20, ok := lo.Find(deployedEvents, func(ev *fungibletypes.EventZRC20Deployed) bool {
+		return ev.ChainId == chains.SolanaLocalnet.ChainId && ev.CoinType == coin.CoinType_ERC20
+	})
+	if !ok {
+		return "", "", fmt.Errorf("unable to find spl zrc20")
+	}
+
+	return erc20zrc20.Contract, splzrc20.Contract, nil
 }
 
 // FundEmissionsPool funds the emissions pool with the given amount

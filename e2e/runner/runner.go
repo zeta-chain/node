@@ -110,6 +110,8 @@ type E2ERunner struct {
 
 	// programs on Solana
 	GatewayProgram solana.PublicKey
+	SPLAddr        solana.PublicKey
+	SPLPrivateKey  solana.PrivateKey // private key for token account is needed for instruction accounts
 
 	// contracts evm
 	ZetaEthAddr      ethcommon.Address
@@ -125,6 +127,8 @@ type E2ERunner struct {
 	// contracts zevm
 	ERC20ZRC20Addr       ethcommon.Address
 	ERC20ZRC20           *zrc20.ZRC20
+	SPLZRC20Addr         ethcommon.Address
+	SPLZRC20             *zrc20.ZRC20
 	ETHZRC20Addr         ethcommon.Address
 	ETHZRC20             *zrc20.ZRC20
 	BTCZRC20Addr         ethcommon.Address
@@ -366,6 +370,8 @@ func (r *E2ERunner) Unlock() {
 func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print(" --- 📜Solana addresses ---")
 	r.Logger.Print("GatewayProgram: %s", r.GatewayProgram.String())
+	r.Logger.Print("SPL:        %s", r.SPLAddr.String())
+
 	// zevm contracts
 	r.Logger.Print(" --- 📜zEVM contracts ---")
 	r.Logger.Print("SystemContract: %s", r.SystemContractAddr.Hex())
@@ -373,6 +379,7 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("ERC20ZRC20:     %s", r.ERC20ZRC20Addr.Hex())
 	r.Logger.Print("BTCZRC20:       %s", r.BTCZRC20Addr.Hex())
 	r.Logger.Print("SOLZRC20:       %s", r.SOLZRC20Addr.Hex())
+	r.Logger.Print("SPLZRC20:       %s", r.SPLZRC20Addr.Hex())
 	r.Logger.Print("TONZRC20:       %s", r.TONZRC20Addr.Hex())
 	r.Logger.Print("UniswapFactory: %s", r.UniswapV2FactoryAddr.Hex())
 	r.Logger.Print("UniswapRouter:  %s", r.UniswapV2RouterAddr.Hex())

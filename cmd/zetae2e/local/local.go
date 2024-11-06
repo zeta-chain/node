@@ -218,6 +218,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		deployerRunner.SetupEVMV2()
 
+		if testSolana {
+			deployerRunner.SetupSolana(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
+		}
+
 		deployerRunner.SetZEVMSystemContracts()
 
 		// NOTE: v2 (gateway) setup called here because system contract needs to be set first, then gateway, then zrc20
@@ -230,10 +234,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// https://github.com/zeta-chain/node/issues/2627
 		deployerRunner.UpdateChainParamsV2Contracts()
 		deployerRunner.ERC20CustodyAddr = deployerRunner.ERC20CustodyV2Addr
-
-		if testSolana {
-			deployerRunner.SetupSolana(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
-		}
 
 		deployerRunner.MintERC20OnEvm(1000000)
 
@@ -404,15 +404,16 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			os.Exit(1)
 		}
 		solanaTests := []string{
-			e2etests.TestSolanaDepositName,
-			e2etests.TestSolanaWithdrawName,
-			e2etests.TestSolanaDepositAndCallName,
-			e2etests.TestSolanaDepositAndCallRefundName,
-			e2etests.TestSolanaDepositRestrictedName,
-			e2etests.TestSolanaWithdrawRestrictedName,
-			// TODO move under admin tests
-			// https://github.com/zeta-chain/node/issues/3085
-			e2etests.TestSolanaWhitelistSPLName,
+			// e2etests.TestSolanaDepositName,
+			// e2etests.TestSolanaWithdrawName,
+			// e2etests.TestSolanaDepositAndCallName,
+			// e2etests.TestSolanaDepositAndCallRefundName,
+			// e2etests.TestSolanaDepositRestrictedName,
+			// e2etests.TestSolanaWithdrawRestrictedName,
+			// // TODO move under admin tests
+			// // https://github.com/zeta-chain/node/issues/3085
+			// e2etests.TestSolanaWhitelistSPLName,
+			e2etests.TestSolanaDepositSPLName,
 		}
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
 	}

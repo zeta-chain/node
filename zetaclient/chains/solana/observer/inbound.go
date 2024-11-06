@@ -315,12 +315,50 @@ func (ob *Observer) ParseInboundAsDeposit(
 // ParseInboundAsDepositSPL tries to parse an instruction as a 'deposit_spl_token'.
 // It returns nil if the instruction can't be parsed as a 'deposit_spl_token'.
 func (ob *Observer) ParseInboundAsDepositSPL(
-	_ *solana.Transaction,
-	_ int,
-	_ uint64,
+	tx *solana.Transaction,
+	instructionIndex int,
+	slot uint64,
 ) (*clienttypes.InboundEvent, error) {
-	// not implemented yet
-	return nil, nil
+	// get instruction by index
+	instruction := tx.Message.Instructions[instructionIndex]
+
+	// try deserializing instruction as a 'deposit_spl_token'
+	var inst solanacontracts.DepositSPLInstructionParams
+	err := borsh.Deserialize(&inst, instruction.Data)
+	if err != nil {
+		return nil, nil
+	}
+
+	// check if the instruction is a deposit or not
+	if inst.Discriminator != solanacontracts.DiscriminatorDepositSPL {
+		return nil, nil
+	}
+
+	// get the sender address (skip if unable to parse signer address)
+	sender, spl, err := ob.GetFromDepositSPLAccounts(tx, &instruction)
+	if err != nil {
+		ob.Logger().
+			Inbound.Err(err).
+			Msgf("unable to get signer for sig %s instruction %d", tx.Signatures[0], instructionIndex)
+		return nil, nil
+	}
+
+	// build inbound event
+	event := &clienttypes.InboundEvent{
+		SenderChainID: ob.Chain().ChainId,
+		Sender:        sender,
+		Receiver:      sender,
+		TxOrigin:      sender,
+		Amount:        inst.Amount,
+		Memo:          inst.Memo,
+		BlockNumber:   slot, // instead of using block, Solana explorer uses slot for indexing
+		TxHash:        tx.Signatures[0].String(),
+		Index:         0, // hardcode to 0 for Solana, not a EVM smart contract call
+		CoinType:      coin.CoinType_ERC20,
+		Asset:         spl,
+	}
+
+	return event, nil
 }
 
 // GetSignerDeposit returns the signer address of the deposit instruction
@@ -358,4 +396,17 @@ func (ob *Observer) GetSignerDeposit(tx *solana.Transaction, inst *solana.Compil
 
 	// sender is the signer account
 	return tx.Message.AccountKeys[signerIndex].String(), nil
+}
+
+func (ob *Observer) GetFromDepositSPLAccounts(tx *solana.Transaction, inst *solana.CompiledInstruction) (string, string, error) {
+	// there should be 7 accounts for a deposit spl instruction
+	if len(inst.Accounts) != solanacontracts.AccountsNumberDepositSPL {
+		return "", "", fmt.Errorf("want %d accounts, got %d", solanacontracts.AccountsNumberDepositSPL, len(inst.Accounts))
+	}
+
+	// the accounts are [signer, pda, whitelist_entry, mint_account, token_program, from, to]
+	signer := tx.Message.AccountKeys[0]
+	spl := tx.Message.AccountKeys[inst.Accounts[3]]
+
+	return signer.String(), spl.String(), nil
 }

@@ -34,6 +34,14 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		r.GatewayProgram = solana.MustPublicKeyFromBase58(c)
 	}
 
+	if c := conf.Contracts.Solana.SPLPrivateKey; c != nil {
+		r.SPLPrivateKey = solana.PrivateKey(c)
+	}
+
+	if c := conf.Contracts.Solana.SPL; c != "" {
+		r.SPLAddr = solana.MustPublicKeyFromBase58(c.String())
+	}
+
 	// set EVM contracts
 	if c := conf.Contracts.EVM.ZetaEthAddr; c != "" {
 		r.ZetaEthAddr, err = c.AsEVMAddress()
@@ -130,6 +138,17 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid SOLZRC20Addr: %w", err)
 		}
 		r.SOLZRC20, err = zrc20.NewZRC20(r.SOLZRC20Addr, r.ZEVMClient)
+		if err != nil {
+			return err
+		}
+	}
+
+	if c := conf.Contracts.ZEVM.SPLZRC20Addr; c != "" {
+		r.SPLZRC20Addr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid SPLZRC20Addr: %w", err)
+		}
+		r.SPLZRC20, err = zrc20.NewZRC20(r.SPLZRC20Addr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}

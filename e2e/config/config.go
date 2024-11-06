@@ -119,7 +119,9 @@ type Contracts struct {
 
 // Solana contains the addresses of predeployed contracts on the Solana chain
 type Solana struct {
-	GatewayProgramID string `yaml:"gateway_program_id"`
+	GatewayProgramID string             `yaml:"gateway_program_id"`
+	SPL              DoubleQuotedString `yaml:"spl"`
+	SPLPrivateKey    []byte             `yaml:"spl_private_key"`
 }
 
 // EVM contains the addresses of predeployed contracts on the EVM chain
@@ -141,6 +143,7 @@ type ZEVM struct {
 	ERC20ZRC20Addr     DoubleQuotedString `yaml:"erc20_zrc20"`
 	BTCZRC20Addr       DoubleQuotedString `yaml:"btc_zrc20"`
 	SOLZRC20Addr       DoubleQuotedString `yaml:"sol_zrc20"`
+	SPLZRC20Addr       DoubleQuotedString `yaml:"spl_zrc20"`
 	TONZRC20Addr       DoubleQuotedString `yaml:"ton_zrc20"`
 	UniswapFactoryAddr DoubleQuotedString `yaml:"uniswap_factory"`
 	UniswapRouterAddr  DoubleQuotedString `yaml:"uniswap_router"`

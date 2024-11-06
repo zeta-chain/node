@@ -17,6 +17,8 @@ const (
 	// AccountsNumberOfDeposit is the number of accounts required for Solana gateway deposit instruction
 	// [signer, pda, system_program]
 	AccountsNumDeposit = 3
+
+	AccountsNumberDepositSPL = 7
 )
 
 var (
