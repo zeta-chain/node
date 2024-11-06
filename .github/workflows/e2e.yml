@@ -30,6 +30,8 @@ concurrency:
 jobs:
   build-zetanode:
     runs-on: ubuntu-22.04
+    permissions:
+      packages: write
     env:
       DOCKER_IMAGE: ghcr.io/${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login || github.repository_owner }}/zetanode
       DOCKER_TAG: ${{ github.ref == 'refs/heads/develop' && 'develop' || github.sha }}
