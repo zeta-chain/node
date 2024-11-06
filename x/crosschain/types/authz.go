@@ -3,7 +3,6 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -17,6 +16,5 @@ func GetAllAuthzZetaclientTxTypes() []string {
 		sdk.MsgTypeURL(&observertypes.MsgVoteTSS{}),
 		sdk.MsgTypeURL(&observertypes.MsgVoteBlame{}),
 		sdk.MsgTypeURL(&observertypes.MsgVoteBlockHeader{}),
-		sdk.MsgTypeURL(&emissionstypes.MsgWithdrawEmission{}),
 	}
 }
