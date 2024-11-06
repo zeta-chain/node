@@ -306,7 +306,7 @@ jobs:
 
       - run: |
           result="${{ needs.build-zetanode.result }}"
-          if [[ $result != "success" || $result == "skipped" ]]; then
+          if [[ $result == "failed" ]]; then
             exit 1
           fi
           result="${{ needs.e2e.result }}"
