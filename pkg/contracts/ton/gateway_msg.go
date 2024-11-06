@@ -24,6 +24,15 @@ const (
 
 const OpWithdraw Op = 200
 
+// ExitCode represents an error code. Might be TVM or custom.
+// TVM: https://docs.ton.org/v3/documentation/tvm/tvm-exit-codes
+// Zeta: https://github.com/zeta-chain/protocol-contracts-ton/blob/main/contracts/common/errors.fc
+type ExitCode uint32
+
+const (
+	ExitCodeInvalidSeqno ExitCode = 109
+)
+
 // Donation represents a donation operation
 type Donation struct {
 	Sender ton.AccountID
