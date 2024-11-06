@@ -93,7 +93,7 @@ func (c *Client) Broadcast(
 	))
 	builder.SetFeeAmount(fee)
 
-	err = c.SignTx(factory, c.cosmosClientContext.GetFromName(), builder, true, c.cosmosClientContext.TxConfig)
+	err = c.SignTx(factory, c.cosmosClientContext.GetFromName(), builder, true)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to sign tx")
 	}
@@ -147,7 +147,6 @@ func (c *Client) SignTx(
 	name string,
 	txBuilder client.TxBuilder,
 	overwriteSig bool,
-	txConfig client.TxConfig,
 ) error {
 	return clienttx.Sign(txf, name, txBuilder, overwriteSig)
 }
