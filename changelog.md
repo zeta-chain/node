@@ -6,6 +6,14 @@
 
 * [3073](https://github.com/zeta-chain/node/pull/3073) - improve ZETA deposit check with max supply check
 
+### Refactor
+
+### Tests
+
+### Fixes
+* [3041](https://github.com/zeta-chain/node/pull/3041) - replace libp2p public DHT with private gossip peer discovery and connection gater for inbound connections
+
+
 ## v21.0.0
 
 ### Features
@@ -142,7 +150,7 @@
 * [2518](https://github.com/zeta-chain/node/pull/2518) - add support for Solana address in zetacore
 * [2483](https://github.com/zeta-chain/node/pull/2483) - add priorityFee (gasTipCap) gas to the state
 * [2567](https://github.com/zeta-chain/node/pull/2567) - add sign latency metric to zetaclient (zetaclient_sign_latency)
-* [2524](https://github.com/zeta-chain/node/pull/2524) - add inscription envelop parsing 
+* [2524](https://github.com/zeta-chain/node/pull/2524) - add inscription envelop parsing
 * [2560](https://github.com/zeta-chain/node/pull/2560) - add support for Solana SOL token withdraw
 * [2533](https://github.com/zeta-chain/node/pull/2533) - parse memo from both OP_RETURN and inscription
 * [2765](https://github.com/zeta-chain/node/pull/2765) - bitcoin depositor fee improvement
@@ -224,7 +232,7 @@
 
 ### CI
 
-* [2388](https://github.com/zeta-chain/node/pull/2388) - added GitHub attestations of binaries produced in the release workflow. 
+* [2388](https://github.com/zeta-chain/node/pull/2388) - added GitHub attestations of binaries produced in the release workflow.
 * [2285](https://github.com/zeta-chain/node/pull/2285) - added nightly EVM performance testing pipeline, modified localnet testing docker image to utilize debian:bookworm, removed build-jet runners where applicable, removed deprecated/removed upgrade path testing pipeline
 * [2268](https://github.com/zeta-chain/node/pull/2268) - updated the publish-release pipeline to utilize the Github Actions Ubuntu 20.04 Runners
 * [2070](https://github.com/zeta-chain/node/pull/2070) - Added commands to build binaries from the working branch as a live full node rpc to test non-governance changes
@@ -636,7 +644,7 @@ Getting the correct TSS address for Bitcoin now requires providing the Bitcoin c
 
 ### Tests
 
-* Add unit tests for adding votes to a ballot 
+* Add unit tests for adding votes to a ballot
 
 ### CI
 
@@ -676,7 +684,7 @@ Getting the correct TSS address for Bitcoin now requires providing the Bitcoin c
 ### Refactoring
 
 * [1226](https://github.com/zeta-chain/node/pull/1226) - call `onCrossChainCall` when depositing to a contract
-* [1238](https://github.com/zeta-chain/node/pull/1238) - change default mempool version in config 
+* [1238](https://github.com/zeta-chain/node/pull/1238) - change default mempool version in config
 * [1279](https://github.com/zeta-chain/node/pull/1279) - remove duplicate funtion name IsEthereum
 * [1289](https://github.com/zeta-chain/node/pull/1289) - skip gas stability pool funding when gasLimit is equal gasUsed
 
