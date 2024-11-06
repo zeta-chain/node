@@ -25,7 +25,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run Gosec Security Scanner
-        uses: zeta-chain/gosec@v2.21.0-zeta
+        uses: zeta-chain/gosec@v2.21.4-zeta2
         with:
           args: -exclude-generated -exclude-dir testutil ./...
 

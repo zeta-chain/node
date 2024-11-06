@@ -35,18 +35,17 @@ func TestMigrateERC20CustodyFunds(r *runner.E2ERunner, _ []string) {
 	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msg)
 	require.NoError(r, err)
 
-	// fetch cctx index from tx response
-	cctxIndex, err := txserver.FetchAttributeFromTxResponse(res, "cctx_index")
-	require.NoError(r, err)
+	event, ok := txserver.EventOfType[*crosschaintypes.EventERC20CustodyFundsMigration](res.Events)
+	require.True(r, ok, "no EventERC20CustodyFundsMigration in %s", res.TxHash)
 
-	cctxRes, err := r.CctxClient.Cctx(r.Ctx, &crosschaintypes.QueryGetCctxRequest{Index: cctxIndex})
+	cctxRes, err := r.CctxClient.Cctx(r.Ctx, &crosschaintypes.QueryGetCctxRequest{Index: event.CctxIndex})
 	require.NoError(r, err)
 
 	cctx := cctxRes.CrossChainTx
 	r.Logger.CCTX(*cctx, "migration")
 
 	// wait for the cctx to be mined
-	r.WaitForMinedCCTXFromIndex(cctxIndex)
+	r.WaitForMinedCCTXFromIndex(event.CctxIndex)
 
 	// check ERC20 balance on new address
 	newAddrBalance, err := r.ERC20.BalanceOf(&bind.CallOpts{}, newAddr)

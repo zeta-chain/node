@@ -32,15 +32,16 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/filters"
-	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
+	"github.com/zeta-chain/node/rpc/backend"
 	"github.com/zeta-chain/node/rpc/ethereum/pubsub"
 	rpcfilters "github.com/zeta-chain/node/rpc/namespaces/ethereum/eth/filters"
 	"github.com/zeta-chain/node/rpc/types"
@@ -378,18 +379,21 @@ func (s *websocketsServer) tcpGetAndSendResponse(wsConn *wsConn, mb []byte) erro
 
 // pubSubAPI is the eth_ prefixed set of APIs in the Web3 JSON-RPC spec
 type pubSubAPI struct {
-	events    *rpcfilters.EventSystem
-	logger    log.Logger
-	clientCtx client.Context
+	events      *rpcfilters.EventSystem
+	logger      log.Logger
+	clientCtx   client.Context
+	queryClient *types.QueryClient
 }
 
 // newPubSubAPI creates an instance of the ethereum PubSub API.
 func newPubSubAPI(clientCtx client.Context, logger log.Logger, tmWSClient *rpcclient.WSClient) *pubSubAPI {
 	logger = logger.With("module", "websocket-client")
+	types.NewQueryClient(clientCtx)
 	return &pubSubAPI{
-		events:    rpcfilters.NewEventSystem(logger, tmWSClient),
-		logger:    logger,
-		clientCtx: clientCtx,
+		events:      rpcfilters.NewEventSystem(logger, tmWSClient),
+		logger:      logger,
+		clientCtx:   clientCtx,
+		queryClient: types.NewQueryClient(clientCtx),
 	}
 }
 
@@ -423,9 +427,6 @@ func (api *pubSubAPI) subscribeNewHeads(wsConn *wsConn, subID rpc.ID) (pubsub.Un
 		return nil, errors.Wrap(err, "error creating block filter")
 	}
 
-	// TODO: use events
-	baseFee := big.NewInt(params.InitialBaseFee)
-
 	go func() {
 		headersCh := sub.Event()
 		errCh := sub.Err()
@@ -442,7 +443,34 @@ func (api *pubSubAPI) subscribeNewHeads(wsConn *wsConn, subID rpc.ID) (pubsub.Un
 					continue
 				}
 
-				header := types.EthHeaderFromTendermint(data.Header, ethtypes.Bloom{}, baseFee)
+				validatorAccount, err := backend.GetValidatorAccount(&data.Header, api.queryClient)
+				if err != nil {
+					api.logger.Error("failed to get validator account", "err", err)
+					continue
+				}
+
+				baseFee := types.BaseFeeFromEvents(data.ResultBeginBlock.Events)
+
+				header := types.EthHeaderFromTendermint(data.Header, ethtypes.Bloom{}, baseFee, validatorAccount)
+
+				var enc types.Header
+				enc.ParentHash = header.ParentHash
+				enc.UncleHash = header.UncleHash
+				enc.Coinbase = header.Coinbase.Hex()
+				enc.Root = header.Root
+				enc.TxHash = header.TxHash
+				enc.ReceiptHash = header.ReceiptHash
+				enc.Bloom = header.Bloom
+				enc.Difficulty = (*hexutil.Big)(header.Difficulty)
+				enc.Number = (*hexutil.Big)(header.Number)
+				enc.GasLimit = hexutil.Uint64(header.GasLimit)
+				enc.GasUsed = hexutil.Uint64(header.GasUsed)
+				enc.Time = hexutil.Uint64(header.Time)
+				enc.Extra = header.Extra
+				enc.MixDigest = header.MixDigest
+				enc.Nonce = header.Nonce
+				enc.BaseFee = (*hexutil.Big)(header.BaseFee)
+				enc.Hash = common.BytesToHash(data.Header.Hash())
 
 				// write to ws conn
 				res := &SubscriptionNotification{
@@ -450,7 +478,7 @@ func (api *pubSubAPI) subscribeNewHeads(wsConn *wsConn, subID rpc.ID) (pubsub.Un
 					Method:  "eth_subscription",
 					Params: &SubscriptionResult{
 						Subscription: subID,
-						Result:       header,
+						Result:       enc,
 					},
 				}
 

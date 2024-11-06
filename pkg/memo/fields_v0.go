@@ -54,18 +54,13 @@ func (f *FieldsV0) Pack(opCode OpCode, encodingFmt EncodingFormat, dataFlags uin
 }
 
 // Unpack decodes the memo fields
-func (f *FieldsV0) Unpack(opCode OpCode, encodingFmt EncodingFormat, dataFlags uint8, data []byte) error {
+func (f *FieldsV0) Unpack(encodingFmt EncodingFormat, dataFlags uint8, data []byte) error {
 	codec, err := GetCodec(encodingFmt)
 	if err != nil {
 		return errors.Wrap(err, "unable to get codec")
 	}
 
-	err = f.unpackFields(codec, dataFlags, data)
-	if err != nil {
-		return err
-	}
-
-	return f.Validate(opCode, dataFlags)
+	return f.unpackFields(codec, dataFlags, data)
 }
 
 // Validate checks if the fields are valid

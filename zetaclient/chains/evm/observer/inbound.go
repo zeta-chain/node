@@ -38,7 +38,7 @@ import (
 // TODO(revamp): move ticker function to a separate file
 func (ob *Observer) WatchInbound(ctx context.Context) error {
 	sampledLogger := ob.Logger().Inbound.Sample(&zerolog.BasicSampler{N: 10})
-	interval := ticker.SecondsFromUint64(ob.ChainParams().InboundTicker)
+	interval := ticker.DurationFromUint64Seconds(ob.ChainParams().InboundTicker)
 	task := func(ctx context.Context, t *ticker.Ticker) error {
 		return ob.watchInboundOnce(ctx, t, sampledLogger)
 	}
@@ -70,7 +70,7 @@ func (ob *Observer) watchInboundOnce(ctx context.Context, t *ticker.Ticker, samp
 		ob.Logger().Inbound.Err(err).Msg("WatchInbound: observeInbound error")
 	}
 
-	newInterval := ticker.SecondsFromUint64(ob.ChainParams().InboundTicker)
+	newInterval := ticker.DurationFromUint64Seconds(ob.ChainParams().InboundTicker)
 	t.SetInterval(newInterval)
 
 	return nil

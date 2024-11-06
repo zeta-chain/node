@@ -36,13 +36,20 @@ interface IStaking {
         uint256 amount
     ) external returns (int64 completionTime);
 
-    function getAllValidators() external view returns (Validator[] calldata validators);
+    function getAllValidators()
+        external
+        view
+        returns (Validator[] calldata validators);
 
-    function getShares(address staker, string memory validator) external view returns (uint256 shares);
+    function getShares(
+        address staker,
+        string memory validator
+    ) external view returns (uint256 shares);
 }
 
 interface WZETA {
     function deposit() external payable;
+
     function withdraw(uint256 wad) external;
 }
 
@@ -94,18 +101,30 @@ contract TestStaking {
         wzeta.withdraw(wad);
     }
 
-    function stake(address staker, string memory validator, uint256 amount) external onlyOwner returns (bool)  {
+    function stake(
+        address staker,
+        string memory validator,
+        uint256 amount
+    ) external onlyOwner returns (bool) {
         return staking.stake(staker, validator, amount);
     }
 
-    function stakeWithStateUpdate(address staker, string memory validator, uint256 amount) external onlyOwner returns (bool)  {
+    function stakeWithStateUpdate(
+        address staker,
+        string memory validator,
+        uint256 amount
+    ) external onlyOwner returns (bool) {
         counter = counter + 1;
         bool success = staking.stake(staker, validator, amount);
         counter = counter + 1;
         return success;
     }
 
-    function stakeAndRevert(address staker, string memory validator, uint256 amount) external onlyOwner returns (bool)  {
+    function stakeAndRevert(
+        address staker,
+        string memory validator,
+        uint256 amount
+    ) external onlyOwner returns (bool) {
         counter = counter + 1;
         staking.stake(staker, validator, amount);
         counter = counter + 1;
@@ -129,11 +148,18 @@ contract TestStaking {
         return staking.moveStake(staker, validatorSrc, validatorDst, amount);
     }
 
-    function getShares(address staker, string memory validator) external view returns(uint256 shares) {
+    function getShares(
+        address staker,
+        string memory validator
+    ) external view returns (uint256 shares) {
         return staking.getShares(staker, validator);
     }
 
-    function getAllValidators() external view returns (Validator[] memory validators) {
+    function getAllValidators()
+        external
+        view
+        returns (Validator[] memory validators)
+    {
         return staking.getAllValidators();
     }
 

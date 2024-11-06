@@ -11,6 +11,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
+	cctxtypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -36,15 +37,13 @@ func (r *E2ERunner) SetupTON() error {
 	depAddr := deployer.GetAddress()
 	r.Logger.Print("💎TON Deployer %s (%s)", depAddr.ToRaw(), depAddr.ToHuman(false, true))
 
-	gwAccount, err := ton.ConstructGatewayAccount(r.TSSAddress)
+	// 2. Deploy Gateway
+	gwAccount, err := ton.ConstructGatewayAccount(depAddr, r.TSSAddress)
 	if err != nil {
 		return errors.Wrap(err, "unable to initialize TON gateway")
 	}
 
-	// 2. Deploy Gateway
-	initStateAmount := ton.TONCoins(10)
-
-	if err := deployer.Deploy(ctx, gwAccount, initStateAmount); err != nil {
+	if err = deployer.Deploy(ctx, gwAccount, toncontracts.Coins(1)); err != nil {
 		return errors.Wrapf(err, "unable to deploy TON gateway")
 	}
 
@@ -56,19 +55,35 @@ func (r *E2ERunner) SetupTON() error {
 	)
 
 	// 3. Check that the gateway indeed was deployed and has desired TON balance.
-	gwBalance, err := deployer.GetBalanceOf(ctx, gwAccount.ID)
-	if err != nil {
+	gwBalance, err := deployer.GetBalanceOf(ctx, gwAccount.ID, true)
+	switch {
+	case err != nil:
 		return errors.Wrap(err, "unable to get balance of TON gateway")
+	case gwBalance.IsZero():
+		return fmt.Errorf("TON gateway balance is zero")
 	}
 
-	if gwBalance.IsZero() {
-		return fmt.Errorf("TON gateway balance is zero")
+	// 4. Set chain params & chain nonce
+	if err := r.ensureTONChainParams(gwAccount); err != nil {
+		return errors.Wrap(err, "unable to ensure TON chain params")
 	}
 
 	r.TONDeployer = deployer
 	r.TONGateway = toncontracts.NewGateway(gwAccount.ID)
 
-	return r.ensureTONChainParams(gwAccount)
+	// 5. Deposit 10000 TON deployer to Zevm Auth
+	veryFirstDeposit := toncontracts.Coins(10000)
+	zevmRecipient := r.ZEVMAuth.From
+
+	gwDeposit, err := r.TONDeposit(&deployer.Wallet, veryFirstDeposit, zevmRecipient)
+	switch {
+	case err != nil:
+		return errors.Wrap(err, "unable to deposit TON to Zevm Auth")
+	case gwDeposit.CctxStatus.Status != cctxtypes.CctxStatus_OutboundMined:
+		return errors.New("gateway deposit CCTX is not mined")
+	}
+
+	return nil
 }
 
 func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
@@ -101,6 +116,11 @@ func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
 
 	if _, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msg); err != nil {
 		return errors.Wrap(err, "unable to broadcast TON chain params tx")
+	}
+
+	resetMsg := observertypes.NewMsgResetChainNonces(creator, chainID, 0, 0)
+	if _, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, resetMsg); err != nil {
+		return errors.Wrap(err, "unable to broadcast TON chain nonce reset tx")
 	}
 
 	r.Logger.Print("💎Voted for adding TON chain params (localnet). Waiting for confirmation")

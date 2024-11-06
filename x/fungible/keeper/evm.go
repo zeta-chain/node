@@ -17,6 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
@@ -735,19 +736,19 @@ func (k Keeper) CallEVMWithData(
 	if gasLimit != nil {
 		gasCap = gasLimit.Uint64()
 	}
-	msg := ethtypes.NewMessage(
-		from,
-		contract,
-		nonce,
-		value,         // amount
-		gasCap,        // gasLimit
-		big.NewInt(0), // gasFeeCap
-		big.NewInt(0), // gasTipCap
-		big.NewInt(0), // gasPrice
-		data,
-		ethtypes.AccessList{}, // AccessList
-		!commit,               // isFake
-	)
+	msg := &core.Message{
+		From:              from,
+		To:                contract,
+		Nonce:             nonce,
+		Value:             value,         // amount
+		GasLimit:          gasCap,        // gasLimit
+		GasFeeCap:         big.NewInt(0), // gasFeeCap
+		GasTipCap:         big.NewInt(0), // gasTipCap
+		GasPrice:          big.NewInt(0), // gasPrice
+		Data:              data,
+		AccessList:        ethtypes.AccessList{}, // AccessList
+		SkipAccountChecks: !commit,               // isFake
+	}
 	k.evmKeeper.WithChainID(ctx) //FIXME:  set chainID for signer; should not need to do this; but seems necessary. Why?
 	k.Logger(ctx).Debug("call evm", "gasCap", gasCap, "chainid", k.evmKeeper.ChainID(), "ctx.chainid", ctx.ChainID())
 	res, err := k.evmKeeper.ApplyMessage(ctx, msg, evmtypes.NewNoOpTracer(), commit)
@@ -799,7 +800,7 @@ func (k Keeper) CallEVMWithData(
 
 		if !noEthereumTxEvent {
 			// adding txData for more info in rpc methods in order to parse synthetic txs
-			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxData, hexutil.Encode(msg.Data())))
+			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxData, hexutil.Encode(msg.Data)))
 			// adding nonce for more info in rpc methods in order to parse synthetic txs
 			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxNonce, fmt.Sprint(nonce)))
 			ctx.EventManager().EmitEvents(sdk.Events{

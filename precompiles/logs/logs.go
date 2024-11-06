@@ -16,9 +16,10 @@ type Argument struct {
 // AddLog adds log to stateDB
 func AddLog(ctx sdk.Context, precompileAddr common.Address, stateDB vm.StateDB, topics []common.Hash, data []byte) {
 	stateDB.AddLog(&types.Log{
-		Address:     precompileAddr,
-		Topics:      topics,
-		Data:        data,
+		Address: precompileAddr,
+		Topics:  topics,
+		Data:    data,
+		// #nosec G115 block height always positive
 		BlockNumber: uint64(ctx.BlockHeight()),
 	})
 }

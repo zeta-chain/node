@@ -32,10 +32,10 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 			error: true,
 		},
 		{
-			name: "invalid erc20",
+			name: "invalid asset",
 			msg: types.NewMsgWhitelistERC20(
 				sample.AccAddress(),
-				"0x0",
+				"",
 				1,
 				"name",
 				"symbol",

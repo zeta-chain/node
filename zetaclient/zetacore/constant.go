@@ -24,6 +24,9 @@ const (
 	// PostVoteInboundMessagePassingExecutionGasLimit is the gas limit for voting on, and executing ,observed inbound tx related to message passing (coin_type == zeta)
 	PostVoteInboundMessagePassingExecutionGasLimit = 4_000_000
 
+	// PostVoteInboundCallOptionsGasLimit is the gas limit for inbound call options
+	PostVoteInboundCallOptionsGasLimit uint64 = 1_500_000
+
 	// AddOutboundTrackerGasLimit is the gas limit for adding tx hash to out tx tracker
 	AddOutboundTrackerGasLimit = 200_000
 

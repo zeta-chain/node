@@ -26,11 +26,12 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/consensus/misc"
+	"github.com/ethereum/go-ethereum/consensus/misc/eip1559"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"google.golang.org/grpc/codes"
@@ -137,7 +138,7 @@ func (b *Backend) processBlock(
 	targetOneFeeHistory.BaseFee = blockBaseFee
 	cfg := b.ChainConfig()
 	if cfg.IsLondon(big.NewInt(blockHeight + 1)) {
-		targetOneFeeHistory.NextBaseFee = misc.CalcBaseFee(cfg, b.CurrentHeader())
+		targetOneFeeHistory.NextBaseFee = eip1559.CalcBaseFee(cfg, b.CurrentHeader())
 	} else {
 		targetOneFeeHistory.NextBaseFee = new(big.Int)
 	}
@@ -317,4 +318,17 @@ func GetHexProofs(proof *crypto.ProofOps) []string {
 		proofs = append(proofs, proof)
 	}
 	return proofs
+}
+
+func GetValidatorAccount(header *tmtypes.Header, qc *types.QueryClient) (sdk.AccAddress, error) {
+	res, err := qc.ValidatorAccount(
+		types.ContextWithHeight(header.Height),
+		&evmtypes.QueryValidatorAccountRequest{
+			ConsAddress: sdk.ConsAddress(header.ProposerAddress).String(),
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get validator account %w", err)
+	}
+	return sdk.AccAddressFromBech32(res.AccountAddress)
 }

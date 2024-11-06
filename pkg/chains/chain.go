@@ -81,6 +81,12 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 			return "", err
 		}
 		return pk.String(), nil
+	case Consensus_catchain_consensus:
+		acc, err := ton.ParseAccountID(string(b))
+		if err != nil {
+			return "", err
+		}
+		return acc.ToRaw(), nil
 	default:
 		return "", fmt.Errorf("chain id %d not supported", chain.ChainId)
 	}
@@ -88,6 +94,10 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 
 func (chain Chain) IsEVMChain() bool {
 	return chain.Vm == Vm_evm
+}
+
+func (chain Chain) IsSolanaChain() bool {
+	return chain.Consensus == Consensus_solana_consensus
 }
 
 func (chain Chain) IsBitcoinChain() bool {

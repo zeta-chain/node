@@ -49,7 +49,7 @@ func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// check if example contract has been called, 'bar' value should be set to amount
-	amoutSats, err := zetabitcoin.GetSatoshis(amount)
+	amountSats, err := zetabitcoin.GetSatoshis(amount)
 	require.NoError(r, err)
-	utils.MustHaveCalledExampleContract(r, contract, big.NewInt(amoutSats))
+	utils.MustHaveCalledExampleContract(r, contract, big.NewInt(amountSats))
 }

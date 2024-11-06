@@ -315,12 +315,6 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, chainID string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
-
-		// System contracts are deployed on the first block , so we cannot vote on gas prices before that
-		if ctx.BlockHeight() <= 1 {
-			return simtypes.NoOpMsg(types.ModuleName, authz.GasPriceVoter.String(), "block height less than 1"), nil, nil
-		}
-
 		// Get a random account and observer
 		simAccount, randomObserver, err := GetRandomAccountAndObserver(r, ctx, k, accounts)
 		if err != nil {
@@ -344,6 +338,11 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 			PriorityFee: r.Uint64(),
 			BlockNumber: r.Uint64(),
 			Supply:      fmt.Sprintf("%d", r.Int63()),
+		}
+
+		// System contracts are deployed on the first block, so we cannot vote on gas prices before that
+		if ctx.BlockHeight() <= 1 {
+			return simtypes.NewOperationMsg(&msg, true, "block height less than 1", nil), nil, nil
 		}
 
 		err = msg.ValidateBasic()

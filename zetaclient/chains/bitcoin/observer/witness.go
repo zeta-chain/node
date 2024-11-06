@@ -6,6 +6,7 @@ import (
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/txscript"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
@@ -104,7 +105,7 @@ func ParseScriptFromWitness(witness []string, logger zerolog.Logger) []byte {
 	// If there are at least two witness elements, and the first byte of
 	// the last element is 0x50, this last element is called annex a
 	// and is removed from the witness stack.
-	if length >= 2 && len(lastElement) > 0 && lastElement[0] == 0x50 {
+	if length >= 2 && len(lastElement) > 0 && lastElement[0] == txscript.TaprootAnnexTag {
 		// account for the extra item removed from the end
 		witness = witness[:length-1]
 	}
@@ -130,7 +131,7 @@ func tryExtractOpRet(tx btcjson.TxRawResult, logger zerolog.Logger) []byte {
 		return nil
 	}
 
-	memo, found, err := bitcoin.DecodeOpReturnMemo(tx.Vout[1].ScriptPubKey.Hex, tx.Txid)
+	memo, found, err := bitcoin.DecodeOpReturnMemo(tx.Vout[1].ScriptPubKey.Hex)
 	if err != nil {
 		logger.Error().Err(err).Msgf("tryExtractOpRet: error decoding OP_RETURN memo: %s", tx.Vout[1].ScriptPubKey.Hex)
 		return nil

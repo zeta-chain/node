@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/holiman/uint256"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
@@ -82,7 +83,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 
 		err := sdkk.EvmKeeper.SetAccount(ctx, zetaTxReceiver, statedb.Account{
 			Nonce:    0,
-			Balance:  big.NewInt(0),
+			Balance:  uint256.NewInt(0),
 			CodeHash: crypto.Keccak256(nil),
 		})
 		require.NoError(t, err)
@@ -141,11 +142,14 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 
 		err := sdkk.EvmKeeper.SetAccount(ctx, zetaTxReceiver, statedb.Account{
 			Nonce:    0,
-			Balance:  big.NewInt(0),
+			Balance:  uint256.NewInt(0),
 			CodeHash: crypto.Keccak256(nil),
 		})
 		require.NoError(t, err)
 		errorMint := errors.New("", 10, "error minting coins")
+		bankMock.On("GetSupply", ctx, mock.Anything, mock.Anything).
+			Return(sdk.NewCoin(config.BaseDenom, sdk.NewInt(0))).
+			Once()
 		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
 
 		_, err = k.ZETADepositAndCallContract(
@@ -228,7 +232,7 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 
 		err := sdkk.EvmKeeper.SetAccount(ctx, zetaTxSender, statedb.Account{
 			Nonce:    0,
-			Balance:  big.NewInt(0),
+			Balance:  uint256.NewInt(0),
 			CodeHash: crypto.Keccak256(nil),
 		})
 		require.NoError(t, err)
@@ -291,11 +295,14 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 
 		err := sdkk.EvmKeeper.SetAccount(ctx, zetaTxSender, statedb.Account{
 			Nonce:    0,
-			Balance:  big.NewInt(0),
+			Balance:  uint256.NewInt(0),
 			CodeHash: crypto.Keccak256(nil),
 		})
 		require.NoError(t, err)
 		errorMint := errors.New("", 101, "error minting coins")
+		bankMock.On("GetSupply", ctx, mock.Anything, mock.Anything).
+			Return(sdk.NewCoin(config.BaseDenom, sdk.NewInt(0))).
+			Once()
 		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
 
 		_, err = k.ZETARevertAndCallContract(

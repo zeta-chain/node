@@ -31,6 +31,7 @@ func (suite *BackendTestSuite) TestSendTransaction() {
 	from := common.BytesToAddress(priv.PubKey().Address().Bytes())
 	nonce := hexutil.Uint64(1)
 	baseFee := sdk.NewInt(1)
+	validator := sdk.AccAddress(tests.GenerateAddress().Bytes())
 	callArgsDefault := evmtypes.TransactionArgs{
 		From:     &from,
 		To:       &toAddr,
@@ -82,6 +83,7 @@ func (suite *BackendTestSuite) TestSendTransaction() {
 				RegisterBlock(client, 1, nil)
 				RegisterBlockResults(client, 1)
 				RegisterBaseFee(queryClient, baseFee)
+				RegisterValidatorAccount(queryClient, validator)
 			},
 			evmtypes.TransactionArgs{
 				From:     &from,
@@ -115,6 +117,7 @@ func (suite *BackendTestSuite) TestSendTransaction() {
 				txBytes, err := txEncoder(tx)
 				suite.Require().NoError(err)
 				RegisterBroadcastTxError(client, txBytes)
+				RegisterValidatorAccount(queryClient, validator)
 			},
 			callArgsDefault,
 			common.Hash{},
@@ -142,6 +145,7 @@ func (suite *BackendTestSuite) TestSendTransaction() {
 				txBytes, err := txEncoder(tx)
 				suite.Require().NoError(err)
 				RegisterBroadcastTx(client, txBytes)
+				RegisterValidatorAccount(queryClient, validator)
 			},
 			callArgsDefault,
 			hash,

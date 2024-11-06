@@ -372,8 +372,6 @@ func New(
 		authAddr,
 	)
 
-	logger.Info("bank keeper blocklist addresses", "addresses", app.BlockedAddrs())
-
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
 		keys[banktypes.StoreKey],
@@ -1060,6 +1058,10 @@ func (app *App) SimulationManager() *module.SimulationManager {
 
 func (app *App) BasicManager() module.BasicManager {
 	return app.mb
+}
+
+func (app *App) ModuleManager() *module.Manager {
+	return app.mm
 }
 
 func (app *App) BlockedAddrs() map[string]bool {
