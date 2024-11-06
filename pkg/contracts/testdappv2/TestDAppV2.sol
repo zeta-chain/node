@@ -8,6 +8,9 @@ interface IERC20 {
 contract TestDAppV2 {
     string public constant NO_MESSAGE_CALL = "called with no message";
 
+    // used to simulate gas consumption
+    uint256[] private storageArray;
+
     struct zContext {
         bytes origin;
         address sender;
@@ -73,8 +76,26 @@ contract TestDAppV2 {
 
         string memory messageStr = message.length == 0 ? getNoMessageIndex(_context.sender) : string(message);
 
+        consumeGas();
+
         setCalledWithMessage(messageStr);
         setAmountWithMessage(messageStr, amount);
+    }
+
+    function consumeGas() internal {
+        // Approximate target gas consumption
+        uint256 targetGas = 1000000;
+        // Approximate gas cost for a single storage write
+        uint256 storageWriteGasCost = 20000;
+        uint256 iterations = targetGas / storageWriteGasCost;
+
+        // Perform the storage writes
+        for (uint256 i = 0; i < iterations; i++) {
+            storageArray.push(i);
+        }
+
+        // Reset the storage array to avoid accumulation of storage cost
+        delete storageArray;
     }
 
     // called with gas token
