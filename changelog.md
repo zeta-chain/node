@@ -10,6 +10,7 @@
 * [3075](https://github.com/zeta-chain/node/pull/3075) - ton: withdraw concurrent, deposit & revert.
 
 ### Refactor
+* [3118](https://github.com/zeta-chain/node/pull/3118) - zetaclient: remove hsm signer
 
 ### Tests
 

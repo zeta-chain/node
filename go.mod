@@ -26,7 +26,6 @@ require (
 	github.com/emicklei/proto v1.11.1
 	github.com/ethereum/go-ethereum v1.13.15
 	github.com/fatih/color v1.14.1
-	github.com/frumioj/crypto11 v1.2.5-0.20210823151709-946ce662cc0e
 	github.com/gagliardetto/solana-go v1.10.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
@@ -57,7 +56,6 @@ require (
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.9.0
 	github.com/zeta-chain/ethermint v0.0.0-20241105191054-1ebf85a354a0
-	github.com/zeta-chain/keystone/keys v0.0.0-20240826165841-3874f358c138
 	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20241021075719-d40d2e28467c
 	gitlab.com/thorchain/tss/go-tss v1.6.5
 	go.nhat.io/grpcmock v0.25.0
@@ -220,7 +218,6 @@ require (
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/miekg/dns v1.1.54 // indirect
-	github.com/miekg/pkcs11 v1.1.1 // indirect
 	github.com/mikioh/tcpinfo v0.0.0-20190314235526-30a79bb1804b // indirect
 	github.com/mikioh/tcpopt v0.0.0-20190314235656-172688c1accc // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
@@ -271,7 +268,6 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/btcd v0.1.1 // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
-	github.com/thales-e-security/pool v0.0.2 // indirect
 	github.com/tidwall/btree v1.6.0 // indirect
 	github.com/tidwall/gjson v1.14.4 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
@@ -337,12 +333,15 @@ require (
 	github.com/decred/dcrd/crypto/blake256 v1.0.1 // indirect
 	github.com/ethereum/c-kzg-4844 v0.4.0 // indirect
 	github.com/gballet/go-verkle v0.1.1-0.20231031103413-a67434b50f46 // indirect
+	github.com/gobwas/ws v1.1.0 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/google/pprof v0.0.0-20230602150820-91b7bce49751 // indirect
+	github.com/hashicorp/go-uuid v1.0.2 // indirect
 	github.com/kkdai/bstream v0.0.0-20161212061736-f391b8402d23 // indirect
 	github.com/mmcloughlin/addchain v0.4.0 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20220328075252-7dd334e3daae // indirect
 	github.com/onsi/ginkgo/v2 v2.9.5 // indirect
+	github.com/otiai10/mint v1.3.1 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
