@@ -121,7 +121,6 @@ type Contracts struct {
 type Solana struct {
 	GatewayProgramID string             `yaml:"gateway_program_id"`
 	SPL              DoubleQuotedString `yaml:"spl"`
-	SPLPrivateKey    []byte             `yaml:"spl_private_key"`
 }
 
 // EVM contains the addresses of predeployed contracts on the EVM chain

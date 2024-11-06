@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"fmt"
 	"math/big"
 	"time"
 
@@ -189,35 +188,46 @@ func (r *E2ERunner) CreateSignedTransaction(
 	return tx
 }
 
-func (r *E2ERunner) DepositSPL(privateKey *solana.PrivateKey, tokenAccount solana.Wallet, receiver ethcommon.Address, data []byte) solana.Signature {
-	// ata for pda
-	pda := r.ComputePdaAddress()
-	pdaAta, _, err := solana.FindAssociatedTokenAddress(pda, tokenAccount.PublicKey())
+func (r *E2ERunner) FindOrCreateAssociatedTokenAccount(payer solana.PrivateKey, owner solana.PublicKey, tokenAccount solana.PublicKey) solana.PublicKey {
+	pdaAta, _, err := solana.FindAssociatedTokenAddress(owner, tokenAccount)
 	require.NoError(r, err)
 
-	ata, _, err := solana.FindAssociatedTokenAddress(privateKey.PublicKey(), tokenAccount.PublicKey())
-	require.NoError(r, err)
-
-	ataInstruction := associatedtokenaccount.NewCreateInstruction(privateKey.PublicKey(), pda, tokenAccount.PublicKey()).Build()
+	info, _ := r.SolanaClient.GetAccountInfo(r.Ctx, pdaAta)
+	if info != nil {
+		// already exists
+		return pdaAta
+	}
+	// doesn't exist, create it
+	ataInstruction := associatedtokenaccount.NewCreateInstruction(payer.PublicKey(), owner, tokenAccount).Build()
 	signedTx := r.CreateSignedTransaction(
 		[]solana.Instruction{ataInstruction},
-		*privateKey,
-		[]solana.PrivateKey{tokenAccount.PrivateKey},
+		payer,
+		[]solana.PrivateKey{},
 	)
 	// broadcast the transaction and wait for finalization
-	_, out := r.BroadcastTxSync(signedTx)
-	r.Logger.Info("pda ata spl logs: %v", out.Meta.LogMessages)
+	r.BroadcastTxSync(signedTx)
 
-	_, err = r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)
+	return pdaAta
+}
+
+func (r *E2ERunner) DepositSPL(privateKey *solana.PrivateKey, amount uint64, tokenAccount solana.PublicKey, receiver ethcommon.Address, data []byte) solana.Signature {
+	// ata for pda
+	pda := r.ComputePdaAddress()
+	pdaAta := r.FindOrCreateAssociatedTokenAccount(*privateKey, pda, tokenAccount)
+
+	// deployer ata
+	ata := r.FindOrCreateAssociatedTokenAccount(*privateKey, privateKey.PublicKey(), tokenAccount)
+
+	_, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)
 	require.NoError(r, err)
 
 	// deposit spl
-	seed := [][]byte{[]byte("whitelist"), tokenAccount.PublicKey().Bytes()}
+	seed := [][]byte{[]byte("whitelist"), tokenAccount.Bytes()}
 	whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, r.GatewayProgram)
 	require.NoError(r, err)
 
-	depositSPLInstruction := r.CreateDepositSPLInstruction(uint64(500_000), privateKey.PublicKey(), whitelistEntryPDA, tokenAccount.PublicKey(), ata, pdaAta, receiver, data)
-	signedTx = r.CreateSignedTransaction(
+	depositSPLInstruction := r.CreateDepositSPLInstruction(amount, privateKey.PublicKey(), whitelistEntryPDA, tokenAccount, ata, pdaAta, receiver, data)
+	signedTx := r.CreateSignedTransaction(
 		[]solana.Instruction{depositSPLInstruction},
 		*privateKey,
 		[]solana.PrivateKey{},
@@ -232,7 +242,7 @@ func (r *E2ERunner) DepositSPL(privateKey *solana.PrivateKey, tokenAccount solan
 	return sig
 }
 
-func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *solana.Wallet {
+func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool, amountToMint uint64) *solana.Wallet {
 	lamport, err := r.SolanaClient.GetMinimumBalanceForRentExemption(r.Ctx, token.MINT_SIZE, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 
@@ -263,6 +273,27 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 	_, out := r.BroadcastTxSync(signedTx)
 	r.Logger.Info("create spl logs: %v", out.Meta.LogMessages)
 
+	// minting some tokens to deployer for testing
+	ata := r.FindOrCreateAssociatedTokenAccount(*privateKey, privateKey.PublicKey(), tokenAccount.PublicKey())
+
+	_, err = r.SolanaClient.GetTokenAccountBalance(r.Ctx, ata, rpc.CommitmentConfirmed)
+	require.NoError(r, err)
+
+	mintToInstruction := token.NewMintToInstruction(amountToMint, tokenAccount.PublicKey(), ata, privateKey.PublicKey(), []solana.PublicKey{}).Build()
+	signedTx = r.CreateSignedTransaction(
+		[]solana.Instruction{mintToInstruction},
+		*privateKey,
+		[]solana.PrivateKey{},
+	)
+
+	// broadcast the transaction and wait for finalization
+	_, out = r.BroadcastTxSync(signedTx)
+	r.Logger.Info("mint spl logs: %v", out.Meta.LogMessages)
+
+	_, err = r.SolanaClient.GetTokenAccountBalance(r.Ctx, ata, rpc.CommitmentConfirmed)
+	require.NoError(r, err)
+
+	// optionally whitelist spl token in gateway
 	if whitelist {
 		seed := [][]byte{[]byte("whitelist"), tokenAccount.PublicKey().Bytes()}
 		whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, r.GatewayProgram)
@@ -288,40 +319,6 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 		whitelistEntryInfo, err = r.SolanaClient.GetAccountInfo(r.Ctx, whitelistEntryPDA)
 		require.NoError(r, err)
 		require.NotNil(r, whitelistEntryInfo)
-
-		fmt.Println("minting tokens to deployer...")
-
-		ata, _, err := solana.FindAssociatedTokenAddress(privateKey.PublicKey(), tokenAccount.PublicKey())
-		require.NoError(r, err)
-
-		ataInstruction := associatedtokenaccount.NewCreateInstruction(privateKey.PublicKey(), privateKey.PublicKey(), tokenAccount.PublicKey()).Build()
-		signedTx = r.CreateSignedTransaction(
-			[]solana.Instruction{ataInstruction},
-			*privateKey,
-			[]solana.PrivateKey{tokenAccount.PrivateKey},
-		)
-		// broadcast the transaction and wait for finalization
-		_, out = r.BroadcastTxSync(signedTx)
-		r.Logger.Info("ata spl logs: %v", out.Meta.LogMessages)
-
-		_, err = r.SolanaClient.GetTokenAccountBalance(r.Ctx, ata, rpc.CommitmentConfirmed)
-		require.NoError(r, err)
-
-		amount := uint64(1_000_000)
-		mintToInstruction := token.NewMintToInstruction(amount, tokenAccount.PublicKey(), ata, privateKey.PublicKey(), []solana.PublicKey{}).Build()
-		signedTx = r.CreateSignedTransaction(
-			[]solana.Instruction{mintToInstruction},
-			*privateKey,
-			[]solana.PrivateKey{},
-		)
-
-		// broadcast the transaction and wait for finalization
-		_, out = r.BroadcastTxSync(signedTx)
-		r.Logger.Info("mint spl logs: %v", out.Meta.LogMessages)
-
-		_, err = r.SolanaClient.GetTokenAccountBalance(r.Ctx, ata, rpc.CommitmentConfirmed)
-		require.NoError(r, err)
-
 	}
 
 	return tokenAccount

@@ -12,8 +12,9 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestSolanaDepositSPL(r *runner.E2ERunner, _ []string) {
-	// require.Len(r, args, 1)
+func TestSolanaDepositSPLAndCall(r *runner.E2ERunner, args []string) {
+	require.Len(r, args, 1)
+	amount := parseInt(r, args[0])
 
 	// deploy an example contract in ZEVM
 	contractAddr, _, contract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)
@@ -24,16 +25,13 @@ func TestSolanaDepositSPL(r *runner.E2ERunner, _ []string) {
 	privKey, err := solana.PrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
 	require.NoError(r, err)
 
-	wall, err := solana.WalletFromPrivateKeyBase58(r.SPLPrivateKey.String())
-	require.NoError(r, err)
-
 	// execute the deposit transaction
-	data := []byte("hello lamports")
-	sig := r.DepositSPL(&privKey, *wall, contractAddr, data)
+	data := []byte("hello spl tokens")
+	sig := r.DepositSPL(&privKey, uint64(amount), r.SPLAddr, contractAddr, data)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "solana_deposit")
+	r.Logger.CCTX(*cctx, "solana_deposit_spl_and_call")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// check if example contract has been called, bar value should be set to amount

@@ -34,10 +34,6 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		r.GatewayProgram = solana.MustPublicKeyFromBase58(c)
 	}
 
-	if c := conf.Contracts.Solana.SPLPrivateKey; c != nil {
-		r.SPLPrivateKey = solana.PrivateKey(c)
-	}
-
 	if c := conf.Contracts.Solana.SPL; c != "" {
 		r.SPLAddr = solana.MustPublicKeyFromBase58(c.String())
 	}

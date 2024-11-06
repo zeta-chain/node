@@ -111,7 +111,6 @@ type E2ERunner struct {
 	// programs on Solana
 	GatewayProgram solana.PublicKey
 	SPLAddr        solana.PublicKey
-	SPLPrivateKey  solana.PrivateKey // private key for token account is needed for instruction accounts
 
 	// contracts evm
 	ZetaEthAddr      ethcommon.Address
