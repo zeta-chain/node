@@ -1,12 +1,12 @@
 package e2etests
 
 import (
-	"github.com/zeta-chain/node/e2e/contracts/testgasconsumer"
 	"math/big"
 
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
+	"github.com/zeta-chain/node/e2e/contracts/testgasconsumer"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -20,6 +20,7 @@ func TestDepositAndCallOutOfGas(r *runner.E2ERunner, args []string) {
 	require.True(r, ok, "Invalid amount specified for TestV2ETHDepositAndCall")
 
 	// Deploy the GasConsumer contract
+	//nolint:dogsled
 	gasConsumerAddress, _, _, _ := testgasconsumer.DeployTestGasConsumer(r.ZEVMAuth, r.ZEVMClient)
 
 	// perform the deposit and call to the GasConsumer contract
