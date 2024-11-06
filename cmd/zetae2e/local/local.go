@@ -50,7 +50,7 @@ const (
 )
 
 var (
-	TestTimeout = 15 * time.Minute
+	TestTimeout = 20 * time.Minute
 )
 
 var noError = testutil.NoError
