@@ -11,7 +11,7 @@
 * [3075](https://github.com/zeta-chain/node/pull/3075) - ton: withdraw concurrent, deposit & revert.
 
 ### Fixes
-* [3166](https://github.com/zeta-chain/node/pull/3117) - register withdraw emissions to legacy amino codec.
+* [3166](https://github.com/zeta-chain/node/pull/3117) - register messages for emissions module to legacy amino codec.
 
 ## v21.0.0
 
