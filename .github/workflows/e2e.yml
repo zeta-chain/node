@@ -28,12 +28,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # this cannot run on forks as forks cannot push packages in pull request context
+  # forked pull request will fall back to slow build
   build-zetanode:
     runs-on: ubuntu-22.04
-    permissions:
-      packages: write
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'zeta-chain/node'
     env:
-      DOCKER_IMAGE: ghcr.io/${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login || github.repository_owner }}/zetanode
+      DOCKER_IMAGE: ghcr.io/${{ github.repository_owner }}/zetanode
       DOCKER_TAG: ${{ github.ref == 'refs/heads/develop' && 'develop' || github.sha }}
     outputs:
       image: ${{ fromJson(steps.build.outputs.metadata)['image.name'] }}
@@ -46,7 +47,6 @@ jobs:
 
       - name: Login to Docker Hub registry
         uses: docker/login-action@v3
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'zeta-chain/node'
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_READ_ONLY }}
@@ -55,7 +55,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login || github.repository_owner }}
+          username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Restore go cache
@@ -304,7 +304,7 @@ jobs:
 
       - run: |
           result="${{ needs.build-zetanode.result }}"
-          if [[ $result != "success" ]]; then
+          if [[ $result != "success" || $result == "skipped" ]]; then
             exit 1
           fi
           result="${{ needs.e2e.result }}"
