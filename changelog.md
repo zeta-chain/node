@@ -10,6 +10,10 @@
 ### Tests
 * [3075](https://github.com/zeta-chain/node/pull/3075) - ton: withdraw concurrent, deposit & revert.
 
+### Fixes
+
+* [3106](https://github.com/zeta-chain/node/pull/3106) - prevent blocked CCTX on out of gas during omnichain calls
+
 ## v21.0.0
 
 ### Features
