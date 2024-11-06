@@ -99,7 +99,6 @@ jobs:
           build-args: |
             NODE_VERSION=${{ env.NODE_VERSION }}
             NODE_COMMIT=${{ env.NODE_COMMIT }}
-      - run: echo "${{ steps.build.outputs.metadata }}"
 
   matrix-conditionals:
     needs: build-zetanode
@@ -246,7 +245,7 @@ jobs:
       runs-on: ${{ matrix.runs-on}}
       run: ${{ matrix.run }}
       timeout-minutes: "${{ matrix.timeout-minutes || 25 }}"
-      zetanode-image: ${{ needs.zetanode-build.outputs.image }}
+      zetanode-image: ${{ needs.build-zetanode.outputs.image }}
       enable-monitoring: ${{ needs.matrix-conditionals.outputs.ENABLE_MONITORING == 'true' }}
     secrets: inherit
   # this allows you to set a required status check
