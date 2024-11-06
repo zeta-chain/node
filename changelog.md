@@ -75,6 +75,7 @@
 * [3018](https://github.com/zeta-chain/node/pull/3018) - support `DepositAndCall` and `WithdrawAndCall` with empty payload
 * [3030](https://github.com/zeta-chain/node/pull/3030) - Avoid storing invalid Solana gateway address in the `SetGatewayAddress`
 * [3047](https://github.com/zeta-chain/node/pull/3047) - wrong block hash in subscribe new heads
+* [3166](https://github.com/zeta-chain/node/pull/3117) - register withdraw emissions to legacy amino
 
 ## v20.0.0
 
