@@ -20,8 +20,8 @@ func TestDepositAndCallOutOfGas(r *runner.E2ERunner, args []string) {
 	require.True(r, ok, "Invalid amount specified for TestV2ETHDepositAndCall")
 
 	// Deploy the GasConsumer contract
-	//nolint:dogsled
-	gasConsumerAddress, _, _, _ := testgasconsumer.DeployTestGasConsumer(r.ZEVMAuth, r.ZEVMClient)
+	gasConsumerAddress, _, _, err := testgasconsumer.DeployTestGasConsumer(r.ZEVMAuth, r.ZEVMClient)
+	require.NoError(r, err)
 
 	// perform the deposit and call to the GasConsumer contract
 	tx := r.V2ETHDepositAndCall(
