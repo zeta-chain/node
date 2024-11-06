@@ -140,6 +140,7 @@ const (
 	TestV2ETHDepositName                         = "v2_eth_deposit"
 	TestV2ETHDepositAndCallName                  = "v2_eth_deposit_and_call"
 	TestV2ETHDepositAndCallNoMessageName         = "v2_eth_deposit_and_call_no_message"
+	TestDepositAndWithdrawName                   = "deposit_and_withdraw"
 	TestV2ETHDepositAndCallRevertName            = "v2_eth_deposit_and_call_revert"
 	TestV2ETHDepositAndCallRevertWithCallName    = "v2_eth_deposit_and_call_revert_with_call"
 	TestV2ETHWithdrawName                        = "v2_eth_withdraw"
@@ -823,6 +824,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "10000000000000000"},
 		},
 		TestV2ETHDepositAndCallNoMessage,
+	),
+	runner.NewE2ETest(
+		TestDepositAndWithdrawName,
+		"makes a depositAndCall that trigger a withdrawal to the origin chain",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000"},
+		},
+		TestDepositAndWithdraw,
 	),
 	runner.NewE2ETest(
 		TestV2ETHDepositAndCallRevertName,
