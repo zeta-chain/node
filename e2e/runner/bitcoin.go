@@ -14,6 +14,7 @@ import (
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 
@@ -106,7 +107,7 @@ func (r *E2ERunner) DepositBTCWithAmount(amount float64, memo *memo.InboundMemo)
 	if memo != nil {
 		txHash, err = r.DepositBTCWithStandardMemo(amount, utxos, memo)
 	} else {
-		txHash, err = r.DepositBTCWithLegacyMemo(amount, utxos)
+		txHash, err = r.DepositBTCWithLegacyMemo(amount, utxos, r.EVMAddress())
 	}
 	require.NoError(r, err)
 
@@ -115,8 +116,9 @@ func (r *E2ERunner) DepositBTCWithAmount(amount float64, memo *memo.InboundMemo)
 	return txHash
 }
 
-// DepositBTC deposits BTC on ZetaChain
-func (r *E2ERunner) DepositBTC() {
+// DepositBTC deposits BTC from the Bitcoin node wallet into ZetaChain.
+// Note: This function only works for node wallet based deployer account.
+func (r *E2ERunner) DepositBTC(receiver common.Address) {
 	r.Logger.Print("⏳ depositing BTC into ZEVM")
 	startTime := time.Now()
 	defer func() {
@@ -130,6 +132,7 @@ func (r *E2ERunner) DepositBTC() {
 	spendableAmount := 0.0
 	spendableUTXOs := 0
 	for _, utxo := range utxos {
+		// 'Spendable' indicates whether we have the private keys to spend this output
 		if utxo.Spendable {
 			spendableAmount += utxo.Amount
 			spendableUTXOs++
@@ -145,8 +148,8 @@ func (r *E2ERunner) DepositBTC() {
 	r.Logger.Info("Now sending BTC to tester ZEVM address...")
 
 	// send initial BTC to the tester ZEVM address
-	amount1 := 1.15 + zetabitcoin.DefaultDepositorFee
-	txHash, err := r.DepositBTCWithLegacyMemo(amount1, utxos[:2])
+	amount := 1.15 + zetabitcoin.DefaultDepositorFee
+	txHash, err := r.DepositBTCWithLegacyMemo(amount, utxos[:2], receiver)
 	require.NoError(r, err)
 
 	// send a donation to the TSS address to compensate for the funds minted automatically during pool creation
@@ -176,11 +179,12 @@ func (r *E2ERunner) DepositBTC() {
 func (r *E2ERunner) DepositBTCWithLegacyMemo(
 	amount float64,
 	inputUTXOs []btcjson.ListUnspentResult,
+	receiver common.Address,
 ) (*chainhash.Hash, error) {
 	r.Logger.Info("⏳ depositing BTC into ZEVM with legacy memo")
 
 	// payload is not needed for pure deposit
-	memoBytes := r.EVMAddress().Bytes()
+	memoBytes := receiver.Bytes()
 
 	return r.SendToTSSFromDeployerWithMemo(amount, inputUTXOs, memoBytes)
 }
@@ -427,7 +431,7 @@ func (r *E2ERunner) MineBlocksIfLocalBitcoin() func() {
 				_, err := r.GenerateToAddressIfLocalBitcoin(1, r.BTCDeployerAddress)
 				require.NoError(r, err)
 
-				time.Sleep(3 * time.Second)
+				time.Sleep(6 * time.Second)
 			}
 		}
 	}()

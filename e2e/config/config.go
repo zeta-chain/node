@@ -64,7 +64,8 @@ type AdditionalAccounts struct {
 	UserERC20         Account `yaml:"user_erc20"`
 	UserZetaTest      Account `yaml:"user_zeta_test"`
 	UserZEVMMPTest    Account `yaml:"user_zevm_mp_test"`
-	UserBitcoin       Account `yaml:"user_bitcoin"`
+	UserBitcoin1      Account `yaml:"user_bitcoin1"`
+	UserBitcoin2      Account `yaml:"user_bitcoin2"`
 	UserSolana        Account `yaml:"user_solana"`
 	UserEther         Account `yaml:"user_ether"`
 	UserMisc          Account `yaml:"user_misc"`
@@ -233,7 +234,8 @@ func (a AdditionalAccounts) AsSlice() []Account {
 		a.UserERC20,
 		a.UserZetaTest,
 		a.UserZEVMMPTest,
-		a.UserBitcoin,
+		a.UserBitcoin1,
+		a.UserBitcoin2,
 		a.UserSolana,
 		a.UserEther,
 		a.UserMisc,
@@ -312,7 +314,11 @@ func (c *Config) GenerateKeys() error {
 	if err != nil {
 		return err
 	}
-	c.AdditionalAccounts.UserBitcoin, err = generateAccount()
+	c.AdditionalAccounts.UserBitcoin1, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserBitcoin2, err = generateAccount()
 	if err != nil {
 		return err
 	}

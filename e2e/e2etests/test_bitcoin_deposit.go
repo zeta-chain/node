@@ -13,8 +13,6 @@ func TestBitcoinDeposit(r *runner.E2ERunner, args []string) {
 
 	depositAmount := parseFloat(r, args[0])
 
-	r.SetBtcAddress(r.Name, false)
-
 	txHash := r.DepositBTCWithAmount(depositAmount, nil)
 
 	// wait for the cctx to be mined

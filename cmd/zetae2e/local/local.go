@@ -272,36 +272,36 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipRegular {
 		// defines all tests, if light is enabled, only the most basic tests are run and advanced are skipped
 		erc20Tests := []string{
-			// e2etests.TestERC20WithdrawName,
-			// e2etests.TestMultipleERC20WithdrawsName,
-			// e2etests.TestERC20DepositAndCallRefundName,
-			// e2etests.TestZRC20SwapName,
+			e2etests.TestERC20WithdrawName,
+			e2etests.TestMultipleERC20WithdrawsName,
+			e2etests.TestERC20DepositAndCallRefundName,
+			e2etests.TestZRC20SwapName,
 		}
 		erc20AdvancedTests := []string{
-			// e2etests.TestERC20DepositRestrictedName,
+			e2etests.TestERC20DepositRestrictedName,
 		}
 		zetaTests := []string{
-			// e2etests.TestZetaWithdrawName,
-			// e2etests.TestMessagePassingExternalChainsName,
-			// e2etests.TestMessagePassingRevertFailExternalChainsName,
-			// e2etests.TestMessagePassingRevertSuccessExternalChainsName,
+			e2etests.TestZetaWithdrawName,
+			e2etests.TestMessagePassingExternalChainsName,
+			e2etests.TestMessagePassingRevertFailExternalChainsName,
+			e2etests.TestMessagePassingRevertSuccessExternalChainsName,
 		}
 		zetaAdvancedTests := []string{
-			// e2etests.TestZetaDepositRestrictedName,
-			// e2etests.TestZetaDepositName,
-			// e2etests.TestZetaDepositNewAddressName,
+			e2etests.TestZetaDepositRestrictedName,
+			e2etests.TestZetaDepositName,
+			e2etests.TestZetaDepositNewAddressName,
 		}
 		zevmMPTests := []string{}
 		zevmMPAdvancedTests := []string{
-			// e2etests.TestMessagePassingZEVMToEVMName,
-			// e2etests.TestMessagePassingEVMtoZEVMName,
-			// e2etests.TestMessagePassingEVMtoZEVMRevertName,
-			// e2etests.TestMessagePassingZEVMtoEVMRevertName,
-			// e2etests.TestMessagePassingZEVMtoEVMRevertFailName,
-			// e2etests.TestMessagePassingEVMtoZEVMRevertFailName,
+			e2etests.TestMessagePassingZEVMToEVMName,
+			e2etests.TestMessagePassingEVMtoZEVMName,
+			e2etests.TestMessagePassingEVMtoZEVMRevertName,
+			e2etests.TestMessagePassingZEVMtoEVMRevertName,
+			e2etests.TestMessagePassingZEVMtoEVMRevertFailName,
+			e2etests.TestMessagePassingEVMtoZEVMRevertFailName,
 		}
 
-		bitcoinTests := []string{
+		bitcoinDepositTests := []string{
 			e2etests.TestBitcoinDonationName,
 			e2etests.TestBitcoinDepositName,
 			e2etests.TestBitcoinDepositAndCallName,
@@ -311,43 +311,45 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinStdMemoDepositAndCallRevertName,
 			e2etests.TestBitcoinStdMemoDepositAndCallRevertOtherAddressName,
 			e2etests.TestBitcoinStdMemoInscribedDepositAndCallName,
+			e2etests.TestCrosschainSwapName,
+		}
+		bitcoinWithdrawTests := []string{
 			e2etests.TestBitcoinWithdrawSegWitName,
 			e2etests.TestBitcoinWithdrawInvalidAddressName,
 			e2etests.TestZetaWithdrawBTCRevertName,
-			e2etests.TestCrosschainSwapName,
 		}
 		bitcoinAdvancedTests := []string{
 			e2etests.TestBitcoinWithdrawTaprootName,
 			e2etests.TestBitcoinWithdrawLegacyName,
-			e2etests.TestBitcoinWithdrawMultipleName,
 			e2etests.TestBitcoinWithdrawP2SHName,
 			e2etests.TestBitcoinWithdrawP2WSHName,
+			e2etests.TestBitcoinWithdrawMultipleName,
 			e2etests.TestBitcoinWithdrawRestrictedName,
 		}
 		ethereumTests := []string{
-			// e2etests.TestEtherWithdrawName,
-			// e2etests.TestContextUpgradeName,
-			// e2etests.TestEtherDepositAndCallName,
-			// e2etests.TestEtherDepositAndCallRefundName,
+			e2etests.TestEtherWithdrawName,
+			e2etests.TestContextUpgradeName,
+			e2etests.TestEtherDepositAndCallName,
+			e2etests.TestEtherDepositAndCallRefundName,
 		}
 		ethereumAdvancedTests := []string{
-			// e2etests.TestEtherWithdrawRestrictedName,
+			e2etests.TestEtherWithdrawRestrictedName,
 		}
 		precompiledContractTests := []string{}
 
 		if !skipPrecompiles {
 			precompiledContractTests = []string{
-				// // e2etests.TestPrecompilesPrototypeName,
-				// // e2etests.TestPrecompilesPrototypeThroughContractName,
-				// // e2etests.TestPrecompilesStakingName,
-				// // // Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
-				// // // e2etests.TestPrecompilesStakingThroughContractName,
-				// // e2etests.TestPrecompilesBankName,
-				// // e2etests.TestPrecompilesBankFailName,
-				// // e2etests.TestPrecompilesBankThroughContractName,
-				// e2etests.TestPrecompilesDistributeName,
-				// e2etests.TestPrecompilesDistributeNonZRC20Name,
-				// e2etests.TestPrecompilesDistributeThroughContractName,
+				// e2etests.TestPrecompilesPrototypeName,
+				// e2etests.TestPrecompilesPrototypeThroughContractName,
+				// e2etests.TestPrecompilesStakingName,
+				// // Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
+				// // e2etests.TestPrecompilesStakingThroughContractName,
+				// e2etests.TestPrecompilesBankName,
+				// e2etests.TestPrecompilesBankFailName,
+				// e2etests.TestPrecompilesBankThroughContractName,
+				e2etests.TestPrecompilesDistributeName,
+				e2etests.TestPrecompilesDistributeNonZRC20Name,
+				e2etests.TestPrecompilesDistributeThroughContractName,
 			}
 		}
 
@@ -355,7 +357,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			erc20Tests = append(erc20Tests, erc20AdvancedTests...)
 			zetaTests = append(zetaTests, zetaAdvancedTests...)
 			zevmMPTests = append(zevmMPTests, zevmMPAdvancedTests...)
-			bitcoinTests = append(bitcoinTests, bitcoinAdvancedTests...)
+			bitcoinWithdrawTests = append(bitcoinWithdrawTests, bitcoinAdvancedTests...)
 			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
 		}
 
@@ -363,7 +365,15 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
 		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
 		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
-		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, bitcoinTests...))
+		startBitcoinTestRoutines(
+			&eg,
+			conf,
+			deployerRunner,
+			verbose,
+			!skipBitcoinSetup,
+			bitcoinDepositTests,
+			bitcoinWithdrawTests,
+		)
 		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, ethereumTests...))
 	}
 

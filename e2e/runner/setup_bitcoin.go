@@ -26,78 +26,65 @@ func (r *E2ERunner) AddTSSToNode() {
 	require.NoError(r, err)
 }
 
-func (r *E2ERunner) SetupBitcoinAccount(initNetwork bool) {
-	r.Logger.Print("⚙️ setting up Bitcoin account")
+// SetupBitcoinAccounts sets up the TSS account and deployer account
+func (r *E2ERunner) SetupBitcoinAccounts(createWallet bool) {
+	r.Logger.Info("⚙️ setting up Bitcoin account")
 	startTime := time.Now()
 	defer func() {
 		r.Logger.Print("✅ Bitcoin account setup in %s", time.Since(startTime))
 	}()
 
-	_, err := r.BtcRPCClient.CreateWallet(r.Name, rpcclient.WithCreateWalletBlank())
-	if err != nil {
-		require.ErrorContains(r, err, "Database already exists")
-	}
+	// setup deployer account
+	r.SetupBtcAddress(r.Name, createWallet)
 
-	r.SetBtcAddress(r.Name, true)
+	// import the TSS address to index TSS utxos and txs
+	err := r.BtcRPCClient.ImportAddress(r.BTCTSSAddress.EncodeAddress())
+	require.NoError(r, err)
+	r.Logger.Info("⚙️ imported BTC TSSAddress: %s", r.BTCTSSAddress.EncodeAddress())
 
-	if initNetwork {
-		// import the TSS address
-		err = r.BtcRPCClient.ImportAddress(r.BTCTSSAddress.EncodeAddress())
-		require.NoError(r, err)
-
-		// mine some blocks to get some BTC into the deployer address
-		_, err = r.GenerateToAddressIfLocalBitcoin(101, r.BTCDeployerAddress)
-		require.NoError(r, err)
-
-		_, err = r.GenerateToAddressIfLocalBitcoin(4, r.BTCDeployerAddress)
-		require.NoError(r, err)
-	}
+	// import deployer address to index deployer utxos and txs
+	err = r.BtcRPCClient.ImportAddress(r.BTCDeployerAddress.EncodeAddress())
+	require.NoError(r, err)
+	r.Logger.Info("⚙️ imported BTCDeployerAddress: %s", r.BTCDeployerAddress.EncodeAddress())
 }
 
-// GetBtcAddress returns the BTC address of the deployer from its EVM private key
-func (r *E2ERunner) GetBtcAddress() (string, string, error) {
+// GetBtcAddress returns the BTC address of the deployer and private key in WIF format
+func (r *E2ERunner) GetBtcAddress() (*btcutil.AddressWitnessPubKeyHash, *btcutil.WIF) {
+	// load configured private key
 	skBytes, err := hex.DecodeString(r.Account.RawPrivateKey.String())
-	if err != nil {
-		return "", "", err
-	}
+	require.NoError(r, err)
 
+	// create private key in WIF format
 	sk, _ := btcec.PrivKeyFromBytes(skBytes)
 	privkeyWIF, err := btcutil.NewWIF(sk, r.BitcoinParams, true)
-	if err != nil {
-		return "", "", err
-	}
+	require.NoError(r, err)
 
+	// derive address from private key
 	address, err := btcutil.NewAddressWitnessPubKeyHash(
 		btcutil.Hash160(privkeyWIF.SerializePubKey()),
 		r.BitcoinParams,
 	)
-	if err != nil {
-		return "", "", err
-	}
+	require.NoError(r, err)
 
-	// return the string representation of the address
-	return address.EncodeAddress(), privkeyWIF.String(), nil
+	return address, privkeyWIF
 }
 
-// SetBtcAddress imports the deployer's private key into the Bitcoin node
-func (r *E2ERunner) SetBtcAddress(name string, rescan bool) {
-	skBytes, err := hex.DecodeString(r.Account.RawPrivateKey.String())
-	require.NoError(r, err)
+// SetupBtcAddress setups the deployer Bitcoin address
+func (r *E2ERunner) SetupBtcAddress(name string, setupWallet bool) {
+	// set the deployer address
+	address, privkeyWIF := r.GetBtcAddress()
+	r.BTCDeployerAddress = address
 
-	sk, _ := btcec.PrivKeyFromBytes(skBytes)
-	privkeyWIF, err := btcutil.NewWIF(sk, r.BitcoinParams, true)
-	require.NoError(r, err)
+	r.Logger.Info("BTCDeployerAddress: %s, %v", r.BTCDeployerAddress.EncodeAddress(), setupWallet)
 
-	if rescan {
-		err := r.BtcRPCClient.ImportPrivKeyRescan(privkeyWIF, name, true)
+	// import the deployer private key as a Bitcoin node wallet
+	if setupWallet {
+		_, err := r.BtcRPCClient.CreateWallet(r.Name, rpcclient.WithCreateWalletBlank())
+		if err != nil {
+			require.ErrorContains(r, err, "Database already exists")
+		}
+
+		err = r.BtcRPCClient.ImportPrivKeyRescan(privkeyWIF, name, true)
 		require.NoError(r, err, "failed to execute ImportPrivKeyRescan")
 	}
-
-	r.BTCDeployerAddress, err = btcutil.NewAddressWitnessPubKeyHash(
-		btcutil.Hash160(privkeyWIF.PrivKey.PubKey().SerializeCompressed()),
-		r.BitcoinParams,
-	)
-	require.NoError(r, err)
-
-	r.Logger.Info("BTCDeployerAddress: %s", r.BTCDeployerAddress.EncodeAddress())
 }
