@@ -38,22 +38,31 @@ var initializeConfigOpts initializeConfigOptions
 func setupInitializeConfigOptions() {
 	f, cfg := InitializeConfigCmd.Flags(), &initializeConfigOpts
 
-	f.StringVar(&cfg.peer, "peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
+	const (
+		usagePeer     = "peer address e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsH..."
+		usageHotKey   = "hotkey for zetaclient this key is used for TSS and ZetaClient operations"
+		usageLogLevel = "log level (0:debug, 1:info, 2:warn, 3:error, 4:fatal, 5:panic)"
+		usageP2PDiag  = "p2p diagnostic ticker (default: 0 means no ticker)"
+		usageTicker   = "config update ticker (default: 0 means no ticker)"
+		usageKeyring  = "keyring backend to use (test, file)"
+	)
+
+	f.StringVar(&cfg.peer, "peer", "", usagePeer)
 	f.StringVar(&cfg.publicIP, "public-ip", "", "public ip address")
 	f.StringVar(&cfg.preParamsPath, "pre-params", "~/preParams.json", "pre-params file path")
 	f.StringVar(&cfg.chainID, "chain-id", "athens_7001-1", "chain id")
 	f.StringVar(&cfg.zetacoreURL, "zetacore-url", "127.0.0.1", "zetacore node URL")
 	f.StringVar(&cfg.authzGranter, "operator", "", "granter for the authorization , this should be operator address")
-	f.StringVar(&cfg.authzHotkey, "hotkey", "hotkey", "hotkey for zetaclient this key is used for TSS and ZetaClient operations")
-	f.Int8Var(&cfg.level, "log-level", int8(zerolog.InfoLevel), "log level (0:debug, 1:info, 2:warn, 3:error, 4:fatal, 5:panic , 6: NoLevel , 7: Disable)")
+	f.StringVar(&cfg.authzHotkey, "hotkey", "hotkey", usageHotKey)
+	f.Int8Var(&cfg.level, "log-level", int8(zerolog.InfoLevel), usageLogLevel)
 	f.StringVar(&cfg.logFormat, "log-format", "json", "log format (json, test)")
 	f.BoolVar(&cfg.logSampler, "log-sampler", false, "set to to true to turn on log sampling")
 	f.BoolVar(&cfg.p2pDiagnostic, "p2p-diagnostic", false, "enable p2p diagnostic")
-	f.Uint64Var(&cfg.p2pDiagnosticTicker, "p2p-diagnostic-ticker", 30, "p2p diagnostic ticker (default: 0 means no ticker)")
-	f.Uint64Var(&cfg.configUpdateTicker, "config-update-ticker", 5, "config update ticker (default: 0 means no ticker)")
+	f.Uint64Var(&cfg.p2pDiagnosticTicker, "p2p-diagnostic-ticker", 30, usageP2PDiag)
+	f.Uint64Var(&cfg.configUpdateTicker, "config-update-ticker", 5, usageTicker)
 	f.StringVar(&cfg.TssPath, "tss-path", "~/.tss", "path to tss location")
 	f.BoolVar(&cfg.TestTssKeysign, "test-tss", false, "set to to true to run a check for TSS keysign on startup")
-	f.StringVar(&cfg.KeyringBackend, "keyring-backend", string(config.KeyringBackendTest), "keyring backend to use (test, file)")
+	f.StringVar(&cfg.KeyringBackend, "keyring-backend", string(config.KeyringBackendTest), usageKeyring)
 	f.BoolVar(&cfg.HsmMode, "hsm-mode", false, "enable hsm signer, default disabled")
 	f.StringVar(&cfg.HsmHotKey, "hsm-hotkey", "hsm-hotkey", "name of hotkey associated with hardware security module")
 	f.StringVar(&cfg.RelayerKeyPath, "relayer-key-path", "~/.zetacored/relayer-keys", "path to relayer keys")

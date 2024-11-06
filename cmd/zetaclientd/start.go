@@ -219,12 +219,12 @@ func Start(_ *cobra.Command, _ []string) error {
 
 	// Generate a new TSS if keygen is set and add it into the tss server
 	// If TSS has already been generated, and keygen was successful ; we use the existing TSS
-	err = GenerateTSS(ctx, masterLogger, zetacoreClient, server)
+	err = mc.Generate(ctx, masterLogger, zetacoreClient, server)
 	if err != nil {
 		return err
 	}
 
-	tss, err := mc.NewTSS(
+	tss, err := mc.New(
 		ctx,
 		zetacoreClient,
 		tssHistoricalList,
@@ -236,7 +236,7 @@ func Start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	if cfg.TestTssKeysign {
-		err = TestTSS(tss.CurrentPubkey, *tss.Server, masterLogger)
+		err = mc.TestTSS(tss.CurrentPubkey, *tss.Server, masterLogger)
 		if err != nil {
 			startLogger.Error().Err(err).Msgf("TestTSS error : %s", tss.CurrentPubkey)
 		}

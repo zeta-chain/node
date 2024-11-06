@@ -40,6 +40,22 @@ var (
 		Short:   "Initialize Zetaclient Configuration file",
 		RunE:    InitializeConfig,
 	}
+	TSSCmd = &cobra.Command{
+		Use:   "tss",
+		Short: "TSS commands",
+	}
+	TSSEncryptCmd = &cobra.Command{
+		Use:   "encrypt [file-path] [secret-key]",
+		Short: "Utility command to encrypt existing tss key-share file",
+		Args:  cobra.ExactArgs(2),
+		RunE:  TSSEncryptFile,
+	}
+	TSSGeneratePreParamsCmd = &cobra.Command{
+		Use:   "tss gen-pre-params [path]",
+		Short: "Generate pre parameters for TSS",
+		Args:  cobra.ExactArgs(1),
+		RunE:  TSSGeneratePreParams,
+	}
 )
 
 var (
@@ -67,6 +83,10 @@ func init() {
 	RootCmd.AddCommand(VersionCmd)
 	RootCmd.AddCommand(StartCmd)
 	RootCmd.AddCommand(InitializeConfigCmd)
+
+	RootCmd.AddCommand(TSSCmd)
+	TSSCmd.AddCommand(TSSEncryptCmd)
+	TSSCmd.AddCommand(TSSGeneratePreParamsCmd)
 }
 
 func setupGlobalOptions() {
