@@ -104,6 +104,7 @@ jobs:
 
   matrix-conditionals:
     needs: build-zetanode
+    if: always()
     runs-on: ubuntu-22.04
     env:
       GH_TOKEN: ${{ github.token }}
