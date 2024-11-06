@@ -19,7 +19,6 @@ import (
 	"github.com/zeta-chain/node/app/ante"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/zetaclient/authz"
-	"github.com/zeta-chain/node/zetaclient/hsm"
 )
 
 // paying 50% more than the current base gas price to buffer for potential block-by-block
@@ -150,10 +149,6 @@ func (c *Client) SignTx(
 	overwriteSig bool,
 	txConfig client.TxConfig,
 ) error {
-	if c.config.HsmMode {
-		return hsm.SignWithHSM(txf, name, txBuilder, overwriteSig, txConfig)
-	}
-
 	return clienttx.Sign(txf, name, txBuilder, overwriteSig)
 }
 
