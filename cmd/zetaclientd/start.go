@@ -164,7 +164,7 @@ func Start(_ *cobra.Command, _ []string) error {
 	}
 	initPreParams(cfg.PreParamsPath)
 	if cfg.P2PDiagnostic {
-		err := RunDiagnostics(startLogger, peers, hotkeyPk, cfg)
+		err := mc.RunDiagnostic(cfg, peers, hotkeyPk, startLogger)
 		if err != nil {
 			startLogger.Error().Err(err).Msg("RunDiagnostics error")
 			return err
