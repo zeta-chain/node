@@ -34,15 +34,15 @@ func (r *E2ERunner) SetupBitcoinAccounts(createWallet bool) {
 		r.Logger.Print("✅ Bitcoin account setup in %s", time.Since(startTime))
 	}()
 
-	// setup deployer account
+	// setup deployer address
 	r.SetupBtcAddress(r.Name, createWallet)
 
-	// import the TSS address to index TSS utxos and txs
+	// import the TSS address to index TSS utxos and transactions
 	err := r.BtcRPCClient.ImportAddress(r.BTCTSSAddress.EncodeAddress())
 	require.NoError(r, err)
 	r.Logger.Info("⚙️ imported BTC TSSAddress: %s", r.BTCTSSAddress.EncodeAddress())
 
-	// import deployer address to index deployer utxos and txs
+	// import deployer address to index deployer utxos and transactions
 	err = r.BtcRPCClient.ImportAddress(r.BTCDeployerAddress.EncodeAddress())
 	require.NoError(r, err)
 	r.Logger.Info("⚙️ imported BTCDeployerAddress: %s", r.BTCDeployerAddress.EncodeAddress())

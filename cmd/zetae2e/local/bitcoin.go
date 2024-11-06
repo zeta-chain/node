@@ -34,7 +34,7 @@ func startBitcoinTestRoutines(
 	// send BTC to TSS for gas fees and to tester ZEVM address
 	if initNetwork {
 		// mine 101 blocks to ensure the BTC rewards are spendable
-		// Note: the rewards can be sent to any address in here
+		// Note: the block rewards can be sent to any address in here
 		_, err := runnerDeposit.GenerateToAddressIfLocalBitcoin(101, runnerDeposit.BTCDeployerAddress)
 		require.NoError(runnerDeposit, err)
 
@@ -61,7 +61,7 @@ func initRunnerDeposit(
 	var (
 		name         = "btc_deposit"
 		account      = conf.AdditionalAccounts.UserBitcoin1
-		createWallet = true // deposit tests need Bitcoin node wallet
+		createWallet = true // deposit tests need Bitcoin node wallet to handle UTXOs
 	)
 
 	return initRunner(name, account, conf, deployerRunner, verbose, initNetwork, createWallet)
@@ -76,7 +76,7 @@ func initRunnerWithdraw(
 	var (
 		name         = "btc_withdraw"
 		account      = conf.AdditionalAccounts.UserBitcoin2
-		createWallet = false // withdraw tests do not use Bitcoin node wallet
+		createWallet = false // withdraw tests DON'T use Bitcoin node wallet
 	)
 
 	return initRunner(name, account, conf, deployerRunner, verbose, initNetwork, createWallet)
@@ -90,8 +90,8 @@ func initRunner(
 	deployerRunner *runner.E2ERunner,
 	verbose, initNetwork, createWallet bool,
 ) *runner.E2ERunner {
-	// initialize r for bitcoin test
-	r, err := initTestRunner(
+	// initialize runner for bitcoin test
+	runner, err := initTestRunner(
 		name,
 		conf,
 		deployerRunner,
@@ -101,27 +101,27 @@ func initRunner(
 	testutil.NoError(err)
 
 	// setup TSS address and setup deployer wallet
-	r.SetupBitcoinAccounts(createWallet)
+	runner.SetupBitcoinAccounts(createWallet)
 
 	// initialize funds
 	if initNetwork {
 		// send some BTC block rewards to the deployer address
-		_, err = r.GenerateToAddressIfLocalBitcoin(4, r.BTCDeployerAddress)
-		require.NoError(r, err)
+		_, err = runner.GenerateToAddressIfLocalBitcoin(4, runner.BTCDeployerAddress)
+		require.NoError(runner, err)
 
 		// send ERC20 token on EVM
 		txERC20Send := deployerRunner.SendERC20OnEvm(account.EVMAddress(), 1000)
-		r.WaitForTxReceiptOnEvm(txERC20Send)
+		runner.WaitForTxReceiptOnEvm(txERC20Send)
 
 		// deposit ETH and ERC20 tokens on ZetaChain
-		txEtherDeposit := r.DepositEther()
-		txERC20Deposit := r.DepositERC20()
+		txEtherDeposit := runner.DepositEther()
+		txERC20Deposit := runner.DepositERC20()
 
-		r.WaitForMinedCCTX(txEtherDeposit)
-		r.WaitForMinedCCTX(txERC20Deposit)
+		runner.WaitForMinedCCTX(txEtherDeposit)
+		runner.WaitForMinedCCTX(txERC20Deposit)
 	}
 
-	return r
+	return runner
 }
 
 // createTestRoutine creates a test routine for given test names
@@ -144,10 +144,6 @@ func createTestRoutine(r *runner.E2ERunner, testNames []string) func() error {
 		if err := r.RunE2ETests(testsToRun); err != nil {
 			return fmt.Errorf("bitcoin tests failed: %v", err)
 		}
-
-		// if err := bitcoinRunner.CheckBtcTSSBalance(); err != nil {
-		// 	return err
-		// }
 
 		r.Logger.Print("🍾 bitcoin tests completed in %s", time.Since(startTime).String())
 

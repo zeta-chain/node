@@ -145,7 +145,7 @@ func (r *E2ERunner) DepositBTC(receiver common.Address) {
 	r.Logger.Info("ListUnspent:")
 	r.Logger.Info("  spendableAmount: %f", spendableAmount)
 	r.Logger.Info("  spendableUTXOs: %d", spendableUTXOs)
-	r.Logger.Info("Now sending BTC to tester ZEVM address...")
+	r.Logger.Info("Now sending two txs to TSS address and tester ZEVM address...")
 
 	// send initial BTC to the tester ZEVM address
 	amount := 1.15 + zetabitcoin.DefaultDepositorFee
@@ -154,6 +154,7 @@ func (r *E2ERunner) DepositBTC(receiver common.Address) {
 
 	// send a donation to the TSS address to compensate for the funds minted automatically during pool creation
 	// and prevent accounting errors
+	// it also serves as gas fee for the TSS to send BTC to other addresses
 	_, err = r.SendToTSSFromDeployerWithMemo(0.11, utxos[2:4], []byte(constant.DonationMessage))
 	require.NoError(r, err)
 

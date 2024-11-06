@@ -301,6 +301,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestMessagePassingEVMtoZEVMRevertFailName,
 		}
 
+		// btc withdraw tests are those that need a Bitcoin node wallet to send UTXOs
 		bitcoinDepositTests := []string{
 			e2etests.TestBitcoinDonationName,
 			e2etests.TestBitcoinDepositName,
@@ -318,7 +319,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinWithdrawInvalidAddressName,
 			e2etests.TestZetaWithdrawBTCRevertName,
 		}
-		bitcoinAdvancedTests := []string{
+		bitcoinWithdrawTestsAdvanced := []string{
 			e2etests.TestBitcoinWithdrawTaprootName,
 			e2etests.TestBitcoinWithdrawLegacyName,
 			e2etests.TestBitcoinWithdrawP2SHName,
@@ -357,7 +358,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			erc20Tests = append(erc20Tests, erc20AdvancedTests...)
 			zetaTests = append(zetaTests, zetaAdvancedTests...)
 			zevmMPTests = append(zevmMPTests, zevmMPAdvancedTests...)
-			bitcoinWithdrawTests = append(bitcoinWithdrawTests, bitcoinAdvancedTests...)
+			bitcoinWithdrawTests = append(bitcoinWithdrawTests, bitcoinWithdrawTestsAdvanced...)
 			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
 		}
 
@@ -466,7 +467,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	// if all tests pass, cancel txs priority monitoring and check if tx priority is not correct in some blocks
-	logger.Print("⏳ e2e tests passed,checking tx priority")
+	logger.Print("⏳ e2e tests passed, checking tx priority")
 	monitorPriorityCancel()
 	if err := <-txPriorityErrCh; err != nil && errors.Is(err, errWrongTxPriority) {
 		logger.Print("❌ %v", err)
@@ -479,10 +480,15 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testTSSMigration {
 		TSSMigration(deployerRunner, logger, verbose, conf)
 	}
+
 	// Verify that there are no trackers left over after tests complete
 	if !skipTrackerCheck {
 		deployerRunner.EnsureNoTrackers()
 	}
+
+	// Verify that the balance of restricted address is zero
+	deployerRunner.EnsureZeroBalanceOnRestrictedAddressZEVM()
+
 	// print and validate report
 	networkReport, err := deployerRunner.GenerateNetworkReport()
 	if err != nil {
