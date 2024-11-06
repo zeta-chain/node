@@ -31,7 +31,12 @@ func TestDepositAndWithdraw(r *runner.E2ERunner, args []string) {
 	)
 
 	// wait for the cctx to be mined
-	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "deposit")
-	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+	cctxDeposit := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	r.Logger.CCTX(*cctxDeposit, "deposit")
+	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxDeposit.CctxStatus.Status)
+
+	// first cctx should trigger a new cctx for the withdrawal
+	cctxWithdraw := utils.WaitCctxMinedByInboundHash(r.Ctx, cctxDeposit.Index, r.CctxClient, r.Logger, r.CctxTimeout)
+	r.Logger.CCTX(*cctxWithdraw, "withdraw")
+	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxWithdraw.CctxStatus.Status)
 }
