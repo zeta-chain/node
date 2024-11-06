@@ -21,6 +21,7 @@ func TSSEncryptFile(_ *cobra.Command, args []string) error {
 		password = args[1]
 	)
 
+	// #nosec G304 -- this is a config file
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return err

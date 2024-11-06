@@ -44,7 +44,7 @@ var (
 		RunE:  TSSEncryptFile,
 	}
 	TSSGeneratePreParamsCmd = &cobra.Command{
-		Use:   "tss gen-pre-params [path]",
+		Use:   "gen-pre-params [path]",
 		Short: "Generate pre parameters for TSS",
 		Args:  cobra.ExactArgs(1),
 		RunE:  TSSGeneratePreParams,

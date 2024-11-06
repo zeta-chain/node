@@ -16,10 +16,10 @@ import (
 	"github.com/zeta-chain/node/zetaclient/keys"
 )
 
-// privateKey is the struct that holds arguments for the relayer commands
+// relayerOptions is the struct that holds arguments for the relayer commands
 type relayerOptions struct {
 	privateKey     string
-	network        uint32
+	network        int32
 	password       string
 	relayerKeyPath string
 }
@@ -32,13 +32,42 @@ func setupRelayerOptions() {
 	// resolve default relayer key path
 	defaultKeyPath := fmt.Sprintf("%s/%s", app.DefaultNodeHome, config.DefaultRelayerDir)
 
-	f.Uint32Var(&cfg.network, "network", 7, "network id, (7:solana)")
+	f.Int32Var(&cfg.network, "network", 7, "network id, (7:solana)")
 	f.StringVar(&cfg.password, "password", "", "the password to decrypt the relayer private key")
 	f.StringVar(&cfg.relayerKeyPath, "key-path", defaultKeyPath, "path to relayer keys")
 
 	// import command in addition has the private key option
 	f = RelayerImportKeyCmd.Flags()
 	f.StringVar(&cfg.privateKey, "private-key", "", "the relayer private key to import")
+}
+
+// RelayerShowAddress shows the relayer address
+func RelayerShowAddress(_ *cobra.Command, _ []string) error {
+	// try loading the relayer key if present
+	network := chains.Network(relayerOpts.network)
+	relayerKey, err := keys.LoadRelayerKey(relayerOpts.relayerKeyPath, network, relayerOpts.password)
+	if err != nil {
+		return errors.Wrap(err, "failed to load relayer key")
+	}
+
+	// relayer key does not exist, return error
+	if relayerKey == nil {
+		return fmt.Errorf(
+			"relayer key not found for network %d in path: %s",
+			relayerOpts.network,
+			relayerOpts.relayerKeyPath,
+		)
+	}
+
+	// resolve the relayer address
+	networkName, address, err := relayerKey.ResolveAddress(network)
+	if err != nil {
+		return errors.Wrap(err, "failed to resolve relayer address")
+	}
+
+	fmt.Printf("relayer address (%s): %s\n", networkName, address)
+
+	return nil
 }
 
 // RelayerImportKey imports a relayer private key
@@ -87,35 +116,6 @@ func RelayerImportKey(_ *cobra.Command, _ []string) error {
 		return errors.Wrapf(err, "failed to create relayer key file: %s", fileName)
 	}
 	fmt.Printf("successfully imported relayer key: %s\n", fileName)
-
-	return nil
-}
-
-// RelayerShowAddress shows the relayer address
-func RelayerShowAddress(_ *cobra.Command, _ []string) error {
-	// try loading the relayer key if present
-	network := chains.Network(relayerOpts.network)
-	relayerKey, err := keys.LoadRelayerKey(relayerOpts.relayerKeyPath, network, relayerOpts.password)
-	if err != nil {
-		return errors.Wrap(err, "failed to load relayer key")
-	}
-
-	// relayer key does not exist, return error
-	if relayerKey == nil {
-		return fmt.Errorf(
-			"relayer key not found for network %d in path: %s",
-			relayerOpts.network,
-			relayerOpts.relayerKeyPath,
-		)
-	}
-
-	// resolve the relayer address
-	networkName, address, err := relayerKey.ResolveAddress(network)
-	if err != nil {
-		return errors.Wrap(err, "failed to resolve relayer address")
-	}
-
-	fmt.Printf("relayer address (%s): %s\n", networkName, address)
 
 	return nil
 }
