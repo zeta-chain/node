@@ -121,7 +121,8 @@ func (r *E2ERunner) CreateDepositSPLInstruction(
 	mint solana.PublicKey,
 	from solana.PublicKey,
 	to solana.PublicKey,
-	receiver solana.PublicKey,
+	receiver ethcommon.Address,
+	data []byte,
 ) solana.Instruction {
 	// compute the gateway PDA address
 	pdaComputed := r.ComputePdaAddress()
@@ -144,7 +145,7 @@ func (r *E2ERunner) CreateDepositSPLInstruction(
 	inst.DataBytes, err = borsh.Serialize(solanacontract.DepositInstructionParams{
 		Discriminator: solanacontract.DiscriminatorDepositSPL,
 		Amount:        amount,
-		Memo:          receiver.Bytes(),
+		Memo:          append(receiver.Bytes(), data...),
 	})
 	require.NoError(r, err)
 
@@ -188,7 +189,7 @@ func (r *E2ERunner) CreateSignedTransaction(
 	return tx
 }
 
-func (r *E2ERunner) DepositSPL(privateKey *solana.PrivateKey, tokenAccount solana.Wallet) {
+func (r *E2ERunner) DepositSPL(privateKey *solana.PrivateKey, tokenAccount solana.Wallet, receiver ethcommon.Address, data []byte) solana.Signature {
 	// ata for pda
 	pda := r.ComputePdaAddress()
 	pdaAta, _, err := solana.FindAssociatedTokenAddress(pda, tokenAccount.PublicKey())
@@ -215,18 +216,20 @@ func (r *E2ERunner) DepositSPL(privateKey *solana.PrivateKey, tokenAccount solan
 	whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, r.GatewayProgram)
 	require.NoError(r, err)
 
-	depositSPLInstruction := r.CreateDepositSPLInstruction(uint64(500_000), privateKey.PublicKey(), whitelistEntryPDA, tokenAccount.PublicKey(), ata, pdaAta, privateKey.PublicKey())
+	depositSPLInstruction := r.CreateDepositSPLInstruction(uint64(500_000), privateKey.PublicKey(), whitelistEntryPDA, tokenAccount.PublicKey(), ata, pdaAta, receiver, data)
 	signedTx = r.CreateSignedTransaction(
 		[]solana.Instruction{depositSPLInstruction},
 		*privateKey,
 		[]solana.PrivateKey{},
 	)
 	// broadcast the transaction and wait for finalization
-	_, out = r.BroadcastTxSync(signedTx)
+	sig, out := r.BroadcastTxSync(signedTx)
 	r.Logger.Info("deposit spl logs: %v", out.Meta.LogMessages)
 
 	_, err = r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)
 	require.NoError(r, err)
+
+	return sig
 }
 
 func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *solana.Wallet {
