@@ -34,6 +34,12 @@ var (
 		Short: "Start ZetaClient Observer",
 		RunE:  Start,
 	}
+	InitializeConfigCmd = &cobra.Command{
+		Use:     "init-config",
+		Aliases: []string{"init"},
+		Short:   "Initialize Zetaclient Configuration file",
+		RunE:    InitializeConfig,
+	}
 )
 
 var (
@@ -53,15 +59,17 @@ func main() {
 func init() {
 	cmd.SetupCosmosConfig()
 
-	// Init global options
-	initGlobalOptions()
+	// Setup options
+	setupGlobalOptions()
+	setupInitializeConfigOptions()
 
 	// Define commands
 	RootCmd.AddCommand(VersionCmd)
 	RootCmd.AddCommand(StartCmd)
+	RootCmd.AddCommand(InitializeConfigCmd)
 }
 
-func initGlobalOptions() {
+func setupGlobalOptions() {
 	globals := RootCmd.PersistentFlags()
 
 	globals.StringVar(&globalOpts.ZetacoreHome, tmcli.HomeFlag, app.DefaultNodeHome, "home path")

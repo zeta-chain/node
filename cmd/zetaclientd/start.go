@@ -59,7 +59,7 @@ func Start(_ *cobra.Command, _ []string) error {
 	}
 
 	// Wait until zetacore has started
-	if len(cfg.Peer) != 0 {
+	if cfg.Peer != "" {
 		if err := validatePeer(cfg.Peer); err != nil {
 			return errors.Wrap(err, "unable to validate peer")
 		}
