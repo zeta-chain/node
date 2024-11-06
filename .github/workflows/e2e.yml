@@ -31,7 +31,8 @@ jobs:
   build-zetanode:
     runs-on: ubuntu-22.04
     env:
-      DOCKER_IMAGE: ghcr.io/${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login || github.repository_owner }}/zetanode
+      GHCR_USERNAME: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login || github.repository_owner }}
+      DOCKER_IMAGE: ghcr.io/${{ env.GHCR_USERNAME }}/zetanode
       DOCKER_TAG: ${{ github.ref == 'refs/heads/develop' && 'develop' || github.sha }}
     outputs:
       image: ${{ fromJson(steps.build.outputs.metadata)['image.name'] }}
@@ -53,7 +54,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
+          username: ${{ env.GHCR_USERNAME }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Restore go cache
