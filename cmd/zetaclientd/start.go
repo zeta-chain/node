@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	ecdsakeygen "github.com/bnb-chain/tss-lib/ecdsa/keygen"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/libp2p/go-libp2p/core/peer"
 	maddr "github.com/multiformats/go-multiaddr"
@@ -34,6 +35,11 @@ import (
 	mc "github.com/zeta-chain/node/zetaclient/tss"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
+
+// todo revamp
+// https://github.com/zeta-chain/node/issues/3119
+// https://github.com/zeta-chain/node/issues/3112
+var preParams *ecdsakeygen.LocalPreParams
 
 func Start(_ *cobra.Command, _ []string) error {
 	// Prompt for Hotkey, TSS key-share and relayer key passwords

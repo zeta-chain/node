@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	ecdsakeygen "github.com/bnb-chain/tss-lib/ecdsa/keygen"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/spf13/cobra"
 
@@ -17,7 +16,7 @@ import (
 var (
 	RootCmd = &cobra.Command{
 		Use:   "zetaclientd",
-		Short: "ZetaClient CLI",
+		Short: "zetaclient cli & server",
 	}
 	VersionCmd = &cobra.Command{
 		Use:   "version",
@@ -62,6 +61,13 @@ var (
 		Short: "Show relayer address",
 		RunE:  RelayerShowAddress,
 	}
+
+	InboundCmd          = &cobra.Command{Use: "inbound", Short: "Inbound transactions"}
+	InboundGetBallotCmd = &cobra.Command{
+		Use:   "get-ballot [inboundHash] [chainID]",
+		Short: "Get the ballot status for the tx hash",
+		RunE:  InboundGetBallot,
+	}
 )
 
 // globalOptions defines the global options for all commands.
@@ -69,18 +75,13 @@ type globalOptions struct {
 	ZetacoreHome string
 }
 
-var (
-	preParams  *ecdsakeygen.LocalPreParams
-	globalOpts globalOptions
-)
+var globalOpts globalOptions
 
-func main() {
-	ctx := context.Background()
+func setupGlobalOptions() {
+	globals := RootCmd.PersistentFlags()
 
-	if err := RootCmd.ExecuteContext(ctx); err != nil {
-		fmt.Printf("Error: %s. Exit code 1\n", err)
-		os.Exit(1)
-	}
+	globals.StringVar(&globalOpts.ZetacoreHome, tmcli.HomeFlag, app.DefaultNodeHome, "home path")
+	// add more options here (e.g. verbosity, etc...)
 }
 
 func init() {
@@ -90,6 +91,7 @@ func init() {
 	setupGlobalOptions()
 	setupInitializeConfigOptions()
 	setupRelayerOptions()
+	setupInboundOptions()
 
 	// Define commands
 	RootCmd.AddCommand(VersionCmd)
@@ -103,11 +105,16 @@ func init() {
 	RootCmd.AddCommand(RelayerCmd)
 	RelayerCmd.AddCommand(RelayerImportKeyCmd)
 	RelayerCmd.AddCommand(RelayerShowAddressCmd)
+
+	RootCmd.AddCommand(InboundCmd)
+	InboundCmd.AddCommand(InboundGetBallotCmd)
 }
 
-func setupGlobalOptions() {
-	globals := RootCmd.PersistentFlags()
+func main() {
+	ctx := context.Background()
 
-	globals.StringVar(&globalOpts.ZetacoreHome, tmcli.HomeFlag, app.DefaultNodeHome, "home path")
-	// add more options here (e.g. verbosity, etc...)
+	if err := RootCmd.ExecuteContext(ctx); err != nil {
+		fmt.Printf("Error: %s. Exit code 1\n", err)
+		os.Exit(1)
+	}
 }
