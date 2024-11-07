@@ -41,6 +41,7 @@ func AppStateFn(
 	cdc codec.Codec,
 	simManager *module.SimulationManager,
 	genesisState map[string]json.RawMessage,
+	exportedState json.RawMessage,
 ) simtypes.AppStateFn {
 	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
@@ -51,59 +52,22 @@ func AppStateFn(
 		}
 
 		chainID = config.ChainID
-		switch {
-		case config.ParamsFile != "" && config.GenesisFile != "":
-			panic("cannot provide both a genesis file and a params file")
 
-		case config.GenesisFile != "":
-			// override the default chain-id from simapp to set it later to the config
-			genesisDoc, accounts, err := AppStateFromGenesisFileFn(r, cdc, config.GenesisFile)
-			if err != nil {
-				panic(err)
-			}
-
-			if FlagGenesisTimeValue == 0 {
-				// use genesis timestamp if no custom timestamp is provided (i.e no random timestamp)
-				genesisTimestamp = genesisDoc.GenesisTime
-			}
-
-			appState = genesisDoc.AppState
-			chainID = genesisDoc.ChainID
-			simAccs = accounts
-
-		case config.ParamsFile != "":
-			appParams := make(simtypes.AppParams)
-			bz, err := os.ReadFile(config.ParamsFile)
-			if err != nil {
-				panic(err)
-			}
-
-			err = json.Unmarshal(bz, &appParams)
-			if err != nil {
-				panic(err)
-			}
-			appState, simAccs = AppStateRandomizedFn(
-				simManager,
-				r,
-				cdc,
-				accs,
-				genesisTimestamp,
-				appParams,
-				genesisState,
-			)
-
-		default:
-			appParams := make(simtypes.AppParams)
-			appState, simAccs = AppStateRandomizedFn(
-				simManager,
-				r,
-				cdc,
-				accs,
-				genesisTimestamp,
-				appParams,
-				genesisState,
-			)
+		// If exported state is provided then use it
+		if exportedState != nil {
+			return exportedState, accs, chainID, genesisTimestamp
 		}
+
+		appParams := make(simtypes.AppParams)
+		appState, simAccs = AppStateRandomizedFn(
+			simManager,
+			r,
+			cdc,
+			accs,
+			genesisTimestamp,
+			appParams,
+			genesisState,
+		)
 
 		rawState := make(map[string]json.RawMessage)
 		err := json.Unmarshal(appState, &rawState)

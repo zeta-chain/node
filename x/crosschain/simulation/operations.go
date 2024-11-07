@@ -51,6 +51,7 @@ const (
 	OpWeightUpdateTssAddress       = "op_weight_msg_update_tss_address"        // #nosec G101 not a hardcoded credential
 	OpWeightAbortStuckCCTX         = "op_weight_msg_abort_stuck_cctx"          // #nosec G101 not a hardcoded credential
 	OpWeightUpdateRateLimiterFlags = "op_weight_msg_update_rate_limiter_flags" // #nosec G101 not a hardcoded credential
+
 )
 
 func WeightedOperations(
@@ -228,14 +229,12 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 			}
 		}
 		msg := sample.InboundVote(0, from, to)
+
 		// Pick a random observer to create the ballot
+		// If this returns and error it is likely that the entire observer set has been removed
 		simAccount, firstVoter, err := GetRandomAccountAndObserver(r, ctx, k, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(
-				types.ModuleName,
-				authz.InboundVoter.String(),
-				"unable to get random account and observer",
-			), nil, nil
+			return simtypes.OperationMsg{}, nil, nil
 		}
 
 		txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
@@ -298,15 +297,7 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 			}
 			observerAccount, err := GetObserverAccount(observerAddress, accs)
 			if err != nil {
-				// This condition is highly unlikely, but if it happens, we can retun an error.
-				// The most likely reason
-				//for this to happen is that the entire observer set has been removed.If that happens we should adjust the number of observers
-				//added to the observer set when starting the simulation.
-				return simtypes.NoOpMsg(
-					types.ModuleName,
-					authz.InboundVoter.String(),
-					"observer account not found",
-				), nil, err
+				continue
 			}
 			// 1.3) schedule the vote
 			votingMsg := msg
@@ -333,13 +324,10 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		// Get a random account and observer
+		// If this returns and error it is likely that the entire observer set has been removed
 		simAccount, randomObserver, err := GetRandomAccountAndObserver(r, ctx, k, accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(
-				types.ModuleName,
-				authz.GasPriceVoter.String(),
-				"unable to get random account and observer",
-			), nil, err
+			return simtypes.OperationMsg{}, nil, nil
 		}
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, simAccount.Address)
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
@@ -430,6 +418,10 @@ func GetRandomAccountAndObserver(
 }
 
 // GetObserverAccount returns the account associated with the observer address from the list of accounts provided
+// GetObserverAccount can fail if all the observers are removed from the observer set ,this can happen
+//if the other modules create transactions which affect the validator
+//and triggers any of the staking hooks defined in the observer modules
+
 func GetObserverAccount(observerAddress string, accounts []simtypes.Account) (simtypes.Account, error) {
 	operatorAddress, err := observerTypes.GetOperatorAddressFromAccAddress(observerAddress)
 	if err != nil {
