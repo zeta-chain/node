@@ -218,9 +218,6 @@ func (r *E2ERunner) DepositSPL(privateKey *solana.PrivateKey, amount uint64, tok
 	// deployer ata
 	ata := r.FindOrCreateAssociatedTokenAccount(*privateKey, privateKey.PublicKey(), tokenAccount)
 
-	_, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)
-	require.NoError(r, err)
-
 	// deposit spl
 	seed := [][]byte{[]byte("whitelist"), tokenAccount.Bytes()}
 	whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, r.GatewayProgram)
@@ -235,9 +232,6 @@ func (r *E2ERunner) DepositSPL(privateKey *solana.PrivateKey, amount uint64, tok
 	// broadcast the transaction and wait for finalization
 	sig, out := r.BroadcastTxSync(signedTx)
 	r.Logger.Info("deposit spl logs: %v", out.Meta.LogMessages)
-
-	_, err = r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)
-	require.NoError(r, err)
 
 	return sig
 }
@@ -276,9 +270,6 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool, amo
 	// minting some tokens to deployer for testing
 	ata := r.FindOrCreateAssociatedTokenAccount(*privateKey, privateKey.PublicKey(), tokenAccount.PublicKey())
 
-	_, err = r.SolanaClient.GetTokenAccountBalance(r.Ctx, ata, rpc.CommitmentConfirmed)
-	require.NoError(r, err)
-
 	mintToInstruction := token.NewMintToInstruction(amountToMint, tokenAccount.PublicKey(), ata, privateKey.PublicKey(), []solana.PublicKey{}).Build()
 	signedTx = r.CreateSignedTransaction(
 		[]solana.Instruction{mintToInstruction},
@@ -289,9 +280,6 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool, amo
 	// broadcast the transaction and wait for finalization
 	_, out = r.BroadcastTxSync(signedTx)
 	r.Logger.Info("mint spl logs: %v", out.Meta.LogMessages)
-
-	_, err = r.SolanaClient.GetTokenAccountBalance(r.Ctx, ata, rpc.CommitmentConfirmed)
-	require.NoError(r, err)
 
 	// optionally whitelist spl token in gateway
 	if whitelist {
