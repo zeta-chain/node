@@ -366,8 +366,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
 		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
 		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
-		startBitcoinTestRoutines(
-			&eg,
+		runnerDeposit, runnerWithdraw := initBitcoinTestRunners(
 			conf,
 			deployerRunner,
 			verbose,
@@ -375,6 +374,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			bitcoinDepositTests,
 			bitcoinWithdrawTests,
 		)
+		eg.Go(runnerDeposit)
+		eg.Go(runnerWithdraw)
 		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, ethereumTests...))
 	}
 

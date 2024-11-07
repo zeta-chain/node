@@ -6,7 +6,6 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/e2etests"
@@ -14,21 +13,42 @@ import (
 	"github.com/zeta-chain/node/testutil"
 )
 
-// startBitcoinTestRoutines starts Bitcoin deposit and withdraw tests in parallel
-func startBitcoinTestRoutines(
-	eg *errgroup.Group,
+// initBitcoinTestRunners initializes Bitcoin deposit and withdraw test runners
+func initBitcoinTestRunners(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
 	initNetwork bool,
 	depositTests []string,
 	withdrawTests []string,
-) {
+) (func() error, func() error) {
 	// initialize runner for deposit tests
-	runnerDeposit := initRunnerDeposit(conf, deployerRunner, verbose, initNetwork)
+	// deposit tests need Bitcoin node wallet to handle UTXOs
+	account := conf.AdditionalAccounts.UserBitcoinDeposit
+	runnerDeposit := initRunner(
+		"btc_deposit",
+		account,
+		conf,
+		deployerRunner,
+		color.FgYellow,
+		verbose,
+		initNetwork,
+		true,
+	)
 
 	// initialize runner for withdraw tests
-	runnerWithdraw := initRunnerWithdraw(conf, deployerRunner, verbose, initNetwork)
+	// withdraw tests DON'T use Bitcoin node wallet
+	account = conf.AdditionalAccounts.UserBitcoinWithdraw
+	runnerWithdraw := initRunner(
+		"btc_withdraw",
+		account,
+		conf,
+		deployerRunner,
+		color.FgHiYellow,
+		verbose,
+		initNetwork,
+		false,
+	)
 
 	// initialize funds
 	// send BTC to TSS for gas fees and to tester ZEVM address
@@ -47,39 +67,7 @@ func startBitcoinTestRoutines(
 	routineDeposit := createTestRoutine(runnerDeposit, depositTests)
 	routineWithdraw := createTestRoutine(runnerWithdraw, withdrawTests)
 
-	// start test routines
-	eg.Go(routineDeposit)
-	eg.Go(routineWithdraw)
-}
-
-// initRunnerDeposit initializes the runner for deposit tests
-func initRunnerDeposit(
-	conf config.Config,
-	deployerRunner *runner.E2ERunner,
-	verbose, initNetwork bool,
-) *runner.E2ERunner {
-	var (
-		name         = "btc_deposit"
-		account      = conf.AdditionalAccounts.UserBitcoin1
-		createWallet = true // deposit tests need Bitcoin node wallet to handle UTXOs
-	)
-
-	return initRunner(name, account, conf, deployerRunner, verbose, initNetwork, createWallet)
-}
-
-// initRunnerWithdraw initializes the runner for withdraw tests
-func initRunnerWithdraw(
-	conf config.Config,
-	deployerRunner *runner.E2ERunner,
-	verbose, initNetwork bool,
-) *runner.E2ERunner {
-	var (
-		name         = "btc_withdraw"
-		account      = conf.AdditionalAccounts.UserBitcoin2
-		createWallet = false // withdraw tests DON'T use Bitcoin node wallet
-	)
-
-	return initRunner(name, account, conf, deployerRunner, verbose, initNetwork, createWallet)
+	return routineDeposit, routineWithdraw
 }
 
 // initRunner initializes the runner for given test name and account
@@ -88,16 +76,11 @@ func initRunner(
 	account config.Account,
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
+	printColor color.Attribute,
 	verbose, initNetwork, createWallet bool,
 ) *runner.E2ERunner {
 	// initialize runner for bitcoin test
-	runner, err := initTestRunner(
-		name,
-		conf,
-		deployerRunner,
-		account,
-		runner.NewLogger(verbose, color.FgYellow, name),
-	)
+	runner, err := initTestRunner(name, conf, deployerRunner, account, runner.NewLogger(verbose, printColor, name))
 	testutil.NoError(err)
 
 	// setup TSS address and setup deployer wallet
@@ -125,8 +108,6 @@ func initRunner(
 }
 
 // createTestRoutine creates a test routine for given test names
-// Note: due to the extensive block generation in Bitcoin localnet, block header test is run first
-// to make it faster to catch up with the latest block header
 func createTestRoutine(r *runner.E2ERunner, testNames []string) func() error {
 	return func() (err error) {
 		r.Logger.Print("🏃 starting bitcoin tests")
