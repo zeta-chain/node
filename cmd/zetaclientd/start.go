@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	ecdsakeygen "github.com/bnb-chain/tss-lib/ecdsa/keygen"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/p2p/protocol/ping"
@@ -37,23 +38,12 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-var StartCmd = &cobra.Command{
-	Use:   "start",
-	Short: "Start ZetaClient Observer",
-	RunE:  start,
-}
+// todo revamp
+// https://github.com/zeta-chain/node/issues/3119
+// https://github.com/zeta-chain/node/issues/3112
+var preParams *ecdsakeygen.LocalPreParams
 
-func init() {
-	RootCmd.AddCommand(StartCmd)
-}
-
-func start(_ *cobra.Command, _ []string) error {
-	if err := setHomeDir(); err != nil {
-		return err
-	}
-
-	SetupConfigForTest()
-
+func Start(_ *cobra.Command, _ []string) error {
 	// Prompt for Hotkey, TSS key-share and relayer key passwords
 	titles := []string{"HotKey", "TSS", "Solana Relayer Key"}
 	passwords, err := zetaos.PromptPasswords(titles)
@@ -66,7 +56,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	//Load Config file given path
-	cfg, err := config.Load(rootArgs.zetaCoreHome)
+	cfg, err := config.Load(globalOpts.ZetacoreHome)
 	if err != nil {
 		return err
 	}
@@ -77,7 +67,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	// Wait until zetacore has started
-	if len(cfg.Peer) != 0 {
+	if cfg.Peer != "" {
 		if err := validatePeer(cfg.Peer); err != nil {
 			return errors.Wrap(err, "unable to validate peer")
 		}
@@ -104,10 +94,9 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// CreateZetacoreClient:  zetacore client is used for all communication to zetacore , which this client connects to.
 	// Zetacore accumulates votes , and provides a centralized source of truth for all clients
-	zetacoreClient, err := CreateZetacoreClient(cfg, hotkeyPass, masterLogger)
+	zetacoreClient, err := createZetacoreClient(cfg, hotkeyPass, masterLogger)
 	if err != nil {
-		startLogger.Error().Err(err).Msg("CreateZetacoreClient error")
-		return err
+		return errors.Wrap(err, "unable to create zetacore client")
 	}
 
 	// Wait until zetacore is ready to create blocks
@@ -145,16 +134,15 @@ func start(_ *cobra.Command, _ []string) error {
 	// This is to ensure that the user does not need to keep their operator key online , and can use a cold key to sign votes
 	signerAddress, err := zetacoreClient.GetKeys().GetAddress()
 	if err != nil {
-		startLogger.Error().Err(err).Msg("error getting signer address")
-		return err
+		return errors.Wrap(err, "error getting signer address")
 	}
-	CreateAuthzSigner(zetacoreClient.GetKeys().GetOperatorAddress().String(), signerAddress)
-	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
+
+	createAuthzSigner(zetacoreClient.GetKeys().GetOperatorAddress().String(), signerAddress)
+	startLogger.Debug().Msgf("createAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore
 	if err = zetacoreClient.UpdateAppContext(ctx, appContext, startLogger); err != nil {
-		startLogger.Error().Err(err).Msg("Error getting core parameters")
-		return err
+		return errors.Wrap(err, "unable to update app context")
 	}
 
 	startLogger.Info().Msgf("Config is updated from zetacore\n %s", cfg.StringMasked())
@@ -266,12 +254,12 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// Generate a new TSS if keygen is set and add it into the tss server
 	// If TSS has already been generated, and keygen was successful ; we use the existing TSS
-	err = GenerateTSS(ctx, masterLogger, zetacoreClient, server)
+	err = mc.Generate(ctx, masterLogger, zetacoreClient, server)
 	if err != nil {
 		return err
 	}
 
-	tss, err := mc.NewTSS(
+	tss, err := mc.New(
 		ctx,
 		zetacoreClient,
 		tssHistoricalList,
@@ -283,7 +271,7 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	if cfg.TestTssKeysign {
-		err = TestTSS(tss.CurrentPubkey, *tss.Server, masterLogger)
+		err = mc.TestTSS(tss.CurrentPubkey, *tss.Server, masterLogger)
 		if err != nil {
 			startLogger.Error().Err(err).Msgf("TestTSS error : %s", tss.CurrentPubkey)
 		}
