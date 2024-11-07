@@ -83,13 +83,6 @@ func (c *Contract) distribute(
 		"Denom", precompiletypes.ZRC20ToCosmosDenom(zrc20Addr),
 	)
 
-	if err := c.addDistributeLog(ctx, evm.StateDB, caller, zrc20Addr, amount); err != nil {
-		return nil, &precompiletypes.ErrUnexpected{
-			When: "AddDistributeLog",
-			Got:  err.Error(),
-		}
-	}
-
 	return method.Outputs.Pack(true)
 }
 
