@@ -25,8 +25,8 @@ type initializeConfigOptions struct {
 
 	p2pDiagnostic       bool
 	p2pDiagnosticTicker uint64
-	TssPath             string
-	TestTssKeysign      bool
+	TSSPath             string
+	TestTSSKeySign      bool
 	KeyringBackend      string
 	RelayerKeyPath      string
 }
@@ -58,8 +58,8 @@ func setupInitializeConfigOptions() {
 	f.BoolVar(&cfg.p2pDiagnostic, "p2p-diagnostic", false, "enable p2p diagnostic")
 	f.Uint64Var(&cfg.p2pDiagnosticTicker, "p2p-diagnostic-ticker", 30, usageP2PDiag)
 	f.Uint64Var(&cfg.configUpdateTicker, "config-update-ticker", 5, usageTicker)
-	f.StringVar(&cfg.TssPath, "tss-path", "~/.tss", "path to tss location")
-	f.BoolVar(&cfg.TestTssKeysign, "test-tss", false, "set to to true to run a check for TSS keysign on startup")
+	f.StringVar(&cfg.TSSPath, "tss-path", "~/.tss", "path to tss location")
+	f.BoolVar(&cfg.TestTSSKeySign, "test-tss", false, "set to to true to run a check for TSS keysign on startup")
 	f.StringVar(&cfg.KeyringBackend, "keyring-backend", string(config.KeyringBackendTest), usageKeyring)
 	f.StringVar(&cfg.RelayerKeyPath, "relayer-key-path", "~/.zetacored/relayer-keys", "path to relayer keys")
 }
@@ -90,7 +90,8 @@ func InitializeConfig(_ *cobra.Command, _ []string) error {
 	configData.LogFormat = opts.logFormat
 	configData.LogSampler = opts.logSampler
 	configData.P2PDiagnostic = opts.p2pDiagnostic
-	configData.TssPath = opts.TssPath
+	configData.TssPath = opts.TSSPath
+	configData.TestTssKeysign = opts.TestTSSKeySign
 	configData.P2PDiagnosticTicker = opts.p2pDiagnosticTicker
 	configData.ConfigUpdateTicker = opts.configUpdateTicker
 	configData.KeyringBackend = config.KeyringBackend(initializeConfigOpts.KeyringBackend)

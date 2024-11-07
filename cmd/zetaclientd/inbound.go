@@ -26,8 +26,8 @@ import (
 )
 
 type inboundOptions struct {
-	zetaNode    string
-	zetaChainID string
+	Node    string
+	ChainID string
 }
 
 var inboundOpts inboundOptions
@@ -35,8 +35,8 @@ var inboundOpts inboundOptions
 func setupInboundOptions() {
 	f, cfg := InboundCmd.PersistentFlags(), &inboundOpts
 
-	f.StringVar(&cfg.zetaNode, "node", "46.4.15.110", "public ip address")
-	f.StringVar(&cfg.zetaChainID, "chain-id", "athens_7001-1", "pre-params file path")
+	f.StringVar(&cfg.Node, "node", "46.4.15.110", "zeta public ip address")
+	f.StringVar(&cfg.ChainID, "chain-id", "athens_7001-1", "zeta chain id")
 }
 
 func InboundGetBallot(_ *cobra.Command, args []string) error {
@@ -57,9 +57,9 @@ func InboundGetBallot(_ *cobra.Command, args []string) error {
 	// create a new zetacore client
 	client, err := zetacore.NewClient(
 		&keys.Keys{OperatorAddress: sdk.MustAccAddressFromBech32(sample.AccAddress())},
-		inboundOpts.zetaNode,
+		inboundOpts.Node,
 		"",
-		inboundOpts.zetaChainID,
+		inboundOpts.ChainID,
 		zerolog.Nop(),
 	)
 	if err != nil {
