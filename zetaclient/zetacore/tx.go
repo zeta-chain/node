@@ -96,7 +96,7 @@ func (c *Client) PostOutboundTracker(ctx context.Context, chainID int64, nonce u
 	}
 
 	signerAddress := c.keys.GetOperatorAddress().String()
-	msg := types.NewMsgAddOutboundTracker(signerAddress, chainID, nonce, txHash, nil, "", 0)
+	msg := types.NewMsgAddOutboundTracker(signerAddress, chainID, nonce, txHash)
 
 	authzMsg, authzSigner, err := WrapMessageWithAuthz(msg)
 	if err != nil {

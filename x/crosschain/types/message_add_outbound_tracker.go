@@ -4,31 +4,22 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/zeta-chain/node/pkg/proofs"
 )
 
 const TypeMsgAddOutboundTracker = "AddOutboundTracker"
 
 var _ sdk.Msg = &MsgAddOutboundTracker{}
 
-func NewMsgAddOutboundTracker(
-	creator string,
-	chain int64,
-	nonce uint64,
-	txHash string,
-	proof *proofs.Proof,
-	blockHash string,
-	txIndex int64,
-) *MsgAddOutboundTracker {
+func NewMsgAddOutboundTracker(creator string, chain int64, nonce uint64, txHash string) *MsgAddOutboundTracker {
 	return &MsgAddOutboundTracker{
-		Creator:   creator,
-		ChainId:   chain,
-		Nonce:     nonce,
-		TxHash:    txHash,
-		Proof:     proof,
-		BlockHash: blockHash,
-		TxIndex:   txIndex,
+		Creator: creator,
+		ChainId: chain,
+		Nonce:   nonce,
+		TxHash:  txHash,
+		// todo
+		Proof:     nil,
+		BlockHash: "",
+		TxIndex:   0,
 	}
 }
 
