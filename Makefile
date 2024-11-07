@@ -40,7 +40,6 @@ BUILD_FLAGS := -ldflags '$(ldflags)' -tags pebbledb,ledger
 
 TEST_DIR ?= "./..."
 TEST_BUILD_FLAGS := -tags pebbledb,ledger
-HSM_BUILD_FLAGS := -tags pebbledb,ledger,hsm_test
 
 export DOCKER_BUILDKIT := 1
 
@@ -72,9 +71,6 @@ test: clean-test-dir run-test
 
 run-test:
 	@go test ${TEST_BUILD_FLAGS} ${TEST_DIR}
-
-test-hsm:
-	@go test ${HSM_BUILD_FLAGS} ${TEST_DIR}
 
 # Generate the test coverage
 # "|| exit 1" is used to return a non-zero exit code if the tests fail

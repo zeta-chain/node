@@ -60,7 +60,6 @@ func InboundGetBallot(_ *cobra.Command, args []string) error {
 		inboundOpts.zetaNode,
 		"",
 		inboundOpts.zetaChainID,
-		false,
 		zerolog.Nop(),
 	)
 	if err != nil {

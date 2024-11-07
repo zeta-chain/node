@@ -28,8 +28,6 @@ type initializeConfigOptions struct {
 	TssPath             string
 	TestTssKeysign      bool
 	KeyringBackend      string
-	HsmMode             bool
-	HsmHotKey           string
 	RelayerKeyPath      string
 }
 
@@ -63,8 +61,6 @@ func setupInitializeConfigOptions() {
 	f.StringVar(&cfg.TssPath, "tss-path", "~/.tss", "path to tss location")
 	f.BoolVar(&cfg.TestTssKeysign, "test-tss", false, "set to to true to run a check for TSS keysign on startup")
 	f.StringVar(&cfg.KeyringBackend, "keyring-backend", string(config.KeyringBackendTest), usageKeyring)
-	f.BoolVar(&cfg.HsmMode, "hsm-mode", false, "enable hsm signer, default disabled")
-	f.StringVar(&cfg.HsmHotKey, "hsm-hotkey", "hsm-hotkey", "name of hotkey associated with hardware security module")
 	f.StringVar(&cfg.RelayerKeyPath, "relayer-key-path", "~/.zetacored/relayer-keys", "path to relayer keys")
 }
 
@@ -98,8 +94,6 @@ func InitializeConfig(_ *cobra.Command, _ []string) error {
 	configData.P2PDiagnosticTicker = opts.p2pDiagnosticTicker
 	configData.ConfigUpdateTicker = opts.configUpdateTicker
 	configData.KeyringBackend = config.KeyringBackend(initializeConfigOpts.KeyringBackend)
-	configData.HsmMode = opts.HsmMode
-	configData.HsmHotKey = opts.HsmHotKey
 	configData.RelayerKeyPath = opts.RelayerKeyPath
 	configData.ComplianceConfig = sample.ComplianceConfig()
 
