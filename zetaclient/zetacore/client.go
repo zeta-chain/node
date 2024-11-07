@@ -87,7 +87,6 @@ func NewClient(
 	chainIP string,
 	signerName string,
 	chainID string,
-	hsmMode bool,
 	logger zerolog.Logger,
 	opts ...Opt,
 ) (*Client, error) {
@@ -108,7 +107,6 @@ func NewClient(
 		SignerName:   signerName,
 		SignerPasswd: "password",
 		ChainRPC:     tendermintRPC(chainIP),
-		HsmMode:      hsmMode,
 	}
 
 	encodingCfg := app.MakeEncodingConfig()

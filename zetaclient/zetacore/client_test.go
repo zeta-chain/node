@@ -148,7 +148,6 @@ func setupZetacoreClient(t *testing.T, opts ...clientTestOpt) *Client {
 		cfg.keys,
 		chainIP, signer,
 		chainID,
-		false,
 		zerolog.Nop(),
 		cfg.opts...,
 	)

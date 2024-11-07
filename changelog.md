@@ -6,12 +6,16 @@
 * [2984](https://github.com/zeta-chain/node/pull/2984) - add Whitelist message ability to whitelist SPL tokens on Solana
 * [3091](https://github.com/zeta-chain/node/pull/3091) - improve build reproducability. `make release{,-build-only}` checksums should now be stable.
 
+### Refactor
+* [3122](https://github.com/zeta-chain/node/pull/3122) - improve & refactor zetaclientd cli
+
 ### Tests
 
 * [3075](https://github.com/zeta-chain/node/pull/3075) - ton: withdraw concurrent, deposit & revert.
 * [3105](https://github.com/zeta-chain/node/pull/3105) - split Bitcoin E2E tests into two runners
 
 ### Refactor
+* [3118](https://github.com/zeta-chain/node/pull/3118) - zetaclient: remove hsm signer
 
 ### Tests
 
