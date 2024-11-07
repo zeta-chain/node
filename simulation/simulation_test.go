@@ -505,8 +505,6 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	exported, err := simApp.ExportAppStateAndValidators(true, []string{}, []string{})
 	require.NoError(t, err)
 
-	t.Log("importing genesis")
-
 	newDB, newDir, _, _, err := cosmossimutils.SetupSimulation(
 		config,
 		SimDBBackend+"_new",
@@ -535,7 +533,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	t.Log("Adding app state to new app")
+	t.Log("Importing genesis into the new app")
 	newSimApp.InitChain(abci.RequestInitChain{
 		ChainId:       SimAppChainID,
 		AppStateBytes: exported.AppState,
