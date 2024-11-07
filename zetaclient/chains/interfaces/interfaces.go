@@ -22,7 +22,6 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
@@ -108,7 +107,6 @@ type ZetacoreClient interface {
 	GetTSSHistory(ctx context.Context) ([]observertypes.TSS, error)
 
 	GetBlockHeight(ctx context.Context) (int64, error)
-	GetBlockHeaderChainState(ctx context.Context, chainID int64) (*lightclienttypes.ChainState, error)
 
 	ListPendingCCTX(ctx context.Context, chainID int64) ([]*crosschaintypes.CrossChainTx, uint64, error)
 	ListPendingCCTXWithinRateLimit(
