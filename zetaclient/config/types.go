@@ -34,7 +34,6 @@ type ClientConfiguration struct {
 	ChainHomeFolder string `json:"chain_home_folder" mapstructure:"chain_home_folder"`
 	SignerName      string `json:"signer_name"       mapstructure:"signer_name"`
 	SignerPasswd    string `json:"signer_passwd"`
-	HsmMode         bool   `json:"hsm_mode"`
 }
 
 // EVMConfig is the config for EVM chain
@@ -95,8 +94,6 @@ type Config struct {
 	TestTssKeysign      bool           `json:"TestTssKeysign"`
 	KeyringBackend      KeyringBackend `json:"KeyringBackend"`
 	RelayerKeyPath      string         `json:"RelayerKeyPath"`
-	HsmMode             bool           `json:"HsmMode"`
-	HsmHotKey           string         `json:"HsmHotKey"`
 
 	// chain configs
 	EVMChainConfigs map[int64]EVMConfig `json:"EVMChainConfigs"`

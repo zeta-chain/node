@@ -50,7 +50,7 @@ const (
 )
 
 var (
-	TestTimeout = 15 * time.Minute
+	TestTimeout = 20 * time.Minute
 )
 
 var noError = testutil.NoError
@@ -428,7 +428,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		tonTests := []string{
 			e2etests.TestTONDepositName,
 			e2etests.TestTONDepositAndCallName,
+			e2etests.TestTONDepositAndCallRefundName,
 			e2etests.TestTONWithdrawName,
+			e2etests.TestTONWithdrawConcurrentName,
 		}
 
 		eg.Go(tonTestRoutine(conf, deployerRunner, verbose, tonTests...))

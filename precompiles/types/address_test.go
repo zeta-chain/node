@@ -1,8 +1,9 @@
 package types
 
 import (
-	"math/big"
 	"testing"
+
+	"github.com/holiman/uint256"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
@@ -52,7 +53,7 @@ func setupMockEVMAndContract(address common.Address) (vm.EVM, vm.Contract) {
 	mockVMContract := vm.NewContract(
 		contractRef{address: common.Address{}},
 		contractRef{address: common.Address{}},
-		big.NewInt(0),
+		uint256.NewInt(0),
 		0,
 	)
 

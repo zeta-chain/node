@@ -57,10 +57,13 @@ func (d *Deployer) Seqno(ctx context.Context) (uint32, error) {
 	return d.blockchain.GetSeqno(ctx, d.GetAddress())
 }
 
-// GetBalanceOf returns the balance of the given account.
-func (d *Deployer) GetBalanceOf(ctx context.Context, id ton.AccountID) (math.Uint, error) {
-	if err := d.waitForAccountActivation(ctx, id); err != nil {
-		return math.Uint{}, errors.Wrap(err, "failed to wait for account activation")
+// GetBalanceOf returns the balance of a given account.
+// wait=true waits for account activation.
+func (d *Deployer) GetBalanceOf(ctx context.Context, id ton.AccountID, wait bool) (math.Uint, error) {
+	if wait {
+		if err := d.waitForAccountActivation(ctx, id); err != nil {
+			return math.Uint{}, errors.Wrap(err, "failed to wait for account activation")
+		}
 	}
 
 	state, err := d.blockchain.GetAccountState(ctx, id)

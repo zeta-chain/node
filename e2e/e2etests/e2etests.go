@@ -67,9 +67,11 @@ const (
 	/**
 	 * TON tests
 	 */
-	TestTONDepositName        = "ton_deposit"
-	TestTONDepositAndCallName = "ton_deposit_and_call"
-	TestTONWithdrawName       = "ton_withdraw"
+	TestTONDepositName              = "ton_deposit"
+	TestTONDepositAndCallName       = "ton_deposit_and_call"
+	TestTONDepositAndCallRefundName = "ton_deposit_refund"
+	TestTONWithdrawName             = "ton_withdraw"
+	TestTONWithdrawConcurrentName   = "ton_withdraw_concurrent"
 
 	/*
 	 Bitcoin tests
@@ -498,12 +500,26 @@ var AllE2ETests = []runner.E2ETest{
 		TestTONDepositAndCall,
 	),
 	runner.NewE2ETest(
+		TestTONDepositAndCallRefundName,
+		"deposit TON into ZEVM and call a smart contract that reverts; expect refund",
+		[]runner.ArgDefinition{
+			{Description: "amount in nano tons", DefaultValue: "1000000000"}, // 1.0 TON
+		},
+		TestTONDepositAndCallRefund,
+	),
+	runner.NewE2ETest(
 		TestTONWithdrawName,
 		"withdraw TON from ZEVM",
 		[]runner.ArgDefinition{
 			{Description: "amount in nano tons", DefaultValue: "2000000000"}, // 2.0 TON
 		},
 		TestTONWithdraw,
+	),
+	runner.NewE2ETest(
+		TestTONWithdrawConcurrentName,
+		"withdraw TON from ZEVM for several recipients simultaneously",
+		[]runner.ArgDefinition{},
+		TestTONWithdrawConcurrent,
 	),
 	/*
 	 Bitcoin tests
