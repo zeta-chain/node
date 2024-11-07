@@ -21,7 +21,6 @@ import (
 	"gitlab.com/thorchain/tss/go-tss/blame"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/proofs"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -75,15 +74,7 @@ type ChainSigner interface {
 	GetGatewayAddress() string
 }
 
-// ZetacoreVoter represents voter interface.
 type ZetacoreVoter interface {
-	PostVoteBlockHeader(
-		ctx context.Context,
-		chainID int64,
-		txhash []byte,
-		height int64,
-		header proofs.HeaderData,
-	) (string, error)
 	PostVoteGasPrice(
 		ctx context.Context,
 		chain chains.Chain,
@@ -141,16 +132,7 @@ type ZetacoreClient interface {
 	GetZetaHotKeyBalance(ctx context.Context) (sdkmath.Int, error)
 	GetInboundTrackersForChain(ctx context.Context, chainID int64) ([]crosschaintypes.InboundTracker, error)
 
-	// todo(revamp): refactor input to struct
-	AddOutboundTracker(
-		ctx context.Context,
-		chainID int64,
-		nonce uint64,
-		txHash string,
-		proof *proofs.Proof,
-		blockHash string,
-		txIndex int64,
-	) (string, error)
+	PostOutboundTracker(ctx context.Context, chainID int64, nonce uint64, txHash string) (string, error)
 
 	Stop()
 	OnBeforeStop(callback func())

@@ -64,7 +64,7 @@ func (s *Signer) trackOutbound(
 		}
 
 		// Note that this method has a check for noop
-		_, err = zetacore.AddOutboundTracker(ctx, chainID, nonce, txHash, nil, "", 0)
+		_, err = zetacore.PostOutboundTracker(ctx, chainID, nonce, txHash)
 		if err != nil {
 			return errors.Wrap(err, "unable to add outbound tracker")
 		}
