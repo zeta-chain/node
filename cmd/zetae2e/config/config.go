@@ -56,7 +56,7 @@ func RunnerFromConfig(
 func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.Config {
 	// copy contracts from deployer runner
 	conf.Contracts.Solana.GatewayProgramID = r.GatewayProgram.String()
-	conf.Contracts.Solana.SPL = config.DoubleQuotedString(r.SPLAddr.String())
+	conf.Contracts.Solana.SPLAddr = config.DoubleQuotedString(r.SPLAddr.String())
 
 	conf.Contracts.EVM.ZetaEthAddr = config.DoubleQuotedString(r.ZetaEthAddr.Hex())
 	conf.Contracts.EVM.ConnectorEthAddr = config.DoubleQuotedString(r.ConnectorEthAddr.Hex())

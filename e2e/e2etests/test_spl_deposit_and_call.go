@@ -10,12 +10,18 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+	testcontract "github.com/zeta-chain/node/testutil/contracts"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestSolanaDepositSPL(r *runner.E2ERunner, args []string) {
+func TestSPLDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 	amount := parseInt(r, args[0])
+
+	// deploy an example contract in ZEVM
+	contractAddr, _, contract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)
+	require.NoError(r, err)
+	r.Logger.Info("Example contract deployed at: %s", contractAddr.String())
 
 	// load deployer private key
 	privKey, err := solana.PrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
@@ -33,17 +39,21 @@ func TestSolanaDepositSPL(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	// get zrc20 balance for recipient
-	zrc20BalanceBefore, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	zrc20BalanceBefore, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, contractAddr)
 	require.NoError(r, err)
 
-	// deposit SPL tokens
+	// execute the deposit transaction
+	data := []byte("hello spl tokens")
 	// #nosec G115 e2eTest - always in range
-	sig := r.SPLDepositAndCall(&privKey, uint64(amount), r.SPLAddr, r.EVMAddress(), nil)
+	sig := r.SPLDepositAndCall(&privKey, uint64(amount), r.SPLAddr, contractAddr, data)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "solana_deposit_spl")
+	r.Logger.CCTX(*cctx, "solana_deposit_spl_and_call")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+
+	// check if example contract has been called, bar value should be set to amount
+	utils.MustHaveCalledExampleContract(r, contract, big.NewInt(int64(amount)))
 
 	// verify balances are updated
 	pdaBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)
@@ -52,7 +62,7 @@ func TestSolanaDepositSPL(r *runner.E2ERunner, args []string) {
 	senderBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentConfirmed)
 	require.NoError(r, err)
 
-	zrc20BalanceAfter, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	zrc20BalanceAfter, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, contractAddr)
 	require.NoError(r, err)
 
 	// verify amount is deposited to pda ata

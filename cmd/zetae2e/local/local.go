@@ -413,8 +413,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			// TODO move under admin tests
 			// https://github.com/zeta-chain/node/issues/3085
 			e2etests.TestSolanaWhitelistSPLName,
-			e2etests.TestSolanaDepositSPLName,
-			e2etests.TestSolanaDepositSPLAndCallName,
+			e2etests.TestSPLDepositName,
+			e2etests.TestSPLDepositAndCallName,
 		}
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
 	}

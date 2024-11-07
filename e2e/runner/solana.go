@@ -37,60 +37,53 @@ func (r *E2ERunner) CreateDepositInstruction(
 	data []byte,
 	amount uint64,
 ) solana.Instruction {
-	// compute the gateway PDA address
-	pdaComputed := r.ComputePdaAddress()
+	pda := r.ComputePdaAddress()
 	programID := r.GatewayProgram
 
-	// create 'deposit' instruction
-	inst := &solana.GenericInstruction{}
-	accountSlice := []*solana.AccountMeta{}
-	accountSlice = append(accountSlice, solana.Meta(signer).WRITE().SIGNER())
-	accountSlice = append(accountSlice, solana.Meta(pdaComputed).WRITE())
-	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
-	inst.ProgID = programID
-	inst.AccountValues = accountSlice
-
-	var err error
-	inst.DataBytes, err = borsh.Serialize(solanacontract.DepositInstructionParams{
+	depositData, err := borsh.Serialize(solanacontract.DepositInstructionParams{
 		Discriminator: solanacontract.DiscriminatorDeposit,
 		Amount:        amount,
 		Memo:          append(receiver.Bytes(), data...),
 	})
 	require.NoError(r, err)
 
-	return inst
+	return &solana.GenericInstruction{
+		ProgID:    programID,
+		DataBytes: depositData,
+		AccountValues: []*solana.AccountMeta{
+			solana.Meta(signer).WRITE().SIGNER(),
+			solana.Meta(pda).WRITE(),
+			solana.Meta(solana.SystemProgramID),
+		},
+	}
 }
 
+// CreateWhitelistSPLMintInstruction creates a 'whitelist_spl_mint' instruction
 func (r *E2ERunner) CreateWhitelistSPLMintInstruction(
-	signer solana.PublicKey,
-	whitelistEntry solana.PublicKey,
-	whitelistCandidate solana.PublicKey,
+	signer, whitelistEntry, whitelistCandidate solana.PublicKey,
 ) solana.Instruction {
-	// compute the gateway PDA address
-	pdaComputed := r.ComputePdaAddress()
+	pda := r.ComputePdaAddress()
 	programID := r.GatewayProgram
 
-	// create 'whitelist_spl_mint' instruction
-	inst := &solana.GenericInstruction{}
-	accountSlice := []*solana.AccountMeta{}
-	accountSlice = append(accountSlice, solana.Meta(whitelistEntry).WRITE())
-	accountSlice = append(accountSlice, solana.Meta(whitelistCandidate))
-	accountSlice = append(accountSlice, solana.Meta(pdaComputed).WRITE())
-	accountSlice = append(accountSlice, solana.Meta(signer).WRITE().SIGNER())
-	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
-	inst.ProgID = programID
-	inst.AccountValues = accountSlice
-
-	var err error
-	inst.DataBytes, err = borsh.Serialize(solanacontract.WhitelistInstructionParams{
+	data, err := borsh.Serialize(solanacontract.WhitelistInstructionParams{
 		Discriminator: solanacontract.DiscriminatorWhitelistSplMint,
-		// remaining fields are empty because no tss signature is needed if signer is admin account
 	})
 	require.NoError(r, err)
 
-	return inst
+	return &solana.GenericInstruction{
+		ProgID:    programID,
+		DataBytes: data,
+		AccountValues: []*solana.AccountMeta{
+			solana.Meta(whitelistEntry).WRITE(),
+			solana.Meta(whitelistCandidate),
+			solana.Meta(pda).WRITE(),
+			solana.Meta(signer).WRITE().SIGNER(),
+			solana.Meta(solana.SystemProgramID),
+		},
+	}
 }
 
+// CreateDepositSPLInstruction creates a 'deposit_spl' instruction
 func (r *E2ERunner) CreateDepositSPLInstruction(
 	amount uint64,
 	signer solana.PublicKey,
@@ -101,32 +94,29 @@ func (r *E2ERunner) CreateDepositSPLInstruction(
 	receiver ethcommon.Address,
 	data []byte,
 ) solana.Instruction {
-	// compute the gateway PDA address
-	pdaComputed := r.ComputePdaAddress()
+	pda := r.ComputePdaAddress()
 	programID := r.GatewayProgram
 
-	// create 'deposit_spl' instruction
-	inst := &solana.GenericInstruction{}
-	accountSlice := []*solana.AccountMeta{}
-	accountSlice = append(accountSlice, solana.Meta(signer).WRITE().SIGNER())
-	accountSlice = append(accountSlice, solana.Meta(pdaComputed))
-	accountSlice = append(accountSlice, solana.Meta(whitelistEntry))
-	accountSlice = append(accountSlice, solana.Meta(mint))
-	accountSlice = append(accountSlice, solana.Meta(solana.TokenProgramID))
-	accountSlice = append(accountSlice, solana.Meta(from).WRITE())
-	accountSlice = append(accountSlice, solana.Meta(to).WRITE())
-	inst.ProgID = programID
-	inst.AccountValues = accountSlice
-
-	var err error
-	inst.DataBytes, err = borsh.Serialize(solanacontract.DepositInstructionParams{
+	depositSPLData, err := borsh.Serialize(solanacontract.DepositInstructionParams{
 		Discriminator: solanacontract.DiscriminatorDepositSPL,
 		Amount:        amount,
 		Memo:          append(receiver.Bytes(), data...),
 	})
 	require.NoError(r, err)
 
-	return inst
+	return &solana.GenericInstruction{
+		ProgID:    programID,
+		DataBytes: depositSPLData,
+		AccountValues: []*solana.AccountMeta{
+			solana.Meta(signer).WRITE().SIGNER(),
+			solana.Meta(pda),
+			solana.Meta(whitelistEntry),
+			solana.Meta(mint),
+			solana.Meta(solana.TokenProgramID),
+			solana.Meta(from).WRITE(),
+			solana.Meta(to).WRITE(),
+		},
+	}
 }
 
 // CreateSignedTransaction creates a signed transaction from instructions

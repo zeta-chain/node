@@ -277,7 +277,10 @@ func (ob *Observer) ParseInboundAsDeposit(
 	var inst solanacontracts.DepositInstructionParams
 	err := borsh.Deserialize(&inst, instruction.Data)
 	if err != nil {
-		return nil, nil
+		ob.Logger().
+			Inbound.Err(err).
+			Msgf("failed to deserialize instruction data for sig %s instruction %d", tx.Signatures[0], instructionIndex)
+		return nil, err
 	}
 
 	// check if the instruction is a deposit or not
@@ -291,7 +294,7 @@ func (ob *Observer) ParseInboundAsDeposit(
 		ob.Logger().
 			Inbound.Err(err).
 			Msgf("unable to get signer for sig %s instruction %d", tx.Signatures[0], instructionIndex)
-		return nil, nil
+		return nil, err
 	}
 
 	// build inbound event
@@ -326,7 +329,10 @@ func (ob *Observer) ParseInboundAsDepositSPL(
 	var inst solanacontracts.DepositSPLInstructionParams
 	err := borsh.Deserialize(&inst, instruction.Data)
 	if err != nil {
-		return nil, nil
+		ob.Logger().
+			Inbound.Err(err).
+			Msgf("failed to deserialize instruction data for sig %s instruction %d", tx.Signatures[0], instructionIndex)
+		return nil, err
 	}
 
 	// check if the instruction is a deposit spl or not
@@ -340,7 +346,7 @@ func (ob *Observer) ParseInboundAsDepositSPL(
 		ob.Logger().
 			Inbound.Err(err).
 			Msgf("unable to get signer and spl for sig %s instruction %d", tx.Signatures[0], instructionIndex)
-		return nil, nil
+		return nil, err
 	}
 
 	// build inbound event
