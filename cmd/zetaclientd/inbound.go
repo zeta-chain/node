@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
@@ -26,36 +25,24 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-var debugArgs = debugArguments{}
-
-type debugArguments struct {
-	zetaCoreHome string
-	zetaNode     string
-	zetaChainID  string
+type inboundOptions struct {
+	Node    string
+	ChainID string
 }
 
-func init() {
-	defaultHomeDir := os.ExpandEnv("$HOME/.zetacored")
+var inboundOpts inboundOptions
 
-	cmd := DebugCmd()
-	cmd.Flags().StringVar(&debugArgs.zetaCoreHome, "core-home", defaultHomeDir, "zetacore home directory")
-	cmd.Flags().StringVar(&debugArgs.zetaNode, "node", "46.4.15.110", "public ip address")
-	cmd.Flags().StringVar(&debugArgs.zetaChainID, "chain-id", "athens_7001-1", "pre-params file path")
+func setupInboundOptions() {
+	f, cfg := InboundCmd.PersistentFlags(), &inboundOpts
 
-	RootCmd.AddCommand(cmd)
+	f.StringVar(&cfg.Node, "node", "46.4.15.110", "zeta public ip address")
+	f.StringVar(&cfg.ChainID, "chain-id", "athens_7001-1", "zeta chain id")
 }
 
-func DebugCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "get-inbound-ballot [inboundHash] [chainID]",
-		Short: "provide txHash and chainID to get the ballot status for the txHash",
-		RunE:  debugCmd,
-	}
-}
-
-func debugCmd(_ *cobra.Command, args []string) error {
+func InboundGetBallot(_ *cobra.Command, args []string) error {
 	cobra.ExactArgs(2)
-	cfg, err := config.Load(debugArgs.zetaCoreHome)
+
+	cfg, err := config.Load(globalOpts.ZetacoreHome)
 	if err != nil {
 		return errors.Wrap(err, "failed to load config")
 	}
@@ -70,9 +57,9 @@ func debugCmd(_ *cobra.Command, args []string) error {
 	// create a new zetacore client
 	client, err := zetacore.NewClient(
 		&keys.Keys{OperatorAddress: sdk.MustAccAddressFromBech32(sample.AccAddress())},
-		debugArgs.zetaNode,
+		inboundOpts.Node,
 		"",
-		debugArgs.zetaChainID,
+		inboundOpts.ChainID,
 		zerolog.Nop(),
 	)
 	if err != nil {

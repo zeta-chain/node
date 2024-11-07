@@ -11,6 +11,7 @@
 
 ### Refactor
 * [3118](https://github.com/zeta-chain/node/pull/3118) - zetaclient: remove hsm signer
+* [3122](https://github.com/zeta-chain/node/pull/3122) - improve & refactor zetaclientd cli
 * [3125](https://github.com/zeta-chain/node/pull/3118) - drop support for header proofs
 
 ### Tests
