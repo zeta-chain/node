@@ -18,6 +18,8 @@ const (
 	// [signer, pda, system_program]
 	AccountsNumDeposit = 3
 
+	// AccountsNumberOfDeposit is the number of accounts required for Solana gateway deposit spl instruction
+	// [signer, pda, whitelist_entry, mint_account, token_program, from, to]
 	AccountsNumberDepositSPL = 7
 )
 

@@ -2,6 +2,7 @@ package observer_test
 
 import (
 	"context"
+	"encoding/hex"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -201,6 +202,54 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 
 	t.Run("should parse inbound event deposit SOL", func(t *testing.T) {
 		event, err := ob.ParseInboundAsDeposit(tx, 0, txResult.Slot)
+		require.NoError(t, err)
+
+		// check result
+		require.EqualValues(t, eventExpected, event)
+	})
+}
+
+func Test_ParseInboundAsDepositSPL(t *testing.T) {
+	// load archived inbound deposit spl tx from localnet result
+	txHash := "aY8yLDze6nHSRi7L5REozKAZY1aAyPJ6TfibiqQL5JGwgSBkYux5z5JfXs5ed8LZqpXUy4VijoU3x15mBd66ZGE"
+
+	chain := chains.SolanaDevnet
+
+	txResult := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHash, false)
+	tx, err := txResult.Transaction.GetTransaction()
+	require.NoError(t, err)
+
+	database, err := db.NewFromSqliteInMemory(true)
+	require.NoError(t, err)
+
+	// create observer
+	chainParams := sample.ChainParams(chain.ChainId)
+	chainParams.GatewayAddress = testutils.GatewayAddresses[chain.ChainId]
+	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, 60, database, base.DefaultLogger(), nil)
+	require.NoError(t, err)
+
+	// expected result
+	// solana e2e deployer account
+	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
+	// solana e2e user evm account
+	expectedMemo, err := hex.DecodeString("103fd9224f00ce3013e95629e52dfc31d805d68d")
+	require.NoError(t, err)
+	eventExpected := &clienttypes.InboundEvent{
+		SenderChainID: chain.ChainId,
+		Sender:        sender,
+		Receiver:      sender,
+		TxOrigin:      sender,
+		Amount:        500000,
+		Memo:          expectedMemo,
+		BlockNumber:   txResult.Slot,
+		TxHash:        txHash,
+		Index:         0, // not a EVM smart contract call
+		CoinType:      coin.CoinType_ERC20,
+		Asset:         "4GddKQ7baJpMyKna7bPPnhh7UQtpzfSGL1FgZ31hj4mp", // SPL address
+	}
+
+	t.Run("should parse inbound event deposit SPL", func(t *testing.T) {
+		event, err := ob.ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
 		require.NoError(t, err)
 
 		// check result

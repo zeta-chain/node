@@ -34,7 +34,7 @@ type DepositInstructionParams struct {
 	Memo []byte
 }
 
-// DepositSPLInstructionParams contains the parameters for a gateway deposit instruction
+// DepositSPLInstructionParams contains the parameters for a gateway deposit spl instruction
 type DepositSPLInstructionParams struct {
 	// Discriminator is the unique identifier for the deposit instruction
 	Discriminator [8]byte

@@ -298,7 +298,7 @@ func (ob *Observer) ParseInboundAsDeposit(
 	event := &clienttypes.InboundEvent{
 		SenderChainID: ob.Chain().ChainId,
 		Sender:        sender,
-		Receiver:      sender,
+		Receiver:      sender, // receiver is pulled out from memo
 		TxOrigin:      sender,
 		Amount:        inst.Amount,
 		Memo:          inst.Memo,
@@ -329,17 +329,17 @@ func (ob *Observer) ParseInboundAsDepositSPL(
 		return nil, nil
 	}
 
-	// check if the instruction is a deposit or not
+	// check if the instruction is a deposit spl or not
 	if inst.Discriminator != solanacontracts.DiscriminatorDepositSPL {
 		return nil, nil
 	}
 
-	// get the sender address (skip if unable to parse signer address)
-	sender, spl, err := ob.GetFromDepositSPLAccounts(tx, &instruction)
+	// get the sender and spl addresses
+	sender, spl, err := ob.GetSignerAndSPLFromDepositSPLAccounts(tx, &instruction)
 	if err != nil {
 		ob.Logger().
 			Inbound.Err(err).
-			Msgf("unable to get signer for sig %s instruction %d", tx.Signatures[0], instructionIndex)
+			Msgf("unable to get signer and spl for sig %s instruction %d", tx.Signatures[0], instructionIndex)
 		return nil, nil
 	}
 
@@ -347,7 +347,7 @@ func (ob *Observer) ParseInboundAsDepositSPL(
 	event := &clienttypes.InboundEvent{
 		SenderChainID: ob.Chain().ChainId,
 		Sender:        sender,
-		Receiver:      sender,
+		Receiver:      sender, // receiver is pulled out from memo
 		TxOrigin:      sender,
 		Amount:        inst.Amount,
 		Memo:          inst.Memo,
@@ -398,7 +398,7 @@ func (ob *Observer) GetSignerDeposit(tx *solana.Transaction, inst *solana.Compil
 	return tx.Message.AccountKeys[signerIndex].String(), nil
 }
 
-func (ob *Observer) GetFromDepositSPLAccounts(
+func (ob *Observer) GetSignerAndSPLFromDepositSPLAccounts(
 	tx *solana.Transaction,
 	inst *solana.CompiledInstruction,
 ) (string, string, error) {

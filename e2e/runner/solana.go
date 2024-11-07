@@ -91,27 +91,6 @@ func (r *E2ERunner) CreateWhitelistSPLMintInstruction(
 	return inst
 }
 
-/*
-
- #[account(mut)]
-    pub signer: Signer<'info>,
-
-    #[account(seeds = [b"meta"], bump)]
-    pub pda: Account<'info, Pda>,
-
-    #[account(seeds=[b"whitelist", mint_account.key().as_ref()], bump)]
-    pub whitelist_entry: Account<'info, WhitelistEntry>, // attach whitelist entry to show the mint_account is whitelisted
-
-    pub mint_account: Account<'info, Mint>,
-
-    pub token_program: Program<'info, Token>,
-
-    #[account(mut)]
-    pub from: Account<'info, TokenAccount>, // this must be owned by signer; normally the ATA of signer
-    #[account(mut)]
-    pub to: Account<'info, TokenAccount>, // this must be ATA of PDA
-*/
-
 func (r *E2ERunner) CreateDepositSPLInstruction(
 	amount uint64,
 	signer solana.PublicKey,
@@ -213,7 +192,8 @@ func (r *E2ERunner) FindOrCreateAssociatedTokenAccount(
 	return pdaAta
 }
 
-func (r *E2ERunner) DepositSPL(
+// SPLDepositAndCall deposits an amount of SPL tokens and calls a contract (if data is provided)
+func (r *E2ERunner) SPLDepositAndCall(
 	privateKey *solana.PrivateKey,
 	amount uint64,
 	tokenAccount solana.PublicKey,

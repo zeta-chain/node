@@ -32,13 +32,13 @@ func TestSolanaDepositSPL(r *runner.E2ERunner, args []string) {
 	senderBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentConfirmed)
 	require.NoError(r, err)
 
-	// get zrc20 balance for recepient
+	// get zrc20 balance for recipient
 	zrc20BalanceBefore, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 
 	// deposit SPL tokens
 	// #nosec G115 e2eTest - always in range
-	sig := r.DepositSPL(&privKey, uint64(amount), r.SPLAddr, r.EVMAddress(), nil)
+	sig := r.SPLDepositAndCall(&privKey, uint64(amount), r.SPLAddr, r.EVMAddress(), nil)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)
@@ -58,7 +58,7 @@ func TestSolanaDepositSPL(r *runner.E2ERunner, args []string) {
 	// verify amount is deposited to pda ata
 	require.Equal(r, parseInt(r, pdaBalanceBefore.Value.Amount)+amount, parseInt(r, pdaBalanceAfter.Value.Amount))
 
-	// verify amount is substracted from sender ata
+	// verify amount is subtracted from sender ata
 	require.Equal(r, parseInt(r, senderBalanceBefore.Value.Amount)-amount, parseInt(r, senderBalanceAfter.Value.Amount))
 
 	// verify amount is minted to receiver
