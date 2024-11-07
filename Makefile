@@ -268,7 +268,7 @@ solana:
 
 start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d 
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 start-e2e-admin-test: e2e-images
 	@echo "--> Starting e2e admin test"
@@ -285,6 +285,12 @@ start-e2e-import-mainnet-test: e2e-images
 	export ZETACORED_IMPORT_GENESIS_DATA=true && \
 	export ZETACORED_START_PERIOD=15m && \
 	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER_COMPOSE) up -d
+
+start-e2e-consensus-test: e2e-images
+	@echo "--> Starting e2e consensus test"
+	export ZETACORE1_IMAGE=ghcr.io/zeta-chain/zetanode:develop && \
+	export ZETACORE1_PLATFORM=linux/amd64 && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d 
 
 start-stress-test: e2e-images
 	@echo "--> Starting stress test"

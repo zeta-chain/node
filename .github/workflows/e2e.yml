@@ -111,6 +111,7 @@ jobs:
     outputs:
       DEFAULT_TESTS: ${{ steps.matrix-conditionals.outputs.DEFAULT_TESTS }}
       UPGRADE_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_TESTS }}
+      CONSENSUS_TESTS: ${{ steps.matrix-conditionals.outputs.CONSENSUS_TESTS }}
       UPGRADE_LIGHT_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_LIGHT_TESTS }}
       UPGRADE_IMPORT_MAINNET_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_IMPORT_MAINNET_TESTS }}
       ADMIN_TESTS: ${{ steps.matrix-conditionals.outputs.ADMIN_TESTS }}
@@ -138,6 +139,7 @@ jobs:
               console.log("labels:", labels);
               core.setOutput('DEFAULT_TESTS', true);
               core.setOutput('UPGRADE_TESTS', labels.includes('UPGRADE_TESTS'));
+              core.setOutput('CONSENSUS_TESTS', !labels.includes('CONSENSUS_BREAKING_ACK'));
               core.setOutput('UPGRADE_LIGHT_TESTS', labels.includes('UPGRADE_LIGHT_TESTS'));
               core.setOutput('UPGRADE_IMPORT_MAINNET_TESTS', labels.includes('UPGRADE_IMPORT_MAINNET_TESTS'));
               core.setOutput('ADMIN_TESTS', labels.includes('ADMIN_TESTS'));
@@ -206,6 +208,9 @@ jobs:
           - make-target: "start-e2e-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.DEFAULT_TESTS == 'true' }}
+          - make-target: "start-e2e-consensus-test"
+            runs-on: ubuntu-20.04
+            run: ${{ needs.matrix-conditionals.outputs.CONSENSUS_TESTS == 'true' }}
           - make-target: "start-upgrade-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.UPGRADE_TESTS == 'true' }}
