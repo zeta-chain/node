@@ -166,6 +166,7 @@ func (r *E2ERunner) CreateSignedTransaction(
 	return tx
 }
 
+// FindOrCreateAssociatedTokenAccount checks if ata exists, and if not creates it
 func (r *E2ERunner) FindOrCreateAssociatedTokenAccount(
 	payer solana.PrivateKey,
 	owner solana.PublicKey,
