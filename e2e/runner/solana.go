@@ -9,7 +9,6 @@ import (
 	associatedtokenaccount "github.com/gagliardetto/solana-go/programs/associated-token-account"
 	"github.com/gagliardetto/solana-go/programs/system"
 	"github.com/gagliardetto/solana-go/programs/token"
-
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
@@ -188,7 +187,11 @@ func (r *E2ERunner) CreateSignedTransaction(
 	return tx
 }
 
-func (r *E2ERunner) FindOrCreateAssociatedTokenAccount(payer solana.PrivateKey, owner solana.PublicKey, tokenAccount solana.PublicKey) solana.PublicKey {
+func (r *E2ERunner) FindOrCreateAssociatedTokenAccount(
+	payer solana.PrivateKey,
+	owner solana.PublicKey,
+	tokenAccount solana.PublicKey,
+) solana.PublicKey {
 	pdaAta, _, err := solana.FindAssociatedTokenAddress(owner, tokenAccount)
 	require.NoError(r, err)
 
@@ -210,7 +213,13 @@ func (r *E2ERunner) FindOrCreateAssociatedTokenAccount(payer solana.PrivateKey, 
 	return pdaAta
 }
 
-func (r *E2ERunner) DepositSPL(privateKey *solana.PrivateKey, amount uint64, tokenAccount solana.PublicKey, receiver ethcommon.Address, data []byte) solana.Signature {
+func (r *E2ERunner) DepositSPL(
+	privateKey *solana.PrivateKey,
+	amount uint64,
+	tokenAccount solana.PublicKey,
+	receiver ethcommon.Address,
+	data []byte,
+) solana.Signature {
 	// ata for pda
 	pda := r.ComputePdaAddress()
 	pdaAta := r.FindOrCreateAssociatedTokenAccount(*privateKey, pda, tokenAccount)
@@ -223,7 +232,16 @@ func (r *E2ERunner) DepositSPL(privateKey *solana.PrivateKey, amount uint64, tok
 	whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, r.GatewayProgram)
 	require.NoError(r, err)
 
-	depositSPLInstruction := r.CreateDepositSPLInstruction(amount, privateKey.PublicKey(), whitelistEntryPDA, tokenAccount, ata, pdaAta, receiver, data)
+	depositSPLInstruction := r.CreateDepositSPLInstruction(
+		amount,
+		privateKey.PublicKey(),
+		whitelistEntryPDA,
+		tokenAccount,
+		ata,
+		pdaAta,
+		receiver,
+		data,
+	)
 	signedTx := r.CreateSignedTransaction(
 		[]solana.Instruction{depositSPLInstruction},
 		*privateKey,
@@ -270,7 +288,8 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool, amo
 	// minting some tokens to deployer for testing
 	ata := r.FindOrCreateAssociatedTokenAccount(*privateKey, privateKey.PublicKey(), tokenAccount.PublicKey())
 
-	mintToInstruction := token.NewMintToInstruction(amountToMint, tokenAccount.PublicKey(), ata, privateKey.PublicKey(), []solana.PublicKey{}).Build()
+	mintToInstruction := token.NewMintToInstruction(amountToMint, tokenAccount.PublicKey(), ata, privateKey.PublicKey(), []solana.PublicKey{}).
+		Build()
 	signedTx = r.CreateSignedTransaction(
 		[]solana.Instruction{mintToInstruction},
 		*privateKey,
@@ -296,7 +315,11 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool, amo
 		}
 
 		// create 'whitelist_spl_mint' instruction
-		instruction := r.CreateWhitelistSPLMintInstruction(privateKey.PublicKey(), whitelistEntryPDA, tokenAccount.PublicKey())
+		instruction := r.CreateWhitelistSPLMintInstruction(
+			privateKey.PublicKey(),
+			whitelistEntryPDA,
+			tokenAccount.PublicKey(),
+		)
 		// create and sign the transaction
 		signedTx := r.CreateSignedTransaction([]solana.Instruction{instruction}, *privateKey, []solana.PrivateKey{})
 

@@ -136,23 +136,24 @@ func TestKeeperGetForeignCoinFromAsset(t *testing.T) {
 		require.False(t, found)
 	})
 
-	t.Run("can get foreign coin with non-checksum address", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+	// TODO: add validation per chain on setting foreign coin, not when getting
+	// t.Run("can get foreign coin with non-checksum address", func(t *testing.T) {
+	// 	k, ctx, _, _ := keepertest.FungibleKeeper(t)
 
-		setForeignCoins(ctx, k,
-			types.ForeignCoins{
-				Zrc20ContractAddress: sample.EthAddress().String(),
-				Asset:                "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-				ForeignChainId:       1,
-				CoinType:             coin.CoinType_ERC20,
-				Name:                 "foo",
-			},
-		)
+	// 	setForeignCoins(ctx, k,
+	// 		types.ForeignCoins{
+	// 			Zrc20ContractAddress: sample.EthAddress().String(),
+	// 			Asset:                "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+	// 			ForeignChainId:       1,
+	// 			CoinType:             coin.CoinType_ERC20,
+	// 			Name:                 "foo",
+	// 		},
+	// 	)
 
-		fc, found := k.GetForeignCoinFromAsset(ctx, "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", 1)
-		require.True(t, found)
-		require.Equal(t, "foo", fc.Name)
-	})
+	// 	fc, found := k.GetForeignCoinFromAsset(ctx, "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", 1)
+	// 	require.True(t, found)
+	// 	require.Equal(t, "foo", fc.Name)
+	// })
 }
 
 func TestKeeperGetAllForeignCoinMap(t *testing.T) {

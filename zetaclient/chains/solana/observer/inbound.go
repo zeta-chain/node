@@ -398,10 +398,17 @@ func (ob *Observer) GetSignerDeposit(tx *solana.Transaction, inst *solana.Compil
 	return tx.Message.AccountKeys[signerIndex].String(), nil
 }
 
-func (ob *Observer) GetFromDepositSPLAccounts(tx *solana.Transaction, inst *solana.CompiledInstruction) (string, string, error) {
+func (ob *Observer) GetFromDepositSPLAccounts(
+	tx *solana.Transaction,
+	inst *solana.CompiledInstruction,
+) (string, string, error) {
 	// there should be 7 accounts for a deposit spl instruction
 	if len(inst.Accounts) != solanacontracts.AccountsNumberDepositSPL {
-		return "", "", fmt.Errorf("want %d accounts, got %d", solanacontracts.AccountsNumberDepositSPL, len(inst.Accounts))
+		return "", "", fmt.Errorf(
+			"want %d accounts, got %d",
+			solanacontracts.AccountsNumberDepositSPL,
+			len(inst.Accounts),
+		)
 	}
 
 	// the accounts are [signer, pda, whitelist_entry, mint_account, token_program, from, to]
