@@ -35,9 +35,9 @@ func (c *Contract) getRewards(
 	}
 
 	// Query the delegation rewards through the distribution keeper querier.
-	dstrClient := distrkeeper.Querier{Keeper: c.distributionKeeper}
+	dstrQuerier := distrkeeper.NewQuerier(c.distributionKeeper)
 
-	res, err := dstrClient.DelegationRewards(ctx, &dstrtypes.QueryDelegationRewardsRequest{
+	res, err := dstrQuerier.DelegationRewards(ctx, &dstrtypes.QueryDelegationRewardsRequest{
 		DelegatorAddress: delegatorCosmosAddr.String(),
 		ValidatorAddress: validatorAddr,
 	})

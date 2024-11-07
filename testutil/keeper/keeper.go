@@ -112,6 +112,7 @@ type SDKKeepers struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 	DistributionKeeper   distrkeeper.Keeper
+	EmissionsKeeper      *emissionskeeper.Keeper
 
 	IBCRouter *porttypes.Router
 }
@@ -418,6 +419,12 @@ func NewSDKKeepersWithKeys(
 	tKeys map[string]*storetypes.TransientStoreKey,
 	allKeys map[string]storetypes.StoreKey,
 ) SDKKeepers {
+	authorityKeeper := authoritykeeper.NewKeeper(
+		cdc,
+		keys[authoritytypes.StoreKey],
+		memKeys[authoritytypes.MemStoreKey],
+		AuthorityGovAddress,
+	)
 	accountKeeper := authkeeper.NewAccountKeeper(
 		cdc,
 		keys[authtypes.StoreKey],
@@ -504,6 +511,33 @@ func NewSDKKeepersWithKeys(
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(distrtypes.ModuleName).String(),
 	)
+	lightclientKeeper := lightclientkeeper.NewKeeper(
+		cdc,
+		keys[lightclienttypes.StoreKey],
+		memKeys[lightclienttypes.MemStoreKey],
+		authorityKeeper,
+	)
+	observerKeeper := observerkeeper.NewKeeper(
+		cdc,
+		keys[observertypes.StoreKey],
+		memKeys[observertypes.MemStoreKey],
+		stakingKeeper,
+		slashingKeeper,
+		authorityKeeper,
+		lightclientKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	emissionsKeeper := emissionskeeper.NewKeeper(
+		cdc,
+		keys[emissionstypes.StoreKey],
+		memKeys[emissionstypes.MemStoreKey],
+		authtypes.FeeCollectorName,
+		bankKeeper,
+		stakingKeeper,
+		observerKeeper,
+		authKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
 
 	return SDKKeepers{
 		ParamsKeeper:       paramsKeeper,
@@ -515,6 +549,7 @@ func NewSDKKeepersWithKeys(
 		SlashingKeeper:     slashingKeeper,
 		CapabilityKeeper:   capabilityKeeper,
 		DistributionKeeper: dstrKeeper,
+		EmissionsKeeper:    emissionsKeeper,
 	}
 }
 

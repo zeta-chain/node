@@ -50,7 +50,7 @@ func TestPrecompilesDistributeThroughContract(r *runner.E2ERunner, args []string
 	r.ZEVMAuth.GasLimit = 10_000_000
 
 	// Set the test to reset the state after it finishes.
-	defer resetDistributionTest(r, lockerAddress, previousGasLimit, fiveHundred)
+	defer resetDistributionTest(r, lockerAddress, previousGasLimit)
 
 	// Check initial balances.
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spenderAddress))

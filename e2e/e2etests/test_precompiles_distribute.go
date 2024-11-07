@@ -3,8 +3,10 @@ package e2etests
 import (
 	"math/big"
 
-	"github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
@@ -39,7 +41,7 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 	r.ZEVMAuth.GasLimit = 10_000_000
 
 	// Set the test to reset the state after it finishes.
-	defer resetDistributionTest(r, lockerAddress, previousGasLimit, fiveHundred)
+	defer resetDistributionTest(r, lockerAddress, previousGasLimit)
 
 	// Get ERC20ZRC20.
 	txHash := r.DepositERC20WithAmountAndMessage(spenderAddress, oneThousand, []byte{})
@@ -47,11 +49,6 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 
 	dstrContract, err := staking.NewIStaking(distributeContractAddress, r.ZEVMClient)
 	require.NoError(r, err, "failed to create distribute contract caller")
-
-	// DO NOT REMOVE - will be used in a subsequent PR when the ability to withdraw delegator rewards is introduced.
-	// Get validators through staking contract.
-	// validators, err := dstrContract.GetAllValidators(&bind.CallOpts{})
-	// require.NoError(r, err)
 
 	// Check initial balances.
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spenderAddress))
@@ -116,52 +113,14 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 	r.WaitForBlocks(1)
 	balanceShouldBe(r, 0, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
-	// DO NOT REMOVE THE FOLLOWING CODE
-	// This section is commented until a following PR introduces the ability to withdraw delegator rewards.
-	// This validator checks will be used then to complete the whole e2e.
+	validators, err := dstrContract.GetAllValidators(&bind.CallOpts{})
+	require.NoError(r, err)
+	require.GreaterOrEqual(r, len(validators), 2)
 
-	// res, err := r.DistributionClient.ValidatorDistributionInfo(
-	// 	r.Ctx,
-	// 	&distributiontypes.QueryValidatorDistributionInfoRequest{
-	// 		ValidatorAddress: validators[0].OperatorAddress,
-	// 	},
-	// )
-	// require.NoError(r, err)
-	// fmt.Printf("Validator 0 distribution info: %+v\n", res)
+	err = stakeThroughCosmosAPI(r, sdk.ValAddress(validators[0].OperatorAddress), spenderAddress, "azeta", oneThousand)
+	require.NoError(r, err)
 
-	// res2, err := r.DistributionClient.ValidatorOutstandingRewards(r.Ctx, &distributiontypes.QueryValidatorOutstandingRewardsRequest{
-	// 	ValidatorAddress: validators[0].OperatorAddress,
-	// })
-	// require.NoError(r, err)
-	// fmt.Printf("Validator 0 outstanding rewards: %+v\n", res2)
-
-	// res3, err := r.DistributionClient.ValidatorCommission(r.Ctx, &distributiontypes.QueryValidatorCommissionRequest{
-	// 	ValidatorAddress: validators[0].OperatorAddress,
-	// })
-	// require.NoError(r, err)
-	// fmt.Printf("Validator 0 commission: %+v\n", res3)
-
-	// // Validator 1
-	// res, err = r.DistributionClient.ValidatorDistributionInfo(
-	// 	r.Ctx,
-	// 	&distributiontypes.QueryValidatorDistributionInfoRequest{
-	// 		ValidatorAddress: validators[1].OperatorAddress,
-	// 	},
-	// )
-	// require.NoError(r, err)
-	// fmt.Printf("Validator 1 distribution info: %+v\n", res)
-
-	// res2, err = r.DistributionClient.ValidatorOutstandingRewards(r.Ctx, &distributiontypes.QueryValidatorOutstandingRewardsRequest{
-	// 	ValidatorAddress: validators[1].OperatorAddress,
-	// })
-	// require.NoError(r, err)
-	// fmt.Printf("Validator 1 outstanding rewards: %+v\n", res2)
-
-	// res3, err = r.DistributionClient.ValidatorCommission(r.Ctx, &distributiontypes.QueryValidatorCommissionRequest{
-	// 	ValidatorAddress: validators[1].OperatorAddress,
-	// })
-	// require.NoError(r, err)
-	// fmt.Printf("Validator 1 commission: %+v\n", res3)
+	r.WaitForBlocks(10)
 }
 
 func TestPrecompilesDistributeNonZRC20(r *runner.E2ERunner, args []string) {
@@ -203,7 +162,7 @@ func TestPrecompilesDistributeNonZRC20(r *runner.E2ERunner, args []string) {
 }
 
 // checkCosmosBalance checks the cosmos coin balance for an address. The coin is specified by its denom.
-func checkCosmosBalance(r *runner.E2ERunner, address types.AccAddress, denom string) *big.Int {
+func checkCosmosBalance(r *runner.E2ERunner, address sdk.AccAddress, denom string) *big.Int {
 	bal, err := r.BankClient.Balance(
 		r.Ctx,
 		&banktypes.QueryBalanceRequest{Address: address.String(), Denom: denom},
@@ -213,11 +172,34 @@ func checkCosmosBalance(r *runner.E2ERunner, address types.AccAddress, denom str
 	return bal.Balance.Amount.BigInt()
 }
 
+func stakeThroughCosmosAPI(
+	r *runner.E2ERunner,
+	validator sdk.ValAddress,
+	staker common.Address,
+	denom string,
+	amount *big.Int,
+) error {
+	msg := stakingtypes.NewMsgDelegate(
+		sdk.AccAddress(staker.Bytes()),
+		validator,
+		sdk.Coin{
+			Denom:  denom,
+			Amount: math.NewIntFromBigInt(amount),
+		},
+	)
+
+	_, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msg)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func resetDistributionTest(
 	r *runner.E2ERunner,
 	lockerAddress common.Address,
 	previousGasLimit uint64,
-	amount *big.Int,
 ) {
 	r.ZEVMAuth.GasLimit = previousGasLimit
 
@@ -228,10 +210,13 @@ func resetDistributionTest(
 	utils.RequireTxSuccessful(r, receipt, "Resetting allowance failed")
 
 	// Reset balance to 0 for spender; this is needed when running upgrade tests where this test runs twice.
+	balance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	require.NoError(r, err)
+
 	tx, err = r.ERC20ZRC20.Transfer(
 		r.ZEVMAuth,
 		common.HexToAddress("0x000000000000000000000000000000000000dEaD"),
-		amount,
+		balance,
 	)
 	require.NoError(r, err)
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)

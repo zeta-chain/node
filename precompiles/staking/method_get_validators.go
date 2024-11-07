@@ -35,9 +35,9 @@ func (c *Contract) getDelegatorValidators(
 	}
 
 	// Query the validator list of the given delegator.
-	dstrClient := distrkeeper.Querier{Keeper: c.distributionKeeper}
+	dstrQuerier := distrkeeper.NewQuerier(c.distributionKeeper)
 
-	res, err := dstrClient.DelegatorValidators(ctx, &dstrtypes.QueryDelegatorValidatorsRequest{
+	res, err := dstrQuerier.DelegatorValidators(ctx, &dstrtypes.QueryDelegatorValidatorsRequest{
 		DelegatorAddress: delegatorCosmosAddr.String(),
 	})
 	if err != nil {
