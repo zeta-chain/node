@@ -20,11 +20,6 @@ export declare class TxHash extends Message<TxHash> {
    */
   txSigner: string;
 
-  /**
-   * @generated from field: bool proved = 3;
-   */
-  proved: boolean;
-
   constructor(data?: PartialMessage<TxHash>);
 
   static readonly runtime: typeof proto3;
