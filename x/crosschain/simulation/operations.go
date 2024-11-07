@@ -12,6 +12,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
 	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -39,17 +40,17 @@ const (
 	DefaultWeightAbortStuckCCTX         = 10
 	DefaultWeightUpdateRateLimiterFlags = 1
 
-	OpWeightMsgAddOutboundTracker  = "op_weight_msg_add_outbound_tracker"
-	OpWeightAddInboundTracker      = "op_weight_msg_add_inbound_tracker"
-	OpWeightRemoveOutboundTracker  = "op_weight_msg_remove_outbound_tracker"
-	OpWeightVoteGasPrice           = "op_weight_msg_vote_gas_price"
-	OpWeightVoteOutbound           = "op_weight_msg_vote_outbound"
-	OpWeightVoteInbound            = "op_weight_msg_vote_inbound"
-	OpWeightWhitelistERC20         = "op_weight_msg_whitelist_erc20"
-	OpWeightMigrateTssFunds        = "op_weight_msg_migrate_tss_funds"
-	OpWeightUpdateTssAddress       = "op_weight_msg_update_tss_address"
-	OpWeightAbortStuckCCTX         = "op_weight_msg_abort_stuck_cctx"
-	OpWeightUpdateRateLimiterFlags = "op_weight_msg_update_rate_limiter_flags"
+	OpWeightMsgAddOutboundTracker  = "op_weight_msg_add_outbound_tracker"      // #nosec G101 not a hardcoded credential
+	OpWeightAddInboundTracker      = "op_weight_msg_add_inbound_tracker"       // #nosec G101 not a hardcoded credential
+	OpWeightRemoveOutboundTracker  = "op_weight_msg_remove_outbound_tracker"   // #nosec G101 not a hardcoded credential
+	OpWeightVoteGasPrice           = "op_weight_msg_vote_gas_price"            // #nosec G101 not a hardcoded credential
+	OpWeightVoteOutbound           = "op_weight_msg_vote_outbound"             // #nosec G101 not a hardcoded credential
+	OpWeightVoteInbound            = "op_weight_msg_vote_inbound"              // #nosec G101 not a hardcoded credential
+	OpWeightWhitelistERC20         = "op_weight_msg_whitelist_erc20"           // #nosec G101 not a hardcoded credential
+	OpWeightMigrateTssFunds        = "op_weight_msg_migrate_tss_funds"         // #nosec G101 not a hardcoded credential
+	OpWeightUpdateTssAddress       = "op_weight_msg_update_tss_address"        // #nosec G101 not a hardcoded credential
+	OpWeightAbortStuckCCTX         = "op_weight_msg_abort_stuck_cctx"          // #nosec G101 not a hardcoded credential
+	OpWeightUpdateRateLimiterFlags = "op_weight_msg_update_rate_limiter_flags" // #nosec G101 not a hardcoded credential
 )
 
 func WeightedOperations(
@@ -147,10 +148,13 @@ func WeightedOperations(
 }
 
 // operationSimulateVoteInbound generates a MsgVoteInbound with a random vote and delivers it.
-func operationSimulateVoteInbound(k keeper.Keeper, msg types.MsgVoteInbound, simAccount simtypes.Account) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, chainID string,
+func operationSimulateVoteInbound(
+	k keeper.Keeper,
+	msg types.MsgVoteInbound,
+	simAccount simtypes.Account,
+) simtypes.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, _ []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
-
 		// Fetch the account from the auth keeper which can then be used to fetch spendable coins
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, simAccount.Address)
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
@@ -207,7 +211,6 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 		accs []simtypes.Account,
 		chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
 		// TODO : randomize these values
 		// Right now we use a constant value for cctx creation , this is the same as the one used in unit tests for the successful condition.
 		// TestKeeper_VoteInbound/successfully vote on evm deposit
@@ -228,7 +231,11 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 		// Pick a random observer to create the ballot
 		simAccount, firstVoter, err := GetRandomAccountAndObserver(r, ctx, k, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, authz.InboundVoter.String(), "unable to get random account and observer"), nil, nil
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				authz.InboundVoter.String(),
+				"unable to get random account and observer",
+			), nil, nil
 		}
 
 		txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
@@ -285,12 +292,21 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 
 		for _, observerIdx := range whoVotes {
 			observerAddress := observerSet.ObserverList[observerIdx]
+			// firstVoter has already voted.
 			if observerAddress == firstVoter {
 				continue
 			}
 			observerAccount, err := GetObserverAccount(observerAddress, accs)
 			if err != nil {
-				panic(err)
+				// This condition is highly unlikely, but if it happens, we can retun an error.
+				// The most likely reason
+				//for this to happen is that the entire observer set has been removed.If that happens we should adjust the number of observers
+				//added to the observer set when starting the simulation.
+				return simtypes.NoOpMsg(
+					types.ModuleName,
+					authz.InboundVoter.String(),
+					"observer account not found",
+				), nil, err
 			}
 			// 1.3) schedule the vote
 			votingMsg := msg
@@ -302,7 +318,8 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 			}
 
 			fops = append(fops, simtypes.FutureOperation{
-				// Submit all subsequent votes in the next block
+				// Submit all subsequent votes in the next block.
+				// We can consider adding a random block height between 1 and ballot maturity blocks in the future.
 				BlockHeight: int(ctx.BlockHeight() + 1),
 				Op:          operationSimulateVoteInbound(k, votingMsg, observerAccount),
 			})
@@ -313,19 +330,27 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 
 // SimulateMsgVoteGasPrice generates a MsgVoteGasPrice and delivers it
 func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, chainID string,
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		// Get a random account and observer
 		simAccount, randomObserver, err := GetRandomAccountAndObserver(r, ctx, k, accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, authz.GasPriceVoter.String(), "unable to get random account and observer"), nil, err
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				authz.GasPriceVoter.String(),
+				"unable to get random account and observer",
+			), nil, err
 		}
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, simAccount.Address)
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
 
 		supportedChains := k.GetObserverKeeper().GetSupportedChains(ctx)
 		if len(supportedChains) == 0 {
-			return simtypes.NoOpMsg(types.ModuleName, authz.GasPriceVoter.String(), "no supported chains found"), nil, nil
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				authz.GasPriceVoter.String(),
+				"no supported chains found",
+			), nil, nil
 		}
 		randomChainID := GetRandomChainID(r, supportedChains)
 
@@ -380,7 +405,12 @@ func GetRandomChainID(r *rand.Rand, chains []chains.Chain) int64 {
 }
 
 // GetRandomAccountAndObserver returns a random account and the associated observer address
-func GetRandomAccountAndObserver(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, accounts []simtypes.Account) (simtypes.Account, string, error) {
+func GetRandomAccountAndObserver(
+	r *rand.Rand,
+	ctx sdk.Context,
+	k keeper.Keeper,
+	accounts []simtypes.Account,
+) (simtypes.Account, string, error) {
 	observers, found := k.GetObserverKeeper().GetObserverSet(ctx)
 	if !found {
 		return simtypes.Account{}, "", fmt.Errorf("observer set not found")
@@ -414,7 +444,9 @@ func GetObserverAccount(observerAddress string, accounts []simtypes.Account) (si
 }
 
 // GenAndDeliverTxWithRandFees generates a transaction with a random fee and delivers it.
-func GenAndDeliverTxWithRandFees(txCtx simulation.OperationInput) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+func GenAndDeliverTxWithRandFees(
+	txCtx simulation.OperationInput,
+) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
 	spendable := txCtx.Bankkeeper.SpendableCoins(txCtx.Context, account.GetAddress())
 
@@ -435,7 +467,10 @@ func GenAndDeliverTxWithRandFees(txCtx simulation.OperationInput) (simtypes.Oper
 
 // GenAndDeliverTx generates a transactions and delivers it with the provided fees.
 // This function does not return an error if the transaction fails to deliver.
-func GenAndDeliverTx(txCtx simulation.OperationInput, fees sdk.Coins) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+func GenAndDeliverTx(
+	txCtx simulation.OperationInput,
+	fees sdk.Coins,
+) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
 	tx, err := simtestutil.GenSignedMockTx(
 		txCtx.R,

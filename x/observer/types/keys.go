@@ -71,7 +71,7 @@ const (
 	NodeAccountKey            = "NodeAccount-value-"
 	KeygenKey                 = "Keygen-value-"
 
-	// TODO remove unsed keys
+	// TODO remove unused keys
 	BlockHeaderKey      = "BlockHeader-value-"
 	BlockHeaderStateKey = "BlockHeaderState-value-"
 

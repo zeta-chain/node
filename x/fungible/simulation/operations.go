@@ -9,6 +9,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
 	"github.com/zeta-chain/node/x/fungible/keeper"
 	"github.com/zeta-chain/node/x/fungible/types"
 	observerTypes "github.com/zeta-chain/node/x/observer/types"
@@ -21,6 +22,7 @@ import (
 // TODO Add more details to comment based on what the number represents in terms of percentage of operations in a block
 // https://github.com/zeta-chain/node/issues/3100
 const (
+	// #nosec G101 not a hardcoded credential
 	OpWeightMsgDeploySystemContracts      = "op_weight_msg_deploy_system_contracts"
 	DefaultWeightMsgDeploySystemContracts = 100
 )
@@ -36,7 +38,7 @@ func WeightedOperations(
 	var weightMsgDeploySystemContracts int
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgDeploySystemContracts, &weightMsgDeploySystemContracts, nil,
-		func(r *rand.Rand) {
+		func(_ *rand.Rand) {
 			weightMsgDeploySystemContracts = DefaultWeightMsgDeploySystemContracts
 		})
 
@@ -50,7 +52,7 @@ func WeightedOperations(
 
 // SimulateMsgDeploySystemContracts deploy system contracts.It is run only once in first block.
 func SimulateMsgDeploySystemContracts(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, chainID string,
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		if DeployedSystemContracts {
 			return simtypes.OperationMsg{}, nil, nil
@@ -58,21 +60,38 @@ func SimulateMsgDeploySystemContracts(k keeper.Keeper) simtypes.Operation {
 
 		policies, found := k.GetAuthorityKeeper().GetPolicies(ctx)
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeploySystemContracts, "policies not found"), nil, nil
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				types.TypeMsgDeploySystemContracts,
+				"policies not found",
+			), nil, nil
 		}
 
 		admin := policies.Items[0].Address
 
 		address, err := observerTypes.GetOperatorAddressFromAccAddress(admin)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeploySystemContracts, "unable to get operator address"), nil, err
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				types.TypeMsgDeploySystemContracts,
+				"unable to get operator address",
+			), nil, err
 		}
 		simAccount, found := simtypes.FindAccount(accounts, address)
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeploySystemContracts, "sim account for admin address not found"), nil, nil
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				types.TypeMsgDeploySystemContracts,
+				"sim account for admin address not found",
+			), nil, nil
 		}
 
 		msg := types.MsgDeploySystemContracts{Creator: admin}
+
+		err = msg.ValidateBasic()
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "failed to validate basic msg"), nil, err
+		}
 
 		txCtx := simulation.OperationInput{
 			R:             r,

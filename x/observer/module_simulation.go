@@ -4,20 +4,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+
 	"github.com/zeta-chain/node/x/observer/simulation"
 	"github.com/zeta-chain/node/x/observer/types"
-)
-
-const (
-	// #nosec G101 not a hardcoded credential
-	opWeightMsgUpdateClientParams          = "op_weight_msg_update_client_params"
-	defaultWeightMsgUpdateClientParams int = 100
 )
 
 // GenerateGenesisState creates a randomized GenState of the module
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
-
 }
 
 // ProposalContents doesn't return any content functions for governance proposals

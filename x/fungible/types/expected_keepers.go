@@ -11,9 +11,9 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 )
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
