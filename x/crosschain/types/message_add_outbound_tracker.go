@@ -16,10 +16,6 @@ func NewMsgAddOutboundTracker(creator string, chain int64, nonce uint64, txHash 
 		ChainId: chain,
 		Nonce:   nonce,
 		TxHash:  txHash,
-		// todo
-		Proof:     nil,
-		BlockHash: "",
-		TxIndex:   0,
 	}
 }
 
