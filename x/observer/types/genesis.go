@@ -14,7 +14,7 @@ func DefaultGenesis() *GenesisState {
 		Observers:         ObserverSet{},
 		NodeAccountList:   []*NodeAccount{},
 		CrosschainFlags:   &CrosschainFlags{IsInboundEnabled: true, IsOutboundEnabled: true},
-		Keygen:            nil,
+		Keygen:            &Keygen{},
 		LastObserverCount: nil,
 		ChainNonces:       []ChainNonces{},
 	}

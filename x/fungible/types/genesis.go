@@ -8,7 +8,10 @@ import (
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		ForeignCoinsList: []ForeignCoins{},
-		SystemContract:   nil,
+		SystemContract: &SystemContract{
+			SystemContract: "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921",
+			ConnectorZevm:  "0x239e96c8f17C85c30100AC26F635Ea15f23E9c67",
+		},
 	}
 }
 
