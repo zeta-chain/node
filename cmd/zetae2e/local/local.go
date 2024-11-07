@@ -190,6 +190,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		noError(deployerRunner.FundEmissionsPool())
 	}
 
+	// monitor block production to ensure we fail fast if there are consensus failures
+	// this is not run in an errgroup since only returning an error will not exit immedately
+	go monitorBlockProductionExit(ctx, conf)
+
 	// wait for keygen to be completed
 	// if setup is skipped, we assume that the keygen is already completed
 	if !skipSetup {
