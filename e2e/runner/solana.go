@@ -37,9 +37,6 @@ func (r *E2ERunner) CreateDepositInstruction(
 	data []byte,
 	amount uint64,
 ) solana.Instruction {
-	pda := r.ComputePdaAddress()
-	programID := r.GatewayProgram
-
 	depositData, err := borsh.Serialize(solanacontract.DepositInstructionParams{
 		Discriminator: solanacontract.DiscriminatorDeposit,
 		Amount:        amount,
@@ -48,11 +45,11 @@ func (r *E2ERunner) CreateDepositInstruction(
 	require.NoError(r, err)
 
 	return &solana.GenericInstruction{
-		ProgID:    programID,
+		ProgID:    r.GatewayProgram,
 		DataBytes: depositData,
 		AccountValues: []*solana.AccountMeta{
 			solana.Meta(signer).WRITE().SIGNER(),
-			solana.Meta(pda).WRITE(),
+			solana.Meta(r.ComputePdaAddress()).WRITE(),
 			solana.Meta(solana.SystemProgramID),
 		},
 	}
@@ -62,21 +59,18 @@ func (r *E2ERunner) CreateDepositInstruction(
 func (r *E2ERunner) CreateWhitelistSPLMintInstruction(
 	signer, whitelistEntry, whitelistCandidate solana.PublicKey,
 ) solana.Instruction {
-	pda := r.ComputePdaAddress()
-	programID := r.GatewayProgram
-
 	data, err := borsh.Serialize(solanacontract.WhitelistInstructionParams{
 		Discriminator: solanacontract.DiscriminatorWhitelistSplMint,
 	})
 	require.NoError(r, err)
 
 	return &solana.GenericInstruction{
-		ProgID:    programID,
+		ProgID:    r.GatewayProgram,
 		DataBytes: data,
 		AccountValues: []*solana.AccountMeta{
 			solana.Meta(whitelistEntry).WRITE(),
 			solana.Meta(whitelistCandidate),
-			solana.Meta(pda).WRITE(),
+			solana.Meta(r.ComputePdaAddress()).WRITE(),
 			solana.Meta(signer).WRITE().SIGNER(),
 			solana.Meta(solana.SystemProgramID),
 		},
@@ -94,9 +88,6 @@ func (r *E2ERunner) CreateDepositSPLInstruction(
 	receiver ethcommon.Address,
 	data []byte,
 ) solana.Instruction {
-	pda := r.ComputePdaAddress()
-	programID := r.GatewayProgram
-
 	depositSPLData, err := borsh.Serialize(solanacontract.DepositInstructionParams{
 		Discriminator: solanacontract.DiscriminatorDepositSPL,
 		Amount:        amount,
@@ -105,11 +96,11 @@ func (r *E2ERunner) CreateDepositSPLInstruction(
 	require.NoError(r, err)
 
 	return &solana.GenericInstruction{
-		ProgID:    programID,
+		ProgID:    r.GatewayProgram,
 		DataBytes: depositSPLData,
 		AccountValues: []*solana.AccountMeta{
 			solana.Meta(signer).WRITE().SIGNER(),
-			solana.Meta(pda),
+			solana.Meta(r.ComputePdaAddress()),
 			solana.Meta(whitelistEntry),
 			solana.Meta(mint),
 			solana.Meta(solana.TokenProgramID),

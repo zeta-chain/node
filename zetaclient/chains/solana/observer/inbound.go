@@ -9,7 +9,6 @@ import (
 	cosmosmath "cosmossdk.io/math"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/near/borsh-go"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
@@ -197,12 +196,24 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 
 		// try parsing the instruction as a 'deposit' if not seen yet
 		if !seenDeposit {
-			event, err := ob.ParseInboundAsDeposit(tx, i, txResult.Slot)
+			deposit, err := solanacontracts.ParseInboundAsDeposit(tx, i, txResult.Slot)
 			if err != nil {
 				return nil, errors.Wrap(err, "error ParseInboundAsDeposit")
-			} else if event != nil {
+			} else if deposit != nil {
 				seenDeposit = true
-				events = append(events, event)
+				events = append(events, &clienttypes.InboundEvent{
+					SenderChainID: ob.Chain().ChainId,
+					Sender:        deposit.Sender,
+					Receiver:      deposit.Sender, // receiver is pulled out from memo
+					TxOrigin:      deposit.Sender,
+					Amount:        deposit.Amount,
+					Memo:          deposit.Memo,
+					BlockNumber:   deposit.Slot, // instead of using block, Solana explorer uses slot for indexing
+					TxHash:        tx.Signatures[0].String(),
+					Index:         0, // hardcode to 0 for Solana, not a EVM smart contract call
+					CoinType:      coin.CoinType_Gas,
+					Asset:         deposit.Asset,
+				})
 				ob.Logger().Inbound.Info().
 					Msgf("FilterInboundEvents: deposit detected in sig %s instruction %d", tx.Signatures[0], i)
 			}
@@ -213,12 +224,24 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 
 		// try parsing the instruction as a 'deposit_spl_token' if not seen yet
 		if !seenDepositSPL {
-			event, err := ob.ParseInboundAsDepositSPL(tx, i, txResult.Slot)
+			deposit, err := solanacontracts.ParseInboundAsDepositSPL(tx, i, txResult.Slot)
 			if err != nil {
 				return nil, errors.Wrap(err, "error ParseInboundAsDepositSPL")
-			} else if event != nil {
+			} else if deposit != nil {
 				seenDepositSPL = true
-				events = append(events, event)
+				events = append(events, &clienttypes.InboundEvent{
+					SenderChainID: ob.Chain().ChainId,
+					Sender:        deposit.Sender,
+					Receiver:      deposit.Sender, // receiver is pulled out from memo
+					TxOrigin:      deposit.Sender,
+					Amount:        deposit.Amount,
+					Memo:          deposit.Memo,
+					BlockNumber:   deposit.Slot, // instead of using block, Solana explorer uses slot for indexing
+					TxHash:        tx.Signatures[0].String(),
+					Index:         0, // hardcode to 0 for Solana, not a EVM smart contract call
+					CoinType:      coin.CoinType_ERC20,
+					Asset:         deposit.Asset,
+				})
 				ob.Logger().Inbound.Info().
 					Msgf("FilterInboundEvents: SPL deposit detected in sig %s instruction %d", tx.Signatures[0], i)
 			}
@@ -261,165 +284,4 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		0, // not a smart contract call
 	)
-}
-
-// ParseInboundAsDeposit tries to parse an instruction as a 'deposit'.
-// It returns nil if the instruction can't be parsed as a 'deposit'.
-func (ob *Observer) ParseInboundAsDeposit(
-	tx *solana.Transaction,
-	instructionIndex int,
-	slot uint64,
-) (*clienttypes.InboundEvent, error) {
-	// get instruction by index
-	instruction := tx.Message.Instructions[instructionIndex]
-
-	// try deserializing instruction as a 'deposit'
-	var inst solanacontracts.DepositInstructionParams
-	err := borsh.Deserialize(&inst, instruction.Data)
-	if err != nil {
-		ob.Logger().
-			Inbound.Err(err).
-			Msgf("failed to deserialize instruction data for sig %s instruction %d", tx.Signatures[0], instructionIndex)
-		return nil, err
-	}
-
-	// check if the instruction is a deposit or not
-	if inst.Discriminator != solanacontracts.DiscriminatorDeposit {
-		return nil, nil
-	}
-
-	// get the sender address (skip if unable to parse signer address)
-	sender, err := ob.GetSignerDeposit(tx, &instruction)
-	if err != nil {
-		ob.Logger().
-			Inbound.Err(err).
-			Msgf("unable to get signer for sig %s instruction %d", tx.Signatures[0], instructionIndex)
-		return nil, err
-	}
-
-	// build inbound event
-	event := &clienttypes.InboundEvent{
-		SenderChainID: ob.Chain().ChainId,
-		Sender:        sender,
-		Receiver:      sender, // receiver is pulled out from memo
-		TxOrigin:      sender,
-		Amount:        inst.Amount,
-		Memo:          inst.Memo,
-		BlockNumber:   slot, // instead of using block, Solana explorer uses slot for indexing
-		TxHash:        tx.Signatures[0].String(),
-		Index:         0, // hardcode to 0 for Solana, not a EVM smart contract call
-		CoinType:      coin.CoinType_Gas,
-		Asset:         "", // no asset for gas token SOL
-	}
-
-	return event, nil
-}
-
-// ParseInboundAsDepositSPL tries to parse an instruction as a 'deposit_spl_token'.
-// It returns nil if the instruction can't be parsed as a 'deposit_spl_token'.
-func (ob *Observer) ParseInboundAsDepositSPL(
-	tx *solana.Transaction,
-	instructionIndex int,
-	slot uint64,
-) (*clienttypes.InboundEvent, error) {
-	// get instruction by index
-	instruction := tx.Message.Instructions[instructionIndex]
-
-	// try deserializing instruction as a 'deposit_spl_token'
-	var inst solanacontracts.DepositSPLInstructionParams
-	err := borsh.Deserialize(&inst, instruction.Data)
-	if err != nil {
-		ob.Logger().
-			Inbound.Err(err).
-			Msgf("failed to deserialize instruction data for sig %s instruction %d", tx.Signatures[0], instructionIndex)
-		return nil, err
-	}
-
-	// check if the instruction is a deposit spl or not
-	if inst.Discriminator != solanacontracts.DiscriminatorDepositSPL {
-		return nil, nil
-	}
-
-	// get the sender and spl addresses
-	sender, spl, err := ob.GetSignerAndSPLFromDepositSPLAccounts(tx, &instruction)
-	if err != nil {
-		ob.Logger().
-			Inbound.Err(err).
-			Msgf("unable to get signer and spl for sig %s instruction %d", tx.Signatures[0], instructionIndex)
-		return nil, err
-	}
-
-	// build inbound event
-	event := &clienttypes.InboundEvent{
-		SenderChainID: ob.Chain().ChainId,
-		Sender:        sender,
-		Receiver:      sender, // receiver is pulled out from memo
-		TxOrigin:      sender,
-		Amount:        inst.Amount,
-		Memo:          inst.Memo,
-		BlockNumber:   slot, // instead of using block, Solana explorer uses slot for indexing
-		TxHash:        tx.Signatures[0].String(),
-		Index:         0, // hardcode to 0 for Solana, not a EVM smart contract call
-		CoinType:      coin.CoinType_ERC20,
-		Asset:         spl,
-	}
-
-	return event, nil
-}
-
-// GetSignerDeposit returns the signer address of the deposit instruction
-// Note: solana-go is not able to parse the AccountMeta 'is_signer' ATM. This is a workaround.
-func (ob *Observer) GetSignerDeposit(tx *solana.Transaction, inst *solana.CompiledInstruction) (string, error) {
-	// there should be 3 accounts for a deposit instruction
-	if len(inst.Accounts) != solanacontracts.AccountsNumDeposit {
-		return "", fmt.Errorf("want %d accounts, got %d", solanacontracts.AccountsNumDeposit, len(inst.Accounts))
-	}
-
-	// the accounts are [signer, pda, system_program]
-	signerIndex, pdaIndex, systemIndex := -1, -1, -1
-
-	// try to find the indexes of all above accounts
-	for _, accIndex := range inst.Accounts {
-		// #nosec G701 always in range
-		accIndexInt := int(accIndex)
-		accKey := tx.Message.AccountKeys[accIndexInt]
-
-		switch accKey {
-		case ob.pda:
-			pdaIndex = accIndexInt
-		case solana.SystemProgramID:
-			systemIndex = accIndexInt
-		default:
-			// the last remaining account is the signer
-			signerIndex = accIndexInt
-		}
-	}
-
-	// all above accounts must be found
-	if signerIndex == -1 || pdaIndex == -1 || systemIndex == -1 {
-		return "", fmt.Errorf("invalid accounts for deposit instruction")
-	}
-
-	// sender is the signer account
-	return tx.Message.AccountKeys[signerIndex].String(), nil
-}
-
-func (ob *Observer) GetSignerAndSPLFromDepositSPLAccounts(
-	tx *solana.Transaction,
-	inst *solana.CompiledInstruction,
-) (string, string, error) {
-	// there should be 7 accounts for a deposit spl instruction
-	if len(inst.Accounts) != solanacontracts.AccountsNumberDepositSPL {
-		return "", "", fmt.Errorf(
-			"want %d accounts, got %d",
-			solanacontracts.AccountsNumberDepositSPL,
-			len(inst.Accounts),
-		)
-	}
-
-	// the accounts are [signer, pda, whitelist_entry, mint_account, token_program, from, to]
-	signer := tx.Message.AccountKeys[0]
-	spl := tx.Message.AccountKeys[inst.Accounts[3]]
-
-	return signer.String(), spl.String(), nil
 }
