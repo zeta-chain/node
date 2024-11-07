@@ -169,8 +169,8 @@ jobs:
                 return;
               }
               const pr_number = pr_match[1];
-              const pr_labels = getPrLabels(pr_number);
-              core.setOutput('CONSENSUS_TESTS', !labels.includes('CONSENSUS_BREAKING_ACK'));
+              const pr_labels = await getPrLabels(pr_number);
+              core.setOutput('CONSENSUS_TESTS', !pr_labels.includes('CONSENSUS_BREAKING_ACK'));
             } else if (context.eventName === 'push' && context.ref === 'refs/heads/develop') {
               core.setOutput('DEFAULT_TESTS', true);
             } else if (context.eventName === 'push' && context.ref.startsWith('refs/heads/release/')) {
