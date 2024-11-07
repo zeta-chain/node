@@ -37,6 +37,7 @@ func TestSolanaDepositSPL(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	// deposit SPL tokens
+	// #nosec G115 e2eTest - always in range
 	sig := r.DepositSPL(&privKey, uint64(amount), r.SPLAddr, r.EVMAddress(), nil)
 
 	// wait for the cctx to be mined
