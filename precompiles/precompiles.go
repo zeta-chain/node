@@ -39,7 +39,7 @@ func StatefulContracts(
 
 	// Define the prototype contract function.
 	if EnabledStatefulContracts[prototype.ContractAddress] {
-		prototypeContract := func(_ sdktypes.Context, _ ethparams.Rules) vm.PrecompiledContract {
+		prototypeContract := func(_ sdktypes.Context, _ ethparams.Rules) vm.StatefulPrecompiledContract {
 			return prototype.NewIPrototypeContract(fungibleKeeper, cdc, gasConfig)
 		}
 
@@ -49,8 +49,8 @@ func StatefulContracts(
 
 	// Define the staking contract function.
 	if EnabledStatefulContracts[staking.ContractAddress] {
-		stakingContract := func(_ sdktypes.Context, _ ethparams.Rules) vm.PrecompiledContract {
-			return staking.NewIStakingContract(stakingKeeper, cdc, gasConfig)
+		stakingContract := func(ctx sdktypes.Context, _ ethparams.Rules) vm.StatefulPrecompiledContract {
+			return staking.NewIStakingContract(ctx, stakingKeeper, *fungibleKeeper, bankKeeper, cdc, gasConfig)
 		}
 
 		// Append the staking contract to the precompiledContracts slice.
@@ -58,7 +58,7 @@ func StatefulContracts(
 	}
 
 	if EnabledStatefulContracts[bank.ContractAddress] {
-		bankContract := func(ctx sdktypes.Context, _ ethparams.Rules) vm.PrecompiledContract {
+		bankContract := func(ctx sdktypes.Context, _ ethparams.Rules) vm.StatefulPrecompiledContract {
 			return bank.NewIBankContract(ctx, bankKeeper, *fungibleKeeper, cdc, gasConfig)
 		}
 

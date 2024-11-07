@@ -13,8 +13,8 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// SignMsgWithdraw signs a withdraw message (for gateway withdraw/withdraw_spl instruction) with TSS.
-func (signer *Signer) SignMsgWithdraw(
+// createAndSignMsgWithdraw creates and signs a withdraw message (for gateway withdraw/withdraw_spl instruction) with TSS.
+func (signer *Signer) createAndSignMsgWithdraw(
 	ctx context.Context,
 	params *types.OutboundParams,
 	height uint64,
@@ -53,13 +53,13 @@ func (signer *Signer) SignMsgWithdraw(
 	return msg.SetSignature(signature), nil
 }
 
-// SignWithdrawTx wraps the withdraw 'msg' into a Solana transaction and signs it with the relayer key.
-func (signer *Signer) SignWithdrawTx(ctx context.Context, msg contracts.MsgWithdraw) (*solana.Transaction, error) {
+// signWithdrawTx wraps the withdraw 'msg' into a Solana transaction and signs it with the relayer key.
+func (signer *Signer) signWithdrawTx(ctx context.Context, msg contracts.MsgWithdraw) (*solana.Transaction, error) {
 	// create withdraw instruction with program call data
 	var err error
 	var inst solana.GenericInstruction
 	inst.DataBytes, err = borsh.Serialize(contracts.WithdrawInstructionParams{
-		Discriminator: contracts.DiscriminatorWithdraw(),
+		Discriminator: contracts.DiscriminatorWithdraw,
 		Amount:        msg.Amount(),
 		Signature:     msg.SigRS(),
 		RecoveryID:    msg.SigV(),

@@ -65,8 +65,11 @@ const (
 	/**
 	 * TON tests
 	 */
-	TestTONDepositName        = "ton_deposit"
-	TestTONDepositAndCallName = "ton_deposit_and_call"
+	TestTONDepositName              = "ton_deposit"
+	TestTONDepositAndCallName       = "ton_deposit_and_call"
+	TestTONDepositAndCallRefundName = "ton_deposit_refund"
+	TestTONWithdrawName             = "ton_withdraw"
+	TestTONWithdrawConcurrentName   = "ton_withdraw_concurrent"
 
 	/*
 	 Bitcoin tests
@@ -80,6 +83,7 @@ const (
 	TestBitcoinStdMemoDepositAndCallName                   = "bitcoin_std_memo_deposit_and_call"
 	TestBitcoinStdMemoDepositAndCallRevertName             = "bitcoin_std_memo_deposit_and_call_revert"
 	TestBitcoinStdMemoDepositAndCallRevertOtherAddressName = "bitcoin_std_memo_deposit_and_call_revert_other_address"
+	TestBitcoinStdMemoInscribedDepositAndCallName          = "bitcoin_std_memo_inscribed_deposit_and_call"
 	TestBitcoinWithdrawSegWitName                          = "bitcoin_withdraw_segwit"
 	TestBitcoinWithdrawTaprootName                         = "bitcoin_withdraw_taproot"
 	TestBitcoinWithdrawMultipleName                        = "bitcoin_withdraw_multiple"
@@ -88,7 +92,6 @@ const (
 	TestBitcoinWithdrawP2SHName                            = "bitcoin_withdraw_p2sh"
 	TestBitcoinWithdrawInvalidAddressName                  = "bitcoin_withdraw_invalid"
 	TestBitcoinWithdrawRestrictedName                      = "bitcoin_withdraw_restricted"
-	TestExtractBitcoinInscriptionMemoName                  = "bitcoin_memo_from_inscription"
 
 	/*
 	 Application tests
@@ -129,6 +132,7 @@ const (
 	TestPauseERC20CustodyName         = "pause_erc20_custody"
 	TestMigrateERC20CustodyFundsName  = "migrate_erc20_custody_funds"
 	TestMigrateTSSName                = "migrate_TSS"
+	TestSolanaWhitelistSPLName        = "solana_whitelist_spl"
 
 	/*
 	 V2 smart contract tests
@@ -172,13 +176,16 @@ const (
 	/*
 	 Stateful precompiled contracts tests
 	*/
-	TestPrecompilesPrototypeName                = "precompile_contracts_prototype"
-	TestPrecompilesPrototypeThroughContractName = "precompile_contracts_prototype_through_contract"
-	TestPrecompilesStakingName                  = "precompile_contracts_staking"
-	TestPrecompilesStakingThroughContractName   = "precompile_contracts_staking_through_contract"
-	TestPrecompilesBankName                     = "precompile_contracts_bank"
-	TestPrecompilesBankFailName                 = "precompile_contracts_bank_fail"
-	TestPrecompilesBankThroughContractName      = "precompile_contracts_bank_through_contract"
+	TestPrecompilesPrototypeName                 = "precompile_contracts_prototype"
+	TestPrecompilesPrototypeThroughContractName  = "precompile_contracts_prototype_through_contract"
+	TestPrecompilesStakingName                   = "precompile_contracts_staking"
+	TestPrecompilesStakingThroughContractName    = "precompile_contracts_staking_through_contract"
+	TestPrecompilesBankName                      = "precompile_contracts_bank"
+	TestPrecompilesBankFailName                  = "precompile_contracts_bank_fail"
+	TestPrecompilesBankThroughContractName       = "precompile_contracts_bank_through_contract"
+	TestPrecompilesDistributeName                = "precompile_contracts_distribute"
+	TestPrecompilesDistributeNonZRC20Name        = "precompile_contracts_distribute_non_zrc20"
+	TestPrecompilesDistributeThroughContractName = "precompile_contracts_distribute_through_contract"
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -449,6 +456,12 @@ var AllE2ETests = []runner.E2ETest{
 		},
 		TestSolanaWithdrawRestricted,
 	),
+	runner.NewE2ETest(
+		TestSolanaWhitelistSPLName,
+		"whitelist SPL",
+		[]runner.ArgDefinition{},
+		TestSolanaWhitelistSPL,
+	),
 	/*
 	 TON tests
 	*/
@@ -468,6 +481,28 @@ var AllE2ETests = []runner.E2ETest{
 		},
 		TestTONDepositAndCall,
 	),
+	runner.NewE2ETest(
+		TestTONDepositAndCallRefundName,
+		"deposit TON into ZEVM and call a smart contract that reverts; expect refund",
+		[]runner.ArgDefinition{
+			{Description: "amount in nano tons", DefaultValue: "1000000000"}, // 1.0 TON
+		},
+		TestTONDepositAndCallRefund,
+	),
+	runner.NewE2ETest(
+		TestTONWithdrawName,
+		"withdraw TON from ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in nano tons", DefaultValue: "2000000000"}, // 2.0 TON
+		},
+		TestTONWithdraw,
+	),
+	runner.NewE2ETest(
+		TestTONWithdrawConcurrentName,
+		"withdraw TON from ZEVM for several recipients simultaneously",
+		[]runner.ArgDefinition{},
+		TestTONWithdrawConcurrent,
+	),
 	/*
 	 Bitcoin tests
 	*/
@@ -477,13 +512,6 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
 		TestBitcoinDonation,
-	),
-	runner.NewE2ETest(
-		TestExtractBitcoinInscriptionMemoName,
-		"extract memo from BTC inscription", []runner.ArgDefinition{
-			{Description: "amount in btc", DefaultValue: "0.1"},
-		},
-		TestExtractBitcoinInscriptionMemo,
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositName,
@@ -539,6 +567,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
 		TestBitcoinStdMemoDepositAndCallRevertOtherAddress,
+	),
+	runner.NewE2ETest(
+		TestBitcoinStdMemoInscribedDepositAndCallName,
+		"deposit Bitcoin into ZEVM and call a contract with inscribed standard memo",
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.1"},
+			{Description: "fee rate", DefaultValue: "10"},
+		},
+		TestBitcoinStdMemoInscribedDepositAndCall,
 	),
 	runner.NewE2ETest(
 		TestBitcoinWithdrawSegWitName,
@@ -1040,5 +1077,23 @@ var AllE2ETests = []runner.E2ETest{
 		"test stateful precompiled contracts bank through contract",
 		[]runner.ArgDefinition{},
 		TestPrecompilesBankThroughContract,
+	),
+	runner.NewE2ETest(
+		TestPrecompilesDistributeName,
+		"test stateful precompiled contracts distribute",
+		[]runner.ArgDefinition{},
+		TestPrecompilesDistribute,
+	),
+	runner.NewE2ETest(
+		TestPrecompilesDistributeNonZRC20Name,
+		"test stateful precompiled contracts distribute with non ZRC20 tokens",
+		[]runner.ArgDefinition{},
+		TestPrecompilesDistributeNonZRC20,
+	),
+	runner.NewE2ETest(
+		TestPrecompilesDistributeThroughContractName,
+		"test stateful precompiled contracts distribute through contract",
+		[]runner.ArgDefinition{},
+		TestPrecompilesDistributeThroughContract,
 	),
 }

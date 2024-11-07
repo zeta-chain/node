@@ -10,6 +10,8 @@ import (
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
 	"github.com/tonkeeper/tongo/wallet"
+
+	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 )
 
 // Deployer represents a wrapper around ton Wallet with some helpful methods.
@@ -55,10 +57,13 @@ func (d *Deployer) Seqno(ctx context.Context) (uint32, error) {
 	return d.blockchain.GetSeqno(ctx, d.GetAddress())
 }
 
-// GetBalanceOf returns the balance of the given account.
-func (d *Deployer) GetBalanceOf(ctx context.Context, id ton.AccountID) (math.Uint, error) {
-	if err := d.waitForAccountActivation(ctx, id); err != nil {
-		return math.Uint{}, errors.Wrap(err, "failed to wait for account activation")
+// GetBalanceOf returns the balance of a given account.
+// wait=true waits for account activation.
+func (d *Deployer) GetBalanceOf(ctx context.Context, id ton.AccountID, wait bool) (math.Uint, error) {
+	if wait {
+		if err := d.waitForAccountActivation(ctx, id); err != nil {
+			return math.Uint{}, errors.Wrap(err, "failed to wait for account activation")
+		}
 	}
 
 	state, err := d.blockchain.GetAccountState(ctx, id)
@@ -74,7 +79,7 @@ func (d *Deployer) GetBalanceOf(ctx context.Context, id ton.AccountID) (math.Uin
 // Fund sends the given amount of coins to the recipient. Returns tx hash and error.
 func (d *Deployer) Fund(ctx context.Context, recipient ton.AccountID, amount math.Uint) (ton.Bits256, error) {
 	msg := wallet.SimpleTransfer{
-		Amount:  UintToCoins(amount),
+		Amount:  toncontracts.UintToCoins(amount),
 		Address: recipient,
 	}
 
@@ -84,7 +89,7 @@ func (d *Deployer) Fund(ctx context.Context, recipient ton.AccountID, amount mat
 // Deploy deploys AccountInit with the given amount of coins. Returns tx hash and error.
 func (d *Deployer) Deploy(ctx context.Context, account *AccountInit, amount math.Uint) error {
 	msg := wallet.Message{
-		Amount:  UintToCoins(amount),
+		Amount:  toncontracts.UintToCoins(amount),
 		Address: account.ID,
 		Code:    account.Code,
 		Data:    account.Data,

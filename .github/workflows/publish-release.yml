@@ -48,9 +48,9 @@ jobs:
     runs-on: ${{ vars.RELEASE_RUNNER }}
     steps:
       - uses: actions/checkout@v4
-      - name: Release build dry-run
+      - name: Build release snapshot
         run: |
-          make release-dry-run
+          make release-snapshot
           
   check-changelog:
     needs:

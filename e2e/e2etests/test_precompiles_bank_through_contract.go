@@ -58,7 +58,7 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	}()
 
 	// Check initial balances.
-	balanceShouldBe(r, 0, checkCosmosBalance(r, testBank, zrc20Address, spender))
+	balanceShouldBe(r, 0, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spender))
 	balanceShouldBe(r, 0, checkZRC20Balance(r, bankAddress))
 
@@ -67,7 +67,7 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	utils.RequiredTxFailed(r, receipt, "Deposit ERC20ZRC20 without allowance should fail")
 
 	// Check balances, should be the same.
-	balanceShouldBe(r, 0, checkCosmosBalance(r, testBank, zrc20Address, spender))
+	balanceShouldBe(r, 0, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spender))
 	balanceShouldBe(r, 0, checkZRC20Balance(r, bankAddress))
 
@@ -80,7 +80,7 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	utils.RequiredTxFailed(r, receipt, "Depositting an amount higher than allowed should fail")
 
 	// Balances shouldn't change.
-	balanceShouldBe(r, 0, checkCosmosBalance(r, testBank, zrc20Address, spender))
+	balanceShouldBe(r, 0, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spender))
 	balanceShouldBe(r, 0, checkZRC20Balance(r, bankAddress))
 
@@ -93,7 +93,7 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	utils.RequiredTxFailed(r, receipt, "Depositting an amount higher than balance should fail")
 
 	// Balances shouldn't change.
-	balanceShouldBe(r, 0, checkCosmosBalance(r, testBank, zrc20Address, spender))
+	balanceShouldBe(r, 0, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spender))
 	balanceShouldBe(r, 0, checkZRC20Balance(r, bankAddress))
 
@@ -102,7 +102,7 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	utils.RequireTxSuccessful(r, receipt, "Depositting a correct amount should pass")
 
 	// Balances should be transferred. Bank now locks 500 ZRC20 tokens.
-	balanceShouldBe(r, 500, checkCosmosBalance(r, testBank, zrc20Address, spender))
+	balanceShouldBe(r, 500, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
 	balanceShouldBe(r, 500, checkZRC20Balance(r, spender))
 	balanceShouldBe(r, 500, checkZRC20Balance(r, bankAddress))
 
@@ -118,7 +118,7 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	utils.RequiredTxFailed(r, receipt, "Withdrawing an amount higher than balance should fail")
 
 	// Balances shouldn't change.
-	balanceShouldBe(r, 500, checkCosmosBalance(r, testBank, zrc20Address, spender))
+	balanceShouldBe(r, 500, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
 	balanceShouldBe(r, 500, checkZRC20Balance(r, spender))
 	balanceShouldBe(r, 500, checkZRC20Balance(r, bankAddress))
 
@@ -127,7 +127,7 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	utils.RequireTxSuccessful(r, receipt, "Withdraw correct amount should pass")
 
 	// Balances should be reverted to initial state.
-	balanceShouldBe(r, 0, checkCosmosBalance(r, testBank, zrc20Address, spender))
+	balanceShouldBe(r, 0, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spender))
 	balanceShouldBe(r, 0, checkZRC20Balance(r, bankAddress))
 
@@ -156,7 +156,11 @@ func checkZRC20Balance(r *runner.E2ERunner, target common.Address) *big.Int {
 	return bankZRC20Balance
 }
 
-func checkCosmosBalance(r *runner.E2ERunner, bank *testbank.TestBank, zrc20, target common.Address) *big.Int {
+func checkCosmosBalanceThroughBank(
+	r *runner.E2ERunner,
+	bank *testbank.TestBank,
+	zrc20, target common.Address,
+) *big.Int {
 	balance, err := bank.BalanceOf(&bind.CallOpts{Context: r.Ctx, From: r.ZEVMAuth.From}, zrc20, target)
 	require.NoError(r, err)
 	return balance

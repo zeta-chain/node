@@ -659,8 +659,8 @@ func TestDecodeScript(t *testing.T) {
 	})
 
 	t.Run("decode error due to missing data for public key", func(t *testing.T) {
-		// missing OP_ENDIF at the end
-		data := "2001a7bae79bd61c2368fe41a565061d6cf22b4f509fbc1652caea06d98b8fd0"
+		// require OP_DATA_32 but OP_DATA_31 is given
+		data := "1f01a7bae79bd61c2368fe41a565061d6cf22b4f509fbc1652caea06d98b8fd0"
 		script, _ := hex.DecodeString(data)
 
 		memo, isFound, err := bitcoin.DecodeScript(script)
