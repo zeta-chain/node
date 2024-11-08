@@ -135,7 +135,7 @@ type ZetacoreClient interface {
 	GetZetaHotKeyBalance(ctx context.Context) (sdkmath.Int, error)
 	GetInboundTrackersForChain(ctx context.Context, chainID int64) ([]crosschaintypes.InboundTracker, error)
 
-	GetUpgradePlan(ctx context.Context) (upgradetypes.Plan, error)
+	GetUpgradePlan(ctx context.Context) (*upgradetypes.Plan, error)
 
 	PostOutboundTracker(ctx context.Context, chainID int64, nonce uint64, txHash string) (string, error)
 }

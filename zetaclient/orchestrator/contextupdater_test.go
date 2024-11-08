@@ -39,7 +39,7 @@ func Test_UpdateAppContext(t *testing.T) {
 		}
 
 		zetacore.On("GetBlockHeight", mock.Anything).Return(int64(123), nil)
-		zetacore.On("GetUpgradePlan", mock.Anything).Return(upgradetypes.Plan{}, nil)
+		zetacore.On("GetUpgradePlan", mock.Anything).Return(nil, nil)
 		zetacore.On("GetSupportedChains", mock.Anything).Return(newChains, nil)
 		zetacore.On("GetAdditionalChains", mock.Anything).Return(nil, nil)
 		zetacore.On("GetChainParams", mock.Anything).Return(newParams, nil)
@@ -68,7 +68,7 @@ func Test_UpdateAppContext(t *testing.T) {
 		)
 
 		zetacore.On("GetBlockHeight", mock.Anything).Return(int64(123), nil)
-		zetacore.On("GetUpgradePlan", mock.Anything).Return(upgradetypes.Plan{
+		zetacore.On("GetUpgradePlan", mock.Anything).Return(&upgradetypes.Plan{
 			Name:   "hello",
 			Height: 124,
 		}, nil)

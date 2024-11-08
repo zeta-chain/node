@@ -585,22 +585,24 @@ func (_m *ZetacoreClient) GetTSSHistory(ctx context.Context) ([]observertypes.TS
 }
 
 // GetUpgradePlan provides a mock function with given fields: ctx
-func (_m *ZetacoreClient) GetUpgradePlan(ctx context.Context) (upgradetypes.Plan, error) {
+func (_m *ZetacoreClient) GetUpgradePlan(ctx context.Context) (*upgradetypes.Plan, error) {
 	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetUpgradePlan")
 	}
 
-	var r0 upgradetypes.Plan
+	var r0 *upgradetypes.Plan
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) (upgradetypes.Plan, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context) (*upgradetypes.Plan, error)); ok {
 		return rf(ctx)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) upgradetypes.Plan); ok {
+	if rf, ok := ret.Get(0).(func(context.Context) *upgradetypes.Plan); ok {
 		r0 = rf(ctx)
 	} else {
-		r0 = ret.Get(0).(upgradetypes.Plan)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*upgradetypes.Plan)
+		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {

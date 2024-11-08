@@ -15,7 +15,7 @@ import (
 
 type Zetacore interface {
 	GetBlockHeight(ctx context.Context) (int64, error)
-	GetUpgradePlan(ctx context.Context) (upgradetypes.Plan, error)
+	GetUpgradePlan(ctx context.Context) (*upgradetypes.Plan, error)
 	GetSupportedChains(ctx context.Context) ([]chains.Chain, error)
 	GetAdditionalChains(ctx context.Context) ([]chains.Chain, error)
 	GetCrosschainFlags(ctx context.Context) (observertypes.CrosschainFlags, error)
@@ -138,22 +138,23 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, lo
 // returns an error if an upgrade is required
 func checkForZetacoreUpgrade(ctx context.Context, zetaHeight int64, zc Zetacore) error {
 	plan, err := zc.GetUpgradePlan(ctx)
-	if err != nil {
+	switch {
+	case err != nil:
 		return errors.Wrap(err, "unable to get upgrade plan")
-	}
-
-	// no upgrade planned
-	if plan.Height == 0 {
+	case plan == nil:
+		// no upgrade planned
 		return nil
 	}
 
-	// We can return an error in couple of blocks ahead.
-	// It's okay because ticker might have a long interval
+	upgradeHeight := plan.Height
+
+	// We can return an error in a few blocks ahead.
+	// It's okay because the ticker might have a long interval.
 	const upgradeRange = 2
 
 	// Note that after plan.Height's block `x/upgrade` module deletes the plan
-	if (plan.Height - zetaHeight) <= upgradeRange {
-		return errors.Wrapf(ErrUpgradeRequired, "current height: %d, upgrade height: %d", zetaHeight, plan.Height)
+	if (upgradeHeight - zetaHeight) <= upgradeRange {
+		return errors.Wrapf(ErrUpgradeRequired, "current height: %d, upgrade height: %d", zetaHeight, upgradeHeight)
 	}
 
 	return nil
