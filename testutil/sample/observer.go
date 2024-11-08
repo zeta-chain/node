@@ -2,6 +2,7 @@ package sample
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -117,6 +118,28 @@ func ChainParamsList() (cpl types.ChainParamsList) {
 		cpl.ChainParams = append(cpl.ChainParams, ChainParams(chain.ChainId))
 	}
 	return
+}
+
+// TSSRandom returns a random TSS,it uses the randomness provided as a parameter
+func TSSRandom(r *rand.Rand) types.TSS {
+	pubKey := PubKey(r)
+	spk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
+	if err != nil {
+		panic(err)
+	}
+	pk, err := zetacrypto.NewPubKey(spk)
+	if err != nil {
+		panic(err)
+	}
+	pubkeyString := pk.String()
+	return types.TSS{
+		TssPubkey:           pubkeyString,
+		TssParticipantList:  []string{},
+		OperatorAddressList: []string{},
+		FinalizedZetaHeight: r.Int63(),
+		KeyGenZetaHeight:    r.Int63(),
+	}
+
 }
 
 // TODO rename to TSS

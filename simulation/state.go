@@ -168,13 +168,9 @@ func AppStateFn(
 		observerState.Observers.ObserverList = observers
 		observerState.CrosschainFlags.IsInboundEnabled = true
 		observerState.CrosschainFlags.IsOutboundEnabled = true
-		tss := observertypes.TSS{
-			TssPubkey:           "cosmospub1addwnpepq27ldhn924mtwylm2r0vja3fcv3nv6gme0e2jnr96l0fkkqw6guscgqfsk0",
-			KeyGenZetaHeight:    100,
-			FinalizedZetaHeight: 110,
-			TssParticipantList:  []string{},
-			OperatorAddressList: observers,
-		}
+
+		tss := sample.TSSRandom(r)
+		tss.OperatorAddressList = observers
 		observerState.Tss = &tss
 
 		// Pick a random account to be the admin of all policies
