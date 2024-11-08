@@ -129,6 +129,8 @@ contract TestDAppV2 {
             require(feeAmount <= amount, "fee amount is higher than the amount");
             uint256 withdrawAmount = amount - feeAmount;
 
+            setAmountWithMessage("gasleft", gasleft());
+
             // in the E2E test doing a withdraw, we want to test the gas usage for processing the outbound
             // this function allow to represent more accurate use case where gas would be consumed in the onCall hook
             consumeGas();
@@ -136,27 +138,27 @@ contract TestDAppV2 {
             IZRC20(zrc20).approve(msg.sender, amount);
 
             // caller is the gateway
-//            IGatewayZEVM(msg.sender).withdraw(
-//                abi.encode(context.sender),
-//                withdrawAmount,
-//                zrc20,
-//                RevertOptions(address(0), false, address(0), "", 0)
-//            );
-            RevertOptions memory revertOptions = RevertOptions(
-                msg.sender, // revert address
-                false, // callOnRevert
-                msg.sender, // abortAddress
-                bytes("revert message"),
-                uint256(100000) // onRevertGasLimit
-            );
-
-            IGatewayZEVM(msg.sender).call(
+            IGatewayZEVM(msg.sender).withdraw(
                 abi.encode(context.sender),
+                withdrawAmount,
                 zrc20,
-                message,
-                100000,
-                revertOptions
+                RevertOptions(address(0), false, address(0), "", 0)
             );
+//            RevertOptions memory revertOptions = RevertOptions(
+//                msg.sender, // revert address
+//                false, // callOnRevert
+//                msg.sender, // abortAddress
+//                bytes("revert message"),
+//                uint256(100000) // onRevertGasLimit
+//            );
+//
+//            IGatewayZEVM(msg.sender).call(
+//                abi.encode(context.sender),
+//                zrc20,
+//                message,
+//                100000,
+//                revertOptions
+//            );
         } else {
             string memory messageStr = message.length == 0 ? getNoMessageIndex(context.sender) : string(message);
 
