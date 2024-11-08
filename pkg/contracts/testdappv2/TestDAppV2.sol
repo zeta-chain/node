@@ -223,7 +223,7 @@ contract TestDAppV2 {
 
     function consumeGas() internal {
         // Approximate target gas consumption
-        uint256 targetGas = 2000000;
+        uint256 targetGas = 1400000;
         // Approximate gas cost for a single storage write
         uint256 storageWriteGasCost = 20000;
         uint256 iterations = targetGas / storageWriteGasCost;
