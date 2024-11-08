@@ -469,14 +469,11 @@ func (signer *Signer) TryProcessOutbound(
 			}
 			logger.Info().
 				Msgf("Broadcast success: nonce %d to chain %s outboundHash %s", outboundTssNonce, chain.String(), outboundHash)
-			zetaHash, err := zetacoreClient.AddOutboundTracker(
+			zetaHash, err := zetacoreClient.PostOutboundTracker(
 				ctx,
 				chain.ChainId,
 				outboundTssNonce,
 				outboundHash,
-				nil,
-				"",
-				-1,
 			)
 			if err != nil {
 				logger.Err(err).

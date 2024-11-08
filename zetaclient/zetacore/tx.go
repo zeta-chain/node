@@ -11,7 +11,6 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
-	"github.com/zeta-chain/node/pkg/proofs"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	clientauthz "github.com/zeta-chain/node/zetaclient/authz"
 	clientcommon "github.com/zeta-chain/node/zetaclient/common"
@@ -84,17 +83,8 @@ func WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, clientauthz.Signer, error) {
 	return &authzMessage, authzSigner, nil
 }
 
-// AddOutboundTracker adds an outbound tracker
-// TODO(revamp): rename to PostAddOutboundTracker
-func (c *Client) AddOutboundTracker(
-	ctx context.Context,
-	chainID int64,
-	nonce uint64,
-	txHash string,
-	proof *proofs.Proof,
-	blockHash string,
-	txIndex int64,
-) (string, error) {
+// PostOutboundTracker adds an outbound tracker
+func (c *Client) PostOutboundTracker(ctx context.Context, chainID int64, nonce uint64, txHash string) (string, error) {
 	// don't report if the tracker already contains the txHash
 	tracker, err := c.GetOutboundTracker(ctx, chains.Chain{ChainId: chainID}, nonce)
 	if err == nil {
@@ -106,7 +96,7 @@ func (c *Client) AddOutboundTracker(
 	}
 
 	signerAddress := c.keys.GetOperatorAddress().String()
-	msg := types.NewMsgAddOutboundTracker(signerAddress, chainID, nonce, txHash, proof, blockHash, txIndex)
+	msg := types.NewMsgAddOutboundTracker(signerAddress, chainID, nonce, txHash)
 
 	authzMsg, authzSigner, err := WrapMessageWithAuthz(msg)
 	if err != nil {

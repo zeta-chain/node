@@ -19,41 +19,17 @@ func TestMsgAddOutboundTracker_ValidateBasic(t *testing.T) {
 	}{
 		{
 			name: "invalid address",
-			msg: types.NewMsgAddOutboundTracker(
-				"invalid",
-				1,
-				1,
-				"",
-				nil,
-				"",
-				1,
-			),
-			err: sdkerrors.ErrInvalidAddress,
+			msg:  types.NewMsgAddOutboundTracker("invalid", 1, 1, ""),
+			err:  sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid chain id",
-			msg: types.NewMsgAddOutboundTracker(
-				sample.AccAddress(),
-				-1,
-				1,
-				"",
-				nil,
-				"",
-				1,
-			),
-			err: sdkerrors.ErrInvalidChainID,
+			msg:  types.NewMsgAddOutboundTracker(sample.AccAddress(), -1, 1, ""),
+			err:  sdkerrors.ErrInvalidChainID,
 		},
 		{
 			name: "valid address",
-			msg: types.NewMsgAddOutboundTracker(
-				sample.AccAddress(),
-				1,
-				1,
-				"",
-				nil,
-				"",
-				1,
-			),
+			msg:  types.NewMsgAddOutboundTracker(sample.AccAddress(), 1, 1, ""),
 		},
 	}
 	for _, tt := range tests {

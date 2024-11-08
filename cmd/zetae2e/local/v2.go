@@ -30,7 +30,7 @@ func startV2Tests(eg *errgroup.Group, conf config.Config, deployerRunner *runner
 		//e2etests.TestV2ETHWithdrawAndCallNoMessageName,
 		e2etests.TestDepositAndWithdrawName,
 	))
-
+	//
 	//// Test happy paths for erc20 token workflow
 	//eg.Go(v2TestRoutine(conf, "erc20", conf.AdditionalAccounts.UserV2ERC20, color.FgHiBlue, deployerRunner, verbose,
 	//	e2etests.TestV2ETHDepositName, // necessary to pay fees on ZEVM
@@ -40,6 +40,7 @@ func startV2Tests(eg *errgroup.Group, conf config.Config, deployerRunner *runner
 	//	e2etests.TestV2ERC20WithdrawAndArbitraryCallName,
 	//	e2etests.TestV2ERC20WithdrawAndCallName,
 	//	e2etests.TestV2ERC20DepositAndCallNoMessageName,
+	//	e2etests.TestV2ERC20WithdrawAndCallNoMessageName,
 	//))
 	//
 	//// Test revert cases for gas token workflow
@@ -56,6 +57,7 @@ func startV2Tests(eg *errgroup.Group, conf config.Config, deployerRunner *runner
 	//		e2etests.TestV2ETHDepositAndCallRevertWithCallName,
 	//		e2etests.TestV2ETHWithdrawAndCallRevertName,
 	//		e2etests.TestV2ETHWithdrawAndCallRevertWithCallName,
+	//		e2etests.TestDepositAndCallOutOfGasName,
 	//	),
 	//)
 	//

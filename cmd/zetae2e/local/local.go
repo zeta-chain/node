@@ -190,6 +190,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		noError(deployerRunner.FundEmissionsPool())
 	}
 
+	// monitor block production to ensure we fail fast if there are consensus failures
+	// this is not run in an errgroup since only returning an error will not exit immedately
+	go monitorBlockProductionExit(ctx, conf)
+
 	// wait for keygen to be completed
 	// if setup is skipped, we assume that the keygen is already completed
 	if !skipSetup {
@@ -218,22 +222,30 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		deployerRunner.SetupEVMV2()
 
+		if testSolana {
+			deployerRunner.SetupSolana(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
+		}
+
 		deployerRunner.SetZEVMSystemContracts()
 
 		// NOTE: v2 (gateway) setup called here because system contract needs to be set first, then gateway, then zrc20
 		deployerRunner.SetZEVMContractsV2()
 
-		deployerRunner.SetZEVMZRC20s()
+		zrc20Deployment := txserver.ZRC20Deployment{
+			ERC20Addr: deployerRunner.ERC20Addr,
+			SPLAddr:   nil,
+		}
+		if testSolana {
+			zrc20Deployment.SPLAddr = deployerRunner.SPLAddr.ToPointer()
+		}
+
+		deployerRunner.SetZEVMZRC20s(zrc20Deployment)
 
 		// Update the chain params to use v2 contract for ERC20Custody
 		// TODO: this function should be removed and the chain params should be directly set to use v2 contract
 		// https://github.com/zeta-chain/node/issues/2627
 		deployerRunner.UpdateChainParamsV2Contracts()
 		deployerRunner.ERC20CustodyAddr = deployerRunner.ERC20CustodyV2Addr
-
-		if testSolana {
-			deployerRunner.SetupSolana(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
-		}
 
 		deployerRunner.MintERC20OnEvm(1000000)
 
@@ -413,6 +425,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			// TODO move under admin tests
 			// https://github.com/zeta-chain/node/issues/3085
 			e2etests.TestSolanaWhitelistSPLName,
+			e2etests.TestSPLDepositName,
+			e2etests.TestSPLDepositAndCallName,
 		}
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
 	}

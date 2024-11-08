@@ -67,7 +67,8 @@ services:
       - ~/.zetacored/genesis_data:/root/genesis_data
 
   zetacore1:
-    image: zetanode:latest
+    image: ${ZETACORE1_IMAGE-zetanode:latest}
+    platform: ${ZETACORE1_PLATFORM-}
     container_name: zetacore1
     hostname: zetacore1
     networks:
