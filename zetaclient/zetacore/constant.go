@@ -19,7 +19,7 @@ const (
 	PostTSSGasLimit = 500_000
 
 	// PostVoteInboundExecutionGasLimit is the gas limit for voting on observed inbound tx and executing it
-	PostVoteInboundExecutionGasLimit = 12_000_000
+	PostVoteInboundExecutionGasLimit = 7_000_000
 
 	// PostVoteInboundMessagePassingExecutionGasLimit is the gas limit for voting on, and executing ,observed inbound tx related to message passing (coin_type == zeta)
 	PostVoteInboundMessagePassingExecutionGasLimit = 4_000_000
