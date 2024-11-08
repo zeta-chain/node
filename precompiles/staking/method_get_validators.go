@@ -16,10 +16,10 @@ func (c *Contract) getDelegatorValidators(
 	method *abi.Method,
 	args []interface{},
 ) ([]byte, error) {
-	if len(args) != 0 {
+	if len(args) != 1 {
 		return nil, &precompiletypes.ErrInvalidNumberOfArgs{
 			Got:    len(args),
-			Expect: 0,
+			Expect: 1,
 		}
 	}
 

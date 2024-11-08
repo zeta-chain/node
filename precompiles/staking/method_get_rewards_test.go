@@ -7,19 +7,15 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/ethereum/go-ethereum/common"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/stretchr/testify/require"
+	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/emissions"
-	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
 func Test_GetRewards(t *testing.T) {
-	t.Run("become azeta staker, distribute ZRC20, get rewards", func(t *testing.T) {
+	t.Run("should return empty rewards list to a non staker", func(t *testing.T) {
 		/* ARRANGE */
 		s := newTestSuite(t)
 
@@ -28,7 +24,38 @@ func Test_GetRewards(t *testing.T) {
 		s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, validator)
 
 		// Create staker.
-		staker := sample.Bech32AccAddress()
+		stakerEVMAddr := sample.EthAddress()
+
+		/* ACT */
+		// Call getRewards.
+		getRewardsMethod := s.stkContractABI.Methods[GetRewardsMethodName]
+
+		s.mockVMContract.Input = packInputArgs(
+			t,
+			getRewardsMethod,
+			[]interface{}{stakerEVMAddr, validator.GetOperator().String()}...,
+		)
+
+		/* ASSERT */
+		bytes, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "delegation does not exist")
+		require.Empty(t, bytes)
+	})
+
+	t.Run("should return the zrc20 rewards list for a staker", func(t *testing.T) {
+		/* ARRANGE */
+		s := newTestSuite(t)
+		s.sdkKeepers.DistributionKeeper.SetFeePool(s.ctx, distrtypes.InitialFeePool())
+
+		// Create validator.
+		validator := sample.Validator(t, rand.New(rand.NewSource(42)))
+		s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, validator)
+
+		// Create staker.
+		stakerEVMAddr := sample.EthAddress()
+		stakerCosmosAddr, err := precompiletypes.GetCosmosAddress(s.sdkKeepers.BankKeeper, stakerEVMAddr)
+		require.NoError(t, err)
 
 		// Become a staker.
 		stakeThroughCosmosAPI(
@@ -37,106 +64,40 @@ func Test_GetRewards(t *testing.T) {
 			s.sdkKeepers.BankKeeper,
 			s.sdkKeepers.StakingKeeper,
 			validator,
-			staker,
+			stakerCosmosAddr,
 			math.NewInt(100),
 		)
+
+		err = s.sdkKeepers.DistributionKeeper.Hooks().
+			AfterDelegationModified(s.ctx, stakerCosmosAddr, validator.GetOperator())
+		require.NoError(t, err)
+
+		// DEBUG CALL
+		del := s.sdkKeepers.StakingKeeper.GetAllDelegations(s.ctx)
+		fmt.Println(del)
 
 		/* Distribute 1000 ZRC20 tokens to the staking contract */
 		distributeZRC20(t, s, big.NewInt(1000))
 
-		// Produce blocks.
-		for i := 0; i < 10; i++ {
-			// produce a block
-			emissions.BeginBlocker(s.ctx, *s.sdkKeepers.EmissionsKeeper)
-			s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-		}
+		emissions.BeginBlocker(s.ctx, *s.sdkKeepers.EmissionsKeeper)
+		s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 
 		/* ACT */
 		// Call getRewards.
 		getRewardsMethod := s.stkContractABI.Methods[GetRewardsMethodName]
-	
-		fmt.Println(common.HexToAddress(staker.String()))
-		fmt.Println(validator.GetOperator().String())
 
-		// Setup method input.
 		s.mockVMContract.Input = packInputArgs(
 			t,
 			getRewardsMethod,
-			[]interface{}{common.HexToAddress(staker.String()), validator.GetOperator().String()}...,
+			[]interface{}{stakerEVMAddr, validator.GetOperator().String()}...,
 		)
 
 		bytes, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
 		require.NoError(t, err)
 
-		res, err := s.stkContractABI.Methods[DistributeMethodName].Outputs.Unpack(bytes)
+		/* ASSERT */
+		res, err := getRewardsMethod.Outputs.Unpack(bytes)
 		require.NoError(t, err)
 		fmt.Println(res)
-
-		/* ASSERT */
 	})
-}
-
-func stakeThroughCosmosAPI(
-	t *testing.T,
-	ctx sdk.Context,
-	bankKeeper bankkeeper.Keeper,
-	stakingKeeper stakingkeeper.Keeper,
-	validator stakingtypes.Validator,
-	staker sdk.AccAddress,
-	amount math.Int,
-)  {
-	// Coins to stake with default cosmos denom.
-	coins := sdk.NewCoins(sdk.NewCoin("stake", amount))
-
-	err := bankKeeper.MintCoins(ctx, fungibletypes.ModuleName, coins)
-	require.NoError(t, err)
-
-	err = bankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-	require.NoError(t, err)
-
-	b := bankKeeper.GetAllBalances(ctx, staker)
-	fmt.Println(b)
-
-	shares, err := stakingKeeper.Delegate(
-		ctx,
-		staker,
-		coins.AmountOf(coins.Denoms()[0]),
-		validator.Status,
-		validator,
-		true,
-	)
-	require.NoError(t, err)
-	require.Equal(t, amount.Uint64(), shares.TruncateInt().Uint64())
-	b = bankKeeper.GetAllBalances(ctx, staker)
-	
-	del, found := stakingKeeper.GetDelegation(ctx, staker, validator.GetOperator())
-	fmt.Println(found)
-	fmt.Println(del)
-}
-
-func distributeZRC20(
-	t *testing.T,
-	s testSuite,
-	amount *big.Int,
-) {
-	distributeMethod := s.stkContractABI.Methods[DistributeMethodName]
-
-	_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, amount)
-	require.NoError(t, err)
-	allowStaking(t, s, amount)
-
-	// Setup method input.
-	s.mockVMContract.Input = packInputArgs(
-		t,
-		distributeMethod,
-		[]interface{}{s.zrc20Address, amount}...,
-	)
-
-	// Call distribute method.
-	success, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
-	require.NoError(t, err)
-	res, err := distributeMethod.Outputs.Unpack(success)
-	require.NoError(t, err)
-	ok := res[0].(bool)
-	require.True(t, ok)
 }

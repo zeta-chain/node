@@ -108,14 +108,14 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		light             = must(cmd.Flags().GetBool(flagLight))
 		setupOnly         = must(cmd.Flags().GetBool(flagSetupOnly))
 		skipSetup         = must(cmd.Flags().GetBool(flagSkipSetup))
-		//skipBitcoinSetup  = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
-		skipHeaderProof  = must(cmd.Flags().GetBool(flagSkipHeaderProof))
-		skipTrackerCheck = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
-		testTSSMigration = must(cmd.Flags().GetBool(flagTestTSSMigration))
-		testV2           = must(cmd.Flags().GetBool(flagTestV2))
-		testV2Migration  = must(cmd.Flags().GetBool(flagTestV2Migration))
-		skipPrecompiles  = must(cmd.Flags().GetBool(flagSkipPrecompiles))
-		upgradeContracts = must(cmd.Flags().GetBool(flagUpgradeContracts))
+		skipBitcoinSetup  = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
+		skipHeaderProof   = must(cmd.Flags().GetBool(flagSkipHeaderProof))
+		skipTrackerCheck  = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
+		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
+		testV2            = must(cmd.Flags().GetBool(flagTestV2))
+		testV2Migration   = must(cmd.Flags().GetBool(flagTestV2Migration))
+		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
+		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
 	)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
@@ -355,11 +355,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 
 		eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose, precompiledContractTests...))
-		// eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
-		// eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
-		// eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
-		// eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, bitcoinTests...))
-		// eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, ethereumTests...))
+		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
+		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
+		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
+		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, bitcoinTests...))
+		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, ethereumTests...))
 	}
 
 	if testAdmin {

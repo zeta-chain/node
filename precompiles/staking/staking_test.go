@@ -6,12 +6,15 @@ import (
 
 	"math/big"
 
+	"cosmossdk.io/math"
 	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/store"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -395,6 +398,65 @@ func allowStaking(t *testing.T, ts testSuite, amount *big.Int) {
 	allowed, ok := resAllowance[0].(bool)
 	require.True(t, ok)
 	require.True(t, allowed)
+}
+
+func stakeThroughCosmosAPI(
+	t *testing.T,
+	ctx sdk.Context,
+	bankKeeper bankkeeper.Keeper,
+	stakingKeeper stakingkeeper.Keeper,
+	validator stakingtypes.Validator,
+	staker sdk.AccAddress,
+	amount math.Int,
+) {
+	// Coins to stake with default cosmos denom.
+	coins := sdk.NewCoins(sdk.NewCoin("stake", amount))
+
+	err := bankKeeper.MintCoins(ctx, fungibletypes.ModuleName, coins)
+	require.NoError(t, err)
+
+	err = bankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	require.NoError(t, err)
+
+	shares, err := stakingKeeper.Delegate(
+		ctx,
+		staker,
+		coins.AmountOf(coins.Denoms()[0]),
+		validator.Status,
+		validator,
+		true,
+	)
+	require.NoError(t, err)
+	require.Equal(t, amount.Uint64(), shares.TruncateInt().Uint64())
+}
+
+func distributeZRC20(
+	t *testing.T,
+	s testSuite,
+	amount *big.Int,
+) {
+	distributeMethod := s.stkContractABI.Methods[DistributeMethodName]
+
+	_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, amount)
+	require.NoError(t, err)
+	allowStaking(t, s, amount)
+
+	// Setup method input.
+	s.mockVMContract.Input = packInputArgs(
+		t,
+		distributeMethod,
+		[]interface{}{s.zrc20Address, amount}...,
+	)
+
+	// Call distribute method.
+	success, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+	require.NoError(t, err)
+
+	res, err := distributeMethod.Outputs.Unpack(success)
+	require.NoError(t, err)
+
+	ok := res[0].(bool)
+	require.True(t, ok)
 }
 
 func callEVM(
