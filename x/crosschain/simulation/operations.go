@@ -231,7 +231,7 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 		msg := sample.InboundVoteSim(0, from, to, r)
 
 		// Pick a random observer to create the ballot
-		// If this returns and error it is likely that the entire observer set has been removed
+		// If this returns an error, it is likely that the entire observer set has been removed
 		simAccount, firstVoter, err := GetRandomAccountAndObserver(r, ctx, k, accs)
 		if err != nil {
 			return simtypes.OperationMsg{}, nil, nil
@@ -239,7 +239,6 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 
 		txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
 		account := k.GetAuthKeeper().GetAccount(ctx, simAccount.Address)
-		//spendable := k.GetBankKeeper().SpendableCoins(ctx, account.GetAddress())
 		firstMsg := msg
 		firstMsg.Creator = firstVoter
 
@@ -285,7 +284,6 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 
 		// 1.2) select who votes
 		whoVotes := r.Perm(len(observerSet.ObserverList))
-		// didntVote := whoVotes[numVotes:]
 		whoVotes = whoVotes[:numVotes]
 
 		var fops []simtypes.FutureOperation
@@ -325,7 +323,7 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		// Get a random account and observer
-		// If this returns and error it is likely that the entire observer set has been removed
+		// If this returns an error, it is likely that the entire observer set has been removed
 		simAccount, randomObserver, err := GetRandomAccountAndObserver(r, ctx, k, accounts)
 		if err != nil {
 			return simtypes.OperationMsg{}, nil, nil

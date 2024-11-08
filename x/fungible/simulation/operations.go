@@ -24,15 +24,11 @@ import (
 const (
 	// #nosec G101 not a hardcoded credential
 	OpWeightMsgDeploySystemContracts      = "op_weight_msg_deploy_system_contracts"
-	DefaultWeightMsgDeploySystemContracts = 100
+	DefaultWeightMsgDeploySystemContracts = 10
 )
 
 // DeployedSystemContracts Use a flag to ensure that the system contracts are deployed only once
 // https://github.com/zeta-chain/node/issues/3102
-var (
-	DeployedSystemContracts = false
-)
-
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper) simulation.WeightedOperations {
 	var weightMsgDeploySystemContracts int
@@ -54,10 +50,6 @@ func WeightedOperations(
 func SimulateMsgDeploySystemContracts(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
-		//if DeployedSystemContracts {
-		//	return simtypes.OperationMsg{}, nil, nil
-		//}
-
 		policies, found := k.GetAuthorityKeeper().GetPolicies(ctx)
 		if !found {
 			return simtypes.NoOpMsg(
@@ -107,7 +99,6 @@ func SimulateMsgDeploySystemContracts(k keeper.Keeper) simtypes.Operation {
 			ModuleName:    types.ModuleName,
 		}
 
-		DeployedSystemContracts = true
 		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
