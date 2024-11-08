@@ -5,55 +5,116 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/e2etests"
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/testutil"
 )
 
-// bitcoinTestRoutine runs Bitcoin related e2e tests
-func bitcoinTestRoutine(
+// initBitcoinTestRunners initializes Bitcoin deposit and withdraw test runners
+func initBitcoinTestRunners(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
-	initBitcoinNetwork bool,
-	testNames ...string,
-) func() error {
-	return func() (err error) {
-		account := conf.AdditionalAccounts.UserBitcoin
-		// initialize runner for bitcoin test
-		bitcoinRunner, err := initTestRunner(
-			"bitcoin",
-			conf,
-			deployerRunner,
-			account,
-			runner.NewLogger(verbose, color.FgYellow, "bitcoin"),
-		)
-		if err != nil {
-			return err
-		}
+	initNetwork bool,
+	depositTests []string,
+	withdrawTests []string,
+) (func() error, func() error) {
+	// initialize runner for deposit tests
+	// deposit tests need Bitcoin node wallet to handle UTXOs
+	account := conf.AdditionalAccounts.UserBitcoinDeposit
+	runnerDeposit := initBitcoinRunner(
+		"btc_deposit",
+		account,
+		conf,
+		deployerRunner,
+		color.FgYellow,
+		verbose,
+		initNetwork,
+		true,
+	)
 
-		bitcoinRunner.Logger.Print("🏃 starting Bitcoin tests")
+	// initialize runner for withdraw tests
+	// withdraw tests DON'T use Bitcoin node wallet
+	account = conf.AdditionalAccounts.UserBitcoinWithdraw
+	runnerWithdraw := initBitcoinRunner(
+		"btc_withdraw",
+		account,
+		conf,
+		deployerRunner,
+		color.FgHiYellow,
+		verbose,
+		initNetwork,
+		false,
+	)
+
+	// initialize funds
+	// send BTC to TSS for gas fees and to tester ZEVM address
+	if initNetwork {
+		// mine 101 blocks to ensure the BTC rewards are spendable
+		// Note: the block rewards can be sent to any address in here
+		_, err := runnerDeposit.GenerateToAddressIfLocalBitcoin(101, runnerDeposit.BTCDeployerAddress)
+		require.NoError(runnerDeposit, err)
+
+		// send BTC to ZEVM addresses
+		runnerDeposit.DepositBTC(runnerDeposit.EVMAddress())
+		runnerDeposit.DepositBTC(runnerWithdraw.EVMAddress())
+	}
+
+	// create test routines
+	routineDeposit := createBitcoinTestRoutine(runnerDeposit, depositTests)
+	routineWithdraw := createBitcoinTestRoutine(runnerWithdraw, withdrawTests)
+
+	return routineDeposit, routineWithdraw
+}
+
+// initBitcoinRunner initializes the Bitcoin runner for given test name and account
+func initBitcoinRunner(
+	name string,
+	account config.Account,
+	conf config.Config,
+	deployerRunner *runner.E2ERunner,
+	printColor color.Attribute,
+	verbose, initNetwork, createWallet bool,
+) *runner.E2ERunner {
+	// initialize runner for bitcoin test
+	runner, err := initTestRunner(name, conf, deployerRunner, account, runner.NewLogger(verbose, printColor, name))
+	testutil.NoError(err)
+
+	// setup TSS address and setup deployer wallet
+	runner.SetupBitcoinAccounts(createWallet)
+
+	// initialize funds
+	if initNetwork {
+		// send some BTC block rewards to the deployer address
+		_, err = runner.GenerateToAddressIfLocalBitcoin(4, runner.BTCDeployerAddress)
+		require.NoError(runner, err)
+
+		// send ERC20 token on EVM
+		txERC20Send := deployerRunner.SendERC20OnEvm(account.EVMAddress(), 1000)
+		runner.WaitForTxReceiptOnEvm(txERC20Send)
+
+		// deposit ETH and ERC20 tokens on ZetaChain
+		txEtherDeposit := runner.DepositEther()
+		txERC20Deposit := runner.DepositERC20()
+
+		runner.WaitForMinedCCTX(txEtherDeposit)
+		runner.WaitForMinedCCTX(txERC20Deposit)
+	}
+
+	return runner
+}
+
+// createBitcoinTestRoutine creates a test routine for given test names
+func createBitcoinTestRoutine(r *runner.E2ERunner, testNames []string) func() error {
+	return func() (err error) {
+		r.Logger.Print("🏃 starting bitcoin tests")
 		startTime := time.Now()
 
-		// funding the account
-		txERC20Send := deployerRunner.SendERC20OnEvm(account.EVMAddress(), 1000)
-		bitcoinRunner.WaitForTxReceiptOnEvm(txERC20Send)
-
-		// depositing the necessary tokens on ZetaChain
-		txEtherDeposit := bitcoinRunner.DepositEther()
-		txERC20Deposit := bitcoinRunner.DepositERC20()
-
-		bitcoinRunner.WaitForMinedCCTX(txEtherDeposit)
-		bitcoinRunner.WaitForMinedCCTX(txERC20Deposit)
-
-		bitcoinRunner.SetupBitcoinAccount(initBitcoinNetwork)
-		bitcoinRunner.DepositBTC()
-
-		// run bitcoin test
-		// Note: due to the extensive block generation in Bitcoin localnet, block header test is run first
-		// to make it faster to catch up with the latest block header
-		testsToRun, err := bitcoinRunner.GetE2ETestsToRunByName(
+		// run bitcoin tests
+		testsToRun, err := r.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
 			testNames...,
 		)
@@ -61,15 +122,11 @@ func bitcoinTestRoutine(
 			return fmt.Errorf("bitcoin tests failed: %v", err)
 		}
 
-		if err := bitcoinRunner.RunE2ETests(testsToRun); err != nil {
+		if err := r.RunE2ETests(testsToRun); err != nil {
 			return fmt.Errorf("bitcoin tests failed: %v", err)
 		}
 
-		if err := bitcoinRunner.CheckBtcTSSBalance(); err != nil {
-			return err
-		}
-
-		bitcoinRunner.Logger.Print("🍾 Bitcoin tests completed in %s", time.Since(startTime).String())
+		r.Logger.Print("🍾 bitcoin tests completed in %s", time.Since(startTime).String())
 
 		return err
 	}

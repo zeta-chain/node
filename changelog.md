@@ -8,7 +8,9 @@
 * [3124](https://github.com/zeta-chain/node/pull/3124) - integrate SPL deposits
 
 ### Tests
+
 * [3075](https://github.com/zeta-chain/node/pull/3075) - ton: withdraw concurrent, deposit & revert.
+* [3105](https://github.com/zeta-chain/node/pull/3105) - split Bitcoin E2E tests into two runners for deposit and withdraw
 
 ### Refactor
 * [3118](https://github.com/zeta-chain/node/pull/3118) - zetaclient: remove hsm signer
