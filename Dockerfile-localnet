@@ -67,7 +67,8 @@ COPY --from=latest-build /go/bin/zetacored /go/bin/zetaclientd /go/bin/zetaclien
 
 # Optional old version build (from source). This old build is used as the genesis version in the upgrade tests. 
 # Use --target latest-runtime to skip.
-FROM base-build AS old-build-source
+# you must have already built the latest image (which the Makefile does)
+FROM zetanode:latest AS old-build-source
 
 ARG OLD_VERSION
 RUN git clone https://github.com/zeta-chain/node.git
@@ -84,13 +85,12 @@ COPY --from=latest-build /go/bin/zetaclientd-supervisor /usr/local/bin
 
 # Optional old version build (from binary).
 # Use --target latest-runtime to skip.
-FROM base-runtime AS old-runtime
+# you must have already built the latest image (which the Makefile does)
+FROM zetanode:latest AS old-runtime
 
 ARG OLD_VERSION
 ARG BUILDARCH
 
-COPY --from=cosmovisor-build /go/bin/cosmovisor /usr/local/bin
-COPY --from=latest-build /go/bin/zetaclientd-supervisor /usr/local/bin
 RUN curl -Lo /usr/local/bin/zetacored ${OLD_VERSION}/zetacored-linux-${BUILDARCH} && \
     chmod 755 /usr/local/bin/zetacored && \
     curl -Lo /usr/local/bin/zetaclientd ${OLD_VERSION}/zetaclientd-linux-${BUILDARCH} && \

@@ -1,4 +1,4 @@
-package main
+package tss
 
 import (
 	"context"
@@ -19,20 +19,20 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/metrics"
-	mc "github.com/zeta-chain/node/zetaclient/tss"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// GenerateTSS generates a new TSS if keygen is set.
+// Generate generates a new TSS if keygen is set.
 // If a TSS was generated successfully in the past,and the keygen was successful, the function will return without doing anything.
 // If a keygen has been set the functions will wait for the correct block to arrive and generate a new TSS.
 // In case of a successful keygen a TSS success vote is broadcasted to zetacore and the newly generate TSS is tested. The generated keyshares are stored in the correct directory
 // In case of a failed keygen a TSS failed vote is broadcasted to zetacore.
-func GenerateTSS(
+func Generate(
 	ctx context.Context,
 	logger zerolog.Logger,
 	zetaCoreClient *zetacore.Client,
-	keygenTssServer *tss.TssServer) error {
+	keygenTssServer *tss.TssServer,
+) error {
 	keygenLogger := logger.With().Str("module", "keygen").Logger()
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
@@ -176,7 +176,7 @@ func TestTSS(pubkey string, tssServer tss.TssServer, logger zerolog.Logger) erro
 	keygenLogger := logger.With().Str("module", "test-keygen").Logger()
 	keygenLogger.Info().Msgf("KeyGen success ! Doing a Key-sign test")
 	// KeySign can fail even if TSS keygen is successful, just logging the error here to break out of outer loop and report TSS
-	err := mc.TestKeysign(pubkey, tssServer)
+	err := TestKeysign(pubkey, tssServer)
 	if err != nil {
 		return err
 	}
