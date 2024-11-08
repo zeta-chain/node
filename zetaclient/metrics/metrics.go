@@ -148,6 +148,12 @@ var (
 		},
 		[]string{"host"},
 	)
+
+	NumConnectedPeers = promauto.NewGauge(prometheus.GaugeOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "num_connected_peers",
+		Help:      "The number of connected peers (authenticated keygen peers)",
+	})
 )
 
 // NewMetrics creates a new Metrics instance

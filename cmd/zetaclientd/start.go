@@ -9,11 +9,14 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
+	ecdsakeygen "github.com/bnb-chain/tss-lib/ecdsa/keygen"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/p2p/protocol/ping"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -35,23 +38,12 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-var StartCmd = &cobra.Command{
-	Use:   "start",
-	Short: "Start ZetaClient Observer",
-	RunE:  start,
-}
+// todo revamp
+// https://github.com/zeta-chain/node/issues/3119
+// https://github.com/zeta-chain/node/issues/3112
+var preParams *ecdsakeygen.LocalPreParams
 
-func init() {
-	RootCmd.AddCommand(StartCmd)
-}
-
-func start(_ *cobra.Command, _ []string) error {
-	if err := setHomeDir(); err != nil {
-		return err
-	}
-
-	SetupConfigForTest()
-
+func Start(_ *cobra.Command, _ []string) error {
 	// Prompt for Hotkey, TSS key-share and relayer key passwords
 	titles := []string{"HotKey", "TSS", "Solana Relayer Key"}
 	passwords, err := zetaos.PromptPasswords(titles)
@@ -64,7 +56,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	//Load Config file given path
-	cfg, err := config.Load(rootArgs.zetaCoreHome)
+	cfg, err := config.Load(globalOpts.ZetacoreHome)
 	if err != nil {
 		return err
 	}
@@ -75,7 +67,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	// Wait until zetacore has started
-	if len(cfg.Peer) != 0 {
+	if cfg.Peer != "" {
 		if err := validatePeer(cfg.Peer); err != nil {
 			return errors.Wrap(err, "unable to validate peer")
 		}
@@ -102,10 +94,9 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// CreateZetacoreClient:  zetacore client is used for all communication to zetacore , which this client connects to.
 	// Zetacore accumulates votes , and provides a centralized source of truth for all clients
-	zetacoreClient, err := CreateZetacoreClient(cfg, hotkeyPass, masterLogger)
+	zetacoreClient, err := createZetacoreClient(cfg, hotkeyPass, masterLogger)
 	if err != nil {
-		startLogger.Error().Err(err).Msg("CreateZetacoreClient error")
-		return err
+		return errors.Wrap(err, "unable to create zetacore client")
 	}
 
 	// Wait until zetacore is ready to create blocks
@@ -143,16 +134,15 @@ func start(_ *cobra.Command, _ []string) error {
 	// This is to ensure that the user does not need to keep their operator key online , and can use a cold key to sign votes
 	signerAddress, err := zetacoreClient.GetKeys().GetAddress()
 	if err != nil {
-		startLogger.Error().Err(err).Msg("error getting signer address")
-		return err
+		return errors.Wrap(err, "error getting signer address")
 	}
-	CreateAuthzSigner(zetacoreClient.GetKeys().GetOperatorAddress().String(), signerAddress)
-	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
+
+	createAuthzSigner(zetacoreClient.GetKeys().GetOperatorAddress().String(), signerAddress)
+	startLogger.Debug().Msgf("createAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore
 	if err = zetacoreClient.UpdateAppContext(ctx, appContext, startLogger); err != nil {
-		startLogger.Error().Err(err).Msg("Error getting core parameters")
-		return err
+		return errors.Wrap(err, "unable to update app context")
 	}
 
 	startLogger.Info().Msgf("Config is updated from zetacore\n %s", cfg.StringMasked())
@@ -181,13 +171,6 @@ func start(_ *cobra.Command, _ []string) error {
 		log.Error().Err(err).Msg("peer address error")
 	}
 	initPreParams(cfg.PreParamsPath)
-	if cfg.P2PDiagnostic {
-		err := RunDiagnostics(startLogger, peers, hotkeyPk, cfg)
-		if err != nil {
-			startLogger.Error().Err(err).Msg("RunDiagnostics error")
-			return err
-		}
-	}
 
 	m, err := metrics.NewMetrics()
 	if err != nil {
@@ -235,14 +218,48 @@ func start(_ *cobra.Command, _ []string) error {
 		signalChannel <- syscall.SIGTERM
 	})
 
+	go func() {
+		for {
+			time.Sleep(30 * time.Second)
+			ps := server.GetKnownPeers()
+			metrics.NumConnectedPeers.Set(float64(len(ps)))
+			telemetryServer.SetConnectedPeers(ps)
+		}
+	}()
+	go func() {
+		host := server.GetP2PHost()
+		pingRTT := make(map[peer.ID]int64)
+		for {
+			var wg sync.WaitGroup
+			for _, p := range whitelistedPeers {
+				wg.Add(1)
+				go func(p peer.ID) {
+					defer wg.Done()
+					ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+					defer cancel()
+					result := <-ping.Ping(ctx, host, p)
+					if result.Error != nil {
+						masterLogger.Error().Err(result.Error).Msg("ping error")
+						pingRTT[p] = -1 // RTT -1 indicate ping error
+						return
+					}
+					pingRTT[p] = result.RTT.Nanoseconds()
+				}(p)
+			}
+			wg.Wait()
+			telemetryServer.SetPingRTT(pingRTT)
+			time.Sleep(30 * time.Second)
+		}
+	}()
+
 	// Generate a new TSS if keygen is set and add it into the tss server
 	// If TSS has already been generated, and keygen was successful ; we use the existing TSS
-	err = GenerateTSS(ctx, masterLogger, zetacoreClient, server)
+	err = mc.Generate(ctx, masterLogger, zetacoreClient, server)
 	if err != nil {
 		return err
 	}
 
-	tss, err := mc.NewTSS(
+	tss, err := mc.New(
 		ctx,
 		zetacoreClient,
 		tssHistoricalList,
@@ -254,7 +271,7 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	if cfg.TestTssKeysign {
-		err = TestTSS(tss.CurrentPubkey, *tss.Server, masterLogger)
+		err = mc.TestTSS(tss.CurrentPubkey, *tss.Server, masterLogger)
 		if err != nil {
 			startLogger.Error().Err(err).Msgf("TestTSS error : %s", tss.CurrentPubkey)
 		}

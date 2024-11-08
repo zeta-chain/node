@@ -1,4 +1,6 @@
 // Package tss provides the TSS signer functionalities for the zetaclient to sign transactions on external chains
+// TODO revamp the whole package
+// https://github.com/zeta-chain/node/issues/3119
 package tss
 
 import (
@@ -85,8 +87,8 @@ type TSS struct {
 	KeysignsTracker *ConcurrentKeysignsTracker
 }
 
-// NewTSS creates a new TSS instance which can be used to sign transactions
-func NewTSS(
+// New TSS constructor
+func New(
 	ctx context.Context,
 	client interfaces.ZetacoreClient,
 	tssHistoricalList []observertypes.TSS,
@@ -174,7 +176,6 @@ func SetupTSSServer(
 		bootstrapPeers,
 		6668,
 		privkey,
-		"MetaMetaOpenTheDoor",
 		tsspath,
 		thorcommon.TssConfig{
 			EnableMonitor:   enableMonitor,
