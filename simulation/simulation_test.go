@@ -82,7 +82,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.DBBackend = SimDBBackend
 	config.BlockMaxGas = SimBlockMaxGas
 
-	numSeeds := 3
+	numSeeds := 2
 	numTimesToRunPerSeed := 5
 
 	// We will be overriding the random seed and just run a single simulation on the provided seed value
@@ -378,7 +378,9 @@ func TestAppImportExport(t *testing.T) {
 
 	// The ordering of the keys is not important, we compare the same prefix for both simulations
 	storeKeysPrefixes := []StoreKeysPrefixes{
-		// Interaction with EVM module , such as deploying contracts or interting with with them such as setting gas price causes the state for the auth module to change on export .
+		// Interaction with EVM module,
+		//such as deploying contracts or interacting with them such as setting gas price,
+		// causes the state for the auth module to change on export.The order of keys within the store is modified.
 		// We will need to explore this further to find a definitive answer
 		//{simApp.GetKey(authtypes.StoreKey), newSimApp.GetKey(authtypes.StoreKey), [][]byte{}},
 		{

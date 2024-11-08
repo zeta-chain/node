@@ -61,6 +61,11 @@ func Bytes() []byte {
 	return []byte("sample")
 }
 
+func RandomBytes(r *rand.Rand) []byte {
+	s := StringRandom(r, 10)
+	return []byte(s)
+}
+
 // String returns a sample string
 func String() string {
 	return "sample"

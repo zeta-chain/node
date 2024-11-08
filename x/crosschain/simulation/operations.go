@@ -228,7 +228,7 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 				to = chain.ChainId
 			}
 		}
-		msg := sample.InboundVote(0, from, to)
+		msg := sample.InboundVoteSim(0, from, to, r)
 
 		// Pick a random observer to create the ballot
 		// If this returns and error it is likely that the entire observer set has been removed
@@ -239,6 +239,7 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 
 		txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
 		account := k.GetAuthKeeper().GetAccount(ctx, simAccount.Address)
+		//spendable := k.GetBankKeeper().SpendableCoins(ctx, account.GetAddress())
 		firstMsg := msg
 		firstMsg.Creator = firstVoter
 
@@ -409,7 +410,6 @@ func GetRandomAccountAndObserver(
 	}
 
 	randomObserver := GetRandomObserver(r, observers.ObserverList)
-
 	simAccount, err := GetObserverAccount(randomObserver, accounts)
 	if err != nil {
 		return simtypes.Account{}, "", err

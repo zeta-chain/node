@@ -54,9 +54,9 @@ func WeightedOperations(
 func SimulateMsgDeploySystemContracts(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
-		if DeployedSystemContracts {
-			return simtypes.OperationMsg{}, nil, nil
-		}
+		//if DeployedSystemContracts {
+		//	return simtypes.OperationMsg{}, nil, nil
+		//}
 
 		policies, found := k.GetAuthorityKeeper().GetPolicies(ctx)
 		if !found {

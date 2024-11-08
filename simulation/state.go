@@ -22,7 +22,6 @@ import (
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	zetaapp "github.com/zeta-chain/node/app"
-	"github.com/zeta-chain/node/testutil/sample"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
@@ -167,7 +166,13 @@ func AppStateFn(
 		observerState.Observers.ObserverList = observers
 		observerState.CrosschainFlags.IsInboundEnabled = true
 		observerState.CrosschainFlags.IsOutboundEnabled = true
-		tss := sample.Tss()
+		tss := observertypes.TSS{
+			TssPubkey:           "cosmospub1addwnpepq27ldhn924mtwylm2r0vja3fcv3nv6gme0e2jnr96l0fkkqw6guscgqfsk0",
+			KeyGenZetaHeight:    100,
+			FinalizedZetaHeight: 110,
+			TssParticipantList:  []string{},
+			OperatorAddressList: observers,
+		}
 		observerState.Tss = &tss
 
 		// Pick a random account to be the admin of all policies

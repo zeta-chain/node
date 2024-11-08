@@ -27,7 +27,7 @@ const (
 	// to ensure that it is present in the block more number of times than any operation that changes the validator set
 
 	// Arrived at this number based on the weights used in the cosmos sdk staking module and through some trial and error
-	DefaultWeightMsgTypeMsgEnableCCTX = 650
+	DefaultWeightMsgTypeMsgEnableCCTX = 2650
 )
 
 // WeightedOperations for observer module
