@@ -55,6 +55,7 @@ func startV2Tests(eg *errgroup.Group, conf config.Config, deployerRunner *runner
 			e2etests.TestV2ETHDepositAndCallRevertWithCallName,
 			e2etests.TestV2ETHWithdrawAndCallRevertName,
 			e2etests.TestV2ETHWithdrawAndCallRevertWithCallName,
+			e2etests.TestDepositAndCallOutOfGasName,
 		),
 	)
 

@@ -149,6 +149,7 @@ const (
 	TestV2ETHWithdrawAndCallThroughContractName  = "v2_eth_withdraw_and_call_through_contract"
 	TestV2ETHWithdrawAndCallRevertName           = "v2_eth_withdraw_and_call_revert"
 	TestV2ETHWithdrawAndCallRevertWithCallName   = "v2_eth_withdraw_and_call_revert_with_call"
+	TestDepositAndCallOutOfGasName               = "deposit_and_call_out_of_gas"
 	TestV2ERC20DepositName                       = "v2_erc20_deposit"
 	TestV2ERC20DepositAndCallName                = "v2_erc20_deposit_and_call"
 	TestV2ERC20DepositAndCallNoMessageName       = "v2_erc20_deposit_and_call_no_message"
@@ -895,6 +896,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
 		TestV2ETHWithdrawAndCallRevertWithCall,
+	),
+	runner.NewE2ETest(
+		TestDepositAndCallOutOfGasName,
+		"deposit Ether into ZEVM and call a contract that runs out of gas",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000"},
+		},
+		TestDepositAndCallOutOfGas,
 	),
 	runner.NewE2ETest(
 		TestV2ERC20DepositName,
