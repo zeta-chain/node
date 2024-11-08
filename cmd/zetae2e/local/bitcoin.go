@@ -25,7 +25,7 @@ func initBitcoinTestRunners(
 	// initialize runner for deposit tests
 	// deposit tests need Bitcoin node wallet to handle UTXOs
 	account := conf.AdditionalAccounts.UserBitcoinDeposit
-	runnerDeposit := initRunner(
+	runnerDeposit := initBitcoinRunner(
 		"btc_deposit",
 		account,
 		conf,
@@ -39,7 +39,7 @@ func initBitcoinTestRunners(
 	// initialize runner for withdraw tests
 	// withdraw tests DON'T use Bitcoin node wallet
 	account = conf.AdditionalAccounts.UserBitcoinWithdraw
-	runnerWithdraw := initRunner(
+	runnerWithdraw := initBitcoinRunner(
 		"btc_withdraw",
 		account,
 		conf,
@@ -64,14 +64,14 @@ func initBitcoinTestRunners(
 	}
 
 	// create test routines
-	routineDeposit := createTestRoutine(runnerDeposit, depositTests)
-	routineWithdraw := createTestRoutine(runnerWithdraw, withdrawTests)
+	routineDeposit := createBitcoinTestRoutine(runnerDeposit, depositTests)
+	routineWithdraw := createBitcoinTestRoutine(runnerWithdraw, withdrawTests)
 
 	return routineDeposit, routineWithdraw
 }
 
-// initRunner initializes the runner for given test name and account
-func initRunner(
+// initBitcoinRunner initializes the Bitcoin runner for given test name and account
+func initBitcoinRunner(
 	name string,
 	account config.Account,
 	conf config.Config,
@@ -107,8 +107,8 @@ func initRunner(
 	return runner
 }
 
-// createTestRoutine creates a test routine for given test names
-func createTestRoutine(r *runner.E2ERunner, testNames []string) func() error {
+// createBitcoinTestRoutine creates a test routine for given test names
+func createBitcoinTestRoutine(r *runner.E2ERunner, testNames []string) func() error {
 	return func() (err error) {
 		r.Logger.Print("🏃 starting bitcoin tests")
 		startTime := time.Now()
