@@ -20,6 +20,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	"github.com/zeta-chain/node/testutil/sample"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 
 	zetaapp "github.com/zeta-chain/node/app"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
@@ -203,12 +205,27 @@ func AppStateFn(
 		}
 		authorityState.Policies = policies
 
+		//Update the fungible genesis state
+		fungibleStateBz, ok := rawState[fungibletypes.ModuleName]
+		if !ok {
+			panic("fungible genesis state is missing")
+		}
+		fungibleState := new(fungibletypes.GenesisState)
+		cdc.MustUnmarshalJSON(fungibleStateBz, fungibleState)
+		// TOODO generate ethereum address from r
+		fungibleState.SystemContract = &fungibletypes.SystemContract{
+			SystemContract: sample.EthAddressRandom(r).String(),
+			ConnectorZevm:  sample.EthAddressRandom(r).String(),
+			Gateway:        sample.EthAddressRandom(r).String(),
+		}
+
 		// change appState back
 		rawState[evmtypes.ModuleName] = cdc.MustMarshalJSON(evmState)
 		rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
 		rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
 		rawState[observertypes.ModuleName] = cdc.MustMarshalJSON(observerState)
 		rawState[authoritytypes.ModuleName] = cdc.MustMarshalJSON(authorityState)
+		rawState[fungibletypes.ModuleName] = cdc.MustMarshalJSON(fungibleState)
 
 		// replace appstate
 		appState, err = json.Marshal(rawState)

@@ -24,7 +24,7 @@ import (
 const (
 	// #nosec G101 not a hardcoded credential
 	OpWeightMsgDeploySystemContracts      = "op_weight_msg_deploy_system_contracts"
-	DefaultWeightMsgDeploySystemContracts = 10
+	DefaultWeightMsgDeploySystemContracts = 5
 )
 
 // DeployedSystemContracts Use a flag to ensure that the system contracts are deployed only once

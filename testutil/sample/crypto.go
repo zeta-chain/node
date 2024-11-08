@@ -60,6 +60,11 @@ func EthAddress() ethcommon.Address {
 	return ethcommon.BytesToAddress(sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address()).Bytes())
 }
 
+func EthAddressRandom(r *rand.Rand) ethcommon.Address {
+	return ethcommon.BytesToAddress(sdk.AccAddress(PubKey(r).Address()).Bytes())
+
+}
+
 // BtcAddressP2WPKH returns a sample btc P2WPKH address
 func BtcAddressP2WPKH(t *testing.T, net *chaincfg.Params) string {
 	privateKey, err := btcec.NewPrivateKey()
