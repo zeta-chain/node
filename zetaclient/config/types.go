@@ -23,8 +23,10 @@ const (
 	// KeyringBackendFile is the file Cosmos keyring backend
 	KeyringBackendFile KeyringBackend = "file"
 
+	DefaultRelayerDir = "relayer-keys"
+
 	// DefaultRelayerKeyPath is the default path that relayer keys are stored
-	DefaultRelayerKeyPath = "~/.zetacored/relayer-keys"
+	DefaultRelayerKeyPath = "~/.zetacored/" + DefaultRelayerDir
 )
 
 // ClientConfiguration is a subset of zetaclient config that is used by zetacore client

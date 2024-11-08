@@ -26,11 +26,9 @@ func (r *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) error {
 	}
 	e2eTest.E2ETest(r, args)
 
-	//check supplies
+	// check zrc20 balance vs. supply
 	if checkAccounting {
-		if err := r.CheckZRC20ReserveAndSupply(); err != nil {
-			return err
-		}
+		r.CheckZRC20BalanceAndSupply()
 	}
 
 	r.Logger.Print("✅ completed in %s - %s", time.Since(startTime), e2eTest.Description)

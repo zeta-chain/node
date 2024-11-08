@@ -2,7 +2,6 @@ package zetacore
 
 import (
 	"context"
-	"encoding/hex"
 	"errors"
 	"net"
 	"testing"
@@ -16,7 +15,6 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -84,15 +82,7 @@ func TestBroadcast(t *testing.T) {
 			withTendermint(mocks.NewSDKClientWithErr(t, nil, 0)),
 		)
 
-		blockHash, err := hex.DecodeString(ethBlockHash)
-		require.NoError(t, err)
-		msg := observerTypes.NewMsgVoteBlockHeader(
-			address.String(),
-			chains.Ethereum.ChainId,
-			blockHash,
-			18495266,
-			getHeaderData(t),
-		)
+		msg := crosschaintypes.NewMsgVoteGasPrice(address.String(), chains.Ethereum.ChainId, 10000, 1000, 1)
 		authzMsg, authzSigner, err := WrapMessageWithAuthz(msg)
 		require.NoError(t, err)
 
@@ -108,15 +98,7 @@ func TestBroadcast(t *testing.T) {
 			),
 		)
 
-		blockHash, err := hex.DecodeString(ethBlockHash)
-		require.NoError(t, err)
-		msg := observerTypes.NewMsgVoteBlockHeader(
-			address.String(),
-			chains.Ethereum.ChainId,
-			blockHash,
-			18495266,
-			getHeaderData(t),
-		)
+		msg := crosschaintypes.NewMsgVoteGasPrice(address.String(), chains.Ethereum.ChainId, 10000, 1000, 1)
 		authzMsg, authzSigner, err := WrapMessageWithAuthz(msg)
 		require.NoError(t, err)
 

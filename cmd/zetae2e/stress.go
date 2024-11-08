@@ -22,6 +22,7 @@ import (
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/cmd/zetae2e/local"
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/testutil"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -142,7 +143,10 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	case "LOCAL":
 		// deploy and set zevm contract
 		e2eTest.SetZEVMSystemContracts()
-		e2eTest.SetZEVMZRC20s()
+		e2eTest.SetZEVMZRC20s(txserver.ZRC20Deployment{
+			ERC20Addr: e2eTest.ERC20Addr,
+			SPLAddr:   nil, // no stress tests for solana atm
+		})
 
 		// deposit on ZetaChain
 		e2eTest.DepositEther()

@@ -61,6 +61,8 @@ const (
 	TestSolanaDepositAndCallRefundName = "solana_deposit_and_call_refund"
 	TestSolanaDepositRestrictedName    = "solana_deposit_restricted"
 	TestSolanaWithdrawRestrictedName   = "solana_withdraw_restricted"
+	TestSPLDepositName                 = "spl_deposit"
+	TestSPLDepositAndCallName          = "spl_deposit_and_call"
 
 	/**
 	 * TON tests
@@ -149,6 +151,7 @@ const (
 	TestV2ETHWithdrawAndCallThroughContractName  = "v2_eth_withdraw_and_call_through_contract"
 	TestV2ETHWithdrawAndCallRevertName           = "v2_eth_withdraw_and_call_revert"
 	TestV2ETHWithdrawAndCallRevertWithCallName   = "v2_eth_withdraw_and_call_revert_with_call"
+	TestDepositAndCallOutOfGasName               = "deposit_and_call_out_of_gas"
 	TestV2ERC20DepositName                       = "v2_erc20_deposit"
 	TestV2ERC20DepositAndCallName                = "v2_erc20_deposit_and_call"
 	TestV2ERC20DepositAndCallNoMessageName       = "v2_erc20_deposit_and_call_no_message"
@@ -461,6 +464,22 @@ var AllE2ETests = []runner.E2ETest{
 		"whitelist SPL",
 		[]runner.ArgDefinition{},
 		TestSolanaWhitelistSPL,
+	),
+	runner.NewE2ETest(
+		TestSPLDepositName,
+		"deposit SPL into ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount of spl tokens", DefaultValue: "500000"},
+		},
+		TestSPLDeposit,
+	),
+	runner.NewE2ETest(
+		TestSPLDepositAndCallName,
+		"deposit SPL into ZEVM and call",
+		[]runner.ArgDefinition{
+			{Description: "amount of spl tokens", DefaultValue: "500000"},
+		},
+		TestSPLDepositAndCall,
 	),
 	/*
 	 TON tests
@@ -897,6 +916,14 @@ var AllE2ETests = []runner.E2ETest{
 		TestV2ETHWithdrawAndCallRevertWithCall,
 	),
 	runner.NewE2ETest(
+		TestDepositAndCallOutOfGasName,
+		"deposit Ether into ZEVM and call a contract that runs out of gas",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000"},
+		},
+		TestDepositAndCallOutOfGas,
+	),
+	runner.NewE2ETest(
 		TestV2ERC20DepositName,
 		"deposit ERC20 into ZEVM using V2 contract",
 		[]runner.ArgDefinition{
@@ -955,13 +982,17 @@ var AllE2ETests = []runner.E2ETest{
 	runner.NewE2ETest(
 		TestV2ERC20WithdrawAndCallName,
 		"withdraw ERC20 from ZEVM and authenticated call a contract using V2 contract",
-		[]runner.ArgDefinition{},
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "1000"},
+		},
 		TestV2ERC20WithdrawAndCall,
 	),
 	runner.NewE2ETest(
 		TestV2ERC20WithdrawAndCallNoMessageName,
 		"withdraw ERC20 from ZEVM and authenticated call a contract using V2 contract with no message",
-		[]runner.ArgDefinition{},
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "1000"},
+		},
 		TestV2ERC20WithdrawAndCallNoMessage,
 	),
 	runner.NewE2ETest(

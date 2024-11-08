@@ -61,20 +61,21 @@ type Account struct {
 
 // AdditionalAccounts are extra accounts required to run specific tests
 type AdditionalAccounts struct {
-	UserERC20         Account `yaml:"user_erc20"`
-	UserZetaTest      Account `yaml:"user_zeta_test"`
-	UserZEVMMPTest    Account `yaml:"user_zevm_mp_test"`
-	UserBitcoin       Account `yaml:"user_bitcoin"`
-	UserSolana        Account `yaml:"user_solana"`
-	UserEther         Account `yaml:"user_ether"`
-	UserMisc          Account `yaml:"user_misc"`
-	UserAdmin         Account `yaml:"user_admin"`
-	UserMigration     Account `yaml:"user_migration"` // used for TSS migration, TODO: rename (https://github.com/zeta-chain/node/issues/2780)
-	UserPrecompile    Account `yaml:"user_precompile"`
-	UserV2Ether       Account `yaml:"user_v2_ether"`
-	UserV2ERC20       Account `yaml:"user_v2_erc20"`
-	UserV2EtherRevert Account `yaml:"user_v2_ether_revert"`
-	UserV2ERC20Revert Account `yaml:"user_v2_erc20_revert"`
+	UserERC20           Account `yaml:"user_erc20"`
+	UserZetaTest        Account `yaml:"user_zeta_test"`
+	UserZEVMMPTest      Account `yaml:"user_zevm_mp_test"`
+	UserBitcoinDeposit  Account `yaml:"user_bitcoin_deposit"`
+	UserBitcoinWithdraw Account `yaml:"user_bitcoin_withdraw"`
+	UserSolana          Account `yaml:"user_solana"`
+	UserEther           Account `yaml:"user_ether"`
+	UserMisc            Account `yaml:"user_misc"`
+	UserAdmin           Account `yaml:"user_admin"`
+	UserMigration       Account `yaml:"user_migration"` // used for TSS migration, TODO: rename (https://github.com/zeta-chain/node/issues/2780)
+	UserPrecompile      Account `yaml:"user_precompile"`
+	UserV2Ether         Account `yaml:"user_v2_ether"`
+	UserV2ERC20         Account `yaml:"user_v2_erc20"`
+	UserV2EtherRevert   Account `yaml:"user_v2_ether_revert"`
+	UserV2ERC20Revert   Account `yaml:"user_v2_erc20_revert"`
 }
 
 type PolicyAccounts struct {
@@ -117,9 +118,10 @@ type Contracts struct {
 	Solana Solana `yaml:"solana"`
 }
 
-// Solana contains the addresses of predeployed contracts on the Solana chain
+// Solana contains the addresses of predeployed contracts and accounts on the Solana chain
 type Solana struct {
-	GatewayProgramID string `yaml:"gateway_program_id"`
+	GatewayProgramID string             `yaml:"gateway_program_id"`
+	SPLAddr          DoubleQuotedString `yaml:"spl"`
 }
 
 // EVM contains the addresses of predeployed contracts on the EVM chain
@@ -141,6 +143,7 @@ type ZEVM struct {
 	ERC20ZRC20Addr     DoubleQuotedString `yaml:"erc20_zrc20"`
 	BTCZRC20Addr       DoubleQuotedString `yaml:"btc_zrc20"`
 	SOLZRC20Addr       DoubleQuotedString `yaml:"sol_zrc20"`
+	SPLZRC20Addr       DoubleQuotedString `yaml:"spl_zrc20"`
 	TONZRC20Addr       DoubleQuotedString `yaml:"ton_zrc20"`
 	UniswapFactoryAddr DoubleQuotedString `yaml:"uniswap_factory"`
 	UniswapRouterAddr  DoubleQuotedString `yaml:"uniswap_router"`
@@ -233,7 +236,8 @@ func (a AdditionalAccounts) AsSlice() []Account {
 		a.UserERC20,
 		a.UserZetaTest,
 		a.UserZEVMMPTest,
-		a.UserBitcoin,
+		a.UserBitcoinDeposit,
+		a.UserBitcoinWithdraw,
 		a.UserSolana,
 		a.UserEther,
 		a.UserMisc,
@@ -312,7 +316,11 @@ func (c *Config) GenerateKeys() error {
 	if err != nil {
 		return err
 	}
-	c.AdditionalAccounts.UserBitcoin, err = generateAccount()
+	c.AdditionalAccounts.UserBitcoinDeposit, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserBitcoinWithdraw, err = generateAccount()
 	if err != nil {
 		return err
 	}

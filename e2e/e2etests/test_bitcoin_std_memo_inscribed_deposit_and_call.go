@@ -14,10 +14,6 @@ import (
 )
 
 func TestBitcoinStdMemoInscribedDepositAndCall(r *runner.E2ERunner, args []string) {
-	// ARRANGE
-	// Given BTC address
-	r.SetBtcAddress(r.Name, false)
-
 	// Start mining blocks
 	stop := r.MineBlocksIfLocalBitcoin()
 	defer stop()

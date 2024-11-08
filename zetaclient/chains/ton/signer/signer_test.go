@@ -246,10 +246,7 @@ func setupTrackersBag(ts *testSuite) {
 	}
 
 	ts.zetacore.On(
-		"AddOutboundTracker",
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
+		"PostOutboundTracker",
 		mock.Anything,
 		mock.Anything,
 		mock.Anything,

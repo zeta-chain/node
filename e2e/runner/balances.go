@@ -107,16 +107,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 
 // GetBitcoinBalance returns the spendable BTC balance of the BTC address
 func (r *E2ERunner) GetBitcoinBalance() (string, error) {
-	addr, _, err := r.GetBtcAddress()
-	if err != nil {
-		return "", fmt.Errorf("failed to get BTC address: %w", err)
-	}
-
-	address, err := btcutil.DecodeAddress(addr, r.BitcoinParams)
-	if err != nil {
-		return "", fmt.Errorf("failed to decode BTC address: %w", err)
-	}
-
+	address, _ := r.GetBtcAddress()
 	total, err := r.GetBitcoinBalanceByAddress(address)
 	if err != nil {
 		return "", err

@@ -208,9 +208,7 @@ func (ob *Observer) addOutboundTracker(ctx context.Context, tx *toncontracts.Tra
 	)
 
 	// note it has a check for noop
-	_, err = ob.
-		ZetacoreClient().
-		AddOutboundTracker(ctx, chainID, nonce, hash, nil, "", 0)
+	_, err = ob.ZetacoreClient().PostOutboundTracker(ctx, chainID, nonce, hash)
 
 	return err
 }
