@@ -167,7 +167,7 @@ func (r *E2ERunner) SetZEVMSystemContracts() {
 }
 
 // SetZEVMZRC20s set ZRC20 for the ZEVM
-func (r *E2ERunner) SetZEVMZRC20s() {
+func (r *E2ERunner) SetZEVMZRC20s(zrc20Deployment txserver.ZRC20Deployment) {
 	r.Logger.Print("⚙️ deploying ZRC20s on ZEVM")
 	startTime := time.Now()
 	defer func() {
@@ -175,24 +175,23 @@ func (r *E2ERunner) SetZEVMZRC20s() {
 	}()
 
 	// deploy system contracts and ZRC20 contracts on ZetaChain
-	erc20zrc20Addr, splzrc20Addr, err := r.ZetaTxServer.DeployZRC20s(
-		e2eutils.OperationalPolicyName,
-		e2eutils.AdminPolicyName,
-		r.ERC20Addr.Hex(),
-		r.SPLAddr.String(),
+	deployedZRC20Addresses, err := r.ZetaTxServer.DeployZRC20s(
+		zrc20Deployment,
 		r.skipChainOperations,
 	)
 	require.NoError(r, err)
 
 	// Set ERC20ZRC20Addr
-	r.ERC20ZRC20Addr = ethcommon.HexToAddress(erc20zrc20Addr)
+	r.ERC20ZRC20Addr = deployedZRC20Addresses.ERC20ZRC20Addr
 	r.ERC20ZRC20, err = zrc20.NewZRC20(r.ERC20ZRC20Addr, r.ZEVMClient)
 	require.NoError(r, err)
 
-	// Set SPLZRC20Addr
-	r.SPLZRC20Addr = ethcommon.HexToAddress(splzrc20Addr)
-	r.SPLZRC20, err = zrc20.NewZRC20(r.SPLZRC20Addr, r.ZEVMClient)
-	require.NoError(r, err)
+	// Set SPLZRC20Addr if set
+	if deployedZRC20Addresses.SPLZRC20Addr != (ethcommon.Address{}) {
+		r.SPLZRC20Addr = deployedZRC20Addresses.SPLZRC20Addr
+		r.SPLZRC20, err = zrc20.NewZRC20(r.SPLZRC20Addr, r.ZEVMClient)
+		require.NoError(r, err)
+	}
 
 	// set ZRC20 contracts
 	r.SetupETHZRC20()

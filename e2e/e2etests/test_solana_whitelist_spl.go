@@ -20,7 +20,7 @@ func TestSolanaWhitelistSPL(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	// deploy SPL token, but don't whitelist in gateway
-	spl := r.DeploySPL(&privkey, false, uint64(1_000_000))
+	spl := r.DeploySPL(&privkey, false)
 
 	// check that whitelist entry doesn't exist for this spl
 	seed := [][]byte{[]byte("whitelist"), spl.PublicKey().Bytes()}

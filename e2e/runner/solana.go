@@ -216,7 +216,7 @@ func (r *E2ERunner) SPLDepositAndCall(
 	return sig
 }
 
-func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool, amountToMint uint64) *solana.Wallet {
+func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *solana.Wallet {
 	lamport, err := r.SolanaClient.GetMinimumBalanceForRentExemption(r.Ctx, token.MINT_SIZE, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 
@@ -250,7 +250,7 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool, amo
 	// minting some tokens to deployer for testing
 	ata := r.FindOrCreateAssociatedTokenAccount(*privateKey, privateKey.PublicKey(), tokenAccount.PublicKey())
 
-	mintToInstruction := token.NewMintToInstruction(amountToMint, tokenAccount.PublicKey(), ata, privateKey.PublicKey(), []solana.PublicKey{}).
+	mintToInstruction := token.NewMintToInstruction(uint64(1_000_000), tokenAccount.PublicKey(), ata, privateKey.PublicKey(), []solana.PublicKey{}).
 		Build()
 	signedTx = r.CreateSignedTransaction(
 		[]solana.Instruction{mintToInstruction},

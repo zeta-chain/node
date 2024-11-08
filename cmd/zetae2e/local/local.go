@@ -227,7 +227,15 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// NOTE: v2 (gateway) setup called here because system contract needs to be set first, then gateway, then zrc20
 		deployerRunner.SetZEVMContractsV2()
 
-		deployerRunner.SetZEVMZRC20s()
+		zrc20Deployment := txserver.ZRC20Deployment{
+			ERC20Addr: deployerRunner.ERC20Addr,
+			SPLAddr:   nil,
+		}
+		if testSolana {
+			zrc20Deployment.SPLAddr = deployerRunner.SPLAddr.ToPointer()
+		}
+
+		deployerRunner.SetZEVMZRC20s(zrc20Deployment)
 
 		// Update the chain params to use v2 contract for ERC20Custody
 		// TODO: this function should be removed and the chain params should be directly set to use v2 contract
