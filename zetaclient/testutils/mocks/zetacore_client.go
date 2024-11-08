@@ -12,8 +12,6 @@ import (
 
 	keysinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 
-	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
-
 	math "cosmossdk.io/math"
 
 	mock "github.com/stretchr/testify/mock"
@@ -157,36 +155,6 @@ func (_m *ZetacoreClient) GetBTCTSSAddress(ctx context.Context, chainID int64) (
 		r0 = rf(ctx, chainID)
 	} else {
 		r0 = ret.Get(0).(string)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
-		r1 = rf(ctx, chainID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetBlockHeaderChainState provides a mock function with given fields: ctx, chainID
-func (_m *ZetacoreClient) GetBlockHeaderChainState(ctx context.Context, chainID int64) (*lightclienttypes.ChainState, error) {
-	ret := _m.Called(ctx, chainID)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetBlockHeaderChainState")
-	}
-
-	var r0 *lightclienttypes.ChainState
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64) (*lightclienttypes.ChainState, error)); ok {
-		return rf(ctx, chainID)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64) *lightclienttypes.ChainState); ok {
-		r0 = rf(ctx, chainID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*lightclienttypes.ChainState)
-		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
