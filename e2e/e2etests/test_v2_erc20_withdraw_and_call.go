@@ -12,16 +12,17 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, _ []string) {
+func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, args []string) {
+	require.Len(r, args, 1)
+
 	previousGasLimit := r.ZEVMAuth.GasLimit
 	r.ZEVMAuth.GasLimit = 10000000
 	defer func() {
 		r.ZEVMAuth.GasLimit = previousGasLimit
 	}()
 
-	// called with fixed amount without arg since onCall implementation is for TestDappV2 is simple and generic
-	// without decoding the payload and amount handling for erc20, purpose of test is to verify correct sender and payload are used
-	amount := big.NewInt(10000)
+	amount, ok := big.NewInt(0).SetString(args[0], 10)
+	require.True(r, ok, "Invalid amount specified for TestV2ERC20WithdrawAndCall")
 
 	payload := randomPayload(r)
 

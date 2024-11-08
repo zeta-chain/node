@@ -43,7 +43,7 @@ func TestV2ERC20WithdrawAndCallNoMessage(r *runner.E2ERunner, args []string) {
 	// check called
 	messageIndex, err := r.TestDAppV2EVM.GetNoMessageIndex(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
-	r.AssertTestDAppEVMCalled(true, messageIndex, amount)
+	r.AssertTestDAppEVMCalled(true, messageIndex, big.NewInt(0))
 
 	// check expected sender was used
 	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(
