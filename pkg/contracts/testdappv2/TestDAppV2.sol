@@ -15,8 +15,15 @@ interface IGatewayZEVM {
         uint256 amount,
         address zrc20,
         RevertOptions calldata revertOptions
-    )
-    external;
+    ) external;
+
+    function call(
+        bytes memory receiver,
+        address zrc20,
+        bytes calldata message,
+        uint256 gasLimit,
+        RevertOptions calldata revertOptions
+    ) external;
 }
 
 /// @title IZRC20
@@ -129,11 +136,26 @@ contract TestDAppV2 {
             IZRC20(zrc20).approve(msg.sender, amount);
 
             // caller is the gateway
-            IGatewayZEVM(msg.sender).withdraw(
+//            IGatewayZEVM(msg.sender).withdraw(
+//                abi.encode(context.sender),
+//                withdrawAmount,
+//                zrc20,
+//                RevertOptions(address(0), false, address(0), "", 0)
+//            );
+            RevertOptions memory revertOptions = RevertOptions(
+                msg.sender, // revert address
+                false, // callOnRevert
+                msg.sender, // abortAddress
+                bytes("revert message"),
+                uint256(100000) // onRevertGasLimit
+            );
+
+            IGatewayZEVM(msg.sender).call(
                 abi.encode(context.sender),
-                withdrawAmount,
                 zrc20,
-                RevertOptions(address(0), false, address(0), "", 0)
+                message,
+                100000,
+                revertOptions
             );
         } else {
             string memory messageStr = message.length == 0 ? getNoMessageIndex(context.sender) : string(message);
