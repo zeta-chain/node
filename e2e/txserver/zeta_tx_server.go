@@ -537,16 +537,21 @@ func (zts ZetaTxServer) DeployZRC20s(
 	}
 
 	// find spl zrc20
-	splzrc20, ok := lo.Find(deployedEvents, func(ev *fungibletypes.EventZRC20Deployed) bool {
-		return ev.ChainId == chains.SolanaLocalnet.ChainId && ev.CoinType == coin.CoinType_ERC20
-	})
-	if !ok {
-		return nil, fmt.Errorf("unable to find spl zrc20")
+	splzrc20Addr := common.Address{}
+	if zrc20Deployment.SPLAddr != nil {
+		splzrc20, ok := lo.Find(deployedEvents, func(ev *fungibletypes.EventZRC20Deployed) bool {
+			return ev.ChainId == chains.SolanaLocalnet.ChainId && ev.CoinType == coin.CoinType_ERC20
+		})
+		if !ok {
+			return nil, fmt.Errorf("unable to find spl zrc20")
+		}
+
+		splzrc20Addr = common.HexToAddress(splzrc20.Contract)
 	}
 
 	return &ZRC20Addresses{
 		ERC20ZRC20Addr: common.HexToAddress(erc20zrc20.Contract),
-		SPLZRC20Addr:   common.HexToAddress(splzrc20.Contract),
+		SPLZRC20Addr:   splzrc20Addr,
 	}, nil
 }
 
