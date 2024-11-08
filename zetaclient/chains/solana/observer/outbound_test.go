@@ -234,7 +234,7 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 		// load and unmarshal archived transaction
 		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
 
-		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_ERC20)
+		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Zeta)
 		require.ErrorContains(t, err, "unsupported outbound coin type")
 		require.Nil(t, inst)
 	})
