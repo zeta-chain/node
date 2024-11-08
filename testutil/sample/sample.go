@@ -62,9 +62,9 @@ func Bytes() []byte {
 }
 
 func RandomBytes(r *rand.Rand) []byte {
-    b := make([]byte, 10)
-    _, _ = r.Read(b)
-    return b
+	b := make([]byte, 10)
+	_, _ = r.Read(b)
+	return b
 }
 
 // String returns a sample string

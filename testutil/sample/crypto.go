@@ -62,7 +62,6 @@ func EthAddress() ethcommon.Address {
 
 func EthAddressRandom(r *rand.Rand) ethcommon.Address {
 	return ethcommon.BytesToAddress(sdk.AccAddress(PubKey(r).Address()).Bytes())
-
 }
 
 // BtcAddressP2WPKH returns a sample btc P2WPKH address
