@@ -132,18 +132,15 @@ func (oc *Orchestrator) Start(ctx context.Context) error {
 
 	oc.logger.Info().Str("signer", signerAddress.String()).Msg("Starting orchestrator")
 
-	// start cctx scheduler
 	bg.Work(ctx, oc.runScheduler, bg.WithName("runScheduler"), bg.WithLogger(oc.logger.Logger))
 	bg.Work(ctx, oc.runObserverSignerSync, bg.WithName("runObserverSignerSync"), bg.WithLogger(oc.logger.Logger))
-
-	shutdownOrchestrator := func() {
-		// now stop orchestrator and all observers
-		close(oc.stop)
-	}
-
-	oc.zetacoreClient.OnBeforeStop(shutdownOrchestrator)
+	bg.Work(ctx, oc.runAppContextUpdater, bg.WithName("runAppContextUpdater"), bg.WithLogger(oc.logger.Logger))
 
 	return nil
+}
+
+func (oc *Orchestrator) Stop() {
+	close(oc.stop)
 }
 
 // returns signer with updated chain parameters.
@@ -780,7 +777,13 @@ func (oc *Orchestrator) runObserverSignerSync(ctx context.Context) error {
 		return nil
 	}
 
-	return ticker.Run(ctx, cadence, task, ticker.WithLogger(oc.logger.Logger, "SyncObserverSigner"))
+	return ticker.Run(
+		ctx,
+		cadence,
+		task,
+		ticker.WithLogger(oc.logger.Logger, "SyncObserverSigner"),
+		ticker.WithStopChan(oc.stop),
+	)
 }
 
 // syncs and provisions observers & signers.

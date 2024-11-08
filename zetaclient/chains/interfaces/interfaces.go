@@ -11,6 +11,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -112,6 +113,10 @@ type ZetacoreClient interface {
 	GetLogger() *zerolog.Logger
 	GetKeys() keyinterfaces.ObserverKeys
 
+	GetSupportedChains(ctx context.Context) ([]chains.Chain, error)
+	GetAdditionalChains(ctx context.Context) ([]chains.Chain, error)
+	GetChainParams(ctx context.Context) ([]*observertypes.ChainParams, error)
+
 	GetKeyGen(ctx context.Context) (observertypes.Keygen, error)
 	GetTSS(ctx context.Context) (observertypes.TSS, error)
 	GetTSSHistory(ctx context.Context) ([]observertypes.TSS, error)
@@ -141,6 +146,8 @@ type ZetacoreClient interface {
 	GetZetaHotKeyBalance(ctx context.Context) (sdkmath.Int, error)
 	GetInboundTrackersForChain(ctx context.Context, chainID int64) ([]crosschaintypes.InboundTracker, error)
 
+	GetUpgradePlan(ctx context.Context) (upgradetypes.Plan, error)
+
 	// todo(revamp): refactor input to struct
 	AddOutboundTracker(
 		ctx context.Context,
@@ -151,9 +158,6 @@ type ZetacoreClient interface {
 		blockHash string,
 		txIndex int64,
 	) (string, error)
-
-	Stop()
-	OnBeforeStop(callback func())
 }
 
 // BTCRPCClient is the interface for BTC RPC client

@@ -24,6 +24,8 @@ import (
 
 	types "github.com/zeta-chain/node/x/crosschain/types"
 
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
 	zerolog "github.com/rs/zerolog"
 )
 
@@ -76,6 +78,36 @@ func (_m *ZetacoreClient) Chain() chains.Chain {
 	}
 
 	return r0
+}
+
+// GetAdditionalChains provides a mock function with given fields: ctx
+func (_m *ZetacoreClient) GetAdditionalChains(ctx context.Context) ([]chains.Chain, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAdditionalChains")
+	}
+
+	var r0 []chains.Chain
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) ([]chains.Chain, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) []chains.Chain); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]chains.Chain)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetAllOutboundTrackerByChain provides a mock function with given fields: ctx, chainID, order
@@ -217,6 +249,36 @@ func (_m *ZetacoreClient) GetCctxByNonce(ctx context.Context, chainID int64, non
 
 	if rf, ok := ret.Get(1).(func(context.Context, int64, uint64) error); ok {
 		r1 = rf(ctx, chainID, nonce)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetChainParams provides a mock function with given fields: ctx
+func (_m *ZetacoreClient) GetChainParams(ctx context.Context) ([]*observertypes.ChainParams, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetChainParams")
+	}
+
+	var r0 []*observertypes.ChainParams
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) ([]*observertypes.ChainParams, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) []*observertypes.ChainParams); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*observertypes.ChainParams)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -496,6 +558,36 @@ func (_m *ZetacoreClient) GetRateLimiterInput(ctx context.Context, window int64)
 	return r0, r1
 }
 
+// GetSupportedChains provides a mock function with given fields: ctx
+func (_m *ZetacoreClient) GetSupportedChains(ctx context.Context) ([]chains.Chain, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSupportedChains")
+	}
+
+	var r0 []chains.Chain
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) ([]chains.Chain, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) []chains.Chain); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]chains.Chain)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetTSS provides a mock function with given fields: ctx
 func (_m *ZetacoreClient) GetTSS(ctx context.Context) (observertypes.TSS, error) {
 	ret := _m.Called(ctx)
@@ -543,6 +635,34 @@ func (_m *ZetacoreClient) GetTSSHistory(ctx context.Context) ([]observertypes.TS
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]observertypes.TSS)
 		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetUpgradePlan provides a mock function with given fields: ctx
+func (_m *ZetacoreClient) GetUpgradePlan(ctx context.Context) (upgradetypes.Plan, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetUpgradePlan")
+	}
+
+	var r0 upgradetypes.Plan
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (upgradetypes.Plan, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) upgradetypes.Plan); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(upgradetypes.Plan)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
@@ -647,11 +767,6 @@ func (_m *ZetacoreClient) ListPendingCCTXWithinRateLimit(ctx context.Context) (*
 	}
 
 	return r0, r1
-}
-
-// OnBeforeStop provides a mock function with given fields: callback
-func (_m *ZetacoreClient) OnBeforeStop(callback func()) {
-	_m.Called(callback)
 }
 
 // PostVoteBlameData provides a mock function with given fields: ctx, _a1, chainID, index
@@ -806,11 +921,6 @@ func (_m *ZetacoreClient) PostVoteOutbound(ctx context.Context, gasLimit uint64,
 	}
 
 	return r0, r1, r2
-}
-
-// Stop provides a mock function with given fields:
-func (_m *ZetacoreClient) Stop() {
-	_m.Called()
 }
 
 // NewZetacoreClient creates a new instance of ZetacoreClient. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

@@ -12,16 +12,20 @@ import (
 )
 
 // GetUpgradePlan returns the current upgrade plan.
-// if there is no active upgrade plan, plan will be nil, err will be nil as well.
-func (c *Clients) GetUpgradePlan(ctx context.Context) (*upgradetypes.Plan, error) {
+// Returns empty plan if no upgrade is planned
+func (c *Clients) GetUpgradePlan(ctx context.Context) (upgradetypes.Plan, error) {
 	in := &upgradetypes.QueryCurrentPlanRequest{}
 
 	resp, err := c.Upgrade.CurrentPlan(ctx, in)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get current upgrade plan")
+	switch {
+	case err != nil:
+		return upgradetypes.Plan{}, errors.Wrap(err, "failed to get current upgrade plan")
+	case resp.Plan == nil:
+		// no upgrade planned
+		return upgradetypes.Plan{}, nil
+	default:
+		return *resp.Plan, nil
 	}
-
-	return resp.Plan, nil
 }
 
 // GetZetaTokenSupplyOnNode returns the zeta token supply on the node

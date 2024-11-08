@@ -141,13 +141,11 @@ func Start(_ *cobra.Command, _ []string) error {
 	startLogger.Debug().Msgf("createAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore
-	if err = zetacoreClient.UpdateAppContext(ctx, appContext, startLogger); err != nil {
+	if err = orchestrator.UpdateAppContext(ctx, appContext, zetacoreClient, startLogger); err != nil {
 		return errors.Wrap(err, "unable to update app context")
 	}
 
 	startLogger.Info().Msgf("Config is updated from zetacore\n %s", cfg.StringMasked())
-
-	go zetacoreClient.UpdateAppContextWorker(ctx, appContext)
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
 	// The hotkeyPk is private key for the Hotkey. The Hotkey is used to sign all inbound transactions
@@ -348,12 +346,12 @@ func Start(_ *cobra.Command, _ []string) error {
 	// Each chain observer is responsible for observing events on the chain and processing them.
 	observerMap, err := orchestrator.CreateChainObserverMap(ctx, zetacoreClient, tss, dbpath, logger, telemetryServer)
 	if err != nil {
-		startLogger.Err(err).Msg("CreateChainObserverMap")
-		return err
+		return errors.Wrap(err, "unable to create chain observer map")
 	}
 
 	// Orchestrator wraps the zetacore client and adds the observers and signer maps to it.
 	// This is the high level object used for CCTX interactions
+	// It also handles background configuration updates from zetacore
 	maestro, err := orchestrator.New(
 		ctx,
 		zetacoreClient,
@@ -365,14 +363,12 @@ func Start(_ *cobra.Command, _ []string) error {
 		telemetryServer,
 	)
 	if err != nil {
-		startLogger.Error().Err(err).Msg("Unable to create orchestrator")
-		return err
+		return errors.Wrap(err, "unable to create orchestrator")
 	}
 
 	// Start orchestrator with all observers and signers
 	if err := maestro.Start(ctx); err != nil {
-		startLogger.Error().Err(err).Msg("Unable to start orchestrator")
-		return err
+		return errors.Wrap(err, "unable to start orchestrator")
 	}
 
 	// start zeta supply checker
@@ -389,12 +385,12 @@ func Start(_ *cobra.Command, _ []string) error {
 	//	defer zetaSupplyChecker.Stop()
 	//}
 
-	startLogger.Info().Msgf("Zetaclientd is running")
+	startLogger.Info().Msg("zetaclientd is running")
 
 	sig := <-signalChannel
-	startLogger.Info().Msgf("Stop signal received: %q", sig)
+	startLogger.Info().Msgf("Stop signal received: %q. Stopping zetaclientd", sig)
 
-	zetacoreClient.Stop()
+	maestro.Stop()
 
 	return nil
 }
