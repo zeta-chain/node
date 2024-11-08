@@ -5,7 +5,7 @@
 ### Features
 * [2984](https://github.com/zeta-chain/node/pull/2984) - add Whitelist message ability to whitelist SPL tokens on Solana
 * [3091](https://github.com/zeta-chain/node/pull/3091) - improve build reproducability. `make release{,-build-only}` checksums should now be stable.
-* [3124](https://github.com/zeta-chain/node/pull/3124) - deposit spl integration
+* [3124](https://github.com/zeta-chain/node/pull/3124) - integrate SPL deposits
 
 ### Refactor
 * [3122](https://github.com/zeta-chain/node/pull/3122) - improve & refactor zetaclientd cli
