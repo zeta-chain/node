@@ -16,7 +16,7 @@ import (
 func TestDepositAndCallOutOfGas(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	amount, ok := big.NewInt(0).SetString(args[0], 10)
+	amount := parseBigInt(r, args[0])
 	require.True(r, ok, "Invalid amount specified for TestV2ETHDepositAndCall")
 
 	// Deploy the GasConsumer contract
