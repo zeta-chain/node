@@ -54,9 +54,10 @@ func RunnerFromConfig(
 
 // ExportContractsFromRunner export contracts from the runner to config using a source config
 func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.Config {
-	conf.Contracts.Solana.GatewayProgramID = r.GatewayProgram.String()
-
 	// copy contracts from deployer runner
+	conf.Contracts.Solana.GatewayProgramID = r.GatewayProgram.String()
+	conf.Contracts.Solana.SPLAddr = config.DoubleQuotedString(r.SPLAddr.String())
+
 	conf.Contracts.EVM.ZetaEthAddr = config.DoubleQuotedString(r.ZetaEthAddr.Hex())
 	conf.Contracts.EVM.ConnectorEthAddr = config.DoubleQuotedString(r.ConnectorEthAddr.Hex())
 	conf.Contracts.EVM.CustodyAddr = config.DoubleQuotedString(r.ERC20CustodyAddr.Hex())
@@ -68,6 +69,7 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	conf.Contracts.ZEVM.ERC20ZRC20Addr = config.DoubleQuotedString(r.ERC20ZRC20Addr.Hex())
 	conf.Contracts.ZEVM.BTCZRC20Addr = config.DoubleQuotedString(r.BTCZRC20Addr.Hex())
 	conf.Contracts.ZEVM.SOLZRC20Addr = config.DoubleQuotedString(r.SOLZRC20Addr.Hex())
+	conf.Contracts.ZEVM.SPLZRC20Addr = config.DoubleQuotedString(r.SPLZRC20Addr.Hex())
 	conf.Contracts.ZEVM.TONZRC20Addr = config.DoubleQuotedString(r.TONZRC20Addr.Hex())
 	conf.Contracts.ZEVM.UniswapFactoryAddr = config.DoubleQuotedString(r.UniswapV2FactoryAddr.Hex())
 	conf.Contracts.ZEVM.UniswapRouterAddr = config.DoubleQuotedString(r.UniswapV2RouterAddr.Hex())
