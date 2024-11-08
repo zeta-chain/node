@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -113,14 +113,14 @@ func getInvalidCCTX(t *testing.T) *crosschaintypes.CrossChainTx {
 	return cctx
 }
 
-// verifyTxSignature is a helper function to verify the signature of a transaction
-func verifyTxSignature(t *testing.T, tx *ethtypes.Transaction, tssPubkey []byte, signer ethtypes.Signer) {
-	_, r, s := tx.RawSignatureValues()
-	signature := append(r.Bytes(), s.Bytes()...)
-	hash := signer.Hash(tx)
-
-	verified := crypto.VerifySignature(tssPubkey, hash.Bytes(), signature)
-	require.True(t, verified)
+// verifyTxSender is a helper function to verify the signature of a transaction
+//
+// signer.Sender() will ecrecover the public key of the transaction internally
+// and will fail if the transaction is not valid or has been tampered with
+func verifyTxSender(t *testing.T, tx *ethtypes.Transaction, expectedSender common.Address, signer ethtypes.Signer) {
+	senderAddr, err := signer.Sender(tx)
+	require.NoError(t, err)
+	require.Equal(t, expectedSender.String(), senderAddr.String())
 }
 
 // verifyTxBodyBasics is a helper function to verify 'to', 'nonce' and 'amount' of a transaction
