@@ -14,6 +14,9 @@ const (
 	// PDASeed is the seed for the Solana gateway program derived address
 	PDASeed = "meta"
 
+	// RentPayerPDASeed is the seed for the Solana gateway program derived address
+	RentPayerPDASeed = "rent-payer"
+
 	// AccountsNumberOfDeposit is the number of accounts required for Solana gateway deposit instruction
 	// [signer, pda, system_program]
 	accountsNumDeposit = 3
@@ -26,6 +29,8 @@ const (
 var (
 	// DiscriminatorInitialize returns the discriminator for Solana gateway 'initialize' instruction
 	DiscriminatorInitialize = idlgateway.IDLGateway.GetDiscriminator("initialize")
+	// DiscriminatorInitializeRentPayer returns the discriminator for Solana gateway 'initialize_rent_payer' instruction
+	DiscriminatorInitializeRentPayer = idlgateway.IDLGateway.GetDiscriminator("initialize_rent_payer")
 	// DiscriminatorDeposit returns the discriminator for Solana gateway 'deposit' instruction
 	DiscriminatorDeposit = idlgateway.IDLGateway.GetDiscriminator("deposit")
 	// DiscriminatorDepositSPL returns the discriminator for Solana gateway 'deposit_spl_token' instruction
@@ -53,4 +58,21 @@ func ParseGatewayIDAndPda(address string) (solana.PublicKey, solana.PublicKey, e
 	pda, _, err = solana.FindProgramAddress([][]byte{seed}, gatewayID)
 
 	return gatewayID, pda, err
+}
+
+// ParseGatewayAddressAndPda parses the rent payer program derived address from the given string
+func ParseRentPayerPda(address string) (solana.PublicKey, error) {
+	var rentPayerPda solana.PublicKey
+
+	// decode gateway address
+	gatewayID, err := solana.PublicKeyFromBase58(address)
+	if err != nil {
+		return rentPayerPda, errors.Wrap(err, "unable to decode address")
+	}
+
+	// compute gateway PDA
+	seed := []byte(RentPayerPDASeed)
+	rentPayerPda, _, err = solana.FindProgramAddress([][]byte{seed}, gatewayID)
+
+	return rentPayerPda, err
 }

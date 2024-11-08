@@ -13,20 +13,22 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// createAndSignMsgWithdraw creates and signs a withdraw message for gateway withdraw instruction with TSS.
-func (signer *Signer) createAndSignMsgWithdraw(
+// createAndSignMsgWithdrawSPL creates and signs a withdraw spl message for gateway withdraw_spl instruction with TSS.
+func (signer *Signer) createAndSignMsgWithdrawSPL(
 	ctx context.Context,
 	params *types.OutboundParams,
 	height uint64,
+	asset string,
+	decimals uint8,
 	cancelTx bool,
-) (*contracts.MsgWithdraw, error) {
+) (*contracts.MsgWithdrawSPL, error) {
 	chain := signer.Chain()
 	// #nosec G115 always positive
 	chainID := uint64(signer.Chain().ChainId)
 	nonce := params.TssNonce
 	amount := params.Amount.Uint64()
 
-	// zero out the amount if cancelTx is set. It's legal to withdraw 0 lamports thru the gateway.
+	// zero out the amount if cancelTx is set. It's legal to withdraw 0 spl thru the gateway.
 	if cancelTx {
 		amount = 0
 	}
@@ -37,8 +39,20 @@ func (signer *Signer) createAndSignMsgWithdraw(
 		return nil, errors.Wrapf(err, "cannot decode receiver address %s", params.Receiver)
 	}
 
-	// prepare withdraw msg and compute hash
-	msg := contracts.NewMsgWithdraw(chainID, nonce, amount, to)
+	// parse token account
+	tokenAccount, err := solana.PublicKeyFromBase58(asset)
+	if err != nil {
+		return nil, err
+	}
+
+	// get recipient ata
+	recipientAta, _, err := solana.FindAssociatedTokenAddress(to, tokenAccount)
+	if err != nil {
+		return nil, err
+	}
+
+	// prepare withdraw spl msg and compute hash
+	msg := contracts.NewMsgWithdrawSPL(chainID, nonce, amount, decimals, tokenAccount, to, recipientAta)
 	msgHash := msg.Hash()
 
 	// sign the message with TSS to get an ECDSA signature.
@@ -53,13 +67,17 @@ func (signer *Signer) createAndSignMsgWithdraw(
 	return msg.SetSignature(signature), nil
 }
 
-// signWithdrawTx wraps the withdraw 'msg' into a Solana transaction and signs it with the relayer key.
-func (signer *Signer) signWithdrawTx(ctx context.Context, msg contracts.MsgWithdraw) (*solana.Transaction, error) {
-	// create withdraw instruction with program call data
+// signWithdrawSPLTx wraps the withdraw spl 'msg' into a Solana transaction and signs it with the relayer key.
+func (signer *Signer) signWithdrawSPLTx(
+	ctx context.Context,
+	msg contracts.MsgWithdrawSPL,
+) (*solana.Transaction, error) {
+	// create withdraw spl instruction with program call data
 	var err error
 	var inst solana.GenericInstruction
-	inst.DataBytes, err = borsh.Serialize(contracts.WithdrawInstructionParams{
-		Discriminator: contracts.DiscriminatorWithdraw,
+	inst.DataBytes, err = borsh.Serialize(contracts.WithdrawSPLInstructionParams{
+		Discriminator: contracts.DiscriminatorWithdrawSPL,
+		Decimals:      msg.Decimals(),
 		Amount:        msg.Amount(),
 		Signature:     msg.SigRS(),
 		RecoveryID:    msg.SigV(),
@@ -72,8 +90,18 @@ func (signer *Signer) signWithdrawTx(ctx context.Context, msg contracts.MsgWithd
 
 	// attach required accounts to the instruction
 	privkey := signer.relayerKey
-	attachWithdrawAccounts(&inst, privkey.PublicKey(), signer.pda, msg.To(), signer.gatewayID)
-
+	err = attachWithdrawSPLAccounts(
+		&inst,
+		privkey.PublicKey(),
+		signer.pda,
+		signer.rentPayerPda,
+		msg.TokenAccount(),
+		msg.To(),
+		signer.gatewayID,
+	)
+	if err != nil {
+		return nil, err
+	}
 	// get a recent blockhash
 	recent, err := signer.client.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
 	if err != nil {
@@ -109,20 +137,42 @@ func (signer *Signer) signWithdrawTx(ctx context.Context, msg contracts.MsgWithd
 	return tx, nil
 }
 
-// attachWithdrawAccounts attaches the required accounts for the gateway withdraw instruction.
-func attachWithdrawAccounts(
+// attachWithdrawSPLAccounts attaches the required accounts for the gateway withdraw spl instruction.
+func attachWithdrawSPLAccounts(
 	inst *solana.GenericInstruction,
 	signer solana.PublicKey,
 	pda solana.PublicKey,
+	rentPayerPda solana.PublicKey,
+	tokenAccount solana.PublicKey,
 	to solana.PublicKey,
 	gatewayID solana.PublicKey,
-) {
+) error {
 	// attach required accounts to the instruction
+	pdaAta, _, err := solana.FindAssociatedTokenAddress(pda, tokenAccount)
+	if err != nil {
+		return err
+	}
+
+	recipientAta, _, err := solana.FindAssociatedTokenAddress(to, tokenAccount)
+	if err != nil {
+		return err
+	}
+
 	var accountSlice []*solana.AccountMeta
 	accountSlice = append(accountSlice, solana.Meta(signer).WRITE().SIGNER())
 	accountSlice = append(accountSlice, solana.Meta(pda).WRITE())
-	accountSlice = append(accountSlice, solana.Meta(to).WRITE())
+	accountSlice = append(accountSlice, solana.Meta(pdaAta).WRITE())
+	accountSlice = append(accountSlice, solana.Meta(tokenAccount))
+	accountSlice = append(accountSlice, solana.Meta(to))
+	accountSlice = append(accountSlice, solana.Meta(recipientAta).WRITE())
+	accountSlice = append(accountSlice, solana.Meta(rentPayerPda).WRITE())
+	accountSlice = append(accountSlice, solana.Meta(solana.TokenProgramID))
+	accountSlice = append(accountSlice, solana.Meta(solana.SPLAssociatedTokenAccountProgramID))
+	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
+
 	inst.ProgID = gatewayID
 
 	inst.AccountValues = accountSlice
+
+	return nil
 }

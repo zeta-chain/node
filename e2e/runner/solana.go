@@ -30,6 +30,18 @@ func (r *E2ERunner) ComputePdaAddress() solana.PublicKey {
 	return pdaComputed
 }
 
+// ComputePdaAddress computes the rent payer PDA address for the gateway program
+func (r *E2ERunner) ComputeRentPayerPdaAddress() solana.PublicKey {
+	seed := []byte(solanacontract.RentPayerPDASeed)
+	GatewayProgramID := solana.MustPublicKeyFromBase58(solanacontract.SolanaGatewayProgramID)
+	pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, GatewayProgramID)
+	require.NoError(r, err)
+
+	r.Logger.Info("computed rent payer pda: %s, bump %d\n", pdaComputed, bump)
+
+	return pdaComputed
+}
+
 // CreateDepositInstruction creates a 'deposit' instruction
 func (r *E2ERunner) CreateDepositInstruction(
 	signer solana.PublicKey,
@@ -250,7 +262,7 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 	// minting some tokens to deployer for testing
 	ata := r.FindOrCreateAssociatedTokenAccount(*privateKey, privateKey.PublicKey(), tokenAccount.PublicKey())
 
-	mintToInstruction := token.NewMintToInstruction(uint64(1_000_000), tokenAccount.PublicKey(), ata, privateKey.PublicKey(), []solana.PublicKey{}).
+	mintToInstruction := token.NewMintToInstruction(uint64(1_000_000_000), tokenAccount.PublicKey(), ata, privateKey.PublicKey(), []solana.PublicKey{}).
 		Build()
 	signedTx = r.CreateSignedTransaction(
 		[]solana.Instruction{mintToInstruction},
@@ -365,6 +377,35 @@ func (r *E2ERunner) WithdrawSOLZRC20(
 
 	// withdraw
 	tx, err = r.SOLZRC20.Withdraw(r.ZEVMAuth, []byte(to.String()), amount)
+	require.NoError(r, err)
+	r.Logger.EVMTransaction(*tx, "withdraw")
+
+	// wait for tx receipt
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt, "withdraw")
+	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
+
+	// wait for the cctx to be mined
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+
+	return cctx
+}
+
+// WithdrawSPLZRC20 withdraws an amount of ZRC20 SPL tokens
+func (r *E2ERunner) WithdrawSPLZRC20(
+	to solana.PublicKey,
+	amount *big.Int,
+	approveAmount *big.Int,
+) *crosschaintypes.CrossChainTx {
+	// approve splzrc20 to spend gas tokens to pay gas fee
+	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.SPLZRC20Addr, approveAmount)
+	require.NoError(r, err)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt, "approve")
+
+	// withdraw
+	tx, err = r.SPLZRC20.Withdraw(r.ZEVMAuth, []byte(to.String()), amount)
 	require.NoError(r, err)
 	r.Logger.EVMTransaction(*tx, "withdraw")
 

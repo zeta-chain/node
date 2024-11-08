@@ -8,18 +8,18 @@ import (
 	"github.com/gagliardetto/solana-go"
 )
 
-// MsgWithdraw is the message for the Solana gateway withdraw/withdraw_spl instruction
+// MsgWithdraw is the message for the Solana gateway withdraw instruction
 type MsgWithdraw struct {
 	// chainID is the chain ID of Solana chain
 	chainID uint64
 
-	// Nonce is the nonce for the withdraw/withdraw_spl
+	// Nonce is the nonce for the withdraw
 	nonce uint64
 
-	// amount is the lamports amount for the withdraw/withdraw_spl
+	// amount is the lamports amount for the withdraw
 	amount uint64
 
-	// To is the recipient address for the withdraw/withdraw_spl
+	// To is the recipient address for the withdraw
 	to solana.PublicKey
 
 	// signature is the signature of the message
@@ -102,6 +102,136 @@ func (msg *MsgWithdraw) SigV() uint8 {
 
 // Signer returns the signer of the message
 func (msg *MsgWithdraw) Signer() (common.Address, error) {
+	msgHash := msg.Hash()
+	msgSig := msg.SigRSV()
+
+	return RecoverSigner(msgHash[:], msgSig[:])
+}
+
+// MsgWithdrawSPL is the message for the Solana gateway withdraw_spl instruction
+type MsgWithdrawSPL struct {
+	// chainID is the chain ID of Solana chain
+	chainID uint64
+
+	// Nonce is the nonce for the withdraw_spl
+	nonce uint64
+
+	// amount is the lamports amount for the withdraw_spl
+	amount uint64
+
+	// tokenAccount is the address for the spl token
+	tokenAccount solana.PublicKey
+
+	// decimals of spl token
+	decimals uint8
+
+	// to is the recipient address for the withdraw_spl
+	to solana.PublicKey
+
+	// recipientAta is the recipient address for the withdraw_spl
+	recipientAta solana.PublicKey
+
+	// signature is the signature of the message
+	signature [65]byte
+}
+
+// NewMsgWithdrawSPL returns a new withdraw spl message
+func NewMsgWithdrawSPL(
+	chainID, nonce, amount uint64,
+	decimals uint8,
+	tokenAccount, to, toAta solana.PublicKey,
+) *MsgWithdrawSPL {
+	return &MsgWithdrawSPL{
+		chainID:      chainID,
+		nonce:        nonce,
+		amount:       amount,
+		to:           to,
+		recipientAta: toAta,
+		tokenAccount: tokenAccount,
+		decimals:     decimals,
+	}
+}
+
+// ChainID returns the chain ID of the message
+func (msg *MsgWithdrawSPL) ChainID() uint64 {
+	return msg.chainID
+}
+
+// Nonce returns the nonce of the message
+func (msg *MsgWithdrawSPL) Nonce() uint64 {
+	return msg.nonce
+}
+
+// Amount returns the amount of the message
+func (msg *MsgWithdrawSPL) Amount() uint64 {
+	return msg.amount
+}
+
+// To returns the recipient address of the message
+func (msg *MsgWithdrawSPL) To() solana.PublicKey {
+	return msg.to
+}
+
+func (msg *MsgWithdrawSPL) RecipientAta() solana.PublicKey {
+	return msg.recipientAta
+}
+
+func (msg *MsgWithdrawSPL) TokenAccount() solana.PublicKey {
+	return msg.tokenAccount
+}
+
+func (msg *MsgWithdrawSPL) Decimals() uint8 {
+	return msg.decimals
+}
+
+// Hash packs the withdraw spl message and computes the hash
+func (msg *MsgWithdrawSPL) Hash() [32]byte {
+	var message []byte
+	buff := make([]byte, 8)
+
+	message = append(message, []byte("withdraw_spl_token")...)
+
+	binary.BigEndian.PutUint64(buff, msg.chainID)
+	message = append(message, buff...)
+
+	binary.BigEndian.PutUint64(buff, msg.nonce)
+	message = append(message, buff...)
+
+	binary.BigEndian.PutUint64(buff, msg.amount)
+	message = append(message, buff...)
+
+	message = append(message, msg.tokenAccount.Bytes()...)
+
+	message = append(message, msg.recipientAta.Bytes()...)
+
+	return crypto.Keccak256Hash(message)
+}
+
+// SetSignature attaches the signature to the message
+func (msg *MsgWithdrawSPL) SetSignature(signature [65]byte) *MsgWithdrawSPL {
+	msg.signature = signature
+	return msg
+}
+
+// SigRSV returns the full 65-byte [R+S+V] signature
+func (msg *MsgWithdrawSPL) SigRSV() [65]byte {
+	return msg.signature
+}
+
+// SigRS returns the 64-byte [R+S] core part of the signature
+func (msg *MsgWithdrawSPL) SigRS() [64]byte {
+	var sig [64]byte
+	copy(sig[:], msg.signature[:64])
+	return sig
+}
+
+// SigV returns the V part (recovery ID) of the signature
+func (msg *MsgWithdrawSPL) SigV() uint8 {
+	return msg.signature[64]
+}
+
+// Signer returns the signer of the message
+func (msg *MsgWithdrawSPL) Signer() (common.Address, error) {
 	msgHash := msg.Hash()
 	msgSig := msg.SigRSV()
 
