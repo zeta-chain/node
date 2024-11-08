@@ -6,6 +6,7 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
+	associatedtokenaccount "github.com/gagliardetto/solana-go/programs/associated-token-account"
 	"github.com/gagliardetto/solana-go/programs/system"
 	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -36,28 +37,77 @@ func (r *E2ERunner) CreateDepositInstruction(
 	data []byte,
 	amount uint64,
 ) solana.Instruction {
-	// compute the gateway PDA address
-	pdaComputed := r.ComputePdaAddress()
-	programID := r.GatewayProgram
-
-	// create 'deposit' instruction
-	inst := &solana.GenericInstruction{}
-	accountSlice := []*solana.AccountMeta{}
-	accountSlice = append(accountSlice, solana.Meta(signer).WRITE().SIGNER())
-	accountSlice = append(accountSlice, solana.Meta(pdaComputed).WRITE())
-	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
-	inst.ProgID = programID
-	inst.AccountValues = accountSlice
-
-	var err error
-	inst.DataBytes, err = borsh.Serialize(solanacontract.DepositInstructionParams{
+	depositData, err := borsh.Serialize(solanacontract.DepositInstructionParams{
 		Discriminator: solanacontract.DiscriminatorDeposit,
 		Amount:        amount,
 		Memo:          append(receiver.Bytes(), data...),
 	})
 	require.NoError(r, err)
 
-	return inst
+	return &solana.GenericInstruction{
+		ProgID:    r.GatewayProgram,
+		DataBytes: depositData,
+		AccountValues: []*solana.AccountMeta{
+			solana.Meta(signer).WRITE().SIGNER(),
+			solana.Meta(r.ComputePdaAddress()).WRITE(),
+			solana.Meta(solana.SystemProgramID),
+		},
+	}
+}
+
+// CreateWhitelistSPLMintInstruction creates a 'whitelist_spl_mint' instruction
+func (r *E2ERunner) CreateWhitelistSPLMintInstruction(
+	signer, whitelistEntry, whitelistCandidate solana.PublicKey,
+) solana.Instruction {
+	data, err := borsh.Serialize(solanacontract.WhitelistInstructionParams{
+		Discriminator: solanacontract.DiscriminatorWhitelistSplMint,
+	})
+	require.NoError(r, err)
+
+	return &solana.GenericInstruction{
+		ProgID:    r.GatewayProgram,
+		DataBytes: data,
+		AccountValues: []*solana.AccountMeta{
+			solana.Meta(whitelistEntry).WRITE(),
+			solana.Meta(whitelistCandidate),
+			solana.Meta(r.ComputePdaAddress()).WRITE(),
+			solana.Meta(signer).WRITE().SIGNER(),
+			solana.Meta(solana.SystemProgramID),
+		},
+	}
+}
+
+// CreateDepositSPLInstruction creates a 'deposit_spl' instruction
+func (r *E2ERunner) CreateDepositSPLInstruction(
+	amount uint64,
+	signer solana.PublicKey,
+	whitelistEntry solana.PublicKey,
+	mint solana.PublicKey,
+	from solana.PublicKey,
+	to solana.PublicKey,
+	receiver ethcommon.Address,
+	data []byte,
+) solana.Instruction {
+	depositSPLData, err := borsh.Serialize(solanacontract.DepositInstructionParams{
+		Discriminator: solanacontract.DiscriminatorDepositSPL,
+		Amount:        amount,
+		Memo:          append(receiver.Bytes(), data...),
+	})
+	require.NoError(r, err)
+
+	return &solana.GenericInstruction{
+		ProgID:    r.GatewayProgram,
+		DataBytes: depositSPLData,
+		AccountValues: []*solana.AccountMeta{
+			solana.Meta(signer).WRITE().SIGNER(),
+			solana.Meta(r.ComputePdaAddress()),
+			solana.Meta(whitelistEntry),
+			solana.Meta(mint),
+			solana.Meta(solana.TokenProgramID),
+			solana.Meta(from).WRITE(),
+			solana.Meta(to).WRITE(),
+		},
+	}
 }
 
 // CreateSignedTransaction creates a signed transaction from instructions
@@ -97,7 +147,76 @@ func (r *E2ERunner) CreateSignedTransaction(
 	return tx
 }
 
-func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey) *solana.Wallet {
+// FindOrCreateAssociatedTokenAccount checks if ata exists, and if not creates it
+func (r *E2ERunner) FindOrCreateAssociatedTokenAccount(
+	payer solana.PrivateKey,
+	owner solana.PublicKey,
+	tokenAccount solana.PublicKey,
+) solana.PublicKey {
+	pdaAta, _, err := solana.FindAssociatedTokenAddress(owner, tokenAccount)
+	require.NoError(r, err)
+
+	info, _ := r.SolanaClient.GetAccountInfo(r.Ctx, pdaAta)
+	if info != nil {
+		// already exists
+		return pdaAta
+	}
+	// doesn't exist, create it
+	ataInstruction := associatedtokenaccount.NewCreateInstruction(payer.PublicKey(), owner, tokenAccount).Build()
+	signedTx := r.CreateSignedTransaction(
+		[]solana.Instruction{ataInstruction},
+		payer,
+		[]solana.PrivateKey{},
+	)
+	// broadcast the transaction and wait for finalization
+	r.BroadcastTxSync(signedTx)
+
+	return pdaAta
+}
+
+// SPLDepositAndCall deposits an amount of SPL tokens and calls a contract (if data is provided)
+func (r *E2ERunner) SPLDepositAndCall(
+	privateKey *solana.PrivateKey,
+	amount uint64,
+	tokenAccount solana.PublicKey,
+	receiver ethcommon.Address,
+	data []byte,
+) solana.Signature {
+	// ata for pda
+	pda := r.ComputePdaAddress()
+	pdaAta := r.FindOrCreateAssociatedTokenAccount(*privateKey, pda, tokenAccount)
+
+	// deployer ata
+	ata := r.FindOrCreateAssociatedTokenAccount(*privateKey, privateKey.PublicKey(), tokenAccount)
+
+	// deposit spl
+	seed := [][]byte{[]byte("whitelist"), tokenAccount.Bytes()}
+	whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, r.GatewayProgram)
+	require.NoError(r, err)
+
+	depositSPLInstruction := r.CreateDepositSPLInstruction(
+		amount,
+		privateKey.PublicKey(),
+		whitelistEntryPDA,
+		tokenAccount,
+		ata,
+		pdaAta,
+		receiver,
+		data,
+	)
+	signedTx := r.CreateSignedTransaction(
+		[]solana.Instruction{depositSPLInstruction},
+		*privateKey,
+		[]solana.PrivateKey{},
+	)
+	// broadcast the transaction and wait for finalization
+	sig, out := r.BroadcastTxSync(signedTx)
+	r.Logger.Info("deposit spl logs: %v", out.Meta.LogMessages)
+
+	return sig
+}
+
+func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *solana.Wallet {
 	lamport, err := r.SolanaClient.GetMinimumBalanceForRentExemption(r.Ctx, token.MINT_SIZE, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 
@@ -127,6 +246,53 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey) *solana.Wallet {
 	// broadcast the transaction and wait for finalization
 	_, out := r.BroadcastTxSync(signedTx)
 	r.Logger.Info("create spl logs: %v", out.Meta.LogMessages)
+
+	// minting some tokens to deployer for testing
+	ata := r.FindOrCreateAssociatedTokenAccount(*privateKey, privateKey.PublicKey(), tokenAccount.PublicKey())
+
+	mintToInstruction := token.NewMintToInstruction(uint64(1_000_000), tokenAccount.PublicKey(), ata, privateKey.PublicKey(), []solana.PublicKey{}).
+		Build()
+	signedTx = r.CreateSignedTransaction(
+		[]solana.Instruction{mintToInstruction},
+		*privateKey,
+		[]solana.PrivateKey{},
+	)
+
+	// broadcast the transaction and wait for finalization
+	_, out = r.BroadcastTxSync(signedTx)
+	r.Logger.Info("mint spl logs: %v", out.Meta.LogMessages)
+
+	// optionally whitelist spl token in gateway
+	if whitelist {
+		seed := [][]byte{[]byte("whitelist"), tokenAccount.PublicKey().Bytes()}
+		whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, r.GatewayProgram)
+		require.NoError(r, err)
+
+		whitelistEntryInfo, err := r.SolanaClient.GetAccountInfo(r.Ctx, whitelistEntryPDA)
+		require.Error(r, err)
+
+		// already whitelisted
+		if whitelistEntryInfo != nil {
+			return tokenAccount
+		}
+
+		// create 'whitelist_spl_mint' instruction
+		instruction := r.CreateWhitelistSPLMintInstruction(
+			privateKey.PublicKey(),
+			whitelistEntryPDA,
+			tokenAccount.PublicKey(),
+		)
+		// create and sign the transaction
+		signedTx := r.CreateSignedTransaction([]solana.Instruction{instruction}, *privateKey, []solana.PrivateKey{})
+
+		// broadcast the transaction and wait for finalization
+		_, out := r.BroadcastTxSync(signedTx)
+		r.Logger.Info("whitelist spl mint logs: %v", out.Meta.LogMessages)
+
+		whitelistEntryInfo, err = r.SolanaClient.GetAccountInfo(r.Ctx, whitelistEntryPDA)
+		require.NoError(r, err)
+		require.NotNil(r, whitelistEntryInfo)
+	}
 
 	return tokenAccount
 }

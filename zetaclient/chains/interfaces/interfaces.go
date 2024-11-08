@@ -22,7 +22,6 @@ import (
 	"gitlab.com/thorchain/tss/go-tss/blame"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/proofs"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
@@ -75,15 +74,7 @@ type ChainSigner interface {
 	GetGatewayAddress() string
 }
 
-// ZetacoreVoter represents voter interface.
 type ZetacoreVoter interface {
-	PostVoteBlockHeader(
-		ctx context.Context,
-		chainID int64,
-		txhash []byte,
-		height int64,
-		header proofs.HeaderData,
-	) (string, error)
 	PostVoteGasPrice(
 		ctx context.Context,
 		chain chains.Chain,
@@ -146,16 +137,7 @@ type ZetacoreClient interface {
 
 	GetUpgradePlan(ctx context.Context) (upgradetypes.Plan, error)
 
-	// todo(revamp): refactor input to struct
-	AddOutboundTracker(
-		ctx context.Context,
-		chainID int64,
-		nonce uint64,
-		txHash string,
-		proof *proofs.Proof,
-		blockHash string,
-		txIndex int64,
-	) (string, error)
+	PostOutboundTracker(ctx context.Context, chainID int64, nonce uint64, txHash string) (string, error)
 }
 
 // BTCRPCClient is the interface for BTC RPC client

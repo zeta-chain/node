@@ -1,21 +1,16 @@
 package zetacore
 
 import (
-	"bytes"
 	"context"
-	"encoding/hex"
-	"os"
 	"testing"
 
 	"cosmossdk.io/math"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
-	"github.com/zeta-chain/node/pkg/proofs"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/keys"
@@ -94,22 +89,6 @@ func Test_GasPriceMultiplier(t *testing.T) {
 	}
 }
 
-func getHeaderData(t *testing.T) proofs.HeaderData {
-	var header ethtypes.Header
-	file, err := os.Open("../../testutil/testdata/eth_header_18495266.json")
-	require.NoError(t, err)
-	defer file.Close()
-	headerBytes := make([]byte, 4096)
-	n, err := file.Read(headerBytes)
-	require.NoError(t, err)
-	err = header.UnmarshalJSON(headerBytes[:n])
-	require.NoError(t, err)
-	var buffer bytes.Buffer
-	err = header.EncodeRLP(&buffer)
-	require.NoError(t, err)
-	return proofs.NewEthereumHeader(buffer.Bytes())
-}
-
 func TestZetacore_PostGasPrice(t *testing.T) {
 	ctx := context.Background()
 
@@ -171,14 +150,14 @@ func TestZetacore_AddOutboundTracker(t *testing.T) {
 
 	t.Run("add tx hash success", func(t *testing.T) {
 		tendermintMock.SetBroadcastTxHash(sampleHash)
-		hash, err := client.AddOutboundTracker(ctx, chainID, nonce, "", nil, "", 456)
+		hash, err := client.PostOutboundTracker(ctx, chainID, nonce, "")
 		assert.NoError(t, err)
 		assert.Equal(t, sampleHash, hash)
 	})
 
 	t.Run("add tx hash fail", func(t *testing.T) {
 		tendermintMock.SetError(errors.New("broadcast error"))
-		hash, err := client.AddOutboundTracker(ctx, chainID, nonce, "", nil, "", 456)
+		hash, err := client.PostOutboundTracker(ctx, chainID, nonce, "")
 		assert.Error(t, err)
 		assert.Empty(t, hash)
 	})
@@ -233,34 +212,6 @@ func TestZetacore_PostBlameData(t *testing.T) {
 		)
 		assert.NoError(t, err)
 		assert.Equal(t, sampleHash, hash)
-	})
-}
-
-func TestZetacore_PostVoteBlockHeader(t *testing.T) {
-	ctx := context.Background()
-
-	extraGRPC := withDummyServer(100)
-	setupMockServer(t, observertypes.RegisterQueryServer, skipMethod, nil, nil, extraGRPC...)
-
-	client := setupZetacoreClient(t,
-		withDefaultObserverKeys(),
-		withAccountRetriever(t, 100, 100),
-		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0).SetBroadcastTxHash(sampleHash)),
-	)
-
-	blockHash, err := hex.DecodeString(ethBlockHash)
-	require.NoError(t, err)
-
-	t.Run("post add block header success", func(t *testing.T) {
-		hash, err := client.PostVoteBlockHeader(
-			ctx,
-			chains.Ethereum.ChainId,
-			blockHash,
-			18495266,
-			getHeaderData(t),
-		)
-		require.NoError(t, err)
-		require.Equal(t, sampleHash, hash)
 	})
 }
 

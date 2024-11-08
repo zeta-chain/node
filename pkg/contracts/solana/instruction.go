@@ -34,6 +34,18 @@ type DepositInstructionParams struct {
 	Memo []byte
 }
 
+// DepositSPLInstructionParams contains the parameters for a gateway deposit spl instruction
+type DepositSPLInstructionParams struct {
+	// Discriminator is the unique identifier for the deposit instruction
+	Discriminator [8]byte
+
+	// Amount is the lamports amount for the deposit
+	Amount uint64
+
+	// Memo is the memo for the deposit
+	Memo []byte
+}
+
 // OutboundInstruction is the interface for all gateway outbound instructions
 type OutboundInstruction interface {
 	// Signer returns the signer of the instruction
