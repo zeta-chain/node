@@ -55,10 +55,16 @@ func SimulateMsgDeploySystemContracts(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
 				types.TypeMsgDeploySystemContracts,
-				"policies not found",
+				"policies object not found",
 			), nil, nil
 		}
-
+		if len(policies.Items) == 0 {
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				types.TypeMsgDeploySystemContracts,
+				"no policies found",
+			), nil, nil
+		}
 		admin := policies.Items[0].Address
 
 		address, err := observerTypes.GetOperatorAddressFromAccAddress(admin)

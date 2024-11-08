@@ -20,21 +20,13 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key, types.KeyPrefix(types.SystemContractKey)):
 			var systemContractA, systemContractB types.SystemContract
-			if err := cdc.Unmarshal(kvA.Value, &systemContractA); err != nil {
-				return fmt.Sprintf("failed to unmarshal A: %v", err)
-			}
-			if err := cdc.Unmarshal(kvB.Value, &systemContractB); err != nil {
-				return fmt.Sprintf("failed to unmarshal B: %v", err)
-			}
+			cdc.MustUnmarshal(kvA.Value, &systemContractA)
+			cdc.MustUnmarshal(kvB.Value, &systemContractB)
 			return fmt.Sprintf("%v\n%v", systemContractA, systemContractB)
 		case bytes.Equal(kvA.Key, types.KeyPrefix(types.ForeignCoinsKeyPrefix)):
 			var foreignCoinsA, foreignCoinsB types.ForeignCoins
-			if err := cdc.Unmarshal(kvA.Value, &foreignCoinsA); err != nil {
-				return fmt.Sprintf("failed to unmarshal A: %v", err)
-			}
-			if err := cdc.Unmarshal(kvB.Value, &foreignCoinsB); err != nil {
-				return fmt.Sprintf("failed to unmarshal B: %v", err)
-			}
+			cdc.MustUnmarshal(kvA.Value, &foreignCoinsA)
+			cdc.MustUnmarshal(kvB.Value, &foreignCoinsB)
 			return fmt.Sprintf("%v\n%v", foreignCoinsA, foreignCoinsB)
 		default:
 			return fmt.Sprintf("invalid fungible key prefix %X", kvA.Key[:1])

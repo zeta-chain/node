@@ -55,13 +55,16 @@ func SimulateMsgTypeMsgEnableCCTX(k keeper.Keeper) simtypes.Operation {
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		policies, found := k.GetAuthorityKeeper().GetPolicies(ctx)
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgEnableCCTX, "policies not found"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgEnableCCTX, "policies object not found"), nil, nil
+		}
+		if len(policies.Items) == 0 {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgEnableCCTX, "no policies found"), nil, nil
 		}
 
 		admin := policies.Items[0].Address
 		address, err := types.GetOperatorAddressFromAccAddress(admin)
 		if err != nil {
-			panic(err)
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgEnableCCTX, err.Error()), nil, err
 		}
 		simAccount, found := simtypes.FindAccount(accounts, address)
 		if !found {

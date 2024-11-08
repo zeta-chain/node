@@ -304,7 +304,7 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 
 			e := votingMsg.ValidateBasic()
 			if e != nil {
-				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate voting msg"), nil, err
+				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate voting msg"), nil, e
 			}
 
 			fops = append(fops, simtypes.FutureOperation{
