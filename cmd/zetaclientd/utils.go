@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/zeta-chain/node/zetaclient/authz"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -68,6 +70,35 @@ func waitForZetaCore(config config.Config, logger zerolog.Logger) {
 		} else {
 			break
 		}
+	}
+}
+
+// waitForZetacoreToCreateBlocks waits for zetacore to create blocks
+func waitForZetacoreToCreateBlocks(ctx context.Context, zc interfaces.ZetacoreClient, logger zerolog.Logger) error {
+	const (
+		interval = 5 * time.Second
+		attempts = 15
+	)
+
+	var (
+		retryCount = 0
+		start      = time.Now()
+	)
+
+	for {
+		blockHeight, err := zc.GetBlockHeight(ctx)
+		if err == nil && blockHeight > 1 {
+			logger.Info().Msgf("Zeta block height: %d", blockHeight)
+			return nil
+		}
+
+		retryCount++
+		if retryCount > attempts {
+			return fmt.Errorf("zetacore is not ready, timeout %s", time.Since(start).String())
+		}
+
+		logger.Info().Msgf("Failed to get block number, retry : %d/%d", retryCount, attempts)
+		time.Sleep(interval)
 	}
 }
 

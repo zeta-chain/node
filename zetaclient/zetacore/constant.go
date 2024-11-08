@@ -33,15 +33,6 @@ const (
 	// PostBlameDataGasLimit is the gas limit for voting on blames
 	PostBlameDataGasLimit = 200_000
 
-	// DefaultRetryCount is the number of retries for broadcasting a tx
-	DefaultRetryCount = 5
-
-	// ExtendedRetryCount is an extended number of retries for broadcasting a tx, used in keygen operations
-	ExtendedRetryCount = 15
-
-	// DefaultRetryInterval is the interval between retries in seconds
-	DefaultRetryInterval = 5
-
 	// PostVoteOutboundGasLimit is the gas limit for voting on observed outbound tx (for zetachain itself)
 	PostVoteOutboundGasLimit = 500_000
 

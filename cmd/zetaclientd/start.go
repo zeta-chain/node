@@ -100,7 +100,7 @@ func Start(_ *cobra.Command, _ []string) error {
 	}
 
 	// Wait until zetacore is ready to create blocks
-	if err = zetacoreClient.WaitForZetacoreToCreateBlocks(ctx); err != nil {
+	if err = waitForZetacoreToCreateBlocks(ctx, zetacoreClient, startLogger); err != nil {
 		startLogger.Error().Err(err).Msg("WaitForZetacoreToCreateBlocks error")
 		return err
 	}

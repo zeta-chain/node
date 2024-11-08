@@ -2,11 +2,9 @@
 package zetacore
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"sync"
-	"time"
 
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	cosmosclient "github.com/cosmos/cosmos-sdk/client"
@@ -269,25 +267,6 @@ func (c *Client) SetAccountNumber(keyType authz.KeyType) error {
 	c.accountNumber[keyType] = accN
 	c.seqNumber[keyType] = seq
 
-	return nil
-}
-
-// WaitForZetacoreToCreateBlocks waits for zetacore to create blocks
-func (c *Client) WaitForZetacoreToCreateBlocks(ctx context.Context) error {
-	retryCount := 0
-	for {
-		block, err := c.GetLatestZetaBlock(ctx)
-		if err == nil && block.Header.Height > 1 {
-			c.logger.Info().Msgf("Zetacore height: %d", block.Header.Height)
-			break
-		}
-		retryCount++
-		c.logger.Debug().Msgf("Failed to get latest Block , Retry : %d/%d", retryCount, DefaultRetryCount)
-		if retryCount > ExtendedRetryCount {
-			return fmt.Errorf("zetacore is not ready, waited for %d seconds", DefaultRetryCount*DefaultRetryInterval)
-		}
-		time.Sleep(DefaultRetryInterval * time.Second)
-	}
 	return nil
 }
 
