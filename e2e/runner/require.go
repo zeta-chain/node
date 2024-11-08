@@ -24,8 +24,8 @@ func (r *E2ERunner) EnsureNoTrackers() {
 	require.Empty(r, res.OutboundTracker, "there should be no trackers at the end of the test")
 }
 
-// EnsureZeroBalanceAddressZEVM ensures that the balance of the address is zero in the ZEVM
-func (r *E2ERunner) EnsureZeroBalanceAddressZEVM() {
+// EnsureZeroBalanceAddressZEVM ensures that the balance of the restricted address is zero in the ZEVM
+func (r *E2ERunner) EnsureZeroBalanceOnRestrictedAddressZEVM() {
 	restrictedAddress := ethcommon.HexToAddress(sample.RestrictedEVMAddressTest)
 
 	// ensure ZETA balance is zero

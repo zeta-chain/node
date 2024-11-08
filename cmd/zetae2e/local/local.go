@@ -313,7 +313,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestMessagePassingEVMtoZEVMRevertFailName,
 		}
 
-		bitcoinTests := []string{
+		// btc withdraw tests are those that need a Bitcoin node wallet to send UTXOs
+		bitcoinDepositTests := []string{
 			e2etests.TestBitcoinDonationName,
 			e2etests.TestBitcoinDepositName,
 			e2etests.TestBitcoinDepositAndCallName,
@@ -323,17 +324,19 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinStdMemoDepositAndCallRevertName,
 			e2etests.TestBitcoinStdMemoDepositAndCallRevertOtherAddressName,
 			e2etests.TestBitcoinStdMemoInscribedDepositAndCallName,
+			e2etests.TestCrosschainSwapName,
+		}
+		bitcoinWithdrawTests := []string{
 			e2etests.TestBitcoinWithdrawSegWitName,
 			e2etests.TestBitcoinWithdrawInvalidAddressName,
 			e2etests.TestZetaWithdrawBTCRevertName,
-			e2etests.TestCrosschainSwapName,
 		}
-		bitcoinAdvancedTests := []string{
+		bitcoinWithdrawTestsAdvanced := []string{
 			e2etests.TestBitcoinWithdrawTaprootName,
 			e2etests.TestBitcoinWithdrawLegacyName,
-			e2etests.TestBitcoinWithdrawMultipleName,
 			e2etests.TestBitcoinWithdrawP2SHName,
 			e2etests.TestBitcoinWithdrawP2WSHName,
+			e2etests.TestBitcoinWithdrawMultipleName,
 			e2etests.TestBitcoinWithdrawRestrictedName,
 		}
 		ethereumTests := []string{
@@ -367,7 +370,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			erc20Tests = append(erc20Tests, erc20AdvancedTests...)
 			zetaTests = append(zetaTests, zetaAdvancedTests...)
 			zevmMPTests = append(zevmMPTests, zevmMPAdvancedTests...)
-			bitcoinTests = append(bitcoinTests, bitcoinAdvancedTests...)
+			bitcoinWithdrawTests = append(bitcoinWithdrawTests, bitcoinWithdrawTestsAdvanced...)
 			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
 		}
 
@@ -375,7 +378,16 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
 		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
 		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
-		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, bitcoinTests...))
+		runnerDeposit, runnerWithdraw := initBitcoinTestRunners(
+			conf,
+			deployerRunner,
+			verbose,
+			!skipBitcoinSetup,
+			bitcoinDepositTests,
+			bitcoinWithdrawTests,
+		)
+		eg.Go(runnerDeposit)
+		eg.Go(runnerWithdraw)
 		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, ethereumTests...))
 	}
 
@@ -471,7 +483,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	// if all tests pass, cancel txs priority monitoring and check if tx priority is not correct in some blocks
-	logger.Print("⏳ e2e tests passed,checking tx priority")
+	logger.Print("⏳ e2e tests passed, checking tx priority")
 	monitorPriorityCancel()
 	if err := <-txPriorityErrCh; err != nil && errors.Is(err, errWrongTxPriority) {
 		logger.Print("❌ %v", err)
@@ -484,10 +496,15 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testTSSMigration {
 		TSSMigration(deployerRunner, logger, verbose, conf)
 	}
+
 	// Verify that there are no trackers left over after tests complete
 	if !skipTrackerCheck {
 		deployerRunner.EnsureNoTrackers()
 	}
+
+	// Verify that the balance of restricted address is zero
+	deployerRunner.EnsureZeroBalanceOnRestrictedAddressZEVM()
+
 	// print and validate report
 	networkReport, err := deployerRunner.GenerateNetworkReport()
 	if err != nil {

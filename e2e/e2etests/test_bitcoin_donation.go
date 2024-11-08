@@ -12,10 +12,6 @@ import (
 )
 
 func TestBitcoinDonation(r *runner.E2ERunner, args []string) {
-	// ARRANGE
-	// Given BTC address
-	r.SetBtcAddress(r.Name, false)
-
 	// Given "Live" BTC network
 	stop := r.MineBlocksIfLocalBitcoin()
 	defer stop()

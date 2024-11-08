@@ -7,7 +7,7 @@ toolchain go1.22.8
 require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.3.0
-	cosmossdk.io/tools/rosetta v0.2.1
+	cosmossdk.io/tools/rosetta v0.2.1 // indirect
 	github.com/99designs/keyring v1.2.1
 	github.com/btcsuite/btcd v0.24.2
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
@@ -15,7 +15,7 @@ require (
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/cockroachdb/errors v1.11.1
-	github.com/coinbase/rosetta-sdk-go v0.7.9
+	github.com/coinbase/rosetta-sdk-go v0.7.9 // indirect
 	github.com/cometbft/cometbft v0.37.5
 	github.com/cometbft/cometbft-db v0.12.0
 	github.com/cosmos/btcutil v1.0.5

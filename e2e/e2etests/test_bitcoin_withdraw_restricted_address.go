@@ -16,8 +16,6 @@ func TestBitcoinWithdrawRestricted(r *runner.E2ERunner, args []string) {
 	withdrawalAmount := parseFloat(r, args[0])
 	amount := btcAmountFromFloat64(r, withdrawalAmount)
 
-	r.SetBtcAddress(r.Name, false)
-
 	withdrawBitcoinRestricted(r, amount)
 }
 
