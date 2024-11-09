@@ -9,13 +9,16 @@ on:
 jobs:
   listen_dev:
     runs-on: ubuntu-latest
-    
+
+    if: |
+      github.actor != 'dependabot[bot]' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'zeta-chain/node') 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       
     - name: Run listen.dev Scan
-      uses: listendev/action@v0.11
+      uses: listendev/action@v0.12
       with: 
         jwt: ${{ secrets.LSTN_API_KEY }}
         ci: only
