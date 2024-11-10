@@ -55,15 +55,16 @@ const (
 	/*
 	 * Solana tests
 	 */
-	TestSolanaDepositName              = "solana_deposit"
-	TestSolanaWithdrawName             = "solana_withdraw"
-	TestSolanaDepositAndCallName       = "solana_deposit_and_call"
-	TestSolanaDepositAndCallRefundName = "solana_deposit_and_call_refund"
-	TestSolanaDepositRestrictedName    = "solana_deposit_restricted"
-	TestSolanaWithdrawRestrictedName   = "solana_withdraw_restricted"
-	TestSPLDepositName                 = "spl_deposit"
-	TestSPLDepositAndCallName          = "spl_deposit_and_call"
-	TestSPLWithdrawName                = "spl_withdraw"
+	TestSolanaDepositName                   = "solana_deposit"
+	TestSolanaWithdrawName                  = "solana_withdraw"
+	TestSolanaDepositAndCallName            = "solana_deposit_and_call"
+	TestSolanaDepositAndCallRefundName      = "solana_deposit_and_call_refund"
+	TestSolanaDepositRestrictedName         = "solana_deposit_restricted"
+	TestSolanaWithdrawRestrictedName        = "solana_withdraw_restricted"
+	TestSPLDepositName                      = "spl_deposit"
+	TestSPLDepositAndCallName               = "spl_deposit_and_call"
+	TestSPLWithdrawName                     = "spl_withdraw"
+	TestSPLWithdrawAndCreateReceiverAtaName = "spl_withdraw_and_create_receiver_ata"
 
 	/**
 	 * TON tests
@@ -441,6 +442,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in spl tokens", DefaultValue: "1000000"},
 		},
 		TestSPLWithdraw,
+	),
+	runner.NewE2ETest(
+		TestSPLWithdrawAndCreateReceiverAtaName,
+		"withdraw SPL from ZEVM and create receiver ata",
+		[]runner.ArgDefinition{
+			{Description: "amount in spl tokens", DefaultValue: "1000000"},
+		},
+		TestSPLWithdrawAndCreateReceiverAta,
 	),
 	runner.NewE2ETest(
 		TestSolanaDepositAndCallRefundName,

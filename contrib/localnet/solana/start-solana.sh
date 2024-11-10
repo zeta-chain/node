@@ -8,9 +8,10 @@ echo "starting solana test validator..."
 solana-test-validator &
 
 sleep 5
-# airdrop to e2e sol account
+# airdrop to e2e sol account and rent payer
 solana airdrop 100
 solana airdrop 100 37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ
+solana airdrop 100 C6KPvGDYfNusoE4yfRP21F8wK35bxCBMT69xk4xo3X79
 solana program deploy gateway.so
 
 
