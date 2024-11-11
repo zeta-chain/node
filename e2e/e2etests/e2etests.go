@@ -75,6 +75,7 @@ const (
 	TestBitcoinDepositName                                 = "bitcoin_deposit"
 	TestBitcoinDepositAndCallName                          = "bitcoin_deposit_and_call"
 	TestBitcoinDepositAndCallRevertName                    = "bitcoin_deposit_and_call_revert"
+	TestBitcoinDepositAndCallRevertWithDustName            = "bitcoin_deposit_and_call_revert_with_dust"
 	TestBitcoinDonationName                                = "bitcoin_donation"
 	TestBitcoinStdMemoDepositName                          = "bitcoin_std_memo_deposit"
 	TestBitcoinStdMemoDepositAndCallName                   = "bitcoin_std_memo_deposit_and_call"
@@ -507,6 +508,11 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
 		TestBitcoinDepositAndCallRevert,
+	),
+	runner.NewE2ETest(
+		TestBitcoinDepositAndCallRevertWithDustName,
+		"deposit Bitcoin into ZEVM; revert with dust amount that aborts the CCTX", []runner.ArgDefinition{},
+		TestBitcoinDepositAndCallRevertWithDust,
 	),
 	runner.NewE2ETest(
 		TestBitcoinStdMemoDepositName,
