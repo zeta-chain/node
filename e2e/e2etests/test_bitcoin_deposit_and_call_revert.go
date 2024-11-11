@@ -20,8 +20,6 @@ func TestBitcoinDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	amount := parseFloat(r, args[0])
 	amount += zetabitcoin.DefaultDepositorFee
 
-	r.Logger.Print("BITCOIN: Amount to send: %s", args[0])
-
 	// Given a list of UTXOs
 	utxos, err := r.ListDeployerUTXOs()
 	require.NoError(r, err)
@@ -44,10 +42,6 @@ func TestBitcoinDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	receiver, value := r.QueryOutboundReceiverAndAmount(cctx.OutboundParams[1].Hash)
 	assert.Equal(r, r.BTCDeployerAddress.EncodeAddress(), receiver)
 	assert.Positive(r, value)
-
-	r.Logger.Print("BITCOIN: Amount received: %d", value)
-
-	// 0.002
 
 	r.Logger.Info("Sent %f BTC to TSS with invalid memo, got refund of %d satoshis", amount, value)
 }
