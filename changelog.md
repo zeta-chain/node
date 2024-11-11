@@ -20,6 +20,7 @@
 ### Fixes
 * [3041](https://github.com/zeta-chain/node/pull/3041) - replace libp2p public DHT with private gossip peer discovery and connection gater for inbound connections
 * [3106](https://github.com/zeta-chain/node/pull/3106) - prevent blocked CCTX on out of gas during omnichain calls
+* [3139](https://github.com/zeta-chain/node/pull/3139) - fix config resolution in orchestrator
 
 ## v21.0.0
 

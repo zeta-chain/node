@@ -258,25 +258,36 @@ func (signer *Signer) prepareWhitelistTx(
 
 // SetGatewayAddress sets the gateway address
 func (signer *Signer) SetGatewayAddress(address string) {
-	// parse gateway ID and PDA
-	gatewayID, pda, err := contracts.ParseGatewayIDAndPda(address)
-	if err != nil {
-		signer.Logger().Std.Error().Err(err).Msgf("cannot parse gateway address: %s", address)
+	// noop
+	if address == "" {
 		return
 	}
 
-	// update gateway ID and PDA
-	signer.Lock()
-	defer signer.Unlock()
+	// parse gateway ID and PDA
+	gatewayID, pda, err := contracts.ParseGatewayIDAndPda(address)
+	if err != nil {
+		signer.Logger().Std.Error().Err(err).Str("address", address).Msgf("Unable to parse gateway address")
+		return
+	}
 
+	// noop
+	if signer.gatewayID.Equals(gatewayID) {
+		return
+	}
+
+	signer.Logger().Std.Info().
+		Str("signer.old_gateway_address", signer.gatewayID.String()).
+		Str("signer.new_gateway_address", gatewayID.String()).
+		Msg("Updated gateway address")
+
+	signer.Lock()
 	signer.gatewayID = gatewayID
 	signer.pda = pda
+	signer.Unlock()
 }
 
 // GetGatewayAddress returns the gateway address
 func (signer *Signer) GetGatewayAddress() string {
-	signer.Lock()
-	defer signer.Unlock()
 	return signer.gatewayID.String()
 }
 
