@@ -2,16 +2,16 @@ package e2etests
 
 import (
 	"github.com/stretchr/testify/require"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/testutil/sample"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 )
 
 // TestBitcoinDepositAndCallRevertWithDust sends a Bitcoin deposit that reverts with a dust amount in the revert outbound.
-// Given the dust is too smart, the CCTX should revert
 func TestBitcoinDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string) {
 	// ARRANGE
 	// Given BTC address
@@ -43,10 +43,12 @@ func TestBitcoinDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string)
 	txHash, err := r.SendToTSSFromDeployerWithMemo(amount, utxos, badMemo)
 	require.NoError(r, err)
 	require.NotEmpty(r, txHash)
-	r.Logger.Print("BITCOIN tx hash: %s", txHash.String())
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "deposit")
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)
+	r.Logger.CCTX(*cctx, "deposit_and_revert")
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
+
+	// check the test was effective: the revert outbound amount is less than the dust amount
+	require.Less(r, cctx.GetCurrentOutboundParam().Amount.Uint64(), uint64(constant.BTCWithdrawalDustAmount))
 }
