@@ -20,6 +20,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/base"
@@ -417,7 +418,7 @@ func (signer *Signer) TryProcessOutbound(
 	}
 
 	// check dust amount
-	dustAmount := false // params.Amount.Uint64() < constant.BTCWithdrawalDustAmount
+	dustAmount := params.Amount.Uint64() < constant.BTCWithdrawalDustAmount
 	if dustAmount {
 		logger.Warn().Msgf("dust amount %d sats, canceling tx", params.Amount.Uint64())
 	}

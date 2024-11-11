@@ -13,6 +13,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/chains/bitcoin/rpc"
@@ -531,8 +532,8 @@ func (ob *Observer) checkTssOutboundResult(
 		return errors.Wrapf(err, "checkTssOutboundResult: invalid TSS Vin in outbound %s nonce %d", hash, nonce)
 	}
 
-	// differentiate between normal and restricted cctx
-	if compliance.IsCctxRestricted(cctx) {
+	// differentiate between normal and cancelled cctx
+	if compliance.IsCctxRestricted(cctx) || params.Amount.Uint64() < constant.BTCWithdrawalDustAmount {
 		err = ob.checkTSSVoutCancelled(params, rawResult.Vout)
 		if err != nil {
 			return errors.Wrapf(
