@@ -27,6 +27,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	zetaos "github.com/zeta-chain/node/pkg/os"
+	"github.com/zeta-chain/node/pkg/ticker"
 	observerTypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/config"
@@ -199,33 +200,36 @@ func Start(_ *cobra.Command, _ []string) error {
 	}
 
 	// Create TSS server
-	server, err := mc.SetupTSSServer(peers, priKey, preParams, appContext.Config(), tssKeyPass, true, whitelistedPeers)
+	tssServer, err := mc.SetupTSSServer(
+		peers,
+		priKey,
+		preParams,
+		appContext.Config(),
+		tssKeyPass,
+		true,
+		whitelistedPeers,
+	)
 	if err != nil {
 		return fmt.Errorf("SetupTSSServer error: %w", err)
 	}
+
 	// Set P2P ID for telemetry
-	telemetryServer.SetP2PID(server.GetLocalPeerID())
+	telemetryServer.SetP2PID(tssServer.GetLocalPeerID())
 
 	// Creating a channel to listen for os signals (or other signals)
 	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
 
-	// Maintenance workers ============
-	maintenance.NewTSSListener(zetacoreClient, masterLogger).Listen(ctx, func() {
-		masterLogger.Info().Msg("TSS listener received an action to shutdown zetaclientd.")
-		signalChannel <- syscall.SIGTERM
-	})
-
 	go func() {
 		for {
 			time.Sleep(30 * time.Second)
-			ps := server.GetKnownPeers()
+			ps := tssServer.GetKnownPeers()
 			metrics.NumConnectedPeers.Set(float64(len(ps)))
 			telemetryServer.SetConnectedPeers(ps)
 		}
 	}()
 	go func() {
-		host := server.GetP2PHost()
+		host := tssServer.GetP2PHost()
 		pingRTT := make(map[peer.ID]int64)
 		for {
 			var wg sync.WaitGroup
@@ -252,7 +256,7 @@ func Start(_ *cobra.Command, _ []string) error {
 
 	// Generate a new TSS if keygen is set and add it into the tss server
 	// If TSS has already been generated, and keygen was successful ; we use the existing TSS
-	err = mc.Generate(ctx, masterLogger, zetacoreClient, server)
+	err = mc.Generate(ctx, zetacoreClient, tssServer, masterLogger)
 	if err != nil {
 		return err
 	}
@@ -262,7 +266,7 @@ func Start(_ *cobra.Command, _ []string) error {
 		zetacoreClient,
 		tssHistoricalList,
 		hotkeyPass,
-		server,
+		tssServer,
 	)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("NewTSS error")
@@ -277,23 +281,26 @@ func Start(_ *cobra.Command, _ []string) error {
 
 	// Wait for TSS keygen to be successful before proceeding, This is a blocking thread only for a new keygen.
 	// For existing keygen, this should directly proceed to the next step
-	ticker := time.NewTicker(time.Second * 1)
-	for range ticker.C {
-		keyGen := appContext.GetKeygen()
-		if keyGen.Status != observerTypes.KeygenStatus_KeyGenSuccess {
-			startLogger.Info().Msgf("Waiting for TSS Keygen to be a success, current status %s", keyGen.Status)
-			continue
+	_ = ticker.Run(ctx, time.Second, func(ctx context.Context, t *ticker.Ticker) error {
+		keygen, err = zetacoreClient.GetKeyGen(ctx)
+		switch {
+		case err != nil:
+			startLogger.Warn().Err(err).Msg("Waiting for TSS Keygen to be a success, got error")
+		case keygen.Status != observerTypes.KeygenStatus_KeyGenSuccess:
+			startLogger.Warn().Msgf("Waiting for TSS Keygen to be a success, current status %s", keygen.Status)
+		default:
+			t.Stop()
 		}
-		break
-	}
+
+		return nil
+	})
 
 	// Update Current TSS value from zetacore, if TSS keygen is successful, the TSS address is set on zeta-core
 	// Returns err if the RPC call fails as zeta client needs the current TSS address to be set
 	// This is only needed in case of a new Keygen , as the TSS address is set on zetacore only after the keygen is successful i.e enough votes have been broadcast
 	currentTss, err := zetacoreClient.GetTSS(ctx)
 	if err != nil {
-		startLogger.Error().Err(err).Msg("GetCurrentTSS error")
-		return err
+		return errors.Wrap(err, "unable to get current TSS")
 	}
 
 	// Filter supported BTC chain IDs
@@ -311,6 +318,13 @@ func Start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Err(err).Msg("TSS address validation failed")
 		return err
 	}
+
+	// Starts various background TSS listeners.
+	// Shuts down zetaclientd if any is triggered.
+	maintenance.NewTSSListener(zetacoreClient, masterLogger).Listen(ctx, func() {
+		masterLogger.Info().Msg("TSS listener received an action to shutdown zetaclientd.")
+		signalChannel <- syscall.SIGTERM
+	})
 
 	if len(appContext.ListChainIDs()) == 0 {
 		startLogger.Error().Interface("config", cfg).Msgf("No chains in updated config")
@@ -367,7 +381,7 @@ func Start(_ *cobra.Command, _ []string) error {
 	}
 
 	// Start orchestrator with all observers and signers
-	if err := maestro.Start(ctx); err != nil {
+	if err = maestro.Start(ctx); err != nil {
 		return errors.Wrap(err, "unable to start orchestrator")
 	}
 
