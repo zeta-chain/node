@@ -33,7 +33,6 @@ type BankKeeper interface {
 		amt sdk.Coins,
 	) error
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
-	GetSupply(ctx sdk.Context, denom string) sdk.Coin
 }
 
 type ObserverKeeper interface {

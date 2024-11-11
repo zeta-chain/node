@@ -29,5 +29,4 @@ var (
 	ErrNilGasPrice             = cosmoserrors.Register(ModuleName, 1127, "nil gas price")
 	ErrAccountNotFound         = cosmoserrors.Register(ModuleName, 1128, "account not found")
 	ErrGatewayContractNotSet   = cosmoserrors.Register(ModuleName, 1129, "gateway contract not set")
-	ErrMaxSupplyReached        = cosmoserrors.Register(ModuleName, 1135, "max supply reached")
 )
