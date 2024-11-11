@@ -6,8 +6,6 @@ import (
 	"sync"
 
 	"github.com/showa-93/go-mask"
-
-	"github.com/zeta-chain/node/pkg/chains"
 )
 
 // KeyringBackend is the type of keyring backend to use for the hotkey
@@ -40,7 +38,6 @@ type ClientConfiguration struct {
 
 // EVMConfig is the config for EVM chain
 type EVMConfig struct {
-	Chain           chains.Chain
 	Endpoint        string `mask:"filled"`
 	RPCAlertLatency int64
 }
@@ -216,7 +213,7 @@ func (c Config) GetRelayerKeyPath() string {
 }
 
 func (c EVMConfig) Empty() bool {
-	return c.Endpoint == "" || c.Chain.IsEmpty()
+	return c.Endpoint == ""
 }
 
 func (c BTCConfig) Empty() bool {
