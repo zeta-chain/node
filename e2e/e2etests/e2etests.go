@@ -63,17 +63,18 @@ const (
 	 Bitcoin tests
 	 Test transfer of Bitcoin asset across chains
 	*/
-	TestBitcoinDepositName                = "bitcoin_deposit"
-	TestBitcoinDepositRefundName          = "bitcoin_deposit_refund"
-	TestBitcoinWithdrawSegWitName         = "bitcoin_withdraw_segwit"
-	TestBitcoinWithdrawTaprootName        = "bitcoin_withdraw_taproot"
-	TestBitcoinWithdrawMultipleName       = "bitcoin_withdraw_multiple"
-	TestBitcoinWithdrawLegacyName         = "bitcoin_withdraw_legacy"
-	TestBitcoinWithdrawP2WSHName          = "bitcoin_withdraw_p2wsh"
-	TestBitcoinWithdrawP2SHName           = "bitcoin_withdraw_p2sh"
-	TestBitcoinWithdrawInvalidAddressName = "bitcoin_withdraw_invalid"
-	TestBitcoinWithdrawRestrictedName     = "bitcoin_withdraw_restricted"
-	TestExtractBitcoinInscriptionMemoName = "bitcoin_memo_from_inscription"
+	TestBitcoinDepositName                      = "bitcoin_deposit"
+	TestBitcoinDepositRefundName                = "bitcoin_deposit_refund"
+	TestBitcoinDepositAndCallRevertWithDustName = "bitcoin_deposit_and_call_revert_with_dust"
+	TestBitcoinWithdrawSegWitName               = "bitcoin_withdraw_segwit"
+	TestBitcoinWithdrawTaprootName              = "bitcoin_withdraw_taproot"
+	TestBitcoinWithdrawMultipleName             = "bitcoin_withdraw_multiple"
+	TestBitcoinWithdrawLegacyName               = "bitcoin_withdraw_legacy"
+	TestBitcoinWithdrawP2WSHName                = "bitcoin_withdraw_p2wsh"
+	TestBitcoinWithdrawP2SHName                 = "bitcoin_withdraw_p2sh"
+	TestBitcoinWithdrawInvalidAddressName       = "bitcoin_withdraw_invalid"
+	TestBitcoinWithdrawRestrictedName           = "bitcoin_withdraw_restricted"
+	TestExtractBitcoinInscriptionMemoName       = "bitcoin_memo_from_inscription"
 
 	/*
 	 Application tests
@@ -420,6 +421,11 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
 		TestBitcoinDepositRefund,
+	),
+	runner.NewE2ETest(
+		TestBitcoinDepositAndCallRevertWithDustName,
+		"deposit Bitcoin into ZEVM; revert with dust amount that aborts the CCTX", []runner.ArgDefinition{},
+		TestBitcoinDepositAndCallRevertWithDust,
 	),
 	runner.NewE2ETest(
 		TestBitcoinWithdrawSegWitName,
