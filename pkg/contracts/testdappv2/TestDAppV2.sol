@@ -144,21 +144,21 @@ contract TestDAppV2 {
                 zrc20,
                 RevertOptions(address(0), false, address(0), "", 0)
             );
-//            RevertOptions memory revertOptions = RevertOptions(
-//                msg.sender, // revert address
-//                false, // callOnRevert
-//                msg.sender, // abortAddress
-//                bytes("revert message"),
-//                uint256(100000) // onRevertGasLimit
-//            );
-//
-//            IGatewayZEVM(msg.sender).call(
-//                abi.encode(context.sender),
-//                zrc20,
-//                message,
-//                100000,
-//                revertOptions
-//            );
+            RevertOptions memory revertOptions = RevertOptions(
+                msg.sender, // revert address
+                false, // callOnRevert
+                msg.sender, // abortAddress
+                bytes("revert message"),
+                uint256(100000) // onRevertGasLimit
+            );
+
+            IGatewayZEVM(msg.sender).call(
+                abi.encode(context.sender),
+                zrc20,
+                message,
+                100000,
+                revertOptions
+            );
         } else {
             string memory messageStr = message.length == 0 ? getNoMessageIndex(context.sender) : string(message);
 
@@ -223,7 +223,7 @@ contract TestDAppV2 {
 
     function consumeGas() internal {
         // Approximate target gas consumption
-        uint256 targetGas = 1000000;
+        uint256 targetGas = 300000;
         // Approximate gas cost for a single storage write
         uint256 storageWriteGasCost = 20000;
         uint256 iterations = targetGas / storageWriteGasCost;
