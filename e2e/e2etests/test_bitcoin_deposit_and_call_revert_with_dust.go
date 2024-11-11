@@ -7,24 +7,26 @@ import (
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/testutil/sample"
-	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 )
 
-func TestBitcoinDepositAndCallRevert(r *runner.E2ERunner, args []string) {
+// TestBitcoinDepositAndCallRevertWithDust sends a Bitcoin deposit that reverts with a dust amount in the revert outbound.
+// Given the dust is too smart, the CCTX should revert
+func TestBitcoinDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string) {
 	// ARRANGE
 	// Given BTC address
 	r.SetBtcAddress(r.Name, false)
+
+	require.Len(r, args, 0)
 
 	// Given "Live" BTC network
 	stop := r.MineBlocksIfLocalBitcoin()
 	defer stop()
 
-	// Given amount to send
-	require.Len(r, args, 1)
-	amount := parseFloat(r, args[0])
-	amount += zetabitcoin.DefaultDepositorFee
+	// 0.002 BTC is consumed in a deposit and revert, the dust is set to 1000 satoshis in the protocol
+	// Therefore the deposit amount should be 0.002 + 0.000005 = 0.00200500 should trigger the condition
+	// As only 500 satoshis are left after the deposit
 
-	r.Logger.Print("BITCOIN: Amount to send: %s", args[0])
+	amount := 0.00200500
 
 	// Given a list of UTXOs
 	utxos, err := r.ListDeployerUTXOs()
@@ -50,8 +52,5 @@ func TestBitcoinDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	assert.Positive(r, value)
 
 	r.Logger.Print("BITCOIN: Amount received: %d", value)
-
-	// 0.002
-
 	r.Logger.Info("Sent %f BTC to TSS with invalid memo, got refund of %d satoshis", amount, value)
 }
