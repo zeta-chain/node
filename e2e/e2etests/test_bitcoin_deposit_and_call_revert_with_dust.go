@@ -1,8 +1,9 @@
 package e2etests
 
 import (
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -27,6 +28,7 @@ func TestBitcoinDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string)
 	// As only 500 satoshis are left after the deposit
 
 	amount := 0.00200500
+	amount += zetabitcoin.DefaultDepositorFee
 
 	// Given a list of UTXOs
 	utxos, err := r.ListDeployerUTXOs()
@@ -41,16 +43,10 @@ func TestBitcoinDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string)
 	txHash, err := r.SendToTSSFromDeployerWithMemo(amount, utxos, badMemo)
 	require.NoError(r, err)
 	require.NotEmpty(r, txHash)
+	r.Logger.Print("BITCOIN tx hash: %s", txHash.String())
 
-	// ASSERT
-	// Now we want to make sure refund TX is completed.
-	cctx := utils.WaitCctxRevertedByInboundHash(r.Ctx, r, txHash.String(), r.CctxClient)
-
-	// Check revert tx receiver address and amount
-	receiver, value := r.QueryOutboundReceiverAndAmount(cctx.OutboundParams[1].Hash)
-	assert.Equal(r, r.BTCDeployerAddress.EncodeAddress(), receiver)
-	assert.Positive(r, value)
-
-	r.Logger.Print("BITCOIN: Amount received: %d", value)
-	r.Logger.Info("Sent %f BTC to TSS with invalid memo, got refund of %d satoshis", amount, value)
+	// wait for the cctx to be mined
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
+	r.Logger.CCTX(*cctx, "deposit")
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)
 }
