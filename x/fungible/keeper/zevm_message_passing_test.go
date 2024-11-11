@@ -146,9 +146,6 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		})
 		require.NoError(t, err)
 		errorMint := errors.New("", 10, "error minting coins")
-		bankMock.On("GetSupply", ctx, mock.Anything, mock.Anything).
-			Return(sdk.NewCoin(config.BaseDenom, sdk.NewInt(0))).
-			Once()
 		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
 
 		_, err = k.ZETADepositAndCallContract(
@@ -299,9 +296,6 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		})
 		require.NoError(t, err)
 		errorMint := errors.New("", 101, "error minting coins")
-		bankMock.On("GetSupply", ctx, mock.Anything, mock.Anything).
-			Return(sdk.NewCoin(config.BaseDenom, sdk.NewInt(0))).
-			Once()
 		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
 
 		_, err = k.ZETARevertAndCallContract(
