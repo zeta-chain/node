@@ -22,9 +22,12 @@ func TestBitcoinDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string)
 	// 0.002 BTC is consumed in a deposit and revert, the dust is set to 1000 satoshis in the protocol
 	// Therefore the deposit amount should be 0.002 + 0.000001 = 0.00200100 should trigger the condition
 	// As only 100 satoshis are left after the deposit
-
-	amount := 0.00200100
-	amount += zetabitcoin.DefaultDepositorFee
+	const (
+		// depositAmount is 0.002001 BTC, chosen to result in 100 satoshis after deposit
+		// which is below the dust threshold of 1000 satoshis
+		depositAmount = 0.00200100
+	)
+	amount := depositAmount + zetabitcoin.DefaultDepositorFee
 
 	// Given a list of UTXOs
 	utxos, err := r.ListDeployerUTXOs()
