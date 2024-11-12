@@ -55,16 +55,17 @@ const (
 	/*
 	 * Solana tests
 	 */
-	TestSolanaDepositName                   = "solana_deposit"
-	TestSolanaWithdrawName                  = "solana_withdraw"
-	TestSolanaDepositAndCallName            = "solana_deposit_and_call"
-	TestSolanaDepositAndCallRefundName      = "solana_deposit_and_call_refund"
-	TestSolanaDepositRestrictedName         = "solana_deposit_restricted"
-	TestSolanaWithdrawRestrictedName        = "solana_withdraw_restricted"
-	TestSPLDepositName                      = "spl_deposit"
-	TestSPLDepositAndCallName               = "spl_deposit_and_call"
-	TestSPLWithdrawName                     = "spl_withdraw"
-	TestSPLWithdrawAndCreateReceiverAtaName = "spl_withdraw_and_create_receiver_ata"
+	TestSolanaDepositName                      = "solana_deposit"
+	TestSolanaWithdrawName                     = "solana_withdraw"
+	TestSolanaDepositAndCallName               = "solana_deposit_and_call"
+	TestSolanaDepositAndCallRevertName         = "solana_deposit_and_call_revert"
+	TestSolanaDepositAndCallRevertWithDustName = "solana_deposit_and_call_revert_with_dust"
+	TestSolanaDepositRestrictedName            = "solana_deposit_restricted"
+	TestSolanaWithdrawRestrictedName           = "solana_withdraw_restricted"
+	TestSPLDepositName                         = "spl_deposit"
+	TestSPLDepositAndCallName                  = "spl_deposit_and_call"
+	TestSPLWithdrawName                        = "spl_withdraw"
+	TestSPLWithdrawAndCreateReceiverAtaName    = "spl_withdraw_and_create_receiver_ata"
 
 	/**
 	 * TON tests
@@ -453,12 +454,18 @@ var AllE2ETests = []runner.E2ETest{
 		TestSPLWithdrawAndCreateReceiverAta,
 	),
 	runner.NewE2ETest(
-		TestSolanaDepositAndCallRefundName,
-		"deposit SOL into ZEVM and call a contract that reverts; should refund",
+		TestSolanaDepositAndCallRevertName,
+		"deposit SOL into ZEVM and call a contract that reverts",
 		[]runner.ArgDefinition{
 			{Description: "amount in lamport", DefaultValue: "1200000"},
 		},
-		TestSolanaDepositAndCallRefund,
+		TestSolanaDepositAndCallRevert,
+	),
+	runner.NewE2ETest(
+		TestSolanaDepositAndCallRevertWithDustName,
+		"deposit SOL into ZEVM; revert with dust amount that aborts the CCTX",
+		[]runner.ArgDefinition{},
+		TestSolanaDepositAndCallRevertWithDust,
 	),
 	runner.NewE2ETest(
 		TestSolanaDepositRestrictedName,
