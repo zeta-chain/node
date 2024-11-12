@@ -2,11 +2,9 @@
 package zetacore
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"sync"
-	"time"
 
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	cosmosclient "github.com/cosmos/cosmos-sdk/client"
@@ -21,11 +19,10 @@ import (
 	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/chains"
 	zetacore_rpc "github.com/zeta-chain/node/pkg/rpc"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/config"
-	zctx "github.com/zeta-chain/node/zetaclient/context"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 var _ interfaces.ZetacoreClient = &Client{}
@@ -43,12 +40,10 @@ type Client struct {
 	accountNumber map[authz.KeyType]uint64
 	seqNumber     map[authz.KeyType]uint64
 
-	encodingCfg          etherminttypes.EncodingConfig
-	keys                 keyinterfaces.ObserverKeys
-	chainID              string
-	chain                chains.Chain
-	stop                 chan struct{}
-	onBeforeStopCallback []func()
+	encodingCfg etherminttypes.EncodingConfig
+	keys        keyinterfaces.ObserverKeys
+	chainID     string
+	chain       chains.Chain
 
 	mu sync.RWMutex
 }
@@ -100,7 +95,7 @@ func NewClient(
 		return nil, errors.Wrapf(err, "invalid chain id %q", chainID)
 	}
 
-	log := logger.With().Str("module", "zetacoreClient").Logger()
+	log := logger.With().Str(logs.FieldModule, "zetacoreClient").Logger()
 
 	cfg := config.ClientConfiguration{
 		ChainHost:    cosmosREST(chainIP),
@@ -140,7 +135,6 @@ func NewClient(
 
 		encodingCfg: encodingCfg,
 		keys:        keys,
-		stop:        make(chan struct{}),
 		chainID:     chainID,
 		chain:       zetaChain,
 	}, nil
@@ -248,23 +242,6 @@ func (c *Client) GetKeys() keyinterfaces.ObserverKeys {
 	return c.keys
 }
 
-// OnBeforeStop adds a callback to be called before the client stops.
-func (c *Client) OnBeforeStop(callback func()) {
-	c.onBeforeStopCallback = append(c.onBeforeStopCallback, callback)
-}
-
-// Stop stops the client and optionally calls the onBeforeStop callbacks.
-func (c *Client) Stop() {
-	c.logger.Info().Msgf("Stopping zetacore client")
-
-	for i := len(c.onBeforeStopCallback) - 1; i >= 0; i-- {
-		c.logger.Info().Int("callback.index", i).Msgf("calling onBeforeStopCallback")
-		c.onBeforeStopCallback[i]()
-	}
-
-	close(c.stop)
-}
-
 // GetAccountNumberAndSequenceNumber We do not use multiple KeyType for now , but this can be optionally used in the future to seprate TSS signer from Zetaclient GRantee
 func (c *Client) GetAccountNumberAndSequenceNumber(_ authz.KeyType) (uint64, uint64, error) {
 	address, err := c.keys.GetAddress()
@@ -291,116 +268,6 @@ func (c *Client) SetAccountNumber(keyType authz.KeyType) error {
 	c.seqNumber[keyType] = seq
 
 	return nil
-}
-
-// WaitForZetacoreToCreateBlocks waits for zetacore to create blocks
-func (c *Client) WaitForZetacoreToCreateBlocks(ctx context.Context) error {
-	retryCount := 0
-	for {
-		block, err := c.GetLatestZetaBlock(ctx)
-		if err == nil && block.Header.Height > 1 {
-			c.logger.Info().Msgf("Zetacore height: %d", block.Header.Height)
-			break
-		}
-		retryCount++
-		c.logger.Debug().Msgf("Failed to get latest Block , Retry : %d/%d", retryCount, DefaultRetryCount)
-		if retryCount > ExtendedRetryCount {
-			return fmt.Errorf("zetacore is not ready, waited for %d seconds", DefaultRetryCount*DefaultRetryInterval)
-		}
-		time.Sleep(DefaultRetryInterval * time.Second)
-	}
-	return nil
-}
-
-// UpdateAppContext updates zctx.AppContext
-// zetacore stores AppContext for all clients
-func (c *Client) UpdateAppContext(ctx context.Context, appContext *zctx.AppContext, logger zerolog.Logger) error {
-	bn, err := c.GetBlockHeight(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to get zetablock height")
-	}
-
-	plan, err := c.GetUpgradePlan(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to get upgrade plan")
-	}
-
-	// Stop client and notify dependant services to stop (Orchestrator, Observers, and Signers)
-	if plan != nil && bn == plan.Height-1 {
-		c.logger.Warn().Msgf(
-			"Active upgrade plan detected and upgrade height reached: %s at height %d; Stopping ZetaClient;"+
-				" please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd",
-			plan.Name,
-			plan.Height,
-		)
-
-		c.Stop()
-
-		return nil
-	}
-
-	supportedChains, err := c.GetSupportedChains(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to fetch supported chains")
-	}
-
-	additionalChains, err := c.GetAdditionalChains(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to fetch additional chains")
-	}
-
-	chainParams, err := c.GetChainParams(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to fetch chain params")
-	}
-
-	keyGen, err := c.GetKeyGen(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to fetch keygen from zetacore")
-	}
-
-	crosschainFlags, err := c.GetCrosschainFlags(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to fetch crosschain flags from zetacore")
-	}
-
-	tss, err := c.GetTSS(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to fetch current TSS")
-	}
-
-	freshParams := make(map[int64]*observertypes.ChainParams, len(chainParams))
-
-	// check and update chain params for each chain
-	// Note that we are EXCLUDING ZetaChain from the chainParams if it's present
-	for i := range chainParams {
-		cp := chainParams[i]
-
-		if !cp.IsSupported {
-			logger.Warn().Int64("chain.id", cp.ChainId).Msg("Skipping unsupported chain")
-			continue
-		}
-
-		if chains.IsZetaChain(cp.ChainId, nil) {
-			continue
-		}
-
-		if err := observertypes.ValidateChainParams(cp); err != nil {
-			logger.Warn().Err(err).Int64("chain.id", cp.ChainId).Msg("Skipping invalid chain params")
-			continue
-		}
-
-		freshParams[cp.ChainId] = cp
-	}
-
-	return appContext.Update(
-		keyGen,
-		supportedChains,
-		additionalChains,
-		freshParams,
-		tss.GetTssPubkey(),
-		crosschainFlags,
-	)
 }
 
 func cosmosREST(host string) string {

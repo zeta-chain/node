@@ -22,6 +22,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/orchestrator"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -69,7 +70,8 @@ func InboundGetBallot(_ *cobra.Command, args []string) error {
 	appContext := zctx.New(cfg, nil, zerolog.Nop())
 	ctx := zctx.WithAppContext(context.Background(), appContext)
 
-	if err := client.UpdateAppContext(ctx, appContext, zerolog.Nop()); err != nil {
+	err = orchestrator.UpdateAppContext(ctx, appContext, client, zerolog.Nop())
+	if err != nil {
 		return errors.Wrap(err, "failed to update app context")
 	}
 

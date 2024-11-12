@@ -2,32 +2,20 @@ package zetacore
 
 import (
 	"context"
-	"net"
 	"testing"
-
-	"github.com/zeta-chain/node/testutil/sample"
-	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 
 	"cosmossdk.io/math"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	zctx "github.com/zeta-chain/node/zetaclient/context"
-	"gitlab.com/thorchain/tss/go-tss/blame"
-	"go.nhat.io/grpcmock"
-	"go.nhat.io/grpcmock/planner"
-
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
-	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	"gitlab.com/thorchain/tss/go-tss/blame"
 )
 
 const (
@@ -196,149 +184,6 @@ func TestZetacore_SetTSS(t *testing.T) {
 		)
 		require.NoError(t, err)
 		require.Equal(t, sampleHash, hash)
-	})
-}
-
-func TestZetacore_UpdateAppContext(t *testing.T) {
-	ctx := context.Background()
-
-	//Setup server for multiple grpc calls
-	listener, err := net.Listen("tcp", "127.0.0.1:9090")
-	require.NoError(t, err)
-
-	ethChainParams := mocks.MockChainParams(chains.Ethereum.ChainId, 100)
-
-	server := grpcmock.MockUnstartedServer(
-		grpcmock.RegisterService(crosschaintypes.RegisterQueryServer),
-		grpcmock.RegisterService(upgradetypes.RegisterQueryServer),
-		grpcmock.RegisterService(observertypes.RegisterQueryServer),
-		grpcmock.RegisterService(lightclienttypes.RegisterQueryServer),
-		grpcmock.RegisterService(authoritytypes.RegisterQueryServer),
-		grpcmock.WithPlanner(planner.FirstMatch()),
-		grpcmock.WithListener(listener),
-		func(s *grpcmock.Server) {
-			method := "/zetachain.zetacore.crosschain.Query/LastZetaHeight"
-			s.ExpectUnary(method).
-				UnlimitedTimes().
-				WithPayload(crosschaintypes.QueryLastZetaHeightRequest{}).
-				Return(crosschaintypes.QueryLastZetaHeightResponse{Height: 12345})
-
-			method = "/cosmos.upgrade.v1beta1.Query/CurrentPlan"
-			s.ExpectUnary(method).
-				UnlimitedTimes().
-				WithPayload(upgradetypes.QueryCurrentPlanRequest{}).
-				Return(upgradetypes.QueryCurrentPlanResponse{
-					Plan: &upgradetypes.Plan{
-						Name:   "big upgrade",
-						Height: 100,
-					},
-				})
-
-			method = "/zetachain.zetacore.observer.Query/GetChainParams"
-			s.ExpectUnary(method).
-				UnlimitedTimes().
-				WithPayload(observertypes.QueryGetChainParamsRequest{}).
-				Return(observertypes.QueryGetChainParamsResponse{ChainParams: &observertypes.ChainParamsList{
-					ChainParams: []*observertypes.ChainParams{
-						{ChainId: 7000}, // ZetaChain
-						&ethChainParams,
-					},
-				}})
-
-			method = "/zetachain.zetacore.observer.Query/SupportedChains"
-			s.ExpectUnary(method).
-				UnlimitedTimes().
-				WithPayload(observertypes.QuerySupportedChains{}).
-				Return(observertypes.QuerySupportedChainsResponse{
-					Chains: []chains.Chain{
-						{
-							ChainId:     chains.BitcoinMainnet.ChainId,
-							Network:     chains.BscMainnet.Network,
-							NetworkType: chains.BscMainnet.NetworkType,
-							Vm:          chains.BscMainnet.Vm,
-							Consensus:   chains.BscMainnet.Consensus,
-							IsExternal:  chains.BscMainnet.IsExternal,
-							CctxGateway: chains.BscMainnet.CctxGateway,
-							Name:        chains.BscMainnet.Name,
-						},
-						{
-							ChainId:     chains.Ethereum.ChainId,
-							Network:     chains.Ethereum.Network,
-							NetworkType: chains.Ethereum.NetworkType,
-							Vm:          chains.Ethereum.Vm,
-							Consensus:   chains.Ethereum.Consensus,
-							IsExternal:  chains.Ethereum.IsExternal,
-							CctxGateway: chains.Ethereum.CctxGateway,
-							Name:        chains.Ethereum.Name,
-						},
-					},
-				})
-
-			method = "/zetachain.zetacore.observer.Query/Keygen"
-			s.ExpectUnary(method).
-				UnlimitedTimes().
-				WithPayload(observertypes.QueryGetKeygenRequest{}).
-				Return(observertypes.QueryGetKeygenResponse{
-					Keygen: &observertypes.Keygen{
-						Status:         observertypes.KeygenStatus_KeyGenSuccess,
-						GranteePubkeys: nil,
-						BlockNumber:    5646,
-					}})
-
-			method = "/zetachain.zetacore.observer.Query/TSS"
-			s.ExpectUnary(method).
-				UnlimitedTimes().
-				WithPayload(observertypes.QueryGetTSSRequest{}).
-				Return(observertypes.QueryGetTSSResponse{
-					TSS: observertypes.TSS{
-						TssPubkey:           "zetapub1addwnpepqtadxdyt037h86z60nl98t6zk56mw5zpnm79tsmvspln3hgt5phdc79kvfc",
-						TssParticipantList:  nil,
-						OperatorAddressList: nil,
-						FinalizedZetaHeight: 1000,
-						KeyGenZetaHeight:    900,
-					},
-				})
-
-			method = "/zetachain.zetacore.observer.Query/CrosschainFlags"
-			s.ExpectUnary(method).
-				UnlimitedTimes().
-				WithPayload(observertypes.QueryGetCrosschainFlagsRequest{}).
-				Return(observertypes.QueryGetCrosschainFlagsResponse{CrosschainFlags: observertypes.CrosschainFlags{
-					IsInboundEnabled:      true,
-					IsOutboundEnabled:     false,
-					GasPriceIncreaseFlags: nil,
-				}})
-
-			method = "/zetachain.zetacore.authority.Query/ChainInfo"
-			s.ExpectUnary(method).
-				UnlimitedTimes().
-				WithPayload(authoritytypes.QueryGetChainInfoRequest{}).
-				Return(authoritytypes.QueryGetChainInfoResponse{
-					ChainInfo: authoritytypes.ChainInfo{
-						Chains: []chains.Chain{
-							sample.Chain(1000),
-							sample.Chain(1001),
-							sample.Chain(1002),
-						},
-					},
-				})
-		},
-	)(t)
-
-	server.Serve()
-	defer server.Close()
-
-	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
-	client := setupZetacoreClient(t,
-		withObserverKeys(keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")),
-		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0)),
-	)
-
-	t.Run("zetacore update success", func(t *testing.T) {
-		cfg := config.New(false)
-		appContext := zctx.New(cfg, nil, zerolog.Nop())
-		err := client.UpdateAppContext(ctx, appContext, zerolog.New(zerolog.NewTestWriter(t)))
-		require.NoError(t, err)
 	})
 }
 
