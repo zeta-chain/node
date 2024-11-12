@@ -11,8 +11,7 @@ import (
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 )
 
-// GetUpgradePlan returns the current upgrade plan.
-// if there is no active upgrade plan, plan will be nil, err will be nil as well.
+// GetUpgradePlan returns the current upgrade plan or nil if there is no plan.
 func (c *Clients) GetUpgradePlan(ctx context.Context) (*upgradetypes.Plan, error) {
 	in := &upgradetypes.QueryCurrentPlanRequest{}
 

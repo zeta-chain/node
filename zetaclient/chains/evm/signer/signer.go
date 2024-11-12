@@ -108,43 +108,69 @@ func (signer *Signer) WithEvmClient(client interfaces.EVMRPCClient) {
 
 // SetZetaConnectorAddress sets the zeta connector address
 func (signer *Signer) SetZetaConnectorAddress(addr ethcommon.Address) {
+	// noop
+	if (addr == ethcommon.Address{}) || signer.zetaConnectorAddress == addr {
+		return
+	}
+
+	signer.Logger().Std.Info().
+		Str("signer.old_zeta_connector_address", signer.zetaConnectorAddress.String()).
+		Str("signer.new_zeta_connector_address", addr.String()).
+		Msg("Updated zeta connector address")
+
 	signer.Lock()
-	defer signer.Unlock()
 	signer.zetaConnectorAddress = addr
+	signer.Unlock()
 }
 
 // SetERC20CustodyAddress sets the erc20 custody address
 func (signer *Signer) SetERC20CustodyAddress(addr ethcommon.Address) {
+	// noop
+	if (addr == ethcommon.Address{}) || signer.er20CustodyAddress == addr {
+		return
+	}
+
+	signer.Logger().Std.Info().
+		Str("signer.old_erc20_custody_address", signer.er20CustodyAddress.String()).
+		Str("signer.new_erc20_custody_address", addr.String()).
+		Msg("Updated erc20 custody address")
+
 	signer.Lock()
-	defer signer.Unlock()
 	signer.er20CustodyAddress = addr
+	signer.Unlock()
 }
 
 // SetGatewayAddress sets the gateway address
-func (signer *Signer) SetGatewayAddress(addr string) {
+func (signer *Signer) SetGatewayAddress(addrRaw string) {
+	addr := ethcommon.HexToAddress(addrRaw)
+
+	// noop
+	if (addr == ethcommon.Address{}) || signer.gatewayAddress == addr {
+		return
+	}
+
+	signer.Logger().Std.Info().
+		Str("signer.old_gateway_address", signer.gatewayAddress.String()).
+		Str("signer.new_gateway_address", addr.String()).
+		Msg("Updated gateway address")
+
 	signer.Lock()
-	defer signer.Unlock()
-	signer.gatewayAddress = ethcommon.HexToAddress(addr)
+	signer.gatewayAddress = addr
+	signer.Unlock()
 }
 
 // GetZetaConnectorAddress returns the zeta connector address
 func (signer *Signer) GetZetaConnectorAddress() ethcommon.Address {
-	signer.Lock()
-	defer signer.Unlock()
 	return signer.zetaConnectorAddress
 }
 
 // GetERC20CustodyAddress returns the erc20 custody address
 func (signer *Signer) GetERC20CustodyAddress() ethcommon.Address {
-	signer.Lock()
-	defer signer.Unlock()
 	return signer.er20CustodyAddress
 }
 
 // GetGatewayAddress returns the gateway address
 func (signer *Signer) GetGatewayAddress() string {
-	signer.Lock()
-	defer signer.Unlock()
 	return signer.gatewayAddress.String()
 }
 
