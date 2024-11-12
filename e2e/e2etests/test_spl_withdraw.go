@@ -40,7 +40,7 @@ func TestSPLWithdraw(r *runner.E2ERunner, args []string) {
 
 	// get receiver ata balance before withdraw
 	receiverAta := r.ResolveSolanaATA(privkey, privkey.PublicKey(), r.SPLAddr)
-	receiverBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, receiverAta, rpc.CommitmentConfirmed)
+	receiverBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, receiverAta, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 	r.Logger.Info("receiver balance of SPL before withdraw: %s", receiverBalanceBefore.Value.Amount)
 
@@ -57,7 +57,7 @@ func TestSPLWithdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("runner balance of SPL after withdraw: %d", zrc20BalanceAfter)
 
 	// verify balances are updated
-	receiverBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, receiverAta, rpc.CommitmentConfirmed)
+	receiverBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, receiverAta, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 	r.Logger.Info("receiver balance of SPL after withdraw: %s", receiverBalanceAfter.Value.Amount)
 

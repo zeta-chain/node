@@ -67,7 +67,7 @@ func TestSPLWithdrawAndCreateReceiverAta(r *runner.E2ERunner, args []string) {
 	require.NotNil(r, receiverAtaAcc)
 
 	// verify balances are updated
-	receiverBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, receiverAta, rpc.CommitmentConfirmed)
+	receiverBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, receiverAta, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 	r.Logger.Info("receiver balance of SPL after withdraw: %s", receiverBalanceAfter.Value.Amount)
 

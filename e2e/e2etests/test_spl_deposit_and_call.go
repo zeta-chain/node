@@ -29,11 +29,11 @@ func TestSPLDepositAndCall(r *runner.E2ERunner, args []string) {
 	pda := r.ComputePdaAddress()
 	pdaAta := r.ResolveSolanaATA(privKey, pda, r.SPLAddr)
 
-	pdaBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)
+	pdaBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 
 	senderAta := r.ResolveSolanaATA(privKey, privKey.PublicKey(), r.SPLAddr)
-	senderBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentConfirmed)
+	senderBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 
 	// get zrc20 balance for recipient
@@ -54,10 +54,10 @@ func TestSPLDepositAndCall(r *runner.E2ERunner, args []string) {
 	utils.MustHaveCalledExampleContract(r, contract, big.NewInt(int64(amount)))
 
 	// verify balances are updated
-	pdaBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)
+	pdaBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 
-	senderBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentConfirmed)
+	senderBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 
 	zrc20BalanceAfter, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, contractAddr)
