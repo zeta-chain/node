@@ -6,13 +6,7 @@ interface IERC20 {
 }
 
 contract TestDAppV2 {
-    // used to simulate gas consumption
-    uint256[] private storageArray;
-
     string public constant NO_MESSAGE_CALL = "called with no message";
-
-    // define if the chain is ZetaChain
-    bool immutable public isZetaChain;
 
     struct zContext {
         bytes origin;
@@ -42,11 +36,6 @@ contract TestDAppV2 {
     mapping(bytes32 => bool) public calledWithMessage;
     mapping(bytes => address) public senderWithMessage;
     mapping(bytes32 => uint256) public amountWithMessage;
-
-    // the constructor is used to determine if the chain is ZetaChain
-    constructor(bool isZetaChain_) {
-        isZetaChain = isZetaChain_;
-    }
 
     // return the index used for the "WithMessage" mapping when the message for calls is empty
     // this allows testing the message with empty message
@@ -121,13 +110,6 @@ contract TestDAppV2 {
 
     // Revertable interface
     function onRevert(RevertContext calldata revertContext) external {
-
-        // if the chain is ZetaChain, consume gas to test the gas consumption
-        // we do it specifically for ZetaChain to test the outbound processing workflow
-        if (isZetaChain) {
-            consumeGas();
-        }
-
         setCalledWithMessage(string(revertContext.revertMessage));
         setAmountWithMessage(string(revertContext.revertMessage), 0);
         senderWithMessage[revertContext.revertMessage] = revertContext.sender;
@@ -142,22 +124,6 @@ contract TestDAppV2 {
         senderWithMessage[bytes(messageStr)] = messageContext.sender;
 
         return "";
-    }
-
-    function consumeGas() internal {
-        // Approximate target gas consumption
-        uint256 targetGas = 5000000;
-        // Approximate gas cost for a single storage write
-        uint256 storageWriteGasCost = 20000;
-        uint256 iterations = targetGas / storageWriteGasCost;
-
-        // Perform the storage writes
-        for (uint256 i = 0; i < iterations; i++) {
-            storageArray.push(i);
-        }
-
-        // Reset the storage array to avoid accumulation of storage cost
-        delete storageArray;
     }
 
     receive() external payable {}
