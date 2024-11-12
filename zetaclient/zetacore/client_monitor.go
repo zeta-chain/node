@@ -81,7 +81,7 @@ func (c *Client) monitorVoteOutboundResult(
 			}
 		}
 	default:
-		c.logger.Debug().Fields(logFields).Msg("monitorVoteOutboundResult: successful")
+		c.logger.Info().Fields(logFields).Msg("monitorVoteOutboundResult: successful")
 	}
 
 	return nil
@@ -159,7 +159,7 @@ func (c *Client) monitorVoteInboundResult(
 		}
 
 	default:
-		c.logger.Debug().Fields(logFields).Msgf("monitorVoteInboundResult: successful")
+		c.logger.Info().Fields(logFields).Msgf("monitorVoteInboundResult: successful")
 	}
 
 	return nil
