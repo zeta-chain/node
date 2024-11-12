@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"time"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -64,8 +65,13 @@ func (r *E2ERunner) SetZEVMContractsV2() {
 	require.NoError(r, err)
 
 	// deploy test dapp v2
-	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.ZEVMAuth, r.ZEVMClient)
+	testDAppV2Addr, txTestDAppV2, testDAppV2, err := testdappv2.DeployTestDAppV2(r.ZEVMAuth, r.ZEVMClient, true)
 	require.NoError(r, err)
+
+	// check isZetaChain is true
+	isZetaChain, err := testDAppV2.IsZetaChain(&bind.CallOpts{})
+	require.NoError(r, err)
+	require.True(r, isZetaChain)
 
 	r.TestDAppV2ZEVMAddr = testDAppV2Addr
 	r.TestDAppV2ZEVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.ZEVMClient)
