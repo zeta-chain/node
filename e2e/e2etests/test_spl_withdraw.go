@@ -62,7 +62,11 @@ func TestSPLWithdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("receiver balance of SPL after withdraw: %s", receiverBalanceAfter.Value.Amount)
 
 	// verify amount is added to receiver ata
-	require.EqualValues(r, new(big.Int).Add(withdrawAmount, parseBigInt(r, receiverBalanceBefore.Value.Amount)).String(), parseBigInt(r, receiverBalanceAfter.Value.Amount).String())
+	require.EqualValues(
+		r,
+		new(big.Int).Add(withdrawAmount, parseBigInt(r, receiverBalanceBefore.Value.Amount)).String(),
+		parseBigInt(r, receiverBalanceAfter.Value.Amount).String(),
+	)
 
 	// verify amount is subtracted on zrc20
 	require.EqualValues(r, new(big.Int).Sub(zrc20BalanceBefore, withdrawAmount).String(), zrc20BalanceAfter.String())
