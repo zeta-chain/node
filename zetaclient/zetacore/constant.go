@@ -47,7 +47,7 @@ const (
 
 	// PostVoteOutboundRevertGasLimit is the gas limit for voting on observed outbound tx for revert (when outbound fails)
 	// The value needs to be higher because reverting implies interacting with the EVM to perform swaps for the gas token
-	PostVoteOutboundRevertGasLimit = 4_000_000
+	PostVoteOutboundRevertGasLimit = 7_000_000
 )
 
 // constants for monitoring tx results
