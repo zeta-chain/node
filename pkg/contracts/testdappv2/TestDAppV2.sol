@@ -146,21 +146,21 @@ contract TestDAppV2 {
                 zrc20,
                 RevertOptions(address(0), false, address(0), "", 0)
             );
-            RevertOptions memory revertOptions = RevertOptions(
-                msg.sender, // revert address
-                false, // callOnRevert
-                msg.sender, // abortAddress
-                bytes("revert message"),
-                uint256(100000) // onRevertGasLimit
-            );
-
-            IGatewayZEVM(msg.sender).call(
-                abi.encode(context.sender),
-                zrc20,
-                message,
-                100000,
-                revertOptions
-            );
+//            RevertOptions memory revertOptions = RevertOptions(
+//                msg.sender, // revert address
+//                false, // callOnRevert
+//                msg.sender, // abortAddress
+//                bytes("revert message"),
+//                uint256(100000) // onRevertGasLimit
+//            );
+//
+//            IGatewayZEVM(msg.sender).call(
+//                abi.encode(context.sender),
+//                zrc20,
+//                message,
+//                100000,
+//                revertOptions
+//            );
 
             emit HelloEvent("Hello", "World");
         } else {
