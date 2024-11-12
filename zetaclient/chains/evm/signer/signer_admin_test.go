@@ -146,7 +146,7 @@ func TestSigner_SignMigrateERC20CustodyFundsCmd(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	tss := mocks.NewTSSMainnet()
+	tss := mocks.NewDerivedTSS(chains.BitcoinMainnet)
 	evmSigner, err := getNewEvmSigner(tss)
 	require.NoError(t, err)
 
@@ -211,7 +211,7 @@ func TestSigner_SignUpdateERC20CustodyPauseStatusCmd(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	tss := mocks.NewTSSMainnet()
+	tss := mocks.NewDerivedTSS(chains.BitcoinMainnet)
 	evmSigner, err := getNewEvmSigner(tss)
 	require.NoError(t, err)
 
