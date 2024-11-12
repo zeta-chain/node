@@ -19,7 +19,7 @@ const (
 	PostTSSGasLimit = 500_000
 
 	// PostVoteInboundExecutionGasLimit is the gas limit for voting on observed inbound tx and executing it
-	PostVoteInboundExecutionGasLimit = 7_000_000
+	PostVoteInboundExecutionGasLimit = 10_000_000
 
 	// PostVoteInboundMessagePassingExecutionGasLimit is the gas limit for voting on, and executing ,observed inbound tx related to message passing (coin_type == zeta)
 	PostVoteInboundMessagePassingExecutionGasLimit = 4_000_000
@@ -47,7 +47,7 @@ const (
 
 	// PostVoteOutboundRevertGasLimit is the gas limit for voting on observed outbound tx for revert (when outbound fails)
 	// The value needs to be higher because reverting implies interacting with the EVM to perform swaps for the gas token
-	PostVoteOutboundRevertGasLimit = 4_000_000
+	PostVoteOutboundRevertGasLimit = 7_000_000
 )
 
 // constants for monitoring tx results
