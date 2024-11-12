@@ -259,7 +259,7 @@ func (signer *Signer) prepareWhitelistTx(
 // SetGatewayAddress sets the gateway address
 func (signer *Signer) SetGatewayAddress(address string) {
 	// noop
-	if address == "" {
+	if address == "" || signer.gatewayID.String() == address {
 		return
 	}
 
