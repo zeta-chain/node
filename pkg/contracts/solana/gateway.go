@@ -44,11 +44,11 @@ var (
 )
 
 // ParseGatewayAddressAndPda parses the gateway id and program derived address from the given string
-func ParseGatewayIDAndPda(address string) (solana.PublicKey, solana.PublicKey, error) {
+func ParseGatewayIDAndPda(gatewayAddress string) (solana.PublicKey, solana.PublicKey, error) {
 	var gatewayID, pda solana.PublicKey
 
 	// decode gateway address
-	gatewayID, err := solana.PublicKeyFromBase58(address)
+	gatewayID, err := solana.PublicKeyFromBase58(gatewayAddress)
 	if err != nil {
 		return gatewayID, pda, errors.Wrap(err, "unable to decode address")
 	}
@@ -61,11 +61,11 @@ func ParseGatewayIDAndPda(address string) (solana.PublicKey, solana.PublicKey, e
 }
 
 // ParseRentPayerPda parses the rent payer program derived address from the given string
-func ParseRentPayerPda(address string) (solana.PublicKey, error) {
+func ParseRentPayerPda(gatewayAddress string) (solana.PublicKey, error) {
 	var rentPayerPda solana.PublicKey
 
 	// decode gateway address
-	gatewayID, err := solana.PublicKeyFromBase58(address)
+	gatewayID, err := solana.PublicKeyFromBase58(gatewayAddress)
 	if err != nil {
 		return rentPayerPda, errors.Wrap(err, "unable to decode address")
 	}

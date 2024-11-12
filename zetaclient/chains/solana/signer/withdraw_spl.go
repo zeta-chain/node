@@ -28,7 +28,7 @@ func (signer *Signer) createAndSignMsgWithdrawSPL(
 	nonce := params.TssNonce
 	amount := params.Amount.Uint64()
 
-	// zero out the amount if cancelTx is set. It's legal to withdraw 0 spl thru the gateway.
+	// zero out the amount if cancelTx is set. It's legal to withdraw 0 spl through the gateway.
 	if cancelTx {
 		amount = 0
 	}

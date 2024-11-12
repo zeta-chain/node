@@ -4,7 +4,6 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
 
@@ -24,17 +23,16 @@ func TestSPLDepositAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("Example contract deployed at: %s", contractAddr.String())
 
 	// load deployer private key
-	privKey, err := solana.PrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
-	require.NoError(r, err)
+	privKey := r.GetSolanaPrivKey()
 
 	// get SPL balance for pda and sender atas
 	pda := r.ComputePdaAddress()
-	pdaAta := r.FindOrCreateAssociatedTokenAccount(privKey, pda, r.SPLAddr)
+	pdaAta := r.FindOrCreateAta(privKey, pda, r.SPLAddr)
 
 	pdaBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)
 	require.NoError(r, err)
 
-	senderAta := r.FindOrCreateAssociatedTokenAccount(privKey, privKey.PublicKey(), r.SPLAddr)
+	senderAta := r.FindOrCreateAta(privKey, privKey.PublicKey(), r.SPLAddr)
 	senderBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentConfirmed)
 	require.NoError(r, err)
 

@@ -13,9 +13,9 @@ import (
 	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
 
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/node/e2e/utils"
 	solanacontract "github.com/zeta-chain/node/pkg/contracts/solana"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // ComputePdaAddress computes the PDA address for the gateway program
@@ -159,8 +159,8 @@ func (r *E2ERunner) CreateSignedTransaction(
 	return tx
 }
 
-// FindOrCreateAssociatedTokenAccount checks if ata exists, and if not creates it
-func (r *E2ERunner) FindOrCreateAssociatedTokenAccount(
+// FindOrCreateAta checks if ata exists, and if not creates it
+func (r *E2ERunner) FindOrCreateAta(
 	payer solana.PrivateKey,
 	owner solana.PublicKey,
 	tokenAccount solana.PublicKey,
@@ -196,10 +196,10 @@ func (r *E2ERunner) SPLDepositAndCall(
 ) solana.Signature {
 	// ata for pda
 	pda := r.ComputePdaAddress()
-	pdaAta := r.FindOrCreateAssociatedTokenAccount(*privateKey, pda, tokenAccount)
+	pdaAta := r.FindOrCreateAta(*privateKey, pda, tokenAccount)
 
 	// deployer ata
-	ata := r.FindOrCreateAssociatedTokenAccount(*privateKey, privateKey.PublicKey(), tokenAccount)
+	ata := r.FindOrCreateAta(*privateKey, privateKey.PublicKey(), tokenAccount)
 
 	// deposit spl
 	seed := [][]byte{[]byte("whitelist"), tokenAccount.Bytes()}
@@ -260,7 +260,7 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 	r.Logger.Info("create spl logs: %v", out.Meta.LogMessages)
 
 	// minting some tokens to deployer for testing
-	ata := r.FindOrCreateAssociatedTokenAccount(*privateKey, privateKey.PublicKey(), tokenAccount.PublicKey())
+	ata := r.FindOrCreateAta(*privateKey, privateKey.PublicKey(), tokenAccount.PublicKey())
 
 	mintToInstruction := token.NewMintToInstruction(uint64(1_000_000_000), tokenAccount.PublicKey(), ata, privateKey.PublicKey(), []solana.PublicKey{}).
 		Build()
@@ -345,8 +345,7 @@ func (r *E2ERunner) SOLDepositAndCall(
 ) solana.Signature {
 	// if signer is not provided, use the runner account as default
 	if signerPrivKey == nil {
-		privkey, err := solana.PrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
-		require.NoError(r, err)
+		privkey := r.GetSolanaPrivKey()
 		signerPrivKey = &privkey
 	}
 
@@ -368,7 +367,7 @@ func (r *E2ERunner) WithdrawSOLZRC20(
 	to solana.PublicKey,
 	amount *big.Int,
 	approveAmount *big.Int,
-) *crosschaintypes.CrossChainTx {
+) *ethtypes.Transaction {
 	// approve
 	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.SOLZRC20Addr, approveAmount)
 	require.NoError(r, err)
@@ -385,11 +384,7 @@ func (r *E2ERunner) WithdrawSOLZRC20(
 	utils.RequireTxSuccessful(r, receipt, "withdraw")
 	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
-	// wait for the cctx to be mined
-	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
-
-	return cctx
+	return tx
 }
 
 // WithdrawSPLZRC20 withdraws an amount of ZRC20 SPL tokens
@@ -397,7 +392,7 @@ func (r *E2ERunner) WithdrawSPLZRC20(
 	to solana.PublicKey,
 	amount *big.Int,
 	approveAmount *big.Int,
-) *crosschaintypes.CrossChainTx {
+) *ethtypes.Transaction {
 	// approve splzrc20 to spend gas tokens to pay gas fee
 	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.SPLZRC20Addr, approveAmount)
 	require.NoError(r, err)
@@ -414,9 +409,5 @@ func (r *E2ERunner) WithdrawSPLZRC20(
 	utils.RequireTxSuccessful(r, receipt, "withdraw")
 	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
-	// wait for the cctx to be mined
-	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
-
-	return cctx
+	return tx
 }

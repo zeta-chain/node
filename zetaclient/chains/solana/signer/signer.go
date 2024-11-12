@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"cosmossdk.io/errors"
-	"github.com/davecgh/go-spew/spew"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
@@ -70,6 +69,7 @@ func NewSigner(
 		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
 	}
 
+	// parse rent payer PDA, used in case receiver ATA should be created in gateway
 	rentPayerPda, err := contracts.ParseRentPayerPda(chainParams.GatewayAddress)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
@@ -340,7 +340,6 @@ func (signer *Signer) decodeMintAccountDetails(ctx context.Context, asset string
 	if err != nil {
 		return token.Mint{}, err
 	}
-	spew.Dump(mint)
 
 	return mint, nil
 }

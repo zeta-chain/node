@@ -128,7 +128,7 @@ type MsgWithdrawSPL struct {
 	// to is the recipient address for the withdraw_spl
 	to solana.PublicKey
 
-	// recipientAta is the recipient address for the withdraw_spl
+	// recipientAta is the recipient associated token account for the withdraw_spl
 	recipientAta solana.PublicKey
 
 	// signature is the signature of the message

@@ -16,8 +16,7 @@ func TestSolanaWhitelistSPL(r *runner.E2ERunner, _ []string) {
 	r.Logger.Info("Deploying new SPL")
 
 	// load deployer private key
-	privkey, err := solana.PrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
-	require.NoError(r, err)
+	privkey := r.GetSolanaPrivKey()
 
 	// deploy SPL token, but don't whitelist in gateway
 	spl := r.DeploySPL(&privkey, false)

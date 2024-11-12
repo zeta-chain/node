@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // TestSPLWithdrawAndCreateReceiverAta withdraws spl, but letting gateway to create receiver ata using rent payer
@@ -31,7 +33,8 @@ func TestSPLWithdrawAndCreateReceiverAta(r *runner.E2ERunner, args []string) {
 		r,
 		-1,
 		withdrawAmount.Cmp(approvedAmount),
-		"Withdrawal amount must be less than the approved amount (1e9)",
+		"Withdrawal amount must be less than the %v",
+		approvedAmount,
 	)
 
 	// create new priv key, with empty ata
@@ -47,7 +50,11 @@ func TestSPLWithdrawAndCreateReceiverAta(r *runner.E2ERunner, args []string) {
 	require.Nil(r, receiverAtaAcc)
 
 	// withdraw
-	r.WithdrawSPLZRC20(receiverPrivKey.PublicKey(), withdrawAmount, approvedAmount)
+	tx := r.WithdrawSPLZRC20(receiverPrivKey.PublicKey(), withdrawAmount, approvedAmount)
+
+	// wait for the cctx to be mined
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// get SPL ZRC20 balance after withdraw
 	zrc20BalanceAfter, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
@@ -65,8 +72,8 @@ func TestSPLWithdrawAndCreateReceiverAta(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("receiver balance of SPL after withdraw: %s", receiverBalanceAfter.Value.Amount)
 
 	// verify amount is added to receiver ata
-	require.Zero(r, withdrawAmount.Cmp(parseBigInt(r, receiverBalanceAfter.Value.Amount)))
+	require.EqualValues(r, withdrawAmount.String(), parseBigInt(r, receiverBalanceAfter.Value.Amount).String())
 
 	// verify amount is subtracted on zrc20
-	require.Zero(r, new(big.Int).Sub(zrc20BalanceBefore, withdrawAmount).Cmp(zrc20BalanceAfter))
+	require.EqualValues(r, new(big.Int).Sub(zrc20BalanceBefore, withdrawAmount).String(), zrc20BalanceAfter.String())
 }

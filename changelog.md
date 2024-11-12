@@ -6,7 +6,7 @@
 * [2984](https://github.com/zeta-chain/node/pull/2984) - add Whitelist message ability to whitelist SPL tokens on Solana
 * [3091](https://github.com/zeta-chain/node/pull/3091) - improve build reproducability. `make release{,-build-only}` checksums should now be stable.
 * [3124](https://github.com/zeta-chain/node/pull/3124) - integrate SPL deposits
-* [3134](https://github.com/zeta-chain/node/pull/3134) - integrate withdraw SPL
+* [3134](https://github.com/zeta-chain/node/pull/3134) - integrate SPL tokens withdraw to Solana
 
 ### Tests
 
