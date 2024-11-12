@@ -79,6 +79,8 @@ contract TestDAppV2 {
     // used to simulate gas consumption
     uint256[] private storageArray;
 
+    event HelloEvent(string, string);
+
     string public constant NO_MESSAGE_CALL = "called with no message";
     string public constant WITHDRAW = "withdraw";
 
@@ -159,6 +161,8 @@ contract TestDAppV2 {
                 100000,
                 revertOptions
             );
+
+            emit HelloEvent("Hello", "World");
         } else {
             string memory messageStr = message.length == 0 ? getNoMessageIndex(context.sender) : string(message);
 
