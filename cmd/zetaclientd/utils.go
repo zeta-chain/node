@@ -73,7 +73,6 @@ func waitForZetaCore(config config.Config, logger zerolog.Logger) {
 	}
 }
 
-// waitForZetacoreToCreateBlocks waits for zetacore to create blocks
 func waitForZetacoreToCreateBlocks(ctx context.Context, zc interfaces.ZetacoreClient, logger zerolog.Logger) error {
 	const (
 		interval = 5 * time.Second

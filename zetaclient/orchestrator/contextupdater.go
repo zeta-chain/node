@@ -67,7 +67,7 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, lo
 		return errors.Wrap(err, "unable to get zeta block height")
 	}
 
-	if err := checkForZetacoreUpgrade(ctx, bn, zc); err != nil {
+	if err = checkForZetacoreUpgrade(ctx, bn, zc); err != nil {
 		return err
 	}
 
@@ -149,11 +149,13 @@ func checkForZetacoreUpgrade(ctx context.Context, zetaHeight int64, zc Zetacore)
 	upgradeHeight := plan.Height
 
 	// We can return an error in a few blocks ahead.
-	// It's okay because the ticker might have a long interval.
-	const upgradeRange = 2
+	// It's okay because the ticker might have an interval longer than 1 block (~5s).
+	//
+	// Example: if an upgrade is on block #102, we can return an error on block #100, #101, #102, ...
+	// Note that tha plan is deleted from zetacore after the upgrade block.
+	const upgradeBlockBuffer = 2
 
-	// Note that after plan.Height's block `x/upgrade` module deletes the plan
-	if (upgradeHeight - zetaHeight) <= upgradeRange {
+	if (upgradeHeight - zetaHeight) <= upgradeBlockBuffer {
 		return errors.Wrapf(ErrUpgradeRequired, "current height: %d, upgrade height: %d", zetaHeight, upgradeHeight)
 	}
 
