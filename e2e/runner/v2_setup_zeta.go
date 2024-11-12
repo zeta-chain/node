@@ -65,13 +65,8 @@ func (r *E2ERunner) SetZEVMContractsV2() {
 	require.NoError(r, err)
 
 	// deploy test dapp v2
-	testDAppV2Addr, txTestDAppV2, testDAppV2, err := testdappv2.DeployTestDAppV2(r.ZEVMAuth, r.ZEVMClient, true)
+	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.ZEVMAuth, r.ZEVMClient, true)
 	require.NoError(r, err)
-
-	// check isZetaChain is true
-	isZetaChain, err := testDAppV2.IsZetaChain(&bind.CallOpts{})
-	require.NoError(r, err)
-	require.True(r, isZetaChain)
 
 	r.TestDAppV2ZEVMAddr = testDAppV2Addr
 	r.TestDAppV2ZEVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.ZEVMClient)
@@ -79,6 +74,11 @@ func (r *E2ERunner) SetZEVMContractsV2() {
 
 	ensureTxReceipt(txProxy, "Gateway proxy deployment failed")
 	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
+
+	// check isZetaChain is true
+	isZetaChain, err := r.TestDAppV2ZEVM.IsZetaChain(&bind.CallOpts{})
+	require.NoError(r, err)
+	require.True(r, isZetaChain)
 }
 
 // UpdateChainParamsV2Contracts update the erc20 custody contract and gateway address in the chain params

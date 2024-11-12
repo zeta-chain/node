@@ -102,13 +102,8 @@ func (r *E2ERunner) SetupEVMV2() {
 	require.NoError(r, err)
 
 	// deploy test dapp v2
-	testDAppV2Addr, txTestDAppV2, testDAppV2, err := testdappv2.DeployTestDAppV2(r.EVMAuth, r.EVMClient, false)
+	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.EVMAuth, r.EVMClient, false)
 	require.NoError(r, err)
-
-	// check isZetaChain is false
-	isZetaChain, err := testDAppV2.IsZetaChain(&bind.CallOpts{})
-	require.NoError(r, err)
-	require.False(r, isZetaChain)
 
 	r.TestDAppV2EVMAddr = testDAppV2Addr
 	r.TestDAppV2EVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.EVMClient)
@@ -120,6 +115,11 @@ func (r *E2ERunner) SetupEVMV2() {
 	ensureTxReceipt(erc20ProxyTx, "ERC20Custody proxy deployment failed")
 	ensureTxReceipt(txSetCustody, "Set custody in Gateway failed")
 	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
+
+	// check isZetaChain is false
+	isZetaChain, err := r.TestDAppV2EVM.IsZetaChain(&bind.CallOpts{})
+	require.NoError(r, err)
+	require.False(r, isZetaChain)
 
 	// whitelist the ERC20
 	txWhitelist, err := r.ERC20CustodyV2.Whitelist(r.EVMAuth, r.ERC20Addr)
