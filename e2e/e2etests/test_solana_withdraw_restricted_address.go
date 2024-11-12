@@ -8,7 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func TestSolanaWithdrawRestricted(r *runner.E2ERunner, args []string) {
@@ -29,7 +31,11 @@ func TestSolanaWithdrawRestricted(r *runner.E2ERunner, args []string) {
 	)
 
 	// withdraw
-	cctx := r.WithdrawSOLZRC20(receiverRestricted, withdrawAmount, approvedAmount)
+	tx := r.WithdrawSOLZRC20(receiverRestricted, withdrawAmount, approvedAmount)
+
+	// wait for the cctx to be mined
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// the cctx should be cancelled with zero value
 	verifySolanaWithdrawalAmountFromCCTX(r, cctx, 0)

@@ -7,7 +7,9 @@ import (
 
 	"cosmossdk.io/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/rs/zerolog"
 
@@ -43,6 +45,9 @@ type Signer struct {
 
 	// pda is the program derived address of the gateway program
 	pda solana.PublicKey
+
+	// rent payer pda is the program derived address of the gateway program to pay rent for creating atas
+	rentPayerPda solana.PublicKey
 }
 
 // NewSigner creates a new Solana signer
@@ -59,17 +64,24 @@ func NewSigner(
 	baseSigner := base.NewSigner(chain, tss, ts, logger)
 
 	// parse gateway ID and PDA
-	gatewayID, pda, err := contracts.ParseGatewayIDAndPda(chainParams.GatewayAddress)
+	gatewayID, pda, err := contracts.ParseGatewayWithPDA(chainParams.GatewayAddress)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
+	}
+
+	// parse rent payer PDA, used in case receiver ATA should be created in gateway
+	rentPayerPda, err := contracts.RentPayerPDA(gatewayID)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
 	}
 
 	// create Solana signer
 	signer := &Signer{
-		Signer:    baseSigner,
-		client:    solClient,
-		gatewayID: gatewayID,
-		pda:       pda,
+		Signer:       baseSigner,
+		client:       solClient,
+		gatewayID:    gatewayID,
+		pda:          pda,
+		rentPayerPda: rentPayerPda,
 	}
 
 	// construct Solana private key if present
@@ -151,6 +163,15 @@ func (signer *Signer) TryProcessOutbound(
 		}
 
 		tx = withdrawTx
+
+	case coin.CoinType_ERC20:
+		withdrawSPLTx, err := signer.prepareWithdrawSPLTx(ctx, cctx, height, logger)
+		if err != nil {
+			logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign withdraw spl outbound")
+			return
+		}
+
+		tx = withdrawSPLTx
 	default:
 		logger.Error().
 			Msgf("TryProcessOutbound: can only send SOL to the Solana network")
@@ -219,6 +240,56 @@ func (signer *Signer) prepareWithdrawTx(
 	return tx, nil
 }
 
+func (signer *Signer) prepareWithdrawSPLTx(
+	ctx context.Context,
+	cctx *types.CrossChainTx,
+	height uint64,
+	logger zerolog.Logger,
+) (*solana.Transaction, error) {
+	params := cctx.GetCurrentOutboundParam()
+	// compliance check
+	cancelTx := compliance.IsCctxRestricted(cctx)
+	if cancelTx {
+		compliance.PrintComplianceLog(
+			logger,
+			signer.Logger().Compliance,
+			true,
+			signer.Chain().ChainId,
+			cctx.Index,
+			cctx.InboundParams.Sender,
+			params.Receiver,
+			"SPL",
+		)
+	}
+
+	// get mint details to get decimals
+	mint, err := signer.decodeMintAccountDetails(ctx, cctx.InboundParams.Asset)
+	if err != nil {
+		return nil, err
+	}
+
+	// sign gateway withdraw spl message by TSS
+	msg, err := signer.createAndSignMsgWithdrawSPL(
+		ctx,
+		params,
+		height,
+		cctx.InboundParams.Asset,
+		mint.Decimals,
+		cancelTx,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// sign the withdraw transaction by relayer key
+	tx, err := signer.signWithdrawSPLTx(ctx, *msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
+}
+
 func (signer *Signer) prepareWhitelistTx(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
@@ -256,6 +327,23 @@ func (signer *Signer) prepareWhitelistTx(
 	return tx, nil
 }
 
+func (signer *Signer) decodeMintAccountDetails(ctx context.Context, asset string) (token.Mint, error) {
+	info, err := signer.client.GetAccountInfo(ctx, solana.MustPublicKeyFromBase58(asset))
+	if err != nil {
+		return token.Mint{}, err
+	}
+
+	var mint token.Mint
+	// Account{}.Data.GetBinary() returns the *decoded* binary data
+	// regardless the original encoding (it can handle them all).
+	err = bin.NewBinDecoder(info.Value.Data.GetBinary()).Decode(&mint)
+	if err != nil {
+		return token.Mint{}, err
+	}
+
+	return mint, nil
+}
+
 // SetGatewayAddress sets the gateway address
 func (signer *Signer) SetGatewayAddress(address string) {
 	// noop
@@ -264,9 +352,9 @@ func (signer *Signer) SetGatewayAddress(address string) {
 	}
 
 	// parse gateway ID and PDA
-	gatewayID, pda, err := contracts.ParseGatewayIDAndPda(address)
+	gatewayID, pda, err := contracts.ParseGatewayWithPDA(address)
 	if err != nil {
-		signer.Logger().Std.Error().Err(err).Str("address", address).Msgf("Unable to parse gateway address")
+		signer.Logger().Std.Error().Err(err).Msgf("cannot parse gateway address: %s", address)
 		return
 	}
 
