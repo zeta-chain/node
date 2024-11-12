@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"math/big"
 	"time"
 
@@ -101,8 +102,13 @@ func (r *E2ERunner) SetupEVMV2() {
 	require.NoError(r, err)
 
 	// deploy test dapp v2
-	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.EVMAuth, r.EVMClient)
+	testDAppV2Addr, txTestDAppV2, testDAppV2, err := testdappv2.DeployTestDAppV2(r.EVMAuth, r.EVMClient, false)
 	require.NoError(r, err)
+
+	// check isZetaChain is false
+	isZetaChain, err := testDAppV2.IsZetaChain(&bind.CallOpts{})
+	require.NoError(r, err)
+	require.False(r, isZetaChain)
 
 	r.TestDAppV2EVMAddr = testDAppV2Addr
 	r.TestDAppV2EVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.EVMClient)
