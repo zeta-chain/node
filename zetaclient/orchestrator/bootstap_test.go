@@ -44,12 +44,10 @@ func TestCreateSignerMap(t *testing.T) {
 		cfg := config.New(false)
 
 		cfg.EVMChainConfigs[chains.Ethereum.ChainId] = config.EVMConfig{
-			Chain:    chains.Ethereum,
 			Endpoint: testutils.MockEVMRPCEndpoint,
 		}
 
 		cfg.EVMChainConfigs[chains.Polygon.ChainId] = config.EVMConfig{
-			Chain:    chains.Polygon,
 			Endpoint: testutils.MockEVMRPCEndpoint,
 		}
 
@@ -225,12 +223,10 @@ func TestCreateChainObserverMap(t *testing.T) {
 		cfg := config.New(false)
 
 		cfg.EVMChainConfigs[chains.Ethereum.ChainId] = config.EVMConfig{
-			Chain:    chains.Ethereum,
 			Endpoint: evmServer.Endpoint,
 		}
 
 		cfg.EVMChainConfigs[chains.Polygon.ChainId] = config.EVMConfig{
-			Chain:    chains.Polygon,
 			Endpoint: evmServer.Endpoint,
 		}
 

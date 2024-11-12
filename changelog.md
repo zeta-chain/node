@@ -17,6 +17,7 @@
 * [3118](https://github.com/zeta-chain/node/pull/3118) - zetaclient: remove hsm signer
 * [3122](https://github.com/zeta-chain/node/pull/3122) - improve & refactor zetaclientd cli
 * [3125](https://github.com/zeta-chain/node/pull/3125) - drop support for header proofs
+* [3137](https://github.com/zeta-chain/node/pull/3137) - remove chain.Chain from zetaclientd config
 
 ### Fixes
 * [3041](https://github.com/zeta-chain/node/pull/3041) - replace libp2p public DHT with private gossip peer discovery and connection gater for inbound connections
