@@ -15,21 +15,21 @@ import (
 // startV2Tests starts v2 related tests in parallel
 func startV2Tests(eg *errgroup.Group, conf config.Config, deployerRunner *runner.E2ERunner, verbose bool) {
 	// Test happy paths for gas token workflow
-	eg.Go(v2TestRoutine(conf, "eth", conf.AdditionalAccounts.UserV2Ether, color.FgHiGreen, deployerRunner, verbose,
-		//e2etests.TestV2ETHDepositName,
-		//e2etests.TestV2ETHDepositAndCallName,
-		//e2etests.TestV2ETHWithdrawName,
-		//e2etests.TestV2ETHWithdrawAndArbitraryCallName,
-		//e2etests.TestV2ETHWithdrawAndCallName,
-		//e2etests.TestV2ETHWithdrawAndCallThroughContractName,
-		//e2etests.TestV2ZEVMToEVMArbitraryCallName,
-		//e2etests.TestV2ZEVMToEVMCallName,
-		//e2etests.TestV2ZEVMToEVMCallThroughContractName,
-		//e2etests.TestV2EVMToZEVMCallName,
-		//e2etests.TestV2ETHDepositAndCallNoMessageName,
-		//e2etests.TestV2ETHWithdrawAndCallNoMessageName,
-		e2etests.TestDepositAndWithdrawName,
-	))
+	//eg.Go(v2TestRoutine(conf, "eth", conf.AdditionalAccounts.UserV2Ether, color.FgHiGreen, deployerRunner, verbose,
+	//	//e2etests.TestV2ETHDepositName,
+	//	//e2etests.TestV2ETHDepositAndCallName,
+	//	//e2etests.TestV2ETHWithdrawName,
+	//	//e2etests.TestV2ETHWithdrawAndArbitraryCallName,
+	//	//e2etests.TestV2ETHWithdrawAndCallName,
+	//	//e2etests.TestV2ETHWithdrawAndCallThroughContractName,
+	//	//e2etests.TestV2ZEVMToEVMArbitraryCallName,
+	//	//e2etests.TestV2ZEVMToEVMCallName,
+	//	//e2etests.TestV2ZEVMToEVMCallThroughContractName,
+	//	//e2etests.TestV2EVMToZEVMCallName,
+	//	//e2etests.TestV2ETHDepositAndCallNoMessageName,
+	//	//e2etests.TestV2ETHWithdrawAndCallNoMessageName,
+	//	e2etests.TestDepositAndWithdrawName,
+	//))
 	//
 	//// Test happy paths for erc20 token workflow
 	//eg.Go(v2TestRoutine(conf, "erc20", conf.AdditionalAccounts.UserV2ERC20, color.FgHiBlue, deployerRunner, verbose,
@@ -44,22 +44,22 @@ func startV2Tests(eg *errgroup.Group, conf config.Config, deployerRunner *runner
 	//))
 	//
 	//// Test revert cases for gas token workflow
-	//eg.Go(
-	//	v2TestRoutine(
-	//		conf,
-	//		"eth-revert",
-	//		conf.AdditionalAccounts.UserV2EtherRevert,
-	//		color.FgHiYellow,
-	//		deployerRunner,
-	//		verbose,
-	//		e2etests.TestV2ETHDepositName, // necessary to pay fees on ZEVM and withdraw
-	//		e2etests.TestV2ETHDepositAndCallRevertName,
-	//		e2etests.TestV2ETHDepositAndCallRevertWithCallName,
-	//		e2etests.TestV2ETHWithdrawAndCallRevertName,
-	//		e2etests.TestV2ETHWithdrawAndCallRevertWithCallName,
-	//		e2etests.TestDepositAndCallOutOfGasName,
-	//	),
-	//)
+	eg.Go(
+		v2TestRoutine(
+			conf,
+			"eth-revert",
+			conf.AdditionalAccounts.UserV2EtherRevert,
+			color.FgHiYellow,
+			deployerRunner,
+			verbose,
+			//e2etests.TestV2ETHDepositName, // necessary to pay fees on ZEVM and withdraw
+			e2etests.TestV2ETHDepositAndCallRevertName,
+			//e2etests.TestV2ETHDepositAndCallRevertWithCallName,
+			//e2etests.TestV2ETHWithdrawAndCallRevertName,
+			//e2etests.TestV2ETHWithdrawAndCallRevertWithCallName,
+			//e2etests.TestDepositAndCallOutOfGasName,
+		),
+	)
 	//
 	//// Test revert cases for erc20 token workflow
 	//eg.Go(

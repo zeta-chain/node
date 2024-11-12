@@ -29,7 +29,7 @@ func TestV2ETHDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	// perform the deposit
 	tx := r.V2ETHDepositAndCall(r.TestDAppV2ZEVMAddr, amount, []byte("revert"), gatewayevm.RevertOptions{
 		RevertAddress:    revertAddress,
-		OnRevertGasLimit: big.NewInt(0),
+		OnRevertGasLimit: big.NewInt(7000000),
 	})
 
 	// wait for the cctx to be mined
