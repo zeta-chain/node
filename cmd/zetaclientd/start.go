@@ -56,7 +56,7 @@ func Start(_ *cobra.Command, _ []string) error {
 		chains.Network_solana.String(): solanaKeyPass,
 	}
 
-	//Load Config file given path
+	// Load Config file given path
 	cfg, err := config.Load(globalOpts.ZetacoreHome)
 	if err != nil {
 		return err

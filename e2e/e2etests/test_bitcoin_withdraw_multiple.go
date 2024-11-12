@@ -18,9 +18,6 @@ func WithdrawBitcoinMultipleTimes(r *runner.E2ERunner, args []string) {
 		times  = parseInt(r, args[1])
 	)
 
-	// Given BTC address set
-	r.SetBtcAddress(r.Name, false)
-
 	// Given a receiver
 	receiver, err := chains.DecodeBtcAddress(defaultReceiver, r.GetBitcoinChainID())
 	require.NoError(r, err)

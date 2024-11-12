@@ -10,8 +10,6 @@ import (
 func TestBitcoinWithdrawSegWit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
-	r.SetBtcAddress(r.Name, false)
-
 	// parse arguments
 	defaultReceiver := r.BTCDeployerAddress.EncodeAddress()
 	receiver, amount := parseBitcoinWithdrawArgs(r, args, defaultReceiver)

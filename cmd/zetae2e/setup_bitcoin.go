@@ -58,7 +58,7 @@ func runSetupBitcoin(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	r.SetupBitcoinAccount(true)
+	r.SetupBitcoinAccounts(true)
 
 	logger.Print("* BTC setup done")
 

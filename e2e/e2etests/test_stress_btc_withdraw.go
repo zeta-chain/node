@@ -22,8 +22,6 @@ func TestStressBTCWithdraw(r *runner.E2ERunner, args []string) {
 	withdrawalAmount := parseFloat(r, args[0])
 	numWithdraws := parseInt(r, args[1])
 
-	r.SetBtcAddress(r.Name, false)
-
 	r.Logger.Print("starting stress test of %d withdraws", numWithdraws)
 
 	// create a wait group to wait for all the withdraws to complete

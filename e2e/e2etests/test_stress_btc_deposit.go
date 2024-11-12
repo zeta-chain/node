@@ -20,8 +20,6 @@ func TestStressBTCDeposit(r *runner.E2ERunner, args []string) {
 	depositAmount := parseFloat(r, args[0])
 	numDeposits := parseInt(r, args[1])
 
-	r.SetBtcAddress(r.Name, false)
-
 	r.Logger.Print("starting stress test of %d deposits", numDeposits)
 
 	// create a wait group to wait for all the deposits to complete
