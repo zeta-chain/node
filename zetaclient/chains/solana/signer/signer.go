@@ -64,13 +64,13 @@ func NewSigner(
 	baseSigner := base.NewSigner(chain, tss, ts, logger)
 
 	// parse gateway ID and PDA
-	gatewayID, pda, err := contracts.ParseGatewayIDAndPda(chainParams.GatewayAddress)
+	gatewayID, pda, err := contracts.ParseGatewayWithPDA(chainParams.GatewayAddress)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
 	}
 
 	// parse rent payer PDA, used in case receiver ATA should be created in gateway
-	rentPayerPda, err := contracts.ParseRentPayerPda(chainParams.GatewayAddress)
+	rentPayerPda, err := contracts.RentPayerPDA(gatewayID)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
 	}
@@ -347,7 +347,7 @@ func (signer *Signer) decodeMintAccountDetails(ctx context.Context, asset string
 // SetGatewayAddress sets the gateway address
 func (signer *Signer) SetGatewayAddress(address string) {
 	// parse gateway ID and PDA
-	gatewayID, pda, err := contracts.ParseGatewayIDAndPda(address)
+	gatewayID, pda, err := contracts.ParseGatewayWithPDA(address)
 	if err != nil {
 		signer.Logger().Std.Error().Err(err).Msgf("cannot parse gateway address: %s", address)
 		return

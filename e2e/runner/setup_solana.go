@@ -87,7 +87,7 @@ func (r *E2ERunner) SetupSolana(deployerPrivateKey string) {
 
 	// initialize rent payer
 	var instRentPayer solana.GenericInstruction
-	rentPayerPdaComputed := r.ComputeRentPayerPdaAddress()
+	rentPayerPdaComputed := r.SolanaRentPayerPDA()
 
 	// create 'initialize_rent_payer' instruction
 	accountSlice = []*solana.AccountMeta{}

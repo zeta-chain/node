@@ -21,12 +21,12 @@ func TestSPLDeposit(r *runner.E2ERunner, args []string) {
 
 	// get SPL balance for pda and sender atas
 	pda := r.ComputePdaAddress()
-	pdaAta := r.FindOrCreateAta(privKey, pda, r.SPLAddr)
+	pdaAta := r.ResolveSolanaATA(privKey, pda, r.SPLAddr)
 
 	pdaBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)
 	require.NoError(r, err)
 
-	senderAta := r.FindOrCreateAta(privKey, privKey.PublicKey(), r.SPLAddr)
+	senderAta := r.ResolveSolanaATA(privKey, privKey.PublicKey(), r.SPLAddr)
 	senderBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentConfirmed)
 	require.NoError(r, err)
 

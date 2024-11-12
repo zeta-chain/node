@@ -43,8 +43,8 @@ var (
 	DiscriminatorWhitelistSplMint = idlgateway.IDLGateway.GetDiscriminator("whitelist_spl_mint")
 )
 
-// ParseGatewayAddressAndPda parses the gateway id and program derived address from the given string
-func ParseGatewayIDAndPda(gatewayAddress string) (solana.PublicKey, solana.PublicKey, error) {
+// ParseGatewayWithPDA parses the gateway id and program derived address from the given string
+func ParseGatewayWithPDA(gatewayAddress string) (solana.PublicKey, solana.PublicKey, error) {
 	var gatewayID, pda solana.PublicKey
 
 	// decode gateway address
@@ -61,18 +61,10 @@ func ParseGatewayIDAndPda(gatewayAddress string) (solana.PublicKey, solana.Publi
 }
 
 // ParseRentPayerPda parses the rent payer program derived address from the given string
-func ParseRentPayerPda(gatewayAddress string) (solana.PublicKey, error) {
+func RentPayerPDA(gateway solana.PublicKey) (solana.PublicKey, error) {
 	var rentPayerPda solana.PublicKey
-
-	// decode gateway address
-	gatewayID, err := solana.PublicKeyFromBase58(gatewayAddress)
-	if err != nil {
-		return rentPayerPda, errors.Wrap(err, "unable to decode address")
-	}
-
-	// compute gateway PDA
 	seed := []byte(RentPayerPDASeed)
-	rentPayerPda, _, err = solana.FindProgramAddress([][]byte{seed}, gatewayID)
+	rentPayerPda, _, err := solana.FindProgramAddress([][]byte{seed}, gateway)
 
 	return rentPayerPda, err
 }

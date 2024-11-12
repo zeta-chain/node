@@ -47,7 +47,6 @@ func (signer *Signer) createAndSignMsgWithdraw(
 	if err != nil {
 		return nil, errors.Wrap(err, "Key-sign failed")
 	}
-	signer.Logger().Std.Info().Msgf("Key-sign succeed for chain %d nonce %d", chainID, nonce)
 
 	// attach the signature and return
 	return msg.SetSignature(signature), nil
@@ -56,9 +55,7 @@ func (signer *Signer) createAndSignMsgWithdraw(
 // signWithdrawTx wraps the withdraw 'msg' into a Solana transaction and signs it with the relayer key.
 func (signer *Signer) signWithdrawTx(ctx context.Context, msg contracts.MsgWithdraw) (*solana.Transaction, error) {
 	// create withdraw instruction with program call data
-	var err error
-	var inst solana.GenericInstruction
-	inst.DataBytes, err = borsh.Serialize(contracts.WithdrawInstructionParams{
+	dataBytes, err := borsh.Serialize(contracts.WithdrawInstructionParams{
 		Discriminator: contracts.DiscriminatorWithdraw,
 		Amount:        msg.Amount(),
 		Signature:     msg.SigRS(),
@@ -70,9 +67,15 @@ func (signer *Signer) signWithdrawTx(ctx context.Context, msg contracts.MsgWithd
 		return nil, errors.Wrap(err, "cannot serialize withdraw instruction")
 	}
 
-	// attach required accounts to the instruction
-	privkey := signer.relayerKey
-	attachWithdrawAccounts(&inst, privkey.PublicKey(), signer.pda, msg.To(), signer.gatewayID)
+	inst := solana.GenericInstruction{
+		ProgID:    signer.gatewayID,
+		DataBytes: dataBytes,
+		AccountValues: []*solana.AccountMeta{
+			solana.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
+			solana.Meta(signer.pda).WRITE(),
+			solana.Meta(msg.To()).WRITE(),
+		},
+	}
 
 	// get a recent blockhash
 	recent, err := signer.client.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
@@ -89,7 +92,7 @@ func (signer *Signer) signWithdrawTx(ctx context.Context, msg contracts.MsgWithd
 			// programs.ComputeBudgetSetComputeUnitPrice(computeUnitPrice),
 			&inst},
 		recent.Value.Blockhash,
-		solana.TransactionPayer(privkey.PublicKey()),
+		solana.TransactionPayer(signer.relayerKey.PublicKey()),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "NewTransaction error")
@@ -97,8 +100,8 @@ func (signer *Signer) signWithdrawTx(ctx context.Context, msg contracts.MsgWithd
 
 	// relayer signs the transaction
 	_, err = tx.Sign(func(key solana.PublicKey) *solana.PrivateKey {
-		if key.Equals(privkey.PublicKey()) {
-			return privkey
+		if key.Equals(signer.relayerKey.PublicKey()) {
+			return signer.relayerKey
 		}
 		return nil
 	})
@@ -107,22 +110,4 @@ func (signer *Signer) signWithdrawTx(ctx context.Context, msg contracts.MsgWithd
 	}
 
 	return tx, nil
-}
-
-// attachWithdrawAccounts attaches the required accounts for the gateway withdraw instruction.
-func attachWithdrawAccounts(
-	inst *solana.GenericInstruction,
-	signer solana.PublicKey,
-	pda solana.PublicKey,
-	to solana.PublicKey,
-	gatewayID solana.PublicKey,
-) {
-	// attach required accounts to the instruction
-	var accountSlice []*solana.AccountMeta
-	accountSlice = append(accountSlice, solana.Meta(signer).WRITE().SIGNER())
-	accountSlice = append(accountSlice, solana.Meta(pda).WRITE())
-	accountSlice = append(accountSlice, solana.Meta(to).WRITE())
-	inst.ProgID = gatewayID
-
-	inst.AccountValues = accountSlice
 }

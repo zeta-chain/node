@@ -30,8 +30,8 @@ func (r *E2ERunner) ComputePdaAddress() solana.PublicKey {
 	return pdaComputed
 }
 
-// ComputePdaAddress computes the rent payer PDA address for the gateway program
-func (r *E2ERunner) ComputeRentPayerPdaAddress() solana.PublicKey {
+// SolanaRentPayerPDA computes the rent payer PDA (Program Derived Address) address for the gateway program
+func (r *E2ERunner) SolanaRentPayerPDA() solana.PublicKey {
 	seed := []byte(solanacontract.RentPayerPDASeed)
 	GatewayProgramID := solana.MustPublicKeyFromBase58(solanacontract.SolanaGatewayProgramID)
 	pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, GatewayProgramID)
@@ -159,8 +159,8 @@ func (r *E2ERunner) CreateSignedTransaction(
 	return tx
 }
 
-// FindOrCreateAta checks if ata exists, and if not creates it
-func (r *E2ERunner) FindOrCreateAta(
+// ResolveSolanaATA finds or creates SOL associated token account
+func (r *E2ERunner) ResolveSolanaATA(
 	payer solana.PrivateKey,
 	owner solana.PublicKey,
 	tokenAccount solana.PublicKey,
@@ -196,10 +196,10 @@ func (r *E2ERunner) SPLDepositAndCall(
 ) solana.Signature {
 	// ata for pda
 	pda := r.ComputePdaAddress()
-	pdaAta := r.FindOrCreateAta(*privateKey, pda, tokenAccount)
+	pdaAta := r.ResolveSolanaATA(*privateKey, pda, tokenAccount)
 
 	// deployer ata
-	ata := r.FindOrCreateAta(*privateKey, privateKey.PublicKey(), tokenAccount)
+	ata := r.ResolveSolanaATA(*privateKey, privateKey.PublicKey(), tokenAccount)
 
 	// deposit spl
 	seed := [][]byte{[]byte("whitelist"), tokenAccount.Bytes()}
@@ -260,7 +260,7 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 	r.Logger.Info("create spl logs: %v", out.Meta.LogMessages)
 
 	// minting some tokens to deployer for testing
-	ata := r.FindOrCreateAta(*privateKey, privateKey.PublicKey(), tokenAccount.PublicKey())
+	ata := r.ResolveSolanaATA(*privateKey, privateKey.PublicKey(), tokenAccount.PublicKey())
 
 	mintToInstruction := token.NewMintToInstruction(uint64(1_000_000_000), tokenAccount.PublicKey(), ata, privateKey.PublicKey(), []solana.PublicKey{}).
 		Build()

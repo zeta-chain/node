@@ -42,13 +42,13 @@ func (signer *Signer) createAndSignMsgWithdrawSPL(
 	// parse token account
 	tokenAccount, err := solana.PublicKeyFromBase58(asset)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "cannot parse asset public key %s", asset)
 	}
 
 	// get recipient ata
 	recipientAta, _, err := solana.FindAssociatedTokenAddress(to, tokenAccount)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "cannot find ATA for %s and token account %s", to, tokenAccount)
 	}
 
 	// prepare withdraw spl msg and compute hash
@@ -61,7 +61,6 @@ func (signer *Signer) createAndSignMsgWithdrawSPL(
 	if err != nil {
 		return nil, errors.Wrap(err, "Key-sign failed")
 	}
-	signer.Logger().Std.Info().Msgf("Key-sign succeed for chain %d nonce %d", chainID, nonce)
 
 	// attach the signature and return
 	return msg.SetSignature(signature), nil
@@ -73,9 +72,7 @@ func (signer *Signer) signWithdrawSPLTx(
 	msg contracts.MsgWithdrawSPL,
 ) (*solana.Transaction, error) {
 	// create withdraw spl instruction with program call data
-	var err error
-	var inst solana.GenericInstruction
-	inst.DataBytes, err = borsh.Serialize(contracts.WithdrawSPLInstructionParams{
+	dataBytes, err := borsh.Serialize(contracts.WithdrawSPLInstructionParams{
 		Discriminator: contracts.DiscriminatorWithdrawSPL,
 		Decimals:      msg.Decimals(),
 		Amount:        msg.Amount(),
@@ -88,19 +85,31 @@ func (signer *Signer) signWithdrawSPLTx(
 		return nil, errors.Wrap(err, "cannot serialize withdraw instruction")
 	}
 
-	// attach required accounts to the instruction
-	privkey := signer.relayerKey
-	err = attachWithdrawSPLAccounts(
-		&inst,
-		privkey.PublicKey(),
-		signer.pda,
-		signer.rentPayerPda,
-		msg.TokenAccount(),
-		msg.To(),
-		signer.gatewayID,
-	)
+	pdaAta, _, err := solana.FindAssociatedTokenAddress(signer.pda, msg.TokenAccount())
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "cannot find ATA for %s and token account %s", signer.pda, msg.TokenAccount())
+	}
+
+	recipientAta, _, err := solana.FindAssociatedTokenAddress(msg.To(), msg.TokenAccount())
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot find ATA for %s and token account %s", msg.To(), msg.TokenAccount())
+	}
+
+	inst := solana.GenericInstruction{
+		ProgID:    signer.gatewayID,
+		DataBytes: dataBytes,
+		AccountValues: []*solana.AccountMeta{
+			solana.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
+			solana.Meta(signer.pda).WRITE(),
+			solana.Meta(pdaAta).WRITE(),
+			solana.Meta(msg.TokenAccount()),
+			solana.Meta(msg.To()),
+			solana.Meta(recipientAta).WRITE(),
+			solana.Meta(signer.rentPayerPda).WRITE(),
+			solana.Meta(solana.TokenProgramID),
+			solana.Meta(solana.SPLAssociatedTokenAccountProgramID),
+			solana.Meta(solana.SystemProgramID),
+		},
 	}
 	// get a recent blockhash
 	recent, err := signer.client.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
@@ -117,7 +126,7 @@ func (signer *Signer) signWithdrawSPLTx(
 			// programs.ComputeBudgetSetComputeUnitPrice(computeUnitPrice),
 			&inst},
 		recent.Value.Blockhash,
-		solana.TransactionPayer(privkey.PublicKey()),
+		solana.TransactionPayer(signer.relayerKey.PublicKey()),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "NewTransaction error")
@@ -125,8 +134,8 @@ func (signer *Signer) signWithdrawSPLTx(
 
 	// relayer signs the transaction
 	_, err = tx.Sign(func(key solana.PublicKey) *solana.PrivateKey {
-		if key.Equals(privkey.PublicKey()) {
-			return privkey
+		if key.Equals(signer.relayerKey.PublicKey()) {
+			return signer.relayerKey
 		}
 		return nil
 	})
@@ -135,44 +144,4 @@ func (signer *Signer) signWithdrawSPLTx(
 	}
 
 	return tx, nil
-}
-
-// attachWithdrawSPLAccounts attaches the required accounts for the gateway withdraw spl instruction.
-func attachWithdrawSPLAccounts(
-	inst *solana.GenericInstruction,
-	signer solana.PublicKey,
-	pda solana.PublicKey,
-	rentPayerPda solana.PublicKey,
-	tokenAccount solana.PublicKey,
-	to solana.PublicKey,
-	gatewayID solana.PublicKey,
-) error {
-	// attach required accounts to the instruction
-	pdaAta, _, err := solana.FindAssociatedTokenAddress(pda, tokenAccount)
-	if err != nil {
-		return err
-	}
-
-	recipientAta, _, err := solana.FindAssociatedTokenAddress(to, tokenAccount)
-	if err != nil {
-		return err
-	}
-
-	var accountSlice []*solana.AccountMeta
-	accountSlice = append(accountSlice, solana.Meta(signer).WRITE().SIGNER())
-	accountSlice = append(accountSlice, solana.Meta(pda).WRITE())
-	accountSlice = append(accountSlice, solana.Meta(pdaAta).WRITE())
-	accountSlice = append(accountSlice, solana.Meta(tokenAccount))
-	accountSlice = append(accountSlice, solana.Meta(to))
-	accountSlice = append(accountSlice, solana.Meta(recipientAta).WRITE())
-	accountSlice = append(accountSlice, solana.Meta(rentPayerPda).WRITE())
-	accountSlice = append(accountSlice, solana.Meta(solana.TokenProgramID))
-	accountSlice = append(accountSlice, solana.Meta(solana.SPLAssociatedTokenAccountProgramID))
-	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
-
-	inst.ProgID = gatewayID
-
-	inst.AccountValues = accountSlice
-
-	return nil
 }
