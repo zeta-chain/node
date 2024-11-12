@@ -602,7 +602,7 @@ func createAppContext(t *testing.T, chainsOrParams ...any) *zctx.AppContext {
 	for _, c := range supportedChains {
 		switch {
 		case chains.IsEVMChain(c.ChainId, nil):
-			cfg.EVMChainConfigs[c.ChainId] = config.EVMConfig{Chain: c}
+			cfg.EVMChainConfigs[c.ChainId] = config.EVMConfig{Endpoint: "localhost"}
 		case chains.IsBitcoinChain(c.ChainId, nil):
 			cfg.BTCChainConfigs[c.ChainId] = config.BTCConfig{RPCHost: "localhost"}
 		case chains.IsSolanaChain(c.ChainId, nil):

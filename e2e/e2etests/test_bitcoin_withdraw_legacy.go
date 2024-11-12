@@ -11,8 +11,6 @@ func TestBitcoinWithdrawLegacy(r *runner.E2ERunner, args []string) {
 	// check length of arguments
 	require.Len(r, args, 2)
 
-	r.SetBtcAddress(r.Name, false)
-
 	// parse arguments and withdraw BTC
 	receiver, amount := parseBitcoinWithdrawArgs(r, args, defaultReceiver)
 

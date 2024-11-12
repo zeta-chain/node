@@ -5,13 +5,25 @@
 ### Features
 * [2984](https://github.com/zeta-chain/node/pull/2984) - add Whitelist message ability to whitelist SPL tokens on Solana
 * [3091](https://github.com/zeta-chain/node/pull/3091) - improve build reproducability. `make release{,-build-only}` checksums should now be stable.
+* [3124](https://github.com/zeta-chain/node/pull/3124) - integrate SPL deposits
 
 ### Tests
+
 * [3075](https://github.com/zeta-chain/node/pull/3075) - ton: withdraw concurrent, deposit & revert.
+* [3105](https://github.com/zeta-chain/node/pull/3105) - split Bitcoin E2E tests into two runners for deposit and withdraw
+
+### Refactor
+* [3118](https://github.com/zeta-chain/node/pull/3118) - zetaclient: remove hsm signer
+* [3122](https://github.com/zeta-chain/node/pull/3122) - improve & refactor zetaclientd cli
+* [3125](https://github.com/zeta-chain/node/pull/3125) - drop support for header proofs
+* [3131](https://github.com/zeta-chain/node/pull/3131) - move app context update from zetacore client
+* [3137](https://github.com/zeta-chain/node/pull/3137) - remove chain.Chain from zetaclientd config
 
 ### Fixes
 * [3166](https://github.com/zeta-chain/node/pull/3117) - register messages for emissions module to legacy amino codec.
 * [3041](https://github.com/zeta-chain/node/pull/3041) - replace libp2p public DHT with private gossip peer discovery and connection gater for inbound connections
+* [3106](https://github.com/zeta-chain/node/pull/3106) - prevent blocked CCTX on out of gas during omnichain calls
+* [3139](https://github.com/zeta-chain/node/pull/3139) - fix config resolution in orchestrator
 
 ## v21.0.0
 
@@ -78,7 +90,6 @@
 * [3018](https://github.com/zeta-chain/node/pull/3018) - support `DepositAndCall` and `WithdrawAndCall` with empty payload
 * [3030](https://github.com/zeta-chain/node/pull/3030) - Avoid storing invalid Solana gateway address in the `SetGatewayAddress`
 * [3047](https://github.com/zeta-chain/node/pull/3047) - wrong block hash in subscribe new heads
-
 
 ## v20.0.0
 

@@ -32,15 +32,8 @@ func CmdAddOutboundTracker() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgAddOutboundTracker(
-				clientCtx.GetFromAddress().String(),
-				argChain,
-				argNonce,
-				argTxHash,
-				nil, // TODO: add option to provide a proof from CLI arguments https://github.com/zeta-chain/node/issues/1134
-				"",
-				-1,
-			)
+			creator := clientCtx.GetFromAddress().String()
+			msg := types.NewMsgAddOutboundTracker(creator, argChain, argNonce, argTxHash)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

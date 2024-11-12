@@ -6,8 +6,6 @@ import (
 	"sync"
 
 	"github.com/showa-93/go-mask"
-
-	"github.com/zeta-chain/node/pkg/chains"
 )
 
 // KeyringBackend is the type of keyring backend to use for the hotkey
@@ -23,8 +21,10 @@ const (
 	// KeyringBackendFile is the file Cosmos keyring backend
 	KeyringBackendFile KeyringBackend = "file"
 
+	DefaultRelayerDir = "relayer-keys"
+
 	// DefaultRelayerKeyPath is the default path that relayer keys are stored
-	DefaultRelayerKeyPath = "~/.zetacored/relayer-keys"
+	DefaultRelayerKeyPath = "~/.zetacored/" + DefaultRelayerDir
 )
 
 // ClientConfiguration is a subset of zetaclient config that is used by zetacore client
@@ -34,12 +34,10 @@ type ClientConfiguration struct {
 	ChainHomeFolder string `json:"chain_home_folder" mapstructure:"chain_home_folder"`
 	SignerName      string `json:"signer_name"       mapstructure:"signer_name"`
 	SignerPasswd    string `json:"signer_passwd"`
-	HsmMode         bool   `json:"hsm_mode"`
 }
 
 // EVMConfig is the config for EVM chain
 type EVMConfig struct {
-	Chain           chains.Chain
 	Endpoint        string `mask:"filled"`
 	RPCAlertLatency int64
 }
@@ -95,8 +93,6 @@ type Config struct {
 	TestTssKeysign      bool           `json:"TestTssKeysign"`
 	KeyringBackend      KeyringBackend `json:"KeyringBackend"`
 	RelayerKeyPath      string         `json:"RelayerKeyPath"`
-	HsmMode             bool           `json:"HsmMode"`
-	HsmHotKey           string         `json:"HsmHotKey"`
 
 	// chain configs
 	EVMChainConfigs map[int64]EVMConfig `json:"EVMChainConfigs"`
@@ -217,7 +213,7 @@ func (c Config) GetRelayerKeyPath() string {
 }
 
 func (c EVMConfig) Empty() bool {
-	return c.Endpoint == "" || c.Chain.IsEmpty()
+	return c.Endpoint == ""
 }
 
 func (c BTCConfig) Empty() bool {
