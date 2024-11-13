@@ -30,11 +30,170 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
-// Simulation parameter constants
+// simulation parameter constants
 const (
 	StakePerAccount           = "stake_per_account"
 	InitiallyBondedValidators = "initially_bonded_validators"
 )
+
+func updateBankState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, notBondedCoins sdk.Coin) *banktypes.GenesisState {
+	bankStateBz, ok := rawState[banktypes.ModuleName]
+	require.True(t, ok, "bank genesis state is missing")
+
+	bankState := new(banktypes.GenesisState)
+	err := cdc.UnmarshalJSON(bankStateBz, bankState)
+	require.NoError(t, err)
+
+	stakingAddr := authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName).String()
+	var found bool
+	for _, balance := range bankState.Balances {
+		if balance.Address == stakingAddr {
+			found = true
+			break
+		}
+	}
+	if !found {
+		bankState.Balances = append(bankState.Balances, banktypes.Balance{
+			Address: stakingAddr,
+			Coins:   sdk.NewCoins(notBondedCoins),
+		})
+	}
+
+	return bankState
+}
+
+func updateEVMState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, bondDenom string) *evmtypes.GenesisState {
+	evmStateBz, ok := rawState[evmtypes.ModuleName]
+	require.True(t, ok, "evm genesis state is missing")
+
+	evmState := new(evmtypes.GenesisState)
+	cdc.MustUnmarshalJSON(evmStateBz, evmState)
+
+	// replace the EvmDenom with BondDenom
+	evmState.Params.EvmDenom = bondDenom
+
+	return evmState
+}
+
+func updateStakingState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec) (*stakingtypes.GenesisState, sdk.Coin) {
+	stakingStateBz, ok := rawState[stakingtypes.ModuleName]
+	require.True(t, ok, "staking genesis state is missing")
+
+	stakingState := new(stakingtypes.GenesisState)
+	err := cdc.UnmarshalJSON(stakingStateBz, stakingState)
+	if err != nil {
+		panic(err)
+	}
+
+	// compute not bonded balance
+	notBondedTokens := math.ZeroInt()
+	for _, val := range stakingState.Validators {
+		if val.Status != stakingtypes.Unbonded {
+			continue
+		}
+		notBondedTokens = notBondedTokens.Add(val.GetTokens())
+	}
+	notBondedCoins := sdk.NewCoin(stakingState.Params.BondDenom, notBondedTokens)
+
+	return stakingState, notBondedCoins
+}
+
+func updateObserverState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, r *rand.Rand, validators stakingtypes.Validators) *observertypes.GenesisState {
+	observerStateBz, ok := rawState[observertypes.ModuleName]
+	require.True(t, ok, "observer genesis state is missing")
+
+	observerState := new(observertypes.GenesisState)
+	cdc.MustUnmarshalJSON(observerStateBz, observerState)
+
+	observers := make([]string, 0)
+	for _, validator := range validators {
+		accAddress, err := observertypes.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
+		if err != nil {
+			continue
+		}
+		observers = append(observers, accAddress.String())
+	}
+
+	r.Shuffle(len(observers), func(i, j int) {
+		observers[i], observers[j] = observers[j], observers[i]
+	})
+
+	numObservers := r.Intn(11) + 5
+	if numObservers > len(observers) {
+		numObservers = len(observers)
+	}
+	observers = observers[:numObservers]
+
+	observerState.Observers.ObserverList = observers
+	observerState.CrosschainFlags.IsInboundEnabled = true
+	observerState.CrosschainFlags.IsOutboundEnabled = true
+
+	tss := sample.TSSRandom(t, r)
+	tss.OperatorAddressList = observers
+	observerState.Tss = &tss
+
+	return observerState
+}
+
+func updateAuthorityState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, r *rand.Rand, accs []simtypes.Account) *authoritytypes.GenesisState {
+	authorityStateBz, ok := rawState[authoritytypes.ModuleName]
+	require.True(t, ok, "authority genesis state is missing")
+
+	authorityState := new(authoritytypes.GenesisState)
+	cdc.MustUnmarshalJSON(authorityStateBz, authorityState)
+
+	randomAccount := accs[r.Intn(len(accs))]
+	policies := authoritytypes.Policies{
+		Items: []*authoritytypes.Policy{
+			{
+				Address:    randomAccount.Address.String(),
+				PolicyType: authoritytypes.PolicyType_groupEmergency,
+			},
+			{
+				Address:    randomAccount.Address.String(),
+				PolicyType: authoritytypes.PolicyType_groupAdmin,
+			},
+			{
+				Address:    randomAccount.Address.String(),
+				PolicyType: authoritytypes.PolicyType_groupOperational,
+			},
+		},
+	}
+	authorityState.Policies = policies
+
+	return authorityState
+}
+
+func updateFungibleState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, r *rand.Rand) *fungibletypes.GenesisState {
+	fungibleStateBz, ok := rawState[fungibletypes.ModuleName]
+	require.True(t, ok, "fungible genesis state is missing")
+
+	fungibleState := new(fungibletypes.GenesisState)
+	cdc.MustUnmarshalJSON(fungibleStateBz, fungibleState)
+	fungibleState.SystemContract = &fungibletypes.SystemContract{
+		SystemContract: sample.EthAddressRandom(r).String(),
+		ConnectorZevm:  sample.EthAddressRandom(r).String(),
+		Gateway:        sample.EthAddressRandom(r).String(),
+	}
+
+	return fungibleState
+}
+
+func updateRawState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, r *rand.Rand, accs []simtypes.Account) {
+	stakingState, notBondedCoins := updateStakingState(t, rawState, cdc)
+	bankState := updateBankState(t, rawState, cdc, notBondedCoins)
+	evmState := updateEVMState(t, rawState, cdc, stakingState.Params.BondDenom)
+	observerState := updateObserverState(t, rawState, cdc, r, stakingState.Validators)
+	authorityState := updateAuthorityState(t, rawState, cdc, r, accs)
+	fungibleState := updateFungibleState(t, rawState, cdc, r)
+
+	rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
+	rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
+	rawState[evmtypes.ModuleName] = cdc.MustMarshalJSON(evmState)
+	rawState[observertypes.ModuleName] = cdc.MustMarshalJSON(observerState)
+	rawState[authoritytypes.ModuleName] = cdc.MustMarshalJSON(authorityState)
+	rawState[fungibletypes.ModuleName] = cdc.MustMarshalJSON(fungibleState)
+}
 
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
@@ -57,7 +216,7 @@ func AppStateFn(
 
 		chainID = config.ChainID
 
-		// If exported state is provided then use it
+		// if exported state is provided then use it
 		if exportedState != nil {
 			return exportedState, accs, chainID, genesisTimestamp
 		}
@@ -79,141 +238,7 @@ func AppStateFn(
 			panic(err)
 		}
 
-		stakingStateBz, ok := rawState[stakingtypes.ModuleName]
-		if !ok {
-			panic("staking genesis state is missing")
-		}
-
-		stakingState := new(stakingtypes.GenesisState)
-		err = cdc.UnmarshalJSON(stakingStateBz, stakingState)
-		if err != nil {
-			panic(err)
-		}
-
-		// compute not bonded balance
-		notBondedTokens := math.ZeroInt()
-		for _, val := range stakingState.Validators {
-			if val.Status != stakingtypes.Unbonded {
-				continue
-			}
-			notBondedTokens = notBondedTokens.Add(val.GetTokens())
-		}
-		notBondedCoins := sdk.NewCoin(stakingState.Params.BondDenom, notBondedTokens)
-
-		// edit bank state to make it have the not bonded pool tokens
-		bankStateBz, ok := rawState[banktypes.ModuleName]
-		require.True(t, ok, "bank genesis state is missing")
-
-		bankState := new(banktypes.GenesisState)
-		err = cdc.UnmarshalJSON(bankStateBz, bankState)
-		require.NoError(t, err)
-
-		stakingAddr := authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName).String()
-		var found bool
-		for _, balance := range bankState.Balances {
-			if balance.Address == stakingAddr {
-				found = true
-				break
-			}
-		}
-		if !found {
-			bankState.Balances = append(bankState.Balances, banktypes.Balance{
-				Address: stakingAddr,
-				Coins:   sdk.NewCoins(notBondedCoins),
-			})
-		}
-
-		// set the bond denom in the EVM genesis state
-		evmStateBz, ok := rawState[evmtypes.ModuleName]
-		require.True(t, ok, "evm genesis state is missing")
-
-		evmState := new(evmtypes.GenesisState)
-		cdc.MustUnmarshalJSON(evmStateBz, evmState)
-
-		// we should replace the EvmDenom with BondDenom
-		evmState.Params.EvmDenom = stakingState.Params.BondDenom
-
-		observers := make([]string, 0)
-		// get all the operator addresses of the validators.
-		// the observer set can be a subset of the validator set
-		for _, validator := range stakingState.Validators {
-			accAddress, err := observertypes.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
-			if err != nil {
-				continue
-			}
-			observers = append(observers, accAddress.String())
-		}
-
-		// shuffle the observers list
-		r.Shuffle(len(observers), func(i, j int) {
-			observers[i], observers[j] = observers[j], observers[i]
-		})
-
-		// pick a random number of observers to add to the observer set
-		numObservers := r.Intn(11) + 5
-		if numObservers > len(observers) {
-			numObservers = len(observers)
-		}
-		observers = observers[:numObservers]
-
-		// update the observer genesis state
-		observerStateBz, ok := rawState[observertypes.ModuleName]
-		require.True(t, ok, "observer genesis state is missing")
-
-		observerState := new(observertypes.GenesisState)
-		cdc.MustUnmarshalJSON(observerStateBz, observerState)
-		observerState.Observers.ObserverList = observers
-		observerState.CrosschainFlags.IsInboundEnabled = true
-		observerState.CrosschainFlags.IsOutboundEnabled = true
-
-		tss := sample.TSSRandom(t, r)
-		tss.OperatorAddressList = observers
-		observerState.Tss = &tss
-
-		// Pick a random account to be the admin of all policies
-		randomAccount := accs[r.Intn(len(accs))]
-		authorityStateBz, ok := rawState[authoritytypes.ModuleName]
-		require.True(t, ok, "authority genesis state is missing")
-
-		// update the authority genesis state
-		authorityState := new(authoritytypes.GenesisState)
-		cdc.MustUnmarshalJSON(authorityStateBz, authorityState)
-		policies := authoritytypes.Policies{
-			Items: []*authoritytypes.Policy{
-				{
-					Address:    randomAccount.Address.String(),
-					PolicyType: authoritytypes.PolicyType_groupEmergency,
-				},
-				{
-					Address:    randomAccount.Address.String(),
-					PolicyType: authoritytypes.PolicyType_groupAdmin,
-				},
-				{
-					Address:    randomAccount.Address.String(),
-					PolicyType: authoritytypes.PolicyType_groupOperational,
-				},
-			},
-		}
-		authorityState.Policies = policies
-
-		//Update the fungible genesis state
-		fungibleStateBz, ok := rawState[fungibletypes.ModuleName]
-		require.True(t, ok, "fungible genesis state is missing")
-		fungibleState := new(fungibletypes.GenesisState)
-		cdc.MustUnmarshalJSON(fungibleStateBz, fungibleState)
-		fungibleState.SystemContract = &fungibletypes.SystemContract{
-			SystemContract: sample.EthAddressRandom(r).String(),
-			ConnectorZevm:  sample.EthAddressRandom(r).String(),
-			Gateway:        sample.EthAddressRandom(r).String(),
-		}
-
-		// change appState back
-		rawState[evmtypes.ModuleName] = cdc.MustMarshalJSON(evmState)
-		rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
-		rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
-		rawState[observertypes.ModuleName] = cdc.MustMarshalJSON(observerState)
-		rawState[authoritytypes.ModuleName] = cdc.MustMarshalJSON(authorityState)
-		rawState[fungibletypes.ModuleName] = cdc.MustMarshalJSON(fungibleState)
+		updateRawState(t, rawState, cdc, r, simAccs)
 
 		// replace appstate
 		appState, err = json.Marshal(rawState)
@@ -251,7 +276,7 @@ func AppStateRandomizedFn(
 		numInitiallyBonded = numAccs
 	}
 
-	// Set the default power reduction to be one less than the initial stake so that all randomised validators are part of the validator set
+	// set the default power reduction to be one less than the initial stake so that all randomised validators are part of the validator set
 	sdk.DefaultPowerReduction = initialStake.Sub(sdk.OneInt())
 
 	fmt.Printf(
