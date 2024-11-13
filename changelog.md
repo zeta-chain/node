@@ -11,6 +11,7 @@
 
 * [3075](https://github.com/zeta-chain/node/pull/3075) - ton: withdraw concurrent, deposit & revert.
 * [3105](https://github.com/zeta-chain/node/pull/3105) - split Bitcoin E2E tests into two runners for deposit and withdraw
+* [3151](https://github.com/zeta-chain/node/pull/3151) - add withdraw emissions to e2e tests
 
 ### Refactor
 * [3118](https://github.com/zeta-chain/node/pull/3118) - zetaclient: remove hsm signer

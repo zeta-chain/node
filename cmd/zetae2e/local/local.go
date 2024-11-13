@@ -488,6 +488,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
 		os.Exit(1)
 	}
+	noError(deployerRunner.WithdrawEmissions())
 
 	// if all tests pass, cancel txs priority monitoring and check if tx priority is not correct in some blocks
 	logger.Print("⏳ e2e tests passed, checking tx priority")
@@ -497,8 +498,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
 		os.Exit(1)
 	}
-
-	noError(deployerRunner.WithdrawEmissions())
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 

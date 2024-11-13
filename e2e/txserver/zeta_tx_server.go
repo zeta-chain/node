@@ -590,11 +590,11 @@ func (zts ZetaTxServer) WithdrawAllEmissions(withdrawAmount sdkmath.Int, account
 	// retrieve account
 	acc, err := zts.clientCtx.Keyring.Key(account)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get withdrawer account: %w", err)
 	}
 	withdrawerAddress, err := acc.GetAddress()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get withdrawer account address: %w", err)
 	}
 
 	msg := emissionstypes.MsgWithdrawEmission{

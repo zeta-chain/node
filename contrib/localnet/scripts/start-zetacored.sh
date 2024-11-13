@@ -37,15 +37,6 @@ add_v17_message_authorizations() {
                 "expiration": null
             },
             {
-                            "granter": .operator,
-                            "grantee": .granteeAddress,
-                            "authorization": {
-                                "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
-                                "msg": "/zetachain.zetacore.crosschain.MsgWithdrawEmissionsss"
-                            },
-                            "expiration": null
-                        },
-            {
                 "granter": .operator,
                 "grantee": .granteeAddress,
                 "authorization": {
@@ -78,32 +69,49 @@ add_v17_message_authorizations() {
 
 
 add_emissions_withdraw_authorizations() {
-    # Address to add emissions withdraw authorizations
-    address=$(yq -r '.additional_accounts.user_emissions_withdraw.bech32_address' /root/config.yml)
 
-    echo "Adding emissions withdraw authorizations for address: $address"
-    # Path to the JSON file
+    config_file="/root/config.yml"
     json_file="/root/.zetacored/config/genesis.json"
 
-    # Using jq to parse JSON, create new entries, and append them to the authorization array
-    jq --arg address "$address" '
-        # Store the nodeAccountList array
-        .app_state.observer.nodeAccountList as $list |
+    # Check if config file exists
+    if [[ ! -f "$config_file" ]]; then
+        echo "Error: Config file not found at $config_file"
+        return 1
+    fi
+    # Address to add emissions withdraw authorizations
+    address=$(yq -r '.additional_accounts.user_emissions_withdraw.bech32_address' "$config_file")
 
-        # Iterate over the stored list to construct new objects and append to the authorization array
-        .app_state.authz.authorization += [
-            $list[] |
-            {
-                "granter": .operator,
-                "grantee": $address,
-                "authorization": {
-                    "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
-                    "msg": "/zetachain.zetacore.emissions.MsgWithdrawEmission"
-                },
-                "expiration": null
-            }
-        ]
-    ' $json_file > temp.json && mv temp.json $json_file
+    # Check if genesis file exists
+    if [[ ! -f "$json_file" ]]; then
+        echo "Error: Genesis file not found at $json_file"
+        return 1
+    fi
+
+    echo "Adding emissions withdraw authorizations for address: $address"
+
+
+     # Using jq to parse JSON, create new entries, and append them to the authorization array
+     if ! jq --arg address "$address" '
+         # Store the nodeAccountList array
+         .app_state.observer.nodeAccountList as $list |
+         # Iterate over the stored list to construct new objects and append to the authorization array
+         .app_state.authz.authorization += [
+             $list[] |
+             {
+                 "granter": .operator,
+                 "grantee": $address,
+                 "authorization": {
+                     "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+                     "msg": "/zetachain.zetacore.emissions.MsgWithdrawEmission"
+                 },
+                 "expiration": null
+             }
+         ]
+     ' "$json_file" > temp.json; then
+         echo "Error: Failed to update genesis file"
+         return 1
+     fi
+     mv temp.json "$json_file"
 }
 
 
@@ -231,7 +239,12 @@ then
 # 2. Add the observers, authorizations, required params and accounts to the genesis.json
   zetacored collect-observer-info
   zetacored add-observer-list --keygen-block 25
-  add_emissions_withdraw_authorizations
+
+  # Add emissions withdraw authorizations
+  if ! add_emissions_withdraw_authorizations; then
+      echo "Error: Failed to add emissions withdraw authorizations"
+      exit 1
+  fi
 
   # Check for the existence of "AddToOutTxTracker" string in the genesis file
   # If this message is found in the genesis, it means add-observer-list has been run with the v16 binary for upgrade tests

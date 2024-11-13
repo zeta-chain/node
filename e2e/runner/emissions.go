@@ -2,10 +2,9 @@ package runner
 
 import (
 	"fmt"
-	"strings"
 
 	"cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
@@ -32,7 +31,7 @@ func (r *E2ERunner) WithdrawEmissions() error {
 	}
 
 	for _, observer := range observerSet.Observers {
-		r.Logger.Print("🏃 withdrawing emissions from the emissions pool on ZetaChain for observer %s", observer)
+		r.Logger.Print("🏃 Withdrawing emissions for observer %s", observer)
 		var (
 			baseDenom            = config.BaseDenom
 			queryObserverBalance = &banktypes.QueryBalanceRequest{
@@ -56,22 +55,17 @@ func (r *E2ERunner) WithdrawEmissions() error {
 			return fmt.Errorf("failed to get available emissions for observer %s: %w", observer, err)
 		}
 
-		amount, found := strings.CutSuffix(availableAmount.Amount, baseDenom)
-		if !found {
-			return fmt.Errorf("invalid amount %s", availableAmount.Amount)
+		availableCoin, err := sdk.ParseCoinNormalized(availableAmount.Amount)
+		if err != nil {
+			return fmt.Errorf("failed to parse coin amount: %w", err)
 		}
 
-		amountInt, ok := sdkmath.NewIntFromString(amount)
-		if !ok {
-			return fmt.Errorf("failed to convert string to int")
-		}
-
-		if amountInt.IsZero() {
+		if availableCoin.Amount.IsZero() {
 			r.Logger.Print("no emissions to withdraw for observer %s", observer)
 			continue
 		}
 
-		err = r.ZetaTxServer.WithdrawAllEmissions(amountInt, e2eutils.UserEmissionsWithdrawName, observer)
+		err = r.ZetaTxServer.WithdrawAllEmissions(availableCoin.Amount, e2eutils.UserEmissionsWithdrawName, observer)
 		if err != nil {
 			return err
 		}
@@ -81,12 +75,12 @@ func (r *E2ERunner) WithdrawEmissions() error {
 			return errors.Wrapf(err, "failed to get balance for observer after withdrawing emissions %s", observer)
 		}
 
-		changeInBalance := balanceAfter.Balance.Sub(*balanceBefore.Balance).Amount.String()
-		if changeInBalance != amount {
+		changeInBalance := balanceAfter.Balance.Sub(*balanceBefore.Balance).Amount
+		if !changeInBalance.Equal(availableCoin.Amount) {
 			return fmt.Errorf(
 				"invalid balance change for observer %s, expected %s, got %s",
 				observer,
-				amount,
+				availableCoin.Amount,
 				changeInBalance,
 			)
 		}
