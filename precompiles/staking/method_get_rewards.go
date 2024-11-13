@@ -3,7 +3,7 @@ package staking
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	dstrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 
@@ -37,7 +37,7 @@ func (c *Contract) getRewards(
 	// Query the delegation rewards through the distribution keeper querier.
 	dstrQuerier := distrkeeper.NewQuerier(c.distributionKeeper)
 
-	res, err := dstrQuerier.DelegationRewards(ctx, &dstrtypes.QueryDelegationRewardsRequest{
+	res, err := dstrQuerier.DelegationRewards(ctx, &distrtypes.QueryDelegationRewardsRequest{
 		DelegatorAddress: delegatorCosmosAddr.String(),
 		ValidatorAddress: validatorAddr,
 	})
@@ -56,14 +56,15 @@ func (c *Contract) getRewards(
 		}
 	}
 
-	zrc20Coins := make([]sdk.DecCoin, 0)
+	rewards := make([]DecCoin, 0)
 	for _, coin := range coins {
-		if precompiletypes.CoinIsZRC20(coin.Denom) {
-			zrc20Coins = append(zrc20Coins, coin)
-		}
+		rewards = append(rewards, DecCoin{
+			Denom:  coin.Denom,
+			Amount: coin.Amount.BigInt(),
+		})
 	}
 
-	return method.Outputs.Pack(zrc20Coins)
+	return method.Outputs.Pack(rewards)
 }
 
 func unpackGetRewardsArgs(args []interface{}) (delegator common.Address, validator string, err error) {

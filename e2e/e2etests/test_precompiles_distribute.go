@@ -1,6 +1,7 @@
 package e2etests
 
 import (
+	"fmt"
 	"math/big"
 
 	"cosmossdk.io/math"
@@ -49,6 +50,39 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 
 	dstrContract, err := staking.NewIStaking(distributeContractAddress, r.ZEVMClient)
 	require.NoError(r, err, "failed to create distribute contract caller")
+
+	// Retrieve the list of validators.
+	validators, err := dstrContract.GetAllValidators(&bind.CallOpts{})
+	require.NoError(r, err)
+	require.GreaterOrEqual(r, len(validators), 2)
+
+	// Save first validators as it will be used through the test.
+	validator := validators[0]
+	valAddr, err := sdk.ValAddressFromBech32(validators[0].OperatorAddress)
+	require.NoError(r, err)
+
+	// There is no delegation, so the response should be empty.
+	dv, err := dstrContract.GetDelegatorValidators(&bind.CallOpts{}, spenderAddress)
+	require.NoError(r, err)
+	require.Empty(r, dv, "DelegatorValidators response should be empty")
+
+	// Shares at this point should be 0.
+	sharesBeforeVal1, err := dstrContract.GetShares(&bind.CallOpts{}, r.ZEVMAuth.From, validator.OperatorAddress)
+	require.NoError(r, err)
+	require.Equal(r, int64(0), sharesBeforeVal1.Int64())
+
+	// Stake with spender so it's registered as a delegator.
+	err = stakeThroughCosmosAPI(r, valAddr, spenderAddress, "azeta", big.NewInt(1))
+	require.NoError(r, err)
+
+	// check shares are set to 1.
+	sharesAfterVal1, err := dstrContract.GetShares(&bind.CallOpts{}, r.ZEVMAuth.From, validator.OperatorAddress)
+	require.NoError(r, err)
+	require.Equal(r, big.NewInt(1e18).String(), sharesAfterVal1.String())
+
+	dv, err = dstrContract.GetDelegatorValidators(&bind.CallOpts{}, spenderAddress)
+	require.NoError(r, err)
+	require.Contains(r, dv, validator.OperatorAddress, "DelegatorValidators response should include validator address")
 
 	// Check initial balances.
 	balanceShouldBe(r, 1000, checkZRC20Balance(r, spenderAddress))
@@ -113,14 +147,17 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 	r.WaitForBlocks(1)
 	balanceShouldBe(r, 0, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
-	validators, err := dstrContract.GetAllValidators(&bind.CallOpts{})
-	require.NoError(r, err)
-	require.GreaterOrEqual(r, len(validators), 2)
+	rewards, _ := dstrContract.GetRewards(&bind.CallOpts{}, spenderAddress, validator.OperatorAddress)
+	fmt.Println("rewards: ", rewards)
 
-	err = stakeThroughCosmosAPI(r, sdk.ValAddress(validators[0].OperatorAddress), spenderAddress, "azeta", oneThousand)
-	require.NoError(r, err)
+	fmt.Println("before: ", checkZRC20Balance(r, spenderAddress))
 
-	r.WaitForBlocks(10)
+	tx, err = dstrContract.ClaimRewards(r.ZEVMAuth, spenderAddress, validator.OperatorAddress)
+	require.NoError(r, err)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt, "claim rewards should succeed")
+
+	fmt.Println("after: ", checkZRC20Balance(r, spenderAddress))
 }
 
 func TestPrecompilesDistributeNonZRC20(r *runner.E2ERunner, args []string) {
@@ -188,7 +225,7 @@ func stakeThroughCosmosAPI(
 		},
 	)
 
-	_, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msg)
+	_, err := r.ZetaTxServer.BroadcastTx(sdk.AccAddress(staker.Bytes()).String(), msg)
 	if err != nil {
 		return err
 	}

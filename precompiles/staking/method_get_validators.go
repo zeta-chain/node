@@ -3,7 +3,7 @@ package staking
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	dstrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 
@@ -37,7 +37,7 @@ func (c *Contract) getDelegatorValidators(
 	// Query the validator list of the given delegator.
 	dstrQuerier := distrkeeper.NewQuerier(c.distributionKeeper)
 
-	res, err := dstrQuerier.DelegatorValidators(ctx, &dstrtypes.QueryDelegatorValidatorsRequest{
+	res, err := dstrQuerier.DelegatorValidators(ctx, &distrtypes.QueryDelegatorValidatorsRequest{
 		DelegatorAddress: delegatorCosmosAddr.String(),
 	})
 	if err != nil {

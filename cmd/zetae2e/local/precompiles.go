@@ -27,6 +27,7 @@ func statefulPrecompilesTestRoutine(
 			deployerRunner,
 			account,
 			runner.NewLogger(verbose, color.FgRed, "precompiles"),
+			runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
 		)
 		if err != nil {
 			return err

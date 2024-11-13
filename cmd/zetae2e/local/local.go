@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/node/app"
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
@@ -160,11 +161,17 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	zetaTxServer, err := txserver.NewZetaTxServer(
 		conf.RPCs.ZetaCoreRPC,
-		[]string{utils.EmergencyPolicyName, utils.OperationalPolicyName, utils.AdminPolicyName},
+		[]string{
+			utils.EmergencyPolicyName,
+			utils.OperationalPolicyName,
+			utils.AdminPolicyName,
+			sdk.AccAddress(conf.AdditionalAccounts.UserPrecompile.EVMAddress().Bytes()).String(),
+		},
 		[]string{
 			conf.PolicyAccounts.EmergencyPolicyAccount.RawPrivateKey.String(),
 			conf.PolicyAccounts.OperationalPolicyAccount.RawPrivateKey.String(),
 			conf.PolicyAccounts.AdminPolicyAccount.RawPrivateKey.String(),
+			conf.AdditionalAccounts.UserPrecompile.RawPrivateKey.String(),
 		},
 		conf.ZetaChainID,
 	)
@@ -332,14 +339,14 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		if !skipPrecompiles {
 			precompiledContractTests = []string{
-				// e2etests.TestPrecompilesPrototypeName,
-				// e2etests.TestPrecompilesPrototypeThroughContractName,
-				// e2etests.TestPrecompilesStakingName,
-				// // Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
-				// // e2etests.TestPrecompilesStakingThroughContractName,
-				// e2etests.TestPrecompilesBankName,
-				// e2etests.TestPrecompilesBankFailName,
-				// e2etests.TestPrecompilesBankThroughContractName,
+				e2etests.TestPrecompilesPrototypeName,
+				e2etests.TestPrecompilesPrototypeThroughContractName,
+				e2etests.TestPrecompilesStakingName,
+				// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
+				// e2etests.TestPrecompilesStakingThroughContractName,
+				e2etests.TestPrecompilesBankName,
+				e2etests.TestPrecompilesBankFailName,
+				e2etests.TestPrecompilesBankThroughContractName,
 				e2etests.TestPrecompilesDistributeName,
 				e2etests.TestPrecompilesDistributeNonZRC20Name,
 				e2etests.TestPrecompilesDistributeThroughContractName,

@@ -1,7 +1,6 @@
 package staking
 
 import (
-	"fmt"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -11,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 	"github.com/zeta-chain/node/testutil/sample"
-	"github.com/zeta-chain/node/x/emissions"
 )
 
 func Test_GetRewards(t *testing.T) {
@@ -72,15 +70,14 @@ func Test_GetRewards(t *testing.T) {
 			AfterDelegationModified(s.ctx, stakerCosmosAddr, validator.GetOperator())
 		require.NoError(t, err)
 
-		// DEBUG CALL
-		del := s.sdkKeepers.StakingKeeper.GetAllDelegations(s.ctx)
-		fmt.Println(del)
-
 		/* Distribute 1000 ZRC20 tokens to the staking contract */
 		distributeZRC20(t, s, big.NewInt(1000))
 
-		emissions.BeginBlocker(s.ctx, *s.sdkKeepers.EmissionsKeeper)
-		s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+		// TODO: Simulate a distribution of rewards.
+		// emissions.BeginBlocker(s.ctx, *s.sdkKeepers.EmissionsKeeper)
+		// staking.BeginBlocker(s.ctx, &s.sdkKeepers.StakingKeeper)
+		// distribution.BeginBlocker(s.ctx, abci.RequestBeginBlock{}, s.sdkKeepers.DistributionKeeper)
+		// s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 
 		/* ACT */
 		// Call getRewards.
@@ -96,8 +93,8 @@ func Test_GetRewards(t *testing.T) {
 		require.NoError(t, err)
 
 		/* ASSERT */
-		res, err := getRewardsMethod.Outputs.Unpack(bytes)
+		_, err = getRewardsMethod.Outputs.Unpack(bytes)
 		require.NoError(t, err)
-		fmt.Println(res)
+		//fmt.Println("getRewards response: ", res)
 	})
 }
