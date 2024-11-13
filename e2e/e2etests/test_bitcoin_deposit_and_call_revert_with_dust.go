@@ -5,6 +5,7 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/testutil/sample"
 	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 )
@@ -43,5 +44,6 @@ func TestBitcoinDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string)
 
 	// ASSERT
 	// Now we want to make sure the cctx is aborted.
-	utils.WaitCctxAbortedByInboundHash(r.Ctx, r, txHash.String(), r.CctxClient)
+	cctx := utils.WaitCctxAbortedByInboundHash(r.Ctx, r, txHash.String(), r.CctxClient)
+	require.True(r, cctx.GetCurrentOutboundParam().Amount.Uint64() < constant.BTCWithdrawalDustAmount)
 }

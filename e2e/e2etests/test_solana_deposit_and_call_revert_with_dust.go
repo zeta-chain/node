@@ -26,5 +26,6 @@ func TestSolanaDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string) 
 
 	// ASSERT
 	// Now we want to make sure cctx is aborted.
-	utils.WaitCctxAbortedByInboundHash(r.Ctx, r, sig.String(), r.CctxClient)
+	cctx := utils.WaitCctxAbortedByInboundHash(r.Ctx, r, sig.String(), r.CctxClient)
+	require.True(r, cctx.GetCurrentOutboundParam().Amount.Uint64() < constant.SolanaWalletRentExempt)
 }
