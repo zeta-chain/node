@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog"
@@ -117,7 +116,7 @@ func getInvalidCCTX(t *testing.T) *crosschaintypes.CrossChainTx {
 //
 // signer.Sender() will ecrecover the public key of the transaction internally
 // and will fail if the transaction is not valid or has been tampered with
-func verifyTxSender(t *testing.T, tx *ethtypes.Transaction, expectedSender common.Address, signer ethtypes.Signer) {
+func verifyTxSender(t *testing.T, tx *ethtypes.Transaction, expectedSender ethcommon.Address, signer ethtypes.Signer) {
 	senderAddr, err := signer.Sender(tx)
 	require.NoError(t, err)
 	require.Equal(t, expectedSender.String(), senderAddr.String())
