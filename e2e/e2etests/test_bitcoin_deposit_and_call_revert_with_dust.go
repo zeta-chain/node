@@ -1,12 +1,15 @@
 package e2etests
 
 import (
+	"strings"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/testutil/sample"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 )
 
@@ -43,7 +46,8 @@ func TestBitcoinDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string)
 	require.NotEmpty(r, txHash)
 
 	// ASSERT
-	// Now we want to make sure the cctx is aborted.
+	// Now we want to make sure the cctx is aborted with expected error message
 	cctx := utils.WaitCctxAbortedByInboundHash(r.Ctx, r, txHash.String(), r.CctxClient)
 	require.True(r, cctx.GetCurrentOutboundParam().Amount.Uint64() < constant.BTCWithdrawalDustAmount)
+	require.True(r, strings.Contains(cctx.CctxStatus.ErrorMessage, crosschaintypes.ErrInvalidWithdrawalAmount.Error()))
 }

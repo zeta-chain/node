@@ -2,6 +2,7 @@ package e2etests
 
 import (
 	"math/big"
+	"strings"
 
 	"github.com/stretchr/testify/require"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/testutil/sample"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // TestSolanaDepositAndCallRevertWithDust tests Solana deposit and call that reverts with a dust amount in the revert outbound.
@@ -28,4 +30,5 @@ func TestSolanaDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string) 
 	// Now we want to make sure cctx is aborted.
 	cctx := utils.WaitCctxAbortedByInboundHash(r.Ctx, r, sig.String(), r.CctxClient)
 	require.True(r, cctx.GetCurrentOutboundParam().Amount.Uint64() < constant.SolanaWalletRentExempt)
+	require.True(r, strings.Contains(cctx.CctxStatus.ErrorMessage, crosschaintypes.ErrInvalidWithdrawalAmount.Error()))
 }
