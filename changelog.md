@@ -1,18 +1,33 @@
 # CHANGELOG
 
+## v22.1.0
+
+## Features
+
+- [3028](https://github.com/zeta-chain/node/pull/3028) - whitelist connection gater
+
+## Fixes
+
+- [3041](https://github.com/zeta-chain/node/pull/3041) - replace DHT with private peer discovery
+- [3162](https://github.com/zeta-chain/node/pull/3162) - skip depositor fee calculation on irrelevant transactions
+
+## v22.0.2
+
+## Fixes
+
+- [3144](https://github.com/zeta-chain/node/pull/3145) - out of gas on ZetaClient during `onRevert`
+
+## v22.0.1
+
+## Fixes
+
+- [3140](https://github.com/zeta-chain/node/pull/3140) - allow BTC revert with dust amount
+
 ## v22.0.0
 
 ## Refactor
 
 * [3073](https://github.com/zeta-chain/node/pull/3073) - improve ZETA deposit check with max supply check
-
-### Refactor
-
-### Tests
-
-### Fixes
-* [3041](https://github.com/zeta-chain/node/pull/3041) - replace libp2p public DHT with private gossip peer discovery and connection gater for inbound connections
-
 
 ## v21.0.0
 
