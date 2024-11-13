@@ -134,6 +134,9 @@ fund_eth_from_config '.additional_accounts.user_v2_ether_revert.evm_address' 100
 # unlock v2 erc20 revert tests accounts
 fund_eth_from_config '.additional_accounts.user_v2_erc20_revert.evm_address' 10000 "V2 ERC20 revert tester"
 
+# unlock emissions withdraw tests accounts
+fund_eth_from_config '.additional_accounts.user_emissions_withdraw.evm_address' 10000 "emissions withdraw tester"
+
 # unlock local solana relayer accounts
 if host solana > /dev/null; then
   solana_url=$(config_str '.rpcs.solana')

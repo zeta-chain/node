@@ -61,21 +61,22 @@ type Account struct {
 
 // AdditionalAccounts are extra accounts required to run specific tests
 type AdditionalAccounts struct {
-	UserERC20           Account `yaml:"user_erc20"`
-	UserZetaTest        Account `yaml:"user_zeta_test"`
-	UserZEVMMPTest      Account `yaml:"user_zevm_mp_test"`
-	UserBitcoinDeposit  Account `yaml:"user_bitcoin_deposit"`
-	UserBitcoinWithdraw Account `yaml:"user_bitcoin_withdraw"`
-	UserSolana          Account `yaml:"user_solana"`
-	UserEther           Account `yaml:"user_ether"`
-	UserMisc            Account `yaml:"user_misc"`
-	UserAdmin           Account `yaml:"user_admin"`
-	UserMigration       Account `yaml:"user_migration"` // used for TSS migration, TODO: rename (https://github.com/zeta-chain/node/issues/2780)
-	UserPrecompile      Account `yaml:"user_precompile"`
-	UserV2Ether         Account `yaml:"user_v2_ether"`
-	UserV2ERC20         Account `yaml:"user_v2_erc20"`
-	UserV2EtherRevert   Account `yaml:"user_v2_ether_revert"`
-	UserV2ERC20Revert   Account `yaml:"user_v2_erc20_revert"`
+	UserERC20             Account `yaml:"user_erc20"`
+	UserZetaTest          Account `yaml:"user_zeta_test"`
+	UserZEVMMPTest        Account `yaml:"user_zevm_mp_test"`
+	UserBitcoinDeposit    Account `yaml:"user_bitcoin_deposit"`
+	UserBitcoinWithdraw   Account `yaml:"user_bitcoin_withdraw"`
+	UserSolana            Account `yaml:"user_solana"`
+	UserEther             Account `yaml:"user_ether"`
+	UserMisc              Account `yaml:"user_misc"`
+	UserAdmin             Account `yaml:"user_admin"`
+	UserMigration         Account `yaml:"user_migration"` // used for TSS migration, TODO: rename (https://github.com/zeta-chain/node/issues/2780)
+	UserPrecompile        Account `yaml:"user_precompile"`
+	UserV2Ether           Account `yaml:"user_v2_ether"`
+	UserV2ERC20           Account `yaml:"user_v2_erc20"`
+	UserV2EtherRevert     Account `yaml:"user_v2_ether_revert"`
+	UserV2ERC20Revert     Account `yaml:"user_v2_erc20_revert"`
+	UserEmissionsWithdraw Account `yaml:"user_emissions_withdraw"`
 }
 
 type PolicyAccounts struct {
@@ -248,6 +249,7 @@ func (a AdditionalAccounts) AsSlice() []Account {
 		a.UserV2ERC20,
 		a.UserV2EtherRevert,
 		a.UserV2ERC20Revert,
+		a.UserEmissionsWithdraw,
 	}
 }
 
@@ -361,6 +363,10 @@ func (c *Config) GenerateKeys() error {
 		return err
 	}
 	c.AdditionalAccounts.UserV2ERC20Revert, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserEmissionsWithdraw, err = generateAccount()
 	if err != nil {
 		return err
 	}
