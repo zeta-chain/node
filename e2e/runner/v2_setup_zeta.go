@@ -3,6 +3,7 @@ package runner
 import (
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
@@ -64,7 +65,7 @@ func (r *E2ERunner) SetZEVMContractsV2() {
 	require.NoError(r, err)
 
 	// deploy test dapp v2
-	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.ZEVMAuth, r.ZEVMClient)
+	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.ZEVMAuth, r.ZEVMClient, true)
 	require.NoError(r, err)
 
 	r.TestDAppV2ZEVMAddr = testDAppV2Addr
@@ -73,6 +74,11 @@ func (r *E2ERunner) SetZEVMContractsV2() {
 
 	ensureTxReceipt(txProxy, "Gateway proxy deployment failed")
 	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
+
+	// check isZetaChain is true
+	isZetaChain, err := r.TestDAppV2ZEVM.IsZetaChain(&bind.CallOpts{})
+	require.NoError(r, err)
+	require.True(r, isZetaChain)
 }
 
 // UpdateChainParamsV2Contracts update the erc20 custody contract and gateway address in the chain params
