@@ -139,7 +139,7 @@ func TSSRandom(t *testing.T, r *rand.Rand) types.TSS {
 
 }
 
-// TODO rename to TSS
+// TODO: rename to TSS
 // https://github.com/zeta-chain/node/issues/3098
 func Tss() types.TSS {
 	_, pubKey, _ := testdata.KeyTestPubAddr()
