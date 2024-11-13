@@ -20,6 +20,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 	zetaeth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
@@ -436,4 +437,10 @@ func (r *E2ERunner) requireTxSuccessful(receipt *ethtypes.Receipt, msgAndArgs ..
 // EVMAddress is shorthand to get the EVM address of the account
 func (r *E2ERunner) EVMAddress() ethcommon.Address {
 	return r.Account.EVMAddress()
+}
+
+func (r *E2ERunner) GetSolanaPrivKey() solana.PrivateKey {
+	privkey, err := solana.PrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
+	require.NoError(r, err)
+	return privkey
 }

@@ -1,5 +1,16 @@
 [
   {
+    "inputs": [
+      {
+        "internalType": "bool",
+        "name": "isZetaChain_",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
     "inputs": [],
     "name": "NO_MESSAGE_CALL",
     "outputs": [
@@ -141,6 +152,19 @@
       }
     ],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "isZetaChain",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

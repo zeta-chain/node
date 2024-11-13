@@ -55,14 +55,16 @@ const (
 	/*
 	 * Solana tests
 	 */
-	TestSolanaDepositName              = "solana_deposit"
-	TestSolanaWithdrawName             = "solana_withdraw"
-	TestSolanaDepositAndCallName       = "solana_deposit_and_call"
-	TestSolanaDepositAndCallRefundName = "solana_deposit_and_call_refund"
-	TestSolanaDepositRestrictedName    = "solana_deposit_restricted"
-	TestSolanaWithdrawRestrictedName   = "solana_withdraw_restricted"
-	TestSPLDepositName                 = "spl_deposit"
-	TestSPLDepositAndCallName          = "spl_deposit_and_call"
+	TestSolanaDepositName                   = "solana_deposit"
+	TestSolanaWithdrawName                  = "solana_withdraw"
+	TestSolanaDepositAndCallName            = "solana_deposit_and_call"
+	TestSolanaDepositAndCallRefundName      = "solana_deposit_and_call_refund"
+	TestSolanaDepositRestrictedName         = "solana_deposit_restricted"
+	TestSolanaWithdrawRestrictedName        = "solana_withdraw_restricted"
+	TestSPLDepositName                      = "spl_deposit"
+	TestSPLDepositAndCallName               = "spl_deposit_and_call"
+	TestSPLWithdrawName                     = "spl_withdraw"
+	TestSPLWithdrawAndCreateReceiverAtaName = "spl_withdraw_and_create_receiver_ata"
 
 	/**
 	 * TON tests
@@ -435,6 +437,22 @@ var AllE2ETests = []runner.E2ETest{
 		TestSolanaDepositAndCall,
 	),
 	runner.NewE2ETest(
+		TestSPLWithdrawName,
+		"withdraw SPL from ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in spl tokens", DefaultValue: "1000000"},
+		},
+		TestSPLWithdraw,
+	),
+	runner.NewE2ETest(
+		TestSPLWithdrawAndCreateReceiverAtaName,
+		"withdraw SPL from ZEVM and create receiver ata",
+		[]runner.ArgDefinition{
+			{Description: "amount in spl tokens", DefaultValue: "1000000"},
+		},
+		TestSPLWithdrawAndCreateReceiverAta,
+	),
+	runner.NewE2ETest(
 		TestSolanaDepositAndCallRefundName,
 		"deposit SOL into ZEVM and call a contract that reverts; should refund",
 		[]runner.ArgDefinition{
@@ -470,7 +488,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestSPLDepositName,
 		"deposit SPL into ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount of spl tokens", DefaultValue: "500000"},
+			{Description: "amount of spl tokens", DefaultValue: "12000000"},
 		},
 		TestSPLDeposit,
 	),
@@ -478,7 +496,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestSPLDepositAndCallName,
 		"deposit SPL into ZEVM and call",
 		[]runner.ArgDefinition{
-			{Description: "amount of spl tokens", DefaultValue: "500000"},
+			{Description: "amount of spl tokens", DefaultValue: "12000000"},
 		},
 		TestSPLDepositAndCall,
 	),

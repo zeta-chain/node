@@ -6,6 +6,7 @@
 * [2984](https://github.com/zeta-chain/node/pull/2984) - add Whitelist message ability to whitelist SPL tokens on Solana
 * [3091](https://github.com/zeta-chain/node/pull/3091) - improve build reproducability. `make release{,-build-only}` checksums should now be stable.
 * [3124](https://github.com/zeta-chain/node/pull/3124) - integrate SPL deposits
+* [3134](https://github.com/zeta-chain/node/pull/3134) - integrate SPL tokens withdraw to Solana
 
 ### Tests
 
@@ -21,6 +22,7 @@
 * [3137](https://github.com/zeta-chain/node/pull/3137) - remove chain.Chain from zetaclientd config
 
 ### Fixes
+* [3117](https://github.com/zeta-chain/node/pull/3117) - register messages for emissions module to legacy amino codec.
 * [3041](https://github.com/zeta-chain/node/pull/3041) - replace libp2p public DHT with private gossip peer discovery and connection gater for inbound connections
 * [3106](https://github.com/zeta-chain/node/pull/3106) - prevent blocked CCTX on out of gas during omnichain calls
 * [3139](https://github.com/zeta-chain/node/pull/3139) - fix config resolution in orchestrator

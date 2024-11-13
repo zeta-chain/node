@@ -85,6 +85,30 @@ func (r *E2ERunner) SetupSolana(deployerPrivateKey string) {
 	require.NoError(r, err)
 	r.Logger.Info("initial PDA balance: %d lamports", balance.Value)
 
+	// initialize rent payer
+	var instRentPayer solana.GenericInstruction
+	rentPayerPdaComputed := r.SolanaRentPayerPDA()
+
+	// create 'initialize_rent_payer' instruction
+	accountSlice = []*solana.AccountMeta{}
+	accountSlice = append(accountSlice, solana.Meta(rentPayerPdaComputed).WRITE())
+	accountSlice = append(accountSlice, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
+	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
+	instRentPayer.ProgID = r.GatewayProgram
+	instRentPayer.AccountValues = accountSlice
+
+	instRentPayer.DataBytes, err = borsh.Serialize(solanacontracts.InitializeRentPayerParams{
+		Discriminator: solanacontracts.DiscriminatorInitializeRentPayer,
+	})
+	require.NoError(r, err)
+
+	// create and sign the transaction
+	signedTx = r.CreateSignedTransaction([]solana.Instruction{&instRentPayer}, privkey, []solana.PrivateKey{})
+
+	// broadcast the transaction and wait for finalization
+	_, out = r.BroadcastTxSync(signedTx)
+	r.Logger.Info("initialize_rent_payer logs: %v", out.Meta.LogMessages)
+
 	err = r.ensureSolanaChainParams()
 	require.NoError(r, err)
 
