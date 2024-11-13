@@ -6,6 +6,7 @@ import (
 	"io"
 	"math/rand"
 	"os"
+	"testing"
 	"time"
 
 	"cosmossdk.io/math"
@@ -19,6 +20,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	zetaapp "github.com/zeta-chain/node/app"
@@ -39,6 +41,7 @@ const (
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
 // All modifications to the genesis state should be done in this function.
 func AppStateFn(
+	t *testing.T,
 	cdc codec.Codec,
 	simManager *module.SimulationManager,
 	genesisState map[string]json.RawMessage,
@@ -99,14 +102,11 @@ func AppStateFn(
 
 		// edit bank state to make it have the not bonded pool tokens
 		bankStateBz, ok := rawState[banktypes.ModuleName]
-		if !ok {
-			panic("bank genesis state is missing")
-		}
+		require.True(t, ok, "bank genesis state is missing")
+
 		bankState := new(banktypes.GenesisState)
 		err = cdc.UnmarshalJSON(bankStateBz, bankState)
-		if err != nil {
-			panic(err)
-		}
+		require.NoError(t, err)
 
 		stakingAddr := authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName).String()
 		var found bool
@@ -123,11 +123,9 @@ func AppStateFn(
 			})
 		}
 
-		// Set the bond denom in the EVM genesis state
+		// set the bond denom in the EVM genesis state
 		evmStateBz, ok := rawState[evmtypes.ModuleName]
-		if !ok {
-			panic("evm genesis state is missing")
-		}
+		require.True(t, ok, "evm genesis state is missing")
 
 		evmState := new(evmtypes.GenesisState)
 		cdc.MustUnmarshalJSON(evmStateBz, evmState)
@@ -136,8 +134,8 @@ func AppStateFn(
 		evmState.Params.EvmDenom = stakingState.Params.BondDenom
 
 		observers := make([]string, 0)
-		// Get all the operator addresses of the validators.
-		// The observer set can be a subset of the validator set
+		// get all the operator addresses of the validators.
+		// the observer set can be a subset of the validator set
 		for _, validator := range stakingState.Validators {
 			accAddress, err := observertypes.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 			if err != nil {
@@ -146,12 +144,12 @@ func AppStateFn(
 			observers = append(observers, accAddress.String())
 		}
 
-		// Shuffle the observers list
+		// shuffle the observers list
 		r.Shuffle(len(observers), func(i, j int) {
 			observers[i], observers[j] = observers[j], observers[i]
 		})
 
-		// Pick a random number of observers to add to the observer set
+		// pick a random number of observers to add to the observer set
 		numObservers := r.Intn(11) + 5
 		if numObservers > len(observers) {
 			numObservers = len(observers)
@@ -160,25 +158,22 @@ func AppStateFn(
 
 		// update the observer genesis state
 		observerStateBz, ok := rawState[observertypes.ModuleName]
-		if !ok {
-			panic("observer genesis state is missing")
-		}
+		require.True(t, ok, "observer genesis state is missing")
+
 		observerState := new(observertypes.GenesisState)
 		cdc.MustUnmarshalJSON(observerStateBz, observerState)
 		observerState.Observers.ObserverList = observers
 		observerState.CrosschainFlags.IsInboundEnabled = true
 		observerState.CrosschainFlags.IsOutboundEnabled = true
 
-		tss := sample.TSSRandom(r)
+		tss := sample.TSSRandom(t, r)
 		tss.OperatorAddressList = observers
 		observerState.Tss = &tss
 
 		// Pick a random account to be the admin of all policies
 		randomAccount := accs[r.Intn(len(accs))]
 		authorityStateBz, ok := rawState[authoritytypes.ModuleName]
-		if !ok {
-			panic("authority genesis state is missing")
-		}
+		require.True(t, ok, "authority genesis state is missing")
 
 		// update the authority genesis state
 		authorityState := new(authoritytypes.GenesisState)
@@ -203,12 +198,9 @@ func AppStateFn(
 
 		//Update the fungible genesis state
 		fungibleStateBz, ok := rawState[fungibletypes.ModuleName]
-		if !ok {
-			panic("fungible genesis state is missing")
-		}
+		require.True(t, ok, "fungible genesis state is missing")
 		fungibleState := new(fungibletypes.GenesisState)
 		cdc.MustUnmarshalJSON(fungibleStateBz, fungibleState)
-		// TOODO generate ethereum address from r
 		fungibleState.SystemContract = &fungibletypes.SystemContract{
 			SystemContract: sample.EthAddressRandom(r).String(),
 			ConnectorZevm:  sample.EthAddressRandom(r).String(),
@@ -225,9 +217,8 @@ func AppStateFn(
 
 		// replace appstate
 		appState, err = json.Marshal(rawState)
-		if err != nil {
-			panic(err)
-		}
+		require.NoError(t, err)
+
 		return appState, simAccs, chainID, genesisTimestamp
 	}
 }

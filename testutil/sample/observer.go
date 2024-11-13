@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/cosmos"
@@ -121,16 +122,12 @@ func ChainParamsList() (cpl types.ChainParamsList) {
 }
 
 // TSSRandom returns a random TSS,it uses the randomness provided as a parameter
-func TSSRandom(r *rand.Rand) types.TSS {
+func TSSRandom(t *testing.T, r *rand.Rand) types.TSS {
 	pubKey := PubKey(r)
 	spk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 	pk, err := zetacrypto.NewPubKey(spk)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 	pubkeyString := pk.String()
 	return types.TSS{
 		TssPubkey:           pubkeyString,

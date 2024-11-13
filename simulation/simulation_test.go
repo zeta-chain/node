@@ -134,6 +134,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				os.Stdout,
 				simApp.BaseApp,
 				zetasimulation.AppStateFn(
+					t,
 					simApp.AppCodec(),
 					simApp.SimulationManager(),
 					simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
@@ -224,6 +225,7 @@ func TestFullAppSimulation(t *testing.T) {
 		os.Stdout,
 		simApp.BaseApp,
 		zetasimulation.AppStateFn(
+			t,
 			simApp.AppCodec(),
 			simApp.SimulationManager(),
 			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
@@ -295,6 +297,7 @@ func TestAppImportExport(t *testing.T) {
 		os.Stdout,
 		simApp.BaseApp,
 		zetasimulation.AppStateFn(
+			t,
 			simApp.AppCodec(),
 			simApp.SimulationManager(),
 			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
@@ -478,6 +481,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		os.Stdout,
 		simApp.BaseApp,
 		zetasimulation.AppStateFn(
+			t,
 			simApp.AppCodec(),
 			simApp.SimulationManager(),
 			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
@@ -546,6 +550,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		os.Stdout,
 		newSimApp.BaseApp,
 		zetasimulation.AppStateFn(
+			t,
 			nil,
 			nil,
 			nil,
