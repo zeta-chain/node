@@ -63,6 +63,16 @@ func NewTSSAthens3() *TSS {
 	return NewMockTSS(chains.BscTestnet, testutils.TSSAddressEVMAthens3, testutils.TSSAddressBTCAthens3)
 }
 
+// NewDerivedTSS creates a TSS where evmAddress and btcAdresses are always derived from the test
+// private key
+func NewDerivedTSS(chain chains.Chain) *TSS {
+	return &TSS{
+		paused:  false,
+		chain:   chain,
+		PrivKey: TestPrivateKey,
+	}
+}
+
 func NewGeneratedTSS(t *testing.T, chain chains.Chain) *TSS {
 	pk, err := crypto.GenerateKey()
 	require.NoError(t, err)
