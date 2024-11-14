@@ -48,7 +48,7 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
-	chainParams.GatewayAddress = testutils.GatewayAddresses[chain.ChainId]
+	chainParams.GatewayAddress = testutils.OldSolanaGatewayAddressDevnet
 	require.NoError(t, err)
 
 	// expected result
@@ -149,7 +149,7 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
-	chainParams.GatewayAddress = testutils.GatewayAddresses[chain.ChainId]
+	chainParams.GatewayAddress = testutils.OldSolanaGatewayAddressDevnet
 
 	// expected result
 	// solana e2e deployer account

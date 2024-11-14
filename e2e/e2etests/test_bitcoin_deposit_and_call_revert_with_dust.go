@@ -1,6 +1,8 @@
 package e2etests
 
 import (
+	"strings"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -38,16 +40,14 @@ func TestBitcoinDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string)
 	// Send BTC to TSS address with a dummy memo
 	// zetacore should revert cctx if call is made on a non-existing address
 	nonExistReceiver := sample.EthAddress()
-	badMemo := append(nonExistReceiver.Bytes(), []byte("gibberish-memo")...)
-	txHash, err := r.SendToTSSFromDeployerWithMemo(amount, utxos, badMemo)
+	anyMemo := append(nonExistReceiver.Bytes(), []byte("gibberish-memo")...)
+	txHash, err := r.SendToTSSFromDeployerWithMemo(amount, utxos, anyMemo)
 	require.NoError(r, err)
 	require.NotEmpty(r, txHash)
 
-	// wait for the cctx to be mined
-	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "deposit_and_revert")
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
-
-	// check the test was effective: the revert outbound amount is less than the dust amount
-	require.Less(r, cctx.GetCurrentOutboundParam().Amount.Uint64(), uint64(constant.BTCWithdrawalDustAmount))
+	// ASSERT
+	// Now we want to make sure the cctx is aborted with expected error message
+	cctx := utils.WaitCctxAbortedByInboundHash(r.Ctx, r, txHash.String(), r.CctxClient)
+	require.True(r, cctx.GetCurrentOutboundParam().Amount.Uint64() < constant.BTCWithdrawalDustAmount)
+	require.True(r, strings.Contains(cctx.CctxStatus.ErrorMessage, crosschaintypes.ErrInvalidWithdrawalAmount.Error()))
 }

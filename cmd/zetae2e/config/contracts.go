@@ -31,7 +31,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 
 	// set Solana contracts
 	if c := conf.Contracts.Solana.GatewayProgramID; c != "" {
-		r.GatewayProgram = solana.MustPublicKeyFromBase58(c)
+		r.GatewayProgram = solana.MustPublicKeyFromBase58(c.String())
 	}
 
 	if c := conf.Contracts.Solana.SPLAddr; c != "" {
@@ -242,7 +242,6 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	}
 
 	// v2 contracts
-
 	if c := conf.Contracts.EVM.Gateway; c != "" {
 		r.GatewayEVMAddr, err = c.AsEVMAddress()
 		if err != nil {
