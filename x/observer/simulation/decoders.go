@@ -61,11 +61,10 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvB.Value, &allChainParamsB)
 			return fmt.Sprintf("%v\n%v", allChainParamsA, allChainParamsB)
 		case bytes.Equal(kvA.Key, types.KeyPrefix(types.TSSHistoryKey)):
-			var tssHistoryA, tssHistoryB []types.TSS
+			var tssHistoryA, tssHistoryB types.TSS
+			cdc.MustUnmarshal(kvA.Value, &tssHistoryA)
+			cdc.MustUnmarshal(kvB.Value, &tssHistoryB)
 			return fmt.Sprintf("%v\n%v", tssHistoryA, tssHistoryB)
-			//cdc.MustUnmarshal(kvA.Value, &tssHistoryA)
-			//cdc.MustUnmarshal(kvB.Value, &tssHistoryB)
-			//return fmt.Sprintf("%v\n%v", tssHistoryA, tssHistoryB)
 		case bytes.Equal(kvA.Key, types.KeyPrefix(types.TssFundMigratorKey)):
 			var tssFundMigratorA, tssFundMigratorB types.TssFundMigratorInfo
 			cdc.MustUnmarshal(kvA.Value, &tssFundMigratorA)
