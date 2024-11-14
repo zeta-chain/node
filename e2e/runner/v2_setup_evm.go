@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
@@ -101,7 +102,7 @@ func (r *E2ERunner) SetupEVMV2() {
 	require.NoError(r, err)
 
 	// deploy test dapp v2
-	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.EVMAuth, r.EVMClient)
+	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.EVMAuth, r.EVMClient, false)
 	require.NoError(r, err)
 
 	r.TestDAppV2EVMAddr = testDAppV2Addr
@@ -114,6 +115,11 @@ func (r *E2ERunner) SetupEVMV2() {
 	ensureTxReceipt(erc20ProxyTx, "ERC20Custody proxy deployment failed")
 	ensureTxReceipt(txSetCustody, "Set custody in Gateway failed")
 	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
+
+	// check isZetaChain is false
+	isZetaChain, err := r.TestDAppV2EVM.IsZetaChain(&bind.CallOpts{})
+	require.NoError(r, err)
+	require.False(r, isZetaChain)
 
 	// whitelist the ERC20
 	txWhitelist, err := r.ERC20CustodyV2.Whitelist(r.EVMAuth, r.ERC20Addr)

@@ -12,6 +12,7 @@
 
 * [3075](https://github.com/zeta-chain/node/pull/3075) - ton: withdraw concurrent, deposit & revert.
 * [3105](https://github.com/zeta-chain/node/pull/3105) - split Bitcoin E2E tests into two runners for deposit and withdraw
+* [3154](https://github.com/zeta-chain/node/pull/3154) - configure Solana gateway program id for E2E tests
 
 ### Refactor
 * [3118](https://github.com/zeta-chain/node/pull/3118) - zetaclient: remove hsm signer
@@ -21,6 +22,7 @@
 * [3137](https://github.com/zeta-chain/node/pull/3137) - remove chain.Chain from zetaclientd config
 
 ### Fixes
+* [3117](https://github.com/zeta-chain/node/pull/3117) - register messages for emissions module to legacy amino codec.
 * [3041](https://github.com/zeta-chain/node/pull/3041) - replace libp2p public DHT with private gossip peer discovery and connection gater for inbound connections
 * [3106](https://github.com/zeta-chain/node/pull/3106) - prevent blocked CCTX on out of gas during omnichain calls
 * [3139](https://github.com/zeta-chain/node/pull/3139) - fix config resolution in orchestrator

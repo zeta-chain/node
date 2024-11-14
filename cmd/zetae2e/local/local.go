@@ -224,7 +224,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.SetupEVMV2()
 
 		if testSolana {
-			deployerRunner.SetupSolana(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
+			deployerRunner.SetupSolana(
+				conf.Contracts.Solana.GatewayProgramID.String(),
+				conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String(),
+			)
 		}
 
 		deployerRunner.SetZEVMSystemContracts()

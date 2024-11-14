@@ -21,8 +21,7 @@ import (
 // ComputePdaAddress computes the PDA address for the gateway program
 func (r *E2ERunner) ComputePdaAddress() solana.PublicKey {
 	seed := []byte(solanacontract.PDASeed)
-	GatewayProgramID := solana.MustPublicKeyFromBase58(solanacontract.SolanaGatewayProgramID)
-	pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, GatewayProgramID)
+	pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, r.GatewayProgram)
 	require.NoError(r, err)
 
 	r.Logger.Info("computed pda: %s, bump %d\n", pdaComputed, bump)
@@ -33,8 +32,7 @@ func (r *E2ERunner) ComputePdaAddress() solana.PublicKey {
 // SolanaRentPayerPDA computes the rent payer PDA (Program Derived Address) address for the gateway program
 func (r *E2ERunner) SolanaRentPayerPDA() solana.PublicKey {
 	seed := []byte(solanacontract.RentPayerPDASeed)
-	GatewayProgramID := solana.MustPublicKeyFromBase58(solanacontract.SolanaGatewayProgramID)
-	pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, GatewayProgramID)
+	pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, r.GatewayProgram)
 	require.NoError(r, err)
 
 	r.Logger.Info("computed rent payer pda: %s, bump %d\n", pdaComputed, bump)
