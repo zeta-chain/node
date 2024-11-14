@@ -109,7 +109,7 @@ func getSignerDeposit(tx *solana.Transaction, inst *solana.CompiledInstruction) 
 	// the accounts are [signer, pda, system_program]
 	// check if first account is signer
 	if !instructionAccounts[0].IsSigner {
-		return "", fmt.Errorf("unexpected signer %s", instructionAccounts[0].PublicKey.String())
+		return "", fmt.Errorf("not signer %s", instructionAccounts[0].PublicKey.String())
 	}
 
 	return instructionAccounts[0].PublicKey.String(), nil
@@ -136,7 +136,7 @@ func getSignerAndSPLFromDepositSPLAccounts(
 	// the accounts are [signer, pda, whitelist_entry, mint_account, token_program, from, to]
 	// check if first account is signer
 	if !instructionAccounts[0].IsSigner {
-		return "", "", fmt.Errorf("unexpected signer %s", instructionAccounts[0].PublicKey.String())
+		return "", "", fmt.Errorf("not signer %s", instructionAccounts[0].PublicKey.String())
 	}
 
 	signer := instructionAccounts[0].PublicKey.String()

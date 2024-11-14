@@ -1,7 +1,6 @@
 package solana_test
 
 import (
-	"bytes"
 	"encoding/hex"
 	"testing"
 
@@ -13,7 +12,8 @@ import (
 )
 
 func Test_MsgWithdrawHash(t *testing.T) {
-	t.Run("should pass for archived inbound, receipt and cctx", func(t *testing.T) {
+	t.Run("should calculate expected hash", func(t *testing.T) {
+		// ARRANGE
 		// #nosec G115 always positive
 		chainID := uint64(chains.SolanaLocalnet.ChainId)
 		nonce := uint64(0)
@@ -24,14 +24,18 @@ func Test_MsgWithdrawHash(t *testing.T) {
 		wantHashBytes, err := hex.DecodeString(wantHash)
 		require.NoError(t, err)
 
+		// ACT
 		// create new withdraw message
 		hash := contracts.NewMsgWithdraw(chainID, nonce, amount, to).Hash()
-		require.True(t, bytes.Equal(hash[:], wantHashBytes))
+
+		// ASSERT
+		require.EqualValues(t, hash[:], wantHashBytes)
 	})
 }
 
 func Test_MsgWhitelistHash(t *testing.T) {
-	t.Run("should pass for archived inbound, receipt and cctx", func(t *testing.T) {
+	t.Run("should calculate expected hash", func(t *testing.T) {
+		// ARRANGE
 		// #nosec G115 always positive
 		chainID := uint64(chains.SolanaLocalnet.ChainId)
 		nonce := uint64(0)
@@ -42,14 +46,18 @@ func Test_MsgWhitelistHash(t *testing.T) {
 		wantHashBytes, err := hex.DecodeString(wantHash)
 		require.NoError(t, err)
 
+		// ACT
 		// create new withdraw message
 		hash := contracts.NewMsgWhitelist(whitelistCandidate, whitelistEntry, chainID, nonce).Hash()
-		require.True(t, bytes.Equal(hash[:], wantHashBytes))
+
+		// ASSERT
+		require.EqualValues(t, hash[:], wantHashBytes)
 	})
 }
 
 func Test_MsgWithdrawSPLHash(t *testing.T) {
-	t.Run("should pass for archived inbound, receipt and cctx", func(t *testing.T) {
+	t.Run("should calculate expected hash", func(t *testing.T) {
+		// ARRANGE
 		// #nosec G115 always positive
 		chainID := uint64(chains.SolanaLocalnet.ChainId)
 		nonce := uint64(0)
@@ -63,8 +71,11 @@ func Test_MsgWithdrawSPLHash(t *testing.T) {
 		wantHashBytes, err := hex.DecodeString(wantHash)
 		require.NoError(t, err)
 
+		// ACT
 		// create new withdraw message
 		hash := contracts.NewMsgWithdrawSPL(chainID, nonce, amount, 8, mintAccount, to, toAta).Hash()
-		require.True(t, bytes.Equal(hash[:], wantHashBytes))
+
+		// ASSERT
+		require.EqualValues(t, hash[:], wantHashBytes)
 	})
 }

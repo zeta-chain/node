@@ -38,6 +38,7 @@ func LoadSolanaInboundTxResult(
 }
 
 func Test_ParseInboundAsDeposit(t *testing.T) {
+	// ARRANGE
 	txHash := "MS3MPLN7hkbyCZFwKqXcg8fmEvQMD74fN6Ps2LSWXJoRxPW5ehaxBorK9q1JFVbqnAvu9jXm6ertj7kT7HpYw1j"
 	chain := chains.SolanaDevnet
 
@@ -61,14 +62,16 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 	}
 
 	t.Run("should parse inbound event deposit SOL", func(t *testing.T) {
+		// ACT
 		deposit, err := ParseInboundAsDeposit(tx, 0, txResult.Slot)
 		require.NoError(t, err)
 
-		// check result
+		// ASSERT
 		require.EqualValues(t, expectedDeposit, deposit)
 	})
 
-	t.Run("should not parse if wrong discriminator", func(t *testing.T) {
+	t.Run("should skip parsing if wrong discriminator", func(t *testing.T) {
+		// ARRANGE
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
@@ -90,12 +93,16 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 
 		tx.Message.Instructions[0].Data = data
 
+		// ACT
 		deposit, err := ParseInboundAsDeposit(tx, 0, txResult.Slot)
+
+		// ASSERT
 		require.NoError(t, err)
 		require.Nil(t, deposit)
 	})
 
 	t.Run("should fail if wrong accounts count", func(t *testing.T) {
+		// ARRANGE
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
@@ -104,12 +111,16 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
 		tx.Message.Instructions[0].Accounts = append(tx.Message.Instructions[0].Accounts, 4)
 
+		// ACT
 		deposit, err := ParseInboundAsDeposit(tx, 0, txResult.Slot)
+
+		// ASSERT
 		require.Error(t, err)
 		require.Nil(t, deposit)
 	})
 
 	t.Run("should fail if first account is not signer", func(t *testing.T) {
+		// ARRANGE
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
@@ -118,13 +129,17 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 		tx.Message.Instructions[0].Accounts[0] = 1
 		tx.Message.Instructions[0].Accounts[1] = 0
 
+		// ACT
 		deposit, err := ParseInboundAsDeposit(tx, 0, txResult.Slot)
+
+		// ASSERT
 		require.Error(t, err)
 		require.Nil(t, deposit)
 	})
 }
 
 func Test_ParseInboundAsDepositSPL(t *testing.T) {
+	// ARRANGE
 	txHash := "aY8yLDze6nHSRi7L5REozKAZY1aAyPJ6TfibiqQL5JGwgSBkYux5z5JfXs5ed8LZqpXUy4VijoU3x15mBd66ZGE"
 	chain := chains.SolanaDevnet
 
@@ -151,14 +166,16 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 	}
 
 	t.Run("should parse inbound event deposit SPL", func(t *testing.T) {
+		// ACT
 		deposit, err := ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
 		require.NoError(t, err)
 
-		// check result
+		// ASSERT
 		require.EqualValues(t, expectedDeposit, deposit)
 	})
 
-	t.Run("should not parse if wrong discriminator", func(t *testing.T) {
+	t.Run("should skip parsing if wrong discriminator", func(t *testing.T) {
+		// ARRANGE
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
@@ -180,12 +197,16 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 
 		tx.Message.Instructions[0].Data = data
 
+		// ACT
 		deposit, err := ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
+
+		// ASSERT
 		require.NoError(t, err)
 		require.Nil(t, deposit)
 	})
 
 	t.Run("should fail if wrong accounts count", func(t *testing.T) {
+		// ARRANGE
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
@@ -194,12 +215,16 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
 		tx.Message.Instructions[0].Accounts = append(tx.Message.Instructions[0].Accounts, 4)
 
+		// ACT
 		deposit, err := ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
+
+		// ASSERT
 		require.Error(t, err)
 		require.Nil(t, deposit)
 	})
 
 	t.Run("should fail if first account is not signer", func(t *testing.T) {
+		// ARRANGE
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
@@ -208,7 +233,10 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 		tx.Message.Instructions[0].Accounts[0] = 1
 		tx.Message.Instructions[0].Accounts[1] = 0
 
+		// ACT
 		deposit, err := ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
+
+		// ASSERT
 		require.Error(t, err)
 		require.Nil(t, deposit)
 	})
