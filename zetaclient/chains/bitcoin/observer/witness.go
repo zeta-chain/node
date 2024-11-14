@@ -23,7 +23,7 @@ func GetBtcEventWithWitness(
 	blockNumber uint64,
 	logger zerolog.Logger,
 	netParams *chaincfg.Params,
-	depositorFee float64,
+	feeCalculator bitcoin.DepositorFeeCalculator,
 ) (*BTCInboundEvent, error) {
 	if len(tx.Vout) < 1 {
 		logger.Debug().Msgf("no output %s", tx.Txid)
@@ -37,6 +37,12 @@ func GetBtcEventWithWitness(
 	if err := isValidRecipient(tx.Vout[0].ScriptPubKey.Hex, tssAddress, netParams); err != nil {
 		logger.Debug().Msgf("irrelevant recipient %s for tx %s, err: %s", tx.Vout[0].ScriptPubKey.Hex, tx.Txid, err)
 		return nil, nil
+	}
+
+	// calculate depositor fee
+	depositorFee, err := feeCalculator(client, &tx, netParams)
+	if err != nil {
+		return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
 	}
 
 	isAmountValid, amount := isValidAmount(tx.Vout[0].Value, depositorFee)
