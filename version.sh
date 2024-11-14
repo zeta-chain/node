@@ -22,7 +22,7 @@ short_commit=$(git rev-parse --short HEAD)
 
 # append -dirty for dirty builds
 if ! git diff --no-ext-diff --quiet --exit-code ; then
-    echo "0.0.${commit_timestamp}+${short_commit}-dirty"
+    echo "0.0.${commit_timestamp}+${short_commit}.dirty"
     exit
 fi
 
