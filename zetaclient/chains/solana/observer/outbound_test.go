@@ -38,6 +38,9 @@ const (
 
 	// whitelistTxTest is local devnet tx result for testing
 	whitelistTxTest = "phM9bESbiqojmpkkUxgjed8EABkxvPGNau9q31B8Yk1sXUtsxJvd6G9VbZZQPsEyn6RiTH4YBtqJ89omqfbbNNY"
+
+	// withdrawSPLTxTest is local devnet tx result for testing
+	withdrawSPLTxTest = "3NgoR4K9FJq7UunorPRGW9wpqMV8oNvZERejutd7bKmqh3CKEV5DMZndhZn7hQ1i4RhTyHXRWxtR5ZNVHmmjAUSF"
 )
 
 // createTestObserver creates a test observer for testing
@@ -354,6 +357,68 @@ func Test_ParseInstructionWhitelist(t *testing.T) {
 
 		inst, err := contracts.ParseInstructionWhitelist(instruction)
 		require.ErrorContains(t, err, "not a whitelist_spl_mint instruction")
+		require.Nil(t, inst)
+	})
+}
+
+func Test_ParseInstructionWithdrawSPL(t *testing.T) {
+	// the test chain and transaction hash
+	chain := chains.SolanaDevnet
+	txHash := withdrawSPLTxTest
+	txAmount := uint64(1000000)
+
+	t.Run("should parse instruction withdraw spl", func(t *testing.T) {
+		// tss address used in local devnet
+		tssAddress := "0x9c427Bc95cC11dE0D3Fb7603A99833e8f781Cfba"
+		// load and unmarshal archived transaction
+		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
+		tx, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		instruction := tx.Message.Instructions[0]
+		inst, err := contracts.ParseInstructionWithdrawSPL(instruction)
+		require.NoError(t, err)
+
+		// check sender, nonce and amount
+		sender, err := inst.Signer()
+		require.NoError(t, err)
+		require.Equal(t, tssAddress, sender.String())
+		require.EqualValues(t, 3, inst.GatewayNonce())
+		require.EqualValues(t, txAmount, inst.TokenAmount())
+		require.EqualValues(t, 6, inst.Decimals)
+		require.EqualValues(t, contracts.DiscriminatorWithdrawSPL, inst.Discriminator)
+	})
+
+	t.Run("should return error on invalid instruction data", func(t *testing.T) {
+		// load and unmarshal archived transaction
+		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
+		txFake, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		// set invalid instruction data
+		instruction := txFake.Message.Instructions[0]
+		instruction.Data = []byte("invalid instruction data")
+
+		inst, err := contracts.ParseInstructionWithdrawSPL(instruction)
+		require.ErrorContains(t, err, "error deserializing instruction")
+		require.Nil(t, inst)
+	})
+
+	t.Run("should return error on discriminator mismatch", func(t *testing.T) {
+		// load and unmarshal archived transaction
+		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
+		txFake, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		// overwrite discriminator (first 8 bytes)
+		instruction := txFake.Message.Instructions[0]
+		fakeDiscriminator := "b712469c946da12100980d0000000000"
+		fakeDiscriminatorBytes, err := hex.DecodeString(fakeDiscriminator)
+		require.NoError(t, err)
+		copy(instruction.Data, fakeDiscriminatorBytes)
+
+		inst, err := contracts.ParseInstructionWithdrawSPL(instruction)
+		require.ErrorContains(t, err, "not a withdraw instruction")
 		require.Nil(t, inst)
 	})
 }
