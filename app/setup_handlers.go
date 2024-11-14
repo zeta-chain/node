@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"golang.org/x/mod/semver"
 
 	"github.com/zeta-chain/node/pkg/constant"
-	"golang.org/x/mod/semver"
 )
 
 // GetDefaultUpgradeHandlerVersion prints the default upgrade handler version
