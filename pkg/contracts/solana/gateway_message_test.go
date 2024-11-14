@@ -54,9 +54,9 @@ func Test_MsgWithdrawSPLHash(t *testing.T) {
 		chainID := uint64(chains.SolanaLocalnet.ChainId)
 		nonce := uint64(0)
 		amount := uint64(1336000)
-		tokenAccount := solana.MustPublicKeyFromBase58("AS48jKNQsDGkEdDvfwu1QpqjtqbCadrAq9nGXjFmdX3Z")
+		mintAccount := solana.MustPublicKeyFromBase58("AS48jKNQsDGkEdDvfwu1QpqjtqbCadrAq9nGXjFmdX3Z")
 		to := solana.MustPublicKeyFromBase58("37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ")
-		toAta, _, err := solana.FindAssociatedTokenAddress(to, tokenAccount)
+		toAta, _, err := solana.FindAssociatedTokenAddress(to, mintAccount)
 		require.NoError(t, err)
 
 		wantHash := "87fa5c0ed757c6e1ea9d8976537eaf7868bc1f1bbf55ab198a01645d664fe0ae"
@@ -64,7 +64,7 @@ func Test_MsgWithdrawSPLHash(t *testing.T) {
 		require.NoError(t, err)
 
 		// create new withdraw message
-		hash := contracts.NewMsgWithdrawSPL(chainID, nonce, amount, 8, tokenAccount, to, toAta).Hash()
+		hash := contracts.NewMsgWithdrawSPL(chainID, nonce, amount, 8, mintAccount, to, toAta).Hash()
 		require.True(t, bytes.Equal(hash[:], wantHashBytes))
 	})
 }
