@@ -217,17 +217,17 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 		// TestKeeper_VoteInbound/successfully vote on evm deposit
 		// But this can improved by adding more randomization
 
-		//https://github.com/zeta-chain/node/issues/3101
 		to, from := int64(1337), int64(101)
 		supportedChains := k.GetObserverKeeper().GetSupportedChains(ctx)
 		for _, chain := range supportedChains {
-			if chains.IsEVMChain(chain.ChainId, []chains.Chain{}) {
+			if chains.IsEthereumChain(chain.ChainId, []chains.Chain{}) {
 				from = chain.ChainId
 			}
 			if chains.IsZetaChain(chain.ChainId, []chains.Chain{}) {
 				to = chain.ChainId
 			}
 		}
+
 		msg := sample.InboundVoteSim(0, from, to, r)
 
 		// Pick a random observer to create the ballot

@@ -56,7 +56,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		to, from := int64(1337), int64(101)
 		supportedChains := zk.ObserverKeeper.GetSupportedChains(ctx)
 		for _, chain := range supportedChains {
-			if chains.IsEVMChain(chain.ChainId, []chains.Chain{}) {
+			if chains.IsEthereumChain(chain.ChainId, []chains.Chain{}) {
 				from = chain.ChainId
 			}
 			if chains.IsZetaChain(chain.ChainId, []chains.Chain{}) {
@@ -212,7 +212,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		to, from := int64(1337), int64(101)
 		supportedChains := zk.ObserverKeeper.GetSupportedChains(ctx)
 		for _, chain := range supportedChains {
-			if chains.IsEVMChain(chain.ChainId, []chains.Chain{}) {
+			if chains.IsEthereumChain(chain.ChainId, []chains.Chain{}) {
 				from = chain.ChainId
 			}
 			if chains.IsZetaChain(chain.ChainId, []chains.Chain{}) {

@@ -8,7 +8,7 @@ import (
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		ForeignCoinsList: []ForeignCoins{},
-		SystemContract:   &SystemContract{},
+		SystemContract:   nil,
 	}
 }
 
