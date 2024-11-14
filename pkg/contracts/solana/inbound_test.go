@@ -8,7 +8,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -43,8 +45,6 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 	tx, err := txResult.Transaction.GetTransaction()
 	require.NoError(t, err)
 
-	require.NoError(t, err)
-
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = testutils.GatewayAddresses[chain.ChainId]
@@ -66,6 +66,61 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 
 		// check result
 		require.EqualValues(t, expectedDeposit, deposit)
+	})
+
+	t.Run("should not parse if wrong discriminator", func(t *testing.T) {
+		txResult := LoadSolanaInboundTxResult(t, txHash)
+		tx, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		instruction := tx.Message.Instructions[0]
+
+		// try deserializing instruction as a 'deposit'
+		var inst DepositInstructionParams
+		err = borsh.Deserialize(&inst, instruction.Data)
+		require.NoError(t, err)
+
+		// serialize it back with wrong discriminator
+		data, err := borsh.Serialize(DepositInstructionParams{
+			Amount:        inst.Amount,
+			Discriminator: DiscriminatorDepositSPL,
+			Memo:          inst.Memo,
+		})
+		require.NoError(t, err)
+
+		tx.Message.Instructions[0].Data = data
+
+		deposit, err := ParseInboundAsDeposit(tx, 0, txResult.Slot)
+		require.NoError(t, err)
+		require.Nil(t, deposit)
+	})
+
+	t.Run("should fail if wrong accounts count", func(t *testing.T) {
+		txResult := LoadSolanaInboundTxResult(t, txHash)
+		tx, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		// append one more account to instruction
+		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
+		tx.Message.Instructions[0].Accounts = append(tx.Message.Instructions[0].Accounts, 4)
+
+		deposit, err := ParseInboundAsDeposit(tx, 0, txResult.Slot)
+		require.Error(t, err)
+		require.Nil(t, deposit)
+	})
+
+	t.Run("should fail if first account is not signer", func(t *testing.T) {
+		txResult := LoadSolanaInboundTxResult(t, txHash)
+		tx, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		// switch account places
+		tx.Message.Instructions[0].Accounts[0] = 1
+		tx.Message.Instructions[0].Accounts[1] = 0
+
+		deposit, err := ParseInboundAsDeposit(tx, 0, txResult.Slot)
+		require.Error(t, err)
+		require.Nil(t, deposit)
 	})
 }
 
@@ -101,5 +156,60 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 
 		// check result
 		require.EqualValues(t, expectedDeposit, deposit)
+	})
+
+	t.Run("should not parse if wrong discriminator", func(t *testing.T) {
+		txResult := LoadSolanaInboundTxResult(t, txHash)
+		tx, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		instruction := tx.Message.Instructions[0]
+
+		// try deserializing instruction as a 'deposit_spl'
+		var inst DepositSPLInstructionParams
+		err = borsh.Deserialize(&inst, instruction.Data)
+		require.NoError(t, err)
+
+		// serialize it back with wrong discriminator
+		data, err := borsh.Serialize(DepositInstructionParams{
+			Amount:        inst.Amount,
+			Discriminator: DiscriminatorDeposit,
+			Memo:          inst.Memo,
+		})
+		require.NoError(t, err)
+
+		tx.Message.Instructions[0].Data = data
+
+		deposit, err := ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
+		require.NoError(t, err)
+		require.Nil(t, deposit)
+	})
+
+	t.Run("should fail if wrong accounts count", func(t *testing.T) {
+		txResult := LoadSolanaInboundTxResult(t, txHash)
+		tx, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		// append one more account to instruction
+		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
+		tx.Message.Instructions[0].Accounts = append(tx.Message.Instructions[0].Accounts, 4)
+
+		deposit, err := ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
+		require.Error(t, err)
+		require.Nil(t, deposit)
+	})
+
+	t.Run("should fail if first account is not signer", func(t *testing.T) {
+		txResult := LoadSolanaInboundTxResult(t, txHash)
+		tx, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		// switch account places
+		tx.Message.Instructions[0].Accounts[0] = 1
+		tx.Message.Instructions[0].Accounts[1] = 0
+
+		deposit, err := ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
+		require.Error(t, err)
+		require.Nil(t, deposit)
 	})
 }
