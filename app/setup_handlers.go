@@ -17,13 +17,16 @@ import (
 // There may be multiple upgrade handlers configured on some releases if different
 // migrations needto be run in different environment
 func GetDefaultUpgradeHandlerVersion() string {
+	// semver must have v prefix, but we store without prefix
+	vVersion := "v" + constant.Version
+
 	// development builds always use the full version in the release handlers
-	if semver.Build(constant.Version) != "" || semver.Prerelease(constant.Version) != "" {
+	if semver.Build(vVersion) != "" || semver.Prerelease(vVersion) != "" {
 		return constant.Version
 	}
 
 	// release builds use just the major version (v22.0.0 -> v22)
-	return semver.Major(constant.Version)
+	return semver.Major(vVersion)
 }
 
 func SetupHandlers(app *App) {
