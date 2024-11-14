@@ -227,6 +227,20 @@ func WaitCctxRevertedByInboundHash(
 	return cctxs[0]
 }
 
+// WaitCctxAbortedByInboundHash waits until cctx is aborted by inbound hash.
+func WaitCctxAbortedByInboundHash(
+	ctx context.Context,
+	t require.TestingT,
+	hash string,
+	c CCTXClient,
+) crosschaintypes.CrossChainTx {
+	// wait for cctx to be aborted
+	cctxs := WaitCctxByInboundHash(ctx, t, hash, c, MatchStatus(crosschaintypes.CctxStatus_Aborted))
+	require.Len(t, cctxs, 1)
+
+	return cctxs[0]
+}
+
 // WaitCctxByInboundHash waits until cctx appears by inbound hash.
 func WaitCctxByInboundHash(
 	ctx context.Context,
