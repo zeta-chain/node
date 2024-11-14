@@ -39,6 +39,7 @@ Zetacore Daemon (server)
 * [zetacored tendermint](#zetacored-tendermint)	 - Tendermint subcommands
 * [zetacored testnet](#zetacored-testnet)	 - subcommands for starting or configuring local testnets
 * [zetacored tx](#zetacored-tx)	 - Transactions subcommands
+* [zetacored upgrade-handler-version](#zetacored-upgrade-handler-version)	 - Print the default upgrade handler version
 * [zetacored validate-genesis](#zetacored-validate-genesis)	 - validates the genesis file at the default location or at the location passed as an arg
 * [zetacored version](#zetacored-version)	 - Print the application binary version information
 
@@ -14345,6 +14346,34 @@ zetacored tx vesting create-vesting-account [to_address] [amount] [end_time] [fl
 ### SEE ALSO
 
 * [zetacored tx vesting](#zetacored-tx-vesting)	 - Vesting transaction subcommands
+
+## zetacored upgrade-handler-version
+
+Print the default upgrade handler version
+
+```
+zetacored upgrade-handler-version [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for upgrade-handler-version
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored](#zetacored)	 - Zetacore Daemon (server)
 
 ## zetacored validate-genesis
 
