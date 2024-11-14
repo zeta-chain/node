@@ -98,4 +98,8 @@ rpcs:
   ton_sidecar_url: "http://ton:8000"
   zetacore_grpc: "zetacore0:9090"
   zetacore_rpc: "http://zetacore0:26657"
-# contracts will be populated on first run
+contracts:
+# configure localnet solana gateway program id
+  solana:
+    gateway_program_id: "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
+    spl: ""

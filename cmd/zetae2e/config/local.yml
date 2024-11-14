@@ -117,3 +117,6 @@ contracts:
     erc20: "0xbD1e64A22B9F92D9Ce81aA9B4b0fFacd80215564"
     test_dapp: "0xBFF76e77D56B3C1202107f059425D56f0AEF87Ed"
     gateway: "0xF0deebCB0E9C829519C4baa794c5445171973826"
+  solana:
+    gateway_program_id: "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
+    spl: ""
