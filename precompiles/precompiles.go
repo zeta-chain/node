@@ -51,7 +51,7 @@ func StatefulContracts(
 
 	// Define the staking contract function.
 	if EnabledStatefulContracts[staking.ContractAddress] {
-		stakingContract := func(ctx sdktypes.Context, _ ethparams.Rules) vm.PrecompiledContract {
+		stakingContract := func(ctx sdktypes.Context, _ ethparams.Rules) vm.StatefulPrecompiledContract {
 			return staking.NewIStakingContract(
 				ctx,
 				stakingKeeper,
