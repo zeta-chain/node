@@ -24,6 +24,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - uses: listendev/action@v0.11
+        with:
+          jwt: ${{ secrets.LSTN_API_KEY }}
+          ci: only
 
       - name: Set CPU Architecture
         shell: bash
