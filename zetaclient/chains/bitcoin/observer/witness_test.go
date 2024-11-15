@@ -61,6 +61,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 
 	// fee rate of above tx is 28 sat/vB
 	depositorFee := bitcoin.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
+	feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
 
 	t.Run("decode OP_RETURN ok", func(t *testing.T) {
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
@@ -93,7 +94,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
@@ -131,7 +132,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
@@ -172,7 +173,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Equal(t, event, eventExpected)
@@ -192,9 +193,28 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
+		require.Nil(t, event)
+	})
+
+	t.Run("should return error if RPC failed to calculate depositor fee", func(t *testing.T) {
+		// load tx
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+
+		// get BTC event
+		rpcClient := mocks.NewBTCRPCClient(t)
+		event, err := observer.GetBtcEventWithWitness(
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			mockDepositFeeCalculator(0.0, errors.New("rpc error")),
+		)
+		require.ErrorContains(t, err, "rpc error")
 		require.Nil(t, event)
 	})
 
@@ -212,7 +232,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Nil(t, event)
@@ -234,7 +254,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.ErrorContains(t, err, "rpc error")
 		require.Nil(t, event)
@@ -268,7 +288,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Nil(t, event)

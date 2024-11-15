@@ -9,8 +9,8 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestSolanaDepositAndCallRefund tests deposit of lamports calling a example contract
-func TestSolanaDepositAndCallRefund(r *runner.E2ERunner, args []string) {
+// TestSolanaDepositAndCallRevert tests deposit of lamports calling a example contract that reverts.
+func TestSolanaDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// parse deposit amount (in lamports)

@@ -224,7 +224,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.SetupEVMV2()
 
 		if testSolana {
-			deployerRunner.SetupSolana(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
+			deployerRunner.SetupSolana(
+				conf.Contracts.Solana.GatewayProgramID.String(),
+				conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String(),
+			)
 		}
 
 		deployerRunner.SetZEVMSystemContracts()
@@ -433,7 +436,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSolanaDepositName,
 			e2etests.TestSolanaWithdrawName,
 			e2etests.TestSolanaDepositAndCallName,
-			e2etests.TestSolanaDepositAndCallRefundName,
+			e2etests.TestSolanaDepositAndCallRevertName,
+			e2etests.TestSolanaDepositAndCallRevertWithDustName,
 			e2etests.TestSolanaDepositRestrictedName,
 			e2etests.TestSolanaWithdrawRestrictedName,
 			// TODO move under admin tests
