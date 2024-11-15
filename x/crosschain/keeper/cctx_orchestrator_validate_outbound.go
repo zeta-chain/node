@@ -325,22 +325,21 @@ func (k Keeper) processFailedZETAOutboundOnZEVM(ctx sdk.Context, cctx *types.Cro
 // TODO: consolidate logic with above function
 // https://github.com/zeta-chain/node/issues/2627
 func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainTx) error {
-	// check the sender is ZetaChain
-	zetaChain, err := chains.ZetaChainFromCosmosChainID(ctx.ChainID())
-	if err != nil {
-		return errors.Wrap(err, "failed to get ZetaChain chainID")
-	}
-	if cctx.InboundParams.SenderChainId != zetaChain.ChainId {
-		return fmt.Errorf(
-			"sender chain for withdraw cctx is not ZetaChain expected %d got %d",
-			zetaChain.ChainId,
-			cctx.InboundParams.SenderChainId,
-		)
-	}
-
 	switch cctx.CctxStatus.Status {
 	case types.CctxStatus_PendingOutbound:
-
+		// check the sender is ZetaChain
+		zetaChain, err := chains.ZetaChainFromCosmosChainID(ctx.ChainID())
+		if err != nil {
+			return errors.Wrap(err, "failed to get ZetaChain chainID")
+		}
+		if cctx.InboundParams.SenderChainId != zetaChain.ChainId {
+			return fmt.Errorf(
+				"sender chain for withdraw cctx is not ZetaChain expected %d got %d",
+				zetaChain.ChainId,
+				cctx.InboundParams.SenderChainId,
+			)
+		}
+		
 		//  get the chain ID of the connected chain
 		chainID := cctx.GetCurrentOutboundParam().ReceiverChainId
 
