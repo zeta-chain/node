@@ -7,9 +7,27 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"golang.org/x/mod/semver"
 
 	"github.com/zeta-chain/node/pkg/constant"
 )
+
+// GetDefaultUpgradeHandlerVersion prints the default upgrade handler version
+//
+// There may be multiple upgrade handlers configured on some releases if different
+// migrations needto be run in different environment
+func GetDefaultUpgradeHandlerVersion() string {
+	// semver must have v prefix, but we store without prefix
+	vVersion := "v" + constant.Version
+
+	// development builds always use the full version in the release handlers
+	if semver.Build(vVersion) != "" || semver.Prerelease(vVersion) != "" {
+		return constant.Version
+	}
+
+	// release builds use just the major version (v22.0.0 -> v22)
+	return semver.Major(vVersion)
+}
 
 func SetupHandlers(app *App) {
 	allUpgrades := upgradeTracker{
@@ -50,10 +68,12 @@ func SetupHandlers(app *App) {
 		upgradeHandlerFns, storeUpgrades = allUpgrades.mergeAllUpgrades()
 	}
 
+	upgradeHandlerVersion := GetDefaultUpgradeHandlerVersion()
+
 	app.UpgradeKeeper.SetUpgradeHandler(
-		constant.Version,
+		upgradeHandlerVersion,
 		func(ctx sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
-			app.Logger().Info("Running upgrade handler for " + constant.Version)
+			app.Logger().Info("Running upgrade handler for " + upgradeHandlerVersion)
 
 			var err error
 			for _, upgradeHandler := range upgradeHandlerFns {
@@ -71,7 +91,7 @@ func SetupHandlers(app *App) {
 	if err != nil {
 		panic(err)
 	}
-	if upgradeInfo.Name == constant.Version && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+	if upgradeInfo.Name == upgradeHandlerVersion && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		// Use upgrade store loader for the initial loading of all stores when app starts,
 		// it checks if version == upgradeHeight and applies store upgrades before loading the stores,
 		// so that new stores start with the correct version (the current height of chain),

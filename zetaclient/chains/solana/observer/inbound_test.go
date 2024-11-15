@@ -71,7 +71,7 @@ func Test_FilterInboundEvents(t *testing.T) {
 
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
-	chainParams.GatewayAddress = testutils.GatewayAddresses[chain.ChainId]
+	chainParams.GatewayAddress = testutils.OldSolanaGatewayAddressDevnet
 
 	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, 60, database, base.DefaultLogger(), nil)
 	require.NoError(t, err)

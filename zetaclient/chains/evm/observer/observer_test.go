@@ -53,7 +53,6 @@ func getAppContext(
 	// create config
 	cfg := config.New(false)
 	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
-		Chain:    evmChain,
 		Endpoint: endpoint,
 	}
 
@@ -178,7 +177,6 @@ func Test_NewObserver(t *testing.T) {
 		{
 			name: "should be able to create observer",
 			evmCfg: config.EVMConfig{
-				Chain:    chain,
 				Endpoint: "http://localhost:8545",
 			},
 			chainParams: params,
@@ -192,7 +190,6 @@ func Test_NewObserver(t *testing.T) {
 		{
 			name: "should fail if RPC call fails",
 			evmCfg: config.EVMConfig{
-				Chain:    chain,
 				Endpoint: "http://localhost:8545",
 			},
 			chainParams: params,
@@ -212,7 +209,6 @@ func Test_NewObserver(t *testing.T) {
 		{
 			name: "should fail on invalid ENV var",
 			evmCfg: config.EVMConfig{
-				Chain:    chain,
 				Endpoint: "http://localhost:8545",
 			},
 			chainParams: params,

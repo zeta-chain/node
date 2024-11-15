@@ -145,6 +145,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig types.EncodingConfig) {
 		GetPubKeyCmd(),
 		CollectObserverInfoCmd(),
 		AddrConversionCmd(),
+		UpgradeHandlerVersionCmd(),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		ethermintclient.NewTestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 

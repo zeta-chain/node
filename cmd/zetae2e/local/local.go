@@ -182,6 +182,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	)
 	noError(err)
 
+	// monitor block production to ensure we fail fast if there are consensus failures
+	// this is not run in an errgroup since only returning an error will not exit immedately
+	// this needs to be early to quickly detect consensus failure during genesis
+	go monitorBlockProductionExit(ctx, conf)
+
 	// set the authority client to the zeta tx server to be able to query message permissions
 	deployerRunner.ZetaTxServer.SetAuthorityClient(deployerRunner.AuthorityClient)
 
@@ -189,10 +194,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipSetup {
 		noError(deployerRunner.FundEmissionsPool())
 	}
-
-	// monitor block production to ensure we fail fast if there are consensus failures
-	// this is not run in an errgroup since only returning an error will not exit immedately
-	go monitorBlockProductionExit(ctx, conf)
 
 	// wait for keygen to be completed
 	// if setup is skipped, we assume that the keygen is already completed
@@ -223,7 +224,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.SetupEVMV2()
 
 		if testSolana {
-			deployerRunner.SetupSolana(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
+			deployerRunner.SetupSolana(
+				conf.Contracts.Solana.GatewayProgramID.String(),
+				conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String(),
+			)
 		}
 
 		deployerRunner.SetZEVMSystemContracts()
@@ -319,6 +323,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinDepositName,
 			e2etests.TestBitcoinDepositAndCallName,
 			e2etests.TestBitcoinDepositAndCallRevertName,
+			e2etests.TestBitcoinDepositAndCallRevertWithDustName,
 			e2etests.TestBitcoinStdMemoDepositName,
 			e2etests.TestBitcoinStdMemoDepositAndCallName,
 			e2etests.TestBitcoinStdMemoDepositAndCallRevertName,
@@ -431,14 +436,17 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSolanaDepositName,
 			e2etests.TestSolanaWithdrawName,
 			e2etests.TestSolanaDepositAndCallName,
-			e2etests.TestSolanaDepositAndCallRefundName,
+			e2etests.TestSolanaDepositAndCallRevertName,
+			e2etests.TestSolanaDepositAndCallRevertWithDustName,
 			e2etests.TestSolanaDepositRestrictedName,
 			e2etests.TestSolanaWithdrawRestrictedName,
 			// TODO move under admin tests
 			// https://github.com/zeta-chain/node/issues/3085
-			e2etests.TestSolanaWhitelistSPLName,
 			e2etests.TestSPLDepositName,
 			e2etests.TestSPLDepositAndCallName,
+			e2etests.TestSPLWithdrawName,
+			e2etests.TestSPLWithdrawAndCreateReceiverAtaName,
+			e2etests.TestSolanaWhitelistSPLName,
 		}
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
 	}

@@ -27,11 +27,11 @@ func (r *E2ERunner) SetupSolanaAccount() {
 }
 
 // SetupSolana sets Solana contracts and params
-func (r *E2ERunner) SetupSolana(deployerPrivateKey string) {
+func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 	r.Logger.Print("⚙️ initializing gateway program on Solana")
 
 	// set Solana contracts
-	r.GatewayProgram = solana.MustPublicKeyFromBase58(solanacontracts.SolanaGatewayProgramID)
+	r.GatewayProgram = solana.MustPublicKeyFromBase58(gatewayID)
 
 	// get deployer account balance
 	privkey, err := solana.PrivateKeyFromBase58(deployerPrivateKey)
@@ -85,6 +85,30 @@ func (r *E2ERunner) SetupSolana(deployerPrivateKey string) {
 	require.NoError(r, err)
 	r.Logger.Info("initial PDA balance: %d lamports", balance.Value)
 
+	// initialize rent payer
+	var instRentPayer solana.GenericInstruction
+	rentPayerPdaComputed := r.SolanaRentPayerPDA()
+
+	// create 'initialize_rent_payer' instruction
+	accountSlice = []*solana.AccountMeta{}
+	accountSlice = append(accountSlice, solana.Meta(rentPayerPdaComputed).WRITE())
+	accountSlice = append(accountSlice, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
+	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
+	instRentPayer.ProgID = r.GatewayProgram
+	instRentPayer.AccountValues = accountSlice
+
+	instRentPayer.DataBytes, err = borsh.Serialize(solanacontracts.InitializeRentPayerParams{
+		Discriminator: solanacontracts.DiscriminatorInitializeRentPayer,
+	})
+	require.NoError(r, err)
+
+	// create and sign the transaction
+	signedTx = r.CreateSignedTransaction([]solana.Instruction{&instRentPayer}, privkey, []solana.PrivateKey{})
+
+	// broadcast the transaction and wait for finalization
+	_, out = r.BroadcastTxSync(signedTx)
+	r.Logger.Info("initialize_rent_payer logs: %v", out.Meta.LogMessages)
+
 	err = r.ensureSolanaChainParams()
 	require.NoError(r, err)
 
@@ -117,7 +141,7 @@ func (r *E2ERunner) ensureSolanaChainParams() error {
 		BallotThreshold:             observertypes.DefaultBallotThreshold,
 		MinObserverDelegation:       observertypes.DefaultMinObserverDelegation,
 		IsSupported:                 true,
-		GatewayAddress:              solanacontracts.SolanaGatewayProgramID,
+		GatewayAddress:              r.GatewayProgram.String(),
 	}
 
 	updateMsg := observertypes.NewMsgUpdateChainParams(creator, chainParams)

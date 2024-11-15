@@ -22,6 +22,12 @@ type InitializeParams struct {
 	ChainID uint64
 }
 
+// InitializeRentPayerParams contains the parameters for a gateway initialize_rent_payer instruction
+type InitializeRentPayerParams struct {
+	// Discriminator is the unique identifier for the initialize_rent_payer instruction
+	Discriminator [8]byte
+}
+
 // DepositInstructionParams contains the parameters for a gateway deposit instruction
 type DepositInstructionParams struct {
 	// Discriminator is the unique identifier for the deposit instruction
@@ -112,6 +118,65 @@ func ParseInstructionWithdraw(instruction solana.CompiledInstruction) (*Withdraw
 
 	// check the discriminator to ensure it's a 'withdraw' instruction
 	if inst.Discriminator != DiscriminatorWithdraw {
+		return nil, fmt.Errorf("not a withdraw instruction: %v", inst.Discriminator)
+	}
+
+	return inst, nil
+}
+
+type WithdrawSPLInstructionParams struct {
+	// Discriminator is the unique identifier for the withdraw instruction
+	Discriminator [8]byte
+
+	Decimals uint8
+
+	// Amount is the lamports amount for the withdraw
+	Amount uint64
+
+	// Signature is the ECDSA signature (by TSS) for the withdraw
+	Signature [64]byte
+
+	// RecoveryID is the recovery ID used to recover the public key from ECDSA signature
+	RecoveryID uint8
+
+	// MessageHash is the hash of the message signed by TSS
+	MessageHash [32]byte
+
+	// Nonce is the nonce for the withdraw
+	Nonce uint64
+}
+
+// Signer returns the signer of the signature contained
+func (inst *WithdrawSPLInstructionParams) Signer() (signer common.Address, err error) {
+	var signature [65]byte
+	copy(signature[:], inst.Signature[:64])
+	signature[64] = inst.RecoveryID
+
+	return RecoverSigner(inst.MessageHash[:], signature[:])
+}
+
+// GatewayNonce returns the nonce of the instruction
+func (inst *WithdrawSPLInstructionParams) GatewayNonce() uint64 {
+	return inst.Nonce
+}
+
+// TokenAmount returns the amount of the instruction
+func (inst *WithdrawSPLInstructionParams) TokenAmount() uint64 {
+	return inst.Amount
+}
+
+// ParseInstructionWithdraw tries to parse the instruction as a 'withdraw'.
+// It returns nil if the instruction can't be parsed as a 'withdraw'.
+func ParseInstructionWithdrawSPL(instruction solana.CompiledInstruction) (*WithdrawSPLInstructionParams, error) {
+	// try deserializing instruction as a 'withdraw'
+	inst := &WithdrawSPLInstructionParams{}
+	err := borsh.Deserialize(inst, instruction.Data)
+	if err != nil {
+		return nil, errors.Wrap(err, "error deserializing instruction")
+	}
+
+	// check the discriminator to ensure it's a 'withdraw' instruction
+	if inst.Discriminator != DiscriminatorWithdrawSPL {
 		return nil, fmt.Errorf("not a withdraw instruction: %v", inst.Discriminator)
 	}
 

@@ -182,6 +182,7 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 			return cosmoserrors.Wrap(err, "AddRevertOutbound")
 		}
 
+		// pay revert outbound gas fee
 		err = k.PayGasAndUpdateCctx(
 			ctx,
 			cctx.InboundParams.SenderChainId,
@@ -192,6 +193,18 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 		if err != nil {
 			return err
 		}
+
+		// validate data of the revert outbound
+		err = k.validateZRC20Withdrawal(
+			ctx,
+			cctx.GetCurrentOutboundParam().ReceiverChainId,
+			cctx.GetCurrentOutboundParam().Amount.BigInt(),
+			[]byte(cctx.GetCurrentOutboundParam().Receiver),
+		)
+		if err != nil {
+			return err
+		}
+
 		err = k.SetObserverOutboundInfo(ctx, cctx.InboundParams.SenderChainId, cctx)
 		if err != nil {
 			return err

@@ -35,7 +35,6 @@ func (signer *Signer) createAndSignMsgWhitelist(
 	if err != nil {
 		return nil, errors.Wrap(err, "Key-sign failed")
 	}
-	signer.Logger().Std.Info().Msgf("Key-sign succeed for chain %d nonce %d", chainID, nonce)
 
 	// attach the signature and return
 	return msg.SetSignature(signature), nil
@@ -44,9 +43,7 @@ func (signer *Signer) createAndSignMsgWhitelist(
 // signWhitelistTx wraps the whitelist 'msg' into a Solana transaction and signs it with the relayer key.
 func (signer *Signer) signWhitelistTx(ctx context.Context, msg *contracts.MsgWhitelist) (*solana.Transaction, error) {
 	// create whitelist_spl_mint instruction with program call data
-	var err error
-	var inst solana.GenericInstruction
-	inst.DataBytes, err = borsh.Serialize(contracts.WhitelistInstructionParams{
+	dataBytes, err := borsh.Serialize(contracts.WhitelistInstructionParams{
 		Discriminator: contracts.DiscriminatorWhitelistSplMint,
 		Signature:     msg.SigRS(),
 		RecoveryID:    msg.SigV(),
@@ -57,16 +54,17 @@ func (signer *Signer) signWhitelistTx(ctx context.Context, msg *contracts.MsgWhi
 		return nil, errors.Wrap(err, "cannot serialize whitelist_spl_mint instruction")
 	}
 
-	// attach required accounts to the instruction
-	privkey := signer.relayerKey
-	attachWhitelistAccounts(
-		&inst,
-		privkey.PublicKey(),
-		signer.pda,
-		msg.WhitelistCandidate(),
-		msg.WhitelistEntry(),
-		signer.gatewayID,
-	)
+	inst := solana.GenericInstruction{
+		ProgID:    signer.gatewayID,
+		DataBytes: dataBytes,
+		AccountValues: []*solana.AccountMeta{
+			solana.Meta(msg.WhitelistEntry()).WRITE(),
+			solana.Meta(msg.WhitelistCandidate()),
+			solana.Meta(signer.pda).WRITE(),
+			solana.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
+			solana.Meta(solana.SystemProgramID),
+		},
+	}
 
 	// get a recent blockhash
 	recent, err := signer.client.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
@@ -83,7 +81,7 @@ func (signer *Signer) signWhitelistTx(ctx context.Context, msg *contracts.MsgWhi
 			// programs.ComputeBudgetSetComputeUnitPrice(computeUnitPrice),
 			&inst},
 		recent.Value.Blockhash,
-		solana.TransactionPayer(privkey.PublicKey()),
+		solana.TransactionPayer(signer.relayerKey.PublicKey()),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "NewTransaction error")
@@ -91,8 +89,8 @@ func (signer *Signer) signWhitelistTx(ctx context.Context, msg *contracts.MsgWhi
 
 	// relayer signs the transaction
 	_, err = tx.Sign(func(key solana.PublicKey) *solana.PrivateKey {
-		if key.Equals(privkey.PublicKey()) {
-			return privkey
+		if key.Equals(signer.relayerKey.PublicKey()) {
+			return signer.relayerKey
 		}
 		return nil
 	})
@@ -101,25 +99,4 @@ func (signer *Signer) signWhitelistTx(ctx context.Context, msg *contracts.MsgWhi
 	}
 
 	return tx, nil
-}
-
-// attachWhitelistAccounts attaches the required accounts for the gateway whitelist instruction.
-func attachWhitelistAccounts(
-	inst *solana.GenericInstruction,
-	signer solana.PublicKey,
-	pda solana.PublicKey,
-	whitelistCandidate solana.PublicKey,
-	whitelistEntry solana.PublicKey,
-	gatewayID solana.PublicKey,
-) {
-	// attach required accounts to the instruction
-	var accountSlice []*solana.AccountMeta
-	accountSlice = append(accountSlice, solana.Meta(whitelistEntry).WRITE())
-	accountSlice = append(accountSlice, solana.Meta(whitelistCandidate))
-	accountSlice = append(accountSlice, solana.Meta(pda).WRITE())
-	accountSlice = append(accountSlice, solana.Meta(signer).WRITE().SIGNER())
-	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
-	inst.ProgID = gatewayID
-
-	inst.AccountValues = accountSlice
 }

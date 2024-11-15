@@ -98,7 +98,7 @@ func NewCometBFTClients(url string) (Clients, error) {
 	return newClients(clientCtx)
 }
 
-// NewGRPCClient creates a Clients which uses gRPC as the transport
+// NewGRPCClients creates a Clients which uses gRPC as the transport
 func NewGRPCClients(url string, opts ...grpc.DialOption) (Clients, error) {
 	grpcConn, err := grpc.Dial(url, opts...)
 	if err != nil {

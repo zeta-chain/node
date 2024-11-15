@@ -55,14 +55,17 @@ const (
 	/*
 	 * Solana tests
 	 */
-	TestSolanaDepositName              = "solana_deposit"
-	TestSolanaWithdrawName             = "solana_withdraw"
-	TestSolanaDepositAndCallName       = "solana_deposit_and_call"
-	TestSolanaDepositAndCallRefundName = "solana_deposit_and_call_refund"
-	TestSolanaDepositRestrictedName    = "solana_deposit_restricted"
-	TestSolanaWithdrawRestrictedName   = "solana_withdraw_restricted"
-	TestSPLDepositName                 = "spl_deposit"
-	TestSPLDepositAndCallName          = "spl_deposit_and_call"
+	TestSolanaDepositName                      = "solana_deposit"
+	TestSolanaWithdrawName                     = "solana_withdraw"
+	TestSolanaDepositAndCallName               = "solana_deposit_and_call"
+	TestSolanaDepositAndCallRevertName         = "solana_deposit_and_call_revert"
+	TestSolanaDepositAndCallRevertWithDustName = "solana_deposit_and_call_revert_with_dust"
+	TestSolanaDepositRestrictedName            = "solana_deposit_restricted"
+	TestSolanaWithdrawRestrictedName           = "solana_withdraw_restricted"
+	TestSPLDepositName                         = "spl_deposit"
+	TestSPLDepositAndCallName                  = "spl_deposit_and_call"
+	TestSPLWithdrawName                        = "spl_withdraw"
+	TestSPLWithdrawAndCreateReceiverAtaName    = "spl_withdraw_and_create_receiver_ata"
 
 	/**
 	 * TON tests
@@ -80,6 +83,7 @@ const (
 	TestBitcoinDepositName                                 = "bitcoin_deposit"
 	TestBitcoinDepositAndCallName                          = "bitcoin_deposit_and_call"
 	TestBitcoinDepositAndCallRevertName                    = "bitcoin_deposit_and_call_revert"
+	TestBitcoinDepositAndCallRevertWithDustName            = "bitcoin_deposit_and_call_revert_with_dust"
 	TestBitcoinDonationName                                = "bitcoin_donation"
 	TestBitcoinStdMemoDepositName                          = "bitcoin_std_memo_deposit"
 	TestBitcoinStdMemoDepositAndCallName                   = "bitcoin_std_memo_deposit_and_call"
@@ -434,12 +438,34 @@ var AllE2ETests = []runner.E2ETest{
 		TestSolanaDepositAndCall,
 	),
 	runner.NewE2ETest(
-		TestSolanaDepositAndCallRefundName,
-		"deposit SOL into ZEVM and call a contract that reverts; should refund",
+		TestSPLWithdrawName,
+		"withdraw SPL from ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in spl tokens", DefaultValue: "1000000"},
+		},
+		TestSPLWithdraw,
+	),
+	runner.NewE2ETest(
+		TestSPLWithdrawAndCreateReceiverAtaName,
+		"withdraw SPL from ZEVM and create receiver ata",
+		[]runner.ArgDefinition{
+			{Description: "amount in spl tokens", DefaultValue: "1000000"},
+		},
+		TestSPLWithdrawAndCreateReceiverAta,
+	),
+	runner.NewE2ETest(
+		TestSolanaDepositAndCallRevertName,
+		"deposit SOL into ZEVM and call a contract that reverts",
 		[]runner.ArgDefinition{
 			{Description: "amount in lamport", DefaultValue: "1200000"},
 		},
-		TestSolanaDepositAndCallRefund,
+		TestSolanaDepositAndCallRevert,
+	),
+	runner.NewE2ETest(
+		TestSolanaDepositAndCallRevertWithDustName,
+		"deposit SOL into ZEVM; revert with dust amount that aborts the CCTX",
+		[]runner.ArgDefinition{},
+		TestSolanaDepositAndCallRevertWithDust,
 	),
 	runner.NewE2ETest(
 		TestSolanaDepositRestrictedName,
@@ -469,7 +495,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestSPLDepositName,
 		"deposit SPL into ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount of spl tokens", DefaultValue: "500000"},
+			{Description: "amount of spl tokens", DefaultValue: "12000000"},
 		},
 		TestSPLDeposit,
 	),
@@ -477,7 +503,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestSPLDepositAndCallName,
 		"deposit SPL into ZEVM and call",
 		[]runner.ArgDefinition{
-			{Description: "amount of spl tokens", DefaultValue: "500000"},
+			{Description: "amount of spl tokens", DefaultValue: "12000000"},
 		},
 		TestSPLDepositAndCall,
 	),
@@ -554,6 +580,11 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
 		TestBitcoinDepositAndCallRevert,
+	),
+	runner.NewE2ETest(
+		TestBitcoinDepositAndCallRevertWithDustName,
+		"deposit Bitcoin into ZEVM; revert with dust amount that aborts the CCTX", []runner.ArgDefinition{},
+		TestBitcoinDepositAndCallRevertWithDust,
 	),
 	runner.NewE2ETest(
 		TestBitcoinStdMemoDepositName,

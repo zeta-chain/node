@@ -4,7 +4,6 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
 
@@ -18,18 +17,17 @@ func TestSPLDeposit(r *runner.E2ERunner, args []string) {
 	amount := parseInt(r, args[0])
 
 	// load deployer private key
-	privKey, err := solana.PrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
-	require.NoError(r, err)
+	privKey := r.GetSolanaPrivKey()
 
 	// get SPL balance for pda and sender atas
 	pda := r.ComputePdaAddress()
-	pdaAta := r.FindOrCreateAssociatedTokenAccount(privKey, pda, r.SPLAddr)
+	pdaAta := r.ResolveSolanaATA(privKey, pda, r.SPLAddr)
 
-	pdaBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)
+	pdaBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 
-	senderAta := r.FindOrCreateAssociatedTokenAccount(privKey, privKey.PublicKey(), r.SPLAddr)
-	senderBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentConfirmed)
+	senderAta := r.ResolveSolanaATA(privKey, privKey.PublicKey(), r.SPLAddr)
+	senderBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 
 	// get zrc20 balance for recipient
@@ -46,10 +44,10 @@ func TestSPLDeposit(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// verify balances are updated
-	pdaBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)
+	pdaBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 
-	senderBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentConfirmed)
+	senderBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 
 	zrc20BalanceAfter, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())

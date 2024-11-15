@@ -9,7 +9,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	ethcommon "github.com/ethereum/go-ethereum/common"
+	eth "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
@@ -132,18 +132,15 @@ func (oc *Orchestrator) Start(ctx context.Context) error {
 
 	oc.logger.Info().Str("signer", signerAddress.String()).Msg("Starting orchestrator")
 
-	// start cctx scheduler
 	bg.Work(ctx, oc.runScheduler, bg.WithName("runScheduler"), bg.WithLogger(oc.logger.Logger))
 	bg.Work(ctx, oc.runObserverSignerSync, bg.WithName("runObserverSignerSync"), bg.WithLogger(oc.logger.Logger))
-
-	shutdownOrchestrator := func() {
-		// now stop orchestrator and all observers
-		close(oc.stop)
-	}
-
-	oc.zetacoreClient.OnBeforeStop(shutdownOrchestrator)
+	bg.Work(ctx, oc.runAppContextUpdater, bg.WithName("runAppContextUpdater"), bg.WithLogger(oc.logger.Logger))
 
 	return nil
+}
+
+func (oc *Orchestrator) Stop() {
+	close(oc.stop)
 }
 
 // returns signer with updated chain parameters.
@@ -164,47 +161,13 @@ func (oc *Orchestrator) resolveSigner(app *zctx.AppContext, chainID int64) (inte
 		params := chain.Params()
 
 		// update zeta connector, ERC20 custody, and gateway addresses
-		zetaConnectorAddress := ethcommon.HexToAddress(params.GetConnectorContractAddress())
-		if zetaConnectorAddress != signer.GetZetaConnectorAddress() {
-			signer.SetZetaConnectorAddress(zetaConnectorAddress)
-			oc.logger.Info().
-				Str("signer.connector_address", zetaConnectorAddress.String()).
-				Msgf("updated zeta connector address for chain %d", chainID)
-		}
-		erc20CustodyAddress := ethcommon.HexToAddress(params.GetErc20CustodyContractAddress())
-		if erc20CustodyAddress != signer.GetERC20CustodyAddress() {
-			signer.SetERC20CustodyAddress(erc20CustodyAddress)
-			oc.logger.Info().
-				Str("signer.erc20_custody", erc20CustodyAddress.String()).
-				Msgf("updated erc20 custody address for chain %d", chainID)
-		}
-		if params.GatewayAddress != signer.GetGatewayAddress() {
-			signer.SetGatewayAddress(params.GatewayAddress)
-			oc.logger.Info().
-				Str("signer.gateway_address", params.GatewayAddress).
-				Msgf("updated gateway address for chain %d", chainID)
-		}
-
+		signer.SetZetaConnectorAddress(eth.HexToAddress(params.ConnectorContractAddress))
+		signer.SetERC20CustodyAddress(eth.HexToAddress(params.Erc20CustodyContractAddress))
+		signer.SetGatewayAddress(params.GatewayAddress)
 	case chain.IsSolana():
-		params := chain.Params()
-
-		// update gateway address
-		if params.GatewayAddress != signer.GetGatewayAddress() {
-			signer.SetGatewayAddress(params.GatewayAddress)
-			oc.logger.Info().
-				Str("signer.gateway_address", params.GatewayAddress).
-				Msgf("updated gateway address for chain %d", chainID)
-		}
+		signer.SetGatewayAddress(chain.Params().GatewayAddress)
 	case chain.IsTON():
-		newAddress := chain.Params().GatewayAddress
-
-		if newAddress != signer.GetGatewayAddress() {
-			signer.SetGatewayAddress(newAddress)
-			oc.logger.Info().
-				Str("signer.new_gateway_address", newAddress).
-				Int64("signer.chain_id", chainID).
-				Msg("set gateway address")
-		}
+		signer.SetGatewayAddress(chain.Params().GatewayAddress)
 	}
 
 	return signer, nil
@@ -780,7 +743,13 @@ func (oc *Orchestrator) runObserverSignerSync(ctx context.Context) error {
 		return nil
 	}
 
-	return ticker.Run(ctx, cadence, task, ticker.WithLogger(oc.logger.Logger, "SyncObserverSigner"))
+	return ticker.Run(
+		ctx,
+		cadence,
+		task,
+		ticker.WithLogger(oc.logger.Logger, "SyncObserverSigner"),
+		ticker.WithStopChan(oc.stop),
+	)
 }
 
 // syncs and provisions observers & signers.
