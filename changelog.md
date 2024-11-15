@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v22.1.1
+
+## Fixes
+
+- [3171](https://github.com/zeta-chain/node/pull/3171) - infinite discovery address leak
+
 ## v22.1.0
 
 ## Features
