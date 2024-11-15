@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/node/app"
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
@@ -165,13 +164,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			utils.EmergencyPolicyName,
 			utils.OperationalPolicyName,
 			utils.AdminPolicyName,
-			sdk.AccAddress(conf.AdditionalAccounts.UserPrecompile.EVMAddress().Bytes()).String(),
 		},
 		[]string{
 			conf.PolicyAccounts.EmergencyPolicyAccount.RawPrivateKey.String(),
 			conf.PolicyAccounts.OperationalPolicyAccount.RawPrivateKey.String(),
 			conf.PolicyAccounts.AdminPolicyAccount.RawPrivateKey.String(),
-			conf.AdditionalAccounts.UserPrecompile.RawPrivateKey.String(),
 		},
 		conf.ZetaChainID,
 	)
@@ -238,7 +235,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 		noError(deployerRunner.FundEmissionsPool())
 
-		deployerRunner.MintERC20OnEvm(1000000)
+		deployerRunner.MintERC20OnEvm(1e10)
 
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}

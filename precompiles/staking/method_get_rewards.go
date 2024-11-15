@@ -1,6 +1,8 @@
 package staking
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -41,10 +43,19 @@ func (c *Contract) getRewards(
 		DelegatorAddress: delegatorCosmosAddr.String(),
 		ValidatorAddress: validatorAddr,
 	})
+
+	// DelegationRewards returns an error if the delegation does not exist.
+	// In this case, simply return an empty list of rewards, so external contracts
+	// can process this case without failing.
 	if err != nil {
-		return nil, precompiletypes.ErrUnexpected{
-			When: "DelegationRewards",
-			Got:  err.Error(),
+		if errors.Is(err, distrtypes.ErrNoDelegationExists) {
+			rewards := make([]DecCoin, 0)
+			return method.Outputs.Pack(rewards)
+		} else {
+			return nil, &precompiletypes.ErrUnexpected{
+				When: "DelegationRewards",
+				Got:  err.Error(),
+			}
 		}
 	}
 
