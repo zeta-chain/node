@@ -6,7 +6,6 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { CoinType } from "../pkg/coin/coin_pb.js";
-import type { Proof } from "../pkg/proofs/proofs_pb.js";
 import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
 import type { CallOptions, ProtocolContractVersion, RevertOptions } from "./cross_chain_tx_pb.js";
 import type { RateLimiterFlags } from "./rate_limiter_flags_pb.js";
@@ -136,21 +135,6 @@ export declare class MsgAddInboundTracker extends Message<MsgAddInboundTracker> 
    */
   coinType: CoinType;
 
-  /**
-   * @generated from field: zetachain.zetacore.pkg.proofs.Proof proof = 5;
-   */
-  proof?: Proof;
-
-  /**
-   * @generated from field: string block_hash = 6;
-   */
-  blockHash: string;
-
-  /**
-   * @generated from field: int64 tx_index = 7;
-   */
-  txIndex: bigint;
-
   constructor(data?: PartialMessage<MsgAddInboundTracker>);
 
   static readonly runtime: typeof proto3;
@@ -186,6 +170,8 @@ export declare class MsgAddInboundTrackerResponse extends Message<MsgAddInboundT
 }
 
 /**
+ * TODO: https://github.com/zeta-chain/node/issues/3083
+ *
  * @generated from message zetachain.zetacore.crosschain.MsgWhitelistERC20
  */
 export declare class MsgWhitelistERC20 extends Message<MsgWhitelistERC20> {
@@ -291,21 +277,6 @@ export declare class MsgAddOutboundTracker extends Message<MsgAddOutboundTracker
    * @generated from field: string tx_hash = 4;
    */
   txHash: string;
-
-  /**
-   * @generated from field: zetachain.zetacore.pkg.proofs.Proof proof = 5;
-   */
-  proof?: Proof;
-
-  /**
-   * @generated from field: string block_hash = 6;
-   */
-  blockHash: string;
-
-  /**
-   * @generated from field: int64 tx_index = 7;
-   */
-  txIndex: bigint;
 
   constructor(data?: PartialMessage<MsgAddOutboundTracker>);
 

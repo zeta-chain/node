@@ -20,6 +20,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 	zetaeth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
@@ -110,6 +111,7 @@ type E2ERunner struct {
 
 	// programs on Solana
 	GatewayProgram solana.PublicKey
+	SPLAddr        solana.PublicKey
 
 	// contracts evm
 	ZetaEthAddr      ethcommon.Address
@@ -125,6 +127,8 @@ type E2ERunner struct {
 	// contracts zevm
 	ERC20ZRC20Addr       ethcommon.Address
 	ERC20ZRC20           *zrc20.ZRC20
+	SPLZRC20Addr         ethcommon.Address
+	SPLZRC20             *zrc20.ZRC20
 	ETHZRC20Addr         ethcommon.Address
 	ETHZRC20             *zrc20.ZRC20
 	BTCZRC20Addr         ethcommon.Address
@@ -366,6 +370,8 @@ func (r *E2ERunner) Unlock() {
 func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print(" --- 📜Solana addresses ---")
 	r.Logger.Print("GatewayProgram: %s", r.GatewayProgram.String())
+	r.Logger.Print("SPL:        %s", r.SPLAddr.String())
+
 	// zevm contracts
 	r.Logger.Print(" --- 📜zEVM contracts ---")
 	r.Logger.Print("SystemContract: %s", r.SystemContractAddr.Hex())
@@ -373,6 +379,7 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("ERC20ZRC20:     %s", r.ERC20ZRC20Addr.Hex())
 	r.Logger.Print("BTCZRC20:       %s", r.BTCZRC20Addr.Hex())
 	r.Logger.Print("SOLZRC20:       %s", r.SOLZRC20Addr.Hex())
+	r.Logger.Print("SPLZRC20:       %s", r.SPLZRC20Addr.Hex())
 	r.Logger.Print("TONZRC20:       %s", r.TONZRC20Addr.Hex())
 	r.Logger.Print("UniswapFactory: %s", r.UniswapV2FactoryAddr.Hex())
 	r.Logger.Print("UniswapRouter:  %s", r.UniswapV2RouterAddr.Hex())
@@ -427,4 +434,10 @@ func (r *E2ERunner) requireTxSuccessful(receipt *ethtypes.Receipt, msgAndArgs ..
 // EVMAddress is shorthand to get the EVM address of the account
 func (r *E2ERunner) EVMAddress() ethcommon.Address {
 	return r.Account.EVMAddress()
+}
+
+func (r *E2ERunner) GetSolanaPrivKey() solana.PrivateKey {
+	privkey, err := solana.PrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
+	require.NoError(r, err)
+	return privkey
 }

@@ -2,11 +2,16 @@ package signer
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"cosmossdk.io/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -40,6 +45,9 @@ type Signer struct {
 
 	// pda is the program derived address of the gateway program
 	pda solana.PublicKey
+
+	// rent payer pda is the program derived address of the gateway program to pay rent for creating atas
+	rentPayerPda solana.PublicKey
 }
 
 // NewSigner creates a new Solana signer
@@ -56,17 +64,24 @@ func NewSigner(
 	baseSigner := base.NewSigner(chain, tss, ts, logger)
 
 	// parse gateway ID and PDA
-	gatewayID, pda, err := contracts.ParseGatewayIDAndPda(chainParams.GatewayAddress)
+	gatewayID, pda, err := contracts.ParseGatewayWithPDA(chainParams.GatewayAddress)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
+	}
+
+	// parse rent payer PDA, used in case receiver ATA should be created in gateway
+	rentPayerPda, err := contracts.RentPayerPDA(gatewayID)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
 	}
 
 	// create Solana signer
 	signer := &Signer{
-		Signer:    baseSigner,
-		client:    solClient,
-		gatewayID: gatewayID,
-		pda:       pda,
+		Signer:       baseSigner,
+		client:       solClient,
+		gatewayID:    gatewayID,
+		pda:          pda,
+		rentPayerPda: rentPayerPda,
 	}
 
 	// construct Solana private key if present
@@ -121,48 +136,50 @@ func (signer *Signer) TryProcessOutbound(
 	chainID := signer.Chain().ChainId
 	nonce := params.TssNonce
 	coinType := cctx.InboundParams.CoinType
-	if coinType != coin.CoinType_Gas {
-		logger.Error().
-			Msgf("TryProcessOutbound: can only send SOL to the Solana network for chain %d nonce %d", chainID, nonce)
-		return
-	}
-
-	// compliance check
-	cancelTx := compliance.IsCctxRestricted(cctx)
-	if cancelTx {
-		compliance.PrintComplianceLog(
-			logger,
-			signer.Logger().Compliance,
-			true,
-			chainID,
-			cctx.Index,
-			cctx.InboundParams.Sender,
-			params.Receiver,
-			"SOL",
-		)
-	}
-
-	// sign gateway withdraw message by TSS
-	msg, err := signer.SignMsgWithdraw(ctx, params, height, cancelTx)
-	if err != nil {
-		logger.Error().Err(err).Msgf("TryProcessOutbound: SignMsgWithdraw error for chain %d nonce %d", chainID, nonce)
-		return
-	}
 
 	// skip relaying the transaction if this signer hasn't set the relayer key
 	if !signer.HasRelayerKey() {
+		logger.Warn().Msgf("TryProcessOutbound: no relayer key configured")
+		return
+	}
+
+	var tx *solana.Transaction
+
+	switch coinType {
+	case coin.CoinType_Cmd:
+		whitelistTx, err := signer.prepareWhitelistTx(ctx, cctx, height)
+		if err != nil {
+			logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign whitelist outbound")
+			return
+		}
+
+		tx = whitelistTx
+
+	case coin.CoinType_Gas:
+		withdrawTx, err := signer.prepareWithdrawTx(ctx, cctx, height, logger)
+		if err != nil {
+			logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign withdraw outbound")
+			return
+		}
+
+		tx = withdrawTx
+
+	case coin.CoinType_ERC20:
+		withdrawSPLTx, err := signer.prepareWithdrawSPLTx(ctx, cctx, height, logger)
+		if err != nil {
+			logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign withdraw spl outbound")
+			return
+		}
+
+		tx = withdrawSPLTx
+	default:
+		logger.Error().
+			Msgf("TryProcessOutbound: can only send SOL to the Solana network")
 		return
 	}
 
 	// set relayer balance metrics
 	signer.SetRelayerBalanceMetrics(ctx)
-
-	// sign the withdraw transaction by relayer key
-	tx, err := signer.SignWithdrawTx(ctx, *msg)
-	if err != nil {
-		logger.Error().Err(err).Msgf("TryProcessOutbound: SignGasWithdraw error for chain %d nonce %d", chainID, nonce)
-		return
-	}
 
 	// broadcast the signed tx to the Solana network with preflight check
 	txSig, err := signer.client.SendTransactionWithOpts(
@@ -176,10 +193,9 @@ func (signer *Signer) TryProcessOutbound(
 		rpc.TransactionOpts{PreflightCommitment: rpc.CommitmentProcessed},
 	)
 	if err != nil {
-		signer.Logger().
-			Std.Warn().
+		logger.Error().
 			Err(err).
-			Msgf("TryProcessOutbound: broadcast error for chain %d nonce %d", chainID, nonce)
+			Msgf("TryProcessOutbound: broadcast error")
 		return
 	}
 
@@ -187,27 +203,179 @@ func (signer *Signer) TryProcessOutbound(
 	signer.reportToOutboundTracker(ctx, zetacoreClient, chainID, nonce, txSig, logger)
 }
 
+func (signer *Signer) prepareWithdrawTx(
+	ctx context.Context,
+	cctx *types.CrossChainTx,
+	height uint64,
+	logger zerolog.Logger,
+) (*solana.Transaction, error) {
+	params := cctx.GetCurrentOutboundParam()
+	// compliance check
+	cancelTx := compliance.IsCctxRestricted(cctx)
+	if cancelTx {
+		compliance.PrintComplianceLog(
+			logger,
+			signer.Logger().Compliance,
+			true,
+			signer.Chain().ChainId,
+			cctx.Index,
+			cctx.InboundParams.Sender,
+			params.Receiver,
+			"SOL",
+		)
+	}
+
+	// sign gateway withdraw message by TSS
+	msg, err := signer.createAndSignMsgWithdraw(ctx, params, height, cancelTx)
+	if err != nil {
+		return nil, err
+	}
+
+	// sign the withdraw transaction by relayer key
+	tx, err := signer.signWithdrawTx(ctx, *msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
+}
+
+func (signer *Signer) prepareWithdrawSPLTx(
+	ctx context.Context,
+	cctx *types.CrossChainTx,
+	height uint64,
+	logger zerolog.Logger,
+) (*solana.Transaction, error) {
+	params := cctx.GetCurrentOutboundParam()
+	// compliance check
+	cancelTx := compliance.IsCctxRestricted(cctx)
+	if cancelTx {
+		compliance.PrintComplianceLog(
+			logger,
+			signer.Logger().Compliance,
+			true,
+			signer.Chain().ChainId,
+			cctx.Index,
+			cctx.InboundParams.Sender,
+			params.Receiver,
+			"SPL",
+		)
+	}
+
+	// get mint details to get decimals
+	mint, err := signer.decodeMintAccountDetails(ctx, cctx.InboundParams.Asset)
+	if err != nil {
+		return nil, err
+	}
+
+	// sign gateway withdraw spl message by TSS
+	msg, err := signer.createAndSignMsgWithdrawSPL(
+		ctx,
+		params,
+		height,
+		cctx.InboundParams.Asset,
+		mint.Decimals,
+		cancelTx,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// sign the withdraw transaction by relayer key
+	tx, err := signer.signWithdrawSPLTx(ctx, *msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
+}
+
+func (signer *Signer) prepareWhitelistTx(
+	ctx context.Context,
+	cctx *types.CrossChainTx,
+	height uint64,
+) (*solana.Transaction, error) {
+	params := cctx.GetCurrentOutboundParam()
+	relayedMsg := strings.Split(cctx.RelayedMessage, ":")
+	if len(relayedMsg) != 2 {
+		return nil, fmt.Errorf("TryProcessOutbound: invalid relayed msg")
+	}
+
+	pk, err := solana.PublicKeyFromBase58(relayedMsg[1])
+	if err != nil {
+		return nil, err
+	}
+
+	seed := [][]byte{[]byte("whitelist"), pk.Bytes()}
+	whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, signer.gatewayID)
+	if err != nil {
+		return nil, err
+	}
+
+	// sign gateway whitelist message by TSS
+	msg, err := signer.createAndSignMsgWhitelist(ctx, params, height, pk, whitelistEntryPDA)
+	if err != nil {
+		return nil, err
+	}
+
+	// sign the whitelist transaction by relayer key
+	tx, err := signer.signWhitelistTx(ctx, msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
+}
+
+func (signer *Signer) decodeMintAccountDetails(ctx context.Context, asset string) (token.Mint, error) {
+	info, err := signer.client.GetAccountInfo(ctx, solana.MustPublicKeyFromBase58(asset))
+	if err != nil {
+		return token.Mint{}, err
+	}
+
+	var mint token.Mint
+	// Account{}.Data.GetBinary() returns the *decoded* binary data
+	// regardless the original encoding (it can handle them all).
+	err = bin.NewBinDecoder(info.Value.Data.GetBinary()).Decode(&mint)
+	if err != nil {
+		return token.Mint{}, err
+	}
+
+	return mint, nil
+}
+
 // SetGatewayAddress sets the gateway address
 func (signer *Signer) SetGatewayAddress(address string) {
+	// noop
+	if address == "" || signer.gatewayID.String() == address {
+		return
+	}
+
 	// parse gateway ID and PDA
-	gatewayID, pda, err := contracts.ParseGatewayIDAndPda(address)
+	gatewayID, pda, err := contracts.ParseGatewayWithPDA(address)
 	if err != nil {
 		signer.Logger().Std.Error().Err(err).Msgf("cannot parse gateway address: %s", address)
 		return
 	}
 
-	// update gateway ID and PDA
-	signer.Lock()
-	defer signer.Unlock()
+	// noop
+	if signer.gatewayID.Equals(gatewayID) {
+		return
+	}
 
+	signer.Logger().Std.Info().
+		Str("signer.old_gateway_address", signer.gatewayID.String()).
+		Str("signer.new_gateway_address", gatewayID.String()).
+		Msg("Updated gateway address")
+
+	signer.Lock()
 	signer.gatewayID = gatewayID
 	signer.pda = pda
+	signer.Unlock()
 }
 
 // GetGatewayAddress returns the gateway address
 func (signer *Signer) GetGatewayAddress() string {
-	signer.Lock()
-	defer signer.Unlock()
 	return signer.gatewayID.String()
 }
 

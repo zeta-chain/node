@@ -85,6 +85,31 @@ func TestSigner(t *testing.T) {
 	require.Equal(t, liteapi.TransactionToHashString(withdrawalTX), tracker.hash)
 }
 
+func TestExitCodeRegex(t *testing.T) {
+	for _, tt := range []string{
+		`unable to send external message: error code: 0 message: 
+		cannot apply external message to current state : 
+		External message was not accepted\nCannot run message on account: inbound external message rejected by 
+		transaction CC8803E21EDA7E6487D191380725A82CD75316E1C131496E1A5636751CE60347:
+		\nexitcode=109, steps=108, gas_used=0\nVM Log (truncated):\n...INT 0\nexecute THROWIFNOT 
+		105\nexecute MYADDR\nexecute XCHG s1,s4\nexecute SDEQ\nexecute THROWIF 112\nexecute OVER\nexecute 
+		EQINT 0\nexecute THROWIF 106\nexecute GETGLOB
+		3\nexecute NEQ\nexecute THROWIF 109\ndefault exception handler, terminating vm with exit code 109\n`,
+
+		`unable to send external message: error code: 0 message: cannot apply external message to current state : 
+		External message was not accepted\nCannot run message on account: 
+		inbound external message rejected by transaction 
+		6CCBB83C7D9BFBFDB40541F35AD069714856F18B4850C1273A117DF6BFADE1C6:\nexitcode=109, steps=108, 
+		gas_used=0\nVM Log (truncated):\n...INT 0....`,
+	} {
+		require.True(t, exitCodeErrorRegex.MatchString(tt))
+
+		exitCode, ok := extractExitCode(tt)
+		require.True(t, ok)
+		require.Equal(t, uint32(109), exitCode)
+	}
+}
+
 type testSuite struct {
 	ctx context.Context
 	t   *testing.T
@@ -221,10 +246,7 @@ func setupTrackersBag(ts *testSuite) {
 	}
 
 	ts.zetacore.On(
-		"AddOutboundTracker",
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
+		"PostOutboundTracker",
 		mock.Anything,
 		mock.Anything,
 		mock.Anything,

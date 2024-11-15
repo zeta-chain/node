@@ -19,6 +19,10 @@ on:
         required: true
         type: string
         default: 'ubuntu-20.04'
+      zetanode-image:
+        description: 'docker image to use for zetanode'
+        required: true
+        type: string
       enable-monitoring:
         description: 'Enable the monitoring stack for this run'
         type: boolean
@@ -31,16 +35,14 @@ jobs:
     timeout-minutes: ${{ inputs.timeout-minutes }}
     strategy:
       fail-fast: false
+    env:
+      ZETANODE_IMAGE: ${{ inputs.zetanode-image }}
     steps:
       - uses: actions/checkout@v4
-      
-      # configure docker to use the containerd snapshotter
-      # so that we can use the buildkit cache
-      - uses: depot/use-containerd-snapshotter-action@v1
 
       - name: Login to Docker Hub registry
         uses: docker/login-action@v3
-        if: (github.event_name == 'push' && github.repository == 'zeta-chain/node') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'zeta-chain/node')
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'zeta-chain/node'
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_READ_ONLY }}
@@ -51,50 +53,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Restore go cache
-        uses: actions/cache@v4
-        id: restore-go-cache
-        with:
-          path: |
-            go-cache
-          key: cache-${{ hashFiles('go.sum') }}
-
-      - name: Inject go cache into docker
-        uses: reproducible-containers/buildkit-cache-dance@v3.1.2
-        with:
-          cache-map: |
-            {
-              "go-cache": "/root/.cache/go-build"
-            }
-          skip-extraction: ${{ steps.restore-go-cache.outputs.cache-hit || github.event_name != 'push' }}
-
-      # this ensures that the version is consistent between cache build and make build
-      - name: Set version for cache
-        run: |
-          NODE_VERSION=$(./version.sh)
-          echo "NODE_VERSION=$NODE_VERSION" >> $GITHUB_ENV
-          NODE_COMMIT=$(git log -1 --format='%H')
-          echo "NODE_COMMIT=$NODE_COMMIT" >> $GITHUB_ENV
-
-      # build zetanode with cache options
-      - name: Build zetanode for cache
-        uses: docker/build-push-action@v6
-        env:
-          CACHE_FROM_CONFIG: "type=registry,ref=ghcr.io/${{ github.repository }}:buildcache"
-          CACHE_TO_CONFIG: "type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max"
-        with:
-          context: .
-          file: ./Dockerfile-localnet
-          push: false
-          tags: zetanode:latest
-          cache-from: ${{ env.CACHE_FROM_CONFIG }}
-          cache-to: ${{ github.event_name == 'push' && env.CACHE_TO_CONFIG || '' }}
-          target: latest-runtime
-          build-args: |
-            NODE_VERSION=${{ env.NODE_VERSION }}
-            NODE_COMMIT=${{ env.NODE_COMMIT }}
-
+      
       - name: Enable monitoring
         if: inputs.enable-monitoring
         run: |

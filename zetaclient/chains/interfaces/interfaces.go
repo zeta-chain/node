@@ -11,6 +11,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -21,9 +22,7 @@ import (
 	"gitlab.com/thorchain/tss/go-tss/blame"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/proofs"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
@@ -75,15 +74,7 @@ type ChainSigner interface {
 	GetGatewayAddress() string
 }
 
-// ZetacoreVoter represents voter interface.
 type ZetacoreVoter interface {
-	PostVoteBlockHeader(
-		ctx context.Context,
-		chainID int64,
-		txhash []byte,
-		height int64,
-		header proofs.HeaderData,
-	) (string, error)
 	PostVoteGasPrice(
 		ctx context.Context,
 		chain chains.Chain,
@@ -112,12 +103,15 @@ type ZetacoreClient interface {
 	GetLogger() *zerolog.Logger
 	GetKeys() keyinterfaces.ObserverKeys
 
+	GetSupportedChains(ctx context.Context) ([]chains.Chain, error)
+	GetAdditionalChains(ctx context.Context) ([]chains.Chain, error)
+	GetChainParams(ctx context.Context) ([]*observertypes.ChainParams, error)
+
 	GetKeyGen(ctx context.Context) (observertypes.Keygen, error)
 	GetTSS(ctx context.Context) (observertypes.TSS, error)
 	GetTSSHistory(ctx context.Context) ([]observertypes.TSS, error)
 
 	GetBlockHeight(ctx context.Context) (int64, error)
-	GetBlockHeaderChainState(ctx context.Context, chainID int64) (*lightclienttypes.ChainState, error)
 
 	ListPendingCCTX(ctx context.Context, chainID int64) ([]*crosschaintypes.CrossChainTx, uint64, error)
 	ListPendingCCTXWithinRateLimit(
@@ -141,19 +135,9 @@ type ZetacoreClient interface {
 	GetZetaHotKeyBalance(ctx context.Context) (sdkmath.Int, error)
 	GetInboundTrackersForChain(ctx context.Context, chainID int64) ([]crosschaintypes.InboundTracker, error)
 
-	// todo(revamp): refactor input to struct
-	AddOutboundTracker(
-		ctx context.Context,
-		chainID int64,
-		nonce uint64,
-		txHash string,
-		proof *proofs.Proof,
-		blockHash string,
-		txIndex int64,
-	) (string, error)
+	GetUpgradePlan(ctx context.Context) (*upgradetypes.Plan, error)
 
-	Stop()
-	OnBeforeStop(callback func())
+	PostOutboundTracker(ctx context.Context, chainID int64, nonce uint64, txHash string) (string, error)
 }
 
 // BTCRPCClient is the interface for BTC RPC client

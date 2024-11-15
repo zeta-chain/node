@@ -21,6 +21,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
@@ -413,13 +414,25 @@ func (signer *Signer) TryProcessOutbound(
 	gasprice.Add(gasprice, satPerByte)
 
 	// compliance check
-	cancelTx := compliance.IsCctxRestricted(cctx)
-	if cancelTx {
+	restrictedCCTX := compliance.IsCctxRestricted(cctx)
+	if restrictedCCTX {
 		compliance.PrintComplianceLog(logger, signer.Logger().Compliance,
 			true, chain.ChainId, cctx.Index, cctx.InboundParams.Sender, params.Receiver, "BTC")
-		amount = 0.0 // zero out the amount to cancel the tx
 	}
-	logger.Info().Msgf("SignGasWithdraw: to %s, value %d sats", to.EncodeAddress(), params.Amount.Uint64())
+
+	// check dust amount
+	dustAmount := params.Amount.Uint64() < constant.BTCWithdrawalDustAmount
+	if dustAmount {
+		logger.Warn().Msgf("dust amount %d sats, canceling tx", params.Amount.Uint64())
+	}
+
+	// set the amount to 0 when the tx should be cancelled
+	cancelTx := restrictedCCTX || dustAmount
+	if cancelTx {
+		amount = 0.0
+	} else {
+		logger.Info().Msgf("SignGasWithdraw: to %s, value %d sats", to.EncodeAddress(), params.Amount.Uint64())
+	}
 
 	// sign withdraw tx
 	tx, err := signer.SignWithdrawTx(
@@ -469,14 +482,11 @@ func (signer *Signer) TryProcessOutbound(
 			}
 			logger.Info().
 				Msgf("Broadcast success: nonce %d to chain %s outboundHash %s", outboundTssNonce, chain.String(), outboundHash)
-			zetaHash, err := zetacoreClient.AddOutboundTracker(
+			zetaHash, err := zetacoreClient.PostOutboundTracker(
 				ctx,
 				chain.ChainId,
 				outboundTssNonce,
 				outboundHash,
-				nil,
-				"",
-				-1,
 			)
 			if err != nil {
 				logger.Err(err).

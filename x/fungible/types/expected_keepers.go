@@ -33,6 +33,7 @@ type BankKeeper interface {
 		amt sdk.Coins,
 	) error
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+	GetSupply(ctx sdk.Context, denom string) sdk.Coin
 }
 
 type ObserverKeeper interface {
@@ -49,7 +50,7 @@ type EVMKeeper interface {
 	EstimateGas(c context.Context, req *evmtypes.EthCallRequest) (*evmtypes.EstimateGasResponse, error)
 	ApplyMessage(
 		ctx sdk.Context,
-		msg core.Message,
+		msg *core.Message,
 		tracer vm.EVMLogger,
 		commit bool,
 	) (*evmtypes.MsgEthereumTxResponse, error)

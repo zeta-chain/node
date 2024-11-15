@@ -1059,6 +1059,10 @@ func (app *App) BasicManager() module.BasicManager {
 	return app.mb
 }
 
+func (app *App) ModuleManager() *module.Manager {
+	return app.mm
+}
+
 func (app *App) BlockedAddrs() map[string]bool {
 	blockList := make(map[string]bool)
 

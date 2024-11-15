@@ -71,7 +71,7 @@ func Test_FilterInboundEvents(t *testing.T) {
 
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
-	chainParams.GatewayAddress = testutils.GatewayAddresses[chain.ChainId]
+	chainParams.GatewayAddress = testutils.OldSolanaGatewayAddressDevnet
 
 	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, 60, database, base.DefaultLogger(), nil)
 	require.NoError(t, err)
@@ -161,49 +161,5 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 
 		msg := ob.BuildInboundVoteMsgFromEvent(event)
 		require.Nil(t, msg)
-	})
-}
-
-func Test_ParseInboundAsDeposit(t *testing.T) {
-	// load archived inbound deposit tx result
-	// https://explorer.solana.com/tx/MS3MPLN7hkbyCZFwKqXcg8fmEvQMD74fN6Ps2LSWXJoRxPW5ehaxBorK9q1JFVbqnAvu9jXm6ertj7kT7HpYw1j?cluster=devnet
-	txHash := "MS3MPLN7hkbyCZFwKqXcg8fmEvQMD74fN6Ps2LSWXJoRxPW5ehaxBorK9q1JFVbqnAvu9jXm6ertj7kT7HpYw1j"
-	chain := chains.SolanaDevnet
-
-	txResult := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHash, false)
-	tx, err := txResult.Transaction.GetTransaction()
-	require.NoError(t, err)
-
-	database, err := db.NewFromSqliteInMemory(true)
-	require.NoError(t, err)
-
-	// create observer
-	chainParams := sample.ChainParams(chain.ChainId)
-	chainParams.GatewayAddress = testutils.GatewayAddresses[chain.ChainId]
-	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, 60, database, base.DefaultLogger(), nil)
-	require.NoError(t, err)
-
-	// expected result
-	sender := "AS48jKNQsDGkEdDvfwu1QpqjtqbCadrAq9nGXjFmdX3Z"
-	eventExpected := &clienttypes.InboundEvent{
-		SenderChainID: chain.ChainId,
-		Sender:        sender,
-		Receiver:      sender,
-		TxOrigin:      sender,
-		Amount:        100000,
-		Memo:          []byte("0x7F8ae2ABb69A558CE6bAd546f25F0464D9e09e5B4955a3F38ff86ae92A914445099caa8eA2B9bA32"),
-		BlockNumber:   txResult.Slot,
-		TxHash:        txHash,
-		Index:         0, // not a EVM smart contract call
-		CoinType:      coin.CoinType_Gas,
-		Asset:         "", // no asset for gas token SOL
-	}
-
-	t.Run("should parse inbound event deposit SOL", func(t *testing.T) {
-		event, err := ob.ParseInboundAsDeposit(tx, 0, txResult.Slot)
-		require.NoError(t, err)
-
-		// check result
-		require.EqualValues(t, eventExpected, event)
 	})
 }

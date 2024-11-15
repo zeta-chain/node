@@ -1,4 +1,6 @@
 // Package tss provides the TSS signer functionalities for the zetaclient to sign transactions on external chains
+// TODO revamp the whole package
+// https://github.com/zeta-chain/node/issues/3119
 package tss
 
 import (
@@ -85,8 +87,8 @@ type TSS struct {
 	KeysignsTracker *ConcurrentKeysignsTracker
 }
 
-// NewTSS creates a new TSS instance which can be used to sign transactions
-func NewTSS(
+// New TSS constructor
+func New(
 	ctx context.Context,
 	client interfaces.ZetacoreClient,
 	tssHistoricalList []observertypes.TSS,
@@ -174,7 +176,6 @@ func SetupTSSServer(
 		bootstrapPeers,
 		6668,
 		privkey,
-		"MetaMetaOpenTheDoor",
 		tsspath,
 		thorcommon.TssConfig{
 			EnableMonitor:   enableMonitor,
@@ -276,32 +277,30 @@ func (tss *TSS) Sign(
 	log.Info().Msgf("signature of digest is... %v", signature)
 
 	if len(signature) == 0 {
-		log.Warn().Err(err).Msgf("signature has length 0")
-		return [65]byte{}, fmt.Errorf("keysign fail: %s", err)
+		return [65]byte{}, fmt.Errorf("keysign fail: signature list is empty")
 	}
 
 	if !verifySignature(tssPubkey, signature, H) {
-		log.Error().Err(err).Msgf("signature verification failure")
-		return [65]byte{}, fmt.Errorf("signuature verification fail")
+		return [65]byte{}, fmt.Errorf("signuature verification failue")
 	}
 
 	var sigbyte [65]byte
 	_, err = base64.StdEncoding.Decode(sigbyte[:32], []byte(signature[0].R))
 	if err != nil {
 		log.Error().Err(err).Msg("decoding signature R")
-		return [65]byte{}, fmt.Errorf("signuature verification fail")
+		return [65]byte{}, fmt.Errorf("signuature verification failure (R) %w", err)
 	}
 
 	_, err = base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature[0].S))
 	if err != nil {
 		log.Error().Err(err).Msg("decoding signature S")
-		return [65]byte{}, fmt.Errorf("signuature verification fail")
+		return [65]byte{}, fmt.Errorf("signuature verification failue (S): %w", err)
 	}
 
 	_, err = base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature[0].RecoveryID))
 	if err != nil {
 		log.Error().Err(err).Msg("decoding signature RecoveryID")
-		return [65]byte{}, fmt.Errorf("signuature verification fail")
+		return [65]byte{}, fmt.Errorf("signuature verification failue (V) %w", err)
 	}
 
 	return sigbyte, nil

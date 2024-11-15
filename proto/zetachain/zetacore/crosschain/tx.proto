@@ -65,12 +65,13 @@ message MsgAddInboundTracker {
   int64 chain_id = 2;
   string tx_hash = 3;
   pkg.coin.CoinType coin_type = 4;
-  pkg.proofs.Proof proof = 5;
-  string block_hash = 6;
-  int64 tx_index = 7;
+
+  // used to be block header profs properties
+  reserved 5, 6, 7;
 }
 message MsgAddInboundTrackerResponse {}
 
+// TODO: https://github.com/zeta-chain/node/issues/3083
 message MsgWhitelistERC20 {
   string creator = 1;
   string erc20_address = 2;
@@ -91,9 +92,9 @@ message MsgAddOutboundTracker {
   int64 chain_id = 2;
   uint64 nonce = 3;
   string tx_hash = 4;
-  pkg.proofs.Proof proof = 5;
-  string block_hash = 6;
-  int64 tx_index = 7;
+
+  // used to be block header profs properties
+  reserved 5, 6, 7;
 }
 
 message MsgAddOutboundTrackerResponse {

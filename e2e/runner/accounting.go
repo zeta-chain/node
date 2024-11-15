@@ -33,15 +33,20 @@ type Response struct {
 	Amount Amount `json:"amount"`
 }
 
-func (r *E2ERunner) CheckZRC20ReserveAndSupply() error {
-	r.Logger.Info("Checking ZRC20 Reserve and Supply")
-	if err := r.checkEthTSSBalance(); err != nil {
-		return err
-	}
-	if err := r.checkERC20TSSBalance(); err != nil {
-		return err
-	}
-	return r.checkZetaTSSBalance()
+func (r *E2ERunner) CheckZRC20BalanceAndSupply() {
+	r.Logger.Info("Checking ZRC20 Balance vs. Supply")
+
+	err := r.checkEthTSSBalance()
+	require.NoError(r, err, "ETH balance check failed")
+
+	err = r.checkERC20TSSBalance()
+	require.NoError(r, err, "ERC20 balance check failed")
+
+	err = r.checkZetaTSSBalance()
+	require.NoError(r, err, "ZETA balance check failed")
+
+	err = r.CheckBtcTSSBalance()
+	require.NoError(r, err, "BTC balance check failed")
 }
 
 func (r *E2ERunner) checkEthTSSBalance() error {
@@ -122,7 +127,7 @@ func (r *E2ERunner) CheckBtcTSSBalance() error {
 		)
 	}
 	// #nosec G115 test - always in range
-	r.Logger.Print(
+	r.Logger.Info(
 		"BTC: Balance (%d) >= ZRC20 TotalSupply (%d)",
 		int64(tssTotalBalance*1e8),
 		zrc20Supply.Int64()-10000000,

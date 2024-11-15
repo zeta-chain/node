@@ -4,51 +4,54 @@ package solana
 import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/pkg/errors"
+	idlgateway "github.com/zeta-chain/protocol-contracts-solana/go-idl/generated"
 )
 
 const (
-	// SolanaGatewayProgramID is the program ID of the Solana gateway program
-	SolanaGatewayProgramID = "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
-
 	// PDASeed is the seed for the Solana gateway program derived address
 	PDASeed = "meta"
 
+	// RentPayerPDASeed is the seed for the Solana gateway program derived address
+	RentPayerPDASeed = "rent-payer"
+
 	// AccountsNumberOfDeposit is the number of accounts required for Solana gateway deposit instruction
 	// [signer, pda, system_program]
-	AccountsNumDeposit = 3
+	accountsNumDeposit = 3
+
+	// AccountsNumberOfDeposit is the number of accounts required for Solana gateway deposit spl instruction
+	// [signer, pda, whitelist_entry, mint_account, token_program, from, to]
+	accountsNumberDepositSPL = 7
 )
 
-// DiscriminatorInitialize returns the discriminator for Solana gateway 'initialize' instruction
-func DiscriminatorInitialize() [8]byte {
-	return [8]byte{175, 175, 109, 31, 13, 152, 155, 237}
-}
+var (
+	// DiscriminatorInitialize returns the discriminator for Solana gateway 'initialize' instruction
+	DiscriminatorInitialize = idlgateway.IDLGateway.GetDiscriminator("initialize")
 
-// DiscriminatorDeposit returns the discriminator for Solana gateway 'deposit' instruction
-func DiscriminatorDeposit() [8]byte {
-	return [8]byte{242, 35, 198, 137, 82, 225, 242, 182}
-}
+	// DiscriminatorInitializeRentPayer returns the discriminator for Solana gateway 'initialize_rent_payer' instruction
+	DiscriminatorInitializeRentPayer = idlgateway.IDLGateway.GetDiscriminator("initialize_rent_payer")
 
-// DiscriminatorDepositSPL returns the discriminator for Solana gateway 'deposit_spl_token' instruction
-func DiscriminatorDepositSPL() [8]byte {
-	return [8]byte{86, 172, 212, 121, 63, 233, 96, 144}
-}
+	// DiscriminatorDeposit returns the discriminator for Solana gateway 'deposit' instruction
+	DiscriminatorDeposit = idlgateway.IDLGateway.GetDiscriminator("deposit")
 
-// DiscriminatorWithdraw returns the discriminator for Solana gateway 'withdraw' instruction
-func DiscriminatorWithdraw() [8]byte {
-	return [8]byte{183, 18, 70, 156, 148, 109, 161, 34}
-}
+	// DiscriminatorDepositSPL returns the discriminator for Solana gateway 'deposit_spl_token' instruction
+	DiscriminatorDepositSPL = idlgateway.IDLGateway.GetDiscriminator("deposit_spl_token")
 
-// DiscriminatorWithdrawSPL returns the discriminator for Solana gateway 'withdraw_spl_token' instruction
-func DiscriminatorWithdrawSPL() [8]byte {
-	return [8]byte{156, 234, 11, 89, 235, 246, 32}
-}
+	// DiscriminatorWithdraw returns the discriminator for Solana gateway 'withdraw' instruction
+	DiscriminatorWithdraw = idlgateway.IDLGateway.GetDiscriminator("withdraw")
 
-// ParseGatewayAddressAndPda parses the gateway id and program derived address from the given string
-func ParseGatewayIDAndPda(address string) (solana.PublicKey, solana.PublicKey, error) {
+	// DiscriminatorWithdrawSPL returns the discriminator for Solana gateway 'withdraw_spl_token' instruction
+	DiscriminatorWithdrawSPL = idlgateway.IDLGateway.GetDiscriminator("withdraw_spl_token")
+
+	// DiscriminatorWhitelist returns the discriminator for Solana gateway 'whitelist_spl_mint' instruction
+	DiscriminatorWhitelistSplMint = idlgateway.IDLGateway.GetDiscriminator("whitelist_spl_mint")
+)
+
+// ParseGatewayWithPDA parses the gateway id and program derived address from the given string
+func ParseGatewayWithPDA(gatewayAddress string) (solana.PublicKey, solana.PublicKey, error) {
 	var gatewayID, pda solana.PublicKey
 
 	// decode gateway address
-	gatewayID, err := solana.PublicKeyFromBase58(address)
+	gatewayID, err := solana.PublicKeyFromBase58(gatewayAddress)
 	if err != nil {
 		return gatewayID, pda, errors.Wrap(err, "unable to decode address")
 	}
@@ -58,4 +61,13 @@ func ParseGatewayIDAndPda(address string) (solana.PublicKey, solana.PublicKey, e
 	pda, _, err = solana.FindProgramAddress([][]byte{seed}, gatewayID)
 
 	return gatewayID, pda, err
+}
+
+// ParseRentPayerPDA parses the rent payer program derived address from the given string
+func RentPayerPDA(gateway solana.PublicKey) (solana.PublicKey, error) {
+	var rentPayerPda solana.PublicKey
+	seed := []byte(RentPayerPDASeed)
+	rentPayerPda, _, err := solana.FindProgramAddress([][]byte{seed}, gateway)
+
+	return rentPayerPda, err
 }

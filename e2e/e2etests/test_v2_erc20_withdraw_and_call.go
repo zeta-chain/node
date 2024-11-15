@@ -12,20 +12,21 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-const payloadMessageWithdrawAuthenticatedCallERC20 = "this is a test ERC20 withdraw and authenticated call payload"
+func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, args []string) {
+	require.Len(r, args, 1)
 
-func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, _ []string) {
 	previousGasLimit := r.ZEVMAuth.GasLimit
 	r.ZEVMAuth.GasLimit = 10000000
 	defer func() {
 		r.ZEVMAuth.GasLimit = previousGasLimit
 	}()
 
-	// called with fixed amount without arg since onCall implementation is for TestDappV2 is simple and generic
-	// without decoding the payload and amount handling for erc20, purpose of test is to verify correct sender and payload are used
-	amount := big.NewInt(10000)
+	amount, ok := big.NewInt(0).SetString(args[0], 10)
+	require.True(r, ok, "Invalid amount specified for TestV2ERC20WithdrawAndCall")
 
-	r.AssertTestDAppEVMCalled(false, payloadMessageWithdrawAuthenticatedCallERC20, amount)
+	payload := randomPayload(r)
+
+	r.AssertTestDAppEVMCalled(false, payload, amount)
 
 	r.ApproveERC20ZRC20(r.GatewayZEVMAddr)
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
@@ -34,7 +35,7 @@ func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, _ []string) {
 	tx := r.V2ERC20WithdrawAndCall(
 		r.TestDAppV2EVMAddr,
 		amount,
-		[]byte(payloadMessageWithdrawAuthenticatedCallERC20),
+		[]byte(payload),
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 
@@ -43,12 +44,12 @@ func TestV2ERC20WithdrawAndCall(r *runner.E2ERunner, _ []string) {
 	r.Logger.CCTX(*cctx, "withdraw")
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
-	r.AssertTestDAppEVMCalled(true, payloadMessageWithdrawAuthenticatedCallERC20, big.NewInt(0))
+	r.AssertTestDAppEVMCalled(true, payload, big.NewInt(0))
 
 	// check expected sender was used
 	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(
 		&bind.CallOpts{},
-		[]byte(payloadMessageWithdrawAuthenticatedCallERC20),
+		[]byte(payload),
 	)
 	require.NoError(r, err)
 	require.Equal(r, r.ZEVMAuth.From, senderForMsg)

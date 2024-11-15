@@ -14,6 +14,7 @@ import (
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 	"google.golang.org/grpc/metadata"
 
+	ethmath "github.com/ethereum/go-ethereum/common/math"
 	"github.com/zeta-chain/node/rpc/backend/mocks"
 	rpc "github.com/zeta-chain/node/rpc/types"
 )
@@ -321,7 +322,7 @@ func (suite *BackendTestSuite) TestFeeHistory() {
 	testCases := []struct {
 		name           string
 		registerMock   func(validator sdk.AccAddress)
-		userBlockCount ethrpc.DecimalOrHex
+		userBlockCount ethmath.HexOrDecimal64
 		latestBlock    ethrpc.BlockNumber
 		expFeeHistory  *rpc.FeeHistoryResult
 		validator      sdk.AccAddress

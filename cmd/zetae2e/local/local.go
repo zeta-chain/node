@@ -50,7 +50,7 @@ const (
 )
 
 var (
-	TestTimeout = 15 * time.Minute
+	TestTimeout = 20 * time.Minute
 )
 
 var noError = testutil.NoError
@@ -186,8 +186,18 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	)
 	noError(err)
 
+	// monitor block production to ensure we fail fast if there are consensus failures
+	// this is not run in an errgroup since only returning an error will not exit immedately
+	// this needs to be early to quickly detect consensus failure during genesis
+	go monitorBlockProductionExit(ctx, conf)
+
 	// set the authority client to the zeta tx server to be able to query message permissions
 	deployerRunner.ZetaTxServer.SetAuthorityClient(deployerRunner.AuthorityClient)
+
+	// run setup steps that do not require tss
+	if !skipSetup {
+		noError(deployerRunner.FundEmissionsPool())
+	}
 
 	// wait for keygen to be completed
 	// if setup is skipped, we assume that the keygen is already completed
@@ -217,12 +227,27 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		deployerRunner.SetupEVMV2()
 
+		if testSolana {
+			deployerRunner.SetupSolana(
+				conf.Contracts.Solana.GatewayProgramID.String(),
+				conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String(),
+			)
+		}
+
 		deployerRunner.SetZEVMSystemContracts()
 
 		// NOTE: v2 (gateway) setup called here because system contract needs to be set first, then gateway, then zrc20
 		deployerRunner.SetZEVMContractsV2()
 
-		deployerRunner.SetZEVMZRC20s()
+		zrc20Deployment := txserver.ZRC20Deployment{
+			ERC20Addr: deployerRunner.ERC20Addr,
+			SPLAddr:   nil,
+		}
+		if testSolana {
+			zrc20Deployment.SPLAddr = deployerRunner.SPLAddr.ToPointer()
+		}
+
+		deployerRunner.SetZEVMZRC20s(zrc20Deployment)
 
 		// Update the chain params to use v2 contract for ERC20Custody
 		// TODO: this function should be removed and the chain params should be directly set to use v2 contract
@@ -301,26 +326,31 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestMessagePassingEVMtoZEVMRevertFailName,
 		}
 
-		bitcoinTests := []string{
+		// btc withdraw tests are those that need a Bitcoin node wallet to send UTXOs
+		bitcoinDepositTests := []string{
 			e2etests.TestBitcoinDonationName,
 			e2etests.TestBitcoinDepositName,
 			e2etests.TestBitcoinDepositAndCallName,
 			e2etests.TestBitcoinDepositAndCallRevertName,
+			e2etests.TestBitcoinDepositAndCallRevertWithDustName,
 			e2etests.TestBitcoinStdMemoDepositName,
 			e2etests.TestBitcoinStdMemoDepositAndCallName,
 			e2etests.TestBitcoinStdMemoDepositAndCallRevertName,
 			e2etests.TestBitcoinStdMemoDepositAndCallRevertOtherAddressName,
+			e2etests.TestBitcoinStdMemoInscribedDepositAndCallName,
+			e2etests.TestCrosschainSwapName,
+		}
+		bitcoinWithdrawTests := []string{
 			e2etests.TestBitcoinWithdrawSegWitName,
 			e2etests.TestBitcoinWithdrawInvalidAddressName,
 			e2etests.TestZetaWithdrawBTCRevertName,
-			e2etests.TestCrosschainSwapName,
 		}
-		bitcoinAdvancedTests := []string{
+		bitcoinWithdrawTestsAdvanced := []string{
 			e2etests.TestBitcoinWithdrawTaprootName,
 			e2etests.TestBitcoinWithdrawLegacyName,
-			e2etests.TestBitcoinWithdrawMultipleName,
 			e2etests.TestBitcoinWithdrawP2SHName,
 			e2etests.TestBitcoinWithdrawP2WSHName,
+			e2etests.TestBitcoinWithdrawMultipleName,
 			e2etests.TestBitcoinWithdrawRestrictedName,
 		}
 		ethereumTests := []string{
@@ -354,16 +384,30 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			erc20Tests = append(erc20Tests, erc20AdvancedTests...)
 			zetaTests = append(zetaTests, zetaAdvancedTests...)
 			zevmMPTests = append(zevmMPTests, zevmMPAdvancedTests...)
-			bitcoinTests = append(bitcoinTests, bitcoinAdvancedTests...)
+			bitcoinWithdrawTests = append(bitcoinWithdrawTests, bitcoinWithdrawTestsAdvanced...)
 			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
 		}
 
 		eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose, precompiledContractTests...))
-		// eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
-		// eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
-		// eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
-		// eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, bitcoinTests...))
-		// eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, ethereumTests...))
+		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
+		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
+		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
+		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, bitcoinTests...))
+		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, ethereumTests...))
+		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
+		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
+		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
+		runnerDeposit, runnerWithdraw := initBitcoinTestRunners(
+			conf,
+			deployerRunner,
+			verbose,
+			!skipBitcoinSetup,
+			bitcoinDepositTests,
+			bitcoinWithdrawTests,
+		)
+		eg.Go(runnerDeposit)
+		eg.Go(runnerWithdraw)
+		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, ethereumTests...))
 	}
 
 	if testAdmin {
@@ -406,9 +450,17 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSolanaDepositName,
 			e2etests.TestSolanaWithdrawName,
 			e2etests.TestSolanaDepositAndCallName,
-			e2etests.TestSolanaDepositAndCallRefundName,
+			e2etests.TestSolanaDepositAndCallRevertName,
+			e2etests.TestSolanaDepositAndCallRevertWithDustName,
 			e2etests.TestSolanaDepositRestrictedName,
 			e2etests.TestSolanaWithdrawRestrictedName,
+			// TODO move under admin tests
+			// https://github.com/zeta-chain/node/issues/3085
+			e2etests.TestSPLDepositName,
+			e2etests.TestSPLDepositAndCallName,
+			e2etests.TestSPLWithdrawName,
+			e2etests.TestSPLWithdrawAndCreateReceiverAtaName,
+			e2etests.TestSolanaWhitelistSPLName,
 		}
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
 	}
@@ -422,7 +474,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		tonTests := []string{
 			e2etests.TestTONDepositName,
 			e2etests.TestTONDepositAndCallName,
+			e2etests.TestTONDepositAndCallRefundName,
 			e2etests.TestTONWithdrawName,
+			e2etests.TestTONWithdrawConcurrentName,
 		}
 
 		eg.Go(tonTestRoutine(conf, deployerRunner, verbose, tonTests...))
@@ -450,7 +504,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	// if all tests pass, cancel txs priority monitoring and check if tx priority is not correct in some blocks
-	logger.Print("⏳ e2e tests passed,checking tx priority")
+	logger.Print("⏳ e2e tests passed, checking tx priority")
 	monitorPriorityCancel()
 	if err := <-txPriorityErrCh; err != nil && errors.Is(err, errWrongTxPriority) {
 		logger.Print("❌ %v", err)
@@ -463,10 +517,15 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testTSSMigration {
 		TSSMigration(deployerRunner, logger, verbose, conf)
 	}
+
 	// Verify that there are no trackers left over after tests complete
 	if !skipTrackerCheck {
 		deployerRunner.EnsureNoTrackers()
 	}
+
+	// Verify that the balance of restricted address is zero
+	deployerRunner.EnsureZeroBalanceOnRestrictedAddressZEVM()
+
 	// print and validate report
 	networkReport, err := deployerRunner.GenerateNetworkReport()
 	if err != nil {

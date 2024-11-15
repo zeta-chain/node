@@ -216,7 +216,7 @@ func DecodeOpReturnMemo(scriptHex string) ([]byte, bool, error) {
 // OP_ENDIF
 // There are no content-type or any other attributes, it's just raw bytes.
 func DecodeScript(script []byte) ([]byte, bool, error) {
-	t := newScriptTokenizer(script)
+	t := txscript.MakeScriptTokenizer(0, script)
 
 	if err := checkInscriptionEnvelope(&t); err != nil {
 		return nil, false, errors.Wrap(err, "checkInscriptionEnvelope: unable to check the envelope")
@@ -306,7 +306,7 @@ func DecodeTSSVout(vout btcjson.Vout, receiverExpected string, chain chains.Chai
 	return receiverVout, amount, nil
 }
 
-func decodeInscriptionPayload(t *scriptTokenizer) ([]byte, error) {
+func decodeInscriptionPayload(t *txscript.ScriptTokenizer) ([]byte, error) {
 	if !t.Next() || t.Opcode() != txscript.OP_FALSE {
 		return nil, fmt.Errorf("OP_FALSE not found")
 	}
@@ -335,13 +335,13 @@ func decodeInscriptionPayload(t *scriptTokenizer) ([]byte, error) {
 
 // checkInscriptionEnvelope decodes the envelope for the script monitoring. The format is
 // OP_PUSHBYTES_32 <32 bytes> OP_CHECKSIG <Content>
-func checkInscriptionEnvelope(t *scriptTokenizer) error {
+func checkInscriptionEnvelope(t *txscript.ScriptTokenizer) error {
 	if !t.Next() || t.Opcode() != txscript.OP_DATA_32 {
-		return fmt.Errorf("cannot obtain public key bytes op %d or err %s", t.Opcode(), t.Err())
+		return fmt.Errorf("public key not found: %v", t.Err())
 	}
 
 	if !t.Next() || t.Opcode() != txscript.OP_CHECKSIG {
-		return fmt.Errorf("cannot parse OP_CHECKSIG, op %d or err %s", t.Opcode(), t.Err())
+		return fmt.Errorf("OP_CHECKSIG not found: %v", t.Err())
 	}
 
 	return nil

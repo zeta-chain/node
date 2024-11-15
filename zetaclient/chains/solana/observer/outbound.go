@@ -157,6 +157,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 
 	// the amount and status of the outbound
 	outboundAmount := new(big.Int).SetUint64(inst.TokenAmount())
+
 	// status was already verified as successful in CheckFinalizedTx
 	outboundStatus := chains.ReceiveStatus_success
 
@@ -295,6 +296,7 @@ func (ob *Observer) CheckFinalizedTx(
 		logger.Error().Err(err).Msg("ParseGatewayInstruction error")
 		return nil, false
 	}
+
 	txNonce := inst.GatewayNonce()
 
 	// recover ECDSA signer from instruction
@@ -352,6 +354,10 @@ func ParseGatewayInstruction(
 	switch coinType {
 	case coin.CoinType_Gas:
 		return contracts.ParseInstructionWithdraw(instruction)
+	case coin.CoinType_Cmd:
+		return contracts.ParseInstructionWhitelist(instruction)
+	case coin.CoinType_ERC20:
+		return contracts.ParseInstructionWithdrawSPL(instruction)
 	default:
 		return nil, fmt.Errorf("unsupported outbound coin type %s", coinType)
 	}

@@ -182,6 +182,7 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 			return cosmoserrors.Wrap(err, "AddRevertOutbound")
 		}
 
+		// pay revert outbound gas fee
 		err = k.PayGasAndUpdateCctx(
 			ctx,
 			cctx.InboundParams.SenderChainId,
@@ -192,6 +193,18 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 		if err != nil {
 			return err
 		}
+
+		// validate data of the revert outbound
+		err = k.validateZRC20Withdrawal(
+			ctx,
+			cctx.GetCurrentOutboundParam().ReceiverChainId,
+			cctx.GetCurrentOutboundParam().Amount.BigInt(),
+			[]byte(cctx.GetCurrentOutboundParam().Receiver),
+		)
+		if err != nil {
+			return err
+		}
+
 		err = k.SetObserverOutboundInfo(ctx, cctx.InboundParams.SenderChainId, cctx)
 		if err != nil {
 			return err
@@ -307,26 +320,25 @@ func (k Keeper) processFailedZETAOutboundOnZEVM(ctx sdk.Context, cctx *types.Cro
 
 // processFailedOutboundV2 processes a failed outbound transaction for protocol version 2
 // for revert, in V2 we have some assumption simplifying the logic
-// - sender chain is always ZetaChain
+// - sender chain is ZetaChain for regular outbound (not revert outbound)
 // - all coin type use the same workflow
 // TODO: consolidate logic with above function
 // https://github.com/zeta-chain/node/issues/2627
 func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainTx) error {
-	// check the sender is ZetaChain
-	zetaChain, err := chains.ZetaChainFromCosmosChainID(ctx.ChainID())
-	if err != nil {
-		return errors.Wrap(err, "failed to get ZetaChain chainID")
-	}
-	if cctx.InboundParams.SenderChainId != zetaChain.ChainId {
-		return fmt.Errorf(
-			"sender chain for withdraw cctx is not ZetaChain expected %d got %d",
-			zetaChain.ChainId,
-			cctx.InboundParams.SenderChainId,
-		)
-	}
-
 	switch cctx.CctxStatus.Status {
 	case types.CctxStatus_PendingOutbound:
+		// check the sender is ZetaChain
+		zetaChain, err := chains.ZetaChainFromCosmosChainID(ctx.ChainID())
+		if err != nil {
+			return errors.Wrap(err, "failed to get ZetaChain chainID")
+		}
+		if cctx.InboundParams.SenderChainId != zetaChain.ChainId {
+			return fmt.Errorf(
+				"sender chain for withdraw cctx is not ZetaChain expected %d got %d",
+				zetaChain.ChainId,
+				cctx.InboundParams.SenderChainId,
+			)
+		}
 
 		//  get the chain ID of the connected chain
 		chainID := cctx.GetCurrentOutboundParam().ReceiverChainId

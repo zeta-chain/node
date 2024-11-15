@@ -98,8 +98,11 @@ fund_eth_from_config '.additional_accounts.user_zeta_test.evm_address' 10000 "ze
 # unlock zevm message passing tester accounts
 fund_eth_from_config '.additional_accounts.user_zevm_mp_test.evm_address' 10000 "zevm mp tester"
 
-# unlock bitcoin tester accounts
-fund_eth_from_config '.additional_accounts.user_bitcoin.evm_address' 10000 "bitcoin tester"
+# unlock bitcoin deposit tester accounts
+fund_eth_from_config '.additional_accounts.user_bitcoin_deposit.evm_address' 10000 "bitcoin deposit tester"
+
+# unlock bitcoin withdraw tester accounts
+fund_eth_from_config '.additional_accounts.user_bitcoin_withdraw.evm_address' 10000 "bitcoin withdraw tester"
 
 # unlock solana tester accounts
 fund_eth_from_config '.additional_accounts.user_solana.evm_address' 10000 "solana tester"

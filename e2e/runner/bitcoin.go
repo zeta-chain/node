@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"net/http"
 	"sort"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 
@@ -107,7 +107,7 @@ func (r *E2ERunner) DepositBTCWithAmount(amount float64, memo *memo.InboundMemo)
 	if memo != nil {
 		txHash, err = r.DepositBTCWithStandardMemo(amount, utxos, memo)
 	} else {
-		txHash, err = r.DepositBTCWithLegacyMemo(amount, utxos)
+		txHash, err = r.DepositBTCWithLegacyMemo(amount, utxos, r.EVMAddress())
 	}
 	require.NoError(r, err)
 
@@ -116,8 +116,9 @@ func (r *E2ERunner) DepositBTCWithAmount(amount float64, memo *memo.InboundMemo)
 	return txHash
 }
 
-// DepositBTC deposits BTC on ZetaChain
-func (r *E2ERunner) DepositBTC() {
+// DepositBTC deposits BTC from the Bitcoin node wallet into ZetaChain.
+// Note: This function only works for node wallet based deployer account.
+func (r *E2ERunner) DepositBTC(receiver common.Address) {
 	r.Logger.Print("⏳ depositing BTC into ZEVM")
 	startTime := time.Now()
 	defer func() {
@@ -131,6 +132,7 @@ func (r *E2ERunner) DepositBTC() {
 	spendableAmount := 0.0
 	spendableUTXOs := 0
 	for _, utxo := range utxos {
+		// 'Spendable' indicates whether we have the private keys to spend this output
 		if utxo.Spendable {
 			spendableAmount += utxo.Amount
 			spendableUTXOs++
@@ -143,27 +145,24 @@ func (r *E2ERunner) DepositBTC() {
 	r.Logger.Info("ListUnspent:")
 	r.Logger.Info("  spendableAmount: %f", spendableAmount)
 	r.Logger.Info("  spendableUTXOs: %d", spendableUTXOs)
-	r.Logger.Info("Now sending two txs to TSS address...")
+	r.Logger.Info("Now sending two txs to TSS address and tester ZEVM address...")
 
-	// send two transactions to the TSS address
-	amount1 := 1.1 + zetabitcoin.DefaultDepositorFee
-	_, err = r.DepositBTCWithLegacyMemo(amount1, utxos[:2])
-	require.NoError(r, err)
-
-	amount2 := 0.05 + zetabitcoin.DefaultDepositorFee
-	txHash2, err := r.DepositBTCWithLegacyMemo(amount2, utxos[2:4])
+	// send initial BTC to the tester ZEVM address
+	amount := 1.15 + zetabitcoin.DefaultDepositorFee
+	txHash, err := r.DepositBTCWithLegacyMemo(amount, utxos[:2], receiver)
 	require.NoError(r, err)
 
 	// send a donation to the TSS address to compensate for the funds minted automatically during pool creation
 	// and prevent accounting errors
-	_, err = r.SendToTSSFromDeployerWithMemo(0.11, utxos[4:5], []byte(constant.DonationMessage))
+	// it also serves as gas fee for the TSS to send BTC to other addresses
+	_, err = r.SendToTSSFromDeployerWithMemo(0.11, utxos[2:4], []byte(constant.DonationMessage))
 	require.NoError(r, err)
 
 	r.Logger.Info("testing if the deposit into BTC ZRC20 is successful...")
 
 	cctx := utils.WaitCctxMinedByInboundHash(
 		r.Ctx,
-		txHash2.String(),
+		txHash.String(),
 		r.CctxClient,
 		r.Logger,
 		r.CctxTimeout,
@@ -181,11 +180,12 @@ func (r *E2ERunner) DepositBTC() {
 func (r *E2ERunner) DepositBTCWithLegacyMemo(
 	amount float64,
 	inputUTXOs []btcjson.ListUnspentResult,
+	receiver common.Address,
 ) (*chainhash.Hash, error) {
 	r.Logger.Info("⏳ depositing BTC into ZEVM with legacy memo")
 
 	// payload is not needed for pure deposit
-	memoBytes := r.EVMAddress().Bytes()
+	memoBytes := receiver.Bytes()
 
 	return r.SendToTSSFromDeployerWithMemo(amount, inputUTXOs, memoBytes)
 }
@@ -331,44 +331,47 @@ func (r *E2ERunner) sendToAddrFromDeployerWithMemo(
 // InscribeToTSSFromDeployerWithMemo creates an inscription that is sent to the tss address with the corresponding memo
 func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 	amount float64,
-	inputUTXOs []btcjson.ListUnspentResult,
 	memo []byte,
-) *chainhash.Hash {
-	// TODO: replace builder with Go function to enable instructions
-	// https://github.com/zeta-chain/node/issues/2759
-	builder := InscriptionBuilder{sidecarURL: "http://bitcoin-node-sidecar:8000", client: http.Client{}}
-
-	address, err := builder.GenerateCommitAddress(memo)
-	require.NoError(r, err)
-	r.Logger.Info("received inscription commit address %s", address)
-
-	receiver, err := chains.DecodeBtcAddress(address, r.GetBitcoinChainID())
+	feeRate int64,
+) (*chainhash.Hash, int64) {
+	// list deployer utxos
+	utxos, err := r.ListDeployerUTXOs()
 	require.NoError(r, err)
 
-	txnHash, err := r.sendToAddrFromDeployerWithMemo(amount, receiver, inputUTXOs, []byte(constant.DonationMessage))
+	// generate commit address
+	builder := NewTapscriptSpender(r.BitcoinParams)
+	receiver, err := builder.GenerateCommitAddress(memo)
 	require.NoError(r, err)
-	r.Logger.Info("obtained inscription commit txn hash %s", txnHash.String())
+	r.Logger.Info("received inscription commit address: %s", receiver)
 
-	// sendToAddrFromDeployerWithMemo makes sure index is 0
-	outpointIdx := 0
-	hexTx, err := builder.GenerateRevealTxn(r.BTCTSSAddress.String(), txnHash.String(), outpointIdx, amount)
+	// send funds to the commit address
+	commitTxHash, err := r.sendToAddrFromDeployerWithMemo(amount, receiver, utxos, nil)
+	require.NoError(r, err)
+	r.Logger.Info("obtained inscription commit txn hash: %s", commitTxHash.String())
+
+	// parameters to build the reveal transaction
+	commitOutputIdx := uint32(0)
+	commitAmount, err := zetabitcoin.GetSatoshis(amount)
 	require.NoError(r, err)
 
-	// Decode the hex string into raw bytes
-	rawTxBytes, err := hex.DecodeString(hexTx)
+	// build the reveal transaction to spend above funds
+	revealTx, err := builder.BuildRevealTxn(
+		r.BTCTSSAddress,
+		wire.OutPoint{
+			Hash:  *commitTxHash,
+			Index: commitOutputIdx,
+		},
+		commitAmount,
+		feeRate,
+	)
 	require.NoError(r, err)
 
-	// Deserialize the raw bytes into a wire.MsgTx structure
-	msgTx := wire.NewMsgTx(wire.TxVersion)
-	err = msgTx.Deserialize(bytes.NewReader(rawTxBytes))
+	// submit the reveal transaction
+	txid, err := r.BtcRPCClient.SendRawTransaction(revealTx, true)
 	require.NoError(r, err)
-	r.Logger.Info("recovered inscription reveal txn %s", hexTx)
+	r.Logger.Info("reveal txid: %s", txid.String())
 
-	txid, err := r.BtcRPCClient.SendRawTransaction(msgTx, true)
-	require.NoError(r, err)
-	r.Logger.Info("txid: %+v", txid)
-
-	return txid
+	return txid, revealTx.TxOut[0].Value
 }
 
 // GetBitcoinChainID gets the bitcoin chain ID from the network params
@@ -429,7 +432,7 @@ func (r *E2ERunner) MineBlocksIfLocalBitcoin() func() {
 				_, err := r.GenerateToAddressIfLocalBitcoin(1, r.BTCDeployerAddress)
 				require.NoError(r, err)
 
-				time.Sleep(3 * time.Second)
+				time.Sleep(6 * time.Second)
 			}
 		}
 	}()

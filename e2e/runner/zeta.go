@@ -99,11 +99,15 @@ func (r *E2ERunner) WaitForMinedCCTX(txHash ethcommon.Hash) {
 
 // WaitForMinedCCTXFromIndex waits for a cctx to be mined from its index
 func (r *E2ERunner) WaitForMinedCCTXFromIndex(index string) *types.CrossChainTx {
+	return r.waitForMinedCCTXFromIndex(index, types.CctxStatus_OutboundMined)
+}
+
+func (r *E2ERunner) waitForMinedCCTXFromIndex(index string, status types.CctxStatus) *types.CrossChainTx {
 	r.Lock()
 	defer r.Unlock()
 
 	cctx := utils.WaitCCTXMinedByIndex(r.Ctx, index, r.CctxClient, r.Logger, r.CctxTimeout)
-	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_OutboundMined)
+	utils.RequireCCTXStatus(r, cctx, status)
 
 	return cctx
 }
@@ -111,6 +115,7 @@ func (r *E2ERunner) WaitForMinedCCTXFromIndex(index string) *types.CrossChainTx 
 // WaitForSpecificCCTX scans for cctx by filters and ensures it's mined
 func (r *E2ERunner) WaitForSpecificCCTX(
 	filter func(*types.CrossChainTx) bool,
+	status types.CctxStatus,
 	timeout time.Duration,
 ) *types.CrossChainTx {
 	var (
@@ -128,7 +133,7 @@ func (r *E2ERunner) WaitForSpecificCCTX(
 		for i := range res.CrossChainTx {
 			tx := res.CrossChainTx[i]
 			if filter(tx) {
-				return r.WaitForMinedCCTXFromIndex(tx.Index)
+				return r.waitForMinedCCTXFromIndex(tx.Index, status)
 			}
 		}
 

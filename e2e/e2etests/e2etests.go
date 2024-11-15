@@ -55,19 +55,26 @@ const (
 	/*
 	 * Solana tests
 	 */
-	TestSolanaDepositName              = "solana_deposit"
-	TestSolanaWithdrawName             = "solana_withdraw"
-	TestSolanaDepositAndCallName       = "solana_deposit_and_call"
-	TestSolanaDepositAndCallRefundName = "solana_deposit_and_call_refund"
-	TestSolanaDepositRestrictedName    = "solana_deposit_restricted"
-	TestSolanaWithdrawRestrictedName   = "solana_withdraw_restricted"
+	TestSolanaDepositName                      = "solana_deposit"
+	TestSolanaWithdrawName                     = "solana_withdraw"
+	TestSolanaDepositAndCallName               = "solana_deposit_and_call"
+	TestSolanaDepositAndCallRevertName         = "solana_deposit_and_call_revert"
+	TestSolanaDepositAndCallRevertWithDustName = "solana_deposit_and_call_revert_with_dust"
+	TestSolanaDepositRestrictedName            = "solana_deposit_restricted"
+	TestSolanaWithdrawRestrictedName           = "solana_withdraw_restricted"
+	TestSPLDepositName                         = "spl_deposit"
+	TestSPLDepositAndCallName                  = "spl_deposit_and_call"
+	TestSPLWithdrawName                        = "spl_withdraw"
+	TestSPLWithdrawAndCreateReceiverAtaName    = "spl_withdraw_and_create_receiver_ata"
 
 	/**
 	 * TON tests
 	 */
-	TestTONDepositName        = "ton_deposit"
-	TestTONDepositAndCallName = "ton_deposit_and_call"
-	TestTONWithdrawName       = "ton_withdraw"
+	TestTONDepositName              = "ton_deposit"
+	TestTONDepositAndCallName       = "ton_deposit_and_call"
+	TestTONDepositAndCallRefundName = "ton_deposit_refund"
+	TestTONWithdrawName             = "ton_withdraw"
+	TestTONWithdrawConcurrentName   = "ton_withdraw_concurrent"
 
 	/*
 	 Bitcoin tests
@@ -76,11 +83,13 @@ const (
 	TestBitcoinDepositName                                 = "bitcoin_deposit"
 	TestBitcoinDepositAndCallName                          = "bitcoin_deposit_and_call"
 	TestBitcoinDepositAndCallRevertName                    = "bitcoin_deposit_and_call_revert"
+	TestBitcoinDepositAndCallRevertWithDustName            = "bitcoin_deposit_and_call_revert_with_dust"
 	TestBitcoinDonationName                                = "bitcoin_donation"
 	TestBitcoinStdMemoDepositName                          = "bitcoin_std_memo_deposit"
 	TestBitcoinStdMemoDepositAndCallName                   = "bitcoin_std_memo_deposit_and_call"
 	TestBitcoinStdMemoDepositAndCallRevertName             = "bitcoin_std_memo_deposit_and_call_revert"
 	TestBitcoinStdMemoDepositAndCallRevertOtherAddressName = "bitcoin_std_memo_deposit_and_call_revert_other_address"
+	TestBitcoinStdMemoInscribedDepositAndCallName          = "bitcoin_std_memo_inscribed_deposit_and_call"
 	TestBitcoinWithdrawSegWitName                          = "bitcoin_withdraw_segwit"
 	TestBitcoinWithdrawTaprootName                         = "bitcoin_withdraw_taproot"
 	TestBitcoinWithdrawMultipleName                        = "bitcoin_withdraw_multiple"
@@ -89,7 +98,6 @@ const (
 	TestBitcoinWithdrawP2SHName                            = "bitcoin_withdraw_p2sh"
 	TestBitcoinWithdrawInvalidAddressName                  = "bitcoin_withdraw_invalid"
 	TestBitcoinWithdrawRestrictedName                      = "bitcoin_withdraw_restricted"
-	TestExtractBitcoinInscriptionMemoName                  = "bitcoin_memo_from_inscription"
 
 	/*
 	 Application tests
@@ -130,6 +138,7 @@ const (
 	TestPauseERC20CustodyName         = "pause_erc20_custody"
 	TestMigrateERC20CustodyFundsName  = "migrate_erc20_custody_funds"
 	TestMigrateTSSName                = "migrate_TSS"
+	TestSolanaWhitelistSPLName        = "solana_whitelist_spl"
 
 	/*
 	 V2 smart contract tests
@@ -146,6 +155,7 @@ const (
 	TestV2ETHWithdrawAndCallThroughContractName  = "v2_eth_withdraw_and_call_through_contract"
 	TestV2ETHWithdrawAndCallRevertName           = "v2_eth_withdraw_and_call_revert"
 	TestV2ETHWithdrawAndCallRevertWithCallName   = "v2_eth_withdraw_and_call_revert_with_call"
+	TestDepositAndCallOutOfGasName               = "deposit_and_call_out_of_gas"
 	TestV2ERC20DepositName                       = "v2_erc20_deposit"
 	TestV2ERC20DepositAndCallName                = "v2_erc20_deposit_and_call"
 	TestV2ERC20DepositAndCallNoMessageName       = "v2_erc20_deposit_and_call_no_message"
@@ -428,12 +438,34 @@ var AllE2ETests = []runner.E2ETest{
 		TestSolanaDepositAndCall,
 	),
 	runner.NewE2ETest(
-		TestSolanaDepositAndCallRefundName,
-		"deposit SOL into ZEVM and call a contract that reverts; should refund",
+		TestSPLWithdrawName,
+		"withdraw SPL from ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in spl tokens", DefaultValue: "1000000"},
+		},
+		TestSPLWithdraw,
+	),
+	runner.NewE2ETest(
+		TestSPLWithdrawAndCreateReceiverAtaName,
+		"withdraw SPL from ZEVM and create receiver ata",
+		[]runner.ArgDefinition{
+			{Description: "amount in spl tokens", DefaultValue: "1000000"},
+		},
+		TestSPLWithdrawAndCreateReceiverAta,
+	),
+	runner.NewE2ETest(
+		TestSolanaDepositAndCallRevertName,
+		"deposit SOL into ZEVM and call a contract that reverts",
 		[]runner.ArgDefinition{
 			{Description: "amount in lamport", DefaultValue: "1200000"},
 		},
-		TestSolanaDepositAndCallRefund,
+		TestSolanaDepositAndCallRevert,
+	),
+	runner.NewE2ETest(
+		TestSolanaDepositAndCallRevertWithDustName,
+		"deposit SOL into ZEVM; revert with dust amount that aborts the CCTX",
+		[]runner.ArgDefinition{},
+		TestSolanaDepositAndCallRevertWithDust,
 	),
 	runner.NewE2ETest(
 		TestSolanaDepositRestrictedName,
@@ -452,6 +484,28 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSolanaWithdrawRestricted,
+	),
+	runner.NewE2ETest(
+		TestSolanaWhitelistSPLName,
+		"whitelist SPL",
+		[]runner.ArgDefinition{},
+		TestSolanaWhitelistSPL,
+	),
+	runner.NewE2ETest(
+		TestSPLDepositName,
+		"deposit SPL into ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount of spl tokens", DefaultValue: "12000000"},
+		},
+		TestSPLDeposit,
+	),
+	runner.NewE2ETest(
+		TestSPLDepositAndCallName,
+		"deposit SPL into ZEVM and call",
+		[]runner.ArgDefinition{
+			{Description: "amount of spl tokens", DefaultValue: "12000000"},
+		},
+		TestSPLDepositAndCall,
 	),
 	/*
 	 TON tests
@@ -473,12 +527,26 @@ var AllE2ETests = []runner.E2ETest{
 		TestTONDepositAndCall,
 	),
 	runner.NewE2ETest(
+		TestTONDepositAndCallRefundName,
+		"deposit TON into ZEVM and call a smart contract that reverts; expect refund",
+		[]runner.ArgDefinition{
+			{Description: "amount in nano tons", DefaultValue: "1000000000"}, // 1.0 TON
+		},
+		TestTONDepositAndCallRefund,
+	),
+	runner.NewE2ETest(
 		TestTONWithdrawName,
 		"withdraw TON from ZEVM",
 		[]runner.ArgDefinition{
 			{Description: "amount in nano tons", DefaultValue: "2000000000"}, // 2.0 TON
 		},
 		TestTONWithdraw,
+	),
+	runner.NewE2ETest(
+		TestTONWithdrawConcurrentName,
+		"withdraw TON from ZEVM for several recipients simultaneously",
+		[]runner.ArgDefinition{},
+		TestTONWithdrawConcurrent,
 	),
 	/*
 	 Bitcoin tests
@@ -489,13 +557,6 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
 		TestBitcoinDonation,
-	),
-	runner.NewE2ETest(
-		TestExtractBitcoinInscriptionMemoName,
-		"extract memo from BTC inscription", []runner.ArgDefinition{
-			{Description: "amount in btc", DefaultValue: "0.1"},
-		},
-		TestExtractBitcoinInscriptionMemo,
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositName,
@@ -519,6 +580,11 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
 		TestBitcoinDepositAndCallRevert,
+	),
+	runner.NewE2ETest(
+		TestBitcoinDepositAndCallRevertWithDustName,
+		"deposit Bitcoin into ZEVM; revert with dust amount that aborts the CCTX", []runner.ArgDefinition{},
+		TestBitcoinDepositAndCallRevertWithDust,
 	),
 	runner.NewE2ETest(
 		TestBitcoinStdMemoDepositName,
@@ -551,6 +617,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
 		TestBitcoinStdMemoDepositAndCallRevertOtherAddress,
+	),
+	runner.NewE2ETest(
+		TestBitcoinStdMemoInscribedDepositAndCallName,
+		"deposit Bitcoin into ZEVM and call a contract with inscribed standard memo",
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.1"},
+			{Description: "fee rate", DefaultValue: "10"},
+		},
+		TestBitcoinStdMemoInscribedDepositAndCall,
 	),
 	runner.NewE2ETest(
 		TestBitcoinWithdrawSegWitName,
@@ -872,6 +947,14 @@ var AllE2ETests = []runner.E2ETest{
 		TestV2ETHWithdrawAndCallRevertWithCall,
 	),
 	runner.NewE2ETest(
+		TestDepositAndCallOutOfGasName,
+		"deposit Ether into ZEVM and call a contract that runs out of gas",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000"},
+		},
+		TestDepositAndCallOutOfGas,
+	),
+	runner.NewE2ETest(
 		TestV2ERC20DepositName,
 		"deposit ERC20 into ZEVM using V2 contract",
 		[]runner.ArgDefinition{
@@ -930,13 +1013,17 @@ var AllE2ETests = []runner.E2ETest{
 	runner.NewE2ETest(
 		TestV2ERC20WithdrawAndCallName,
 		"withdraw ERC20 from ZEVM and authenticated call a contract using V2 contract",
-		[]runner.ArgDefinition{},
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "1000"},
+		},
 		TestV2ERC20WithdrawAndCall,
 	),
 	runner.NewE2ETest(
 		TestV2ERC20WithdrawAndCallNoMessageName,
 		"withdraw ERC20 from ZEVM and authenticated call a contract using V2 contract with no message",
-		[]runner.ArgDefinition{},
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "1000"},
+		},
 		TestV2ERC20WithdrawAndCallNoMessage,
 	),
 	runner.NewE2ETest(

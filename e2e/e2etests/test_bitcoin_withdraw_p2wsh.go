@@ -10,8 +10,6 @@ import (
 func TestBitcoinWithdrawP2WSH(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
-	r.SetBtcAddress(r.Name, false)
-
 	// parse arguments and withdraw BTC
 	defaultReceiver := "bcrt1qm9mzhyky4w853ft2ms6dtqdyyu3z2tmrq8jg8xglhyuv0dsxzmgs2f0sqy"
 	receiver, amount := parseBitcoinWithdrawArgs(r, args, defaultReceiver)
