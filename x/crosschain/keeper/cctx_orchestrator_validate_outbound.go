@@ -320,7 +320,7 @@ func (k Keeper) processFailedZETAOutboundOnZEVM(ctx sdk.Context, cctx *types.Cro
 
 // processFailedOutboundV2 processes a failed outbound transaction for protocol version 2
 // for revert, in V2 we have some assumption simplifying the logic
-// - sender chain is always ZetaChain
+// - sender chain is ZetaChain for regular outbound (not revert outbound)
 // - all coin type use the same workflow
 // TODO: consolidate logic with above function
 // https://github.com/zeta-chain/node/issues/2627
