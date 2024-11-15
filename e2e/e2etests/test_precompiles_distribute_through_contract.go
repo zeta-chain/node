@@ -15,7 +15,7 @@ import (
 	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 )
 
-func TestPrecompilesDistributeThroughContract(r *runner.E2ERunner, args []string) {
+func TestPrecompilesDistributeAndClaimThroughContract(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0, "No arguments expected")
 
 	var (
@@ -26,11 +26,14 @@ func TestPrecompilesDistributeThroughContract(r *runner.E2ERunner, args []string
 		zrc20Address = r.ERC20ZRC20Addr
 		zrc20Denom   = precompiletypes.ZRC20ToCosmosDenom(zrc20Address)
 
-		oneThousand    = big.NewInt(1e3)
-		oneThousandOne = big.NewInt(1001)
-		fiveHundred    = big.NewInt(500)
-		fiveHundredOne = big.NewInt(501)
-		zero           = big.NewInt(0)
+		// carry is carried from the TestPrecompilesDistributeName test. It's applicable only to locker address.
+		carry            = big.NewInt(6210810988040846448)
+		oneThousand      = big.NewInt(1e3)
+		oneThousandOne   = big.NewInt(1001)
+		fiveHundred      = big.NewInt(500)
+		fiveHundredCarry = new(big.Int).Add(big.NewInt(500), carry)
+		fiveHundredOne   = big.NewInt(501)
+		zero             = big.NewInt(0)
 
 		//previousGasLimit = r.ZEVMAuth.GasLimit
 	)
@@ -55,7 +58,7 @@ func TestPrecompilesDistributeThroughContract(r *runner.E2ERunner, args []string
 
 	// Check initial balances.
 	balanceShouldBe(r, oneThousand, checkZRC20Balance(r, spenderAddress))
-	balanceShouldBe(r, fiveHundred, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
+	balanceShouldBe(r, carry, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
 	balanceShouldBe(r, zero, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	receipt = distributeThroughContract(r, testDstrContract, zrc20Address, oneThousand)
@@ -63,7 +66,7 @@ func TestPrecompilesDistributeThroughContract(r *runner.E2ERunner, args []string
 
 	// Balances shouldn't change after a failed attempt.
 	balanceShouldBe(r, oneThousand, checkZRC20Balance(r, spenderAddress))
-	balanceShouldBe(r, fiveHundred, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
+	balanceShouldBe(r, carry, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
 	balanceShouldBe(r, zero, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	// Allow 500.
@@ -74,7 +77,7 @@ func TestPrecompilesDistributeThroughContract(r *runner.E2ERunner, args []string
 
 	// Balances shouldn't change after a failed attempt.
 	balanceShouldBe(r, oneThousand, checkZRC20Balance(r, spenderAddress))
-	balanceShouldBe(r, fiveHundred, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
+	balanceShouldBe(r, carry, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
 	balanceShouldBe(r, zero, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	// Raise the allowance to 1000.
@@ -86,7 +89,7 @@ func TestPrecompilesDistributeThroughContract(r *runner.E2ERunner, args []string
 
 	// Balances shouldn't change after a failed attempt.
 	balanceShouldBe(r, oneThousand, checkZRC20Balance(r, spenderAddress))
-	balanceShouldBe(r, fiveHundred, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
+	balanceShouldBe(r, carry, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
 	balanceShouldBe(r, zero, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	// Should be able to distribute 500, which is within balance and allowance.
@@ -94,7 +97,7 @@ func TestPrecompilesDistributeThroughContract(r *runner.E2ERunner, args []string
 	utils.RequireTxSuccessful(r, receipt, "distribute should succeed when distributing within balance and allowance")
 
 	balanceShouldBe(r, fiveHundred, checkZRC20Balance(r, spenderAddress))
-	balanceShouldBe(r, oneThousand, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
+	balanceShouldBe(r, fiveHundredCarry, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
 	balanceShouldBe(r, fiveHundred, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	eventDitributed, err := dstrContract.ParseDistributed(*receipt.Logs[0])

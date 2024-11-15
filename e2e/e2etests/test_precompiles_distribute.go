@@ -20,7 +20,7 @@ import (
 	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 )
 
-func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
+func TestPrecompilesDistributeAndClaim(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0, "No arguments expected")
 
 	var (
@@ -184,6 +184,12 @@ func TestPrecompilesDistribute(r *runner.E2ERunner, args []string) {
 	zrc20RewardsAmt, ok := big.NewInt(0).SetString("14239697290875601808", 10)
 	require.True(r, ok)
 	balanceShouldBe(r, zrc20RewardsAmt, checkZRC20Balance(r, staker))
+
+	eventClaimed, err := distrContract.ParseClaimedRewards(*receipt.Logs[0])
+	require.NoError(r, err)
+	require.Equal(r, zrc20Address, eventClaimed.Zrc20Token)
+	require.Equal(r, staker, eventClaimed.ClaimAddress)
+	require.Equal(r, zrc20RewardsAmt.Uint64(), eventClaimed.Amount.Uint64())
 
 	// Locker final balance should be zrc20Disitributed - zrc20RewardsAmt.
 	lockerFinalBalance := big.NewInt(0).Sub(zrc20DistrAmt, zrc20RewardsAmt)

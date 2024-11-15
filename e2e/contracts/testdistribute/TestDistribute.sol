@@ -1,12 +1,31 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
+struct DecCoin {
+    string denom;
+    uint256 amount;
+}
+
 // @dev Interface to interact with distribute.
 interface IDistribute {
     function distribute(
         address zrc20,
         uint256 amount
     ) external returns (bool success);
+
+    function claimRewards(
+        address delegator,
+        string memory validator
+    ) external returns (bool success);
+
+    function getDelegatorValidators(
+        address delegator
+    ) external view returns (string[] calldata validators);
+
+    function getRewards(
+        address delegator,
+        string memory validator
+    ) external view returns (DecCoin[] calldata rewards);
 }
 
 // @dev Call IBank contract functions
