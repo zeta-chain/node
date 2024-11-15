@@ -63,7 +63,7 @@ func ParseGatewayWithPDA(gatewayAddress string) (solana.PublicKey, solana.Public
 	return gatewayID, pda, err
 }
 
-// ParseRentPayerPda parses the rent payer program derived address from the given string
+// ParseRentPayerPDA parses the rent payer program derived address from the given string
 func RentPayerPDA(gateway solana.PublicKey) (solana.PublicKey, error) {
 	var rentPayerPda solana.PublicKey
 	seed := []byte(RentPayerPDASeed)

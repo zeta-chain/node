@@ -128,6 +128,7 @@ type WithdrawSPLInstructionParams struct {
 	// Discriminator is the unique identifier for the withdraw instruction
 	Discriminator [8]byte
 
+	// Decimals is decimals for spl token
 	Decimals uint8
 
 	// Amount is the lamports amount for the withdraw

@@ -119,8 +119,8 @@ type MsgWithdrawSPL struct {
 	// amount is the lamports amount for the withdraw_spl
 	amount uint64
 
-	// tokenAccount is the address for the spl token
-	tokenAccount solana.PublicKey
+	// mintAccount is the address for the spl token
+	mintAccount solana.PublicKey
 
 	// decimals of spl token
 	decimals uint8
@@ -139,7 +139,7 @@ type MsgWithdrawSPL struct {
 func NewMsgWithdrawSPL(
 	chainID, nonce, amount uint64,
 	decimals uint8,
-	tokenAccount, to, toAta solana.PublicKey,
+	mintAccount, to, toAta solana.PublicKey,
 ) *MsgWithdrawSPL {
 	return &MsgWithdrawSPL{
 		chainID:      chainID,
@@ -147,7 +147,7 @@ func NewMsgWithdrawSPL(
 		amount:       amount,
 		to:           to,
 		recipientAta: toAta,
-		tokenAccount: tokenAccount,
+		mintAccount:  mintAccount,
 		decimals:     decimals,
 	}
 }
@@ -176,8 +176,8 @@ func (msg *MsgWithdrawSPL) RecipientAta() solana.PublicKey {
 	return msg.recipientAta
 }
 
-func (msg *MsgWithdrawSPL) TokenAccount() solana.PublicKey {
-	return msg.tokenAccount
+func (msg *MsgWithdrawSPL) MintAccount() solana.PublicKey {
+	return msg.mintAccount
 }
 
 func (msg *MsgWithdrawSPL) Decimals() uint8 {
@@ -200,7 +200,7 @@ func (msg *MsgWithdrawSPL) Hash() [32]byte {
 	binary.BigEndian.PutUint64(buff, msg.amount)
 	message = append(message, buff...)
 
-	message = append(message, msg.tokenAccount.Bytes()...)
+	message = append(message, msg.mintAccount.Bytes()...)
 
 	message = append(message, msg.recipientAta.Bytes()...)
 
