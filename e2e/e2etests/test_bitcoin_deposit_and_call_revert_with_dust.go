@@ -13,10 +13,6 @@ import (
 
 // TestBitcoinDepositAndCallRevertWithDust sends a Bitcoin deposit that reverts with a dust amount in the revert outbound.
 func TestBitcoinDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string) {
-	// this test is not compatible with v20 base
-	if r.IsRunningUpgrade() {
-		return
-	}
 	// ARRANGE
 	// Given BTC address
 	r.SetBtcAddress(r.Name, false)
