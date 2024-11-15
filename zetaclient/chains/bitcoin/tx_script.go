@@ -337,11 +337,11 @@ func decodeInscriptionPayload(t *txscript.ScriptTokenizer) ([]byte, error) {
 // OP_PUSHBYTES_32 <32 bytes> OP_CHECKSIG <Content>
 func checkInscriptionEnvelope(t *txscript.ScriptTokenizer) error {
 	if !t.Next() || t.Opcode() != txscript.OP_DATA_32 {
-		return fmt.Errorf("public key not found")
+		return fmt.Errorf("public key not found: %v", t.Err())
 	}
 
 	if !t.Next() || t.Opcode() != txscript.OP_CHECKSIG {
-		return fmt.Errorf("OP_CHECKSIG not found")
+		return fmt.Errorf("OP_CHECKSIG not found: %v", t.Err())
 	}
 
 	return nil
