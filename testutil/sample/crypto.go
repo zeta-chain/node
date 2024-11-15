@@ -60,7 +60,7 @@ func EthAddress() ethcommon.Address {
 	return ethcommon.BytesToAddress(sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address()).Bytes())
 }
 
-func EthAddressRandom(r *rand.Rand) ethcommon.Address {
+func EthAddressFromRand(r *rand.Rand) ethcommon.Address {
 	return ethcommon.BytesToAddress(sdk.AccAddress(PubKey(r).Address()).Bytes())
 }
 

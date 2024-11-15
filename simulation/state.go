@@ -36,7 +36,12 @@ const (
 	InitiallyBondedValidators = "initially_bonded_validators"
 )
 
-func updateBankState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, notBondedCoins sdk.Coin) *banktypes.GenesisState {
+func updateBankState(
+	t *testing.T,
+	rawState map[string]json.RawMessage,
+	cdc codec.Codec,
+	notBondedCoins sdk.Coin,
+) *banktypes.GenesisState {
 	bankStateBz, ok := rawState[banktypes.ModuleName]
 	require.True(t, ok, "bank genesis state is missing")
 
@@ -62,7 +67,12 @@ func updateBankState(t *testing.T, rawState map[string]json.RawMessage, cdc code
 	return bankState
 }
 
-func updateEVMState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, bondDenom string) *evmtypes.GenesisState {
+func updateEVMState(
+	t *testing.T,
+	rawState map[string]json.RawMessage,
+	cdc codec.Codec,
+	bondDenom string,
+) *evmtypes.GenesisState {
 	evmStateBz, ok := rawState[evmtypes.ModuleName]
 	require.True(t, ok, "evm genesis state is missing")
 
@@ -75,7 +85,11 @@ func updateEVMState(t *testing.T, rawState map[string]json.RawMessage, cdc codec
 	return evmState
 }
 
-func updateStakingState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec) (*stakingtypes.GenesisState, sdk.Coin) {
+func updateStakingState(
+	t *testing.T,
+	rawState map[string]json.RawMessage,
+	cdc codec.Codec,
+) (*stakingtypes.GenesisState, sdk.Coin) {
 	stakingStateBz, ok := rawState[stakingtypes.ModuleName]
 	require.True(t, ok, "staking genesis state is missing")
 
@@ -98,7 +112,13 @@ func updateStakingState(t *testing.T, rawState map[string]json.RawMessage, cdc c
 	return stakingState, notBondedCoins
 }
 
-func updateObserverState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, r *rand.Rand, validators stakingtypes.Validators) *observertypes.GenesisState {
+func updateObserverState(
+	t *testing.T,
+	rawState map[string]json.RawMessage,
+	cdc codec.Codec,
+	r *rand.Rand,
+	validators stakingtypes.Validators,
+) *observertypes.GenesisState {
 	observerStateBz, ok := rawState[observertypes.ModuleName]
 	require.True(t, ok, "observer genesis state is missing")
 
@@ -128,14 +148,20 @@ func updateObserverState(t *testing.T, rawState map[string]json.RawMessage, cdc 
 	observerState.CrosschainFlags.IsInboundEnabled = true
 	observerState.CrosschainFlags.IsOutboundEnabled = true
 
-	tss := sample.TSSRandom(t, r)
+	tss := sample.TSSFromRand(t, r)
 	tss.OperatorAddressList = observers
 	observerState.Tss = &tss
 
 	return observerState
 }
 
-func updateAuthorityState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, r *rand.Rand, accs []simtypes.Account) *authoritytypes.GenesisState {
+func updateAuthorityState(
+	t *testing.T,
+	rawState map[string]json.RawMessage,
+	cdc codec.Codec,
+	r *rand.Rand,
+	accs []simtypes.Account,
+) *authoritytypes.GenesisState {
 	authorityStateBz, ok := rawState[authoritytypes.ModuleName]
 	require.True(t, ok, "authority genesis state is missing")
 
@@ -164,22 +190,33 @@ func updateAuthorityState(t *testing.T, rawState map[string]json.RawMessage, cdc
 	return authorityState
 }
 
-func updateFungibleState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, r *rand.Rand) *fungibletypes.GenesisState {
+func updateFungibleState(
+	t *testing.T,
+	rawState map[string]json.RawMessage,
+	cdc codec.Codec,
+	r *rand.Rand,
+) *fungibletypes.GenesisState {
 	fungibleStateBz, ok := rawState[fungibletypes.ModuleName]
 	require.True(t, ok, "fungible genesis state is missing")
 
 	fungibleState := new(fungibletypes.GenesisState)
 	cdc.MustUnmarshalJSON(fungibleStateBz, fungibleState)
 	fungibleState.SystemContract = &fungibletypes.SystemContract{
-		SystemContract: sample.EthAddressRandom(r).String(),
-		ConnectorZevm:  sample.EthAddressRandom(r).String(),
-		Gateway:        sample.EthAddressRandom(r).String(),
+		SystemContract: sample.EthAddressFromRand(r).String(),
+		ConnectorZevm:  sample.EthAddressFromRand(r).String(),
+		Gateway:        sample.EthAddressFromRand(r).String(),
 	}
 
 	return fungibleState
 }
 
-func updateRawState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, r *rand.Rand, accs []simtypes.Account) {
+func updateRawState(
+	t *testing.T,
+	rawState map[string]json.RawMessage,
+	cdc codec.Codec,
+	r *rand.Rand,
+	accs []simtypes.Account,
+) {
 	stakingState, notBondedCoins := updateStakingState(t, rawState, cdc)
 	bankState := updateBankState(t, rawState, cdc, notBondedCoins)
 	evmState := updateEVMState(t, rawState, cdc, stakingState.Params.BondDenom)

@@ -71,10 +71,6 @@ const (
 	NodeAccountKey            = "NodeAccount-value-"
 	KeygenKey                 = "Keygen-value-"
 
-	// TODO remove unused keys
-	BlockHeaderKey      = "BlockHeader-value-"
-	BlockHeaderStateKey = "BlockHeaderState-value-"
-
 	// TODO rename to BallotListForHeightKey
 	BallotListKey = "BallotList-value-"
 	TSSKey        = "TSS-value-"

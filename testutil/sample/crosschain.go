@@ -302,9 +302,9 @@ func InboundVoteSim(coinType coin.CoinType, from, to int64, r *rand.Rand) types.
 	EthAddress()
 	return types.MsgVoteInbound{
 		Creator:            "",
-		Sender:             EthAddressRandom(r).String(),
+		Sender:             EthAddressFromRand(r).String(),
 		SenderChainId:      from,
-		Receiver:           EthAddressRandom(r).String(),
+		Receiver:           EthAddressFromRand(r).String(),
 		ReceiverChain:      to,
 		Amount:             math.NewUint(r.Uint64()),
 		Message:            base64.StdEncoding.EncodeToString(RandomBytes(r)),
@@ -314,7 +314,7 @@ func InboundVoteSim(coinType coin.CoinType, from, to int64, r *rand.Rand) types.
 		},
 		InboundHash: ethcommon.BytesToHash(RandomBytes(r)).String(),
 		CoinType:    coinType,
-		TxOrigin:    EthAddressRandom(r).String(),
+		TxOrigin:    EthAddressFromRand(r).String(),
 		Asset:       StringRandom(r, 32),
 		EventIndex:  r.Uint64(),
 	}

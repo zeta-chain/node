@@ -121,8 +121,8 @@ func ChainParamsList() (cpl types.ChainParamsList) {
 	return
 }
 
-// TSSRandom returns a random TSS,it uses the randomness provided as a parameter
-func TSSRandom(t *testing.T, r *rand.Rand) types.TSS {
+// TSSFromRand returns a random TSS,it uses the randomness provided as a parameter
+func TSSFromRand(t *testing.T, r *rand.Rand) types.TSS {
 	pubKey := PubKey(r)
 	spk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
 	require.NoError(t, err)
@@ -136,7 +136,6 @@ func TSSRandom(t *testing.T, r *rand.Rand) types.TSS {
 		FinalizedZetaHeight: r.Int63(),
 		KeyGenZetaHeight:    r.Int63(),
 	}
-
 }
 
 // TODO: rename to TSS
