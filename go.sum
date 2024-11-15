@@ -1531,6 +1531,8 @@ github.com/zeta-chain/go-tss v0.0.0-20241031223543-18765295f992 h1:jpfOoQGHQo29C
 github.com/zeta-chain/go-tss v0.0.0-20241031223543-18765295f992/go.mod h1:nqelgf4HKkqlXaVg8X38a61WfyYB+ivCt6nnjoTIgCc=
 github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20241021075719-d40d2e28467c h1:ZoFxMMZtivRLquXVq1sEVlT45UnTPMO1MSXtc88nDv4=
 github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20241021075719-d40d2e28467c/go.mod h1:SjT7QirtJE8stnAe1SlNOanxtfSfijJm3MGJ+Ax7w7w=
+github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20241115132906-3a2956d37120 h1:gKdaXOR43JuECGcjwqpxex3vpLf+OrP/wAVzXbH0kck=
+github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20241115132906-3a2956d37120/go.mod h1:SjT7QirtJE8stnAe1SlNOanxtfSfijJm3MGJ+Ax7w7w=
 github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20241108171442-e48d82f94892 h1:oI5qCrw2SXDf2a2UYAn0tpaKHbKpJcR+XDtceyY00wE=
 github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20241108171442-e48d82f94892/go.mod h1:DcDY828o773soiU/h0XpC+naxitrIMFVZqEvq/EJxMA=
 github.com/zeta-chain/tss-lib v0.0.0-20240916163010-2e6b438bd901 h1:9whtN5fjYHfk4yXIuAsYP2EHxImwDWDVUOnZJ2pfL3w=
