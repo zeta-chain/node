@@ -8,6 +8,12 @@ import (
 	"github.com/bnb-chain/tss-lib/ecdsa/keygen"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
+	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
+)
+
+const (
+	Version = "0.14.0"
+	Algo    = tsscommon.ECDSA
 )
 
 // MultiAddressFromString parses a string into a slice of addresses (for convenience).

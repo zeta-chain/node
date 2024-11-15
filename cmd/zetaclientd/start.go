@@ -254,9 +254,9 @@ func Start(_ *cobra.Command, _ []string) error {
 
 	// Generate a new TSS if keygen is set and add it into the tss server
 	// If TSS has already been generated, and keygen was successful ; we use the existing TSS
-	err = mc.Generate(ctx, zetacoreClient, tssServer, masterLogger)
+	err = mc.KeygenCeremony(ctx, tssServer, zetacoreClient, masterLogger)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to run tss keygen ceremony")
 	}
 
 	tss, err := mc.New(
@@ -271,9 +271,12 @@ func Start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	if cfg.TestTssKeysign {
-		err = mc.TestTSS(tss.CurrentPubkey, *tss.Server, masterLogger)
-		if err != nil {
-			startLogger.Error().Err(err).Msgf("TestTSS error : %s", tss.CurrentPubkey)
+		startLogger.Info().Msg("Performing TSS key-sign test")
+
+		if err = mc.TestKeysign(tss.CurrentPubkey, *tss.Server); err != nil {
+			startLogger.Error().Err(err).
+				Str("tss.public_key", tss.CurrentPubkey).
+				Msg("TSS key-sign failed")
 		}
 	}
 

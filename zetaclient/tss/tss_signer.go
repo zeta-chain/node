@@ -594,7 +594,7 @@ func TestKeysign(tssPubkey string, tssServer tss.TssServer) error {
 		[]string{base64.StdEncoding.EncodeToString(H.Bytes())},
 		10,
 		nil,
-		"0.14.0",
+		Version,
 	)
 	ksRes, err := tssServer.KeySign(keysignReq)
 	if err != nil {
