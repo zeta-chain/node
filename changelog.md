@@ -27,6 +27,7 @@
 * [3106](https://github.com/zeta-chain/node/pull/3106) - prevent blocked CCTX on out of gas during omnichain calls
 * [3139](https://github.com/zeta-chain/node/pull/3139) - fix config resolution in orchestrator
 * [3149](https://github.com/zeta-chain/node/pull/3149) - abort the cctx if dust amount is detected in the revert outbound
+* [3162](https://github.com/zeta-chain/node/pull/3162) - skip depositor fee calculation if transaction does not involve TSS address
 
 ## v21.0.0
 

@@ -255,12 +255,6 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		return "", fmt.Errorf("block %d is not confirmed yet", blockVb.Height)
 	}
 
-	// calculate depositor fee
-	depositorFee, err := bitcoin.CalcDepositorFee(ob.btcClient, tx, ob.netParams)
-	if err != nil {
-		return "", errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
-	}
-
 	// #nosec G115 always positive
 	event, err := GetBtcEvent(
 		ob.btcClient,
@@ -269,7 +263,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		uint64(blockVb.Height),
 		ob.logger.Inbound,
 		ob.netParams,
-		depositorFee,
+		bitcoin.CalcDepositorFee,
 	)
 	if err != nil {
 		return "", err
@@ -323,13 +317,7 @@ func FilterAndParseIncomingTx(
 			continue // the first tx is coinbase; we do not process coinbase tx
 		}
 
-		// calculate depositor fee
-		depositorFee, err := bitcoin.CalcDepositorFee(rpcClient, &txs[idx], netParams)
-		if err != nil {
-			return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
-		}
-
-		event, err := GetBtcEvent(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
+		event, err := GetBtcEvent(rpcClient, tx, tssAddress, blockNumber, logger, netParams, bitcoin.CalcDepositorFee)
 		if err != nil {
 			// unable to parse the tx, the caller should retry
 			return nil, errors.Wrapf(err, "error getting btc event for tx %s in block %d", tx.Txid, blockNumber)
@@ -391,12 +379,12 @@ func GetBtcEvent(
 	blockNumber uint64,
 	logger zerolog.Logger,
 	netParams *chaincfg.Params,
-	depositorFee float64,
+	feeCalculator bitcoin.DepositorFeeCalculator,
 ) (*BTCInboundEvent, error) {
 	if netParams.Name == chaincfg.MainNetParams.Name {
-		return GetBtcEventWithoutWitness(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
+		return GetBtcEventWithoutWitness(rpcClient, tx, tssAddress, blockNumber, logger, netParams, feeCalculator)
 	}
-	return GetBtcEventWithWitness(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
+	return GetBtcEventWithWitness(rpcClient, tx, tssAddress, blockNumber, logger, netParams, feeCalculator)
 }
 
 // GetBtcEventWithoutWitness either returns a valid BTCInboundEvent or nil
@@ -409,11 +397,15 @@ func GetBtcEventWithoutWitness(
 	blockNumber uint64,
 	logger zerolog.Logger,
 	netParams *chaincfg.Params,
-	depositorFee float64,
+	feeCalculator bitcoin.DepositorFeeCalculator,
 ) (*BTCInboundEvent, error) {
-	found := false
-	var value float64
-	var memo []byte
+	var (
+		found        bool
+		value        float64
+		depositorFee float64
+		memo         []byte
+	)
+
 	if len(tx.Vout) >= 2 {
 		// 1st vout must have tss address as receiver with p2wpkh scriptPubKey
 		vout0 := tx.Vout[0]
@@ -428,6 +420,12 @@ func GetBtcEventWithoutWitness(
 			// skip irrelevant tx to us
 			if receiver != tssAddress {
 				return nil, nil
+			}
+
+			// calculate depositor fee
+			depositorFee, err = feeCalculator(rpcClient, &tx, netParams)
+			if err != nil {
+				return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
 			}
 
 			// deposit amount has to be no less than the minimum depositor fee
