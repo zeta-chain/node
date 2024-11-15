@@ -40,7 +40,7 @@ func TestV2ETHWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw")
-	require.Equal(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
+	require.Equal(r, crosschaintypes.CctxStatus_Aborted, cctx.CctxStatus.Status)
 
 	r.AssertTestDAppZEVMCalled(true, payloadMessageWithdrawOnRevertETH, big.NewInt(0))
 

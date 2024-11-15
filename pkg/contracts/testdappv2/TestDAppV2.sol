@@ -77,8 +77,7 @@ contract TestDAppV2 {
         string memory messageStr = message.length == 0 ? getNoMessageIndex(_context.sender) : string(message);
 
         setCalledWithMessage(messageStr);
-        setAmountWithMessage(messageStr, uint256(gasleft()));
-
+        setAmountWithMessage(messageStr, amount);
         consumeGas();
     }
 
