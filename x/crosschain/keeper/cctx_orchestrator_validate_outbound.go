@@ -312,6 +312,7 @@ func (k Keeper) processFailedZETAOutboundOnZEVM(ctx sdk.Context, cctx *types.Cro
 // TODO: consolidate logic with above function
 // https://github.com/zeta-chain/node/issues/2627
 func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainTx) error {
+
 	// check the sender is ZetaChain
 	zetaChain, err := chains.ZetaChainFromCosmosChainID(ctx.ChainID())
 	if err != nil {
