@@ -302,9 +302,9 @@ func InboundVoteSim(coinType coin.CoinType, from, to int64, r *rand.Rand) types.
 	EthAddress()
 	return types.MsgVoteInbound{
 		Creator:            "",
-		Sender:             EthAddressRandom(r).String(),
+		Sender:             EthAddressFromRand(r).String(),
 		SenderChainId:      from,
-		Receiver:           EthAddressRandom(r).String(),
+		Receiver:           EthAddressFromRand(r).String(),
 		ReceiverChain:      to,
 		Amount:             math.NewUint(r.Uint64()),
 		Message:            base64.StdEncoding.EncodeToString(RandomBytes(r)),
@@ -314,10 +314,80 @@ func InboundVoteSim(coinType coin.CoinType, from, to int64, r *rand.Rand) types.
 		},
 		InboundHash: ethcommon.BytesToHash(RandomBytes(r)).String(),
 		CoinType:    coinType,
-		TxOrigin:    EthAddressRandom(r).String(),
+		TxOrigin:    EthAddressFromRand(r).String(),
 		Asset:       StringRandom(r, 32),
 		EventIndex:  r.Uint64(),
 	}
+}
+
+func OutboundVoteSim(r *rand.Rand,
+	creator string,
+	index string,
+	to int64,
+	from int64,
+	tssPubkey string,
+) (types.CrossChainTx, types.MsgVoteOutbound) {
+	coinType := coin.CoinType_Gas
+
+	amount := math.NewUint(uint64(r.Int63()))
+	inbound := &types.InboundParams{
+		Sender:                 EthAddressFromRand(r).String(),
+		SenderChainId:          from,
+		TxOrigin:               EthAddressFromRand(r).String(),
+		CoinType:               coinType,
+		Asset:                  StringRandom(r, 32),
+		Amount:                 amount,
+		ObservedHash:           StringRandom(r, 32),
+		ObservedExternalHeight: r.Uint64(),
+		BallotIndex:            StringRandom(r, 32),
+		FinalizedZetaHeight:    r.Uint64(),
+	}
+
+	outbound := &types.OutboundParams{
+		Receiver:        EthAddressFromRand(r).String(),
+		ReceiverChainId: to,
+		CoinType:        coinType,
+		Amount:          math.NewUint(uint64(r.Int63())),
+		TssNonce:        0,
+		TssPubkey:       tssPubkey,
+		CallOptions: &types.CallOptions{
+			GasLimit: r.Uint64(),
+		},
+		GasPrice:               math.NewUint(uint64(r.Int63())).String(),
+		Hash:                   StringRandom(r, 32),
+		BallotIndex:            StringRandom(r, 32),
+		ObservedExternalHeight: r.Uint64(),
+		GasUsed:                100,
+		EffectiveGasPrice:      math.NewInt(r.Int63()),
+		EffectiveGasLimit:      100,
+	}
+
+	cctx := types.CrossChainTx{
+		Creator:        creator,
+		Index:          index,
+		ZetaFees:       sdk.NewUint(1),
+		RelayedMessage: base64.StdEncoding.EncodeToString(RandomBytes(r)),
+		CctxStatus:     &types.Status{Status: types.CctxStatus_PendingInbound},
+		InboundParams:  inbound,
+		OutboundParams: []*types.OutboundParams{outbound},
+	}
+
+	msg := types.MsgVoteOutbound{
+		CctxHash:                          cctx.Index,
+		OutboundTssNonce:                  cctx.GetCurrentOutboundParam().TssNonce,
+		OutboundChain:                     cctx.GetCurrentOutboundParam().ReceiverChainId,
+		Status:                            chains.ReceiveStatus_success,
+		Creator:                           creator,
+		ObservedOutboundHash:              ethcommon.BytesToHash(EthAddressFromRand(r).Bytes()).String(),
+		ValueReceived:                     cctx.GetCurrentOutboundParam().Amount,
+		ObservedOutboundBlockHeight:       cctx.GetCurrentOutboundParam().ObservedExternalHeight,
+		ObservedOutboundEffectiveGasPrice: cctx.GetCurrentOutboundParam().EffectiveGasPrice,
+		ObservedOutboundGasUsed:           cctx.GetCurrentOutboundParam().GasUsed,
+		CoinType:                          cctx.InboundParams.CoinType,
+	}
+
+	return cctx, msg
+
 }
 
 func ZRC20Withdrawal(to []byte, value *big.Int) *zrc20.ZRC20Withdrawal {

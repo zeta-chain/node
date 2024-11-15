@@ -22,6 +22,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	chains2 "github.com/zeta-chain/node/pkg/chains"
 
 	zetaapp "github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -127,10 +128,30 @@ func updateObserverState(t *testing.T, rawState map[string]json.RawMessage, cdc 
 	observerState.Observers.ObserverList = observers
 	observerState.CrosschainFlags.IsInboundEnabled = true
 	observerState.CrosschainFlags.IsOutboundEnabled = true
-
 	tss := sample.TSSRandom(t, r)
 	tss.OperatorAddressList = observers
 	observerState.Tss = &tss
+
+	chains := chains2.DefaultChainsList()
+	var chainsNonces []observertypes.ChainNonces
+	var pendingNonces []observertypes.PendingNonces
+	for _, chain := range chains {
+		chainNonce := observertypes.ChainNonces{
+			ChainId: chain.ChainId,
+			Nonce:   0,
+		}
+		chainsNonces = append(chainsNonces, chainNonce)
+		pendingNonce := observertypes.PendingNonces{
+			NonceLow:  0,
+			NonceHigh: 0,
+			ChainId:   chain.ChainId,
+			Tss:       tss.TssPubkey,
+		}
+		pendingNonces = append(pendingNonces, pendingNonce)
+	}
+
+	observerState.ChainNonces = chainsNonces
+	observerState.PendingNonces = pendingNonces
 
 	return observerState
 }
@@ -171,9 +192,9 @@ func updateFungibleState(t *testing.T, rawState map[string]json.RawMessage, cdc 
 	fungibleState := new(fungibletypes.GenesisState)
 	cdc.MustUnmarshalJSON(fungibleStateBz, fungibleState)
 	fungibleState.SystemContract = &fungibletypes.SystemContract{
-		SystemContract: sample.EthAddressRandom(r).String(),
-		ConnectorZevm:  sample.EthAddressRandom(r).String(),
-		Gateway:        sample.EthAddressRandom(r).String(),
+		SystemContract: sample.EthAddressFromRand(r).String(),
+		ConnectorZevm:  sample.EthAddressFromRand(r).String(),
+		Gateway:        sample.EthAddressFromRand(r).String(),
 	}
 
 	return fungibleState
