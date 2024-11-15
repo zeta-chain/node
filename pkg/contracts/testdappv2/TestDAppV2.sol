@@ -72,11 +72,11 @@ contract TestDAppV2 {
     )
     external
     {
+        consumeGas();
+
         require(!isRevertMessage(string(message)));
 
         string memory messageStr = message.length == 0 ? getNoMessageIndex(_context.sender) : string(message);
-
-        consumeGas();
 
         setCalledWithMessage(messageStr);
         setAmountWithMessage(messageStr, amount);
@@ -135,7 +135,7 @@ contract TestDAppV2 {
 
     function consumeGas() internal {
         // Approximate target gas consumption
-        uint256 targetGas = 3000000;
+        uint256 targetGas = 8000000;
         // Approximate gas cost for a single storage write
         uint256 storageWriteGasCost = 20000;
         uint256 iterations = targetGas / storageWriteGasCost;
