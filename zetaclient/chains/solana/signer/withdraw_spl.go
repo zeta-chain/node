@@ -39,20 +39,20 @@ func (signer *Signer) createAndSignMsgWithdrawSPL(
 		return nil, errors.Wrapf(err, "cannot decode receiver address %s", params.Receiver)
 	}
 
-	// parse token account
-	tokenAccount, err := solana.PublicKeyFromBase58(asset)
+	// parse mint account
+	mintAccount, err := solana.PublicKeyFromBase58(asset)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot parse asset public key %s", asset)
 	}
 
 	// get recipient ata
-	recipientAta, _, err := solana.FindAssociatedTokenAddress(to, tokenAccount)
+	recipientAta, _, err := solana.FindAssociatedTokenAddress(to, mintAccount)
 	if err != nil {
-		return nil, errors.Wrapf(err, "cannot find ATA for %s and token account %s", to, tokenAccount)
+		return nil, errors.Wrapf(err, "cannot find ATA for %s and mint account %s", to, mintAccount)
 	}
 
 	// prepare withdraw spl msg and compute hash
-	msg := contracts.NewMsgWithdrawSPL(chainID, nonce, amount, decimals, tokenAccount, to, recipientAta)
+	msg := contracts.NewMsgWithdrawSPL(chainID, nonce, amount, decimals, mintAccount, to, recipientAta)
 	msgHash := msg.Hash()
 
 	// sign the message with TSS to get an ECDSA signature.
@@ -85,14 +85,14 @@ func (signer *Signer) signWithdrawSPLTx(
 		return nil, errors.Wrap(err, "cannot serialize withdraw instruction")
 	}
 
-	pdaAta, _, err := solana.FindAssociatedTokenAddress(signer.pda, msg.TokenAccount())
+	pdaAta, _, err := solana.FindAssociatedTokenAddress(signer.pda, msg.MintAccount())
 	if err != nil {
-		return nil, errors.Wrapf(err, "cannot find ATA for %s and token account %s", signer.pda, msg.TokenAccount())
+		return nil, errors.Wrapf(err, "cannot find ATA for %s and mint account %s", signer.pda, msg.MintAccount())
 	}
 
-	recipientAta, _, err := solana.FindAssociatedTokenAddress(msg.To(), msg.TokenAccount())
+	recipientAta, _, err := solana.FindAssociatedTokenAddress(msg.To(), msg.MintAccount())
 	if err != nil {
-		return nil, errors.Wrapf(err, "cannot find ATA for %s and token account %s", msg.To(), msg.TokenAccount())
+		return nil, errors.Wrapf(err, "cannot find ATA for %s and mint account %s", msg.To(), msg.MintAccount())
 	}
 
 	inst := solana.GenericInstruction{
@@ -102,7 +102,7 @@ func (signer *Signer) signWithdrawSPLTx(
 			solana.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
 			solana.Meta(signer.pda).WRITE(),
 			solana.Meta(pdaAta).WRITE(),
-			solana.Meta(msg.TokenAccount()),
+			solana.Meta(msg.MintAccount()),
 			solana.Meta(msg.To()),
 			solana.Meta(recipientAta).WRITE(),
 			solana.Meta(signer.rentPayerPda).WRITE(),

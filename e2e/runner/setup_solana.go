@@ -113,8 +113,8 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 	require.NoError(r, err)
 
 	// deploy test spl
-	tokenAccount := r.DeploySPL(&privkey, true)
-	r.SPLAddr = tokenAccount.PublicKey()
+	mintAccount := r.DeploySPL(&privkey, true)
+	r.SPLAddr = mintAccount.PublicKey()
 }
 
 func (r *E2ERunner) ensureSolanaChainParams() error {
