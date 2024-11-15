@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -13,11 +11,9 @@ import (
 	"syscall"
 	"time"
 
-	ecdsakeygen "github.com/bnb-chain/tss-lib/ecdsa/keygen"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/p2p/protocol/ping"
-	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -39,11 +35,9 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// todo revamp
+// Start starts zetaclientd process todo revamp
 // https://github.com/zeta-chain/node/issues/3119
 // https://github.com/zeta-chain/node/issues/3112
-var preParams *ecdsakeygen.LocalPreParams
-
 func Start(_ *cobra.Command, _ []string) error {
 	// Prompt for Hotkey, TSS key-share and relayer key passwords
 	titles := []string{"HotKey", "TSS", "Solana Relayer Key"}
@@ -164,12 +158,16 @@ func Start(_ *cobra.Command, _ []string) error {
 	}
 	priKey := secp256k1.PrivKey(hotkeyPk.Bytes()[:32])
 
-	// Generate pre Params if not present already
-	peers, err := initPeers(cfg.Peer)
+	tssBootstrapPeers, err := mc.MultiAddressFromString(cfg.Peer)
 	if err != nil {
-		log.Error().Err(err).Msg("peer address error")
+		// this is okay, we still have whitelisted peers to connect to
+		startLogger.Warn().Err(err).Msg("TSS bootstrap peers error")
 	}
-	initPreParams(cfg.PreParamsPath)
+
+	tssPreParams, err := mc.ResolvePreParamsFromPath(cfg.PreParamsPath)
+	if err != nil {
+		return errors.Wrap(err, "unable to resolve TSS pre params. Use `zetaclient tss gen-pre-params`")
+	}
 
 	m, err := metrics.NewMetrics()
 	if err != nil {
@@ -201,9 +199,9 @@ func Start(_ *cobra.Command, _ []string) error {
 
 	// Create TSS server
 	tssServer, err := mc.SetupTSSServer(
-		peers,
+		tssBootstrapPeers,
 		priKey,
-		preParams,
+		tssPreParams,
 		appContext.Config(),
 		tssKeyPass,
 		true,
@@ -407,42 +405,6 @@ func Start(_ *cobra.Command, _ []string) error {
 	maestro.Stop()
 
 	return nil
-}
-
-func initPeers(peer string) ([]maddr.Multiaddr, error) {
-	var peers []maddr.Multiaddr
-
-	if peer != "" {
-		address, err := maddr.NewMultiaddr(peer)
-		if err != nil {
-			log.Error().Err(err).Msg("NewMultiaddr error")
-			return []maddr.Multiaddr{}, err
-		}
-		peers = append(peers, address)
-	}
-	return peers, nil
-}
-
-func initPreParams(path string) {
-	if path != "" {
-		path = filepath.Clean(path)
-		log.Info().Msgf("pre-params file path %s", path)
-		preParamsFile, err := os.Open(path)
-		if err != nil {
-			log.Error().Err(err).Msg("open pre-params file failed; skip")
-		} else {
-			bz, err := io.ReadAll(preParamsFile)
-			if err != nil {
-				log.Error().Err(err).Msg("read pre-params file failed; skip")
-			} else {
-				err = json.Unmarshal(bz, &preParams)
-				if err != nil {
-					log.Error().Err(err).Msg("unmarshal pre-params file failed; skip and generate new one")
-					preParams = nil // skip reading pre-params; generate new one instead
-				}
-			}
-		}
-	}
 }
 
 // isObserverNode checks whether THIS node is an observer node.
