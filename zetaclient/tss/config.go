@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	Port    = 6668
 	Version = "0.14.0"
 	Algo    = tsscommon.ECDSA
 )

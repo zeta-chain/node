@@ -271,9 +271,7 @@ func Start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	if cfg.TestTssKeysign {
-		startLogger.Info().Msg("Performing TSS key-sign test")
-
-		if err = mc.TestKeysign(tss.CurrentPubkey, *tss.Server); err != nil {
+		if err = mc.TestKeySign(tss.Server, tss.CurrentPubkey, startLogger); err != nil {
 			startLogger.Error().Err(err).
 				Str("tss.public_key", tss.CurrentPubkey).
 				Msg("TSS key-sign failed")

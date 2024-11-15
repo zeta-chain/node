@@ -141,7 +141,7 @@ func (k *keygenCeremony) iteration(ctx context.Context) (shouldRetry bool, err e
 
 	k.logger.Info().Msg("Performing TSS key-sign test")
 
-	if err = TestKeysign(newPubKey, *k.tss); err != nil {
+	if err = TestKeySign(k.tss, newPubKey, k.logger); err != nil {
 		k.logger.Error().Err(err).Msg("Failed to test TSS keygen")
 		// signing can fail even if tss keygen is successful
 	}

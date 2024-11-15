@@ -174,7 +174,7 @@ func SetupTSSServer(
 
 	tssServer, err := tss.NewTss(
 		bootstrapPeers,
-		6668,
+		Port,
 		privkey,
 		tsspath,
 		thorcommon.TssConfig{
@@ -241,7 +241,7 @@ func (tss *TSS) Sign(
 		[]string{base64.StdEncoding.EncodeToString(H)},
 		int64(height),
 		nil,
-		"0.14.0",
+		Version,
 	)
 	end := tss.KeysignsTracker.StartMsgSign()
 	ksRes, err := tss.Server.KeySign(keysignReq)
@@ -280,30 +280,12 @@ func (tss *TSS) Sign(
 		return [65]byte{}, fmt.Errorf("keysign fail: signature list is empty")
 	}
 
-	if !verifySignature(tssPubkey, signature, H) {
-		return [65]byte{}, fmt.Errorf("signuature verification failue")
-	}
-
-	var sigbyte [65]byte
-	_, err = base64.StdEncoding.Decode(sigbyte[:32], []byte(signature[0].R))
+	sig, err := VerifySignature(signature[0], tssPubkey, H)
 	if err != nil {
-		log.Error().Err(err).Msg("decoding signature R")
-		return [65]byte{}, fmt.Errorf("signuature verification failure (R) %w", err)
+		return [65]byte{}, fmt.Errorf("unable to verify signature: %w", err)
 	}
 
-	_, err = base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature[0].S))
-	if err != nil {
-		log.Error().Err(err).Msg("decoding signature S")
-		return [65]byte{}, fmt.Errorf("signuature verification failue (S): %w", err)
-	}
-
-	_, err = base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature[0].RecoveryID))
-	if err != nil {
-		log.Error().Err(err).Msg("decoding signature RecoveryID")
-		return [65]byte{}, fmt.Errorf("signuature verification failue (V) %w", err)
-	}
-
-	return sigbyte, nil
+	return sig, nil
 }
 
 // SignBatch is hash of some data
@@ -579,93 +561,9 @@ func GetTssAddrEVM(tssPubkey string) (ethcommon.Address, error) {
 	return keyAddr, nil
 }
 
-// TestKeysign tests the keysign
-// it is called when a new TSS is generated to ensure the network works as expected
-// TODO(revamp): move to a test package
-
-func TestKeysign(tssPubkey string, tssServer tss.TssServer) error {
-	log.Info().Msg("trying keysign...")
-	data := []byte("hello meta")
-	H := crypto.Keccak256Hash(data)
-	log.Info().Msgf("hash of data (hello meta) is %s", H)
-
-	keysignReq := keysign.NewRequest(
-		tssPubkey,
-		[]string{base64.StdEncoding.EncodeToString(H.Bytes())},
-		10,
-		nil,
-		Version,
-	)
-	ksRes, err := tssServer.KeySign(keysignReq)
-	if err != nil {
-		log.Warn().Msg("keysign fail")
-	}
-
-	signature := ksRes.Signatures
-	// [{cyP8i/UuCVfQKDsLr1kpg09/CeIHje1FU6GhfmyMD5Q= D4jXTH3/CSgCg+9kLjhhfnNo3ggy9DTQSlloe3bbKAs= eY++Z2LwsuKG1JcghChrsEJ4u9grLloaaFZNtXI3Ujk= AA==}]
-	// 32B msg hash, 32B R, 32B S, 1B RC
-	log.Info().Msgf("signature of helloworld... %v", signature)
-
-	if len(signature) == 0 {
-		log.Info().Msgf("signature has length 0, skipping verify")
-		return fmt.Errorf("signature has length 0")
-	}
-
-	verifySignature(tssPubkey, signature, H.Bytes())
-	if verifySignature(tssPubkey, signature, H.Bytes()) {
-		return nil
-	}
-
-	return fmt.Errorf("verify signature fail")
-}
-
-// IsEnvFlagEnabled checks if the environment flag is enabled
 func IsEnvFlagEnabled(flag string) bool {
 	value := os.Getenv(flag)
 	return value == "true" || value == "1"
-}
-
-// verifySignature verifies the signature
-// TODO(revamp): move to a test package
-func verifySignature(tssPubkey string, signature []keysign.Signature, H []byte) bool {
-	if len(signature) == 0 {
-		log.Warn().Msg("verify_signature: empty signature array")
-		return false
-	}
-	pubkey, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, tssPubkey)
-	if err != nil {
-		log.Error().Msg("get pubkey from bech32 fail")
-	}
-
-	// verify the signature of msg.
-	var sigbyte [65]byte
-	_, err = base64.StdEncoding.Decode(sigbyte[:32], []byte(signature[0].R))
-	if err != nil {
-		log.Error().Err(err).Msg("decoding signature R")
-		return false
-	}
-
-	_, err = base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature[0].S))
-	if err != nil {
-		log.Error().Err(err).Msg("decoding signature S")
-		return false
-	}
-
-	_, err = base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature[0].RecoveryID))
-	if err != nil {
-		log.Error().Err(err).Msg("decoding signature RecoveryID")
-		return false
-	}
-
-	sigPublicKey, err := crypto.SigToPub(H, sigbyte[:])
-	if err != nil {
-		log.Error().Err(err).Msg("SigToPub error in verify_signature")
-		return false
-	}
-
-	compressedPubkey := crypto.CompressPubkey(sigPublicKey)
-	log.Info().Msgf("pubkey %s recovered pubkey %s", pubkey.String(), hex.EncodeToString(compressedPubkey))
-	return bytes.Equal(pubkey.Bytes(), compressedPubkey)
 }
 
 // combineDigests combines the digests
