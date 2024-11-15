@@ -6,6 +6,9 @@ interface IERC20 {
 }
 
 contract TestDAppV2 {
+    // used to simulate gas consumption
+    uint256[] private storageArray;
+
     string public constant NO_MESSAGE_CALL = "called with no message";
 
     struct zContext {
@@ -73,6 +76,8 @@ contract TestDAppV2 {
 
         string memory messageStr = message.length == 0 ? getNoMessageIndex(_context.sender) : string(message);
 
+        consumeGas();
+
         setCalledWithMessage(messageStr);
         setAmountWithMessage(messageStr, amount);
     }
@@ -110,6 +115,8 @@ contract TestDAppV2 {
 
     // Revertable interface
     function onRevert(RevertContext calldata revertContext) external {
+        consumeGas();
+
         setCalledWithMessage(string(revertContext.revertMessage));
         setAmountWithMessage(string(revertContext.revertMessage), 0);
         senderWithMessage[revertContext.revertMessage] = revertContext.sender;
@@ -124,6 +131,22 @@ contract TestDAppV2 {
         senderWithMessage[bytes(messageStr)] = messageContext.sender;
 
         return "";
+    }
+
+    function consumeGas() internal {
+        // Approximate target gas consumption
+        uint256 targetGas = 1000000;
+        // Approximate gas cost for a single storage write
+        uint256 storageWriteGasCost = 20000;
+        uint256 iterations = targetGas / storageWriteGasCost;
+
+        // Perform the storage writes
+        for (uint256 i = 0; i < iterations; i++) {
+            storageArray.push(i);
+        }
+
+        // Reset the storage array to avoid accumulation of storage cost
+        delete storageArray;
     }
 
     receive() external payable {}
