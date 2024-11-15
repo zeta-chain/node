@@ -339,7 +339,7 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 				cctx.InboundParams.SenderChainId,
 			)
 		}
-		
+
 		//  get the chain ID of the connected chain
 		chainID := cctx.GetCurrentOutboundParam().ReceiverChainId
 
