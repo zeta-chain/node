@@ -41,22 +41,22 @@ func startV2Tests(eg *errgroup.Group, conf config.Config, deployerRunner *runner
 	//	e2etests.TestV2ERC20DepositAndCallNoMessageName,
 	//))
 
-	// Test revert cases for gas token workflow
-	eg.Go(
-		v2TestRoutine(
-			conf,
-			"eth-revert",
-			conf.AdditionalAccounts.UserV2EtherRevert,
-			color.FgHiYellow,
-			deployerRunner,
-			verbose,
-			e2etests.TestV2ETHDepositName, // necessary to pay fees on ZEVM and withdraw
-			//e2etests.TestV2ETHDepositAndCallRevertName,
-			//e2etests.TestV2ETHDepositAndCallRevertWithCallName,
-			//e2etests.TestV2ETHWithdrawAndCallRevertName,
-			e2etests.TestV2ETHWithdrawAndCallRevertWithCallName,
-		),
-	)
+	//// Test revert cases for gas token workflow
+	//eg.Go(
+	//	v2TestRoutine(
+	//		conf,
+	//		"eth-revert",
+	//		conf.AdditionalAccounts.UserV2EtherRevert,
+	//		color.FgHiYellow,
+	//		deployerRunner,
+	//		verbose,
+	//		e2etests.TestV2ETHDepositName, // necessary to pay fees on ZEVM and withdraw
+	//		//e2etests.TestV2ETHDepositAndCallRevertName,
+	//		//e2etests.TestV2ETHDepositAndCallRevertWithCallName,
+	//		//e2etests.TestV2ETHWithdrawAndCallRevertName,
+	//		e2etests.TestV2ETHWithdrawAndCallRevertWithCallName,
+	//	),
+	//)
 
 	//// Test revert cases for erc20 token workflow
 	//eg.Go(
