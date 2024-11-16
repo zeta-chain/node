@@ -51,11 +51,11 @@ func (c *Contract) getRewards(
 		if errors.Is(err, distrtypes.ErrNoDelegationExists) {
 			rewards := make([]DecCoin, 0)
 			return method.Outputs.Pack(rewards)
-		} else {
-			return nil, &precompiletypes.ErrUnexpected{
-				When: "DelegationRewards",
-				Got:  err.Error(),
-			}
+		}
+
+		return nil, &precompiletypes.ErrUnexpected{
+			When: "DelegationRewards",
+			Got:  err.Error(),
 		}
 	}
 
