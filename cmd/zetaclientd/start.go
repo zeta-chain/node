@@ -241,6 +241,7 @@ func start(_ *cobra.Command, _ []string) error {
 	go func() {
 		host := server.GetP2PHost()
 		pingRTT := make(map[peer.ID]int64)
+		pingRTTLock := sync.Mutex{}
 		for {
 			var wg sync.WaitGroup
 			for _, p := range whitelistedPeers {
@@ -250,6 +251,8 @@ func start(_ *cobra.Command, _ []string) error {
 					ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 					defer cancel()
 					result := <-ping.Ping(ctx, host, p)
+					pingRTTLock.Lock()
+					defer pingRTTLock.Unlock()
 					if result.Error != nil {
 						masterLogger.Error().Err(result.Error).Msg("ping error")
 						pingRTT[p] = -1 // RTT -1 indicate ping error
