@@ -36,9 +36,10 @@ func Test_GetRewards(t *testing.T) {
 
 		/* ASSERT */
 		bytes, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "delegation does not exist")
-		require.Empty(t, bytes)
+		require.NoError(t, err)
+		res, err := getRewardsMethod.Outputs.Unpack(bytes)
+		require.NoError(t, err)
+		require.Empty(t, res[0])
 	})
 
 	t.Run("should return the zrc20 rewards list for a staker", func(t *testing.T) {

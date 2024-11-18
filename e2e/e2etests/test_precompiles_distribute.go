@@ -62,10 +62,11 @@ func TestPrecompilesDistributeAndClaim(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	require.GreaterOrEqual(r, len(validators), 2)
 
-	// Save first validators as it will be used through the test.
-	validator := validators[0]
-	validatorAddr, err := sdk.ValAddressFromBech32(validators[0].OperatorAddress)
-	require.NoError(r, err)
+	// Save first validator bech32 address and as it will be used through the test.
+	validatorAddr, validatorValAddr := getValidatorAddresses(r, distrContract)
+
+	// Reset the test after it finishes.
+	defer resetDistributionTest(r, distrContract, lockerAddress, previousGasLimit, staker, validatorValAddr)
 
 	// Get ERC20ZRC20.
 	txHash := r.DepositERC20WithAmountAndMessage(staker, zrc20DistrAmt, []byte{})
@@ -77,17 +78,17 @@ func TestPrecompilesDistributeAndClaim(r *runner.E2ERunner, args []string) {
 	require.Empty(r, dv, "DelegatorValidators response should be empty")
 
 	// Shares at this point should be 0.
-	sharesBefore, err := distrContract.GetShares(&bind.CallOpts{}, r.ZEVMAuth.From, validator.OperatorAddress)
+	sharesBefore, err := distrContract.GetShares(&bind.CallOpts{}, r.ZEVMAuth.From, validatorAddr)
 	require.NoError(r, err)
 	require.Equal(r, int64(0), sharesBefore.Int64(), "shares should be 0 when there are no delegations")
 
 	// There should be no rewards.
-	rewards, err := distrContract.GetRewards(&bind.CallOpts{}, staker, validator.OperatorAddress)
+	rewards, err := distrContract.GetRewards(&bind.CallOpts{}, staker, validatorAddr)
 	require.NoError(r, err)
 	require.Empty(r, rewards, "rewards should be empty when there are no delegations")
 
 	// Stake with spender so it's registered as a delegator.
-	err = stakeThroughCosmosAPI(r, validatorAddr, staker, stakeAmt)
+	err = stakeThroughCosmosAPI(r, validatorValAddr, staker, stakeAmt)
 	require.NoError(r, err)
 
 	// Check initial balances.
@@ -158,10 +159,10 @@ func TestPrecompilesDistributeAndClaim(r *runner.E2ERunner, args []string) {
 	// The result should include the validator address.
 	dv, err = distrContract.GetDelegatorValidators(&bind.CallOpts{}, staker)
 	require.NoError(r, err)
-	require.Contains(r, dv, validator.OperatorAddress, "DelegatorValidators response should include validator address")
+	require.Contains(r, dv, validatorAddr, "DelegatorValidators response should include validator address")
 
 	// Get rewards and check it contains zrc20 tokens.
-	rewards, err = distrContract.GetRewards(&bind.CallOpts{}, staker, validator.OperatorAddress)
+	rewards, err = distrContract.GetRewards(&bind.CallOpts{}, staker, validatorAddr)
 	require.NoError(r, err)
 	require.GreaterOrEqual(r, len(rewards), 2)
 	found := false
@@ -174,7 +175,7 @@ func TestPrecompilesDistributeAndClaim(r *runner.E2ERunner, args []string) {
 	require.True(r, found, "rewards should include the ZRC20 token")
 
 	// Claim the rewards, they'll be unlocked as ZRC20 tokens.
-	tx, err = distrContract.ClaimRewards(r.ZEVMAuth, staker, validator.OperatorAddress)
+	tx, err = distrContract.ClaimRewards(r.ZEVMAuth, staker, validatorAddr)
 	require.NoError(r, err)
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "claim rewards should succeed")
@@ -195,10 +196,8 @@ func TestPrecompilesDistributeAndClaim(r *runner.E2ERunner, args []string) {
 	lockerFinalBalance := big.NewInt(0).Sub(zrc20DistrAmt, zrc20RewardsAmt)
 	balanceShouldBe(r, lockerFinalBalance, checkZRC20Balance(r, lockerAddress))
 
-	// Set the test to reset the state after it finishes.
-	sharesAfter, err := distrContract.GetShares(&bind.CallOpts{}, r.ZEVMAuth.From, validator.OperatorAddress)
-	require.NoError(r, err)
-	resetDistributionTest(r, lockerAddress, previousGasLimit, staker, validatorAddr, sharesAfter)
+	// Staker final cosmos balance should be 0.
+	balanceShouldBe(r, zero, checkCosmosBalance(r, sdk.AccAddress(staker.Bytes()), zrc20Denom))
 }
 
 func TestPrecompilesDistributeNonZRC20(r *runner.E2ERunner, args []string) {
@@ -275,12 +274,17 @@ func stakeThroughCosmosAPI(
 
 func resetDistributionTest(
 	r *runner.E2ERunner,
+	distrContract *staking.IStaking,
 	lockerAddress common.Address,
 	previousGasLimit uint64,
 	staker common.Address,
 	validator sdk.ValAddress,
-	amount *big.Int,
 ) {
+	validatorAddr, _ := getValidatorAddresses(r, distrContract)
+
+	amount, err := distrContract.GetShares(&bind.CallOpts{}, r.ZEVMAuth.From, validatorAddr)
+	require.NoError(r, err)
+
 	// Restore the gas limit.
 	r.ZEVMAuth.GasLimit = previousGasLimit
 
@@ -288,7 +292,7 @@ func resetDistributionTest(
 	tx, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, lockerAddress, big.NewInt(0))
 	require.NoError(r, err)
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireTxSuccessful(r, receipt, "Resetting allowance failed")
+	utils.RequireTxSuccessful(r, receipt, "resetting allowance failed")
 
 	// Reset balance to 0 for spender; this is needed when running upgrade tests where this test runs twice.
 	balance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
@@ -311,10 +315,26 @@ func resetDistributionTest(
 		validator,
 		sdk.Coin{
 			Denom:  "azeta",
-			Amount: math.NewIntFromBigInt(amount),
+			Amount: math.NewIntFromBigInt(amount.Div(amount, big.NewInt(1e18))),
 		},
 	)
 
 	_, err = r.ZetaTxServer.BroadcastTx(sdk.AccAddress(staker.Bytes()).String(), msg)
 	require.NoError(r, err)
+}
+
+func getValidatorAddresses(r *runner.E2ERunner, distrContract *staking.IStaking) (string, sdk.ValAddress) {
+	// distrContract, err := staking.NewIStaking(staking.ContractAddress, r.ZEVMClient)
+	// require.NoError(r, err, "failed to create distribute contract caller")
+
+	// Retrieve the list of validators.
+	validators, err := distrContract.GetAllValidators(&bind.CallOpts{})
+	require.NoError(r, err)
+	require.GreaterOrEqual(r, len(validators), 2)
+
+	// Save first validators as it will be used through the test.
+	validatorAddr, err := sdk.ValAddressFromBech32(validators[0].OperatorAddress)
+	require.NoError(r, err)
+
+	return validators[0].OperatorAddress, validatorAddr
 }

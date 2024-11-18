@@ -30,33 +30,36 @@ interface IDistribute {
 
 // @dev Call IBank contract functions
 contract TestDistribute {
-    event Distributed(
-        address indexed zrc20_distributor,
-        address indexed zrc20_token,
-        uint256 amount
-    );
-
     IDistribute distr = IDistribute(0x0000000000000000000000000000000000000066);
-
-    address immutable owner;
-
-    constructor() {
-        owner = msg.sender;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner);
-        _;
-    }
-
-    function distributeThroughContract(
-        address zrc20,
-        uint256 amount
-    ) external onlyOwner returns (bool) {
-        return distr.distribute(zrc20, amount);
-    }
 
     fallback() external payable {}
 
     receive() external payable {}
+
+    function distributeThroughContract(
+        address zrc20,
+        uint256 amount
+    ) external returns (bool) {
+        return distr.distribute(zrc20, amount);
+    }
+
+    function claimRewardsThroughContract(
+        address delegator,
+        string memory validator
+    ) external returns (bool) {
+        return distr.claimRewards(delegator, validator);
+    }
+
+    function getDelegatorValidatorsThroughContract(
+        address delegator
+    ) external view returns (string[] memory) {
+        return distr.getDelegatorValidators(delegator);
+    }
+
+    function getRewardsThroughContract(
+        address delegator,
+        string memory validator
+    ) external view returns (DecCoin[] memory) {
+        return distr.getRewards(delegator, validator);
+    }
 }

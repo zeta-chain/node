@@ -2,11 +2,13 @@ package e2etests
 
 import (
 	"math/big"
+	"strings"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
+	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/e2e/contracts/testdistribute"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -19,106 +21,181 @@ func TestPrecompilesDistributeAndClaimThroughContract(r *runner.E2ERunner, args 
 	require.Len(r, args, 0, "No arguments expected")
 
 	var (
-		spenderAddress            = r.EVMAddress()
-		distributeContractAddress = staking.ContractAddress
-		lockerAddress             = bank.ContractAddress
+		// Addresses.
+		staker               = r.EVMAddress()
+		distrContractAddress = staking.ContractAddress
+		lockerAddress        = bank.ContractAddress
 
-		zrc20Address = r.ERC20ZRC20Addr
-		zrc20Denom   = precompiletypes.ZRC20ToCosmosDenom(zrc20Address)
+		// Stake amount.
+		stakeAmt = new(big.Int)
+
+		// ZRC20 distribution.
+		zrc20Address  = r.ERC20ZRC20Addr
+		zrc20Denom    = precompiletypes.ZRC20ToCosmosDenom(zrc20Address)
+		zrc20DistrAmt = big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1e6))
 
 		// carry is carried from the TestPrecompilesDistributeName test. It's applicable only to locker address.
-		carry            = big.NewInt(6210810988040846448)
-		oneThousand      = big.NewInt(1e3)
-		oneThousandOne   = big.NewInt(1001)
-		fiveHundred      = big.NewInt(500)
-		fiveHundredCarry = new(big.Int).Add(big.NewInt(500), carry)
-		fiveHundredOne   = big.NewInt(501)
-		zero             = big.NewInt(0)
+		// This is needed because there's no easy way to retrieve that balance from the locker.
+		carry              = big.NewInt(6210810988040846448)
+		zrc20DistrAmtCarry = new(big.Int).Add(zrc20DistrAmt, carry)
+		oneThousand        = big.NewInt(1e3)
+		oneThousandOne     = big.NewInt(1001)
+		fiveHundred        = big.NewInt(500)
+		fiveHundredOne     = big.NewInt(501)
+		zero               = big.NewInt(0)
 
-		//previousGasLimit = r.ZEVMAuth.GasLimit
+		previousGasLimit = r.ZEVMAuth.GasLimit
 	)
 
-	// Get ERC20ZRC20.
-	txHash := r.DepositERC20WithAmountAndMessage(spenderAddress, oneThousand, []byte{})
-	utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	// stakeAmt has to be as big as the validator self delegation.
+	// This way the rewards will be distributed 50%.
+	_, ok := stakeAmt.SetString("1000000000000000000000", 10)
+	require.True(r, ok)
 
-	dstrContract, err := staking.NewIStaking(distributeContractAddress, r.ZEVMClient)
+	// Set new gas limit to avoid out of gas errors.
+	r.ZEVMAuth.GasLimit = 10_000_000
+
+	distrContract, err := staking.NewIStaking(distrContractAddress, r.ZEVMClient)
 	require.NoError(r, err, "failed to create distribute contract caller")
 
+	// testDstrContract  is the dApp contract that uses the staking precompile under the hood.
 	_, tx, testDstrContract, err := testdistribute.DeployTestDistribute(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "deployment of disitributor caller contract failed")
 
-	// Set new gas limit to avoid out of gas errors.
-	r.ZEVMAuth.GasLimit = 10_000_000
+	// Save first validator bech32 address and ValAddress as it will be used through the test.
+	validatorAddr, validatorValAddr := getValidatorAddresses(r, distrContract)
 
-	// Set the test to reset the state after it finishes.
-	//defer resetDistributionTest(r, lockerAddress, previousGasLimit)
+	// Reset the test after it finishes.
+	defer resetDistributionTest(r, distrContract, lockerAddress, previousGasLimit, staker, validatorValAddr)
+
+	// Get ERC20ZRC20.
+	txHash := r.DepositERC20WithAmountAndMessage(staker, zrc20DistrAmt, []byte{})
+	utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+
+	// There is no delegation, so the response should be empty.
+	dv, err := testDstrContract.GetDelegatorValidatorsThroughContract(
+		&bind.CallOpts{},
+		staker,
+	)
+	require.NoError(r, err)
+	require.Empty(r, dv, "DelegatorValidators response should be empty")
+
+	// There should be no rewards.
+	rewards, err := testDstrContract.GetRewardsThroughContract(&bind.CallOpts{}, staker, validatorAddr)
+	require.NoError(r, err)
+	require.Empty(r, rewards, "rewards should be empty when there are no delegations")
+
+	// Stake with spender so it's registered as a delegator.
+	err = stakeThroughCosmosAPI(r, validatorValAddr, staker, stakeAmt)
+	require.NoError(r, err)
 
 	// Check initial balances.
-	balanceShouldBe(r, oneThousand, checkZRC20Balance(r, spenderAddress))
-	balanceShouldBe(r, carry, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
+	balanceShouldBe(r, zrc20DistrAmt, checkZRC20Balance(r, staker))
+	balanceShouldBe(r, carry, checkZRC20Balance(r, lockerAddress))
 	balanceShouldBe(r, zero, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
-	receipt = distributeThroughContract(r, testDstrContract, zrc20Address, oneThousand)
+	tx, err = testDstrContract.DistributeThroughContract(r.ZEVMAuth, zrc20Address, oneThousand)
+	require.NoError(r, err)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequiredTxFailed(r, receipt, "distribute should fail when there's no allowance")
 
 	// Balances shouldn't change after a failed attempt.
-	balanceShouldBe(r, oneThousand, checkZRC20Balance(r, spenderAddress))
-	balanceShouldBe(r, carry, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
+	balanceShouldBe(r, zrc20DistrAmt, checkZRC20Balance(r, staker))
+	balanceShouldBe(r, carry, checkZRC20Balance(r, lockerAddress))
 	balanceShouldBe(r, zero, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	// Allow 500.
-	approveAllowance(r, distributeContractAddress, fiveHundred)
+	approveAllowance(r, distrContractAddress, fiveHundred)
 
-	receipt = distributeThroughContract(r, testDstrContract, zrc20Address, fiveHundredOne)
+	tx, err = testDstrContract.DistributeThroughContract(r.ZEVMAuth, zrc20Address, fiveHundredOne)
+	require.NoError(r, err)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequiredTxFailed(r, receipt, "distribute should fail trying to distribute more than allowed")
 
 	// Balances shouldn't change after a failed attempt.
-	balanceShouldBe(r, oneThousand, checkZRC20Balance(r, spenderAddress))
-	balanceShouldBe(r, carry, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
+	balanceShouldBe(r, zrc20DistrAmt, checkZRC20Balance(r, staker))
+	balanceShouldBe(r, carry, checkZRC20Balance(r, lockerAddress))
 	balanceShouldBe(r, zero, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	// Raise the allowance to 1000.
-	approveAllowance(r, distributeContractAddress, oneThousand)
+	approveAllowance(r, distrContractAddress, oneThousand)
 
 	// Shouldn't be able to distribute more than owned balance.
-	receipt = distributeThroughContract(r, testDstrContract, zrc20Address, oneThousandOne)
+	tx, err = testDstrContract.DistributeThroughContract(r.ZEVMAuth, zrc20Address, oneThousandOne)
+	require.NoError(r, err)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequiredTxFailed(r, receipt, "distribute should fail trying to distribute more than owned balance")
 
 	// Balances shouldn't change after a failed attempt.
-	balanceShouldBe(r, oneThousand, checkZRC20Balance(r, spenderAddress))
-	balanceShouldBe(r, carry, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
+	balanceShouldBe(r, zrc20DistrAmt, checkZRC20Balance(r, staker))
+	balanceShouldBe(r, carry, checkZRC20Balance(r, lockerAddress))
 	balanceShouldBe(r, zero, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
-	// Should be able to distribute 500, which is within balance and allowance.
-	receipt = distributeThroughContract(r, testDstrContract, zrc20Address, fiveHundred)
+	// Raise the allowance to max tokens.
+	approveAllowance(r, distrContractAddress, zrc20DistrAmt)
+
+	// Should be able to distribute an amount which is within balance and allowance.
+	tx, err = testDstrContract.DistributeThroughContract(r.ZEVMAuth, zrc20Address, zrc20DistrAmt)
+	require.NoError(r, err)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "distribute should succeed when distributing within balance and allowance")
 
-	balanceShouldBe(r, fiveHundred, checkZRC20Balance(r, spenderAddress))
-	balanceShouldBe(r, fiveHundredCarry, checkZRC20Balance(r, lockerAddress)) // Carries 500 from distribute e2e.
-	balanceShouldBe(r, fiveHundred, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
+	balanceShouldBe(r, zero, checkZRC20Balance(r, staker))
+	balanceShouldBe(r, zrc20DistrAmtCarry, checkZRC20Balance(r, lockerAddress))
+	balanceShouldBe(r, zrc20DistrAmt, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
-	eventDitributed, err := dstrContract.ParseDistributed(*receipt.Logs[0])
+	eventDitributed, err := distrContract.ParseDistributed(*receipt.Logs[0])
 	require.NoError(r, err)
 	require.Equal(r, zrc20Address, eventDitributed.Zrc20Token)
-	require.Equal(r, spenderAddress, eventDitributed.Zrc20Distributor)
-	require.Equal(r, fiveHundred.Uint64(), eventDitributed.Amount.Uint64())
+	require.Equal(r, staker, eventDitributed.Zrc20Distributor)
+	require.Equal(r, zrc20DistrAmt.Uint64(), eventDitributed.Amount.Uint64())
 
 	// After one block the rewards should have been distributed and fee collector should have 0 ZRC20 balance.
 	r.WaitForBlocks(1)
 	balanceShouldBe(r, zero, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
-}
 
-func distributeThroughContract(
-	r *runner.E2ERunner,
-	dstr *testdistribute.TestDistribute,
-	zrc20Address common.Address,
-	amount *big.Int,
-) *types.Receipt {
-	tx, err := dstr.DistributeThroughContract(r.ZEVMAuth, zrc20Address, amount)
+	// DelegatorValidators returns the list of validator this delegator has delegated to.
+	// The result should include the validator address.
+	dv, err = testDstrContract.GetDelegatorValidatorsThroughContract(&bind.CallOpts{}, staker)
 	require.NoError(r, err)
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	return receipt
+	require.Contains(r, dv, validatorAddr, "DelegatorValidators response should include validator address")
+
+	// Get rewards and check it contains zrc20 tokens.
+	rewards, err = testDstrContract.GetRewardsThroughContract(&bind.CallOpts{}, staker, validatorAddr)
+	require.NoError(r, err)
+	require.GreaterOrEqual(r, len(rewards), 2)
+	found := false
+	for _, coin := range rewards {
+		if strings.Contains(coin.Denom, config.ZRC20DenomPrefix) {
+			found = true
+			break
+		}
+	}
+	require.True(r, found, "rewards should include the ZRC20 token")
+
+	tx, err = testDstrContract.ClaimRewardsThroughContract(r.ZEVMAuth, staker, validatorAddr)
+	require.NoError(r, err)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt, "claim rewards should succeed")
+
+	// Before claiming rewards the ZRC20 balance is 0. After claiming rewards the ZRC20 balance should be 14239697290875601808.
+	// Which is the amount of ZRC20 distributed, divided by two validators, and subtracted the commissions.
+	zrc20RewardsAmt, ok := big.NewInt(0).SetString("14239697290875601808", 10)
+	require.True(r, ok)
+	balanceShouldBe(r, zrc20RewardsAmt, checkZRC20Balance(r, staker))
+
+	eventClaimed, err := distrContract.ParseClaimedRewards(*receipt.Logs[0])
+	require.NoError(r, err)
+	require.Equal(r, zrc20Address, eventClaimed.Zrc20Token)
+	require.Equal(r, staker, eventClaimed.ClaimAddress)
+	require.Equal(r, zrc20RewardsAmt.Uint64(), eventClaimed.Amount.Uint64())
+
+	// Locker final balance should be zrc20Distributed with carry - zrc20RewardsAmt.
+	lockerFinalBalance := big.NewInt(0).Sub(zrc20DistrAmtCarry, zrc20RewardsAmt)
+	balanceShouldBe(r, lockerFinalBalance, checkZRC20Balance(r, lockerAddress))
+
+	// Staker final cosmos balance should be 0.
+	balanceShouldBe(r, zero, checkCosmosBalance(r, sdk.AccAddress(staker.Bytes()), zrc20Denom))
 }
