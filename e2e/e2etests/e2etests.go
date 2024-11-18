@@ -110,9 +110,10 @@ const (
 	 Miscellaneous tests
 	 Test various functionalities not related to assets
 	*/
-	TestContextUpgradeName = "context_upgrade"
-	TestMyTestName         = "my_test"
-	TestDonationEtherName  = "donation_ether"
+	TestContextUpgradeName  = "context_upgrade"
+	TestMyTestName          = "my_test"
+	TestDonationEtherName   = "donation_ether"
+	TestInboundTrackersName = "inbound_trackers"
 
 	/*
 	 Stress tests
@@ -736,6 +737,12 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "100000000000000000"},
 		},
 		TestDonationEther,
+	),
+	runner.NewE2ETest(
+		TestInboundTrackersName,
+		"test inbound trackers",
+		[]runner.ArgDefinition{},
+		TestInboundTrackers,
 	),
 	/*
 	 Stress tests
