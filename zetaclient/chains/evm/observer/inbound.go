@@ -144,24 +144,32 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 		}
 		ob.Logger().Inbound.Info().Msgf("checking tracker for inbound %s chain %d", tracker.TxHash, ob.Chain().ChainId)
 
-		// check and vote on inbound tx
-		switch tracker.CoinType {
-		case coin.CoinType_Zeta:
-			_, err = ob.CheckAndVoteInboundTokenZeta(ctx, tx, receipt, true)
-		case coin.CoinType_ERC20:
-			_, err = ob.CheckAndVoteInboundTokenERC20(ctx, tx, receipt, true)
-		case coin.CoinType_Gas:
-			_, err = ob.CheckAndVoteInboundTokenGas(ctx, tx, receipt, true)
-		default:
-			return fmt.Errorf(
-				"unknown coin type %s for inbound %s chain %d",
-				tracker.CoinType,
-				tx.Hash,
-				ob.Chain().ChainId,
-			)
-		}
-		if err != nil {
-			return errors.Wrapf(err, "error checking and voting for inbound %s chain %d", tx.Hash, ob.Chain().ChainId)
+		// if the transaction is sent to the gateway, this is a v2 inbound
+		gatewayAddr, gateway, err := ob.GetGatewayContract()
+		if err == nil && ethcommon.HexToAddress(tx.To) == gatewayAddr {
+			if err := ob.ProcessInboundTrackerV2(ctx, gateway, tx, receipt); err != nil {
+				return err
+			}
+		} else {
+			// check and vote on inbound tx
+			switch tracker.CoinType {
+			case coin.CoinType_Zeta:
+				_, err = ob.CheckAndVoteInboundTokenZeta(ctx, tx, receipt, true)
+			case coin.CoinType_ERC20:
+				_, err = ob.CheckAndVoteInboundTokenERC20(ctx, tx, receipt, true)
+			case coin.CoinType_Gas:
+				_, err = ob.CheckAndVoteInboundTokenGas(ctx, tx, receipt, true)
+			default:
+				return fmt.Errorf(
+					"unknown coin type %s for inbound %s chain %d",
+					tracker.CoinType,
+					tx.Hash,
+					ob.Chain().ChainId,
+				)
+			}
+			if err != nil {
+				return errors.Wrapf(err, "error checking and voting for inbound %s chain %d", tx.Hash, ob.Chain().ChainId)
+			}
 		}
 	}
 	return nil
