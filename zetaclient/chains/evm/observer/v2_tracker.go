@@ -3,10 +3,12 @@ package observer
 import (
 	"context"
 	"fmt"
+
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/onrik/ethrpc"
-	"github.com/zeta-chain/node/zetaclient/zetacore"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
+
+	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 func (ob *Observer) ProcessInboundTrackerV2(
@@ -24,7 +26,12 @@ func (ob *Observer) ProcessInboundTrackerV2(
 		eventDeposit, err := gateway.ParseDeposited(*log)
 		if err == nil {
 			// check if the event is processable
-			if !ob.checkEventProcessability(eventDeposit.Sender, eventDeposit.Receiver, eventDeposit.Raw.TxHash, eventDeposit.Payload) {
+			if !ob.checkEventProcessability(
+				eventDeposit.Sender,
+				eventDeposit.Receiver,
+				eventDeposit.Raw.TxHash,
+				eventDeposit.Payload,
+			) {
 				return fmt.Errorf("event from inbound tracker %s is not processable", tx.Hash)
 			}
 			msg := ob.newDepositInboundVote(eventDeposit)
@@ -36,7 +43,12 @@ func (ob *Observer) ProcessInboundTrackerV2(
 		eventDepositAndCall, err := gateway.ParseDepositedAndCalled(*log)
 		if err == nil {
 			// check if the event is processable
-			if !ob.checkEventProcessability(eventDepositAndCall.Sender, eventDepositAndCall.Receiver, eventDepositAndCall.Raw.TxHash, eventDepositAndCall.Payload) {
+			if !ob.checkEventProcessability(
+				eventDepositAndCall.Sender,
+				eventDepositAndCall.Receiver,
+				eventDepositAndCall.Raw.TxHash,
+				eventDepositAndCall.Payload,
+			) {
 				return fmt.Errorf("event from inbound tracker %s is not processable", tx.Hash)
 			}
 			msg := ob.newDepositAndCallInboundVote(eventDepositAndCall)
@@ -48,7 +60,12 @@ func (ob *Observer) ProcessInboundTrackerV2(
 		eventCall, err := gateway.ParseCalled(*log)
 		if err == nil {
 			// check if the event is processable
-			if !ob.checkEventProcessability(eventCall.Sender, eventCall.Receiver, eventCall.Raw.TxHash, eventCall.Payload) {
+			if !ob.checkEventProcessability(
+				eventCall.Sender,
+				eventCall.Receiver,
+				eventCall.Raw.TxHash,
+				eventCall.Payload,
+			) {
 				return fmt.Errorf("event from inbound tracker %s is not processable", tx.Hash)
 			}
 			msg := ob.newCallInboundVote(eventCall)
