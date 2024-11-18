@@ -148,7 +148,7 @@ func getTSSTX(
 		return "", err
 	}
 
-	sig65B, err := tss.Sign(ctx, witnessHash, 10, 10, 0, "")
+	sig65B, err := tss.Sign(ctx, witnessHash, 10, 10, 0)
 	R := &btcec.ModNScalar{}
 	R.SetBytes((*[32]byte)(sig65B[:32]))
 	S := &btcec.ModNScalar{}

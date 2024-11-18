@@ -218,22 +218,11 @@ func (tss *TSS) Pubkey() []byte {
 
 // Sign signs a digest
 // digest should be Hashes of some data
-// NOTE: Specify optionalPubkey to use a different pubkey than the current pubkey set during keygen
-func (tss *TSS) Sign(
-	ctx context.Context,
-	digest []byte,
-	height uint64,
-	nonce uint64,
-	chainID int64,
-	optionalPubKey string,
-) ([65]byte, error) {
+func (tss *TSS) Sign(ctx context.Context, digest []byte, height, nonce uint64, chainID int64) ([65]byte, error) {
 	H := digest
 	log.Debug().Msgf("hash of digest is %s", H)
 
 	tssPubkey := tss.CurrentPubkey
-	if optionalPubKey != "" {
-		tssPubkey = optionalPubKey
-	}
 
 	// #nosec G115 always in range
 	keysignReq := keysign.NewRequest(

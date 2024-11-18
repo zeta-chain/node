@@ -197,7 +197,7 @@ func (signer *Signer) Sign(
 
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
 
-	sig, err := signer.TSS().Sign(ctx, hashBytes, height, nonce, signer.Chain().ChainId, "")
+	sig, err := signer.TSS().Sign(ctx, hashBytes, height, nonce, signer.Chain().ChainId)
 	if err != nil {
 		return nil, nil, nil, err
 	}

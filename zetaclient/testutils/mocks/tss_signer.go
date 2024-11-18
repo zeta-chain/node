@@ -103,7 +103,7 @@ func (s *TSS) WithPrivKey(privKey *ecdsa.PrivateKey) *TSS {
 }
 
 // Sign uses test key unrelated to any tss key in production
-func (s *TSS) Sign(_ context.Context, data []byte, _ uint64, _ uint64, _ int64, _ string) ([65]byte, error) {
+func (s *TSS) Sign(_ context.Context, data []byte, _ uint64, _ uint64, _ int64) ([65]byte, error) {
 	// return error if tss is paused
 	if s.paused {
 		return [65]byte{}, fmt.Errorf("tss is paused")

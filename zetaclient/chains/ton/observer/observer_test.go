@@ -199,7 +199,7 @@ func (ts *testSuite) sign(msg signable) {
 	hash, err := msg.Hash()
 	require.NoError(ts.t, err)
 
-	sig, err := ts.tss.Sign(ts.ctx, hash[:], 0, 0, 0, "")
+	sig, err := ts.tss.Sign(ts.ctx, hash[:], 0, 0, 0)
 	require.NoError(ts.t, err)
 
 	msg.SetSignature(sig)

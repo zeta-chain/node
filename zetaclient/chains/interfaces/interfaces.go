@@ -227,25 +227,11 @@ type EVMJSONRPCClient interface {
 // TSSSigner is the interface for TSS signer
 type TSSSigner interface {
 	Pubkey() []byte
-
-	// Sign signs the data
-	// Note: it specifies optionalPubkey to use a different pubkey than the current pubkey set during keygen
-	// TODO: check if optionalPubkey is needed
-	// https://github.com/zeta-chain/node/issues/2085
-	Sign(
-		ctx context.Context,
-		data []byte,
-		height uint64,
-		nonce uint64,
-		chainID int64,
-		optionalPubkey string,
-	) ([65]byte, error)
-
-	// SignBatch signs the data in batch
-	SignBatch(ctx context.Context, digests [][]byte, height uint64, nonce uint64, chainID int64) ([][65]byte, error)
-
 	EVMAddress() ethcommon.Address
 	EVMAddressList() []ethcommon.Address
 	BTCAddress(chainID int64) (*btcutil.AddressWitnessPubKeyHash, error)
 	PubKeyCompressedBytes() []byte
+
+	Sign(ctx context.Context, data []byte, height, nonce uint64, chainID int64) ([65]byte, error)
+	SignBatch(ctx context.Context, digests [][]byte, height, nonce uint64, chainID int64) ([][65]byte, error)
 }
