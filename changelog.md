@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v22.1.2
+
+## Fixes
+
+- [3181](https://github.com/zeta-chain/node/pull/3181) - add lock around pingRTT to prevent crash
+
 ## v22.1.1
 
 ## Fixes
