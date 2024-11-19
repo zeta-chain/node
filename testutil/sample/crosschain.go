@@ -304,16 +304,17 @@ func CoinTypeFromRand(r *rand.Rand) coin.CoinType {
 }
 
 // InboundVoteSim creates a simulated inbound vote message. This function uses the provided source of randomness to generate
-func InboundVoteSim(_ coin.CoinType, from, to int64, r *rand.Rand) types.MsgVoteInbound {
+func InboundVoteSim(from, to int64, r *rand.Rand) types.MsgVoteInbound {
 	coinType := CoinTypeFromRand(r)
 	return types.MsgVoteInbound{
-		Creator:            "",
-		Sender:             EthAddressFromRand(r).String(),
-		SenderChainId:      from,
-		Receiver:           EthAddressFromRand(r).String(),
-		ReceiverChain:      to,
-		Amount:             math.NewUint(r.Uint64()),
-		Message:            "95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5",
+		Creator:       "",
+		Sender:        EthAddressFromRand(r).String(),
+		SenderChainId: from,
+		Receiver:      EthAddressFromRand(r).String(),
+		ReceiverChain: to,
+		Amount:        math.NewUint(r.Uint64()),
+		Message:       "95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5", // Refactor this
+		// to use ProtocolContractVersion_V2 format
 		InboundBlockHeight: r.Uint64(),
 		CallOptions: &types.CallOptions{
 			GasLimit: 1000000000,

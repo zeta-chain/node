@@ -393,7 +393,7 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 			}
 		}
 
-		msg := sample.InboundVoteSim(0, from, to, r)
+		msg := sample.InboundVoteSim(from, to, r)
 		// Return early if inbound is not enabled.
 		cf, found := k.GetObserverKeeper().GetCrosschainFlags(ctx)
 		if !found {
