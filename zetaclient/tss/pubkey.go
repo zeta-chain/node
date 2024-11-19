@@ -37,8 +37,6 @@ func NewPubKeyFromBech32(bech32 string) (PubKey, error) {
 		return PubKey{}, errors.Wrap(err, "unable to DecompressPubkey")
 	}
 
-	crypto.FromECDSAPub(pubKey)
-
 	return PubKey{
 		cosmosPubKey: cosmosPubKey,
 		ecdsaPubKey:  pubKey,
