@@ -2,13 +2,10 @@ package tss
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"strings"
 	"time"
 
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
@@ -158,7 +155,7 @@ func (s *Service) SignBatch(
 
 	digestsBase64 := make([]string, len(digests))
 	for i, digest := range digests {
-		digestsBase64[i] = base64.StdEncoding.EncodeToString(digest)
+		digestsBase64[i] = base64EncodeString(digest)
 	}
 
 	tssPubKeyBech32 := s.PubKey().Bech32String()
@@ -272,13 +269,6 @@ func (s *Service) blameFailure(
 		Msg("Posted blame data to zetacore")
 
 	return errFailure
-}
-
-// combineDigests combines the digests
-func combineDigests(digestList []string) []byte {
-	digestConcat := strings.Join(digestList, "")
-	digestBytes := chainhash.DoubleHashH([]byte(digestConcat))
-	return digestBytes.CloneBytes()
 }
 
 func keysignLogFields(req keysign.Request, height, nonce uint64, chainID int64) map[string]any {

@@ -2,15 +2,18 @@ package tss
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"time"
 
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
 	"gitlab.com/thorchain/tss/go-tss/keygen"
+	"gitlab.com/thorchain/tss/go-tss/keysign"
 	"gitlab.com/thorchain/tss/go-tss/tss"
 	"golang.org/x/crypto/sha3"
 
@@ -228,4 +231,50 @@ func digestReq(req keygen.Request) (string, error) {
 	digest := hex.EncodeToString(hasher.Sum(nil))
 
 	return digest, nil
+}
+
+var testKeySignData = []byte("hello meta")
+
+// TestKeySign performs a TSS key-sign test of sample data.
+func TestKeySign(keySigner KeySigner, tssPubKey string, logger zerolog.Logger) error {
+	logger = logger.With().Str(logs.FieldModule, "tss_keysign").Logger()
+
+	hashedData := crypto.Keccak256Hash(testKeySignData)
+
+	logger.Info().
+		Str("keysign.test_data", string(testKeySignData)).
+		Str("keysign.test_data_hash", hashedData.String()).
+		Msg("Performing TSS key-sign test")
+
+	req := keysign.NewRequest(
+		tssPubKey,
+		[]string{base64.StdEncoding.EncodeToString(hashedData.Bytes())},
+		10,
+		nil,
+		Version,
+	)
+
+	res, err := keySigner.KeySign(req)
+	switch {
+	case err != nil:
+		return errors.Wrap(err, "key signing request error")
+	case res.Status != tsscommon.Success:
+		logger.Error().Interface("keysign.fail_blame", res.Blame).Msg("Keysign failed")
+		return errors.Wrapf(err, "key signing is not successful (status %d)", res.Status)
+	case len(res.Signatures) == 0:
+		return errors.New("signatures list is empty")
+	}
+
+	// 32B msg hash, 32B R, 32B S, 1B RC
+	signature := res.Signatures[0]
+
+	logger.Info().Interface("keysign.signature", signature).Msg("Received signature from TSS")
+
+	if _, err = VerifySignature(signature, tssPubKey, hashedData.Bytes()); err != nil {
+		return errors.Wrap(err, "signature verification failed")
+	}
+
+	logger.Info().Msg("TSS key-sign test passed")
+
+	return nil
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/rand"
-	"encoding/base64"
 	"fmt"
 	"regexp"
 	"testing"
@@ -129,6 +128,7 @@ func (m *keySignerMock) PubKeyBech32() string {
 	return bech32
 }
 
+// AddCall mimics TSS signature process (when called with provided arguments)
 func (m *keySignerMock) AddCall(pk string, digests [][]byte, height int64, success bool, err error) {
 	if success && err != nil {
 		m.t.Fatalf("success and error are mutually exclusive")
@@ -136,7 +136,7 @@ func (m *keySignerMock) AddCall(pk string, digests [][]byte, height int64, succe
 
 	var (
 		msgs = lo.Map(digests, func(digest []byte, _ int) string {
-			return base64.StdEncoding.EncodeToString(digest)
+			return base64EncodeString(digest)
 		})
 
 		req = keysign.NewRequest(pk, msgs, height, nil, Version)
@@ -175,9 +175,9 @@ func (m *keySignerMock) sign(req keysign.Request) keysign.Response {
 
 		signatures = append(signatures, keysign.Signature{
 			Msg:        msg,
-			R:          base64.StdEncoding.EncodeToString(sig[:32]),
-			S:          base64.StdEncoding.EncodeToString(sig[32:64]),
-			RecoveryID: base64.StdEncoding.EncodeToString(sig[64:65]),
+			R:          base64EncodeString(sig[:32]),
+			S:          base64EncodeString(sig[32:64]),
+			RecoveryID: base64EncodeString(sig[64:65]),
 		})
 	}
 
