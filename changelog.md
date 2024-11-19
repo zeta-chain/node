@@ -29,6 +29,7 @@
 * [3149](https://github.com/zeta-chain/node/pull/3149) - abort the cctx if dust amount is detected in the revert outbound
 * [3155](https://github.com/zeta-chain/node/pull/3155) - fix potential panic in the Bitcoin inscription parsing
 * [3162](https://github.com/zeta-chain/node/pull/3162) - skip depositor fee calculation if transaction does not involve TSS address
+* [3184](https://github.com/zeta-chain/node/pull/3184) - zetaclient should not retry if inbound vote message validation fails
 
 ## v21.0.0
 
