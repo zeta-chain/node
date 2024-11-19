@@ -207,6 +207,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 	// uncomment this line to stop observing inbound and test observation with inbound trackers
 	// https://github.com/zeta-chain/node/blob/3879b5ef8b418542c82a4383263604222f0605c6/e2e/e2etests/test_inbound_trackers.go#L19
 	// TODO: implement a programmatic way to disable inbound observation
+	// https://github.com/zeta-chain/node/issues/3186
 	//return nil
 
 	// skip if current height is too low
