@@ -226,6 +226,8 @@ func operationSimulateVoteInbound(
 
 func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 
+	defaultVote := chains.ReceiveStatus_success
+	alternativeVote := chains.ReceiveStatus_failed
 	observerVotesTransitionMatrix, statePercentageArray, curNumVotesState := ObserverVotesSimulationMatrix()
 	ballotVotesTransitionMatrix, yesVotePercentageArray, ballotVotesState := BallotVoteSimulationMatrix()
 	return func(
@@ -258,6 +260,8 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 		}
 
 		cctx, msg := sample.OutboundVoteSim(r, creator, index, to, from, tss.TssPubkey)
+		msg.Status = defaultVote
+
 		err = k.SetObserverOutboundInfo(ctx, to, &cctx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to set observer outbound info"), nil, err
@@ -326,8 +330,12 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 		ballotVotesState = ballotVotesTransitionMatrix.NextState(r, ballotVotesState)
 		yesVotePercentage := yesVotePercentageArray[ballotVotesState]
 		numberOfYesVotes := int(math.Ceil(float64(numVotes) * yesVotePercentage))
-		vote := chains.ReceiveStatus_success
-		for _, observerIdx := range whoVotes {
+		vote := defaultVote
+
+		for voteCount, observerIdx := range whoVotes {
+			if voteCount == numberOfYesVotes {
+				vote = alternativeVote
+			}
 			observerAddress := observerSet.ObserverList[observerIdx]
 			// firstVoter has already voted.
 			if observerAddress == firstVoter {
@@ -340,6 +348,7 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 			// 1.3) schedule the vote
 			votingMsg := msg
 			votingMsg.Creator = observerAddress
+			votingMsg.Status = vote
 
 			e := votingMsg.ValidateBasic()
 			if e != nil {
@@ -650,14 +659,7 @@ func GenAndDeliverTx(
 }
 
 func ObserverVotesSimulationMatrix() (simtypes.TransitionMatrix, []float64, int) {
-	// The states are:
-	// column 1: All observers vote
-	// column 2: 90% vote
-	// column 3: 75% vote
-	// column 4: 40% vote
-	// column 5: 15% vote
-	// column 6: noone votes
-	// All columns sum to 100 for simplicity, but this is arbitrary and can be changed
+
 	observerVotesTransitionMatrix, _ := simulation.CreateTransitionMatrix([][]int{
 		{20, 10, 0, 0, 0, 0},
 		{55, 50, 20, 10, 0, 0},
@@ -666,25 +668,31 @@ func ObserverVotesSimulationMatrix() (simtypes.TransitionMatrix, []float64, int)
 		{0, 0, 20, 30, 30, 30},
 		{0, 0, 0, 10, 10, 25},
 	})
-
+	// The states are:
+	// column 1: All observers vote
+	// column 2: 90% vote
+	// column 3: 75% vote
+	// column 4: 40% vote
+	// column 5: 15% vote
+	// column 6: noone votes
+	// All columns sum to 100 for simplicity, but this is arbitrary and can be changed
 	statePercentageArray := []float64{1, .9, .75, .4, .15, 0}
 	curNumVotesState := 1
 	return observerVotesTransitionMatrix, statePercentageArray, curNumVotesState
 }
 
 func BallotVoteSimulationMatrix() (simtypes.TransitionMatrix, []float64, int) {
+	ballotTransitionMatrix, _ := simulation.CreateTransitionMatrix([][]int{
+		{70, 10, 20},
+		{20, 30, 30},
+		{10, 60, 50},
+	})
 	// The states are:
 	// column 1: 100% vote yes
 	// column 2: 50% vote yes
 	// column 3: 0% vote yes
 	// For all conditions we assume if the the vote is not a yes.
 	// then it is a no .Not voting condtion is handled by the ObserverVotesSimulationMatrix matrix
-	ballotTransitionMatrix, _ := simulation.CreateTransitionMatrix([][]int{
-		{20, 50, 50},
-		{55, 50, 20},
-		{25, 0, 30},
-	})
-
 	yesVoteArray := []float64{1, .5, 0}
 	ballotVotesState := 1
 	return ballotTransitionMatrix, yesVoteArray, ballotVotesState

@@ -119,7 +119,7 @@ func updateObserverState(t *testing.T, rawState map[string]json.RawMessage, cdc 
 		observers[i], observers[j] = observers[j], observers[i]
 	})
 
-	numObservers := r.Intn(11) + 5
+	numObservers := r.Intn(21) + 5
 	if numObservers > len(observers) {
 		numObservers = len(observers)
 	}

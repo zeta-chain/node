@@ -297,9 +297,15 @@ func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteInbound {
 	}
 }
 
+func CoinTypeFromRand(r *rand.Rand) coin.CoinType {
+	coinTypes := []coin.CoinType{coin.CoinType_Gas, coin.CoinType_ERC20, coin.CoinType_Zeta}
+	coinType := coinTypes[r.Intn(len(coinTypes))]
+	return coinType
+}
+
 // InboundVoteSim creates a simulated inbound vote message. This function uses the provided source of randomness to generate
-func InboundVoteSim(coinType coin.CoinType, from, to int64, r *rand.Rand) types.MsgVoteInbound {
-	EthAddress()
+func InboundVoteSim(_ coin.CoinType, from, to int64, r *rand.Rand) types.MsgVoteInbound {
+	coinType := CoinTypeFromRand(r)
 	return types.MsgVoteInbound{
 		Creator:            "",
 		Sender:             EthAddressFromRand(r).String(),
@@ -307,7 +313,7 @@ func InboundVoteSim(coinType coin.CoinType, from, to int64, r *rand.Rand) types.
 		Receiver:           EthAddressFromRand(r).String(),
 		ReceiverChain:      to,
 		Amount:             math.NewUint(r.Uint64()),
-		Message:            base64.StdEncoding.EncodeToString(RandomBytes(r)),
+		Message:            "95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5",
 		InboundBlockHeight: r.Uint64(),
 		CallOptions: &types.CallOptions{
 			GasLimit: 1000000000,
@@ -327,8 +333,8 @@ func OutboundVoteSim(r *rand.Rand,
 	from int64,
 	tssPubkey string,
 ) (types.CrossChainTx, types.MsgVoteOutbound) {
-	coinType := coin.CoinType_Gas
 
+	coinType := CoinTypeFromRand(r)
 	amount := math.NewUint(uint64(r.Int63()))
 	inbound := &types.InboundParams{
 		Sender:                 EthAddressFromRand(r).String(),
@@ -367,7 +373,7 @@ func OutboundVoteSim(r *rand.Rand,
 		Index:          index,
 		ZetaFees:       sdk.NewUint(1),
 		RelayedMessage: base64.StdEncoding.EncodeToString(RandomBytes(r)),
-		CctxStatus:     &types.Status{Status: types.CctxStatus_PendingInbound},
+		CctxStatus:     &types.Status{Status: types.CctxStatus_PendingOutbound},
 		InboundParams:  inbound,
 		OutboundParams: []*types.OutboundParams{outbound},
 	}

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -105,6 +106,8 @@ func (k msgServer) VoteInbound(
 	}
 	// Save the inbound CCTX to the store. This is called irrespective of the status of the CCTX or the outcome of the process function.
 	k.SaveObservedInboundInformation(ctx, cctx, msg.EventIndex)
+
+	fmt.Println("Successfully voted on inbound transaction", cctx.CctxStatus.Status)
 
 	return &types.MsgVoteInboundResponse{}, nil
 }
