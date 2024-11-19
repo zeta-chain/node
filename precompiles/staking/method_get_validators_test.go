@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -30,6 +31,36 @@ func Test_GetValidators(t *testing.T) {
 			t,
 			getValidatorsMethod,
 			[]interface{}{stakerEVMAddr}...,
+		)
+
+		bytes, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+		require.NoError(t, err)
+
+		res, err := getValidatorsMethod.Outputs.Unpack(bytes)
+		require.NoError(t, err)
+		require.NotEmpty(t, res)
+
+		list, ok := res[0].([]string)
+		require.True(t, ok)
+		require.Len(t, list, 0)
+	})
+
+	t.Run("should return an empty list for an invalid staker", func(t *testing.T) {
+		/* ARRANGE */
+		s := newTestSuite(t)
+
+		// Create validator.
+		validator := sample.Validator(t, rand.New(rand.NewSource(42)))
+		s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, validator)
+
+		/* ACT */
+		// Call getRewards.
+		getValidatorsMethod := s.stkContractABI.Methods[GetValidatorsMethodName]
+
+		s.mockVMContract.Input = packInputArgs(
+			t,
+			getValidatorsMethod,
+			[]interface{}{common.Address{}}...,
 		)
 
 		bytes, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
