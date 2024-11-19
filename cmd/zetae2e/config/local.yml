@@ -97,7 +97,7 @@ rpcs:
   zetacore_grpc: "localhost:9090"
   zetacore_rpc: "http://localhost:26657"
   solana: "http://localhost:8899"
-  ton_sidecar_url: ""
+  ton_sidecar_url: "http://localhost:8111"
 contracts:
   zevm:
     system_contract: "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
