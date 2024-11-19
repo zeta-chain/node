@@ -44,11 +44,11 @@ jobs:
           echo "${{ github.ref }}"
 
   check-goreleaser:
-    if: inputs.skip_checks != true
     runs-on: ${{ vars.RELEASE_RUNNER }}
     steps:
       - uses: actions/checkout@v4
       - name: Build release snapshot
+        if: inputs.skip_checks != true
         run: |
           make release-snapshot
           
