@@ -18,6 +18,15 @@ func (ob *Observer) ProcessInboundTrackerV2(
 	tx *ethrpc.Transaction,
 	receipt *ethtypes.Receipt,
 ) error {
+	// check confirmations
+	if confirmed := ob.HasEnoughConfirmations(receipt, ob.LastBlock()); !confirmed {
+		return fmt.Errorf(
+			"inbound %s has not been confirmed yet: receipt block %d",
+			tx.Hash,
+			receipt.BlockNumber.Uint64(),
+		)
+	}
+
 	for _, log := range receipt.Logs {
 		if log == nil {
 			continue

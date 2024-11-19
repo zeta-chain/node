@@ -740,7 +740,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestInboundTrackersName,
-		"test inbound trackers",
+		"test processing inbound trackers for observation",
 		[]runner.ArgDefinition{},
 		TestInboundTrackers,
 	),
