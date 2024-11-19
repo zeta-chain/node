@@ -22,6 +22,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
 // createTestBtcEvent creates a test BTC inbound event
@@ -41,7 +42,7 @@ func createTestBtcEvent(
 	}
 }
 
-func Test_CheckProcessability(t *testing.T) {
+func Test_Processability(t *testing.T) {
 	// setup compliance config
 	cfg := config.Config{
 		ComplianceConfig: sample.ComplianceConfig(),
@@ -52,7 +53,7 @@ func Test_CheckProcessability(t *testing.T) {
 	tests := []struct {
 		name     string
 		event    *observer.BTCInboundEvent
-		expected observer.InboundProcessability
+		expected clienttypes.InboundProcessability
 	}{
 		{
 			name: "should return InboundProcessabilityGood for a processable inbound event",
@@ -60,7 +61,7 @@ func Test_CheckProcessability(t *testing.T) {
 				FromAddress: "tb1quhassyrlj43qar0mn0k5sufyp6mazmh2q85lr6ex8ehqfhxpzsksllwrsu",
 				ToAddress:   testutils.TSSAddressBTCAthens3,
 			},
-			expected: observer.InboundProcessabilityGood,
+			expected: clienttypes.InboundProcessabilityGood,
 		},
 		{
 			name: "should return InboundProcessabilityComplianceViolation for a restricted sender address",
@@ -68,7 +69,7 @@ func Test_CheckProcessability(t *testing.T) {
 				FromAddress: sample.RestrictedBtcAddressTest,
 				ToAddress:   testutils.TSSAddressBTCAthens3,
 			},
-			expected: observer.InboundProcessabilityComplianceViolation,
+			expected: clienttypes.InboundProcessabilityComplianceViolation,
 		},
 		{
 			name: "should return InboundProcessabilityComplianceViolation for a restricted receiver address in standard memo",
@@ -81,7 +82,7 @@ func Test_CheckProcessability(t *testing.T) {
 					},
 				},
 			},
-			expected: observer.InboundProcessabilityComplianceViolation,
+			expected: clienttypes.InboundProcessabilityComplianceViolation,
 		},
 		{
 			name: "should return InboundProcessabilityComplianceViolation for a restricted revert address in standard memo",
@@ -96,7 +97,7 @@ func Test_CheckProcessability(t *testing.T) {
 					},
 				},
 			},
-			expected: observer.InboundProcessabilityComplianceViolation,
+			expected: clienttypes.InboundProcessabilityComplianceViolation,
 		},
 		{
 			name: "should return InboundProcessabilityDonation for a donation inbound event",
@@ -105,7 +106,7 @@ func Test_CheckProcessability(t *testing.T) {
 				ToAddress:   testutils.TSSAddressBTCAthens3,
 				MemoBytes:   []byte(constant.DonationMessage),
 			},
-			expected: observer.InboundProcessabilityDonation,
+			expected: clienttypes.InboundProcessabilityDonation,
 		},
 	}
 

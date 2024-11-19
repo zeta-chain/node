@@ -361,13 +361,22 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 	}
 	amountInt := big.NewInt(amountSats)
 
-	// create inbound vote message contract V1 for legacy memo
+	// create inbound vote message contract V1 for legacy memo or standard memo
+	var msg *crosschaintypes.MsgVoteInbound
 	if event.MemoStd == nil {
-		return ob.NewInboundVoteFromLegacyMemo(event, amountInt)
+		msg = ob.NewInboundVoteFromLegacyMemo(event, amountInt)
+	} else {
+		msg = ob.NewInboundVoteFromStdMemo(event, amountInt)
 	}
 
-	// create inbound vote message for standard memo
-	return ob.NewInboundVoteFromStdMemo(event, amountInt)
+	// make sure the message is valid before posting to zetacore
+	err = msg.ValidateBasic()
+	if err != nil {
+		ob.Logger().Inbound.Error().Err(err).Fields(lf).Msg("invalid inbound vote message")
+		return nil
+	}
+
+	return msg
 }
 
 // GetBtcEvent returns a valid BTCInboundEvent or nil
