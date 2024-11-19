@@ -6,9 +6,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
 	"gitlab.com/thorchain/tss/go-tss/keysign"
@@ -30,11 +32,21 @@ type Service struct {
 	currentPubKey PubKey
 
 	postBlame bool
-	logger    zerolog.Logger
+	metrics   *Metrics
+
+	logger zerolog.Logger
+}
+
+// Metrics Prometheus metrics for the TSS service.
+type Metrics struct {
+	ActiveMsgsSigns    prometheus.Gauge
+	SignLatency        *prometheus.HistogramVec
+	NodeBlamePerPubKey *prometheus.CounterVec
 }
 
 type serviceConfig struct {
 	postBlame bool
+	metrics   *Metrics
 }
 
 // Opt Service option.
@@ -48,11 +60,36 @@ func WithPostBlame(postBlame bool) Opt {
 	}
 }
 
+// WithMetrics registers Prometheus metrics for the TSS service.
+// Otherwise, no metrics will be collected.
+func WithMetrics(ctx context.Context, zetacore interfaces.ZetacoreClient, m *Metrics) Opt {
+	return func(cfg *serviceConfig, _ zerolog.Logger) error {
+		keygen, err := zetacore.GetKeyGen(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get keygen (WithMetrics)")
+		}
+
+		m.ActiveMsgsSigns.Set(0)
+		m.SignLatency.Reset()
+		m.NodeBlamePerPubKey.Reset()
+
+		for _, granteeBech32 := range keygen.GranteePubkeys {
+			m.NodeBlamePerPubKey.WithLabelValues(granteeBech32).Inc()
+		}
+
+		cfg.metrics = m
+
+		return nil
+	}
+}
+
+var noopMetrics = Metrics{
+	ActiveMsgsSigns:    prometheus.NewGauge(prometheus.GaugeOpts{Name: "noop"}),
+	SignLatency:        prometheus.NewHistogramVec(prometheus.HistogramOpts{Name: "noop"}, []string{"result"}),
+	NodeBlamePerPubKey: prometheus.NewCounterVec(prometheus.CounterOpts{Name: "noop"}, []string{"pubkey"}),
+}
+
 // NewService Service constructor.
-// TODO Constructor
-// TODO PubKey struct
-// TODO Test cases for bootstrap
-// TODO metrics
 // TODO LRU cache
 func NewService(
 	keySigner KeySigner,
@@ -63,26 +100,30 @@ func NewService(
 ) (*Service, error) {
 	logger = logger.With().Str(logs.FieldModule, "tss_service").Logger()
 
-	// Apply opts
-	var cfg serviceConfig
+	cfg := serviceConfig{
+		metrics:   &noopMetrics,
+		postBlame: false,
+	}
+
 	for _, opt := range opts {
 		if err := opt(&cfg, logger); err != nil {
 			return nil, errors.Wrap(err, "failed to apply tss config option")
 		}
 	}
 
-	currentTSSPubKey, err := NewPubKeyFromBech32(tssPubKeyBech32)
+	// Represents the current TSS public key.
+	// FWIW, based on this, we can derive EVM / BTC addresses.
+	currentPubKey, err := NewPubKeyFromBech32(tssPubKeyBech32)
 	if err != nil {
 		return nil, errors.Wrap(err, "invalid tss pub key")
 	}
 
-	// todo metrics
-
 	return &Service{
 		tss:           keySigner,
-		currentPubKey: currentTSSPubKey,
+		currentPubKey: currentPubKey,
 		zetacore:      zc,
 		postBlame:     cfg.postBlame,
+		metrics:       cfg.metrics,
 		logger:        logger,
 	}, nil
 }
@@ -159,12 +200,30 @@ func (s *Service) SignBatch(
 	return signatures, nil
 }
 
-func (s *Service) sign(req keysign.Request) (keysign.Response, error) {
-	// todo track signs (metrics)
-	res, err := s.tss.KeySign(req)
-	// todo finish tracking
+var (
+	signLabelsSuccess = prometheus.Labels{"result": "success"}
+	signLabelsError   = prometheus.Labels{"result": "error"}
+)
 
-	return res, err
+// sign sends TSS key sign request to the underlying go-tss and registers metrics
+func (s *Service) sign(req keysign.Request) (res keysign.Response, err error) {
+	// metrics start
+	messagesCount, start := float64(len(req.Messages)), time.Now()
+	s.metrics.ActiveMsgsSigns.Add(messagesCount)
+
+	// metrics finish
+	defer func() {
+		s.metrics.ActiveMsgsSigns.Sub(messagesCount)
+
+		latency := time.Since(start).Seconds()
+		if err == nil && res.Status == thorcommon.Success {
+			s.metrics.SignLatency.With(signLabelsSuccess).Observe(latency)
+		} else {
+			s.metrics.SignLatency.With(signLabelsError).Observe(latency)
+		}
+	}()
+
+	return s.tss.KeySign(req)
 }
 
 func (s *Service) blameFailure(
@@ -184,7 +243,10 @@ func (s *Service) blameFailure(
 		Interface("keysign.fail_blame", res.Blame).
 		Msg("Keysign failed")
 
-	// todo inc blame metrics
+	// register blame metrics
+	for _, node := range res.Blame.BlameNodes {
+		s.metrics.NodeBlamePerPubKey.WithLabelValues(node.Pubkey).Inc()
+	}
 
 	if !s.postBlame {
 		return errFailure

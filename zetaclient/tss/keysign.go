@@ -9,7 +9,6 @@ import (
 	"github.com/rs/zerolog"
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
 	"gitlab.com/thorchain/tss/go-tss/keysign"
-	"gitlab.com/thorchain/tss/go-tss/tss"
 
 	"github.com/zeta-chain/node/pkg/cosmos"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -22,7 +21,7 @@ var (
 )
 
 // TestKeySign performs a TSS key-sign test of sample data.
-func TestKeySign(tssServer *tss.TssServer, tssPubKey string, logger zerolog.Logger) error {
+func TestKeySign(keySigner KeySigner, tssPubKey string, logger zerolog.Logger) error {
 	logger = logger.With().Str(logs.FieldModule, "tss_keysign").Logger()
 
 	hashedData := crypto.Keccak256Hash(testKeySignData)
@@ -40,7 +39,7 @@ func TestKeySign(tssServer *tss.TssServer, tssPubKey string, logger zerolog.Logg
 		Version,
 	)
 
-	res, err := tssServer.KeySign(req)
+	res, err := keySigner.KeySign(req)
 	switch {
 	case err != nil:
 		return errors.Wrap(err, "key signing request error")
