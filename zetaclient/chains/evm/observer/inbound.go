@@ -121,6 +121,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
 	for _, tracker := range trackers {
 		// query tx and receipt
 		tx, _, err := ob.TransactionByHash(tracker.TxHash)
@@ -143,6 +144,15 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 			)
 		}
 		ob.Logger().Inbound.Info().Msgf("checking tracker for inbound %s chain %d", tracker.TxHash, ob.Chain().ChainId)
+
+		// check confirmations
+		if confirmed := ob.HasEnoughConfirmations(receipt, ob.LastBlock()); !confirmed {
+			return fmt.Errorf(
+				"inbound %s has not been confirmed yet: receipt block %d",
+				tx.Hash,
+				receipt.BlockNumber.Uint64(),
+			)
+		}
 
 		// if the transaction is sent to the gateway, this is a v2 inbound
 		gatewayAddr, gateway, err := ob.GetGatewayContract()
@@ -193,6 +203,11 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 
 	// increment prom counter
 	metrics.GetBlockByNumberPerChain.WithLabelValues(ob.Chain().Name).Inc()
+
+	// uncomment this line to stop observing inbound and test observation with inbound trackers
+	// https://github.com/zeta-chain/node/blob/3879b5ef8b418542c82a4383263604222f0605c6/e2e/e2etests/test_inbound_trackers.go#L19
+	// TODO: implement a programmatic way to disable inbound observation
+	//return nil
 
 	// skip if current height is too low
 	if blockNumber < ob.ChainParams().ConfirmationCount {
@@ -493,15 +508,6 @@ func (ob *Observer) CheckAndVoteInboundTokenZeta(
 		return "", err
 	}
 
-	// check confirmations
-	if confirmed := ob.HasEnoughConfirmations(receipt, ob.LastBlock()); !confirmed {
-		return "", fmt.Errorf(
-			"inbound %s has not been confirmed yet: receipt block %d",
-			tx.Hash,
-			receipt.BlockNumber.Uint64(),
-		)
-	}
-
 	// get zeta connector contract
 	addrConnector, connector, err := ob.GetConnectorContract()
 	if err != nil {
@@ -543,15 +549,6 @@ func (ob *Observer) CheckAndVoteInboundTokenERC20(
 	receipt *ethtypes.Receipt,
 	vote bool,
 ) (string, error) {
-	// check confirmations
-	if confirmed := ob.HasEnoughConfirmations(receipt, ob.LastBlock()); !confirmed {
-		return "", fmt.Errorf(
-			"inbound %s has not been confirmed yet: receipt block %d",
-			tx.Hash,
-			receipt.BlockNumber.Uint64(),
-		)
-	}
-
 	// get erc20 custody contract
 	addrCustody, custody, err := ob.GetERC20CustodyContract()
 	if err != nil {
@@ -594,15 +591,6 @@ func (ob *Observer) CheckAndVoteInboundTokenGas(
 	receipt *ethtypes.Receipt,
 	vote bool,
 ) (string, error) {
-	// check confirmations
-	if confirmed := ob.HasEnoughConfirmations(receipt, ob.LastBlock()); !confirmed {
-		return "", fmt.Errorf(
-			"inbound %s has not been confirmed yet: receipt block %d",
-			tx.Hash,
-			receipt.BlockNumber.Uint64(),
-		)
-	}
-
 	// checks receiver and tx status
 	if ethcommon.HexToAddress(tx.To) != ob.TSS().EVMAddress() {
 		return "", fmt.Errorf("tx.To %s is not TSS address", tx.To)

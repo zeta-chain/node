@@ -11,6 +11,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
+// ProcessInboundTrackerV2 processes inbound tracker events from the gateway
 func (ob *Observer) ProcessInboundTrackerV2(
 	ctx context.Context,
 	gateway *gatewayevm.GatewayEVM,

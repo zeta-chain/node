@@ -336,6 +336,8 @@ func (r *E2ERunner) skipChainOperations(chainID int64) bool {
 
 // AddInboundTracker adds an inbound tracker from the tx hash
 func (r *E2ERunner) AddInboundTracker(coinType coin.CoinType, txHash string) {
+	require.NotNil(r, r.ZetaTxServer)
+
 	chainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err)
 

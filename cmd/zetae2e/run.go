@@ -16,6 +16,8 @@ import (
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/e2etests"
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/txserver"
+	"github.com/zeta-chain/node/e2e/utils"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
@@ -104,6 +106,29 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	var runnerOpts []runner.E2ERunnerOption
+
+	// if keys are defined for all policy accounts, we initialize a ZETA tx server allowing to send admin actions
+	emergencyKey := conf.PolicyAccounts.EmergencyPolicyAccount.RawPrivateKey.String()
+	operationalKey := conf.PolicyAccounts.OperationalPolicyAccount.RawPrivateKey.String()
+	adminKey := conf.PolicyAccounts.AdminPolicyAccount.RawPrivateKey.String()
+	if emergencyKey != "" && operationalKey != "" && adminKey != "" {
+		zetaTxServer, err := txserver.NewZetaTxServer(
+			conf.RPCs.ZetaCoreRPC,
+			[]string{utils.EmergencyPolicyName, utils.OperationalPolicyName, utils.AdminPolicyName},
+			[]string{
+				emergencyKey,
+				operationalKey,
+				adminKey,
+			},
+			conf.ZetaChainID,
+		)
+		if err != nil {
+			return nil
+		}
+		runnerOpts = append(runnerOpts, runner.WithZetaTxServer(zetaTxServer))
+	}
+
 	// initialize deployer runner with config
 	testRunner, err := zetae2econfig.RunnerFromConfig(
 		ctx,
@@ -112,6 +137,7 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 		conf,
 		conf.DefaultAccount,
 		logger,
+		runnerOpts...,
 	)
 	if err != nil {
 		return err
