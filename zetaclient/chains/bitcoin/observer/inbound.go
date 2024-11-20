@@ -332,12 +332,15 @@ func FilterAndParseIncomingTx(
 }
 
 // GetInboundVoteFromBtcEvent converts a BTCInboundEvent to a MsgVoteInbound to enable voting on the inbound on zetacore
+//
+// Returns:
+//   - a valid MsgVoteInbound message, or
+//   - nil if no valid message can be created for whatever reasons:
+//     invalid data, not processable, invalid amount, etc.
 func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosschaintypes.MsgVoteInbound {
 	// prepare logger fields
 	lf := map[string]any{
-		logs.FieldModule: logs.ModNameInbound,
 		logs.FieldMethod: "GetInboundVoteFromBtcEvent",
-		logs.FieldChain:  ob.Chain().ChainId,
 		logs.FieldTx:     event.TxHash,
 	}
 
