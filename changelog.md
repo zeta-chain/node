@@ -3,10 +3,12 @@
 ## Unreleased
 
 ### Features
+
 * [2984](https://github.com/zeta-chain/node/pull/2984) - add Whitelist message ability to whitelist SPL tokens on Solana
 * [3091](https://github.com/zeta-chain/node/pull/3091) - improve build reproducability. `make release{,-build-only}` checksums should now be stable.
 * [3124](https://github.com/zeta-chain/node/pull/3124) - integrate SPL deposits
 * [3134](https://github.com/zeta-chain/node/pull/3134) - integrate SPL tokens withdraw to Solana
+* [3182](https://github.com/zeta-chain/node/pull/3182) - enable zetaclient pprof server on port 6061
 
 ### Tests
 
@@ -15,6 +17,7 @@
 * [3154](https://github.com/zeta-chain/node/pull/3154) - configure Solana gateway program id for E2E tests
 
 ### Refactor
+
 * [3118](https://github.com/zeta-chain/node/pull/3118) - zetaclient: remove hsm signer
 * [3122](https://github.com/zeta-chain/node/pull/3122) - improve & refactor zetaclientd cli
 * [3125](https://github.com/zeta-chain/node/pull/3125) - drop support for header proofs
@@ -22,6 +25,7 @@
 * [3137](https://github.com/zeta-chain/node/pull/3137) - remove chain.Chain from zetaclientd config
 
 ### Fixes
+
 * [3117](https://github.com/zeta-chain/node/pull/3117) - register messages for emissions module to legacy amino codec.
 * [3041](https://github.com/zeta-chain/node/pull/3041) - replace libp2p public DHT with private gossip peer discovery and connection gater for inbound connections
 * [3106](https://github.com/zeta-chain/node/pull/3106) - prevent blocked CCTX on out of gas during omnichain calls
@@ -29,6 +33,7 @@
 * [3149](https://github.com/zeta-chain/node/pull/3149) - abort the cctx if dust amount is detected in the revert outbound
 * [3155](https://github.com/zeta-chain/node/pull/3155) - fix potential panic in the Bitcoin inscription parsing
 * [3162](https://github.com/zeta-chain/node/pull/3162) - skip depositor fee calculation if transaction does not involve TSS address
+* [3179](https://github.com/zeta-chain/node/pull/3179) - support inbound trackers for v2 cctx
 * [3184](https://github.com/zeta-chain/node/pull/3184) - zetaclient should not retry if inbound vote message validation fails
 
 ## v21.0.0
