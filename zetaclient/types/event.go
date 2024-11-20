@@ -14,18 +14,18 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 )
 
-// InboundProcessability is an enum representing the processability of an inbound
-type InboundProcessability int
+// InboundCategory is an enum representing the category of an inbound event
+type InboundCategory int
 
 const (
-	// InboundProcessabilityGood represents a processable inbound
-	InboundProcessabilityGood InboundProcessability = iota
+	// InboundCategoryGood represents a processable inbound
+	InboundCategoryGood InboundCategory = iota
 
-	// InboundProcessabilityDonation represents a donation inbound
-	InboundProcessabilityDonation
+	// InboundCategoryDonation represents a donation inbound
+	InboundCategoryDonation
 
-	// InboundProcessabilityComplianceViolation represents a compliance violation
-	InboundProcessabilityComplianceViolation
+	// InboundCategoryRestricted represents a restricted inbound
+	InboundCategoryRestricted
 )
 
 // InboundEvent represents an inbound event
@@ -88,8 +88,8 @@ func (event *InboundEvent) DecodeMemo() error {
 	return nil
 }
 
-// Processability returns the processability of the inbound event
-func (event *InboundEvent) Processability() InboundProcessability {
+// Category returns the category of the inbound event
+func (event *InboundEvent) Category() InboundCategory {
 	// parse memo-specified receiver
 	receiver := ""
 	parsedAddress, _, err := memo.DecodeLegacyMemoHex(hex.EncodeToString(event.Memo))
@@ -99,13 +99,13 @@ func (event *InboundEvent) Processability() InboundProcessability {
 
 	// check restricted addresses
 	if config.ContainRestrictedAddress(event.Sender, event.Receiver, event.TxOrigin, receiver) {
-		return InboundProcessabilityComplianceViolation
+		return InboundCategoryRestricted
 	}
 
 	// donation check
 	if bytes.Equal(event.Memo, []byte(constant.DonationMessage)) {
-		return InboundProcessabilityDonation
+		return InboundCategoryDonation
 	}
 
-	return InboundProcessabilityGood
+	return InboundCategoryGood
 }

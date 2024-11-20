@@ -49,11 +49,11 @@ type BTCInboundEvent struct {
 	TxHash string
 }
 
-// Processability returns the processability of the inbound event
-func (event *BTCInboundEvent) Processability() clienttypes.InboundProcessability {
+// Category returns the category of the inbound event
+func (event *BTCInboundEvent) Category() clienttypes.InboundCategory {
 	// compliance check on sender and receiver addresses
 	if config.ContainRestrictedAddress(event.FromAddress, event.ToAddress) {
-		return clienttypes.InboundProcessabilityComplianceViolation
+		return clienttypes.InboundCategoryRestricted
 	}
 
 	// compliance check on receiver, revert/abort addresses in standard memo
@@ -63,16 +63,16 @@ func (event *BTCInboundEvent) Processability() clienttypes.InboundProcessability
 			event.MemoStd.RevertOptions.RevertAddress,
 			event.MemoStd.RevertOptions.AbortAddress,
 		) {
-			return clienttypes.InboundProcessabilityComplianceViolation
+			return clienttypes.InboundCategoryRestricted
 		}
 	}
 
 	// donation check
 	if bytes.Equal(event.MemoBytes, []byte(constant.DonationMessage)) {
-		return clienttypes.InboundProcessabilityDonation
+		return clienttypes.InboundCategoryDonation
 	}
 
-	return clienttypes.InboundProcessabilityGood
+	return clienttypes.InboundCategoryGood
 }
 
 // DecodeMemoBytes decodes the contained memo bytes as either standard or legacy memo
@@ -153,23 +153,22 @@ func ValidateStandardMemo(memoStd memo.InboundMemo, chainID int64) error {
 
 // IsEventProcessable checks if the inbound event is processable
 func (ob *Observer) IsEventProcessable(event BTCInboundEvent) bool {
-	// check if the event is processable
-	switch result := event.Processability(); result {
-	case clienttypes.InboundProcessabilityGood:
+	switch category := event.Category(); category {
+	case clienttypes.InboundCategoryGood:
 		return true
-	case clienttypes.InboundProcessabilityDonation:
+	case clienttypes.InboundCategoryDonation:
 		logFields := map[string]any{
 			logs.FieldChain: ob.Chain().ChainId,
 			logs.FieldTx:    event.TxHash,
 		}
 		ob.Logger().Inbound.Info().Fields(logFields).Msgf("thank you rich folk for your donation!")
 		return false
-	case clienttypes.InboundProcessabilityComplianceViolation:
+	case clienttypes.InboundCategoryRestricted:
 		compliance.PrintComplianceLog(ob.logger.Inbound, ob.logger.Compliance,
 			false, ob.Chain().ChainId, event.TxHash, event.FromAddress, event.ToAddress, "BTC")
 		return false
 	default:
-		ob.Logger().Inbound.Error().Msgf("unreachable code got InboundProcessability: %v", result)
+		ob.Logger().Inbound.Error().Msgf("unreachable code got InboundProcessability: %v", category)
 		return false
 	}
 }

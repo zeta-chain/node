@@ -58,7 +58,7 @@ func Test_DecodeMemo(t *testing.T) {
 	}
 }
 
-func Test_Processability(t *testing.T) {
+func Test_Catetory(t *testing.T) {
 	// setup compliance config
 	cfg := config.Config{
 		ComplianceConfig: sample.ComplianceConfig(),
@@ -69,55 +69,55 @@ func Test_Processability(t *testing.T) {
 	tests := []struct {
 		name     string
 		event    *types.InboundEvent
-		expected types.InboundProcessability
+		expected types.InboundCategory
 	}{
 		{
-			name: "should return InboundProcessabilityGood for a processable inbound event",
+			name: "should return InboundCategoryGood for a processable inbound event",
 			event: &types.InboundEvent{
 				Sender:   sample.SolanaAddress(t),
 				Receiver: sample.EthAddress().Hex(),
 			},
-			expected: types.InboundProcessabilityGood,
+			expected: types.InboundCategoryGood,
 		},
 		{
-			name: "should return InboundProcessabilityComplianceViolation for a restricted sender address",
+			name: "should return InboundCategoryRestricted for a restricted sender address",
 			event: &types.InboundEvent{
 				Sender:   sample.RestrictedSolAddressTest,
 				Receiver: sample.EthAddress().Hex(),
 			},
-			expected: types.InboundProcessabilityComplianceViolation,
+			expected: types.InboundCategoryRestricted,
 		},
 		{
-			name: "should return InboundProcessabilityComplianceViolation for a restricted receiver address",
+			name: "should return InboundCategoryRestricted for a restricted receiver address",
 			event: &types.InboundEvent{
 				Sender:   sample.SolanaAddress(t),
 				Receiver: sample.RestrictedSolAddressTest,
 			},
-			expected: types.InboundProcessabilityComplianceViolation,
+			expected: types.InboundCategoryRestricted,
 		},
 		{
-			name: "should return InboundProcessabilityComplianceViolation for a restricted receiver address in memo",
+			name: "should return InboundCategoryRestricted for a restricted receiver address in memo",
 			event: &types.InboundEvent{
 				Sender:   sample.SolanaAddress(t),
 				Receiver: sample.EthAddress().Hex(),
 				Memo:     ethcommon.HexToAddress(sample.RestrictedEVMAddressTest).Bytes(),
 			},
-			expected: types.InboundProcessabilityComplianceViolation,
+			expected: types.InboundCategoryRestricted,
 		},
 		{
-			name: "should return InboundProcessabilityDonation for a donation inbound event",
+			name: "should return InboundCategoryDonation for a donation inbound event",
 			event: &types.InboundEvent{
 				Sender:   sample.SolanaAddress(t),
 				Receiver: sample.EthAddress().Hex(),
 				Memo:     []byte(constant.DonationMessage),
 			},
-			expected: types.InboundProcessabilityDonation,
+			expected: types.InboundCategoryDonation,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := tt.event.Processability()
+			result := tt.event.Category()
 			require.Equal(t, tt.expected, result)
 		})
 	}

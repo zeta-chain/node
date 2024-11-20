@@ -307,22 +307,22 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 
 // IsEventProcessable checks if the inbound event is processable
 func (ob *Observer) IsEventProcessable(event clienttypes.InboundEvent) bool {
-	switch result := event.Processability(); result {
-	case clienttypes.InboundProcessabilityGood:
+	switch category := event.Category(); category {
+	case clienttypes.InboundCategoryGood:
 		return true
-	case clienttypes.InboundProcessabilityDonation:
+	case clienttypes.InboundCategoryDonation:
 		logFields := map[string]any{
 			logs.FieldChain: ob.Chain().ChainId,
 			logs.FieldTx:    event.TxHash,
 		}
 		ob.Logger().Inbound.Info().Fields(logFields).Msgf("thank you rich folk for your donation!")
 		return false
-	case clienttypes.InboundProcessabilityComplianceViolation:
+	case clienttypes.InboundCategoryRestricted:
 		compliance.PrintComplianceLog(ob.Logger().Inbound, ob.Logger().Compliance,
 			false, ob.Chain().ChainId, event.TxHash, event.Sender, event.Receiver, event.CoinType.String())
 		return false
 	default:
-		ob.Logger().Inbound.Error().Msgf("unreachable code got InboundProcessability: %v", result)
+		ob.Logger().Inbound.Error().Msgf("unreachable code got InboundProcessability: %v", category)
 		return false
 	}
 }
