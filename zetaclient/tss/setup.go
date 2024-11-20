@@ -33,8 +33,14 @@ type SetupProps struct {
 	Config          config.Config
 	Zetacore        *zetacore.Client
 	HotKeyPassword  string
+	TSSKeyPassword  string
 	BitcoinChainIDs []int64
 	PostBlame       bool
+	Telemetry       Telemetry
+}
+
+type Telemetry interface {
+	SetP2PID(string)
 }
 
 // Setup beefy function that does all the logic for bootstrapping tss-server, tss signer,
@@ -121,11 +127,15 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		tssPreParams,
 		hotPrivateKeyECDSA,
 		p.Config,
-		p.HotKeyPassword,
+		p.TSSKeyPassword,
 		logger,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to start TSS server")
+	}
+
+	if p.Telemetry != nil {
+		p.Telemetry.SetP2PID(tssServer.GetLocalPeerID())
 	}
 
 	logger.Info().Msg("TSS server started")
