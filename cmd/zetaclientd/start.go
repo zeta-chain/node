@@ -6,8 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	// #nosec G108 -- pprof enablement is intentional
-	_ "net/http/pprof"
+	_ "net/http/pprof" // #nosec G108 -- pprof enablement is intentional
 	"os"
 	"os/signal"
 	"path/filepath"
