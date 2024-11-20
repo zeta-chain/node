@@ -172,7 +172,7 @@ const (
 	TestV2ZEVMToEVMCallName                      = "v2_zevm_to_evm_call"
 	TestV2ZEVMToEVMCallThroughContractName       = "v2_zevm_to_evm_call_through_contract"
 	TestV2EVMToZEVMCallName                      = "v2_evm_to_zevm_call"
-	TestV2DepositAndCallSwapName                 = "v2_deposit_and_call_swap_name"
+	TestV2DepositAndCallSwapName                 = "v2_deposit_and_call_swap"
 
 	/*
 	 Operational tests
@@ -1076,7 +1076,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestV2DepositAndCallSwapName,
-		"evm -> zevm deposit and call with swap and withdraw",
+		"evm -> zevm deposit and call with swap and withdraw back to evm",
 		[]runner.ArgDefinition{},
 		TestV2DepositAndCallSwap,
 	),
