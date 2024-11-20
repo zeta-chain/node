@@ -272,11 +272,7 @@ func resolveTSSPath(tssPath string, logger zerolog.Logger) (string, error) {
 		return "", errors.Wrap(err, "unable to get user home dir")
 	}
 
-	// it's weird that it's `.Tss` instead of `.tss`,
-	// but I kept this for backward compatibility
-	const defaultTssDir = ".Tss"
-
-	tssPath = path.Join(home, defaultTssDir)
+	tssPath = path.Join(home, ".tss")
 	logger.Warn().Msgf("TSS path is empty, falling back to %s", tssPath)
 
 	return tssPath, nil
