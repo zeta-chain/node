@@ -8,6 +8,7 @@
 * [3091](https://github.com/zeta-chain/node/pull/3091) - improve build reproducability. `make release{,-build-only}` checksums should now be stable.
 * [3124](https://github.com/zeta-chain/node/pull/3124) - integrate SPL deposits
 * [3134](https://github.com/zeta-chain/node/pull/3134) - integrate SPL tokens withdraw to Solana
+* [3182](https://github.com/zeta-chain/node/pull/3182) - enable zetaclient pprof server on port 6061
 
 ### Tests
 
