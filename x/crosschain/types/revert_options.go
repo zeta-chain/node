@@ -6,6 +6,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/crypto"
 )
 
@@ -73,6 +74,19 @@ func (r RevertOptions) ToEVMRevertOptions() gatewayevm.RevertOptions {
 func (r RevertOptions) GetEVMRevertAddress() (ethcommon.Address, bool) {
 	addr := ethcommon.HexToAddress(r.RevertAddress)
 	return addr, !crypto.IsEmptyAddress(addr)
+}
+
+// GetBTCRevertAddress validates and returns the BTC revert address
+func (r RevertOptions) GetBTCRevertAddress(chainID int64) (string, bool) {
+	btcAddress, err := chains.DecodeBtcAddress(r.RevertAddress, chainID)
+	if err != nil {
+		return "", false
+	}
+	if !chains.IsBtcAddressSupported(btcAddress) {
+		return "", false
+	}
+
+	return btcAddress.EncodeAddress(), true
 }
 
 // GetEVMAbortAddress returns the EVM abort address
