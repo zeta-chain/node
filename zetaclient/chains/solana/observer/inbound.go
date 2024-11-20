@@ -257,9 +257,7 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent) *crosschaintypes.MsgVoteInbound {
 	// prepare logger fields
 	lf := map[string]any{
-		logs.FieldModule: logs.ModNameInbound,
 		logs.FieldMethod: "BuildInboundVoteMsgFromEvent",
-		logs.FieldChain:  ob.Chain().ChainId,
 		logs.FieldTx:     event.TxHash,
 	}
 
