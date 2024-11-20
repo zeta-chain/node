@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/bnb-chain/tss-lib/ecdsa/keygen"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
 )
 
@@ -52,4 +54,63 @@ func ResolvePreParamsFromPath(path string) (*keygen.LocalPreParams, error) {
 	}
 
 	return &pp, nil
+}
+
+// ParsePubKeysFromPath extracts public keys from tss directory.
+// Example: `tssPath="~/.tss"`. Contents:
+// localstate-zetapub1addwnpepq2fdhcmfyv07s86djjca835l4f2n2ta0c7le6vnl508mseca2s9g6slj0gm.json
+// Output: `zetapub1addwnpepq2fdhcmfyv07s86djjca835l4f2n2ta0c7le6vnl508mseca2s9g6slj0gm`
+func ParsePubKeysFromPath(tssPath string, logger zerolog.Logger) ([]PubKey, error) {
+	const prefix = "localstate-"
+
+	files, err := os.ReadDir(tssPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to read dir")
+	}
+
+	var shareFiles []os.DirEntry
+	for _, file := range files {
+		if !file.IsDir() && strings.HasPrefix(filepath.Base(file.Name()), prefix) {
+			shareFiles = append(shareFiles, file)
+		}
+	}
+
+	if len(shareFiles) == 0 {
+		logger.Warn().Msg("No TSS key share files found")
+		return nil, nil
+	}
+
+	logger.Info().Msgf("Found TSS %d key share files", len(shareFiles))
+
+	result := []PubKey{}
+	for _, entry := range shareFiles {
+		filename := filepath.Base(entry.Name())
+
+		if !strings.HasPrefix(filename, prefix) {
+			logger.Warn().Msgf("Skipping file %s as it doesn't have %q prefix", prefix, filename)
+			continue
+		}
+
+		if !strings.HasSuffix(filename, ".json") {
+			logger.Warn().Msgf("Skipping file %s as it's not .json", filename)
+			continue
+		}
+
+		bech32 := strings.TrimSuffix(strings.TrimPrefix(filename, prefix), ".json")
+
+		pubKey, err := NewPubKeyFromBech32(bech32)
+		if err != nil {
+			logger.Error().Err(err).Msgf("Unable to create PubKey from %q", bech32)
+			continue
+		}
+
+		result = append(result, pubKey)
+	}
+
+	if len(result) == 0 {
+		logger.Warn().Msg("No valid TSS pub keys were found")
+		return nil, nil
+	}
+
+	return result, nil
 }

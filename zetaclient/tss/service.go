@@ -169,7 +169,7 @@ func (s *Service) SignBatch(
 		Version,
 	)
 
-	res, err := s.sign(req)
+	res, err := s.sign(req, nonce, chainID)
 	switch {
 	case err != nil:
 		// unexpected error (not related to failed key sign)
@@ -203,10 +203,18 @@ var (
 )
 
 // sign sends TSS key sign request to the underlying go-tss and registers metrics
-func (s *Service) sign(req keysign.Request) (res keysign.Response, err error) {
+func (s *Service) sign(req keysign.Request, nonce uint64, chainID int64) (res keysign.Response, err error) {
 	// metrics start
 	messagesCount, start := float64(len(req.Messages)), time.Now()
 	s.metrics.ActiveMsgsSigns.Add(messagesCount)
+
+	lf := map[string]any{
+		"tss.chain_id":     chainID,
+		"tss.block_height": req.BlockHeight,
+		"tss.nonce":        nonce,
+	}
+
+	s.logger.Info().Fields(lf).Msg("TSS keysign request")
 
 	// metrics finish
 	defer func() {
@@ -218,6 +226,12 @@ func (s *Service) sign(req keysign.Request) (res keysign.Response, err error) {
 		} else {
 			s.metrics.SignLatency.With(signLabelsError).Observe(latency)
 		}
+
+		s.logger.Info().
+			Fields(lf).
+			Bool("tss.success", res.Status == thorcommon.Success).
+			Float64("tss.latency", latency).
+			Msg("TSS keysign response")
 	}()
 
 	return s.tss.KeySign(req)
