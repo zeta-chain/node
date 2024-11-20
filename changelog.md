@@ -34,6 +34,7 @@
 * [3155](https://github.com/zeta-chain/node/pull/3155) - fix potential panic in the Bitcoin inscription parsing
 * [3162](https://github.com/zeta-chain/node/pull/3162) - skip depositor fee calculation if transaction does not involve TSS address
 * [3179](https://github.com/zeta-chain/node/pull/3179) - support inbound trackers for v2 cctx
+* [3192](https://github.com/zeta-chain/node/pull/3192) - fix incorrect zContext origin caused by the replacement of 'sender' with 'revertAddress'
 
 ## v21.0.0
 
