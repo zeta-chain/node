@@ -271,7 +271,7 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 	}
 
 	// check if the event is processable
-	if !ob.CheckEventProcessability(*event) {
+	if !ob.IsEventProcessable(*event) {
 		return nil
 	}
 
@@ -305,8 +305,8 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 	return msg
 }
 
-// CheckEventProcessability checks if the inbound event is processable
-func (ob *Observer) CheckEventProcessability(event clienttypes.InboundEvent) bool {
+// IsEventProcessable checks if the inbound event is processable
+func (ob *Observer) IsEventProcessable(event clienttypes.InboundEvent) bool {
 	switch result := event.Processability(); result {
 	case clienttypes.InboundProcessabilityGood:
 		return true

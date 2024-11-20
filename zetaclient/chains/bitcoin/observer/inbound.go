@@ -349,7 +349,7 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 	}
 
 	// check if the event is processable
-	if !ob.CheckEventProcessability(*event) {
+	if !ob.IsEventProcessable(*event) {
 		return nil
 	}
 

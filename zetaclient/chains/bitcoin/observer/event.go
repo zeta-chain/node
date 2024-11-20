@@ -151,8 +151,8 @@ func ValidateStandardMemo(memoStd memo.InboundMemo, chainID int64) error {
 	return nil
 }
 
-// CheckEventProcessability checks if the inbound event is processable
-func (ob *Observer) CheckEventProcessability(event BTCInboundEvent) bool {
+// IsEventProcessable checks if the inbound event is processable
+func (ob *Observer) IsEventProcessable(event BTCInboundEvent) bool {
 	// check if the event is processable
 	switch result := event.Processability(); result {
 	case clienttypes.InboundProcessabilityGood:
