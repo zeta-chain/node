@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
+	_ "net/http/pprof" // #nosec G108 -- pprof enablement is intentional
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -254,6 +256,15 @@ func Start(_ *cobra.Command, _ []string) error {
 			wg.Wait()
 			telemetryServer.SetPingRTT(pingRTT)
 			time.Sleep(30 * time.Second)
+		}
+	}()
+	// pprof http server
+	// zetacored/cometbft is already listening for pprof on 6060 (by default)
+	go func() {
+		// #nosec G114 -- timeouts uneeded
+		err := http.ListenAndServe("localhost:6061", nil)
+		if err != nil {
+			log.Error().Err(err).Msg("pprof http server error")
 		}
 	}()
 
