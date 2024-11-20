@@ -26,6 +26,7 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
+	"github.com/zeta-chain/node/zetaclient/tss"
 )
 
 type Order string
@@ -226,12 +227,7 @@ type EVMJSONRPCClient interface {
 
 // TSSSigner is the interface for TSS signer
 type TSSSigner interface {
-	Pubkey() []byte
-	EVMAddress() ethcommon.Address
-	EVMAddressList() []ethcommon.Address
-	BTCAddress(chainID int64) (*btcutil.AddressWitnessPubKeyHash, error)
-	PubKeyCompressedBytes() []byte
-
+	PubKey() tss.PubKey
 	Sign(ctx context.Context, data []byte, height, nonce uint64, chainID int64) ([65]byte, error)
 	SignBatch(ctx context.Context, digests [][]byte, height, nonce uint64, chainID int64) ([][65]byte, error)
 }

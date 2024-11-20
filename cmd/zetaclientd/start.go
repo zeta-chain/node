@@ -2,37 +2,34 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"strings"
-	"sync"
 	"syscall"
-	"time"
 
-	"github.com/cometbft/cometbft/crypto/secp256k1"
-	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/libp2p/go-libp2p/p2p/protocol/ping"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"gitlab.com/thorchain/tss/go-tss/conversion"
 
 	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	zetaos "github.com/zeta-chain/node/pkg/os"
-	"github.com/zeta-chain/node/pkg/ticker"
-	observerTypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/maintenance"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/orchestrator"
-	mc "github.com/zeta-chain/node/zetaclient/tss"
+	zetatss "github.com/zeta-chain/node/zetaclient/tss"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
+)
+
+const (
+	// enables posting blame data to core for failed TSS signatures
+	envFlagPostBlame = "POST_BLAME"
 )
 
 // Start starts zetaclientd process todo revamp
@@ -61,7 +58,6 @@ func Start(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "initLogger failed")
 	}
 
-	// Wait until zetacore has started
 	if cfg.Peer != "" {
 		if err := validatePeer(cfg.Peer); err != nil {
 			return errors.Wrap(err, "unable to validate peer")
@@ -142,181 +138,70 @@ func Start(_ *cobra.Command, _ []string) error {
 
 	startLogger.Info().Msgf("Config is updated from zetacore\n %s", cfg.StringMasked())
 
-	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
-	// The hotkeyPk is private key for the Hotkey. The Hotkey is used to sign all inbound transactions
-	// Each node processes a portion of the key stored in ~/.tss by default . Custom location can be specified in config file during init.
-	// After generating the key , the address is set on the zetacore
-	hotkeyPk, err := zetacoreClient.GetKeys().GetPrivateKey(hotkeyPass)
-	if err != nil {
-		startLogger.Error().Err(err).Msg("zetacore client GetPrivateKey error")
-	}
-	startLogger.Debug().Msgf("hotkeyPk %s", hotkeyPk.String())
-	if len(hotkeyPk.Bytes()) != 32 {
-		errMsg := fmt.Sprintf("key bytes len %d != 32", len(hotkeyPk.Bytes()))
-		log.Error().Msg(errMsg)
-		return errors.New(errMsg)
-	}
-	priKey := secp256k1.PrivKey(hotkeyPk.Bytes()[:32])
-
-	tssBootstrapPeers, err := mc.MultiAddressFromString(cfg.Peer)
-	if err != nil {
-		// this is okay, we still have whitelisted peers to connect to
-		startLogger.Warn().Err(err).Msg("TSS bootstrap peers error")
-	}
-
-	tssPreParams, err := mc.ResolvePreParamsFromPath(cfg.PreParamsPath)
-	if err != nil {
-		return errors.Wrap(err, "unable to resolve TSS pre params. Use `zetaclient tss gen-pre-params`")
-	}
-
 	m, err := metrics.NewMetrics()
 	if err != nil {
-		log.Error().Err(err).Msg("NewMetrics")
-		return err
+		return errors.Wrap(err, "unable to create metrics")
 	}
 	m.Start()
 
 	metrics.Info.WithLabelValues(constant.Version).Set(1)
 	metrics.LastStartTime.SetToCurrentTime()
 
-	var tssHistoricalList []observerTypes.TSS
-	tssHistoricalList, err = zetacoreClient.GetTSSHistory(ctx)
-	if err != nil {
-		startLogger.Error().Err(err).Msg("GetTssHistory error")
-	}
-
 	telemetryServer.SetIPAddress(cfg.PublicIP)
 
-	keygen := appContext.GetKeygen()
-	whitelistedPeers := []peer.ID{}
-	for _, pk := range keygen.GranteePubkeys {
-		pid, err := conversion.Bech32PubkeyToPeerID(pk)
-		if err != nil {
-			return err
-		}
-		whitelistedPeers = append(whitelistedPeers, pid)
+	tssSetupProps := zetatss.SetupProps{
+		Config:          cfg,
+		Zetacore:        zetacoreClient,
+		HotKeyPassword:  hotkeyPass,
+		TSSKeyPassword:  tssKeyPass,
+		BitcoinChainIDs: btcChainIDsFromContext(appContext),
+		PostBlame:       isEnvFlagEnabled(envFlagPostBlame),
+		Telemetry:       telemetryServer,
 	}
 
-	// Create TSS server
-	tssServer, err := mc.SetupTSSServer(
-		tssBootstrapPeers,
-		priKey,
-		tssPreParams,
-		appContext.Config(),
-		tssKeyPass,
-		true,
-		whitelistedPeers,
-	)
+	tss, err := zetatss.Setup(ctx, tssSetupProps, startLogger)
 	if err != nil {
-		return fmt.Errorf("SetupTSSServer error: %w", err)
+		return errors.Wrap(err, "unable to setup TSS service")
 	}
-
-	// Set P2P ID for telemetry
-	telemetryServer.SetP2PID(tssServer.GetLocalPeerID())
 
 	// Creating a channel to listen for os signals (or other signals)
 	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
 
-	go func() {
-		for {
-			time.Sleep(30 * time.Second)
-			ps := tssServer.GetKnownPeers()
-			metrics.NumConnectedPeers.Set(float64(len(ps)))
-			telemetryServer.SetConnectedPeers(ps)
-		}
-	}()
-	go func() {
-		host := tssServer.GetP2PHost()
-		pingRTT := make(map[peer.ID]int64)
-		for {
-			var wg sync.WaitGroup
-			for _, p := range whitelistedPeers {
-				wg.Add(1)
-				go func(p peer.ID) {
-					defer wg.Done()
-					ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-					defer cancel()
-					result := <-ping.Ping(ctx, host, p)
-					if result.Error != nil {
-						masterLogger.Error().Err(result.Error).Msg("ping error")
-						pingRTT[p] = -1 // RTT -1 indicate ping error
-						return
-					}
-					pingRTT[p] = result.RTT.Nanoseconds()
-				}(p)
-			}
-			wg.Wait()
-			telemetryServer.SetPingRTT(pingRTT)
-			time.Sleep(30 * time.Second)
-		}
-	}()
-
-	// Generate a new TSS if keygen is set and add it into the tss server
-	// If TSS has already been generated, and keygen was successful ; we use the existing TSS
-	err = mc.KeygenCeremony(ctx, tssServer, zetacoreClient, masterLogger)
-	if err != nil {
-		return errors.Wrap(err, "unable to run tss keygen ceremony")
-	}
-
-	tss, err := mc.New(
-		ctx,
-		zetacoreClient,
-		tssHistoricalList,
-		hotkeyPass,
-		tssServer,
-	)
-	if err != nil {
-		startLogger.Error().Err(err).Msg("NewTSS error")
-		return err
-	}
-	if cfg.TestTssKeysign {
-		if err = mc.TestKeySign(tss.Server, tss.CurrentPubkey, startLogger); err != nil {
-			startLogger.Error().Err(err).
-				Str("tss.public_key", tss.CurrentPubkey).
-				Msg("TSS key-sign failed")
-		}
-	}
-
-	// Wait for TSS keygen to be successful before proceeding, This is a blocking thread only for a new keygen.
-	// For existing keygen, this should directly proceed to the next step
-	_ = ticker.Run(ctx, time.Second, func(ctx context.Context, t *ticker.Ticker) error {
-		keygen, err = zetacoreClient.GetKeyGen(ctx)
-		switch {
-		case err != nil:
-			startLogger.Warn().Err(err).Msg("Waiting for TSS Keygen to be a success, got error")
-		case keygen.Status != observerTypes.KeygenStatus_KeyGenSuccess:
-			startLogger.Warn().Msgf("Waiting for TSS Keygen to be a success, current status %s", keygen.Status)
-		default:
-			t.Stop()
-		}
-
-		return nil
-	})
-
-	// Update Current TSS value from zetacore, if TSS keygen is successful, the TSS address is set on zeta-core
-	// Returns err if the RPC call fails as zeta client needs the current TSS address to be set
-	// This is only needed in case of a new Keygen , as the TSS address is set on zetacore only after the keygen is successful i.e enough votes have been broadcast
-	currentTss, err := zetacoreClient.GetTSS(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to get current TSS")
-	}
-
-	// Filter supported BTC chain IDs
-	btcChains := appContext.FilterChains(zctx.Chain.IsBitcoin)
-	btcChainIDs := make([]int64, len(btcChains))
-	for i, chain := range btcChains {
-		btcChainIDs[i] = chain.ID()
-	}
-
-	// Make sure the TSS EVM/BTC addresses are well formed.
-	// Zetaclient should not start if TSS addresses cannot be properly derived.
-	tss.CurrentPubkey = currentTss.TssPubkey
-	err = tss.ValidateAddresses(btcChainIDs)
-	if err != nil {
-		startLogger.Error().Err(err).Msg("TSS address validation failed")
-		return err
-	}
+	// todo move to tss/healthcheck.go
+	//go func() {
+	//	for {
+	//		time.Sleep(30 * time.Second)
+	//		ps := tssServer.GetKnownPeers()
+	//		metrics.NumConnectedPeers.Set(float64(len(ps)))
+	//		telemetryServer.SetConnectedPeers(ps)
+	//	}
+	//}()
+	//go func() {
+	//	host := tssServer.GetP2PHost()
+	//	pingRTT := make(map[peer.ID]int64)
+	//	for {
+	//		var wg sync.WaitGroup
+	//		for _, p := range whitelistedPeers {
+	//			wg.Add(1)
+	//			go func(p peer.ID) {
+	//				defer wg.Done()
+	//				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	//				defer cancel()
+	//				result := <-ping.Ping(ctx, host, p)
+	//				if result.Error != nil {
+	//					masterLogger.Error().Err(result.Error).Msg("ping error")
+	//					pingRTT[p] = -1 // RTT -1 indicate ping error
+	//					return
+	//				}
+	//				pingRTT[p] = result.RTT.Nanoseconds()
+	//			}(p)
+	//		}
+	//		wg.Wait()
+	//		telemetryServer.SetPingRTT(pingRTT)
+	//		time.Sleep(30 * time.Second)
+	//	}
+	//}()
 
 	// Starts various background TSS listeners.
 	// Shuts down zetaclientd if any is triggered.
@@ -424,4 +309,22 @@ func isObserverNode(ctx context.Context, client *zetacore.Client) (bool, error) 
 	}
 
 	return false, nil
+}
+
+func isEnvFlagEnabled(flag string) bool {
+	v, _ := strconv.ParseBool(os.Getenv(flag))
+	return v
+}
+
+func btcChainIDsFromContext(app *zctx.AppContext) []int64 {
+	var (
+		btcChains   = app.FilterChains(zctx.Chain.IsBitcoin)
+		btcChainIDs = make([]int64, len(btcChains))
+	)
+
+	for i, chain := range btcChains {
+		btcChainIDs[i] = chain.ID()
+	}
+
+	return btcChainIDs
 }
