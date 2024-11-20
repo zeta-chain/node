@@ -111,6 +111,12 @@ type ZetacoreClient interface {
 	GetKeyGen(ctx context.Context) (observertypes.Keygen, error)
 	GetTSS(ctx context.Context) (observertypes.TSS, error)
 	GetTSSHistory(ctx context.Context) ([]observertypes.TSS, error)
+	PostVoteTSS(
+		ctx context.Context,
+		tssPubKey string,
+		keyGenZetaHeight int64,
+		status chains.ReceiveStatus,
+	) (string, error)
 
 	GetBlockHeight(ctx context.Context) (int64, error)
 

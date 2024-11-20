@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"syscall"
 
@@ -20,6 +19,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/maintenance"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/orchestrator"
@@ -33,7 +33,6 @@ const (
 )
 
 // Start starts zetaclientd process todo revamp
-// https://github.com/zeta-chain/node/issues/3119
 // https://github.com/zeta-chain/node/issues/3112
 func Start(_ *cobra.Command, _ []string) error {
 	// Prompt for Hotkey, TSS key-share and relayer key passwords
@@ -56,12 +55,6 @@ func Start(_ *cobra.Command, _ []string) error {
 	logger, err := base.InitLogger(cfg)
 	if err != nil {
 		return errors.Wrap(err, "initLogger failed")
-	}
-
-	if cfg.Peer != "" {
-		if err := validatePeer(cfg.Peer); err != nil {
-			return errors.Wrap(err, "unable to validate peer")
-		}
 	}
 
 	masterLogger := logger.Std
@@ -149,14 +142,20 @@ func Start(_ *cobra.Command, _ []string) error {
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
 
+	granteePubKeyBech32, err := resolveObserverPubKeyBech32(cfg, hotkeyPass)
+	if err != nil {
+		return errors.Wrap(err, "unable to resolve observer pub key bech32")
+	}
+
 	tssSetupProps := zetatss.SetupProps{
-		Config:          cfg,
-		Zetacore:        zetacoreClient,
-		HotKeyPassword:  hotkeyPass,
-		TSSKeyPassword:  tssKeyPass,
-		BitcoinChainIDs: btcChainIDsFromContext(appContext),
-		PostBlame:       isEnvFlagEnabled(envFlagPostBlame),
-		Telemetry:       telemetryServer,
+		Config:              cfg,
+		Zetacore:            zetacoreClient,
+		GranteePubKeyBech32: granteePubKeyBech32,
+		HotKeyPassword:      hotkeyPass,
+		TSSKeyPassword:      tssKeyPass,
+		BitcoinChainIDs:     btcChainIDsFromContext(appContext),
+		PostBlame:           isEnvFlagEnabled(envFlagPostBlame),
+		Telemetry:           telemetryServer,
 	}
 
 	tss, err := zetatss.Setup(ctx, tssSetupProps, startLogger)
@@ -311,20 +310,12 @@ func isObserverNode(ctx context.Context, client *zetacore.Client) (bool, error) 
 	return false, nil
 }
 
-func isEnvFlagEnabled(flag string) bool {
-	v, _ := strconv.ParseBool(os.Getenv(flag))
-	return v
-}
-
-func btcChainIDsFromContext(app *zctx.AppContext) []int64 {
-	var (
-		btcChains   = app.FilterChains(zctx.Chain.IsBitcoin)
-		btcChainIDs = make([]int64, len(btcChains))
-	)
-
-	for i, chain := range btcChains {
-		btcChainIDs[i] = chain.ID()
+func resolveObserverPubKeyBech32(cfg config.Config, hotKeyPassword string) (string, error) {
+	// Get observer's public key ("grantee pub key")
+	_, granteePubKeyBech32, err := keys.GetKeyringKeybase(cfg, hotKeyPassword)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to get keyring key base")
 	}
 
-	return btcChainIDs
+	return granteePubKeyBech32, nil
 }

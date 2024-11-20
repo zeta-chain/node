@@ -22,25 +22,20 @@ import (
 
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/config"
-	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
-	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 // SetupProps represents options for Setup.
 type SetupProps struct {
-	Config          config.Config
-	Zetacore        *zetacore.Client
-	HotKeyPassword  string
-	TSSKeyPassword  string
-	BitcoinChainIDs []int64
-	PostBlame       bool
-	Telemetry       Telemetry
-}
-
-type Telemetry interface {
-	SetP2PID(string)
+	Config              config.Config
+	Zetacore            Zetacore
+	GranteePubKeyBech32 string
+	HotKeyPassword      string
+	TSSKeyPassword      string
+	BitcoinChainIDs     []int64
+	PostBlame           bool
+	Telemetry           Telemetry
 }
 
 // Setup beefy function that does all the logic for bootstrapping tss-server, tss signer,
@@ -102,22 +97,6 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	}
 
 	logger.Info().Interface("whitelisted_peers", whitelistedPeers).Msg("Resolved whitelist peers")
-
-	// 4.
-	// 	err = newTss.LoadTssFilesFromDirectory(app.Config().TssPath)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//
-	//	_, pubkeyInBech32, err := keys.GetKeyringKeybase(app.Config(), hotkeyPassword)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//
-	//	err = newTss.VerifyKeysharesForPubkeys(tssHistoricalList, pubkeyInBech32)
-	//	if err != nil {
-	//		client.GetLogger().Error().Err(err).Msg("VerifyKeysharesForPubkeys fail")
-	//	}
 
 	// todo bump numbers
 	// 4. Bootstrap go-tss TSS server
@@ -312,14 +291,8 @@ func verifyKeySharesForPubKeys(p SetupProps, history []observertypes.TSS, logger
 		pubKeysSet[k.Bech32String()] = k
 	}
 
-	// Get observer's public key ("grantee pub key")
-	_, granteePubKeyBech32, err := keys.GetKeyringKeybase(p.Config, p.HotKeyPassword)
-	if err != nil {
-		return errors.Wrap(err, "unable to get keyring key base")
-	}
-
 	wasPartOfTSS := func(grantees []string) bool {
-		return slices.Contains(grantees, granteePubKeyBech32)
+		return slices.Contains(grantees, p.GranteePubKeyBech32)
 	}
 
 	for _, tssEntry := range history {

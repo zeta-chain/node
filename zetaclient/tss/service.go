@@ -9,11 +9,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
+	"gitlab.com/thorchain/tss/go-tss/blame"
 	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
 	"gitlab.com/thorchain/tss/go-tss/keysign"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -22,9 +24,33 @@ type KeySigner interface {
 	KeySign(req keysign.Request) (keysign.Response, error)
 }
 
+// Zetacore zeta core client.
+type Zetacore interface {
+	GetKeys() keyinterfaces.ObserverKeys
+
+	Chain() chains.Chain
+	GetBlockHeight(ctx context.Context) (int64, error)
+
+	GetKeyGen(ctx context.Context) (observertypes.Keygen, error)
+	GetTSS(ctx context.Context) (observertypes.TSS, error)
+	GetTSSHistory(ctx context.Context) ([]observertypes.TSS, error)
+	PostVoteTSS(
+		ctx context.Context,
+		tssPubKey string,
+		keyGenZetaHeight int64,
+		status chains.ReceiveStatus,
+	) (string, error)
+
+	PostVoteBlameData(ctx context.Context, blame *blame.Blame, chainID int64, index string) (string, error)
+}
+
+type Telemetry interface {
+	SetP2PID(id string)
+}
+
 // Service TSS service
 type Service struct {
-	zetacore      interfaces.ZetacoreClient
+	zetacore      Zetacore
 	tss           KeySigner
 	currentPubKey PubKey
 
@@ -59,7 +85,7 @@ func WithPostBlame(postBlame bool) Opt {
 
 // WithMetrics registers Prometheus metrics for the TSS service.
 // Otherwise, no metrics will be collected.
-func WithMetrics(ctx context.Context, zetacore interfaces.ZetacoreClient, m *Metrics) Opt {
+func WithMetrics(ctx context.Context, zetacore Zetacore, m *Metrics) Opt {
 	return func(cfg *serviceConfig, _ zerolog.Logger) error {
 		keygen, err := zetacore.GetKeyGen(ctx)
 		if err != nil {
@@ -91,7 +117,7 @@ var noopMetrics = Metrics{
 func NewService(
 	keySigner KeySigner,
 	tssPubKeyBech32 string,
-	zc interfaces.ZetacoreClient,
+	zetacore Zetacore,
 	logger zerolog.Logger,
 	opts ...Opt,
 ) (*Service, error) {
@@ -118,7 +144,7 @@ func NewService(
 	return &Service{
 		tss:           keySigner,
 		currentPubKey: currentPubKey,
-		zetacore:      zc,
+		zetacore:      zetacore,
 		postBlame:     cfg.postBlame,
 		metrics:       cfg.metrics,
 		logger:        logger,

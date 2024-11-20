@@ -22,7 +22,6 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
-	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 const (
@@ -32,14 +31,14 @@ const (
 
 type keygenCeremony struct {
 	tss           *tss.TssServer
-	zetacore      *zetacore.Client
+	zetacore      Zetacore
 	lastSeenBlock int64
 	logger        zerolog.Logger
 }
 
 // KeygenCeremony runs TSS keygen ceremony as a blocking thread.
 // Most likely the keygen is already generated, so this function will be a noop.
-func KeygenCeremony(ctx context.Context, tssServer *tss.TssServer, zc *zetacore.Client, logger zerolog.Logger) error {
+func KeygenCeremony(ctx context.Context, tssServer *tss.TssServer, zc Zetacore, logger zerolog.Logger) error {
 	const interval = time.Second
 
 	ceremony := keygenCeremony{

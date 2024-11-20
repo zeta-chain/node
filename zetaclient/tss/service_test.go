@@ -1,9 +1,10 @@
-package tss
+package tss_test
 
 import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,9 +18,15 @@ import (
 	"github.com/zeta-chain/node/cmd"
 	"github.com/zeta-chain/node/pkg/cosmos"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/zetaclient/tss"
 	"gitlab.com/thorchain/tss/go-tss/blame"
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
 	"gitlab.com/thorchain/tss/go-tss/keysign"
+)
+
+var (
+	base64EncodeString = base64.StdEncoding.EncodeToString
+	base64DecodeString = base64.StdEncoding.DecodeString
 )
 
 func TestService(t *testing.T) {
@@ -27,7 +34,7 @@ func TestService(t *testing.T) {
 
 	t.Run("NewService", func(t *testing.T) {
 		t.Run("Invalid pub key", func(t *testing.T) {
-			s, err := NewService(nil, "hello", nil, zerolog.Nop())
+			s, err := tss.NewService(nil, "hello", nil, zerolog.Nop())
 			require.ErrorContains(t, err, "invalid tss pub key")
 			require.Empty(t, s)
 		})
@@ -37,7 +44,7 @@ func TestService(t *testing.T) {
 			ts := newTestSuite(t)
 
 			// ACT
-			s, err := NewService(ts, ts.PubKeyBech32(), ts.zetacore, ts.logger)
+			s, err := tss.NewService(ts, ts.PubKeyBech32(), ts.zetacore, ts.logger)
 
 			// ASSERT
 			require.NoError(t, err)
@@ -53,7 +60,7 @@ func TestService(t *testing.T) {
 			ts := newTestSuite(t)
 
 			// Given tss service
-			s, err := NewService(ts, ts.PubKeyBech32(), ts.zetacore, ts.logger)
+			s, err := tss.NewService(ts, ts.PubKeyBech32(), ts.zetacore, ts.logger)
 			require.NoError(t, err)
 
 			// Given a sample msg to sign
@@ -139,7 +146,7 @@ func (m *keySignerMock) AddCall(pk string, digests [][]byte, height int64, succe
 			return base64EncodeString(digest)
 		})
 
-		req = keysign.NewRequest(pk, msgs, height, nil, Version)
+		req = keysign.NewRequest(pk, msgs, height, nil, tss.Version)
 		key = m.key(req)
 
 		res keysign.Response
