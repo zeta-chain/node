@@ -147,7 +147,10 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 
 		// if the transaction is sent to the gateway, this is a v2 inbound
 		gatewayAddr, gateway, err := ob.GetGatewayContract()
-		if err == nil && ethcommon.HexToAddress(tx.To) == gatewayAddr {
+		if err != nil {
+			ob.Logger().Inbound.Debug().Err(err).Msg("error getting gateway contract for processing inbound tracker")
+		}
+		if err == nil && tx != nil && ethcommon.HexToAddress(tx.To) == gatewayAddr {
 			if err := ob.ProcessInboundTrackerV2(ctx, gateway, tx, receipt); err != nil {
 				return err
 			}

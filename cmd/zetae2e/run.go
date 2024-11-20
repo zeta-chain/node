@@ -124,7 +124,7 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 			conf.ZetaChainID,
 		)
 		if err != nil {
-			return nil
+			return err
 		}
 		runnerOpts = append(runnerOpts, runner.WithZetaTxServer(zetaTxServer))
 	}
