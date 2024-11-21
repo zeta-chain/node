@@ -65,8 +65,7 @@ func (r *E2ERunner) WithdrawEmissions() error {
 			continue
 		}
 
-		err = r.ZetaTxServer.WithdrawAllEmissions(availableCoin.Amount, e2eutils.UserEmissionsWithdrawName, observer)
-		if err != nil {
+		if err := r.ZetaTxServer.WithdrawAllEmissions(availableCoin.Amount, e2eutils.UserEmissionsWithdrawName, observer); err != nil {
 			return err
 		}
 
