@@ -449,7 +449,7 @@ func (ob *Observer) FilterTSSOutboundInBlock(ctx context.Context, blockNumber ui
 
 	for i := range block.Transactions {
 		tx := block.Transactions[i]
-		if ethcommon.HexToAddress(tx.From) == ob.TSS().EVMAddress() {
+		if ethcommon.HexToAddress(tx.From) == ob.TSS().PubKey().AddressEVM() {
 			// #nosec G115 nonce always positive
 			nonce := uint64(tx.Nonce)
 			if !ob.IsTxConfirmed(nonce) {
@@ -501,33 +501,20 @@ func (ob *Observer) checkConfirmedTx(
 	// check tx sender and nonce
 	signer := ethtypes.NewLondonSigner(big.NewInt(ob.Chain().ChainId))
 	from, err := signer.Sender(transaction)
-	if err != nil {
+	switch {
+	case err != nil:
 		logger.Error().Err(err).Msg("local recovery of sender address failed")
 		return nil, nil, false
-	}
-	if from != ob.TSS().EVMAddress() { // must be TSS address
-		// If from is not TSS address, check if it is one of the previous TSS addresses We can still try to confirm a tx which was broadcast by an old TSS
-		// This is to handle situations where the outbound has already been broad-casted by an older TSS address and the zetacore is waiting for the all the required block confirmations
-		// to go through before marking the cctx into a finalized state
-
-		// TODO : improve this logic to verify that the correct TSS address is the from address.
-		// https://github.com/zeta-chain/node/issues/2487
-		logger.Warn().
-			Msgf("tx sender %s is not matching current TSS address %s", from.String(), ob.TSS().EVMAddress().String())
-		addressList := ob.TSS().EVMAddressList()
-		isOldTssAddress := false
-		for _, addr := range addressList {
-			if from == addr {
-				isOldTssAddress = true
-			}
-		}
-		if !isOldTssAddress {
-			logger.Error().Msgf("tx sender %s is not matching any of the TSS addresses", from.String())
-			return nil, nil, false
-		}
-	}
-	if transaction.Nonce() != nonce { // must match tracker nonce
-		logger.Error().Msgf("tx nonce %d is not matching tracker nonce", nonce)
+	case from != ob.TSS().PubKey().AddressEVM():
+		// might be false positive during TSS upgrade for unconfirmed txs
+		// Make all deposits/withdrawals are paused during TSS upgrade
+		logger.Error().Str("tx.sender", from.String()).Msgf("tx sender is not TSS addresses")
+		return nil, nil, false
+	case transaction.Nonce() != nonce:
+		logger.Error().
+			Uint64("tx.nonce", transaction.Nonce()).
+			Uint64("tracker.nonce", nonce).
+			Msg("tx nonce is not matching tracker nonce")
 		return nil, nil, false
 	}
 
