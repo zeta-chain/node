@@ -167,41 +167,6 @@ func Start(_ *cobra.Command, _ []string) error {
 	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
 
-	// todo move to tss/healthcheck.go
-	//go func() {
-	//	for {
-	//		time.Sleep(30 * time.Second)
-	//		ps := tssServer.GetKnownPeers()
-	//		metrics.NumConnectedPeers.Set(float64(len(ps)))
-	//		telemetryServer.SetConnectedPeers(ps)
-	//	}
-	//}()
-	//go func() {
-	//	host := tssServer.GetP2PHost()
-	//	pingRTT := make(map[peer.ID]int64)
-	//	for {
-	//		var wg sync.WaitGroup
-	//		for _, p := range whitelistedPeers {
-	//			wg.Add(1)
-	//			go func(p peer.ID) {
-	//				defer wg.Done()
-	//				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	//				defer cancel()
-	//				result := <-ping.Ping(ctx, host, p)
-	//				if result.Error != nil {
-	//					masterLogger.Error().Err(result.Error).Msg("ping error")
-	//					pingRTT[p] = -1 // RTT -1 indicate ping error
-	//					return
-	//				}
-	//				pingRTT[p] = result.RTT.Nanoseconds()
-	//			}(p)
-	//		}
-	//		wg.Wait()
-	//		telemetryServer.SetPingRTT(pingRTT)
-	//		time.Sleep(30 * time.Second)
-	//	}
-	//}()
-
 	// Starts various background TSS listeners.
 	// Shuts down zetaclientd if any is triggered.
 	maintenance.NewTSSListener(zetacoreClient, masterLogger).Listen(ctx, func() {

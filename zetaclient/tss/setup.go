@@ -175,9 +175,17 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		return nil, errors.Wrap(err, "unable to validate tss addresses")
 	}
 
-	logger.Info().Msg("TSS addresses validated")
+	logger.Info().Msg("TSS addresses validated. Starting healthcheck worker")
 
-	// todo health checks
+	healthCheckProps := HealthcheckProps{
+		Telemetry:               p.Telemetry,
+		WhitelistPeers:          whitelistedPeers,
+		NumConnectedPeersMetric: metrics.NumConnectedPeers,
+	}
+
+	if err = HealthcheckWorker(ctx, tssServer, healthCheckProps, logger); err != nil {
+		return nil, errors.Wrap(err, "unable to start healthcheck worker")
+	}
 
 	return service, nil
 }

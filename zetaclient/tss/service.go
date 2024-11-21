@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
@@ -46,6 +47,8 @@ type Zetacore interface {
 
 type Telemetry interface {
 	SetP2PID(id string)
+	SetConnectedPeers(peers []peer.AddrInfo)
+	SetPingRTT(peers map[peer.ID]int64)
 }
 
 // Service TSS service
