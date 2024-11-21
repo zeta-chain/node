@@ -40,6 +40,7 @@ func startV2Tests(eg *errgroup.Group, conf config.Config, deployerRunner *runner
 		e2etests.TestV2ERC20WithdrawAndCallName,
 		e2etests.TestV2ERC20DepositAndCallNoMessageName,
 		e2etests.TestV2ERC20WithdrawAndCallNoMessageName,
+		e2etests.TestV2DepositAndCallSwapName,
 	))
 
 	// Test revert cases for gas token workflow
