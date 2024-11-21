@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"net/http"
+	_ "net/http/pprof" // #nosec G108 -- pprof enablement is intentional
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -166,6 +168,16 @@ func Start(_ *cobra.Command, _ []string) error {
 	// Creating a channel to listen for os signals (or other signals)
 	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
+
+	// pprof http server
+	// zetacored/cometbft is already listening for pprof on 6060 (by default)
+	go func() {
+		// #nosec G114 -- timeouts uneeded
+		err := http.ListenAndServe("localhost:6061", nil)
+		if err != nil {
+			log.Error().Err(err).Msg("pprof http server error")
+		}
+	}()
 
 	// Starts various background TSS listeners.
 	// Shuts down zetaclientd if any is triggered.

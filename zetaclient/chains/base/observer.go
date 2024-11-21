@@ -211,7 +211,7 @@ func (ob *Observer) WithZetacoreClient(client interfaces.ZetacoreClient) *Observ
 	return ob
 }
 
-// Tss returns the tss signer for the observer.
+// TSS returns the tss signer for the observer.
 func (ob *Observer) TSS() interfaces.TSSSigner {
 	return ob.tss
 }

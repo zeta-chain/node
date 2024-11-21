@@ -94,34 +94,53 @@ func ParseInboundAsDepositSPL(
 	}, nil
 }
 
-// GetSignerDeposit returns the signer address of the deposit instruction
-// Note: solana-go is not able to parse the AccountMeta 'is_signer' ATM. This is a workaround.
+// getSignerDeposit returns the signer address of the deposit instruction
 func getSignerDeposit(tx *solana.Transaction, inst *solana.CompiledInstruction) (string, error) {
-	// there should be 3 accounts for a deposit instruction
-	if len(inst.Accounts) != accountsNumDeposit {
-		return "", fmt.Errorf("want %d accounts, got %d", accountsNumDeposit, len(inst.Accounts))
+	instructionAccounts, err := inst.ResolveInstructionAccounts(&tx.Message)
+	if err != nil {
+		return "", err
 	}
 
-	// sender is the signer account
-	return tx.Message.AccountKeys[0].String(), nil
+	// there should be 3 accounts for a deposit instruction
+	if len(instructionAccounts) != accountsNumDeposit {
+		return "", fmt.Errorf("want %d accounts, got %d", accountsNumDeposit, len(instructionAccounts))
+	}
+
+	// the accounts are [signer, pda, system_program]
+	// check if first account is signer
+	if !instructionAccounts[0].IsSigner {
+		return "", fmt.Errorf("not signer %s", instructionAccounts[0].PublicKey.String())
+	}
+
+	return instructionAccounts[0].PublicKey.String(), nil
 }
 
+// getSignerAndSPLFromDepositSPLAccounts returns the signer and spl address of the deposit_spl instruction
 func getSignerAndSPLFromDepositSPLAccounts(
 	tx *solana.Transaction,
 	inst *solana.CompiledInstruction,
 ) (string, string, error) {
+	instructionAccounts, err := inst.ResolveInstructionAccounts(&tx.Message)
+	if err != nil {
+		return "", "", err
+	}
+
 	// there should be 7 accounts for a deposit spl instruction
-	if len(inst.Accounts) != accountsNumberDepositSPL {
+	if len(instructionAccounts) != accountsNumberDepositSPL {
 		return "", "", fmt.Errorf(
 			"want %d accounts, got %d",
 			accountsNumberDepositSPL,
-			len(inst.Accounts),
+			len(instructionAccounts),
 		)
 	}
-
 	// the accounts are [signer, pda, whitelist_entry, mint_account, token_program, from, to]
-	signer := tx.Message.AccountKeys[0]
-	spl := tx.Message.AccountKeys[inst.Accounts[3]]
+	// check if first account is signer
+	if !instructionAccounts[0].IsSigner {
+		return "", "", fmt.Errorf("not signer %s", instructionAccounts[0].PublicKey.String())
+	}
 
-	return signer.String(), spl.String(), nil
+	signer := instructionAccounts[0].PublicKey.String()
+	spl := instructionAccounts[3].PublicKey.String()
+
+	return signer, spl, nil
 }
