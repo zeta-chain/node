@@ -507,7 +507,7 @@ func (ob *Observer) checkConfirmedTx(
 		return nil, nil, false
 	case from != ob.TSS().PubKey().AddressEVM():
 		// might be false positive during TSS upgrade for unconfirmed txs
-		// Make all deposits/withdrawals are paused during TSS upgrade
+		// Make sure all deposits/withdrawals are paused during TSS upgrade
 		logger.Error().Str("tx.sender", from.String()).Msgf("tx sender is not TSS addresses")
 		return nil, nil, false
 	case transaction.Nonce() != nonce:

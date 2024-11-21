@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"net/http"
-	_ "net/http/pprof" // #nosec G108 -- runPprof enablement is intentional
+	_ "net/http/pprof" // #nosec G108 -- pprof enablement is intentional
 	"os"
 	"os/signal"
 	"path/filepath"
