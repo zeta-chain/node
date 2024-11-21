@@ -111,6 +111,8 @@ services:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
     restart: always
+    ports:
+      - "6061:6061" # pprof
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
