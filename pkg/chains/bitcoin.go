@@ -13,6 +13,7 @@ var (
 		BitcoinMainnet.ChainId:       &chaincfg.MainNetParams,
 		BitcoinTestnet.ChainId:       &chaincfg.TestNet3Params,
 		BitcoinSignetTestnet.ChainId: &chaincfg.SigNetParams,
+		BitcoinTestnet4.ChainId:      &TestNet4Params,
 	}
 
 	// networkNameToChainID maps the Bitcoin network name to the chain ID
@@ -21,6 +22,7 @@ var (
 		chaincfg.MainNetParams.Name:       BitcoinMainnet.ChainId,
 		chaincfg.TestNet3Params.Name:      BitcoinTestnet.ChainId,
 		chaincfg.SigNetParams.Name:        BitcoinSignetTestnet.ChainId,
+		TestNet4Params.Name:               BitcoinTestnet4.ChainId,
 	}
 )
 

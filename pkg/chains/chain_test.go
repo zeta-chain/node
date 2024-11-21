@@ -147,8 +147,22 @@ func TestChain_EncodeAddress(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "should error if b is not a valid address on the bitcoin network",
+			name:    "should error if b is not a valid address on the bitcoin testnet network",
 			chain:   chains.BitcoinTestnet,
+			b:       []byte("bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c"),
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name:    "should error if b is not a valid address on the bitcoin signet network",
+			chain:   chains.BitcoinSignetTestnet,
+			b:       []byte("bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c"),
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name:    "should error if b is not a valid address on the bitcoin testnet4 network",
+			chain:   chains.BitcoinTestnet4,
 			b:       []byte("bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c"),
 			want:    "",
 			wantErr: true,
@@ -242,6 +256,7 @@ func TestChain_IsBitcoinChain(t *testing.T) {
 		{"Bitcoin Testnet", chains.BitcoinTestnet, true},
 		{"Bitcoin Regtest", chains.BitcoinRegtest, true},
 		{"Bitcoin Signet Testnet", chains.BitcoinSignetTestnet, true},
+		{"Bitcoin Testnet4", chains.BitcoinTestnet4, true},
 		{"Non-Bitcoin", chains.Ethereum, false},
 		{"Zeta Mainnet", chains.ZetaChainMainnet, false},
 	}
