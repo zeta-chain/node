@@ -21,7 +21,7 @@ func TestV2DepositAndCallSwap(r *runner.E2ERunner, _ []string) {
 	// create tokens pair (erc20 and eth)
 	tx, err := r.UniswapV2Factory.CreatePair(r.ZEVMAuth, r.ERC20ZRC20Addr, r.ETHZRC20Addr)
 	if err != nil {
-		r.Logger.Print("ℹ️ create pair error", err.Error())
+		r.Logger.Print("ℹ️ create pair error %s", err.Error())
 	} else {
 		utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	}
