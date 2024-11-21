@@ -265,7 +265,7 @@ func TestInbound(t *testing.T) {
 
 		withdrawalSigner, err := withdrawal.Signer()
 		require.NoError(t, err)
-		require.Equal(t, ob.TSS().EVMAddress().Hex(), withdrawalSigner.Hex())
+		require.Equal(t, ob.TSS().PubKey().AddressEVM().Hex(), withdrawalSigner.Hex())
 
 		withdrawalTX := sample.TONWithdrawal(t, ts.gateway.AccountID(), withdrawal)
 		txs := []ton.Transaction{withdrawalTX}

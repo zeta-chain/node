@@ -35,10 +35,9 @@ func (suite *BTCSignTestSuite) SetupTest() {
 	wif, _ := btcutil.DecodeWIF(pk)
 	privateKey := wif.PrivKey
 
-	suite.testSigner = &mocks.TSS{ // fake TSS
-		PrivKey: privateKey.ToECDSA(),
-	}
-	addr, err := suite.testSigner.BTCAddress(chains.BitcoinTestnet.ChainId)
+	suite.testSigner = mocks.NewTSSFromPrivateKey(suite.T(), privateKey.ToECDSA())
+
+	addr, err := suite.testSigner.PubKey().AddressBTC(chains.BitcoinTestnet.ChainId)
 	suite.Require().NoError(err)
 	suite.T().Logf("segwit addr: %s", addr)
 }
@@ -159,7 +158,7 @@ func getTSSTX(
 		return "", err
 	}
 
-	pkCompressed := tss.PubKeyCompressedBytes()
+	pkCompressed := tss.PubKey().Bytes(true)
 	txWitness := wire.TxWitness{append(sig.Serialize(), byte(hashType)), pkCompressed}
 	tx.TxIn[0].Witness = txWitness
 

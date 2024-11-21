@@ -30,7 +30,7 @@ const (
 func TestCreateSignerMap(t *testing.T) {
 	var (
 		ts         = metrics.NewTelemetryServer()
-		tss        = mocks.NewTSSMainnet()
+		tss        = mocks.NewTSS(t)
 		log        = zerolog.New(zerolog.NewTestWriter(t))
 		baseLogger = base.Logger{Std: log, Compliance: log}
 	)
@@ -195,7 +195,7 @@ func TestCreateSignerMap(t *testing.T) {
 func TestCreateChainObserverMap(t *testing.T) {
 	var (
 		ts         = metrics.NewTelemetryServer()
-		tss        = mocks.NewTSSMainnet()
+		tss        = mocks.NewTSS(t)
 		log        = zerolog.New(zerolog.NewTestWriter(t))
 		baseLogger = base.Logger{Std: log, Compliance: log}
 		client     = mocks.NewZetacoreClient(t)

@@ -143,7 +143,7 @@ func newTestSuite(t *testing.T) *testSuite {
 
 		liteClient = mocks.NewSignerLiteClient(t)
 
-		tss      = mocks.NewTSSAthens3()
+		tss      = mocks.NewTSS(t)
 		zetacore = mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
 
 		testLogger = zerolog.New(zerolog.NewTestWriter(t))

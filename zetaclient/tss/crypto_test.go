@@ -36,5 +36,10 @@ func TestPubKey(t *testing.T) {
 		assert.Equal(t, sample, pk.Bech32String())
 		assert.Equal(t, "0x70e967acfcc17c3941e87562161406d41676fd83", strings.ToLower(addrEVM.Hex()))
 		assert.Equal(t, "bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y", addrBTC.String())
+
+		// Check that NewPubKeyFromECDSA works
+		pk2, err := NewPubKeyFromECDSA(*pk.ecdsaPubKey)
+		require.NoError(t, err)
+		require.Equal(t, pk.Bech32String(), pk2.Bech32String())
 	})
 }

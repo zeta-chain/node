@@ -5,10 +5,12 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"encoding/base64"
+	"encoding/hex"
 	"strings"
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	eth "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -52,6 +54,35 @@ func NewPubKeyFromBech32(bech32 string) (PubKey, error) {
 		cosmosPubKey: cosmosPubKey,
 		ecdsaPubKey:  pubKey,
 	}, nil
+}
+
+// NewPubKeyFromECDSA creates a new PubKey from an ECDSA public key.
+func NewPubKeyFromECDSA(pk ecdsa.PublicKey) (PubKey, error) {
+	compressed := elliptic.MarshalCompressed(pk.Curve, pk.X, pk.Y)
+
+	return PubKey{
+		cosmosPubKey: &secp256k1.PubKey{Key: compressed},
+		ecdsaPubKey:  &pk,
+	}, nil
+}
+
+// NewPubKeyFromECDSAHexString creates PubKey from 0xABC12...
+func NewPubKeyFromECDSAHexString(raw string) (PubKey, error) {
+	if strings.HasPrefix(raw, "0x") {
+		raw = raw[2:]
+	}
+
+	b, err := hex.DecodeString(raw)
+	if err != nil {
+		return PubKey{}, errors.Wrap(err, "unable to decode hex string")
+	}
+
+	pk, err := crypto.UnmarshalPubkey(b)
+	if err != nil {
+		return PubKey{}, errors.Wrap(err, "unable to unmarshal pubkey")
+	}
+
+	return NewPubKeyFromECDSA(*pk)
 }
 
 // Bytes marshals pubKey to bytes either as compressed or uncompressed slice.

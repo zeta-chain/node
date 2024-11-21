@@ -7,6 +7,7 @@ import (
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -35,6 +36,7 @@ const (
 
 	// tssAddressTest is the TSS address for testing
 	tssAddressTest = "0x05C7dBdd1954D59c9afaB848dA7d8DD3F35e69Cd"
+	tssPubKeyTest  = "0x0441707acf75468fd132dfe8a4d48a7726adca036199bbacac7be37e9b7104f2b3b69197bbffa6c7e25ba478ba10505c8929a632e4a84dd03e5e04c260e6c52a00"
 
 	// whitelistTxTest is local devnet tx result for testing
 	whitelistTxTest = "phM9bESbiqojmpkkUxgjed8EABkxvPGNau9q31B8Yk1sXUtsxJvd6G9VbZZQPsEyn6RiTH4YBtqJ89omqfbbNNY"
@@ -50,10 +52,13 @@ func createTestObserver(
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
 
+	testLogger := zerolog.New(zerolog.NewTestWriter(t))
+	logger := base.Logger{Std: testLogger, Compliance: testLogger}
+
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = GatewayAddressTest
-	ob, err := observer.NewObserver(chain, solClient, *chainParams, nil, tss, 60, database, base.DefaultLogger(), nil)
+	ob, err := observer.NewObserver(chain, solClient, *chainParams, nil, tss, 60, database, logger, nil)
 	require.NoError(t, err)
 
 	return ob
@@ -76,7 +81,7 @@ func Test_CheckFinalizedTx(t *testing.T) {
 	solClient.On("GetTransaction", mock.Anything, txSig, mock.Anything).Return(txResult, nil)
 
 	// mock TSS
-	tss := mocks.NewMockTSS(chain, tssAddressTest, "")
+	tss := mocks.NewTSS(t).FakePubKey(tssPubKeyTest)
 
 	// create observer with and TSS
 	ob := createTestObserver(t, chain, solClient, tss)
@@ -132,7 +137,7 @@ func Test_CheckFinalizedTx(t *testing.T) {
 
 	t.Run("should return error on ECDSA signer mismatch", func(t *testing.T) {
 		// create observer with other TSS address
-		tssOther := mocks.NewMockTSS(chain, sample.EthAddress().String(), "")
+		tssOther := mocks.NewTSS(t)
 		ob := createTestObserver(t, chain, solClient, tssOther)
 
 		tx, finalized := ob.CheckFinalizedTx(ctx, txHash, nonce, coinType)

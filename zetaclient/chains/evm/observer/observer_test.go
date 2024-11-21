@@ -117,7 +117,7 @@ func MockEVMObserver(
 	}
 	// use default mock tss if not provided
 	if tss == nil {
-		tss = mocks.NewTSSMainnet()
+		tss = mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet)
 	}
 	// create AppContext
 	appContext, _ := getAppContext(t, chain, "", &params)
@@ -182,7 +182,7 @@ func Test_NewObserver(t *testing.T) {
 			chainParams: params,
 			evmClient:   evmClient,
 			evmJSONRPC:  mocks.NewMockJSONRPCClient(),
-			tss:         mocks.NewTSSMainnet(),
+			tss:         mocks.NewTSS(t),
 			logger:      base.Logger{},
 			ts:          nil,
 			fail:        false,
@@ -200,7 +200,7 @@ func Test_NewObserver(t *testing.T) {
 				return evmClient
 			}(),
 			evmJSONRPC: mocks.NewMockJSONRPCClient(),
-			tss:        mocks.NewTSSMainnet(),
+			tss:        mocks.NewTSS(t),
 			logger:     base.Logger{},
 			ts:         nil,
 			fail:       true,
@@ -214,7 +214,7 @@ func Test_NewObserver(t *testing.T) {
 			chainParams: params,
 			evmClient:   evmClient,
 			evmJSONRPC:  mocks.NewMockJSONRPCClient(),
-			tss:         mocks.NewTSSMainnet(),
+			tss:         mocks.NewTSS(t),
 			before: func() {
 				envVar := base.EnvVarLatestBlockByChain(chain)
 				os.Setenv(envVar, "invalid")

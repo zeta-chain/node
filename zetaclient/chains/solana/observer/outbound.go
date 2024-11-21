@@ -307,8 +307,9 @@ func (ob *Observer) CheckFinalizedTx(
 	}
 
 	// check tx authorization
-	if signerECDSA != ob.TSS().EVMAddress() {
-		logger.Error().Msgf("tx signer %s is not matching current TSS address %s", signerECDSA, ob.TSS().EVMAddress())
+	if signerECDSA != ob.TSS().PubKey().AddressEVM() {
+		logger.Error().
+			Msgf("tx signer %s is not matching current TSS address %s", signerECDSA, ob.TSS().PubKey().AddressEVM())
 		return nil, false
 	}
 

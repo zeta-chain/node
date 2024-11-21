@@ -596,7 +596,7 @@ func (ob *Observer) CheckAndVoteInboundTokenGas(
 	}
 
 	// checks receiver and tx status
-	if ethcommon.HexToAddress(tx.To) != ob.TSS().EVMAddress() {
+	if ethcommon.HexToAddress(tx.To) != ob.TSS().PubKey().AddressEVM() {
 		return "", fmt.Errorf("tx.To %s is not TSS address", tx.To)
 	}
 	if receipt.Status != ethtypes.ReceiptStatusSuccessful {
@@ -788,7 +788,7 @@ func (ob *Observer) ObserveTSSReceiveInBlock(ctx context.Context, blockNumber ui
 	}
 	for i := range block.Transactions {
 		tx := block.Transactions[i]
-		if ethcommon.HexToAddress(tx.To) == ob.TSS().EVMAddress() {
+		if ethcommon.HexToAddress(tx.To) == ob.TSS().PubKey().AddressEVM() {
 			receipt, err := ob.evmClient.TransactionReceipt(ctx, ethcommon.HexToHash(tx.Hash))
 			if err != nil {
 				return errors.Wrapf(err, "error getting receipt for inbound %s chain %d", tx.Hash, ob.Chain().ChainId)
