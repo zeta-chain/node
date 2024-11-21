@@ -124,20 +124,14 @@ func (k PubKey) AddressEVM() eth.Address {
 
 // VerifySignature checks that keysign.Signature is valid and origins from expected TSS public key.
 // Also returns signature as [65]byte (R, S, V)
-func VerifySignature(sig keysign.Signature, tssPubKey string, expectedMsgHash []byte) ([65]byte, error) {
+func VerifySignature(sig keysign.Signature, pk PubKey, hash []byte) ([65]byte, error) {
 	// Check that msg hash equals msg hash in the signature
 	actualMsgHash, err := base64DecodeString(sig.Msg)
 	switch {
 	case err != nil:
 		return [65]byte{}, errors.Wrap(err, "unable to decode message hash")
-	case !bytes.Equal(expectedMsgHash, actualMsgHash):
+	case !bytes.Equal(hash, actualMsgHash):
 		return [65]byte{}, errors.New("message hash mismatch")
-	}
-
-	// Prepare expected public key
-	expectedPubKey, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, tssPubKey)
-	if err != nil {
-		return [65]byte{}, errors.Wrap(err, "unable to decode tss pub key from bech32")
 	}
 
 	sigBytes, err := SignatureToBytes(sig)
@@ -146,12 +140,11 @@ func VerifySignature(sig keysign.Signature, tssPubKey string, expectedMsgHash []
 	}
 
 	// Recover public key from signature
-	actualPubKey, err := crypto.SigToPub(expectedMsgHash, sigBytes[:])
-	if err != nil {
+	actualPubKey, err := crypto.SigToPub(hash, sigBytes[:])
+	switch {
+	case err != nil:
 		return [65]byte{}, errors.Wrap(err, "unable to recover public key from signature")
-	}
-
-	if !bytes.Equal(expectedPubKey.Bytes(), crypto.CompressPubkey(actualPubKey)) {
+	case crypto.PubkeyToAddress(*actualPubKey) != pk.AddressEVM():
 		return [65]byte{}, errors.New("public key mismatch")
 	}
 

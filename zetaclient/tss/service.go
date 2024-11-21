@@ -187,11 +187,9 @@ func (s *Service) SignBatch(
 		digestsBase64[i] = base64EncodeString(digest)
 	}
 
-	tssPubKeyBech32 := s.PubKey().Bech32String()
-
 	// #nosec G115 always in range
 	req := keysign.NewRequest(
-		tssPubKeyBech32,
+		s.PubKey().Bech32String(),
 		digestsBase64,
 		int64(height),
 		nil,
@@ -215,7 +213,7 @@ func (s *Service) SignBatch(
 
 	signatures := make([][65]byte, len(res.Signatures))
 	for i, sigResponse := range res.Signatures {
-		signatures[i], err = VerifySignature(sigResponse, tssPubKeyBech32, digests[i])
+		signatures[i], err = VerifySignature(sigResponse, s.PubKey(), digests[i])
 		if err != nil {
 			return nil, fmt.Errorf("unable to verify signature: %w (#%d)", err, i)
 		}

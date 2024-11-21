@@ -277,8 +277,13 @@ func digestReq(req keygen.Request) (string, error) {
 var testKeySignData = []byte("hello meta")
 
 // TestKeySign performs a TSS key-sign test of sample data.
-func TestKeySign(keySigner KeySigner, tssPubKey string, logger zerolog.Logger) error {
+func TestKeySign(keySigner KeySigner, tssPubKeyBec32 string, logger zerolog.Logger) error {
 	logger = logger.With().Str(logs.FieldModule, "tss_keysign").Logger()
+
+	tssPubKey, err := NewPubKeyFromBech32(tssPubKeyBec32)
+	if err != nil {
+		return errors.Wrap(err, "unable to parse TSS public key")
+	}
 
 	hashedData := crypto.Keccak256Hash(testKeySignData)
 
@@ -288,7 +293,7 @@ func TestKeySign(keySigner KeySigner, tssPubKey string, logger zerolog.Logger) e
 		Msg("Performing TSS key-sign test")
 
 	req := keysign.NewRequest(
-		tssPubKey,
+		tssPubKey.Bech32String(),
 		[]string{base64.StdEncoding.EncodeToString(hashedData.Bytes())},
 		10,
 		nil,
