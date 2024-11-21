@@ -20,6 +20,7 @@
 * [3125](https://github.com/zeta-chain/node/pull/3125) - drop support for header proofs
 * [3131](https://github.com/zeta-chain/node/pull/3131) - move app context update from zetacore client
 * [3137](https://github.com/zeta-chain/node/pull/3137) - remove chain.Chain from zetaclientd config
+* [3170](https://github.com/zeta-chain/node/pull/3170) - revamp TSS package in zetaclient
 
 ### Fixes
 * [3117](https://github.com/zeta-chain/node/pull/3117) - register messages for emissions module to legacy amino codec.
