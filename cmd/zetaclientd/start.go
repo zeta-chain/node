@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"net/http"
-	_ "net/http/pprof" // #nosec G108 -- pprof enablement is intentional
+	_ "net/http/pprof" // #nosec G108 -- runPprof enablement is intentional
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -11,6 +11,7 @@ import (
 	"syscall"
 
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
@@ -32,6 +33,7 @@ import (
 const (
 	// enables posting blame data to core for failed TSS signatures
 	envFlagPostBlame = "POST_BLAME"
+	envPprofAddr     = "PPROF_ADDR"
 )
 
 // Start starts zetaclientd process todo revamp
@@ -77,6 +79,8 @@ func Start(_ *cobra.Command, _ []string) error {
 			panic("telemetryServer error")
 		}
 	}()
+
+	go runPprof(startLogger)
 
 	// CreateZetacoreClient:  zetacore client is used for all communication to zetacore , which this client connects to.
 	// Zetacore accumulates votes , and provides a centralized source of truth for all clients
@@ -168,16 +172,6 @@ func Start(_ *cobra.Command, _ []string) error {
 	// Creating a channel to listen for os signals (or other signals)
 	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
-
-	// pprof http server
-	// zetacored/cometbft is already listening for pprof on 6060 (by default)
-	go func() {
-		// #nosec G114 -- timeouts uneeded
-		err := http.ListenAndServe("localhost:6061", nil)
-		if err != nil {
-			log.Error().Err(err).Msg("pprof http server error")
-		}
-	}()
 
 	// Starts various background TSS listeners.
 	// Shuts down zetaclientd if any is triggered.
@@ -295,4 +289,20 @@ func resolveObserverPubKeyBech32(cfg config.Config, hotKeyPassword string) (stri
 	}
 
 	return granteePubKeyBech32, nil
+}
+
+// runPprof run pprof http server
+// zetacored/cometbft is already listening for runPprof on 6060 (by default)
+func runPprof(logger zerolog.Logger) {
+	addr := os.Getenv(envPprofAddr)
+	if addr == "" {
+		addr = "localhost:6061"
+	}
+
+	logger.Info().Str("addr", addr).Msg("starting pprof http server")
+
+	// #nosec G114 -- timeouts unneeded
+	if err := http.ListenAndServe(addr, nil); err != nil {
+		logger.Error().Err(err).Msg("pprof http server error")
+	}
 }
