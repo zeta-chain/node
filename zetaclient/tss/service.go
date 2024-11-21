@@ -211,17 +211,14 @@ func (s *Service) SignBatch(
 		return nil, fmt.Errorf("keysign fail: signature list length mismatch")
 	}
 
-	signatures := make([][65]byte, len(res.Signatures))
-	for i, sigResponse := range res.Signatures {
-		signatures[i], err = VerifySignature(sigResponse, s.PubKey(), digests[i])
-		if err != nil {
-			return nil, fmt.Errorf("unable to verify signature: %w (#%d)", err, i)
-		}
+	sigs, err := verifySignatures(digests, res, s.PubKey())
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to verify signatures")
 	}
 
 	// todo sig save to LRU cache (chain-id + digest). We need LRU per EACH chain
 
-	return signatures, nil
+	return sigs, nil
 }
 
 var (

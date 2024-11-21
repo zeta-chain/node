@@ -81,6 +81,37 @@ func TestService(t *testing.T) {
 			require.NotEmpty(t, sig)
 		})
 	})
+
+	t.Run("SignBatch", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t)
+
+		// Given tss service
+		s, err := tss.NewService(ts, ts.PubKeyBech32(), ts.zetacore, ts.logger)
+		require.NoError(t, err)
+
+		// Given several sample messages to sign
+		digests := [][]byte{
+			ts.SampleDigest(),
+			ts.SampleDigest(),
+			ts.SampleDigest(),
+			ts.SampleDigest(),
+			ts.SampleDigest(),
+			ts.SampleDigest(),
+			ts.SampleDigest(),
+		}
+
+		// Given mock response
+		const blockHeight = 123
+		ts.keySignerMock.AddCall(ts.PubKeyBech32(), digests, blockHeight, true, nil)
+
+		// ACT
+		sig, err := s.SignBatch(ts.ctx, digests, blockHeight, 2, 3)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.NotEmpty(t, sig)
+	})
 }
 
 type testSuite struct {
@@ -187,6 +218,9 @@ func (m *keySignerMock) sign(req keysign.Request) keysign.Response {
 			RecoveryID: base64EncodeString(sig[64:65]),
 		})
 	}
+
+	// might be random... we should tolerate that
+	signatures = lo.Shuffle(signatures)
 
 	return keysign.Response{
 		Signatures: signatures,

@@ -6,6 +6,7 @@ import (
 	"crypto/elliptic"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"strings"
 
 	"github.com/btcsuite/btcd/btcutil"
@@ -166,6 +167,49 @@ func SignatureToBytes(input keysign.Signature) (sig [65]byte, err error) {
 	}
 
 	return sig, nil
+}
+
+// apparently go-tss returns res.Signatures in a different order than digests,
+// thus we need to ensure the order AND verify the signatures
+func verifySignatures(digests [][]byte, res keysign.Response, pk PubKey) ([][65]byte, error) {
+	switch {
+	case len(digests) == 0:
+		return nil, errors.New("empty digests list")
+	case len(digests) != len(res.Signatures):
+		return nil, errors.New("length mismatch")
+	case len(digests) == 1:
+		// most common case
+		sig, err := VerifySignature(res.Signatures[0], pk, digests[0])
+		if err != nil {
+			return nil, err
+		}
+
+		return [][65]byte{sig}, nil
+	}
+
+	// map bas64(digest) => slice index
+	cache := make(map[string]int, len(digests))
+	for i, digest := range digests {
+		cache[base64EncodeString(digest)] = i
+	}
+
+	signatures := make([][65]byte, len(res.Signatures))
+
+	for _, sigResponse := range res.Signatures {
+		i, ok := cache[sigResponse.Msg]
+		if !ok {
+			return nil, errors.Errorf("missing digest %s", sigResponse.Msg)
+		}
+
+		sig, err := VerifySignature(sigResponse, pk, digests[i])
+		if err != nil {
+			return nil, fmt.Errorf("unable to verify signature: %w (#%d)", err, i)
+		}
+
+		signatures[i] = sig
+	}
+
+	return signatures, nil
 }
 
 // combineDigests combines the digests
