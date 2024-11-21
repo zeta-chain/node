@@ -33,16 +33,23 @@ type keygenCeremony struct {
 	tss           *tss.TssServer
 	zetacore      Zetacore
 	lastSeenBlock int64
+	iterations    int
 	logger        zerolog.Logger
 }
 
 // KeygenCeremony runs TSS keygen ceremony as a blocking thread.
 // Most likely the keygen is already generated, so this function will be a noop.
-func KeygenCeremony(ctx context.Context, tssServer *tss.TssServer, zc Zetacore, logger zerolog.Logger) error {
+// Returns the TSS key if generated, or error.
+func KeygenCeremony(
+	ctx context.Context,
+	server *tss.TssServer,
+	zc Zetacore,
+	logger zerolog.Logger,
+) (observertypes.TSS, error) {
 	const interval = time.Second
 
 	ceremony := keygenCeremony{
-		tss:      tssServer,
+		tss:      server,
 		zetacore: zc,
 		logger:   logger.With().Str(logs.FieldModule, "tss_keygen").Logger(),
 	}
@@ -51,7 +58,7 @@ func KeygenCeremony(ctx context.Context, tssServer *tss.TssServer, zc Zetacore, 
 		shouldRetry, err := ceremony.iteration(ctx)
 		switch {
 		case shouldRetry:
-			if err != nil {
+			if err != nil && !errors.Is(err, context.Canceled) {
 				logger.Error().Err(err).Msg("Keygen error. Retrying...")
 			}
 
@@ -66,7 +73,20 @@ func KeygenCeremony(ctx context.Context, tssServer *tss.TssServer, zc Zetacore, 
 		}
 	}
 
-	return ticker.Run(ctx, interval, task, ticker.WithLogger(logger, "tss_keygen"))
+	err := ticker.Run(ctx, interval, task, ticker.WithLogger(logger, "tss_keygen"))
+	if err != nil {
+		return observertypes.TSS{}, err
+	}
+
+	// If there was only a single iteration, most likely the TSS is already generated,
+	// Otherwise, we need to wait for the next block to ensure TSS is set by internal keepers.
+	if ceremony.iterations > 1 {
+		if err = ceremony.waitForBlock(ctx); err != nil {
+			return observertypes.TSS{}, errors.Wrap(err, "error waiting for the next block")
+		}
+	}
+
+	return zc.GetTSS(ctx)
 }
 
 // iteration runs ceremony iteration every time interval.
@@ -75,6 +95,8 @@ func KeygenCeremony(ctx context.Context, tssServer *tss.TssServer, zc Zetacore, 
 // - If the keygen is pending, ensure we're on the right block
 // - Iteration also ensured that the logic is invoked ONLY once per block (regardless of the interval)
 func (k *keygenCeremony) iteration(ctx context.Context) (shouldRetry bool, err error) {
+	k.iterations++
+
 	keygenTask, err := k.zetacore.GetKeyGen(ctx)
 	switch {
 	case err != nil:
@@ -216,6 +238,26 @@ func (k *keygenCeremony) blockThrottled(currentBlock int64) bool {
 	default:
 		k.lastSeenBlock = currentBlock
 		return false
+	}
+}
+
+func (k *keygenCeremony) waitForBlock(ctx context.Context) error {
+	height, err := k.zetacore.GetBlockHeight(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to get block height (initial)")
+	}
+
+	for {
+		k.logger.Info().Msg("Waiting for the next block to arrive")
+		newHeight, err := k.zetacore.GetBlockHeight(ctx)
+		switch {
+		case err != nil:
+			return errors.Wrap(err, "unable to get block height")
+		case newHeight > height:
+			return nil
+		default:
+			time.Sleep(time.Second)
+		}
 	}
 }
 

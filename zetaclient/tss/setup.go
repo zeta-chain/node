@@ -120,17 +120,10 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	logger.Info().Msg("TSS server started")
 
 	// 5. Perform key generation (if needed)
-	if err = KeygenCeremony(ctx, tssServer, p.Zetacore, logger); err != nil {
+	tssInfo, err := KeygenCeremony(ctx, tssServer, p.Zetacore, logger)
+	if err != nil {
 		return nil, errors.Wrap(err, "unable to perform keygen ceremony")
 	}
-
-	// 6. Get tss & tss history from zetacore
-	tssInfo, err := p.Zetacore.GetTSS(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get TSS from zetacore")
-	}
-
-	logger.Info().Msg("Got TSS info from zetacore")
 
 	historicalTSSInfo, err := p.Zetacore.GetTSSHistory(ctx)
 	if err != nil {
