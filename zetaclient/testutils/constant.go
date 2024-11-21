@@ -39,12 +39,14 @@ const (
 	EventERC20Withdraw = "Withdrawn"
 )
 
+// OldSolanaGatewayAddressDevnet is the old gateway address deployed on Solana devnet
+const OldSolanaGatewayAddressDevnet = "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
+
 // GatewayAddresses contains constants gateway addresses for testing
 var GatewayAddresses = map[int64]string{
-	// Gateway address on Solana devnet
-	// NOTE: currently different deployer key pair is used for development compared to live networks
-	// as live networks key pair is sensitive information at this point, can be unified once we have deployments completed
-	chains.SolanaDevnet.ChainId: "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d",
+	// Solana gateway addresses
+	chains.SolanaDevnet.ChainId:  "ZETAjseVjuFsxdRxo6MmTCvqFwb3ZHUx56Co3vCmGis",
+	chains.SolanaMainnet.ChainId: "ZETAjseVjuFsxdRxo6MmTCvqFwb3ZHUx56Co3vCmGis",
 }
 
 // ConnectorAddresses contains constants ERC20 connector addresses for testing

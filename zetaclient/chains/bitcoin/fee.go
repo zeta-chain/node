@@ -56,6 +56,9 @@ var (
 	DefaultDepositorFee = DepositorFee(defaultDepositorFeeRate)
 )
 
+// DepositorFeeCalculator is a function type to calculate the Bitcoin depositor fee
+type DepositorFeeCalculator func(interfaces.BTCRPCClient, *btcjson.TxRawResult, *chaincfg.Params) (float64, error)
+
 // FeeRateToSatPerByte converts a fee rate in BTC/KB to sat/byte.
 func FeeRateToSatPerByte(rate float64) *big.Int {
 	// #nosec G115 always in range

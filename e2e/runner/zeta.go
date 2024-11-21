@@ -15,6 +15,7 @@ import (
 
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -331,4 +332,21 @@ func (r *E2ERunner) skipChainOperations(chainID int64) bool {
 	}
 
 	return skip
+}
+
+// AddInboundTracker adds an inbound tracker from the tx hash
+func (r *E2ERunner) AddInboundTracker(coinType coin.CoinType, txHash string) {
+	require.NotNil(r, r.ZetaTxServer)
+
+	chainID, err := r.EVMClient.ChainID(r.Ctx)
+	require.NoError(r, err)
+
+	msg := types.NewMsgAddInboundTracker(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.EmergencyPolicyName),
+		chainID.Int64(),
+		coinType,
+		txHash,
+	)
+	_, err = r.ZetaTxServer.BroadcastTx(utils.EmergencyPolicyName, msg)
+	require.NoError(r, err)
 }

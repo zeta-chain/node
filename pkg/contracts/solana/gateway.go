@@ -8,9 +8,6 @@ import (
 )
 
 const (
-	// SolanaGatewayProgramID is the program ID of the Solana gateway program
-	SolanaGatewayProgramID = "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
-
 	// PDASeed is the seed for the Solana gateway program derived address
 	PDASeed = "meta"
 
@@ -29,16 +26,22 @@ const (
 var (
 	// DiscriminatorInitialize returns the discriminator for Solana gateway 'initialize' instruction
 	DiscriminatorInitialize = idlgateway.IDLGateway.GetDiscriminator("initialize")
+
 	// DiscriminatorInitializeRentPayer returns the discriminator for Solana gateway 'initialize_rent_payer' instruction
 	DiscriminatorInitializeRentPayer = idlgateway.IDLGateway.GetDiscriminator("initialize_rent_payer")
+
 	// DiscriminatorDeposit returns the discriminator for Solana gateway 'deposit' instruction
 	DiscriminatorDeposit = idlgateway.IDLGateway.GetDiscriminator("deposit")
+
 	// DiscriminatorDepositSPL returns the discriminator for Solana gateway 'deposit_spl_token' instruction
 	DiscriminatorDepositSPL = idlgateway.IDLGateway.GetDiscriminator("deposit_spl_token")
+
 	// DiscriminatorWithdraw returns the discriminator for Solana gateway 'withdraw' instruction
 	DiscriminatorWithdraw = idlgateway.IDLGateway.GetDiscriminator("withdraw")
+
 	// DiscriminatorWithdrawSPL returns the discriminator for Solana gateway 'withdraw_spl_token' instruction
 	DiscriminatorWithdrawSPL = idlgateway.IDLGateway.GetDiscriminator("withdraw_spl_token")
+
 	// DiscriminatorWhitelist returns the discriminator for Solana gateway 'whitelist_spl_mint' instruction
 	DiscriminatorWhitelistSplMint = idlgateway.IDLGateway.GetDiscriminator("whitelist_spl_mint")
 )
@@ -60,7 +63,7 @@ func ParseGatewayWithPDA(gatewayAddress string) (solana.PublicKey, solana.Public
 	return gatewayID, pda, err
 }
 
-// ParseRentPayerPda parses the rent payer program derived address from the given string
+// ParseRentPayerPDA parses the rent payer program derived address from the given string
 func RentPayerPDA(gateway solana.PublicKey) (solana.PublicKey, error) {
 	var rentPayerPda solana.PublicKey
 	seed := []byte(RentPayerPDASeed)

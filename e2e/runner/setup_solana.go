@@ -27,11 +27,11 @@ func (r *E2ERunner) SetupSolanaAccount() {
 }
 
 // SetupSolana sets Solana contracts and params
-func (r *E2ERunner) SetupSolana(deployerPrivateKey string) {
+func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 	r.Logger.Print("⚙️ initializing gateway program on Solana")
 
 	// set Solana contracts
-	r.GatewayProgram = solana.MustPublicKeyFromBase58(solanacontracts.SolanaGatewayProgramID)
+	r.GatewayProgram = solana.MustPublicKeyFromBase58(gatewayID)
 
 	// get deployer account balance
 	privkey, err := solana.PrivateKeyFromBase58(deployerPrivateKey)
@@ -113,8 +113,8 @@ func (r *E2ERunner) SetupSolana(deployerPrivateKey string) {
 	require.NoError(r, err)
 
 	// deploy test spl
-	tokenAccount := r.DeploySPL(&privkey, true)
-	r.SPLAddr = tokenAccount.PublicKey()
+	mintAccount := r.DeploySPL(&privkey, true)
+	r.SPLAddr = mintAccount.PublicKey()
 }
 
 func (r *E2ERunner) ensureSolanaChainParams() error {
@@ -141,7 +141,7 @@ func (r *E2ERunner) ensureSolanaChainParams() error {
 		BallotThreshold:             observertypes.DefaultBallotThreshold,
 		MinObserverDelegation:       observertypes.DefaultMinObserverDelegation,
 		IsSupported:                 true,
-		GatewayAddress:              solanacontracts.SolanaGatewayProgramID,
+		GatewayAddress:              r.GatewayProgram.String(),
 	}
 
 	updateMsg := observertypes.NewMsgUpdateChainParams(creator, chainParams)

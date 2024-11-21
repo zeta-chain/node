@@ -121,7 +121,7 @@ type Contracts struct {
 
 // Solana contains the addresses of predeployed contracts and accounts on the Solana chain
 type Solana struct {
-	GatewayProgramID string             `yaml:"gateway_program_id"`
+	GatewayProgramID DoubleQuotedString `yaml:"gateway_program_id"`
 	SPLAddr          DoubleQuotedString `yaml:"spl"`
 }
 

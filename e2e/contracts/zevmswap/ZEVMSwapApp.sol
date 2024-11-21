@@ -96,4 +96,28 @@ contract ZEVMSwapApp is zContract {
         IZRC20(targetZRC20).approve(address(targetZRC20), amounts[1]*10);
         IZRC20(targetZRC20).withdraw(recipient, amounts[1]);
     }
+
+    // used with v2 contracts
+    function onCall(Context calldata, address zrc20, uint256 amount, bytes calldata message) external {
+        address targetZRC20;
+        bytes memory recipient;
+        address[] memory path;
+
+        (targetZRC20, recipient) = decodeMemo(message);
+        path = new address[](2);
+        path[0] = zrc20;
+        path[1] = targetZRC20;
+
+        // approve the usage of this token by router02
+        IZRC20(zrc20).approve(address(router02), amount);
+
+        // swap for target token
+        uint256[] memory amounts = IUniswapV2Router02(router02).swapExactTokensForTokens(amount, 0, path, address(this), _DEADLINE);
+
+        // perform withdrawal with the target token
+        (address gasZRC20Addr,uint256 gasFee) = IZRC20(targetZRC20).withdrawGasFee();
+        IZRC20(gasZRC20Addr).approve(address(targetZRC20), gasFee);
+        IZRC20(targetZRC20).approve(address(targetZRC20), amounts[1]*10);
+        IZRC20(targetZRC20).withdraw(recipient, amounts[1]);
+    }
 }

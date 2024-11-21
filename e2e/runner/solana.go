@@ -21,8 +21,7 @@ import (
 // ComputePdaAddress computes the PDA address for the gateway program
 func (r *E2ERunner) ComputePdaAddress() solana.PublicKey {
 	seed := []byte(solanacontract.PDASeed)
-	GatewayProgramID := solana.MustPublicKeyFromBase58(solanacontract.SolanaGatewayProgramID)
-	pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, GatewayProgramID)
+	pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, r.GatewayProgram)
 	require.NoError(r, err)
 
 	r.Logger.Info("computed pda: %s, bump %d\n", pdaComputed, bump)
@@ -33,8 +32,7 @@ func (r *E2ERunner) ComputePdaAddress() solana.PublicKey {
 // SolanaRentPayerPDA computes the rent payer PDA (Program Derived Address) address for the gateway program
 func (r *E2ERunner) SolanaRentPayerPDA() solana.PublicKey {
 	seed := []byte(solanacontract.RentPayerPDASeed)
-	GatewayProgramID := solana.MustPublicKeyFromBase58(solanacontract.SolanaGatewayProgramID)
-	pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, GatewayProgramID)
+	pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, r.GatewayProgram)
 	require.NoError(r, err)
 
 	r.Logger.Info("computed rent payer pda: %s, bump %d\n", pdaComputed, bump)
@@ -163,9 +161,9 @@ func (r *E2ERunner) CreateSignedTransaction(
 func (r *E2ERunner) ResolveSolanaATA(
 	payer solana.PrivateKey,
 	owner solana.PublicKey,
-	tokenAccount solana.PublicKey,
+	mintAccount solana.PublicKey,
 ) solana.PublicKey {
-	pdaAta, _, err := solana.FindAssociatedTokenAddress(owner, tokenAccount)
+	pdaAta, _, err := solana.FindAssociatedTokenAddress(owner, mintAccount)
 	require.NoError(r, err)
 
 	info, _ := r.SolanaClient.GetAccountInfo(r.Ctx, pdaAta)
@@ -174,7 +172,7 @@ func (r *E2ERunner) ResolveSolanaATA(
 		return pdaAta
 	}
 	// doesn't exist, create it
-	ataInstruction := associatedtokenaccount.NewCreateInstruction(payer.PublicKey(), owner, tokenAccount).Build()
+	ataInstruction := associatedtokenaccount.NewCreateInstruction(payer.PublicKey(), owner, mintAccount).Build()
 	signedTx := r.CreateSignedTransaction(
 		[]solana.Instruction{ataInstruction},
 		payer,
@@ -190,19 +188,19 @@ func (r *E2ERunner) ResolveSolanaATA(
 func (r *E2ERunner) SPLDepositAndCall(
 	privateKey *solana.PrivateKey,
 	amount uint64,
-	tokenAccount solana.PublicKey,
+	mintAccount solana.PublicKey,
 	receiver ethcommon.Address,
 	data []byte,
 ) solana.Signature {
 	// ata for pda
 	pda := r.ComputePdaAddress()
-	pdaAta := r.ResolveSolanaATA(*privateKey, pda, tokenAccount)
+	pdaAta := r.ResolveSolanaATA(*privateKey, pda, mintAccount)
 
 	// deployer ata
-	ata := r.ResolveSolanaATA(*privateKey, privateKey.PublicKey(), tokenAccount)
+	ata := r.ResolveSolanaATA(*privateKey, privateKey.PublicKey(), mintAccount)
 
 	// deposit spl
-	seed := [][]byte{[]byte("whitelist"), tokenAccount.Bytes()}
+	seed := [][]byte{[]byte("whitelist"), mintAccount.Bytes()}
 	whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, r.GatewayProgram)
 	require.NoError(r, err)
 
@@ -210,7 +208,7 @@ func (r *E2ERunner) SPLDepositAndCall(
 		amount,
 		privateKey.PublicKey(),
 		whitelistEntryPDA,
-		tokenAccount,
+		mintAccount,
 		ata,
 		pdaAta,
 		receiver,
@@ -233,26 +231,26 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 	require.NoError(r, err)
 
 	// to deploy new spl token, create account instruction and initialize mint instruction have to be in the same transaction
-	tokenAccount := solana.NewWallet()
+	mintAccount := solana.NewWallet()
 	createAccountInstruction := system.NewCreateAccountInstruction(
 		lamport,
 		token.MINT_SIZE,
 		solana.TokenProgramID,
 		privateKey.PublicKey(),
-		tokenAccount.PublicKey(),
+		mintAccount.PublicKey(),
 	).Build()
 
 	initializeMintInstruction := token.NewInitializeMint2Instruction(
 		6,
 		privateKey.PublicKey(),
 		privateKey.PublicKey(),
-		tokenAccount.PublicKey(),
+		mintAccount.PublicKey(),
 	).Build()
 
 	signedTx := r.CreateSignedTransaction(
 		[]solana.Instruction{createAccountInstruction, initializeMintInstruction},
 		*privateKey,
-		[]solana.PrivateKey{tokenAccount.PrivateKey},
+		[]solana.PrivateKey{mintAccount.PrivateKey},
 	)
 
 	// broadcast the transaction and wait for finalization
@@ -260,9 +258,9 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 	r.Logger.Info("create spl logs: %v", out.Meta.LogMessages)
 
 	// minting some tokens to deployer for testing
-	ata := r.ResolveSolanaATA(*privateKey, privateKey.PublicKey(), tokenAccount.PublicKey())
+	ata := r.ResolveSolanaATA(*privateKey, privateKey.PublicKey(), mintAccount.PublicKey())
 
-	mintToInstruction := token.NewMintToInstruction(uint64(1_000_000_000), tokenAccount.PublicKey(), ata, privateKey.PublicKey(), []solana.PublicKey{}).
+	mintToInstruction := token.NewMintToInstruction(uint64(1_000_000_000), mintAccount.PublicKey(), ata, privateKey.PublicKey(), []solana.PublicKey{}).
 		Build()
 	signedTx = r.CreateSignedTransaction(
 		[]solana.Instruction{mintToInstruction},
@@ -276,7 +274,7 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 
 	// optionally whitelist spl token in gateway
 	if whitelist {
-		seed := [][]byte{[]byte("whitelist"), tokenAccount.PublicKey().Bytes()}
+		seed := [][]byte{[]byte("whitelist"), mintAccount.PublicKey().Bytes()}
 		whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, r.GatewayProgram)
 		require.NoError(r, err)
 
@@ -285,14 +283,14 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 
 		// already whitelisted
 		if whitelistEntryInfo != nil {
-			return tokenAccount
+			return mintAccount
 		}
 
 		// create 'whitelist_spl_mint' instruction
 		instruction := r.CreateWhitelistSPLMintInstruction(
 			privateKey.PublicKey(),
 			whitelistEntryPDA,
-			tokenAccount.PublicKey(),
+			mintAccount.PublicKey(),
 		)
 		// create and sign the transaction
 		signedTx := r.CreateSignedTransaction([]solana.Instruction{instruction}, *privateKey, []solana.PrivateKey{})
@@ -306,7 +304,7 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 		require.NotNil(r, whitelistEntryInfo)
 	}
 
-	return tokenAccount
+	return mintAccount
 }
 
 // BroadcastTxSync broadcasts a transaction and waits for it to be finalized
