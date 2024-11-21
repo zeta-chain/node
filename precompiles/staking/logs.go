@@ -153,6 +153,7 @@ func (c *Contract) addClaimRewardsLog(
 	stateDB vm.StateDB,
 	delegator common.Address,
 	zrc20Token common.Address,
+	validator sdk.ValAddress,
 	amount *big.Int,
 ) error {
 	event := c.Abi().Events[ClaimRewardsEventName]
@@ -161,6 +162,7 @@ func (c *Contract) addClaimRewardsLog(
 		event,
 		[]interface{}{delegator},
 		[]interface{}{zrc20Token},
+		[]interface{}{common.BytesToAddress(validator.Bytes())},
 	)
 	if err != nil {
 		return err

@@ -253,7 +253,7 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 	case GetValidatorsMethodName:
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
-			res, err = c.getDelegatorValidators(ctx, method, args)
+			res, err = c.getValidatorListForDelegator(ctx, method, args)
 			return err
 		})
 		if execErr != nil {

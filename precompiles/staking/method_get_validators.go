@@ -11,7 +11,7 @@ import (
 )
 
 // getValidators queries the list of validators for a given delegator.
-func (c *Contract) getDelegatorValidators(
+func (c *Contract) getValidatorListForDelegator(
 	ctx sdk.Context,
 	method *abi.Method,
 	args []interface{},

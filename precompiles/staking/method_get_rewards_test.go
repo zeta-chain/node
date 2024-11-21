@@ -96,6 +96,5 @@ func Test_GetRewards(t *testing.T) {
 		/* ASSERT */
 		_, err = getRewardsMethod.Outputs.Unpack(bytes)
 		require.NoError(t, err)
-		//fmt.Println("getRewards response: ", res)
 	})
 }

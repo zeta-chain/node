@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
@@ -190,6 +191,7 @@ func TestPrecompilesDistributeAndClaimThroughContract(r *runner.E2ERunner, args 
 	require.NoError(r, err)
 	require.Equal(r, zrc20Address, eventClaimed.Zrc20Token)
 	require.Equal(r, staker, eventClaimed.ClaimAddress)
+	require.Equal(r, common.BytesToAddress(validatorValAddr.Bytes()), eventClaimed.Validator)
 	require.Equal(r, zrc20RewardsAmt.Uint64(), eventClaimed.Amount.Uint64())
 
 	// Locker final balance should be zrc20Distributed with carry - zrc20RewardsAmt.

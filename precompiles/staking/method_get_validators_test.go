@@ -24,7 +24,7 @@ func Test_GetValidators(t *testing.T) {
 		stakerEVMAddr := sample.EthAddress()
 
 		/* ACT */
-		// Call getRewards.
+		// Call getValidatorListForDelegator.
 		getValidatorsMethod := s.stkContractABI.Methods[GetValidatorsMethodName]
 
 		s.mockVMContract.Input = packInputArgs(
@@ -54,7 +54,7 @@ func Test_GetValidators(t *testing.T) {
 		s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, validator)
 
 		/* ACT */
-		// Call getRewards.
+		// Call getValidatorListForDelegator.
 		getValidatorsMethod := s.stkContractABI.Methods[GetValidatorsMethodName]
 
 		s.mockVMContract.Input = packInputArgs(
@@ -100,7 +100,7 @@ func Test_GetValidators(t *testing.T) {
 		)
 
 		/* ACT */
-		// Call getRewards.
+		// Call getValidatorListForDelegator.
 		getValidatorsMethod := s.stkContractABI.Methods[GetValidatorsMethodName]
 
 		s.mockVMContract.Input = packInputArgs(

@@ -190,6 +190,7 @@ func TestPrecompilesDistributeAndClaim(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	require.Equal(r, zrc20Address, eventClaimed.Zrc20Token)
 	require.Equal(r, staker, eventClaimed.ClaimAddress)
+	require.Equal(r, common.BytesToAddress(validatorValAddr.Bytes()), eventClaimed.Validator)
 	require.Equal(r, zrc20RewardsAmt.Uint64(), eventClaimed.Amount.Uint64())
 
 	// Locker final balance should be zrc20Disitributed - zrc20RewardsAmt.
@@ -259,7 +260,7 @@ func stakeThroughCosmosAPI(
 		sdk.AccAddress(staker.Bytes()),
 		validator,
 		sdk.Coin{
-			Denom:  "azeta",
+			Denom:  config.BaseDenom,
 			Amount: math.NewIntFromBigInt(amount),
 		},
 	)
@@ -314,7 +315,7 @@ func resetDistributionTest(
 		sdk.AccAddress(staker.Bytes()),
 		validator,
 		sdk.Coin{
-			Denom:  "azeta",
+			Denom:  config.BaseDenom,
 			Amount: math.NewIntFromBigInt(amount.Div(amount, big.NewInt(1e18))),
 		},
 	)

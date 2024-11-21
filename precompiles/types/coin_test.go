@@ -34,13 +34,15 @@ func Test_CoinIsZRC20(t *testing.T) {
 		denom    string
 		expected bool
 	}{
-		{"", false}, // Empty string.
+		{"", false},       // Empty string.
 		{"zrc20/", false}, // Missing address.
-		{"zrc20/0x514910771af9ca656af840dff83e8264ecf986ca", true}, // Valid ZRC20 address.
-		{"zrc20/0xCa14007Eff0dB1f8135f4C25B34De49AB0d42766", true}, // Valid ZRC20 address.
-		{"zrc200xabcdef", false}, // Malformed prefix.
-		{"foo/0x0123456789", false}, // Invalid prefix.
-		{"ZRC20/0x0123456789abcdef", false}, // Invalid prefix.
+		{"zrc20/0x0000000000000000000000000000000000000000", false}, // Zero address.
+		{"zrc20/0x514910771af9ca656af840dff83e8264ecf986ca", true},  // Valid ZRC20 address.
+		{"zrc20/0xCa14007Eff0dB1f8135f4C25B34De49AB0d42766", true},  // Valid ZRC20 address.
+		{"zrc20/0x12345", false},                                    // Valid prefix, invalid ZRC20 address.
+		{"zrc200xabcdef", false},                                    // Malformed prefix.
+		{"foo/0x0123456789", false},                                 // Invalid prefix.
+		{"ZRC20/0x0123456789abcdef", false},                         // Invalid prefix.
 	}
 
 	for _, tt := range test {

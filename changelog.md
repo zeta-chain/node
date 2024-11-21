@@ -55,7 +55,7 @@
 * [3028](https://github.com/zeta-chain/node/pull/3028) - whitelist connection gater
 * [3019](https://github.com/zeta-chain/node/pull/3019) - add ditribute functions to staking precompile
 * [3020](https://github.com/zeta-chain/node/pull/3020) - add support for TON withdrawals
-* [3088](https://github.com/zeta-chain/node/pull/3088) - add functions to check and withdraw delegator rewards
+* [3088](https://github.com/zeta-chain/node/pull/3088) - add functions to check and withdraw zrc20 as delegation rewards
 
 ### Refactor
 

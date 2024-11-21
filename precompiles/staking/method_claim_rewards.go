@@ -96,6 +96,12 @@ func (c *Contract) claimRewards(
 		// Check if bank address has enough ZRC20 balance.
 		// This check is also made inside UnlockZRC20, but repeat it here to avoid burning the coins.
 		if err := c.fungibleKeeper.CheckZRC20Balance(ctx, zrc20Addr, bank.ContractAddress, zrc20Amount); err != nil {
+			ctx.Logger().Info(
+				"Claimed invalid amount of ZRC20 Validator Rewards",
+				"Total", zrc20Amount,
+				"Denom", precompiletypes.ZRC20ToCosmosDenom(zrc20Addr),
+			)
+
 			continue
 		}
 
@@ -106,18 +112,32 @@ func (c *Contract) claimRewards(
 			continue
 		}
 
+		ctx.Logger().Info(
+			"Sentf ZRC20 coins from delegator to Module",
+			"Delegator", delegatorCosmosAddr,
+			"Module", fungibletypes.ModuleName,
+			"Denom", precompiletypes.ZRC20ToCosmosDenom(zrc20Addr),
+			"Amount", coin.Amount,
+		)
+
 		if err := c.bankKeeper.BurnCoins(ctx, fungibletypes.ModuleName, coinSet); err != nil {
-			continue
+			return nil, &precompiletypes.ErrUnexpected{
+				When: "BurnCoins",
+				Got:  err.Error(),
+			}
 		}
 
 		// Finally, unlock the ZRC20 coins.
 		if err := c.fungibleKeeper.UnlockZRC20(ctx, zrc20Addr, delegatorAddr, bank.ContractAddress, zrc20Amount); err != nil {
-			continue
+			return nil, &precompiletypes.ErrUnexpected{
+				When: "UnlockZRC20",
+				Got:  err.Error(),
+			}
 		}
 
 		// Emit an event per ZRC20 coin unlocked.
 		// This keeps events as granular and deterministic as possible.
-		if err := c.addClaimRewardsLog(ctx, evm.StateDB, delegatorAddr, zrc20Addr, zrc20Amount); err != nil {
+		if err := c.addClaimRewardsLog(ctx, evm.StateDB, delegatorAddr, zrc20Addr, validatorCosmosAddr, zrc20Amount); err != nil {
 			return nil, &precompiletypes.ErrUnexpected{
 				When: "AddClaimRewardLog",
 				Got:  err.Error(),
