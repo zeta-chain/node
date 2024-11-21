@@ -302,7 +302,8 @@ func runPprof(logger zerolog.Logger) {
 	logger.Info().Str("addr", addr).Msg("starting pprof http server")
 
 	// #nosec G114 -- timeouts unneeded
-	if err := http.ListenAndServe(addr, nil); err != nil {
+	err := http.ListenAndServe(addr, nil)
+	if err != nil {
 		logger.Error().Err(err).Msg("pprof http server error")
 	}
 }
