@@ -98,7 +98,6 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 
 	logger.Info().Interface("whitelisted_peers", whitelistedPeers).Msg("Resolved whitelist peers")
 
-	// todo bump numbers
 	// 4. Bootstrap go-tss TSS server
 	tssServer, err := NewTSSServer(
 		bootstrapPeers,
@@ -130,7 +129,7 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		return nil, errors.Wrap(err, "unable to get TSS history")
 	}
 
-	// 7. Verify key shared for public keys
+	// 6. Verify key shares
 	logger.Info().Msg("Got historical TSS info from zetacore. Verifying key shares...")
 	if err = verifyKeySharesForPubKeys(p, historicalTSSInfo, logger); err != nil {
 		return nil, errors.Wrap(err, "unable to verify key shares for pub keys")
@@ -138,7 +137,7 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 
 	logger.Info().Msg("Key shared verified")
 
-	// 8. Optionally test key signing
+	// 7. Optionally test key signing
 	if p.Config.TestTssKeysign {
 		if err = TestKeySign(tssServer, tssInfo.TssPubkey, logger); err != nil {
 			return nil, errors.Wrap(err, "unable to test key signing")
@@ -164,6 +163,7 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 
 	logger.Info().Msg("TSS service created")
 
+	// 9. Ensure that TSS has valid EVM and BTC addresses
 	if err = validateAddresses(service, p.BitcoinChainIDs, logger); err != nil {
 		return nil, errors.Wrap(err, "unable to validate tss addresses")
 	}
@@ -176,6 +176,7 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		NumConnectedPeersMetric: metrics.NumConnectedPeers,
 	}
 
+	// 10. Start healthcheck worker
 	if err = HealthcheckWorker(ctx, tssServer, healthCheckProps, logger); err != nil {
 		return nil, errors.Wrap(err, "unable to start healthcheck worker")
 	}
