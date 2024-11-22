@@ -198,7 +198,7 @@ services:
         ipv4_address: 172.20.0.102
 
   bitcoin:
-    image: ghcr.io/zeta-chain/ruimarinho-bitcoin-core:22 # version 23 is not working with btcd 0.22.0 due to change in createwallet rpc
+    image: ghcr.io/zeta-chain/bitcoin-core-docker:28.0
     container_name: bitcoin
     hostname: bitcoin
     networks:
@@ -213,6 +213,8 @@ services:
       -rpcbind=0.0.0.0
       -rpcauth=smoketest:63acf9b8dccecce914d85ff8c044b78b$$5892f9bbc84f4364e79f0970039f88bdd823f168d4acc76099ab97b14a766a99
       -txindex=1
+      -deprecatedrpc=create_bdb
+      -deprecatedrpc=warnings
 
   solana:
     image: solana-local:latest
