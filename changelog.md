@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## Unreleased
+
+### Features
+
+### Tests
+
+* [3204](https://github.com/zeta-chain/node/issues/3204) - move Bitcoin revert address test to advanced group to avoid upgrade test failure
+
+### Refactor
+
+### Fixes
+
 ## v23.0.0
 
 ### Features
