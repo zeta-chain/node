@@ -60,7 +60,8 @@ func (r *E2ERunner) SendERC20OnEvm(address ethcommon.Address, amountERC20 int64)
 func (r *E2ERunner) DepositERC20() ethcommon.Hash {
 	r.Logger.Print("⏳ depositing ERC20 into ZEVM")
 
-	return r.DepositERC20WithAmountAndMessage(r.EVMAddress(), big.NewInt(1e18), []byte{})
+	oneHundred := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(100))
+	return r.DepositERC20WithAmountAndMessage(r.EVMAddress(), oneHundred, []byte{})
 }
 
 func (r *E2ERunner) DepositERC20WithAmountAndMessage(to ethcommon.Address, amount *big.Int, msg []byte) ethcommon.Hash {
