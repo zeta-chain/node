@@ -90,7 +90,6 @@
 ## Refactor
 
 * [3073](https://github.com/zeta-chain/node/pull/3073) - improve ZETA deposit check with max supply check
->>>>>>> cad1b36d6fdd96b8ecfd48f0be32246338db513e
 
 ## v21.0.0
 
