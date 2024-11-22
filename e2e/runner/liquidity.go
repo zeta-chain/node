@@ -38,7 +38,7 @@ func (r *E2ERunner) AddLiquidityETH(amountZETA, amountETH *big.Int) {
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == types.ReceiptStatusFailed {
-		r.Logger.Error("Add liquidity failed: %s", receipt.Logs)
+		r.Logger.Error("Add liquidity failed for ZETA/ETH")
 	}
 
 	// get the pair address
@@ -75,7 +75,7 @@ func (r *E2ERunner) AddLiquidityERC20(amountZETA, amountERC20 *big.Int) {
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == types.ReceiptStatusFailed {
-		r.Logger.Error("Add liquidity failed: %s", receipt.Logs)
+		r.Logger.Error("Add liquidity failed for ZETA/ERC20")
 	}
 
 	// get the pair address
