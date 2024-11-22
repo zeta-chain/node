@@ -152,7 +152,7 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		WithMetrics(ctx, p.Zetacore, &Metrics{
 			ActiveMsgsSigns:    metrics.NumActiveMsgSigns,
 			SignLatency:        metrics.SignLatency,
-			NodeBlamePerPubKey: metrics.TssNodeBlamePerPubKey,
+			NodeBlamePerPubKey: metrics.TSSNodeBlamePerPubKey,
 		}),
 	)
 	if err != nil {

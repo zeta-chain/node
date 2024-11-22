@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	// Port is the default port for go-tss server.
 	Port    = 6668
 	Version = "0.14.0"
 	Algo    = tsscommon.ECDSA

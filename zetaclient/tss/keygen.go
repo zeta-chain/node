@@ -207,7 +207,7 @@ func (k *keygenCeremony) performKeygen(ctx context.Context, keygenTask observert
 
 	// increment blame counter
 	for _, node := range res.Blame.BlameNodes {
-		metrics.TssNodeBlamePerPubKey.WithLabelValues(node.Pubkey).Inc()
+		metrics.TSSNodeBlamePerPubKey.WithLabelValues(node.Pubkey).Inc()
 	}
 
 	blameDigest, err := digestReq(req)
