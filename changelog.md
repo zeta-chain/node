@@ -8,12 +8,15 @@
 * [3091](https://github.com/zeta-chain/node/pull/3091) - improve build reproducability. `make release{,-build-only}` checksums should now be stable.
 * [3124](https://github.com/zeta-chain/node/pull/3124) - integrate SPL deposits
 * [3134](https://github.com/zeta-chain/node/pull/3134) - integrate SPL tokens withdraw to Solana
+* [3182](https://github.com/zeta-chain/node/pull/3182) - enable zetaclient pprof server on port 6061
 
 ### Tests
 
 * [3075](https://github.com/zeta-chain/node/pull/3075) - ton: withdraw concurrent, deposit & revert.
 * [3105](https://github.com/zeta-chain/node/pull/3105) - split Bitcoin E2E tests into two runners for deposit and withdraw
 * [3154](https://github.com/zeta-chain/node/pull/3154) - configure Solana gateway program id for E2E tests
+* [3188](https://github.com/zeta-chain/node/pull/3188) - add e2e test for v2 deposit and call with swap
+* [3151](https://github.com/zeta-chain/node/pull/3151) - add withdraw emissions to e2e tests
 
 ### Refactor
 
@@ -33,6 +36,7 @@
 * [3155](https://github.com/zeta-chain/node/pull/3155) - fix potential panic in the Bitcoin inscription parsing
 * [3162](https://github.com/zeta-chain/node/pull/3162) - skip depositor fee calculation if transaction does not involve TSS address
 * [3179](https://github.com/zeta-chain/node/pull/3179) - support inbound trackers for v2 cctx
+* [3192](https://github.com/zeta-chain/node/pull/3192) - fix incorrect zContext origin caused by the replacement of 'sender' with 'revertAddress'
 
 ## v22.1.2
 

@@ -65,6 +65,10 @@ additional_accounts:
     bech32_address: "zeta1nry9yeg6njhjrp2ctppa8558vqxal9fxk69zxg"
     evm_address: "0x98c852651A9CAF2185585843d3D287600Ddf9526"
     private_key: "bf9456c679bb5a952a9a137fcfc920e0413efdb97c36de1e57455763084230cb"
+  user_emissions_withdraw:
+    bech32_address: "zeta1n9zhyn4unvaee3ey40k7x7f5nmj7zet6qr5kl7"
+    evm_address: "0x9945724EBc9B3B9cc724abedE379349EE5E1657a"
+    private_key: "9d524fe318c0eb5f80d8b246993a9f15f924db24d4b8b873839b13bc30040d03"
 policy_accounts:
   emergency_policy_account:
     bech32_address: "zeta16m2cnrdwtgweq4njc6t470vl325gw4kp6s7tap"
