@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## Unreleased
+
+### Features
+
+### Tests
+
+### Refactor
+
+### Fixes
+
+* [3206](https://github.com/zeta-chain/node/pull/3206) - skip Solana unsupported transaction version to not block inbound observation
+
 ## v23.0.0
 
 ### Features
