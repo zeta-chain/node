@@ -47,7 +47,12 @@ func TestBitcoinDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string)
 
 	// ASSERT
 	// Now we want to make sure the cctx is aborted with expected error message
-	cctx := utils.WaitCctxAbortedByInboundHash(r.Ctx, r, txHash.String(), r.CctxClient)
-	require.True(r, cctx.GetCurrentOutboundParam().Amount.Uint64() < constant.BTCWithdrawalDustAmount)
-	require.True(r, strings.Contains(cctx.CctxStatus.ErrorMessage, crosschaintypes.ErrInvalidWithdrawalAmount.Error()))
+
+	// cctx status would be pending revert if using v21 or before
+	cctx := utils.WaitCctxByStatusList(r.Ctx, r, txHash.String(), r.CctxClient, []crosschaintypes.CctxStatus{crosschaintypes.CctxStatus_Aborted, crosschaintypes.CctxStatus_PendingRevert})
+
+	if cctx.CctxStatus.Status == crosschaintypes.CctxStatus_Aborted {
+		require.True(r, cctx.GetCurrentOutboundParam().Amount.Uint64() < constant.BTCWithdrawalDustAmount)
+		require.True(r, strings.Contains(cctx.CctxStatus.ErrorMessage, crosschaintypes.ErrInvalidWithdrawalAmount.Error()))
+	}
 }

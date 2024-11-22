@@ -194,6 +194,22 @@ func MatchStatus(s crosschaintypes.CctxStatus) WaitOpts {
 	})
 }
 
+// MatchStatusList is the WaitOpts that matches CCTX with the given status.
+// It returns as soon as any of the status is matched.
+func MatchStatusList(s []crosschaintypes.CctxStatus) WaitOpts {
+	return Matches(func(tx crosschaintypes.CrossChainTx) bool {
+		if tx.CctxStatus == nil {
+			return false
+		}
+		for _, s := range s {
+			if tx.CctxStatus.Status == s {
+				return true
+			}
+		}
+		return false
+	})
+}
+
 // MatchReverted is the WaitOpts that matches reverted CCTX.
 func MatchReverted() WaitOpts {
 	return Matches(func(tx crosschaintypes.CrossChainTx) bool {
@@ -225,6 +241,20 @@ func WaitCctxRevertedByInboundHash(
 	require.Len(t, cctxs, 1)
 
 	return cctxs[0]
+}
+
+// WaitCctxByStatusList waits until cctx is in one of the given statuses.
+func WaitCctxByStatusList(
+	ctx context.Context,
+	t require.TestingT,
+	hash string,
+	c CCTXClient,
+	status []crosschaintypes.CctxStatus,
+) crosschaintypes.CrossChainTx {
+	cctx := WaitCctxByInboundHash(ctx, t, hash, c, MatchStatusList(status))
+	require.Len(t, cctx, 1)
+
+	return cctx[0]
 }
 
 // WaitCctxAbortedByInboundHash waits until cctx is aborted by inbound hash.
