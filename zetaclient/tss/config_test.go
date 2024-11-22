@@ -1,8 +1,10 @@
 package tss
 
 import (
+	_ "embed"
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -40,6 +42,58 @@ func Test_ParsePubKeysFromPath(t *testing.T) {
 	}
 }
 
+func Test_ResolvePreParamsFromPath(t *testing.T) {
+	t.Run("file not found", func(t *testing.T) {
+		// ARRANGE
+		path := filepath.Join(os.TempDir(), "hello-123.json")
+
+		// ACT
+		_, err := ResolvePreParamsFromPath(path)
+
+		// ASSERT
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "unable to read pre-params")
+	})
+
+	t.Run("invalid file", func(t *testing.T) {
+		// ARRANGE
+		tmpFile, err := os.CreateTemp(os.TempDir(), "pre-params-*.json")
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			require.NoError(t, os.Remove(tmpFile.Name()))
+		})
+
+		_, err = tmpFile.WriteString(`invalid-json`)
+		require.NoError(t, err)
+		tmpFile.Close()
+
+		// ACT
+		_, err = ResolvePreParamsFromPath(tmpFile.Name())
+
+		// ASSERT
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "unable to decode pre-params")
+	})
+
+	t.Run("AllGood", func(t *testing.T) {
+		// ARRANGE
+		tmpFile, err := os.CreateTemp(os.TempDir(), "pre-params-*.json")
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			require.NoError(t, os.Remove(tmpFile.Name()))
+		})
+
+		createPreParams(t, tmpFile.Name())
+
+		// ACT
+		resolvedPreParams, err := ResolvePreParamsFromPath(tmpFile.Name())
+
+		// Assert
+		require.NoError(t, err)
+		require.NotNil(t, resolvedPreParams)
+	})
+}
+
 func generateKeyShareFiles(t *testing.T, n int, dir string) {
 	err := os.Chdir(dir)
 	require.NoError(t, err)
@@ -60,4 +114,18 @@ func generateKeyShareFiles(t *testing.T, n int, dir string) {
 		err = os.WriteFile(filename, b, 0644)
 		require.NoError(t, err)
 	}
+}
+
+//go:embed testdata/pre-params.json
+var preParamsFixture []byte
+
+// createPreParams creates a pre-params file at the given path.
+// uses fixture to skip long setup.
+func createPreParams(t *testing.T, filePath string) {
+	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0600)
+	require.NoError(t, err)
+
+	_, err = file.Write(preParamsFixture)
+	require.NoError(t, err)
+	require.NoError(t, file.Close())
 }

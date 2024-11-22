@@ -11,6 +11,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
+
+	"github.com/zeta-chain/node/cmd"
 )
 
 const (
@@ -19,6 +21,10 @@ const (
 	Version = "0.14.0"
 	Algo    = tsscommon.ECDSA
 )
+
+func init() {
+	cmd.SetupCosmosConfig()
+}
 
 // MultiAddressFromString parses a string into a slice of addresses (for convenience).
 func MultiAddressFromString(peer string) ([]multiaddr.Multiaddr, error) {

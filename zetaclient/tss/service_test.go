@@ -15,7 +15,6 @@ import (
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/cmd"
 	"github.com/zeta-chain/node/pkg/cosmos"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/tss"
@@ -30,8 +29,6 @@ var (
 )
 
 func TestService(t *testing.T) {
-	cmd.SetupCosmosConfig()
-
 	t.Run("NewService", func(t *testing.T) {
 		t.Run("Invalid pub key", func(t *testing.T) {
 			s, err := tss.NewService(nil, "hello", nil, zerolog.Nop())
