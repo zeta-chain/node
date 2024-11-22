@@ -113,6 +113,11 @@ func Hash() ethcommon.Hash {
 	return ethcommon.BytesToHash(EthAddress().Bytes())
 }
 
+// Hash returns a sample hash
+func HashFromRand(r *rand.Rand) ethcommon.Hash {
+	return ethcommon.BytesToHash(EthAddressFromRand(r).Bytes())
+}
+
 // BtcHash returns a sample btc hash
 func BtcHash() chainhash.Hash {
 	return chainhash.Hash(Hash())

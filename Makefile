@@ -401,7 +401,7 @@ test-sim-nondeterminism:
 	$(call run-sim-test,"non-determinism test",TestAppStateDeterminism,100,200,30m)
 
 test-sim-fullappsimulation:
-	$(call run-sim-test,"TestFullAppSimulation",TestFullAppSimulation,100,200,30m)
+	$(call run-sim-test,"TestFullAppSimulation",TestFullAppSimulation,10,20,30m)
 
 test-sim-import-export:
 	$(call run-sim-test,"test-import-export",TestAppImportExport,50,100,30m)

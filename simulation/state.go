@@ -23,6 +23,7 @@ import (
 	"github.com/stretchr/testify/require"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	chains2 "github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
 
 	zetaapp "github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -195,6 +196,22 @@ func updateFungibleState(t *testing.T, rawState map[string]json.RawMessage, cdc 
 		SystemContract: sample.EthAddressFromRand(r).String(),
 		ConnectorZevm:  sample.EthAddressFromRand(r).String(),
 		Gateway:        sample.EthAddressFromRand(r).String(),
+	}
+
+	foreignCoins := make([]fungibletypes.ForeignCoins, 0)
+	chains := chains2.DefaultChainsList()
+
+	for _, chain := range chains {
+		foreignCoin := fungibletypes.ForeignCoins{
+			ForeignChainId:       chain.ChainId,
+			Asset:                sample.EthAddressFromRand(r).String(),
+			Zrc20ContractAddress: sample.EthAddressFromRand(r).String(),
+			Decimals:             18,
+			Paused:               false,
+			CoinType:             coin.CoinType_Gas,
+			LiquidityCap:         math.ZeroUint(),
+		}
+		foreignCoins = append(foreignCoins, foreignCoin)
 	}
 
 	return fungibleState

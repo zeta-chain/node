@@ -47,6 +47,7 @@ func (k Keeper) RefundAmountOnZetaChainGas(
 	// get the zrc20 contract address
 	fcSenderChain, found := k.fungibleKeeper.GetGasCoinForForeignCoin(ctx, chainID)
 	if !found {
+		fmt.Println("chainID", chainID, "RefundAmountOnZetaChainGas")
 		return types.ErrForeignCoinNotFound
 	}
 	zrc20 := ethcommon.HexToAddress(fcSenderChain.Zrc20ContractAddress)

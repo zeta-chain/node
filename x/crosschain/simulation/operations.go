@@ -150,6 +150,10 @@ func WeightedOperations(
 			weightVoteOutbound,
 			SimulateVoteOutbound(k),
 		),
+		simulation.NewWeightedOperation(
+			weightAddInboundTracker,
+			SimulateMsgAddInboundTracker(k),
+		),
 	}
 }
 
@@ -368,7 +372,6 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
-
 	observerVotesTransitionMatrix, statePercentageArray, curNumVotesState := ObserverVotesSimulationMatrix()
 	return func(
 		r *rand.Rand,
@@ -393,7 +396,15 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 			}
 		}
 
-		msg := sample.InboundVoteSim(from, to, r)
+		foriegnCoins := k.GetFungibleKeeper().GetAllForeignCoins(ctx)
+		asset := ""
+		for _, coin := range foriegnCoins {
+			if coin.ForeignChainId == from {
+				asset = coin.Asset
+			}
+		}
+
+		msg := sample.InboundVoteSim(from, to, r, asset)
 		// Return early if inbound is not enabled.
 		cf, found := k.GetObserverKeeper().GetCrosschainFlags(ctx)
 		if !found {
@@ -461,6 +472,7 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 
 		var fops []simtypes.FutureOperation
 
+		votingBlock := int64(0)
 		for _, observerIdx := range whoVotes {
 			observerAddress := observerSet.ObserverList[observerIdx]
 			// firstVoter has already voted.
@@ -479,13 +491,13 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 			if e != nil {
 				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate voting msg"), nil, e
 			}
-
 			fops = append(fops, simtypes.FutureOperation{
 				// Submit all subsequent votes in the next block.
 				// We can consider adding a random block height between 1 and ballot maturity blocks in the future.
-				BlockHeight: int(ctx.BlockHeight() + 1),
+				BlockHeight: int(ctx.BlockHeight() + votingBlock),
 				Op:          operationSimulateVoteInbound(k, votingMsg, observerAccount),
 			})
+			votingBlock++
 		}
 		return opMsg, fops, nil
 	}

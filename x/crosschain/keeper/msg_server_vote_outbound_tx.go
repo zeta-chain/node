@@ -119,7 +119,6 @@ func (k msgServer) VoteOutbound(
 		return &types.MsgVoteOutboundResponse{}, nil
 	}
 	k.SaveSuccessfulOutbound(ctx, &cctx, tss.TssPubkey)
-	fmt.Println("Outbound transaction processed successfully", cctx.CctxStatus.Status)
 	return &types.MsgVoteOutboundResponse{}, nil
 }
 

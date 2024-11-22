@@ -5,7 +5,6 @@ import (
 
 	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -64,6 +63,7 @@ func (k msgServer) VoteInbound(
 	// vote on inbound ballot
 	// use a temporary context to not commit any ballot state change in case of error
 	tmpCtx, commit := ctx.CacheContext()
+
 	finalized, isNew, err := k.zetaObserverKeeper.VoteOnInboundBallot(
 		tmpCtx,
 		msg.SenderChainId,
