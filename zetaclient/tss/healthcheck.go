@@ -49,15 +49,14 @@ func HealthcheckWorker(ctx context.Context, server *tss.TssServer, p Healthcheck
 
 	pinger := func(ctx context.Context, _ *ticker.Ticker) error {
 		var wg sync.WaitGroup
-		for i := range p.WhitelistPeers {
-			peerID := p.WhitelistPeers[i]
+		for _, peerID := range p.WhitelistPeers {
 			if peerID == host.ID() {
 				continue
 			}
 
 			wg.Add(1)
 
-			go func() {
+			go func(peerID peer.ID) {
 				defer wg.Done()
 
 				defer func() {
@@ -81,11 +80,11 @@ func HealthcheckWorker(ctx context.Context, server *tss.TssServer, p Healthcheck
 				mu.Lock()
 				pingRTT[peerID] = result.RTT.Nanoseconds()
 				mu.Unlock()
-			}()
-
-			wg.Wait()
-			p.Telemetry.SetPingRTT(pingRTT)
+			}(peerID)
 		}
+
+		wg.Wait()
+		p.Telemetry.SetPingRTT(pingRTT)
 
 		return nil
 	}
