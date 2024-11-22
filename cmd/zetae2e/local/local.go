@@ -87,8 +87,6 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSkipPrecompiles, false, "set to true to skip stateful precompiled contracts test")
 	cmd.Flags().
 		Bool(flagUpgradeContracts, false, "set to true to upgrade Gateways and ERC20Custody contracts during setup for ZEVM and EVM")
-	cmd.Flags().
-		Bool(flagSkipBitcoinDustWithdraw, false, "set to true to skip tests that withdraw dust amount from Bitcoin")
 
 	return cmd
 }
@@ -98,28 +96,27 @@ func NewLocalCmd() *cobra.Command {
 func localE2ETest(cmd *cobra.Command, _ []string) {
 	// fetch flags
 	var (
-		waitForHeight           = must(cmd.Flags().GetInt64(flagWaitForHeight))
-		contractsDeployed       = must(cmd.Flags().GetBool(flagContractsDeployed))
-		verbose                 = must(cmd.Flags().GetBool(flagVerbose))
-		configOut               = must(cmd.Flags().GetString(flagConfigOut))
-		testAdmin               = must(cmd.Flags().GetBool(flagTestAdmin))
-		testPerformance         = must(cmd.Flags().GetBool(flagTestPerformance))
-		testCustom              = must(cmd.Flags().GetBool(flagTestCustom))
-		testSolana              = must(cmd.Flags().GetBool(flagTestSolana))
-		testTON                 = must(cmd.Flags().GetBool(flagTestTON))
-		skipRegular             = must(cmd.Flags().GetBool(flagSkipRegular))
-		light                   = must(cmd.Flags().GetBool(flagLight))
-		setupOnly               = must(cmd.Flags().GetBool(flagSetupOnly))
-		skipSetup               = must(cmd.Flags().GetBool(flagSkipSetup))
-		skipBitcoinSetup        = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
-		skipHeaderProof         = must(cmd.Flags().GetBool(flagSkipHeaderProof))
-		skipTrackerCheck        = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
-		testTSSMigration        = must(cmd.Flags().GetBool(flagTestTSSMigration))
-		testV2                  = must(cmd.Flags().GetBool(flagTestV2))
-		testV2Migration         = must(cmd.Flags().GetBool(flagTestV2Migration))
-		skipPrecompiles         = must(cmd.Flags().GetBool(flagSkipPrecompiles))
-		upgradeContracts        = must(cmd.Flags().GetBool(flagUpgradeContracts))
-		skipBitcoinDustWithdraw = must(cmd.Flags().GetBool(flagSkipBitcoinDustWithdraw))
+		waitForHeight     = must(cmd.Flags().GetInt64(flagWaitForHeight))
+		contractsDeployed = must(cmd.Flags().GetBool(flagContractsDeployed))
+		verbose           = must(cmd.Flags().GetBool(flagVerbose))
+		configOut         = must(cmd.Flags().GetString(flagConfigOut))
+		testAdmin         = must(cmd.Flags().GetBool(flagTestAdmin))
+		testPerformance   = must(cmd.Flags().GetBool(flagTestPerformance))
+		testCustom        = must(cmd.Flags().GetBool(flagTestCustom))
+		testSolana        = must(cmd.Flags().GetBool(flagTestSolana))
+		testTON           = must(cmd.Flags().GetBool(flagTestTON))
+		skipRegular       = must(cmd.Flags().GetBool(flagSkipRegular))
+		light             = must(cmd.Flags().GetBool(flagLight))
+		setupOnly         = must(cmd.Flags().GetBool(flagSetupOnly))
+		skipSetup         = must(cmd.Flags().GetBool(flagSkipSetup))
+		skipBitcoinSetup  = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
+		skipHeaderProof   = must(cmd.Flags().GetBool(flagSkipHeaderProof))
+		skipTrackerCheck  = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
+		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
+		testV2            = must(cmd.Flags().GetBool(flagTestV2))
+		testV2Migration   = must(cmd.Flags().GetBool(flagTestV2Migration))
+		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
+		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
 	)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
@@ -334,8 +331,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinStdMemoInscribedDepositAndCallName,
 			e2etests.TestCrosschainSwapName,
 		}
-		if !skipBitcoinDustWithdraw {
-			bitcoinDepositTests = append(bitcoinDepositTests, e2etests.TestBitcoinDepositAndCallRevertWithDustName)
+		bitcoinDepositTestsAdvanced := []string{
+			e2etests.TestBitcoinDepositAndCallRevertWithDustName,
 		}
 		bitcoinWithdrawTests := []string{
 			e2etests.TestBitcoinWithdrawSegWitName,
@@ -381,6 +378,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			erc20Tests = append(erc20Tests, erc20AdvancedTests...)
 			zetaTests = append(zetaTests, zetaAdvancedTests...)
 			zevmMPTests = append(zevmMPTests, zevmMPAdvancedTests...)
+			bitcoinDepositTests = append(bitcoinDepositTests, bitcoinDepositTestsAdvanced...)
 			bitcoinWithdrawTests = append(bitcoinWithdrawTests, bitcoinWithdrawTestsAdvanced...)
 			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
 		}
