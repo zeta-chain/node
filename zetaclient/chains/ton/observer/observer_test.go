@@ -64,7 +64,9 @@ func newTestSuite(t *testing.T) *testSuite {
 		liteClient = mocks.NewLiteClient(t)
 
 		tss      = mocks.NewGeneratedTSS(t, chain)
-		zetacore = mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
+		zetacore = mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{
+			OperatorAddress: sample.Bech32AccAddress(),
+		})
 
 		testLogger = zerolog.New(zerolog.NewTestWriter(t))
 		logger     = base.Logger{Std: testLogger, Compliance: testLogger}
