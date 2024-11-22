@@ -251,13 +251,11 @@ func makeCtx(t *testing.T) context.Context {
 	bscParams := mocks.MockChainParams(chains.BscMainnet.ChainId, 10)
 
 	err := app.Update(
-		observertypes.Keygen{},
 		[]chains.Chain{chains.BscMainnet, chains.ZetaChainMainnet},
 		nil,
 		map[int64]*observertypes.ChainParams{
 			chains.BscMainnet.ChainId: &bscParams,
 		},
-		"tssPubKey",
 		observertypes.CrosschainFlags{},
 	)
 	require.NoError(t, err, "unable to update app context")

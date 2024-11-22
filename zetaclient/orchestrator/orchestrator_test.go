@@ -627,11 +627,9 @@ func createAppContext(t *testing.T, chainsOrParams ...any) *zctx.AppContext {
 
 	// feed chain params
 	err := appContext.Update(
-		observertypes.Keygen{},
 		supportedChains,
 		nil,
 		params,
-		"tssPubKey",
 		*ccFlags,
 	)
 	require.NoError(t, err, "failed to update app context")

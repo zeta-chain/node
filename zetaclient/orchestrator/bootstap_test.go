@@ -443,11 +443,9 @@ func mustUpdateAppContext(
 	chainParams map[int64]*observertypes.ChainParams,
 ) {
 	err := app.Update(
-		app.GetKeygen(),
 		chains,
 		additionalChains,
 		chainParams,
-		"tssPubKey",
 		app.GetCrossChainFlags(),
 	)
 

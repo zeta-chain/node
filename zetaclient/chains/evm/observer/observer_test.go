@@ -69,11 +69,9 @@ func getAppContext(
 
 	// feed chain params
 	err := appContext.Update(
-		observertypes.Keygen{},
 		[]chains.Chain{evmChain, chains.ZetaChainMainnet},
 		nil,
 		chainParams,
-		"tssPubKey",
 		*sample.CrosschainFlags(),
 	)
 	require.NoError(t, err)

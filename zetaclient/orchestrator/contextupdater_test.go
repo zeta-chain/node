@@ -43,9 +43,7 @@ func Test_UpdateAppContext(t *testing.T) {
 		zetacore.On("GetSupportedChains", mock.Anything).Return(newChains, nil)
 		zetacore.On("GetAdditionalChains", mock.Anything).Return(nil, nil)
 		zetacore.On("GetChainParams", mock.Anything).Return(newParams, nil)
-		zetacore.On("GetKeyGen", mock.Anything).Return(observertypes.Keygen{}, nil)
 		zetacore.On("GetCrosschainFlags", mock.Anything).Return(ccFlags, nil)
-		zetacore.On("GetTSS", mock.Anything).Return(observertypes.TSS{TssPubkey: "0x123"}, nil)
 
 		// ACT
 		err := UpdateAppContext(ctx, app, zetacore, logger)
