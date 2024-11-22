@@ -104,10 +104,8 @@ func (k PubKey) Bytes(compress bool) []byte {
 // Example: `zetapub1addwnpepq2fdhcmfyv07s86djjca835l4f2n2ta0c7le6vnl508mseca2s9g6slj0gm`
 func (k PubKey) Bech32String() string {
 	v, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, k.cosmosPubKey)
-
-	// should not happen as we only set k.cosmosPubKey from the constructor
 	if err != nil {
-		panic("PubKey.Bech32String: " + err.Error())
+		return "" // not possible
 	}
 
 	return v
