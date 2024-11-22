@@ -63,6 +63,7 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 
 	r.Logger.Info("Creating the liquidity pool USTD/ZETA")
 	fifty := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(50))
+	r.AddLiquidityETH(fifty, fifty)
 	r.AddLiquidityERC20(fifty, fifty)
 	require.NoError(r, err)
 
