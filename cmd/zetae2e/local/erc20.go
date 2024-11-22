@@ -37,7 +37,7 @@ func erc20TestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		txERC20Send := deployerRunner.SendERC20OnEvm(account.EVMAddress(), 10)
+		txERC20Send := deployerRunner.SendERC20OnEvm(account.EVMAddress(), 10000)
 		erc20Runner.WaitForTxReceiptOnEvm(txERC20Send)
 
 		// depositing the necessary tokens on ZetaChain

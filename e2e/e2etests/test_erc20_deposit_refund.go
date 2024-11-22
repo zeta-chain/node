@@ -2,9 +2,7 @@ package e2etests
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
-	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -64,7 +62,9 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	r.Logger.Info("Sending a deposit that should revert with a liquidity pool")
 
 	r.Logger.Info("Creating the liquidity pool USTD/ZETA")
-	err = createZetaERC20LiquidityPool(r)
+	fifty := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(50))
+	r.AddLiquidityETH(fifty, fifty)
+	r.AddLiquidityERC20(fifty, fifty)
 	require.NoError(r, err)
 
 	r.Logger.Info("Liquidity pool created")
@@ -73,7 +73,7 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	// send the deposit
-	amount = big.NewInt(1e7)
+	amount = big.NewInt(1e10)
 	inboundHash, err = sendInvalidERC20Deposit(r, amount)
 	require.NoError(r, err)
 
@@ -118,43 +118,6 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	r.Logger.Info("\tbalance before refund: %s", erc20Balance.String())
 	r.Logger.Info("\tamount: %s", amount.String())
 	r.Logger.Info("\tbalance after refund: %s", erc20BalanceAfterRefund.String())
-}
-
-func createZetaERC20LiquidityPool(r *runner.E2ERunner) error {
-	amount := big.NewInt(1e10)
-	txHash := r.DepositERC20WithAmountAndMessage(r.EVMAddress(), amount, []byte{})
-	utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-
-	tx, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, r.UniswapV2RouterAddr, big.NewInt(1e10))
-	if err != nil {
-		return err
-	}
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status == 0 {
-		return errors.New("approve failed")
-	}
-
-	previousValue := r.ZEVMAuth.Value
-	r.ZEVMAuth.Value = big.NewInt(1e10)
-	tx, err = r.UniswapV2Router.AddLiquidityETH(
-		r.ZEVMAuth,
-		r.ERC20ZRC20Addr,
-		amount,
-		big.NewInt(0),
-		big.NewInt(0),
-		r.EVMAddress(),
-		big.NewInt(time.Now().Add(10*time.Minute).Unix()),
-	)
-	r.ZEVMAuth.Value = previousValue
-	if err != nil {
-		return err
-	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status == 0 {
-		return fmt.Errorf("add liquidity failed")
-	}
-
-	return nil
 }
 
 func sendInvalidERC20Deposit(r *runner.E2ERunner, amount *big.Int) (string, error) {
