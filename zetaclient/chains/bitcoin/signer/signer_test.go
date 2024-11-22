@@ -229,7 +229,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 func TestAddWithdrawTxOutputs(t *testing.T) {
 	// Create test signer and receiver address
 	signer, err := NewSigner(
-		chains.BitcoinRegtest,
+		chains.BitcoinMainnet,
 		mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet),
 		nil,
 		base.DefaultLogger(),
