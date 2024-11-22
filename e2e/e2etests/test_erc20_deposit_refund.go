@@ -73,7 +73,7 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	// send the deposit
-	amount = big.NewInt(1e7)
+	amount = big.NewInt(1e10)
 	inboundHash, err = sendInvalidERC20Deposit(r, amount)
 	require.NoError(r, err)
 
