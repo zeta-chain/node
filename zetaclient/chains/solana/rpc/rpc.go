@@ -20,7 +20,7 @@ const (
 	// The 'HEALTH_CHECK_SLOT_DISTANCE' is default to 150 slots, which is 150 * 0.4s = 60s
 	RPCAlertLatency = time.Duration(60) * time.Second
 
-	// JSONRPCErrorCodeUnsupportedTransactionVersion
+	// ErrorCodeUnsupportedTransactionVersion
 	// see: https://github.com/solana-labs/solana/blob/master/rpc/src/rpc.rs#L7276
 	ErrorCodeUnsupportedTransactionVersion = "-32015"
 )
@@ -133,17 +133,17 @@ func GetTransactionWithMaxVersion(
 	client interfaces.SolanaRPCClient,
 	signature solana.Signature,
 	maxTxVersion *uint64,
-) (*rpc.GetTransactionResult, error) {
+) (*rpc.GetTransactionResult, bool, error) {
 	txResult, err := client.GetTransaction(ctx, signature, &rpc.GetTransactionOpts{
 		MaxSupportedTransactionVersion: maxTxVersion,
 	})
 
 	// skip unsupported transaction version error
 	if err != nil && strings.Contains(err.Error(), ErrorCodeUnsupportedTransactionVersion) {
-		return nil, nil
+		return nil, true, nil
 	}
 
-	return txResult, err
+	return txResult, false, err
 }
 
 // CheckRPCStatus checks the RPC status of the solana chain
