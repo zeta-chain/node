@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/gagliardetto/solana-go"
@@ -18,6 +19,10 @@ const (
 	// RPCAlertLatency is the default threshold for RPC latency to be considered unhealthy and trigger an alert.
 	// The 'HEALTH_CHECK_SLOT_DISTANCE' is default to 150 slots, which is 150 * 0.4s = 60s
 	RPCAlertLatency = time.Duration(60) * time.Second
+
+	// JSONRPCErrorCodeUnsupportedTransactionVersion
+	// see: https://github.com/solana-labs/solana/blob/master/rpc/src/rpc.rs#L7276
+	ErrorCodeUnsupportedTransactionVersion = "-32015"
 )
 
 // GetFirstSignatureForAddress searches the first signature for the given address.
@@ -120,6 +125,25 @@ func GetSignaturesForAddressUntil(
 	}
 
 	return allSignatures, nil
+}
+
+// GetTransactionWithMaxVersion fetches a transaction with the given signature and max version.
+func GetTransactionWithMaxVersion(
+	ctx context.Context,
+	client interfaces.SolanaRPCClient,
+	signature solana.Signature,
+	maxTxVersion *uint64,
+) (*rpc.GetTransactionResult, error) {
+	txResult, err := client.GetTransaction(ctx, signature, &rpc.GetTransactionOpts{
+		MaxSupportedTransactionVersion: maxTxVersion,
+	})
+
+	// skip unsupported transaction version error
+	if err != nil && strings.Contains(err.Error(), ErrorCodeUnsupportedTransactionVersion) {
+		return nil, nil
+	}
+
+	return txResult, err
 }
 
 // CheckRPCStatus checks the RPC status of the solana chain

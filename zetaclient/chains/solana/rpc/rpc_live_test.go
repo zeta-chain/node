@@ -17,9 +17,40 @@ func Test_SolanaRPCLive(t *testing.T) {
 		return
 	}
 
+	LiveTest_GetTransactionWithVersion(t)
 	LiveTest_GetFirstSignatureForAddress(t)
 	LiveTest_GetSignaturesForAddressUntil(t)
 	LiveTest_CheckRPCStatus(t)
+}
+
+func LiveTest_GetTransactionWithVersion(t *testing.T) {
+	// create a Solana devnet RPC client
+	client := solanarpc.New(solanarpc.DevNet_RPC)
+
+	// example transaction of version "0"
+	// https://explorer.solana.com/tx/Wqgj7hAaUUSfLzieN912G7GxyGHijzBZgY135NtuFtPRjevK8DnYjWwQZy7LAKFQZu582wsjuab2QP27VMUJzAi?cluster=devnet
+	txSig := solana.MustSignatureFromBase58(
+		"Wqgj7hAaUUSfLzieN912G7GxyGHijzBZgY135NtuFtPRjevK8DnYjWwQZy7LAKFQZu582wsjuab2QP27VMUJzAi",
+	)
+
+	t.Run("should get the transaction if the version is supported", func(t *testing.T) {
+		ctx := context.Background()
+		txResult, err := rpc.GetTransactionWithMaxVersion(
+			ctx,
+			client,
+			txSig,
+			&solanarpc.MaxSupportedTransactionVersion0,
+		)
+		require.NoError(t, err)
+		require.NotNil(t, txResult)
+	})
+
+	t.Run("should skip the transaction if the version is not supported", func(t *testing.T) {
+		ctx := context.Background()
+		txResult, err := rpc.GetTransactionWithMaxVersion(ctx, client, txSig, nil)
+		require.NoError(t, err)
+		require.Nil(t, txResult)
+	})
 }
 
 func LiveTest_GetFirstSignatureForAddress(t *testing.T) {

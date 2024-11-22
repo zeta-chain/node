@@ -100,17 +100,23 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 		// process successfully signature only
 		if sig.Err == nil {
-			txResult, err := ob.solClient.GetTransaction(ctx, sig.Signature, &rpc.GetTransactionOpts{})
+			maxTxVersion := rpc.MaxSupportedTransactionVersion0
+			txResult, err := solanarpc.GetTransactionWithMaxVersion(ctx, ob.solClient, sig.Signature, &maxTxVersion)
 			if err != nil {
 				// we have to re-scan this signature on next ticker
 				return errors.Wrapf(err, "error GetTransaction for chain %d sig %s", chainID, sigString)
 			}
 
-			// filter inbound events and vote
-			err = ob.FilterInboundEventsAndVote(ctx, txResult)
-			if err != nil {
-				// we have to re-scan this signature on next ticker
-				return errors.Wrapf(err, "error FilterInboundEventAndVote for chain %d sig %s", chainID, sigString)
+			switch {
+			case txResult == nil:
+				ob.Logger().Inbound.Warn().Msgf("ObserveInbound: skip unsupported transaction sig %s", sigString)
+			default:
+				// filter inbound events and vote
+				err = ob.FilterInboundEventsAndVote(ctx, txResult)
+				if err != nil {
+					// we have to re-scan this signature on next ticker
+					return errors.Wrapf(err, "error FilterInboundEventAndVote for chain %d sig %s", chainID, sigString)
+				}
 			}
 		}
 
