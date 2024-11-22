@@ -25,7 +25,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	// if the tx fails due to already initialized, it will be ignored
 	_, err := r.UniswapV2Factory.CreatePair(r.ZEVMAuth, r.ERC20ZRC20Addr, r.BTCZRC20Addr)
 	if err != nil {
-		r.Logger.Print("ℹ️ create pair error")
+		r.Logger.Print("ℹ️ create pair error %s", err.Error())
 	}
 
 	txERC20ZRC20Approve, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
