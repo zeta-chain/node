@@ -422,6 +422,8 @@ func (r *E2ERunner) QueryOutboundReceiverAndAmount(txid string) (string, int64) 
 // and returns a channel that can be used to stop the mining
 // If the chain is not local, the function does nothing
 func (r *E2ERunner) MineBlocksIfLocalBitcoin() func() {
+	require.NotNil(r, r.BTCDeployerAddress, "E2ERunner.BTCDeployerAddress is nil")
+
 	stopChan := make(chan struct{})
 	go func() {
 		for {
