@@ -87,7 +87,8 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSkipPrecompiles, false, "set to true to skip stateful precompiled contracts test")
 	cmd.Flags().
 		Bool(flagUpgradeContracts, false, "set to true to upgrade Gateways and ERC20Custody contracts during setup for ZEVM and EVM")
-	cmd.Flags().Bool(flagSkipBitcoinDustWithdraw, false, "set to true to skip tests that withdraw dust amount from Bitcoin")
+	cmd.Flags().
+		Bool(flagSkipBitcoinDustWithdraw, false, "set to true to skip tests that withdraw dust amount from Bitcoin")
 
 	return cmd
 }
