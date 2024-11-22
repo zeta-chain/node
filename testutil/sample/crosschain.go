@@ -305,8 +305,7 @@ func CoinTypeFromRand(r *rand.Rand) coin.CoinType {
 
 // InboundVoteSim creates a simulated inbound vote message. This function uses the provided source of randomness to generate
 func InboundVoteSim(from, to int64, r *rand.Rand, asset string) types.MsgVoteInbound {
-	//coinType := CoinTypeFromRand(r)
-	coinType := coin.CoinType_Gas
+	coinType := CoinTypeFromRand(r)
 	return types.MsgVoteInbound{
 		Creator:       "",
 		Sender:        EthAddressFromRand(r).String(),
@@ -337,6 +336,7 @@ func OutboundVoteSim(r *rand.Rand,
 ) (types.CrossChainTx, types.MsgVoteOutbound) {
 
 	coinType := CoinTypeFromRand(r)
+
 	amount := math.NewUint(uint64(r.Int63()))
 	inbound := &types.InboundParams{
 		Sender:                 EthAddressFromRand(r).String(),

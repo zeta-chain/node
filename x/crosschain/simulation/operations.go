@@ -398,6 +398,7 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 
 		foriegnCoins := k.GetFungibleKeeper().GetAllForeignCoins(ctx)
 		asset := ""
+
 		for _, coin := range foriegnCoins {
 			if coin.ForeignChainId == from {
 				asset = coin.Asset
@@ -472,7 +473,7 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 
 		var fops []simtypes.FutureOperation
 
-		votingBlock := int64(0)
+		votingBlock := int64(1)
 		for _, observerIdx := range whoVotes {
 			observerAddress := observerSet.ObserverList[observerIdx]
 			// firstVoter has already voted.
@@ -497,7 +498,7 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 				BlockHeight: int(ctx.BlockHeight() + votingBlock),
 				Op:          operationSimulateVoteInbound(k, votingMsg, observerAccount),
 			})
-			votingBlock++
+			//votingBlock++
 		}
 		return opMsg, fops, nil
 	}

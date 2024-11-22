@@ -213,6 +213,7 @@ func updateFungibleState(t *testing.T, rawState map[string]json.RawMessage, cdc 
 		}
 		foreignCoins = append(foreignCoins, foreignCoin)
 	}
+	fungibleState.ForeignCoinsList = foreignCoins
 
 	return fungibleState
 }

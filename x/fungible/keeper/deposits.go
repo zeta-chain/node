@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,7 +37,7 @@ func (k Keeper) ZRC20DepositAndCallContract(
 	protocolContractVersion crosschaintypes.ProtocolContractVersion,
 	isCrossChainCall bool,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
-	fmt.Println("executing ZRC20DepositAndCallContract", asset, senderChainID)
+	//fmt.Println("start ZRC20DepositAndCallContract", asset, senderChainID)
 	// get ZRC20 contract
 	zrc20Contract, _, err := k.getAndCheckZRC20(ctx, amount, senderChainID, coinType, asset)
 	if err != nil {
@@ -101,6 +100,7 @@ func (k Keeper) getAndCheckZRC20(
 	// this simplify the current workflow and allow to pause calls by pausing the gas token
 	// TODO: refactor this logic and create specific workflow for no asset call
 	// https://github.com/zeta-chain/node/issues/2627
+
 	if coinType == coin.CoinType_Gas || coinType == coin.CoinType_NoAssetCall {
 		foreignCoin, found = k.GetGasCoinForForeignCoin(ctx, chainID)
 		if !found {
