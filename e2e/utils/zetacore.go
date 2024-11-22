@@ -194,22 +194,6 @@ func MatchStatus(s crosschaintypes.CctxStatus) WaitOpts {
 	})
 }
 
-// MatchStatusList is the WaitOpts that matches CCTX with the given status.
-// It returns as soon as any of the status is matched.
-func MatchStatusList(s []crosschaintypes.CctxStatus) WaitOpts {
-	return Matches(func(tx crosschaintypes.CrossChainTx) bool {
-		if tx.CctxStatus == nil {
-			return false
-		}
-		for _, s := range s {
-			if tx.CctxStatus.Status == s {
-				return true
-			}
-		}
-		return false
-	})
-}
-
 // MatchReverted is the WaitOpts that matches reverted CCTX.
 func MatchReverted() WaitOpts {
 	return Matches(func(tx crosschaintypes.CrossChainTx) bool {
