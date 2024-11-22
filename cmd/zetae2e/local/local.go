@@ -121,6 +121,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
 
 	testStartTime := time.Now()
+	
 	logger.Print("starting E2E tests")
 
 	if testAdmin {
