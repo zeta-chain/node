@@ -146,6 +146,8 @@ func GetDefaultChainParams() ChainParamsList {
 			GetDefaultBscTestnetChainParams(),
 			GetDefaultMumbaiTestnetChainParams(),
 			GetDefaultBtcTestnetChainParams(),
+			GetDefaultBtcTestnet4ChainParams(),
+			GetDefaultBtcSignetChainParams(),
 			GetDefaultBtcRegtestChainParams(),
 			GetDefaultGoerliLocalnetChainParams(),
 		},
@@ -264,6 +266,42 @@ func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 func GetDefaultBtcTestnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.BitcoinTestnet.ChainId,
+		ConfirmationCount:           2,
+		ZetaTokenContractAddress:    constant.EVMZeroAddress,
+		ConnectorContractAddress:    constant.EVMZeroAddress,
+		Erc20CustodyContractAddress: constant.EVMZeroAddress,
+		WatchUtxoTicker:             30,
+		InboundTicker:               120,
+		OutboundTicker:              12,
+		GasPriceTicker:              30,
+		OutboundScheduleInterval:    30,
+		OutboundScheduleLookahead:   100,
+		BallotThreshold:             DefaultBallotThreshold,
+		MinObserverDelegation:       DefaultMinObserverDelegation,
+		IsSupported:                 false,
+	}
+}
+func GetDefaultBtcTestnet4ChainParams() *ChainParams {
+	return &ChainParams{
+		ChainId:                     chains.BitcoinTestnet4.ChainId,
+		ConfirmationCount:           2,
+		ZetaTokenContractAddress:    constant.EVMZeroAddress,
+		ConnectorContractAddress:    constant.EVMZeroAddress,
+		Erc20CustodyContractAddress: constant.EVMZeroAddress,
+		WatchUtxoTicker:             30,
+		InboundTicker:               120,
+		OutboundTicker:              12,
+		GasPriceTicker:              30,
+		OutboundScheduleInterval:    30,
+		OutboundScheduleLookahead:   100,
+		BallotThreshold:             DefaultBallotThreshold,
+		MinObserverDelegation:       DefaultMinObserverDelegation,
+		IsSupported:                 false,
+	}
+}
+func GetDefaultBtcSignetChainParams() *ChainParams {
+	return &ChainParams{
+		ChainId:                     chains.BitcoinSignetTestnet.ChainId,
 		ConfirmationCount:           2,
 		ZetaTokenContractAddress:    constant.EVMZeroAddress,
 		ConnectorContractAddress:    constant.EVMZeroAddress,

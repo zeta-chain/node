@@ -1,0 +1,26 @@
+{
+	"BTCChainConfigs": {
+		"18444": {
+		  "RPCUsername": "smoketest",
+		  "RPCPassword": "123",
+		  "RPCHost": "bitcoin:18443",
+		  "RPCParams": "regtest",
+		  "RPCAlertLatency": 60
+		},
+		"18333": {
+		  "RPCUsername": "default",
+		  "RPCPassword": "default",
+		  "RPCHost": "172.17.0.1:38332",
+		  "RPCParams": "testnet3",
+		  "RPCAlertLatency": 60
+		},
+		"18334": {
+		  "RPCUsername": "default",
+		  "RPCPassword": "default",
+		  "RPCHost": "172.17.0.1:48332",
+		  "RPCParams": "testnet3",
+		  "RPCAlertLatency": 60
+
+		}
+	}
+}

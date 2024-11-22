@@ -115,4 +115,9 @@ if [[ -f /root/zetaclient-config-overlay.json ]]; then
   mv /tmp/merged_config.json /root/.zetacored/config/zetaclient_config.json
 fi
 
+# signet
+export CHAIN_18333_SCAN_FROM_BLOCK=latest
+# testnet4
+export CHAIN_18334_SCAN_FROM_BLOCK=latest
+
 zetaclientd-supervisor start < /root/password.file
