@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/testutil/sample"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
@@ -625,6 +627,24 @@ func TestPostVoteInbound(t *testing.T) {
 		ballot, err := ob.PostVoteInbound(context.TODO(), &msg, 100000)
 		require.NoError(t, err)
 		require.Equal(t, "sampleBallotIndex", ballot)
+	})
+
+	t.Run("should not post vote if message basic validation fails", func(t *testing.T) {
+		// create observer
+		ob := createObserver(t, chains.Ethereum, defaultAlertLatency)
+
+		// create mock zetacore client
+		zetacoreClient := mocks.NewZetacoreClient(t)
+		ob = ob.WithZetacoreClient(zetacoreClient)
+
+		// create sample message with long Message
+		msg := sample.InboundVote(coin.CoinType_Gas, chains.Ethereum.ChainId, chains.ZetaChainMainnet.ChainId)
+		msg.Message = strings.Repeat("1", crosschaintypes.MaxMessageLength+1)
+
+		// post vote inbound
+		ballot, err := ob.PostVoteInbound(context.TODO(), &msg, 100000)
+		require.NoError(t, err)
+		require.Empty(t, ballot)
 	})
 }
 

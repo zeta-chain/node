@@ -282,21 +282,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		return msg.Digest(), nil
 	}
 
-	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(
-		ctx,
-		zetacore.PostVoteInboundGasLimit,
-		zetacore.PostVoteInboundExecutionGasLimit,
-		msg,
-	)
-	if err != nil {
-		ob.logger.Inbound.Error().Err(err).Msg("error posting to zetacore")
-		return "", err
-	} else if zetaHash != "" {
-		ob.logger.Inbound.Info().Msgf("BTC deposit detected and reported: PostVoteInbound zeta tx hash: %s inbound %s ballot %s fee %v",
-			zetaHash, txHash, ballot, event.DepositorFee)
-	}
-
-	return msg.Digest(), nil
+	return ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
 }
 
 // FilterAndParseIncomingTx given txs list returned by the "getblock 2" RPC command, return the txs that are relevant to us
@@ -364,22 +350,13 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 	}
 	amountInt := big.NewInt(amountSats)
 
-	// create inbound vote message contract V1 for legacy memo or standard memo
-	var msg *crosschaintypes.MsgVoteInbound
+	// create inbound vote message contract V1 for legacy memo
 	if event.MemoStd == nil {
-		msg = ob.NewInboundVoteFromLegacyMemo(event, amountInt)
-	} else {
-		msg = ob.NewInboundVoteFromStdMemo(event, amountInt)
+		return ob.NewInboundVoteFromLegacyMemo(event, amountInt)
 	}
 
-	// make sure the message is valid before posting to zetacore
-	err = msg.ValidateBasic()
-	if err != nil {
-		ob.Logger().Inbound.Error().Err(err).Fields(lf).Msg("invalid inbound vote message")
-		return nil
-	}
-
-	return msg
+	// create inbound vote message for standard memo
+	return ob.NewInboundVoteFromStdMemo(event, amountInt)
 }
 
 // GetBtcEvent returns a valid BTCInboundEvent or nil

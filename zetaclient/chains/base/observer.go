@@ -466,7 +466,7 @@ func (ob *Observer) ReadLastTxScannedFromDB() (string, error) {
 	return lastTx.Hash, nil
 }
 
-// PostVoteInbound posts a vote for the given vote message
+// PostVoteInbound posts a vote for the given vote message and returns the ballot.
 func (ob *Observer) PostVoteInbound(
 	ctx context.Context,
 	msg *crosschaintypes.MsgVoteInbound,
@@ -477,18 +477,25 @@ func (ob *Observer) PostVoteInbound(
 	var (
 		txHash   = msg.InboundHash
 		coinType = msg.CoinType
-		chainID  = ob.Chain().ChainId
 	)
 
-	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctx, gasLimit, retryGasLimit, msg)
-
+	// prepare logger fields
 	lf := map[string]any{
-		"inbound.chain_id":         chainID,
-		"inbound.coin_type":        coinType.String(),
-		"inbound.external_tx_hash": txHash,
-		"inbound.ballot_index":     ballot,
-		"inbound.zeta_tx_hash":     zetaHash,
+		logs.FieldMethod:   "PostVoteInbound",
+		logs.FieldTx:       txHash,
+		logs.FieldCoinType: coinType.String(),
 	}
+
+	// make sure the message is valid to avoid unnecessary retries
+	if err := msg.ValidateBasic(); err != nil {
+		ob.logger.Inbound.Warn().Err(err).Fields(lf).Msg("invalid inbound vote message")
+		return "", nil
+	}
+
+	// post vote to zetacore
+	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctx, gasLimit, retryGasLimit, msg)
+	lf[logs.FieldZetaTx] = zetaHash
+	lf[logs.FieldBallot] = ballot
 
 	switch {
 	case err != nil:

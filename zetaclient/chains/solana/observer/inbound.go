@@ -274,7 +274,7 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 	}
 
 	// create inbound vote message
-	msg := crosschaintypes.NewMsgVoteInbound(
+	return crosschaintypes.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		event.Sender,
 		event.SenderChainID,
@@ -292,27 +292,16 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 		crosschaintypes.ProtocolContractVersion_V1,
 		false, // not relevant for v1
 	)
-
-	// make sure the message is valid before posting to zetacore
-	err = msg.ValidateBasic()
-	if err != nil {
-		ob.Logger().Inbound.Error().Err(err).Fields(lf).Msg("invalid inbound vote message")
-		return nil
-	}
-
-	return msg
 }
 
 // IsEventProcessable checks if the inbound event is processable
 func (ob *Observer) IsEventProcessable(event clienttypes.InboundEvent) bool {
+	logFields := map[string]any{logs.FieldTx: event.TxHash}
+
 	switch category := event.Category(); category {
 	case clienttypes.InboundCategoryGood:
 		return true
 	case clienttypes.InboundCategoryDonation:
-		logFields := map[string]any{
-			logs.FieldChain: ob.Chain().ChainId,
-			logs.FieldTx:    event.TxHash,
-		}
 		ob.Logger().Inbound.Info().Fields(logFields).Msgf("thank you rich folk for your donation!")
 		return false
 	case clienttypes.InboundCategoryRestricted:
@@ -320,7 +309,7 @@ func (ob *Observer) IsEventProcessable(event clienttypes.InboundEvent) bool {
 			false, ob.Chain().ChainId, event.TxHash, event.Sender, event.Receiver, event.CoinType.String())
 		return false
 	default:
-		ob.Logger().Inbound.Error().Msgf("unreachable code got InboundProcessability: %v", category)
+		ob.Logger().Inbound.Error().Msgf("unreachable code got InboundCategory: %v", category)
 		return false
 	}
 }

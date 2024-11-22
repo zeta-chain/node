@@ -157,9 +157,7 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 
 	// create test observer
 	ob := MockBTCObserver(t, chain, params, nil)
-	zetacoreClient := mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{
-		OperatorAddress: sample.Bech32AccAddress(),
-	}).WithZetaChain()
+	zetacoreClient := mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{}).WithZetaChain()
 	ob.WithZetacoreClient(zetacoreClient)
 
 	// test cases

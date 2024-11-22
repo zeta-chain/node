@@ -2,7 +2,6 @@ package observer_test
 
 import (
 	"context"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -10,7 +9,6 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/testutil/sample"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	"github.com/zeta-chain/node/zetaclient/config"
@@ -110,9 +108,7 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 	params := sample.ChainParams(chain.ChainId)
 	params.GatewayAddress = sample.SolanaAddress(t)
 	zetacoreClient := mocks.NewZetacoreClient(t)
-	zetacoreClient.WithKeys(&keys.Keys{
-		OperatorAddress: sample.Bech32AccAddress(),
-	}).WithZetaChain().WithPostVoteInbound("", "")
+	zetacoreClient.WithKeys(&keys.Keys{}).WithZetaChain().WithPostVoteInbound("", "")
 
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
@@ -151,16 +147,6 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 		// restrict sender
 		cfg.ComplianceConfig.RestrictedAddresses = []string{sender}
 		config.LoadComplianceConfig(cfg)
-
-		msg := ob.BuildInboundVoteMsgFromEvent(event)
-		require.Nil(t, msg)
-	})
-
-	t.Run("should return nil if message basic validation fails", func(t *testing.T) {
-		// create event with donation memo
-		sender := sample.SolanaAddress(t)
-		maxMsgBytes := crosschaintypes.MaxMessageLength / 2
-		event := sample.InboundEvent(chain.ChainId, sender, sender, 1280, []byte(strings.Repeat("a", maxMsgBytes+1)))
 
 		msg := ob.BuildInboundVoteMsgFromEvent(event)
 		require.Nil(t, msg)

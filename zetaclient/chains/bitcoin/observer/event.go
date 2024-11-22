@@ -153,14 +153,12 @@ func ValidateStandardMemo(memoStd memo.InboundMemo, chainID int64) error {
 
 // IsEventProcessable checks if the inbound event is processable
 func (ob *Observer) IsEventProcessable(event BTCInboundEvent) bool {
+	logFields := map[string]any{logs.FieldTx: event.TxHash}
+
 	switch category := event.Category(); category {
 	case clienttypes.InboundCategoryGood:
 		return true
 	case clienttypes.InboundCategoryDonation:
-		logFields := map[string]any{
-			logs.FieldChain: ob.Chain().ChainId,
-			logs.FieldTx:    event.TxHash,
-		}
 		ob.Logger().Inbound.Info().Fields(logFields).Msgf("thank you rich folk for your donation!")
 		return false
 	case clienttypes.InboundCategoryRestricted:
@@ -168,7 +166,7 @@ func (ob *Observer) IsEventProcessable(event BTCInboundEvent) bool {
 			false, ob.Chain().ChainId, event.TxHash, event.FromAddress, event.ToAddress, "BTC")
 		return false
 	default:
-		ob.Logger().Inbound.Error().Msgf("unreachable code got InboundProcessability: %v", category)
+		ob.Logger().Inbound.Error().Fields(logFields).Msgf("unreachable code got InboundCategory: %v", category)
 		return false
 	}
 }
