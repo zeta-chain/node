@@ -161,11 +161,17 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	zetaTxServer, err := txserver.NewZetaTxServer(
 		conf.RPCs.ZetaCoreRPC,
-		[]string{utils.EmergencyPolicyName, utils.OperationalPolicyName, utils.AdminPolicyName},
+		[]string{
+			utils.EmergencyPolicyName,
+			utils.OperationalPolicyName,
+			utils.AdminPolicyName,
+			utils.UserEmissionsWithdrawName,
+		},
 		[]string{
 			conf.PolicyAccounts.EmergencyPolicyAccount.RawPrivateKey.String(),
 			conf.PolicyAccounts.OperationalPolicyAccount.RawPrivateKey.String(),
 			conf.PolicyAccounts.AdminPolicyAccount.RawPrivateKey.String(),
+			conf.AdditionalAccounts.UserEmissionsWithdraw.RawPrivateKey.String(),
 		},
 		conf.ZetaChainID,
 	)
@@ -492,6 +498,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
 		os.Exit(1)
 	}
+	noError(deployerRunner.WithdrawEmissions())
 
 	// if all tests pass, cancel txs priority monitoring and check if tx priority is not correct in some blocks
 	logger.Print("⏳ e2e tests passed, checking tx priority")

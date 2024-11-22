@@ -16,6 +16,7 @@
 * [3105](https://github.com/zeta-chain/node/pull/3105) - split Bitcoin E2E tests into two runners for deposit and withdraw
 * [3154](https://github.com/zeta-chain/node/pull/3154) - configure Solana gateway program id for E2E tests
 * [3188](https://github.com/zeta-chain/node/pull/3188) - add e2e test for v2 deposit and call with swap
+* [3151](https://github.com/zeta-chain/node/pull/3151) - add withdraw emissions to e2e tests
 
 ### Refactor
 

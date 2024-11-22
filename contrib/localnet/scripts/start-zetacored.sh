@@ -67,6 +67,55 @@ add_v17_message_authorizations() {
     ' $json_file > temp.json && mv temp.json $json_file
 }
 
+
+add_emissions_withdraw_authorizations() {
+
+    config_file="/root/config.yml"
+    json_file="/root/.zetacored/config/genesis.json"
+
+    # Check if config file exists
+    if [[ ! -f "$config_file" ]]; then
+        echo "Error: Config file not found at $config_file"
+        return 1
+    fi
+    # Address to add emissions withdraw authorizations
+    address=$(yq -r '.additional_accounts.user_emissions_withdraw.bech32_address' "$config_file")
+
+    # Check if genesis file exists
+    if [[ ! -f "$json_file" ]]; then
+        echo "Error: Genesis file not found at $json_file"
+        return 1
+    fi
+
+    echo "Adding emissions withdraw authorizations for address: $address"
+
+
+     # Using jq to parse JSON, create new entries, and append them to the authorization array
+     if ! jq --arg address "$address" '
+         # Store the nodeAccountList array
+         .app_state.observer.nodeAccountList as $list |
+         # Iterate over the stored list to construct new objects and append to the authorization array
+         .app_state.authz.authorization += [
+             $list[] |
+             {
+                 "granter": .operator,
+                 "grantee": $address,
+                 "authorization": {
+                     "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+                     "msg": "/zetachain.zetacore.emissions.MsgWithdrawEmission"
+                 },
+                 "expiration": null
+             }
+         ]
+     ' "$json_file" > temp.json; then
+         echo "Error: Failed to update genesis file"
+         return 1
+     fi
+     mv temp.json "$json_file"
+}
+
+
+
 # create keys
 CHAINID="athens_101-1"
 KEYRING="test"
@@ -191,6 +240,12 @@ then
   zetacored collect-observer-info
   zetacored add-observer-list --keygen-block 25
 
+  # Add emissions withdraw authorizations
+  if ! add_emissions_withdraw_authorizations; then
+      echo "Error: Failed to add emissions withdraw authorizations"
+      exit 1
+  fi
+
   # Check for the existence of "AddToOutTxTracker" string in the genesis file
   # If this message is found in the genesis, it means add-observer-list has been run with the v16 binary for upgrade tests
   # In this case, we need to add authorizations for the new v17 messages to the genesis file
@@ -271,6 +326,9 @@ then
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
 # v2 erc20 revert tester
   address=$(yq -r '.additional_accounts.user_v2_erc20_revert.bech32_address' /root/config.yml)
+  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+# emissions withdraw tester
+  address=$(yq -r '.additional_accounts.user_emissions_withdraw.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
 
 # 3. Copy the genesis.json to all the nodes .And use it to create a gentx for every node

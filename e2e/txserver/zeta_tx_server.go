@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -582,6 +583,28 @@ func (zts ZetaTxServer) FundEmissionsPool(account string, amount *big.Int) error
 		emissionPoolAccAddr,
 		sdktypes.NewCoins(sdktypes.NewCoin(config.BaseDenom, amountInt)),
 	))
+	return err
+}
+
+func (zts ZetaTxServer) WithdrawAllEmissions(withdrawAmount sdkmath.Int, account, observer string) error {
+	// retrieve account
+	acc, err := zts.clientCtx.Keyring.Key(account)
+	if err != nil {
+		return fmt.Errorf("failed to get withdrawer account: %w", err)
+	}
+	withdrawerAddress, err := acc.GetAddress()
+	if err != nil {
+		return fmt.Errorf("failed to get withdrawer account address: %w", err)
+	}
+
+	msg := emissionstypes.MsgWithdrawEmission{
+		Creator: observer,
+		Amount:  withdrawAmount,
+	}
+
+	authzMessage := authz.NewMsgExec(withdrawerAddress, []sdktypes.Msg{&msg})
+
+	_, err = zts.BroadcastTx(account, &authzMessage)
 	return err
 }
 
