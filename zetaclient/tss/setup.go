@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"slices"
 	"time"
 
@@ -51,8 +51,6 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	case len(hotPrivateKey.Bytes()) != 32:
 		return nil, fmt.Errorf("hot privateKey: expect 32 bytes, got %d bytes", len(hotPrivateKey.Bytes()))
 	}
-
-	p.Zetacore.GetKeys().GetKeybase()
 
 	hotPrivateKeyECDSA := secp256k1.PrivKey(hotPrivateKey.Bytes()[:32])
 
@@ -263,7 +261,7 @@ func resolveTSSPath(tssPath string, logger zerolog.Logger) (string, error) {
 		return "", errors.Wrap(err, "unable to get user home dir")
 	}
 
-	tssPath = path.Join(home, ".tss")
+	tssPath = filepath.Join(home, ".tss")
 	logger.Warn().Msgf("TSS path is empty, falling back to %s", tssPath)
 
 	return tssPath, nil
