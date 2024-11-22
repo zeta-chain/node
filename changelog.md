@@ -4,6 +4,18 @@
 
 ### Features
 
+### Tests
+
+### Refactor
+
+### Fixes
+
+* [3184](https://github.com/zeta-chain/node/pull/3184) - zetaclient should not retry if inbound vote message validation fails
+
+## v23.0.0
+
+### Features
+
 * [2984](https://github.com/zeta-chain/node/pull/2984) - add Whitelist message ability to whitelist SPL tokens on Solana
 * [3091](https://github.com/zeta-chain/node/pull/3091) - improve build reproducability. `make release{,-build-only}` checksums should now be stable.
 * [3124](https://github.com/zeta-chain/node/pull/3124) - integrate SPL deposits
@@ -16,6 +28,7 @@
 * [3105](https://github.com/zeta-chain/node/pull/3105) - split Bitcoin E2E tests into two runners for deposit and withdraw
 * [3154](https://github.com/zeta-chain/node/pull/3154) - configure Solana gateway program id for E2E tests
 * [3188](https://github.com/zeta-chain/node/pull/3188) - add e2e test for v2 deposit and call with swap
+* [3151](https://github.com/zeta-chain/node/pull/3151) - add withdraw emissions to e2e tests
 
 ### Refactor
 
@@ -35,7 +48,49 @@
 * [3155](https://github.com/zeta-chain/node/pull/3155) - fix potential panic in the Bitcoin inscription parsing
 * [3162](https://github.com/zeta-chain/node/pull/3162) - skip depositor fee calculation if transaction does not involve TSS address
 * [3179](https://github.com/zeta-chain/node/pull/3179) - support inbound trackers for v2 cctx
-* [3184](https://github.com/zeta-chain/node/pull/3184) - zetaclient should not retry if inbound vote message validation fails
+* [3192](https://github.com/zeta-chain/node/pull/3192) - fix incorrect zContext origin caused by the replacement of 'sender' with 'revertAddress'
+
+## v22.1.2
+
+## Fixes
+
+- [3181](https://github.com/zeta-chain/node/pull/3181) - add lock around pingRTT to prevent crash
+
+## v22.1.1
+
+## Fixes
+
+- [3171](https://github.com/zeta-chain/node/pull/3171) - infinite discovery address leak
+
+## v22.1.0
+
+## Features
+
+- [3028](https://github.com/zeta-chain/node/pull/3028) - whitelist connection gater
+
+## Fixes
+
+- [3041](https://github.com/zeta-chain/node/pull/3041) - replace DHT with private peer discovery
+- [3162](https://github.com/zeta-chain/node/pull/3162) - skip depositor fee calculation on irrelevant transactions
+
+## v22.0.2
+
+## Fixes
+
+- [3144](https://github.com/zeta-chain/node/pull/3145) - out of gas on ZetaClient during `onRevert`
+
+## v22.0.1
+
+## Fixes
+
+- [3140](https://github.com/zeta-chain/node/pull/3140) - allow BTC revert with dust amount
+
+## v22.0.0
+
+## Refactor
+
+* [3073](https://github.com/zeta-chain/node/pull/3073) - improve ZETA deposit check with max supply check
+>>>>>>> cad1b36d6fdd96b8ecfd48f0be32246338db513e
 
 ## v21.0.0
 

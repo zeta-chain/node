@@ -4,8 +4,10 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/stretchr/testify/require"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -127,6 +129,39 @@ func Test_SetRevertOutboundValues(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, cctx.OutboundParams, 2)
 		require.Equal(t, cctx.GetCurrentOutboundParam().Receiver, cctx.InboundParams.Sender)
+		require.Equal(t, cctx.GetCurrentOutboundParam().ReceiverChainId, cctx.InboundParams.SenderChainId)
+		require.Equal(t, cctx.GetCurrentOutboundParam().Amount, cctx.OutboundParams[0].Amount)
+		require.Equal(t, cctx.GetCurrentOutboundParam().CallOptions.GasLimit, uint64(100))
+		require.Equal(t, cctx.GetCurrentOutboundParam().TssPubkey, cctx.OutboundParams[0].TssPubkey)
+		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundParams[0].TxFinalizationStatus)
+	})
+
+	t.Run("successfully set BTC revert address V1", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.InboundParams.SenderChainId = chains.BitcoinTestnet.ChainId
+		cctx.OutboundParams = cctx.OutboundParams[:1]
+		cctx.RevertOptions.RevertAddress = sample.BtcAddressP2WPKH(t, &chaincfg.TestNet3Params)
+
+		err := cctx.AddRevertOutbound(100)
+		require.NoError(t, err)
+		require.Len(t, cctx.OutboundParams, 2)
+		require.Equal(t, cctx.GetCurrentOutboundParam().Receiver, cctx.RevertOptions.RevertAddress)
+		require.Equal(t, cctx.GetCurrentOutboundParam().ReceiverChainId, cctx.InboundParams.SenderChainId)
+		require.Equal(t, cctx.GetCurrentOutboundParam().Amount, cctx.OutboundParams[0].Amount)
+		require.Equal(t, cctx.GetCurrentOutboundParam().CallOptions.GasLimit, uint64(100))
+		require.Equal(t, cctx.GetCurrentOutboundParam().TssPubkey, cctx.OutboundParams[0].TssPubkey)
+		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundParams[0].TxFinalizationStatus)
+	})
+
+	t.Run("successfully set EVM revert address V2", func(t *testing.T) {
+		cctx := sample.CrossChainTxV2(t, "test")
+		cctx.OutboundParams = cctx.OutboundParams[:1]
+		cctx.RevertOptions.RevertAddress = sample.EthAddress().Hex()
+
+		err := cctx.AddRevertOutbound(100)
+		require.NoError(t, err)
+		require.Len(t, cctx.OutboundParams, 2)
+		require.Equal(t, cctx.GetCurrentOutboundParam().Receiver, cctx.RevertOptions.RevertAddress)
 		require.Equal(t, cctx.GetCurrentOutboundParam().ReceiverChainId, cctx.InboundParams.SenderChainId)
 		require.Equal(t, cctx.GetCurrentOutboundParam().Amount, cctx.OutboundParams[0].Amount)
 		require.Equal(t, cctx.GetCurrentOutboundParam().CallOptions.GasLimit, uint64(100))

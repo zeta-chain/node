@@ -205,11 +205,10 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 	event *BTCInboundEvent,
 	amountSats *big.Int,
 ) *crosschaintypes.MsgVoteInbound {
-	// replace 'sender' with 'revertAddress' if specified in the memo, so that
-	// zetacore will refund to the address specified by the user in the revert options.
-	sender := event.FromAddress
-	if event.MemoStd.RevertOptions.RevertAddress != "" {
-		sender = event.MemoStd.RevertOptions.RevertAddress
+	// inject the 'revertAddress' specified in the memo, so that
+	// zetacore will create a revert outbound that points to the custom revert address.
+	revertOptions := crosschaintypes.RevertOptions{
+		RevertAddress: event.MemoStd.RevertOptions.RevertAddress,
 	}
 
 	// make a legacy message so that zetacore can process it as V1
@@ -218,7 +217,7 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 
 	return crosschaintypes.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
-		sender,
+		event.FromAddress,
 		ob.Chain().ChainId,
 		event.FromAddress,
 		event.ToAddress,
@@ -233,5 +232,6 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 		0,
 		crosschaintypes.ProtocolContractVersion_V1,
 		false, // not relevant for v1
+		crosschaintypes.WithRevertOptions(revertOptions),
 	)
 }

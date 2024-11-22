@@ -424,7 +424,7 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 		// expected vote
 		memoBytesExpected := append(event.MemoStd.Receiver.Bytes(), event.MemoStd.Payload...)
 		expectedVote := crosschaintypes.MsgVoteInbound{
-			Sender:             revertOptions.RevertAddress, // should be overridden by revert address
+			Sender:             event.FromAddress,
 			SenderChainId:      chain.ChainId,
 			TxOrigin:           event.FromAddress,
 			Receiver:           event.ToAddress,
@@ -438,7 +438,9 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 			},
 			CoinType:                coin.CoinType_Gas,
 			ProtocolContractVersion: crosschaintypes.ProtocolContractVersion_V1,
-			RevertOptions:           crosschaintypes.NewEmptyRevertOptions(), // ignored by V1
+			RevertOptions: crosschaintypes.RevertOptions{
+				RevertAddress: revertOptions.RevertAddress, // should be overridden by revert address
+			},
 		}
 
 		// create new inbound vote V1 with standard memo

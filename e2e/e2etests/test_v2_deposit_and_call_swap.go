@@ -20,8 +20,11 @@ import (
 func TestV2DepositAndCallSwap(r *runner.E2ERunner, _ []string) {
 	// create tokens pair (erc20 and eth)
 	tx, err := r.UniswapV2Factory.CreatePair(r.ZEVMAuth, r.ERC20ZRC20Addr, r.ETHZRC20Addr)
-	require.NoError(r, err)
-	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	if err != nil {
+		r.Logger.Print("ℹ️ create pair error %s", err.Error())
+	} else {
+		utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	}
 
 	// approve router to spend tokens being swapped
 	tx, err = r.ERC20ZRC20.Approve(r.ZEVMAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))

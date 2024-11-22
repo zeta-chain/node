@@ -1,11 +1,14 @@
 package types_test
 
 import (
+	"testing"
+
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"testing"
 )
 
 func TestRevertOptions_GetEVMRevertAddress(t *testing.T) {
@@ -41,6 +44,47 @@ func TestRevertOptions_GetEVMRevertAddress(t *testing.T) {
 		}.GetEVMRevertAddress()
 
 		require.False(t, valid)
+	})
+}
+
+func TestRevertOptions_GetBTCRevertAddress(t *testing.T) {
+	t.Run("valid Bitcoin revert address", func(t *testing.T) {
+		addr := sample.BtcAddressP2WPKH(t, &chaincfg.TestNet3Params)
+		actualAddr, valid := types.RevertOptions{
+			RevertAddress: addr,
+		}.GetBTCRevertAddress(chains.BitcoinTestnet.ChainId)
+
+		require.True(t, valid)
+		require.Equal(t, addr, actualAddr)
+	})
+
+	t.Run("invalid Bitcoin revert address", func(t *testing.T) {
+		actualAddr, valid := types.RevertOptions{
+			// it's a regnet address, not testnet
+			RevertAddress: "bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2",
+		}.GetBTCRevertAddress(chains.BitcoinTestnet.ChainId)
+
+		require.False(t, valid)
+		require.Empty(t, actualAddr)
+	})
+
+	t.Run("empty revert address", func(t *testing.T) {
+		actualAddr, valid := types.RevertOptions{
+			RevertAddress: "",
+		}.GetBTCRevertAddress(chains.BitcoinTestnet.ChainId)
+
+		require.False(t, valid)
+		require.Empty(t, actualAddr)
+	})
+
+	t.Run("unsupported Bitcoin revert address", func(t *testing.T) {
+		actualAddr, valid := types.RevertOptions{
+			// address not supported
+			RevertAddress: "035e4ae279bd416b5da724972c9061ec6298dac020d1e3ca3f06eae715135cdbec",
+		}.GetBTCRevertAddress(chains.BitcoinTestnet.ChainId)
+
+		require.False(t, valid)
+		require.Empty(t, actualAddr)
 	})
 }
 

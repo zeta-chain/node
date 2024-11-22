@@ -45,6 +45,7 @@ import (
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -99,6 +100,7 @@ type E2ERunner struct {
 	ObserverClient     observertypes.QueryClient
 	LightclientClient  lightclienttypes.QueryClient
 	DistributionClient distributiontypes.QueryClient
+	EmissionsClient    emissionstypes.QueryClient
 
 	// optional zeta (cosmos) client
 	// typically only in test runners that need it
@@ -210,6 +212,7 @@ func NewE2ERunner(
 		ObserverClient:     clients.Zetacore.Observer,
 		LightclientClient:  clients.Zetacore.Lightclient,
 		DistributionClient: clients.Zetacore.Distribution,
+		EmissionsClient:    clients.Zetacore.Emissions,
 
 		EVMAuth:      clients.EvmAuth,
 		ZEVMAuth:     clients.ZevmAuth,

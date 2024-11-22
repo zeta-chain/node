@@ -45,6 +45,10 @@ func TestBitcoinStdMemoDepositAndCallRevertOtherAddress(r *runner.E2ERunner, arg
 	// Now we want to make sure revert TX is completed.
 	cctx := utils.WaitCctxRevertedByInboundHash(r.Ctx, r, txHash.String(), r.CctxClient)
 
+	// Make sure inbound sender and revert address are correct
+	assert.Equal(r, cctx.InboundParams.Sender, r.BTCDeployerAddress.EncodeAddress())
+	assert.Equal(r, cctx.GetCurrentOutboundParam().Receiver, revertAddress)
+
 	// Check revert tx receiver address and amount
 	receiver, value := r.QueryOutboundReceiverAndAmount(cctx.OutboundParams[1].Hash)
 	assert.Equal(r, revertAddress, receiver)
