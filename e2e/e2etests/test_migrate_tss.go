@@ -20,7 +20,7 @@ import (
 )
 
 func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
-	r.SetupBtcAddress(r.Name, false)
+	r.SetupBtcAddress(false)
 	stop := r.MineBlocksIfLocalBitcoin()
 	defer stop()
 
