@@ -25,28 +25,29 @@ import (
 )
 
 const (
-	flagContractsDeployed = "deployed"
-	flagWaitForHeight     = "wait-for"
-	FlagConfigFile        = "config"
-	flagConfigOut         = "config-out"
-	flagVerbose           = "verbose"
-	flagTestAdmin         = "test-admin"
-	flagTestPerformance   = "test-performance"
-	flagTestCustom        = "test-custom"
-	flagTestSolana        = "test-solana"
-	flagTestTON           = "test-ton"
-	flagSkipRegular       = "skip-regular"
-	flagLight             = "light"
-	flagSetupOnly         = "setup-only"
-	flagSkipSetup         = "skip-setup"
-	flagTestTSSMigration  = "test-tss-migration"
-	flagSkipBitcoinSetup  = "skip-bitcoin-setup"
-	flagSkipHeaderProof   = "skip-header-proof"
-	flagTestV2            = "test-v2"
-	flagTestV2Migration   = "test-v2-migration"
-	flagSkipTrackerCheck  = "skip-tracker-check"
-	flagSkipPrecompiles   = "skip-precompiles"
-	flagUpgradeContracts  = "upgrade-contracts"
+	flagContractsDeployed       = "deployed"
+	flagWaitForHeight           = "wait-for"
+	FlagConfigFile              = "config"
+	flagConfigOut               = "config-out"
+	flagVerbose                 = "verbose"
+	flagTestAdmin               = "test-admin"
+	flagTestPerformance         = "test-performance"
+	flagTestCustom              = "test-custom"
+	flagTestSolana              = "test-solana"
+	flagTestTON                 = "test-ton"
+	flagSkipRegular             = "skip-regular"
+	flagLight                   = "light"
+	flagSetupOnly               = "setup-only"
+	flagSkipSetup               = "skip-setup"
+	flagTestTSSMigration        = "test-tss-migration"
+	flagSkipBitcoinSetup        = "skip-bitcoin-setup"
+	flagSkipHeaderProof         = "skip-header-proof"
+	flagTestV2                  = "test-v2"
+	flagTestV2Migration         = "test-v2-migration"
+	flagSkipTrackerCheck        = "skip-tracker-check"
+	flagSkipPrecompiles         = "skip-precompiles"
+	flagUpgradeContracts        = "upgrade-contracts"
+	flagSkipBitcoinDustWithdraw = "skip-bitcoin-dust-withdraw"
 )
 
 var (
@@ -86,6 +87,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSkipPrecompiles, false, "set to true to skip stateful precompiled contracts test")
 	cmd.Flags().
 		Bool(flagUpgradeContracts, false, "set to true to upgrade Gateways and ERC20Custody contracts during setup for ZEVM and EVM")
+	cmd.Flags().Bool(flagSkipBitcoinDustWithdraw, false, "set to true to skip tests that withdraw dust amount from Bitcoin")
 
 	return cmd
 }
@@ -95,27 +97,28 @@ func NewLocalCmd() *cobra.Command {
 func localE2ETest(cmd *cobra.Command, _ []string) {
 	// fetch flags
 	var (
-		waitForHeight     = must(cmd.Flags().GetInt64(flagWaitForHeight))
-		contractsDeployed = must(cmd.Flags().GetBool(flagContractsDeployed))
-		verbose           = must(cmd.Flags().GetBool(flagVerbose))
-		configOut         = must(cmd.Flags().GetString(flagConfigOut))
-		testAdmin         = must(cmd.Flags().GetBool(flagTestAdmin))
-		testPerformance   = must(cmd.Flags().GetBool(flagTestPerformance))
-		testCustom        = must(cmd.Flags().GetBool(flagTestCustom))
-		testSolana        = must(cmd.Flags().GetBool(flagTestSolana))
-		testTON           = must(cmd.Flags().GetBool(flagTestTON))
-		skipRegular       = must(cmd.Flags().GetBool(flagSkipRegular))
-		light             = must(cmd.Flags().GetBool(flagLight))
-		setupOnly         = must(cmd.Flags().GetBool(flagSetupOnly))
-		skipSetup         = must(cmd.Flags().GetBool(flagSkipSetup))
-		skipBitcoinSetup  = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
-		skipHeaderProof   = must(cmd.Flags().GetBool(flagSkipHeaderProof))
-		skipTrackerCheck  = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
-		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
-		testV2            = must(cmd.Flags().GetBool(flagTestV2))
-		testV2Migration   = must(cmd.Flags().GetBool(flagTestV2Migration))
-		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
-		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
+		waitForHeight           = must(cmd.Flags().GetInt64(flagWaitForHeight))
+		contractsDeployed       = must(cmd.Flags().GetBool(flagContractsDeployed))
+		verbose                 = must(cmd.Flags().GetBool(flagVerbose))
+		configOut               = must(cmd.Flags().GetString(flagConfigOut))
+		testAdmin               = must(cmd.Flags().GetBool(flagTestAdmin))
+		testPerformance         = must(cmd.Flags().GetBool(flagTestPerformance))
+		testCustom              = must(cmd.Flags().GetBool(flagTestCustom))
+		testSolana              = must(cmd.Flags().GetBool(flagTestSolana))
+		testTON                 = must(cmd.Flags().GetBool(flagTestTON))
+		skipRegular             = must(cmd.Flags().GetBool(flagSkipRegular))
+		light                   = must(cmd.Flags().GetBool(flagLight))
+		setupOnly               = must(cmd.Flags().GetBool(flagSetupOnly))
+		skipSetup               = must(cmd.Flags().GetBool(flagSkipSetup))
+		skipBitcoinSetup        = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
+		skipHeaderProof         = must(cmd.Flags().GetBool(flagSkipHeaderProof))
+		skipTrackerCheck        = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
+		testTSSMigration        = must(cmd.Flags().GetBool(flagTestTSSMigration))
+		testV2                  = must(cmd.Flags().GetBool(flagTestV2))
+		testV2Migration         = must(cmd.Flags().GetBool(flagTestV2Migration))
+		skipPrecompiles         = must(cmd.Flags().GetBool(flagSkipPrecompiles))
+		upgradeContracts        = must(cmd.Flags().GetBool(flagUpgradeContracts))
+		skipBitcoinDustWithdraw = must(cmd.Flags().GetBool(flagSkipBitcoinDustWithdraw))
 	)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
@@ -323,13 +326,15 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinDepositName,
 			e2etests.TestBitcoinDepositAndCallName,
 			e2etests.TestBitcoinDepositAndCallRevertName,
-			e2etests.TestBitcoinDepositAndCallRevertWithDustName,
 			e2etests.TestBitcoinStdMemoDepositName,
 			e2etests.TestBitcoinStdMemoDepositAndCallName,
 			e2etests.TestBitcoinStdMemoDepositAndCallRevertName,
 			e2etests.TestBitcoinStdMemoDepositAndCallRevertOtherAddressName,
 			e2etests.TestBitcoinStdMemoInscribedDepositAndCallName,
 			e2etests.TestCrosschainSwapName,
+		}
+		if !skipBitcoinDustWithdraw {
+			bitcoinDepositTests = append(bitcoinDepositTests, e2etests.TestBitcoinDepositAndCallRevertWithDustName)
 		}
 		bitcoinWithdrawTests := []string{
 			e2etests.TestBitcoinWithdrawSegWitName,
