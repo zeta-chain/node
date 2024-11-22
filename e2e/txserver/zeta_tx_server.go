@@ -461,7 +461,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 			"BTC",
 			"tBTC",
 			coin.CoinType_Gas,
-			100000,
+			100,
 		),
 		fungibletypes.NewMsgDeployFungibleCoinZRC20(
 			deployerAddr,
@@ -471,7 +471,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 			"BTC",
 			"tBTC",
 			coin.CoinType_Gas,
-			100000,
+			100,
 		),
 		fungibletypes.NewMsgDeployFungibleCoinZRC20(
 			deployerAddr,
