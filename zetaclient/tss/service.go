@@ -208,7 +208,11 @@ func (s *Service) SignBatch(
 	case len(res.Signatures) == 0:
 		return nil, fmt.Errorf("keysign fail: signature list is empty")
 	case len(res.Signatures) != len(digests):
-		return nil, fmt.Errorf("keysign fail: signature list length mismatch")
+		return nil, fmt.Errorf(
+			"keysign fail: signatures length mismatch (got %d, want %d)",
+			len(res.Signatures),
+			len(digests),
+		)
 	}
 
 	sigs, err := verifySignatures(digests, res, s.PubKey())

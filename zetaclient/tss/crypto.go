@@ -132,7 +132,7 @@ func VerifySignature(sig keysign.Signature, pk PubKey, hash []byte) ([65]byte, e
 	case err != nil:
 		return [65]byte{}, errors.Wrap(err, "unable to decode message hash")
 	case !bytes.Equal(hash, actualMsgHash):
-		return [65]byte{}, errors.New("message hash mismatch")
+		return [65]byte{}, errors.Errorf("message hash mismatch (got 0x%x, want 0x%x)", actualMsgHash, hash)
 	}
 
 	sigBytes, err := SignatureToBytes(sig)
@@ -146,7 +146,11 @@ func VerifySignature(sig keysign.Signature, pk PubKey, hash []byte) ([65]byte, e
 	case err != nil:
 		return [65]byte{}, errors.Wrap(err, "unable to recover public key from signature")
 	case crypto.PubkeyToAddress(*actualPubKey) != pk.AddressEVM():
-		return [65]byte{}, errors.New("public key mismatch")
+		return [65]byte{}, errors.Errorf(
+			"public key mismatch (got %s, want %s)",
+			crypto.PubkeyToAddress(*actualPubKey),
+			pk.AddressEVM(),
+		)
 	}
 
 	return sigBytes, nil
@@ -176,7 +180,7 @@ func verifySignatures(digests [][]byte, res keysign.Response, pk PubKey) ([][65]
 	case len(digests) == 0:
 		return nil, errors.New("empty digests list")
 	case len(digests) != len(res.Signatures):
-		return nil, errors.New("length mismatch")
+		return nil, errors.Errorf("length mismatch (got %d, want %d)", len(res.Signatures), len(digests))
 	case len(digests) == 1:
 		// most common case
 		sig, err := VerifySignature(res.Signatures[0], pk, digests[0])
