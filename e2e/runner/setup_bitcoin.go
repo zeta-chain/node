@@ -2,11 +2,11 @@ package runner
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"time"
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcutil"
-	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/stretchr/testify/require"
 )
 
@@ -35,7 +35,7 @@ func (r *E2ERunner) SetupBitcoinAccounts(createWallet bool) {
 	}()
 
 	// setup deployer address
-	r.SetupBtcAddress(r.Name, createWallet)
+	r.SetupBtcAddress(createWallet)
 
 	// import the TSS address to index TSS utxos and transactions
 	err := r.BtcRPCClient.ImportAddress(r.BTCTSSAddress.EncodeAddress())
@@ -70,21 +70,40 @@ func (r *E2ERunner) GetBtcAddress() (*btcutil.AddressWitnessPubKeyHash, *btcutil
 }
 
 // SetupBtcAddress setups the deployer Bitcoin address
-func (r *E2ERunner) SetupBtcAddress(name string, setupWallet bool) {
+func (r *E2ERunner) SetupBtcAddress(createWallet bool) {
 	// set the deployer address
 	address, privkeyWIF := r.GetBtcAddress()
 	r.BTCDeployerAddress = address
 
-	r.Logger.Info("BTCDeployerAddress: %s, %v", r.BTCDeployerAddress.EncodeAddress(), setupWallet)
+	r.Logger.Info("BTCDeployerAddress: %s, %v", r.BTCDeployerAddress.EncodeAddress(), createWallet)
 
 	// import the deployer private key as a Bitcoin node wallet
-	if setupWallet {
-		_, err := r.BtcRPCClient.CreateWallet(r.Name, rpcclient.WithCreateWalletBlank())
+	if createWallet {
+		// we must use a raw request as the rpcclient does not expose the
+		// descriptors arg which must be set to false
+		// https://github.com/btcsuite/btcd/issues/2179
+		// https://developer.bitcoin.org/reference/rpc/createwallet.html
+		args := []interface{}{
+			r.Name, // wallet_name
+			false,  // disable_private_keys
+			true,   // blank
+			"",     // passphrase
+			false,  // avoid_reuse
+			false,  // descriptors
+			true,   // load_on_startup
+		}
+		argsRawMsg := []json.RawMessage{}
+		for _, arg := range args {
+			encodedArg, err := json.Marshal(arg)
+			require.NoError(r, err)
+			argsRawMsg = append(argsRawMsg, encodedArg)
+		}
+		_, err := r.BtcRPCClient.RawRequest("createwallet", argsRawMsg)
 		if err != nil {
 			require.ErrorContains(r, err, "Database already exists")
 		}
 
-		err = r.BtcRPCClient.ImportPrivKeyRescan(privkeyWIF, name, true)
+		err = r.BtcRPCClient.ImportPrivKeyRescan(privkeyWIF, r.Name, true)
 		require.NoError(r, err, "failed to execute ImportPrivKeyRescan")
 	}
 }
