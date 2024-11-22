@@ -134,6 +134,9 @@ fund_eth_from_config '.additional_accounts.user_v2_ether_revert.evm_address' 100
 # unlock v2 erc20 revert tests accounts
 fund_eth_from_config '.additional_accounts.user_v2_erc20_revert.evm_address' 10000 "V2 ERC20 revert tester"
 
+# unlock emissions withdraw tests accounts
+fund_eth_from_config '.additional_accounts.user_emissions_withdraw.evm_address' 10000 "emissions withdraw tester"
+
 # unlock local solana relayer accounts
 if host solana > /dev/null; then
   solana_url=$(config_str '.rpcs.solana')
@@ -222,7 +225,8 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
     echo "running E2E command to setup the networks and populate the state..."
 
     # Use light flag to ensure tests can complete before the upgrade height
-    zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path"  --light --skip-precompiles ${COMMON_ARGS}
+    # skip-bitcoin-dust-withdraw flag can be removed after v23 is released
+    zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --light --skip-precompiles ${COMMON_ARGS}
     if [ $? -ne 0 ]; then
       echo "first e2e failed"
       exit 1
