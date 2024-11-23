@@ -7,10 +7,13 @@ import (
 	"sync"
 	"time"
 
+	libp2p_network "github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/p2p/protocol/ping"
+	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
+	"github.com/samber/lo"
 	"gitlab.com/thorchain/tss/go-tss/tss"
 
 	"github.com/zeta-chain/node/pkg/bg"
@@ -89,16 +92,28 @@ func HealthcheckWorker(ctx context.Context, server *tss.TssServer, p Healthcheck
 		return nil
 	}
 
-	peersCounter := func(_ context.Context, _ *ticker.Ticker) error {
+	knownPeersCounter := func(_ context.Context, _ *ticker.Ticker) error {
 		peers := server.GetKnownPeers()
-		p.NumConnectedPeersMetric.Set(float64(len(peers)))
-		p.Telemetry.SetConnectedPeers(peers)
+		p.Telemetry.SetKnownPeers(peers)
+		return nil
+	}
 
+	connectedPeersCounter := func(_ context.Context, _ *ticker.Ticker) error {
+		p2pHost := server.GetP2PHost()
+		connectedPeers := lo.Map(p2pHost.Network().Conns(), func(conn libp2p_network.Conn, _ int) peer.AddrInfo {
+			return peer.AddrInfo{
+				ID:    conn.RemotePeer(),
+				Addrs: []maddr.Multiaddr{conn.RemoteMultiaddr()},
+			}
+		})
+		p.Telemetry.SetConnectedPeers(connectedPeers)
+		p.NumConnectedPeersMetric.Set(float64(len(connectedPeers)))
 		return nil
 	}
 
 	runBackgroundTicker(ctx, pinger, p.Interval, "TSSHealthcheckPeersPing", logger)
-	runBackgroundTicker(ctx, peersCounter, p.Interval, "TSSHealthcheckPeersCounter", logger)
+	runBackgroundTicker(ctx, knownPeersCounter, p.Interval, "TSSHealthcheckKnownPeersCounter", logger)
+	runBackgroundTicker(ctx, connectedPeersCounter, p.Interval, "TSSHealthcheckConnectedPeersCounter", logger)
 
 	return nil
 }
