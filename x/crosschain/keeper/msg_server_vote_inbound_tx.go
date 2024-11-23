@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -102,11 +101,11 @@ func (k msgServer) VoteInbound(
 
 	cctx, err := k.ValidateInbound(ctx, msg, true)
 	if err != nil {
-		fmt.Println("Error validating inbound", err)
 		return nil, sdkerrors.Wrap(err, voteInboundID)
 	}
 	// Save the inbound CCTX to the store. This is called irrespective of the status of the CCTX or the outcome of the process function.
 	k.SaveObservedInboundInformation(ctx, cctx, msg.EventIndex)
+
 	return &types.MsgVoteInboundResponse{}, nil
 }
 

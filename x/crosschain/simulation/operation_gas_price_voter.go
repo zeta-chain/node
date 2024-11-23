@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -8,13 +9,13 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// SimulateMsgAddInboundTracker generates a MsgAddInboundTracker with random values
-func SimulateMsgAddInboundTracker(k keeper.Keeper) simtypes.Operation {
+// SimulateMsgVoteGasPrice generates a MsgVoteGasPrice and delivers it
+func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		// Get a random account and observer
@@ -30,28 +31,31 @@ func SimulateMsgAddInboundTracker(k keeper.Keeper) simtypes.Operation {
 		if len(supportedChains) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgAddInboundTracker,
+				authz.GasPriceVoter.String(),
 				"no supported chains found",
 			), nil, nil
 		}
 		randomChainID := GetRandomChainID(r, supportedChains)
-		txHash := sample.HashFromRand(r)
-		coinType := sample.CoinTypeFromRand(r)
 
-		// Add a new inbound Tracker
-		msg := types.MsgAddInboundTracker{
-			Creator:   randomObserver,
-			ChainId:   randomChainID,
-			TxHash:    txHash.String(),
-			CoinType:  coinType,
-			Proof:     nil,
-			BlockHash: "",
-			TxIndex:   0,
+		// Vote for random gas price. Gas prices do not use a ballot system, so we can vote directly without having to schedule future operations.
+		// The random nature of the price might create weird gas prices for the chain, but it is fine for now. We can remove the randomness if needed
+		msg := types.MsgVoteGasPrice{
+			Creator:     randomObserver,
+			ChainId:     randomChainID,
+			Price:       r.Uint64(),
+			PriorityFee: r.Uint64(),
+			BlockNumber: r.Uint64(),
+			Supply:      fmt.Sprintf("%d", r.Int63()),
+		}
+
+		// System contracts are deployed on the first block, so we cannot vote on gas prices before that
+		if ctx.BlockHeight() <= 1 {
+			return simtypes.NewOperationMsg(&msg, true, "block height less than 1", nil), nil, nil
 		}
 
 		err = msg.ValidateBasic()
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate MsgAddInboundTracker"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate vote gas price  msg"), nil, err
 		}
 
 		txCtx := simulation.OperationInput{
