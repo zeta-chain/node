@@ -36,7 +36,7 @@ func (ob *Observer) ProcessInboundTrackerV2(
 		eventDeposit, err := gateway.ParseDeposited(*log)
 		if err == nil {
 			// check if the event is processable
-			if !ob.IsEventProcessable(
+			if !ob.isEventProcessable(
 				eventDeposit.Sender,
 				eventDeposit.Receiver,
 				eventDeposit.Raw.TxHash,
@@ -53,7 +53,7 @@ func (ob *Observer) ProcessInboundTrackerV2(
 		eventDepositAndCall, err := gateway.ParseDepositedAndCalled(*log)
 		if err == nil {
 			// check if the event is processable
-			if !ob.IsEventProcessable(
+			if !ob.isEventProcessable(
 				eventDepositAndCall.Sender,
 				eventDepositAndCall.Receiver,
 				eventDepositAndCall.Raw.TxHash,
@@ -70,7 +70,7 @@ func (ob *Observer) ProcessInboundTrackerV2(
 		eventCall, err := gateway.ParseCalled(*log)
 		if err == nil {
 			// check if the event is processable
-			if !ob.IsEventProcessable(
+			if !ob.isEventProcessable(
 				eventCall.Sender,
 				eventCall.Receiver,
 				eventCall.Raw.TxHash,

@@ -30,6 +30,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 )
@@ -355,12 +356,13 @@ func (signer *Signer) TryProcessOutbound(
 
 	// prepare logger
 	params := cctx.GetCurrentOutboundParam()
-	logger := signer.Logger().Std.With().
-		Str("method", "TryProcessOutbound").
-		Int64("chain", signer.Chain().ChainId).
-		Uint64("nonce", params.TssNonce).
-		Str("cctx", cctx.Index).
-		Logger()
+	// prepare logger fields
+	lf := map[string]any{
+		logs.FieldMethod: "TryProcessOutbound",
+		logs.FieldCctx:   cctx.Index,
+		logs.FieldNonce:  params.TssNonce,
+	}
+	logger := signer.Logger().Std.With().Fields(lf).Logger()
 
 	// support gas token only for Bitcoin outbound
 	coinType := cctx.InboundParams.CoinType
@@ -431,7 +433,7 @@ func (signer *Signer) TryProcessOutbound(
 	if cancelTx {
 		amount = 0.0
 	} else {
-		logger.Info().Msgf("SignGasWithdraw: to %s, value %d sats", to.EncodeAddress(), params.Amount.Uint64())
+		logger.Info().Msgf("withdraw BTC to %s, value %d sats", to.EncodeAddress(), params.Amount.Uint64())
 	}
 
 	// sign withdraw tx
@@ -448,25 +450,21 @@ func (signer *Signer) TryProcessOutbound(
 		cancelTx,
 	)
 	if err != nil {
-		logger.Warn().
-			Err(err).
-			Msgf("SignWithdrawTx error: nonce %d chain %d", outboundTssNonce, params.ReceiverChainId)
+		logger.Warn().Err(err).Msg("SignWithdrawTx failed")
 		return
 	}
-	logger.Info().
-		Msgf("Key-sign success: %d => %s, nonce %d", cctx.InboundParams.SenderChainId, chain.Name, outboundTssNonce)
+	logger.Info().Msg("Key-sign success")
 
 	// FIXME: add prometheus metrics
 	_, err = zetacoreClient.GetObserverList(ctx)
 	if err != nil {
 		logger.Warn().
 			Err(err).
-			Msgf("unable to get observer list: chain %d observation %s", outboundTssNonce, observertypes.ObservationType_OutboundTx.String())
+			Msgf("unable to get observer list, observation %s", observertypes.ObservationType_OutboundTx.String())
 	}
 	if tx != nil {
 		outboundHash := tx.TxHash().String()
-		logger.Info().
-			Msgf("on chain %s nonce %d, outboundHash %s signer %s", chain.Name, outboundTssNonce, outboundHash, signerAddress)
+		logger.Info().Msgf("signed outboundHash %s signer %s", outboundHash, signerAddress)
 
 		// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s) in case of RPC error
 		backOff := broadcastBackoff
@@ -474,14 +472,11 @@ func (signer *Signer) TryProcessOutbound(
 			time.Sleep(backOff)
 			err := signer.Broadcast(tx)
 			if err != nil {
-				logger.Warn().
-					Err(err).
-					Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outboundHash, chain.Name, outboundTssNonce, i)
+				logger.Warn().Err(err).Msgf("broadcasting tx %s to chain %s, retry %d", outboundHash, chain.Name, i)
 				backOff *= 2
 				continue
 			}
-			logger.Info().
-				Msgf("Broadcast success: nonce %d to chain %s outboundHash %s", outboundTssNonce, chain.String(), outboundHash)
+			logger.Info().Msgf("Broadcast success: chain %s outboundHash %s", chain.String(), outboundHash)
 			zetaHash, err := zetacoreClient.PostOutboundTracker(
 				ctx,
 				chain.ChainId,
@@ -490,7 +485,7 @@ func (signer *Signer) TryProcessOutbound(
 			)
 			if err != nil {
 				logger.Err(err).
-					Msgf("Unable to add to tracker on zetacore: nonce %d chain %s outboundHash %s", outboundTssNonce, chain.Name, outboundHash)
+					Msgf("Unable to add to tracker on zetacore: chain %s outboundHash %s", chain.Name, outboundHash)
 			}
 			logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
 

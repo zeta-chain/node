@@ -18,8 +18,11 @@ import (
 type InboundCategory int
 
 const (
+	// InboundCategoryUnknown represents an unknown inbound
+	InboundCategoryUnknown InboundCategory = iota
+
 	// InboundCategoryGood represents a processable inbound
-	InboundCategoryGood InboundCategory = iota
+	InboundCategoryGood
 
 	// InboundCategoryDonation represents a donation inbound
 	InboundCategoryDonation

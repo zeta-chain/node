@@ -23,8 +23,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// IsEventProcessable checks if the event is processable
-func (ob *Observer) IsEventProcessable(
+// isEventProcessable checks if the event is processable
+func (ob *Observer) isEventProcessable(
 	sender, receiver ethcommon.Address,
 	txHash ethcommon.Hash,
 	payload []byte,
@@ -99,7 +99,7 @@ func (ob *Observer) ObserveGatewayDeposit(ctx context.Context, startBlock, toBlo
 		}
 
 		// check if the event is processable
-		if !ob.IsEventProcessable(event.Sender, event.Receiver, event.Raw.TxHash, event.Payload) {
+		if !ob.isEventProcessable(event.Sender, event.Receiver, event.Raw.TxHash, event.Payload) {
 			continue
 		}
 
@@ -247,7 +247,7 @@ func (ob *Observer) ObserveGatewayCall(ctx context.Context, startBlock, toBlock 
 		}
 
 		// check if the event is processable
-		if !ob.IsEventProcessable(event.Sender, event.Receiver, event.Raw.TxHash, event.Payload) {
+		if !ob.isEventProcessable(event.Sender, event.Receiver, event.Raw.TxHash, event.Payload) {
 			continue
 		}
 
@@ -378,7 +378,7 @@ func (ob *Observer) ObserveGatewayDepositAndCall(ctx context.Context, startBlock
 		}
 
 		// check if the event is processable
-		if !ob.IsEventProcessable(event.Sender, event.Receiver, event.Raw.TxHash, event.Payload) {
+		if !ob.isEventProcessable(event.Sender, event.Receiver, event.Raw.TxHash, event.Payload) {
 			continue
 		}
 
