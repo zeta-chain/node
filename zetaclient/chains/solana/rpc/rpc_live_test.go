@@ -35,23 +35,16 @@ func LiveTest_GetTransactionWithVersion(t *testing.T) {
 
 	t.Run("should get the transaction if the version is supported", func(t *testing.T) {
 		ctx := context.Background()
-		txResult, skip, err := rpc.GetTransactionWithMaxVersion(
-			ctx,
-			client,
-			txSig,
-			&solanarpc.MaxSupportedTransactionVersion0,
-		)
+		txResult, err := rpc.GetTransaction(ctx, client, txSig)
 		require.NoError(t, err)
 		require.NotNil(t, txResult)
-		require.False(t, skip)
 	})
 
 	t.Run("should skip the transaction if the version is not supported", func(t *testing.T) {
 		ctx := context.Background()
-		txResult, skip, err := rpc.GetTransactionWithMaxVersion(ctx, client, txSig, nil)
-		require.NoError(t, err)
+		txResult, err := rpc.GetTransaction(ctx, client, txSig)
+		require.ErrorIs(t, err, rpc.ErrUnsupportedTxVersion)
 		require.Nil(t, txResult)
-		require.True(t, skip)
 	})
 }
 

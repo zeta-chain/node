@@ -20,10 +20,12 @@ const (
 	// The 'HEALTH_CHECK_SLOT_DISTANCE' is default to 150 slots, which is 150 * 0.4s = 60s
 	RPCAlertLatency = time.Duration(60) * time.Second
 
-	// ErrorCodeUnsupportedTransactionVersion
 	// see: https://github.com/solana-labs/solana/blob/master/rpc/src/rpc.rs#L7276
-	ErrorCodeUnsupportedTransactionVersion = "-32015"
+	errorCodeUnsupportedTransactionVersion = "-32015"
 )
+
+// ErrUnsupportedTxVersion is returned when the transaction version is not supported by zetaclient
+var ErrUnsupportedTxVersion = errors.New("unsupported tx version")
 
 // GetFirstSignatureForAddress searches the first signature for the given address.
 // Note: make sure that the rpc provider used has enough transaction history.
@@ -127,23 +129,25 @@ func GetSignaturesForAddressUntil(
 	return allSignatures, nil
 }
 
-// GetTransactionWithMaxVersion fetches a transaction with the given signature and max version.
-func GetTransactionWithMaxVersion(
+// GetTransaction fetches a transaction with the given signature.
+// Note that it might return ErrUnsupportedTxVersion (for tx that we don't support yet).
+func GetTransaction(
 	ctx context.Context,
 	client interfaces.SolanaRPCClient,
-	signature solana.Signature,
-	maxTxVersion *uint64,
-) (*rpc.GetTransactionResult, bool, error) {
-	txResult, err := client.GetTransaction(ctx, signature, &rpc.GetTransactionOpts{
-		MaxSupportedTransactionVersion: maxTxVersion,
+	sig solana.Signature,
+) (*rpc.GetTransactionResult, error) {
+	txResult, err := client.GetTransaction(ctx, sig, &rpc.GetTransactionOpts{
+		MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion0,
 	})
 
-	// skip unsupported transaction version error
-	if err != nil && strings.Contains(err.Error(), ErrorCodeUnsupportedTransactionVersion) {
-		return nil, true, nil
+	switch {
+	case err != nil && strings.Contains(err.Error(), errorCodeUnsupportedTransactionVersion):
+		return nil, ErrUnsupportedTxVersion
+	case err != nil:
+		return nil, err
+	default:
+		return txResult, nil
 	}
-
-	return txResult, false, err
 }
 
 // CheckRPCStatus checks the RPC status of the solana chain
