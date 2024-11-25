@@ -26,7 +26,7 @@ require (
 	github.com/emicklei/proto v1.11.1
 	github.com/ethereum/go-ethereum v1.13.15
 	github.com/fatih/color v1.14.1
-	github.com/gagliardetto/solana-go v1.10.0
+	github.com/gagliardetto/solana-go v1.12.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
 	github.com/gorilla/mux v1.8.0
@@ -282,7 +282,7 @@ require (
 	github.com/zondax/hid v0.9.2 // indirect
 	github.com/zondax/ledger-go v0.14.3 // indirect
 	go.etcd.io/bbolt v1.4.0-alpha.0.0.20240404170359-43604f3112c5 // indirect
-	go.mongodb.org/mongo-driver v1.11.0 // indirect
+	go.mongodb.org/mongo-driver v1.12.2 // indirect
 	go.nhat.io/matcher/v2 v2.0.0 // indirect
 	go.nhat.io/wait v0.1.0 // indirect
 	go.opencensus.io v0.24.0 // indirect

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/gagliardetto/solana-go"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -23,7 +24,7 @@ func (rk RelayerKey) ResolveAddress(network chains.Network) (string, string, err
 
 	switch network {
 	case chains.Network_solana:
-		privKey, err := crypto.SolanaPrivateKeyFromString(rk.PrivateKey)
+		privKey, err := solana.PrivateKeyFromBase58(rk.PrivateKey)
 		if err != nil {
 			return "", "", errors.Wrap(err, "unable to construct solana private key")
 		}
@@ -128,7 +129,7 @@ func ReadRelayerKeyFromFile(fileName string) (*RelayerKey, error) {
 func IsRelayerPrivateKeyValid(privateKey string, network chains.Network) bool {
 	switch network {
 	case chains.Network_solana:
-		_, err := crypto.SolanaPrivateKeyFromString(privateKey)
+		_, err := solana.PrivateKeyFromBase58(privateKey)
 		if err != nil {
 			return false
 		}
