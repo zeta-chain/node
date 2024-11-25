@@ -7,6 +7,7 @@ import (
 
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/config"
+	zetatss "github.com/zeta-chain/node/zetaclient/tss"
 )
 
 // initializeConfigOptions is a set of CLI options for `init` command.
@@ -73,7 +74,7 @@ func InitializeConfig(_ *cobra.Command, _ []string) error {
 	// Validate Peer
 	// e.g. /ip4/172.0.2.1/tcp/6668/p2p/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp
 	if opts.peer != "" {
-		if err := validatePeer(opts.peer); err != nil {
+		if _, err := zetatss.MultiAddressFromString(opts.peer); err != nil {
 			return errors.Wrap(err, "invalid peer address")
 		}
 	}

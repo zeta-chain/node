@@ -187,7 +187,7 @@ func (s *Signer) SignMessage(ctx context.Context, msg Signable, zetaHeight, nonc
 	chainID := s.Chain().ChainId
 
 	// sig = [65]byte {R, S, V (recovery ID)}
-	sig, err := s.TSS().Sign(ctx, hash[:], zetaHeight, nonce, chainID, "")
+	sig, err := s.TSS().Sign(ctx, hash[:], zetaHeight, nonce, chainID)
 	if err != nil {
 		return errors.Wrap(err, "unable to sign the message")
 	}

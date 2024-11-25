@@ -36,12 +36,12 @@ var (
 )
 
 // getNewEvmSigner creates a new EVM chain signer for testing
-func getNewEvmSigner(tss interfaces.TSSSigner) (*Signer, error) {
+func getNewEvmSigner(t *testing.T, tss interfaces.TSSSigner) (*Signer, error) {
 	ctx := context.Background()
 
 	// use default mock TSS if not provided
 	if tss == nil {
-		tss = mocks.NewTSSMainnet()
+		tss = mocks.NewTSS(t)
 	}
 
 	connectorAddress := ConnectorAddress
@@ -67,7 +67,7 @@ func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.O
 
 	// use default mock TSS if not provided
 	if tss == nil {
-		tss = mocks.NewTSSMainnet()
+		tss = mocks.NewTSS(t)
 	}
 
 	// prepare mock arguments to create observer
@@ -136,7 +136,7 @@ func verifyTxBodyBasics(
 }
 
 func TestSigner_SetGetConnectorAddress(t *testing.T) {
-	evmSigner, err := getNewEvmSigner(nil)
+	evmSigner, err := getNewEvmSigner(t, nil)
 	require.NoError(t, err)
 	// Get and compare
 	require.Equal(t, ConnectorAddress, evmSigner.GetZetaConnectorAddress())
@@ -148,7 +148,7 @@ func TestSigner_SetGetConnectorAddress(t *testing.T) {
 }
 
 func TestSigner_SetGetERC20CustodyAddress(t *testing.T) {
-	evmSigner, err := getNewEvmSigner(nil)
+	evmSigner, err := getNewEvmSigner(t, nil)
 	require.NoError(t, err)
 	// Get and compare
 	require.Equal(t, ERC20CustodyAddress, evmSigner.GetERC20CustodyAddress())
@@ -163,7 +163,7 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	evmSigner, err := getNewEvmSigner(nil)
+	evmSigner, err := getNewEvmSigner(t, nil)
 	require.NoError(t, err)
 	cctx := getCCTX(t)
 	processor := getNewOutboundProcessor()
@@ -192,7 +192,7 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	evmSigner, err := getNewEvmSigner(nil)
+	evmSigner, err := getNewEvmSigner(t, nil)
 	require.NoError(t, err)
 
 	// Setup txData struct
@@ -251,13 +251,11 @@ func makeCtx(t *testing.T) context.Context {
 	bscParams := mocks.MockChainParams(chains.BscMainnet.ChainId, 10)
 
 	err := app.Update(
-		observertypes.Keygen{},
 		[]chains.Chain{chains.BscMainnet, chains.ZetaChainMainnet},
 		nil,
 		map[int64]*observertypes.ChainParams{
 			chains.BscMainnet.ChainId: &bscParams,
 		},
-		"tssPubKey",
 		observertypes.CrosschainFlags{},
 	)
 	require.NoError(t, err, "unable to update app context")

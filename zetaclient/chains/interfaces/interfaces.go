@@ -26,6 +26,7 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
+	"github.com/zeta-chain/node/zetaclient/tss"
 )
 
 type Order string
@@ -110,6 +111,12 @@ type ZetacoreClient interface {
 	GetKeyGen(ctx context.Context) (observertypes.Keygen, error)
 	GetTSS(ctx context.Context) (observertypes.TSS, error)
 	GetTSSHistory(ctx context.Context) ([]observertypes.TSS, error)
+	PostVoteTSS(
+		ctx context.Context,
+		tssPubKey string,
+		keyGenZetaHeight int64,
+		status chains.ReceiveStatus,
+	) (string, error)
 
 	GetBlockHeight(ctx context.Context) (int64, error)
 
@@ -226,26 +233,7 @@ type EVMJSONRPCClient interface {
 
 // TSSSigner is the interface for TSS signer
 type TSSSigner interface {
-	Pubkey() []byte
-
-	// Sign signs the data
-	// Note: it specifies optionalPubkey to use a different pubkey than the current pubkey set during keygen
-	// TODO: check if optionalPubkey is needed
-	// https://github.com/zeta-chain/node/issues/2085
-	Sign(
-		ctx context.Context,
-		data []byte,
-		height uint64,
-		nonce uint64,
-		chainID int64,
-		optionalPubkey string,
-	) ([65]byte, error)
-
-	// SignBatch signs the data in batch
-	SignBatch(ctx context.Context, digests [][]byte, height uint64, nonce uint64, chainID int64) ([][65]byte, error)
-
-	EVMAddress() ethcommon.Address
-	EVMAddressList() []ethcommon.Address
-	BTCAddress(chainID int64) (*btcutil.AddressWitnessPubKeyHash, error)
-	PubKeyCompressedBytes() []byte
+	PubKey() tss.PubKey
+	Sign(ctx context.Context, data []byte, height, nonce uint64, chainID int64) ([65]byte, error)
+	SignBatch(ctx context.Context, digests [][]byte, height, nonce uint64, chainID int64) ([][65]byte, error)
 }

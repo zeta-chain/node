@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Unreleased
+
+## Refactor
+* [3170](https://github.com/zeta-chain/node/pull/3170) - revamp TSS package in zetaclient
+
 ## v23.0.0
 
 ### Features

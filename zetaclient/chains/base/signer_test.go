@@ -12,10 +12,10 @@ import (
 )
 
 // createSigner creates a new signer for testing
-func createSigner(_ *testing.T) *base.Signer {
+func createSigner(t *testing.T) *base.Signer {
 	// constructor parameters
 	chain := chains.Ethereum
-	tss := mocks.NewTSSMainnet()
+	tss := mocks.NewTSS(t)
 	logger := base.DefaultLogger()
 
 	// create signer
@@ -40,7 +40,7 @@ func TestSignerGetterAndSetter(t *testing.T) {
 		signer := createSigner(t)
 
 		// update tss
-		newTSS := mocks.NewTSSAthens3()
+		newTSS := mocks.NewTSS(t)
 		signer = signer.WithTSS(newTSS)
 		require.Equal(t, newTSS, signer.TSS())
 	})

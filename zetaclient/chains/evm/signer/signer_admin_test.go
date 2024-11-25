@@ -7,7 +7,6 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
@@ -17,8 +16,8 @@ func TestSigner_SignAdminTx(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	tss := mocks.NewDerivedTSS(chains.BitcoinMainnet)
-	evmSigner, err := getNewEvmSigner(tss)
+	tss := mocks.NewTSS(t)
+	evmSigner, err := getNewEvmSigner(t, tss)
 	require.NoError(t, err)
 
 	// Setup txData struct
@@ -38,7 +37,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify tx signature
-		verifyTxSender(t, tx, tss.EVMAddress(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		// Note: Revert tx calls erc20 custody contract with 0 gas token
@@ -58,7 +57,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify tx signature
-		verifyTxSender(t, tx, tss.EVMAddress(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		// Note: Revert tx calls erc20 custody contract with 0 gas token
@@ -73,7 +72,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify tx signature
-		verifyTxSender(t, tx, tss.EVMAddress(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		// Note: Revert tx calls erc20 custody contract with 0 gas token
@@ -87,7 +86,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify tx signature
-		verifyTxSender(t, tx, tss.EVMAddress(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, txData.amount)
@@ -98,8 +97,8 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	tss := mocks.NewDerivedTSS(chains.BitcoinMainnet)
-	evmSigner, err := getNewEvmSigner(tss)
+	tss := mocks.NewTSS(t)
+	evmSigner, err := getNewEvmSigner(t, tss)
 	require.NoError(t, err)
 
 	// Setup txData struct
@@ -119,7 +118,7 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 		require.NotNil(t, tx)
 
 		// Verify tx signature
-		verifyTxSender(t, tx, tss.EVMAddress(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, zeroValue)
@@ -146,8 +145,8 @@ func TestSigner_SignMigrateERC20CustodyFundsCmd(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	tss := mocks.NewDerivedTSS(chains.BitcoinMainnet)
-	evmSigner, err := getNewEvmSigner(tss)
+	tss := mocks.NewTSS(t)
+	evmSigner, err := getNewEvmSigner(t, tss)
 	require.NoError(t, err)
 
 	// Setup txData struct
@@ -175,7 +174,7 @@ func TestSigner_SignMigrateERC20CustodyFundsCmd(t *testing.T) {
 		require.NotNil(t, tx)
 
 		// Verify tx signature
-		verifyTxSender(t, tx, tss.EVMAddress(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, zeroValue)
@@ -211,8 +210,8 @@ func TestSigner_SignUpdateERC20CustodyPauseStatusCmd(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	tss := mocks.NewDerivedTSS(chains.BitcoinMainnet)
-	evmSigner, err := getNewEvmSigner(tss)
+	tss := mocks.NewTSS(t)
+	evmSigner, err := getNewEvmSigner(t, tss)
 	require.NoError(t, err)
 
 	// Setup txData struct
@@ -234,7 +233,7 @@ func TestSigner_SignUpdateERC20CustodyPauseStatusCmd(t *testing.T) {
 		require.NotNil(t, tx)
 
 		// Verify tx signature
-		verifyTxSender(t, tx, tss.EVMAddress(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, zeroValue)
@@ -250,7 +249,7 @@ func TestSigner_SignUpdateERC20CustodyPauseStatusCmd(t *testing.T) {
 		require.NotNil(t, tx)
 
 		// Verify tx signature
-		verifyTxSender(t, tx, tss.EVMAddress(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, zeroValue)
@@ -287,8 +286,8 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	tss := mocks.NewDerivedTSS(chains.BitcoinMainnet)
-	evmSigner, err := getNewEvmSigner(tss)
+	tss := mocks.NewTSS(t)
+	evmSigner, err := getNewEvmSigner(t, tss)
 	require.NoError(t, err)
 
 	// Setup txData struct
@@ -307,7 +306,7 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 		require.NotNil(t, tx)
 
 		// Verify tx signature
-		verifyTxSender(t, tx, tss.EVMAddress(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, txData.amount)
