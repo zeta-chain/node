@@ -385,6 +385,7 @@ func (signer *Signer) TryProcessOutbound(
 		logger.Error().Err(err).Msg("cannot get signer address")
 		return
 	}
+	lf["signer"] = signerAddress.String()
 
 	// get size limit and gas price
 	sizelimit := params.CallOptions.GasLimit
@@ -457,12 +458,12 @@ func (signer *Signer) TryProcessOutbound(
 	_, err = zetacoreClient.GetObserverList(ctx)
 	if err != nil {
 		logger.Warn().
-			Err(err).
-			Msgf("unable to get observer list, observation %s", observertypes.ObservationType_OutboundTx.String())
+			Err(err).Stringer("observation_type", observertypes.ObservationType_OutboundTx).
+			Msg("unable to get observer list, observation")
 	}
 	if tx != nil {
 		outboundHash := tx.TxHash().String()
-		logger.Info().Msgf("signed outboundHash %s signer %s", outboundHash, signerAddress)
+		lf[logs.FieldTx] = outboundHash
 
 		// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s) in case of RPC error
 		backOff := broadcastBackoff
@@ -470,11 +471,11 @@ func (signer *Signer) TryProcessOutbound(
 			time.Sleep(backOff)
 			err := signer.Broadcast(tx)
 			if err != nil {
-				logger.Warn().Err(err).Msgf("broadcasting tx %s to chain %s, retry %d", outboundHash, chain.Name, i)
+				logger.Warn().Err(err).Fields(lf).Msgf("Broadcasting Bitcoin tx, retry %d", i)
 				backOff *= 2
 				continue
 			}
-			logger.Info().Msgf("Broadcast success: chain %s outboundHash %s", chain.String(), outboundHash)
+			logger.Info().Fields(lf).Msgf("Broadcast Bitcoin tx successfully")
 			zetaHash, err := zetacoreClient.PostOutboundTracker(
 				ctx,
 				chain.ChainId,
@@ -482,10 +483,9 @@ func (signer *Signer) TryProcessOutbound(
 				outboundHash,
 			)
 			if err != nil {
-				logger.Err(err).
-					Msgf("Unable to add to tracker on zetacore: chain %s outboundHash %s", chain.Name, outboundHash)
+				logger.Err(err).Fields(lf).Msgf("Unable to add Bitcoin outbound tracker")
 			}
-			logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
+			logger.Info().Msgf("Add Bitcoin outbound tracker successfully %s", zetaHash)
 
 			// Save successfully broadcasted transaction to btc chain observer
 			btcObserver.SaveBroadcastedTx(outboundHash, outboundTssNonce)
