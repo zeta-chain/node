@@ -1,7 +1,6 @@
 package e2etests
 
 import (
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -46,13 +45,13 @@ func TestBitcoinStdMemoDepositAndCallRevertOtherAddress(r *runner.E2ERunner, arg
 	cctx := utils.WaitCctxRevertedByInboundHash(r.Ctx, r, txHash.String(), r.CctxClient)
 
 	// Make sure inbound sender and revert address are correct
-	assert.Equal(r, cctx.InboundParams.Sender, r.BTCDeployerAddress.EncodeAddress())
-	assert.Equal(r, cctx.GetCurrentOutboundParam().Receiver, revertAddress)
+	require.Equal(r, cctx.InboundParams.Sender, r.BTCDeployerAddress.EncodeAddress())
+	require.Equal(r, cctx.GetCurrentOutboundParam().Receiver, revertAddress)
 
 	// Check revert tx receiver address and amount
 	receiver, value := r.QueryOutboundReceiverAndAmount(cctx.OutboundParams[1].Hash)
-	assert.Equal(r, revertAddress, receiver)
-	assert.Positive(r, value)
+	require.Equal(r, revertAddress, receiver)
+	require.True(r, value > 0)
 
 	r.Logger.Info(
 		"Sent %f BTC to TSS to call non-existing contract, got refund of %d satoshis to other address",
