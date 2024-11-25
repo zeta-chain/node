@@ -485,7 +485,8 @@ func (signer *Signer) TryProcessOutbound(
 			if err != nil {
 				logger.Err(err).Fields(lf).Msgf("Unable to add Bitcoin outbound tracker")
 			}
-			logger.Info().Msgf("Add Bitcoin outbound tracker successfully %s", zetaHash)
+			lf[logs.FieldZetaTx] = zetaHash
+			logger.Info().Fields(lf).Msgf("Add Bitcoin outbound tracker successfully")
 
 			// Save successfully broadcasted transaction to btc chain observer
 			btcObserver.SaveBroadcastedTx(outboundHash, outboundTssNonce)
