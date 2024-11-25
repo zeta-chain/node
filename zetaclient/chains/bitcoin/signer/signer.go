@@ -432,8 +432,6 @@ func (signer *Signer) TryProcessOutbound(
 	cancelTx := restrictedCCTX || dustAmount
 	if cancelTx {
 		amount = 0.0
-	} else {
-		logger.Info().Msgf("withdraw BTC to %s, value %d sats", to.EncodeAddress(), params.Amount.Uint64())
 	}
 
 	// sign withdraw tx
