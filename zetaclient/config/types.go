@@ -68,7 +68,7 @@ type TONConfig struct {
 // ComplianceConfig is the config for compliance
 type ComplianceConfig struct {
 	LogPath             string   `json:"LogPath"`
-	RestrictedAddresses []string `json:"RestrictedAddresses"`
+	RestrictedAddresses []string `json:"RestrictedAddresses" mask:"zero"`
 }
 
 // Config is the config for ZetaClient
