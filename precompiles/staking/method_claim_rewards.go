@@ -80,7 +80,7 @@ func (c *Contract) claimRewards(
 		// Check if bank address has enough ZRC20 balance.
 		// This check is also made inside UnlockZRC20, but repeat it here to avoid burning the coins.
 		if err := c.fungibleKeeper.CheckZRC20Balance(ctx, zrc20Addr, bank.ContractAddress, zrc20Amount); err != nil {
-			ctx.Logger().Info(
+			ctx.Logger().Error(
 				"Claimed invalid amount of ZRC20 Validator Rewards",
 				"Total", zrc20Amount,
 				"Denom", precompiletypes.ZRC20ToCosmosDenom(zrc20Addr),
@@ -95,14 +95,6 @@ func (c *Contract) claimRewards(
 		if err := c.bankKeeper.SendCoinsFromAccountToModule(ctx, delegatorCosmosAddr, fungibletypes.ModuleName, coinSet); err != nil {
 			continue
 		}
-
-		ctx.Logger().Info(
-			"Sentf ZRC20 coins from delegator to Module",
-			"Delegator", delegatorCosmosAddr,
-			"Module", fungibletypes.ModuleName,
-			"Denom", precompiletypes.ZRC20ToCosmosDenom(zrc20Addr),
-			"Amount", coin.Amount,
-		)
 
 		if err := c.bankKeeper.BurnCoins(ctx, fungibletypes.ModuleName, coinSet); err != nil {
 			return nil, &precompiletypes.ErrUnexpected{
@@ -127,6 +119,13 @@ func (c *Contract) claimRewards(
 				Got:  err.Error(),
 			}
 		}
+
+		ctx.Logger().Debug(
+			"Claimed ZRC20 rewards",
+			"Delegator", delegatorCosmosAddr,
+			"Denom", precompiletypes.ZRC20ToCosmosDenom(zrc20Addr),
+			"Amount", coin.Amount,
+		)
 	}
 
 	return method.Outputs.Pack(true)

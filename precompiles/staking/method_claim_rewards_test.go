@@ -15,9 +15,6 @@ func Test_ClaimRewards(t *testing.T) {
 		s := newTestSuite(t)
 		validator := sample.Validator(t, rand.New(rand.NewSource(42)))
 
-		// Create staker.
-		//stakerEVMAddr := sample.EthAddress()
-
 		/* ACT */
 		// Call claimRewardsMethod.
 		claimRewardsMethod := s.stkContractABI.Methods[ClaimRewardsMethodName]
@@ -30,7 +27,11 @@ func Test_ClaimRewards(t *testing.T) {
 
 		_, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "invalid address 0x0000000000000000000000000000000000000000, reason: empty address")
+		require.Contains(
+			t,
+			err.Error(),
+			"invalid address 0x0000000000000000000000000000000000000000, reason: empty address",
+		)
 	})
 
 	t.Run("should return an error when passing incorrect validator", func(t *testing.T) {
@@ -75,6 +76,10 @@ func Test_ClaimRewards(t *testing.T) {
 
 		_, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "unexpected error in WithdrawDelegationRewards: no delegation distribution info")
+		require.Contains(
+			t,
+			err.Error(),
+			"unexpected error in WithdrawDelegationRewards: no delegation distribution info",
+		)
 	})
 }

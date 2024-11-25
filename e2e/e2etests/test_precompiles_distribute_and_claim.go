@@ -42,13 +42,14 @@ func TestPrecompilesDistributeAndClaim(r *runner.E2ERunner, args []string) {
 		fiveHundred       = big.NewInt(500)
 		fiveHundredOne    = big.NewInt(501)
 		zero              = big.NewInt(0)
+		stake             = "1000000000000000000000"
 
 		previousGasLimit = r.ZEVMAuth.GasLimit
 	)
 
 	// stakeAmt has to be as big as the validator self delegation.
 	// This way the rewards will be distributed 50%.
-	_, ok := stakeAmt.SetString("1000000000000000000000", 10)
+	_, ok := stakeAmt.SetString(stake, 10)
 	require.True(r, ok)
 
 	// Set new gas limit to avoid out of gas errors.
