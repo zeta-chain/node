@@ -2,7 +2,12 @@
 
 ## Unreleased
 
+### Tests
+
+* [3205](https://github.com/zeta-chain/node/issues/3205) - move Bitcoin revert address test to advanced group to avoid upgrade test failure
+
 ## Refactor
+
 * [3170](https://github.com/zeta-chain/node/pull/3170) - revamp TSS package in zetaclient
 
 ## v23.0.0
