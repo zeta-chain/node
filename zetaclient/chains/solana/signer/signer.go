@@ -16,7 +16,6 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
-	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
@@ -86,10 +85,11 @@ func NewSigner(
 
 	// construct Solana private key if present
 	if relayerKey != nil {
-		signer.relayerKey, err = crypto.SolanaPrivateKeyFromString(relayerKey.PrivateKey)
+		privKey, err := solana.PrivateKeyFromBase58(relayerKey.PrivateKey)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to construct solana private key")
 		}
+		signer.relayerKey = &privKey
 		logger.Std.Info().Msgf("Solana relayer address: %s", signer.relayerKey.PublicKey())
 	} else {
 		logger.Std.Info().Msg("Solana relayer key is not provided")

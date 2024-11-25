@@ -99,30 +99,39 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 		// process successfully signature only
 		if sig.Err == nil {
-			txResult, err := ob.solClient.GetTransaction(ctx, sig.Signature, &rpc.GetTransactionOpts{})
-			if err != nil {
+			txResult, err := solanarpc.GetTransaction(ctx, ob.solClient, sig.Signature)
+			switch {
+			case errors.Is(err, solanarpc.ErrUnsupportedTxVersion):
+				ob.Logger().Inbound.Warn().
+					Stringer("tx.signature", sig.Signature).
+					Msg("ObserveInbound: skip unsupported transaction")
+			// just save the sig to last scanned txs
+			case err != nil:
 				// we have to re-scan this signature on next ticker
-				return errors.Wrapf(err, "error GetTransaction for chain %d sig %s", chainID, sigString)
-			}
-
-			// filter inbound events and vote
-			err = ob.FilterInboundEventsAndVote(ctx, txResult)
-			if err != nil {
-				// we have to re-scan this signature on next ticker
-				return errors.Wrapf(err, "error FilterInboundEventAndVote for chain %d sig %s", chainID, sigString)
+				return errors.Wrapf(err, "error GetTransaction for sig %s", sigString)
+			default:
+				// filter inbound events and vote
+				if err = ob.FilterInboundEventsAndVote(ctx, txResult); err != nil {
+					// we have to re-scan this signature on next ticker
+					return errors.Wrapf(err, "error FilterInboundEventAndVote for sig %s", sigString)
+				}
 			}
 		}
 
 		// signature scanned; save last scanned signature to both memory and db, ignore db error
-		if err := ob.SaveLastTxScanned(sigString, sig.Slot); err != nil {
+		if err = ob.SaveLastTxScanned(sigString, sig.Slot); err != nil {
 			ob.Logger().
 				Inbound.Error().
 				Err(err).
-				Msgf("ObserveInbound: error saving last sig %s for chain %d", sigString, chainID)
+				Str("tx.signature", sigString).
+				Msg("ObserveInbound: error saving last sig")
 		}
+
 		ob.Logger().
 			Inbound.Info().
-			Msgf("ObserveInbound: last scanned sig is %s for chain %d in slot %d", sigString, chainID, sig.Slot)
+			Str("tx.signature", sigString).
+			Uint64("tx.slot", sig.Slot).
+			Msg("ObserveInbound: last scanned sig")
 
 		// take a rest if max signatures per ticker is reached
 		if len(signatures)-i >= MaxSignaturesPerTicker {
