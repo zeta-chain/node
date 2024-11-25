@@ -30,6 +30,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 )
@@ -355,12 +356,13 @@ func (signer *Signer) TryProcessOutbound(
 
 	// prepare logger
 	params := cctx.GetCurrentOutboundParam()
-	logger := signer.Logger().Std.With().
-		Str("method", "TryProcessOutbound").
-		Int64("chain", signer.Chain().ChainId).
-		Uint64("nonce", params.TssNonce).
-		Str("cctx", cctx.Index).
-		Logger()
+	// prepare logger fields
+	lf := map[string]any{
+		logs.FieldMethod: "TryProcessOutbound",
+		logs.FieldCctx:   cctx.Index,
+		logs.FieldNonce:  params.TssNonce,
+	}
+	logger := signer.Logger().Std.With().Fields(lf).Logger()
 
 	// support gas token only for Bitcoin outbound
 	coinType := cctx.InboundParams.CoinType
@@ -383,6 +385,7 @@ func (signer *Signer) TryProcessOutbound(
 		logger.Error().Err(err).Msg("cannot get signer address")
 		return
 	}
+	lf["signer"] = signerAddress.String()
 
 	// get size limit and gas price
 	sizelimit := params.CallOptions.GasLimit
@@ -430,8 +433,6 @@ func (signer *Signer) TryProcessOutbound(
 	cancelTx := restrictedCCTX || dustAmount
 	if cancelTx {
 		amount = 0.0
-	} else {
-		logger.Info().Msgf("SignGasWithdraw: to %s, value %d sats", to.EncodeAddress(), params.Amount.Uint64())
 	}
 
 	// sign withdraw tx
@@ -448,25 +449,21 @@ func (signer *Signer) TryProcessOutbound(
 		cancelTx,
 	)
 	if err != nil {
-		logger.Warn().
-			Err(err).
-			Msgf("SignConnectorOnReceive error: nonce %d chain %d", outboundTssNonce, params.ReceiverChainId)
+		logger.Warn().Err(err).Msg("SignWithdrawTx failed")
 		return
 	}
-	logger.Info().
-		Msgf("Key-sign success: %d => %s, nonce %d", cctx.InboundParams.SenderChainId, chain.Name, outboundTssNonce)
+	logger.Info().Msg("Key-sign success")
 
 	// FIXME: add prometheus metrics
 	_, err = zetacoreClient.GetObserverList(ctx)
 	if err != nil {
 		logger.Warn().
-			Err(err).
-			Msgf("unable to get observer list: chain %d observation %s", outboundTssNonce, observertypes.ObservationType_OutboundTx.String())
+			Err(err).Stringer("observation_type", observertypes.ObservationType_OutboundTx).
+			Msg("unable to get observer list, observation")
 	}
 	if tx != nil {
 		outboundHash := tx.TxHash().String()
-		logger.Info().
-			Msgf("on chain %s nonce %d, outboundHash %s signer %s", chain.Name, outboundTssNonce, outboundHash, signerAddress)
+		lf[logs.FieldTx] = outboundHash
 
 		// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s) in case of RPC error
 		backOff := broadcastBackoff
@@ -474,14 +471,11 @@ func (signer *Signer) TryProcessOutbound(
 			time.Sleep(backOff)
 			err := signer.Broadcast(tx)
 			if err != nil {
-				logger.Warn().
-					Err(err).
-					Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outboundHash, chain.Name, outboundTssNonce, i)
+				logger.Warn().Err(err).Fields(lf).Msgf("Broadcasting Bitcoin tx, retry %d", i)
 				backOff *= 2
 				continue
 			}
-			logger.Info().
-				Msgf("Broadcast success: nonce %d to chain %s outboundHash %s", outboundTssNonce, chain.String(), outboundHash)
+			logger.Info().Fields(lf).Msgf("Broadcast Bitcoin tx successfully")
 			zetaHash, err := zetacoreClient.PostOutboundTracker(
 				ctx,
 				chain.ChainId,
@@ -489,10 +483,10 @@ func (signer *Signer) TryProcessOutbound(
 				outboundHash,
 			)
 			if err != nil {
-				logger.Err(err).
-					Msgf("Unable to add to tracker on zetacore: nonce %d chain %s outboundHash %s", outboundTssNonce, chain.Name, outboundHash)
+				logger.Err(err).Fields(lf).Msgf("Unable to add Bitcoin outbound tracker")
 			}
-			logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
+			lf[logs.FieldZetaTx] = zetaHash
+			logger.Info().Fields(lf).Msgf("Add Bitcoin outbound tracker successfully")
 
 			// Save successfully broadcasted transaction to btc chain observer
 			btcObserver.SaveBroadcastedTx(outboundHash, outboundTssNonce)

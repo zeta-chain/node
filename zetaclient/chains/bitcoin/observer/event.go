@@ -19,20 +19,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
-)
-
-// InboundProcessability is an enum representing the processability of an inbound
-type InboundProcessability int
-
-const (
-	// InboundProcessabilityGood represents a processable inbound
-	InboundProcessabilityGood InboundProcessability = iota
-
-	// InboundProcessabilityDonation represents a donation inbound
-	InboundProcessabilityDonation
-
-	// InboundProcessabilityComplianceViolation represents a compliance violation
-	InboundProcessabilityComplianceViolation
+	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
 // BTCInboundEvent represents an incoming transaction event
@@ -62,11 +49,11 @@ type BTCInboundEvent struct {
 	TxHash string
 }
 
-// Processability returns the processability of the inbound event
-func (event *BTCInboundEvent) Processability() InboundProcessability {
+// Category returns the category of the inbound event
+func (event *BTCInboundEvent) Category() clienttypes.InboundCategory {
 	// compliance check on sender and receiver addresses
 	if config.ContainRestrictedAddress(event.FromAddress, event.ToAddress) {
-		return InboundProcessabilityComplianceViolation
+		return clienttypes.InboundCategoryRestricted
 	}
 
 	// compliance check on receiver, revert/abort addresses in standard memo
@@ -76,16 +63,16 @@ func (event *BTCInboundEvent) Processability() InboundProcessability {
 			event.MemoStd.RevertOptions.RevertAddress,
 			event.MemoStd.RevertOptions.AbortAddress,
 		) {
-			return InboundProcessabilityComplianceViolation
+			return clienttypes.InboundCategoryRestricted
 		}
 	}
 
 	// donation check
 	if bytes.Equal(event.MemoBytes, []byte(constant.DonationMessage)) {
-		return InboundProcessabilityDonation
+		return clienttypes.InboundCategoryDonation
 	}
 
-	return InboundProcessabilityGood
+	return clienttypes.InboundCategoryGood
 }
 
 // DecodeMemoBytes decodes the contained memo bytes as either standard or legacy memo
@@ -164,25 +151,22 @@ func ValidateStandardMemo(memoStd memo.InboundMemo, chainID int64) error {
 	return nil
 }
 
-// CheckEventProcessability checks if the inbound event is processable
-func (ob *Observer) CheckEventProcessability(event BTCInboundEvent) bool {
-	// check if the event is processable
-	switch result := event.Processability(); result {
-	case InboundProcessabilityGood:
+// IsEventProcessable checks if the inbound event is processable
+func (ob *Observer) IsEventProcessable(event BTCInboundEvent) bool {
+	logFields := map[string]any{logs.FieldTx: event.TxHash}
+
+	switch category := event.Category(); category {
+	case clienttypes.InboundCategoryGood:
 		return true
-	case InboundProcessabilityDonation:
-		logFields := map[string]any{
-			logs.FieldChain: ob.Chain().ChainId,
-			logs.FieldTx:    event.TxHash,
-		}
+	case clienttypes.InboundCategoryDonation:
 		ob.Logger().Inbound.Info().Fields(logFields).Msgf("thank you rich folk for your donation!")
 		return false
-	case InboundProcessabilityComplianceViolation:
+	case clienttypes.InboundCategoryRestricted:
 		compliance.PrintComplianceLog(ob.logger.Inbound, ob.logger.Compliance,
 			false, ob.Chain().ChainId, event.TxHash, event.FromAddress, event.ToAddress, "BTC")
 		return false
 	default:
-		ob.Logger().Inbound.Error().Msgf("unreachable code got InboundProcessability: %v", result)
+		ob.Logger().Inbound.Error().Fields(logFields).Msgf("unreachable code got InboundCategory: %v", category)
 		return false
 	}
 }

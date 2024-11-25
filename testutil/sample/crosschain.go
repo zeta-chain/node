@@ -292,7 +292,7 @@ func ZetaAccounting(t *testing.T, index string) types.ZetaAccounting {
 
 func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteInbound {
 	return types.MsgVoteInbound{
-		Creator:            "",
+		Creator:            Bech32AccAddress().String(),
 		Sender:             EthAddress().String(),
 		SenderChainId:      Chain(from).ChainId,
 		Receiver:           EthAddress().String(),

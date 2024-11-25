@@ -1,7 +1,34 @@
 package types
 
 import (
+	"bytes"
+	"encoding/hex"
+
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
+
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/pkg/crypto"
+	"github.com/zeta-chain/node/pkg/memo"
+	"github.com/zeta-chain/node/zetaclient/config"
+)
+
+// InboundCategory is an enum representing the category of an inbound event
+type InboundCategory int
+
+const (
+	// InboundCategoryUnknown represents an unknown inbound
+	InboundCategoryUnknown InboundCategory = iota
+
+	// InboundCategoryGood represents a processable inbound
+	InboundCategoryGood
+
+	// InboundCategoryDonation represents a donation inbound
+	InboundCategoryDonation
+
+	// InboundCategoryRestricted represents a restricted inbound
+	InboundCategoryRestricted
 )
 
 // InboundEvent represents an inbound event
@@ -40,4 +67,48 @@ type InboundEvent struct {
 
 	// Asset is the asset of the inbound
 	Asset string
+}
+
+// DecodeMemo decodes the receiver from the memo bytes
+func (event *InboundEvent) DecodeMemo() error {
+	// skip decoding donation tx as it won't go through zetacore
+	if bytes.Equal(event.Memo, []byte(constant.DonationMessage)) {
+		return nil
+	}
+
+	// decode receiver address from memo
+	parsedAddress, _, err := memo.DecodeLegacyMemoHex(hex.EncodeToString(event.Memo))
+	if err != nil { // unreachable code
+		return errors.Wrap(err, "invalid memo hex")
+	}
+
+	// ensure the receiver is valid
+	if crypto.IsEmptyAddress(parsedAddress) {
+		return errors.New("got empty receiver address from memo")
+	}
+	event.Receiver = parsedAddress.Hex()
+
+	return nil
+}
+
+// Category returns the category of the inbound event
+func (event *InboundEvent) Category() InboundCategory {
+	// parse memo-specified receiver
+	receiver := ""
+	parsedAddress, _, err := memo.DecodeLegacyMemoHex(hex.EncodeToString(event.Memo))
+	if err == nil && parsedAddress != (ethcommon.Address{}) {
+		receiver = parsedAddress.Hex()
+	}
+
+	// check restricted addresses
+	if config.ContainRestrictedAddress(event.Sender, event.Receiver, event.TxOrigin, receiver) {
+		return InboundCategoryRestricted
+	}
+
+	// donation check
+	if bytes.Equal(event.Memo, []byte(constant.DonationMessage)) {
+		return InboundCategoryDonation
+	}
+
+	return InboundCategoryGood
 }
