@@ -45,7 +45,7 @@ func Test_GetValidators(t *testing.T) {
 		require.Len(t, list, 0)
 	})
 
-	t.Run("should return an empty list for an invalid staker", func(t *testing.T) {
+	t.Run("should return an error for zero address", func(t *testing.T) {
 		/* ARRANGE */
 		s := newTestSuite(t)
 
@@ -63,16 +63,9 @@ func Test_GetValidators(t *testing.T) {
 			[]interface{}{common.Address{}}...,
 		)
 
-		bytes, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
-		require.NoError(t, err)
-
-		res, err := getValidatorsMethod.Outputs.Unpack(bytes)
-		require.NoError(t, err)
-		require.NotEmpty(t, res)
-
-		list, ok := res[0].([]string)
-		require.True(t, ok)
-		require.Len(t, list, 0)
+		_, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid address 0x0000000000000000000000000000000000000000, reason: empty address")
 	})
 
 	t.Run("should return staker's validator list", func(t *testing.T) {
