@@ -16,6 +16,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 	. "gopkg.in/check.v1"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -43,9 +44,9 @@ func (s *BTCSignerSuite) SetUpTest(c *C) {
 	//privkeyBytes := crypto.FromECDSA(privateKey)
 	//c.Logf("privatekey %s", hex.EncodeToString(privkeyBytes))
 	c.Assert(err, IsNil)
-	tss := &mocks.TSS{
-		PrivKey: privateKey,
-	}
+
+	tss := mocks.NewTSSFromPrivateKey(c, privateKey)
+
 	s.btcSigner, err = NewSigner(
 		chains.Chain{},
 		tss,
@@ -228,8 +229,8 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 func TestAddWithdrawTxOutputs(t *testing.T) {
 	// Create test signer and receiver address
 	signer, err := NewSigner(
-		chains.Chain{},
-		mocks.NewTSSMainnet(),
+		chains.BitcoinMainnet,
+		mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet),
 		nil,
 		base.DefaultLogger(),
 		config.BTCConfig{},
@@ -237,7 +238,7 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 	require.NoError(t, err)
 
 	// tss address and script
-	tssAddr, err := signer.TSS().BTCAddress(chains.BitcoinTestnet.ChainId)
+	tssAddr, err := signer.TSS().PubKey().AddressBTC(chains.BitcoinMainnet.ChainId)
 	require.NoError(t, err)
 	tssScript, err := txscript.PayToAddrScript(tssAddr)
 	require.NoError(t, err)
@@ -387,9 +388,7 @@ func TestNewBTCSigner(t *testing.T) {
 	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
 	privateKey, err := crypto.HexToECDSA(skHex)
 	require.NoError(t, err)
-	tss := &mocks.TSS{
-		PrivKey: privateKey,
-	}
+	tss := mocks.NewTSSFromPrivateKey(t, privateKey)
 	btcSigner, err := NewSigner(
 		chains.Chain{},
 		tss,

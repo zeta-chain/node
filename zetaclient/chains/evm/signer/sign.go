@@ -111,7 +111,7 @@ func (signer *Signer) SignCancel(ctx context.Context, txData *OutboundData) (*et
 	tx, _, _, err := signer.Sign(
 		ctx,
 		nil,
-		signer.TSS().EVMAddress(),
+		signer.TSS().PubKey().AddressEVM(),
 		zeroValue, // zero out the amount to cancel the tx
 		txData.gas,
 		txData.nonce,

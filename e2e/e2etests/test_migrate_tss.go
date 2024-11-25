@@ -20,10 +20,11 @@ import (
 )
 
 func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
+	r.SetupBtcAddress(false)
 	stop := r.MineBlocksIfLocalBitcoin()
 	defer stop()
 
-	// Pause inbound procoessing for tss migration
+	// Pause inbound processing for tss migration
 	r.Logger.Info("Pause inbound  processing")
 	msg := observertypes.NewMsgDisableCCTX(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.EmergencyPolicyName),

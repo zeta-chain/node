@@ -863,6 +863,34 @@ func (_m *ZetacoreClient) PostVoteOutbound(ctx context.Context, gasLimit uint64,
 	return r0, r1, r2
 }
 
+// PostVoteTSS provides a mock function with given fields: ctx, tssPubKey, keyGenZetaHeight, status
+func (_m *ZetacoreClient) PostVoteTSS(ctx context.Context, tssPubKey string, keyGenZetaHeight int64, status chains.ReceiveStatus) (string, error) {
+	ret := _m.Called(ctx, tssPubKey, keyGenZetaHeight, status)
+
+	if len(ret) == 0 {
+		panic("no return value specified for PostVoteTSS")
+	}
+
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64, chains.ReceiveStatus) (string, error)); ok {
+		return rf(ctx, tssPubKey, keyGenZetaHeight, status)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64, chains.ReceiveStatus) string); ok {
+		r0 = rf(ctx, tssPubKey, keyGenZetaHeight, status)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, int64, chains.ReceiveStatus) error); ok {
+		r1 = rf(ctx, tssPubKey, keyGenZetaHeight, status)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // NewZetacoreClient creates a new instance of ZetacoreClient. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewZetacoreClient(t interface {

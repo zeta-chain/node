@@ -126,7 +126,7 @@ func Test_NewObserver(t *testing.T) {
 			btcClient:   btcClient,
 			chainParams: params,
 			coreClient:  nil,
-			tss:         mocks.NewTSSMainnet(),
+			tss:         mocks.NewTSS(t),
 		},
 		{
 			name:         "should fail if net params is not found",
@@ -134,7 +134,7 @@ func Test_NewObserver(t *testing.T) {
 			btcClient:    btcClient,
 			chainParams:  params,
 			coreClient:   nil,
-			tss:          mocks.NewTSSMainnet(),
+			tss:          mocks.NewTSS(t),
 			errorMessage: "unable to get BTC net params for chain",
 		},
 		{
@@ -143,7 +143,7 @@ func Test_NewObserver(t *testing.T) {
 			btcClient:   btcClient,
 			chainParams: params,
 			coreClient:  nil,
-			tss:         mocks.NewTSSMainnet(),
+			tss:         mocks.NewTSS(t),
 			before: func() {
 				envVar := base.EnvVarLatestBlockByChain(chain)
 				os.Setenv(envVar, "invalid")

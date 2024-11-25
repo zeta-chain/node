@@ -143,7 +143,7 @@ func newTestSuite(t *testing.T) *testSuite {
 
 		liteClient = mocks.NewSignerLiteClient(t)
 
-		tss      = mocks.NewTSSAthens3()
+		tss      = mocks.NewTSS(t)
 		zetacore = mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
 
 		testLogger = zerolog.New(zerolog.NewTestWriter(t))
@@ -201,7 +201,7 @@ func (ts *testSuite) Sign(msg Signable) {
 	hash, err := msg.Hash()
 	require.NoError(ts.t, err)
 
-	sig, err := ts.tss.Sign(ts.ctx, hash[:], 0, 0, 0, "")
+	sig, err := ts.tss.Sign(ts.ctx, hash[:], 0, 0, 0)
 	require.NoError(ts.t, err)
 
 	msg.SetSignature(sig)
