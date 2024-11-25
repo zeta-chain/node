@@ -8,13 +8,14 @@ import (
 	solanarpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
+	"github.com/zeta-chain/node/zetaclient/common"
 )
 
 // Test_SolanaRPCLive is a phony test to run all live tests
 func Test_SolanaRPCLive(t *testing.T) {
-	//if !common.LiveTestEnabled() {
-	//	return
-	//}
+	if !common.LiveTestEnabled() {
+		return
+	}
 
 	LiveTest_GetTransactionWithVersion(t)
 	LiveTest_GetFirstSignatureForAddress(t)
@@ -38,14 +39,6 @@ func LiveTest_GetTransactionWithVersion(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, txResult)
 	})
-
-	// there's no such use case as of now because maxTxVersion is hard-coded in the zetaclient
-	//t.Run("should skip the transaction if the version is not supported", func(t *testing.T) {
-	//	ctx := context.Background()
-	//	txResult, err := rpc.GetTransaction(ctx, client, txSig)
-	//	require.ErrorIs(t, err, rpc.ErrUnsupportedTxVersion)
-	//	require.Nil(t, txResult)
-	//})
 }
 
 func LiveTest_GetFirstSignatureForAddress(t *testing.T) {
