@@ -20,7 +20,7 @@ import (
 func (c *Contract) claimRewards(
 	ctx sdk.Context,
 	evm *vm.EVM,
-	contract *vm.Contract,
+	_ *vm.Contract,
 	method *abi.Method,
 	args []interface{},
 ) ([]byte, error) {
@@ -34,22 +34,6 @@ func (c *Contract) claimRewards(
 	delegatorAddr, validatorAddr, err := unpackClaimRewardsArgs(args)
 	if err != nil {
 		return nil, err
-	}
-
-	var (
-		// This represents the delegator calling directly the precompile.
-		callerIsDelegator = contract.CallerAddress == delegatorAddr
-
-		// This represents the delegator calling the precompile through a contract.
-		originIsDelegator = evm.Origin == delegatorAddr
-	)
-
-	// If the delegator is not the origin nor the caller, it's an unauthorized operation.
-	if !callerIsDelegator && !originIsDelegator {
-		return nil, precompiletypes.ErrInvalidAddr{
-			Got:    delegatorAddr.String(),
-			Reason: "unauthorized to withdraw the delegation rewards for delegator",
-		}
 	}
 
 	// Get delegator Cosmos address.
