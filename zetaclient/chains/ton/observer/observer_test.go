@@ -63,7 +63,7 @@ func newTestSuite(t *testing.T) *testSuite {
 
 		liteClient = mocks.NewLiteClient(t)
 
-		tss      = mocks.NewGeneratedTSS(t, chain)
+		tss      = mocks.NewTSS(t)
 		zetacore = mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
 
 		testLogger = zerolog.New(zerolog.NewTestWriter(t))
@@ -199,7 +199,7 @@ func (ts *testSuite) sign(msg signable) {
 	hash, err := msg.Hash()
 	require.NoError(ts.t, err)
 
-	sig, err := ts.tss.Sign(ts.ctx, hash[:], 0, 0, 0, "")
+	sig, err := ts.tss.Sign(ts.ctx, hash[:], 0, 0, 0)
 	require.NoError(ts.t, err)
 
 	msg.SetSignature(sig)
@@ -207,7 +207,7 @@ func (ts *testSuite) sign(msg signable) {
 	// double check
 	evmSigner, err := msg.Signer()
 	require.NoError(ts.t, err)
-	require.Equal(ts.t, ts.tss.EVMAddress().String(), evmSigner.String())
+	require.Equal(ts.t, ts.tss.PubKey().AddressEVM().String(), evmSigner.String())
 }
 
 // parses string to TON

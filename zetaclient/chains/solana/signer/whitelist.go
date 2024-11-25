@@ -31,7 +31,7 @@ func (signer *Signer) createAndSignMsgWhitelist(
 
 	// sign the message with TSS to get an ECDSA signature.
 	// the produced signature is in the [R || S || V] format where V is 0 or 1.
-	signature, err := signer.TSS().Sign(ctx, msgHash[:], height, nonce, chain.ChainId, "")
+	signature, err := signer.TSS().Sign(ctx, msgHash[:], height, nonce, chain.ChainId)
 	if err != nil {
 		return nil, errors.Wrap(err, "Key-sign failed")
 	}

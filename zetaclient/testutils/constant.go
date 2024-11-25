@@ -10,12 +10,10 @@ const (
 	// MockEVMRPCEndpoint is the endpoint to enable the mock EVM RPC client
 	MockEVMRPCEndpoint = "MockEVMRPCEnabled"
 
-	// TSSAddressEVMMainnet the EVM TSS address for test purposes
-	// Note: public key is zetapub1addwnpepqtadxdyt037h86z60nl98t6zk56mw5zpnm79tsmvspln3hgt5phdc79kvfc
+	// TSSAddressEVMMainnet TSSAddressBTCMainnet TSSPubKeyMainnet actual mainnet pub key & addresses
 	TSSAddressEVMMainnet = "0x70e967acFcC17c3941E87562161406d41676FD83"
-
-	// TSSAddressBTCMainnet the BTC TSS address for test purposes
 	TSSAddressBTCMainnet = "bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y"
+	TSSPubKeyMainnet     = "zetapub1addwnpepqtadxdyt037h86z60nl98t6zk56mw5zpnm79tsmvspln3hgt5phdc79kvfc"
 
 	// TSSPubkeyAthens3 is the TSS public key in Athens3
 	TSSPubkeyAthens3 = "zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm76z3jncsnzz32rclangr2g35p"

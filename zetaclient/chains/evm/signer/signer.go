@@ -186,7 +186,7 @@ func (signer *Signer) Sign(
 	height uint64,
 ) (*ethtypes.Transaction, []byte, []byte, error) {
 	signer.Logger().Std.Debug().
-		Str("tss_pub_key", signer.TSS().EVMAddress().String()).
+		Str("tss_pub_key", signer.TSS().PubKey().AddressEVM().String()).
 		Msg("Signing evm transaction")
 
 	chainID := big.NewInt(signer.Chain().ChainId)
@@ -197,7 +197,7 @@ func (signer *Signer) Sign(
 
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
 
-	sig, err := signer.TSS().Sign(ctx, hashBytes, height, nonce, signer.Chain().ChainId, "")
+	sig, err := signer.TSS().Sign(ctx, hashBytes, height, nonce, signer.Chain().ChainId)
 	if err != nil {
 		return nil, nil, nil, err
 	}
