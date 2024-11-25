@@ -2,11 +2,9 @@
 
 ## Unreleased
 
-### Features
+## Refactor
 
-### Tests
-
-### Refactor
+* [3170](https://github.com/zeta-chain/node/pull/3170) - revamp TSS package in zetaclient
 
 ### Fixes
 

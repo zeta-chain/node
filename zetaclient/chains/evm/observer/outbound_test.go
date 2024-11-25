@@ -442,7 +442,8 @@ func Test_FilterTSSOutbound(t *testing.T) {
 		evmClient.On("TransactionReceipt", mock.Anything, outboundHash).Return(receipt, nil)
 
 		// create evm observer for testing
-		tss := mocks.NewTSSMainnet()
+		tss := mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet)
+
 		ob, _ := MockEVMObserver(t, chain, evmClient, nil, nil, tss, 1, chainParam)
 
 		// feed archived block to observer cache
@@ -475,7 +476,7 @@ func Test_FilterTSSOutbound(t *testing.T) {
 		evmJSONRPC := mocks.NewMockJSONRPCClient()
 
 		// create evm observer for testing
-		tss := mocks.NewTSSMainnet()
+		tss := mocks.NewTSS(t)
 		ob, _ := MockEVMObserver(t, chain, evmClient, evmJSONRPC, nil, tss, 1, chainParam)
 
 		// filter TSS outbound

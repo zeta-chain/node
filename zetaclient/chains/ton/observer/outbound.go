@@ -175,7 +175,7 @@ func (ob *Observer) determineReceiveStatus(tx *toncontracts.Transaction) (chains
 	switch {
 	case err != nil:
 		return 0, err
-	case evmSigner != ob.TSS().EVMAddress():
+	case evmSigner != ob.TSS().PubKey().AddressEVM():
 		return 0, errors.New("withdrawal signer is not TSS")
 	case !tx.IsSuccess():
 		return chains.ReceiveStatus_failed, nil
@@ -192,7 +192,7 @@ func (ob *Observer) addOutboundTracker(ctx context.Context, tx *toncontracts.Tra
 	switch {
 	case err != nil:
 		return err
-	case evmSigner != ob.TSS().EVMAddress():
+	case evmSigner != ob.TSS().PubKey().AddressEVM():
 		ob.Logger().Inbound.Warn().
 			Fields(txLogFields(tx)).
 			Str("transaction.ton.signer", evmSigner.String()).

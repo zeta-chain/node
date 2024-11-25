@@ -8,12 +8,10 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/cmd"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -25,7 +23,6 @@ import (
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/metrics"
-	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
@@ -43,7 +40,7 @@ func createObserver(t *testing.T, chain chains.Chain, alertLatency int64) *base.
 	chainParams := *sample.ChainParams(chain.ChainId)
 	chainParams.ConfirmationCount = defaultConfirmationCount
 	zetacoreClient := mocks.NewZetacoreClient(t)
-	tss := mocks.NewTSSMainnet()
+	tss := mocks.NewTSS(t)
 
 	database := createDatabase(t)
 
@@ -72,7 +69,7 @@ func TestNewObserver(t *testing.T) {
 	chainParams := *sample.ChainParams(chain.ChainId)
 	appContext := zctx.New(config.New(false), nil, zerolog.Nop())
 	zetacoreClient := mocks.NewZetacoreClient(t)
-	tss := mocks.NewTSSMainnet()
+	tss := mocks.NewTSS(t)
 	blockCacheSize := base.DefaultBlockCacheSize
 	headersCacheSize := base.DefaultHeaderCacheSize
 
@@ -190,7 +187,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		ob := createObserver(t, chain, defaultAlertLatency)
 
 		// update tss
-		newTSS := mocks.NewTSSAthens3()
+		newTSS := mocks.NewTSS(t)
 		ob = ob.WithTSS(newTSS)
 		require.Equal(t, newTSS, ob.TSS())
 	})
@@ -268,9 +265,6 @@ func TestObserverGetterAndSetter(t *testing.T) {
 }
 
 func TestTSSAddressString(t *testing.T) {
-	testConfig := sdk.GetConfig()
-	testConfig.SetBech32PrefixForAccount(cmd.Bech32PrefixAccAddr, cmd.Bech32PrefixAccPub)
-
 	tests := []struct {
 		name         string
 		chain        chains.Chain
@@ -280,17 +274,17 @@ func TestTSSAddressString(t *testing.T) {
 		{
 			name:         "should return TSS BTC address for Bitcoin chain",
 			chain:        chains.BitcoinMainnet,
-			addrExpected: testutils.TSSAddressBTCMainnet,
+			addrExpected: "btc",
 		},
 		{
 			name:         "should return TSS EVM address for EVM chain",
 			chain:        chains.Ethereum,
-			addrExpected: testutils.TSSAddressEVMMainnet,
+			addrExpected: "eth",
 		},
 		{
 			name:         "should return TSS EVM address for other non-BTC chain",
 			chain:        chains.SolanaDevnet,
-			addrExpected: testutils.TSSAddressEVMMainnet,
+			addrExpected: "eth",
 		},
 		{
 			name:         "should return empty address for unknown BTC chain",
@@ -309,14 +303,26 @@ func TestTSSAddressString(t *testing.T) {
 			// force error if needed
 			if tt.forceError {
 				// pause TSS to cause error
-				tss := mocks.NewTSSMainnet()
+				tss := mocks.NewTSS(t)
 				tss.Pause()
 				ob = ob.WithTSS(tss)
+				c := chains.BitcoinRegtest
+				c.ChainId = 123123123
+				ob.WithChain(c)
 			}
 
 			// get TSS address
 			addr := ob.TSSAddressString()
-			require.Equal(t, tt.addrExpected, addr)
+			switch tt.addrExpected {
+			case "":
+				require.Equal(t, "", addr)
+			case "btc":
+				require.True(t, strings.HasPrefix(addr, "bc"))
+			case "eth":
+				require.True(t, strings.HasPrefix(addr, "0x"))
+			default:
+				t.Fail()
+			}
 		})
 	}
 }
@@ -376,13 +382,13 @@ func TestOutboundID(t *testing.T) {
 		{
 			name:  "should get correct outbound id for Ethereum chain",
 			chain: chains.Ethereum,
-			tss:   mocks.NewTSSMainnet(),
+			tss:   mocks.NewTSS(t),
 			nonce: 100,
 		},
 		{
 			name:  "should get correct outbound id for Bitcoin chain",
 			chain: chains.BitcoinMainnet,
-			tss:   mocks.NewTSSMainnet(),
+			tss:   mocks.NewTSS(t),
 			nonce: 200,
 		},
 	}

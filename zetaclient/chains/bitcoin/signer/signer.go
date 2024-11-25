@@ -156,7 +156,7 @@ func (signer *Signer) AddWithdrawTxOutputs(
 	}
 
 	// 1st output: the nonce-mark btc to TSS self
-	tssAddrP2WPKH, err := signer.TSS().BTCAddress(signer.Chain().ChainId)
+	tssAddrP2WPKH, err := signer.TSS().PubKey().AddressBTC(signer.Chain().ChainId)
 	if err != nil {
 		return err
 	}
@@ -305,7 +305,7 @@ func (signer *Signer) SignWithdrawTx(
 		S.SetBytes((*[32]byte)(sig65B[32:64]))
 		sig := btcecdsa.NewSignature(R, S)
 
-		pkCompressed := signer.TSS().PubKeyCompressedBytes()
+		pkCompressed := signer.TSS().PubKey().Bytes(true)
 		hashType := txscript.SigHashAll
 		txWitness := wire.TxWitness{append(sig.Serialize(), byte(hashType)), pkCompressed}
 		tx.TxIn[ix].Witness = txWitness
