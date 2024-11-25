@@ -11,19 +11,18 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 
 	ecdsakeygen "github.com/bnb-chain/tss-lib/ecdsa/keygen"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/libp2p/go-libp2p/p2p/protocol/ping"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
-	"gitlab.com/thorchain/tss/go-tss/conversion"
+	"gitlab.com/thorchain/tss/go-tss/tss"
 
 	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -192,14 +191,6 @@ func Start(_ *cobra.Command, _ []string) error {
 	telemetryServer.SetIPAddress(cfg.PublicIP)
 
 	keygen := appContext.GetKeygen()
-	whitelistedPeers := []peer.ID{}
-	for _, pk := range keygen.GranteePubkeys {
-		pid, err := conversion.Bech32PubkeyToPeerID(pk)
-		if err != nil {
-			return err
-		}
-		whitelistedPeers = append(whitelistedPeers, pid)
-	}
 
 	// Create TSS server
 	tssServer, err := mc.SetupTSSServer(
@@ -209,7 +200,6 @@ func Start(_ *cobra.Command, _ []string) error {
 		appContext.Config(),
 		tssKeyPass,
 		true,
-		whitelistedPeers,
 	)
 	if err != nil {
 		return fmt.Errorf("SetupTSSServer error: %w", err)
@@ -225,37 +215,14 @@ func Start(_ *cobra.Command, _ []string) error {
 	go func() {
 		for {
 			time.Sleep(30 * time.Second)
-			ps := tssServer.GetKnownPeers()
-			metrics.NumConnectedPeers.Set(float64(len(ps)))
-			telemetryServer.SetConnectedPeers(ps)
-		}
-	}()
-	go func() {
-		host := tssServer.GetP2PHost()
-		pingRTT := make(map[peer.ID]int64)
-		pingRTTLock := sync.Mutex{}
-		for {
-			var wg sync.WaitGroup
-			for _, p := range whitelistedPeers {
-				wg.Add(1)
-				go func(p peer.ID) {
-					defer wg.Done()
-					ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-					defer cancel()
-					result := <-ping.Ping(ctx, host, p)
-					pingRTTLock.Lock()
-					defer pingRTTLock.Unlock()
-					if result.Error != nil {
-						masterLogger.Error().Err(result.Error).Msg("ping error")
-						pingRTT[p] = -1 // RTT -1 indicate ping error
-						return
-					}
-					pingRTT[p] = result.RTT.Nanoseconds()
-				}(p)
-			}
-			wg.Wait()
-			telemetryServer.SetPingRTT(pingRTT)
-			time.Sleep(30 * time.Second)
+			knownPeersTss := tssServer.GetKnownPeers()
+			metrics.NumConnectedPeers.Set(float64(len(knownPeersTss)))
+			knownPeersAddrInfo := lo.Map(knownPeersTss, func(p tss.PeerInfo, _ int) peer.AddrInfo {
+				return peer.AddrInfo{
+					ID: peer.ID(p.ID),
+				}
+			})
+			telemetryServer.SetConnectedPeers(knownPeersAddrInfo)
 		}
 	}()
 	// pprof http server
