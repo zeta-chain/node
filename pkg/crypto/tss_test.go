@@ -69,6 +69,12 @@ func TestGetTssAddrBTC(t *testing.T) {
 			wantErr:       false,
 		},
 		{
+			name:          "Valid TSS pubkey signet params",
+			tssPubkey:     pk,
+			bitcoinParams: &chaincfg.SigNetParams,
+			wantErr:       false,
+		},
+		{
 			name:          "Invalid TSS pubkey testnet params",
 			tssPubkey:     "invalid",
 			bitcoinParams: &chaincfg.TestNet3Params,

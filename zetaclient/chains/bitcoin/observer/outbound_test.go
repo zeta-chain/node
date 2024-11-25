@@ -8,6 +8,7 @@ import (
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/zetaclient/db"
 
@@ -25,7 +26,7 @@ func MockBTCObserverMainnet(t *testing.T) *Observer {
 	// setup mock arguments
 	chain := chains.BitcoinMainnet
 	params := mocks.MockChainParams(chain.ChainId, 10)
-	tss := mocks.NewTSSMainnet()
+	tss := mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet)
 
 	// create mock rpc client
 	btcClient := mocks.NewBTCRPCClient(t)
@@ -34,8 +35,11 @@ func MockBTCObserverMainnet(t *testing.T) *Observer {
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
 
+	logger := zerolog.New(zerolog.NewTestWriter(t))
+	baseLogger := base.Logger{Std: logger, Compliance: logger}
+
 	// create Bitcoin observer
-	ob, err := NewObserver(chain, btcClient, params, nil, tss, 60, database, base.Logger{}, nil)
+	ob, err := NewObserver(chain, btcClient, params, nil, tss, 60, database, baseLogger, nil)
 	require.NoError(t, err)
 
 	return ob
@@ -46,9 +50,7 @@ func createObserverWithPrivateKey(t *testing.T) *Observer {
 	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
 	privateKey, err := crypto.HexToECDSA(skHex)
 	require.NoError(t, err)
-	tss := &mocks.TSS{
-		PrivKey: privateKey,
-	}
+	tss := mocks.NewTSSFromPrivateKey(t, privateKey)
 
 	// create Bitcoin observer with mock tss
 	ob := MockBTCObserverMainnet(t)
@@ -61,7 +63,7 @@ func createObserverWithPrivateKey(t *testing.T) *Observer {
 func createObserverWithUTXOs(t *testing.T) *Observer {
 	// Create Bitcoin observer
 	ob := createObserverWithPrivateKey(t)
-	tssAddress, err := ob.TSS().BTCAddress(chains.BitcoinTestnet.ChainId)
+	tssAddress, err := ob.TSS().PubKey().AddressBTC(chains.BitcoinTestnet.ChainId)
 	require.NoError(t, err)
 
 	// Create 10 dummy UTXOs (22.44 BTC in total)
@@ -79,7 +81,7 @@ func mineTxNSetNonceMark(t *testing.T, ob *Observer, nonce uint64, txid string, 
 	ob.includedTxResults[outboundID] = &btcjson.GetTransactionResult{TxID: txid}
 
 	// Set nonce mark
-	tssAddress, err := ob.TSS().BTCAddress(chains.BitcoinTestnet.ChainId)
+	tssAddress, err := ob.TSS().PubKey().AddressBTC(chains.BitcoinMainnet.ChainId)
 	require.NoError(t, err)
 	nonceMark := btcjson.ListUnspentResult{
 		TxID:    txid,

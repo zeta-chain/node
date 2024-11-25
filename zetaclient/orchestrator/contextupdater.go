@@ -86,19 +86,9 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, lo
 		return errors.Wrap(err, "unable to fetch chain params")
 	}
 
-	keyGen, err := zc.GetKeyGen(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to fetch keygen from zetacore")
-	}
-
 	crosschainFlags, err := zc.GetCrosschainFlags(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to fetch crosschain flags from zetacore")
-	}
-
-	tss, err := zc.GetTSS(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to fetch current TSS")
 	}
 
 	freshParams := make(map[int64]*observertypes.ChainParams, len(chainParams))
@@ -117,7 +107,7 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, lo
 			continue
 		}
 
-		if err := observertypes.ValidateChainParams(cp); err != nil {
+		if err = observertypes.ValidateChainParams(cp); err != nil {
 			logger.Warn().Err(err).Int64("chain.id", cp.ChainId).Msg("Skipping invalid chain params")
 			continue
 		}
@@ -126,11 +116,9 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, lo
 	}
 
 	return app.Update(
-		keyGen,
 		supportedChains,
 		additionalChains,
 		freshParams,
-		tss.GetTssPubkey(),
 		crosschainFlags,
 	)
 }

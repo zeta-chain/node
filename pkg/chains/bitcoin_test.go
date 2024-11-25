@@ -18,6 +18,7 @@ func TestBitcoinNetParamsFromChainID(t *testing.T) {
 		{"Mainnet", BitcoinMainnet.ChainId, &chaincfg.MainNetParams, false},
 		{"Testnet", BitcoinTestnet.ChainId, &chaincfg.TestNet3Params, false},
 		{"Signet", BitcoinSignetTestnet.ChainId, &chaincfg.SigNetParams, false},
+		{"Testnet4", BitcoinTestnet4.ChainId, &TestNet4Params, false},
 		{"Unknown", -1, nil, true},
 	}
 
@@ -46,6 +47,7 @@ func TestBitcoinChainIDFromNetParams(t *testing.T) {
 		{"Mainnet", chaincfg.MainNetParams.Name, BitcoinMainnet.ChainId, false},
 		{"Testnet", chaincfg.TestNet3Params.Name, BitcoinTestnet.ChainId, false},
 		{"Signet", chaincfg.SigNetParams.Name, BitcoinSignetTestnet.ChainId, false},
+		{"Testnet4", TestNet4Params.Name, BitcoinTestnet4.ChainId, false},
 		{"Unknown", "Unknown", 0, true},
 	}
 
@@ -67,10 +69,14 @@ func TestIsBitcoinRegnet(t *testing.T) {
 	require.True(t, IsBitcoinRegnet(BitcoinRegtest.ChainId))
 	require.False(t, IsBitcoinRegnet(BitcoinMainnet.ChainId))
 	require.False(t, IsBitcoinRegnet(BitcoinTestnet.ChainId))
+	require.False(t, IsBitcoinRegnet(BitcoinSignetTestnet.ChainId))
+	require.False(t, IsBitcoinRegnet(BitcoinTestnet4.ChainId))
 }
 
 func TestIsBitcoinMainnet(t *testing.T) {
 	require.True(t, IsBitcoinMainnet(BitcoinMainnet.ChainId))
 	require.False(t, IsBitcoinMainnet(BitcoinRegtest.ChainId))
 	require.False(t, IsBitcoinMainnet(BitcoinTestnet.ChainId))
+	require.False(t, IsBitcoinMainnet(BitcoinSignetTestnet.ChainId))
+	require.False(t, IsBitcoinMainnet(BitcoinTestnet4.ChainId))
 }

@@ -18,17 +18,11 @@ func TestAppContext(t *testing.T) {
 		testCfg = config.New(false)
 		logger  = zerolog.New(zerolog.NewTestWriter(t))
 
-		keyGen = types.Keygen{
-			Status:         types.KeygenStatus_KeyGenSuccess,
-			GranteePubkeys: []string{"testPubKey1"},
-			BlockNumber:    123,
-		}
 		ccFlags = types.CrosschainFlags{
 			IsInboundEnabled:      true,
 			IsOutboundEnabled:     true,
 			GasPriceIncreaseFlags: nil,
 		}
-		ttsPubKey = "tssPubKeyTest"
 	)
 
 	testCfg.BTCChainConfigs[111] = config.BTCConfig{RPCUsername: "satoshi"}
@@ -64,8 +58,6 @@ func TestAppContext(t *testing.T) {
 		require.ErrorIs(t, err, ErrChainNotFound)
 
 		require.Equal(t, testCfg, appContext.Config())
-		require.Empty(t, appContext.GetKeygen())
-		require.Empty(t, appContext.GetCurrentTssPubKey())
 		require.Empty(t, appContext.GetCrossChainFlags())
 		require.False(t, appContext.IsInboundObservationEnabled())
 		require.False(t, appContext.IsOutboundObservationEnabled())
@@ -89,15 +81,13 @@ func TestAppContext(t *testing.T) {
 		}
 
 		// ACT
-		err = appContext.Update(keyGen, newChains, additionalChains, chainParams, ttsPubKey, ccFlags)
+		err = appContext.Update(newChains, additionalChains, chainParams, ccFlags)
 
 		// ASSERT
 		require.NoError(t, err)
 
 		// Check getters
 		assert.Equal(t, testCfg, appContext.Config())
-		assert.Equal(t, keyGen, appContext.GetKeygen())
-		assert.Equal(t, ttsPubKey, appContext.GetCurrentTssPubKey())
 		assert.Equal(t, ccFlags, appContext.GetCrossChainFlags())
 		assert.True(t, appContext.IsInboundObservationEnabled())
 		assert.True(t, appContext.IsOutboundObservationEnabled())
@@ -132,7 +122,7 @@ func TestAppContext(t *testing.T) {
 				{
 					name: "update with empty chains results in an error",
 					act: func(a *AppContext) error {
-						return appContext.Update(keyGen, newChains, nil, nil, ttsPubKey, ccFlags)
+						return appContext.Update(newChains, nil, nil, ccFlags)
 					},
 					assert: func(t *testing.T, a *AppContext, err error) {
 						assert.ErrorContains(t, err, "no chain params present")
@@ -153,7 +143,7 @@ func TestAppContext(t *testing.T) {
 						chainParamsWithOpt := maps.Clone(chainParams)
 						chainParamsWithOpt[opParams.ChainId] = opParams
 
-						return a.Update(keyGen, chainsWithOpt, additionalChains, chainParamsWithOpt, ttsPubKey, ccFlags)
+						return a.Update(chainsWithOpt, additionalChains, chainParamsWithOpt, ccFlags)
 					},
 					assert: func(t *testing.T, a *AppContext, err error) {
 						assert.ErrorIs(t, err, ErrChainNotSupported)
@@ -164,7 +154,7 @@ func TestAppContext(t *testing.T) {
 					name: "trying to add zeta chain without chain params is allowed",
 					act: func(a *AppContext) error {
 						chainsWithZeta := append(newChains, chains.ZetaChainMainnet)
-						return a.Update(keyGen, chainsWithZeta, additionalChains, chainParams, ttsPubKey, ccFlags)
+						return a.Update(chainsWithZeta, additionalChains, chainParams, ccFlags)
 					},
 					assert: func(t *testing.T, a *AppContext, err error) {
 						assert.NoError(t, err)
@@ -186,7 +176,7 @@ func TestAppContext(t *testing.T) {
 
 						chainsWithZeta := append(newChains, chains.ZetaChainMainnet)
 
-						return a.Update(keyGen, chainsWithZeta, additionalChains, chainParamsWithZeta, ttsPubKey, ccFlags)
+						return a.Update(chainsWithZeta, additionalChains, chainParamsWithZeta, ccFlags)
 					},
 					assert: func(t *testing.T, a *AppContext, err error) {
 						assert.NoError(t, err)
@@ -209,7 +199,7 @@ func TestAppContext(t *testing.T) {
 						updatedChainParams[maticParams.ChainId] = maticParams
 						delete(updatedChainParams, chains.ZetaChainMainnet.ChainId)
 
-						return a.Update(keyGen, newChains, additionalChains, updatedChainParams, ttsPubKey, ccFlags)
+						return a.Update(newChains, additionalChains, updatedChainParams, ccFlags)
 					},
 					assert: func(t *testing.T, a *AppContext, err error) {
 						assert.ErrorContains(t, err, "unable to locate fresh chain 137 based on chain params")

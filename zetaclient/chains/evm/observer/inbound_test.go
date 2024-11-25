@@ -465,7 +465,7 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 	block := testutils.LoadEVMBlock(t, TestDataDir, chainID, blockNumber, true)
 
 	// create mock zetacore client
-	tss := mocks.NewTSSMainnet()
+	tss := mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet)
 	lastBlock := receipt.BlockNumber.Uint64() + confirmation
 	zetacoreClient := mocks.NewZetacoreClient(t).
 		WithKeys(&keys.Keys{}).

@@ -121,6 +121,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
 
 	testStartTime := time.Now()
+
 	logger.Print("starting E2E tests")
 
 	if testAdmin {
@@ -164,11 +165,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			utils.EmergencyPolicyName,
 			utils.OperationalPolicyName,
 			utils.AdminPolicyName,
+			utils.UserEmissionsWithdrawName,
 		},
 		[]string{
 			conf.PolicyAccounts.EmergencyPolicyAccount.RawPrivateKey.String(),
 			conf.PolicyAccounts.OperationalPolicyAccount.RawPrivateKey.String(),
 			conf.PolicyAccounts.AdminPolicyAccount.RawPrivateKey.String(),
+			conf.AdditionalAccounts.UserEmissionsWithdraw.RawPrivateKey.String(),
 		},
 		conf.ZetaChainID,
 	)
@@ -327,13 +330,15 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinDepositName,
 			e2etests.TestBitcoinDepositAndCallName,
 			e2etests.TestBitcoinDepositAndCallRevertName,
-			e2etests.TestBitcoinDepositAndCallRevertWithDustName,
 			e2etests.TestBitcoinStdMemoDepositName,
 			e2etests.TestBitcoinStdMemoDepositAndCallName,
 			e2etests.TestBitcoinStdMemoDepositAndCallRevertName,
 			e2etests.TestBitcoinStdMemoDepositAndCallRevertOtherAddressName,
 			e2etests.TestBitcoinStdMemoInscribedDepositAndCallName,
 			e2etests.TestCrosschainSwapName,
+		}
+		bitcoinDepositTestsAdvanced := []string{
+			e2etests.TestBitcoinDepositAndCallRevertWithDustName,
 		}
 		bitcoinWithdrawTests := []string{
 			e2etests.TestBitcoinWithdrawSegWitName,
@@ -379,6 +384,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			erc20Tests = append(erc20Tests, erc20AdvancedTests...)
 			zetaTests = append(zetaTests, zetaAdvancedTests...)
 			zevmMPTests = append(zevmMPTests, zevmMPAdvancedTests...)
+			bitcoinDepositTests = append(bitcoinDepositTests, bitcoinDepositTestsAdvanced...)
 			bitcoinWithdrawTests = append(bitcoinWithdrawTests, bitcoinWithdrawTestsAdvanced...)
 			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
 		}
@@ -492,6 +498,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
 		os.Exit(1)
 	}
+	noError(deployerRunner.WithdrawEmissions())
 
 	// if all tests pass, cancel txs priority monitoring and check if tx priority is not correct in some blocks
 	logger.Print("⏳ e2e tests passed, checking tx priority")

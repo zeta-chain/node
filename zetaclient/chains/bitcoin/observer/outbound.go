@@ -560,7 +560,7 @@ func (ob *Observer) checkTSSVin(ctx context.Context, vins []btcjson.Vin, nonce u
 	if nonce > 0 && len(vins) <= 1 {
 		return fmt.Errorf("checkTSSVin: len(vins) <= 1")
 	}
-	pubKeyTss := hex.EncodeToString(ob.TSS().PubKeyCompressedBytes())
+	pubKeyTss := hex.EncodeToString(ob.TSS().PubKey().Bytes(true))
 	for i, vin := range vins {
 		// The length of the Witness should be always 2 for SegWit inputs.
 		if len(vin.Witness) != 2 {

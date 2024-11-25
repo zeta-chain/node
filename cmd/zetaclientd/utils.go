@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"net"
-	"strings"
+	"os"
+	"strconv"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,6 +16,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/authz"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/config"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -101,23 +102,20 @@ func waitForZetacoreToCreateBlocks(ctx context.Context, zc interfaces.ZetacoreCl
 	}
 }
 
-func validatePeer(seedPeer string) error {
-	parsedPeer := strings.Split(seedPeer, "/")
+func isEnvFlagEnabled(flag string) bool {
+	v, _ := strconv.ParseBool(os.Getenv(flag))
+	return v
+}
 
-	if len(parsedPeer) < 7 {
-		return errors.New("seed peer missing IP or ID or both, seed: " + seedPeer)
+func btcChainIDsFromContext(app *zctx.AppContext) []int64 {
+	var (
+		btcChains   = app.FilterChains(zctx.Chain.IsBitcoin)
+		btcChainIDs = make([]int64, len(btcChains))
+	)
+
+	for i, chain := range btcChains {
+		btcChainIDs[i] = chain.ID()
 	}
 
-	seedIP := parsedPeer[2]
-	seedID := parsedPeer[6]
-
-	if net.ParseIP(seedIP) == nil {
-		return errors.New("invalid seed IP address format, seed: " + seedPeer)
-	}
-
-	if len(seedID) == 0 {
-		return errors.New("seed id is empty, seed: " + seedPeer)
-	}
-
-	return nil
+	return btcChainIDs
 }

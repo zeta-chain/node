@@ -211,7 +211,7 @@ func (ob *Observer) WithZetacoreClient(client interfaces.ZetacoreClient) *Observ
 	return ob
 }
 
-// Tss returns the tss signer for the observer.
+// TSS returns the tss signer for the observer.
 func (ob *Observer) TSS() interfaces.TSSSigner {
 	return ob.tss
 }
@@ -228,13 +228,13 @@ func (ob *Observer) WithTSS(tss interfaces.TSSSigner) *Observer {
 func (ob *Observer) TSSAddressString() string {
 	switch ob.chain.Consensus {
 	case chains.Consensus_bitcoin:
-		address, err := ob.tss.BTCAddress(ob.Chain().ChainId)
+		address, err := ob.tss.PubKey().AddressBTC(ob.Chain().ChainId)
 		if err != nil {
 			return ""
 		}
 		return address.EncodeAddress()
 	default:
-		return ob.tss.EVMAddress().String()
+		return ob.tss.PubKey().AddressEVM().String()
 	}
 }
 

@@ -19,7 +19,7 @@ func TestZRC20Swap(r *runner.E2ERunner, _ []string) {
 	// if the tx fails due to already initialized, it will be ignored
 	tx, err := r.UniswapV2Factory.CreatePair(r.ZEVMAuth, r.ERC20ZRC20Addr, r.ETHZRC20Addr)
 	if err != nil {
-		r.Logger.Print("ℹ️ create pair error")
+		r.Logger.Print("ℹ️ create pair error %s", err.Error())
 	} else {
 		utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	}
