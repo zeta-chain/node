@@ -56,8 +56,7 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 		}
 
 		// pick a random nonce from the pending nonces between 0 and nonceLow
-		//fmt.Printf("pendingNonces.NonceLow: %d | pendingNonces.NonceHigh: %d \n",
-		//	pendingNonces.NonceLow, pendingNonces.NonceHigh)
+		// Ih nonce low is the same as nonce high, it means that there are no pending nonces to add trackers for
 		if pendingNonces.NonceLow == pendingNonces.NonceHigh {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
@@ -65,8 +64,16 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 				"no pending nonces found",
 			), nil, nil
 		}
-
-		nonce := pendingNonces.NonceLow
+		// Pick a random pending nonce
+		nonce := 0
+		switch {
+		case pendingNonces.NonceHigh <= 1:
+			nonce = int(pendingNonces.NonceLow)
+		case pendingNonces.NonceLow == 0:
+			nonce = r.Intn(int(pendingNonces.NonceHigh))
+		default:
+			nonce = r.Intn(int(pendingNonces.NonceHigh)-int(pendingNonces.NonceLow)) + int(pendingNonces.NonceLow)
+		}
 
 		tracker, found := k.GetOutboundTracker(ctx, chainID, uint64(nonce))
 		if found && tracker.IsMaxed() {
