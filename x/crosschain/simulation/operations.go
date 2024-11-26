@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
+	"github.com/zeta-chain/node/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -21,11 +22,11 @@ import (
 // TODO Add more details to comment based on what the number represents in terms of percentage of operations in a block
 // https://github.com/zeta-chain/node/issues/3100
 const (
-	DefaultWeightMsgAddOutboundTracker  = 50
-	DefaultWeightAddInboundTracker      = 50
+	DefaultWeightMsgAddOutboundTracker  = 100
+	DefaultWeightAddInboundTracker      = 20
 	DefaultWeightRemoveOutboundTracker  = 5
 	DefaultWeightVoteGasPrice           = 100
-	DefaultWeightVoteOutbound           = 50
+	DefaultWeightVoteOutbound           = 100
 	DefaultWeightVoteInbound            = 100
 	DefaultWeightWhitelistERC20         = 1
 	DefaultWeightMigrateTssFunds        = 1
@@ -149,6 +150,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgAddOutboundTracker,
 			SimulateMsgAddOutboundTracker(k),
+		),
+		simulation.NewWeightedOperation(
+			weightRemoveOutboundTracker,
+			SimulateMsgRemoveOutboundTracker(k),
 		),
 	}
 }
@@ -295,4 +300,25 @@ func BallotVoteSimulationMatrix() (simtypes.TransitionMatrix, []float64, int) {
 	yesVoteArray := []float64{1, .5, 0}
 	ballotVotesState := 1
 	return ballotTransitionMatrix, yesVoteArray, ballotVotesState
+}
+
+func GetPolicyAccount(ctx sdk.Context, k types.AuthorityKeeper, accounts []simtypes.Account) (simtypes.Account, error) {
+	policies, found := k.GetPolicies(ctx)
+	if !found {
+		return simtypes.Account{}, fmt.Errorf("policies object not found")
+	}
+	if len(policies.Items) == 0 {
+		return simtypes.Account{}, fmt.Errorf("no policies found")
+	}
+
+	admin := policies.Items[0].Address
+	address, err := observerTypes.GetOperatorAddressFromAccAddress(admin)
+	if err != nil {
+		return simtypes.Account{}, err
+	}
+	simAccount, found := simtypes.FindAccount(accounts, address)
+	if !found {
+		return simtypes.Account{}, fmt.Errorf("admin account not found in list of simulation accounts")
+	}
+	return simAccount, nil
 }

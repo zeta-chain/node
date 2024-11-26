@@ -9,6 +9,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -224,6 +225,7 @@ type FungibleKeeper interface {
 type AuthorityKeeper interface {
 	CheckAuthorization(ctx sdk.Context, msg sdk.Msg) error
 	GetAdditionalChainList(ctx sdk.Context) (list []chains.Chain)
+	GetPolicies(ctx sdk.Context) (val authoritytypes.Policies, found bool)
 }
 
 type LightclientKeeper interface {
