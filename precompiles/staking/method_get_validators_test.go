@@ -65,7 +65,11 @@ func Test_GetValidators(t *testing.T) {
 
 		_, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "invalid address 0x0000000000000000000000000000000000000000, reason: empty address")
+		require.Contains(
+			t,
+			err.Error(),
+			"invalid address 0x0000000000000000000000000000000000000000, reason: empty address",
+		)
 	})
 
 	t.Run("should return staker's validator list", func(t *testing.T) {
