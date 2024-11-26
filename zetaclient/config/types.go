@@ -167,6 +167,7 @@ func (c Config) StringMasked() string {
 	// create a masker
 	masker := mask.NewMasker()
 	masker.RegisterMaskStringFunc(mask.MaskTypeFilled, masker.MaskFilledString)
+	masker.RegisterMaskAnyFunc(mask.MaskTypeFilled, masker.MaskZero)
 
 	// mask the config
 	masked, err := masker.Mask(c)
