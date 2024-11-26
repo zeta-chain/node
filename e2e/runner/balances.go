@@ -99,21 +99,24 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	var solSOL *big.Int
 	var solSPL *big.Int
 	if r.Account.SolanaAddress != "" && r.Account.SolanaPrivateKey != "" {
+		solanaAddr := solana.MustPublicKeyFromBase58(r.Account.SolanaAddress.String())
+		privateKey := solana.MustPrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
 		solSOLBalance, err := r.SolanaClient.GetBalance(
 			r.Ctx,
-			solana.MustPublicKeyFromBase58(r.Account.SolanaAddress.String()),
+			solanaAddr,
 			rpc.CommitmentFinalized,
 		)
 		if err != nil {
 			return AccountBalances{}, err
 		}
 
+		// #nosec G115 always in range
 		solSOL = big.NewInt(int64(solSOLBalance.Value))
 
 		if r.SPLAddr != (solana.PublicKey{}) {
 			ata := r.ResolveSolanaATA(
-				solana.MustPrivateKeyFromBase58(r.Account.SolanaPrivateKey.String()),
-				solana.MustPublicKeyFromBase58(r.Account.SolanaAddress.String()),
+				privateKey,
+				solanaAddr,
 				r.SPLAddr,
 			)
 			splBalance, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, ata, rpc.CommitmentFinalized)
@@ -200,8 +203,12 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 
 	// solana
 	r.Logger.Print("Solana:")
-	r.Logger.Print("* SOL balance: %s", balances.SolSOL.String())
-	r.Logger.Print("* SPL balance: %s", balances.SolSPL.String())
+	if balances.SolSOL != nil {
+		r.Logger.Print("* SOL balance: %s", balances.SolSOL.String())
+	}
+	if balances.SolSPL != nil {
+		r.Logger.Print("* SPL balance: %s", balances.SolSPL.String())
+	}
 }
 
 // PrintTotalDiff shows the difference in the account balances of the accounts used in the e2e test from two balances structs
