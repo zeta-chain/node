@@ -68,7 +68,7 @@ type TONConfig struct {
 // ComplianceConfig is the config for compliance
 type ComplianceConfig struct {
 	LogPath             string   `json:"LogPath"`
-	RestrictedAddresses []string `json:"RestrictedAddresses"`
+	RestrictedAddresses []string `json:"RestrictedAddresses" mask:"zero"`
 }
 
 // Config is the config for ZetaClient
@@ -167,6 +167,7 @@ func (c Config) StringMasked() string {
 	// create a masker
 	masker := mask.NewMasker()
 	masker.RegisterMaskStringFunc(mask.MaskTypeFilled, masker.MaskFilledString)
+	masker.RegisterMaskAnyFunc(mask.MaskTypeFilled, masker.MaskZero)
 
 	// mask the config
 	masked, err := masker.Mask(c)
