@@ -282,21 +282,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		return msg.Digest(), nil
 	}
 
-	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(
-		ctx,
-		zetacore.PostVoteInboundGasLimit,
-		zetacore.PostVoteInboundExecutionGasLimit,
-		msg,
-	)
-	if err != nil {
-		ob.logger.Inbound.Error().Err(err).Msg("error posting to zetacore")
-		return "", err
-	} else if zetaHash != "" {
-		ob.logger.Inbound.Info().Msgf("BTC deposit detected and reported: PostVoteInbound zeta tx hash: %s inbound %s ballot %s fee %v",
-			zetaHash, txHash, ballot, event.DepositorFee)
-	}
-
-	return msg.Digest(), nil
+	return ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
 }
 
 // FilterAndParseIncomingTx given txs list returned by the "getblock 2" RPC command, return the txs that are relevant to us
@@ -332,12 +318,15 @@ func FilterAndParseIncomingTx(
 }
 
 // GetInboundVoteFromBtcEvent converts a BTCInboundEvent to a MsgVoteInbound to enable voting on the inbound on zetacore
+//
+// Returns:
+//   - a valid MsgVoteInbound message, or
+//   - nil if no valid message can be created for whatever reasons:
+//     invalid data, not processable, invalid amount, etc.
 func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosschaintypes.MsgVoteInbound {
 	// prepare logger fields
 	lf := map[string]any{
-		logs.FieldModule: logs.ModNameInbound,
 		logs.FieldMethod: "GetInboundVoteFromBtcEvent",
-		logs.FieldChain:  ob.Chain().ChainId,
 		logs.FieldTx:     event.TxHash,
 	}
 
@@ -349,7 +338,7 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 	}
 
 	// check if the event is processable
-	if !ob.CheckEventProcessability(*event) {
+	if !ob.IsEventProcessable(*event) {
 		return nil
 	}
 

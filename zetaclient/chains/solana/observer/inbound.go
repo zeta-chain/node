@@ -1,7 +1,6 @@
 package observer
 
 import (
-	"bytes"
 	"context"
 	"encoding/hex"
 	"fmt"
@@ -13,12 +12,12 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/coin"
-	"github.com/zeta-chain/node/pkg/constant"
 	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -100,30 +99,39 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 		// process successfully signature only
 		if sig.Err == nil {
-			txResult, err := ob.solClient.GetTransaction(ctx, sig.Signature, &rpc.GetTransactionOpts{})
-			if err != nil {
+			txResult, err := solanarpc.GetTransaction(ctx, ob.solClient, sig.Signature)
+			switch {
+			case errors.Is(err, solanarpc.ErrUnsupportedTxVersion):
+				ob.Logger().Inbound.Warn().
+					Stringer("tx.signature", sig.Signature).
+					Msg("ObserveInbound: skip unsupported transaction")
+			// just save the sig to last scanned txs
+			case err != nil:
 				// we have to re-scan this signature on next ticker
-				return errors.Wrapf(err, "error GetTransaction for chain %d sig %s", chainID, sigString)
-			}
-
-			// filter inbound events and vote
-			err = ob.FilterInboundEventsAndVote(ctx, txResult)
-			if err != nil {
-				// we have to re-scan this signature on next ticker
-				return errors.Wrapf(err, "error FilterInboundEventAndVote for chain %d sig %s", chainID, sigString)
+				return errors.Wrapf(err, "error GetTransaction for sig %s", sigString)
+			default:
+				// filter inbound events and vote
+				if err = ob.FilterInboundEventsAndVote(ctx, txResult); err != nil {
+					// we have to re-scan this signature on next ticker
+					return errors.Wrapf(err, "error FilterInboundEventAndVote for sig %s", sigString)
+				}
 			}
 		}
 
 		// signature scanned; save last scanned signature to both memory and db, ignore db error
-		if err := ob.SaveLastTxScanned(sigString, sig.Slot); err != nil {
+		if err = ob.SaveLastTxScanned(sigString, sig.Slot); err != nil {
 			ob.Logger().
 				Inbound.Error().
 				Err(err).
-				Msgf("ObserveInbound: error saving last sig %s for chain %d", sigString, chainID)
+				Str("tx.signature", sigString).
+				Msg("ObserveInbound: error saving last sig")
 		}
+
 		ob.Logger().
 			Inbound.Info().
-			Msgf("ObserveInbound: last scanned sig is %s for chain %d in slot %d", sigString, chainID, sig.Slot)
+			Str("tx.signature", sigString).
+			Uint64("tx.slot", sig.Slot).
+			Msg("ObserveInbound: last scanned sig")
 
 		// take a rest if max signatures per ticker is reached
 		if len(signatures)-i >= MaxSignaturesPerTicker {
@@ -256,19 +264,27 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 
 // BuildInboundVoteMsgFromEvent builds a MsgVoteInbound from an inbound event
 func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent) *crosschaintypes.MsgVoteInbound {
-	// compliance check. Return nil if the inbound contains restricted addresses
-	if compliance.DoesInboundContainsRestrictedAddress(event, ob.Logger()) {
+	// prepare logger fields
+	lf := map[string]any{
+		logs.FieldMethod: "BuildInboundVoteMsgFromEvent",
+		logs.FieldTx:     event.TxHash,
+	}
+
+	// decode event memo bytes to get the receiver
+	err := event.DecodeMemo()
+	if err != nil {
+		ob.Logger().Inbound.Info().Fields(lf).Msgf("invalid memo bytes: %s", hex.EncodeToString(event.Memo))
 		return nil
 	}
 
-	// donation check
-	if bytes.Equal(event.Memo, []byte(constant.DonationMessage)) {
-		ob.Logger().Inbound.Info().
-			Msgf("thank you rich folk for your donation! tx %s chain %d", event.TxHash, event.SenderChainID)
+	// check if the event is processable
+	if !ob.IsEventProcessable(*event) {
 		return nil
 	}
 
-	return zetacore.GetInboundVoteMessage(
+	// create inbound vote message
+	return crosschaintypes.NewMsgVoteInbound(
+		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		event.Sender,
 		event.SenderChainID,
 		event.Sender,
@@ -281,7 +297,28 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 		0,
 		event.CoinType,
 		event.Asset,
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		0, // not a smart contract call
+		crosschaintypes.ProtocolContractVersion_V1,
+		false, // not relevant for v1
 	)
+}
+
+// IsEventProcessable checks if the inbound event is processable
+func (ob *Observer) IsEventProcessable(event clienttypes.InboundEvent) bool {
+	logFields := map[string]any{logs.FieldTx: event.TxHash}
+
+	switch category := event.Category(); category {
+	case clienttypes.InboundCategoryGood:
+		return true
+	case clienttypes.InboundCategoryDonation:
+		ob.Logger().Inbound.Info().Fields(logFields).Msgf("thank you rich folk for your donation!")
+		return false
+	case clienttypes.InboundCategoryRestricted:
+		compliance.PrintComplianceLog(ob.Logger().Inbound, ob.Logger().Compliance,
+			false, ob.Chain().ChainId, event.TxHash, event.Sender, event.Receiver, event.CoinType.String())
+		return false
+	default:
+		ob.Logger().Inbound.Error().Msgf("unreachable code got InboundCategory: %v", category)
+		return false
+	}
 }

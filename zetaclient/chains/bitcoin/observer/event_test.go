@@ -22,6 +22,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
 // createTestBtcEvent creates a test BTC inbound event
@@ -41,7 +42,7 @@ func createTestBtcEvent(
 	}
 }
 
-func Test_CheckProcessability(t *testing.T) {
+func Test_Category(t *testing.T) {
 	// setup compliance config
 	cfg := config.Config{
 		ComplianceConfig: sample.ComplianceConfig(),
@@ -52,26 +53,26 @@ func Test_CheckProcessability(t *testing.T) {
 	tests := []struct {
 		name     string
 		event    *observer.BTCInboundEvent
-		expected observer.InboundProcessability
+		expected clienttypes.InboundCategory
 	}{
 		{
-			name: "should return InboundProcessabilityGood for a processable inbound event",
+			name: "should return InboundCategoryGood for a processable inbound event",
 			event: &observer.BTCInboundEvent{
 				FromAddress: "tb1quhassyrlj43qar0mn0k5sufyp6mazmh2q85lr6ex8ehqfhxpzsksllwrsu",
 				ToAddress:   testutils.TSSAddressBTCAthens3,
 			},
-			expected: observer.InboundProcessabilityGood,
+			expected: clienttypes.InboundCategoryGood,
 		},
 		{
-			name: "should return InboundProcessabilityComplianceViolation for a restricted sender address",
+			name: "should return InboundCategoryRestricted for a restricted sender address",
 			event: &observer.BTCInboundEvent{
 				FromAddress: sample.RestrictedBtcAddressTest,
 				ToAddress:   testutils.TSSAddressBTCAthens3,
 			},
-			expected: observer.InboundProcessabilityComplianceViolation,
+			expected: clienttypes.InboundCategoryRestricted,
 		},
 		{
-			name: "should return InboundProcessabilityComplianceViolation for a restricted receiver address in standard memo",
+			name: "should return InboundCategoryRestricted for a restricted receiver address in standard memo",
 			event: &observer.BTCInboundEvent{
 				FromAddress: "tb1quhassyrlj43qar0mn0k5sufyp6mazmh2q85lr6ex8ehqfhxpzsksllwrsu",
 				ToAddress:   testutils.TSSAddressBTCAthens3,
@@ -81,10 +82,10 @@ func Test_CheckProcessability(t *testing.T) {
 					},
 				},
 			},
-			expected: observer.InboundProcessabilityComplianceViolation,
+			expected: clienttypes.InboundCategoryRestricted,
 		},
 		{
-			name: "should return InboundProcessabilityComplianceViolation for a restricted revert address in standard memo",
+			name: "should return InboundCategoryRestricted for a restricted revert address in standard memo",
 			event: &observer.BTCInboundEvent{
 				FromAddress: "tb1quhassyrlj43qar0mn0k5sufyp6mazmh2q85lr6ex8ehqfhxpzsksllwrsu",
 				ToAddress:   testutils.TSSAddressBTCAthens3,
@@ -96,22 +97,22 @@ func Test_CheckProcessability(t *testing.T) {
 					},
 				},
 			},
-			expected: observer.InboundProcessabilityComplianceViolation,
+			expected: clienttypes.InboundCategoryRestricted,
 		},
 		{
-			name: "should return InboundProcessabilityDonation for a donation inbound event",
+			name: "should return InboundCategoryDonation for a donation inbound event",
 			event: &observer.BTCInboundEvent{
 				FromAddress: "tb1quhassyrlj43qar0mn0k5sufyp6mazmh2q85lr6ex8ehqfhxpzsksllwrsu",
 				ToAddress:   testutils.TSSAddressBTCAthens3,
 				MemoBytes:   []byte(constant.DonationMessage),
 			},
-			expected: observer.InboundProcessabilityDonation,
+			expected: clienttypes.InboundCategoryDonation,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := tt.event.Processability()
+			result := tt.event.Category()
 			require.Equal(t, tt.expected, result)
 		})
 	}
@@ -301,7 +302,7 @@ func Test_ValidateStandardMemo(t *testing.T) {
 	}
 }
 
-func Test_CheckEventProcessability(t *testing.T) {
+func Test_IsEventProcessable(t *testing.T) {
 	// can use any bitcoin chain for testing
 	chain := chains.BitcoinMainnet
 	params := mocks.MockChainParams(chain.ChainId, 10)
@@ -344,7 +345,7 @@ func Test_CheckEventProcessability(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := ob.CheckEventProcessability(tt.event)
+			result := ob.IsEventProcessable(tt.event)
 			require.Equal(t, tt.result, result)
 		})
 	}

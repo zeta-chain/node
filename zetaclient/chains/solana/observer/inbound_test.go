@@ -129,7 +129,17 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 		msg := ob.BuildInboundVoteMsgFromEvent(event)
 		require.NotNil(t, msg)
 	})
-	t.Run("should return nil msg if sender is restricted", func(t *testing.T) {
+
+	t.Run("should return nil if failed to decode memo", func(t *testing.T) {
+		sender := sample.SolanaAddress(t)
+		memo := []byte("a memo too short")
+		event := sample.InboundEvent(chain.ChainId, sender, sender, 1280, memo)
+
+		msg := ob.BuildInboundVoteMsgFromEvent(event)
+		require.Nil(t, msg)
+	})
+
+	t.Run("should return nil if event is not processable", func(t *testing.T) {
 		sender := sample.SolanaAddress(t)
 		receiver := sample.SolanaAddress(t)
 		event := sample.InboundEvent(chain.ChainId, sender, receiver, 1280, nil)
@@ -141,25 +151,53 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 		msg := ob.BuildInboundVoteMsgFromEvent(event)
 		require.Nil(t, msg)
 	})
-	t.Run("should return nil msg if receiver is restricted", func(t *testing.T) {
-		sender := sample.SolanaAddress(t)
-		receiver := sample.SolanaAddress(t)
-		memo := sample.EthAddress().Bytes()
-		event := sample.InboundEvent(chain.ChainId, sender, receiver, 1280, []byte(memo))
+}
 
-		// restrict receiver
-		cfg.ComplianceConfig.RestrictedAddresses = []string{receiver}
-		config.LoadComplianceConfig(cfg)
+func Test_IsEventProcessable(t *testing.T) {
+	// parepare params
+	chain := chains.SolanaDevnet
+	params := sample.ChainParams(chain.ChainId)
+	params.GatewayAddress = sample.SolanaAddress(t)
 
-		msg := ob.BuildInboundVoteMsgFromEvent(event)
-		require.Nil(t, msg)
-	})
-	t.Run("should return nil msg on donation transaction", func(t *testing.T) {
-		// create event with donation memo
-		sender := sample.SolanaAddress(t)
-		event := sample.InboundEvent(chain.ChainId, sender, sender, 1280, []byte(constant.DonationMessage))
+	// create test observer
+	ob := MockSolanaObserver(t, chain, nil, *params, nil, nil)
 
-		msg := ob.BuildInboundVoteMsgFromEvent(event)
-		require.Nil(t, msg)
-	})
+	// setup compliance config
+	cfg := config.Config{
+		ComplianceConfig: sample.ComplianceConfig(),
+	}
+	config.LoadComplianceConfig(cfg)
+
+	// test cases
+	tests := []struct {
+		name   string
+		event  clienttypes.InboundEvent
+		result bool
+	}{
+		{
+			name:   "should return true for processable event",
+			event:  clienttypes.InboundEvent{Sender: sample.SolanaAddress(t), Receiver: sample.SolanaAddress(t)},
+			result: true,
+		},
+		{
+			name:   "should return false on donation message",
+			event:  clienttypes.InboundEvent{Memo: []byte(constant.DonationMessage)},
+			result: false,
+		},
+		{
+			name: "should return false on compliance violation",
+			event: clienttypes.InboundEvent{
+				Sender:   sample.RestrictedSolAddressTest,
+				Receiver: sample.EthAddress().Hex(),
+			},
+			result: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ob.IsEventProcessable(tt.event)
+			require.Equal(t, tt.result, result)
+		})
+	}
 }
