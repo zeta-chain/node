@@ -75,6 +75,7 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 			nonce = r.Intn(int(pendingNonces.NonceHigh)-int(pendingNonces.NonceLow)) + int(pendingNonces.NonceLow)
 		}
 
+		// Verify if the tracker is maxed
 		tracker, found := k.GetOutboundTracker(ctx, chainID, uint64(nonce))
 		if found && tracker.IsMaxed() {
 			return simtypes.NoOpMsg(
@@ -92,11 +93,6 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 			Proof:     nil,
 			BlockHash: "",
 			TxIndex:   0,
-		}
-
-		// System contracts are deployed on the first block, so we cannot vote on gas prices before that
-		if ctx.BlockHeight() <= 2 {
-			return simtypes.NewOperationMsg(&msg, true, "block height less than 1", nil), nil, nil
 		}
 
 		err = msg.ValidateBasic()
