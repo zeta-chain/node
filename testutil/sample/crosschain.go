@@ -348,7 +348,6 @@ func OutboundVoteSim(r *rand.Rand,
 	from int64,
 	tssPubkey string,
 ) (types.CrossChainTx, types.MsgVoteOutbound) {
-
 	coinType := CoinTypeFromRand(r)
 
 	amount := math.NewUint(uint64(r.Int63()))
@@ -409,7 +408,6 @@ func OutboundVoteSim(r *rand.Rand,
 	}
 
 	return cctx, msg
-
 }
 
 func ZRC20Withdrawal(to []byte, value *big.Int) *zrc20.ZRC20Withdrawal {

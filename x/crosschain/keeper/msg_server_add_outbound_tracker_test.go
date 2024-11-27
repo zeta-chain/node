@@ -249,8 +249,8 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
 		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
 
-		hashes := make([]*types.TxHash, keeper.MaxOutboundTrackerHashes)
-		for i := 0; i < keeper.MaxOutboundTrackerHashes; i++ {
+		hashes := make([]*types.TxHash, types.MaxOutboundTrackerHashes)
+		for i := 0; i < types.MaxOutboundTrackerHashes; i++ {
 			hashes[i] = &types.TxHash{
 				TxHash: sample.Hash().Hex(),
 			}

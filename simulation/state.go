@@ -135,8 +135,8 @@ func updateObserverState(t *testing.T, rawState map[string]json.RawMessage, cdc 
 	observerState.Tss = &tss
 
 	chains := zetachains.DefaultChainsList()
-	var chainsNonces []observertypes.ChainNonces
-	var pendingNonces []observertypes.PendingNonces
+	chainsNonces := make([]observertypes.ChainNonces, 0)
+	pendingNonces := make([]observertypes.PendingNonces, 0)
 	for _, chain := range chains {
 		chainNonce := observertypes.ChainNonces{
 			ChainId: chain.ChainId,
@@ -250,6 +250,7 @@ func updateRawState(t *testing.T, rawState map[string]json.RawMessage, cdc codec
 	rawState[observertypes.ModuleName] = cdc.MustMarshalJSON(observerState)
 	rawState[authoritytypes.ModuleName] = cdc.MustMarshalJSON(authorityState)
 	rawState[fungibletypes.ModuleName] = cdc.MustMarshalJSON(fungibleState)
+	rawState[crosschaintypes.ModuleName] = cdc.MustMarshalJSON(updateCrossChainState(t, rawState, cdc, r))
 }
 
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.

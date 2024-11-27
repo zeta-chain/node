@@ -20,7 +20,6 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
-	crosschainkeeper "github.com/zeta-chain/node/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/evm"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
@@ -126,7 +125,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 			// should not happen. We can't tell which txHash is true. It might happen (e.g. bug, glitchy/hacked endpoint)
 			ob.Logger().Outbound.Error().Msgf("WatchOutbound: confirmed multiple (%d) outbound for chain %d nonce %d", txCount, chainID, nonce)
 		} else {
-			if len(tracker.HashList) == crosschainkeeper.MaxOutboundTrackerHashes {
+			if len(tracker.HashList) == crosschaintypes.MaxOutboundTrackerHashes {
 				ob.Logger().Outbound.Error().Msgf("WatchOutbound: outbound tracker is full of hashes for chain %d nonce %d", chainID, nonce)
 			}
 		}
