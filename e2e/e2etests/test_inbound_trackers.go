@@ -84,4 +84,32 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	)
 	addTrackerAndWaitForCCTX(coin.CoinType_NoAssetCall, tx.Hash().Hex())
 	r.Logger.Print("🍾v2 call observed")
+
+	// set value of the payable transactions
+	previousValue := r.EVMAuth.Value
+	r.EVMAuth.Value = amount
+
+	// send v2 deposit through contract
+	r.Logger.Print("🏃test v2 erc20 deposit through contract")
+	tx, err := r.TestDAppV2EVM.GatewayDeposit(r.EVMAuth, r.EVMAddress())
+	require.NoError(r, err)
+	addTrackerAndWaitForCCTX(coin.CoinType_Gas, tx.Hash().Hex())
+	r.Logger.Print("🍾v2 erc20 deposit through contract observed")
+
+	// send v2 deposit and call through contract
+	r.Logger.Print("🏃test v2 erc20 deposit and call through contract")
+	tx, err = r.TestDAppV2EVM.GatewayDepositAndCall(r.EVMAuth, r.EVMAddress(), []byte(randomPayload(r)))
+	require.NoError(r, err)
+	addTrackerAndWaitForCCTX(coin.CoinType_Gas, tx.Hash().Hex())
+	r.Logger.Print("🍾v2 erc20 deposit and call through contract observed")
+
+	// reset the value of the payable transactions
+	r.EVMAuth.Value = previousValue
+
+	// send v2 call through contract
+	r.Logger.Print("🏃test v2 call through contract")
+	tx, err = r.TestDAppV2EVM.GatewayCall(r.EVMAuth, r.EVMAddress(), []byte(randomPayload(r)))
+	require.NoError(r, err)
+	addTrackerAndWaitForCCTX(coin.CoinType_NoAssetCall, tx.Hash().Hex())
+	r.Logger.Print("🍾v2 call through contract observed")
 }

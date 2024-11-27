@@ -102,7 +102,7 @@ func (r *E2ERunner) SetupEVMV2() {
 	require.NoError(r, err)
 
 	// deploy test dapp v2
-	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.EVMAuth, r.EVMClient, false)
+	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.EVMAuth, r.EVMClient, false, r.GatewayEVMAddr)
 	require.NoError(r, err)
 
 	r.TestDAppV2EVMAddr = testDAppV2Addr
