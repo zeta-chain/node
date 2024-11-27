@@ -43,12 +43,11 @@ func (k msgServer) AbortStuckCCTX(
 		return nil, types.ErrStatusNotPending
 	}
 
-	cctx.CctxStatus = &types.Status{
-		Status:        types.CctxStatus_Aborted,
-		StatusMessage: AbortMessage,
-	}
+	// update the status
+	cctx.CctxStatus.UpdateStatusAndErrorMessages(types.CctxStatus_Aborted, AbortMessage, "")
 
-	k.SetCrossChainTx(ctx, cctx)
+	// Save out outbound, we do not need to provide the tss-pubkey as NonceToCctx is not updated
+	k.SaveOutbound(ctx, &cctx, "")
 
 	return &types.MsgAbortStuckCCTXResponse{}, nil
 }
