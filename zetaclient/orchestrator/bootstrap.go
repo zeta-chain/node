@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"context"
+	"fmt"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -479,16 +480,16 @@ func syncObserverMap(
 }
 
 func btcDatabaseFileName(chain chains.Chain) string {
-	// btcDatabaseFilename is the Bitcoin database file name now used in mainnet and testnet3
+	// legacyBTCDatabaseFilename is the Bitcoin database file name now used in mainnet and testnet3
 	// so we keep using it here for backward compatibility
-	const btcDatabaseFilename = "btc_chain_client"
+	const legacyBTCDatabaseFilename = "btc_chain_client"
 
 	// For additional bitcoin networks, we use the chain name as the database file name
 	switch chain.ChainId {
 	case chains.BitcoinMainnet.ChainId, chains.BitcoinTestnet.ChainId:
-		return btcDatabaseFilename
+		return legacyBTCDatabaseFilename
 	default:
-		return chain.Name
+		return fmt.Sprintf("%s_%d", legacyBTCDatabaseFilename, chain.ChainId)
 	}
 }
 
