@@ -14,6 +14,7 @@
 
 * [3206](https://github.com/zeta-chain/node/pull/3206) - skip Solana unsupported transaction version to not block inbound observation
 * [3184](https://github.com/zeta-chain/node/pull/3184) - zetaclient should not retry if inbound vote message validation fails
+* [3225](https://github.com/zeta-chain/node/pull/3225) - use separate database file names for btc signet and testnet4
 
 ## v23.0.0
 
