@@ -341,13 +341,13 @@ func InboundVoteSim(from, to int64, r *rand.Rand, asset string) types.MsgVoteInb
 	}
 }
 
-func OutboundVoteSim(r *rand.Rand,
+func CCTXfromRand(r *rand.Rand,
 	creator string,
 	index string,
 	to int64,
 	from int64,
 	tssPubkey string,
-) (types.CrossChainTx, types.MsgVoteOutbound) {
+) types.CrossChainTx {
 	coinType := CoinTypeFromRand(r)
 
 	amount := math.NewUint(uint64(r.Int63()))
@@ -392,13 +392,19 @@ func OutboundVoteSim(r *rand.Rand,
 		InboundParams:  inbound,
 		OutboundParams: []*types.OutboundParams{outbound},
 	}
+	return cctx
+}
+
+func OutboundVoteSim(r *rand.Rand,
+	cctx types.CrossChainTx,
+) (types.CrossChainTx, types.MsgVoteOutbound) {
 
 	msg := types.MsgVoteOutbound{
 		CctxHash:                          cctx.Index,
 		OutboundTssNonce:                  cctx.GetCurrentOutboundParam().TssNonce,
 		OutboundChain:                     cctx.GetCurrentOutboundParam().ReceiverChainId,
 		Status:                            chains.ReceiveStatus_success,
-		Creator:                           creator,
+		Creator:                           cctx.Creator,
 		ObservedOutboundHash:              ethcommon.BytesToHash(EthAddressFromRand(r).Bytes()).String(),
 		ValueReceived:                     cctx.GetCurrentOutboundParam().Amount,
 		ObservedOutboundBlockHeight:       cctx.GetCurrentOutboundParam().ObservedExternalHeight,

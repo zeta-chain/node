@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,6 +41,8 @@ func (k msgServer) AbortStuckCCTX(
 		cctx.CctxStatus.Status == types.CctxStatus_PendingInbound ||
 		cctx.CctxStatus.Status == types.CctxStatus_PendingRevert
 	if !isPending {
+		fmt.Println("CCTX not in pending", cctx.Index, cctx.CctxStatus.Status)
+
 		return nil, types.ErrStatusNotPending
 	}
 

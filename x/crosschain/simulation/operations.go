@@ -22,7 +22,7 @@ import (
 // TODO Add more details to comment based on what the number represents in terms of percentage of operations in a block
 // https://github.com/zeta-chain/node/issues/3100
 const (
-	DefaultWeightMsgAddOutboundTracker  = 100
+	DefaultWeightAddOutboundTracker     = 100
 	DefaultWeightAddInboundTracker      = 20
 	DefaultWeightRemoveOutboundTracker  = 5
 	DefaultWeightVoteGasPrice           = 100
@@ -51,7 +51,7 @@ const (
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper) simulation.WeightedOperations {
 	var (
-		weightMsgAddOutboundTracker  int
+		weightAddOutboundTracker     int
 		weightAddInboundTracker      int
 		weightRemoveOutboundTracker  int
 		weightVoteGasPrice           int
@@ -64,9 +64,9 @@ func WeightedOperations(
 		weightUpdateRateLimiterFlags int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgAddOutboundTracker, &weightMsgAddOutboundTracker, nil,
+	appParams.GetOrGenerate(cdc, OpWeightMsgAddOutboundTracker, &weightAddOutboundTracker, nil,
 		func(_ *rand.Rand) {
-			weightMsgAddOutboundTracker = DefaultWeightMsgAddOutboundTracker
+			weightAddOutboundTracker = DefaultWeightAddOutboundTracker
 		},
 	)
 
@@ -148,7 +148,7 @@ func WeightedOperations(
 			SimulateMsgAddInboundTracker(k),
 		),
 		simulation.NewWeightedOperation(
-			weightMsgAddOutboundTracker,
+			weightAddOutboundTracker,
 			SimulateMsgAddOutboundTracker(k),
 		),
 		simulation.NewWeightedOperation(
@@ -158,6 +158,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightWhitelistERC20,
 			SimulateMsgWhitelistERC20(k),
+		),
+		simulation.NewWeightedOperation(
+			weightAbortStuckCCTX,
+			SimulateMsgAbortStuckCCTX(k),
 		),
 	}
 }

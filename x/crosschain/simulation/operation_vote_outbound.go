@@ -11,6 +11,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -89,8 +90,20 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 			return simtypes.OperationMsg{}, nil, fmt.Errorf("tss not found")
 		}
 
-		cctx, msg := sample.OutboundVoteSim(r, creator, index, to, from, tss.TssPubkey)
-		msg.Status = defaultVote
+		cctx := sample.CCTXfromRand(r, creator, index, to, from, tss.TssPubkey)
+		msg := types.MsgVoteOutbound{
+			CctxHash:                          cctx.Index,
+			OutboundTssNonce:                  cctx.GetCurrentOutboundParam().TssNonce,
+			OutboundChain:                     cctx.GetCurrentOutboundParam().ReceiverChainId,
+			Status:                            defaultVote,
+			Creator:                           cctx.Creator,
+			ObservedOutboundHash:              ethcommon.BytesToHash(sample.EthAddressFromRand(r).Bytes()).String(),
+			ValueReceived:                     cctx.GetCurrentOutboundParam().Amount,
+			ObservedOutboundBlockHeight:       cctx.GetCurrentOutboundParam().ObservedExternalHeight,
+			ObservedOutboundEffectiveGasPrice: cctx.GetCurrentOutboundParam().EffectiveGasPrice,
+			ObservedOutboundGasUsed:           cctx.GetCurrentOutboundParam().GasUsed,
+			CoinType:                          cctx.InboundParams.CoinType,
+		}
 
 		err = k.SetObserverOutboundInfo(ctx, to, &cctx)
 		if err != nil {
