@@ -36,10 +36,7 @@ func (k msgServer) AbortStuckCCTX(
 	}
 
 	// check if the cctx is pending
-	isPending := cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound ||
-		cctx.CctxStatus.Status == types.CctxStatus_PendingInbound ||
-		cctx.CctxStatus.Status == types.CctxStatus_PendingRevert
-	if !isPending {
+	if !cctx.CctxStatus.Status.IsPendingStatus() {
 		return nil, types.ErrStatusNotPending
 	}
 

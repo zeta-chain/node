@@ -86,3 +86,11 @@ func stateTransitionMap() map[CctxStatus][]CctxStatus {
 	}
 	return stateTransitionMap
 }
+
+func (c CctxStatus) IsTerminalStatus() bool {
+	return c == CctxStatus_Aborted || c == CctxStatus_Reverted || c == CctxStatus_OutboundMined
+}
+
+func (c CctxStatus) IsPendingStatus() bool {
+	return c == CctxStatus_PendingInbound || c == CctxStatus_PendingOutbound || c == CctxStatus_PendingRevert
+}
