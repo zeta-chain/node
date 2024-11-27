@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## v23.1.1
+
+### Fixes
+
+* [3206](https://github.com/zeta-chain/node/pull/3206) - skip Solana unsupported transaction version to not block inbound observation
+
+## v23.1.0
+
+### Chores
+
+- [3215](https://github.com/zeta-chain/node/pull/3215) - revert go-tss to v21/v22 version to avoid keysign failures
+
 ## v23.0.0
 
 ### Features
