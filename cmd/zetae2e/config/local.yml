@@ -3,6 +3,8 @@ default_account:
   bech32_address: "zeta1uhznv7uzyjq84s3q056suc8pkme85lkvhrz3dd"
   evm_address: "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC"
   private_key: "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
+  solana_address: "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
+  solana_private_key: "4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C"
 additional_accounts:
   user_erc20:
     bech32_address: "zeta1datate7xmwm4uk032f9rmcu0cwy7ch7kg6y6zv"
@@ -106,7 +108,7 @@ contracts:
   zevm:
     system_contract: "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
     eth_zrc20: "0x13A0c5930C028511Dc02665E7285134B6d11A5f4"
-    erc20_zrc20: "0x48f80608B672DC30DC7e3dbBd0343c5F02C738Eb"
+    erc20_zrc20: "0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a"
     btc_zrc20: "0xd97B1de3619ed2c6BEb3860147E30cA8A7dC9891"
     uniswap_factory: "0x9fd96203f7b22bCF72d9DCb40ff98302376cE09c"
     uniswap_router: "0x2ca7d64A7EFE2D62A725E2B35Cf7230D6677FfEe"
@@ -115,6 +117,8 @@ contracts:
     test_dapp: "0xA8D5060feb6B456e886F023709A2795373691E63"
     gateway: "0xa825eAa55b497AF892faca73a3797046C10B7c23"
     test_dapp_v2: "0xBFF76e77D56B3C1202107f059425D56f0AEF87Ed"
+    sol_zrc20: "0x48f80608B672DC30DC7e3dbBd0343c5F02C738Eb"
+    spl_zrc20: "0x7c8dDa80bbBE1254a7aACf3219EBe1481c6E01d7"
   evm:
     zeta_eth: "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9"
     connector_eth: "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"
