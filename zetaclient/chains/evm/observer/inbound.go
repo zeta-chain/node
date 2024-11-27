@@ -150,8 +150,8 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 		if err != nil {
 			ob.Logger().Inbound.Debug().Err(err).Msg("error getting gateway contract for processing inbound tracker")
 		}
-		if err == nil && tx != nil && ethcommon.HexToAddress(tx.To) == gatewayAddr {
-			if err := ob.ProcessInboundTrackerV2(ctx, gateway, tx, receipt); err != nil {
+		if err == nil && tx != nil {
+			if err := ob.ProcessInboundTrackerV2(ctx, gateway, gatewayAddr, tx, receipt); err != nil {
 				return err
 			}
 		} else {

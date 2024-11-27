@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/onrik/ethrpc"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
@@ -15,6 +16,7 @@ import (
 func (ob *Observer) ProcessInboundTrackerV2(
 	ctx context.Context,
 	gateway *gatewayevm.GatewayEVM,
+	gatewayAddr ethcommon.Address,
 	tx *ethrpc.Transaction,
 	receipt *ethtypes.Receipt,
 ) error {
@@ -28,7 +30,7 @@ func (ob *Observer) ProcessInboundTrackerV2(
 	}
 
 	for _, log := range receipt.Logs {
-		if log == nil {
+		if log == nil && log.Address != gatewayAddr {
 			continue
 		}
 
