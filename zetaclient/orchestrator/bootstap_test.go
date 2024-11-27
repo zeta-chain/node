@@ -395,6 +395,46 @@ func TestCreateChainObserverMap(t *testing.T) {
 	})
 }
 
+func TestBtcDatabaseFileName(t *testing.T) {
+	tests := []struct {
+		name     string
+		chain    chains.Chain
+		expected string
+	}{
+		{
+			name:     "should use legacy file name for bitcoin mainnet",
+			chain:    chains.BitcoinMainnet,
+			expected: "btc_chain_client",
+		},
+		{
+			name:     "should use legacy file name for bitcoin testnet3",
+			chain:    chains.BitcoinTestnet,
+			expected: "btc_chain_client",
+		},
+		{
+			name:     "should use new file name for bitcoin regtest",
+			chain:    chains.BitcoinRegtest,
+			expected: "btc_chain_client_18444",
+		},
+		{
+			name:     "should use new file name for bitcoin signet",
+			chain:    chains.BitcoinSignetTestnet,
+			expected: "btc_chain_client_18333",
+		},
+		{
+			name:     "should use new file name for bitcoin testnet4",
+			chain:    chains.BitcoinTestnet4,
+			expected: "btc_chain_client_18334",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expected, btcDatabaseFileName(tt.chain))
+		})
+	}
+}
+
 func chainParams(supportedChains []chains.Chain) ([]chains.Chain, map[int64]*observertypes.ChainParams) {
 	params := make(map[int64]*observertypes.ChainParams)
 
