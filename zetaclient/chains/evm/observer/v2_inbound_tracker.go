@@ -2,6 +2,7 @@ package observer
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -11,6 +12,8 @@ import (
 
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
+
+var errEventNotFound = errors.New("no gateway event found in inbound tracker")
 
 // ProcessInboundTrackerV2 processes inbound tracker events from the gateway
 func (ob *Observer) ProcessInboundTrackerV2(
@@ -86,5 +89,5 @@ func (ob *Observer) ProcessInboundTrackerV2(
 		}
 	}
 
-	return fmt.Errorf("no gateway event found in inbound tracker %s", tx.Hash)
+	return errEventNotFound
 }
