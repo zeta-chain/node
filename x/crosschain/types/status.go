@@ -13,7 +13,8 @@ func (m *Status) AbortRefunded() {
 func (m *Status) UpdateStatusAndErrorMessages(newStatus CctxStatus, statusMsg, errorMsg string) {
 	m.UpdateStatus(newStatus, statusMsg)
 
-	if newStatus == CctxStatus_Aborted || newStatus == CctxStatus_Reverted || newStatus == CctxStatus_PendingRevert {
+	if errorMsg != "" &&
+		(newStatus == CctxStatus_Aborted || newStatus == CctxStatus_Reverted || newStatus == CctxStatus_PendingRevert) {
 		m.UpdateErrorMessage(errorMsg)
 	}
 }
