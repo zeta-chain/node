@@ -21,11 +21,18 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 
 		chainID := int64(1337)
 		supportedChains := k.GetObserverKeeper().GetSupportedChains(ctx)
+		if len(supportedChains) == 0 {
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				types.TypeMsgAddOutboundTracker,
+				"no supported chains found",
+			), nil, nil
+		}
+
 		for _, chain := range supportedChains {
 			if chains.IsEthereumChain(chain.ChainId, []chains.Chain{}) {
 				chainID = chain.ChainId
 			}
-
 		}
 		// Get a random account and observer
 		// If this returns an error, it is likely that the entire observer set has been removed

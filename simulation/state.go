@@ -22,8 +22,9 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-	chains2 "github.com/zeta-chain/node/pkg/chains"
+	zetachains "github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 
 	zetaapp "github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -133,7 +134,7 @@ func updateObserverState(t *testing.T, rawState map[string]json.RawMessage, cdc 
 	tss.OperatorAddressList = observers
 	observerState.Tss = &tss
 
-	chains := chains2.DefaultChainsList()
+	chains := zetachains.DefaultChainsList()
 	var chainsNonces []observertypes.ChainNonces
 	var pendingNonces []observertypes.PendingNonces
 	for _, chain := range chains {
@@ -186,6 +187,23 @@ func updateAuthorityState(t *testing.T, rawState map[string]json.RawMessage, cdc
 	return authorityState
 }
 
+func updateCrossChainState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, r *rand.Rand) *crosschaintypes.GenesisState {
+	crossChainStateBz, ok := rawState[crosschaintypes.ModuleName]
+	require.True(t, ok, "crosschain genesis state is missing")
+
+	crossChainState := new(crosschaintypes.GenesisState)
+	cdc.MustUnmarshalJSON(crossChainStateBz, crossChainState)
+
+	gasPriceList := []crosschaintypes.GasPrice{}
+
+	chains := zetachains.DefaultChainsList()
+	for _, chain := range chains {
+		gasPriceList = append(gasPriceList, sample.GasPriceFromRand(r, chain.ChainId))
+	}
+
+	return crossChainState
+}
+
 func updateFungibleState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, r *rand.Rand) *fungibletypes.GenesisState {
 	fungibleStateBz, ok := rawState[fungibletypes.ModuleName]
 	require.True(t, ok, "fungible genesis state is missing")
@@ -199,7 +217,7 @@ func updateFungibleState(t *testing.T, rawState map[string]json.RawMessage, cdc 
 	}
 
 	foreignCoins := make([]fungibletypes.ForeignCoins, 0)
-	chains := chains2.DefaultChainsList()
+	chains := zetachains.DefaultChainsList()
 
 	for _, chain := range chains {
 		foreignCoin := fungibletypes.ForeignCoins{

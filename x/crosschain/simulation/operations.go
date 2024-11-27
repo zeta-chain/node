@@ -28,7 +28,7 @@ const (
 	DefaultWeightVoteGasPrice           = 100
 	DefaultWeightVoteOutbound           = 100
 	DefaultWeightVoteInbound            = 100
-	DefaultWeightWhitelistERC20         = 1
+	DefaultWeightWhitelistERC20         = 10
 	DefaultWeightMigrateTssFunds        = 1
 	DefaultWeightUpdateTssAddress       = 1
 	DefaultWeightAbortStuckCCTX         = 10
@@ -154,6 +154,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightRemoveOutboundTracker,
 			SimulateMsgRemoveOutboundTracker(k),
+		),
+		simulation.NewWeightedOperation(
+			weightWhitelistERC20,
+			SimulateMsgWhitelistERC20(k),
 		),
 	}
 }

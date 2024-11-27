@@ -39,11 +39,14 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 
 		// Vote for random gas price. Gas prices do not use a ballot system, so we can vote directly without having to schedule future operations.
 		// The random nature of the price might create weird gas prices for the chain, but it is fine for now. We can remove the randomness if needed
+		price := r.Uint64()
+		// Select priority fee between 0 and price
+		priorityFee := r.Uint64() % price
 		msg := types.MsgVoteGasPrice{
 			Creator:     randomObserver,
 			ChainId:     randomChainID,
-			Price:       r.Uint64(),
-			PriorityFee: r.Uint64(),
+			Price:       price,
+			PriorityFee: priorityFee,
 			BlockNumber: r.Uint64(),
 			Supply:      fmt.Sprintf("%d", r.Int63()),
 		}

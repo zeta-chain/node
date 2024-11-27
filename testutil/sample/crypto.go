@@ -90,6 +90,14 @@ func SolanaAddress(t *testing.T) string {
 	return privKey.PublicKey().String()
 }
 
+func SolAddressFromRand(t *testing.T, r *rand.Rand) string {
+	privKey, err := solana.NewRandomPrivateKey()
+	if err != nil {
+		panic(err)
+	}
+	return privKey.PublicKey().String()
+}
+
 // SolanaSignature returns a sample solana signature
 func SolanaSignature(t *testing.T) solana.Signature {
 	// Generate a random keypair
@@ -139,6 +147,13 @@ func Bech32AccAddress() sdk.AccAddress {
 // AccAddress returns a sample account address in string
 func AccAddress() string {
 	pk := ed25519.GenPrivKey().PubKey()
+	addr := pk.Address()
+	return sdk.AccAddress(addr).String()
+}
+
+// AccAddressFromRand returns a sample account address in string
+func AccAddressFromRand(r *rand.Rand) string {
+	pk := PubKey(r)
 	addr := pk.Address()
 	return sdk.AccAddress(addr).String()
 }

@@ -8,33 +8,53 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func SimulateMsgRemoveOutboundTracker(k keeper.Keeper) simtypes.Operation {
+func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgRemoveOutboundTracker, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWhitelistERC20, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
 
-		trackers := k.GetAllOutboundTracker(ctx)
-
-		if len(trackers) == 0 {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgRemoveOutboundTracker, "no outbound trackers found"), nil, nil
+		supportedChains := k.GetObserverKeeper().GetSupportedChains(ctx)
+		if len(supportedChains) == 0 {
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				types.TypeMsgWhitelistERC20,
+				"no supported chains found",
+			), nil, nil
 		}
 
-		randomTracker := trackers[r.Intn(len(trackers))]
+		filteredChains := chains.FilterChains(supportedChains, chains.FilterByVM(chains.Vm_evm))
 
-		msg := types.MsgRemoveOutboundTracker{
-			ChainId: randomTracker.ChainId,
-			Nonce:   randomTracker.Nonce,
-			Creator: policyAccount.Address.String(),
+		//pick a random chain
+		randomChain := supportedChains[r.Intn(len(filteredChains))]
+		var tokenAddress string
+		switch {
+		case randomChain.IsEVMChain():
+			tokenAddress = sample.EthAddressFromRand(r).String()
+			//updatedTokenAddress = sample.EthAddressFromRand(r).String()
+		default:
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWhitelistERC20, "unsupported chain"), nil, nil
+		}
+
+		msg := types.MsgWhitelistERC20{
+			Creator:      policyAccount.Address.String(),
+			ChainId:      randomChain.ChainId,
+			Erc20Address: tokenAddress,
+			GasLimit:     100000,
+			Decimals:     18,
+			Name:         "Test",
+			Symbol:       "TST",
 		}
 
 		err = msg.ValidateBasic()
