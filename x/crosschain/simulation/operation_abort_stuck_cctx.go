@@ -84,26 +84,26 @@ func SimulateMsgAbortStuckCCTX(k keeper.Keeper) simtypes.Operation {
 				"no pending nonces found",
 			), nil, nil
 		}
-		fmt.Println("Pending nonces:", pendingNonces.NonceLow, pendingNonces.NonceHigh)
-		for i := pendingNonces.NonceLow; i < pendingNonces.NonceHigh; i++ {
-			fmt.Println("Checking nonce:", i)
-			nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tss.TssPubkey, chainID, int64(i))
-			if !found {
-				fmt.Println("NonceToCctx not found:", chainID, i)
-				continue
-			}
-
-			cctx, found := k.GetCrossChainTx(ctx, nonceToCctx.CctxIndex)
-			if !found {
-				fmt.Println("CCTX not found:", chainID, i)
-				continue
-			}
-			fmt.Println("CCTX found:", cctx.Index, cctx.CctxStatus.Status, cctx.GetCurrentOutboundParam().TssNonce)
-			//if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
-			//	fmt.Println("CCTX already aborted:", cctx.Index)
-			//	continue
-			//}
-		}
+		//fmt.Println("Pending nonces:", pendingNonces.NonceLow, pendingNonces.NonceHigh)
+		//for i := pendingNonces.NonceLow; i < pendingNonces.NonceHigh; i++ {
+		//	fmt.Println("Checking nonce:", i)
+		//	nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tss.TssPubkey, chainID, int64(i))
+		//	if !found {
+		//		fmt.Println("NonceToCctx not found:", chainID, i)
+		//		continue
+		//	}
+		//
+		//	cctx, found := k.GetCrossChainTx(ctx, nonceToCctx.CctxIndex)
+		//	if !found {
+		//		fmt.Println("CCTX not found:", chainID, i)
+		//		continue
+		//	}
+		//	fmt.Println("CCTX found:", cctx.Index, cctx.CctxStatus.Status, cctx.GetCurrentOutboundParam().TssNonce)
+		//	//if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
+		//	//	fmt.Println("CCTX already aborted:", cctx.Index)
+		//	//	continue
+		//	//}
+		//}
 
 		// Pick a random pending nonce
 		nonce := 0
@@ -133,7 +133,14 @@ func SimulateMsgAbortStuckCCTX(k keeper.Keeper) simtypes.Operation {
 				"no cctx found",
 			), nil, nil
 		}
-		fmt.Println("CCTX picked for abort:", cctx.Index, cctx.CctxStatus.Status, cctx.GetCurrentOutboundParam().TssNonce)
+
+		if !cctx.CctxStatus.Status.IsPendingStatus() {
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				types.TypeMsgAbortStuckCCTX,
+				"cctx not in pending status",
+			), nil, nil
+		}
 
 		msg := types.MsgAbortStuckCCTX{
 			Creator:   policyAccount.Address.String(),

@@ -33,6 +33,7 @@ const (
 	DefaultWeightUpdateTssAddress       = 1
 	DefaultWeightAbortStuckCCTX         = 10
 	DefaultWeightUpdateRateLimiterFlags = 1
+	DefaultWeightRefundAbortedCCTX      = 1
 
 	OpWeightMsgAddOutboundTracker  = "op_weight_msg_add_outbound_tracker"      // #nosec G101 not a hardcoded credential
 	OpWeightAddInboundTracker      = "op_weight_msg_add_inbound_tracker"       // #nosec G101 not a hardcoded credential
@@ -45,6 +46,7 @@ const (
 	OpWeightUpdateTssAddress       = "op_weight_msg_update_tss_address"        // #nosec G101 not a hardcoded credential
 	OpWeightAbortStuckCCTX         = "op_weight_msg_abort_stuck_cctx"          // #nosec G101 not a hardcoded credential
 	OpWeightUpdateRateLimiterFlags = "op_weight_msg_update_rate_limiter_flags" // #nosec G101 not a hardcoded credential
+	OpWeightRefundAbortedCCTX      = "op_weight_msg_refund_aborted_cctx"       // #nosec G101 not a hardcoded credential
 
 )
 
@@ -62,6 +64,7 @@ func WeightedOperations(
 		weightUpdateTssAddress       int
 		weightAbortStuckCCTX         int
 		weightUpdateRateLimiterFlags int
+		weightRefundAbortedCCTX      int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgAddOutboundTracker, &weightAddOutboundTracker, nil,
@@ -127,6 +130,12 @@ func WeightedOperations(
 	appParams.GetOrGenerate(cdc, OpWeightUpdateRateLimiterFlags, &weightUpdateRateLimiterFlags, nil,
 		func(_ *rand.Rand) {
 			weightUpdateRateLimiterFlags = DefaultWeightUpdateRateLimiterFlags
+		},
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightRefundAbortedCCTX, &weightRefundAbortedCCTX, nil,
+		func(_ *rand.Rand) {
+			weightRefundAbortedCCTX = DefaultWeightRefundAbortedCCTX
 		},
 	)
 
