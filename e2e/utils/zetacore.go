@@ -113,7 +113,7 @@ func WaitCctxsMinedByInboundHash(
 		allFound := true
 		for j, cctx := range res.CrossChainTxs {
 			cctx := cctx
-			if !IsTerminalStatus(cctx.CctxStatus.Status) {
+			if !cctx.CctxStatus.Status.IsTerminalStatus() {
 				// prevent spamming logs
 				if i%20 == 0 {
 					logger.Info(
@@ -170,7 +170,7 @@ func WaitCCTXMinedByIndex(
 		}
 
 		cctx := res.CrossChainTx
-		if !IsTerminalStatus(cctx.CctxStatus.Status) {
+		if !cctx.CctxStatus.Status.IsTerminalStatus() {
 			// prevent spamming logs
 			if i%20 == 0 {
 				logger.Info(
@@ -297,12 +297,6 @@ func WaitCctxByInboundHash(
 
 		time.Sleep(tick)
 	}
-}
-
-func IsTerminalStatus(status crosschaintypes.CctxStatus) bool {
-	return status == crosschaintypes.CctxStatus_OutboundMined ||
-		status == crosschaintypes.CctxStatus_Aborted ||
-		status == crosschaintypes.CctxStatus_Reverted
 }
 
 // WaitForBlockHeight waits until the block height reaches the given height
