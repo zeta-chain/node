@@ -468,7 +468,7 @@ func TestKeeper_UpdateNonceToCCTX(t *testing.T) {
 		tssPubkey := "test-tss-pubkey"
 
 		// Act
-		k.UpdateNonceToCCTX(ctx, cctx, tssPubkey)
+		k.SetNonceToCCTXMapping(ctx, cctx, tssPubkey)
 
 		// Assert
 		nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tssPubkey, chainID, int64(nonce))
@@ -491,7 +491,7 @@ func TestKeeper_UpdateNonceToCCTX(t *testing.T) {
 		tssPubkey := "test-tss-pubkey"
 
 		// Act
-		k.UpdateNonceToCCTX(ctx, cctx, tssPubkey)
+		k.SetNonceToCCTXMapping(ctx, cctx, tssPubkey)
 
 		// Assert
 		nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tssPubkey, chainID, int64(nonce))
@@ -514,7 +514,7 @@ func TestKeeper_UpdateNonceToCCTX(t *testing.T) {
 		tssPubkey := "test-tss-pubkey"
 
 		// Act
-		k.UpdateNonceToCCTX(ctx, cctx, tssPubkey)
+		k.SetNonceToCCTXMapping(ctx, cctx, tssPubkey)
 
 		// Assert
 		_, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tssPubkey, chainID, int64(nonce))

@@ -21,8 +21,9 @@ import (
 
 // 2. Set the cctx in the store
 
-// 3. set the mapping inboundHash -> cctxIndex
+// 3. Update the mapping inboundHash -> cctxIndex
 // A new value is added to the mapping when a single inbound hash is connected to multiple cctx indexes
+// If the inbound hash to cctx mapping does not exist, a new mapping is created and the cctx index is added to the list of cctx indexes
 
 // 4. update the zeta accounting
 // Zeta-accounting is updated aborted cctxs of cointtype zeta.When a cctx is aborted it means that `GetAbortedAmount`
@@ -33,7 +34,7 @@ func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(
 	cctx types.CrossChainTx,
 	tssPubkey string,
 ) {
-	k.UpdateNonceToCCTX(ctx, cctx, tssPubkey)
+	k.SetNonceToCCTXMapping(ctx, cctx, tssPubkey)
 	k.SetCrossChainTx(ctx, cctx)
 	k.UpdateInboundHashToCCTX(ctx, cctx)
 	k.UpdateZetaAccounting(ctx, cctx)
@@ -69,8 +70,8 @@ func (k Keeper) UpdateZetaAccounting(
 	}
 }
 
-// UpdateNonceToCCTX updates the mapping between a nonce and a cctx index if the cctx is in a PendingOutbound or PendingRevert state
-func (k Keeper) UpdateNonceToCCTX(
+// SetNonceToCCTXMapping updates the mapping between a nonce and a cctx index if the cctx is in a PendingOutbound or PendingRevert state
+func (k Keeper) SetNonceToCCTXMapping(
 	ctx sdk.Context,
 	cctx types.CrossChainTx,
 	tssPubkey string,
