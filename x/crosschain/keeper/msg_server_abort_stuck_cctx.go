@@ -43,7 +43,8 @@ func (k msgServer) AbortStuckCCTX(
 	// update the status
 	cctx.CctxStatus.UpdateStatusAndErrorMessages(types.CctxStatus_Aborted, AbortMessage, "")
 
-	// Save out outbound, we do not need to provide the tss-pubkey as NonceToCctx is not updated
+	// Save out outbound,
+	// We do not need to provide the tss-pubkey as NonceToCctx is not updated / New outbound is not added
 	k.SaveOutbound(ctx, &cctx, "")
 
 	return &types.MsgAbortStuckCCTXResponse{}, nil

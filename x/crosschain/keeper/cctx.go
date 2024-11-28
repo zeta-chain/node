@@ -91,7 +91,7 @@ func (k Keeper) SetNonceToCCTXMapping(
 
 // SetCrossChainTx set a specific cctx in the store from its index
 func (k Keeper) SetCrossChainTx(ctx sdk.Context, cctx types.CrossChainTx) {
-	// only set the update timestamp if the block height is >0 to allow
+	// only set the updated timestamp if the block height is >0 to allow
 	// for a genesis import
 	if cctx.CctxStatus != nil && ctx.BlockHeight() > 0 {
 		cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
