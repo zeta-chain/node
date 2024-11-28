@@ -33,22 +33,18 @@ func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(
 	cctx types.CrossChainTx,
 	tssPubkey string,
 ) {
-	// set mapping nonce => cctxIndex
-
-	if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound ||
-		cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
-		k.GetObserverKeeper().SetNonceToCctx(ctx, observerTypes.NonceToCctx{
-			ChainId: cctx.GetCurrentOutboundParam().ReceiverChainId,
-			// #nosec G115 always in range
-			Nonce:     int64(cctx.GetCurrentOutboundParam().TssNonce),
-			CctxIndex: cctx.Index,
-			Tss:       tssPubkey,
-		})
-	}
-
+	k.UpdateNonceToCCTX(ctx, cctx, tssPubkey)
 	k.SetCrossChainTx(ctx, cctx)
+	k.UpdateInboundHashToCCTX(ctx, cctx)
+	k.UpdateZetaAccounting(ctx, cctx)
+}
 
-	// set mapping inboundHash -> cctxIndex
+// UpdateInboundHashToCCTX updates the mapping between an inbound hash and a cctx index.
+// A new index is added to the list of cctx indexes if it is not already present
+func (k Keeper) UpdateInboundHashToCCTX(
+	ctx sdk.Context,
+	cctx types.CrossChainTx,
+) {
 	in, _ := k.GetInboundHashToCctx(ctx, cctx.InboundParams.ObservedHash)
 	in.InboundHash = cctx.InboundParams.ObservedHash
 	found := false
@@ -62,9 +58,33 @@ func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(
 		in.CctxIndex = append(in.CctxIndex, cctx.Index)
 	}
 	k.SetInboundHashToCctx(ctx, in)
+}
 
+func (k Keeper) UpdateZetaAccounting(
+	ctx sdk.Context,
+	cctx types.CrossChainTx,
+) {
 	if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.InboundParams.CoinType == coin.CoinType_Zeta {
 		k.AddZetaAbortedAmount(ctx, GetAbortedAmount(cctx))
+	}
+}
+
+// UpdateNonceToCCTX updates the mapping between a nonce and a cctx index if the cctx is in a PendingOutbound or PendingRevert state
+func (k Keeper) UpdateNonceToCCTX(
+	ctx sdk.Context,
+	cctx types.CrossChainTx,
+	tssPubkey string,
+) {
+	// set mapping nonce => cctxIndex
+	if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound ||
+		cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
+		k.GetObserverKeeper().SetNonceToCctx(ctx, observerTypes.NonceToCctx{
+			ChainId: cctx.GetCurrentOutboundParam().ReceiverChainId,
+			// #nosec G115 always in range
+			Nonce:     int64(cctx.GetCurrentOutboundParam().TssNonce),
+			CctxIndex: cctx.Index,
+			Tss:       tssPubkey,
+		})
 	}
 }
 
