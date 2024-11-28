@@ -55,7 +55,8 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 		require.True(t, found)
 		require.Equal(t, crosschaintypes.CctxStatus_Aborted, cctxFound.CctxStatus.Status)
 		require.Contains(t, cctxFound.CctxStatus.StatusMessage, crosschainkeeper.AbortMessage)
-		pendingNonces, found := k.GetObserverKeeper().GetPendingNonces(ctx, cctx.GetCurrentOutboundParam().TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId)
+		pendingNonces, found := k.GetObserverKeeper().
+			GetPendingNonces(ctx, cctx.GetCurrentOutboundParam().TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId)
 		require.True(t, found)
 		require.Equal(t, pendingNonces.NonceLow, int64(cctx.GetCurrentOutboundParam().TssNonce+1))
 	})
@@ -102,7 +103,8 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 		require.Contains(t, cctxFound.CctxStatus.StatusMessage, crosschainkeeper.AbortMessage)
 		// ensure the last update timestamp is updated
 		require.Equal(t, cctxFound.CctxStatus.LastUpdateTimestamp, ctx.BlockTime().Unix())
-		pendingNonces, found := k.GetObserverKeeper().GetPendingNonces(ctx, cctx.GetCurrentOutboundParam().TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId)
+		pendingNonces, found := k.GetObserverKeeper().
+			GetPendingNonces(ctx, cctx.GetCurrentOutboundParam().TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId)
 		require.True(t, found)
 		require.Equal(t, pendingNonces.NonceLow, int64(cctx.GetCurrentOutboundParam().TssNonce+1))
 
@@ -149,7 +151,8 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 		require.True(t, found)
 		require.Equal(t, crosschaintypes.CctxStatus_Aborted, cctxFound.CctxStatus.Status)
 		require.Contains(t, cctxFound.CctxStatus.StatusMessage, crosschainkeeper.AbortMessage)
-		pendingNonces, found := k.GetObserverKeeper().GetPendingNonces(ctx, cctx.GetCurrentOutboundParam().TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId)
+		pendingNonces, found := k.GetObserverKeeper().
+			GetPendingNonces(ctx, cctx.GetCurrentOutboundParam().TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId)
 		require.True(t, found)
 		require.Equal(t, pendingNonces.NonceLow, int64(cctx.GetCurrentOutboundParam().TssNonce+1))
 	})

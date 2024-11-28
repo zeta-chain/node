@@ -14,6 +14,7 @@
 
 * [3206](https://github.com/zeta-chain/node/pull/3206) - skip Solana unsupported transaction version to not block inbound observation
 * [3184](https://github.com/zeta-chain/node/pull/3184) - zetaclient should not retry if inbound vote message validation fails
+* [3230](https://github.com/zeta-chain/node/pull/3230) - update pending nonces when aborting a cctx through MsgAbortStuckCCTX
 
 ## v23.0.0
 

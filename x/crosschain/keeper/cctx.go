@@ -12,16 +12,29 @@ import (
 )
 
 // SetCctxAndNonceToCctxAndInboundHashToCctx does the following things in one function:
-// 1. set the cctx in the store
-// 2. set the mapping inboundHash -> cctxIndex , one inboundHash can be connected to multiple cctxindex
-// 3. set the mapping nonce => cctx
+
+// 1. Set the Nonce to Cctx mapping
+// A new mapping between a nonce and a cctx index should be created only when we add a new outbound to an existing cctx.
+// When adding a new outbound , the only two conditions are
+// - The cctx is in CctxStatus_PendingOutbound , which means the first outbound has been added, and we need to set the nonce for that
+// - The cctx is in CctxStatus_PendingRevert , which means the second outbound has been added, and we need to set the nonce for that
+
+// 2. Set the cctx in the store
+
+// 3. set the mapping inboundHash -> cctxIndex
+// A new value is added to the mapping when a single inbound hash is connected to multiple cctx indexes
+
 // 4. update the zeta accounting
+// Zeta-accounting is updated aborted cctxs of cointtype zeta.When a cctx is aborted it means that `GetAbortedAmount`
+//of zeta is locked and cannot be used.
+
 func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(
 	ctx sdk.Context,
 	cctx types.CrossChainTx,
 	tssPubkey string,
 ) {
 	// set mapping nonce => cctxIndex
+
 	if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound ||
 		cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
 		k.GetObserverKeeper().SetNonceToCctx(ctx, observerTypes.NonceToCctx{
@@ -34,6 +47,7 @@ func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(
 	}
 
 	k.SetCrossChainTx(ctx, cctx)
+
 	// set mapping inboundHash -> cctxIndex
 	in, _ := k.GetInboundHashToCctx(ctx, cctx.InboundParams.ObservedHash)
 	in.InboundHash = cctx.InboundParams.ObservedHash
