@@ -158,8 +158,11 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 	// the amount and status of the outbound
 	outboundAmount := new(big.Int).SetUint64(inst.TokenAmount())
 
-	// status was already verified as successful in CheckFinalizedTx
+	// look into the log messages to determine the status of the outbound
 	outboundStatus := chains.ReceiveStatus_success
+	if inst.Failed(txResult.Meta.LogMessages) {
+		outboundStatus = chains.ReceiveStatus_failed
+	}
 
 	// compliance check, special handling the cancelled cctx
 	if compliance.IsCctxRestricted(cctx) {
@@ -297,8 +300,6 @@ func (ob *Observer) CheckFinalizedTx(
 		return nil, false
 	}
 
-	txNonce := inst.GatewayNonce()
-
 	// recover ECDSA signer from instruction
 	signerECDSA, err := inst.Signer()
 	if err != nil {
@@ -314,8 +315,8 @@ func (ob *Observer) CheckFinalizedTx(
 	}
 
 	// check tx nonce
-	if txNonce != nonce {
-		logger.Error().Msgf("tx nonce %d is not matching tracker nonce", txNonce)
+	if inst.GatewayNonce() != nonce {
+		logger.Error().Msgf("tx nonce %d is not matching tracker nonce", inst.GatewayNonce())
 		return nil, false
 	}
 
@@ -334,7 +335,7 @@ func ParseGatewayInstruction(
 		return nil, errors.Wrap(err, "error unmarshaling transaction")
 	}
 
-	// there should be only one single instruction ('withdraw' or 'withdraw_spl_token')
+	// there should be only one single instruction ('withdraw' or 'withdraw_spl_token' or 'whitelist_spl_mint')
 	if len(tx.Message.Instructions) != 1 {
 		return nil, fmt.Errorf("want 1 instruction, got %d", len(tx.Message.Instructions))
 	}
@@ -351,7 +352,7 @@ func ParseGatewayInstruction(
 		return nil, fmt.Errorf("programID %s is not matching gatewayID %s", programID, gatewayID)
 	}
 
-	// parse the instruction as a 'withdraw' or 'withdraw_spl_token'
+	// parse the instruction as a 'withdraw' or 'withdraw_spl_token' or 'whitelist_spl_mint'
 	switch coinType {
 	case coin.CoinType_Gas:
 		return contracts.ParseInstructionWithdraw(instruction)

@@ -2,12 +2,23 @@ package solana
 
 import (
 	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gagliardetto/solana-go"
 	"github.com/near/borsh-go"
 	"github.com/pkg/errors"
+)
+
+const (
+	// MsgWithdrawSPLTokenSuccess is the success message for withdraw_spl_token instruction
+	// #nosec G101 not a hardcoded credential
+	MsgWithdrawSPLTokenSuccess = "withdraw spl token successfully"
+
+	// MsgWithdrawSPLTokenNonExistentAta is the log message printed when recipient ATA does not exist
+	MsgWithdrawSPLTokenNonExistentAta = "recipient ATA account does not exist"
 )
 
 // InitializeParams contains the parameters for a gateway initialize instruction
@@ -62,6 +73,9 @@ type OutboundInstruction interface {
 
 	// TokenAmount returns the amount of the instruction
 	TokenAmount() uint64
+
+	// Failed returns true if the instruction logs indicate failure
+	Failed(logMessages []string) bool
 }
 
 var _ OutboundInstruction = (*WithdrawInstructionParams)(nil)
@@ -104,6 +118,11 @@ func (inst *WithdrawInstructionParams) GatewayNonce() uint64 {
 // TokenAmount returns the amount of the instruction
 func (inst *WithdrawInstructionParams) TokenAmount() uint64 {
 	return inst.Amount
+}
+
+// Failed always returns false for a 'withdraw' without checking the logs
+func (inst *WithdrawInstructionParams) Failed(_ []string) bool {
+	return false
 }
 
 // ParseInstructionWithdraw tries to parse the instruction as a 'withdraw'.
@@ -166,19 +185,31 @@ func (inst *WithdrawSPLInstructionParams) TokenAmount() uint64 {
 	return inst.Amount
 }
 
-// ParseInstructionWithdraw tries to parse the instruction as a 'withdraw'.
-// It returns nil if the instruction can't be parsed as a 'withdraw'.
+// Failed returns true if the logs of the 'withdraw_spl_token' instruction indicate failure.
+//
+// Note: SPL token transfer cannot be done if the recipient ATA does not exist.
+func (inst *WithdrawSPLInstructionParams) Failed(logMessages []string) bool {
+	// Assumption: only one of the two messages will be present in the logs.
+	// If both messages are present, it could imply a program bug or a malicious attack.
+	// In such case, the function treats the transaction as successful to minimize the attack surface,
+	// bacause a fabricated failure could be used to trick zetacore into refunding the withdrawer (if implemented in the future).
+	return !containsLogMessage(logMessages, MsgWithdrawSPLTokenSuccess) &&
+		containsLogMessage(logMessages, MsgWithdrawSPLTokenNonExistentAta)
+}
+
+// ParseInstructionWithdrawSPL tries to parse the instruction as a 'withdraw_spl_token'.
+// It returns nil if the instruction can't be parsed as a 'withdraw_spl_token'.
 func ParseInstructionWithdrawSPL(instruction solana.CompiledInstruction) (*WithdrawSPLInstructionParams, error) {
-	// try deserializing instruction as a 'withdraw'
+	// try deserializing instruction as a 'withdraw_spl_token'
 	inst := &WithdrawSPLInstructionParams{}
 	err := borsh.Deserialize(inst, instruction.Data)
 	if err != nil {
 		return nil, errors.Wrap(err, "error deserializing instruction")
 	}
 
-	// check the discriminator to ensure it's a 'withdraw' instruction
+	// check the discriminator to ensure it's a 'withdraw_spl_token' instruction
 	if inst.Discriminator != DiscriminatorWithdrawSPL {
-		return nil, fmt.Errorf("not a withdraw instruction: %v", inst.Discriminator)
+		return nil, fmt.Errorf("not a withdraw_spl_token instruction: %v", inst.Discriminator)
 	}
 
 	return inst, nil
@@ -234,6 +265,11 @@ func (inst *WhitelistInstructionParams) TokenAmount() uint64 {
 	return 0
 }
 
+// Failed always returns false for a 'whitelist_spl_mint' without checking the logs
+func (inst *WhitelistInstructionParams) Failed(_ []string) bool {
+	return true
+}
+
 // ParseInstructionWhitelist tries to parse the instruction as a 'whitelist_spl_mint'.
 // It returns nil if the instruction can't be parsed as a 'whitelist_spl_mint'.
 func ParseInstructionWhitelist(instruction solana.CompiledInstruction) (*WhitelistInstructionParams, error) {
@@ -250,4 +286,11 @@ func ParseInstructionWhitelist(instruction solana.CompiledInstruction) (*Whiteli
 	}
 
 	return inst, nil
+}
+
+// containsLogMessage returns true if any of the log messages contains the 'msgSearch'
+func containsLogMessage(logMessages []string, msgSearch string) bool {
+	return slices.IndexFunc(logMessages, func(msg string) bool {
+		return strings.Contains(msg, msgSearch)
+	}) != -1
 }

@@ -507,7 +507,7 @@ func Test_ParseInstructionWithdrawSPL(t *testing.T) {
 		inst, err := contracts.ParseInstructionWithdrawSPL(instruction)
 
 		// ASSERT
-		require.ErrorContains(t, err, "not a withdraw instruction")
+		require.ErrorContains(t, err, "not a withdraw_spl_token instruction")
 		require.Nil(t, inst)
 	})
 }

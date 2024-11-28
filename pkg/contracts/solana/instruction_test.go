@@ -1,6 +1,7 @@
 package solana_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -77,4 +78,46 @@ func Test_RecoverSigner(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEqual(t, ethcommon.Address{}, signer)
 	require.NotEqual(t, testSigner, signer.String())
+}
+
+func Test_WithdrawSPLInstructionParams_Failed(t *testing.T) {
+	tests := []struct {
+		name        string
+		logMessages []string
+		want        bool
+	}{
+		{
+			name: "failed - only non-existent ATA account message found",
+			logMessages: []string{
+				"Program log: Instruction: WithdrawSPLToken",
+				fmt.Sprintf("Program log: %s", contracts.MsgWithdrawSPLTokenNonExistentAta),
+			},
+			want: true,
+		},
+		{
+			name: "succeeded - only success message found",
+			logMessages: []string{
+				"Program log: Instruction: WithdrawSPLToken",
+				fmt.Sprintf("Program log: %s", contracts.MsgWithdrawSPLTokenSuccess),
+			},
+			want: false,
+		},
+		{
+			// This case should NEVER happen by design of the gateway contract.
+			name: "succeeded - found both success message and non-existent ATA account message",
+			logMessages: []string{
+				"Program log: Instruction: WithdrawSPLToken",
+				fmt.Sprintf("Program log: %s", contracts.MsgWithdrawSPLTokenSuccess),
+				fmt.Sprintf("Program log: %s", contracts.MsgWithdrawSPLTokenNonExistentAta),
+			},
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			inst := contracts.WithdrawSPLInstructionParams{}
+			require.Equal(t, tt.want, inst.Failed(tt.logMessages))
+		})
+	}
 }
