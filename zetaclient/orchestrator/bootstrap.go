@@ -489,7 +489,7 @@ func btcDatabaseFileName(chain chains.Chain) string {
 	case chains.BitcoinMainnet.ChainId, chains.BitcoinTestnet.ChainId:
 		return legacyBTCDatabaseFilename
 	default:
-		return fmt.Sprintf("%s_%d", legacyBTCDatabaseFilename, chain.ChainId)
+		return fmt.Sprintf("%s_%s", legacyBTCDatabaseFilename, chain.Name)
 	}
 }
 
