@@ -267,7 +267,7 @@ func (inst *WhitelistInstructionParams) TokenAmount() uint64 {
 
 // Failed always returns false for a 'whitelist_spl_mint' without checking the logs
 func (inst *WhitelistInstructionParams) Failed(_ []string) bool {
-	return true
+	return false
 }
 
 // ParseInstructionWhitelist tries to parse the instruction as a 'whitelist_spl_mint'.
