@@ -65,7 +65,7 @@ const (
 	TestSPLDepositName                         = "spl_deposit"
 	TestSPLDepositAndCallName                  = "spl_deposit_and_call"
 	TestSPLWithdrawName                        = "spl_withdraw"
-	TestSPLWithdrawAndCreateReceiverAtaName    = "spl_withdraw_and_create_receiver_ata"
+	TestSPLWithdrawFailsIfNoReceiverAtaName    = "spl_withdraw_fails_without_receiver_ata"
 
 	/**
 	 * TON tests
@@ -448,12 +448,12 @@ var AllE2ETests = []runner.E2ETest{
 		TestSPLWithdraw,
 	),
 	runner.NewE2ETest(
-		TestSPLWithdrawAndCreateReceiverAtaName,
-		"withdraw SPL from ZEVM and create receiver ata",
+		TestSPLWithdrawFailsIfNoReceiverAtaName,
+		"withdraw SPL from ZEVM fails if no receiver ata",
 		[]runner.ArgDefinition{
 			{Description: "amount in spl tokens", DefaultValue: "1000000"},
 		},
-		TestSPLWithdrawAndCreateReceiverAta,
+		TestSPLWithdrawFailsIfNoReceiverAta,
 	),
 	runner.NewE2ETest(
 		TestSolanaDepositAndCallRevertName,

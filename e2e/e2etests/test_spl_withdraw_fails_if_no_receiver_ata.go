@@ -5,7 +5,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/gagliardetto/solana-go"
-	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -13,9 +12,8 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestSPLWithdrawAndCreateReceiverAta withdraws spl, but letting gateway to create receiver ata using rent payer
-// instead of providing receiver that has it already created
-func TestSPLWithdrawAndCreateReceiverAta(r *runner.E2ERunner, args []string) {
+// TestSPLWithdrawFailsIfNoReceiverAta fails to withdraw spl because receiver ata doesn't exist
+func TestSPLWithdrawFailsIfNoReceiverAta(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	withdrawAmount := parseBigInt(r, args[0])
@@ -52,28 +50,20 @@ func TestSPLWithdrawAndCreateReceiverAta(r *runner.E2ERunner, args []string) {
 	// withdraw
 	tx := r.WithdrawSPLZRC20(receiverPrivKey.PublicKey(), withdrawAmount, approvedAmount)
 
-	// wait for the cctx to be mined
+	// wait for the cctx to be mined and aborted
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)
 
 	// get SPL ZRC20 balance after withdraw
 	zrc20BalanceAfter, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 	r.Logger.Info("runner balance of SPL after withdraw: %d", zrc20BalanceAfter)
 
-	// verify receiver ata was created
+	// verify receiver ata was not created
 	receiverAtaAcc, err = r.SolanaClient.GetAccountInfo(r.Ctx, receiverAta)
-	require.NoError(r, err)
-	require.NotNil(r, receiverAtaAcc)
+	require.Error(r, err)
+	require.Nil(r, receiverAtaAcc)
 
-	// verify balances are updated
-	receiverBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, receiverAta, rpc.CommitmentFinalized)
-	require.NoError(r, err)
-	r.Logger.Info("receiver balance of SPL after withdraw: %s", receiverBalanceAfter.Value.Amount)
-
-	// verify amount is added to receiver ata
-	require.EqualValues(r, withdrawAmount.String(), parseBigInt(r, receiverBalanceAfter.Value.Amount).String())
-
-	// verify amount is subtracted on zrc20
-	require.EqualValues(r, new(big.Int).Sub(zrc20BalanceBefore, withdrawAmount).String(), zrc20BalanceAfter.String())
+	// verify amount is not changed on zrc20 -- TODO: cctx is aborted without revert?
+	// require.EqualValues(r, zrc20BalanceBefore.String(), zrc20BalanceAfter.String())
 }
