@@ -191,6 +191,7 @@ func (t *TelemetryServer) Handlers() http.Handler {
 	router.Handle("/connectedpeers", http.HandlerFunc(t.connectedPeersHandler)).Methods(http.MethodGet)
 	router.Handle("/knownpeers", http.HandlerFunc(t.knownPeersHandler)).Methods(http.MethodGet)
 	router.Handle("/pingrtt", http.HandlerFunc(t.pingRTTHandler)).Methods(http.MethodGet)
+	router.Handle("/systemtime", http.HandlerFunc(systemdTimeHandler)).Methods(http.MethodGet)
 	router.Use(logMiddleware())
 
 	return router
@@ -331,6 +332,12 @@ func (t *TelemetryServer) pingRTTHandler(w http.ResponseWriter, _ *http.Request)
 		return
 	}
 	fmt.Fprintf(w, "%s", string(data))
+}
+
+// systemdTimeHandler returns the current system time in seconds
+func systemdTimeHandler(w http.ResponseWriter, _ *http.Request) {
+	nowString := time.Now().UTC().Format(time.RFC3339)
+	fmt.Fprintf(w, "%s", string(nowString))
 }
 
 // logMiddleware logs the incoming HTTP request
