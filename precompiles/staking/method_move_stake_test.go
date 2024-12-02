@@ -17,7 +17,7 @@ func Test_MoveStake(t *testing.T) {
 	t.Run("should fail with error disabled", func(t *testing.T) {
 		// ARRANGE
 		s := newTestSuite(t)
-		methodID := s.contractABI.Methods[MoveStakeMethodName]
+		methodID := s.stkContractABI.Methods[MoveStakeMethodName]
 		r := rand.New(rand.NewSource(42))
 		validatorSrc := sample.Validator(t, r)
 		s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, validatorSrc)
@@ -41,9 +41,9 @@ func Test_MoveStake(t *testing.T) {
 		}
 
 		// stake to validator src
-		stakeMethodID := s.contractABI.Methods[StakeMethodName]
+		stakeMethodID := s.stkContractABI.Methods[StakeMethodName]
 		s.mockVMContract.Input = packInputArgs(t, stakeMethodID, argsStake...)
-		_, err = s.contract.Run(s.mockEVM, s.mockVMContract, false)
+		_, err = s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
 		require.Error(t, err)
 		require.ErrorIs(t, err, precompiletypes.ErrDisabledMethod{
 			Method: StakeMethodName,
@@ -58,7 +58,7 @@ func Test_MoveStake(t *testing.T) {
 		s.mockVMContract.Input = packInputArgs(t, methodID, argsMoveStake...)
 
 		// ACT
-		_, err = s.contract.Run(s.mockEVM, s.mockVMContract, false)
+		_, err = s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
 
 		// ASSERT
 		require.Error(t, err)

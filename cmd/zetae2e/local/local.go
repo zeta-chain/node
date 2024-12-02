@@ -258,7 +258,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.UpdateChainParamsV2Contracts()
 		deployerRunner.ERC20CustodyAddr = deployerRunner.ERC20CustodyV2Addr
 
-		deployerRunner.MintERC20OnEvm(1000000)
+		deployerRunner.MintERC20OnEvm(1e10)
 
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
@@ -366,14 +366,14 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		if !skipPrecompiles {
 			precompiledContractTests = []string{
-				// e2etests.TestPrecompilesPrototypeName,
-				// e2etests.TestPrecompilesPrototypeThroughContractName,
-				// e2etests.TestPrecompilesStakingName,
-				// // Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
-				// // e2etests.TestPrecompilesStakingThroughContractName,
-				// e2etests.TestPrecompilesBankName,
-				// e2etests.TestPrecompilesBankFailName,
-				// e2etests.TestPrecompilesBankThroughContractName,
+				e2etests.TestPrecompilesPrototypeName,
+				e2etests.TestPrecompilesPrototypeThroughContractName,
+				e2etests.TestPrecompilesStakingName,
+				// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
+				// e2etests.TestPrecompilesStakingThroughContractName,
+				e2etests.TestPrecompilesBankName,
+				e2etests.TestPrecompilesBankFailName,
+				e2etests.TestPrecompilesBankThroughContractName,
 				e2etests.TestPrecompilesDistributeName,
 				e2etests.TestPrecompilesDistributeNonZRC20Name,
 				e2etests.TestPrecompilesDistributeThroughContractName,

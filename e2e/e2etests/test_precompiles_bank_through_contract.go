@@ -17,13 +17,16 @@ import (
 func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0, "No arguments expected")
 
-	spender := r.EVMAddress()
-	bankAddress := bank.ContractAddress
-	zrc20Address := r.ERC20ZRC20Addr
-	oneThousand := big.NewInt(1e3)
-	oneThousandOne := big.NewInt(1001)
-	fiveHundred := big.NewInt(500)
-	fiveHundredOne := big.NewInt(501)
+	var (
+		spender        = r.EVMAddress()
+		bankAddress    = bank.ContractAddress
+		zrc20Address   = r.ERC20ZRC20Addr
+		oneThousand    = big.NewInt(1e3)
+		oneThousandOne = big.NewInt(1001)
+		fiveHundred    = big.NewInt(500)
+		fiveHundredOne = big.NewInt(501)
+		zero           = big.NewInt(0)
+	)
 
 	// Get ERC20ZRC20.
 	txHash := r.DepositERC20WithAmountAndMessage(r.EVMAddress(), oneThousand, []byte{})
@@ -58,18 +61,18 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	}()
 
 	// Check initial balances.
-	balanceShouldBe(r, 0, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
-	balanceShouldBe(r, 1000, checkZRC20Balance(r, spender))
-	balanceShouldBe(r, 0, checkZRC20Balance(r, bankAddress))
+	balanceShouldBe(r, zero, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
+	balanceShouldBe(r, oneThousand, checkZRC20Balance(r, spender))
+	balanceShouldBe(r, zero, checkZRC20Balance(r, bankAddress))
 
 	// Deposit without previous alllowance should fail.
 	receipt = depositThroughTestBank(r, testBank, zrc20Address, oneThousand)
 	utils.RequiredTxFailed(r, receipt, "Deposit ERC20ZRC20 without allowance should fail")
 
 	// Check balances, should be the same.
-	balanceShouldBe(r, 0, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
-	balanceShouldBe(r, 1000, checkZRC20Balance(r, spender))
-	balanceShouldBe(r, 0, checkZRC20Balance(r, bankAddress))
+	balanceShouldBe(r, zero, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
+	balanceShouldBe(r, oneThousand, checkZRC20Balance(r, spender))
+	balanceShouldBe(r, zero, checkZRC20Balance(r, bankAddress))
 
 	// Allow 500 ZRC20 to bank precompile.
 	approveAllowance(r, bankAddress, fiveHundred)
@@ -80,9 +83,9 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	utils.RequiredTxFailed(r, receipt, "Depositting an amount higher than allowed should fail")
 
 	// Balances shouldn't change.
-	balanceShouldBe(r, 0, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
-	balanceShouldBe(r, 1000, checkZRC20Balance(r, spender))
-	balanceShouldBe(r, 0, checkZRC20Balance(r, bankAddress))
+	balanceShouldBe(r, zero, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
+	balanceShouldBe(r, oneThousand, checkZRC20Balance(r, spender))
+	balanceShouldBe(r, zero, checkZRC20Balance(r, bankAddress))
 
 	// Allow 1000 ZRC20 to bank precompile.
 	approveAllowance(r, bankAddress, oneThousand)
@@ -93,18 +96,18 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	utils.RequiredTxFailed(r, receipt, "Depositting an amount higher than balance should fail")
 
 	// Balances shouldn't change.
-	balanceShouldBe(r, 0, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
-	balanceShouldBe(r, 1000, checkZRC20Balance(r, spender))
-	balanceShouldBe(r, 0, checkZRC20Balance(r, bankAddress))
+	balanceShouldBe(r, zero, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
+	balanceShouldBe(r, oneThousand, checkZRC20Balance(r, spender))
+	balanceShouldBe(r, zero, checkZRC20Balance(r, bankAddress))
 
 	// Deposit 500 ERC20ZRC20 tokens to the bank contract, it's within allowance and balance. Should pass.
 	receipt = depositThroughTestBank(r, testBank, zrc20Address, fiveHundred)
 	utils.RequireTxSuccessful(r, receipt, "Depositting a correct amount should pass")
 
 	// Balances should be transferred. Bank now locks 500 ZRC20 tokens.
-	balanceShouldBe(r, 500, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
-	balanceShouldBe(r, 500, checkZRC20Balance(r, spender))
-	balanceShouldBe(r, 500, checkZRC20Balance(r, bankAddress))
+	balanceShouldBe(r, fiveHundred, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
+	balanceShouldBe(r, fiveHundred, checkZRC20Balance(r, spender))
+	balanceShouldBe(r, fiveHundred, checkZRC20Balance(r, bankAddress))
 
 	// Check the deposit event.
 	eventDeposit, err := bankPrecompileCaller.ParseDeposit(*receipt.Logs[0])
@@ -118,18 +121,18 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	utils.RequiredTxFailed(r, receipt, "Withdrawing an amount higher than balance should fail")
 
 	// Balances shouldn't change.
-	balanceShouldBe(r, 500, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
-	balanceShouldBe(r, 500, checkZRC20Balance(r, spender))
-	balanceShouldBe(r, 500, checkZRC20Balance(r, bankAddress))
+	balanceShouldBe(r, fiveHundred, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
+	balanceShouldBe(r, fiveHundred, checkZRC20Balance(r, spender))
+	balanceShouldBe(r, fiveHundred, checkZRC20Balance(r, bankAddress))
 
 	// Try to withdraw 500 ERC20ZRC20 tokens. Should pass.
 	receipt = withdrawThroughTestBank(r, testBank, zrc20Address, fiveHundred)
 	utils.RequireTxSuccessful(r, receipt, "Withdraw correct amount should pass")
 
 	// Balances should be reverted to initial state.
-	balanceShouldBe(r, 0, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
-	balanceShouldBe(r, 1000, checkZRC20Balance(r, spender))
-	balanceShouldBe(r, 0, checkZRC20Balance(r, bankAddress))
+	balanceShouldBe(r, zero, checkCosmosBalanceThroughBank(r, testBank, zrc20Address, spender))
+	balanceShouldBe(r, oneThousand, checkZRC20Balance(r, spender))
+	balanceShouldBe(r, zero, checkZRC20Balance(r, bankAddress))
 
 	// Check the withdraw event.
 	eventWithdraw, err := bankPrecompileCaller.ParseWithdraw(*receipt.Logs[0])
@@ -146,8 +149,8 @@ func approveAllowance(r *runner.E2ERunner, target common.Address, amount *big.In
 	utils.RequireTxSuccessful(r, receipt, "Approve ERC20ZRC20 allowance tx failed")
 }
 
-func balanceShouldBe(r *runner.E2ERunner, expected uint64, balance *big.Int) {
-	require.Equal(r, expected, balance.Uint64(), "Balance should be %d, got: %d", expected, balance.Uint64())
+func balanceShouldBe(r *runner.E2ERunner, expected *big.Int, balance *big.Int) {
+	require.Equal(r, expected.Uint64(), balance.Uint64(), "Balance should be %d, got: %d", expected, balance.Uint64())
 }
 
 func checkZRC20Balance(r *runner.E2ERunner, target common.Address) *big.Int {

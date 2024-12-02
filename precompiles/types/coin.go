@@ -2,6 +2,7 @@ package types
 
 import (
 	"math/big"
+	"strings"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,12 +17,19 @@ func ZRC20ToCosmosDenom(ZRC20Address common.Address) string {
 	return config.ZRC20DenomPrefix + ZRC20Address.String()
 }
 
-func CreateCoinSet(zrc20address common.Address, amount *big.Int) (sdk.Coins, error) {
+func CreateZRC20CoinSet(zrc20address common.Address, amount *big.Int) (sdk.Coins, error) {
 	defer func() {
 		if r := recover(); r != nil {
 			return
 		}
 	}()
+
+	if (zrc20address == common.Address{}) {
+		return nil, &ErrInvalidAddr{
+			Got:    zrc20address.String(),
+			Reason: "empty address",
+		}
+	}
 
 	denom := ZRC20ToCosmosDenom(zrc20address)
 
@@ -48,4 +56,18 @@ func CreateCoinSet(zrc20address common.Address, amount *big.Int) (sdk.Coins, err
 	}
 
 	return coinSet, nil
+}
+
+// CoinIsZRC20 checks if a given coin is a ZRC20 coin based on its denomination.
+func CoinIsZRC20(denom string) bool {
+	// Fail fast if the prefix is not set.
+	if !strings.HasPrefix(denom, config.ZRC20DenomPrefix) {
+		return false
+	}
+
+	// Prefix is correctly set, extract the zrc20 address.
+	zrc20Addr := strings.TrimPrefix(denom, config.ZRC20DenomPrefix)
+
+	// Return true only if address is not empty and is a valid hex address.
+	return common.HexToAddress(zrc20Addr) != common.Address{} && common.IsHexAddress(zrc20Addr)
 }
