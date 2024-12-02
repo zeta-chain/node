@@ -12,8 +12,8 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestSPLWithdrawFailsIfNoReceiverAta fails to withdraw spl because receiver ata doesn't exist
-func TestSPLWithdrawFailsIfNoReceiverAta(r *runner.E2ERunner, args []string) {
+// TestSPLWithdrawNoReceiverAta tests the scenario where the receiver ATA doesn't exist
+func TestSPLWithdrawNoReceiverAta(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	withdrawAmount := parseBigInt(r, args[0])
