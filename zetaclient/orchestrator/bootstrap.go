@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"context"
+	"fmt"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -11,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tonkeeper/tongo/ton"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
@@ -31,10 +33,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
-
-// btcDatabaseFilename is the Bitcoin database file name now used in mainnet,
-// so we keep using it here for backward compatibility
-const btcDatabaseFilename = "btc_chain_client"
 
 // CreateSignerMap creates a map of interfaces.ChainSigner (by chainID) for all chains in the config.
 // Note that signer construction failure for a chain does not prevent the creation of signers for other chains.
@@ -363,7 +361,7 @@ func syncObserverMap(
 				continue
 			}
 
-			database, err := db.NewFromSqlite(dbpath, btcDatabaseFilename, true)
+			database, err := db.NewFromSqlite(dbpath, btcDatabaseFileName(*rawChain), true)
 			if err != nil {
 				logger.Std.Error().Err(err).Msgf("unable to open database for BTC chain %d", chainID)
 				continue
@@ -479,6 +477,20 @@ func syncObserverMap(
 	mapDeleteMissingKeys(observerMap, presentChainIDs, onBeforeRemove)
 
 	return added, removed, nil
+}
+
+func btcDatabaseFileName(chain chains.Chain) string {
+	// legacyBTCDatabaseFilename is the Bitcoin database file name now used in mainnet and testnet3
+	// so we keep using it here for backward compatibility
+	const legacyBTCDatabaseFilename = "btc_chain_client"
+
+	// For additional bitcoin networks, we use the chain name as the database file name
+	switch chain.ChainId {
+	case chains.BitcoinMainnet.ChainId, chains.BitcoinTestnet.ChainId:
+		return legacyBTCDatabaseFilename
+	default:
+		return fmt.Sprintf("%s_%s", legacyBTCDatabaseFilename, chain.Name)
+	}
 }
 
 func makeTONClient(

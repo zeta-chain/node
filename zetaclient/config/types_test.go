@@ -86,6 +86,24 @@ func Test_GetBTCConfig(t *testing.T) {
 			},
 			want: false,
 		},
+		{
+			name:    "should not fallback to old config if Signet config is not set in the new config",
+			chainID: chains.BitcoinSignetTestnet.ChainId,
+			oldCfg: config.BTCConfig{
+				RPCHost: "localhost",
+			},
+			btcCfg: nil, // new config is not set
+			want:   false,
+		},
+		{
+			name:    "should not fallback to old config if Testnet4 config is not set in the new config",
+			chainID: chains.BitcoinTestnet4.ChainId,
+			oldCfg: config.BTCConfig{
+				RPCHost: "localhost",
+			},
+			btcCfg: nil, // new config is not set
+			want:   false,
+		},
 	}
 
 	for _, tt := range tests {
