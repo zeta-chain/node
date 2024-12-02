@@ -414,17 +414,17 @@ func TestBtcDatabaseFileName(t *testing.T) {
 		{
 			name:     "should use new file name for bitcoin regtest",
 			chain:    chains.BitcoinRegtest,
-			expected: "btc_chain_client_18444",
+			expected: "btc_chain_client_btc_regtest",
 		},
 		{
 			name:     "should use new file name for bitcoin signet",
 			chain:    chains.BitcoinSignetTestnet,
-			expected: "btc_chain_client_18333",
+			expected: "btc_chain_client_btc_signet_testnet",
 		},
 		{
 			name:     "should use new file name for bitcoin testnet4",
 			chain:    chains.BitcoinTestnet4,
-			expected: "btc_chain_client_18334",
+			expected: "btc_chain_client_btc_testnet4",
 		},
 	}
 
