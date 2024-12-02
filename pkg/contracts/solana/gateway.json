@@ -424,49 +424,6 @@
       "args": []
     },
     {
-      "name": "set_deposit_fee",
-      "discriminator": [
-        72,
-        107,
-        227,
-        2,
-        227,
-        31,
-        202,
-        82
-      ],
-      "accounts": [
-        {
-          "name": "pda",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  109,
-                  101,
-                  116,
-                  97
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "signer",
-          "writable": true,
-          "signer": true
-        }
-      ],
-      "args": [
-        {
-          "name": "fee",
-          "type": "u64"
-        }
-      ]
-    },
-    {
       "name": "set_deposit_paused",
       "discriminator": [
         98,
@@ -1123,14 +1080,6 @@
           {
             "name": "deposit_paused",
             "type": "bool"
-          },
-          {
-            "name": "deposit_fee",
-            "type": "u64"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
           }
         ]
       }
@@ -1139,24 +1088,14 @@
       "name": "RentPayerPda",
       "type": {
         "kind": "struct",
-        "fields": [
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
+        "fields": []
       }
     },
     {
       "name": "WhitelistEntry",
       "type": {
         "kind": "struct",
-        "fields": [
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
+        "fields": []
       }
     }
   ]
