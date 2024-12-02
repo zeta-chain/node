@@ -104,7 +104,7 @@ jobs:
 
   matrix-conditionals:
     needs: build-zetanode
-    if: always()
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-22.04
     env:
       GH_TOKEN: ${{ github.token }}
@@ -217,7 +217,7 @@ jobs:
     needs:
       - build-zetanode
       - matrix-conditionals
-    if: always()
+    if: ${{ !cancelled() }}
     strategy:
       fail-fast: false
       matrix:
@@ -281,7 +281,7 @@ jobs:
       - build-zetanode
       - matrix-conditionals
       - e2e
-    if: always()
+    if: ${{ !cancelled() }}
     steps:
       - name: Send slack message with results
         uses: actions/github-script@v7
