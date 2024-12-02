@@ -51,6 +51,7 @@ func TestSPLWithdrawNoReceiverAta(r *runner.E2ERunner, args []string) {
 	tx := r.WithdrawSPLZRC20(receiverPrivKey.PublicKey(), withdrawAmount, approvedAmount)
 
 	// wait for the cctx to be mined and aborted
+	// TODO: https://github.com/zeta-chain/node/issues/3234
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)
 
