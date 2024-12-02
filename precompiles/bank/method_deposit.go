@@ -80,7 +80,7 @@ func (c *Contract) deposit(
 	//   this way we map ZRC20 addresses to cosmos denoms "zevm/0x12345".
 	// - Mint coins to the fungible module.
 	// - Send coins from fungible to the caller.
-	coinSet, err := precompiletypes.CreateCoinSet(zrc20Addr, amount)
+	coinSet, err := precompiletypes.CreateZRC20CoinSet(zrc20Addr, amount)
 	if err != nil {
 		return nil, err
 	}

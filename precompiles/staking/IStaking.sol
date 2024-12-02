@@ -23,6 +23,13 @@ struct Validator {
     BondStatus bondStatus;
 }
 
+/// @notice Cosmos coin representation.
+/// ref: https://github.com/cosmos/cosmos-sdk/blob/470e0859462b28a53adb411843539561d11d7bf5/x/distribution/README.md?plain=1#L139
+struct DecCoin {
+    string denom;
+    uint256 amount;
+}
+
 interface IStaking {
     /// @notice Stake event is emitted when stake function is called
     /// @param staker Staker address
@@ -63,6 +70,18 @@ interface IStaking {
     event Distributed(
         address indexed zrc20_distributor,
         address indexed zrc20_token,
+        uint256 amount
+    );
+
+    /// @notice ClaimedRewards is emitted when a delegator claims ZRC20.
+    /// @param claim_address Delegator address where the funds were withdrawed.
+    /// @param zrc20_token ZRC20 token address.
+    /// @param validator Validator address.
+    /// @param amount Claimed amount.
+    event ClaimedRewards(
+        address indexed claim_address,
+        address indexed zrc20_token,
+        address indexed validator,
         uint256 amount
     );
 
@@ -123,4 +142,28 @@ interface IStaking {
         address zrc20,
         uint256 amount
     ) external returns (bool success);
+
+    /// @notice Claim ZRC20 staking rewards.
+    /// @param validator The validator address to claim rewards from.
+    /// @return success Boolean indicating whether the claim was successful.
+    function claimRewards(
+        address delegator,
+        string memory validator
+    ) external returns (bool success);
+
+    /// @dev Queries all validators the delegator has delegated to.
+    /// @param delegator The delegator address to query rewards from.
+    /// @return validators List of the validators the caller has delegated to.
+    function getDelegatorValidators(
+        address delegator
+    ) external view returns (string[] calldata validators);
+
+    /// @notice Query ZRC20 outstanding staking rewards.
+    /// @param delegator The delegator address to query rewards from.
+    /// @param validator The validator address to query rewards from.
+    /// @return rewards The list of coins rewarded on the validator.
+    function getRewards(
+        address delegator,
+        string memory validator
+    ) external view returns (DecCoin[] calldata rewards);
 }

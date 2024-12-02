@@ -5,6 +5,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
@@ -31,6 +32,7 @@ func StatefulContracts(
 	fungibleKeeper *fungiblekeeper.Keeper,
 	stakingKeeper *stakingkeeper.Keeper,
 	bankKeeper bankkeeper.Keeper,
+	distributionKeeper distrkeeper.Keeper,
 	cdc codec.Codec,
 	gasConfig storetypes.GasConfig,
 ) (precompiledContracts []evmkeeper.CustomContractFn) {
@@ -50,7 +52,15 @@ func StatefulContracts(
 	// Define the staking contract function.
 	if EnabledStatefulContracts[staking.ContractAddress] {
 		stakingContract := func(ctx sdktypes.Context, _ ethparams.Rules) vm.StatefulPrecompiledContract {
-			return staking.NewIStakingContract(ctx, stakingKeeper, *fungibleKeeper, bankKeeper, cdc, gasConfig)
+			return staking.NewIStakingContract(
+				ctx,
+				stakingKeeper,
+				*fungibleKeeper,
+				bankKeeper,
+				distributionKeeper,
+				cdc,
+				gasConfig,
+			)
 		}
 
 		// Append the staking contract to the precompiledContracts slice.
