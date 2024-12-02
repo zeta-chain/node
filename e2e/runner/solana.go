@@ -110,12 +110,13 @@ func (r *E2ERunner) CreateDepositSPLInstruction(
 		DataBytes: depositSPLData,
 		AccountValues: []*solana.AccountMeta{
 			solana.Meta(signer).WRITE().SIGNER(),
-			solana.Meta(r.ComputePdaAddress()),
+			solana.Meta(r.ComputePdaAddress()).WRITE(),
 			solana.Meta(whitelistEntry),
 			solana.Meta(mint),
 			solana.Meta(solana.TokenProgramID),
 			solana.Meta(from).WRITE(),
 			solana.Meta(to).WRITE(),
+			solana.Meta(solana.SystemProgramID),
 		},
 	}
 }
