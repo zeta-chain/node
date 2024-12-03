@@ -13,8 +13,8 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestSPLWithdrawAndCreateReceiverAta withdraws spl, but letting gateway to create receiver ata
-// instead of providing receiver that has it already created
+// TestSPLWithdrawAndCreateReceiverAta withdraws SPL, but letting gateway program to create receiver ATA
+// using PDA funds, instead of providing already created ATA
 func TestSPLWithdrawAndCreateReceiverAta(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
