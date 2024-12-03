@@ -22,12 +22,6 @@ type InitializeParams struct {
 	ChainID uint64
 }
 
-// InitializeRentPayerParams contains the parameters for a gateway initialize_rent_payer instruction
-type InitializeRentPayerParams struct {
-	// Discriminator is the unique identifier for the initialize_rent_payer instruction
-	Discriminator [8]byte
-}
-
 // DepositInstructionParams contains the parameters for a gateway deposit instruction
 type DepositInstructionParams struct {
 	// Discriminator is the unique identifier for the deposit instruction

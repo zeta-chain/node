@@ -44,9 +44,6 @@ type Signer struct {
 
 	// pda is the program derived address of the gateway program
 	pda solana.PublicKey
-
-	// rent payer pda is the program derived address of the gateway program to pay rent for creating atas
-	rentPayerPda solana.PublicKey
 }
 
 // NewSigner creates a new Solana signer
@@ -68,19 +65,12 @@ func NewSigner(
 		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
 	}
 
-	// parse rent payer PDA, used in case receiver ATA should be created in gateway
-	rentPayerPda, err := contracts.RentPayerPDA(gatewayID)
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
-	}
-
 	// create Solana signer
 	signer := &Signer{
-		Signer:       baseSigner,
-		client:       solClient,
-		gatewayID:    gatewayID,
-		pda:          pda,
-		rentPayerPda: rentPayerPda,
+		Signer:    baseSigner,
+		client:    solClient,
+		gatewayID: gatewayID,
+		pda:       pda,
 	}
 
 	// construct Solana private key if present
