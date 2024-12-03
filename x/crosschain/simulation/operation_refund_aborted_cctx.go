@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
+// SimulateMsgRefundAbortedCCTX generates a MsgRefundAbortedCCTX with random values
 func SimulateMsgRefundAbortedCCTX(k keeper.Keeper,
 ) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,

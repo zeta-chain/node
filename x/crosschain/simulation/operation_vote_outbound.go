@@ -55,6 +55,8 @@ func operationSimulateVoteOutbound(
 	}
 }
 
+// SimulateVoteOutbound generates a MsgVoteOutbound with random values
+// This is the only operation which saves a cctx directly to the store.
 func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 
 	defaultVote := chains.ReceiveStatus_success

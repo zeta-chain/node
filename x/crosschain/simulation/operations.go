@@ -22,49 +22,52 @@ import (
 // TODO Add more details to comment based on what the number represents in terms of percentage of operations in a block
 // https://github.com/zeta-chain/node/issues/3100
 const (
-	DefaultWeightAddOutboundTracker     = 100
-	DefaultWeightAddInboundTracker      = 20
-	DefaultWeightRemoveOutboundTracker  = 10
-	DefaultWeightVoteGasPrice           = 100
-	DefaultWeightVoteOutbound           = 100
-	DefaultWeightVoteInbound            = 100
-	DefaultWeightWhitelistERC20         = 10
-	DefaultWeightMigrateTssFunds        = 1
-	DefaultWeightUpdateTssAddress       = 1
-	DefaultWeightAbortStuckCCTX         = 10
-	DefaultWeightUpdateRateLimiterFlags = 10
-	DefaultWeightRefundAbortedCCTX      = 10
+	DefaultWeightAddOutboundTracker            = 100
+	DefaultWeightAddInboundTracker             = 20
+	DefaultWeightRemoveOutboundTracker         = 10
+	DefaultWeightVoteGasPrice                  = 100
+	DefaultWeightVoteOutbound                  = 100
+	DefaultWeightVoteInbound                   = 100
+	DefaultWeightWhitelistERC20                = 10
+	DefaultWeightMigrateTssFunds               = 1
+	DefaultWeightUpdateTssAddress              = 1
+	DefaultWeightAbortStuckCCTX                = 10
+	DefaultWeightUpdateRateLimiterFlags        = 10
+	DefaultWeightRefundAbortedCCTX             = 10
+	DefaultWeightUpdateERC20CustodyPauseStatus = 10
 
-	OpWeightMsgAddOutboundTracker  = "op_weight_msg_add_outbound_tracker"      // #nosec G101 not a hardcoded credential
-	OpWeightAddInboundTracker      = "op_weight_msg_add_inbound_tracker"       // #nosec G101 not a hardcoded credential
-	OpWeightRemoveOutboundTracker  = "op_weight_msg_remove_outbound_tracker"   // #nosec G101 not a hardcoded credential
-	OpWeightVoteGasPrice           = "op_weight_msg_vote_gas_price"            // #nosec G101 not a hardcoded credential
-	OpWeightVoteOutbound           = "op_weight_msg_vote_outbound"             // #nosec G101 not a hardcoded credential
-	OpWeightVoteInbound            = "op_weight_msg_vote_inbound"              // #nosec G101 not a hardcoded credential
-	OpWeightWhitelistERC20         = "op_weight_msg_whitelist_erc20"           // #nosec G101 not a hardcoded credential
-	OpWeightMigrateTssFunds        = "op_weight_msg_migrate_tss_funds"         // #nosec G101 not a hardcoded credential
-	OpWeightUpdateTssAddress       = "op_weight_msg_update_tss_address"        // #nosec G101 not a hardcoded credential
-	OpWeightAbortStuckCCTX         = "op_weight_msg_abort_stuck_cctx"          // #nosec G101 not a hardcoded credential
-	OpWeightUpdateRateLimiterFlags = "op_weight_msg_update_rate_limiter_flags" // #nosec G101 not a hardcoded credential
-	OpWeightRefundAbortedCCTX      = "op_weight_msg_refund_aborted_cctx"       // #nosec G101 not a hardcoded credential
+	OpWeightMsgAddOutboundTracker          = "op_weight_msg_add_outbound_tracker"              // #nosec G101 not a hardcoded credential
+	OpWeightAddInboundTracker              = "op_weight_msg_add_inbound_tracker"               // #nosec G101 not a hardcoded credential
+	OpWeightRemoveOutboundTracker          = "op_weight_msg_remove_outbound_tracker"           // #nosec G101 not a hardcoded credential
+	OpWeightVoteGasPrice                   = "op_weight_msg_vote_gas_price"                    // #nosec G101 not a hardcoded credential
+	OpWeightVoteOutbound                   = "op_weight_msg_vote_outbound"                     // #nosec G101 not a hardcoded credential
+	OpWeightVoteInbound                    = "op_weight_msg_vote_inbound"                      // #nosec G101 not a hardcoded credential
+	OpWeightWhitelistERC20                 = "op_weight_msg_whitelist_erc20"                   // #nosec G101 not a hardcoded credential
+	OpWeightMigrateTssFunds                = "op_weight_msg_migrate_tss_funds"                 // #nosec G101 not a hardcoded credential
+	OpWeightUpdateTssAddress               = "op_weight_msg_update_tss_address"                // #nosec G101 not a hardcoded credential
+	OpWeightAbortStuckCCTX                 = "op_weight_msg_abort_stuck_cctx"                  // #nosec G101 not a hardcoded credential
+	OpWeightUpdateRateLimiterFlags         = "op_weight_msg_update_rate_limiter_flags"         // #nosec G101 not a hardcoded credential
+	OpWeightRefundAbortedCCTX              = "op_weight_msg_refund_aborted_cctx"               // #nosec G101 not a hardcoded credential
+	OppWeightUpdateERC20CustodyPauseStatus = "op_weight_msg_update_erc20_custody_pause_status" // #nosec G101 not a hardcoded credential
 
 )
 
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper) simulation.WeightedOperations {
 	var (
-		weightAddOutboundTracker     int
-		weightAddInboundTracker      int
-		weightRemoveOutboundTracker  int
-		weightVoteGasPrice           int
-		weightVoteOutbound           int
-		weightVoteInbound            int
-		weightWhitelistERC20         int
-		weightMigrateTssFunds        int
-		weightUpdateTssAddress       int
-		weightAbortStuckCCTX         int
-		weightUpdateRateLimiterFlags int
-		weightRefundAbortedCCTX      int
+		weightAddOutboundTracker            int
+		weightAddInboundTracker             int
+		weightRemoveOutboundTracker         int
+		weightVoteGasPrice                  int
+		weightVoteOutbound                  int
+		weightVoteInbound                   int
+		weightWhitelistERC20                int
+		weightMigrateTssFunds               int
+		weightUpdateTssAddress              int
+		weightAbortStuckCCTX                int
+		weightUpdateRateLimiterFlags        int
+		weightRefundAbortedCCTX             int
+		weightUpdateERC20CustodyPauseStatus int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgAddOutboundTracker, &weightAddOutboundTracker, nil,
@@ -139,6 +142,12 @@ func WeightedOperations(
 		},
 	)
 
+	appParams.GetOrGenerate(cdc, OppWeightUpdateERC20CustodyPauseStatus, &weightUpdateERC20CustodyPauseStatus, nil,
+		func(_ *rand.Rand) {
+			weightUpdateERC20CustodyPauseStatus = DefaultWeightUpdateERC20CustodyPauseStatus
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightVoteGasPrice,
@@ -179,6 +188,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightUpdateRateLimiterFlags,
 			SimulateMsgUpdateRateLimiterFlags(k),
+		),
+		simulation.NewWeightedOperation(
+			weightUpdateERC20CustodyPauseStatus,
+			SimulateUpdateERC20CustodyPauseStatus(k),
 		),
 	}
 }

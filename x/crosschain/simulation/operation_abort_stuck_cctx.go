@@ -42,26 +42,10 @@ func SimulateMsgAbortStuckCCTX(k keeper.Keeper) simtypes.Operation {
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
 
-		//_, creator, err := GetRandomAccountAndObserver(r, ctx, k, accounts)
-		//if err != nil {
-		//	return simtypes.OperationMsg{}, nil, nil
-		//}
-		//index := ethcrypto.Keccak256Hash([]byte(fmt.Sprintf("%d", r.Int63()))).Hex()
-		//
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)
 		if !found {
 			return simtypes.OperationMsg{}, nil, fmt.Errorf("tss not found")
 		}
-		//
-		//cctx := sample.CCTXfromRand(r, creator, index, to, from, tss.TssPubkey)
-		//cctx.CctxStatus = &types.Status{
-		//	Status:              types.CctxStatus_Aborted,
-		//	StatusMessage:       "testing SimulateMsgAbortStuckCCTX",
-		//	ErrorMessage:        "SimulateMsgAbortStuckCCTX",
-		//	LastUpdateTimestamp: r.Int63(),
-		//	IsAbortRefunded:     false,
-		//	CreatedTimestamp:    r.Int63(),
-		//}
 
 		pendingNonces, found := k.GetObserverKeeper().GetPendingNonces(ctx, tss.TssPubkey, chainID)
 		if !found {
@@ -81,27 +65,6 @@ func SimulateMsgAbortStuckCCTX(k keeper.Keeper) simtypes.Operation {
 				"no pending nonces found",
 			), nil, nil
 		}
-		//fmt.Println("Pending nonces:", pendingNonces.NonceLow, pendingNonces.NonceHigh)
-		//for i := pendingNonces.NonceLow; i < pendingNonces.NonceHigh; i++ {
-		//	fmt.Println("Checking nonce:", i)
-		//	nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tss.TssPubkey, chainID, int64(i))
-		//	if !found {
-		//		fmt.Println("NonceToCctx not found:", chainID, i)
-		//		continue
-		//	}
-		//
-		//	cctx, found := k.GetCrossChainTx(ctx, nonceToCctx.CctxIndex)
-		//	if !found {
-		//		fmt.Println("CCTX not found:", chainID, i)
-		//		continue
-		//	}
-		//	fmt.Println("CCTX found:", cctx.Index, cctx.CctxStatus.Status, cctx.GetCurrentOutboundParam().TssNonce)
-		//	//if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
-		//	//	fmt.Println("CCTX already aborted:", cctx.Index)
-		//	//	continue
-		//	//}
-		//}
-
 		// Pick a random pending nonce
 		nonce := 0
 		switch {
