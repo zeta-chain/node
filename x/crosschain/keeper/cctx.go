@@ -34,15 +34,15 @@ func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(
 	cctx types.CrossChainTx,
 	tssPubkey string,
 ) {
-	k.SetNonceToCCTXMapping(ctx, cctx, tssPubkey)
+	k.setNonceToCCTXMapping(ctx, cctx, tssPubkey)
 	k.SetCrossChainTx(ctx, cctx)
-	k.UpdateInboundHashToCCTX(ctx, cctx)
-	k.UpdateZetaAccounting(ctx, cctx)
+	k.updateInboundHashToCCTX(ctx, cctx)
+	k.updateZetaAccounting(ctx, cctx)
 }
 
-// UpdateInboundHashToCCTX updates the mapping between an inbound hash and a cctx index.
+// updateInboundHashToCCTX updates the mapping between an inbound hash and a cctx index.
 // A new index is added to the list of cctx indexes if it is not already present
-func (k Keeper) UpdateInboundHashToCCTX(
+func (k Keeper) updateInboundHashToCCTX(
 	ctx sdk.Context,
 	cctx types.CrossChainTx,
 ) {
@@ -61,7 +61,7 @@ func (k Keeper) UpdateInboundHashToCCTX(
 	k.SetInboundHashToCctx(ctx, in)
 }
 
-func (k Keeper) UpdateZetaAccounting(
+func (k Keeper) updateZetaAccounting(
 	ctx sdk.Context,
 	cctx types.CrossChainTx,
 ) {
@@ -70,8 +70,8 @@ func (k Keeper) UpdateZetaAccounting(
 	}
 }
 
-// SetNonceToCCTXMapping updates the mapping between a nonce and a cctx index if the cctx is in a PendingOutbound or PendingRevert state
-func (k Keeper) SetNonceToCCTXMapping(
+// setNonceToCCTXMapping updates the mapping between a nonce and a cctx index if the cctx is in a PendingOutbound or PendingRevert state
+func (k Keeper) setNonceToCCTXMapping(
 	ctx sdk.Context,
 	cctx types.CrossChainTx,
 	tssPubkey string,

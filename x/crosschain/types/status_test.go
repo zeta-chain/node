@@ -191,7 +191,7 @@ func TestCctxStatus_IsTerminalStatus(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.expected, tc.status.IsTerminalStatus())
+			assert.Equal(t, tc.expected, tc.status.IsTerminal())
 		})
 	}
 }
@@ -212,7 +212,7 @@ func TestCctxStatus_IsPendingStatus(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.expected, tc.status.IsPendingStatus())
+			assert.Equal(t, tc.expected, tc.status.IsPending())
 		})
 	}
 }

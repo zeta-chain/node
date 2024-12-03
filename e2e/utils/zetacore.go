@@ -113,7 +113,7 @@ func WaitCctxsMinedByInboundHash(
 		allFound := true
 		for j, cctx := range res.CrossChainTxs {
 			cctx := cctx
-			if !cctx.CctxStatus.Status.IsTerminalStatus() {
+			if !cctx.CctxStatus.Status.IsTerminal() {
 				// prevent spamming logs
 				if i%20 == 0 {
 					logger.Info(
@@ -170,7 +170,7 @@ func WaitCCTXMinedByIndex(
 		}
 
 		cctx := res.CrossChainTx
-		if !cctx.CctxStatus.Status.IsTerminalStatus() {
+		if !cctx.CctxStatus.Status.IsTerminal() {
 			// prevent spamming logs
 			if i%20 == 0 {
 				logger.Info(
