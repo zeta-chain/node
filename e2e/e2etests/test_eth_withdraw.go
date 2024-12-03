@@ -46,6 +46,7 @@ func TestEtherWithdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("TestEtherWithdraw completed")
 }
 
+// nolint:unused // https://github.com/zeta-chain/node/issues/3221
 func mustFetchEthReceipt(r *runner.E2ERunner, cctx *crosschaintypes.CrossChainTx) *ethtypes.Receipt {
 	hash := cctx.GetCurrentOutboundParam().Hash
 	require.NotEmpty(r, hash, "outbound hash is empty")
