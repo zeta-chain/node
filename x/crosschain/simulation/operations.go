@@ -24,7 +24,7 @@ import (
 const (
 	DefaultWeightAddOutboundTracker     = 100
 	DefaultWeightAddInboundTracker      = 20
-	DefaultWeightRemoveOutboundTracker  = 5
+	DefaultWeightRemoveOutboundTracker  = 10
 	DefaultWeightVoteGasPrice           = 100
 	DefaultWeightVoteOutbound           = 100
 	DefaultWeightVoteInbound            = 100
@@ -32,7 +32,7 @@ const (
 	DefaultWeightMigrateTssFunds        = 1
 	DefaultWeightUpdateTssAddress       = 1
 	DefaultWeightAbortStuckCCTX         = 10
-	DefaultWeightUpdateRateLimiterFlags = 1
+	DefaultWeightUpdateRateLimiterFlags = 10
 	DefaultWeightRefundAbortedCCTX      = 10
 
 	OpWeightMsgAddOutboundTracker  = "op_weight_msg_add_outbound_tracker"      // #nosec G101 not a hardcoded credential
@@ -175,6 +175,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightRefundAbortedCCTX,
 			SimulateMsgRefundAbortedCCTX(k),
+		),
+		simulation.NewWeightedOperation(
+			weightUpdateRateLimiterFlags,
+			SimulateMsgUpdateRateLimiterFlags(k),
 		),
 	}
 }

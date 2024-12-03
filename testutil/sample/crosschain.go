@@ -54,6 +54,36 @@ func RateLimiterFlags() types.RateLimiterFlags {
 	}
 }
 
+func RateLimiterFlagsFromRand(r *rand.Rand) types.RateLimiterFlags {
+	return types.RateLimiterFlags{
+		Enabled: true,
+		Window:  r.Int63(),
+		Rate:    sdk.NewUint(r.Uint64()),
+		Conversions: []types.Conversion{
+			{
+				Zrc20: EthAddressFromRand(r).Hex(),
+				Rate:  sdk.NewDec(r.Int63()),
+			},
+			{
+				Zrc20: EthAddressFromRand(r).Hex(),
+				Rate:  sdk.NewDec(r.Int63()),
+			},
+			{
+				Zrc20: EthAddressFromRand(r).Hex(),
+				Rate:  sdk.NewDec(r.Int63()),
+			},
+			{
+				Zrc20: EthAddressFromRand(r).Hex(),
+				Rate:  sdk.NewDec(r.Int63()),
+			},
+			{
+				Zrc20: EthAddressFromRand(r).Hex(),
+				Rate:  sdk.NewDec(r.Int63()),
+			},
+		},
+	}
+}
+
 // CustomAssetRate creates a custom asset rate with the given parameters
 func CustomAssetRate(
 	chainID int64,
