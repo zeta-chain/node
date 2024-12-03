@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Features
+
+* [3235](https://github.com/zeta-chain/node/pull/3235) - add /systemtime telemetry endpoint (zetaclient)
+
 ### Tests
 
 * [3205](https://github.com/zeta-chain/node/issues/3205) - move Bitcoin revert address test to advanced group to avoid upgrade test failure
