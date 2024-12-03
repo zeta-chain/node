@@ -57,6 +57,8 @@ func (g Gas) validate() error {
 // or DynamicFeeTx{} (post EIP-1559).
 //
 // Returns true if priority fee is <= 0.
+//
+//nolint:unused // https://github.com/zeta-chain/node/issues/3221
 func (g Gas) isLegacy() bool {
 	return g.PriorityFee.Sign() < 1
 }
