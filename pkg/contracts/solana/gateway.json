@@ -376,54 +376,6 @@
       ]
     },
     {
-      "name": "initialize_rent_payer",
-      "discriminator": [
-        225,
-        73,
-        166,
-        180,
-        25,
-        245,
-        183,
-        96
-      ],
-      "accounts": [
-        {
-          "name": "rent_payer_pda",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  114,
-                  101,
-                  110,
-                  116,
-                  45,
-                  112,
-                  97,
-                  121,
-                  101,
-                  114
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "authority",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "set_deposit_paused",
       "discriminator": [
         98,
@@ -879,29 +831,6 @@
           "writable": true
         },
         {
-          "name": "rent_payer_pda",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  114,
-                  101,
-                  110,
-                  116,
-                  45,
-                  112,
-                  97,
-                  121,
-                  101,
-                  114
-                ]
-              }
-            ]
-          }
-        },
-        {
           "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
@@ -964,19 +893,6 @@
         36,
         43,
         94
-      ]
-    },
-    {
-      "name": "RentPayerPda",
-      "discriminator": [
-        48,
-        247,
-        192,
-        150,
-        46,
-        218,
-        14,
-        121
       ]
     },
     {
@@ -1082,13 +998,6 @@
             "type": "bool"
           }
         ]
-      }
-    },
-    {
-      "name": "RentPayerPda",
-      "type": {
-        "kind": "struct",
-        "fields": []
       }
     },
     {
