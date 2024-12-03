@@ -63,9 +63,6 @@ func SimulateMsgAbortStuckCCTX(k keeper.Keeper) simtypes.Operation {
 		//	CreatedTimestamp:    r.Int63(),
 		//}
 
-		fmt.Println("\n------------------------------------------------------")
-		fmt.Println("Block height:", ctx.BlockHeight())
-
 		pendingNonces, found := k.GetObserverKeeper().GetPendingNonces(ctx, tss.TssPubkey, chainID)
 		if !found {
 			return simtypes.NoOpMsg(

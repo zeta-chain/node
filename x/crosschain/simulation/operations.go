@@ -33,7 +33,7 @@ const (
 	DefaultWeightUpdateTssAddress       = 1
 	DefaultWeightAbortStuckCCTX         = 10
 	DefaultWeightUpdateRateLimiterFlags = 1
-	DefaultWeightRefundAbortedCCTX      = 1
+	DefaultWeightRefundAbortedCCTX      = 10
 
 	OpWeightMsgAddOutboundTracker  = "op_weight_msg_add_outbound_tracker"      // #nosec G101 not a hardcoded credential
 	OpWeightAddInboundTracker      = "op_weight_msg_add_inbound_tracker"       // #nosec G101 not a hardcoded credential
@@ -171,6 +171,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightAbortStuckCCTX,
 			SimulateMsgAbortStuckCCTX(k),
+		),
+		simulation.NewWeightedOperation(
+			weightRefundAbortedCCTX,
+			SimulateMsgRefundAbortedCCTX(k),
 		),
 	}
 }
@@ -338,4 +342,17 @@ func GetPolicyAccount(ctx sdk.Context, k types.AuthorityKeeper, accounts []simty
 		return simtypes.Account{}, fmt.Errorf("admin account not found in list of simulation accounts")
 	}
 	return simAccount, nil
+}
+
+func GetAsset(ctx sdk.Context, k types.FungibleKeeper, chainID int64) (string, error) {
+	foreignCoins := k.GetAllForeignCoins(ctx)
+	asset := ""
+
+	for _, coin := range foreignCoins {
+		if coin.ForeignChainId == chainID {
+			return coin.Asset, nil
+		}
+	}
+
+	return asset, fmt.Errorf("asset not found for chain %d", chainID)
 }

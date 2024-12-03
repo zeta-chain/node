@@ -90,7 +90,12 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 			return simtypes.OperationMsg{}, nil, fmt.Errorf("tss not found")
 		}
 
-		cctx := sample.CCTXfromRand(r, creator, index, to, from, tss.TssPubkey)
+		asset, err := GetAsset(ctx, k.GetFungibleKeeper(), from)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, authz.OutboundVoter.String(), "unable to get asset"), nil, err
+		}
+
+		cctx := sample.CCTXfromRand(r, creator, index, to, from, tss.TssPubkey, asset)
 		msg := types.MsgVoteOutbound{
 			CctxHash:                          cctx.Index,
 			OutboundTssNonce:                  cctx.GetCurrentOutboundParam().TssNonce,

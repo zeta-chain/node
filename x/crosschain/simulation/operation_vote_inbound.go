@@ -78,13 +78,9 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 			}
 		}
 
-		foriegnCoins := k.GetFungibleKeeper().GetAllForeignCoins(ctx)
-		asset := ""
-
-		for _, coin := range foriegnCoins {
-			if coin.ForeignChainId == from {
-				asset = coin.Asset
-			}
+		asset, err := GetAsset(ctx, k.GetFungibleKeeper(), from)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, authz.InboundVoter.String(), "unable to get asset"), nil, err
 		}
 
 		msg := sample.InboundVoteSim(from, to, r, asset)

@@ -347,6 +347,7 @@ func CCTXfromRand(r *rand.Rand,
 	to int64,
 	from int64,
 	tssPubkey string,
+	asset string,
 ) types.CrossChainTx {
 	coinType := CoinTypeFromRand(r)
 
@@ -356,7 +357,7 @@ func CCTXfromRand(r *rand.Rand,
 		SenderChainId:          from,
 		TxOrigin:               EthAddressFromRand(r).String(),
 		CoinType:               coinType,
-		Asset:                  StringRandom(r, 32),
+		Asset:                  asset,
 		Amount:                 amount,
 		ObservedHash:           StringRandom(r, 32),
 		ObservedExternalHeight: r.Uint64(),
