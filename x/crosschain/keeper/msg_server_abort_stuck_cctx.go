@@ -2,11 +2,10 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/zeta-chain/node/pkg/coin"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -41,8 +40,6 @@ func (k msgServer) AbortStuckCCTX(
 		cctx.CctxStatus.Status == types.CctxStatus_PendingInbound ||
 		cctx.CctxStatus.Status == types.CctxStatus_PendingRevert
 	if !isPending {
-		fmt.Println("CCTX not in pending", cctx.Index, cctx.CctxStatus.Status)
-
 		return nil, types.ErrStatusNotPending
 	}
 
@@ -52,6 +49,10 @@ func (k msgServer) AbortStuckCCTX(
 	}
 
 	k.SetCrossChainTx(ctx, cctx)
+	// TODO replace with updated code from develop
+	if cctx.InboundParams.CoinType == coin.CoinType_Zeta {
+		k.AddZetaAbortedAmount(ctx, GetAbortedAmount(cctx))
+	}
 
 	return &types.MsgAbortStuckCCTXResponse{}, nil
 }

@@ -49,7 +49,7 @@ func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(
 	}
 	k.SetInboundHashToCctx(ctx, in)
 
-	if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.InboundParams.CoinType == coin.CoinType_Zeta {
+	if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.InboundParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.IsAbortRefunded == false {
 		k.AddZetaAbortedAmount(ctx, GetAbortedAmount(cctx))
 	}
 }

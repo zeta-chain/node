@@ -250,6 +250,15 @@ func TestFullAppSimulation(t *testing.T) {
 	zetasimulation.PrintStats(db)
 }
 
+// TestFullAppSimulationAfterImport tests the application simulation after importing the state exported from a previous.At a high level,it does the following
+//  1. It runs a full simulation and exports the state
+//  2. It creates a new app, and db
+//  3. It imports the exported state into the new app
+//  4. It compares the two apps
+//     a. First app which ran the simulation
+//     b. Second app which imported the state
+
+// This can verify the export and import process do not modify the state in anyway irrespective of the operations performed
 func TestAppImportExport(t *testing.T) {
 	config := zetasimulation.NewConfigFromFlags()
 
