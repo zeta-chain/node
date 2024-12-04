@@ -90,7 +90,7 @@ func SolanaAddress(t *testing.T) string {
 	return privKey.PublicKey().String()
 }
 
-func SolAddressFromRand(t *testing.T, r *rand.Rand) string {
+func SolAddressFromRand(r *rand.Rand) string {
 	privKey, err := solana.NewRandomPrivateKey()
 	if err != nil {
 		panic(err)

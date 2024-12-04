@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -15,8 +14,8 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// SimulateMsgWhitelistERC20 generates a MsgWhitelistERC20 with random values and delivers it
-func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
+// SimulateUpdateERC20CustodyPauseStatus generates a MsgUpdateERC20CustodyPauseStatus with random values and delivers it
+func SimulateMigrateERC20CustodyFunds(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
@@ -31,29 +30,30 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 		if len(supportedChains) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgWhitelistERC20,
+				types.TypeUpdateERC20CustodyPauseStatus,
 				"no supported chains found",
 			), nil, nil
 		}
 
-		filteredChains := chains.FilterChains(supportedChains, chains.FilterByVM(chains.Vm_evm))
+		filteredChains := chains.FilterChains(supportedChains, chains.FilterExternalChains)
 
 		//pick a random chain
-		randomChain := filteredChains[r.Intn(len(filteredChains))]
-		var tokenAddress string
-		switch {
-		case randomChain.IsEVMChain():
-			tokenAddress = sample.EthAddressFromRand(r).String()
-		default:
-			fmt.Println("unsupported chain", randomChain.ChainId)
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWhitelistERC20, "unsupported chain"), nil, nil
-		}
+		randomChain := supportedChains[r.Intn(len(filteredChains))]
 
-		_, found := k.GetObserverKeeper().GetTSS(ctx)
+		_, found := k.GetObserverKeeper().GetChainNonces(ctx, randomChain.ChainId)
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgWhitelistERC20,
+				types.TypeUpdateERC20CustodyPauseStatus,
+				"no chain nonces found",
+			), nil, nil
+		}
+
+		_, found = k.GetObserverKeeper().GetTSS(ctx)
+		if !found {
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				types.TypeMsgMigrateERC20CustodyFunds,
 				"no TSS found",
 			), nil, nil
 		}
@@ -62,41 +62,35 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgWhitelistERC20,
+				types.TypeMsgMigrateERC20CustodyFunds,
 				"no chain params found",
 			), nil, nil
 		}
-
-		medianGasPrice, priorityFee, isFound := k.GetMedianGasValues(ctx, randomChain.ChainId)
-		if !isFound {
+		medianGasPrice, priorityFee, found := k.GetMedianGasValues(ctx, randomChain.ChainId)
+		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgWhitelistERC20,
-				"median gas price not found",
+				types.TypeMsgMigrateERC20CustodyFunds,
+				"no median gas values found",
 			), nil, nil
 		}
-
 		medianGasPrice = medianGasPrice.MulUint64(types.ERC20CustodyPausingGasMultiplierEVM)
 		priorityFee = priorityFee.MulUint64(types.ERC20CustodyPausingGasMultiplierEVM)
 
 		if priorityFee.GT(medianGasPrice) {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgWhitelistERC20,
+				types.TypeMsgMigrateERC20CustodyFunds,
 				"priorityFee is greater than median gasPrice",
 			), nil, nil
 		}
 
-		gasLimit := r.Int63n(1000000000) + 1
-		nameLength := r.Intn(97) + 3
-		msg := types.MsgWhitelistERC20{
-			Creator:      policyAccount.Address.String(),
-			ChainId:      randomChain.ChainId,
-			Erc20Address: tokenAddress,
-			GasLimit:     gasLimit,
-			Decimals:     18,
-			Name:         sample.StringRandom(r, nameLength),
-			Symbol:       sample.StringRandom(r, 3),
+		msg := types.MsgMigrateERC20CustodyFunds{
+			Creator:           policyAccount.Address.String(),
+			ChainId:           randomChain.ChainId,
+			NewCustodyAddress: sample.EthAddressFromRand(r).String(),
+			Erc20Address:      sample.EthAddressFromRand(r).String(),
+			Amount:            sdk.NewUint(r.Uint64()),
 		}
 
 		err = msg.ValidateBasic()

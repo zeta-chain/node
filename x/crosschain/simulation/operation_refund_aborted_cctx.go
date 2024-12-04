@@ -46,6 +46,10 @@ func SimulateMsgRefundAbortedCCTX(k keeper.Keeper,
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgAbortStuckCCTX, "aborted cctx already refunded"), nil, nil
 		}
 
+		if !abortedCctx.InboundParams.CoinType.SupportsRefund() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgAbortStuckCCTX, "coin type does not support refund"), nil, nil
+		}
+
 		msg := types.MsgRefundAbortedCCTX{
 			Creator:       policyAccount.Address.String(),
 			CctxIndex:     abortedCctx.Index,
