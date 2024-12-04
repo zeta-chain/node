@@ -87,6 +87,17 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 			), nil, nil
 		}
 
+		foreignCoins := k.GetFungibleKeeper().GetAllForeignCoins(ctx)
+		for _, fCoin := range foreignCoins {
+			if fCoin.Asset == tokenAddress && fCoin.ForeignChainId == randomChain.ChainId {
+				return simtypes.NoOpMsg(
+					types.ModuleName,
+					types.TypeMsgWhitelistERC20,
+					"ERC20 already whitelisted",
+				), nil, nil
+			}
+		}
+
 		gasLimit := r.Int63n(1000000000) + 1
 		nameLength := r.Intn(97) + 3
 		msg := types.MsgWhitelistERC20{

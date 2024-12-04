@@ -1,11 +1,8 @@
 package crosschain
 
 import (
-	"fmt"
-
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/node/pkg/coin"
 
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
