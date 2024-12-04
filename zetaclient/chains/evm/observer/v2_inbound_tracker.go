@@ -89,5 +89,5 @@ func (ob *Observer) ProcessInboundTrackerV2(
 		}
 	}
 
-	return errEventNotFound
+	return errors.Wrapf(ErrEventNotFound, "inbound tracker %s", tx.Hash)
 }
