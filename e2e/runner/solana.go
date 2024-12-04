@@ -29,17 +29,6 @@ func (r *E2ERunner) ComputePdaAddress() solana.PublicKey {
 	return pdaComputed
 }
 
-// SolanaRentPayerPDA computes the rent payer PDA (Program Derived Address) address for the gateway program
-func (r *E2ERunner) SolanaRentPayerPDA() solana.PublicKey {
-	seed := []byte(solanacontract.RentPayerPDASeed)
-	pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, r.GatewayProgram)
-	require.NoError(r, err)
-
-	r.Logger.Info("computed rent payer pda: %s, bump %d\n", pdaComputed, bump)
-
-	return pdaComputed
-}
-
 // CreateDepositInstruction creates a 'deposit' instruction
 func (r *E2ERunner) CreateDepositInstruction(
 	signer solana.PublicKey,
@@ -110,12 +99,13 @@ func (r *E2ERunner) CreateDepositSPLInstruction(
 		DataBytes: depositSPLData,
 		AccountValues: []*solana.AccountMeta{
 			solana.Meta(signer).WRITE().SIGNER(),
-			solana.Meta(r.ComputePdaAddress()),
+			solana.Meta(r.ComputePdaAddress()).WRITE(),
 			solana.Meta(whitelistEntry),
 			solana.Meta(mint),
 			solana.Meta(solana.TokenProgramID),
 			solana.Meta(from).WRITE(),
 			solana.Meta(to).WRITE(),
+			solana.Meta(solana.SystemProgramID),
 		},
 	}
 }
