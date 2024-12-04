@@ -61,11 +61,14 @@ func (k Keeper) updateInboundHashToCCTX(
 	k.SetInboundHashToCctx(ctx, in)
 }
 
+// updateZetaAccounting updates the zeta accounting with the amount of zeta that was locked in an aborted cctx
 func (k Keeper) updateZetaAccounting(
 	ctx sdk.Context,
 	cctx types.CrossChainTx,
 ) {
-	if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.InboundParams.CoinType == coin.CoinType_Zeta {
+	if cctx.CctxStatus.Status == types.CctxStatus_Aborted &&
+		cctx.InboundParams.CoinType == coin.CoinType_Zeta &&
+		cctx.CctxStatus.IsAbortRefunded == false {
 		k.AddZetaAbortedAmount(ctx, GetAbortedAmount(cctx))
 	}
 }

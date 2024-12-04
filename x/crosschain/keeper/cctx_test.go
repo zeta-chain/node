@@ -602,8 +602,10 @@ func TestKeeper_UpdateZetaAccounting(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		amount := sdkmath.NewUint(100)
 		cctx := types.CrossChainTx{
-			InboundParams:  &types.InboundParams{CoinType: coin.CoinType_Zeta},
-			CctxStatus:     &types.Status{Status: types.CctxStatus_Aborted},
+			InboundParams: &types.InboundParams{CoinType: coin.CoinType_Zeta},
+			CctxStatus: &types.Status{
+				IsAbortRefunded: false,
+				Status:          types.CctxStatus_Aborted},
 			OutboundParams: []*types.OutboundParams{{Amount: amount}},
 		}
 		k.SetZetaAccounting(ctx, types.ZetaAccounting{AbortedZetaAmount: math.ZeroUint()})
@@ -622,8 +624,10 @@ func TestKeeper_UpdateZetaAccounting(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		amount := sdkmath.NewUint(100)
 		cctx := types.CrossChainTx{
-			InboundParams:  &types.InboundParams{CoinType: coin.CoinType_Zeta},
-			CctxStatus:     &types.Status{Status: types.CctxStatus_PendingOutbound},
+			InboundParams: &types.InboundParams{CoinType: coin.CoinType_Zeta},
+			CctxStatus: &types.Status{
+				IsAbortRefunded: false,
+				Status:          types.CctxStatus_PendingOutbound},
 			OutboundParams: []*types.OutboundParams{{Amount: amount}},
 		}
 		k.SetZetaAccounting(ctx, types.ZetaAccounting{AbortedZetaAmount: math.ZeroUint()})
@@ -642,8 +646,10 @@ func TestKeeper_UpdateZetaAccounting(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		amount := sdkmath.NewUint(100)
 		cctx := types.CrossChainTx{
-			InboundParams:  &types.InboundParams{CoinType: coin.CoinType_Zeta},
-			CctxStatus:     &types.Status{Status: types.CctxStatus_Aborted},
+			InboundParams: &types.InboundParams{CoinType: coin.CoinType_Zeta},
+			CctxStatus: &types.Status{
+				IsAbortRefunded: false,
+				Status:          types.CctxStatus_Aborted},
 			OutboundParams: []*types.OutboundParams{{Amount: amount}},
 		}
 
@@ -654,5 +660,27 @@ func TestKeeper_UpdateZetaAccounting(t *testing.T) {
 		zetaAccounting, found := k.GetZetaAccounting(ctx)
 		require.True(t, found)
 		require.Equal(t, amount, zetaAccounting.AbortedZetaAmount)
+	})
+
+	t.Run("should not update zeta accounting if the cctx is already refunded", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		amount := sdkmath.NewUint(100)
+		cctx := types.CrossChainTx{
+			InboundParams: &types.InboundParams{CoinType: coin.CoinType_Zeta},
+			CctxStatus: &types.Status{
+				IsAbortRefunded: true,
+				Status:          types.CctxStatus_Aborted},
+			OutboundParams: []*types.OutboundParams{{Amount: amount}},
+		}
+		k.SetZetaAccounting(ctx, types.ZetaAccounting{AbortedZetaAmount: math.ZeroUint()})
+
+		// Act
+		k.UpdateZetaAccounting(ctx, cctx)
+
+		// Assert
+		zetaAccounting, found := k.GetZetaAccounting(ctx)
+		require.True(t, found)
+		require.Equal(t, math.ZeroUint(), zetaAccounting.AbortedZetaAmount)
 	})
 }
