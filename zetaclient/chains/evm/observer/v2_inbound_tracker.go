@@ -2,27 +2,32 @@ package observer
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/onrik/ethrpc"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
+	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-var errEventNotFound = errors.New("no gateway event found in inbound tracker")
+var (
+	ErrEventNotFound = errors.New("event not found")
+	ErrGatewayNotSet = errors.New("gateway contract not set")
+)
 
 // ProcessInboundTrackerV2 processes inbound tracker events from the gateway
 func (ob *Observer) ProcessInboundTrackerV2(
 	ctx context.Context,
-	gateway *gatewayevm.GatewayEVM,
-	gatewayAddr ethcommon.Address,
 	tx *ethrpc.Transaction,
 	receipt *ethtypes.Receipt,
 ) error {
+	gatewayAddr, gateway, err := ob.GetGatewayContract()
+	if err != nil {
+		ob.Logger().Inbound.Debug().Err(err).Msg("error getting gateway contract for processing inbound tracker")
+		return ErrGatewayNotSet
+	}
+
 	// check confirmations
 	if confirmed := ob.HasEnoughConfirmations(receipt, ob.LastBlock()); !confirmed {
 		return fmt.Errorf(
@@ -33,7 +38,7 @@ func (ob *Observer) ProcessInboundTrackerV2(
 	}
 
 	for _, log := range receipt.Logs {
-		if log == nil && log.Address != gatewayAddr {
+		if log == nil || log.Address != gatewayAddr {
 			continue
 		}
 

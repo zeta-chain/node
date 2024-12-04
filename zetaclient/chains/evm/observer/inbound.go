@@ -146,19 +146,13 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 		ob.Logger().Inbound.Info().Msgf("checking tracker for inbound %s chain %d", tracker.TxHash, ob.Chain().ChainId)
 
 		// try processing the tracker for v2 inbound
-		gatewayAddr, gateway, err := ob.GetGatewayContract()
-		if err != nil {
-			ob.Logger().Inbound.Debug().Err(err).Msg("error getting gateway contract for processing inbound tracker")
-		}
-		if err == nil && tx != nil {
-			// filter error if event is not found, in this case we run v1 tracker process
-			if err := ob.ProcessInboundTrackerV2(ctx, gateway, gatewayAddr, tx, receipt); err != nil &&
-				!errors.Is(err, errEventNotFound) {
-				return err
-			} else if err == nil {
-				// continue with next tracker
-				continue
-			}
+		// filter error if event is not found, in this case we run v1 tracker process
+		if err := ob.ProcessInboundTrackerV2(ctx, tx, receipt); err != nil &&
+			!errors.Is(err, ErrEventNotFound) && !errors.Is(err, ErrGatewayNotSet) {
+			return err
+		} else if err == nil {
+			// continue with next tracker
+			continue
 		}
 
 		// try processing the tracker for v1 inbound
