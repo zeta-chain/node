@@ -53,7 +53,11 @@ type Observer struct {
 
 // priorityFeeConfig is the configuration for priority fee
 type priorityFeeConfig struct {
-	checked   bool
+	// checked indicates whether the observer checked
+	// this EVM chain for EIP-1559 (further checks are cached)
+	checked bool
+
+	// supported indicates whether this EVM chain supports EIP-1559
 	supported bool
 }
 
