@@ -22,8 +22,8 @@ import (
 // TODO Add more details to comment based on what the number represents in terms of percentage of operations in a block
 // https://github.com/zeta-chain/node/issues/3100
 const (
-	DefaultWeightAddOutboundTracker            = 100
-	DefaultWeightAddInboundTracker             = 20
+	DefaultWeightAddOutboundTracker            = 10
+	DefaultWeightAddInboundTracker             = 10
 	DefaultWeightRemoveOutboundTracker         = 10
 	DefaultWeightVoteGasPrice                  = 100
 	DefaultWeightVoteOutbound                  = 100
@@ -31,7 +31,7 @@ const (
 	DefaultWeightWhitelistERC20                = 10
 	DefaultWeightMigrateTssFunds               = 1
 	DefaultWeightUpdateTssAddress              = 1
-	DefaultWeightAbortStuckCCTX                = 10
+	DefaultWeightAbortStuckCCTX                = 5
 	DefaultWeightUpdateRateLimiterFlags        = 10
 	DefaultWeightRefundAbortedCCTX             = 10
 	DefaultWeightUpdateERC20CustodyPauseStatus = 10

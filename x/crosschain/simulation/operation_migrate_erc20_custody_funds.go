@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -14,7 +15,7 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// SimulateUpdateERC20CustodyPauseStatus generates a MsgUpdateERC20CustodyPauseStatus with random values and delivers it
+// SimulateMigrateERC20CustodyFunds generates a MsgMigrateERC20CustodyFunds with random values and delivers it
 func SimulateMigrateERC20CustodyFunds(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
@@ -30,7 +31,7 @@ func SimulateMigrateERC20CustodyFunds(k keeper.Keeper) simtypes.Operation {
 		if len(supportedChains) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeUpdateERC20CustodyPauseStatus,
+				types.TypeMsgMigrateERC20CustodyFunds,
 				"no supported chains found",
 			), nil, nil
 		}
@@ -38,13 +39,13 @@ func SimulateMigrateERC20CustodyFunds(k keeper.Keeper) simtypes.Operation {
 		filteredChains := chains.FilterChains(supportedChains, chains.FilterExternalChains)
 
 		//pick a random chain
-		randomChain := supportedChains[r.Intn(len(filteredChains))]
+		randomChain := filteredChains[r.Intn(len(filteredChains))]
 
 		_, found := k.GetObserverKeeper().GetChainNonces(ctx, randomChain.ChainId)
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeUpdateERC20CustodyPauseStatus,
+				types.TypeMsgMigrateERC20CustodyFunds,
 				"no chain nonces found",
 			), nil, nil
 		}

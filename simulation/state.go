@@ -194,12 +194,14 @@ func updateCrossChainState(t *testing.T, rawState map[string]json.RawMessage, cd
 	crossChainState := new(crosschaintypes.GenesisState)
 	cdc.MustUnmarshalJSON(crossChainStateBz, crossChainState)
 
-	gasPriceList := []crosschaintypes.GasPrice{}
+	var gasPriceList []*crosschaintypes.GasPrice
 
 	chains := zetachains.DefaultChainsList()
 	for _, chain := range chains {
 		gasPriceList = append(gasPriceList, sample.GasPriceFromRand(r, chain.ChainId))
 	}
+
+	crossChainState.GasPriceList = gasPriceList
 
 	return crossChainState
 }

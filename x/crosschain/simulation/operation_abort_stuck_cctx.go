@@ -94,6 +94,7 @@ func SimulateMsgAbortStuckCCTX(k keeper.Keeper) simtypes.Operation {
 			), nil, nil
 		}
 
+		// TODO : Remove this check after pending nonces fix is merged. Remove in this pr
 		if !cctx.CctxStatus.Status.IsPendingStatus() {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
