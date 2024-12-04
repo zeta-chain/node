@@ -105,7 +105,6 @@ func (signer *Signer) signWithdrawSPLTx(
 			solana.Meta(msg.MintAccount()),
 			solana.Meta(msg.To()),
 			solana.Meta(recipientAta).WRITE(),
-			solana.Meta(signer.rentPayerPda).WRITE(),
 			solana.Meta(solana.TokenProgramID),
 			solana.Meta(solana.SPLAssociatedTokenAccountProgramID),
 			solana.Meta(solana.SystemProgramID),

@@ -6,6 +6,8 @@ import (
 	"sync"
 
 	"github.com/showa-93/go-mask"
+
+	"github.com/zeta-chain/node/pkg/chains"
 )
 
 // KeyringBackend is the type of keyring backend to use for the hotkey
@@ -139,7 +141,13 @@ func (c Config) GetBTCConfig(chainID int64) (BTCConfig, bool) {
 	// this will allow new 'zetaclientd' binary to work with old config file
 	btcCfg, found := c.BTCChainConfigs[chainID]
 	if !found || btcCfg.Empty() {
-		btcCfg = c.BitcoinConfig
+		// fallback to old 'BitcoinConfig' ONLY for mainnet and testnet.
+		// we don't want observers who hasn't setup their Signet/Testnet4 endpoints to use old config
+		// because old config is either testnet3 or mainnet which is the incorrect endpoint to use.
+		if chainID == chains.BitcoinMainnet.ChainId ||
+			chainID == chains.BitcoinTestnet.ChainId {
+			btcCfg = c.BitcoinConfig
+		}
 	}
 
 	return btcCfg, !btcCfg.Empty()
