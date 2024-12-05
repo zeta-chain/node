@@ -22,6 +22,8 @@ import (
 	"go.nhat.io/grpcmock/planner"
 
 	cometbft_rpc_client "github.com/cometbft/cometbft/rpc/client"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	cometbft_types "github.com/cometbft/cometbft/types"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/keys"
@@ -236,4 +238,32 @@ func TestZetacore_GetAllOutboundTrackerByChain(t *testing.T) {
 	resp, err = client.GetAllOutboundTrackerByChain(ctx, chain.ChainId, interfaces.Descending)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.OutboundTracker, resp)
+}
+
+func TestZetacore_SubscribeNewBlocks(t *testing.T) {
+	ctx := context.Background()
+	cometBFTClient := mocks.NewSDKClientWithErr(t, nil, 0)
+	client := setupZetacoreClient(
+		t,
+		withDefaultObserverKeys(),
+		withTendermint(cometBFTClient),
+	)
+
+	newBlockChan, err := client.NewBlockSubscriber(ctx)
+	require.NoError(t, err)
+
+	height := int64(10)
+
+	cometBFTClient.PublishToSubscribers(coretypes.ResultEvent{
+		Data: cometbft_types.EventDataNewBlock{
+			Block: &cometbft_types.Block{
+				Header: cometbft_types.Header{
+					Height: height,
+				},
+			},
+		},
+	})
+
+	newBlockEvent := <-newBlockChan
+	require.Equal(t, height, newBlockEvent.Block.Header.Height)
 }
