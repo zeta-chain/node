@@ -307,6 +307,9 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 		case newBlock := <-newBlockChan:
 			bn := newBlock.Block.Height
 
+			blockTimeLatency := time.Since(newBlock.Block.Time)
+			metrics.CoreBlockLatency.Set(blockTimeLatency.Seconds())
+
 			balance, err := oc.zetacoreClient.GetZetaHotKeyBalance(ctx)
 			if err != nil {
 				oc.logger.Error().Err(err).Msgf("couldn't get operator balance")
