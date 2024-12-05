@@ -100,6 +100,13 @@ func (k msgServer) VoteOutbound(
 		return &types.MsgVoteOutboundResponse{}, nil
 	}
 
+	// The logic below should be executed only once for every cctx. If the cctx is in aborted state we do not need to process it
+	if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
+		return nil, cosmoserrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"%s, CCTX %s has been aborted", voteOutboundID, cctx.Index)
+	}
+
 	// Set the finalized ballot to the current outbound params.
 	cctx.SetOutboundBallotIndex(ballotIndex)
 
@@ -226,12 +233,6 @@ func (k Keeper) ValidateOutboundMessage(ctx sdk.Context, msg types.MsgVoteOutbou
 		return types.CrossChainTx{}, cosmoserrors.Wrapf(
 			sdkerrors.ErrInvalidRequest,
 			"%s, CCTX %s does not exist", voteOutboundID, msg.CctxHash)
-	}
-
-	if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
-		return types.CrossChainTx{}, cosmoserrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"%s, CCTX %s is already aborted", voteOutboundID, msg.CctxHash)
 	}
 
 	if cctx.GetCurrentOutboundParam().TssNonce != msg.OutboundTssNonce {
