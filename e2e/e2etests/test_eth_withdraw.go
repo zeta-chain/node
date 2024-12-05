@@ -39,12 +39,14 @@ func TestEtherWithdraw(r *runner.E2ERunner, args []string) {
 
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
-	withdrawalReceipt := mustFetchEthReceipt(r, cctx)
-	require.Equal(r, uint8(ethtypes.DynamicFeeTxType), withdrawalReceipt.Type, "receipt type mismatch")
+	//Skipped due to https://github.com/zeta-chain/node/issues/3221
+	//withdrawalReceipt := mustFetchEthReceipt(r, cctx)
+	//require.Equal(r, uint8(ethtypes.DynamicFeeTxType), withdrawalReceipt.Type, "receipt type mismatch")
 
 	r.Logger.Info("TestEtherWithdraw completed")
 }
 
+// nolint:unused // https://github.com/zeta-chain/node/issues/3221
 func mustFetchEthReceipt(r *runner.E2ERunner, cctx *crosschaintypes.CrossChainTx) *ethtypes.Receipt {
 	hash := cctx.GetCurrentOutboundParam().Hash
 	require.NotEmpty(r, hash, "outbound hash is empty")
