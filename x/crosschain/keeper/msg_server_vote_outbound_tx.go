@@ -100,6 +100,11 @@ func (k msgServer) VoteOutbound(
 		return &types.MsgVoteOutboundResponse{}, nil
 	}
 
+	// If the CCTX is in a terminal state, we do not need to process it.
+	if cctx.CctxStatus.Status.IsTerminal() {
+		return &types.MsgVoteOutboundResponse{}, cosmoserrors.Wrap(types.ErrCCTXAlreadyFinalized, fmt.Sprintf("CCTX status %s", cctx.CctxStatus.Status))
+	}
+
 	// Set the finalized ballot to the current outbound params.
 	cctx.SetOutboundBallotIndex(ballotIndex)
 
