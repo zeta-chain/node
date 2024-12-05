@@ -228,6 +228,12 @@ func (k Keeper) ValidateOutboundMessage(ctx sdk.Context, msg types.MsgVoteOutbou
 			"%s, CCTX %s does not exist", voteOutboundID, msg.CctxHash)
 	}
 
+	if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
+		return types.CrossChainTx{}, cosmoserrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"%s, CCTX %s is already aborted", voteOutboundID, msg.CctxHash)
+	}
+
 	if cctx.GetCurrentOutboundParam().TssNonce != msg.OutboundTssNonce {
 		return types.CrossChainTx{}, cosmoserrors.Wrapf(
 			sdkerrors.ErrInvalidRequest,

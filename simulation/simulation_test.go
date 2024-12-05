@@ -82,7 +82,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.DBBackend = SimDBBackend
 	config.BlockMaxGas = SimBlockMaxGas
 
-	numSeeds := 2
+	numSeeds := 3
 	numTimesToRunPerSeed := 5
 
 	// We will be overriding the random seed and just run a single simulation on the provided seed value
