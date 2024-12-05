@@ -62,7 +62,11 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	for _, tracker := range trackers {
 		signature := solana.MustSignatureFromBase58(tracker.TxHash)
 		txResult, err := solanarpc.GetTransaction(ctx, ob.solClient, signature)
-		if err != nil && !errors.Is(err, solanarpc.ErrUnsupportedTxVersion) {
+		switch {
+		case errors.Is(err, solanarpc.ErrUnsupportedTxVersion):
+			ob.Logger().Inbound.Warn().Stringer("tx.signature", signature).Msg("skip inbound tracker hash")
+			continue
+		case err != nil:
 			return errors.Wrapf(err, "error GetTransaction for chain %d sig %s", chainID, signature)
 		}
 
