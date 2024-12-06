@@ -21,7 +21,7 @@ func SimulateMsgRefundAbortedCCTX(k keeper.Keeper,
 		// Fetch the account from the auth keeper which can then be used to fetch spendable coins}
 		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgAbortStuckCCTX, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.RefundAborted, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
@@ -32,22 +32,22 @@ func SimulateMsgRefundAbortedCCTX(k keeper.Keeper,
 		abortedCctxFound := false
 
 		for _, cctx := range cctxList {
+
 			if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
+				if !cctx.InboundParams.CoinType.SupportsRefund() {
+					continue
+				}
+				if cctx.CctxStatus.IsAbortRefunded {
+					continue
+				}
+
 				abortedCctx = cctx
 				abortedCctxFound = true
 				break
 			}
 		}
 		if !abortedCctxFound {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgAbortStuckCCTX, "no aborted cctx found"), nil, nil
-		}
-
-		if abortedCctx.CctxStatus.IsAbortRefunded {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgAbortStuckCCTX, "aborted cctx already refunded"), nil, nil
-		}
-
-		if !abortedCctx.InboundParams.CoinType.SupportsRefund() {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgAbortStuckCCTX, "coin type does not support refund"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.RefundAborted, "no aborted cctx found"), nil, nil
 		}
 
 		msg := types.MsgRefundAbortedCCTX{

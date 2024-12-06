@@ -9,8 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/stretchr/testify/require"
-
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/cosmos"
 	zetacrypto "github.com/zeta-chain/node/pkg/crypto"
@@ -121,13 +119,17 @@ func ChainParamsList() (cpl types.ChainParamsList) {
 	return
 }
 
-// TSSRandom returns a random TSS,it uses the randomness provided as a parameter
-func TSSRandom(t *testing.T, r *rand.Rand) types.TSS {
+// TSSFromRand returns a random TSS,it uses the randomness provided as a parameter
+func TSSFromRand(r *rand.Rand) (types.TSS, error) {
 	pubKey := PubKey(r)
 	spk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
-	require.NoError(t, err)
+	if err != nil {
+		return types.TSS{}, err
+	}
 	pk, err := zetacrypto.NewPubKey(spk)
-	require.NoError(t, err)
+	if err != nil {
+		return types.TSS{}, err
+	}
 	pubkeyString := pk.String()
 	return types.TSS{
 		TssPubkey:           pubkeyString,
@@ -135,8 +137,7 @@ func TSSRandom(t *testing.T, r *rand.Rand) types.TSS {
 		OperatorAddressList: []string{},
 		FinalizedZetaHeight: r.Int63(),
 		KeyGenZetaHeight:    r.Int63(),
-	}
-
+	}, nil
 }
 
 // TODO: rename to TSS

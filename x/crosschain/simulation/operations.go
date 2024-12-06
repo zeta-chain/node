@@ -30,7 +30,7 @@ const (
 	DefaultWeightVoteInbound                   = 100
 	DefaultWeightWhitelistERC20                = 10
 	DefaultWeightMigrateTssFunds               = 1
-	DefaultWeightUpdateTssAddress              = 1
+	DefaultWeightUpdateTssAddress              = 10
 	DefaultWeightAbortStuckCCTX                = 5
 	DefaultWeightUpdateRateLimiterFlags        = 10
 	DefaultWeightRefundAbortedCCTX             = 10
@@ -205,6 +205,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMigrateERC20CustodyFunds,
 			SimulateMigrateERC20CustodyFunds(k),
+		),
+		simulation.NewWeightedOperation(
+			weightUpdateTssAddress,
+			SimulateMsgUpdateTssAddress(k),
 		),
 	}
 }

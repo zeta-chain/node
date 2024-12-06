@@ -419,7 +419,10 @@ func CCTXfromRand(r *rand.Rand,
 		Index:          index,
 		ZetaFees:       sdk.NewUint(1),
 		RelayedMessage: base64.StdEncoding.EncodeToString(RandomBytes(r)),
-		CctxStatus:     &types.Status{Status: types.CctxStatus_PendingOutbound},
+		CctxStatus: &types.Status{
+			IsAbortRefunded: false,
+			Status:          types.CctxStatus_PendingOutbound,
+		},
 		InboundParams:  inbound,
 		OutboundParams: []*types.OutboundParams{outbound},
 	}

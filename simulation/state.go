@@ -130,7 +130,8 @@ func updateObserverState(t *testing.T, rawState map[string]json.RawMessage, cdc 
 	observerState.Observers.ObserverList = observers
 	observerState.CrosschainFlags.IsInboundEnabled = true
 	observerState.CrosschainFlags.IsOutboundEnabled = true
-	tss := sample.TSSRandom(t, r)
+	tss, err := sample.TSSFromRand(r)
+	require.NoError(t, err)
 	tss.OperatorAddressList = observers
 	observerState.Tss = &tss
 
