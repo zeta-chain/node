@@ -65,7 +65,12 @@ func (r *E2ERunner) SetZEVMContractsV2() {
 	require.NoError(r, err)
 
 	// deploy test dapp v2
-	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.ZEVMAuth, r.ZEVMClient, true)
+	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(
+		r.ZEVMAuth,
+		r.ZEVMClient,
+		true,
+		r.GatewayEVMAddr,
+	)
 	require.NoError(r, err)
 
 	r.TestDAppV2ZEVMAddr = testDAppV2Addr
