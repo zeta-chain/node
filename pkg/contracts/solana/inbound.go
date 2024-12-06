@@ -45,14 +45,14 @@ func tryParseAsDeposit(
 	// get instruction by index
 	instruction := tx.Message.Instructions[instructionIndex]
 
-	// try deserializing instruction as a 'deposit'
+	// try deserializing instruction as a deposit
 	inst := DepositInstructionParams{}
-
 	err := borsh.Deserialize(&inst, instruction.Data)
 	if err != nil {
 		return nil, nil
 	}
 
+	// check if the instruction is a deposit or not, if not, skip parsing
 	if inst.Discriminator != DiscriminatorDeposit {
 		return nil, nil
 	}
@@ -81,7 +81,7 @@ func tryParseAsDepositAndCall(
 	// get instruction by index
 	instruction := tx.Message.Instructions[instructionIndex]
 
-	// try deserializing instruction as a 'deposit_and_call'
+	// try deserializing instruction as a deposit_and_call
 	instDepositAndCall := DepositAndCallInstructionParams{}
 	err := borsh.Deserialize(&instDepositAndCall, instruction.Data)
 	if err != nil {
@@ -107,8 +107,8 @@ func tryParseAsDepositAndCall(
 	}, nil
 }
 
-// ParseInboundAsDepositSPL tries to parse an instruction as a 'deposit_spl' or 'deposit_spl_and_call'.
-// It returns nil if the instruction can't be parsed as a 'deposit_spl'.
+// ParseInboundAsDepositSPL tries to parse an instruction as a deposit_spl or deposit_spl_and_call.
+// It returns nil if the instruction can't be parsed as a deposit_spl.
 func ParseInboundAsDepositSPL(
 	tx *solana.Transaction,
 	instructionIndex int,
@@ -132,15 +132,14 @@ func tryParseAsDepositSPL(
 	// get instruction by index
 	instruction := tx.Message.Instructions[instructionIndex]
 
-	// try deserializing instruction as a 'deposit_spl'
+	// try deserializing instruction as a deposit_spl
 	var inst DepositSPLInstructionParams
-
-	// check if the instruction is a 'deposit_spl' or not, if not, try to parse as 'deposit_spl_and_call'
 	err := borsh.Deserialize(&inst, instruction.Data)
 	if err != nil {
 		return nil, nil
 	}
 
+	// check if the instruction is a deposit_spl or not, if not, skip parsing
 	if inst.Discriminator != DiscriminatorDepositSPL {
 		return nil, nil
 	}
@@ -169,14 +168,14 @@ func tryParseAsDepositSPLAndCall(
 	// get instruction by index
 	instruction := tx.Message.Instructions[instructionIndex]
 
-	// try deserializing instruction as a 'deposit_spl_and_call'
+	// try deserializing instruction as a deposit_spl_and_call
 	instDepositAndCall := DepositSPLAndCallInstructionParams{}
 	err := borsh.Deserialize(&instDepositAndCall, instruction.Data)
 	if err != nil {
 		return nil, nil
 	}
 
-	// check if the instruction is a 'deposit_spl_and_call' or not, if not, skip parsing
+	// check if the instruction is a deposit_spl_and_call or not, if not, skip parsing
 	if instDepositAndCall.Discriminator != DiscriminatorDepositSPLAndCall {
 		return nil, nil
 	}
