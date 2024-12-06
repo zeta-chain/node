@@ -17,6 +17,8 @@ var (
 )
 
 // ProcessInboundTrackerV2 processes inbound tracker events from the gateway
+// TODO: add test coverage
+// https://github.com/zeta-chain/node/issues/2669
 func (ob *Observer) ProcessInboundTrackerV2(
 	ctx context.Context,
 	tx *ethrpc.Transaction,
