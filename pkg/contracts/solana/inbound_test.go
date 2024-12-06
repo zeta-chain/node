@@ -87,7 +87,7 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 		data, err := borsh.Serialize(DepositInstructionParams{
 			Amount:        inst.Amount,
 			Discriminator: DiscriminatorDepositSPL,
-			Memo:          inst.Memo,
+			Receiver:      inst.Receiver,
 		})
 		require.NoError(t, err)
 
@@ -191,7 +191,7 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 		data, err := borsh.Serialize(DepositInstructionParams{
 			Amount:        inst.Amount,
 			Discriminator: DiscriminatorDeposit,
-			Memo:          inst.Memo,
+			Receiver:      inst.Receiver,
 		})
 		require.NoError(t, err)
 
