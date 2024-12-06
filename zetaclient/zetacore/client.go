@@ -6,8 +6,8 @@ import (
 	"strings"
 	"sync"
 
-	cometbft_rpc_client "github.com/cometbft/cometbft/rpc/client"
-	cometbft_http_client "github.com/cometbft/cometbft/rpc/client/http"
+	cometbftrpc "github.com/cometbft/cometbft/rpc/client"
+	cometbfthttp "github.com/cometbft/cometbft/rpc/client/http"
 	cosmosclient "github.com/cosmos/cosmos-sdk/client"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/pkg/errors"
@@ -19,7 +19,7 @@ import (
 	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/chains"
-	zetacore_rpc "github.com/zeta-chain/node/pkg/rpc"
+	zetacorerpc "github.com/zeta-chain/node/pkg/rpc"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/config"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
@@ -30,13 +30,13 @@ var _ interfaces.ZetacoreClient = &Client{}
 
 // Client is the client to send tx to zetacore
 type Client struct {
-	zetacore_rpc.Clients
+	zetacorerpc.Clients
 
 	logger zerolog.Logger
 	config config.ClientConfiguration
 
 	cosmosClientContext cosmosclient.Context
-	cometBFTClient      cometbft_rpc_client.Client
+	cometBFTClient      cometbftrpc.Client
 
 	blockHeight   int64
 	accountNumber map[authz.KeyType]uint64
@@ -54,7 +54,7 @@ var unsecureGRPC = grpc.WithTransportCredentials(insecure.NewCredentials())
 
 type constructOpts struct {
 	customTendermint bool
-	tendermintClient cometbft_rpc_client.Client
+	tendermintClient cometbftrpc.Client
 
 	customAccountRetriever bool
 	accountRetriever       cosmosclient.AccountRetriever
@@ -63,7 +63,7 @@ type constructOpts struct {
 type Opt func(cfg *constructOpts)
 
 // WithTendermintClient sets custom tendermint client
-func WithTendermintClient(client cometbft_rpc_client.Client) Opt {
+func WithTendermintClient(client cometbftrpc.Client) Opt {
 	return func(c *constructOpts) {
 		c.customTendermint = true
 		c.tendermintClient = client
@@ -108,7 +108,7 @@ func NewClient(
 
 	encodingCfg := app.MakeEncodingConfig()
 
-	zetacoreClients, err := zetacore_rpc.NewGRPCClients(cosmosGRPC(chainIP), unsecureGRPC)
+	zetacoreClients, err := zetacorerpc.NewGRPCClients(cosmosGRPC(chainIP), unsecureGRPC)
 	if err != nil {
 		return nil, errors.Wrap(err, "grpc dial fail")
 	}
@@ -130,7 +130,7 @@ func NewClient(
 	// create a cometbft client if one was not provided in the constructOptions
 	if !constructOptions.customTendermint {
 		cometBFTURL := "http://" + tendermintRPC(chainIP)
-		cometBFTClient, err := cometbft_http_client.New(cometBFTURL, "/websocket")
+		cometBFTClient, err := cometbfthttp.New(cometBFTURL, "/websocket")
 		if err != nil {
 			return nil, errors.Wrapf(err, "new cometbft client (%s)", cometBFTURL)
 		}
@@ -198,7 +198,7 @@ func buildCosmosClientContext(
 			remote = fmt.Sprintf("tcp://%s", remote)
 		}
 
-		wsClient, err := cometbft_http_client.New(remote, "/websocket")
+		wsClient, err := cometbfthttp.New(remote, "/websocket")
 		if err != nil {
 			return cosmosclient.Context{}, err
 		}
