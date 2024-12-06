@@ -113,7 +113,7 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 
 		// append one more account to instruction
 		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
-		tx.Message.Instructions[0].Accounts = append(tx.Message.Instructions[0].Accounts, 4)
+		tx.Message.Instructions[0].Accounts = tx.Message.Instructions[0].Accounts[:len(tx.Message.Instructions[0].Accounts)-1]
 
 		// ACT
 		deposit, err := ParseInboundAsDeposit(tx, 0, txResult.Slot)
@@ -218,7 +218,7 @@ func Test_ParseInboundAsDepositAndCall(t *testing.T) {
 
 		// append one more account to instruction
 		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
-		tx.Message.Instructions[0].Accounts = append(tx.Message.Instructions[0].Accounts, 4)
+		tx.Message.Instructions[0].Accounts = tx.Message.Instructions[0].Accounts[:len(tx.Message.Instructions[0].Accounts)-1]
 
 		// ACT
 		deposit, err := ParseInboundAsDeposit(tx, 0, txResult.Slot)
@@ -322,7 +322,7 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 
 		// append one more account to instruction
 		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
-		tx.Message.Instructions[0].Accounts = append(tx.Message.Instructions[0].Accounts, 4)
+		tx.Message.Instructions[0].Accounts = tx.Message.Instructions[0].Accounts[:len(tx.Message.Instructions[0].Accounts)-1]
 
 		// ACT
 		deposit, err := ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
@@ -426,7 +426,7 @@ func Test_ParseInboundAsDepositAndCallSPL(t *testing.T) {
 
 		// append one more account to instruction
 		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
-		tx.Message.Instructions[0].Accounts = append(tx.Message.Instructions[0].Accounts, 4)
+		tx.Message.Instructions[0].Accounts = tx.Message.Instructions[0].Accounts[:len(tx.Message.Instructions[0].Accounts)-1]
 
 		// ACT
 		deposit, err := ParseInboundAsDepositSPL(tx, 0, txResult.Slot)

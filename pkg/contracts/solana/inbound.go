@@ -201,9 +201,9 @@ func getSignerDeposit(tx *solana.Transaction, inst *solana.CompiledInstruction) 
 		return "", err
 	}
 
-	// there should be 3 accounts for a deposit instruction
-	if len(instructionAccounts) != accountsNumDeposit {
-		return "", fmt.Errorf("want %d accounts, got %d", accountsNumDeposit, len(instructionAccounts))
+	// there should be at least all mandatory accounts for a deposit instruction
+	if len(instructionAccounts) < accountsNumDeposit {
+		return "", fmt.Errorf("want required %d accounts, got %d", accountsNumDeposit, len(instructionAccounts))
 	}
 
 	// the accounts are [signer, pda, system_program]
@@ -225,10 +225,10 @@ func getSignerAndSPLFromDepositSPLAccounts(
 		return "", "", err
 	}
 
-	// there should be 7 accounts for a deposit spl instruction
-	if len(instructionAccounts) != accountsNumberDepositSPL {
+	// there should be at least all mandatory accounts for a deposit spl instruction
+	if len(instructionAccounts) < accountsNumberDepositSPL {
 		return "", "", fmt.Errorf(
-			"want %d accounts, got %d",
+			"want required %d accounts, got %d",
 			accountsNumberDepositSPL,
 			len(instructionAccounts),
 		)
