@@ -7,6 +7,7 @@ import (
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/crypto"
@@ -67,6 +68,8 @@ func LoadRelayerKey(relayerKeyPath string, network chains.Network, password stri
 		relayerKey.PrivateKey = privateKey
 		return relayerKey, nil
 	}
+
+	log.Logger.Warn().Msgf("relayer key file not found: %s", fileName)
 
 	// relayer key is optional, so it's okay if the relayer key is not provided
 	return nil, nil

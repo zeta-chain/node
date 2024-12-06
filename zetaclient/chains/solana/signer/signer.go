@@ -127,12 +127,6 @@ func (signer *Signer) TryProcessOutbound(
 	nonce := params.TssNonce
 	coinType := cctx.InboundParams.CoinType
 
-	// skip relaying the transaction if this signer hasn't set the relayer key
-	if !signer.HasRelayerKey() {
-		logger.Warn().Msgf("TryProcessOutbound: no relayer key configured")
-		return
-	}
-
 	var tx *solana.Transaction
 
 	switch coinType {
@@ -165,6 +159,12 @@ func (signer *Signer) TryProcessOutbound(
 	default:
 		logger.Error().
 			Msgf("TryProcessOutbound: can only send SOL to the Solana network")
+		return
+	}
+
+	// skip relaying the transaction if this signer hasn't set the relayer key
+	if !signer.HasRelayerKey() {
+		logger.Warn().Msgf("TryProcessOutbound: no relayer key configured")
 		return
 	}
 
