@@ -50,7 +50,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if found {
 		for _, elem := range genState.CrossChainTxs {
 			if elem != nil {
-				k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *elem, tss.TssPubkey)
+				k.SaveCCTXUpdate(ctx, *elem, tss.TssPubkey)
 			}
 		}
 	}

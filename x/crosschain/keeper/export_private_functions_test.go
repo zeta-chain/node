@@ -15,6 +15,6 @@ func (k Keeper) UpdateInboundHashToCCTX(ctx sdk.Context, cctx types.CrossChainTx
 	k.updateInboundHashToCCTX(ctx, cctx)
 }
 
-func (k Keeper) SetNonceToCCTXMapping(ctx sdk.Context, cctx types.CrossChainTx, tssPubkey string) {
-	k.setNonceToCCTXMapping(ctx, cctx, tssPubkey)
+func (k Keeper) SetNonceToCCTX(ctx sdk.Context, cctx types.CrossChainTx, tssPubkey string) {
+	k.setNonceToCCTX(ctx, cctx, tssPubkey)
 }

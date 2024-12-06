@@ -44,7 +44,7 @@ func createNCctxWithStatus(
 		items[i].OutboundParams = []*types.OutboundParams{{Amount: math.ZeroUint(), CallOptions: &types.CallOptions{}}}
 		items[i].RevertOptions = types.NewEmptyRevertOptions()
 
-		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, items[i], tssPubkey)
+		keeper.SaveCCTXUpdate(ctx, items[i], tssPubkey)
 	}
 	return items
 }
@@ -88,7 +88,7 @@ func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int, tssPubkey string
 		items[i].Index = fmt.Sprintf("%d", i)
 		items[i].RevertOptions = types.NewEmptyRevertOptions()
 
-		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, items[i], tssPubkey)
+		keeper.SaveCCTXUpdate(ctx, items[i], tssPubkey)
 	}
 	return items
 }
@@ -468,7 +468,7 @@ func TestKeeper_UpdateNonceToCCTX(t *testing.T) {
 		tssPubkey := "test-tss-pubkey"
 
 		// Act
-		k.SetNonceToCCTXMapping(ctx, cctx, tssPubkey)
+		k.SetNonceToCCTX(ctx, cctx, tssPubkey)
 
 		// Assert
 		nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tssPubkey, chainID, int64(nonce))
@@ -491,7 +491,7 @@ func TestKeeper_UpdateNonceToCCTX(t *testing.T) {
 		tssPubkey := "test-tss-pubkey"
 
 		// Act
-		k.SetNonceToCCTXMapping(ctx, cctx, tssPubkey)
+		k.SetNonceToCCTX(ctx, cctx, tssPubkey)
 
 		// Assert
 		nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tssPubkey, chainID, int64(nonce))
@@ -514,7 +514,7 @@ func TestKeeper_UpdateNonceToCCTX(t *testing.T) {
 		tssPubkey := "test-tss-pubkey"
 
 		// Act
-		k.SetNonceToCCTXMapping(ctx, cctx, tssPubkey)
+		k.SetNonceToCCTX(ctx, cctx, tssPubkey)
 
 		// Assert
 		_, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tssPubkey, chainID, int64(nonce))

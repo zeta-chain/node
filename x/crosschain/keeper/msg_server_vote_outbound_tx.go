@@ -221,7 +221,7 @@ func (k Keeper) SaveOutbound(ctx sdk.Context, cctx *types.CrossChainTx, tssPubke
 		k.RemoveOutboundTrackerFromStore(ctx, outboundParams.ReceiverChainId, outboundParams.TssNonce)
 	}
 	// This should set nonce to cctx only if a new revert is created.
-	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *cctx, tssPubkey)
+	k.SaveCCTXUpdate(ctx, *cctx, tssPubkey)
 }
 
 func (k Keeper) ValidateOutboundMessage(ctx sdk.Context, msg types.MsgVoteOutbound) (types.CrossChainTx, error) {

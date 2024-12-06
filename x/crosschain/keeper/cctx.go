@@ -11,7 +11,7 @@ import (
 	observerTypes "github.com/zeta-chain/node/x/observer/types"
 )
 
-// SetCctxAndNonceToCctxAndInboundHashToCctx does the following things in one function:
+// SaveCCTXUpdate does the following things in one function:
 
 // 1. Set the Nonce to Cctx mapping
 // A new mapping between a nonce and a cctx index should be created only when we add a new outbound to an existing cctx.
@@ -29,12 +29,12 @@ import (
 // Zeta-accounting is updated aborted cctxs of cointtype zeta.When a cctx is aborted it means that `GetAbortedAmount`
 //of zeta is locked and cannot be used.
 
-func (k Keeper) SetCctxAndNonceToCctxAndInboundHashToCctx(
+func (k Keeper) SaveCCTXUpdate(
 	ctx sdk.Context,
 	cctx types.CrossChainTx,
 	tssPubkey string,
 ) {
-	k.setNonceToCCTXMapping(ctx, cctx, tssPubkey)
+	k.setNonceToCCTX(ctx, cctx, tssPubkey)
 	k.SetCrossChainTx(ctx, cctx)
 	k.updateInboundHashToCCTX(ctx, cctx)
 	k.updateZetaAccounting(ctx, cctx)
@@ -73,8 +73,8 @@ func (k Keeper) updateZetaAccounting(
 	}
 }
 
-// setNonceToCCTXMapping updates the mapping between a nonce and a cctx index if the cctx is in a PendingOutbound or PendingRevert state
-func (k Keeper) setNonceToCCTXMapping(
+// setNonceToCCTX updates the mapping between a nonce and a cctx index if the cctx is in a PendingOutbound or PendingRevert state
+func (k Keeper) setNonceToCCTX(
 	ctx sdk.Context,
 	cctx types.CrossChainTx,
 	tssPubkey string,
