@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -9,7 +8,6 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -37,15 +35,40 @@ func SimulateMsgUpdateTssAddress(k keeper.Keeper) simtypes.Operation {
 			), nil, nil
 		}
 
+		cctxList := k.GetAllCrossChainTx(ctx)
+		if len(cctxList) == 0 {
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				types.TypeMsgUpdateTssAddress,
+				"no cross chain txs found",
+			), nil, nil
+		}
+		minedCCTX := types.CrossChainTx{}
+		foundMined := false
+		for _, cctx := range cctxList {
+			if cctx.CctxStatus.Status == types.CctxStatus_OutboundMined {
+				minedCCTX = cctx
+				foundMined = true
+				break
+			}
+		}
+		if !foundMined {
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				types.TypeMsgUpdateTssAddress,
+				"no mined cross chain txs found in mined state",
+			), nil, nil
+		}
+
 		for _, chain := range supportedChains {
-			index := ethcrypto.Keccak256Hash([]byte(fmt.Sprintf("%d", r.Int63()))).Hex()
-			cctx := types.CrossChainTx{Index: index,
-				CctxStatus: &types.Status{Status: types.CctxStatus_OutboundMined}}
+			//index := ethcrypto.Keccak256Hash([]byte(fmt.Sprintf("%d", r.Int63()))).Hex()
+			//cctx := types.CrossChainTx{Index: index,
+			//	CctxStatus: &types.Status{Status: types.CctxStatus_OutboundMined}}
 			tssmigrator := observertypes.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
-				MigrationCctxIndex: index,
+				MigrationCctxIndex: minedCCTX.Index,
 			}
-			k.SetCrossChainTx(ctx, cctx)
+			//k.SetCrossChainTx(ctx, cctx)
 			k.GetObserverKeeper().SetFundMigrator(ctx, tssmigrator)
 		}
 

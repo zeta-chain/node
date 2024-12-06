@@ -135,6 +135,9 @@ func updateObserverState(t *testing.T, rawState map[string]json.RawMessage, cdc 
 	tss.OperatorAddressList = observers
 	observerState.Tss = &tss
 
+	tssHistory := make([]observertypes.TSS, 0)
+	tssHistory = append(tssHistory, tss)
+
 	chains := zetachains.DefaultChainsList()
 	chainsNonces := make([]observertypes.ChainNonces, 0)
 	pendingNonces := make([]observertypes.PendingNonces, 0)
@@ -155,6 +158,7 @@ func updateObserverState(t *testing.T, rawState map[string]json.RawMessage, cdc 
 
 	observerState.ChainNonces = chainsNonces
 	observerState.PendingNonces = pendingNonces
+	observerState.TssHistory = tssHistory
 
 	return observerState
 }
