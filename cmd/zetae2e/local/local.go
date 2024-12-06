@@ -43,7 +43,6 @@ const (
 	flagSkipBitcoinSetup  = "skip-bitcoin-setup"
 	flagSkipHeaderProof   = "skip-header-proof"
 	flagTestV2            = "test-v2"
-	flagTestV2Migration   = "test-v2-migration"
 	flagSkipTrackerCheck  = "skip-tracker-check"
 	flagSkipPrecompiles   = "skip-precompiles"
 	flagUpgradeContracts  = "upgrade-contracts"
@@ -81,7 +80,6 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSkipHeaderProof, false, "set to true to skip header proof tests")
 	cmd.Flags().Bool(flagTestTSSMigration, false, "set to true to include a migration test at the end")
 	cmd.Flags().Bool(flagTestV2, false, "set to true to run tests for v2 contracts")
-	cmd.Flags().Bool(flagTestV2Migration, false, "set to true to run tests for v2 contracts migration test")
 	cmd.Flags().Bool(flagSkipTrackerCheck, false, "set to true to skip tracker check at the end of the tests")
 	cmd.Flags().Bool(flagSkipPrecompiles, false, "set to true to skip stateful precompiled contracts test")
 	cmd.Flags().
@@ -113,7 +111,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipTrackerCheck  = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
 		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
 		testV2            = must(cmd.Flags().GetBool(flagTestV2))
-		testV2Migration   = must(cmd.Flags().GetBool(flagTestV2Migration))
 		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
 		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
 	)
@@ -282,11 +279,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if setupOnly {
 		logger.Print("✅ the localnet has been setup")
 		os.Exit(0)
-	}
-
-	// run the v2 migration
-	if testV2Migration {
-		deployerRunner.RunV2Migration()
 	}
 
 	// run tests
@@ -482,7 +474,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.UpgradeGatewaysAndERC20Custody()
 	}
 
-	if testV2 || testV2Migration {
+	if testV2 {
 		startV2Tests(&eg, conf, deployerRunner, verbose)
 	}
 

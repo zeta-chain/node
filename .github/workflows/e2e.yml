@@ -121,7 +121,6 @@ jobs:
       SOLANA_TESTS: ${{ steps.matrix-conditionals.outputs.SOLANA_TESTS }}
       TON_TESTS: ${{ steps.matrix-conditionals.outputs.TON_TESTS }}
       V2_TESTS: ${{ steps.matrix-conditionals.outputs.V2_TESTS }}
-      V2_MIGRATION_TESTS: ${{ steps.matrix-conditionals.outputs.V2_MIGRATION_TESTS }}
       ENABLE_MONITORING: ${{ steps.matrix-conditionals.outputs.ENABLE_MONITORING }}
     steps:
       # use api rather than event context to avoid race conditions (label added after push)
@@ -154,7 +153,6 @@ jobs:
               core.setOutput('SOLANA_TESTS', labels.includes('SOLANA_TESTS'));
               core.setOutput('TON_TESTS', labels.includes('TON_TESTS'));
               core.setOutput('V2_TESTS', labels.includes('V2_TESTS')); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
-              core.setOutput('V2_MIGRATION_TESTS', labels.includes('V2_MIGRATION_TESTS')); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
               core.setOutput('ENABLE_MONITORING', labels.includes('ENABLE_MONITORING'));
             } else if (context.eventName === 'merge_group') {
               // default mergequeue tests
@@ -209,7 +207,6 @@ jobs:
               core.setOutput('SOLANA_TESTS', makeTargets.includes('solana-test'));
               core.setOutput('TON_TESTS', makeTargets.includes('ton-test'));
               core.setOutput('V2_TESTS', makeTargets.includes('v2-test')); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
-              core.setOutput('V2_MIGRATION_TESTS', makeTargets.includes('v2-migration-test')); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
               core.setOutput('ENABLE_MONITORING', context.payload.inputs['enable-monitoring']);
             }
 
@@ -261,9 +258,6 @@ jobs:
           - make-target: "start-v2-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.V2_TESTS == 'true' }}
-          - make-target: "start-upgrade-v2-migration-test"
-            runs-on: ubuntu-20.04
-            run: ${{ needs.matrix-conditionals.outputs.V2_MIGRATION_TESTS == 'true' }}
     name: ${{ matrix.make-target }}
     uses: ./.github/workflows/reusable-e2e.yml
     with:
