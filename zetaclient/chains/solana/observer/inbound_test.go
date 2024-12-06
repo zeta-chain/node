@@ -26,8 +26,8 @@ var (
 
 func Test_FilterInboundEventAndVote(t *testing.T) {
 	// load archived inbound vote tx result
-	// https://explorer.solana.com/tx/MS3MPLN7hkbyCZFwKqXcg8fmEvQMD74fN6Ps2LSWXJoRxPW5ehaxBorK9q1JFVbqnAvu9jXm6ertj7kT7HpYw1j?cluster=devnet
-	txHash := "MS3MPLN7hkbyCZFwKqXcg8fmEvQMD74fN6Ps2LSWXJoRxPW5ehaxBorK9q1JFVbqnAvu9jXm6ertj7kT7HpYw1j"
+	// https://explorer.solana.com/tx/24GzWsxYCFcwwJ2rzAsWwWC85aYKot6Rz3jWnBP1GvoAg5A9f1WinYyvyKseYM52q6i3EkotZdJuQomGGq5oxRYr?cluster=devnet
+	txHash := "24GzWsxYCFcwwJ2rzAsWwWC85aYKot6Rz3jWnBP1GvoAg5A9f1WinYyvyKseYM52q6i3EkotZdJuQomGGq5oxRYr"
 	chain := chains.SolanaDevnet
 	txResult := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHash, false)
 
@@ -62,7 +62,7 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 func Test_FilterInboundEvents(t *testing.T) {
 	// load archived inbound deposit tx result
 	// https://explorer.solana.com/tx/MS3MPLN7hkbyCZFwKqXcg8fmEvQMD74fN6Ps2LSWXJoRxPW5ehaxBorK9q1JFVbqnAvu9jXm6ertj7kT7HpYw1j?cluster=devnet
-	txHash := "MS3MPLN7hkbyCZFwKqXcg8fmEvQMD74fN6Ps2LSWXJoRxPW5ehaxBorK9q1JFVbqnAvu9jXm6ertj7kT7HpYw1j"
+	txHash := "24GzWsxYCFcwwJ2rzAsWwWC85aYKot6Rz3jWnBP1GvoAg5A9f1WinYyvyKseYM52q6i3EkotZdJuQomGGq5oxRYr"
 	chain := chains.SolanaDevnet
 	txResult := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHash, false)
 
@@ -77,14 +77,15 @@ func Test_FilterInboundEvents(t *testing.T) {
 	require.NoError(t, err)
 
 	// expected result
-	sender := "AS48jKNQsDGkEdDvfwu1QpqjtqbCadrAq9nGXjFmdX3Z"
+	sender := "HgTpiVRvjUPUcWLzdmCgdadu1GceJNgBWLoN9r66p8o3"
+	expectedMemo := []byte{109, 163, 11, 250, 101, 232, 90, 22, 176, 91, 206, 56, 70, 51, 158, 210, 188, 116, 99, 22}
 	eventExpected := &clienttypes.InboundEvent{
 		SenderChainID: chain.ChainId,
 		Sender:        sender,
 		Receiver:      sender,
 		TxOrigin:      sender,
-		Amount:        100000,
-		Memo:          []byte("0x7F8ae2ABb69A558CE6bAd546f25F0464D9e09e5B4955a3F38ff86ae92A914445099caa8eA2B9bA32"),
+		Amount:        100000000,
+		Memo:          expectedMemo,
 		BlockNumber:   txResult.Slot,
 		TxHash:        txHash,
 		Index:         0, // not a EVM smart contract call

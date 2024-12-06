@@ -51,7 +51,7 @@ func TestSPLDepositAndCall(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// check if example contract has been called, bar value should be set to amount
-	utils.MustHaveCalledExampleContract(r, contract, big.NewInt(int64(amount)))
+	utils.MustHaveCalledExampleContractWithMsg(r, contract, big.NewInt(int64(amount)), data)
 
 	// verify balances are updated
 	pdaBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentFinalized)
