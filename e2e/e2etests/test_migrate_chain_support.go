@@ -151,7 +151,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	legacy.TestEtherWithdraw(newRunner, []string{"50000000000000000"})
 
 	// finally try to deposit Zeta back
-	TestZetaDeposit(newRunner, []string{"100000000000000000"})
+	legacy.TestZetaDeposit(newRunner, []string{"100000000000000000"})
 
 	// ERC20 test
 

@@ -44,16 +44,6 @@ const (
 	TestERC20DepositRestrictedName             = "erc20_deposit_restricted" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 
 	/*
-	 ZETA tests
-	 Test transfer of ZETA asset across chains
-	*/
-	TestZetaDepositName           = "zeta_deposit"
-	TestZetaDepositNewAddressName = "zeta_deposit_new_address"
-	TestZetaDepositRestrictedName = "zeta_deposit_restricted"
-	TestZetaWithdrawName          = "zeta_withdraw"
-	TestZetaWithdrawBTCRevertName = "zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
-
-	/*
 	 * Solana tests
 	 */
 	TestSolanaDepositName                      = "solana_deposit"
@@ -104,7 +94,6 @@ const (
 	 Application tests
 	 Test various smart contract applications across chains
 	*/
-	TestZRC20SwapName      = "zrc20_swap"
 	TestCrosschainSwapName = "crosschain_swap"
 
 	/*
@@ -183,6 +172,19 @@ const (
 	TestLegacyMultipleERC20DepositName                      = "legacy_erc20_multiple_deposit"
 	TestLegacyMultipleERC20WithdrawsName                    = "legacy_erc20_multiple_withdraw"
 	TestLegacyERC20DepositAndCallRefundName                 = "legacy_erc20_deposit_and_call_refund"
+
+	/*
+	 ZETA tests
+	 Test transfer of ZETA asset across chains
+	 Note: It is still the only way to transfer ZETA across chains. Work to integrate ZETA transfers as part of the gateway is in progress
+	 These tests are marked as legacy because there is no longer active development on ZETA transfers, and we stopped integrating ZETA support on new mainnet chains
+	*/
+	TestLegacyZetaDepositName           = "legacy_zeta_deposit"
+	TestLegacyZetaDepositNewAddressName = "legacy_zeta_deposit_new_address"
+	TestLegacyZetaDepositRestrictedName = "legacy_zeta_deposit_restricted"
+	TestLegacyZetaWithdrawName          = "legacy_zeta_withdraw"
+	TestLegacyZetaWithdrawBTCRevertName = "legacy_zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
+
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -411,49 +413,6 @@ var AllE2ETests = []runner.E2ETest{
 		"evm -> zevm deposit and call with swap and withdraw back to evm",
 		[]runner.ArgDefinition{},
 		TestV2DepositAndCallSwap,
-	),
-	/*
-	 ZETA tests
-	*/
-	runner.NewE2ETest(
-		TestZetaDepositName,
-		"deposit ZETA from Ethereum to ZEVM",
-		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
-		},
-		TestZetaDeposit,
-	),
-	runner.NewE2ETest(
-		TestZetaDepositNewAddressName,
-		"deposit ZETA from Ethereum to a new ZEVM address which does not exist yet",
-		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
-		},
-		TestZetaDepositNewAddress,
-	),
-	runner.NewE2ETest(
-		TestZetaDepositRestrictedName,
-		"deposit ZETA from Ethereum to ZEVM restricted address",
-		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
-		},
-		TestZetaDepositRestricted,
-	),
-	runner.NewE2ETest(
-		TestZetaWithdrawName,
-		"withdraw ZETA from ZEVM to Ethereum",
-		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
-		},
-		TestZetaWithdraw,
-	),
-	runner.NewE2ETest(
-		TestZetaWithdrawBTCRevertName,
-		"sending ZETA from ZEVM to Bitcoin with a message that should revert cctxs",
-		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
-		},
-		TestZetaWithdrawBTCRevert,
 	),
 
 	/*
@@ -746,12 +705,6 @@ var AllE2ETests = []runner.E2ETest{
 	/*
 	 Application tests
 	*/
-	runner.NewE2ETest(
-		TestZRC20SwapName,
-		"swap ZRC20 ERC20 for ZRC20 ETH",
-		[]runner.ArgDefinition{},
-		TestZRC20Swap,
-	),
 	runner.NewE2ETest(
 		TestCrosschainSwapName,
 		"testing Bitcoin ERC20 cross-chain swap",
@@ -1141,5 +1094,49 @@ var AllE2ETests = []runner.E2ETest{
 		"deposit a non-gas ZRC20 into ZEVM and call a contract that reverts (v1 protocol contracts)",
 		[]runner.ArgDefinition{},
 		legacy.TestERC20DepositAndCallRefund,
+	),
+
+	/*
+	 ZETA tests
+	*/
+	runner.NewE2ETest(
+		TestLegacyZetaDepositName,
+		"deposit ZETA from Ethereum to ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
+		},
+		legacy.TestZetaDeposit,
+	),
+	runner.NewE2ETest(
+		TestLegacyZetaDepositNewAddressName,
+		"deposit ZETA from Ethereum to a new ZEVM address which does not exist yet",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
+		},
+		legacy.TestZetaDepositNewAddress,
+	),
+	runner.NewE2ETest(
+		TestLegacyZetaDepositRestrictedName,
+		"deposit ZETA from Ethereum to ZEVM restricted address",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
+		},
+		legacy.TestZetaDepositRestricted,
+	),
+	runner.NewE2ETest(
+		TestLegacyZetaWithdrawName,
+		"withdraw ZETA from ZEVM to Ethereum",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
+		},
+		legacy.TestZetaWithdraw,
+	),
+	runner.NewE2ETest(
+		TestLegacyZetaWithdrawBTCRevertName,
+		"sending ZETA from ZEVM to Bitcoin with a message that should revert cctxs",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
+		},
+		legacy.TestZetaWithdrawBTCRevert,
 	),
 }

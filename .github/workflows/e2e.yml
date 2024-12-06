@@ -120,7 +120,7 @@ jobs:
       TSS_MIGRATION_TESTS: ${{ steps.matrix-conditionals.outputs.TSS_MIGRATION_TESTS }}
       SOLANA_TESTS: ${{ steps.matrix-conditionals.outputs.SOLANA_TESTS }}
       TON_TESTS: ${{ steps.matrix-conditionals.outputs.TON_TESTS }}
-      V2_TESTS: ${{ steps.matrix-conditionals.outputs.V2_TESTS }}
+      LEGACY_TESTS: ${{ steps.matrix-conditionals.outputs.LEGACY_TESTS }}
       ENABLE_MONITORING: ${{ steps.matrix-conditionals.outputs.ENABLE_MONITORING }}
     steps:
       # use api rather than event context to avoid race conditions (label added after push)
@@ -152,7 +152,7 @@ jobs:
               core.setOutput('TSS_MIGRATION_TESTS', labels.includes('TSS_MIGRATION_TESTS'));
               core.setOutput('SOLANA_TESTS', labels.includes('SOLANA_TESTS'));
               core.setOutput('TON_TESTS', labels.includes('TON_TESTS'));
-              core.setOutput('V2_TESTS', labels.includes('V2_TESTS')); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
+              core.setOutput('LEGACY_TESTS', labels.includes('LEGACY_TESTS'));
               core.setOutput('ENABLE_MONITORING', labels.includes('ENABLE_MONITORING'));
             } else if (context.eventName === 'merge_group') {
               // default mergequeue tests
@@ -181,7 +181,7 @@ jobs:
               core.setOutput('STATEFUL_DATA_TESTS', true);
               core.setOutput('SOLANA_TESTS', true);
               core.setOutput('TON_TESTS', true);
-              core.setOutput('V2_TESTS', true); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
+              core.setOutput('LEGACY_TESTS', true);
             } else if (context.eventName === 'schedule') {
               core.setOutput('DEFAULT_TESTS', true);
               core.setOutput('UPGRADE_TESTS', true);
@@ -193,7 +193,7 @@ jobs:
               core.setOutput('TSS_MIGRATION_TESTS', true);
               core.setOutput('SOLANA_TESTS', true);
               core.setOutput('TON_TESTS', true);
-              core.setOutput('V2_TESTS', true); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
+              core.setOutput('LEGACY_TESTS', true);
             } else if (context.eventName === 'workflow_dispatch') {
               const makeTargets = context.payload.inputs['make-targets'].split(',');
               core.setOutput('DEFAULT_TESTS', makeTargets.includes('default-test'));
@@ -206,7 +206,7 @@ jobs:
               core.setOutput('TSS_MIGRATION_TESTS', makeTargets.includes('tss-migration-test'));
               core.setOutput('SOLANA_TESTS', makeTargets.includes('solana-test'));
               core.setOutput('TON_TESTS', makeTargets.includes('ton-test'));
-              core.setOutput('V2_TESTS', makeTargets.includes('v2-test')); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
+              core.setOutput('LEGACY_TESTS', makeTargets.includes('legacy-test'));
               core.setOutput('ENABLE_MONITORING', context.payload.inputs['enable-monitoring']);
             }
 
@@ -255,9 +255,9 @@ jobs:
           - make-target: "start-ton-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.TON_TESTS == 'true' }}
-          - make-target: "start-v2-test"
+          - make-target: "start-legacy-test"
             runs-on: ubuntu-20.04
-            run: ${{ needs.matrix-conditionals.outputs.V2_TESTS == 'true' }}
+            run: ${{ needs.matrix-conditionals.outputs.LEGACY_TESTS == 'true' }}
     name: ${{ matrix.make-target }}
     uses: ./.github/workflows/reusable-e2e.yml
     with:

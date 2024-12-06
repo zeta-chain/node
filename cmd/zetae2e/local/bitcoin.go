@@ -13,8 +13,8 @@ import (
 	"github.com/zeta-chain/node/testutil"
 )
 
-// initBitcoinTestRunners initializes Bitcoin deposit and withdraw test runners
-func initBitcoinTestRunners(
+// bitcoinTestRoutines returns test routines for deposit and withdraw tests
+func bitcoinTestRoutines(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,

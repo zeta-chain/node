@@ -41,7 +41,7 @@ const (
 	flagTestTSSMigration  = "test-tss-migration"
 	flagSkipBitcoinSetup  = "skip-bitcoin-setup"
 	flagSkipHeaderProof   = "skip-header-proof"
-	flagTestV2            = "test-v2"
+	flagTestLegacy        = "test-legacy"
 	flagSkipTrackerCheck  = "skip-tracker-check"
 	flagSkipPrecompiles   = "skip-precompiles"
 	flagUpgradeContracts  = "upgrade-contracts"
@@ -77,7 +77,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSkipBitcoinSetup, false, "set to true to skip bitcoin wallet setup")
 	cmd.Flags().Bool(flagSkipHeaderProof, false, "set to true to skip header proof tests")
 	cmd.Flags().Bool(flagTestTSSMigration, false, "set to true to include a migration test at the end")
-	cmd.Flags().Bool(flagTestV2, false, "set to true to run tests for v2 contracts")
+	cmd.Flags().Bool(flagTestLegacy, false, "set to true to run legacy EVM tests")
 	cmd.Flags().Bool(flagSkipTrackerCheck, false, "set to true to skip tracker check at the end of the tests")
 	cmd.Flags().Bool(flagSkipPrecompiles, false, "set to true to skip stateful precompiled contracts test")
 	cmd.Flags().
@@ -107,7 +107,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipHeaderProof   = must(cmd.Flags().GetBool(flagSkipHeaderProof))
 		skipTrackerCheck  = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
 		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
-		testV2            = must(cmd.Flags().GetBool(flagTestV2))
+		testLegacy        = must(cmd.Flags().GetBool(flagTestLegacy))
 		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
 		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
 	)
@@ -278,41 +278,18 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		os.Exit(0)
 	}
 
+	if upgradeContracts {
+		deployerRunner.UpgradeGatewaysAndERC20Custody()
+	}
+
 	// run tests
 	var eg errgroup.Group
 
 	if !skipRegular {
-		// defines all tests, if light is enabled, only the most basic tests are run and advanced are skipped
-		erc20Tests := []string{
-			e2etests.TestLegacyERC20WithdrawName,
-			e2etests.TestLegacyMultipleERC20WithdrawsName,
-			e2etests.TestLegacyERC20DepositAndCallRefundName,
-			e2etests.TestZRC20SwapName,
-		}
-		erc20AdvancedTests := []string{
-			e2etests.TestERC20DepositRestrictedName,
-		}
-		zetaTests := []string{
-			e2etests.TestZetaWithdrawName,
-			e2etests.TestLegacyMessagePassingExternalChainsName,
-			e2etests.TestLegacyMessagePassingRevertFailExternalChainsName,
-			e2etests.TestLegacyMessagePassingRevertSuccessExternalChainsName,
-		}
-		zetaAdvancedTests := []string{
-			e2etests.TestZetaDepositRestrictedName,
-			e2etests.TestZetaDepositName,
-			e2etests.TestZetaDepositNewAddressName,
-		}
-		zevmMPTests := []string{}
-		zevmMPAdvancedTests := []string{
-			e2etests.TestLegacyMessagePassingZEVMToEVMName,
-			e2etests.TestLegacyMessagePassingEVMtoZEVMName,
-			e2etests.TestLegacyMessagePassingEVMtoZEVMRevertName,
-			e2etests.TestLegacyMessagePassingZEVMtoEVMRevertName,
-			e2etests.TestLegacyMessagePassingZEVMtoEVMRevertFailName,
-			e2etests.TestLegacyMessagePassingEVMtoZEVMRevertFailName,
-		}
+		// start the EVM tests
+		startEVMTests(&eg, conf, deployerRunner, verbose)
 
+		// start the bitcoin tests
 		// btc withdraw tests are those that need a Bitcoin node wallet to send UTXOs
 		bitcoinDepositTests := []string{
 			e2etests.TestBitcoinDonationName,
@@ -332,7 +309,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		bitcoinWithdrawTests := []string{
 			e2etests.TestBitcoinWithdrawSegWitName,
 			e2etests.TestBitcoinWithdrawInvalidAddressName,
-			e2etests.TestZetaWithdrawBTCRevertName,
+			e2etests.TestLegacyZetaWithdrawBTCRevertName,
 		}
 		bitcoinWithdrawTestsAdvanced := []string{
 			e2etests.TestBitcoinWithdrawTaprootName,
@@ -342,46 +319,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinWithdrawMultipleName,
 			e2etests.TestBitcoinWithdrawRestrictedName,
 		}
-		ethereumTests := []string{
-			e2etests.TestLegacyEtherWithdrawName,
-			e2etests.TestLegacyEtherDepositAndCallName,
-			e2etests.TestLegacyEtherDepositAndCallRefundName,
-		}
-		ethereumAdvancedTests := []string{
-			e2etests.TestEtherWithdrawRestrictedName,
-		}
-		precompiledContractTests := []string{}
-
-		if !skipPrecompiles {
-			precompiledContractTests = []string{
-				e2etests.TestPrecompilesPrototypeName,
-				e2etests.TestPrecompilesPrototypeThroughContractName,
-				e2etests.TestPrecompilesStakingName,
-				// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
-				// e2etests.TestPrecompilesStakingThroughContractName,
-				e2etests.TestPrecompilesBankName,
-				e2etests.TestPrecompilesBankFailName,
-				e2etests.TestPrecompilesBankThroughContractName,
-				e2etests.TestPrecompilesDistributeName,
-				e2etests.TestPrecompilesDistributeNonZRC20Name,
-				e2etests.TestPrecompilesDistributeThroughContractName,
-			}
-		}
-
 		if !light {
-			erc20Tests = append(erc20Tests, erc20AdvancedTests...)
-			zetaTests = append(zetaTests, zetaAdvancedTests...)
-			zevmMPTests = append(zevmMPTests, zevmMPAdvancedTests...)
+			// if light is enabled, only the most basic tests are run and advanced are skipped
 			bitcoinDepositTests = append(bitcoinDepositTests, bitcoinDepositTestsAdvanced...)
 			bitcoinWithdrawTests = append(bitcoinWithdrawTests, bitcoinWithdrawTestsAdvanced...)
-			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
 		}
-
-		eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose, precompiledContractTests...))
-		eg.Go(legacyERC20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
-		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
-		eg.Go(legacyZEVMMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
-		runnerDeposit, runnerWithdraw := initBitcoinTestRunners(
+		bitcoinDepositTestRoutine, bitcoinWithdrawTestRoutine := bitcoinTestRoutines(
 			conf,
 			deployerRunner,
 			verbose,
@@ -389,9 +332,24 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			bitcoinDepositTests,
 			bitcoinWithdrawTests,
 		)
-		eg.Go(runnerDeposit)
-		eg.Go(runnerWithdraw)
-		eg.Go(legacyEthereumTestRoutine(conf, deployerRunner, verbose, ethereumTests...))
+		eg.Go(bitcoinDepositTestRoutine)
+		eg.Go(bitcoinWithdrawTestRoutine)
+	}
+
+	if !skipPrecompiles {
+		eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose,
+			e2etests.TestPrecompilesPrototypeName,
+			e2etests.TestPrecompilesPrototypeThroughContractName,
+			e2etests.TestPrecompilesStakingName,
+			// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
+			// e2etests.TestPrecompilesStakingThroughContractName,
+			e2etests.TestPrecompilesBankName,
+			e2etests.TestPrecompilesBankFailName,
+			e2etests.TestPrecompilesBankThroughContractName,
+			e2etests.TestPrecompilesDistributeName,
+			e2etests.TestPrecompilesDistributeNonZRC20Name,
+			e2etests.TestPrecompilesDistributeThroughContractName,
+		))
 	}
 
 	if testAdmin {
@@ -405,23 +363,19 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestPauseERC20CustodyName,
 			e2etests.TestMigrateERC20CustodyFundsName,
 
-			// Test the rate limiter functionalities
-			// this test is currently incomplete and takes 10m to run
-			// TODO: define assertion, and make more optimized
-			// https://github.com/zeta-chain/node/issues/2090
-			//e2etests.TestRateLimiterName,
-
-			// TestMigrateChainSupportName tests EVM chain migration. Currently this test doesn't work with Anvil because pre-EIP1559 txs are not supported
+			// Currently this test doesn't work with Anvil because pre-EIP1559 txs are not supported
 			// See issue below for details
 			// TODO: reenable this test as per the issue below
 			// https://github.com/zeta-chain/node/issues/1980
 			// e2etests.TestMigrateChainSupportName,
 		))
 	}
+
 	if testPerformance {
 		eg.Go(ethereumDepositPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherDepositName))
 		eg.Go(ethereumWithdrawPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherWithdrawName))
 	}
+
 	if testSolana {
 		if deployerRunner.SolanaClient == nil {
 			logger.Print("❌ solana client is nil, maybe solana rpc is not set")
@@ -463,12 +417,33 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		eg.Go(tonTestRoutine(conf, deployerRunner, verbose, tonTests...))
 	}
 
-	if upgradeContracts {
-		deployerRunner.UpgradeGatewaysAndERC20Custody()
-	}
-
-	if testV2 {
-		startEVMTests(&eg, conf, deployerRunner, verbose)
+	if testLegacy {
+		eg.Go(legacyERC20TestRoutine(conf, deployerRunner, verbose,
+			e2etests.TestLegacyERC20WithdrawName,
+			e2etests.TestLegacyMultipleERC20WithdrawsName,
+			e2etests.TestLegacyERC20DepositAndCallRefundName))
+		eg.Go(legacyZETATestRoutine(conf, deployerRunner, verbose,
+			e2etests.TestLegacyZetaWithdrawName,
+			e2etests.TestLegacyMessagePassingExternalChainsName,
+			e2etests.TestLegacyMessagePassingRevertFailExternalChainsName,
+			e2etests.TestLegacyMessagePassingRevertSuccessExternalChainsName,
+			e2etests.TestLegacyZetaDepositRestrictedName,
+			e2etests.TestLegacyZetaDepositName,
+			e2etests.TestLegacyZetaDepositNewAddressName,
+		))
+		eg.Go(legacyZEVMMPTestRoutine(conf, deployerRunner, verbose,
+			e2etests.TestLegacyMessagePassingZEVMToEVMName,
+			e2etests.TestLegacyMessagePassingEVMtoZEVMName,
+			e2etests.TestLegacyMessagePassingEVMtoZEVMRevertName,
+			e2etests.TestLegacyMessagePassingZEVMtoEVMRevertName,
+			e2etests.TestLegacyMessagePassingZEVMtoEVMRevertFailName,
+			e2etests.TestLegacyMessagePassingEVMtoZEVMRevertFailName,
+		))
+		eg.Go(legacyEthereumTestRoutine(conf, deployerRunner, verbose,
+			e2etests.TestLegacyEtherWithdrawName,
+			e2etests.TestLegacyEtherDepositAndCallName,
+			e2etests.TestLegacyEtherDepositAndCallRefundName,
+		))
 	}
 
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority

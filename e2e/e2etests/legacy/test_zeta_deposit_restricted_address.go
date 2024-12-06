@@ -1,4 +1,4 @@
-package e2etests
+package legacy
 
 import (
 	ethcommon "github.com/ethereum/go-ethereum/common"

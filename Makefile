@@ -312,9 +312,9 @@ start-ton-test: e2e-images
 	export E2E_ARGS="--skip-regular --test-ton" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile ton up -d
 
-start-v2-test: e2e-images
-	@echo "--> Starting e2e smart contracts v2 test"
-	export E2E_ARGS="--skip-regular --test-v2" && \
+start-legacy-test: e2e-images
+	@echo "--> Starting e2e smart contracts legacy test"
+	export E2E_ARGS="--skip-regular --test-legacy" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 ###############################################################################
