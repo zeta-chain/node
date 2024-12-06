@@ -15,6 +15,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
+	"github.com/zeta-chain/node/e2e/e2etests/legacy"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -41,7 +42,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	r.DepositZetaWithAmount(r.EVMAddress(), zetaAmount)
 
 	// do an ethers withdraw on the previous chain (0.01eth) for some interaction
-	TestEtherWithdraw(r, []string{"10000000000000000"})
+	legacy.TestEtherWithdraw(r, []string{"10000000000000000"})
 
 	// create runner for the new EVM and set it up
 	newRunner, err := configureEVM2(r)
@@ -147,7 +148,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	r.Logger.CCTX(*cctx, "zeta withdraw")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
-	TestEtherWithdraw(newRunner, []string{"50000000000000000"})
+	legacy.TestEtherWithdraw(newRunner, []string{"50000000000000000"})
 
 	// finally try to deposit Zeta back
 	TestZetaDeposit(newRunner, []string{"100000000000000000"})

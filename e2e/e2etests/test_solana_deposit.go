@@ -20,7 +20,7 @@ func TestSolanaDeposit(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("runner balance of SOL before deposit: %d", balanceBefore)
 
 	// parse deposit amount (in lamports)
-	depositAmount := parseBigInt(r, args[0])
+	depositAmount := utils.ParseBigInt(r, args[0])
 
 	// execute the deposit transaction
 	sig := r.SOLDepositAndCall(nil, r.EVMAddress(), depositAmount, nil)

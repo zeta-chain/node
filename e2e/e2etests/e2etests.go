@@ -1,6 +1,7 @@
 package e2etests
 
 import (
+	"github.com/zeta-chain/node/e2e/e2etests/legacy"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/testutil/sample"
 )
@@ -110,8 +111,6 @@ const (
 	 Miscellaneous tests
 	 Test various functionalities not related to assets
 	*/
-	TestContextUpgradeName  = "context_upgrade"
-	TestMyTestName          = "my_test"
 	TestDonationEtherName   = "donation_ether"
 	TestInboundTrackersName = "inbound_trackers"
 
@@ -251,7 +250,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
 		},
-		TestMessagePassingExternalChains,
+		legacy.TestMessagePassingExternalChains,
 	),
 	runner.NewE2ETest(
 		TestMessagePassingRevertFailExternalChainsName,
@@ -259,7 +258,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
 		},
-		TestMessagePassingRevertFailExternalChains,
+		legacy.TestMessagePassingRevertFailExternalChains,
 	),
 	runner.NewE2ETest(
 		TestMessagePassingRevertSuccessExternalChainsName,
@@ -267,7 +266,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
 		},
-		TestMessagePassingRevertSuccessExternalChains,
+		legacy.TestMessagePassingRevertSuccessExternalChains,
 	),
 	runner.NewE2ETest(
 		TestMessagePassingEVMtoZEVMName,
@@ -275,7 +274,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in azeta", DefaultValue: "10000000000000000009"},
 		},
-		TestMessagePassingEVMtoZEVM,
+		legacy.TestMessagePassingEVMtoZEVM,
 	),
 	runner.NewE2ETest(
 		TestMessagePassingZEVMToEVMName,
@@ -283,7 +282,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in azeta", DefaultValue: "10000000000000000007"},
 		},
-		TestMessagePassingZEVMtoEVM,
+		legacy.TestMessagePassingZEVMtoEVM,
 	),
 	runner.NewE2ETest(
 		TestMessagePassingZEVMtoEVMRevertName,
@@ -291,7 +290,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in azeta", DefaultValue: "10000000000000000006"},
 		},
-		TestMessagePassingZEVMtoEVMRevert,
+		legacy.TestMessagePassingZEVMtoEVMRevert,
 	),
 	runner.NewE2ETest(
 		TestMessagePassingEVMtoZEVMRevertName,
@@ -299,7 +298,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in azeta", DefaultValue: "10000000000000000008"},
 		},
-		TestMessagePassingEVMtoZEVMRevert,
+		legacy.TestMessagePassingEVMtoZEVMRevert,
 	),
 	runner.NewE2ETest(
 		TestMessagePassingZEVMtoEVMRevertFailName,
@@ -307,7 +306,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in azeta", DefaultValue: "10000000000000000008"},
 		},
-		TestMessagePassingZEVMtoEVMRevertFail,
+		legacy.TestMessagePassingZEVMtoEVMRevertFail,
 	),
 	runner.NewE2ETest(
 		TestMessagePassingEVMtoZEVMRevertFailName,
@@ -315,7 +314,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in azeta", DefaultValue: "10000000000000000008"},
 		},
-		TestMessagePassingEVMtoZEVMRevertFail,
+		legacy.TestMessagePassingEVMtoZEVMRevertFail,
 	),
 
 	/*
@@ -327,7 +326,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "10000000000000000"},
 		},
-		TestEtherDeposit,
+		legacy.TestEtherDeposit,
 	),
 	runner.NewE2ETest(
 		TestEtherWithdrawName,
@@ -335,7 +334,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
-		TestEtherWithdraw,
+		legacy.TestEtherWithdraw,
 	),
 	runner.NewE2ETest(
 		TestEtherWithdrawRestrictedName,
@@ -351,7 +350,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "10000000000000000000"},
 		},
-		TestEtherDepositAndCallRefund,
+		legacy.TestEtherDepositAndCallRefund,
 	),
 	runner.NewE2ETest(
 		TestEtherDepositAndCallName,
@@ -359,7 +358,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
 		},
-		TestEtherDepositAndCall,
+		legacy.TestEtherDepositAndCall,
 	),
 	/*
 	 EVM erc20 tests
@@ -370,7 +369,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
 		},
-		TestERC20Withdraw,
+		legacy.TestERC20Withdraw,
 	),
 	runner.NewE2ETest(
 		TestERC20DepositName,
@@ -378,7 +377,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "100000"},
 		},
-		TestERC20Deposit,
+		legacy.TestERC20Deposit,
 	),
 	runner.NewE2ETest(
 		TestMultipleERC20DepositName,
@@ -387,7 +386,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "1000000000"},
 			{Description: "count", DefaultValue: "3"},
 		},
-		TestMultipleERC20Deposit,
+		legacy.TestMultipleERC20Deposit,
 	),
 	runner.NewE2ETest(
 		TestMultipleERC20WithdrawsName,
@@ -396,7 +395,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "100"},
 			{Description: "count", DefaultValue: "3"},
 		},
-		TestMultipleERC20Withdraws,
+		legacy.TestMultipleERC20Withdraws,
 	),
 	runner.NewE2ETest(
 		TestERC20DepositRestrictedName,
@@ -404,13 +403,13 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "100000"},
 		},
-		TestERC20DepositRestricted,
+		legacy.TestERC20DepositRestricted,
 	),
 	runner.NewE2ETest(
 		TestERC20DepositAndCallRefundName,
 		"deposit a non-gas ZRC20 into ZEVM and call a contract that reverts",
 		[]runner.ArgDefinition{},
-		TestERC20DepositAndCallRefund,
+		legacy.TestERC20DepositAndCallRefund,
 	),
 	/*
 	 Solana tests
@@ -718,20 +717,6 @@ var AllE2ETests = []runner.E2ETest{
 	 Miscellaneous tests
 	*/
 	runner.NewE2ETest(
-		TestContextUpgradeName,
-		"tests sending ETH on ZEVM and check context data using ContextApp",
-		[]runner.ArgDefinition{
-			{Description: "amount in wei", DefaultValue: "1000000000000000"},
-		},
-		TestContextUpgrade,
-	),
-	runner.NewE2ETest(
-		TestMyTestName,
-		"performing custom test",
-		[]runner.ArgDefinition{},
-		TestMyTest,
-	),
-	runner.NewE2ETest(
 		TestDonationEtherName,
 		"donate Ether to the TSS",
 		[]runner.ArgDefinition{
@@ -829,7 +814,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestRateLimiterName,
 		"test sending cctxs with rate limiter enabled and show logs when processing cctxs",
 		[]runner.ArgDefinition{},
-		TestRateLimiter,
+		legacy.TestRateLimiter,
 	),
 	runner.NewE2ETest(
 		TestCriticalAdminTransactionsName,

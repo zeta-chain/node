@@ -32,7 +32,6 @@ const (
 	flagVerbose           = "verbose"
 	flagTestAdmin         = "test-admin"
 	flagTestPerformance   = "test-performance"
-	flagTestCustom        = "test-custom"
 	flagTestSolana        = "test-solana"
 	flagTestTON           = "test-ton"
 	flagSkipRegular       = "skip-regular"
@@ -68,7 +67,6 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
 	cmd.Flags().Bool(flagTestAdmin, false, "set to true to run admin tests")
 	cmd.Flags().Bool(flagTestPerformance, false, "set to true to run performance tests")
-	cmd.Flags().Bool(flagTestCustom, false, "set to true to run custom tests")
 	cmd.Flags().Bool(flagTestSolana, false, "set to true to run solana tests")
 	cmd.Flags().Bool(flagTestTON, false, "set to true to run TON tests")
 	cmd.Flags().Bool(flagSkipRegular, false, "set to true to skip regular tests")
@@ -99,7 +97,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		configOut         = must(cmd.Flags().GetString(flagConfigOut))
 		testAdmin         = must(cmd.Flags().GetBool(flagTestAdmin))
 		testPerformance   = must(cmd.Flags().GetBool(flagTestPerformance))
-		testCustom        = must(cmd.Flags().GetBool(flagTestCustom))
 		testSolana        = must(cmd.Flags().GetBool(flagTestSolana))
 		testTON           = must(cmd.Flags().GetBool(flagTestTON))
 		skipRegular       = must(cmd.Flags().GetBool(flagSkipRegular))
@@ -347,7 +344,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 		ethereumTests := []string{
 			e2etests.TestEtherWithdrawName,
-			e2etests.TestContextUpgradeName,
 			e2etests.TestEtherDepositAndCallName,
 			e2etests.TestEtherDepositAndCallRefundName,
 		}
@@ -425,9 +421,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testPerformance {
 		eg.Go(ethereumDepositPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherDepositName))
 		eg.Go(ethereumWithdrawPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherWithdrawName))
-	}
-	if testCustom {
-		eg.Go(miscTestRoutine(conf, deployerRunner, verbose, e2etests.TestMyTestName))
 	}
 	if testSolana {
 		if deployerRunner.SolanaClient == nil {

@@ -1,4 +1,4 @@
-package e2etests
+package legacy
 
 import (
 	"math/big"
@@ -23,7 +23,7 @@ func TestMessagePassingEVMtoZEVMRevert(r *runner.E2ERunner, args []string) {
 	require.True(r, fungibleEthAddress != ethcommon.Address{}, "invalid fungible module address")
 
 	// parse the amount
-	amount := parseBigInt(r, args[0])
+	amount := utils.ParseBigInt(r, args[0])
 
 	// Set destination details
 	zEVMChainID, err := r.ZEVMClient.ChainID(r.Ctx)

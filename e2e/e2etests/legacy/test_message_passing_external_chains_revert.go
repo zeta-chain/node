@@ -1,4 +1,4 @@
-package e2etests
+package legacy
 
 import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -18,7 +18,7 @@ func TestMessagePassingRevertSuccessExternalChains(r *runner.E2ERunner, args []s
 	require.Len(r, args, 1)
 
 	// parse the amount
-	amount := parseBigInt(r, args[0])
+	amount := utils.ParseBigInt(r, args[0])
 
 	chainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err)

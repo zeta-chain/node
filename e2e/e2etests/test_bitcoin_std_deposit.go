@@ -20,7 +20,7 @@ func TestBitcoinStdMemoDeposit(r *runner.E2ERunner, args []string) {
 
 	// parse amount to deposit
 	require.Len(r, args, 1)
-	amount := parseFloat(r, args[0])
+	amount := utils.ParseFloat(r, args[0])
 
 	// get ERC20 BTC balance before deposit
 	balanceBefore, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())

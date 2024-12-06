@@ -14,7 +14,7 @@ func TestTONDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 
 	// Given amount and arbitrary call data
 	var (
-		amount = parseUint(r, args[0])
+		amount = utils.ParseUint(r, args[0])
 		data   = []byte("hello reverter")
 	)
 

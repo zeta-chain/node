@@ -1,4 +1,4 @@
-package e2etests
+package legacy
 
 import (
 	"math/big"
@@ -16,7 +16,7 @@ func TestEtherDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// parse the deposit amount
-	value := parseBigInt(r, args[0])
+	value := utils.ParseBigInt(r, args[0])
 
 	evmClient := r.EVMClient
 

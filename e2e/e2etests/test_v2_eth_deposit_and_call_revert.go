@@ -15,8 +15,7 @@ import (
 func TestV2ETHDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok, "Invalid amount specified for TestV2ETHDepositAndCallRevert")
+	amount := utils.ParseBigInt(r, args[0])
 
 	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
 

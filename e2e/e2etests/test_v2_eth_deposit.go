@@ -14,8 +14,7 @@ import (
 func TestV2ETHDeposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok, "Invalid amount specified for TestV2ETHDeposit")
+	amount := utils.ParseBigInt(r, args[0])
 
 	r.Logger.Info("starting v2 eth deposit test")
 

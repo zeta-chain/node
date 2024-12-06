@@ -18,8 +18,8 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
 	// parse deposit amount and number of deposits
-	depositAmount := parseBigInt(r, args[0])
-	numDeposits := parseInt(r, args[1])
+	depositAmount := utils.ParseBigInt(r, args[0])
+	numDeposits := utils.ParseInt(r, args[1])
 
 	r.Logger.Print("starting stress test of %d deposits", numDeposits)
 

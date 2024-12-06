@@ -12,7 +12,7 @@ func TestZetaWithdraw(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// parse withdraw amount
-	amount := parseBigInt(r, args[0])
+	amount := utils.ParseBigInt(r, args[0])
 
 	r.DepositAndApproveWZeta(amount)
 	tx := r.WithdrawZeta(amount, true)

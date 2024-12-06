@@ -12,7 +12,7 @@ func TestZetaDepositNewAddress(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// parse deposit amount
-	amount := parseBigInt(r, args[0])
+	amount := utils.ParseBigInt(r, args[0])
 
 	newAddress := sample.EthAddress()
 	hash := r.DepositZetaWithAmount(newAddress, amount)

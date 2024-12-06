@@ -22,7 +22,7 @@ func TestSolanaWithdrawRestricted(r *runner.E2ERunner, args []string) {
 
 	// parse withdraw amount (in lamports), approve amount is 1 SOL
 	approvedAmount := new(big.Int).SetUint64(solana.LAMPORTS_PER_SOL)
-	withdrawAmount := parseBigInt(r, args[1])
+	withdrawAmount := utils.ParseBigInt(r, args[1])
 	require.Equal(
 		r,
 		-1,
@@ -38,5 +38,5 @@ func TestSolanaWithdrawRestricted(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// the cctx should be cancelled with zero value
-	verifySolanaWithdrawalAmountFromCCTX(r, cctx, 0)
+	r.VerifySolanaWithdrawalAmountFromCCTX(cctx, 0)
 }

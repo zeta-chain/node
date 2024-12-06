@@ -1,4 +1,4 @@
-package e2etests
+package legacy
 
 import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -14,7 +14,7 @@ func TestMessagePassingEVMtoZEVMRevertFail(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// parse the amount
-	amount := parseBigInt(r, args[0])
+	amount := utils.ParseBigInt(r, args[0])
 
 	// Deploying a test contract not containing a logic for reverting the cctx
 	testDappNoRevertEVMAddr, tx, testDappNoRevertEVM, err := testdappnorevert.DeployTestDAppNoRevert(

@@ -15,8 +15,7 @@ import (
 func TestV2ETHDepositAndCallNoMessage(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok, "Invalid amount specified for TestV2ETHDepositAndCallNoMessage")
+	amount := utils.ParseBigInt(r, args[0])
 
 	oldBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
 	require.NoError(r, err)

@@ -15,7 +15,7 @@ func TestZetaWithdrawBTCRevert(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// parse withdraw amount
-	amount := parseBigInt(r, args[0])
+	amount := utils.ParseBigInt(r, args[0])
 
 	r.ZEVMAuth.Value = amount
 	tx, err := r.WZeta.Deposit(r.ZEVMAuth)

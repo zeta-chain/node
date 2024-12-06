@@ -14,7 +14,7 @@ func TestSolanaDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// parse deposit amount (in lamports)
-	depositAmount := parseBigInt(r, args[0])
+	depositAmount := utils.ParseBigInt(r, args[0])
 
 	// deploy an example contract in ZEVM
 	contractAddr, _, contract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)

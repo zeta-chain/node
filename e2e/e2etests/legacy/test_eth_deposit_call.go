@@ -1,4 +1,4 @@
-package e2etests
+package legacy
 
 import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -15,7 +15,7 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// parse deposit amount
-	value := parseBigInt(r, args[0])
+	value := utils.ParseBigInt(r, args[0])
 
 	r.Logger.Info("Deploying example contract")
 	exampleAddr, _, exampleContract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)

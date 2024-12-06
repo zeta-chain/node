@@ -1,4 +1,4 @@
-package e2etests
+package legacy
 
 import (
 	"math/big"

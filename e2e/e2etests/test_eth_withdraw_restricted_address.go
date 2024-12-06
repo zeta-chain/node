@@ -50,5 +50,5 @@ func TestEtherWithdrawRestricted(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// the cctx should be cancelled with zero value
-	verifyTransferAmountFromCCTX(r, cctx, 0)
+	r.VerifyTransferAmountFromCCTX(cctx, 0)
 }

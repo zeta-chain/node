@@ -13,7 +13,7 @@ func TestZetaDepositRestricted(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// parse the deposit amount
-	amount := parseBigInt(r, args[0])
+	amount := utils.ParseBigInt(r, args[0])
 
 	// Deposit amount to restricted address
 	txHash := r.DepositZetaWithAmount(ethcommon.HexToAddress(sample.RestrictedEVMAddressTest), amount)

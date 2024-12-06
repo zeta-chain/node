@@ -1,4 +1,4 @@
-package e2etests
+package legacy
 
 import (
 	"math/big"
@@ -29,5 +29,5 @@ func TestERC20Withdraw(r *runner.E2ERunner, args []string) {
 	// verify the withdraw value
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 
-	verifyTransferAmountFromCCTX(r, cctx, withdrawalAmount.Int64())
+	r.VerifyTransferAmountFromCCTX(cctx, withdrawalAmount.Int64())
 }

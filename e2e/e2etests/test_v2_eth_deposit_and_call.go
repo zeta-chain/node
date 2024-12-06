@@ -15,8 +15,7 @@ import (
 func TestV2ETHDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok, "Invalid amount specified for TestV2ETHDepositAndCall")
+	amount := utils.ParseBigInt(r, args[0])
 
 	payload := randomPayload(r)
 

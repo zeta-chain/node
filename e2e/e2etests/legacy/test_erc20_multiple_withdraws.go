@@ -1,4 +1,4 @@
-package e2etests
+package legacy
 
 import (
 	"math/big"
@@ -17,14 +17,14 @@ func TestMultipleERC20Withdraws(r *runner.E2ERunner, args []string) {
 	approvedAmount := big.NewInt(1e18)
 
 	// parse the withdrawal amount and number of withdrawals
-	withdrawalAmount := parseBigInt(r, args[0])
+	withdrawalAmount := utils.ParseBigInt(r, args[0])
 	require.Equal(
 		r,
 		-1,
 		withdrawalAmount.Cmp(approvedAmount),
 		"Invalid withdrawal amount specified for TestMultipleWithdraws.",
 	)
-	numberOfWithdrawals := parseBigInt(r, args[1])
+	numberOfWithdrawals := utils.ParseBigInt(r, args[1])
 	require.NotEmpty(r, numberOfWithdrawals.Int64())
 
 	// calculate total withdrawal to ensure it doesn't exceed approved amount.
@@ -84,6 +84,6 @@ func TestMultipleERC20Withdraws(r *runner.E2ERunner, args []string) {
 
 	// verify the withdraw value
 	for _, cctx := range cctxs {
-		verifyTransferAmountFromCCTX(r, cctx, withdrawalAmount.Int64())
+		r.VerifyTransferAmountFromCCTX(cctx, withdrawalAmount.Int64())
 	}
 }

@@ -21,8 +21,7 @@ func TestV2ETHWithdrawAndCallNoMessage(r *runner.E2ERunner, args []string) {
 		r.ZEVMAuth.GasLimit = previousGasLimit
 	}()
 
-	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok, "Invalid amount specified for TestV2ETHWithdrawAndCallNoMessage")
+	amount := utils.ParseBigInt(r, args[0])
 
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 

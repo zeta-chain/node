@@ -13,7 +13,7 @@ func TestDonationEther(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// parse the donation amount
-	amount := parseBigInt(r, args[0])
+	amount := utils.ParseBigInt(r, args[0])
 
 	txDonation, err := r.SendEther(r.TSSAddress, amount, []byte(constant.DonationMessage))
 	require.NoError(r, err)

@@ -19,7 +19,7 @@ func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
 
 	// Given amount to send
 	require.Len(r, args, 1)
-	amount := parseFloat(r, args[0])
+	amount := utils.ParseFloat(r, args[0])
 	amountTotal := amount + zetabitcoin.DefaultDepositorFee
 
 	// Given a list of UTXOs

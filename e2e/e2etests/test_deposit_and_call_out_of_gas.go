@@ -16,7 +16,7 @@ import (
 func TestDepositAndCallOutOfGas(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	amount := parseBigInt(r, args[0])
+	amount := utils.ParseBigInt(r, args[0])
 
 	// Deploy the GasConsumer contract
 	gasConsumerAddress, _, _, err := testgasconsumer.DeployTestGasConsumer(r.ZEVMAuth, r.ZEVMClient)

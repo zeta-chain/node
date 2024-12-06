@@ -1,4 +1,4 @@
-package e2etests
+package legacy
 
 import (
 	"github.com/stretchr/testify/require"
@@ -7,14 +7,14 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 )
 
-// TestEtherDeposit tests deposit of ethers
-func TestEtherDeposit(r *runner.E2ERunner, args []string) {
+func TestERC20Deposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// parse the deposit amount
-	amount := parseBigInt(r, args[0])
+	amount := utils.ParseBigInt(r, args[0])
 
-	hash := r.DepositEtherWithAmount(amount) // in wei
+	hash := r.DepositERC20WithAmountAndMessage(r.EVMAddress(), amount, []byte{})
+
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")

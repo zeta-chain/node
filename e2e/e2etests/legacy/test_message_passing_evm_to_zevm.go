@@ -1,4 +1,4 @@
-package e2etests
+package legacy
 
 import (
 	"math/big"
@@ -17,7 +17,7 @@ func TestMessagePassingEVMtoZEVM(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// parse the amount
-	amount := parseBigInt(r, args[0])
+	amount := utils.ParseBigInt(r, args[0])
 
 	// Set destination details
 	zEVMChainID, err := r.ZEVMClient.ChainID(r.Ctx)

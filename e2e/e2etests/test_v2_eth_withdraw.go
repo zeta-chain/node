@@ -14,8 +14,7 @@ import (
 func TestV2ETHWithdraw(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	amount, ok := big.NewInt(0).SetString(args[0], 10)
-	require.True(r, ok, "Invalid amount specified for TestV2ETHWithdraw")
+	amount := utils.ParseBigInt(r, args[0])
 
 	oldBalance, err := r.EVMClient.BalanceAt(r.Ctx, r.EVMAddress(), nil)
 	require.NoError(r, err)
