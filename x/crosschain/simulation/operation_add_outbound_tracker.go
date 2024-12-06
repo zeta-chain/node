@@ -58,7 +58,7 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
 				types.TypeMsgAddOutboundTracker,
-				"no pending nonces found",
+				"pending nonces object not found",
 			), nil, nil
 		}
 
