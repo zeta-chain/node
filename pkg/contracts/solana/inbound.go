@@ -29,7 +29,7 @@ func ParseInboundAsDeposit(
 ) (*Deposit, error) {
 	// first try to parse as deposit, then as deposit_and_call
 	deposit, err := tryParseAsDeposit(tx, instructionIndex, slot)
-	if deposit != nil || err != nil {
+	if err != nil || deposit != nil {
 		return deposit, err
 	}
 
@@ -116,7 +116,7 @@ func ParseInboundAsDepositSPL(
 ) (*Deposit, error) {
 	// first try to parse as deposit_spl, then as deposit_spl_and_call
 	deposit, err := tryParseAsDepositSPL(tx, instructionIndex, slot)
-	if deposit != nil || err != nil {
+	if err != nil || deposit != nil {
 		return deposit, err
 	}
 
