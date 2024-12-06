@@ -16,7 +16,7 @@ func TestERC20DepositRestricted(r *runner.E2ERunner, args []string) {
 	amount := utils.ParseBigInt(r, args[0])
 
 	// deposit ERC20 to restricted address
-	txHash := r.DepositERC20WithAmountAndMessage(
+	txHash := r.LegacyDepositERC20WithAmountAndMessage(
 		ethcommon.HexToAddress(sample.RestrictedEVMAddressTest),
 		amount,
 		[]byte{},

@@ -31,7 +31,7 @@ func TestEtherWithdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.EVMReceipt(*receipt, "approve")
 
 	// withdraw
-	tx = r.WithdrawEther(withdrawalAmount)
+	tx = r.LegacyWithdrawEther(withdrawalAmount)
 
 	// verify the withdrawal value
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

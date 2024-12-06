@@ -34,7 +34,7 @@ func TestV2ZEVMToEVMCallThroughContract(r *runner.E2ERunner, args []string) {
 	utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 
 	// perform the authenticated call
-	tx = r.V2ZEVMToEMVCallThroughContract(
+	tx = r.ZEVMToEMVCallThroughContract(
 		gatewayCaller,
 		r.TestDAppV2EVMAddr,
 		[]byte(payload),

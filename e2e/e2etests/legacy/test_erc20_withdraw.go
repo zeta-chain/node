@@ -24,7 +24,7 @@ func TestERC20Withdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("eth zrc20 approve receipt: status %d", receipt.Status)
 
 	// withdraw
-	tx = r.WithdrawERC20(withdrawalAmount)
+	tx = r.LegacyWithdrawERC20(withdrawalAmount)
 
 	// verify the withdraw value
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

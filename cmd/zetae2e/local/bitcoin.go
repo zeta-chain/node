@@ -93,12 +93,12 @@ func initBitcoinRunner(
 		require.NoError(runner, err)
 
 		// send ERC20 token on EVM
-		txERC20Send := deployerRunner.SendERC20OnEvm(account.EVMAddress(), 1000)
-		runner.WaitForTxReceiptOnEvm(txERC20Send)
+		txERC20Send := deployerRunner.SendERC20OnEVM(account.EVMAddress(), 1000)
+		runner.WaitForTxReceiptOnEVM(txERC20Send)
 
 		// deposit ETH and ERC20 tokens on ZetaChain
-		txEtherDeposit := runner.DepositEther()
-		txERC20Deposit := runner.DepositERC20()
+		txEtherDeposit := runner.LegacyDepositEther()
+		txERC20Deposit := runner.LegacyDepositERC20()
 
 		runner.WaitForMinedCCTX(txEtherDeposit)
 		runner.WaitForMinedCCTX(txERC20Deposit)

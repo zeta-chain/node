@@ -30,25 +30,25 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 
 	// send v1 eth deposit
 	r.Logger.Print("🏃test v1 eth deposit")
-	txHash := r.DepositEtherWithAmount(amount)
+	txHash := r.LegacyDepositEtherWithAmount(amount)
 	addTrackerAndWaitForCCTX(coin.CoinType_Gas, txHash.Hex())
 	r.Logger.Print("🍾v1 eth deposit observed")
 
 	// send v1 erc20 deposit
 	r.Logger.Print("🏃test v1 erc20 deposit")
-	txHash = r.DepositERC20WithAmountAndMessage(r.EVMAddress(), amount, []byte{})
+	txHash = r.LegacyDepositERC20WithAmountAndMessage(r.EVMAddress(), amount, []byte{})
 	addTrackerAndWaitForCCTX(coin.CoinType_ERC20, txHash.Hex())
 	r.Logger.Print("🍾v1 erc20 deposit observed")
 
 	// send v2 eth deposit
 	r.Logger.Print("🏃test v2 eth deposit")
-	tx := r.V2ETHDeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+	tx := r.ETHDeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 	addTrackerAndWaitForCCTX(coin.CoinType_Gas, tx.Hash().Hex())
 	r.Logger.Print("🍾v2 eth deposit observed")
 
 	// send v2 eth deposit and call
 	r.Logger.Print("🏃test v2 eth eposit and call")
-	tx = r.V2ETHDepositAndCall(
+	tx = r.ETHDepositAndCall(
 		r.TestDAppV2ZEVMAddr,
 		amount,
 		[]byte(randomPayload(r)),
@@ -60,13 +60,13 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	// send v2 erc20 deposit
 	r.Logger.Print("🏃test v2 erc20 deposit")
 	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
-	tx = r.V2ERC20Deposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+	tx = r.ERC20Deposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 	addTrackerAndWaitForCCTX(coin.CoinType_Gas, tx.Hash().Hex())
 	r.Logger.Print("🍾v2 erc20 deposit observed")
 
 	// send v2 erc20 deposit and call
 	r.Logger.Print("🏃test v2 erc20 deposit and call")
-	tx = r.V2ERC20DepositAndCall(
+	tx = r.ERC20DepositAndCall(
 		r.TestDAppV2ZEVMAddr,
 		amount,
 		[]byte(randomPayload(r)),
@@ -77,7 +77,7 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 
 	// send v2 call
 	r.Logger.Print("🏃test v2 call")
-	tx = r.V2EVMToZEMVCall(
+	tx = r.EVMToZEMVCall(
 		r.TestDAppV2ZEVMAddr,
 		[]byte(randomPayload(r)),
 		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},

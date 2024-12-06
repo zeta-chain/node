@@ -220,9 +220,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// TODO: merge v1 and v2 together
 		// https://github.com/zeta-chain/node/issues/2627
 
-		deployerRunner.SetupEVM(contractsDeployed, true)
+		deployerRunner.LegacySetupEVM(contractsDeployed, true)
 
-		deployerRunner.SetupEVMV2()
+		deployerRunner.SetupEVM()
 
 		if testSolana {
 			deployerRunner.SetupSolana(
@@ -252,7 +252,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.UpdateChainParamsV2Contracts()
 		deployerRunner.ERC20CustodyAddr = deployerRunner.ERC20CustodyV2Addr
 
-		deployerRunner.MintERC20OnEvm(1e10)
+		deployerRunner.MintERC20OnEVM(1e10)
 
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}

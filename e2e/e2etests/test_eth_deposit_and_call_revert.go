@@ -26,7 +26,7 @@ func TestV2ETHDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	require.EqualValues(r, int64(0), balance.Int64())
 
 	// perform the deposit
-	tx := r.V2ETHDepositAndCall(r.TestDAppV2ZEVMAddr, amount, []byte("revert"), gatewayevm.RevertOptions{
+	tx := r.ETHDepositAndCall(r.TestDAppV2ZEVMAddr, amount, []byte("revert"), gatewayevm.RevertOptions{
 		RevertAddress:    revertAddress,
 		OnRevertGasLimit: big.NewInt(0),
 	})

@@ -77,7 +77,7 @@ func TestV2DepositAndCallSwap(r *runner.E2ERunner, _ []string) {
 
 	// perform the deposit and call
 	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
-	tx = r.V2ERC20DepositAndCall(
+	tx = r.ERC20DepositAndCall(
 		r.ZEVMSwapAppAddr,
 		big.NewInt(8e7),
 		memobytes,

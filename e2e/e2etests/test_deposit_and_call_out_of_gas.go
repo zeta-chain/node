@@ -23,7 +23,7 @@ func TestDepositAndCallOutOfGas(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	// perform the deposit and call to the GasConsumer contract
-	tx := r.V2ETHDepositAndCall(
+	tx := r.ETHDepositAndCall(
 		gasConsumerAddress,
 		amount,
 		[]byte(randomPayload(r)),

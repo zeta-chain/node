@@ -47,7 +47,7 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	}()
 
 	// Get ERC20ZRC20.
-	txHash := r.DepositERC20WithAmountAndMessage(r.EVMAddress(), totalAmount, []byte{})
+	txHash := r.LegacyDepositERC20WithAmountAndMessage(r.EVMAddress(), totalAmount, []byte{})
 	utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 
 	// Create a bank contract caller.
@@ -167,7 +167,7 @@ func TestPrecompilesBankNonZRC20(r *runner.E2ERunner, args []string) {
 
 	// Deposit and approve 50 WZETA for the test.
 	approveAmount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(50))
-	r.DepositAndApproveWZeta(approveAmount)
+	r.LegacyDepositAndApproveWZeta(approveAmount)
 
 	// Non ZRC20 balanceOf check should fail.
 	_, err = bankContract.BalanceOf(&bind.CallOpts{Context: r.Ctx}, r.WZetaAddr, spender)

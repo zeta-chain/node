@@ -70,7 +70,7 @@ func TestPrecompilesDistributeAndClaim(r *runner.E2ERunner, args []string) {
 	defer resetDistributionTest(r, distrContract, lockerAddress, previousGasLimit, staker, validatorValAddr)
 
 	// Get ERC20ZRC20.
-	txHash := r.DepositERC20WithAmountAndMessage(staker, zrc20DistrAmt, []byte{})
+	txHash := r.LegacyDepositERC20WithAmountAndMessage(staker, zrc20DistrAmt, []byte{})
 	utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 
 	// There is no delegation, so the response should be empty.
@@ -220,7 +220,7 @@ func TestPrecompilesDistributeNonZRC20(r *runner.E2ERunner, args []string) {
 
 	// Deposit and approve 50 WZETA for the test.
 	approveAmount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(50))
-	r.DepositAndApproveWZeta(approveAmount)
+	r.LegacyDepositAndApproveWZeta(approveAmount)
 
 	// Allow the staking contract to spend 25 WZeta tokens.
 	tx, err := r.WZeta.Approve(r.ZEVMAuth, dstrAddress, big.NewInt(25))

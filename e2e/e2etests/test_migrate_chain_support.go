@@ -39,7 +39,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// deposit most of the ZETA supply on ZetaChain
 	zetaAmount := big.NewInt(1e18)
 	zetaAmount = zetaAmount.Mul(zetaAmount, big.NewInt(20_000_000_000)) // 20B Zeta
-	r.DepositZetaWithAmount(r.EVMAddress(), zetaAmount)
+	r.LegacyDepositZetaWithAmount(r.EVMAddress(), zetaAmount)
 
 	// do an ethers withdraw on the previous chain (0.01eth) for some interaction
 	legacy.TestEtherWithdraw(r, []string{"10000000000000000"})
@@ -48,14 +48,14 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	newRunner, err := configureEVM2(r)
 	require.NoError(r, err)
 
-	newRunner.SetupEVM(false, false)
+	newRunner.LegacySetupEVM(false, false)
 
 	// mint some ERC20
-	newRunner.MintERC20OnEvm(10000)
+	newRunner.MintERC20OnEVM(10000)
 
 	// we deploy connectorETH in this test to simulate a new "canonical" chain emitting ZETA
 	// to represent the ZETA already existing on ZetaChain we manually send the minted ZETA to the connector
-	newRunner.SendZetaOnEvm(newRunner.ConnectorEthAddr, 20_000_000_000)
+	newRunner.LegacySendZetaOnEvm(newRunner.ConnectorEthAddr, 20_000_000_000)
 
 	// update the chain params to set up the chain
 	chainParams := getNewEVMChainParams(newRunner)
@@ -137,13 +137,13 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// deposit Ethers and ERC20 on ZetaChain
 	etherAmount := big.NewInt(1e18)
 	etherAmount = etherAmount.Mul(etherAmount, big.NewInt(10))
-	txEtherDeposit := newRunner.DepositEtherWithAmount(etherAmount)
+	txEtherDeposit := newRunner.LegacyDepositEtherWithAmount(etherAmount)
 	newRunner.WaitForMinedCCTX(txEtherDeposit)
 
 	// perform withdrawals on the new chain
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(10))
-	newRunner.DepositAndApproveWZeta(amount)
-	tx := newRunner.WithdrawZeta(amount, true)
+	newRunner.LegacyDepositAndApproveWZeta(amount)
+	tx := newRunner.LegacyWithdrawZeta(amount, true)
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "zeta withdraw")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
@@ -185,7 +185,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	newRunner.ERC20ZRC20 = erc20ZRC20
 
 	// deposit ERC20 on ZetaChain
-	txERC20Deposit := newRunner.DepositERC20()
+	txERC20Deposit := newRunner.LegacyDepositERC20()
 	newRunner.WaitForMinedCCTX(txERC20Deposit)
 
 	// stop mining

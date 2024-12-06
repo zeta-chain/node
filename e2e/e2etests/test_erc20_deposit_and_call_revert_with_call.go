@@ -24,7 +24,7 @@ func TestV2ERC20DepositAndCallRevertWithCall(r *runner.E2ERunner, args []string)
 	r.AssertTestDAppEVMCalled(false, payload, amount)
 
 	// perform the deposit
-	tx := r.V2ERC20DepositAndCall(r.TestDAppV2ZEVMAddr, amount, []byte("revert"), gatewayevm.RevertOptions{
+	tx := r.ERC20DepositAndCall(r.TestDAppV2ZEVMAddr, amount, []byte("revert"), gatewayevm.RevertOptions{
 		RevertAddress:    r.TestDAppV2EVMAddr,
 		CallOnRevert:     true,
 		RevertMessage:    []byte(payload),

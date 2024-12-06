@@ -95,11 +95,11 @@ func createAndWaitWithdraws(r *runner.E2ERunner, withdrawType withdrawType, with
 		// create a new withdraw depending on the type
 		switch withdrawType {
 		case withdrawTypeZETA:
-			txs[i] = r.WithdrawZeta(withdrawAmount, true)
+			txs[i] = r.LegacyWithdrawZeta(withdrawAmount, true)
 		case withdrawTypeETH:
-			txs[i] = r.WithdrawEther(withdrawAmount)
+			txs[i] = r.LegacyWithdrawEther(withdrawAmount)
 		case withdrawTypeERC20:
-			txs[i] = r.WithdrawERC20(withdrawAmount)
+			txs[i] = r.LegacyWithdrawERC20(withdrawAmount)
 		default:
 			return fmt.Errorf("invalid withdraw type: %s", withdrawType)
 		}
@@ -242,7 +242,7 @@ func addZetaGasLiquidity(r *runner.E2ERunner) error {
 func approveTokens(r *runner.E2ERunner) error {
 	// deposit and approve 50 WZETA for the tests
 	approveAmount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(50))
-	r.DepositAndApproveWZeta(approveAmount)
+	r.LegacyDepositAndApproveWZeta(approveAmount)
 
 	// approve ETH for withdraws
 	tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, r.ETHZRC20Addr, approveAmount)

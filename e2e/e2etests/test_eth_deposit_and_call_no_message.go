@@ -21,7 +21,7 @@ func TestV2ETHDepositAndCallNoMessage(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	// perform the deposit and call to the TestDAppV2ZEVMAddr
-	tx := r.V2ETHDepositAndCall(
+	tx := r.ETHDepositAndCall(
 		r.TestDAppV2ZEVMAddr,
 		amount,
 		[]byte{},

@@ -40,7 +40,7 @@ func TestV2ETHWithdrawAndCallThroughContract(r *runner.E2ERunner, args []string)
 	payload := randomPayload(r)
 
 	// perform the authenticated call
-	tx = r.V2ETHWithdrawAndCallThroughContract(gatewayCaller, r.TestDAppV2EVMAddr,
+	tx = r.ETHWithdrawAndCallThroughContract(gatewayCaller, r.TestDAppV2EVMAddr,
 		amount,
 		[]byte(payload),
 		gatewayzevmcaller.RevertOptions{OnRevertGasLimit: big.NewInt(0)})

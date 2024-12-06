@@ -13,7 +13,7 @@ func TestERC20Deposit(r *runner.E2ERunner, args []string) {
 	// parse the deposit amount
 	amount := utils.ParseBigInt(r, args[0])
 
-	hash := r.DepositERC20WithAmountAndMessage(r.EVMAddress(), amount, []byte{})
+	hash := r.LegacyDepositERC20WithAmountAndMessage(r.EVMAddress(), amount, []byte{})
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

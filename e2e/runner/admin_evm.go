@@ -7,7 +7,7 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 )
 
-func (r *E2ERunner) UpdateTssAddressForConnector() {
+func (r *E2ERunner) UpdateTSSAddressForConnector() {
 	require.NoError(r, r.SetTSSAddresses())
 
 	tx, err := r.ConnectorEth.UpdateTssAddress(r.EVMAuth, r.TSSAddress)
@@ -21,7 +21,7 @@ func (r *E2ERunner) UpdateTssAddressForConnector() {
 	require.Equal(r, r.TSSAddress, tssAddressOnConnector)
 }
 
-func (r *E2ERunner) UpdateTssAddressForErc20custody() {
+func (r *E2ERunner) UpdateTSSAddressForERC20custody() {
 	require.NoError(r, r.SetTSSAddresses())
 
 	tx, err := r.ERC20CustodyV2.UpdateTSSAddress(r.EVMAuth, r.TSSAddress)

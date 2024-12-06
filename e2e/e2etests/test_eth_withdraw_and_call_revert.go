@@ -27,7 +27,7 @@ func TestV2ETHWithdrawAndCallRevert(r *runner.E2ERunner, args []string) {
 	require.EqualValues(r, int64(0), balance.Int64())
 
 	// perform the withdraw
-	tx := r.V2ETHWithdrawAndArbitraryCall(
+	tx := r.ETHWithdrawAndArbitraryCall(
 		r.TestDAppV2EVMAddr,
 		amount,
 		r.EncodeGasCall("revert"),

@@ -37,12 +37,12 @@ func legacyERC20TestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		txERC20Send := deployerRunner.SendERC20OnEvm(account.EVMAddress(), 10000)
-		erc20Runner.WaitForTxReceiptOnEvm(txERC20Send)
+		txERC20Send := deployerRunner.SendERC20OnEVM(account.EVMAddress(), 10000)
+		erc20Runner.WaitForTxReceiptOnEVM(txERC20Send)
 
 		// depositing the necessary tokens on ZetaChain
-		txEtherDeposit := erc20Runner.DepositEther()
-		txERC20Deposit := erc20Runner.DepositERC20()
+		txEtherDeposit := erc20Runner.LegacyDepositEther()
+		txERC20Deposit := erc20Runner.LegacyDepositERC20()
 		erc20Runner.WaitForMinedCCTX(txEtherDeposit)
 		erc20Runner.WaitForMinedCCTX(txERC20Deposit)
 
@@ -89,7 +89,7 @@ func legacyEthereumTestRoutine(
 		startTime := time.Now()
 
 		// depositing the necessary tokens on ZetaChain
-		txEtherDeposit := ethereumRunner.DepositEther()
+		txEtherDeposit := ethereumRunner.LegacyDepositEther()
 		ethereumRunner.WaitForMinedCCTX(txEtherDeposit)
 
 		// run ethereum test
@@ -138,12 +138,12 @@ func legacyZEVMMPTestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		txZetaSend := deployerRunner.SendZetaOnEvm(account.EVMAddress(), 1000)
-		zevmMPRunner.WaitForTxReceiptOnEvm(txZetaSend)
+		txZetaSend := deployerRunner.LegacySendZetaOnEvm(account.EVMAddress(), 1000)
+		zevmMPRunner.WaitForTxReceiptOnEVM(txZetaSend)
 
 		// depositing the necessary tokens on ZetaChain
-		txZetaDeposit := zevmMPRunner.DepositZeta()
-		txEtherDeposit := zevmMPRunner.DepositEther()
+		txZetaDeposit := zevmMPRunner.LegacyDepositZeta()
+		txEtherDeposit := zevmMPRunner.LegacyDepositEther()
 		zevmMPRunner.WaitForMinedCCTX(txZetaDeposit)
 		zevmMPRunner.WaitForMinedCCTX(txEtherDeposit)
 
@@ -191,12 +191,12 @@ func legacyZETATestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		txZetaSend := deployerRunner.SendZetaOnEvm(account.EVMAddress(), 1000)
-		zetaRunner.WaitForTxReceiptOnEvm(txZetaSend)
+		txZetaSend := deployerRunner.LegacySendZetaOnEvm(account.EVMAddress(), 1000)
+		zetaRunner.WaitForTxReceiptOnEVM(txZetaSend)
 
 		// depositing the necessary tokens on ZetaChain
-		txZetaDeposit := zetaRunner.DepositZeta()
-		txEtherDeposit := zetaRunner.DepositEther()
+		txZetaDeposit := zetaRunner.LegacyDepositZeta()
+		txEtherDeposit := zetaRunner.LegacyDepositEther()
 		zetaRunner.WaitForMinedCCTX(txZetaDeposit)
 		zetaRunner.WaitForMinedCCTX(txEtherDeposit)
 

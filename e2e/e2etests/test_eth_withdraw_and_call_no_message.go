@@ -26,7 +26,7 @@ func TestV2ETHWithdrawAndCallNoMessage(r *runner.E2ERunner, args []string) {
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw
-	tx := r.V2ETHWithdrawAndCall(
+	tx := r.ETHWithdrawAndCall(
 		r.TestDAppV2EVMAddr,
 		amount,
 		[]byte{},

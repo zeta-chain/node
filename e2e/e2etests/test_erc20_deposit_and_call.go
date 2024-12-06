@@ -27,7 +27,7 @@ func TestV2ERC20DepositAndCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	// perform the deposit
-	tx := r.V2ERC20DepositAndCall(
+	tx := r.ERC20DepositAndCall(
 		r.TestDAppV2ZEVMAddr,
 		amount,
 		[]byte(payload),

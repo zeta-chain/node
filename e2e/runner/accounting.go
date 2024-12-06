@@ -36,7 +36,7 @@ type Response struct {
 func (r *E2ERunner) CheckZRC20BalanceAndSupply() {
 	r.Logger.Info("Checking ZRC20 Balance vs. Supply")
 
-	err := r.checkEthTSSBalance()
+	err := r.checkETHTSSBalance()
 	require.NoError(r, err, "ETH balance check failed")
 
 	err = r.checkERC20TSSBalance()
@@ -45,11 +45,11 @@ func (r *E2ERunner) CheckZRC20BalanceAndSupply() {
 	err = r.checkZetaTSSBalance()
 	require.NoError(r, err, "ZETA balance check failed")
 
-	err = r.CheckBtcTSSBalance()
+	err = r.CheckBTCTSSBalance()
 	require.NoError(r, err, "BTC balance check failed")
 }
 
-func (r *E2ERunner) checkEthTSSBalance() error {
+func (r *E2ERunner) checkETHTSSBalance() error {
 	allTssAddress, err := r.ObserverClient.TssHistory(r.Ctx, &observertypes.QueryTssHistoryRequest{})
 	if err != nil {
 		return err
@@ -86,7 +86,7 @@ func (r *E2ERunner) checkEthTSSBalance() error {
 	return nil
 }
 
-func (r *E2ERunner) CheckBtcTSSBalance() error {
+func (r *E2ERunner) CheckBTCTSSBalance() error {
 	allTssAddress, err := r.ObserverClient.TssHistory(r.Ctx, &observertypes.QueryTssHistoryRequest{})
 	if err != nil {
 		return err

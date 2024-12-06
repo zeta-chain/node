@@ -86,7 +86,7 @@ func ethereumWithdrawPerformanceRoutine(
 		startTime := time.Now()
 
 		// depositing the necessary tokens on ZetaChain
-		txEtherDeposit := r.DepositEther()
+		txEtherDeposit := r.LegacyDepositEther()
 		r.WaitForMinedCCTX(txEtherDeposit)
 
 		tests, err := r.GetE2ETestsToRunByName(

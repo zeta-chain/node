@@ -73,7 +73,7 @@ func TestPrecompilesDistributeAndClaimThroughContract(r *runner.E2ERunner, args 
 	defer resetDistributionTest(r, distrContract, lockerAddress, previousGasLimit, staker, validatorValAddr)
 
 	// Get ERC20ZRC20.
-	txHash := r.DepositERC20WithAmountAndMessage(staker, zrc20DistrAmt, []byte{})
+	txHash := r.LegacyDepositERC20WithAmountAndMessage(staker, zrc20DistrAmt, []byte{})
 	utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 
 	// There is no delegation, so the response should be empty.

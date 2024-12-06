@@ -27,7 +27,7 @@ func TestV2ERC20WithdrawAndCallNoMessage(r *runner.E2ERunner, args []string) {
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw
-	tx := r.V2ERC20WithdrawAndCall(
+	tx := r.ERC20WithdrawAndCall(
 		r.TestDAppV2EVMAddr,
 		amount,
 		[]byte{},

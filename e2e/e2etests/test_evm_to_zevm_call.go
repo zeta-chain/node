@@ -19,7 +19,7 @@ func TestV2EVMToZEVMCall(r *runner.E2ERunner, args []string) {
 	r.AssertTestDAppZEVMCalled(false, payload, big.NewInt(0))
 
 	// perform the withdraw
-	tx := r.V2EVMToZEMVCall(
+	tx := r.EVMToZEMVCall(
 		r.TestDAppV2ZEVMAddr,
 		[]byte(payload),
 		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},

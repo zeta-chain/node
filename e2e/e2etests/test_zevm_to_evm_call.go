@@ -23,7 +23,7 @@ func TestV2ZEVMToEVMCall(r *runner.E2ERunner, args []string) {
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// perform the authenticated call
-	tx := r.V2ZEVMToEMVCall(
+	tx := r.ZEVMToEMVCall(
 		r.TestDAppV2EVMAddr,
 		[]byte(payload),
 		gatewayzevm.RevertOptions{

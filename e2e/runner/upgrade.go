@@ -56,7 +56,7 @@ func (r *E2ERunner) UpgradeGatewayEVM() {
 	ensureTxReceipt(txUpgrade, "GatewayEVM upgrade failed")
 }
 
-// UpgradeERC20CustodyZEVM upgrades the ERC20Custody contract
+// UpgradeERC20Custody upgrades the ERC20Custody contract
 func (r *E2ERunner) UpgradeERC20Custody() {
 	ensureTxReceipt := func(tx *ethtypes.Transaction, failMessage string) {
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)

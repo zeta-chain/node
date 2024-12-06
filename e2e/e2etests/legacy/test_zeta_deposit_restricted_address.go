@@ -16,7 +16,7 @@ func TestZetaDepositRestricted(r *runner.E2ERunner, args []string) {
 	amount := utils.ParseBigInt(r, args[0])
 
 	// Deposit amount to restricted address
-	txHash := r.DepositZetaWithAmount(ethcommon.HexToAddress(sample.RestrictedEVMAddressTest), amount)
+	txHash := r.LegacyDepositZetaWithAmount(ethcommon.HexToAddress(sample.RestrictedEVMAddressTest), amount)
 
 	// wait for 5 zeta blocks
 	r.WaitForBlocks(5)

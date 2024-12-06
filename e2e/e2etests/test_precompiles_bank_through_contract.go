@@ -29,7 +29,7 @@ func TestPrecompilesBankThroughContract(r *runner.E2ERunner, args []string) {
 	)
 
 	// Get ERC20ZRC20.
-	txHash := r.DepositERC20WithAmountAndMessage(r.EVMAddress(), oneThousand, []byte{})
+	txHash := r.LegacyDepositERC20WithAmountAndMessage(r.EVMAddress(), oneThousand, []byte{})
 	utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 
 	bankPrecompileCaller, err := bank.NewIBank(bank.ContractAddress, r.ZEVMClient)

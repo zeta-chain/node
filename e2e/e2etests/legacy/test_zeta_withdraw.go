@@ -14,8 +14,8 @@ func TestZetaWithdraw(r *runner.E2ERunner, args []string) {
 	// parse withdraw amount
 	amount := utils.ParseBigInt(r, args[0])
 
-	r.DepositAndApproveWZeta(amount)
-	tx := r.WithdrawZeta(amount, true)
+	r.LegacyDepositAndApproveWZeta(amount)
+	tx := r.LegacyWithdrawZeta(amount, true)
 
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "zeta withdraw")

@@ -15,7 +15,7 @@ func TestDonationEther(r *runner.E2ERunner, args []string) {
 	// parse the donation amount
 	amount := utils.ParseBigInt(r, args[0])
 
-	txDonation, err := r.SendEther(r.TSSAddress, amount, []byte(constant.DonationMessage))
+	txDonation, err := r.LegacySendEther(r.TSSAddress, amount, []byte(constant.DonationMessage))
 	require.NoError(r, err)
 
 	r.Logger.EVMTransaction(*txDonation, "donation")
