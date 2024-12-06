@@ -284,9 +284,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipRegular {
 		// defines all tests, if light is enabled, only the most basic tests are run and advanced are skipped
 		erc20Tests := []string{
-			e2etests.TestERC20WithdrawName,
-			e2etests.TestMultipleERC20WithdrawsName,
-			e2etests.TestERC20DepositAndCallRefundName,
+			e2etests.TestLegacyERC20WithdrawName,
+			e2etests.TestLegacyMultipleERC20WithdrawsName,
+			e2etests.TestLegacyERC20DepositAndCallRefundName,
 			e2etests.TestZRC20SwapName,
 		}
 		erc20AdvancedTests := []string{
@@ -294,9 +294,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 		zetaTests := []string{
 			e2etests.TestZetaWithdrawName,
-			e2etests.TestMessagePassingExternalChainsName,
-			e2etests.TestMessagePassingRevertFailExternalChainsName,
-			e2etests.TestMessagePassingRevertSuccessExternalChainsName,
+			e2etests.TestLegacyMessagePassingExternalChainsName,
+			e2etests.TestLegacyMessagePassingRevertFailExternalChainsName,
+			e2etests.TestLegacyMessagePassingRevertSuccessExternalChainsName,
 		}
 		zetaAdvancedTests := []string{
 			e2etests.TestZetaDepositRestrictedName,
@@ -305,12 +305,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 		zevmMPTests := []string{}
 		zevmMPAdvancedTests := []string{
-			e2etests.TestMessagePassingZEVMToEVMName,
-			e2etests.TestMessagePassingEVMtoZEVMName,
-			e2etests.TestMessagePassingEVMtoZEVMRevertName,
-			e2etests.TestMessagePassingZEVMtoEVMRevertName,
-			e2etests.TestMessagePassingZEVMtoEVMRevertFailName,
-			e2etests.TestMessagePassingEVMtoZEVMRevertFailName,
+			e2etests.TestLegacyMessagePassingZEVMToEVMName,
+			e2etests.TestLegacyMessagePassingEVMtoZEVMName,
+			e2etests.TestLegacyMessagePassingEVMtoZEVMRevertName,
+			e2etests.TestLegacyMessagePassingZEVMtoEVMRevertName,
+			e2etests.TestLegacyMessagePassingZEVMtoEVMRevertFailName,
+			e2etests.TestLegacyMessagePassingEVMtoZEVMRevertFailName,
 		}
 
 		// btc withdraw tests are those that need a Bitcoin node wallet to send UTXOs
@@ -343,9 +343,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinWithdrawRestrictedName,
 		}
 		ethereumTests := []string{
-			e2etests.TestEtherWithdrawName,
-			e2etests.TestEtherDepositAndCallName,
-			e2etests.TestEtherDepositAndCallRefundName,
+			e2etests.TestLegacyEtherWithdrawName,
+			e2etests.TestLegacyEtherDepositAndCallName,
+			e2etests.TestLegacyEtherDepositAndCallRefundName,
 		}
 		ethereumAdvancedTests := []string{
 			e2etests.TestEtherWithdrawRestrictedName,
@@ -378,9 +378,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 
 		eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose, precompiledContractTests...))
-		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
+		eg.Go(legacyERC20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
 		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
-		eg.Go(zevmMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
+		eg.Go(legacyZEVMMPTestRoutine(conf, deployerRunner, verbose, zevmMPTests...))
 		runnerDeposit, runnerWithdraw := initBitcoinTestRunners(
 			conf,
 			deployerRunner,
@@ -391,7 +391,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		)
 		eg.Go(runnerDeposit)
 		eg.Go(runnerWithdraw)
-		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, ethereumTests...))
+		eg.Go(legacyEthereumTestRoutine(conf, deployerRunner, verbose, ethereumTests...))
 	}
 
 	if testAdmin {
@@ -468,7 +468,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	if testV2 {
-		startV2Tests(&eg, conf, deployerRunner, verbose)
+		startEVMTests(&eg, conf, deployerRunner, verbose)
 	}
 
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
