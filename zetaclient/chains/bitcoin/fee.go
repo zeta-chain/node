@@ -32,7 +32,6 @@ const (
 	bytesPerWitness      = 108          // each additional witness incurs about 108 bytes and it may vary
 	OutboundBytesMin     = uint64(239)  // 239vB == EstimateSegWitTxSize(2, 2, toP2WPKH)
 	OutboundBytesMax     = uint64(1543) // 1543v == EstimateSegWitTxSize(21, 2, toP2TR)
-	OutboundBytesAvg     = uint64(245)  // 245vB is a suggested gas limit for zetacore
 
 	// defaultDepositorFeeRate is the default fee rate for depositor fee, 20 sat/vB
 	defaultDepositorFeeRate = 20
@@ -49,6 +48,7 @@ var (
 	BtcOutboundBytesDepositor = OutboundSizeDepositor()
 
 	// BtcOutboundBytesWithdrawer is the outbound size incurred by the withdrawer: 177vB
+	// This will be the suggested gas limit used for zetacore
 	BtcOutboundBytesWithdrawer = OutboundSizeWithdrawer()
 
 	// DefaultDepositorFee is the default depositor fee is 0.00001360 BTC (20 * 68vB / 100000000)

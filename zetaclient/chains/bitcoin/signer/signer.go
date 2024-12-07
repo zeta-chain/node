@@ -42,6 +42,12 @@ const (
 	// the rank below (or equal to) which we consolidate UTXOs
 	consolidationRank = 10
 
+	// rbfTxInSequenceNum is the sequence number used to signal an opt-in full-RBF (Replace-By-Fee) transaction
+	// Setting sequenceNum to "1" effectively makes the transaction timelocks irrelevant.
+	// See bip125: https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki
+	// Also see: https://github.com/BlockchainCommons/Learning-Bitcoin-from-the-Command-Line/blob/master/05_2_Resending_a_Transaction_with_RBF.md
+	rbfTxInSequenceNum uint32 = 1
+
 	// broadcastBackoff is the initial backoff duration for retrying broadcast
 	broadcastBackoff = 1000 * time.Millisecond
 
@@ -234,8 +240,11 @@ func (signer *Signer) SignWithdrawTx(
 		if err != nil {
 			return nil, err
 		}
+
+		// add input and set 'nSequence' to opt-in for RBF
 		outpoint := wire.NewOutPoint(hash, prevOut.Vout)
 		txIn := wire.NewTxIn(outpoint, nil, nil)
+		txIn.Sequence = rbfTxInSequenceNum
 		tx.AddTxIn(txIn)
 	}
 

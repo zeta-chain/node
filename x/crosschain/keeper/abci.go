@@ -52,8 +52,8 @@ func (k Keeper) IterateAndUpdateCctxGasPrice(
 
 IterateChains:
 	for _, chain := range chains {
-		// support only external evm chains
-		if zetachains.IsEVMChain(chain.ChainId, additionalChains) && !zetachains.IsZetaChain(chain.ChainId, additionalChains) {
+		// support only external evm chains and bitcoin chain
+		if IsGasStabilityPoolEnabledChain(chain.ChainId, additionalChains) {
 			res, err := k.ListPendingCctx(sdk.UnwrapSDKContext(ctx), &types.QueryListPendingCctxRequest{
 				ChainId: chain.ChainId,
 				Limit:   gasPriceIncreaseFlags.MaxPendingCctxs,
@@ -174,4 +174,16 @@ func CheckAndUpdateCctxGasPrice(
 	k.SetCrossChainTx(ctx, cctx)
 
 	return gasPriceIncrease, additionalFees, nil
+}
+
+// IsGasStabilityPoolEnabledChain returns true if given chainID is enabled for gas stability pool
+func IsGasStabilityPoolEnabledChain(chainID int64, additionalChains []zetachains.Chain) bool {
+	switch {
+	case zetachains.IsEVMChain(chainID, additionalChains):
+		return !zetachains.IsZetaChain(chainID, additionalChains)
+	case zetachains.IsBitcoinChain(chainID, additionalChains):
+		return true
+	default:
+		return false
+	}
 }

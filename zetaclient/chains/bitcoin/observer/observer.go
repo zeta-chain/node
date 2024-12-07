@@ -285,7 +285,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 		return errors.Wrap(err, "GetBlockCount error")
 	}
 
-	// UTXO has no concept of priority fee (like eth)
+	// Bitcoin has no concept of priority fee (like eth)
 	const priorityFee = 0
 
 	// #nosec G115 always positive

@@ -420,7 +420,7 @@ func TestOutboundSizeBreakdown(t *testing.T) {
 		txSizeTotal += sizeOutput
 	}
 
-	// calculate the average outbound size
+	// calculate the average outbound size (245 vByte)
 	// #nosec G115 always in range
 	txSizeAverage := uint64((float64(txSizeTotal))/float64(len(payees)) + 0.5)
 
@@ -433,7 +433,6 @@ func TestOutboundSizeBreakdown(t *testing.T) {
 	require.Equal(t, uint64(177), txSizeWithdrawer)
 
 	// total outbound size == (deposit fee + withdrawer fee), 245 = 68 + 177
-	require.Equal(t, OutboundBytesAvg, txSizeAverage)
 	require.Equal(t, txSizeAverage, txSizeDepositor+txSizeWithdrawer)
 
 	// check default depositor fee

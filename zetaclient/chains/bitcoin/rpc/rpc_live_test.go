@@ -33,9 +33,10 @@ func createRPCClient(chainID int64) (*rpcclient.Client, error) {
 	var connCfg *rpcclient.ConnConfig
 	rpcMainnet := os.Getenv(common.EnvBtcRPCMainnet)
 	rpcTestnet := os.Getenv(common.EnvBtcRPCTestnet)
+	rpcTestnet4 := "localhost:48332" // os.Getenv(common.EnvBtcRPCTestnet4)
 
-	// mainnet
-	if chainID == chains.BitcoinMainnet.ChainId {
+	switch chainID {
+	case chains.BitcoinMainnet.ChainId:
 		connCfg = &rpcclient.ConnConfig{
 			Host:         rpcMainnet, // mainnet endpoint goes here
 			User:         "user",
@@ -44,9 +45,7 @@ func createRPCClient(chainID int64) (*rpcclient.Client, error) {
 			HTTPPostMode: true,
 			DisableTLS:   true,
 		}
-	}
-	// testnet3
-	if chainID == chains.BitcoinTestnet.ChainId {
+	case chains.BitcoinTestnet.ChainId:
 		connCfg = &rpcclient.ConnConfig{
 			Host:         rpcTestnet, // testnet endpoint goes here
 			User:         "user",
@@ -55,7 +54,19 @@ func createRPCClient(chainID int64) (*rpcclient.Client, error) {
 			HTTPPostMode: true,
 			DisableTLS:   true,
 		}
+	case chains.BitcoinTestnet4.ChainId:
+		connCfg = &rpcclient.ConnConfig{
+			Host:         rpcTestnet4, // testnet endpoint goes here
+			User:         "admin",
+			Pass:         "admin",
+			Params:       "testnet3", // testnet4 uses testnet3 network name
+			HTTPPostMode: true,
+			DisableTLS:   true,
+		}
+	default:
+		return nil, errors.New("unsupported chain")
 	}
+
 	return rpcclient.New(connCfg, nil)
 }
 
@@ -101,19 +112,32 @@ func getMempoolSpaceTxsByBlock(
 	return blkHash, mempoolTxs, nil
 }
 
-// Test_BitcoinLive is a phony test to run each live test individually
+// Test_BitcoinLive is a test to run all Bitcoin live tests
 func Test_BitcoinLive(t *testing.T) {
-	// LiveTest_FilterAndParseIncomingTx(t)
-	// LiveTest_FilterAndParseIncomingTx_Nop(t)
-	// LiveTest_NewRPCClient(t)
-	// LiveTest_GetBlockHeightByHash(t)
-	// LiveTest_BitcoinFeeRate(t)
-	// LiveTest_AvgFeeRateMainnetMempoolSpace(t)
-	// LiveTest_AvgFeeRateTestnetMempoolSpace(t)
-	// LiveTest_GetRecentFeeRate(t)
-	// LiveTest_GetSenderByVin(t)
-	// LiveTest_GetTransactionFeeAndRate(t)
-	// LiveTest_CalcDepositorFeeV2(t)
+	if !common.LiveTestEnabled() {
+		return
+	}
+
+	LiveTest_PendingMempoolTx(t)
+	LiveTest_NewRPCClient(t)
+	LiveTest_CheckRPCStatus(t)
+	LiveTest_FilterAndParseIncomingTx(t)
+	LiveTest_GetBlockHeightByHash(t)
+	LiveTest_GetSenderByVin(t)
+}
+
+// Test_BitcoinFeeLive is a test to run all Bitcoin fee related live tests
+func Test_BitcoinFeeLive(t *testing.T) {
+	if !common.LiveTestEnabled() {
+		return
+	}
+
+	LiveTest_BitcoinFeeRate(t)
+	LiveTest_AvgFeeRateMainnetMempoolSpace(t)
+	LiveTest_AvgFeeRateTestnetMempoolSpace(t)
+	LiveTest_GetRecentFeeRate(t)
+	LiveTest_GetTransactionFeeAndRate(t)
+	LiveTest_CalcDepositorFee(t)
 }
 
 func LiveTest_FilterAndParseIncomingTx(t *testing.T) {
@@ -140,7 +164,7 @@ func LiveTest_FilterAndParseIncomingTx(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.Len(t, inbounds, 1)
-	require.Equal(t, inbounds[0].Value, 0.0001)
+	require.Equal(t, inbounds[0].Value+inbounds[0].DepositorFee, 0.0001)
 	require.Equal(t, inbounds[0].ToAddress, "tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2")
 
 	// the text memo is base64 std encoded string:DSRR1RmDCwWmxqY201/TMtsJdmA=
@@ -151,49 +175,6 @@ func LiveTest_FilterAndParseIncomingTx(t *testing.T) {
 	require.Equal(t, inbounds[0].FromAddress, "tb1qyslx2s8evalx67n88wf42yv7236303ezj3tm2l")
 	require.Equal(t, inbounds[0].BlockNumber, uint64(2406185))
 	require.Equal(t, inbounds[0].TxHash, "889bfa69eaff80a826286d42ec3f725fd97c3338357ddc3a1f543c2d6266f797")
-}
-
-func LiveTest_FilterAndParseIncomingTx_Nop(t *testing.T) {
-	// setup Bitcoin client
-	client, err := createRPCClient(chains.BitcoinTestnet.ChainId)
-	require.NoError(t, err)
-
-	// get a block that contains no incoming tx
-	hashStr := "000000000000002fd8136dbf91708898da9d6ae61d7c354065a052568e2f2888"
-	hash, err := chainhash.NewHashFromStr(hashStr)
-	require.NoError(t, err)
-
-	block, err := client.GetBlockVerboseTx(hash)
-	require.NoError(t, err)
-
-	// filter incoming tx
-	inbounds, err := observer.FilterAndParseIncomingTx(
-		client,
-		block.Tx,
-		uint64(block.Height),
-		"tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2",
-		log.Logger,
-		&chaincfg.TestNet3Params,
-	)
-
-	require.NoError(t, err)
-	require.Empty(t, inbounds)
-}
-
-// TestBitcoinObserverLive is a phony test to run each live test individually
-func TestBitcoinObserverLive(t *testing.T) {
-	if !common.LiveTestEnabled() {
-		return
-	}
-
-	LiveTest_NewRPCClient(t)
-	LiveTest_CheckRPCStatus(t)
-	LiveTest_GetBlockHeightByHash(t)
-	LiveTest_BitcoinFeeRate(t)
-	LiveTest_AvgFeeRateMainnetMempoolSpace(t)
-	LiveTest_AvgFeeRateTestnetMempoolSpace(t)
-	LiveTest_GetRecentFeeRate(t)
-	LiveTest_GetSenderByVin(t)
 }
 
 // LiveTestNewRPCClient creates a new Bitcoin RPC client
@@ -500,7 +481,7 @@ func LiveTest_GetTransactionFeeAndRate(t *testing.T) {
 	// calculates block range to test
 	startBlock, err := client.GetBlockCount()
 	require.NoError(t, err)
-	endBlock := startBlock - 100 // go back whatever blocks as needed
+	endBlock := startBlock - 1 // go back whatever blocks as needed
 
 	// loop through mempool.space blocks backwards
 	for bn := startBlock; bn >= endBlock; {

@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	zetachains "github.com/zeta-chain/node/pkg/chains"
 	testkeeper "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
@@ -446,6 +447,51 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				)
 				require.EqualValues(t, tc.blockTimestamp.Unix(), cctx.CctxStatus.LastUpdateTimestamp)
 			}
+		})
+	}
+}
+
+func TestIsGasStabilityPoolEnabledChain(t *testing.T) {
+	tests := []struct {
+		name     string
+		chainID  int64
+		expected bool
+	}{
+		{
+			name:     "Ethereum is enabled",
+			chainID:  chains.Ethereum.ChainId,
+			expected: true,
+		},
+		{
+			name:     "Binance Smart Chain is enabled",
+			chainID:  chains.BscMainnet.ChainId,
+			expected: true,
+		},
+		{
+			name:     "Bitcoin is enabled",
+			chainID:  chains.BitcoinMainnet.ChainId,
+			expected: true,
+		},
+		{
+			name:     "ZetaChain is not enabled",
+			chainID:  chains.ZetaChainMainnet.ChainId,
+			expected: false,
+		},
+		{
+			name:     "Solana is not enabled",
+			chainID:  chains.SolanaMainnet.ChainId,
+			expected: false,
+		},
+		{
+			name:     "TON is not enabled",
+			chainID:  chains.TONMainnet.ChainId,
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.expected, keeper.IsGasStabilityPoolEnabledChain(tt.chainID, []zetachains.Chain{}))
 		})
 	}
 }
