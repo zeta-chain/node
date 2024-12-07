@@ -3,7 +3,7 @@ package crosschain
 import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -45,14 +45,33 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	// Set all the cross-chain txs
-	tss, found := k.GetObserverKeeper().GetTSS(ctx)
-	if found {
-		for _, elem := range genState.CrossChainTxs {
-			if elem != nil {
-				k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *elem, tss.TssPubkey)
+	//tss, found := k.GetObserverKeeper().GetTSS(ctx)
+	//if found {
+	for _, elem := range genState.CrossChainTxs {
+		if elem != nil {
+			cctx := *elem
+			k.SetCrossChainTx(ctx, cctx)
+			// set mapping inboundHash -> cctxIndex
+			in, _ := k.GetInboundHashToCctx(ctx, cctx.InboundParams.ObservedHash)
+			in.InboundHash = cctx.InboundParams.ObservedHash
+			found := false
+			for _, cctxIndex := range in.CctxIndex {
+				if cctxIndex == cctx.Index {
+					found = true
+					break
+				}
+			}
+			if !found {
+				in.CctxIndex = append(in.CctxIndex, cctx.Index)
+			}
+			k.SetInboundHashToCctx(ctx, in)
+
+			if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.InboundParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.IsAbortRefunded == false {
+				k.AddZetaAbortedAmount(ctx, keeper.GetAbortedAmount(cctx))
 			}
 		}
 	}
+	//}
 	for _, elem := range genState.FinalizedInbounds {
 		k.SetFinalizedInbound(ctx, elem)
 	}

@@ -1,7 +1,6 @@
 package simulation_test
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -18,7 +17,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	cosmossimutils "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/kv"
 	cosmossim "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -427,7 +425,7 @@ func TestAppImportExport(t *testing.T) {
 		storeA := ctxSimApp.KVStore(skp.A)
 		storeB := ctxNewSimApp.KVStore(skp.B)
 
-		failedKVAs, failedKVBs := DiffKVStores(storeA, storeB, skp.SkipPrefixes)
+		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, skp.SkipPrefixes)
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
 
 		t.Logf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
@@ -574,75 +572,4 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		simApp.AppCodec(),
 	)
 	require.NoError(t, err)
-}
-
-func DiffKVStores(a sdk.KVStore, b sdk.KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []kv.Pair) {
-	iterA := a.Iterator(nil, nil)
-
-	defer iterA.Close()
-
-	iterB := b.Iterator(nil, nil)
-
-	defer iterB.Close()
-
-	//for {
-	//	if !iterA.Valid() && !iterB.Valid() {
-	//		return kvAs, kvBs
-	//	}
-	//	var kvA, kvB kv.Pair
-	//	if iterA.Valid() {
-	//		kvA = kv.Pair{Key: iterA.Key(), Value: iterA.Value()}
-	//		iterA.Next()
-	//	}
-	//	if iterB.Valid() {
-	//		kvB = kv.Pair{Key: iterB.Key(), Value: iterB.Value()}
-	//		iterB.Next()
-	//	}
-	//	kvAs = append(kvAs, kvA)
-	//	kvBs = append(kvBs, kvB)
-	//}
-
-	for {
-		if !iterA.Valid() && !iterB.Valid() {
-			return kvAs, kvBs
-		}
-
-		var kvA, kvB kv.Pair
-		if iterA.Valid() {
-			kvA = kv.Pair{Key: iterA.Key(), Value: iterA.Value()}
-
-			iterA.Next()
-		}
-
-		if iterB.Valid() {
-			kvB = kv.Pair{Key: iterB.Key(), Value: iterB.Value()}
-		}
-
-		compareValue := true
-
-		for _, prefix := range prefixesToSkip {
-			// Skip value comparison if we matched a prefix
-			if bytes.HasPrefix(kvA.Key, prefix) {
-				compareValue = false
-				break
-			}
-		}
-
-		if !compareValue {
-			// We're skipping this key due to an exclusion prefix.  If it's present in B, iterate past it.  If it's
-			// absent don't iterate.
-			if bytes.Equal(kvA.Key, kvB.Key) {
-				iterB.Next()
-			}
-			continue
-		}
-
-		// always iterate B when comparing
-		iterB.Next()
-
-		if !bytes.Equal(kvA.Key, kvB.Key) || !bytes.Equal(kvA.Value, kvB.Value) {
-			kvAs = append(kvAs, kvA)
-			kvBs = append(kvBs, kvB)
-		}
-	}
 }
