@@ -1,6 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
+struct RevertOptions {
+    address revertAddress;
+    bool callOnRevert;
+    address abortAddress;
+    bytes revertMessage;
+    uint256 onRevertGasLimit;
+}
+
+interface IGatewayEVM {
+    function deposit(address receiver, RevertOptions calldata revertOptions) external payable;
+    function depositAndCall(
+        address receiver,
+        bytes calldata payload,
+        RevertOptions calldata revertOptions
+    )
+    external
+    payable;
+    function call(address receiver, bytes calldata payload, RevertOptions calldata revertOptions) external;
+}
+
 interface IERC20 {
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
 }
@@ -13,6 +33,9 @@ contract TestDAppV2 {
 
     // define if the chain is ZetaChain
     bool immutable public isZetaChain;
+
+    // address of the gateway
+    address immutable public gateway;
 
     struct zContext {
         bytes origin;
@@ -44,8 +67,9 @@ contract TestDAppV2 {
     mapping(bytes32 => uint256) public amountWithMessage;
 
     // the constructor is used to determine if the chain is ZetaChain
-    constructor(bool isZetaChain_) {
+    constructor(bool isZetaChain_, address gateway_) {
         isZetaChain = isZetaChain_;
+        gateway = gateway_;
     }
 
     // return the index used for the "WithMessage" mapping when the message for calls is empty
@@ -142,6 +166,24 @@ contract TestDAppV2 {
         senderWithMessage[bytes(messageStr)] = messageContext.sender;
 
         return "";
+    }
+
+    // deposit through Gateway EVM
+    function gatewayDeposit(address dst) external payable {
+        require(!isZetaChain);
+        IGatewayEVM(gateway).deposit{value: msg.value}(dst, RevertOptions(msg.sender, false, address(0), "", 0));
+    }
+
+    // deposit and call through Gateway EVM
+    function gatewayDepositAndCall(address dst, bytes calldata payload) external payable {
+        require(!isZetaChain);
+        IGatewayEVM(gateway).depositAndCall{value: msg.value}(dst, payload, RevertOptions(msg.sender, false, address(0), "", 0));
+    }
+
+    // call through Gateway EVM
+    function gatewayCall(address dst, bytes calldata payload) external {
+        require(!isZetaChain);
+        IGatewayEVM(gateway).call(dst, payload, RevertOptions(msg.sender, false, address(0), "", 0));
     }
 
     function consumeGas() internal {

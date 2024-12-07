@@ -145,35 +145,34 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 		}
 		ob.Logger().Inbound.Info().Msgf("checking tracker for inbound %s chain %d", tracker.TxHash, ob.Chain().ChainId)
 
-		// if the transaction is sent to the gateway, this is a v2 inbound
-		gatewayAddr, gateway, err := ob.GetGatewayContract()
-		if err != nil {
-			ob.Logger().Inbound.Debug().Err(err).Msg("error getting gateway contract for processing inbound tracker")
+		// try processing the tracker for v2 inbound
+		// filter error if event is not found, in this case we run v1 tracker process
+		if err := ob.ProcessInboundTrackerV2(ctx, tx, receipt); err != nil &&
+			!errors.Is(err, ErrEventNotFound) && !errors.Is(err, ErrGatewayNotSet) {
+			return err
+		} else if err == nil {
+			// continue with next tracker
+			continue
 		}
-		if err == nil && tx != nil && ethcommon.HexToAddress(tx.To) == gatewayAddr {
-			if err := ob.ProcessInboundTrackerV2(ctx, gateway, tx, receipt); err != nil {
-				return err
-			}
-		} else {
-			// check and vote on inbound tx
-			switch tracker.CoinType {
-			case coin.CoinType_Zeta:
-				_, err = ob.CheckAndVoteInboundTokenZeta(ctx, tx, receipt, true)
-			case coin.CoinType_ERC20:
-				_, err = ob.CheckAndVoteInboundTokenERC20(ctx, tx, receipt, true)
-			case coin.CoinType_Gas:
-				_, err = ob.CheckAndVoteInboundTokenGas(ctx, tx, receipt, true)
-			default:
-				return fmt.Errorf(
-					"unknown coin type %s for inbound %s chain %d",
-					tracker.CoinType,
-					tx.Hash,
-					ob.Chain().ChainId,
-				)
-			}
-			if err != nil {
-				return errors.Wrapf(err, "error checking and voting for inbound %s chain %d", tx.Hash, ob.Chain().ChainId)
-			}
+
+		// try processing the tracker for v1 inbound
+		switch tracker.CoinType {
+		case coin.CoinType_Zeta:
+			_, err = ob.CheckAndVoteInboundTokenZeta(ctx, tx, receipt, true)
+		case coin.CoinType_ERC20:
+			_, err = ob.CheckAndVoteInboundTokenERC20(ctx, tx, receipt, true)
+		case coin.CoinType_Gas:
+			_, err = ob.CheckAndVoteInboundTokenGas(ctx, tx, receipt, true)
+		default:
+			return fmt.Errorf(
+				"unknown coin type %s for inbound %s chain %d",
+				tracker.CoinType,
+				tx.Hash,
+				ob.Chain().ChainId,
+			)
+		}
+		if err != nil {
+			return errors.Wrapf(err, "error checking and voting for inbound %s chain %d", tx.Hash, ob.Chain().ChainId)
 		}
 	}
 	return nil

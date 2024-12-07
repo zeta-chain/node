@@ -85,12 +85,8 @@ func GetSignaturesForAddressUntil(
 	var allSignatures []*rpc.TransactionSignature
 
 	// make sure that the 'untilSig' exists to prevent undefined behavior on GetSignaturesForAddressWithOpts
-	_, err := client.GetTransaction(
-		ctx,
-		untilSig,
-		&rpc.GetTransactionOpts{Commitment: rpc.CommitmentFinalized},
-	)
-	if err != nil {
+	_, err := GetTransaction(ctx, client, untilSig)
+	if err != nil && !errors.Is(err, ErrUnsupportedTxVersion) {
 		return nil, errors.Wrapf(err, "error GetTransaction for untilSig %s", untilSig)
 	}
 
@@ -137,6 +133,7 @@ func GetTransaction(
 	sig solana.Signature,
 ) (*rpc.GetTransactionResult, error) {
 	txResult, err := client.GetTransaction(ctx, sig, &rpc.GetTransactionOpts{
+		Commitment:                     rpc.CommitmentFinalized,
 		MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion0,
 	})
 

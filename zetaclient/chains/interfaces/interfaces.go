@@ -148,6 +148,8 @@ type ZetacoreClient interface {
 }
 
 // BTCRPCClient is the interface for BTC RPC client
+//
+// WARN: you must add any RPCs used on mainnet/testnet to the whitelist in https://github.com/zeta-chain/bitcoin-core-docker
 type BTCRPCClient interface {
 	GetNetworkInfo() (*btcjson.GetNetworkInfoResult, error)
 	CreateWallet(name string, opts ...rpcclient.CreateWalletOpt) (*btcjson.CreateWalletResult, error)

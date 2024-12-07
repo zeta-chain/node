@@ -98,7 +98,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	// solana
 	var solSOL *big.Int
 	var solSPL *big.Int
-	if r.Account.SolanaAddress != "" && r.Account.SolanaPrivateKey != "" {
+	if r.Account.SolanaAddress != "" && r.Account.SolanaPrivateKey != "" && r.SolanaClient != nil {
 		solanaAddr := solana.MustPublicKeyFromBase58(r.Account.SolanaAddress.String())
 		privateKey := solana.MustPrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
 		solSOLBalance, err := r.SolanaClient.GetBalance(

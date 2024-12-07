@@ -42,7 +42,7 @@ func (c *Contract) distribute(
 	}
 
 	// Create the coinSet in advance, if this step fails do not lock ZRC20.
-	coinSet, err := precompiletypes.CreateCoinSet(zrc20Addr, amount)
+	coinSet, err := precompiletypes.CreateZRC20CoinSet(zrc20Addr, amount)
 	if err != nil {
 		return nil, err
 	}
