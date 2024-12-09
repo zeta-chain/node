@@ -10,8 +10,8 @@ import (
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
+	"github.com/zeta-chain/node/e2e/contracts/erc20"
 	"github.com/zeta-chain/node/e2e/utils"
-	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
 	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
 )
@@ -29,11 +29,19 @@ func (r *E2ERunner) SetupEVM() {
 		r.Logger.Info("EVM v2 setup took %s\n", time.Since(startTime))
 	}()
 
+	r.Logger.Info("Deploying ERC20 contract")
+	erc20Addr, txERC20, erc20contract, err := erc20.DeployERC20(r.EVMAuth, r.EVMClient, "TESTERC20", "TESTERC20", 6)
+	require.NoError(r, err)
+
+	r.ERC20 = erc20contract
+	r.ERC20Addr = erc20Addr
+	r.Logger.Info("ERC20 contract address: %s, tx hash: %s", erc20Addr.Hex(), txERC20.Hash().Hex())
+
 	r.Logger.InfoLoud("Deploy Gateway and ERC20Custody ERC20\n")
 
 	// donate to the TSS address to avoid account errors because deploying gas token ZRC20 will automatically mint
-	// gas token on ZetaChain to initialize the pool
-	txDonation, err := r.LegacySendEther(r.TSSAddress, big.NewInt(101000000000000000), []byte(constant.DonationMessage))
+	// gas token on ZetaChain to initialize the pool d
+	txDonation, err := r.DonateEtherToTSS(big.NewInt(101000000000000000))
 	require.NoError(r, err)
 
 	r.Logger.Info("Deploying Gateway EVM")
@@ -86,16 +94,16 @@ func (r *E2ERunner) SetupEVM() {
 	)
 	require.NoError(r, err)
 
-	r.ERC20CustodyV2Addr = erc20CustodyProxyAddress
-	r.ERC20CustodyV2, err = erc20custodyv2.NewERC20Custody(erc20CustodyProxyAddress, r.EVMClient)
+	r.ERC20CustodyAddr = erc20CustodyProxyAddress
+	r.ERC20Custody, err = erc20custodyv2.NewERC20Custody(erc20CustodyProxyAddress, r.EVMClient)
 	require.NoError(r, err)
 	r.Logger.Info(
-		"ERC20CustodyV2 contract address: %s, tx hash: %s",
+		"ERC20Custody contract address: %s, tx hash: %s",
 		erc20CustodyAddr.Hex(),
 		txCustody.Hash().Hex(),
 	)
 
-	ensureTxReceipt(txCustody, "ERC20CustodyV2 deployment failed")
+	ensureTxReceipt(txCustody, "ERC20Custody deployment failed")
 
 	// set custody contract in gateway
 	txSetCustody, err := r.GatewayEVM.SetCustody(r.EVMAuth, erc20CustodyProxyAddress)
@@ -110,6 +118,7 @@ func (r *E2ERunner) SetupEVM() {
 	require.NoError(r, err)
 
 	// check contract deployment receipt
+	ensureTxReceipt(txERC20, "ERC20 deployment failed")
 	ensureTxReceipt(txDonation, "EVM donation tx failed")
 	ensureTxReceipt(gatewayProxyTx, "Gateway proxy deployment failed")
 	ensureTxReceipt(erc20ProxyTx, "ERC20Custody proxy deployment failed")
@@ -122,11 +131,11 @@ func (r *E2ERunner) SetupEVM() {
 	require.False(r, isZetaChain)
 
 	// whitelist the ERC20
-	txWhitelist, err := r.ERC20CustodyV2.Whitelist(r.EVMAuth, r.ERC20Addr)
+	txWhitelist, err := r.ERC20Custody.Whitelist(r.EVMAuth, r.ERC20Addr)
 	require.NoError(r, err)
 
 	// set legacy supported (calling deposit directly in ERC20Custody)
-	txSetLegacySupported, err := r.ERC20CustodyV2.SetSupportsLegacy(r.EVMAuth, true)
+	txSetLegacySupported, err := r.ERC20Custody.SetSupportsLegacy(r.EVMAuth, true)
 	require.NoError(r, err)
 
 	ensureTxReceipt(txWhitelist, "ERC20 whitelist failed")

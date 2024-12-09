@@ -220,9 +220,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// TODO: merge v1 and v2 together
 		// https://github.com/zeta-chain/node/issues/2627
 
-		deployerRunner.LegacySetupEVM(contractsDeployed, true)
-
+		// setup protocol contracts on the connected EVM chain
 		deployerRunner.SetupEVM()
+
+		//setup protocol contracts v1 as they are still supported for now
+		deployerRunner.LegacySetupEVM(contractsDeployed)
 
 		if testSolana {
 			deployerRunner.SetupSolana(
@@ -231,10 +233,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			)
 		}
 
-		deployerRunner.SetZEVMSystemContracts()
-
 		// NOTE: v2 (gateway) setup called here because system contract needs to be set first, then gateway, then zrc20
-		deployerRunner.SetZEVMContractsV2()
+		deployerRunner.SetupZEVMProtocolContracts()
+
+		deployerRunner.SetupLegacyZEVMContracts()
 
 		zrc20Deployment := txserver.ZRC20Deployment{
 			ERC20Addr: deployerRunner.ERC20Addr,
@@ -243,14 +245,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		if testSolana {
 			zrc20Deployment.SPLAddr = deployerRunner.SPLAddr.ToPointer()
 		}
+		deployerRunner.SetupZEVMZRC20s(zrc20Deployment)
 
-		deployerRunner.SetZEVMZRC20s(zrc20Deployment)
-
-		// Update the chain params to use v2 contract for ERC20Custody
-		// TODO: this function should be removed and the chain params should be directly set to use v2 contract
-		// https://github.com/zeta-chain/node/issues/2627
-		deployerRunner.UpdateChainParamsV2Contracts()
-		deployerRunner.ERC20CustodyAddr = deployerRunner.ERC20CustodyV2Addr
+		// Update the chain params to contains protocol contract addresses
+		deployerRunner.UpdateProtocolContractsInChainParams()
 
 		deployerRunner.MintERC20OnEVM(1e10)
 

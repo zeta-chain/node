@@ -24,14 +24,14 @@ func (r *E2ERunner) UpdateTSSAddressForConnector() {
 func (r *E2ERunner) UpdateTSSAddressForERC20custody() {
 	require.NoError(r, r.SetTSSAddresses())
 
-	tx, err := r.ERC20CustodyV2.UpdateTSSAddress(r.EVMAuth, r.TSSAddress)
+	tx, err := r.ERC20Custody.UpdateTSSAddress(r.EVMAuth, r.TSSAddress)
 	require.NoError(r, err)
 	r.Logger.Info("TSS ERC20 Address Update Tx: %s", tx.Hash().String())
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt)
 
-	// we have to reference ERC20CustodyV2 since it's `TssAddress` on v2 and `TSSAddress` on v1
-	tssAddressOnCustody, err := r.ERC20CustodyV2.TssAddress(&bind.CallOpts{Context: r.Ctx})
+	// we have to reference ERC20Custody since it's `TssAddress` on v2 and `TSSAddress` on v1
+	tssAddressOnCustody, err := r.ERC20Custody.TssAddress(&bind.CallOpts{Context: r.Ctx})
 	require.NoError(r, err)
 	require.Equal(r, r.TSSAddress, tssAddressOnCustody)
 }

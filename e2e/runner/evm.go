@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/constant"
 )
 
 // ETHDeposit calls Deposit of Gateway with gas token on EVM
@@ -197,6 +198,11 @@ func (r *E2ERunner) ApproveERC20ZRC20(allowed ethcommon.Address) {
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 		require.True(r, receipt.Status == 1, "approval failed")
 	}
+}
+
+// DonateEtherToTSS donates ether to TSS
+func (r *E2ERunner) DonateEtherToTSS(amount *big.Int) (*ethtypes.Transaction, error) {
+	return r.LegacySendEther(r.TSSAddress, amount, []byte(constant.DonationMessage))
 }
 
 // AnvilMineBlocks mines blocks on Anvil localnet

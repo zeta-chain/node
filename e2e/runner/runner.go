@@ -21,7 +21,6 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 	zetaeth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/systemcontract.sol"
@@ -116,15 +115,19 @@ type E2ERunner struct {
 	SPLAddr        solana.PublicKey
 
 	// contracts evm
-	ZetaEthAddr      ethcommon.Address
-	ZetaEth          *zetaeth.ZetaEth
-	ConnectorEthAddr ethcommon.Address
-	ConnectorEth     *zetaconnectoreth.ZetaConnectorEth
-	ERC20CustodyAddr ethcommon.Address
-	ERC20Custody     *erc20custody.ERC20Custody
-	ERC20Addr        ethcommon.Address
-	ERC20            *erc20.ERC20
-	EvmTestDAppAddr  ethcommon.Address
+	ZetaEthAddr       ethcommon.Address
+	ZetaEth           *zetaeth.ZetaEth
+	ConnectorEthAddr  ethcommon.Address
+	ConnectorEth      *zetaconnectoreth.ZetaConnectorEth
+	ERC20CustodyAddr  ethcommon.Address
+	ERC20Custody      *erc20custodyv2.ERC20Custody
+	ERC20Addr         ethcommon.Address
+	ERC20             *erc20.ERC20
+	EvmTestDAppAddr   ethcommon.Address
+	GatewayEVMAddr    ethcommon.Address
+	GatewayEVM        *gatewayevm.GatewayEVM
+	TestDAppV2EVMAddr ethcommon.Address
+	TestDAppV2EVM     *testdappv2.TestDAppV2
 
 	// contracts zevm
 	ERC20ZRC20Addr       ethcommon.Address
@@ -154,6 +157,10 @@ type E2ERunner struct {
 	SystemContractAddr   ethcommon.Address
 	SystemContract       *systemcontract.SystemContract
 	ZevmTestDAppAddr     ethcommon.Address
+	GatewayZEVMAddr      ethcommon.Address
+	GatewayZEVM          *gatewayzevm.GatewayZEVM
+	TestDAppV2ZEVMAddr   ethcommon.Address
+	TestDAppV2ZEVM       *testdappv2.TestDAppV2
 
 	// config
 	CctxTimeout    time.Duration
@@ -166,20 +173,6 @@ type E2ERunner struct {
 	Logger        *Logger
 	BitcoinParams *chaincfg.Params
 	mutex         sync.Mutex
-
-	// evm v2
-	GatewayEVMAddr     ethcommon.Address
-	GatewayEVM         *gatewayevm.GatewayEVM
-	ERC20CustodyV2Addr ethcommon.Address
-	ERC20CustodyV2     *erc20custodyv2.ERC20Custody
-	TestDAppV2EVMAddr  ethcommon.Address
-	TestDAppV2EVM      *testdappv2.TestDAppV2
-
-	// zevm v2
-	GatewayZEVMAddr    ethcommon.Address
-	GatewayZEVM        *gatewayzevm.GatewayZEVM
-	TestDAppV2ZEVMAddr ethcommon.Address
-	TestDAppV2ZEVM     *testdappv2.TestDAppV2
 }
 
 func NewE2ERunner(
@@ -268,7 +261,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	if err != nil {
 		return err
 	}
-	r.ERC20Custody, err = erc20custody.NewERC20Custody(r.ERC20CustodyAddr, r.EVMClient)
+	r.ERC20Custody, err = erc20custodyv2.NewERC20Custody(r.ERC20CustodyAddr, r.EVMClient)
 	if err != nil {
 		return err
 	}
@@ -332,11 +325,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	if err != nil {
 		return err
 	}
-	r.ERC20CustodyV2Addr = other.ERC20CustodyV2Addr
-	r.ERC20CustodyV2, err = erc20custodyv2.NewERC20Custody(r.ERC20CustodyV2Addr, r.EVMClient)
-	if err != nil {
-		return err
-	}
+
 	r.TestDAppV2EVMAddr = other.TestDAppV2EVMAddr
 	r.TestDAppV2EVM, err = testdappv2.NewTestDAppV2(r.TestDAppV2EVMAddr, r.EVMClient)
 	if err != nil {
@@ -409,7 +398,6 @@ func (r *E2ERunner) PrintContractAddresses() {
 
 	r.Logger.Print(" --- 📜EVM v2 contracts ---")
 	r.Logger.Print("GatewayEVM:     %s", r.GatewayEVMAddr.Hex())
-	r.Logger.Print("ERC20CustodyV2: %s", r.ERC20CustodyV2Addr.Hex())
 	r.Logger.Print("TestDAppV2EVM:  %s", r.TestDAppV2EVMAddr.Hex())
 }
 

@@ -17,9 +17,6 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
-	"github.com/zeta-chain/node/e2e/contracts/contextapp"
-	"github.com/zeta-chain/node/e2e/contracts/testdapp"
-	"github.com/zeta-chain/node/e2e/contracts/zevmswap"
 	"github.com/zeta-chain/node/e2e/txserver"
 	e2eutils "github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -69,109 +66,8 @@ func (r *E2ERunner) SetTSSAddresses() error {
 	return nil
 }
 
-// SetZEVMSystemContracts set system contracts for the ZEVM
-func (r *E2ERunner) SetZEVMSystemContracts() {
-	r.Logger.Print("⚙️ deploying system contracts on ZEVM")
-	startTime := time.Now()
-	defer func() {
-		r.Logger.Info("System contract deployments took %s\n", time.Since(startTime))
-	}()
-
-	// deploy system contracts and ZRC20 contracts on ZetaChain
-	addresses, err := r.ZetaTxServer.DeploySystemContracts(
-		e2eutils.OperationalPolicyName,
-		e2eutils.AdminPolicyName,
-	)
-	require.NoError(r, err)
-
-	// UniswapV2FactoryAddr
-	r.UniswapV2FactoryAddr = ethcommon.HexToAddress(addresses.UniswapV2FactoryAddr)
-	r.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(r.UniswapV2FactoryAddr, r.ZEVMClient)
-	require.NoError(r, err)
-
-	// UniswapV2RouterAddr
-	r.UniswapV2RouterAddr = ethcommon.HexToAddress(addresses.UniswapV2RouterAddr)
-	r.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(r.UniswapV2RouterAddr, r.ZEVMClient)
-	require.NoError(r, err)
-
-	// ZevmConnectorAddr
-	r.ConnectorZEVMAddr = ethcommon.HexToAddress(addresses.ZEVMConnectorAddr)
-	r.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(r.ConnectorZEVMAddr, r.ZEVMClient)
-	require.NoError(r, err)
-
-	// WZetaAddr
-	r.WZetaAddr = ethcommon.HexToAddress(addresses.WZETAAddr)
-	r.WZeta, err = wzeta.NewWETH9(r.WZetaAddr, r.ZEVMClient)
-	require.NoError(r, err)
-
-	// query system contract address from the chain
-	systemContractRes, err := r.FungibleClient.SystemContract(
-		r.Ctx,
-		&fungibletypes.QueryGetSystemContractRequest{},
-	)
-	require.NoError(r, err)
-
-	systemContractAddr := ethcommon.HexToAddress(systemContractRes.SystemContract.SystemContract)
-	systemContract, err := systemcontract.NewSystemContract(
-		systemContractAddr,
-		r.ZEVMClient,
-	)
-	require.NoError(r, err)
-
-	r.SystemContract = systemContract
-	r.SystemContractAddr = systemContractAddr
-
-	// deploy TestDApp contract on zEVM
-	appAddr, txApp, _, err := testdapp.DeployTestDApp(
-		r.ZEVMAuth,
-		r.ZEVMClient,
-		r.ConnectorZEVMAddr,
-		r.WZetaAddr,
-	)
-	require.NoError(r, err)
-
-	r.ZevmTestDAppAddr = appAddr
-	r.Logger.Info("TestDApp Zevm contract address: %s, tx hash: %s", appAddr.Hex(), txApp.Hash().Hex())
-
-	// deploy ZEVMSwapApp and ContextApp
-	zevmSwapAppAddr, txZEVMSwapApp, zevmSwapApp, err := zevmswap.DeployZEVMSwapApp(
-		r.ZEVMAuth,
-		r.ZEVMClient,
-		r.UniswapV2RouterAddr,
-		r.SystemContractAddr,
-	)
-	require.NoError(r, err)
-
-	contextAppAddr, txContextApp, contextApp, err := contextapp.DeployContextApp(r.ZEVMAuth, r.ZEVMClient)
-	require.NoError(r, err)
-
-	receipt := e2eutils.MustWaitForTxReceipt(
-		r.Ctx,
-		r.ZEVMClient,
-		txZEVMSwapApp,
-		r.Logger,
-		r.ReceiptTimeout,
-	)
-	r.requireTxSuccessful(receipt, "ZEVMSwapApp deployment failed")
-
-	r.ZEVMSwapAppAddr = zevmSwapAppAddr
-	r.ZEVMSwapApp = zevmSwapApp
-
-	receipt = e2eutils.MustWaitForTxReceipt(
-		r.Ctx,
-		r.ZEVMClient,
-		txContextApp,
-		r.Logger,
-		r.ReceiptTimeout,
-	)
-	r.requireTxSuccessful(receipt, "ContextApp deployment failed")
-
-	r.ContextAppAddr = contextAppAddr
-	r.ContextApp = contextApp
-}
-
-// SetZEVMZRC20s set ZRC20 for the ZEVM
-func (r *E2ERunner) SetZEVMZRC20s(zrc20Deployment txserver.ZRC20Deployment) {
+// SetupZEVMZRC20s setup ZRC20 for the ZEVM
+func (r *E2ERunner) SetupZEVMZRC20s(zrc20Deployment txserver.ZRC20Deployment) {
 	r.Logger.Print("⚙️ deploying ZRC20s on ZEVM")
 	startTime := time.Now()
 	defer func() {
@@ -281,18 +177,62 @@ func (r *E2ERunner) EnableHeaderVerification(chainIDList []int64) error {
 	return r.ZetaTxServer.EnableHeaderVerification(e2eutils.AdminPolicyName, chainIDList)
 }
 
-// SetZEVMContractsV2 set contracts for the ZEVM
-func (r *E2ERunner) SetZEVMContractsV2() {
+// SetupZEVMProtocolContracts setup protocol contracts for the ZEVM
+func (r *E2ERunner) SetupZEVMProtocolContracts() {
 	ensureTxReceipt := func(tx *ethtypes.Transaction, failMessage string) {
 		receipt := e2eutils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 		r.requireTxSuccessful(receipt, failMessage+" tx hash: "+tx.Hash().Hex())
 	}
 
-	r.Logger.Print("⚙️ setting up ZEVM v2 network")
+	r.Logger.Print("⚙️ setting up ZEVM protocol contracts")
 	startTime := time.Now()
 	defer func() {
-		r.Logger.Info("ZEVM v2 network took %s\n", time.Since(startTime))
+		r.Logger.Info("ZEVM protocol contracts took %s\n", time.Since(startTime))
 	}()
+
+	// deploy system contracts and ZRC20 contracts on ZetaChain
+	addresses, err := r.ZetaTxServer.DeploySystemContracts(
+		e2eutils.OperationalPolicyName,
+		e2eutils.AdminPolicyName,
+	)
+	require.NoError(r, err)
+
+	// UniswapV2FactoryAddr
+	r.UniswapV2FactoryAddr = ethcommon.HexToAddress(addresses.UniswapV2FactoryAddr)
+	r.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(r.UniswapV2FactoryAddr, r.ZEVMClient)
+	require.NoError(r, err)
+
+	// UniswapV2RouterAddr
+	r.UniswapV2RouterAddr = ethcommon.HexToAddress(addresses.UniswapV2RouterAddr)
+	r.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(r.UniswapV2RouterAddr, r.ZEVMClient)
+	require.NoError(r, err)
+
+	// ZevmConnectorAddr
+	r.ConnectorZEVMAddr = ethcommon.HexToAddress(addresses.ZEVMConnectorAddr)
+	r.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(r.ConnectorZEVMAddr, r.ZEVMClient)
+	require.NoError(r, err)
+
+	// WZetaAddr
+	r.WZetaAddr = ethcommon.HexToAddress(addresses.WZETAAddr)
+	r.WZeta, err = wzeta.NewWETH9(r.WZetaAddr, r.ZEVMClient)
+	require.NoError(r, err)
+
+	// query system contract address from the chain
+	systemContractRes, err := r.FungibleClient.SystemContract(
+		r.Ctx,
+		&fungibletypes.QueryGetSystemContractRequest{},
+	)
+	require.NoError(r, err)
+
+	systemContractAddr := ethcommon.HexToAddress(systemContractRes.SystemContract.SystemContract)
+	systemContract, err := systemcontract.NewSystemContract(
+		systemContractAddr,
+		r.ZEVMClient,
+	)
+	require.NoError(r, err)
+
+	r.SystemContract = systemContract
+	r.SystemContractAddr = systemContractAddr
 
 	r.Logger.Info("Deploying Gateway ZEVM")
 	gatewayZEVMAddr, txGateway, _, err := gatewayzevm.DeployGatewayZEVM(r.ZEVMAuth, r.ZEVMClient)
@@ -353,9 +293,10 @@ func (r *E2ERunner) SetZEVMContractsV2() {
 	require.True(r, isZetaChain)
 }
 
-// UpdateChainParamsV2Contracts update the erc20 custody contract and gateway address in the chain params
-// this operation is used when transitioning to new smart contract architecture where a new ERC20 custody contract is deployed
-func (r *E2ERunner) UpdateChainParamsV2Contracts() {
+// UpdateProtocolContractsInChainParams update the erc20 custody contract and gateway address in the chain params
+// TODO: should be used for all protocol contracts including the ZETA connector
+// https://github.com/zeta-chain/node/issues/3257
+func (r *E2ERunner) UpdateProtocolContractsInChainParams() {
 	res, err := r.ObserverClient.GetChainParams(r.Ctx, &observertypes.QueryGetChainParamsRequest{})
 	require.NoError(r, err)
 
@@ -377,7 +318,7 @@ func (r *E2ERunner) UpdateChainParamsV2Contracts() {
 	require.True(r, found, "Chain params not found for chain id %d", evmChainID)
 
 	// update with the new ERC20 custody contract address
-	chainParams.Erc20CustodyContractAddress = r.ERC20CustodyV2Addr.Hex()
+	chainParams.Erc20CustodyContractAddress = r.ERC20CustodyAddr.Hex()
 
 	// update with the new gateway address
 	chainParams.GatewayAddress = r.GatewayEVMAddr.Hex()

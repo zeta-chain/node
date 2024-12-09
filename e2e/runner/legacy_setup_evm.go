@@ -7,12 +7,10 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 	zetaeth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
-	"github.com/zeta-chain/node/e2e/contracts/erc20"
 	"github.com/zeta-chain/node/e2e/contracts/testdapp"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -41,16 +39,14 @@ func (r *E2ERunner) LegacySetEVMContractsFromConfig() {
 }
 
 // LegacySetupEVM setup legacy contracts on EVM for e2e test
-func (r *E2ERunner) LegacySetupEVM(contractsDeployed bool, whitelistERC20 bool) {
-	r.Logger.Print("⚙️ setting up EVM network")
+func (r *E2ERunner) LegacySetupEVM(contractsDeployed bool) {
+	r.Logger.Print("⚙️ setting up EVM network legacy contracts")
 	startTime := time.Now()
 	defer func() {
 		r.Logger.Info("EVM setup took %s\n", time.Since(startTime))
 	}()
 
-	// TODO: put this logic outside of this function
 	// We use this config to be consistent with the old implementation
-	// https://github.com/zeta-chain/node-private/issues/41
 	if contractsDeployed {
 		r.LegacySetEVMContractsFromConfig()
 		return
@@ -99,30 +95,6 @@ func (r *E2ERunner) LegacySetupEVM(contractsDeployed bool, whitelistERC20 bool) 
 		txConnector.Hash().Hex(),
 	)
 
-	r.Logger.Info("Deploying ERC20Custody contract")
-	erc20CustodyAddr, txCustody, ERC20Custody, err := erc20custody.DeployERC20Custody(
-		r.EVMAuth,
-		r.EVMClient,
-		r.EVMAddress(),
-		r.EVMAddress(),
-		big.NewInt(0),
-		big.NewInt(1e18),
-		ethcommon.HexToAddress("0x"),
-	)
-	require.NoError(r, err)
-
-	r.ERC20CustodyAddr = erc20CustodyAddr
-	r.ERC20Custody = ERC20Custody
-	r.Logger.Info("ERC20Custody contract address: %s, tx hash: %s", erc20CustodyAddr.Hex(), txCustody.Hash().Hex())
-
-	r.Logger.Info("Deploying ERC20 contract")
-	erc20Addr, txERC20, erc20, err := erc20.DeployERC20(r.EVMAuth, r.EVMClient, "TESTERC20", "TESTERC20", 6)
-	require.NoError(r, err)
-
-	r.ERC20 = erc20
-	r.ERC20Addr = erc20Addr
-	r.Logger.Info("ERC20 contract address: %s, tx hash: %s", erc20Addr.Hex(), txERC20.Hash().Hex())
-
 	// deploy TestDApp contract
 	appAddr, txApp, _, err := testdapp.DeployTestDApp(
 		r.EVMAuth,
@@ -144,25 +116,7 @@ func (r *E2ERunner) LegacySetupEVM(contractsDeployed bool, whitelistERC20 bool) 
 	ensureTxReceipt(txDonation, "EVM donation tx failed")
 	ensureTxReceipt(txZetaEth, "ZetaEth deployment failed")
 	ensureTxReceipt(txConnector, "ZetaConnectorEth deployment failed")
-	ensureTxReceipt(txCustody, "ERC20Custody deployment failed")
-	ensureTxReceipt(txERC20, "ERC20 deployment failed")
 	ensureTxReceipt(txApp, "TestDApp deployment failed")
-
-	// initialize custody contract
-	r.Logger.Info("Whitelist ERC20")
-	if whitelistERC20 {
-		txWhitelist, err := ERC20Custody.Whitelist(r.EVMAuth, erc20Addr)
-		require.NoError(r, err)
-		ensureTxReceipt(txWhitelist, "ERC20 whitelist failed")
-	}
-
-	r.Logger.Info("Set TSS address")
-	txCustody, err = ERC20Custody.UpdateTSSAddress(r.EVMAuth, r.TSSAddress)
-	require.NoError(r, err)
-
-	ensureTxReceipt(txCustody, "ERC20 update TSS address failed")
-
-	r.Logger.Info("TSS set receipt tx hash: %s", txCustody.Hash().Hex())
 
 	// save config containing contract addresses
 	// TODO: put this logic outside of this function in a general config
@@ -181,7 +135,6 @@ func (r *E2ERunner) LegacySetupEVM(contractsDeployed bool, whitelistERC20 bool) 
 	require.NoError(r, err, "failed to get chain params for chain %d", chains.GoerliLocalnet.ChainId)
 
 	chainParams := currentChainParamsRes.ChainParams
-	chainParams.Erc20CustodyContractAddress = r.ERC20CustodyAddr.Hex()
 	chainParams.ConnectorContractAddress = r.ConnectorEthAddr.Hex()
 	chainParams.ZetaTokenContractAddress = r.ZetaEthAddr.Hex()
 

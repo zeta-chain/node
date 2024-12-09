@@ -176,26 +176,14 @@ func (r *E2ERunner) checkERC20TSSBalance() error {
 		return err
 	}
 
-	custodyFullBalance := custodyBalance
-
-	// take into account the balance of the new ERC20 custody contract as v2 test use this contract
-	// if both addresses are equal, then there is no need to check the balance of the new contract
-	if r.ERC20CustodyAddr.Hex() != r.ERC20CustodyV2Addr.Hex() {
-		custodyV2Balance, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.ERC20CustodyV2Addr)
-		if err != nil {
-			return err
-		}
-		custodyFullBalance = big.NewInt(0).Add(custodyBalance, custodyV2Balance)
-	}
-
 	erc20zrc20Supply, err := r.ERC20ZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		return err
 	}
-	if custodyFullBalance.Cmp(erc20zrc20Supply) < 0 {
-		return fmt.Errorf("ERC20: TSS balance (%d) < ZRC20 TotalSupply (%d) ", custodyFullBalance, erc20zrc20Supply)
+	if custodyBalance.Cmp(erc20zrc20Supply) < 0 {
+		return fmt.Errorf("ERC20: TSS balance (%d) < ZRC20 TotalSupply (%d) ", custodyBalance, erc20zrc20Supply)
 	}
-	r.Logger.Info("ERC20: TSS balance (%d) >= ERC20 ZRC20 TotalSupply (%d)", custodyFullBalance, erc20zrc20Supply)
+	r.Logger.Info("ERC20: TSS balance (%d) >= ERC20 ZRC20 TotalSupply (%d)", custodyBalance, erc20zrc20Supply)
 	return nil
 }
 

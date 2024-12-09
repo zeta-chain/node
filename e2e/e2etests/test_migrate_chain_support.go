@@ -48,7 +48,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	newRunner, err := configureEVM2(r)
 	require.NoError(r, err)
 
-	newRunner.LegacySetupEVM(false, false)
+	newRunner.LegacySetupEVM(false)
 
 	// mint some ERC20
 	newRunner.MintERC20OnEVM(10000)

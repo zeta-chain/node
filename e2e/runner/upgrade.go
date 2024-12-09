@@ -70,7 +70,7 @@ func (r *E2ERunner) UpgradeERC20Custody() {
 	ensureTxReceipt(txDeploy, "New ERC20Custody implementation deployment failed")
 
 	// Upgrade
-	txUpgrade, err := r.ERC20CustodyV2.UpgradeToAndCall(r.EVMAuth, newImplementationAddress, []byte{})
+	txUpgrade, err := r.ERC20Custody.UpgradeToAndCall(r.EVMAuth, newImplementationAddress, []byte{})
 	require.NoError(r, err)
 	ensureTxReceipt(txUpgrade, "ERC20Custody upgrade failed")
 }

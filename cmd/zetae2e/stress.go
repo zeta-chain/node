@@ -136,14 +136,14 @@ func StressTest(cmd *cobra.Command, _ []string) {
 
 	// setup TSS addresses
 	noError(e2eTest.SetTSSAddresses())
-	e2eTest.LegacySetupEVM(stressTestArgs.contractsDeployed, true)
+	e2eTest.LegacySetupEVM(stressTestArgs.contractsDeployed)
 
 	// If stress test is running on local docker environment
 	switch stressTestArgs.network {
 	case "LOCAL":
 		// deploy and set zevm contract
-		e2eTest.SetZEVMSystemContracts()
-		e2eTest.SetZEVMZRC20s(txserver.ZRC20Deployment{
+		e2eTest.SetupZEVMProtocolContracts()
+		e2eTest.SetupZEVMZRC20s(txserver.ZRC20Deployment{
 			ERC20Addr: e2eTest.ERC20Addr,
 			SPLAddr:   nil, // no stress tests for solana atm
 		})
