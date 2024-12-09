@@ -75,7 +75,6 @@ func NewSigner(
 	ctx context.Context,
 	chain chains.Chain,
 	tss interfaces.TSSSigner,
-	ts *metrics.TelemetryServer,
 	logger base.Logger,
 	endpoint string,
 	zetaConnectorAddress ethcommon.Address,
@@ -83,7 +82,7 @@ func NewSigner(
 	gatewayAddress ethcommon.Address,
 ) (*Signer, error) {
 	// create base signer
-	baseSigner := base.NewSigner(chain, tss, ts, logger)
+	baseSigner := base.NewSigner(chain, tss, logger)
 
 	// create EVM client
 	client, ethSigner, err := getEVMRPC(ctx, endpoint)

@@ -52,7 +52,6 @@ func getNewEvmSigner(t *testing.T, tss interfaces.TSSSigner) (*Signer, error) {
 		ctx,
 		chains.BscMainnet,
 		tss,
-		nil,
 		logger,
 		testutils.MockEVMRPCEndpoint,
 		connectorAddress,

@@ -773,7 +773,7 @@ func (oc *Orchestrator) syncObserverSigner(ctx context.Context) error {
 			Msg("synced observers")
 	}
 
-	added, removed, err = syncSignerMap(ctx, oc.tss, oc.baseLogger, oc.ts, &oc.signerMap)
+	added, removed, err = syncSignerMap(ctx, oc.tss, oc.baseLogger, &oc.signerMap)
 	if err != nil {
 		return errors.Wrap(err, "syncSignerMap failed")
 	}

@@ -64,10 +64,8 @@ type Observer struct {
 	// rpcAlertLatency is the threshold of RPC latency to trigger an alert
 	rpcAlertLatency time.Duration
 
-	// blockCache is the cache for blocks
 	blockCache *lru.Cache
 
-	// headerCache is the cache for headers
 	headerCache *lru.Cache
 
 	// db is the database to persist data
@@ -101,7 +99,17 @@ func NewObserver(
 	database *db.DB,
 	logger Logger,
 ) (*Observer, error) {
-	ob := Observer{
+	blockCache, err := lru.New(blockCacheSize)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating block cache")
+	}
+
+	headerCache, err := lru.New(headerCacheSize)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating header cache")
+	}
+
+	return &Observer{
 		chain:            chain,
 		chainParams:      chainParams,
 		zetacoreClient:   zetacoreClient,
@@ -112,27 +120,12 @@ func NewObserver(
 		rpcAlertLatency:  time.Duration(rpcAlertLatency) * time.Second,
 		ts:               ts,
 		db:               database,
+		blockCache:       blockCache,
+		headerCache:      headerCache,
 		mu:               &sync.Mutex{},
+		logger:           newObserverLogger(chain, logger),
 		stop:             make(chan struct{}),
-	}
-
-	// setup loggers
-	ob.WithLogger(logger)
-
-	// create block cache
-	var err error
-	ob.blockCache, err = lru.New(blockCacheSize)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating block cache")
-	}
-
-	// create header cache
-	ob.headerCache, err = lru.New(headerCacheSize)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating header cache")
-	}
-
-	return &ob, nil
+	}, nil
 }
 
 // Start starts the observer. Returns false if it's already started (noop).
@@ -332,26 +325,6 @@ func (ob *Observer) Logger() *ObserverLogger {
 	return &ob.logger
 }
 
-// WithLogger attaches a new logger to the observer.
-func (ob *Observer) WithLogger(logger Logger) *Observer {
-	chainLogger := logger.Std.
-		With().
-		Int64(logs.FieldChain, ob.chain.ChainId).
-		Str(logs.FieldChainNetwork, ob.chain.Network.String()).
-		Logger()
-
-	ob.logger = ObserverLogger{
-		Chain:      chainLogger,
-		Inbound:    chainLogger.With().Str(logs.FieldModule, logs.ModNameInbound).Logger(),
-		Outbound:   chainLogger.With().Str(logs.FieldModule, logs.ModNameOutbound).Logger(),
-		GasPrice:   chainLogger.With().Str(logs.FieldModule, logs.ModNameGasPrice).Logger(),
-		Headers:    chainLogger.With().Str(logs.FieldModule, logs.ModNameHeaders).Logger(),
-		Compliance: logger.Compliance,
-	}
-
-	return ob
-}
-
 // Mu returns the mutex for the observer.
 func (ob *Observer) Mu() *sync.Mutex {
 	return ob.mu
@@ -543,4 +516,25 @@ func EnvVarLatestBlockByChain(chain chains.Chain) string {
 // EnvVarLatestTxByChain returns the environment variable for the last tx by chain.
 func EnvVarLatestTxByChain(chain chains.Chain) string {
 	return fmt.Sprintf("CHAIN_%d_SCAN_FROM_TX", chain.ChainId)
+}
+
+func newObserverLogger(chain chains.Chain, logger Logger) ObserverLogger {
+	withLogFields := func(l zerolog.Logger) zerolog.Logger {
+		return l.With().
+			Int64(logs.FieldChain, chain.ChainId).
+			Str(logs.FieldChainNetwork, chain.Network.String()).
+			Logger()
+	}
+
+	log := withLogFields(logger.Std)
+	complianceLog := withLogFields(logger.Compliance)
+
+	return ObserverLogger{
+		Chain:      log,
+		Inbound:    log.With().Str(logs.FieldModule, logs.ModNameInbound).Logger(),
+		Outbound:   log.With().Str(logs.FieldModule, logs.ModNameOutbound).Logger(),
+		GasPrice:   log.With().Str(logs.FieldModule, logs.ModNameGasPrice).Logger(),
+		Headers:    log.With().Str(logs.FieldModule, logs.ModNameHeaders).Logger(),
+		Compliance: complianceLog,
+	}
 }
