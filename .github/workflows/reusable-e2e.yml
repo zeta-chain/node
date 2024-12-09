@@ -27,6 +27,10 @@ on:
         description: 'Enable the monitoring stack for this run'
         type: boolean
         default: false
+      run-twice:
+        description: 'Run the tests a second time'
+        type: boolean
+        default: false
 
 jobs:
   e2e:
@@ -72,6 +76,17 @@ jobs:
         run: |
           container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
           docker logs -f "${container_id}" &
+          exit $(docker wait "${container_id}")
+
+      - name: Start Test (second run)
+        if: inputs.run-twice
+        run: make ${{ inputs.make-target }}
+
+      - name: Watch Test (second run)
+        if: inputs.run-twice
+        run: |
+          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
+          docker logs --since -10s -f "${container_id}" &
           exit $(docker wait "${container_id}")
 
       - name: Full Log Dump On Failure
