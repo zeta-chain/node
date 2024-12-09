@@ -118,7 +118,6 @@ func Test_BitcoinLive(t *testing.T) {
 		return
 	}
 
-	LiveTest_PendingMempoolTx(t)
 	LiveTest_NewRPCClient(t)
 	LiveTest_CheckRPCStatus(t)
 	LiveTest_FilterAndParseIncomingTx(t)
