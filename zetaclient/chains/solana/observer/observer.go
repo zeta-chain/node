@@ -56,7 +56,6 @@ func NewObserver(
 		zetacoreClient,
 		tss,
 		base.DefaultBlockCacheSize,
-		base.DefaultHeaderCacheSize,
 		rpcAlertLatency,
 		ts,
 		db,

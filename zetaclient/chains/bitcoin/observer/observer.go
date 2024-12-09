@@ -107,7 +107,6 @@ func NewObserver(
 		zetacoreClient,
 		tss,
 		btcBlocksPerDay,
-		base.DefaultHeaderCacheSize,
 		rpcAlertLatency,
 		ts,
 		database,

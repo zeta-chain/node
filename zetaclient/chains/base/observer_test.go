@@ -52,7 +52,6 @@ func createObserver(t *testing.T, chain chains.Chain, alertLatency int64) *base.
 		zetacoreClient,
 		tss,
 		base.DefaultBlockCacheSize,
-		base.DefaultHeaderCacheSize,
 		alertLatency,
 		nil,
 		database,
@@ -71,57 +70,41 @@ func TestNewObserver(t *testing.T) {
 	zetacoreClient := mocks.NewZetacoreClient(t)
 	tss := mocks.NewTSS(t)
 	blockCacheSize := base.DefaultBlockCacheSize
-	headersCacheSize := base.DefaultHeaderCacheSize
 
 	database := createDatabase(t)
 
 	// test cases
 	tests := []struct {
-		name            string
-		chain           chains.Chain
-		chainParams     observertypes.ChainParams
-		appContext      *zctx.AppContext
-		zetacoreClient  interfaces.ZetacoreClient
-		tss             interfaces.TSSSigner
-		blockCacheSize  int
-		headerCacheSize int
-		fail            bool
-		message         string
+		name           string
+		chain          chains.Chain
+		chainParams    observertypes.ChainParams
+		appContext     *zctx.AppContext
+		zetacoreClient interfaces.ZetacoreClient
+		tss            interfaces.TSSSigner
+		blockCacheSize int
+		fail           bool
+		message        string
 	}{
 		{
-			name:            "should be able to create new observer",
-			chain:           chain,
-			chainParams:     chainParams,
-			appContext:      appContext,
-			zetacoreClient:  zetacoreClient,
-			tss:             tss,
-			blockCacheSize:  blockCacheSize,
-			headerCacheSize: headersCacheSize,
-			fail:            false,
+			name:           "should be able to create new observer",
+			chain:          chain,
+			chainParams:    chainParams,
+			appContext:     appContext,
+			zetacoreClient: zetacoreClient,
+			tss:            tss,
+			blockCacheSize: blockCacheSize,
+			fail:           false,
 		},
 		{
-			name:            "should return error on invalid block cache size",
-			chain:           chain,
-			chainParams:     chainParams,
-			appContext:      appContext,
-			zetacoreClient:  zetacoreClient,
-			tss:             tss,
-			blockCacheSize:  0,
-			headerCacheSize: headersCacheSize,
-			fail:            true,
-			message:         "error creating block cache",
-		},
-		{
-			name:            "should return error on invalid header cache size",
-			chain:           chain,
-			chainParams:     chainParams,
-			appContext:      appContext,
-			zetacoreClient:  zetacoreClient,
-			tss:             tss,
-			blockCacheSize:  blockCacheSize,
-			headerCacheSize: 0,
-			fail:            true,
-			message:         "error creating header cache",
+			name:           "should return error on invalid block cache size",
+			chain:          chain,
+			chainParams:    chainParams,
+			appContext:     appContext,
+			zetacoreClient: zetacoreClient,
+			tss:            tss,
+			blockCacheSize: 0,
+			fail:           true,
+			message:        "error creating block cache",
 		},
 	}
 
@@ -134,7 +117,6 @@ func TestNewObserver(t *testing.T) {
 				tt.zetacoreClient,
 				tt.tss,
 				tt.blockCacheSize,
-				tt.headerCacheSize,
 				60,
 				nil,
 				database,
@@ -228,17 +210,6 @@ func TestObserverGetterAndSetter(t *testing.T) {
 
 		ob = ob.WithBlockCache(newBlockCache)
 		require.Equal(t, newBlockCache, ob.BlockCache())
-	})
-
-	t.Run("should be able to replace header cache", func(t *testing.T) {
-		ob := createObserver(t, chain, defaultAlertLatency)
-
-		// update headers cache
-		newHeadersCache, err := lru.New(200)
-		require.NoError(t, err)
-
-		ob = ob.WithHeaderCache(newHeadersCache)
-		require.Equal(t, newHeadersCache, ob.HeaderCache())
 	})
 
 	t.Run("should be able to update telemetry server", func(t *testing.T) {

@@ -3,12 +3,10 @@ package observer_test
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"os"
 	"testing"
 
 	"cosmossdk.io/math"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/onrik/ethrpc"
 	"github.com/rs/zerolog"
@@ -387,47 +385,6 @@ func Test_BlockCache(t *testing.T) {
 
 		// delete the block should not panic
 		ob.RemoveCachedBlock(blockNumber)
-	})
-}
-
-func Test_HeaderCache(t *testing.T) {
-	ctx := context.Background()
-
-	t.Run("should get block header from cache", func(t *testing.T) {
-		// create observer
-		ob := &observer.Observer{}
-		headerCache, err := lru.New(100)
-		require.NoError(t, err)
-		ob.WithHeaderCache(headerCache)
-
-		// create mock evm client
-		evmClient := mocks.NewEVMRPCClient(t)
-		ob.WithEvmClient(evmClient)
-
-		// feed block header to evm client
-		header := &ethtypes.Header{Number: big.NewInt(100)}
-		evmClient.On("HeaderByNumber", mock.Anything, mock.Anything).Return(header, nil)
-
-		// get block header from observer
-		resHeader, err := ob.GetBlockHeaderCached(ctx, uint64(100))
-		require.NoError(t, err)
-		require.EqualValues(t, header, resHeader)
-	})
-	t.Run("should fail if stored type is not block header", func(t *testing.T) {
-		// create observer
-		ob := &observer.Observer{}
-		headerCache, err := lru.New(100)
-		require.NoError(t, err)
-		ob.WithHeaderCache(headerCache)
-
-		// add a string to cache
-		blockNumber := uint64(100)
-		headerCache.Add(blockNumber, "a string value")
-
-		// get block header from cache
-		header, err := ob.GetBlockHeaderCached(ctx, blockNumber)
-		require.ErrorContains(t, err, "cached value is not of type *ethtypes.Header")
-		require.Nil(t, header)
 	})
 }
 

@@ -31,10 +31,6 @@ const (
 	// DefaultBlockCacheSize is the default number of blocks that the observer will keep in cache for performance (without RPC calls)
 	// Cached blocks can be used to get block information and verify transactions
 	DefaultBlockCacheSize = 1000
-
-	// DefaultHeaderCacheSize is the default number of headers that the observer will keep in cache for performance (without RPC calls)
-	// Cached headers can be used to get header information
-	DefaultHeaderCacheSize = 1000
 )
 
 // Observer is the base structure for chain observers, grouping the common logic for each chain observer client.
@@ -66,8 +62,6 @@ type Observer struct {
 
 	blockCache *lru.Cache
 
-	headerCache *lru.Cache
-
 	// db is the database to persist data
 	db *db.DB
 
@@ -93,7 +87,6 @@ func NewObserver(
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
 	blockCacheSize int,
-	headerCacheSize int,
 	rpcAlertLatency int64,
 	ts *metrics.TelemetryServer,
 	database *db.DB,
@@ -102,11 +95,6 @@ func NewObserver(
 	blockCache, err := lru.New(blockCacheSize)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating block cache")
-	}
-
-	headerCache, err := lru.New(headerCacheSize)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating header cache")
 	}
 
 	return &Observer{
@@ -121,7 +109,6 @@ func NewObserver(
 		ts:               ts,
 		db:               database,
 		blockCache:       blockCache,
-		headerCache:      headerCache,
 		mu:               &sync.Mutex{},
 		logger:           newObserverLogger(chain, logger),
 		stop:             make(chan struct{}),
@@ -283,17 +270,6 @@ func (ob *Observer) BlockCache() *lru.Cache {
 // WithBlockCache attaches a new block cache to the observer.
 func (ob *Observer) WithBlockCache(cache *lru.Cache) *Observer {
 	ob.blockCache = cache
-	return ob
-}
-
-// HeaderCache returns the header cache for the observer.
-func (ob *Observer) HeaderCache() *lru.Cache {
-	return ob.headerCache
-}
-
-// WithHeaderCache attaches a new header cache to the observer.
-func (ob *Observer) WithHeaderCache(cache *lru.Cache) *Observer {
-	ob.headerCache = cache
 	return ob
 }
 

@@ -437,7 +437,6 @@ func syncObserverMap(
 				client,
 				tss,
 				base.DefaultBlockCacheSize,
-				base.DefaultHeaderCacheSize,
 				cfg.RPCAlertLatency,
 				ts,
 				database,
