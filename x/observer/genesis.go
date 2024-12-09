@@ -1,6 +1,8 @@
 package observer
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -11,10 +13,21 @@ import (
 // InitGenesis initializes the observer module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-	observerCount := uint64(0)
+
+	fmt.Println("Observer Set Len : ", genState.Observers.Len())
+
+	observerCount := uint64(genState.Observers.Len())
+
 	if genState.Observers.Len() > 0 {
 		k.SetObserverSet(ctx, genState.Observers)
-		observerCount = uint64(len(genState.Observers.ObserverList))
+	} else {
+		k.SetObserverSet(ctx, types.ObserverSet{})
+	}
+
+	if genState.LastObserverCount != nil {
+		k.SetLastObserverCount(ctx, genState.LastObserverCount)
+	} else {
+		k.SetLastObserverCount(ctx, &types.LastObserverCount{LastChangeHeight: 0, Count: observerCount})
 	}
 
 	// if chain params are defined set them
@@ -80,12 +93,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			Height:           height,
 			BallotsIndexList: ballotList,
 		})
-	}
-
-	if genState.LastObserverCount != nil {
-		k.SetLastObserverCount(ctx, genState.LastObserverCount)
-	} else {
-		k.SetLastObserverCount(ctx, &types.LastObserverCount{LastChangeHeight: 0, Count: observerCount})
 	}
 
 	tss := types.TSS{}

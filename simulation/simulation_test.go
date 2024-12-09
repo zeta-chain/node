@@ -425,6 +425,14 @@ func TestAppImportExport(t *testing.T) {
 		storeA := ctxSimApp.KVStore(skp.A)
 		storeB := ctxNewSimApp.KVStore(skp.B)
 
+		a, b := CountKVStores(storeA, storeB, skp.SkipPrefixes)
+		if a != b {
+			t.Logf("storeA: %d, storeB: %d", a, b)
+			t.Log("key prefix: ", skp.A.Name())
+			//FindDiffKeys(storeA, storeB)
+			//t.Fail()
+		}
+
 		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, skp.SkipPrefixes)
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
 
@@ -572,4 +580,63 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		simApp.AppCodec(),
 	)
 	require.NoError(t, err)
+}
+
+// DiffKVStores compares two KVstores and returns all the key/value pairs
+// that differ from one another. It also skips value comparison for a set of provided prefixes.
+func CountKVStores(a sdk.KVStore, b sdk.KVStore, _ [][]byte) (int, int) {
+	iterA := a.Iterator(nil, nil)
+
+	defer iterA.Close()
+
+	iterB := b.Iterator(nil, nil)
+
+	defer iterB.Close()
+
+	countA := 0
+	countB := 0
+
+	for iterA.Valid() {
+		countA++
+		iterA.Next()
+	}
+
+	for iterB.Valid() {
+		countB++
+		iterB.Next()
+	}
+	return countA, countB
+}
+
+func FindDiffKeys(a sdk.KVStore, b sdk.KVStore) {
+
+	keysA := map[string]bool{}
+	keysB := map[string]bool{}
+	iterA := a.Iterator(nil, nil)
+
+	defer iterA.Close()
+
+	iterB := b.Iterator(nil, nil)
+
+	defer iterB.Close()
+
+	for iterA.Valid() {
+		k := string(iterA.Key())
+		iterA.Next()
+		keysA[k] = true
+
+	}
+
+	for iterB.Valid() {
+		kb := string(iterB.Key())
+		iterB.Next()
+		keysB[kb] = true
+	}
+
+	for k := range keysA {
+		if _, ok := keysB[k]; !ok {
+			fmt.Println("Key in A not in B", k)
+		}
+	}
+
 }

@@ -52,19 +52,19 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			cctx := *elem
 			k.SetCrossChainTx(ctx, cctx)
 			// set mapping inboundHash -> cctxIndex
-			in, _ := k.GetInboundHashToCctx(ctx, cctx.InboundParams.ObservedHash)
-			in.InboundHash = cctx.InboundParams.ObservedHash
-			found := false
-			for _, cctxIndex := range in.CctxIndex {
-				if cctxIndex == cctx.Index {
-					found = true
-					break
-				}
-			}
-			if !found {
-				in.CctxIndex = append(in.CctxIndex, cctx.Index)
-			}
-			k.SetInboundHashToCctx(ctx, in)
+			//in, _ := k.GetInboundHashToCctx(ctx, cctx.InboundParams.ObservedHash)
+			//in.InboundHash = cctx.InboundParams.ObservedHash
+			//found := false
+			//for _, cctxIndex := range in.CctxIndex {
+			//	if cctxIndex == cctx.Index {
+			//		found = true
+			//		break
+			//	}
+			//}
+			//if !found {
+			//	in.CctxIndex = append(in.CctxIndex, cctx.Index)
+			//}
+			//k.SetInboundHashToCctx(ctx, in)
 
 			if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.InboundParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.IsAbortRefunded == false {
 				k.AddZetaAbortedAmount(ctx, keeper.GetAbortedAmount(cctx))
