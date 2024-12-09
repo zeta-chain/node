@@ -15,7 +15,7 @@ import (
 // startEVMTests starts EVM chains related tests in parallel
 func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runner.E2ERunner, verbose bool) {
 	// Test happy paths for gas token workflow
-	eg.Go(evmTestRoutine(conf, "eth", conf.AdditionalAccounts.UserV2Ether, color.FgHiGreen, deployerRunner, verbose,
+	eg.Go(evmTestRoutine(conf, "eth", conf.AdditionalAccounts.UserEther, color.FgHiGreen, deployerRunner, verbose,
 		e2etests.TestETHDepositName,
 		e2etests.TestETHDepositAndCallName,
 		e2etests.TestETHWithdrawName,
@@ -32,7 +32,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 	))
 
 	// Test happy paths for erc20 token workflow
-	eg.Go(evmTestRoutine(conf, "erc20", conf.AdditionalAccounts.UserV2ERC20, color.FgHiBlue, deployerRunner, verbose,
+	eg.Go(evmTestRoutine(conf, "erc20", conf.AdditionalAccounts.UserERC20, color.FgHiBlue, deployerRunner, verbose,
 		e2etests.TestETHDepositName, // necessary to pay fees on ZEVM
 		e2etests.TestERC20DepositName,
 		e2etests.TestERC20DepositAndCallName,
@@ -50,7 +50,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 		evmTestRoutine(
 			conf,
 			"eth-revert",
-			conf.AdditionalAccounts.UserV2EtherRevert,
+			conf.AdditionalAccounts.UserEtherRevert,
 			color.FgHiYellow,
 			deployerRunner,
 			verbose,
@@ -68,7 +68,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 		evmTestRoutine(
 			conf,
 			"erc20-revert",
-			conf.AdditionalAccounts.UserV2ERC20Revert,
+			conf.AdditionalAccounts.UserERC20Revert,
 			color.FgHiRed,
 			deployerRunner,
 			verbose,

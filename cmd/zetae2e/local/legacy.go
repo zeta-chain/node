@@ -19,7 +19,7 @@ func legacyERC20TestRoutine(
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
-		account := conf.AdditionalAccounts.UserERC20
+		account := conf.AdditionalAccounts.UserLegacyERC20
 		// initialize runner for erc20 test
 		erc20Runner, err := initTestRunner(
 			"erc20",
@@ -78,7 +78,7 @@ func legacyEthereumTestRoutine(
 			"ether",
 			conf,
 			deployerRunner,
-			conf.AdditionalAccounts.UserEther,
+			conf.AdditionalAccounts.UserLegacyEther,
 			runner.NewLogger(verbose, color.FgMagenta, "ether"),
 		)
 		if err != nil {
@@ -121,7 +121,7 @@ func legacyZEVMMPTestRoutine(
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
-		account := conf.AdditionalAccounts.UserZEVMMPTest
+		account := conf.AdditionalAccounts.UserLegacyZEVMMP
 		// initialize runner for zevm mp test
 		zevmMPRunner, err := initTestRunner(
 			"zevm_mp",
@@ -174,7 +174,7 @@ func legacyZETATestRoutine(
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
-		account := conf.AdditionalAccounts.UserZetaTest
+		account := conf.AdditionalAccounts.UserLegacyZeta
 		// initialize runner for zeta test
 		zetaRunner, err := initTestRunner(
 			"zeta",
