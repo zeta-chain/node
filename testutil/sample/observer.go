@@ -113,6 +113,31 @@ func ChainParams(chainID int64) *types.ChainParams {
 	}
 }
 
+func ChainParamsFromRand(r *rand.Rand, chainID int64) *types.ChainParams {
+	fiftyPercent, err := sdk.NewDecFromStr("0.5")
+	if err != nil {
+		return nil
+	}
+
+	return &types.ChainParams{
+		ChainId:           chainID,
+		ConfirmationCount: r.Uint64(),
+
+		GasPriceTicker:              Uint64InRange(1, 300),
+		InboundTicker:               Uint64InRange(1, 300),
+		OutboundTicker:              Uint64InRange(1, 300),
+		WatchUtxoTicker:             Uint64InRange(1, 300),
+		ZetaTokenContractAddress:    EthAddress().String(),
+		ConnectorContractAddress:    EthAddress().String(),
+		Erc20CustodyContractAddress: EthAddress().String(),
+		OutboundScheduleInterval:    Int64InRange(1, 100),
+		OutboundScheduleLookahead:   Int64InRange(1, 500),
+		BallotThreshold:             fiftyPercent,
+		MinObserverDelegation:       sdk.NewDec(r.Int63()),
+		IsSupported:                 true,
+	}
+}
+
 func ChainParamsSupported(chainID int64) *types.ChainParams {
 	cp := ChainParams(chainID)
 	cp.IsSupported = true

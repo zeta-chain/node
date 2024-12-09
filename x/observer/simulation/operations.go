@@ -129,6 +129,11 @@ func WeightedOperations(
 			weightMsgTypeMsgUpdateKeygen,
 			SimulateMsgUpdateKeygen(k),
 		),
+
+		simulation.NewWeightedOperation(
+			weightMsgTypeMsgUpdateChainParams,
+			SimulateMsgUpdateChainParams(k),
+		),
 	}
 
 }
