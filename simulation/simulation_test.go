@@ -425,14 +425,6 @@ func TestAppImportExport(t *testing.T) {
 		storeA := ctxSimApp.KVStore(skp.A)
 		storeB := ctxNewSimApp.KVStore(skp.B)
 
-		a, b := CountKVStores(storeA, storeB, skp.SkipPrefixes)
-		if a != b {
-			t.Logf("storeA: %d, storeB: %d", a, b)
-			t.Log("key prefix: ", skp.A.Name())
-			//FindDiffKeys(storeA, storeB)
-			//t.Fail()
-		}
-
 		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, skp.SkipPrefixes)
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
 

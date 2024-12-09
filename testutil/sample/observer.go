@@ -68,6 +68,15 @@ func Keygen(t *testing.T) *types.Keygen {
 	}
 }
 
+func KeygenFromRand(r *rand.Rand) types.Keygen {
+	pubkey := PubKey(r)
+	return types.Keygen{
+		Status:         types.KeygenStatus_KeyGenSuccess,
+		GranteePubkeys: []string{pubkey.String()},
+		BlockNumber:    r.Int63(),
+	}
+}
+
 func LastObserverCount(lastChangeHeight int64) *types.LastObserverCount {
 	r := newRandFromSeed(lastChangeHeight)
 

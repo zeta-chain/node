@@ -1,8 +1,6 @@
 package observer
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -13,17 +11,13 @@ import (
 // InitGenesis initializes the observer module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-
-	fmt.Println("Observer Set Len : ", genState.Observers.Len())
-
-	observerCount := uint64(genState.Observers.Len())
-
 	if genState.Observers.Len() > 0 {
 		k.SetObserverSet(ctx, genState.Observers)
 	} else {
 		k.SetObserverSet(ctx, types.ObserverSet{})
 	}
 
+	observerCount := uint64(genState.Observers.Len())
 	if genState.LastObserverCount != nil {
 		k.SetLastObserverCount(ctx, genState.LastObserverCount)
 	} else {

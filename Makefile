@@ -425,6 +425,8 @@ test-sim-after-import-long: runsim
 	@echo "Running application simulation-after-import. This may take several minute"
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 500 50 TestAppSimulationAfterImport
 
+test-sim-quick: test-sim-nondeterminism test-sim-fullappsimulation test-sim-import-export test-sim-after-import
+
 .PHONY: \
 test-sim-nondeterminism \
 test-sim-fullappsimulation \
