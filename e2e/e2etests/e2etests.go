@@ -1158,7 +1158,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestPrecompilesDistributeName,
 		"test stateful precompiled contracts distribute",
 		[]runner.ArgDefinition{},
-		TestPrecompilesDistribute,
+		TestPrecompilesDistributeAndClaim,
 	),
 	runner.NewE2ETest(
 		TestPrecompilesDistributeNonZRC20Name,
@@ -1170,6 +1170,6 @@ var AllE2ETests = []runner.E2ETest{
 		TestPrecompilesDistributeThroughContractName,
 		"test stateful precompiled contracts distribute through contract",
 		[]runner.ArgDefinition{},
-		TestPrecompilesDistributeThroughContract,
+		TestPrecompilesDistributeAndClaimThroughContract,
 	),
 }

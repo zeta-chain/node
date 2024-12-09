@@ -219,7 +219,7 @@ func (signer *Signer) Sign(
 }
 
 func newTx(
-	chainID *big.Int,
+	_ *big.Int,
 	data []byte,
 	to ethcommon.Address,
 	amount *big.Int,
@@ -230,27 +230,28 @@ func newTx(
 		return nil, errors.Wrap(err, "invalid gas parameters")
 	}
 
-	if gas.isLegacy() {
-		return ethtypes.NewTx(&ethtypes.LegacyTx{
-			To:       &to,
-			Value:    amount,
-			Data:     data,
-			GasPrice: gas.Price,
-			Gas:      gas.Limit,
-			Nonce:    nonce,
-		}), nil
-	}
-
-	return ethtypes.NewTx(&ethtypes.DynamicFeeTx{
-		ChainID:   chainID,
-		To:        &to,
-		Value:     amount,
-		Data:      data,
-		GasFeeCap: gas.Price,
-		GasTipCap: gas.PriorityFee,
-		Gas:       gas.Limit,
-		Nonce:     nonce,
+	// https://github.com/zeta-chain/node/issues/3221
+	//if gas.isLegacy() {
+	return ethtypes.NewTx(&ethtypes.LegacyTx{
+		To:       &to,
+		Value:    amount,
+		Data:     data,
+		GasPrice: gas.Price,
+		Gas:      gas.Limit,
+		Nonce:    nonce,
 	}), nil
+	//}
+	//
+	//return ethtypes.NewTx(&ethtypes.DynamicFeeTx{
+	//	ChainID:   chainID,
+	//	To:        &to,
+	//	Value:     amount,
+	//	Data:      data,
+	//	GasFeeCap: gas.Price,
+	//	GasTipCap: gas.PriorityFee,
+	//	Gas:       gas.Limit,
+	//	Nonce:     nonce,
+	//}), nil
 }
 
 func (signer *Signer) broadcast(ctx context.Context, tx *ethtypes.Transaction) error {

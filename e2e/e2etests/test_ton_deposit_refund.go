@@ -39,12 +39,5 @@ func TestTONDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	r.Logger.CCTX(*cctx, "ton_deposit_and_refund")
 
-	// Check the error carries the revert executed.
-	// tolerate the error in both the ErrorMessage field and the StatusMessage field
-	if cctx.CctxStatus.ErrorMessage != "" {
-		require.Contains(r, cctx.CctxStatus.ErrorMessage, "revert executed")
-		return
-	}
-
-	require.Contains(r, cctx.CctxStatus.StatusMessage, utils.ErrHashRevertFoo)
+	require.Contains(r, cctx.CctxStatus.ErrorMessage, utils.ErrHashRevertFoo)
 }

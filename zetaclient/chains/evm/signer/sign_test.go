@@ -59,6 +59,7 @@ func TestSigner_SignConnectorOnReceive(t *testing.T) {
 	})
 
 	t.Run("SignOutbound - should successfully sign DynamicFeeTx", func(t *testing.T) {
+		t.Skip("Skipped due to https://github.com/zeta-chain/node/issues/3221")
 		// ARRANGE
 		const (
 			gwei        = 1_000_000_000

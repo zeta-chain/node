@@ -541,6 +541,7 @@ func New(
 			&app.FungibleKeeper,
 			app.StakingKeeper,
 			app.BankKeeper,
+			app.DistrKeeper,
 			appCodec,
 			storetypes.TransientGasConfig(),
 		),

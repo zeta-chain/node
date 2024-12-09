@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -47,10 +48,18 @@ func initABI() {
 			GasRequiredByMethod[methodID] = MoveStakeMethodGas
 		case DistributeMethodName:
 			GasRequiredByMethod[methodID] = DistributeMethodGas
+		case ClaimRewardsMethodName:
+			GasRequiredByMethod[methodID] = ClaimRewardsMethodGas
 		case GetAllValidatorsMethodName:
 			GasRequiredByMethod[methodID] = 0
 			ViewMethod[methodID] = true
 		case GetSharesMethodName:
+			GasRequiredByMethod[methodID] = 0
+			ViewMethod[methodID] = true
+		case GetRewardsMethodName:
+			GasRequiredByMethod[methodID] = 0
+			ViewMethod[methodID] = true
+		case GetValidatorsMethodName:
 			GasRequiredByMethod[methodID] = 0
 			ViewMethod[methodID] = true
 		default:
@@ -62,11 +71,12 @@ func initABI() {
 type Contract struct {
 	precompiletypes.BaseContract
 
-	stakingKeeper  stakingkeeper.Keeper
-	fungibleKeeper fungiblekeeper.Keeper
-	bankKeeper     bankkeeper.Keeper
-	cdc            codec.Codec
-	kvGasConfig    storetypes.GasConfig
+	stakingKeeper      stakingkeeper.Keeper
+	fungibleKeeper     fungiblekeeper.Keeper
+	bankKeeper         bankkeeper.Keeper
+	distributionKeeper distrkeeper.Keeper
+	cdc                codec.Codec
+	kvGasConfig        storetypes.GasConfig
 }
 
 func NewIStakingContract(
@@ -74,6 +84,7 @@ func NewIStakingContract(
 	stakingKeeper *stakingkeeper.Keeper,
 	fungibleKeeper fungiblekeeper.Keeper,
 	bankKeeper bankkeeper.Keeper,
+	distributionKeeper distrkeeper.Keeper,
 	cdc codec.Codec,
 	kvGasConfig storetypes.GasConfig,
 ) *Contract {
@@ -83,12 +94,13 @@ func NewIStakingContract(
 	}
 
 	return &Contract{
-		BaseContract:   precompiletypes.NewBaseContract(ContractAddress),
-		stakingKeeper:  *stakingKeeper,
-		fungibleKeeper: fungibleKeeper,
-		bankKeeper:     bankKeeper,
-		cdc:            cdc,
-		kvGasConfig:    kvGasConfig,
+		BaseContract:       precompiletypes.NewBaseContract(ContractAddress),
+		stakingKeeper:      *stakingKeeper,
+		fungibleKeeper:     fungibleKeeper,
+		bankKeeper:         bankKeeper,
+		distributionKeeper: distributionKeeper,
+		cdc:                cdc,
+		kvGasConfig:        kvGasConfig,
 	}
 }
 
@@ -217,6 +229,41 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
 			res, err = c.distribute(ctx, evm, contract, method, args)
+			return err
+		})
+		if execErr != nil {
+			res, errPack := method.Outputs.Pack(false)
+			if errPack != nil {
+				return nil, errPack
+			}
+
+			return res, err
+		}
+		return res, nil
+	case GetRewardsMethodName:
+		var res []byte
+		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
+			res, err = c.getRewards(ctx, method, args)
+			return err
+		})
+		if execErr != nil {
+			return nil, err
+		}
+		return res, nil
+	case GetValidatorsMethodName:
+		var res []byte
+		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
+			res, err = c.getValidatorListForDelegator(ctx, method, args)
+			return err
+		})
+		if execErr != nil {
+			return nil, err
+		}
+		return res, nil
+	case ClaimRewardsMethodName:
+		var res []byte
+		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
+			res, err = c.claimRewards(ctx, evm, contract, method, args)
 			return err
 		})
 		if execErr != nil {

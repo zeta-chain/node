@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Features
+
+* [3235](https://github.com/zeta-chain/node/pull/3235) - add /systemtime telemetry endpoint (zetaclient)
+
 ### Tests
 
 * [3205](https://github.com/zeta-chain/node/issues/3205) - move Bitcoin revert address test to advanced group to avoid upgrade test failure
@@ -15,6 +19,8 @@
 * [3206](https://github.com/zeta-chain/node/pull/3206) - skip Solana unsupported transaction version to not block inbound observation
 * [3184](https://github.com/zeta-chain/node/pull/3184) - zetaclient should not retry if inbound vote message validation fails
 * [3230](https://github.com/zeta-chain/node/pull/3230) - update pending nonces when aborting a cctx through MsgAbortStuckCCTX
+* [3225](https://github.com/zeta-chain/node/pull/3225) - use separate database file names for btc signet and testnet4
+* [3253](https://github.com/zeta-chain/node/pull/3253) - fix solana inbound version 0 queries and move tss keysign prior to relayer key checking
 
 ## v23.0.0
 
@@ -24,6 +30,7 @@
 * [3091](https://github.com/zeta-chain/node/pull/3091) - improve build reproducability. `make release{,-build-only}` checksums should now be stable.
 * [3124](https://github.com/zeta-chain/node/pull/3124) - integrate SPL deposits
 * [3134](https://github.com/zeta-chain/node/pull/3134) - integrate SPL tokens withdraw to Solana
+* [3088](https://github.com/zeta-chain/node/pull/3088) - add functions to check and withdraw zrc20 as delegation rewards
 * [3182](https://github.com/zeta-chain/node/pull/3182) - enable zetaclient pprof server on port 6061
 
 ### Tests

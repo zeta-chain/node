@@ -240,7 +240,7 @@ func (k Keeper) processSuccessfulOutbound(
 	oldStatus := cctx.CctxStatus.Status
 	switch oldStatus {
 	case types.CctxStatus_PendingRevert:
-		cctx.SetReverted("", "revert executed")
+		cctx.SetReverted("", "")
 	case types.CctxStatus_PendingOutbound:
 		cctx.SetOutboundMined("")
 	default:
