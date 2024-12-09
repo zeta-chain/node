@@ -86,3 +86,21 @@ func stateTransitionMap() map[CctxStatus][]CctxStatus {
 	}
 	return stateTransitionMap
 }
+
+// IsTerminal returns true if the status is terminal.
+// The terminal states are
+// CctxStatus_Aborted
+// CctxStatus_Reverted
+// CctxStatus_OutboundMined
+func (c CctxStatus) IsTerminal() bool {
+	return c == CctxStatus_Aborted || c == CctxStatus_Reverted || c == CctxStatus_OutboundMined
+}
+
+// IsPending returns true if the status is pending.
+// The pending states are
+// CctxStatus_PendingInbound
+// CctxStatus_PendingOutbound
+// CctxStatus_PendingRevert
+func (c CctxStatus) IsPending() bool {
+	return !c.IsTerminal()
+}
