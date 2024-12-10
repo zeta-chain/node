@@ -25,7 +25,7 @@ func SimulateMsgUpdateChainParams(k keeper.Keeper) simtypes.Operation {
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
 
-		randomChain, err := GetExternalChain(ctx, k, r, 100)
+		randomChain, err := GetExternalChain(ctx, k, r, 10)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUpdateChainParams, err.Error()), nil, nil
 		}

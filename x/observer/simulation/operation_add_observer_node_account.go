@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -9,47 +8,69 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/observer/keeper"
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-// SimulateMsgResetChainNonces generates a MsgResetChainNonces and delivers it.
-func SimulateMsgResetChainNonces(k keeper.Keeper) simtypes.Operation {
+// SimulateMsgAddObserverNodeAccount generates a TypeMsgAddObserver and delivers it.
+func SimulateMsgAddObserverNodeAccount(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgResetChainNonces, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgAddObserver, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
 
-		randomChain, err := GetExternalChain(ctx, k, r, 10)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgResetChainNonces, err.Error()), nil, fmt.Errorf("error getting external chain")
-		}
-
-		tss, found := k.GetTSS(ctx)
+		observerSet, found := k.GetObserverSet(ctx)
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgResetChainNonces, "TSS not found"), nil, fmt.Errorf("TSS not found")
-		}
-		pendingNonces, found := k.GetPendingNonces(ctx, tss.TssPubkey, randomChain.ChainId)
-		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgResetChainNonces, "Pending nonces not found"), nil,
-				fmt.Errorf("pending nonces not found for chain %d %s", randomChain.ChainId, randomChain.ChainName)
-		}
-
-		nonceIncrement := int64(r.Intn(100-1)) + 1
-
-		msg := types.MsgResetChainNonces{
-			Creator:        policyAccount.Address.String(),
-			ChainId:        randomChain.ChainId,
-			ChainNonceHigh: pendingNonces.NonceHigh + nonceIncrement,
-			ChainNonceLow:  pendingNonces.NonceLow + nonceIncrement,
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				types.TypeMsgAddObserver,
+				"no observer set found",
+			), nil, nil
 		}
 
-		err = msg.ValidateBasic()
+		observerMap := make(map[string]bool)
+		for _, observer := range observerSet.ObserverList {
+			observerMap[observer] = true
+		}
+
+		validators := k.GetStakingKeeper().GetAllValidators(ctx)
+		if len(validators) == 0 {
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				types.TypeMsgUpdateObserver,
+				"no validators found",
+			), nil, nil
+		}
+		newObserver := ""
+		for {
+			randomValidator := validators[r.Intn(len(validators))]
+			randomValidatorOperatorAddress, err := types.GetAccAddressFromOperatorAddress(randomValidator.OperatorAddress)
+			if err != nil {
+				continue
+			}
+			newObserver = randomValidatorOperatorAddress.String()
+			err = k.IsValidator(ctx, newObserver)
+			if err != nil {
+				continue
+			}
+			if _, ok := observerMap[newObserver]; !ok {
+				break
+			}
+		}
+
+		msg := types.MsgAddObserver{
+			Creator:                 policyAccount.Address.String(),
+			ObserverAddress:         newObserver,
+			ZetaclientGranteePubkey: sample.PubkeyStringFromRand(r),
+			AddNodeAccountOnly:      true,
+		}
+
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), err.Error()), nil, err
 		}

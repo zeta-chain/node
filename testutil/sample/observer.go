@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -316,6 +317,17 @@ func GasPriceIncreaseFlags() types.GasPriceIncreaseFlags {
 	return types.GasPriceIncreaseFlags{
 		EpochLength:             1,
 		RetryInterval:           1,
+		GasPriceIncreasePercent: 1,
+		MaxPendingCctxs:         100,
+	}
+}
+
+func GasPriceIncreaseFlagsFromRand(r *rand.Rand) types.GasPriceIncreaseFlags {
+	minValue := 1
+	maxValue := 100
+	return types.GasPriceIncreaseFlags{
+		EpochLength:             int64(r.Intn(maxValue-minValue) + minValue),
+		RetryInterval:           time.Duration(r.Intn(maxValue-minValue) + minValue),
 		GasPriceIncreasePercent: 1,
 		MaxPendingCctxs:         100,
 	}

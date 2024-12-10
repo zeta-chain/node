@@ -24,6 +24,7 @@ import (
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	zetachains "github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/crypto"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 
 	zetaapp "github.com/zeta-chain/node/app"
@@ -108,6 +109,7 @@ func updateObserverState(t *testing.T, rawState map[string]json.RawMessage, cdc 
 	observerState := new(observertypes.GenesisState)
 	cdc.MustUnmarshalJSON(observerStateBz, observerState)
 
+	// Create an observer set as a subset of the current validator set
 	observers := make([]string, 0)
 	for _, validator := range validators {
 		accAddress, err := observertypes.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
@@ -127,17 +129,27 @@ func updateObserverState(t *testing.T, rawState map[string]json.RawMessage, cdc 
 	}
 	observers = observers[:numObservers]
 
-	observerState.Observers.ObserverList = observers
-	observerState.CrosschainFlags.IsInboundEnabled = true
-	observerState.CrosschainFlags.IsOutboundEnabled = true
+	// Create node account list for the observers set
+	nodeAccounts := make([]*observertypes.NodeAccount, len(observers))
+	for i, observer := range observers {
+		nodeAccounts[i] = &observertypes.NodeAccount{
+			Operator:       observer,
+			GranteeAddress: observer,
+			GranteePubkey:  &crypto.PubKeySet{},
+			NodeStatus:     observertypes.NodeStatus_Active,
+		}
+		//fmt.Println(nodeAccounts[i].GranteePubkey)
+	}
+	// Create a random tss
 	tss, err := sample.TSSFromRand(r)
 	require.NoError(t, err)
 	tss.OperatorAddressList = observers
-	observerState.Tss = &tss
 
+	// Create a tss history
 	tssHistory := make([]observertypes.TSS, 0)
 	tssHistory = append(tssHistory, tss)
 
+	// Create chainnonces and pendingnonces
 	chains := zetachains.DefaultChainsList()
 	chainsNonces := make([]observertypes.ChainNonces, 0)
 	pendingNonces := make([]observertypes.PendingNonces, 0)
@@ -156,6 +168,11 @@ func updateObserverState(t *testing.T, rawState map[string]json.RawMessage, cdc 
 		pendingNonces = append(pendingNonces, pendingNonce)
 	}
 
+	observerState.Tss = &tss
+	observerState.Observers.ObserverList = observers
+	observerState.NodeAccountList = nodeAccounts
+	observerState.CrosschainFlags.IsInboundEnabled = true
+	observerState.CrosschainFlags.IsOutboundEnabled = true
 	observerState.ChainNonces = chainsNonces
 	observerState.PendingNonces = pendingNonces
 	observerState.TssHistory = tssHistory
@@ -370,7 +387,6 @@ func AppStateRandomizedFn(
 	if err != nil {
 		panic(err)
 	}
-
 	return appState, accs
 }
 

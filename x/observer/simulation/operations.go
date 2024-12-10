@@ -45,7 +45,7 @@ const (
 	DefaultWeightMsgTypeMsgRemoveChainParams           = 10
 	DefaultWeightMsgTypeMsgResetChainNonces            = 5
 	DefaultWeightMsgTypeMsgUpdateGasPriceIncreaseFlags = 10
-	DefaultWeightMsgTypeMsgAddObserver                 = 10
+	DefaultWeightMsgTypeMsgAddObserver                 = 5
 )
 
 // WeightedOperations for observer module
@@ -145,6 +145,26 @@ func WeightedOperations(
 			weightMsgTypeMsgResetChainNonces,
 			SimulateMsgResetChainNonces(k),
 		),
+
+		simulation.NewWeightedOperation(
+			weightMsgTypeMsgUpdateGasPriceIncreaseFlags,
+			SimulateMsgUpdateGasPriceIncreaseFlags(k),
+		),
+
+		simulation.NewWeightedOperation(
+			weightMsgTypeMsgAddObserver,
+			SimulateMsgUpdateObserver(k),
+		),
+
+		simulation.NewWeightedOperation(
+			weightMsgTypeMsgAddObserver,
+			SimulateMsgAddObserverNodeAccount(k),
+		),
+
+		simulation.NewWeightedOperation(
+			weightMsgTypeMsgAddObserver,
+			SimulateMsgAddObserver(k),
+		),
 	}
 
 }
@@ -183,4 +203,72 @@ func GetExternalChain(ctx sdk.Context, k keeper.Keeper, r *rand.Rand, retryCount
 		}
 	}
 	return chains.Chain{}, fmt.Errorf("no external chain found")
+}
+
+// GetRandomAccountAndObserver returns a random account and the associated observer address
+func GetRandomAccountAndObserver(
+	r *rand.Rand,
+	ctx sdk.Context,
+	k keeper.Keeper,
+	accounts []simtypes.Account,
+) (simtypes.Account, string, []string, error) {
+	observerList := []string{}
+	observers, found := k.GetObserverSet(ctx)
+	if !found {
+		return simtypes.Account{}, "", observerList, fmt.Errorf("observer set not found")
+	}
+
+	observerList = observers.ObserverList
+
+	if len(observers.ObserverList) == 0 {
+		return simtypes.Account{}, "", observerList, fmt.Errorf("no observers present in observer set found")
+	}
+
+	randomObserver := ""
+	foundObserver := false
+	for i := 0; i < 10; i++ {
+		randomObserver = GetRandomObserver(r, observers.ObserverList)
+		_, foundNodeAccount := k.GetNodeAccount(ctx, randomObserver)
+		if !foundNodeAccount {
+			continue
+		}
+		ok := k.IsNonTombstonedObserver(ctx, randomObserver)
+		if ok {
+			foundObserver = true
+			break
+		}
+	}
+
+	if !foundObserver {
+		return simtypes.Account{}, "", observerList, fmt.Errorf("no observer found")
+	}
+
+	simAccount, err := GetObserverAccount(randomObserver, accounts)
+	if err != nil {
+		return simtypes.Account{}, "", observerList, err
+	}
+	return simAccount, randomObserver, observerList, nil
+}
+
+func GetRandomObserver(r *rand.Rand, observerList []string) string {
+	idx := r.Intn(len(observerList))
+	return observerList[idx]
+}
+
+// GetObserverAccount returns the account associated with the observer address from the list of accounts provided
+// GetObserverAccount can fail if all the observers are removed from the observer set ,this can happen
+//if the other modules create transactions which affect the validator
+//and triggers any of the staking hooks defined in the observer modules
+
+func GetObserverAccount(observerAddress string, accounts []simtypes.Account) (simtypes.Account, error) {
+	operatorAddress, err := types.GetOperatorAddressFromAccAddress(observerAddress)
+	if err != nil {
+		return simtypes.Account{}, fmt.Errorf("validator not found for observer ")
+	}
+
+	simAccount, found := simtypes.FindAccount(accounts, operatorAddress)
+	if !found {
+		return simtypes.Account{}, fmt.Errorf("operator account not found")
+	}
+	return simAccount, nil
 }

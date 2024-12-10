@@ -63,7 +63,7 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 		}
 
 		// pick a random nonce from the pending nonces between 0 and nonceLow
-		// Ih nonce low is the same as nonce high, it means that there are no pending nonces to add trackers for
+		// If nonce low is the same as nonce high, it means that there are no pending nonces to add trackers for
 		if pendingNonces.NonceLow == pendingNonces.NonceHigh {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
@@ -89,6 +89,26 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 				types.ModuleName,
 				types.TypeMsgAddOutboundTracker,
 				"tracker is maxed",
+			), nil, nil
+		}
+
+		// Verify the nonceToCCTX exists
+		nonceToCCTX, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tss.TssPubkey, chainID, int64(nonce))
+		if !found {
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				types.TypeMsgAddOutboundTracker,
+				"no nonce to cctx found",
+			), nil, nil
+		}
+
+		// Verify the cctx exists
+		_, found = k.GetCrossChainTx(ctx, nonceToCCTX.CctxIndex)
+		if !found {
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				types.TypeMsgAddOutboundTracker,
+				"no cctx found for nonce",
 			), nil, nil
 		}
 		// Add a new inbound Tracker

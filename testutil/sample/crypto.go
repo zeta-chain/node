@@ -33,9 +33,49 @@ func PubKeySet() *crypto.PubKeySet {
 	return &pubKeySet
 }
 
+func Secp256PrivateKeyFromRand(r *rand.Rand) secp256k1.PrivKey {
+	randomBytes := make([]byte, 32)
+	_, err := r.Read(randomBytes)
+	if err != nil {
+		panic(err)
+	}
+	return secp256k1.GenPrivKeySecp256k1(randomBytes)
+}
+
+func Ed25519PrivateKeyFromRand(r *rand.Rand) *ed25519.PrivKey {
+	randomBytes := make([]byte, 32)
+	_, err := r.Read(randomBytes)
+	if err != nil {
+		panic(err)
+	}
+	return ed25519.GenPrivKeyFromSecret(randomBytes)
+
+}
+
+func PubKeySetFromRand(r *rand.Rand) *crypto.PubKeySet {
+	pubKeySet := crypto.PubKeySet{
+		Secp256k1: crypto.PubKey(Secp256PrivateKeyFromRand(r).PubKey().Bytes()),
+		Ed25519:   crypto.PubKey(Ed25519PrivateKeyFromRand(r).PubKey().String()),
+	}
+	return &pubKeySet
+}
+
 // PubKeyString returns a sample public key string
 func PubKeyString() string {
 	priKey := ed25519.GenPrivKey()
+	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, priKey.PubKey())
+	if err != nil {
+		panic(err)
+	}
+	pubkey, err := crypto.NewPubKey(s)
+	if err != nil {
+		panic(err)
+	}
+	return pubkey.String()
+}
+
+func PubkeyStringFromRand(r *rand.Rand) string {
+	priKey := Ed25519PrivateKeyFromRand(r)
 	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, priKey.PubKey())
 	if err != nil {
 		panic(err)

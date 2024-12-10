@@ -239,7 +239,21 @@ func GetRandomAccountAndObserver(
 		return simtypes.Account{}, "", fmt.Errorf("no observers present in observer set found")
 	}
 
-	randomObserver := GetRandomObserver(r, observers.ObserverList)
+	randomObserver := ""
+	foundObserver := false
+	for i := 0; i < 10; i++ {
+		randomObserver = GetRandomObserver(r, observers.ObserverList)
+		ok := k.GetObserverKeeper().IsNonTombstonedObserver(ctx, randomObserver)
+		if ok {
+			foundObserver = true
+			break
+		}
+	}
+
+	if !foundObserver {
+		return simtypes.Account{}, "", fmt.Errorf("no observer found")
+	}
+
 	simAccount, err := GetObserverAccount(randomObserver, accounts)
 	if err != nil {
 		return simtypes.Account{}, "", err
