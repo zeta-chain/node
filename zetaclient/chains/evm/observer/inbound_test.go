@@ -19,12 +19,113 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
+
+func Test_ERC20AddressToForeignCoinAsset(t *testing.T) {
+	tests := []struct {
+		name         string
+		chainID      int64
+		erc20Address ethcommon.Address
+		assetString  string
+	}{
+		// Ethereum Mainnet
+		{
+			name:         "USDC.ETH",
+			chainID:      chains.Ethereum.ChainId,
+			erc20Address: ethcommon.HexToAddress("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"),
+			assetString:  "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+		},
+		{
+			name:         "PEPE.ETH",
+			chainID:      chains.Ethereum.ChainId,
+			erc20Address: ethcommon.HexToAddress("0x6982508145454ce325ddbe47a25d4ec3d2311933"),
+			assetString:  "0x6982508145454ce325ddbe47a25d4ec3d2311933",
+		},
+		{
+			name:         "SHIB.ETH",
+			chainID:      chains.Ethereum.ChainId,
+			erc20Address: ethcommon.HexToAddress("0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce"),
+			assetString:  "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce",
+		},
+		{
+			name:         "USDT.ETH",
+			chainID:      chains.Ethereum.ChainId,
+			erc20Address: ethcommon.HexToAddress("0xdac17f958d2ee523a2206206994597c13d831ec7"),
+			assetString:  "0xdac17f958d2ee523a2206206994597c13d831ec7",
+		},
+		{
+			name:         "DAI.ETH",
+			chainID:      chains.Ethereum.ChainId,
+			erc20Address: ethcommon.HexToAddress("0x6b175474e89094c44da98b954eedeac495271d0f"),
+			assetString:  "0x6b175474e89094c44da98b954eedeac495271d0f",
+		},
+		{
+			name:         "ULTI.ETH",
+			chainID:      chains.Ethereum.ChainId,
+			erc20Address: ethcommon.HexToAddress("0x0E7779e698052f8fe56C415C3818FCf89de9aC6D"),
+			assetString:  "0x0E7779e698052f8fe56C415C3818FCf89de9aC6D",
+		},
+		// BSC Mainnet
+		{
+			name:         "USDC.BSC",
+			chainID:      chains.BscMainnet.ChainId,
+			erc20Address: ethcommon.HexToAddress("0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"),
+			assetString:  "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+		},
+		{
+			name:         "USDT.BSC",
+			chainID:      chains.BscMainnet.ChainId,
+			erc20Address: ethcommon.HexToAddress("0x55d398326f99059ff775485246999027b3197955"),
+			assetString:  "0x55d398326f99059ff775485246999027b3197955",
+		},
+		{
+			name:         "ULTI.BSC",
+			chainID:      chains.BscMainnet.ChainId,
+			erc20Address: ethcommon.HexToAddress("0x0E7779e698052f8fe56C415C3818FCf89de9aC6D"),
+			assetString:  "0x0E7779e698052f8fe56C415C3818FCf89de9aC6D",
+		},
+		// Polygon Mainnet
+		{
+			name:         "USDT.POL",
+			chainID:      chains.Polygon.ChainId,
+			erc20Address: ethcommon.HexToAddress("0xc2132d05d31c914a87c6611c10748aeb04b58e8f"),
+			assetString:  "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+		},
+		{
+			name:         "USDC.POL",
+			chainID:      chains.Polygon.ChainId,
+			erc20Address: ethcommon.HexToAddress("0x3c499c542cef5e3811e1192ce70d8cc03d5c3359"),
+			assetString:  "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+		},
+		// Polygon Amoy
+		{
+			name:         "USDC.AMOY",
+			chainID:      chains.Amoy.ChainId,
+			erc20Address: ethcommon.HexToAddress("0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582"),
+			assetString:  "0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582",
+		},
+		// Base Mainnet
+		{
+			name:         "USDC.BASE",
+			chainID:      chains.BaseMainnet.ChainId,
+			erc20Address: ethcommon.HexToAddress("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"),
+			assetString:  "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			asset := observer.ERC20AddressToForeignCoinAsset(tt.chainID, tt.erc20Address)
+			require.Equal(t, tt.assetString, asset)
+		})
+	}
+}
 
 func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 	// load archived ZetaSent inbound, receipt and cctx
