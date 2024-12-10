@@ -182,6 +182,9 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited)
 	}
 
 	// convert erc20Address to asset in foreign coin store to avoid checksum mismatch
+	// convert erc20Address to asset in foreign coin store to avoid checksum mismatch
+	// TODO: remove once the checksum conversion is fixed in the protocol
+	// https://github.com/zeta-chain/node/issues/3274
 	asset := ERC20AddressToForeignCoinAsset(ob.Chain().ChainId, event.Asset)
 	if asset != event.Asset.Hex() {
 		ob.Logger().
