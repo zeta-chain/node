@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/observer/types"
 
 	"github.com/zeta-chain/node/x/observer/keeper"
@@ -42,7 +43,7 @@ const (
 	DefaultWeightMsgTypeMsgUpdateObserver              = 10
 	DefaultWeightMsgTypeMsgUpdateChainParams           = 10
 	DefaultWeightMsgTypeMsgRemoveChainParams           = 10
-	DefaultWeightMsgTypeMsgResetChainNonces            = 10
+	DefaultWeightMsgTypeMsgResetChainNonces            = 5
 	DefaultWeightMsgTypeMsgUpdateGasPriceIncreaseFlags = 10
 	DefaultWeightMsgTypeMsgAddObserver                 = 10
 )
@@ -129,10 +130,20 @@ func WeightedOperations(
 			weightMsgTypeMsgUpdateKeygen,
 			SimulateMsgUpdateKeygen(k),
 		),
-
+		//
 		simulation.NewWeightedOperation(
 			weightMsgTypeMsgUpdateChainParams,
 			SimulateMsgUpdateChainParams(k),
+		),
+		//
+		//simulation.NewWeightedOperation(
+		//	weightMsgTypeMsgRemoveChainParams,
+		//	SimulateMsgRemoveChainParams(k),
+		//),
+
+		simulation.NewWeightedOperation(
+			weightMsgTypeMsgResetChainNonces,
+			SimulateMsgResetChainNonces(k),
 		),
 	}
 
@@ -157,4 +168,19 @@ func GetPolicyAccount(ctx sdk.Context, k types.AuthorityKeeper, accounts []simty
 		return simtypes.Account{}, fmt.Errorf("admin account not found in list of simulation accounts")
 	}
 	return simAccount, nil
+}
+
+func GetExternalChain(ctx sdk.Context, k keeper.Keeper, r *rand.Rand, retryCount int) (chains.Chain, error) {
+	supportedChains := k.GetSupportedChains(ctx)
+	if len(supportedChains) == 0 {
+		return chains.Chain{}, fmt.Errorf("no supported chains found")
+	}
+	// remove zeta chain from the supported chains
+	for i := 0; i < retryCount; i++ {
+		c := supportedChains[r.Intn(len(supportedChains))]
+		if !c.IsZetaChain() {
+			return c, nil
+		}
+	}
+	return chains.Chain{}, fmt.Errorf("no external chain found")
 }

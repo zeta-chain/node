@@ -31,9 +31,9 @@ func SimulateMsgUpdateKeygen(k keeper.Keeper) simtypes.Operation {
 			k.SetKeygen(ctx, kg)
 		}
 
-		blockHeighMin := ctx.BlockHeight() + 11
-		blockHeighMax := ctx.BlockHeight() + 1000
-		keygenBlockHeight := int64(r.Intn(int(blockHeighMax-blockHeighMin))) + blockHeighMin
+		blockHeightMin := ctx.BlockHeight() + 11
+		blockHeightMax := ctx.BlockHeight() + 1000
+		keygenBlockHeight := int64(r.Intn(int(blockHeightMax-blockHeightMin))) + blockHeightMin
 
 		msg := types.MsgUpdateKeygen{
 			Creator: policyAccount.Address.String(),
