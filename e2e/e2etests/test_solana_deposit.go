@@ -29,6 +29,7 @@ func TestSolanaDeposit(r *runner.E2ERunner, args []string) {
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "solana_deposit")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+	require.Equal(r, cctx.GetCurrentOutboundParam().Receiver, r.EVMAddress().Hex())
 
 	// get ERC20 SOL balance after deposit
 	balanceAfter, err := r.SOLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())

@@ -81,7 +81,7 @@ func Test_FilterInboundEvents(t *testing.T) {
 	eventExpected := &clienttypes.InboundEvent{
 		SenderChainID: chain.ChainId,
 		Sender:        sender,
-		Receiver:      sender,
+		Receiver:      "",
 		TxOrigin:      sender,
 		Amount:        100000,
 		Memo:          []byte("0x7F8ae2ABb69A558CE6bAd546f25F0464D9e09e5B4955a3F38ff86ae92A914445099caa8eA2B9bA32"),
@@ -123,11 +123,13 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 
 	t.Run("should return vote msg for valid event", func(t *testing.T) {
 		sender := sample.SolanaAddress(t)
-		memo := sample.EthAddress().Bytes()
-		event := sample.InboundEvent(chain.ChainId, sender, sender, 1280, []byte(memo))
+		receiver := sample.EthAddress()
+		event := sample.InboundEvent(chain.ChainId, sender, "", 1280, receiver.Bytes())
 
 		msg := ob.BuildInboundVoteMsgFromEvent(event)
 		require.NotNil(t, msg)
+		require.Equal(t, sender, msg.Sender)
+		require.Equal(t, receiver.Hex(), msg.Receiver)
 	})
 
 	t.Run("should return nil if failed to decode memo", func(t *testing.T) {
