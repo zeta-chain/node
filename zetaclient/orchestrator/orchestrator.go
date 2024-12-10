@@ -308,7 +308,15 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 			bn := newBlock.Block.Height
 
 			blockTimeLatency := time.Since(newBlock.Block.Time)
-			metrics.CoreBlockLatency.Set(blockTimeLatency.Seconds())
+			blockTimeLatencySeconds := blockTimeLatency.Seconds()
+			metrics.CoreBlockLatency.Set(blockTimeLatencySeconds)
+
+			if blockTimeLatencySeconds > 15 {
+				oc.logger.Warn().
+					Float64("latency", blockTimeLatencySeconds).
+					Msgf("runScheduler: core block latency too high")
+				continue
+			}
 
 			balance, err := oc.zetacoreClient.GetZetaHotKeyBalance(ctx)
 			if err != nil {
