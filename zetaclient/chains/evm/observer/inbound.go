@@ -746,6 +746,8 @@ func (ob *Observer) BuildInboundVoteMsgForDepositedEvent(
 	}
 
 	// convert erc20Address to asset in foreign coin store to avoid checksum mismatch
+	// TODO: remove once the checksum conversion is fixed in the protocol
+	// https://github.com/zeta-chain/node/issues/3274
 	asset := ERC20AddressToForeignCoinAsset(ob.Chain().ChainId, event.Asset)
 
 	message := hex.EncodeToString(event.Message)
