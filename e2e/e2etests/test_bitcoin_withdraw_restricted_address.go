@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
 )
@@ -13,8 +14,8 @@ import (
 func TestBitcoinWithdrawRestricted(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	withdrawalAmount := parseFloat(r, args[0])
-	amount := btcAmountFromFloat64(r, withdrawalAmount)
+	withdrawalAmount := utils.ParseFloat(r, args[0])
+	amount := utils.BTCAmountFromFloat64(r, withdrawalAmount)
 
 	withdrawBitcoinRestricted(r, amount)
 }

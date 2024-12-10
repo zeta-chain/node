@@ -17,9 +17,9 @@ import (
 func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
 	// Can withdraw 10ZETA
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(10))
-	r.DepositAndApproveWZeta(amount)
+	r.LegacyDepositAndApproveWZeta(amount)
 
-	tx := r.WithdrawZeta(amount, true)
+	tx := r.LegacyWithdrawZeta(amount, true)
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
@@ -63,8 +63,8 @@ func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
 	require.Equal(r, "foo", response)
 
 	// Can continue to interact with the connector: withdraw 10ZETA
-	r.DepositAndApproveWZeta(amount)
-	tx = r.WithdrawZeta(amount, true)
+	r.LegacyDepositAndApproveWZeta(amount)
+	tx = r.LegacyWithdrawZeta(amount, true)
 	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "zeta withdraw")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)

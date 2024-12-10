@@ -17,7 +17,7 @@ func TestBitcoinStdMemoDepositAndCallRevertOtherAddress(r *runner.E2ERunner, arg
 
 	// Parse amount to send
 	require.Len(r, args, 1)
-	amount := parseFloat(r, args[0])
+	amount := utils.ParseFloat(r, args[0])
 
 	// Create a memo to call non-existing contract
 	revertAddress := "bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2"

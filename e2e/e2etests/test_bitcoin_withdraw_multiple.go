@@ -4,6 +4,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
 )
 
@@ -14,8 +15,8 @@ func WithdrawBitcoinMultipleTimes(r *runner.E2ERunner, args []string) {
 	// Given amount and repeat count
 	require.Len(r, args, 2)
 	var (
-		amount = btcAmountFromFloat64(r, parseFloat(r, args[0]))
-		times  = parseInt(r, args[1])
+		amount = utils.BTCAmountFromFloat64(r, utils.ParseFloat(r, args[0]))
+		times  = utils.ParseInt(r, args[1])
 	)
 
 	// Given a receiver
