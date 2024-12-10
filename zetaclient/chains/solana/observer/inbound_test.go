@@ -81,7 +81,7 @@ func Test_FilterInboundEvents(t *testing.T) {
 	eventExpected := &clienttypes.InboundEvent{
 		SenderChainID: chain.ChainId,
 		Sender:        sender,
-		Receiver:      sender,
+		Receiver:      "",
 		TxOrigin:      sender,
 		Amount:        100000,
 		Memo:          []byte("0x7F8ae2ABb69A558CE6bAd546f25F0464D9e09e5B4955a3F38ff86ae92A914445099caa8eA2B9bA32"),
