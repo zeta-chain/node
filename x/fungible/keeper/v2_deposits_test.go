@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"math/big"
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
@@ -11,8 +14,6 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
 	"github.com/zeta-chain/node/x/fungible/types"
-	"math/big"
-	"testing"
 )
 
 // getTestDAppNoMessageIndex queries the no message index of the test dapp v2 contract
@@ -51,7 +52,7 @@ func getTestDAppNoMessageIndex(
 
 // deployTestDAppV2 deploys the test dapp v2 contract and returns its address
 func deployTestDAppV2(t *testing.T, ctx sdk.Context, k *fungiblekeeper.Keeper, evmk types.EVMKeeper) common.Address {
-	testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true)
+	testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, sample.EthAddress())
 	require.NoError(t, err)
 	require.NotEmpty(t, testDAppV2)
 	assertContractDeployment(t, evmk, ctx, testDAppV2)

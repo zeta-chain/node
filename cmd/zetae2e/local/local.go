@@ -218,6 +218,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}))
 	}
 
+	e2eStartHeight, err := deployerRunner.Clients.Zetacore.GetBlockHeight(ctx)
+	noError(err)
+
 	// setting up the networks
 	if !skipSetup {
 		logger.Print("⚙️ setting up networks")
@@ -258,8 +261,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.UpdateChainParamsV2Contracts()
 		deployerRunner.ERC20CustodyAddr = deployerRunner.ERC20CustodyV2Addr
 
-		deployerRunner.MintERC20OnEvm(1e10)
-
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
 
@@ -283,6 +284,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("✅ the localnet has been setup")
 		os.Exit(0)
 	}
+
+	// always mint ERC20 before every test execution
+	deployerRunner.MintERC20OnEvm(1e10)
 
 	// run the v2 migration
 	if testV2Migration {
@@ -368,15 +372,23 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			precompiledContractTests = []string{
 				e2etests.TestPrecompilesPrototypeName,
 				e2etests.TestPrecompilesPrototypeThroughContractName,
-				e2etests.TestPrecompilesStakingName,
 				// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
 				// e2etests.TestPrecompilesStakingThroughContractName,
 				e2etests.TestPrecompilesBankName,
 				e2etests.TestPrecompilesBankFailName,
 				e2etests.TestPrecompilesBankThroughContractName,
-				e2etests.TestPrecompilesDistributeName,
-				e2etests.TestPrecompilesDistributeNonZRC20Name,
-				e2etests.TestPrecompilesDistributeThroughContractName,
+			}
+			if e2eStartHeight < 100 {
+				// these tests require a clean system
+				// since unstaking has an unbonding period
+				precompiledContractTests = append(precompiledContractTests,
+					e2etests.TestPrecompilesStakingName,
+					e2etests.TestPrecompilesDistributeName,
+					e2etests.TestPrecompilesDistributeNonZRC20Name,
+					e2etests.TestPrecompilesDistributeThroughContractName,
+				)
+			} else {
+				logger.Print("⚠️ partial precompiled run (unclean state)")
 			}
 		}
 

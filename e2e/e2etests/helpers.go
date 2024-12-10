@@ -185,3 +185,13 @@ func parseBitcoinWithdrawArgs(r *runner.E2ERunner, args []string, defaultReceive
 
 	return receiver, amount
 }
+
+// bigAdd is shorthand for new(big.Int).Add(x, y)
+func bigAdd(x *big.Int, y *big.Int) *big.Int {
+	return new(big.Int).Add(x, y)
+}
+
+// bigSub is shorthand for new(big.Int).Sub(x, y)
+func bigSub(x *big.Int, y *big.Int) *big.Int {
+	return new(big.Int).Sub(x, y)
+}
