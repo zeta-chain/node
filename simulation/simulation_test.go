@@ -42,7 +42,7 @@ func init() {
 	zetasimulation.GetSimulatorFlags()
 }
 
-// StoreKeysPrefixes defines a struct used in comparing tw keys for two different stores
+// StoreKeysPrefixes defines a struct used in comparing two keys for two different stores
 // SkipPrefixes is used to skip certain prefixes when comparing the stores
 type StoreKeysPrefixes struct {
 	A            storetypes.StoreKey
