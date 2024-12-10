@@ -111,6 +111,7 @@ const (
 	TestStressBTCWithdrawName   = "stress_btc_withdraw"
 	TestStressEtherDepositName  = "stress_eth_deposit"
 	TestStressBTCDepositName    = "stress_btc_deposit"
+	TestStressSolanaDepositName = "stress_solana_deposit"
 
 	/*
 	 Admin tests
@@ -766,6 +767,17 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "count", DefaultValue: "100"},
 		},
 		TestStressBTCDeposit,
+	),
+	runner.NewE2ETest(
+		TestStressSolanaDepositName,
+		"stress test SOL/SPL deposit",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamports", DefaultValue: "120000"},
+			{Description: "count of SOL deposits", DefaultValue: "10"},
+			{Description: "amount in SPL tokens", DefaultValue: "120000"},
+			{Description: "count of SPL deposits", DefaultValue: "0"},
+		},
+		TestStressSolanaDeposit,
 	),
 	/*
 	 Admin tests

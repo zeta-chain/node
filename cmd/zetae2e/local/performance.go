@@ -106,3 +106,52 @@ func ethereumWithdrawPerformanceRoutine(
 		return err
 	}
 }
+
+// solanaDepositPerformanceRoutine runs performance tests for Sol deposits
+func solanaDepositPerformanceRoutine(
+	conf config.Config,
+	deployerRunner *runner.E2ERunner,
+	verbose bool,
+	testNames ...string,
+) func() error {
+	return func() (err error) {
+		// initialize runner for solana test
+		r, err := initTestRunner(
+			"solana",
+			conf,
+			deployerRunner,
+			conf.AdditionalAccounts.UserSolana,
+			runner.NewLogger(verbose, color.FgCyan, "solana"),
+			runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
+		)
+		if err != nil {
+			return err
+		}
+
+		if r.ReceiptTimeout == 0 {
+			r.ReceiptTimeout = 15 * time.Minute
+		}
+		if r.CctxTimeout == 0 {
+			r.CctxTimeout = 15 * time.Minute
+		}
+
+		r.Logger.Print("🏃 starting solana deposit performance tests")
+		startTime := time.Now()
+
+		tests, err := r.GetE2ETestsToRunByName(
+			e2etests.AllE2ETests,
+			testNames...,
+		)
+		if err != nil {
+			return fmt.Errorf("solana deposit performance test failed: %v", err)
+		}
+
+		if err := r.RunE2ETests(tests); err != nil {
+			return fmt.Errorf("solana deposit performance test failed: %v", err)
+		}
+
+		r.Logger.Print("🍾 solana deposit performance test completed in %s", time.Since(startTime).String())
+
+		return err
+	}
+}

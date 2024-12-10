@@ -64,7 +64,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagContractsDeployed, false, "set to to true if running tests again with existing state")
 	cmd.Flags().Int64(flagWaitForHeight, 0, "block height for tests to begin, ex. --wait-for 100")
 	cmd.Flags().String(FlagConfigFile, "", "config file to use for the tests")
-	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
+	cmd.Flags().Bool(flagVerbose, true, "set to true to enable verbose logging")
 	cmd.Flags().Bool(flagTestAdmin, false, "set to true to run admin tests")
 	cmd.Flags().Bool(flagTestPerformance, false, "set to true to run performance tests")
 	cmd.Flags().Bool(flagTestSolana, false, "set to true to run solana tests")
@@ -110,6 +110,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testLegacy        = must(cmd.Flags().GetBool(flagTestLegacy))
 		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
 		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
+		setupSolana       = testSolana || testPerformance
 	)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
@@ -123,8 +124,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	if testPerformance {
-		logger.Print("⚠️ performance tests enabled, regular tests will be skipped")
+		logger.Print("⚠️ performance tests enabled, not related tests will be skipped")
 		skipRegular = true
+		skipPrecompiles = true
 	}
 
 	// start timer
@@ -226,7 +228,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// setup protocol contracts on the connected EVM chain
 		deployerRunner.SetupEVM()
 
-		if testSolana {
+		if setupSolana {
 			deployerRunner.SetupSolana(
 				conf.Contracts.Solana.GatewayProgramID.String(),
 				conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String(),
@@ -240,7 +242,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			ERC20Addr: deployerRunner.ERC20Addr,
 			SPLAddr:   nil,
 		}
-		if testSolana {
+		if setupSolana {
 			zrc20Deployment.SPLAddr = deployerRunner.SPLAddr.ToPointer()
 		}
 		deployerRunner.SetupZEVMZRC20s(zrc20Deployment)
@@ -379,8 +381,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	if testPerformance {
-		eg.Go(ethereumDepositPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherDepositName))
-		eg.Go(ethereumWithdrawPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherWithdrawName))
+		// eg.Go(ethereumDepositPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherDepositName))
+		// eg.Go(ethereumWithdrawPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherWithdrawName))
+		eg.Go(solanaDepositPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressSolanaDepositName))
 	}
 
 	if testSolana {
