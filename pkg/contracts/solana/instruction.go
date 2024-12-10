@@ -30,19 +30,49 @@ type DepositInstructionParams struct {
 	// Amount is the lamports amount for the deposit
 	Amount uint64
 
-	// Memo is the memo for the deposit
+	// Receiver is the receiver for the deposit
+	Receiver [20]byte
+}
+
+// DepositAndCallInstructionParams contains the parameters for a gateway deposit_and_call instruction
+type DepositAndCallInstructionParams struct {
+	// Discriminator is the unique identifier for the deposit_and_call instruction
+	Discriminator [8]byte
+
+	// Amount is the lamports amount for the deposit_and_call
+	Amount uint64
+
+	// Receiver is the receiver for the deposit_and_call
+	Receiver [20]byte
+
+	// Memo is the memo for the deposit_and_call
 	Memo []byte
 }
 
-// DepositSPLInstructionParams contains the parameters for a gateway deposit spl instruction
+// DepositSPLInstructionParams contains the parameters for a gateway deposit_spl instruction
 type DepositSPLInstructionParams struct {
-	// Discriminator is the unique identifier for the deposit instruction
+	// Discriminator is the unique identifier for the deposit_spl instruction
 	Discriminator [8]byte
 
-	// Amount is the lamports amount for the deposit
+	// Amount is the lamports amount for the deposit_spl
 	Amount uint64
 
-	// Memo is the memo for the deposit
+	// Receiver is the receiver for the deposit_spl
+	Receiver [20]byte
+}
+
+// DepositSPLAndCallInstructionParams contains the parameters for a gateway deposit_spl_and_call instruction
+type DepositSPLAndCallInstructionParams struct {
+	// Discriminator is the unique identifier for the deposit_spl_and_call instruction
+	Discriminator [8]byte
+
+	// Amount is the lamports amount for the deposit_spl_and_call
+	Amount uint64
+
+	// Receiver is the receiver for the deposit_spl_and_call
+	Receiver [20]byte
+
+	// Memo is the memo for the deposit_spl_and_call
 	Memo []byte
 }
 

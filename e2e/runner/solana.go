@@ -36,12 +36,24 @@ func (r *E2ERunner) CreateDepositInstruction(
 	data []byte,
 	amount uint64,
 ) solana.Instruction {
-	depositData, err := borsh.Serialize(solanacontract.DepositInstructionParams{
-		Discriminator: solanacontract.DiscriminatorDeposit,
-		Amount:        amount,
-		Memo:          append(receiver.Bytes(), data...),
-	})
-	require.NoError(r, err)
+	var err error
+	var depositData []byte
+	if data == nil {
+		depositData, err = borsh.Serialize(solanacontract.DepositInstructionParams{
+			Discriminator: solanacontract.DiscriminatorDeposit,
+			Amount:        amount,
+			Receiver:      receiver,
+		})
+		require.NoError(r, err)
+	} else {
+		depositData, err = borsh.Serialize(solanacontract.DepositAndCallInstructionParams{
+			Discriminator: solanacontract.DiscriminatorDepositAndCall,
+			Amount:        amount,
+			Receiver:      receiver,
+			Memo:          data,
+		})
+		require.NoError(r, err)
+	}
 
 	return &solana.GenericInstruction{
 		ProgID:    r.GatewayProgram,
@@ -87,12 +99,24 @@ func (r *E2ERunner) CreateDepositSPLInstruction(
 	receiver ethcommon.Address,
 	data []byte,
 ) solana.Instruction {
-	depositSPLData, err := borsh.Serialize(solanacontract.DepositInstructionParams{
-		Discriminator: solanacontract.DiscriminatorDepositSPL,
-		Amount:        amount,
-		Memo:          append(receiver.Bytes(), data...),
-	})
-	require.NoError(r, err)
+	var err error
+	var depositSPLData []byte
+	if data == nil {
+		depositSPLData, err = borsh.Serialize(solanacontract.DepositSPLInstructionParams{
+			Discriminator: solanacontract.DiscriminatorDepositSPL,
+			Amount:        amount,
+			Receiver:      receiver,
+		})
+		require.NoError(r, err)
+	} else {
+		depositSPLData, err = borsh.Serialize(solanacontract.DepositSPLAndCallInstructionParams{
+			Discriminator: solanacontract.DiscriminatorDepositSPLAndCall,
+			Amount:        amount,
+			Receiver:      receiver,
+			Memo:          data,
+		})
+		require.NoError(r, err)
+	}
 
 	return &solana.GenericInstruction{
 		ProgID:    r.GatewayProgram,
