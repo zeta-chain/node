@@ -27,8 +27,14 @@ var (
 	// DiscriminatorDeposit returns the discriminator for Solana gateway 'deposit' instruction
 	DiscriminatorDeposit = idlgateway.IDLGateway.GetDiscriminator("deposit")
 
+	// DiscriminatorDeposit returns the discriminator for Solana gateway 'deposit_and_call' instruction
+	DiscriminatorDepositAndCall = idlgateway.IDLGateway.GetDiscriminator("deposit_and_call")
+
 	// DiscriminatorDepositSPL returns the discriminator for Solana gateway 'deposit_spl_token' instruction
 	DiscriminatorDepositSPL = idlgateway.IDLGateway.GetDiscriminator("deposit_spl_token")
+
+	// DiscriminatorDepositSPLAndCall returns the discriminator for Solana gateway 'deposit_spl_token_and_call' instruction
+	DiscriminatorDepositSPLAndCall = idlgateway.IDLGateway.GetDiscriminator("deposit_spl_token_and_call")
 
 	// DiscriminatorWithdraw returns the discriminator for Solana gateway 'withdraw' instruction
 	DiscriminatorWithdraw = idlgateway.IDLGateway.GetDiscriminator("withdraw")
