@@ -37,6 +37,7 @@ import (
 
 var (
 	// erc20AddressToForeignCoinAssetMap maps the chain id and foreign ERC20 address to the coin asset string
+	// this is currently necessary because of the following issue: https://github.com/zeta-chain/node/issues/3274
 	erc20AddressToForeignCoinAssetMap = map[int64]map[ethcommon.Address]string{
 		// Ethereum mainnet
 		chains.Ethereum.ChainId: {
