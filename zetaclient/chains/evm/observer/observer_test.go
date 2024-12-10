@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	lru "github.com/hashicorp/golang-lru"
 	"github.com/onrik/ethrpc"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
@@ -76,72 +75,6 @@ func getAppContext(
 
 	// create AppContext
 	return appContext, cfg.EVMChainConfigs[evmChain.ChainId]
-}
-
-// MockEVMObserver creates a mock ChainObserver with custom chain, TSS, params etc
-func MockEVMObserver(
-	t *testing.T,
-	chain chains.Chain,
-	evmClient interfaces.EVMRPCClient,
-	evmJSONRPC interfaces.EVMJSONRPCClient,
-	zetacoreClient interfaces.ZetacoreClient,
-	tss interfaces.TSSSigner,
-	lastBlock uint64,
-	params observertypes.ChainParams,
-) (*observer.Observer, *zctx.AppContext) {
-	ctx := context.Background()
-
-	// use default mock evm client if not provided
-	if evmClient == nil {
-		evmClientDefault := mocks.NewEVMRPCClient(t)
-		evmClientDefault.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
-		evmClient = evmClientDefault
-	}
-
-	// use default mock evm client if not provided
-	if evmJSONRPC == nil {
-		evmJSONRPC = mocks.NewMockJSONRPCClient()
-	}
-
-	// use default mock zetacore client if not provided
-	if zetacoreClient == nil {
-		zetacoreClient = mocks.NewZetacoreClient(t).
-			WithKeys(&keys.Keys{}).
-			WithZetaChain().
-			WithPostVoteInbound("", "").
-			WithPostVoteOutbound("", "")
-	}
-	// use default mock tss if not provided
-	if tss == nil {
-		tss = mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet)
-	}
-	// create AppContext
-	appContext, _ := getAppContext(t, chain, "", &params)
-
-	database, err := db.NewFromSqliteInMemory(true)
-	require.NoError(t, err)
-
-	testLogger := zerolog.New(zerolog.NewTestWriter(t))
-	logger := base.Logger{Std: testLogger, Compliance: testLogger}
-
-	// create observer
-	ob, err := observer.NewObserver(
-		ctx,
-		chain,
-		evmClient,
-		evmJSONRPC,
-		params,
-		zetacoreClient,
-		tss,
-		60,
-		database,
-		logger,
-		nil,
-	)
-	require.NoError(t, err)
-	ob.WithLastBlock(lastBlock)
-
-	return ob, appContext
 }
 
 func Test_NewObserver(t *testing.T) {
@@ -272,14 +205,9 @@ func Test_NewObserver(t *testing.T) {
 func Test_LoadLastBlockScanned(t *testing.T) {
 	ctx := context.Background()
 
-	// use Ethereum chain for testing
-	chain := chains.Ethereum
-	params := mocks.MockChainParams(chain.ChainId, 10)
-
 	// create observer using mock evm client
-	evmClient := mocks.NewEVMRPCClient(t)
-	evmClient.On("BlockNumber", mock.Anything).Return(uint64(100), nil)
-	ob, _ := MockEVMObserver(t, chain, evmClient, nil, nil, nil, 1, params)
+	ob := newTestSuite(t)
+	ob.evmClient.On("BlockNumber", mock.Anything).Return(uint64(100), nil)
 
 	t.Run("should load last block scanned", func(t *testing.T) {
 		// create db and write 123 as last block scanned
@@ -292,7 +220,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 	})
 	t.Run("should fail on invalid env var", func(t *testing.T) {
 		// set invalid environment variable
-		envvar := base.EnvVarLatestBlockByChain(chain)
+		envvar := base.EnvVarLatestBlockByChain(ob.Chain())
 		os.Setenv(envvar, "invalid")
 		defer os.Unsetenv(envvar)
 
@@ -302,17 +230,14 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 	})
 	t.Run("should fail on RPC error", func(t *testing.T) {
 		// create observer on separate path, as we need to reset last block scanned
-		obOther, _ := MockEVMObserver(t, chain, evmClient, nil, nil, nil, 1, params)
+		obOther := newTestSuite(t)
 
 		// reset last block scanned to 0 so that it will be loaded from RPC
 		obOther.WithLastBlockScanned(0)
 
-		// create mock evm client with RPC error
-		evmClient := mocks.NewEVMRPCClient(t)
-		evmClient.On("BlockNumber", mock.Anything).Return(uint64(0), fmt.Errorf("error RPC"))
-
 		// attach mock evm client to observer
-		obOther.WithEvmClient(evmClient)
+		obOther.evmClient.On("BlockNumber", mock.Anything).Unset()
+		obOther.evmClient.On("BlockNumber", mock.Anything).Return(uint64(0), fmt.Errorf("error RPC"))
 
 		// load last block scanned
 		err := obOther.LoadLastBlockScanned(ctx)
@@ -323,68 +248,54 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 func Test_BlockCache(t *testing.T) {
 	t.Run("should get block from cache", func(t *testing.T) {
 		// create observer
-		ob := &observer.Observer{}
-		blockCache, err := lru.New(100)
-		require.NoError(t, err)
-		ob.WithBlockCache(blockCache)
-
-		// create mock evm client
-		JSONRPC := mocks.NewMockJSONRPCClient()
-		ob.WithEvmJSONRPC(JSONRPC)
+		ts := newTestSuite(t)
 
 		// feed block to JSON rpc client
 		block := &ethrpc.Block{Number: 100}
-		JSONRPC.WithBlock(block)
+		ts.rpcClient.WithBlock(block)
 
 		// get block header from observer, fallback to JSON RPC
-		result, err := ob.GetBlockByNumberCached(uint64(100))
+		result, err := ts.Observer.GetBlockByNumberCached(uint64(100))
 		require.NoError(t, err)
 		require.EqualValues(t, block, result)
 
 		// get block header from cache
-		result, err = ob.GetBlockByNumberCached(uint64(100))
+		result, err = ts.Observer.GetBlockByNumberCached(uint64(100))
 		require.NoError(t, err)
 		require.EqualValues(t, block, result)
 	})
 	t.Run("should fail if stored type is not block", func(t *testing.T) {
 		// create observer
-		ob := &observer.Observer{}
-		blockCache, err := lru.New(100)
-		require.NoError(t, err)
-		ob.WithBlockCache(blockCache)
+		ts := newTestSuite(t)
 
 		// add a string to cache
 		blockNumber := uint64(100)
-		blockCache.Add(blockNumber, "a string value")
+		ts.BlockCache().Add(blockNumber, "a string value")
 
 		// get result header from cache
-		result, err := ob.GetBlockByNumberCached(blockNumber)
+		result, err := ts.Observer.GetBlockByNumberCached(blockNumber)
 		require.ErrorContains(t, err, "cached value is not of type *ethrpc.Block")
 		require.Nil(t, result)
 	})
 	t.Run("should be able to remove block from cache", func(t *testing.T) {
 		// create observer
-		ob := &observer.Observer{}
-		blockCache, err := lru.New(100)
-		require.NoError(t, err)
-		ob.WithBlockCache(blockCache)
+		ts := newTestSuite(t)
 
 		// delete non-existing block should not panic
 		blockNumber := uint64(123)
-		ob.RemoveCachedBlock(blockNumber)
+		ts.RemoveCachedBlock(blockNumber)
 
 		// add a block
 		block := &ethrpc.Block{Number: 123}
-		blockCache.Add(blockNumber, block)
-		ob.WithBlockCache(blockCache)
+		ts.BlockCache().Add(blockNumber, block)
 
 		// block should be in cache
-		result, err := ob.GetBlockByNumberCached(blockNumber)
+		result, err := ts.GetBlockByNumberCached(blockNumber)
 		require.NoError(t, err)
 		require.EqualValues(t, block, result)
 
 		// delete the block should not panic
-		ob.RemoveCachedBlock(blockNumber)
+		ts.RemoveCachedBlock(blockNumber)
 	})
 }
 
@@ -401,17 +312,14 @@ func Test_CheckTxInclusion(t *testing.T) {
 	blockNumber := receipt.BlockNumber.Uint64()
 	block := testutils.LoadEVMBlock(t, TestDataDir, chainID, blockNumber, true)
 
-	// create client
-	blockCache, err := lru.New(1000)
-	require.NoError(t, err)
-	ob := &observer.Observer{}
+	// create observer
+	ts := newTestSuite(t)
 
 	// save block to cache
-	blockCache.Add(blockNumber, block)
-	ob.WithBlockCache(blockCache)
+	ts.BlockCache().Add(blockNumber, block)
 
 	t.Run("should pass for archived outbound", func(t *testing.T) {
-		err := ob.CheckTxInclusion(tx, receipt)
+		err := ts.CheckTxInclusion(tx, receipt)
 		require.NoError(t, err)
 	})
 	t.Run("should fail on tx index out of range", func(t *testing.T) {
@@ -419,22 +327,21 @@ func Test_CheckTxInclusion(t *testing.T) {
 		copyReceipt := *receipt
 		// #nosec G115 non negative value
 		copyReceipt.TransactionIndex = uint(len(block.Transactions))
-		err := ob.CheckTxInclusion(tx, &copyReceipt)
+		err := ts.CheckTxInclusion(tx, &copyReceipt)
 		require.ErrorContains(t, err, "out of range")
 	})
 	t.Run("should fail on tx hash mismatch", func(t *testing.T) {
 		// change the tx at position 'receipt.TransactionIndex' to a different tx
 		priorTx := block.Transactions[receipt.TransactionIndex-1]
 		block.Transactions[receipt.TransactionIndex] = priorTx
-		blockCache.Add(blockNumber, block)
-		ob.WithBlockCache(blockCache)
+		ts.BlockCache().Add(blockNumber, block)
 
 		// check inclusion should fail
-		err := ob.CheckTxInclusion(tx, receipt)
+		err := ts.CheckTxInclusion(tx, receipt)
 		require.ErrorContains(t, err, "has different hash")
 
 		// wrong block should be removed from cache
-		_, ok := blockCache.Get(blockNumber)
+		_, ok := ts.BlockCache().Get(blockNumber)
 		require.False(t, ok)
 	})
 }
@@ -467,4 +374,82 @@ func Test_VoteOutboundBallot(t *testing.T) {
 		ballotExpected := cctx.GetCurrentOutboundParam().BallotIndex
 		require.Equal(t, ballotExpected, msg.Digest())
 	})
+}
+
+type testSuite struct {
+	*observer.Observer
+	ctx         context.Context
+	appContext  *zctx.AppContext
+	chainParams *observertypes.ChainParams
+	tss         *mocks.TSS
+	zetacore    *mocks.ZetacoreClient
+	rpcClient   *mocks.MockJSONRPCClient
+	evmClient   *mocks.EVMRPCClient
+}
+
+type testSuiteConfig struct {
+	chain *chains.Chain
+}
+
+func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
+	var cfg testSuiteConfig
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
+	chain := chains.Ethereum
+	if cfg.chain != nil {
+		chain = *cfg.chain
+	}
+
+	chainParams := mocks.MockChainParams(chain.ChainId, 10)
+
+	appContext, _ := getAppContext(t, chain, "", &chainParams)
+	ctx := zctx.WithAppContext(context.Background(), appContext)
+
+	evmClient := mocks.NewEVMRPCClient(t)
+	evmClient.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
+
+	rpcClient := mocks.NewMockJSONRPCClient()
+
+	zetacore := mocks.NewZetacoreClient(t).
+		WithKeys(&keys.Keys{}).
+		WithZetaChain().
+		WithPostVoteInbound("", "").
+		WithPostVoteOutbound("", "")
+
+	tss := mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet)
+
+	database, err := db.NewFromSqliteInMemory(true)
+	require.NoError(t, err)
+
+	log := zerolog.New(zerolog.NewTestWriter(t)).With().Caller().Logger()
+	logger := base.Logger{Std: log, Compliance: log}
+
+	ob, err := observer.NewObserver(
+		ctx,
+		chain,
+		evmClient,
+		rpcClient,
+		chainParams,
+		zetacore,
+		tss,
+		60,
+		database,
+		logger,
+		nil,
+	)
+	require.NoError(t, err)
+	ob.WithLastBlock(1)
+
+	return &testSuite{
+		Observer:    ob,
+		ctx:         ctx,
+		appContext:  appContext,
+		chainParams: &chainParams,
+		tss:         tss,
+		zetacore:    zetacore,
+		rpcClient:   rpcClient,
+		evmClient:   evmClient,
+	}
 }

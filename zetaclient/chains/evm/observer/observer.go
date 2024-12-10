@@ -108,16 +108,6 @@ func NewObserver(
 	return ob, nil
 }
 
-// WithEvmClient attaches a new evm client to the observer
-func (ob *Observer) WithEvmClient(client interfaces.EVMRPCClient) {
-	ob.evmClient = client
-}
-
-// WithEvmJSONRPC attaches a new evm json rpc client to the observer
-func (ob *Observer) WithEvmJSONRPC(client interfaces.EVMJSONRPCClient) {
-	ob.evmJSONRPC = client
-}
-
 // GetConnectorContract returns the non-Eth connector address and binder
 func (ob *Observer) GetConnectorContract() (ethcommon.Address, *zetaconnector.ZetaConnectorNonEth, error) {
 	addr := ethcommon.HexToAddress(ob.ChainParams().ConnectorContractAddress)

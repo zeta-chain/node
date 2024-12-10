@@ -35,29 +35,38 @@ var (
 	ERC20CustodyAddress = sample.EthAddress()
 )
 
-// getNewEvmSigner creates a new EVM chain signer for testing
-func getNewEvmSigner(t *testing.T, tss interfaces.TSSSigner) (*Signer, error) {
+type testSuite struct {
+	*Signer
+	tss    *mocks.TSS
+	client *mocks.EVMRPCClient
+}
+
+func newTestSuite(t *testing.T) *testSuite {
 	ctx := context.Background()
+	chain := chains.BscMainnet
+	tss := mocks.NewTSS(t)
+	logger := zerolog.New(zerolog.NewTestWriter(t))
 
-	// use default mock TSS if not provided
-	if tss == nil {
-		tss = mocks.NewTSS(t)
-	}
-
-	connectorAddress := ConnectorAddress
-	erc20CustodyAddress := ERC20CustodyAddress
-	logger := base.Logger{}
-
-	return NewSigner(
+	s, err := NewSigner(
 		ctx,
-		chains.BscMainnet,
+		chain,
 		tss,
-		logger,
+		base.Logger{Std: logger, Compliance: logger},
 		testutils.MockEVMRPCEndpoint,
-		connectorAddress,
-		erc20CustodyAddress,
+		ConnectorAddress,
+		ERC20CustodyAddress,
 		sample.EthAddress(),
 	)
+	require.NoError(t, err)
+
+	client, ok := s.client.(*mocks.EVMRPCClient)
+	require.True(t, ok)
+
+	return &testSuite{
+		Signer: s,
+		tss:    tss,
+		client: client,
+	}
 }
 
 // getNewEvmChainObserver creates a new EVM chain observer for testing
@@ -135,8 +144,8 @@ func verifyTxBodyBasics(
 }
 
 func TestSigner_SetGetConnectorAddress(t *testing.T) {
-	evmSigner, err := getNewEvmSigner(t, nil)
-	require.NoError(t, err)
+	evmSigner := newTestSuite(t)
+
 	// Get and compare
 	require.Equal(t, ConnectorAddress, evmSigner.GetZetaConnectorAddress())
 
@@ -147,8 +156,7 @@ func TestSigner_SetGetConnectorAddress(t *testing.T) {
 }
 
 func TestSigner_SetGetERC20CustodyAddress(t *testing.T) {
-	evmSigner, err := getNewEvmSigner(t, nil)
-	require.NoError(t, err)
+	evmSigner := newTestSuite(t)
 	// Get and compare
 	require.Equal(t, ERC20CustodyAddress, evmSigner.GetERC20CustodyAddress())
 
@@ -162,17 +170,14 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	evmSigner, err := getNewEvmSigner(t, nil)
-	require.NoError(t, err)
+	evmSigner := newTestSuite(t)
 	cctx := getCCTX(t)
 	processor := getNewOutboundProcessor()
 	mockObserver, err := getNewEvmChainObserver(t, nil)
 	require.NoError(t, err)
 
 	// Attach mock EVM client to the signer
-	evmClient := mocks.NewEVMRPCClient(t)
-	evmClient.On("SendTransaction", mock.Anything, mock.Anything).Return(nil)
-	evmSigner.WithEvmClient(evmClient)
+	evmSigner.client.On("SendTransaction", mock.Anything, mock.Anything).Return(nil)
 
 	// Test with mock client that has keys
 	client := mocks.NewZetacoreClient(t).
@@ -191,8 +196,7 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	evmSigner, err := getNewEvmSigner(t, nil)
-	require.NoError(t, err)
+	evmSigner := newTestSuite(t)
 
 	// Setup txData struct
 	cctx := getCCTX(t)
@@ -201,9 +205,7 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 	require.False(t, skip)
 
 	// Attach mock EVM evmClient to the signer
-	evmClient := mocks.NewEVMRPCClient(t)
-	evmClient.On("SendTransaction", mock.Anything, mock.Anything).Return(nil)
-	evmSigner.WithEvmClient(evmClient)
+	evmSigner.client.On("SendTransaction", mock.Anything, mock.Anything).Return(nil)
 
 	t.Run("BroadcastOutbound - should successfully broadcast", func(t *testing.T) {
 		// Call SignERC20Withdraw

@@ -85,16 +85,6 @@ func NewObserver(
 	return ob, nil
 }
 
-// SolClient returns the solana rpc client
-func (ob *Observer) SolClient() interfaces.SolanaRPCClient {
-	return ob.solClient
-}
-
-// WithSolClient attaches a new solana rpc client to the observer
-func (ob *Observer) WithSolClient(client interfaces.SolanaRPCClient) {
-	ob.solClient = client
-}
-
 // Start starts the Go routine processes to observe the Solana chain
 func (ob *Observer) Start(ctx context.Context) {
 	if ok := ob.Observer.Start(); !ok {

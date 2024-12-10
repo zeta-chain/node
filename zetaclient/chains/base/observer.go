@@ -158,12 +158,6 @@ func (ob *Observer) Chain() chains.Chain {
 	return ob.chain
 }
 
-// WithChain attaches a new chain to the observer.
-func (ob *Observer) WithChain(chain chains.Chain) *Observer {
-	ob.chain = chain
-	return ob
-}
-
 // ChainParams returns the chain params for the observer.
 func (ob *Observer) ChainParams() observertypes.ChainParams {
 	ob.mu.Lock()
@@ -185,21 +179,9 @@ func (ob *Observer) ZetacoreClient() interfaces.ZetacoreClient {
 	return ob.zetacoreClient
 }
 
-// WithZetacoreClient attaches a new zetacore client to the observer.
-func (ob *Observer) WithZetacoreClient(client interfaces.ZetacoreClient) *Observer {
-	ob.zetacoreClient = client
-	return ob
-}
-
 // TSS returns the tss signer for the observer.
 func (ob *Observer) TSS() interfaces.TSSSigner {
 	return ob.tss
-}
-
-// WithTSS attaches a new tss signer to the observer.
-func (ob *Observer) WithTSS(tss interfaces.TSSSigner) *Observer {
-	ob.tss = tss
-	return ob
 }
 
 // TSSAddressString returns the TSS address for the chain.
@@ -267,12 +249,6 @@ func (ob *Observer) BlockCache() *lru.Cache {
 	return ob.blockCache
 }
 
-// WithBlockCache attaches a new block cache to the observer.
-func (ob *Observer) WithBlockCache(cache *lru.Cache) *Observer {
-	ob.blockCache = cache
-	return ob
-}
-
 // OutboundID returns a unique identifier for the outbound transaction.
 // The identifier is now used as the key for maps that store outbound related data (e.g. transaction, receipt, etc).
 func (ob *Observer) OutboundID(nonce uint64) string {
@@ -283,12 +259,6 @@ func (ob *Observer) OutboundID(nonce uint64) string {
 // DB returns the database for the observer.
 func (ob *Observer) DB() *db.DB {
 	return ob.db
-}
-
-// WithTelemetryServer attaches a new telemetry server to the observer.
-func (ob *Observer) WithTelemetryServer(ts *metrics.TelemetryServer) *Observer {
-	ob.ts = ts
-	return ob
 }
 
 // TelemetryServer returns the telemetry server for the observer.

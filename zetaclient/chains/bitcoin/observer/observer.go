@@ -156,11 +156,6 @@ func (ob *Observer) BtcClient() interfaces.BTCRPCClient {
 	return ob.btcClient
 }
 
-// WithBtcClient attaches a new btc client to the observer
-func (ob *Observer) WithBtcClient(client interfaces.BTCRPCClient) {
-	ob.btcClient = client
-}
-
 // Start starts the Go routine processes to observe the Bitcoin chain
 func (ob *Observer) Start(ctx context.Context) {
 	if ok := ob.Observer.Start(); !ok {

@@ -8,21 +8,17 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
 func TestSigner_SignConnectorOnReceive(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	tss := mocks.NewTSS(t)
-	evmSigner, err := getNewEvmSigner(t, tss)
-	require.NoError(t, err)
+	evmSigner := newTestSuite(t)
 
 	// Setup txData struct
 
 	cctx := getCCTX(t)
-	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
@@ -33,17 +29,17 @@ func TestSigner_SignConnectorOnReceive(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify Signature
-		verifyTxSender(t, tx, tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 	})
 	t.Run("SignConnectorOnReceive - should fail if keysign fails", func(t *testing.T) {
 		// Pause tss to make keysign fail
-		tss.Pause()
+		evmSigner.tss.Pause()
 
 		// Call SignConnectorOnReceive
 		tx, err := evmSigner.SignConnectorOnReceive(ctx, txData)
 		require.ErrorContains(t, err, "sign onReceive error")
 		require.Nil(t, tx)
-		tss.Unpause()
+		evmSigner.tss.Unpause()
 	})
 
 	t.Run("SignOutbound - should successfully sign LegacyTx", func(t *testing.T) {
@@ -52,7 +48,7 @@ func TestSigner_SignConnectorOnReceive(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify Signature
-		verifyTxSender(t, tx, tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// check that by default tx type is legacy tx
 		assert.Equal(t, ethtypes.LegacyTxType, int(tx.Type()))
@@ -78,14 +74,14 @@ func TestSigner_SignConnectorOnReceive(t *testing.T) {
 		require.NoError(t, err)
 
 		// Given a working TSS
-		tss.Unpause()
+		evmSigner.tss.Unpause()
 
 		// ACT
 		tx, err := evmSigner.SignConnectorOnReceive(ctx, txData)
 		require.NoError(t, err)
 
 		// ASSERT
-		verifyTxSender(t, tx, tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// check that by default tx type is a dynamic fee tx
 		assert.Equal(t, ethtypes.DynamicFeeTxType, int(tx.Type()))
@@ -100,13 +96,10 @@ func TestSigner_SignConnectorOnRevert(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	tss := mocks.NewTSS(t)
-	evmSigner, err := getNewEvmSigner(t, tss)
-	require.NoError(t, err)
+	evmSigner := newTestSuite(t)
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
@@ -117,7 +110,7 @@ func TestSigner_SignConnectorOnRevert(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify tx signature
-		verifyTxSender(t, tx, tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		// Note: Revert tx calls connector contract with 0 gas token
@@ -125,7 +118,7 @@ func TestSigner_SignConnectorOnRevert(t *testing.T) {
 	})
 	t.Run("SignConnectorOnRevert - should fail if keysign fails", func(t *testing.T) {
 		// Pause tss to make keysign fail
-		tss.Pause()
+		evmSigner.tss.Pause()
 
 		// Call SignConnectorOnRevert
 		tx, err := evmSigner.SignConnectorOnRevert(ctx, txData)
@@ -138,13 +131,10 @@ func TestSigner_SignCancel(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	tss := mocks.NewTSS(t)
-	evmSigner, err := getNewEvmSigner(t, tss)
-	require.NoError(t, err)
+	evmSigner := newTestSuite(t)
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
@@ -155,15 +145,15 @@ func TestSigner_SignCancel(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify tx signature
-		verifyTxSender(t, tx, tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		// Note: Cancel tx sends 0 gas token to TSS self address
-		verifyTxBodyBasics(t, tx, tss.PubKey().AddressEVM(), txData.nonce, big.NewInt(0))
+		verifyTxBodyBasics(t, tx, evmSigner.tss.PubKey().AddressEVM(), txData.nonce, big.NewInt(0))
 	})
 	t.Run("SignCancel - should fail if keysign fails", func(t *testing.T) {
 		// Pause tss to make keysign fail
-		tss.Pause()
+		evmSigner.tss.Pause()
 
 		// Call SignCancel
 		tx, err := evmSigner.SignCancel(ctx, txData)
@@ -176,13 +166,10 @@ func TestSigner_SignGasWithdraw(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	tss := mocks.NewTSS(t)
-	evmSigner, err := getNewEvmSigner(t, tss)
-	require.NoError(t, err)
+	evmSigner := newTestSuite(t)
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
@@ -193,14 +180,14 @@ func TestSigner_SignGasWithdraw(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify tx signature
-		verifyTxSender(t, tx, tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, txData.amount)
 	})
 	t.Run("SignGasWithdraw - should fail if keysign fails", func(t *testing.T) {
 		// Pause tss to make keysign fail
-		tss.Pause()
+		evmSigner.tss.Pause()
 
 		// Call SignGasWithdraw
 		tx, err := evmSigner.SignGasWithdraw(ctx, txData)
@@ -213,9 +200,7 @@ func TestSigner_SignERC20Withdraw(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	tss := mocks.NewTSS(t)
-	evmSigner, err := getNewEvmSigner(t, tss)
-	require.NoError(t, err)
+	evmSigner := newTestSuite(t)
 
 	// Setup txData struct
 	cctx := getCCTX(t)
@@ -229,7 +214,7 @@ func TestSigner_SignERC20Withdraw(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify tx signature
-		verifyTxSender(t, tx, tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		// Note: Withdraw tx calls erc20 custody contract with 0 gas token
@@ -238,7 +223,7 @@ func TestSigner_SignERC20Withdraw(t *testing.T) {
 
 	t.Run("SignERC20WithdrawTx - should fail if keysign fails", func(t *testing.T) {
 		// pause tss to make keysign fail
-		tss.Pause()
+		evmSigner.tss.Pause()
 
 		// Call SignERC20WithdrawTx
 		tx, err := evmSigner.SignERC20Withdraw(ctx, txData)
