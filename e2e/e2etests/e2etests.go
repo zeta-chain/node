@@ -198,7 +198,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000000000000000000"},
 		},
-		TestV2ETHDeposit,
+		TestETHDeposit,
 	),
 	runner.NewE2ETest(
 		TestETHDepositAndCallName,
@@ -206,7 +206,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "10000000000000000"},
 		},
-		TestV2ETHDepositAndCall,
+		TestETHDepositAndCall,
 	),
 	runner.NewE2ETest(
 		TestETHDepositAndCallNoMessageName,
@@ -214,7 +214,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "10000000000000000"},
 		},
-		TestV2ETHDepositAndCallNoMessage,
+		TestETHDepositAndCallNoMessage,
 	),
 	runner.NewE2ETest(
 		TestETHDepositAndCallRevertName,
@@ -222,7 +222,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "10000000000000000"},
 		},
-		TestV2ETHDepositAndCallRevert,
+		TestETHDepositAndCallRevert,
 	),
 	runner.NewE2ETest(
 		TestETHDepositAndCallRevertWithCallName,
@@ -230,7 +230,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "10000000000000000"},
 		},
-		TestV2ETHDepositAndCallRevertWithCall,
+		TestETHDepositAndCallRevertWithCall,
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawName,
@@ -238,7 +238,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
-		TestV2ETHWithdraw,
+		TestETHWithdraw,
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawAndArbitraryCallName,
@@ -246,7 +246,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
-		TestV2ETHWithdrawAndArbitraryCall,
+		TestETHWithdrawAndArbitraryCall,
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawAndCallName,
@@ -254,7 +254,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
-		TestV2ETHWithdrawAndCall,
+		TestETHWithdrawAndCall,
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawAndCallNoMessageName,
@@ -262,7 +262,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
-		TestV2ETHWithdrawAndCallNoMessage,
+		TestETHWithdrawAndCallNoMessage,
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawAndCallThroughContractName,
@@ -270,7 +270,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
-		TestV2ETHWithdrawAndCallThroughContract,
+		TestETHWithdrawAndCallThroughContract,
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawAndCallRevertName,
@@ -278,7 +278,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
-		TestV2ETHWithdrawAndCallRevert,
+		TestETHWithdrawAndCallRevert,
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawAndCallRevertWithCallName,
@@ -286,7 +286,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
-		TestV2ETHWithdrawAndCallRevertWithCall,
+		TestETHWithdrawAndCallRevertWithCall,
 	),
 	runner.NewE2ETest(
 		TestDepositAndCallOutOfGasName,
@@ -302,7 +302,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "100000000000000000000"},
 		},
-		TestV2ERC20Deposit,
+		TestERC20Deposit,
 	),
 	runner.NewE2ETest(
 		TestERC20DepositAndCallName,
@@ -310,7 +310,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "100000"},
 		},
-		TestV2ERC20DepositAndCall,
+		TestERC20DepositAndCall,
 	),
 	runner.NewE2ETest(
 		TestERC20DepositAndCallNoMessageName,
@@ -318,7 +318,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "100000"},
 		},
-		TestV2ERC20DepositAndCallNoMessage,
+		TestERC20DepositAndCallNoMessage,
 	),
 	runner.NewE2ETest(
 		TestERC20DepositAndCallRevertName,
@@ -326,7 +326,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
-		TestV2ERC20DepositAndCallRevert,
+		TestERC20DepositAndCallRevert,
 	),
 	runner.NewE2ETest(
 		TestERC20DepositAndCallRevertWithCallName,
@@ -334,7 +334,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
-		TestV2ERC20DepositAndCallRevertWithCall,
+		TestERC20DepositAndCallRevertWithCall,
 	),
 	runner.NewE2ETest(
 		TestERC20WithdrawName,
@@ -342,7 +342,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
 		},
-		TestV2ERC20Withdraw,
+		TestERC20Withdraw,
 	),
 	runner.NewE2ETest(
 		TestERC20WithdrawAndArbitraryCallName,
@@ -350,7 +350,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
 		},
-		TestV2ERC20WithdrawAndArbitraryCall,
+		TestERC20WithdrawAndArbitraryCall,
 	),
 	runner.NewE2ETest(
 		TestERC20WithdrawAndCallName,
@@ -358,7 +358,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
 		},
-		TestV2ERC20WithdrawAndCall,
+		TestERC20WithdrawAndCall,
 	),
 	runner.NewE2ETest(
 		TestERC20WithdrawAndCallNoMessageName,
@@ -366,7 +366,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
 		},
-		TestV2ERC20WithdrawAndCallNoMessage,
+		TestERC20WithdrawAndCallNoMessage,
 	),
 	runner.NewE2ETest(
 		TestERC20WithdrawAndCallRevertName,
@@ -374,7 +374,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
 		},
-		TestV2ERC20WithdrawAndCallRevert,
+		TestERC20WithdrawAndCallRevert,
 	),
 	runner.NewE2ETest(
 		TestERC20WithdrawAndCallRevertWithCallName,
@@ -382,37 +382,37 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
 		},
-		TestV2ERC20WithdrawAndCallRevertWithCall,
+		TestERC20WithdrawAndCallRevertWithCall,
 	),
 	runner.NewE2ETest(
 		TestZEVMToEVMArbitraryCallName,
 		"zevm -> evm call",
 		[]runner.ArgDefinition{},
-		TestV2ZEVMToEVMArbitraryCall,
+		TestZEVMToEVMArbitraryCall,
 	),
 	runner.NewE2ETest(
 		TestZEVMToEVMCallName,
 		"zevm -> evm call",
 		[]runner.ArgDefinition{},
-		TestV2ZEVMToEVMCall,
+		TestZEVMToEVMCall,
 	),
 	runner.NewE2ETest(
 		TestZEVMToEVMCallThroughContractName,
 		"zevm -> evm call through intermediary contract",
 		[]runner.ArgDefinition{},
-		TestV2ZEVMToEVMCallThroughContract,
+		TestZEVMToEVMCallThroughContract,
 	),
 	runner.NewE2ETest(
 		TestEVMToZEVMCallName,
 		"evm -> zevm call",
 		[]runner.ArgDefinition{},
-		TestV2EVMToZEVMCall,
+		TestEVMToZEVMCall,
 	),
 	runner.NewE2ETest(
 		TestDepositAndCallSwapName,
 		"evm -> zevm deposit and call with swap and withdraw back to evm",
 		[]runner.ArgDefinition{},
-		TestV2DepositAndCallSwap,
+		TestDepositAndCallSwap,
 	),
 
 	/*

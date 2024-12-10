@@ -11,7 +11,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestV2ETHWithdraw(r *runner.E2ERunner, args []string) {
+func TestETHWithdraw(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	amount := utils.ParseBigInt(r, args[0])

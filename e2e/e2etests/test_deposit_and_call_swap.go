@@ -17,7 +17,7 @@ import (
 // purpose is to test similar scenario with v2 contracts where there is swap + withdraw in onCall
 // to showcase that it's not reverting with gas limit issues
 // this test should be removed when this issue is completed: https://github.com/zeta-chain/node/issues/2711
-func TestV2DepositAndCallSwap(r *runner.E2ERunner, _ []string) {
+func TestDepositAndCallSwap(r *runner.E2ERunner, _ []string) {
 	// create tokens pair (erc20 and eth)
 	tx, err := r.UniswapV2Factory.CreatePair(r.ZEVMAuth, r.ERC20ZRC20Addr, r.ETHZRC20Addr)
 	if err != nil {

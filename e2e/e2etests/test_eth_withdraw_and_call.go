@@ -12,7 +12,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestV2ETHWithdrawAndCall(r *runner.E2ERunner, args []string) {
+func TestETHWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	previousGasLimit := r.ZEVMAuth.GasLimit

@@ -220,9 +220,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("⚙️ setting up networks")
 		startTime := time.Now()
 
-		// TODO: merge v1 and v2 together
-		// https://github.com/zeta-chain/node/issues/2627
-
 		//setup protocol contracts v1 as they are still supported for now
 		deployerRunner.LegacySetupEVM(contractsDeployed)
 
@@ -236,9 +233,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			)
 		}
 
-		// NOTE: v2 (gateway) setup called here because system contract needs to be set first, then gateway, then zrc20
 		deployerRunner.SetupZEVMProtocolContracts()
-
 		deployerRunner.SetupLegacyZEVMContracts()
 
 		zrc20Deployment := txserver.ZRC20Deployment{

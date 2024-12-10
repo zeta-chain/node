@@ -377,10 +377,8 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("UniswapRouter:  %s", r.UniswapV2RouterAddr.Hex())
 	r.Logger.Print("ConnectorZEVM:  %s", r.ConnectorZEVMAddr.Hex())
 	r.Logger.Print("WZeta:          %s", r.WZetaAddr.Hex())
-
-	r.Logger.Print("ZEVMSwapApp:    %s", r.ZEVMSwapAppAddr.Hex())
-	r.Logger.Print("ContextApp:     %s", r.ContextAppAddr.Hex())
-	r.Logger.Print("TestDappZEVM:   %s", r.ZevmTestDAppAddr.Hex())
+	r.Logger.Print("GatewayZEVM:    %s", r.GatewayZEVMAddr.Hex())
+	r.Logger.Print("TestDAppV2ZEVM: %s", r.TestDAppV2ZEVMAddr.Hex())
 
 	// evm contracts
 	r.Logger.Print(" --- 📜EVM contracts ---")
@@ -388,17 +386,15 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("ConnectorEth:   %s", r.ConnectorEthAddr.Hex())
 	r.Logger.Print("ERC20Custody:   %s", r.ERC20CustodyAddr.Hex())
 	r.Logger.Print("ERC20:          %s", r.ERC20Addr.Hex())
-	r.Logger.Print("TestDappEVM:    %s", r.EvmTestDAppAddr.Hex())
-
-	// v2 contracts
-
-	r.Logger.Print(" --- 📜zEVM v2 contracts ---")
-	r.Logger.Print("GatewayZEVM:    %s", r.GatewayZEVMAddr.Hex())
-	r.Logger.Print("TestDAppV2ZEVM: %s", r.TestDAppV2ZEVMAddr.Hex())
-
-	r.Logger.Print(" --- 📜EVM v2 contracts ---")
 	r.Logger.Print("GatewayEVM:     %s", r.GatewayEVMAddr.Hex())
 	r.Logger.Print("TestDAppV2EVM:  %s", r.TestDAppV2EVMAddr.Hex())
+
+	r.Logger.Print(" --- 📜Legacy contracts ---")
+
+	r.Logger.Print("ZEVMSwapApp:    %s", r.ZEVMSwapAppAddr.Hex())
+	r.Logger.Print("ContextApp:     %s", r.ContextAppAddr.Hex())
+	r.Logger.Print("TestDappZEVM:   %s", r.ZevmTestDAppAddr.Hex())
+	r.Logger.Print("TestDappEVM:    %s", r.EvmTestDAppAddr.Hex())
 }
 
 // IsRunningUpgrade returns true if the test is running an upgrade test suite.

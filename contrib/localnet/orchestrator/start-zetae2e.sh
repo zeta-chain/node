@@ -89,14 +89,17 @@ sleep 2
 # unlock the default account account
 fund_eth_from_config '.default_account.evm_address' 10000 "deployer"
 
-# unlock erc20 tester accounts
+# unlock legacy erc20 tester accounts
 fund_eth_from_config '.additional_accounts.user_legacy_erc20.evm_address' 10000 "ERC20 tester"
 
-# unlock zeta tester accounts
+# unlock legacy zeta tester accounts
 fund_eth_from_config '.additional_accounts.user_legacy_zeta.evm_address' 10000 "zeta tester"
 
-# unlock zevm message passing tester accounts
+# unlock legacy zevm message passing tester accounts
 fund_eth_from_config '.additional_accounts.user_legacy_zevm_mp.evm_address' 10000 "zevm mp tester"
+
+# unlock legacy ethers tester accounts
+fund_eth_from_config '.additional_accounts.user_legacy_ether.evm_address' 10000 "ether tester"
 
 # unlock bitcoin deposit tester accounts
 fund_eth_from_config '.additional_accounts.user_bitcoin_deposit.evm_address' 10000 "bitcoin deposit tester"
@@ -106,9 +109,6 @@ fund_eth_from_config '.additional_accounts.user_bitcoin_withdraw.evm_address' 10
 
 # unlock solana tester accounts
 fund_eth_from_config '.additional_accounts.user_solana.evm_address' 10000 "solana tester"
-
-# unlock ethers tester accounts
-fund_eth_from_config '.additional_accounts.user_legacy_ether.evm_address' 10000 "ether tester"
 
 # unlock miscellaneous tests accounts
 fund_eth_from_config '.additional_accounts.user_misc.evm_address' 10000 "misc tester"
@@ -122,16 +122,16 @@ fund_eth_from_config '.additional_accounts.user_migration.evm_address' 10000 "mi
 # unlock precompile tests accounts
 fund_eth_from_config '.additional_accounts.user_precompile.evm_address' 10000 "precompiles tester"
 
-# unlock v2 ethers tests accounts
+# unlock ethers tests accounts
 fund_eth_from_config '.additional_accounts.user_ether.evm_address' 10000  "V2 ethers tester"
 
-# unlock v2 erc20 tests accounts
+# unlock erc20 tests accounts
 fund_eth_from_config '.additional_accounts.user_erc20.evm_address' 10000  "V2 ERC20 tester"
 
-# unlock v2 ethers revert tests accounts
+# unlock ethers revert tests accounts
 fund_eth_from_config '.additional_accounts.user_ether_revert.evm_address' 10000 "V2 ethers revert tester"
 
-# unlock v2 erc20 revert tests accounts
+# unlock erc20 revert tests accounts
 fund_eth_from_config '.additional_accounts.user_erc20_revert.evm_address' 10000 "V2 ERC20 revert tester"
 
 # unlock emissions withdraw tests accounts

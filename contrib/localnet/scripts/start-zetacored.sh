@@ -291,11 +291,14 @@ then
 # default account
   address=$(yq -r '.default_account.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# erc20 tester
+# legacy erc20 tester
   address=$(yq -r '.additional_accounts.user_legacy_erc20.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# zeta tester
+# legacy zeta tester
   address=$(yq -r '.additional_accounts.user_legacy_zeta.bech32_address' /root/config.yml)
+  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+# legacy ethers tester
+  address=$(yq -r '.additional_accounts.user_legacy_ether.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
 # bitcoin deposit tester
   address=$(yq -r '.additional_accounts.user_bitcoin_deposit.bech32_address' /root/config.yml)
@@ -306,25 +309,22 @@ then
 # solana tester
   address=$(yq -r '.additional_accounts.user_solana.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# ethers tester
-  address=$(yq -r '.additional_accounts.user_legacy_ether.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta 
 # migration tester
   address=$(yq -r '.additional_accounts.user_migration.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
 # precompile tester
   address=$(yq -r '.additional_accounts.user_precompile.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# v2 ether tester
+# ether tester
   address=$(yq -r '.additional_accounts.user_ether.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# v2 erc20 tester
+# erc20 tester
   address=$(yq -r '.additional_accounts.user_erc20.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# v2 ether revert tester
+# ether revert tester
   address=$(yq -r '.additional_accounts.user_ether_revert.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# v2 erc20 revert tester
+# erc20 revert tester
   address=$(yq -r '.additional_accounts.user_erc20_revert.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
 # emissions withdraw tester

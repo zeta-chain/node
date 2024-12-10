@@ -11,7 +11,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestV2ZEVMToEVMArbitraryCall(r *runner.E2ERunner, args []string) {
+func TestZEVMToEVMArbitraryCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0)
 
 	payload := randomPayload(r)
