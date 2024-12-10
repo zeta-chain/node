@@ -213,7 +213,7 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 				events = append(events, &clienttypes.InboundEvent{
 					SenderChainID: ob.Chain().ChainId,
 					Sender:        deposit.Sender,
-					Receiver:      deposit.Sender, // receiver is pulled out from memo
+					Receiver:      "", // receiver will be pulled out from memo later
 					TxOrigin:      deposit.Sender,
 					Amount:        deposit.Amount,
 					Memo:          deposit.Memo,
@@ -241,7 +241,7 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 				events = append(events, &clienttypes.InboundEvent{
 					SenderChainID: ob.Chain().ChainId,
 					Sender:        deposit.Sender,
-					Receiver:      deposit.Sender, // receiver is pulled out from memo
+					Receiver:      "", // receiver will be pulled out from memo later
 					TxOrigin:      deposit.Sender,
 					Amount:        deposit.Amount,
 					Memo:          deposit.Memo,
@@ -281,7 +281,7 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 		event.Sender,
 		event.SenderChainID,
 		event.Sender,
-		event.Sender,
+		event.Receiver,
 		ob.ZetacoreClient().Chain().ChainId,
 		cosmosmath.NewUint(event.Amount),
 		hex.EncodeToString(event.Memo),
