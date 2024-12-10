@@ -28,7 +28,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 		e2etests.TestEVMToZEVMCallName,
 		e2etests.TestETHDepositAndCallNoMessageName,
 		e2etests.TestETHWithdrawAndCallNoMessageName,
-		e2etests.TestEtherWithdrawRestrictedName, // to change to use v2
+		e2etests.TestEtherWithdrawRestrictedName,
 	))
 
 	// Test happy paths for erc20 token workflow
@@ -42,7 +42,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 		e2etests.TestERC20DepositAndCallNoMessageName,
 		e2etests.TestERC20WithdrawAndCallNoMessageName,
 		e2etests.TestDepositAndCallSwapName,
-		e2etests.TestERC20DepositRestrictedName, // to change to use v2
+		e2etests.TestERC20DepositRestrictedName,
 	))
 
 	// Test revert cases for gas token workflow
