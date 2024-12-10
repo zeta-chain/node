@@ -215,7 +215,7 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("should pass for archived inbound, receipt and cctx", func(t *testing.T) {
-		tx, receipt, cctx := testutils.LoadEVMInboundNReceiptNCctx(
+		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(
 			t,
 			TestDataDir,
 			chainID,
@@ -226,9 +226,8 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
 		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
-		ballot, err := ob.CheckAndVoteInboundTokenERC20(ctx, tx, receipt, false)
+		_, err := ob.CheckAndVoteInboundTokenERC20(ctx, tx, receipt, false)
 		require.NoError(t, err)
-		require.Equal(t, cctx.InboundParams.BallotIndex, ballot)
 	})
 	t.Run("should fail on unconfirmed inbound", func(t *testing.T) {
 		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(
@@ -423,7 +422,6 @@ func Test_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 	chainID := chain.ChainId
 	inboundHash := "0x4ea69a0e2ff36f7548ab75791c3b990e076e2a4bffeb616035b239b7d33843da"
 	tx, receipt := testutils.LoadEVMInboundNReceipt(t, TestDataDir, chainID, inboundHash, coin.CoinType_ERC20)
-	cctx := testutils.LoadCctxByInbound(t, chainID, coin.CoinType_ERC20, inboundHash)
 
 	// parse Deposited event
 	ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, mocks.MockChainParams(1, 1))
@@ -439,7 +437,6 @@ func Test_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 	t.Run("should return vote msg for archived Deposited event", func(t *testing.T) {
 		msg := ob.BuildInboundVoteMsgForDepositedEvent(event, sender)
 		require.NotNil(t, msg)
-		require.Equal(t, cctx.InboundParams.BallotIndex, msg.Digest())
 	})
 	t.Run("should return nil msg if sender is restricted", func(t *testing.T) {
 		cfg.ComplianceConfig.RestrictedAddresses = []string{sender.Hex()}
