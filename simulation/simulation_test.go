@@ -375,6 +375,7 @@ func TestAppImportExport(t *testing.T) {
 		ChainID: SimAppChainID,
 	})
 
+	t.Log("initializing genesis for the new app using exported genesis state")
 	// Use genesis state from the first app to initialize the second app
 	newSimApp.ModuleManager().InitGenesis(ctxNewSimApp, newSimApp.AppCodec(), genesisState)
 	newSimApp.StoreConsensusParams(ctxNewSimApp, exported.ConsensusParams)
