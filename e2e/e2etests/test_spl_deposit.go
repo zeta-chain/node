@@ -42,6 +42,7 @@ func TestSPLDeposit(r *runner.E2ERunner, args []string) {
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "solana_deposit_spl")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+	require.Equal(r, cctx.GetCurrentOutboundParam().Receiver, r.EVMAddress().Hex())
 
 	// verify balances are updated
 	pdaBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentFinalized)

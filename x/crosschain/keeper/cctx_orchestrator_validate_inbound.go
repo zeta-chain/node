@@ -51,7 +51,7 @@ func (k Keeper) ValidateInbound(
 	if ok {
 		cctx.InboundParams.ObservedHash = inCctxIndex
 	}
-	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx, tss.TssPubkey)
+	k.SaveCCTXUpdate(ctx, cctx, tss.TssPubkey)
 
 	return &cctx, nil
 }

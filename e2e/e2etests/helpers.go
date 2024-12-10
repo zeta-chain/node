@@ -78,3 +78,13 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 
 	return rawTx
 }
+
+// bigAdd is shorthand for new(big.Int).Add(x, y)
+func bigAdd(x *big.Int, y *big.Int) *big.Int {
+	return new(big.Int).Add(x, y)
+}
+
+// bigSub is shorthand for new(big.Int).Sub(x, y)
+func bigSub(x *big.Int, y *big.Int) *big.Int {
+	return new(big.Int).Sub(x, y)
+}

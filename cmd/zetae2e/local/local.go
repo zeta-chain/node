@@ -212,6 +212,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}))
 	}
 
+	e2eStartHeight, err := deployerRunner.Clients.Zetacore.GetBlockHeight(ctx)
+	noError(err)
+
 	// setting up the networks
 	if !skipSetup {
 		logger.Print("⚙️ setting up networks")
@@ -250,8 +253,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// Update the chain params to contains protocol contract addresses
 		deployerRunner.UpdateProtocolContractsInChainParams()
 
-		deployerRunner.MintERC20OnEVM(1e10)
-
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
 
@@ -279,6 +280,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if upgradeContracts {
 		deployerRunner.UpgradeGatewaysAndERC20Custody()
 	}
+
+	// always mint ERC20 before every test execution
+	deployerRunner.MintERC20OnEVM(1e10)
 
 	// run tests
 	var eg errgroup.Group
@@ -317,6 +321,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinWithdrawMultipleName,
 			e2etests.TestBitcoinWithdrawRestrictedName,
 		}
+
 		if !light {
 			// if light is enabled, only the most basic tests are run and advanced are skipped
 			bitcoinDepositTests = append(bitcoinDepositTests, bitcoinDepositTestsAdvanced...)
@@ -335,19 +340,28 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	if !skipPrecompiles {
-		eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose,
+		precompiledContractTests := []string{
 			e2etests.TestPrecompilesPrototypeName,
 			e2etests.TestPrecompilesPrototypeThroughContractName,
-			e2etests.TestPrecompilesStakingName,
 			// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
 			// e2etests.TestPrecompilesStakingThroughContractName,
 			e2etests.TestPrecompilesBankName,
 			e2etests.TestPrecompilesBankFailName,
 			e2etests.TestPrecompilesBankThroughContractName,
-			e2etests.TestPrecompilesDistributeName,
-			e2etests.TestPrecompilesDistributeNonZRC20Name,
-			e2etests.TestPrecompilesDistributeThroughContractName,
-		))
+		}
+		if e2eStartHeight < 100 {
+			// these tests require a clean system
+			// since unstaking has an unbonding period
+			precompiledContractTests = append(precompiledContractTests,
+				e2etests.TestPrecompilesStakingName,
+				e2etests.TestPrecompilesDistributeName,
+				e2etests.TestPrecompilesDistributeNonZRC20Name,
+				e2etests.TestPrecompilesDistributeThroughContractName,
+			)
+		} else {
+			logger.Print("⚠️ partial precompiled run (unclean state)")
+		}
+		eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose, precompiledContractTests...))
 	}
 
 	if testAdmin {

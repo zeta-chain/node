@@ -1,6 +1,7 @@
 package crosschain
 
 import (
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/x/crosschain/keeper"
@@ -10,7 +11,9 @@ import (
 // InitGenesis initializes the crosschain module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-	k.SetZetaAccounting(ctx, genState.ZetaAccounting)
+	// Always set the zeta accounting to zero at genesis.
+	// ZetaAccounting value is build by iterating through all the cctxs and adding the amount to the zeta accounting.
+	k.SetZetaAccounting(ctx, types.ZetaAccounting{AbortedZetaAmount: sdkmath.ZeroUint()})
 	// Set all the outbound tracker
 	for _, elem := range genState.OutboundTrackerList {
 		k.SetOutboundTracker(ctx, elem)
@@ -47,7 +50,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if found {
 		for _, elem := range genState.CrossChainTxs {
 			if elem != nil {
-				k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *elem, tss.TssPubkey)
+				k.SaveCCTXUpdate(ctx, *elem, tss.TssPubkey)
 			}
 		}
 	}
