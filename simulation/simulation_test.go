@@ -387,6 +387,7 @@ func TestAppImportExport(t *testing.T) {
 		//such as deploying contracts or interacting with them such as setting gas price,
 		// causes the state for the auth module to change on export.The order of keys within the store is modified.
 		// We will need to explore this further to find a definitive answer
+		// TODO : https://github.com/zeta-chain/node/issues/3263
 		//{simApp.GetKey(authtypes.StoreKey), newSimApp.GetKey(authtypes.StoreKey), [][]byte{}},
 		{
 			simApp.GetKey(stakingtypes.StoreKey), newSimApp.GetKey(stakingtypes.StoreKey),

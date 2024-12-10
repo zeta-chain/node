@@ -228,7 +228,7 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 			}
 		}
 
-		msg := sample.InboundVoteSim(0, from, to, r)
+		msg := sample.InboundVoteFromRand(0, from, to, r)
 
 		// Pick a random observer to create the ballot
 		// If this returns an error, it is likely that the entire observer set has been removed

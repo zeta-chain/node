@@ -9,9 +9,10 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// GenerateGenesisState creates a randomized GenState of the module
+// GenerateGenesisState creates a GenState of the module used to initialize the simulation runs
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
+	crosschainGenesis := types.DefaultGenesis()
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(crosschainGenesis)
 }
 
 // ProposalContents doesn't return any content functions for governance proposals

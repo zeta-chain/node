@@ -297,8 +297,8 @@ func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteInbound {
 	}
 }
 
-// InboundVoteSim creates a simulated inbound vote message. This function uses the provided source of randomness to generate
-func InboundVoteSim(coinType coin.CoinType, from, to int64, r *rand.Rand) types.MsgVoteInbound {
+// InboundVoteFromRand creates a simulated inbound vote message. This function uses the provided source of randomness to generate the vote
+func InboundVoteFromRand(coinType coin.CoinType, from, to int64, r *rand.Rand) types.MsgVoteInbound {
 	EthAddress()
 	return types.MsgVoteInbound{
 		Creator:            "",
