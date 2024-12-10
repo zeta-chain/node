@@ -223,11 +223,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// TODO: merge v1 and v2 together
 		// https://github.com/zeta-chain/node/issues/2627
 
-		// setup protocol contracts on the connected EVM chain
-		deployerRunner.SetupEVM()
-
 		//setup protocol contracts v1 as they are still supported for now
 		deployerRunner.LegacySetupEVM(contractsDeployed)
+
+		// setup protocol contracts on the connected EVM chain
+		deployerRunner.SetupEVM()
 
 		if testSolana {
 			deployerRunner.SetupSolana(
