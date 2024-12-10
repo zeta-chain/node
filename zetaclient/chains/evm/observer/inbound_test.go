@@ -27,7 +27,7 @@ import (
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
-func Test_ERC20AddressToForeignCoinAsset(t *testing.T) {
+func Test_PatchZRC20Asset(t *testing.T) {
 	tests := []struct {
 		name         string
 		chainID      int64
@@ -65,12 +65,6 @@ func Test_ERC20AddressToForeignCoinAsset(t *testing.T) {
 			erc20Address: ethcommon.HexToAddress("0x6b175474e89094c44da98b954eedeac495271d0f"),
 			assetString:  "0x6b175474e89094c44da98b954eedeac495271d0f",
 		},
-		{
-			name:         "ULTI.ETH",
-			chainID:      chains.Ethereum.ChainId,
-			erc20Address: ethcommon.HexToAddress("0x0E7779e698052f8fe56C415C3818FCf89de9aC6D"),
-			assetString:  "0x0E7779e698052f8fe56C415C3818FCf89de9aC6D",
-		},
 		// BSC Mainnet
 		{
 			name:         "USDC.BSC",
@@ -83,12 +77,6 @@ func Test_ERC20AddressToForeignCoinAsset(t *testing.T) {
 			chainID:      chains.BscMainnet.ChainId,
 			erc20Address: ethcommon.HexToAddress("0x55d398326f99059ff775485246999027b3197955"),
 			assetString:  "0x55d398326f99059ff775485246999027b3197955",
-		},
-		{
-			name:         "ULTI.BSC",
-			chainID:      chains.BscMainnet.ChainId,
-			erc20Address: ethcommon.HexToAddress("0x0E7779e698052f8fe56C415C3818FCf89de9aC6D"),
-			assetString:  "0x0E7779e698052f8fe56C415C3818FCf89de9aC6D",
 		},
 		// Polygon Mainnet
 		{
@@ -110,18 +98,11 @@ func Test_ERC20AddressToForeignCoinAsset(t *testing.T) {
 			erc20Address: ethcommon.HexToAddress("0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582"),
 			assetString:  "0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582",
 		},
-		// Base Mainnet
-		{
-			name:         "USDC.BASE",
-			chainID:      chains.BaseMainnet.ChainId,
-			erc20Address: ethcommon.HexToAddress("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"),
-			assetString:  "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			asset := observer.ERC20AddressToForeignCoinAsset(tt.chainID, tt.erc20Address)
+			asset := observer.PatchZRC20Asset(tt.chainID, tt.erc20Address)
 			require.Equal(t, tt.assetString, asset)
 		})
 	}

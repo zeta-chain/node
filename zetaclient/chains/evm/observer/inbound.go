@@ -51,8 +51,6 @@ var (
 			ethcommon.HexToAddress("0xdac17f958d2ee523a2206206994597c13d831ec7"): "0xdac17f958d2ee523a2206206994597c13d831ec7",
 			// DAI.ETH
 			ethcommon.HexToAddress("0x6b175474e89094c44da98b954eedeac495271d0f"): "0x6b175474e89094c44da98b954eedeac495271d0f",
-			// ULTI.ETH
-			ethcommon.HexToAddress("0x0E7779e698052f8fe56C415C3818FCf89de9aC6D"): "0x0E7779e698052f8fe56C415C3818FCf89de9aC6D",
 		},
 
 		// BSC mainnet
@@ -61,8 +59,6 @@ var (
 			ethcommon.HexToAddress("0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"): "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
 			// USDT.BSC
 			ethcommon.HexToAddress("0x55d398326f99059ff775485246999027b3197955"): "0x55d398326f99059ff775485246999027b3197955",
-			// ULTI.BSC
-			ethcommon.HexToAddress("0x0E7779e698052f8fe56C415C3818FCf89de9aC6D"): "0x0E7779e698052f8fe56C415C3818FCf89de9aC6D",
 		},
 
 		// Polygon mainnet
@@ -78,20 +74,14 @@ var (
 			// USDC.AMOY
 			ethcommon.HexToAddress("0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582"): "0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582",
 		},
-
-		// Base mainnet
-		chains.BaseMainnet.ChainId: {
-			// USDC.BASE
-			ethcommon.HexToAddress("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"): "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-		},
 	}
 )
 
-// ERC20AddressToForeignCoinAsset
-func ERC20AddressToForeignCoinAsset(chainID int64, erc20Address ethcommon.Address) string {
+// PatchZRC20Asset returns a patched asset string for the given chainID and erc20Address
+// so that it matches the asset string in the foreign coin store.
+func PatchZRC20Asset(chainID int64, erc20Address ethcommon.Address) string {
 	addressToAsset, found := erc20AddressToForeignCoinAssetMap[chainID]
-	switch {
-	case found:
+	if found {
 		// if found, convert the address to asset in foreigh coin store
 		asset, found := addressToAsset[erc20Address]
 		if found {
@@ -100,10 +90,10 @@ func ERC20AddressToForeignCoinAsset(chainID int64, erc20Address ethcommon.Addres
 
 		// use the checksum address as asset string by default
 		return erc20Address.Hex()
-	default:
-		// use the checksum address as asset string by default
-		return erc20Address.Hex()
 	}
+
+	// use the checksum address as asset string by default
+	return erc20Address.Hex()
 }
 
 // WatchInbound watches evm chain for incoming txs and post votes to zetacore
@@ -745,10 +735,10 @@ func (ob *Observer) BuildInboundVoteMsgForDepositedEvent(
 		return nil
 	}
 
-	// convert erc20Address to asset in foreign coin store to avoid checksum mismatch
+	// get patched asset string so that it matches the asset in the foreign coin store
 	// TODO: remove once the checksum conversion is fixed in the protocol
 	// https://github.com/zeta-chain/node/issues/3274
-	asset := ERC20AddressToForeignCoinAsset(ob.Chain().ChainId, event.Asset)
+	asset := PatchZRC20Asset(ob.Chain().ChainId, event.Asset)
 
 	message := hex.EncodeToString(event.Message)
 	ob.Logger().Inbound.Info().

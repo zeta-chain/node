@@ -160,7 +160,28 @@ func Test_ParseInboundAsDepositAndCall(t *testing.T) {
 	// solana e2e deployer account
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
 	// example contract deployed during e2e test, read from tx result
-	expectedReceiver := []byte{117, 160, 106, 140, 37, 135, 57, 218, 223, 226, 53, 45, 87, 151, 61, 239, 158, 231, 162, 186}
+	expectedReceiver := []byte{
+		117,
+		160,
+		106,
+		140,
+		37,
+		135,
+		57,
+		218,
+		223,
+		226,
+		53,
+		45,
+		87,
+		151,
+		61,
+		239,
+		158,
+		231,
+		162,
+		186,
+	}
 	expectedMsg := []byte("hello lamports")
 	expectedDeposit := &Deposit{
 		Sender: sender,
