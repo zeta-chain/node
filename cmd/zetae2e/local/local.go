@@ -125,6 +125,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testPerformance {
 		logger.Print("⚠️ performance tests enabled, regular tests will be skipped")
 		skipRegular = true
+		skipPrecompiles = true
 	}
 
 	// start timer
