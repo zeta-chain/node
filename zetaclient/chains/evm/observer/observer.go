@@ -243,6 +243,10 @@ func (ob *Observer) TransactionByHash(txHash string) (*ethrpc.Transaction, bool,
 	return tx, tx.BlockNumber == nil, nil
 }
 
+func (ob *Observer) TransactionReceipt(ctx context.Context, hash ethcommon.Hash) (*ethtypes.Receipt, error) {
+	return ob.evmClient.TransactionReceipt(ctx, hash)
+}
+
 // GetBlockByNumberCached get block by number from cache
 // returns block, ethrpc.Block, isFallback, isSkip, error
 func (ob *Observer) GetBlockByNumberCached(blockNumber uint64) (*ethrpc.Block, error) {

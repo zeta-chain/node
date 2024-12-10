@@ -7,20 +7,19 @@ import (
 	"strings"
 
 	"cosmossdk.io/errors"
-	"github.com/btcsuite/btcd/rpcclient"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/onrik/ethrpc"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
 	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	evmobserver "github.com/zeta-chain/node/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/orchestrator"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -87,27 +86,26 @@ func InboundGetBallot(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	chainProto := chain.RawChain()
+	baseLogger := base.Logger{Std: zerolog.Nop(), Compliance: zerolog.Nop()}
+
+	observers, err := orchestrator.CreateChainObserverMap(ctx, client, nil, db.SqliteInMemory, baseLogger, nil)
+	if err != nil {
+		return errors.Wrap(err, "failed to create chain observer map")
+	}
 
 	// get ballot identifier according to the chain type
 	if chain.IsEVM() {
-		evmObserver := evmobserver.Observer{}
-		evmObserver.WithZetacoreClient(client)
-		var ethRPC *ethrpc.EthRPC
-		var client *ethclient.Client
-		coinType := coin.CoinType_Cmd
-		for chainIDFromConfig, evmConfig := range cfg.GetAllEVMConfigs() {
-			if chainIDFromConfig == chainID {
-				ethRPC = ethrpc.NewEthRPC(evmConfig.Endpoint)
-				client, err = ethclient.Dial(evmConfig.Endpoint)
-				if err != nil {
-					return err
-				}
-				evmObserver.WithEvmClient(client)
-				evmObserver.WithEvmJSONRPC(ethRPC)
-				evmObserver.WithChain(*chainProto)
-			}
+		observer, ok := observers[chainID]
+		if !ok {
+			return fmt.Errorf("observer not found for evm chain %d", chain.ID())
 		}
+
+		evmObserver, ok := observer.(*evmobserver.Observer)
+		if !ok {
+			return fmt.Errorf("observer is not evm observer for chain %d", chain.ID())
+		}
+
+		coinType := coin.CoinType_Cmd
 		hash := ethcommon.HexToHash(inboundHash)
 		tx, isPending, err := evmObserver.TransactionByHash(inboundHash)
 		if err != nil {
@@ -118,7 +116,7 @@ func InboundGetBallot(_ *cobra.Command, args []string) error {
 			return fmt.Errorf("tx is still pending")
 		}
 
-		receipt, err := client.TransactionReceipt(context.Background(), hash)
+		receipt, err := evmObserver.TransactionReceipt(ctx, hash)
 		if err != nil {
 			return fmt.Errorf("tx receipt not found on chain %s, %d", err.Error(), chain.ID())
 		}
@@ -158,33 +156,23 @@ func InboundGetBallot(_ *cobra.Command, args []string) error {
 		}
 		fmt.Println("CoinType : ", coinType)
 	} else if chain.IsBitcoin() {
-		btcObserver := btcobserver.Observer{}
-		btcObserver.WithZetacoreClient(client)
-		btcObserver.WithChain(*chainProto)
-		btcConfig, found := cfg.GetBTCConfig(chainID)
-		if !found {
-			return fmt.Errorf("unable to find config for BTC chain %d", chainID)
-		}
-		connCfg := &rpcclient.ConnConfig{
-			Host:         btcConfig.RPCHost,
-			User:         btcConfig.RPCUsername,
-			Pass:         btcConfig.RPCPassword,
-			HTTPPostMode: true,
-			DisableTLS:   true,
-			Params:       btcConfig.RPCParams,
+		observer, ok := observers[chainID]
+		if !ok {
+			return fmt.Errorf("observer not found for btc chain %d", chainID)
 		}
 
-		btcClient, err := rpcclient.New(connCfg, nil)
-		if err != nil {
-			return err
+		btcObserver, ok := observer.(*btcobserver.Observer)
+		if !ok {
+			return fmt.Errorf("observer is not btc observer for chain %d", chainID)
 		}
-		btcObserver.WithBtcClient(btcClient)
+
 		ballotIdentifier, err = btcObserver.CheckReceiptForBtcTxHash(ctx, inboundHash, false)
 		if err != nil {
 			return err
 		}
 	}
-	fmt.Println("BallotIdentifier : ", ballotIdentifier)
+
+	fmt.Println("BallotIdentifier: ", ballotIdentifier)
 
 	// query ballot
 	ballot, err := client.GetBallot(ctx, ballotIdentifier)
@@ -193,9 +181,10 @@ func InboundGetBallot(_ *cobra.Command, args []string) error {
 	}
 
 	for _, vote := range ballot.Voters {
-		fmt.Printf("%s : %s \n", vote.VoterAddress, vote.VoteType)
+		fmt.Printf("%s: %s\n", vote.VoterAddress, vote.VoteType)
 	}
-	fmt.Println("BallotStatus : ", ballot.BallotStatus)
+
+	fmt.Println("BallotStatus: ", ballot.BallotStatus)
 
 	return nil
 }
