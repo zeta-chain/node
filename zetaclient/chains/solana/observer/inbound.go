@@ -19,6 +19,7 @@ import (
 	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -274,6 +275,19 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 	if bytes.Equal(event.Memo, []byte(constant.DonationMessage)) {
 		ob.Logger().Inbound.Info().
 			Msgf("thank you rich folk for your donation! tx %s chain %d", event.TxHash, event.SenderChainID)
+		return nil
+	}
+
+	// prepare logger fields
+	lf := map[string]any{
+		logs.FieldMethod: "BuildInboundVoteMsgFromEvent",
+		logs.FieldTx:     event.TxHash,
+	}
+
+	// decode event memo bytes to get the receiver
+	err := event.DecodeMemo()
+	if err != nil {
+		ob.Logger().Inbound.Info().Fields(lf).Msgf("invalid memo bytes: %s", hex.EncodeToString(event.Memo))
 		return nil
 	}
 

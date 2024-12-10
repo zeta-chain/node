@@ -1,7 +1,15 @@
 package types
 
 import (
+	"bytes"
+	"encoding/hex"
+
+	"github.com/pkg/errors"
+
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/pkg/crypto"
+	"github.com/zeta-chain/node/pkg/memo"
 )
 
 // InboundEvent represents an inbound event
@@ -40,4 +48,27 @@ type InboundEvent struct {
 
 	// Asset is the asset of the inbound
 	Asset string
+}
+
+// DecodeMemo decodes the receiver from the memo bytes
+func (event *InboundEvent) DecodeMemo() error {
+	// skip decoding donation tx as it won't go through zetacore
+	if bytes.Equal(event.Memo, []byte(constant.DonationMessage)) {
+		return nil
+	}
+
+	// decode receiver address from memo
+	parsedAddress, _, err := memo.DecodeLegacyMemoHex(hex.EncodeToString(event.Memo))
+	if err != nil { // unreachable code
+		return errors.Wrap(err, "invalid memo hex")
+	}
+
+	// ensure the receiver is valid
+	if crypto.IsEmptyAddress(parsedAddress) {
+		return errors.New("got empty receiver address from memo")
+	}
+
+	event.Receiver = parsedAddress.Hex()
+
+	return nil
 }
