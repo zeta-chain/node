@@ -166,7 +166,7 @@ func newTestSuite(t *testing.T) *testSuite {
 
 		proc:       outboundprocessor.NewProcessor(logger.Std),
 		gw:         toncontracts.NewGateway(gwAccountID),
-		baseSigner: base.NewSigner(chain, tss, nil, logger),
+		baseSigner: base.NewSigner(chain, tss, logger),
 	}
 
 	// Setup mocks

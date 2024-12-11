@@ -54,6 +54,34 @@ func (_m *ObserverAuthorityKeeper) GetAdditionalChainList(ctx types.Context) []c
 	return r0
 }
 
+// GetPolicies provides a mock function with given fields: ctx
+func (_m *ObserverAuthorityKeeper) GetPolicies(ctx types.Context) (authoritytypes.Policies, bool) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPolicies")
+	}
+
+	var r0 authoritytypes.Policies
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context) (authoritytypes.Policies, bool)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context) authoritytypes.Policies); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(authoritytypes.Policies)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context) bool); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
 // SetPolicies provides a mock function with given fields: ctx, policies
 func (_m *ObserverAuthorityKeeper) SetPolicies(ctx types.Context, policies authoritytypes.Policies) {
 	_m.Called(ctx, policies)

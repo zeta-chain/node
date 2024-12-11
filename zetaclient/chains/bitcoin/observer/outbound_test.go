@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/db"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -22,11 +23,14 @@ import (
 var TestDataDir = "../../../"
 
 // MockBTCObserverMainnet creates a mock Bitcoin mainnet observer for testing
-func MockBTCObserverMainnet(t *testing.T) *Observer {
+func MockBTCObserverMainnet(t *testing.T, tss interfaces.TSSSigner) *Observer {
 	// setup mock arguments
 	chain := chains.BitcoinMainnet
 	params := mocks.MockChainParams(chain.ChainId, 10)
-	tss := mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet)
+
+	if tss == nil {
+		tss = mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet)
+	}
 
 	// create mock rpc client
 	btcClient := mocks.NewBTCRPCClient(t)
@@ -53,8 +57,7 @@ func createObserverWithPrivateKey(t *testing.T) *Observer {
 	tss := mocks.NewTSSFromPrivateKey(t, privateKey)
 
 	// create Bitcoin observer with mock tss
-	ob := MockBTCObserverMainnet(t)
-	ob.WithTSS(tss)
+	ob := MockBTCObserverMainnet(t, tss)
 
 	return ob
 }
@@ -107,7 +110,7 @@ func TestCheckTSSVout(t *testing.T) {
 	nonce := uint64(148)
 
 	// create mainnet mock client
-	ob := MockBTCObserverMainnet(t)
+	ob := MockBTCObserverMainnet(t, nil)
 
 	t.Run("valid TSS vout should pass", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
@@ -189,7 +192,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 	nonce := uint64(148)
 
 	// create mainnet mock client
-	ob := MockBTCObserverMainnet(t)
+	ob := MockBTCObserverMainnet(t, nil)
 
 	t.Run("valid TSS vout should pass", func(t *testing.T) {
 		// remove change vout to simulate cancelled tx

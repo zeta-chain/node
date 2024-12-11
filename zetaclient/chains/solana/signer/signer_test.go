@@ -89,7 +89,7 @@ func Test_NewSigner(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s, err := signer.NewSigner(tt.chain, tt.chainParams, tt.solClient, tt.tss, tt.relayerKey, tt.ts, tt.logger)
+			s, err := signer.NewSigner(tt.chain, tt.chainParams, tt.solClient, tt.tss, tt.relayerKey, tt.logger)
 			if tt.errMessage != "" {
 				require.ErrorContains(t, err, tt.errMessage)
 				require.Nil(t, s)
@@ -110,7 +110,7 @@ func Test_SetGatewayAddress(t *testing.T) {
 
 	// helper functor to create signer
 	signerCreator := func() *signer.Signer {
-		s, err := signer.NewSigner(chain, *chainParams, nil, nil, nil, nil, base.DefaultLogger())
+		s, err := signer.NewSigner(chain, *chainParams, nil, nil, nil, base.DefaultLogger())
 		require.NoError(t, err)
 		return s
 	}
@@ -159,7 +159,7 @@ func Test_SetRelayerBalanceMetrics(t *testing.T) {
 	mckClient.On("GetBalance", mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("rpc error"))
 
 	// create signer and set relayer balance metrics
-	s, err := signer.NewSigner(chain, *chainParams, mckClient, nil, relayerKey, nil, base.DefaultLogger())
+	s, err := signer.NewSigner(chain, *chainParams, mckClient, nil, relayerKey, base.DefaultLogger())
 	require.NoError(t, err)
 	s.SetRelayerBalanceMetrics(ctx)
 
@@ -174,7 +174,7 @@ func Test_SetRelayerBalanceMetrics(t *testing.T) {
 	}, nil)
 
 	// create signer and set relayer balance metrics again
-	s, err = signer.NewSigner(chain, *chainParams, mckClient, nil, relayerKey, nil, base.DefaultLogger())
+	s, err = signer.NewSigner(chain, *chainParams, mckClient, nil, relayerKey, base.DefaultLogger())
 	require.NoError(t, err)
 	s.SetRelayerBalanceMetrics(ctx)
 

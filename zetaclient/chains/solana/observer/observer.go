@@ -56,7 +56,6 @@ func NewObserver(
 		zetacoreClient,
 		tss,
 		base.DefaultBlockCacheSize,
-		base.DefaultHeaderCacheSize,
 		rpcAlertLatency,
 		ts,
 		db,
@@ -84,16 +83,6 @@ func NewObserver(
 	ob.Observer.LoadLastTxScanned()
 
 	return ob, nil
-}
-
-// SolClient returns the solana rpc client
-func (ob *Observer) SolClient() interfaces.SolanaRPCClient {
-	return ob.solClient
-}
-
-// WithSolClient attaches a new solana rpc client to the observer
-func (ob *Observer) WithSolClient(client interfaces.SolanaRPCClient) {
-	ob.solClient = client
 }
 
 // Start starts the Go routine processes to observe the Solana chain

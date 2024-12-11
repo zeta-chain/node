@@ -75,7 +75,6 @@ func NewSigner(
 	ctx context.Context,
 	chain chains.Chain,
 	tss interfaces.TSSSigner,
-	ts *metrics.TelemetryServer,
 	logger base.Logger,
 	endpoint string,
 	zetaConnectorAddress ethcommon.Address,
@@ -83,7 +82,7 @@ func NewSigner(
 	gatewayAddress ethcommon.Address,
 ) (*Signer, error) {
 	// create base signer
-	baseSigner := base.NewSigner(chain, tss, ts, logger)
+	baseSigner := base.NewSigner(chain, tss, logger)
 
 	// create EVM client
 	client, ethSigner, err := getEVMRPC(ctx, endpoint)
@@ -99,11 +98,6 @@ func NewSigner(
 		er20CustodyAddress:   erc20CustodyAddress,
 		gatewayAddress:       gatewayAddress,
 	}, nil
-}
-
-// WithEvmClient attaches a new client to the signer
-func (signer *Signer) WithEvmClient(client interfaces.EVMRPCClient) {
-	signer.client = client
 }
 
 // SetZetaConnectorAddress sets the zeta connector address
@@ -544,11 +538,6 @@ func (signer *Signer) BroadcastOutbound(
 		signer.reportToOutboundTracker(ctx, zetacoreClient, toChain.ID(), tx.Nonce(), outboundHash, logger)
 		break // successful broadcast; no need to retry
 	}
-}
-
-// EvmClient returns the EVM RPC client
-func (signer *Signer) EvmClient() interfaces.EVMRPCClient {
-	return signer.client
 }
 
 // EvmSigner returns the EVM signer object for the signer

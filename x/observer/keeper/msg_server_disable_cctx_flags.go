@@ -37,7 +37,6 @@ func (k msgServer) DisableCCTX(
 	if msg.DisableOutbound {
 		flags.IsOutboundEnabled = false
 	}
-
 	k.SetCrosschainFlags(ctx, flags)
 
 	err = ctx.EventManager().EmitTypedEvents(&types.EventCCTXDisabled{

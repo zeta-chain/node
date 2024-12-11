@@ -153,12 +153,10 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 	// can use any bitcoin chain for testing
 	chain := chains.BitcoinMainnet
-	params := mocks.MockChainParams(chain.ChainId, 10)
 
 	// create test observer
-	ob := MockBTCObserver(t, chain, params, nil)
-	zetacoreClient := mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{}).WithZetaChain()
-	ob.WithZetacoreClient(zetacoreClient)
+	ob := newTestSuite(t, chain)
+	ob.zetacore.WithKeys(&keys.Keys{}).WithZetaChain()
 
 	// test cases
 	tests := []struct {

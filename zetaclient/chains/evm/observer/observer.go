@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"math/big"
 	"strings"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -82,7 +81,6 @@ func NewObserver(
 		zetacoreClient,
 		tss,
 		base.DefaultBlockCacheSize,
-		base.DefaultHeaderCacheSize,
 		rpcAlertLatency,
 		ts,
 		database,
@@ -108,16 +106,6 @@ func NewObserver(
 	}
 
 	return ob, nil
-}
-
-// WithEvmClient attaches a new evm client to the observer
-func (ob *Observer) WithEvmClient(client interfaces.EVMRPCClient) {
-	ob.evmClient = client
-}
-
-// WithEvmJSONRPC attaches a new evm json rpc client to the observer
-func (ob *Observer) WithEvmJSONRPC(client interfaces.EVMJSONRPCClient) {
-	ob.evmJSONRPC = client
 }
 
 // GetConnectorContract returns the non-Eth connector address and binder
@@ -255,20 +243,8 @@ func (ob *Observer) TransactionByHash(txHash string) (*ethrpc.Transaction, bool,
 	return tx, tx.BlockNumber == nil, nil
 }
 
-// GetBlockHeaderCached get block header by number from cache
-func (ob *Observer) GetBlockHeaderCached(ctx context.Context, blockNumber uint64) (*ethtypes.Header, error) {
-	if result, ok := ob.HeaderCache().Get(blockNumber); ok {
-		if header, ok := result.(*ethtypes.Header); ok {
-			return header, nil
-		}
-		return nil, errors.New("cached value is not of type *ethtypes.Header")
-	}
-	header, err := ob.evmClient.HeaderByNumber(ctx, new(big.Int).SetUint64(blockNumber))
-	if err != nil {
-		return nil, err
-	}
-	ob.HeaderCache().Add(blockNumber, header)
-	return header, nil
+func (ob *Observer) TransactionReceipt(ctx context.Context, hash ethcommon.Hash) (*ethtypes.Receipt, error) {
+	return ob.evmClient.TransactionReceipt(ctx, hash)
 }
 
 // GetBlockByNumberCached get block by number from cache

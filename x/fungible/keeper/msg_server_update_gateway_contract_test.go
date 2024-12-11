@@ -1,10 +1,11 @@
 package keeper_test
 
 import (
+	"testing"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
