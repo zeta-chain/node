@@ -20,6 +20,7 @@ func IsEVMAddress(address string) bool {
 }
 
 // IsChecksumAddress returns true if the EVM address string is a valid checksum address
+// See https://eips.ethereum.org/EIPS/eip-55
 func IsChecksumAddress(address string) bool {
 	return address == common.HexToAddress(address).Hex()
 }
