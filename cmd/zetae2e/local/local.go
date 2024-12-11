@@ -389,13 +389,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				deployerRunner,
 				verbose,
 				e2etests.TestStressSolanaDepositName,
-			),
-		)
-		eg.Go(
-			solanaDepositPerformanceRoutine(
-				conf,
-				deployerRunner,
-				verbose,
 				e2etests.TestStressSPLDepositName,
 			),
 		)
@@ -405,13 +398,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				deployerRunner,
 				verbose,
 				e2etests.TestStressSolanaWithdrawName,
-			),
-		)
-		eg.Go(
-			solanaWithdrawPerformanceRoutine(
-				conf,
-				deployerRunner,
-				verbose,
 				e2etests.TestStressSPLWithdrawName,
 			),
 		)
