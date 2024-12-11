@@ -18,7 +18,10 @@ func MigrateStore(ctx sdk.Context, fungibleKeeper fungibleKeeper) error {
 	fcs := fungibleKeeper.GetAllForeignCoins(ctx)
 	for _, fc := range fcs {
 		if fc.Asset != "" && crypto.IsEVMAddress(fc.Asset) && !crypto.IsChecksumAddress(fc.Asset) {
-			fc.Asset = crypto.ToChecksumAddress(fc.Asset)
+			checksumAddress := crypto.ToChecksumAddress(fc.Asset)
+			ctx.Logger().Info("Patching zrc20 asset", "zrc20", fc.Symbol, "old", fc.Asset, "new", checksumAddress)
+
+			fc.Asset = checksumAddress
 			fungibleKeeper.SetForeignCoins(ctx, fc)
 		}
 	}
