@@ -15,7 +15,7 @@ import (
 func TestSolanaWithdraw(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	withdrawAmount := parseBigInt(r, args[0])
+	withdrawAmount := utils.ParseBigInt(r, args[0])
 
 	// get ERC20 SOL balance before withdraw
 	balanceBefore, err := r.SOLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())

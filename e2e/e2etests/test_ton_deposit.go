@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/testutil/sample"
 )
@@ -16,7 +17,7 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	ctx, deployer := r.Ctx, r.TONDeployer
 
 	// Given amount
-	amount := parseUint(r, args[0])
+	amount := utils.ParseUint(r, args[0])
 
 	// Given approx deposit fee
 	depositFee, err := r.TONGateway.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDeposit)

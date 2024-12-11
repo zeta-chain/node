@@ -19,8 +19,8 @@ import (
 func TestStressBTCWithdraw(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
-	withdrawalAmount := parseFloat(r, args[0])
-	numWithdraws := parseInt(r, args[1])
+	withdrawalAmount := utils.ParseFloat(r, args[0])
+	numWithdraws := utils.ParseInt(r, args[1])
 
 	r.Logger.Print("starting stress test of %d withdraws", numWithdraws)
 

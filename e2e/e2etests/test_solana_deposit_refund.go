@@ -14,7 +14,7 @@ func TestSolanaDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// parse deposit amount (in lamports)
-	depositAmount := parseBigInt(r, args[0])
+	depositAmount := utils.ParseBigInt(r, args[0])
 
 	// deploy a reverter contract in ZEVM
 	// TODO: consider removing repeated deployments of reverter contract

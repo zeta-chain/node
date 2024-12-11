@@ -11,7 +11,7 @@ import (
 func TestBitcoinDeposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	depositAmount := parseFloat(r, args[0])
+	depositAmount := utils.ParseFloat(r, args[0])
 
 	txHash := r.DepositBTCWithAmount(depositAmount, nil)
 

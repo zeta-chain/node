@@ -129,7 +129,7 @@ func (ob *Observer) GetERC20CustodyContract() (ethcommon.Address, *erc20custody.
 	return addr, contract, err
 }
 
-// GetERC20CustodyV2Contract returns ERC20CustodyV2 contract address and binder
+// GetERC20CustodyV2Contract returns ERC20Custody contract address and binder
 // NOTE: we use the same address as gateway v1
 // this simplify the migration process v1 will be completely removed in the future
 // currently the ABI for withdraw is identical, therefore both contract instances can be used

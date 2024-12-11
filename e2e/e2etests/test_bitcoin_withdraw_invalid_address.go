@@ -12,8 +12,8 @@ import (
 func TestBitcoinWithdrawToInvalidAddress(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	withdrawalAmount := parseFloat(r, args[0])
-	amount := btcAmountFromFloat64(r, withdrawalAmount)
+	withdrawalAmount := utils.ParseFloat(r, args[0])
+	amount := utils.BTCAmountFromFloat64(r, withdrawalAmount)
 
 	withdrawToInvalidAddress(r, amount)
 }

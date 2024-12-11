@@ -11,6 +11,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
+	cometbfttypes "github.com/cometbft/cometbft/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -145,6 +146,7 @@ type ZetacoreClient interface {
 	GetUpgradePlan(ctx context.Context) (*upgradetypes.Plan, error)
 
 	PostOutboundTracker(ctx context.Context, chainID int64, nonce uint64, txHash string) (string, error)
+	NewBlockSubscriber(ctx context.Context) (chan cometbfttypes.EventDataNewBlock, error)
 }
 
 // BTCRPCClient is the interface for BTC RPC client

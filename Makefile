@@ -312,9 +312,9 @@ start-ton-test: e2e-images
 	export E2E_ARGS="--skip-regular --test-ton" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile ton up -d
 
-start-v2-test: e2e-images
-	@echo "--> Starting e2e smart contracts v2 test"
-	export E2E_ARGS="--skip-regular --test-v2" && \
+start-legacy-test: e2e-images
+	@echo "--> Starting e2e smart contracts legacy test"
+	export E2E_ARGS="--skip-regular --test-legacy" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 ###############################################################################
@@ -361,16 +361,6 @@ start-upgrade-test-admin: zetanode-upgrade
 	export UPGRADE_HEIGHT=90 && \
 	export E2E_ARGS="--skip-regular --test-admin" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
-
-# this test upgrades from v18 and execute the v2 contracts migration process
-# this tests is part of upgrade test part because it should run the upgrade from v18 to fully replicate the upgrade process
-start-upgrade-v2-migration-test: zetanode-upgrade
-	@echo "--> Starting v2 migration upgrade test"
-	export LOCALNET_MODE=upgrade && \
-	export UPGRADE_HEIGHT=90 && \
-	export E2E_ARGS="--test-v2-migration" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
-
 
 start-upgrade-import-mainnet-test: zetanode-upgrade
 	@echo "--> Starting import-data upgrade test"

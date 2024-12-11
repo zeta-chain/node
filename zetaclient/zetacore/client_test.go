@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cosmosclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -22,6 +21,9 @@ import (
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
 
+	cometbftrpc "github.com/cometbft/cometbft/rpc/client"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	cometbfttypes "github.com/cometbft/cometbft/types"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/keys"
@@ -111,7 +113,7 @@ func withDefaultObserverKeys() clientTestOpt {
 	return withObserverKeys(keys.NewKeysWithKeybase(keyRing, address, testSigner, ""))
 }
 
-func withTendermint(client cosmosclient.TendermintRPC) clientTestOpt {
+func withTendermint(client cometbftrpc.Client) clientTestOpt {
 	return func(cfg *clientTestConfig) { cfg.opts = append(cfg.opts, WithTendermintClient(client)) }
 }
 
@@ -177,7 +179,11 @@ func TestZetacore_GetZetaHotKeyBalance(t *testing.T) {
 	method := "/cosmos.bank.v1beta1.Query/Balance"
 	setupMockServer(t, banktypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClient(
+		t,
+		withDefaultObserverKeys(),
+		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0)),
+	)
 
 	// should be able to get balance of signer
 	client.keys = keys.NewKeysWithKeybase(mocks.NewKeyring(), types.AccAddress{}, "bob", "")
@@ -219,7 +225,11 @@ func TestZetacore_GetAllOutboundTrackerByChain(t *testing.T) {
 	method := "/zetachain.zetacore.crosschain.Query/OutboundTrackerAllByChain"
 	setupMockServer(t, crosschaintypes.RegisterQueryServer, method, input, expectedOutput)
 
-	client := setupZetacoreClient(t, withDefaultObserverKeys())
+	client := setupZetacoreClient(
+		t,
+		withDefaultObserverKeys(),
+		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0)),
+	)
 
 	resp, err := client.GetAllOutboundTrackerByChain(ctx, chain.ChainId, interfaces.Ascending)
 	require.NoError(t, err)
@@ -228,4 +238,32 @@ func TestZetacore_GetAllOutboundTrackerByChain(t *testing.T) {
 	resp, err = client.GetAllOutboundTrackerByChain(ctx, chain.ChainId, interfaces.Descending)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.OutboundTracker, resp)
+}
+
+func TestZetacore_SubscribeNewBlocks(t *testing.T) {
+	ctx := context.Background()
+	cometBFTClient := mocks.NewSDKClientWithErr(t, nil, 0)
+	client := setupZetacoreClient(
+		t,
+		withDefaultObserverKeys(),
+		withTendermint(cometBFTClient),
+	)
+
+	newBlockChan, err := client.NewBlockSubscriber(ctx)
+	require.NoError(t, err)
+
+	height := int64(10)
+
+	cometBFTClient.PublishToSubscribers(coretypes.ResultEvent{
+		Data: cometbfttypes.EventDataNewBlock{
+			Block: &cometbfttypes.Block{
+				Header: cometbfttypes.Header{
+					Height: height,
+				},
+			},
+		},
+	})
+
+	newBlockEvent := <-newBlockChan
+	require.Equal(t, height, newBlockEvent.Block.Header.Height)
 }
