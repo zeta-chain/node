@@ -87,6 +87,8 @@ const (
 	NonceToCctxKeyPrefix = "NonceToCctx-value-"
 
 	ParamsKey = "Params-value-"
+
+	OperationalFlagsKey = "OperationalFlags-value-"
 )
 
 func GetBlameIndex(chainID int64, nonce uint64, digest string, height uint64) string {

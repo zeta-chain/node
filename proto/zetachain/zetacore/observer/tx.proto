@@ -8,6 +8,7 @@ import "zetachain/zetacore/observer/observer.proto";
 import "zetachain/zetacore/observer/params.proto";
 import "zetachain/zetacore/observer/pending_nonces.proto";
 import "zetachain/zetacore/observer/tss.proto";
+import "zetachain/zetacore/observer/operational.proto";
 import "zetachain/zetacore/pkg/chains/chains.proto";
 import "zetachain/zetacore/pkg/proofs/proofs.proto";
 
@@ -31,6 +32,8 @@ service Msg {
   rpc DisableCCTX(MsgDisableCCTX) returns (MsgDisableCCTXResponse);
   rpc UpdateGasPriceIncreaseFlags(MsgUpdateGasPriceIncreaseFlags)
       returns (MsgUpdateGasPriceIncreaseFlagsResponse);
+  rpc UpdateOperationalFlags(MsgUpdateOperationalFlags)
+      returns (MsgUpdateOperationalFlagsResponse);
 }
 
 message MsgUpdateObserver {
@@ -137,3 +140,10 @@ message MsgUpdateGasPriceIncreaseFlags {
 }
 
 message MsgUpdateGasPriceIncreaseFlagsResponse {}
+
+message MsgUpdateOperationalFlags {
+  string creator = 1;
+  OperationalFlags operationalFlags = 2 [ (gogoproto.nullable) = false ];
+}
+
+message MsgUpdateOperationalFlagsResponse {}

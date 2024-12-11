@@ -132,6 +132,7 @@ const (
 	TestMigrateERC20CustodyFundsName  = "migrate_erc20_custody_funds"
 	TestMigrateTSSName                = "migrate_TSS"
 	TestSolanaWhitelistSPLName        = "solana_whitelist_spl"
+	TestOperationalFlagsName          = "operational_flags"
 
 	/*
 	 Operational tests
@@ -878,7 +879,12 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{},
 		TestMigrateERC20CustodyFunds,
 	),
-
+	runner.NewE2ETest(
+		TestOperationalFlagsName,
+		"operational flags functionality",
+		[]runner.ArgDefinition{},
+		TestOperationalFlags,
+	),
 	/*
 	 Special tests
 	*/
