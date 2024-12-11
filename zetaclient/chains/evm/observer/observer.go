@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"math/big"
 	"strings"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -53,7 +52,11 @@ type Observer struct {
 
 // priorityFeeConfig is the configuration for priority fee
 type priorityFeeConfig struct {
-	checked   bool
+	// checked indicates whether the observer checked
+	// this EVM chain for EIP-1559 (further checks are cached)
+	checked bool
+
+	// supported indicates whether this EVM chain supports EIP-1559
 	supported bool
 }
 
@@ -78,7 +81,6 @@ func NewObserver(
 		zetacoreClient,
 		tss,
 		base.DefaultBlockCacheSize,
-		base.DefaultHeaderCacheSize,
 		rpcAlertLatency,
 		ts,
 		database,
@@ -106,16 +108,6 @@ func NewObserver(
 	return ob, nil
 }
 
-// WithEvmClient attaches a new evm client to the observer
-func (ob *Observer) WithEvmClient(client interfaces.EVMRPCClient) {
-	ob.evmClient = client
-}
-
-// WithEvmJSONRPC attaches a new evm json rpc client to the observer
-func (ob *Observer) WithEvmJSONRPC(client interfaces.EVMJSONRPCClient) {
-	ob.evmJSONRPC = client
-}
-
 // GetConnectorContract returns the non-Eth connector address and binder
 func (ob *Observer) GetConnectorContract() (ethcommon.Address, *zetaconnector.ZetaConnectorNonEth, error) {
 	addr := ethcommon.HexToAddress(ob.ChainParams().ConnectorContractAddress)
@@ -137,7 +129,7 @@ func (ob *Observer) GetERC20CustodyContract() (ethcommon.Address, *erc20custody.
 	return addr, contract, err
 }
 
-// GetERC20CustodyV2Contract returns ERC20CustodyV2 contract address and binder
+// GetERC20CustodyV2Contract returns ERC20Custody contract address and binder
 // NOTE: we use the same address as gateway v1
 // this simplify the migration process v1 will be completely removed in the future
 // currently the ABI for withdraw is identical, therefore both contract instances can be used
@@ -251,20 +243,8 @@ func (ob *Observer) TransactionByHash(txHash string) (*ethrpc.Transaction, bool,
 	return tx, tx.BlockNumber == nil, nil
 }
 
-// GetBlockHeaderCached get block header by number from cache
-func (ob *Observer) GetBlockHeaderCached(ctx context.Context, blockNumber uint64) (*ethtypes.Header, error) {
-	if result, ok := ob.HeaderCache().Get(blockNumber); ok {
-		if header, ok := result.(*ethtypes.Header); ok {
-			return header, nil
-		}
-		return nil, errors.New("cached value is not of type *ethtypes.Header")
-	}
-	header, err := ob.evmClient.HeaderByNumber(ctx, new(big.Int).SetUint64(blockNumber))
-	if err != nil {
-		return nil, err
-	}
-	ob.HeaderCache().Add(blockNumber, header)
-	return header, nil
+func (ob *Observer) TransactionReceipt(ctx context.Context, hash ethcommon.Hash) (*ethtypes.Receipt, error) {
+	return ob.evmClient.TransactionReceipt(ctx, hash)
 }
 
 // GetBlockByNumberCached get block by number from cache

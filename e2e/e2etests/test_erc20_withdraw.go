@@ -4,30 +4,26 @@ import (
 	"math/big"
 
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func TestERC20Withdraw(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	withdrawalAmount, ok := new(big.Int).SetString(args[0], 10)
-	require.True(r, ok, "Invalid withdrawal amount specified for TestERC20Withdraw.")
+	amount := utils.ParseBigInt(r, args[0])
 
-	// approve 1 unit of the gas token to cover the gas fee
-	tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, r.ERC20ZRC20Addr, big.NewInt(1e18))
-	require.NoError(r, err)
+	r.ApproveERC20ZRC20(r.GatewayZEVMAddr)
+	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireTxSuccessful(r, receipt)
-	r.Logger.Info("eth zrc20 approve receipt: status %d", receipt.Status)
+	// perform the withdraw
+	tx := r.ERC20Withdraw(r.EVMAddress(), amount, gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 
-	// withdraw
-	tx = r.WithdrawERC20(withdrawalAmount)
-
-	// verify the withdraw value
+	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-
-	verifyTransferAmountFromCCTX(r, cctx, withdrawalAmount.Int64())
+	r.Logger.CCTX(*cctx, "withdraw")
+	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 }

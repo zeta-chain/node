@@ -92,7 +92,7 @@ func TestWhitelistERC20(r *runner.E2ERunner, _ []string) {
 	r.Logger.Info("ERC20 balance: %s", balance.String())
 
 	// run deposit and withdraw ERC20 test
-	txHash := r.DepositERC20WithAmountAndMessage(r.EVMAddress(), balance, []byte{})
+	txHash := r.LegacyDepositERC20WithAmountAndMessage(r.EVMAddress(), balance, []byte{})
 	r.WaitForMinedCCTX(txHash)
 
 	// approve 1 unit of the gas token to cover the gas fee
@@ -103,6 +103,6 @@ func TestWhitelistERC20(r *runner.E2ERunner, _ []string) {
 	utils.RequireTxSuccessful(r, receipt)
 	r.Logger.Info("eth zrc20 approve receipt: status %d", receipt.Status)
 
-	tx = r.WithdrawERC20(balance)
+	tx = r.LegacyWithdrawERC20(balance)
 	r.WaitForMinedCCTX(tx.Hash())
 }

@@ -13,6 +13,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/constant"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
@@ -531,8 +532,8 @@ func (ob *Observer) checkTssOutboundResult(
 		return errors.Wrapf(err, "checkTssOutboundResult: invalid TSS Vin in outbound %s nonce %d", hash, nonce)
 	}
 
-	// differentiate between normal and restricted cctx
-	if compliance.IsCctxRestricted(cctx) {
+	// differentiate between normal and cancelled cctx
+	if compliance.IsCctxRestricted(cctx) || params.Amount.Uint64() < constant.BTCWithdrawalDustAmount {
 		err = ob.checkTSSVoutCancelled(params, rawResult.Vout)
 		if err != nil {
 			return errors.Wrapf(
@@ -559,7 +560,7 @@ func (ob *Observer) checkTSSVin(ctx context.Context, vins []btcjson.Vin, nonce u
 	if nonce > 0 && len(vins) <= 1 {
 		return fmt.Errorf("checkTSSVin: len(vins) <= 1")
 	}
-	pubKeyTss := hex.EncodeToString(ob.TSS().PubKeyCompressedBytes())
+	pubKeyTss := hex.EncodeToString(ob.TSS().PubKey().Bytes(true))
 	for i, vin := range vins {
 		// The length of the Witness should be always 2 for SegWit inputs.
 		if len(vin.Witness) != 2 {

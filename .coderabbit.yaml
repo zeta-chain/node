@@ -33,6 +33,10 @@ reviews:
       instructions: >-
         Review the shell scripts, point out issues relative to security,
         performance, and maintainability.
+    - path: '{*e2e*,*_test.go}'
+      instructions: >-
+        Errors in tests may be handled via require.NoError(t, err) rather
+        than explicitly returning error.
 
   auto_review:
     drafts: false

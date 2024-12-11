@@ -100,11 +100,12 @@ func (k msgServer) VoteOutbound(
 		return &types.MsgVoteOutboundResponse{}, nil
 	}
 
-	// The logic below should be executed only once for every cctx. If the cctx is in aborted state we do not need to process it
-	if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
-		return nil, cosmoserrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"%s, CCTX %s has been aborted", voteOutboundID, cctx.Index)
+	// If the CCTX is in a terminal state, we do not need to process it.
+	if cctx.CctxStatus.Status.IsTerminal() {
+		return &types.MsgVoteOutboundResponse{}, cosmoserrors.Wrap(
+			types.ErrCCTXAlreadyFinalized,
+			fmt.Sprintf("CCTX status %s", cctx.CctxStatus.Status),
+		)
 	}
 
 	// Set the finalized ballot to the current outbound params.
@@ -223,7 +224,7 @@ func (k Keeper) SaveOutbound(ctx sdk.Context, cctx *types.CrossChainTx, tssPubke
 		k.RemoveOutboundTrackerFromStore(ctx, outboundParams.ReceiverChainId, outboundParams.TssNonce)
 	}
 	// This should set nonce to cctx only if a new revert is created.
-	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *cctx, tssPubkey)
+	k.SaveCCTXUpdate(ctx, *cctx, tssPubkey)
 }
 
 func (k Keeper) ValidateOutboundMessage(ctx sdk.Context, msg types.MsgVoteOutbound) (types.CrossChainTx, error) {

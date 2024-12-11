@@ -14,7 +14,6 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
-	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/testutil/sample"
 	crosschainkeeper "github.com/zeta-chain/node/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -41,7 +40,7 @@ func Test_GetUpdatedSigner(t *testing.T) {
 		tonChainParams = mocks.MockChainParams(tonChain.ChainId, 100)
 	)
 
-	solChainParams.GatewayAddress = solanacontracts.SolanaGatewayProgramID
+	solChainParams.GatewayAddress = testutils.GatewayAddresses[solChain.ChainId]
 
 	// new chain params in AppContext
 	evmChainParamsNew := mocks.MockChainParams(evmChainParams.ChainId, 100)
@@ -126,7 +125,7 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		tonChainParams = mocks.MockChainParams(tonChain.ChainId, 100)
 	)
 
-	solChainParams.GatewayAddress = solanacontracts.SolanaGatewayProgramID
+	solChainParams.GatewayAddress = testutils.GatewayAddresses[solChain.ChainId]
 	tonChainParams.GatewayAddress = sample.GenerateTONAccountID().ToRaw()
 
 	// new chain params in AppContext
@@ -602,7 +601,7 @@ func createAppContext(t *testing.T, chainsOrParams ...any) *zctx.AppContext {
 	for _, c := range supportedChains {
 		switch {
 		case chains.IsEVMChain(c.ChainId, nil):
-			cfg.EVMChainConfigs[c.ChainId] = config.EVMConfig{Chain: c}
+			cfg.EVMChainConfigs[c.ChainId] = config.EVMConfig{Endpoint: "localhost"}
 		case chains.IsBitcoinChain(c.ChainId, nil):
 			cfg.BTCChainConfigs[c.ChainId] = config.BTCConfig{RPCHost: "localhost"}
 		case chains.IsSolanaChain(c.ChainId, nil):
@@ -628,11 +627,9 @@ func createAppContext(t *testing.T, chainsOrParams ...any) *zctx.AppContext {
 
 	// feed chain params
 	err := appContext.Update(
-		observertypes.Keygen{},
 		supportedChains,
 		nil,
 		params,
-		"tssPubKey",
 		*ccFlags,
 	)
 	require.NoError(t, err, "failed to update app context")

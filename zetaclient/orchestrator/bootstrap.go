@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"context"
+	"fmt"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -11,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tonkeeper/tongo/ton"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
@@ -32,20 +34,15 @@ import (
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
-// btcDatabaseFilename is the Bitcoin database file name now used in mainnet,
-// so we keep using it here for backward compatibility
-const btcDatabaseFilename = "btc_chain_client"
-
 // CreateSignerMap creates a map of interfaces.ChainSigner (by chainID) for all chains in the config.
 // Note that signer construction failure for a chain does not prevent the creation of signers for other chains.
 func CreateSignerMap(
 	ctx context.Context,
 	tss interfaces.TSSSigner,
 	logger base.Logger,
-	ts *metrics.TelemetryServer,
 ) (map[int64]interfaces.ChainSigner, error) {
 	signers := make(map[int64]interfaces.ChainSigner)
-	_, _, err := syncSignerMap(ctx, tss, logger, ts, &signers)
+	_, _, err := syncSignerMap(ctx, tss, logger, &signers)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +57,6 @@ func syncSignerMap(
 	ctx context.Context,
 	tss interfaces.TSSSigner,
 	logger base.Logger,
-	ts *metrics.TelemetryServer,
 	signers *map[int64]interfaces.ChainSigner,
 ) (int, int, error) {
 	if signers == nil {
@@ -130,7 +126,6 @@ func syncSignerMap(
 				ctx,
 				*rawChain,
 				tss,
-				ts,
 				logger,
 				cfg.Endpoint,
 				zetaConnectorAddress,
@@ -150,7 +145,7 @@ func syncSignerMap(
 				continue
 			}
 
-			signer, err := btcsigner.NewSigner(*rawChain, tss, ts, logger, cfg)
+			signer, err := btcsigner.NewSigner(*rawChain, tss, logger, cfg)
 			if err != nil {
 				logger.Std.Error().Err(err).Msgf("Unable to construct signer for BTC chain %d", chainID)
 				continue
@@ -181,7 +176,7 @@ func syncSignerMap(
 			}
 
 			// create Solana signer
-			signer, err := solanasigner.NewSigner(*rawChain, *params, rpcClient, tss, relayerKey, ts, logger)
+			signer, err := solanasigner.NewSigner(*rawChain, *params, rpcClient, tss, relayerKey, logger)
 			if err != nil {
 				logger.Std.Error().Err(err).Msgf("Unable to construct signer for SOL chain %d", chainID)
 				continue
@@ -202,7 +197,7 @@ func syncSignerMap(
 			}
 
 			tonSigner := tonsigner.New(
-				base.NewSigner(*rawChain, tss, ts, logger),
+				base.NewSigner(*rawChain, tss, logger),
 				tonClient,
 				gateway,
 			)
@@ -363,7 +358,7 @@ func syncObserverMap(
 				continue
 			}
 
-			database, err := db.NewFromSqlite(dbpath, btcDatabaseFilename, true)
+			database, err := db.NewFromSqlite(dbpath, btcDatabaseFileName(*rawChain), true)
 			if err != nil {
 				logger.Std.Error().Err(err).Msgf("unable to open database for BTC chain %d", chainID)
 				continue
@@ -442,7 +437,6 @@ func syncObserverMap(
 				client,
 				tss,
 				base.DefaultBlockCacheSize,
-				base.DefaultHeaderCacheSize,
 				cfg.RPCAlertLatency,
 				ts,
 				database,
@@ -479,6 +473,20 @@ func syncObserverMap(
 	mapDeleteMissingKeys(observerMap, presentChainIDs, onBeforeRemove)
 
 	return added, removed, nil
+}
+
+func btcDatabaseFileName(chain chains.Chain) string {
+	// legacyBTCDatabaseFilename is the Bitcoin database file name now used in mainnet and testnet3
+	// so we keep using it here for backward compatibility
+	const legacyBTCDatabaseFilename = "btc_chain_client"
+
+	// For additional bitcoin networks, we use the chain name as the database file name
+	switch chain.ChainId {
+	case chains.BitcoinMainnet.ChainId, chains.BitcoinTestnet.ChainId:
+		return legacyBTCDatabaseFilename
+	default:
+		return fmt.Sprintf("%s_%s", legacyBTCDatabaseFilename, chain.Name)
+	}
 }
 
 func makeTONClient(

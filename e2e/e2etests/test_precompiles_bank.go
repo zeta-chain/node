@@ -46,23 +46,32 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 		utils.RequireTxSuccessful(r, receipt, "Resetting balance failed")
 	}()
 
+	// Ensure starting allowance is zero; this is needed when running the tests multiple times
+	tx, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, bankAddress, big.NewInt(0))
+	require.NoError(r, err)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt, "Resetting allowance failed")
+
 	// Get ERC20ZRC20.
-	txHash := r.DepositERC20WithAmountAndMessage(r.EVMAddress(), totalAmount, []byte{})
+	txHash := r.LegacyDepositERC20WithAmountAndMessage(r.EVMAddress(), totalAmount, []byte{})
 	utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 
 	// Create a bank contract caller.
 	bankContract, err := bank.NewIBank(bank.ContractAddress, r.ZEVMClient)
 	require.NoError(r, err, "Failed to create bank contract caller")
 
-	// Cosmos coin balance should be 0 at this point.
-	cosmosBalance, err := bankContract.BalanceOf(&bind.CallOpts{Context: r.Ctx}, r.ERC20ZRC20Addr, spender)
+	// get starting balances
+	startSpenderCosmosBalance, err := bankContract.BalanceOf(&bind.CallOpts{Context: r.Ctx}, r.ERC20ZRC20Addr, spender)
 	require.NoError(r, err, "Call bank.BalanceOf()")
-	require.Equal(r, uint64(0), cosmosBalance.Uint64(), "spender cosmos coin balance should be 0")
+	startSpenderZRC20Balance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{Context: r.Ctx}, spender)
+	require.NoError(r, err, "Call bank.BalanceOf()")
+	startBankZRC20Balance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{Context: r.Ctx}, bankAddress)
+	require.NoError(r, err, "Call ERC20ZRC20.BalanceOf")
 
 	// Approve allowance of 500 ERC20ZRC20 tokens for the bank contract. Should pass.
-	tx, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, bankAddress, depositAmount)
+	tx, err = r.ERC20ZRC20.Approve(r.ZEVMAuth, bankAddress, depositAmount)
 	require.NoError(r, err)
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "Approve ETHZRC20 bank allowance tx failed")
 
 	// Deposit 501 ERC20ZRC20 tokens to the bank contract.
@@ -99,17 +108,27 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	require.Equal(r, depositAmount, eventDeposit.Amount, "Deposit event amount should be 500")
 
 	// Spender: cosmos coin balance should be 500 at this point.
-	cosmosBalance, err = bankContract.BalanceOf(&bind.CallOpts{Context: r.Ctx}, r.ERC20ZRC20Addr, spender)
+	spenderCosmosBalance, err := bankContract.BalanceOf(&bind.CallOpts{Context: r.Ctx}, r.ERC20ZRC20Addr, spender)
 	require.NoError(r, err, "Call bank.BalanceOf()")
-	require.Equal(r, uint64(500), cosmosBalance.Uint64(), "spender cosmos coin balance should be 500")
+	require.Equal(
+		r,
+		startSpenderCosmosBalance.Int64()+500,
+		spenderCosmosBalance.Int64(),
+		"spender cosmos coin balance should be +500",
+	)
 
 	// Bank: ERC20ZRC20 balance should be 500 tokens locked.
 	bankZRC20Balance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{Context: r.Ctx}, bankAddress)
 	require.NoError(r, err, "Call ERC20ZRC20.BalanceOf")
-	require.Equal(r, uint64(500), bankZRC20Balance.Uint64(), "bank ERC20ZRC20 balance should be 500")
+	require.Equal(
+		r,
+		startBankZRC20Balance.Int64()+500,
+		bankZRC20Balance.Int64(),
+		"bank ERC20ZRC20 balance should be +500",
+	)
 
-	// Try to withdraw 501 ERC20ZRC20 tokens. Should fail.
-	tx, err = bankContract.Withdraw(r.ZEVMAuth, r.ERC20ZRC20Addr, big.NewInt(501))
+	// Try to withdraw one more than current balance. Should fail.
+	tx, err = bankContract.Withdraw(r.ZEVMAuth, r.ERC20ZRC20Addr, new(big.Int).Add(spenderCosmosBalance, big.NewInt(1)))
 	require.NoError(r, err, "Error calling bank.withdraw()")
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequiredTxFailed(r, receipt, "Withdrawing more than cosmos coin balance amount should fail")
@@ -118,7 +137,12 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	// No tokens should be unlocked with a failed withdraw.
 	bankZRC20Balance, err = r.ERC20ZRC20.BalanceOf(&bind.CallOpts{Context: r.Ctx}, bankAddress)
 	require.NoError(r, err, "Call ERC20ZRC20.BalanceOf")
-	require.Equal(r, uint64(500), bankZRC20Balance.Uint64(), "bank ERC20ZRC20 balance should be 500")
+	require.Equal(
+		r,
+		startBankZRC20Balance.Int64()+500,
+		bankZRC20Balance.Int64(),
+		"bank ERC20ZRC20 balance should be +500",
+	)
 
 	// Try to withdraw 500 ERC20ZRC20 tokens. Should pass.
 	tx, err = bankContract.Withdraw(r.ZEVMAuth, r.ERC20ZRC20Addr, depositAmount)
@@ -133,20 +157,35 @@ func TestPrecompilesBank(r *runner.E2ERunner, args []string) {
 	require.Equal(r, r.ERC20ZRC20Addr, eventWithdraw.Zrc20Token, "Withdraw event token should be ERC20ZRC20Addr")
 	require.Equal(r, depositAmount, eventWithdraw.Amount, "Withdraw event amount should be 500")
 
-	// Spender: cosmos coin balance should be 0 at this point.
-	cosmosBalance, err = bankContract.BalanceOf(&bind.CallOpts{Context: r.Ctx}, r.ERC20ZRC20Addr, spender)
+	// Spender: cosmos coin balance should be +0 at this point.
+	spenderCosmosBalance, err = bankContract.BalanceOf(&bind.CallOpts{Context: r.Ctx}, r.ERC20ZRC20Addr, spender)
 	require.NoError(r, err, "Call bank.BalanceOf()")
-	require.Equal(r, uint64(0), cosmosBalance.Uint64(), "spender cosmos coin balance should be 0")
+	require.Equal(
+		r,
+		startSpenderCosmosBalance.Int64(),
+		spenderCosmosBalance.Int64(),
+		"spender cosmos coin balance should match starting balance",
+	)
 
-	// Spender: ERC20ZRC20 balance should be 1000 at this point.
-	zrc20Balance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{Context: r.Ctx}, spender)
-	require.NoError(r, err, "Call bank.BalanceOf()")
-	require.Equal(r, uint64(1000), zrc20Balance.Uint64(), "spender ERC20ZRC20 balance should be 1000")
+	// Spender: ERC20ZRC20 balance should be +0 at this point.
+	spenderZRC20Balance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{Context: r.Ctx}, spender)
+	require.NoError(r, err, "Call ERC20ZRC20.BalanceOf")
+	require.Equal(
+		r,
+		startSpenderZRC20Balance.Int64(),
+		spenderZRC20Balance.Int64(),
+		"spender ERC20ZRC20 balance should match starting balance",
+	)
 
-	// Bank: ERC20ZRC20 balance should be 0 tokens locked.
+	// Bank: ERC20ZRC20 balance should be +0 tokens locked.
 	bankZRC20Balance, err = r.ERC20ZRC20.BalanceOf(&bind.CallOpts{Context: r.Ctx}, bankAddress)
 	require.NoError(r, err, "Call ERC20ZRC20.BalanceOf")
-	require.Equal(r, uint64(0), bankZRC20Balance.Uint64(), "bank ERC20ZRC20 balance should be 0")
+	require.Equal(
+		r,
+		startBankZRC20Balance.Int64(),
+		bankZRC20Balance.Int64(),
+		"bank ERC20ZRC20 balance should match starting balance",
+	)
 }
 
 func TestPrecompilesBankNonZRC20(r *runner.E2ERunner, args []string) {
@@ -167,7 +206,7 @@ func TestPrecompilesBankNonZRC20(r *runner.E2ERunner, args []string) {
 
 	// Deposit and approve 50 WZETA for the test.
 	approveAmount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(50))
-	r.DepositAndApproveWZeta(approveAmount)
+	r.LegacyDepositAndApproveWZeta(approveAmount)
 
 	// Non ZRC20 balanceOf check should fail.
 	_, err = bankContract.BalanceOf(&bind.CallOpts{Context: r.Ctx}, r.WZetaAddr, spender)

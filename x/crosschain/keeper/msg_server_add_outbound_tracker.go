@@ -2,13 +2,11 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -54,38 +52,21 @@ func (k msgServer) AddOutboundTracker(
 		return &types.MsgAddOutboundTrackerResponse{IsRemoved: true}, nil
 	}
 
-	// check if the msg signer is from the emergency group policy address.It is okay to ignore the error as the sender can also be an observer
-	isAuthorizedPolicy := false
-	if k.GetAuthorityKeeper().CheckAuthorization(ctx, msg) == nil {
-		isAuthorizedPolicy = true
-	}
+	// check if the msg signer is from the emergency group policy address.
+	// or an observer
+	var (
+		isAuthorizedPolicy = k.GetAuthorityKeeper().CheckAuthorization(ctx, msg) == nil
+		isObserver         = k.GetObserverKeeper().IsNonTombstonedObserver(ctx, msg.Creator)
+	)
 
-	// check if the msg signer is an observer
-	isObserver := k.GetObserverKeeper().IsNonTombstonedObserver(ctx, msg.Creator)
-	isProven := false
-
-	// only emergency group and observer can submit tracker without proof
-	// if the sender is not from the emergency group or observer, the outbound proof must be provided
 	if !(isAuthorizedPolicy || isObserver) {
-		if msg.Proof == nil {
-			return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, fmt.Sprintf("Creator %s", msg.Creator))
-		}
-		// verify proof when it is provided
-		if err := verifyProofAndOutboundBody(ctx, k, msg); err != nil {
-			return nil, err
-		}
-
-		isProven = true
+		return nil, cosmoserrors.Wrapf(authoritytypes.ErrUnauthorized, "Creator %s", msg.Creator)
 	}
 
 	// fetch the tracker
 	// if the tracker does not exist, initialize a new one
 	tracker, found := k.GetOutboundTracker(ctx, msg.ChainId, msg.Nonce)
-	hash := types.TxHash{
-		TxHash:   msg.TxHash,
-		TxSigner: msg.Creator,
-		Proved:   isProven,
-	}
+	hash := types.TxHash{TxHash: msg.TxHash, TxSigner: msg.Creator}
 	if !found {
 		k.SetOutboundTracker(ctx, types.OutboundTracker{
 			Index:    "",
@@ -97,14 +78,8 @@ func (k msgServer) AddOutboundTracker(
 	}
 
 	// check if the hash is already in the tracker
-	for i, hash := range tracker.HashList {
-		hash := hash
+	for _, hash := range tracker.HashList {
 		if strings.EqualFold(hash.TxHash, msg.TxHash) {
-			// if the hash is already in the tracker but we have a proof, mark it as proven and only keep this one in the list
-			if isProven {
-				tracker.HashList[i].Proved = true
-				k.SetOutboundTracker(ctx, tracker)
-			}
 			return &types.MsgAddOutboundTrackerResponse{}, nil
 		}
 	}
@@ -123,35 +98,4 @@ func (k msgServer) AddOutboundTracker(
 	tracker.HashList = append(tracker.HashList, &hash)
 	k.SetOutboundTracker(ctx, tracker)
 	return &types.MsgAddOutboundTrackerResponse{}, nil
-}
-
-// verifyProofAndOutboundBody verifies the proof and outbound tx body
-// Precondition: the proof must be non-nil
-func verifyProofAndOutboundBody(ctx sdk.Context, k msgServer, msg *types.MsgAddOutboundTracker) error {
-	txBytes, err := k.lightclientKeeper.VerifyProof(ctx, msg.Proof, msg.ChainId, msg.BlockHash, msg.TxIndex)
-	if err != nil {
-		return types.ErrProofVerificationFail.Wrap(err.Error())
-	}
-
-	// get tss address
-	var bitcoinChainID int64
-	if chains.IsBitcoinChain(msg.ChainId, k.GetAuthorityKeeper().GetAdditionalChainList(ctx)) {
-		bitcoinChainID = msg.ChainId
-	}
-
-	tss, err := k.GetObserverKeeper().GetTssAddress(ctx, &observertypes.QueryGetTssAddressRequest{
-		BitcoinChainId: bitcoinChainID,
-	})
-	if err != nil {
-		return observertypes.ErrTssNotFound.Wrap(err.Error())
-	}
-	if tss == nil {
-		return observertypes.ErrTssNotFound.Wrapf("tss address nil")
-	}
-
-	if err := types.VerifyOutboundBody(*msg, txBytes, *tss); err != nil {
-		return types.ErrTxBodyVerificationFail.Wrap(err.Error())
-	}
-
-	return nil
 }

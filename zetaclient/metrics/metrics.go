@@ -43,11 +43,11 @@ var (
 		Help:      "Count of getLogs per chain",
 	}, []string{"chain"})
 
-	// TssNodeBlamePerPubKey is a counter that contains the number of tss node blame per pubkey
-	TssNodeBlamePerPubKey = promauto.NewCounterVec(prometheus.CounterOpts{
+	// TSSNodeBlamePerPubKey is a counter that contains the number of tss node blame per pubkey
+	TSSNodeBlamePerPubKey = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: ZetaClientNamespace,
 		Name:      "tss_node_blame_count",
-		Help:      "Tss node blame counter per pubkey",
+		Help:      "TSS node blame counter per pubkey",
 	}, []string{"pubkey"})
 
 	// RelayerKeyBalance is a gauge that contains the relayer key balance of the chain
@@ -83,6 +83,14 @@ var (
 		Namespace: ZetaClientNamespace,
 		Name:      "last_core_block_number",
 		Help:      "Last core block number",
+	})
+
+	// CoreBlockLatency is a gauge that measures the difference between system time and
+	// block time from zetacore
+	CoreBlockLatency = promauto.NewGauge(prometheus.GaugeOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "core_block_latency",
+		Help:      "Difference between system time and block time from zetacore",
 	})
 
 	// Info is a gauge that contains information about the zetaclient environment

@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/gagliardetto/solana-go"
@@ -18,7 +19,13 @@ const (
 	// RPCAlertLatency is the default threshold for RPC latency to be considered unhealthy and trigger an alert.
 	// The 'HEALTH_CHECK_SLOT_DISTANCE' is default to 150 slots, which is 150 * 0.4s = 60s
 	RPCAlertLatency = time.Duration(60) * time.Second
+
+	// see: https://github.com/solana-labs/solana/blob/master/rpc/src/rpc.rs#L7276
+	errorCodeUnsupportedTransactionVersion = "-32015"
 )
+
+// ErrUnsupportedTxVersion is returned when the transaction version is not supported by zetaclient
+var ErrUnsupportedTxVersion = errors.New("unsupported tx version")
 
 // GetFirstSignatureForAddress searches the first signature for the given address.
 // Note: make sure that the rpc provider used has enough transaction history.
@@ -78,12 +85,8 @@ func GetSignaturesForAddressUntil(
 	var allSignatures []*rpc.TransactionSignature
 
 	// make sure that the 'untilSig' exists to prevent undefined behavior on GetSignaturesForAddressWithOpts
-	_, err := client.GetTransaction(
-		ctx,
-		untilSig,
-		&rpc.GetTransactionOpts{Commitment: rpc.CommitmentFinalized},
-	)
-	if err != nil {
+	_, err := GetTransaction(ctx, client, untilSig)
+	if err != nil && !errors.Is(err, ErrUnsupportedTxVersion) {
 		return nil, errors.Wrapf(err, "error GetTransaction for untilSig %s", untilSig)
 	}
 
@@ -120,6 +123,28 @@ func GetSignaturesForAddressUntil(
 	}
 
 	return allSignatures, nil
+}
+
+// GetTransaction fetches a transaction with the given signature.
+// Note that it might return ErrUnsupportedTxVersion (for tx that we don't support yet).
+func GetTransaction(
+	ctx context.Context,
+	client interfaces.SolanaRPCClient,
+	sig solana.Signature,
+) (*rpc.GetTransactionResult, error) {
+	txResult, err := client.GetTransaction(ctx, sig, &rpc.GetTransactionOpts{
+		Commitment:                     rpc.CommitmentFinalized,
+		MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion0,
+	})
+
+	switch {
+	case err != nil && strings.Contains(err.Error(), errorCodeUnsupportedTransactionVersion):
+		return nil, ErrUnsupportedTxVersion
+	case err != nil:
+		return nil, err
+	default:
+		return txResult, nil
+	}
 }
 
 // CheckRPCStatus checks the RPC status of the solana chain

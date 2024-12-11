@@ -173,6 +173,88 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		require.Len(t, c.OutboundParams, expectedNumberOfOutboundParams)
 	})
 
+	t.Run("unable to finalize an outbound if the cctx has already been aborted ", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseObserverMock: true,
+		})
+
+		// Setup mock data
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		senderChain := getValidEthChain()
+		asset := ""
+		observer := sample.AccAddress()
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{ObserverList: []string{observer}})
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
+		cctx.GetCurrentOutboundParam().TssPubkey = tss.TssPubkey
+		cctx.CctxStatus.Status = types.CctxStatus_Aborted
+		k.SetCrossChainTx(ctx, *cctx)
+		observerMock.On("GetTSS", ctx).Return(observertypes.TSS{}, true).Once()
+
+		// Successfully mock VoteOnOutboundBallot
+		keepertest.MockVoteOnOutboundSuccessBallot(observerMock, ctx, cctx, senderChain, observer)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+		msg := types.MsgVoteOutbound{
+			CctxHash:                          cctx.Index,
+			OutboundTssNonce:                  cctx.GetCurrentOutboundParam().TssNonce,
+			OutboundChain:                     cctx.GetCurrentOutboundParam().ReceiverChainId,
+			Status:                            chains.ReceiveStatus_success,
+			Creator:                           observer,
+			ObservedOutboundHash:              sample.Hash().String(),
+			ValueReceived:                     cctx.GetCurrentOutboundParam().Amount,
+			ObservedOutboundBlockHeight:       10,
+			ObservedOutboundEffectiveGasPrice: math.NewInt(21),
+			ObservedOutboundGasUsed:           21,
+			CoinType:                          cctx.InboundParams.CoinType,
+		}
+		_, err := msgServer.VoteOutbound(ctx, &msg)
+		require.ErrorIs(t, err, types.ErrCCTXAlreadyFinalized)
+	})
+
+	t.Run("unable to finalize an outbound if the cctx has already been outboundmined", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseObserverMock: true,
+		})
+
+		// Setup mock data
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		senderChain := getValidEthChain()
+		asset := ""
+		observer := sample.AccAddress()
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{ObserverList: []string{observer}})
+		cctx := GetERC20Cctx(t, receiver, senderChain, asset, amount)
+		cctx.GetCurrentOutboundParam().TssPubkey = tss.TssPubkey
+		cctx.CctxStatus.Status = types.CctxStatus_OutboundMined
+		k.SetCrossChainTx(ctx, *cctx)
+		observerMock.On("GetTSS", ctx).Return(observertypes.TSS{}, true).Once()
+
+		// Successfully mock VoteOnOutboundBallot
+		keepertest.MockVoteOnOutboundSuccessBallot(observerMock, ctx, cctx, senderChain, observer)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+		msg := types.MsgVoteOutbound{
+			CctxHash:                          cctx.Index,
+			OutboundTssNonce:                  cctx.GetCurrentOutboundParam().TssNonce,
+			OutboundChain:                     cctx.GetCurrentOutboundParam().ReceiverChainId,
+			Status:                            chains.ReceiveStatus_success,
+			Creator:                           observer,
+			ObservedOutboundHash:              sample.Hash().String(),
+			ValueReceived:                     cctx.GetCurrentOutboundParam().Amount,
+			ObservedOutboundBlockHeight:       10,
+			ObservedOutboundEffectiveGasPrice: math.NewInt(21),
+			ObservedOutboundGasUsed:           21,
+			CoinType:                          cctx.InboundParams.CoinType,
+		}
+		_, err := msgServer.VoteOutbound(ctx, &msg)
+		require.ErrorIs(t, err, types.ErrCCTXAlreadyFinalized)
+	})
+
 	t.Run("vote on outbound tx fails if tss is not found", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseObserverMock: true,

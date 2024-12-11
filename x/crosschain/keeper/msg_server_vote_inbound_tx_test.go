@@ -52,7 +52,6 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		validatorList := setObservers(t, k, ctx, zk)
 
-		// https://github.com/zeta-chain/node/issues/3101
 		to, from := int64(1337), int64(101)
 		supportedChains := zk.ObserverKeeper.GetSupportedChains(ctx)
 		for _, chain := range supportedChains {

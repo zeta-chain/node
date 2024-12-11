@@ -5,16 +5,15 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
 )
 
 func TestBitcoinWithdrawSegWit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
-	r.SetBtcAddress(r.Name, false)
-
 	// parse arguments
 	defaultReceiver := r.BTCDeployerAddress.EncodeAddress()
-	receiver, amount := parseBitcoinWithdrawArgs(r, args, defaultReceiver)
+	receiver, amount := utils.ParseBitcoinWithdrawArgs(r, args, defaultReceiver, r.GetBitcoinChainID())
 	_, ok := receiver.(*btcutil.AddressWitnessPubKeyHash)
 	require.True(r, ok, "Invalid receiver address specified for TestBitcoinWithdrawSegWit.")
 

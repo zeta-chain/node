@@ -290,7 +290,7 @@ func GetDefaultBtcRegtestChainParams() *ChainParams {
 		WatchUtxoTicker:             1,
 		InboundTicker:               1,
 		OutboundTicker:              2,
-		OutboundScheduleInterval:    2,
+		OutboundScheduleInterval:    1,
 		OutboundScheduleLookahead:   5,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,

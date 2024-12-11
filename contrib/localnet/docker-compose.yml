@@ -5,7 +5,6 @@
 # - An Ethereum node (eth)
 # - A secondary optional Ethereum node (eth2) enabled when profile is set to eth2
 # - A Bitcoin node (bitcoin)
-# - A Rosetta API (rosetta)
 # - An orchestrator to manage interaction with the localnet (orchestrator)
 # - An upgrade host to serve binaries for the upgrade tests (upgrade-host). Only enabled when profile is set to upgrade.
 # - An upgrade orchestrator to send the upgrade governance proposal (upgrade-orchestrator). Only enabled when profile is set to upgrade.
@@ -19,22 +18,6 @@ networks:
         - subnet: 172.20.0.0/24
 
 services:
-  rosetta:
-    image: zetanode:latest
-    container_name: rosetta
-    hostname: rosetta
-    depends_on:
-      zetacore0:
-        condition: service_healthy
-    ports:
-      - "8080:8080"
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.200
-    entrypoint: ["zetacored", "rosetta", "--tendermint", "zetacore0:26657", "--grpc", "zetacore0:9090", "--network", "athens_101-1", "--blockchain",  "zetacore"]
-    volumes:
-      - ssh:/root/.ssh
-
   zetacore0:
     image: zetanode:latest
     container_name: zetacore0
@@ -67,7 +50,8 @@ services:
       - ~/.zetacored/genesis_data:/root/genesis_data
 
   zetacore1:
-    image: zetanode:latest
+    image: ${ZETACORE1_IMAGE-zetanode:latest}
+    platform: ${ZETACORE1_PLATFORM-}
     container_name: zetacore1
     hostname: zetacore1
     networks:
@@ -126,7 +110,10 @@ services:
       - ETHDEV_ENDPOINT=http://eth:8545
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - PPROF_ADDR=0.0.0.0:6061
     restart: always
+    ports:
+      - "6061:6061" # pprof
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
@@ -211,7 +198,7 @@ services:
         ipv4_address: 172.20.0.102
 
   bitcoin:
-    image: ghcr.io/zeta-chain/ruimarinho-bitcoin-core:22 # version 23 is not working with btcd 0.22.0 due to change in createwallet rpc
+    image: ghcr.io/zeta-chain/bitcoin-core-docker:28.0
     container_name: bitcoin
     hostname: bitcoin
     networks:
@@ -226,6 +213,8 @@ services:
       -rpcbind=0.0.0.0
       -rpcauth=smoketest:63acf9b8dccecce914d85ff8c044b78b$$5892f9bbc84f4364e79f0970039f88bdd823f168d4acc76099ab97b14a766a99
       -txindex=1
+      -deprecatedrpc=create_bdb
+      -deprecatedrpc=warnings
 
   solana:
     image: solana-local:latest

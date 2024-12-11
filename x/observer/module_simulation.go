@@ -9,9 +9,10 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-// GenerateGenesisState creates a randomized GenState of the module
+// GenerateGenesisState creates a GenState of the module used to initialize the simulation runs
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
+	observerGenesis := types.DefaultGenesis()
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(observerGenesis)
 }
 
 // ProposalContents doesn't return any content functions for governance proposals

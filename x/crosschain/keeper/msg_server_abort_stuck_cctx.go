@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/node/pkg/coin"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -37,23 +36,16 @@ func (k msgServer) AbortStuckCCTX(
 	}
 
 	// check if the cctx is pending
-	isPending := cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound ||
-		cctx.CctxStatus.Status == types.CctxStatus_PendingInbound ||
-		cctx.CctxStatus.Status == types.CctxStatus_PendingRevert
-	if !isPending {
+	if !cctx.CctxStatus.Status.IsPending() {
 		return nil, types.ErrStatusNotPending
 	}
 
-	cctx.CctxStatus = &types.Status{
-		Status:        types.CctxStatus_Aborted,
-		StatusMessage: AbortMessage,
-	}
+	// update the status
+	cctx.CctxStatus.UpdateStatusAndErrorMessages(types.CctxStatus_Aborted, AbortMessage, "")
 
-	k.SetCrossChainTx(ctx, cctx)
-	// TODO replace with updated code from develop
-	if cctx.InboundParams.CoinType == coin.CoinType_Zeta {
-		k.AddZetaAbortedAmount(ctx, GetAbortedAmount(cctx))
-	}
+	// Save out outbound,
+	// We do not need to provide the tss-pubkey as NonceToCctx is not updated / New outbound is not added
+	k.SaveOutbound(ctx, &cctx, "")
 
 	return &types.MsgAbortStuckCCTXResponse{}, nil
 }

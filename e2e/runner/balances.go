@@ -7,6 +7,8 @@ import (
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 )
@@ -25,6 +27,8 @@ type AccountBalances struct {
 	EvmZETA   *big.Int
 	EvmERC20  *big.Int
 	BtcBTC    string
+	SolSOL    *big.Int
+	SolSPL    *big.Int
 }
 
 // AccountBalancesDiff is a struct that contains the difference in the balances of the accounts used in the E2E test
@@ -66,7 +70,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	}
 	zetaSol, err := r.getZRC20BalanceSafe(r.SOLZRC20)
 	if err != nil {
-		r.Logger.Error("get SOL balance: %v", err)
+		return AccountBalances{}, err
 	}
 
 	// evm
@@ -91,6 +95,44 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		}
 	}
 
+	// solana
+	var solSOL *big.Int
+	var solSPL *big.Int
+	if r.Account.SolanaAddress != "" && r.Account.SolanaPrivateKey != "" && r.SolanaClient != nil {
+		solanaAddr := solana.MustPublicKeyFromBase58(r.Account.SolanaAddress.String())
+		privateKey := solana.MustPrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
+		solSOLBalance, err := r.SolanaClient.GetBalance(
+			r.Ctx,
+			solanaAddr,
+			rpc.CommitmentFinalized,
+		)
+		if err != nil {
+			return AccountBalances{}, err
+		}
+
+		// #nosec G115 always in range
+		solSOL = big.NewInt(int64(solSOLBalance.Value))
+
+		if r.SPLAddr != (solana.PublicKey{}) {
+			ata := r.ResolveSolanaATA(
+				privateKey,
+				solanaAddr,
+				r.SPLAddr,
+			)
+			splBalance, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, ata, rpc.CommitmentFinalized)
+			if err != nil {
+				return AccountBalances{}, err
+			}
+
+			solSPLParsed, ok := new(big.Int).SetString(splBalance.Value.Amount, 10)
+			if !ok {
+				return AccountBalances{}, errors.New("can't parse spl balance")
+			}
+
+			solSPL = solSPLParsed
+		}
+	}
+
 	return AccountBalances{
 		ZetaETH:   zetaEth,
 		ZetaZETA:  zetaZeta,
@@ -102,21 +144,14 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		EvmZETA:   evmZeta,
 		EvmERC20:  evmErc20,
 		BtcBTC:    BtcBTC,
+		SolSOL:    solSOL,
+		SolSPL:    solSPL,
 	}, nil
 }
 
 // GetBitcoinBalance returns the spendable BTC balance of the BTC address
 func (r *E2ERunner) GetBitcoinBalance() (string, error) {
-	addr, _, err := r.GetBtcAddress()
-	if err != nil {
-		return "", fmt.Errorf("failed to get BTC address: %w", err)
-	}
-
-	address, err := btcutil.DecodeAddress(addr, r.BitcoinParams)
-	if err != nil {
-		return "", fmt.Errorf("failed to decode BTC address: %w", err)
-	}
-
+	address, _ := r.GetBtcAddress()
 	total, err := r.GetBitcoinBalanceByAddress(address)
 	if err != nil {
 		return "", err
@@ -154,6 +189,7 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	r.Logger.Print("* ETH balance:   %s", balances.ZetaETH.String())
 	r.Logger.Print("* ERC20 balance: %s", balances.ZetaERC20.String())
 	r.Logger.Print("* BTC balance:   %s", balances.ZetaBTC.String())
+	r.Logger.Print("* SOL balance: %s", balances.ZetaSOL.String())
 
 	// evm
 	r.Logger.Print("EVM:")
@@ -167,7 +203,12 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 
 	// solana
 	r.Logger.Print("Solana:")
-	r.Logger.Print("* SOL balance: %s", balances.ZetaSOL.String())
+	if balances.SolSOL != nil {
+		r.Logger.Print("* SOL balance: %s", balances.SolSOL.String())
+	}
+	if balances.SolSPL != nil {
+		r.Logger.Print("* SPL balance: %s", balances.SolSPL.String())
+	}
 }
 
 // PrintTotalDiff shows the difference in the account balances of the accounts used in the e2e test from two balances structs

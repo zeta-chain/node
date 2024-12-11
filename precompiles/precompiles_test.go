@@ -25,7 +25,14 @@ func Test_StatefulContracts(t *testing.T) {
 	}
 
 	// StatefulContracts() should return all the enabled contracts.
-	contracts := StatefulContracts(k, &sdkk.StakingKeeper, sdkk.BankKeeper, appCodec, gasConfig)
+	contracts := StatefulContracts(
+		k,
+		&sdkk.StakingKeeper,
+		sdkk.BankKeeper,
+		sdkk.DistributionKeeper,
+		appCodec,
+		gasConfig,
+	)
 	require.NotNil(t, contracts, "StatefulContracts() should not return a nil slice")
 	require.Len(t, contracts, expectedContracts, "StatefulContracts() should return all the enabled contracts")
 

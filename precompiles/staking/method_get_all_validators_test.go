@@ -19,11 +19,11 @@ func Test_GetAllValidators(t *testing.T) {
 			s.sdkKeepers.StakingKeeper.RemoveValidator(s.ctx, v.GetOperator())
 		}
 
-		methodID := s.contractABI.Methods[GetAllValidatorsMethodName]
+		methodID := s.stkContractABI.Methods[GetAllValidatorsMethodName]
 		s.mockVMContract.Input = methodID.ID
 
 		// ACT
-		validators, err := s.contract.Run(s.mockEVM, s.mockVMContract, false)
+		validators, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -37,14 +37,14 @@ func Test_GetAllValidators(t *testing.T) {
 	t.Run("should return validators if set", func(t *testing.T) {
 		// ARRANGE
 		s := newTestSuite(t)
-		methodID := s.contractABI.Methods[GetAllValidatorsMethodName]
+		methodID := s.stkContractABI.Methods[GetAllValidatorsMethodName]
 		s.mockVMContract.Input = methodID.ID
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 		s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, validator)
 
 		// ACT
-		validators, err := s.contract.Run(s.mockEVM, s.mockVMContract, false)
+		validators, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
 
 		// ASSERT
 		require.NoError(t, err)

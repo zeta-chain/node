@@ -323,7 +323,6 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 		return nil, cosmoserrors.Wrapf(types.ErrContractNotFound, "GetSystemContract address not found")
 	}
 
-	fmt.Println("system.SystemContract", system)
 	systemAddress := common.HexToAddress(system.SystemContract)
 
 	sysConABI, err := systemcontract.SystemContractMetaData.GetAbi()

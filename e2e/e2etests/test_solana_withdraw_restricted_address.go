@@ -8,7 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func TestSolanaWithdrawRestricted(r *runner.E2ERunner, args []string) {
@@ -20,7 +22,7 @@ func TestSolanaWithdrawRestricted(r *runner.E2ERunner, args []string) {
 
 	// parse withdraw amount (in lamports), approve amount is 1 SOL
 	approvedAmount := new(big.Int).SetUint64(solana.LAMPORTS_PER_SOL)
-	withdrawAmount := parseBigInt(r, args[1])
+	withdrawAmount := utils.ParseBigInt(r, args[1])
 	require.Equal(
 		r,
 		-1,
@@ -29,8 +31,12 @@ func TestSolanaWithdrawRestricted(r *runner.E2ERunner, args []string) {
 	)
 
 	// withdraw
-	cctx := r.WithdrawSOLZRC20(receiverRestricted, withdrawAmount, approvedAmount)
+	tx := r.WithdrawSOLZRC20(receiverRestricted, withdrawAmount, approvedAmount)
+
+	// wait for the cctx to be mined
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// the cctx should be cancelled with zero value
-	verifySolanaWithdrawalAmountFromCCTX(r, cctx, 0)
+	r.VerifySolanaWithdrawalAmountFromCCTX(cctx, 0)
 }

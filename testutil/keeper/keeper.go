@@ -111,6 +111,8 @@ type SDKKeepers struct {
 	TransferKeeper       ibctransferkeeper.Keeper
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
+	DistributionKeeper   distrkeeper.Keeper
+	EmissionsKeeper      *emissionskeeper.Keeper
 
 	IBCRouter *porttypes.Router
 }
@@ -150,6 +152,22 @@ var (
 	)
 	testTransientKeys = sdk.NewTransientStoreKeys(evmtypes.TransientKey)
 	testMemKeys       = sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
+
+	maccPerms = map[string][]string{
+		authtypes.FeeCollectorName:     nil,
+		distrtypes.ModuleName:          nil,
+		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:            {authtypes.Burner},
+		//ibctransfertypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
+		crosschaintypes.ModuleName: {authtypes.Minter, authtypes.Burner},
+		//ibccrosschaintypes.ModuleName:                   nil,
+		evmtypes.ModuleName:                             {authtypes.Minter, authtypes.Burner},
+		fungibletypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
+		emissionstypes.ModuleName:                       nil,
+		emissionstypes.UndistributedObserverRewardsPool: nil,
+		emissionstypes.UndistributedTSSRewardsPool:      nil,
+	}
 )
 
 // ModuleAccountAddrs returns all the app's module account addresses.
@@ -401,6 +419,20 @@ func NewSDKKeepersWithKeys(
 	tKeys map[string]*storetypes.TransientStoreKey,
 	allKeys map[string]storetypes.StoreKey,
 ) SDKKeepers {
+	authorityKeeper := authoritykeeper.NewKeeper(
+		cdc,
+		keys[authoritytypes.StoreKey],
+		memKeys[authoritytypes.MemStoreKey],
+		AuthorityGovAddress,
+	)
+	accountKeeper := authkeeper.NewAccountKeeper(
+		cdc,
+		keys[authtypes.StoreKey],
+		ethermint.ProtoAccount,
+		maccPerms,
+		sdk.GetConfig().GetBech32AccountAddrPrefix(),
+		authtypes.NewModuleAddress(authtypes.ModuleName).String(),
+	)
 	paramsKeeper := paramskeeper.NewKeeper(
 		cdc,
 		fungibletypes.Amino,
@@ -470,16 +502,56 @@ func NewSDKKeepersWithKeys(
 		keys[capabilitytypes.StoreKey],
 		memKeys[capabilitytypes.MemStoreKey],
 	)
+	dstrKeeper := distrkeeper.NewKeeper(
+		cdc,
+		keys[distrtypes.StoreKey],
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		authtypes.FeeCollectorName,
+		authtypes.NewModuleAddress(distrtypes.ModuleName).String(),
+	)
+	lightclientKeeper := lightclientkeeper.NewKeeper(
+		cdc,
+		keys[lightclienttypes.StoreKey],
+		memKeys[lightclienttypes.MemStoreKey],
+		authorityKeeper,
+	)
+	observerKeeper := observerkeeper.NewKeeper(
+		cdc,
+		keys[observertypes.StoreKey],
+		memKeys[observertypes.MemStoreKey],
+		stakingKeeper,
+		slashingKeeper,
+		authorityKeeper,
+		lightclientKeeper,
+		bankKeeper,
+		authKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	emissionsKeeper := emissionskeeper.NewKeeper(
+		cdc,
+		keys[emissionstypes.StoreKey],
+		memKeys[emissionstypes.MemStoreKey],
+		authtypes.FeeCollectorName,
+		bankKeeper,
+		stakingKeeper,
+		observerKeeper,
+		authKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
 
 	return SDKKeepers{
-		ParamsKeeper:     paramsKeeper,
-		AuthKeeper:       authKeeper,
-		BankKeeper:       bankKeeper,
-		StakingKeeper:    stakingKeeper,
-		FeeMarketKeeper:  feeMarketKeeper,
-		EvmKeeper:        evmKeeper,
-		SlashingKeeper:   slashingKeeper,
-		CapabilityKeeper: capabilityKeeper,
+		ParamsKeeper:       paramsKeeper,
+		AuthKeeper:         authKeeper,
+		BankKeeper:         bankKeeper,
+		StakingKeeper:      stakingKeeper,
+		FeeMarketKeeper:    feeMarketKeeper,
+		EvmKeeper:          evmKeeper,
+		SlashingKeeper:     slashingKeeper,
+		CapabilityKeeper:   capabilityKeeper,
+		DistributionKeeper: dstrKeeper,
+		EmissionsKeeper:    emissionsKeeper,
 	}
 }
 

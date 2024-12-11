@@ -12,6 +12,8 @@ import (
 // InitGenesis initializes the crosschain module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+	// Always set the zeta accounting to zero at genesis.
+	// ZetaAccounting value is build by iterating through all the cctxs and adding the amount to the zeta accounting.
 	k.SetZetaAccounting(ctx, types.ZetaAccounting{AbortedZetaAmount: sdkmath.ZeroUint()})
 	// Set all the outbound tracker
 	for _, elem := range genState.OutboundTrackerList {

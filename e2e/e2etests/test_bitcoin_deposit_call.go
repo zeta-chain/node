@@ -13,17 +13,13 @@ import (
 )
 
 func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
-	// ARRANGE
-	// Given BTC address
-	r.SetBtcAddress(r.Name, false)
-
 	// Given "Live" BTC network
 	stop := r.MineBlocksIfLocalBitcoin()
 	defer stop()
 
 	// Given amount to send
 	require.Len(r, args, 1)
-	amount := parseFloat(r, args[0])
+	amount := utils.ParseFloat(r, args[0])
 	amountTotal := amount + zetabitcoin.DefaultDepositorFee
 
 	// Given a list of UTXOs

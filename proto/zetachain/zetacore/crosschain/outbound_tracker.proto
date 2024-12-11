@@ -6,7 +6,9 @@ option go_package = "github.com/zeta-chain/node/x/crosschain/types";
 message TxHash {
   string tx_hash = 1;
   string tx_signer = 2;
-  bool proved = 3;
+
+  // used to be `bool proven` (for block header verification)
+  reserved 3;
 }
 message OutboundTracker {
   string index = 1; // format: "chain-nonce"

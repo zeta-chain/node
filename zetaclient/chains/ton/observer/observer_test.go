@@ -63,8 +63,10 @@ func newTestSuite(t *testing.T) *testSuite {
 
 		liteClient = mocks.NewLiteClient(t)
 
-		tss      = mocks.NewGeneratedTSS(t, chain)
-		zetacore = mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
+		tss      = mocks.NewTSS(t)
+		zetacore = mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{
+			OperatorAddress: sample.Bech32AccAddress(),
+		})
 
 		testLogger = zerolog.New(zerolog.NewTestWriter(t))
 		logger     = base.Logger{Std: testLogger, Compliance: testLogger}
@@ -78,7 +80,6 @@ func newTestSuite(t *testing.T) *testSuite {
 		*chainParams,
 		zetacore,
 		tss,
-		1,
 		1,
 		60,
 		nil,
@@ -199,7 +200,7 @@ func (ts *testSuite) sign(msg signable) {
 	hash, err := msg.Hash()
 	require.NoError(ts.t, err)
 
-	sig, err := ts.tss.Sign(ts.ctx, hash[:], 0, 0, 0, "")
+	sig, err := ts.tss.Sign(ts.ctx, hash[:], 0, 0, 0)
 	require.NoError(ts.t, err)
 
 	msg.SetSignature(sig)
@@ -207,7 +208,7 @@ func (ts *testSuite) sign(msg signable) {
 	// double check
 	evmSigner, err := msg.Signer()
 	require.NoError(ts.t, err)
-	require.Equal(ts.t, ts.tss.EVMAddress().String(), evmSigner.String())
+	require.Equal(ts.t, ts.tss.PubKey().AddressEVM().String(), evmSigner.String())
 }
 
 // parses string to TON
@@ -251,10 +252,7 @@ func setupTrackersBag(ts *testSuite) {
 	}
 
 	ts.zetacore.On(
-		"AddOutboundTracker",
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
+		"PostOutboundTracker",
 		mock.Anything,
 		mock.Anything,
 		mock.Anything,

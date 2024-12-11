@@ -13,7 +13,7 @@ func (m *Status) AbortRefunded() {
 func (m *Status) UpdateStatusAndErrorMessages(newStatus CctxStatus, statusMsg, errorMsg string) {
 	m.UpdateStatus(newStatus, statusMsg)
 
-	if newStatus == CctxStatus_Aborted || newStatus == CctxStatus_Reverted || newStatus == CctxStatus_PendingRevert {
+	if errorMsg != "" {
 		m.UpdateErrorMessage(errorMsg)
 	}
 }
@@ -87,10 +87,20 @@ func stateTransitionMap() map[CctxStatus][]CctxStatus {
 	return stateTransitionMap
 }
 
-func (c CctxStatus) IsTerminalStatus() bool {
+// IsTerminal returns true if the status is terminal.
+// The terminal states are
+// CctxStatus_Aborted
+// CctxStatus_Reverted
+// CctxStatus_OutboundMined
+func (c CctxStatus) IsTerminal() bool {
 	return c == CctxStatus_Aborted || c == CctxStatus_Reverted || c == CctxStatus_OutboundMined
 }
 
-func (c CctxStatus) IsPendingStatus() bool {
-	return c == CctxStatus_PendingInbound || c == CctxStatus_PendingOutbound || c == CctxStatus_PendingRevert
+// IsPending returns true if the status is pending.
+// The pending states are
+// CctxStatus_PendingInbound
+// CctxStatus_PendingOutbound
+// CctxStatus_PendingRevert
+func (c CctxStatus) IsPending() bool {
+	return !c.IsTerminal()
 }

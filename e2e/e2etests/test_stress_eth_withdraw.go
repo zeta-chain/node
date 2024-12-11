@@ -21,7 +21,7 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
 	// parse withdraw amount and number of withdraws
-	withdrawalAmount := parseBigInt(r, args[0])
+	withdrawalAmount := utils.ParseBigInt(r, args[0])
 
 	numWithdraws, err := strconv.Atoi(args[1])
 	require.NoError(r, err)

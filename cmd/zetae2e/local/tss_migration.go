@@ -55,7 +55,7 @@ func tssMigrationTestRoutine(
 		if err := tssMigrationTestRunner.RunE2ETests(testsToRun); err != nil {
 			return fmt.Errorf("TSS migration tests failed: %v", err)
 		}
-		if err := tssMigrationTestRunner.CheckBtcTSSBalance(); err != nil {
+		if err := tssMigrationTestRunner.CheckBTCTSSBalance(); err != nil {
 			return err
 		}
 
@@ -90,7 +90,7 @@ func TSSMigration(deployerRunner *runner.E2ERunner, logger *runner.Logger, verbo
 		logger.Print("❌ tss migration failed")
 		os.Exit(1)
 	}
-	deployerRunner.UpdateTssAddressForConnector()
-	deployerRunner.UpdateTssAddressForErc20custody()
+	deployerRunner.UpdateTSSAddressForConnector()
+	deployerRunner.UpdateTSSAddressForERC20custody()
 	logger.Print("✅ migration completed in %s ", time.Since(migrationStartTime).String())
 }

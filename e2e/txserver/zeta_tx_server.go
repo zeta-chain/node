@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -33,6 +34,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/gagliardetto/solana-go"
 	"github.com/samber/lo"
 	"github.com/zeta-chain/ethermint/crypto/hd"
 	etherminttypes "github.com/zeta-chain/ethermint/types"
@@ -54,6 +57,18 @@ import (
 // SystemContractAddresses contains the addresses of the system contracts deployed
 type SystemContractAddresses struct {
 	UniswapV2FactoryAddr, UniswapV2RouterAddr, ZEVMConnectorAddr, WZETAAddr, ERC20zrc20Addr string
+}
+
+// ZRC20Deployment configures deployment of ZRC20 contracts
+type ZRC20Deployment struct {
+	ERC20Addr common.Address
+	SPLAddr   *solana.PublicKey // if nil - no SPL ZRC20 is deployed
+}
+
+// ZRC20Addresses contains the addresses of deployed ZRC20 contracts
+type ZRC20Addresses struct {
+	ERC20ZRC20Addr common.Address
+	SPLZRC20Addr   common.Address
 }
 
 // EmissionsPoolAddress is the address of the emissions pool
@@ -381,40 +396,40 @@ func (zts ZetaTxServer) DeploySystemContracts(
 }
 
 // DeployZRC20s deploys the ZRC20 contracts
-// returns the addresses of erc20 zrc20
+// returns the addresses of erc20 and spl zrc20
 func (zts ZetaTxServer) DeployZRC20s(
-	accountOperational, accountAdmin, erc20Addr string,
+	zrc20Deployment ZRC20Deployment,
 	skipChain func(chainID int64) bool,
-) (string, error) {
+) (*ZRC20Addresses, error) {
 	// retrieve account
-	accOperational, err := zts.clientCtx.Keyring.Key(accountOperational)
+	accOperational, err := zts.clientCtx.Keyring.Key(utils.OperationalPolicyName)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	addrOperational, err := accOperational.GetAddress()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	accAdmin, err := zts.clientCtx.Keyring.Key(accountAdmin)
+	accAdmin, err := zts.clientCtx.Keyring.Key(utils.AdminPolicyName)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	addrAdmin, err := accAdmin.GetAddress()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// authorization for deploying new ZRC20 has changed from accountOperational to accountAdmin in v19
 	// we use this query to check the current authorization for the message
 	// if pre v19 the query is not implement and authorization is operational
-	deployerAccount := accountAdmin
+	deployerAccount := utils.AdminPolicyName
 	deployerAddr := addrAdmin.String()
 	authorization, preV19, err := zts.fetchMessagePermissions(&fungibletypes.MsgDeployFungibleCoinZRC20{})
 	if err != nil {
-		return "", fmt.Errorf("failed to fetch message permissions: %s", err.Error())
+		return nil, fmt.Errorf("failed to fetch message permissions: %s", err.Error())
 	}
 	if preV19 || authorization == authoritytypes.PolicyType_groupOperational {
-		deployerAccount = accountOperational
+		deployerAccount = utils.OperationalPolicyName
 		deployerAddr = addrOperational.String()
 	}
 
@@ -461,7 +476,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 		),
 		fungibletypes.NewMsgDeployFungibleCoinZRC20(
 			deployerAddr,
-			erc20Addr,
+			zrc20Deployment.ERC20Addr.Hex(),
 			chains.GoerliLocalnet.ChainId,
 			6,
 			"USDT",
@@ -469,6 +484,19 @@ func (zts ZetaTxServer) DeployZRC20s(
 			coin.CoinType_ERC20,
 			100000,
 		),
+	}
+
+	if zrc20Deployment.SPLAddr != nil {
+		deployMsgs = append(deployMsgs, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+			deployerAddr,
+			zrc20Deployment.SPLAddr.String(),
+			chains.SolanaLocalnet.ChainId,
+			9,
+			"USDT",
+			"USDT",
+			coin.CoinType_ERC20,
+			100000,
+		))
 	}
 
 	// apply skipChain filter and convert to sdk.Msg
@@ -484,12 +512,12 @@ func (zts ZetaTxServer) DeployZRC20s(
 
 	res, err := zts.BroadcastTx(deployerAccount, deployMsgsIface...)
 	if err != nil {
-		return "", fmt.Errorf("deploy zrc20s: %w", err)
+		return nil, fmt.Errorf("deploy zrc20s: %w", err)
 	}
 
 	deployedEvents, ok := EventsOfType[*fungibletypes.EventZRC20Deployed](res.Events)
 	if !ok {
-		return "", fmt.Errorf("no EventZRC20Deployed in %s", res.TxHash)
+		return nil, fmt.Errorf("no EventZRC20Deployed in %s", res.TxHash)
 	}
 
 	zrc20Addrs := lo.Map(deployedEvents, func(ev *fungibletypes.EventZRC20Deployed, _ int) string {
@@ -498,7 +526,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 
 	err = zts.InitializeLiquidityCaps(zrc20Addrs...)
 	if err != nil {
-		return "", fmt.Errorf("initialize liquidity cap: %w", err)
+		return nil, fmt.Errorf("initialize liquidity cap: %w", err)
 	}
 
 	// find erc20 zrc20
@@ -506,10 +534,26 @@ func (zts ZetaTxServer) DeployZRC20s(
 		return ev.ChainId == chains.GoerliLocalnet.ChainId && ev.CoinType == coin.CoinType_ERC20
 	})
 	if !ok {
-		return "", fmt.Errorf("unable to find erc20 zrc20")
+		return nil, fmt.Errorf("unable to find erc20 zrc20")
 	}
 
-	return erc20zrc20.Contract, nil
+	// find spl zrc20
+	splzrc20Addr := common.Address{}
+	if zrc20Deployment.SPLAddr != nil {
+		splzrc20, ok := lo.Find(deployedEvents, func(ev *fungibletypes.EventZRC20Deployed) bool {
+			return ev.ChainId == chains.SolanaLocalnet.ChainId && ev.CoinType == coin.CoinType_ERC20
+		})
+		if !ok {
+			return nil, fmt.Errorf("unable to find spl zrc20")
+		}
+
+		splzrc20Addr = common.HexToAddress(splzrc20.Contract)
+	}
+
+	return &ZRC20Addresses{
+		ERC20ZRC20Addr: common.HexToAddress(erc20zrc20.Contract),
+		SPLZRC20Addr:   splzrc20Addr,
+	}, nil
 }
 
 // FundEmissionsPool funds the emissions pool with the given amount
@@ -539,6 +583,28 @@ func (zts ZetaTxServer) FundEmissionsPool(account string, amount *big.Int) error
 		emissionPoolAccAddr,
 		sdktypes.NewCoins(sdktypes.NewCoin(config.BaseDenom, amountInt)),
 	))
+	return err
+}
+
+func (zts ZetaTxServer) WithdrawAllEmissions(withdrawAmount sdkmath.Int, account, observer string) error {
+	// retrieve account
+	acc, err := zts.clientCtx.Keyring.Key(account)
+	if err != nil {
+		return fmt.Errorf("failed to get withdrawer account: %w", err)
+	}
+	withdrawerAddress, err := acc.GetAddress()
+	if err != nil {
+		return fmt.Errorf("failed to get withdrawer account address: %w", err)
+	}
+
+	msg := emissionstypes.MsgWithdrawEmission{
+		Creator: observer,
+		Amount:  withdrawAmount,
+	}
+
+	authzMessage := authz.NewMsgExec(withdrawerAddress, []sdktypes.Msg{&msg})
+
+	_, err = zts.BroadcastTx(account, &authzMessage)
 	return err
 }
 

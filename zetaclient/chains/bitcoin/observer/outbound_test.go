@@ -8,7 +8,9 @@ import (
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/db"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -21,11 +23,14 @@ import (
 var TestDataDir = "../../../"
 
 // MockBTCObserverMainnet creates a mock Bitcoin mainnet observer for testing
-func MockBTCObserverMainnet(t *testing.T) *Observer {
+func MockBTCObserverMainnet(t *testing.T, tss interfaces.TSSSigner) *Observer {
 	// setup mock arguments
 	chain := chains.BitcoinMainnet
 	params := mocks.MockChainParams(chain.ChainId, 10)
-	tss := mocks.NewTSSMainnet()
+
+	if tss == nil {
+		tss = mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet)
+	}
 
 	// create mock rpc client
 	btcClient := mocks.NewBTCRPCClient(t)
@@ -34,8 +39,11 @@ func MockBTCObserverMainnet(t *testing.T) *Observer {
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
 
+	logger := zerolog.New(zerolog.NewTestWriter(t))
+	baseLogger := base.Logger{Std: logger, Compliance: logger}
+
 	// create Bitcoin observer
-	ob, err := NewObserver(chain, btcClient, params, nil, tss, 60, database, base.Logger{}, nil)
+	ob, err := NewObserver(chain, btcClient, params, nil, tss, 60, database, baseLogger, nil)
 	require.NoError(t, err)
 
 	return ob
@@ -46,13 +54,10 @@ func createObserverWithPrivateKey(t *testing.T) *Observer {
 	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
 	privateKey, err := crypto.HexToECDSA(skHex)
 	require.NoError(t, err)
-	tss := &mocks.TSS{
-		PrivKey: privateKey,
-	}
+	tss := mocks.NewTSSFromPrivateKey(t, privateKey)
 
 	// create Bitcoin observer with mock tss
-	ob := MockBTCObserverMainnet(t)
-	ob.WithTSS(tss)
+	ob := MockBTCObserverMainnet(t, tss)
 
 	return ob
 }
@@ -61,7 +66,7 @@ func createObserverWithPrivateKey(t *testing.T) *Observer {
 func createObserverWithUTXOs(t *testing.T) *Observer {
 	// Create Bitcoin observer
 	ob := createObserverWithPrivateKey(t)
-	tssAddress, err := ob.TSS().BTCAddress(chains.BitcoinTestnet.ChainId)
+	tssAddress, err := ob.TSS().PubKey().AddressBTC(chains.BitcoinTestnet.ChainId)
 	require.NoError(t, err)
 
 	// Create 10 dummy UTXOs (22.44 BTC in total)
@@ -79,7 +84,7 @@ func mineTxNSetNonceMark(t *testing.T, ob *Observer, nonce uint64, txid string, 
 	ob.includedTxResults[outboundID] = &btcjson.GetTransactionResult{TxID: txid}
 
 	// Set nonce mark
-	tssAddress, err := ob.TSS().BTCAddress(chains.BitcoinTestnet.ChainId)
+	tssAddress, err := ob.TSS().PubKey().AddressBTC(chains.BitcoinMainnet.ChainId)
 	require.NoError(t, err)
 	nonceMark := btcjson.ListUnspentResult{
 		TxID:    txid,
@@ -105,7 +110,7 @@ func TestCheckTSSVout(t *testing.T) {
 	nonce := uint64(148)
 
 	// create mainnet mock client
-	ob := MockBTCObserverMainnet(t)
+	ob := MockBTCObserverMainnet(t, nil)
 
 	t.Run("valid TSS vout should pass", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
@@ -187,7 +192,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 	nonce := uint64(148)
 
 	// create mainnet mock client
-	ob := MockBTCObserverMainnet(t)
+	ob := MockBTCObserverMainnet(t, nil)
 
 	t.Run("valid TSS vout should pass", func(t *testing.T) {
 		// remove change vout to simulate cancelled tx

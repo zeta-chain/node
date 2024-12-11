@@ -89,23 +89,26 @@ sleep 2
 # unlock the default account account
 fund_eth_from_config '.default_account.evm_address' 10000 "deployer"
 
-# unlock erc20 tester accounts
-fund_eth_from_config '.additional_accounts.user_erc20.evm_address' 10000 "ERC20 tester"
+# unlock legacy erc20 tester accounts
+fund_eth_from_config '.additional_accounts.user_legacy_erc20.evm_address' 10000 "ERC20 tester"
 
-# unlock zeta tester accounts
-fund_eth_from_config '.additional_accounts.user_zeta_test.evm_address' 10000 "zeta tester"
+# unlock legacy zeta tester accounts
+fund_eth_from_config '.additional_accounts.user_legacy_zeta.evm_address' 10000 "zeta tester"
 
-# unlock zevm message passing tester accounts
-fund_eth_from_config '.additional_accounts.user_zevm_mp_test.evm_address' 10000 "zevm mp tester"
+# unlock legacy zevm message passing tester accounts
+fund_eth_from_config '.additional_accounts.user_legacy_zevm_mp.evm_address' 10000 "zevm mp tester"
 
-# unlock bitcoin tester accounts
-fund_eth_from_config '.additional_accounts.user_bitcoin.evm_address' 10000 "bitcoin tester"
+# unlock legacy ethers tester accounts
+fund_eth_from_config '.additional_accounts.user_legacy_ether.evm_address' 10000 "ether tester"
+
+# unlock bitcoin deposit tester accounts
+fund_eth_from_config '.additional_accounts.user_bitcoin_deposit.evm_address' 10000 "bitcoin deposit tester"
+
+# unlock bitcoin withdraw tester accounts
+fund_eth_from_config '.additional_accounts.user_bitcoin_withdraw.evm_address' 10000 "bitcoin withdraw tester"
 
 # unlock solana tester accounts
 fund_eth_from_config '.additional_accounts.user_solana.evm_address' 10000 "solana tester"
-
-# unlock ethers tester accounts
-fund_eth_from_config '.additional_accounts.user_ether.evm_address' 10000 "ether tester"
 
 # unlock miscellaneous tests accounts
 fund_eth_from_config '.additional_accounts.user_misc.evm_address' 10000 "misc tester"
@@ -119,17 +122,20 @@ fund_eth_from_config '.additional_accounts.user_migration.evm_address' 10000 "mi
 # unlock precompile tests accounts
 fund_eth_from_config '.additional_accounts.user_precompile.evm_address' 10000 "precompiles tester"
 
-# unlock v2 ethers tests accounts
-fund_eth_from_config '.additional_accounts.user_v2_ether.evm_address' 10000  "V2 ethers tester"
+# unlock ethers tests accounts
+fund_eth_from_config '.additional_accounts.user_ether.evm_address' 10000  "V2 ethers tester"
 
-# unlock v2 erc20 tests accounts
-fund_eth_from_config '.additional_accounts.user_v2_erc20.evm_address' 10000  "V2 ERC20 tester"
+# unlock erc20 tests accounts
+fund_eth_from_config '.additional_accounts.user_erc20.evm_address' 10000  "V2 ERC20 tester"
 
-# unlock v2 ethers revert tests accounts
-fund_eth_from_config '.additional_accounts.user_v2_ether_revert.evm_address' 10000 "V2 ethers revert tester"
+# unlock ethers revert tests accounts
+fund_eth_from_config '.additional_accounts.user_ether_revert.evm_address' 10000 "V2 ethers revert tester"
 
-# unlock v2 erc20 revert tests accounts
-fund_eth_from_config '.additional_accounts.user_v2_erc20_revert.evm_address' 10000 "V2 ERC20 revert tester"
+# unlock erc20 revert tests accounts
+fund_eth_from_config '.additional_accounts.user_erc20_revert.evm_address' 10000 "V2 ERC20 revert tester"
+
+# unlock emissions withdraw tests accounts
+fund_eth_from_config '.additional_accounts.user_emissions_withdraw.evm_address' 10000 "emissions withdraw tester"
 
 # unlock local solana relayer accounts
 if host solana > /dev/null; then
@@ -180,7 +186,8 @@ if [ "$LOCALNET_MODE" == "tss-migrate" ]; then
   echo "waiting 10 seconds for node to restart"
     sleep 10
 
-  zetae2e local --skip-setup --config "$deployed_config_path" --skip-bitcoin-setup --light --skip-header-proof
+  zetae2e local --skip-setup --config "$deployed_config_path" \
+    --skip-bitcoin-setup --light --skip-header-proof --skip-precompiles
   ZETAE2E_EXIT_CODE=$?
   if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
     echo "E2E passed after migration"
@@ -219,7 +226,8 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
     echo "running E2E command to setup the networks and populate the state..."
 
     # Use light flag to ensure tests can complete before the upgrade height
-    zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path"  --light --skip-precompiles ${COMMON_ARGS}
+    # skip-bitcoin-dust-withdraw flag can be removed after v23 is released
+    zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --light --skip-precompiles ${COMMON_ARGS}
     if [ $? -ne 0 ]; then
       echo "first e2e failed"
       exit 1
@@ -258,9 +266,9 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   # When the upgrade height is greater than 100 for upgrade test, the Bitcoin tests have been run once, therefore the Bitcoin wallet is already set up
   # Use light flag to skip advanced tests
   if [ "$UPGRADE_HEIGHT" -lt 100 ]; then
-    zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --light --test-v2 --upgrade-contracts ${COMMON_ARGS}
+    zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --light --upgrade-contracts ${COMMON_ARGS}
   else
-    zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --skip-bitcoin-setup --light --test-v2 --upgrade-contracts ${COMMON_ARGS}
+    zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --skip-bitcoin-setup --light --upgrade-contracts ${COMMON_ARGS}
   fi
 
   ZETAE2E_EXIT_CODE=$?

@@ -3,6 +3,7 @@ package mocks
 import (
 	"context"
 	"encoding/hex"
+	"sync"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -20,6 +21,9 @@ type CometBFTClient struct {
 	err    error
 	code   uint32
 	txHash bytes.HexBytes
+
+	subscribers     map[string]chan<- coretypes.ResultEvent
+	subscribersLock sync.Mutex
 }
 
 func (c *CometBFTClient) BroadcastTxCommit(
@@ -82,11 +86,31 @@ func (c *CometBFTClient) SetError(err error) *CometBFTClient {
 	return c
 }
 
+// PublishToSubscribers will publish an event to all subscribers (mock only)
+func (c *CometBFTClient) PublishToSubscribers(event coretypes.ResultEvent) {
+	c.subscribersLock.Lock()
+	defer c.subscribersLock.Unlock()
+	for _, ch := range c.subscribers {
+		ch <- event
+	}
+}
+
+func (c *CometBFTClient) Subscribe(
+	_ context.Context,
+	subscriber, _ string,
+	_ ...int,
+) (out <-chan coretypes.ResultEvent, err error) {
+	outChan := make(chan coretypes.ResultEvent)
+	c.subscribers[subscriber] = outChan
+	return outChan, nil
+}
+
 func NewSDKClientWithErr(t *testing.T, err error, code uint32) *CometBFTClient {
 	return &CometBFTClient{
-		t:      t,
-		Client: mock.Client{},
-		err:    err,
-		code:   code,
+		t:           t,
+		Client:      mock.Client{},
+		err:         err,
+		code:        code,
+		subscribers: make(map[string]chan<- coretypes.ResultEvent),
 	}
 }
