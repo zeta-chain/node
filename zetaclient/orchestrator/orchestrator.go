@@ -289,122 +289,121 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 		return err
 	}
 
-	observeTicker := time.NewTicker(3 * time.Second)
-	var lastBlockNum int64
+	newBlockChan, err := oc.zetacoreClient.NewBlockSubscriber(ctx)
+	if err != nil {
+		return err
+	}
+
 	for {
 		select {
 		case <-oc.stop:
 			oc.logger.Warn().Msg("runScheduler: stopped")
 			return nil
-		case <-observeTicker.C:
-			{
-				bn, err := oc.zetacoreClient.GetBlockHeight(ctx)
-				if err != nil {
-					oc.logger.Error().Err(err).Msg("StartCctxScheduler: GetBlockHeight fail")
-					continue
-				}
-				if bn < 0 {
-					oc.logger.Error().Msg("runScheduler: GetBlockHeight returned negative height")
-					continue
-				}
-				if lastBlockNum == 0 {
-					lastBlockNum = bn - 1
-				}
-				if bn > lastBlockNum { // we have a new block
-					bn = lastBlockNum + 1
-					if bn%10 == 0 {
-						oc.logger.Debug().Msgf("runScheduler: zetacore heart beat: %d", bn)
-					}
+		case <-time.After(time.Second * 10):
+			// the subscription should automatically reconnect after zetacore
+			// restart, but we should log this just in case that logic is not
+			// working
+			oc.logger.Warn().Msg("runScheduler: no blocks after 10 seconds")
+		case newBlock := <-newBlockChan:
+			bn := newBlock.Block.Height
 
-					balance, err := oc.zetacoreClient.GetZetaHotKeyBalance(ctx)
-					if err != nil {
-						oc.logger.Error().Err(err).Msgf("couldn't get operator balance")
-					} else {
-						diff := oc.lastOperatorBalance.Sub(balance)
-						if diff.GT(sdkmath.NewInt(0)) && diff.LT(sdkmath.NewInt(math.MaxInt64)) {
-							oc.ts.AddFeeEntry(bn, diff.Int64())
-							oc.lastOperatorBalance = balance
-						}
-					}
+			blockTimeLatency := time.Since(newBlock.Block.Time)
+			blockTimeLatencySeconds := blockTimeLatency.Seconds()
+			metrics.CoreBlockLatency.Set(blockTimeLatencySeconds)
 
-					// set current hot key burn rate
-					metrics.HotKeyBurnRate.Set(float64(oc.ts.HotKeyBurnRate.GetBurnRate().Int64()))
+			if blockTimeLatencySeconds > 15 {
+				oc.logger.Warn().
+					Float64("latency", blockTimeLatencySeconds).
+					Msgf("runScheduler: core block latency too high")
+				continue
+			}
 
-					// get chain ids without zeta chain
-					chainIDs := lo.FilterMap(app.ListChains(), func(c zctx.Chain, _ int) (int64, bool) {
-						return c.ID(), !c.IsZeta()
-					})
-
-					// query pending cctxs across all external chains within rate limit
-					cctxMap, err := oc.GetPendingCctxsWithinRateLimit(ctx, chainIDs)
-					if err != nil {
-						oc.logger.Error().Err(err).Msgf("runScheduler: GetPendingCctxsWithinRatelimit failed")
-					}
-
-					// schedule keysign for pending cctxs on each chain
-					for _, chain := range app.ListChains() {
-						// skip zeta chain
-						if chain.IsZeta() {
-							continue
-						}
-
-						chainID := chain.ID()
-
-						// update chain parameters for signer and chain observer
-						signer, err := oc.resolveSigner(app, chainID)
-						if err != nil {
-							oc.logger.Error().Err(err).
-								Int64(logs.FieldChain, chainID).
-								Msg("runScheduler: unable to resolve signer")
-							continue
-						}
-
-						ob, err := oc.resolveObserver(app, chainID)
-						if err != nil {
-							oc.logger.Error().Err(err).
-								Int64(logs.FieldChain, chainID).
-								Msg("runScheduler: unable to resolve observer")
-							continue
-						}
-
-						// get cctxs from map and set pending transactions prometheus gauge
-						cctxList := cctxMap[chainID]
-
-						metrics.PendingTxsPerChain.
-							WithLabelValues(chain.Name()).
-							Set(float64(len(cctxList)))
-
-						if len(cctxList) == 0 {
-							continue
-						}
-
-						if !app.IsOutboundObservationEnabled() {
-							continue
-						}
-
-						// #nosec G115 range is verified
-						zetaHeight := uint64(bn)
-
-						switch {
-						case chain.IsEVM():
-							oc.ScheduleCctxEVM(ctx, zetaHeight, chainID, cctxList, ob, signer)
-						case chain.IsBitcoin():
-							oc.ScheduleCctxBTC(ctx, zetaHeight, chainID, cctxList, ob, signer)
-						case chain.IsSolana():
-							oc.ScheduleCctxSolana(ctx, zetaHeight, chainID, cctxList, ob, signer)
-						case chain.IsTON():
-							oc.ScheduleCCTXTON(ctx, zetaHeight, chainID, cctxList, ob, signer)
-						default:
-							oc.logger.Error().Msgf("runScheduler: no scheduler found chain %d", chainID)
-							continue
-						}
-					}
-
-					// update last processed block number
-					lastBlockNum = bn
-					oc.ts.SetCoreBlockNumber(lastBlockNum)
+			balance, err := oc.zetacoreClient.GetZetaHotKeyBalance(ctx)
+			if err != nil {
+				oc.logger.Error().Err(err).Msgf("couldn't get operator balance")
+			} else {
+				diff := oc.lastOperatorBalance.Sub(balance)
+				if diff.GT(sdkmath.NewInt(0)) && diff.LT(sdkmath.NewInt(math.MaxInt64)) {
+					oc.ts.AddFeeEntry(bn, diff.Int64())
+					oc.lastOperatorBalance = balance
 				}
 			}
+
+			// set current hot key burn rate
+			metrics.HotKeyBurnRate.Set(float64(oc.ts.HotKeyBurnRate.GetBurnRate().Int64()))
+
+			// get chain ids without zeta chain
+			chainIDs := lo.FilterMap(app.ListChains(), func(c zctx.Chain, _ int) (int64, bool) {
+				return c.ID(), !c.IsZeta()
+			})
+
+			// query pending cctxs across all external chains within rate limit
+			cctxMap, err := oc.GetPendingCctxsWithinRateLimit(ctx, chainIDs)
+			if err != nil {
+				oc.logger.Error().Err(err).Msgf("runScheduler: GetPendingCctxsWithinRatelimit failed")
+			}
+
+			// schedule keysign for pending cctxs on each chain
+			for _, chain := range app.ListChains() {
+				// skip zeta chain
+				if chain.IsZeta() {
+					continue
+				}
+
+				chainID := chain.ID()
+
+				// update chain parameters for signer and chain observer
+				signer, err := oc.resolveSigner(app, chainID)
+				if err != nil {
+					oc.logger.Error().Err(err).
+						Int64(logs.FieldChain, chainID).
+						Msg("runScheduler: unable to resolve signer")
+					continue
+				}
+
+				ob, err := oc.resolveObserver(app, chainID)
+				if err != nil {
+					oc.logger.Error().Err(err).
+						Int64(logs.FieldChain, chainID).
+						Msg("runScheduler: unable to resolve observer")
+					continue
+				}
+
+				// get cctxs from map and set pending transactions prometheus gauge
+				cctxList := cctxMap[chainID]
+
+				metrics.PendingTxsPerChain.
+					WithLabelValues(chain.Name()).
+					Set(float64(len(cctxList)))
+
+				if len(cctxList) == 0 {
+					continue
+				}
+
+				if !app.IsOutboundObservationEnabled() {
+					continue
+				}
+
+				// #nosec G115 range is verified
+				zetaHeight := uint64(bn)
+
+				switch {
+				case chain.IsEVM():
+					oc.ScheduleCctxEVM(ctx, zetaHeight, chainID, cctxList, ob, signer)
+				case chain.IsBitcoin():
+					oc.ScheduleCctxBTC(ctx, zetaHeight, chainID, cctxList, ob, signer)
+				case chain.IsSolana():
+					oc.ScheduleCctxSolana(ctx, zetaHeight, chainID, cctxList, ob, signer)
+				case chain.IsTON():
+					oc.ScheduleCCTXTON(ctx, zetaHeight, chainID, cctxList, ob, signer)
+				default:
+					oc.logger.Error().Msgf("runScheduler: no scheduler found chain %d", chainID)
+					continue
+				}
+			}
+
+			// update last processed block number
+			oc.ts.SetCoreBlockNumber(bn)
 		}
 	}
 }
@@ -773,7 +772,7 @@ func (oc *Orchestrator) syncObserverSigner(ctx context.Context) error {
 			Msg("synced observers")
 	}
 
-	added, removed, err = syncSignerMap(ctx, oc.tss, oc.baseLogger, oc.ts, &oc.signerMap)
+	added, removed, err = syncSignerMap(ctx, oc.tss, oc.baseLogger, &oc.signerMap)
 	if err != nil {
 		return errors.Wrap(err, "syncSignerMap failed")
 	}

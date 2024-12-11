@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	lru "github.com/hashicorp/golang-lru"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -20,25 +19,11 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
 )
 
-// getContractsByChainID is a helper func to get contracts and addresses by chainID
-func getContractsByChainID(
-	t *testing.T,
-	chainID int64,
-) (*zetaconnector.ZetaConnectorNonEth, ethcommon.Address, *erc20custody.ERC20Custody, ethcommon.Address) {
-	connector := mocks.MockConnectorNonEth(t, chainID)
-	connectorAddress := testutils.ConnectorAddresses[chainID]
-	custody := mocks.MockERC20Custody(t, chainID)
-	custodyAddress := testutils.CustodyAddresses[chainID]
-	return connector, connectorAddress, custody, custodyAddress
-}
-
 func Test_IsOutboundProcessed(t *testing.T) {
 	// load archived outbound receipt that contains ZetaReceived event
 	// https://etherscan.io/tx/0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f
-	chain := chains.Ethereum
 	chainID := chains.Ethereum.ChainId
 	nonce := uint64(9718)
-	chainParam := mocks.MockChainParams(chain.ChainId, 1)
 	outboundHash := "0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f"
 	cctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 	receipt := testutils.LoadEVMOutboundReceipt(
@@ -61,7 +46,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 
 	t.Run("should post vote and return true if outbound is processed", func(t *testing.T) {
 		// create evm observer and set outbound and receipt
-		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
+		ob := newTestSuite(t)
 		ob.SetTxNReceipt(nonce, receipt, outbound)
 
 		// post outbound vote
@@ -77,7 +62,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		cctx.InboundParams.Sender = sample.EthAddress().Hex()
 
 		// create evm observer and set outbound and receipt
-		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
+		ob := newTestSuite(t)
 		ob.SetTxNReceipt(nonce, receipt, outbound)
 
 		// modify compliance config to restrict sender address
@@ -94,14 +79,14 @@ func Test_IsOutboundProcessed(t *testing.T) {
 	})
 	t.Run("should return false if outbound is not confirmed", func(t *testing.T) {
 		// create evm observer and DO NOT set outbound as confirmed
-		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
+		ob := newTestSuite(t)
 		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
 		require.NoError(t, err)
 		require.True(t, continueKeysign)
 	})
 	t.Run("should fail if unable to parse ZetaReceived event", func(t *testing.T) {
 		// create evm observer and set outbound and receipt
-		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
+		ob := newTestSuite(t)
 		ob.SetTxNReceipt(nonce, receipt, outbound)
 
 		// set connector contract address to an arbitrary address to make event parsing fail
@@ -124,10 +109,8 @@ func Test_IsOutboundProcessed_ContractError(t *testing.T) {
 
 	// load archived outbound receipt that contains ZetaReceived event
 	// https://etherscan.io/tx/0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f
-	chain := chains.Ethereum
 	chainID := chains.Ethereum.ChainId
 	nonce := uint64(9718)
-	chainParam := mocks.MockChainParams(chain.ChainId, 1)
 	outboundHash := "0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f"
 	cctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 	receipt := testutils.LoadEVMOutboundReceipt(
@@ -150,7 +133,7 @@ func Test_IsOutboundProcessed_ContractError(t *testing.T) {
 
 	t.Run("should fail if unable to get connector/custody contract", func(t *testing.T) {
 		// create evm observer and set outbound and receipt
-		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
+		ob := newTestSuite(t)
 		ob.SetTxNReceipt(nonce, receipt, outbound)
 		abiConnector := zetaconnector.ZetaConnectorNonEthMetaData.ABI
 		abiCustody := erc20custody.ERC20CustodyMetaData.ABI
@@ -194,7 +177,7 @@ func Test_PostVoteOutbound(t *testing.T) {
 		receiveStatus := chains.ReceiveStatus_success
 
 		// create evm client using mock zetacore client and post outbound vote
-		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, mocks.MockChainParams(chain.ChainId, 100))
+		ob := newTestSuite(t)
 		ob.PostVoteOutbound(
 			ctx,
 			cctx.Index,
@@ -420,7 +403,6 @@ func Test_FilterTSSOutbound(t *testing.T) {
 	// https://etherscan.io/block/19363323
 	chain := chains.Ethereum
 	chainID := chain.ChainId
-	chainParam := mocks.MockChainParams(chainID, 1)
 
 	// load archived evm block
 	// https://etherscan.io/block/19363323
@@ -435,22 +417,18 @@ func Test_FilterTSSOutbound(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("should filter TSS outbound", func(t *testing.T) {
-		// create mock evm client with preloaded block, tx and receipt
-		evmClient := mocks.NewEVMRPCClient(t)
-		evmClient.On("BlockNumber", mock.Anything).Return(blockNumber+1, nil) // +1 confirmations
-		evmClient.On("TransactionByHash", mock.Anything, outboundHash).Return(tx, false, nil)
-		evmClient.On("TransactionReceipt", mock.Anything, outboundHash).Return(receipt, nil)
-
 		// create evm observer for testing
-		tss := mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet)
+		ob := newTestSuite(t)
 
-		ob, _ := MockEVMObserver(t, chain, evmClient, nil, nil, tss, 1, chainParam)
+		confirmations := ob.chainParams.ConfirmationCount
 
-		// feed archived block to observer cache
-		blockCache, err := lru.New(1000)
-		require.NoError(t, err)
-		blockCache.Add(blockNumber, block)
-		ob.WithBlockCache(blockCache)
+		// create mock evm client with preloaded block, tx and receipt
+		ob.evmClient.On("BlockNumber", mock.Anything).Unset()
+		ob.evmClient.On("BlockNumber", mock.Anything).Return(blockNumber+confirmations, nil)
+		ob.evmClient.On("TransactionByHash", mock.Anything, outboundHash).Return(tx, false, nil)
+		ob.evmClient.On("TransactionReceipt", mock.Anything, outboundHash).Return(receipt, nil)
+
+		ob.BlockCache().Add(blockNumber, block)
 
 		// filter TSS outbound
 		ob.FilterTSSOutbound(ctx, blockNumber, blockNumber)
@@ -460,7 +438,7 @@ func Test_FilterTSSOutbound(t *testing.T) {
 		require.True(t, found)
 
 		// retrieve tx and receipt
-		receipt, tx := ob.GetTxNReceipt(outboundNonce)
+		receipt, tx = ob.GetTxNReceipt(outboundNonce)
 		require.NotNil(t, tx)
 		require.NotNil(t, receipt)
 		require.Equal(t, outboundHash, tx.Hash())
@@ -468,16 +446,7 @@ func Test_FilterTSSOutbound(t *testing.T) {
 	})
 
 	t.Run("should filter nothing on RPC error", func(t *testing.T) {
-		// create mock evm client block number
-		evmClient := mocks.NewEVMRPCClient(t)
-		evmClient.On("BlockNumber", mock.Anything).Return(blockNumber+1, nil)
-
-		// create evm JSON-RPC client without block to simulate RPC error
-		evmJSONRPC := mocks.NewMockJSONRPCClient()
-
-		// create evm observer for testing
-		tss := mocks.NewTSS(t)
-		ob, _ := MockEVMObserver(t, chain, evmClient, evmJSONRPC, nil, tss, 1, chainParam)
+		ob := newTestSuite(t)
 
 		// filter TSS outbound
 		ob.FilterTSSOutbound(ctx, blockNumber, blockNumber)

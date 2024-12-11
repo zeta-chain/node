@@ -22,6 +22,7 @@ import (
 
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	cometbfttypes "github.com/cometbft/cometbft/types"
 	zerolog "github.com/rs/zerolog"
 )
 
@@ -884,6 +885,32 @@ func (_m *ZetacoreClient) PostVoteTSS(ctx context.Context, tssPubKey string, key
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, int64, chains.ReceiveStatus) error); ok {
 		r1 = rf(ctx, tssPubKey, keyGenZetaHeight, status)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// NewBlockSubscriber provides a mock function with given fields: ctx
+func (_m *ZetacoreClient) NewBlockSubscriber(ctx context.Context) (chan cometbfttypes.EventDataNewBlock, error) {
+	ret := _m.Called(ctx)
+
+	var r0 chan cometbfttypes.EventDataNewBlock
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (chan cometbfttypes.EventDataNewBlock, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) chan cometbfttypes.EventDataNewBlock); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(chan cometbfttypes.EventDataNewBlock)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -481,6 +481,8 @@ func New(
 		app.SlashingKeeper,
 		app.AuthorityKeeper,
 		app.LightclientKeeper,
+		app.BankKeeper,
+		app.AccountKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 

@@ -13,6 +13,7 @@ import (
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 )
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
@@ -33,6 +34,7 @@ type BankKeeper interface {
 		amt sdk.Coins,
 	) error
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	GetSupply(ctx sdk.Context, denom string) sdk.Coin
 }
 
@@ -62,4 +64,5 @@ type EVMKeeper interface {
 type AuthorityKeeper interface {
 	CheckAuthorization(ctx sdk.Context, msg sdk.Msg) error
 	GetAdditionalChainList(ctx sdk.Context) (list []chains.Chain)
+	GetPolicies(ctx sdk.Context) (val authoritytypes.Policies, found bool)
 }

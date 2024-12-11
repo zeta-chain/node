@@ -32,7 +32,7 @@ jobs:
   # forked pull request will fall back to slow build
   build-zetanode:
     runs-on: ubuntu-22.04
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'zeta-chain/node'
+    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'zeta-chain/node') && github.actor != 'dependabot[bot]'
     env:
       DOCKER_IMAGE: ghcr.io/${{ github.repository_owner }}/zetanode
       DOCKER_TAG: ${{ github.ref == 'refs/heads/develop' && 'develop' || github.sha }}

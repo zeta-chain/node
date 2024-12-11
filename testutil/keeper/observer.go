@@ -10,7 +10,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -47,6 +49,8 @@ func initObserverKeeper(
 	stakingKeeper stakingkeeper.Keeper,
 	slashingKeeper slashingkeeper.Keeper,
 	authorityKeeper types.AuthorityKeeper,
+	bankKeeper bankkeeper.Keeper,
+	authKeeper authkeeper.AccountKeeper,
 	lightclientKeeper types.LightclientKeeper,
 ) *keeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
@@ -62,6 +66,8 @@ func initObserverKeeper(
 		slashingKeeper,
 		authorityKeeper,
 		lightclientKeeper,
+		bankKeeper,
+		authKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 }
@@ -103,6 +109,8 @@ func ObserverKeeperWithMocks(
 	var slashingKeeper types.SlashingKeeper = sdkKeepers.SlashingKeeper
 	var authorityKeeper types.AuthorityKeeper = authorityKeeperTmp
 	var lightclientKeeper types.LightclientKeeper = lightclientKeeperTmp
+	var bankKeeper types.BankKeeper = sdkKeepers.BankKeeper
+	var authKeeper types.AccountKeeper = sdkKeepers.AuthKeeper
 	if mockOptions.UseStakingMock {
 		stakingKeeper = observermocks.NewObserverStakingKeeper(t)
 	}
@@ -124,6 +132,8 @@ func ObserverKeeperWithMocks(
 		slashingKeeper,
 		authorityKeeper,
 		lightclientKeeper,
+		bankKeeper,
+		authKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 

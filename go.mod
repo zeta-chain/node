@@ -6,7 +6,7 @@ toolchain go1.22.8
 
 require (
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/math v1.3.0
+	cosmossdk.io/math v1.4.0
 	cosmossdk.io/tools/rosetta v0.2.1 // indirect
 	github.com/99designs/keyring v1.2.1
 	github.com/btcsuite/btcd v0.24.2
