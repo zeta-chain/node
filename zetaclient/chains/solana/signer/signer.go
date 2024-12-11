@@ -53,11 +53,10 @@ func NewSigner(
 	solClient interfaces.SolanaRPCClient,
 	tss interfaces.TSSSigner,
 	relayerKey *keys.RelayerKey,
-	ts *metrics.TelemetryServer,
 	logger base.Logger,
 ) (*Signer, error) {
 	// create base signer
-	baseSigner := base.NewSigner(chain, tss, ts, logger)
+	baseSigner := base.NewSigner(chain, tss, logger)
 
 	// parse gateway ID and PDA
 	gatewayID, pda, err := contracts.ParseGatewayWithPDA(chainParams.GatewayAddress)

@@ -29,7 +29,6 @@ const (
 
 func TestCreateSignerMap(t *testing.T) {
 	var (
-		ts         = metrics.NewTelemetryServer()
 		tss        = mocks.NewTSS(t)
 		log        = zerolog.New(zerolog.NewTestWriter(t))
 		baseLogger = base.Logger{Std: log, Compliance: log}
@@ -64,7 +63,7 @@ func TestCreateSignerMap(t *testing.T) {
 		})
 
 		// ACT
-		signers, err := CreateSignerMap(ctx, tss, baseLogger, ts)
+		signers, err := CreateSignerMap(ctx, tss, baseLogger)
 
 		// ASSERT
 		assert.NoError(t, err)
@@ -82,7 +81,7 @@ func TestCreateSignerMap(t *testing.T) {
 			})
 
 			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, ts, &signers)
+			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
 
 			// ASSERT
 			assert.NoError(t, err)
@@ -101,7 +100,7 @@ func TestCreateSignerMap(t *testing.T) {
 			})
 
 			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, ts, &signers)
+			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
 
 			// ASSERT
 			assert.NoError(t, err)
@@ -122,7 +121,7 @@ func TestCreateSignerMap(t *testing.T) {
 			})
 
 			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, ts, &signers)
+			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
 
 			// ASSERT
 			assert.NoError(t, err)
@@ -142,7 +141,7 @@ func TestCreateSignerMap(t *testing.T) {
 			})
 
 			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, ts, &signers)
+			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
 
 			// ASSERT
 			assert.NoError(t, err)
@@ -164,7 +163,7 @@ func TestCreateSignerMap(t *testing.T) {
 			})
 
 			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, ts, &signers)
+			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
 
 			// ASSERT
 			assert.NoError(t, err)
@@ -181,7 +180,7 @@ func TestCreateSignerMap(t *testing.T) {
 			before := len(signers)
 
 			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, ts, &signers)
+			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
 
 			// ASSERT
 			assert.NoError(t, err)

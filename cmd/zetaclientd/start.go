@@ -197,7 +197,7 @@ func Start(_ *cobra.Command, _ []string) error {
 
 	// CreateSignerMap: This creates a map of all signers for each chain.
 	// Each signer is responsible for signing transactions for a particular chain
-	signerMap, err := orchestrator.CreateSignerMap(ctx, tss, logger, telemetryServer)
+	signerMap, err := orchestrator.CreateSignerMap(ctx, tss, logger)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to create signer map")
 		return err
