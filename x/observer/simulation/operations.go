@@ -244,7 +244,7 @@ func GetRandomAccountAndObserver(
 	}
 
 	if !foundObserver {
-		return simtypes.Account{}, "", observerList, fmt.Errorf("no observer found")
+		return simtypes.Account{}, "no observer found", nil, nil
 	}
 
 	simAccount, err := GetObserverAccount(randomObserver, accounts)

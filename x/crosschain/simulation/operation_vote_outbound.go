@@ -132,6 +132,12 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 		firstMsg := msg
 		firstMsg.Creator = firstVoter
 
+		// THe first vote should always create a new ballot
+		_, found = k.GetObserverKeeper().GetBallot(ctx, firstMsg.Digest())
+		if found {
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "ballot already exists"), nil, nil
+		}
+
 		err = firstMsg.ValidateBasic()
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate first inbound vote"), nil, err

@@ -254,7 +254,7 @@ func TestFullAppSimulation(t *testing.T) {
 //  1. It runs a full simulation and exports the state
 //  2. It creates a new app, and db
 //  3. It imports the exported state into the new app
-//  4. It compares the two apps
+//  4. It compares the key value pairs for the two apps.The comparison function takes a list of keys to skip as an input as well
 //     a. First app which ran the simulation
 //     b. Second app which imported the state
 
@@ -520,6 +520,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	exported, err := simApp.ExportAppStateAndValidators(true, []string{}, []string{})
 	require.NoError(t, err)
 
+	// Setup a new app with new database and directory
 	newDB, newDir, _, _, err := cosmossimutils.SetupSimulation(
 		config,
 		SimDBBackend+"_new",
@@ -527,9 +528,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		zetasimulation.FlagVerboseValue,
 		zetasimulation.FlagEnabledValue,
 	)
-
 	require.NoError(t, err, "simulation setup failed")
-
 	t.Cleanup(func() {
 		if err := newDB.Close(); err != nil {
 			require.NoError(t, err, "Error closing new database")
@@ -538,7 +537,6 @@ func TestAppSimulationAfterImport(t *testing.T) {
 			require.NoError(t, err, "Error removing directory")
 		}
 	})
-
 	newSimApp, err := zetasimulation.NewSimApp(
 		logger,
 		newDB,
@@ -548,12 +546,14 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	)
 	require.NoError(t, err)
 
+	// Initialize the new app with the exported genesis state of the first run
 	t.Log("Importing genesis into the new app")
 	newSimApp.InitChain(abci.RequestInitChain{
 		ChainId:       SimAppChainID,
 		AppStateBytes: exported.AppState,
 	})
 
+	// Run simulation on the new app
 	stopEarly, simParams, simErr = simulation.SimulateFromSeed(
 		t,
 		os.Stdout,

@@ -85,15 +85,21 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 		}
 
 		msg := sample.InboundVoteSim(from, to, r, asset)
-		// Return early if inbound is not enabled.
+
 		cf, found := k.GetObserverKeeper().GetCrosschainFlags(ctx)
 		if !found {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "crosschain flags not found"), nil, nil
 		}
+
+		// Return early if inbound is not enabled.
 		if !cf.IsInboundEnabled {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "inbound is not enabled"), nil, nil
 		}
 
+		// Return early if the inbound has already been finalized.
+		if k.IsFinalizedInbound(ctx, msg.InboundHash, msg.SenderChainId, msg.EventIndex) {
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "inbound already finalized"), nil, nil
+		}
 		// Pick a random observer to create the ballot
 		// If this returns an error, it is likely that the entire observer set has been removed
 		simAccount, firstVoter, err := GetRandomAccountAndObserver(r, ctx, k, accs)
@@ -106,11 +112,16 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 		firstMsg := msg
 		firstMsg.Creator = firstVoter
 
+		// THe first vote should always create a new ballot
+		_, found = k.GetObserverKeeper().GetBallot(ctx, firstMsg.Digest())
+		if found {
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "ballot already exists"), nil, nil
+		}
+
 		err = firstMsg.ValidateBasic()
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate first inbound vote"), nil, err
 		}
-
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
