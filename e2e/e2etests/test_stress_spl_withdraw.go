@@ -9,19 +9,18 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/montanaflynn/stats"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/sync/errgroup"
-
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	"golang.org/x/sync/errgroup"
 )
 
-// TestStressSolanaWithdraw tests the stressing withdrawal of SOL/SPL
-func TestStressSolanaWithdraw(r *runner.E2ERunner, args []string) {
+// TestStressSPLWithdraw tests the stressing withdrawal of SOL/SPL
+func TestStressSPLWithdraw(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
-	withdrawSOLAmount := utils.ParseBigInt(r, args[0])
-	numWithdrawalsSOL := utils.ParseInt(r, args[1])
+	withdrawSPLAmount := utils.ParseBigInt(r, args[0])
+	numWithdrawalsSPL := utils.ParseInt(r, args[1])
 
 	balanceBefore, err := r.SOLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
@@ -34,12 +33,22 @@ func TestStressSolanaWithdraw(r *runner.E2ERunner, args []string) {
 	// load deployer private key
 	privKey := r.GetSolanaPrivKey()
 
-	r.Logger.Print("starting stress test of %d SOL withdrawals", numWithdrawalsSOL)
+	r.Logger.Print("starting stress test of %d SPL withdrawals", numWithdrawalsSPL)
 
 	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.SOLZRC20Addr, big.NewInt(1e18))
 	require.NoError(r, err)
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "approve_sol")
+
+	tx, err = r.SPLZRC20.Approve(r.ZEVMAuth, r.SPLZRC20Addr, big.NewInt(1e18))
+	require.NoError(r, err)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt, "approve_spl")
+
+	tx, err = r.SOLZRC20.Approve(r.ZEVMAuth, r.SPLZRC20Addr, big.NewInt(1e18))
+	require.NoError(r, err)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt, "approve_spl_sol")
 
 	// create a wait group to wait for all the withdrawals to complete
 	var eg errgroup.Group
@@ -48,18 +57,18 @@ func TestStressSolanaWithdraw(r *runner.E2ERunner, args []string) {
 	withdrawDurations := []float64{}
 	withdrawDurationsLock := sync.Mutex{}
 
-	// send the withdrawals SOL
-	for i := 0; i < numWithdrawalsSOL; i++ {
+	// send the withdrawals SPL
+	for i := 0; i < numWithdrawalsSPL; i++ {
 		i := i
 
-		// execute the withdraw SOL transaction
-		tx, err = r.SOLZRC20.Withdraw(r.ZEVMAuth, []byte(privKey.PublicKey().String()), withdrawSOLAmount)
+		// execute the withdraw SPL transaction
+		tx, err = r.SPLZRC20.Withdraw(r.ZEVMAuth, []byte(privKey.PublicKey().String()), withdrawSPLAmount)
 		require.NoError(r, err)
 
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 		utils.RequireTxSuccessful(r, receipt)
 
-		r.Logger.Print("index %d: starting SOL withdraw, tx hash: %s", i, tx.Hash().Hex())
+		r.Logger.Print("index %d: starting SPL withdraw, tx hash: %s", i, tx.Hash().Hex())
 
 		eg.Go(func() error {
 			startTime := time.Now()
@@ -101,5 +110,5 @@ func TestStressSolanaWithdraw(r *runner.E2ERunner, args []string) {
 	}
 
 	require.NoError(r, err)
-	r.Logger.Print("all SOL withdrawals completed")
+	r.Logger.Print("all SPL withdrawals completed")
 }
