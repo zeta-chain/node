@@ -9,10 +9,11 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/montanaflynn/stats"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"golang.org/x/sync/errgroup"
 )
 
 // TestStressSPLWithdraw tests the stressing withdrawal of SOL/SPL
