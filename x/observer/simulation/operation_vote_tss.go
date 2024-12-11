@@ -10,9 +10,9 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/zeta-chain/node/testutil/sample"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/observer/keeper"
 	"github.com/zeta-chain/node/x/observer/types"
 )
@@ -55,7 +55,6 @@ func operationSimulateVoteTss(
 // SimulateVoteOutbound generates a MsgVoteOutbound with random values
 // This is the only operation which saves a cctx directly to the store.
 func SimulateMsgVoteTSS(k keeper.Keeper) simtypes.Operation {
-
 	return func(
 		r *rand.Rand,
 		app *baseapp.BaseApp,

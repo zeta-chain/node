@@ -19,8 +19,14 @@ import (
 // Operation weights are used by the simulation program to simulate the weight of different operations.
 // This decides what percentage of a certain type of operation is part of a block.
 // Based on the weights assigned in the cosmos sdk modules , 100 seems to the max weight used , and therefore guarantees that at least one operation of that type is present in a block.
-// TODO Add more details to comment based on what the number represents in terms of percentage of operations in a block
-// https://github.com/zeta-chain/node/issues/3100
+// Operation weights are used by the `SimulateFromSeed`
+// function to pick a random operation based on the weights.The functions with higher weights are more likely to be picked.
+
+// Therefore, this decides the percentage of a certain operation that is part of a block.
+
+// Based on the weights assigned in the cosmos sdk modules,
+// 100 seems to the max weight used,and we should use relative weights
+// to signify the number of each operation in a block.
 const (
 	// #nosec G101 not a hardcoded credential
 	OpWeightMsgTypeMsgEnableCCTX                  = "op_weight_msg_enable_crosschain_flags"

@@ -118,7 +118,7 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 		}
 
 		msg.OutboundTssNonce = cctx.GetCurrentOutboundParam().TssNonce
-		k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx, tss.TssPubkey)
+		k.SaveCCTXUpdate(ctx, cctx, tss.TssPubkey)
 
 		// Pick a random observer to create the ballot
 		// If this returns an error, it is likely that the entire observer set has been removed

@@ -2,20 +2,15 @@ package simulation
 
 import (
 	"fmt"
-	"math"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/node/x/observer/types"
@@ -33,9 +28,6 @@ import (
 // Based on the weights assigned in the cosmos sdk modules,
 // 100 seems to the max weight used,and we should use relative weights
 // to signify the number of each operation in a block.
-
-// TODO Add more details to comment based on what the number represents in terms of percentage of operations in a block
-// https://github.com/zeta-chain/node/issues/3100
 const (
 	DefaultWeightAddOutboundTracker            = 10
 	DefaultWeightAddInboundTracker             = 10

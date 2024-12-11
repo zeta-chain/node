@@ -113,13 +113,10 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 		}
 		// Add a new inbound Tracker
 		msg := types.MsgAddOutboundTracker{
-			Creator:   randomObserver,
-			ChainId:   chainID,
-			Nonce:     uint64(nonce),
-			TxHash:    txHash.String(),
-			Proof:     nil,
-			BlockHash: "",
-			TxIndex:   0,
+			Creator: randomObserver,
+			ChainId: chainID,
+			Nonce:   uint64(nonce),
+			TxHash:  txHash.String(),
 		}
 
 		err = msg.ValidateBasic()

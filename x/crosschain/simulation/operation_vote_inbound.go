@@ -84,7 +84,7 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, authz.InboundVoter.String(), "unable to get asset"), nil, err
 		}
 
-		msg := sample.InboundVoteSim(from, to, r, asset)
+		msg := sample.InboundVoteFromRand(from, to, r, asset)
 
 		cf, found := k.GetObserverKeeper().GetCrosschainFlags(ctx)
 		if !found {
