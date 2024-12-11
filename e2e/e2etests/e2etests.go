@@ -112,6 +112,7 @@ const (
 	TestStressEtherDepositName   = "stress_eth_deposit"
 	TestStressBTCDepositName     = "stress_btc_deposit"
 	TestStressSolanaDepositName  = "stress_solana_deposit"
+	TestStressSPLDepositName     = "stress_spl_deposit"
 	TestStressSolanaWithdrawName = "stress_solana_withdraw"
 	TestStressSPLWithdrawName    = "stress_spl_withdraw"
 
@@ -772,14 +773,21 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestStressSolanaDepositName,
-		"stress test SOL/SPL deposit",
+		"stress test SOL deposit",
 		[]runner.ArgDefinition{
 			{Description: "amount in lamports", DefaultValue: "1200000"},
-			{Description: "count of SOL deposits", DefaultValue: "10"},
-			{Description: "amount in SPL tokens", DefaultValue: "1200000"},
-			{Description: "count of SPL deposits", DefaultValue: "10"},
+			{Description: "count of SOL deposits", DefaultValue: "50"},
 		},
 		TestStressSolanaDeposit,
+	),
+	runner.NewE2ETest(
+		TestStressSPLDepositName,
+		"stress test SPL deposit",
+		[]runner.ArgDefinition{
+			{Description: "amount in SPL tokens", DefaultValue: "1200000"},
+			{Description: "count of SPL deposits", DefaultValue: "50"},
+		},
+		TestStressSPLDeposit,
 	),
 	runner.NewE2ETest(
 		TestStressSolanaWithdrawName,

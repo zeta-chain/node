@@ -13,20 +13,14 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestStressSolanaDeposit tests the stressing deposit of SOL/SPL
+// TestStressSolanaDeposit tests the stressing deposit of SOL
 func TestStressSolanaDeposit(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 4)
+	require.Len(r, args, 2)
 
 	depositSOLAmount := utils.ParseBigInt(r, args[0])
 	numDepositsSOL := utils.ParseInt(r, args[1])
 
-	depositSPLAmount := utils.ParseBigInt(r, args[2])
-	numDepositsSPL := utils.ParseInt(r, args[3])
-
-	// load deployer private key
-	privKey := r.GetSolanaPrivKey()
-
-	r.Logger.Print("starting stress test of %d SOL and %d SPL deposits", numDepositsSOL, numDepositsSPL)
+	r.Logger.Print("starting stress test of %d SOL deposits", numDepositsSOL)
 
 	// create a wait group to wait for all the deposits to complete
 	var eg errgroup.Group
@@ -38,17 +32,6 @@ func TestStressSolanaDeposit(r *runner.E2ERunner, args []string) {
 		// execute the deposit SOL transaction
 		sig := r.SOLDepositAndCall(nil, r.EVMAddress(), depositSOLAmount, nil)
 		r.Logger.Print("index %d: starting SOL deposit, sig: %s", i, sig.String())
-
-		eg.Go(func() error { return monitorDeposit(r, sig, i, time.Now()) })
-	}
-
-	// send the deposits SPL
-	for i := 0; i < numDepositsSPL; i++ {
-		i := i
-
-		// execute the deposit SPL transaction
-		sig := r.SPLDepositAndCall(&privKey, depositSPLAmount.Uint64(), r.SPLAddr, r.EVMAddress(), nil)
-		r.Logger.Print("index %d: starting SPL deposit, sig: %s", i, sig.String())
 
 		eg.Go(func() error { return monitorDeposit(r, sig, i, time.Now()) })
 	}
