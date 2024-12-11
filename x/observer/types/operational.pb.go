@@ -22,6 +22,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// Flags for the top-level operation of zetaclient.
 type OperationalFlags struct {
 	// Height for a coordinated zetaclient restart.
 	// Will be ignored if missed.
