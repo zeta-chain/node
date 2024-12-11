@@ -31,7 +31,7 @@ func TestMigrateStore(t *testing.T) {
 				"",
 				"Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr",
 				"BrS9iNMC3y8J4QTmCz8VrGrYepdoxXYvKxcDMiixwLn5",
-				"0x999999CF1046E68E36E1AA2E0E07105EDDD1F08E", // uppcase
+				"0x999999CF1046E68E36E1AA2E0E07105EDDD1F08E", // uppercase
 			},
 			expectedList: []string{
 				"",
