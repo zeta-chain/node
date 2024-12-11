@@ -21,6 +21,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
@@ -29,7 +30,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
-	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 )
 
@@ -61,12 +62,11 @@ type Signer struct {
 func NewSigner(
 	chain chains.Chain,
 	tss interfaces.TSSSigner,
-	ts *metrics.TelemetryServer,
 	logger base.Logger,
 	cfg config.BTCConfig,
 ) (*Signer, error) {
 	// create base signer
-	baseSigner := base.NewSigner(chain, tss, ts, logger)
+	baseSigner := base.NewSigner(chain, tss, logger)
 
 	// create the bitcoin rpc client using the provided config
 	connCfg := &rpcclient.ConnConfig{
@@ -154,7 +154,7 @@ func (signer *Signer) AddWithdrawTxOutputs(
 	}
 
 	// 1st output: the nonce-mark btc to TSS self
-	tssAddrP2WPKH, err := signer.TSS().BTCAddress(signer.Chain().ChainId)
+	tssAddrP2WPKH, err := signer.TSS().PubKey().AddressBTC(signer.Chain().ChainId)
 	if err != nil {
 		return err
 	}
@@ -303,7 +303,7 @@ func (signer *Signer) SignWithdrawTx(
 		S.SetBytes((*[32]byte)(sig65B[32:64]))
 		sig := btcecdsa.NewSignature(R, S)
 
-		pkCompressed := signer.TSS().PubKeyCompressedBytes()
+		pkCompressed := signer.TSS().PubKey().Bytes(true)
 		hashType := txscript.SigHashAll
 		txWitness := wire.TxWitness{append(sig.Serialize(), byte(hashType)), pkCompressed}
 		tx.TxIn[ix].Witness = txWitness
@@ -354,12 +354,13 @@ func (signer *Signer) TryProcessOutbound(
 
 	// prepare logger
 	params := cctx.GetCurrentOutboundParam()
-	logger := signer.Logger().Std.With().
-		Str("method", "TryProcessOutbound").
-		Int64("chain", signer.Chain().ChainId).
-		Uint64("nonce", params.TssNonce).
-		Str("cctx", cctx.Index).
-		Logger()
+	// prepare logger fields
+	lf := map[string]any{
+		logs.FieldMethod: "TryProcessOutbound",
+		logs.FieldCctx:   cctx.Index,
+		logs.FieldNonce:  params.TssNonce,
+	}
+	logger := signer.Logger().Std.With().Fields(lf).Logger()
 
 	// support gas token only for Bitcoin outbound
 	coinType := cctx.InboundParams.CoinType
@@ -382,6 +383,7 @@ func (signer *Signer) TryProcessOutbound(
 		logger.Error().Err(err).Msg("cannot get signer address")
 		return
 	}
+	lf["signer"] = signerAddress.String()
 
 	// get size limit and gas price
 	sizelimit := params.CallOptions.GasLimit
@@ -413,13 +415,23 @@ func (signer *Signer) TryProcessOutbound(
 	gasprice.Add(gasprice, satPerByte)
 
 	// compliance check
-	cancelTx := compliance.IsCctxRestricted(cctx)
-	if cancelTx {
+	restrictedCCTX := compliance.IsCctxRestricted(cctx)
+	if restrictedCCTX {
 		compliance.PrintComplianceLog(logger, signer.Logger().Compliance,
 			true, chain.ChainId, cctx.Index, cctx.InboundParams.Sender, params.Receiver, "BTC")
-		amount = 0.0 // zero out the amount to cancel the tx
 	}
-	logger.Info().Msgf("SignGasWithdraw: to %s, value %d sats", to.EncodeAddress(), params.Amount.Uint64())
+
+	// check dust amount
+	dustAmount := params.Amount.Uint64() < constant.BTCWithdrawalDustAmount
+	if dustAmount {
+		logger.Warn().Msgf("dust amount %d sats, canceling tx", params.Amount.Uint64())
+	}
+
+	// set the amount to 0 when the tx should be cancelled
+	cancelTx := restrictedCCTX || dustAmount
+	if cancelTx {
+		amount = 0.0
+	}
 
 	// sign withdraw tx
 	tx, err := signer.SignWithdrawTx(
@@ -435,25 +447,21 @@ func (signer *Signer) TryProcessOutbound(
 		cancelTx,
 	)
 	if err != nil {
-		logger.Warn().
-			Err(err).
-			Msgf("SignConnectorOnReceive error: nonce %d chain %d", outboundTssNonce, params.ReceiverChainId)
+		logger.Warn().Err(err).Msg("SignWithdrawTx failed")
 		return
 	}
-	logger.Info().
-		Msgf("Key-sign success: %d => %s, nonce %d", cctx.InboundParams.SenderChainId, chain.Name, outboundTssNonce)
+	logger.Info().Msg("Key-sign success")
 
 	// FIXME: add prometheus metrics
 	_, err = zetacoreClient.GetObserverList(ctx)
 	if err != nil {
 		logger.Warn().
-			Err(err).
-			Msgf("unable to get observer list: chain %d observation %s", outboundTssNonce, observertypes.ObservationType_OutboundTx.String())
+			Err(err).Stringer("observation_type", observertypes.ObservationType_OutboundTx).
+			Msg("unable to get observer list, observation")
 	}
 	if tx != nil {
 		outboundHash := tx.TxHash().String()
-		logger.Info().
-			Msgf("on chain %s nonce %d, outboundHash %s signer %s", chain.Name, outboundTssNonce, outboundHash, signerAddress)
+		lf[logs.FieldTx] = outboundHash
 
 		// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s) in case of RPC error
 		backOff := broadcastBackoff
@@ -461,28 +469,22 @@ func (signer *Signer) TryProcessOutbound(
 			time.Sleep(backOff)
 			err := signer.Broadcast(tx)
 			if err != nil {
-				logger.Warn().
-					Err(err).
-					Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outboundHash, chain.Name, outboundTssNonce, i)
+				logger.Warn().Err(err).Fields(lf).Msgf("Broadcasting Bitcoin tx, retry %d", i)
 				backOff *= 2
 				continue
 			}
-			logger.Info().
-				Msgf("Broadcast success: nonce %d to chain %s outboundHash %s", outboundTssNonce, chain.String(), outboundHash)
-			zetaHash, err := zetacoreClient.AddOutboundTracker(
+			logger.Info().Fields(lf).Msgf("Broadcast Bitcoin tx successfully")
+			zetaHash, err := zetacoreClient.PostOutboundTracker(
 				ctx,
 				chain.ChainId,
 				outboundTssNonce,
 				outboundHash,
-				nil,
-				"",
-				-1,
 			)
 			if err != nil {
-				logger.Err(err).
-					Msgf("Unable to add to tracker on zetacore: nonce %d chain %s outboundHash %s", outboundTssNonce, chain.Name, outboundHash)
+				logger.Err(err).Fields(lf).Msgf("Unable to add Bitcoin outbound tracker")
 			}
-			logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
+			lf[logs.FieldZetaTx] = zetaHash
+			logger.Info().Fields(lf).Msgf("Add Bitcoin outbound tracker successfully")
 
 			// Save successfully broadcasted transaction to btc chain observer
 			btcObserver.SaveBroadcastedTx(outboundHash, outboundTssNonce)

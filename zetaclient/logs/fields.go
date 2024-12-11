@@ -10,6 +10,9 @@ const (
 	FieldNonce        = "nonce"
 	FieldTx           = "tx"
 	FieldCctx         = "cctx"
+	FieldZetaTx       = "zeta_tx"
+	FieldBallot       = "ballot"
+	FieldCoinType     = "coin_type"
 
 	// module names
 	ModNameInbound  = "inbound"

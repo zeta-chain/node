@@ -22,20 +22,14 @@ type AppContext struct {
 	// config is the config of the app
 	config config.Config
 
-	// logger is the logger of the app
-	logger zerolog.Logger
-
 	// chainRegistry is a registry of supported chains
 	chainRegistry *ChainRegistry
-
-	// currentTssPubKey is the current tss pubKey
-	currentTssPubKey string
 
 	// crosschainFlags is the current crosschain flags state
 	crosschainFlags observertypes.CrosschainFlags
 
-	// keygen is the current tss keygen state
-	keygen observertypes.Keygen
+	// logger is the logger of the app
+	logger zerolog.Logger
 
 	mu sync.RWMutex
 }
@@ -43,16 +37,10 @@ type AppContext struct {
 // New creates and returns new empty AppContext
 func New(cfg config.Config, relayerKeyPasswords map[string]string, logger zerolog.Logger) *AppContext {
 	return &AppContext{
-		config: cfg,
-		logger: logger.With().Str("module", "appcontext").Logger(),
-
-		chainRegistry: NewChainRegistry(relayerKeyPasswords),
-
-		crosschainFlags:  observertypes.CrosschainFlags{},
-		currentTssPubKey: "",
-		keygen:           observertypes.Keygen{},
-
-		mu: sync.RWMutex{},
+		config:          cfg,
+		chainRegistry:   NewChainRegistry(relayerKeyPasswords),
+		crosschainFlags: observertypes.CrosschainFlags{},
+		logger:          logger.With().Str("module", "appcontext").Logger(),
 	}
 }
 
@@ -102,32 +90,6 @@ func (a *AppContext) IsInboundObservationEnabled() bool {
 	return a.GetCrossChainFlags().IsInboundEnabled
 }
 
-// GetKeygen returns the current keygen
-func (a *AppContext) GetKeygen() observertypes.Keygen {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-
-	var copiedPubKeys []string
-	if a.keygen.GranteePubkeys != nil {
-		copiedPubKeys = make([]string, len(a.keygen.GranteePubkeys))
-		copy(copiedPubKeys, a.keygen.GranteePubkeys)
-	}
-
-	return observertypes.Keygen{
-		Status:         a.keygen.Status,
-		GranteePubkeys: copiedPubKeys,
-		BlockNumber:    a.keygen.BlockNumber,
-	}
-}
-
-// GetCurrentTssPubKey returns the current tss pubKey.
-func (a *AppContext) GetCurrentTssPubKey() string {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-
-	return a.currentTssPubKey
-}
-
 // GetCrossChainFlags returns crosschain flags
 func (a *AppContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 	a.mu.RLock()
@@ -139,10 +101,8 @@ func (a *AppContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 // Update updates AppContext and params for all chains
 // this must be the ONLY function that writes to AppContext
 func (a *AppContext) Update(
-	keygen observertypes.Keygen,
 	freshChains, additionalChains []chains.Chain,
 	freshChainParams map[int64]*observertypes.ChainParams,
-	tssPubKey string,
 	crosschainFlags observertypes.CrosschainFlags,
 ) error {
 	// some sanity checks
@@ -151,9 +111,6 @@ func (a *AppContext) Update(
 		return fmt.Errorf("no chains present")
 	case len(freshChainParams) == 0:
 		return fmt.Errorf("no chain params present")
-	case tssPubKey == "" && a.currentTssPubKey != "":
-		// note that if we're doing a fresh start, we ALLOW an empty tssPubKey
-		return fmt.Errorf("tss pubkey is empty")
 	case len(additionalChains) > 0:
 		for _, c := range additionalChains {
 			if !c.IsExternal {
@@ -171,8 +128,6 @@ func (a *AppContext) Update(
 	defer a.mu.Unlock()
 
 	a.crosschainFlags = crosschainFlags
-	a.keygen = keygen
-	a.currentTssPubKey = tssPubKey
 
 	return nil
 }

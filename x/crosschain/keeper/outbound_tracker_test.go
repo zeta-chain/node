@@ -42,19 +42,29 @@ func TestOutboundTrackerGet(t *testing.T) {
 	}
 }
 func TestOutboundTrackerRemove(t *testing.T) {
-	k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-	items := createNOutboundTracker(k, ctx, 10)
-	for _, item := range items {
-		k.RemoveOutboundTrackerFromStore(ctx,
-			item.ChainId,
-			item.Nonce,
-		)
-		_, found := k.GetOutboundTracker(ctx,
-			item.ChainId,
-			item.Nonce,
-		)
-		require.False(t, found)
-	}
+	t.Run("Remove tracker if it exists", func(t *testing.T) {
+		keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		items := createNOutboundTracker(keeper, ctx, 10)
+		for _, item := range items {
+			keeper.RemoveOutboundTrackerFromStore(ctx,
+				item.ChainId,
+				item.Nonce,
+			)
+			_, found := keeper.GetOutboundTracker(ctx,
+				item.ChainId,
+				item.Nonce,
+			)
+			require.False(t, found)
+		}
+	})
+
+	t.Run("Do nothing if tracker doesn't exist", func(t *testing.T) {
+		keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		require.NotPanics(t, func() {
+			keeper.RemoveOutboundTrackerFromStore(ctx, 1, 1)
+		})
+	})
+
 }
 
 func TestOutboundTrackerGetAll(t *testing.T) {

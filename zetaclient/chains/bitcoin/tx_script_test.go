@@ -622,7 +622,7 @@ func TestDecodeScript(t *testing.T) {
 	t.Run("should decode longer data ok", func(t *testing.T) {
 		// 600 bytes of random data generated offline
 		data := "2001a7bae79bd61c2368fe41a565061d6cf22b4f509fbc1652caea06d98b8fd0c7ac00634d0802c7faa771dd05f27993d22c42988758882d20080241074462884c8774e1cdf4b04e5b3b74b6568bd1769722708306c66270b6b2a7f68baced83627eeeb2d494e8a1749277b92a4c5a90b1b4f6038e5f704405515109d4d0021612ad298b8dad6e12245f8f0020e11a7a319652ba6abe261958201ce5e83131cd81302c0ecec60d4afa9f72540fc84b6b9c1f3d903ab25686df263b192a403a4aa22b799ba24369c49ff4042012589a07d4211e05f80f18a1262de5a1577ce0ec9e1fa9283cfa25d98d7d0b4217951dfcb8868570318c63f1e1424cfdb7d7a33c6b9e3ced4b2ffa0178b3a5fac8bace2991e382a402f56a2c6a9191463740910056483e4fd0f5ac729ffac66bf1b3ec4570c4e75c116f7d9fd65718ec3ed6c7647bf335b77e7d6a4e2011276dc8031b78403a1ad82c92fb339ec916c263b6dd0f003ba4381ad5410e90e88effbfa7f961b8e8a6011c525643a434f7abe2c1928a892cc57d6291831216c4e70cb80a39a79a3889211070e767c23db396af9b4c2093c3743d8cbcbfcb73d29361ecd3857e94ab3c800be1299fd36a5685ec60607a60d8c2e0f99ff0b8b9e86354d39a43041f7d552e95fe2d33b6fc0f540715da0e7e1b344c778afe73f82d00881352207b719f67dcb00b4ff645974d4fd7711363d26400e2852890cb6ea9cbfe63ac43080870049b1023be984331560c6350bb64da52b4b81bc8910934915f0a96701f4c50646d5386146596443bee9b2d116706e1687697fb42542196c1d764419c23a914896f9212946518ac59e1ba5d1fc37e503313133ebdf2ced5785e0eaa9738fe3f9ad73646e733931ebb7cff26e96106fe68"
-		script, _ := hex.DecodeString(data)
+		script := testutil.HexToBytes(t, data)
 
 		memo, isFound, err := bitcoin.DecodeScript(script)
 		require.Nil(t, err)
@@ -636,7 +636,7 @@ func TestDecodeScript(t *testing.T) {
 	t.Run("should decode shorter data ok", func(t *testing.T) {
 		// 81 bytes of random data generated offline
 		data := "20d6f59371037bf30115d9fd6016f0e3ef552cdfc0367ee20aa9df3158f74aaeb4ac00634c51bdd33073d76f6b4ae6510d69218100575eafabadd16e5faf9f42bd2fbbae402078bdcaa4c0413ce96d053e3c0bbd4d5944d6857107d640c248bdaaa7de959d9c1e6b9962b51428e5a554c28c397160881668"
-		script, _ := hex.DecodeString(data)
+		script := testutil.HexToBytes(t, data)
 
 		memo, isFound, err := bitcoin.DecodeScript(script)
 		require.Nil(t, err)
@@ -650,7 +650,7 @@ func TestDecodeScript(t *testing.T) {
 	t.Run("decode error due to missing data byte", func(t *testing.T) {
 		// missing OP_ENDIF at the end
 		data := "20cabd6ecc0245c40f27ca6299dcd3732287c317f3946734f04e27568fc5334218ac00634d0802000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004c500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000068"
-		script, _ := hex.DecodeString(data)
+		script := testutil.HexToBytes(t, data)
 
 		memo, isFound, err := bitcoin.DecodeScript(script)
 		require.ErrorContains(t, err, "should contain more data, but script ended")
@@ -658,24 +658,44 @@ func TestDecodeScript(t *testing.T) {
 		require.Nil(t, memo)
 	})
 
-	t.Run("decode error due to missing data for public key", func(t *testing.T) {
+	t.Run("opcode OP_DATA_32 for public key not found", func(t *testing.T) {
 		// require OP_DATA_32 but OP_DATA_31 is given
 		data := "1f01a7bae79bd61c2368fe41a565061d6cf22b4f509fbc1652caea06d98b8fd0"
-		script, _ := hex.DecodeString(data)
+		script := testutil.HexToBytes(t, data)
 
 		memo, isFound, err := bitcoin.DecodeScript(script)
-		require.ErrorContains(t, err, "cannot obtain public key bytes")
+		require.ErrorContains(t, err, "public key not found")
 		require.False(t, isFound)
 		require.Nil(t, memo)
 	})
 
-	t.Run("decode error due to missing OP_CHECKSIG", func(t *testing.T) {
-		// missing OP_ENDIF at the end
+	t.Run("opcode OP_CHECKSIG not found", func(t *testing.T) {
+		// require OP_CHECKSIG (0xac) but OP_CODESEPARATOR (0xac) is found
 		data := "2001a7bae79bd61c2368fe41a565061d6cf22b4f509fbc1652caea06d98b8fd0c7ab"
-		script, _ := hex.DecodeString(data)
+		script := testutil.HexToBytes(t, data)
 
 		memo, isFound, err := bitcoin.DecodeScript(script)
-		require.ErrorContains(t, err, "cannot parse OP_CHECKSIG")
+		require.ErrorContains(t, err, "OP_CHECKSIG not found")
+		require.False(t, isFound)
+		require.Nil(t, memo)
+	})
+
+	t.Run("parsing opcode OP_DATA_32 failed", func(t *testing.T) {
+		data := "01"
+		script := testutil.HexToBytes(t, data)
+		memo, isFound, err := bitcoin.DecodeScript(script)
+
+		require.ErrorContains(t, err, "public key not found")
+		require.False(t, isFound)
+		require.Nil(t, memo)
+	})
+
+	t.Run("parsing opcode OP_CHECKSIG failed", func(t *testing.T) {
+		data := "2001a7bae79bd61c2368fe41a565061d6cf22b4f509fbc1652caea06d98b8fd0c701"
+		script := testutil.HexToBytes(t, data)
+		memo, isFound, err := bitcoin.DecodeScript(script)
+
+		require.ErrorContains(t, err, "OP_CHECKSIG not found")
 		require.False(t, isFound)
 		require.Nil(t, memo)
 	})

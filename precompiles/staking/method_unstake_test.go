@@ -17,7 +17,7 @@ func Test_Unstake(t *testing.T) {
 	t.Run("should fail with error disabled", func(t *testing.T) {
 		// ARRANGE
 		s := newTestSuite(t)
-		methodID := s.contractABI.Methods[UnstakeMethodName]
+		methodID := s.stkContractABI.Methods[UnstakeMethodName]
 		r := rand.New(rand.NewSource(42))
 		validator := sample.Validator(t, r)
 
@@ -36,7 +36,7 @@ func Test_Unstake(t *testing.T) {
 		s.mockVMContract.Input = packInputArgs(t, methodID, args...)
 
 		// ACT
-		_, err = s.contract.Run(s.mockEVM, s.mockVMContract, false)
+		_, err = s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
 
 		// ASSERT
 		require.Error(t, err)

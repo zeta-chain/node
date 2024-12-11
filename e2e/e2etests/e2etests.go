@@ -1,6 +1,7 @@
 package e2etests
 
 import (
+	"github.com/zeta-chain/node/e2e/e2etests/legacy"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/testutil/sample"
 )
@@ -8,59 +9,54 @@ import (
 // List of all e2e test names to be used in zetae2e
 const (
 	/*
-	 ZETA tests
-	 Test transfer of ZETA asset across chains
+	  EVM chain tests
 	*/
-	TestZetaDepositName           = "zeta_deposit"
-	TestZetaDepositNewAddressName = "zeta_deposit_new_address"
-	TestZetaDepositRestrictedName = "zeta_deposit_restricted"
-	TestZetaWithdrawName          = "zeta_withdraw"
-	TestZetaWithdrawBTCRevertName = "zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
-
-	/*
-	 Message passing tests
-	 Test message passing across chains
-	*/
-	TestMessagePassingExternalChainsName              = "message_passing_external_chains"
-	TestMessagePassingRevertFailExternalChainsName    = "message_passing_revert_fail"
-	TestMessagePassingRevertSuccessExternalChainsName = "message_passing_revert_success"
-	TestMessagePassingEVMtoZEVMName                   = "message_passing_evm_to_zevm"
-	TestMessagePassingZEVMToEVMName                   = "message_passing_zevm_to_evm"
-	TestMessagePassingZEVMtoEVMRevertName             = "message_passing_zevm_to_evm_revert"
-	TestMessagePassingEVMtoZEVMRevertName             = "message_passing_evm_to_zevm_revert"
-	TestMessagePassingZEVMtoEVMRevertFailName         = "message_passing_zevm_to_evm_revert_fail"
-	TestMessagePassingEVMtoZEVMRevertFailName         = "message_passing_evm_to_zevm_revert_fail"
-
-	/*
-	 EVM gas tests
-	 Test transfer of EVM gas asset across chains
-	*/
-	TestEtherDepositName              = "eth_deposit"
-	TestEtherWithdrawName             = "eth_withdraw"
-	TestEtherWithdrawRestrictedName   = "eth_withdraw_restricted"
-	TestEtherDepositAndCallRefundName = "eth_deposit_and_call_refund"
-	TestEtherDepositAndCallName       = "eth_deposit_and_call"
-
-	/*
-	 EVM erc20 tests
-	 Test transfer of EVM erc20 asset across chains
-	*/
-	TestERC20WithdrawName             = "erc20_withdraw"
-	TestERC20DepositName              = "erc20_deposit"
-	TestMultipleERC20DepositName      = "erc20_multiple_deposit"
-	TestMultipleERC20WithdrawsName    = "erc20_multiple_withdraw"
-	TestERC20DepositRestrictedName    = "erc20_deposit_restricted" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestERC20DepositAndCallRefundName = "erc20_deposit_and_call_refund"
+	TestETHDepositName                         = "eth_deposit"
+	TestETHDepositAndCallName                  = "eth_deposit_and_call"
+	TestETHDepositAndCallNoMessageName         = "eth_deposit_and_call_no_message"
+	TestETHDepositAndCallRevertName            = "eth_deposit_and_call_revert"
+	TestETHDepositAndCallRevertWithCallName    = "eth_deposit_and_call_revert_with_call"
+	TestETHWithdrawName                        = "eth_withdraw"
+	TestETHWithdrawAndArbitraryCallName        = "eth_withdraw_and_arbitrary_call"
+	TestETHWithdrawAndCallName                 = "eth_withdraw_and_call"
+	TestETHWithdrawAndCallNoMessageName        = "eth_withdraw_and_call_no_message"
+	TestETHWithdrawAndCallThroughContractName  = "eth_withdraw_and_call_through_contract"
+	TestETHWithdrawAndCallRevertName           = "eth_withdraw_and_call_revert"
+	TestETHWithdrawAndCallRevertWithCallName   = "eth_withdraw_and_call_revert_with_call"
+	TestDepositAndCallOutOfGasName             = "deposit_and_call_out_of_gas"
+	TestERC20DepositName                       = "erc20_deposit"
+	TestERC20DepositAndCallName                = "erc20_deposit_and_call"
+	TestERC20DepositAndCallNoMessageName       = "erc20_deposit_and_call_no_message"
+	TestERC20DepositAndCallRevertName          = "erc20_deposit_and_call_revert"
+	TestERC20DepositAndCallRevertWithCallName  = "erc20_deposit_and_call_revert_with_call"
+	TestERC20WithdrawName                      = "erc20_withdraw"
+	TestERC20WithdrawAndArbitraryCallName      = "erc20_withdraw_and_arbitrary_call"
+	TestERC20WithdrawAndCallName               = "erc20_withdraw_and_call"
+	TestERC20WithdrawAndCallNoMessageName      = "erc20_withdraw_and_call_no_message"
+	TestERC20WithdrawAndCallRevertName         = "erc20_withdraw_and_call_revert"
+	TestERC20WithdrawAndCallRevertWithCallName = "erc20_withdraw_and_call_revert_with_call"
+	TestZEVMToEVMArbitraryCallName             = "zevm_to_evm_arbitrary_call"
+	TestZEVMToEVMCallName                      = "zevm_to_evm_call"
+	TestZEVMToEVMCallThroughContractName       = "zevm_to_evm_call_through_contract"
+	TestEVMToZEVMCallName                      = "evm_to_zevm_call"
+	TestDepositAndCallSwapName                 = "deposit_and_call_swap"
+	TestEtherWithdrawRestrictedName            = "eth_withdraw_restricted"
+	TestERC20DepositRestrictedName             = "erc20_deposit_restricted" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 
 	/*
 	 * Solana tests
 	 */
-	TestSolanaDepositName              = "solana_deposit"
-	TestSolanaWithdrawName             = "solana_withdraw"
-	TestSolanaDepositAndCallName       = "solana_deposit_and_call"
-	TestSolanaDepositAndCallRefundName = "solana_deposit_and_call_refund"
-	TestSolanaDepositRestrictedName    = "solana_deposit_restricted"
-	TestSolanaWithdrawRestrictedName   = "solana_withdraw_restricted"
+	TestSolanaDepositName                      = "solana_deposit"
+	TestSolanaWithdrawName                     = "solana_withdraw"
+	TestSolanaDepositAndCallName               = "solana_deposit_and_call"
+	TestSolanaDepositAndCallRevertName         = "solana_deposit_and_call_revert"
+	TestSolanaDepositAndCallRevertWithDustName = "solana_deposit_and_call_revert_with_dust"
+	TestSolanaDepositRestrictedName            = "solana_deposit_restricted"
+	TestSolanaWithdrawRestrictedName           = "solana_withdraw_restricted"
+	TestSPLDepositName                         = "spl_deposit"
+	TestSPLDepositAndCallName                  = "spl_deposit_and_call"
+	TestSPLWithdrawName                        = "spl_withdraw"
+	TestSPLWithdrawAndCreateReceiverAtaName    = "spl_withdraw_and_create_receiver_ata"
 
 	/**
 	 * TON tests
@@ -78,6 +74,7 @@ const (
 	TestBitcoinDepositName                                 = "bitcoin_deposit"
 	TestBitcoinDepositAndCallName                          = "bitcoin_deposit_and_call"
 	TestBitcoinDepositAndCallRevertName                    = "bitcoin_deposit_and_call_revert"
+	TestBitcoinDepositAndCallRevertWithDustName            = "bitcoin_deposit_and_call_revert_with_dust"
 	TestBitcoinDonationName                                = "bitcoin_donation"
 	TestBitcoinStdMemoDepositName                          = "bitcoin_std_memo_deposit"
 	TestBitcoinStdMemoDepositAndCallName                   = "bitcoin_std_memo_deposit_and_call"
@@ -97,16 +94,14 @@ const (
 	 Application tests
 	 Test various smart contract applications across chains
 	*/
-	TestZRC20SwapName      = "zrc20_swap"
 	TestCrosschainSwapName = "crosschain_swap"
 
 	/*
 	 Miscellaneous tests
 	 Test various functionalities not related to assets
 	*/
-	TestContextUpgradeName = "context_upgrade"
-	TestMyTestName         = "my_test"
-	TestDonationEtherName  = "donation_ether"
+	TestDonationEtherName   = "donation_ether"
+	TestInboundTrackersName = "inbound_trackers"
 
 	/*
 	 Stress tests
@@ -135,37 +130,6 @@ const (
 	TestSolanaWhitelistSPLName        = "solana_whitelist_spl"
 
 	/*
-	 V2 smart contract tests
-	*/
-	TestV2ETHDepositName                         = "v2_eth_deposit"
-	TestV2ETHDepositAndCallName                  = "v2_eth_deposit_and_call"
-	TestV2ETHDepositAndCallNoMessageName         = "v2_eth_deposit_and_call_no_message"
-	TestV2ETHDepositAndCallRevertName            = "v2_eth_deposit_and_call_revert"
-	TestV2ETHDepositAndCallRevertWithCallName    = "v2_eth_deposit_and_call_revert_with_call"
-	TestV2ETHWithdrawName                        = "v2_eth_withdraw"
-	TestV2ETHWithdrawAndArbitraryCallName        = "v2_eth_withdraw_and_arbitrary_call"
-	TestV2ETHWithdrawAndCallName                 = "v2_eth_withdraw_and_call"
-	TestV2ETHWithdrawAndCallNoMessageName        = "v2_eth_withdraw_and_call_no_message"
-	TestV2ETHWithdrawAndCallThroughContractName  = "v2_eth_withdraw_and_call_through_contract"
-	TestV2ETHWithdrawAndCallRevertName           = "v2_eth_withdraw_and_call_revert"
-	TestV2ETHWithdrawAndCallRevertWithCallName   = "v2_eth_withdraw_and_call_revert_with_call"
-	TestV2ERC20DepositName                       = "v2_erc20_deposit"
-	TestV2ERC20DepositAndCallName                = "v2_erc20_deposit_and_call"
-	TestV2ERC20DepositAndCallNoMessageName       = "v2_erc20_deposit_and_call_no_message"
-	TestV2ERC20DepositAndCallRevertName          = "v2_erc20_deposit_and_call_revert"
-	TestV2ERC20DepositAndCallRevertWithCallName  = "v2_erc20_deposit_and_call_revert_with_call"
-	TestV2ERC20WithdrawName                      = "v2_erc20_withdraw"
-	TestV2ERC20WithdrawAndArbitraryCallName      = "v2_erc20_withdraw_and_arbitrary_call"
-	TestV2ERC20WithdrawAndCallName               = "v2_erc20_withdraw_and_call"
-	TestV2ERC20WithdrawAndCallNoMessageName      = "v2_erc20_withdraw_and_call_no_message"
-	TestV2ERC20WithdrawAndCallRevertName         = "v2_erc20_withdraw_and_call_revert"
-	TestV2ERC20WithdrawAndCallRevertWithCallName = "v2_erc20_withdraw_and_call_revert_with_call"
-	TestV2ZEVMToEVMArbitraryCallName             = "v2_zevm_to_evm_arbitrary_call"
-	TestV2ZEVMToEVMCallName                      = "v2_zevm_to_evm_call"
-	TestV2ZEVMToEVMCallThroughContractName       = "v2_zevm_to_evm_call_through_contract"
-	TestV2EVMToZEVMCallName                      = "v2_evm_to_zevm_call"
-
-	/*
 	 Operational tests
 	 Not used to test functionalities but do various interactions with the netwoks
 	*/
@@ -186,175 +150,192 @@ const (
 	TestPrecompilesDistributeName                = "precompile_contracts_distribute"
 	TestPrecompilesDistributeNonZRC20Name        = "precompile_contracts_distribute_non_zrc20"
 	TestPrecompilesDistributeThroughContractName = "precompile_contracts_distribute_through_contract"
+
+	/*
+	 Legacy tests (using v1 protocol contracts)
+	*/
+	TestLegacyMessagePassingExternalChainsName              = "legacy_message_passing_external_chains"
+	TestLegacyMessagePassingRevertFailExternalChainsName    = "legacy_message_passing_revert_fail"
+	TestLegacyMessagePassingRevertSuccessExternalChainsName = "legacy_message_passing_revert_success"
+	TestLegacyMessagePassingEVMtoZEVMName                   = "legacy_message_passing_evm_to_zevm"
+	TestLegacyMessagePassingZEVMToEVMName                   = "legacy_message_passing_zevm_to_evm"
+	TestLegacyMessagePassingZEVMtoEVMRevertName             = "legacy_message_passing_zevm_to_evm_revert"
+	TestLegacyMessagePassingEVMtoZEVMRevertName             = "legacy_message_passing_evm_to_zevm_revert"
+	TestLegacyMessagePassingZEVMtoEVMRevertFailName         = "legacy_message_passing_zevm_to_evm_revert_fail"
+	TestLegacyMessagePassingEVMtoZEVMRevertFailName         = "legacy_message_passing_evm_to_zevm_revert_fail"
+	TestLegacyEtherDepositName                              = "legacy_eth_deposit"
+	TestLegacyEtherWithdrawName                             = "legacy_eth_withdraw"
+	TestLegacyEtherDepositAndCallRefundName                 = "legacy_eth_deposit_and_call_refund"
+	TestLegacyEtherDepositAndCallName                       = "legacy_eth_deposit_and_call"
+	TestLegacyERC20WithdrawName                             = "legacy_erc20_withdraw"
+	TestLegacyERC20DepositName                              = "legacy_erc20_deposit"
+	TestLegacyMultipleERC20DepositName                      = "legacy_erc20_multiple_deposit"
+	TestLegacyMultipleERC20WithdrawsName                    = "legacy_erc20_multiple_withdraw"
+	TestLegacyERC20DepositAndCallRefundName                 = "legacy_erc20_deposit_and_call_refund"
+
+	/*
+	 ZETA tests
+	 Test transfer of ZETA asset across chains
+	 Note: It is still the only way to transfer ZETA across chains. Work to integrate ZETA transfers as part of the gateway is in progress
+	 These tests are marked as legacy because there is no longer active development on ZETA transfers, and we stopped integrating ZETA support on new mainnet chains
+	*/
+	TestLegacyZetaDepositName           = "legacy_zeta_deposit"
+	TestLegacyZetaDepositNewAddressName = "legacy_zeta_deposit_new_address"
+	TestLegacyZetaDepositRestrictedName = "legacy_zeta_deposit_restricted"
+	TestLegacyZetaWithdrawName          = "legacy_zeta_withdraw"
+	TestLegacyZetaWithdrawBTCRevertName = "legacy_zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
+
 )
 
 // AllE2ETests is an ordered list of all e2e tests
 var AllE2ETests = []runner.E2ETest{
 	/*
-	 ZETA tests
+	 EVM chain tests
 	*/
 	runner.NewE2ETest(
-		TestZetaDepositName,
-		"deposit ZETA from Ethereum to ZEVM",
-		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
-		},
-		TestZetaDeposit,
-	),
-	runner.NewE2ETest(
-		TestZetaDepositNewAddressName,
-		"deposit ZETA from Ethereum to a new ZEVM address which does not exist yet",
-		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
-		},
-		TestZetaDepositNewAddress,
-	),
-	runner.NewE2ETest(
-		TestZetaDepositRestrictedName,
-		"deposit ZETA from Ethereum to ZEVM restricted address",
-		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
-		},
-		TestZetaDepositRestricted,
-	),
-	runner.NewE2ETest(
-		TestZetaWithdrawName,
-		"withdraw ZETA from ZEVM to Ethereum",
-		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
-		},
-		TestZetaWithdraw,
-	),
-	runner.NewE2ETest(
-		TestZetaWithdrawBTCRevertName,
-		"sending ZETA from ZEVM to Bitcoin with a message that should revert cctxs",
-		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
-		},
-		TestZetaWithdrawBTCRevert,
-	),
-	/*
-	 Message passing tests
-	*/
-	runner.NewE2ETest(
-		TestMessagePassingExternalChainsName,
-		"evm->evm message passing (sending ZETA only)",
-		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
-		},
-		TestMessagePassingExternalChains,
-	),
-	runner.NewE2ETest(
-		TestMessagePassingRevertFailExternalChainsName,
-		"message passing with failing revert between external EVM chains",
-		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
-		},
-		TestMessagePassingRevertFailExternalChains,
-	),
-	runner.NewE2ETest(
-		TestMessagePassingRevertSuccessExternalChainsName,
-		"message passing with successful revert between external EVM chains",
-		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
-		},
-		TestMessagePassingRevertSuccessExternalChains,
-	),
-	runner.NewE2ETest(
-		TestMessagePassingEVMtoZEVMName,
-		"evm -> zevm message passing contract call ",
-		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "10000000000000000009"},
-		},
-		TestMessagePassingEVMtoZEVM,
-	),
-	runner.NewE2ETest(
-		TestMessagePassingZEVMToEVMName,
-		"zevm -> evm message passing contract call",
-		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "10000000000000000007"},
-		},
-		TestMessagePassingZEVMtoEVM,
-	),
-	runner.NewE2ETest(
-		TestMessagePassingZEVMtoEVMRevertName,
-		"zevm -> evm message passing contract call reverts",
-		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "10000000000000000006"},
-		},
-		TestMessagePassingZEVMtoEVMRevert,
-	),
-	runner.NewE2ETest(
-		TestMessagePassingEVMtoZEVMRevertName,
-		"evm -> zevm message passing and revert back to evm",
-		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "10000000000000000008"},
-		},
-		TestMessagePassingEVMtoZEVMRevert,
-	),
-	runner.NewE2ETest(
-		TestMessagePassingZEVMtoEVMRevertFailName,
-		"zevm -> evm message passing contract with failing revert",
-		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "10000000000000000008"},
-		},
-		TestMessagePassingZEVMtoEVMRevertFail,
-	),
-	runner.NewE2ETest(
-		TestMessagePassingEVMtoZEVMRevertFailName,
-		"evm -> zevm message passing contract with failing revert",
-		[]runner.ArgDefinition{
-			{Description: "amount in azeta", DefaultValue: "10000000000000000008"},
-		},
-		TestMessagePassingEVMtoZEVMRevertFail,
-	),
-
-	/*
-	 EVM gas tests
-	*/
-	runner.NewE2ETest(
-		TestEtherDepositName,
+		TestETHDepositName,
 		"deposit Ether into ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000000000000000000"},
+		},
+		TestETHDeposit,
+	),
+	runner.NewE2ETest(
+		TestETHDepositAndCallName,
+		"deposit Ether into ZEVM and call a contract",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "10000000000000000"},
 		},
-		TestEtherDeposit,
+		TestETHDepositAndCall,
 	),
 	runner.NewE2ETest(
-		TestEtherWithdrawName,
+		TestETHDepositAndCallNoMessageName,
+		"deposit Ether into ZEVM and call a contract using no message content",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000"},
+		},
+		TestETHDepositAndCallNoMessage,
+	),
+	runner.NewE2ETest(
+		TestETHDepositAndCallRevertName,
+		"deposit Ether into ZEVM and call a contract that reverts",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000"},
+		},
+		TestETHDepositAndCallRevert,
+	),
+	runner.NewE2ETest(
+		TestETHDepositAndCallRevertWithCallName,
+		"deposit Ether into ZEVM and call a contract that reverts with a onRevert call",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000"},
+		},
+		TestETHDepositAndCallRevertWithCall,
+	),
+	runner.NewE2ETest(
+		TestETHWithdrawName,
 		"withdraw Ether from ZEVM",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
-		TestEtherWithdraw,
+		TestETHWithdraw,
 	),
 	runner.NewE2ETest(
-		TestEtherWithdrawRestrictedName,
-		"withdraw Ether from ZEVM to restricted address",
+		TestETHWithdrawAndArbitraryCallName,
+		"withdraw Ether from ZEVM and call a contract",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
-		TestEtherWithdrawRestricted,
+		TestETHWithdrawAndArbitraryCall,
 	),
 	runner.NewE2ETest(
-		TestEtherDepositAndCallRefundName,
-		"deposit Ether into ZEVM and call a contract that reverts; should refund",
+		TestETHWithdrawAndCallName,
+		"withdraw Ether from ZEVM call a contract",
 		[]runner.ArgDefinition{
-			{Description: "amount in wei", DefaultValue: "10000000000000000000"},
+			{Description: "amount in wei", DefaultValue: "100000"},
 		},
-		TestEtherDepositAndCallRefund,
+		TestETHWithdrawAndCall,
 	),
 	runner.NewE2ETest(
-		TestEtherDepositAndCallName,
-		"deposit ZRC20 into ZEVM and call a contract",
+		TestETHWithdrawAndCallNoMessageName,
+		"withdraw Ether from ZEVM call a contract with no message content",
 		[]runner.ArgDefinition{
-			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
+			{Description: "amount in wei", DefaultValue: "100000"},
 		},
-		TestEtherDepositAndCall,
+		TestETHWithdrawAndCallNoMessage,
 	),
-	/*
-	 EVM erc20 tests
-	*/
+	runner.NewE2ETest(
+		TestETHWithdrawAndCallThroughContractName,
+		"withdraw Ether from ZEVM call a contract through intermediary contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000"},
+		},
+		TestETHWithdrawAndCallThroughContract,
+	),
+	runner.NewE2ETest(
+		TestETHWithdrawAndCallRevertName,
+		"withdraw Ether from ZEVM and call a contract that reverts",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000"},
+		},
+		TestETHWithdrawAndCallRevert,
+	),
+	runner.NewE2ETest(
+		TestETHWithdrawAndCallRevertWithCallName,
+		"withdraw Ether from ZEVM and call a contract that reverts with a onRevert call",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000"},
+		},
+		TestETHWithdrawAndCallRevertWithCall,
+	),
+	runner.NewE2ETest(
+		TestDepositAndCallOutOfGasName,
+		"deposit Ether into ZEVM and call a contract that runs out of gas",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000"},
+		},
+		TestDepositAndCallOutOfGas,
+	),
+	runner.NewE2ETest(
+		TestERC20DepositName,
+		"deposit ERC20 into ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100000000000000000000"},
+		},
+		TestERC20Deposit,
+	),
+	runner.NewE2ETest(
+		TestERC20DepositAndCallName,
+		"deposit ERC20 into ZEVM and call a contract",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100000"},
+		},
+		TestERC20DepositAndCall,
+	),
+	runner.NewE2ETest(
+		TestERC20DepositAndCallNoMessageName,
+		"deposit ERC20 into ZEVM and call a contract with no message content",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100000"},
+		},
+		TestERC20DepositAndCallNoMessage,
+	),
+	runner.NewE2ETest(
+		TestERC20DepositAndCallRevertName,
+		"deposit ERC20 into ZEVM and call a contract that reverts",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "10000000000000000000"},
+		},
+		TestERC20DepositAndCallRevert,
+	),
+	runner.NewE2ETest(
+		TestERC20DepositAndCallRevertWithCallName,
+		"deposit ERC20 into ZEVM and call a contract that reverts with a onRevert call",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "10000000000000000000"},
+		},
+		TestERC20DepositAndCallRevertWithCall,
+	),
 	runner.NewE2ETest(
 		TestERC20WithdrawName,
 		"withdraw ERC20 from ZEVM",
@@ -364,45 +345,76 @@ var AllE2ETests = []runner.E2ETest{
 		TestERC20Withdraw,
 	),
 	runner.NewE2ETest(
-		TestERC20DepositName,
-		"deposit ERC20 into ZEVM",
+		TestERC20WithdrawAndArbitraryCallName,
+		"withdraw ERC20 from ZEVM and arbitrary call a contract",
 		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "100000"},
+			{Description: "amount", DefaultValue: "1000"},
 		},
-		TestERC20Deposit,
+		TestERC20WithdrawAndArbitraryCall,
 	),
 	runner.NewE2ETest(
-		TestMultipleERC20DepositName,
-		"deposit ERC20 into ZEVM in multiple deposits",
+		TestERC20WithdrawAndCallName,
+		"withdraw ERC20 from ZEVM and authenticated call a contract",
 		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "1000000000"},
-			{Description: "count", DefaultValue: "3"},
+			{Description: "amount", DefaultValue: "1000"},
 		},
-		TestMultipleERC20Deposit,
+		TestERC20WithdrawAndCall,
 	),
 	runner.NewE2ETest(
-		TestMultipleERC20WithdrawsName,
-		"withdraw ERC20 from ZEVM in multiple withdrawals",
+		TestERC20WithdrawAndCallNoMessageName,
+		"withdraw ERC20 from ZEVM and authenticated call a contract with no message",
 		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "100"},
-			{Description: "count", DefaultValue: "3"},
+			{Description: "amount", DefaultValue: "1000"},
 		},
-		TestMultipleERC20Withdraws,
+		TestERC20WithdrawAndCallNoMessage,
 	),
 	runner.NewE2ETest(
-		TestERC20DepositRestrictedName,
-		"deposit ERC20 into ZEVM restricted address",
+		TestERC20WithdrawAndCallRevertName,
+		"withdraw ERC20 from ZEVM and call a contract that reverts",
 		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "100000"},
+			{Description: "amount", DefaultValue: "1000"},
 		},
-		TestERC20DepositRestricted,
+		TestERC20WithdrawAndCallRevert,
 	),
 	runner.NewE2ETest(
-		TestERC20DepositAndCallRefundName,
-		"deposit a non-gas ZRC20 into ZEVM and call a contract that reverts",
+		TestERC20WithdrawAndCallRevertWithCallName,
+		"withdraw ERC20 from ZEVM and call a contract that reverts with a onRevert call",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "1000"},
+		},
+		TestERC20WithdrawAndCallRevertWithCall,
+	),
+	runner.NewE2ETest(
+		TestZEVMToEVMArbitraryCallName,
+		"zevm -> evm call",
 		[]runner.ArgDefinition{},
-		TestERC20DepositAndCallRefund,
+		TestZEVMToEVMArbitraryCall,
 	),
+	runner.NewE2ETest(
+		TestZEVMToEVMCallName,
+		"zevm -> evm call",
+		[]runner.ArgDefinition{},
+		TestZEVMToEVMCall,
+	),
+	runner.NewE2ETest(
+		TestZEVMToEVMCallThroughContractName,
+		"zevm -> evm call through intermediary contract",
+		[]runner.ArgDefinition{},
+		TestZEVMToEVMCallThroughContract,
+	),
+	runner.NewE2ETest(
+		TestEVMToZEVMCallName,
+		"evm -> zevm call",
+		[]runner.ArgDefinition{},
+		TestEVMToZEVMCall,
+	),
+	runner.NewE2ETest(
+		TestDepositAndCallSwapName,
+		"evm -> zevm deposit and call with swap and withdraw back to evm",
+		[]runner.ArgDefinition{},
+		TestDepositAndCallSwap,
+	),
+
 	/*
 	 Solana tests
 	*/
@@ -431,12 +443,34 @@ var AllE2ETests = []runner.E2ETest{
 		TestSolanaDepositAndCall,
 	),
 	runner.NewE2ETest(
-		TestSolanaDepositAndCallRefundName,
-		"deposit SOL into ZEVM and call a contract that reverts; should refund",
+		TestSPLWithdrawName,
+		"withdraw SPL from ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in spl tokens", DefaultValue: "1000000"},
+		},
+		TestSPLWithdraw,
+	),
+	runner.NewE2ETest(
+		TestSPLWithdrawAndCreateReceiverAtaName,
+		"withdraw SPL from ZEVM and create receiver ata",
+		[]runner.ArgDefinition{
+			{Description: "amount in spl tokens", DefaultValue: "1000000"},
+		},
+		TestSPLWithdrawAndCreateReceiverAta,
+	),
+	runner.NewE2ETest(
+		TestSolanaDepositAndCallRevertName,
+		"deposit SOL into ZEVM and call a contract that reverts",
 		[]runner.ArgDefinition{
 			{Description: "amount in lamport", DefaultValue: "1200000"},
 		},
-		TestSolanaDepositAndCallRefund,
+		TestSolanaDepositAndCallRevert,
+	),
+	runner.NewE2ETest(
+		TestSolanaDepositAndCallRevertWithDustName,
+		"deposit SOL into ZEVM; revert with dust amount that aborts the CCTX",
+		[]runner.ArgDefinition{},
+		TestSolanaDepositAndCallRevertWithDust,
 	),
 	runner.NewE2ETest(
 		TestSolanaDepositRestrictedName,
@@ -461,6 +495,22 @@ var AllE2ETests = []runner.E2ETest{
 		"whitelist SPL",
 		[]runner.ArgDefinition{},
 		TestSolanaWhitelistSPL,
+	),
+	runner.NewE2ETest(
+		TestSPLDepositName,
+		"deposit SPL into ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount of spl tokens", DefaultValue: "12000000"},
+		},
+		TestSPLDeposit,
+	),
+	runner.NewE2ETest(
+		TestSPLDepositAndCallName,
+		"deposit SPL into ZEVM and call",
+		[]runner.ArgDefinition{
+			{Description: "amount of spl tokens", DefaultValue: "12000000"},
+		},
+		TestSPLDepositAndCall,
 	),
 	/*
 	 TON tests
@@ -535,6 +585,11 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
 		TestBitcoinDepositAndCallRevert,
+	),
+	runner.NewE2ETest(
+		TestBitcoinDepositAndCallRevertWithDustName,
+		"deposit Bitcoin into ZEVM; revert with dust amount that aborts the CCTX", []runner.ArgDefinition{},
+		TestBitcoinDepositAndCallRevertWithDust,
 	),
 	runner.NewE2ETest(
 		TestBitcoinStdMemoDepositName,
@@ -651,12 +706,6 @@ var AllE2ETests = []runner.E2ETest{
 	 Application tests
 	*/
 	runner.NewE2ETest(
-		TestZRC20SwapName,
-		"swap ZRC20 ERC20 for ZRC20 ETH",
-		[]runner.ArgDefinition{},
-		TestZRC20Swap,
-	),
-	runner.NewE2ETest(
 		TestCrosschainSwapName,
 		"testing Bitcoin ERC20 cross-chain swap",
 		[]runner.ArgDefinition{},
@@ -666,26 +715,18 @@ var AllE2ETests = []runner.E2ETest{
 	 Miscellaneous tests
 	*/
 	runner.NewE2ETest(
-		TestContextUpgradeName,
-		"tests sending ETH on ZEVM and check context data using ContextApp",
-		[]runner.ArgDefinition{
-			{Description: "amount in wei", DefaultValue: "1000000000000000"},
-		},
-		TestContextUpgrade,
-	),
-	runner.NewE2ETest(
-		TestMyTestName,
-		"performing custom test",
-		[]runner.ArgDefinition{},
-		TestMyTest,
-	),
-	runner.NewE2ETest(
 		TestDonationEtherName,
 		"donate Ether to the TSS",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000000000000000"},
 		},
 		TestDonationEther,
+	),
+	runner.NewE2ETest(
+		TestInboundTrackersName,
+		"test processing inbound trackers for observation",
+		[]runner.ArgDefinition{},
+		TestInboundTrackers,
 	),
 	/*
 	 Stress tests
@@ -771,7 +812,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestRateLimiterName,
 		"test sending cctxs with rate limiter enabled and show logs when processing cctxs",
 		[]runner.ArgDefinition{},
-		TestRateLimiter,
+		legacy.TestRateLimiter,
 	),
 	runner.NewE2ETest(
 		TestCriticalAdminTransactionsName,
@@ -797,213 +838,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{},
 		TestMigrateERC20CustodyFunds,
 	),
-	/*
-	 V2 smart contract tests
-	*/
-	runner.NewE2ETest(
-		TestV2ETHDepositName,
-		"deposit Ether into ZEVM using V2 contract",
-		[]runner.ArgDefinition{
-			{Description: "amount in wei", DefaultValue: "100000000000000000000"},
-		},
-		TestV2ETHDeposit,
-	),
-	runner.NewE2ETest(
-		TestV2ETHDepositAndCallName,
-		"deposit Ether into ZEVM and call a contract using V2 contract",
-		[]runner.ArgDefinition{
-			{Description: "amount in wei", DefaultValue: "10000000000000000"},
-		},
-		TestV2ETHDepositAndCall,
-	),
-	runner.NewE2ETest(
-		TestV2ETHDepositAndCallNoMessageName,
-		"deposit Ether into ZEVM and call a contract using V2 contract using no message content",
-		[]runner.ArgDefinition{
-			{Description: "amount in wei", DefaultValue: "10000000000000000"},
-		},
-		TestV2ETHDepositAndCallNoMessage,
-	),
-	runner.NewE2ETest(
-		TestV2ETHDepositAndCallRevertName,
-		"deposit Ether into ZEVM and call a contract using V2 contract that reverts",
-		[]runner.ArgDefinition{
-			{Description: "amount in wei", DefaultValue: "10000000000000000"},
-		},
-		TestV2ETHDepositAndCallRevert,
-	),
-	runner.NewE2ETest(
-		TestV2ETHDepositAndCallRevertWithCallName,
-		"deposit Ether into ZEVM and call a contract using V2 contract that reverts with a onRevert call",
-		[]runner.ArgDefinition{
-			{Description: "amount in wei", DefaultValue: "10000000000000000"},
-		},
-		TestV2ETHDepositAndCallRevertWithCall,
-	),
-	runner.NewE2ETest(
-		TestV2ETHWithdrawName,
-		"withdraw Ether from ZEVM using V2 contract",
-		[]runner.ArgDefinition{
-			{Description: "amount in wei", DefaultValue: "100000"},
-		},
-		TestV2ETHWithdraw,
-	),
-	runner.NewE2ETest(
-		TestV2ETHWithdrawAndArbitraryCallName,
-		"withdraw Ether from ZEVM and call a contract using V2 contract",
-		[]runner.ArgDefinition{
-			{Description: "amount in wei", DefaultValue: "100000"},
-		},
-		TestV2ETHWithdrawAndArbitraryCall,
-	),
-	runner.NewE2ETest(
-		TestV2ETHWithdrawAndCallName,
-		"withdraw Ether from ZEVM call a contract using V2 contract",
-		[]runner.ArgDefinition{
-			{Description: "amount in wei", DefaultValue: "100000"},
-		},
-		TestV2ETHWithdrawAndCall,
-	),
-	runner.NewE2ETest(
-		TestV2ETHWithdrawAndCallNoMessageName,
-		"withdraw Ether from ZEVM call a contract using V2 contract with no message content",
-		[]runner.ArgDefinition{
-			{Description: "amount in wei", DefaultValue: "100000"},
-		},
-		TestV2ETHWithdrawAndCallNoMessage,
-	),
-	runner.NewE2ETest(
-		TestV2ETHWithdrawAndCallThroughContractName,
-		"withdraw Ether from ZEVM call a contract using V2 contract through intermediary contract",
-		[]runner.ArgDefinition{
-			{Description: "amount in wei", DefaultValue: "100000"},
-		},
-		TestV2ETHWithdrawAndCallThroughContract,
-	),
-	runner.NewE2ETest(
-		TestV2ETHWithdrawAndCallRevertName,
-		"withdraw Ether from ZEVM and call a contract using V2 contract that reverts",
-		[]runner.ArgDefinition{
-			{Description: "amount in wei", DefaultValue: "100000"},
-		},
-		TestV2ETHWithdrawAndCallRevert,
-	),
-	runner.NewE2ETest(
-		TestV2ETHWithdrawAndCallRevertWithCallName,
-		"withdraw Ether from ZEVM and call a contract using V2 contract that reverts with a onRevert call",
-		[]runner.ArgDefinition{
-			{Description: "amount in wei", DefaultValue: "100000"},
-		},
-		TestV2ETHWithdrawAndCallRevertWithCall,
-	),
-	runner.NewE2ETest(
-		TestV2ERC20DepositName,
-		"deposit ERC20 into ZEVM using V2 contract",
-		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "100000000000000000000"},
-		},
-		TestV2ERC20Deposit,
-	),
-	runner.NewE2ETest(
-		TestV2ERC20DepositAndCallName,
-		"deposit ERC20 into ZEVM and call a contract using V2 contract",
-		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "100000"},
-		},
-		TestV2ERC20DepositAndCall,
-	),
-	runner.NewE2ETest(
-		TestV2ERC20DepositAndCallNoMessageName,
-		"deposit ERC20 into ZEVM and call a contract using V2 contract with no message content",
-		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "100000"},
-		},
-		TestV2ERC20DepositAndCallNoMessage,
-	),
-	runner.NewE2ETest(
-		TestV2ERC20DepositAndCallRevertName,
-		"deposit ERC20 into ZEVM and call a contract using V2 contract that reverts",
-		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "10000000000000000000"},
-		},
-		TestV2ERC20DepositAndCallRevert,
-	),
-	runner.NewE2ETest(
-		TestV2ERC20DepositAndCallRevertWithCallName,
-		"deposit ERC20 into ZEVM and call a contract using V2 contract that reverts with a onRevert call",
-		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "10000000000000000000"},
-		},
-		TestV2ERC20DepositAndCallRevertWithCall,
-	),
-	runner.NewE2ETest(
-		TestV2ERC20WithdrawName,
-		"withdraw ERC20 from ZEVM using V2 contract",
-		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "1000"},
-		},
-		TestV2ERC20Withdraw,
-	),
-	runner.NewE2ETest(
-		TestV2ERC20WithdrawAndArbitraryCallName,
-		"withdraw ERC20 from ZEVM and arbitrary call a contract using V2 contract",
-		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "1000"},
-		},
-		TestV2ERC20WithdrawAndArbitraryCall,
-	),
-	runner.NewE2ETest(
-		TestV2ERC20WithdrawAndCallName,
-		"withdraw ERC20 from ZEVM and authenticated call a contract using V2 contract",
-		[]runner.ArgDefinition{},
-		TestV2ERC20WithdrawAndCall,
-	),
-	runner.NewE2ETest(
-		TestV2ERC20WithdrawAndCallNoMessageName,
-		"withdraw ERC20 from ZEVM and authenticated call a contract using V2 contract with no message",
-		[]runner.ArgDefinition{},
-		TestV2ERC20WithdrawAndCallNoMessage,
-	),
-	runner.NewE2ETest(
-		TestV2ERC20WithdrawAndCallRevertName,
-		"withdraw ERC20 from ZEVM and call a contract using V2 contract that reverts",
-		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "1000"},
-		},
-		TestV2ERC20WithdrawAndCallRevert,
-	),
-	runner.NewE2ETest(
-		TestV2ERC20WithdrawAndCallRevertWithCallName,
-		"withdraw ERC20 from ZEVM and call a contract using V2 contract that reverts with a onRevert call",
-		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "1000"},
-		},
-		TestV2ERC20WithdrawAndCallRevertWithCall,
-	),
-	runner.NewE2ETest(
-		TestV2ZEVMToEVMArbitraryCallName,
-		"zevm -> evm call using V2 contract",
-		[]runner.ArgDefinition{},
-		TestV2ZEVMToEVMArbitraryCall,
-	),
-	runner.NewE2ETest(
-		TestV2ZEVMToEVMCallName,
-		"zevm -> evm call using V2 contract",
-		[]runner.ArgDefinition{},
-		TestV2ZEVMToEVMCall,
-	),
-	runner.NewE2ETest(
-		TestV2ZEVMToEVMCallThroughContractName,
-		"zevm -> evm call using V2 contract through intermediary contract",
-		[]runner.ArgDefinition{},
-		TestV2ZEVMToEVMCallThroughContract,
-	),
-	runner.NewE2ETest(
-		TestV2EVMToZEVMCallName,
-		"evm -> zevm call using V2 contract",
-		[]runner.ArgDefinition{},
-		TestV2EVMToZEVMCall,
-	),
+
 	/*
 	 Special tests
 	*/
@@ -1082,7 +917,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestPrecompilesDistributeName,
 		"test stateful precompiled contracts distribute",
 		[]runner.ArgDefinition{},
-		TestPrecompilesDistribute,
+		TestPrecompilesDistributeAndClaim,
 	),
 	runner.NewE2ETest(
 		TestPrecompilesDistributeNonZRC20Name,
@@ -1094,6 +929,214 @@ var AllE2ETests = []runner.E2ETest{
 		TestPrecompilesDistributeThroughContractName,
 		"test stateful precompiled contracts distribute through contract",
 		[]runner.ArgDefinition{},
-		TestPrecompilesDistributeThroughContract,
+		TestPrecompilesDistributeAndClaimThroughContract,
+	),
+
+	/*
+	 Legacy tests
+	*/
+	runner.NewE2ETest(
+		TestLegacyMessagePassingExternalChainsName,
+		"evm->evm message passing (sending ZETA only) (v1 protocol contracts)",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
+		},
+		legacy.TestMessagePassingExternalChains,
+	),
+	runner.NewE2ETest(
+		TestLegacyMessagePassingRevertFailExternalChainsName,
+		"message passing with failing revert between external EVM chains (v1 protocol contracts)",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
+		},
+		legacy.TestMessagePassingRevertFailExternalChains,
+	),
+	runner.NewE2ETest(
+		TestLegacyMessagePassingRevertSuccessExternalChainsName,
+		"message passing with successful revert between external EVM chains (v1 protocol contracts)",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
+		},
+		legacy.TestMessagePassingRevertSuccessExternalChains,
+	),
+	runner.NewE2ETest(
+		TestLegacyMessagePassingEVMtoZEVMName,
+		"evm -> zevm message passing contract call (v1 protocol contracts)",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000009"},
+		},
+		legacy.TestMessagePassingEVMtoZEVM,
+	),
+	runner.NewE2ETest(
+		TestLegacyMessagePassingZEVMToEVMName,
+		"zevm -> evm message passing contract call (v1 protocol contracts)",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000007"},
+		},
+		legacy.TestMessagePassingZEVMtoEVM,
+	),
+	runner.NewE2ETest(
+		TestLegacyMessagePassingZEVMtoEVMRevertName,
+		"zevm -> evm message passing contract call reverts (v1 protocol contracts)",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000006"},
+		},
+		legacy.TestMessagePassingZEVMtoEVMRevert,
+	),
+	runner.NewE2ETest(
+		TestLegacyMessagePassingEVMtoZEVMRevertName,
+		"evm -> zevm message passing and revert back to evm (v1 protocol contracts)",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000008"},
+		},
+		legacy.TestMessagePassingEVMtoZEVMRevert,
+	),
+	runner.NewE2ETest(
+		TestLegacyMessagePassingZEVMtoEVMRevertFailName,
+		"zevm -> evm message passing contract with failing revert (v1 protocol contracts)",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000008"},
+		},
+		legacy.TestMessagePassingZEVMtoEVMRevertFail,
+	),
+	runner.NewE2ETest(
+		TestLegacyMessagePassingEVMtoZEVMRevertFailName,
+		"evm -> zevm message passing contract with failing revert (v1 protocol contracts)",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000008"},
+		},
+		legacy.TestMessagePassingEVMtoZEVMRevertFail,
+	),
+	runner.NewE2ETest(
+		TestLegacyEtherDepositName,
+		"deposit Ether into ZEVM (v1 protocol contracts)",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000"},
+		},
+		legacy.TestEtherDeposit,
+	),
+	runner.NewE2ETest(
+		TestLegacyEtherWithdrawName,
+		"withdraw Ether from ZEVM (v1 protocol contracts)",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000"},
+		},
+		legacy.TestEtherWithdraw,
+	),
+	runner.NewE2ETest(
+		TestEtherWithdrawRestrictedName,
+		"withdraw Ether from ZEVM to restricted address (v1 protocol contracts)",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000"},
+		},
+		TestEtherWithdrawRestricted,
+	),
+	runner.NewE2ETest(
+		TestLegacyEtherDepositAndCallRefundName,
+		"deposit Ether into ZEVM and call a contract that reverts; should refund (v1 protocol contracts)",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000000"},
+		},
+		legacy.TestEtherDepositAndCallRefund,
+	),
+	runner.NewE2ETest(
+		TestLegacyEtherDepositAndCallName,
+		"deposit ZRC20 into ZEVM and call a contract (v1 protocol contracts)",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
+		},
+		legacy.TestEtherDepositAndCall,
+	),
+	runner.NewE2ETest(
+		TestLegacyERC20WithdrawName,
+		"withdraw ERC20 from ZEVM (v1 protocol contracts)",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "1000"},
+		},
+		legacy.TestERC20Withdraw,
+	),
+	runner.NewE2ETest(
+		TestLegacyERC20DepositName,
+		"deposit ERC20 into ZEVM (v1 protocol contracts)",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100000"},
+		},
+		legacy.TestERC20Deposit,
+	),
+	runner.NewE2ETest(
+		TestLegacyMultipleERC20DepositName,
+		"deposit ERC20 into ZEVM in multiple deposits (v1 protocol contracts)",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "1000000000"},
+			{Description: "count", DefaultValue: "3"},
+		},
+		legacy.TestMultipleERC20Deposit,
+	),
+	runner.NewE2ETest(
+		TestLegacyMultipleERC20WithdrawsName,
+		"withdraw ERC20 from ZEVM in multiple withdrawals (v1 protocol contracts)",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100"},
+			{Description: "count", DefaultValue: "3"},
+		},
+		legacy.TestMultipleERC20Withdraws,
+	),
+	runner.NewE2ETest(
+		TestERC20DepositRestrictedName,
+		"deposit ERC20 into ZEVM restricted address (v1 protocol contracts)",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100000"},
+		},
+		TestERC20DepositRestricted,
+	),
+	runner.NewE2ETest(
+		TestLegacyERC20DepositAndCallRefundName,
+		"deposit a non-gas ZRC20 into ZEVM and call a contract that reverts (v1 protocol contracts)",
+		[]runner.ArgDefinition{},
+		legacy.TestERC20DepositAndCallRefund,
+	),
+
+	/*
+	 ZETA tests
+	*/
+	runner.NewE2ETest(
+		TestLegacyZetaDepositName,
+		"deposit ZETA from Ethereum to ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
+		},
+		legacy.TestZetaDeposit,
+	),
+	runner.NewE2ETest(
+		TestLegacyZetaDepositNewAddressName,
+		"deposit ZETA from Ethereum to a new ZEVM address which does not exist yet",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
+		},
+		legacy.TestZetaDepositNewAddress,
+	),
+	runner.NewE2ETest(
+		TestLegacyZetaDepositRestrictedName,
+		"deposit ZETA from Ethereum to ZEVM restricted address",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
+		},
+		legacy.TestZetaDepositRestricted,
+	),
+	runner.NewE2ETest(
+		TestLegacyZetaWithdrawName,
+		"withdraw ZETA from ZEVM to Ethereum",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
+		},
+		legacy.TestZetaWithdraw,
+	),
+	runner.NewE2ETest(
+		TestLegacyZetaWithdrawBTCRevertName,
+		"sending ZETA from ZEVM to Bitcoin with a message that should revert cctxs",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
+		},
+		legacy.TestZetaWithdrawBTCRevert,
 	),
 }

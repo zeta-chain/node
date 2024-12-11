@@ -40,7 +40,6 @@ BUILD_FLAGS := -ldflags '$(ldflags)' -tags pebbledb,ledger
 
 TEST_DIR ?= "./..."
 TEST_BUILD_FLAGS := -tags pebbledb,ledger
-HSM_BUILD_FLAGS := -tags pebbledb,ledger,hsm_test
 
 export DOCKER_BUILDKIT := 1
 
@@ -72,9 +71,6 @@ test: clean-test-dir run-test
 
 run-test:
 	@go test ${TEST_BUILD_FLAGS} ${TEST_DIR}
-
-test-hsm:
-	@go test ${HSM_BUILD_FLAGS} ${TEST_DIR}
 
 # Generate the test coverage
 # "|| exit 1" is used to return a non-zero exit code if the tests fail
@@ -227,7 +223,8 @@ generate: proto-gen openapi specs typescript docs-zetacored mocks precompiles fm
 ###############################################################################
 ###                         Localnet                          				###
 ###############################################################################
-start-localnet: zetanode start-localnet-skip-build
+e2e-images: zetanode orchestrator
+start-localnet: e2e-images start-localnet-skip-build
 
 start-localnet-skip-build:
 	@echo "--> Starting localnet"
@@ -242,11 +239,23 @@ stop-localnet:
 ###                         E2E tests               						###
 ###############################################################################
 
+ifdef ZETANODE_IMAGE
+zetanode:
+	@echo "Pulling zetanode image"
+	$(DOCKER) pull $(ZETANODE_IMAGE)
+	$(DOCKER) tag $(ZETANODE_IMAGE) zetanode:latest
+.PHONY: zetanode
+else
 zetanode:
 	@echo "Building zetanode"
 	$(DOCKER) build -t zetanode --build-arg NODE_VERSION=$(NODE_VERSION) --build-arg NODE_COMMIT=$(NODE_COMMIT) --target latest-runtime -f ./Dockerfile-localnet .
-	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 .PHONY: zetanode
+endif
+
+orchestrator:
+	@echo "Building e2e orchestrator"
+	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
+.PHONY: orchestrator
 
 install-zetae2e: go.sum
 	@echo "--> Installing zetae2e"
@@ -257,49 +266,55 @@ solana:
 	@echo "Building solana docker image"
 	$(DOCKER) build -t solana-local -f contrib/localnet/solana/Dockerfile contrib/localnet/solana/
 
-start-e2e-test: zetanode
+start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d 
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
-start-e2e-admin-test: zetanode
+start-e2e-admin-test: e2e-images
 	@echo "--> Starting e2e admin test"
 	export E2E_ARGS="--skip-regular --test-admin" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile eth2 up -d
 
-start-e2e-performance-test: zetanode
+start-e2e-performance-test: e2e-images
 	@echo "--> Starting e2e performance test"
 	export E2E_ARGS="--test-performance" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
-start-e2e-import-mainnet-test: zetanode
+start-e2e-import-mainnet-test: e2e-images
 	@echo "--> Starting e2e import-data test"
 	export ZETACORED_IMPORT_GENESIS_DATA=true && \
 	export ZETACORED_START_PERIOD=15m && \
 	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER_COMPOSE) up -d
 
-start-stress-test: zetanode
+start-e2e-consensus-test: e2e-images
+	@echo "--> Starting e2e consensus test"
+	export ZETACORE1_IMAGE=ghcr.io/zeta-chain/zetanode:develop && \
+	export ZETACORE1_PLATFORM=linux/amd64 && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d 
+
+start-stress-test: e2e-images
 	@echo "--> Starting stress test"
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
-start-tss-migration-test: zetanode
+start-tss-migration-test: e2e-images
 	@echo "--> Starting tss migration test"
 	export LOCALNET_MODE=tss-migrate && \
 	export E2E_ARGS="--test-tss-migration" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
-start-solana-test: zetanode solana
+start-solana-test: e2e-images solana
 	@echo "--> Starting solana test"
 	export E2E_ARGS="--skip-regular --test-solana" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana up -d
 
-start-ton-test: zetanode
+start-ton-test: e2e-images
 	@echo "--> Starting TON test"
 	export E2E_ARGS="--skip-regular --test-ton" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile ton up -d
 
-start-v2-test: zetanode
-	@echo "--> Starting e2e smart contracts v2 test"
-	export E2E_ARGS="--skip-regular --test-v2" && \
+start-legacy-test: e2e-images
+	@echo "--> Starting e2e smart contracts legacy test"
+	export E2E_ARGS="--skip-regular --test-legacy" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 ###############################################################################
@@ -309,19 +324,19 @@ start-v2-test: zetanode
 # build from source only if requested
 # NODE_VERSION and NODE_COMMIT must be set as old-runtime depends on lastest-runtime
 ifdef UPGRADE_TEST_FROM_SOURCE
-zetanode-upgrade: zetanode
+zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from source"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source \
-		--build-arg OLD_VERSION='release/v21' \
+		--build-arg OLD_VERSION='release/v22' \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
 		--build-arg NODE_COMMIT=$(NODE_COMMIT)
 		.
 .PHONY: zetanode-upgrade
 else
-zetanode-upgrade: zetanode
+zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from binaries"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime \
-	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v21.0.0' \
+	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v22.1.1' \
 	--build-arg NODE_VERSION=$(NODE_VERSION) \
 	--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 	.
@@ -346,16 +361,6 @@ start-upgrade-test-admin: zetanode-upgrade
 	export UPGRADE_HEIGHT=90 && \
 	export E2E_ARGS="--skip-regular --test-admin" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
-
-# this test upgrades from v18 and execute the v2 contracts migration process
-# this tests is part of upgrade test part because it should run the upgrade from v18 to fully replicate the upgrade process
-start-upgrade-v2-migration-test: zetanode-upgrade
-	@echo "--> Starting v2 migration upgrade test"
-	export LOCALNET_MODE=upgrade && \
-	export UPGRADE_HEIGHT=90 && \
-	export E2E_ARGS="--test-v2-migration" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
-
 
 start-upgrade-import-mainnet-test: zetanode-upgrade
 	@echo "--> Starting import-data upgrade test"

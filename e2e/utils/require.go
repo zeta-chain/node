@@ -16,7 +16,13 @@ func RequireCCTXStatus(
 	expected crosschaintypes.CctxStatus,
 	msgAndArgs ...any,
 ) {
-	msg := fmt.Sprintf("cctx status is not %q cctx index %s", expected.String(), cctx.Index)
+	msg := fmt.Sprintf(
+		"cctx status is not %q cctx index %s, status: %s, error: %s",
+		expected.String(),
+		cctx.Index,
+		cctx.CctxStatus.StatusMessage,
+		cctx.CctxStatus.ErrorMessage,
+	)
 
 	require.NotNil(t, cctx.CctxStatus)
 	require.Equal(t, expected, cctx.CctxStatus.Status, msg+errSuffix(msgAndArgs...))

@@ -6,6 +6,7 @@ import (
 
 	"math/big"
 
+	"cosmossdk.io/math"
 	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/holiman/uint256"
@@ -13,6 +14,8 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -39,20 +42,24 @@ func Test_IStakingContract(t *testing.T) {
 	gasConfig := storetypes.TransientGasConfig()
 
 	t.Run("should check methods are present in ABI", func(t *testing.T) {
-		require.NotNil(t, s.contractABI.Methods[StakeMethodName], "stake method should be present in the ABI")
-		require.NotNil(t, s.contractABI.Methods[UnstakeMethodName], "unstake method should be present in the ABI")
+		require.NotNil(t, s.stkContractABI.Methods[StakeMethodName], "stake method should be present in the ABI")
+		require.NotNil(t, s.stkContractABI.Methods[UnstakeMethodName], "unstake method should be present in the ABI")
 		require.NotNil(
 			t,
-			s.contractABI.Methods[MoveStakeMethodName],
+			s.stkContractABI.Methods[MoveStakeMethodName],
 			"moveStake method should be present in the ABI",
 		)
 
 		require.NotNil(
 			t,
-			s.contractABI.Methods[GetAllValidatorsMethodName],
+			s.stkContractABI.Methods[GetAllValidatorsMethodName],
 			"getAllValidators method should be present in the ABI",
 		)
-		require.NotNil(t, s.contractABI.Methods[GetSharesMethodName], "getShares method should be present in the ABI")
+		require.NotNil(
+			t,
+			s.stkContractABI.Methods[GetSharesMethodName],
+			"getShares method should be present in the ABI",
+		)
 	})
 
 	t.Run("should check gas requirements for methods", func(t *testing.T) {
@@ -60,9 +67,9 @@ func Test_IStakingContract(t *testing.T) {
 
 		t.Run("stake", func(t *testing.T) {
 			// ACT
-			stake := s.contract.RequiredGas(s.contractABI.Methods[StakeMethodName].ID)
+			stake := s.stkContract.RequiredGas(s.stkContractABI.Methods[StakeMethodName].ID)
 			// ASSERT
-			copy(method[:], s.contractABI.Methods[StakeMethodName].ID[:4])
+			copy(method[:], s.stkContractABI.Methods[StakeMethodName].ID[:4])
 			baseCost := uint64(len(method)) * gasConfig.WriteCostPerByte
 			require.Equal(
 				t,
@@ -76,9 +83,9 @@ func Test_IStakingContract(t *testing.T) {
 
 		t.Run("unstake", func(t *testing.T) {
 			// ACT
-			unstake := s.contract.RequiredGas(s.contractABI.Methods[UnstakeMethodName].ID)
+			unstake := s.stkContract.RequiredGas(s.stkContractABI.Methods[UnstakeMethodName].ID)
 			// ASSERT
-			copy(method[:], s.contractABI.Methods[UnstakeMethodName].ID[:4])
+			copy(method[:], s.stkContractABI.Methods[UnstakeMethodName].ID[:4])
 			baseCost := uint64(len(method)) * gasConfig.WriteCostPerByte
 			require.Equal(
 				t,
@@ -92,9 +99,9 @@ func Test_IStakingContract(t *testing.T) {
 
 		t.Run("moveStake", func(t *testing.T) {
 			// ACT
-			moveStake := s.contract.RequiredGas(s.contractABI.Methods[MoveStakeMethodName].ID)
+			moveStake := s.stkContract.RequiredGas(s.stkContractABI.Methods[MoveStakeMethodName].ID)
 			// ASSERT
-			copy(method[:], s.contractABI.Methods[MoveStakeMethodName].ID[:4])
+			copy(method[:], s.stkContractABI.Methods[MoveStakeMethodName].ID[:4])
 			baseCost := uint64(len(method)) * gasConfig.WriteCostPerByte
 			require.Equal(
 				t,
@@ -108,9 +115,9 @@ func Test_IStakingContract(t *testing.T) {
 
 		t.Run("getAllValidators", func(t *testing.T) {
 			// ACT
-			getAllValidators := s.contract.RequiredGas(s.contractABI.Methods[GetAllValidatorsMethodName].ID)
+			getAllValidators := s.stkContract.RequiredGas(s.stkContractABI.Methods[GetAllValidatorsMethodName].ID)
 			// ASSERT
-			copy(method[:], s.contractABI.Methods[GetAllValidatorsMethodName].ID[:4])
+			copy(method[:], s.stkContractABI.Methods[GetAllValidatorsMethodName].ID[:4])
 			baseCost := uint64(len(method)) * gasConfig.ReadCostPerByte
 			require.Equal(
 				t,
@@ -124,9 +131,9 @@ func Test_IStakingContract(t *testing.T) {
 
 		t.Run("getShares", func(t *testing.T) {
 			// ACT
-			getShares := s.contract.RequiredGas(s.contractABI.Methods[GetSharesMethodName].ID)
+			getShares := s.stkContract.RequiredGas(s.stkContractABI.Methods[GetSharesMethodName].ID)
 			// ASSERT
-			copy(method[:], s.contractABI.Methods[GetSharesMethodName].ID[:4])
+			copy(method[:], s.stkContractABI.Methods[GetSharesMethodName].ID[:4])
 			baseCost := uint64(len(method)) * gasConfig.ReadCostPerByte
 			require.Equal(
 				t,
@@ -142,7 +149,7 @@ func Test_IStakingContract(t *testing.T) {
 			// ARRANGE
 			invalidMethodBytes := []byte("invalidMethod")
 			// ACT
-			gasInvalidMethod := s.contract.RequiredGas(invalidMethodBytes)
+			gasInvalidMethod := s.stkContract.RequiredGas(invalidMethodBytes)
 			// ASSERT
 			require.Equal(
 				t,
@@ -159,7 +166,7 @@ func Test_IStakingContract(t *testing.T) {
 func Test_InvalidMethod(t *testing.T) {
 	s := newTestSuite(t)
 
-	_, doNotExist := s.contractABI.Methods["invalidMethod"]
+	_, doNotExist := s.stkContractABI.Methods["invalidMethod"]
 	require.False(t, doNotExist, "invalidMethod should not be present in the ABI")
 }
 
@@ -190,7 +197,7 @@ func Test_RunInvalidMethod(t *testing.T) {
 	s.mockVMContract.Input = packInputArgs(t, methodID, args...)
 
 	// ACT
-	_, err := s.contract.Run(s.mockEVM, s.mockVMContract, false)
+	_, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
 
 	// ASSERT
 	require.Error(t, err)
@@ -241,6 +248,7 @@ func setup(t *testing.T) (sdk.Context, *Contract, abi.ABI, keeper.SDKKeepers, *v
 		&sdkKeepers.StakingKeeper,
 		*fungibleKeeper,
 		sdkKeepers.BankKeeper,
+		sdkKeepers.DistributionKeeper,
 		appCodec,
 		gasConfig,
 	)
@@ -277,13 +285,12 @@ func setup(t *testing.T) (sdk.Context, *Contract, abi.ABI, keeper.SDKKeepers, *v
 
 type testSuite struct {
 	ctx            sdk.Context
-	contract       *Contract
-	contractABI    *abi.ABI
+	stkContract    *Contract
+	stkContractABI *abi.ABI
 	fungibleKeeper *fungiblekeeper.Keeper
 	sdkKeepers     keeper.SDKKeepers
 	mockEVM        *vm.EVM
 	mockVMContract *vm.Contract
-	methodID       abi.Method
 	defaultCaller  common.Address
 	defaultLocker  common.Address
 	zrc20Address   common.Address
@@ -314,6 +321,7 @@ func newTestSuite(t *testing.T) testSuite {
 		&sdkKeepers.StakingKeeper,
 		*fungibleKeeper,
 		sdkKeepers.BankKeeper,
+		sdkKeepers.DistributionKeeper,
 		appCodec,
 		gasConfig,
 	)
@@ -362,7 +370,6 @@ func newTestSuite(t *testing.T) testSuite {
 		sdkKeepers,
 		mockEVM,
 		mockVMContract,
-		abi.Methods[DistributeMethodName],
 		caller,
 		locker,
 		zrc20Address,
@@ -385,13 +392,72 @@ func allowStaking(t *testing.T, ts testSuite, amount *big.Int) {
 		fungibletypes.ModuleAddressEVM,
 		ts.zrc20Address,
 		"approve",
-		[]interface{}{ts.contract.Address(), amount},
+		[]interface{}{ts.stkContract.Address(), amount},
 	)
 	require.NoError(t, err, "error allowing staking to spend ZRC20 tokens")
 
 	allowed, ok := resAllowance[0].(bool)
 	require.True(t, ok)
 	require.True(t, allowed)
+}
+
+func stakeThroughCosmosAPI(
+	t *testing.T,
+	ctx sdk.Context,
+	bankKeeper bankkeeper.Keeper,
+	stakingKeeper stakingkeeper.Keeper,
+	validator stakingtypes.Validator,
+	staker sdk.AccAddress,
+	amount math.Int,
+) {
+	// Coins to stake with default cosmos denom.
+	coins := sdk.NewCoins(sdk.NewCoin("stake", amount))
+
+	err := bankKeeper.MintCoins(ctx, fungibletypes.ModuleName, coins)
+	require.NoError(t, err)
+
+	err = bankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+	require.NoError(t, err)
+
+	shares, err := stakingKeeper.Delegate(
+		ctx,
+		staker,
+		coins.AmountOf(coins.Denoms()[0]),
+		validator.Status,
+		validator,
+		true,
+	)
+	require.NoError(t, err)
+	require.Equal(t, amount.Uint64(), shares.TruncateInt().Uint64())
+}
+
+func distributeZRC20(
+	t *testing.T,
+	s testSuite,
+	amount *big.Int,
+) {
+	distributeMethod := s.stkContractABI.Methods[DistributeMethodName]
+
+	_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, amount)
+	require.NoError(t, err)
+	allowStaking(t, s, amount)
+
+	// Setup method input.
+	s.mockVMContract.Input = packInputArgs(
+		t,
+		distributeMethod,
+		[]interface{}{s.zrc20Address, amount}...,
+	)
+
+	// Call distribute method.
+	success, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+	require.NoError(t, err)
+
+	res, err := distributeMethod.Outputs.Unpack(success)
+	require.NoError(t, err)
+
+	ok := res[0].(bool)
+	require.True(t, ok)
 }
 
 func callEVM(

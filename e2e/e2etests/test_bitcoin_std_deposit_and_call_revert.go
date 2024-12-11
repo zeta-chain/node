@@ -1,7 +1,6 @@
 package e2etests
 
 import (
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -11,17 +10,13 @@ import (
 )
 
 func TestBitcoinStdMemoDepositAndCallRevert(r *runner.E2ERunner, args []string) {
-	// ARRANGE
-	// Given BTC address
-	r.SetBtcAddress(r.Name, false)
-
 	// Start mining blocks
 	stop := r.MineBlocksIfLocalBitcoin()
 	defer stop()
 
 	// Parse amount to send
 	require.Len(r, args, 1)
-	amount := parseFloat(r, args[0])
+	amount := utils.ParseFloat(r, args[0])
 
 	// Create a memo to call non-existing contract
 	memo := &memo.InboundMemo{
@@ -46,8 +41,8 @@ func TestBitcoinStdMemoDepositAndCallRevert(r *runner.E2ERunner, args []string) 
 
 	// Check revert tx receiver address and amount
 	receiver, value := r.QueryOutboundReceiverAndAmount(cctx.OutboundParams[1].Hash)
-	assert.Equal(r, r.BTCDeployerAddress.EncodeAddress(), receiver)
-	assert.Positive(r, value)
+	require.Equal(r, r.BTCDeployerAddress.EncodeAddress(), receiver)
+	require.True(r, value > 0)
 
 	r.Logger.Info("Sent %f BTC to TSS to call non-existing contract, got refund of %d satoshis", amount, value)
 }

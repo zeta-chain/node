@@ -1,12 +1,41 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
+struct RevertOptions {
+    address revertAddress;
+    bool callOnRevert;
+    address abortAddress;
+    bytes revertMessage;
+    uint256 onRevertGasLimit;
+}
+
+interface IGatewayEVM {
+    function deposit(address receiver, RevertOptions calldata revertOptions) external payable;
+    function depositAndCall(
+        address receiver,
+        bytes calldata payload,
+        RevertOptions calldata revertOptions
+    )
+    external
+    payable;
+    function call(address receiver, bytes calldata payload, RevertOptions calldata revertOptions) external;
+}
+
 interface IERC20 {
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
 }
 
 contract TestDAppV2 {
+    // used to simulate gas consumption
+    uint256[] private storageArray;
+
     string public constant NO_MESSAGE_CALL = "called with no message";
+
+    // define if the chain is ZetaChain
+    bool immutable public isZetaChain;
+
+    // address of the gateway
+    address immutable public gateway;
 
     struct zContext {
         bytes origin;
@@ -36,6 +65,12 @@ contract TestDAppV2 {
     mapping(bytes32 => bool) public calledWithMessage;
     mapping(bytes => address) public senderWithMessage;
     mapping(bytes32 => uint256) public amountWithMessage;
+
+    // the constructor is used to determine if the chain is ZetaChain
+    constructor(bool isZetaChain_, address gateway_) {
+        isZetaChain = isZetaChain_;
+        gateway = gateway_;
+    }
 
     // return the index used for the "WithMessage" mapping when the message for calls is empty
     // this allows testing the message with empty message
@@ -110,6 +145,13 @@ contract TestDAppV2 {
 
     // Revertable interface
     function onRevert(RevertContext calldata revertContext) external {
+
+        // if the chain is ZetaChain, consume gas to test the gas consumption
+        // we do it specifically for ZetaChain to test the outbound processing workflow
+        if (isZetaChain) {
+            consumeGas();
+        }
+
         setCalledWithMessage(string(revertContext.revertMessage));
         setAmountWithMessage(string(revertContext.revertMessage), 0);
         senderWithMessage[revertContext.revertMessage] = revertContext.sender;
@@ -124,6 +166,40 @@ contract TestDAppV2 {
         senderWithMessage[bytes(messageStr)] = messageContext.sender;
 
         return "";
+    }
+
+    // deposit through Gateway EVM
+    function gatewayDeposit(address dst) external payable {
+        require(!isZetaChain);
+        IGatewayEVM(gateway).deposit{value: msg.value}(dst, RevertOptions(msg.sender, false, address(0), "", 0));
+    }
+
+    // deposit and call through Gateway EVM
+    function gatewayDepositAndCall(address dst, bytes calldata payload) external payable {
+        require(!isZetaChain);
+        IGatewayEVM(gateway).depositAndCall{value: msg.value}(dst, payload, RevertOptions(msg.sender, false, address(0), "", 0));
+    }
+
+    // call through Gateway EVM
+    function gatewayCall(address dst, bytes calldata payload) external {
+        require(!isZetaChain);
+        IGatewayEVM(gateway).call(dst, payload, RevertOptions(msg.sender, false, address(0), "", 0));
+    }
+
+    function consumeGas() internal {
+        // Approximate target gas consumption
+        uint256 targetGas = 500000;
+        // Approximate gas cost for a single storage write
+        uint256 storageWriteGasCost = 20000;
+        uint256 iterations = targetGas / storageWriteGasCost;
+
+        // Perform the storage writes
+        for (uint256 i = 0; i < iterations; i++) {
+            storageArray.push(i);
+        }
+
+        // Reset the storage array to avoid accumulation of storage cost
+        delete storageArray;
     }
 
     receive() external payable {}

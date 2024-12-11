@@ -58,4 +58,5 @@ var (
 	ErrValidatingInbound       = errorsmod.Register(ModuleName, 1157, "unable to validate inbound")
 	ErrInvalidGasLimit         = errorsmod.Register(ModuleName, 1158, "invalid gas limit")
 	ErrUnableToSetOutboundInfo = errorsmod.Register(ModuleName, 1159, "unable to set outbound info")
+	ErrCCTXAlreadyFinalized    = errorsmod.Register(ModuleName, 1160, "cctx already finalized")
 )

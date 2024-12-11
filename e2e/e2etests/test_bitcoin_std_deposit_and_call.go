@@ -14,16 +14,13 @@ import (
 )
 
 func TestBitcoinStdMemoDepositAndCall(r *runner.E2ERunner, args []string) {
-	// setup deployer BTC address
-	r.SetBtcAddress(r.Name, false)
-
 	// start mining blocks if local bitcoin
 	stop := r.MineBlocksIfLocalBitcoin()
 	defer stop()
 
 	// parse amount to deposit
 	require.Len(r, args, 1)
-	amount := parseFloat(r, args[0])
+	amount := utils.ParseFloat(r, args[0])
 
 	// deploy an example contract in ZEVM
 	contractAddr, _, contract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)

@@ -307,8 +307,9 @@ func (ob *Observer) CheckFinalizedTx(
 	}
 
 	// check tx authorization
-	if signerECDSA != ob.TSS().EVMAddress() {
-		logger.Error().Msgf("tx signer %s is not matching current TSS address %s", signerECDSA, ob.TSS().EVMAddress())
+	if signerECDSA != ob.TSS().PubKey().AddressEVM() {
+		logger.Error().
+			Msgf("tx signer %s is not matching current TSS address %s", signerECDSA, ob.TSS().PubKey().AddressEVM())
 		return nil, false
 	}
 
@@ -356,6 +357,8 @@ func ParseGatewayInstruction(
 		return contracts.ParseInstructionWithdraw(instruction)
 	case coin.CoinType_Cmd:
 		return contracts.ParseInstructionWhitelist(instruction)
+	case coin.CoinType_ERC20:
+		return contracts.ParseInstructionWithdrawSPL(instruction)
 	default:
 		return nil, fmt.Errorf("unsupported outbound coin type %s", coinType)
 	}

@@ -25,7 +25,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	// if the tx fails due to already initialized, it will be ignored
 	_, err := r.UniswapV2Factory.CreatePair(r.ZEVMAuth, r.ERC20ZRC20Addr, r.BTCZRC20Addr)
 	if err != nil {
-		r.Logger.Print("ℹ️ create pair error")
+		r.Logger.Print("ℹ️ create pair error %s", err.Error())
 	}
 
 	txERC20ZRC20Approve, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
@@ -82,7 +82,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 
 	r.Logger.Info("***** First test: ERC20 -> BTC")
 	// Should deposit ERC20 for swap, swap for BTC and withdraw BTC
-	txHash := r.DepositERC20WithAmountAndMessage(r.EVMAddress(), big.NewInt(8e7), msg)
+	txHash := r.LegacyDepositERC20WithAmountAndMessage(r.EVMAddress(), big.NewInt(8e7), msg)
 	cctx1 := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 
 	// check the cctx status

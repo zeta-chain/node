@@ -187,7 +187,7 @@ func (s *Signer) SignMessage(ctx context.Context, msg Signable, zetaHeight, nonc
 	chainID := s.Chain().ChainId
 
 	// sig = [65]byte {R, S, V (recovery ID)}
-	sig, err := s.TSS().Sign(ctx, hash[:], zetaHeight, nonce, chainID, "")
+	sig, err := s.TSS().Sign(ctx, hash[:], zetaHeight, nonce, chainID)
 	if err != nil {
 		return errors.Wrap(err, "unable to sign the message")
 	}
@@ -278,7 +278,7 @@ func (s *Signer) GetGatewayAddress() string {
 // SetGatewayAddress sets gateway address. Has a check for noop.
 func (s *Signer) SetGatewayAddress(addr string) {
 	// noop
-	if s.gateway.AccountID().ToRaw() == addr {
+	if addr == "" || s.gateway.AccountID().ToRaw() == addr {
 		return
 	}
 
@@ -287,6 +287,11 @@ func (s *Signer) SetGatewayAddress(addr string) {
 		s.Logger().Std.Error().Err(err).Str("addr", addr).Msg("unable to parse gateway address")
 		return
 	}
+
+	s.Logger().Std.Info().
+		Str("signer.old_gateway_address", s.gateway.AccountID().ToRaw()).
+		Str("signer.new_gateway_address", acc.ToRaw()).
+		Msg("Updated gateway address")
 
 	s.Lock()
 	s.gateway = toncontracts.NewGateway(acc)

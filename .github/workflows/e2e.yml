@@ -28,13 +28,90 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # this cannot run on forks as forks cannot push packages in pull request context
+  # forked pull request will fall back to slow build
+  build-zetanode:
+    runs-on: ubuntu-22.04
+    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'zeta-chain/node') && github.actor != 'dependabot[bot]'
+    env:
+      DOCKER_IMAGE: ghcr.io/${{ github.repository_owner }}/zetanode
+      DOCKER_TAG: ${{ github.ref == 'refs/heads/develop' && 'develop' || github.sha }}
+    outputs:
+      image: ${{ fromJson(steps.build.outputs.metadata)['image.name'] }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # configure docker to use the containerd snapshotter
+      # so that we can use the buildkit cache
+      - uses: depot/use-containerd-snapshotter-action@v1
+
+      - name: Login to Docker Hub registry
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_READ_ONLY }}
+
+      - name: Login to github docker registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore go cache
+        uses: actions/cache@v4
+        id: restore-go-cache
+        with:
+          path: |
+            go-cache
+          key: cache-${{ hashFiles('go.sum') }}
+
+      - name: Inject go cache into docker
+        uses: reproducible-containers/buildkit-cache-dance@v3.1.2
+        with:
+          cache-map: |
+            {
+              "go-cache": "/root/.cache/go-build"
+            }
+          skip-extraction: ${{ steps.restore-go-cache.outputs.cache-hit || github.event_name != 'push' }}
+
+      # this ensures that the version is consistent between cache build and make build
+      - name: Set version for cache
+        run: |
+          NODE_VERSION=$(./version.sh)
+          echo "NODE_VERSION=$NODE_VERSION" >> $GITHUB_ENV
+          NODE_COMMIT=$(git log -1 --format='%H')
+          echo "NODE_COMMIT=$NODE_COMMIT" >> $GITHUB_ENV
+
+      # build zetanode with cache options
+      - name: Build zetanode for cache
+        id: build
+        uses: docker/build-push-action@v6
+        env:
+          CACHE_FROM_CONFIG: "type=registry,ref=ghcr.io/${{ github.repository }}:buildcache"
+          CACHE_TO_CONFIG: "type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max"
+        with:
+          context: .
+          file: ./Dockerfile-localnet
+          push: true
+          tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
+          cache-from: ${{ env.CACHE_FROM_CONFIG }}
+          cache-to: ${{ github.event_name == 'push' && env.CACHE_TO_CONFIG || '' }}
+          target: latest-runtime
+          build-args: |
+            NODE_VERSION=${{ env.NODE_VERSION }}
+            NODE_COMMIT=${{ env.NODE_COMMIT }}
+
   matrix-conditionals:
+    needs: build-zetanode
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-22.04
     env:
       GH_TOKEN: ${{ github.token }}
     outputs:
       DEFAULT_TESTS: ${{ steps.matrix-conditionals.outputs.DEFAULT_TESTS }}
       UPGRADE_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_TESTS }}
+      CONSENSUS_TESTS: ${{ steps.matrix-conditionals.outputs.CONSENSUS_TESTS }}
       UPGRADE_LIGHT_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_LIGHT_TESTS }}
       UPGRADE_IMPORT_MAINNET_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_IMPORT_MAINNET_TESTS }}
       ADMIN_TESTS: ${{ steps.matrix-conditionals.outputs.ADMIN_TESTS }}
@@ -43,8 +120,7 @@ jobs:
       TSS_MIGRATION_TESTS: ${{ steps.matrix-conditionals.outputs.TSS_MIGRATION_TESTS }}
       SOLANA_TESTS: ${{ steps.matrix-conditionals.outputs.SOLANA_TESTS }}
       TON_TESTS: ${{ steps.matrix-conditionals.outputs.TON_TESTS }}
-      V2_TESTS: ${{ steps.matrix-conditionals.outputs.V2_TESTS }}
-      V2_MIGRATION_TESTS: ${{ steps.matrix-conditionals.outputs.V2_MIGRATION_TESTS }}
+      LEGACY_TESTS: ${{ steps.matrix-conditionals.outputs.LEGACY_TESTS }}
       ENABLE_MONITORING: ${{ steps.matrix-conditionals.outputs.ENABLE_MONITORING }}
     steps:
       # use api rather than event context to avoid race conditions (label added after push)
@@ -52,16 +128,22 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            if (context.eventName === 'pull_request') {
+            const getPrLabels = async (pull_number) => {
               const { data: pr } = await github.rest.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: context.payload.pull_request.number,
-              });
-              const labels = pr.labels.map(label => label.name);
-              console.log("labels:", labels);
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pull_number,
+                });
+                const labels = pr.labels.map(label => label.name);
+                console.log(`labels for ${pull_number}:`, labels);
+                return labels;
+            }
+
+            if (context.eventName === 'pull_request') {
+              const labels = await getPrLabels(context.payload.pull_request.number);
               core.setOutput('DEFAULT_TESTS', true);
               core.setOutput('UPGRADE_TESTS', labels.includes('UPGRADE_TESTS'));
+              core.setOutput('CONSENSUS_TESTS', labels.includes('CONSENSUS_TESTS'));
               core.setOutput('UPGRADE_LIGHT_TESTS', labels.includes('UPGRADE_LIGHT_TESTS'));
               core.setOutput('UPGRADE_IMPORT_MAINNET_TESTS', labels.includes('UPGRADE_IMPORT_MAINNET_TESTS'));
               core.setOutput('ADMIN_TESTS', labels.includes('ADMIN_TESTS'));
@@ -70,12 +152,23 @@ jobs:
               core.setOutput('TSS_MIGRATION_TESTS', labels.includes('TSS_MIGRATION_TESTS'));
               core.setOutput('SOLANA_TESTS', labels.includes('SOLANA_TESTS'));
               core.setOutput('TON_TESTS', labels.includes('TON_TESTS'));
-              core.setOutput('V2_TESTS', labels.includes('V2_TESTS')); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
-              core.setOutput('V2_MIGRATION_TESTS', labels.includes('V2_MIGRATION_TESTS')); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
+              core.setOutput('LEGACY_TESTS', labels.includes('LEGACY_TESTS'));
               core.setOutput('ENABLE_MONITORING', labels.includes('ENABLE_MONITORING'));
             } else if (context.eventName === 'merge_group') {
+              // default mergequeue tests
               core.setOutput('DEFAULT_TESTS', true);
               core.setOutput('UPGRADE_LIGHT_TESTS', true);
+
+              // conditional tests based on PR labels
+              const commit_message = context.payload.merge_group.head_commit.message;
+              const pr_match = commit_message.split('\n')[0].match(/\(#(\d+)\)$/);
+              if (!pr_match) {
+                console.error("unable to extract PR number from mergequeue commit message");
+                return;
+              }
+              const pr_number = pr_match[1];
+              const pr_labels = await getPrLabels(pr_number);
+              core.setOutput('CONSENSUS_TESTS', !pr_labels.includes('CONSENSUS_BREAKING_ACK'));
             } else if (context.eventName === 'push' && context.ref === 'refs/heads/develop') {
               core.setOutput('DEFAULT_TESTS', true);
             } else if (context.eventName === 'push' && context.ref.startsWith('refs/heads/release/')) {
@@ -88,7 +181,7 @@ jobs:
               core.setOutput('STATEFUL_DATA_TESTS', true);
               core.setOutput('SOLANA_TESTS', true);
               core.setOutput('TON_TESTS', true);
-              core.setOutput('V2_TESTS', true); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
+              core.setOutput('LEGACY_TESTS', true);
             } else if (context.eventName === 'schedule') {
               core.setOutput('DEFAULT_TESTS', true);
               core.setOutput('UPGRADE_TESTS', true);
@@ -100,7 +193,7 @@ jobs:
               core.setOutput('TSS_MIGRATION_TESTS', true);
               core.setOutput('SOLANA_TESTS', true);
               core.setOutput('TON_TESTS', true);
-              core.setOutput('V2_TESTS', true); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
+              core.setOutput('LEGACY_TESTS', true);
             } else if (context.eventName === 'workflow_dispatch') {
               const makeTargets = context.payload.inputs['make-targets'].split(',');
               core.setOutput('DEFAULT_TESTS', makeTargets.includes('default-test'));
@@ -113,13 +206,15 @@ jobs:
               core.setOutput('TSS_MIGRATION_TESTS', makeTargets.includes('tss-migration-test'));
               core.setOutput('SOLANA_TESTS', makeTargets.includes('solana-test'));
               core.setOutput('TON_TESTS', makeTargets.includes('ton-test'));
-              core.setOutput('V2_TESTS', makeTargets.includes('v2-test')); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
-              core.setOutput('V2_MIGRATION_TESTS', makeTargets.includes('v2-migration-test')); // for v2 tests, TODO: remove this once we fully migrate to v2 (https://github.com/zeta-chain/node/issues/2627)
+              core.setOutput('LEGACY_TESTS', makeTargets.includes('legacy-test'));
               core.setOutput('ENABLE_MONITORING', context.payload.inputs['enable-monitoring']);
             }
 
   e2e:
-    needs: matrix-conditionals
+    needs:
+      - build-zetanode
+      - matrix-conditionals
+    if: ${{ !cancelled() }}
     strategy:
       fail-fast: false
       matrix:
@@ -127,6 +222,9 @@ jobs:
           - make-target: "start-e2e-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.DEFAULT_TESTS == 'true' }}
+          - make-target: "start-e2e-consensus-test"
+            runs-on: ubuntu-20.04
+            run: ${{ needs.matrix-conditionals.outputs.CONSENSUS_TESTS == 'true' }}
           - make-target: "start-upgrade-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.UPGRADE_TESTS == 'true' }}
@@ -157,12 +255,9 @@ jobs:
           - make-target: "start-ton-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.TON_TESTS == 'true' }}
-          - make-target: "start-v2-test"
+          - make-target: "start-legacy-test"
             runs-on: ubuntu-20.04
-            run: ${{ needs.matrix-conditionals.outputs.V2_TESTS == 'true' }}
-          - make-target: "start-upgrade-v2-migration-test"
-            runs-on: ubuntu-20.04
-            run: ${{ needs.matrix-conditionals.outputs.V2_MIGRATION_TESTS == 'true' }}
+            run: ${{ needs.matrix-conditionals.outputs.LEGACY_TESTS == 'true' }}
     name: ${{ matrix.make-target }}
     uses: ./.github/workflows/reusable-e2e.yml
     with:
@@ -170,15 +265,17 @@ jobs:
       runs-on: ${{ matrix.runs-on}}
       run: ${{ matrix.run }}
       timeout-minutes: "${{ matrix.timeout-minutes || 25 }}"
+      zetanode-image: ${{ needs.build-zetanode.outputs.image }}
       enable-monitoring: ${{ needs.matrix-conditionals.outputs.ENABLE_MONITORING == 'true' }}
     secrets: inherit
   # this allows you to set a required status check
   e2e-ok:
     runs-on: ubuntu-22.04
     needs:
+      - build-zetanode
       - matrix-conditionals
       - e2e
-    if: always()
+    if: ${{ !cancelled() }}
     steps:
       - name: Send slack message with results
         uses: actions/github-script@v7
@@ -224,6 +321,10 @@ jobs:
 
 
       - run: |
+          result="${{ needs.build-zetanode.result }}"
+          if [[ $result == "failed" ]]; then
+            exit 1
+          fi
           result="${{ needs.e2e.result }}"
           if [[ $result == "success" || $result == "skipped" ]]; then
             exit 0

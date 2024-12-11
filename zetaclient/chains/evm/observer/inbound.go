@@ -121,6 +121,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
 	for _, tracker := range trackers {
 		// query tx and receipt
 		tx, _, err := ob.TransactionByHash(tracker.TxHash)
@@ -144,7 +145,17 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 		}
 		ob.Logger().Inbound.Info().Msgf("checking tracker for inbound %s chain %d", tracker.TxHash, ob.Chain().ChainId)
 
-		// check and vote on inbound tx
+		// try processing the tracker for v2 inbound
+		// filter error if event is not found, in this case we run v1 tracker process
+		if err := ob.ProcessInboundTrackerV2(ctx, tx, receipt); err != nil &&
+			!errors.Is(err, ErrEventNotFound) && !errors.Is(err, ErrGatewayNotSet) {
+			return err
+		} else if err == nil {
+			// continue with next tracker
+			continue
+		}
+
+		// try processing the tracker for v1 inbound
 		switch tracker.CoinType {
 		case coin.CoinType_Zeta:
 			_, err = ob.CheckAndVoteInboundTokenZeta(ctx, tx, receipt, true)
@@ -185,6 +196,12 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 
 	// increment prom counter
 	metrics.GetBlockByNumberPerChain.WithLabelValues(ob.Chain().Name).Inc()
+
+	// uncomment this line to stop observing inbound and test observation with inbound trackers
+	// https://github.com/zeta-chain/node/blob/3879b5ef8b418542c82a4383263604222f0605c6/e2e/e2etests/test_inbound_trackers.go#L19
+	// TODO: implement a better way to disable inbound observation
+	// https://github.com/zeta-chain/node/issues/3186
+	//return nil
 
 	// skip if current height is too low
 	if blockNumber < ob.ChainParams().ConfirmationCount {
@@ -596,7 +613,7 @@ func (ob *Observer) CheckAndVoteInboundTokenGas(
 	}
 
 	// checks receiver and tx status
-	if ethcommon.HexToAddress(tx.To) != ob.TSS().EVMAddress() {
+	if ethcommon.HexToAddress(tx.To) != ob.TSS().PubKey().AddressEVM() {
 		return "", fmt.Errorf("tx.To %s is not TSS address", tx.To)
 	}
 	if receipt.Status != ethtypes.ReceiptStatusSuccessful {
@@ -788,7 +805,7 @@ func (ob *Observer) ObserveTSSReceiveInBlock(ctx context.Context, blockNumber ui
 	}
 	for i := range block.Transactions {
 		tx := block.Transactions[i]
-		if ethcommon.HexToAddress(tx.To) == ob.TSS().EVMAddress() {
+		if ethcommon.HexToAddress(tx.To) == ob.TSS().PubKey().AddressEVM() {
 			receipt, err := ob.evmClient.TransactionReceipt(ctx, ethcommon.HexToHash(tx.Hash))
 			if err != nil {
 				return errors.Wrapf(err, "error getting receipt for inbound %s chain %d", tx.Hash, ob.Chain().ChainId)

@@ -3,10 +3,11 @@ package base
 import (
 	"sync"
 
+	"github.com/rs/zerolog"
+
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
-	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 // Signer is the base structure for grouping the common logic between chain signers.
@@ -17,9 +18,6 @@ type Signer struct {
 
 	// tss is the TSS signer
 	tss interfaces.TSSSigner
-
-	// ts is the telemetry server for metrics
-	ts *metrics.TelemetryServer
 
 	// logger contains the loggers used by signer
 	logger Logger
@@ -33,19 +31,22 @@ type Signer struct {
 }
 
 // NewSigner creates a new base signer.
-func NewSigner(chain chains.Chain, tss interfaces.TSSSigner, ts *metrics.TelemetryServer, logger Logger) *Signer {
+func NewSigner(chain chains.Chain, tss interfaces.TSSSigner, logger Logger) *Signer {
+	withLogFields := func(log zerolog.Logger) zerolog.Logger {
+		return log.With().
+			Int64(logs.FieldChain, chain.ChainId).
+			Str(logs.FieldModule, "signer").
+			Logger()
+	}
+
 	return &Signer{
-		chain: chain,
-		tss:   tss,
-		ts:    ts,
-		logger: Logger{
-			Std: logger.Std.With().
-				Int64(logs.FieldChain, chain.ChainId).
-				Str(logs.FieldModule, "signer").
-				Logger(),
-			Compliance: logger.Compliance,
-		},
+		chain:                 chain,
+		tss:                   tss,
 		outboundBeingReported: make(map[string]bool),
+		logger: Logger{
+			Std:        withLogFields(logger.Std),
+			Compliance: withLogFields(logger.Compliance),
+		},
 	}
 }
 
@@ -54,32 +55,9 @@ func (s *Signer) Chain() chains.Chain {
 	return s.chain
 }
 
-// WithChain attaches a new chain to the signer.
-func (s *Signer) WithChain(chain chains.Chain) *Signer {
-	s.chain = chain
-	return s
-}
-
-// Tss returns the tss signer for the signer.
+// TSS returns the tss signer for the signer.
 func (s *Signer) TSS() interfaces.TSSSigner {
 	return s.tss
-}
-
-// WithTSS attaches a new tss signer to the signer.
-func (s *Signer) WithTSS(tss interfaces.TSSSigner) *Signer {
-	s.tss = tss
-	return s
-}
-
-// TelemetryServer returns the telemetry server for the signer.
-func (s *Signer) TelemetryServer() *metrics.TelemetryServer {
-	return s.ts
-}
-
-// WithTelemetryServer attaches a new telemetry server to the signer.
-func (s *Signer) WithTelemetryServer(ts *metrics.TelemetryServer) *Signer {
-	s.ts = ts
-	return s
 }
 
 // Logger returns the logger for the signer.

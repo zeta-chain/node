@@ -17,6 +17,7 @@ import (
 	etherminttypes "github.com/zeta-chain/node/rpc/types"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -51,6 +52,8 @@ type Clients struct {
 	Observer observertypes.QueryClient
 	// Lightclient is a github.com/zeta-chain/zetacore/x/lightclient/types QueryClient
 	Lightclient lightclienttypes.QueryClient
+	// EmissionsClient is a github.com/zeta-chain/zetacore/x/emissions/types QueryClient
+	Emissions emissionstypes.QueryClient
 
 	// Ethermint specific clients
 
@@ -79,6 +82,7 @@ func newClients(ctx client.Context) (Clients, error) {
 		Fungible:    fungibletypes.NewQueryClient(ctx),
 		Observer:    observertypes.NewQueryClient(ctx),
 		Lightclient: lightclienttypes.NewQueryClient(ctx),
+		Emissions:   emissionstypes.NewQueryClient(ctx),
 		// Ethermint specific clients
 		Ethermint:          etherminttypes.NewQueryClient(ctx),
 		EthermintFeeMarket: feemarkettypes.NewQueryClient(ctx),
@@ -98,7 +102,7 @@ func NewCometBFTClients(url string) (Clients, error) {
 	return newClients(clientCtx)
 }
 
-// NewGRPCClient creates a Clients which uses gRPC as the transport
+// NewGRPCClients creates a Clients which uses gRPC as the transport
 func NewGRPCClients(url string, opts ...grpc.DialOption) (Clients, error) {
 	grpcConn, err := grpc.Dial(url, opts...)
 	if err != nil {

@@ -15,7 +15,7 @@ import (
 
 const (
 	loggerSeparator = " | "
-	padding         = 10
+	padding         = 12
 )
 
 // Logger is a wrapper around log.Logger that adds verbosity

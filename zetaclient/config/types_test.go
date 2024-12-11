@@ -17,7 +17,6 @@ func Test_GetRelayerKeyPath(t *testing.T) {
 }
 
 func Test_GetEVMConfig(t *testing.T) {
-	chain := chains.Sepolia
 	chainID := chains.Sepolia.ChainId
 
 	t.Run("should find non-empty evm config", func(t *testing.T) {
@@ -26,7 +25,6 @@ func Test_GetEVMConfig(t *testing.T) {
 
 		// set valid evm endpoint
 		cfg.EVMChainConfigs[chainID] = config.EVMConfig{
-			Chain:    chain,
 			Endpoint: "localhost",
 		}
 
@@ -41,21 +39,6 @@ func Test_GetEVMConfig(t *testing.T) {
 		cfg := config.New(true)
 
 		// should not find evm config because endpoint is empty
-		_, found := cfg.GetEVMConfig(chainID)
-		require.False(t, found)
-	})
-
-	t.Run("should not find evm config if chain is empty", func(t *testing.T) {
-		// create config with defaults
-		cfg := config.New(true)
-
-		// set empty chain
-		cfg.EVMChainConfigs[chainID] = config.EVMConfig{
-			Chain:    chains.Chain{},
-			Endpoint: "localhost",
-		}
-
-		// should not find evm config because chain is empty
 		_, found := cfg.GetEVMConfig(chainID)
 		require.False(t, found)
 	})

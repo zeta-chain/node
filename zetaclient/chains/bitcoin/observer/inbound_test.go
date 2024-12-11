@@ -23,12 +23,20 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	clientcommon "github.com/zeta-chain/node/zetaclient/common"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testrpc"
 )
+
+// mockDepositFeeCalculator returns a mock depositor fee calculator that returns the given fee and error.
+func mockDepositFeeCalculator(fee float64, err error) bitcoin.DepositorFeeCalculator {
+	return func(interfaces.BTCRPCClient, *btcjson.TxRawResult, *chaincfg.Params) (float64, error) {
+		return fee, err
+	}
+}
 
 func TestAvgFeeRateBlock828440(t *testing.T) {
 	// load archived block 828440
@@ -145,12 +153,10 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 	// can use any bitcoin chain for testing
 	chain := chains.BitcoinMainnet
-	params := mocks.MockChainParams(chain.ChainId, 10)
 
 	// create test observer
-	ob := MockBTCObserver(t, chain, params, nil)
-	zetacoreClient := mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{}).WithZetaChain()
-	ob.WithZetacoreClient(zetacoreClient)
+	ob := newTestSuite(t, chain)
+	ob.zetacore.WithKeys(&keys.Keys{}).WithZetaChain()
 
 	// test cases
 	tests := []struct {
@@ -278,6 +284,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 
 	// fee rate of above tx is 28 sat/vB
 	depositorFee := bitcoin.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
+	feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
 
 	// expected result
 	memo, err := hex.DecodeString(tx.Vout[1].ScriptPubKey.Hex[4:])
@@ -309,7 +316,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
@@ -333,7 +340,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
@@ -357,7 +364,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
@@ -381,7 +388,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
@@ -405,7 +412,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)
@@ -425,7 +432,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Nil(t, event)
@@ -445,7 +452,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Nil(t, event)
@@ -459,7 +466,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Nil(t, event)
@@ -479,9 +486,28 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
+		require.Nil(t, event)
+	})
+
+	t.Run("should return error if RPC failed to calculate depositor fee", func(t *testing.T) {
+		// load tx
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+
+		// get BTC event
+		rpcClient := mocks.NewBTCRPCClient(t)
+		event, err := observer.GetBtcEventWithoutWitness(
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			mockDepositFeeCalculator(0.0, errors.New("rpc error")),
+		)
+		require.ErrorContains(t, err, "rpc error")
 		require.Nil(t, event)
 	})
 
@@ -499,7 +525,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Nil(t, event)
@@ -519,7 +545,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Nil(t, event)
@@ -539,7 +565,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Nil(t, event)
@@ -570,7 +596,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Nil(t, event)
@@ -588,6 +614,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 
 	// fee rate of above tx is 28 sat/vB
 	depositorFee := bitcoin.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
+	feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
 
 	t.Run("should return error on invalid Vout[0] script", func(t *testing.T) {
 		// load tx and modify Vout[0] script to invalid script
@@ -603,7 +630,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.Error(t, err)
 		require.Nil(t, event)
@@ -623,7 +650,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.ErrorContains(t, err, "no input found")
 		require.Nil(t, event)
@@ -645,7 +672,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.ErrorContains(t, err, "error getting sender address")
 		require.Nil(t, event)
@@ -662,6 +689,8 @@ func TestGetBtcEvent(t *testing.T) {
 		net := &chaincfg.MainNetParams
 		// 2.992e-05, see avgFeeRate https://mempool.space/api/v1/blocks/835640
 		depositorFee := bitcoin.DepositorFee(22 * clientcommon.BTCOutboundGasPriceMultiplier)
+		feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
+
 		txHash2 := "37777defed8717c581b4c0509329550e344bdc14ac38f71fc050096887e535c8"
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash2, false)
 		rpcClient := mocks.NewBTCRPCClient(t)
@@ -673,7 +702,7 @@ func TestGetBtcEvent(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Equal(t, (*observer.BTCInboundEvent)(nil), event)
@@ -693,6 +722,7 @@ func TestGetBtcEvent(t *testing.T) {
 
 		// fee rate of above tx is 28 sat/vB
 		depositorFee := bitcoin.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
+		feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
 
 		// expected result
 		memo, err := hex.DecodeString(tx.Vout[1].ScriptPubKey.Hex[4:])
@@ -723,7 +753,7 @@ func TestGetBtcEvent(t *testing.T) {
 			blockNumber,
 			log.Logger,
 			net,
-			depositorFee,
+			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Equal(t, eventExpected, event)

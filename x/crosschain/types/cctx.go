@@ -10,6 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -114,10 +115,21 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 		return fmt.Errorf("cannot revert before trying to process an outbound tx")
 	}
 
+	// in protocol contract V1, developers can specify a revert address for Bitcoin chains
+	// TODO: remove this V1 logic after switching Bitcoin to V2 architecture
+	// https://github.com/zeta-chain/node/issues/2711
+	revertReceiver := m.InboundParams.Sender
+	if m.ProtocolContractVersion == ProtocolContractVersion_V1 &&
+		chains.IsBitcoinChain(m.InboundParams.SenderChainId, []chains.Chain{}) {
+		revertAddress, valid := m.RevertOptions.GetBTCRevertAddress(m.InboundParams.SenderChainId)
+		if valid {
+			revertReceiver = revertAddress
+		}
+	}
+
 	// in protocol contract V2, developers can specify a specific address to receive the revert
 	// if not specified, the sender address is used
 	// note: this option is current only support for EVM type chains
-	revertReceiver := m.InboundParams.Sender
 	if m.ProtocolContractVersion == ProtocolContractVersion_V2 {
 		revertAddress, valid := m.RevertOptions.GetEVMRevertAddress()
 		if valid {

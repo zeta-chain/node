@@ -17,7 +17,7 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	ctx, deployer := r.Ctx, r.TONDeployer
 
 	// Given amount
-	amount := parseUint(r, args[0])
+	amount := utils.ParseUint(r, args[0])
 
 	// Given approx depositAndCall fee
 	depositFee, err := r.TONGateway.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDepositAndCall)

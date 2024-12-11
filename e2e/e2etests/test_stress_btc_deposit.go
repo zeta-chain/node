@@ -17,10 +17,8 @@ import (
 func TestStressBTCDeposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
-	depositAmount := parseFloat(r, args[0])
-	numDeposits := parseInt(r, args[1])
-
-	r.SetBtcAddress(r.Name, false)
+	depositAmount := utils.ParseFloat(r, args[0])
+	numDeposits := utils.ParseInt(r, args[1])
 
 	r.Logger.Print("starting stress test of %d deposits", numDeposits)
 

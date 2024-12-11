@@ -29,8 +29,7 @@ const (
 
 func TestCreateSignerMap(t *testing.T) {
 	var (
-		ts         = metrics.NewTelemetryServer()
-		tss        = mocks.NewTSSMainnet()
+		tss        = mocks.NewTSS(t)
 		log        = zerolog.New(zerolog.NewTestWriter(t))
 		baseLogger = base.Logger{Std: log, Compliance: log}
 	)
@@ -44,12 +43,10 @@ func TestCreateSignerMap(t *testing.T) {
 		cfg := config.New(false)
 
 		cfg.EVMChainConfigs[chains.Ethereum.ChainId] = config.EVMConfig{
-			Chain:    chains.Ethereum,
 			Endpoint: testutils.MockEVMRPCEndpoint,
 		}
 
 		cfg.EVMChainConfigs[chains.Polygon.ChainId] = config.EVMConfig{
-			Chain:    chains.Polygon,
 			Endpoint: testutils.MockEVMRPCEndpoint,
 		}
 
@@ -66,7 +63,7 @@ func TestCreateSignerMap(t *testing.T) {
 		})
 
 		// ACT
-		signers, err := CreateSignerMap(ctx, tss, baseLogger, ts)
+		signers, err := CreateSignerMap(ctx, tss, baseLogger)
 
 		// ASSERT
 		assert.NoError(t, err)
@@ -84,7 +81,7 @@ func TestCreateSignerMap(t *testing.T) {
 			})
 
 			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, ts, &signers)
+			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
 
 			// ASSERT
 			assert.NoError(t, err)
@@ -103,7 +100,7 @@ func TestCreateSignerMap(t *testing.T) {
 			})
 
 			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, ts, &signers)
+			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
 
 			// ASSERT
 			assert.NoError(t, err)
@@ -124,7 +121,7 @@ func TestCreateSignerMap(t *testing.T) {
 			})
 
 			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, ts, &signers)
+			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
 
 			// ASSERT
 			assert.NoError(t, err)
@@ -144,7 +141,7 @@ func TestCreateSignerMap(t *testing.T) {
 			})
 
 			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, ts, &signers)
+			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
 
 			// ASSERT
 			assert.NoError(t, err)
@@ -166,7 +163,7 @@ func TestCreateSignerMap(t *testing.T) {
 			})
 
 			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, ts, &signers)
+			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
 
 			// ASSERT
 			assert.NoError(t, err)
@@ -183,7 +180,7 @@ func TestCreateSignerMap(t *testing.T) {
 			before := len(signers)
 
 			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, ts, &signers)
+			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
 
 			// ASSERT
 			assert.NoError(t, err)
@@ -197,7 +194,7 @@ func TestCreateSignerMap(t *testing.T) {
 func TestCreateChainObserverMap(t *testing.T) {
 	var (
 		ts         = metrics.NewTelemetryServer()
-		tss        = mocks.NewTSSMainnet()
+		tss        = mocks.NewTSS(t)
 		log        = zerolog.New(zerolog.NewTestWriter(t))
 		baseLogger = base.Logger{Std: log, Compliance: log}
 		client     = mocks.NewZetacoreClient(t)
@@ -225,12 +222,10 @@ func TestCreateChainObserverMap(t *testing.T) {
 		cfg := config.New(false)
 
 		cfg.EVMChainConfigs[chains.Ethereum.ChainId] = config.EVMConfig{
-			Chain:    chains.Ethereum,
 			Endpoint: evmServer.Endpoint,
 		}
 
 		cfg.EVMChainConfigs[chains.Polygon.ChainId] = config.EVMConfig{
-			Chain:    chains.Polygon,
 			Endpoint: evmServer.Endpoint,
 		}
 
@@ -399,6 +394,46 @@ func TestCreateChainObserverMap(t *testing.T) {
 	})
 }
 
+func TestBtcDatabaseFileName(t *testing.T) {
+	tests := []struct {
+		name     string
+		chain    chains.Chain
+		expected string
+	}{
+		{
+			name:     "should use legacy file name for bitcoin mainnet",
+			chain:    chains.BitcoinMainnet,
+			expected: "btc_chain_client",
+		},
+		{
+			name:     "should use legacy file name for bitcoin testnet3",
+			chain:    chains.BitcoinTestnet,
+			expected: "btc_chain_client",
+		},
+		{
+			name:     "should use new file name for bitcoin regtest",
+			chain:    chains.BitcoinRegtest,
+			expected: "btc_chain_client_btc_regtest",
+		},
+		{
+			name:     "should use new file name for bitcoin signet",
+			chain:    chains.BitcoinSignetTestnet,
+			expected: "btc_chain_client_btc_signet_testnet",
+		},
+		{
+			name:     "should use new file name for bitcoin testnet4",
+			chain:    chains.BitcoinTestnet4,
+			expected: "btc_chain_client_btc_testnet4",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expected, btcDatabaseFileName(tt.chain))
+		})
+	}
+}
+
 func chainParams(supportedChains []chains.Chain) ([]chains.Chain, map[int64]*observertypes.ChainParams) {
 	params := make(map[int64]*observertypes.ChainParams)
 
@@ -447,11 +482,9 @@ func mustUpdateAppContext(
 	chainParams map[int64]*observertypes.ChainParams,
 ) {
 	err := app.Update(
-		app.GetKeygen(),
 		chains,
 		additionalChains,
 		chainParams,
-		"tssPubKey",
 		app.GetCrossChainFlags(),
 	)
 

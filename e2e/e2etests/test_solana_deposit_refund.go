@@ -9,12 +9,12 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestSolanaDepositAndCallRefund tests deposit of lamports calling a example contract
-func TestSolanaDepositAndCallRefund(r *runner.E2ERunner, args []string) {
+// TestSolanaDepositAndCallRevert tests deposit of lamports calling a example contract that reverts.
+func TestSolanaDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// parse deposit amount (in lamports)
-	depositAmount := parseBigInt(r, args[0])
+	depositAmount := utils.ParseBigInt(r, args[0])
 
 	// deploy a reverter contract in ZEVM
 	// TODO: consider removing repeated deployments of reverter contract
@@ -31,11 +31,5 @@ func TestSolanaDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "solana_deposit_and_refund")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 
-	// Check the error carries the revert executed.
-	// tolerate the error in both the ErrorMessage field and the StatusMessage field
-	if cctx.CctxStatus.ErrorMessage != "" {
-		require.Contains(r, cctx.CctxStatus.ErrorMessage, "revert executed")
-	} else {
-		require.Contains(r, cctx.CctxStatus.StatusMessage, utils.ErrHashRevertFoo)
-	}
+	require.Contains(r, cctx.CctxStatus.ErrorMessage, utils.ErrHashRevertFoo)
 }

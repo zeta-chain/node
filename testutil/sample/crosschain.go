@@ -218,6 +218,22 @@ func CrossChainTx(t *testing.T, index string) *types.CrossChainTx {
 	}
 }
 
+func CrossChainTxV2(t *testing.T, index string) *types.CrossChainTx {
+	r := newRandFromStringSeed(t, index)
+
+	return &types.CrossChainTx{
+		Creator:                 AccAddress(),
+		Index:                   GetCctxIndexFromString(index),
+		ZetaFees:                math.NewUint(uint64(r.Int63())),
+		RelayedMessage:          StringRandom(r, 32),
+		CctxStatus:              Status(t, index),
+		InboundParams:           InboundParams(r),
+		OutboundParams:          []*types.OutboundParams{OutboundParams(r), OutboundParams(r)},
+		ProtocolContractVersion: types.ProtocolContractVersion_V2,
+		RevertOptions:           types.NewEmptyRevertOptions(),
+	}
+}
+
 // CustomCctxsInBlockRange create 1 cctx per block in block range [lowBlock, highBlock] (inclusive)
 func CustomCctxsInBlockRange(
 	t *testing.T,
@@ -278,7 +294,7 @@ func ZetaAccounting(t *testing.T, index string) types.ZetaAccounting {
 // InboundVote creates a sample inbound vote message
 func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteInbound {
 	return types.MsgVoteInbound{
-		Creator:            "",
+		Creator:            Bech32AccAddress().String(),
 		Sender:             EthAddress().String(),
 		SenderChainId:      Chain(from).ChainId,
 		Receiver:           EthAddress().String(),

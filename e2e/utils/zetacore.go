@@ -16,9 +16,11 @@ import (
 type CCTXClient = crosschaintypes.QueryClient
 
 const (
-	EmergencyPolicyName   = "emergency"
-	AdminPolicyName       = "admin"
-	OperationalPolicyName = "operational"
+	EmergencyPolicyName       = "emergency"
+	AdminPolicyName           = "admin"
+	OperationalPolicyName     = "operational"
+	UserEmissionsWithdrawName = "emissions_withdraw"
+
 	// The timeout was increased from 4 to 6 , which allows for a higher success in test runs
 	// However this needs to be researched as to why the increase in timeout was needed.
 	// https://github.com/zeta-chain/node/issues/2690
@@ -111,7 +113,7 @@ func WaitCctxsMinedByInboundHash(
 		allFound := true
 		for j, cctx := range res.CrossChainTxs {
 			cctx := cctx
-			if !IsTerminalStatus(cctx.CctxStatus.Status) {
+			if !cctx.CctxStatus.Status.IsTerminal() {
 				// prevent spamming logs
 				if i%20 == 0 {
 					logger.Info(
@@ -168,7 +170,7 @@ func WaitCCTXMinedByIndex(
 		}
 
 		cctx := res.CrossChainTx
-		if !IsTerminalStatus(cctx.CctxStatus.Status) {
+		if !cctx.CctxStatus.Status.IsTerminal() {
 			// prevent spamming logs
 			if i%20 == 0 {
 				logger.Info(
@@ -222,6 +224,20 @@ func WaitCctxRevertedByInboundHash(
 ) crosschaintypes.CrossChainTx {
 	// wait for cctx to be reverted
 	cctxs := WaitCctxByInboundHash(ctx, t, hash, c, MatchReverted())
+	require.Len(t, cctxs, 1)
+
+	return cctxs[0]
+}
+
+// WaitCctxAbortedByInboundHash waits until cctx is aborted by inbound hash.
+func WaitCctxAbortedByInboundHash(
+	ctx context.Context,
+	t require.TestingT,
+	hash string,
+	c CCTXClient,
+) crosschaintypes.CrossChainTx {
+	// wait for cctx to be aborted
+	cctxs := WaitCctxByInboundHash(ctx, t, hash, c, MatchStatus(crosschaintypes.CctxStatus_Aborted))
 	require.Len(t, cctxs, 1)
 
 	return cctxs[0]
@@ -281,12 +297,6 @@ func WaitCctxByInboundHash(
 
 		time.Sleep(tick)
 	}
-}
-
-func IsTerminalStatus(status crosschaintypes.CctxStatus) bool {
-	return status == crosschaintypes.CctxStatus_OutboundMined ||
-		status == crosschaintypes.CctxStatus_Aborted ||
-		status == crosschaintypes.CctxStatus_Reverted
 }
 
 // WaitForBlockHeight waits until the block height reaches the given height

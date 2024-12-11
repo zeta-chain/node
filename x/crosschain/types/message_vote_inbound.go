@@ -22,7 +22,7 @@ const MaxMessageLength = 10240
 // InboundVoteOption is a function that sets some option on the inbound vote message
 type InboundVoteOption func(*MsgVoteInbound)
 
-// WithMemoRevertOptions sets the revert options for inbound vote message
+// WithRevertOptions sets the revert options for inbound vote message
 func WithRevertOptions(revertOptions RevertOptions) InboundVoteOption {
 	return func(msg *MsgVoteInbound) {
 		msg.RevertOptions = revertOptions

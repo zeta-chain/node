@@ -6,23 +6,20 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/constant"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 )
 
 func TestBitcoinDonation(r *runner.E2ERunner, args []string) {
-	// ARRANGE
-	// Given BTC address
-	r.SetBtcAddress(r.Name, false)
-
 	// Given "Live" BTC network
 	stop := r.MineBlocksIfLocalBitcoin()
 	defer stop()
 
 	// Given amount to send
 	require.Len(r, args, 1)
-	amount := parseFloat(r, args[0])
+	amount := utils.ParseFloat(r, args[0])
 	amountTotal := amount + zetabitcoin.DefaultDepositorFee
 
 	// Given a list of UTXOs

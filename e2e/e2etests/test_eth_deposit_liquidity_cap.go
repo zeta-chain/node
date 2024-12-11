@@ -35,7 +35,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("set liquidity cap tx hash: %s", res.TxHash)
 	r.Logger.Info("Depositing more than liquidity cap should make cctx reverted")
 
-	signedTx, err := r.SendEther(r.TSSAddress, amountMoreThanCap, nil)
+	signedTx, err := r.LegacySendEther(r.TSSAddress, amountMoreThanCap, nil)
 	require.NoError(r, err)
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
@@ -50,7 +50,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 	initialBal, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 
-	signedTx, err = r.SendEther(r.TSSAddress, amountLessThanCap, nil)
+	signedTx, err = r.LegacySendEther(r.TSSAddress, amountLessThanCap, nil)
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
@@ -82,7 +82,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 	initialBal, err = r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 
-	signedTx, err = r.SendEther(r.TSSAddress, amountMoreThanCap, nil)
+	signedTx, err = r.LegacySendEther(r.TSSAddress, amountMoreThanCap, nil)
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)

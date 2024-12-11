@@ -7,14 +7,15 @@ import (
 
 	"cosmossdk.io/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
-	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
@@ -52,14 +53,13 @@ func NewSigner(
 	solClient interfaces.SolanaRPCClient,
 	tss interfaces.TSSSigner,
 	relayerKey *keys.RelayerKey,
-	ts *metrics.TelemetryServer,
 	logger base.Logger,
 ) (*Signer, error) {
 	// create base signer
-	baseSigner := base.NewSigner(chain, tss, ts, logger)
+	baseSigner := base.NewSigner(chain, tss, logger)
 
 	// parse gateway ID and PDA
-	gatewayID, pda, err := contracts.ParseGatewayIDAndPda(chainParams.GatewayAddress)
+	gatewayID, pda, err := contracts.ParseGatewayWithPDA(chainParams.GatewayAddress)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
 	}
@@ -74,10 +74,11 @@ func NewSigner(
 
 	// construct Solana private key if present
 	if relayerKey != nil {
-		signer.relayerKey, err = crypto.SolanaPrivateKeyFromString(relayerKey.PrivateKey)
+		privKey, err := solana.PrivateKeyFromBase58(relayerKey.PrivateKey)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to construct solana private key")
 		}
+		signer.relayerKey = &privKey
 		logger.Std.Info().Msgf("Solana relayer address: %s", signer.relayerKey.PublicKey())
 	} else {
 		logger.Std.Info().Msg("Solana relayer key is not provided")
@@ -125,12 +126,6 @@ func (signer *Signer) TryProcessOutbound(
 	nonce := params.TssNonce
 	coinType := cctx.InboundParams.CoinType
 
-	// skip relaying the transaction if this signer hasn't set the relayer key
-	if !signer.HasRelayerKey() {
-		logger.Warn().Msgf("TryProcessOutbound: no relayer key configured")
-		return
-	}
-
 	var tx *solana.Transaction
 
 	switch coinType {
@@ -151,9 +146,24 @@ func (signer *Signer) TryProcessOutbound(
 		}
 
 		tx = withdrawTx
+
+	case coin.CoinType_ERC20:
+		withdrawSPLTx, err := signer.prepareWithdrawSPLTx(ctx, cctx, height, logger)
+		if err != nil {
+			logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign withdraw spl outbound")
+			return
+		}
+
+		tx = withdrawSPLTx
 	default:
 		logger.Error().
 			Msgf("TryProcessOutbound: can only send SOL to the Solana network")
+		return
+	}
+
+	// skip relaying the transaction if this signer hasn't set the relayer key
+	if !signer.HasRelayerKey() {
+		logger.Warn().Msgf("TryProcessOutbound: no relayer key configured")
 		return
 	}
 
@@ -219,6 +229,56 @@ func (signer *Signer) prepareWithdrawTx(
 	return tx, nil
 }
 
+func (signer *Signer) prepareWithdrawSPLTx(
+	ctx context.Context,
+	cctx *types.CrossChainTx,
+	height uint64,
+	logger zerolog.Logger,
+) (*solana.Transaction, error) {
+	params := cctx.GetCurrentOutboundParam()
+	// compliance check
+	cancelTx := compliance.IsCctxRestricted(cctx)
+	if cancelTx {
+		compliance.PrintComplianceLog(
+			logger,
+			signer.Logger().Compliance,
+			true,
+			signer.Chain().ChainId,
+			cctx.Index,
+			cctx.InboundParams.Sender,
+			params.Receiver,
+			"SPL",
+		)
+	}
+
+	// get mint details to get decimals
+	mint, err := signer.decodeMintAccountDetails(ctx, cctx.InboundParams.Asset)
+	if err != nil {
+		return nil, err
+	}
+
+	// sign gateway withdraw spl message by TSS
+	msg, err := signer.createAndSignMsgWithdrawSPL(
+		ctx,
+		params,
+		height,
+		cctx.InboundParams.Asset,
+		mint.Decimals,
+		cancelTx,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// sign the withdraw transaction by relayer key
+	tx, err := signer.signWithdrawSPLTx(ctx, *msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
+}
+
 func (signer *Signer) prepareWhitelistTx(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
@@ -256,27 +316,55 @@ func (signer *Signer) prepareWhitelistTx(
 	return tx, nil
 }
 
+func (signer *Signer) decodeMintAccountDetails(ctx context.Context, asset string) (token.Mint, error) {
+	info, err := signer.client.GetAccountInfo(ctx, solana.MustPublicKeyFromBase58(asset))
+	if err != nil {
+		return token.Mint{}, err
+	}
+
+	var mint token.Mint
+	// Account{}.Data.GetBinary() returns the *decoded* binary data
+	// regardless the original encoding (it can handle them all).
+	err = bin.NewBinDecoder(info.Value.Data.GetBinary()).Decode(&mint)
+	if err != nil {
+		return token.Mint{}, err
+	}
+
+	return mint, nil
+}
+
 // SetGatewayAddress sets the gateway address
 func (signer *Signer) SetGatewayAddress(address string) {
+	// noop
+	if address == "" || signer.gatewayID.String() == address {
+		return
+	}
+
 	// parse gateway ID and PDA
-	gatewayID, pda, err := contracts.ParseGatewayIDAndPda(address)
+	gatewayID, pda, err := contracts.ParseGatewayWithPDA(address)
 	if err != nil {
 		signer.Logger().Std.Error().Err(err).Msgf("cannot parse gateway address: %s", address)
 		return
 	}
 
-	// update gateway ID and PDA
-	signer.Lock()
-	defer signer.Unlock()
+	// noop
+	if signer.gatewayID.Equals(gatewayID) {
+		return
+	}
 
+	signer.Logger().Std.Info().
+		Str("signer.old_gateway_address", signer.gatewayID.String()).
+		Str("signer.new_gateway_address", gatewayID.String()).
+		Msg("Updated gateway address")
+
+	signer.Lock()
 	signer.gatewayID = gatewayID
 	signer.pda = pda
+	signer.Unlock()
 }
 
 // GetGatewayAddress returns the gateway address
 func (signer *Signer) GetGatewayAddress() string {
-	signer.Lock()
-	defer signer.Unlock()
 	return signer.gatewayID.String()
 }
 

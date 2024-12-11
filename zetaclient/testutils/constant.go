@@ -10,12 +10,10 @@ const (
 	// MockEVMRPCEndpoint is the endpoint to enable the mock EVM RPC client
 	MockEVMRPCEndpoint = "MockEVMRPCEnabled"
 
-	// TSSAddressEVMMainnet the EVM TSS address for test purposes
-	// Note: public key is zetapub1addwnpepqtadxdyt037h86z60nl98t6zk56mw5zpnm79tsmvspln3hgt5phdc79kvfc
+	// TSSAddressEVMMainnet TSSAddressBTCMainnet TSSPubKeyMainnet actual mainnet pub key & addresses
 	TSSAddressEVMMainnet = "0x70e967acFcC17c3941E87562161406d41676FD83"
-
-	// TSSAddressBTCMainnet the BTC TSS address for test purposes
 	TSSAddressBTCMainnet = "bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y"
+	TSSPubKeyMainnet     = "zetapub1addwnpepqtadxdyt037h86z60nl98t6zk56mw5zpnm79tsmvspln3hgt5phdc79kvfc"
 
 	// TSSPubkeyAthens3 is the TSS public key in Athens3
 	TSSPubkeyAthens3 = "zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm76z3jncsnzz32rclangr2g35p"
@@ -39,12 +37,14 @@ const (
 	EventERC20Withdraw = "Withdrawn"
 )
 
+// OldSolanaGatewayAddressDevnet is the old gateway address deployed on Solana devnet
+const OldSolanaGatewayAddressDevnet = "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
+
 // GatewayAddresses contains constants gateway addresses for testing
 var GatewayAddresses = map[int64]string{
-	// Gateway address on Solana devnet
-	// NOTE: currently different deployer key pair is used for development compared to live networks
-	// as live networks key pair is sensitive information at this point, can be unified once we have deployments completed
-	chains.SolanaDevnet.ChainId: "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d",
+	// Solana gateway addresses
+	chains.SolanaDevnet.ChainId:  "ZETAjseVjuFsxdRxo6MmTCvqFwb3ZHUx56Co3vCmGis",
+	chains.SolanaMainnet.ChainId: "ZETAjseVjuFsxdRxo6MmTCvqFwb3ZHUx56Co3vCmGis",
 }
 
 // ConnectorAddresses contains constants ERC20 connector addresses for testing

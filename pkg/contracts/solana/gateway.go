@@ -8,38 +8,50 @@ import (
 )
 
 const (
-	// SolanaGatewayProgramID is the program ID of the Solana gateway program
-	SolanaGatewayProgramID = "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
-
 	// PDASeed is the seed for the Solana gateway program derived address
 	PDASeed = "meta"
 
 	// AccountsNumberOfDeposit is the number of accounts required for Solana gateway deposit instruction
 	// [signer, pda, system_program]
-	AccountsNumDeposit = 3
+	accountsNumDeposit = 3
+
+	// AccountsNumberOfDeposit is the number of accounts required for Solana gateway deposit spl instruction
+	// [signer, pda, whitelist_entry, mint_account, token_program, from, to, system_program]
+	accountsNumberDepositSPL = 8
 )
 
 var (
 	// DiscriminatorInitialize returns the discriminator for Solana gateway 'initialize' instruction
 	DiscriminatorInitialize = idlgateway.IDLGateway.GetDiscriminator("initialize")
+
 	// DiscriminatorDeposit returns the discriminator for Solana gateway 'deposit' instruction
 	DiscriminatorDeposit = idlgateway.IDLGateway.GetDiscriminator("deposit")
+
+	// DiscriminatorDeposit returns the discriminator for Solana gateway 'deposit_and_call' instruction
+	DiscriminatorDepositAndCall = idlgateway.IDLGateway.GetDiscriminator("deposit_and_call")
+
 	// DiscriminatorDepositSPL returns the discriminator for Solana gateway 'deposit_spl_token' instruction
 	DiscriminatorDepositSPL = idlgateway.IDLGateway.GetDiscriminator("deposit_spl_token")
+
+	// DiscriminatorDepositSPLAndCall returns the discriminator for Solana gateway 'deposit_spl_token_and_call' instruction
+	DiscriminatorDepositSPLAndCall = idlgateway.IDLGateway.GetDiscriminator("deposit_spl_token_and_call")
+
 	// DiscriminatorWithdraw returns the discriminator for Solana gateway 'withdraw' instruction
 	DiscriminatorWithdraw = idlgateway.IDLGateway.GetDiscriminator("withdraw")
+
 	// DiscriminatorWithdrawSPL returns the discriminator for Solana gateway 'withdraw_spl_token' instruction
 	DiscriminatorWithdrawSPL = idlgateway.IDLGateway.GetDiscriminator("withdraw_spl_token")
+
 	// DiscriminatorWhitelist returns the discriminator for Solana gateway 'whitelist_spl_mint' instruction
 	DiscriminatorWhitelistSplMint = idlgateway.IDLGateway.GetDiscriminator("whitelist_spl_mint")
 )
 
-// ParseGatewayAddressAndPda parses the gateway id and program derived address from the given string
-func ParseGatewayIDAndPda(address string) (solana.PublicKey, solana.PublicKey, error) {
+// ParseGatewayWithPDA parses the gateway id and program derived address from the given string
+func ParseGatewayWithPDA(gatewayAddress string) (solana.PublicKey, solana.PublicKey, error) {
 	var gatewayID, pda solana.PublicKey
 
 	// decode gateway address
-	gatewayID, err := solana.PublicKeyFromBase58(address)
+	gatewayID, err := solana.PublicKeyFromBase58(gatewayAddress)
 	if err != nil {
 		return gatewayID, pda, errors.Wrap(err, "unable to decode address")
 	}
