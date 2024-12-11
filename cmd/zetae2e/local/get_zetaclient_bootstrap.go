@@ -1,4 +1,4 @@
-package main
+package local
 
 import (
 	"fmt"
@@ -17,6 +17,8 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
+const grpcURLFlag = "grpc-url"
+
 func NewGetZetaclientBootstrap() *cobra.Command {
 	var ConfigureZetaclientBootstrapCmd = &cobra.Command{
 		Use:   "get-zetaclient-bootstrap",
@@ -24,13 +26,17 @@ func NewGetZetaclientBootstrap() *cobra.Command {
 		RunE:  getZetaclientBootstrap,
 	}
 
+	ConfigureZetaclientBootstrapCmd.Flags().
+		String(grpcURLFlag, "zetacore0:9090", "--grpc-url zetacore0:9090")
+
 	return ConfigureZetaclientBootstrapCmd
 }
 
 func getZetaclientBootstrap(cmd *cobra.Command, _ []string) error {
 	sdkconfig.SetDefault(true)
+	grpcURL, _ := cmd.Flags().GetString(grpcURLFlag)
 	rpcClient, err := rpc.NewGRPCClients(
-		"zetacore0:9090",
+		grpcURL,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithBlock(),
 	)

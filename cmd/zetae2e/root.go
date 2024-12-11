@@ -29,7 +29,6 @@ func NewRootCmd() *cobra.Command {
 		NewStressTestCmd(),
 		NewInitCmd(),
 		NewSetupBitcoinCmd(),
-		NewGetZetaclientBootstrap(),
 	)
 
 	return cmd
