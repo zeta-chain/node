@@ -14,8 +14,8 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-// SimulateMsgAddObserverNodeAccount generates a TypeMsgAddObserver and delivers it.
-func SimulateMsgAddObserverNodeAccount(k keeper.Keeper) simtypes.Operation {
+// SimulateAddObserverNodeAccount generates a TypeMsgAddObserver and delivers it.
+func SimulateAddObserverNodeAccount(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
@@ -49,22 +49,29 @@ func SimulateMsgAddObserverNodeAccount(k keeper.Keeper) simtypes.Operation {
 			), nil, nil
 		}
 		newObserver := ""
-		for {
+		foundNewObserver := RepeatCheck(func() bool {
 			randomValidator := validators[r.Intn(len(validators))]
-			randomValidatorOperatorAddress, err := types.GetAccAddressFromOperatorAddress(
-				randomValidator.OperatorAddress,
-			)
+			randomValidatorAddress, err := types.GetAccAddressFromOperatorAddress(randomValidator.OperatorAddress)
 			if err != nil {
-				continue
+				return false
 			}
-			newObserver = randomValidatorOperatorAddress.String()
+			newObserver = randomValidatorAddress.String()
 			err = k.IsValidator(ctx, newObserver)
 			if err != nil {
-				continue
+				return false
 			}
 			if _, ok := observerMap[newObserver]; !ok {
-				break
+				return true
 			}
+			return false
+		})
+
+		if !foundNewObserver {
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				types.TypeMsgAddObserver,
+				"no new observer found",
+			), nil, nil
 		}
 
 		msg := types.MsgAddObserver{

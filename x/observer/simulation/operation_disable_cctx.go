@@ -13,8 +13,8 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-// SimulateMsgDisableCCTX generates a MsgDisableCCTX and delivers it.
-func SimulateMsgDisableCCTX(k keeper.Keeper) simtypes.Operation {
+// SimulateDisableCCTX generates a MsgDisableCCTX and delivers it.
+func SimulateDisableCCTX(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)

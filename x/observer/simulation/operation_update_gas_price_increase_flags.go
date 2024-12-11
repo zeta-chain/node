@@ -14,8 +14,8 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-// SimulateMsgUpdateGasPriceIncreaseFlags generates a MsgUpdateGasPriceIncreaseFlags with random values
-func SimulateMsgUpdateGasPriceIncreaseFlags(k keeper.Keeper) simtypes.Operation {
+// SimulateUpdateGasPriceIncreaseFlags generates a MsgUpdateGasPriceIncreaseFlags with random values
+func SimulateUpdateGasPriceIncreaseFlags(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)

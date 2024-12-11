@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 
@@ -11,19 +10,16 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	ethcrypto "github.com/ethereum/go-ethereum/crypto"
-
-	"github.com/zeta-chain/node/pkg/authz"
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
-	"github.com/zeta-chain/node/x/crosschain/keeper"
-	"github.com/zeta-chain/node/x/crosschain/types"
+
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/x/observer/keeper"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
-func operationSimulateVoteOutbound(
+func operationSimulateVoteTss(
 	k keeper.Keeper,
-	msg types.MsgVoteOutbound,
+	msg types.MsgVoteTSS,
 	simAccount simtypes.Account,
 ) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, _ []simtypes.Account, _ string,
@@ -58,11 +54,8 @@ func operationSimulateVoteOutbound(
 
 // SimulateVoteOutbound generates a MsgVoteOutbound with random values
 // This is the only operation which saves a cctx directly to the store.
-func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
-	defaultVote := chains.ReceiveStatus_success
-	alternativeVote := chains.ReceiveStatus_failed
-	observerVotesTransitionMatrix, statePercentageArray, curNumVotesState := ObserverVotesSimulationMatrix()
-	ballotVotesTransitionMatrix, yesVotePercentageArray, ballotVotesState := BallotVoteSimulationMatrix()
+func SimulateMsgVoteTSS(k keeper.Keeper) simtypes.Operation {
+
 	return func(
 		r *rand.Rand,
 		app *baseapp.BaseApp,
@@ -70,77 +63,59 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 		accs []simtypes.Account,
 		chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		to, from := int64(1337), int64(101)
-		supportedChains := k.GetObserverKeeper().GetSupportedChains(ctx)
-		for _, chain := range supportedChains {
-			if chains.IsEthereumChain(chain.ChainId, []chains.Chain{}) {
-				to = chain.ChainId
-			}
-			if chains.IsZetaChain(chain.ChainId, []chains.Chain{}) {
-				from = chain.ChainId
-			}
+		yesVote := chains.ReceiveStatus_success
+		noVote := chains.ReceiveStatus_failed
+		ballotVotesTransitionMatrix, yesVotePercentageArray, ballotVotesState := BallotVoteSimulationMatrix()
+		nodeAccounts := k.GetAllNodeAccount(ctx)
+		numVotes := len(nodeAccounts)
+		ballotVotesState = ballotVotesTransitionMatrix.NextState(r, ballotVotesState)
+		yesVotePercentage := yesVotePercentageArray[ballotVotesState]
+		numberOfYesVotes := int(math.Ceil(float64(numVotes) * yesVotePercentage))
+
+		vote := yesVote
+		if numberOfYesVotes == 0 {
+			vote = noVote
 		}
 
-		_, creator, err := GetRandomAccountAndObserver(r, ctx, k, accs)
+		newTss, err := sample.TSSFromRand(r)
 		if err != nil {
-			return simtypes.OperationMsg{}, nil, nil
+			return simtypes.OperationMsg{}, nil, err
 		}
-		index := ethcrypto.Keccak256Hash([]byte(fmt.Sprintf("%d", r.Int63()))).Hex()
 
-		tss, found := k.GetObserverKeeper().GetTSS(ctx)
+		keygen, found := k.GetKeygen(ctx)
 		if !found {
-			return simtypes.OperationMsg{}, nil, fmt.Errorf("tss not found")
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgVoteTSS, "keygen not found"), nil, nil
 		}
 
-		asset, err := GetAsset(ctx, k.GetFungibleKeeper(), from)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, authz.OutboundVoter.String(), "unable to get asset"), nil, err
+		msg := types.MsgVoteTSS{
+			Creator:          "",
+			TssPubkey:        newTss.TssPubkey,
+			KeygenZetaHeight: keygen.BlockNumber,
+			Status:           vote,
 		}
-
-		cctx := sample.CCTXfromRand(r, creator, index, to, from, tss.TssPubkey, asset)
-		msg := types.MsgVoteOutbound{
-			CctxHash:                          cctx.Index,
-			OutboundTssNonce:                  cctx.GetCurrentOutboundParam().TssNonce,
-			OutboundChain:                     cctx.GetCurrentOutboundParam().ReceiverChainId,
-			Status:                            defaultVote,
-			Creator:                           cctx.Creator,
-			ObservedOutboundHash:              ethcommon.BytesToHash(sample.EthAddressFromRand(r).Bytes()).String(),
-			ValueReceived:                     cctx.GetCurrentOutboundParam().Amount,
-			ObservedOutboundBlockHeight:       cctx.GetCurrentOutboundParam().ObservedExternalHeight,
-			ObservedOutboundEffectiveGasPrice: cctx.GetCurrentOutboundParam().EffectiveGasPrice,
-			ObservedOutboundGasUsed:           cctx.GetCurrentOutboundParam().GasUsed,
-			CoinType:                          cctx.InboundParams.CoinType,
-		}
-
-		err = k.SetObserverOutboundInfo(ctx, to, &cctx)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to set observer outbound info"), nil, err
-		}
-
-		msg.OutboundTssNonce = cctx.GetCurrentOutboundParam().TssNonce
-		k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, cctx, tss.TssPubkey)
 
 		// Pick a random observer to create the ballot
 		// If this returns an error, it is likely that the entire observer set has been removed
-		simAccount, firstVoter, err := GetRandomAccountAndObserver(r, ctx, k, accs)
+		simAccount, firstVoter, err := GetRandomNodeAccount(r, ctx, k, accs)
 		if err != nil {
 			return simtypes.OperationMsg{}, nil, nil
 		}
 
 		txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
 		account := k.GetAuthKeeper().GetAccount(ctx, simAccount.Address)
+
 		firstMsg := msg
 		firstMsg.Creator = firstVoter
 
 		// THe first vote should always create a new ballot
-		_, found = k.GetObserverKeeper().GetBallot(ctx, firstMsg.Digest())
+		_, found = k.GetBallot(ctx, firstMsg.Digest())
 		if found {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "ballot already exists"), nil, nil
 		}
 
 		err = firstMsg.ValidateBasic()
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate first outbound vote"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate first tss vote"), nil, err
 		}
 
 		tx, err := simtestutil.GenSignedMockTx(
@@ -167,44 +142,23 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 
 		opMsg := simtypes.NewOperationMsg(&msg, true, "", nil)
 
-		// Add subsequent votes
-		observerSet, found := k.GetObserverKeeper().GetObserverSet(ctx)
-		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, authz.OutboundVoter.String(), "observer set not found"), nil, nil
-		}
-
-		// 1) Schedule operations for votes
-		// 1.1) first pick a number of people to vote.
-		curNumVotesState = observerVotesTransitionMatrix.NextState(r, curNumVotesState)
-		numVotes := int(math.Ceil(float64(len(observerSet.ObserverList)) * statePercentageArray[curNumVotesState]))
-
-		// 1.2) select who votes
-		whoVotes := r.Perm(len(observerSet.ObserverList))
-		whoVotes = whoVotes[:numVotes]
-
 		var fops []simtypes.FutureOperation
 
-		ballotVotesState = ballotVotesTransitionMatrix.NextState(r, ballotVotesState)
-		yesVotePercentage := yesVotePercentageArray[ballotVotesState]
-		numberOfYesVotes := int(math.Ceil(float64(numVotes) * yesVotePercentage))
-		vote := defaultVote
-
-		for voteCount, observerIdx := range whoVotes {
-			if voteCount == numberOfYesVotes {
-				vote = alternativeVote
+		for voteCount, nodeAccount := range nodeAccounts {
+			if vote == yesVote && voteCount == numberOfYesVotes {
+				vote = noVote
 			}
-			observerAddress := observerSet.ObserverList[observerIdx]
 			// firstVoter has already voted.
-			if observerAddress == firstVoter {
+			if nodeAccount.Operator == firstVoter {
 				continue
 			}
-			observerAccount, err := GetObserverAccount(observerAddress, accs)
+			observerAccount, err := GetSimAccount(nodeAccount.Operator, accs)
 			if err != nil {
 				continue
 			}
 			// 1.3) schedule the vote
 			votingMsg := msg
-			votingMsg.Creator = observerAddress
+			votingMsg.Creator = nodeAccount.Operator
 			votingMsg.Status = vote
 
 			e := votingMsg.ValidateBasic()
@@ -216,7 +170,7 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 				// Submit all subsequent votes in the next block.
 				// We can consider adding a random block height between 1 and ballot maturity blocks in the future.
 				BlockHeight: int(ctx.BlockHeight() + 1),
-				Op:          operationSimulateVoteOutbound(k, votingMsg, observerAccount),
+				Op:          operationSimulateVoteTss(k, votingMsg, observerAccount),
 			})
 		}
 		return opMsg, fops, nil

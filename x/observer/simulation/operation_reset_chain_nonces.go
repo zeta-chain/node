@@ -14,8 +14,8 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-// SimulateMsgResetChainNonces generates a MsgResetChainNonces and delivers it.
-func SimulateMsgResetChainNonces(k keeper.Keeper) simtypes.Operation {
+// SimulateResetChainNonces generates a MsgResetChainNonces and delivers it.
+func SimulateResetChainNonces(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
@@ -26,7 +26,7 @@ func SimulateMsgResetChainNonces(k keeper.Keeper) simtypes.Operation {
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
 
-		randomChain, err := GetExternalChain(ctx, k, r, 10)
+		randomChain, err := GetExternalChain(ctx, k, r)
 		if err != nil {
 			return simtypes.NoOpMsg(
 					types.ModuleName,

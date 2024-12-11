@@ -5,6 +5,7 @@ import (
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -46,6 +47,8 @@ const (
 	DefaultWeightMsgTypeMsgResetChainNonces            = 5
 	DefaultWeightMsgTypeMsgUpdateGasPriceIncreaseFlags = 10
 	DefaultWeightMsgTypeMsgAddObserver                 = 5
+
+	DefaultRetryCount = 10
 )
 
 // WeightedOperations for observer module
@@ -123,22 +126,22 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgTypeMsgEnableCCTX,
-			SimulateMsgEnableCCTX(k),
+			SimulateEnableCCTX(k),
 		),
 
 		simulation.NewWeightedOperation(
 			weightMsgTypeMsgDisableCCTX,
-			SimulateMsgDisableCCTX(k),
+			SimulateDisableCCTX(k),
 		),
 
 		simulation.NewWeightedOperation(
 			weightMsgTypeMsgUpdateKeygen,
-			SimulateMsgUpdateKeygen(k),
+			SimulateUpdateKeygen(k),
 		),
 		//
 		simulation.NewWeightedOperation(
 			weightMsgTypeMsgUpdateChainParams,
-			SimulateMsgUpdateChainParams(k),
+			SimulateUpdateChainParams(k),
 		),
 		//
 		//simulation.NewWeightedOperation(
@@ -148,27 +151,32 @@ func WeightedOperations(
 
 		simulation.NewWeightedOperation(
 			weightMsgTypeMsgResetChainNonces,
-			SimulateMsgResetChainNonces(k),
+			SimulateResetChainNonces(k),
 		),
 
 		simulation.NewWeightedOperation(
 			weightMsgTypeMsgUpdateGasPriceIncreaseFlags,
-			SimulateMsgUpdateGasPriceIncreaseFlags(k),
+			SimulateUpdateGasPriceIncreaseFlags(k),
 		),
 
 		simulation.NewWeightedOperation(
 			weightMsgTypeMsgAddObserver,
-			SimulateMsgUpdateObserver(k),
+			SimulateUpdateObserver(k),
 		),
 
 		simulation.NewWeightedOperation(
 			weightMsgTypeMsgAddObserver,
-			SimulateMsgAddObserverNodeAccount(k),
+			SimulateAddObserverNodeAccount(k),
 		),
 
 		simulation.NewWeightedOperation(
 			weightMsgTypeMsgAddObserver,
-			SimulateMsgAddObserver(k),
+			SimulateAddObserver(k),
+		),
+
+		simulation.NewWeightedOperation(
+			weightMsgTypeMsgVoteTSS,
+			SimulateMsgVoteTSS(k),
 		),
 	}
 }
@@ -194,19 +202,25 @@ func GetPolicyAccount(ctx sdk.Context, k types.AuthorityKeeper, accounts []simty
 	return simAccount, nil
 }
 
-func GetExternalChain(ctx sdk.Context, k keeper.Keeper, r *rand.Rand, retryCount int) (chains.Chain, error) {
+func GetExternalChain(ctx sdk.Context, k keeper.Keeper, r *rand.Rand) (chains.Chain, error) {
 	supportedChains := k.GetSupportedChains(ctx)
 	if len(supportedChains) == 0 {
 		return chains.Chain{}, fmt.Errorf("no supported chains found")
 	}
-	// remove zeta chain from the supported chains
-	for i := 0; i < retryCount; i++ {
+	externalChain := chains.Chain{}
+	foundExternalChain := RepeatCheck(func() bool {
 		c := supportedChains[r.Intn(len(supportedChains))]
 		if !c.IsZetaChain() {
-			return c, nil
+			externalChain = c
+			return true
 		}
+		return false
+	})
+
+	if !foundExternalChain {
+		return chains.Chain{}, fmt.Errorf("no external chain found")
 	}
-	return chains.Chain{}, fmt.Errorf("no external chain found")
+	return externalChain, nil
 }
 
 // GetRandomAccountAndObserver returns a random account and the associated observer address
@@ -229,29 +243,49 @@ func GetRandomAccountAndObserver(
 	}
 
 	randomObserver := ""
-	foundObserver := false
-	for i := 0; i < 10; i++ {
-		randomObserver = GetRandomObserver(r, observers.ObserverList)
+	foundObserver := RepeatCheck(func() bool {
+		randomObserver = GetRandomObserver(r, observerList)
 		_, foundNodeAccount := k.GetNodeAccount(ctx, randomObserver)
 		if !foundNodeAccount {
-			continue
+			return false
 		}
 		ok := k.IsNonTombstonedObserver(ctx, randomObserver)
 		if ok {
-			foundObserver = true
-			break
+			return true
 		}
-	}
+		return false
+	})
 
 	if !foundObserver {
 		return simtypes.Account{}, "no observer found", nil, nil
 	}
 
-	simAccount, err := GetObserverAccount(randomObserver, accounts)
+	simAccount, err := GetSimAccount(randomObserver, accounts)
 	if err != nil {
 		return simtypes.Account{}, "", observerList, err
 	}
 	return simAccount, randomObserver, observerList, nil
+}
+
+func GetRandomNodeAccount(
+	r *rand.Rand,
+	ctx sdk.Context,
+	k keeper.Keeper,
+	accounts []simtypes.Account,
+) (simtypes.Account, string, error) {
+	nodeAccounts := k.GetAllNodeAccount(ctx)
+
+	if len(nodeAccounts) == 0 {
+		return simtypes.Account{}, "", fmt.Errorf("no node accounts present")
+	}
+
+	randomNodeAccount := nodeAccounts[r.Intn(len(nodeAccounts))].Operator
+
+	simAccount, err := GetSimAccount(randomNodeAccount, accounts)
+	if err != nil {
+		return simtypes.Account{}, "", err
+	}
+	return simAccount, randomNodeAccount, nil
 }
 
 func GetRandomObserver(r *rand.Rand, observerList []string) string {
@@ -259,12 +293,12 @@ func GetRandomObserver(r *rand.Rand, observerList []string) string {
 	return observerList[idx]
 }
 
-// GetObserverAccount returns the account associated with the observer address from the list of accounts provided
-// GetObserverAccount can fail if all the observers are removed from the observer set ,this can happen
+// GetSimAccount returns the account associated with the observer address from the list of accounts provided
+// GetSimAccount can fail if all the observers are removed from the observer set ,this can happen
 //if the other modules create transactions which affect the validator
 //and triggers any of the staking hooks defined in the observer modules
 
-func GetObserverAccount(observerAddress string, accounts []simtypes.Account) (simtypes.Account, error) {
+func GetSimAccount(observerAddress string, accounts []simtypes.Account) (simtypes.Account, error) {
 	operatorAddress, err := types.GetOperatorAddressFromAccAddress(observerAddress)
 	if err != nil {
 		return simtypes.Account{}, fmt.Errorf("validator not found for observer ")
@@ -275,4 +309,102 @@ func GetObserverAccount(observerAddress string, accounts []simtypes.Account) (si
 		return simtypes.Account{}, fmt.Errorf("operator account not found")
 	}
 	return simAccount, nil
+}
+
+func RepeatCheck(fn func() bool) bool {
+	for i := 0; i < DefaultRetryCount; i++ {
+		if fn() {
+			return true
+		}
+	}
+	return false
+}
+
+func ObserverVotesSimulationMatrix() (simtypes.TransitionMatrix, []float64, int) {
+	observerVotesTransitionMatrix, _ := simulation.CreateTransitionMatrix([][]int{
+		{20, 10, 0, 0, 0, 0},
+		{55, 50, 20, 10, 0, 0},
+		{25, 25, 30, 25, 30, 15},
+		{0, 15, 30, 25, 30, 30},
+		{0, 0, 20, 30, 30, 30},
+		{0, 0, 0, 10, 10, 25},
+	})
+	// The states are:
+	// column 1: All observers vote
+	// column 2: 90% vote
+	// column 3: 75% vote
+	// column 4: 40% vote
+	// column 5: 15% vote
+	// column 6: noone votes
+	// All columns sum to 100 for simplicity, but this is arbitrary and can be changed
+	statePercentageArray := []float64{1, .9, .75, .4, .15, 0}
+	curNumVotesState := 1
+	return observerVotesTransitionMatrix, statePercentageArray, curNumVotesState
+}
+
+func BallotVoteSimulationMatrix() (simtypes.TransitionMatrix, []float64, int) {
+	ballotTransitionMatrix, _ := simulation.CreateTransitionMatrix([][]int{
+		{70, 10},
+		{30, 10},
+	})
+	// The states are:
+	// column 1: 100% vote yes
+	// column 2: 0% vote yes
+	// For all conditions we assume if the vote is not a yes
+	// then it is a no .
+	yesVoteArray := []float64{1, 0}
+	ballotVotesState := 1
+	return ballotTransitionMatrix, yesVoteArray, ballotVotesState
+}
+
+// GenAndDeliverTxWithRandFees generates a transaction with a random fee and delivers it.
+func GenAndDeliverTxWithRandFees(
+	txCtx simulation.OperationInput,
+) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
+	spendable := txCtx.Bankkeeper.SpendableCoins(txCtx.Context, account.GetAddress())
+
+	var fees sdk.Coins
+	var err error
+
+	coins, hasNeg := spendable.SafeSub(txCtx.CoinsSpentInMsg...)
+	if hasNeg {
+		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "message doesn't leave room for fees"), nil, err
+	}
+
+	fees, err = simtypes.RandomFees(txCtx.R, txCtx.Context, coins)
+	if err != nil {
+		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to generate fees"), nil, err
+	}
+	return GenAndDeliverTx(txCtx, fees)
+}
+
+// GenAndDeliverTx generates a transactions and delivers it with the provided fees.
+// This function does not return an error if the transaction fails to deliver.
+func GenAndDeliverTx(
+	txCtx simulation.OperationInput,
+	fees sdk.Coins,
+) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
+	tx, err := simtestutil.GenSignedMockTx(
+		txCtx.R,
+		txCtx.TxGen,
+		[]sdk.Msg{txCtx.Msg},
+		fees,
+		simtestutil.DefaultGenTxGas,
+		txCtx.Context.ChainID(),
+		[]uint64{account.GetAccountNumber()},
+		[]uint64{account.GetSequence()},
+		txCtx.SimAccount.PrivKey,
+	)
+	if err != nil {
+		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to generate mock tx"), nil, err
+	}
+
+	_, _, err = txCtx.App.SimDeliver(txCtx.TxGen.TxEncoder(), tx)
+	if err != nil {
+		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to deliver tx"), nil, nil
+	}
+
+	return simtypes.NewOperationMsg(txCtx.Msg, true, "", txCtx.Cdc), nil, nil
 }

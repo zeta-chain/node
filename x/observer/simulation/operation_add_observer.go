@@ -14,8 +14,8 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-// SimulateMsgAddObserver generates a TypeMsgAddObserver and delivers it. The message adds an observer to the observer set
-func SimulateMsgAddObserver(k keeper.Keeper) simtypes.Operation {
+// SimulateAddObserver generates a TypeMsgAddObserver and delivers it. The message adds an observer to the observer set
+func SimulateAddObserver(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
@@ -44,14 +44,13 @@ func SimulateMsgAddObserver(k keeper.Keeper) simtypes.Operation {
 
 		// Pick a random observer which part of the node account but not in the observer set
 		var newObserver string
-		foundNA := false
-		for i := 0; i < 10; i++ {
+		foundNA := RepeatCheck(func() bool {
 			newObserver = nodeAccounts[r.Intn(len(nodeAccounts))].Operator
 			if _, found := observerMap[newObserver]; !found {
-				foundNA = true
-				break
+				return true
 			}
-		}
+			return false
+		})
 		if !foundNA {
 			return simtypes.NoOpMsg(
 				types.ModuleName,

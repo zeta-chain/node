@@ -34,19 +34,27 @@ func SimulateMsgRemoveChainParams(k keeper.Keeper) simtypes.Operation {
 			), nil, nil
 		}
 
-		randomChainId := int64(0)
-		// remove zeta chain from the supported chains
-		for {
+		randomExternalChain := int64(0)
+		foundExternalChain := RepeatCheck(func() bool {
 			c := supportedChains[r.Intn(len(supportedChains))]
 			if !c.IsZetaChain() {
-				randomChainId = c.ChainId
-				break
+				randomExternalChain = c.ChainId
+				return true
 			}
+			return false
+		})
+
+		if !foundExternalChain {
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				types.TypeMsgRemoveChainParams,
+				"no external chain found",
+			), nil, nil
 		}
 
 		msg := types.MsgRemoveChainParams{
 			Creator: policyAccount.Address.String(),
-			ChainId: randomChainId,
+			ChainId: randomExternalChain,
 		}
 
 		err = msg.ValidateBasic()

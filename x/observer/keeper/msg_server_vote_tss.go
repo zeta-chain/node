@@ -27,8 +27,7 @@ const voteTSSid = "Vote TSS"
 func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types.MsgVoteTSSResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Checks whether a signer is authorized to sign, by checking their address against the observer mapper
-	// which contains the observer list for the chain and type.
+	// Checks whether a signer is authorized to sign, by checking if the signer has a node account.
 	_, found := k.GetNodeAccount(ctx, msg.Creator)
 	if !found {
 		return nil, errorsmod.Wrapf(
@@ -80,6 +79,12 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 		return &types.MsgVoteTSSResponse{}, errorsmod.Wrap(err, voteTSSid)
 	}
 
+	//if ctx.BlockHeight() == 3 || ctx.BlockHeight() == 4 {
+	//	fmt.Println("Vote added", ctx.BlockHeight(), msg.TssPubkey)
+	//	fmt.Println("Votes", ballot.Votes)
+	//	fmt.Println("VoterList Length", len(ballot.VoterList))
+	//}
+
 	ballot, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
 	if !isFinalized {
 		return &types.MsgVoteTSSResponse{
@@ -88,6 +93,8 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 			KeygenSuccess: false,
 		}, nil
 	}
+
+	//fmt.Println("Ballot finalized", ballot.BallotStatus)
 
 	// The ballot is finalized, we check if this is the correct ballot for updating the TSS
 	// The requirements are
@@ -104,7 +111,7 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 		}, nil
 	}
 
-	// For cases when an observer tries to vote for an older pending ballot, associated with a keygen that was discarded , we would return at this check while still adding the vote to the ballot
+	// For cases when an observer tries to vote for an older pending ballot, associated with a keygen that was discarded, we would return at this check while still adding the vote to the ballot
 	if msg.KeygenZetaHeight != keygen.BlockNumber {
 		return &types.MsgVoteTSSResponse{
 			VoteFinalized: isFinalized,

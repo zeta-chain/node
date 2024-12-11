@@ -14,8 +14,8 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-// SimulateMsgUpdateKeygen generates a MsgUpdateKeygen and delivers it.
-func SimulateMsgUpdateKeygen(k keeper.Keeper) simtypes.Operation {
+// SimulateUpdateKeygen generates a MsgUpdateKeygen and delivers it.
+func SimulateUpdateKeygen(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
