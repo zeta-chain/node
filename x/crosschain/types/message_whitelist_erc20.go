@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/pkg/errors"
+
 	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/x/fungible/types"
 )

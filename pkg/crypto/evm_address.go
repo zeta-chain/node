@@ -1,8 +1,9 @@
 package crypto
 
 import (
-	"github.com/ethereum/go-ethereum/common"
 	"strings"
+
+	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/zeta-chain/node/pkg/constant"
 )
