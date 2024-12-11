@@ -1,29 +1,18 @@
 package observer
 
 import (
-	"math/rand"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
+	"github.com/zeta-chain/node/x/observer/simulation"
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-const (
-	// #nosec G101 not a hardcoded credential
-	opWeightMsgUpdateClientParams          = "op_weight_msg_update_client_params"
-	defaultWeightMsgUpdateClientParams int = 100
-)
-
-// GenerateGenesisState creates a randomized GenState of the module
+// GenerateGenesisState creates a GenState of the module used to initialize the simulation runs
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	accs := make([]string, len(simState.Accounts))
-	for i, acc := range simState.Accounts {
-		accs[i] = acc.Address.String()
-	}
-	observerGenesis := types.GenesisState{}
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&observerGenesis)
+	observerGenesis := types.DefaultGenesis()
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(observerGenesis)
 }
 
 // ProposalContents doesn't return any content functions for governance proposals
@@ -36,18 +25,13 @@ func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedPropo
 }
 
 // RegisterStoreDecoder registers a decoder
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+}
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	operations := make([]simtypes.WeightedOperation, 0)
-
-	var weightMsgUpdateClientParams int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgUpdateClientParams, &weightMsgUpdateClientParams, nil,
-		func(_ *rand.Rand) {
-			weightMsgUpdateClientParams = defaultWeightMsgUpdateClientParams
-		},
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.Cdc, am.keeper,
 	)
-
-	return operations
 }

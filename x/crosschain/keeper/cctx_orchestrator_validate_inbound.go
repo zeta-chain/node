@@ -20,7 +20,6 @@ func (k Keeper) ValidateInbound(
 	if !tssFound {
 		return nil, types.ErrCannotFindTSSKeys
 	}
-
 	err := k.CheckIfTSSMigrationTransfer(ctx, msg)
 	if err != nil {
 		return nil, err

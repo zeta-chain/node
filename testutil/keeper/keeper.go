@@ -525,6 +525,8 @@ func NewSDKKeepersWithKeys(
 		slashingKeeper,
 		authorityKeeper,
 		lightclientKeeper,
+		bankKeeper,
+		authKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	emissionsKeeper := emissionskeeper.NewKeeper(

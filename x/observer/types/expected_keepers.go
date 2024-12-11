@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -38,6 +39,7 @@ type AuthorityKeeper interface {
 
 	// SetPolicies is solely used for the migration of policies from observer to authority
 	SetPolicies(ctx sdk.Context, policies authoritytypes.Policies)
+	GetPolicies(ctx sdk.Context) (val authoritytypes.Policies, found bool)
 }
 
 type LightclientKeeper interface {
@@ -56,4 +58,13 @@ type LightclientKeeper interface {
 		header proofs.HeaderData,
 		parentHash []byte,
 	)
+}
+
+type BankKeeper interface {
+	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+}
+
+// AccountKeeper defines the expected account keeper used for simulations (noalias)
+type AccountKeeper interface {
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
 }

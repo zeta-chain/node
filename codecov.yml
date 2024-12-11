@@ -52,7 +52,7 @@ ignore:
   - "x/**/events.go"
   - "x/**/migrator.go"
   - "x/**/module_simulation.go"
-  - "x/**/simulation/**/*"
+  - "x/**/simulation/*.go"
   - "**/*.proto"
   - "**/*.md"
   - "**/*.yml"
