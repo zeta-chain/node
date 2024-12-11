@@ -64,6 +64,12 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 }
 
 // TestAppStateDeterminism runs a full application simulation , and produces multiple blocks as per the config
+// It does the following
+// 1. It runs the simulation multiple times with the same seed value
+// 2. It checks the apphash at the end of each run
+// 3. It compares the apphash at the end of each run to check for determinism
+// 4. Repeat steps 1-3 for multiple seeds
+
 // It checks the determinism of the application by comparing the apphash at the end of each run to other runs
 // The following test certifies that , for the same set of operations ( irrespective of what the operations are ) ,
 // we would reach the same final state if the initial state is the same
@@ -177,7 +183,7 @@ func TestAppStateDeterminism(t *testing.T) {
 }
 
 // TestFullAppSimulation runs a full simApp simulation with the provided configuration.
-// At the end of the run it tries to export the genesis state to make sure the export works.
+// This is the basic test which just runs the simulation and checks for any errors
 func TestFullAppSimulation(t *testing.T) {
 
 	config := zetasimulation.NewConfigFromFlags()
@@ -277,7 +283,6 @@ func TestAppImportExport(t *testing.T) {
 		t.Skip("skipping application simulation")
 	}
 	require.NoError(t, err, "simulation setup failed")
-
 	t.Cleanup(func() {
 		if err := db.Close(); err != nil {
 			require.NoError(t, err, "Error closing new database")
@@ -391,9 +396,11 @@ func TestAppImportExport(t *testing.T) {
 	// The ordering of the keys is not important, we compare the same prefix for both simulations
 	storeKeysPrefixes := []StoreKeysPrefixes{
 		// Interaction with EVM module,
-		//such as deploying contracts or interacting with them such as setting gas price,
+		// such as deploying contracts or interacting with them such as setting gas price,
 		// causes the state for the auth module to change on export.The order of keys within the store is modified.
 		// We will need to explore this further to find a definitive answer
+		// TODO:https://github.com/zeta-chain/node/issues/3263
+
 		//{simApp.GetKey(authtypes.StoreKey), newSimApp.GetKey(authtypes.StoreKey), [][]byte{}},
 		{
 			simApp.GetKey(stakingtypes.StoreKey), newSimApp.GetKey(stakingtypes.StoreKey),
@@ -443,6 +450,12 @@ func TestAppImportExport(t *testing.T) {
 	}
 }
 
+// TestAppSimulationAfterImport tests the application simulation after importing the state exported from a previous simulation run.
+// It does the following steps
+// 1. It runs a full simulation and exports the state
+// 2. It creates a new app, and db
+// 3. It imports the exported state into the new app
+// 4. It runs a simulation on the new app and verifies that there is error in the second simulation
 func TestAppSimulationAfterImport(t *testing.T) {
 	config := zetasimulation.NewConfigFromFlags()
 
