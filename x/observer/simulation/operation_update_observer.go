@@ -24,7 +24,7 @@ func SimulateMsgUpdateObserver(k keeper.Keeper) simtypes.Operation {
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
 
-		_, randomObserver, err, observerList := GetRandomAccountAndObserver(r, ctx, k, accounts)
+		_, randomObserver, observerList, err := GetRandomAccountAndObserver(r, ctx, k, accounts)
 
 		observerMap := make(map[string]bool)
 		for _, observer := range observerList {
