@@ -45,8 +45,8 @@ func (msg *MsgUpdateOperationalFlags) ValidateBasic() error {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
-	if msg.OperationalFlags.RestartHeight < 0 {
-		return cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, "restart height cannot be negative")
+	if err := msg.OperationalFlags.Validate(); err != nil {
+		return cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	return nil

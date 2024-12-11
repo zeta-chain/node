@@ -284,3 +284,9 @@ func GasPriceIncreaseFlags() types.GasPriceIncreaseFlags {
 		MaxPendingCctxs:         100,
 	}
 }
+
+func OperationalFlags() types.OperationalFlags {
+	return types.OperationalFlags{
+		RestartHeight: 1,
+	}
+}
