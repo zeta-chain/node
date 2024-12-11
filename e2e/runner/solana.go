@@ -274,7 +274,7 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 	// minting some tokens to deployer for testing
 	ata := r.ResolveSolanaATA(*privateKey, privateKey.PublicKey(), mintAccount.PublicKey())
 
-	mintToInstruction := token.NewMintToInstruction(uint64(1_000_000_000), mintAccount.PublicKey(), ata, privateKey.PublicKey(), []solana.PublicKey{}).
+	mintToInstruction := token.NewMintToInstruction(uint64(100_000_000_000_000), mintAccount.PublicKey(), ata, privateKey.PublicKey(), []solana.PublicKey{}).
 		Build()
 	signedTx = r.CreateSignedTransaction(
 		[]solana.Instruction{mintToInstruction},

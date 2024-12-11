@@ -384,6 +384,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// eg.Go(ethereumDepositPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherDepositName))
 		// eg.Go(ethereumWithdrawPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherWithdrawName))
 		eg.Go(solanaDepositPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressSolanaDepositName))
+		eg.Go(solanaWithdrawPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressSolanaWithdrawName))
 	}
 
 	if testSolana {

@@ -107,11 +107,12 @@ const (
 	 Stress tests
 	 Test stressing networks with many cross-chain transactions
 	*/
-	TestStressEtherWithdrawName = "stress_eth_withdraw"
-	TestStressBTCWithdrawName   = "stress_btc_withdraw"
-	TestStressEtherDepositName  = "stress_eth_deposit"
-	TestStressBTCDepositName    = "stress_btc_deposit"
-	TestStressSolanaDepositName = "stress_solana_deposit"
+	TestStressEtherWithdrawName  = "stress_eth_withdraw"
+	TestStressBTCWithdrawName    = "stress_btc_withdraw"
+	TestStressEtherDepositName   = "stress_eth_deposit"
+	TestStressBTCDepositName     = "stress_btc_deposit"
+	TestStressSolanaDepositName  = "stress_solana_deposit"
+	TestStressSolanaWithdrawName = "stress_solana_withdraw"
 
 	/*
 	 Admin tests
@@ -772,12 +773,23 @@ var AllE2ETests = []runner.E2ETest{
 		TestStressSolanaDepositName,
 		"stress test SOL/SPL deposit",
 		[]runner.ArgDefinition{
-			{Description: "amount in lamports", DefaultValue: "120000"},
+			{Description: "amount in lamports", DefaultValue: "1200000"},
 			{Description: "count of SOL deposits", DefaultValue: "10"},
-			{Description: "amount in SPL tokens", DefaultValue: "120000"},
-			{Description: "count of SPL deposits", DefaultValue: "0"},
+			{Description: "amount in SPL tokens", DefaultValue: "1200000"},
+			{Description: "count of SPL deposits", DefaultValue: "10"},
 		},
 		TestStressSolanaDeposit,
+	),
+	runner.NewE2ETest(
+		TestStressSolanaWithdrawName,
+		"stress test SOL/SPL withdrawals",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamports", DefaultValue: "1000000"},
+			{Description: "count of SOL withdrawals", DefaultValue: "10"},
+			{Description: "amount in SPL tokens", DefaultValue: "1000000"},
+			{Description: "count of SPL withdrawals", DefaultValue: "10"},
+		},
+		TestStressSolanaWithdraw,
 	),
 	/*
 	 Admin tests
