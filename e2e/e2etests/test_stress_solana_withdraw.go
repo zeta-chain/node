@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/montanaflynn/stats"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
@@ -16,20 +15,12 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestStressSolanaWithdraw tests the stressing withdrawal of SOL/SPL
+// TestStressSolanaWithdraw tests the stressing withdrawal of SOL
 func TestStressSolanaWithdraw(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
 	withdrawSOLAmount := utils.ParseBigInt(r, args[0])
 	numWithdrawalsSOL := utils.ParseInt(r, args[1])
-
-	balanceBefore, err := r.SOLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
-	require.NoError(r, err)
-	r.Logger.Info("runner balance of SOL before withdraw: %s", balanceBefore.String())
-
-	balanceBefore, err = r.SPLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
-	require.NoError(r, err)
-	r.Logger.Info("runner balance of SPL before withdraw: %s", balanceBefore.String())
 
 	// load deployer private key
 	privKey := r.GetSolanaPrivKey()

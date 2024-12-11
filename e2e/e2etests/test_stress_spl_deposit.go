@@ -38,5 +38,5 @@ func TestStressSPLDeposit(r *runner.E2ERunner, args []string) {
 
 	require.NoError(r, eg.Wait())
 
-	r.Logger.Print("all deposits completed")
+	r.Logger.Print("all SPL deposits completed")
 }

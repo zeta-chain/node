@@ -64,7 +64,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagContractsDeployed, false, "set to to true if running tests again with existing state")
 	cmd.Flags().Int64(flagWaitForHeight, 0, "block height for tests to begin, ex. --wait-for 100")
 	cmd.Flags().String(FlagConfigFile, "", "config file to use for the tests")
-	cmd.Flags().Bool(flagVerbose, true, "set to true to enable verbose logging")
+	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
 	cmd.Flags().Bool(flagTestAdmin, false, "set to true to run admin tests")
 	cmd.Flags().Bool(flagTestPerformance, false, "set to true to run performance tests")
 	cmd.Flags().Bool(flagTestSolana, false, "set to true to run solana tests")
@@ -124,7 +124,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	if testPerformance {
-		logger.Print("⚠️ performance tests enabled, not related tests will be skipped")
+		logger.Print("⚠️ performance tests enabled, regular tests will be skipped")
 		skipRegular = true
 		skipPrecompiles = true
 	}

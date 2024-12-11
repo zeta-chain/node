@@ -38,7 +38,7 @@ func TestStressSolanaDeposit(r *runner.E2ERunner, args []string) {
 
 	require.NoError(r, eg.Wait())
 
-	r.Logger.Print("all deposits completed")
+	r.Logger.Print("all SOL deposits completed")
 }
 
 // monitorDeposit monitors the deposit of SOL/SPL, returns once the deposit is complete
