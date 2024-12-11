@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -58,7 +59,6 @@ func operationSimulateVoteOutbound(
 // SimulateVoteOutbound generates a MsgVoteOutbound with random values
 // This is the only operation which saves a cctx directly to the store.
 func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
-
 	defaultVote := chains.ReceiveStatus_success
 	alternativeVote := chains.ReceiveStatus_failed
 	observerVotesTransitionMatrix, statePercentageArray, curNumVotesState := ObserverVotesSimulationMatrix()
@@ -214,6 +214,5 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 			})
 		}
 		return opMsg, fops, nil
-
 	}
 }

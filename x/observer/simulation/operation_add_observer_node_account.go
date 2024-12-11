@@ -8,6 +8,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/observer/keeper"
 	"github.com/zeta-chain/node/x/observer/types"
@@ -50,7 +51,9 @@ func SimulateMsgAddObserverNodeAccount(k keeper.Keeper) simtypes.Operation {
 		newObserver := ""
 		for {
 			randomValidator := validators[r.Intn(len(validators))]
-			randomValidatorOperatorAddress, err := types.GetAccAddressFromOperatorAddress(randomValidator.OperatorAddress)
+			randomValidatorOperatorAddress, err := types.GetAccAddressFromOperatorAddress(
+				randomValidator.OperatorAddress,
+			)
 			if err != nil {
 				continue
 			}

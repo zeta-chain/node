@@ -3,6 +3,7 @@ package crosschain
 import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -11,7 +12,6 @@ import (
 // InitGenesis initializes the crosschain module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-
 	k.SetZetaAccounting(ctx, types.ZetaAccounting{AbortedZetaAmount: sdkmath.ZeroUint()})
 	// Set all the outbound tracker
 	for _, elem := range genState.OutboundTrackerList {
@@ -66,7 +66,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			//}
 			//k.SetInboundHashToCctx(ctx, in)
 
-			if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.InboundParams.CoinType == coin.CoinType_Zeta && cctx.CctxStatus.IsAbortRefunded == false {
+			if cctx.CctxStatus.Status == types.CctxStatus_Aborted &&
+				cctx.InboundParams.CoinType == coin.CoinType_Zeta &&
+				cctx.CctxStatus.IsAbortRefunded == false {
 				k.AddZetaAbortedAmount(ctx, keeper.GetAbortedAmount(cctx))
 			}
 		}

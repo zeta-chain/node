@@ -8,10 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/x/observer/types"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/observer/keeper"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 // Simulation operation weights constants
@@ -105,10 +105,15 @@ func WeightedOperations(
 			weightMsgTypeMsgResetChainNonces = DefaultWeightMsgTypeMsgResetChainNonces
 		})
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgTypeMsgUpdateGasPriceIncreaseFlags, &weightMsgTypeMsgUpdateGasPriceIncreaseFlags, nil,
+	appParams.GetOrGenerate(
+		cdc,
+		OpWeightMsgTypeMsgUpdateGasPriceIncreaseFlags,
+		&weightMsgTypeMsgUpdateGasPriceIncreaseFlags,
+		nil,
 		func(_ *rand.Rand) {
 			weightMsgTypeMsgUpdateGasPriceIncreaseFlags = DefaultWeightMsgTypeMsgUpdateGasPriceIncreaseFlags
-		})
+		},
+	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgTypeMsgAddObserver, &weightMsgTypeMsgAddObserver, nil,
 		func(_ *rand.Rand) {
@@ -166,7 +171,6 @@ func WeightedOperations(
 			SimulateMsgAddObserver(k),
 		),
 	}
-
 }
 
 func GetPolicyAccount(ctx sdk.Context, k types.AuthorityKeeper, accounts []simtypes.Account) (simtypes.Account, error) {

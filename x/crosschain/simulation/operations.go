@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -332,7 +333,6 @@ func GenAndDeliverTx(
 }
 
 func ObserverVotesSimulationMatrix() (simtypes.TransitionMatrix, []float64, int) {
-
 	observerVotesTransitionMatrix, _ := simulation.CreateTransitionMatrix([][]int{
 		{20, 10, 0, 0, 0, 0},
 		{55, 50, 20, 10, 0, 0},

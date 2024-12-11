@@ -8,6 +8,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -26,7 +27,11 @@ func SimulateMsgRemoveOutboundTracker(k keeper.Keeper) simtypes.Operation {
 		trackers := k.GetAllOutboundTracker(ctx)
 
 		if len(trackers) == 0 {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgRemoveOutboundTracker, "no outbound trackers found"), nil, nil
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				types.TypeMsgRemoveOutboundTracker,
+				"no outbound trackers found",
+			), nil, nil
 		}
 
 		randomTracker := trackers[r.Intn(len(trackers))]
@@ -39,7 +44,11 @@ func SimulateMsgRemoveOutboundTracker(k keeper.Keeper) simtypes.Operation {
 
 		err = msg.ValidateBasic()
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate MsgRemoveOutboundTracker msg"), nil, err
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				msg.Type(),
+				"unable to validate MsgRemoveOutboundTracker msg",
+			), nil, err
 		}
 
 		txCtx := simulation.OperationInput{

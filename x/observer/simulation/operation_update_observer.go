@@ -8,6 +8,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
 	"github.com/zeta-chain/node/x/observer/keeper"
 	"github.com/zeta-chain/node/x/observer/types"
 )
@@ -54,7 +55,6 @@ func SimulateMsgUpdateObserver(k keeper.Keeper) simtypes.Operation {
 			if _, ok := observerMap[newObserver]; !ok {
 				break
 			}
-
 		}
 
 		lastBlockCount, found := k.GetLastObserverCount(ctx)

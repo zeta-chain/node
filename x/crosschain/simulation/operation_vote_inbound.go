@@ -10,6 +10,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
 	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -175,7 +176,6 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 				BlockHeight: int(ctx.BlockHeight() + 1),
 				Op:          operationSimulateVoteInbound(k, votingMsg, observerAccount),
 			})
-
 		}
 		return opMsg, fops, nil
 	}

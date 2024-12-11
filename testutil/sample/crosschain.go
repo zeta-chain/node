@@ -432,7 +432,6 @@ func CCTXfromRand(r *rand.Rand,
 func OutboundVoteSim(r *rand.Rand,
 	cctx types.CrossChainTx,
 ) (types.CrossChainTx, types.MsgVoteOutbound) {
-
 	msg := types.MsgVoteOutbound{
 		CctxHash:                          cctx.Index,
 		OutboundTssNonce:                  cctx.GetCurrentOutboundParam().TssNonce,

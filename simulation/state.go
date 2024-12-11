@@ -22,14 +22,14 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+
+	zetaapp "github.com/zeta-chain/node/app"
 	zetachains "github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/crypto"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-
-	zetaapp "github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/testutil/sample"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
@@ -40,7 +40,12 @@ const (
 	InitiallyBondedValidators = "initially_bonded_validators"
 )
 
-func updateBankState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, notBondedCoins sdk.Coin) *banktypes.GenesisState {
+func updateBankState(
+	t *testing.T,
+	rawState map[string]json.RawMessage,
+	cdc codec.Codec,
+	notBondedCoins sdk.Coin,
+) *banktypes.GenesisState {
 	bankStateBz, ok := rawState[banktypes.ModuleName]
 	require.True(t, ok, "bank genesis state is missing")
 
@@ -66,7 +71,12 @@ func updateBankState(t *testing.T, rawState map[string]json.RawMessage, cdc code
 	return bankState
 }
 
-func updateEVMState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, bondDenom string) *evmtypes.GenesisState {
+func updateEVMState(
+	t *testing.T,
+	rawState map[string]json.RawMessage,
+	cdc codec.Codec,
+	bondDenom string,
+) *evmtypes.GenesisState {
 	evmStateBz, ok := rawState[evmtypes.ModuleName]
 	require.True(t, ok, "evm genesis state is missing")
 
@@ -79,7 +89,11 @@ func updateEVMState(t *testing.T, rawState map[string]json.RawMessage, cdc codec
 	return evmState
 }
 
-func updateStakingState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec) (*stakingtypes.GenesisState, sdk.Coin) {
+func updateStakingState(
+	t *testing.T,
+	rawState map[string]json.RawMessage,
+	cdc codec.Codec,
+) (*stakingtypes.GenesisState, sdk.Coin) {
 	stakingStateBz, ok := rawState[stakingtypes.ModuleName]
 	require.True(t, ok, "staking genesis state is missing")
 
@@ -102,7 +116,13 @@ func updateStakingState(t *testing.T, rawState map[string]json.RawMessage, cdc c
 	return stakingState, notBondedCoins
 }
 
-func updateObserverState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, r *rand.Rand, validators stakingtypes.Validators) *observertypes.GenesisState {
+func updateObserverState(
+	t *testing.T,
+	rawState map[string]json.RawMessage,
+	cdc codec.Codec,
+	r *rand.Rand,
+	validators stakingtypes.Validators,
+) *observertypes.GenesisState {
 	observerStateBz, ok := rawState[observertypes.ModuleName]
 	require.True(t, ok, "observer genesis state is missing")
 
@@ -180,7 +200,13 @@ func updateObserverState(t *testing.T, rawState map[string]json.RawMessage, cdc 
 	return observerState
 }
 
-func updateAuthorityState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, r *rand.Rand, accs []simtypes.Account) *authoritytypes.GenesisState {
+func updateAuthorityState(
+	t *testing.T,
+	rawState map[string]json.RawMessage,
+	cdc codec.Codec,
+	r *rand.Rand,
+	accs []simtypes.Account,
+) *authoritytypes.GenesisState {
 	authorityStateBz, ok := rawState[authoritytypes.ModuleName]
 	require.True(t, ok, "authority genesis state is missing")
 
@@ -209,7 +235,12 @@ func updateAuthorityState(t *testing.T, rawState map[string]json.RawMessage, cdc
 	return authorityState
 }
 
-func updateCrossChainState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, r *rand.Rand) *crosschaintypes.GenesisState {
+func updateCrossChainState(
+	t *testing.T,
+	rawState map[string]json.RawMessage,
+	cdc codec.Codec,
+	r *rand.Rand,
+) *crosschaintypes.GenesisState {
 	crossChainStateBz, ok := rawState[crosschaintypes.ModuleName]
 	require.True(t, ok, "crosschain genesis state is missing")
 
@@ -228,7 +259,12 @@ func updateCrossChainState(t *testing.T, rawState map[string]json.RawMessage, cd
 	return crossChainState
 }
 
-func updateFungibleState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, r *rand.Rand) *fungibletypes.GenesisState {
+func updateFungibleState(
+	t *testing.T,
+	rawState map[string]json.RawMessage,
+	cdc codec.Codec,
+	r *rand.Rand,
+) *fungibletypes.GenesisState {
 	fungibleStateBz, ok := rawState[fungibletypes.ModuleName]
 	require.True(t, ok, "fungible genesis state is missing")
 
@@ -260,7 +296,13 @@ func updateFungibleState(t *testing.T, rawState map[string]json.RawMessage, cdc 
 	return fungibleState
 }
 
-func updateRawState(t *testing.T, rawState map[string]json.RawMessage, cdc codec.Codec, r *rand.Rand, accs []simtypes.Account) {
+func updateRawState(
+	t *testing.T,
+	rawState map[string]json.RawMessage,
+	cdc codec.Codec,
+	r *rand.Rand,
+	accs []simtypes.Account,
+) {
 	stakingState, notBondedCoins := updateStakingState(t, rawState, cdc)
 	bankState := updateBankState(t, rawState, cdc, notBondedCoins)
 	evmState := updateEVMState(t, rawState, cdc, stakingState.Params.BondDenom)

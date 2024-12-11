@@ -73,7 +73,12 @@ func (k msgServer) UpdateObserver(
 		return nil, errorsmod.Wrap(types.ErrLastObserverCountNotFound, "Observer count not found")
 	}
 	if lastBlockCount.Count != totalObserverCountCurrentBlock {
-		return nil, errorsmod.Wrapf(types.ErrUpdateObserver, "Observer count mismatch current block : %d , last block : %d", totalObserverCountCurrentBlock, lastBlockCount.Count)
+		return nil, errorsmod.Wrapf(
+			types.ErrUpdateObserver,
+			"Observer count mismatch current block : %d , last block : %d",
+			totalObserverCountCurrentBlock,
+			lastBlockCount.Count,
+		)
 	}
 	return &types.MsgUpdateObserverResponse{}, nil
 }

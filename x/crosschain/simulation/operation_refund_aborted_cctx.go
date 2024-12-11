@@ -8,6 +8,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -32,7 +33,6 @@ func SimulateMsgRefundAbortedCCTX(k keeper.Keeper,
 		abortedCctxFound := false
 
 		for _, cctx := range cctxList {
-
 			if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
 				if !cctx.InboundParams.CoinType.SupportsRefund() {
 					continue
@@ -58,7 +58,11 @@ func SimulateMsgRefundAbortedCCTX(k keeper.Keeper,
 
 		err = msg.ValidateBasic()
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate MsgRefundAbortedCCTX msg"), nil, err
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				msg.Type(),
+				"unable to validate MsgRefundAbortedCCTX msg",
+			), nil, err
 		}
 
 		txCtx := simulation.OperationInput{

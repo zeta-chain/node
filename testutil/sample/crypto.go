@@ -49,7 +49,6 @@ func Ed25519PrivateKeyFromRand(r *rand.Rand) *ed25519.PrivKey {
 		panic(err)
 	}
 	return ed25519.GenPrivKeyFromSecret(randomBytes)
-
 }
 
 func PubKeySetFromRand(r *rand.Rand) *crypto.PubKeySet {

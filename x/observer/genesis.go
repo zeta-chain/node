@@ -11,7 +11,6 @@ import (
 // InitGenesis initializes the observer module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-
 	if genState.Observers.Len() > 0 {
 		k.SetObserverSet(ctx, genState.Observers)
 	} else {

@@ -9,6 +9,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
 	"github.com/zeta-chain/node/x/observer/keeper"
 	"github.com/zeta-chain/node/x/observer/types"
 )
@@ -27,12 +28,24 @@ func SimulateMsgResetChainNonces(k keeper.Keeper) simtypes.Operation {
 
 		randomChain, err := GetExternalChain(ctx, k, r, 10)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgResetChainNonces, err.Error()), nil, fmt.Errorf("error getting external chain")
+			return simtypes.NoOpMsg(
+					types.ModuleName,
+					types.TypeMsgResetChainNonces,
+					err.Error(),
+				), nil, fmt.Errorf(
+					"error getting external chain",
+				)
 		}
 
 		tss, found := k.GetTSS(ctx)
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgResetChainNonces, "TSS not found"), nil, fmt.Errorf("TSS not found")
+			return simtypes.NoOpMsg(
+					types.ModuleName,
+					types.TypeMsgResetChainNonces,
+					"TSS not found",
+				), nil, fmt.Errorf(
+					"TSS not found",
+				)
 		}
 		pendingNonces, found := k.GetPendingNonces(ctx, tss.TssPubkey, randomChain.ChainId)
 		if !found {
