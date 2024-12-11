@@ -26,6 +26,9 @@ func SimulateUpdateObserver(k keeper.Keeper) simtypes.Operation {
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
 
 		_, randomObserver, observerList, err := GetRandomAccountAndObserver(r, ctx, k, accounts)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUpdateObserver, err.Error()), nil, nil
+		}
 
 		observerMap := make(map[string]bool)
 		for _, observer := range observerList {
