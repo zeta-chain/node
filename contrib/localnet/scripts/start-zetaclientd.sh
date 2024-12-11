@@ -71,11 +71,12 @@ mkdir -p "${RELAYER_KEY_PATH}"
 mkdir -p "$HOME/.tss/"
 zetae2e get-zetaclient-bootstrap > "$HOME/.tss/address_book.seed"
 
+MYIP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
+
 echo "Start zetaclientd"
 # skip initialization if the config file already exists (zetaclientd init has already been run)
 if [[ $HOSTNAME == "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.json ]]
 then
-    MYIP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
     zetaclientd init --zetacore-url zetacore0 --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
 
     # import relayer private key for zetaclient0

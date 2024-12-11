@@ -8,12 +8,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/node/pkg/rpc"
-	"github.com/zeta-chain/node/pkg/sdkconfig"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"gitlab.com/thorchain/tss/go-tss/conversion"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/zeta-chain/node/pkg/rpc"
+	"github.com/zeta-chain/node/pkg/sdkconfig"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 func NewGetZetaclientBootstrap() *cobra.Command {
@@ -65,9 +66,9 @@ func getZetaclientBootstrap(cmd *cobra.Command, _ []string) error {
 		// in localnet, moniker is also the hostname
 		moniker := validatorRes.Validator.Description.Moniker
 
-		peerId, err := conversion.Bech32PubkeyToPeerID(account.GranteePubkey.Secp256k1.String())
+		peerID, err := conversion.Bech32PubkeyToPeerID(account.GranteePubkey.Secp256k1.String())
 		if err != nil {
-			return fmt.Errorf("conferting pubkey to peerid: %w", err)
+			return fmt.Errorf("converting pubkey to peerID: %w", err)
 		}
 		zetaclientHostname := strings.ReplaceAll(moniker, "zetacore", "zetaclient")
 
@@ -90,7 +91,7 @@ func getZetaclientBootstrap(cmd *cobra.Command, _ []string) error {
 		if ipv4Address == "" {
 			return fmt.Errorf("no IPv4 address found for hostname %s", zetaclientHostname)
 		}
-		fmt.Printf("/ip4/%s/tcp/6668/p2p/%s\n", ipv4Address, peerId.String())
+		fmt.Printf("/ip4/%s/tcp/6668/p2p/%s\n", ipv4Address, peerID.String())
 	}
 
 	return nil
