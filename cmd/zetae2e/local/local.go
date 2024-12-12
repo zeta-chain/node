@@ -386,18 +386,41 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		eg.Go(
 			solanaDepositPerformanceRoutine(
 				conf,
+				"perf_sol_deposit",
 				deployerRunner,
 				verbose,
+				conf.AdditionalAccounts.UserSolana,
 				e2etests.TestStressSolanaDepositName,
+			),
+		)
+		eg.Go(
+			solanaDepositPerformanceRoutine(
+				conf,
+				"perf_spl_deposit",
+				deployerRunner,
+				verbose,
+				conf.AdditionalAccounts.UserSPL,
 				e2etests.TestStressSPLDepositName,
 			),
 		)
 		eg.Go(
 			solanaWithdrawPerformanceRoutine(
 				conf,
+				"perf_sol_withdraw",
 				deployerRunner,
 				verbose,
+				conf.AdditionalAccounts.UserSolana,
 				e2etests.TestStressSolanaWithdrawName,
+			),
+		)
+
+		eg.Go(
+			solanaWithdrawPerformanceRoutine(
+				conf,
+				"perf_spl_withdraw",
+				deployerRunner,
+				verbose,
+				conf.AdditionalAccounts.UserSPL,
 				e2etests.TestStressSPLWithdrawName,
 			),
 		)

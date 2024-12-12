@@ -113,8 +113,10 @@ func ethereumWithdrawPerformanceRoutine(
 // solanaDepositPerformanceRoutine runs performance tests for solana deposits
 func solanaDepositPerformanceRoutine(
 	conf config.Config,
+	name string,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
+	account config.Account,
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
@@ -123,8 +125,8 @@ func solanaDepositPerformanceRoutine(
 			"solana",
 			conf,
 			deployerRunner,
-			conf.AdditionalAccounts.UserSolana,
-			runner.NewLogger(verbose, color.FgHiMagenta, "perf_sol_deposit"),
+			account,
+			runner.NewLogger(verbose, color.FgHiMagenta, name),
 			runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
 		)
 		if err != nil {
@@ -135,7 +137,7 @@ func solanaDepositPerformanceRoutine(
 			r.ReceiptTimeout = 15 * time.Minute
 		}
 		if r.CctxTimeout == 0 {
-			r.CctxTimeout = 15 * time.Minute
+			r.CctxTimeout = 30 * time.Minute
 		}
 
 		r.Logger.Print("🏃 starting solana deposit performance tests")
@@ -162,8 +164,10 @@ func solanaDepositPerformanceRoutine(
 // solanaWithdrawPerformanceRoutine runs performance tests for solana withdrawals
 func solanaWithdrawPerformanceRoutine(
 	conf config.Config,
+	name string,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
+	account config.Account,
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
@@ -172,8 +176,8 @@ func solanaWithdrawPerformanceRoutine(
 			"solana",
 			conf,
 			deployerRunner,
-			conf.AdditionalAccounts.UserSolana,
-			runner.NewLogger(verbose, color.FgHiGreen, "perf_sol_withdraw"),
+			account,
+			runner.NewLogger(verbose, color.FgHiGreen, name),
 			runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
 		)
 		if err != nil {
@@ -184,7 +188,7 @@ func solanaWithdrawPerformanceRoutine(
 			r.ReceiptTimeout = 15 * time.Minute
 		}
 		if r.CctxTimeout == 0 {
-			r.CctxTimeout = 15 * time.Minute
+			r.CctxTimeout = 30 * time.Minute
 		}
 
 		r.Logger.Print("🏃 starting solana withdraw performance tests")

@@ -65,7 +65,7 @@ func TestStressSolanaWithdraw(r *runner.E2ERunner, args []string) {
 				)
 			}
 			timeToComplete := time.Since(startTime)
-			r.Logger.Print("index %d: withdraw cctx success in %s", i, timeToComplete.String())
+			r.Logger.Print("index %d: withdraw SOL cctx success in %s", i, timeToComplete.String())
 
 			withdrawDurationsLock.Lock()
 			withdrawDurations = append(withdrawDurations, timeToComplete.Seconds())
