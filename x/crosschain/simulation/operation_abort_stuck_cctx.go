@@ -15,9 +15,12 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
+// SimulateMsgAbortStuckCCTX generates a MsgAbortStuckCCTX with random values
 func SimulateMsgAbortStuckCCTX(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
+
+		// Pick a ethereum chain to abort a stuck cctx
 		chainID := int64(1337)
 		supportedChains := k.GetObserverKeeper().GetSupportedChains(ctx)
 		if len(supportedChains) == 0 {
@@ -56,7 +59,6 @@ func SimulateMsgAbortStuckCCTX(k keeper.Keeper) simtypes.Operation {
 			), nil, nil
 		}
 
-		// pick a random nonce from the pending nonces between 0 and nonceLow
 		// If nonce low is the same as nonce high, it means that there are no pending nonces to add trackers for
 		if pendingNonces.NonceLow == pendingNonces.NonceHigh {
 			return simtypes.NoOpMsg(

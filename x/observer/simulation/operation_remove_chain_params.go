@@ -13,7 +13,8 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-// SimulateMsgRemoveChainParams generates a MsgRemoveChainParams and delivers it.
+// SimulateMsgRemoveChainParams generates a MsgRemoveChainParams and delivers it. This message removes a chain from the list
+// This is not being run right now as the removal causes a lot of errors for the other operations.
 func SimulateMsgRemoveChainParams(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {

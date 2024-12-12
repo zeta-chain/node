@@ -56,8 +56,9 @@ func operationSimulateVoteOutbound(
 	}
 }
 
-// SimulateVoteOutbound generates a MsgVoteOutbound with random values
-// This is the only operation which saves a cctx directly to the store.
+// SimulateVoteOutbound generates a MsgVoteOutbound with random values and delivers it.
+//It also schedules future operations for subsequent votes.
+
 func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 	defaultVote := chains.ReceiveStatus_success
 	alternativeVote := chains.ReceiveStatus_failed
@@ -97,6 +98,7 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, authz.OutboundVoter.String(), "unable to get asset"), nil, err
 		}
 
+		// Generate a new cctx and save it , which can be used to finalize the outbound
 		cctx := sample.CCTXfromRand(r, creator, index, to, from, tss.TssPubkey, asset)
 		msg := types.MsgVoteOutbound{
 			CctxHash:                          cctx.Index,
@@ -158,7 +160,7 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
-		// We can return error here as we  can guarantee that the first vote will be successful.
+		// We can return error here as we can guarantee that the first vote will be successful.
 		// Since we query the observer set before adding votes
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {

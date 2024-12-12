@@ -54,6 +54,7 @@ func operationSimulateVoteInbound(
 	}
 }
 
+// SimulateVoteInbound generates a MsgVoteInbound with random values and delivers it. It also schedules future operations for subsequent votes.
 func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 	observerVotesTransitionMatrix, statePercentageArray, curNumVotesState := ObserverVotesSimulationMatrix()
 	return func(
@@ -63,11 +64,6 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 		accs []simtypes.Account,
 		chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		// TODO : randomize these values
-		// Right now we use a constant value for cctx creation , this is the same as the one used in unit tests for the successful condition.
-		// TestKeeper_VoteInbound/successfully vote on evm deposit
-		// But this can improved by adding more randomization
-
 		to, from := int64(1337), int64(101)
 		supportedChains := k.GetObserverKeeper().GetSupportedChains(ctx)
 		for _, chain := range supportedChains {
@@ -84,6 +80,7 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, authz.InboundVoter.String(), "unable to get asset"), nil, err
 		}
 
+		// Generate a random inbound vote , coin type is randomly selected
 		msg := sample.InboundVoteFromRand(from, to, r, asset)
 
 		cf, found := k.GetObserverKeeper().GetCrosschainFlags(ctx)

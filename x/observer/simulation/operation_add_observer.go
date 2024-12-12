@@ -14,7 +14,8 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-// SimulateAddObserver generates a TypeMsgAddObserver and delivers it. The message adds an observer to the observer set
+// SimulateAddObserver generates a TypeMsgAddObserver and delivers it. This message sets AddNodeAccountOnly to false;
+// Therefore, it adds the observer to the observer set
 func SimulateAddObserver(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
@@ -43,6 +44,7 @@ func SimulateAddObserver(k keeper.Keeper) simtypes.Operation {
 		nodeAccounts := k.GetAllNodeAccount(ctx)
 
 		// Pick a random observer which part of the node account but not in the observer set
+		// New accounts are added to the node account list via SimulateAddObserverNodeAccount
 		var newObserver string
 		foundNA := RepeatCheck(func() bool {
 			newObserver = nodeAccounts[r.Intn(len(nodeAccounts))].Operator

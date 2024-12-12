@@ -40,7 +40,6 @@ func SimulateMsgRefundAbortedCCTX(k keeper.Keeper,
 				if cctx.CctxStatus.IsAbortRefunded {
 					continue
 				}
-
 				abortedCctx = cctx
 				abortedCctxFound = true
 				break

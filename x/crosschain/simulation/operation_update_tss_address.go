@@ -44,6 +44,9 @@ func SimulateMsgUpdateTssAddress(k keeper.Keeper) simtypes.Operation {
 				"no cross chain txs found",
 			), nil, nil
 		}
+
+		// Pick any cctx with status OutboundMined, and use its index for the migration
+		// We set the fund migrator directly as we are not simulating MsgMigrateTssFunds
 		minedCCTX := types.CrossChainTx{}
 		foundMined := false
 		for _, cctx := range cctxList {
@@ -61,16 +64,13 @@ func SimulateMsgUpdateTssAddress(k keeper.Keeper) simtypes.Operation {
 			), nil, nil
 		}
 
+		// Thee tss migrator is set for all chains supporting tss migration
 		for _, chain := range supportedChains {
-			//index := ethcrypto.Keccak256Hash([]byte(fmt.Sprintf("%d", r.Int63()))).Hex()
-			//cctx := types.CrossChainTx{Index: index,
-			//	CctxStatus: &types.Status{Status: types.CctxStatus_OutboundMined}}
-			tssmigrator := observertypes.TssFundMigratorInfo{
+			tssMigrator := observertypes.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
 				MigrationCctxIndex: minedCCTX.Index,
 			}
-			//k.SetCrossChainTx(ctx, cctx)
-			k.GetObserverKeeper().SetFundMigrator(ctx, tssmigrator)
+			k.GetObserverKeeper().SetFundMigrator(ctx, tssMigrator)
 		}
 
 		oldTss, found := k.GetObserverKeeper().GetTSS(ctx)
@@ -81,6 +81,8 @@ func SimulateMsgUpdateTssAddress(k keeper.Keeper) simtypes.Operation {
 				"no TSS found",
 			), nil, nil
 		}
+
+		// Set the new TSS to state
 		newTss, err := sample.TSSFromRand(r)
 		newTss.FinalizedZetaHeight = oldTss.FinalizedZetaHeight + 10
 		newTss.KeyGenZetaHeight = oldTss.KeyGenZetaHeight + 10

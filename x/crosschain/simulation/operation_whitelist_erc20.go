@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -40,13 +39,14 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 		filteredChains := chains.FilterChains(supportedChains, chains.FilterByVM(chains.Vm_evm))
 
 		//pick a random chain
+		// Keep the switch case to add solana support in future
+		// TODO : https://github.com/zeta-chain/node/issues/3287
 		randomChain := filteredChains[r.Intn(len(filteredChains))]
 		var tokenAddress string
 		switch {
 		case randomChain.IsEVMChain():
 			tokenAddress = sample.EthAddressFromRand(r).String()
 		default:
-			fmt.Println("unsupported chain", randomChain.ChainId)
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWhitelistERC20, "unsupported chain"), nil, nil
 		}
 

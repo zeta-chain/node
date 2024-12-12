@@ -15,6 +15,7 @@ import (
 )
 
 // SimulateAddObserverNodeAccount generates a TypeMsgAddObserver and delivers it.
+// This message sets AddNodeAccountOnly to true to it does not add the observer to the observer set
 func SimulateAddObserverNodeAccount(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {

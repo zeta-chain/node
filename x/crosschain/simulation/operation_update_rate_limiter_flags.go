@@ -14,6 +14,7 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
+// SimulateMsgUpdateRateLimiterFlags generates a MsgUpdateRateLimiterFlags with random values
 func SimulateMsgUpdateRateLimiterFlags(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {

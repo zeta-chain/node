@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
+// SimulateMsgRemoveOutboundTracker generates a MsgRemoveOutboundTracker with random values
 func SimulateMsgRemoveOutboundTracker(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {

@@ -17,6 +17,7 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
+// operationSimulateVoteTss generates a MsgVoteTSS with random values
 func operationSimulateVoteTss(
 	k keeper.Keeper,
 	msg types.MsgVoteTSS,
@@ -52,8 +53,7 @@ func operationSimulateVoteTss(
 	}
 }
 
-// SimulateVoteOutbound generates a MsgVoteOutbound with random values
-// This is the only operation which saves a cctx directly to the store.
+// SimulateMsgVoteTSS generates a MsgVoteTSS with random values and delivers it, it also schedules future votes for the same ballot
 func SimulateMsgVoteTSS(k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand,
