@@ -20,16 +20,16 @@ import (
 const grpcURLFlag = "grpc-url"
 
 func NewGetZetaclientBootstrap() *cobra.Command {
-	var ConfigureZetaclientBootstrapCmd = &cobra.Command{
+	var cmd = &cobra.Command{
 		Use:   "get-zetaclient-bootstrap",
 		Short: "get bootstrap address book entries for zetaclient",
 		RunE:  getZetaclientBootstrap,
 	}
 
-	ConfigureZetaclientBootstrapCmd.Flags().
+	cmd.Flags().
 		String(grpcURLFlag, "zetacore0:9090", "--grpc-url zetacore0:9090")
 
-	return ConfigureZetaclientBootstrapCmd
+	return cmd
 }
 
 func getZetaclientBootstrap(cmd *cobra.Command, _ []string) error {
