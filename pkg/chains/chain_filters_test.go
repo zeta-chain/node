@@ -49,6 +49,21 @@ func TestFilterChains(t *testing.T) {
 			},
 		},
 		{
+			name: "Filter vm evm chains",
+			filters: []chains.ChainFilter{
+				chains.FilterByVM(chains.Vm_evm),
+			},
+			expected: func() []chains.Chain {
+				var chainList []chains.Chain
+				for _, chain := range chains.ExternalChainList([]chains.Chain{}) {
+					if chain.Vm == chains.Vm_evm {
+						chainList = append(chainList, chain)
+					}
+				}
+				return chainList
+			},
+		},
+		{
 			name: "Apply multiple filters external chains and gateway observer",
 			filters: []chains.ChainFilter{
 				chains.FilterExternalChains,

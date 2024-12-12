@@ -129,14 +129,6 @@ func SolanaAddress(t *testing.T) string {
 	return privKey.PublicKey().String()
 }
 
-func SolAddressFromRand(r *rand.Rand) string {
-	privKey, err := solana.NewRandomPrivateKey()
-	if err != nil {
-		panic(err)
-	}
-	return privKey.PublicKey().String()
-}
-
 // SolanaSignature returns a sample solana signature
 func SolanaSignature(t *testing.T) solana.Signature {
 	// Generate a random keypair

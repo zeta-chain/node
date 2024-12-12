@@ -79,12 +79,6 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 		return &types.MsgVoteTSSResponse{}, errorsmod.Wrap(err, voteTSSid)
 	}
 
-	//if ctx.BlockHeight() == 3 || ctx.BlockHeight() == 4 {
-	//	fmt.Println("Vote added", ctx.BlockHeight(), msg.TssPubkey)
-	//	fmt.Println("Votes", ballot.Votes)
-	//	fmt.Println("VoterList Length", len(ballot.VoterList))
-	//}
-
 	ballot, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
 	if !isFinalized {
 		return &types.MsgVoteTSSResponse{
@@ -93,8 +87,6 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 			KeygenSuccess: false,
 		}, nil
 	}
-
-	//fmt.Println("Ballot finalized", ballot.BallotStatus)
 
 	// The ballot is finalized, we check if this is the correct ballot for updating the TSS
 	// The requirements are

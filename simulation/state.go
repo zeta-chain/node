@@ -3,17 +3,12 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"math/rand"
-	"os"
 	"testing"
 	"time"
 
 	"cosmossdk.io/math"
-	cmtjson "github.com/cometbft/cometbft/libs/json"
-	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -23,7 +18,6 @@ import (
 	"github.com/stretchr/testify/require"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	zetaapp "github.com/zeta-chain/node/app"
 	zetachains "github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/crypto"
@@ -40,6 +34,9 @@ const (
 	InitiallyBondedValidators = "initially_bonded_validators"
 )
 
+// updateBankState updates the bank genesis state.
+// It adds the following
+// - The not bonded balance for the not bonded pool
 func updateBankState(
 	t *testing.T,
 	rawState map[string]json.RawMessage,
@@ -71,6 +68,8 @@ func updateBankState(
 	return bankState
 }
 
+// updateEVMState updates the evm genesis state.
+// It replaces the EvmDenom with BondDenom
 func updateEVMState(
 	t *testing.T,
 	rawState map[string]json.RawMessage,
@@ -89,6 +88,10 @@ func updateEVMState(
 	return evmState
 }
 
+// updateStakingState updates the staking genesis state.
+// It adds the following
+// - The not bonded balance for the not bonded pool
+// It additionally returns the non-bonded coins as well
 func updateStakingState(
 	t *testing.T,
 	rawState map[string]json.RawMessage,
@@ -116,6 +119,15 @@ func updateStakingState(
 	return stakingState, notBondedCoins
 }
 
+// updateObserverState updates the observer genesis state.
+// It adds the following
+// - A random observer set which is a subset of the current validator set
+// - A randomised node account for each observer
+// - A random TSS
+// - A TSS history for the TSS created
+// - Chain nonces for each chain
+// - Pending nonces for each chain
+// - Crosschain flags, inbound and outbound enabled
 func updateObserverState(
 	t *testing.T,
 	rawState map[string]json.RawMessage,
@@ -158,7 +170,6 @@ func updateObserverState(
 			GranteePubkey:  &crypto.PubKeySet{},
 			NodeStatus:     observertypes.NodeStatus_Active,
 		}
-		//fmt.Println(nodeAccounts[i].GranteePubkey)
 	}
 	// Create a random tss
 	tss, err := sample.TSSFromRand(r)
@@ -200,6 +211,9 @@ func updateObserverState(
 	return observerState
 }
 
+// updateAuthorityState updates the authority genesis state.
+// It adds the following
+// - A policy for each policy type, the address is a random account address selected from the simulation accounts list
 func updateAuthorityState(
 	t *testing.T,
 	rawState map[string]json.RawMessage,
@@ -235,6 +249,9 @@ func updateAuthorityState(
 	return authorityState
 }
 
+// updateCrossChainState updates the crosschain genesis state.
+// It adds the following
+// - A gas price list for each chain
 func updateCrossChainState(
 	t *testing.T,
 	rawState map[string]json.RawMessage,
@@ -247,11 +264,11 @@ func updateCrossChainState(
 	crossChainState := new(crosschaintypes.GenesisState)
 	cdc.MustUnmarshalJSON(crossChainStateBz, crossChainState)
 
-	var gasPriceList []*crosschaintypes.GasPrice
-
+	// Add a gasprice for each chain
 	chains := zetachains.DefaultChainsList()
-	for _, chain := range chains {
-		gasPriceList = append(gasPriceList, sample.GasPriceFromRand(r, chain.ChainId))
+	gasPriceList := make([]*crosschaintypes.GasPrice, len(chains))
+	for i, chain := range chains {
+		gasPriceList[i] = sample.GasPriceFromRand(r, chain.ChainId)
 	}
 
 	crossChainState.GasPriceList = gasPriceList
@@ -259,6 +276,12 @@ func updateCrossChainState(
 	return crossChainState
 }
 
+// updateFungibleState updates the fungible genesis state.
+// It adds the following
+// - A random system contract address
+// - A random connector zevm address
+// - A random gateway address
+// - A foreign coin for each chain under the default chain list.
 func updateFungibleState(
 	t *testing.T,
 	rawState map[string]json.RawMessage,
@@ -296,6 +319,8 @@ func updateFungibleState(
 	return fungibleState
 }
 
+// updateRawState updates the raw genesis state for the application.
+// This is used to inject values needed to run the simulation tests.
 func updateRawState(
 	t *testing.T,
 	rawState map[string]json.RawMessage,
@@ -340,7 +365,7 @@ func AppStateFn(
 
 		chainID = config.ChainID
 
-		// if exported state is provided then use it
+		// if exported state is provided, then use it
 		if exportedState != nil {
 			return exportedState, accs, chainID, genesisTimestamp
 		}
@@ -430,59 +455,4 @@ func AppStateRandomizedFn(
 		panic(err)
 	}
 	return appState, accs
-}
-
-// AppStateFromGenesisFileFn util function to generate the genesis AppState
-// from a genesis.json file.
-func AppStateFromGenesisFileFn(
-	r io.Reader,
-	cdc codec.JSONCodec,
-	genesisFile string,
-) (tmtypes.GenesisDoc, []simtypes.Account, error) {
-	bytes, err := os.ReadFile(genesisFile) // #nosec G304 -- genesisFile value is controlled
-	if err != nil {
-		panic(err)
-	}
-
-	var genesis tmtypes.GenesisDoc
-	// NOTE: Comet uses a custom JSON decoder for GenesisDoc
-	err = cmtjson.Unmarshal(bytes, &genesis)
-	if err != nil {
-		panic(err)
-	}
-
-	var appState zetaapp.GenesisState
-	err = json.Unmarshal(genesis.AppState, &appState)
-	if err != nil {
-		panic(err)
-	}
-
-	var authGenesis authtypes.GenesisState
-	if appState[authtypes.ModuleName] != nil {
-		cdc.MustUnmarshalJSON(appState[authtypes.ModuleName], &authGenesis)
-	}
-
-	newAccs := make([]simtypes.Account, len(authGenesis.Accounts))
-	for i, acc := range authGenesis.Accounts {
-		// Pick a random private key, since we don't know the actual key
-		// This should be fine as it's only used for mock Tendermint validators
-		// and these keys are never actually used to sign by mock Tendermint.
-		privkeySeed := make([]byte, 15)
-		if _, err := r.Read(privkeySeed); err != nil {
-			panic(err)
-		}
-
-		privKey := secp256k1.GenPrivKeyFromSecret(privkeySeed)
-
-		a, ok := acc.GetCachedValue().(authtypes.AccountI)
-		if !ok {
-			return genesis, nil, fmt.Errorf("expected account")
-		}
-
-		// create simulator accounts
-		simAcc := simtypes.Account{PrivKey: privKey, PubKey: privKey.PubKey(), Address: a.GetAddress()}
-		newAccs[i] = simAcc
-	}
-
-	return genesis, newAccs, nil
 }

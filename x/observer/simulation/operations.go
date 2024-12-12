@@ -28,17 +28,16 @@ import (
 // 100 seems to the max weight used,and we should use relative weights
 // to signify the number of each operation in a block.
 const (
-	// #nosec G101 not a hardcoded credential
-	OpWeightMsgTypeMsgEnableCCTX                  = "op_weight_msg_enable_crosschain_flags"
-	OpWeightMsgTypeMsgDisableCCTX                 = "op_weight_msg_disable_crosschain_flags"
-	OpWeightMsgTypeMsgVoteTSS                     = "op_weight_msg_vote_tss"
-	OpWeightMsgTypeMsgUpdateKeygen                = "op_weight_msg_update_keygen"
-	OpWeightMsgTypeMsgUpdateObserver              = "op_weight_msg_update_observer"
-	OpWeightMsgTypeMsgUpdateChainParams           = "op_weight_msg_update_chain_params"
-	OpWeightMsgTypeMsgRemoveChainParams           = "op_weight_msg_remove_chain_params"
-	OpWeightMsgTypeMsgResetChainNonces            = "op_weight_msg_reset_chain_nonces"
-	OpWeightMsgTypeMsgUpdateGasPriceIncreaseFlags = "op_weight_msg_update_gas_price_increase_flags"
-	OpWeightMsgTypeMsgAddObserver                 = "op_weight_msg_add_observer"
+	OpWeightMsgTypeMsgEnableCCTX                  = "op_weight_msg_enable_crosschain_flags"         // #nosec G101 not a hardcoded credential
+	OpWeightMsgTypeMsgDisableCCTX                 = "op_weight_msg_disable_crosschain_flags"        // #nosec G101 not a hardcoded credential
+	OpWeightMsgTypeMsgVoteTSS                     = "op_weight_msg_vote_tss"                        // #nosec G101 not a hardcoded credential
+	OpWeightMsgTypeMsgUpdateKeygen                = "op_weight_msg_update_keygen"                   // #nosec G101 not a hardcoded credential
+	OpWeightMsgTypeMsgUpdateObserver              = "op_weight_msg_update_observer"                 // #nosec G101 not a hardcoded credential
+	OpWeightMsgTypeMsgUpdateChainParams           = "op_weight_msg_update_chain_params"             // #nosec G101 not a hardcoded credential
+	OpWeightMsgTypeMsgRemoveChainParams           = "op_weight_msg_remove_chain_params"             // #nosec G101 not a hardcoded credential
+	OpWeightMsgTypeMsgResetChainNonces            = "op_weight_msg_reset_chain_nonces"              // #nosec G101 not a hardcoded credential
+	OpWeightMsgTypeMsgUpdateGasPriceIncreaseFlags = "op_weight_msg_update_gas_price_increase_flags" // #nosec G101 not a hardcoded credential
+	OpWeightMsgTypeMsgAddObserver                 = "op_weight_msg_add_observer"                    // #nosec G101 not a hardcoded credential
 
 	// DefaultWeightMsgTypeMsgEnableCCTX We use a high weight for this operation
 	// to ensure that it is present in the block more number of times than any operation that changes the validator set

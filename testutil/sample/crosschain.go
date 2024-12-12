@@ -357,7 +357,6 @@ func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteInbound {
 	}
 }
 
-// InboundVoteFromRand creates a simulated inbound vote message. This function uses the provided source of randomness to generate the vot
 // InboundVoteFromRand creates a simulated inbound vote message. This function uses the provided source of randomness to generate the vote
 func InboundVoteFromRand(from, to int64, r *rand.Rand, asset string) types.MsgVoteInbound {
 	coinType := CoinTypeFromRand(r)

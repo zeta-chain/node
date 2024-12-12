@@ -11,6 +11,7 @@
 * [3205](https://github.com/zeta-chain/node/issues/3205) - move Bitcoin revert address test to advanced group to avoid upgrade test failure
 * [3254](https://github.com/zeta-chain/node/pull/3254) - rename v2 E2E tests as evm tests and rename old evm tests as legacy
 * [3095](https://github.com/zeta-chain/node/pull/3095) - initialize simulation tests for custom zetachain modules
+* [3207](https://github.com/zeta-chain/node/pull/3207) - add simulation test operations for all messages in crosschain and observer module
 
 ## Refactor
 

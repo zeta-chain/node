@@ -183,7 +183,10 @@ func TestAppStateDeterminism(t *testing.T) {
 }
 
 // TestFullAppSimulation runs a full simApp simulation with the provided configuration.
-// This is the basic test which just runs the simulation and checks for any errors
+// This test does the following
+// 1. It runs a full simulation with the provided configuration
+// 2. It exports the state and validators
+// 3. Verifies that the run and export were successful
 func TestFullAppSimulation(t *testing.T) {
 
 	config := zetasimulation.NewConfigFromFlags()
@@ -585,63 +588,4 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		simApp.AppCodec(),
 	)
 	require.NoError(t, err)
-}
-
-// DiffKVStores compares two KVstores and returns all the key/value pairs
-// that differ from one another. It also skips value comparison for a set of provided prefixes.
-func CountKVStores(a sdk.KVStore, b sdk.KVStore, _ [][]byte) (int, int) {
-	iterA := a.Iterator(nil, nil)
-
-	defer iterA.Close()
-
-	iterB := b.Iterator(nil, nil)
-
-	defer iterB.Close()
-
-	countA := 0
-	countB := 0
-
-	for iterA.Valid() {
-		countA++
-		iterA.Next()
-	}
-
-	for iterB.Valid() {
-		countB++
-		iterB.Next()
-	}
-	return countA, countB
-}
-
-func FindDiffKeys(a sdk.KVStore, b sdk.KVStore) {
-
-	keysA := map[string]bool{}
-	keysB := map[string]bool{}
-	iterA := a.Iterator(nil, nil)
-
-	defer iterA.Close()
-
-	iterB := b.Iterator(nil, nil)
-
-	defer iterB.Close()
-
-	for iterA.Valid() {
-		k := string(iterA.Key())
-		iterA.Next()
-		keysA[k] = true
-
-	}
-
-	for iterB.Valid() {
-		kb := string(iterB.Key())
-		iterB.Next()
-		keysB[kb] = true
-	}
-
-	for k := range keysA {
-		if _, ok := keysB[k]; !ok {
-			fmt.Println("Key in A not in B", k)
-		}
-	}
-
 }
