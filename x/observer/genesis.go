@@ -17,7 +17,14 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetObserverSet(ctx, types.ObserverSet{})
 	}
 
-	observerCount := uint64(genState.Observers.Len())
+	observerCount := uint64(0)
+	if genState.Observers.Len() > int(^uint64(0)) {
+		observerCount = ^uint64(0)
+		ctx.Logger().Error("Observer count exceeds maximum uint64 value")
+	} else {
+		observerCount = uint64(genState.Observers.Len())
+	}
+
 	if genState.LastObserverCount != nil {
 		k.SetLastObserverCount(ctx, genState.LastObserverCount)
 	} else {

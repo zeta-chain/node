@@ -83,7 +83,7 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 		}
 
 		// Verify if the tracker is maxed
-		tracker, found := k.GetOutboundTracker(ctx, chainID, uint64(nonce))
+		tracker, found := k.GetOutboundTracker(ctx, chainID, uint64(nonce)) // nosec G115 - overflow is not an issue here
 		if found && tracker.IsMaxed() {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
@@ -115,7 +115,7 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 		msg := types.MsgAddOutboundTracker{
 			Creator: randomObserver,
 			ChainId: chainID,
-			Nonce:   uint64(nonce),
+			Nonce:   uint64(nonce), // nosec G115 - overflow is not an issue here
 			TxHash:  txHash.String(),
 		}
 

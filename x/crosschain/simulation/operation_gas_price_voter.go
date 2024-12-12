@@ -51,7 +51,7 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 			ChainId:     randomChainID,
 			Price:       price,
 			PriorityFee: priorityFee,
-			BlockNumber: uint64(ctx.BlockHeight()) + r.Uint64()%1000,
+			BlockNumber: uint64(ctx.BlockHeight()) + r.Uint64()%1000, // nosec G115 - overflow is not a issue here
 			Supply:      sdk.NewInt(r.Int63n(1e18)).String(),
 		}
 

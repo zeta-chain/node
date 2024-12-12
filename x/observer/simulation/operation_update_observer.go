@@ -78,6 +78,7 @@ func SimulateUpdateObserver(k keeper.Keeper) simtypes.Operation {
 				"no last block count found",
 			), nil, nil
 		}
+		// #nosec G115 - overflow is not a concern here
 		if int(lastBlockCount.Count) != len(observerList) {
 			return simtypes.NoOpMsg(
 				types.ModuleName,

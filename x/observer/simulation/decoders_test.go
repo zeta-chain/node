@@ -62,21 +62,21 @@ func TestNewDecodeStore(t *testing.T) {
 		name        string
 		expectedLog string
 	}{
-		{"CrosschainFlags", fmt.Sprintf("%v\n%v", *crosschainFlags, *crosschainFlags)},
-		{"LastBlockObserverCount", fmt.Sprintf("%v\n%v", *lastBlockObserverCount, *lastBlockObserverCount)},
-		{"NodeAccount", fmt.Sprintf("%v\n%v", *nodeAccount, *nodeAccount)},
-		{"Keygen", fmt.Sprintf("%v\n%v", *keygen, *keygen)},
-		{"BallotList", fmt.Sprintf("%v\n%v", ballotList, ballotList)},
-		{"Ballot", fmt.Sprintf("%v\n%v", *ballot, *ballot)},
-		{"TSS", fmt.Sprintf("%v\n%v", tss, tss)},
-		{"TSSHistory", fmt.Sprintf("%v\n%v", tss, tss)},
-		{"ObserverSet", fmt.Sprintf("%v\n%v", observerSet, observerSet)},
-		{"ChainParamsList", fmt.Sprintf("%v\n%v", chainParamsList, chainParamsList)},
-		{"TssFundMigrator", fmt.Sprintf("%v\n%v", tssFundMigrator, tssFundMigrator)},
-		{"PendingNonces", fmt.Sprintf("%v\n%v", pendingNonce, pendingNonce)},
-		{"ChainNonces", fmt.Sprintf("%v\n%v", chainNonces, chainNonces)},
-		{"NonceToCctx", fmt.Sprintf("%v\n%v", nonceToCctx, nonceToCctx)},
-		{"Params", fmt.Sprintf("%v\n%v", params, params)},
+		{"CrosschainFlags", fmt.Sprintf("key %s value A %v value B %v", types.CrosschainFlagsKey, *crosschainFlags, *crosschainFlags)},
+		{"LastBlockObserverCount", fmt.Sprintf("key %s value A %v value B %v", types.LastBlockObserverCountKey, *lastBlockObserverCount, *lastBlockObserverCount)},
+		{"NodeAccount", fmt.Sprintf("key %s value A %v value B %v", types.NodeAccountKey, *nodeAccount, *nodeAccount)},
+		{"Keygen", fmt.Sprintf("key %s value A %v value B %v", types.KeygenKey, *keygen, *keygen)},
+		{"BallotList", fmt.Sprintf("key %s value A %v value B %v", types.BallotListKey, ballotList, ballotList)},
+		{"Ballot", fmt.Sprintf("key %s value A %v value B %v", types.VoterKey, *ballot, *ballot)},
+		{"TSS", fmt.Sprintf("key %s value A %v value B %v", types.TSSKey, tss, tss)},
+		{"TSSHistory", fmt.Sprintf("key %s value A %v value B %v", types.TSSHistoryKey, tss, tss)},
+		{"ObserverSet", fmt.Sprintf("key %s value A %v value B %v", types.ObserverSetKey, observerSet, observerSet)},
+		{"ChainParamsList", fmt.Sprintf("key %s value A %v value B %v", types.AllChainParamsKey, chainParamsList, chainParamsList)},
+		{"TssFundMigrator", fmt.Sprintf("key %s value A %v value B %v", types.TssFundMigratorKey, tssFundMigrator, tssFundMigrator)},
+		{"PendingNonces", fmt.Sprintf("key %s value A %v value B %v", types.PendingNoncesKeyPrefix, pendingNonce, pendingNonce)},
+		{"ChainNonces", fmt.Sprintf("key %s value A %v value B %v", types.ChainNoncesKey, chainNonces, chainNonces)},
+		{"NonceToCctx", fmt.Sprintf("key %s value A %v value B %v", types.NonceToCctxKeyPrefix, nonceToCctx, nonceToCctx)},
+		{"Params", fmt.Sprintf("key %s value A %v value B %v", types.ParamsKey, params, params)},
 	}
 
 	for i, tt := range tests {
