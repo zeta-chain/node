@@ -20,6 +20,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/memo"
@@ -33,6 +34,67 @@ import (
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
+
+var (
+	// erc20AddressToForeignCoinAssetMap maps the chain id and foreign ERC20 address to the coin asset string
+	// this is currently necessary because of the following issue: https://github.com/zeta-chain/node/issues/3274
+	erc20AddressToForeignCoinAssetMap = map[int64]map[ethcommon.Address]string{
+		// Ethereum mainnet
+		chains.Ethereum.ChainId: {
+			// USDC.ETH
+			ethcommon.HexToAddress("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"): "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+			// PEPE.ETH
+			ethcommon.HexToAddress("0x6982508145454ce325ddbe47a25d4ec3d2311933"): "0x6982508145454ce325ddbe47a25d4ec3d2311933",
+			// SHIB.ETH
+			ethcommon.HexToAddress("0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce"): "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce",
+			// USDT.ETH
+			ethcommon.HexToAddress("0xdac17f958d2ee523a2206206994597c13d831ec7"): "0xdac17f958d2ee523a2206206994597c13d831ec7",
+			// DAI.ETH
+			ethcommon.HexToAddress("0x6b175474e89094c44da98b954eedeac495271d0f"): "0x6b175474e89094c44da98b954eedeac495271d0f",
+		},
+
+		// BSC mainnet
+		chains.BscMainnet.ChainId: {
+			// USDC.BSC
+			ethcommon.HexToAddress("0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"): "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+			// USDT.BSC
+			ethcommon.HexToAddress("0x55d398326f99059ff775485246999027b3197955"): "0x55d398326f99059ff775485246999027b3197955",
+		},
+
+		// Polygon mainnet
+		chains.Polygon.ChainId: {
+			// USDT.POL
+			ethcommon.HexToAddress("0xc2132d05d31c914a87c6611c10748aeb04b58e8f"): "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+			// USDC.POL
+			ethcommon.HexToAddress("0x3c499c542cef5e3811e1192ce70d8cc03d5c3359"): "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+		},
+
+		// Polygon Amoy
+		chains.Amoy.ChainId: {
+			// USDC.AMOY
+			ethcommon.HexToAddress("0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582"): "0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582",
+		},
+	}
+)
+
+// PatchZRC20Asset returns a patched asset string for the given chainID and erc20Address
+// so that it matches the asset string in the foreign coin store.
+func PatchZRC20Asset(chainID int64, erc20Address ethcommon.Address) string {
+	addressToAsset, found := erc20AddressToForeignCoinAssetMap[chainID]
+	if found {
+		// if found, convert the address to asset in foreigh coin store
+		asset, found := addressToAsset[erc20Address]
+		if found {
+			return asset
+		}
+
+		// use the checksum address as asset string by default
+		return erc20Address.Hex()
+	}
+
+	// use the checksum address as asset string by default
+	return erc20Address.Hex()
+}
 
 // WatchInbound watches evm chain for incoming txs and post votes to zetacore
 // TODO(revamp): move ticker function to a separate file
@@ -672,11 +734,17 @@ func (ob *Observer) BuildInboundVoteMsgForDepositedEvent(
 			Msgf("thank you rich folk for your donation! tx %s chain %d", event.Raw.TxHash.Hex(), ob.Chain().ChainId)
 		return nil
 	}
+
+	// get patched asset string so that it matches the asset in the foreign coin store
+	// TODO: remove once the checksum conversion is fixed in the protocol
+	// https://github.com/zeta-chain/node/issues/3274
+	asset := PatchZRC20Asset(ob.Chain().ChainId, event.Asset)
+
 	message := hex.EncodeToString(event.Message)
 	ob.Logger().Inbound.Info().
-		Msgf("ERC20CustodyDeposited inbound detected on chain %d tx %s block %d from %s value %s message %s",
+		Msgf("ERC20CustodyDeposited inbound detected on chain %d tx %s block %d from %s value %s asset %s message %s",
 			ob.Chain().
-				ChainId, event.Raw.TxHash.Hex(), event.Raw.BlockNumber, sender.Hex(), event.Amount.String(), message)
+				ChainId, event.Raw.TxHash.Hex(), event.Raw.BlockNumber, sender.Hex(), event.Amount.String(), asset, message)
 
 	return zetacore.GetInboundVoteMessage(
 		sender.Hex(),
@@ -690,7 +758,7 @@ func (ob *Observer) BuildInboundVoteMsgForDepositedEvent(
 		event.Raw.BlockNumber,
 		1_500_000,
 		coin.CoinType_ERC20,
-		event.Asset.String(),
+		asset,
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		event.Raw.Index,
 	)

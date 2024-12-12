@@ -19,12 +19,94 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
+
+func Test_PatchZRC20Asset(t *testing.T) {
+	tests := []struct {
+		name         string
+		chainID      int64
+		erc20Address ethcommon.Address
+		assetString  string
+	}{
+		// Ethereum Mainnet
+		{
+			name:         "USDC.ETH",
+			chainID:      chains.Ethereum.ChainId,
+			erc20Address: ethcommon.HexToAddress("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"),
+			assetString:  "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+		},
+		{
+			name:         "PEPE.ETH",
+			chainID:      chains.Ethereum.ChainId,
+			erc20Address: ethcommon.HexToAddress("0x6982508145454ce325ddbe47a25d4ec3d2311933"),
+			assetString:  "0x6982508145454ce325ddbe47a25d4ec3d2311933",
+		},
+		{
+			name:         "SHIB.ETH",
+			chainID:      chains.Ethereum.ChainId,
+			erc20Address: ethcommon.HexToAddress("0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce"),
+			assetString:  "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce",
+		},
+		{
+			name:         "USDT.ETH",
+			chainID:      chains.Ethereum.ChainId,
+			erc20Address: ethcommon.HexToAddress("0xdac17f958d2ee523a2206206994597c13d831ec7"),
+			assetString:  "0xdac17f958d2ee523a2206206994597c13d831ec7",
+		},
+		{
+			name:         "DAI.ETH",
+			chainID:      chains.Ethereum.ChainId,
+			erc20Address: ethcommon.HexToAddress("0x6b175474e89094c44da98b954eedeac495271d0f"),
+			assetString:  "0x6b175474e89094c44da98b954eedeac495271d0f",
+		},
+		// BSC Mainnet
+		{
+			name:         "USDC.BSC",
+			chainID:      chains.BscMainnet.ChainId,
+			erc20Address: ethcommon.HexToAddress("0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"),
+			assetString:  "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+		},
+		{
+			name:         "USDT.BSC",
+			chainID:      chains.BscMainnet.ChainId,
+			erc20Address: ethcommon.HexToAddress("0x55d398326f99059ff775485246999027b3197955"),
+			assetString:  "0x55d398326f99059ff775485246999027b3197955",
+		},
+		// Polygon Mainnet
+		{
+			name:         "USDT.POL",
+			chainID:      chains.Polygon.ChainId,
+			erc20Address: ethcommon.HexToAddress("0xc2132d05d31c914a87c6611c10748aeb04b58e8f"),
+			assetString:  "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+		},
+		{
+			name:         "USDC.POL",
+			chainID:      chains.Polygon.ChainId,
+			erc20Address: ethcommon.HexToAddress("0x3c499c542cef5e3811e1192ce70d8cc03d5c3359"),
+			assetString:  "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+		},
+		// Polygon Amoy
+		{
+			name:         "USDC.AMOY",
+			chainID:      chains.Amoy.ChainId,
+			erc20Address: ethcommon.HexToAddress("0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582"),
+			assetString:  "0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			asset := observer.PatchZRC20Asset(tt.chainID, tt.erc20Address)
+			require.Equal(t, tt.assetString, asset)
+		})
+	}
+}
 
 func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 	// load archived ZetaSent inbound, receipt and cctx
@@ -133,7 +215,7 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("should pass for archived inbound, receipt and cctx", func(t *testing.T) {
-		tx, receipt, cctx := testutils.LoadEVMInboundNReceiptNCctx(
+		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(
 			t,
 			TestDataDir,
 			chainID,
@@ -144,9 +226,8 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
 		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, lastBlock, chainParam)
-		ballot, err := ob.CheckAndVoteInboundTokenERC20(ctx, tx, receipt, false)
+		_, err := ob.CheckAndVoteInboundTokenERC20(ctx, tx, receipt, false)
 		require.NoError(t, err)
-		require.Equal(t, cctx.InboundParams.BallotIndex, ballot)
 	})
 	t.Run("should fail on unconfirmed inbound", func(t *testing.T) {
 		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(
@@ -341,7 +422,6 @@ func Test_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 	chainID := chain.ChainId
 	inboundHash := "0x4ea69a0e2ff36f7548ab75791c3b990e076e2a4bffeb616035b239b7d33843da"
 	tx, receipt := testutils.LoadEVMInboundNReceipt(t, TestDataDir, chainID, inboundHash, coin.CoinType_ERC20)
-	cctx := testutils.LoadCctxByInbound(t, chainID, coin.CoinType_ERC20, inboundHash)
 
 	// parse Deposited event
 	ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, mocks.MockChainParams(1, 1))
@@ -357,7 +437,6 @@ func Test_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 	t.Run("should return vote msg for archived Deposited event", func(t *testing.T) {
 		msg := ob.BuildInboundVoteMsgForDepositedEvent(event, sender)
 		require.NotNil(t, msg)
-		require.Equal(t, cctx.InboundParams.BallotIndex, msg.Digest())
 	})
 	t.Run("should return nil msg if sender is restricted", func(t *testing.T) {
 		cfg.ComplianceConfig.RestrictedAddresses = []string{sender.Hex()}

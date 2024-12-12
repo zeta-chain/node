@@ -181,6 +181,16 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited)
 		isCrossChainCall = true
 	}
 
+	// get patched asset string so that it matches the one in the foreign coin store
+	// TODO: remove once the checksum conversion is fixed in the protocol
+	// https://github.com/zeta-chain/node/issues/3274
+	asset := PatchZRC20Asset(ob.Chain().ChainId, event.Asset)
+	if asset != event.Asset.Hex() {
+		ob.Logger().
+			Inbound.Info().
+			Msgf("newDepositInboundVote converted asset %s to %s for chain %d", event.Asset.Hex(), asset, ob.Chain().ChainId)
+	}
+
 	return *types.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		event.Sender.Hex(),
@@ -194,7 +204,7 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited)
 		event.Raw.BlockNumber,
 		zetacore.PostVoteInboundCallOptionsGasLimit,
 		coinType,
-		event.Asset.Hex(),
+		asset,
 		event.Raw.Index,
 		types.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
@@ -454,6 +464,16 @@ func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDep
 		coinType = coin.CoinType_Gas
 	}
 
+	// get patched asset string so that it matches the one in the foreign coin store
+	// TODO: remove once the checksum conversion is fixed in the protocol
+	// https://github.com/zeta-chain/node/issues/3274
+	asset := PatchZRC20Asset(ob.Chain().ChainId, event.Asset)
+	if asset != event.Asset.Hex() {
+		ob.Logger().
+			Inbound.Info().
+			Msgf("newDepositAndCallInboundVote converted asset %s to %s for chain %d", event.Asset.Hex(), asset, ob.Chain().ChainId)
+	}
+
 	return *types.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		event.Sender.Hex(),
@@ -467,7 +487,7 @@ func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDep
 		event.Raw.BlockNumber,
 		1_500_000,
 		coinType,
-		event.Asset.Hex(),
+		asset,
 		event.Raw.Index,
 		types.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
