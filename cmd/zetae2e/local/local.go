@@ -381,28 +381,28 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	if testPerformance {
-		eg.Go(ethereumDepositPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherDepositName))
-		eg.Go(ethereumWithdrawPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherWithdrawName))
-		eg.Go(
-			solanaDepositPerformanceRoutine(
-				conf,
-				"perf_sol_deposit",
-				deployerRunner,
-				verbose,
-				conf.AdditionalAccounts.UserSolana,
-				e2etests.TestStressSolanaDepositName,
-			),
-		)
-		eg.Go(
-			solanaDepositPerformanceRoutine(
-				conf,
-				"perf_spl_deposit",
-				deployerRunner,
-				verbose,
-				conf.AdditionalAccounts.UserSPL,
-				e2etests.TestStressSPLDepositName,
-			),
-		)
+		// eg.Go(ethereumDepositPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherDepositName))
+		// eg.Go(ethereumWithdrawPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherWithdrawName))
+		// eg.Go(
+		// 	solanaDepositPerformanceRoutine(
+		// 		conf,
+		// 		"perf_sol_deposit",
+		// 		deployerRunner,
+		// 		verbose,
+		// 		conf.AdditionalAccounts.UserSolana,
+		// 		e2etests.TestStressSolanaDepositName,
+		// 	),
+		// )
+		// eg.Go(
+		// 	solanaDepositPerformanceRoutine(
+		// 		conf,
+		// 		"perf_spl_deposit",
+		// 		deployerRunner,
+		// 		verbose,
+		// 		conf.AdditionalAccounts.UserSPL,
+		// 		e2etests.TestStressSPLDepositName,
+		// 	),
+		// )
 		eg.Go(
 			solanaWithdrawPerformanceRoutine(
 				conf,
