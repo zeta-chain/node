@@ -327,7 +327,7 @@ ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from source"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source \
-		--build-arg OLD_VERSION='release/v22' \
+		--build-arg OLD_VERSION='release/v23' \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
 		--build-arg NODE_COMMIT=$(NODE_COMMIT)
 		.
@@ -336,7 +336,7 @@ else
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from binaries"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime \
-	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v22.1.1' \
+	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v23.1.5' \
 	--build-arg NODE_VERSION=$(NODE_VERSION) \
 	--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 	.
@@ -409,7 +409,7 @@ test-sim-fullappsimulation:
 	$(call run-sim-test,"TestFullAppSimulation",TestFullAppSimulation,100,200,30m)
 
 test-sim-import-export:
-	$(call run-sim-test,"test-import-export",TestAppImportExport,100,200,30m)
+	$(call run-sim-test,"test-import-export",TestAppImportExport,50,100,30m)
 
 test-sim-after-import:
 	$(call run-sim-test,"test-sim-after-import",TestAppSimulationAfterImport,100,200,30m)

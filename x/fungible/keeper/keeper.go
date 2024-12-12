@@ -13,7 +13,7 @@ import (
 
 type (
 	Keeper struct {
-		cdc             codec.BinaryCodec
+		cdc             codec.Codec
 		storeKey        storetypes.StoreKey
 		memKey          storetypes.StoreKey
 		authKeeper      types.AccountKeeper
@@ -25,7 +25,7 @@ type (
 )
 
 func NewKeeper(
-	cdc codec.BinaryCodec,
+	cdc codec.Codec,
 	storeKey,
 	memKey storetypes.StoreKey,
 	authKeeper types.AccountKeeper,
@@ -52,6 +52,10 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 func (k Keeper) GetAuthKeeper() types.AccountKeeper {
 	return k.authKeeper
+}
+
+func (k Keeper) GetCodec() codec.Codec {
+	return k.cdc
 }
 
 func (k Keeper) GetEVMKeeper() types.EVMKeeper {

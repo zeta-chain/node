@@ -77,6 +77,8 @@ func IBCCrosschainKeeperWithMocks(
 		sdkKeepers.StakingKeeper,
 		sdkKeepers.SlashingKeeper,
 		authorityKeeper,
+		sdkKeepers.BankKeeper,
+		sdkKeepers.AuthKeeper,
 		lightclientKeeper,
 	)
 	fungibleKeeper := initFungibleKeeper(

@@ -10,6 +10,7 @@
 
 * [3205](https://github.com/zeta-chain/node/issues/3205) - move Bitcoin revert address test to advanced group to avoid upgrade test failure
 * [3254](https://github.com/zeta-chain/node/pull/3254) - rename v2 E2E tests as evm tests and rename old evm tests as legacy
+* [3095](https://github.com/zeta-chain/node/pull/3095) - initialize simulation tests for custom zetachain modules
 
 ## Refactor
 
@@ -23,6 +24,7 @@
 * [3225](https://github.com/zeta-chain/node/pull/3225) - use separate database file names for btc signet and testnet4
 * [3242](https://github.com/zeta-chain/node/pull/3242) - set the `Receiver` of `MsgVoteInbound` to the address pulled from solana memo
 * [3253](https://github.com/zeta-chain/node/pull/3253) - fix solana inbound version 0 queries and move tss keysign prior to relayer key checking
+* [3278](https://github.com/zeta-chain/node/pull/3278) - enforce checksum format for asset address in ZRC20
 
 ## v23.0.0
 

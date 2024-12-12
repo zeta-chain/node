@@ -93,6 +93,7 @@ func (k msgServer) VoteInbound(
 		}
 	}
 	commit()
+
 	// If the ballot is not finalized return nil here to add vote to commit state
 	if !finalized {
 		return &types.MsgVoteInboundResponse{}, nil
@@ -102,9 +103,9 @@ func (k msgServer) VoteInbound(
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, voteInboundID)
 	}
-
 	// Save the inbound CCTX to the store. This is called irrespective of the status of the CCTX or the outcome of the process function.
 	k.SaveObservedInboundInformation(ctx, cctx, msg.EventIndex)
+
 	return &types.MsgVoteInboundResponse{}, nil
 }
 

@@ -83,6 +83,8 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().
 		Bool(flagUpgradeContracts, false, "set to true to upgrade Gateways and ERC20Custody contracts during setup for ZEVM and EVM")
 
+	cmd.AddCommand(NewGetZetaclientBootstrap())
+
 	return cmd
 }
 
