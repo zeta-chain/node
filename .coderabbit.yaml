@@ -8,6 +8,7 @@ tone_instructions: >-
 reviews:
   profile: chill
   high_level_summary: true
+  review_status: false
 
   # disables the cringe
   poem: false
