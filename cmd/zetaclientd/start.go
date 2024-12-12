@@ -115,6 +115,11 @@ func Start(_ *cobra.Command, _ []string) error {
 		graceful.ShutdownNow()
 	})
 
+	maintenance.NewShutdownListener(zetacoreClient, logger.Std).Listen(ctx, func() {
+		logger.Std.Info().Msg("Shutdown listener received an action to shutdown zetaclientd.")
+		graceful.ShutdownNow()
+	})
+
 	// CreateSignerMap: This creates a map of all signers for each chain.
 	// Each signer is responsible for signing transactions for a particular chain
 	signerMap, err := orchestrator.CreateSignerMap(ctx, tss, logger)

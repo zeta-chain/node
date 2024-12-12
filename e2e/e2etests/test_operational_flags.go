@@ -10,29 +10,33 @@ import (
 
 // TestOperationalFlags tests the functionality of operations flags.
 func TestOperationalFlags(r *runner.E2ERunner, _ []string) {
-	operationalFlagsRes, err := r.Clients.Zetacore.Observer.OperationalFlags(
+	_, err := r.Clients.Zetacore.Observer.OperationalFlags(
 		r.Ctx,
 		&observertypes.QueryOperationalFlagsRequest{},
 	)
 	require.NoError(r, err)
 
-	// always set to low height so it's ignored by zetaclient
-	nextRestartHeight := operationalFlagsRes.OperationalFlags.RestartHeight + 1
+	currentHeight, err := r.Clients.Zetacore.GetBlockHeight(r.Ctx)
+	require.NoError(r, err)
 
+	// schedule a restart for 5 blocks in the future
+	restartHeight := currentHeight + 5
 	updateMsg := observertypes.NewMsgUpdateOperationalFlags(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
 		observertypes.OperationalFlags{
-			RestartHeight: nextRestartHeight,
+			RestartHeight: restartHeight,
 		},
 	)
 
 	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, updateMsg)
 	require.NoError(r, err)
 
-	operationalFlagsRes, err = r.Clients.Zetacore.Observer.OperationalFlags(
+	operationalFlagsRes, err := r.Clients.Zetacore.Observer.OperationalFlags(
 		r.Ctx,
 		&observertypes.QueryOperationalFlagsRequest{},
 	)
 	require.NoError(r, err)
-	require.Equal(r, nextRestartHeight, operationalFlagsRes.OperationalFlags.RestartHeight)
+	require.Equal(r, restartHeight, operationalFlagsRes.OperationalFlags.RestartHeight)
+
+	// TODO: wait for restart height + 2 then test that start timestamp metric has increased
 }
