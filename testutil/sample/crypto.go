@@ -58,6 +58,9 @@ func PubKeyString() string {
 
 func PubkeyStringFromRand(r *rand.Rand) (string, error) {
 	priKey, err := Ed25519PrivateKeyFromRand(r)
+	if err != nil {
+		return "", err
+	}
 	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, priKey.PubKey())
 	if err != nil {
 		return "", err
