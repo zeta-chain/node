@@ -75,10 +75,14 @@ func SimulateAddObserverNodeAccount(k keeper.Keeper) simtypes.Operation {
 			), nil, nil
 		}
 
+		pubkey, err := sample.PubkeyStringFromRand(r)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgAddObserver, err.Error()), nil, nil
+		}
 		msg := types.MsgAddObserver{
 			Creator:                 policyAccount.Address.String(),
 			ObserverAddress:         newObserver,
-			ZetaclientGranteePubkey: sample.PubkeyStringFromRand(r),
+			ZetaclientGranteePubkey: pubkey,
 			AddNodeAccountOnly:      true,
 		}
 

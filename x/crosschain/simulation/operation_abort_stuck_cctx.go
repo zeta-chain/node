@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -47,7 +46,11 @@ func SimulateMsgAbortStuckCCTX(k keeper.Keeper) simtypes.Operation {
 
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)
 		if !found {
-			return simtypes.OperationMsg{}, nil, fmt.Errorf("tss not found")
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				types.TypeMsgAbortStuckCCTX,
+				"no TSS found",
+			), nil, nil
 		}
 
 		pendingNonces, found := k.GetObserverKeeper().GetPendingNonces(ctx, tss.TssPubkey, chainID)
@@ -63,7 +66,7 @@ func SimulateMsgAbortStuckCCTX(k keeper.Keeper) simtypes.Operation {
 		if pendingNonces.NonceLow == pendingNonces.NonceHigh {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgAddOutboundTracker,
+				types.TypeMsgAbortStuckCCTX,
 				"no pending nonces found",
 			), nil, nil
 		}

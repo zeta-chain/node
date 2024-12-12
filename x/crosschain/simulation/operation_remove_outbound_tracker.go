@@ -48,7 +48,7 @@ func SimulateMsgRemoveOutboundTracker(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
 				msg.Type(),
-				"unable to validate MsgRemoveOutboundTracker msg",
+				"unable to validate MsgRemoveOutboundTracker",
 			), nil, err
 		}
 

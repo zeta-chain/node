@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -39,8 +38,12 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 		randomChainID := GetRandomChainID(r, supportedChains)
 
 		// Vote for random gas price. Gas prices do not use a ballot system, so we can vote directly without having to schedule future operations.
-		// The random nature of the price might create weird gas prices for the chain, but it is fine for now. We can remove the randomness if needed
-		price := r.Uint64()
+
+		var price uint64
+		for price == 0 {
+			maxGasPrice := uint64(1000 * 1e9) // 1000 Gwei
+			price = uint64(1e9) + r.Uint64()%maxGasPrice
+		}
 		// Select priority fee between 0 and price
 		priorityFee := r.Uint64() % price
 		msg := types.MsgVoteGasPrice{
@@ -48,8 +51,8 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 			ChainId:     randomChainID,
 			Price:       price,
 			PriorityFee: priorityFee,
-			BlockNumber: r.Uint64(),
-			Supply:      fmt.Sprintf("%d", r.Int63()),
+			BlockNumber: uint64(ctx.BlockHeight()) + r.Uint64()%1000,
+			Supply:      sdk.NewInt(r.Int63n(1e18)).String(),
 		}
 
 		// System contracts are deployed on the first block, so we cannot vote on gas prices before that

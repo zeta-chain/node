@@ -57,7 +57,7 @@ const (
 	OpWeightUpdateRateLimiterFlags        = "op_weight_msg_update_rate_limiter_flags"         // #nosec G101 not a hardcoded credential
 	OpWeightRefundAbortedCCTX             = "op_weight_msg_refund_aborted_cctx"               // #nosec G101 not a hardcoded credential
 	OpWeightUpdateERC20CustodyPauseStatus = "op_weight_msg_update_erc20_custody_pause_status" // #nosec G101 not a hardcoded credential
-	OppWeightMigrateERC20CustodyFunds     = "op_weight_msg_migrate_erc20_custody_funds"       // #nosec G101 not a hardcoded credential
+	OpWeightMigrateERC20CustodyFunds      = "op_weight_msg_migrate_erc20_custody_funds"       // #nosec G101 not a hardcoded credential
 
 )
 
@@ -158,7 +158,7 @@ func WeightedOperations(
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OppWeightMigrateERC20CustodyFunds, &weightMigrateERC20CustodyFunds, nil,
+	appParams.GetOrGenerate(cdc, OpWeightMigrateERC20CustodyFunds, &weightMigrateERC20CustodyFunds, nil,
 		func(_ *rand.Rand) {
 			weightMigrateERC20CustodyFunds = DefaultWeightMigrateERC20CustodyFunds
 		},

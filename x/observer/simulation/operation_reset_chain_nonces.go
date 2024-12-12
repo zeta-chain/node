@@ -53,7 +53,7 @@ func SimulateResetChainNonces(k keeper.Keeper) simtypes.Operation {
 				fmt.Errorf("pending nonces not found for chain %d %s", randomChain.ChainId, randomChain.ChainName)
 		}
 
-		nonceIncrement := int64(r.Intn(100-1)) + 1
+		nonceIncrement := int64(r.Intn(99)) + 1
 
 		msg := types.MsgResetChainNonces{
 			Creator:        policyAccount.Address.String(),

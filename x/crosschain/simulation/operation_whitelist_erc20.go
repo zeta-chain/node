@@ -37,6 +37,13 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 		}
 
 		filteredChains := chains.FilterChains(supportedChains, chains.FilterByVM(chains.Vm_evm))
+		if len(filteredChains) == 0 {
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				types.TypeMsgWhitelistERC20,
+				"no EVM-compatible chains found",
+			), nil, nil
+		}
 
 		//pick a random chain
 		// Keep the switch case to add solana support in future
@@ -116,7 +123,7 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
 				msg.Type(),
-				"unable to validate MsgRemoveOutboundTracker msg",
+				"unable to validate MsgWhitelistERC20",
 			), nil, err
 		}
 

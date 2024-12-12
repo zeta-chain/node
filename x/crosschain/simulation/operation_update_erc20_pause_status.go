@@ -20,7 +20,7 @@ func SimulateUpdateERC20CustodyPauseStatus(k keeper.Keeper) simtypes.Operation {
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWhitelistERC20, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeUpdateERC20CustodyPauseStatus, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
@@ -38,7 +38,7 @@ func SimulateUpdateERC20CustodyPauseStatus(k keeper.Keeper) simtypes.Operation {
 		filteredChains := chains.FilterChains(supportedChains, chains.FilterExternalChains)
 
 		//pick a random chain
-		randomChain := supportedChains[r.Intn(len(filteredChains))]
+		randomChain := filteredChains[r.Intn(len(filteredChains))]
 
 		_, found := k.GetObserverKeeper().GetChainNonces(ctx, randomChain.ChainId)
 		if !found {
@@ -96,7 +96,7 @@ func SimulateUpdateERC20CustodyPauseStatus(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
 				msg.Type(),
-				"unable to validate MsgRemoveOutboundTracker msg",
+				"unable to validate MsgUpdateERC20CustodyPauseStatus msg",
 			), nil, err
 		}
 

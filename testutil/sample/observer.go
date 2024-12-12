@@ -116,11 +116,7 @@ func ChainParams(chainID int64) *types.ChainParams {
 }
 
 func ChainParamsFromRand(r *rand.Rand, chainID int64) *types.ChainParams {
-	fiftyPercent, err := sdk.NewDecFromStr("0.5")
-	if err != nil {
-		return nil
-	}
-
+	fiftyPercent := sdk.MustNewDecFromStr("0.5")
 	return &types.ChainParams{
 		ChainId:           chainID,
 		ConfirmationCount: r.Uint64(),

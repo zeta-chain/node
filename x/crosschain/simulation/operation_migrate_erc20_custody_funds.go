@@ -21,7 +21,7 @@ func SimulateMigrateERC20CustodyFunds(k keeper.Keeper) simtypes.Operation {
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWhitelistERC20, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMigrateERC20CustodyFunds, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
@@ -99,7 +99,7 @@ func SimulateMigrateERC20CustodyFunds(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
 				msg.Type(),
-				"unable to validate MsgRemoveOutboundTracker msg",
+				"unable to validate MsgMigrateERC20CustodyFunds",
 			), nil, err
 		}
 

@@ -19,7 +19,7 @@ func SimulateEnableCCTX(k keeper.Keeper) simtypes.Operation {
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUpdateKeygen, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgEnableCCTX, err.Error()), nil, nil
 		}
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
@@ -27,7 +27,7 @@ func SimulateEnableCCTX(k keeper.Keeper) simtypes.Operation {
 		msg := types.MsgEnableCCTX{
 			Creator:        policyAccount.Address.String(),
 			EnableInbound:  true,
-			EnableOutbound: false,
+			EnableOutbound: true,
 		}
 
 		err = msg.ValidateBasic()

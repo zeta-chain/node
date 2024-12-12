@@ -37,7 +37,6 @@ func (k Keeper) ZRC20DepositAndCallContract(
 	protocolContractVersion crosschaintypes.ProtocolContractVersion,
 	isCrossChainCall bool,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
-	//fmt.Println("start ZRC20DepositAndCallContract", asset, senderChainID)
 	// get ZRC20 contract
 	zrc20Contract, _, err := k.getAndCheckZRC20(ctx, amount, senderChainID, coinType, asset)
 	if err != nil {

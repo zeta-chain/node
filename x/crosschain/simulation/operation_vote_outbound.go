@@ -90,7 +90,7 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)
 		if !found {
-			return simtypes.OperationMsg{}, nil, fmt.Errorf("tss not found")
+			return simtypes.NoOpMsg(types.ModuleName, authz.OutboundVoter.String(), "tss not found"), nil, nil
 		}
 
 		asset, err := GetAsset(ctx, k.GetFungibleKeeper(), from)

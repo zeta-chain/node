@@ -21,7 +21,7 @@ func SimulateMsgUpdateTssAddress(k keeper.Keeper) simtypes.Operation {
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWhitelistERC20, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUpdateTssAddress, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
@@ -105,7 +105,7 @@ func SimulateMsgUpdateTssAddress(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
 				msg.Type(),
-				"unable to validate MsgRemoveOutboundTracker msg",
+				"unable to validate MsgUpdateTssAddress msg",
 			), nil, err
 		}
 

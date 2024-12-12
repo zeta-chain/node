@@ -32,6 +32,10 @@ func SimulateUpdateChainParams(k keeper.Keeper) simtypes.Operation {
 		}
 
 		cp := sample.ChainParamsFromRand(r, randomChain.ChainId)
+		err = types.ValidateChainParams(cp)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUpdateChainParams, err.Error()), nil, nil
+		}
 
 		msg := types.MsgUpdateChainParams{
 			Creator:     policyAccount.Address.String(),

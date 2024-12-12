@@ -149,7 +149,10 @@ func GasPriceWithChainID(t *testing.T, chainID int64) types.GasPrice {
 }
 
 func GasPriceFromRand(r *rand.Rand, chainID int64) *types.GasPrice {
-	price := r.Uint64()
+	var price uint64
+	for price == 0 {
+		price = r.Uint64()
+	}
 	priorityFee := r.Uint64() % price
 	return &types.GasPrice{
 		Creator:      "",
@@ -367,7 +370,7 @@ func InboundVoteFromRand(from, to int64, r *rand.Rand, asset string) types.MsgVo
 		Receiver:           EthAddressFromRand(r).String(),
 		ReceiverChain:      to,
 		Amount:             math.NewUint(r.Uint64()),
-		Message:            base64.StdEncoding.EncodeToString(RandomBytes(r)),
+		Message:            "95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5",
 		InboundBlockHeight: r.Uint64(),
 		CallOptions: &types.CallOptions{
 			GasLimit: 1000000000,

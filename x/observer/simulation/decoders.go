@@ -91,7 +91,7 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvB.Value, &paramsB)
 			return fmt.Sprintf("%v\n%v", paramsA, paramsB)
 		default:
-			panic(fmt.Sprintf("invalid observer key prefix %X", kvA.Key[:1]))
+			panic(fmt.Sprintf("invalid observer key prefix %X (first 8 bytes: %X)", kvA.Key[:1], kvA.Key[:min(8, len(kvA.Key))]))
 		}
 	}
 }
