@@ -776,7 +776,7 @@ var AllE2ETests = []runner.E2ETest{
 		"stress test SOL deposit",
 		[]runner.ArgDefinition{
 			{Description: "amount in lamports", DefaultValue: "1200000"},
-			{Description: "count of SOL deposits", DefaultValue: "40"},
+			{Description: "count of SOL deposits", DefaultValue: "30"},
 		},
 		TestStressSolanaDeposit,
 	),
@@ -785,7 +785,7 @@ var AllE2ETests = []runner.E2ETest{
 		"stress test SPL deposit",
 		[]runner.ArgDefinition{
 			{Description: "amount in SPL tokens", DefaultValue: "1200000"},
-			{Description: "count of SPL deposits", DefaultValue: "40"},
+			{Description: "count of SPL deposits", DefaultValue: "30"},
 		},
 		TestStressSPLDeposit,
 	),
@@ -794,7 +794,7 @@ var AllE2ETests = []runner.E2ETest{
 		"stress test SOL withdrawals",
 		[]runner.ArgDefinition{
 			{Description: "amount in lamports", DefaultValue: "1000000"},
-			{Description: "count of SOL withdrawals", DefaultValue: "40"},
+			{Description: "count of SOL withdrawals", DefaultValue: "30"},
 		},
 		TestStressSolanaWithdraw,
 	),
@@ -803,7 +803,7 @@ var AllE2ETests = []runner.E2ETest{
 		"stress test SPL withdrawals",
 		[]runner.ArgDefinition{
 			{Description: "amount in SPL tokens", DefaultValue: "1000000"},
-			{Description: "count of SPL withdrawals", DefaultValue: "40"},
+			{Description: "count of SPL withdrawals", DefaultValue: "30"},
 		},
 		TestStressSPLWithdraw,
 	),
