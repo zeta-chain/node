@@ -5,21 +5,18 @@ import (
 	"net/http"
 	_ "net/http/pprof" // #nosec G108 -- pprof enablement is intentional
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/pkg/graceful"
 	zetaos "github.com/zeta-chain/node/pkg/os"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
-	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/maintenance"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/orchestrator"
@@ -59,28 +56,10 @@ func Start(_ *cobra.Command, _ []string) error {
 	appContext := zctx.New(cfg, passes.relayerKeys(), logger.Std)
 	ctx := zctx.WithAppContext(context.Background(), appContext)
 
-	// TODO graceful
-	telemetryServer := metrics.NewTelemetryServer()
-	go func() {
-		err := telemetryServer.Start()
-		if err != nil {
-			log.Fatal().Err(err).Msg("telemetryServer error")
-		}
-	}()
-
-	m, err := metrics.NewMetrics()
+	telemetry, err := startTelemetry(ctx, cfg)
 	if err != nil {
-		return errors.Wrap(err, "unable to create metrics")
+		return errors.Wrap(err, "unable to start telemetry")
 	}
-	m.Start()
-
-	metrics.Info.WithLabelValues(constant.Version).Set(1)
-	metrics.LastStartTime.SetToCurrentTime()
-
-	telemetryServer.SetIPAddress(cfg.PublicIP)
-
-	// TODO graceful
-	go runPprof(logger.Std)
 
 	// zetacore client is used for all communication to zeta node.
 	// it accumulates votes, and provides a source of truth for all clients
@@ -118,7 +97,7 @@ func Start(_ *cobra.Command, _ []string) error {
 		TSSKeyPassword:      passes.tss,
 		BitcoinChainIDs:     btcChainIDsFromContext(appContext),
 		PostBlame:           isEnvFlagEnabled(envFlagPostBlame),
-		Telemetry:           telemetryServer,
+		Telemetry:           telemetry,
 	}
 
 	tss, err := zetatss.Setup(ctx, tssSetupProps, logger.Std)
@@ -126,16 +105,11 @@ func Start(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "unable to setup TSS service")
 	}
 
-	// Creating a channel to listen for os signals (or other signals)
-	// TODO graceful
-	signalChannel := make(chan os.Signal, 1)
-	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
-
 	// Starts various background TSS listeners.
 	// Shuts down zetaclientd if any is triggered.
 	maintenance.NewTSSListener(zetacoreClient, logger.Std).Listen(ctx, func() {
 		logger.Std.Info().Msg("TSS listener received an action to shutdown zetaclientd.")
-		signalChannel <- syscall.SIGTERM
+		graceful.ShutdownNow()
 	})
 
 	// CreateSignerMap: This creates a map of all signers for each chain.
@@ -148,7 +122,7 @@ func Start(_ *cobra.Command, _ []string) error {
 
 	// Creates a map of all chain observers for each chain.
 	// Each chain observer is responsible for observing events on the chain and processing them.
-	observerMap, err := orchestrator.CreateChainObserverMap(ctx, zetacoreClient, tss, dbPath, logger, telemetryServer)
+	observerMap, err := orchestrator.CreateChainObserverMap(ctx, zetacoreClient, tss, dbPath, logger, telemetry)
 	if err != nil {
 		return errors.Wrap(err, "unable to create chain observer map")
 	}
@@ -164,53 +138,19 @@ func Start(_ *cobra.Command, _ []string) error {
 		tss,
 		dbPath,
 		logger,
-		telemetryServer,
+		telemetry,
 	)
 	if err != nil {
 		return errors.Wrap(err, "unable to create orchestrator")
 	}
 
 	// Start orchestrator with all observers and signers
-	if err = maestro.Start(ctx); err != nil {
-		return errors.Wrap(err, "unable to start orchestrator")
-	}
+	graceful.AddService(ctx, maestro)
 
-	log.Info().Msg("zetaclientd is running")
-
-	// todo graceful
-	sig := <-signalChannel
-	log.Info().Msgf("Stop signal received: %q. Stopping zetaclientd", sig)
-
-	maestro.Stop()
+	// Block current routine until a shutdown signal is received
+	graceful.WaitForShutdown()
 
 	return nil
-}
-
-func resolveObserverPubKeyBech32(cfg config.Config, hotKeyPassword string) (string, error) {
-	// Get observer's public key ("grantee pub key")
-	_, granteePubKeyBech32, err := keys.GetKeyringKeybase(cfg, hotKeyPassword)
-	if err != nil {
-		return "", errors.Wrap(err, "unable to get keyring key base")
-	}
-
-	return granteePubKeyBech32, nil
-}
-
-// runPprof run pprof http server
-// zetacored/cometbft is already listening for runPprof on 6060 (by default)
-func runPprof(logger zerolog.Logger) {
-	addr := os.Getenv(envPprofAddr)
-	if addr == "" {
-		addr = "localhost:6061"
-	}
-
-	logger.Info().Str("addr", addr).Msg("starting pprof http server")
-
-	// #nosec G114 -- timeouts unneeded
-	err := http.ListenAndServe(addr, nil)
-	if err != nil {
-		logger.Error().Err(err).Msg("pprof http server error")
-	}
 }
 
 type passwords struct {
@@ -239,4 +179,44 @@ func (p passwords) relayerKeys() map[string]string {
 	return map[string]string{
 		chains.Network_solana.String(): p.solanaRelayerKey,
 	}
+}
+
+func startTelemetry(ctx context.Context, cfg config.Config) (*metrics.TelemetryServer, error) {
+	// 1. Init pprof http server
+	pprofServer := func(_ context.Context) error {
+		addr := os.Getenv(envPprofAddr)
+		if addr == "" {
+			addr = "localhost:6061"
+		}
+
+		log.Info().Str("addr", addr).Msg("starting pprof http server")
+
+		// #nosec G114 -- timeouts unneeded
+		err := http.ListenAndServe(addr, nil)
+		if err != nil {
+			log.Error().Err(err).Msg("pprof http server error")
+		}
+
+		return nil
+	}
+
+	// 2. Init metrics server
+	metricsServer, err := metrics.NewMetrics()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create metrics")
+	}
+
+	metrics.Info.WithLabelValues(constant.Version).Set(1)
+	metrics.LastStartTime.SetToCurrentTime()
+
+	// 3. Init telemetry server
+	telemetry := metrics.NewTelemetryServer()
+	telemetry.SetIPAddress(cfg.PublicIP)
+
+	// 4. Add services to the process
+	graceful.AddStarter(ctx, pprofServer)
+	graceful.AddService(ctx, metricsServer)
+	graceful.AddService(ctx, telemetry)
+
+	return telemetry, nil
 }

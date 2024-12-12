@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"time"
 
+	"cosmossdk.io/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -186,20 +187,24 @@ func NewMetrics() (*Metrics, error) {
 }
 
 // Start starts the metrics server
-func (m *Metrics) Start() {
+func (m *Metrics) Start(_ context.Context) error {
 	log.Info().Msg("metrics server starting")
-	go func() {
-		if err := m.s.ListenAndServe(); err != nil {
-			log.Error().Err(err).Msg("fail to start metric server")
-		}
-	}()
+
+	if err := m.s.ListenAndServe(); err != nil {
+		return errors.Wrap(err, "fail to start metric server")
+	}
+
+	return nil
 }
 
 // Stop stops the metrics server
-func (m *Metrics) Stop() error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+func (m *Metrics) Stop() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	return m.s.Shutdown(ctx)
+
+	if err := m.s.Shutdown(ctx); err != nil {
+		log.Error().Err(err).Msg("failed to shutdown metrics server")
+	}
 }
 
 // GetInstrumentedHTTPClient sets up a http client that emits prometheus metrics

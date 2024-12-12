@@ -9,9 +9,11 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 // Process represents "virtual" process that contains
@@ -33,6 +35,9 @@ type Service interface {
 	Start(ctx context.Context) error
 	Stop()
 }
+
+// DefaultProcess is a process instance with some sane defaults.
+var DefaultProcess = New(15*time.Second, log.Logger, NewSigChan(syscall.SIGINT, syscall.SIGTERM))
 
 // New Process constructor.
 func New(timeout time.Duration, logger zerolog.Logger, stop <-chan os.Signal) *Process {
@@ -82,7 +87,8 @@ func (p *Process) WaitForShutdown() {
 
 	for {
 		select {
-		case <-p.stop:
+		case sig := <-p.stop:
+			p.logger.Info().Msgf("Received signal: %q", sig.String())
 			p.ShutdownNow()
 			return
 		case <-t.C:
@@ -144,4 +150,24 @@ func NewSigChan(signals ...os.Signal) chan os.Signal {
 	signal.Notify(out, signals...)
 
 	return out
+}
+
+func AddService(ctx context.Context, s Service) {
+	DefaultProcess.AddService(ctx, s)
+}
+
+func AddStarter(ctx context.Context, fn func(ctx context.Context) error) {
+	DefaultProcess.AddStarter(ctx, fn)
+}
+
+func AddStopper(fn func()) {
+	DefaultProcess.AddStopper(fn)
+}
+
+func WaitForShutdown() {
+	DefaultProcess.WaitForShutdown()
+}
+
+func ShutdownNow() {
+	DefaultProcess.ShutdownNow()
 }

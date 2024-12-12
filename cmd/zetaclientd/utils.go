@@ -161,3 +161,13 @@ func btcChainIDsFromContext(app *zctx.AppContext) []int64 {
 
 	return btcChainIDs
 }
+
+func resolveObserverPubKeyBech32(cfg config.Config, hotKeyPassword string) (string, error) {
+	// Get observer's public key ("grantee pub key")
+	_, granteePubKeyBech32, err := keys.GetKeyringKeybase(cfg, hotKeyPassword)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to get keyring key base")
+	}
+
+	return granteePubKeyBech32, nil
+}

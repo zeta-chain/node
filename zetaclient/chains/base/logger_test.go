@@ -79,7 +79,7 @@ func TestInitLogger(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// init logger
-			logger, err := base.InitLogger(tt.cfg)
+			logger, err := base.NewLogger(tt.cfg)
 
 			// check if error is expected
 			if tt.fail {
