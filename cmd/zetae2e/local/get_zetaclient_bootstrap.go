@@ -13,7 +13,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/zeta-chain/node/pkg/rpc"
-	"github.com/zeta-chain/node/pkg/sdkconfig"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -33,7 +32,6 @@ func NewGetZetaclientBootstrap() *cobra.Command {
 }
 
 func getZetaclientBootstrap(cmd *cobra.Command, _ []string) error {
-	sdkconfig.SetDefault(true)
 	grpcURL, _ := cmd.Flags().GetString(grpcURLFlag)
 	rpcClient, err := rpc.NewGRPCClients(
 		grpcURL,

@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/node/app"
+	_ "github.com/zeta-chain/node/pkg/sdkconfig/default"
 	"github.com/zeta-chain/node/testutil/sample"
 )
 
@@ -18,7 +18,6 @@ func TestParsefileToObserverMapper(t *testing.T) {
 		err := os.RemoveAll(fp)
 		require.NoError(t, err)
 	}(t, file)
-	app.SetConfig()
 
 	observerAddress := sample.AccAddress()
 	commonGrantAddress := sample.AccAddress()

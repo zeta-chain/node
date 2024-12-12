@@ -19,7 +19,7 @@ import (
 	"github.com/stretchr/testify/require"
 	. "gopkg.in/check.v1"
 
-	"github.com/zeta-chain/node/cmd"
+	_ "github.com/zeta-chain/node/pkg/sdkconfig/default"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -35,24 +35,10 @@ var (
 )
 
 const (
-	signerNameForTest     = `jack`
-	signerPasswordForTest = `password`
+	signerNameForTest            = `jack`
+	signerPasswordForTest        = `password`
+	zetaChainHDPath       string = `m/44'/60'/0'/0/0`
 )
-
-func setupConfig() {
-	testConfig := sdk.GetConfig()
-	testConfig.SetBech32PrefixForAccount(cmd.Bech32PrefixAccAddr, cmd.Bech32PrefixAccPub)
-	testConfig.SetBech32PrefixForValidator(cmd.Bech32PrefixValAddr, cmd.Bech32PrefixValPub)
-	testConfig.SetBech32PrefixForConsensusNode(cmd.Bech32PrefixConsAddr, cmd.Bech32PrefixConsPub)
-	testConfig.SetFullFundraiserPath(cmd.ZetaChainHDPath)
-	sdk.SetCoinDenomRegex(func() string {
-		return cmd.DenomRegex
-	})
-}
-
-func (*KeysSuite) SetUpSuite(_ *C) {
-	setupConfig()
-}
 
 func (*KeysSuite) setupKeysForTest(c *C) string {
 	ns := strconv.Itoa(time.Now().Nanosecond())
@@ -72,7 +58,7 @@ func (*KeysSuite) setupKeysForTest(c *C) string {
 	_, _, err = kb.NewMnemonic(
 		GetGranteeKeyName(signerNameForTest),
 		cKeys.English,
-		cmd.ZetaChainHDPath,
+		zetaChainHDPath,
 		password,
 		hd.Secp256k1,
 	)

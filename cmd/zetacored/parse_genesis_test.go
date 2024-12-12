@@ -15,8 +15,8 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/node/app"
 	zetacored "github.com/zeta-chain/node/cmd/zetacored"
+	_ "github.com/zeta-chain/node/pkg/sdkconfig/default"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -24,18 +24,7 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
-func setConfig(t *testing.T) {
-	defer func(t *testing.T) {
-		if r := recover(); r != nil {
-			t.Log("config is already sealed", r)
-		}
-	}(t)
-	cfg := sdk.GetConfig()
-	cfg.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
-	cfg.Seal()
-}
 func Test_ModifyCrossChainState(t *testing.T) {
-	setConfig(t)
 	t.Run("successfully modify cross chain state to reduce data", func(t *testing.T) {
 		cdc := keepertest.NewCodec()
 		appState := sample.AppState(t)
@@ -64,7 +53,6 @@ func Test_ModifyCrossChainState(t *testing.T) {
 }
 
 func Test_ModifyObserverState(t *testing.T) {
-	setConfig(t)
 	t.Run("successfully modify observer state to reduce data", func(t *testing.T) {
 		cdc := keepertest.NewCodec()
 		appState := sample.AppState(t)
@@ -93,7 +81,6 @@ func Test_ModifyObserverState(t *testing.T) {
 
 func Test_ImportDataIntoFile(t *testing.T) {
 	t.Run("successfully import data into file and modify data", func(t *testing.T) {
-		setConfig(t)
 		cdc := keepertest.NewCodec()
 		genDoc := sample.GenDoc(t)
 		importGenDoc := ImportGenDoc(t, cdc, 100)
@@ -133,7 +120,6 @@ func Test_ImportDataIntoFile(t *testing.T) {
 	})
 
 	t.Run("successfully import data into file without modifying data", func(t *testing.T) {
-		setConfig(t)
 		cdc := keepertest.NewCodec()
 		genDoc := sample.GenDoc(t)
 		importGenDoc := ImportGenDoc(t, cdc, 8)
