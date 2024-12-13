@@ -387,7 +387,6 @@ func InboundVoteFromRand(from, to int64, r *rand.Rand, asset string) types.MsgVo
 func ProtocolVersionFromRand(r *rand.Rand) types.ProtocolContractVersion {
 	versions := []types.ProtocolContractVersion{types.ProtocolContractVersion_V1, types.ProtocolContractVersion_V2}
 	return versions[r.Intn(len(versions))]
-
 }
 
 func CoinTypeFromRand(r *rand.Rand) coin.CoinType {

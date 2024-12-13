@@ -62,8 +62,19 @@ func TestNewDecodeStore(t *testing.T) {
 		name        string
 		expectedLog string
 	}{
-		{"CrosschainFlags", fmt.Sprintf("key %s value A %v value B %v", types.CrosschainFlagsKey, *crosschainFlags, *crosschainFlags)},
-		{"LastBlockObserverCount", fmt.Sprintf("key %s value A %v value B %v", types.LastBlockObserverCountKey, *lastBlockObserverCount, *lastBlockObserverCount)},
+		{
+			"CrosschainFlags",
+			fmt.Sprintf("key %s value A %v value B %v", types.CrosschainFlagsKey, *crosschainFlags, *crosschainFlags),
+		},
+		{
+			"LastBlockObserverCount",
+			fmt.Sprintf(
+				"key %s value A %v value B %v",
+				types.LastBlockObserverCountKey,
+				*lastBlockObserverCount,
+				*lastBlockObserverCount,
+			),
+		},
 		{"NodeAccount", fmt.Sprintf("key %s value A %v value B %v", types.NodeAccountKey, *nodeAccount, *nodeAccount)},
 		{"Keygen", fmt.Sprintf("key %s value A %v value B %v", types.KeygenKey, *keygen, *keygen)},
 		{"BallotList", fmt.Sprintf("key %s value A %v value B %v", types.BallotListKey, ballotList, ballotList)},
@@ -71,11 +82,23 @@ func TestNewDecodeStore(t *testing.T) {
 		{"TSS", fmt.Sprintf("key %s value A %v value B %v", types.TSSKey, tss, tss)},
 		{"TSSHistory", fmt.Sprintf("key %s value A %v value B %v", types.TSSHistoryKey, tss, tss)},
 		{"ObserverSet", fmt.Sprintf("key %s value A %v value B %v", types.ObserverSetKey, observerSet, observerSet)},
-		{"ChainParamsList", fmt.Sprintf("key %s value A %v value B %v", types.AllChainParamsKey, chainParamsList, chainParamsList)},
-		{"TssFundMigrator", fmt.Sprintf("key %s value A %v value B %v", types.TssFundMigratorKey, tssFundMigrator, tssFundMigrator)},
-		{"PendingNonces", fmt.Sprintf("key %s value A %v value B %v", types.PendingNoncesKeyPrefix, pendingNonce, pendingNonce)},
+		{
+			"ChainParamsList",
+			fmt.Sprintf("key %s value A %v value B %v", types.AllChainParamsKey, chainParamsList, chainParamsList),
+		},
+		{
+			"TssFundMigrator",
+			fmt.Sprintf("key %s value A %v value B %v", types.TssFundMigratorKey, tssFundMigrator, tssFundMigrator),
+		},
+		{
+			"PendingNonces",
+			fmt.Sprintf("key %s value A %v value B %v", types.PendingNoncesKeyPrefix, pendingNonce, pendingNonce),
+		},
 		{"ChainNonces", fmt.Sprintf("key %s value A %v value B %v", types.ChainNoncesKey, chainNonces, chainNonces)},
-		{"NonceToCctx", fmt.Sprintf("key %s value A %v value B %v", types.NonceToCctxKeyPrefix, nonceToCctx, nonceToCctx)},
+		{
+			"NonceToCctx",
+			fmt.Sprintf("key %s value A %v value B %v", types.NonceToCctxKeyPrefix, nonceToCctx, nonceToCctx),
+		},
 		{"Params", fmt.Sprintf("key %s value A %v value B %v", types.ParamsKey, params, params)},
 	}
 

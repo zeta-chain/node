@@ -42,13 +42,36 @@ func TestDecodeStore(t *testing.T) {
 		expectedLog string
 	}{
 		{"CrossChainTx", fmt.Sprintf("key %s value A %v value B %v", types.CCTXKey, *cctx, *cctx)},
-		{"LastBlockHeight", fmt.Sprintf("key %s value A %v value B %v", types.LastBlockHeightKey, *lastBlockHeight, *lastBlockHeight)},
+		{
+			"LastBlockHeight",
+			fmt.Sprintf("key %s value A %v value B %v", types.LastBlockHeightKey, *lastBlockHeight, *lastBlockHeight),
+		},
 		{"GasPrice", fmt.Sprintf("key %s value A %v value B %v", types.GasPriceKey, *gasPrice, *gasPrice)},
-		{"OutboundTracker", fmt.Sprintf("key %s value A %v value B %v", types.OutboundTrackerKeyPrefix, outboundTracker, outboundTracker)},
-		{"InboundTracker", fmt.Sprintf("key %s value A %v value B %v", types.InboundTrackerKeyPrefix, inboundTracker, inboundTracker)},
-		{"ZetaAccounting", fmt.Sprintf("key %s value A %v value B %v", types.ZetaAccountingKey, zetaAccounting, zetaAccounting)},
-		{"RateLimiterFlags", fmt.Sprintf("key %s value A %v value B %v", types.RateLimiterFlagsKey, rateLimiterFlags, rateLimiterFlags)},
-		{"FinalizedInbounds", fmt.Sprintf("key %s value A %v value B %v", types.FinalizedInboundsKey, []byte{1}, []byte{1})},
+		{
+			"OutboundTracker",
+			fmt.Sprintf(
+				"key %s value A %v value B %v",
+				types.OutboundTrackerKeyPrefix,
+				outboundTracker,
+				outboundTracker,
+			),
+		},
+		{
+			"InboundTracker",
+			fmt.Sprintf("key %s value A %v value B %v", types.InboundTrackerKeyPrefix, inboundTracker, inboundTracker),
+		},
+		{
+			"ZetaAccounting",
+			fmt.Sprintf("key %s value A %v value B %v", types.ZetaAccountingKey, zetaAccounting, zetaAccounting),
+		},
+		{
+			"RateLimiterFlags",
+			fmt.Sprintf("key %s value A %v value B %v", types.RateLimiterFlagsKey, rateLimiterFlags, rateLimiterFlags),
+		},
+		{
+			"FinalizedInbounds",
+			fmt.Sprintf("key %s value A %v value B %v", types.FinalizedInboundsKey, []byte{1}, []byte{1}),
+		},
 	}
 
 	for i, tt := range tests {

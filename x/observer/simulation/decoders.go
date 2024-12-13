@@ -19,12 +19,22 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			var crosschainFlagsA, crosschainFlagsB types.CrosschainFlags
 			cdc.MustUnmarshal(kvA.Value, &crosschainFlagsA)
 			cdc.MustUnmarshal(kvB.Value, &crosschainFlagsB)
-			return fmt.Sprintf("key %s value A %v value B %v", types.CrosschainFlagsKey, crosschainFlagsA, crosschainFlagsB)
+			return fmt.Sprintf(
+				"key %s value A %v value B %v",
+				types.CrosschainFlagsKey,
+				crosschainFlagsA,
+				crosschainFlagsB,
+			)
 		case bytes.Equal(kvA.Key, types.KeyPrefix(types.LastBlockObserverCountKey)):
 			var lastBlockObserverCountA, lastBlockObserverCountB types.LastObserverCount
 			cdc.MustUnmarshal(kvA.Value, &lastBlockObserverCountA)
 			cdc.MustUnmarshal(kvB.Value, &lastBlockObserverCountB)
-			return fmt.Sprintf("key %s value A %v value B %v", types.LastBlockObserverCountKey, lastBlockObserverCountA, lastBlockObserverCountB)
+			return fmt.Sprintf(
+				"key %s value A %v value B %v",
+				types.LastBlockObserverCountKey,
+				lastBlockObserverCountA,
+				lastBlockObserverCountB,
+			)
 		case bytes.Equal(kvA.Key, types.KeyPrefix(types.NodeAccountKey)):
 			var nodeAccountA, nodeAccountB types.NodeAccount
 			cdc.MustUnmarshal(kvA.Value, &nodeAccountA)
@@ -59,7 +69,12 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			var allChainParamsA, allChainParamsB types.ChainParamsList
 			cdc.MustUnmarshal(kvA.Value, &allChainParamsA)
 			cdc.MustUnmarshal(kvB.Value, &allChainParamsB)
-			return fmt.Sprintf("key %s value A %v value B %v", types.AllChainParamsKey, allChainParamsA, allChainParamsB)
+			return fmt.Sprintf(
+				"key %s value A %v value B %v",
+				types.AllChainParamsKey,
+				allChainParamsA,
+				allChainParamsB,
+			)
 		case bytes.Equal(kvA.Key, types.KeyPrefix(types.TSSHistoryKey)):
 			var tssHistoryA, tssHistoryB types.TSS
 			cdc.MustUnmarshal(kvA.Value, &tssHistoryA)
@@ -69,12 +84,22 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			var tssFundMigratorA, tssFundMigratorB types.TssFundMigratorInfo
 			cdc.MustUnmarshal(kvA.Value, &tssFundMigratorA)
 			cdc.MustUnmarshal(kvB.Value, &tssFundMigratorB)
-			return fmt.Sprintf("key %s value A %v value B %v", types.TssFundMigratorKey, tssFundMigratorA, tssFundMigratorB)
+			return fmt.Sprintf(
+				"key %s value A %v value B %v",
+				types.TssFundMigratorKey,
+				tssFundMigratorA,
+				tssFundMigratorB,
+			)
 		case bytes.Equal(kvA.Key, types.KeyPrefix(types.PendingNoncesKeyPrefix)):
 			var pendingNoncesA, pendingNoncesB types.PendingNonces
 			cdc.MustUnmarshal(kvA.Value, &pendingNoncesA)
 			cdc.MustUnmarshal(kvB.Value, &pendingNoncesB)
-			return fmt.Sprintf("key %s value A %v value B %v", types.PendingNoncesKeyPrefix, pendingNoncesA, pendingNoncesB)
+			return fmt.Sprintf(
+				"key %s value A %v value B %v",
+				types.PendingNoncesKeyPrefix,
+				pendingNoncesA,
+				pendingNoncesB,
+			)
 		case bytes.Equal(kvA.Key, types.KeyPrefix(types.ChainNoncesKey)):
 			var chainNoncesA, chainNoncesB types.ChainNonces
 			cdc.MustUnmarshal(kvA.Value, &chainNoncesA)
