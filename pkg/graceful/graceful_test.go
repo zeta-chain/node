@@ -135,7 +135,7 @@ func TestProcess(t *testing.T) {
 		assert.Contains(t, ts.logBuffer.String(), "failed to start service")
 	})
 
-	t.Run("Panic handling", func(t *testing.T) {
+	t.Run("Panic handling during startup", func(t *testing.T) {
 		t.Parallel()
 
 		// ARRANGE
@@ -153,6 +153,31 @@ func TestProcess(t *testing.T) {
 		// Check that service had errors and was stopped
 		assert.Contains(t, ts.logBuffer.String(), "Shutdown completed")
 		assert.Contains(t, ts.logBuffer.String(), "panic in service")
+
+		// Check that error contains exact line of panic
+		assert.Contains(t, ts.logBuffer.String(), "graceful_test.go:145")
+	})
+
+	t.Run("Panic handling during shutdown", func(t *testing.T) {
+		t.Parallel()
+
+		// ARRANGE
+		ts := newTestSuite(t, defaultTimeout, false)
+
+		ts.process.AddStopper(func() {
+			panic("bombarda maxima")
+		})
+
+		// ACT
+		ts.process.ShutdownNow()
+
+		// ASSERT
+		// Check that service had errors and was stopped
+		assert.Contains(t, ts.logBuffer.String(), "Shutdown completed")
+		assert.Contains(t, ts.logBuffer.String(), "panic during shutdown")
+
+		// Check that error contains exact line of panic
+		assert.Contains(t, ts.logBuffer.String(), "graceful_test.go:168")
 	})
 
 	t.Run("WaitForShutdown noop", func(t *testing.T) {

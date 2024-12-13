@@ -6,8 +6,11 @@ package graceful
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
+	"runtime/debug"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -60,7 +63,7 @@ func (p *Process) AddStarter(ctx context.Context, fn func(ctx context.Context) e
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				p.logger.Error().Interface("panic", r).Msg("panic in service")
+				p.logger.Error().Err(panicToErr(r, 10)).Msg("panic in service")
 				p.ShutdownNow()
 			}
 		}()
@@ -123,7 +126,7 @@ func (p *Process) ShutdownNow() {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				p.logger.Error().Interface("panic", r).Msg("panic during shutdown")
+				p.logger.Error().Err(panicToErr(r, 10)).Msg("panic during shutdown")
 			}
 
 			// complete shutdown
@@ -142,6 +145,20 @@ func (p *Process) ShutdownNow() {
 	case <-done:
 		p.logger.Info().Msg("Shutdown completed")
 	}
+}
+
+// panicToErr converts panic to error WITH exact line of panic.
+// Note the offset should be determined empirically.
+func panicToErr(panic any, offset int) error {
+	stack := string(debug.Stack())
+	lines := strings.Split(stack, "\n")
+	line := ""
+
+	if len(lines) > offset {
+		line = strings.TrimSpace(lines[offset])
+	}
+
+	return fmt.Errorf("panic: %v at %s", panic, line)
 }
 
 // NewSigChan creates a new signal channel.
