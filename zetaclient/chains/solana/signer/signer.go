@@ -31,15 +31,15 @@ import (
 
 const (
 	// solanaTransactionTimeout is the timeout for waiting for an outbound to be confirmed.
-	// Transaction referencing a blockhash older than 150 blocks (~1 minute) will expire and be rejected by Solana.
-	solanaTransactionTimeout = 1 * time.Minute
+	// Transaction referencing a blockhash older than 150 blocks (60 ~90 secs) will expire and be rejected by Solana.
+	solanaTransactionTimeout = 2 * time.Minute
 
 	// broadcastBackoff is the initial backoff duration for retrying broadcast
 	broadcastBackoff = 1 * time.Second
 
 	// broadcastRetries is the maximum number of retries for broadcasting a transaction
-	// 6 retries will span over 1 + 2 + 4 + 8 + 16 + 32 = 63 seconds, good enough for the 1 minute timeout
-	broadcastRetries = 6
+	// 6 retries will span over 1 + 2 + 4 + 8 + 16 + 32 + 64 = 127 seconds, good enough for the 2 minute timeout
+	broadcastRetries = 7
 )
 
 var _ interfaces.ChainSigner = (*Signer)(nil)
@@ -206,7 +206,7 @@ func (signer *Signer) broadcastOutbound(
 		logs.FieldTx:     tx.Signatures[0].String(),
 	}
 
-	// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s, 32s)
+	// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s, 32s, 64s)
 	// to tolerate tx nonce mismatch with PDA nonce or unknown RPC error
 	backOff := broadcastBackoff
 	for i := 0; i < broadcastRetries; i++ {
@@ -220,9 +220,9 @@ func (signer *Signer) broadcastOutbound(
 			pda := contracts.PdaInfo{}
 			err = borsh.Deserialize(&pda, pdaInfo.Bytes())
 			if err != nil {
-				logger.Error().Err(err).Msgf("unable to deserialize PDA info")
+				logger.Error().Err(err).Fields(lf).Msgf("unable to deserialize PDA info")
 			} else if pda.Nonce > nonce {
-				logger.Info().Err(err).Msgf("PDA nonce %d is greater than outbound nonce, stop retrying", pda.Nonce)
+				logger.Info().Err(err).Fields(lf).Msgf("PDA nonce %d is greater than outbound nonce, stop retrying", pda.Nonce)
 				break
 			}
 		}
@@ -243,6 +243,7 @@ func (signer *Signer) broadcastOutbound(
 			backOff *= 2
 			continue
 		}
+		logger.Info().Fields(lf).Msgf("broadcasted Solana outbound successfully")
 
 		// successful broadcast; report to the outbound tracker
 		signer.reportToOutboundTracker(ctx, zetacoreClient, chainID, nonce, txSig, logger)
