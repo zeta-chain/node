@@ -32,9 +32,9 @@ const (
 	DefaultWeightAddOutboundTracker            = 10
 	DefaultWeightAddInboundTracker             = 10
 	DefaultWeightRemoveOutboundTracker         = 10
-	DefaultWeightVoteGasPrice                  = 100
-	DefaultWeightVoteOutbound                  = 100
-	DefaultWeightVoteInbound                   = 100
+	DefaultWeightVoteGasPrice                  = 50
+	DefaultWeightVoteOutbound                  = 10
+	DefaultWeightVoteInbound                   = 10
 	DefaultWeightWhitelistERC20                = 10
 	DefaultWeightMigrateTssFunds               = 1
 	DefaultWeightUpdateTssAddress              = 10

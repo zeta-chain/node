@@ -42,7 +42,7 @@ const (
 	// DefaultWeightMsgTypeMsgEnableCCTX We use a high weight for this operation
 	// to ensure that it is present in the block more number of times than any operation that changes the validator set
 	// Arrived at this number based on the weights used in the cosmos sdk staking module and through some trial and error
-	DefaultWeightMsgTypeMsgEnableCCTX                  = 3650
+	DefaultWeightMsgTypeMsgEnableCCTX                  = 100
 	DefaultWeightMsgTypeMsgDisableCCTX                 = 10
 	DefaultWeightMsgTypeMsgVoteTSS                     = 10
 	DefaultWeightMsgTypeMsgUpdateKeygen                = 10

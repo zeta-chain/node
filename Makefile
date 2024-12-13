@@ -175,8 +175,7 @@ protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace --user $(shell id -u):$(shell id -g) $(protoImageName)
 
 proto-format:
-	@echo "--> Formatting Protobuf files"
-	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
+	@echo "--> Formatting Protobuf files"	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
 .PHONY: proto-format
 
 typescript: proto-format
