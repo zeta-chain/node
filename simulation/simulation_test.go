@@ -458,7 +458,7 @@ func TestAppImportExport(t *testing.T) {
 // 1. It runs a full simulation and exports the state
 // 2. It creates a new app, and db
 // 3. It imports the exported state into the new app
-// 4. It runs a simulation on the new app and verifies that there is error in the second simulation
+// 4. It runs a simulation on the new app and verifies that there is no error in the second simulation
 func TestAppSimulationAfterImport(t *testing.T) {
 	config := zetasimulation.NewConfigFromFlags()
 
@@ -587,5 +587,5 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		config,
 		simApp.AppCodec(),
 	)
-	require.NoError(t, err)
+	require.NoError(t, simErr)
 }
