@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/zeta-chain/node/app"
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/e2etests"
@@ -83,6 +82,8 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().
 		Bool(flagUpgradeContracts, false, "set to true to upgrade Gateways and ERC20Custody contracts during setup for ZEVM and EVM")
 
+	cmd.AddCommand(NewGetZetaclientBootstrap())
+
 	return cmd
 }
 
@@ -152,8 +153,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if waitForHeight != 0 {
 		noError(utils.WaitForBlockHeight(ctx, waitForHeight, conf.RPCs.ZetaCoreRPC, logger))
 	}
-
-	app.SetConfig()
 
 	zetaTxServer, err := txserver.NewZetaTxServer(
 		conf.RPCs.ZetaCoreRPC,

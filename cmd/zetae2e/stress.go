@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fatih/color"
@@ -18,7 +17,6 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 	"google.golang.org/grpc"
 
-	"github.com/zeta-chain/node/app"
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/cmd/zetae2e/local"
 	"github.com/zeta-chain/node/e2e/runner"
@@ -76,11 +74,6 @@ func StressTest(cmd *cobra.Command, _ []string) {
 		fmt.Println("E2E test timed out after", StressTestTimeout)
 		os.Exit(1)
 	}()
-
-	// set account prefix to zeta
-	cosmosConf := sdk.GetConfig()
-	cosmosConf.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
-	cosmosConf.Seal()
 
 	// initialize E2E tests config
 	conf := must(local.GetConfig(cmd))
