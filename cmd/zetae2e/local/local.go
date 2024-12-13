@@ -411,6 +411,15 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				verbose,
 				conf.AdditionalAccounts.UserSolana,
 				e2etests.TestStressSolanaWithdrawName,
+			),
+		)
+		eg.Go(
+			solanaWithdrawPerformanceRoutine(
+				conf,
+				"perf_spl_withdraw",
+				deployerRunner,
+				verbose,
+				conf.AdditionalAccounts.UserSPL,
 				e2etests.TestStressSPLWithdrawName,
 			),
 		)
