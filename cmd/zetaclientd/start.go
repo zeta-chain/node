@@ -21,6 +21,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/orchestrator"
 	zetatss "github.com/zeta-chain/node/zetaclient/tss"
+	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 const (
@@ -63,18 +64,11 @@ func Start(_ *cobra.Command, _ []string) error {
 
 	// zetacore client is used for all communication to zeta node.
 	// it accumulates votes, and provides a source of truth for all clients
-	zetacoreClient, err := createZetacoreClient(cfg, passes.hotkey, logger.Std)
+	//
+	// This call crated client, ensured block production, then prepares the client
+	zetacoreClient, err := zetacore.NewFromConfig(ctx, &cfg, passes.hotkey, logger.Std)
 	if err != nil {
-		return errors.Wrap(err, "unable to create zetacore client")
-	}
-
-	// Wait until zetacore is ready to produce blocks
-	if err = waitForBlocks(ctx, zetacoreClient, logger.Std); err != nil {
-		return errors.Wrap(err, "zetacore unavailable")
-	}
-
-	if err = prepareZetacoreClient(ctx, zetacoreClient, &cfg, logger.Std); err != nil {
-		return errors.Wrap(err, "unable to prepare zetacore client")
+		return errors.Wrap(err, "unable to create zetacore client from config")
 	}
 
 	// Initialize core parameters from zetacore
@@ -103,6 +97,15 @@ func Start(_ *cobra.Command, _ []string) error {
 	tss, err := zetatss.Setup(ctx, tssSetupProps, logger.Std)
 	if err != nil {
 		return errors.Wrap(err, "unable to setup TSS service")
+	}
+
+	isObserver, err := isObserverNode(ctx, zetacoreClient)
+	switch {
+	case err != nil:
+		return errors.Wrap(err, "unable to check if observer node")
+	case !isObserver:
+		logger.Std.Warn().Msg("This node is not an observer node. Exit 0")
+		return nil
 	}
 
 	// Starts various background TSS listeners.
