@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/memo"
+	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -324,6 +325,7 @@ func Test_DecodeLegacyMemoHex(t *testing.T) {
 		{"empty msg", "", common.Address{}, nil, false},
 		{"invalid hex", "invalidHex", common.Address{}, nil, true},
 		{"short msg", "1a2b3c4d5e6f708192a3b4c5d6e7f808", common.Address{}, expectedShortMsgResult, false},
+		{"random message", sample.EthAddress().String(), common.Address{}, nil, true},
 	}
 
 	for _, tt := range tests {

@@ -370,17 +370,24 @@ func InboundVoteFromRand(from, to int64, r *rand.Rand, asset string) types.MsgVo
 		Receiver:           EthAddressFromRand(r).String(),
 		ReceiverChain:      to,
 		Amount:             math.NewUint(r.Uint64()),
-		Message:            "95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5",
+		Message:            EthAddressFromRand(r).String(),
 		InboundBlockHeight: r.Uint64(),
 		CallOptions: &types.CallOptions{
 			GasLimit: 1000000000,
 		},
-		InboundHash: ethcommon.BytesToHash(RandomBytes(r)).String(),
-		CoinType:    coinType,
-		TxOrigin:    EthAddressFromRand(r).String(),
-		Asset:       asset,
-		EventIndex:  r.Uint64(),
+		InboundHash:             ethcommon.BytesToHash(RandomBytes(r)).String(),
+		CoinType:                coinType,
+		TxOrigin:                EthAddressFromRand(r).String(),
+		Asset:                   asset,
+		EventIndex:              r.Uint64(),
+		ProtocolContractVersion: ProtocolVersionFromRand(r),
 	}
+}
+
+func ProtocolVersionFromRand(r *rand.Rand) types.ProtocolContractVersion {
+	versions := []types.ProtocolContractVersion{types.ProtocolContractVersion_V1, types.ProtocolContractVersion_V2}
+	return versions[r.Intn(len(versions))]
+
 }
 
 func CoinTypeFromRand(r *rand.Rand) coin.CoinType {
@@ -441,8 +448,9 @@ func CCTXfromRand(r *rand.Rand,
 			IsAbortRefunded: false,
 			Status:          types.CctxStatus_PendingOutbound,
 		},
-		InboundParams:  inbound,
-		OutboundParams: []*types.OutboundParams{outbound},
+		InboundParams:           inbound,
+		OutboundParams:          []*types.OutboundParams{outbound},
+		ProtocolContractVersion: ProtocolVersionFromRand(r),
 	}
 	return cctx
 }
