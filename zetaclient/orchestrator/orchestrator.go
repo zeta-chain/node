@@ -598,6 +598,7 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 	}
 
 	// outbound keysign scheduler parameters
+	// #nosec G115 positive
 	interval := uint64(observer.ChainParams().OutboundScheduleInterval)
 	outboundScheduleLookahead := observer.ChainParams().OutboundScheduleLookahead
 	outboundScheduleLookback := uint64(float64(outboundScheduleLookahead) * outboundLookbackFactor)
