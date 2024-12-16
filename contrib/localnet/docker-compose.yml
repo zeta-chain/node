@@ -218,6 +218,8 @@ services:
     profiles:
       - solana
       - all
+      - stress
+    restart: always
     ports:
       - "8899:8899"
     networks:

@@ -119,10 +119,14 @@ const (
 	 Stress tests
 	 Test stressing networks with many cross-chain transactions
 	*/
-	TestStressEtherWithdrawName = "stress_eth_withdraw"
-	TestStressBTCWithdrawName   = "stress_btc_withdraw"
-	TestStressEtherDepositName  = "stress_eth_deposit"
-	TestStressBTCDepositName    = "stress_btc_deposit"
+	TestStressEtherWithdrawName  = "stress_eth_withdraw"
+	TestStressBTCWithdrawName    = "stress_btc_withdraw"
+	TestStressEtherDepositName   = "stress_eth_deposit"
+	TestStressBTCDepositName     = "stress_btc_deposit"
+	TestStressSolanaDepositName  = "stress_solana_deposit"
+	TestStressSPLDepositName     = "stress_spl_deposit"
+	TestStressSolanaWithdrawName = "stress_solana_withdraw"
+	TestStressSPLWithdrawName    = "stress_spl_withdraw"
 
 	/*
 	 Admin tests
@@ -783,6 +787,42 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "count", DefaultValue: "100"},
 		},
 		TestStressBTCDeposit,
+	),
+	runner.NewE2ETest(
+		TestStressSolanaDepositName,
+		"stress test SOL deposit",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamports", DefaultValue: "1200000"},
+			{Description: "count of SOL deposits", DefaultValue: "50"},
+		},
+		TestStressSolanaDeposit,
+	),
+	runner.NewE2ETest(
+		TestStressSPLDepositName,
+		"stress test SPL deposit",
+		[]runner.ArgDefinition{
+			{Description: "amount in SPL tokens", DefaultValue: "1200000"},
+			{Description: "count of SPL deposits", DefaultValue: "50"},
+		},
+		TestStressSPLDeposit,
+	),
+	runner.NewE2ETest(
+		TestStressSolanaWithdrawName,
+		"stress test SOL withdrawals",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamports", DefaultValue: "1000000"},
+			{Description: "count of SOL withdrawals", DefaultValue: "50"},
+		},
+		TestStressSolanaWithdraw,
+	),
+	runner.NewE2ETest(
+		TestStressSPLWithdrawName,
+		"stress test SPL withdrawals",
+		[]runner.ArgDefinition{
+			{Description: "amount in SPL tokens", DefaultValue: "1000000"},
+			{Description: "count of SPL withdrawals", DefaultValue: "50"},
+		},
+		TestStressSPLWithdraw,
 	),
 	/*
 	 Admin tests

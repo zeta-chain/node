@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"cosmossdk.io/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -22,8 +22,22 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
+)
+
+const (
+	// solanaTransactionTimeout is the timeout for waiting for an outbound to be confirmed.
+	// Transaction referencing a blockhash older than 150 blocks (60 ~90 secs) will expire and be rejected by Solana.
+	solanaTransactionTimeout = 2 * time.Minute
+
+	// broadcastBackoff is the initial backoff duration for retrying broadcast
+	broadcastBackoff = 1 * time.Second
+
+	// broadcastRetries is the maximum number of retries for broadcasting a transaction
+	// 6 retries will span over 1 + 2 + 4 + 8 + 16 + 32 + 64 = 127 seconds, good enough for the 2 minute timeout
+	broadcastRetries = 7
 )
 
 var _ interfaces.ChainSigner = (*Signer)(nil)
@@ -171,26 +185,68 @@ func (signer *Signer) TryProcessOutbound(
 	// set relayer balance metrics
 	signer.SetRelayerBalanceMetrics(ctx)
 
-	// broadcast the signed tx to the Solana network with preflight check
-	txSig, err := signer.client.SendTransactionWithOpts(
-		ctx,
-		tx,
-		// Commitment "finalized" is too conservative for preflight check and
-		// it results in repeated broadcast attempts that only 1 will succeed.
-		// Commitment "processed" will simulate tx against more recent state
-		// thus fails faster once a tx is already broadcasted and processed by the cluster.
-		// This reduces the number of "failed" txs due to repeated broadcast attempts.
-		rpc.TransactionOpts{PreflightCommitment: rpc.CommitmentProcessed},
-	)
-	if err != nil {
-		logger.Error().
-			Err(err).
-			Msgf("TryProcessOutbound: broadcast error")
-		return
+	// broadcast the signed tx to the Solana network
+	signer.broadcastOutbound(ctx, tx, chainID, nonce, logger, zetacoreClient)
+}
+
+// broadcastOutbound sends the signed transaction to the Solana network
+func (signer *Signer) broadcastOutbound(
+	ctx context.Context,
+	tx *solana.Transaction,
+	chainID int64,
+	nonce uint64,
+	logger zerolog.Logger,
+	zetacoreClient interfaces.ZetacoreClient,
+) {
+	// prepare logger fields
+	lf := map[string]any{
+		logs.FieldMethod: "broadcastOutbound",
+		logs.FieldNonce:  nonce,
+		logs.FieldTx:     tx.Signatures[0].String(),
 	}
 
-	// report the outbound to the outbound tracker
-	signer.reportToOutboundTracker(ctx, zetacoreClient, chainID, nonce, txSig, logger)
+	// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s, 32s, 64s)
+	// to tolerate tx nonce mismatch with PDA nonce or unknown RPC error
+	backOff := broadcastBackoff
+	for i := 0; i < broadcastRetries; i++ {
+		time.Sleep(backOff)
+
+		// PDA nonce may already be increased by other relayer, no need to retry
+		pdaInfo, err := signer.client.GetAccountInfo(ctx, signer.pda)
+		if err != nil {
+			logger.Error().Err(err).Fields(lf).Msgf("unable to get PDA account info")
+		} else {
+			pda, err := contracts.DeserializePdaInfo(pdaInfo)
+			if err != nil {
+				logger.Error().Err(err).Fields(lf).Msgf("unable to deserialize PDA info")
+			} else if pda.Nonce > nonce {
+				logger.Info().Err(err).Fields(lf).Msgf("PDA nonce %d is greater than outbound nonce, stop retrying", pda.Nonce)
+				break
+			}
+		}
+
+		// broadcast the signed tx to the Solana network with preflight check
+		txSig, err := signer.client.SendTransactionWithOpts(
+			ctx,
+			tx,
+			// Commitment "finalized" is too conservative for preflight check and
+			// it results in repeated broadcast attempts that only 1 will succeed.
+			// Commitment "processed" will simulate tx against more recent state
+			// thus fails faster once a tx is already broadcasted and processed by the cluster.
+			// This reduces the number of "failed" txs due to repeated broadcast attempts.
+			rpc.TransactionOpts{PreflightCommitment: rpc.CommitmentProcessed},
+		)
+		if err != nil {
+			logger.Warn().Err(err).Fields(lf).Msgf("SendTransactionWithOpts failed")
+			backOff *= 2
+			continue
+		}
+		logger.Info().Fields(lf).Msgf("broadcasted Solana outbound successfully")
+
+		// successful broadcast; report to the outbound tracker
+		signer.reportToOutboundTracker(ctx, zetacoreClient, chainID, nonce, txSig, logger)
+		break
+	}
 }
 
 func (signer *Signer) prepareWithdrawTx(
@@ -323,15 +379,7 @@ func (signer *Signer) decodeMintAccountDetails(ctx context.Context, asset string
 		return token.Mint{}, err
 	}
 
-	var mint token.Mint
-	// Account{}.Data.GetBinary() returns the *decoded* binary data
-	// regardless the original encoding (it can handle them all).
-	err = bin.NewBinDecoder(info.Value.Data.GetBinary()).Decode(&mint)
-	if err != nil {
-		return token.Mint{}, err
-	}
-
-	return mint, nil
+	return contracts.DeserializeMintAccountInfo(info)
 }
 
 // SetGatewayAddress sets the gateway address

@@ -34,11 +34,11 @@ import (
 )
 
 const (
-	// evmOutboundLookbackFactor is the factor to determine how many nonces to look back for pending cctxs
+	// outboundLookbackFactor is the factor to determine how many nonces to look back for pending cctxs
 	// For example, give OutboundScheduleLookahead of 120, pending NonceLow of 1000 and factor of 1.0,
 	// the scheduler need to be able to pick up and schedule any pending cctx with nonce < 880 (1000 - 120 * 1.0)
 	// NOTE: 1.0 means look back the same number of cctxs as we look ahead
-	evmOutboundLookbackFactor = 1.0
+	outboundLookbackFactor = 1.0
 
 	// sampling rate for sampled orchestrator logger
 	loggerSamplingRate = 10
@@ -429,7 +429,7 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 	}
 	outboundScheduleLookahead := observer.ChainParams().OutboundScheduleLookahead
 	// #nosec G115 always in range
-	outboundScheduleLookback := uint64(float64(outboundScheduleLookahead) * evmOutboundLookbackFactor)
+	outboundScheduleLookback := uint64(float64(outboundScheduleLookahead) * outboundLookbackFactor)
 	// #nosec G115 positive
 	outboundScheduleInterval := uint64(observer.ChainParams().OutboundScheduleInterval)
 	criticalInterval := uint64(10)                      // for critical pending outbound we reduce re-try interval
@@ -597,8 +597,12 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 		oc.logger.Error().Msgf("ScheduleCctxSolana: chain observer is not a solana observer")
 		return
 	}
+
+	// outbound keysign scheduler parameters
 	// #nosec G115 positive
 	interval := uint64(observer.ChainParams().OutboundScheduleInterval)
+	outboundScheduleLookahead := observer.ChainParams().OutboundScheduleLookahead
+	outboundScheduleLookback := uint64(float64(outboundScheduleLookahead) * outboundLookbackFactor)
 
 	// schedule keysign for each pending cctx
 	for _, cctx := range cctxList {
@@ -610,6 +614,11 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 			oc.logger.Error().
 				Msgf("ScheduleCctxSolana: outbound %s chainid mismatch: want %d, got %d", outboundID, chainID, params.ReceiverChainId)
 			continue
+		}
+		if params.TssNonce > cctxList[0].GetCurrentOutboundParam().TssNonce+outboundScheduleLookback {
+			oc.logger.Warn().Msgf("ScheduleCctxSolana: nonce too high: signing %d, earliest pending %d",
+				params.TssNonce, cctxList[0].GetCurrentOutboundParam().TssNonce)
+			break
 		}
 
 		// vote outbound if it's already confirmed
