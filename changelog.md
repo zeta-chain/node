@@ -16,6 +16,7 @@
 ## Refactor
 
 * [3170](https://github.com/zeta-chain/node/pull/3170) - revamp TSS package in zetaclient
+* [3291](https://github.com/zeta-chain/node/pull/3291) - revamp zetaclient initialization (+ graceful shutdown)
 
 ### Fixes
 
