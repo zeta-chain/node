@@ -129,6 +129,7 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 
 		msg := ob.BuildInboundVoteMsgFromEvent(event)
 		require.NotNil(t, msg)
+		require.Equal(t, sender, msg.Sender)
 		require.Equal(t, receiver.Hex(), msg.Receiver)
 	})
 	t.Run("should return nil msg if sender is restricted", func(t *testing.T) {
