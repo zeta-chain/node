@@ -79,7 +79,7 @@ func ethereumWithdrawPerformanceRoutine(
 		}
 
 		if r.ReceiptTimeout == 0 {
-			r.ReceiptTimeout = 30 * time.Minute
+			r.ReceiptTimeout = 15 * time.Minute
 		}
 		if r.CctxTimeout == 0 {
 			r.CctxTimeout = 15 * time.Minute
@@ -134,10 +134,10 @@ func solanaDepositPerformanceRoutine(
 		}
 
 		if r.ReceiptTimeout == 0 {
-			r.ReceiptTimeout = 30 * time.Minute
+			r.ReceiptTimeout = 15 * time.Minute
 		}
 		if r.CctxTimeout == 0 {
-			r.CctxTimeout = 30 * time.Minute
+			r.CctxTimeout = 15 * time.Minute
 		}
 
 		r.Logger.Print("🏃 starting solana deposit performance tests")
@@ -185,10 +185,10 @@ func solanaWithdrawPerformanceRoutine(
 		}
 
 		if r.ReceiptTimeout == 0 {
-			r.ReceiptTimeout = 30 * time.Minute
+			r.ReceiptTimeout = 15 * time.Minute
 		}
 		if r.CctxTimeout == 0 {
-			r.CctxTimeout = 30 * time.Minute
+			r.CctxTimeout = 15 * time.Minute
 		}
 
 		r.Logger.Print("🏃 starting solana withdraw performance tests")
