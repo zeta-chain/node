@@ -275,7 +275,7 @@ start-e2e-admin-test: e2e-images
 	export E2E_ARGS="--skip-regular --test-admin" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile eth2 up -d
 
-start-e2e-performance-test: e2e-images
+start-e2e-performance-test: e2e-images solana
 	@echo "--> Starting e2e performance test"
 	export E2E_ARGS="--test-performance" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d

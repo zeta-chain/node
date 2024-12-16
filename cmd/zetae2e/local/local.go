@@ -111,6 +111,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testLegacy        = must(cmd.Flags().GetBool(flagTestLegacy))
 		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
 		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
+		setupSolana       = testSolana || testPerformance
 	)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
@@ -226,7 +227,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// setup protocol contracts on the connected EVM chain
 		deployerRunner.SetupEVM()
 
-		if testSolana {
+		if setupSolana {
 			deployerRunner.SetupSolana(
 				conf.Contracts.Solana.GatewayProgramID.String(),
 				conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String(),
@@ -240,7 +241,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			ERC20Addr: deployerRunner.ERC20Addr,
 			SPLAddr:   nil,
 		}
-		if testSolana {
+		if setupSolana {
 			zrc20Deployment.SPLAddr = deployerRunner.SPLAddr.ToPointer()
 		}
 		deployerRunner.SetupZEVMZRC20s(zrc20Deployment)
@@ -381,6 +382,46 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testPerformance {
 		eg.Go(ethereumDepositPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherDepositName))
 		eg.Go(ethereumWithdrawPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherWithdrawName))
+		eg.Go(
+			solanaDepositPerformanceRoutine(
+				conf,
+				"perf_sol_deposit",
+				deployerRunner,
+				verbose,
+				conf.AdditionalAccounts.UserSolana,
+				e2etests.TestStressSolanaDepositName,
+			),
+		)
+		eg.Go(
+			solanaDepositPerformanceRoutine(
+				conf,
+				"perf_spl_deposit",
+				deployerRunner,
+				verbose,
+				conf.AdditionalAccounts.UserSPL,
+				e2etests.TestStressSPLDepositName,
+			),
+		)
+		eg.Go(
+			solanaWithdrawPerformanceRoutine(
+				conf,
+				"perf_sol_withdraw",
+				deployerRunner,
+				verbose,
+				conf.AdditionalAccounts.UserSolana,
+				e2etests.TestStressSolanaWithdrawName,
+			),
+		)
+		eg.Go(
+			solanaWithdrawPerformanceRoutine(
+				conf,
+				"perf_spl_withdraw",
+				deployerRunner,
+				verbose,
+				conf.AdditionalAccounts.UserSPL,
+				e2etests.TestStressSPLWithdrawName,
+			),
+		)
 	}
 
 	if testSolana {
