@@ -19,6 +19,7 @@ import (
 	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -213,7 +214,7 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 				events = append(events, &clienttypes.InboundEvent{
 					SenderChainID: ob.Chain().ChainId,
 					Sender:        deposit.Sender,
-					Receiver:      deposit.Sender, // receiver is pulled out from memo
+					Receiver:      "", // receiver will be pulled out from memo later
 					TxOrigin:      deposit.Sender,
 					Amount:        deposit.Amount,
 					Memo:          deposit.Memo,
@@ -241,7 +242,7 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 				events = append(events, &clienttypes.InboundEvent{
 					SenderChainID: ob.Chain().ChainId,
 					Sender:        deposit.Sender,
-					Receiver:      deposit.Sender, // receiver is pulled out from memo
+					Receiver:      "", // receiver will be pulled out from memo later
 					TxOrigin:      deposit.Sender,
 					Amount:        deposit.Amount,
 					Memo:          deposit.Memo,
@@ -277,11 +278,24 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 		return nil
 	}
 
+	// prepare logger fields
+	lf := map[string]any{
+		logs.FieldMethod: "BuildInboundVoteMsgFromEvent",
+		logs.FieldTx:     event.TxHash,
+	}
+
+	// decode event memo bytes to get the receiver
+	err := event.DecodeMemo()
+	if err != nil {
+		ob.Logger().Inbound.Info().Fields(lf).Msgf("invalid memo bytes: %s", hex.EncodeToString(event.Memo))
+		return nil
+	}
+
 	return zetacore.GetInboundVoteMessage(
 		event.Sender,
 		event.SenderChainID,
 		event.Sender,
-		event.Sender,
+		event.Receiver,
 		ob.ZetacoreClient().Chain().ChainId,
 		cosmosmath.NewUint(event.Amount),
 		hex.EncodeToString(event.Memo),
