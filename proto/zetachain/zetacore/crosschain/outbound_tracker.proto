@@ -1,14 +1,18 @@
 syntax = "proto3";
 package zetachain.zetacore.crosschain;
 
+import "gogoproto/gogo.proto";
 option go_package = "github.com/zeta-chain/node/x/crosschain/types";
 
 message TxHash {
   string tx_hash = 1;
   string tx_signer = 2;
 
-  // used to be `bool proven` (for block header verification)
-  reserved 3;
+  bool proved = 3 [
+    deprecated = true,
+    (gogoproto.jsontag) = "-",
+    (gogoproto.moretags) = "yaml:\"-\""
+  ];
 }
 message OutboundTracker {
   string index = 1; // format: "chain-nonce"

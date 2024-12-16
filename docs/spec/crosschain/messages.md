@@ -12,6 +12,9 @@ message MsgAddOutboundTracker {
 	int64 chain_id = 2;
 	uint64 nonce = 3;
 	string tx_hash = 4;
+	pkg.proofs.Proof proof = 5;
+	string block_hash = 6;
+	int64 tx_index = 7;
 }
 ```
 
@@ -25,6 +28,9 @@ message MsgAddInboundTracker {
 	int64 chain_id = 2;
 	string tx_hash = 3;
 	pkg.coin.CoinType coin_type = 4;
+	pkg.proofs.Proof proof = 5;
+	string block_hash = 6;
+	int64 tx_index = 7;
 }
 ```
 
