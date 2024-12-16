@@ -18,12 +18,7 @@ var (
 
 func SetDefault(seal bool) {
 	config := sdk.GetConfig()
-	config.SetBech32PrefixForAccount(AccountAddressPrefix, AccountPubKeyPrefix)
-	config.SetBech32PrefixForValidator(ValidatorAddressPrefix, ValidatorPubKeyPrefix)
-	config.SetBech32PrefixForConsensusNode(ConsNodeAddressPrefix, ConsNodePubKeyPrefix)
-	if seal {
-		config.Seal()
-	}
+	Set(config, seal)
 }
 
 func Set(config *sdk.Config, seal bool) {
