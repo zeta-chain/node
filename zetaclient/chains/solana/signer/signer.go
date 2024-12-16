@@ -8,11 +8,9 @@ import (
 
 	"cosmossdk.io/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/near/borsh-go"
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -217,8 +215,7 @@ func (signer *Signer) broadcastOutbound(
 		if err != nil {
 			logger.Error().Err(err).Fields(lf).Msgf("unable to get PDA account info")
 		} else {
-			pda := contracts.PdaInfo{}
-			err = borsh.Deserialize(&pda, pdaInfo.Bytes())
+			pda, err := contracts.DeserializePdaInfo(pdaInfo)
 			if err != nil {
 				logger.Error().Err(err).Fields(lf).Msgf("unable to deserialize PDA info")
 			} else if pda.Nonce > nonce {
@@ -381,15 +378,7 @@ func (signer *Signer) decodeMintAccountDetails(ctx context.Context, asset string
 		return token.Mint{}, err
 	}
 
-	var mint token.Mint
-	// Account{}.Data.GetBinary() returns the *decoded* binary data
-	// regardless the original encoding (it can handle them all).
-	err = bin.NewBinDecoder(info.Value.Data.GetBinary()).Decode(&mint)
-	if err != nil {
-		return token.Mint{}, err
-	}
-
-	return mint, nil
+	return contracts.DeserializeMintAccountInfo(info)
 }
 
 // SetGatewayAddress sets the gateway address
