@@ -2,6 +2,8 @@ package sample
 
 import (
 	"crypto/ecdsa"
+	cryptoed25519 "crypto/ed25519"
+
 	"math/big"
 	"math/rand"
 	"strconv"
@@ -108,11 +110,29 @@ func SolanaPrivateKey(t *testing.T) solana.PrivateKey {
 	return privKey
 }
 
+func SolanaPrivateKeyFromRand(r *rand.Rand) (solana.PrivateKey, error) {
+	pub, priv, err := cryptoed25519.GenerateKey(r)
+	if err != nil {
+		return nil, err
+	}
+	var publicKey cryptoed25519.PublicKey
+	copy(publicKey[:], pub)
+	return solana.PrivateKey(priv), nil
+}
+
 // SolanaAddress returns a sample solana address
 func SolanaAddress(t *testing.T) string {
 	privKey, err := solana.NewRandomPrivateKey()
 	require.NoError(t, err)
 	return privKey.PublicKey().String()
+}
+
+func SolanaAddressFromRand(r *rand.Rand) (string, error) {
+	privKey, err := SolanaPrivateKeyFromRand(r)
+	if err != nil {
+		return "", err
+	}
+	return privKey.PublicKey().String(), nil
 }
 
 // SolanaSignature returns a sample solana signature
