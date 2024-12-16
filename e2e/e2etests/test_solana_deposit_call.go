@@ -29,6 +29,7 @@ func TestSolanaDepositAndCall(r *runner.E2ERunner, args []string) {
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "solana_deposit_and_call")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+	require.Equal(r, cctx.GetCurrentOutboundParam().Receiver, contractAddr.Hex())
 
 	// check if example contract has been called, bar value should be set to amount
 	utils.MustHaveCalledExampleContractWithMsg(r, contract, depositAmount, data)
