@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v24.0.0
+
+### Fixes
+
+* upgrade cosmos sdk to 0.47.15
+
 ## v23.1.1
 
 ### Fixes
