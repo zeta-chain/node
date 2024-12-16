@@ -7,11 +7,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/spf13/cobra"
-	"gitlab.com/thorchain/tss/go-tss/conversion"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	legacybech32 "github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
+	crypto2 "github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/zeta-chain/node/pkg/rpc"
 	"github.com/zeta-chain/node/pkg/sdkconfig"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -30,6 +32,18 @@ func NewGetZetaclientBootstrap() *cobra.Command {
 		String(grpcURLFlag, "zetacore0:9090", "--grpc-url zetacore0:9090")
 
 	return cmd
+}
+
+func bech32PubkeyToPeerID(pubKey string) (peer.ID, error) {
+	bech32PubKey, err := legacybech32.UnmarshalPubKey(legacybech32.AccPK, pubKey)
+	if err != nil {
+		return "", err
+	}
+	secp256k1PubKey, err := crypto2.UnmarshalSecp256k1PublicKey(bech32PubKey.Bytes())
+	if err != nil {
+		return "", err
+	}
+	return peer.IDFromPublicKey(secp256k1PubKey)
 }
 
 func getZetaclientBootstrap(cmd *cobra.Command, _ []string) error {
@@ -72,7 +86,7 @@ func getZetaclientBootstrap(cmd *cobra.Command, _ []string) error {
 		// in localnet, moniker is also the hostname
 		moniker := validatorRes.Validator.Description.Moniker
 
-		peerID, err := conversion.Bech32PubkeyToPeerID(account.GranteePubkey.Secp256k1.String())
+		peerID, err := bech32PubkeyToPeerID(account.GranteePubkey.Secp256k1.String())
 		if err != nil {
 			return fmt.Errorf("converting pubkey to peerID: %w", err)
 		}
