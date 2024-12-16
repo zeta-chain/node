@@ -7,15 +7,14 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/zeta-chain/node/e2e/runner"
-	"github.com/zeta-chain/node/e2e/utils"
 )
 
 // TestStressSPLDeposit tests the stressing deposit of SPL
 func TestStressSPLDeposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
-	depositSPLAmount := utils.ParseBigInt(r, args[0])
-	numDepositsSPL := utils.ParseInt(r, args[1])
+	depositSPLAmount := parseBigInt(r, args[0])
+	numDepositsSPL := parseInt(r, args[1])
 
 	// load deployer private key
 	privKey := r.GetSolanaPrivKey()

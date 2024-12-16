@@ -17,8 +17,8 @@ import (
 func TestStressSolanaDeposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
-	depositSOLAmount := utils.ParseBigInt(r, args[0])
-	numDepositsSOL := utils.ParseInt(r, args[1])
+	depositSOLAmount := parseBigInt(r, args[0])
+	numDepositsSOL := parseInt(r, args[1])
 
 	r.Logger.Print("starting stress test of %d SOL deposits", numDepositsSOL)
 

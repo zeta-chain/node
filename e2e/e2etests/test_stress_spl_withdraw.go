@@ -19,8 +19,8 @@ import (
 func TestStressSPLWithdraw(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
-	withdrawSPLAmount := utils.ParseBigInt(r, args[0])
-	numWithdrawalsSPL := utils.ParseInt(r, args[1])
+	withdrawSPLAmount := parseBigInt(r, args[0])
+	numWithdrawalsSPL := parseInt(r, args[1])
 
 	// load deployer private key
 	privKey := r.GetSolanaPrivKey()
