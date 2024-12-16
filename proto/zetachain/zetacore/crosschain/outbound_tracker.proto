@@ -8,7 +8,7 @@ message TxHash {
   string tx_hash = 1;
   string tx_signer = 2;
 
-  bool proved = 3 [
+  bool proven = 3 [
     deprecated = true,
     (gogoproto.jsontag) = "-",
     (gogoproto.moretags) = "yaml:\"-\""

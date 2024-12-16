@@ -21,10 +21,10 @@ export declare class TxHash extends Message<TxHash> {
   txSigner: string;
 
   /**
-   * @generated from field: bool proved = 3 [deprecated = true];
+   * @generated from field: bool proven = 3 [deprecated = true];
    * @deprecated
    */
-  proved: boolean;
+  proven: boolean;
 
   constructor(data?: PartialMessage<TxHash>);
 

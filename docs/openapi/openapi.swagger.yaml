@@ -57603,7 +57603,7 @@ definitions:
         type: string
       tx_signer:
         type: string
-      proved:
+      proven:
         type: boolean
   cryptoPubKeySet:
     type: object
