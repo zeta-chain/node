@@ -254,10 +254,6 @@ func (c *Client) Chain() chains.Chain {
 	return c.chain
 }
 
-func (c *Client) GetLogger() *zerolog.Logger {
-	return &c.logger
-}
-
 func (c *Client) GetKeys() keyinterfaces.ObserverKeys {
 	return c.keys
 }
