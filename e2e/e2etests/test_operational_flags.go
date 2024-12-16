@@ -1,11 +1,17 @@
 package e2etests
 
 import (
+	"time"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
+)
+
+const (
+	startTimestampMetricName = "zetaclient_last_start_timestamp_seconds"
 )
 
 // TestOperationalFlags tests the functionality of operations flags.
@@ -38,5 +44,19 @@ func TestOperationalFlags(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 	require.Equal(r, restartHeight, operationalFlagsRes.OperationalFlags.RestartHeight)
 
-	// TODO: wait for restart height + 2 then test that start timestamp metric has increased
+	originalStartTime, err := r.Clients.ZetaclientMetrics.FetchGauge(startTimestampMetricName)
+	require.NoError(r, err, "fetching zetaclient metric name")
+
+	// wait for height above restart height
+	// wait for a few extra block to account for shutdown and startup time
+	require.Eventually(r, func() bool {
+		height, err := r.Clients.Zetacore.GetBlockHeight(r.Ctx)
+		require.NoError(r, err)
+		return height > restartHeight+3
+	}, time.Minute, time.Second)
+
+	currentStartTime, err := r.Clients.ZetaclientMetrics.FetchGauge(startTimestampMetricName)
+	require.NoError(r, err)
+
+	require.Greater(r, currentStartTime, originalStartTime+1)
 }

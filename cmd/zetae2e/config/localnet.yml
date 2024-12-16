@@ -107,6 +107,7 @@ rpcs:
   ton_sidecar_url: "http://ton:8000"
   zetacore_grpc: "zetacore0:9090"
   zetacore_rpc: "http://zetacore0:26657"
+  zetaclient_metrics: "http://zetaclient0:8886"
 contracts:
 # configure localnet solana gateway program id
   solana:
