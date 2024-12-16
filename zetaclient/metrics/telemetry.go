@@ -31,7 +31,6 @@ type TelemetryServer struct {
 	status                 types.Status
 	ipAddress              string
 	HotKeyBurnRate         *BurnRate
-	knownPeers             []peer.AddrInfo
 	connectedPeers         []peer.AddrInfo
 	rtt                    map[peer.ID]int64
 }
@@ -43,7 +42,6 @@ func NewTelemetryServer() *TelemetryServer {
 		lastScannedBlockNumber: make(map[int64]uint64),
 		lastStartTimestamp:     time.Now(),
 		HotKeyBurnRate:         NewBurnRate(100),
-		knownPeers:             make([]peer.AddrInfo, 0),
 		connectedPeers:         make([]peer.AddrInfo, 0),
 		rtt:                    make(map[peer.ID]int64),
 	}
@@ -67,18 +65,6 @@ func (t *TelemetryServer) GetPingRTT() map[peer.ID]int64 {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	return t.rtt
-}
-
-func (t *TelemetryServer) SetKnownPeers(peers []peer.AddrInfo) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	t.knownPeers = peers
-}
-
-func (t *TelemetryServer) GetKnownPeers() []peer.AddrInfo {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	return t.knownPeers
 }
 
 func (t *TelemetryServer) SetConnectedPeers(peers []peer.AddrInfo) {
@@ -189,7 +175,6 @@ func (t *TelemetryServer) Handlers() http.Handler {
 	router.Handle("/ip", http.HandlerFunc(t.ipHandler)).Methods(http.MethodGet)
 	router.Handle("/hotkeyburnrate", http.HandlerFunc(t.hotKeyFeeBurnRate)).Methods(http.MethodGet)
 	router.Handle("/connectedpeers", http.HandlerFunc(t.connectedPeersHandler)).Methods(http.MethodGet)
-	router.Handle("/knownpeers", http.HandlerFunc(t.knownPeersHandler)).Methods(http.MethodGet)
 	router.Handle("/pingrtt", http.HandlerFunc(t.pingRTTHandler)).Methods(http.MethodGet)
 	router.Handle("/systemtime", http.HandlerFunc(systemTimeHandler)).Methods(http.MethodGet)
 	router.Use(logMiddleware())
@@ -297,18 +282,6 @@ func (t *TelemetryServer) hotKeyFeeBurnRate(w http.ResponseWriter, _ *http.Reque
 func (t *TelemetryServer) connectedPeersHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	peers := t.GetConnectedPeers()
-	data, err := json.Marshal(peers)
-	if err != nil {
-		t.logger.Error().Err(err).Msg("Failed to marshal known peers")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	fmt.Fprintf(w, "%s", string(data))
-}
-
-func (t *TelemetryServer) knownPeersHandler(w http.ResponseWriter, _ *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	peers := t.GetKnownPeers()
 	data, err := json.Marshal(peers)
 	if err != nil {
 		t.logger.Error().Err(err).Msg("Failed to marshal known peers")

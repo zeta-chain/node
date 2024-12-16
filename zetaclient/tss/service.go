@@ -48,7 +48,6 @@ type Zetacore interface {
 type Telemetry interface {
 	SetP2PID(id string)
 	SetConnectedPeers(peers []peer.AddrInfo)
-	SetKnownPeers(peers []peer.AddrInfo)
 	SetPingRTT(peers map[peer.ID]int64)
 }
 
