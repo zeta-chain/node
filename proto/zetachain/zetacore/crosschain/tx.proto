@@ -66,21 +66,9 @@ message MsgAddInboundTracker {
   string tx_hash = 3;
   pkg.coin.CoinType coin_type = 4;
 
-  pkg.proofs.Proof proof = 5 [
-    deprecated = true,
-    (gogoproto.jsontag) = "-",
-    (gogoproto.moretags) = "yaml:\"-\""
-  ];
-  string block_hash = 6 [
-    deprecated = true,
-    (gogoproto.jsontag) = "-",
-    (gogoproto.moretags) = "yaml:\"-\""
-  ];
-  int64 tx_index = 7 [
-    deprecated = true,
-    (gogoproto.jsontag) = "-",
-    (gogoproto.moretags) = "yaml:\"-\""
-  ];
+  pkg.proofs.Proof proof = 5 [ deprecated = true ];
+  string block_hash = 6 [ deprecated = true ];
+  int64 tx_index = 7 [ deprecated = true ];
 }
 message MsgAddInboundTrackerResponse {}
 
@@ -106,21 +94,9 @@ message MsgAddOutboundTracker {
   uint64 nonce = 3;
   string tx_hash = 4;
 
-  pkg.proofs.Proof proof = 5 [
-    deprecated = true,
-    (gogoproto.jsontag) = "-",
-    (gogoproto.moretags) = "yaml:\"-\""
-  ];
-  string block_hash = 6 [
-    deprecated = true,
-    (gogoproto.jsontag) = "-",
-    (gogoproto.moretags) = "yaml:\"-\""
-  ];
-  int64 tx_index = 7 [
-    deprecated = true,
-    (gogoproto.jsontag) = "-",
-    (gogoproto.moretags) = "yaml:\"-\""
-  ];
+  pkg.proofs.Proof proof = 5 [ deprecated = true ];
+  string block_hash = 6 [ deprecated = true ];
+  int64 tx_index = 7 [ deprecated = true ];
 }
 
 message MsgAddOutboundTrackerResponse {
