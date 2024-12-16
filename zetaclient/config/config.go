@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // restrictedAddressBook is a map of restricted addresses
@@ -113,4 +115,16 @@ func ContainRestrictedAddress(addrs ...string) bool {
 		}
 	}
 	return false
+}
+
+// ResolveDBPath resolves the path to chain observer database
+func ResolveDBPath() (string, error) {
+	const dbpath = ".zetaclient/chainobserver"
+
+	userDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", errors.Wrap(err, "unable to resolve user home directory")
+	}
+
+	return filepath.Join(userDir, dbpath), nil
 }

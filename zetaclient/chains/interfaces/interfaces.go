@@ -19,7 +19,6 @@ import (
 	"github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/onrik/ethrpc"
-	"github.com/rs/zerolog"
 	"gitlab.com/thorchain/tss/go-tss/blame"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -102,7 +101,6 @@ type ZetacoreClient interface {
 	ZetacoreVoter
 
 	Chain() chains.Chain
-	GetLogger() *zerolog.Logger
 	GetKeys() keyinterfaces.ObserverKeys
 
 	GetSupportedChains(ctx context.Context) ([]chains.Chain, error)
