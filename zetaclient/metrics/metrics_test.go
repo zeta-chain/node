@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -25,7 +26,7 @@ var _ = Suite(&MetricsSuite{})
 func (ms *MetricsSuite) SetUpSuite(c *C) {
 	m, err := NewMetrics()
 	c.Assert(err, IsNil)
-	m.Start()
+	go m.Start(context.Background())
 	ms.m = m
 }
 

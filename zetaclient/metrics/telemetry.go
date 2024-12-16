@@ -198,10 +198,11 @@ func (t *TelemetryServer) Handlers() http.Handler {
 }
 
 // Start starts telemetry server
-func (t *TelemetryServer) Start() error {
+func (t *TelemetryServer) Start(_ context.Context) error {
 	if t.s == nil {
 		return errors.New("invalid http server instance")
 	}
+
 	if err := t.s.ListenAndServe(); err != nil {
 		if !errors.Is(err, http.ErrServerClosed) {
 			return fmt.Errorf("fail to start http server: %w", err)
@@ -212,14 +213,13 @@ func (t *TelemetryServer) Start() error {
 }
 
 // Stop stops telemetry server
-func (t *TelemetryServer) Stop() error {
-	c, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (t *TelemetryServer) Stop() {
+	c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	err := t.s.Shutdown(c)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to shutdown the HTTP server gracefully")
+
+	if err := t.s.Shutdown(c); err != nil {
+		log.Error().Err(err).Msg("Failed to shutdown the TelemetryServer")
 	}
-	return err
 }
 
 // pingHandler returns a 200 OK response
