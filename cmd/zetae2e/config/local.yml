@@ -100,8 +100,8 @@ rpcs:
   evm: "http://localhost:8545"
   bitcoin:
     host: "localhost:18443"
-    user: "smoketest"
-    pass: "123"
+    user: "admin"
+    pass: "admin"
     http_post_mode: true
     disable_tls: true
     params: regnet

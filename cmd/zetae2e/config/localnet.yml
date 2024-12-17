@@ -98,8 +98,8 @@ rpcs:
   evm: "http://eth:8545"
   bitcoin:
     host: "bitcoin:18443"
-    user: "smoketest"
-    pass: "123"
+    user: "admin"
+    pass: "admin"
     http_post_mode: true
     disable_tls: true
     params: regnet
