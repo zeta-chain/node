@@ -86,7 +86,7 @@ func (o *ShutdownListener) handleNewFlags(ctx context.Context, f observertypes.O
 		return false
 	}
 
-	if f.RestartHeight > currentHeight {
+	if f.RestartHeight < currentHeight {
 		// only log restart height misseed once
 		if o.lastRestartHeightMissed != f.RestartHeight {
 			o.logger.Error().
