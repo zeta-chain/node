@@ -81,6 +81,12 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		ob.WithLastTxScanned(lastSig.String())
 	}
 
+	// query last finalized slot
+	lastSlot, err := ob.solClient.GetSlot(ctx, rpc.CommitmentFinalized)
+	if err != nil {
+		ob.Logger().Inbound.Err(err).Msg("unable to get last slot")
+	}
+
 	// get all signatures for the gateway address since last scanned signature
 	lastSig := solana.MustSignatureFromBase58(ob.LastTxScanned())
 	signatures, err := solanarpc.GetSignaturesForAddressUntil(ctx, ob.solClient, ob.gatewayID, lastSig, pageLimit)
@@ -88,7 +94,11 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		ob.Logger().Inbound.Err(err).Msg("error GetSignaturesForAddressUntil")
 		return err
 	}
-	if len(signatures) > 0 {
+
+	// update metrics if no new signatures found
+	if len(signatures) == 0 {
+		ob.WithLastBlockScanned(lastSlot)
+	} else {
 		ob.Logger().Inbound.Info().Msgf("ObserveInbound: got %d signatures for chain %d", len(signatures), chainID)
 	}
 
