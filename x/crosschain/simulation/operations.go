@@ -42,7 +42,6 @@ const (
 	DefaultWeightUpdateRateLimiterFlags        = 10
 	DefaultWeightRefundAbortedCCTX             = 10
 	DefaultWeightUpdateERC20CustodyPauseStatus = 10
-	DefaultWeightMigrateERC20CustodyFunds      = 10
 
 	OpWeightMsgAddOutboundTracker         = "op_weight_msg_add_outbound_tracker"              // #nosec G101 not a hardcoded credential
 	OpWeightAddInboundTracker             = "op_weight_msg_add_inbound_tracker"               // #nosec G101 not a hardcoded credential
@@ -57,8 +56,6 @@ const (
 	OpWeightUpdateRateLimiterFlags        = "op_weight_msg_update_rate_limiter_flags"         // #nosec G101 not a hardcoded credential
 	OpWeightRefundAbortedCCTX             = "op_weight_msg_refund_aborted_cctx"               // #nosec G101 not a hardcoded credential
 	OpWeightUpdateERC20CustodyPauseStatus = "op_weight_msg_update_erc20_custody_pause_status" // #nosec G101 not a hardcoded credential
-	OpWeightMigrateERC20CustodyFunds      = "op_weight_msg_migrate_erc20_custody_funds"       // #nosec G101 not a hardcoded credential
-
 )
 
 func WeightedOperations(
@@ -77,7 +74,6 @@ func WeightedOperations(
 		weightUpdateRateLimiterFlags        int
 		weightRefundAbortedCCTX             int
 		weightUpdateERC20CustodyPauseStatus int
-		weightMigrateERC20CustodyFunds      int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgAddOutboundTracker, &weightAddOutboundTracker, nil,
@@ -158,12 +154,6 @@ func WeightedOperations(
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMigrateERC20CustodyFunds, &weightMigrateERC20CustodyFunds, nil,
-		func(_ *rand.Rand) {
-			weightMigrateERC20CustodyFunds = DefaultWeightMigrateERC20CustodyFunds
-		},
-	)
-
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightVoteGasPrice,
@@ -208,10 +198,6 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightUpdateERC20CustodyPauseStatus,
 			SimulateUpdateERC20CustodyPauseStatus(k),
-		),
-		simulation.NewWeightedOperation(
-			weightMigrateERC20CustodyFunds,
-			SimulateMigrateERC20CustodyFunds(k),
 		),
 		simulation.NewWeightedOperation(
 			weightUpdateTssAddress,

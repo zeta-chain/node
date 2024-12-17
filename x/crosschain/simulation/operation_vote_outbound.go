@@ -71,7 +71,7 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 		accs []simtypes.Account,
 		chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		to, from := int64(1337), int64(101)
+		to, from := chains.GoerliLocalnet.ChainId, chains.ZetaChainPrivnet.ChainId
 		supportedChains := k.GetObserverKeeper().GetSupportedChains(ctx)
 		for _, chain := range supportedChains {
 			if chains.IsEthereumChain(chain.ChainId, []chains.Chain{}) {

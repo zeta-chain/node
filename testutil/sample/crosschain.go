@@ -151,8 +151,10 @@ func GasPriceWithChainID(t *testing.T, chainID int64) types.GasPrice {
 func GasPriceFromRand(r *rand.Rand, chainID int64) *types.GasPrice {
 	var price uint64
 	for price == 0 {
-		price = r.Uint64()
+		maxGasPrice := uint64(1000 * 1e9) // 1000 Gwei
+		price = uint64(1e9) + r.Uint64()%maxGasPrice
 	}
+	// Select priority fee between 0 and price
 	priorityFee := r.Uint64() % price
 	return &types.GasPrice{
 		Creator:      "",

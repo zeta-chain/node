@@ -19,7 +19,7 @@ import (
 func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
-		chainID := int64(1337)
+		chainID := chains.GoerliLocalnet.ChainId
 		supportedChains := k.GetObserverKeeper().GetSupportedChains(ctx)
 		if len(supportedChains) == 0 {
 			return simtypes.NoOpMsg(
