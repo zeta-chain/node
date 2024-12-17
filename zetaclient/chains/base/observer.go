@@ -57,9 +57,6 @@ type Observer struct {
 	// lastTxScanned is the last transaction hash scanned by the observer
 	lastTxScanned string
 
-	// rpcAlertLatency is the threshold of RPC latency to trigger an alert
-	rpcAlertLatency time.Duration
-
 	blockCache *lru.Cache
 
 	// db is the database to persist data
@@ -87,7 +84,6 @@ func NewObserver(
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
 	blockCacheSize int,
-	rpcAlertLatency int64,
 	ts *metrics.TelemetryServer,
 	database *db.DB,
 	logger Logger,
@@ -105,7 +101,6 @@ func NewObserver(
 		lastBlock:        0,
 		lastBlockScanned: 0,
 		lastTxScanned:    "",
-		rpcAlertLatency:  time.Duration(rpcAlertLatency) * time.Second,
 		ts:               ts,
 		db:               database,
 		blockCache:       blockCache,
@@ -429,29 +424,12 @@ func (ob *Observer) PostVoteInbound(
 	return ballot, nil
 }
 
-// AlertOnRPCLatency prints an alert if the RPC latency exceeds the threshold.
-// Returns true if the RPC latency is too high.
-func (ob *Observer) AlertOnRPCLatency(latestBlockTime time.Time, defaultAlertLatency time.Duration) bool {
+// ReportBlockLatency records the latency between the current time
+// an the latest block time for a chain as a metric
+func (ob *Observer) ReportBlockLatency(latestBlockTime time.Time) {
 	elapsedTime := time.Since(latestBlockTime)
 
-	alertLatency := ob.rpcAlertLatency
-	if alertLatency == 0 {
-		alertLatency = defaultAlertLatency
-	}
-
-	lf := map[string]any{
-		"rpc_latency_alert_ms": alertLatency.Milliseconds(),
-		"rpc_latency_real_ms":  elapsedTime.Milliseconds(),
-	}
-
-	if elapsedTime > alertLatency {
-		ob.logger.Chain.Error().Fields(lf).Msg("RPC latency is too high, please check the node or explorer")
-		return true
-	}
-
-	ob.logger.Chain.Info().Fields(lf).Msg("RPC latency is OK")
-
-	return false
+	metrics.LatestBlockLatency.WithLabelValues(ob.chain.Name).Set(elapsedTime.Seconds())
 }
 
 // EnvVarLatestBlockByChain returns the environment variable for the last block by chain.

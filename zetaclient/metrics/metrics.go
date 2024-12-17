@@ -79,6 +79,13 @@ var (
 		Help:      "Last scanned block number per chain",
 	}, []string{"chain"})
 
+	// LatestBlockLatency is a gauge that contains the block latency for each observed chain
+	LatestBlockLatency = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "latest_block_latency",
+		Help:      "Latency of last block for observed chains",
+	}, []string{"chain"})
+
 	// LastCoreBlockNumber is a gauge that contains the last core block number
 	LastCoreBlockNumber = promauto.NewGauge(prometheus.GaugeOpts{
 		Namespace: ZetaClientNamespace,
