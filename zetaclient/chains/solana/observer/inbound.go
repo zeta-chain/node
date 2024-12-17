@@ -82,9 +82,9 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	}
 
 	// query last finalized slot
-	lastSlot, err := ob.solClient.GetSlot(ctx, rpc.CommitmentFinalized)
-	if err != nil {
-		ob.Logger().Inbound.Err(err).Msg("unable to get last slot")
+	lastSlot, errSlot := ob.solClient.GetSlot(ctx, rpc.CommitmentFinalized)
+	if errSlot != nil {
+		ob.Logger().Inbound.Err(errSlot).Msg("unable to get last slot")
 	}
 
 	// get all signatures for the gateway address since last scanned signature
@@ -96,7 +96,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	}
 
 	// update metrics if no new signatures found
-	if len(signatures) == 0 {
+	if len(signatures) == 0 && errSlot == nil {
 		ob.WithLastBlockScanned(lastSlot)
 	} else {
 		ob.Logger().Inbound.Info().Msgf("ObserveInbound: got %d signatures for chain %d", len(signatures), chainID)
