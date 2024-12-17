@@ -5,6 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
+import type { OperationalFlags } from "./operational_pb.js";
 import type { TssFundMigratorInfo } from "./tss_funds_migrator_pb.js";
 import type { ChainNonces } from "./chain_nonces_pb.js";
 import type { PageRequest, PageResponse } from "../../../cosmos/base/query/v1beta1/pagination_pb.js";
@@ -18,6 +19,49 @@ import type { NodeAccount } from "./node_account_pb.js";
 import type { CrosschainFlags } from "./crosschain_flags_pb.js";
 import type { Keygen } from "./keygen_pb.js";
 import type { Blame } from "./blame_pb.js";
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryOperationalFlagsRequest
+ */
+export declare class QueryOperationalFlagsRequest extends Message<QueryOperationalFlagsRequest> {
+  constructor(data?: PartialMessage<QueryOperationalFlagsRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryOperationalFlagsRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryOperationalFlagsRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryOperationalFlagsRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryOperationalFlagsRequest;
+
+  static equals(a: QueryOperationalFlagsRequest | PlainMessage<QueryOperationalFlagsRequest> | undefined, b: QueryOperationalFlagsRequest | PlainMessage<QueryOperationalFlagsRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryOperationalFlagsResponse
+ */
+export declare class QueryOperationalFlagsResponse extends Message<QueryOperationalFlagsResponse> {
+  /**
+   * @generated from field: zetachain.zetacore.observer.OperationalFlags operational_flags = 1;
+   */
+  operationalFlags?: OperationalFlags;
+
+  constructor(data?: PartialMessage<QueryOperationalFlagsResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryOperationalFlagsResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryOperationalFlagsResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryOperationalFlagsResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryOperationalFlagsResponse;
+
+  static equals(a: QueryOperationalFlagsResponse | PlainMessage<QueryOperationalFlagsResponse> | undefined, b: QueryOperationalFlagsResponse | PlainMessage<QueryOperationalFlagsResponse> | undefined): boolean;
+}
 
 /**
  * @generated from message zetachain.zetacore.observer.QueryTssFundsMigratorInfoAllRequest

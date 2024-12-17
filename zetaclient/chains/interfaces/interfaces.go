@@ -136,6 +136,7 @@ type ZetacoreClient interface {
 	) ([]crosschaintypes.OutboundTracker, error)
 	GetCrosschainFlags(ctx context.Context) (observertypes.CrosschainFlags, error)
 	GetRateLimiterFlags(ctx context.Context) (crosschaintypes.RateLimiterFlags, error)
+	GetOperationalFlags(ctx context.Context) (observertypes.OperationalFlags, error)
 	GetObserverList(ctx context.Context) ([]string, error)
 	GetBTCTSSAddress(ctx context.Context, chainID int64) (string, error)
 	GetZetaHotKeyBalance(ctx context.Context) (sdkmath.Int, error)

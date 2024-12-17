@@ -94,13 +94,14 @@ type ObserverRelayerAccounts struct {
 
 // RPCs contains the configuration for the RPC endpoints
 type RPCs struct {
-	Zevm          string     `yaml:"zevm"`
-	EVM           string     `yaml:"evm"`
-	Bitcoin       BitcoinRPC `yaml:"bitcoin"`
-	Solana        string     `yaml:"solana"`
-	TONSidecarURL string     `yaml:"ton_sidecar_url"`
-	ZetaCoreGRPC  string     `yaml:"zetacore_grpc"`
-	ZetaCoreRPC   string     `yaml:"zetacore_rpc"`
+	Zevm              string     `yaml:"zevm"`
+	EVM               string     `yaml:"evm"`
+	Bitcoin           BitcoinRPC `yaml:"bitcoin"`
+	Solana            string     `yaml:"solana"`
+	TONSidecarURL     string     `yaml:"ton_sidecar_url"`
+	ZetaCoreGRPC      string     `yaml:"zetacore_grpc"`
+	ZetaCoreRPC       string     `yaml:"zetacore_rpc"`
+	ZetaclientMetrics string     `yaml:"zetaclient_metrics"`
 }
 
 // BitcoinRPC contains the configuration for the Bitcoin RPC endpoint
