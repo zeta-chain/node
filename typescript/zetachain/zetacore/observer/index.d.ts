@@ -8,6 +8,7 @@ export * from "./keygen_pb";
 export * from "./node_account_pb";
 export * from "./nonce_to_cctx_pb";
 export * from "./observer_pb";
+export * from "./operational_pb";
 export * from "./params_pb";
 export * from "./pending_nonces_pb";
 export * from "./query_pb";
