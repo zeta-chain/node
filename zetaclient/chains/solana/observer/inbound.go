@@ -96,8 +96,10 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	}
 
 	// update metrics if no new signatures found
-	if len(signatures) == 0 && errSlot == nil {
-		ob.WithLastBlockScanned(lastSlot)
+	if len(signatures) == 0 {
+		if errSlot == nil {
+			ob.WithLastBlockScanned(lastSlot)
+		}
 	} else {
 		ob.Logger().Inbound.Info().Msgf("ObserveInbound: got %d signatures for chain %d", len(signatures), chainID)
 	}
