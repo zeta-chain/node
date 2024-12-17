@@ -130,7 +130,7 @@ const (
 	TestCriticalAdminTransactionsName = "critical_admin_transactions"
 	TestPauseERC20CustodyName         = "pause_erc20_custody"
 	TestMigrateERC20CustodyFundsName  = "migrate_erc20_custody_funds"
-	TestMigrateTSSName                = "migrate_TSS"
+	TestMigrateTSSName                = "migrate_tss"
 	TestSolanaWhitelistSPLName        = "solana_whitelist_spl"
 	TestOperationalFlagsName          = "operational_flags"
 
