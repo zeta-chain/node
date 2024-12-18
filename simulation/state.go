@@ -249,10 +249,10 @@ func updateAuthorityState(
 	return authorityState
 }
 
-// updateCrossChainState updates the crosschain genesis state.
+// updateCrosschainState updates the crosschain genesis state.
 // It adds the following
 // - A gas price list for each chain
-func updateCrossChainState(
+func updateCrosschainState(
 	t *testing.T,
 	rawState map[string]json.RawMessage,
 	cdc codec.Codec,
@@ -341,7 +341,7 @@ func updateRawState(
 	rawState[observertypes.ModuleName] = cdc.MustMarshalJSON(observerState)
 	rawState[authoritytypes.ModuleName] = cdc.MustMarshalJSON(authorityState)
 	rawState[fungibletypes.ModuleName] = cdc.MustMarshalJSON(fungibleState)
-	rawState[crosschaintypes.ModuleName] = cdc.MustMarshalJSON(updateCrossChainState(t, rawState, cdc, r))
+	rawState[crosschaintypes.ModuleName] = cdc.MustMarshalJSON(updateCrosschainState(t, rawState, cdc, r))
 }
 
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
