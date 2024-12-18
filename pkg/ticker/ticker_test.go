@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -19,6 +20,8 @@ func TestTicker(t *testing.T) {
 	)
 
 	t.Run("Basic case with context", func(t *testing.T) {
+		t.Parallel()
+
 		// ARRANGE
 		// Given a counter
 		var counter int
@@ -45,6 +48,8 @@ func TestTicker(t *testing.T) {
 	})
 
 	t.Run("Halts when error occurred", func(t *testing.T) {
+		t.Parallel()
+
 		// ARRANGE
 		// Given a counter
 		var counter int
@@ -70,6 +75,8 @@ func TestTicker(t *testing.T) {
 	})
 
 	t.Run("Dynamic interval update", func(t *testing.T) {
+		t.Parallel()
+
 		// ARRANGE
 		// Given a counter
 		var counter int
@@ -104,6 +111,8 @@ func TestTicker(t *testing.T) {
 	})
 
 	t.Run("Stop ticker", func(t *testing.T) {
+		t.Parallel()
+
 		// ARRANGE
 		// Given a counter
 		var counter int
@@ -135,7 +144,96 @@ func TestTicker(t *testing.T) {
 		})
 	})
 
+	t.Run("Stop ticker in a blocking fashion", func(t *testing.T) {
+		t.Parallel()
+
+		const (
+			tickerInterval = 100 * time.Millisecond
+			workDuration   = 600 * time.Millisecond
+			stopAfterStart = workDuration + tickerInterval/2
+		)
+
+		newLogger := func(t *testing.T) zerolog.Logger {
+			return zerolog.New(zerolog.NewTestWriter(t)).With().Timestamp().Logger()
+		}
+
+		// test task that imitates some work
+		newTask := func(counter *int32, logger zerolog.Logger) Task {
+			return func(ctx context.Context, _ *Ticker) error {
+				logger.Info().Msg("Tick start")
+				atomic.AddInt32(counter, 1)
+
+				time.Sleep(workDuration)
+
+				logger.Info().Msgf("Tick end")
+				atomic.AddInt32(counter, -1)
+
+				return nil
+			}
+		}
+
+		t.Run("Non-blocking stop fails do finish the work", func(t *testing.T) {
+			t.Parallel()
+
+			// ARRANGE
+			// Given some test task that imitates some work
+			testLogger := newLogger(t)
+			counter := int32(0)
+			task := newTask(&counter, testLogger)
+
+			// Given a ticker
+			ticker := New(tickerInterval, task, WithLogger(testLogger, "test-non-blocking-ticker"))
+
+			// ACT
+			// Imitate the ticker run in the background
+			go func() {
+				err := ticker.Run(context.Background())
+				require.NoError(t, err)
+			}()
+
+			// Then stop the ticker after some delay
+			time.Sleep(stopAfterStart)
+			testLogger.Info().Msg("Stopping ticker")
+			ticker.Stop()
+			testLogger.Info().Msg("Stopped ticker")
+
+			// ASSERT
+			// If ticker is stopped BEFORE the work is done i.e. "in the middle of work",
+			// thus the counter would be `1. You can also check the logs
+			assert.Equal(t, int32(1), counter)
+		})
+
+		t.Run("Blocking stop works as expected", func(t *testing.T) {
+			t.Parallel()
+
+			// ARRANGE
+			// Now if we have the SAME test but with blocking stop, it should work
+			testLogger := newLogger(t)
+			counter := int32(0)
+			task := newTask(&counter, testLogger)
+
+			ticker := New(tickerInterval, task, WithLogger(testLogger, "test-non-blocking-ticker"))
+
+			// ACT
+			go func() {
+				err := ticker.Run(context.Background())
+				require.NoError(t, err)
+			}()
+
+			time.Sleep(stopAfterStart)
+			testLogger.Info().Msg("Stopping ticker")
+			ticker.StopBlocking()
+			testLogger.Info().Msg("Stopped ticker")
+
+			// ASSERT
+			// If ticker is stopped AFTER the work is done
+			assert.Equal(t, int32(0), counter)
+		})
+	})
+
 	t.Run("Panic", func(t *testing.T) {
+		t.Parallel()
+
 		// ARRANGE
 		// Given a context
 		ctx := context.Background()
@@ -151,10 +249,12 @@ func TestTicker(t *testing.T) {
 		// ASSERT
 		assert.ErrorContains(t, err, "panic during ticker run: oops")
 		// assert that we get error with the correct line number
-		assert.ErrorContains(t, err, "ticker_test.go:145")
+		assert.ErrorContains(t, err, "ticker_test.go:243")
 	})
 
 	t.Run("Nil panic", func(t *testing.T) {
+		t.Parallel()
+
 		// ARRANGE
 		// Given a context
 		ctx := context.Background()
@@ -176,10 +276,12 @@ func TestTicker(t *testing.T) {
 			"panic during ticker run: runtime error: invalid memory address or nil pointer dereference",
 		)
 		// assert that we get error with the correct line number
-		assert.ErrorContains(t, err, "ticker_test.go:165")
+		assert.ErrorContains(t, err, "ticker_test.go:265")
 	})
 
 	t.Run("Run as a single call", func(t *testing.T) {
+		t.Parallel()
+
 		// ARRANGE
 		// Given a counter
 		var counter int
@@ -202,6 +304,8 @@ func TestTicker(t *testing.T) {
 	})
 
 	t.Run("With stop channel", func(t *testing.T) {
+		t.Parallel()
+
 		// ARRANGE
 		var (
 			tickerInterval = 100 * time.Millisecond
@@ -232,6 +336,8 @@ func TestTicker(t *testing.T) {
 	})
 
 	t.Run("With logger", func(t *testing.T) {
+		t.Parallel()
+
 		// ARRANGE
 		out := &bytes.Buffer{}
 		logger := zerolog.New(out)

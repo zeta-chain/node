@@ -56,6 +56,7 @@ type Ticker struct {
 	stopped   bool
 	ctxCancel context.CancelFunc
 
+	runCompleteChan  chan struct{}
 	externalStopChan <-chan struct{}
 	logger           zerolog.Logger
 }
@@ -103,7 +104,16 @@ func Run(ctx context.Context, interval time.Duration, task Task, opts ...Opt) er
 // - task returns an error or panics
 // - shutdown signal is received
 func (t *Ticker) Run(ctx context.Context) (err error) {
+	// prevent concurrent runs
+	t.runnerMu.Lock()
+	defer t.runnerMu.Unlock()
+
+	ctx = t.setStartState(ctx)
+
 	defer func() {
+		// used in StopBlocking()
+		close(t.runCompleteChan)
+
 		if r := recover(); r != nil {
 			stack := string(debug.Stack())
 			lines := strings.Split(stack, "\n")
@@ -116,20 +126,13 @@ func (t *Ticker) Run(ctx context.Context) (err error) {
 		}
 	}()
 
-	// prevent concurrent runs
-	t.runnerMu.Lock()
-	defer t.runnerMu.Unlock()
-
-	// setup
-	ctx, t.ctxCancel = context.WithCancel(ctx)
-	t.ticker = time.NewTicker(t.interval)
-	t.stopped = false
-
 	// initial run
-	if err := t.task(ctx, t); err != nil {
+	if err = t.task(ctx, t); err != nil {
 		t.Stop()
 		return fmt.Errorf("ticker task failed (initial run): %w", err)
 	}
+
+	defer t.setStopState()
 
 	for {
 		select {
@@ -172,8 +175,35 @@ func (t *Ticker) SetInterval(interval time.Duration) {
 	t.ticker.Reset(interval)
 }
 
-// Stop stops the ticker. Safe to call concurrently or multiple times.
+// Stop stops the ticker in a NON-blocking way. If the task is running in a separate goroutine,
+// this call *might* not wait for it to finish. To wait for task finish, use StopBlocking().
+// It's safe to call Stop() multiple times / concurrently / within the task.
 func (t *Ticker) Stop() {
+	t.setStopState()
+}
+
+// StopBlocking stops the ticker in a blocking way i.e. it waits for the task to finish.
+// DO NOT call this within the task.
+func (t *Ticker) StopBlocking() {
+	t.setStopState()
+	<-t.runCompleteChan
+}
+
+func (t *Ticker) setStartState(ctx context.Context) context.Context {
+	t.stateMu.Lock()
+	defer t.stateMu.Unlock()
+
+	ctx, t.ctxCancel = context.WithCancel(ctx)
+	t.ticker = time.NewTicker(t.interval)
+	t.stopped = false
+
+	// this signals that Run() is about to return
+	t.runCompleteChan = make(chan struct{})
+
+	return ctx
+}
+
+func (t *Ticker) setStopState() {
 	t.stateMu.Lock()
 	defer t.stateMu.Unlock()
 
