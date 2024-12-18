@@ -59,14 +59,15 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, account confi
 	}
 
 	return runner.Clients{
-		Zetacore: zetaCoreClients,
-		BtcRPC:   btcRPCClient,
-		Solana:   solanaClient,
-		TON:      tonClient,
-		Evm:      evmClient,
-		EvmAuth:  evmAuth,
-		Zevm:     zevmClient,
-		ZevmAuth: zevmAuth,
+		Zetacore:          zetaCoreClients,
+		BtcRPC:            btcRPCClient,
+		Solana:            solanaClient,
+		TON:               tonClient,
+		Evm:               evmClient,
+		EvmAuth:           evmAuth,
+		Zevm:              zevmClient,
+		ZevmAuth:          zevmAuth,
+		ZetaclientMetrics: &runner.MetricsClient{URL: conf.RPCs.ZetaclientMetrics},
 	}, nil
 }
 

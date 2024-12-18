@@ -43,6 +43,7 @@ func GetQueryCmd(_ string) *cobra.Command {
 		CmdListPendingNonces(),
 		CmdGetAllTssFundsMigrator(),
 		CmdGetTssFundsMigrator(),
+		CmdShowOperationalFlags(),
 	)
 
 	return cmd

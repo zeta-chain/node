@@ -114,6 +114,7 @@ services:
     restart: always
     ports:
       - "6061:6061" # pprof
+      - "8886:8886" # metrics
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
