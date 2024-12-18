@@ -88,7 +88,7 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 			chainID,
 			uint64(nonce),
 		) // #nosec G115 - overflow is not an issue here
-		if found && tracker.IsMaxed() {
+		if found && tracker.MaxReached() {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
 				types.TypeMsgAddOutboundTracker,

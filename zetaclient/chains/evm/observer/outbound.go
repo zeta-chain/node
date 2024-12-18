@@ -125,7 +125,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 			// should not happen. We can't tell which txHash is true. It might happen (e.g. bug, glitchy/hacked endpoint)
 			ob.Logger().Outbound.Error().Msgf("WatchOutbound: confirmed multiple (%d) outbound for chain %d nonce %d", txCount, chainID, nonce)
 		} else {
-			if tracker.IsMaxed() {
+			if tracker.MaxReached() {
 				ob.Logger().Outbound.Error().Msgf("WatchOutbound: outbound tracker is full of hashes for chain %d nonce %d", chainID, nonce)
 			}
 		}

@@ -85,7 +85,7 @@ func (k msgServer) AddOutboundTracker(
 	}
 
 	// check if max hashes are reached
-	if tracker.IsMaxed() {
+	if tracker.MaxReached() {
 		return nil, types.ErrMaxTxOutTrackerHashesReached.Wrapf(
 			"max hashes reached for chain %d, nonce %d, hash number: %d",
 			msg.ChainId,

@@ -40,8 +40,8 @@ func TestOutboundTracker_IsMaxed(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.tracker.IsMaxed(); got != tt.want {
-				t.Errorf("OutboundTracker.IsMaxed() = %v, want %v", got, tt.want)
+			if got := tt.tracker.MaxReached(); got != tt.want {
+				t.Errorf("OutboundTracker.MaxReached() = %v, want %v", got, tt.want)
 			}
 		})
 	}
