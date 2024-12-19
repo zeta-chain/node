@@ -41,6 +41,5 @@ func (ob *Observer) checkRPCStatus() {
 		return
 	}
 
-	// alert if RPC latency is too high
-	ob.AlertOnRPCLatency(blockTime, rpc.RPCAlertLatency)
+	ob.ReportBlockLatency(blockTime)
 }

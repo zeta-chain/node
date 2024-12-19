@@ -46,7 +46,6 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 		*chainParams,
 		zetacoreClient,
 		nil,
-		60,
 		database,
 		base.DefaultLogger(),
 		nil,
@@ -73,7 +72,7 @@ func Test_FilterInboundEvents(t *testing.T) {
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = testutils.OldSolanaGatewayAddressDevnet
 
-	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, 60, database, base.DefaultLogger(), nil)
+	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, database, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	// expected result
@@ -114,7 +113,7 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
 
-	ob, err := observer.NewObserver(chain, nil, *params, zetacoreClient, nil, 60, database, base.DefaultLogger(), nil)
+	ob, err := observer.NewObserver(chain, nil, *params, zetacoreClient, nil, database, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	// create test compliance config

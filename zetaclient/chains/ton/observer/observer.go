@@ -186,10 +186,7 @@ func (ob *Observer) checkRPCStatus(ctx context.Context) error {
 
 	blockTime := time.Unix(int64(block.GenUtime), 0).UTC()
 
-	// will be overridden by chain config
-	const defaultAlertLatency = 30 * time.Second
-
-	ob.AlertOnRPCLatency(blockTime, defaultAlertLatency)
+	ob.ReportBlockLatency(blockTime)
 
 	return nil
 }

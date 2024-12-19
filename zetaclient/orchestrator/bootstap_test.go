@@ -216,7 +216,7 @@ func TestCreateChainObserverMap(t *testing.T) {
 		_, solConfig := testrpc.NewSolanaServer(t)
 
 		// Given TON config
-		tonConfig := config.TONConfig{LiteClientConfigURL: tonMainnet, RPCAlertLatency: 1}
+		tonConfig := config.TONConfig{LiteClientConfigURL: tonMainnet}
 
 		// Given a zetaclient config with ETH, MATIC, and BTC chains
 		cfg := config.New(false)

@@ -38,31 +38,27 @@ type ClientConfiguration struct {
 
 // EVMConfig is the config for EVM chain
 type EVMConfig struct {
-	Endpoint        string `mask:"filled"`
-	RPCAlertLatency int64
+	Endpoint string `mask:"filled"`
 }
 
 // BTCConfig is the config for Bitcoin chain
 type BTCConfig struct {
 	// the following are rpcclient ConnConfig fields
-	RPCUsername     string `mask:"filled"`
-	RPCPassword     string `mask:"filled"`
-	RPCHost         string `mask:"filled"`
-	RPCParams       string // "regtest", "mainnet", "testnet3" , "signet", "testnet4"
-	RPCAlertLatency int64
+	RPCUsername string `mask:"filled"`
+	RPCPassword string `mask:"filled"`
+	RPCHost     string `mask:"filled"`
+	RPCParams   string // "regtest", "mainnet", "testnet3" , "signet", "testnet4"
 }
 
 // SolanaConfig is the config for Solana chain
 type SolanaConfig struct {
-	Endpoint        string `mask:"filled"`
-	RPCAlertLatency int64
+	Endpoint string `mask:"filled"`
 }
 
 // TONConfig is the config for TON chain
 type TONConfig struct {
 	// Can be either URL of local file path
 	LiteClientConfigURL string `json:"liteClientConfigURL"`
-	RPCAlertLatency     int64  `json:"rpcAlertLatency"`
 }
 
 // ComplianceConfig is the config for compliance
