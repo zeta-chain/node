@@ -34,26 +34,23 @@ func bitcoinConfigRegnet() BTCConfig {
 	return BTCConfig{
 		// `smoketest` is the previous name for E2E test,
 		// we keep this name for compatibility between client versions in upgrade test
-		RPCUsername:     "smoketest",
-		RPCPassword:     "123",
-		RPCHost:         "bitcoin:18443",
-		RPCParams:       "regtest",
-		RPCAlertLatency: 60,
+		RPCUsername: "smoketest",
+		RPCPassword: "123",
+		RPCHost:     "bitcoin:18443",
+		RPCParams:   "regtest",
 	}
 }
 
 // solanaConfigLocalnet contains config for Solana localnet
 func solanaConfigLocalnet() SolanaConfig {
 	return SolanaConfig{
-		Endpoint:        "http://solana:8899",
-		RPCAlertLatency: 60,
+		Endpoint: "http://solana:8899",
 	}
 }
 
 func tonConfigLocalnet() TONConfig {
 	return TONConfig{
 		LiteClientConfigURL: "http://ton:8000/lite-client.json",
-		RPCAlertLatency:     60,
 	}
 }
 
@@ -62,8 +59,7 @@ func tonConfigLocalnet() TONConfig {
 func evmChainsConfigs() map[int64]EVMConfig {
 	return map[int64]EVMConfig{
 		chains.GoerliLocalnet.ChainId: {
-			Endpoint:        "http://eth:8545",
-			RPCAlertLatency: 60,
+			Endpoint: "http://eth:8545",
 		},
 	}
 }
