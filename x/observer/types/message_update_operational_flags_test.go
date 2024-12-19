@@ -2,10 +2,12 @@ package types_test
 
 import (
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/observer/types"
 )
@@ -24,11 +26,23 @@ func TestMsgUpdateOperationalFlags_ValidateBasic(t *testing.T) {
 			},
 		},
 		{
-			name: "invalid operational flags",
+			name: "invalid restart height",
 			msg: types.NewMsgUpdateOperationalFlags(
 				sample.AccAddress(),
 				types.OperationalFlags{
 					RestartHeight: -1,
+				},
+			),
+			err: func(t require.TestingT, err error, i ...interface{}) {
+				require.ErrorContains(t, err, "invalid request")
+			},
+		},
+		{
+			name: "invalid signer block time offset",
+			msg: types.NewMsgUpdateOperationalFlags(
+				sample.AccAddress(),
+				types.OperationalFlags{
+					SignerBlockTimeOffset: ptr.Ptr(-time.Second),
 				},
 			),
 			err: func(t require.TestingT, err error, i ...interface{}) {

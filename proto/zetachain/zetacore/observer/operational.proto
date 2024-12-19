@@ -1,6 +1,9 @@
 syntax = "proto3";
 package zetachain.zetacore.observer;
 
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+
 option go_package = "github.com/zeta-chain/node/x/observer/types";
 
 // Flags for the top-level operation of zetaclient.
@@ -8,4 +11,9 @@ message OperationalFlags {
   // Height for a coordinated zetaclient restart.
   // Will be ignored if missed.
   int64 restart_height = 1;
+
+  // Offset from the zetacore block time to initiate signing.
+  // Should be calculated and set based on max(zetaclient_core_block_latency).
+  google.protobuf.Duration signer_block_time_offset = 2
+      [ (gogoproto.stdduration) = true ];
 }

@@ -68,6 +68,9 @@ type Orchestrator struct {
 	dbDirectory string
 	baseLogger  base.Logger
 
+	// signerBlockTimeOffset
+	signerBlockTimeOffset time.Duration
+
 	// misc
 	logger multiLogger
 	ts     *metrics.TelemetryServer
@@ -135,6 +138,12 @@ func (oc *Orchestrator) Start(ctx context.Context) error {
 	bg.Work(ctx, oc.runScheduler, bg.WithName("runScheduler"), bg.WithLogger(oc.logger.Logger))
 	bg.Work(ctx, oc.runObserverSignerSync, bg.WithName("runObserverSignerSync"), bg.WithLogger(oc.logger.Logger))
 	bg.Work(ctx, oc.runAppContextUpdater, bg.WithName("runAppContextUpdater"), bg.WithLogger(oc.logger.Logger))
+	bg.Work(
+		ctx,
+		oc.runSyncObserverOperationalFlags,
+		bg.WithName("runSyncObserverOperationalFlags"),
+		bg.WithLogger(oc.logger.Logger),
+	)
 
 	return nil
 }
@@ -317,6 +326,13 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 					Msgf("runScheduler: core block latency too high")
 				continue
 			}
+
+			sleepDuration := time.Until(newBlock.Block.Time.Add(oc.signerBlockTimeOffset))
+			if sleepDuration < 0 {
+				sleepDuration = 0
+			}
+			metrics.CoreBlockLatencySleep.Set(sleepDuration.Seconds())
+			time.Sleep(sleepDuration)
 
 			balance, err := oc.zetacoreClient.GetZetaHotKeyBalance(ctx)
 			if err != nil {
@@ -791,6 +807,51 @@ func (oc *Orchestrator) syncObserverSigner(ctx context.Context) error {
 			Int("signer.added", added).
 			Int("signer.removed", removed).
 			Msg("synced signers")
+	}
+
+	return nil
+}
+
+func (oc *Orchestrator) runSyncObserverOperationalFlags(ctx context.Context) error {
+	// every other block
+	const cadence = 2 * constant.ZetaBlockTime
+
+	task := func(ctx context.Context, _ *ticker.Ticker) error {
+		if err := oc.syncObserverOperationalFlags(ctx); err != nil {
+			oc.logger.Error().Err(err).Msg("syncObserverOperationalFlags failed")
+		}
+
+		return nil
+	}
+
+	return ticker.Run(
+		ctx,
+		cadence,
+		task,
+		ticker.WithLogger(oc.logger.Logger, "SyncObserverOperationalFlags"),
+		ticker.WithStopChan(oc.stop),
+	)
+}
+
+func (oc *Orchestrator) syncObserverOperationalFlags(ctx context.Context) error {
+	client := oc.zetacoreClient
+	flags, err := client.GetOperationalFlags(ctx)
+	if err != nil {
+		return fmt.Errorf("get operational flags: %w", err)
+	}
+
+	oc.mu.Lock()
+	defer oc.mu.Unlock()
+	newSignerBlockTimeOffsetPtr := flags.SignerBlockTimeOffset
+	if newSignerBlockTimeOffsetPtr == nil {
+		return nil
+	}
+	newSignerBlockTimeOffset := *newSignerBlockTimeOffsetPtr
+	if oc.signerBlockTimeOffset != newSignerBlockTimeOffset {
+		oc.logger.Info().
+			Dur("offset", newSignerBlockTimeOffset).
+			Msg("block time offset updated")
+		oc.signerBlockTimeOffset = newSignerBlockTimeOffset
 	}
 
 	return nil

@@ -58110,6 +58110,11 @@ definitions:
         description: |-
           Height for a coordinated zetaclient restart.
           Will be ignored if missed.
+      signer_block_time_offset:
+        type: string
+        description: |-
+          Offset from the zetacore block time to initiate signing.
+          Should be calculated and set based on max(zetaclient_core_block_latency).
     description: Flags for the top-level operation of zetaclient.
   observerPendingNonces:
     type: object
