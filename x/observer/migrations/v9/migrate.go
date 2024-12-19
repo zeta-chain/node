@@ -12,17 +12,18 @@ type observerKeeper interface {
 	DeleteBallotListForHeight(ctx sdk.Context, height int64)
 }
 
-// MigrateStore migrates the x/observer module state from the consensus version 7 to 8
+const MaturityBlocks = int64(100)
+
+// MigrateStore migrates the x/observer module state from the consensus version 8 to version 9.
 // It updates the indexing for chain nonces object to use chain ID instead of chain name
 func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 	currentHeight := ctx.BlockHeight()
 	// Maturity blocks is a parameter in the emissions module
-	maturityBlocks := int64(100)
-	if currentHeight < maturityBlocks {
+
+	if currentHeight < MaturityBlocks {
 		return nil
 	}
-	maturedHeight := currentHeight - maturityBlocks
-
+	maturedHeight := currentHeight - MaturityBlocks
 	for i := maturedHeight; i > 0; i-- {
 		ballotList, found := observerKeeper.GetBallotListForHeight(ctx, i)
 		if !found {
@@ -33,5 +34,6 @@ func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 		}
 		observerKeeper.DeleteBallotListForHeight(ctx, i)
 	}
+
 	return nil
 }

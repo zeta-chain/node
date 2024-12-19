@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 
+	sdkerrors "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -101,44 +102,80 @@ func DistributeObserverRewards(
 	keeper keeper.Keeper,
 	params types.Params,
 ) error {
-	slashAmount := params.ObserverSlashAmount
-	rewardsDistributer := map[string]int64{}
-	totalRewardsUnits := int64(0)
+	var (
+		slashAmount    = params.ObserverSlashAmount
+		maturityBlocks = params.BallotMaturityBlocks
+
+		maturedBallots []string
+	)
+
 	err := keeper.GetBankKeeper().
 		SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount)))
 	if err != nil {
-		return err
+		return sdkerrors.Wrap(err, "Error while transferring funds to the undistributed pool")
 	}
 
-	list, found := keeper.GetObserverKeeper().GetMaturedBallots(ctx, params.BallotMaturityBlocks)
-	ballotIdentifiers := []string{}
+	// Fetch the matured ballots for this block
+	list, found := keeper.GetObserverKeeper().GetMaturedBallots(ctx, maturityBlocks)
 	if found {
-		ballotIdentifiers = list.BallotsIndexList
+		maturedBallots = list.BallotsIndexList
 	}
-
 	// do not distribute rewards if no ballots are matured, the rewards can accumulate in the undistributed pool
-	if len(ballotIdentifiers) == 0 {
+	if len(maturedBallots) == 0 {
 		return nil
 	}
-	ballots := make([]observertypes.Ballot, 0, len(ballotIdentifiers))
-	for _, ballotIdentifier := range ballotIdentifiers {
+
+	// We have some matured ballots, we now need to process them
+	// Processing Step 1: Distribute the rewards
+	// Final distribution list is the list of ObserverEmissions, which will be emitted as events
+	finalDistributionList := distributeRewardsForMaturedBallots(ctx, keeper, maturedBallots, amount, slashAmount)
+
+	// Processing Step 2: Emit the observer emissions
+	types.EmitObserverEmissions(ctx, finalDistributionList)
+
+	// Processing Step 3: Delete all matured ballots and the ballot list
+	keeper.GetObserverKeeper().ClearMaturedBallotsAndBallotList(ctx, params.BallotMaturityBlocks)
+	return nil
+}
+
+// DistributeTSSRewards trasferes the allocated rewards to the Undistributed Tss Rewards Pool.
+// This is done so that the reserves factor is properly calculated in the next block
+func DistributeTSSRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.BankKeeper) error {
+	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
+	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedTSSRewardsPool, coin)
+}
+
+func distributeRewardsForMaturedBallots(
+	ctx sdk.Context,
+	keeper keeper.Keeper,
+	maturedBallots []string,
+	amount sdkmath.Int,
+	slashAmount sdkmath.Int,
+) []*types.ObserverEmission {
+	var (
+		rewardsDistributeMap = map[string]int64{}
+		totalRewardsUnits    = int64(0)
+	)
+	ballots := make([]observertypes.Ballot, 0, len(maturedBallots))
+	for _, ballotIdentifier := range maturedBallots {
 		ballot, found := keeper.GetObserverKeeper().GetBallot(ctx, ballotIdentifier)
 		if !found {
 			continue
 		}
 		ballots = append(ballots, ballot)
-		totalRewardsUnits += ballot.BuildRewardsDistribution(rewardsDistributer)
+		totalRewardsUnits += ballot.BuildRewardsDistribution(rewardsDistributeMap)
 	}
 	rewardPerUnit := sdkmath.ZeroInt()
 	if totalRewardsUnits > 0 && amount.IsPositive() {
 		rewardPerUnit = amount.Quo(sdk.NewInt(totalRewardsUnits))
 	}
 	ctx.Logger().
-		Debug(fmt.Sprintf("Total Rewards Units : %d , rewards per Unit %s ,number of ballots :%d", totalRewardsUnits, rewardPerUnit.String(), len(ballotIdentifiers)))
-	sortedKeys := make([]string, 0, len(rewardsDistributer))
-	for k := range rewardsDistributer {
+		Debug(fmt.Sprintf("Total Rewards Units : %d , rewards per Unit %s ,number of ballots :%d", totalRewardsUnits, rewardPerUnit.String(), len(maturedBallots)))
+	sortedKeys := make([]string, 0, len(rewardsDistributeMap))
+	for k := range rewardsDistributeMap {
 		sortedKeys = append(sortedKeys, k)
 	}
+
 	sort.Strings(sortedKeys)
 	var finalDistributionList []*types.ObserverEmission
 	for _, key := range sortedKeys {
@@ -149,7 +186,7 @@ func DistributeObserverRewards(
 		}
 		// observerRewardUnits can be negative if the observer has been slashed
 		// an observers earn 1 unit for a correct vote, and -1 unit for an incorrect vote
-		observerRewardUnits := rewardsDistributer[key]
+		observerRewardUnits := rewardsDistributeMap[key]
 
 		if observerRewardUnits == 0 {
 			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
@@ -180,16 +217,5 @@ func DistributeObserverRewards(
 			})
 		}
 	}
-	types.EmitObserverEmissions(ctx, finalDistributionList)
-
-	// Clear the matured ballots
-	keeper.GetObserverKeeper().ClearMaturedBallotsAndBallotList(ctx, ballots, params.BallotMaturityBlocks)
-	return nil
-}
-
-// DistributeTSSRewards trasferes the allocated rewards to the Undistributed Tss Rewards Pool.
-// This is done so that the reserves factor is properly calculated in the next block
-func DistributeTSSRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.BankKeeper) error {
-	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
-	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedTSSRewardsPool, coin)
+	return finalDistributionList
 }

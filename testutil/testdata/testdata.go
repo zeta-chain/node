@@ -8,7 +8,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 const (
@@ -28,28 +27,6 @@ var ethFiles embed.FS
 
 //go:embed *
 var testDataFiles embed.FS
-
-//go:embed * observer/*
-var ObserverFiles embed.FS
-
-type Ballots struct {
-	Ballots []*observertypes.Ballot `json:"Ballots"`
-}
-
-// ReadMainnetBallots reads the mainnet ballots from a file. This was last updated on 09-30-2024.
-func ReadMainnetBallots(t *testing.T) []*observertypes.Ballot {
-
-	file, err := ObserverFiles.Open("observer/ballots.json")
-	require.NoError(t, err)
-	defer file.Close()
-
-	// Decode the JSON into the data struct
-	var b Ballots
-	err = json.NewDecoder(file).Decode(&b)
-	require.NoError(t, err)
-
-	return b.Ballots
-}
 
 // ReadEthHeader reads a header from a file.
 // TODO: centralize test data

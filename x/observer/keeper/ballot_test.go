@@ -253,7 +253,7 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 		require.Equal(t, numberOfBallots, len(k.GetAllBallots(ctx)))
 
 		//Act
-		k.ClearMaturedBallotsAndBallotList(ctx, ballots, 0)
+		k.ClearMaturedBallotsAndBallotList(ctx, 0)
 
 		//Assert
 		for _, b := range ballots {
@@ -289,7 +289,7 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 		require.Equal(t, 0, len(k.GetAllBallots(ctx)))
 
 		//Act
-		k.ClearMaturedBallotsAndBallotList(ctx, []types.Ballot{}, 0)
+		k.ClearMaturedBallotsAndBallotList(ctx, 0)
 
 		//Assert
 		_, found = k.GetBallotListForHeight(ctx, 1)
@@ -297,7 +297,8 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 		require.Equal(t, 0, len(k.GetAllBallots(ctx)))
 	})
 
-	t.Run("clear only ballots successfully if ballotList is not found", func(t *testing.T) {
+	t.Run("do nothing if ballot list for height is not found", func(t *testing.T) {
+		// Note this condition should never happen in production as the ballot list for height should always be set when saving a ballot to state
 		//Arrange
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		numberOfBallots := 10
@@ -310,28 +311,20 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 			k.SetBallot(ctx, &b)
 			ballots[i] = b
 		}
-		require.Equal(t, numberOfBallots, len(k.GetAllBallots(ctx)))
 		_, found := k.GetBallotListForHeight(ctx, 1)
 		require.False(t, found)
+		require.Equal(t, numberOfBallots, len(k.GetAllBallots(ctx)))
 
 		//Act
-		k.ClearMaturedBallotsAndBallotList(ctx, ballots, 0)
+		k.ClearMaturedBallotsAndBallotList(ctx, 0)
 
 		//Assert
 		for _, b := range ballots {
-			_, found := k.GetBallot(ctx, b.BallotIdentifier)
-			require.False(t, found)
+			_, found = k.GetBallot(ctx, b.BallotIdentifier)
+			require.True(t, found)
 		}
-		_, found = k.GetBallotListForHeight(ctx, 1)
-		require.False(t, found)
-		eventCount := 0
-		for _, event := range ctx.EventManager().Events() {
-			if event.Type == "zetachain.zetacore.observer.EventBallotDeleted" {
-				eventCount++
-			}
-		}
-		require.Equal(t, numberOfBallots, eventCount)
 	})
+
 }
 
 func TestGetMaturedBallotHeight(t *testing.T) {

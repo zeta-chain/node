@@ -16,7 +16,7 @@ type AccountKeeper interface {
 type ObserverKeeper interface {
 	GetBallot(ctx sdk.Context, index string) (val observertypes.Ballot, found bool)
 	GetMaturedBallots(ctx sdk.Context, maturityBlocks int64) (val observertypes.BallotListForHeight, found bool)
-	ClearMaturedBallotsAndBallotList(ctx sdk.Context, ballots []observertypes.Ballot, maturityBlocks int64)
+	ClearMaturedBallotsAndBallotList(ctx sdk.Context, maturityBlocks int64)
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
