@@ -2,6 +2,8 @@ package scheduler
 
 import (
 	"time"
+
+	cometbft "github.com/cometbft/cometbft/types"
 )
 
 // Opt Definition option
@@ -37,9 +39,8 @@ func IntervalUpdater(intervalUpdater func() time.Duration) Opt {
 	return func(d *Definition) { d.intervalUpdater = intervalUpdater }
 }
 
-// todo
-// BlockListener alter behaviour to listen for new blocks instead of using a ticker.
+// BlockTicker makes Definition to listen for new zeta blocks instead of using interval ticker.
 // IntervalUpdater is ignored.
-//func BlockListener(listener <-chan cometbft.EventDataNewBlock) Opt {
-//	return func(d *Definition) { d.blockListener = listener }
-//}
+func BlockTicker(blocks <-chan cometbft.EventDataNewBlock) Opt {
+	return func(d *Definition) { d.blockChan = blocks }
+}

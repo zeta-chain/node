@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	cometbft "github.com/cometbft/cometbft/types"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 
@@ -48,12 +49,15 @@ type Definition struct {
 	// arbitrary function that will be invoked by the scheduler
 	task Task
 
-	// properties for ticker / blockChan ticker
+	// represents interval ticker and its options
 	ticker          *ticker.Ticker
-	blockChanTicker *blockChanTicker
 	interval        time.Duration
 	intervalUpdater func() time.Duration
 	skipper         func() bool
+
+	// zeta block ticker (also supports skipper)
+	blockChan       <-chan cometbft.EventDataNewBlock
+	blockChanTicker *blockTicker
 
 	// logging
 	logFields map[string]any
@@ -142,77 +146,74 @@ func (d *Definition) Stop() {
 		d.scheduler.mu.Lock()
 		delete(d.scheduler.definitions, d.id)
 		d.scheduler.mu.Unlock()
-		d.logger.Info().Int64("time_taken_ms", time.Since(start).Milliseconds()).Msg("Stopped task")
+
+		timeTakenMS := time.Since(start).Milliseconds()
+		d.logger.Info().Int64("time_taken_ms", timeTakenMS).Msg("Stopped scheduler task")
 	}()
 
 	d.logger.Info().Msg("Stopping scheduler task")
 
-	if d.isTickerBasedTask() {
+	if d.isIntervalTicker() {
 		d.ticker.StopBlocking()
 		return
 	}
 
-	// todo stop block chan ticker
+	d.blockChanTicker.Stop()
 }
 
-func (d *Definition) isTickerBasedTask() bool {
-	// todo
-	return true
+func (d *Definition) isIntervalTicker() bool {
+	return d.blockChan == nil
 }
 
 func (d *Definition) startTicker(ctx context.Context) {
-	if d.isTickerBasedTask() {
-		d.ticker = ticker.New(
-			d.interval,
-			d.tickerTask(),
-			ticker.WithLogger(d.logger, d.name),
-		)
+	d.logger.Info().Msg("Starting scheduler task")
 
-		bgTask := func(ctx context.Context) error {
-			d.logger.Info().Msg("Starting task")
-			return d.ticker.Run(ctx)
-		}
+	if d.isIntervalTicker() {
+		d.ticker = ticker.New(d.interval, d.invokeByInterval, ticker.WithLogger(d.logger, d.name))
+		bg.Work(ctx, d.ticker.Start, bg.WithLogger(d.logger))
 
-		// Run async worker (no need for logger here)
-		bg.Work(ctx, bgTask)
 		return
 	}
 
-	// todo start block chan ticker
+	d.blockChanTicker = newBlockTicker(d.invoke, d.blockChan, d.logger)
+
+	bg.Work(ctx, d.blockChanTicker.Start, bg.WithLogger(d.logger))
 }
 
-// tickerTask wraps Task to be executed by ticker.Ticker
-func (d *Definition) tickerTask() ticker.Task {
-	return func(ctx context.Context, t *ticker.Ticker) error {
-		d.invoke(ctx)
-
-		if d.intervalUpdater != nil {
-			// noop if interval is not changed
-			t.SetInterval(d.intervalUpdater())
-		}
-
-		return nil
+// invokeByInterval a ticker.Task wrapper of invoke.
+func (d *Definition) invokeByInterval(ctx context.Context, t *ticker.Ticker) error {
+	if err := d.invoke(ctx); err != nil {
+		d.logger.Error().Err(err).Msg("task failed")
 	}
+
+	if d.intervalUpdater != nil {
+		// noop if interval is not changed
+		t.SetInterval(d.intervalUpdater())
+	}
+
+	return nil
 }
 
 // invoke executes a given Task with logging & telemetry.
-func (d *Definition) invoke(ctx context.Context) {
+func (d *Definition) invoke(ctx context.Context) error {
 	// skip tick
 	if d.skipper != nil && d.skipper() {
-		return
+		return nil
 	}
 
 	d.logger.Debug().Msg("Invoking task")
-	// todo metrics
-	//   - duration
-	//   - outcome (skip, err, ok)
-	//   - bump invocation counter
 
 	err := d.task(ctx)
 
-	if err != nil {
-		d.logger.Error().Err(err).Msg("task failed")
-	}
+	// todo metrics (TBD)
+	//   - duration (time taken)
+	//   - outcome (skip, err, ok)
+	//   - bump invocation counter
+	//   - "last invoked at" timestamp (?)
+	//   - chain_id
+	//   - metrics cardinality: "task_group (?)" "task_name", "status", "chain_id"
+
+	return err
 }
 
 func newDefinitionLogger(def *Definition, logger zerolog.Logger) zerolog.Logger {
@@ -229,7 +230,5 @@ func newDefinitionLogger(def *Definition, logger zerolog.Logger) zerolog.Logger 
 		taskType = "block_ticker"
 	}
 
-	logOpts.Str("task.type", taskType)
-
-	return logOpts.Logger()
+	return logOpts.Str("task.type", taskType).Logger()
 }

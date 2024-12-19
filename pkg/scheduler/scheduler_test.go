@@ -9,8 +9,10 @@ import (
 	"testing"
 	"time"
 
+	cometbft "github.com/cometbft/cometbft/types"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestScheduler(t *testing.T) {
@@ -40,7 +42,7 @@ func TestScheduler(t *testing.T) {
 		assert.Equal(t, int32(2), counter)
 
 		// Check logs
-		assert.Contains(t, ts.logBuffer.String(), "Stopped task")
+		assert.Contains(t, ts.logBuffer.String(), "Stopped scheduler task")
 		assert.Contains(t, ts.logBuffer.String(), `"task.group":"default"`)
 	})
 
@@ -217,11 +219,8 @@ func TestScheduler(t *testing.T) {
 
 		// ASSERT #1
 		shutdownLogPattern := func(group, name string) string {
-			return fmt.Sprintf(
-				`"task\.name":"%s","task\.group":"%s","time_taken_ms":.*"message":"Stopped task"`,
-				name,
-				group,
-			)
+			const pattern = `"task\.name":"%s","task\.group":"%s",.*"message":"Stopped scheduler task"`
+			return fmt.Sprintf(pattern, name, group)
 		}
 
 		// Make sure Alice.A and Alice.B are stopped
@@ -238,6 +237,113 @@ func TestScheduler(t *testing.T) {
 		// ASSERT #2
 		// Bob.C is not running
 		assert.Regexp(t, shutdownLogPattern("bob", "c"), ts.logBuffer.String())
+	})
+
+	t.Run("Block tick: tick is faster than the block", func(t *testing.T) {
+		t.Parallel()
+
+		// ARRANGE
+		ts := newTestSuite(t)
+
+		// Given a task that increments a counter by block height
+		var counter int64
+
+		task := func(ctx context.Context) error {
+			// Note that ctx contains the block event
+			blockEvent, ok := BlockFromContext(ctx)
+			require.True(t, ok)
+
+			atomic.AddInt64(&counter, blockEvent.Block.Height)
+			time.Sleep(100 * time.Millisecond)
+			return nil
+		}
+
+		// Given block ticker
+		blockChan := ts.mockBlockChan(200*time.Millisecond, 0)
+
+		// ACT
+		// Register block
+		ts.scheduler.Register(ts.ctx, task, BlockTicker(blockChan))
+		time.Sleep(1200 * time.Millisecond)
+		ts.scheduler.Stop()
+
+		// ASSERT
+		assert.Equal(t, int64(21), counter)
+		assert.Contains(t, ts.logBuffer.String(), "Stopped scheduler task")
+	})
+
+	t.Run("Block tick: tick is slower than the block", func(t *testing.T) {
+		t.Parallel()
+
+		// ARRANGE
+		ts := newTestSuite(t)
+
+		// Given a task that increments a counter on start
+		// and then decrements before finish
+		var counter int64
+
+		task := func(ctx context.Context) error {
+			_, ok := BlockFromContext(ctx)
+			require.True(t, ok)
+
+			atomic.AddInt64(&counter, 1)
+			time.Sleep(256 * time.Millisecond)
+			atomic.AddInt64(&counter, -1)
+			return nil
+		}
+
+		// Given block ticker
+		blockChan := ts.mockBlockChan(100*time.Millisecond, 0)
+
+		// ACT
+		// Register block
+		ts.scheduler.Register(ts.ctx, task, BlockTicker(blockChan))
+		time.Sleep(1200 * time.Millisecond)
+		ts.scheduler.Stop()
+
+		// ASSERT
+		// zero indicates that Stop() waits for current iteration to finish (graceful shutdown)
+		assert.Equal(t, int64(0), counter)
+	})
+
+	t.Run("Block tick: chan closes unexpectedly", func(t *testing.T) {
+		t.Parallel()
+
+		// ARRANGE
+		ts := newTestSuite(t)
+
+		// Given a task that increments a counter on start
+		// and then decrements before finish
+		var counter int64
+
+		task := func(ctx context.Context) error {
+			_, ok := BlockFromContext(ctx)
+			require.True(t, ok)
+
+			atomic.AddInt64(&counter, 1)
+			time.Sleep(200 * time.Millisecond)
+			atomic.AddInt64(&counter, -1)
+			return nil
+		}
+
+		// Given block ticker that closes after 3 blocks
+		blockChan := ts.mockBlockChan(100*time.Millisecond, 3)
+
+		// ACT
+		// Register block
+		ts.scheduler.Register(ts.ctx, task, BlockTicker(blockChan), Name("block-tick"))
+
+		// Wait for a while
+		time.Sleep(1000 * time.Millisecond)
+
+		// Stop the scheduler.
+		// Note that actually the ticker is already stopped.
+		ts.scheduler.Stop()
+
+		// ASSERT
+		// zero indicates that Stop() waits for current iteration to finish (graceful shutdown)
+		assert.Equal(t, int64(0), counter)
+		assert.Contains(t, ts.logBuffer.String(), "Block channel closed")
 	})
 }
 
@@ -259,4 +365,38 @@ func newTestSuite(t *testing.T) *testSuite {
 		logger:    logger,
 		logBuffer: logBuffer,
 	}
+}
+
+// mockBlockChan mocks websocket blocks. Optionally halts after lastBlock.
+func (ts *testSuite) mockBlockChan(interval time.Duration, lastBlock int64) chan cometbft.EventDataNewBlock {
+	producer := make(chan cometbft.EventDataNewBlock)
+
+	go func() {
+		var blockNumber int64
+
+		for {
+			blockNumber++
+			ts.logger.Info().Int64("block_number", blockNumber).Msg("Producing new block")
+
+			header := cometbft.Header{
+				ChainID: "zeta",
+				Height:  blockNumber,
+				Time:    time.Now(),
+			}
+
+			producer <- cometbft.EventDataNewBlock{
+				Block: &cometbft.Block{Header: header},
+			}
+
+			if blockNumber > 0 && blockNumber == lastBlock {
+				ts.logger.Info().Int64("block_number", blockNumber).Msg("Halting block producer")
+				close(producer)
+				return
+			}
+
+			time.Sleep(interval)
+		}
+	}()
+
+	return producer
 }
