@@ -95,7 +95,7 @@ func New(interval time.Duration, task Task, opts ...Opt) *Ticker {
 
 // Run creates and runs a new Ticker.
 func Run(ctx context.Context, interval time.Duration, task Task, opts ...Opt) error {
-	return New(interval, task, opts...).Run(ctx)
+	return New(interval, task, opts...).Start(ctx)
 }
 
 // Run runs the ticker by blocking current goroutine. It also invokes BEFORE ticker starts.
@@ -103,7 +103,7 @@ func Run(ctx context.Context, interval time.Duration, task Task, opts ...Opt) er
 // - context is done (returns ctx.Err())
 // - task returns an error or panics
 // - shutdown signal is received
-func (t *Ticker) Run(ctx context.Context) (err error) {
+func (t *Ticker) Start(ctx context.Context) (err error) {
 	// prevent concurrent runs
 	t.runnerMu.Lock()
 	defer t.runnerMu.Unlock()

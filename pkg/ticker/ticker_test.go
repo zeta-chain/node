@@ -38,7 +38,7 @@ func TestTicker(t *testing.T) {
 		})
 
 		// ACT
-		err := ticker.Run(ctx)
+		err := ticker.Start(ctx)
 
 		// ASSERT
 		assert.ErrorIs(t, err, context.DeadlineExceeded)
@@ -67,7 +67,7 @@ func TestTicker(t *testing.T) {
 		})
 
 		// ACT
-		err := ticker.Run(ctx)
+		err := ticker.Start(ctx)
 
 		// ASSERT
 		assert.ErrorContains(t, err, "oops")
@@ -100,7 +100,7 @@ func TestTicker(t *testing.T) {
 		})
 
 		// ACT
-		err := ticker.Run(ctx)
+		err := ticker.Start(ctx)
 
 		// ASSERT
 		assert.ErrorIs(t, err, context.DeadlineExceeded)
@@ -133,7 +133,7 @@ func TestTicker(t *testing.T) {
 		}()
 
 		// ACT
-		err := ticker.Run(ctx)
+		err := ticker.Start(ctx)
 
 		// ASSERT
 		assert.NoError(t, err)
@@ -187,7 +187,7 @@ func TestTicker(t *testing.T) {
 			// ACT
 			// Imitate the ticker run in the background
 			go func() {
-				err := ticker.Run(context.Background())
+				err := ticker.Start(context.Background())
 				require.NoError(t, err)
 			}()
 
@@ -216,7 +216,7 @@ func TestTicker(t *testing.T) {
 
 			// ACT
 			go func() {
-				err := ticker.Run(context.Background())
+				err := ticker.Start(context.Background())
 				require.NoError(t, err)
 			}()
 
@@ -244,7 +244,7 @@ func TestTicker(t *testing.T) {
 		})
 
 		// ACT
-		err := ticker.Run(ctx)
+		err := ticker.Start(ctx)
 
 		// ASSERT
 		assert.ErrorContains(t, err, "panic during ticker run: oops")
@@ -267,7 +267,7 @@ func TestTicker(t *testing.T) {
 		})
 
 		// ACT
-		err := ticker.Run(ctx)
+		err := ticker.Start(ctx)
 
 		// ASSERT
 		assert.ErrorContains(
