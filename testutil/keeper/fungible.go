@@ -116,6 +116,8 @@ func FungibleKeeperWithMocks(
 		sdkKeepers.SlashingKeeper,
 		authorityKeeperTmp,
 		lightclientKeeperTmp,
+		sdkKeepers.BankKeeper,
+		sdkKeepers.AuthKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 

@@ -7,13 +7,13 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/pkg/sdkconfig"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestNewMsgVoteBlameMsg_ValidateBasic(t *testing.T) {
-	keeper.SetConfig(false)
+	sdkconfig.SetDefault(false)
 	tests := []struct {
 		name  string
 		msg   *types.MsgVoteBlame

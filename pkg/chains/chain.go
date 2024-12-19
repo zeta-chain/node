@@ -7,6 +7,7 @@ import (
 
 	"github.com/btcsuite/btcd/chaincfg"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/tonkeeper/tongo/ton"
 )
 
 // Validate checks whether the chain is valid
@@ -80,6 +81,12 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 			return "", err
 		}
 		return pk.String(), nil
+	case Consensus_catchain_consensus:
+		acc, err := ton.ParseAccountID(string(b))
+		if err != nil {
+			return "", err
+		}
+		return acc.ToRaw(), nil
 	default:
 		return "", fmt.Errorf("chain id %d not supported", chain.ChainId)
 	}
@@ -89,8 +96,16 @@ func (chain Chain) IsEVMChain() bool {
 	return chain.Vm == Vm_evm
 }
 
+func (chain Chain) IsSolanaChain() bool {
+	return chain.Consensus == Consensus_solana_consensus
+}
+
 func (chain Chain) IsBitcoinChain() bool {
 	return chain.Consensus == Consensus_bitcoin
+}
+
+func (chain Chain) IsTONChain() bool {
+	return chain.Consensus == Consensus_catchain_consensus
 }
 
 // DecodeAddressFromChainID decode the address string to bytes
@@ -104,6 +119,14 @@ func DecodeAddressFromChainID(chainID int64, addr string, additionalChains []Cha
 		return []byte(addr), nil
 	case IsSolanaChain(chainID, additionalChains):
 		return []byte(addr), nil
+	case IsTONChain(chainID, additionalChains):
+		// e.g. `0:55798cb7b87168251a7c39f6806b8c202f6caa0f617a76f4070b3fdacfd056a1`
+		acc, err := ton.ParseAccountID(addr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid TON address %q: %w", addr, err)
+		}
+
+		return []byte(acc.ToRaw()), nil
 	default:
 		return nil, fmt.Errorf("chain (%d) not supported", chainID)
 	}
@@ -130,6 +153,11 @@ func IsBitcoinChain(chainID int64, additionalChains []Chain) bool {
 // IsSolanaChain returns true if the chain is a Solana chain
 func IsSolanaChain(chainID int64, additionalChains []Chain) bool {
 	return ChainIDInChainList(chainID, ChainListByNetwork(Network_solana, additionalChains))
+}
+
+// IsTONChain returns true is the chain is TON chain
+func IsTONChain(chainID int64, additionalChains []Chain) bool {
+	return ChainIDInChainList(chainID, ChainListByNetwork(Network_ton, additionalChains))
 }
 
 // IsEthereumChain returns true if the chain is an Ethereum chain
@@ -167,12 +195,16 @@ func GetChainFromChainID(chainID int64, additionalChains []Chain) (Chain, bool) 
 // GetBTCChainParams returns the bitcoin chain config params from the chain ID
 func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 	switch chainID {
-	case 18444:
+	case BitcoinRegtest.ChainId:
 		return &chaincfg.RegressionNetParams, nil
-	case 18332:
+	case BitcoinTestnet.ChainId:
 		return &chaincfg.TestNet3Params, nil
-	case 8332:
+	case BitcoinMainnet.ChainId:
 		return &chaincfg.MainNetParams, nil
+	case BitcoinSignetTestnet.ChainId:
+		return &chaincfg.SigNetParams, nil
+	case BitcoinTestnet4.ChainId:
+		return &TestNet4Params, nil
 	default:
 		return nil, fmt.Errorf("error chainID %d is not a bitcoin chain", chainID)
 	}
@@ -182,11 +214,15 @@ func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 func GetBTCChainIDFromChainParams(params *chaincfg.Params) (int64, error) {
 	switch params.Name {
 	case chaincfg.RegressionNetParams.Name:
-		return 18444, nil
+		return BitcoinRegtest.ChainId, nil
 	case chaincfg.TestNet3Params.Name:
-		return 18332, nil
+		return BitcoinTestnet.ChainId, nil
 	case chaincfg.MainNetParams.Name:
-		return 8332, nil
+		return BitcoinMainnet.ChainId, nil
+	case chaincfg.SigNetParams.Name:
+		return BitcoinSignetTestnet.ChainId, nil
+	case TestNet4Params.Name:
+		return BitcoinTestnet4.ChainId, nil
 	default:
 		return 0, fmt.Errorf("error chain %s is not a bitcoin chain", params.Name)
 	}

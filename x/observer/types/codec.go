@@ -20,6 +20,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgEnableCCTX{}, "observer/EnableCCTX", nil)
 	cdc.RegisterConcrete(&MsgDisableCCTX{}, "observer/DisableCCTX", nil)
 	cdc.RegisterConcrete(&MsgUpdateGasPriceIncreaseFlags{}, "observer/UpdateGasPriceIncreaseFlags", nil)
+	cdc.RegisterConcrete(&MsgUpdateOperationalFlags{}, "observer/UpdateOperationalFlags", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -36,6 +37,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgEnableCCTX{},
 		&MsgDisableCCTX{},
 		&MsgUpdateGasPriceIncreaseFlags{},
+		&MsgUpdateOperationalFlags{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

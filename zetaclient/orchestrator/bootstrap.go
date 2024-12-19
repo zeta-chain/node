@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"context"
+	"fmt"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -9,7 +10,10 @@ import (
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	ethrpc2 "github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
+	"github.com/tonkeeper/tongo/ton"
 
+	"github.com/zeta-chain/node/pkg/chains"
+	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
@@ -19,15 +23,16 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	solbserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	solanasigner "github.com/zeta-chain/node/zetaclient/chains/solana/signer"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	tonobserver "github.com/zeta-chain/node/zetaclient/chains/ton/observer"
+	tonsigner "github.com/zeta-chain/node/zetaclient/chains/ton/signer"
+	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
-
-// btcDatabaseFilename is the Bitcoin database file name now used in mainnet,
-// so we keep using it here for backward compatibility
-const btcDatabaseFilename = "btc_chain_client"
 
 // CreateSignerMap creates a map of interfaces.ChainSigner (by chainID) for all chains in the config.
 // Note that signer construction failure for a chain does not prevent the creation of signers for other chains.
@@ -35,10 +40,9 @@ func CreateSignerMap(
 	ctx context.Context,
 	tss interfaces.TSSSigner,
 	logger base.Logger,
-	ts *metrics.TelemetryServer,
 ) (map[int64]interfaces.ChainSigner, error) {
 	signers := make(map[int64]interfaces.ChainSigner)
-	_, _, err := syncSignerMap(ctx, tss, logger, ts, &signers)
+	_, _, err := syncSignerMap(ctx, tss, logger, &signers)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +57,6 @@ func syncSignerMap(
 	ctx context.Context,
 	tss interfaces.TSSSigner,
 	logger base.Logger,
-	ts *metrics.TelemetryServer,
 	signers *map[int64]interfaces.ChainSigner,
 ) (int, int, error) {
 	if signers == nil {
@@ -71,7 +74,7 @@ func syncSignerMap(
 		presentChainIDs = make([]int64, 0)
 
 		onAfterAdd = func(chainID int64, _ interfaces.ChainSigner) {
-			logger.Std.Info().Msgf("Added signer for chain %d", chainID)
+			logger.Std.Info().Int64(logs.FieldChain, chainID).Msg("Added signer")
 			added++
 		}
 
@@ -80,7 +83,7 @@ func syncSignerMap(
 		}
 
 		onBeforeRemove = func(chainID int64, _ interfaces.ChainSigner) {
-			logger.Std.Info().Msgf("Removing signer for chain %d", chainID)
+			logger.Std.Info().Int64(logs.FieldChain, chainID).Msg("Removing signer")
 			removed++
 		}
 	)
@@ -123,7 +126,6 @@ func syncSignerMap(
 				ctx,
 				*rawChain,
 				tss,
-				ts,
 				logger,
 				cfg.Endpoint,
 				zetaConnectorAddress,
@@ -136,16 +138,16 @@ func syncSignerMap(
 			}
 
 			addSigner(chainID, signer)
-		case chain.IsUTXO():
-			cfg, found := app.Config().GetBTCConfig()
+		case chain.IsBitcoin():
+			cfg, found := app.Config().GetBTCConfig(chainID)
 			if !found {
-				logger.Std.Warn().Msgf("Unable to find UTXO config for chain %d", chainID)
+				logger.Std.Warn().Msgf("Unable to find BTC config for chain %d signer", chainID)
 				continue
 			}
 
-			signer, err := btcsigner.NewSigner(*rawChain, tss, ts, logger, cfg)
+			signer, err := btcsigner.NewSigner(*rawChain, tss, logger, cfg)
 			if err != nil {
-				logger.Std.Error().Err(err).Msgf("Unable to construct signer for UTXO chain %d", chainID)
+				logger.Std.Error().Err(err).Msgf("Unable to construct signer for BTC chain %d", chainID)
 				continue
 			}
 
@@ -174,13 +176,33 @@ func syncSignerMap(
 			}
 
 			// create Solana signer
-			signer, err := solanasigner.NewSigner(*rawChain, *params, rpcClient, tss, relayerKey, ts, logger)
+			signer, err := solanasigner.NewSigner(*rawChain, *params, rpcClient, tss, relayerKey, logger)
 			if err != nil {
 				logger.Std.Error().Err(err).Msgf("Unable to construct signer for SOL chain %d", chainID)
 				continue
 			}
 
 			addSigner(chainID, signer)
+		case chain.IsTON():
+			cfg, found := app.Config().GetTONConfig()
+			if !found {
+				logger.Std.Warn().Msgf("Unable to find TON config for chain %d", chainID)
+				continue
+			}
+
+			tonClient, gateway, err := makeTONClient(ctx, cfg, chain.Params().GatewayAddress)
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("Unable to create TON client for chain %d", chainID)
+				continue
+			}
+
+			tonSigner := tonsigner.New(
+				base.NewSigner(*rawChain, tss, logger),
+				tonClient,
+				gateway,
+			)
+
+			addSigner(chainID, tonSigner)
 		default:
 			logger.Std.Warn().
 				Int64("signer.chain_id", chain.ID()).
@@ -238,7 +260,8 @@ func syncObserverMap(
 
 		presentChainIDs = make([]int64, 0)
 
-		onAfterAdd = func(_ int64, ob interfaces.ChainObserver) {
+		onAfterAdd = func(chainID int64, ob interfaces.ChainObserver) {
+			logger.Std.Info().Int64(logs.FieldChain, chainID).Msg("Added observer")
 			ob.Start(ctx)
 			added++
 		}
@@ -247,7 +270,8 @@ func syncObserverMap(
 			mapSet[int64, interfaces.ChainObserver](observerMap, chainID, ob, onAfterAdd)
 		}
 
-		onBeforeRemove = func(_ int64, ob interfaces.ChainObserver) {
+		onBeforeRemove = func(chainID int64, ob interfaces.ChainObserver) {
+			logger.Std.Info().Int64(logs.FieldChain, chainID).Msg("Removing observer")
 			ob.Stop()
 			removed++
 		}
@@ -320,10 +344,10 @@ func syncObserverMap(
 			}
 
 			addObserver(chainID, observer)
-		case chain.IsUTXO():
-			cfg, found := app.Config().GetBTCConfig()
+		case chain.IsBitcoin():
+			cfg, found := app.Config().GetBTCConfig(chainID)
 			if !found {
-				logger.Std.Warn().Msgf("Unable to find chain params for BTC chain %d", chainID)
+				logger.Std.Warn().Msgf("Unable to find BTC config for chain %d observer", chainID)
 				continue
 			}
 
@@ -333,7 +357,7 @@ func syncObserverMap(
 				continue
 			}
 
-			database, err := db.NewFromSqlite(dbpath, btcDatabaseFilename, true)
+			database, err := db.NewFromSqlite(dbpath, btcDatabaseFileName(*rawChain), true)
 			if err != nil {
 				logger.Std.Error().Err(err).Msgf("unable to open database for BTC chain %d", chainID)
 				continue
@@ -391,6 +415,48 @@ func syncObserverMap(
 			}
 
 			addObserver(chainID, solObserver)
+		case chain.IsTON():
+			cfg, found := app.Config().GetTONConfig()
+			if !found {
+				logger.Std.Warn().Msgf("Unable to find chain params for TON chain %d", chainID)
+				continue
+			}
+
+			database, err := db.NewFromSqlite(dbpath, chainName, true)
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("unable to open database for TON chain %d", chainID)
+				continue
+			}
+
+			baseObserver, err := base.NewObserver(
+				*rawChain,
+				*params,
+				client,
+				tss,
+				base.DefaultBlockCacheSize,
+				ts,
+				database,
+				logger,
+			)
+
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("Unable to create base observer for TON chain %d", chainID)
+				continue
+			}
+
+			tonClient, gateway, err := makeTONClient(ctx, cfg, chain.Params().GatewayAddress)
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("Unable to create TON client for chain %d", chainID)
+				continue
+			}
+
+			tonObserver, err := tonobserver.New(baseObserver, tonClient, gateway)
+			if err != nil {
+				logger.Std.Error().Err(err).Msgf("Unable to create TON observer for chain %d", chainID)
+				continue
+			}
+
+			addObserver(chainID, tonObserver)
 		default:
 			logger.Std.Warn().
 				Int64("observer.chain_id", chain.ID()).
@@ -403,4 +469,38 @@ func syncObserverMap(
 	mapDeleteMissingKeys(observerMap, presentChainIDs, onBeforeRemove)
 
 	return added, removed, nil
+}
+
+func btcDatabaseFileName(chain chains.Chain) string {
+	// legacyBTCDatabaseFilename is the Bitcoin database file name now used in mainnet and testnet3
+	// so we keep using it here for backward compatibility
+	const legacyBTCDatabaseFilename = "btc_chain_client"
+
+	// For additional bitcoin networks, we use the chain name as the database file name
+	switch chain.ChainId {
+	case chains.BitcoinMainnet.ChainId, chains.BitcoinTestnet.ChainId:
+		return legacyBTCDatabaseFilename
+	default:
+		return fmt.Sprintf("%s_%s", legacyBTCDatabaseFilename, chain.Name)
+	}
+}
+
+func makeTONClient(
+	ctx context.Context,
+	cfg config.TONConfig,
+	gatewayAddr string,
+) (*liteapi.Client, *toncontracts.Gateway, error) {
+	client, err := liteapi.NewFromSource(ctx, cfg.LiteClientConfigURL)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "Unable to create TON liteapi")
+	}
+
+	gatewayID, err := ton.ParseAccountID(gatewayAddr)
+	if err != nil {
+		return nil, nil, errors.Wrapf(err, "Unable to parse gateway address %q", gatewayAddr)
+	}
+
+	gw := toncontracts.NewGateway(gatewayID)
+
+	return client, gw, nil
 }

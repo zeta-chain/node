@@ -2,15 +2,22 @@ package rpc
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
-	"github.com/btcsuite/btcutil"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/config"
+)
+
+const (
+	// RPCAlertLatency is the default threshold for RPC latency to be considered unhealthy and trigger an alert.
+	// Bitcoin block time is 10 minutes, 1200s (20 minutes) is a reasonable threshold for Bitcoin
+	RPCAlertLatency = time.Duration(1200) * time.Second
 )
 
 // NewRPCClient creates a new RPC client by the given config.
@@ -172,4 +179,38 @@ func GetTransactionFeeAndRate(rpcClient interfaces.BTCRPCClient, rawResult *btcj
 	feeRate := fee / int64(rawResult.Vsize)
 
 	return fee, feeRate, nil
+}
+
+// CheckRPCStatus checks the RPC status of the bitcoin chain
+func CheckRPCStatus(client interfaces.BTCRPCClient, tssAddress btcutil.Address) (time.Time, error) {
+	// query latest block number
+	bn, err := client.GetBlockCount()
+	if err != nil {
+		return time.Time{}, errors.Wrap(err, "RPC failed on GetBlockCount, RPC down?")
+	}
+
+	// query latest block header
+	hash, err := client.GetBlockHash(bn)
+	if err != nil {
+		return time.Time{}, errors.Wrap(err, "RPC failed on GetBlockHash, RPC down?")
+	}
+
+	// query latest block header thru hash
+	header, err := client.GetBlockHeader(hash)
+	if err != nil {
+		return time.Time{}, errors.Wrap(err, "RPC failed on GetBlockHeader, RPC down?")
+	}
+
+	// should be able to list utxos owned by TSS address
+	res, err := client.ListUnspentMinMaxAddresses(0, 1000000, []btcutil.Address{tssAddress})
+	if err != nil {
+		return time.Time{}, errors.Wrap(err, "can't list utxos of TSS address; TSS address is not imported?")
+	}
+
+	// TSS address should have utxos
+	if len(res) == 0 {
+		return time.Time{}, errors.New("TSS address has no utxos; TSS address is not imported?")
+	}
+
+	return header.Timestamp, nil
 }

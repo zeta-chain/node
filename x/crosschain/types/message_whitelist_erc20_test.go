@@ -6,13 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/pkg/sdkconfig"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
-	keeper.SetConfig(false)
+	sdkconfig.SetDefault(false)
 	tests := []struct {
 		name  string
 		msg   *types.MsgWhitelistERC20
@@ -32,10 +32,10 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 			error: true,
 		},
 		{
-			name: "invalid erc20",
+			name: "invalid asset",
 			msg: types.NewMsgWhitelistERC20(
 				sample.AccAddress(),
-				"0x0",
+				"",
 				1,
 				"name",
 				"symbol",
@@ -71,10 +71,36 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 			error: true,
 		},
 		{
-			name: "valid",
+			name: "evm asset address with invalid checksum format",
 			msg: types.NewMsgWhitelistERC20(
 				sample.AccAddress(),
-				sample.EthAddress().Hex(),
+				"0x5a4f260a7d716c859a2736151cb38b9c58c32c64",
+				1,
+				"name",
+				"symbol",
+				6,
+				10,
+			),
+			error: true,
+		},
+		{
+			name: "valid message with evm asset address",
+			msg: types.NewMsgWhitelistERC20(
+				sample.AccAddress(),
+				"0x5a4f260A7D716c859A2736151cB38b9c58C32c64",
+				1,
+				"name",
+				"symbol",
+				6,
+				10,
+			),
+			error: false,
+		},
+		{
+			name: "valid message with solana asset address",
+			msg: types.NewMsgWhitelistERC20(
+				sample.AccAddress(),
+				"Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr",
 				1,
 				"name",
 				"symbol",

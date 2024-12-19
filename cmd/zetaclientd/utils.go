@@ -1,43 +1,60 @@
 package main
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/rs/zerolog"
+	"context"
+	"os"
+	"strconv"
 
-	"github.com/zeta-chain/node/zetaclient/authz"
+	"github.com/pkg/errors"
+
 	"github.com/zeta-chain/node/zetaclient/config"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-func CreateAuthzSigner(granter string, grantee sdk.AccAddress) {
-	authz.SetupAuthZSignerList(granter, grantee)
+// isObserverNode checks whether THIS node is an observer node.
+func isObserverNode(ctx context.Context, zc *zetacore.Client) (bool, error) {
+	observers, err := zc.GetObserverList(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "unable to get observers list")
+	}
+
+	operatorAddress := zc.GetKeys().GetOperatorAddress().String()
+
+	for _, observer := range observers {
+		if observer == operatorAddress {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
-func CreateZetacoreClient(cfg config.Config, hotkeyPassword string, logger zerolog.Logger) (*zetacore.Client, error) {
-	hotKey := cfg.AuthzHotkey
-	if cfg.HsmMode {
-		hotKey = cfg.HsmHotKey
+func isEnvFlagEnabled(flag string) bool {
+	v, _ := strconv.ParseBool(os.Getenv(flag))
+	return v
+}
+
+func btcChainIDsFromContext(app *zctx.AppContext) []int64 {
+	var (
+		btcChains   = app.FilterChains(zctx.Chain.IsBitcoin)
+		btcChainIDs = make([]int64, len(btcChains))
+	)
+
+	for i, chain := range btcChains {
+		btcChainIDs[i] = chain.ID()
 	}
 
-	chainIP := cfg.ZetaCoreURL
+	return btcChainIDs
+}
 
-	kb, _, err := keys.GetKeyringKeybase(cfg, hotkeyPassword)
+func resolveObserverPubKeyBech32(cfg config.Config, hotKeyPassword string) (string, error) {
+	// Get observer's public key ("grantee pub key")
+	_, granteePubKeyBech32, err := keys.GetKeyringKeybase(cfg, hotKeyPassword)
 	if err != nil {
-		return nil, err
+		return "", errors.Wrap(err, "unable to get keyring key base")
 	}
 
-	granterAddreess, err := sdk.AccAddressFromBech32(cfg.AuthzGranter)
-	if err != nil {
-		return nil, err
-	}
-
-	k := keys.NewKeysWithKeybase(kb, granterAddreess, cfg.AuthzHotkey, hotkeyPassword)
-
-	client, err := zetacore.NewClient(k, chainIP, hotKey, cfg.ChainID, cfg.HsmMode, logger)
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
+	return granteePubKeyBech32, nil
 }

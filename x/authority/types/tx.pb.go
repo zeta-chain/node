@@ -9,6 +9,7 @@ import (
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
+	chains "github.com/zeta-chain/node/pkg/chains"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -312,8 +313,8 @@ var xxx_messageInfo_MsgUpdatePoliciesResponse proto.InternalMessageInfo
 
 // MsgUpdateChainInfo defines the MsgUpdateChainInfo service.
 type MsgUpdateChainInfo struct {
-	Creator   string    `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	ChainInfo ChainInfo `protobuf:"bytes,2,opt,name=chain_info,json=chainInfo,proto3" json:"chain_info"`
+	Creator string       `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Chain   chains.Chain `protobuf:"bytes,3,opt,name=chain,proto3" json:"chain"`
 }
 
 func (m *MsgUpdateChainInfo) Reset()         { *m = MsgUpdateChainInfo{} }
@@ -356,11 +357,11 @@ func (m *MsgUpdateChainInfo) GetCreator() string {
 	return ""
 }
 
-func (m *MsgUpdateChainInfo) GetChainInfo() ChainInfo {
+func (m *MsgUpdateChainInfo) GetChain() chains.Chain {
 	if m != nil {
-		return m.ChainInfo
+		return m.Chain
 	}
-	return ChainInfo{}
+	return chains.Chain{}
 }
 
 // MsgUpdateChainInfoResponse defines the MsgUpdateChainInfoResponse service.
@@ -400,6 +401,96 @@ func (m *MsgUpdateChainInfoResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateChainInfoResponse proto.InternalMessageInfo
 
+// MsgRemoveChainInfo defines the MsgRemoveChainInfo service.
+type MsgRemoveChainInfo struct {
+	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	ChainId int64  `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+}
+
+func (m *MsgRemoveChainInfo) Reset()         { *m = MsgRemoveChainInfo{} }
+func (m *MsgRemoveChainInfo) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveChainInfo) ProtoMessage()    {}
+func (*MsgRemoveChainInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_42e081863c477116, []int{8}
+}
+func (m *MsgRemoveChainInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRemoveChainInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRemoveChainInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRemoveChainInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveChainInfo.Merge(m, src)
+}
+func (m *MsgRemoveChainInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRemoveChainInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveChainInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRemoveChainInfo proto.InternalMessageInfo
+
+func (m *MsgRemoveChainInfo) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgRemoveChainInfo) GetChainId() int64 {
+	if m != nil {
+		return m.ChainId
+	}
+	return 0
+}
+
+// MsgRemoveChainInfoResponse defines the MsgRemoveChainInfoResponse service.
+type MsgRemoveChainInfoResponse struct {
+}
+
+func (m *MsgRemoveChainInfoResponse) Reset()         { *m = MsgRemoveChainInfoResponse{} }
+func (m *MsgRemoveChainInfoResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveChainInfoResponse) ProtoMessage()    {}
+func (*MsgRemoveChainInfoResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_42e081863c477116, []int{9}
+}
+func (m *MsgRemoveChainInfoResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRemoveChainInfoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRemoveChainInfoResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRemoveChainInfoResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveChainInfoResponse.Merge(m, src)
+}
+func (m *MsgRemoveChainInfoResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRemoveChainInfoResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveChainInfoResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRemoveChainInfoResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgAddAuthorization)(nil), "zetachain.zetacore.authority.MsgAddAuthorization")
 	proto.RegisterType((*MsgAddAuthorizationResponse)(nil), "zetachain.zetacore.authority.MsgAddAuthorizationResponse")
@@ -409,6 +500,8 @@ func init() {
 	proto.RegisterType((*MsgUpdatePoliciesResponse)(nil), "zetachain.zetacore.authority.MsgUpdatePoliciesResponse")
 	proto.RegisterType((*MsgUpdateChainInfo)(nil), "zetachain.zetacore.authority.MsgUpdateChainInfo")
 	proto.RegisterType((*MsgUpdateChainInfoResponse)(nil), "zetachain.zetacore.authority.MsgUpdateChainInfoResponse")
+	proto.RegisterType((*MsgRemoveChainInfo)(nil), "zetachain.zetacore.authority.MsgRemoveChainInfo")
+	proto.RegisterType((*MsgRemoveChainInfoResponse)(nil), "zetachain.zetacore.authority.MsgRemoveChainInfoResponse")
 }
 
 func init() {
@@ -416,38 +509,42 @@ func init() {
 }
 
 var fileDescriptor_42e081863c477116 = []byte{
-	// 491 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0x4f, 0x6f, 0xd3, 0x30,
-	0x14, 0xaf, 0xd9, 0xb4, 0xb1, 0x87, 0x34, 0xb6, 0x0c, 0x41, 0xc9, 0x46, 0xa8, 0x22, 0x01, 0x95,
-	0x60, 0xc9, 0x28, 0x48, 0x80, 0xc4, 0x65, 0x43, 0x42, 0x20, 0xa8, 0x34, 0x45, 0xf4, 0xc2, 0xa5,
-	0xca, 0x12, 0xcf, 0xb5, 0xd4, 0xc6, 0x51, 0xec, 0xc2, 0x5a, 0x81, 0xc4, 0x95, 0x13, 0x7c, 0x03,
-	0xbe, 0xce, 0x8e, 0x3b, 0x72, 0x42, 0xa8, 0xfd, 0x22, 0x68, 0x6e, 0xec, 0x4d, 0x4d, 0xe4, 0xb5,
-	0xec, 0xf6, 0x62, 0xff, 0xfe, 0xf9, 0x39, 0x7e, 0x70, 0x6f, 0x88, 0x45, 0x18, 0x75, 0x42, 0x9a,
-	0xf8, 0xb2, 0x62, 0x19, 0xf6, 0xc3, 0xbe, 0xe8, 0xb0, 0x8c, 0x8a, 0x81, 0x2f, 0x8e, 0xbc, 0x34,
-	0x63, 0x82, 0x59, 0x5b, 0x1a, 0xe6, 0x29, 0x98, 0xa7, 0x61, 0xf6, 0x43, 0xa3, 0x48, 0xca, 0xba,
-	0x34, 0xa2, 0x98, 0x4f, 0xa4, 0xec, 0x6d, 0x23, 0x58, 0x6e, 0xb4, 0x69, 0x72, 0xc8, 0x72, 0xf8,
-	0x8e, 0x11, 0x9e, 0x57, 0xc3, 0x50, 0x50, 0x96, 0xe4, 0x8c, 0x1b, 0x84, 0x11, 0x26, 0x4b, 0xff,
-	0xb4, 0x9a, 0xac, 0xba, 0xbf, 0x10, 0x6c, 0x34, 0x39, 0xd9, 0x8d, 0xe3, 0xdd, 0xf3, 0x1c, 0xab,
-	0x0a, 0xcb, 0x51, 0x86, 0x43, 0xc1, 0xb2, 0x2a, 0xaa, 0xa1, 0xfa, 0x4a, 0xa0, 0x3e, 0xad, 0x5b,
-	0xb0, 0xdc, 0xe3, 0xa4, 0xdd, 0xcf, 0xba, 0xd5, 0x2b, 0x72, 0x67, 0xa9, 0xc7, 0x49, 0x2b, 0xeb,
-	0x5a, 0x2d, 0x58, 0x57, 0xbe, 0x38, 0x6e, 0xcb, 0xe3, 0x0d, 0xaa, 0x0b, 0x35, 0x54, 0x5f, 0x6d,
-	0xd4, 0x3d, 0x53, 0xa3, 0xbc, 0x7d, 0x89, 0xfd, 0x30, 0x48, 0x71, 0xb0, 0x76, 0x26, 0x31, 0x59,
-	0x75, 0xef, 0xc0, 0x66, 0x49, 0xc0, 0x00, 0xf3, 0x94, 0x25, 0x1c, 0xbb, 0xef, 0xe0, 0x66, 0x93,
-	0x93, 0x00, 0xf7, 0xd8, 0x27, 0x7c, 0xd9, 0x23, 0xb8, 0x35, 0x70, 0xca, 0xc5, 0xb4, 0xdd, 0x67,
-	0x58, 0x6f, 0x72, 0xd2, 0x4a, 0xe3, 0x50, 0xe0, 0xfd, 0xfc, 0x06, 0x0d, 0x4e, 0x6f, 0xe0, 0xaa,
-	0xba, 0x67, 0x69, 0x75, 0xad, 0x71, 0x7f, 0x86, 0x56, 0x50, 0xcc, 0xf7, 0x16, 0x8f, 0xff, 0xdc,
-	0xad, 0x04, 0x9a, 0xed, 0x6e, 0xc2, 0xed, 0x82, 0xb1, 0x4e, 0xf5, 0x05, 0x2c, 0xbd, 0xf9, 0xea,
-	0x54, 0xfa, 0x6d, 0x72, 0xc8, 0x0c, 0xb1, 0xde, 0x03, 0x9c, 0xfd, 0x51, 0x79, 0xb0, 0x07, 0xe6,
-	0x60, 0x5a, 0x36, 0x4f, 0xb6, 0x12, 0xa9, 0x05, 0x77, 0x0b, 0xec, 0xa2, 0xbb, 0xca, 0xd6, 0xf8,
-	0xb1, 0x08, 0x0b, 0x4d, 0x4e, 0xac, 0x21, 0xac, 0x4e, 0xb5, 0xcd, 0x37, 0x3b, 0x16, 0x8e, 0x6b,
-	0x3f, 0x9b, 0x93, 0xa0, 0x32, 0x58, 0x5f, 0xe1, 0xfa, 0x74, 0x73, 0x76, 0x66, 0xd4, 0xd2, 0x0c,
-	0xfb, 0xf9, 0xbc, 0x0c, 0x6d, 0xff, 0x0d, 0xc1, 0x5a, 0xe1, 0x85, 0x3d, 0xbe, 0x50, 0x6e, 0x9a,
-	0x62, 0xbf, 0x98, 0x9b, 0xa2, 0x23, 0x7c, 0x47, 0xb0, 0x51, 0xf6, 0x48, 0x9e, 0x5e, 0x28, 0x59,
-	0xc2, 0xb2, 0x5f, 0xfe, 0x0f, 0x4b, 0x65, 0xd9, 0x7b, 0x7d, 0x3c, 0x72, 0xd0, 0xc9, 0xc8, 0x41,
-	0x7f, 0x47, 0x0e, 0xfa, 0x39, 0x76, 0x2a, 0x27, 0x63, 0xa7, 0xf2, 0x7b, 0xec, 0x54, 0x3e, 0x3e,
-	0x22, 0x54, 0x74, 0xfa, 0x07, 0x5e, 0xc4, 0x7a, 0x72, 0xac, 0x6d, 0x4f, 0x26, 0x5c, 0xc2, 0x62,
-	0xec, 0x1f, 0x9d, 0x1f, 0xc0, 0x83, 0x14, 0xf3, 0x83, 0x25, 0x39, 0xc2, 0x9e, 0xfc, 0x0b, 0x00,
-	0x00, 0xff, 0xff, 0x74, 0x55, 0xd6, 0x33, 0xad, 0x05, 0x00, 0x00,
+	// 555 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0xdf, 0x6b, 0xd3, 0x40,
+	0x1c, 0x6f, 0xd6, 0xfd, 0xa8, 0xdf, 0xc1, 0xec, 0x32, 0xd1, 0x2e, 0x9b, 0xb1, 0x04, 0x95, 0xa2,
+	0x2e, 0x99, 0x55, 0x50, 0xc1, 0x07, 0x37, 0x41, 0xac, 0x52, 0x18, 0xc1, 0xbe, 0xf8, 0x52, 0xb2,
+	0xe6, 0x76, 0x0d, 0x6b, 0x73, 0x21, 0x77, 0x9d, 0x6b, 0x41, 0xf0, 0xd5, 0x17, 0xf1, 0x3f, 0xf0,
+	0xdf, 0xd9, 0xe3, 0x1e, 0x7d, 0x12, 0x69, 0xff, 0x11, 0xd9, 0xe5, 0x72, 0xd6, 0x34, 0x66, 0xa9,
+	0x3e, 0xf5, 0x92, 0xfb, 0xfc, 0xca, 0xe7, 0xd2, 0x6f, 0xe0, 0xce, 0x08, 0x31, 0xa7, 0xd3, 0x75,
+	0x3c, 0xdf, 0xe2, 0x2b, 0x12, 0x22, 0xcb, 0x19, 0xb0, 0x2e, 0x09, 0x3d, 0x36, 0xb4, 0xd8, 0xa9,
+	0x19, 0x84, 0x84, 0x11, 0x75, 0x5b, 0xc2, 0xcc, 0x18, 0x66, 0x4a, 0x98, 0x76, 0x3f, 0x53, 0x24,
+	0x20, 0x3d, 0xaf, 0xe3, 0x21, 0x1a, 0x49, 0x69, 0x3b, 0x99, 0x60, 0xbe, 0xd1, 0xf6, 0xfc, 0x23,
+	0x22, 0xe0, 0xbb, 0x99, 0x70, 0xb1, 0x1a, 0x39, 0xcc, 0x23, 0xbe, 0x60, 0xdc, 0x4b, 0x61, 0x04,
+	0xc7, 0x38, 0x92, 0xa6, 0xe2, 0x47, 0x60, 0xaf, 0x61, 0x82, 0x09, 0x5f, 0x5a, 0x17, 0xab, 0xe8,
+	0xae, 0xf1, 0x4d, 0x81, 0x8d, 0x26, 0xc5, 0x7b, 0xae, 0xbb, 0x37, 0xad, 0xaf, 0x56, 0x60, 0xa5,
+	0x13, 0x22, 0x87, 0x91, 0xb0, 0xa2, 0x54, 0x95, 0xda, 0x15, 0x3b, 0xbe, 0x54, 0x6f, 0xc0, 0x4a,
+	0x9f, 0xe2, 0xf6, 0x20, 0xec, 0x55, 0x16, 0xf8, 0xce, 0x72, 0x9f, 0xe2, 0x56, 0xd8, 0x53, 0x5b,
+	0xb0, 0x1e, 0x67, 0x44, 0x6e, 0x9b, 0x57, 0x31, 0xac, 0x14, 0xab, 0x4a, 0x6d, 0xad, 0x5e, 0x33,
+	0xb3, 0x4a, 0x35, 0x0f, 0x38, 0xf6, 0xdd, 0x30, 0x40, 0x76, 0xf9, 0xb7, 0x44, 0x74, 0xd7, 0xb8,
+	0x09, 0x5b, 0x29, 0x01, 0x6d, 0x44, 0x03, 0xe2, 0x53, 0x64, 0xbc, 0x85, 0xeb, 0x4d, 0x8a, 0x6d,
+	0xd4, 0x27, 0x27, 0xe8, 0x7f, 0x1f, 0xc1, 0xa8, 0x82, 0x9e, 0x2e, 0x26, 0xed, 0x3e, 0xc0, 0x7a,
+	0x93, 0xe2, 0x56, 0xe0, 0x3a, 0x0c, 0x1d, 0x88, 0xd3, 0xce, 0x70, 0x7a, 0x0d, 0xa5, 0xf8, 0x9d,
+	0xe0, 0x56, 0xab, 0xf5, 0xbb, 0x39, 0xaa, 0xf0, 0x10, 0xdd, 0x5f, 0x3c, 0xfb, 0x71, 0xab, 0x60,
+	0x4b, 0xb6, 0xb1, 0x05, 0x9b, 0x33, 0xc6, 0x32, 0xd5, 0x09, 0xa8, 0x72, 0xf3, 0xe5, 0x85, 0x74,
+	0xc3, 0x3f, 0x22, 0x19, 0xb1, 0x5e, 0xc0, 0x12, 0x4f, 0xc0, 0x8f, 0x67, 0xb5, 0x7e, 0x3b, 0x2d,
+	0x53, 0x70, 0x8c, 0x4d, 0xf1, 0x02, 0x71, 0x49, 0x91, 0x28, 0x22, 0xbe, 0x59, 0x2c, 0x2d, 0x94,
+	0x8b, 0xc6, 0x36, 0x68, 0xb3, 0xbe, 0x32, 0x55, 0x83, 0xa7, 0x8a, 0xda, 0xcc, 0x93, 0x6a, 0x13,
+	0x4a, 0xe2, 0x3f, 0xe1, 0xf2, 0xb2, 0x8a, 0xf6, 0x0a, 0xbf, 0x6e, 0xb8, 0xc2, 0x28, 0x21, 0x15,
+	0x1b, 0xd5, 0xbf, 0x2c, 0x41, 0xb1, 0x49, 0xb1, 0x3a, 0x82, 0xb5, 0xc4, 0xc9, 0x58, 0xd9, 0x6d,
+	0xcf, 0x34, 0xaa, 0x3d, 0x99, 0x93, 0x10, 0x67, 0x50, 0x3f, 0xc2, 0xd5, 0x64, 0xff, 0xbb, 0x39,
+	0xb5, 0x24, 0x43, 0x7b, 0x3a, 0x2f, 0x63, 0xda, 0x3e, 0x59, 0xf4, 0xe5, 0xf6, 0x09, 0x46, 0x0e,
+	0xfb, 0xbf, 0x9c, 0x80, 0xfa, 0x49, 0x81, 0xf2, 0xcc, 0x0c, 0x79, 0x78, 0xa9, 0x5c, 0x92, 0xa2,
+	0x3d, 0x9b, 0x9b, 0x22, 0x23, 0x7c, 0x56, 0x60, 0x23, 0x6d, 0x0c, 0x3c, 0xce, 0xf9, 0x50, 0x7f,
+	0x06, 0x79, 0xfe, 0x2f, 0xac, 0x38, 0xcb, 0xfe, 0xab, 0xb3, 0xb1, 0xae, 0x9c, 0x8f, 0x75, 0xe5,
+	0xe7, 0x58, 0x57, 0xbe, 0x4e, 0xf4, 0xc2, 0xf9, 0x44, 0x2f, 0x7c, 0x9f, 0xe8, 0x85, 0xf7, 0x0f,
+	0xb0, 0xc7, 0xba, 0x83, 0x43, 0xb3, 0x43, 0xfa, 0x7c, 0x64, 0xef, 0x44, 0xd3, 0xdb, 0x27, 0x2e,
+	0xb2, 0x4e, 0xa7, 0x3f, 0x47, 0xc3, 0x00, 0xd1, 0xc3, 0x65, 0x3e, 0xa4, 0x1f, 0xfd, 0x0a, 0x00,
+	0x00, 0xff, 0xff, 0x96, 0x32, 0xd6, 0x22, 0xbb, 0x06, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -464,6 +561,7 @@ const _ = grpc.SupportPackageIsVersion4
 type MsgClient interface {
 	UpdatePolicies(ctx context.Context, in *MsgUpdatePolicies, opts ...grpc.CallOption) (*MsgUpdatePoliciesResponse, error)
 	UpdateChainInfo(ctx context.Context, in *MsgUpdateChainInfo, opts ...grpc.CallOption) (*MsgUpdateChainInfoResponse, error)
+	RemoveChainInfo(ctx context.Context, in *MsgRemoveChainInfo, opts ...grpc.CallOption) (*MsgRemoveChainInfoResponse, error)
 	AddAuthorization(ctx context.Context, in *MsgAddAuthorization, opts ...grpc.CallOption) (*MsgAddAuthorizationResponse, error)
 	RemoveAuthorization(ctx context.Context, in *MsgRemoveAuthorization, opts ...grpc.CallOption) (*MsgRemoveAuthorizationResponse, error)
 }
@@ -494,6 +592,15 @@ func (c *msgClient) UpdateChainInfo(ctx context.Context, in *MsgUpdateChainInfo,
 	return out, nil
 }
 
+func (c *msgClient) RemoveChainInfo(ctx context.Context, in *MsgRemoveChainInfo, opts ...grpc.CallOption) (*MsgRemoveChainInfoResponse, error) {
+	out := new(MsgRemoveChainInfoResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.authority.Msg/RemoveChainInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) AddAuthorization(ctx context.Context, in *MsgAddAuthorization, opts ...grpc.CallOption) (*MsgAddAuthorizationResponse, error) {
 	out := new(MsgAddAuthorizationResponse)
 	err := c.cc.Invoke(ctx, "/zetachain.zetacore.authority.Msg/AddAuthorization", in, out, opts...)
@@ -516,6 +623,7 @@ func (c *msgClient) RemoveAuthorization(ctx context.Context, in *MsgRemoveAuthor
 type MsgServer interface {
 	UpdatePolicies(context.Context, *MsgUpdatePolicies) (*MsgUpdatePoliciesResponse, error)
 	UpdateChainInfo(context.Context, *MsgUpdateChainInfo) (*MsgUpdateChainInfoResponse, error)
+	RemoveChainInfo(context.Context, *MsgRemoveChainInfo) (*MsgRemoveChainInfoResponse, error)
 	AddAuthorization(context.Context, *MsgAddAuthorization) (*MsgAddAuthorizationResponse, error)
 	RemoveAuthorization(context.Context, *MsgRemoveAuthorization) (*MsgRemoveAuthorizationResponse, error)
 }
@@ -529,6 +637,9 @@ func (*UnimplementedMsgServer) UpdatePolicies(ctx context.Context, req *MsgUpdat
 }
 func (*UnimplementedMsgServer) UpdateChainInfo(ctx context.Context, req *MsgUpdateChainInfo) (*MsgUpdateChainInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateChainInfo not implemented")
+}
+func (*UnimplementedMsgServer) RemoveChainInfo(ctx context.Context, req *MsgRemoveChainInfo) (*MsgRemoveChainInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveChainInfo not implemented")
 }
 func (*UnimplementedMsgServer) AddAuthorization(ctx context.Context, req *MsgAddAuthorization) (*MsgAddAuthorizationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddAuthorization not implemented")
@@ -573,6 +684,24 @@ func _Msg_UpdateChainInfo_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).UpdateChainInfo(ctx, req.(*MsgUpdateChainInfo))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_RemoveChainInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRemoveChainInfo)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RemoveChainInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.authority.Msg/RemoveChainInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RemoveChainInfo(ctx, req.(*MsgRemoveChainInfo))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -624,6 +753,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateChainInfo",
 			Handler:    _Msg_UpdateChainInfo_Handler,
+		},
+		{
+			MethodName: "RemoveChainInfo",
+			Handler:    _Msg_RemoveChainInfo_Handler,
 		},
 		{
 			MethodName: "AddAuthorization",
@@ -847,7 +980,7 @@ func (m *MsgUpdateChainInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	{
-		size, err := m.ChainInfo.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.Chain.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -855,7 +988,7 @@ func (m *MsgUpdateChainInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x12
+	dAtA[i] = 0x1a
 	if len(m.Creator) > 0 {
 		i -= len(m.Creator)
 		copy(dAtA[i:], m.Creator)
@@ -882,6 +1015,64 @@ func (m *MsgUpdateChainInfoResponse) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *MsgUpdateChainInfoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRemoveChainInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRemoveChainInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRemoveChainInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ChainId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRemoveChainInfoResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRemoveChainInfoResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRemoveChainInfoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -989,12 +1180,37 @@ func (m *MsgUpdateChainInfo) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = m.ChainInfo.Size()
+	l = m.Chain.Size()
 	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
 func (m *MsgUpdateChainInfoResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgRemoveChainInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.ChainId != 0 {
+		n += 1 + sovTx(uint64(m.ChainId))
+	}
+	return n
+}
+
+func (m *MsgRemoveChainInfoResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1582,9 +1798,9 @@ func (m *MsgUpdateChainInfo) Unmarshal(dAtA []byte) error {
 			}
 			m.Creator = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
+		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ChainInfo", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Chain", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1611,7 +1827,7 @@ func (m *MsgUpdateChainInfo) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.ChainInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Chain.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1663,6 +1879,157 @@ func (m *MsgUpdateChainInfoResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUpdateChainInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRemoveChainInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRemoveChainInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRemoveChainInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
+			}
+			m.ChainId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ChainId |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRemoveChainInfoResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRemoveChainInfoResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRemoveChainInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

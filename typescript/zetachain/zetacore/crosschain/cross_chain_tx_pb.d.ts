@@ -165,6 +165,14 @@ export declare class InboundParams extends Message<InboundParams> {
    */
   txFinalizationStatus: TxFinalizationStatus;
 
+  /**
+   * this field describes if a smart contract call should be made for a inbound
+   * with assets only used for protocol contract version 2
+   *
+   * @generated from field: bool is_cross_chain_call = 12;
+   */
+  isCrossChainCall: boolean;
+
   constructor(data?: PartialMessage<InboundParams>);
 
   static readonly runtime: typeof proto3;
@@ -208,6 +216,35 @@ export declare class ZetaAccounting extends Message<ZetaAccounting> {
 }
 
 /**
+ * @generated from message zetachain.zetacore.crosschain.CallOptions
+ */
+export declare class CallOptions extends Message<CallOptions> {
+  /**
+   * @generated from field: uint64 gas_limit = 1;
+   */
+  gasLimit: bigint;
+
+  /**
+   * @generated from field: bool is_arbitrary_call = 2;
+   */
+  isArbitraryCall: boolean;
+
+  constructor(data?: PartialMessage<CallOptions>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.CallOptions";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CallOptions;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CallOptions;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CallOptions;
+
+  static equals(a: CallOptions | PlainMessage<CallOptions> | undefined, b: CallOptions | PlainMessage<CallOptions> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.crosschain.OutboundParams
  */
 export declare class OutboundParams extends Message<OutboundParams> {
@@ -237,6 +274,8 @@ export declare class OutboundParams extends Message<OutboundParams> {
   tssNonce: bigint;
 
   /**
+   * Deprecated (v21), use CallOptions
+   *
    * @generated from field: uint64 gas_limit = 6;
    */
   gasLimit: bigint;
@@ -294,6 +333,11 @@ export declare class OutboundParams extends Message<OutboundParams> {
    */
   txFinalizationStatus: TxFinalizationStatus;
 
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.CallOptions call_options = 24;
+   */
+  callOptions?: CallOptions;
+
   constructor(data?: PartialMessage<OutboundParams>);
 
   static readonly runtime: typeof proto3;
@@ -319,9 +363,20 @@ export declare class Status extends Message<Status> {
   status: CctxStatus;
 
   /**
+   * status_message carries information about the status transitions:
+   * why they were triggered, old and new status.
+   *
    * @generated from field: string status_message = 2;
    */
   statusMessage: string;
+
+  /**
+   * error_message carries information about the error that caused the tx
+   * to be PendingRevert, Reverted or Aborted.
+   *
+   * @generated from field: string error_message = 6;
+   */
+  errorMessage: string;
 
   /**
    * @generated from field: int64 lastUpdate_timestamp = 3;

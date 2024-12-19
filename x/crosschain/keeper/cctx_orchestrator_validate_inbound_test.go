@@ -58,7 +58,7 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 			Return(observerTypes.PendingNonces{NonceHigh: 1}, true)
 		observerMock.On("SetChainNonces", mock.Anything, mock.Anything).Return(nil)
 		observerMock.On("SetPendingNonces", mock.Anything, mock.Anything).Return(nil)
-		// setup Mocks for SetCctxAndNonceToCctxAndInboundHashToCctx
+		// setup Mocks for SaveCCTXUpdate
 		observerMock.On("SetNonceToCctx", mock.Anything, mock.Anything).Return(nil)
 
 		k.SetGasPrice(ctx, types.GasPrice{
@@ -78,11 +78,13 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 			Message:            message,
 			InboundHash:        inboundHash.String(),
 			InboundBlockHeight: inboundBlockHeight,
-			GasLimit:           gasLimit,
-			CoinType:           cointType,
-			TxOrigin:           sender.String(),
-			Asset:              asset,
-			EventIndex:         eventIndex,
+			CallOptions: &types.CallOptions{
+				GasLimit: gasLimit,
+			},
+			CoinType:   cointType,
+			TxOrigin:   sender.String(),
+			Asset:      asset,
+			EventIndex: eventIndex,
 		}
 
 		_, err := k.ValidateInbound(ctx, &msg, false)
@@ -136,11 +138,13 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 			Message:            message,
 			InboundHash:        inboundHash.String(),
 			InboundBlockHeight: inboundBlockHeight,
-			GasLimit:           gasLimit,
-			CoinType:           cointType,
-			TxOrigin:           sender.String(),
-			Asset:              asset,
-			EventIndex:         eventIndex,
+			CallOptions: &types.CallOptions{
+				GasLimit: gasLimit,
+			},
+			CoinType:   cointType,
+			TxOrigin:   sender.String(),
+			Asset:      asset,
+			EventIndex: eventIndex,
 		}
 
 		_, err := k.ValidateInbound(ctx, &msg, false)
@@ -203,11 +207,13 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 			Message:            message,
 			InboundHash:        inboundHash.String(),
 			InboundBlockHeight: inboundBlockHeight,
-			GasLimit:           gasLimit,
-			CoinType:           cointType,
-			TxOrigin:           sender.String(),
-			Asset:              asset,
-			EventIndex:         eventIndex,
+			CallOptions: &types.CallOptions{
+				GasLimit: gasLimit,
+			},
+			CoinType:   cointType,
+			TxOrigin:   sender.String(),
+			Asset:      asset,
+			EventIndex: eventIndex,
 		}
 
 		_, err := k.ValidateInbound(ctx, &msg, false)
@@ -267,11 +273,13 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 			Message:            message,
 			InboundHash:        inboundHash.String(),
 			InboundBlockHeight: inboundBlockHeight,
-			GasLimit:           gasLimit,
-			CoinType:           cointType,
-			TxOrigin:           sender.String(),
-			Asset:              asset,
-			EventIndex:         eventIndex,
+			CallOptions: &types.CallOptions{
+				GasLimit: gasLimit,
+			},
+			CoinType:   cointType,
+			TxOrigin:   sender.String(),
+			Asset:      asset,
+			EventIndex: eventIndex,
 		}
 
 		_, err := k.ValidateInbound(ctx, &msg, false)
@@ -329,11 +337,13 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 			Message:            message,
 			InboundHash:        inboundHash.String(),
 			InboundBlockHeight: inboundBlockHeight,
-			GasLimit:           gasLimit,
-			CoinType:           cointType,
-			TxOrigin:           sender.String(),
-			Asset:              asset,
-			EventIndex:         eventIndex,
+			CallOptions: &types.CallOptions{
+				GasLimit: gasLimit,
+			},
+			CoinType:   cointType,
+			TxOrigin:   sender.String(),
+			Asset:      asset,
+			EventIndex: eventIndex,
 		}
 
 		_, err := k.ValidateInbound(ctx, &msg, false)
@@ -567,7 +577,7 @@ func TestKeeper_CheckMigration(t *testing.T) {
 		}
 
 		err := k.CheckIfTSSMigrationTransfer(ctx, &msg)
-		require.ErrorContains(t, err, "no Bitcoin net params for chain ID: 999")
+		require.ErrorContains(t, err, "no Bitcoin network params for chain ID: 999")
 	})
 
 	t.Run("fails if gateway is not observer ", func(t *testing.T) {

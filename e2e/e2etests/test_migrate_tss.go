@@ -7,7 +7,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/btcsuite/btcutil"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
@@ -20,11 +20,11 @@ import (
 )
 
 func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
-	r.SetBtcAddress(r.Name, false)
+	r.SetupBtcAddress(false)
 	stop := r.MineBlocksIfLocalBitcoin()
 	defer stop()
 
-	// Pause inbound procoessing for tss migration
+	// Pause inbound processing for tss migration
 	r.Logger.Info("Pause inbound  processing")
 	msg := observertypes.NewMsgDisableCCTX(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.EmergencyPolicyName),
@@ -47,6 +47,8 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	// Use fixed fee of 0.01 for migration
 	btcBalance = btcBalance - 0.01
 	btcChain := chains.BitcoinRegtest.ChainId
+
+	r.WaitForTSSGeneration(2)
 
 	//migrate btc funds
 	// #nosec G701 e2eTest - always in range

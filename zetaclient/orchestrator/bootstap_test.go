@@ -16,16 +16,20 @@ import (
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testrpc"
 )
 
-const solanaGatewayAddress = "2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s"
+const (
+	solanaGatewayAddress = "2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s"
+	tonGatewayAddress    = "0:997d889c815aeac21c47f86ae0e38383efc3c3463067582f6263ad48c5a1485b"
+	tonMainnet           = "https://ton.org/global-config.json"
+)
 
 func TestCreateSignerMap(t *testing.T) {
 	var (
-		ts         = metrics.NewTelemetryServer()
-		tss        = mocks.NewTSSMainnet()
+		tss        = mocks.NewTSS(t)
 		log        = zerolog.New(zerolog.NewTestWriter(t))
 		baseLogger = base.Logger{Std: log, Compliance: log}
 	)
@@ -39,16 +43,14 @@ func TestCreateSignerMap(t *testing.T) {
 		cfg := config.New(false)
 
 		cfg.EVMChainConfigs[chains.Ethereum.ChainId] = config.EVMConfig{
-			Chain:    chains.Ethereum,
-			Endpoint: mocks.EVMRPCEnabled,
+			Endpoint: testutils.MockEVMRPCEndpoint,
 		}
 
 		cfg.EVMChainConfigs[chains.Polygon.ChainId] = config.EVMConfig{
-			Chain:    chains.Polygon,
-			Endpoint: mocks.EVMRPCEnabled,
+			Endpoint: testutils.MockEVMRPCEndpoint,
 		}
 
-		cfg.BitcoinConfig = btcConfig
+		cfg.BTCChainConfigs[chains.BitcoinMainnet.ChainId] = btcConfig
 
 		// Given AppContext
 		app := zctx.New(cfg, nil, log)
@@ -61,7 +63,7 @@ func TestCreateSignerMap(t *testing.T) {
 		})
 
 		// ACT
-		signers, err := CreateSignerMap(ctx, tss, baseLogger, ts)
+		signers, err := CreateSignerMap(ctx, tss, baseLogger)
 
 		// ASSERT
 		assert.NoError(t, err)
@@ -79,7 +81,7 @@ func TestCreateSignerMap(t *testing.T) {
 			})
 
 			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, ts, &signers)
+			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
 
 			// ASSERT
 			assert.NoError(t, err)
@@ -98,7 +100,7 @@ func TestCreateSignerMap(t *testing.T) {
 			})
 
 			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, ts, &signers)
+			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
 
 			// ASSERT
 			assert.NoError(t, err)
@@ -119,7 +121,7 @@ func TestCreateSignerMap(t *testing.T) {
 			})
 
 			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, ts, &signers)
+			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
 
 			// ASSERT
 			assert.NoError(t, err)
@@ -139,7 +141,7 @@ func TestCreateSignerMap(t *testing.T) {
 			})
 
 			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, ts, &signers)
+			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
 
 			// ASSERT
 			assert.NoError(t, err)
@@ -161,7 +163,7 @@ func TestCreateSignerMap(t *testing.T) {
 			})
 
 			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, ts, &signers)
+			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
 
 			// ASSERT
 			assert.NoError(t, err)
@@ -178,7 +180,7 @@ func TestCreateSignerMap(t *testing.T) {
 			before := len(signers)
 
 			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, ts, &signers)
+			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
 
 			// ASSERT
 			assert.NoError(t, err)
@@ -192,7 +194,7 @@ func TestCreateSignerMap(t *testing.T) {
 func TestCreateChainObserverMap(t *testing.T) {
 	var (
 		ts         = metrics.NewTelemetryServer()
-		tss        = mocks.NewTSSMainnet()
+		tss        = mocks.NewTSS(t)
 		log        = zerolog.New(zerolog.NewTestWriter(t))
 		baseLogger = base.Logger{Std: log, Compliance: log}
 		client     = mocks.NewZetacoreClient(t)
@@ -210,24 +212,26 @@ func TestCreateChainObserverMap(t *testing.T) {
 		evmServer := testrpc.NewEVMServer(t)
 		evmServer.SetBlockNumber(100)
 
-		// Given generic SOL RPC
+		// Given SOL config
 		_, solConfig := testrpc.NewSolanaServer(t)
+
+		// Given TON config
+		tonConfig := config.TONConfig{LiteClientConfigURL: tonMainnet}
 
 		// Given a zetaclient config with ETH, MATIC, and BTC chains
 		cfg := config.New(false)
 
 		cfg.EVMChainConfigs[chains.Ethereum.ChainId] = config.EVMConfig{
-			Chain:    chains.Ethereum,
 			Endpoint: evmServer.Endpoint,
 		}
 
 		cfg.EVMChainConfigs[chains.Polygon.ChainId] = config.EVMConfig{
-			Chain:    chains.Polygon,
 			Endpoint: evmServer.Endpoint,
 		}
 
-		cfg.BitcoinConfig = btcConfig
+		cfg.BTCChainConfigs[chains.BitcoinMainnet.ChainId] = btcConfig
 		cfg.SolanaConfig = solConfig
+		cfg.TONConfig = tonConfig
 
 		// Given AppContext
 		app := zctx.New(cfg, nil, log)
@@ -238,6 +242,7 @@ func TestCreateChainObserverMap(t *testing.T) {
 		mustUpdateAppContextChainParams(t, app, []chains.Chain{
 			chains.Ethereum,
 			chains.BitcoinMainnet,
+			chains.TONMainnet,
 		})
 
 		// ACT
@@ -248,11 +253,12 @@ func TestCreateChainObserverMap(t *testing.T) {
 		assert.NotEmpty(t, observers)
 
 		// Okay, now we want to check that signers for EVM and BTC were created
-		assert.Equal(t, 2, len(observers))
+		assert.Equal(t, 3, len(observers))
 		hasObserver(t, observers, chains.Ethereum.ChainId)
 		hasObserver(t, observers, chains.BitcoinMainnet.ChainId)
+		hasObserver(t, observers, chains.TONMainnet.ChainId)
 
-		t.Run("Add polygon in the runtime", func(t *testing.T) {
+		t.Run("Add polygon and remove TON in the runtime", func(t *testing.T) {
 			// ARRANGE
 			mustUpdateAppContextChainParams(t, app, []chains.Chain{
 				chains.Ethereum, chains.BitcoinMainnet, chains.Polygon,
@@ -264,7 +270,7 @@ func TestCreateChainObserverMap(t *testing.T) {
 			// ASSERT
 			assert.NoError(t, err)
 			assert.Equal(t, 1, added)
-			assert.Equal(t, 0, removed)
+			assert.Equal(t, 1, removed)
 
 			hasObserver(t, observers, chains.Ethereum.ChainId)
 			hasObserver(t, observers, chains.Polygon.ChainId)
@@ -388,6 +394,46 @@ func TestCreateChainObserverMap(t *testing.T) {
 	})
 }
 
+func TestBtcDatabaseFileName(t *testing.T) {
+	tests := []struct {
+		name     string
+		chain    chains.Chain
+		expected string
+	}{
+		{
+			name:     "should use legacy file name for bitcoin mainnet",
+			chain:    chains.BitcoinMainnet,
+			expected: "btc_chain_client",
+		},
+		{
+			name:     "should use legacy file name for bitcoin testnet3",
+			chain:    chains.BitcoinTestnet,
+			expected: "btc_chain_client",
+		},
+		{
+			name:     "should use new file name for bitcoin regtest",
+			chain:    chains.BitcoinRegtest,
+			expected: "btc_chain_client_btc_regtest",
+		},
+		{
+			name:     "should use new file name for bitcoin signet",
+			chain:    chains.BitcoinSignetTestnet,
+			expected: "btc_chain_client_btc_signet_testnet",
+		},
+		{
+			name:     "should use new file name for bitcoin testnet4",
+			chain:    chains.BitcoinTestnet4,
+			expected: "btc_chain_client_btc_testnet4",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expected, btcDatabaseFileName(tt.chain))
+		})
+	}
+}
+
 func chainParams(supportedChains []chains.Chain) ([]chains.Chain, map[int64]*observertypes.ChainParams) {
 	params := make(map[int64]*observertypes.ChainParams)
 
@@ -399,6 +445,11 @@ func chainParams(supportedChains []chains.Chain) ([]chains.Chain, map[int64]*obs
 			continue
 		}
 
+		if chains.IsEVMChain(chainID, nil) {
+			params[chainID] = ptr.Ptr(mocks.MockChainParams(chainID, 100))
+			continue
+		}
+
 		if chains.IsSolanaChain(chainID, nil) {
 			p := mocks.MockChainParams(chainID, 100)
 			p.GatewayAddress = solanaGatewayAddress
@@ -406,10 +457,14 @@ func chainParams(supportedChains []chains.Chain) ([]chains.Chain, map[int64]*obs
 			continue
 		}
 
-		if chains.IsEVMChain(chainID, nil) {
-			params[chainID] = ptr.Ptr(mocks.MockChainParams(chainID, 100))
+		if chains.IsTONChain(chainID, nil) {
+			p := mocks.MockChainParams(chainID, 100)
+			p.GatewayAddress = tonGatewayAddress
+			params[chainID] = &p
 			continue
 		}
+
+		panic("unknown chain: " + chain.String())
 	}
 
 	return supportedChains, params
@@ -427,11 +482,9 @@ func mustUpdateAppContext(
 	chainParams map[int64]*observertypes.ChainParams,
 ) {
 	err := app.Update(
-		app.GetKeygen(),
 		chains,
 		additionalChains,
 		chainParams,
-		"tssPubKey",
 		app.GetCrossChainFlags(),
 	)
 

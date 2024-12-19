@@ -15,7 +15,7 @@ func TestSolanaDepositRestricted(r *runner.E2ERunner, args []string) {
 	receiverRestricted := ethcommon.HexToAddress(args[0])
 
 	// parse deposit amount (in lamports)
-	depositAmount := parseBigInt(r, args[1])
+	depositAmount := utils.ParseBigInt(r, args[1])
 
 	// execute the deposit transaction
 	sig := r.SOLDepositAndCall(nil, receiverRestricted, depositAmount, nil)

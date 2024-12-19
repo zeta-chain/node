@@ -6,6 +6,7 @@ import (
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/txscript"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
@@ -23,7 +24,7 @@ func GetBtcEventWithWitness(
 	blockNumber uint64,
 	logger zerolog.Logger,
 	netParams *chaincfg.Params,
-	depositorFee float64,
+	feeCalculator bitcoin.DepositorFeeCalculator,
 ) (*BTCInboundEvent, error) {
 	if len(tx.Vout) < 1 {
 		logger.Debug().Msgf("no output %s", tx.Txid)
@@ -37,6 +38,12 @@ func GetBtcEventWithWitness(
 	if err := isValidRecipient(tx.Vout[0].ScriptPubKey.Hex, tssAddress, netParams); err != nil {
 		logger.Debug().Msgf("irrelevant recipient %s for tx %s, err: %s", tx.Vout[0].ScriptPubKey.Hex, tx.Txid, err)
 		return nil, nil
+	}
+
+	// calculate depositor fee
+	depositorFee, err := feeCalculator(client, &tx, netParams)
+	if err != nil {
+		return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
 	}
 
 	isAmountValid, amount := isValidAmount(tx.Vout[0].Value, depositorFee)
@@ -58,7 +65,7 @@ func GetBtcEventWithWitness(
 		memo = candidate
 		logger.Debug().Msgf("GetBtcEventWithWitness: found inscription memo %s in tx %s", hex.EncodeToString(memo), tx.Txid)
 	} else {
-		return nil, errors.Errorf("error getting memo for inbound: %s", tx.Txid)
+		return nil, nil
 	}
 
 	// event found, get sender address
@@ -67,13 +74,20 @@ func GetBtcEventWithWitness(
 		return nil, errors.Wrapf(err, "error getting sender address for inbound: %s", tx.Txid)
 	}
 
+	// skip this tx and move on (e.g., due to unknown script type)
+	// we don't know whom to refund if this tx gets reverted in zetacore
+	if fromAddress == "" {
+		return nil, nil
+	}
+
 	return &BTCInboundEvent{
-		FromAddress: fromAddress,
-		ToAddress:   tssAddress,
-		Value:       amount,
-		MemoBytes:   memo,
-		BlockNumber: blockNumber,
-		TxHash:      tx.Txid,
+		FromAddress:  fromAddress,
+		ToAddress:    tssAddress,
+		Value:        amount,
+		DepositorFee: depositorFee,
+		MemoBytes:    memo,
+		BlockNumber:  blockNumber,
+		TxHash:       tx.Txid,
 	}, nil
 }
 
@@ -97,7 +111,7 @@ func ParseScriptFromWitness(witness []string, logger zerolog.Logger) []byte {
 	// If there are at least two witness elements, and the first byte of
 	// the last element is 0x50, this last element is called annex a
 	// and is removed from the witness stack.
-	if length >= 2 && len(lastElement) > 0 && lastElement[0] == 0x50 {
+	if length >= 2 && len(lastElement) > 0 && lastElement[0] == txscript.TaprootAnnexTag {
 		// account for the extra item removed from the end
 		witness = witness[:length-1]
 	}
@@ -123,7 +137,7 @@ func tryExtractOpRet(tx btcjson.TxRawResult, logger zerolog.Logger) []byte {
 		return nil
 	}
 
-	memo, found, err := bitcoin.DecodeOpReturnMemo(tx.Vout[1].ScriptPubKey.Hex, tx.Txid)
+	memo, found, err := bitcoin.DecodeOpReturnMemo(tx.Vout[1].ScriptPubKey.Hex)
 	if err != nil {
 		logger.Error().Err(err).Msgf("tryExtractOpRet: error decoding OP_RETURN memo: %s", tx.Vout[1].ScriptPubKey.Hex)
 		return nil

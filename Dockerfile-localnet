@@ -1,6 +1,6 @@
 # syntax=ghcr.io/zeta-chain/docker-dockerfile:1.9-labs
 # check=error=true
-FROM ghcr.io/zeta-chain/golang:1.22.5-bookworm AS base-build
+FROM ghcr.io/zeta-chain/golang:1.22.7-bookworm AS base-build
 
 ENV GOPATH=/go
 ENV GOOS=linux
@@ -19,14 +19,18 @@ COPY go.sum .
 RUN go mod download
 COPY version.sh .
 COPY --exclude=*.sh --exclude=*.md --exclude=*.yml . .
+ARG NODE_VERSION
+ARG NODE_COMMIT
 
-RUN --mount=type=cache,target="/root/.cache/go-build" make install
-RUN --mount=type=cache,target="/root/.cache/go-build" make install-zetae2e
+RUN --mount=type=cache,target="/root/.cache/go-build" \
+    NODE_VERSION=${NODE_VERSION} \
+    NODE_COMMIT=${NODE_COMMIT} \
+    make install install-zetae2e
 
-FROM ghcr.io/zeta-chain/golang:1.22.5-bookworm AS cosmovisor-build
+FROM ghcr.io/zeta-chain/golang:1.22.7-bookworm AS cosmovisor-build
 RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.6.0
 
-FROM ghcr.io/zeta-chain/golang:1.22.5-bookworm AS base-runtime
+FROM ghcr.io/zeta-chain/golang:1.22.7-bookworm AS base-runtime
 
 RUN apt update && \
     apt install -yq jq yq curl tmux python3 openssh-server iputils-ping iproute2 bind9-host && \
@@ -59,11 +63,12 @@ EXPOSE 22
 FROM base-runtime AS latest-runtime
 
 COPY --from=cosmovisor-build /go/bin/cosmovisor /usr/local/bin
-COPY --from=latest-build /go/bin/zetacored /go/bin/zetaclientd /go/bin/zetaclientd-supervisor /go/bin/zetae2e /usr/local/bin
+COPY --from=latest-build /go/bin/zetacored /go/bin/zetaclientd /go/bin/zetaclientd-supervisor /go/bin/zetae2e /usr/local/bin/
 
 # Optional old version build (from source). This old build is used as the genesis version in the upgrade tests. 
 # Use --target latest-runtime to skip.
-FROM base-build AS old-build-source
+# you must have already built the latest image (which the Makefile does)
+FROM zetanode:latest AS old-build-source
 
 ARG OLD_VERSION
 RUN git clone https://github.com/zeta-chain/node.git
@@ -75,18 +80,17 @@ RUN cd node && make install
 FROM base-runtime AS old-runtime-source
 
 COPY --from=cosmovisor-build /go/bin/cosmovisor /usr/local/bin
-COPY --from=old-build-source /go/bin/zetacored /go/bin/zetaclientd /usr/local/bin
+COPY --from=old-build-source /go/bin/zetacored /go/bin/zetaclientd /usr/local/bin/
 COPY --from=latest-build /go/bin/zetaclientd-supervisor /usr/local/bin
 
 # Optional old version build (from binary).
 # Use --target latest-runtime to skip.
-FROM base-runtime AS old-runtime
+# you must have already built the latest image (which the Makefile does)
+FROM zetanode:latest AS old-runtime
 
 ARG OLD_VERSION
 ARG BUILDARCH
 
-COPY --from=cosmovisor-build /go/bin/cosmovisor /usr/local/bin
-COPY --from=latest-build /go/bin/zetaclientd-supervisor /usr/local/bin
 RUN curl -Lo /usr/local/bin/zetacored ${OLD_VERSION}/zetacored-linux-${BUILDARCH} && \
     chmod 755 /usr/local/bin/zetacored && \
     curl -Lo /usr/local/bin/zetaclientd ${OLD_VERSION}/zetaclientd-linux-${BUILDARCH} && \

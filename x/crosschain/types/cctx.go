@@ -10,6 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -40,10 +41,19 @@ func (m CrossChainTx) GetEVMAbortAddress() ethcommon.Address {
 // OutboundParams[0] is the original outbound, if it reverts, then
 // OutboundParams[1] is the new outbound.
 func (m CrossChainTx) GetCurrentOutboundParam() *OutboundParams {
+	// TODO: Deprecated (V21) gasLimit should be removed and CallOptions should be mandatory
+	// this should never happen, but since it is optional, adding it just in case
 	if len(m.OutboundParams) == 0 {
-		return &OutboundParams{}
+		return &OutboundParams{CallOptions: &CallOptions{}}
 	}
-	return m.OutboundParams[len(m.OutboundParams)-1]
+
+	outboundParams := m.OutboundParams[len(m.OutboundParams)-1]
+	if outboundParams.CallOptions == nil {
+		outboundParams.CallOptions = &CallOptions{
+			GasLimit: outboundParams.GasLimit,
+		}
+	}
+	return outboundParams
 }
 
 // IsCurrentOutboundRevert returns true if the current outbound is the revert tx.
@@ -105,10 +115,21 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 		return fmt.Errorf("cannot revert before trying to process an outbound tx")
 	}
 
+	// in protocol contract V1, developers can specify a revert address for Bitcoin chains
+	// TODO: remove this V1 logic after switching Bitcoin to V2 architecture
+	// https://github.com/zeta-chain/node/issues/2711
+	revertReceiver := m.InboundParams.Sender
+	if m.ProtocolContractVersion == ProtocolContractVersion_V1 &&
+		chains.IsBitcoinChain(m.InboundParams.SenderChainId, []chains.Chain{}) {
+		revertAddress, valid := m.RevertOptions.GetBTCRevertAddress(m.InboundParams.SenderChainId)
+		if valid {
+			revertReceiver = revertAddress
+		}
+	}
+
 	// in protocol contract V2, developers can specify a specific address to receive the revert
 	// if not specified, the sender address is used
 	// note: this option is current only support for EVM type chains
-	revertReceiver := m.InboundParams.Sender
 	if m.ProtocolContractVersion == ProtocolContractVersion_V2 {
 		revertAddress, valid := m.RevertOptions.GetEVMRevertAddress()
 		if valid {
@@ -120,8 +141,10 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 		Receiver:        revertReceiver,
 		ReceiverChainId: m.InboundParams.SenderChainId,
 		Amount:          m.GetCurrentOutboundParam().Amount,
-		GasLimit:        gasLimit,
-		TssPubkey:       m.GetCurrentOutboundParam().TssPubkey,
+		CallOptions: &CallOptions{
+			GasLimit: gasLimit,
+		},
+		TssPubkey: m.GetCurrentOutboundParam().TssPubkey,
 	}
 	// The original outbound has been finalized, the new outbound is pending
 	m.GetCurrentOutboundParam().TxFinalizationStatus = TxFinalizationStatus_Executed
@@ -160,28 +183,28 @@ func (m *CrossChainTx) AddOutbound(
 }
 
 // SetAbort sets the CCTX status to Aborted with the given error message.
-func (m CrossChainTx) SetAbort(message string) {
-	m.CctxStatus.ChangeStatus(CctxStatus_Aborted, message)
+func (m CrossChainTx) SetAbort(statusMsg, errorMsg string) {
+	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_Aborted, statusMsg, errorMsg)
 }
 
 // SetPendingRevert sets the CCTX status to PendingRevert with the given error message.
-func (m CrossChainTx) SetPendingRevert(message string) {
-	m.CctxStatus.ChangeStatus(CctxStatus_PendingRevert, message)
+func (m CrossChainTx) SetPendingRevert(statusMsg, errorMsg string) {
+	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_PendingRevert, statusMsg, errorMsg)
 }
 
 // SetPendingOutbound sets the CCTX status to PendingOutbound with the given error message.
-func (m CrossChainTx) SetPendingOutbound(message string) {
-	m.CctxStatus.ChangeStatus(CctxStatus_PendingOutbound, message)
+func (m CrossChainTx) SetPendingOutbound(statusMsg string) {
+	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_PendingOutbound, statusMsg, "")
 }
 
 // SetOutboundMined sets the CCTX status to OutboundMined with the given error message.
-func (m CrossChainTx) SetOutboundMined(message string) {
-	m.CctxStatus.ChangeStatus(CctxStatus_OutboundMined, message)
+func (m CrossChainTx) SetOutboundMined(statusMsg string) {
+	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_OutboundMined, statusMsg, "")
 }
 
 // SetReverted sets the CCTX status to Reverted with the given error message.
-func (m CrossChainTx) SetReverted(message string) {
-	m.CctxStatus.ChangeStatus(CctxStatus_Reverted, message)
+func (m CrossChainTx) SetReverted(statusMsg, errorMsg string) {
+	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_Reverted, statusMsg, errorMsg)
 }
 
 func (m CrossChainTx) GetCCTXIndexBytes() ([32]byte, error) {
@@ -226,14 +249,18 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		FinalizedZetaHeight:    0,
 		BallotIndex:            index,
 		CoinType:               msg.CoinType,
+		IsCrossChainCall:       msg.IsCrossChainCall,
 	}
 
 	outboundParams := &OutboundParams{
-		Receiver:               msg.Receiver,
-		ReceiverChainId:        msg.ReceiverChain,
-		Hash:                   "",
-		TssNonce:               0,
-		GasLimit:               msg.GasLimit,
+		Receiver:        msg.Receiver,
+		ReceiverChainId: msg.ReceiverChain,
+		Hash:            "",
+		TssNonce:        0,
+		CallOptions: &CallOptions{
+			IsArbitraryCall: msg.CallOptions.IsArbitraryCall,
+			GasLimit:        msg.CallOptions.GasLimit,
+		},
 		GasPrice:               "",
 		GasPriorityFee:         "",
 		BallotIndex:            "",
@@ -245,6 +272,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 	status := &Status{
 		Status:              CctxStatus_PendingInbound,
 		StatusMessage:       "",
+		ErrorMessage:        "",
 		CreatedTimestamp:    ctx.BlockHeader().Time.Unix(),
 		LastUpdateTimestamp: ctx.BlockHeader().Time.Unix(),
 		IsAbortRefunded:     false,

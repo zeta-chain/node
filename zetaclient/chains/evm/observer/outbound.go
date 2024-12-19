@@ -44,7 +44,7 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
 	ticker, err := clienttypes.NewDynamicTicker(
 		fmt.Sprintf("EVM_WatchOutbound_%d", ob.Chain().ChainId),
-		ob.GetChainParams().OutboundTicker,
+		ob.ChainParams().OutboundTicker,
 	)
 	if err != nil {
 		ob.Logger().Outbound.Error().Err(err).Msg("error creating ticker")
@@ -72,7 +72,7 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 					Msgf("WatchOutbound: error ProcessOutboundTrackers for chain %d", chainID)
 			}
 
-			ticker.UpdateInterval(ob.GetChainParams().OutboundTicker, ob.Logger().Outbound)
+			ticker.UpdateInterval(ob.ChainParams().OutboundTicker, ob.Logger().Outbound)
 		case <-ob.StopChannel():
 			ob.Logger().Outbound.Info().Msg("WatchOutbound: stopped")
 			return nil
@@ -427,6 +427,43 @@ func ParseAndCheckWithdrawnEvent(
 	return nil, errors.New("no ERC20 Withdrawn event found")
 }
 
+// FilterTSSOutbound filters the outbounds from TSS address to supplement outbound trackers
+func (ob *Observer) FilterTSSOutbound(ctx context.Context, startBlock, toBlock uint64) {
+	// filters the outbounds from TSS address block by block
+	for bn := startBlock; bn <= toBlock; bn++ {
+		ob.FilterTSSOutboundInBlock(ctx, bn)
+	}
+}
+
+// FilterTSSOutboundInBlock filters the outbounds in a single block to supplement outbound trackers
+func (ob *Observer) FilterTSSOutboundInBlock(ctx context.Context, blockNumber uint64) {
+	// query block and ignore error (we don't rescan as we are only supplementing outbound trackers)
+	block, err := ob.GetBlockByNumberCached(blockNumber)
+	if err != nil {
+		ob.Logger().
+			Outbound.Error().
+			Err(err).
+			Msgf("error getting block %d for chain %d", blockNumber, ob.Chain().ChainId)
+		return
+	}
+
+	for i := range block.Transactions {
+		tx := block.Transactions[i]
+		if ethcommon.HexToAddress(tx.From) == ob.TSS().PubKey().AddressEVM() {
+			// #nosec G115 nonce always positive
+			nonce := uint64(tx.Nonce)
+			if !ob.IsTxConfirmed(nonce) {
+				if receipt, txx, ok := ob.checkConfirmedTx(ctx, tx.Hash, nonce); ok {
+					ob.SetTxNReceipt(nonce, receipt, txx)
+					ob.Logger().
+						Outbound.Info().
+						Msgf("TSS outbound detected on chain %d nonce %d tx %s", ob.Chain().ChainId, nonce, tx.Hash)
+				}
+			}
+		}
+	}
+}
+
 // checkConfirmedTx checks if a txHash is confirmed
 // returns (receipt, transaction, true) if confirmed or (nil, nil, false) otherwise
 func (ob *Observer) checkConfirmedTx(
@@ -464,33 +501,20 @@ func (ob *Observer) checkConfirmedTx(
 	// check tx sender and nonce
 	signer := ethtypes.NewLondonSigner(big.NewInt(ob.Chain().ChainId))
 	from, err := signer.Sender(transaction)
-	if err != nil {
+	switch {
+	case err != nil:
 		logger.Error().Err(err).Msg("local recovery of sender address failed")
 		return nil, nil, false
-	}
-	if from != ob.TSS().EVMAddress() { // must be TSS address
-		// If from is not TSS address, check if it is one of the previous TSS addresses We can still try to confirm a tx which was broadcast by an old TSS
-		// This is to handle situations where the outbound has already been broad-casted by an older TSS address and the zetacore is waiting for the all the required block confirmations
-		// to go through before marking the cctx into a finalized state
-
-		// TODO : improve this logic to verify that the correct TSS address is the from address.
-		// https://github.com/zeta-chain/node/issues/2487
-		logger.Warn().
-			Msgf("tx sender %s is not matching current TSS address %s", from.String(), ob.TSS().EVMAddress().String())
-		addressList := ob.TSS().EVMAddressList()
-		isOldTssAddress := false
-		for _, addr := range addressList {
-			if from == addr {
-				isOldTssAddress = true
-			}
-		}
-		if !isOldTssAddress {
-			logger.Error().Msgf("tx sender %s is not matching any of the TSS addresses", from.String())
-			return nil, nil, false
-		}
-	}
-	if transaction.Nonce() != nonce { // must match tracker nonce
-		logger.Error().Msgf("tx nonce %d is not matching tracker nonce", nonce)
+	case from != ob.TSS().PubKey().AddressEVM():
+		// might be false positive during TSS upgrade for unconfirmed txs
+		// Make sure all deposits/withdrawals are paused during TSS upgrade
+		logger.Error().Str("tx.sender", from.String()).Msgf("tx sender is not TSS addresses")
+		return nil, nil, false
+	case transaction.Nonce() != nonce:
+		logger.Error().
+			Uint64("tx.nonce", transaction.Nonce()).
+			Uint64("tracker.nonce", nonce).
+			Msg("tx nonce is not matching tracker nonce")
 		return nil, nil, false
 	}
 

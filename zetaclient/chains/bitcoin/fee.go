@@ -8,13 +8,11 @@ import (
 
 	"github.com/btcsuite/btcd/blockchain"
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcutil"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	clientcommon "github.com/zeta-chain/node/zetaclient/common"
@@ -44,13 +42,6 @@ const (
 
 	// feeRateCountBackBlocks is the default number of blocks to look back for fee rate estimation
 	feeRateCountBackBlocks = 2
-
-	// DynamicDepositorFeeHeight is the mainnet height from which dynamic depositor fee V1 is applied
-	DynamicDepositorFeeHeight = 834500
-
-	// DynamicDepositorFeeHeightV2 is the mainnet height from which dynamic depositor fee V2 is applied
-	// Height 863400 is approximately a month away (2024-09-28) from the time of writing, allowing enough time for the upgrade
-	DynamicDepositorFeeHeightV2 = 863400
 )
 
 var (
@@ -64,6 +55,9 @@ var (
 	// default depositor fee calculation is based on a fixed fee rate of 20 sat/byte just for simplicity.
 	DefaultDepositorFee = DepositorFee(defaultDepositorFeeRate)
 )
+
+// DepositorFeeCalculator is a function type to calculate the Bitcoin depositor fee
+type DepositorFeeCalculator func(interfaces.BTCRPCClient, *btcjson.TxRawResult, *chaincfg.Params) (float64, error)
 
 // FeeRateToSatPerByte converts a fee rate in BTC/KB to sat/byte.
 func FeeRateToSatPerByte(rate float64) *big.Int {
@@ -112,7 +106,7 @@ func EstimateOutboundSize(numInputs uint64, payees []btcutil.Address) (uint64, e
 // GetOutputSizeByAddress returns the size of a tx output in bytes by the given address
 func GetOutputSizeByAddress(to btcutil.Address) (uint64, error) {
 	switch addr := to.(type) {
-	case *chains.AddressTaproot:
+	case *btcutil.AddressTaproot:
 		if addr == nil {
 			return 0, nil
 		}
@@ -226,37 +220,8 @@ func CalcBlockAvgFeeRate(blockVb *btcjson.GetBlockVerboseTxResult, netParams *ch
 	return txsFees / int64(vBytes), nil
 }
 
-// CalcDepositorFee calculates the depositor fee for a given block
+// CalcDepositorFee calculates the depositor fee for a given tx result
 func CalcDepositorFee(
-	blockVb *btcjson.GetBlockVerboseTxResult,
-	chainID int64,
-	netParams *chaincfg.Params,
-	logger zerolog.Logger,
-) float64 {
-	// use default fee for regnet
-	if chains.IsBitcoinRegnet(chainID) {
-		return DefaultDepositorFee
-	}
-	// mainnet dynamic fee takes effect only after a planned upgrade height
-	if chains.IsBitcoinMainnet(chainID) && blockVb.Height < DynamicDepositorFeeHeight {
-		return DefaultDepositorFee
-	}
-
-	// calculate deposit fee rate
-	feeRate, err := CalcBlockAvgFeeRate(blockVb, netParams)
-	if err != nil {
-		feeRate = defaultDepositorFeeRate // use default fee rate if calculation fails, should not happen
-		logger.Error().Err(err).Msgf("cannot calculate fee rate for block %d", blockVb.Height)
-	}
-
-	// #nosec G115 always in range
-	feeRate = int64(float64(feeRate) * clientcommon.BTCOutboundGasPriceMultiplier)
-
-	return DepositorFee(feeRate)
-}
-
-// CalcDepositorFeeV2 calculates the depositor fee for a given tx result
-func CalcDepositorFeeV2(
 	rpcClient interfaces.BTCRPCClient,
 	rawResult *btcjson.TxRawResult,
 	netParams *chaincfg.Params,

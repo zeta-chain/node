@@ -55,7 +55,6 @@ func NewObserver(
 		zetacoreClient,
 		tss,
 		base.DefaultBlockCacheSize,
-		base.DefaultHeaderCacheSize,
 		ts,
 		db,
 		logger,
@@ -65,7 +64,7 @@ func NewObserver(
 	}
 
 	// parse gateway ID and PDA
-	gatewayID, pda, err := contracts.ParseGatewayIDAndPda(chainParams.GatewayAddress)
+	gatewayID, pda, err := contracts.ParseGatewayWithPDA(chainParams.GatewayAddress)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
 	}
@@ -84,35 +83,9 @@ func NewObserver(
 	return ob, nil
 }
 
-// SolClient returns the solana rpc client
-func (ob *Observer) SolClient() interfaces.SolanaRPCClient {
-	return ob.solClient
-}
-
-// WithSolClient attaches a new solana rpc client to the observer
-func (ob *Observer) WithSolClient(client interfaces.SolanaRPCClient) {
-	ob.solClient = client
-}
-
-// SetChainParams sets the chain params for the observer
-// Note: chain params is accessed concurrently
-func (ob *Observer) SetChainParams(params observertypes.ChainParams) {
-	ob.Mu().Lock()
-	defer ob.Mu().Unlock()
-	ob.WithChainParams(params)
-}
-
-// GetChainParams returns the chain params for the observer
-// Note: chain params is accessed concurrently
-func (ob *Observer) GetChainParams() observertypes.ChainParams {
-	ob.Mu().Lock()
-	defer ob.Mu().Unlock()
-	return ob.ChainParams()
-}
-
 // Start starts the Go routine processes to observe the Solana chain
 func (ob *Observer) Start(ctx context.Context) {
-	if noop := ob.Observer.Start(); noop {
+	if ok := ob.Observer.Start(); !ok {
 		ob.Logger().Chain.Info().Msgf("observer is already started for chain %d", ob.Chain().ChainId)
 		return
 	}
@@ -130,6 +103,9 @@ func (ob *Observer) Start(ctx context.Context) {
 
 	// watch zetacore for Solana inbound trackers
 	bg.Work(ctx, ob.WatchInboundTracker, bg.WithName("WatchInboundTracker"), bg.WithLogger(ob.Logger().Inbound))
+
+	// watch RPC status of the Solana chain
+	bg.Work(ctx, ob.watchRPCStatus, bg.WithName("watchRPCStatus"), bg.WithLogger(ob.Logger().Chain))
 }
 
 // LoadLastTxScanned loads the last scanned tx from the database.

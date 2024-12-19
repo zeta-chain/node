@@ -2,26 +2,24 @@ package signer
 
 import (
 	"fmt"
+	"math/big"
+	"testing"
+
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/testutil/sample"
-	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
-	"math/big"
-	"testing"
 )
 
 func TestSigner_SignAdminTx(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	evmSigner, err := getNewEvmSigner(nil)
-	require.NoError(t, err)
+	evmSigner := newTestSuite(t)
 
 	// Setup txData struct
 	cctx := getCCTX(t)
 
-	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 
 	require.False(t, skip)
@@ -35,8 +33,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify tx signature
-		tss := mocks.NewTSSMainnet()
-		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		// Note: Revert tx calls erc20 custody contract with 0 gas token
@@ -56,8 +53,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify tx signature
-		tss := mocks.NewTSSMainnet()
-		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		// Note: Revert tx calls erc20 custody contract with 0 gas token
@@ -72,8 +68,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify tx signature
-		tss := mocks.NewTSSMainnet()
-		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		// Note: Revert tx calls erc20 custody contract with 0 gas token
@@ -87,8 +82,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify tx signature
-		tss := mocks.NewTSSMainnet()
-		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, txData.amount)
@@ -99,14 +93,10 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	tss := mocks.NewTSSMainnet()
-	evmSigner, err := getNewEvmSigner(tss)
-	require.NoError(t, err)
+	evmSigner := newTestSuite(t)
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-
-	require.NoError(t, err)
 
 	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 
@@ -120,8 +110,7 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 		require.NotNil(t, tx)
 
 		// Verify tx signature
-		tss := mocks.NewTSSMainnet()
-		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, zeroValue)
@@ -135,7 +124,7 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 
 	t.Run("signWhitelistERC20Cmd - should fail if keysign fails", func(t *testing.T) {
 		// Pause tss to make keysign fail
-		tss.Pause()
+		evmSigner.tss.Pause()
 
 		// Call signWhitelistERC20Cmd
 		tx, err := evmSigner.signWhitelistERC20Cmd(ctx, txData, sample.EthAddress().Hex())
@@ -148,14 +137,10 @@ func TestSigner_SignMigrateERC20CustodyFundsCmd(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	tss := mocks.NewTSSMainnet()
-	evmSigner, err := getNewEvmSigner(tss)
-	require.NoError(t, err)
+	evmSigner := newTestSuite(t)
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-
-	require.NoError(t, err)
 
 	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 
@@ -177,8 +162,7 @@ func TestSigner_SignMigrateERC20CustodyFundsCmd(t *testing.T) {
 		require.NotNil(t, tx)
 
 		// Verify tx signature
-		tss := mocks.NewTSSMainnet()
-		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, zeroValue)
@@ -194,7 +178,7 @@ func TestSigner_SignMigrateERC20CustodyFundsCmd(t *testing.T) {
 
 	t.Run("signMigrateERC20CustodyFundsCmd - should fail if keysign fails", func(t *testing.T) {
 		// Pause tss to make keysign fail
-		tss.Pause()
+		evmSigner.tss.Pause()
 
 		params := fmt.Sprintf(
 			"%s,%s,%s",
@@ -214,14 +198,11 @@ func TestSigner_SignUpdateERC20CustodyPauseStatusCmd(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	tss := mocks.NewTSSMainnet()
-	evmSigner, err := getNewEvmSigner(tss)
-	require.NoError(t, err)
+	evmSigner := newTestSuite(t)
 
 	// Setup txData struct
 	cctx := getCCTX(t)
 
-	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 
 	require.False(t, skip)
@@ -237,8 +218,7 @@ func TestSigner_SignUpdateERC20CustodyPauseStatusCmd(t *testing.T) {
 		require.NotNil(t, tx)
 
 		// Verify tx signature
-		tss := mocks.NewTSSMainnet()
-		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, zeroValue)
@@ -254,8 +234,7 @@ func TestSigner_SignUpdateERC20CustodyPauseStatusCmd(t *testing.T) {
 		require.NotNil(t, tx)
 
 		// Verify tx signature
-		tss := mocks.NewTSSMainnet()
-		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, zeroValue)
@@ -277,7 +256,7 @@ func TestSigner_SignUpdateERC20CustodyPauseStatusCmd(t *testing.T) {
 
 	t.Run("signUpdateERC20CustodyPauseStatusCmd - should fail if keysign fails", func(t *testing.T) {
 		// Pause tss to make keysign fail
-		tss.Pause()
+		evmSigner.tss.Pause()
 
 		params := constant.OptionPause
 
@@ -292,14 +271,11 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	tss := mocks.NewTSSMainnet()
-	evmSigner, err := getNewEvmSigner(tss)
-	require.NoError(t, err)
+	evmSigner := newTestSuite(t)
 
 	// Setup txData struct
 	cctx := getCCTX(t)
 
-	require.NoError(t, err)
 	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 
 	require.False(t, skip)
@@ -312,8 +288,7 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 		require.NotNil(t, tx)
 
 		// Verify tx signature
-		tss := mocks.NewTSSMainnet()
-		verifyTxSignature(t, tx, tss.Pubkey(), evmSigner.EvmSigner())
+		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 
 		// Verify tx body basics
 		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, txData.amount)
@@ -321,7 +296,7 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 
 	t.Run("signMigrateTssFundsCmd - should fail if keysign fails", func(t *testing.T) {
 		// Pause tss to make keysign fail
-		tss.Pause()
+		evmSigner.tss.Pause()
 
 		// Call signMigrateTssFundsCmd
 		tx, err := evmSigner.signMigrateTssFundsCmd(ctx, txData)

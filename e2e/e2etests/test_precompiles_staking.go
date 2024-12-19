@@ -13,6 +13,58 @@ import (
 	"github.com/zeta-chain/node/precompiles/staking"
 )
 
+func TestPrecompilesStakingIsDisabled(r *runner.E2ERunner, args []string) {
+	require.Len(r, args, 0, "No arguments expected")
+
+	stakingContract, err := staking.NewIStaking(staking.ContractAddress, r.ZEVMClient)
+	require.NoError(r, err, "Failed to create staking contract caller")
+
+	previousGasLimit := r.ZEVMAuth.GasLimit
+	r.ZEVMAuth.GasLimit = 10000000
+	defer func() {
+		r.ZEVMAuth.GasLimit = previousGasLimit
+	}()
+
+	validators, err := stakingContract.GetAllValidators(&bind.CallOpts{})
+	require.NoError(r, err)
+	require.GreaterOrEqual(r, len(validators), 2)
+
+	CleanValidatorDelegations(r, stakingContract, validators)
+
+	// shares are 0 for both validators at the start
+	sharesBeforeVal1, err := stakingContract.GetShares(&bind.CallOpts{}, r.ZEVMAuth.From, validators[0].OperatorAddress)
+	require.NoError(r, err)
+	require.Equal(r, int64(0), sharesBeforeVal1.Int64())
+
+	sharesBeforeVal2, err := stakingContract.GetShares(&bind.CallOpts{}, r.ZEVMAuth.From, validators[1].OperatorAddress)
+	require.NoError(r, err)
+	require.Equal(r, int64(0), sharesBeforeVal2.Int64())
+
+	// stake 3 to validator1
+	tx, err := stakingContract.Stake(r.ZEVMAuth, r.ZEVMAuth.From, validators[0].OperatorAddress, big.NewInt(3))
+	require.NoError(r, err)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequiredTxFailed(r, receipt)
+
+	// unstake 1 from validator1
+	tx, err = stakingContract.Unstake(r.ZEVMAuth, r.ZEVMAuth.From, validators[0].OperatorAddress, big.NewInt(1))
+	require.NoError(r, err)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequiredTxFailed(r, receipt)
+
+	// move 1 stake from validator1 to validator2
+	tx, err = stakingContract.MoveStake(
+		r.ZEVMAuth,
+		r.ZEVMAuth.From,
+		validators[0].OperatorAddress,
+		validators[1].OperatorAddress,
+		big.NewInt(1),
+	)
+	require.NoError(r, err)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequiredTxFailed(r, receipt)
+}
+
 func TestPrecompilesStaking(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0, "No arguments expected")
 
@@ -28,6 +80,8 @@ func TestPrecompilesStaking(r *runner.E2ERunner, args []string) {
 	validators, err := stakingContract.GetAllValidators(&bind.CallOpts{})
 	require.NoError(r, err)
 	require.GreaterOrEqual(r, len(validators), 2)
+
+	CleanValidatorDelegations(r, stakingContract, validators)
 
 	// shares are 0 for both validators at the start
 	sharesBeforeVal1, err := stakingContract.GetShares(&bind.CallOpts{}, r.ZEVMAuth.From, validators[0].OperatorAddress)
@@ -108,4 +162,30 @@ func TestPrecompilesStaking(r *runner.E2ERunner, args []string) {
 	})
 	require.NoError(r, err)
 	require.Equal(r, int64(1), delegationAfterVal2.DelegationResponse.Balance.Amount.Int64())
+}
+
+// CleanValidatorDelegations unstakes all delegations from the given validators if delegations ar present
+func CleanValidatorDelegations(r *runner.E2ERunner, stakingContract *staking.IStaking, validators []staking.Validator) {
+	for _, validator := range validators {
+		delegator := sdk.AccAddress(r.ZEVMAuth.From.Bytes()).String()
+		delegation, err := r.StakingClient.Delegation(r.Ctx, &types.QueryDelegationRequest{
+			DelegatorAddr: delegator,
+			ValidatorAddr: validator.OperatorAddress,
+		})
+		if err != nil || delegation.DelegationResponse == nil {
+			continue
+		}
+
+		delegationAmount := delegation.DelegationResponse.Balance.Amount.Int64()
+		if delegationAmount > 0 && err == nil {
+			tx, err := stakingContract.Unstake(
+				r.ZEVMAuth,
+				r.ZEVMAuth.From,
+				validator.OperatorAddress,
+				big.NewInt(delegationAmount),
+			)
+			require.NoError(r, err)
+			utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+		}
+	}
 }

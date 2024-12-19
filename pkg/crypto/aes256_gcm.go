@@ -103,6 +103,7 @@ func DecryptAES256GCM(ciphertext []byte, password string) ([]byte, error) {
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
 
 	// decrypt the ciphertext
+	// #nosec G407 false positive https://github.com/securego/gosec/issues/1211
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
 		return nil, err

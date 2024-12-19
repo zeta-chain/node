@@ -38,7 +38,7 @@ func TestKeeper_GetParams(t *testing.T) {
 				BallotMaturityBlocks:        int64(emissionstypes.BallotMaturityBlocks),
 				BlockRewardAmount:           emissionstypes.BlockReward,
 			},
-			constainsErr: "slash amount cannot be less than 0",
+			constainsErr: "slash amount must not be negative",
 		},
 		{
 			name: "validator emission percentage too high",
@@ -122,7 +122,7 @@ func TestKeeper_GetParams(t *testing.T) {
 				BallotMaturityBlocks:        -100,
 				BlockRewardAmount:           emissionstypes.BlockReward,
 			},
-			constainsErr: "ballot maturity types must be gte 0",
+			constainsErr: "ballot maturity types must not be negative",
 		},
 		{
 			name: "block reward amount too low",
@@ -134,7 +134,7 @@ func TestKeeper_GetParams(t *testing.T) {
 				BallotMaturityBlocks:        int64(emissionstypes.BallotMaturityBlocks),
 				BlockRewardAmount:           sdkmath.LegacyMustNewDecFromStr("-10.00"),
 			},
-			constainsErr: "block reward amount cannot be less than 0",
+			constainsErr: "block reward amount must not be negative",
 		},
 	}
 	for _, tt := range tests {

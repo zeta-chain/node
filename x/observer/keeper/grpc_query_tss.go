@@ -4,6 +4,7 @@ import (
 	"context"
 	"sort"
 
+	"github.com/btcsuite/btcd/chaincfg"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -54,7 +55,7 @@ func (k Keeper) GetTssAddress(
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	bitcoinParams := chains.BitcoinRegnetParams
+	bitcoinParams := &chaincfg.RegressionNetParams
 	if req.BitcoinChainId != 0 {
 		bitcoinParams, err = chains.BitcoinNetParamsFromChainID(req.BitcoinChainId)
 		if err != nil {
@@ -88,7 +89,7 @@ func (k Keeper) GetTssAddressByFinalizedHeight(
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	bitcoinParams := chains.BitcoinRegnetParams
+	bitcoinParams := &chaincfg.RegressionNetParams
 	if req.BitcoinChainId != 0 {
 		bitcoinParams, err = chains.BitcoinNetParamsFromChainID(req.BitcoinChainId)
 		if err != nil {

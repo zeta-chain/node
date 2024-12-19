@@ -9,28 +9,45 @@ func (m *Status) AbortRefunded() {
 	m.StatusMessage = "CCTX aborted and Refunded"
 }
 
-// ChangeStatus changes the status of the cross chain transaction
-// empty msg does not overwrite old status message
-func (m *Status) ChangeStatus(newStatus CctxStatus, msg string) {
-	if len(msg) > 0 {
-		if m.StatusMessage != "" {
-			m.StatusMessage = fmt.Sprintf("%s : %s", m.StatusMessage, msg)
-		} else {
-			m.StatusMessage = msg
-		}
+// UpdateStatusAndErrorMessages transitions the Status and Error messages.
+func (m *Status) UpdateStatusAndErrorMessages(newStatus CctxStatus, statusMsg, errorMsg string) {
+	m.UpdateStatus(newStatus, statusMsg)
+
+	if errorMsg != "" {
+		m.UpdateErrorMessage(errorMsg)
 	}
-	if !m.ValidateTransition(newStatus) {
+}
+
+// UpdateStatus updates the cctx status and cctx.status.status_message.
+func (m *Status) UpdateStatus(newStatus CctxStatus, statusMsg string) {
+	if m.ValidateTransition(newStatus) {
+		m.StatusMessage = fmt.Sprintf("Status changed from %s to %s", m.Status.String(), newStatus.String())
+		m.Status = newStatus
+	} else {
 		m.StatusMessage = fmt.Sprintf(
-			"Failed to transition : OldStatus %s , NewStatus %s , MSG : %s :",
+			"Failed to transition status from %s to %s",
 			m.Status.String(),
 			newStatus.String(),
-			msg,
 		)
+
 		m.Status = CctxStatus_Aborted
-		return
 	}
-	m.Status = newStatus
-} //nolint:typecheck
+
+	if statusMsg != "" {
+		m.StatusMessage += fmt.Sprintf(": %s", statusMsg)
+	}
+}
+
+// UpdateErrorMessage updates cctx.status.error_message.
+func (m *Status) UpdateErrorMessage(errorMsg string) {
+	errMsg := errorMsg
+
+	if errMsg == "" {
+		errMsg = "unknown error"
+	}
+
+	m.ErrorMessage = errMsg
+}
 
 func (m *Status) ValidateTransition(newStatus CctxStatus) bool {
 	stateTransitionMap := stateTransitionMap()
@@ -68,4 +85,22 @@ func stateTransitionMap() map[CctxStatus][]CctxStatus {
 		CctxStatus_Reverted,
 	}
 	return stateTransitionMap
+}
+
+// IsTerminal returns true if the status is terminal.
+// The terminal states are
+// CctxStatus_Aborted
+// CctxStatus_Reverted
+// CctxStatus_OutboundMined
+func (c CctxStatus) IsTerminal() bool {
+	return c == CctxStatus_Aborted || c == CctxStatus_Reverted || c == CctxStatus_OutboundMined
+}
+
+// IsPending returns true if the status is pending.
+// The pending states are
+// CctxStatus_PendingInbound
+// CctxStatus_PendingOutbound
+// CctxStatus_PendingRevert
+func (c CctxStatus) IsPending() bool {
+	return !c.IsTerminal()
 }

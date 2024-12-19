@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/gagliardetto/solana-go"
-	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 
+	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
@@ -21,7 +21,7 @@ func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
 
 	ticker, err := clienttypes.NewDynamicTicker(
 		fmt.Sprintf("Solana_WatchInboundTracker_%d", ob.Chain().ChainId),
-		ob.GetChainParams().InboundTicker,
+		ob.ChainParams().InboundTicker,
 	)
 	if err != nil {
 		ob.Logger().Inbound.Err(err).Msg("error creating ticker")
@@ -42,7 +42,7 @@ func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
 					Err(err).
 					Msgf("WatchInboundTracker: error ProcessInboundTrackers for chain %d", ob.Chain().ChainId)
 			}
-			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.Logger().Inbound)
+			ticker.UpdateInterval(ob.ChainParams().InboundTicker, ob.Logger().Inbound)
 		case <-ob.StopChannel():
 			ob.Logger().Inbound.Info().Msgf("WatchInboundTracker stopped for chain %d", ob.Chain().ChainId)
 			return nil
@@ -61,10 +61,12 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	// process inbound trackers
 	for _, tracker := range trackers {
 		signature := solana.MustSignatureFromBase58(tracker.TxHash)
-		txResult, err := ob.solClient.GetTransaction(ctx, signature, &rpc.GetTransactionOpts{
-			Commitment: rpc.CommitmentFinalized,
-		})
-		if err != nil {
+		txResult, err := solanarpc.GetTransaction(ctx, ob.solClient, signature)
+		switch {
+		case errors.Is(err, solanarpc.ErrUnsupportedTxVersion):
+			ob.Logger().Inbound.Warn().Stringer("tx.signature", signature).Msg("skip inbound tracker hash")
+			continue
+		case err != nil:
 			return errors.Wrapf(err, "error GetTransaction for chain %d sig %s", chainID, signature)
 		}
 

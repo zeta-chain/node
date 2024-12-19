@@ -1,12 +1,13 @@
 package app
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"os"
+	"runtime/debug"
 	"time"
 
-	cosmoserrors "cosmossdk.io/errors"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -24,7 +25,6 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -143,26 +143,8 @@ func init() {
 }
 
 var (
-	AccountAddressPrefix = "zeta"
-	NodeDir              = ".zetacored"
-	DefaultNodeHome      = os.ExpandEnv("$HOME/") + NodeDir
-
-	// AddrLen is the allowed length (in bytes) for an address.
-	// NOTE: In the SDK, the default value is 255.
-	AddrLen = 20
-
-	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
-	Bech32PrefixAccAddr = AccountAddressPrefix
-	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
-	Bech32PrefixAccPub = AccountAddressPrefix + sdk.PrefixPublic
-	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
-	Bech32PrefixValAddr = AccountAddressPrefix + sdk.PrefixValidator + sdk.PrefixOperator
-	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
-	Bech32PrefixValPub = AccountAddressPrefix + sdk.PrefixValidator + sdk.PrefixOperator + sdk.PrefixPublic
-	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
-	Bech32PrefixConsAddr = AccountAddressPrefix + sdk.PrefixValidator + sdk.PrefixConsensus
-	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
-	Bech32PrefixConsPub = AccountAddressPrefix + sdk.PrefixValidator + sdk.PrefixConsensus + sdk.PrefixPublic
+	NodeDir         = ".zetacored"
+	DefaultNodeHome = os.ExpandEnv("$HOME/") + NodeDir
 )
 
 func getGovProposalHandlers() []govclient.ProposalHandler {
@@ -177,64 +159,33 @@ func getGovProposalHandlers() []govclient.ProposalHandler {
 	return govProposalHandlers
 }
 
-var (
-	ModuleBasics = module.NewBasicManager(
-		auth.AppModuleBasic{},
-		genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
-		bank.AppModuleBasic{},
-		//capability.AppModuleBasic{},
-		staking.AppModuleBasic{},
-		distr.AppModuleBasic{},
-		gov.NewAppModuleBasic(getGovProposalHandlers()),
-		params.AppModuleBasic{},
-		crisis.AppModuleBasic{},
-		slashing.AppModuleBasic{},
-		//ibc.AppModuleBasic{},
-		//ibctm.AppModuleBasic{},
-		upgrade.AppModuleBasic{},
-		evidence.AppModuleBasic{},
-		//transfer.AppModuleBasic{},
-		vesting.AppModuleBasic{},
-		consensus.AppModuleBasic{},
-		evm.AppModuleBasic{},
-		feemarket.AppModuleBasic{},
-		authoritymodule.AppModuleBasic{},
-		lightclientmodule.AppModuleBasic{},
-		crosschainmodule.AppModuleBasic{},
-		//ibccrosschain.AppModuleBasic{},
-		observermodule.AppModuleBasic{},
-		fungiblemodule.AppModuleBasic{},
-		emissionsmodule.AppModuleBasic{},
-		groupmodule.AppModuleBasic{},
-		authzmodule.AppModuleBasic{},
-	)
+type GenesisState map[string]json.RawMessage
 
-	// module account permissions
-	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:     nil,
-		distrtypes.ModuleName:          nil,
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:            {authtypes.Burner},
-		//ibctransfertypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
-		crosschaintypes.ModuleName: {authtypes.Minter, authtypes.Burner},
-		//ibccrosschaintypes.ModuleName:                   nil,
-		evmtypes.ModuleName:                             {authtypes.Minter, authtypes.Burner},
-		fungibletypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
-		emissionstypes.ModuleName:                       nil,
-		emissionstypes.UndistributedObserverRewardsPool: nil,
-		emissionstypes.UndistributedTssRewardsPool:      nil,
-	}
+// module account permissions
+var maccPerms = map[string][]string{
+	authtypes.FeeCollectorName:     nil,
+	distrtypes.ModuleName:          nil,
+	stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
+	stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+	govtypes.ModuleName:            {authtypes.Burner},
+	//ibctransfertypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
+	crosschaintypes.ModuleName: {authtypes.Minter, authtypes.Burner},
+	//ibccrosschaintypes.ModuleName:                   nil,
+	evmtypes.ModuleName:                             {authtypes.Minter, authtypes.Burner},
+	fungibletypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
+	emissionstypes.ModuleName:                       nil,
+	emissionstypes.UndistributedObserverRewardsPool: nil,
+	emissionstypes.UndistributedTSSRewardsPool:      nil,
+}
 
-	// module accounts that are NOT allowed to receive tokens
-	blockedReceivingModAcc = map[string]bool{
-		distrtypes.ModuleName:          true,
-		authtypes.FeeCollectorName:     true,
-		stakingtypes.BondedPoolName:    true,
-		stakingtypes.NotBondedPoolName: true,
-		govtypes.ModuleName:            true,
-	}
-)
+// module accounts that are NOT allowed to receive tokens
+var blockedReceivingModAcc = map[string]bool{
+	distrtypes.ModuleName:          true,
+	authtypes.FeeCollectorName:     true,
+	stakingtypes.BondedPoolName:    true,
+	stakingtypes.NotBondedPoolName: true,
+	govtypes.ModuleName:            true,
+}
 
 var (
 	_ runtime.AppI            = (*App)(nil)
@@ -259,6 +210,7 @@ type App struct {
 
 	mm           *module.Manager
 	sm           *module.SimulationManager
+	mb           module.BasicManager
 	configurator module.Configurator
 
 	// sdk keepers
@@ -400,8 +352,6 @@ func New(
 		authAddr,
 	)
 
-	logger.Info("bank keeper blocklist addresses", "addresses", app.BlockedAddrs())
-
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
 		keys[banktypes.StoreKey],
@@ -511,6 +461,8 @@ func New(
 		app.SlashingKeeper,
 		app.AuthorityKeeper,
 		app.LightclientKeeper,
+		app.BankKeeper,
+		app.AccountKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
@@ -570,6 +522,8 @@ func New(
 		precompiles.StatefulContracts(
 			&app.FungibleKeeper,
 			app.StakingKeeper,
+			app.BankKeeper,
+			app.DistrKeeper,
 			appCodec,
 			storetypes.TransientGasConfig(),
 		),
@@ -635,6 +589,7 @@ func New(
 	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper))
+
 	govConfig := govtypes.DefaultConfig()
 	govKeeper := govkeeper.NewKeeper(
 		appCodec,
@@ -646,11 +601,14 @@ func New(
 		govConfig,
 		authAddr,
 	)
+
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
 		// register governance hooks
 		),
 	)
+	// Set legacy router for backwards compatibility with gov v1beta1
+	// app.GovKeeper.SetLegacyRouter(govRouter)
 
 	// Create evidence Keeper for to register the IBC light client misbehaviour evidence route
 	evidenceKeeper := evidencekeeper.NewKeeper(
@@ -736,6 +694,8 @@ func New(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 	)
 
+	app.mb = ModuleBasics
+
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
 	// CanWithdrawInvariant invariant.
@@ -811,6 +771,10 @@ func New(
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
 
+	app.sm = module.NewSimulationManager(simulationModules(app, appCodec, skipGenesisInvariants)...)
+
+	app.sm.RegisterStoreDecoders()
+
 	// initialize stores
 	app.MountKVStores(keys)
 	app.MountTransientStores(tKeys)
@@ -875,6 +839,26 @@ func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 
 // InitChainer application update at chain initialization
 func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+	// InitChainErrorMessage is the error message displayed when trying to sync testnet or mainnet from block 1 using the latest binary.
+	const InitChainErrorMessage = `
+Unable to sync testnet or mainnet from block 1 using the latest version.
+Please use a snapshot to sync your node.
+Refer to the documentation for more information:
+https://www.zetachain.com/docs/nodes/start-here/syncing/`
+
+	// The defer is used to catch panics during InitChain
+	// and display a more meaningful message for people trying to sync a node from block 1 using the latest binary.
+	// We exit the process after displaying the message as we do not need to start a node with empty state.
+
+	defer func() {
+		if r := recover(); r != nil {
+			ctx.Logger().Error("panic occurred during InitGenesis", "error", r)
+			ctx.Logger().Debug("stack trace", "stack", string(debug.Stack()))
+			ctx.Logger().
+				Info(InitChainErrorMessage)
+			os.Exit(1)
+		}
+	}()
 	var genesisState GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
@@ -898,7 +882,7 @@ func (app *App) ModuleAccountAddrs() map[string]bool {
 	return modAccAddrs
 }
 
-// LegacyAmino returns SimApp's amino codec.
+// LegacyAmino returns app's amino codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
@@ -961,7 +945,7 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register legacy and grpc-gateway routes for all modules.
-	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	app.mb.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// register app's OpenAPI routes.
 	if apiConfig.Swagger {
@@ -1033,24 +1017,17 @@ func initParamsKeeper(
 	return paramsKeeper
 }
 
-// VerifyAddressFormat verifies the address is compatible with ethereum
-func VerifyAddressFormat(bz []byte) error {
-	if len(bz) == 0 {
-		return cosmoserrors.Wrap(sdkerrors.ErrUnknownAddress, "invalid address; cannot be empty")
-	}
-	if len(bz) != AddrLen {
-		return cosmoserrors.Wrapf(
-			sdkerrors.ErrUnknownAddress,
-			"invalid address length; got: %d, expect: %d", len(bz), AddrLen,
-		)
-	}
-
-	return nil
-}
-
 // SimulationManager implements the SimulationApp interface
 func (app *App) SimulationManager() *module.SimulationManager {
 	return app.sm
+}
+
+func (app *App) BasicManager() module.BasicManager {
+	return app.mb
+}
+
+func (app *App) ModuleManager() *module.Manager {
+	return app.mm
 }
 
 func (app *App) BlockedAddrs() map[string]bool {

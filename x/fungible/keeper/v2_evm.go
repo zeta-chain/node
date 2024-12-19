@@ -15,6 +15,9 @@ import (
 	"github.com/zeta-chain/node/x/fungible/types"
 )
 
+// gatewayGasLimit is the gas limit for the gateway functions
+var gatewayGasLimit = big.NewInt(1_000_000)
+
 // CallUpdateGatewayAddress calls the updateGatewayAddress function on the ZRC20 contract
 // function updateGatewayAddress(address addr)
 func (k Keeper) CallUpdateGatewayAddress(
@@ -33,7 +36,7 @@ func (k Keeper) CallUpdateGatewayAddress(
 		types.ModuleAddressEVM,
 		zrc20Address,
 		BigIntZero,
-		nil,
+		gatewayGasLimit,
 		true,
 		false,
 		"updateGatewayAddress",
@@ -83,7 +86,7 @@ func (k Keeper) CallDepositAndCallZRC20(
 		types.ModuleAddressEVM,
 		gatewayAddr,
 		BigIntZero,
-		nil,
+		gatewayGasLimit,
 		true,
 		false,
 		"depositAndCall0",
@@ -133,7 +136,7 @@ func (k Keeper) CallExecute(
 		types.ModuleAddressEVM,
 		gatewayAddr,
 		BigIntZero,
-		nil,
+		gatewayGasLimit,
 		true,
 		false,
 		"execute",
@@ -153,6 +156,7 @@ func (k Keeper) CallExecute(
 //	)
 func (k Keeper) CallExecuteRevert(
 	ctx sdk.Context,
+	inboundSender string,
 	zrc20 common.Address,
 	amount *big.Int,
 	target common.Address,
@@ -178,14 +182,15 @@ func (k Keeper) CallExecuteRevert(
 		types.ModuleAddressEVM,
 		gatewayAddr,
 		BigIntZero,
-		nil,
+		gatewayGasLimit,
 		true,
 		false,
 		"executeRevert",
 		target,
 		revert.RevertContext{
+			Sender:        common.HexToAddress(inboundSender),
 			Asset:         zrc20,
-			Amount:        amount.Uint64(),
+			Amount:        amount,
 			RevertMessage: message,
 		},
 	)
@@ -203,6 +208,7 @@ func (k Keeper) CallExecuteRevert(
 // )
 func (k Keeper) CallDepositAndRevert(
 	ctx sdk.Context,
+	inboundSender string,
 	zrc20 common.Address,
 	amount *big.Int,
 	target common.Address,
@@ -228,7 +234,7 @@ func (k Keeper) CallDepositAndRevert(
 		types.ModuleAddressEVM,
 		gatewayAddr,
 		BigIntZero,
-		nil,
+		gatewayGasLimit,
 		true,
 		false,
 		"depositAndRevert",
@@ -236,8 +242,9 @@ func (k Keeper) CallDepositAndRevert(
 		amount,
 		target,
 		revert.RevertContext{
+			Sender:        common.HexToAddress(inboundSender),
 			Asset:         zrc20,
-			Amount:        amount.Uint64(),
+			Amount:        amount,
 			RevertMessage: message,
 		},
 	)

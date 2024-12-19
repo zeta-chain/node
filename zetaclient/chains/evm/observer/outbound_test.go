@@ -6,6 +6,7 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -18,25 +19,11 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
 )
 
-// getContractsByChainID is a helper func to get contracts and addresses by chainID
-func getContractsByChainID(
-	t *testing.T,
-	chainID int64,
-) (*zetaconnector.ZetaConnectorNonEth, ethcommon.Address, *erc20custody.ERC20Custody, ethcommon.Address) {
-	connector := mocks.MockConnectorNonEth(t, chainID)
-	connectorAddress := testutils.ConnectorAddresses[chainID]
-	custody := mocks.MockERC20Custody(t, chainID)
-	custodyAddress := testutils.CustodyAddresses[chainID]
-	return connector, connectorAddress, custody, custodyAddress
-}
-
 func Test_IsOutboundProcessed(t *testing.T) {
 	// load archived outbound receipt that contains ZetaReceived event
 	// https://etherscan.io/tx/0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f
-	chain := chains.Ethereum
 	chainID := chains.Ethereum.ChainId
 	nonce := uint64(9718)
-	chainParam := mocks.MockChainParams(chain.ChainId, 1)
 	outboundHash := "0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f"
 	cctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 	receipt := testutils.LoadEVMOutboundReceipt(
@@ -59,7 +46,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 
 	t.Run("should post vote and return true if outbound is processed", func(t *testing.T) {
 		// create evm observer and set outbound and receipt
-		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
+		ob := newTestSuite(t)
 		ob.SetTxNReceipt(nonce, receipt, outbound)
 
 		// post outbound vote
@@ -75,7 +62,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		cctx.InboundParams.Sender = sample.EthAddress().Hex()
 
 		// create evm observer and set outbound and receipt
-		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
+		ob := newTestSuite(t)
 		ob.SetTxNReceipt(nonce, receipt, outbound)
 
 		// modify compliance config to restrict sender address
@@ -92,18 +79,18 @@ func Test_IsOutboundProcessed(t *testing.T) {
 	})
 	t.Run("should return false if outbound is not confirmed", func(t *testing.T) {
 		// create evm observer and DO NOT set outbound as confirmed
-		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
+		ob := newTestSuite(t)
 		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
 		require.NoError(t, err)
 		require.True(t, continueKeysign)
 	})
 	t.Run("should fail if unable to parse ZetaReceived event", func(t *testing.T) {
 		// create evm observer and set outbound and receipt
-		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
+		ob := newTestSuite(t)
 		ob.SetTxNReceipt(nonce, receipt, outbound)
 
 		// set connector contract address to an arbitrary address to make event parsing fail
-		chainParamsNew := ob.GetChainParams()
+		chainParamsNew := ob.ChainParams()
 		chainParamsNew.ConnectorContractAddress = sample.EthAddress().Hex()
 		ob.SetChainParams(chainParamsNew)
 		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
@@ -122,10 +109,8 @@ func Test_IsOutboundProcessed_ContractError(t *testing.T) {
 
 	// load archived outbound receipt that contains ZetaReceived event
 	// https://etherscan.io/tx/0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f
-	chain := chains.Ethereum
 	chainID := chains.Ethereum.ChainId
 	nonce := uint64(9718)
-	chainParam := mocks.MockChainParams(chain.ChainId, 1)
 	outboundHash := "0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f"
 	cctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 	receipt := testutils.LoadEVMOutboundReceipt(
@@ -148,7 +133,7 @@ func Test_IsOutboundProcessed_ContractError(t *testing.T) {
 
 	t.Run("should fail if unable to get connector/custody contract", func(t *testing.T) {
 		// create evm observer and set outbound and receipt
-		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, chainParam)
+		ob := newTestSuite(t)
 		ob.SetTxNReceipt(nonce, receipt, outbound)
 		abiConnector := zetaconnector.ZetaConnectorNonEthMetaData.ABI
 		abiCustody := erc20custody.ERC20CustodyMetaData.ABI
@@ -192,7 +177,7 @@ func Test_PostVoteOutbound(t *testing.T) {
 		receiveStatus := chains.ReceiveStatus_success
 
 		// create evm client using mock zetacore client and post outbound vote
-		ob, _ := MockEVMObserver(t, chain, nil, nil, nil, nil, 1, mocks.MockChainParams(chain.ChainId, 100))
+		ob := newTestSuite(t)
 		ob.PostVoteOutbound(
 			ctx,
 			cctx.Index,
@@ -413,7 +398,66 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 	})
 }
 
-// TODO: create mocks for gateway and ERC20CustodyV2 and uncomment these tests
+func Test_FilterTSSOutbound(t *testing.T) {
+	// load archived evm block
+	// https://etherscan.io/block/19363323
+	chain := chains.Ethereum
+	chainID := chain.ChainId
+
+	// load archived evm block
+	// https://etherscan.io/block/19363323
+	blockNumber := uint64(19363323)
+	block := testutils.LoadEVMBlock(t, TestDataDir, chainID, blockNumber, true)
+
+	// the outbound to be tested
+	outboundNonce := uint64(7260)
+	outboundHash := ethcommon.HexToHash("0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3")
+	tx, receipt := testutils.LoadEVMOutboundNReceipt(t, TestDataDir, chainID, outboundHash.Hex(), coin.CoinType_Gas)
+
+	ctx := context.Background()
+
+	t.Run("should filter TSS outbound", func(t *testing.T) {
+		// create evm observer for testing
+		ob := newTestSuite(t)
+
+		confirmations := ob.chainParams.ConfirmationCount
+
+		// create mock evm client with preloaded block, tx and receipt
+		ob.evmClient.On("BlockNumber", mock.Anything).Unset()
+		ob.evmClient.On("BlockNumber", mock.Anything).Return(blockNumber+confirmations, nil)
+		ob.evmClient.On("TransactionByHash", mock.Anything, outboundHash).Return(tx, false, nil)
+		ob.evmClient.On("TransactionReceipt", mock.Anything, outboundHash).Return(receipt, nil)
+
+		ob.BlockCache().Add(blockNumber, block)
+
+		// filter TSS outbound
+		ob.FilterTSSOutbound(ctx, blockNumber, blockNumber)
+
+		// tx should be confirmed after filtering
+		found := ob.IsTxConfirmed(outboundNonce)
+		require.True(t, found)
+
+		// retrieve tx and receipt
+		receipt, tx = ob.GetTxNReceipt(outboundNonce)
+		require.NotNil(t, tx)
+		require.NotNil(t, receipt)
+		require.Equal(t, outboundHash, tx.Hash())
+		require.Equal(t, outboundNonce, tx.Nonce())
+	})
+
+	t.Run("should filter nothing on RPC error", func(t *testing.T) {
+		ob := newTestSuite(t)
+
+		// filter TSS outbound
+		ob.FilterTSSOutbound(ctx, blockNumber, blockNumber)
+
+		// tx should be confirmed after filtering
+		found := ob.IsTxConfirmed(outboundNonce)
+		require.False(t, found)
+	})
+}
+
+// TODO: create mocks for gateway and ERC20Custody and uncomment these tests
 // https://github.com/zeta-chain/node/issues/2669
 //
 //func Test_ParseOutboundReceivedValue(t *testing.T) {

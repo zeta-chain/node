@@ -18,8 +18,8 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
 	// parse deposit amount and number of deposits
-	depositAmount := parseBigInt(r, args[0])
-	numDeposits := parseInt(r, args[1])
+	depositAmount := utils.ParseBigInt(r, args[0])
+	numDeposits := utils.ParseInt(r, args[1])
 
 	r.Logger.Print("starting stress test of %d deposits", numDeposits)
 
@@ -29,7 +29,7 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 	// send the deposits
 	for i := 0; i < numDeposits; i++ {
 		i := i
-		hash := r.DepositEtherWithAmount(depositAmount)
+		hash := r.LegacyDepositEtherWithAmount(depositAmount)
 		r.Logger.Print("index %d: starting deposit, tx hash: %s", i, hash.Hex())
 
 		eg.Go(func() error { return monitorEtherDeposit(r, hash, i, time.Now()) })
@@ -52,7 +52,7 @@ func monitorEtherDeposit(r *runner.E2ERunner, hash ethcommon.Hash, index int, st
 			cctx.Index,
 		)
 	}
-	timeToComplete := time.Now().Sub(startTime)
+	timeToComplete := time.Since(startTime)
 	r.Logger.Print("index %d: deposit cctx success in %s", index, timeToComplete.String())
 
 	return nil

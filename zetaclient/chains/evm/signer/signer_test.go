@@ -8,8 +8,8 @@ import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
@@ -35,30 +35,38 @@ var (
 	ERC20CustodyAddress = sample.EthAddress()
 )
 
-// getNewEvmSigner creates a new EVM chain signer for testing
-func getNewEvmSigner(tss interfaces.TSSSigner) (*Signer, error) {
+type testSuite struct {
+	*Signer
+	tss    *mocks.TSS
+	client *mocks.EVMRPCClient
+}
+
+func newTestSuite(t *testing.T) *testSuite {
 	ctx := context.Background()
+	chain := chains.BscMainnet
+	tss := mocks.NewTSS(t)
+	logger := zerolog.New(zerolog.NewTestWriter(t))
 
-	// use default mock TSS if not provided
-	if tss == nil {
-		tss = mocks.NewTSSMainnet()
-	}
-
-	connectorAddress := ConnectorAddress
-	erc20CustodyAddress := ERC20CustodyAddress
-	logger := base.Logger{}
-
-	return NewSigner(
+	s, err := NewSigner(
 		ctx,
-		chains.BscMainnet,
+		chain,
 		tss,
-		nil,
-		logger,
-		mocks.EVMRPCEnabled,
-		connectorAddress,
-		erc20CustodyAddress,
+		base.Logger{Std: logger, Compliance: logger},
+		testutils.MockEVMRPCEndpoint,
+		ConnectorAddress,
+		ERC20CustodyAddress,
 		sample.EthAddress(),
 	)
+	require.NoError(t, err)
+
+	client, ok := s.client.(*mocks.EVMRPCClient)
+	require.True(t, ok)
+
+	return &testSuite{
+		Signer: s,
+		tss:    tss,
+		client: client,
+	}
 }
 
 // getNewEvmChainObserver creates a new EVM chain observer for testing
@@ -67,11 +75,12 @@ func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.O
 
 	// use default mock TSS if not provided
 	if tss == nil {
-		tss = mocks.NewTSSMainnet()
+		tss = mocks.NewTSS(t)
 	}
 
 	// prepare mock arguments to create observer
-	evmClient := mocks.NewMockEvmClient().WithBlockNumber(1000)
+	evmClient := mocks.NewEVMRPCClient(t)
+	evmClient.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
 	evmJSONRPCClient := mocks.NewMockJSONRPCClient()
 	params := mocks.MockChainParams(chains.BscMainnet.ChainId, 10)
 	logger := base.Logger{}
@@ -110,14 +119,14 @@ func getInvalidCCTX(t *testing.T) *crosschaintypes.CrossChainTx {
 	return cctx
 }
 
-// verifyTxSignature is a helper function to verify the signature of a transaction
-func verifyTxSignature(t *testing.T, tx *ethtypes.Transaction, tssPubkey []byte, signer ethtypes.Signer) {
-	_, r, s := tx.RawSignatureValues()
-	signature := append(r.Bytes(), s.Bytes()...)
-	hash := signer.Hash(tx)
-
-	verified := crypto.VerifySignature(tssPubkey, hash.Bytes(), signature)
-	require.True(t, verified)
+// verifyTxSender is a helper function to verify the signature of a transaction
+//
+// signer.Sender() will ecrecover the public key of the transaction internally
+// and will fail if the transaction is not valid or has been tampered with
+func verifyTxSender(t *testing.T, tx *ethtypes.Transaction, expectedSender ethcommon.Address, signer ethtypes.Signer) {
+	senderAddr, err := signer.Sender(tx)
+	require.NoError(t, err)
+	require.Equal(t, expectedSender.String(), senderAddr.String())
 }
 
 // verifyTxBodyBasics is a helper function to verify 'to', 'nonce' and 'amount' of a transaction
@@ -134,8 +143,8 @@ func verifyTxBodyBasics(
 }
 
 func TestSigner_SetGetConnectorAddress(t *testing.T) {
-	evmSigner, err := getNewEvmSigner(nil)
-	require.NoError(t, err)
+	evmSigner := newTestSuite(t)
+
 	// Get and compare
 	require.Equal(t, ConnectorAddress, evmSigner.GetZetaConnectorAddress())
 
@@ -146,8 +155,7 @@ func TestSigner_SetGetConnectorAddress(t *testing.T) {
 }
 
 func TestSigner_SetGetERC20CustodyAddress(t *testing.T) {
-	evmSigner, err := getNewEvmSigner(nil)
-	require.NoError(t, err)
+	evmSigner := newTestSuite(t)
 	// Get and compare
 	require.Equal(t, ERC20CustodyAddress, evmSigner.GetERC20CustodyAddress())
 
@@ -160,12 +168,15 @@ func TestSigner_SetGetERC20CustodyAddress(t *testing.T) {
 func TestSigner_TryProcessOutbound(t *testing.T) {
 	ctx := makeCtx(t)
 
-	evmSigner, err := getNewEvmSigner(nil)
-	require.NoError(t, err)
+	// Setup evm signer
+	evmSigner := newTestSuite(t)
 	cctx := getCCTX(t)
 	processor := getNewOutboundProcessor()
 	mockObserver, err := getNewEvmChainObserver(t, nil)
 	require.NoError(t, err)
+
+	// Attach mock EVM client to the signer
+	evmSigner.client.On("SendTransaction", mock.Anything, mock.Anything).Return(nil)
 
 	// Test with mock client that has keys
 	client := mocks.NewZetacoreClient(t).
@@ -184,14 +195,16 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 	ctx := makeCtx(t)
 
 	// Setup evm signer
-	evmSigner, err := getNewEvmSigner(nil)
-	require.NoError(t, err)
+	evmSigner := newTestSuite(t)
 
 	// Setup txData struct
 	cctx := getCCTX(t)
 	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 	require.NoError(t, err)
 	require.False(t, skip)
+
+	// Attach mock EVM evmClient to the signer
+	evmSigner.client.On("SendTransaction", mock.Anything, mock.Anything).Return(nil)
 
 	t.Run("BroadcastOutbound - should successfully broadcast", func(t *testing.T) {
 		// Call SignERC20Withdraw
@@ -238,13 +251,11 @@ func makeCtx(t *testing.T) context.Context {
 	bscParams := mocks.MockChainParams(chains.BscMainnet.ChainId, 10)
 
 	err := app.Update(
-		observertypes.Keygen{},
 		[]chains.Chain{chains.BscMainnet, chains.ZetaChainMainnet},
 		nil,
 		map[int64]*observertypes.ChainParams{
 			chains.BscMainnet.ChainId: &bscParams,
 		},
-		"tssPubKey",
 		observertypes.CrosschainFlags{},
 	)
 	require.NoError(t, err, "unable to update app context")

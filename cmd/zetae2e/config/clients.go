@@ -8,50 +8,66 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go/rpc"
+	ton "github.com/tonkeeper/tongo/liteapi"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/runner"
+	tonrunner "github.com/zeta-chain/node/e2e/runner/ton"
+	"github.com/zeta-chain/node/pkg/retry"
 	zetacore_rpc "github.com/zeta-chain/node/pkg/rpc"
+	tonconfig "github.com/zeta-chain/node/zetaclient/chains/ton"
 )
 
 // getClientsFromConfig get clients from config
-func getClientsFromConfig(ctx context.Context, conf config.Config, account config.Account) (
-	runner.Clients,
-	error,
-) {
+func getClientsFromConfig(ctx context.Context, conf config.Config, account config.Account) (runner.Clients, error) {
+	btcRPCClient, err := getBtcClient(conf.RPCs.Bitcoin)
+	if err != nil {
+		return runner.Clients{}, fmt.Errorf("failed to get btc client: %w", err)
+	}
+
+	evmClient, evmAuth, err := getEVMClient(ctx, conf.RPCs.EVM, account)
+	if err != nil {
+		return runner.Clients{}, fmt.Errorf("failed to get evm client: %w", err)
+	}
+
 	var solanaClient *rpc.Client
 	if conf.RPCs.Solana != "" {
 		if solanaClient = rpc.New(conf.RPCs.Solana); solanaClient == nil {
 			return runner.Clients{}, fmt.Errorf("failed to get solana client")
 		}
 	}
-	btcRPCClient, err := getBtcClient(conf.RPCs.Bitcoin)
-	if err != nil {
-		return runner.Clients{}, fmt.Errorf("failed to get btc client: %w", err)
+
+	var tonClient *tonrunner.Client
+	if conf.RPCs.TONSidecarURL != "" {
+		c, err := getTONClient(ctx, conf.RPCs.TONSidecarURL)
+		if err != nil {
+			return runner.Clients{}, fmt.Errorf("failed to get ton client: %w", err)
+		}
+		tonClient = c
 	}
-	evmClient, evmAuth, err := getEVMClient(ctx, conf.RPCs.EVM, account)
-	if err != nil {
-		return runner.Clients{}, fmt.Errorf("failed to get evm client: %w", err)
-	}
+
 	zetaCoreClients, err := GetZetacoreClient(conf)
 	if err != nil {
 		return runner.Clients{}, fmt.Errorf("failed to get zetacore client: %w", err)
 	}
+
 	zevmClient, zevmAuth, err := getEVMClient(ctx, conf.RPCs.Zevm, account)
 	if err != nil {
 		return runner.Clients{}, fmt.Errorf("failed to get zevm client: %w", err)
 	}
 
 	return runner.Clients{
-		Zetacore: zetaCoreClients,
-		BtcRPC:   btcRPCClient,
-		Solana:   solanaClient,
-		Evm:      evmClient,
-		EvmAuth:  evmAuth,
-		Zevm:     zevmClient,
-		ZevmAuth: zevmAuth,
+		Zetacore:          zetaCoreClients,
+		BtcRPC:            btcRPCClient,
+		Solana:            solanaClient,
+		TON:               tonClient,
+		Evm:               evmClient,
+		EvmAuth:           evmAuth,
+		Zevm:              zevmClient,
+		ZevmAuth:          zevmAuth,
+		ZetaclientMetrics: &runner.MetricsClient{URL: conf.RPCs.ZetaclientMetrics},
 	}, nil
 }
 
@@ -104,6 +120,35 @@ func getEVMClient(
 	}
 
 	return evmClient, evmAuth, nil
+}
+
+func getTONClient(ctx context.Context, sidecarURL string) (*tonrunner.Client, error) {
+	if sidecarURL == "" {
+		return nil, fmt.Errorf("sidecar URL is empty")
+	}
+
+	sidecar := tonrunner.NewSidecarClient(sidecarURL)
+
+	// It might take some time to bootstrap the sidecar
+	cfg, err := retry.DoTypedWithRetry(
+		func() (*tonconfig.GlobalConfigurationFile, error) {
+			return tonconfig.ConfigFromURL(ctx, sidecar.LiteServerURL())
+		},
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get ton config: %w", err)
+	}
+
+	client, err := ton.NewClient(ton.WithConfigurationFile(*cfg))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create ton client: %w", err)
+	}
+
+	return &tonrunner.Client{
+		Client:        client,
+		SidecarClient: sidecar,
+	}, nil
 }
 
 func GetZetacoreClient(conf config.Config) (zetacore_rpc.Clients, error) {

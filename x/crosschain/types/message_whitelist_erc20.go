@@ -4,8 +4,9 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/x/fungible/types"
 )
 
@@ -51,11 +52,10 @@ func (msg *MsgWhitelistERC20) GetSignBytes() []byte {
 func (msg *MsgWhitelistERC20) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err.Error())
 	}
-	// check if the system contract address is valid
-	if ethcommon.HexToAddress(msg.Erc20Address) == (ethcommon.Address{}) {
-		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid ERC20 contract address (%s)", msg.Erc20Address)
+	if err := validateAssetAddress(msg.Erc20Address); err != nil {
+		return cosmoserrors.Wrapf(types.ErrInvalidAddress, "invalid asset address (%s)", err.Error())
 	}
 	if msg.Decimals > 128 {
 		return cosmoserrors.Wrapf(types.ErrInvalidDecimals, "invalid decimals (%d)", msg.Decimals)
@@ -63,5 +63,19 @@ func (msg *MsgWhitelistERC20) ValidateBasic() error {
 	if msg.GasLimit <= 0 {
 		return cosmoserrors.Wrapf(types.ErrInvalidGasLimit, "invalid gas limit (%d)", msg.GasLimit)
 	}
+	return nil
+}
+
+func validateAssetAddress(address string) error {
+	if address == "" {
+		return errors.New("empty asset address")
+	}
+
+	// if the address is an evm address, check if it is in checksum format
+	if crypto.IsEVMAddress(address) && !crypto.IsChecksumAddress(address) {
+		return errors.New("evm address is not in checksum format")
+	}
+
+	// currently no specific check is implemented for other address format
 	return nil
 }

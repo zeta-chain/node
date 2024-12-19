@@ -1,0 +1,11 @@
+syntax = "proto3";
+package zetachain.zetacore.observer;
+
+option go_package = "github.com/zeta-chain/node/x/observer/types";
+
+// Flags for the top-level operation of zetaclient.
+message OperationalFlags {
+  // Height for a coordinated zetaclient restart.
+  // Will be ignored if missed.
+  int64 restart_height = 1;
+}

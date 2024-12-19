@@ -1,0 +1,71 @@
+# This docker-compose updates the services to use a persistent data directory
+# clear these volumes with this command: docker volume rm $(docker volume ls -q | grep -- '-persist$')
+
+services:
+  zetacore0:
+    volumes:
+      - zetacore0-zetacored-persist:/root/.zetacored
+
+  zetacore1:
+    volumes:
+      - zetacore1-zetacored-persist:/root/.zetacored
+
+  zetacore2:
+    volumes:
+      - zetacore2-zetacored-persist:/root/.zetacored
+
+  zetacore3:
+    volumes:
+      - zetacore3-zetacored-persist:/root/.zetacored
+
+  zetaclient0:
+    volumes:
+      - zetaclient0-zetacored-persist:/root/.zetacored
+      - zetaclient0-tss-persist:/root/.tss
+      - zetaclient0-zetaclient-persist:/root/.zetaclient
+
+  zetaclient1:
+    volumes:
+      - zetaclient1-zetacored-persist:/root/.zetacored
+      - zetaclient1-tss-persist:/root/.tss
+      - zetaclient1-zetaclient-persist:/root/.zetaclient
+
+  zetaclient2:
+    volumes:
+      - zetaclient2-zetacored-persist:/root/.zetacored
+      - zetaclient2-tss-persist:/root/.tss
+      - zetaclient2-zetaclient-persist:/root/.zetaclient
+
+  zetaclient3:
+    volumes:
+      - zetaclient3-zetacored-persist:/root/.zetacored
+      - zetaclient3-tss-persist:/root/.tss
+      - zetaclient3-zetaclient-persist:/root/.zetaclient
+
+  eth:
+    volumes:
+      - eth-data-persist:/root/data
+
+  orchestrator:
+    volumes:
+      - orchestrator-state-persist:/root/state
+
+volumes:
+  zetacore0-zetacored-persist:
+  zetacore1-zetacored-persist:
+  zetacore2-zetacored-persist:
+  zetacore3-zetacored-persist:
+  zetaclient0-zetacored-persist:
+  zetaclient0-tss-persist:
+  zetaclient0-zetaclient-persist:
+  zetaclient1-zetacored-persist:
+  zetaclient1-tss-persist:
+  zetaclient1-zetaclient-persist:
+  zetaclient2-zetacored-persist:
+  zetaclient2-tss-persist:
+  zetaclient2-zetaclient-persist:
+  zetaclient3-zetacored-persist:
+  zetaclient3-tss-persist:
+  zetaclient3-zetaclient-persist:
+  eth-data-persist:
+  orchestrator-state-persist:

@@ -17,7 +17,7 @@ enum CctxStatus {
   Reverted = 5;        // inbound reverted.
   Aborted =
       6; // inbound tx error or invalid paramters and cannot revert; just abort.
-  // But the amount can be refunded to zetachain using and admin proposal
+         // But the amount can be refunded to zetachain using and admin proposal
 }
 
 enum TxFinalizationStatus {
@@ -43,6 +43,10 @@ message InboundParams {
   string ballot_index = 9;
   uint64 finalized_zeta_height = 10;
   TxFinalizationStatus tx_finalization_status = 11;
+
+  // this field describes if a smart contract call should be made for a inbound
+  // with assets only used for protocol contract version 2
+  bool is_cross_chain_call = 12;
 }
 
 message ZetaAccounting {
@@ -54,6 +58,11 @@ message ZetaAccounting {
   ];
 }
 
+message CallOptions {
+  uint64 gas_limit = 1;
+  bool is_arbitrary_call = 2;
+}
+
 message OutboundParams {
   string receiver = 1;
   int64 receiver_chainId = 2;
@@ -63,6 +72,7 @@ message OutboundParams {
     (gogoproto.nullable) = false
   ];
   uint64 tss_nonce = 5;
+  // Deprecated (v21), use CallOptions
   uint64 gas_limit = 6;
   string gas_price = 7;
   string gas_priority_fee = 23;
@@ -80,13 +90,20 @@ message OutboundParams {
   string tss_pubkey = 11;
   TxFinalizationStatus tx_finalization_status = 12;
 
+  CallOptions call_options = 24;
+
   // not used. do not edit.
   reserved 13 to 19;
 }
 
 message Status {
   CctxStatus status = 1;
+  // status_message carries information about the status transitions:
+  // why they were triggered, old and new status.
   string status_message = 2;
+  // error_message carries information about the error that caused the tx
+  // to be PendingRevert, Reverted or Aborted.
+  string error_message = 6;
   int64 lastUpdate_timestamp = 3;
   bool isAbortRefunded = 4;
   // when the CCTX was created. only populated on new transactions.

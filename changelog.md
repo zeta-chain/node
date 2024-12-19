@@ -4,6 +4,182 @@
 
 ### Features
 
+* [3235](https://github.com/zeta-chain/node/pull/3235) - add /systemtime telemetry endpoint (zetaclient)
+
+### Tests
+
+* [3205](https://github.com/zeta-chain/node/issues/3205) - move Bitcoin revert address test to advanced group to avoid upgrade test failure
+* [3254](https://github.com/zeta-chain/node/pull/3254) - rename v2 E2E tests as evm tests and rename old evm tests as legacy
+* [3095](https://github.com/zeta-chain/node/pull/3095) - initialize simulation tests for custom zetachain modules
+* [3276](https://github.com/zeta-chain/node/pull/3276) - add Solana E2E performance tests and improve Solana outbounds performance
+
+## Refactor
+
+* [3170](https://github.com/zeta-chain/node/pull/3170) - revamp TSS package in zetaclient
+* [3291](https://github.com/zeta-chain/node/pull/3291) - revamp zetaclient initialization (+ graceful shutdown)
+
+### Fixes
+
+* [3206](https://github.com/zeta-chain/node/pull/3206) - skip Solana unsupported transaction version to not block inbound observation
+* [3184](https://github.com/zeta-chain/node/pull/3184) - zetaclient should not retry if inbound vote message validation fails
+* [3230](https://github.com/zeta-chain/node/pull/3230) - update pending nonces when aborting a cctx through MsgAbortStuckCCTX
+* [3225](https://github.com/zeta-chain/node/pull/3225) - use separate database file names for btc signet and testnet4
+* [3242](https://github.com/zeta-chain/node/pull/3242) - set the `Receiver` of `MsgVoteInbound` to the address pulled from solana memo
+* [3253](https://github.com/zeta-chain/node/pull/3253) - fix solana inbound version 0 queries and move tss keysign prior to relayer key checking
+* [3278](https://github.com/zeta-chain/node/pull/3278) - enforce checksum format for asset address in ZRC20
+* [3289](https://github.com/zeta-chain/node/pull/3289) - remove all dynamic peer discovery (zetaclient)
+* [3314](https://github.com/zeta-chain/node/pull/3314) - update `last_scanned_block_number` metrics more frequently for Solana chain
+
+## v23.0.0
+
+### Features
+
+* [2984](https://github.com/zeta-chain/node/pull/2984) - add Whitelist message ability to whitelist SPL tokens on Solana
+* [3091](https://github.com/zeta-chain/node/pull/3091) - improve build reproducability. `make release{,-build-only}` checksums should now be stable.
+* [3124](https://github.com/zeta-chain/node/pull/3124) - integrate SPL deposits
+* [3134](https://github.com/zeta-chain/node/pull/3134) - integrate SPL tokens withdraw to Solana
+* [3088](https://github.com/zeta-chain/node/pull/3088) - add functions to check and withdraw zrc20 as delegation rewards
+* [3182](https://github.com/zeta-chain/node/pull/3182) - enable zetaclient pprof server on port 6061
+
+### Tests
+
+* [3075](https://github.com/zeta-chain/node/pull/3075) - ton: withdraw concurrent, deposit & revert.
+* [3105](https://github.com/zeta-chain/node/pull/3105) - split Bitcoin E2E tests into two runners for deposit and withdraw
+* [3154](https://github.com/zeta-chain/node/pull/3154) - configure Solana gateway program id for E2E tests
+* [3188](https://github.com/zeta-chain/node/pull/3188) - add e2e test for v2 deposit and call with swap
+* [3151](https://github.com/zeta-chain/node/pull/3151) - add withdraw emissions to e2e tests
+
+### Refactor
+
+* [3118](https://github.com/zeta-chain/node/pull/3118) - zetaclient: remove hsm signer
+* [3122](https://github.com/zeta-chain/node/pull/3122) - improve & refactor zetaclientd cli
+* [3125](https://github.com/zeta-chain/node/pull/3125) - drop support for header proofs
+* [3131](https://github.com/zeta-chain/node/pull/3131) - move app context update from zetacore client
+* [3137](https://github.com/zeta-chain/node/pull/3137) - remove chain.Chain from zetaclientd config
+
+### Fixes
+
+* [3117](https://github.com/zeta-chain/node/pull/3117) - register messages for emissions module to legacy amino codec.
+* [3041](https://github.com/zeta-chain/node/pull/3041) - replace libp2p public DHT with private gossip peer discovery and connection gater for inbound connections
+* [3106](https://github.com/zeta-chain/node/pull/3106) - prevent blocked CCTX on out of gas during omnichain calls
+* [3139](https://github.com/zeta-chain/node/pull/3139) - fix config resolution in orchestrator
+* [3149](https://github.com/zeta-chain/node/pull/3149) - abort the cctx if dust amount is detected in the revert outbound
+* [3155](https://github.com/zeta-chain/node/pull/3155) - fix potential panic in the Bitcoin inscription parsing
+* [3162](https://github.com/zeta-chain/node/pull/3162) - skip depositor fee calculation if transaction does not involve TSS address
+* [3179](https://github.com/zeta-chain/node/pull/3179) - support inbound trackers for v2 cctx
+* [3192](https://github.com/zeta-chain/node/pull/3192) - fix incorrect zContext origin caused by the replacement of 'sender' with 'revertAddress'
+
+## v22.1.2
+
+## Fixes
+
+- [3181](https://github.com/zeta-chain/node/pull/3181) - add lock around pingRTT to prevent crash
+
+## v22.1.1
+
+## Fixes
+
+- [3171](https://github.com/zeta-chain/node/pull/3171) - infinite discovery address leak
+
+## v22.1.0
+
+## Features
+
+- [3028](https://github.com/zeta-chain/node/pull/3028) - whitelist connection gater
+
+## Fixes
+
+- [3041](https://github.com/zeta-chain/node/pull/3041) - replace DHT with private peer discovery
+- [3162](https://github.com/zeta-chain/node/pull/3162) - skip depositor fee calculation on irrelevant transactions
+
+## v22.0.2
+
+## Fixes
+
+- [3144](https://github.com/zeta-chain/node/pull/3145) - out of gas on ZetaClient during `onRevert`
+
+## v22.0.1
+
+## Fixes
+
+- [3140](https://github.com/zeta-chain/node/pull/3140) - allow BTC revert with dust amount
+
+## v22.0.0
+
+## Refactor
+
+* [3073](https://github.com/zeta-chain/node/pull/3073) - improve ZETA deposit check with max supply check
+
+## v21.0.0
+
+### Features
+
+* [2633](https://github.com/zeta-chain/node/pull/2633) - support for stateful precompiled contracts
+* [2788](https://github.com/zeta-chain/node/pull/2788) - add common importable zetacored rpc package
+* [2784](https://github.com/zeta-chain/node/pull/2784) - staking precompiled contract
+* [2795](https://github.com/zeta-chain/node/pull/2795) - support restricted address in Solana
+* [2861](https://github.com/zeta-chain/node/pull/2861) - emit events from staking precompile
+* [2860](https://github.com/zeta-chain/node/pull/2860) - bank precompiled contract
+* [2870](https://github.com/zeta-chain/node/pull/2870) - support for multiple Bitcoin chains in the zetaclient
+* [2883](https://github.com/zeta-chain/node/pull/2883) - add chain static information for btc signet testnet
+* [2907](https://github.com/zeta-chain/node/pull/2907) - derive Bitcoin tss address by chain id and added more Signet static info
+* [2911](https://github.com/zeta-chain/node/pull/2911) - add chain static information for btc testnet4
+* [2904](https://github.com/zeta-chain/node/pull/2904) - integrate authenticated calls smart contract functionality into protocol
+* [2919](https://github.com/zeta-chain/node/pull/2919) - add inbound sender to revert context
+* [2957](https://github.com/zeta-chain/node/pull/2957) - enable Bitcoin inscription support on testnet
+* [2896](https://github.com/zeta-chain/node/pull/2896) - add TON inbound observation
+* [2987](https://github.com/zeta-chain/node/pull/2987) - add non-EVM standard inbound memo package
+* [2979](https://github.com/zeta-chain/node/pull/2979) - add fungible keeper ability to lock/unlock ZRC20 tokens
+* [3012](https://github.com/zeta-chain/node/pull/3012) - integrate authenticated calls erc20 smart contract functionality into protocol
+* [3025](https://github.com/zeta-chain/node/pull/3025) - standard memo for Bitcoin inbound
+* [3028](https://github.com/zeta-chain/node/pull/3028) - whitelist connection gater
+* [3019](https://github.com/zeta-chain/node/pull/3019) - add ditribute functions to staking precompile
+* [3020](https://github.com/zeta-chain/node/pull/3020) - add support for TON withdrawals
+
+### Refactor
+
+* [2749](https://github.com/zeta-chain/node/pull/2749) - fix all lint errors from govet
+* [2725](https://github.com/zeta-chain/node/pull/2725) - refactor SetCctxAndNonceToCctxAndInboundHashToCctx to receive tsspubkey as an argument
+* [2802](https://github.com/zeta-chain/node/pull/2802) - set default liquidity cap for new ZRC20s
+* [2826](https://github.com/zeta-chain/node/pull/2826) - remove unused code from emissions module and add new parameter for fixed block reward amount
+* [2890](https://github.com/zeta-chain/node/pull/2890) - refactor `MsgUpdateChainInfo` to accept a single chain, and add `MsgRemoveChainInfo` to remove a chain
+* [2899](https://github.com/zeta-chain/node/pull/2899) - remove btc deposit fee v1 and improve unit tests
+* [2952](https://github.com/zeta-chain/node/pull/2952) - add error_message to cctx.status
+* [3039](https://github.com/zeta-chain/node/pull/3039) - use `btcd` native APIs to handle Bitcoin Taproot address
+* [3082](https://github.com/zeta-chain/node/pull/3082) - replace docker-based bitcoin sidecar inscription build with Golang implementation
+
+### Tests
+
+* [2661](https://github.com/zeta-chain/node/pull/2661) - update connector and erc20Custody addresses in tss migration e2e tests
+* [2703](https://github.com/zeta-chain/node/pull/2703) - add e2e tests for stateful precompiled contracts
+* [2830](https://github.com/zeta-chain/node/pull/2830) - extend staking precompile tests
+* [2867](https://github.com/zeta-chain/node/pull/2867) - skip precompiles test for tss migration
+* [2833](https://github.com/zeta-chain/node/pull/2833) - add e2e framework for TON blockchain
+* [2874](https://github.com/zeta-chain/node/pull/2874) - add support for multiple runs for precompile tests
+* [2895](https://github.com/zeta-chain/node/pull/2895) - add e2e test for bitcoin deposit and call
+* [2894](https://github.com/zeta-chain/node/pull/2894) - increase gas limit for TSS vote tx
+* [2932](https://github.com/zeta-chain/node/pull/2932) - add gateway upgrade as part of the upgrade test
+* [2947](https://github.com/zeta-chain/node/pull/2947) - initialize simulation tests
+* [3033](https://github.com/zeta-chain/node/pull/3033) - initialize simulation tests for import and export
+
+### Fixes
+
+* [2674](https://github.com/zeta-chain/node/pull/2674) - allow operators to vote on ballots associated with discarded keygen without affecting the status of the current keygen.
+* [2672](https://github.com/zeta-chain/node/pull/2672) - check observer set for duplicates when adding a new observer or updating an existing one
+* [2735](https://github.com/zeta-chain/node/pull/2735) - fix the outbound tracker blocking confirmation and outbound processing on EVM chains by locally index outbound txs in zetaclient
+* [2944](https://github.com/zeta-chain/node/pull/2844) - add tsspubkey to index for tss keygen voting
+* [2842](https://github.com/zeta-chain/node/pull/2842) - fix: move interval assignment out of cctx loop in EVM outbound tx scheduler
+* [2853](https://github.com/zeta-chain/node/pull/2853) - calling precompile through sc with sc state update
+* [2925](https://github.com/zeta-chain/node/pull/2925) - add recover to init chainer to diplay informative message when starting a node from block 1
+* [2909](https://github.com/zeta-chain/node/pull/2909) - add legacy messages back to codec for querier backward compatibility
+* [3018](https://github.com/zeta-chain/node/pull/3018) - support `DepositAndCall` and `WithdrawAndCall` with empty payload
+* [3030](https://github.com/zeta-chain/node/pull/3030) - Avoid storing invalid Solana gateway address in the `SetGatewayAddress`
+* [3047](https://github.com/zeta-chain/node/pull/3047) - wrong block hash in subscribe new heads
+
+## v20.0.0
+
+### Features
+
 * [2578](https://github.com/zeta-chain/node/pull/2578) - add Gateway address in protocol contract list
 * [2630](https://github.com/zeta-chain/node/pull/2630) - implement `MsgMigrateERC20CustodyFunds` to migrate the funds from the ERC20Custody to a new contracts (to be used for the new ERC20Custody contract for smart contract V2)
 * [2578](https://github.com/zeta-chain/node/pull/2578) - Add Gateway address in protocol contract list
@@ -15,36 +191,27 @@
 * [2644](https://github.com/zeta-chain/node/pull/2644) - add created_timestamp to cctx status
 * [2673](https://github.com/zeta-chain/node/pull/2673) - add relayer key importer, encryption and decryption
 * [2633](https://github.com/zeta-chain/node/pull/2633) - support for stateful precompiled contracts
+* [2751](https://github.com/zeta-chain/node/pull/2751) - add RPC status check for Solana chain
 * [2788](https://github.com/zeta-chain/node/pull/2788) - add common importable zetacored rpc package
 * [2784](https://github.com/zeta-chain/node/pull/2784) - staking precompiled contract
 * [2795](https://github.com/zeta-chain/node/pull/2795) - support restricted address in Solana
-* [2861](https://github.com/zeta-chain/node/pull/2861) - emit events from staking precompile
+* [2825](https://github.com/zeta-chain/node/pull/2825) - add Bitcoin inscriptions support
 
 ### Refactor
 
 * [2615](https://github.com/zeta-chain/node/pull/2615) - Refactor cleanup of outbound trackers
-* [2749](https://github.com/zeta-chain/node/pull/2749) - fix all lint errors from govet
-* [2725](https://github.com/zeta-chain/node/pull/2725) - refactor SetCctxAndNonceToCctxAndInboundHashToCctx to receive tsspubkey as an argument
-* [2802](https://github.com/zeta-chain/node/pull/2802) - set default liquidity cap for new ZRC20s
-* [2826](https://github.com/zeta-chain/node/pull/2826) - remove unused code from emissions module and add new parameter for fixed block reward amount
-* [2863](https://github.com/zeta-chain/node/pull/2863) - delete ballots after they mature
+* [2855](https://github.com/zeta-chain/node/pull/2855) - disable Bitcoin witness support for mainnet
 
 ### Tests
 
-* [2661](https://github.com/zeta-chain/node/pull/2661) - update connector and erc20Custody addresses in tss migration e2e tests
 * [2726](https://github.com/zeta-chain/node/pull/2726) - add e2e tests for deposit and call, deposit and revert
-* [2703](https://github.com/zeta-chain/node/pull/2703) - add e2e tests for stateful precompiled contracts
-* [2763](https://github.com/zeta-chain/node/pull/2763) - add V2 contracts migration test
-* [2830] (https://github.com/zeta-chain/node/pull/2830) - extend staking precompile tests
+* [2821](https://github.com/zeta-chain/node/pull/2821) - V2 protocol contracts migration e2e tests
 
 ### Fixes
 
 * [2654](https://github.com/zeta-chain/node/pull/2654) - add validation for authorization list in when validating genesis state for authorization module
-* [2674](https://github.com/zeta-chain/node/pull/2674) - allow operators to vote on ballots associated with discarded keygen without affecting the status of the current keygen.
 * [2672](https://github.com/zeta-chain/node/pull/2672) - check observer set for duplicates when adding a new observer or updating an existing one
-* [2787](https://github.com/zeta-chain/node/pull/2787) - ask for 3 accounts (signer, pda, system_program) on solana gateway deposit
-* [2842](https://github.com/zeta-chain/node/pull/2842) - fix: move interval assignment out of cctx loop in EVM outbound tx scheduler
-* [2853](https://github.com/zeta-chain/node/pull/2853) - calling precompile through sc with sc state update
+* [2824](https://github.com/zeta-chain/node/pull/2824) - fix Solana deposit number
 
 ## v19.0.0
 
@@ -83,7 +250,7 @@
 * [2518](https://github.com/zeta-chain/node/pull/2518) - add support for Solana address in zetacore
 * [2483](https://github.com/zeta-chain/node/pull/2483) - add priorityFee (gasTipCap) gas to the state
 * [2567](https://github.com/zeta-chain/node/pull/2567) - add sign latency metric to zetaclient (zetaclient_sign_latency)
-* [2524](https://github.com/zeta-chain/node/pull/2524) - add inscription envelop parsing 
+* [2524](https://github.com/zeta-chain/node/pull/2524) - add inscription envelop parsing
 * [2560](https://github.com/zeta-chain/node/pull/2560) - add support for Solana SOL token withdraw
 * [2533](https://github.com/zeta-chain/node/pull/2533) - parse memo from both OP_RETURN and inscription
 * [2765](https://github.com/zeta-chain/node/pull/2765) - bitcoin depositor fee improvement
@@ -165,7 +332,7 @@
 
 ### CI
 
-* [2388](https://github.com/zeta-chain/node/pull/2388) - added GitHub attestations of binaries produced in the release workflow. 
+* [2388](https://github.com/zeta-chain/node/pull/2388) - added GitHub attestations of binaries produced in the release workflow.
 * [2285](https://github.com/zeta-chain/node/pull/2285) - added nightly EVM performance testing pipeline, modified localnet testing docker image to utilize debian:bookworm, removed build-jet runners where applicable, removed deprecated/removed upgrade path testing pipeline
 * [2268](https://github.com/zeta-chain/node/pull/2268) - updated the publish-release pipeline to utilize the Github Actions Ubuntu 20.04 Runners
 * [2070](https://github.com/zeta-chain/node/pull/2070) - Added commands to build binaries from the working branch as a live full node rpc to test non-governance changes
@@ -577,7 +744,7 @@ Getting the correct TSS address for Bitcoin now requires providing the Bitcoin c
 
 ### Tests
 
-* Add unit tests for adding votes to a ballot 
+* Add unit tests for adding votes to a ballot
 
 ### CI
 
@@ -617,7 +784,7 @@ Getting the correct TSS address for Bitcoin now requires providing the Bitcoin c
 ### Refactoring
 
 * [1226](https://github.com/zeta-chain/node/pull/1226) - call `onCrossChainCall` when depositing to a contract
-* [1238](https://github.com/zeta-chain/node/pull/1238) - change default mempool version in config 
+* [1238](https://github.com/zeta-chain/node/pull/1238) - change default mempool version in config
 * [1279](https://github.com/zeta-chain/node/pull/1279) - remove duplicate funtion name IsEthereum
 * [1289](https://github.com/zeta-chain/node/pull/1289) - skip gas stability pool funding when gasLimit is equal gasUsed
 

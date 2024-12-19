@@ -100,6 +100,14 @@ func (k msgServer) VoteOutbound(
 		return &types.MsgVoteOutboundResponse{}, nil
 	}
 
+	// If the CCTX is in a terminal state, we do not need to process it.
+	if cctx.CctxStatus.Status.IsTerminal() {
+		return &types.MsgVoteOutboundResponse{}, cosmoserrors.Wrap(
+			types.ErrCCTXAlreadyFinalized,
+			fmt.Sprintf("CCTX status %s", cctx.CctxStatus.Status),
+		)
+	}
+
 	// Set the finalized ballot to the current outbound params.
 	cctx.SetOutboundBallotIndex(ballotIndex)
 
@@ -185,7 +193,7 @@ SaveFailedOutbound saves a failed outbound transaction.It does the following thi
 */
 
 func (k Keeper) SaveFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx, errMessage string, tssPubkey string) {
-	cctx.SetAbort(errMessage)
+	cctx.SetAbort("", errMessage)
 	ctx.Logger().Error(errMessage)
 	k.SaveOutbound(ctx, cctx, tssPubkey)
 }
@@ -216,7 +224,7 @@ func (k Keeper) SaveOutbound(ctx sdk.Context, cctx *types.CrossChainTx, tssPubke
 		k.RemoveOutboundTrackerFromStore(ctx, outboundParams.ReceiverChainId, outboundParams.TssNonce)
 	}
 	// This should set nonce to cctx only if a new revert is created.
-	k.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, *cctx, tssPubkey)
+	k.SaveCCTXUpdate(ctx, *cctx, tssPubkey)
 }
 
 func (k Keeper) ValidateOutboundMessage(ctx sdk.Context, msg types.MsgVoteOutbound) (types.CrossChainTx, error) {

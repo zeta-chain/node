@@ -30,6 +30,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -74,7 +75,6 @@ func NewSigner(
 	ctx context.Context,
 	chain chains.Chain,
 	tss interfaces.TSSSigner,
-	ts *metrics.TelemetryServer,
 	logger base.Logger,
 	endpoint string,
 	zetaConnectorAddress ethcommon.Address,
@@ -82,7 +82,7 @@ func NewSigner(
 	gatewayAddress ethcommon.Address,
 ) (*Signer, error) {
 	// create base signer
-	baseSigner := base.NewSigner(chain, tss, ts, logger)
+	baseSigner := base.NewSigner(chain, tss, logger)
 
 	// create EVM client
 	client, ethSigner, err := getEVMRPC(ctx, endpoint)
@@ -102,43 +102,69 @@ func NewSigner(
 
 // SetZetaConnectorAddress sets the zeta connector address
 func (signer *Signer) SetZetaConnectorAddress(addr ethcommon.Address) {
+	// noop
+	if (addr == ethcommon.Address{}) || signer.zetaConnectorAddress == addr {
+		return
+	}
+
+	signer.Logger().Std.Info().
+		Str("signer.old_zeta_connector_address", signer.zetaConnectorAddress.String()).
+		Str("signer.new_zeta_connector_address", addr.String()).
+		Msg("Updated zeta connector address")
+
 	signer.Lock()
-	defer signer.Unlock()
 	signer.zetaConnectorAddress = addr
+	signer.Unlock()
 }
 
 // SetERC20CustodyAddress sets the erc20 custody address
 func (signer *Signer) SetERC20CustodyAddress(addr ethcommon.Address) {
+	// noop
+	if (addr == ethcommon.Address{}) || signer.er20CustodyAddress == addr {
+		return
+	}
+
+	signer.Logger().Std.Info().
+		Str("signer.old_erc20_custody_address", signer.er20CustodyAddress.String()).
+		Str("signer.new_erc20_custody_address", addr.String()).
+		Msg("Updated erc20 custody address")
+
 	signer.Lock()
-	defer signer.Unlock()
 	signer.er20CustodyAddress = addr
+	signer.Unlock()
 }
 
 // SetGatewayAddress sets the gateway address
-func (signer *Signer) SetGatewayAddress(addr string) {
+func (signer *Signer) SetGatewayAddress(addrRaw string) {
+	addr := ethcommon.HexToAddress(addrRaw)
+
+	// noop
+	if (addr == ethcommon.Address{}) || signer.gatewayAddress == addr {
+		return
+	}
+
+	signer.Logger().Std.Info().
+		Str("signer.old_gateway_address", signer.gatewayAddress.String()).
+		Str("signer.new_gateway_address", addr.String()).
+		Msg("Updated gateway address")
+
 	signer.Lock()
-	defer signer.Unlock()
-	signer.gatewayAddress = ethcommon.HexToAddress(addr)
+	signer.gatewayAddress = addr
+	signer.Unlock()
 }
 
 // GetZetaConnectorAddress returns the zeta connector address
 func (signer *Signer) GetZetaConnectorAddress() ethcommon.Address {
-	signer.Lock()
-	defer signer.Unlock()
 	return signer.zetaConnectorAddress
 }
 
 // GetERC20CustodyAddress returns the erc20 custody address
 func (signer *Signer) GetERC20CustodyAddress() ethcommon.Address {
-	signer.Lock()
-	defer signer.Unlock()
 	return signer.er20CustodyAddress
 }
 
 // GetGatewayAddress returns the gateway address
 func (signer *Signer) GetGatewayAddress() string {
-	signer.Lock()
-	defer signer.Unlock()
 	return signer.gatewayAddress.String()
 }
 
@@ -154,7 +180,7 @@ func (signer *Signer) Sign(
 	height uint64,
 ) (*ethtypes.Transaction, []byte, []byte, error) {
 	signer.Logger().Std.Debug().
-		Str("tss_pub_key", signer.TSS().EVMAddress().String()).
+		Str("tss_pub_key", signer.TSS().PubKey().AddressEVM().String()).
 		Msg("Signing evm transaction")
 
 	chainID := big.NewInt(signer.Chain().ChainId)
@@ -165,7 +191,7 @@ func (signer *Signer) Sign(
 
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
 
-	sig, err := signer.TSS().Sign(ctx, hashBytes, height, nonce, signer.Chain().ChainId, "")
+	sig, err := signer.TSS().Sign(ctx, hashBytes, height, nonce, signer.Chain().ChainId)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -187,7 +213,7 @@ func (signer *Signer) Sign(
 }
 
 func newTx(
-	chainID *big.Int,
+	_ *big.Int,
 	data []byte,
 	to ethcommon.Address,
 	amount *big.Int,
@@ -198,27 +224,28 @@ func newTx(
 		return nil, errors.Wrap(err, "invalid gas parameters")
 	}
 
-	if gas.isLegacy() {
-		return ethtypes.NewTx(&ethtypes.LegacyTx{
-			To:       &to,
-			Value:    amount,
-			Data:     data,
-			GasPrice: gas.Price,
-			Gas:      gas.Limit,
-			Nonce:    nonce,
-		}), nil
-	}
-
-	return ethtypes.NewTx(&ethtypes.DynamicFeeTx{
-		ChainID:   chainID,
-		To:        &to,
-		Value:     amount,
-		Data:      data,
-		GasFeeCap: gas.Price,
-		GasTipCap: gas.PriorityFee,
-		Gas:       gas.Limit,
-		Nonce:     nonce,
+	// https://github.com/zeta-chain/node/issues/3221
+	//if gas.isLegacy() {
+	return ethtypes.NewTx(&ethtypes.LegacyTx{
+		To:       &to,
+		Value:    amount,
+		Data:     data,
+		GasPrice: gas.Price,
+		Gas:      gas.Limit,
+		Nonce:    nonce,
 	}), nil
+	//}
+	//
+	//return ethtypes.NewTx(&ethtypes.DynamicFeeTx{
+	//	ChainID:   chainID,
+	//	To:        &to,
+	//	Value:     amount,
+	//	Data:      data,
+	//	GasFeeCap: gas.Price,
+	//	GasTipCap: gas.PriorityFee,
+	//	Gas:       gas.Limit,
+	//	Nonce:     nonce,
+	//}), nil
 }
 
 func (signer *Signer) broadcast(ctx context.Context, tx *ethtypes.Transaction) error {
@@ -513,11 +540,6 @@ func (signer *Signer) BroadcastOutbound(
 	}
 }
 
-// EvmClient returns the EVM RPC client
-func (signer *Signer) EvmClient() interfaces.EVMRPCClient {
-	return signer.client
-}
-
 // EvmSigner returns the EVM signer object for the signer
 func (signer *Signer) EvmSigner() ethtypes.Signer {
 	// TODO(revamp): rename field into evmSigner
@@ -545,10 +567,10 @@ func ErrorMsg(cctx *crosschaintypes.CrossChainTx) string {
 
 // getEVMRPC is a helper function to set up the client and signer, also initializes a mock client for unit tests
 func getEVMRPC(ctx context.Context, endpoint string) (interfaces.EVMRPCClient, ethtypes.Signer, error) {
-	if endpoint == mocks.EVMRPCEnabled {
+	if endpoint == testutils.MockEVMRPCEndpoint {
 		chainID := big.NewInt(chains.BscMainnet.ChainId)
 		ethSigner := ethtypes.NewLondonSigner(chainID)
-		client := &mocks.MockEvmClient{}
+		client := &mocks.EVMRPCClient{}
 		return client, ethSigner, nil
 	}
 	httpClient, err := metrics.GetInstrumentedHTTPClient(endpoint)

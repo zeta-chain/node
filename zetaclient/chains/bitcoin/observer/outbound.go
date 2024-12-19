@@ -13,6 +13,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/constant"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
@@ -32,7 +33,7 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get app from context")
 	}
 
-	ticker, err := types.NewDynamicTicker("Bitcoin_WatchOutbound", ob.GetChainParams().OutboundTicker)
+	ticker, err := types.NewDynamicTicker("Bitcoin_WatchOutbound", ob.ChainParams().OutboundTicker)
 	if err != nil {
 		return errors.Wrap(err, "unable to create dynamic ticker")
 	}
@@ -106,7 +107,7 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 					ob.logger.Outbound.Error().Msgf("WatchOutbound: included multiple (%d) outbound for chain %d nonce %d", txCount, chainID, tracker.Nonce)
 				}
 			}
-			ticker.UpdateInterval(ob.GetChainParams().OutboundTicker, ob.logger.Outbound)
+			ticker.UpdateInterval(ob.ChainParams().OutboundTicker, ob.logger.Outbound)
 		case <-ob.StopChannel():
 			ob.logger.Outbound.Info().Msgf("WatchOutbound stopped for chain %d", chainID)
 			return nil
@@ -414,7 +415,7 @@ func (ob *Observer) getOutboundIDByNonce(ctx context.Context, nonce uint64, test
 
 // findNonceMarkUTXO finds the nonce-mark UTXO in the list of UTXOs.
 func (ob *Observer) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
-	tssAddress := ob.TSS().BTCAddressWitnessPubkeyHash().EncodeAddress()
+	tssAddress := ob.TSSAddressString()
 	amount := chains.NonceMarkAmount(nonce)
 	for i, utxo := range ob.utxos {
 		sats, err := bitcoin.GetSatoshis(utxo.Amount)
@@ -531,8 +532,8 @@ func (ob *Observer) checkTssOutboundResult(
 		return errors.Wrapf(err, "checkTssOutboundResult: invalid TSS Vin in outbound %s nonce %d", hash, nonce)
 	}
 
-	// differentiate between normal and restricted cctx
-	if compliance.IsCctxRestricted(cctx) {
+	// differentiate between normal and cancelled cctx
+	if compliance.IsCctxRestricted(cctx) || params.Amount.Uint64() < constant.BTCWithdrawalDustAmount {
 		err = ob.checkTSSVoutCancelled(params, rawResult.Vout)
 		if err != nil {
 			return errors.Wrapf(
@@ -559,7 +560,7 @@ func (ob *Observer) checkTSSVin(ctx context.Context, vins []btcjson.Vin, nonce u
 	if nonce > 0 && len(vins) <= 1 {
 		return fmt.Errorf("checkTSSVin: len(vins) <= 1")
 	}
-	pubKeyTss := hex.EncodeToString(ob.TSS().PubKeyCompressedBytes())
+	pubKeyTss := hex.EncodeToString(ob.TSS().PubKey().Bytes(true))
 	for i, vin := range vins {
 		// The length of the Witness should be always 2 for SegWit inputs.
 		if len(vin.Witness) != 2 {
@@ -599,7 +600,7 @@ func (ob *Observer) checkTSSVout(params *crosschaintypes.OutboundParams, vouts [
 	}
 
 	nonce := params.TssNonce
-	tssAddress := ob.TSS().BTCAddress()
+	tssAddress := ob.TSSAddressString()
 	for _, vout := range vouts {
 		// decode receiver and amount from vout
 		receiverExpected := tssAddress
@@ -658,7 +659,7 @@ func (ob *Observer) checkTSSVoutCancelled(params *crosschaintypes.OutboundParams
 	}
 
 	nonce := params.TssNonce
-	tssAddress := ob.TSS().BTCAddress()
+	tssAddress := ob.TSSAddressString()
 	for _, vout := range vouts {
 		// decode receiver and amount from vout
 		receiverVout, amount, err := bitcoin.DecodeTSSVout(vout, tssAddress, ob.Chain())

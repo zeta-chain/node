@@ -35,7 +35,10 @@ func SetupMainnetData(t *testing.T, k *observerkeeper.Keeper, ctx sdk.Context) {
 
 	for _, ballot := range b {
 		k.SetBallot(ctx, ballot)
-		ballotsList[ballot.BallotCreationHeight] = append(ballotsList[ballot.BallotCreationHeight], ballot.BallotIdentifier)
+		ballotsList[ballot.BallotCreationHeight] = append(
+			ballotsList[ballot.BallotCreationHeight],
+			ballot.BallotIdentifier,
+		)
 	}
 
 	for height, ballotList := range ballotsList {

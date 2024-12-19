@@ -12,13 +12,13 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/proofs"
-	"github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/pkg/sdkconfig"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestMsgVoteBlockHeader_ValidateBasic(t *testing.T) {
-	keeper.SetConfig(false)
+	sdkconfig.SetDefault(false)
 	var header ethtypes.Header
 	file, err := os.Open("../../../testutil/testdata/eth_header_18495266.json")
 	require.NoError(t, err)

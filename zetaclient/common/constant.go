@@ -1,5 +1,7 @@
 package common
 
+import "time"
+
 const (
 	// DefaultGasPriceMultiplier is the default gas price multiplier for all chains
 	DefaultGasPriceMultiplier = 1.0
@@ -9,4 +11,7 @@ const (
 
 	// BTCOutboundGasPriceMultiplier is the default gas price multiplier for BTC outbond txs
 	BTCOutboundGasPriceMultiplier = 2.0
+
+	// RPCStatusCheckInterval is the interval to check RPC status, 1 minute
+	RPCStatusCheckInterval = time.Minute
 )

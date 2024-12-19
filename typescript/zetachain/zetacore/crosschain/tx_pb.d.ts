@@ -8,7 +8,7 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 import type { CoinType } from "../pkg/coin/coin_pb.js";
 import type { Proof } from "../pkg/proofs/proofs_pb.js";
 import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
-import type { ProtocolContractVersion, RevertOptions } from "./cross_chain_tx_pb.js";
+import type { CallOptions, ProtocolContractVersion, RevertOptions } from "./cross_chain_tx_pb.js";
 import type { RateLimiterFlags } from "./rate_limiter_flags_pb.js";
 
 /**
@@ -137,17 +137,20 @@ export declare class MsgAddInboundTracker extends Message<MsgAddInboundTracker> 
   coinType: CoinType;
 
   /**
-   * @generated from field: zetachain.zetacore.pkg.proofs.Proof proof = 5;
+   * @generated from field: zetachain.zetacore.pkg.proofs.Proof proof = 5 [deprecated = true];
+   * @deprecated
    */
   proof?: Proof;
 
   /**
-   * @generated from field: string block_hash = 6;
+   * @generated from field: string block_hash = 6 [deprecated = true];
+   * @deprecated
    */
   blockHash: string;
 
   /**
-   * @generated from field: int64 tx_index = 7;
+   * @generated from field: int64 tx_index = 7 [deprecated = true];
+   * @deprecated
    */
   txIndex: bigint;
 
@@ -186,6 +189,8 @@ export declare class MsgAddInboundTrackerResponse extends Message<MsgAddInboundT
 }
 
 /**
+ * TODO: https://github.com/zeta-chain/node/issues/3083
+ *
  * @generated from message zetachain.zetacore.crosschain.MsgWhitelistERC20
  */
 export declare class MsgWhitelistERC20 extends Message<MsgWhitelistERC20> {
@@ -293,17 +298,20 @@ export declare class MsgAddOutboundTracker extends Message<MsgAddOutboundTracker
   txHash: string;
 
   /**
-   * @generated from field: zetachain.zetacore.pkg.proofs.Proof proof = 5;
+   * @generated from field: zetachain.zetacore.pkg.proofs.Proof proof = 5 [deprecated = true];
+   * @deprecated
    */
   proof?: Proof;
 
   /**
-   * @generated from field: string block_hash = 6;
+   * @generated from field: string block_hash = 6 [deprecated = true];
+   * @deprecated
    */
   blockHash: string;
 
   /**
-   * @generated from field: int64 tx_index = 7;
+   * @generated from field: int64 tx_index = 7 [deprecated = true];
+   * @deprecated
    */
   txIndex: bigint;
 
@@ -429,6 +437,12 @@ export declare class MsgVoteGasPrice extends Message<MsgVoteGasPrice> {
    * @generated from field: uint64 block_number = 4;
    */
   blockNumber: bigint;
+
+  /**
+   * @generated from field: string supply = 5 [deprecated = true];
+   * @deprecated
+   */
+  supply: string;
 
   constructor(data?: PartialMessage<MsgVoteGasPrice>);
 
@@ -616,6 +630,8 @@ export declare class MsgVoteInbound extends Message<MsgVoteInbound> {
   inboundBlockHeight: bigint;
 
   /**
+   * Deprecated (v21), use CallOptions
+   *
    * @generated from field: uint64 gas_limit = 11;
    */
   gasLimit: bigint;
@@ -655,6 +671,18 @@ export declare class MsgVoteInbound extends Message<MsgVoteInbound> {
    * @generated from field: zetachain.zetacore.crosschain.RevertOptions revert_options = 17;
    */
   revertOptions?: RevertOptions;
+
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.CallOptions call_options = 18;
+   */
+  callOptions?: CallOptions;
+
+  /**
+   * define if a smart contract call should be made with asset
+   *
+   * @generated from field: bool is_cross_chain_call = 19;
+   */
+  isCrossChainCall: boolean;
 
   constructor(data?: PartialMessage<MsgVoteInbound>);
 

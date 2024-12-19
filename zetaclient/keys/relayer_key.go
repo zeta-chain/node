@@ -5,7 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/gagliardetto/solana-go"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/crypto"
@@ -23,7 +25,7 @@ func (rk RelayerKey) ResolveAddress(network chains.Network) (string, string, err
 
 	switch network {
 	case chains.Network_solana:
-		privKey, err := crypto.SolanaPrivateKeyFromString(rk.PrivateKey)
+		privKey, err := solana.PrivateKeyFromBase58(rk.PrivateKey)
 		if err != nil {
 			return "", "", errors.Wrap(err, "unable to construct solana private key")
 		}
@@ -66,6 +68,8 @@ func LoadRelayerKey(relayerKeyPath string, network chains.Network, password stri
 		relayerKey.PrivateKey = privateKey
 		return relayerKey, nil
 	}
+
+	log.Logger.Warn().Msgf("relayer key file not found: %s", fileName)
 
 	// relayer key is optional, so it's okay if the relayer key is not provided
 	return nil, nil
@@ -128,7 +132,7 @@ func ReadRelayerKeyFromFile(fileName string) (*RelayerKey, error) {
 func IsRelayerPrivateKeyValid(privateKey string, network chains.Network) bool {
 	switch network {
 	case chains.Network_solana:
-		_, err := crypto.SolanaPrivateKeyFromString(privateKey)
+		_, err := solana.PrivateKeyFromBase58(privateKey)
 		if err != nil {
 			return false
 		}

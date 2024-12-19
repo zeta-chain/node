@@ -5,14 +5,15 @@ import (
 	"testing"
 
 	"github.com/btcsuite/btcd/blockchain"
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcutil"
 	"github.com/stretchr/testify/require"
 
+	btcecdsa "github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	"github.com/zeta-chain/node/pkg/chains"
 )
 
@@ -59,13 +60,13 @@ var exampleTxids = []string{
 }
 
 func generateKeyPair(t *testing.T, net *chaincfg.Params) (*btcec.PrivateKey, btcutil.Address, []byte) {
-	privateKey, err := btcec.NewPrivateKey(btcec.S256())
+	privateKey, err := btcec.NewPrivateKey()
 	require.NoError(t, err)
 	pubKeyHash := btcutil.Hash160(privateKey.PubKey().SerializeCompressed())
 	addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, net)
 	require.NoError(t, err)
 	//fmt.Printf("New address: %s\n", addr.EncodeAddress())
-	pkScript, err := PayToAddrScript(addr)
+	pkScript, err := txscript.PayToAddrScript(addr)
 	require.NoError(t, err)
 	return privateKey, addr, pkScript
 }
@@ -82,7 +83,7 @@ func getTestAddrScript(t *testing.T, scriptType string) btcutil.Address {
 
 // createPkScripts creates 10 random amount of scripts to the given address 'to'
 func createPkScripts(t *testing.T, to btcutil.Address, repeat int) ([]btcutil.Address, [][]byte) {
-	pkScript, err := PayToAddrScript(to)
+	pkScript, err := txscript.PayToAddrScript(to)
 	require.NoError(t, err)
 
 	addrs := []btcutil.Address{}
@@ -154,13 +155,12 @@ func addTxInputsOutputsAndSignTx(
 
 func signTx(t *testing.T, tx *wire.MsgTx, payerScript []byte, privateKey *btcec.PrivateKey) {
 	preTxSize := tx.SerializeSize()
-	sigHashes := txscript.NewTxSigHashes(tx)
+	sigHashes := txscript.NewTxSigHashes(tx, txscript.NewCannedPrevOutputFetcher([]byte{}, 0))
 	for ix := range tx.TxIn {
 		amount := int64(1 + rand.Intn(100000000))
 		witnessHash, err := txscript.CalcWitnessSigHash(payerScript, sigHashes, txscript.SigHashAll, tx, ix, amount)
 		require.NoError(t, err)
-		sig, err := privateKey.Sign(witnessHash)
-		require.NoError(t, err)
+		sig := btcecdsa.Sign(privateKey, witnessHash)
 
 		pkCompressed := privateKey.PubKey().SerializeCompressed()
 		txWitness := wire.TxWitness{append(sig.Serialize(), byte(txscript.SigHashAll)), pkCompressed}
@@ -261,7 +261,7 @@ func TestOutboundSizeXIn3Out(t *testing.T) {
 
 func TestGetOutputSizeByAddress(t *testing.T) {
 	// test nil P2TR address and non-nil P2TR address
-	nilP2TR := (*chains.AddressTaproot)(nil)
+	nilP2TR := (*btcutil.AddressTaproot)(nil)
 	sizeNilP2TR, err := GetOutputSizeByAddress(nilP2TR)
 	require.NoError(t, err)
 	require.Equal(t, uint64(0), sizeNilP2TR)

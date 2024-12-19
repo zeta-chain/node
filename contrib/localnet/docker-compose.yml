@@ -5,7 +5,6 @@
 # - An Ethereum node (eth)
 # - A secondary optional Ethereum node (eth2) enabled when profile is set to eth2
 # - A Bitcoin node (bitcoin)
-# - A Rosetta API (rosetta)
 # - An orchestrator to manage interaction with the localnet (orchestrator)
 # - An upgrade host to serve binaries for the upgrade tests (upgrade-host). Only enabled when profile is set to upgrade.
 # - An upgrade orchestrator to send the upgrade governance proposal (upgrade-orchestrator). Only enabled when profile is set to upgrade.
@@ -19,22 +18,6 @@ networks:
         - subnet: 172.20.0.0/24
 
 services:
-  rosetta:
-    image: zetanode:latest
-    container_name: rosetta
-    hostname: rosetta
-    depends_on:
-      zetacore0:
-        condition: service_healthy
-    ports:
-      - "8080:8080"
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.200
-    entrypoint: ["zetacored", "rosetta", "--tendermint", "zetacore0:26657", "--grpc", "zetacore0:9090", "--network", "athens_101-1", "--blockchain",  "zetacore"]
-    volumes:
-      - ssh:/root/.ssh
-
   zetacore0:
     image: zetanode:latest
     container_name: zetacore0
@@ -67,7 +50,8 @@ services:
       - ~/.zetacored/genesis_data:/root/genesis_data
 
   zetacore1:
-    image: zetanode:latest
+    image: ${ZETACORE1_IMAGE-zetanode:latest}
+    platform: ${ZETACORE1_PLATFORM-}
     container_name: zetacore1
     hostname: zetacore1
     networks:
@@ -90,7 +74,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.13
-    entrypoint: [ "/root/start-zetacored.sh", "4" ]
+    entrypoint: ["/root/start-zetacored.sh", "4"]
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
@@ -107,7 +91,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.14
-    entrypoint: [ "/root/start-zetacored.sh", "4" ]
+    entrypoint: ["/root/start-zetacored.sh", "4"]
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
@@ -126,7 +110,11 @@ services:
       - ETHDEV_ENDPOINT=http://eth:8545
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - PPROF_ADDR=0.0.0.0:6061
     restart: always
+    ports:
+      - "6061:6061" # pprof
+      - "8886:8886" # metrics
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
@@ -193,7 +181,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.100
-    entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2"]
+    entrypoint: ["geth", "--dev", "--datadir", "/root/data", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2", "--"]
 
   eth2:
     build:
@@ -211,7 +199,7 @@ services:
         ipv4_address: 172.20.0.102
 
   bitcoin:
-    image: ghcr.io/zeta-chain/ruimarinho-bitcoin-core:22 # version 23 is not working with btcd 0.22.0 due to change in createwallet rpc
+    image: ghcr.io/zeta-chain/bitcoin-core-docker:a94b52f
     container_name: bitcoin
     hostname: bitcoin
     networks:
@@ -219,13 +207,13 @@ services:
         ipv4_address: 172.20.0.101
     ports:
       - "18443:18443"
-    command:
-      -printtoconsole
-      -regtest=1
-      -rpcallowip=0.0.0.0/0
-      -rpcbind=0.0.0.0
-      -rpcauth=smoketest:63acf9b8dccecce914d85ff8c044b78b$$5892f9bbc84f4364e79f0970039f88bdd823f168d4acc76099ab97b14a766a99
-      -txindex=1
+    command: /opt/wallet.sh
+    environment:
+      - CHAIN=regtest
+      - RPC_USER=smoketest
+      - RPC_PASSWORD=123
+      - ADMIN_RPC_USER=admin
+      - ADMIN_RPC_PASSWORD=admin
 
   solana:
     image: solana-local:latest
@@ -234,12 +222,32 @@ services:
     profiles:
       - solana
       - all
+      - stress
+    restart: always
     ports:
       - "8899:8899"
     networks:
       mynetwork:
         ipv4_address: 172.20.0.103
-    entrypoint: [ "/usr/bin/start-solana.sh" ]
+    entrypoint: ["/usr/bin/start-solana.sh"]
+
+  ton:
+    # figure out why E2E fail with MyLocalTon v124 @ deposit: deployer.CreateWallet(..)
+    # image: ghcr.io/zeta-chain/ton-docker:4f08c1d
+    image: ghcr.io/zeta-chain/ton-docker:a69ea0f
+    container_name: ton
+    hostname: ton
+    profiles:
+      - ton
+      - all
+    ports:
+      - "8111:8000" # sidecar
+      - "4443:4443" # lite client
+    environment:
+      DOCKER_IP: 172.20.0.104
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.104
 
   orchestrator:
     image: orchestrator:latest
@@ -297,7 +305,7 @@ services:
       - ssh:/root/.ssh
 
   grafana:
-    image: grafana/grafana:9.1.7
+    image: ghcr.io/zeta-chain/grafana-grafana:11.2.0
     container_name: grafana
     hostname: grafana
     profiles:
@@ -306,6 +314,7 @@ services:
     volumes:
       - ./grafana/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
       - ./grafana/dashboards/:/etc/grafana/provisioning/dashboards
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
       - grafana_storage:/var/lib/grafana
     ports:
       - "3000:3000"
@@ -316,7 +325,7 @@ services:
       - prometheus
 
   prometheus:
-    image: prom/prometheus:v2.53.1
+    image: ghcr.io/zeta-chain/prom-prometheus:v2.53.1
     container_name: prometheus
     hostname: prometheus
     profiles:
@@ -328,8 +337,7 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.31
     depends_on:
-      zetacore0:
-        condition: service_healthy
+      - zetacore0
 
   zetachain-exporter:
     image: zetachain/zetachain-exporter:v2.0.6
@@ -360,7 +368,7 @@ services:
 
   loki:
     container_name: loki
-    image: grafana/loki:3.1.0
+    image: ghcr.io/zeta-chain/grafana-loki:3.1.0
     hostname: loki
     profiles:
       - monitoring
@@ -372,7 +380,7 @@ services:
 
   promtail:
     container_name: promtail
-    image: grafana/promtail:2.9.9
+    image: ghcr.io/zeta-chain/grafana-promtail:2.9.9
     hostname: promtail
     profiles:
       - monitoring
@@ -384,6 +392,24 @@ services:
       - ./promtail/config.yaml:/etc/promtail/config.yaml:ro
       - /var/run/docker.sock:/var/run/docker.sock
     command: -config.file=/etc/promtail/config.yaml
+
+  grafana-cloudflared:
+    container_name: grafana-cloudflared
+    image: ghcr.io/zeta-chain/cloudflare-cloudflared:2024.9.1
+    hostname: grafana-cloudflared
+    profiles:
+      - monitoring-cloudflared
+      - all
+    command:
+      - tunnel
+      - --no-autoupdate
+      - --url
+      - http://grafana:3000
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.35
+    depends_on:
+      - grafana
 
 volumes:
   ssh:

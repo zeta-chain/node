@@ -399,6 +399,7 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&observertypes.MsgUpdateChainParams{}),
 			sdk.MsgTypeURL(&observertypes.MsgEnableCCTX{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateGasPriceIncreaseFlags{}),
+			sdk.MsgTypeURL(&observertypes.MsgUpdateOperationalFlags{}),
 		}
 
 		// EmergencyPolicyMessageList is a list of messages that can be authorized by the emergency policy
@@ -430,6 +431,7 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&types.MsgAddAuthorization{}),
 			sdk.MsgTypeURL(&types.MsgRemoveAuthorization{}),
 			sdk.MsgTypeURL(&types.MsgUpdateChainInfo{}),
+			sdk.MsgTypeURL(&types.MsgRemoveChainInfo{}),
 			sdk.MsgTypeURL(&lightclienttypes.MsgEnableHeaderVerification{}),
 		}
 		defaultList := types.DefaultAuthorizationsList()

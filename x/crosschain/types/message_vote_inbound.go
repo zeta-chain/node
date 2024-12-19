@@ -22,6 +22,13 @@ const MaxMessageLength = 10240
 // InboundVoteOption is a function that sets some option on the inbound vote message
 type InboundVoteOption func(*MsgVoteInbound)
 
+// WithRevertOptions sets the revert options for inbound vote message
+func WithRevertOptions(revertOptions RevertOptions) InboundVoteOption {
+	return func(msg *MsgVoteInbound) {
+		msg.RevertOptions = revertOptions
+	}
+}
+
 // WithZEVMRevertOptions sets the revert options for the inbound vote message (ZEVM format)
 // the function convert the type from abigen to type defined in proto
 func WithZEVMRevertOptions(revertOptions gatewayzevm.RevertOptions) InboundVoteOption {
@@ -35,6 +42,13 @@ func WithZEVMRevertOptions(revertOptions gatewayzevm.RevertOptions) InboundVoteO
 func WithEVMRevertOptions(revertOptions gatewayevm.RevertOptions) InboundVoteOption {
 	return func(msg *MsgVoteInbound) {
 		msg.RevertOptions = NewRevertOptionsFromEVM(revertOptions)
+	}
+}
+
+// WithCrossChainCall sets the cross chain call to true for the inbound vote message
+func WithCrossChainCall(isCrossChainCall bool) InboundVoteOption {
+	return func(msg *MsgVoteInbound) {
+		msg.IsCrossChainCall = isCrossChainCall
 	}
 }
 
@@ -56,25 +70,30 @@ func NewMsgVoteInbound(
 	asset string,
 	eventIndex uint,
 	protocolContractVersion ProtocolContractVersion,
+	isArbitraryCall bool,
 	options ...InboundVoteOption,
 ) *MsgVoteInbound {
 	msg := &MsgVoteInbound{
-		Creator:                 creator,
-		Sender:                  sender,
-		SenderChainId:           senderChain,
-		TxOrigin:                txOrigin,
-		Receiver:                receiver,
-		ReceiverChain:           receiverChain,
-		Amount:                  amount,
-		Message:                 message,
-		InboundHash:             inboundHash,
-		InboundBlockHeight:      inboundBlockHeight,
-		GasLimit:                gasLimit,
+		Creator:            creator,
+		Sender:             sender,
+		SenderChainId:      senderChain,
+		TxOrigin:           txOrigin,
+		Receiver:           receiver,
+		ReceiverChain:      receiverChain,
+		Amount:             amount,
+		Message:            message,
+		InboundHash:        inboundHash,
+		InboundBlockHeight: inboundBlockHeight,
+		CallOptions: &CallOptions{
+			GasLimit:        gasLimit,
+			IsArbitraryCall: isArbitraryCall,
+		},
 		CoinType:                coinType,
 		Asset:                   asset,
 		EventIndex:              uint64(eventIndex),
 		ProtocolContractVersion: protocolContractVersion,
 		RevertOptions:           NewEmptyRevertOptions(),
+		IsCrossChainCall:        false,
 	}
 
 	for _, option := range options {

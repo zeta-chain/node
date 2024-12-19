@@ -40,21 +40,21 @@ func (k Keeper) Hooks() Hooks {
 
 // PostTxProcessing is a wrapper for calling the EVM PostTxProcessing hook on
 // the module keeper
-func (h Hooks) PostTxProcessing(ctx sdk.Context, msg core.Message, receipt *ethtypes.Receipt) error {
+func (h Hooks) PostTxProcessing(ctx sdk.Context, msg *core.Message, receipt *ethtypes.Receipt) error {
 	return h.k.PostTxProcessing(ctx, msg, receipt)
 }
 
 // PostTxProcessing implements EvmHooks.PostTxProcessing.
 func (k Keeper) PostTxProcessing(
 	ctx sdk.Context,
-	msg core.Message,
+	msg *core.Message,
 	receipt *ethtypes.Receipt,
 ) error {
 	var emittingContract ethcommon.Address
-	if msg.To() != nil {
-		emittingContract = *msg.To()
+	if msg.To != nil {
+		emittingContract = *msg.To
 	}
-	return k.ProcessLogs(ctx, receipt.Logs, emittingContract, msg.From().Hex())
+	return k.ProcessLogs(ctx, receipt.Logs, emittingContract, msg.From.Hex())
 }
 
 // ProcessLogs post-processes logs emitted by a zEVM contract; if the log contains Withdrawal event
@@ -87,7 +87,7 @@ func (k Keeper) ProcessLogs(
 	// run the processing for the v1 and the v2 protocol contracts
 	for _, log := range logs {
 		if !crypto.IsEmptyAddress(gatewayAddr) {
-			if err := k.ProcessZEVMInboundV2(ctx, log, gatewayAddr, emittingAddress, txOrigin); err != nil {
+			if err := k.ProcessZEVMInboundV2(ctx, log, gatewayAddr, txOrigin); err != nil {
 				return errors.Wrap(err, "failed to process ZEVM inbound V2")
 			}
 		}
@@ -206,6 +206,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(
 		foreignCoin.Asset,
 		event.Raw.Index,
 		types.ProtocolContractVersion_V1,
+		false, // not relevant for v1
 	)
 
 	cctx, err := k.ValidateInbound(ctx, msg, false)
@@ -286,6 +287,7 @@ func (k Keeper) ProcessZetaSentEvent(
 		"",
 		event.Raw.Index,
 		types.ProtocolContractVersion_V1,
+		false, // not relevant for v1
 	)
 
 	cctx, err := k.ValidateInbound(ctx, msg, true)

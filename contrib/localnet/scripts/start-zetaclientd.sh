@@ -20,7 +20,7 @@ import_relayer_key() {
 
   # import solana (network=7) relayer private key
   privkey_solana=$(yq -r ".observer_relayer_accounts.relayer_accounts[${num}].solana_private_key" /root/config.yml)
-  zetaclientd import-relayer-key --network=7 --private-key="$privkey_solana" --password=pass_relayerkey
+  zetaclientd relayer import-key --network=7 --private-key="$privkey_solana" --password=pass_relayerkey
 }
 
 PREPARAMS_PATH="/root/preparams/${HOSTNAME}.json"
@@ -68,11 +68,15 @@ echo "operatorAddress: $operatorAddress"
 RELAYER_KEY_PATH="$HOME/.zetacored/relayer-keys"
 mkdir -p "${RELAYER_KEY_PATH}"
 
+mkdir -p "$HOME/.tss/"
+zetae2e local get-zetaclient-bootstrap > "$HOME/.tss/address_book.seed"
+
+MYIP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
+
 echo "Start zetaclientd"
 # skip initialization if the config file already exists (zetaclientd init has already been run)
 if [[ $HOSTNAME == "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.json ]]
 then
-    MYIP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
     zetaclientd init --zetacore-url zetacore0 --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
 
     # import relayer private key for zetaclient0
@@ -90,13 +94,7 @@ if [[ $HOSTNAME != "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.j
 then
   num=$(echo $HOSTNAME | tr -dc '0-9')
   node="zetacore$num"
-  MYIP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
-  SEED=""
-  while [ -z "$SEED" ]
-  do
-    SEED=$(curl --retry 30 --retry-delay 1 --max-time 1 --retry-connrefused -s zetaclient0:8123/p2p)
-  done
-  zetaclientd init --peer "/ip4/172.20.0.21/tcp/6668/p2p/${SEED}" --zetacore-url "$node" --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --log-level 1 --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
+  zetaclientd init --zetacore-url "$node" --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --log-level 1 --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
 
   # import relayer private key for zetaclient{$num}
   import_relayer_key "${num}"
@@ -107,6 +105,12 @@ then
   if [[ -n $ADDITIONAL_EVM ]]; then
    set_sepolia_endpoint
   fi
+fi
+
+# merge zetaclient-config-overlay.json into zetaclient_config.json if specified
+if [[ -f /root/zetaclient-config-overlay.json ]]; then
+  jq -s '.[0] * .[1]' /root/.zetacored/config/zetaclient_config.json /root/zetaclient-config-overlay.json > /tmp/merged_config.json
+  mv /tmp/merged_config.json /root/.zetacored/config/zetaclient_config.json
 fi
 
 zetaclientd-supervisor start < /root/password.file

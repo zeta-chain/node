@@ -6,11 +6,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
-	"github.com/btcsuite/btcutil"
+	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -18,7 +20,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
+	"github.com/stretchr/testify/require"
 	zetaeth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/systemcontract.sol"
@@ -35,11 +37,14 @@ import (
 	"github.com/zeta-chain/node/e2e/contracts/contextapp"
 	"github.com/zeta-chain/node/e2e/contracts/erc20"
 	"github.com/zeta-chain/node/e2e/contracts/zevmswap"
+	tonrunner "github.com/zeta-chain/node/e2e/runner/ton"
 	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
+	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -70,6 +75,9 @@ type E2ERunner struct {
 	BTCTSSAddress         btcutil.Address
 	BTCDeployerAddress    *btcutil.AddressWitnessPubKeyHash
 	SolanaDeployerAddress solana.PublicKey
+	TONDeployer           *tonrunner.Deployer
+	TONGateway            *toncontracts.Gateway
+	FeeCollectorAddress   types.AccAddress
 
 	// all clients.
 	// a reference to this type is required to enable creating a new E2ERunner.
@@ -82,14 +90,16 @@ type E2ERunner struct {
 	SolanaClient *rpc.Client
 
 	// zetacored grpc clients
-	AuthorityClient   authoritytypes.QueryClient
-	CctxClient        crosschaintypes.QueryClient
-	FungibleClient    fungibletypes.QueryClient
-	AuthClient        authtypes.QueryClient
-	BankClient        banktypes.QueryClient
-	StakingClient     stakingtypes.QueryClient
-	ObserverClient    observertypes.QueryClient
-	LightclientClient lightclienttypes.QueryClient
+	AuthorityClient    authoritytypes.QueryClient
+	CctxClient         crosschaintypes.QueryClient
+	FungibleClient     fungibletypes.QueryClient
+	AuthClient         authtypes.QueryClient
+	BankClient         banktypes.QueryClient
+	StakingClient      stakingtypes.QueryClient
+	ObserverClient     observertypes.QueryClient
+	LightclientClient  lightclienttypes.QueryClient
+	DistributionClient distributiontypes.QueryClient
+	EmissionsClient    emissionstypes.QueryClient
 
 	// optional zeta (cosmos) client
 	// typically only in test runners that need it
@@ -102,27 +112,36 @@ type E2ERunner struct {
 
 	// programs on Solana
 	GatewayProgram solana.PublicKey
+	SPLAddr        solana.PublicKey
 
 	// contracts evm
-	ZetaEthAddr      ethcommon.Address
-	ZetaEth          *zetaeth.ZetaEth
-	ConnectorEthAddr ethcommon.Address
-	ConnectorEth     *zetaconnectoreth.ZetaConnectorEth
-	ERC20CustodyAddr ethcommon.Address
-	ERC20Custody     *erc20custody.ERC20Custody
-	ERC20Addr        ethcommon.Address
-	ERC20            *erc20.ERC20
-	EvmTestDAppAddr  ethcommon.Address
+	ZetaEthAddr       ethcommon.Address
+	ZetaEth           *zetaeth.ZetaEth
+	ConnectorEthAddr  ethcommon.Address
+	ConnectorEth      *zetaconnectoreth.ZetaConnectorEth
+	ERC20CustodyAddr  ethcommon.Address
+	ERC20Custody      *erc20custodyv2.ERC20Custody
+	ERC20Addr         ethcommon.Address
+	ERC20             *erc20.ERC20
+	EvmTestDAppAddr   ethcommon.Address
+	GatewayEVMAddr    ethcommon.Address
+	GatewayEVM        *gatewayevm.GatewayEVM
+	TestDAppV2EVMAddr ethcommon.Address
+	TestDAppV2EVM     *testdappv2.TestDAppV2
 
 	// contracts zevm
 	ERC20ZRC20Addr       ethcommon.Address
 	ERC20ZRC20           *zrc20.ZRC20
+	SPLZRC20Addr         ethcommon.Address
+	SPLZRC20             *zrc20.ZRC20
 	ETHZRC20Addr         ethcommon.Address
 	ETHZRC20             *zrc20.ZRC20
 	BTCZRC20Addr         ethcommon.Address
 	BTCZRC20             *zrc20.ZRC20
 	SOLZRC20Addr         ethcommon.Address
 	SOLZRC20             *zrc20.ZRC20
+	TONZRC20Addr         ethcommon.Address
+	TONZRC20             *zrc20.ZRC20
 	UniswapV2FactoryAddr ethcommon.Address
 	UniswapV2Factory     *uniswapv2factory.UniswapV2Factory
 	UniswapV2RouterAddr  ethcommon.Address
@@ -138,6 +157,10 @@ type E2ERunner struct {
 	SystemContractAddr   ethcommon.Address
 	SystemContract       *systemcontract.SystemContract
 	ZevmTestDAppAddr     ethcommon.Address
+	GatewayZEVMAddr      ethcommon.Address
+	GatewayZEVM          *gatewayzevm.GatewayZEVM
+	TestDAppV2ZEVMAddr   ethcommon.Address
+	TestDAppV2ZEVM       *testdappv2.TestDAppV2
 
 	// config
 	CctxTimeout    time.Duration
@@ -150,20 +173,6 @@ type E2ERunner struct {
 	Logger        *Logger
 	BitcoinParams *chaincfg.Params
 	mutex         sync.Mutex
-
-	// evm v2
-	GatewayEVMAddr     ethcommon.Address
-	GatewayEVM         *gatewayevm.GatewayEVM
-	ERC20CustodyV2Addr ethcommon.Address
-	ERC20CustodyV2     *erc20custodyv2.ERC20Custody
-	TestDAppV2EVMAddr  ethcommon.Address
-	TestDAppV2EVM      *testdappv2.TestDAppV2
-
-	// zevm v2
-	GatewayZEVMAddr    ethcommon.Address
-	GatewayZEVM        *gatewayzevm.GatewayZEVM
-	TestDAppV2ZEVMAddr ethcommon.Address
-	TestDAppV2ZEVM     *testdappv2.TestDAppV2
 }
 
 func NewE2ERunner(
@@ -181,18 +190,22 @@ func NewE2ERunner(
 
 		Account: account,
 
+		FeeCollectorAddress: authtypes.NewModuleAddress(authtypes.FeeCollectorName),
+
 		Clients: clients,
 
-		ZEVMClient:        clients.Zevm,
-		EVMClient:         clients.Evm,
-		AuthorityClient:   clients.Zetacore.Authority,
-		CctxClient:        clients.Zetacore.Crosschain,
-		FungibleClient:    clients.Zetacore.Fungible,
-		AuthClient:        clients.Zetacore.Auth,
-		BankClient:        clients.Zetacore.Bank,
-		StakingClient:     clients.Zetacore.Staking,
-		ObserverClient:    clients.Zetacore.Observer,
-		LightclientClient: clients.Zetacore.Lightclient,
+		ZEVMClient:         clients.Zevm,
+		EVMClient:          clients.Evm,
+		AuthorityClient:    clients.Zetacore.Authority,
+		CctxClient:         clients.Zetacore.Crosschain,
+		FungibleClient:     clients.Zetacore.Fungible,
+		AuthClient:         clients.Zetacore.Auth,
+		BankClient:         clients.Zetacore.Bank,
+		StakingClient:      clients.Zetacore.Staking,
+		ObserverClient:     clients.Zetacore.Observer,
+		LightclientClient:  clients.Zetacore.Lightclient,
+		DistributionClient: clients.Zetacore.Distribution,
+		EmissionsClient:    clients.Zetacore.Emissions,
 
 		EVMAuth:      clients.EvmAuth,
 		ZEVMAuth:     clients.ZevmAuth,
@@ -226,6 +239,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	r.ETHZRC20Addr = other.ETHZRC20Addr
 	r.BTCZRC20Addr = other.BTCZRC20Addr
 	r.SOLZRC20Addr = other.SOLZRC20Addr
+	r.TONZRC20Addr = other.TONZRC20Addr
 	r.UniswapV2FactoryAddr = other.UniswapV2FactoryAddr
 	r.UniswapV2RouterAddr = other.UniswapV2RouterAddr
 	r.ConnectorZEVMAddr = other.ConnectorZEVMAddr
@@ -247,7 +261,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	if err != nil {
 		return err
 	}
-	r.ERC20Custody, err = erc20custody.NewERC20Custody(r.ERC20CustodyAddr, r.EVMClient)
+	r.ERC20Custody, err = erc20custodyv2.NewERC20Custody(r.ERC20CustodyAddr, r.EVMClient)
 	if err != nil {
 		return err
 	}
@@ -268,6 +282,10 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 		return err
 	}
 	r.SOLZRC20, err = zrc20.NewZRC20(r.SOLZRC20Addr, r.ZEVMClient)
+	if err != nil {
+		return err
+	}
+	r.TONZRC20, err = zrc20.NewZRC20(r.TONZRC20Addr, r.ZEVMClient)
 	if err != nil {
 		return err
 	}
@@ -307,11 +325,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	if err != nil {
 		return err
 	}
-	r.ERC20CustodyV2Addr = other.ERC20CustodyV2Addr
-	r.ERC20CustodyV2, err = erc20custodyv2.NewERC20Custody(r.ERC20CustodyV2Addr, r.EVMClient)
-	if err != nil {
-		return err
-	}
+
 	r.TestDAppV2EVMAddr = other.TestDAppV2EVMAddr
 	r.TestDAppV2EVM, err = testdappv2.NewTestDAppV2(r.TestDAppV2EVMAddr, r.EVMClient)
 	if err != nil {
@@ -348,6 +362,8 @@ func (r *E2ERunner) Unlock() {
 func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print(" --- 📜Solana addresses ---")
 	r.Logger.Print("GatewayProgram: %s", r.GatewayProgram.String())
+	r.Logger.Print("SPL:        %s", r.SPLAddr.String())
+
 	// zevm contracts
 	r.Logger.Print(" --- 📜zEVM contracts ---")
 	r.Logger.Print("SystemContract: %s", r.SystemContractAddr.Hex())
@@ -355,14 +371,14 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("ERC20ZRC20:     %s", r.ERC20ZRC20Addr.Hex())
 	r.Logger.Print("BTCZRC20:       %s", r.BTCZRC20Addr.Hex())
 	r.Logger.Print("SOLZRC20:       %s", r.SOLZRC20Addr.Hex())
+	r.Logger.Print("SPLZRC20:       %s", r.SPLZRC20Addr.Hex())
+	r.Logger.Print("TONZRC20:       %s", r.TONZRC20Addr.Hex())
 	r.Logger.Print("UniswapFactory: %s", r.UniswapV2FactoryAddr.Hex())
 	r.Logger.Print("UniswapRouter:  %s", r.UniswapV2RouterAddr.Hex())
 	r.Logger.Print("ConnectorZEVM:  %s", r.ConnectorZEVMAddr.Hex())
 	r.Logger.Print("WZeta:          %s", r.WZetaAddr.Hex())
-
-	r.Logger.Print("ZEVMSwapApp:    %s", r.ZEVMSwapAppAddr.Hex())
-	r.Logger.Print("ContextApp:     %s", r.ContextAppAddr.Hex())
-	r.Logger.Print("TestDappZEVM:   %s", r.ZevmTestDAppAddr.Hex())
+	r.Logger.Print("GatewayZEVM:    %s", r.GatewayZEVMAddr.Hex())
+	r.Logger.Print("TestDAppV2ZEVM: %s", r.TestDAppV2ZEVMAddr.Hex())
 
 	// evm contracts
 	r.Logger.Print(" --- 📜EVM contracts ---")
@@ -370,18 +386,15 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("ConnectorEth:   %s", r.ConnectorEthAddr.Hex())
 	r.Logger.Print("ERC20Custody:   %s", r.ERC20CustodyAddr.Hex())
 	r.Logger.Print("ERC20:          %s", r.ERC20Addr.Hex())
-	r.Logger.Print("TestDappEVM:    %s", r.EvmTestDAppAddr.Hex())
-
-	// v2 contracts
-
-	r.Logger.Print(" --- 📜zEVM v2 contracts ---")
-	r.Logger.Print("GatewayZEVM:    %s", r.GatewayZEVMAddr.Hex())
-	r.Logger.Print("TestDAppV2ZEVM: %s", r.TestDAppV2ZEVMAddr.Hex())
-
-	r.Logger.Print(" --- 📜EVM v2 contracts ---")
 	r.Logger.Print("GatewayEVM:     %s", r.GatewayEVMAddr.Hex())
-	r.Logger.Print("ERC20CustodyV2: %s", r.ERC20CustodyV2Addr.Hex())
 	r.Logger.Print("TestDAppV2EVM:  %s", r.TestDAppV2EVMAddr.Hex())
+
+	r.Logger.Print(" --- 📜Legacy contracts ---")
+
+	r.Logger.Print("ZEVMSwapApp:    %s", r.ZEVMSwapAppAddr.Hex())
+	r.Logger.Print("ContextApp:     %s", r.ContextAppAddr.Hex())
+	r.Logger.Print("TestDappZEVM:   %s", r.ZevmTestDAppAddr.Hex())
+	r.Logger.Print("TestDappEVM:    %s", r.EvmTestDAppAddr.Hex())
 }
 
 // IsRunningUpgrade returns true if the test is running an upgrade test suite.
@@ -408,4 +421,10 @@ func (r *E2ERunner) requireTxSuccessful(receipt *ethtypes.Receipt, msgAndArgs ..
 // EVMAddress is shorthand to get the EVM address of the account
 func (r *E2ERunner) EVMAddress() ethcommon.Address {
 	return r.Account.EVMAddress()
+}
+
+func (r *E2ERunner) GetSolanaPrivKey() solana.PrivateKey {
+	privkey, err := solana.PrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
+	require.NoError(r, err)
+	return privkey
 }

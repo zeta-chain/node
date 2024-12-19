@@ -24,12 +24,14 @@ type StakingKeeper interface {
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
 	GetModuleAccount(ctx sdk.Context, name string) types.ModuleAccountI
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 }
 
 type ObserverKeeper interface {
@@ -146,9 +148,11 @@ type FungibleKeeper interface {
 		coinType coin.CoinType,
 		asset string,
 		protocolContractVersion ProtocolContractVersion,
+		isCrossChainCall bool,
 	) (*evmtypes.MsgEthereumTxResponse, bool, error)
 	ProcessV2RevertDeposit(
 		ctx sdk.Context,
+		inboundSender string,
 		amount *big.Int,
 		chainID int64,
 		coinType coin.CoinType,

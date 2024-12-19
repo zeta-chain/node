@@ -11,7 +11,6 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
-	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
 )
 
 var (
@@ -148,7 +147,6 @@ func GetDefaultChainParams() ChainParamsList {
 			GetDefaultMumbaiTestnetChainParams(),
 			GetDefaultBtcTestnetChainParams(),
 			GetDefaultBtcRegtestChainParams(),
-			GetDefaultSolanaLocalnetChainParams(),
 			GetDefaultGoerliLocalnetChainParams(),
 		},
 	}
@@ -292,30 +290,11 @@ func GetDefaultBtcRegtestChainParams() *ChainParams {
 		WatchUtxoTicker:             1,
 		InboundTicker:               1,
 		OutboundTicker:              2,
-		OutboundScheduleInterval:    2,
+		OutboundScheduleInterval:    1,
 		OutboundScheduleLookahead:   5,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
-	}
-}
-func GetDefaultSolanaLocalnetChainParams() *ChainParams {
-	return &ChainParams{
-		ChainId:                     chains.SolanaLocalnet.ChainId,
-		ConfirmationCount:           32,
-		ZetaTokenContractAddress:    constant.EVMZeroAddress,
-		ConnectorContractAddress:    constant.EVMZeroAddress,
-		Erc20CustodyContractAddress: constant.EVMZeroAddress,
-		GasPriceTicker:              5,
-		WatchUtxoTicker:             0,
-		InboundTicker:               2,
-		OutboundTicker:              2,
-		OutboundScheduleInterval:    2,
-		OutboundScheduleLookahead:   5,
-		BallotThreshold:             DefaultBallotThreshold,
-		MinObserverDelegation:       DefaultMinObserverDelegation,
-		IsSupported:                 false,
-		GatewayAddress:              solanacontracts.SolanaGatewayProgramID,
 	}
 }
 func GetDefaultGoerliLocalnetChainParams() *ChainParams {

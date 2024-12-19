@@ -17,6 +17,7 @@ import type { Blame } from "./blame_pb.js";
 import type { PendingNonces } from "./pending_nonces_pb.js";
 import type { ChainNonces } from "./chain_nonces_pb.js";
 import type { NonceToCctx } from "./nonce_to_cctx_pb.js";
+import type { OperationalFlags } from "./operational_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.observer.GenesisState
@@ -98,6 +99,11 @@ export declare class GenesisState extends Message<GenesisState> {
    * @generated from field: repeated zetachain.zetacore.observer.NonceToCctx nonce_to_cctx = 15;
    */
   nonceToCctx: NonceToCctx[];
+
+  /**
+   * @generated from field: zetachain.zetacore.observer.OperationalFlags operational_flags = 16;
+   */
+  operationalFlags?: OperationalFlags;
 
   constructor(data?: PartialMessage<GenesisState>);
 

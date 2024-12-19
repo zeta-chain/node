@@ -7,26 +7,26 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcutil"
+	cometbfttypes "github.com/cometbft/cometbft/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/onrik/ethrpc"
-	"github.com/rs/zerolog"
 	"gitlab.com/thorchain/tss/go-tss/blame"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/proofs"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
+	"github.com/zeta-chain/node/zetaclient/tss"
 )
 
 type Order string
@@ -39,15 +39,21 @@ const (
 
 // ChainObserver is the interface for chain observer
 type ChainObserver interface {
+	// Start starts the observer
 	Start(ctx context.Context)
+
+	// Stop stops the observer
 	Stop()
-	VoteOutboundIfConfirmed(
-		ctx context.Context,
-		cctx *crosschaintypes.CrossChainTx,
-	) (bool, error)
+
+	// ChainParams returns observer chain params (might be out of date with zetacore)
+	ChainParams() observertypes.ChainParams
+
+	// SetChainParams sets observer chain params
 	SetChainParams(observertypes.ChainParams)
-	GetChainParams() observertypes.ChainParams
-	WatchInboundTracker(ctx context.Context) error
+
+	// VoteOutboundIfConfirmed checks outbound status and returns (continueKeySign, error)
+	// todo we should make this simpler.
+	VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschaintypes.CrossChainTx) (bool, error)
 }
 
 // ChainSigner is the interface to sign transactions for a chain
@@ -69,15 +75,7 @@ type ChainSigner interface {
 	GetGatewayAddress() string
 }
 
-// ZetacoreVoter represents voter interface.
 type ZetacoreVoter interface {
-	PostVoteBlockHeader(
-		ctx context.Context,
-		chainID int64,
-		txhash []byte,
-		height int64,
-		header proofs.HeaderData,
-	) (string, error)
 	PostVoteGasPrice(
 		ctx context.Context,
 		chain chains.Chain,
@@ -103,15 +101,23 @@ type ZetacoreClient interface {
 	ZetacoreVoter
 
 	Chain() chains.Chain
-	GetLogger() *zerolog.Logger
 	GetKeys() keyinterfaces.ObserverKeys
+
+	GetSupportedChains(ctx context.Context) ([]chains.Chain, error)
+	GetAdditionalChains(ctx context.Context) ([]chains.Chain, error)
+	GetChainParams(ctx context.Context) ([]*observertypes.ChainParams, error)
 
 	GetKeyGen(ctx context.Context) (observertypes.Keygen, error)
 	GetTSS(ctx context.Context) (observertypes.TSS, error)
 	GetTSSHistory(ctx context.Context) ([]observertypes.TSS, error)
+	PostVoteTSS(
+		ctx context.Context,
+		tssPubKey string,
+		keyGenZetaHeight int64,
+		status chains.ReceiveStatus,
+	) (string, error)
 
 	GetBlockHeight(ctx context.Context) (int64, error)
-	GetBlockHeaderChainState(ctx context.Context, chainID int64) (*lightclienttypes.ChainState, error)
 
 	ListPendingCCTX(ctx context.Context, chainID int64) ([]*crosschaintypes.CrossChainTx, uint64, error)
 	ListPendingCCTXWithinRateLimit(
@@ -130,27 +136,21 @@ type ZetacoreClient interface {
 	) ([]crosschaintypes.OutboundTracker, error)
 	GetCrosschainFlags(ctx context.Context) (observertypes.CrosschainFlags, error)
 	GetRateLimiterFlags(ctx context.Context) (crosschaintypes.RateLimiterFlags, error)
+	GetOperationalFlags(ctx context.Context) (observertypes.OperationalFlags, error)
 	GetObserverList(ctx context.Context) ([]string, error)
 	GetBTCTSSAddress(ctx context.Context, chainID int64) (string, error)
 	GetZetaHotKeyBalance(ctx context.Context) (sdkmath.Int, error)
 	GetInboundTrackersForChain(ctx context.Context, chainID int64) ([]crosschaintypes.InboundTracker, error)
 
-	// todo(revamp): refactor input to struct
-	AddOutboundTracker(
-		ctx context.Context,
-		chainID int64,
-		nonce uint64,
-		txHash string,
-		proof *proofs.Proof,
-		blockHash string,
-		txIndex int64,
-	) (string, error)
+	GetUpgradePlan(ctx context.Context) (*upgradetypes.Plan, error)
 
-	Stop()
-	OnBeforeStop(callback func())
+	PostOutboundTracker(ctx context.Context, chainID int64, nonce uint64, txHash string) (string, error)
+	NewBlockSubscriber(ctx context.Context) (chan cometbfttypes.EventDataNewBlock, error)
 }
 
 // BTCRPCClient is the interface for BTC RPC client
+//
+// WARN: you must add any RPCs used on mainnet/testnet to the whitelist in https://github.com/zeta-chain/bitcoin-core-docker
 type BTCRPCClient interface {
 	GetNetworkInfo() (*btcjson.GetNetworkInfoResult, error)
 	CreateWallet(name string, opts ...rpcclient.CreateWalletOpt) (*btcjson.CreateWalletResult, error)
@@ -194,6 +194,7 @@ type SolanaRPCClient interface {
 	GetVersion(ctx context.Context) (*solrpc.GetVersionResult, error)
 	GetHealth(ctx context.Context) (string, error)
 	GetSlot(ctx context.Context, commitment solrpc.CommitmentType) (uint64, error)
+	GetBlockTime(ctx context.Context, block uint64) (*solana.UnixTimeSeconds, error)
 	GetAccountInfo(ctx context.Context, account solana.PublicKey) (*solrpc.GetAccountInfoResult, error)
 	GetBalance(
 		ctx context.Context,
@@ -235,28 +236,7 @@ type EVMJSONRPCClient interface {
 
 // TSSSigner is the interface for TSS signer
 type TSSSigner interface {
-	Pubkey() []byte
-
-	// Sign signs the data
-	// Note: it specifies optionalPubkey to use a different pubkey than the current pubkey set during keygen
-	// TODO: check if optionalPubkey is needed
-	// https://github.com/zeta-chain/node/issues/2085
-	Sign(
-		ctx context.Context,
-		data []byte,
-		height uint64,
-		nonce uint64,
-		chainID int64,
-		optionalPubkey string,
-	) ([65]byte, error)
-
-	// SignBatch signs the data in batch
-	SignBatch(ctx context.Context, digests [][]byte, height uint64, nonce uint64, chainID int64) ([][65]byte, error)
-
-	EVMAddress() ethcommon.Address
-
-	EVMAddressList() []ethcommon.Address
-	BTCAddress() string
-	BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash
-	PubKeyCompressedBytes() []byte
+	PubKey() tss.PubKey
+	Sign(ctx context.Context, data []byte, height, nonce uint64, chainID int64) ([65]byte, error)
+	SignBatch(ctx context.Context, digests [][]byte, height, nonce uint64, chainID int64) ([][65]byte, error)
 }

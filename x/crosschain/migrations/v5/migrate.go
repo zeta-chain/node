@@ -137,6 +137,7 @@ func SetZetaAccounting(
 
 	return nil
 }
+
 func GetAbortedAmount(cctx types.CrossChainTx) sdkmath.Uint {
 	if cctx.OutboundParams != nil && !cctx.GetCurrentOutboundParam().Amount.IsZero() {
 		return cctx.GetCurrentOutboundParam().Amount

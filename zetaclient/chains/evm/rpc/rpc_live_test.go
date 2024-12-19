@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/rpc"
+	"github.com/zeta-chain/node/zetaclient/common"
 
 	"testing"
 )
@@ -20,7 +21,12 @@ const (
 
 // Test_EVMRPCLive is a phony test to run each live test individually
 func Test_EVMRPCLive(t *testing.T) {
-	// LiveTest_IsTxConfirmed(t)
+	if !common.LiveTestEnabled() {
+		return
+	}
+
+	LiveTest_IsTxConfirmed(t)
+	LiveTest_CheckRPCStatus(t)
 }
 
 func LiveTest_IsTxConfirmed(t *testing.T) {
@@ -42,4 +48,13 @@ func LiveTest_IsTxConfirmed(t *testing.T) {
 		require.NoError(t, err)
 		require.False(t, confirmed)
 	})
+}
+
+func LiveTest_CheckRPCStatus(t *testing.T) {
+	client, err := ethclient.Dial(URLEthMainnet)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	_, err = rpc.CheckRPCStatus(ctx, client)
+	require.NoError(t, err)
 }

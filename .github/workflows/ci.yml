@@ -1,0 +1,134 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - develop
+      - release/*
+  merge_group:
+  pull_request:
+
+concurrency: 
+  group: ci-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  S3_BUCKET_PATH: "zetachain-deployment-files/builds/zeta-node"
+  S3_PUBLIC_BUCKET_PATH: "zetachain-external-files"
+  AWS_REGION: "us-east-1"
+  GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set CPU Architecture
+        shell: bash
+        run: |
+          if [ "$(uname -m)" == "aarch64" ]; then
+            echo "CPU_ARCH=arm64" >> $GITHUB_ENV
+          elif [ "$(uname -m)" == "x86_64" ]; then
+            echo "CPU_ARCH=amd64" >> $GITHUB_ENV
+          else
+            echo "Unsupported architecture" >&2
+            exit 1
+          fi
+
+      - name: Install Pipeline Dependencies
+        uses: ./.github/actions/install-dependencies
+        timeout-minutes: 8
+        with:
+          cpu_architecture: ${{ env.CPU_ARCH }}
+          skip_python: "true"
+          skip_aws_cli: "true"
+          skip_docker_compose: "false"
+      
+      - name: Test
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 20
+          max_attempts: 2
+          retry_on: error
+          command: |
+            echo "Running Build Tests"
+            make clean
+            make test-coverage
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          file: coverage.out
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: zeta-chain/node
+
+      - name: Build zetacored and zetaclientd
+        env:
+          CGO_ENABLED: 1
+          GOOS: linux
+          GOARCH: ${{ env.CPU_ARCH }}
+        run: |
+          make install
+          cp "$HOME"/go/bin/* ./
+          chmod a+x ./zetacored
+          ./zetacored version
+
+      - name: Upload zetacored
+        uses: actions/upload-artifact@v4
+        with:
+          name: zetacored
+          path: ~/go/bin/zetacored
+          retention-days: 30
+      
+      - name: Upload zetaclientd
+        uses: actions/upload-artifact@v4
+        with:
+          name: zetaclientd
+          path: ~/go/bin/zetaclientd
+          retention-days: 30
+      
+      - name: Clean Up Workspace
+        if: always()
+        shell: bash
+        run: rm -rf *
+  rpcimportable:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 15
+    # do not run this on forks as they are not installable
+    # it will still be check in the merge queue in this case
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'zeta-chain/node'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: go get node
+        working-directory: contrib/rpcimportable
+        run: go get github.com/zeta-chain/node@${{github.event.pull_request.head.sha || github.sha}}
+        env:
+          GOPROXY: direct
+          GOSUMDB: off
+      - name: go mod tidy
+        working-directory: contrib/rpcimportable
+        run: go mod tidy
+      - name: show go.mod
+        working-directory: contrib/rpcimportable
+        run: cat go.mod
+      - name: go test
+        working-directory: contrib/rpcimportable
+        run: go test ./...
+  ci-ok:
+    runs-on: ubuntu-22.04
+    needs:
+      - build-and-test
+      - rpcimportable
+    if: always()
+    steps:
+      - if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: |
+          echo "One of the jobs failed or was cancelled"
+          exit 1
+

@@ -43,11 +43,12 @@ func TestWhitelistERC20(r *runner.E2ERunner, _ []string) {
 	))
 	require.NoError(r, err)
 
-	// retrieve zrc20 and cctx from event
-	whitelistCCTXIndex, err := txserver.FetchAttributeFromTxResponse(res, "whitelist_cctx_index")
-	require.NoError(r, err)
+	event, ok := txserver.EventOfType[*crosschaintypes.EventERC20Whitelist](res.Events)
+	require.True(r, ok, "no EventERC20Whitelist in %s", res.TxHash)
+	erc20zrc20Addr := event.Zrc20Address
+	whitelistCCTXIndex := event.WhitelistCctxIndex
 
-	erc20zrc20Addr, err := txserver.FetchAttributeFromTxResponse(res, "zrc20_address")
+	err = r.ZetaTxServer.InitializeLiquidityCaps(erc20zrc20Addr)
 	require.NoError(r, err)
 
 	// ensure CCTX created
@@ -91,7 +92,7 @@ func TestWhitelistERC20(r *runner.E2ERunner, _ []string) {
 	r.Logger.Info("ERC20 balance: %s", balance.String())
 
 	// run deposit and withdraw ERC20 test
-	txHash := r.DepositERC20WithAmountAndMessage(r.EVMAddress(), balance, []byte{})
+	txHash := r.LegacyDepositERC20WithAmountAndMessage(r.EVMAddress(), balance, []byte{})
 	r.WaitForMinedCCTX(txHash)
 
 	// approve 1 unit of the gas token to cover the gas fee
@@ -102,6 +103,6 @@ func TestWhitelistERC20(r *runner.E2ERunner, _ []string) {
 	utils.RequireTxSuccessful(r, receipt)
 	r.Logger.Info("eth zrc20 approve receipt: status %d", receipt.Status)
 
-	tx = r.WithdrawERC20(balance)
+	tx = r.LegacyWithdrawERC20(balance)
 	r.WaitForMinedCCTX(tx.Hash())
 }

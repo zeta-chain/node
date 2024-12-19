@@ -205,6 +205,8 @@ func ModifyObserverState(
 	currentGenState := observertypes.GetGenesisStateFromAppState(cdc, appState)
 	currentGenState.Ballots = importedObserverGenState.Ballots
 	currentGenState.NonceToCctx = importedObserverGenState.NonceToCctx
+	// zero operational flags as they are network specific
+	currentGenState.OperationalFlags = observertypes.OperationalFlags{}
 
 	currentGenStateBz, err := cdc.MarshalJSON(&currentGenState)
 	if err != nil {

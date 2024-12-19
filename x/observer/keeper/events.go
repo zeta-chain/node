@@ -1,10 +1,11 @@
 package keeper
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
 
-	types2 "github.com/coinbase/rosetta-sdk-go/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	types "github.com/zeta-chain/node/x/observer/types"
@@ -20,6 +21,20 @@ func EmitEventBallotCreated(ctx sdk.Context, ballot types.Ballot, observationHas
 	if err != nil {
 		ctx.Logger().Error("failed to emit EventBallotCreated : %s", err.Error())
 	}
+}
+
+// vendor this code from github.com/coinbase/rosetta-sdk-go/types
+func prettyPrintStruct(val interface{}) string {
+	prettyStruct, err := json.MarshalIndent(
+		val,
+		"",
+		" ",
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return string(prettyStruct)
 }
 
 func EmitEventBallotDeleted(ctx sdk.Context, ballot types.Ballot) {
@@ -44,7 +59,7 @@ func EmitEventKeyGenBlockUpdated(ctx sdk.Context, keygen *types.Keygen) {
 	err := ctx.EventManager().EmitTypedEvents(&types.EventKeygenBlockUpdated{
 		MsgTypeUrl:    sdk.MsgTypeURL(&types.MsgUpdateKeygen{}),
 		KeygenBlock:   strconv.Itoa(int(keygen.BlockNumber)),
-		KeygenPubkeys: types2.PrettyPrintStruct(keygen.GranteePubkeys),
+		KeygenPubkeys: prettyPrintStruct(keygen.GranteePubkeys),
 	})
 	if err != nil {
 		ctx.Logger().Error("Error emitting EventKeygenBlockUpdated :", err)

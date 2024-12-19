@@ -19,12 +19,22 @@ modular framework for building blockchain and
 [Ethermint](https://github.com/zeta-chain/ethermint), a module that implements
 EVM-compatibility (ZetaChain fork).
 
-- [zeta-node](https://github.com/zeta-chain/zeta-node) (this repository)
-  contains the source code for the ZetaChain node (`zetacored`) and the
-  ZetaChain client (`zetaclientd`).
-- [protocol-contracts](https://github.com/zeta-chain/protocol-contracts)
-  contains the source code for the Solidity smart contracts that implement the
-  core functionality of ZetaChain.
+This repository contains the core components:
+
+* [Blockchain Modules (ZetaCore)](x):
+This section contains the core logic of the ZetaChain blockchain, built using Cosmos SDK modules. These modules are responsible for managing the state, state transitions, and overall functionality of the ZetaChain network.
+* [ZetaClient](zetaclient):
+The ZetaClient is a specialized client designed to act as an observer and signer for the ZetaChain network. It is responsible for communicating with the blockchain, relaying messages, and performing signature tasks to ensure the network operates cross-chain transactions.
+
+### Protocol Contracts
+
+In addition to the blockchain codebase, ZetaChain’s architecture includes a set of protocol contracts that serve as an interface for developers to interact with the blockchain. These smart contracts are deployed across various blockchain networks. The smart contract source code is maintained in separate repositories, depending on the network they are deployed on:
+
+* [ZetaChain EVM and EVM connected chains](https://github.com/zeta-chain/protocol-contracts)
+* [Solana connected chains (SVM)](https://github.com/zeta-chain/protocol-contracts-solana)
+* [TON connected chains (TVM)](https://github.com/zeta-chain/protocol-contracts-ton)
+
+These repositories contain the necessary code and tools to deploy, interact with, and extend the functionality of ZetaChain’s cross-chain protocol on each respective blockchain network.
 
 ## Building the `zetacored`/`zetaclientd` binaries
 
@@ -73,9 +83,10 @@ Find below further documentation for development and running your own ZetaChain 
 - [Run the E2E tests and interact with the localnet](docs/development/LOCAL_TESTING.md)
 - [Make a new ZetaChain release](docs/development/RELEASES.md)
 - [Deploy your own ZetaChain or Bitcoin node](docs/development/DEPLOY_NODES.md)
+- [Run the simulation tests](docs/development/SIMULATION_TESTING.md)
 
 ## Community
 
-[Twitter](https://twitter.com/zetablockchain) |
+[X (formerly Twitter)](https://x.com/zetablockchain) |
 [Discord](https://discord.com/invite/zetachain) |
 [Telegram](https://t.me/zetachainofficial) | [Website](https://zetachain.com)

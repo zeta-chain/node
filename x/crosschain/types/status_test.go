@@ -140,33 +140,79 @@ func TestStatus_ChangeStatus(t *testing.T) {
 	t.Run("should change status and msg if transition is valid", func(t *testing.T) {
 		s := types.Status{Status: types.CctxStatus_PendingInbound}
 
-		s.ChangeStatus(types.CctxStatus_PendingOutbound, "msg")
+		s.UpdateStatus(types.CctxStatus_PendingOutbound, "msg")
 		assert.Equal(t, s.Status, types.CctxStatus_PendingOutbound)
-		assert.Equal(t, s.StatusMessage, "msg")
+		assert.Equal(t, s.StatusMessage, "Status changed from PendingInbound to PendingOutbound: msg")
 	})
 
 	t.Run("should change status if transition is valid", func(t *testing.T) {
 		s := types.Status{Status: types.CctxStatus_PendingInbound}
 
-		s.ChangeStatus(types.CctxStatus_PendingOutbound, "")
+		s.UpdateStatus(types.CctxStatus_PendingOutbound, "")
+		fmt.Printf("%+v\n", s)
 		assert.Equal(t, s.Status, types.CctxStatus_PendingOutbound)
-		assert.Equal(t, s.StatusMessage, "")
+		assert.Equal(t, s.StatusMessage, fmt.Sprintf(
+			"Status changed from %s to %s",
+			types.CctxStatus_PendingInbound.String(),
+			types.CctxStatus_PendingOutbound.String()),
+		)
 	})
 
 	t.Run("should change status to aborted and msg if transition is invalid", func(t *testing.T) {
 		s := types.Status{Status: types.CctxStatus_PendingOutbound}
 
-		s.ChangeStatus(types.CctxStatus_PendingInbound, "msg")
+		s.UpdateStatus(types.CctxStatus_PendingInbound, "msg")
 		assert.Equal(t, s.Status, types.CctxStatus_Aborted)
 		assert.Equal(
 			t,
 			fmt.Sprintf(
-				"Failed to transition : OldStatus %s , NewStatus %s , MSG : %s :",
+				"Failed to transition status from %s to %s: msg",
 				types.CctxStatus_PendingOutbound.String(),
 				types.CctxStatus_PendingInbound.String(),
-				"msg",
 			),
 			s.StatusMessage,
 		)
 	})
+}
+
+func TestCctxStatus_IsTerminalStatus(t *testing.T) {
+	tests := []struct {
+		name     string
+		status   types.CctxStatus
+		expected bool
+	}{
+		{"PendingInbound", types.CctxStatus_PendingInbound, false},
+		{"PendingOutbound", types.CctxStatus_PendingOutbound, false},
+		{"OutboundMined", types.CctxStatus_OutboundMined, true},
+		{"Reverted", types.CctxStatus_Reverted, true},
+		{"Aborted", types.CctxStatus_Aborted, true},
+		{"PendingRevert", types.CctxStatus_PendingRevert, false},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, tc.status.IsTerminal())
+		})
+	}
+}
+
+func TestCctxStatus_IsPendingStatus(t *testing.T) {
+	tests := []struct {
+		name     string
+		status   types.CctxStatus
+		expected bool
+	}{
+		{"PendingInbound", types.CctxStatus_PendingInbound, true},
+		{"PendingOutbound", types.CctxStatus_PendingOutbound, true},
+		{"OutboundMined", types.CctxStatus_OutboundMined, false},
+		{"Reverted", types.CctxStatus_Reverted, false},
+		{"Aborted", types.CctxStatus_Aborted, false},
+		{"PendingRevert", types.CctxStatus_PendingRevert, true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, tc.status.IsPending())
+		})
+	}
 }

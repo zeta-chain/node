@@ -17,7 +17,7 @@ import (
 func CmdVoteInbound() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "vote-inbound [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message" +
-			"] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex] [protocolContractVersion]",
+			"] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex] [protocolContractVersion] [isArbitraryCall]",
 		Short: "Broadcast message to vote an inbound",
 		Args:  cobra.ExactArgs(13),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -67,6 +67,11 @@ func CmdVoteInbound() *cobra.Command {
 				return err
 			}
 
+			isArbitraryCall, err := strconv.ParseBool(args[13])
+			if err != nil {
+				return err
+			}
+
 			msg := types.NewMsgVoteInbound(
 				clientCtx.GetFromAddress().String(),
 				argsSender,
@@ -83,6 +88,7 @@ func CmdVoteInbound() *cobra.Command {
 				argsAsset,
 				uint(argsEventIndex),
 				protocolContractVersion,
+				isArbitraryCall,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

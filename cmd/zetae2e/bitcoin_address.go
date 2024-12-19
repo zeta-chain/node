@@ -6,7 +6,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/node/app"
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/runner"
@@ -46,9 +45,6 @@ func runBitcoinAddress(cmd *cobra.Command, args []string) error {
 	// initialize logger
 	logger := runner.NewLogger(false, color.FgHiYellow, "")
 
-	// set config
-	app.SetConfig()
-
 	// initialize context
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -66,14 +62,11 @@ func runBitcoinAddress(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	addr, privKey, err := r.GetBtcAddress()
-	if err != nil {
-		return err
-	}
+	addr, privKey := r.GetBtcAddress()
 
-	logger.Print("* BTC address: %s", addr)
+	logger.Print("* BTC address: %s", addr.EncodeAddress())
 	if showPrivKey {
-		logger.Print("* BTC privkey: %s", privKey)
+		logger.Print("* BTC privkey: %s", privKey.String())
 	}
 
 	return nil

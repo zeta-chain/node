@@ -4,31 +4,44 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
-	lru "github.com/hashicorp/golang-lru"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/testutil/sample"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
-	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
-// createObserver creates a new observer for testing
-func createObserver(t *testing.T, chain chains.Chain) *base.Observer {
+const (
+	// defaultConfirmationCount is the default confirmation count for unit tests
+	defaultConfirmationCount = 2
+)
+
+type testSuite struct {
+	*base.Observer
+	db       *db.DB
+	tss      *mocks.TSS
+	zetacore *mocks.ZetacoreClient
+}
+
+// newTestSuite creates a new observer for testing
+func newTestSuite(t *testing.T, chain chains.Chain) *testSuite {
 	// constructor parameters
 	chainParams := *sample.ChainParams(chain.ChainId)
+	chainParams.ConfirmationCount = defaultConfirmationCount
 	zetacoreClient := mocks.NewZetacoreClient(t)
-	tss := mocks.NewTSSMainnet()
+	tss := mocks.NewTSS(t)
 
 	database := createDatabase(t)
 
@@ -40,14 +53,18 @@ func createObserver(t *testing.T, chain chains.Chain) *base.Observer {
 		zetacoreClient,
 		tss,
 		base.DefaultBlockCacheSize,
-		base.DefaultHeaderCacheSize,
 		nil,
 		database,
 		logger,
 	)
 	require.NoError(t, err)
 
-	return ob
+	return &testSuite{
+		Observer: ob,
+		db:       database,
+		tss:      tss,
+		zetacore: zetacoreClient,
+	}
 }
 
 func TestNewObserver(t *testing.T) {
@@ -56,59 +73,43 @@ func TestNewObserver(t *testing.T) {
 	chainParams := *sample.ChainParams(chain.ChainId)
 	appContext := zctx.New(config.New(false), nil, zerolog.Nop())
 	zetacoreClient := mocks.NewZetacoreClient(t)
-	tss := mocks.NewTSSMainnet()
+	tss := mocks.NewTSS(t)
 	blockCacheSize := base.DefaultBlockCacheSize
-	headersCacheSize := base.DefaultHeaderCacheSize
 
 	database := createDatabase(t)
 
 	// test cases
 	tests := []struct {
-		name            string
-		chain           chains.Chain
-		chainParams     observertypes.ChainParams
-		appContext      *zctx.AppContext
-		zetacoreClient  interfaces.ZetacoreClient
-		tss             interfaces.TSSSigner
-		blockCacheSize  int
-		headerCacheSize int
-		fail            bool
-		message         string
+		name           string
+		chain          chains.Chain
+		chainParams    observertypes.ChainParams
+		appContext     *zctx.AppContext
+		zetacoreClient interfaces.ZetacoreClient
+		tss            interfaces.TSSSigner
+		blockCacheSize int
+		fail           bool
+		message        string
 	}{
 		{
-			name:            "should be able to create new observer",
-			chain:           chain,
-			chainParams:     chainParams,
-			appContext:      appContext,
-			zetacoreClient:  zetacoreClient,
-			tss:             tss,
-			blockCacheSize:  blockCacheSize,
-			headerCacheSize: headersCacheSize,
-			fail:            false,
+			name:           "should be able to create new observer",
+			chain:          chain,
+			chainParams:    chainParams,
+			appContext:     appContext,
+			zetacoreClient: zetacoreClient,
+			tss:            tss,
+			blockCacheSize: blockCacheSize,
+			fail:           false,
 		},
 		{
-			name:            "should return error on invalid block cache size",
-			chain:           chain,
-			chainParams:     chainParams,
-			appContext:      appContext,
-			zetacoreClient:  zetacoreClient,
-			tss:             tss,
-			blockCacheSize:  0,
-			headerCacheSize: headersCacheSize,
-			fail:            true,
-			message:         "error creating block cache",
-		},
-		{
-			name:            "should return error on invalid header cache size",
-			chain:           chain,
-			chainParams:     chainParams,
-			appContext:      appContext,
-			zetacoreClient:  zetacoreClient,
-			tss:             tss,
-			blockCacheSize:  blockCacheSize,
-			headerCacheSize: 0,
-			fail:            true,
-			message:         "error creating header cache",
+			name:           "should return error on invalid block cache size",
+			chain:          chain,
+			chainParams:    chainParams,
+			appContext:     appContext,
+			zetacoreClient: zetacoreClient,
+			tss:            tss,
+			blockCacheSize: 0,
+			fail:           true,
+			message:        "error creating block cache",
 		},
 	}
 
@@ -121,7 +122,6 @@ func TestNewObserver(t *testing.T) {
 				tt.zetacoreClient,
 				tt.tss,
 				tt.blockCacheSize,
-				tt.headerCacheSize,
 				nil,
 				database,
 				base.DefaultLogger(),
@@ -141,7 +141,7 @@ func TestNewObserver(t *testing.T) {
 func TestStop(t *testing.T) {
 	t.Run("should be able to stop observer", func(t *testing.T) {
 		// create observer and initialize db
-		ob := createObserver(t, chains.Ethereum)
+		ob := newTestSuite(t, chains.Ethereum)
 
 		// stop observer
 		ob.Stop()
@@ -151,92 +151,35 @@ func TestStop(t *testing.T) {
 func TestObserverGetterAndSetter(t *testing.T) {
 	chain := chains.Ethereum
 
-	t.Run("should be able to update chain", func(t *testing.T) {
-		ob := createObserver(t, chain)
-
-		// update chain
-		newChain := chains.BscMainnet
-		ob = ob.WithChain(chains.BscMainnet)
-		require.Equal(t, newChain, ob.Chain())
-	})
-	t.Run("should be able to update chain params", func(t *testing.T) {
-		ob := createObserver(t, chain)
-
-		// update chain params
-		newChainParams := *sample.ChainParams(chains.BscMainnet.ChainId)
-		ob = ob.WithChainParams(newChainParams)
-		require.True(t, observertypes.ChainParamsEqual(newChainParams, ob.ChainParams()))
-	})
-	t.Run("should be able to update zetacore client", func(t *testing.T) {
-		ob := createObserver(t, chain)
-
-		// update zetacore client
-		newZetacoreClient := mocks.NewZetacoreClient(t)
-		ob = ob.WithZetacoreClient(newZetacoreClient)
-		require.Equal(t, newZetacoreClient, ob.ZetacoreClient())
-	})
-	t.Run("should be able to update tss", func(t *testing.T) {
-		ob := createObserver(t, chain)
-
-		// update tss
-		newTSS := mocks.NewTSSAthens3()
-		ob = ob.WithTSS(newTSS)
-		require.Equal(t, newTSS, ob.TSS())
-	})
 	t.Run("should be able to update last block", func(t *testing.T) {
-		ob := createObserver(t, chain)
+		ob := newTestSuite(t, chain)
 
 		// update last block
 		newLastBlock := uint64(100)
-		ob = ob.WithLastBlock(newLastBlock)
+		ob.Observer.WithLastBlock(newLastBlock)
 		require.Equal(t, newLastBlock, ob.LastBlock())
 	})
+
 	t.Run("should be able to update last block scanned", func(t *testing.T) {
-		ob := createObserver(t, chain)
+		ob := newTestSuite(t, chain)
 
 		// update last block scanned
 		newLastBlockScanned := uint64(100)
-		ob = ob.WithLastBlockScanned(newLastBlockScanned)
+		ob.Observer.WithLastBlockScanned(newLastBlockScanned)
 		require.Equal(t, newLastBlockScanned, ob.LastBlockScanned())
 	})
+
 	t.Run("should be able to update last tx scanned", func(t *testing.T) {
-		ob := createObserver(t, chain)
+		ob := newTestSuite(t, chain)
 
 		// update last tx scanned
 		newLastTxScanned := sample.EthAddress().String()
-		ob = ob.WithLastTxScanned(newLastTxScanned)
+		ob.Observer.WithLastTxScanned(newLastTxScanned)
 		require.Equal(t, newLastTxScanned, ob.LastTxScanned())
 	})
-	t.Run("should be able to replace block cache", func(t *testing.T) {
-		ob := createObserver(t, chain)
 
-		// update block cache
-		newBlockCache, err := lru.New(200)
-		require.NoError(t, err)
-
-		ob = ob.WithBlockCache(newBlockCache)
-		require.Equal(t, newBlockCache, ob.BlockCache())
-	})
-	t.Run("should be able to replace header cache", func(t *testing.T) {
-		ob := createObserver(t, chain)
-
-		// update headers cache
-		newHeadersCache, err := lru.New(200)
-		require.NoError(t, err)
-
-		ob = ob.WithHeaderCache(newHeadersCache)
-		require.Equal(t, newHeadersCache, ob.HeaderCache())
-	})
-	t.Run("should be able to update telemetry server", func(t *testing.T) {
-		ob := createObserver(t, chain)
-
-		// update telemetry server
-		newServer := metrics.NewTelemetryServer()
-		ob = ob.WithTelemetryServer(newServer)
-		require.Equal(t, newServer, ob.TelemetryServer())
-	})
 	t.Run("should be able to get logger", func(t *testing.T) {
-		ob := createObserver(t, chain)
+		ob := newTestSuite(t, chain)
 		logger := ob.Logger()
 
 		// should be able to print log
@@ -249,23 +192,118 @@ func TestObserverGetterAndSetter(t *testing.T) {
 	})
 }
 
+func TestTSSAddressString(t *testing.T) {
+	btcSomething := chains.BitcoinMainnet
+	btcSomething.ChainId = 123123123
+
+	tests := []struct {
+		name         string
+		chain        chains.Chain
+		addrExpected string
+	}{
+		{
+			name:         "should return TSS BTC address for Bitcoin chain",
+			chain:        chains.BitcoinMainnet,
+			addrExpected: "btc",
+		},
+		{
+			name:         "should return TSS EVM address for EVM chain",
+			chain:        chains.Ethereum,
+			addrExpected: "eth",
+		},
+		{
+			name:         "should return TSS EVM address for other non-BTC chain",
+			chain:        chains.SolanaDevnet,
+			addrExpected: "eth",
+		},
+		{
+			name:         "should return empty address for unknown BTC chain",
+			chain:        btcSomething,
+			addrExpected: "",
+		},
+	}
+
+	// run tests
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// create observer
+			ob := newTestSuite(t, tt.chain)
+
+			// get TSS address
+			addr := ob.TSSAddressString()
+			switch tt.addrExpected {
+			case "":
+				require.Equal(t, "", addr)
+			case "btc":
+				require.True(t, strings.HasPrefix(addr, "bc"))
+			case "eth":
+				require.True(t, strings.HasPrefix(addr, "0x"))
+			default:
+				t.Fail()
+			}
+		})
+	}
+}
+
+func TestIsBlockConfirmed(t *testing.T) {
+	tests := []struct {
+		name      string
+		chain     chains.Chain
+		block     uint64
+		lastBlock uint64
+		confirmed bool
+	}{
+		{
+			name:      "should confirm block 100 when confirmation arrives 2",
+			chain:     chains.BitcoinMainnet,
+			block:     100,
+			lastBlock: 101, // got 2 confirmations
+			confirmed: true,
+		},
+		{
+			name:      "should not confirm block 100 when confirmation < 2",
+			chain:     chains.BitcoinMainnet,
+			block:     100,
+			lastBlock: 100, // got 1 confirmation, need one more
+			confirmed: false,
+		},
+		{
+			name:      "should confirm block 100 when confirmation arrives 2",
+			chain:     chains.Ethereum,
+			block:     100,
+			lastBlock: 99, // last block lagging behind, need to wait
+			confirmed: false,
+		},
+	}
+
+	// run tests
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// create observer
+			ob := newTestSuite(t, tt.chain)
+			ob.Observer.WithLastBlock(tt.lastBlock)
+
+			// check if block is confirmed
+			confirmed := ob.IsBlockConfirmed(tt.block)
+			require.Equal(t, tt.confirmed, confirmed)
+		})
+	}
+}
+
 func TestOutboundID(t *testing.T) {
 	tests := []struct {
 		name  string
 		chain chains.Chain
-		tss   interfaces.TSSSigner
 		nonce uint64
 	}{
 		{
 			name:  "should get correct outbound id for Ethereum chain",
 			chain: chains.Ethereum,
-			tss:   mocks.NewTSSMainnet(),
 			nonce: 100,
 		},
 		{
 			name:  "should get correct outbound id for Bitcoin chain",
 			chain: chains.BitcoinMainnet,
-			tss:   mocks.NewTSSMainnet(),
 			nonce: 200,
 		},
 	}
@@ -274,17 +312,13 @@ func TestOutboundID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// create observer
-			ob := createObserver(t, tt.chain)
-			ob = ob.WithTSS(tt.tss)
+			ob := newTestSuite(t, tt.chain)
 
 			// get outbound id
 			outboundID := ob.OutboundID(tt.nonce)
 
 			// expected outbound id
-			exepctedID := fmt.Sprintf("%d-%s-%d", tt.chain.ChainId, tt.tss.EVMAddress(), tt.nonce)
-			if tt.chain.Consensus == chains.Consensus_bitcoin {
-				exepctedID = fmt.Sprintf("%d-%s-%d", tt.chain.ChainId, tt.tss.BTCAddress(), tt.nonce)
-			}
+			exepctedID := fmt.Sprintf("%d-%s-%d", tt.chain.ChainId, ob.TSSAddressString(), tt.nonce)
 			require.Equal(t, exepctedID, outboundID)
 		})
 	}
@@ -296,7 +330,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 
 	t.Run("should be able to load last block scanned", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := newTestSuite(t, chain)
 
 		// create db and write 100 as last block scanned
 		err := ob.WriteLastBlockScannedToDB(100)
@@ -307,18 +341,20 @@ func TestLoadLastBlockScanned(t *testing.T) {
 		require.NoError(t, err)
 		require.EqualValues(t, 100, ob.LastBlockScanned())
 	})
+
 	t.Run("latest block scanned should be 0 if not found in db", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := newTestSuite(t, chain)
 
 		// read last block scanned
 		err := ob.LoadLastBlockScanned(log.Logger)
 		require.NoError(t, err)
 		require.EqualValues(t, 0, ob.LastBlockScanned())
 	})
+
 	t.Run("should overwrite last block scanned if env var is set", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := newTestSuite(t, chain)
 
 		// create db and write 100 as last block scanned
 		ob.WriteLastBlockScannedToDB(100)
@@ -331,9 +367,10 @@ func TestLoadLastBlockScanned(t *testing.T) {
 		require.NoError(t, err)
 		require.EqualValues(t, 101, ob.LastBlockScanned())
 	})
+
 	t.Run("last block scanned should remain 0 if env var is set to latest", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := newTestSuite(t, chain)
 
 		// create db and write 100 as last block scanned
 		ob.WriteLastBlockScannedToDB(100)
@@ -346,9 +383,10 @@ func TestLoadLastBlockScanned(t *testing.T) {
 		require.NoError(t, err)
 		require.EqualValues(t, 0, ob.LastBlockScanned())
 	})
+
 	t.Run("should return error on invalid env var", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := newTestSuite(t, chain)
 
 		// set invalid env var
 		os.Setenv(envvar, "invalid")
@@ -362,7 +400,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 func TestSaveLastBlockScanned(t *testing.T) {
 	t.Run("should be able to save last block scanned", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chains.Ethereum)
+		ob := newTestSuite(t, chains.Ethereum)
 
 		// save 100 as last block scanned
 		err := ob.SaveLastBlockScanned(100)
@@ -382,7 +420,7 @@ func TestReadWriteDBLastBlockScanned(t *testing.T) {
 	chain := chains.Ethereum
 	t.Run("should be able to write and read last block scanned to db", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := newTestSuite(t, chain)
 
 		// write last block scanned
 		err := ob.WriteLastBlockScannedToDB(100)
@@ -392,9 +430,10 @@ func TestReadWriteDBLastBlockScanned(t *testing.T) {
 		require.NoError(t, err)
 		require.EqualValues(t, 100, lastBlockScanned)
 	})
+
 	t.Run("should return error when last block scanned not found in db", func(t *testing.T) {
 		// create empty db
-		ob := createObserver(t, chain)
+		ob := newTestSuite(t, chain)
 
 		lastScannedBlock, err := ob.ReadLastBlockScannedFromDB()
 		require.Error(t, err)
@@ -408,7 +447,7 @@ func TestLoadLastTxScanned(t *testing.T) {
 
 	t.Run("should be able to load last tx scanned", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := newTestSuite(t, chain)
 
 		// create db and write sample hash as last tx scanned
 		ob.WriteLastTxScannedToDB(lastTx)
@@ -417,17 +456,19 @@ func TestLoadLastTxScanned(t *testing.T) {
 		ob.LoadLastTxScanned()
 		require.EqualValues(t, lastTx, ob.LastTxScanned())
 	})
+
 	t.Run("latest tx scanned should be empty if not found in db", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := newTestSuite(t, chain)
 
 		// read last tx scanned
 		ob.LoadLastTxScanned()
 		require.Empty(t, ob.LastTxScanned())
 	})
+
 	t.Run("should overwrite last tx scanned if env var is set", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := newTestSuite(t, chain)
 
 		// create db and write sample hash as last tx scanned
 		ob.WriteLastTxScannedToDB(lastTx)
@@ -446,7 +487,7 @@ func TestSaveLastTxScanned(t *testing.T) {
 	chain := chains.SolanaDevnet
 	t.Run("should be able to save last tx scanned", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := newTestSuite(t, chain)
 
 		// save random tx hash
 		lastSlot := uint64(100)
@@ -469,7 +510,7 @@ func TestReadWriteDBLastTxScanned(t *testing.T) {
 	chain := chains.SolanaDevnet
 	t.Run("should be able to write and read last tx scanned to db", func(t *testing.T) {
 		// create observer and open db
-		ob := createObserver(t, chain)
+		ob := newTestSuite(t, chain)
 
 		// write last tx scanned
 		lastTx := "5LuQMorgd11p8GWEw6pmyHCDtA26NUyeNFhLWPNk2oBoM9pkag1LzhwGSRos3j4TJLhKjswFhZkGtvSGdLDkmqsk"
@@ -480,9 +521,10 @@ func TestReadWriteDBLastTxScanned(t *testing.T) {
 		require.NoError(t, err)
 		require.EqualValues(t, lastTx, lastTxScanned)
 	})
+
 	t.Run("should return error when last tx scanned not found in db", func(t *testing.T) {
 		// create empty db
-		ob := createObserver(t, chain)
+		ob := newTestSuite(t, chain)
 
 		lastTxScanned, err := ob.ReadLastTxScannedFromDB()
 		require.Error(t, err)
@@ -493,18 +535,29 @@ func TestReadWriteDBLastTxScanned(t *testing.T) {
 func TestPostVoteInbound(t *testing.T) {
 	t.Run("should be able to post vote inbound", func(t *testing.T) {
 		// create observer
-		ob := createObserver(t, chains.Ethereum)
+		ob := newTestSuite(t, chains.Ethereum)
 
-		// create mock zetacore client
-		zetacoreClient := mocks.NewZetacoreClient(t)
-		zetacoreClient.WithPostVoteInbound("", "sampleBallotIndex")
-		ob = ob.WithZetacoreClient(zetacoreClient)
+		ob.zetacore.WithPostVoteInbound("", "sampleBallotIndex")
 
 		// post vote inbound
 		msg := sample.InboundVote(coin.CoinType_Gas, chains.Ethereum.ChainId, chains.ZetaChainMainnet.ChainId)
 		ballot, err := ob.PostVoteInbound(context.TODO(), &msg, 100000)
 		require.NoError(t, err)
 		require.Equal(t, "sampleBallotIndex", ballot)
+	})
+
+	t.Run("should not post vote if message basic validation fails", func(t *testing.T) {
+		// create observer
+		ob := newTestSuite(t, chains.Ethereum)
+
+		// create sample message with long Message
+		msg := sample.InboundVote(coin.CoinType_Gas, chains.Ethereum.ChainId, chains.ZetaChainMainnet.ChainId)
+		msg.Message = strings.Repeat("1", crosschaintypes.MaxMessageLength+1)
+
+		// post vote inbound
+		ballot, err := ob.PostVoteInbound(context.TODO(), &msg, 100000)
+		require.NoError(t, err)
+		require.Empty(t, ballot)
 	})
 }
 

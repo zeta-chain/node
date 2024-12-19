@@ -134,8 +134,10 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				OutboundParams: []*types.OutboundParams{
 					{
 						ReceiverChainId: 42,
-						GasLimit:        1000,
-						GasPrice:        "100",
+						CallOptions: &types.CallOptions{
+							GasLimit: 1000,
+						},
+						GasPrice: "100",
 					},
 				},
 			},
@@ -159,8 +161,10 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				OutboundParams: []*types.OutboundParams{
 					{
 						ReceiverChainId: 42,
-						GasLimit:        1000,
-						GasPrice:        "100",
+						CallOptions: &types.CallOptions{
+							GasLimit: 1000,
+						},
+						GasPrice: "100",
 					},
 				},
 			},
@@ -188,8 +192,10 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				OutboundParams: []*types.OutboundParams{
 					{
 						ReceiverChainId: 42,
-						GasLimit:        1000,
-						GasPrice:        "100",
+						CallOptions: &types.CallOptions{
+							GasLimit: 1000,
+						},
+						GasPrice: "100",
 					},
 				},
 			},
@@ -217,8 +223,10 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				OutboundParams: []*types.OutboundParams{
 					{
 						ReceiverChainId: 42,
-						GasLimit:        1000,
-						GasPrice:        "100",
+						CallOptions: &types.CallOptions{
+							GasLimit: 1000,
+						},
+						GasPrice: "100",
 					},
 				},
 			},
@@ -245,8 +253,10 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				OutboundParams: []*types.OutboundParams{
 					{
 						ReceiverChainId: 42,
-						GasLimit:        100,
-						GasPrice:        "",
+						CallOptions: &types.CallOptions{
+							GasLimit: 100,
+						},
+						GasPrice: "",
 					},
 				},
 			},
@@ -268,8 +278,10 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				OutboundParams: []*types.OutboundParams{
 					{
 						ReceiverChainId: 42,
-						GasLimit:        0,
-						GasPrice:        "100",
+						CallOptions: &types.CallOptions{
+							GasLimit: 0,
+						},
+						GasPrice: "100",
 					},
 				},
 			},
@@ -291,8 +303,10 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				OutboundParams: []*types.OutboundParams{
 					{
 						ReceiverChainId: 42,
-						GasLimit:        0,
-						GasPrice:        "100",
+						CallOptions: &types.CallOptions{
+							GasLimit: 0,
+						},
+						GasPrice: "100",
 					},
 				},
 			},
@@ -314,8 +328,10 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				OutboundParams: []*types.OutboundParams{
 					{
 						ReceiverChainId: 42,
-						GasLimit:        1000,
-						GasPrice:        "100",
+						CallOptions: &types.CallOptions{
+							GasLimit: 1000,
+						},
+						GasPrice: "100",
 					},
 				},
 			},
@@ -336,8 +352,10 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 				OutboundParams: []*types.OutboundParams{
 					{
 						ReceiverChainId: 42,
-						GasLimit:        1000,
-						GasPrice:        "100",
+						CallOptions: &types.CallOptions{
+							GasLimit: 1000,
+						},
+						GasPrice: "100",
 					},
 				},
 			},

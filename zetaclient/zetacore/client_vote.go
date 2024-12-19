@@ -7,41 +7,12 @@ import (
 	"gitlab.com/thorchain/tss/go-tss/blame"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/proofs"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observerclient "github.com/zeta-chain/node/x/observer/client/cli"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 )
-
-// PostVoteBlockHeader posts a vote on an observed block header
-func (c *Client) PostVoteBlockHeader(
-	ctx context.Context,
-	chainID int64,
-	blockHash []byte,
-	height int64,
-	header proofs.HeaderData,
-) (string, error) {
-	signerAddress := c.keys.GetOperatorAddress().String()
-
-	msg := observertypes.NewMsgVoteBlockHeader(signerAddress, chainID, blockHash, height, header)
-
-	authzMsg, authzSigner, err := WrapMessageWithAuthz(msg)
-	if err != nil {
-		return "", err
-	}
-
-	zetaTxHash, err := retry.DoTypedWithRetry(func() (string, error) {
-		return c.Broadcast(ctx, DefaultGasLimit, authzMsg, authzSigner)
-	})
-
-	if err != nil {
-		return "", errors.Wrap(err, "unable to broadcast vote block header")
-	}
-
-	return zetaTxHash, nil
-}
 
 // PostVoteGasPrice posts a gas price vote. Returns txHash and error.
 func (c *Client) PostVoteGasPrice(
@@ -89,7 +60,7 @@ func (c *Client) PostVoteTSS(
 	}
 
 	zetaTxHash, err := retry.DoTypedWithRetry(func() (string, error) {
-		return c.Broadcast(ctx, DefaultGasLimit, authzMsg, authzSigner)
+		return c.Broadcast(ctx, PostTSSGasLimit, authzMsg, authzSigner)
 	})
 
 	if err != nil {

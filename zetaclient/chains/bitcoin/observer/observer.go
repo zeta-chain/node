@@ -3,19 +3,16 @@ package observer
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"math"
 	"math/big"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcutil"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
@@ -53,23 +50,6 @@ type Logger struct {
 
 	// UTXOs is the logger for UTXOs management
 	UTXOs zerolog.Logger
-}
-
-// BTCInboundEvent represents an incoming transaction event
-// TODO(revamp): Move to inbound
-type BTCInboundEvent struct {
-	// FromAddress is the first input address
-	FromAddress string
-
-	// ToAddress is the TSS address
-	ToAddress string
-
-	// Value is the amount of BTC
-	Value float64
-
-	MemoBytes   []byte
-	BlockNumber uint64
-	TxHash      string
 }
 
 // BTCBlockNHeader contains bitcoin block and the header
@@ -126,7 +106,6 @@ func NewObserver(
 		zetacoreClient,
 		tss,
 		btcBlocksPerDay,
-		base.DefaultHeaderCacheSize,
 		ts,
 		database,
 		logger,
@@ -175,30 +154,9 @@ func (ob *Observer) BtcClient() interfaces.BTCRPCClient {
 	return ob.btcClient
 }
 
-// WithBtcClient attaches a new btc client to the observer
-func (ob *Observer) WithBtcClient(client interfaces.BTCRPCClient) {
-	ob.btcClient = client
-}
-
-// SetChainParams sets the chain params for the observer
-// Note: chain params is accessed concurrently
-func (ob *Observer) SetChainParams(params observertypes.ChainParams) {
-	ob.Mu().Lock()
-	defer ob.Mu().Unlock()
-	ob.WithChainParams(params)
-}
-
-// GetChainParams returns the chain params for the observer
-// Note: chain params is accessed concurrently
-func (ob *Observer) GetChainParams() observertypes.ChainParams {
-	ob.Mu().Lock()
-	defer ob.Mu().Unlock()
-	return ob.ChainParams()
-}
-
 // Start starts the Go routine processes to observe the Bitcoin chain
 func (ob *Observer) Start(ctx context.Context) {
-	if noop := ob.Observer.Start(); noop {
+	if ok := ob.Observer.Start(); !ok {
 		ob.Logger().Chain.Info().Msgf("observer is already started for chain %d", ob.Chain().ChainId)
 		return
 	}
@@ -221,71 +179,7 @@ func (ob *Observer) Start(ctx context.Context) {
 	bg.Work(ctx, ob.WatchInboundTracker, bg.WithName("WatchInboundTracker"), bg.WithLogger(ob.Logger().Inbound))
 
 	// watch the RPC status of the bitcoin chain
-	bg.Work(ctx, ob.WatchRPCStatus, bg.WithName("WatchRPCStatus"), bg.WithLogger(ob.Logger().Chain))
-}
-
-// WatchRPCStatus watches the RPC status of the Bitcoin chain
-// TODO(revamp): move ticker related functions to a specific file
-// TODO(revamp): move inner logic in a separate function
-func (ob *Observer) WatchRPCStatus(_ context.Context) error {
-	ob.logger.Chain.Info().Msgf("RPCStatus is starting")
-	ticker := time.NewTicker(60 * time.Second)
-
-	for {
-		select {
-		case <-ticker.C:
-			if !ob.GetChainParams().IsSupported {
-				continue
-			}
-
-			bn, err := ob.btcClient.GetBlockCount()
-			if err != nil {
-				ob.logger.Chain.Error().Err(err).Msg("RPC status check: RPC down? ")
-				continue
-			}
-
-			hash, err := ob.btcClient.GetBlockHash(bn)
-			if err != nil {
-				ob.logger.Chain.Error().Err(err).Msg("RPC status check: RPC down? ")
-				continue
-			}
-
-			header, err := ob.btcClient.GetBlockHeader(hash)
-			if err != nil {
-				ob.logger.Chain.Error().Err(err).Msg("RPC status check: RPC down? ")
-				continue
-			}
-
-			blockTime := header.Timestamp
-			elapsedSeconds := time.Since(blockTime).Seconds()
-			if elapsedSeconds > 1200 {
-				ob.logger.Chain.Error().Err(err).Msg("RPC status check: RPC down? ")
-				continue
-			}
-
-			tssAddr := ob.TSS().BTCAddressWitnessPubkeyHash()
-			res, err := ob.btcClient.ListUnspentMinMaxAddresses(0, 1000000, []btcutil.Address{tssAddr})
-			if err != nil {
-				ob.logger.Chain.Error().
-					Err(err).
-					Msg("RPC status check: can't list utxos of TSS address; wallet or loaded? TSS address is not imported? ")
-				continue
-			}
-
-			if len(res) == 0 {
-				ob.logger.Chain.Error().
-					Err(err).
-					Msg("RPC status check: TSS address has no utxos; TSS address is not imported? ")
-				continue
-			}
-
-			ob.logger.Chain.Info().
-				Msgf("[OK] RPC status check: latest block number %d, timestamp %s (%.fs ago), tss addr %s, #utxos: %d", bn, blockTime, elapsedSeconds, tssAddr, len(res))
-
-		case <-ob.StopChannel():
-			return nil
-		}
-	}
+	bg.Work(ctx, ob.watchRPCStatus, bg.WithName("watchRPCStatus"), bg.WithLogger(ob.Logger().Chain))
 }
 
 // GetPendingNonce returns the artificial pending nonce
@@ -301,12 +195,12 @@ func (ob *Observer) ConfirmationsThreshold(amount *big.Int) int64 {
 	if amount.Cmp(big.NewInt(BigValueSats)) >= 0 {
 		return BigValueConfirmationCount
 	}
-	if BigValueConfirmationCount < ob.GetChainParams().ConfirmationCount {
+	if BigValueConfirmationCount < ob.ChainParams().ConfirmationCount {
 		return BigValueConfirmationCount
 	}
 
 	// #nosec G115 always in range
-	return int64(ob.GetChainParams().ConfirmationCount)
+	return int64(ob.ChainParams().ConfirmationCount)
 }
 
 // WatchGasPrice watches Bitcoin chain for gas rate and post to zetacore
@@ -320,25 +214,25 @@ func (ob *Observer) WatchGasPrice(ctx context.Context) error {
 	}
 
 	// start gas price ticker
-	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchGasPrice", ob.GetChainParams().GasPriceTicker)
+	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchGasPrice", ob.ChainParams().GasPriceTicker)
 	if err != nil {
 		return errors.Wrapf(err, "NewDynamicTicker error")
 	}
 	ob.logger.GasPrice.Info().Msgf("WatchGasPrice started for chain %d with interval %d",
-		ob.Chain().ChainId, ob.GetChainParams().GasPriceTicker)
+		ob.Chain().ChainId, ob.ChainParams().GasPriceTicker)
 
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C():
-			if !ob.GetChainParams().IsSupported {
+			if !ob.ChainParams().IsSupported {
 				continue
 			}
 			err := ob.PostGasPrice(ctx)
 			if err != nil {
 				ob.logger.GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.Chain().ChainId)
 			}
-			ticker.UpdateInterval(ob.GetChainParams().GasPriceTicker, ob.logger.GasPrice)
+			ticker.UpdateInterval(ob.ChainParams().GasPriceTicker, ob.logger.GasPrice)
 		case <-ob.StopChannel():
 			ob.logger.GasPrice.Info().Msgf("WatchGasPrice stopped for chain %d", ob.Chain().ChainId)
 			return nil
@@ -395,53 +289,10 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	return nil
 }
 
-// GetSenderAddressByVin get the sender address from the previous transaction
-// TODO(revamp): move in upper package to separate file (e.g., rpc.go)
-func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, net *chaincfg.Params) (string, error) {
-	// query previous raw transaction by txid
-	// GetTransaction requires reconfiguring the bitcoin node (txindex=1), so we use GetRawTransaction instead
-	hash, err := chainhash.NewHashFromStr(vin.Txid)
-	if err != nil {
-		return "", err
-	}
-
-	tx, err := rpcClient.GetRawTransaction(hash)
-	if err != nil {
-		return "", errors.Wrapf(err, "error getting raw transaction %s", vin.Txid)
-	}
-
-	// #nosec G115 - always in range
-	if len(tx.MsgTx().TxOut) <= int(vin.Vout) {
-		return "", fmt.Errorf("vout index %d out of range for tx %s", vin.Vout, vin.Txid)
-	}
-
-	// decode sender address from previous pkScript
-	pkScript := tx.MsgTx().TxOut[vin.Vout].PkScript
-	scriptHex := hex.EncodeToString(pkScript)
-	if bitcoin.IsPkScriptP2TR(pkScript) {
-		return bitcoin.DecodeScriptP2TR(scriptHex, net)
-	}
-	if bitcoin.IsPkScriptP2WSH(pkScript) {
-		return bitcoin.DecodeScriptP2WSH(scriptHex, net)
-	}
-	if bitcoin.IsPkScriptP2WPKH(pkScript) {
-		return bitcoin.DecodeScriptP2WPKH(scriptHex, net)
-	}
-	if bitcoin.IsPkScriptP2SH(pkScript) {
-		return bitcoin.DecodeScriptP2SH(scriptHex, net)
-	}
-	if bitcoin.IsPkScriptP2PKH(pkScript) {
-		return bitcoin.DecodeScriptP2PKH(scriptHex, net)
-	}
-
-	// sender address not found, return nil and move on to the next tx
-	return "", nil
-}
-
 // WatchUTXOs watches bitcoin chain for UTXOs owned by the TSS address
 // TODO(revamp): move ticker related functions to a specific file
 func (ob *Observer) WatchUTXOs(ctx context.Context) error {
-	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchUTXOs", ob.GetChainParams().WatchUtxoTicker)
+	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchUTXOs", ob.ChainParams().WatchUtxoTicker)
 	if err != nil {
 		ob.logger.UTXOs.Error().Err(err).Msg("error creating ticker")
 		return err
@@ -451,7 +302,7 @@ func (ob *Observer) WatchUTXOs(ctx context.Context) error {
 	for {
 		select {
 		case <-ticker.C():
-			if !ob.GetChainParams().IsSupported {
+			if !ob.ChainParams().IsSupported {
 				continue
 			}
 			err := ob.FetchUTXOs(ctx)
@@ -466,7 +317,7 @@ func (ob *Observer) WatchUTXOs(ctx context.Context) error {
 					ob.logger.UTXOs.Debug().Err(err).Msg("No wallet is loaded")
 				}
 			}
-			ticker.UpdateInterval(ob.GetChainParams().WatchUtxoTicker, ob.logger.UTXOs)
+			ticker.UpdateInterval(ob.ChainParams().WatchUtxoTicker, ob.logger.UTXOs)
 		case <-ob.StopChannel():
 			ob.logger.UTXOs.Info().Msgf("WatchUTXOs stopped for chain %d", ob.Chain().ChainId)
 			return nil
@@ -494,12 +345,11 @@ func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 	maxConfirmations := int(bh)
 
 	// List all unspent UTXOs (160ms)
-	tssAddr := ob.TSS().BTCAddress()
-	address, err := chains.DecodeBtcAddress(tssAddr, ob.Chain().ChainId)
+	tssAddr, err := ob.TSS().PubKey().AddressBTC(ob.Chain().ChainId)
 	if err != nil {
-		return fmt.Errorf("btc: error decoding wallet address (%s) : %s", tssAddr, err.Error())
+		return fmt.Errorf("error getting bitcoin tss address")
 	}
-	utxos, err := ob.btcClient.ListUnspentMinMaxAddresses(0, maxConfirmations, []btcutil.Address{address})
+	utxos, err := ob.btcClient.ListUnspentMinMaxAddresses(0, maxConfirmations, []btcutil.Address{tssAddr})
 	if err != nil {
 		return err
 	}

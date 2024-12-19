@@ -20,10 +20,9 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
 
-	"github.com/zeta-chain/node/pkg/bg"
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/pkg/memo"
 	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/evm"
@@ -39,23 +38,20 @@ import (
 // TODO(revamp): move ticker function to a separate file
 func (ob *Observer) WatchInbound(ctx context.Context) error {
 	sampledLogger := ob.Logger().Inbound.Sample(&zerolog.BasicSampler{N: 10})
-	interval := ticker.SecondsFromUint64(ob.GetChainParams().InboundTicker)
+	interval := ticker.DurationFromUint64Seconds(ob.ChainParams().InboundTicker)
 	task := func(ctx context.Context, t *ticker.Ticker) error {
 		return ob.watchInboundOnce(ctx, t, sampledLogger)
 	}
 
-	t := ticker.New(interval, task)
-
-	bg.Work(ctx, func(_ context.Context) error {
-		<-ob.StopChannel()
-		t.Stop()
-		ob.Logger().Inbound.Info().Msg("WatchInbound stopped")
-		return nil
-	})
-
 	ob.Logger().Inbound.Info().Msgf("WatchInbound started")
 
-	return t.Run(ctx)
+	return ticker.Run(
+		ctx,
+		interval,
+		task,
+		ticker.WithStopChan(ob.StopChannel()),
+		ticker.WithLogger(ob.Logger().Inbound, "WatchInbound"),
+	)
 }
 
 func (ob *Observer) watchInboundOnce(ctx context.Context, t *ticker.Ticker, sampledLogger zerolog.Logger) error {
@@ -74,7 +70,7 @@ func (ob *Observer) watchInboundOnce(ctx context.Context, t *ticker.Ticker, samp
 		ob.Logger().Inbound.Err(err).Msg("WatchInbound: observeInbound error")
 	}
 
-	newInterval := ticker.SecondsFromUint64(ob.GetChainParams().InboundTicker)
+	newInterval := ticker.DurationFromUint64Seconds(ob.ChainParams().InboundTicker)
 	t.SetInterval(newInterval)
 
 	return nil
@@ -91,7 +87,7 @@ func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
 
 	ticker, err := clienttypes.NewDynamicTicker(
 		fmt.Sprintf("EVM_WatchInboundTracker_%d", ob.Chain().ChainId),
-		ob.GetChainParams().InboundTicker,
+		ob.ChainParams().InboundTicker,
 	)
 	if err != nil {
 		ob.Logger().Inbound.Err(err).Msg("error creating ticker")
@@ -110,7 +106,7 @@ func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
 			if err != nil {
 				ob.Logger().Inbound.Err(err).Msg("ProcessInboundTrackers error")
 			}
-			ticker.UpdateInterval(ob.GetChainParams().InboundTicker, ob.Logger().Inbound)
+			ticker.UpdateInterval(ob.ChainParams().InboundTicker, ob.Logger().Inbound)
 		case <-ob.StopChannel():
 			ob.Logger().Inbound.Info().Msgf("WatchInboundTracker stopped for chain %d", ob.Chain().ChainId)
 			return nil
@@ -125,6 +121,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
 	for _, tracker := range trackers {
 		// query tx and receipt
 		tx, _, err := ob.TransactionByHash(tracker.TxHash)
@@ -148,7 +145,17 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 		}
 		ob.Logger().Inbound.Info().Msgf("checking tracker for inbound %s chain %d", tracker.TxHash, ob.Chain().ChainId)
 
-		// check and vote on inbound tx
+		// try processing the tracker for v2 inbound
+		// filter error if event is not found, in this case we run v1 tracker process
+		if err := ob.ProcessInboundTrackerV2(ctx, tx, receipt); err != nil &&
+			!errors.Is(err, ErrEventNotFound) && !errors.Is(err, ErrGatewayNotSet) {
+			return err
+		} else if err == nil {
+			// continue with next tracker
+			continue
+		}
+
+		// try processing the tracker for v1 inbound
 		switch tracker.CoinType {
 		case coin.CoinType_Zeta:
 			_, err = ob.CheckAndVoteInboundTokenZeta(ctx, tx, receipt, true)
@@ -190,11 +197,17 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 	// increment prom counter
 	metrics.GetBlockByNumberPerChain.WithLabelValues(ob.Chain().Name).Inc()
 
+	// uncomment this line to stop observing inbound and test observation with inbound trackers
+	// https://github.com/zeta-chain/node/blob/3879b5ef8b418542c82a4383263604222f0605c6/e2e/e2etests/test_inbound_trackers.go#L19
+	// TODO: implement a better way to disable inbound observation
+	// https://github.com/zeta-chain/node/issues/3186
+	//return nil
+
 	// skip if current height is too low
-	if blockNumber < ob.GetChainParams().ConfirmationCount {
+	if blockNumber < ob.ChainParams().ConfirmationCount {
 		return fmt.Errorf("observeInbound: skipping observer, current block number %d is too low", blockNumber)
 	}
-	confirmedBlockNum := blockNumber - ob.GetChainParams().ConfirmationCount
+	confirmedBlockNum := blockNumber - ob.ChainParams().ConfirmationCount
 
 	// skip if no new block is confirmed
 	lastScanned := ob.LastBlockScanned()
@@ -223,6 +236,11 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 		return errors.Wrap(err, "unable to observe TSSReceive")
 	}
 
+	// task 4: filter the outbounds from TSS address to supplement outbound trackers
+	// TODO: make this a separate go routine in outbound.go after switching to smart contract V2
+	//
+	ob.FilterTSSOutbound(ctx, startBlock, toBlock)
+
 	// query the gateway logs
 	// TODO: refactor in a more declarative design. Example: storing the list of contract and events to listen in an array
 	// https://github.com/zeta-chain/node/issues/2493
@@ -238,6 +256,12 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 			Err(err).
 			Msgf("ObserveInbound: error observing call events from Gateway contract")
 	}
+	lastScannedGatewayDepositAndCall, err := ob.ObserveGatewayDepositAndCall(ctx, startBlock, toBlock)
+	if err != nil {
+		ob.Logger().Inbound.Error().
+			Err(err).
+			Msgf("ObserveInbound: error observing depositAndCall events from Gateway contract")
+	}
 
 	// note: using lowest height for all 3 events is not perfect, but it's simple and good enough
 	lastScannedLowest := lastScannedZetaSent
@@ -252,6 +276,9 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 	}
 	if lastScannedGatewayCall < lastScannedLowest {
 		lastScannedLowest = lastScannedGatewayCall
+	}
+	if lastScannedGatewayDepositAndCall < lastScannedLowest {
+		lastScannedLowest = lastScannedGatewayDepositAndCall
 	}
 
 	// update last scanned block height for all 3 events (ZetaSent, Deposited, TssRecvd), ignore db error
@@ -586,7 +613,7 @@ func (ob *Observer) CheckAndVoteInboundTokenGas(
 	}
 
 	// checks receiver and tx status
-	if ethcommon.HexToAddress(tx.To) != ob.TSS().EVMAddress() {
+	if ethcommon.HexToAddress(tx.To) != ob.TSS().PubKey().AddressEVM() {
 		return "", fmt.Errorf("tx.To %s is not TSS address", tx.To)
 	}
 	if receipt.Status != ethtypes.ReceiptStatusSuccessful {
@@ -610,7 +637,7 @@ func (ob *Observer) CheckAndVoteInboundTokenGas(
 
 // HasEnoughConfirmations checks if the given receipt has enough confirmations
 func (ob *Observer) HasEnoughConfirmations(receipt *ethtypes.Receipt, lastHeight uint64) bool {
-	confHeight := receipt.BlockNumber.Uint64() + ob.GetChainParams().ConfirmationCount
+	confHeight := receipt.BlockNumber.Uint64() + ob.ChainParams().ConfirmationCount
 	return lastHeight >= confHeight
 }
 
@@ -621,7 +648,7 @@ func (ob *Observer) BuildInboundVoteMsgForDepositedEvent(
 ) *types.MsgVoteInbound {
 	// compliance check
 	maybeReceiver := ""
-	parsedAddress, _, err := chains.ParseAddressAndData(hex.EncodeToString(event.Message))
+	parsedAddress, _, err := memo.DecodeLegacyMemoHex(hex.EncodeToString(event.Message))
 	if err == nil && parsedAddress != (ethcommon.Address{}) {
 		maybeReceiver = parsedAddress.Hex()
 	}
@@ -731,7 +758,7 @@ func (ob *Observer) BuildInboundVoteMsgForTokenSentToTSS(
 
 	// compliance check
 	maybeReceiver := ""
-	parsedAddress, _, err := chains.ParseAddressAndData(message)
+	parsedAddress, _, err := memo.DecodeLegacyMemoHex(message)
 	if err == nil && parsedAddress != (ethcommon.Address{}) {
 		maybeReceiver = parsedAddress.Hex()
 	}
@@ -778,7 +805,7 @@ func (ob *Observer) ObserveTSSReceiveInBlock(ctx context.Context, blockNumber ui
 	}
 	for i := range block.Transactions {
 		tx := block.Transactions[i]
-		if ethcommon.HexToAddress(tx.To) == ob.TSS().EVMAddress() {
+		if ethcommon.HexToAddress(tx.To) == ob.TSS().PubKey().AddressEVM() {
 			receipt, err := ob.evmClient.TransactionReceipt(ctx, ethcommon.HexToHash(tx.Hash))
 			if err != nil {
 				return errors.Wrapf(err, "error getting receipt for inbound %s chain %d", tx.Hash, ob.Chain().ChainId)

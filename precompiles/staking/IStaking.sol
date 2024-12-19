@@ -5,9 +5,7 @@ pragma solidity ^0.8.26;
 address constant ISTAKING_PRECOMPILE_ADDRESS = 0x0000000000000000000000000000000000000066; // 102
 
 /// @dev The IStaking contract's instance.
-IStaking constant ISTAKING_CONTRACT = IStaking(
-    ISTAKING_PRECOMPILE_ADDRESS
-);
+IStaking constant ISTAKING_CONTRACT = IStaking(ISTAKING_PRECOMPILE_ADDRESS);
 
 /// @notice Bond status for validator
 enum BondStatus {
@@ -23,6 +21,13 @@ struct Validator {
     string consensusPubKey;
     bool jailed;
     BondStatus bondStatus;
+}
+
+/// @notice Cosmos coin representation.
+/// ref: https://github.com/cosmos/cosmos-sdk/blob/470e0859462b28a53adb411843539561d11d7bf5/x/distribution/README.md?plain=1#L139
+struct DecCoin {
+    string denom;
+    uint256 amount;
 }
 
 interface IStaking {
@@ -55,6 +60,28 @@ interface IStaking {
         address indexed staker,
         address indexed validatorSrc,
         address indexed validatorDst,
+        uint256 amount
+    );
+
+    /// @notice Distributed event is emitted when distribute function is called successfully.
+    /// @param zrc20_distributor Distributor address.
+    /// @param zrc20_token ZRC20 token address.
+    /// @param amount Distributed amount.
+    event Distributed(
+        address indexed zrc20_distributor,
+        address indexed zrc20_token,
+        uint256 amount
+    );
+
+    /// @notice ClaimedRewards is emitted when a delegator claims ZRC20.
+    /// @param claim_address Delegator address where the funds were withdrawed.
+    /// @param zrc20_token ZRC20 token address.
+    /// @param validator Validator address.
+    /// @param amount Claimed amount.
+    event ClaimedRewards(
+        address indexed claim_address,
+        address indexed zrc20_token,
+        address indexed validator,
         uint256 amount
     );
 
@@ -95,9 +122,48 @@ interface IStaking {
 
     /// @notice Get all validators
     /// @return validators All validators
-    function getAllValidators() external view returns (Validator[] calldata validators);
+    function getAllValidators()
+        external
+        view
+        returns (Validator[] calldata validators);
 
     /// @notice Get shares for staker in validator
     /// @return shares Staker shares in validator
-    function getShares(address staker, string memory validator) external view returns (uint256 shares);
+    function getShares(
+        address staker,
+        string memory validator
+    ) external view returns (uint256 shares);
+
+    /// @notice Distribute a ZRC20 token as staking rewards.
+    /// @param zrc20 The ZRC20 token address to be distributed.
+    /// @param amount The amount of ZRC20 tokens to distribute.
+    /// @return success Boolean indicating whether the distribution was successful.
+    function distribute(
+        address zrc20,
+        uint256 amount
+    ) external returns (bool success);
+
+    /// @notice Claim ZRC20 staking rewards.
+    /// @param validator The validator address to claim rewards from.
+    /// @return success Boolean indicating whether the claim was successful.
+    function claimRewards(
+        address delegator,
+        string memory validator
+    ) external returns (bool success);
+
+    /// @dev Queries all validators the delegator has delegated to.
+    /// @param delegator The delegator address to query rewards from.
+    /// @return validators List of the validators the caller has delegated to.
+    function getDelegatorValidators(
+        address delegator
+    ) external view returns (string[] calldata validators);
+
+    /// @notice Query ZRC20 outstanding staking rewards.
+    /// @param delegator The delegator address to query rewards from.
+    /// @param validator The validator address to query rewards from.
+    /// @return rewards The list of coins rewarded on the validator.
+    function getRewards(
+        address delegator,
+        string memory validator
+    ) external view returns (DecCoin[] calldata rewards);
 }

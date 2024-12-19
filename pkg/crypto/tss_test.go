@@ -3,8 +3,8 @@ package crypto
 import (
 	"testing"
 
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -66,6 +66,12 @@ func TestGetTssAddrBTC(t *testing.T) {
 			name:          "Valid TSS pubkey testnet params",
 			tssPubkey:     pk,
 			bitcoinParams: &chaincfg.TestNet3Params,
+			wantErr:       false,
+		},
+		{
+			name:          "Valid TSS pubkey signet params",
+			tssPubkey:     pk,
+			bitcoinParams: &chaincfg.SigNetParams,
 			wantErr:       false,
 		},
 		{

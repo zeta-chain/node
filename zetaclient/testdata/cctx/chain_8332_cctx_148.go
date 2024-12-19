@@ -34,12 +34,14 @@ var chain_8332_cctx_148 = &crosschaintypes.CrossChainTx{
 	},
 	OutboundParams: []*crosschaintypes.OutboundParams{
 		{
-			Receiver:               "bc1qpsdlklfcmlcfgm77c43x65ddtrt7n0z57hsyjp",
-			ReceiverChainId:        8332,
-			CoinType:               coin.CoinType_Gas,
-			Amount:                 sdkmath.NewUint(12000),
-			TssNonce:               148,
-			GasLimit:               254,
+			Receiver:        "bc1qpsdlklfcmlcfgm77c43x65ddtrt7n0z57hsyjp",
+			ReceiverChainId: 8332,
+			CoinType:        coin.CoinType_Gas,
+			Amount:          sdkmath.NewUint(12000),
+			TssNonce:        148,
+			CallOptions: &crosschaintypes.CallOptions{
+				GasLimit: 254,
+			},
 			GasPrice:               "46",
 			Hash:                   "030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0",
 			ObservedExternalHeight: 150,

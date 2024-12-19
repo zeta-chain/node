@@ -9,8 +9,9 @@ import (
 	"github.com/zeta-chain/node/x/authority/types"
 )
 
-// UpdateChainInfo updates the chain info structure that adds new static chain info or overwrite existing chain info
-// on the hard-coded chain info
+// UpdateChainInfo updates the chain info object
+// If the provided chain does not exist in the chain info object, it is added
+// If the chain already exists in the chain info object, it is updated
 func (k msgServer) UpdateChainInfo(
 	goCtx context.Context,
 	msg *types.MsgUpdateChainInfo,
@@ -24,8 +25,27 @@ func (k msgServer) UpdateChainInfo(
 	if err != nil {
 		return nil, errors.Wrap(types.ErrUnauthorized, err.Error())
 	}
-	// set chain info
-	k.SetChainInfo(ctx, msg.ChainInfo)
 
+	chainInfo := types.ChainInfo{}
+	chainInfoExist := false
+
+	existingChainInfo, found := k.GetChainInfo(ctx)
+	if found {
+		chainInfo = existingChainInfo
+	}
+	// try to update a chain if the chain info already exists
+	for i, chain := range chainInfo.Chains {
+		if chain.ChainId == msg.Chain.ChainId {
+			chainInfo.Chains[i] = msg.Chain
+			chainInfoExist = true
+		}
+	}
+
+	// if the chain info does not exist, add the chain to the chain info object
+	if !chainInfoExist {
+		chainInfo.Chains = append(chainInfo.Chains, msg.Chain)
+	}
+
+	k.SetChainInfo(ctx, chainInfo)
 	return &types.MsgUpdateChainInfoResponse{}, nil
 }

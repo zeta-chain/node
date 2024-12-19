@@ -34,12 +34,14 @@ var chain_1_cctx_9718 = &crosschaintypes.CrossChainTx{
 	},
 	OutboundParams: []*crosschaintypes.OutboundParams{
 		{
-			Receiver:               "0x30735c88fa430f11499b0edcfcc25246fb9182e3",
-			ReceiverChainId:        1,
-			CoinType:               coin.CoinType_Zeta,
-			Amount:                 sdkmath.NewUint(474493998697236392),
-			TssNonce:               9718,
-			GasLimit:               90000,
+			Receiver:        "0x30735c88fa430f11499b0edcfcc25246fb9182e3",
+			ReceiverChainId: 1,
+			CoinType:        coin.CoinType_Zeta,
+			Amount:          sdkmath.NewUint(474493998697236392),
+			TssNonce:        9718,
+			CallOptions: &crosschaintypes.CallOptions{
+				GasLimit: 90000,
+			},
 			GasPrice:               "112217884384",
 			Hash:                   "0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f",
 			BallotIndex:            "0xff07eaa34ca02a08bca1558e5f6220cbfc734061f083622b24923e032f0c480f",

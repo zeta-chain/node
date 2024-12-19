@@ -39,9 +39,10 @@ func TestGenesis(t *testing.T) {
 				sample.ChainNonces(1),
 				sample.ChainNonces(2),
 			},
-			PendingNonces: sample.PendingNoncesList(t, "sample", 20),
-			NonceToCctx:   sample.NonceToCctxList(t, "sample", 20),
-			TssHistory:    []types.TSS{sample.Tss()},
+			PendingNonces:    sample.PendingNoncesList(t, "sample", 20),
+			NonceToCctx:      sample.NonceToCctxList(t, "sample", 20),
+			TssHistory:       []types.TSS{sample.Tss()},
+			OperationalFlags: sample.OperationalFlags(),
 		}
 
 		// Init and export
@@ -68,15 +69,12 @@ func TestGenesis(t *testing.T) {
 		btcChainParams.IsSupported = true
 		goerliChainParams := types.GetDefaultGoerliLocalnetChainParams()
 		goerliChainParams.IsSupported = true
-		solanaChainParams := types.GetDefaultSolanaLocalnetChainParams()
-		solanaChainParams.IsSupported = true
 		zetaPrivnetChainParams := types.GetDefaultZetaPrivnetChainParams()
 		zetaPrivnetChainParams.IsSupported = true
 		localnetChainParams := types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
 				btcChainParams,
 				goerliChainParams,
-				solanaChainParams,
 				zetaPrivnetChainParams,
 			},
 		}
@@ -87,6 +85,7 @@ func TestGenesis(t *testing.T) {
 			Keygen:            &types.Keygen{},
 			LastObserverCount: &types.LastObserverCount{},
 			NodeAccountList:   []*types.NodeAccount{},
+			OperationalFlags:  types.OperationalFlags{},
 		}
 
 		require.Equal(t, expectedGenesisState, *got)
@@ -107,15 +106,12 @@ func TestGenesis(t *testing.T) {
 		btcChainParams.IsSupported = true
 		goerliChainParams := types.GetDefaultGoerliLocalnetChainParams()
 		goerliChainParams.IsSupported = true
-		solanaChainParams := types.GetDefaultSolanaLocalnetChainParams()
-		solanaChainParams.IsSupported = true
 		zetaPrivnetChainParams := types.GetDefaultZetaPrivnetChainParams()
 		zetaPrivnetChainParams.IsSupported = true
 		localnetChainParams := types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
 				btcChainParams,
 				goerliChainParams,
-				solanaChainParams,
 				zetaPrivnetChainParams,
 			},
 		}
@@ -154,6 +150,7 @@ func TestGenesis(t *testing.T) {
 			BlameList:         k.GetAllBlame(ctx),
 			ChainNonces:       k.GetAllChainNonces(ctx),
 			NonceToCctx:       k.GetAllNonceToCctx(ctx),
+			OperationalFlags:  types.OperationalFlags{},
 		}
 
 		require.Equal(t, expectedGenesisState, *got)

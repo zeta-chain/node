@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/holiman/uint256"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
@@ -50,23 +51,24 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		validatorList := setObservers(t, k, ctx, zk)
+
 		to, from := int64(1337), int64(101)
 		supportedChains := zk.ObserverKeeper.GetSupportedChains(ctx)
 		for _, chain := range supportedChains {
-			if chains.IsEVMChain(chain.ChainId, []chains.Chain{}) {
+			if chains.IsEthereumChain(chain.ChainId, []chains.Chain{}) {
 				from = chain.ChainId
 			}
 			if chains.IsZetaChain(chain.ChainId, []chains.Chain{}) {
 				to = chain.ChainId
 			}
 		}
-		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 
 		msg := sample.InboundVote(0, from, to)
+		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 
 		err := sdkk.EvmKeeper.SetAccount(ctx, ethcommon.HexToAddress(msg.Receiver), statedb.Account{
 			Nonce:    0,
-			Balance:  big.NewInt(0),
+			Balance:  uint256.NewInt(0),
 			CodeHash: crypto.Keccak256(nil),
 		})
 		require.NoError(t, err)
@@ -126,12 +128,14 @@ func TestKeeper_VoteInbound(t *testing.T) {
 			Amount:             sdkmath.NewUintFromString("10000000"),
 			Message:            "",
 			InboundBlockHeight: 1,
-			GasLimit:           1000000000,
-			InboundHash:        "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
-			CoinType:           0, // zeta
-			TxOrigin:           "0x954598965C2aCdA2885B037561526260764095B8",
-			Asset:              "",
-			EventIndex:         1,
+			CallOptions: &types.CallOptions{
+				GasLimit: 1000000000,
+			},
+			InboundHash: "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
+			CoinType:    0, // zeta
+			TxOrigin:    "0x954598965C2aCdA2885B037561526260764095B8",
+			Asset:       "",
+			EventIndex:  1,
 		}
 		_, err := msgServer.VoteInbound(
 			ctx,
@@ -153,12 +157,14 @@ func TestKeeper_VoteInbound(t *testing.T) {
 			Amount:             sdkmath.NewUintFromString("10000000"),
 			Message:            "",
 			InboundBlockHeight: 1,
-			GasLimit:           1000000001, // <---- Change here
-			InboundHash:        "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
-			CoinType:           0,
-			TxOrigin:           "0x954598965C2aCdA2885B037561526260764095B8",
-			Asset:              "",
-			EventIndex:         1,
+			CallOptions: &types.CallOptions{
+				GasLimit: 1000000001, // <---- Change here
+			},
+			InboundHash: "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
+			CoinType:    0,
+			TxOrigin:    "0x954598965C2aCdA2885B037561526260764095B8",
+			Asset:       "",
+			EventIndex:  1,
 		}
 
 		_, err = msgServer.VoteInbound(
@@ -205,7 +211,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		to, from := int64(1337), int64(101)
 		supportedChains := zk.ObserverKeeper.GetSupportedChains(ctx)
 		for _, chain := range supportedChains {
-			if chains.IsEVMChain(chain.ChainId, []chains.Chain{}) {
+			if chains.IsEthereumChain(chain.ChainId, []chains.Chain{}) {
 				from = chain.ChainId
 			}
 			if chains.IsZetaChain(chain.ChainId, []chains.Chain{}) {
@@ -261,7 +267,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 	})
 }
 
-func TestStatus_ChangeStatus(t *testing.T) {
+func TestStatus_UpdateCctxStatus(t *testing.T) {
 	tt := []struct {
 		Name         string
 		Status       types.Status
@@ -298,7 +304,7 @@ func TestStatus_ChangeStatus(t *testing.T) {
 	for _, test := range tt {
 		test := test
 		t.Run(test.Name, func(t *testing.T) {
-			test.Status.ChangeStatus(test.NonErrStatus, test.Msg)
+			test.Status.UpdateStatusAndErrorMessages(test.NonErrStatus, test.Msg, "")
 			if test.IsErr {
 				require.Equal(t, test.ErrStatus, test.Status.Status)
 			} else {

@@ -7,12 +7,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/sdkconfig"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/authority/types"
 )
 
 func TestGenesisState_Validate(t *testing.T) {
-	setConfig(t)
+	sdkconfig.SetDefault(false)
 
 	tests := []struct {
 		name        string

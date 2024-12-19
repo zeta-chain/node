@@ -34,12 +34,14 @@ var chain_56_cctx_68270 = &crosschaintypes.CrossChainTx{
 	},
 	OutboundParams: []*crosschaintypes.OutboundParams{
 		{
-			Receiver:               "0xb0C04e07A301927672A8A7a874DB6930576C90B8",
-			ReceiverChainId:        56,
-			CoinType:               coin.CoinType_Gas,
-			Amount:                 sdkmath.NewUint(657177295293237048),
-			TssNonce:               68270,
-			GasLimit:               21000,
+			Receiver:        "0xb0C04e07A301927672A8A7a874DB6930576C90B8",
+			ReceiverChainId: 56,
+			CoinType:        coin.CoinType_Gas,
+			Amount:          sdkmath.NewUint(657177295293237048),
+			TssNonce:        68270,
+			CallOptions: &crosschaintypes.CallOptions{
+				GasLimit: 21000,
+			},
 			GasPrice:               "6000000000",
 			Hash:                   "0xeb2b183ece6638688b9df9223180b13a67208cd744bbdadeab8de0482d7f4e3c",
 			BallotIndex:            "0xa4600c952934f797e162d637d70859a611757407908d96bc53e45a81c80b006b",

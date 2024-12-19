@@ -11,11 +11,12 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/node/app"
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/e2etests"
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/txserver"
+	"github.com/zeta-chain/node/e2e/utils"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
@@ -97,12 +98,32 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 		conf.Contracts.ZEVM.ERC20ZRC20Addr = config.DoubleQuotedString(zrc20ContractAddress)
 	}
 
-	// set config
-	app.SetConfig()
-
 	// initialize context
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	var runnerOpts []runner.E2ERunnerOption
+
+	// if keys are defined for all policy accounts, we initialize a ZETA tx server allowing to send admin actions
+	emergencyKey := conf.PolicyAccounts.EmergencyPolicyAccount.RawPrivateKey.String()
+	operationalKey := conf.PolicyAccounts.OperationalPolicyAccount.RawPrivateKey.String()
+	adminKey := conf.PolicyAccounts.AdminPolicyAccount.RawPrivateKey.String()
+	if emergencyKey != "" && operationalKey != "" && adminKey != "" {
+		zetaTxServer, err := txserver.NewZetaTxServer(
+			conf.RPCs.ZetaCoreRPC,
+			[]string{utils.EmergencyPolicyName, utils.OperationalPolicyName, utils.AdminPolicyName},
+			[]string{
+				emergencyKey,
+				operationalKey,
+				adminKey,
+			},
+			conf.ZetaChainID,
+		)
+		if err != nil {
+			return err
+		}
+		runnerOpts = append(runnerOpts, runner.WithZetaTxServer(zetaTxServer))
+	}
 
 	// initialize deployer runner with config
 	testRunner, err := zetae2econfig.RunnerFromConfig(
@@ -112,6 +133,7 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 		conf,
 		conf.DefaultAccount,
 		logger,
+		runnerOpts...,
 	)
 	if err != nil {
 		return err
@@ -155,20 +177,22 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 
 // parseCmdArgsToE2ETestRunConfig parses command-line arguments into a slice of E2ETestRunConfig structs.
 func parseCmdArgsToE2ETestRunConfig(args []string) ([]runner.E2ETestRunConfig, error) {
-	tests := []runner.E2ETestRunConfig{}
+	tests := make([]runner.E2ETestRunConfig, 0, len(args))
+
 	for _, arg := range args {
 		parts := strings.SplitN(arg, ":", 2)
-		if len(parts) != 2 {
-			return nil, errors.New("command arguments should be in format: testName:testArgs")
-		}
-		if parts[0] == "" {
+		testName := parts[0]
+		if testName == "" {
 			return nil, errors.New("missing testName")
 		}
-		testName := parts[0]
-		testArgs := []string{}
-		if parts[1] != "" {
-			testArgs = strings.Split(parts[1], ",")
+
+		var testArgs []string
+		if len(parts) > 1 {
+			if parts[1] != "" {
+				testArgs = strings.Split(parts[1], ",")
+			}
 		}
+
 		tests = append(tests, runner.E2ETestRunConfig{
 			Name: testName,
 			Args: testArgs,

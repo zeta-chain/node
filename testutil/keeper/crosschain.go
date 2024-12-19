@@ -129,6 +129,8 @@ func CrosschainKeeperWithMocks(
 		sdkKeepers.SlashingKeeper,
 		authorityKeeperTmp,
 		lightclientKeeperTmp,
+		sdkKeepers.BankKeeper,
+		sdkKeepers.AuthKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
@@ -388,6 +390,7 @@ func MockRevertForHandleEVMDeposit(
 		senderChainID,
 		mock.Anything,
 		coin.CoinType_ERC20,
+		mock.Anything,
 		mock.Anything,
 		mock.Anything,
 	).Return(&evmtypes.MsgEthereumTxResponse{VmError: "reverted"}, false, errDeposit)

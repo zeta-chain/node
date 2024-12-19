@@ -30431,6 +30431,21 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/observer/operationalFlags:
+    get:
+      summary: Queries operational flags
+      operationId: Query_OperationalFlags
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryOperationalFlagsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/observer/pendingNonces:
     get:
       operationId: Query_PendingNoncesAll
@@ -56838,6 +56853,9 @@ definitions:
     description: |-
       MsgRemoveAuthorizationResponse defines the MsgRemoveAuthorizationResponse
       service.
+  authorityMsgRemoveChainInfoResponse:
+    type: object
+    description: MsgRemoveChainInfoResponse defines the MsgRemoveChainInfoResponse service.
   authorityMsgUpdateChainInfoResponse:
     type: object
     description: MsgUpdateChainInfoResponse defines the MsgUpdateChainInfoResponse service.
@@ -56995,7 +57013,9 @@ definitions:
       - bitcoin
       - op_stack
       - solana_consensus
+      - catchain_consensus
     default: ethereum
+    description: '- catchain_consensus: ton'
     title: |-
       Consensus represents the consensus algorithm used by the chain
       this can represent the consensus of a L1
@@ -57011,6 +57031,7 @@ definitions:
       - optimism
       - base
       - solana
+      - ton
     default: eth
     title: |-
       Network represents the network of the chain
@@ -57045,6 +57066,7 @@ definitions:
       - no_vm
       - evm
       - svm
+      - tvm
     default: no_vm
     title: |-
       Vm represents the virtual machine type of the chain to support smart
@@ -57063,6 +57085,14 @@ definitions:
        - ERC20: ERC20 token
        - Cmd: no asset, used for admin command
        - NoAssetCall: no asset, used for contract call
+  crosschainCallOptions:
+    type: object
+    properties:
+      gas_limit:
+        type: string
+        format: uint64
+      is_arbitrary_call:
+        type: boolean
   crosschainCctxStatus:
     type: string
     enum:
@@ -57187,6 +57217,11 @@ definitions:
         format: uint64
       tx_finalization_status:
         $ref: '#/definitions/crosschainTxFinalizationStatus'
+      is_cross_chain_call:
+        type: boolean
+        title: |-
+          this field describes if a smart contract call should be made for a inbound
+          with assets only used for protocol contract version 2
   crosschainInboundTracker:
     type: object
     properties:
@@ -57273,6 +57308,7 @@ definitions:
       gas_limit:
         type: string
         format: uint64
+        title: Deprecated (v21), use CallOptions
       gas_price:
         type: string
       gas_priority_fee:
@@ -57299,6 +57335,8 @@ definitions:
         type: string
       tx_finalization_status:
         $ref: '#/definitions/crosschainTxFinalizationStatus'
+      call_options:
+        $ref: '#/definitions/crosschainCallOptions'
   crosschainOutboundTracker:
     type: object
     properties:
@@ -57580,7 +57618,7 @@ definitions:
         type: string
       tx_signer:
         type: string
-      proved:
+      proven:
         type: boolean
   cryptoPubKeySet:
     type: object
@@ -57995,6 +58033,8 @@ definitions:
     type: object
   observerMsgUpdateObserverResponse:
     type: object
+  observerMsgUpdateOperationalFlagsResponse:
+    type: object
   observerMsgVoteBlameResponse:
     type: object
   observerMsgVoteBlockHeaderResponse:
@@ -58061,6 +58101,16 @@ definitions:
       - Tombstoned
       - AdminUpdate
     default: Undefined
+  observerOperationalFlags:
+    type: object
+    properties:
+      restart_height:
+        type: string
+        format: int64
+        description: |-
+          Height for a coordinated zetaclient restart.
+          Will be ignored if missed.
+    description: Flags for the top-level operation of zetaclient.
   observerPendingNonces:
     type: object
     properties:
@@ -58204,6 +58254,11 @@ definitions:
         type: array
         items:
           type: string
+  observerQueryOperationalFlagsResponse:
+    type: object
+    properties:
+      operational_flags:
+        $ref: '#/definitions/observerOperationalFlags'
   observerQueryPendingNoncesByChainResponse:
     type: object
     properties:
@@ -58432,6 +58487,14 @@ definitions:
         $ref: '#/definitions/crosschainCctxStatus'
       status_message:
         type: string
+        description: |-
+          status_message carries information about the status transitions:
+          why they were triggered, old and new status.
+      error_message:
+        type: string
+        description: |-
+          error_message carries information about the error that caused the tx
+          to be PendingRevert, Reverted or Aborted.
       lastUpdate_timestamp:
         type: string
         format: int64

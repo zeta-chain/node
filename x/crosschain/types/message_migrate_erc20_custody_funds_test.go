@@ -8,13 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/testutil/keeper"
+	"github.com/zeta-chain/node/pkg/sdkconfig"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func TestNewMsgMigrateERC20CustodyFunds_ValidateBasic(t *testing.T) {
-	keeper.SetConfig(false)
+	sdkconfig.SetDefault(false)
 	tests := []struct {
 		name  string
 		msg   *types.MsgMigrateERC20CustodyFunds

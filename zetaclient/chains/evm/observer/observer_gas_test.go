@@ -8,39 +8,27 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
 func TestPostGasPrice(t *testing.T) {
 	const (
-		gwei        = 10e9
-		blockNumber = 1000
-		anything    = mock.Anything
+		gwei     = 10e9
+		anything = mock.Anything
 	)
 
 	ctx := context.Background()
 
 	t.Run("Pre EIP-1559 doesn't support priorityFee", func(t *testing.T) {
 		// ARRANGE
-		// Given ETH rpc mock
-		ethRPC := mocks.NewMockEvmClient().WithBlockNumber(blockNumber)
-
-		// Given zetacore client mock
-		zetacoreClient := mocks.NewZetacoreClient(t).WithZetaChain()
-
 		// Given an observer
-		chain := chains.Ethereum
-		confirmation := uint64(10)
-		chainParam := mocks.MockChainParams(chain.ChainId, confirmation)
-
-		observer, _ := MockEVMObserver(t, chain, ethRPC, nil, zetacoreClient, nil, blockNumber, chainParam)
+		observer := newTestSuite(t)
 
 		// Given empty baseFee from RPC
-		ethRPC.WithHeader(&ethtypes.Header{BaseFee: nil})
+		observer.evmClient.On("HeaderByNumber", anything, anything).Return(&ethtypes.Header{BaseFee: nil}, nil)
 
-		// Given gas price from RPC
-		ethRPC.WithSuggestGasPrice(big.NewInt(3 * gwei))
+		// Given gasPrice and priorityFee from RPC
+		observer.evmClient.On("SuggestGasPrice", anything).Return(big.NewInt(3*gwei), nil)
+		observer.evmClient.On("SuggestGasTipCap", anything).Return(big.NewInt(0), nil)
 
 		// Given mock collector for zetacore call
 		// PostVoteGasPrice(ctx, chain, gasPrice, priorityFee, blockNum)
@@ -50,7 +38,7 @@ func TestPostGasPrice(t *testing.T) {
 			priorityFee = args.Get(3).(uint64)
 		}
 
-		zetacoreClient.
+		observer.zetacore.
 			On("PostVoteGasPrice", anything, anything, anything, anything, anything).
 			Run(collector).
 			Return("0xABC123...", nil)
@@ -68,26 +56,16 @@ func TestPostGasPrice(t *testing.T) {
 
 	t.Run("Post EIP-1559 supports priorityFee", func(t *testing.T) {
 		// ARRANGE
-		// Given ETH rpc mock
-		ethRPC := mocks.NewMockEvmClient().WithBlockNumber(blockNumber)
-
-		// Given zetacore client mock
-		zetacoreClient := mocks.NewZetacoreClient(t).WithZetaChain()
-
 		// Given an observer
-		chain := chains.Ethereum
-		confirmation := uint64(10)
-		chainParam := mocks.MockChainParams(chain.ChainId, confirmation)
-
-		observer, _ := MockEVMObserver(t, chain, ethRPC, nil, zetacoreClient, nil, blockNumber, chainParam)
+		observer := newTestSuite(t)
 
 		// Given 1 gwei baseFee from RPC
-		ethRPC.WithHeader(&ethtypes.Header{BaseFee: big.NewInt(gwei)})
+		observer.evmClient.On("HeaderByNumber", anything, anything).
+			Return(&ethtypes.Header{BaseFee: big.NewInt(gwei)}, nil)
 
 		// Given gasPrice and priorityFee from RPC
-		ethRPC.
-			WithSuggestGasPrice(big.NewInt(3 * gwei)).
-			WithSuggestGasTipCap(big.NewInt(2 * gwei))
+		observer.evmClient.On("SuggestGasPrice", anything).Return(big.NewInt(3*gwei), nil)
+		observer.evmClient.On("SuggestGasTipCap", anything).Return(big.NewInt(2*gwei), nil)
 
 		// Given mock collector for zetacore call
 		// PostVoteGasPrice(ctx, chain, gasPrice, priorityFee, blockNum)
@@ -97,7 +75,7 @@ func TestPostGasPrice(t *testing.T) {
 			priorityFee = args.Get(3).(uint64)
 		}
 
-		zetacoreClient.
+		observer.zetacore.
 			On("PostVoteGasPrice", anything, anything, anything, anything, anything).
 			Run(collector).
 			Return("0xABC123...", nil)

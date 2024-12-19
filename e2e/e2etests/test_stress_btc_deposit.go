@@ -17,10 +17,8 @@ import (
 func TestStressBTCDeposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
-	depositAmount := parseFloat(r, args[0])
-	numDeposits := parseInt(r, args[1])
-
-	r.SetBtcAddress(r.Name, false)
+	depositAmount := utils.ParseFloat(r, args[0])
+	numDeposits := utils.ParseInt(r, args[1])
 
 	r.Logger.Print("starting stress test of %d deposits", numDeposits)
 
@@ -30,7 +28,7 @@ func TestStressBTCDeposit(r *runner.E2ERunner, args []string) {
 	// send the deposits
 	for i := 0; i < numDeposits; i++ {
 		i := i
-		txHash := r.DepositBTCWithAmount(depositAmount)
+		txHash := r.DepositBTCWithAmount(depositAmount, nil)
 		r.Logger.Print("index %d: starting deposit, tx hash: %s", i, txHash.String())
 
 		eg.Go(func() error { return monitorBTCDeposit(r, txHash, i, time.Now()) })
@@ -53,7 +51,7 @@ func monitorBTCDeposit(r *runner.E2ERunner, hash *chainhash.Hash, index int, sta
 			cctx.Index,
 		)
 	}
-	timeToComplete := time.Now().Sub(startTime)
+	timeToComplete := time.Since(startTime)
 	r.Logger.Print("index %d: deposit cctx success in %s", index, timeToComplete.String())
 
 	return nil

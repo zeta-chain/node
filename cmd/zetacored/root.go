@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 
-	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	dbm "github.com/cometbft/cometbft-db"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
@@ -20,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -47,12 +45,6 @@ const EnvPrefix = "zetacore"
 
 func NewRootCmd() (*cobra.Command, types.EncodingConfig) {
 	encodingConfig := app.MakeEncodingConfig()
-
-	cfg := sdk.GetConfig()
-	cfg.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
-	cfg.SetBech32PrefixForValidator(app.Bech32PrefixValAddr, app.Bech32PrefixValPub)
-	cfg.SetBech32PrefixForConsensusNode(app.Bech32PrefixConsAddr, app.Bech32PrefixConsPub)
-	cfg.Seal()
 
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
@@ -146,6 +138,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig types.EncodingConfig) {
 		GetPubKeyCmd(),
 		CollectObserverInfoCmd(),
 		AddrConversionCmd(),
+		UpgradeHandlerVersionCmd(),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		ethermintclient.NewTestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 
@@ -177,8 +170,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig types.EncodingConfig) {
 	if err := SetEthereumHDPath(rootCmd); err != nil {
 		fmt.Printf("warning: unable to set default HD path: %v\n", err)
 	}
-
-	rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Codec))
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
@@ -268,48 +259,43 @@ func (ac appCreator) newApp(
 	)
 }
 
-// appExport creates a new simapp (optionally at a given height)
+// appExport is used to export the state of the application for a genesis file.
 func (ac appCreator) appExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
 	appOpts servertypes.AppOptions,
 	modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
-	var anApp *app.App
+	var zetaApp *app.App
 
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
 	if !ok || homePath == "" {
 		return servertypes.ExportedApp{}, errors.New("application home not set")
 	}
 
-	if height != -1 {
-		anApp = app.New(
-			logger,
-			db,
-			traceStore,
-			false,
-			map[int64]bool{},
-			homePath,
-			uint(1),
-			ac.encCfg,
-			appOpts,
-		)
-
-		if err := anApp.LoadHeight(height); err != nil {
-			return servertypes.ExportedApp{}, err
-		}
-	} else {
-		anApp = app.New(
-			logger,
-			db,
-			traceStore,
-			true,
-			map[int64]bool{},
-			homePath,
-			uint(1),
-			ac.encCfg,
-			appOpts,
-		)
+	loadLatest := false
+	if height == -1 {
+		loadLatest = true
 	}
 
-	return anApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
+	zetaApp = app.New(
+		logger,
+		db,
+		traceStore,
+		loadLatest,
+		map[int64]bool{},
+		homePath,
+		uint(1),
+		ac.encCfg,
+		appOpts,
+	)
+
+	// If height is -1, it means we are using the latest height.
+	// For all other cases, we load the specified height from the Store
+	if !loadLatest {
+		if err := zetaApp.LoadHeight(height); err != nil {
+			return servertypes.ExportedApp{}, err
+		}
+	}
+
+	return zetaApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
 }

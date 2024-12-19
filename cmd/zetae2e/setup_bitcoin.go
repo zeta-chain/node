@@ -6,7 +6,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/node/app"
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/runner"
@@ -34,9 +33,6 @@ func runSetupBitcoin(_ *cobra.Command, args []string) error {
 	// initialize logger
 	logger := runner.NewLogger(false, color.FgHiYellow, "")
 
-	// set config
-	app.SetConfig()
-
 	// initialize context
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -58,7 +54,7 @@ func runSetupBitcoin(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	r.SetupBitcoinAccount(true)
+	r.SetupBitcoinAccounts(true)
 
 	logger.Print("* BTC setup done")
 

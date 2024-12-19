@@ -1,23 +1,28 @@
 package e2etests
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"math/big"
-	"strconv"
 
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcutil"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/gagliardetto/solana-go"
-	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	"github.com/zeta-chain/node/pkg/chains"
-	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
+
+// randomPayload generates a random payload to be used in gateway calls for testing purposes
+func randomPayload(r *runner.E2ERunner) string {
+	bytes := make([]byte, 50)
+	_, err := rand.Read(bytes)
+	require.NoError(r, err)
+
+	return hex.EncodeToString(bytes)
+}
 
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
 	tx, err := r.BTCZRC20.Approve(
@@ -74,98 +79,12 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	return rawTx
 }
 
-// verifyTransferAmountFromCCTX verifies the transfer amount from the CCTX on EVM
-func verifyTransferAmountFromCCTX(r *runner.E2ERunner, cctx *crosschaintypes.CrossChainTx, amount int64) {
-	r.Logger.Info("outTx hash %s", cctx.GetCurrentOutboundParam().Hash)
-
-	receipt, err := r.EVMClient.TransactionReceipt(
-		r.Ctx,
-		ethcommon.HexToHash(cctx.GetCurrentOutboundParam().Hash),
-	)
-	require.NoError(r, err)
-
-	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
-
-	for _, log := range receipt.Logs {
-		event, err := r.ERC20.ParseTransfer(*log)
-		if err != nil {
-			continue
-		}
-		r.Logger.Info("  logs: from %s, to %s, value %d", event.From.Hex(), event.To.Hex(), event.Value)
-		require.Equal(r, amount, event.Value.Int64(), "value is not correct")
-	}
+// bigAdd is shorthand for new(big.Int).Add(x, y)
+func bigAdd(x *big.Int, y *big.Int) *big.Int {
+	return new(big.Int).Add(x, y)
 }
 
-// verifySolanaWithdrawalAmountFromCCTX verifies the withdrawn amount on Solana for given CCTX
-func verifySolanaWithdrawalAmountFromCCTX(r *runner.E2ERunner, cctx *crosschaintypes.CrossChainTx, amount uint64) {
-	txHash := cctx.GetCurrentOutboundParam().Hash
-	r.Logger.Info("outbound hash %s", txHash)
-
-	// convert txHash to signature
-	sig, err := solana.SignatureFromBase58(txHash)
-	require.NoError(r, err)
-
-	// query transaction by signature
-	txResult, err := r.SolanaClient.GetTransaction(r.Ctx, sig, &rpc.GetTransactionOpts{})
-	require.NoError(r, err)
-
-	// unmarshal transaction
-	tx, err := txResult.Transaction.GetTransaction()
-	require.NoError(r, err)
-
-	// 1st instruction is the withdraw
-	instruction := tx.Message.Instructions[0]
-	instWithdrae, err := solanacontracts.ParseInstructionWithdraw(instruction)
-	require.NoError(r, err)
-
-	// verify the amount
-	require.Equal(r, amount, instWithdrae.TokenAmount(), "withdraw amount is not correct")
-}
-
-// Parse helpers ==========================================>
-
-func parseFloat(t require.TestingT, s string) float64 {
-	f, err := strconv.ParseFloat(s, 64)
-	require.NoError(t, err, "unable to parse float %q", s)
-	return f
-}
-
-func parseInt(t require.TestingT, s string) int {
-	v, err := strconv.Atoi(s)
-	require.NoError(t, err, "unable to parse int from %q", s)
-
-	return v
-}
-
-func parseBigInt(t require.TestingT, s string) *big.Int {
-	v, ok := big.NewInt(0).SetString(s, 10)
-	require.True(t, ok, "unable to parse big.Int from %q", s)
-
-	return v
-}
-
-// bigIntFromFloat64 takes float64 (e.g. 0.001) that represents btc amount
-// and converts it to big.Int for downstream usage.
-func btcAmountFromFloat64(t require.TestingT, amount float64) *big.Int {
-	satoshi, err := btcutil.NewAmount(amount)
-	require.NoError(t, err)
-
-	return big.NewInt(int64(satoshi))
-}
-
-func parseBitcoinWithdrawArgs(r *runner.E2ERunner, args []string, defaultReceiver string) (btcutil.Address, *big.Int) {
-	require.NotEmpty(r, args, "args list is empty")
-
-	receiverRaw := defaultReceiver
-	if args[0] != "" {
-		receiverRaw = args[0]
-	}
-
-	receiver, err := chains.DecodeBtcAddress(receiverRaw, r.GetBitcoinChainID())
-	require.NoError(r, err, "unable to decode btc address")
-
-	withdrawalAmount := parseFloat(r, args[1])
-	amount := btcAmountFromFloat64(r, withdrawalAmount)
-
-	return receiver, amount
+// bigSub is shorthand for new(big.Int).Sub(x, y)
+func bigSub(x *big.Int, y *big.Int) *big.Int {
+	return new(big.Int).Sub(x, y)
 }

@@ -20,6 +20,7 @@ var (
 		"/zetachain.zetacore.observer.MsgUpdateChainParams",
 		"/zetachain.zetacore.observer.MsgEnableCCTX",
 		"/zetachain.zetacore.observer.MsgUpdateGasPriceIncreaseFlags",
+		"/zetachain.zetacore.observer.MsgUpdateOperationalFlags",
 	}
 	// AdminPolicyMessages keeps track of the message URLs that can, by default, only be executed by admin policy address
 	AdminPolicyMessages = []string{
@@ -39,6 +40,7 @@ var (
 		"/zetachain.zetacore.authority.MsgAddAuthorization",
 		"/zetachain.zetacore.authority.MsgRemoveAuthorization",
 		"/zetachain.zetacore.authority.MsgUpdateChainInfo",
+		"/zetachain.zetacore.authority.MsgRemoveChainInfo",
 		"/zetachain.zetacore.lightclient.MsgEnableHeaderVerification",
 	}
 	// EmergencyPolicyMessages keeps track of the message URLs that can, by default, only be executed by emergency policy address

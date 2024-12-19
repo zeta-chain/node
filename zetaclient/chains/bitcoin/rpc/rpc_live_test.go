@@ -31,8 +31,8 @@ import (
 // createRPCClient creates a new Bitcoin RPC client for given chainID
 func createRPCClient(chainID int64) (*rpcclient.Client, error) {
 	var connCfg *rpcclient.ConnConfig
-	rpcMainnet := os.Getenv("BTC_RPC_MAINNET")
-	rpcTestnet := os.Getenv("BTC_RPC_TESTNET")
+	rpcMainnet := os.Getenv(common.EnvBtcRPCMainnet)
+	rpcTestnet := os.Getenv(common.EnvBtcRPCTestnet)
 
 	// mainnet
 	if chainID == chains.BitcoinMainnet.ChainId {
@@ -137,7 +137,6 @@ func LiveTest_FilterAndParseIncomingTx(t *testing.T) {
 		"tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2",
 		log.Logger,
 		&chaincfg.TestNet3Params,
-		0.0,
 	)
 	require.NoError(t, err)
 	require.Len(t, inbounds, 1)
@@ -175,10 +174,26 @@ func LiveTest_FilterAndParseIncomingTx_Nop(t *testing.T) {
 		"tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2",
 		log.Logger,
 		&chaincfg.TestNet3Params,
-		0.0,
 	)
+
 	require.NoError(t, err)
 	require.Empty(t, inbounds)
+}
+
+// TestBitcoinObserverLive is a phony test to run each live test individually
+func TestBitcoinObserverLive(t *testing.T) {
+	if !common.LiveTestEnabled() {
+		return
+	}
+
+	LiveTest_NewRPCClient(t)
+	LiveTest_CheckRPCStatus(t)
+	LiveTest_GetBlockHeightByHash(t)
+	LiveTest_BitcoinFeeRate(t)
+	LiveTest_AvgFeeRateMainnetMempoolSpace(t)
+	LiveTest_AvgFeeRateTestnetMempoolSpace(t)
+	LiveTest_GetRecentFeeRate(t)
+	LiveTest_GetSenderByVin(t)
 }
 
 // LiveTestNewRPCClient creates a new Bitcoin RPC client
@@ -186,8 +201,8 @@ func LiveTest_NewRPCClient(t *testing.T) {
 	btcConfig := config.BTCConfig{
 		RPCUsername: "user",
 		RPCPassword: "pass",
-		RPCHost:     "bitcoin.rpc.zetachain.com/6315704c-49bc-4649-8b9d-e9278a1dfeb3",
-		RPCParams:   "mainnet",
+		RPCHost:     os.Getenv(common.EnvBtcRPCTestnet),
+		RPCParams:   "testnet3",
 	}
 
 	// create Bitcoin RPC client
@@ -198,6 +213,22 @@ func LiveTest_NewRPCClient(t *testing.T) {
 	bn, err := client.GetBlockCount()
 	require.NoError(t, err)
 	require.Greater(t, bn, int64(0))
+}
+
+// Live_TestCheckRPCStatus checks the RPC status of the Bitcoin chain
+func LiveTest_CheckRPCStatus(t *testing.T) {
+	// setup Bitcoin client
+	chainID := chains.BitcoinMainnet.ChainId
+	client, err := createRPCClient(chainID)
+	require.NoError(t, err)
+
+	// decode tss address
+	tssAddress, err := chains.DecodeBtcAddress(testutils.TSSAddressBTCMainnet, chainID)
+	require.NoError(t, err)
+
+	// check RPC status
+	_, err = rpc.CheckRPCStatus(client, tssAddress)
+	require.NoError(t, err)
 }
 
 // LiveTestGetBlockHeightByHash queries Bitcoin block height by hash
@@ -263,9 +294,11 @@ func LiveTest_BitcoinFeeRate(t *testing.T) {
 		feeRateEconomical2.Uint64(),
 	)
 
-	// monitor fee rate every 5 minutes
-	for {
-		time.Sleep(time.Duration(5) * time.Minute)
+	// monitor fee rate every 5 minutes, adjust the iteration count as needed
+	for i := 0; i < 1; i++ {
+		// please uncomment this interval for long running test
+		//time.Sleep(time.Duration(5) * time.Minute)
+
 		bn, err = client.GetBlockCount()
 		feeRateConservative1, errCon1 = getFeeRate(client, 1, &btcjson.EstimateModeConservative)
 		feeRateEconomical1, errEco1 = getFeeRate(client, 1, &btcjson.EstimateModeEconomical)
@@ -356,7 +389,7 @@ func LiveTest_AvgFeeRateMainnetMempoolSpace(t *testing.T) {
 	// test against mempool.space API for 10000 blocks
 	//startBlock := 210000 * 3 // 3rd halving
 	startBlock := 829596
-	endBlock := startBlock - 10000
+	endBlock := startBlock - 1 // go back to whatever block as needed
 
 	compareAvgFeeRate(t, client, startBlock, endBlock, false)
 }
@@ -370,7 +403,7 @@ func LiveTest_AvgFeeRateTestnetMempoolSpace(t *testing.T) {
 	// test against mempool.space API for 10000 blocks
 	//startBlock := 210000 * 12 // 12th halving
 	startBlock := 2577600
-	endBlock := startBlock - 10000
+	endBlock := startBlock - 1 // go back to whatever block as needed
 
 	compareAvgFeeRate(t, client, startBlock, endBlock, true)
 }
@@ -387,8 +420,8 @@ func LiveTest_GetRecentFeeRate(t *testing.T) {
 	require.Greater(t, feeRate, uint64(0))
 }
 
-// LiveTestGetSenderByVin gets sender address for each vin and compares with mempool.space sender address
-func LiveTestGetSenderByVin(t *testing.T) {
+// LiveTest_GetSenderByVin gets sender address for each vin and compares with mempool.space sender address
+func LiveTest_GetSenderByVin(t *testing.T) {
 	// setup Bitcoin client
 	chainID := chains.BitcoinMainnet.ChainId
 	client, err := createRPCClient(chainID)
@@ -405,7 +438,7 @@ func LiveTestGetSenderByVin(t *testing.T) {
 	// calculates block range to test
 	startBlock, err := client.GetBlockCount()
 	require.NoError(t, err)
-	endBlock := startBlock - 5000
+	endBlock := startBlock - 1 // go back to whatever block as needed
 
 	// loop through mempool.space blocks backwards
 BLOCKLOOP:
@@ -548,7 +581,7 @@ func LiveTest_GetTransactionFeeAndRate(t *testing.T) {
 	}
 }
 
-func LiveTest_CalcDepositorFeeV2(t *testing.T) {
+func LiveTest_CalcDepositorFee(t *testing.T) {
 	// setup Bitcoin client
 	client, err := createRPCClient(chains.BitcoinMainnet.ChainId)
 	require.NoError(t, err)
@@ -563,13 +596,13 @@ func LiveTest_CalcDepositorFeeV2(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("should return default depositor fee", func(t *testing.T) {
-		depositorFee, err := bitcoin.CalcDepositorFeeV2(client, rawResult, &chaincfg.RegressionNetParams)
+		depositorFee, err := bitcoin.CalcDepositorFee(client, rawResult, &chaincfg.RegressionNetParams)
 		require.NoError(t, err)
 		require.Equal(t, bitcoin.DefaultDepositorFee, depositorFee)
 	})
 
 	t.Run("should return correct depositor fee for a given tx", func(t *testing.T) {
-		depositorFee, err := bitcoin.CalcDepositorFeeV2(client, rawResult, &chaincfg.MainNetParams)
+		depositorFee, err := bitcoin.CalcDepositorFee(client, rawResult, &chaincfg.MainNetParams)
 		require.NoError(t, err)
 
 		// the actual fee rate is 860 sat/vByte

@@ -11,7 +11,9 @@ import (
 func TestChain_Name(t *testing.T) {
 	t.Run("new Name field is compatible with ChainName enum", func(t *testing.T) {
 		for _, chain := range chains.DefaultChainsList() {
-			require.EqualValues(t, chain.Name, chain.ChainName.String())
+			if chain.ChainName != chains.ChainName_empty {
+				require.EqualValues(t, chain.Name, chain.ChainName.String())
+			}
 		}
 	})
 }
@@ -34,6 +36,7 @@ func TestChainListByNetworkType(t *testing.T) {
 				chains.OptimismMainnet,
 				chains.BaseMainnet,
 				chains.SolanaMainnet,
+				chains.TONMainnet,
 			},
 		},
 		{
@@ -42,6 +45,8 @@ func TestChainListByNetworkType(t *testing.T) {
 			[]chains.Chain{
 				chains.ZetaChainTestnet,
 				chains.BitcoinTestnet,
+				chains.BitcoinSignetTestnet,
+				chains.BitcoinTestnet4,
 				chains.Mumbai,
 				chains.Amoy,
 				chains.BscTestnet,
@@ -50,6 +55,7 @@ func TestChainListByNetworkType(t *testing.T) {
 				chains.OptimismSepolia,
 				chains.BaseSepolia,
 				chains.SolanaDevnet,
+				chains.TONTestnet,
 			},
 		},
 		{
@@ -60,6 +66,7 @@ func TestChainListByNetworkType(t *testing.T) {
 				chains.BitcoinRegtest,
 				chains.GoerliLocalnet,
 				chains.SolanaLocalnet,
+				chains.TONLocalnet,
 			},
 		},
 	}
@@ -90,7 +97,13 @@ func TestChainListByNetwork(t *testing.T) {
 		{
 			"Btc",
 			chains.Network_btc,
-			[]chains.Chain{chains.BitcoinMainnet, chains.BitcoinTestnet, chains.BitcoinRegtest},
+			[]chains.Chain{
+				chains.BitcoinMainnet,
+				chains.BitcoinTestnet,
+				chains.BitcoinSignetTestnet,
+				chains.BitcoinTestnet4,
+				chains.BitcoinRegtest,
+			},
 		},
 		{
 			"Eth",
@@ -122,6 +135,11 @@ func TestChainListByNetwork(t *testing.T) {
 			chains.Network_solana,
 			[]chains.Chain{chains.SolanaMainnet, chains.SolanaDevnet, chains.SolanaLocalnet},
 		},
+		{
+			"TON",
+			chains.Network_ton,
+			[]chains.Chain{chains.TONMainnet, chains.TONTestnet, chains.TONLocalnet},
+		},
 	}
 
 	for _, lt := range listTests {
@@ -137,6 +155,8 @@ func TestDefaultChainList(t *testing.T) {
 		chains.BscMainnet,
 		chains.Ethereum,
 		chains.BitcoinTestnet,
+		chains.BitcoinSignetTestnet,
+		chains.BitcoinTestnet4,
 		chains.Mumbai,
 		chains.Amoy,
 		chains.BscTestnet,
@@ -156,6 +176,9 @@ func TestDefaultChainList(t *testing.T) {
 		chains.SolanaMainnet,
 		chains.SolanaDevnet,
 		chains.SolanaLocalnet,
+		chains.TONMainnet,
+		chains.TONTestnet,
+		chains.TONLocalnet,
 	}, chains.DefaultChainsList())
 }
 
@@ -173,6 +196,8 @@ func TestChainListByGateway(t *testing.T) {
 				chains.BscMainnet,
 				chains.Ethereum,
 				chains.BitcoinTestnet,
+				chains.BitcoinSignetTestnet,
+				chains.BitcoinTestnet4,
 				chains.Mumbai,
 				chains.Amoy,
 				chains.BscTestnet,
@@ -188,6 +213,9 @@ func TestChainListByGateway(t *testing.T) {
 				chains.SolanaMainnet,
 				chains.SolanaDevnet,
 				chains.SolanaLocalnet,
+				chains.TONMainnet,
+				chains.TONTestnet,
+				chains.TONLocalnet,
 			},
 		},
 		{
@@ -215,6 +243,8 @@ func TestExternalChainList(t *testing.T) {
 		chains.BscMainnet,
 		chains.Ethereum,
 		chains.BitcoinTestnet,
+		chains.BitcoinSignetTestnet,
+		chains.BitcoinTestnet4,
 		chains.Mumbai,
 		chains.Amoy,
 		chains.BscTestnet,
@@ -230,6 +260,9 @@ func TestExternalChainList(t *testing.T) {
 		chains.SolanaMainnet,
 		chains.SolanaDevnet,
 		chains.SolanaLocalnet,
+		chains.TONMainnet,
+		chains.TONTestnet,
+		chains.TONLocalnet,
 	}, chains.ExternalChainList([]chains.Chain{}))
 }
 

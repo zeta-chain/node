@@ -61,20 +61,23 @@ type Account struct {
 
 // AdditionalAccounts are extra accounts required to run specific tests
 type AdditionalAccounts struct {
-	UserERC20         Account `yaml:"user_erc20"`
-	UserZetaTest      Account `yaml:"user_zeta_test"`
-	UserZEVMMPTest    Account `yaml:"user_zevm_mp_test"`
-	UserBitcoin       Account `yaml:"user_bitcoin"`
-	UserSolana        Account `yaml:"user_solana"`
-	UserEther         Account `yaml:"user_ether"`
-	UserMisc          Account `yaml:"user_misc"`
-	UserAdmin         Account `yaml:"user_admin"`
-	UserMigration     Account `yaml:"user_migration"` // used for TSS migration, TODO: rename (https://github.com/zeta-chain/node/issues/2780)
-	UserPrecompile    Account `yaml:"user_precompile"`
-	UserV2Ether       Account `yaml:"user_v2_ether"`
-	UserV2ERC20       Account `yaml:"user_v2_erc20"`
-	UserV2EtherRevert Account `yaml:"user_v2_ether_revert"`
-	UserV2ERC20Revert Account `yaml:"user_v2_erc20_revert"`
+	UserLegacyERC20       Account `yaml:"user_legacy_erc20"`
+	UserLegacyZeta        Account `yaml:"user_legacy_zeta"`
+	UserLegacyZEVMMP      Account `yaml:"user_legacy_zevm_mp"`
+	UserLegacyEther       Account `yaml:"user_legacy_ether"`
+	UserBitcoinDeposit    Account `yaml:"user_bitcoin_deposit"`
+	UserBitcoinWithdraw   Account `yaml:"user_bitcoin_withdraw"`
+	UserSolana            Account `yaml:"user_solana"`
+	UserSPL               Account `yaml:"user_spl"`
+	UserMisc              Account `yaml:"user_misc"`
+	UserAdmin             Account `yaml:"user_admin"`
+	UserMigration         Account `yaml:"user_migration"` // used for TSS migration, TODO: rename (https://github.com/zeta-chain/node/issues/2780)
+	UserPrecompile        Account `yaml:"user_precompile"`
+	UserEther             Account `yaml:"user_ether"`
+	UserERC20             Account `yaml:"user_erc20"`
+	UserEtherRevert       Account `yaml:"user_ether_revert"`
+	UserERC20Revert       Account `yaml:"user_erc20_revert"`
+	UserEmissionsWithdraw Account `yaml:"user_emissions_withdraw"`
 }
 
 type PolicyAccounts struct {
@@ -91,12 +94,14 @@ type ObserverRelayerAccounts struct {
 
 // RPCs contains the configuration for the RPC endpoints
 type RPCs struct {
-	Zevm         string     `yaml:"zevm"`
-	EVM          string     `yaml:"evm"`
-	Bitcoin      BitcoinRPC `yaml:"bitcoin"`
-	Solana       string     `yaml:"solana"`
-	ZetaCoreGRPC string     `yaml:"zetacore_grpc"`
-	ZetaCoreRPC  string     `yaml:"zetacore_rpc"`
+	Zevm              string     `yaml:"zevm"`
+	EVM               string     `yaml:"evm"`
+	Bitcoin           BitcoinRPC `yaml:"bitcoin"`
+	Solana            string     `yaml:"solana"`
+	TONSidecarURL     string     `yaml:"ton_sidecar_url"`
+	ZetaCoreGRPC      string     `yaml:"zetacore_grpc"`
+	ZetaCoreRPC       string     `yaml:"zetacore_rpc"`
+	ZetaclientMetrics string     `yaml:"zetaclient_metrics"`
 }
 
 // BitcoinRPC contains the configuration for the Bitcoin RPC endpoint
@@ -116,9 +121,10 @@ type Contracts struct {
 	Solana Solana `yaml:"solana"`
 }
 
-// Solana contains the addresses of predeployed contracts on the Solana chain
+// Solana contains the addresses of predeployed contracts and accounts on the Solana chain
 type Solana struct {
-	GatewayProgramID string `yaml:"gateway_program_id"`
+	GatewayProgramID DoubleQuotedString `yaml:"gateway_program_id"`
+	SPLAddr          DoubleQuotedString `yaml:"spl"`
 }
 
 // EVM contains the addresses of predeployed contracts on the EVM chain
@@ -140,6 +146,8 @@ type ZEVM struct {
 	ERC20ZRC20Addr     DoubleQuotedString `yaml:"erc20_zrc20"`
 	BTCZRC20Addr       DoubleQuotedString `yaml:"btc_zrc20"`
 	SOLZRC20Addr       DoubleQuotedString `yaml:"sol_zrc20"`
+	SPLZRC20Addr       DoubleQuotedString `yaml:"spl_zrc20"`
+	TONZRC20Addr       DoubleQuotedString `yaml:"ton_zrc20"`
 	UniswapFactoryAddr DoubleQuotedString `yaml:"uniswap_factory"`
 	UniswapRouterAddr  DoubleQuotedString `yaml:"uniswap_router"`
 	ConnectorZEVMAddr  DoubleQuotedString `yaml:"connector_zevm"`
@@ -206,13 +214,20 @@ func WriteConfig(file string, config Config) error {
 		return errors.New("file name cannot be empty")
 	}
 
-	b, err := yaml.Marshal(config)
+	// #nosec G304 -- the variable is expected to be controlled by the user
+	fHandle, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
-		return err
+		return fmt.Errorf("open file: %w", err)
 	}
-	err = os.WriteFile(file, b, 0600)
+	defer fHandle.Close()
+
+	// use a custom encoder so we can set the indentation level
+	encoder := yaml.NewEncoder(fHandle)
+	defer encoder.Close()
+	encoder.SetIndent(2)
+	err = encoder.Encode(config)
 	if err != nil {
-		return err
+		return fmt.Errorf("encode config: %w", err)
 	}
 	return nil
 }
@@ -221,20 +236,23 @@ func WriteConfig(file string, config Config) error {
 // struct
 func (a AdditionalAccounts) AsSlice() []Account {
 	return []Account{
-		a.UserERC20,
-		a.UserZetaTest,
-		a.UserZEVMMPTest,
-		a.UserBitcoin,
+		a.UserLegacyERC20,
+		a.UserLegacyZeta,
+		a.UserLegacyZEVMMP,
+		a.UserBitcoinDeposit,
+		a.UserBitcoinWithdraw,
 		a.UserSolana,
-		a.UserEther,
+		a.UserSPL,
+		a.UserLegacyEther,
 		a.UserMisc,
 		a.UserAdmin,
 		a.UserMigration,
 		a.UserPrecompile,
-		a.UserV2Ether,
-		a.UserV2ERC20,
-		a.UserV2EtherRevert,
-		a.UserV2ERC20Revert,
+		a.UserEther,
+		a.UserERC20,
+		a.UserEtherRevert,
+		a.UserERC20Revert,
+		a.UserEmissionsWithdraw,
 	}
 }
 
@@ -291,19 +309,23 @@ func (c *Config) GenerateKeys() error {
 	if err != nil {
 		return err
 	}
-	c.AdditionalAccounts.UserERC20, err = generateAccount()
+	c.AdditionalAccounts.UserLegacyERC20, err = generateAccount()
 	if err != nil {
 		return err
 	}
-	c.AdditionalAccounts.UserZetaTest, err = generateAccount()
+	c.AdditionalAccounts.UserLegacyZeta, err = generateAccount()
 	if err != nil {
 		return err
 	}
-	c.AdditionalAccounts.UserZEVMMPTest, err = generateAccount()
+	c.AdditionalAccounts.UserLegacyZEVMMP, err = generateAccount()
 	if err != nil {
 		return err
 	}
-	c.AdditionalAccounts.UserBitcoin, err = generateAccount()
+	c.AdditionalAccounts.UserBitcoinDeposit, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserBitcoinWithdraw, err = generateAccount()
 	if err != nil {
 		return err
 	}
@@ -311,7 +333,11 @@ func (c *Config) GenerateKeys() error {
 	if err != nil {
 		return err
 	}
-	c.AdditionalAccounts.UserEther, err = generateAccount()
+	c.AdditionalAccounts.UserSPL, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserLegacyEther, err = generateAccount()
 	if err != nil {
 		return err
 	}
@@ -331,19 +357,23 @@ func (c *Config) GenerateKeys() error {
 	if err != nil {
 		return err
 	}
-	c.AdditionalAccounts.UserV2Ether, err = generateAccount()
+	c.AdditionalAccounts.UserEther, err = generateAccount()
 	if err != nil {
 		return err
 	}
-	c.AdditionalAccounts.UserV2ERC20, err = generateAccount()
+	c.AdditionalAccounts.UserERC20, err = generateAccount()
 	if err != nil {
 		return err
 	}
-	c.AdditionalAccounts.UserV2EtherRevert, err = generateAccount()
+	c.AdditionalAccounts.UserEtherRevert, err = generateAccount()
 	if err != nil {
 		return err
 	}
-	c.AdditionalAccounts.UserV2ERC20Revert, err = generateAccount()
+	c.AdditionalAccounts.UserERC20Revert, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserEmissionsWithdraw, err = generateAccount()
 	if err != nil {
 		return err
 	}

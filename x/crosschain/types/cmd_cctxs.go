@@ -298,10 +298,12 @@ func newCmdCCTX(
 				ReceiverChainId: chainID,
 				CoinType:        coin.CoinType_Cmd,
 				Amount:          amount,
-				GasLimit:        gasLimit,
-				GasPrice:        medianGasPrice,
-				GasPriorityFee:  priorityFee,
-				TssPubkey:       tssPubKey,
+				CallOptions: &CallOptions{
+					GasLimit: gasLimit,
+				},
+				GasPrice:       medianGasPrice,
+				GasPriorityFee: priorityFee,
+				TssPubkey:      tssPubKey,
 			},
 		},
 	}

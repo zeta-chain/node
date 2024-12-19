@@ -10,6 +10,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -42,6 +43,9 @@ type OutboundData struct {
 
 	// revertOptions field contains data detailing the revert options
 	revertOptions types.RevertOptions
+
+	// callOptions field determinenes if call is arbitrary or authenticated and contains gasLimit
+	callOptions types.CallOptions
 }
 
 // NewOutboundData creates OutboundData from the given CCTX.
@@ -67,14 +71,16 @@ func NewOutboundData(
 	}
 
 	var (
-		to        ethcommon.Address
-		toChainID *big.Int
+		to          ethcommon.Address
+		toChainID   *big.Int
+		callOptions types.CallOptions
 	)
 
 	// in protocol contract v2, receiver is always set in the outbound
 	if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 {
 		to = ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
 		toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
+		callOptions = *cctx.GetCurrentOutboundParam().CallOptions
 	} else {
 		// recipient + destination chain
 		var skip bool
@@ -140,7 +146,25 @@ func NewOutboundData(
 		outboundParams: outboundParams,
 
 		revertOptions: cctx.RevertOptions,
+
+		callOptions: callOptions,
 	}, false, nil
+}
+
+func (o OutboundData) MessageContext() (gatewayevm.MessageContext, error) {
+	if o.callOptions == (types.CallOptions{}) {
+		return gatewayevm.MessageContext{}, errors.New("call options not found")
+	}
+	// if sender is provided in messageContext call is authenticated and target is Callable.onCall
+	// otherwise, call is arbitrary
+	messageContext := gatewayevm.MessageContext{
+		Sender: o.sender,
+	}
+	if o.callOptions.IsArbitraryCall {
+		messageContext.Sender = ethcommon.Address{}
+	}
+
+	return messageContext, nil
 }
 
 func getCCTXIndex(cctx *types.CrossChainTx) ([32]byte, error) {
@@ -191,7 +215,7 @@ func getDestination(cctx *types.CrossChainTx, logger zerolog.Logger) (ethcommon.
 }
 
 func validateParams(params *types.OutboundParams) error {
-	if params == nil || params.GasLimit == 0 {
+	if params == nil || params.CallOptions.GasLimit == 0 {
 		return errors.New("outboundParams is empty")
 	}
 

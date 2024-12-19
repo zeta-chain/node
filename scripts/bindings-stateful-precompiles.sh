@@ -75,4 +75,5 @@ function bindings() {
 # List of bindings to generate
 bindings ./precompiles/prototype
 bindings ./precompiles/staking
+bindings ./precompiles/bank
 

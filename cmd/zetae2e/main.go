@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/fatih/color"
+
+	_ "github.com/zeta-chain/node/pkg/sdkconfig/default"
 )
 
 func main() {

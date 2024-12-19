@@ -15,7 +15,7 @@ import (
 
 const (
 	loggerSeparator = " | "
-	padding         = 10
+	padding         = 12
 )
 
 // Logger is a wrapper around log.Logger that adds verbosity
@@ -71,15 +71,21 @@ func (l *Logger) PrintNoPrefix(message string, args ...interface{}) {
 }
 
 // Info prints a message to the logger if verbose is true
-func (l *Logger) Info(message string, args ...interface{}) {
+func (l *Logger) Info(message string, args ...any) {
+	if !l.verbose {
+		return
+	}
+
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	if l.verbose {
-		text := fmt.Sprintf(message, args...)
-		// #nosec G104 - we are not using user input
-		_, _ = l.logger.Print(l.getPrefixWithPadding() + loggerSeparator + "[INFO]" + text + "\n")
-	}
+	var (
+		content = fmt.Sprintf(message, args...)
+		line    = fmt.Sprintf("%s%s[INFO] %s \n", l.getPrefixWithPadding(), loggerSeparator, content)
+	)
+
+	// #nosec G104 - we are not using user input
+	_, _ = l.logger.Print(line)
 }
 
 // InfoLoud prints a message to the logger if verbose is true
@@ -147,6 +153,7 @@ func (l *Logger) CCTX(cctx crosschaintypes.CrossChainTx, name string) {
 		l.Info("  TxHeight: %d", outTxParam.ObservedExternalHeight)
 		l.Info("  BallotIndex: %s", outTxParam.BallotIndex)
 		l.Info("  TSSNonce: %d", outTxParam.TssNonce)
+		l.Info("  CallOptions: %+v", outTxParam.CallOptions)
 		l.Info("  GasLimit: %d", outTxParam.GasLimit)
 		l.Info("  GasPrice: %s", outTxParam.GasPrice)
 		l.Info("  GasUsed: %d", outTxParam.GasUsed)

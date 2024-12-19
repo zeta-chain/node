@@ -65,12 +65,14 @@ message MsgAddInboundTracker {
   int64 chain_id = 2;
   string tx_hash = 3;
   pkg.coin.CoinType coin_type = 4;
-  pkg.proofs.Proof proof = 5;
-  string block_hash = 6;
-  int64 tx_index = 7;
+
+  pkg.proofs.Proof proof = 5 [ deprecated = true ];
+  string block_hash = 6 [ deprecated = true ];
+  int64 tx_index = 7 [ deprecated = true ];
 }
 message MsgAddInboundTrackerResponse {}
 
+// TODO: https://github.com/zeta-chain/node/issues/3083
 message MsgWhitelistERC20 {
   string creator = 1;
   string erc20_address = 2;
@@ -91,9 +93,10 @@ message MsgAddOutboundTracker {
   int64 chain_id = 2;
   uint64 nonce = 3;
   string tx_hash = 4;
-  pkg.proofs.Proof proof = 5;
-  string block_hash = 6;
-  int64 tx_index = 7;
+
+  pkg.proofs.Proof proof = 5 [ deprecated = true ];
+  string block_hash = 6 [ deprecated = true ];
+  int64 tx_index = 7 [ deprecated = true ];
 }
 
 message MsgAddOutboundTrackerResponse {
@@ -119,7 +122,7 @@ message MsgVoteGasPrice {
 
   uint64 block_number = 4;
 
-  reserved 5; // deprecated `string supply`
+  string supply = 5 [ deprecated = true ];
 }
 
 message MsgVoteGasPriceResponse {}
@@ -163,6 +166,7 @@ message MsgVoteInbound {
   string message = 8;
   string inbound_hash = 9;
   uint64 inbound_block_height = 10;
+  // Deprecated (v21), use CallOptions
   uint64 gas_limit = 11;
   pkg.coin.CoinType coin_type = 12;
   string tx_origin = 13;
@@ -175,6 +179,11 @@ message MsgVoteInbound {
 
   // revert options provided by the sender
   RevertOptions revert_options = 17 [ (gogoproto.nullable) = false ];
+
+  CallOptions call_options = 18;
+
+  // define if a smart contract call should be made with asset
+  bool is_cross_chain_call = 19;
 }
 
 message MsgVoteInboundResponse {}

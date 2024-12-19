@@ -36,7 +36,7 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
 	ticker, err := clienttypes.NewDynamicTicker(
 		fmt.Sprintf("Solana_WatchOutbound_%d", chainID),
-		ob.GetChainParams().OutboundTicker,
+		ob.ChainParams().OutboundTicker,
 	)
 	if err != nil {
 		ob.Logger().Outbound.Error().Err(err).Msg("error creating ticker")
@@ -63,7 +63,7 @@ func (ob *Observer) WatchOutbound(ctx context.Context) error {
 					Msgf("WatchOutbound: error ProcessOutboundTrackers for chain %d", chainID)
 			}
 
-			ticker.UpdateInterval(ob.GetChainParams().OutboundTicker, ob.Logger().Outbound)
+			ticker.UpdateInterval(ob.ChainParams().OutboundTicker, ob.Logger().Outbound)
 		case <-ob.StopChannel():
 			ob.Logger().Outbound.Info().Msgf("WatchOutbound: watcher stopped for chain %d", chainID)
 			return nil
@@ -157,6 +157,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 
 	// the amount and status of the outbound
 	outboundAmount := new(big.Int).SetUint64(inst.TokenAmount())
+
 	// status was already verified as successful in CheckFinalizedTx
 	outboundStatus := chains.ReceiveStatus_success
 
@@ -295,6 +296,7 @@ func (ob *Observer) CheckFinalizedTx(
 		logger.Error().Err(err).Msg("ParseGatewayInstruction error")
 		return nil, false
 	}
+
 	txNonce := inst.GatewayNonce()
 
 	// recover ECDSA signer from instruction
@@ -305,8 +307,9 @@ func (ob *Observer) CheckFinalizedTx(
 	}
 
 	// check tx authorization
-	if signerECDSA != ob.TSS().EVMAddress() {
-		logger.Error().Msgf("tx signer %s is not matching current TSS address %s", signerECDSA, ob.TSS().EVMAddress())
+	if signerECDSA != ob.TSS().PubKey().AddressEVM() {
+		logger.Error().
+			Msgf("tx signer %s is not matching current TSS address %s", signerECDSA, ob.TSS().PubKey().AddressEVM())
 		return nil, false
 	}
 
@@ -352,6 +355,10 @@ func ParseGatewayInstruction(
 	switch coinType {
 	case coin.CoinType_Gas:
 		return contracts.ParseInstructionWithdraw(instruction)
+	case coin.CoinType_Cmd:
+		return contracts.ParseInstructionWhitelist(instruction)
+	case coin.CoinType_ERC20:
+		return contracts.ParseInstructionWithdrawSPL(instruction)
 	default:
 		return nil, fmt.Errorf("unsupported outbound coin type %s", coinType)
 	}

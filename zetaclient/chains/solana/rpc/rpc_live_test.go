@@ -2,31 +2,57 @@ package rpc_test
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/gagliardetto/solana-go"
 	solanarpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
+	"github.com/zeta-chain/node/zetaclient/common"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
 // Test_SolanaRPCLive is a phony test to run all live tests
 func Test_SolanaRPCLive(t *testing.T) {
-	// LiveTest_GetFirstSignatureForAddress(t)
-	// LiveTest_GetSignaturesForAddressUntil(t)
+	if !common.LiveTestEnabled() {
+		return
+	}
+
+	LiveTest_GetTransactionWithVersion(t)
+	LiveTest_GetFirstSignatureForAddress(t)
+	LiveTest_GetSignaturesForAddressUntil(t)
+	LiveTest_GetSignaturesForAddressUntil_Version0(t)
+	LiveTest_CheckRPCStatus(t)
+}
+
+func LiveTest_GetTransactionWithVersion(t *testing.T) {
+	// create a Solana devnet RPC client
+	client := solanarpc.New(solanarpc.DevNet_RPC)
+
+	// example transaction of version "0"
+	// https://explorer.solana.com/tx/Wqgj7hAaUUSfLzieN912G7GxyGHijzBZgY135NtuFtPRjevK8DnYjWwQZy7LAKFQZu582wsjuab2QP27VMUJzAi?cluster=devnet
+	txSig := solana.MustSignatureFromBase58(
+		"Wqgj7hAaUUSfLzieN912G7GxyGHijzBZgY135NtuFtPRjevK8DnYjWwQZy7LAKFQZu582wsjuab2QP27VMUJzAi",
+	)
+
+	t.Run("should get the transaction if the version is supported", func(t *testing.T) {
+		ctx := context.Background()
+		txResult, err := rpc.GetTransaction(ctx, client, txSig)
+		require.NoError(t, err)
+		require.NotNil(t, txResult)
+	})
 }
 
 func LiveTest_GetFirstSignatureForAddress(t *testing.T) {
 	// create a Solana devnet RPC client
-	urlDevnet := os.Getenv("TEST_SOL_URL_DEVNET")
-	client := solanarpc.New(urlDevnet)
+	client := solanarpc.New(solanarpc.DevNet_RPC)
 
 	// program address
 	address := solana.MustPublicKeyFromBase58("2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s")
 
 	// get the first signature for the address (one by one)
-	sig, err := rpc.GetFirstSignatureForAddress(context.TODO(), client, address, 1)
+	sig, err := rpc.GetFirstSignatureForAddress(context.Background(), client, address, 1)
 	require.NoError(t, err)
 
 	// assert
@@ -36,8 +62,7 @@ func LiveTest_GetFirstSignatureForAddress(t *testing.T) {
 
 func LiveTest_GetSignaturesForAddressUntil(t *testing.T) {
 	// create a Solana devnet RPC client
-	urlDevnet := os.Getenv("TEST_SOL_URL_DEVNET")
-	client := solanarpc.New(urlDevnet)
+	client := solanarpc.New(solanarpc.DevNet_RPC)
 
 	// program address
 	address := solana.MustPublicKeyFromBase58("2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s")
@@ -45,8 +70,8 @@ func LiveTest_GetSignaturesForAddressUntil(t *testing.T) {
 		"2tUQtcrXxtNFtV9kZ4kQsmY7snnEoEEArmu9pUptr4UCy8UdbtjPD6UtfEtPJ2qk5CTzZTmLwsbmZdLymcwSUcHu",
 	)
 
-	// get all signatures for the address until the first signature (one by one)
-	sigs, err := rpc.GetSignaturesForAddressUntil(context.TODO(), client, address, untilSig, 1)
+	// get all signatures for the address until the first signature
+	sigs, err := rpc.GetSignaturesForAddressUntil(context.Background(), client, address, untilSig, 100)
 	require.NoError(t, err)
 
 	// assert
@@ -56,4 +81,30 @@ func LiveTest_GetSignaturesForAddressUntil(t *testing.T) {
 	for _, sig := range sigs {
 		require.NotEqual(t, untilSig, sig.Signature)
 	}
+}
+
+func LiveTest_GetSignaturesForAddressUntil_Version0(t *testing.T) {
+	// create a Solana devnet RPC client
+	client := solanarpc.New(solanarpc.DevNet_RPC)
+
+	// program address and signature of version "0"
+	chain := chains.SolanaDevnet
+	address := solana.MustPublicKeyFromBase58(testutils.GatewayAddresses[chain.ChainId])
+	untilSig := solana.MustSignatureFromBase58(
+		"39fSgD2nteJCQRQP3ynqEcDMZAFSETCbfb61AUqLU6y7qbzSJL5rn2DHU2oM35zsf94Feb5C5QWd5L5UnncBsAay",
+	)
+
+	// should get all signatures for the address until a signature of version "0" successfully
+	_, err := rpc.GetSignaturesForAddressUntil(context.Background(), client, address, untilSig, 100)
+	require.NoError(t, err)
+}
+
+func LiveTest_CheckRPCStatus(t *testing.T) {
+	// create a Solana devnet RPC client
+	client := solanarpc.New(solanarpc.DevNet_RPC)
+
+	// check the RPC status
+	ctx := context.Background()
+	_, err := rpc.CheckRPCStatus(ctx, client, false)
+	require.NoError(t, err)
 }

@@ -73,7 +73,7 @@ func TestChain_Validate(t *testing.T) {
 			chain: chains.Chain{
 				ChainId:     42,
 				Name:        "foo",
-				Network:     chains.Network_solana + 1,
+				Network:     chains.Network_ton + 1,
 				NetworkType: chains.NetworkType_testnet,
 				Vm:          chains.Vm_evm,
 				Consensus:   chains.Consensus_op_stack,
@@ -101,7 +101,7 @@ func TestChain_Validate(t *testing.T) {
 				Name:        "foo",
 				Network:     chains.Network_base,
 				NetworkType: chains.NetworkType_devnet,
-				Vm:          chains.Vm_svm + 1,
+				Vm:          chains.Vm_tvm + 1,
 				Consensus:   chains.Consensus_op_stack,
 				IsExternal:  true,
 			},
@@ -115,7 +115,7 @@ func TestChain_Validate(t *testing.T) {
 				Network:     chains.Network_base,
 				NetworkType: chains.NetworkType_devnet,
 				Vm:          chains.Vm_evm,
-				Consensus:   chains.Consensus_solana_consensus + 1,
+				Consensus:   chains.Consensus_catchain_consensus + 1,
 				IsExternal:  true,
 			},
 			errStr: "invalid consensus",
@@ -147,8 +147,22 @@ func TestChain_EncodeAddress(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "should error if b is not a valid address on the bitcoin network",
+			name:    "should error if b is not a valid address on the bitcoin testnet network",
 			chain:   chains.BitcoinTestnet,
+			b:       []byte("bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c"),
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name:    "should error if b is not a valid address on the bitcoin signet network",
+			chain:   chains.BitcoinSignetTestnet,
+			b:       []byte("bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c"),
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name:    "should error if b is not a valid address on the bitcoin testnet4 network",
+			chain:   chains.BitcoinTestnet4,
 			b:       []byte("bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c"),
 			want:    "",
 			wantErr: true,
@@ -158,6 +172,27 @@ func TestChain_EncodeAddress(t *testing.T) {
 			chain:   chains.BitcoinMainnet,
 			b:       []byte("bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c"),
 			want:    "bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c",
+			wantErr: false,
+		},
+		{
+			name:    "valid bitcoin testnet address",
+			chain:   chains.BitcoinTestnet,
+			b:       []byte("tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur"),
+			want:    "tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur",
+			wantErr: false,
+		},
+		{
+			name:    "valid bitcoin signet address",
+			chain:   chains.BitcoinSignetTestnet,
+			b:       []byte("tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur"),
+			want:    "tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur",
+			wantErr: false,
+		},
+		{
+			name:    "valid bitcoin testnet4 address",
+			chain:   chains.BitcoinTestnet4,
+			b:       []byte("tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur"),
+			want:    "tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur",
 			wantErr: false,
 		},
 		{
@@ -207,6 +242,7 @@ func TestChain_EncodeAddress(t *testing.T) {
 				require.Error(t, err)
 				return
 			}
+			require.NoError(t, err)
 			require.Equal(t, tc.want, s)
 		})
 	}
@@ -241,6 +277,8 @@ func TestChain_IsBitcoinChain(t *testing.T) {
 		{"Bitcoin Mainnet", chains.BitcoinMainnet, true},
 		{"Bitcoin Testnet", chains.BitcoinTestnet, true},
 		{"Bitcoin Regtest", chains.BitcoinRegtest, true},
+		{"Bitcoin Signet Testnet", chains.BitcoinSignetTestnet, true},
+		{"Bitcoin Testnet4", chains.BitcoinTestnet4, true},
 		{"Non-Bitcoin", chains.Ethereum, false},
 		{"Zeta Mainnet", chains.ZetaChainMainnet, false},
 	}
@@ -301,6 +339,19 @@ func TestDecodeAddressFromChainID(t *testing.T) {
 			want:    []byte("DCAK36VfExkPdAkYUQg6ewgxyinvcEyPLyHjRbmveKFw"),
 		},
 		{
+			name:    "TON",
+			chainID: chains.TONMainnet.ChainId,
+			addr:    "0:55798cb7b87168251a7c39f6806b8c202f6caa0f617a76f4070b3fdacfd056a1",
+			want:    []byte("0:55798cb7b87168251a7c39f6806b8c202f6caa0f617a76f4070b3fdacfd056a1"),
+		},
+		{
+			name:    "TON",
+			chainID: chains.TONMainnet.ChainId,
+			// human friendly address should be always represented in raw format
+			addr: "EQB3ncyBUTjZUA5EnFKR5_EnOMI9V1tTEAAPaiU71gc4TiUt",
+			want: []byte("0:779dcc815138d9500e449c5291e7f12738c23d575b5310000f6a253bd607384e"),
+		},
+		{
 			name:    "Non-supported chain",
 			chainID: 9999,
 			wantErr: true,
@@ -350,6 +401,7 @@ func TestIsBitcoinChain(t *testing.T) {
 		{"Bitcoin Mainnet", chains.BitcoinMainnet.ChainId, true},
 		{"Bitcoin Testnet", chains.BitcoinTestnet.ChainId, true},
 		{"Bitcoin Regtest", chains.BitcoinRegtest.ChainId, true},
+		{"Bitcoin Signet Testnet", chains.BitcoinSignetTestnet.ChainId, true},
 		{"Non-Bitcoin", chains.Ethereum.ChainId, false},
 		{"Zeta Mainnet", chains.ZetaChainMainnet.ChainId, false},
 	}
@@ -405,29 +457,108 @@ func TestGetChainFromChainID(t *testing.T) {
 }
 
 func TestGetBTCChainParams(t *testing.T) {
-	params, err := chains.GetBTCChainParams(chains.BitcoinMainnet.ChainId)
-	require.NoError(t, err)
-	require.Equal(t, &chaincfg.MainNetParams, params)
+	tt := []struct {
+		name           string
+		chainID        int64
+		expectedParams *chaincfg.Params
+		expectedError  require.ErrorAssertionFunc
+	}{
+		{
+			name:           "Bitcoin Mainnet",
+			chainID:        chains.BitcoinMainnet.ChainId,
+			expectedParams: &chaincfg.MainNetParams,
+			expectedError:  require.NoError,
+		},
+		{
+			name:           "Bitcoin Testnet",
+			chainID:        chains.BitcoinTestnet.ChainId,
+			expectedParams: &chaincfg.TestNet3Params,
+			expectedError:  require.NoError,
+		},
+		{
+			name:           "Bitcoin Regtest",
+			chainID:        chains.BitcoinRegtest.ChainId,
+			expectedParams: &chaincfg.RegressionNetParams,
+			expectedError:  require.NoError,
+		},
+		{
+			name:           "Bitcoin Signet Testnet",
+			chainID:        chains.BitcoinSignetTestnet.ChainId,
+			expectedParams: &chaincfg.SigNetParams,
+			expectedError:  require.NoError,
+		},
+		{
+			name:           "Unknown Chain",
+			chainID:        9999,
+			expectedParams: nil,
+			expectedError: func(t require.TestingT, err error, i ...interface{}) {
+				require.ErrorContains(t, err, "error chainID 9999 is not a bitcoin chain")
+			},
+		},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			params, err := chains.GetBTCChainParams(tc.chainID)
+			tc.expectedError(t, err)
+			require.Equal(t, tc.expectedParams, params)
+		})
+	}
 
-	_, err = chains.GetBTCChainParams(9999)
-	require.Error(t, err)
 }
 
 func TestGetBTCChainIDFromChainParams(t *testing.T) {
-	chainID, err := chains.GetBTCChainIDFromChainParams(&chaincfg.MainNetParams)
-	require.NoError(t, err)
-	require.Equal(t, int64(8332), chainID)
-
-	chainID, err = chains.GetBTCChainIDFromChainParams(&chaincfg.RegressionNetParams)
-	require.NoError(t, err)
-	require.Equal(t, int64(18444), chainID)
-
-	chainID, err = chains.GetBTCChainIDFromChainParams(&chaincfg.TestNet3Params)
-	require.NoError(t, err)
-	require.Equal(t, int64(18332), chainID)
-
-	_, err = chains.GetBTCChainIDFromChainParams(&chaincfg.Params{Name: "unknown"})
-	require.Error(t, err)
+	tt := []struct {
+		name            string
+		params          *chaincfg.Params
+		expectedChainID int64
+		expectedError   require.ErrorAssertionFunc
+	}{
+		{
+			name:            "Bitcoin Mainnet",
+			params:          &chaincfg.MainNetParams,
+			expectedChainID: chains.BitcoinMainnet.ChainId,
+			expectedError:   require.NoError,
+		},
+		{
+			name:            "Bitcoin Testnet",
+			params:          &chaincfg.TestNet3Params,
+			expectedChainID: chains.BitcoinTestnet.ChainId,
+			expectedError:   require.NoError,
+		},
+		{
+			name:            "Bitcoin Regtest",
+			params:          &chaincfg.RegressionNetParams,
+			expectedChainID: chains.BitcoinRegtest.ChainId,
+			expectedError:   require.NoError,
+		},
+		{
+			name:            "Bitcoin Signet Testnet",
+			params:          &chaincfg.SigNetParams,
+			expectedChainID: chains.BitcoinSignetTestnet.ChainId,
+			expectedError:   require.NoError,
+		},
+		{
+			name:            "Bitcoin Testnet4",
+			params:          &chains.TestNet4Params,
+			expectedChainID: chains.BitcoinTestnet4.ChainId,
+			expectedError:   require.NoError,
+		},
+		{
+			name:            "Unknown Chain",
+			params:          &chaincfg.Params{Name: "unknown"},
+			expectedChainID: 0,
+			expectedError: func(t require.TestingT, err error, i ...interface{}) {
+				require.ErrorContains(t, err, "error chain unknown is not a bitcoin chain")
+			},
+		},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			chainID, err := chains.GetBTCChainIDFromChainParams(tc.params)
+			tc.expectedError(t, err)
+			require.Equal(t, tc.expectedChainID, chainID)
+		})
+	}
 }
 
 func TestChainIDInChainList(t *testing.T) {

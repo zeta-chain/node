@@ -38,6 +38,15 @@ This uses `docker compose` to start the localnet and run standard e2e tests insi
 - `ZETACORED_IMPORT_GENESIS_DATA`: path to genesis data to import before starting zetacored
 - `ZETACORED_START_PERIOD`: duration to tolerate `zetacored` health check failures during startup
 
+More options directly to `docker compose` via the `NODE_COMPOSE_ARGS` variable. This allows setting additional profiles or configuring an overlay. Example:
+
+```
+export NODE_COMPOSE_ARGS="--profile monitoring -f docker-compose-persistent.yml"
+make start-e2e-test
+```
+
+This starts the e2e tests while enabling the monitoring stack and persistence (data is not deleted between test runs).
+
 #### Run admin functions e2e tests
 
 We define e2e tests allowing to test admin functionalities (emergency network pause for example).

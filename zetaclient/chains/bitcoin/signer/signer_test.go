@@ -7,19 +7,20 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
+	btcecdsa "github.com/btcsuite/btcd/btcec/v2/ecdsa"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 	. "gopkg.in/check.v1"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -43,13 +44,12 @@ func (s *BTCSignerSuite) SetUpTest(c *C) {
 	//privkeyBytes := crypto.FromECDSA(privateKey)
 	//c.Logf("privatekey %s", hex.EncodeToString(privkeyBytes))
 	c.Assert(err, IsNil)
-	tss := &mocks.TSS{
-		PrivKey: privateKey,
-	}
+
+	tss := mocks.NewTSSFromPrivateKey(c, privateKey)
+
 	s.btcSigner, err = NewSigner(
 		chains.Chain{},
 		tss,
-		nil,
 		base.DefaultLogger(),
 		config.BTCConfig{},
 	)
@@ -63,7 +63,7 @@ func (s *BTCSignerSuite) TestP2PH(c *C) {
 		"d4f8720ee63e502ee2869afab7de234b80c")
 	c.Assert(err, IsNil)
 
-	privKey, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), privKeyBytes)
+	privKey, pubKey := btcec.PrivKeyFromBytes(privKeyBytes)
 	pubKeyHash := btcutil.Hash160(pubKey.SerializeCompressed())
 	addr, err := btcutil.NewAddressPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
 	c.Assert(err, IsNil)
@@ -75,7 +75,7 @@ func (s *BTCSignerSuite) TestP2PH(c *C) {
 	prevOut := wire.NewOutPoint(&chainhash.Hash{}, ^uint32(0))
 	txIn := wire.NewTxIn(prevOut, []byte{txscript.OP_0, txscript.OP_0}, nil)
 	originTx.AddTxIn(txIn)
-	pkScript, err := bitcoin.PayToAddrScript(addr)
+	pkScript, err := txscript.PayToAddrScript(addr)
 
 	c.Assert(err, IsNil)
 
@@ -118,7 +118,7 @@ func (s *BTCSignerSuite) TestP2PH(c *C) {
 		txscript.ScriptStrictMultiSig |
 		txscript.ScriptDiscourageUpgradableNops
 	vm, err := txscript.NewEngine(originTx.TxOut[0].PkScript, redeemTx, 0,
-		flags, nil, nil, -1)
+		flags, nil, nil, -1, txscript.NewMultiPrevOutFetcher(nil))
 	c.Assert(err, IsNil)
 
 	err = vm.Execute()
@@ -134,7 +134,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 		"d4f8720ee63e502ee2869afab7de234b80c")
 	c.Assert(err, IsNil)
 
-	privKey, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), privKeyBytes)
+	privKey, pubKey := btcec.PrivKeyFromBytes(privKeyBytes)
 	pubKeyHash := btcutil.Hash160(pubKey.SerializeCompressed())
 	//addr, err := btcutil.NewAddressPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
 	addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
@@ -147,7 +147,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 	prevOut := wire.NewOutPoint(&chainhash.Hash{}, ^uint32(0))
 	txIn := wire.NewTxIn(prevOut, []byte{txscript.OP_0, txscript.OP_0}, nil)
 	originTx.AddTxIn(txIn)
-	pkScript, err := bitcoin.PayToAddrScript(addr)
+	pkScript, err := txscript.PayToAddrScript(addr)
 	c.Assert(err, IsNil)
 	txOut := wire.NewTxOut(100000000, pkScript)
 	originTx.AddTxOut(txOut)
@@ -167,8 +167,8 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 	// but for this example don't bother.
 	txOut = wire.NewTxOut(0, nil)
 	redeemTx.AddTxOut(txOut)
-	txSigHashes := txscript.NewTxSigHashes(redeemTx)
-	pkScript, err = bitcoin.PayToAddrScript(addr)
+	txSigHashes := txscript.NewTxSigHashes(redeemTx, txscript.NewCannedPrevOutputFetcher([]byte{}, 0))
+	pkScript, err = txscript.PayToAddrScript(addr)
 	c.Assert(err, IsNil)
 
 	{
@@ -190,7 +190,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 			txscript.ScriptStrictMultiSig |
 			txscript.ScriptDiscourageUpgradableNops
 		vm, err := txscript.NewEngine(originTx.TxOut[0].PkScript, redeemTx, 0,
-			flags, nil, nil, -1)
+			flags, nil, nil, -1, txscript.NewCannedPrevOutputFetcher([]byte{}, 0))
 		c.Assert(err, IsNil)
 
 		err = vm.Execute()
@@ -207,8 +207,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 			100000000,
 		)
 		c.Assert(err, IsNil)
-		sig, err := privKey.Sign(witnessHash)
-		c.Assert(err, IsNil)
+		sig := btcecdsa.Sign(privKey, witnessHash)
 		txWitness := wire.TxWitness{append(sig.Serialize(), byte(txscript.SigHashAll)), pubKeyHash}
 		redeemTx.TxIn[0].Witness = txWitness
 
@@ -216,7 +215,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 			txscript.ScriptStrictMultiSig |
 			txscript.ScriptDiscourageUpgradableNops
 		vm, err := txscript.NewEngine(originTx.TxOut[0].PkScript, redeemTx, 0,
-			flags, nil, nil, -1)
+			flags, nil, nil, -1, txscript.NewMultiPrevOutFetcher(nil))
 		c.Assert(err, IsNil)
 
 		err = vm.Execute()
@@ -229,17 +228,17 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 func TestAddWithdrawTxOutputs(t *testing.T) {
 	// Create test signer and receiver address
 	signer, err := NewSigner(
-		chains.Chain{},
-		mocks.NewTSSMainnet(),
-		nil,
+		chains.BitcoinMainnet,
+		mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet),
 		base.DefaultLogger(),
 		config.BTCConfig{},
 	)
 	require.NoError(t, err)
 
 	// tss address and script
-	tssAddr := signer.TSS().BTCAddressWitnessPubkeyHash()
-	tssScript, err := bitcoin.PayToAddrScript(tssAddr)
+	tssAddr, err := signer.TSS().PubKey().AddressBTC(chains.BitcoinMainnet.ChainId)
+	require.NoError(t, err)
+	tssScript, err := txscript.PayToAddrScript(tssAddr)
 	require.NoError(t, err)
 	fmt.Printf("tss address: %s", tssAddr.EncodeAddress())
 
@@ -247,7 +246,7 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 	receiver := "bc1qaxf82vyzy8y80v000e7t64gpten7gawewzu42y"
 	to, err := chains.DecodeBtcAddress(receiver, chains.BitcoinMainnet.ChainId)
 	require.NoError(t, err)
-	toScript, err := bitcoin.PayToAddrScript(to)
+	toScript, err := txscript.PayToAddrScript(to)
 	require.NoError(t, err)
 
 	// test cases
@@ -387,13 +386,10 @@ func TestNewBTCSigner(t *testing.T) {
 	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
 	privateKey, err := crypto.HexToECDSA(skHex)
 	require.NoError(t, err)
-	tss := &mocks.TSS{
-		PrivKey: privateKey,
-	}
+	tss := mocks.NewTSSFromPrivateKey(t, privateKey)
 	btcSigner, err := NewSigner(
 		chains.Chain{},
 		tss,
-		nil,
 		base.DefaultLogger(),
 		config.BTCConfig{})
 	require.NoError(t, err)

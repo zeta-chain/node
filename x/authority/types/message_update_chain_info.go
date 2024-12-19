@@ -4,16 +4,18 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/zeta-chain/node/pkg/chains"
 )
 
 const TypeMsgUpdateChainInfo = "UpdateChainInfo"
 
 var _ sdk.Msg = &MsgUpdateChainInfo{}
 
-func NewMsgUpdateChainInfo(creator string, chainInfo ChainInfo) *MsgUpdateChainInfo {
+func NewMsgUpdateChainInfo(creator string, chain chains.Chain) *MsgUpdateChainInfo {
 	return &MsgUpdateChainInfo{
-		Creator:   creator,
-		ChainInfo: chainInfo,
+		Creator: creator,
+		Chain:   chain,
 	}
 }
 
@@ -43,9 +45,10 @@ func (msg *MsgUpdateChainInfo) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
-	// the chain information must be valid
-	if err := msg.ChainInfo.Validate(); err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid chain info: %s", err.Error())
+	// the chain must be valid
+	if err := msg.Chain.Validate(); err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid chain"+
+			": %s", err.Error())
 	}
 
 	return nil

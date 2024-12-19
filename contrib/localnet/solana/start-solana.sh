@@ -9,8 +9,8 @@ solana-test-validator &
 
 sleep 5
 # airdrop to e2e sol account
-solana airdrop 100
-solana airdrop 100 37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ
+solana airdrop 1000
+solana airdrop 1000 37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ
 solana program deploy gateway.so
 
 

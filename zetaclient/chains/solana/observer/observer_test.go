@@ -29,9 +29,10 @@ func MockSolanaObserver(
 	if zetacoreClient == nil {
 		zetacoreClient = mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
 	}
+
 	// use mock tss if not provided
 	if tss == nil {
-		tss = mocks.NewTSSMainnet()
+		tss = mocks.NewTSS(t)
 	}
 
 	database, err := db.NewFromSqliteInMemory(true)

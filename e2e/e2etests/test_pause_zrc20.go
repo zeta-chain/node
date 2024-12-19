@@ -92,7 +92,7 @@ func TestPauseZRC20(r *runner.E2ERunner, _ []string) {
 	utils.RequireTxSuccessful(r, receipt)
 
 	// Check deposit revert when paused
-	signedTx, err := r.SendEther(r.TSSAddress, big.NewInt(1e17), nil)
+	signedTx, err := r.LegacySendEther(r.TSSAddress, big.NewInt(1e17), nil)
 	require.NoError(r, err)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)

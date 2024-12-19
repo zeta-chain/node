@@ -5,9 +5,7 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"math/big"
 	"strings"
-	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -54,7 +52,11 @@ type Observer struct {
 
 // priorityFeeConfig is the configuration for priority fee
 type priorityFeeConfig struct {
-	checked   bool
+	// checked indicates whether the observer checked
+	// this EVM chain for EIP-1559 (further checks are cached)
+	checked bool
+
+	// supported indicates whether this EVM chain supports EIP-1559
 	supported bool
 }
 
@@ -78,7 +80,6 @@ func NewObserver(
 		zetacoreClient,
 		tss,
 		base.DefaultBlockCacheSize,
-		base.DefaultHeaderCacheSize,
 		ts,
 		database,
 		logger,
@@ -105,66 +106,40 @@ func NewObserver(
 	return ob, nil
 }
 
-// WithEvmClient attaches a new evm client to the observer
-func (ob *Observer) WithEvmClient(client interfaces.EVMRPCClient) {
-	ob.evmClient = client
-}
-
-// WithEvmJSONRPC attaches a new evm json rpc client to the observer
-func (ob *Observer) WithEvmJSONRPC(client interfaces.EVMJSONRPCClient) {
-	ob.evmJSONRPC = client
-}
-
-// SetChainParams sets the chain params for the observer
-// Note: chain params is accessed concurrently
-func (ob *Observer) SetChainParams(params observertypes.ChainParams) {
-	ob.Mu().Lock()
-	defer ob.Mu().Unlock()
-	ob.WithChainParams(params)
-}
-
-// GetChainParams returns the chain params for the observer
-// Note: chain params is accessed concurrently
-func (ob *Observer) GetChainParams() observertypes.ChainParams {
-	ob.Mu().Lock()
-	defer ob.Mu().Unlock()
-	return ob.ChainParams()
-}
-
 // GetConnectorContract returns the non-Eth connector address and binder
 func (ob *Observer) GetConnectorContract() (ethcommon.Address, *zetaconnector.ZetaConnectorNonEth, error) {
-	addr := ethcommon.HexToAddress(ob.GetChainParams().ConnectorContractAddress)
+	addr := ethcommon.HexToAddress(ob.ChainParams().ConnectorContractAddress)
 	contract, err := zetaconnector.NewZetaConnectorNonEth(addr, ob.evmClient)
 	return addr, contract, err
 }
 
 // GetConnectorContractEth returns the Eth connector address and binder
 func (ob *Observer) GetConnectorContractEth() (ethcommon.Address, *zetaconnectoreth.ZetaConnectorEth, error) {
-	addr := ethcommon.HexToAddress(ob.GetChainParams().ConnectorContractAddress)
+	addr := ethcommon.HexToAddress(ob.ChainParams().ConnectorContractAddress)
 	contract, err := FetchConnectorContractEth(addr, ob.evmClient)
 	return addr, contract, err
 }
 
 // GetERC20CustodyContract returns ERC20Custody contract address and binder
 func (ob *Observer) GetERC20CustodyContract() (ethcommon.Address, *erc20custody.ERC20Custody, error) {
-	addr := ethcommon.HexToAddress(ob.GetChainParams().Erc20CustodyContractAddress)
+	addr := ethcommon.HexToAddress(ob.ChainParams().Erc20CustodyContractAddress)
 	contract, err := erc20custody.NewERC20Custody(addr, ob.evmClient)
 	return addr, contract, err
 }
 
-// GetERC20CustodyV2Contract returns ERC20CustodyV2 contract address and binder
+// GetERC20CustodyV2Contract returns ERC20Custody contract address and binder
 // NOTE: we use the same address as gateway v1
 // this simplify the migration process v1 will be completely removed in the future
 // currently the ABI for withdraw is identical, therefore both contract instances can be used
 func (ob *Observer) GetERC20CustodyV2Contract() (ethcommon.Address, *erc20custodyv2.ERC20Custody, error) {
-	addr := ethcommon.HexToAddress(ob.GetChainParams().Erc20CustodyContractAddress)
+	addr := ethcommon.HexToAddress(ob.ChainParams().Erc20CustodyContractAddress)
 	contract, err := erc20custodyv2.NewERC20Custody(addr, ob.evmClient)
 	return addr, contract, err
 }
 
 // GetGatewayContract returns the gateway contract address and binder
 func (ob *Observer) GetGatewayContract() (ethcommon.Address, *gatewayevm.GatewayEVM, error) {
-	addr := ethcommon.HexToAddress(ob.GetChainParams().GatewayAddress)
+	addr := ethcommon.HexToAddress(ob.ChainParams().GatewayAddress)
 	contract, err := gatewayevm.NewGatewayEVM(addr, ob.evmClient)
 	return addr, contract, err
 }
@@ -189,7 +164,7 @@ func FetchZetaTokenContract(
 
 // Start all observation routines for the evm chain
 func (ob *Observer) Start(ctx context.Context) {
-	if noop := ob.Observer.Start(); noop {
+	if ok := ob.Observer.Start(); !ok {
 		ob.Logger().Chain.Info().Msgf("observer is already started for chain %d", ob.Chain().ChainId)
 		return
 	}
@@ -200,50 +175,7 @@ func (ob *Observer) Start(ctx context.Context) {
 	bg.Work(ctx, ob.WatchOutbound, bg.WithName("WatchOutbound"), bg.WithLogger(ob.Logger().Outbound))
 	bg.Work(ctx, ob.WatchGasPrice, bg.WithName("WatchGasPrice"), bg.WithLogger(ob.Logger().GasPrice))
 	bg.Work(ctx, ob.WatchInboundTracker, bg.WithName("WatchInboundTracker"), bg.WithLogger(ob.Logger().Inbound))
-	bg.Work(ctx, ob.WatchRPCStatus, bg.WithName("WatchRPCStatus"), bg.WithLogger(ob.Logger().Chain))
-}
-
-// WatchRPCStatus watches the RPC status of the evm chain
-// TODO(revamp): move ticker to ticker file
-// TODO(revamp): move inner logic to a separate function
-func (ob *Observer) WatchRPCStatus(ctx context.Context) error {
-	ob.Logger().Chain.Info().Msgf("Starting RPC status check for chain %d", ob.Chain().ChainId)
-	ticker := time.NewTicker(60 * time.Second)
-	for {
-		select {
-		case <-ticker.C:
-			if !ob.GetChainParams().IsSupported {
-				continue
-			}
-			bn, err := ob.evmClient.BlockNumber(ctx)
-			if err != nil {
-				ob.Logger().Chain.Error().Err(err).Msg("RPC Status Check error: RPC down?")
-				continue
-			}
-			gasPrice, err := ob.evmClient.SuggestGasPrice(ctx)
-			if err != nil {
-				ob.Logger().Chain.Error().Err(err).Msg("RPC Status Check error: RPC down?")
-				continue
-			}
-			header, err := ob.evmClient.HeaderByNumber(ctx, new(big.Int).SetUint64(bn))
-			if err != nil {
-				ob.Logger().Chain.Error().Err(err).Msg("RPC Status Check error: RPC down?")
-				continue
-			}
-			// #nosec G115 always in range
-			blockTime := time.Unix(int64(header.Time), 0).UTC()
-			elapsedSeconds := time.Since(blockTime).Seconds()
-			if elapsedSeconds > 100 {
-				ob.Logger().Chain.Warn().
-					Msgf("RPC Status Check warning: RPC stale or chain stuck (check explorer)? Latest block %d timestamp is %.0fs ago", bn, elapsedSeconds)
-				continue
-			}
-			ob.Logger().Chain.Info().
-				Msgf("[OK] RPC status: latest block num %d, timestamp %s ( %.0fs ago), suggested gas price %d", header.Number, blockTime.String(), elapsedSeconds, gasPrice.Uint64())
-		case <-ob.StopChannel():
-			return nil
-		}
-	}
+	bg.Work(ctx, ob.watchRPCStatus, bg.WithName("watchRPCStatus"), bg.WithLogger(ob.Logger().Chain))
 }
 
 // SetTxNReceipt sets the receipt and transaction in memory
@@ -309,20 +241,8 @@ func (ob *Observer) TransactionByHash(txHash string) (*ethrpc.Transaction, bool,
 	return tx, tx.BlockNumber == nil, nil
 }
 
-// GetBlockHeaderCached get block header by number from cache
-func (ob *Observer) GetBlockHeaderCached(ctx context.Context, blockNumber uint64) (*ethtypes.Header, error) {
-	if result, ok := ob.HeaderCache().Get(blockNumber); ok {
-		if header, ok := result.(*ethtypes.Header); ok {
-			return header, nil
-		}
-		return nil, errors.New("cached value is not of type *ethtypes.Header")
-	}
-	header, err := ob.evmClient.HeaderByNumber(ctx, new(big.Int).SetUint64(blockNumber))
-	if err != nil {
-		return nil, err
-	}
-	ob.HeaderCache().Add(blockNumber, header)
-	return header, nil
+func (ob *Observer) TransactionReceipt(ctx context.Context, hash ethcommon.Hash) (*ethtypes.Receipt, error) {
+	return ob.evmClient.TransactionReceipt(ctx, hash)
 }
 
 // GetBlockByNumberCached get block by number from cache
@@ -356,6 +276,9 @@ func (ob *Observer) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
 	block, err := ob.evmJSONRPC.EthGetBlockByNumber(blockNumber, true)
 	if err != nil {
 		return nil, err
+	}
+	if block == nil {
+		return nil, fmt.Errorf("block not found: %d", blockNumber)
 	}
 	for i := range block.Transactions {
 		err := evm.ValidateEvmTransaction(&block.Transactions[i])

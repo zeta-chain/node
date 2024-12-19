@@ -25,30 +25,33 @@ func (k Keeper) ProcessV2Deposit(
 	amount *big.Int,
 	message []byte,
 	coinType coin.CoinType,
+	isCrossChainCall bool,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	context := systemcontract.ZContext{
-		Origin:  from,
-		Sender:  ethcommon.Address{},
+		Origin:  []byte{},
+		Sender:  ethcommon.BytesToAddress(from),
 		ChainID: big.NewInt(senderChainID),
 	}
 
-	if len(message) == 0 {
-		// simple deposit
-		res, err := k.DepositZRC20(ctx, zrc20Addr, to, amount)
-		return res, false, err
-	} else if coinType == coin.CoinType_NoAssetCall {
+	if coinType == coin.CoinType_NoAssetCall {
 		// simple call
 		res, err := k.CallExecute(ctx, context, zrc20Addr, amount, to, message)
 		return res, true, err
+	} else if isCrossChainCall {
+		// call with asset
+		res, err := k.CallDepositAndCallZRC20(ctx, context, zrc20Addr, amount, to, message)
+		return res, true, err
 	}
-	// deposit and call
-	res, err := k.CallDepositAndCallZRC20(ctx, context, zrc20Addr, amount, to, message)
-	return res, true, err
+
+	// simple deposit
+	res, err := k.DepositZRC20(ctx, zrc20Addr, to, amount)
+	return res, false, err
 }
 
 // ProcessV2RevertDeposit handles a revert deposit from an inbound tx with protocol version 2
 func (k Keeper) ProcessV2RevertDeposit(
 	ctx sdk.Context,
+	inboundSender string,
 	amount *big.Int,
 	chainID int64,
 	coinType coin.CoinType,
@@ -74,7 +77,7 @@ func (k Keeper) ProcessV2RevertDeposit(
 
 		if callOnRevert {
 			// no asset, call simple revert
-			_, err := k.CallExecuteRevert(ctx, zrc20Addr, amount, revertAddress, revertMessage)
+			_, err := k.CallExecuteRevert(ctx, inboundSender, zrc20Addr, amount, revertAddress, revertMessage)
 			return err
 		} else {
 			// no asset, no call, do nothing
@@ -87,6 +90,7 @@ func (k Keeper) ProcessV2RevertDeposit(
 			// revert with a ZRC20 asset
 			_, err := k.CallDepositAndRevert(
 				ctx,
+				inboundSender,
 				zrc20Addr,
 				amount,
 				revertAddress,

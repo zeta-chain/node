@@ -13,6 +13,24 @@ type FungibleBankKeeper struct {
 	mock.Mock
 }
 
+// GetSupply provides a mock function with given fields: ctx, denom
+func (_m *FungibleBankKeeper) GetSupply(ctx types.Context, denom string) types.Coin {
+	ret := _m.Called(ctx, denom)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSupply")
+	}
+
+	var r0 types.Coin
+	if rf, ok := ret.Get(0).(func(types.Context, string) types.Coin); ok {
+		r0 = rf(ctx, denom)
+	} else {
+		r0 = ret.Get(0).(types.Coin)
+	}
+
+	return r0
+}
+
 // MintCoins provides a mock function with given fields: ctx, moduleName, amt
 func (_m *FungibleBankKeeper) MintCoins(ctx types.Context, moduleName string, amt types.Coins) error {
 	ret := _m.Called(ctx, moduleName, amt)
@@ -44,6 +62,26 @@ func (_m *FungibleBankKeeper) SendCoinsFromModuleToAccount(ctx types.Context, se
 		r0 = rf(ctx, senderModule, recipientAddr, amt)
 	} else {
 		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// SpendableCoins provides a mock function with given fields: ctx, addr
+func (_m *FungibleBankKeeper) SpendableCoins(ctx types.Context, addr types.AccAddress) types.Coins {
+	ret := _m.Called(ctx, addr)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SpendableCoins")
+	}
+
+	var r0 types.Coins
+	if rf, ok := ret.Get(0).(func(types.Context, types.AccAddress) types.Coins); ok {
+		r0 = rf(ctx, addr)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(types.Coins)
+		}
 	}
 
 	return r0

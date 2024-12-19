@@ -67,6 +67,55 @@ add_v17_message_authorizations() {
     ' $json_file > temp.json && mv temp.json $json_file
 }
 
+
+add_emissions_withdraw_authorizations() {
+
+    config_file="/root/config.yml"
+    json_file="/root/.zetacored/config/genesis.json"
+
+    # Check if config file exists
+    if [[ ! -f "$config_file" ]]; then
+        echo "Error: Config file not found at $config_file"
+        return 1
+    fi
+    # Address to add emissions withdraw authorizations
+    address=$(yq -r '.additional_accounts.user_emissions_withdraw.bech32_address' "$config_file")
+
+    # Check if genesis file exists
+    if [[ ! -f "$json_file" ]]; then
+        echo "Error: Genesis file not found at $json_file"
+        return 1
+    fi
+
+    echo "Adding emissions withdraw authorizations for address: $address"
+
+
+     # Using jq to parse JSON, create new entries, and append them to the authorization array
+     if ! jq --arg address "$address" '
+         # Store the nodeAccountList array
+         .app_state.observer.nodeAccountList as $list |
+         # Iterate over the stored list to construct new objects and append to the authorization array
+         .app_state.authz.authorization += [
+             $list[] |
+             {
+                 "granter": .operator,
+                 "grantee": $address,
+                 "authorization": {
+                     "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+                     "msg": "/zetachain.zetacore.emissions.MsgWithdrawEmission"
+                 },
+                 "expiration": null
+             }
+         ]
+     ' "$json_file" > temp.json; then
+         echo "Error: Failed to update genesis file"
+         return 1
+     fi
+     mv temp.json "$json_file"
+}
+
+
+
 # create keys
 CHAINID="athens_101-1"
 KEYRING="test"
@@ -191,6 +240,12 @@ then
   zetacored collect-observer-info
   zetacored add-observer-list --keygen-block 25
 
+  # Add emissions withdraw authorizations
+  if ! add_emissions_withdraw_authorizations; then
+      echo "Error: Failed to add emissions withdraw authorizations"
+      exit 1
+  fi
+
   # Check for the existence of "AddToOutTxTracker" string in the genesis file
   # If this message is found in the genesis, it means add-observer-list has been run with the v16 binary for upgrade tests
   # In this case, we need to add authorizations for the new v17 messages to the genesis file
@@ -236,38 +291,44 @@ then
 # default account
   address=$(yq -r '.default_account.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# erc20 tester
-  address=$(yq -r '.additional_accounts.user_erc20.bech32_address' /root/config.yml)
+# legacy erc20 tester
+  address=$(yq -r '.additional_accounts.user_legacy_erc20.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# zeta tester
-  address=$(yq -r '.additional_accounts.user_zeta_test.bech32_address' /root/config.yml)
+# legacy zeta tester
+  address=$(yq -r '.additional_accounts.user_legacy_zeta.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# bitcoin tester
-  address=$(yq -r '.additional_accounts.user_bitcoin.bech32_address' /root/config.yml)
+# legacy ethers tester
+  address=$(yq -r '.additional_accounts.user_legacy_ether.bech32_address' /root/config.yml)
+  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+# bitcoin deposit tester
+  address=$(yq -r '.additional_accounts.user_bitcoin_deposit.bech32_address' /root/config.yml)
+  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+# bitcoin withdraw tester
+  address=$(yq -r '.additional_accounts.user_bitcoin_withdraw.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
 # solana tester
   address=$(yq -r '.additional_accounts.user_solana.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# ethers tester
-  address=$(yq -r '.additional_accounts.user_ether.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta 
 # migration tester
   address=$(yq -r '.additional_accounts.user_migration.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
 # precompile tester
   address=$(yq -r '.additional_accounts.user_precompile.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# v2 ether tester
-  address=$(yq -r '.additional_accounts.user_v2_ether.bech32_address' /root/config.yml)
+# ether tester
+  address=$(yq -r '.additional_accounts.user_ether.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# v2 erc20 tester
-  address=$(yq -r '.additional_accounts.user_v2_erc20.bech32_address' /root/config.yml)
+# erc20 tester
+  address=$(yq -r '.additional_accounts.user_erc20.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# v2 ether revert tester
-  address=$(yq -r '.additional_accounts.user_v2_ether_revert.bech32_address' /root/config.yml)
+# ether revert tester
+  address=$(yq -r '.additional_accounts.user_ether_revert.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# v2 erc20 revert tester
-  address=$(yq -r '.additional_accounts.user_v2_erc20_revert.bech32_address' /root/config.yml)
+# erc20 revert tester
+  address=$(yq -r '.additional_accounts.user_erc20_revert.bech32_address' /root/config.yml)
+  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+# emissions withdraw tester
+  address=$(yq -r '.additional_accounts.user_emissions_withdraw.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
 
 # 3. Copy the genesis.json to all the nodes .And use it to create a gentx for every node
@@ -292,8 +353,13 @@ then
     echo "Importing data"
     zetacored parse-genesis-file /root/genesis_data/exported-genesis.json
   fi
-#  Update governance voting period to 100s , to ignore the voting period imported from mainnet.
-  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["voting_params"]["voting_period"]="100s"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+
+# Update governance voting parameters for localnet
+# this allows for quick upgrades and using more than two nodes
+  jq '.app_state["gov"]["params"]["voting_period"]="100s" |
+    .app_state["gov"]["params"]["quorum"]="0.1" |
+    .app_state["gov"]["params"]["threshold"]="0.1"' \
+  $HOME/.zetacored/config/genesis.json > tmp.json && mv tmp.json $HOME/.zetacored/config/genesis.json
 
 # 4. Collect all the gentx files in zetacore0 and create the final genesis.json
   zetacored collect-gentxs
