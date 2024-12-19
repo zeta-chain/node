@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -133,5 +134,51 @@ func TestKeeper_BallotByIdentifier(t *testing.T) {
 			ObservationType: ballot.ObservationType,
 			BallotStatus:    ballot.BallotStatus,
 		}, res)
+	})
+}
+
+func TestKeeper_Ballots(t *testing.T) {
+	t.Run("should error if req is nil", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		wctx := sdk.WrapSDKContext(ctx)
+
+		res, err := k.Ballots(wctx, nil)
+		require.Nil(t, res)
+		require.Error(t, err)
+	})
+
+	t.Run("should return empty list if no ballots", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		wctx := sdk.WrapSDKContext(ctx)
+
+		res, err := k.Ballots(wctx, &types.QueryBallotsRequest{})
+		require.NoError(t, err)
+		require.Equal(t, &types.QueryBallotsResponse{
+			Ballots: []types.Ballot{},
+		}, res)
+	})
+
+	t.Run("should return all ballots", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		wctx := sdk.WrapSDKContext(ctx)
+
+		ballots := make([]types.Ballot, 10)
+		for i := 0; i < 10; i++ {
+			ballot := types.Ballot{
+				Index:                "",
+				BallotIdentifier:     fmt.Sprintf("index-%d", i),
+				VoterList:            []string{sample.AccAddress()},
+				Votes:                []types.VoteType{types.VoteType_SuccessObservation},
+				BallotStatus:         types.BallotStatus_BallotInProgress,
+				BallotCreationHeight: 1,
+				BallotThreshold:      sdk.MustNewDecFromStr("0.5"),
+			}
+			k.SetBallot(ctx, &ballot)
+			ballots[i] = ballot
+		}
+
+		res, err := k.Ballots(wctx, &types.QueryBallotsRequest{})
+		require.NoError(t, err)
+		require.ElementsMatch(t, ballots, res.Ballots)
 	})
 }

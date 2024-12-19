@@ -83,8 +83,8 @@ func (k Keeper) AddBallotToList(ctx sdk.Context, ballot types.Ballot) {
 
 // ClearMaturedBallotsAndBallotList deletes all matured ballots and the list of ballots for a given height.
 // It also emits an event for each ballot deleted.
-func (k Keeper) ClearMaturedBallotsAndBallotList(ctx sdk.Context, maturityBlocks int64) {
-	maturedBallotsHeight := getMaturedBallotHeight(ctx, maturityBlocks)
+func (k Keeper) ClearMaturedBallotsAndBallotList(ctx sdk.Context, maturityBlocksParam int64) {
+	maturedBallotsHeight := getMaturedBallotHeight(ctx, maturityBlocksParam)
 
 	// Fetch all the matured ballots, return if no matured ballots are found
 	// For the current implementation, this should never happen as ClearMaturedBallotsAndBallotList is only called after the Distribution of the rewards,

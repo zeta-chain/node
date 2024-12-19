@@ -37,6 +37,31 @@ func CmdBallotByIdentifier() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
 
+func CmdAllBallots() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list-ballots",
+		Short: "Query all ballots",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			params := &types.QueryBallotsRequest{}
+
+			res, err := queryClient.Ballots(cmd.Context(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }

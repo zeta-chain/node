@@ -171,6 +171,20 @@ service Query {
       returns (QueryOperationalFlagsResponse) {
     option (google.api.http).get = "/zeta-chain/observer/operationalFlags";
   }
+
+  // Query all ballots
+  rpc Ballots(QueryBallotsRequest) returns (QueryBallotsResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/ballots";
+  }
+}
+
+message QueryBallotsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryBallotsResponse {
+  repeated Ballot ballots = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryOperationalFlagsRequest {}

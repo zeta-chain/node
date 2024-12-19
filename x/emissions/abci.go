@@ -105,7 +105,6 @@ func DistributeObserverRewards(
 	var (
 		slashAmount    = params.ObserverSlashAmount
 		maturityBlocks = params.BallotMaturityBlocks
-
 		maturedBallots []string
 	)
 

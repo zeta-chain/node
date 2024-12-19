@@ -52,3 +52,16 @@ func (k Keeper) BallotByIdentifier(
 		BallotStatus:     ballot.BallotStatus,
 	}, nil
 }
+
+func (k Keeper) Ballots(goCtx context.Context, req *types.QueryBallotsRequest) (*types.QueryBallotsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	ballotList := k.GetAllBallots(ctx)
+	ballots := make([]types.Ballot, len(ballotList))
+	for i, ballot := range ballotList {
+		ballots[i] = *ballot
+	}
+	return &types.QueryBallotsResponse{Ballots: ballots}, nil
+}
