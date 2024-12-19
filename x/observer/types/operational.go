@@ -17,7 +17,7 @@ func (f *OperationalFlags) Validate() error {
 	if f.SignerBlockTimeOffset != nil {
 		signerBlockTimeOffset := *f.SignerBlockTimeOffset
 		if signerBlockTimeOffset < 0 {
-			return ErrOperationalFlagsRestartHeightNegative
+			return ErrOperationalFlagsSignerBlockTimeOffsetNegative
 		}
 		if signerBlockTimeOffset > signerBlockTimeOffsetLimit {
 			return cosmoserrors.Wrapf(ErrOperationalFlagsSignerBlockTimeOffsetLimit, "(%s)", signerBlockTimeOffset)

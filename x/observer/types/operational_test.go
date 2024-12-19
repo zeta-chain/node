@@ -39,7 +39,7 @@ func TestOperationalFlags_Validate(t *testing.T) {
 			of: types.OperationalFlags{
 				SignerBlockTimeOffset: ptr.Ptr(-time.Second),
 			},
-			errContains: types.ErrOperationalFlagsRestartHeightNegative.Error(),
+			errContains: types.ErrOperationalFlagsSignerBlockTimeOffsetNegative.Error(),
 		},
 		{
 			name: "signer offset limit exceeded",

@@ -2,7 +2,6 @@ syntax = "proto3";
 package zetachain.zetacore.observer;
 
 import "gogoproto/gogo.proto";
-import "google/protobuf/field_mask.proto";
 import "zetachain/zetacore/observer/blame.proto";
 import "zetachain/zetacore/observer/crosschain_flags.proto";
 import "zetachain/zetacore/observer/observer.proto";
