@@ -5376,6 +5376,7 @@ zetacored query observer [flags]
 * [zetacored query](#zetacored-query)	 - Querying subcommands
 * [zetacored query observer get-historical-tss-address](#zetacored-query-observer-get-historical-tss-address)	 - Query tss address by finalized zeta height (for historical tss addresses)
 * [zetacored query observer get-tss-address](#zetacored-query-observer-get-tss-address)	 - Query current tss address
+* [zetacored query observer list-ballots](#zetacored-query-observer-list-ballots)	 - Query all ballots
 * [zetacored query observer list-blame](#zetacored-query-observer-list-blame)	 - Query AllBlameRecords
 * [zetacored query observer list-blame-by-msg](#zetacored-query-observer-list-blame-by-msg)	 - Query AllBlameRecords
 * [zetacored query observer list-chain-nonces](#zetacored-query-observer-list-chain-nonces)	 - list all chainNonces
@@ -5447,6 +5448,40 @@ zetacored query observer get-tss-address [bitcoinChainId]] [flags]
       --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for get-tss-address
+      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+  -o, --output string      Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query observer](#zetacored-query-observer)	 - Querying commands for the observer module
+
+## zetacored query observer list-ballots
+
+Query all ballots
+
+```
+zetacored query observer list-ballots [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string   the gRPC endpoint to use for this chain
+      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --height int         Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help               help for list-ballots
       --node string        [host]:[port] to Tendermint RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
