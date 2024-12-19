@@ -25,29 +25,39 @@ type Scheduler struct {
 	logger      zerolog.Logger
 }
 
+// Task represents scheduler's task
 type Task func(ctx context.Context) error
 
+// Group represents Definition group.
+// Definitions can be grouped for easier management.
 type Group string
 
+// DefaultGroup is the default group for definitions.
 const DefaultGroup = Group("default")
 
+// Definition represents a configuration of a Task
 type Definition struct {
+	// ref to the Scheduler is required
 	scheduler *Scheduler
 
-	id     uuid.UUID
-	group  Group
-	name   string
-	task   Task
-	ticker *ticker.Ticker
+	// naming stuff
+	id    uuid.UUID
+	group Group
+	name  string
 
+	// arbitrary function that will be invoked by the scheduler
+	task Task
+
+	// properties for ticker / blockChan ticker
+	ticker          *ticker.Ticker
+	blockChanTicker *blockChanTicker
 	interval        time.Duration
 	intervalUpdater func() time.Duration
 	skipper         func() bool
 
+	// logging
 	logFields map[string]any
 	logger    zerolog.Logger
-
-	// todo block subscriber (on zeta-chain new block)
 }
 
 // New Scheduler instance.
@@ -56,38 +66,6 @@ func New(logger zerolog.Logger) *Scheduler {
 		definitions: make(map[uuid.UUID]*Definition),
 		logger:      logger.With().Str("module", "scheduler").Logger(),
 	}
-}
-
-// Opt Definition option
-type Opt func(*Definition)
-
-// Name sets task name.
-func Name(name string) Opt {
-	return func(d *Definition) { d.name = name }
-}
-
-func GroupName(group Group) Opt {
-	return func(d *Definition) { d.group = group }
-}
-
-// LogFields augments definition logger with some fields.
-func LogFields(fields map[string]any) Opt {
-	return func(d *Definition) { d.logFields = fields }
-}
-
-// Interval sets initial task interval.
-func Interval(interval time.Duration) Opt {
-	return func(d *Definition) { d.interval = interval }
-}
-
-// Skipper sets task skipper function
-func Skipper(skipper func() bool) Opt {
-	return func(d *Definition) { d.skipper = skipper }
-}
-
-// IntervalUpdater sets interval updater function.
-func IntervalUpdater(intervalUpdater func() time.Duration) Opt {
-	return func(d *Definition) { d.intervalUpdater = intervalUpdater }
 }
 
 // Register registers and starts new task in the background
@@ -105,28 +83,13 @@ func (s *Scheduler) Register(ctx context.Context, task Task, opts ...Opt) *Defin
 		opt(def)
 	}
 
-	logOpts := s.logger.With().
-		Str("task.name", def.name).
-		Str("task.group", string(def.group))
+	def.logger = newDefinitionLogger(def, s.logger)
 
-	if len(def.logFields) > 0 {
-		logOpts = logOpts.Fields(def.logFields)
-	}
-
-	def.logger = logOpts.Logger()
-
-	defTicker := def.provisionTicker(task)
-
-	bgTask := func(ctx context.Context) error {
-		return defTicker.Run(ctx)
-	}
+	def.startTicker(ctx)
 
 	s.mu.Lock()
 	s.definitions[id] = def
 	s.mu.Unlock()
-
-	// Run async worker
-	bg.Work(ctx, bgTask, bg.WithLogger(def.logger), bg.WithName(def.name))
 
 	return def
 }
@@ -173,45 +136,55 @@ func (s *Scheduler) StopGroup(group Group) {
 // Stop stops the task and offloads it from the scheduler.
 func (d *Definition) Stop() {
 	start := time.Now()
-	d.logger.Info().Msg("Stopping scheduler task")
-	d.ticker.StopBlocking()
-	d.logger.Info().Dur("time_taken", time.Since(start)).Msg("Stopped scheduler task")
 
 	// delete definition from scheduler
-	d.scheduler.mu.Lock()
-	delete(d.scheduler.definitions, d.id)
-	d.scheduler.mu.Unlock()
+	defer func() {
+		d.scheduler.mu.Lock()
+		delete(d.scheduler.definitions, d.id)
+		d.scheduler.mu.Unlock()
+		d.logger.Info().Int64("time_taken_ms", time.Since(start).Milliseconds()).Msg("Stopped task")
+	}()
+
+	d.logger.Info().Msg("Stopping scheduler task")
+
+	if d.isTickerBasedTask() {
+		d.ticker.StopBlocking()
+		return
+	}
+
+	// todo stop block chan ticker
 }
 
-func (d *Definition) provisionTicker(task Task) *ticker.Ticker {
-	d.ticker = ticker.New(
-		d.interval,
-		d.tickerTask(task),
-		ticker.WithLogger(d.logger, d.name),
-	)
+func (d *Definition) isTickerBasedTask() bool {
+	// todo
+	return true
+}
 
-	return d.ticker
+func (d *Definition) startTicker(ctx context.Context) {
+	if d.isTickerBasedTask() {
+		d.ticker = ticker.New(
+			d.interval,
+			d.tickerTask(),
+			ticker.WithLogger(d.logger, d.name),
+		)
+
+		bgTask := func(ctx context.Context) error {
+			d.logger.Info().Msg("Starting task")
+			return d.ticker.Run(ctx)
+		}
+
+		// Run async worker (no need for logger here)
+		bg.Work(ctx, bgTask)
+		return
+	}
+
+	// todo start block chan ticker
 }
 
 // tickerTask wraps Task to be executed by ticker.Ticker
-func (d *Definition) tickerTask(task Task) ticker.Task {
-	// todo metrics
-	//   - duration
-	//   - outcome (skip, err, ok)
-	//   - bump invocation counter
-
+func (d *Definition) tickerTask() ticker.Task {
 	return func(ctx context.Context, t *ticker.Ticker) error {
-		// skip tick
-		if d.skipper != nil && d.skipper() {
-			return nil
-		}
-
-		err := task(ctx)
-
-		if err != nil {
-			d.logger.Error().Err(err).Msg("task failed")
-			return nil
-		}
+		d.invoke(ctx)
 
 		if d.intervalUpdater != nil {
 			// noop if interval is not changed
@@ -220,4 +193,43 @@ func (d *Definition) tickerTask(task Task) ticker.Task {
 
 		return nil
 	}
+}
+
+// invoke executes a given Task with logging & telemetry.
+func (d *Definition) invoke(ctx context.Context) {
+	// skip tick
+	if d.skipper != nil && d.skipper() {
+		return
+	}
+
+	d.logger.Debug().Msg("Invoking task")
+	// todo metrics
+	//   - duration
+	//   - outcome (skip, err, ok)
+	//   - bump invocation counter
+
+	err := d.task(ctx)
+
+	if err != nil {
+		d.logger.Error().Err(err).Msg("task failed")
+	}
+}
+
+func newDefinitionLogger(def *Definition, logger zerolog.Logger) zerolog.Logger {
+	logOpts := logger.With().
+		Str("task.name", def.name).
+		Str("task.group", string(def.group))
+
+	if len(def.logFields) > 0 {
+		logOpts = logOpts.Fields(def.logFields)
+	}
+
+	taskType := "interval_ticker"
+	if def.blockChanTicker != nil {
+		taskType = "block_ticker"
+	}
+
+	logOpts.Str("task.type", taskType)
+
+	return logOpts.Logger()
 }
