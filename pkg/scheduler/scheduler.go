@@ -163,22 +163,17 @@ func (t *Task) Stop() {
 
 // execute executes Task with additional logging and metrics.
 func (t *Task) execute(ctx context.Context) error {
+	startedAt := time.Now().UTC()
+
 	// skip tick
 	if t.skipper != nil && t.skipper() {
+		recordMetrics(t, startedAt, nil, true)
 		return nil
 	}
 
-	t.logger.Debug().Msg("Invoking task")
-
 	err := t.exec(ctx)
 
-	// todo metrics (TBD)
-	//   - duration (time taken)
-	//   - outcome (skip, err, ok)
-	//   - bump invocation counter
-	//   - "last invoked at" timestamp (?)
-	//   - chain_id
-	//   - metrics cardinality: "task_group (?)" "task_name", "status", "chain_id"
+	recordMetrics(t, startedAt, err, false)
 
 	return err
 }
