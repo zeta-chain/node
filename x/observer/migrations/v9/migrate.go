@@ -15,7 +15,7 @@ type observerKeeper interface {
 const MaturityBlocks = int64(100)
 
 // MigrateStore migrates the x/observer module state from the consensus version 8 to version 9.
-// It updates the indexing for chain nonces object to use chain ID instead of chain name
+// The migration deletes all the ballots and ballot lists that are older than MaturityBlocks.
 func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 	currentHeight := ctx.BlockHeight()
 	// Maturity blocks is a parameter in the emissions module
