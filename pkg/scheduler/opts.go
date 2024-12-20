@@ -7,40 +7,40 @@ import (
 )
 
 // Opt Task option
-type Opt func(task *Task)
+type Opt func(task *Task, taskOpts *taskOpts)
 
 // Name sets task name.
 func Name(name string) Opt {
-	return func(d *Task) { d.name = name }
+	return func(t *Task, _ *taskOpts) { t.name = name }
 }
 
 // GroupName sets task group. Otherwise, defaults to DefaultGroup.
 func GroupName(group Group) Opt {
-	return func(d *Task) { d.group = group }
+	return func(t *Task, _ *taskOpts) { t.group = group }
 }
 
 // LogFields augments Task's logger with some fields.
 func LogFields(fields map[string]any) Opt {
-	return func(d *Task) { d.logFields = fields }
+	return func(_ *Task, opts *taskOpts) { opts.logFields = fields }
 }
 
 // Interval sets initial task interval.
 func Interval(interval time.Duration) Opt {
-	return func(d *Task) { d.interval = interval }
+	return func(_ *Task, opts *taskOpts) { opts.interval = interval }
 }
 
 // Skipper sets task skipper function
 func Skipper(skipper func() bool) Opt {
-	return func(d *Task) { d.skipper = skipper }
+	return func(t *Task, _ *taskOpts) { t.skipper = skipper }
 }
 
 // IntervalUpdater sets interval updater function.
 func IntervalUpdater(intervalUpdater func() time.Duration) Opt {
-	return func(d *Task) { d.intervalUpdater = intervalUpdater }
+	return func(_ *Task, opts *taskOpts) { opts.intervalUpdater = intervalUpdater }
 }
 
-// BlockTicker makes Definition to listen for new zeta blocks instead of using interval ticker.
-// IntervalUpdater is ignored.
+// BlockTicker makes Task to listen for new zeta blocks
+// instead of using interval ticker. IntervalUpdater is ignored.
 func BlockTicker(blocks <-chan cometbft.EventDataNewBlock) Opt {
-	return func(d *Task) { d.blockChan = blocks }
+	return func(_ *Task, opts *taskOpts) { opts.blockChan = blocks }
 }

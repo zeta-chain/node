@@ -270,6 +270,7 @@ func TestScheduler(t *testing.T) {
 		// ASSERT
 		assert.Equal(t, int64(21), counter)
 		assert.Contains(t, ts.logBuffer.String(), "Stopped scheduler task")
+		assert.Contains(t, ts.logBuffer.String(), `"task.type":"block_ticker"`)
 	})
 
 	t.Run("Block tick: tick is slower than the block", func(t *testing.T) {

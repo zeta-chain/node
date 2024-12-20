@@ -16,7 +16,6 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/bg"
-	"github.com/zeta-chain/node/pkg/ticker"
 )
 
 // Scheduler represents background task scheduler.
@@ -35,31 +34,37 @@ type Group string
 // DefaultGroup is the default task group.
 const DefaultGroup = Group("default")
 
+// tickable ticker abstraction to support different implementations
+type tickable interface {
+	Start(ctx context.Context) error
+	Stop()
+}
+
 // Task represents scheduler's task.
 type Task struct {
 	// ref to the Scheduler is required
 	scheduler *Scheduler
 
-	// naming stuff
 	id    uuid.UUID
 	group Group
 	name  string
 
 	exec Executable
 
-	// represents interval ticker and its options
-	ticker          *ticker.Ticker
+	// ticker abstraction to support different implementations
+	ticker  tickable
+	skipper func() bool
+
+	logger zerolog.Logger
+}
+
+type taskOpts struct {
 	interval        time.Duration
 	intervalUpdater func() time.Duration
-	skipper         func() bool
 
-	// zeta block ticker (also supports skipper)
-	blockChan       <-chan cometbft.EventDataNewBlock
-	blockChanTicker *blockTicker
+	blockChan <-chan cometbft.EventDataNewBlock
 
-	// logging
 	logFields map[string]any
-	logger    zerolog.Logger
 }
 
 // New Scheduler instance.
@@ -79,15 +84,21 @@ func (s *Scheduler) Register(ctx context.Context, exec Executable, opts ...Opt) 
 		group:     DefaultGroup,
 		name:      id.String(),
 		exec:      exec,
-		interval:  time.Second,
 	}
+
+	config := &taskOpts{
+		interval: time.Second,
+	}
+
 	for _, opt := range opts {
-		opt(task)
+		opt(task, config)
 	}
 
-	task.logger = newTaskLogger(task, s.logger)
+	task.logger = newTaskLogger(task, config, s.logger)
+	task.ticker = newTickable(task, config)
 
-	task.startTicker(ctx)
+	task.logger.Info().Msg("Starting scheduler task")
+	bg.Work(ctx, task.ticker.Start, bg.WithLogger(task.logger))
 
 	s.mu.Lock()
 	s.tasks[id] = task
@@ -137,63 +148,21 @@ func (s *Scheduler) StopGroup(group Group) {
 
 // Stop stops the task and offloads it from the scheduler.
 func (t *Task) Stop() {
+	t.logger.Info().Msg("Stopping scheduler task")
 	start := time.Now()
 
-	// delete task from scheduler
-	defer func() {
-		t.scheduler.mu.Lock()
-		delete(t.scheduler.tasks, t.id)
-		t.scheduler.mu.Unlock()
+	t.ticker.Stop()
 
-		timeTakenMS := time.Since(start).Milliseconds()
-		t.logger.Info().Int64("time_taken_ms", timeTakenMS).Msg("Stopped scheduler task")
-	}()
+	t.scheduler.mu.Lock()
+	delete(t.scheduler.tasks, t.id)
+	t.scheduler.mu.Unlock()
 
-	t.logger.Info().Msg("Stopping scheduler task")
-
-	if t.isIntervalTicker() {
-		t.ticker.StopBlocking()
-		return
-	}
-
-	t.blockChanTicker.Stop()
+	timeTakenMS := time.Since(start).Milliseconds()
+	t.logger.Info().Int64("time_taken_ms", timeTakenMS).Msg("Stopped scheduler task")
 }
 
-func (t *Task) isIntervalTicker() bool {
-	return t.blockChan == nil
-}
-
-func (t *Task) startTicker(ctx context.Context) {
-	t.logger.Info().Msg("Starting scheduler task")
-
-	if t.isIntervalTicker() {
-		t.ticker = ticker.New(t.interval, t.invokeByInterval, ticker.WithLogger(t.logger, t.name))
-		bg.Work(ctx, t.ticker.Start, bg.WithLogger(t.logger))
-
-		return
-	}
-
-	t.blockChanTicker = newBlockTicker(t.invoke, t.blockChan, t.logger)
-
-	bg.Work(ctx, t.blockChanTicker.Start, bg.WithLogger(t.logger))
-}
-
-// invokeByInterval a ticker.Task wrapper of invoke.
-func (t *Task) invokeByInterval(ctx context.Context, tt *ticker.Ticker) error {
-	if err := t.invoke(ctx); err != nil {
-		t.logger.Error().Err(err).Msg("task failed")
-	}
-
-	if t.intervalUpdater != nil {
-		// noop if interval is not changed
-		tt.SetInterval(t.intervalUpdater())
-	}
-
-	return nil
-}
-
-// invoke executes a given Task with logging & telemetry.
-func (t *Task) invoke(ctx context.Context) error {
+// execute executes Task with additional logging and metrics.
+func (t *Task) execute(ctx context.Context) error {
 	// skip tick
 	if t.skipper != nil && t.skipper() {
 		return nil
@@ -214,19 +183,34 @@ func (t *Task) invoke(ctx context.Context) error {
 	return err
 }
 
-func newTaskLogger(task *Task, logger zerolog.Logger) zerolog.Logger {
+func newTaskLogger(task *Task, opts *taskOpts, logger zerolog.Logger) zerolog.Logger {
 	logOpts := logger.With().
 		Str("task.name", task.name).
 		Str("task.group", string(task.group))
 
-	if len(task.logFields) > 0 {
-		logOpts = logOpts.Fields(task.logFields)
+	if len(opts.logFields) > 0 {
+		logOpts = logOpts.Fields(opts.logFields)
 	}
 
 	taskType := "interval_ticker"
-	if task.blockChanTicker != nil {
+	if opts.blockChan != nil {
 		taskType = "block_ticker"
 	}
 
 	return logOpts.Str("task.type", taskType).Logger()
+}
+
+func newTickable(task *Task, opts *taskOpts) tickable {
+	// Block-based ticker
+	if opts.blockChan != nil {
+		return newBlockTicker(task.execute, opts.blockChan, task.logger)
+	}
+
+	return newIntervalTicker(
+		task.execute,
+		opts.interval,
+		opts.intervalUpdater,
+		task.name,
+		task.logger,
+	)
 }
