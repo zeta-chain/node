@@ -43,7 +43,7 @@ func TestBitcoinDepositAndWithdrawWithDust(r *runner.E2ERunner, args []string) {
 	require.NotEmpty(r, txHash)
 
 	// ASSERT
-	// Now we want to make sure the cctx is aborted with expected error message
+	// Now we want to make sure the cctx is reverted with expected error message
 
 	// cctx status would be pending revert if using v21 or before
 	cctx := utils.WaitCctxRevertedByInboundHash(r.Ctx, r, txHash.String(), r.CctxClient)
