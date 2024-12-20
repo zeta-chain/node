@@ -101,6 +101,8 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 		}
 
 		// use a temporary context to not commit any state change in case of error
+		// note: ZRC20DepositAndCallContract is solely responsible for calling the contract and depositing tokens if needed
+		// and does not include any other side effects or any logic that modifies the state directly
 		tmpCtx, commit := ctx.CacheContext()
 
 		evmTxResponse, contractCall, err := k.fungibleKeeper.ZRC20DepositAndCallContract(
