@@ -3,6 +3,7 @@ package e2etests
 import (
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/contracts/withdrawer"
@@ -45,9 +46,13 @@ func TestBitcoinDepositAndWithdrawWithDust(r *runner.E2ERunner, args []string) {
 	// Now we want to make sure the cctx is aborted with expected error message
 
 	// cctx status would be pending revert if using v21 or before
-	cctx := utils.WaitCctxAbortedByInboundHash(r.Ctx, r, txHash.String(), r.CctxClient)
-
+	cctx := utils.WaitCctxRevertedByInboundHash(r.Ctx, r, txHash.String(), r.CctxClient)
 	require.Equal(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
-	//require.True(r, cctx.GetCurrentOutboundParam().Amount.Uint64() < constant.BTCWithdrawalDustAmount)
-	//require.True(r, strings.Contains(cctx.CctxStatus.ErrorMessage, crosschaintypes.ErrInvalidWithdrawalAmount.Error()))
+	require.Contains(r, cctx.CctxStatus.ErrorMessage, crosschaintypes.ErrCannotProcessWithdrawal.Error())
+
+	// check the contract has no BTC balance, this would mean the contract call state transition is not reverted
+	// get BTC ZRC20 balance of the withdrawer contract
+	bal, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, withdrawerAddr)
+	require.NoError(r, err)
+	require.Zero(r, bal.Uint64())
 }
