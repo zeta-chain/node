@@ -12,7 +12,7 @@ import (
 // blockTicker represents custom ticker implementation
 // that ticks on new Zeta block events.
 type blockTicker struct {
-	task Task
+	exec Executable
 
 	// block channel that will be used to receive new blocks
 	blockChan <-chan cometbft.EventDataNewBlock
@@ -31,9 +31,9 @@ type blockTicker struct {
 
 type blockCtxKey struct{}
 
-func newBlockTicker(task Task, blockChan <-chan cometbft.EventDataNewBlock, logger zerolog.Logger) *blockTicker {
+func newBlockTicker(task Executable, blockChan <-chan cometbft.EventDataNewBlock, logger zerolog.Logger) *blockTicker {
 	return &blockTicker{
-		task:      task,
+		exec:      task,
 		blockChan: blockChan,
 		stopChan:  make(chan struct{}),
 		doneChan:  nil,
@@ -77,7 +77,7 @@ func (t *blockTicker) Start(ctx context.Context) error {
 
 			ctx := withBlockEvent(ctx, block)
 
-			if err := t.task(ctx); err != nil {
+			if err := t.exec(ctx); err != nil {
 				t.logger.Warn().Err(err).Msg("Task error")
 			}
 		case <-ctx.Done():

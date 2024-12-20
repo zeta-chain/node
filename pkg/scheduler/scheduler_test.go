@@ -24,14 +24,14 @@ func TestScheduler(t *testing.T) {
 
 		var counter int32
 
-		task := func(ctx context.Context) error {
+		exec := func(ctx context.Context) error {
 			atomic.AddInt32(&counter, 1)
 			return nil
 		}
 
 		// ACT
 		// Register task and stop it after x1.5 interval.
-		ts.scheduler.Register(ts.ctx, task)
+		ts.scheduler.Register(ts.ctx, exec)
 		time.Sleep(1500 * time.Millisecond)
 		ts.scheduler.Stop()
 
@@ -54,7 +54,7 @@ func TestScheduler(t *testing.T) {
 
 		var counter int32
 
-		task := func(ctx context.Context) error {
+		exec := func(ctx context.Context) error {
 			atomic.AddInt32(&counter, 1)
 			return nil
 		}
@@ -63,7 +63,7 @@ func TestScheduler(t *testing.T) {
 		// Register task and stop it after x1.5 interval.
 		ts.scheduler.Register(
 			ts.ctx,
-			task,
+			exec,
 			Name("counter-inc"),
 			GroupName("my-custom-group"),
 			Interval(300*time.Millisecond),
@@ -85,7 +85,7 @@ func TestScheduler(t *testing.T) {
 		assert.Contains(t, ts.logBuffer.String(), `"blockchain":"doge","validators":["alice","bob"]`)
 	})
 
-	t.Run("Definition can also stop itself", func(t *testing.T) {
+	t.Run("Task can stop itself", func(t *testing.T) {
 		t.Parallel()
 
 		// ARRANGE
@@ -93,17 +93,17 @@ func TestScheduler(t *testing.T) {
 
 		var counter int32
 
-		task := func(ctx context.Context) error {
+		exec := func(ctx context.Context) error {
 			atomic.AddInt32(&counter, 1)
 			return nil
 		}
 
 		// ACT
 		// Register task and stop it after x1.5 interval.
-		def := ts.scheduler.Register(ts.ctx, task, Interval(300*time.Millisecond))
+		task := ts.scheduler.Register(ts.ctx, exec, Interval(300*time.Millisecond))
 
 		time.Sleep(time.Second)
-		def.Stop()
+		task.Stop()
 
 		// ASSERT
 		// Counter should be 1 + 1000/300 = 4 (first run + interval runs)
@@ -118,7 +118,7 @@ func TestScheduler(t *testing.T) {
 
 		var counter int32
 
-		task := func(ctx context.Context) error {
+		exec := func(ctx context.Context) error {
 			atomic.AddInt32(&counter, 1)
 			return nil
 		}
@@ -133,10 +133,10 @@ func TestScheduler(t *testing.T) {
 
 		// ACT
 		// Register task and stop it after x1.5 interval.
-		def := ts.scheduler.Register(ts.ctx, task, Interval(50*time.Millisecond), Skipper(skipper))
+		task := ts.scheduler.Register(ts.ctx, exec, Interval(50*time.Millisecond), Skipper(skipper))
 
 		time.Sleep(time.Second)
-		def.Stop()
+		task.Stop()
 
 		// ASSERT
 		assert.Equal(t, int32(maxValue), counter)
@@ -150,7 +150,7 @@ func TestScheduler(t *testing.T) {
 
 		var counter int32
 
-		task := func(ctx context.Context) error {
+		exec := func(ctx context.Context) error {
 			atomic.AddInt32(&counter, 1)
 			return nil
 		}
@@ -162,10 +162,10 @@ func TestScheduler(t *testing.T) {
 
 		// ACT
 		// Register task and stop it after x1.5 interval.
-		def := ts.scheduler.Register(ts.ctx, task, Interval(time.Millisecond), IntervalUpdater(intervalUpdater))
+		task := ts.scheduler.Register(ts.ctx, exec, Interval(time.Millisecond), IntervalUpdater(intervalUpdater))
 
 		time.Sleep(time.Second)
-		def.Stop()
+		task.Stop()
 
 		// ASSERT
 		assert.Equal(t, int32(6), counter)
@@ -282,7 +282,7 @@ func TestScheduler(t *testing.T) {
 		// and then decrements before finish
 		var counter int64
 
-		task := func(ctx context.Context) error {
+		exec := func(ctx context.Context) error {
 			_, ok := BlockFromContext(ctx)
 			require.True(t, ok)
 
@@ -297,7 +297,7 @@ func TestScheduler(t *testing.T) {
 
 		// ACT
 		// Register block
-		ts.scheduler.Register(ts.ctx, task, BlockTicker(blockChan))
+		ts.scheduler.Register(ts.ctx, exec, BlockTicker(blockChan))
 		time.Sleep(1200 * time.Millisecond)
 		ts.scheduler.Stop()
 
@@ -316,7 +316,7 @@ func TestScheduler(t *testing.T) {
 		// and then decrements before finish
 		var counter int64
 
-		task := func(ctx context.Context) error {
+		exec := func(ctx context.Context) error {
 			_, ok := BlockFromContext(ctx)
 			require.True(t, ok)
 
@@ -331,7 +331,7 @@ func TestScheduler(t *testing.T) {
 
 		// ACT
 		// Register block
-		ts.scheduler.Register(ts.ctx, task, BlockTicker(blockChan), Name("block-tick"))
+		ts.scheduler.Register(ts.ctx, exec, BlockTicker(blockChan), Name("block-tick"))
 
 		// Wait for a while
 		time.Sleep(1000 * time.Millisecond)
