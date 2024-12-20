@@ -30,6 +30,10 @@
 * [3289](https://github.com/zeta-chain/node/pull/3289) - remove all dynamic peer discovery (zetaclient)
 * [3314](https://github.com/zeta-chain/node/pull/3314) - update `last_scanned_block_number` metrics more frequently for Solana chain
 
+## v24.0.0
+
+* [3323](https://github.com/zeta-chain/node/pull/3323) - upgrade cosmos sdk to 0.47.15
+
 ## v23.0.0
 
 ### Features
