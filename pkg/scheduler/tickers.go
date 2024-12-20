@@ -3,11 +3,52 @@ package scheduler
 import (
 	"context"
 	"fmt"
-	"sync/atomic"
+	"sync"
+	"time"
 
 	cometbft "github.com/cometbft/cometbft/types"
 	"github.com/rs/zerolog"
+
+	"github.com/zeta-chain/node/pkg/ticker"
 )
+
+// intervalTicker wrapper for ticker.Ticker.
+type intervalTicker struct {
+	ticker *ticker.Ticker
+}
+
+func newIntervalTicker(
+	task Executable,
+	interval time.Duration,
+	intervalUpdater func() time.Duration,
+	taskName string,
+	logger zerolog.Logger,
+) *intervalTicker {
+	wrapper := func(ctx context.Context, t *ticker.Ticker) error {
+		if err := task(ctx); err != nil {
+			logger.Error().Err(err).Msg("task failed")
+		}
+
+		if intervalUpdater != nil {
+			// noop if interval is not changed
+			t.SetInterval(intervalUpdater())
+		}
+
+		return nil
+	}
+
+	tt := ticker.New(interval, wrapper, ticker.WithLogger(logger, taskName))
+
+	return &intervalTicker{ticker: tt}
+}
+
+func (t *intervalTicker) Start(ctx context.Context) error {
+	return t.ticker.Start(ctx)
+}
+
+func (t *intervalTicker) Stop() {
+	t.ticker.StopBlocking()
+}
 
 // blockTicker represents custom ticker implementation that ticks on new Zeta block events.
 // Pass blockTicker ONLY by pointer.
@@ -23,7 +64,8 @@ type blockTicker struct {
 	// doneChan is used to signal that the ticker has stopped (i.e. "blocking stop")
 	doneChan chan struct{}
 
-	isRunning atomic.Bool
+	isRunning bool
+	mu        sync.Mutex
 
 	logger zerolog.Logger
 }
@@ -34,8 +76,6 @@ func newBlockTicker(task Executable, blockChan <-chan cometbft.EventDataNewBlock
 	return &blockTicker{
 		exec:      task,
 		blockChan: blockChan,
-		stopChan:  make(chan struct{}),
-		doneChan:  nil,
 		logger:    logger,
 	}
 }
@@ -51,19 +91,14 @@ func BlockFromContext(ctx context.Context) (cometbft.EventDataNewBlock, bool) {
 }
 
 func (t *blockTicker) Start(ctx context.Context) error {
-	if !t.setRunning(true) {
-		return fmt.Errorf("ticker already started")
+	if err := t.init(); err != nil {
+		return err
 	}
 
-	t.doneChan = make(chan struct{})
-	defer func() {
-		close(t.doneChan)
+	defer t.cleanup()
 
-		// closes stopChan if it's not closed yet
-		if t.setRunning(false) {
-			close(t.stopChan)
-		}
-	}()
+	// release Stop() blocking
+	defer func() { close(t.doneChan) }()
 
 	for {
 		select {
@@ -77,7 +112,7 @@ func (t *blockTicker) Start(ctx context.Context) error {
 			ctx := withBlockEvent(ctx, block)
 
 			if err := t.exec(ctx); err != nil {
-				t.logger.Warn().Err(err).Msg("Task error")
+				t.logger.Error().Err(err).Msg("Task error")
 			}
 		case <-ctx.Done():
 			t.logger.Warn().Err(ctx.Err()).Msg("Content error")
@@ -90,8 +125,11 @@ func (t *blockTicker) Start(ctx context.Context) error {
 }
 
 func (t *blockTicker) Stop() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
 	// noop
-	if !t.isRunning.Load() {
+	if !t.isRunning {
 		return
 	}
 
@@ -100,13 +138,35 @@ func (t *blockTicker) Stop() {
 
 	// wait for the loop to stop
 	<-t.doneChan
-	t.setRunning(false)
+
+	t.isRunning = false
 }
 
-func (t *blockTicker) setRunning(running bool) (changed bool) {
-	if running {
-		return t.isRunning.CompareAndSwap(false, true)
+func (t *blockTicker) init() error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.isRunning {
+		return fmt.Errorf("ticker already started")
 	}
 
-	return t.isRunning.CompareAndSwap(true, false)
+	t.stopChan = make(chan struct{})
+	t.doneChan = make(chan struct{})
+	t.isRunning = true
+
+	return nil
+}
+
+// if ticker was stopped NOT by Stop() method, we want to make a cleanup
+func (t *blockTicker) cleanup() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	// noop
+	if !t.isRunning {
+		return
+	}
+
+	t.isRunning = false
+	close(t.stopChan)
 }
