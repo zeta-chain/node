@@ -29,6 +29,7 @@
 * [3278](https://github.com/zeta-chain/node/pull/3278) - enforce checksum format for asset address in ZRC20
 * [3289](https://github.com/zeta-chain/node/pull/3289) - remove all dynamic peer discovery (zetaclient)
 * [3314](https://github.com/zeta-chain/node/pull/3314) - update `last_scanned_block_number` metrics more frequently for Solana chain
+* [3321](https://github.com/zeta-chain/node/pull/3321) - make crosschain-call with invalid withdraw revert
 
 ## v23.0.0
 
