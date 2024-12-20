@@ -170,6 +170,27 @@ var (
 		Name:      "num_connected_peers",
 		Help:      "The number of connected peers (authenticated keygen peers)",
 	})
+
+	// SchedulerTaskInvocationCounter tracks invocations categorized by status, group, and name
+	SchedulerTaskInvocationCounter = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: ZetaClientNamespace,
+			Name:      "scheduler_task_invocations_total",
+			Help:      "Total number of task invocations",
+		},
+		[]string{"status", "task_group", "task_name"},
+	)
+
+	// SchedulerTaskExecutionDuration measures the execution duration of tasks
+	SchedulerTaskExecutionDuration = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: ZetaClientNamespace,
+			Name:      "scheduler_task_duration_seconds",
+			Help:      "Histogram of task execution duration in seconds",
+			Buckets:   []float64{0.05, 0.1, 0.2, 0.3, 0.5, 1, 1.5, 2, 3, 5, 7.5, 10, 15}, // 50ms to 15s
+		},
+		[]string{"status", "task_group", "task_name"},
+	)
 )
 
 // NewMetrics creates a new Metrics instance
