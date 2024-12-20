@@ -72,7 +72,7 @@ func TestMigrateStore(t *testing.T) {
 		}
 	})
 
-	t.Run("do not thing if ballot list for height is not found", func(t *testing.T) {
+	t.Run("do nothing if ballot list for height is not found", func(t *testing.T) {
 		//Arrange
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		// Set current height to 1000
@@ -108,7 +108,7 @@ func TestMigrateStore(t *testing.T) {
 		require.Equal(t, numberOfActualBlocks*numberOfBallotsPerBlock, int64(len(allBallotsAfterMigration)))
 	})
 
-	t.Run("do not thing if current height is less than maturity blocks", func(t *testing.T) {
+	t.Run("do nothing if current height is less than maturity blocks", func(t *testing.T) {
 		//Arrange
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		// Set current height to 100

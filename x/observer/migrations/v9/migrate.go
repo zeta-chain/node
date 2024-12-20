@@ -19,7 +19,6 @@ const MaturityBlocks = int64(100)
 func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 	currentHeight := ctx.BlockHeight()
 	// Maturity blocks is a parameter in the emissions module
-
 	if currentHeight < MaturityBlocks {
 		return nil
 	}

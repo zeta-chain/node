@@ -488,7 +488,7 @@ func TestBallot_GenerateVoterList(t *testing.T) {
 		err               require.ErrorAssertionFunc
 	}{
 		{
-			name:   "Success observation",
+			name:   "success observation",
 			voters: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
 			votes: []VoteType{
 				VoteType_SuccessObservation,
@@ -518,7 +518,7 @@ func TestBallot_GenerateVoterList(t *testing.T) {
 		},
 
 		{
-			name:   "Failure observation",
+			name:   "failure observation",
 			voters: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
 			votes: []VoteType{
 				VoteType_FailureObservation,
