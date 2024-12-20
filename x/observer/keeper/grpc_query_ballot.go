@@ -68,10 +68,12 @@ func (k Keeper) Ballots(goCtx context.Context, req *types.QueryBallotsRequest) (
 	if req.Pagination == nil {
 		req.Pagination = &query.PageRequest{}
 	}
-	if req.Pagination.Limit == 0 || req.Pagination.Limit > 100 {
+
+	if req.Pagination.Limit > 100 {
 		req.Pagination.Limit = 100
 	}
-
+	// The ballots are not sorted in any particular order therefore this query only has limited usefulness
+	// if the number of ballots is too large
 	pageRes, err := query.Paginate(ballotStore, req.Pagination, func(_ []byte, value []byte) error {
 		var ballot types.Ballot
 		if err := k.cdc.Unmarshal(value, &ballot); err != nil {
