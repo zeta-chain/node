@@ -9,8 +9,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// blockTicker represents custom ticker implementation
-// that ticks on new Zeta block events.
+// blockTicker represents custom ticker implementation that ticks on new Zeta block events.
+// Pass blockTicker ONLY by pointer.
 type blockTicker struct {
 	exec Executable
 
@@ -23,8 +23,7 @@ type blockTicker struct {
 	// doneChan is used to signal that the ticker has stopped (i.e. "blocking stop")
 	doneChan chan struct{}
 
-	// atomic flag. `1` for RUNNING, `0` for STOPPED
-	status int32
+	isRunning atomic.Bool
 
 	logger zerolog.Logger
 }
@@ -92,7 +91,7 @@ func (t *blockTicker) Start(ctx context.Context) error {
 
 func (t *blockTicker) Stop() {
 	// noop
-	if !t.getRunning() {
+	if !t.isRunning.Load() {
 		return
 	}
 
@@ -104,14 +103,10 @@ func (t *blockTicker) Stop() {
 	t.setRunning(false)
 }
 
-func (t *blockTicker) getRunning() bool {
-	return atomic.LoadInt32(&t.status) == 1
-}
-
 func (t *blockTicker) setRunning(running bool) (changed bool) {
 	if running {
-		return atomic.CompareAndSwapInt32(&t.status, 0, 1)
+		return t.isRunning.CompareAndSwap(false, true)
 	}
 
-	return atomic.CompareAndSwapInt32(&t.status, 1, 0)
+	return t.isRunning.CompareAndSwap(true, false)
 }
