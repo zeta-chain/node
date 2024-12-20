@@ -100,8 +100,11 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			return false, fmt.Errorf("HandleEVMDeposit: unable to decode address: %w", err)
 		}
 
+		// use a temporary context to not commit any state change in case of error
+		tmpCtx, commit := ctx.CacheContext()
+
 		evmTxResponse, contractCall, err := k.fungibleKeeper.ZRC20DepositAndCallContract(
-			ctx,
+			tmpCtx,
 			from,
 			to,
 			inboundAmount,
@@ -113,8 +116,11 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			cctx.InboundParams.IsCrossChainCall,
 		)
 		if fungibletypes.IsContractReverted(evmTxResponse, err) || errShouldRevertCctx(err) {
+			// this is a contract revert, we commit the state to save the emitted logs related to revert
+			commit()
 			return true, err
 		} else if err != nil {
+			// this should not happen and we don't commit the state to avoid inconsistent state
 			return false, err
 		}
 
@@ -123,18 +129,21 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 		if !evmTxResponse.Failed() && contractCall {
 			logs := evmtypes.LogsToEthereum(evmTxResponse.Logs)
 			if len(logs) > 0 {
-				ctx = ctx.WithValue(InCCTXIndexKey, cctx.Index)
+				tmpCtx = tmpCtx.WithValue(InCCTXIndexKey, cctx.Index)
 				txOrigin := cctx.InboundParams.TxOrigin
 				if txOrigin == "" {
 					txOrigin = inboundSender
 				}
 
-				err = k.ProcessLogs(ctx, logs, to, txOrigin)
+				// process logs to process cctx events initiated during the contract call
+				err = k.ProcessLogs(tmpCtx, logs, to, txOrigin)
 				if err != nil {
-					// ProcessLogs should not error; error indicates exception, should abort
-					return false, errors.Wrap(types.ErrCannotProcessWithdrawal, err.Error())
+					// this happens if the cctx events are not processed correctly with invalid withdrawls
+					// in this situation we want the CCTX to be reverted, we don't commit the state so the contract call is not persisted
+					// the contract call is considered as reverted
+					return true, errors.Wrap(types.ErrCannotProcessWithdrawal, err.Error())
 				}
-				ctx.EventManager().EmitEvent(
+				tmpCtx.EventManager().EmitEvent(
 					sdk.NewEvent(sdk.EventTypeMessage,
 						sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 						sdk.NewAttribute("action", "DepositZRC20AndCallContract"),
@@ -145,7 +154,11 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 				)
 			}
 		}
+
+		// commit state change from the deposit and eventual cctx events
+		commit()
 	}
+
 	return false, nil
 }
 
