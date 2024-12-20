@@ -138,7 +138,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 				// process logs to process cctx events initiated during the contract call
 				err = k.ProcessLogs(tmpCtx, logs, to, txOrigin)
 				if err != nil {
-					// this happens if the cctx events are not processed correctly with invalid withdrawls
+					// this happens if the cctx events are not processed correctly with invalid withdrawals
 					// in this situation we want the CCTX to be reverted, we don't commit the state so the contract call is not persisted
 					// the contract call is considered as reverted
 					return true, errors.Wrap(types.ErrCannotProcessWithdrawal, err.Error())
