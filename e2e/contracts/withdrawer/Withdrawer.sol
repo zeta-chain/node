@@ -27,4 +27,11 @@ contract Withdrawer {
         IZRC20(zrc20).approve(address(zrc20), type(uint256).max);
         IZRC20(zrc20).withdraw(context.origin, withdrawAmount);
     }
+
+    // perform a withdraw on cross chain call, v2
+    function onCall(Context calldata context, address zrc20, uint256, bytes calldata) external {
+        // perform withdrawal with the target token
+        IZRC20(zrc20).approve(address(zrc20), type(uint256).max);
+        IZRC20(zrc20).withdraw(context.origin, withdrawAmount);
+    }
 }
