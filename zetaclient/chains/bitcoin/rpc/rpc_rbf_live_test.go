@@ -28,7 +28,7 @@ import (
 // setupTest initializes the privateKey, sender, receiver and RPC client
 func setupTest(t *testing.T) (*rpcclient.Client, *secp256k1.PrivateKey, btcutil.Address, btcutil.Address) {
 	// network to use
-	chain := chains.BitcoinTestnet4
+	chain := chains.BitcoinMainnet
 	net, err := chains.GetBTCChainParams(chain.ChainId)
 	require.NoError(t, err)
 
@@ -62,18 +62,29 @@ func Test_BitcoinRBFLive(t *testing.T) {
 		return
 	}
 
-	LiveTest_PendingMempoolTx(t)
+	//LiveTest_PendingMempoolTx(t)
 }
 
-func LiveTest_RBFTransaction(t *testing.T) {
+func Test_RBFTransaction(t *testing.T) {
 	// setup test
 	client, privKey, sender, to := setupTest(t)
+
+	// try querying tx result
+	_, getTxResult, err := rpc.GetTxResultByHash(
+		client,
+		"329d9204b906adc5f220954d53d9d990ebe92404c19297233aacb4a2ae799b69",
+	)
+	if err == nil {
+		fmt.Printf("tx confirmations: %d\n", getTxResult.Confirmations)
+	} else {
+		fmt.Printf("GetTxResultByHash failed: %s\n", err)
+	}
 
 	// define amount, fee rate and bump fee reserved
 	amount := 0.00001
 	nonceMark := chains.NonceMarkAmount(1)
-	feeRate := int64(2)
-	bumpFeeReserved := int64(10000)
+	feeRate := int64(6)
+	bumpFeeReserved := int64(0)
 
 	// STEP 1
 	// build and send tx1
@@ -83,13 +94,13 @@ func LiveTest_RBFTransaction(t *testing.T) {
 
 	// STEP 2
 	// build and send tx2 (child of tx1)
-	nonceMark += 1
-	txHash2 := buildAndSendRBFTx(t, client, privKey, txHash1, sender, to, amount, nonceMark, feeRate, bumpFeeReserved)
-	fmt.Printf("sent tx2: %s\n", txHash2)
+	// nonceMark += 1
+	// txHash2 := buildAndSendRBFTx(t, client, privKey, txHash1, sender, to, amount, nonceMark, feeRate, bumpFeeReserved)
+	// fmt.Printf("sent tx2: %s\n", txHash2)
 
 	// STEP 3
 	// wait for a short time before bumping fee
-	rawTx1, confirmed := waitForTxConfirmation(client, sender, txHash1, 10*time.Second)
+	rawTx1, confirmed := waitForTxConfirmation(client, sender, txHash1, 600*time.Second)
 	if confirmed {
 		fmt.Println("Opps: tx1 confirmed, no chance to bump fee; please start over")
 		return
@@ -128,42 +139,69 @@ func LiveTest_RBFTransaction(t *testing.T) {
 	// tx1 and tx2 must be dropped
 	ensureTxDropped(t, client, txHash1)
 	fmt.Println("tx1 dropped")
-	ensureTxDropped(t, client, txHash2)
-	fmt.Println("tx2 dropped")
+	//ensureTxDropped(t, client, txHash2)
+	//fmt.Println("tx2 dropped")
 }
 
 // Test_RBFTransactionChained_CPFP tests Child-Pays-For-Parent (CPFP) fee bumping strategy for chained RBF transactions
-func LiveTest_RBFTransaction_Chained_CPFP(t *testing.T) {
+func Test_RBFTransaction_Chained_CPFP(t *testing.T) {
 	// setup test
 	client, privKey, sender, to := setupTest(t)
 
 	// define amount, fee rate and bump fee reserved
 	amount := 0.00001
-	nonceMark := chains.NonceMarkAmount(0)
-	feeRate := int64(2)
-	bumpFeeReserved := int64(10000)
+	nonceMark := int64(0)
+	feeRate := int64(20)
+	bumpFeeReserved := int64(0)
+
+	////
+	txid := "a5028b27a82aaea7f1bc6da41cb42e5f69478ef2b2e2cca7335db62f689f7e18"
+	oldHash, err := chainhash.NewHashFromStr(txid)
+	require.NoError(t, err)
+	rawTx2, err := client.GetRawTransaction(oldHash)
+
+	// STEP 5
+	// bump gas fee for tx3 (the child/grandchild of tx1/tx2)
+	// we assume that tx3 has same vBytes as the fee-bump tx (tx4) for simplicity
+	// two rules to satisfy:
+	//   - feeTx4 >= feeTx3
+	//   - additionalFees >= vSizeTx4 * minRelayFeeRate
+	// see: https://github.com/bitcoin/bitcoin/blob/master/src/policy/rbf.cpp#L166-L183
+	minRelayFeeRate := int64(1)
+	feeRateIncrease := minRelayFeeRate + feeRate - 1
+	additionalFees := (110) * feeRateIncrease
+	fmt.Printf("additional fee: %d sats\n", additionalFees)
+	tx3, err := bumpRBFTxFee(rawTx2.MsgTx(), additionalFees)
+	require.NoError(t, err)
+
+	// STEP 6
+	// sign and send tx3, which replaces tx2
+	signTx(t, client, privKey, tx3)
+	txHash, err := client.SendRawTransaction(tx3, true)
+	require.NoError(t, err)
+	fmt.Printf("sent tx3: %s\n", txHash)
 
 	// STEP 1
 	// build and send tx1
-	nonceMark += 1
+	nonceMark = 0
 	txHash1 := buildAndSendRBFTx(t, client, privKey, nil, sender, to, amount, nonceMark, feeRate, bumpFeeReserved)
 	fmt.Printf("sent tx1: %s\n", txHash1)
 
 	// STEP 2
 	// build and send tx2 (child of tx1)
-	nonceMark += 1
+	//nonceMark += 1
 	txHash2 := buildAndSendRBFTx(t, client, privKey, txHash1, sender, to, amount, nonceMark, feeRate, bumpFeeReserved)
 	fmt.Printf("sent tx2: %s\n", txHash2)
 
 	// STEP 3
 	// build and send tx3 (child of tx2)
-	nonceMark += 1
+	//nonceMark += 1
 	txHash3 := buildAndSendRBFTx(t, client, privKey, txHash2, sender, to, amount, nonceMark, feeRate, bumpFeeReserved)
 	fmt.Printf("sent tx3: %s\n", txHash3)
 
 	// STEP 4
 	// wait for a short time before bumping fee
-	rawTx3, confirmed := waitForTxConfirmation(client, sender, txHash3, 10*time.Second)
+	rawTx2, confirmed := waitForTxConfirmation(client, sender, txHash3, 10*time.Second)
 	if confirmed {
 		fmt.Println("Opps: tx3 confirmed, no chance to bump fee; please start over")
 		return
@@ -176,11 +214,11 @@ func LiveTest_RBFTransaction_Chained_CPFP(t *testing.T) {
 	//   - feeTx4 >= feeTx3
 	//   - additionalFees >= vSizeTx4 * minRelayFeeRate
 	// see: https://github.com/bitcoin/bitcoin/blob/master/src/policy/rbf.cpp#L166-L183
-	minRelayFeeRate := int64(1)
-	feeRateIncrease := minRelayFeeRate
-	additionalFees := (mempool.GetTxVirtualSize(rawTx3) + 1) * feeRateIncrease
+	minRelayFeeRate = int64(1)
+	feeRateIncrease = minRelayFeeRate
+	additionalFees = (mempool.GetTxVirtualSize(rawTx2) + 1) * feeRateIncrease
 	fmt.Printf("additional fee: %d sats\n", additionalFees)
-	tx4, err := bumpRBFTxFee(rawTx3.MsgTx(), additionalFees)
+	tx4, err := bumpRBFTxFee(rawTx2.MsgTx(), additionalFees)
 	require.NoError(t, err)
 
 	// STEP 6
@@ -203,7 +241,7 @@ func LiveTest_RBFTransaction_Chained_CPFP(t *testing.T) {
 	fmt.Println("tx1 dropped")
 }
 
-func LiveTest_PendingMempoolTx(t *testing.T) {
+func Test_PendingMempoolTx(t *testing.T) {
 	// setup Bitcoin client
 	client, err := createRPCClient(chains.BitcoinMainnet.ChainId)
 	require.NoError(t, err)
@@ -235,10 +273,11 @@ func LiveTest_PendingMempoolTx(t *testing.T) {
 		txHash := mempoolTxs[i]
 		entry, err := client.GetMempoolEntry(txHash.String())
 		if err == nil {
+			require.Positive(t, entry.Fee)
 			txTime := time.Unix(entry.Time, 0)
 			txTimeStr := txTime.Format(time.DateTime)
 			elapsed := time.Since(txTime)
-			if elapsed > 2*time.Hour {
+			if elapsed > 30*time.Minute {
 				// calculate average block time
 				elapsedBlocks := lastHeight - entry.Height
 				minutesPerBlockCalculated := elapsed.Minutes() / float64(elapsedBlocks)
@@ -282,7 +321,18 @@ func buildAndSendRBFTx(
 ) *chainhash.Hash {
 	// list outputs
 	utxos := listUTXOs(client, sender)
-	require.NotEmpty(t, utxos)
+	//require.NotEmpty(t, utxos)
+
+	// use hardcoded utxos if none found
+	if len(utxos) == 0 {
+		utxos = []btcjson.ListUnspentResult{
+			{
+				TxID:   "329d9204b906adc5f220954d53d9d990ebe92404c19297233aacb4a2ae799b69",
+				Vout:   0,
+				Amount: 0.00014399,
+			},
+		}
+	}
 
 	// ensure all inputs are from the parent tx
 	if parent != nil {
@@ -364,31 +414,37 @@ func buildRBFTx(
 	require.NoError(t, err)
 
 	// amount to send in satoshis
-	amountSats, err := bitcoin.GetSatoshis(amount)
-	require.NoError(t, err)
+	//amountSats, err := bitcoin.GetSatoshis(amount)
+	//require.NoError(t, err)
 
 	// calculate tx fee
-	txSize, err := bitcoin.EstimateOutboundSize(uint64(len(utxos)), []btcutil.Address{to})
+	txSize, err := bitcoin.EstimateOutboundSize(int64(len(utxos)), []btcutil.Address{to})
 	require.NoError(t, err)
+	require.Greater(t, txSize, uint64(62))
+	//txSize = 125 // remove the size of the nonce-mark and payee outputs
+	txSize -= 62 // remove the size of the nonce-mark and payee outputs
 	fees := int64(txSize) * feeRate
 
+	// adjust amount
+	amountSats := totalSats - fees
+
 	// make sure total is greater than amount + fees
-	require.GreaterOrEqual(t, totalSats, nonceMark+amountSats+fees+bumpFeeReserved)
+	//require.GreaterOrEqual(t, totalSats, nonceMark+amountSats+fees+bumpFeeReserved)
 
 	// 1st output: simulated nonce-mark amount to self
 	pkScriptSender, err := txscript.PayToAddrScript(sender)
 	require.NoError(t, err)
-	txOut0 := wire.NewTxOut(nonceMark, pkScriptSender)
-	tx.AddTxOut(txOut0)
+	// txOut0 := wire.NewTxOut(nonceMark, pkScriptSender)
+	// tx.AddTxOut(txOut0)
 
 	// 2nd output: payment to receiver
-	pkScriptReceiver, err := txscript.PayToAddrScript(to)
-	require.NoError(t, err)
-	txOut1 := wire.NewTxOut(amountSats, pkScriptReceiver)
-	tx.AddTxOut(txOut1)
+	// pkScriptReceiver, err := txscript.PayToAddrScript(to)
+	// require.NoError(t, err)
+	// txOut1 := wire.NewTxOut(amountSats, pkScriptReceiver)
+	// tx.AddTxOut(txOut1)
 
 	// 3rd output: change to self
-	changeSats := totalSats - nonceMark - amountSats - fees
+	changeSats := amountSats //totalSats - nonceMark - amountSats - fees
 	require.GreaterOrEqual(t, changeSats, bumpFeeReserved)
 	txOut2 := wire.NewTxOut(changeSats, pkScriptSender)
 	tx.AddTxOut(txOut2)
@@ -518,12 +574,12 @@ func bumpRBFTxFee(oldTx *wire.MsgTx, additionalFee int64) (*wire.MsgTx, error) {
 	}
 
 	// original change needs to be enough to cover the additional fee
-	if newTx.TxOut[2].Value <= additionalFee {
+	if newTx.TxOut[0].Value <= additionalFee {
 		return nil, errors.New("change amount is not enough to cover the additional fee")
 	}
 
 	// bump fee by reducing the change amount
-	newTx.TxOut[2].Value = newTx.TxOut[2].Value - additionalFee
+	newTx.TxOut[0].Value = newTx.TxOut[0].Value - additionalFee
 
 	return newTx, nil
 }

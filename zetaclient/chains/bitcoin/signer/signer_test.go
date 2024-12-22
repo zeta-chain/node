@@ -3,7 +3,6 @@ package signer
 import (
 	"encoding/hex"
 	"fmt"
-	"math/big"
 	"reflect"
 	"testing"
 
@@ -259,7 +258,7 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 		total    float64
 		amount   float64
 		nonce    int64
-		fees     *big.Int
+		fees     int64
 		cancelTx bool
 		fail     bool
 		message  string
@@ -272,7 +271,7 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 			total:  1.00012000,
 			amount: 0.2,
 			nonce:  10000,
-			fees:   big.NewInt(2000),
+			fees:   2000,
 			fail:   false,
 			txout: []*wire.TxOut{
 				{Value: 10000, PkScript: tssScript},
@@ -287,7 +286,7 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 			total:  0.20012000,
 			amount: 0.2,
 			nonce:  10000,
-			fees:   big.NewInt(2000),
+			fees:   2000,
 			fail:   false,
 			txout: []*wire.TxOut{
 				{Value: 10000, PkScript: tssScript},
@@ -301,7 +300,7 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 			total:    1.00012000,
 			amount:   0.2,
 			nonce:    10000,
-			fees:     big.NewInt(2000),
+			fees:     2000,
 			cancelTx: true,
 			fail:     false,
 			txout: []*wire.TxOut{
@@ -332,7 +331,7 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 			total:   0.20011000,
 			amount:  0.2,
 			nonce:   10000,
-			fees:    big.NewInt(2000),
+			fees:    2000,
 			fail:    true,
 			message: "remainder value is negative",
 		},
@@ -343,7 +342,7 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 			total:  0.20022000, //  0.2 + fee + nonceMark * 2
 			amount: 0.2,
 			nonce:  10000,
-			fees:   big.NewInt(2000),
+			fees:   2000,
 			fail:   false,
 			txout: []*wire.TxOut{
 				{Value: 10000, PkScript: tssScript},
@@ -358,7 +357,7 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 			total:  1.00012000,
 			amount: 0.2,
 			nonce:  10000,
-			fees:   big.NewInt(2000),
+			fees:   2000,
 			fail:   true,
 		},
 	}

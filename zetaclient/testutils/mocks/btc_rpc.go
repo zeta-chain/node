@@ -293,6 +293,36 @@ func (_m *BTCRPCClient) GetBlockVerboseTx(blockHash *chainhash.Hash) (*btcjson.G
 	return r0, r1
 }
 
+// GetMempoolEntry provides a mock function with given fields: txHash
+func (_m *BTCRPCClient) GetMempoolEntry(txHash string) (*btcjson.GetMempoolEntryResult, error) {
+	ret := _m.Called(txHash)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMempoolEntry")
+	}
+
+	var r0 *btcjson.GetMempoolEntryResult
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (*btcjson.GetMempoolEntryResult, error)); ok {
+		return rf(txHash)
+	}
+	if rf, ok := ret.Get(0).(func(string) *btcjson.GetMempoolEntryResult); ok {
+		r0 = rf(txHash)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*btcjson.GetMempoolEntryResult)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(txHash)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetNetworkInfo provides a mock function with given fields:
 func (_m *BTCRPCClient) GetNetworkInfo() (*btcjson.GetNetworkInfoResult, error) {
 	ret := _m.Called()

@@ -2,6 +2,9 @@ package rpc
 
 import (
 	"fmt"
+	"math"
+	"math/big"
+	"strings"
 	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
@@ -18,6 +21,18 @@ const (
 	// RPCAlertLatency is the default threshold for RPC latency to be considered unhealthy and trigger an alert.
 	// Bitcoin block time is 10 minutes, 1200s (20 minutes) is a reasonable threshold for Bitcoin
 	RPCAlertLatency = time.Duration(1200) * time.Second
+
+	// PendingTxFeeBumpWaitBlocks is the number of blocks to await before considering a tx stuck in mempool
+	PendingTxFeeBumpWaitBlocks = 3
+
+	// blockTimeBTC represents the average time to mine a block in Bitcoin
+	blockTimeBTC = 10 * time.Minute
+
+	// BTCMaxSupply is the maximum supply of Bitcoin
+	maxBTCSupply = 21000000.0
+
+	// bytesPerKB is the number of bytes in a KB
+	bytesPerKB = 1000
 )
 
 // NewRPCClient creates a new RPC client by the given config.
@@ -130,6 +145,32 @@ func GetRawTxResult(
 	return btcjson.TxRawResult{}, fmt.Errorf("GetRawTxResult: tx %s not included yet", hash)
 }
 
+// FeeRateToSatPerByte converts a fee rate from BTC/KB to sat/byte.
+func FeeRateToSatPerByte(rate float64) *big.Int {
+	// #nosec G115 always in range
+	satPerKB := new(big.Int).SetInt64(int64(rate * btcutil.SatoshiPerBitcoin))
+	return new(big.Int).Div(satPerKB, big.NewInt(bytesPerKB))
+}
+
+// GetEstimatedFeeRate gets estimated smart fee rate (BTC/Kb) targeting given block confirmation
+func GetEstimatedFeeRate(rpcClient interfaces.BTCRPCClient, confTarget int64) (int64, error) {
+	feeResult, err := rpcClient.EstimateSmartFee(confTarget, &btcjson.EstimateModeEconomical)
+	if err != nil {
+		return 0, errors.Wrap(err, "unable to estimate smart fee")
+	}
+	if feeResult.Errors != nil {
+		return 0, fmt.Errorf("fee result contains errors: %s", feeResult.Errors)
+	}
+	if feeResult.FeeRate == nil {
+		return 0, fmt.Errorf("fee rate is nil")
+	}
+	if *feeResult.FeeRate <= 0 || *feeResult.FeeRate >= maxBTCSupply {
+		return 0, fmt.Errorf("fee rate is invalid: %f", *feeResult.FeeRate)
+	}
+
+	return FeeRateToSatPerByte(*feeResult.FeeRate).Int64(), nil
+}
+
 // GetTransactionFeeAndRate gets the transaction fee and rate for a given tx result
 func GetTransactionFeeAndRate(rpcClient interfaces.BTCRPCClient, rawResult *btcjson.TxRawResult) (int64, int64, error) {
 	var (
@@ -179,6 +220,97 @@ func GetTransactionFeeAndRate(rpcClient interfaces.BTCRPCClient, rawResult *btcj
 	feeRate := fee / int64(rawResult.Vsize)
 
 	return fee, feeRate, nil
+}
+
+// IsTxStuckInMempool checks if the transaction is stuck in the mempool.
+//
+// A pending tx with 'confirmations == 0' will be considered stuck due to excessive pending time.
+func IsTxStuckInMempool(
+	client interfaces.BTCRPCClient,
+	txHash string,
+	maxWaitBlocks int64,
+) (bool, time.Duration, error) {
+	lastBlock, err := client.GetBlockCount()
+	if err != nil {
+		return false, 0, errors.Wrap(err, "GetBlockCount failed")
+	}
+
+	memplEntry, err := client.GetMempoolEntry(txHash)
+	if err != nil {
+		if strings.Contains(err.Error(), "Transaction not in mempool") {
+			return false, 0, nil // not a mempool tx, of course not stuck
+		}
+		return false, 0, errors.Wrap(err, "GetMempoolEntry failed")
+	}
+
+	// is the tx pending for too long?
+	pendingTime := time.Since(time.Unix(memplEntry.Time, 0))
+	pendingTimeAllowed := blockTimeBTC * time.Duration(maxWaitBlocks)
+	pendingDeadline := memplEntry.Height + maxWaitBlocks
+	if pendingTime > pendingTimeAllowed && lastBlock > pendingDeadline {
+		return true, pendingTime, nil
+	}
+
+	return false, pendingTime, nil
+}
+
+// GetTotalMempoolParentsSizeNFees returns the total fee and vsize of all pending parents of a given pending child tx (inclusive)
+//
+// A parent is defined as:
+//   - a tx that is also pending in the mempool
+//   - a tx that has its first output spent by the child as first input
+//
+// Returns: (totalTxs, totalFees, totalVSize, error)
+func GetTotalMempoolParentsSizeNFees(
+	client interfaces.BTCRPCClient,
+	childHash string,
+) (int64, float64, int64, int64, error) {
+	var (
+		totalTxs   int64
+		totalFees  float64
+		totalVSize int64
+		avgFeeRate int64
+	)
+
+	// loop through all parents
+	parentHash := childHash
+	for {
+		memplEntry, err := client.GetMempoolEntry(parentHash)
+		if err != nil {
+			if strings.Contains(err.Error(), "Transaction not in mempool") {
+				// not a mempool tx, stop looking for parents
+				break
+			}
+			return 0, 0, 0, 0, errors.Wrapf(err, "unable to get mempool entry for tx %s", parentHash)
+		}
+
+		// sum up the total fees and vsize
+		totalTxs++
+		totalFees += memplEntry.Fee
+		totalVSize += int64(memplEntry.VSize)
+
+		// find the parent tx
+		tx, err := GetRawTxByHash(client, parentHash)
+		if err != nil {
+			return 0, 0, 0, 0, errors.Wrapf(err, "unable to get tx %s", parentHash)
+		}
+		parentHash = tx.MsgTx().TxIn[0].PreviousOutPoint.Hash.String()
+	}
+
+	// sanity check, should never happen
+	if totalFees <= 0 || totalVSize <= 0 {
+		return 0, 0, 0, 0, errors.Errorf("invalid result: totalFees %f, totalVSize %d", totalFees, totalVSize)
+	}
+
+	// no pending tx found
+	if totalTxs == 0 {
+		return 0, 0, 0, 0, errors.Errorf("no pending tx found for given child %s", childHash)
+	}
+
+	// calculate the average fee rate
+	avgFeeRate = int64(math.Ceil(totalFees / float64(totalVSize)))
+
+	return totalTxs, totalFees, totalVSize, avgFeeRate, nil
 }
 
 // CheckRPCStatus checks the RPC status of the bitcoin chain

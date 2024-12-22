@@ -387,11 +387,11 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 
 						switch {
 						case chain.IsEVM():
-							oc.ScheduleCctxEVM(ctx, zetaHeight, chainID, cctxList, ob, signer)
+							oc.ScheduleCCTXEVM(ctx, zetaHeight, chainID, cctxList, ob, signer)
 						case chain.IsBitcoin():
-							oc.ScheduleCctxBTC(ctx, zetaHeight, chainID, cctxList, ob, signer)
+							oc.ScheduleCCTXBTC(ctx, zetaHeight, chainID, cctxList, ob, signer)
 						case chain.IsSolana():
-							oc.ScheduleCctxSolana(ctx, zetaHeight, chainID, cctxList, ob, signer)
+							oc.ScheduleCCTXSolana(ctx, zetaHeight, chainID, cctxList, ob, signer)
 						case chain.IsTON():
 							oc.ScheduleCCTXTON(ctx, zetaHeight, chainID, cctxList, ob, signer)
 						default:
@@ -409,8 +409,8 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 	}
 }
 
-// ScheduleCctxEVM schedules evm outbound keysign on each ZetaChain block (the ticker)
-func (oc *Orchestrator) ScheduleCctxEVM(
+// ScheduleCCTXEVM schedules evm outbound keysign on each ZetaChain block (the ticker)
+func (oc *Orchestrator) ScheduleCCTXEVM(
 	ctx context.Context,
 	zetaHeight uint64,
 	chainID int64,
@@ -508,11 +508,11 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 	}
 }
 
-// ScheduleCctxBTC schedules bitcoin outbound keysign on each ZetaChain block (the ticker)
+// ScheduleCCTXBTC schedules bitcoin outbound keysign on each ZetaChain block (the ticker)
 // 1. schedule at most one keysign per ticker
 // 2. schedule keysign only when nonce-mark UTXO is available
 // 3. stop keysign when lookahead is reached
-func (oc *Orchestrator) ScheduleCctxBTC(
+func (oc *Orchestrator) ScheduleCCTXBTC(
 	ctx context.Context,
 	zetaHeight uint64,
 	chainID int64,
@@ -583,8 +583,8 @@ func (oc *Orchestrator) ScheduleCctxBTC(
 	}
 }
 
-// ScheduleCctxSolana schedules solana outbound keysign on each ZetaChain block (the ticker)
-func (oc *Orchestrator) ScheduleCctxSolana(
+// ScheduleCCTXSolana schedules solana outbound keysign on each ZetaChain block (the ticker)
+func (oc *Orchestrator) ScheduleCCTXSolana(
 	ctx context.Context,
 	zetaHeight uint64,
 	chainID int64,

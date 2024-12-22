@@ -20,6 +20,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -28,98 +29,116 @@ import (
 // TODO(revamp): move ticker functions to a specific file
 // TODO(revamp): move into a separate package
 func (ob *Observer) WatchOutbound(ctx context.Context) error {
+	// get app context
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to get app from context")
 	}
 
+	// create outbound ticker
 	ticker, err := types.NewDynamicTicker("Bitcoin_WatchOutbound", ob.ChainParams().OutboundTicker)
 	if err != nil {
 		return errors.Wrap(err, "unable to create dynamic ticker")
 	}
-
 	defer ticker.Stop()
 
-	chainID := ob.Chain().ChainId
-	ob.logger.Outbound.Info().Msgf("WatchOutbound started for chain %d", chainID)
+	ob.logger.Outbound.Info().Msg("WatchOutbound: started")
 	sampledLogger := ob.logger.Outbound.Sample(&zerolog.BasicSampler{N: 10})
 
 	for {
 		select {
 		case <-ticker.C():
 			if !app.IsOutboundObservationEnabled() {
-				sampledLogger.Info().
-					Msgf("WatchOutbound: outbound observation is disabled for chain %d", chainID)
+				sampledLogger.Info().Msg("WatchOutbound: outbound observation is disabled")
 				continue
 			}
-			trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
+
+			// process outbound trackers
+			err := ob.ProcessOutboundTrackers(ctx)
 			if err != nil {
-				ob.logger.Outbound.Error().
-					Err(err).
-					Msgf("WatchOutbound: error GetAllOutboundTrackerByChain for chain %d", chainID)
-				continue
+				ob.Logger().Outbound.Error().Err(err).Msg("WatchOutbound: ProcessOutboundTrackers failed")
 			}
-			for _, tracker := range trackers {
-				// get original cctx parameters
-				outboundID := ob.OutboundID(tracker.Nonce)
-				cctx, err := ob.ZetacoreClient().GetCctxByNonce(ctx, chainID, tracker.Nonce)
-				if err != nil {
-					ob.logger.Outbound.Info().
-						Err(err).
-						Msgf("WatchOutbound: can't find cctx for chain %d nonce %d", chainID, tracker.Nonce)
-					break
-				}
 
-				nonce := cctx.GetCurrentOutboundParam().TssNonce
-				if tracker.Nonce != nonce { // Tanmay: it doesn't hurt to check
-					ob.logger.Outbound.Error().
-						Msgf("WatchOutbound: tracker nonce %d not match cctx nonce %d", tracker.Nonce, nonce)
-					break
-				}
-
-				if len(tracker.HashList) > 1 {
-					ob.logger.Outbound.Warn().
-						Msgf("WatchOutbound: oops, outboundID %s got multiple (%d) outbound hashes", outboundID, len(tracker.HashList))
-				}
-
-				// iterate over all txHashes to find the truly included one.
-				// we do it this (inefficient) way because we don't rely on the first one as it may be a false positive (for unknown reason).
-				txCount := 0
-				var txResult *btcjson.GetTransactionResult
-				for _, txHash := range tracker.HashList {
-					result, inMempool := ob.checkIncludedTx(ctx, cctx, txHash.TxHash)
-					if result != nil && !inMempool { // included
-						txCount++
-						txResult = result
-						ob.logger.Outbound.Info().
-							Msgf("WatchOutbound: included outbound %s for chain %d nonce %d", txHash.TxHash, chainID, tracker.Nonce)
-						if txCount > 1 {
-							ob.logger.Outbound.Error().Msgf(
-								"WatchOutbound: checkIncludedTx passed, txCount %d chain %d nonce %d result %v", txCount, chainID, tracker.Nonce, result)
-						}
-					}
-				}
-
-				if txCount == 1 { // should be only one txHash included for each nonce
-					ob.setIncludedTx(tracker.Nonce, txResult)
-				} else if txCount > 1 {
-					ob.removeIncludedTx(tracker.Nonce) // we can't tell which txHash is true, so we remove all (if any) to be safe
-					ob.logger.Outbound.Error().Msgf("WatchOutbound: included multiple (%d) outbound for chain %d nonce %d", txCount, chainID, tracker.Nonce)
-				}
-			}
 			ticker.UpdateInterval(ob.ChainParams().OutboundTicker, ob.logger.Outbound)
 		case <-ob.StopChannel():
-			ob.logger.Outbound.Info().Msgf("WatchOutbound stopped for chain %d", chainID)
+			ob.logger.Outbound.Info().Msg("WatchOutbound: stopped")
 			return nil
 		}
 	}
 }
 
-// VoteOutboundIfConfirmed checks outbound status and returns (continueKeysign, error)
-func (ob *Observer) VoteOutboundIfConfirmed(
+// ProcessOutboundTrackers processes outbound trackers
+func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
+	chainID := ob.Chain().ChainId
+	trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
+	if err != nil {
+		return errors.Wrap(err, "GetAllOutboundTrackerByChain failed")
+	}
+
+	// logger fields
+	lf := map[string]any{
+		logs.FieldMethod: "ProcessOutboundTrackers",
+	}
+
+	// process outbound trackers
+	for _, tracker := range trackers {
+		// set logger fields
+		lf[logs.FieldNonce] = tracker.Nonce
+
+		// get the CCTX
+		cctx, err := ob.ZetacoreClient().GetCctxByNonce(ctx, chainID, tracker.Nonce)
+		if err != nil {
+			ob.logger.Outbound.Err(err).Fields(lf).Msg("cannot find cctx")
+			break
+		}
+		if len(tracker.HashList) > 1 {
+			ob.logger.Outbound.Warn().Msgf("oops, got multiple (%d) outbound hashes", len(tracker.HashList))
+		}
+
+		// Iterate over all txHashes to find the truly included outbound.
+		// At any time, there is guarantee that only one single txHash will be considered valid and included for each nonce.
+		// The reasons are:
+		//   1. CCTX with nonce 'N = 0' is the past and well-controlled.
+		//   2. Given any CCTX with nonce 'N > 0', its outbound MUST spend the previous nonce-mark UTXO (nonce N-1) to be considered valid.
+		//   3. Bitcoin prevents double spending of the same UTXO except for RBF.
+		//   4. When RBF happens, the original tx will be removed from Bitcoin core, and only the new tx will be valid.
+		for _, txHash := range tracker.HashList {
+			_, included := ob.TryIncludeOutbound(ctx, cctx, txHash.TxHash)
+			if included {
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// TryIncludeOutbound tries to include an outbound for the given cctx and txHash.
+//
+// Due to 10-min block time, zetaclient observes outbounds both in mempool and in blocks.
+// An outbound is considered included if it satisfies one of the following two cases:
+//  1. a valid tx pending in mempool with confirmation == 0
+//  2. a valid tx included in a block with confirmation > 0
+//
+// Returns: (txResult, included)
+func (ob *Observer) TryIncludeOutbound(
 	ctx context.Context,
 	cctx *crosschaintypes.CrossChainTx,
-) (bool, error) {
+	txHash string,
+) (*btcjson.GetTransactionResult, bool) {
+	nonce := cctx.GetCurrentOutboundParam().TssNonce
+
+	// check tx inclusion and save tx result
+	txResult, included := ob.checkTxInclusion(ctx, cctx, txHash)
+	if included {
+		ob.setIncludedTx(nonce, txResult)
+	}
+
+	return txResult, included
+}
+
+// VoteOutboundIfConfirmed checks outbound status and returns (continueKeysign, error)
+func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschaintypes.CrossChainTx) (bool, error) {
 	const (
 		// not used with Bitcoin
 		outboundGasUsed  = 0
@@ -142,6 +161,9 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	res, included := ob.includedTxResults[outboundID]
 	ob.Mu().Unlock()
 
+	// Short-circuit in following two cases:
+	//   1. Outbound neither broadcasted nor included. It requires a keysign.
+	//   2. Outbound was broadcasted for nonce 0. It's an edge case (happened before) to avoid duplicate payments.
 	if !included {
 		if !broadcasted {
 			return true, nil
@@ -156,26 +178,15 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 			return false, nil
 		}
 
-		// Try including this outbound broadcasted by myself
-		txResult, inMempool := ob.checkIncludedTx(ctx, cctx, txnHash)
-		if txResult == nil { // check failed, try again next time
-			return true, nil
-		} else if inMempool { // still in mempool (should avoid unnecessary Tss keysign)
-			ob.logger.Outbound.Info().Msgf("VoteOutboundIfConfirmed: outbound %s is still in mempool", outboundID)
-			return false, nil
-		}
-		// included
-		ob.setIncludedTx(nonce, txResult)
-
-		// Get tx result again in case it is just included
-		res = ob.getIncludedTx(nonce)
-		if res == nil {
+		// Try including this outbound broadcasted by myself to supplement outbound trackers.
+		// Note: each Bitcoin outbound usually gets included right after broadcasting.
+		res, included = ob.TryIncludeOutbound(ctx, cctx, txnHash)
+		if !included {
 			return true, nil
 		}
-		ob.logger.Outbound.Info().Msgf("VoteOutboundIfConfirmed: setIncludedTx succeeded for outbound %s", outboundID)
 	}
 
-	// It's safe to use cctx's amount to post confirmation because it has already been verified in observeOutbound()
+	// It's safe to use cctx's amount to post confirmation because it has already been verified in checkTxInclusion().
 	amountInSat := params.Amount.BigInt()
 	if res.Confirmations < ob.ConfirmationsThreshold(amountInSat) {
 		ob.logger.Outbound.Debug().
@@ -244,105 +255,6 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	return false, nil
 }
 
-// SelectUTXOs selects a sublist of utxos to be used as inputs.
-//
-// Parameters:
-//   - amount: The desired minimum total value of the selected UTXOs.
-//   - utxos2Spend: The maximum number of UTXOs to spend.
-//   - nonce: The nonce of the outbound transaction.
-//   - consolidateRank: The rank below which UTXOs will be consolidated.
-//   - test: true for unit test only.
-//
-// Returns:
-//   - a sublist (includes previous nonce-mark) of UTXOs or an error if the qualifying sublist cannot be found.
-//   - the total value of the selected UTXOs.
-//   - the number of consolidated UTXOs.
-//   - the total value of the consolidated UTXOs.
-//
-// TODO(revamp): move to utxo file
-func (ob *Observer) SelectUTXOs(
-	ctx context.Context,
-	amount float64,
-	utxosToSpend uint16,
-	nonce uint64,
-	consolidateRank uint16,
-	test bool,
-) ([]btcjson.ListUnspentResult, float64, uint16, float64, error) {
-	idx := -1
-	if nonce == 0 {
-		// for nonce = 0; make exception; no need to include nonce-mark utxo
-		ob.Mu().Lock()
-		defer ob.Mu().Unlock()
-	} else {
-		// for nonce > 0; we proceed only when we see the nonce-mark utxo
-		preTxid, err := ob.getOutboundIDByNonce(ctx, nonce-1, test)
-		if err != nil {
-			return nil, 0, 0, 0, err
-		}
-		ob.Mu().Lock()
-		defer ob.Mu().Unlock()
-		idx, err = ob.findNonceMarkUTXO(nonce-1, preTxid)
-		if err != nil {
-			return nil, 0, 0, 0, err
-		}
-	}
-
-	// select smallest possible UTXOs to make payment
-	total := 0.0
-	left, right := 0, 0
-	for total < amount && right < len(ob.utxos) {
-		if utxosToSpend > 0 { // expand sublist
-			total += ob.utxos[right].Amount
-			right++
-			utxosToSpend--
-		} else { // pop the smallest utxo and append the current one
-			total -= ob.utxos[left].Amount
-			total += ob.utxos[right].Amount
-			left++
-			right++
-		}
-	}
-	results := make([]btcjson.ListUnspentResult, right-left)
-	copy(results, ob.utxos[left:right])
-
-	// include nonce-mark as the 1st input
-	if idx >= 0 { // for nonce > 0
-		if idx < left || idx >= right {
-			total += ob.utxos[idx].Amount
-			results = append([]btcjson.ListUnspentResult{ob.utxos[idx]}, results...)
-		} else { // move nonce-mark to left
-			for i := idx - left; i > 0; i-- {
-				results[i], results[i-1] = results[i-1], results[i]
-			}
-		}
-	}
-	if total < amount {
-		return nil, 0, 0, 0, fmt.Errorf(
-			"SelectUTXOs: not enough btc in reserve - available : %v , tx amount : %v",
-			total,
-			amount,
-		)
-	}
-
-	// consolidate biggest possible UTXOs to maximize consolidated value
-	// consolidation happens only when there are more than (or equal to) consolidateRank (10) UTXOs
-	utxoRank, consolidatedUtxo, consolidatedValue := uint16(0), uint16(0), 0.0
-	for i := len(ob.utxos) - 1; i >= 0 && utxosToSpend > 0; i-- { // iterate over UTXOs big-to-small
-		if i != idx && (i < left || i >= right) { // exclude nonce-mark and already selected UTXOs
-			utxoRank++
-			if utxoRank >= consolidateRank { // consolication starts from the 10-ranked UTXO based on value
-				utxosToSpend--
-				consolidatedUtxo++
-				total += ob.utxos[i].Amount
-				consolidatedValue += ob.utxos[i].Amount
-				results = append(results, ob.utxos[i])
-			}
-		}
-	}
-
-	return results, total, consolidatedUtxo, consolidatedValue, nil
-}
-
 // refreshPendingNonce tries increasing the artificial pending nonce of outbound (if lagged behind).
 // There could be many (unpredictable) reasons for a pending nonce lagging behind, for example:
 // 1. The zetaclient gets restarted.
@@ -355,31 +267,25 @@ func (ob *Observer) refreshPendingNonce(ctx context.Context) {
 	}
 
 	// increase pending nonce if lagged behind
-	ob.Mu().Lock()
-	pendingNonce := ob.pendingNonce
-	ob.Mu().Unlock()
-
 	// #nosec G115 always non-negative
 	nonceLow := uint64(p.NonceLow)
-	if nonceLow > pendingNonce {
+	if nonceLow > ob.GetPendingNonce() {
 		// get the last included outbound hash
-		txid, err := ob.getOutboundIDByNonce(ctx, nonceLow-1, false)
+		txid, err := ob.getOutboundHashByNonce(ctx, nonceLow-1, false)
 		if err != nil {
 			ob.logger.Chain.Error().Err(err).Msg("refreshPendingNonce: error getting last outbound txid")
 		}
 
 		// set 'NonceLow' as the new pending nonce
-		ob.Mu().Lock()
-		defer ob.Mu().Unlock()
-		ob.pendingNonce = nonceLow
+		ob.setPendingNonce(nonceLow)
 		ob.logger.Chain.Info().
-			Msgf("refreshPendingNonce: increase pending nonce to %d with txid %s", ob.pendingNonce, txid)
+			Msgf("refreshPendingNonce: increase pending nonce to %d with txid %s", nonceLow, txid)
 	}
 }
 
-// getOutboundIDByNonce gets the outbound ID from the nonce of the outbound transaction
+// getOutboundHashByNonce gets the outbound hash for given nonce.
 // test is true for unit test only
-func (ob *Observer) getOutboundIDByNonce(ctx context.Context, nonce uint64, test bool) (string, error) {
+func (ob *Observer) getOutboundHashByNonce(ctx context.Context, nonce uint64, test bool) (string, error) {
 	// There are 2 types of txids an observer can trust
 	// 1. The ones had been verified and saved by observer self.
 	// 2. The ones had been finalized in zetacore based on majority vote.
@@ -413,82 +319,85 @@ func (ob *Observer) getOutboundIDByNonce(ctx context.Context, nonce uint64, test
 	return "", fmt.Errorf("getOutboundIDByNonce: cannot find outbound txid for nonce %d", nonce)
 }
 
-// findNonceMarkUTXO finds the nonce-mark UTXO in the list of UTXOs.
-func (ob *Observer) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
-	tssAddress := ob.TSSAddressString()
-	amount := chains.NonceMarkAmount(nonce)
-	for i, utxo := range ob.utxos {
-		sats, err := bitcoin.GetSatoshis(utxo.Amount)
-		if err != nil {
-			ob.logger.Outbound.Error().Err(err).Msgf("findNonceMarkUTXO: error getting satoshis for utxo %v", utxo)
-		}
-		if utxo.Address == tssAddress && sats == amount && utxo.TxID == txid && utxo.Vout == 0 {
-			ob.logger.Outbound.Info().
-				Msgf("findNonceMarkUTXO: found nonce-mark utxo with txid %s, amount %d satoshi", utxo.TxID, sats)
-			return i, nil
-		}
-	}
-	return -1, fmt.Errorf("findNonceMarkUTXO: cannot find nonce-mark utxo with nonce %d", nonce)
-}
-
-// checkIncludedTx checks if a txHash is included and returns (txResult, inMempool)
-// Note: if txResult is nil, then inMempool flag should be ignored.
-func (ob *Observer) checkIncludedTx(
+// checkTxInclusion checks if a txHash is included and returns (txResult, included)
+//
+// Note: a 'included' tx may still be considered stuck if it's in mempool for too long.
+func (ob *Observer) checkTxInclusion(
 	ctx context.Context,
 	cctx *crosschaintypes.CrossChainTx,
 	txHash string,
 ) (*btcjson.GetTransactionResult, bool) {
-	outboundID := ob.OutboundID(cctx.GetCurrentOutboundParam().TssNonce)
-	hash, getTxResult, err := rpc.GetTxResultByHash(ob.btcClient, txHash)
+	// logger fields
+	lf := map[string]any{
+		logs.FieldMethod: "checkTxInclusion",
+		logs.FieldNonce:  cctx.GetCurrentOutboundParam().TssNonce,
+		logs.FieldTx:     txHash,
+	}
+
+	// fetch tx result
+	hash, txResult, err := rpc.GetTxResultByHash(ob.btcClient, txHash)
 	if err != nil {
-		ob.logger.Outbound.Error().Err(err).Msgf("checkIncludedTx: error GetTxResultByHash: %s", txHash)
+		ob.logger.Outbound.Warn().Err(err).Fields(lf).Msg("GetTxResultByHash failed")
 		return nil, false
 	}
 
-	if txHash != getTxResult.TxID { // just in case, we'll use getTxResult.TxID later
-		ob.logger.Outbound.Error().
-			Msgf("checkIncludedTx: inconsistent txHash %s and getTxResult.TxID %s", txHash, getTxResult.TxID)
+	// validate tx result
+	err = ob.checkTssOutboundResult(ctx, cctx, hash, txResult)
+	if err != nil {
+		ob.logger.Outbound.Error().Err(err).Fields(lf).Msg("checkTssOutboundResult failed")
 		return nil, false
 	}
 
-	if getTxResult.Confirmations >= 0 { // check included tx only
-		err = ob.checkTssOutboundResult(ctx, cctx, hash, getTxResult)
-		if err != nil {
-			ob.logger.Outbound.Error().
-				Err(err).
-				Msgf("checkIncludedTx: error verify bitcoin outbound %s outboundID %s", txHash, outboundID)
-			return nil, false
-		}
-		return getTxResult, false // included
-	}
-	return getTxResult, true // in mempool
+	// tx is valid and included
+	return txResult, true
 }
 
-// setIncludedTx saves included tx result in memory
+// setIncludedTx saves included tx result in memory.
+//   - the outbounds are chained (by nonce) txs sequentially included.
+//   - tx results may still be set in arbitrary order as the method is called across goroutines, and it doesn't matter.
 func (ob *Observer) setIncludedTx(nonce uint64, getTxResult *btcjson.GetTransactionResult) {
-	txHash := getTxResult.TxID
-	outboundID := ob.OutboundID(nonce)
+	var (
+		txHash     = getTxResult.TxID
+		outboundID = ob.OutboundID(nonce)
+		lf         = map[string]any{
+			logs.FieldMethod:     "setIncludedTx",
+			logs.FieldNonce:      nonce,
+			logs.FieldTx:         txHash,
+			logs.FieldOutboundID: outboundID,
+		}
+	)
 
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
 	res, found := ob.includedTxResults[outboundID]
-	if !found { // not found.
+	if !found {
+		// for new hash:
+		//   - include new outbound and enforce rigid 1-to-1 mapping: nonce <===> txHash
+		//   - try increasing pending nonce on every newly included outbound
 		ob.includedTxHashes[txHash] = true
-		ob.includedTxResults[outboundID] = getTxResult // include new outbound and enforce rigid 1-to-1 mapping: nonce <===> txHash
-		if nonce >= ob.pendingNonce {                  // try increasing pending nonce on every newly included outbound
+		ob.includedTxResults[outboundID] = getTxResult
+		if nonce >= ob.pendingNonce {
 			ob.pendingNonce = nonce + 1
 		}
-		ob.logger.Outbound.Info().
-			Msgf("setIncludedTx: included new bitcoin outbound %s outboundID %s pending nonce %d", txHash, outboundID, ob.pendingNonce)
-	} else if txHash == res.TxID { // found same hash
-		ob.includedTxResults[outboundID] = getTxResult // update tx result as confirmations may increase
+		ob.logger.Outbound.Info().Fields(lf).Msgf("included new bitcoin outbound, pending nonce %d", ob.pendingNonce)
+	} else if txHash == res.TxID {
+		// for existing hash:
+		//   - update tx result because confirmations may increase
+		ob.includedTxResults[outboundID] = getTxResult
 		if getTxResult.Confirmations > res.Confirmations {
-			ob.logger.Outbound.Info().Msgf("setIncludedTx: bitcoin outbound %s got confirmations %d", txHash, getTxResult.Confirmations)
+			ob.logger.Outbound.Info().Msgf("bitcoin outbound got %d confirmations", getTxResult.Confirmations)
 		}
-	} else { // found other hash.
-		// be alert for duplicate payment!!! As we got a new hash paying same cctx (for whatever reason).
-		delete(ob.includedTxResults, outboundID) // we can't tell which txHash is true, so we remove all to be safe
-		ob.logger.Outbound.Error().Msgf("setIncludedTx: duplicate payment by bitcoin outbound %s outboundID %s, prior outbound %s", txHash, outboundID, res.TxID)
+	} else {
+		// got multiple hashes for same nonce. RBF happened.
+		ob.logger.Outbound.Info().Fields(lf).Msgf("replaced bitcoin outbound %s", res.TxID)
+
+		// remove prior txHash and txResult
+		delete(ob.includedTxHashes, res.TxID)
+		delete(ob.includedTxResults, outboundID)
+
+		// add new txHash and txResult
+		ob.includedTxHashes[txHash] = true
+		ob.includedTxResults[outboundID] = getTxResult
 	}
 }
 
@@ -499,18 +408,8 @@ func (ob *Observer) getIncludedTx(nonce uint64) *btcjson.GetTransactionResult {
 	return ob.includedTxResults[ob.OutboundID(nonce)]
 }
 
-// removeIncludedTx removes included tx from memory
-func (ob *Observer) removeIncludedTx(nonce uint64) {
-	ob.Mu().Lock()
-	defer ob.Mu().Unlock()
-	txResult, found := ob.includedTxResults[ob.OutboundID(nonce)]
-	if found {
-		delete(ob.includedTxHashes, txResult.TxID)
-		delete(ob.includedTxResults, ob.OutboundID(nonce))
-	}
-}
-
 // Basic TSS outbound checks:
+//   - confirmations >= 0
 //   - should be able to query the raw tx
 //   - check if all inputs are segwit && TSS inputs
 //
@@ -521,6 +420,11 @@ func (ob *Observer) checkTssOutboundResult(
 	hash *chainhash.Hash,
 	res *btcjson.GetTransactionResult,
 ) error {
+	// negative confirmation means invalid tx, return error
+	if res.Confirmations < 0 {
+		return fmt.Errorf("checkTssOutboundResult: negative confirmations %d", res.Confirmations)
+	}
+
 	params := cctx.GetCurrentOutboundParam()
 	nonce := params.TssNonce
 	rawResult, err := rpc.GetRawTxResult(ob.btcClient, hash, res)
@@ -571,9 +475,9 @@ func (ob *Observer) checkTSSVin(ctx context.Context, vins []btcjson.Vin, nonce u
 		}
 		// 1st vin: nonce-mark MUST come from prior TSS outbound
 		if nonce > 0 && i == 0 {
-			preTxid, err := ob.getOutboundIDByNonce(ctx, nonce-1, false)
+			preTxid, err := ob.getOutboundHashByNonce(ctx, nonce-1, false)
 			if err != nil {
-				return fmt.Errorf("checkTSSVin: error findTxIDByNonce %d", nonce-1)
+				return fmt.Errorf("checkTSSVin: error getOutboundHashByNonce %d", nonce-1)
 			}
 			// nonce-mark MUST the 1st output that comes from prior TSS outbound
 			if vin.Txid != preTxid || vin.Vout != 0 {

@@ -14,4 +14,7 @@ const (
 
 	// RPCStatusCheckInterval is the interval to check RPC status, 1 minute
 	RPCStatusCheckInterval = time.Minute
+
+	// MempoolStuckTxCheckInterval is the interval to check for stuck transactions in the mempool
+	MempoolStuckTxCheckInterval = time.Minute
 )

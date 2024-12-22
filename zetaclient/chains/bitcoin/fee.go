@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math"
-	"math/big"
 
 	"github.com/btcsuite/btcd/blockchain"
 	"github.com/btcsuite/btcd/btcjson"
@@ -20,18 +19,17 @@ import (
 
 const (
 	// constants related to transaction size calculations
-	bytesPerKB           = 1000
-	bytesPerInput        = 41           // each input is 41 bytes
-	bytesPerOutputP2TR   = 43           // each P2TR output is 43 bytes
-	bytesPerOutputP2WSH  = 43           // each P2WSH output is 43 bytes
-	bytesPerOutputP2WPKH = 31           // each P2WPKH output is 31 bytes
-	bytesPerOutputP2SH   = 32           // each P2SH output is 32 bytes
-	bytesPerOutputP2PKH  = 34           // each P2PKH output is 34 bytes
-	bytesPerOutputAvg    = 37           // average size of all above types of outputs (36.6 bytes)
-	bytes1stWitness      = 110          // the 1st witness incurs about 110 bytes and it may vary
-	bytesPerWitness      = 108          // each additional witness incurs about 108 bytes and it may vary
-	OutboundBytesMin     = uint64(239)  // 239vB == EstimateSegWitTxSize(2, 2, toP2WPKH)
-	OutboundBytesMax     = uint64(1543) // 1543v == EstimateSegWitTxSize(21, 2, toP2TR)
+	bytesPerInput        = 41          // each input is 41 bytes
+	bytesPerOutputP2TR   = 43          // each P2TR output is 43 bytes
+	bytesPerOutputP2WSH  = 43          // each P2WSH output is 43 bytes
+	bytesPerOutputP2WPKH = 31          // each P2WPKH output is 31 bytes
+	bytesPerOutputP2SH   = 32          // each P2SH output is 32 bytes
+	bytesPerOutputP2PKH  = 34          // each P2PKH output is 34 bytes
+	bytesPerOutputAvg    = 37          // average size of all above types of outputs (36.6 bytes)
+	bytes1stWitness      = 110         // the 1st witness incurs about 110 bytes and it may vary
+	bytesPerWitness      = 108         // each additional witness incurs about 108 bytes and it may vary
+	OutboundBytesMin     = int64(239)  // 239vB == EstimateSegWitTxSize(2, 2, toP2WPKH)
+	OutboundBytesMax     = int64(1543) // 1543v == EstimateSegWitTxSize(21, 2, toP2TR)
 
 	// defaultDepositorFeeRate is the default fee rate for depositor fee, 20 sat/vB
 	defaultDepositorFeeRate = 20
@@ -59,34 +57,27 @@ var (
 // DepositorFeeCalculator is a function type to calculate the Bitcoin depositor fee
 type DepositorFeeCalculator func(interfaces.BTCRPCClient, *btcjson.TxRawResult, *chaincfg.Params) (float64, error)
 
-// FeeRateToSatPerByte converts a fee rate in BTC/KB to sat/byte.
-func FeeRateToSatPerByte(rate float64) *big.Int {
-	// #nosec G115 always in range
-	satPerKB := new(big.Int).SetInt64(int64(rate * btcutil.SatoshiPerBitcoin))
-	return new(big.Int).Div(satPerKB, big.NewInt(bytesPerKB))
-}
-
 // WiredTxSize calculates the wired tx size in bytes
-func WiredTxSize(numInputs uint64, numOutputs uint64) uint64 {
+func WiredTxSize(numInputs uint64, numOutputs uint64) int64 {
 	// Version 4 bytes + LockTime 4 bytes + Serialized varint size for the
 	// number of transaction inputs and outputs.
 	// #nosec G115 always positive
-	return uint64(8 + wire.VarIntSerializeSize(numInputs) + wire.VarIntSerializeSize(numOutputs))
+	return int64(8 + wire.VarIntSerializeSize(numInputs) + wire.VarIntSerializeSize(numOutputs))
 }
 
 // EstimateOutboundSize estimates the size of an outbound in vBytes
-func EstimateOutboundSize(numInputs uint64, payees []btcutil.Address) (uint64, error) {
+func EstimateOutboundSize(numInputs int64, payees []btcutil.Address) (int64, error) {
 	if numInputs == 0 {
 		return 0, nil
 	}
 	// #nosec G115 always positive
 	numOutputs := 2 + uint64(len(payees))
-	bytesWiredTx := WiredTxSize(numInputs, numOutputs)
+	bytesWiredTx := WiredTxSize(uint64(numInputs), numOutputs)
 	bytesInput := numInputs * bytesPerInput
-	bytesOutput := uint64(2) * bytesPerOutputP2WPKH // new nonce mark, change
+	bytesOutput := int64(2) * bytesPerOutputP2WPKH // new nonce mark, change
 
 	// calculate the size of the outputs to payees
-	bytesToPayees := uint64(0)
+	bytesToPayees := int64(0)
 	for _, to := range payees {
 		sizeOutput, err := GetOutputSizeByAddress(to)
 		if err != nil {
@@ -104,7 +95,7 @@ func EstimateOutboundSize(numInputs uint64, payees []btcutil.Address) (uint64, e
 }
 
 // GetOutputSizeByAddress returns the size of a tx output in bytes by the given address
-func GetOutputSizeByAddress(to btcutil.Address) (uint64, error) {
+func GetOutputSizeByAddress(to btcutil.Address) (int64, error) {
 	switch addr := to.(type) {
 	case *btcutil.AddressTaproot:
 		if addr == nil {
@@ -137,16 +128,16 @@ func GetOutputSizeByAddress(to btcutil.Address) (uint64, error) {
 }
 
 // OutboundSizeDepositor returns outbound size (68vB) incurred by the depositor
-func OutboundSizeDepositor() uint64 {
+func OutboundSizeDepositor() int64 {
 	return bytesPerInput + bytesPerWitness/blockchain.WitnessScaleFactor
 }
 
 // OutboundSizeWithdrawer returns outbound size (177vB) incurred by the withdrawer (1 input, 3 outputs)
-func OutboundSizeWithdrawer() uint64 {
+func OutboundSizeWithdrawer() int64 {
 	bytesWiredTx := WiredTxSize(1, 3)
-	bytesInput := uint64(1) * bytesPerInput         // nonce mark
-	bytesOutput := uint64(2) * bytesPerOutputP2WPKH // 2 P2WPKH outputs: new nonce mark, change
-	bytesOutput += bytesPerOutputAvg                // 1 output to withdrawer's address
+	bytesInput := int64(1) * bytesPerInput         // nonce mark
+	bytesOutput := int64(2) * bytesPerOutputP2WPKH // 2 P2WPKH outputs: new nonce mark, change
+	bytesOutput += bytesPerOutputAvg               // 1 output to withdrawer's address
 
 	return bytesWiredTx + bytesInput + bytesOutput + bytes1stWitness/blockchain.WitnessScaleFactor
 }
@@ -246,7 +237,7 @@ func CalcDepositorFee(
 
 // GetRecentFeeRate gets the highest fee rate from recent blocks
 // Note: this method should be used for testnet ONLY
-func GetRecentFeeRate(rpcClient interfaces.BTCRPCClient, netParams *chaincfg.Params) (uint64, error) {
+func GetRecentFeeRate(rpcClient interfaces.BTCRPCClient, netParams *chaincfg.Params) (int64, error) {
 	// should avoid using this method for mainnet
 	if netParams.Name == chaincfg.MainNetParams.Name {
 		return 0, errors.New("GetRecentFeeRate should not be used for mainnet")
@@ -286,6 +277,5 @@ func GetRecentFeeRate(rpcClient interfaces.BTCRPCClient, netParams *chaincfg.Par
 		highestRate = defaultTestnetFeeRate
 	}
 
-	// #nosec G115 always in range
-	return uint64(highestRate), nil
+	return highestRate, nil
 }

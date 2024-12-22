@@ -163,6 +163,7 @@ type BTCRPCClient interface {
 	GetTransaction(txHash *chainhash.Hash) (*btcjson.GetTransactionResult, error)
 	GetRawTransaction(txHash *chainhash.Hash) (*btcutil.Tx, error)
 	GetRawTransactionVerbose(txHash *chainhash.Hash) (*btcjson.TxRawResult, error)
+	GetMempoolEntry(txHash string) (*btcjson.GetMempoolEntryResult, error)
 	GetBlockCount() (int64, error)
 	GetBlockHash(blockHeight int64) (*chainhash.Hash, error)
 	GetBlockVerbose(blockHash *chainhash.Hash) (*btcjson.GetBlockVerboseResult, error)
