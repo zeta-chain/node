@@ -1,6 +1,6 @@
 # ZetaChain
 
-ZetaChain is an EVM-compatible L1 blockchain that enables omnichain, generic
+[ZetaChain](https://www.zetachain.com/) is an EVM-compatible L1 blockchain that enables omnichain, generic
 smart contracts and messaging between any blockchain.
 
 ## Prerequisites
