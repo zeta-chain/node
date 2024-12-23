@@ -108,6 +108,18 @@ message Status {
   bool isAbortRefunded = 4;
   // when the CCTX was created. only populated on new transactions.
   int64 created_timestamp = 5;
+  // error_message_revert carries information about the revert outbound tx ,
+  // which is created if the first outbound tx fails
+  string error_message_revert = 7;
+}
+
+// StatusMessages is a message that carries status and error messages for a
+// cctx Currently this is only used internally to pass messages when updating
+// the status
+message StatusMessages {
+  string status_message = 1;
+  string error_message_outbound = 2;
+  string error_message_revert = 3;
 }
 
 // ProtocolContractVersion represents the version of the protocol contract used

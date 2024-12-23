@@ -9,19 +9,23 @@ func (m *Status) AbortRefunded() {
 	m.StatusMessage = "CCTX aborted and Refunded"
 }
 
-// UpdateStatusAndErrorMessages transitions the Status and Error messages.
-func (m *Status) UpdateStatusAndErrorMessages(newStatus CctxStatus, statusMsg, errorMsg string) {
-	m.UpdateStatus(newStatus, statusMsg)
+//// UpdateStatusAndErrorMessages transitions the Status and Error messages.
+//func (m *Status) UpdateStatusAndErrorMessages(newStatus CctxStatus, statusMsg, errorMsg string) {
+//	m.UpdateStatus(newStatus)
+//
+//	if errorMsg != "" {
+//		m.UpdateErrorMessage(errorMsg)
+//	}
+//}
 
-	if errorMsg != "" {
-		m.UpdateErrorMessage(errorMsg)
-	}
+func (m *Status) UpdateStatusAndErrorMessages(newStatus CctxStatus, messages StatusMessages) {
+	m.UpdateStatus(newStatus)
+	m.UpdateErrorMessages(messages)
 }
 
-// UpdateStatus updates the cctx status and cctx.status.status_message.
-func (m *Status) UpdateStatus(newStatus CctxStatus, statusMsg string) {
+// UpdateStatus updates the cctx status
+func (m *Status) UpdateStatus(newStatus CctxStatus) {
 	if m.ValidateTransition(newStatus) {
-		m.StatusMessage = fmt.Sprintf("Status changed from %s to %s", m.Status.String(), newStatus.String())
 		m.Status = newStatus
 	} else {
 		m.StatusMessage = fmt.Sprintf(
@@ -29,14 +33,35 @@ func (m *Status) UpdateStatus(newStatus CctxStatus, statusMsg string) {
 			m.Status.String(),
 			newStatus.String(),
 		)
-
 		m.Status = CctxStatus_Aborted
 	}
-
-	if statusMsg != "" {
-		m.StatusMessage += fmt.Sprintf(": %s", statusMsg)
-	}
 }
+
+func (m *Status) UpdateErrorMessages(messages StatusMessages) {
+	m.StatusMessage = messages.StatusMessage
+	m.ErrorMessage = messages.ErrorMessageOutbound
+	m.ErrorMessageRevert = messages.ErrorMessageRevert
+}
+
+//// UpdateStatus updates the cctx status and cctx.status.status_message.
+//func (m *Status) UpdateStatus(newStatus CctxStatus, statusMsg string) {
+//	if m.ValidateTransition(newStatus) {
+//		m.StatusMessage = fmt.Sprintf("Status changed from %s to %s", m.Status.String(), newStatus.String())
+//		m.Status = newStatus
+//	} else {
+//		m.StatusMessage = fmt.Sprintf(
+//			"Failed to transition status from %s to %s",
+//			m.Status.String(),
+//			newStatus.String(),
+//		)
+//
+//		m.Status = CctxStatus_Aborted
+//	}
+//
+//	if statusMsg != "" {
+//		m.StatusMessage += fmt.Sprintf(": %s", statusMsg)
+//	}
+//}
 
 // UpdateErrorMessage updates cctx.status.error_message.
 func (m *Status) UpdateErrorMessage(errorMsg string) {

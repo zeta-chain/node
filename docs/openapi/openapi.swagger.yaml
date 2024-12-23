@@ -58504,6 +58504,11 @@ definitions:
         type: string
         format: int64
         description: when the CCTX was created. only populated on new transactions.
+      error_message_revert:
+        type: string
+        title: |-
+          error_message_revert carries information about the revert outbound tx ,
+          which is created if the first outbound tx fails
   zetacoreemissionsParams:
     type: object
     properties:

@@ -41,7 +41,10 @@ func (k msgServer) AbortStuckCCTX(
 	}
 
 	// update the status
-	cctx.CctxStatus.UpdateStatusAndErrorMessages(types.CctxStatus_Aborted, AbortMessage, "")
+	cctx.CctxStatus.UpdateStatusAndErrorMessages(
+		types.CctxStatus_Aborted,
+		types.StatusMessages{StatusMessage: AbortMessage},
+	)
 
 	// Save out outbound,
 	// We do not need to provide the tss-pubkey as NonceToCctx is not updated / New outbound is not added

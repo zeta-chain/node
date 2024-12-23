@@ -75,7 +75,10 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 	}()
 	if err != nil {
 		// do not commit anything here as the CCTX should be aborted
-		config.CCTX.SetAbort("internal error", err.Error())
+		config.CCTX.SetAbort(types.StatusMessages{
+			StatusMessage:        "Outbound preprocessing failed for cctx when initiating outbound",
+			ErrorMessageOutbound: err.Error(),
+		})
 		return types.CctxStatus_Aborted, err
 	}
 	commit()

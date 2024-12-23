@@ -183,28 +183,28 @@ func (m *CrossChainTx) AddOutbound(
 }
 
 // SetAbort sets the CCTX status to Aborted with the given error message.
-func (m CrossChainTx) SetAbort(statusMsg, errorMsg string) {
-	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_Aborted, statusMsg, errorMsg)
+func (m CrossChainTx) SetAbort(messages StatusMessages) {
+	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_Aborted, messages)
 }
 
 // SetPendingRevert sets the CCTX status to PendingRevert with the given error message.
-func (m CrossChainTx) SetPendingRevert(statusMsg, errorMsg string) {
-	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_PendingRevert, statusMsg, errorMsg)
+func (m CrossChainTx) SetPendingRevert(messages StatusMessages) {
+	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_PendingRevert, messages)
 }
 
 // SetPendingOutbound sets the CCTX status to PendingOutbound with the given error message.
-func (m CrossChainTx) SetPendingOutbound(statusMsg string) {
-	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_PendingOutbound, statusMsg, "")
+func (m CrossChainTx) SetPendingOutbound(messages StatusMessages) {
+	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_PendingOutbound, messages)
 }
 
 // SetOutboundMined sets the CCTX status to OutboundMined with the given error message.
-func (m CrossChainTx) SetOutboundMined(statusMsg string) {
-	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_OutboundMined, statusMsg, "")
+func (m CrossChainTx) SetOutboundMined(messages StatusMessages) {
+	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_OutboundMined, messages)
 }
 
 // SetReverted sets the CCTX status to Reverted with the given error message.
-func (m CrossChainTx) SetReverted(statusMsg, errorMsg string) {
-	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_Reverted, statusMsg, errorMsg)
+func (m CrossChainTx) SetReverted(messages StatusMessages) {
+	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_Reverted, messages)
 }
 
 func (m CrossChainTx) GetCCTXIndexBytes() ([32]byte, error) {
