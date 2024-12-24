@@ -64,7 +64,9 @@ func (cr *ChainRegistry) Get(chainID int64) (Chain, error) {
 
 // All returns all chains in the registry sorted by chain ID.
 func (cr *ChainRegistry) All() []Chain {
+	cr.mu.Lock()
 	items := maps.Values(cr.chains)
+	cr.mu.Unlock()
 
 	slices.SortFunc(items, func(a, b Chain) int {
 		return cmp.Compare(a.ID(), b.ID())

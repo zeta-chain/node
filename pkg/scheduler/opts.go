@@ -36,7 +36,10 @@ func Skipper(skipper func() bool) Opt {
 
 // IntervalUpdater sets interval updater function.
 func IntervalUpdater(intervalUpdater func() time.Duration) Opt {
-	return func(_ *Task, opts *taskOpts) { opts.intervalUpdater = intervalUpdater }
+	return func(_ *Task, opts *taskOpts) {
+		opts.interval = intervalUpdater()
+		opts.intervalUpdater = intervalUpdater
+	}
 }
 
 // BlockTicker makes Task to listen for new zeta blocks
