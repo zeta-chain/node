@@ -134,7 +134,6 @@ func (oc *Orchestrator) Start(ctx context.Context) error {
 
 	bg.Work(ctx, oc.runScheduler, bg.WithName("runScheduler"), bg.WithLogger(oc.logger.Logger))
 	bg.Work(ctx, oc.runObserverSignerSync, bg.WithName("runObserverSignerSync"), bg.WithLogger(oc.logger.Logger))
-	bg.Work(ctx, oc.runAppContextUpdater, bg.WithName("runAppContextUpdater"), bg.WithLogger(oc.logger.Logger))
 
 	return nil
 }
