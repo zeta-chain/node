@@ -14,6 +14,7 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/graceful"
 	zetaos "github.com/zeta-chain/node/pkg/os"
+	"github.com/zeta-chain/node/pkg/scheduler"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
@@ -154,6 +155,11 @@ func Start(_ *cobra.Command, _ []string) error {
 
 	// Start orchestrator with all observers and signers
 	graceful.AddService(ctx, maestro)
+
+	maestroV2 := orchestrator.NewV2(zetacoreClient, scheduler.New(logger.Std), logger.Std)
+
+	// Start orchestrator V2 with all observers and signers
+	graceful.AddService(ctx, maestroV2)
 
 	// Block current routine until a shutdown signal is received
 	graceful.WaitForShutdown()
