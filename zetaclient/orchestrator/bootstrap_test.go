@@ -6,6 +6,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/ptr"
@@ -200,6 +201,8 @@ func TestCreateChainObserverMap(t *testing.T) {
 		client     = mocks.NewZetacoreClient(t)
 		dbPath     = db.SqliteInMemory
 	)
+
+	mockZetacore(client)
 
 	t.Run("CreateChainObserverMap", func(t *testing.T) {
 		// ARRANGE
@@ -511,4 +514,14 @@ func hasObserver(t *testing.T, observer map[int64]interfaces.ChainObserver, chai
 func missesObserver(t *testing.T, observer map[int64]interfaces.ChainObserver, chainId int64) {
 	_, ok := observer[chainId]
 	assert.False(t, ok, "unexpected observer for chain %d", chainId)
+}
+
+// observer&signers have background tasks that rely on mocked calls.
+// Ignorance results in FLAKY tests which fail silently with exit code 1.
+func mockZetacore(client *mocks.ZetacoreClient) {
+	// ctx context.Context, chain chains.Chain, gasPrice uint64, priorityFee uint64, blockNum uint64
+	client.
+		On("PostVoteGasPrice", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Return("", nil).
+		Maybe()
 }

@@ -1,9 +1,7 @@
 package orchestrator
 
 import (
-	"bytes"
 	"context"
-	"io"
 	"sync"
 	"testing"
 	"time"
@@ -19,13 +17,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
 )
-
-// [x] todo: fix UNEXPECTED test failure (exit code 1)
-// [ ] log helper for debugging (zerolog)
-// [ ] todo: add v2 to start.go
-// [ ] todo: run e2e tests.
-// [ ] todo: add btc observer&signer
 
 func TestOrchestratorV2(t *testing.T) {
 	t.Run("updates app context", func(t *testing.T) {
@@ -53,13 +46,14 @@ func TestOrchestratorV2(t *testing.T) {
 
 		assert.Eventually(t, check, 5*time.Second, 100*time.Millisecond)
 
-		assert.Contains(t, ts.logBuffer.String(), "Chain list changed at the runtime!")
-		assert.Contains(t, ts.logBuffer.String(), `"chains.new":[1]`)
+		assert.Contains(t, ts.Log.String(), "Chain list changed at the runtime!")
+		assert.Contains(t, ts.Log.String(), `"chains.new":[1]`)
 	})
 }
 
 type testSuite struct {
 	*V2
+	*testlog.Log
 
 	t *testing.T
 
@@ -71,9 +65,6 @@ type testSuite struct {
 
 	zetacore  *mocks.ZetacoreClient
 	scheduler *scheduler.Scheduler
-
-	logBuffer *bytes.Buffer
-	logger    zerolog.Logger
 
 	mu sync.Mutex
 }
@@ -92,18 +83,18 @@ var defaultChainsWithParams = []any{
 
 func newTestSuite(t *testing.T) *testSuite {
 	var (
-		logBuffer = &bytes.Buffer{}
-		logger    = zerolog.New(io.MultiWriter(zerolog.NewTestWriter(t), logBuffer))
+		logger = testlog.New(t)
 
 		chainList, chainParams = parseChainsWithParams(t, defaultChainsWithParams...)
-		ctx, appCtx            = newAppContext(t, logger, chainList, chainParams)
+		ctx, appCtx            = newAppContext(t, logger.Logger, chainList, chainParams)
 
-		schedulerService = scheduler.New(logger)
+		schedulerService = scheduler.New(logger.Logger)
 		zetacore         = mocks.NewZetacoreClient(t)
 	)
 
 	ts := &testSuite{
-		V2: NewV2(zetacore, schedulerService, logger),
+		V2:  NewV2(zetacore, schedulerService, logger.Logger),
+		Log: logger,
 
 		t: t,
 
@@ -115,9 +106,6 @@ func newTestSuite(t *testing.T) *testSuite {
 
 		scheduler: schedulerService,
 		zetacore:  zetacore,
-
-		logBuffer: logBuffer,
-		logger:    logger,
 	}
 
 	// Mock basic zetacore methods

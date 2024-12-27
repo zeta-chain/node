@@ -98,7 +98,7 @@ func Run(ctx context.Context, interval time.Duration, task Task, opts ...Opt) er
 	return New(interval, task, opts...).Start(ctx)
 }
 
-// Run runs the ticker by blocking current goroutine. It also invokes BEFORE ticker starts.
+// Start runs the ticker by blocking current goroutine. It also invokes BEFORE ticker starts.
 // Stops when (if any):
 // - context is done (returns ctx.Err())
 // - task returns an error or panics
@@ -139,7 +139,7 @@ func (t *Ticker) Start(ctx context.Context) (err error) {
 		case <-ctx.Done():
 			// if task is finished (i.e. last tick completed BEFORE ticker.Stop(),
 			// then we need to return nil)
-			if t.stopped {
+			if t.isStopped() {
 				return nil
 			}
 			return ctx.Err()
@@ -217,6 +217,13 @@ func (t *Ticker) setStopState() {
 	t.ticker.Stop()
 
 	t.logger.Info().Msgf("Ticker stopped")
+}
+
+func (t *Ticker) isStopped() bool {
+	t.stateMu.Lock()
+	defer t.stateMu.Unlock()
+
+	return t.stopped
 }
 
 // DurationFromUint64Seconds converts uint64 of seconds to time.Duration.
