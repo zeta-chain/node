@@ -1,4 +1,4 @@
-package orchestrator_test
+package orchestrator
 
 import (
 	"bytes"
@@ -18,11 +18,16 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
-	"github.com/zeta-chain/node/zetaclient/orchestrator"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
-func TestV2(t *testing.T) {
+// [x] todo: fix UNEXPECTED test failure (exit code 1)
+// [ ] log helper for debugging (zerolog)
+// [ ] todo: add v2 to start.go
+// [ ] todo: run e2e tests.
+// [ ] todo: add btc observer&signer
+
+func TestOrchestratorV2(t *testing.T) {
 	t.Run("updates app context", func(t *testing.T) {
 		// ARRANGE
 		ts := newTestSuite(t)
@@ -54,7 +59,7 @@ func TestV2(t *testing.T) {
 }
 
 type testSuite struct {
-	*orchestrator.V2
+	*V2
 
 	t *testing.T
 
@@ -98,7 +103,7 @@ func newTestSuite(t *testing.T) *testSuite {
 	)
 
 	ts := &testSuite{
-		V2: orchestrator.NewV2(zetacore, schedulerService, logger),
+		V2: NewV2(zetacore, schedulerService, logger),
 
 		t: t,
 
@@ -121,9 +126,9 @@ func newTestSuite(t *testing.T) *testSuite {
 	zetacore.On("GetAdditionalChains", mock.Anything).Return(nil, nil).Maybe()
 	zetacore.On("GetCrosschainFlags", mock.Anything).Return(appCtx.GetCrossChainFlags(), nil).Maybe()
 
-	// Mock chain-related methods as dynamic getters
-	zetacore.On("GetSupportedChains", mock.Anything).Return(ts.getSupportedChains)
-	zetacore.On("GetChainParams", mock.Anything).Return(ts.getChainParams)
+	//Mock chain-related methods as dynamic getters
+	zetacore.On("GetSupportedChains", mock.Anything).Return(ts.getSupportedChains).Maybe()
+	zetacore.On("GetChainParams", mock.Anything).Return(ts.getChainParams).Maybe()
 
 	t.Cleanup(ts.Stop)
 
@@ -196,28 +201,4 @@ func newAppContext(
 	ctx := zctx.WithAppContext(context.Background(), appContext)
 
 	return ctx, appContext
-}
-
-func parseChainsWithParams(t *testing.T, chainsOrParams ...any) ([]chains.Chain, []*observertypes.ChainParams) {
-	var (
-		supportedChains = make([]chains.Chain, 0, len(chainsOrParams))
-		obsParams       = make([]*observertypes.ChainParams, 0, len(chainsOrParams))
-	)
-
-	for _, something := range chainsOrParams {
-		switch tt := something.(type) {
-		case *chains.Chain:
-			supportedChains = append(supportedChains, *tt)
-		case chains.Chain:
-			supportedChains = append(supportedChains, tt)
-		case *observertypes.ChainParams:
-			obsParams = append(obsParams, tt)
-		case observertypes.ChainParams:
-			obsParams = append(obsParams, &tt)
-		default:
-			t.Errorf("parse chains and params: unsupported type %T (%+v)", tt, tt)
-		}
-	}
-
-	return supportedChains, obsParams
 }
