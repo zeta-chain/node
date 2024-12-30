@@ -14,8 +14,11 @@ import (
 	"github.com/zeta-chain/node/pkg/scheduler"
 	"github.com/zeta-chain/node/testutil/sample"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
 )
@@ -65,6 +68,7 @@ type testSuite struct {
 
 	zetacore  *mocks.ZetacoreClient
 	scheduler *scheduler.Scheduler
+	tss       *mocks.TSS
 
 	mu sync.Mutex
 }
@@ -83,17 +87,32 @@ var defaultChainsWithParams = []any{
 
 func newTestSuite(t *testing.T) *testSuite {
 	var (
-		logger = testlog.New(t)
+		logger     = testlog.New(t)
+		baseLogger = base.Logger{
+			Std:        logger.Logger,
+			Compliance: logger.Logger,
+		}
 
 		chainList, chainParams = parseChainsWithParams(t, defaultChainsWithParams...)
 		ctx, appCtx            = newAppContext(t, logger.Logger, chainList, chainParams)
 
 		schedulerService = scheduler.New(logger.Logger)
 		zetacore         = mocks.NewZetacoreClient(t)
+		tss              = mocks.NewTSS(t)
 	)
 
+	deps := &Dependencies{
+		Zetacore:  zetacore,
+		TSS:       tss,
+		DBPath:    db.SqliteInMemory,
+		Telemetry: metrics.NewTelemetryServer(),
+	}
+
+	v2, err := NewV2(schedulerService, deps, baseLogger)
+	require.NoError(t, err)
+
 	ts := &testSuite{
-		V2:  NewV2(zetacore, schedulerService, logger.Logger),
+		V2:  v2,
 		Log: logger,
 
 		t: t,
@@ -106,6 +125,7 @@ func newTestSuite(t *testing.T) *testSuite {
 
 		scheduler: schedulerService,
 		zetacore:  zetacore,
+		tss:       tss,
 	}
 
 	// Mock basic zetacore methods
@@ -114,7 +134,7 @@ func newTestSuite(t *testing.T) *testSuite {
 	zetacore.On("GetAdditionalChains", mock.Anything).Return(nil, nil).Maybe()
 	zetacore.On("GetCrosschainFlags", mock.Anything).Return(appCtx.GetCrossChainFlags(), nil).Maybe()
 
-	//Mock chain-related methods as dynamic getters
+	// Mock chain-related methods as dynamic getters
 	zetacore.On("GetSupportedChains", mock.Anything).Return(ts.getSupportedChains).Maybe()
 	zetacore.On("GetChainParams", mock.Anything).Return(ts.getChainParams).Maybe()
 

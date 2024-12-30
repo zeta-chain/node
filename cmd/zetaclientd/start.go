@@ -153,12 +153,23 @@ func Start(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "unable to create orchestrator")
 	}
 
+	taskScheduler := scheduler.New(logger.Std)
+	maestroV2Deps := &orchestrator.Dependencies{
+		Zetacore:  zetacoreClient,
+		TSS:       tss,
+		DBPath:    dbPath,
+		Telemetry: telemetry,
+	}
+
+	maestroV2, err := orchestrator.NewV2(taskScheduler, maestroV2Deps, logger)
+	if err != nil {
+		return errors.Wrap(err, "unable to create orchestrator V2")
+	}
+
 	// Start orchestrator with all observers and signers
 	graceful.AddService(ctx, maestro)
 
-	maestroV2 := orchestrator.NewV2(zetacoreClient, scheduler.New(logger.Std), logger.Std)
-
-	// Start orchestrator V2 with all observers and signers
+	// Start orchestrator V2
 	graceful.AddService(ctx, maestroV2)
 
 	// Block current routine until a shutdown signal is received

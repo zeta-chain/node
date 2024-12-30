@@ -11,6 +11,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	observer "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // ChainRegistry is a registry of supported chains
@@ -143,6 +144,13 @@ func (c Chain) ID() int64 {
 
 func (c Chain) Name() string {
 	return c.chainInfo.Name
+}
+
+func (c Chain) LogFields() map[string]any {
+	return map[string]any{
+		logs.FieldChain:        c.ID(),
+		logs.FieldChainNetwork: c.chainInfo.Network.String(),
+	}
 }
 
 func (c Chain) Params() *observer.ChainParams {
