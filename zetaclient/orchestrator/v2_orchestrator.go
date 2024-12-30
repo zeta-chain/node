@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/scheduler"
 	"github.com/zeta-chain/node/pkg/ticker"
@@ -38,8 +39,8 @@ type loggers struct {
 const schedulerGroup = scheduler.Group("orchestrator")
 
 type ObserverSigner interface {
+	Chain() chains.Chain
 	Start(ctx context.Context) error
-	Chain() zctx.Chain
 	Stop()
 }
 
@@ -223,7 +224,7 @@ func (oc *V2) addChain(observerSigner ObserverSigner) {
 	chain := observerSigner.Chain()
 
 	oc.mu.Lock()
-	oc.chains[chain.ID()] = observerSigner
+	oc.chains[chain.ChainId] = observerSigner
 	oc.mu.Unlock()
 
 	oc.logger.Info().Fields(chain.LogFields()).Msg("Added observer-signer")

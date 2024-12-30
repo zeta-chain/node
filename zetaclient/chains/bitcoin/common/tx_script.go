@@ -1,4 +1,4 @@
-package bitcoin
+package common
 
 // #nosec G507 ripemd160 required for bitcoin address encoding
 import (

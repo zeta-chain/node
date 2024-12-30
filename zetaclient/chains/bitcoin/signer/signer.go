@@ -25,7 +25,7 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
@@ -133,14 +133,14 @@ func (signer *Signer) AddWithdrawTxOutputs(
 	cancelTx bool,
 ) error {
 	// convert withdraw amount to satoshis
-	amountSatoshis, err := bitcoin.GetSatoshis(amount)
+	amountSatoshis, err := common.GetSatoshis(amount)
 	if err != nil {
 		return err
 	}
 
 	// calculate remaining btc (the change) to TSS self
 	remaining := total - amount
-	remainingSats, err := bitcoin.GetSatoshis(remaining)
+	remainingSats, err := common.GetSatoshis(remaining)
 	if err != nil {
 		return err
 	}
@@ -200,7 +200,7 @@ func (signer *Signer) SignWithdrawTx(
 	chain chains.Chain,
 	cancelTx bool,
 ) (*wire.MsgTx, error) {
-	estimateFee := float64(gasPrice.Uint64()*bitcoin.OutboundBytesMax) / 1e8
+	estimateFee := float64(gasPrice.Uint64()*common.OutboundBytesMax) / 1e8
 	nonceMark := chains.NonceMarkAmount(nonce)
 
 	// refresh unspent UTXOs and continue with keysign regardless of error
@@ -239,23 +239,23 @@ func (signer *Signer) SignWithdrawTx(
 
 	// size checking
 	// #nosec G115 always positive
-	txSize, err := bitcoin.EstimateOutboundSize(uint64(len(prevOuts)), []btcutil.Address{to})
+	txSize, err := common.EstimateOutboundSize(uint64(len(prevOuts)), []btcutil.Address{to})
 	if err != nil {
 		return nil, err
 	}
-	if sizeLimit < bitcoin.BtcOutboundBytesWithdrawer { // ZRC20 'withdraw' charged less fee from end user
+	if sizeLimit < common.BtcOutboundBytesWithdrawer { // ZRC20 'withdraw' charged less fee from end user
 		signer.Logger().Std.Info().
 			Msgf("sizeLimit %d is less than BtcOutboundBytesWithdrawer %d for nonce %d", sizeLimit, txSize, nonce)
 	}
-	if txSize < bitcoin.OutboundBytesMin { // outbound shouldn't be blocked a low sizeLimit
+	if txSize < common.OutboundBytesMin { // outbound shouldn't be blocked a low sizeLimit
 		signer.Logger().Std.Warn().
-			Msgf("txSize %d is less than outboundBytesMin %d; use outboundBytesMin", txSize, bitcoin.OutboundBytesMin)
-		txSize = bitcoin.OutboundBytesMin
+			Msgf("txSize %d is less than outboundBytesMin %d; use outboundBytesMin", txSize, common.OutboundBytesMin)
+		txSize = common.OutboundBytesMin
 	}
-	if txSize > bitcoin.OutboundBytesMax { // in case of accident
+	if txSize > common.OutboundBytesMax { // in case of accident
 		signer.Logger().Std.Warn().
-			Msgf("txSize %d is greater than outboundBytesMax %d; use outboundBytesMax", txSize, bitcoin.OutboundBytesMax)
-		txSize = bitcoin.OutboundBytesMax
+			Msgf("txSize %d is greater than outboundBytesMax %d; use outboundBytesMax", txSize, common.OutboundBytesMax)
+		txSize = common.OutboundBytesMax
 	}
 
 	// fee calculation
@@ -276,7 +276,7 @@ func (signer *Signer) SignWithdrawTx(
 	sigHashes := txscript.NewTxSigHashes(tx, txscript.NewCannedPrevOutputFetcher([]byte{}, 0))
 	witnessHashes := make([][]byte, len(tx.TxIn))
 	for ix := range tx.TxIn {
-		amt, err := bitcoin.GetSatoshis(prevOuts[ix].Amount)
+		amt, err := common.GetSatoshis(prevOuts[ix].Amount)
 		if err != nil {
 			return nil, err
 		}
@@ -411,7 +411,7 @@ func (signer *Signer) TryProcessOutbound(
 		logger.Error().Err(err).Msgf("cannot get bitcoin network info")
 		return
 	}
-	satPerByte := bitcoin.FeeRateToSatPerByte(networkInfo.RelayFee)
+	satPerByte := common.FeeRateToSatPerByte(networkInfo.RelayFee)
 	gasprice.Add(gasprice, satPerByte)
 
 	// compliance check

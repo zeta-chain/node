@@ -132,6 +132,11 @@ func (s *Scheduler) StopGroup(group Group) {
 		return
 	}
 
+	s.logger.Info().
+		Int("tasks", len(selectedTasks)).
+		Str("group", string(group)).
+		Msg("Stopping scheduler group")
+
 	// Stop all selected tasks concurrently
 	var wg sync.WaitGroup
 	wg.Add(len(selectedTasks))

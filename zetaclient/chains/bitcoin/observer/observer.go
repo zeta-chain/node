@@ -20,7 +20,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/metrics"
@@ -137,21 +137,16 @@ func NewObserver(
 	}
 
 	// load last scanned block
-	if err := ob.LoadLastBlockScanned(); err != nil {
+	if err = ob.LoadLastBlockScanned(); err != nil {
 		return nil, errors.Wrap(err, "unable to load last scanned block")
 	}
 
 	// load broadcasted transactions
-	if err := ob.LoadBroadcastedTxMap(); err != nil {
+	if err = ob.LoadBroadcastedTxMap(); err != nil {
 		return nil, errors.Wrap(err, "unable to load broadcasted tx map")
 	}
 
 	return ob, nil
-}
-
-// BtcClient returns the btc client
-func (ob *Observer) BtcClient() interfaces.BTCRPCClient {
-	return ob.btcClient
 }
 
 // Start starts the Go routine processes to observe the Bitcoin chain
@@ -268,7 +263,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 		if *feeResult.FeeRate > math.MaxInt64 {
 			return fmt.Errorf("gas price is too large: %f", *feeResult.FeeRate)
 		}
-		feeRateEstimated = bitcoin.FeeRateToSatPerByte(*feeResult.FeeRate).Uint64()
+		feeRateEstimated = common.FeeRateToSatPerByte(*feeResult.FeeRate).Uint64()
 	}
 
 	// query the current block number
@@ -369,7 +364,7 @@ func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 	utxosFiltered := make([]btcjson.ListUnspentResult, 0)
 	for _, utxo := range utxos {
 		// UTXOs big enough to cover the cost of spending themselves
-		if utxo.Amount < bitcoin.DefaultDepositorFee {
+		if utxo.Amount < common.DefaultDepositorFee {
 			continue
 		}
 		// we don't want to spend other people's unconfirmed UTXOs as they may not be safe to spend
@@ -486,7 +481,7 @@ func (ob *Observer) specialHandleFeeRate() (uint64, error) {
 		// hardcode gas price for regnet
 		return 1, nil
 	case chains.NetworkType_testnet:
-		feeRateEstimated, err := bitcoin.GetRecentFeeRate(ob.btcClient, ob.netParams)
+		feeRateEstimated, err := common.GetRecentFeeRate(ob.btcClient, ob.netParams)
 		if err != nil {
 			return 0, errors.Wrapf(err, "error GetRecentFeeRate")
 		}

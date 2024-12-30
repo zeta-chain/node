@@ -14,7 +14,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -55,7 +55,7 @@ func (ob *Observer) WatchInbound(ctx context.Context) error {
 				// skip showing log for block number 0 as it means Bitcoin node is not enabled
 				// TODO: prevent this routine from running if Bitcoin node is not enabled
 				// https://github.com/zeta-chain/node/issues/2790
-				if !errors.Is(err, bitcoin.ErrBitcoinNotEnabled) {
+				if !errors.Is(err, common.ErrBitcoinNotEnabled) {
 					ob.logger.Inbound.Error().Err(err).Msg("WatchInbound error observing in tx")
 				} else {
 					ob.logger.Inbound.Debug().Err(err).Msg("WatchInbound: Bitcoin node is not enabled")
@@ -83,7 +83,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 	// 0 will be returned if the node is not synced
 	if currentBlock == 0 {
-		return errors.Wrap(bitcoin.ErrBitcoinNotEnabled, "observeInboundBTC: current block number 0 is too low")
+		return errors.Wrap(common.ErrBitcoinNotEnabled, "observeInboundBTC: current block number 0 is too low")
 	}
 
 	// #nosec G115 checked positive
@@ -263,7 +263,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		uint64(blockVb.Height),
 		ob.logger.Inbound,
 		ob.netParams,
-		bitcoin.CalcDepositorFee,
+		common.CalcDepositorFee,
 	)
 	if err != nil {
 		return "", err
@@ -303,7 +303,7 @@ func FilterAndParseIncomingTx(
 			continue // the first tx is coinbase; we do not process coinbase tx
 		}
 
-		event, err := GetBtcEvent(rpcClient, tx, tssAddress, blockNumber, logger, netParams, bitcoin.CalcDepositorFee)
+		event, err := GetBtcEvent(rpcClient, tx, tssAddress, blockNumber, logger, netParams, common.CalcDepositorFee)
 		if err != nil {
 			// unable to parse the tx, the caller should retry
 			return nil, errors.Wrapf(err, "error getting btc event for tx %s in block %d", tx.Txid, blockNumber)
@@ -343,7 +343,7 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 	}
 
 	// convert the amount to integer (satoshis)
-	amountSats, err := bitcoin.GetSatoshis(event.Value)
+	amountSats, err := common.GetSatoshis(event.Value)
 	if err != nil {
 		ob.Logger().Inbound.Error().Err(err).Fields(lf).Msgf("can't convert value %f to satoshis", event.Value)
 		return nil
@@ -368,7 +368,7 @@ func GetBtcEvent(
 	blockNumber uint64,
 	logger zerolog.Logger,
 	netParams *chaincfg.Params,
-	feeCalculator bitcoin.DepositorFeeCalculator,
+	feeCalculator common.DepositorFeeCalculator,
 ) (*BTCInboundEvent, error) {
 	if netParams.Name == chaincfg.MainNetParams.Name {
 		return GetBtcEventWithoutWitness(rpcClient, tx, tssAddress, blockNumber, logger, netParams, feeCalculator)
@@ -386,7 +386,7 @@ func GetBtcEventWithoutWitness(
 	blockNumber uint64,
 	logger zerolog.Logger,
 	netParams *chaincfg.Params,
-	feeCalculator bitcoin.DepositorFeeCalculator,
+	feeCalculator common.DepositorFeeCalculator,
 ) (*BTCInboundEvent, error) {
 	var (
 		found        bool
@@ -401,7 +401,7 @@ func GetBtcEventWithoutWitness(
 		script := vout0.ScriptPubKey.Hex
 		if len(script) == 44 && script[:4] == "0014" {
 			// P2WPKH output: 0x00 + 20 bytes of pubkey hash
-			receiver, err := bitcoin.DecodeScriptP2WPKH(vout0.ScriptPubKey.Hex, netParams)
+			receiver, err := common.DecodeScriptP2WPKH(vout0.ScriptPubKey.Hex, netParams)
 			if err != nil { // should never happen
 				return nil, err
 			}
@@ -427,7 +427,7 @@ func GetBtcEventWithoutWitness(
 
 			// 2nd vout must be a valid OP_RETURN memo
 			vout1 := tx.Vout[1]
-			memo, found, err = bitcoin.DecodeOpReturnMemo(vout1.ScriptPubKey.Hex)
+			memo, found, err = common.DecodeOpReturnMemo(vout1.ScriptPubKey.Hex)
 			if err != nil {
 				logger.Error().Err(err).Msgf("GetBtcEvent: error decoding OP_RETURN memo: %s", vout1.ScriptPubKey.Hex)
 				return nil, nil
@@ -487,5 +487,5 @@ func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, n
 	// decode sender address from previous pkScript
 	pkScript := tx.MsgTx().TxOut[vin.Vout].PkScript
 
-	return bitcoin.DecodeSenderFromScript(pkScript, net)
+	return common.DecodeSenderFromScript(pkScript, net)
 }

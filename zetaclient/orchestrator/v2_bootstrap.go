@@ -5,6 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	btcsigner "github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
@@ -12,7 +13,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/db"
 )
 
-func (oc *V2) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) (ObserverSigner, error) {
+func (oc *V2) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) (*bitcoin.Bitcoin, error) {
 	var (
 		rawChain       = chain.RawChain()
 		rawChainParams = chain.Params()
@@ -47,7 +48,7 @@ func (oc *V2) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) (ObserverS
 
 	// todo extract base observer
 
-	_, err = btcobserver.NewObserver(
+	observer, err := btcobserver.NewObserver(
 		*rawChain,
 		rpcClient,
 		*rawChainParams,
@@ -63,12 +64,10 @@ func (oc *V2) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) (ObserverS
 
 	// todo extract base signer
 
-	_, err = btcsigner.NewSigner(*rawChain, oc.deps.TSS, oc.logger.base, cfg)
+	signer, err := btcsigner.NewSigner(*rawChain, oc.deps.TSS, oc.logger.base, cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create signer")
 	}
 
-	// todo observer-signer
-
-	return nil, nil
+	return bitcoin.New(oc.scheduler, observer, signer), nil
 }

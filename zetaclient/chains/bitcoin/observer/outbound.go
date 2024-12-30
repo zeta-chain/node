@@ -15,7 +15,7 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
@@ -418,7 +418,7 @@ func (ob *Observer) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
 	tssAddress := ob.TSSAddressString()
 	amount := chains.NonceMarkAmount(nonce)
 	for i, utxo := range ob.utxos {
-		sats, err := bitcoin.GetSatoshis(utxo.Amount)
+		sats, err := common.GetSatoshis(utxo.Amount)
 		if err != nil {
 			ob.logger.Outbound.Error().Err(err).Msgf("findNonceMarkUTXO: error getting satoshis for utxo %v", utxo)
 		}
@@ -608,7 +608,7 @@ func (ob *Observer) checkTSSVout(params *crosschaintypes.OutboundParams, vouts [
 			// the 2nd output is the payment to recipient
 			receiverExpected = params.Receiver
 		}
-		receiverVout, amount, err := bitcoin.DecodeTSSVout(vout, receiverExpected, ob.Chain())
+		receiverVout, amount, err := common.DecodeTSSVout(vout, receiverExpected, ob.Chain())
 		if err != nil {
 			return err
 		}
@@ -662,7 +662,7 @@ func (ob *Observer) checkTSSVoutCancelled(params *crosschaintypes.OutboundParams
 	tssAddress := ob.TSSAddressString()
 	for _, vout := range vouts {
 		// decode receiver and amount from vout
-		receiverVout, amount, err := bitcoin.DecodeTSSVout(vout, tssAddress, ob.Chain())
+		receiverVout, amount, err := common.DecodeTSSVout(vout, tssAddress, ob.Chain())
 		if err != nil {
 			return errors.Wrap(err, "checkTSSVoutCancelled: error decoding P2WPKH vout")
 		}
