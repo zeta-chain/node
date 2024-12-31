@@ -16,7 +16,7 @@ func TestBitcoinStdMemoDepositAndCallRevert(r *runner.E2ERunner, args []string) 
 
 	// Parse amount to send
 	require.Len(r, args, 1)
-	amount := parseFloat(r, args[0])
+	amount := utils.ParseFloat(r, args[0])
 
 	// Create a memo to call non-existing contract
 	memo := &memo.InboundMemo{

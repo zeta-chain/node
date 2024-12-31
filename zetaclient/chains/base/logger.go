@@ -1,6 +1,7 @@
 package base
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -11,9 +12,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 )
 
-const (
-	ComplianceLogFile = "compliance.log"
-)
+const complianceLogFile = "compliance.log"
 
 // Logger contains the base loggers
 type Logger struct {
@@ -21,7 +20,7 @@ type Logger struct {
 	Compliance zerolog.Logger
 }
 
-// DefaultLoggers creates default base loggers for tests
+// DefaultLogger creates default base loggers for tests
 func DefaultLogger() Logger {
 	return Logger{
 		Std:        log.Logger,
@@ -50,39 +49,38 @@ type ObserverLogger struct {
 	Compliance zerolog.Logger
 }
 
-// InitLogger initializes the base loggers
-func InitLogger(cfg config.Config) (Logger, error) {
+// NewLogger initializes the base loggers
+func NewLogger(cfg config.Config) (Logger, error) {
 	// open compliance log file
-	file, err := openComplianceLogFile(cfg)
+	complianceFile, err := openComplianceLogFile(cfg)
 	if err != nil {
-		return DefaultLogger(), err
+		return Logger{}, err
 	}
 
-	level := zerolog.Level(cfg.LogLevel)
+	augmentLogger := func(logger zerolog.Logger) zerolog.Logger {
+		level := zerolog.Level(cfg.LogLevel)
+
+		return logger.Level(level).With().Timestamp().Logger()
+	}
 
 	// create loggers based on configured level and format
-	var std zerolog.Logger
-	var compliance zerolog.Logger
-	switch cfg.LogFormat {
-	case "json":
-		std = zerolog.New(os.Stdout).Level(level).With().Timestamp().Logger()
-		compliance = zerolog.New(file).Level(level).With().Timestamp().Logger()
-	case "text":
-		std = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).
-			Level(zerolog.Level(cfg.LogLevel)).
-			With().
-			Timestamp().
-			Logger()
-		compliance = zerolog.New(file).Level(level).With().Timestamp().Logger()
-	default:
-		std = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339})
-		compliance = zerolog.New(file).With().Timestamp().Logger()
+	var stdWriter io.Writer = os.Stdout
+	if cfg.LogFormat != "json" {
+		stdWriter = zerolog.ConsoleWriter{
+			Out:        os.Stdout,
+			TimeFormat: time.RFC3339,
+		}
 	}
+
+	std := augmentLogger(zerolog.New(stdWriter))
+	compliance := augmentLogger(zerolog.New(complianceFile))
 
 	if cfg.LogSampler {
 		std = std.Sample(&zerolog.BasicSampler{N: 5})
 	}
-	log.Logger = std // set global logger
+
+	// set global logger
+	log.Logger = std
 
 	return Logger{
 		Std:        std,
@@ -99,11 +97,12 @@ func openComplianceLogFile(cfg config.Config) (*os.File, error) {
 	}
 
 	// clean file name
-	name := filepath.Join(logPath, ComplianceLogFile)
+	name := filepath.Join(logPath, complianceLogFile)
 	name, err := filepath.Abs(name)
 	if err != nil {
 		return nil, err
 	}
+
 	name = filepath.Clean(name)
 
 	// open (or create) compliance log file

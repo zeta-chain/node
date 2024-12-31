@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
 )
 
 func TestBitcoinWithdrawLegacy(r *runner.E2ERunner, args []string) {
@@ -12,7 +13,7 @@ func TestBitcoinWithdrawLegacy(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
 	// parse arguments and withdraw BTC
-	receiver, amount := parseBitcoinWithdrawArgs(r, args, defaultReceiver)
+	receiver, amount := utils.ParseBitcoinWithdrawArgs(r, args, defaultReceiver, r.GetBitcoinChainID())
 
 	_, ok := receiver.(*btcutil.AddressPubKeyHash)
 	require.True(r, ok, "Invalid receiver address specified for TestBitcoinWithdrawLegacy.")

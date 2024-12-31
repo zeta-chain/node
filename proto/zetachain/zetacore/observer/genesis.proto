@@ -14,6 +14,7 @@ import "zetachain/zetacore/observer/params.proto";
 import "zetachain/zetacore/observer/pending_nonces.proto";
 import "zetachain/zetacore/observer/tss.proto";
 import "zetachain/zetacore/observer/tss_funds_migrator.proto";
+import "zetachain/zetacore/observer/operational.proto";
 
 option go_package = "github.com/zeta-chain/node/x/observer/types";
 
@@ -35,4 +36,5 @@ message GenesisState {
   repeated PendingNonces pending_nonces = 13 [ (gogoproto.nullable) = false ];
   repeated ChainNonces chain_nonces = 14 [ (gogoproto.nullable) = false ];
   repeated NonceToCctx nonce_to_cctx = 15 [ (gogoproto.nullable) = false ];
+  OperationalFlags operational_flags = 16 [ (gogoproto.nullable) = false ];
 }

@@ -20,6 +20,12 @@ export declare class TxHash extends Message<TxHash> {
    */
   txSigner: string;
 
+  /**
+   * @generated from field: bool proven = 3 [deprecated = true];
+   * @deprecated
+   */
+  proven: boolean;
+
   constructor(data?: PartialMessage<TxHash>);
 
   static readonly runtime: typeof proto3;

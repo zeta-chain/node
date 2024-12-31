@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
 )
@@ -37,7 +38,7 @@ func TestTONWithdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("Recipient's TON balance before withdrawal: %s", toncontracts.FormatCoins(tonRecipientBalanceBefore))
 
 	// Given amount to withdraw (and approved amount in TON ZRC20 to cover the gas fee)
-	amount := parseUint(r, args[0])
+	amount := utils.ParseUint(r, args[0])
 	approvedAmount := amount.Add(toncontracts.Coins(1))
 
 	// ACT

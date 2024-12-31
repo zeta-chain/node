@@ -21,7 +21,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
-	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 )
 
@@ -47,12 +46,11 @@ type Signer struct {
 func NewSigner(
 	chain chains.Chain,
 	tss interfaces.TSSSigner,
-	ts *metrics.TelemetryServer,
 	logger base.Logger,
 	cfg config.BTCConfig,
 ) (*Signer, error) {
 	// create base signer
-	baseSigner := base.NewSigner(chain, tss, ts, logger)
+	baseSigner := base.NewSigner(chain, tss, logger)
 
 	// create the bitcoin rpc client using the provided config
 	connCfg := &rpcclient.ConnConfig{

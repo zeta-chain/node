@@ -81,8 +81,6 @@ func newTestSuite(t *testing.T) *testSuite {
 		zetacore,
 		tss,
 		1,
-		1,
-		60,
 		nil,
 		database,
 		logger,

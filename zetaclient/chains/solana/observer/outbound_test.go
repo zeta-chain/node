@@ -61,7 +61,7 @@ func createTestObserver(
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = GatewayAddressTest
-	ob, err := observer.NewObserver(chain, solClient, *chainParams, nil, tss, 60, database, logger, nil)
+	ob, err := observer.NewObserver(chain, solClient, *chainParams, nil, tss, database, logger, nil)
 	require.NoError(t, err)
 
 	return ob

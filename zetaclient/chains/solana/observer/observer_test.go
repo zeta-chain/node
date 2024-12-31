@@ -45,7 +45,6 @@ func MockSolanaObserver(
 		chainParams,
 		zetacoreClient,
 		tss,
-		60,
 		database,
 		base.DefaultLogger(),
 		nil,

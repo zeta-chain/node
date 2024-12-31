@@ -11,6 +11,7 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
@@ -290,6 +291,7 @@ func ZetaAccounting(t *testing.T, index string) types.ZetaAccounting {
 	}
 }
 
+// InboundVote creates a sample inbound vote message
 func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteInbound {
 	return types.MsgVoteInbound{
 		Creator:            Bech32AccAddress().String(),
@@ -308,6 +310,29 @@ func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteInbound {
 		TxOrigin:    EthAddress().String(),
 		Asset:       "",
 		EventIndex:  EventIndex(),
+	}
+}
+
+// InboundVoteFromRand creates a simulated inbound vote message. This function uses the provided source of randomness to generate the vote
+func InboundVoteFromRand(coinType coin.CoinType, from, to int64, r *rand.Rand) types.MsgVoteInbound {
+	EthAddress()
+	return types.MsgVoteInbound{
+		Creator:            "",
+		Sender:             EthAddressFromRand(r).String(),
+		SenderChainId:      from,
+		Receiver:           EthAddressFromRand(r).String(),
+		ReceiverChain:      to,
+		Amount:             math.NewUint(r.Uint64()),
+		Message:            base64.StdEncoding.EncodeToString(RandomBytes(r)),
+		InboundBlockHeight: r.Uint64(),
+		CallOptions: &types.CallOptions{
+			GasLimit: 1000000000,
+		},
+		InboundHash: ethcommon.BytesToHash(RandomBytes(r)).String(),
+		CoinType:    coinType,
+		TxOrigin:    EthAddressFromRand(r).String(),
+		Asset:       StringRandom(r, 32),
+		EventIndex:  r.Uint64(),
 	}
 }
 

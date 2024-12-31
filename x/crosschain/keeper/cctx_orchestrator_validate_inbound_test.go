@@ -58,7 +58,7 @@ func TestKeeper_ValidateInbound(t *testing.T) {
 			Return(observerTypes.PendingNonces{NonceHigh: 1}, true)
 		observerMock.On("SetChainNonces", mock.Anything, mock.Anything).Return(nil)
 		observerMock.On("SetPendingNonces", mock.Anything, mock.Anything).Return(nil)
-		// setup Mocks for SetCctxAndNonceToCctxAndInboundHashToCctx
+		// setup Mocks for SaveCCTXUpdate
 		observerMock.On("SetNonceToCctx", mock.Anything, mock.Anything).Return(nil)
 
 		k.SetGasPrice(ctx, types.GasPrice{

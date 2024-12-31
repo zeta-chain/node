@@ -33,11 +33,11 @@ func PromptPasswords(passwordTitles []string) ([]string, error) {
 
 // readPassword is a helper function that reads a password from bufio.Reader
 func readPassword(reader *bufio.Reader, passwordTitle string) (string, error) {
-	const delimitor = '\n'
+	const delimiter = '\n'
 
 	// prompt for password
 	fmt.Printf("%s Password: ", passwordTitle)
-	password, err := reader.ReadString(delimitor)
+	password, err := reader.ReadString(delimiter)
 	if err != nil {
 		return "", err
 	}

@@ -14,7 +14,7 @@ import (
 
 func TestSPLDeposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
-	amount := parseInt(r, args[0])
+	amount := utils.ParseInt(r, args[0])
 
 	// load deployer private key
 	privKey := r.GetSolanaPrivKey()
@@ -42,6 +42,7 @@ func TestSPLDeposit(r *runner.E2ERunner, args []string) {
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "solana_deposit_spl")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+	require.Equal(r, cctx.GetCurrentOutboundParam().Receiver, r.EVMAddress().Hex())
 
 	// verify balances are updated
 	pdaBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentFinalized)
@@ -54,10 +55,18 @@ func TestSPLDeposit(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	// verify amount is deposited to pda ata
-	require.Equal(r, parseInt(r, pdaBalanceBefore.Value.Amount)+amount, parseInt(r, pdaBalanceAfter.Value.Amount))
+	require.Equal(
+		r,
+		utils.ParseInt(r, pdaBalanceBefore.Value.Amount)+amount,
+		utils.ParseInt(r, pdaBalanceAfter.Value.Amount),
+	)
 
 	// verify amount is subtracted from sender ata
-	require.Equal(r, parseInt(r, senderBalanceBefore.Value.Amount)-amount, parseInt(r, senderBalanceAfter.Value.Amount))
+	require.Equal(
+		r,
+		utils.ParseInt(r, senderBalanceBefore.Value.Amount)-amount,
+		utils.ParseInt(r, senderBalanceAfter.Value.Amount),
+	)
 
 	// verify amount is minted to receiver
 	require.Zero(r, zrc20BalanceBefore.Add(zrc20BalanceBefore, big.NewInt(int64(amount))).Cmp(zrc20BalanceAfter))

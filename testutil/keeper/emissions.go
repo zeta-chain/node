@@ -12,7 +12,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/node/pkg/sdkconfig"
+	_ "github.com/zeta-chain/node/pkg/sdkconfig/default" //nolint:blank-imports this is a test package
 	emissionsmocks "github.com/zeta-chain/node/testutil/keeper/mocks/emissions"
 	"github.com/zeta-chain/node/x/emissions/keeper"
 	"github.com/zeta-chain/node/x/emissions/types"
@@ -33,7 +33,6 @@ func EmissionKeeperWithMockOptions(
 	t testing.TB,
 	mockOptions EmissionMockOptions,
 ) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
-	sdkconfig.SetDefault(false)
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
@@ -54,6 +53,8 @@ func EmissionKeeperWithMockOptions(
 		sdkKeepers.StakingKeeper,
 		sdkKeepers.SlashingKeeper,
 		authorityKeeper,
+		sdkKeepers.BankKeeper,
+		sdkKeepers.AuthKeeper,
 		initLightclientKeeper(cdc, stateStore, authorityKeeper),
 	)
 

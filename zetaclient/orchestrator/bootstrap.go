@@ -40,10 +40,9 @@ func CreateSignerMap(
 	ctx context.Context,
 	tss interfaces.TSSSigner,
 	logger base.Logger,
-	ts *metrics.TelemetryServer,
 ) (map[int64]interfaces.ChainSigner, error) {
 	signers := make(map[int64]interfaces.ChainSigner)
-	_, _, err := syncSignerMap(ctx, tss, logger, ts, &signers)
+	_, _, err := syncSignerMap(ctx, tss, logger, &signers)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +57,6 @@ func syncSignerMap(
 	ctx context.Context,
 	tss interfaces.TSSSigner,
 	logger base.Logger,
-	ts *metrics.TelemetryServer,
 	signers *map[int64]interfaces.ChainSigner,
 ) (int, int, error) {
 	if signers == nil {
@@ -128,7 +126,6 @@ func syncSignerMap(
 				ctx,
 				*rawChain,
 				tss,
-				ts,
 				logger,
 				cfg.Endpoint,
 				zetaConnectorAddress,
@@ -148,7 +145,7 @@ func syncSignerMap(
 				continue
 			}
 
-			signer, err := btcsigner.NewSigner(*rawChain, tss, ts, logger, cfg)
+			signer, err := btcsigner.NewSigner(*rawChain, tss, logger, cfg)
 			if err != nil {
 				logger.Std.Error().Err(err).Msgf("Unable to construct signer for BTC chain %d", chainID)
 				continue
@@ -179,7 +176,7 @@ func syncSignerMap(
 			}
 
 			// create Solana signer
-			signer, err := solanasigner.NewSigner(*rawChain, *params, rpcClient, tss, relayerKey, ts, logger)
+			signer, err := solanasigner.NewSigner(*rawChain, *params, rpcClient, tss, relayerKey, logger)
 			if err != nil {
 				logger.Std.Error().Err(err).Msgf("Unable to construct signer for SOL chain %d", chainID)
 				continue
@@ -200,7 +197,7 @@ func syncSignerMap(
 			}
 
 			tonSigner := tonsigner.New(
-				base.NewSigner(*rawChain, tss, ts, logger),
+				base.NewSigner(*rawChain, tss, logger),
 				tonClient,
 				gateway,
 			)
@@ -337,7 +334,6 @@ func syncObserverMap(
 				*params,
 				client,
 				tss,
-				cfg.RPCAlertLatency,
 				database,
 				logger,
 				ts,
@@ -373,7 +369,6 @@ func syncObserverMap(
 				*params,
 				client,
 				tss,
-				cfg.RPCAlertLatency,
 				database,
 				logger,
 				ts,
@@ -410,7 +405,6 @@ func syncObserverMap(
 				*params,
 				client,
 				tss,
-				cfg.RPCAlertLatency,
 				database,
 				logger,
 				ts,
@@ -440,8 +434,6 @@ func syncObserverMap(
 				client,
 				tss,
 				base.DefaultBlockCacheSize,
-				base.DefaultHeaderCacheSize,
-				cfg.RPCAlertLatency,
 				ts,
 				database,
 				logger,

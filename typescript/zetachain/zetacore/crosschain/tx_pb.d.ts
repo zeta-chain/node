@@ -6,6 +6,7 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { CoinType } from "../pkg/coin/coin_pb.js";
+import type { Proof } from "../pkg/proofs/proofs_pb.js";
 import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
 import type { CallOptions, ProtocolContractVersion, RevertOptions } from "./cross_chain_tx_pb.js";
 import type { RateLimiterFlags } from "./rate_limiter_flags_pb.js";
@@ -134,6 +135,24 @@ export declare class MsgAddInboundTracker extends Message<MsgAddInboundTracker> 
    * @generated from field: zetachain.zetacore.pkg.coin.CoinType coin_type = 4;
    */
   coinType: CoinType;
+
+  /**
+   * @generated from field: zetachain.zetacore.pkg.proofs.Proof proof = 5 [deprecated = true];
+   * @deprecated
+   */
+  proof?: Proof;
+
+  /**
+   * @generated from field: string block_hash = 6 [deprecated = true];
+   * @deprecated
+   */
+  blockHash: string;
+
+  /**
+   * @generated from field: int64 tx_index = 7 [deprecated = true];
+   * @deprecated
+   */
+  txIndex: bigint;
 
   constructor(data?: PartialMessage<MsgAddInboundTracker>);
 
@@ -277,6 +296,24 @@ export declare class MsgAddOutboundTracker extends Message<MsgAddOutboundTracker
    * @generated from field: string tx_hash = 4;
    */
   txHash: string;
+
+  /**
+   * @generated from field: zetachain.zetacore.pkg.proofs.Proof proof = 5 [deprecated = true];
+   * @deprecated
+   */
+  proof?: Proof;
+
+  /**
+   * @generated from field: string block_hash = 6 [deprecated = true];
+   * @deprecated
+   */
+  blockHash: string;
+
+  /**
+   * @generated from field: int64 tx_index = 7 [deprecated = true];
+   * @deprecated
+   */
+  txIndex: bigint;
 
   constructor(data?: PartialMessage<MsgAddOutboundTracker>);
 

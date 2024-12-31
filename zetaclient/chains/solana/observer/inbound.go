@@ -81,6 +81,12 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		ob.WithLastTxScanned(lastSig.String())
 	}
 
+	// query last finalized slot
+	lastSlot, errSlot := ob.solClient.GetSlot(ctx, rpc.CommitmentFinalized)
+	if errSlot != nil {
+		ob.Logger().Inbound.Err(errSlot).Msg("unable to get last slot")
+	}
+
 	// get all signatures for the gateway address since last scanned signature
 	lastSig := solana.MustSignatureFromBase58(ob.LastTxScanned())
 	signatures, err := solanarpc.GetSignaturesForAddressUntil(ctx, ob.solClient, ob.gatewayID, lastSig, pageLimit)
@@ -88,7 +94,13 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		ob.Logger().Inbound.Err(err).Msg("error GetSignaturesForAddressUntil")
 		return err
 	}
-	if len(signatures) > 0 {
+
+	// update metrics if no new signatures found
+	if len(signatures) == 0 {
+		if errSlot == nil {
+			ob.WithLastBlockScanned(lastSlot)
+		}
+	} else {
 		ob.Logger().Inbound.Info().Msgf("ObserveInbound: got %d signatures for chain %d", len(signatures), chainID)
 	}
 
@@ -212,7 +224,7 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 				events = append(events, &clienttypes.InboundEvent{
 					SenderChainID: ob.Chain().ChainId,
 					Sender:        deposit.Sender,
-					Receiver:      deposit.Sender, // receiver is pulled out from memo
+					Receiver:      "", // receiver will be pulled out from memo later
 					TxOrigin:      deposit.Sender,
 					Amount:        deposit.Amount,
 					Memo:          deposit.Memo,
@@ -240,7 +252,7 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 				events = append(events, &clienttypes.InboundEvent{
 					SenderChainID: ob.Chain().ChainId,
 					Sender:        deposit.Sender,
-					Receiver:      deposit.Sender, // receiver is pulled out from memo
+					Receiver:      "", // receiver will be pulled out from memo later
 					TxOrigin:      deposit.Sender,
 					Amount:        deposit.Amount,
 					Memo:          deposit.Memo,
@@ -288,7 +300,7 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 		event.Sender,
 		event.SenderChainID,
 		event.Sender,
-		event.Sender,
+		event.Receiver,
 		ob.ZetacoreClient().Chain().ChainId,
 		cosmosmath.NewUint(event.Amount),
 		hex.EncodeToString(event.Memo),

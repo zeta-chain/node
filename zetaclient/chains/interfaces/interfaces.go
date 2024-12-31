@@ -11,6 +11,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
+	cometbfttypes "github.com/cometbft/cometbft/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -18,7 +19,6 @@ import (
 	"github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/onrik/ethrpc"
-	"github.com/rs/zerolog"
 	"gitlab.com/thorchain/tss/go-tss/blame"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -101,7 +101,6 @@ type ZetacoreClient interface {
 	ZetacoreVoter
 
 	Chain() chains.Chain
-	GetLogger() *zerolog.Logger
 	GetKeys() keyinterfaces.ObserverKeys
 
 	GetSupportedChains(ctx context.Context) ([]chains.Chain, error)
@@ -137,6 +136,7 @@ type ZetacoreClient interface {
 	) ([]crosschaintypes.OutboundTracker, error)
 	GetCrosschainFlags(ctx context.Context) (observertypes.CrosschainFlags, error)
 	GetRateLimiterFlags(ctx context.Context) (crosschaintypes.RateLimiterFlags, error)
+	GetOperationalFlags(ctx context.Context) (observertypes.OperationalFlags, error)
 	GetObserverList(ctx context.Context) ([]string, error)
 	GetBTCTSSAddress(ctx context.Context, chainID int64) (string, error)
 	GetZetaHotKeyBalance(ctx context.Context) (sdkmath.Int, error)
@@ -145,6 +145,7 @@ type ZetacoreClient interface {
 	GetUpgradePlan(ctx context.Context) (*upgradetypes.Plan, error)
 
 	PostOutboundTracker(ctx context.Context, chainID int64, nonce uint64, txHash string) (string, error)
+	NewBlockSubscriber(ctx context.Context) (chan cometbfttypes.EventDataNewBlock, error)
 }
 
 // BTCRPCClient is the interface for BTC RPC client

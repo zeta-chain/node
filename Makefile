@@ -275,7 +275,7 @@ start-e2e-admin-test: e2e-images
 	export E2E_ARGS="--skip-regular --test-admin" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile eth2 up -d
 
-start-e2e-performance-test: e2e-images
+start-e2e-performance-test: e2e-images solana
 	@echo "--> Starting e2e performance test"
 	export E2E_ARGS="--test-performance" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
@@ -312,9 +312,9 @@ start-ton-test: e2e-images
 	export E2E_ARGS="--skip-regular --test-ton" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile ton up -d
 
-start-v2-test: e2e-images
-	@echo "--> Starting e2e smart contracts v2 test"
-	export E2E_ARGS="--skip-regular --test-v2" && \
+start-legacy-test: e2e-images
+	@echo "--> Starting e2e smart contracts legacy test"
+	export E2E_ARGS="--skip-regular --test-legacy" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 ###############################################################################
@@ -327,7 +327,7 @@ ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from source"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source \
-		--build-arg OLD_VERSION='release/v22' \
+		--build-arg OLD_VERSION='release/v23' \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
 		--build-arg NODE_COMMIT=$(NODE_COMMIT)
 		.
@@ -336,7 +336,7 @@ else
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from binaries"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime \
-	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v22.1.1' \
+	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v23.1.5' \
 	--build-arg NODE_VERSION=$(NODE_VERSION) \
 	--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 	.
@@ -361,16 +361,6 @@ start-upgrade-test-admin: zetanode-upgrade
 	export UPGRADE_HEIGHT=90 && \
 	export E2E_ARGS="--skip-regular --test-admin" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
-
-# this test upgrades from v18 and execute the v2 contracts migration process
-# this tests is part of upgrade test part because it should run the upgrade from v18 to fully replicate the upgrade process
-start-upgrade-v2-migration-test: zetanode-upgrade
-	@echo "--> Starting v2 migration upgrade test"
-	export LOCALNET_MODE=upgrade && \
-	export UPGRADE_HEIGHT=90 && \
-	export E2E_ARGS="--test-v2-migration" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
-
 
 start-upgrade-import-mainnet-test: zetanode-upgrade
 	@echo "--> Starting import-data upgrade test"
@@ -419,7 +409,7 @@ test-sim-fullappsimulation:
 	$(call run-sim-test,"TestFullAppSimulation",TestFullAppSimulation,100,200,30m)
 
 test-sim-import-export:
-	$(call run-sim-test,"test-import-export",TestAppImportExport,100,200,30m)
+	$(call run-sim-test,"test-import-export",TestAppImportExport,50,100,30m)
 
 test-sim-after-import:
 	$(call run-sim-test,"test-sim-after-import",TestAppSimulationAfterImport,100,200,30m)

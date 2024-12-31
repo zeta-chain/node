@@ -30431,6 +30431,21 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/observer/operationalFlags:
+    get:
+      summary: Queries operational flags
+      operationId: Query_OperationalFlags
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryOperationalFlagsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/observer/pendingNonces:
     get:
       operationId: Query_PendingNoncesAll
@@ -57603,6 +57618,8 @@ definitions:
         type: string
       tx_signer:
         type: string
+      proven:
+        type: boolean
   cryptoPubKeySet:
     type: object
     properties:
@@ -58016,6 +58033,8 @@ definitions:
     type: object
   observerMsgUpdateObserverResponse:
     type: object
+  observerMsgUpdateOperationalFlagsResponse:
+    type: object
   observerMsgVoteBlameResponse:
     type: object
   observerMsgVoteBlockHeaderResponse:
@@ -58082,6 +58101,21 @@ definitions:
       - Tombstoned
       - AdminUpdate
     default: Undefined
+  observerOperationalFlags:
+    type: object
+    properties:
+      restart_height:
+        type: string
+        format: int64
+        description: |-
+          Height for a coordinated zetaclient restart.
+          Will be ignored if missed.
+      signer_block_time_offset:
+        type: string
+        description: |-
+          Offset from the zetacore block time to initiate signing.
+          Should be calculated and set based on max(zetaclient_core_block_latency).
+    description: Flags for the top-level operation of zetaclient.
   observerPendingNonces:
     type: object
     properties:
@@ -58225,6 +58259,11 @@ definitions:
         type: array
         items:
           type: string
+  observerQueryOperationalFlagsResponse:
+    type: object
+    properties:
+      operational_flags:
+        $ref: '#/definitions/observerOperationalFlags'
   observerQueryPendingNoncesByChainResponse:
     type: object
     properties:

@@ -14,6 +14,26 @@ type CrosschainAccountKeeper struct {
 	mock.Mock
 }
 
+// GetAccount provides a mock function with given fields: ctx, addr
+func (_m *CrosschainAccountKeeper) GetAccount(ctx types.Context, addr types.AccAddress) authtypes.AccountI {
+	ret := _m.Called(ctx, addr)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAccount")
+	}
+
+	var r0 authtypes.AccountI
+	if rf, ok := ret.Get(0).(func(types.Context, types.AccAddress) authtypes.AccountI); ok {
+		r0 = rf(ctx, addr)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(authtypes.AccountI)
+		}
+	}
+
+	return r0
+}
+
 // GetModuleAccount provides a mock function with given fields: ctx, name
 func (_m *CrosschainAccountKeeper) GetModuleAccount(ctx types.Context, name string) authtypes.ModuleAccountI {
 	ret := _m.Called(ctx, name)

@@ -8,7 +8,6 @@ import (
 	"runtime/debug"
 	"time"
 
-	cosmoserrors "cosmossdk.io/errors"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -26,7 +25,6 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -145,26 +143,8 @@ func init() {
 }
 
 var (
-	AccountAddressPrefix = "zeta"
-	NodeDir              = ".zetacored"
-	DefaultNodeHome      = os.ExpandEnv("$HOME/") + NodeDir
-
-	// AddrLen is the allowed length (in bytes) for an address.
-	// NOTE: In the SDK, the default value is 255.
-	AddrLen = 20
-
-	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
-	Bech32PrefixAccAddr = AccountAddressPrefix
-	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
-	Bech32PrefixAccPub = AccountAddressPrefix + sdk.PrefixPublic
-	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
-	Bech32PrefixValAddr = AccountAddressPrefix + sdk.PrefixValidator + sdk.PrefixOperator
-	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
-	Bech32PrefixValPub = AccountAddressPrefix + sdk.PrefixValidator + sdk.PrefixOperator + sdk.PrefixPublic
-	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
-	Bech32PrefixConsAddr = AccountAddressPrefix + sdk.PrefixValidator + sdk.PrefixConsensus
-	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
-	Bech32PrefixConsPub = AccountAddressPrefix + sdk.PrefixValidator + sdk.PrefixConsensus + sdk.PrefixPublic
+	NodeDir         = ".zetacored"
+	DefaultNodeHome = os.ExpandEnv("$HOME/") + NodeDir
 )
 
 func getGovProposalHandlers() []govclient.ProposalHandler {
@@ -481,6 +461,8 @@ func New(
 		app.SlashingKeeper,
 		app.AuthorityKeeper,
 		app.LightclientKeeper,
+		app.BankKeeper,
+		app.AccountKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
@@ -1033,21 +1015,6 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(observertypes.ModuleName)
 	paramsKeeper.Subspace(emissionstypes.ModuleName)
 	return paramsKeeper
-}
-
-// VerifyAddressFormat verifies the address is compatible with ethereum
-func VerifyAddressFormat(bz []byte) error {
-	if len(bz) == 0 {
-		return cosmoserrors.Wrap(sdkerrors.ErrUnknownAddress, "invalid address; cannot be empty")
-	}
-	if len(bz) != AddrLen {
-		return cosmoserrors.Wrapf(
-			sdkerrors.ErrUnknownAddress,
-			"invalid address length; got: %d, expect: %d", len(bz), AddrLen,
-		)
-	}
-
-	return nil
 }
 
 // SimulationManager implements the SimulationApp interface

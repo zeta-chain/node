@@ -21,7 +21,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils"
-	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
@@ -305,10 +304,9 @@ func Test_ValidateStandardMemo(t *testing.T) {
 func Test_IsEventProcessable(t *testing.T) {
 	// can use any bitcoin chain for testing
 	chain := chains.BitcoinMainnet
-	params := mocks.MockChainParams(chain.ChainId, 10)
 
 	// create test observer
-	ob := MockBTCObserver(t, chain, params, nil)
+	ob := newTestSuite(t, chain)
 
 	// setup compliance config
 	cfg := config.Config{
@@ -354,12 +352,10 @@ func Test_IsEventProcessable(t *testing.T) {
 func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
 	// can use any bitcoin chain for testing
 	chain := chains.BitcoinMainnet
-	params := mocks.MockChainParams(chain.ChainId, 10)
 
 	// create test observer
-	ob := MockBTCObserver(t, chain, params, nil)
-	zetacoreClient := mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{}).WithZetaChain()
-	ob.WithZetacoreClient(zetacoreClient)
+	ob := newTestSuite(t, chain)
+	ob.zetacore.WithKeys(&keys.Keys{}).WithZetaChain()
 
 	t.Run("should create new inbound vote msg V1", func(t *testing.T) {
 		// create test event
@@ -396,12 +392,10 @@ func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
 func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 	// can use any bitcoin chain for testing
 	chain := chains.BitcoinMainnet
-	params := mocks.MockChainParams(chain.ChainId, 10)
 
 	// create test observer
-	ob := MockBTCObserver(t, chain, params, nil)
-	zetacoreClient := mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{}).WithZetaChain()
-	ob.WithZetacoreClient(zetacoreClient)
+	ob := newTestSuite(t, chain)
+	ob.zetacore.WithKeys(&keys.Keys{}).WithZetaChain()
 
 	t.Run("should create new inbound vote msg with standard memo", func(t *testing.T) {
 		// create revert options

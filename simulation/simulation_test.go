@@ -10,29 +10,30 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	cosmossimutils "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	cosmossim "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/cosmos/cosmos-sdk/x/simulation"
+	cosmossimcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"github.com/zeta-chain/node/app"
 	zetasimulation "github.com/zeta-chain/node/simulation"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/server"
-	cosmossimutils "github.com/cosmos/cosmos-sdk/testutil/sims"
-	cosmossim "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
-	cosmossimcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // AppChainID hardcoded chainID for simulation
@@ -41,10 +42,12 @@ func init() {
 	zetasimulation.GetSimulatorFlags()
 }
 
+// StoreKeysPrefixes defines a struct used in comparing two keys for two different stores
+// SkipPrefixes is used to skip certain prefixes when comparing the stores
 type StoreKeysPrefixes struct {
-	A        storetypes.StoreKey
-	B        storetypes.StoreKey
-	Prefixes [][]byte
+	A            storetypes.StoreKey
+	B            storetypes.StoreKey
+	SkipPrefixes [][]byte
 }
 
 const (
@@ -133,9 +136,11 @@ func TestAppStateDeterminism(t *testing.T) {
 				os.Stdout,
 				simApp.BaseApp,
 				zetasimulation.AppStateFn(
+					t,
 					simApp.AppCodec(),
 					simApp.SimulationManager(),
 					simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
+					nil,
 				),
 				cosmossim.RandomAccounts,
 				cosmossimutils.SimulationOperations(simApp, simApp.AppCodec(), config),
@@ -222,9 +227,11 @@ func TestFullAppSimulation(t *testing.T) {
 		os.Stdout,
 		simApp.BaseApp,
 		zetasimulation.AppStateFn(
+			t,
 			simApp.AppCodec(),
 			simApp.SimulationManager(),
 			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
+			nil,
 		),
 		cosmossim.RandomAccounts,
 		cosmossimutils.SimulationOperations(simApp, simApp.AppCodec(), config),
@@ -292,9 +299,11 @@ func TestAppImportExport(t *testing.T) {
 		os.Stdout,
 		simApp.BaseApp,
 		zetasimulation.AppStateFn(
+			t,
 			simApp.AppCodec(),
 			simApp.SimulationManager(),
 			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
+			nil,
 		),
 		cosmossim.RandomAccounts,
 		cosmossimutils.SimulationOperations(simApp, simApp.AppCodec(), config),
@@ -314,7 +323,6 @@ func TestAppImportExport(t *testing.T) {
 	exported, err := simApp.ExportAppStateAndValidators(false, []string{}, []string{})
 	require.NoError(t, err)
 
-	t.Log("importing genesis")
 	newDB, newDir, _, _, err := cosmossimutils.SetupSimulation(
 		config,
 		SimDBBackend+"_new",
@@ -360,20 +368,29 @@ func TestAppImportExport(t *testing.T) {
 	ctxSimApp := simApp.NewContext(true, tmproto.Header{
 		Height:  simApp.LastBlockHeight(),
 		ChainID: SimAppChainID,
-	}).WithChainID(SimAppChainID)
+	})
+
 	ctxNewSimApp := newSimApp.NewContext(true, tmproto.Header{
 		Height:  simApp.LastBlockHeight(),
 		ChainID: SimAppChainID,
-	}).WithChainID(SimAppChainID)
+	})
 
+	t.Log("initializing genesis for the new app using exported genesis state")
 	// Use genesis state from the first app to initialize the second app
 	newSimApp.ModuleManager().InitGenesis(ctxNewSimApp, newSimApp.AppCodec(), genesisState)
 	newSimApp.StoreConsensusParams(ctxNewSimApp, exported.ConsensusParams)
 
 	t.Log("comparing stores")
+
 	// The ordering of the keys is not important, we compare the same prefix for both simulations
 	storeKeysPrefixes := []StoreKeysPrefixes{
-		{simApp.GetKey(authtypes.StoreKey), newSimApp.GetKey(authtypes.StoreKey), [][]byte{}},
+		// Interaction with EVM module,
+		// such as deploying contracts or interacting with them such as setting gas price,
+		// causes the state for the auth module to change on export.The order of keys within the store is modified.
+		// We will need to explore this further to find a definitive answer
+		// TODO:https://github.com/zeta-chain/node/issues/3263
+
+		// {simApp.GetKey(authtypes.StoreKey), newSimApp.GetKey(authtypes.StoreKey), [][]byte{}},
 		{
 			simApp.GetKey(stakingtypes.StoreKey), newSimApp.GetKey(stakingtypes.StoreKey),
 			[][]byte{
@@ -388,13 +405,23 @@ func TestAppImportExport(t *testing.T) {
 		{simApp.GetKey(govtypes.StoreKey), newSimApp.GetKey(govtypes.StoreKey), [][]byte{}},
 		{simApp.GetKey(evidencetypes.StoreKey), newSimApp.GetKey(evidencetypes.StoreKey), [][]byte{}},
 		{simApp.GetKey(evmtypes.StoreKey), newSimApp.GetKey(evmtypes.StoreKey), [][]byte{}},
+		{simApp.GetKey(crosschaintypes.StoreKey), newSimApp.GetKey(crosschaintypes.StoreKey), [][]byte{
+			// We update the timestamp for cctx when importing the genesis state which results in a different value
+			crosschaintypes.KeyPrefix(crosschaintypes.CCTXKey),
+		}},
+
+		{simApp.GetKey(observertypes.StoreKey), newSimApp.GetKey(observertypes.StoreKey), [][]byte{
+			// The order of ballots when importing is not preserved which causes the value to be different.
+			observertypes.KeyPrefix(observertypes.BallotListKey),
+		}},
+		{simApp.GetKey(fungibletypes.StoreKey), newSimApp.GetKey(fungibletypes.StoreKey), [][]byte{}},
 	}
 
 	for _, skp := range storeKeysPrefixes {
 		storeA := ctxSimApp.KVStore(skp.A)
 		storeB := ctxNewSimApp.KVStore(skp.B)
 
-		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, skp.Prefixes)
+		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, skp.SkipPrefixes)
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
 
 		t.Logf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
@@ -459,9 +486,11 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		os.Stdout,
 		simApp.BaseApp,
 		zetasimulation.AppStateFn(
+			t,
 			simApp.AppCodec(),
 			simApp.SimulationManager(),
 			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
+			nil,
 		),
 		cosmossim.RandomAccounts,
 		cosmossimutils.SimulationOperations(simApp, simApp.AppCodec(), config),
@@ -486,8 +515,6 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	// export state and simParams
 	exported, err := simApp.ExportAppStateAndValidators(true, []string{}, []string{})
 	require.NoError(t, err)
-
-	t.Log("importing genesis")
 
 	newDB, newDir, _, _, err := cosmossimutils.SetupSimulation(
 		config,
@@ -517,6 +544,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	)
 	require.NoError(t, err)
 
+	t.Log("Importing genesis into the new app")
 	newSimApp.InitChain(abci.RequestInitChain{
 		ChainId:       SimAppChainID,
 		AppStateBytes: exported.AppState,
@@ -527,9 +555,11 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		os.Stdout,
 		newSimApp.BaseApp,
 		zetasimulation.AppStateFn(
-			simApp.AppCodec(),
-			simApp.SimulationManager(),
-			simApp.BasicManager().DefaultGenesis(simApp.AppCodec()),
+			t,
+			nil,
+			nil,
+			nil,
+			exported.AppState,
 		),
 		cosmossim.RandomAccounts,
 		cosmossimutils.SimulationOperations(newSimApp, newSimApp.AppCodec(), config),

@@ -31,3 +31,26 @@ func MustHaveCalledExampleContract(
 		amount.String(),
 	)
 }
+
+// MustHaveCalledExampleContractWithMsg checks if the contract has been called correctly with correct amount and msg
+func MustHaveCalledExampleContractWithMsg(
+	t require.TestingT,
+	contract *testcontract.Example,
+	amount *big.Int,
+	msg []byte,
+) {
+	bar, err := contract.Bar(&bind.CallOpts{})
+	require.NoError(t, err)
+	require.Equal(
+		t,
+		0,
+		bar.Cmp(amount),
+		"cross-chain call failed bar value %s should be equal to amount %s",
+		bar.String(),
+		amount.String(),
+	)
+
+	lastMsg, err := contract.LastMessage(&bind.CallOpts{})
+	require.NoError(t, err)
+	require.Equal(t, string(msg), string(lastMsg))
+}

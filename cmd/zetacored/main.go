@@ -10,6 +10,7 @@ import (
 
 	"github.com/zeta-chain/node/app"
 	cmdcfg "github.com/zeta-chain/node/cmd/zetacored/config"
+	_ "github.com/zeta-chain/node/pkg/sdkconfig/default"
 )
 
 func main() {

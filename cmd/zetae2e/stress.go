@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fatih/color"
@@ -18,7 +17,6 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 	"google.golang.org/grpc"
 
-	"github.com/zeta-chain/node/app"
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/cmd/zetae2e/local"
 	"github.com/zeta-chain/node/e2e/runner"
@@ -77,11 +75,6 @@ func StressTest(cmd *cobra.Command, _ []string) {
 		os.Exit(1)
 	}()
 
-	// set account prefix to zeta
-	cosmosConf := sdk.GetConfig()
-	cosmosConf.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
-	cosmosConf.Seal()
-
 	// initialize E2E tests config
 	conf := must(local.GetConfig(cmd))
 
@@ -136,21 +129,21 @@ func StressTest(cmd *cobra.Command, _ []string) {
 
 	// setup TSS addresses
 	noError(e2eTest.SetTSSAddresses())
-	e2eTest.SetupEVM(stressTestArgs.contractsDeployed, true)
+	e2eTest.LegacySetupEVM(stressTestArgs.contractsDeployed)
 
 	// If stress test is running on local docker environment
 	switch stressTestArgs.network {
 	case "LOCAL":
 		// deploy and set zevm contract
-		e2eTest.SetZEVMSystemContracts()
-		e2eTest.SetZEVMZRC20s(txserver.ZRC20Deployment{
+		e2eTest.SetupZEVMProtocolContracts()
+		e2eTest.SetupZEVMZRC20s(txserver.ZRC20Deployment{
 			ERC20Addr: e2eTest.ERC20Addr,
 			SPLAddr:   nil, // no stress tests for solana atm
 		})
 
 		// deposit on ZetaChain
-		e2eTest.DepositEther()
-		e2eTest.DepositZeta()
+		e2eTest.LegacyDepositEther()
+		e2eTest.LegacyDepositZeta()
 	case "TESTNET":
 		ethZRC20Addr := must(e2eTest.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(5)))
 		e2eTest.ETHZRC20Addr = ethZRC20Addr

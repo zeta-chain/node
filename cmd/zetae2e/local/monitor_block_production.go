@@ -7,7 +7,7 @@ import (
 	"time"
 
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
-	cometbft_types "github.com/cometbft/cometbft/types"
+	cometbfttypes "github.com/cometbft/cometbft/types"
 
 	"github.com/zeta-chain/node/e2e/config"
 )
@@ -37,16 +37,16 @@ func monitorBlockProduction(ctx context.Context, conf config.Config) error {
 	if err != nil {
 		return fmt.Errorf("subscribe: %w", err)
 	}
-	latestNewBlockEvent := cometbft_types.EventDataNewBlock{}
+	latestNewBlockEvent := cometbfttypes.EventDataNewBlock{}
 	for {
 		select {
 		case event := <-blockEventChan:
-			newBlockEvent, ok := event.Data.(cometbft_types.EventDataNewBlock)
+			newBlockEvent, ok := event.Data.(cometbfttypes.EventDataNewBlock)
 			if !ok {
 				return fmt.Errorf("expecting new block event, got %T", event.Data)
 			}
 			latestNewBlockEvent = newBlockEvent
-		case <-time.After(4 * time.Second):
+		case <-time.After(5 * time.Second):
 			return fmt.Errorf("timed out waiting for new block (last block %d)", latestNewBlockEvent.Block.Height)
 		case <-ctx.Done():
 			return nil

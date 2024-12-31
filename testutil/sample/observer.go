@@ -2,16 +2,20 @@ package sample
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/cosmos"
 	zetacrypto "github.com/zeta-chain/node/pkg/crypto"
+	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -119,6 +123,25 @@ func ChainParamsList() (cpl types.ChainParamsList) {
 	return
 }
 
+// TSSFromRand returns a random TSS,it uses the randomness provided as a parameter
+func TSSFromRand(t *testing.T, r *rand.Rand) types.TSS {
+	pubKey := PubKey(r)
+	spk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
+	require.NoError(t, err)
+	pk, err := zetacrypto.NewPubKey(spk)
+	require.NoError(t, err)
+	pubkeyString := pk.String()
+	return types.TSS{
+		TssPubkey:           pubkeyString,
+		TssParticipantList:  []string{},
+		OperatorAddressList: []string{},
+		FinalizedZetaHeight: r.Int63(),
+		KeyGenZetaHeight:    r.Int63(),
+	}
+}
+
+// TODO: rename to TSS
+// https://github.com/zeta-chain/node/issues/3098
 func Tss() types.TSS {
 	_, pubKey, _ := testdata.KeyTestPubAddr()
 	spk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
@@ -261,5 +284,12 @@ func GasPriceIncreaseFlags() types.GasPriceIncreaseFlags {
 		RetryInterval:           1,
 		GasPriceIncreasePercent: 1,
 		MaxPendingCctxs:         100,
+	}
+}
+
+func OperationalFlags() types.OperationalFlags {
+	return types.OperationalFlags{
+		RestartHeight:         1,
+		SignerBlockTimeOffset: ptr.Ptr(time.Second),
 	}
 }

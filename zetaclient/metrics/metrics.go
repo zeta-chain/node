@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"time"
 
+	"cosmossdk.io/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -78,11 +79,33 @@ var (
 		Help:      "Last scanned block number per chain",
 	}, []string{"chain"})
 
+	// LatestBlockLatency is a gauge that contains the block latency for each observed chain
+	LatestBlockLatency = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "latest_block_latency",
+		Help:      "Latency of last block for observed chains",
+	}, []string{"chain"})
+
 	// LastCoreBlockNumber is a gauge that contains the last core block number
 	LastCoreBlockNumber = promauto.NewGauge(prometheus.GaugeOpts{
 		Namespace: ZetaClientNamespace,
 		Name:      "last_core_block_number",
 		Help:      "Last core block number",
+	})
+
+	// CoreBlockLatency is a gauge that measures the difference between system time and
+	// block time from zetacore
+	CoreBlockLatency = promauto.NewGauge(prometheus.GaugeOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "core_block_latency",
+		Help:      "Difference between system time and block time from zetacore",
+	})
+
+	// CoreBlockLatencySleep is a gauge of the duration we sleep before signing
+	CoreBlockLatencySleep = promauto.NewGauge(prometheus.GaugeOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "core_block_latency_sleep",
+		Help:      "The duration we sleep before signing",
 	})
 
 	// Info is a gauge that contains information about the zetaclient environment
@@ -154,6 +177,27 @@ var (
 		Name:      "num_connected_peers",
 		Help:      "The number of connected peers (authenticated keygen peers)",
 	})
+
+	// SchedulerTaskInvocationCounter tracks invocations categorized by status, group, and name
+	SchedulerTaskInvocationCounter = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: ZetaClientNamespace,
+			Name:      "scheduler_task_invocations_total",
+			Help:      "Total number of task invocations",
+		},
+		[]string{"status", "task_group", "task_name"},
+	)
+
+	// SchedulerTaskExecutionDuration measures the execution duration of tasks
+	SchedulerTaskExecutionDuration = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: ZetaClientNamespace,
+			Name:      "scheduler_task_duration_seconds",
+			Help:      "Histogram of task execution duration in seconds",
+			Buckets:   []float64{0.05, 0.1, 0.2, 0.3, 0.5, 1, 1.5, 2, 3, 5, 7.5, 10, 15}, // 50ms to 15s
+		},
+		[]string{"status", "task_group", "task_name"},
+	)
 )
 
 // NewMetrics creates a new Metrics instance
@@ -178,20 +222,24 @@ func NewMetrics() (*Metrics, error) {
 }
 
 // Start starts the metrics server
-func (m *Metrics) Start() {
+func (m *Metrics) Start(_ context.Context) error {
 	log.Info().Msg("metrics server starting")
-	go func() {
-		if err := m.s.ListenAndServe(); err != nil {
-			log.Error().Err(err).Msg("fail to start metric server")
-		}
-	}()
+
+	if err := m.s.ListenAndServe(); err != nil {
+		return errors.Wrap(err, "fail to start metric server")
+	}
+
+	return nil
 }
 
 // Stop stops the metrics server
-func (m *Metrics) Stop() error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+func (m *Metrics) Stop() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	return m.s.Shutdown(ctx)
+
+	if err := m.s.Shutdown(ctx); err != nil {
+		log.Error().Err(err).Msg("failed to shutdown metrics server")
+	}
 }
 
 // GetInstrumentedHTTPClient sets up a http client that emits prometheus metrics

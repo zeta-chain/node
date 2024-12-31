@@ -44,7 +44,7 @@ func createNCctxWithStatus(
 		items[i].OutboundParams = []*types.OutboundParams{{Amount: math.ZeroUint(), CallOptions: &types.CallOptions{}}}
 		items[i].RevertOptions = types.NewEmptyRevertOptions()
 
-		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, items[i], tssPubkey)
+		keeper.SaveCCTXUpdate(ctx, items[i], tssPubkey)
 	}
 	return items
 }
@@ -88,7 +88,7 @@ func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int, tssPubkey string
 		items[i].Index = fmt.Sprintf("%d", i)
 		items[i].RevertOptions = types.NewEmptyRevertOptions()
 
-		keeper.SetCctxAndNonceToCctxAndInboundHashToCctx(ctx, items[i], tssPubkey)
+		keeper.SaveCCTXUpdate(ctx, items[i], tssPubkey)
 	}
 	return items
 }
@@ -451,5 +451,236 @@ func Test_NewCCTX(t *testing.T) {
 	t.Run("zero value for protocol contract version gives V1", func(t *testing.T) {
 		cctx := types.CrossChainTx{}
 		require.Equal(t, types.ProtocolContractVersion_V1, cctx.ProtocolContractVersion)
+	})
+}
+
+func TestKeeper_UpdateNonceToCCTX(t *testing.T) {
+	t.Run("should set nonce to cctx if status is PendingOutbound", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		chainID := chains.Ethereum.ChainId
+		nonce := uint64(10)
+
+		cctx := types.CrossChainTx{Index: "test",
+			OutboundParams: []*types.OutboundParams{{ReceiverChainId: chainID, TssNonce: nonce}},
+			CctxStatus:     &types.Status{Status: types.CctxStatus_PendingOutbound},
+		}
+		tssPubkey := "test-tss-pubkey"
+
+		// Act
+		k.SetNonceToCCTX(ctx, cctx, tssPubkey)
+
+		// Assert
+		nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tssPubkey, chainID, int64(nonce))
+		require.True(t, found)
+		require.Equal(t, cctx.Index, nonceToCctx.CctxIndex)
+		require.Equal(t, tssPubkey, nonceToCctx.Tss)
+		require.Equal(t, chainID, nonceToCctx.ChainId)
+	})
+
+	t.Run("should set nonce to cctx if status is PendingRevert", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		chainID := chains.Ethereum.ChainId
+		nonce := uint64(10)
+
+		cctx := types.CrossChainTx{Index: "test",
+			OutboundParams: []*types.OutboundParams{{ReceiverChainId: chainID, TssNonce: nonce}},
+			CctxStatus:     &types.Status{Status: types.CctxStatus_PendingRevert},
+		}
+		tssPubkey := "test-tss-pubkey"
+
+		// Act
+		k.SetNonceToCCTX(ctx, cctx, tssPubkey)
+
+		// Assert
+		nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tssPubkey, chainID, int64(nonce))
+		require.True(t, found)
+		require.Equal(t, cctx.Index, nonceToCctx.CctxIndex)
+		require.Equal(t, tssPubkey, nonceToCctx.Tss)
+		require.Equal(t, chainID, nonceToCctx.ChainId)
+	})
+
+	t.Run("should not set nonce to cctx if status is not PendingOutbound or PendingRevert", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		chainID := chains.Ethereum.ChainId
+		nonce := uint64(10)
+
+		cctx := types.CrossChainTx{Index: "test",
+			OutboundParams: []*types.OutboundParams{{ReceiverChainId: chainID, TssNonce: nonce}},
+			CctxStatus:     &types.Status{Status: types.CctxStatus_Aborted},
+		}
+		tssPubkey := "test-tss-pubkey"
+
+		// Act
+		k.SetNonceToCCTX(ctx, cctx, tssPubkey)
+
+		// Assert
+		_, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tssPubkey, chainID, int64(nonce))
+		require.False(t, found)
+	})
+}
+
+func TestKeeper_UpdateInboundHashToCCTX(t *testing.T) {
+	t.Run(
+		"should update inbound hash to cctx mapping if new cctx index is found for the same inbound hash",
+		func(t *testing.T) {
+			// Arrange
+			k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+			inboundHash := sample.Hash().String()
+			index1 := sample.ZetaIndex(t)
+			index2 := sample.ZetaIndex(t)
+
+			inboundHashToCctx := types.InboundHashToCctx{
+				InboundHash: inboundHash,
+				CctxIndex:   []string{index1},
+			}
+			k.SetInboundHashToCctx(ctx, inboundHashToCctx)
+			cctx := types.CrossChainTx{Index: index2, InboundParams: &types.InboundParams{ObservedHash: inboundHash}}
+
+			// Act
+			k.UpdateInboundHashToCCTX(ctx, cctx)
+
+			// Assert
+			inboundHashToCctx, found := k.GetInboundHashToCctx(ctx, inboundHash)
+			require.True(t, found)
+			require.Equal(t, inboundHash, inboundHashToCctx.InboundHash)
+			require.Equal(t, 2, len(inboundHashToCctx.CctxIndex))
+			require.Contains(t, inboundHashToCctx.CctxIndex, index1)
+			require.Contains(t, inboundHashToCctx.CctxIndex, index2)
+		},
+	)
+
+	t.Run("should do nothing if the cctx index is already in the mapping", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		inboundHash := sample.Hash().String()
+		index := sample.ZetaIndex(t)
+
+		inboundHashToCctx := types.InboundHashToCctx{
+			InboundHash: inboundHash,
+			CctxIndex:   []string{index},
+		}
+		k.SetInboundHashToCctx(ctx, inboundHashToCctx)
+		cctx := types.CrossChainTx{Index: index, InboundParams: &types.InboundParams{ObservedHash: inboundHash}}
+
+		// Act
+		k.UpdateInboundHashToCCTX(ctx, cctx)
+
+		// Assert
+		inboundHashToCctx, found := k.GetInboundHashToCctx(ctx, inboundHash)
+		require.True(t, found)
+		require.Equal(t, inboundHash, inboundHashToCctx.InboundHash)
+		require.Equal(t, 1, len(inboundHashToCctx.CctxIndex))
+		require.Contains(t, inboundHashToCctx.CctxIndex, index)
+	})
+
+	t.Run("should add cctx index to mapping if InboundHashToCctx is not found", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		inboundHash := sample.Hash().String()
+		index := sample.ZetaIndex(t)
+
+		cctx := types.CrossChainTx{Index: index, InboundParams: &types.InboundParams{ObservedHash: inboundHash}}
+
+		// Act
+		k.UpdateInboundHashToCCTX(ctx, cctx)
+
+		// Assert
+		inboundHashToCctx, found := k.GetInboundHashToCctx(ctx, inboundHash)
+		require.True(t, found)
+		require.Equal(t, inboundHash, inboundHashToCctx.InboundHash)
+		require.Equal(t, 1, len(inboundHashToCctx.CctxIndex))
+		require.Contains(t, inboundHashToCctx.CctxIndex, index)
+	})
+}
+
+func TestKeeper_UpdateZetaAccounting(t *testing.T) {
+	t.Run("should update zeta accounting if cctx is aborted and coin type is zeta", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		amount := sdkmath.NewUint(100)
+		cctx := types.CrossChainTx{
+			InboundParams: &types.InboundParams{CoinType: coin.CoinType_Zeta},
+			CctxStatus: &types.Status{
+				IsAbortRefunded: false,
+				Status:          types.CctxStatus_Aborted},
+			OutboundParams: []*types.OutboundParams{{Amount: amount}},
+		}
+		k.SetZetaAccounting(ctx, types.ZetaAccounting{AbortedZetaAmount: math.ZeroUint()})
+
+		// Act
+		k.UpdateZetaAccounting(ctx, cctx)
+
+		// Assert
+		zetaAccounting, found := k.GetZetaAccounting(ctx)
+		require.True(t, found)
+		require.Equal(t, amount, zetaAccounting.AbortedZetaAmount)
+	})
+
+	t.Run("should not update zeta accounting if cctx is not aborted", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		amount := sdkmath.NewUint(100)
+		cctx := types.CrossChainTx{
+			InboundParams: &types.InboundParams{CoinType: coin.CoinType_Zeta},
+			CctxStatus: &types.Status{
+				IsAbortRefunded: false,
+				Status:          types.CctxStatus_PendingOutbound},
+			OutboundParams: []*types.OutboundParams{{Amount: amount}},
+		}
+		k.SetZetaAccounting(ctx, types.ZetaAccounting{AbortedZetaAmount: math.ZeroUint()})
+
+		// Act
+		k.UpdateZetaAccounting(ctx, cctx)
+
+		// Assert
+		zetaAccounting, found := k.GetZetaAccounting(ctx)
+		require.True(t, found)
+		require.Equal(t, math.ZeroUint(), zetaAccounting.AbortedZetaAmount)
+	})
+
+	t.Run("should update to amount if zeta accounting is not set", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		amount := sdkmath.NewUint(100)
+		cctx := types.CrossChainTx{
+			InboundParams: &types.InboundParams{CoinType: coin.CoinType_Zeta},
+			CctxStatus: &types.Status{
+				IsAbortRefunded: false,
+				Status:          types.CctxStatus_Aborted},
+			OutboundParams: []*types.OutboundParams{{Amount: amount}},
+		}
+
+		// Act
+		k.UpdateZetaAccounting(ctx, cctx)
+
+		// Assert
+		zetaAccounting, found := k.GetZetaAccounting(ctx)
+		require.True(t, found)
+		require.Equal(t, amount, zetaAccounting.AbortedZetaAmount)
+	})
+
+	t.Run("should not update zeta accounting if the cctx is already refunded", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		amount := sdkmath.NewUint(100)
+		cctx := types.CrossChainTx{
+			InboundParams: &types.InboundParams{CoinType: coin.CoinType_Zeta},
+			CctxStatus: &types.Status{
+				IsAbortRefunded: true,
+				Status:          types.CctxStatus_Aborted},
+			OutboundParams: []*types.OutboundParams{{Amount: amount}},
+		}
+		k.SetZetaAccounting(ctx, types.ZetaAccounting{AbortedZetaAmount: math.ZeroUint()})
+
+		// Act
+		k.UpdateZetaAccounting(ctx, cctx)
+
+		// Assert
+		zetaAccounting, found := k.GetZetaAccounting(ctx)
+		require.True(t, found)
+		require.Equal(t, math.ZeroUint(), zetaAccounting.AbortedZetaAmount)
 	})
 }

@@ -11,7 +11,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/node/app"
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/e2etests"
@@ -98,9 +97,6 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 		conf.Contracts.EVM.ERC20 = config.DoubleQuotedString(erc20Asset)
 		conf.Contracts.ZEVM.ERC20ZRC20Addr = config.DoubleQuotedString(zrc20ContractAddress)
 	}
-
-	// set config
-	app.SetConfig()
 
 	// initialize context
 	ctx, cancel := context.WithCancel(context.Background())

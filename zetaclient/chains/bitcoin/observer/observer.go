@@ -91,7 +91,6 @@ func NewObserver(
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
-	rpcAlertLatency int64,
 	database *db.DB,
 	logger base.Logger,
 	ts *metrics.TelemetryServer,
@@ -103,8 +102,6 @@ func NewObserver(
 		zetacoreClient,
 		tss,
 		btcBlocksPerDay,
-		base.DefaultHeaderCacheSize,
-		rpcAlertLatency,
 		ts,
 		database,
 		logger,
@@ -150,11 +147,6 @@ func NewObserver(
 // BtcClient returns the btc client
 func (ob *Observer) BtcClient() interfaces.BTCRPCClient {
 	return ob.btcClient
-}
-
-// WithBtcClient attaches a new btc client to the observer
-func (ob *Observer) WithBtcClient(client interfaces.BTCRPCClient) {
-	ob.btcClient = client
 }
 
 // Start starts the Go routine processes to observe the Bitcoin chain

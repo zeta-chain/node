@@ -49,7 +49,6 @@ func (s *BTCSignerSuite) SetUpTest(c *C) {
 	s.btcSigner, err = NewSigner(
 		chains.Chain{},
 		tss,
-		nil,
 		base.DefaultLogger(),
 		config.BTCConfig{},
 	)
@@ -230,7 +229,6 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 	signer, err := NewSigner(
 		chains.BitcoinMainnet,
 		mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet),
-		nil,
 		base.DefaultLogger(),
 		config.BTCConfig{},
 	)
@@ -391,7 +389,6 @@ func TestNewBTCSigner(t *testing.T) {
 	btcSigner, err := NewSigner(
 		chains.Chain{},
 		tss,
-		nil,
 		base.DefaultLogger(),
 		config.BTCConfig{})
 	require.NoError(t, err)

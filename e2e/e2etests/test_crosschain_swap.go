@@ -82,7 +82,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 
 	r.Logger.Info("***** First test: ERC20 -> BTC")
 	// Should deposit ERC20 for swap, swap for BTC and withdraw BTC
-	txHash := r.DepositERC20WithAmountAndMessage(r.EVMAddress(), big.NewInt(8e7), msg)
+	txHash := r.LegacyDepositERC20WithAmountAndMessage(r.EVMAddress(), big.NewInt(8e7), msg)
 	cctx1 := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 
 	// check the cctx status

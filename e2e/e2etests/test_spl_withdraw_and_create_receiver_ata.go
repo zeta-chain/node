@@ -18,7 +18,7 @@ import (
 func TestSPLWithdrawAndCreateReceiverAta(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	withdrawAmount := parseBigInt(r, args[0])
+	withdrawAmount := utils.ParseBigInt(r, args[0])
 
 	// get SPL ZRC20 balance before withdraw
 	zrc20BalanceBefore, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
@@ -72,7 +72,7 @@ func TestSPLWithdrawAndCreateReceiverAta(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("receiver balance of SPL after withdraw: %s", receiverBalanceAfter.Value.Amount)
 
 	// verify amount is added to receiver ata
-	require.EqualValues(r, withdrawAmount.String(), parseBigInt(r, receiverBalanceAfter.Value.Amount).String())
+	require.EqualValues(r, withdrawAmount.String(), utils.ParseBigInt(r, receiverBalanceAfter.Value.Amount).String())
 
 	// verify amount is subtracted on zrc20
 	require.EqualValues(r, new(big.Int).Sub(zrc20BalanceBefore, withdrawAmount).String(), zrc20BalanceAfter.String())

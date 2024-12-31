@@ -49,13 +49,15 @@ func ChainNoncesKeyPrefix(chainID int64) []byte {
 	return []byte(strconv.FormatInt(chainID, 10))
 }
 
+// Address TODOS for name changes: https://github.com/zeta-chain/node/issues/3098
 const (
 	BlameKey = "Blame-"
-	// TODO change identifier for VoterKey to something more descriptive
+	// TODO change identifier for VoterKey to BallotKey
 	VoterKey = "Voter-value-"
 
 	// AllChainParamsKey is the ke prefix for all chain params
 	// NOTE: CoreParams is old name for AllChainParams we keep it as key value for backward compatibility
+	// TODO rename to ChainParamsListKey
 	AllChainParamsKey = "CoreParams"
 
 	ObserverSetKey = "ObserverSet-value-"
@@ -64,22 +66,29 @@ const (
 	// NOTE: PermissionFlags is old name for CrosschainFlags we keep it as key value for backward compatibility
 	CrosschainFlagsKey = "PermissionFlags-value-"
 
+	// TODO rename to LastObserverCountKey
 	LastBlockObserverCountKey = "ObserverCount-value-"
 	NodeAccountKey            = "NodeAccount-value-"
 	KeygenKey                 = "Keygen-value-"
-	BlockHeaderKey            = "BlockHeader-value-"
-	BlockHeaderStateKey       = "BlockHeaderState-value-"
 
-	BallotListKey      = "BallotList-value-"
-	TSSKey             = "TSS-value-"
-	TSSHistoryKey      = "TSS-History-value-"
+	// TODO rename to BallotListForHeightKey
+	BallotListKey = "BallotList-value-"
+	TSSKey        = "TSS-value-"
+	TSSHistoryKey = "TSS-History-value-"
+
+	// TODO rename to TssFundMigratorInfoKey
 	TssFundMigratorKey = "FundsMigrator-value-"
 
+	// TODO Rename to PendingNoncesListKey
 	PendingNoncesKeyPrefix = "PendingNonces-value-"
 	ChainNoncesKey         = "ChainNonces-value-"
-	NonceToCctxKeyPrefix   = "NonceToCctx-value-"
+
+	// TODO rename to NonceToCctxListKey
+	NonceToCctxKeyPrefix = "NonceToCctx-value-"
 
 	ParamsKey = "Params-value-"
+
+	OperationalFlagsKey = "OperationalFlags-value-"
 )
 
 func GetBlameIndex(chainID int64, nonce uint64, digest string, height uint64) string {

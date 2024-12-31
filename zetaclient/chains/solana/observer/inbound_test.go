@@ -26,8 +26,8 @@ var (
 
 func Test_FilterInboundEventAndVote(t *testing.T) {
 	// load archived inbound vote tx result
-	// https://explorer.solana.com/tx/MS3MPLN7hkbyCZFwKqXcg8fmEvQMD74fN6Ps2LSWXJoRxPW5ehaxBorK9q1JFVbqnAvu9jXm6ertj7kT7HpYw1j?cluster=devnet
-	txHash := "MS3MPLN7hkbyCZFwKqXcg8fmEvQMD74fN6Ps2LSWXJoRxPW5ehaxBorK9q1JFVbqnAvu9jXm6ertj7kT7HpYw1j"
+	// https://explorer.solana.com/tx/24GzWsxYCFcwwJ2rzAsWwWC85aYKot6Rz3jWnBP1GvoAg5A9f1WinYyvyKseYM52q6i3EkotZdJuQomGGq5oxRYr?cluster=devnet
+	txHash := "24GzWsxYCFcwwJ2rzAsWwWC85aYKot6Rz3jWnBP1GvoAg5A9f1WinYyvyKseYM52q6i3EkotZdJuQomGGq5oxRYr"
 	chain := chains.SolanaDevnet
 	txResult := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHash, false)
 
@@ -46,7 +46,6 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 		*chainParams,
 		zetacoreClient,
 		nil,
-		60,
 		database,
 		base.DefaultLogger(),
 		nil,
@@ -62,7 +61,7 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 func Test_FilterInboundEvents(t *testing.T) {
 	// load archived inbound deposit tx result
 	// https://explorer.solana.com/tx/MS3MPLN7hkbyCZFwKqXcg8fmEvQMD74fN6Ps2LSWXJoRxPW5ehaxBorK9q1JFVbqnAvu9jXm6ertj7kT7HpYw1j?cluster=devnet
-	txHash := "MS3MPLN7hkbyCZFwKqXcg8fmEvQMD74fN6Ps2LSWXJoRxPW5ehaxBorK9q1JFVbqnAvu9jXm6ertj7kT7HpYw1j"
+	txHash := "24GzWsxYCFcwwJ2rzAsWwWC85aYKot6Rz3jWnBP1GvoAg5A9f1WinYyvyKseYM52q6i3EkotZdJuQomGGq5oxRYr"
 	chain := chains.SolanaDevnet
 	txResult := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHash, false)
 
@@ -73,18 +72,19 @@ func Test_FilterInboundEvents(t *testing.T) {
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = testutils.OldSolanaGatewayAddressDevnet
 
-	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, 60, database, base.DefaultLogger(), nil)
+	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, database, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	// expected result
-	sender := "AS48jKNQsDGkEdDvfwu1QpqjtqbCadrAq9nGXjFmdX3Z"
+	sender := "HgTpiVRvjUPUcWLzdmCgdadu1GceJNgBWLoN9r66p8o3"
+	expectedMemo := []byte{109, 163, 11, 250, 101, 232, 90, 22, 176, 91, 206, 56, 70, 51, 158, 210, 188, 116, 99, 22}
 	eventExpected := &clienttypes.InboundEvent{
 		SenderChainID: chain.ChainId,
 		Sender:        sender,
-		Receiver:      sender,
+		Receiver:      "",
 		TxOrigin:      sender,
-		Amount:        100000,
-		Memo:          []byte("0x7F8ae2ABb69A558CE6bAd546f25F0464D9e09e5B4955a3F38ff86ae92A914445099caa8eA2B9bA32"),
+		Amount:        100000000,
+		Memo:          expectedMemo,
 		BlockNumber:   txResult.Slot,
 		TxHash:        txHash,
 		Index:         0, // not a EVM smart contract call
@@ -113,7 +113,7 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
 
-	ob, err := observer.NewObserver(chain, nil, *params, zetacoreClient, nil, 60, database, base.DefaultLogger(), nil)
+	ob, err := observer.NewObserver(chain, nil, *params, zetacoreClient, nil, database, base.DefaultLogger(), nil)
 	require.NoError(t, err)
 
 	// create test compliance config
@@ -123,11 +123,13 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 
 	t.Run("should return vote msg for valid event", func(t *testing.T) {
 		sender := sample.SolanaAddress(t)
-		memo := sample.EthAddress().Bytes()
-		event := sample.InboundEvent(chain.ChainId, sender, sender, 1280, []byte(memo))
+		receiver := sample.EthAddress()
+		event := sample.InboundEvent(chain.ChainId, sender, "", 1280, receiver.Bytes())
 
 		msg := ob.BuildInboundVoteMsgFromEvent(event)
 		require.NotNil(t, msg)
+		require.Equal(t, sender, msg.Sender)
+		require.Equal(t, receiver.Hex(), msg.Receiver)
 	})
 
 	t.Run("should return nil if failed to decode memo", func(t *testing.T) {

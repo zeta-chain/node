@@ -29,87 +29,87 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	}
 
 	// send v1 eth deposit
-	r.Logger.Print("🏃test v1 eth deposit")
-	txHash := r.DepositEtherWithAmount(amount)
+	r.Logger.Print("🏃test legacy eth deposit")
+	txHash := r.LegacyDepositEtherWithAmount(amount)
 	addTrackerAndWaitForCCTX(coin.CoinType_Gas, txHash.Hex())
-	r.Logger.Print("🍾v1 eth deposit observed")
+	r.Logger.Print("🍾legacy eth deposit observed")
 
 	// send v1 erc20 deposit
-	r.Logger.Print("🏃test v1 erc20 deposit")
-	txHash = r.DepositERC20WithAmountAndMessage(r.EVMAddress(), amount, []byte{})
+	r.Logger.Print("🏃test legacy erc20 deposit")
+	txHash = r.LegacyDepositERC20WithAmountAndMessage(r.EVMAddress(), amount, []byte{})
 	addTrackerAndWaitForCCTX(coin.CoinType_ERC20, txHash.Hex())
-	r.Logger.Print("🍾v1 erc20 deposit observed")
+	r.Logger.Print("🍾legacy erc20 deposit observed")
 
-	// send v2 eth deposit
-	r.Logger.Print("🏃test v2 eth deposit")
-	tx := r.V2ETHDeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+	// send eth deposit
+	r.Logger.Print("🏃test eth deposit")
+	tx := r.ETHDeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 	addTrackerAndWaitForCCTX(coin.CoinType_Gas, tx.Hash().Hex())
-	r.Logger.Print("🍾v2 eth deposit observed")
+	r.Logger.Print("🍾 eth deposit observed")
 
-	// send v2 eth deposit and call
-	r.Logger.Print("🏃test v2 eth eposit and call")
-	tx = r.V2ETHDepositAndCall(
+	// send eth deposit and call
+	r.Logger.Print("🏃test eth eposit and call")
+	tx = r.ETHDepositAndCall(
 		r.TestDAppV2ZEVMAddr,
 		amount,
 		[]byte(randomPayload(r)),
 		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 	addTrackerAndWaitForCCTX(coin.CoinType_Gas, tx.Hash().Hex())
-	r.Logger.Print("🍾v2 eth deposit and call observed")
+	r.Logger.Print("🍾 eth deposit and call observed")
 
-	// send v2 erc20 deposit
-	r.Logger.Print("🏃test v2 erc20 deposit")
+	// send erc20 deposit
+	r.Logger.Print("🏃test  erc20 deposit")
 	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
-	tx = r.V2ERC20Deposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+	tx = r.ERC20Deposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 	addTrackerAndWaitForCCTX(coin.CoinType_Gas, tx.Hash().Hex())
-	r.Logger.Print("🍾v2 erc20 deposit observed")
+	r.Logger.Print("🍾 erc20 deposit observed")
 
-	// send v2 erc20 deposit and call
-	r.Logger.Print("🏃test v2 erc20 deposit and call")
-	tx = r.V2ERC20DepositAndCall(
+	// send erc20 deposit and call
+	r.Logger.Print("🏃test erc20 deposit and call")
+	tx = r.ERC20DepositAndCall(
 		r.TestDAppV2ZEVMAddr,
 		amount,
 		[]byte(randomPayload(r)),
 		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 	addTrackerAndWaitForCCTX(coin.CoinType_Gas, tx.Hash().Hex())
-	r.Logger.Print("🍾v2 erc20 deposit and call observed")
+	r.Logger.Print("🍾 erc20 deposit and call observed")
 
-	// send v2 call
-	r.Logger.Print("🏃test v2 call")
-	tx = r.V2EVMToZEMVCall(
+	// send call
+	r.Logger.Print("🏃test call")
+	tx = r.EVMToZEMVCall(
 		r.TestDAppV2ZEVMAddr,
 		[]byte(randomPayload(r)),
 		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 	addTrackerAndWaitForCCTX(coin.CoinType_NoAssetCall, tx.Hash().Hex())
-	r.Logger.Print("🍾v2 call observed")
+	r.Logger.Print("🍾 call observed")
 
 	// set value of the payable transactions
 	previousValue := r.EVMAuth.Value
 	r.EVMAuth.Value = amount
 
-	// send v2 deposit through contract
-	r.Logger.Print("🏃test v2 deposit through contract")
+	// send deposit through contract
+	r.Logger.Print("🏃test deposit through contract")
 	tx, err := r.TestDAppV2EVM.GatewayDeposit(r.EVMAuth, r.EVMAddress())
 	require.NoError(r, err)
 	addTrackerAndWaitForCCTX(coin.CoinType_Gas, tx.Hash().Hex())
-	r.Logger.Print("🍾v2 deposit through contract observed")
+	r.Logger.Print("🍾 deposit through contract observed")
 
-	// send v2 deposit and call through contract
-	r.Logger.Print("🏃test v2 deposit and call through contract")
+	// send deposit and call through contract
+	r.Logger.Print("🏃test deposit and call through contract")
 	tx, err = r.TestDAppV2EVM.GatewayDepositAndCall(r.EVMAuth, r.TestDAppV2ZEVMAddr, []byte(randomPayload(r)))
 	require.NoError(r, err)
 	addTrackerAndWaitForCCTX(coin.CoinType_Gas, tx.Hash().Hex())
-	r.Logger.Print("🍾v2 deposit and call through contract observed")
+	r.Logger.Print("🍾 deposit and call through contract observed")
 
 	// reset the value of the payable transactions
 	r.EVMAuth.Value = previousValue
 
-	// send v2 call through contract
-	r.Logger.Print("🏃test v2 call through contract")
+	// send call through contract
+	r.Logger.Print("🏃test call through contract")
 	tx, err = r.TestDAppV2EVM.GatewayCall(r.EVMAuth, r.TestDAppV2ZEVMAddr, []byte(randomPayload(r)))
 	require.NoError(r, err)
 	addTrackerAndWaitForCCTX(coin.CoinType_NoAssetCall, tx.Hash().Hex())
-	r.Logger.Print("🍾v2 call through contract observed")
+	r.Logger.Print("🍾 call through contract observed")
 }

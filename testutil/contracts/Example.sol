@@ -12,6 +12,7 @@ contract Example {
     }
 
     uint256 public bar;
+    bytes public lastMessage;
 
     constructor() {
         bar = 0;
@@ -40,5 +41,6 @@ contract Example {
         bytes calldata message
     ) external {
         bar = amount;
+        lastMessage = message;
     }
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/node/cmd"
+	_ "github.com/zeta-chain/node/pkg/sdkconfig/default" //nolint:blank-imports this is a test package
 	zetatss "github.com/zeta-chain/node/zetaclient/tss"
 )
 
@@ -120,8 +120,4 @@ func (tss *TSS) Pause() {
 
 func (tss *TSS) Unpause() {
 	tss.paused = false
-}
-
-func init() {
-	cmd.SetupCosmosConfig()
 }

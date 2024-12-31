@@ -6,15 +6,15 @@ default_account:
   solana_address: "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
   solana_private_key: "4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C"
 additional_accounts:
-  user_erc20:
+  user_legacy_erc20:
     bech32_address: "zeta1datate7xmwm4uk032f9rmcu0cwy7ch7kg6y6zv"
     evm_address: "0x6F57D5E7c6DBb75e59F1524a3dE38Fc389ec5Fd6"
     private_key: "fda3be1b1517bdf48615bdadacc1e6463d2865868dc8077d2cdcfa4709a16894"
-  user_zeta_test:
+  user_legacy_zeta:
     bech32_address: "zeta1tnp0hvsq4y5mxuhrq9h3jfwulxywpq0ads0rer"
     evm_address: "0x5cC2fBb200A929B372e3016F1925DcF988E081fd"
     private_key: "729a6cdc5c925242e7df92fdeeb94dadbf2d0b9950d4db8f034ab27a3b114ba7"
-  user_zevm_mp_test:
+  user_legacy_zevm_mp:
     bech32_address: "zeta13t3zjxvwec7g38q8mdjga37rpes9zkfvv7tkn2"
     evm_address: "0x8Ae229198eCE3c889C07DB648Ec7C30E6051592c"
     private_key: "105460aebf71b10bfdb710ef5aa6d2932ee6ff6fc317ac9c24e0979903b10a5d"
@@ -31,7 +31,12 @@ additional_accounts:
     evm_address: "0x103FD9224F00ce3013e95629e52DFc31D805D68d"
     private_key: "dd53f191113d18e57bd4a5494a64a020ba7919c815d0a6d34a42ebb2839e9d95"
     solana_private_key: "4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C"
-  user_ether:
+  user_spl:
+    bech32_address: "zeta17e77anpmzhuuam67hg6x3mtqrulqh80z9chv70"
+    evm_address: "0xf67deecc3B15F9CEeF5eba3468ed601f3e0B9de2"
+    private_key: "2b3306a8ac43dbf0e350b87876c131e7e12bd49563a16de9ce8aeb664b94d559"
+    solana_private_key: "4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C"
+  user_legacy_ether:
     bech32_address: "zeta134rakuus43xn63yucgxhn88ywj8ewcv6ezn2ga"
     evm_address: "0x8D47Db7390AC4D3D449Cc20D799ce4748F97619A"
     private_key: "098e74a1c2261fa3c1b8cfca8ef2b4ff96c73ce36710d208d1f6535aef42545d"
@@ -51,19 +56,19 @@ additional_accounts:
     bech32_address: "zeta1k4f0l2e9qqjccxnstwj0uaarxvn44lj990she9"
     evm_address: "0xb552FFAb2500258C1A705Ba4Fe77A333275AFE45"
     private_key: "bd6b74387f11b31d21e87c2ae7a23ec269aee08a355dad6c508a6fceb79d1f48"
-  user_v2_ether:
+  user_ether:
     bech32_address: "zeta1erlqlpl5da7a9r3emzw60kax9fxc3h0r3z7c5e"
     evm_address: "0xC8fe0F87f46F7Dd28e39D89Da7Dba62A4D88dde3"
     private_key: "11c25af71c82602a681ce622bf76f4f0fbc3b7f23ce935db6249d1517322f436"
-  user_v2_erc20:
+  user_erc20:
     bech32_address: "zeta12wp6syndml6jd32m7f9mn2wscsxz6cff8nczl4"
     evm_address: "0x5383A8126ddff526C55bF24Bb9a9D0c40c2d6129"
     private_key: "77b0e4dcc29c5c47b6999dabd42abcfdf7750ccc86d6659c1373ec1ea3b4af6c"
-  user_v2_ether_revert:
+  user_ether_revert:
     bech32_address: "zeta1m7m5xd79x9qmlyfpqxcwuac04r3dewfpdcfw5e"
     evm_address: "0xdFb74337c53141bf912101b0Ee770FA8e2DCB921"
     private_key: "be7098604cc40f95d68298a3b4ae13972ac8a3df271ba19ddf169070d30e8ba8"
-  user_v2_erc20_revert:
+  user_erc20_revert:
     bech32_address: "zeta1nry9yeg6njhjrp2ctppa8558vqxal9fxk69zxg"
     evm_address: "0x98c852651A9CAF2185585843d3D287600Ddf9526"
     private_key: "bf9456c679bb5a952a9a137fcfc920e0413efdb97c36de1e57455763084230cb"
@@ -95,8 +100,8 @@ rpcs:
   evm: "http://localhost:8545"
   bitcoin:
     host: "localhost:18443"
-    user: "smoketest"
-    pass: "123"
+    user: "admin"
+    pass: "admin"
     http_post_mode: true
     disable_tls: true
     params: regnet
@@ -104,6 +109,7 @@ rpcs:
   zetacore_rpc: "http://localhost:26657"
   solana: "http://localhost:8899"
   ton_sidecar_url: "http://localhost:8111"
+  zetaclient_metrics: "http://localhost:8886"
 contracts:
   zevm:
     system_contract: "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"

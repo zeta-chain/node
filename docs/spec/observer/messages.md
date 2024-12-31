@@ -164,3 +164,12 @@ message MsgUpdateGasPriceIncreaseFlags {
 }
 ```
 
+## MsgUpdateOperationalFlags
+
+```proto
+message MsgUpdateOperationalFlags {
+	string creator = 1;
+	OperationalFlags operational_flags = 2;
+}
+```
+

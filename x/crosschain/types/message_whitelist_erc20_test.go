@@ -71,10 +71,36 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 			error: true,
 		},
 		{
-			name: "valid",
+			name: "evm asset address with invalid checksum format",
 			msg: types.NewMsgWhitelistERC20(
 				sample.AccAddress(),
-				sample.EthAddress().Hex(),
+				"0x5a4f260a7d716c859a2736151cb38b9c58c32c64",
+				1,
+				"name",
+				"symbol",
+				6,
+				10,
+			),
+			error: true,
+		},
+		{
+			name: "valid message with evm asset address",
+			msg: types.NewMsgWhitelistERC20(
+				sample.AccAddress(),
+				"0x5a4f260A7D716c859A2736151cB38b9c58C32c64",
+				1,
+				"name",
+				"symbol",
+				6,
+				10,
+			),
+			error: false,
+		},
+		{
+			name: "valid message with solana asset address",
+			msg: types.NewMsgWhitelistERC20(
+				sample.AccAddress(),
+				"Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr",
 				1,
 				"name",
 				"symbol",
