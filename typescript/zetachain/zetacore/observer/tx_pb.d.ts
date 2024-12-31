@@ -694,7 +694,7 @@ export declare class MsgUpdateOperationalFlags extends Message<MsgUpdateOperatio
   creator: string;
 
   /**
-   * @generated from field: zetachain.zetacore.observer.OperationalFlags operationalFlags = 2;
+   * @generated from field: zetachain.zetacore.observer.OperationalFlags operational_flags = 2;
    */
   operationalFlags?: OperationalFlags;
 

@@ -101,6 +101,13 @@ var (
 		Help:      "Difference between system time and block time from zetacore",
 	})
 
+	// CoreBlockLatencySleep is a gauge of the duration we sleep before signing
+	CoreBlockLatencySleep = promauto.NewGauge(prometheus.GaugeOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "core_block_latency_sleep",
+		Help:      "The duration we sleep before signing",
+	})
+
 	// Info is a gauge that contains information about the zetaclient environment
 	Info = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: ZetaClientNamespace,
