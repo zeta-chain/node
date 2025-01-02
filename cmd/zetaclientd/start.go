@@ -94,11 +94,6 @@ func Start(_ *cobra.Command, _ []string) error {
 		Telemetry:           telemetry,
 	}
 
-	tss, err := zetatss.Setup(ctx, tssSetupProps, logger.Std)
-	if err != nil {
-		return errors.Wrap(err, "unable to setup TSS service")
-	}
-
 	isObserver, err := isObserverNode(ctx, zetacoreClient)
 	switch {
 	case err != nil:
@@ -115,10 +110,22 @@ func Start(_ *cobra.Command, _ []string) error {
 		graceful.ShutdownNow()
 	})
 
-	maintenance.NewShutdownListener(zetacoreClient, logger.Std).Listen(ctx, func() {
+	shutdownListener := maintenance.NewShutdownListener(zetacoreClient, logger.Std)
+	err = shutdownListener.RunPreStartCheck(ctx)
+	if err != nil {
+		return errors.Wrap(err, "pre start check failed")
+	}
+	shutdownListener.Listen(ctx, func() {
 		logger.Std.Info().Msg("Shutdown listener received an action to shutdown zetaclientd.")
 		graceful.ShutdownNow()
 	})
+
+	// This will start p2p communication so it should only happen after
+	// preflight checks have completed
+	tss, err := zetatss.Setup(ctx, tssSetupProps, logger.Std)
+	if err != nil {
+		return errors.Wrap(err, "unable to setup TSS service")
+	}
 
 	// CreateSignerMap: This creates a map of all signers for each chain.
 	// Each signer is responsible for signing transactions for a particular chain

@@ -16,4 +16,8 @@ message OperationalFlags {
   // Should be calculated and set based on max(zetaclient_core_block_latency).
   google.protobuf.Duration signer_block_time_offset = 2
       [ (gogoproto.stdduration) = true ];
+
+  // Minimum version of zetaclient that is allowed to run. This must be either
+  // a valid semver string (v23.0.1) or empty.
+  string minimum_version = 3;
 }

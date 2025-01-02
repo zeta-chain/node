@@ -16,6 +16,10 @@ func TestOperationalFlags_Validate(t *testing.T) {
 		errContains string
 	}{
 		{
+			name: "empty is valid",
+			of:   types.OperationalFlags{},
+		},
+		{
 			name: "invalid restart height",
 			of: types.OperationalFlags{
 				RestartHeight: -1,
@@ -49,10 +53,17 @@ func TestOperationalFlags_Validate(t *testing.T) {
 			errContains: types.ErrOperationalFlagsSignerBlockTimeOffsetLimit.Error(),
 		},
 		{
+			name: "minimum version valid",
+			of: types.OperationalFlags{
+				MinimumVersion: "v1.1.1",
+			},
+		},
+		{
 			name: "all flags valid",
 			of: types.OperationalFlags{
 				RestartHeight:         1,
 				SignerBlockTimeOffset: ptr.Ptr(time.Second),
+				MinimumVersion:        "v1.1.1",
 			},
 		},
 	}
