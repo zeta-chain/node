@@ -169,7 +169,7 @@ message MsgUpdateGasPriceIncreaseFlags {
 ```proto
 message MsgUpdateOperationalFlags {
 	string creator = 1;
-	OperationalFlags operationalFlags = 2;
+	OperationalFlags operational_flags = 2;
 }
 ```
 

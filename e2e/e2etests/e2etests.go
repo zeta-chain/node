@@ -132,7 +132,8 @@ const (
 	TestMigrateERC20CustodyFundsName  = "migrate_erc20_custody_funds"
 	TestMigrateTSSName                = "migrate_tss"
 	TestSolanaWhitelistSPLName        = "solana_whitelist_spl"
-	TestOperationalFlagsName          = "operational_flags"
+	TestZetaclientRestartHeightName   = "zetaclient_restart_height"
+	TestZetaclientSignerOffsetName    = "zetaclient_signer_offset"
 
 	/*
 	 Operational tests
@@ -880,10 +881,16 @@ var AllE2ETests = []runner.E2ETest{
 		TestMigrateERC20CustodyFunds,
 	),
 	runner.NewE2ETest(
-		TestOperationalFlagsName,
-		"operational flags functionality",
+		TestZetaclientRestartHeightName,
+		"zetaclient scheduled restart height",
 		[]runner.ArgDefinition{},
-		TestOperationalFlags,
+		TestZetaclientRestartHeight,
+	),
+	runner.NewE2ETest(
+		TestZetaclientSignerOffsetName,
+		"zetaclient signer offset",
+		[]runner.ArgDefinition{},
+		TestZetaclientSignerOffset,
 	),
 	/*
 	 Special tests
