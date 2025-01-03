@@ -16,58 +16,9 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
-	"github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
-
-// WatchInbound watches Bitcoin chain for inbounds on a ticker
-// It starts a ticker and run ObserveInbound
-// TODO(revamp): move all ticker related methods in the same file
-func (ob *Observer) WatchInbound(ctx context.Context) error {
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInbound", ob.ChainParams().InboundTicker)
-	if err != nil {
-		ob.logger.Inbound.Error().Err(err).Msg("error creating ticker")
-		return err
-	}
-	defer ticker.Stop()
-
-	ob.logger.Inbound.Info().Msgf("WatchInbound started for chain %d", ob.Chain().ChainId)
-	sampledLogger := ob.logger.Inbound.Sample(&zerolog.BasicSampler{N: 10})
-
-	// ticker loop
-	for {
-		select {
-		case <-ticker.C():
-			if !app.IsInboundObservationEnabled() {
-				sampledLogger.Info().
-					Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.Chain().ChainId)
-				continue
-			}
-			err := ob.ObserveInbound(ctx)
-			if err != nil {
-				// skip showing log for block number 0 as it means Bitcoin node is not enabled
-				// TODO: prevent this routine from running if Bitcoin node is not enabled
-				// https://github.com/zeta-chain/node/issues/2790
-				if !errors.Is(err, common.ErrBitcoinNotEnabled) {
-					ob.logger.Inbound.Error().Err(err).Msg("WatchInbound error observing in tx")
-				} else {
-					ob.logger.Inbound.Debug().Err(err).Msg("WatchInbound: Bitcoin node is not enabled")
-				}
-			}
-			ticker.UpdateInterval(ob.ChainParams().InboundTicker, ob.logger.Inbound)
-		case <-ob.StopChannel():
-			ob.logger.Inbound.Info().Msgf("WatchInbound stopped for chain %d", ob.Chain().ChainId)
-			return nil
-		}
-	}
-}
 
 // ObserveInbound observes the Bitcoin chain for inbounds and post votes to zetacore
 // TODO(revamp): simplify this function into smaller functions
@@ -83,7 +34,8 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 	// 0 will be returned if the node is not synced
 	if currentBlock == 0 {
-		return errors.Wrap(common.ErrBitcoinNotEnabled, "observeInboundBTC: current block number 0 is too low")
+		ob.logger.Inbound.Debug().Err(err).Msg("WatchInbound: Bitcoin node is not enabled")
+		return nil
 	}
 
 	// #nosec G115 checked positive
@@ -156,44 +108,9 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	return nil
 }
 
-// WatchInboundTracker watches zetacore for bitcoin inbound trackers
-// TODO(revamp): move all ticker related methods in the same file
-func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInboundTracker", ob.ChainParams().InboundTicker)
-	if err != nil {
-		ob.logger.Inbound.Err(err).Msg("error creating ticker")
-		return err
-	}
-
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C():
-			if !app.IsInboundObservationEnabled() {
-				continue
-			}
-			err := ob.ProcessInboundTrackers(ctx)
-			if err != nil {
-				ob.logger.Inbound.Error().
-					Err(err).
-					Msgf("error observing inbound tracker for chain %d", ob.Chain().ChainId)
-			}
-			ticker.UpdateInterval(ob.ChainParams().InboundTicker, ob.logger.Inbound)
-		case <-ob.StopChannel():
-			ob.logger.Inbound.Info().Msgf("WatchInboundTracker stopped for chain %d", ob.Chain().ChainId)
-			return nil
-		}
-	}
-}
-
-// ProcessInboundTrackers processes inbound trackers
+// ObserveInboundTrackers processes inbound trackers
 // TODO(revamp): move inbound tracker logic in a specific file
-func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
+func (ob *Observer) ObserveInboundTrackers(ctx context.Context) error {
 	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
 	if err != nil {
 		return err

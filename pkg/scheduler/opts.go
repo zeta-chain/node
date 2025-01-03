@@ -29,7 +29,7 @@ func Interval(interval time.Duration) Opt {
 	return func(_ *Task, opts *taskOpts) { opts.interval = interval }
 }
 
-// Skipper sets task skipper function
+// Skipper sets task skipper function. If it returns true, the task is skipped.
 func Skipper(skipper func() bool) Opt {
 	return func(t *Task, _ *taskOpts) { t.skipper = skipper }
 }
