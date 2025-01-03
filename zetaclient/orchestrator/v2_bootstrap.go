@@ -47,6 +47,8 @@ func (oc *V2) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) (*bitcoin.
 	}
 
 	// todo extract base observer
+	// todo extract base signer
+	// https://github.com/zeta-chain/node/issues/3331
 
 	observer, err := btcobserver.NewObserver(
 		*rawChain,
@@ -61,8 +63,6 @@ func (oc *V2) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) (*bitcoin.
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
-
-	// todo extract base signer
 
 	signer, err := btcsigner.NewSigner(*rawChain, oc.deps.TSS, oc.logger.base, cfg)
 	if err != nil {

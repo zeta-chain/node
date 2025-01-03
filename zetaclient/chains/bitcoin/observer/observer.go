@@ -39,8 +39,6 @@ const (
 	BigValueConfirmationCount = 6
 )
 
-var _ interfaces.ChainObserver = (*Observer)(nil)
-
 // Logger contains list of loggers used by Bitcoin chain observer
 type Logger struct {
 	// base.Logger contains a list of base observer loggers
@@ -145,11 +143,6 @@ func NewObserver(
 	}
 
 	return ob, nil
-}
-
-// Start starts the Go routine processes to observe the Bitcoin chain
-func (ob *Observer) Start(_ context.Context) {
-	// todo drop
 }
 
 // GetPendingNonce returns the artificial pending nonce

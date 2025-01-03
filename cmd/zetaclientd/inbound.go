@@ -15,7 +15,6 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	evmobserver "github.com/zeta-chain/node/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
@@ -156,20 +155,21 @@ func InboundGetBallot(_ *cobra.Command, args []string) error {
 		}
 		fmt.Println("CoinType : ", coinType)
 	} else if chain.IsBitcoin() {
-		observer, ok := observers[chainID]
-		if !ok {
-			return fmt.Errorf("observer not found for btc chain %d", chainID)
-		}
-
-		btcObserver, ok := observer.(*btcobserver.Observer)
-		if !ok {
-			return fmt.Errorf("observer is not btc observer for chain %d", chainID)
-		}
-
-		ballotIdentifier, err = btcObserver.CheckReceiptForBtcTxHash(ctx, inboundHash, false)
-		if err != nil {
-			return err
-		}
+		return fmt.Errorf("not implemented")
+		//observer, ok := observers[chainID]
+		//if !ok {
+		//	return fmt.Errorf("observer not found for btc chain %d", chainID)
+		//}
+		//
+		//btcObserver, ok := observer.(*btcobserver.Observer)
+		//if !ok {
+		//	return fmt.Errorf("observer is not btc observer for chain %d", chainID)
+		//}
+		//
+		//ballotIdentifier, err = btcObserver.CheckReceiptForBtcTxHash(ctx, inboundHash, false)
+		//if err != nil {
+		//	return err
+		//}
 	}
 
 	fmt.Println("BallotIdentifier: ", ballotIdentifier)

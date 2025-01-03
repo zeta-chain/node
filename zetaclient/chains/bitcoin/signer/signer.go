@@ -16,7 +16,6 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -47,8 +46,6 @@ const (
 	// broadcastRetries is the maximum number of retries for broadcasting a transaction
 	broadcastRetries = 5
 )
-
-var _ interfaces.ChainSigner = (*Signer)(nil)
 
 // Signer deals with signing BTC transactions and implements the ChainSigner interface
 type Signer struct {
@@ -86,37 +83,6 @@ func NewSigner(
 		Signer: baseSigner,
 		client: client,
 	}, nil
-}
-
-// TODO: get rid of below four get/set functions for Bitcoin, as they are not needed in future
-// https://github.com/zeta-chain/node/issues/2532
-// SetZetaConnectorAddress does nothing for BTC
-func (signer *Signer) SetZetaConnectorAddress(_ ethcommon.Address) {
-}
-
-// SetERC20CustodyAddress does nothing for BTC
-func (signer *Signer) SetERC20CustodyAddress(_ ethcommon.Address) {
-}
-
-// GetZetaConnectorAddress returns dummy address
-func (signer *Signer) GetZetaConnectorAddress() ethcommon.Address {
-	return ethcommon.Address{}
-}
-
-// GetERC20CustodyAddress returns dummy address
-func (signer *Signer) GetERC20CustodyAddress() ethcommon.Address {
-	return ethcommon.Address{}
-}
-
-// SetGatewayAddress does nothing for BTC
-// Note: TSS address will be used as gateway address for Bitcoin
-func (signer *Signer) SetGatewayAddress(_ string) {
-}
-
-// GetGatewayAddress returns empty address
-// Note: same as SetGatewayAddress
-func (signer *Signer) GetGatewayAddress() string {
-	return ""
 }
 
 // AddWithdrawTxOutputs adds the 3 outputs to the withdraw tx
@@ -340,7 +306,7 @@ func (signer *Signer) TryProcessOutbound(
 	cctx *types.CrossChainTx,
 	outboundProcessor *outboundprocessor.Processor,
 	outboundID string,
-	chainObserver interfaces.ChainObserver,
+	observer *observer.Observer,
 	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
@@ -369,14 +335,7 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 
-	// convert chain observer to BTC observer
-	btcObserver, ok := chainObserver.(*observer.Observer)
-	if !ok {
-		logger.Error().Msg("chain observer is not a bitcoin observer")
-		return
-	}
-
-	chain := btcObserver.Chain()
+	chain := observer.Chain()
 	outboundTssNonce := params.TssNonce
 	signerAddress, err := zetacoreClient.GetKeys().GetAddress()
 	if err != nil {
@@ -440,7 +399,7 @@ func (signer *Signer) TryProcessOutbound(
 		amount,
 		gasprice,
 		sizelimit,
-		btcObserver,
+		observer,
 		height,
 		outboundTssNonce,
 		chain,
@@ -487,7 +446,7 @@ func (signer *Signer) TryProcessOutbound(
 			logger.Info().Fields(lf).Msgf("Add Bitcoin outbound tracker successfully")
 
 			// Save successfully broadcasted transaction to btc chain observer
-			btcObserver.SaveBroadcastedTx(outboundHash, outboundTssNonce)
+			observer.SaveBroadcastedTx(outboundHash, outboundTssNonce)
 
 			break // successful broadcast; no need to retry
 		}
