@@ -52,5 +52,8 @@ func TestBitcoinDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string)
 	cctx := utils.WaitCctxAbortedByInboundHash(r.Ctx, r, txHash.String(), r.CctxClient)
 
 	require.True(r, cctx.GetCurrentOutboundParam().Amount.Uint64() < constant.BTCWithdrawalDustAmount)
-	require.True(r, strings.Contains(cctx.CctxStatus.ErrorMessage, crosschaintypes.ErrInvalidWithdrawalAmount.Error()))
+	require.True(
+		r,
+		strings.Contains(cctx.CctxStatus.ErrorMessageRevert, crosschaintypes.ErrInvalidWithdrawalAmount.Error()),
+	)
 }

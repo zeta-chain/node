@@ -198,3 +198,74 @@ func TestCctxStatus_IsPendingStatus(t *testing.T) {
 		})
 	}
 }
+
+func TestStatus_UpdateErrorMessages(t *testing.T) {
+	t.Run("should update only status message if error message outbound is empty", func(t *testing.T) {
+		m := types.Status{
+			StatusMessage:      "old status message",
+			ErrorMessage:       "old error message",
+			ErrorMessageRevert: "old error message revert",
+		}
+		messages := types.StatusMessages{
+			StatusMessage: "status message",
+		}
+		m.UpdateErrorMessages(messages)
+		require.Equal(t, messages.StatusMessage, m.StatusMessage)
+		require.Equal(t, "old error message", m.ErrorMessage)
+		require.Equal(t, "old error message revert", m.ErrorMessageRevert)
+	})
+
+	t.Run("should update only status message and revert message if outbound message is empty", func(t *testing.T) {
+		m := types.Status{
+			StatusMessage:      "old status message",
+			ErrorMessage:       "old error message",
+			ErrorMessageRevert: "old error message revert",
+		}
+		messages := types.StatusMessages{
+			StatusMessage:      "status message",
+			ErrorMessageRevert: "error message revert",
+		}
+		m.UpdateErrorMessages(messages)
+		require.Equal(t, messages.StatusMessage, m.StatusMessage)
+		require.Equal(t, "old error message", m.ErrorMessage)
+		require.Equal(t, messages.ErrorMessageRevert, m.ErrorMessageRevert)
+	})
+
+	t.Run("should update only status message and outbound message if revert message is empty", func(t *testing.T) {
+		m := types.Status{
+			StatusMessage:      "old status message",
+			ErrorMessage:       "old error message",
+			ErrorMessageRevert: "old error message revert",
+		}
+		messages := types.StatusMessages{
+			StatusMessage:        "status message",
+			ErrorMessageOutbound: "error message outbound",
+		}
+		m.UpdateErrorMessages(messages)
+		require.Equal(t, messages.StatusMessage, m.StatusMessage)
+		require.Equal(t, messages.ErrorMessageOutbound, m.ErrorMessage)
+		require.Equal(t, "old error message revert", m.ErrorMessageRevert)
+	})
+
+	t.Run("multiple updates to status message should only keep the most recent one", func(t *testing.T) {
+		m := types.Status{
+			StatusMessage: "old status message",
+		}
+		messages := types.StatusMessages{
+			StatusMessage:        "new status message 1",
+			ErrorMessageOutbound: "new error message outbound",
+		}
+		m.UpdateErrorMessages(messages)
+		require.Equal(t, messages.StatusMessage, m.StatusMessage)
+		require.Equal(t, messages.ErrorMessageOutbound, m.ErrorMessage)
+		require.Equal(t, "", m.ErrorMessageRevert)
+		messages2 := types.StatusMessages{
+			StatusMessage:      "new status message 2",
+			ErrorMessageRevert: "new error message revert",
+		}
+		m.UpdateErrorMessages(messages2)
+		require.Equal(t, messages2.StatusMessage, m.StatusMessage)
+		require.Equal(t, messages.ErrorMessageOutbound, m.ErrorMessage)
+		require.Equal(t, messages2.ErrorMessageRevert, m.ErrorMessageRevert)
+	})
+}

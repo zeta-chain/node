@@ -9,15 +9,6 @@ func (m *Status) AbortRefunded() {
 	m.StatusMessage = "CCTX aborted and Refunded"
 }
 
-//// UpdateStatusAndErrorMessages transitions the Status and Error messages.
-//func (m *Status) UpdateStatusAndErrorMessages(newStatus CctxStatus, statusMsg, errorMsg string) {
-//	m.UpdateStatus(newStatus)
-//
-//	if errorMsg != "" {
-//		m.UpdateErrorMessage(errorMsg)
-//	}
-//}
-
 func (m *Status) UpdateStatusAndErrorMessages(newStatus CctxStatus, messages StatusMessages) {
 	m.UpdateStatus(newStatus)
 	m.UpdateErrorMessages(messages)
@@ -37,41 +28,19 @@ func (m *Status) UpdateStatus(newStatus CctxStatus) {
 	}
 }
 
+// UpdateErrorMessages updates cctx.status.error_message and cctx.status.error_message_revert.
 func (m *Status) UpdateErrorMessages(messages StatusMessages) {
+	// Always update the status message , status should contain only the most recent update
 	m.StatusMessage = messages.StatusMessage
-	m.ErrorMessage = messages.ErrorMessageOutbound
-	m.ErrorMessageRevert = messages.ErrorMessageRevert
-}
-
-//// UpdateStatus updates the cctx status and cctx.status.status_message.
-//func (m *Status) UpdateStatus(newStatus CctxStatus, statusMsg string) {
-//	if m.ValidateTransition(newStatus) {
-//		m.StatusMessage = fmt.Sprintf("Status changed from %s to %s", m.Status.String(), newStatus.String())
-//		m.Status = newStatus
-//	} else {
-//		m.StatusMessage = fmt.Sprintf(
-//			"Failed to transition status from %s to %s",
-//			m.Status.String(),
-//			newStatus.String(),
-//		)
-//
-//		m.Status = CctxStatus_Aborted
-//	}
-//
-//	if statusMsg != "" {
-//		m.StatusMessage += fmt.Sprintf(": %s", statusMsg)
-//	}
-//}
-
-// UpdateErrorMessage updates cctx.status.error_message.
-func (m *Status) UpdateErrorMessage(errorMsg string) {
-	errMsg := errorMsg
-
-	if errMsg == "" {
-		errMsg = "unknown error"
+	// We should be updating only one of these two messages at a time
+	if messages.ErrorMessageOutbound != "" {
+		m.ErrorMessage = messages.ErrorMessageOutbound
+		return
 	}
-
-	m.ErrorMessage = errMsg
+	if messages.ErrorMessageRevert != "" {
+		m.ErrorMessageRevert = messages.ErrorMessageRevert
+		return
+	}
 }
 
 func (m *Status) ValidateTransition(newStatus CctxStatus) bool {
