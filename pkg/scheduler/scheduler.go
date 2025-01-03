@@ -107,6 +107,18 @@ func (s *Scheduler) Register(ctx context.Context, exec Executable, opts ...Opt) 
 	return task
 }
 
+func (s *Scheduler) Tasks() map[uuid.UUID]*Task {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	copied := make(map[uuid.UUID]*Task, len(s.tasks))
+	for k, v := range s.tasks {
+		copied[k] = v
+	}
+
+	return s.tasks
+}
+
 // Stop stops all tasks.
 func (s *Scheduler) Stop() {
 	s.StopGroup("")
@@ -164,6 +176,14 @@ func (t *Task) Stop() {
 
 	timeTakenMS := time.Since(start).Milliseconds()
 	t.logger.Info().Int64("time_taken_ms", timeTakenMS).Msg("Stopped scheduler task")
+}
+
+func (t *Task) Group() Group {
+	return t.group
+}
+
+func (t *Task) Name() string {
+	return t.name
 }
 
 // execute executes Task with additional logging and metrics.
