@@ -214,7 +214,9 @@ func (t *Ticker) setStopState() {
 
 	t.ctxCancel()
 	t.stopped = true
-	t.ticker.Stop()
+	if t.ticker != nil {
+		t.ticker.Stop()
+	}
 
 	t.logger.Info().Msgf("Ticker stopped")
 }
