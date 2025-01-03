@@ -194,7 +194,7 @@ func (oc *V2) SyncChains(ctx context.Context) error {
 		oc.logger.Info().
 			Int("chains.added", added).
 			Int("chains.removed", removed).
-			Msg("synced observer-signers")
+			Msg("Synced observer-signers")
 	}
 
 	return nil

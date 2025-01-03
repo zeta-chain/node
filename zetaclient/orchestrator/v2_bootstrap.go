@@ -14,11 +14,6 @@ import (
 )
 
 func (oc *V2) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) (*bitcoin.Bitcoin, error) {
-	var (
-		rawChain       = chain.RawChain()
-		rawChainParams = chain.Params()
-	)
-
 	// should not happen
 	if !chain.IsBitcoin() {
 		return nil, errors.New("chain is not bitcoin")
@@ -38,6 +33,11 @@ func (oc *V2) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) (*bitcoin.
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create rpc client")
 	}
+
+	var (
+		rawChain       = chain.RawChain()
+		rawChainParams = chain.Params()
+	)
 
 	dbName := btcDatabaseFileName(*rawChain)
 

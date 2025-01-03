@@ -99,15 +99,15 @@ func (b *Bitcoin) Start(ctx context.Context) error {
 	}
 
 	// Observers
-	register(b.observer.ObserveInbound, "ObserveInbound", optInboundInterval, optInboundSkipper)
-	register(b.observer.ObserveInboundTrackers, "ObserveInboundTrackers", optInboundInterval, optInboundSkipper)
-	register(b.observer.FetchUTXOs, "FetchUTXOs", optUTXOInterval, optGenericSkipper)
-	register(b.observer.PostGasPrice, "PostGasPrice", optGasInterval, optGenericSkipper)
-	register(b.observer.CheckRPCStatus, "CheckRPCStatus")
-	register(b.observer.ObserveOutbound, "ObserveOutbound", optOutboundInterval, optOutboundSkipper)
+	register(b.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
+	register(b.observer.ObserveInboundTrackers, "observe_inbound_trackers", optInboundInterval, optInboundSkipper)
+	register(b.observer.FetchUTXOs, "fetch_utxos", optUTXOInterval, optGenericSkipper)
+	register(b.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
+	register(b.observer.CheckRPCStatus, "check_rpc_status")
+	register(b.observer.ObserveOutbound, "observe_outbound", optOutboundInterval, optOutboundSkipper)
 
 	// CCTX Scheduler
-	register(b.scheduleCCTX, "ScheduleCCTX", scheduler.BlockTicker(newBlockChan), optOutboundSkipper)
+	register(b.scheduleCCTX, "schedule_cctx", scheduler.BlockTicker(newBlockChan), optOutboundSkipper)
 
 	return nil
 }
@@ -142,6 +142,7 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 		return errors.New("unable to get zeta block from context")
 	}
 
+	// #nosec G115 always in range
 	zetaHeight := uint64(zetaBlock.Block.Height)
 
 	cctxList, _, err := b.observer.ZetacoreClient().ListPendingCCTX(ctx, chainID)
