@@ -100,7 +100,7 @@ func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 		}
 		// we don't want to spend other people's unconfirmed UTXOs as they may not be safe to spend
 		if utxo.Confirmations == 0 {
-			if !ob.isTSSTransaction(utxo.TxID) {
+			if !ob.IsTSSTransaction(utxo.TxID) {
 				continue
 			}
 		}

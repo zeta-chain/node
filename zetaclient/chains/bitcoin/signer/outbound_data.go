@@ -59,8 +59,7 @@ func NewOutboundData(
 
 	// support gas token only for Bitcoin outbound
 	if cctx.InboundParams.CoinType != coin.CoinType_Gas {
-		logger.Error().Msg("can only send gas token to a Bitcoin network")
-		return nil, nil
+		return nil, errors.New("can only send gas token to a Bitcoin network")
 	}
 
 	// fee rate
@@ -72,10 +71,10 @@ func NewOutboundData(
 	// check receiver address
 	to, err := chains.DecodeBtcAddress(params.Receiver, params.ReceiverChainId)
 	if err != nil {
-		return nil, errors.Wrapf(err, "cannot decode address %s", params.Receiver)
+		return nil, errors.Wrapf(err, "cannot decode receiver address %s", params.Receiver)
 	}
 	if !chains.IsBtcAddressSupported(to) {
-		return nil, fmt.Errorf("unsupported address %s", params.Receiver)
+		return nil, fmt.Errorf("unsupported receiver address %s", params.Receiver)
 	}
 	amount := float64(params.Amount.Uint64()) / 1e8
 

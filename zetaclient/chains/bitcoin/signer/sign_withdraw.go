@@ -14,6 +14,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 )
@@ -197,7 +198,7 @@ func (signer *Signer) AddWithdrawTxOutputs(
 	}
 
 	// 3rd output: the remaining btc to TSS self
-	if remainingSats > 0 {
+	if remainingSats >= constant.BTCWithdrawalDustAmount {
 		txOut3 := wire.NewTxOut(remainingSats, payToSelfScript)
 		tx.AddTxOut(txOut3)
 	}

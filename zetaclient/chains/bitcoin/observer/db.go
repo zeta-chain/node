@@ -11,6 +11,7 @@ import (
 func (ob *Observer) SaveBroadcastedTx(txHash string, nonce uint64) {
 	outboundID := ob.OutboundID(nonce)
 	ob.Mu().Lock()
+	ob.tssOutboundHashes[txHash] = true
 	ob.broadcastedTx[outboundID] = txHash
 	ob.Mu().Unlock()
 
@@ -59,6 +60,7 @@ func (ob *Observer) LoadBroadcastedTxMap() error {
 		return err
 	}
 	for _, entry := range broadcastedTransactions {
+		ob.tssOutboundHashes[entry.Hash] = true
 		ob.broadcastedTx[entry.Key] = entry.Hash
 	}
 	return nil

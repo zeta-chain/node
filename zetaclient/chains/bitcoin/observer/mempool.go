@@ -2,6 +2,7 @@ package observer
 
 import (
 	"context"
+	"time"
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/pkg/errors"
@@ -12,11 +13,32 @@ import (
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
+// LastStuckOutbound contains the last stuck outbound tx information.
+type LastStuckOutbound struct {
+	// Nonce is the nonce of the outbound.
+	Nonce uint64
+
+	// Tx is the original transaction.
+	Tx *btcutil.Tx
+
+	// StuckFor is the duration for which the tx has been stuck.
+	StuckFor time.Duration
+}
+
+// NewLastStuckOutbound creates a new LastStuckOutbound struct.
+func NewLastStuckOutbound(nonce uint64, tx *btcutil.Tx, stuckFor time.Duration) *LastStuckOutbound {
+	return &LastStuckOutbound{
+		Nonce:    nonce,
+		Tx:       tx,
+		StuckFor: stuckFor,
+	}
+}
+
 // WatchMempoolTxs monitors pending outbound txs in the Bitcoin mempool.
 func (ob *Observer) WatchMempoolTxs(ctx context.Context) error {
 	task := func(ctx context.Context, _ *ticker.Ticker) error {
-		if err := ob.checkLastStuckTx(ctx); err != nil {
-			ob.Logger().Chain.Err(err).Msg("checkLastStuckTx error")
+		if err := ob.refreshLastStuckOutbound(ctx); err != nil {
+			ob.Logger().Chain.Err(err).Msg("refreshLastStuckOutbound error")
 		}
 		return nil
 	}
@@ -30,11 +52,11 @@ func (ob *Observer) WatchMempoolTxs(ctx context.Context) error {
 	)
 }
 
-// checkLastStuckTx checks the last stuck tx in the Bitcoin mempool.
-func (ob *Observer) checkLastStuckTx(ctx context.Context) error {
+// refreshLastStuckOutbound refreshes the information about the last stuck tx in the Bitcoin mempool.
+func (ob *Observer) refreshLastStuckOutbound(ctx context.Context) error {
 	// log fields
 	lf := map[string]any{
-		logs.FieldMethod: "checkLastStuckTx",
+		logs.FieldMethod: "refreshLastStuckOutbound",
 	}
 
 	// step 1: get last TSS transaction
@@ -53,7 +75,7 @@ func (ob *Observer) checkLastStuckTx(ctx context.Context) error {
 		return errors.Wrapf(err, "cannot determine if tx %s nonce %d is stuck", txHash, lastNonce)
 	}
 
-	// step 3: update outbound stuck flag
+	// step 3: update last outbound stuck tx information
 	//
 	// the key ideas to determine if Bitcoin outbound is stuck/unstuck:
 	// 	1. outbound txs are a sequence of txs chained by nonce-mark UTXOs.
@@ -70,14 +92,11 @@ func (ob *Observer) checkLastStuckTx(ctx context.Context) error {
 	// Note: reserved RBF bumping fee might be not enough to clear the stuck txs during extreme traffic surges, two options:
 	//  1. wait for the gas rate to drop.
 	//  2. manually clear the stuck txs by using offline accelerator services.
-	stuckAlready := ob.IsOutboundStuck()
 	if stuck {
-		ob.logger.Outbound.Warn().Fields(lf).Msgf("Bitcoin outbound is stuck for %f minutes", stuckFor.Minutes())
+		ob.SetLastStuckOutbound(NewLastStuckOutbound(lastNonce, lastTx, stuckFor))
+	} else {
+		ob.SetLastStuckOutbound(nil)
 	}
-	if !stuck && stuckAlready {
-		ob.logger.Outbound.Info().Fields(lf).Msgf("Bitcoin outbound is no longer stuck")
-	}
-	ob.setOutboundStuck(stuck)
 
 	return nil
 }
@@ -103,7 +122,7 @@ func (ob *Observer) GetLastOutbound(ctx context.Context) (*btcutil.Tx, uint64, e
 	// source 1:
 	// pick highest nonce tx from included txs
 	lastNonce = pendingNonce - 1
-	txResult := ob.getIncludedTx(lastNonce)
+	txResult := ob.GetIncludedTx(lastNonce)
 	if txResult == nil {
 		// should NEVER happen by design
 		return nil, 0, errors.New("last included tx not found")
@@ -118,7 +137,7 @@ func (ob *Observer) GetLastOutbound(ctx context.Context) (*btcutil.Tx, uint64, e
 	}
 	for nonce := uint64(p.NonceLow); nonce < uint64(p.NonceHigh); nonce++ {
 		if nonce > lastNonce {
-			txID, found := ob.getBroadcastedTx(nonce)
+			txID, found := ob.GetBroadcastedTx(nonce)
 			if found {
 				lastNonce = nonce
 				lastHash = txID

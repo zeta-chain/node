@@ -145,11 +145,13 @@ func syncSignerMap(
 				continue
 			}
 
-			signer, err := btcsigner.NewSigner(*rawChain, tss, logger, cfg)
+			rpcClient, err := rpc.NewRPCClient(cfg)
 			if err != nil {
-				logger.Std.Error().Err(err).Msgf("Unable to construct signer for BTC chain %d", chainID)
+				logger.Std.Error().Err(err).Msgf("unable to create rpc client for BTC chain %d", chainID)
 				continue
 			}
+
+			signer := btcsigner.NewSigner(*rawChain, rpcClient, tss, logger)
 
 			addSigner(chainID, signer)
 		case chain.IsSolana():

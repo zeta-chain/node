@@ -306,7 +306,7 @@ func Test_IsEventProcessable(t *testing.T) {
 	chain := chains.BitcoinMainnet
 
 	// create test observer
-	ob := newTestSuite(t, chain)
+	ob := newTestSuite(t, chain, "")
 
 	// setup compliance config
 	cfg := config.Config{
@@ -354,7 +354,7 @@ func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
 	chain := chains.BitcoinMainnet
 
 	// create test observer
-	ob := newTestSuite(t, chain)
+	ob := newTestSuite(t, chain, "")
 	ob.zetacore.WithKeys(&keys.Keys{}).WithZetaChain()
 
 	t.Run("should create new inbound vote msg V1", func(t *testing.T) {
@@ -394,7 +394,7 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 	chain := chains.BitcoinMainnet
 
 	// create test observer
-	ob := newTestSuite(t, chain)
+	ob := newTestSuite(t, chain, "")
 	ob.zetacore.WithKeys(&keys.Keys{}).WithZetaChain()
 
 	t.Run("should create new inbound vote msg with standard memo", func(t *testing.T) {

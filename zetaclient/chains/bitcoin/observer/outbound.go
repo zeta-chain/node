@@ -131,7 +131,7 @@ func (ob *Observer) TryIncludeOutbound(
 	// check tx inclusion and save tx result
 	txResult, included := ob.checkTxInclusion(ctx, cctx, txHash)
 	if included {
-		ob.setIncludedTx(nonce, txResult)
+		ob.SetIncludedTx(nonce, txResult)
 	}
 
 	return txResult, included
@@ -277,7 +277,7 @@ func (ob *Observer) refreshPendingNonce(ctx context.Context) {
 		}
 
 		// set 'NonceLow' as the new pending nonce
-		ob.setPendingNonce(nonceLow)
+		ob.SetPendingNonce(nonceLow)
 		ob.logger.Chain.Info().
 			Msgf("refreshPendingNonce: increase pending nonce to %d with txid %s", nonceLow, txid)
 	}
@@ -289,7 +289,7 @@ func (ob *Observer) getOutboundHashByNonce(ctx context.Context, nonce uint64, te
 	// There are 2 types of txids an observer can trust
 	// 1. The ones had been verified and saved by observer self.
 	// 2. The ones had been finalized in zetacore based on majority vote.
-	if res := ob.getIncludedTx(nonce); res != nil {
+	if res := ob.GetIncludedTx(nonce); res != nil {
 		return res.TxID, nil
 	}
 	if !test { // if not unit test, get cctx from zetacore
@@ -352,10 +352,10 @@ func (ob *Observer) checkTxInclusion(
 	return txResult, true
 }
 
-// setIncludedTx saves included tx result in memory.
+// SetIncludedTx saves included tx result in memory.
 //   - the outbounds are chained (by nonce) txs sequentially included.
 //   - tx results may still be set in arbitrary order as the method is called across goroutines, and it doesn't matter.
-func (ob *Observer) setIncludedTx(nonce uint64, getTxResult *btcjson.GetTransactionResult) {
+func (ob *Observer) SetIncludedTx(nonce uint64, getTxResult *btcjson.GetTransactionResult) {
 	var (
 		txHash     = getTxResult.TxID
 		outboundID = ob.OutboundID(nonce)
@@ -374,7 +374,7 @@ func (ob *Observer) setIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 		// for new hash:
 		//   - include new outbound and enforce rigid 1-to-1 mapping: nonce <===> txHash
 		//   - try increasing pending nonce on every newly included outbound
-		ob.includedTxHashes[txHash] = true
+		ob.tssOutboundHashes[txHash] = true
 		ob.includedTxResults[outboundID] = getTxResult
 		if nonce >= ob.pendingNonce {
 			ob.pendingNonce = nonce + 1
@@ -392,17 +392,17 @@ func (ob *Observer) setIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 		ob.logger.Outbound.Info().Fields(lf).Msgf("replaced bitcoin outbound %s", res.TxID)
 
 		// remove prior txHash and txResult
-		delete(ob.includedTxHashes, res.TxID)
+		delete(ob.tssOutboundHashes, res.TxID)
 		delete(ob.includedTxResults, outboundID)
 
 		// add new txHash and txResult
-		ob.includedTxHashes[txHash] = true
+		ob.tssOutboundHashes[txHash] = true
 		ob.includedTxResults[outboundID] = getTxResult
 	}
 }
 
-// getIncludedTx gets the receipt and transaction from memory
-func (ob *Observer) getIncludedTx(nonce uint64) *btcjson.GetTransactionResult {
+// GetIncludedTx gets the receipt and transaction from memory
+func (ob *Observer) GetIncludedTx(nonce uint64) *btcjson.GetTransactionResult {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
 	return ob.includedTxResults[ob.OutboundID(nonce)]
@@ -429,7 +429,7 @@ func (ob *Observer) checkTssOutboundResult(
 	nonce := params.TssNonce
 	rawResult, err := rpc.GetRawTxResult(ob.btcClient, hash, res)
 	if err != nil {
-		return errors.Wrapf(err, "checkTssOutboundResult: error GetRawTxResultByHash %s", hash.String())
+		return errors.Wrapf(err, "checkTssOutboundResult: error GetRawTxResult %s", hash.String())
 	}
 	err = ob.checkTSSVin(ctx, rawResult.Vin, nonce)
 	if err != nil {

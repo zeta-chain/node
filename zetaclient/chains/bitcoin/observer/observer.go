@@ -17,6 +17,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
@@ -65,14 +66,15 @@ type Observer struct {
 	// pendingNonce is the outbound artificial pending nonce
 	pendingNonce uint64
 
-	// outboundStuck is the flag to indicate if the outbound is stuck in the mempool
-	outboundStuck bool
+	// lastStuckTx contains the last stuck outbound tx information
+	// Note: nil if outbound is not stuck
+	lastStuckTx *LastStuckOutbound
 
 	// utxos contains the UTXOs owned by the TSS address
 	utxos []btcjson.ListUnspentResult
 
-	// includedTxHashes indexes included tx with tx hash
-	includedTxHashes map[string]bool
+	// tssOutboundHashes keeps track of outbound hashes sent from TSS address
+	tssOutboundHashes map[string]bool
 
 	// includedTxResults indexes tx results with the outbound tx identifier
 	includedTxResults map[string]*btcjson.GetTransactionResult
@@ -122,7 +124,7 @@ func NewObserver(
 		netParams:         netParams,
 		btcClient:         btcClient,
 		utxos:             []btcjson.ListUnspentResult{},
-		includedTxHashes:  make(map[string]bool),
+		tssOutboundHashes: make(map[string]bool),
 		includedTxResults: make(map[string]*btcjson.GetTransactionResult),
 		broadcastedTx:     make(map[string]string),
 		logger: Logger{
@@ -188,6 +190,13 @@ func (ob *Observer) GetPendingNonce() uint64 {
 	return ob.pendingNonce
 }
 
+// SetPendingNonce sets the artificial pending nonce
+func (ob *Observer) SetPendingNonce(nonce uint64) {
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
+	ob.pendingNonce = nonce
+}
+
 // ConfirmationsThreshold returns number of required Bitcoin confirmations depending on sent BTC amount.
 func (ob *Observer) ConfirmationsThreshold(amount *big.Int) int64 {
 	if amount.Cmp(big.NewInt(BigValueSats)) >= 0 {
@@ -234,36 +243,47 @@ func (ob *Observer) GetBlockByNumberCached(blockNumber int64) (*BTCBlockNHeader,
 	return blockNheader, nil
 }
 
-// IsOutboundStuck returns true if the outbound is stuck in the mempool
-func (ob *Observer) IsOutboundStuck() bool {
+// GetLastStuckOutbound returns the last stuck outbound tx information
+func (ob *Observer) GetLastStuckOutbound() *LastStuckOutbound {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
-	return ob.outboundStuck
+	return ob.lastStuckTx
 }
 
-// isTSSTransaction checks if a given transaction was sent by TSS itself.
-// An unconfirmed transaction is safe to spend only if it was sent by TSS and verified by ourselves.
-func (ob *Observer) isTSSTransaction(txid string) bool {
-	_, found := ob.includedTxHashes[txid]
+// SetLastStuckOutbound sets the information of last stuck outbound
+func (ob *Observer) SetLastStuckOutbound(stuckTx *LastStuckOutbound) {
+	lf := map[string]any{
+		logs.FieldMethod: "SetLastStuckOutbound",
+	}
+
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
+
+	if stuckTx != nil {
+		lf[logs.FieldNonce] = stuckTx.Nonce
+		lf[logs.FieldTx] = stuckTx.Tx.MsgTx().TxID()
+		ob.logger.Outbound.Warn().
+			Fields(lf).
+			Msgf("Bitcoin outbound is stuck for %f minutes", stuckTx.StuckFor.Minutes())
+	} else if ob.lastStuckTx != nil {
+		lf[logs.FieldNonce] = ob.lastStuckTx.Nonce
+		lf[logs.FieldTx] = ob.lastStuckTx.Tx.MsgTx().TxID()
+		ob.logger.Outbound.Info().Fields(lf).Msgf("Bitcoin outbound is no longer stuck")
+	}
+	ob.lastStuckTx = stuckTx
+}
+
+// IsTSSTransaction checks if a given transaction was sent by TSS itself.
+// An unconfirmed transaction is safe to spend only if it was sent by TSS self.
+func (ob *Observer) IsTSSTransaction(txid string) bool {
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
+	_, found := ob.tssOutboundHashes[txid]
 	return found
 }
 
-// setPendingNonce sets the artificial pending nonce
-func (ob *Observer) setPendingNonce(nonce uint64) {
-	ob.Mu().Lock()
-	defer ob.Mu().Unlock()
-	ob.pendingNonce = nonce
-}
-
-// setOutboundStuck sets the outbound stuck flag
-func (ob *Observer) setOutboundStuck(stuck bool) {
-	ob.Mu().Lock()
-	defer ob.Mu().Unlock()
-	ob.outboundStuck = stuck
-}
-
-// getBroadcastedTx gets successfully broadcasted transaction by nonce
-func (ob *Observer) getBroadcastedTx(nonce uint64) (string, bool) {
+// GetBroadcastedTx gets successfully broadcasted transaction by nonce
+func (ob *Observer) GetBroadcastedTx(nonce uint64) (string, bool) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
 

@@ -1,71 +1,173 @@
-package signer
+package signer_test
 
 import (
+	"context"
 	"encoding/hex"
-	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/btcsuite/btcd/btcec/v2"
-	btcecdsa "github.com/btcsuite/btcd/btcec/v2/ecdsa"
+	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
+	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/zetaclient/testutils"
-	. "gopkg.in/check.v1"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 	"github.com/zeta-chain/node/zetaclient/config"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
-type BTCSignerSuite struct {
-	btcSigner *Signer
+// the relative path to the testdata directory
+var TestDataDir = "../../../"
+
+type testSuite struct {
+	*signer.Signer
+	tss            *mocks.TSS
+	client         *mocks.BTCRPCClient
+	zetacoreClient *mocks.ZetacoreClient
 }
 
-var _ = Suite(&BTCSignerSuite{})
+func newTestSuite(t *testing.T, chain chains.Chain) *testSuite {
+	// mock BTC RPC client
+	rpcClient := mocks.NewBTCRPCClient(t)
+	rpcClient.On("GetBlockCount", mock.Anything).Maybe().Return(int64(101), nil)
 
-func (s *BTCSignerSuite) SetUpTest(c *C) {
+	// mock TSS
+	var tss *mocks.TSS
+	if chains.IsBitcoinMainnet(chain.ChainId) {
+		tss = mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet)
+	} else {
+		tss = mocks.NewTSS(t).FakePubKey(testutils.TSSPubkeyAthens3)
+	}
+
+	// mock Zetacore client
+	zetacoreClient := mocks.NewZetacoreClient(t).
+		WithKeys(&keys.Keys{}).
+		WithZetaChain()
+
+	signer := signer.NewSigner(
+		chain,
+		rpcClient,
+		tss,
+		base.DefaultLogger(),
+	)
+
+	return &testSuite{
+		Signer:         signer,
+		tss:            tss,
+		client:         rpcClient,
+		zetacoreClient: zetacoreClient,
+	}
+}
+
+func Test_NewSigner(t *testing.T) {
 	// test private key with EVM address
-	//// EVM: 0x236C7f53a90493Bb423411fe4117Cb4c2De71DfB
+	// EVM: 0x236C7f53a90493Bb423411fe4117Cb4c2De71DfB
 	// BTC testnet3: muGe9prUBjQwEnX19zG26fVRHNi8z7kSPo
 	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
 	privateKey, err := crypto.HexToECDSA(skHex)
-	pkBytes := crypto.FromECDSAPub(&privateKey.PublicKey)
-	c.Logf("pubkey: %d", len(pkBytes))
-	// Uncomment the following code to generate new random private key pairs
-	//privateKey, err := crypto.GenerateKey()
-	//privkeyBytes := crypto.FromECDSA(privateKey)
-	//c.Logf("privatekey %s", hex.EncodeToString(privkeyBytes))
-	c.Assert(err, IsNil)
-
-	tss := mocks.NewTSSFromPrivateKey(c, privateKey)
-
-	s.btcSigner, err = NewSigner(
-		chains.Chain{},
-		tss,
-		base.DefaultLogger(),
-		config.BTCConfig{},
-	)
-	c.Assert(err, IsNil)
+	require.NoError(t, err)
+	tss := mocks.NewTSSFromPrivateKey(t, privateKey)
+	signer := signer.NewSigner(chains.BitcoinMainnet, mocks.NewBTCRPCClient(t), tss, base.DefaultLogger())
+	require.NotNil(t, signer)
 }
 
-func (s *BTCSignerSuite) TestP2PH(c *C) {
+func Test_BroadcastOutbound(t *testing.T) {
+	// test cases
+	tests := []struct {
+		name        string
+		chain       chains.Chain
+		nonce       uint64
+		failTracker bool
+	}{
+		{
+			name:  "should successfully broadcast and include outbound",
+			chain: chains.BitcoinMainnet,
+			nonce: uint64(148),
+		},
+		{
+			name:        "should successfully broadcast and include outbound, but failed to post outbound tracker",
+			chain:       chains.BitcoinMainnet,
+			nonce:       uint64(148),
+			failTracker: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// setup s and observer
+			s := newTestSuite(t, tt.chain)
+			observer := s.getNewObserver(t)
+
+			// load tx and result
+			chainID := tt.chain.ChainId
+			rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, tt.nonce)
+			txResult := testutils.LoadBTCTransaction(t, TestDataDir, chainID, rawResult.Txid)
+			msgTx := testutils.LoadBTCMsgTx(t, TestDataDir, chainID, rawResult.Txid)
+
+			// mock RPC response
+			s.client.On("SendRawTransaction", mock.Anything, mock.Anything).Return(nil, nil)
+			s.client.On("GetTransaction", mock.Anything).Return(txResult, nil)
+			s.client.On("GetRawTransactionVerbose", mock.Anything).Return(rawResult, nil)
+
+			// mock Zetacore client response
+			if tt.failTracker {
+				s.zetacoreClient.WithPostOutboundTracker("")
+			} else {
+				s.zetacoreClient.WithPostOutboundTracker("0x123")
+			}
+
+			// mock the previous tx as included
+			// this is necessary to allow the 'checkTSSVin' function to pass
+			observer.SetIncludedTx(tt.nonce-1, &btcjson.GetTransactionResult{
+				TxID: rawResult.Vin[0].Txid,
+			})
+
+			ctx := makeCtx(t)
+			s.BroadcastOutbound(
+				ctx,
+				msgTx,
+				tt.nonce,
+				cctx,
+				observer,
+				s.zetacoreClient,
+			)
+
+			// check if outbound is included
+			gotResult := observer.GetIncludedTx(tt.nonce)
+			require.Equal(t, txResult, gotResult)
+		})
+	}
+}
+
+func Test_P2PH(t *testing.T) {
 	// Ordinarily the private key would come from whatever storage mechanism
 	// is being used, but for this example just hard code it.
 	privKeyBytes, err := hex.DecodeString("22a47fa09a223f2aa079edf85a7c2" +
 		"d4f8720ee63e502ee2869afab7de234b80c")
-	c.Assert(err, IsNil)
+	require.NoError(t, err)
 
 	privKey, pubKey := btcec.PrivKeyFromBytes(privKeyBytes)
 	pubKeyHash := btcutil.Hash160(pubKey.SerializeCompressed())
 	addr, err := btcutil.NewAddressPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
-	c.Assert(err, IsNil)
+	require.NoError(t, err)
 
 	// For this example, create a fake transaction that represents what
 	// would ordinarily be the real transaction that is being spent.  It
@@ -75,8 +177,7 @@ func (s *BTCSignerSuite) TestP2PH(c *C) {
 	txIn := wire.NewTxIn(prevOut, []byte{txscript.OP_0, txscript.OP_0}, nil)
 	originTx.AddTxIn(txIn)
 	pkScript, err := txscript.PayToAddrScript(addr)
-
-	c.Assert(err, IsNil)
+	require.NoError(t, err)
 
 	txOut := wire.NewTxOut(100000000, pkScript)
 	originTx.AddTxOut(txOut)
@@ -107,7 +208,7 @@ func (s *BTCSignerSuite) TestP2PH(c *C) {
 	sigScript, err := txscript.SignTxOutput(&chaincfg.MainNetParams,
 		redeemTx, 0, originTx.TxOut[0].PkScript, txscript.SigHashAll,
 		txscript.KeyClosure(lookupKey), nil, nil)
-	c.Assert(err, IsNil)
+	require.NoError(t, err)
 
 	redeemTx.TxIn[0].SignatureScript = sigScript
 
@@ -118,26 +219,24 @@ func (s *BTCSignerSuite) TestP2PH(c *C) {
 		txscript.ScriptDiscourageUpgradableNops
 	vm, err := txscript.NewEngine(originTx.TxOut[0].PkScript, redeemTx, 0,
 		flags, nil, nil, -1, txscript.NewMultiPrevOutFetcher(nil))
-	c.Assert(err, IsNil)
+	require.NoError(t, err)
 
 	err = vm.Execute()
-	c.Assert(err, IsNil)
-
-	fmt.Println("Transaction successfully signed")
+	require.NoError(t, err)
 }
 
-func (s *BTCSignerSuite) TestP2WPH(c *C) {
+func Test_P2WPH(t *testing.T) {
 	// Ordinarily the private key would come from whatever storage mechanism
 	// is being used, but for this example just hard code it.
 	privKeyBytes, err := hex.DecodeString("22a47fa09a223f2aa079edf85a7c2" +
 		"d4f8720ee63e502ee2869afab7de234b80c")
-	c.Assert(err, IsNil)
+	require.NoError(t, err)
 
 	privKey, pubKey := btcec.PrivKeyFromBytes(privKeyBytes)
 	pubKeyHash := btcutil.Hash160(pubKey.SerializeCompressed())
 	//addr, err := btcutil.NewAddressPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
 	addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
-	c.Assert(err, IsNil)
+	require.NoError(t, err)
 
 	// For this example, create a fake transaction that represents what
 	// would ordinarily be the real transaction that is being spent.  It
@@ -147,7 +246,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 	txIn := wire.NewTxIn(prevOut, []byte{txscript.OP_0, txscript.OP_0}, nil)
 	originTx.AddTxIn(txIn)
 	pkScript, err := txscript.PayToAddrScript(addr)
-	c.Assert(err, IsNil)
+	require.NoError(t, err)
 	txOut := wire.NewTxOut(100000000, pkScript)
 	originTx.AddTxOut(txOut)
 	originTxHash := originTx.TxHash()
@@ -168,7 +267,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 	redeemTx.AddTxOut(txOut)
 	txSigHashes := txscript.NewTxSigHashes(redeemTx, txscript.NewCannedPrevOutputFetcher([]byte{}, 0))
 	pkScript, err = txscript.PayToAddrScript(addr)
-	c.Assert(err, IsNil)
+	require.NoError(t, err)
 
 	{
 		txWitness, err := txscript.WitnessSignature(
@@ -181,7 +280,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 			privKey,
 			true,
 		)
-		c.Assert(err, IsNil)
+		require.NoError(t, err)
 		redeemTx.TxIn[0].Witness = txWitness
 		// Prove that the transaction has been validly signed by executing the
 		// script pair.
@@ -190,10 +289,10 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 			txscript.ScriptDiscourageUpgradableNops
 		vm, err := txscript.NewEngine(originTx.TxOut[0].PkScript, redeemTx, 0,
 			flags, nil, nil, -1, txscript.NewCannedPrevOutputFetcher([]byte{}, 0))
-		c.Assert(err, IsNil)
+		require.NoError(t, err)
 
 		err = vm.Execute()
-		c.Assert(err, IsNil)
+		require.NoError(t, err)
 	}
 
 	{
@@ -205,8 +304,8 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 			0,
 			100000000,
 		)
-		c.Assert(err, IsNil)
-		sig := btcecdsa.Sign(privKey, witnessHash)
+		require.NoError(t, err)
+		sig := ecdsa.Sign(privKey, witnessHash)
 		txWitness := wire.TxWitness{append(sig.Serialize(), byte(txscript.SigHashAll)), pubKeyHash}
 		redeemTx.TxIn[0].Witness = txWitness
 
@@ -215,182 +314,65 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 			txscript.ScriptDiscourageUpgradableNops
 		vm, err := txscript.NewEngine(originTx.TxOut[0].PkScript, redeemTx, 0,
 			flags, nil, nil, -1, txscript.NewMultiPrevOutFetcher(nil))
-		c.Assert(err, IsNil)
+		require.NoError(t, err)
 
 		err = vm.Execute()
-		c.Assert(err, IsNil)
+		require.NoError(t, err)
 	}
-
-	fmt.Println("Transaction successfully signed")
 }
 
-func TestAddWithdrawTxOutputs(t *testing.T) {
-	// Create test signer and receiver address
-	signer, err := NewSigner(
-		chains.BitcoinMainnet,
-		mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet),
-		base.DefaultLogger(),
-		config.BTCConfig{},
+func makeCtx(t *testing.T) context.Context {
+	app := zctx.New(config.New(false), nil, zerolog.Nop())
+
+	chain := chains.BitcoinMainnet
+	btcParams := mocks.MockChainParams(chain.ChainId, 2)
+
+	err := app.Update(
+		[]chains.Chain{chain, chains.ZetaChainMainnet},
+		nil,
+		map[int64]*observertypes.ChainParams{
+			chain.ChainId: &btcParams,
+		},
+		observertypes.CrosschainFlags{},
+	)
+	require.NoError(t, err, "unable to update app context")
+
+	return zctx.WithAppContext(context.Background(), app)
+}
+
+// getCCTX returns a CCTX for testing
+func getCCTX(t *testing.T) *crosschaintypes.CrossChainTx {
+	return testutils.LoadCctxByNonce(t, 8332, 148)
+}
+
+// getNewOutboundProcessor creates a new outbound processor for testing
+func getNewOutboundProcessor() *outboundprocessor.Processor {
+	logger := zerolog.Logger{}
+	return outboundprocessor.NewProcessor(logger)
+}
+
+// getNewObserver creates a new BTC chain observer for testing
+func (s *testSuite) getNewObserver(t *testing.T) *observer.Observer {
+	// prepare mock arguments to create observer
+	params := mocks.MockChainParams(s.Chain().ChainId, 2)
+	logger := base.DefaultLogger()
+	ts := &metrics.TelemetryServer{}
+
+	// create in-memory db
+	database, err := db.NewFromSqliteInMemory(true)
+	require.NoError(t, err)
+
+	ob, err := observer.NewObserver(
+		s.Chain(),
+		s.client,
+		params,
+		s.zetacoreClient,
+		s.tss,
+		database,
+		logger,
+		ts,
 	)
 	require.NoError(t, err)
 
-	// tss address and script
-	tssAddr, err := signer.TSS().PubKey().AddressBTC(chains.BitcoinMainnet.ChainId)
-	require.NoError(t, err)
-	tssScript, err := txscript.PayToAddrScript(tssAddr)
-	require.NoError(t, err)
-	fmt.Printf("tss address: %s", tssAddr.EncodeAddress())
-
-	// receiver addresses
-	receiver := "bc1qaxf82vyzy8y80v000e7t64gpten7gawewzu42y"
-	to, err := chains.DecodeBtcAddress(receiver, chains.BitcoinMainnet.ChainId)
-	require.NoError(t, err)
-	toScript, err := txscript.PayToAddrScript(to)
-	require.NoError(t, err)
-
-	// test cases
-	tests := []struct {
-		name     string
-		tx       *wire.MsgTx
-		to       btcutil.Address
-		total    float64
-		amount   float64
-		nonce    int64
-		fees     int64
-		cancelTx bool
-		fail     bool
-		message  string
-		txout    []*wire.TxOut
-	}{
-		{
-			name:   "should add outputs successfully",
-			tx:     wire.NewMsgTx(wire.TxVersion),
-			to:     to,
-			total:  1.00012000,
-			amount: 0.2,
-			nonce:  10000,
-			fees:   2000,
-			fail:   false,
-			txout: []*wire.TxOut{
-				{Value: 10000, PkScript: tssScript},
-				{Value: 20000000, PkScript: toScript},
-				{Value: 80000000, PkScript: tssScript},
-			},
-		},
-		{
-			name:   "should add outputs without change successfully",
-			tx:     wire.NewMsgTx(wire.TxVersion),
-			to:     to,
-			total:  0.20012000,
-			amount: 0.2,
-			nonce:  10000,
-			fees:   2000,
-			fail:   false,
-			txout: []*wire.TxOut{
-				{Value: 10000, PkScript: tssScript},
-				{Value: 20000000, PkScript: toScript},
-			},
-		},
-		{
-			name:     "should cancel tx successfully",
-			tx:       wire.NewMsgTx(wire.TxVersion),
-			to:       to,
-			total:    1.00012000,
-			amount:   0.2,
-			nonce:    10000,
-			fees:     2000,
-			cancelTx: true,
-			fail:     false,
-			txout: []*wire.TxOut{
-				{Value: 10000, PkScript: tssScript},
-				{Value: 100000000, PkScript: tssScript},
-			},
-		},
-		{
-			name:   "should fail on invalid amount",
-			tx:     wire.NewMsgTx(wire.TxVersion),
-			to:     to,
-			total:  1.00012000,
-			amount: -0.5,
-			fail:   true,
-		},
-		{
-			name:   "should fail when total < amount",
-			tx:     wire.NewMsgTx(wire.TxVersion),
-			to:     to,
-			total:  0.00012000,
-			amount: 0.2,
-			fail:   true,
-		},
-		{
-			name:    "should fail when total < fees + amount + nonce",
-			tx:      wire.NewMsgTx(wire.TxVersion),
-			to:      to,
-			total:   0.20011000,
-			amount:  0.2,
-			nonce:   10000,
-			fees:    2000,
-			fail:    true,
-			message: "remainder value is negative",
-		},
-		{
-			name:   "should not produce duplicate nonce mark",
-			tx:     wire.NewMsgTx(wire.TxVersion),
-			to:     to,
-			total:  0.20022000, //  0.2 + fee + nonceMark * 2
-			amount: 0.2,
-			nonce:  10000,
-			fees:   2000,
-			fail:   false,
-			txout: []*wire.TxOut{
-				{Value: 10000, PkScript: tssScript},
-				{Value: 20000000, PkScript: toScript},
-				{Value: 9999, PkScript: tssScript}, // nonceMark - 1
-			},
-		},
-		{
-			name:   "should fail on invalid to address",
-			tx:     wire.NewMsgTx(wire.TxVersion),
-			to:     nil,
-			total:  1.00012000,
-			amount: 0.2,
-			nonce:  10000,
-			fees:   2000,
-			fail:   true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := signer.AddWithdrawTxOutputs(tt.tx, tt.to, tt.total, tt.amount, tt.nonce, tt.fees, tt.cancelTx)
-			if tt.fail {
-				require.Error(t, err)
-				if tt.message != "" {
-					require.ErrorContains(t, err, tt.message)
-				}
-				return
-			} else {
-				require.NoError(t, err)
-				require.True(t, reflect.DeepEqual(tt.txout, tt.tx.TxOut))
-			}
-		})
-	}
-}
-
-// Coverage doesn't seem to pick this up from the suite
-func TestNewBTCSigner(t *testing.T) {
-	// test private key with EVM address
-	//// EVM: 0x236C7f53a90493Bb423411fe4117Cb4c2De71DfB
-	// BTC testnet3: muGe9prUBjQwEnX19zG26fVRHNi8z7kSPo
-	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
-	privateKey, err := crypto.HexToECDSA(skHex)
-	require.NoError(t, err)
-	tss := mocks.NewTSSFromPrivateKey(t, privateKey)
-	btcSigner, err := NewSigner(
-		chains.Chain{},
-		tss,
-		base.DefaultLogger(),
-		config.BTCConfig{})
-	require.NoError(t, err)
-	require.NotNil(t, btcSigner)
+	return ob
 }

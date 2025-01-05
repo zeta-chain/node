@@ -22,10 +22,15 @@ const (
 	rbfTxInSequenceNum uint32 = 1
 )
 
+// SignRBFTx signs a RBF (Replace-By-Fee) to unblock last stuck outbound transaction.
+//
+// The key points:
+//   - It reuses the stuck tx's inputs and outputs but gives a higher fee to miners.
+//   - Funding the last stuck outbound will be considered as CPFP (child-pays-for-parent) by miners.
 func (signer *Signer) SignRBFTx(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
-	oldTx *btcutil.Tx,
+	lastTx *btcutil.Tx,
 	minRelayFee float64,
 ) (*wire.MsgTx, error) {
 	var (
@@ -33,7 +38,7 @@ func (signer *Signer) SignRBFTx(
 		lf     = map[string]any{
 			logs.FieldMethod: "SignRBFTx",
 			logs.FieldNonce:  params.TssNonce,
-			logs.FieldTx:     oldTx.MsgTx().TxID(),
+			logs.FieldTx:     lastTx.MsgTx().TxID(),
 		}
 		logger = signer.Logger().Std.With().Fields(lf).Logger()
 	)
@@ -44,11 +49,17 @@ func (signer *Signer) SignRBFTx(
 		return nil, fmt.Errorf("cannot convert fee rate %s", params.GasPrice)
 	}
 
-	// initiate fee bumper
-	fb := NewCPFPFeeBumper(signer.client, oldTx, cctxRate, minRelayFee)
-	err = fb.FetchFeeBumpInfo(rpc.GetTotalMempoolParentsSizeNFees, logger)
+	// create fee bumper
+	fb, err := NewCPFPFeeBumper(
+		signer.client,
+		rpc.GetTotalMempoolParentsSizeNFees,
+		lastTx,
+		cctxRate,
+		minRelayFee,
+		logger,
+	)
 	if err != nil {
-		return nil, errors.Wrap(err, "FetchFeeBumpInfo failed")
+		return nil, errors.Wrap(err, "NewCPFPFeeBumper failed")
 	}
 
 	// bump tx fees
