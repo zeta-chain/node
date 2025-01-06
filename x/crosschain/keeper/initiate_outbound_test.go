@@ -96,7 +96,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 			errDeposit := fmt.Errorf("deposit failed")
 
 			// Setup expected calls
-			// mock unsuccessful HandleEVMDeposit which reverts , i.e returns err and isContractReverted = true
+			// mock unsuccessful HandleEVMDeposit which reverts, i.e returns err and isContractReverted = true
 			keepertest.MockRevertForHandleEVMDeposit(fungibleMock, receiver, amount, senderChain.ChainId, errDeposit)
 
 			// mock unsuccessful GetSupportedChainFromChainID

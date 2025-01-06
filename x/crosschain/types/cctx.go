@@ -145,6 +145,7 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 			GasLimit: gasLimit,
 		},
 		TssPubkey: m.GetCurrentOutboundParam().TssPubkey,
+		CoinType:  m.InboundParams.CoinType,
 	}
 	// The original outbound has been finalized, the new outbound is pending
 	m.GetCurrentOutboundParam().TxFinalizationStatus = TxFinalizationStatus_Executed

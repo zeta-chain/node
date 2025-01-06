@@ -367,12 +367,12 @@ func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 
 	zevmConnectorAbi, err := zevmconnectorcontract.ZetaConnectorZEVMMetaData.GetAbi()
 	if err != nil {
-		return nil, err
+		return nil, cosmoserrors.Wrap(types.ErrABIGet, err.Error())
 	}
 
 	err = k.DepositCoinsToFungibleModule(ctx, zetaValue)
 	if err != nil {
-		return nil, err
+		return nil, cosmoserrors.Wrap(types.ErrDepositZetaToFungibleAccount, err.Error())
 	}
 
 	return k.CallEVM(
@@ -665,26 +665,25 @@ func (k Keeper) CallEVM(
 	if err != nil {
 		return nil, cosmoserrors.Wrap(
 			types.ErrABIPack,
-			cosmoserrors.Wrap(err, "failed to create transaction data").Error(),
+			fmt.Sprintf("failed to create transaction data: %s", err.Error()),
 		)
 	}
 
 	k.Logger(ctx).Debug("calling EVM", "from", from, "contract", contract, "value", value, "method", method)
 	resp, err := k.CallEVMWithData(ctx, from, &contract, data, commit, noEthereumTxEvent, value, gasLimit)
 	if err != nil {
-		errMes := fmt.Sprintf(
-			"contract call failed: method '%s', contract '%s', args: %v",
-			method,
-			contract.Hex(),
-			args,
-		)
-
-		// if it is a revert error then add the revert reason to the error message
-		revertErr, ok := err.(*evmtypes.RevertError)
+		errMessage := types.EvmErrorMessage(fmt.Sprintf("contract call failed"), method, contract, args)
+		errMessage = types.EvmErrorMessageAddErrorString(errMessage, err.Error())
+		// if it is a revert error then add the revert reason
+		var revertErr *evmtypes.RevertError
+		ok := errors.As(err, &revertErr)
 		if ok {
-			errMes = fmt.Sprintf("%s, reason: %v", errMes, revertErr.ErrorData())
+			errMessage = types.EvmErrorMessageAddRevertReason(
+				errMessage,
+				fmt.Sprintf("revert reason: %s", revertErr.ErrorData()),
+			)
 		}
-		return resp, cosmoserrors.Wrap(err, errMes)
+		return resp, cosmoserrors.Wrap(types.ErrCallEvmWithData, errMessage)
 	}
 	return resp, nil
 }

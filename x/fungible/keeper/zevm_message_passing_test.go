@@ -161,7 +161,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 			data,
 			cctxIndexBytes,
 		)
-		require.ErrorIs(t, err, errorMint)
+		require.ErrorContains(t, err, errorMint.Error())
 	})
 }
 

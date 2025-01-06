@@ -45,21 +45,24 @@ func (k Keeper) ValidateOutboundZEVM(
 	if depositErr != nil && isContractReverted {
 		tmpCtxRevert, commitRevert := ctx.CacheContext()
 		// contract call reverted; should refund via a revert tx
-		err := k.processFailedOutboundOnExternalChain(
+		reverErr := k.processFailedOutboundOnExternalChain(
 			tmpCtxRevert,
 			cctx,
 			types.CctxStatus_PendingOutbound,
 			depositErr.Error(),
 			cctx.InboundParams.Amount,
 		)
+		// In this case the outbound and revert both fail in the same block ,so we should update status for both together.
+		// A status revert failed indicates that the outbound has already failed before this.
 
-		if err != nil {
+		if reverErr != nil {
 			// Error here would mean the outbound tx failed and we also failed to create a revert tx.
-			// In this case the cctx can be aborted directly
+			// This is the only case where we set outbound and revert messages, as both the outbound and the revert failed in the same block
 			cctx.SetAbort(
 				types.StatusMessages{
-					StatusMessage:      fmt.Sprintf("Revert failed , Error : %s", depositErr.Error()),
-					ErrorMessageRevert: fmt.Sprintf("Processing error: %s", err.Error()),
+					StatusMessage:        fmt.Sprintf("Revert failed"),
+					ErrorMessageOutbound: depositErr.Error(),
+					ErrorMessageRevert:   reverErr.Error(),
 				})
 			return types.CctxStatus_Aborted
 		}
@@ -146,7 +149,7 @@ func (k Keeper) processFailedOutboundObservers(ctx sdk.Context, cctx *types.Cros
 			{
 				cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 				cctx.SetAbort(types.StatusMessages{
-					StatusMessage:        "outbound failed for non-ZETA cctx",
+					StatusMessage:        "Outbound failed for non-ZETA cctx",
 					ErrorMessageOutbound: fmt.Sprintf("coin type %s not supported for revert when source chain is Zetachain", cctx.InboundParams.CoinType),
 				})
 			}
@@ -373,7 +376,7 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 		// update status
 		cctx.SetPendingRevert(types.StatusMessages{
 			StatusMessage:        "Outbound failed",
-			ErrorMessageOutbound: "outbound failed to external chain",
+			ErrorMessageOutbound: "Outbound failed to external chain ,start revert",
 		})
 
 		// process the revert on ZEVM

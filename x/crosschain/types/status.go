@@ -30,16 +30,13 @@ func (m *Status) UpdateStatus(newStatus CctxStatus) {
 
 // UpdateErrorMessages updates cctx.status.error_message and cctx.status.error_message_revert.
 func (m *Status) UpdateErrorMessages(messages StatusMessages) {
-	// Always update the status message , status should contain only the most recent update
+	// Always update the status message, status should contain only the most recent update
 	m.StatusMessage = messages.StatusMessage
-	// We should be updating only one of these two messages at a time
 	if messages.ErrorMessageOutbound != "" {
 		m.ErrorMessage = messages.ErrorMessageOutbound
-		return
 	}
 	if messages.ErrorMessageRevert != "" {
 		m.ErrorMessageRevert = messages.ErrorMessageRevert
-		return
 	}
 }
 

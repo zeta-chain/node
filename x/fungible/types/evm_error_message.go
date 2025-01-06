@@ -6,19 +6,40 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func EvmErrorMessage(method string, contract common.Address, args interface{}) string {
+const (
+	MessageKey      = "message"
+	MethodKey       = "method"
+	ContractKey     = "contract"
+	ArgsKey         = "args"
+	ErrorKey        = "error"
+	RevertReasonKey = "revertReason"
+)
+
+func EvmErrorMessage(errorMessage string, method string, contract common.Address, args interface{}) string {
 	return fmt.Sprintf(
-		"contract call failed: method '%s', contract '%s', args: %v",
+		"%s:%s,%s:%s,%s:%s,%s:%v",
+		MessageKey,
+		errorMessage,
+		MethodKey,
 		method,
+		ContractKey,
 		contract.Hex(),
-		args,
-	)
+		ArgsKey,
+		args)
 }
 
-func EvmErrorMessageWithRevertError(errorMessage string, reason interface{}) string {
+func EvmErrorMessageAddErrorString(errorMessage string, error string) string {
 	return fmt.Sprintf(
-		"%s, reason: %v",
+		"%s,%s:%s",
 		errorMessage,
-		reason,
-	)
+		ErrorKey,
+		error)
+}
+
+func EvmErrorMessageAddRevertReason(errorMessage string, revertReason interface{}) string {
+	return fmt.Sprintf(
+		"%s,%s:%v",
+		errorMessage,
+		RevertReasonKey,
+		revertReason)
 }
