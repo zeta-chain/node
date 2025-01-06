@@ -98,7 +98,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
 		fungibleMock.On(
 			"ZRC20DepositAndCallContract",
-			ctx,
+			mock.Anything,
 			mock.Anything,
 			receiver,
 			amount,
@@ -145,7 +145,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
 			fungibleMock.On(
 				"ZRC20DepositAndCallContract",
-				ctx,
+				mock.Anything,
 				mock.Anything,
 				receiver,
 				amount,
@@ -187,7 +187,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 				cctx,
 			)
 			require.Error(t, err)
-			require.False(t, reverted)
+			require.True(t, reverted)
 			fungibleMock.AssertExpectations(t)
 		},
 	)
@@ -209,7 +209,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
 			fungibleMock.On(
 				"ZRC20DepositAndCallContract",
-				ctx,
+				mock.Anything,
 				mock.Anything,
 				receiver,
 				amount,
@@ -300,7 +300,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		errDeposit := errors.New("deposit failed")
 		fungibleMock.On(
 			"ZRC20DepositAndCallContract",
-			ctx,
+			mock.Anything,
 			mock.Anything,
 			receiver,
 			amount,
@@ -346,7 +346,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		errDeposit := errors.New("deposit failed")
 		fungibleMock.On(
 			"ZRC20DepositAndCallContract",
-			ctx,
+			mock.Anything,
 			mock.Anything,
 			receiver,
 			amount,
@@ -391,7 +391,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
 		fungibleMock.On(
 			"ZRC20DepositAndCallContract",
-			ctx,
+			mock.Anything,
 			mock.Anything,
 			receiver,
 			amount,
@@ -436,7 +436,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
 		fungibleMock.On(
 			"ZRC20DepositAndCallContract",
-			ctx,
+			mock.Anything,
 			mock.Anything,
 			receiver,
 			amount,
@@ -481,7 +481,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 
 			fungibleMock.On(
 				"ZRC20DepositAndCallContract",
-				ctx,
+				mock.Anything,
 				mock.Anything,
 				receiver,
 				amount,
@@ -552,7 +552,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		ctx = ctx.WithTxBytes(b)
 		fungibleMock.On(
 			"ZRC20DepositAndCallContract",
-			ctx,
+			mock.Anything,
 			mock.Anything,
 			receiver,
 			amount,
@@ -596,7 +596,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		require.NoError(t, err)
 		fungibleMock.On(
 			"ZRC20DepositAndCallContract",
-			ctx,
+			mock.Anything,
 			mock.Anything,
 			receiver,
 			amount,

@@ -76,7 +76,7 @@ func GetTxResultByHash(
 	return hash, txResult, nil
 }
 
-// GetTXRawResultByHash gets the raw transaction by hash
+// GetRawTxByHash gets the raw transaction by hash
 func GetRawTxByHash(rpcClient interfaces.BTCRPCClient, txID string) (*btcutil.Tx, error) {
 	hash, err := chainhash.NewHashFromStr(txID)
 	if err != nil {

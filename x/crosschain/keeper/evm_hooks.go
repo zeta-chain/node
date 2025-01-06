@@ -133,7 +133,7 @@ func (k Keeper) ProcessZEVMInboundV1(
 
 		// If Validation fails, we will not process the event and return and error. This condition means that the event was correct, and emitted from a registered ZRC20 contract
 		// But the information entered by the user is incorrect. In this case we can return an error and roll back the transaction
-		if err := k.ValidateZrc20WithdrawEvent(ctx, eventZRC20Withdrawal, coin.ForeignChainId); err != nil {
+		if err := k.ValidateZRC20WithdrawEvent(ctx, eventZRC20Withdrawal, coin.ForeignChainId); err != nil {
 			return err
 		}
 		// If the event is valid, we will process it and create a new CCTX
@@ -303,9 +303,9 @@ func (k Keeper) ProcessZetaSentEvent(
 	return nil
 }
 
-// ValidateZrc20WithdrawEvent checks if the ZRC20Withdrawal event is valid
+// ValidateZRC20WithdrawEvent checks if the ZRC20Withdrawal event is valid
 // It verifies event information for BTC chains and returns an error if the event is invalid
-func (k Keeper) ValidateZrc20WithdrawEvent(ctx sdk.Context, event *zrc20.ZRC20Withdrawal, chainID int64) error {
+func (k Keeper) ValidateZRC20WithdrawEvent(ctx sdk.Context, event *zrc20.ZRC20Withdrawal, chainID int64) error {
 	// The event was parsed; that means the user has deposited tokens to the contract.
 	return k.validateZRC20Withdrawal(ctx, chainID, event.Value, event.To)
 }
