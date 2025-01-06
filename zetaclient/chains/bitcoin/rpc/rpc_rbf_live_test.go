@@ -62,7 +62,7 @@ func Test_BitcoinRBFLive(t *testing.T) {
 		return
 	}
 
-	//LiveTest_PendingMempoolTx(t)
+	LiveTest_PendingMempoolTx(t)
 }
 
 func Test_RBFTransaction(t *testing.T) {
@@ -241,7 +241,7 @@ func Test_RBFTransaction_Chained_CPFP(t *testing.T) {
 	fmt.Println("tx1 dropped")
 }
 
-func Test_PendingMempoolTx(t *testing.T) {
+func LiveTest_PendingMempoolTx(t *testing.T) {
 	// setup Bitcoin client
 	client, err := createRPCClient(chains.BitcoinMainnet.ChainId)
 	require.NoError(t, err)

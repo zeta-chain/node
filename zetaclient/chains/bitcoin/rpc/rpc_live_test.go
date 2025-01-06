@@ -33,7 +33,7 @@ func createRPCClient(chainID int64) (*rpcclient.Client, error) {
 	var connCfg *rpcclient.ConnConfig
 	rpcMainnet := os.Getenv(common.EnvBtcRPCMainnet)
 	rpcTestnet := os.Getenv(common.EnvBtcRPCTestnet)
-	rpcTestnet4 := "localhost:48332" // os.Getenv(common.EnvBtcRPCTestnet4)
+	rpcTestnet4 := os.Getenv(common.EnvBtcRPCTestnet4)
 
 	switch chainID {
 	case chains.BitcoinMainnet.ChainId:
