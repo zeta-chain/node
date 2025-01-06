@@ -116,7 +116,7 @@ func (s *Scheduler) Tasks() map[uuid.UUID]*Task {
 		copied[k] = v
 	}
 
-	return s.tasks
+	return copied
 }
 
 // Stop stops all tasks.

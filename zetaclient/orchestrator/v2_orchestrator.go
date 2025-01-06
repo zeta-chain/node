@@ -153,15 +153,15 @@ func (oc *V2) SyncChains(ctx context.Context) error {
 		case chain.IsBitcoin():
 			observerSigner, err = oc.bootstrapBitcoin(ctx, chain)
 		case chain.IsEVM():
-			// todo
+			// TODO
 			// https://github.com/zeta-chain/node/issues/3302
 			continue
 		case chain.IsSolana():
-			// todo
+			// TODO
 			// https://github.com/zeta-chain/node/issues/3301
 			continue
 		case chain.IsTON():
-			// todo
+			// TODO
 			// https://github.com/zeta-chain/node/issues/3300
 			continue
 		}
@@ -224,9 +224,14 @@ func (oc *V2) addChain(observerSigner ObserverSigner) {
 	chain := observerSigner.Chain()
 
 	oc.mu.Lock()
-	oc.chains[chain.ChainId] = observerSigner
-	oc.mu.Unlock()
+	defer oc.mu.Unlock()
 
+	// noop
+	if _, ok := oc.chains[chain.ChainId]; ok {
+		return
+	}
+
+	oc.chains[chain.ChainId] = observerSigner
 	oc.logger.Info().Fields(chain.LogFields()).Msg("Added observer-signer")
 }
 

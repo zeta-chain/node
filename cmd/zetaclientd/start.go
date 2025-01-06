@@ -170,6 +170,8 @@ func Start(_ *cobra.Command, _ []string) error {
 	graceful.AddService(ctx, maestro)
 
 	// Start orchestrator V2
+	// V2 will co-exist with V1 until all types of chains will be refactored (BTC, EVM, SOL, TON).
+	// (currently it's only BTC)
 	graceful.AddService(ctx, maestroV2)
 
 	// Block current routine until a shutdown signal is received

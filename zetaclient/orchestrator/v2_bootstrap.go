@@ -46,8 +46,8 @@ func (oc *V2) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) (*bitcoin.
 		return nil, errors.Wrapf(err, "unable to open database %s", dbName)
 	}
 
-	// todo extract base observer
-	// todo extract base signer
+	// TODO extract base observer
+	// TODO extract base signer
 	// https://github.com/zeta-chain/node/issues/3331
 
 	observer, err := btcobserver.NewObserver(

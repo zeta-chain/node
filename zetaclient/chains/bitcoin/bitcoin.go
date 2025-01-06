@@ -29,7 +29,7 @@ func New(
 	observer *observer.Observer,
 	signer *signer.Signer,
 ) *Bitcoin {
-	// todo move this to base signer
+	// TODO move this to base signer
 	// https://github.com/zeta-chain/node/issues/3330
 	proc := outboundprocessor.NewProcessor(observer.Logger().Outbound)
 
@@ -55,7 +55,7 @@ func (b *Bitcoin) Start(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get app from context")
 	}
 
-	// todo: should we share & fan-out the same chan across all chains?
+	// TODO: should we share & fan-out the same chan across all chains?
 	newBlockChan, err := b.observer.ZetacoreClient().NewBlockSubscriber(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to create new block subscriber")
