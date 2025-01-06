@@ -46,11 +46,29 @@ var (
 	ErrObserverSetNotFound         = errorsmod.Register(ModuleName, 1130, "observer set not found")
 	ErrTssNotFound                 = errorsmod.Register(ModuleName, 1131, "tss not found")
 
-	ErrInboundDisabled                       = errorsmod.Register(ModuleName, 1132, "inbound tx processing is disabled")
+	ErrInboundDisabled = errorsmod.Register(
+		ModuleName,
+		1132,
+		"inbound tx processing is disabled",
+	)
 	ErrInvalidZetaCoinTypes                  = errorsmod.Register(ModuleName, 1133, "invalid zeta coin types")
 	ErrNotObserver                           = errorsmod.Register(ModuleName, 1134, "sender is not an observer")
 	ErrDuplicateObserver                     = errorsmod.Register(ModuleName, 1135, "observer already exists")
 	ErrObserverNotFound                      = errorsmod.Register(ModuleName, 1136, "observer not found")
 	ErrInvalidObserverAddress                = errorsmod.Register(ModuleName, 1137, "invalid observer address")
-	ErrOperationalFlagsRestartHeightNegative = errorsmod.Register(ModuleName, 1138, "restart height cannot be negative")
+	ErrOperationalFlagsRestartHeightNegative = errorsmod.Register(
+		ModuleName,
+		1138,
+		"restart height cannot be negative",
+	)
+	ErrOperationalFlagsSignerBlockTimeOffsetNegative = errorsmod.Register(
+		ModuleName,
+		1139,
+		"signer block time offset cannot be negative",
+	)
+	ErrOperationalFlagsSignerBlockTimeOffsetLimit = errorsmod.Register(
+		ModuleName,
+		1140,
+		"signer block time offset exceeds limit",
+	)
 )

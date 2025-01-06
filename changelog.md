@@ -5,6 +5,8 @@
 ### Features
 
 * [3235](https://github.com/zeta-chain/node/pull/3235) - add /systemtime telemetry endpoint (zetaclient)
+* [3317](https://github.com/zeta-chain/node/pull/3317) - add configurable signer latency correction (zetaclient)
+
 
 ### Tests
 
@@ -17,6 +19,7 @@
 
 * [3170](https://github.com/zeta-chain/node/pull/3170) - revamp TSS package in zetaclient
 * [3291](https://github.com/zeta-chain/node/pull/3291) - revamp zetaclient initialization (+ graceful shutdown)
+* [3319](https://github.com/zeta-chain/node/pull/3319) - implement scheduler for zetaclient
 
 ### Fixes
 
@@ -30,6 +33,10 @@
 * [3289](https://github.com/zeta-chain/node/pull/3289) - remove all dynamic peer discovery (zetaclient)
 * [3314](https://github.com/zeta-chain/node/pull/3314) - update `last_scanned_block_number` metrics more frequently for Solana chain
 * [3321](https://github.com/zeta-chain/node/pull/3321) - make crosschain-call with invalid withdraw revert
+
+## v24.0.0
+
+* [3323](https://github.com/zeta-chain/node/pull/3323) - upgrade cosmos sdk to 0.47.15
 
 ## v23.0.0
 
