@@ -42,7 +42,7 @@ message BallotListForHeight {
   repeated string ballots_index_list = 2;
 }
 
-message VoterList {
+message Voter {
   string voter_address = 1;
   VoteType vote_type = 2;
 }

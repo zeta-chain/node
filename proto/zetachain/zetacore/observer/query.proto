@@ -276,7 +276,7 @@ message QueryBallotByIdentifierRequest { string ballot_identifier = 1; }
 
 message QueryBallotByIdentifierResponse {
   string ballot_identifier = 1;
-  repeated VoterList voters = 2 [ (gogoproto.nullable) = false ];
+  repeated Voter voters = 2 [ (gogoproto.nullable) = false ];
   ObservationType observation_type = 3;
   BallotStatus ballot_status = 4;
 }

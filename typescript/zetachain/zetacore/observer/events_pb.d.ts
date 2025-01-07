@@ -5,7 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { VoterList } from "./ballot_pb.js";
+import type { Voter } from "./ballot_pb.js";
 import type { GasPriceIncreaseFlags } from "./crosschain_flags_pb.js";
 
 /**
@@ -57,24 +57,19 @@ export declare class EventBallotCreated extends Message<EventBallotCreated> {
  */
 export declare class EventBallotDeleted extends Message<EventBallotDeleted> {
   /**
-   * @generated from field: string msg_type_url = 1;
-   */
-  msgTypeUrl: string;
-
-  /**
-   * @generated from field: string ballot_identifier = 2;
+   * @generated from field: string ballot_identifier = 1;
    */
   ballotIdentifier: string;
 
   /**
-   * @generated from field: string ballot_type = 3;
+   * @generated from field: string ballot_type = 2;
    */
   ballotType: string;
 
   /**
-   * @generated from field: repeated zetachain.zetacore.observer.VoterList voters = 4;
+   * @generated from field: repeated zetachain.zetacore.observer.Voter voters = 3;
    */
-  voters: VoterList[];
+  voters: Voter[];
 
   constructor(data?: PartialMessage<EventBallotDeleted>);
 

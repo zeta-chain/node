@@ -38,14 +38,13 @@ func prettyPrintStruct(val interface{}) string {
 }
 
 func EmitEventBallotDeleted(ctx sdk.Context, ballot types.Ballot) {
-	var voterList []types.VoterList
+	var voterList []types.Voter
 	voterList, err := ballot.GenerateVoterList()
 	if err != nil {
 		ctx.Logger().
 			Error(fmt.Sprintf("failed to generate voter list for ballot %s", ballot.BallotIdentifier), err.Error())
 	}
 	err = ctx.EventManager().EmitTypedEvent(&types.EventBallotDeleted{
-		MsgTypeUrl:       "zetachain.zetacore.observer.internal.BallotDeleted",
 		BallotIdentifier: ballot.BallotIdentifier,
 		BallotType:       ballot.ObservationType.String(),
 		Voters:           voterList,

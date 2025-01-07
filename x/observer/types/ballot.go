@@ -118,14 +118,14 @@ func (m Ballot) BuildRewardsDistribution(rewardsMap map[string]int64) int64 {
 
 // GenerateVoterList generates a list of voters from the `VoterList` and `Votes` fields
 // This is used for queries and events and not persisted to the store
-func (m Ballot) GenerateVoterList() ([]VoterList, error) {
+func (m Ballot) GenerateVoterList() ([]Voter, error) {
 	if len(m.VoterList) != len(m.Votes) {
 		return nil, ErrInvalidVoterList
 	}
 
-	votersList := make([]VoterList, len(m.VoterList))
+	votersList := make([]Voter, len(m.VoterList))
 	for i := range m.VoterList {
-		voter := VoterList{
+		voter := Voter{
 			VoterAddress: m.VoterList[i],
 			VoteType:     m.Votes[i],
 		}

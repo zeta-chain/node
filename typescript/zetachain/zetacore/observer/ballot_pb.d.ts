@@ -143,9 +143,9 @@ export declare class BallotListForHeight extends Message<BallotListForHeight> {
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.VoterList
+ * @generated from message zetachain.zetacore.observer.Voter
  */
-export declare class VoterList extends Message<VoterList> {
+export declare class Voter extends Message<Voter> {
   /**
    * @generated from field: string voter_address = 1;
    */
@@ -156,18 +156,18 @@ export declare class VoterList extends Message<VoterList> {
    */
   voteType: VoteType;
 
-  constructor(data?: PartialMessage<VoterList>);
+  constructor(data?: PartialMessage<Voter>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.VoterList";
+  static readonly typeName = "zetachain.zetacore.observer.Voter";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): VoterList;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Voter;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): VoterList;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Voter;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): VoterList;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Voter;
 
-  static equals(a: VoterList | PlainMessage<VoterList> | undefined, b: VoterList | PlainMessage<VoterList> | undefined): boolean;
+  static equals(a: Voter | PlainMessage<Voter> | undefined, b: Voter | PlainMessage<Voter> | undefined): boolean;
 }
 

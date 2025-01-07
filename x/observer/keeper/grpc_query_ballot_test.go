@@ -126,7 +126,7 @@ func TestKeeper_BallotByIdentifier(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, &types.QueryBallotByIdentifierResponse{
 			BallotIdentifier: ballot.BallotIdentifier,
-			Voters: []types.VoterList{
+			Voters: []types.Voter{
 				{
 					VoterAddress: voter,
 					VoteType:     types.VoteType_SuccessObservation,

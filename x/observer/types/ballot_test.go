@@ -484,7 +484,7 @@ func TestBallot_GenerateVoterList(t *testing.T) {
 		name              string
 		voters            []string
 		votes             []VoteType
-		expectedVoterList []VoterList
+		expectedVoterList []Voter
 		err               require.ErrorAssertionFunc
 	}{
 		{
@@ -496,7 +496,7 @@ func TestBallot_GenerateVoterList(t *testing.T) {
 				VoteType_SuccessObservation,
 				VoteType_SuccessObservation,
 			},
-			expectedVoterList: []VoterList{
+			expectedVoterList: []Voter{
 				{
 					VoterAddress: "Observer1",
 					VoteType:     VoteType_SuccessObservation,
@@ -526,7 +526,7 @@ func TestBallot_GenerateVoterList(t *testing.T) {
 				VoteType_FailureObservation,
 				VoteType_FailureObservation,
 			},
-			expectedVoterList: []VoterList{
+			expectedVoterList: []Voter{
 				{
 					VoterAddress: "Observer1",
 					VoteType:     VoteType_FailureObservation,
@@ -556,7 +556,7 @@ func TestBallot_GenerateVoterList(t *testing.T) {
 				VoteType_SuccessObservation,
 				VoteType_SuccessObservation,
 			},
-			expectedVoterList: []VoterList{
+			expectedVoterList: []Voter{
 				{
 					VoterAddress: "Observer1",
 					VoteType:     VoteType_FailureObservation,

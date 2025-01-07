@@ -14,8 +14,8 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
-func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
-	emissionPoolBalance := keeper.GetReservesFactor(ctx)
+func BeginBlocker(ctx sdk.Context, emissionsKeeper keeper.Keeper) {
+	emissionPoolBalance := emissionsKeeper.GetReservesFactor(ctx)
 
 	// reduce frequency of log messages
 	logEach10Blocks := func(message string) {
@@ -27,7 +27,7 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	}
 
 	// Get the block rewards from the params
-	params, found := keeper.GetParams(ctx)
+	params, found := emissionsKeeper.GetParams(ctx)
 	if !found {
 		ctx.Logger().Error("Params not found")
 		return
@@ -53,24 +53,29 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	// Use a tmpCtx, which is a cache-wrapped context to avoid writing to the store
 	// We commit only if all three distributions are successful, if not the funds stay in the emission pool
 	tmpCtx, commit := ctx.CacheContext()
-	err := DistributeValidatorRewards(tmpCtx, validatorRewards, keeper.GetBankKeeper(), keeper.GetFeeCollector())
+	err := DistributeValidatorRewards(
+		tmpCtx,
+		validatorRewards,
+		emissionsKeeper.GetBankKeeper(),
+		emissionsKeeper.GetFeeCollector(),
+	)
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("Error while distributing validator rewards %s", err))
 		return
 	}
-	err = DistributeObserverRewards(tmpCtx, observerRewards, keeper, params)
+	err = DistributeObserverRewards(tmpCtx, observerRewards, emissionsKeeper, params)
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("Error while distributing observer rewards %s", err))
 		return
 	}
-	err = DistributeTSSRewards(tmpCtx, tssSignerRewards, keeper.GetBankKeeper())
+	err = DistributeTSSRewards(tmpCtx, tssSignerRewards, emissionsKeeper.GetBankKeeper())
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("Error while distributing tss signer rewards %s", err))
 		return
 	}
 	commit()
 
-	types.EmitValidatorEmissions(ctx, "", "",
+	keeper.EmitValidatorEmissions(ctx, "", "",
 		"",
 		validatorRewards.String(),
 		observerRewards.String(),
@@ -99,7 +104,7 @@ func DistributeValidatorRewards(
 func DistributeObserverRewards(
 	ctx sdk.Context,
 	amount sdkmath.Int,
-	keeper keeper.Keeper,
+	emissionsKeeper keeper.Keeper,
 	params types.Params,
 ) error {
 	var (
@@ -108,14 +113,14 @@ func DistributeObserverRewards(
 		maturedBallots []string
 	)
 
-	err := keeper.GetBankKeeper().
+	err := emissionsKeeper.GetBankKeeper().
 		SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount)))
 	if err != nil {
-		return sdkerrors.Wrap(err, "Error while transferring funds to the undistributed pool")
+		return sdkerrors.Wrap(err, "error while transferring funds to the undistributed pool")
 	}
 
 	// Fetch the matured ballots for this block
-	list, found := keeper.GetObserverKeeper().GetMaturedBallots(ctx, maturityBlocks)
+	list, found := emissionsKeeper.GetObserverKeeper().GetMaturedBallots(ctx, maturityBlocks)
 	if found {
 		maturedBallots = list.BallotsIndexList
 	}
@@ -127,13 +132,19 @@ func DistributeObserverRewards(
 	// We have some matured ballots, we now need to process them
 	// Processing Step 1: Distribute the rewards
 	// Final distribution list is the list of ObserverEmissions, which will be emitted as events
-	finalDistributionList := distributeRewardsForMaturedBallots(ctx, keeper, maturedBallots, amount, slashAmount)
+	finalDistributionList := distributeRewardsForMaturedBallots(
+		ctx,
+		emissionsKeeper,
+		maturedBallots,
+		amount,
+		slashAmount,
+	)
 
 	// Processing Step 2: Emit the observer emissions
-	types.EmitObserverEmissions(ctx, finalDistributionList)
+	keeper.EmitObserverEmissions(ctx, finalDistributionList)
 
 	// Processing Step 3: Delete all matured ballots and the ballot list
-	keeper.GetObserverKeeper().ClearMaturedBallotsAndBallotList(ctx, params.BallotMaturityBlocks)
+	emissionsKeeper.GetObserverKeeper().ClearMaturedBallotsAndBallotList(ctx, params.BallotMaturityBlocks)
 	return nil
 }
 

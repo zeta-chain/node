@@ -6,7 +6,7 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { PageRequest, PageResponse } from "../../../cosmos/base/query/v1beta1/pagination_pb.js";
-import type { Ballot, BallotStatus, VoterList } from "./ballot_pb.js";
+import type { Ballot, BallotStatus, Voter } from "./ballot_pb.js";
 import type { OperationalFlags } from "./operational_pb.js";
 import type { TssFundMigratorInfo } from "./tss_funds_migrator_pb.js";
 import type { ChainNonces } from "./chain_nonces_pb.js";
@@ -703,9 +703,9 @@ export declare class QueryBallotByIdentifierResponse extends Message<QueryBallot
   ballotIdentifier: string;
 
   /**
-   * @generated from field: repeated zetachain.zetacore.observer.VoterList voters = 2;
+   * @generated from field: repeated zetachain.zetacore.observer.Voter voters = 2;
    */
-  voters: VoterList[];
+  voters: Voter[];
 
   /**
    * @generated from field: zetachain.zetacore.observer.ObservationType observation_type = 3;
