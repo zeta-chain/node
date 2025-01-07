@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"time"
 
-	tmlog "github.com/cometbft/cometbft/libs/log"
+	tmlog "cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"

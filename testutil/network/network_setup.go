@@ -15,9 +15,9 @@ import (
 	"testing"
 	"time"
 
+	tmlog "cosmossdk.io/log"
 	"cosmossdk.io/math"
 	pruningtypes "cosmossdk.io/store/pruning/types"
-	tmlog "github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/node"
 	tmclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/cosmos/cosmos-sdk/client"
