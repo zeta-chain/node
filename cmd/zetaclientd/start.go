@@ -109,6 +109,8 @@ func Start(_ *cobra.Command, _ []string) error {
 		return nil
 	}
 
+	graceful.AddStopper(tss.Stop)
+
 	// Starts various background TSS listeners.
 	// Shuts down zetaclientd if any is triggered.
 	maintenance.NewTSSListener(zetacoreClient, logger.Std).Listen(ctx, func() {
