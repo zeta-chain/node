@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"errors"
+	"reflect"
 	"testing"
 	"time"
 
@@ -88,14 +89,20 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 	ctx = ctx.WithBlockHeight(observertypes.DefaultCrosschainFlags().GasPriceIncreaseFlags.EpochLength * 2)
 	cctxCount, flags = k.IterateAndUpdateCctxGasPrice(ctx, supportedChains, updateFunc)
 
-	// 2 eth + 5 bsc = 7
-	require.Equal(t, 7, cctxCount)
+	// 2 eth + 5 btc + 5 bsc = 12
+	require.Equal(t, 12, cctxCount)
 	require.Equal(t, customFlags, flags)
 
 	// check that the update function was called with the cctx index
-	require.Equal(t, 7, len(updateFuncMap))
+	require.Equal(t, 12, len(updateFuncMap))
 	require.Contains(t, updateFuncMap, sample.GetCctxIndexFromString("1-10"))
 	require.Contains(t, updateFuncMap, sample.GetCctxIndexFromString("1-11"))
+
+	require.Contains(t, updateFuncMap, sample.GetCctxIndexFromString("8332-20"))
+	require.Contains(t, updateFuncMap, sample.GetCctxIndexFromString("8332-21"))
+	require.Contains(t, updateFuncMap, sample.GetCctxIndexFromString("8332-22"))
+	require.Contains(t, updateFuncMap, sample.GetCctxIndexFromString("8332-23"))
+	require.Contains(t, updateFuncMap, sample.GetCctxIndexFromString("8332-24"))
 
 	require.Contains(t, updateFuncMap, sample.GetCctxIndexFromString("56-30"))
 	require.Contains(t, updateFuncMap, sample.GetCctxIndexFromString("56-31"))
@@ -104,7 +111,7 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 	require.Contains(t, updateFuncMap, sample.GetCctxIndexFromString("56-34"))
 }
 
-func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
+func Test_CheckAndUpdateCctxGasPriceEVM(t *testing.T) {
 	sampleTimestamp := time.Now()
 	retryIntervalReached := sampleTimestamp.Add(observertypes.DefaultGasPriceIncreaseFlags.RetryInterval + time.Second)
 	retryIntervalNotReached := sampleTimestamp.Add(
@@ -407,7 +414,7 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 			}
 
 			// check and update gas price
-			gasPriceIncrease, feesPaid, err := keeper.CheckAndUpdateCctxGasPrice(ctx, *k, tc.cctx, tc.flags)
+			gasPriceIncrease, feesPaid, err := keeper.CheckAndUpdateCctxGasPriceEVM(ctx, *k, tc.cctx, tc.flags)
 
 			if tc.isError {
 				require.Error(t, err)
@@ -451,47 +458,219 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 	}
 }
 
-func TestIsGasStabilityPoolEnabledChain(t *testing.T) {
-	tests := []struct {
-		name     string
-		chainID  int64
-		expected bool
+func Test_CheckAndUpdateCctxGasRateBTC(t *testing.T) {
+	sampleTimestamp := time.Now()
+	gasRateUpdateInterval := observertypes.DefaultGasPriceIncreaseFlags.RetryInterval
+	retryIntervalReached := sampleTimestamp.Add(gasRateUpdateInterval + time.Second)
+	retryIntervalNotReached := sampleTimestamp.Add(gasRateUpdateInterval - time.Second)
+
+	tt := []struct {
+		name              string
+		cctx              types.CrossChainTx
+		flags             observertypes.GasPriceIncreaseFlags
+		blockTimestamp    time.Time
+		medianGasPrice    uint64
+		medianPriorityFee uint64
+		shouldUpdate      bool
+		isError           bool
 	}{
 		{
-			name:     "Ethereum is enabled",
-			chainID:  chains.Ethereum.ChainId,
-			expected: true,
+			name: "can update gas rate when retry interval is reached",
+			cctx: types.CrossChainTx{
+				Index: "a",
+				CctxStatus: &types.Status{
+					CreatedTimestamp:    sampleTimestamp.Unix(),
+					LastUpdateTimestamp: sampleTimestamp.Unix(),
+				},
+				OutboundParams: []*types.OutboundParams{
+					{
+						ReceiverChainId: 8332,
+						CallOptions: &types.CallOptions{
+							GasLimit: 254,
+						},
+						GasPrice: "10",
+					},
+				},
+			},
+			flags:          observertypes.DefaultGasPriceIncreaseFlags,
+			blockTimestamp: retryIntervalReached,
+			medianGasPrice: 12,
+			shouldUpdate:   true,
 		},
 		{
-			name:     "Binance Smart Chain is enabled",
-			chainID:  chains.BscMainnet.ChainId,
-			expected: true,
+			name: "skip if gas price is not set",
+			cctx: types.CrossChainTx{
+				Index: "b1",
+				OutboundParams: []*types.OutboundParams{
+					{
+						GasPrice: "",
+					},
+				},
+			},
+			flags:          observertypes.DefaultGasPriceIncreaseFlags,
+			blockTimestamp: retryIntervalReached,
+			medianGasPrice: 12,
 		},
 		{
-			name:     "Bitcoin is enabled",
-			chainID:  chains.BitcoinMainnet.ChainId,
-			expected: true,
+			name: "skip if gas limit is not set",
+			cctx: types.CrossChainTx{
+				Index: "b2",
+				OutboundParams: []*types.OutboundParams{
+					{
+						CallOptions: &types.CallOptions{
+							GasLimit: 0,
+						},
+						GasPrice: "10",
+					},
+				},
+			},
+			flags:          observertypes.DefaultGasPriceIncreaseFlags,
+			blockTimestamp: retryIntervalReached,
+			medianGasPrice: 12,
 		},
 		{
-			name:     "ZetaChain is not enabled",
-			chainID:  chains.ZetaChainMainnet.ChainId,
-			expected: false,
+			name: "skip if retry interval is not reached",
+			cctx: types.CrossChainTx{
+				Index: "b3",
+				CctxStatus: &types.Status{
+					CreatedTimestamp:    sampleTimestamp.Unix(),
+					LastUpdateTimestamp: sampleTimestamp.Unix(),
+				},
+				OutboundParams: []*types.OutboundParams{
+					{
+						CallOptions: &types.CallOptions{
+							GasLimit: 254,
+						},
+						GasPrice: "10",
+					},
+				},
+			},
+			flags:          observertypes.DefaultGasPriceIncreaseFlags,
+			blockTimestamp: retryIntervalNotReached,
+			medianGasPrice: 12,
 		},
 		{
-			name:     "Solana is not enabled",
-			chainID:  chains.SolanaMainnet.ChainId,
-			expected: false,
+			name: "returns error if can't find median gas price",
+			cctx: types.CrossChainTx{
+				Index: "b4",
+				CctxStatus: &types.Status{
+					CreatedTimestamp:    sampleTimestamp.Unix(),
+					LastUpdateTimestamp: sampleTimestamp.Unix(),
+				},
+				OutboundParams: []*types.OutboundParams{
+					{
+						ReceiverChainId: 8332,
+						CallOptions: &types.CallOptions{
+							GasLimit: 254,
+						},
+						GasPrice: "10",
+					},
+				},
+			},
+			flags:          observertypes.DefaultGasPriceIncreaseFlags,
+			blockTimestamp: retryIntervalReached,
+			medianGasPrice: 0,
+			isError:        true,
+		},
+	}
+	for _, tc := range tt {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			k, ctx := testkeeper.CrosschainKeeperAllMocks(t)
+			chainID := tc.cctx.GetCurrentOutboundParam().ReceiverChainId
+
+			// set median gas price if not zero
+			if tc.medianGasPrice != 0 {
+				k.SetGasPrice(ctx, types.GasPrice{
+					ChainId:     chainID,
+					Prices:      []uint64{tc.medianGasPrice},
+					MedianIndex: 0,
+				})
+
+				// ensure median gas price is set
+				medianGasPrice, _, isFound := k.GetMedianGasValues(ctx, chainID)
+				require.True(t, isFound)
+				require.True(t, medianGasPrice.Equal(math.NewUint(tc.medianGasPrice)))
+			}
+
+			// set block timestamp
+			ctx = ctx.WithBlockTime(tc.blockTimestamp)
+
+			// check and update gas rate
+			gasPriceIncrease, feesPaid, err := keeper.CheckAndUpdateCctxGasRateBTC(ctx, *k, tc.cctx, tc.flags)
+			if tc.isError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+
+			// check values
+			require.True(t, gasPriceIncrease.IsZero())
+			require.True(t, feesPaid.IsZero())
+
+			// check cctx if gas rate is updated
+			if tc.shouldUpdate {
+				cctx, found := k.GetCrossChainTx(ctx, tc.cctx.Index)
+				require.True(t, found)
+				newGasPrice, err := cctx.GetCurrentOutboundParam().GetGasPriorityFeeUInt64()
+				require.NoError(t, err)
+				require.Equal(t, tc.medianGasPrice, newGasPrice)
+				require.EqualValues(t, tc.blockTimestamp.Unix(), cctx.CctxStatus.LastUpdateTimestamp)
+			}
+		})
+	}
+}
+
+func Test_GetCctxGasPriceUpdater(t *testing.T) {
+	tests := []struct {
+		name       string
+		chainID    int64
+		found      bool
+		updateFunc keeper.CheckAndUpdateCctxGasPriceFunc
+	}{
+		{
+			name:       "Ethereum is enabled",
+			chainID:    chains.Ethereum.ChainId,
+			found:      true,
+			updateFunc: keeper.CheckAndUpdateCctxGasPriceEVM,
 		},
 		{
-			name:     "TON is not enabled",
-			chainID:  chains.TONMainnet.ChainId,
-			expected: false,
+			name:       "Binance Smart Chain is enabled",
+			chainID:    chains.BscMainnet.ChainId,
+			found:      true,
+			updateFunc: keeper.CheckAndUpdateCctxGasPriceEVM,
+		},
+		{
+			name:       "Bitcoin is enabled",
+			chainID:    chains.BitcoinMainnet.ChainId,
+			found:      true,
+			updateFunc: keeper.CheckAndUpdateCctxGasRateBTC,
+		},
+		{
+			name:       "ZetaChain is not enabled",
+			chainID:    chains.ZetaChainMainnet.ChainId,
+			found:      false,
+			updateFunc: nil,
+		},
+		{
+			name:       "Solana is not enabled",
+			chainID:    chains.SolanaMainnet.ChainId,
+			found:      false,
+			updateFunc: nil,
+		},
+		{
+			name:       "TON is not enabled",
+			chainID:    chains.TONMainnet.ChainId,
+			found:      false,
+			updateFunc: nil,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.expected, keeper.IsGasStabilityPoolEnabledChain(tt.chainID, []zetachains.Chain{}))
+			updateFunc, found := keeper.GetCctxGasPriceUpdater(tt.chainID, []zetachains.Chain{})
+			require.Equal(t, tt.found, found)
+			require.Equal(t, reflect.ValueOf(tt.updateFunc).Pointer(), reflect.ValueOf(updateFunc).Pointer())
 		})
 	}
 }
