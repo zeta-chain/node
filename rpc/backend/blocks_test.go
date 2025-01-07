@@ -654,7 +654,7 @@ func (suite *BackendTestSuite) TestTendermintBlockResultByNumber() {
 
 				expBlockRes = &tmrpctypes.ResultBlockResults{
 					Height:     blockNum,
-					TxsResults: []*types.ResponseDeliverTx{{Code: 0, GasUsed: 0}},
+					TxsResults: []*types.ExecTxResult{{Code: 0, GasUsed: 0}},
 				}
 			},
 			true,
@@ -828,7 +828,7 @@ func (suite *BackendTestSuite) TestBlockBloom() {
 		{
 			"fail - non block bloom event type",
 			&tmrpctypes.ResultBlockResults{
-				EndBlockEvents: []types.Event{{Type: evmtypes.EventTypeEthereumTx}},
+				FinalizeBlockEvents: []types.Event{{Type: evmtypes.EventTypeEthereumTx}},
 			},
 			ethtypes.Bloom{},
 			false,
@@ -836,7 +836,7 @@ func (suite *BackendTestSuite) TestBlockBloom() {
 		{
 			"fail - nonblock bloom attribute key",
 			&tmrpctypes.ResultBlockResults{
-				EndBlockEvents: []types.Event{
+				FinalizeBlockEvents: []types.Event{
 					{
 						Type: evmtypes.EventTypeBlockBloom,
 						Attributes: []types.EventAttribute{
@@ -851,7 +851,7 @@ func (suite *BackendTestSuite) TestBlockBloom() {
 		{
 			"pass - block bloom attribute key",
 			&tmrpctypes.ResultBlockResults{
-				EndBlockEvents: []types.Event{
+				FinalizeBlockEvents: []types.Event{
 					{
 						Type: evmtypes.EventTypeBlockBloom,
 						Attributes: []types.EventAttribute{
@@ -902,7 +902,7 @@ func (suite *BackendTestSuite) TestGetEthBlockFromTendermint() {
 			&tmrpctypes.ResultBlock{Block: emptyBlock},
 			&tmrpctypes.ResultBlockResults{
 				Height:     1,
-				TxsResults: []*types.ResponseDeliverTx{{Code: 0, GasUsed: 0}},
+				TxsResults: []*types.ExecTxResult{{Code: 0, GasUsed: 0}},
 			},
 			false,
 			func(baseFee sdkmath.Int, validator sdk.AccAddress, height int64) {
@@ -926,7 +926,7 @@ func (suite *BackendTestSuite) TestGetEthBlockFromTendermint() {
 			},
 			&tmrpctypes.ResultBlockResults{
 				Height:     1,
-				TxsResults: []*types.ResponseDeliverTx{{Code: 0, GasUsed: 0}},
+				TxsResults: []*types.ExecTxResult{{Code: 0, GasUsed: 0}},
 			},
 			true,
 			func(baseFee sdkmath.Int, validator sdk.AccAddress, height int64) {
@@ -950,7 +950,7 @@ func (suite *BackendTestSuite) TestGetEthBlockFromTendermint() {
 			},
 			&tmrpctypes.ResultBlockResults{
 				Height:     1,
-				TxsResults: []*types.ResponseDeliverTx{{Code: 0, GasUsed: 0}},
+				TxsResults: []*types.ExecTxResult{{Code: 0, GasUsed: 0}},
 			},
 			true,
 			func(baseFee sdkmath.Int, validator sdk.AccAddress, height int64) {
@@ -974,7 +974,7 @@ func (suite *BackendTestSuite) TestGetEthBlockFromTendermint() {
 			},
 			&tmrpctypes.ResultBlockResults{
 				Height:     1,
-				TxsResults: []*types.ResponseDeliverTx{{Code: 0, GasUsed: 0}},
+				TxsResults: []*types.ExecTxResult{{Code: 0, GasUsed: 0}},
 			},
 			true,
 			func(baseFee sdkmath.Int, validator sdk.AccAddress, height int64) {
@@ -998,7 +998,7 @@ func (suite *BackendTestSuite) TestGetEthBlockFromTendermint() {
 			},
 			&tmrpctypes.ResultBlockResults{
 				Height: 1,
-				TxsResults: []*types.ResponseDeliverTx{
+				TxsResults: []*types.ExecTxResult{
 					{
 						Code:    11,
 						GasUsed: 0,
@@ -1028,7 +1028,7 @@ func (suite *BackendTestSuite) TestGetEthBlockFromTendermint() {
 			},
 			&tmrpctypes.ResultBlockResults{
 				Height:     1,
-				TxsResults: []*types.ResponseDeliverTx{{Code: 0, GasUsed: 0}},
+				TxsResults: []*types.ExecTxResult{{Code: 0, GasUsed: 0}},
 			},
 			false,
 			func(baseFee sdkmath.Int, validator sdk.AccAddress, height int64) {
@@ -1052,7 +1052,7 @@ func (suite *BackendTestSuite) TestGetEthBlockFromTendermint() {
 			},
 			&tmrpctypes.ResultBlockResults{
 				Height:     1,
-				TxsResults: []*types.ResponseDeliverTx{{Code: 0, GasUsed: 0}},
+				TxsResults: []*types.ExecTxResult{{Code: 0, GasUsed: 0}},
 			},
 			true,
 			func(baseFee sdkmath.Int, validator sdk.AccAddress, height int64) {
@@ -1138,7 +1138,7 @@ func (suite *BackendTestSuite) TestEthMsgsFromTendermintBlock() {
 				Block: tmtypes.MakeBlock(1, []tmtypes.Tx{bz}, nil, nil),
 			},
 			&tmrpctypes.ResultBlockResults{
-				TxsResults: []*types.ResponseDeliverTx{
+				TxsResults: []*types.ExecTxResult{
 					{
 						Code: 1,
 					},
@@ -1152,7 +1152,7 @@ func (suite *BackendTestSuite) TestEthMsgsFromTendermintBlock() {
 				Block: tmtypes.MakeBlock(1, []tmtypes.Tx{bz}, nil, nil),
 			},
 			&tmrpctypes.ResultBlockResults{
-				TxsResults: []*types.ResponseDeliverTx{
+				TxsResults: []*types.ExecTxResult{
 					{
 						Code: 1,
 						Log:  ethrpc.ExceedBlockGasLimitError,
@@ -1167,7 +1167,7 @@ func (suite *BackendTestSuite) TestEthMsgsFromTendermintBlock() {
 				Block: tmtypes.MakeBlock(1, []tmtypes.Tx{bz}, nil, nil),
 			},
 			&tmrpctypes.ResultBlockResults{
-				TxsResults: []*types.ResponseDeliverTx{
+				TxsResults: []*types.ExecTxResult{
 					{
 						Code: 0,
 						Log:  ethrpc.ExceedBlockGasLimitError,
@@ -1563,7 +1563,7 @@ func (suite *BackendTestSuite) TestEthBlockFromTendermintBlock() {
 			},
 			&tmrpctypes.ResultBlockResults{
 				Height:     1,
-				TxsResults: []*types.ResponseDeliverTx{{Code: 0, GasUsed: 0}},
+				TxsResults: []*types.ExecTxResult{{Code: 0, GasUsed: 0}},
 			},
 			func(baseFee sdkmath.Int, blockNum int64) {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
@@ -1592,8 +1592,8 @@ func (suite *BackendTestSuite) TestEthBlockFromTendermintBlock() {
 			},
 			&tmrpctypes.ResultBlockResults{
 				Height:     1,
-				TxsResults: []*types.ResponseDeliverTx{{Code: 0, GasUsed: 0}},
-				EndBlockEvents: []types.Event{
+				TxsResults: []*types.ExecTxResult{{Code: 0, GasUsed: 0}},
+				FinalizeBlockEvents: []types.Event{
 					{
 						Type: evmtypes.EventTypeBlockBloom,
 						Attributes: []types.EventAttribute{
@@ -1662,7 +1662,7 @@ func (suite *BackendTestSuite) TestEthAndSyntheticMsgsFromTendermintBlock() {
 	resBlock := &tmrpctypes.ResultBlock{Block: emptyBlock, BlockID: tmtypes.BlockID{Hash: bytes.HexBytes(blockHash)}}
 	blockRes := &tmrpctypes.ResultBlockResults{
 		Height:     1,
-		TxsResults: []*types.ResponseDeliverTx{{}, &txRes},
+		TxsResults: []*types.ExecTxResult{{}, &txRes},
 	}
 
 	// both real and synthetic should be returned
@@ -1693,7 +1693,7 @@ func (suite *BackendTestSuite) TestEthAndSyntheticEthBlockByNumber() {
 	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 	// block contains block real and synthetic tx
 	RegisterBlock(client, 1, []tmtypes.Tx{realTx, tx})
-	RegisterBlockResultsWithTxResults(client, 1, []*types.ResponseDeliverTx{{}, &txRes})
+	RegisterBlockResultsWithTxResults(client, 1, []*types.ExecTxResult{{}, &txRes})
 	RegisterBaseFee(queryClient, sdkmath.NewInt(1))
 	RegisterValidatorAccount(queryClient, validator)
 
@@ -1718,7 +1718,7 @@ func (suite *BackendTestSuite) TestEthAndSyntheticGetBlockByNumber() {
 	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 	// block contains block real and synthetic tx
 	RegisterBlock(client, 1, []tmtypes.Tx{realTx, tx})
-	RegisterBlockResultsWithTxResults(client, 1, []*types.ResponseDeliverTx{{}, &txRes})
+	RegisterBlockResultsWithTxResults(client, 1, []*types.ExecTxResult{{}, &txRes})
 	RegisterBaseFee(queryClient, sdkmath.NewInt(1))
 	RegisterValidatorAccount(queryClient, sdk.AccAddress(common.Address{}.Bytes()))
 	RegisterConsensusParams(client, 1)

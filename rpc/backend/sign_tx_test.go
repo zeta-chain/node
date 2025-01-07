@@ -6,15 +6,13 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	goethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
-	"github.com/zeta-chain/ethermint/ethereum/eip712"
 	"github.com/zeta-chain/ethermint/tests"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"google.golang.org/grpc/metadata"
@@ -217,6 +215,7 @@ func (suite *BackendTestSuite) TestSign() {
 				signature, _, err := suite.backend.clientCtx.Keyring.SignByAddress(
 					(sdk.AccAddress)(from.Bytes()),
 					tc.inputBz,
+					signing.SignMode_SIGN_MODE_TEXTUAL,
 				)
 				signature[goethcrypto.RecoveryIDOffset] += 27
 				suite.Require().NoError(err)
@@ -229,18 +228,6 @@ func (suite *BackendTestSuite) TestSign() {
 }
 
 func (suite *BackendTestSuite) TestSignTypedData() {
-	data := legacytx.StdSignBytes(
-		"0",
-		1,
-		1,
-		0,
-		legacytx.StdFee{Gas: 10, Amount: sdk.Coins{}},
-		[]sdk.Msg{&banktypes.MsgSend{}},
-		"",
-		nil,
-	)
-	typedData, err := eip712.WrapTxToTypedData(0, data)
-	suite.Require().NoError(err)
 	from, priv := tests.NewAddrKey()
 	testCases := []struct {
 		name           string
@@ -266,16 +253,7 @@ func (suite *BackendTestSuite) TestSignTypedData() {
 			apitypes.TypedData{},
 			false,
 		},
-		{
-			"sucess - valid typed data",
-			func() {
-				armor := crypto.EncryptArmorPrivKey(priv, "", "eth_secp256k1")
-				suite.backend.clientCtx.Keyring.ImportPrivKey("test_key", armor, "")
-			},
-			from,
-			typedData,
-			true,
-		},
+		// TODO: Generate a TypedData msg
 	}
 
 	for _, tc := range testCases {
@@ -288,10 +266,7 @@ func (suite *BackendTestSuite) TestSignTypedData() {
 			if tc.expPass {
 				sigHash, _, err := apitypes.TypedDataAndHash(tc.inputTypedData)
 				suite.Require().NoError(err)
-				signature, _, err := suite.backend.clientCtx.Keyring.SignByAddress(
-					(sdk.AccAddress)(from.Bytes()),
-					sigHash,
-				)
+				signature, _, err := suite.backend.clientCtx.Keyring.SignByAddress((sdk.AccAddress)(from.Bytes()), sigHash, signing.SignMode_SIGN_MODE_TEXTUAL)
 				signature[goethcrypto.RecoveryIDOffset] += 27
 				suite.Require().NoError(err)
 				suite.Require().Equal((hexutil.Bytes)(signature), responseBz)

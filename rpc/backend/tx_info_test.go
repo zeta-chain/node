@@ -6,10 +6,10 @@ import (
 
 	tmlog "cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/zeta-chain/ethermint/indexer"
@@ -38,7 +38,7 @@ func (suite *BackendTestSuite) TestGetSyntheticTransactionByHash() {
 	RegisterBaseFee(queryClient, sdkmath.NewInt(1))
 	RegisterTxSearchWithTxResult(client, query, []byte{}, txRes)
 	RegisterBlock(client, 1, nil)
-	RegisterBlockResultsWithTxResults(client, 1, []*abci.ResponseDeliverTx{&txRes})
+	RegisterBlockResultsWithTxResults(client, 1, []*abci.ExecTxResult{&txRes})
 
 	res, err := suite.backend.GetTransactionByHash(common.HexToHash(hash))
 	suite.Require().NoError(err)
@@ -82,7 +82,7 @@ func (suite *BackendTestSuite) TestGetSyntheticTransactionReceiptByHash() {
 	RegisterParamsWithoutHeader(queryClient, 1)
 	RegisterTxSearchWithTxResult(client, query, []byte{}, txRes)
 	RegisterBlock(client, 1, nil)
-	RegisterBlockResultsWithTxResults(client, 1, []*abci.ResponseDeliverTx{&txRes})
+	RegisterBlockResultsWithTxResults(client, 1, []*abci.ExecTxResult{&txRes})
 
 	res, err := suite.backend.GetTransactionReceipt(common.HexToHash(hash))
 	suite.Require().NoError(err)
@@ -111,7 +111,7 @@ func (suite *BackendTestSuite) TestGetSyntheticTransactionByBlockNumberAndIndex(
 	client := suite.backend.clientCtx.Client.(*mocks.Client)
 	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 	RegisterBlock(client, 1, []types.Tx{tx})
-	RegisterBlockResultsWithTxResults(client, 1, []*abci.ResponseDeliverTx{&txRes})
+	RegisterBlockResultsWithTxResults(client, 1, []*abci.ExecTxResult{&txRes})
 	RegisterBaseFee(queryClient, sdkmath.NewInt(1))
 
 	res, err := suite.backend.GetTransactionByBlockNumberAndIndex(rpctypes.BlockNumber(1), 0)
@@ -144,7 +144,7 @@ func (suite *BackendTestSuite) TestGetSyntheticTransactionByBlockNumberAndIndexW
 	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 	// synthetic tx with real MsgEthereumTx
 	RegisterBlock(client, 1, []types.Tx{realTx, tx})
-	RegisterBlockResultsWithTxResults(client, 1, []*abci.ResponseDeliverTx{{}, &txRes})
+	RegisterBlockResultsWithTxResults(client, 1, []*abci.ExecTxResult{{}, &txRes})
 	RegisterBaseFee(queryClient, sdkmath.NewInt(1))
 
 	res, err := suite.backend.GetTransactionByBlockNumberAndIndex(rpctypes.BlockNumber(1), 1)
@@ -171,7 +171,7 @@ func (suite *BackendTestSuite) TestGetTransactionByHash() {
 
 	txBz := suite.signAndEncodeEthTx(msgEthereumTx)
 	block := &types.Block{Header: types.Header{Height: 1, ChainID: "test"}, Data: types.Data{Txs: []types.Tx{txBz}}}
-	responseDeliver := []*abci.ResponseDeliverTx{
+	responseDeliver := []*abci.ExecTxResult{
 		{
 			Code: 0,
 			Events: []abci.Event{
@@ -452,7 +452,7 @@ func (suite *BackendTestSuite) TestGetTransactionByBlockAndIndex() {
 	msgEthTx, bz := suite.buildEthereumTx()
 
 	defaultBlock := types.MakeBlock(1, []types.Tx{bz}, nil, nil)
-	defaultResponseDeliverTx := []*abci.ResponseDeliverTx{
+	defaultExecTxResult := []*abci.ExecTxResult{
 		{
 			Code: 0,
 			Events: []abci.Event{
@@ -523,7 +523,7 @@ func (suite *BackendTestSuite) TestGetTransactionByBlockAndIndex() {
 					Header: types.Header{Height: 1, ChainID: "test"},
 					Data:   types.Data{Txs: []types.Tx{txBz}},
 				}
-				err := suite.backend.indexer.IndexBlock(block, defaultResponseDeliverTx)
+				err := suite.backend.indexer.IndexBlock(block, defaultExecTxResult)
 				suite.Require().NoError(err)
 				RegisterBlockResults(client, 1)
 				RegisterBaseFee(queryClient, sdkmath.NewInt(1))
@@ -724,7 +724,7 @@ func (suite *BackendTestSuite) TestGetTransactionReceipt() {
 		registerMock func()
 		tx           *evmtypes.MsgEthereumTx
 		block        *types.Block
-		blockResult  []*abci.ResponseDeliverTx
+		blockResult  []*abci.ExecTxResult
 		expTxReceipt map[string]interface{}
 		expPass      bool
 	}{
@@ -741,7 +741,7 @@ func (suite *BackendTestSuite) TestGetTransactionReceipt() {
 			},
 			msgEthereumTx,
 			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
-			[]*abci.ResponseDeliverTx{
+			[]*abci.ExecTxResult{
 				{
 					Code: 0,
 					Events: []abci.Event{

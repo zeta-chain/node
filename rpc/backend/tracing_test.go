@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	tmlog "cosmossdk.io/log"
-	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -57,7 +57,7 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 		txHash        common.Hash
 		registerMock  func()
 		block         *types.Block
-		responseBlock []*abci.ResponseDeliverTx
+		responseBlock []*abci.ExecTxResult
 		expResult     interface{}
 		expPass       bool
 	}{
@@ -66,7 +66,7 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 			txHash,
 			func() {},
 			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{}}},
-			[]*abci.ResponseDeliverTx{
+			[]*abci.ExecTxResult{
 				{
 					Code: 0,
 					Events: []abci.Event{
@@ -93,7 +93,7 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 				RegisterBlockError(client, 1)
 			},
 			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
-			[]*abci.ResponseDeliverTx{
+			[]*abci.ExecTxResult{
 				{
 					Code: 0,
 					Events: []abci.Event{
@@ -123,7 +123,7 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 					msgEthereumTx2,
 					[]*evmtypes.MsgEthereumTx{msgEthereumTx},
 				)
-				txResults := []*abci.ResponseDeliverTx{
+				txResults := []*abci.ExecTxResult{
 					{
 						Code: 0,
 						Events: []abci.Event{
@@ -158,7 +158,7 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 				Header: types.Header{Height: 1, ChainID: ChainID},
 				Data:   types.Data{Txs: []types.Tx{txBz, txBz2}},
 			},
-			[]*abci.ResponseDeliverTx{
+			[]*abci.ExecTxResult{
 				{
 					Code: 0,
 					Events: []abci.Event{
@@ -197,7 +197,7 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				RegisterBlock(client, 1, []types.Tx{txBz})
 				RegisterTraceTransaction(queryClient, msgEthereumTx)
-				txResults := []*abci.ResponseDeliverTx{
+				txResults := []*abci.ExecTxResult{
 					{
 						Code: 0,
 						Events: []abci.Event{
@@ -216,7 +216,7 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 
 			},
 			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
-			[]*abci.ResponseDeliverTx{
+			[]*abci.ExecTxResult{
 				{
 					Code: 0,
 					Events: []abci.Event{
