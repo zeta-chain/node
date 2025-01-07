@@ -6,15 +6,17 @@ import (
 	"strconv"
 	"strings"
 
-	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	btcrpc "github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	evmobserver "github.com/zeta-chain/node/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
@@ -155,21 +157,39 @@ func InboundGetBallot(_ *cobra.Command, args []string) error {
 		}
 		fmt.Println("CoinType : ", coinType)
 	} else if chain.IsBitcoin() {
-		return fmt.Errorf("not implemented")
-		//observer, ok := observers[chainID]
-		//if !ok {
-		//	return fmt.Errorf("observer not found for btc chain %d", chainID)
-		//}
-		//
-		//btcObserver, ok := observer.(*btcobserver.Observer)
-		//if !ok {
-		//	return fmt.Errorf("observer is not btc observer for chain %d", chainID)
-		//}
-		//
-		//ballotIdentifier, err = btcObserver.CheckReceiptForBtcTxHash(ctx, inboundHash, false)
-		//if err != nil {
-		//	return err
-		//}
+		bitcoinConfig, found := appContext.Config().GetBTCConfig(chain.ID())
+		if !found {
+			return fmt.Errorf("unable to find btc config")
+		}
+
+		rpcClient, err := btcrpc.NewRPCClient(bitcoinConfig)
+		if err != nil {
+			return errors.Wrap(err, "unable to create rpc client")
+		}
+
+		database, err := db.NewFromSqliteInMemory(true)
+		if err != nil {
+			return errors.Wrap(err, "unable to open database")
+		}
+
+		observer, err := btcobserver.NewObserver(
+			*chain.RawChain(),
+			rpcClient,
+			*chain.Params(),
+			client,
+			nil,
+			database,
+			baseLogger,
+			nil,
+		)
+		if err != nil {
+			return errors.Wrap(err, "unable to create btc observer")
+		}
+
+		ballotIdentifier, err = observer.CheckReceiptForBtcTxHash(ctx, inboundHash, false)
+		if err != nil {
+			return err
+		}
 	}
 
 	fmt.Println("BallotIdentifier: ", ballotIdentifier)
