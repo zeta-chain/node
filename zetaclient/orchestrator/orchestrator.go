@@ -34,11 +34,11 @@ import (
 )
 
 const (
-	// evmOutboundLookbackFactor is the factor to determine how many nonces to look back for pending cctxs
+	// outboundLookbackFactor is the factor to determine how many nonces to look back for pending cctxs
 	// For example, give OutboundScheduleLookahead of 120, pending NonceLow of 1000 and factor of 1.0,
 	// the scheduler need to be able to pick up and schedule any pending cctx with nonce < 880 (1000 - 120 * 1.0)
 	// NOTE: 1.0 means look back the same number of cctxs as we look ahead
-	evmOutboundLookbackFactor = 1.0
+	outboundLookbackFactor = 1.0
 
 	// sampling rate for sampled orchestrator logger
 	loggerSamplingRate = 10
@@ -67,6 +67,9 @@ type Orchestrator struct {
 	tss         interfaces.TSSSigner
 	dbDirectory string
 	baseLogger  base.Logger
+
+	// signerBlockTimeOffset
+	signerBlockTimeOffset time.Duration
 
 	// misc
 	logger multiLogger
@@ -135,6 +138,12 @@ func (oc *Orchestrator) Start(ctx context.Context) error {
 	bg.Work(ctx, oc.runScheduler, bg.WithName("runScheduler"), bg.WithLogger(oc.logger.Logger))
 	bg.Work(ctx, oc.runObserverSignerSync, bg.WithName("runObserverSignerSync"), bg.WithLogger(oc.logger.Logger))
 	bg.Work(ctx, oc.runAppContextUpdater, bg.WithName("runAppContextUpdater"), bg.WithLogger(oc.logger.Logger))
+	bg.Work(
+		ctx,
+		oc.runSyncObserverOperationalFlags,
+		bg.WithName("runSyncObserverOperationalFlags"),
+		bg.WithLogger(oc.logger.Logger),
+	)
 
 	return nil
 }
@@ -318,6 +327,13 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 				continue
 			}
 
+			sleepDuration := time.Until(newBlock.Block.Time.Add(oc.signerBlockTimeOffset))
+			if sleepDuration < 0 {
+				sleepDuration = 0
+			}
+			metrics.CoreBlockLatencySleep.Set(sleepDuration.Seconds())
+			time.Sleep(sleepDuration)
+
 			balance, err := oc.zetacoreClient.GetZetaHotKeyBalance(ctx)
 			if err != nil {
 				oc.logger.Error().Err(err).Msgf("couldn't get operator balance")
@@ -428,7 +444,7 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 	}
 	outboundScheduleLookahead := observer.ChainParams().OutboundScheduleLookahead
 	// #nosec G115 always in range
-	outboundScheduleLookback := uint64(float64(outboundScheduleLookahead) * evmOutboundLookbackFactor)
+	outboundScheduleLookback := uint64(float64(outboundScheduleLookahead) * outboundLookbackFactor)
 	// #nosec G115 positive
 	outboundScheduleInterval := uint64(observer.ChainParams().OutboundScheduleInterval)
 	criticalInterval := uint64(10)                      // for critical pending outbound we reduce re-try interval
@@ -596,8 +612,12 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 		oc.logger.Error().Msgf("ScheduleCctxSolana: chain observer is not a solana observer")
 		return
 	}
+
+	// outbound keysign scheduler parameters
 	// #nosec G115 positive
 	interval := uint64(observer.ChainParams().OutboundScheduleInterval)
+	outboundScheduleLookahead := observer.ChainParams().OutboundScheduleLookahead
+	outboundScheduleLookback := uint64(float64(outboundScheduleLookahead) * outboundLookbackFactor)
 
 	// schedule keysign for each pending cctx
 	for _, cctx := range cctxList {
@@ -609,6 +629,11 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 			oc.logger.Error().
 				Msgf("ScheduleCctxSolana: outbound %s chainid mismatch: want %d, got %d", outboundID, chainID, params.ReceiverChainId)
 			continue
+		}
+		if params.TssNonce > cctxList[0].GetCurrentOutboundParam().TssNonce+outboundScheduleLookback {
+			oc.logger.Warn().Msgf("ScheduleCctxSolana: nonce too high: signing %d, earliest pending %d",
+				params.TssNonce, cctxList[0].GetCurrentOutboundParam().TssNonce)
+			break
 		}
 
 		// vote outbound if it's already confirmed
@@ -782,6 +807,51 @@ func (oc *Orchestrator) syncObserverSigner(ctx context.Context) error {
 			Int("signer.added", added).
 			Int("signer.removed", removed).
 			Msg("synced signers")
+	}
+
+	return nil
+}
+
+func (oc *Orchestrator) runSyncObserverOperationalFlags(ctx context.Context) error {
+	// every other block
+	const cadence = 2 * constant.ZetaBlockTime
+
+	task := func(ctx context.Context, _ *ticker.Ticker) error {
+		if err := oc.syncObserverOperationalFlags(ctx); err != nil {
+			oc.logger.Error().Err(err).Msg("syncObserverOperationalFlags failed")
+		}
+
+		return nil
+	}
+
+	return ticker.Run(
+		ctx,
+		cadence,
+		task,
+		ticker.WithLogger(oc.logger.Logger, "SyncObserverOperationalFlags"),
+		ticker.WithStopChan(oc.stop),
+	)
+}
+
+func (oc *Orchestrator) syncObserverOperationalFlags(ctx context.Context) error {
+	client := oc.zetacoreClient
+	flags, err := client.GetOperationalFlags(ctx)
+	if err != nil {
+		return fmt.Errorf("get operational flags: %w", err)
+	}
+
+	oc.mu.Lock()
+	defer oc.mu.Unlock()
+	newSignerBlockTimeOffsetPtr := flags.SignerBlockTimeOffset
+	if newSignerBlockTimeOffsetPtr == nil {
+		return nil
+	}
+	newSignerBlockTimeOffset := *newSignerBlockTimeOffsetPtr
+	if oc.signerBlockTimeOffset != newSignerBlockTimeOffset {
+		oc.logger.Info().
+			Dur("offset", newSignerBlockTimeOffset).
+			Msg("block time offset updated")
+		oc.signerBlockTimeOffset = newSignerBlockTimeOffset
 	}
 
 	return nil

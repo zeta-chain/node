@@ -14,6 +14,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/cosmos"
 	zetacrypto "github.com/zeta-chain/node/pkg/crypto"
+	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -327,5 +328,12 @@ func GasPriceIncreaseFlagsFromRand(r *rand.Rand) types.GasPriceIncreaseFlags {
 		RetryInterval:           time.Duration(r.Intn(maxValue-minValue) + minValue),
 		GasPriceIncreasePercent: 1,
 		MaxPendingCctxs:         100,
+	}
+}
+
+func OperationalFlags() types.OperationalFlags {
+	return types.OperationalFlags{
+		RestartHeight:         1,
+		SignerBlockTimeOffset: ptr.Ptr(time.Second),
 	}
 }

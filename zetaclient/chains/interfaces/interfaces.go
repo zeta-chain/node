@@ -19,7 +19,6 @@ import (
 	"github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/onrik/ethrpc"
-	"github.com/rs/zerolog"
 	"gitlab.com/thorchain/tss/go-tss/blame"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -102,7 +101,6 @@ type ZetacoreClient interface {
 	ZetacoreVoter
 
 	Chain() chains.Chain
-	GetLogger() *zerolog.Logger
 	GetKeys() keyinterfaces.ObserverKeys
 
 	GetSupportedChains(ctx context.Context) ([]chains.Chain, error)
@@ -138,6 +136,7 @@ type ZetacoreClient interface {
 	) ([]crosschaintypes.OutboundTracker, error)
 	GetCrosschainFlags(ctx context.Context) (observertypes.CrosschainFlags, error)
 	GetRateLimiterFlags(ctx context.Context) (crosschaintypes.RateLimiterFlags, error)
+	GetOperationalFlags(ctx context.Context) (observertypes.OperationalFlags, error)
 	GetObserverList(ctx context.Context) ([]string, error)
 	GetBTCTSSAddress(ctx context.Context, chainID int64) (string, error)
 	GetZetaHotKeyBalance(ctx context.Context) (sdkmath.Int, error)

@@ -75,6 +75,7 @@ const (
 	TestBitcoinDepositAndCallName                          = "bitcoin_deposit_and_call"
 	TestBitcoinDepositAndCallRevertName                    = "bitcoin_deposit_and_call_revert"
 	TestBitcoinDepositAndCallRevertWithDustName            = "bitcoin_deposit_and_call_revert_with_dust"
+	TestBitcoinDepositAndWithdrawWithDustName              = "bitcoin_deposit_and_withdraw_with_dust"
 	TestBitcoinDonationName                                = "bitcoin_donation"
 	TestBitcoinStdMemoDepositName                          = "bitcoin_std_memo_deposit"
 	TestBitcoinStdMemoDepositAndCallName                   = "bitcoin_std_memo_deposit_and_call"
@@ -107,10 +108,14 @@ const (
 	 Stress tests
 	 Test stressing networks with many cross-chain transactions
 	*/
-	TestStressEtherWithdrawName = "stress_eth_withdraw"
-	TestStressBTCWithdrawName   = "stress_btc_withdraw"
-	TestStressEtherDepositName  = "stress_eth_deposit"
-	TestStressBTCDepositName    = "stress_btc_deposit"
+	TestStressEtherWithdrawName  = "stress_eth_withdraw"
+	TestStressBTCWithdrawName    = "stress_btc_withdraw"
+	TestStressEtherDepositName   = "stress_eth_deposit"
+	TestStressBTCDepositName     = "stress_btc_deposit"
+	TestStressSolanaDepositName  = "stress_solana_deposit"
+	TestStressSPLDepositName     = "stress_spl_deposit"
+	TestStressSolanaWithdrawName = "stress_solana_withdraw"
+	TestStressSPLWithdrawName    = "stress_spl_withdraw"
 
 	/*
 	 Admin tests
@@ -126,8 +131,10 @@ const (
 	TestCriticalAdminTransactionsName = "critical_admin_transactions"
 	TestPauseERC20CustodyName         = "pause_erc20_custody"
 	TestMigrateERC20CustodyFundsName  = "migrate_erc20_custody_funds"
-	TestMigrateTSSName                = "migrate_TSS"
+	TestMigrateTSSName                = "migrate_tss"
 	TestSolanaWhitelistSPLName        = "solana_whitelist_spl"
+	TestZetaclientRestartHeightName   = "zetaclient_restart_height"
+	TestZetaclientSignerOffsetName    = "zetaclient_signer_offset"
 
 	/*
 	 Operational tests
@@ -581,15 +588,23 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositAndCallRevertName,
-		"deposit Bitcoin into ZEVM; expect refund", []runner.ArgDefinition{
+		"deposit Bitcoin into ZEVM; expect refund",
+		[]runner.ArgDefinition{
 			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
 		TestBitcoinDepositAndCallRevert,
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositAndCallRevertWithDustName,
-		"deposit Bitcoin into ZEVM; revert with dust amount that aborts the CCTX", []runner.ArgDefinition{},
+		"deposit Bitcoin into ZEVM; revert with dust amount that aborts the CCTX",
+		[]runner.ArgDefinition{},
 		TestBitcoinDepositAndCallRevertWithDust,
+	),
+	runner.NewE2ETest(
+		TestBitcoinDepositAndWithdrawWithDustName,
+		"deposit Bitcoin into ZEVM and withdraw with dust amount that fails the CCTX",
+		[]runner.ArgDefinition{},
+		TestBitcoinDepositAndWithdrawWithDust,
 	),
 	runner.NewE2ETest(
 		TestBitcoinStdMemoDepositName,
@@ -767,6 +782,42 @@ var AllE2ETests = []runner.E2ETest{
 		},
 		TestStressBTCDeposit,
 	),
+	runner.NewE2ETest(
+		TestStressSolanaDepositName,
+		"stress test SOL deposit",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamports", DefaultValue: "1200000"},
+			{Description: "count of SOL deposits", DefaultValue: "50"},
+		},
+		TestStressSolanaDeposit,
+	),
+	runner.NewE2ETest(
+		TestStressSPLDepositName,
+		"stress test SPL deposit",
+		[]runner.ArgDefinition{
+			{Description: "amount in SPL tokens", DefaultValue: "1200000"},
+			{Description: "count of SPL deposits", DefaultValue: "50"},
+		},
+		TestStressSPLDeposit,
+	),
+	runner.NewE2ETest(
+		TestStressSolanaWithdrawName,
+		"stress test SOL withdrawals",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamports", DefaultValue: "1000000"},
+			{Description: "count of SOL withdrawals", DefaultValue: "50"},
+		},
+		TestStressSolanaWithdraw,
+	),
+	runner.NewE2ETest(
+		TestStressSPLWithdrawName,
+		"stress test SPL withdrawals",
+		[]runner.ArgDefinition{
+			{Description: "amount in SPL tokens", DefaultValue: "1000000"},
+			{Description: "count of SPL withdrawals", DefaultValue: "50"},
+		},
+		TestStressSPLWithdraw,
+	),
 	/*
 	 Admin tests
 	*/
@@ -838,7 +889,18 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{},
 		TestMigrateERC20CustodyFunds,
 	),
-
+	runner.NewE2ETest(
+		TestZetaclientRestartHeightName,
+		"zetaclient scheduled restart height",
+		[]runner.ArgDefinition{},
+		TestZetaclientRestartHeight,
+	),
+	runner.NewE2ETest(
+		TestZetaclientSignerOffsetName,
+		"zetaclient signer offset",
+		[]runner.ArgDefinition{},
+		TestZetaclientSignerOffset,
+	),
 	/*
 	 Special tests
 	*/

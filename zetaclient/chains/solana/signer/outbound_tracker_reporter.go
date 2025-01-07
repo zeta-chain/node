@@ -13,12 +13,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
-const (
-	// SolanaTransactionTimeout is the timeout for waiting for an outbound to be confirmed
-	// Transaction referencing a blockhash older than 150 blocks will expire and be rejected by Solana.
-	SolanaTransactionTimeout = 2 * time.Minute
-)
-
 // reportToOutboundTracker launch a go routine with timeout to check for tx confirmation;
 // it reports tx to outbound tracker only if it's confirmed by the Solana network.
 func (signer *Signer) reportToOutboundTracker(
@@ -56,7 +50,7 @@ func (signer *Signer) reportToOutboundTracker(
 			time.Sleep(5 * time.Second)
 
 			// give up if we know the tx is too old and already expired
-			if time.Since(start) > SolanaTransactionTimeout {
+			if time.Since(start) > solanaTransactionTimeout {
 				logger.Info().Msg("outbound is expired")
 				return nil
 			}

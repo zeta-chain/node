@@ -20,6 +20,7 @@ func ForeignCoins(t *testing.T, address string) types.ForeignCoins {
 		Symbol:               StringRandom(r, 32),
 		CoinType:             coin.CoinType_ERC20,
 		GasLimit:             r.Uint64(),
+		LiquidityCap:         UintInRange(0, 10000000000),
 	}
 }
 

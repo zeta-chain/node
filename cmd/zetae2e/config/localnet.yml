@@ -29,6 +29,11 @@ additional_accounts:
     evm_address: "0x103FD9224F00ce3013e95629e52DFc31D805D68d"
     private_key: "dd53f191113d18e57bd4a5494a64a020ba7919c815d0a6d34a42ebb2839e9d95"
     solana_private_key: "4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C"
+  user_spl:
+    bech32_address: "zeta17e77anpmzhuuam67hg6x3mtqrulqh80z9chv70"
+    evm_address: "0xf67deecc3B15F9CEeF5eba3468ed601f3e0B9de2"
+    private_key: "2b3306a8ac43dbf0e350b87876c131e7e12bd49563a16de9ce8aeb664b94d559"
+    solana_private_key: "4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C"
   user_legacy_ether:
     bech32_address: "zeta134rakuus43xn63yucgxhn88ywj8ewcv6ezn2ga"
     evm_address: "0x8D47Db7390AC4D3D449Cc20D799ce4748F97619A"
@@ -93,8 +98,8 @@ rpcs:
   evm: "http://eth:8545"
   bitcoin:
     host: "bitcoin:18443"
-    user: "smoketest"
-    pass: "123"
+    user: "admin"
+    pass: "admin"
     http_post_mode: true
     disable_tls: true
     params: regnet
@@ -102,6 +107,7 @@ rpcs:
   ton_sidecar_url: "http://ton:8000"
   zetacore_grpc: "zetacore0:9090"
   zetacore_rpc: "http://zetacore0:26657"
+  zetaclient_metrics: "http://zetaclient0:8886"
 contracts:
 # configure localnet solana gateway program id
   solana:

@@ -114,6 +114,7 @@ services:
     restart: always
     ports:
       - "6061:6061" # pprof
+      - "8886:8886" # metrics
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
@@ -198,7 +199,7 @@ services:
         ipv4_address: 172.20.0.102
 
   bitcoin:
-    image: ghcr.io/zeta-chain/bitcoin-core-docker:28.0
+    image: ghcr.io/zeta-chain/bitcoin-core-docker:a94b52f
     container_name: bitcoin
     hostname: bitcoin
     networks:
@@ -206,15 +207,13 @@ services:
         ipv4_address: 172.20.0.101
     ports:
       - "18443:18443"
-    command:
-      -printtoconsole
-      -regtest=1
-      -rpcallowip=0.0.0.0/0
-      -rpcbind=0.0.0.0
-      -rpcauth=smoketest:63acf9b8dccecce914d85ff8c044b78b$$5892f9bbc84f4364e79f0970039f88bdd823f168d4acc76099ab97b14a766a99
-      -txindex=1
-      -deprecatedrpc=create_bdb
-      -deprecatedrpc=warnings
+    command: /opt/wallet.sh
+    environment:
+      - CHAIN=regtest
+      - RPC_USER=smoketest
+      - RPC_PASSWORD=123
+      - ADMIN_RPC_USER=admin
+      - ADMIN_RPC_PASSWORD=admin
 
   solana:
     image: solana-local:latest
@@ -223,6 +222,8 @@ services:
     profiles:
       - solana
       - all
+      - stress
+    restart: always
     ports:
       - "8899:8899"
     networks:

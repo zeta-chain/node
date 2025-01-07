@@ -68,6 +68,7 @@ type AdditionalAccounts struct {
 	UserBitcoinDeposit    Account `yaml:"user_bitcoin_deposit"`
 	UserBitcoinWithdraw   Account `yaml:"user_bitcoin_withdraw"`
 	UserSolana            Account `yaml:"user_solana"`
+	UserSPL               Account `yaml:"user_spl"`
 	UserMisc              Account `yaml:"user_misc"`
 	UserAdmin             Account `yaml:"user_admin"`
 	UserMigration         Account `yaml:"user_migration"` // used for TSS migration, TODO: rename (https://github.com/zeta-chain/node/issues/2780)
@@ -93,13 +94,14 @@ type ObserverRelayerAccounts struct {
 
 // RPCs contains the configuration for the RPC endpoints
 type RPCs struct {
-	Zevm          string     `yaml:"zevm"`
-	EVM           string     `yaml:"evm"`
-	Bitcoin       BitcoinRPC `yaml:"bitcoin"`
-	Solana        string     `yaml:"solana"`
-	TONSidecarURL string     `yaml:"ton_sidecar_url"`
-	ZetaCoreGRPC  string     `yaml:"zetacore_grpc"`
-	ZetaCoreRPC   string     `yaml:"zetacore_rpc"`
+	Zevm              string     `yaml:"zevm"`
+	EVM               string     `yaml:"evm"`
+	Bitcoin           BitcoinRPC `yaml:"bitcoin"`
+	Solana            string     `yaml:"solana"`
+	TONSidecarURL     string     `yaml:"ton_sidecar_url"`
+	ZetaCoreGRPC      string     `yaml:"zetacore_grpc"`
+	ZetaCoreRPC       string     `yaml:"zetacore_rpc"`
+	ZetaclientMetrics string     `yaml:"zetaclient_metrics"`
 }
 
 // BitcoinRPC contains the configuration for the Bitcoin RPC endpoint
@@ -240,6 +242,7 @@ func (a AdditionalAccounts) AsSlice() []Account {
 		a.UserBitcoinDeposit,
 		a.UserBitcoinWithdraw,
 		a.UserSolana,
+		a.UserSPL,
 		a.UserLegacyEther,
 		a.UserMisc,
 		a.UserAdmin,
@@ -327,6 +330,10 @@ func (c *Config) GenerateKeys() error {
 		return err
 	}
 	c.AdditionalAccounts.UserSolana, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserSPL, err = generateAccount()
 	if err != nil {
 		return err
 	}

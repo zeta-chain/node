@@ -92,12 +92,6 @@ func HealthcheckWorker(ctx context.Context, server *tss.TssServer, p Healthcheck
 		return nil
 	}
 
-	knownPeersCounter := func(_ context.Context, _ *ticker.Ticker) error {
-		peers := server.GetKnownPeers()
-		p.Telemetry.SetKnownPeers(peers)
-		return nil
-	}
-
 	connectedPeersCounter := func(_ context.Context, _ *ticker.Ticker) error {
 		p2pHost := server.GetP2PHost()
 		connectedPeers := lo.Map(p2pHost.Network().Conns(), func(conn libp2p_network.Conn, _ int) peer.AddrInfo {
@@ -112,7 +106,6 @@ func HealthcheckWorker(ctx context.Context, server *tss.TssServer, p Healthcheck
 	}
 
 	runBackgroundTicker(ctx, pinger, p.Interval, "TSSHealthcheckPeersPing", logger)
-	runBackgroundTicker(ctx, knownPeersCounter, p.Interval, "TSSHealthcheckKnownPeersCounter", logger)
 	runBackgroundTicker(ctx, connectedPeersCounter, p.Interval, "TSSHealthcheckConnectedPeersCounter", logger)
 
 	return nil

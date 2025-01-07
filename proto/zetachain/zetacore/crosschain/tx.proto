@@ -66,8 +66,9 @@ message MsgAddInboundTracker {
   string tx_hash = 3;
   pkg.coin.CoinType coin_type = 4;
 
-  // used to be block header profs properties
-  reserved 5, 6, 7;
+  pkg.proofs.Proof proof = 5 [ deprecated = true ];
+  string block_hash = 6 [ deprecated = true ];
+  int64 tx_index = 7 [ deprecated = true ];
 }
 message MsgAddInboundTrackerResponse {}
 
@@ -93,8 +94,9 @@ message MsgAddOutboundTracker {
   uint64 nonce = 3;
   string tx_hash = 4;
 
-  // used to be block header profs properties
-  reserved 5, 6, 7;
+  pkg.proofs.Proof proof = 5 [ deprecated = true ];
+  string block_hash = 6 [ deprecated = true ];
+  int64 tx_index = 7 [ deprecated = true ];
 }
 
 message MsgAddOutboundTrackerResponse {

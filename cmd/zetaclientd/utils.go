@@ -2,104 +2,33 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strconv"
-	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/zeta-chain/node/zetaclient/authz"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-func createAuthzSigner(granter string, grantee sdk.AccAddress) {
-	authz.SetupAuthZSignerList(granter, grantee)
-}
-
-func createZetacoreClient(cfg config.Config, hotkeyPassword string, logger zerolog.Logger) (*zetacore.Client, error) {
-	hotKey := cfg.AuthzHotkey
-
-	chainIP := cfg.ZetaCoreURL
-
-	kb, _, err := keys.GetKeyringKeybase(cfg, hotkeyPassword)
+// isObserverNode checks whether THIS node is an observer node.
+func isObserverNode(ctx context.Context, zc *zetacore.Client) (bool, error) {
+	observers, err := zc.GetObserverList(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get keyring base")
+		return false, errors.Wrap(err, "unable to get observers list")
 	}
 
-	granterAddress, err := sdk.AccAddressFromBech32(cfg.AuthzGranter)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get granter address")
-	}
+	operatorAddress := zc.GetKeys().GetOperatorAddress().String()
 
-	k := keys.NewKeysWithKeybase(kb, granterAddress, cfg.AuthzHotkey, hotkeyPassword)
-
-	client, err := zetacore.NewClient(k, chainIP, hotKey, cfg.ChainID, logger)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create zetacore client")
-	}
-
-	return client, nil
-}
-
-func waitForZetaCore(config config.Config, logger zerolog.Logger) {
-	const (
-		port  = 9090
-		retry = 5 * time.Second
-	)
-
-	var (
-		url = fmt.Sprintf("%s:%d", config.ZetaCoreURL, port)
-		opt = grpc.WithTransportCredentials(insecure.NewCredentials())
-	)
-
-	// wait until zetacore is up
-	logger.Debug().Msgf("Waiting for zetacore to open %d port...", port)
-
-	for {
-		if _, err := grpc.Dial(url, opt); err != nil {
-			logger.Warn().Err(err).Msg("grpc dial fail")
-			time.Sleep(retry)
-		} else {
-			break
+	for _, observer := range observers {
+		if observer == operatorAddress {
+			return true, nil
 		}
 	}
-}
 
-func waitForZetacoreToCreateBlocks(ctx context.Context, zc interfaces.ZetacoreClient, logger zerolog.Logger) error {
-	const (
-		interval = 5 * time.Second
-		attempts = 15
-	)
-
-	var (
-		retryCount = 0
-		start      = time.Now()
-	)
-
-	for {
-		blockHeight, err := zc.GetBlockHeight(ctx)
-		if err == nil && blockHeight > 1 {
-			logger.Info().Msgf("Zeta block height: %d", blockHeight)
-			return nil
-		}
-
-		retryCount++
-		if retryCount > attempts {
-			return fmt.Errorf("zetacore is not ready, timeout %s", time.Since(start).String())
-		}
-
-		logger.Info().Msgf("Failed to get block number, retry : %d/%d", retryCount, attempts)
-		time.Sleep(interval)
-	}
+	return false, nil
 }
 
 func isEnvFlagEnabled(flag string) bool {
@@ -118,4 +47,14 @@ func btcChainIDsFromContext(app *zctx.AppContext) []int64 {
 	}
 
 	return btcChainIDs
+}
+
+func resolveObserverPubKeyBech32(cfg config.Config, hotKeyPassword string) (string, error) {
+	// Get observer's public key ("grantee pub key")
+	_, granteePubKeyBech32, err := keys.GetKeyringKeybase(cfg, hotKeyPassword)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to get keyring key base")
+	}
+
+	return granteePubKeyBech32, nil
 }

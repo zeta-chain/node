@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/zeta-chain/node/app"
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/e2etests"
@@ -83,6 +82,8 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().
 		Bool(flagUpgradeContracts, false, "set to true to upgrade Gateways and ERC20Custody contracts during setup for ZEVM and EVM")
 
+	cmd.AddCommand(NewGetZetaclientBootstrap())
+
 	return cmd
 }
 
@@ -110,6 +111,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testLegacy        = must(cmd.Flags().GetBool(flagTestLegacy))
 		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
 		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
+		setupSolana       = testSolana || testPerformance
 	)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
@@ -151,8 +153,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if waitForHeight != 0 {
 		noError(utils.WaitForBlockHeight(ctx, waitForHeight, conf.RPCs.ZetaCoreRPC, logger))
 	}
-
-	app.SetConfig()
 
 	zetaTxServer, err := txserver.NewZetaTxServer(
 		conf.RPCs.ZetaCoreRPC,
@@ -227,7 +227,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// setup protocol contracts on the connected EVM chain
 		deployerRunner.SetupEVM()
 
-		if testSolana {
+		if setupSolana {
 			deployerRunner.SetupSolana(
 				conf.Contracts.Solana.GatewayProgramID.String(),
 				conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String(),
@@ -241,7 +241,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			ERC20Addr: deployerRunner.ERC20Addr,
 			SPLAddr:   nil,
 		}
-		if testSolana {
+		if setupSolana {
 			zrc20Deployment.SPLAddr = deployerRunner.SPLAddr.ToPointer()
 		}
 		deployerRunner.SetupZEVMZRC20s(zrc20Deployment)
@@ -303,6 +303,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		bitcoinDepositTestsAdvanced := []string{
 			e2etests.TestBitcoinDepositAndCallRevertWithDustName,
 			e2etests.TestBitcoinStdMemoDepositAndCallRevertOtherAddressName,
+			e2etests.TestBitcoinDepositAndWithdrawWithDustName,
 		}
 		bitcoinWithdrawTests := []string{
 			e2etests.TestBitcoinWithdrawSegWitName,
@@ -362,6 +363,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose,
+			e2etests.TestZetaclientSignerOffsetName,
+			e2etests.TestZetaclientRestartHeightName,
 			e2etests.TestWhitelistERC20Name,
 			e2etests.TestPauseZRC20Name,
 			e2etests.TestUpdateBytecodeZRC20Name,
@@ -382,6 +385,46 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testPerformance {
 		eg.Go(ethereumDepositPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherDepositName))
 		eg.Go(ethereumWithdrawPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherWithdrawName))
+		eg.Go(
+			solanaDepositPerformanceRoutine(
+				conf,
+				"perf_sol_deposit",
+				deployerRunner,
+				verbose,
+				conf.AdditionalAccounts.UserSolana,
+				e2etests.TestStressSolanaDepositName,
+			),
+		)
+		eg.Go(
+			solanaDepositPerformanceRoutine(
+				conf,
+				"perf_spl_deposit",
+				deployerRunner,
+				verbose,
+				conf.AdditionalAccounts.UserSPL,
+				e2etests.TestStressSPLDepositName,
+			),
+		)
+		eg.Go(
+			solanaWithdrawPerformanceRoutine(
+				conf,
+				"perf_sol_withdraw",
+				deployerRunner,
+				verbose,
+				conf.AdditionalAccounts.UserSolana,
+				e2etests.TestStressSolanaWithdrawName,
+			),
+		)
+		eg.Go(
+			solanaWithdrawPerformanceRoutine(
+				conf,
+				"perf_spl_withdraw",
+				deployerRunner,
+				verbose,
+				conf.AdditionalAccounts.UserSPL,
+				e2etests.TestStressSPLWithdrawName,
+			),
+		)
 	}
 
 	if testSolana {

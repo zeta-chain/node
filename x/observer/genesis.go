@@ -130,6 +130,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, elem := range genState.NonceToCctx {
 		k.SetNonceToCctx(ctx, elem)
 	}
+	k.SetOperationalFlags(ctx, genState.OperationalFlags)
 }
 
 // ExportGenesis returns the observer module's exported genesis.
@@ -185,6 +186,8 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		os = observers
 	}
 
+	of, _ := k.GetOperationalFlags(ctx)
+
 	return &types.GenesisState{
 		Ballots:           k.GetAllBallots(ctx),
 		ChainParamsList:   chainParams,
@@ -200,5 +203,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		BlameList:         k.GetAllBlame(ctx),
 		ChainNonces:       k.GetAllChainNonces(ctx),
 		NonceToCctx:       k.GetAllNonceToCctx(ctx),
+		OperationalFlags:  of,
 	}
 }

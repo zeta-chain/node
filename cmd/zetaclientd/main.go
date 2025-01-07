@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/node/app"
-	"github.com/zeta-chain/node/cmd"
 	"github.com/zeta-chain/node/pkg/constant"
+	_ "github.com/zeta-chain/node/pkg/sdkconfig/default"
 )
 
 var (
@@ -85,8 +85,6 @@ func setupGlobalOptions() {
 }
 
 func init() {
-	cmd.SetupCosmosConfig()
-
 	// Setup options
 	setupGlobalOptions()
 	setupInitializeConfigOptions()

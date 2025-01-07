@@ -14,6 +14,7 @@ import "zetachain/zetacore/observer/observer.proto";
 import "zetachain/zetacore/observer/params.proto";
 import "zetachain/zetacore/observer/pending_nonces.proto";
 import "zetachain/zetacore/observer/tss.proto";
+import "zetachain/zetacore/observer/operational.proto";
 import "zetachain/zetacore/pkg/chains/chains.proto";
 import "zetachain/zetacore/pkg/proofs/proofs.proto";
 import "zetachain/zetacore/observer/tss_funds_migrator.proto";
@@ -164,6 +165,18 @@ service Query {
     option (google.api.http).get =
         "/zeta-chain/observer/getAllTssFundsMigrators";
   }
+
+  // Queries operational flags
+  rpc OperationalFlags(QueryOperationalFlagsRequest)
+      returns (QueryOperationalFlagsResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/operationalFlags";
+  }
+}
+
+message QueryOperationalFlagsRequest {}
+
+message QueryOperationalFlagsResponse {
+  OperationalFlags operational_flags = 1 [ (gogoproto.nullable) = false ];
 }
 
 message QueryTssFundsMigratorInfoAllRequest {}

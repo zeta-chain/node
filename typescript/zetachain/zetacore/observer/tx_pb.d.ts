@@ -11,6 +11,7 @@ import type { ChainParams } from "./params_pb.js";
 import type { Blame } from "./blame_pb.js";
 import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
 import type { GasPriceIncreaseFlags } from "./crosschain_flags_pb.js";
+import type { OperationalFlags } from "./operational_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.observer.MsgUpdateObserver
@@ -681,5 +682,53 @@ export declare class MsgUpdateGasPriceIncreaseFlagsResponse extends Message<MsgU
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateGasPriceIncreaseFlagsResponse;
 
   static equals(a: MsgUpdateGasPriceIncreaseFlagsResponse | PlainMessage<MsgUpdateGasPriceIncreaseFlagsResponse> | undefined, b: MsgUpdateGasPriceIncreaseFlagsResponse | PlainMessage<MsgUpdateGasPriceIncreaseFlagsResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.MsgUpdateOperationalFlags
+ */
+export declare class MsgUpdateOperationalFlags extends Message<MsgUpdateOperationalFlags> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: zetachain.zetacore.observer.OperationalFlags operational_flags = 2;
+   */
+  operationalFlags?: OperationalFlags;
+
+  constructor(data?: PartialMessage<MsgUpdateOperationalFlags>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.MsgUpdateOperationalFlags";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateOperationalFlags;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateOperationalFlags;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateOperationalFlags;
+
+  static equals(a: MsgUpdateOperationalFlags | PlainMessage<MsgUpdateOperationalFlags> | undefined, b: MsgUpdateOperationalFlags | PlainMessage<MsgUpdateOperationalFlags> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.MsgUpdateOperationalFlagsResponse
+ */
+export declare class MsgUpdateOperationalFlagsResponse extends Message<MsgUpdateOperationalFlagsResponse> {
+  constructor(data?: PartialMessage<MsgUpdateOperationalFlagsResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.MsgUpdateOperationalFlagsResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateOperationalFlagsResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateOperationalFlagsResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateOperationalFlagsResponse;
+
+  static equals(a: MsgUpdateOperationalFlagsResponse | PlainMessage<MsgUpdateOperationalFlagsResponse> | undefined, b: MsgUpdateOperationalFlagsResponse | PlainMessage<MsgUpdateOperationalFlagsResponse> | undefined): boolean;
 }
 
