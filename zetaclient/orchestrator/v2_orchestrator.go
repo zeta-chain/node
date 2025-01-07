@@ -168,6 +168,8 @@ func (oc *V2) SyncChains(ctx context.Context) error {
 
 		switch {
 		case errors.Is(errSkipChain, err):
+			// TODO use throttled logger instead of sampled one.
+			// https://github.com/zeta-chain/node/issues/3336
 			oc.logger.sampled.Warn().Err(err).Fields(chain.LogFields()).Msg("Skipping observer-signer")
 			continue
 		case err != nil:
