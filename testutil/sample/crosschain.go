@@ -12,7 +12,6 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
@@ -381,7 +380,7 @@ func InboundVoteFromRand(from, to int64, r *rand.Rand, asset string) types.MsgVo
 		CallOptions: &types.CallOptions{
 			GasLimit: 1000000000,
 		},
-		InboundHash:             ethcommon.BytesToHash(RandomBytes(r)).String(),
+		InboundHash:             common.BytesToHash(RandomBytes(r)).String(),
 		CoinType:                coinType,
 		TxOrigin:                EthAddressFromRand(r).String(),
 		Asset:                   asset,
@@ -476,7 +475,7 @@ func OutboundVoteSim(r *rand.Rand,
 		OutboundChain:                     cctx.GetCurrentOutboundParam().ReceiverChainId,
 		Status:                            chains.ReceiveStatus_success,
 		Creator:                           cctx.Creator,
-		ObservedOutboundHash:              ethcommon.BytesToHash(EthAddressFromRand(r).Bytes()).String(),
+		ObservedOutboundHash:              common.BytesToHash(EthAddressFromRand(r).Bytes()).String(),
 		ValueReceived:                     cctx.GetCurrentOutboundParam().Amount,
 		ObservedOutboundBlockHeight:       cctx.GetCurrentOutboundParam().ObservedExternalHeight,
 		ObservedOutboundEffectiveGasPrice: cctx.GetCurrentOutboundParam().EffectiveGasPrice,
