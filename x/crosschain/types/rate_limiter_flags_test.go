@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -16,7 +17,7 @@ import (
 )
 
 func TestRateLimiterFlags_Validate(t *testing.T) {
-	dec, err := sdk.NewDecFromStr("0.00042")
+	dec, err := sdkmath.LegacyNewDecFromStr("0.00042")
 	require.NoError(t, err)
 	duplicatedAddress := sample.EthAddress().String()
 
@@ -30,11 +31,11 @@ func TestRateLimiterFlags_Validate(t *testing.T) {
 			flags: types.RateLimiterFlags{
 				Enabled: true,
 				Window:  42,
-				Rate:    sdk.NewUint(42),
+				Rate:    sdkmath.NewUint(42),
 				Conversions: []types.Conversion{
 					{
 						Zrc20: sample.EthAddress().String(),
-						Rate:  sdk.NewDec(42),
+						Rate:  sdkmath.LegacyNewDec(42),
 					},
 					{
 						Zrc20: sample.EthAddress().String(),
@@ -52,11 +53,11 @@ func TestRateLimiterFlags_Validate(t *testing.T) {
 			flags: types.RateLimiterFlags{
 				Enabled: true,
 				Window:  42,
-				Rate:    sdk.NewUint(42),
+				Rate:    sdkmath.NewUint(42),
 				Conversions: []types.Conversion{
 					{
 						Zrc20: "invalid",
-						Rate:  sdk.NewDec(42),
+						Rate:  sdkmath.LegacyNewDec(42),
 					},
 					{
 						Zrc20: sample.EthAddress().String(),
@@ -71,11 +72,11 @@ func TestRateLimiterFlags_Validate(t *testing.T) {
 			flags: types.RateLimiterFlags{
 				Enabled: true,
 				Window:  42,
-				Rate:    sdk.NewUint(42),
+				Rate:    sdkmath.NewUint(42),
 				Conversions: []types.Conversion{
 					{
 						Zrc20: duplicatedAddress,
-						Rate:  sdk.NewDec(42),
+						Rate:  sdkmath.LegacyNewDec(42),
 					},
 					{
 						Zrc20: duplicatedAddress,
@@ -90,11 +91,11 @@ func TestRateLimiterFlags_Validate(t *testing.T) {
 			flags: types.RateLimiterFlags{
 				Enabled: true,
 				Window:  42,
-				Rate:    sdk.NewUint(42),
+				Rate:    sdkmath.NewUint(42),
 				Conversions: []types.Conversion{
 					{
 						Zrc20: sample.EthAddress().String(),
-						Rate:  sdk.NewDec(42),
+						Rate:  sdkmath.LegacyNewDec(42),
 					},
 					{
 						Zrc20: sample.EthAddress().String(),
@@ -127,7 +128,7 @@ func TestRateLimiterFlags_Validate(t *testing.T) {
 }
 
 func TestRateLimiterFlags_GetConversionRate(t *testing.T) {
-	dec, err := sdk.NewDecFromStr("0.00042")
+	dec, err := sdkmath.LegacyNewDecFromStr("0.00042")
 	require.NoError(t, err)
 	address := sample.EthAddress().String()
 
@@ -143,11 +144,11 @@ func TestRateLimiterFlags_GetConversionRate(t *testing.T) {
 			flags: types.RateLimiterFlags{
 				Enabled: true,
 				Window:  42,
-				Rate:    sdk.NewUint(42),
+				Rate:    sdkmath.NewUint(42),
 				Conversions: []types.Conversion{
 					{
 						Zrc20: address,
-						Rate:  sdk.NewDec(42),
+						Rate:  sdkmath.LegacyNewDec(42),
 					},
 					{
 						Zrc20: sample.EthAddress().String(),
@@ -156,7 +157,7 @@ func TestRateLimiterFlags_GetConversionRate(t *testing.T) {
 				},
 			},
 			zrc20:      address,
-			expected:   sdk.NewDec(42),
+			expected:   sdkmath.LegacyNewDec(42),
 			shouldFind: true,
 		},
 		{
@@ -164,11 +165,11 @@ func TestRateLimiterFlags_GetConversionRate(t *testing.T) {
 			flags: types.RateLimiterFlags{
 				Enabled: true,
 				Window:  42,
-				Rate:    sdk.NewUint(42),
+				Rate:    sdkmath.NewUint(42),
 				Conversions: []types.Conversion{
 					{
 						Zrc20: sample.EthAddress().String(),
-						Rate:  sdk.NewDec(42),
+						Rate:  sdkmath.LegacyNewDec(42),
 					},
 					{
 						Zrc20: sample.EthAddress().String(),
@@ -177,7 +178,7 @@ func TestRateLimiterFlags_GetConversionRate(t *testing.T) {
 				},
 			},
 			zrc20:      address,
-			expected:   sdk.NewDec(0),
+			expected:   sdkmath.LegacyNewDec(0),
 			shouldFind: false,
 		},
 	}
@@ -199,21 +200,21 @@ func TestBuildAssetRateMapFromList(t *testing.T) {
 			Asset:    "eth",
 			Decimals: 18,
 			CoinType: coin.CoinType_Gas,
-			Rate:     sdk.NewDec(1),
+			Rate:     sdkmath.LegacyNewDec(1),
 		},
 		{
 			ChainId:  1,
 			Asset:    "usdt",
 			Decimals: 6,
 			CoinType: coin.CoinType_ERC20,
-			Rate:     sdk.NewDec(2),
+			Rate:     sdkmath.LegacyNewDec(2),
 		},
 		{
 			ChainId:  2,
 			Asset:    "btc",
 			Decimals: 8,
 			CoinType: coin.CoinType_Gas,
-			Rate:     sdk.NewDec(3),
+			Rate:     sdkmath.LegacyNewDec(3),
 		},
 	}
 
@@ -243,9 +244,9 @@ func TestConvertCctxValue(t *testing.T) {
 	assetBTC := sample.EthAddress().Hex()
 	assetUSDT := sample.EthAddress().Hex()
 	assetRateList := []types.AssetRate{
-		sample.CustomAssetRate(ethChainID, assetETH, 18, coin.CoinType_Gas, sdk.NewDec(2500)),
-		sample.CustomAssetRate(btcChainID, assetBTC, 8, coin.CoinType_Gas, sdk.NewDec(50000)),
-		sample.CustomAssetRate(ethChainID, assetUSDT, 6, coin.CoinType_ERC20, sdk.MustNewDecFromStr("0.8")),
+		sample.CustomAssetRate(ethChainID, assetETH, 18, coin.CoinType_Gas, sdkmath.LegacyNewDec(2500)),
+		sample.CustomAssetRate(btcChainID, assetBTC, 8, coin.CoinType_Gas, sdkmath.LegacyNewDec(50000)),
+		sample.CustomAssetRate(ethChainID, assetUSDT, 6, coin.CoinType_ERC20, sdkmath.LegacyMustNewDecFromStr("0.8")),
 	}
 	gasAssetRateMap, erc20AssetRateMap := types.BuildAssetRateMapFromList(assetRateList)
 
@@ -269,77 +270,77 @@ func TestConvertCctxValue(t *testing.T) {
 			chainID:         ethChainID,
 			coinType:        coin.CoinType_Zeta,
 			asset:           "",
-			amount:          sdk.NewUint(3e17), // 0.3 ZETA
+			amount:          sdkmath.NewUint(3e17), // 0.3 ZETA
 			gasAssetRates:   gasAssetRateMap,
 			erc20AssetRates: erc20AssetRateMap,
-			expectedValue:   sdk.NewInt(3e17),
+			expectedValue:   sdkmath.NewInt(3e17),
 		},
 		{
 			name:            "should convert cctx ETH value correctly",
 			chainID:         ethChainID,
 			coinType:        coin.CoinType_Gas,
 			asset:           "",
-			amount:          sdk.NewUint(3e15), // 0.003 ETH
+			amount:          sdkmath.NewUint(3e15), // 0.003 ETH
 			gasAssetRates:   gasAssetRateMap,
 			erc20AssetRates: erc20AssetRateMap,
-			expectedValue:   sdk.NewInt(75e17), // 0.003 ETH * 2500 = 7.5 ZETA
+			expectedValue:   sdkmath.NewInt(75e17), // 0.003 ETH * 2500 = 7.5 ZETA
 		},
 		{
 			name:            "should convert cctx BTC value correctly",
 			chainID:         btcChainID,
 			coinType:        coin.CoinType_Gas,
 			asset:           "",
-			amount:          sdk.NewUint(70000), // 0.0007 BTC
+			amount:          sdkmath.NewUint(70000), // 0.0007 BTC
 			gasAssetRates:   gasAssetRateMap,
 			erc20AssetRates: erc20AssetRateMap,
-			expectedValue:   sdk.NewInt(35).Mul(sdk.NewInt(1e18)), // 0.0007 BTC * 50000 = 35.0 ZETA
+			expectedValue:   sdkmath.NewInt(35).Mul(sdkmath.NewInt(1e18)), // 0.0007 BTC * 50000 = 35.0 ZETA
 		},
 		{
 			name:            "should convert cctx USDT value correctly",
 			chainID:         ethChainID,
 			coinType:        coin.CoinType_ERC20,
 			asset:           assetUSDT,
-			amount:          sdk.NewUint(3e6), // 3 USDT
+			amount:          sdkmath.NewUint(3e6), // 3 USDT
 			gasAssetRates:   gasAssetRateMap,
 			erc20AssetRates: erc20AssetRateMap,
-			expectedValue:   sdk.NewInt(24e17), // 3 USDT * 0.8 = 2.4 ZETA
+			expectedValue:   sdkmath.NewInt(24e17), // 3 USDT * 0.8 = 2.4 ZETA
 		},
 		{
 			name:            "should return 0 if no gas asset rate found for chainID",
 			chainID:         ethChainID,
 			coinType:        coin.CoinType_Gas,
 			asset:           "",
-			amount:          sdk.NewUint(100),
+			amount:          sdkmath.NewUint(100),
 			gasAssetRates:   nil,
 			erc20AssetRates: erc20AssetRateMap,
-			expectedValue:   sdk.NewInt(0),
+			expectedValue:   sdkmath.NewInt(0),
 		},
 		{
 			name:            "should return 0 if no erc20 asset rate found for chainID",
 			chainID:         ethChainID,
 			coinType:        coin.CoinType_ERC20,
 			asset:           assetUSDT,
-			amount:          sdk.NewUint(100),
+			amount:          sdkmath.NewUint(100),
 			gasAssetRates:   gasAssetRateMap,
 			erc20AssetRates: nil,
-			expectedValue:   sdk.NewInt(0),
+			expectedValue:   sdkmath.NewInt(0),
 		},
 		{
 			name:            "should return 0 if coinType is CoinType_Cmd",
 			chainID:         ethChainID,
 			coinType:        coin.CoinType_Cmd,
 			asset:           "",
-			amount:          sdk.NewUint(100),
+			amount:          sdkmath.NewUint(100),
 			gasAssetRates:   gasAssetRateMap,
 			erc20AssetRates: erc20AssetRateMap,
-			expectedValue:   sdk.NewInt(0),
+			expectedValue:   sdkmath.NewInt(0),
 		},
 		{
 			name:     "should return 0 on nil rate",
 			chainID:  ethChainID,
 			coinType: coin.CoinType_Gas,
 			asset:    "",
-			amount:   sdk.NewUint(100),
+			amount:   sdkmath.NewUint(100),
 			gasAssetRates: func() map[int64]types.AssetRate {
 				// set rate to nil
 				nilAssetRateMap, _ := types.BuildAssetRateMapFromList(assetRateList)
@@ -349,24 +350,24 @@ func TestConvertCctxValue(t *testing.T) {
 				return nilAssetRateMap
 			}(),
 			erc20AssetRates: erc20AssetRateMap,
-			expectedValue:   sdk.NewInt(0),
+			expectedValue:   sdkmath.NewInt(0),
 		},
 		{
 			name:          "should return 0 on rate <= 0",
 			chainID:       ethChainID,
 			coinType:      coin.CoinType_ERC20,
 			asset:         assetUSDT,
-			amount:        sdk.NewUint(100),
+			amount:        sdkmath.NewUint(100),
 			gasAssetRates: gasAssetRateMap,
 			erc20AssetRates: func() map[int64]map[string]types.AssetRate {
 				// set rate to 0
 				_, zeroAssetRateMap := types.BuildAssetRateMapFromList(assetRateList)
 				zeroRate := zeroAssetRateMap[ethChainID][strings.ToLower(assetUSDT)]
-				zeroRate.Rate = sdk.NewDec(0)
+				zeroRate.Rate = sdkmath.LegacyNewDec(0)
 				zeroAssetRateMap[ethChainID][strings.ToLower(assetUSDT)] = zeroRate
 				return zeroAssetRateMap
 			}(),
-			expectedValue: sdk.NewInt(0),
+			expectedValue: sdkmath.NewInt(0),
 		},
 	}
 

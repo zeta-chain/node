@@ -46,7 +46,7 @@ func SetZetaAccounting(
 	p := types.KeyPrefix(fmt.Sprintf("%s", types.CCTXKey))
 	prefixedStore := prefix.NewStore(ctx.KVStore(crossChainStoreKey), p)
 	abortedAmountZeta := sdkmath.ZeroUint()
-	iterator := sdk.KVStorePrefixIterator(prefixedStore, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(prefixedStore, []byte{})
 	defer func(iterator sdk.Iterator) {
 		err := iterator.Close()
 		if err != nil {
@@ -77,7 +77,7 @@ func MoveNonceToObserverModule(
 	var pendingNonces []observertypes.PendingNonces
 	var nonceToCcTx []observertypes.NonceToCctx
 	store := prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(observertypes.ChainNoncesKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 	defer func(iterator sdk.Iterator) {
 		err := iterator.Close()
 		if err != nil {
@@ -92,7 +92,7 @@ func MoveNonceToObserverModule(
 		}
 	}
 	store = prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(observertypes.PendingNoncesKeyPrefix))
-	iterator = sdk.KVStorePrefixIterator(store, []byte{})
+	iterator = storetypes.KVStorePrefixIterator(store, []byte{})
 	defer func(iterator sdk.Iterator) {
 		err := iterator.Close()
 		if err != nil {
@@ -107,7 +107,7 @@ func MoveNonceToObserverModule(
 		}
 	}
 	store = prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(observertypes.NonceToCctxKeyPrefix))
-	iterator = sdk.KVStorePrefixIterator(store, []byte{})
+	iterator = storetypes.KVStorePrefixIterator(store, []byte{})
 	defer func(iterator sdk.Iterator) {
 		err := iterator.Close()
 		if err != nil {
@@ -154,7 +154,7 @@ func MoveTssToObserverModule(ctx sdk.Context,
 	}
 
 	store = prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(observertypes.TSSHistoryKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var val observertypes.TSS

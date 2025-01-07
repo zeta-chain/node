@@ -34,7 +34,7 @@ func initLightclientKeeper(
 	ss store.CommitMultiStore,
 	authorityKeeper types.AuthorityKeeper,
 ) keeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, nil)
 	ss.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, nil)
@@ -47,7 +47,7 @@ func LightclientKeeperWithMocks(
 	t testing.TB,
 	mockOptions LightclientMockOptions,
 ) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
 	// Initialize local store

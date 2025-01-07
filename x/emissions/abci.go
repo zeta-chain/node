@@ -128,7 +128,7 @@ func DistributeObserverRewards(
 	}
 	rewardPerUnit := sdkmath.ZeroInt()
 	if totalRewardsUnits > 0 && amount.IsPositive() {
-		rewardPerUnit = amount.Quo(sdk.NewInt(totalRewardsUnits))
+		rewardPerUnit = amount.Quo(sdkmath.NewInt(totalRewardsUnits))
 	}
 	ctx.Logger().
 		Debug(fmt.Sprintf("Total Rewards Units : %d , rewards per Unit %s ,number of ballots :%d", totalRewardsUnits, rewardPerUnit.String(), len(ballotIdentifiers)))
@@ -167,7 +167,7 @@ func DistributeObserverRewards(
 		}
 
 		// Defensive check
-		if rewardPerUnit.GT(sdk.ZeroInt()) {
+		if rewardPerUnit.GT(sdkmath.ZeroInt()) {
 			rewardAmount := rewardPerUnit.Mul(sdkmath.NewInt(observerRewardUnits))
 			keeper.AddObserverEmission(ctx, observerAddress.String(), rewardAmount)
 			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{

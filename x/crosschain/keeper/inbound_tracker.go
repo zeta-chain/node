@@ -51,7 +51,7 @@ func (k Keeper) GetAllInboundTrackerPaginated(
 	pagination *query.PageRequest,
 ) (inTxTrackers []types.InboundTracker, pageRes *query.PageResponse, err error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InboundTrackerKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	pageRes, err = query.Paginate(store, pagination, func(_ []byte, value []byte) error {
 		var inTxTracker types.InboundTracker
@@ -66,7 +66,7 @@ func (k Keeper) GetAllInboundTrackerPaginated(
 
 func (k Keeper) GetAllInboundTracker(ctx sdk.Context) (inTxTrackers []types.InboundTracker) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InboundTrackerKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.InboundTracker
@@ -78,7 +78,7 @@ func (k Keeper) GetAllInboundTracker(ctx sdk.Context) (inTxTrackers []types.Inbo
 
 func (k Keeper) GetAllInboundTrackerForChain(ctx sdk.Context, chainID int64) (list []types.InboundTracker) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InboundTrackerKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte(fmt.Sprintf("%d-", chainID)))
+	iterator := storetypes.KVStorePrefixIterator(store, []byte(fmt.Sprintf("%d-", chainID)))
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.InboundTracker

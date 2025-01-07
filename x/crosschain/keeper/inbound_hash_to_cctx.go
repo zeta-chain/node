@@ -50,7 +50,7 @@ func (k Keeper) RemoveInboundHashToCctx(
 // GetAllInboundHashToCctx returns all inboundHashToCctx
 func (k Keeper) GetAllInboundHashToCctx(ctx sdk.Context) (list []types.InboundHashToCctx) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InboundHashToCctxKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 

@@ -6,11 +6,11 @@ import (
 	"math/big"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -33,16 +33,16 @@ func TestRateLimiter(r *runner.E2ERunner, _ []string) {
 	// rateLimiterFlags are the rate limiter flags for the test
 	rateLimiterFlags := crosschaintypes.RateLimiterFlags{
 		Enabled: true,
-		Rate:    sdk.NewUint(1e17).MulUint64(5), // 0.5 ZETA this value is used so rate is reached
+		Rate:    sdkmath.NewUint(1e17).MulUint64(5), // 0.5 ZETA this value is used so rate is reached
 		Window:  10,
 		Conversions: []crosschaintypes.Conversion{
 			{
 				Zrc20: r.ETHZRC20Addr.Hex(),
-				Rate:  sdk.NewDec(2), // 1 ETH = 2 ZETA
+				Rate:  sdkmath.LegacyNewDec(2), // 1 ETH = 2 ZETA
 			},
 			{
 				Zrc20: r.ERC20ZRC20Addr.Hex(),
-				Rate:  sdk.NewDec(1).QuoInt64(2), // 2 USDC = 1 ZETA
+				Rate:  sdkmath.LegacyNewDec(1).QuoInt64(2), // 2 USDC = 1 ZETA
 			},
 		},
 	}

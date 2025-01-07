@@ -24,7 +24,7 @@ func (k Keeper) IsFinalizedInbound(ctx sdk.Context, inboundHash string, chainID 
 
 func (k Keeper) GetAllFinalizedInbound(ctx sdk.Context) (list []string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.FinalizedInboundsKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	cosmoserrors "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/systemcontract.sol"
@@ -85,7 +86,7 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	err = k.bankKeeper.MintCoins(
 		ctx,
 		types.ModuleName,
-		sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amountAZeta))),
+		sdk.NewCoins(sdk.NewCoin("azeta", sdkmath.NewIntFromBigInt(amountAZeta))),
 	)
 	if err != nil {
 		return ethcommon.Address{}, err

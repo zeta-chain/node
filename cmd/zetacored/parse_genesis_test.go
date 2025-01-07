@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -242,7 +243,7 @@ func GetImportData(t *testing.T, cdc *codec.ProtoCodec, n int) map[string]json.R
 		}
 	}
 	balances := make([]banktypes.Balance, n)
-	supply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()))
+	supply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.ZeroInt()))
 	for i := 0; i < n; i++ {
 		balances[i] = banktypes.Balance{
 			Address: sample.AccAddress(),

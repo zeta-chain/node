@@ -16,7 +16,7 @@ func (k Keeper) GetAllBlockHeaders(ctx sdk.Context) (list []proofs.BlockHeader) 
 	p := types.KeyPrefix(fmt.Sprintf("%s", types.BlockHeaderKey))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 

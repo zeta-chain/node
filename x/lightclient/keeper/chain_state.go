@@ -15,7 +15,7 @@ func (k Keeper) GetAllChainStates(ctx sdk.Context) (list []types.ChainState) {
 	p := types.KeyPrefix(fmt.Sprintf("%s", types.ChainStateKey))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 

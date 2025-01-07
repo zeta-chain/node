@@ -5,7 +5,6 @@ import (
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
@@ -18,20 +17,20 @@ import (
 )
 
 type StakingKeeper interface {
-	GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator)
+	GetAllValidators(ctx context.Context) (validators []stakingtypes.Validator, err error)
 }
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	GetModuleAccount(ctx sdk.Context, name string) types.ModuleAccountI
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
+	GetModuleAccount(ctx context.Context, name string) sdk.ModuleAccountI
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
-	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
-	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
-	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	BurnCoins(ctx context.Context, name string, amt sdk.Coins) error
+	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 }
 
 type ObserverKeeper interface {

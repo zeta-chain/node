@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -69,7 +70,7 @@ func (k Keeper) RemoveTSS(ctx sdk.Context) {
 // GetAllTSS returns all tss historical information from the store
 func (k Keeper) GetAllTSS(ctx sdk.Context) (list []types.TSS) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSHistoryKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.TSS

@@ -5,11 +5,11 @@ import (
 	"math/big"
 
 	tmlog "cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cometbft/cometbft/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/zeta-chain/ethermint/indexer"
@@ -35,7 +35,7 @@ func (suite *BackendTestSuite) TestGetSyntheticTransactionByHash() {
 		common.HexToHash(hash).Hex(),
 	)
 	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-	RegisterBaseFee(queryClient, sdk.NewInt(1))
+	RegisterBaseFee(queryClient, sdkmath.NewInt(1))
 	RegisterTxSearchWithTxResult(client, query, []byte{}, txRes)
 	RegisterBlock(client, 1, nil)
 	RegisterBlockResultsWithTxResults(client, 1, []*abci.ResponseDeliverTx{&txRes})
@@ -112,7 +112,7 @@ func (suite *BackendTestSuite) TestGetSyntheticTransactionByBlockNumberAndIndex(
 	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 	RegisterBlock(client, 1, []types.Tx{tx})
 	RegisterBlockResultsWithTxResults(client, 1, []*abci.ResponseDeliverTx{&txRes})
-	RegisterBaseFee(queryClient, sdk.NewInt(1))
+	RegisterBaseFee(queryClient, sdkmath.NewInt(1))
 
 	res, err := suite.backend.GetTransactionByBlockNumberAndIndex(rpctypes.BlockNumber(1), 0)
 	suite.Require().NoError(err)
@@ -145,7 +145,7 @@ func (suite *BackendTestSuite) TestGetSyntheticTransactionByBlockNumberAndIndexW
 	// synthetic tx with real MsgEthereumTx
 	RegisterBlock(client, 1, []types.Tx{realTx, tx})
 	RegisterBlockResultsWithTxResults(client, 1, []*abci.ResponseDeliverTx{{}, &txRes})
-	RegisterBaseFee(queryClient, sdk.NewInt(1))
+	RegisterBaseFee(queryClient, sdkmath.NewInt(1))
 
 	res, err := suite.backend.GetTransactionByBlockNumberAndIndex(rpctypes.BlockNumber(1), 1)
 	suite.Require().NoError(err)
@@ -245,7 +245,7 @@ func (suite *BackendTestSuite) TestGetTransactionByHash() {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				RegisterBlock(client, 1, []types.Tx{txBz})
 				RegisterBlockResults(client, 1)
-				RegisterBaseFee(queryClient, sdk.NewInt(1))
+				RegisterBaseFee(queryClient, sdkmath.NewInt(1))
 			},
 			msgEthereumTx,
 			rpcTransaction,
@@ -526,7 +526,7 @@ func (suite *BackendTestSuite) TestGetTransactionByBlockAndIndex() {
 				err := suite.backend.indexer.IndexBlock(block, defaultResponseDeliverTx)
 				suite.Require().NoError(err)
 				RegisterBlockResults(client, 1)
-				RegisterBaseFee(queryClient, sdk.NewInt(1))
+				RegisterBaseFee(queryClient, sdkmath.NewInt(1))
 			},
 			&tmrpctypes.ResultBlock{Block: defaultBlock},
 			0,
@@ -539,7 +539,7 @@ func (suite *BackendTestSuite) TestGetTransactionByBlockAndIndex() {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				RegisterBlockResults(client, 1)
-				RegisterBaseFee(queryClient, sdk.NewInt(1))
+				RegisterBaseFee(queryClient, sdkmath.NewInt(1))
 			},
 			&tmrpctypes.ResultBlock{Block: defaultBlock},
 			0,
@@ -605,7 +605,7 @@ func (suite *BackendTestSuite) TestGetTransactionByBlockNumberAndIndex() {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				RegisterBlock(client, 1, []types.Tx{bz})
 				RegisterBlockResults(client, 1)
-				RegisterBaseFee(queryClient, sdk.NewInt(1))
+				RegisterBaseFee(queryClient, sdkmath.NewInt(1))
 			},
 			0,
 			0,

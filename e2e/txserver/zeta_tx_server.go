@@ -230,10 +230,10 @@ func (zts ZetaTxServer) BroadcastTx(account string, msgs ...sdktypes.Msg) (*sdkt
 	}
 	// increase gas and fees if multiple messages are provided
 	txBuilder.SetGasLimit(zts.txFactory.Gas() * uint64(len(msgs)))
-	txBuilder.SetFeeAmount(zts.txFactory.Fees().MulInt(sdktypes.NewInt(int64(len(msgs)))))
+	txBuilder.SetFeeAmount(zts.txFactory.Fees().MulInt(sdkmath.NewInt(int64(len(msgs)))))
 
 	// Sign tx
-	err = tx.Sign(zts.txFactory, account, txBuilder, true)
+	err = tx.Sign(context.TODO(), zts.txFactory, account, txBuilder, true)
 	if err != nil {
 		return nil, err
 	}
@@ -575,7 +575,7 @@ func (zts ZetaTxServer) FundEmissionsPool(account string, amount *big.Int) error
 	}
 
 	// convert amount
-	amountInt := sdktypes.NewIntFromBigInt(amount)
+	amountInt := sdkmath.NewIntFromBigInt(amount)
 
 	// fund emissions pool
 	_, err = zts.BroadcastTx(account, banktypes.NewMsgSend(
@@ -625,7 +625,7 @@ func (zts *ZetaTxServer) SetAuthorityClient(authorityClient authoritytypes.Query
 
 // InitializeLiquidityCaps initializes the liquidity cap for the given coin with a large value
 func (zts ZetaTxServer) InitializeLiquidityCaps(zrc20s ...string) error {
-	liquidityCap := sdktypes.NewUint(1e18).MulUint64(1e12)
+	liquidityCap := sdkmath.NewUint(1e18).MulUint64(1e12)
 
 	msgs := make([]sdktypes.Msg, len(zrc20s))
 	for i, zrc20 := range zrc20s {

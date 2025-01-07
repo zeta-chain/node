@@ -26,7 +26,7 @@ func (k Keeper) GetWithdrawableEmission(ctx sdk.Context, address string) (val ty
 
 func (k Keeper) GetAllWithdrawableEmission(ctx sdk.Context) (list []types.WithdrawableEmissions) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.WithdrawableEmissionsKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 

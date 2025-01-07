@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/ethereum/go-ethereum/common"
@@ -47,7 +48,7 @@ func setupGasCoin(
 	// increase the default liquidity cap
 	foreignCoin, found := k.GetForeignCoins(ctx, addr.Hex())
 	require.True(t, found)
-	foreignCoin.LiquidityCap = sdk.NewUint(1e18).MulUint64(1e12)
+	foreignCoin.LiquidityCap = sdkmath.NewUint(1e18).MulUint64(1e12)
 	k.SetForeignCoins(ctx, foreignCoin)
 
 	return addr
@@ -79,7 +80,7 @@ func deployZRC20(
 	// increase the default liquidity cap
 	foreignCoin, found := k.GetForeignCoins(ctx, addr.Hex())
 	require.True(t, found)
-	foreignCoin.LiquidityCap = sdk.NewUint(1e18).MulUint64(1e12)
+	foreignCoin.LiquidityCap = sdkmath.NewUint(1e18).MulUint64(1e12)
 	k.SetForeignCoins(ctx, foreignCoin)
 
 	return addr
@@ -107,7 +108,7 @@ func setupZRC20Pool(
 	err = bankKeeper.MintCoins(
 		ctx,
 		types.ModuleName,
-		sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(liquidityAmount))),
+		sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdkmath.NewIntFromBigInt(liquidityAmount))),
 	)
 	require.NoError(t, err)
 

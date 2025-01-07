@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/x/observer/types"
@@ -36,7 +37,7 @@ func (k Keeper) RemoveNodeAccount(ctx sdk.Context, index string) {
 // GetAllNodeAccount returns all nodeAccount
 func (k Keeper) GetAllNodeAccount(ctx sdk.Context) (list []types.NodeAccount) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.NodeAccountKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 

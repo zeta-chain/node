@@ -36,7 +36,7 @@ func (k Keeper) RemoveLastBlockHeight(ctx sdk.Context, index string) {
 // GetAllLastBlockHeight returns all lastBlockHeight
 func (k Keeper) GetAllLastBlockHeight(ctx sdk.Context) (list []types.LastBlockHeight) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.LastBlockHeightKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 

@@ -71,7 +71,7 @@ func initCrosschainKeeper(
 	authorityKeeper types.AuthorityKeeper,
 	lightclientKeeper types.LightclientKeeper,
 ) *keeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	ss.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, db)

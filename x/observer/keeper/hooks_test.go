@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
@@ -53,15 +54,15 @@ func TestKeeper_AfterValidatorBeginUnbonding(t *testing.T) {
 
 	r := rand.New(rand.NewSource(9))
 	validator := sample.Validator(t, r)
-	validator.DelegatorShares = sdk.NewDec(100)
+	validator.DelegatorShares = sdkmath.LegacyNewDec(100)
 	sdkk.StakingKeeper.SetValidator(ctx, validator)
 	accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 	require.NoError(t, err)
 
 	sdkk.StakingKeeper.SetDelegation(ctx, stakingtypes.Delegation{
 		DelegatorAddress: accAddressOfValidator.String(),
-		ValidatorAddress: validator.GetOperator().String(),
-		Shares:           sdk.NewDec(10),
+		ValidatorAddress: validator.GetOperator(),
+		Shares:           sdkmath.LegacyNewDec(10),
 	})
 
 	k.SetObserverSet(ctx, types.ObserverSet{
@@ -69,7 +70,9 @@ func TestKeeper_AfterValidatorBeginUnbonding(t *testing.T) {
 	})
 
 	hooks := k.Hooks()
-	err = hooks.AfterValidatorBeginUnbonding(ctx, nil, validator.GetOperator())
+	valAddr, err := sdk.ValAddressFromBech32(validator.GetOperator())
+	require.NoError(t, err)
+	err = hooks.AfterValidatorBeginUnbonding(ctx, nil, valAddr)
 	require.NoError(t, err)
 
 	os, found := k.GetObserverSet(ctx)
@@ -83,15 +86,15 @@ func TestKeeper_AfterDelegationModified(t *testing.T) {
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
-		validator.DelegatorShares = sdk.NewDec(100)
+		validator.DelegatorShares = sdkmath.LegacyNewDec(100)
 		sdkk.StakingKeeper.SetValidator(ctx, validator)
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
 
 		sdkk.StakingKeeper.SetDelegation(ctx, stakingtypes.Delegation{
 			DelegatorAddress: accAddressOfValidator.String(),
-			ValidatorAddress: validator.GetOperator().String(),
-			Shares:           sdk.NewDec(10),
+			ValidatorAddress: validator.GetOperator(),
+			Shares:           sdkmath.LegacyNewDec(10),
 		})
 
 		k.SetObserverSet(ctx, types.ObserverSet{
@@ -99,7 +102,9 @@ func TestKeeper_AfterDelegationModified(t *testing.T) {
 		})
 
 		hooks := k.Hooks()
-		err = hooks.AfterDelegationModified(ctx, sdk.AccAddress(sample.AccAddress()), validator.GetOperator())
+		valAddr, err := sdk.ValAddressFromBech32(validator.GetOperator())
+		require.NoError(t, err)
+		err = hooks.AfterDelegationModified(ctx, sdk.AccAddress(sample.AccAddress()), valAddr)
 		require.NoError(t, err)
 
 		os, found := k.GetObserverSet(ctx)
@@ -113,15 +118,15 @@ func TestKeeper_AfterDelegationModified(t *testing.T) {
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
-		validator.DelegatorShares = sdk.NewDec(100)
+		validator.DelegatorShares = sdkmath.LegacyNewDec(100)
 		sdkk.StakingKeeper.SetValidator(ctx, validator)
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
 
 		sdkk.StakingKeeper.SetDelegation(ctx, stakingtypes.Delegation{
 			DelegatorAddress: accAddressOfValidator.String(),
-			ValidatorAddress: validator.GetOperator().String(),
-			Shares:           sdk.NewDec(10),
+			ValidatorAddress: validator.GetOperator(),
+			Shares:           sdkmath.LegacyNewDec(10),
 		})
 
 		k.SetObserverSet(ctx, types.ObserverSet{
@@ -129,7 +134,9 @@ func TestKeeper_AfterDelegationModified(t *testing.T) {
 		})
 
 		hooks := k.Hooks()
-		err = hooks.AfterDelegationModified(ctx, accAddressOfValidator, validator.GetOperator())
+		valAddr, err := sdk.ValAddressFromBech32(validator.GetOperator())
+		require.NoError(t, err)
+		err = hooks.AfterDelegationModified(ctx, accAddressOfValidator, valAddr)
 		require.NoError(t, err)
 
 		os, found := k.GetObserverSet(ctx)
@@ -148,7 +155,9 @@ func TestKeeper_BeforeValidatorSlashed(t *testing.T) {
 		k.SetObserverSet(ctx, os)
 
 		hooks := k.Hooks()
-		err := hooks.BeforeValidatorSlashed(ctx, validator.GetOperator(), sdk.NewDec(1))
+		valAddr, err := sdk.ValAddressFromBech32(validator.GetOperator())
+		require.NoError(t, err)
+		err = hooks.BeforeValidatorSlashed(ctx, valAddr, sdkmath.LegacyNewDec(1))
 		require.NoError(t, err)
 		storedOs, found := k.GetObserverSet(ctx)
 		require.True(t, found)
@@ -160,11 +169,13 @@ func TestKeeper_BeforeValidatorSlashed(t *testing.T) {
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
-		validator.DelegatorShares = sdk.NewDec(100)
+		validator.DelegatorShares = sdkmath.LegacyNewDec(100)
 		sdkk.StakingKeeper.SetValidator(ctx, validator)
 
 		hooks := k.Hooks()
-		err := hooks.BeforeValidatorSlashed(ctx, validator.GetOperator(), sdk.NewDec(1))
+		valAddr, err := sdk.ValAddressFromBech32(validator.GetOperator())
+		require.NoError(t, err)
+		err = hooks.BeforeValidatorSlashed(ctx, valAddr, sdkmath.LegacyNewDec(1))
 		require.NoError(t, err)
 	})
 
@@ -173,8 +184,8 @@ func TestKeeper_BeforeValidatorSlashed(t *testing.T) {
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
-		validator.DelegatorShares = sdk.NewDec(100)
-		validator.Tokens = sdk.NewInt(100)
+		validator.DelegatorShares = sdkmath.LegacyNewDec(100)
+		validator.Tokens = sdkmath.NewInt(100)
 		sdkk.StakingKeeper.SetValidator(ctx, validator)
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
@@ -184,7 +195,9 @@ func TestKeeper_BeforeValidatorSlashed(t *testing.T) {
 		})
 
 		hooks := k.Hooks()
-		err = hooks.BeforeValidatorSlashed(ctx, validator.GetOperator(), sdk.MustNewDecFromStr("0.1"))
+		valAddr, err := sdk.ValAddressFromBech32(validator.GetOperator())
+		require.NoError(t, err)
+		err = hooks.BeforeValidatorSlashed(ctx, valAddr, sdkmath.LegacyMustNewDecFromStr("0.1"))
 		require.NoError(t, err)
 
 		os, found := k.GetObserverSet(ctx)
@@ -197,8 +210,8 @@ func TestKeeper_BeforeValidatorSlashed(t *testing.T) {
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
-		validator.DelegatorShares = sdk.NewDec(100)
-		validator.Tokens = sdk.NewInt(1000000000000000000)
+		validator.DelegatorShares = sdkmath.LegacyNewDec(100)
+		validator.Tokens = sdkmath.NewInt(1000000000000000000)
 		sdkk.StakingKeeper.SetValidator(ctx, validator)
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
@@ -208,7 +221,9 @@ func TestKeeper_BeforeValidatorSlashed(t *testing.T) {
 		})
 
 		hooks := k.Hooks()
-		err = hooks.BeforeValidatorSlashed(ctx, validator.GetOperator(), sdk.MustNewDecFromStr("0"))
+		valAddr, err := sdk.ValAddressFromBech32(validator.GetOperator())
+		require.NoError(t, err)
+		err = hooks.BeforeValidatorSlashed(ctx, valAddr, sdkmath.LegacyMustNewDecFromStr("0"))
 		require.NoError(t, err)
 
 		os, found := k.GetObserverSet(ctx)

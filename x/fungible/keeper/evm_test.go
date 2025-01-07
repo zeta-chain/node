@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -316,7 +317,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 		require.Equal(t, "bar", foreignCoins.Symbol)
 		require.Equal(t, coin.CoinType_Gas, foreignCoins.CoinType)
 		require.Equal(t, uint64(1000), foreignCoins.GasLimit)
-		require.True(t, foreignCoins.LiquidityCap.Equal(sdk.NewUint(types.DefaultLiquidityCap).MulUint64(8)))
+		require.True(t, foreignCoins.LiquidityCap.Equal(sdkmath.NewUint(types.DefaultLiquidityCap).MulUint64(8)))
 
 		// can get the zrc20 data
 		zrc20Data, err := k.QueryZRC20Data(ctx, addr)
@@ -506,7 +507,7 @@ func TestKeeper_DeploySystemContracts(t *testing.T) {
 		err = sdkk.BankKeeper.MintCoins(
 			ctx,
 			types.ModuleName,
-			sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amount))),
+			sdk.NewCoins(sdk.NewCoin("azeta", sdkmath.NewIntFromBigInt(amount))),
 		)
 		require.NoError(t, err)
 

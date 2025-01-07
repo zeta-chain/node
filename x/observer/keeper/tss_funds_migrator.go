@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/x/observer/types"
@@ -27,7 +28,7 @@ func (k Keeper) GetFundMigrator(ctx sdk.Context, chainID int64) (val types.TssFu
 
 func (k Keeper) GetAllTssFundMigrators(ctx sdk.Context) (fms []types.TssFundMigratorInfo) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TssFundMigratorKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.TssFundMigratorInfo
@@ -39,7 +40,7 @@ func (k Keeper) GetAllTssFundMigrators(ctx sdk.Context) (fms []types.TssFundMigr
 
 func (k Keeper) RemoveAllExistingMigrators(ctx sdk.Context) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TssFundMigratorKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		store.Delete(iterator.Key())

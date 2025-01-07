@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/x/observer/types"
@@ -39,7 +40,7 @@ func (k Keeper) RemoveChainNonces(ctx sdk.Context, chainID int64) {
 // GetAllChainNonces returns all chainNonces
 func (k Keeper) GetAllChainNonces(ctx sdk.Context) (list []types.ChainNonces) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ChainNoncesKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.ChainNonces

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -36,7 +37,7 @@ func (k Keeper) GetAllPendingNoncesPaginated(
 	pagination *query.PageRequest,
 ) (list []types.PendingNonces, pageRes *query.PageResponse, err error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PendingNoncesKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 	pageRes, err = query.Paginate(store, pagination, func(_ []byte, value []byte) error {
@@ -53,7 +54,7 @@ func (k Keeper) GetAllPendingNoncesPaginated(
 
 func (k Keeper) GetAllPendingNonces(ctx sdk.Context) (list []types.PendingNonces, err error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PendingNoncesKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

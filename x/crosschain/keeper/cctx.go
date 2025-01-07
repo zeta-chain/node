@@ -124,7 +124,7 @@ func (k Keeper) GetAllCrossChainTx(ctx sdk.Context) (list []types.CrossChainTx) 
 	p := types.KeyPrefix(fmt.Sprintf("%s", types.CCTXKey))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 

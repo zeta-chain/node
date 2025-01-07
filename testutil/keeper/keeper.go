@@ -144,14 +144,14 @@ var moduleAccountPerms = map[string][]string{
 }
 
 var (
-	testStoreKeys = sdk.NewKVStoreKeys(
+	testStoreKeys = storetypes.NewKVStoreKeys(
 		authtypes.StoreKey,
 		banktypes.StoreKey,
 		evmtypes.StoreKey,
 		consensustypes.StoreKey,
 	)
-	testTransientKeys = sdk.NewTransientStoreKeys(evmtypes.TransientKey)
-	testMemKeys       = sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
+	testTransientKeys = storetypes.NewTransientStoreKeys(evmtypes.TransientKey)
+	testMemKeys       = storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
 	maccPerms = map[string][]string{
 		authtypes.FeeCollectorName:     nil,
@@ -187,8 +187,8 @@ func ParamsKeeper(
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 ) paramskeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(paramstypes.StoreKey)
-	tkeys := sdk.NewTransientStoreKey(paramstypes.TStoreKey)
+	storeKey := storetypes.NewKVStoreKey(paramstypes.StoreKey)
+	tkeys := storetypes.NewTransientStoreKey(paramstypes.TStoreKey)
 
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	ss.MountStoreWithDB(tkeys, storetypes.StoreTypeTransient, db)
@@ -206,7 +206,7 @@ func ConsensusKeeper(
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 ) consensuskeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(consensustypes.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(consensustypes.StoreKey)
 
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	return consensuskeeper.NewKeeper(cdc, storeKey, authtypes.NewModuleAddress(govtypes.ModuleName).String())
@@ -218,7 +218,7 @@ func AccountKeeper(
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 ) authkeeper.AccountKeeper {
-	storeKey := sdk.NewKVStoreKey(authtypes.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(authtypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	return authkeeper.NewAccountKeeper(
@@ -238,7 +238,7 @@ func BankKeeper(
 	ss store.CommitMultiStore,
 	authKeeper authkeeper.AccountKeeper,
 ) bankkeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(banktypes.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(banktypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	blockedAddrs := make(map[string]bool)
 
@@ -259,7 +259,7 @@ func StakingKeeper(
 	authKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper,
 ) stakingkeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(stakingtypes.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	return *stakingkeeper.NewKeeper(
@@ -278,7 +278,7 @@ func SlashingKeeper(
 	ss store.CommitMultiStore,
 	stakingKeeper stakingkeeper.Keeper,
 ) slashingkeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(slashingtypes.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(slashingtypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	return slashingkeeper.NewKeeper(
 		cdc,
@@ -298,7 +298,7 @@ func DistributionKeeper(
 	bankKeeper bankkeeper.Keeper,
 	stakingKeeper *stakingkeeper.Keeper,
 ) distrkeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(distrtypes.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(distrtypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	return distrkeeper.NewKeeper(
@@ -323,7 +323,7 @@ func UpgradeKeeper(
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 ) upgradekeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(upgradetypes.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(upgradetypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	skipUpgradeHeights := make(map[int64]bool)
@@ -347,8 +347,8 @@ func FeeMarketKeeper(
 	paramKeeper paramskeeper.Keeper,
 	consensusKeeper consensuskeeper.Keeper,
 ) feemarketkeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(feemarkettypes.StoreKey)
-	transientKey := sdk.NewTransientStoreKey(feemarkettypes.TransientKey)
+	storeKey := storetypes.NewKVStoreKey(feemarkettypes.StoreKey)
+	transientKey := storetypes.NewTransientStoreKey(feemarkettypes.TransientKey)
 
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	ss.MountStoreWithDB(transientKey, storetypes.StoreTypeTransient, db)
@@ -375,8 +375,8 @@ func EVMKeeper(
 	paramKeeper paramskeeper.Keeper,
 	consensusKeeper consensuskeeper.Keeper,
 ) *evmkeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(evmtypes.StoreKey)
-	transientKey := sdk.NewTransientStoreKey(evmtypes.TransientKey)
+	storeKey := storetypes.NewKVStoreKey(evmtypes.StoreKey)
+	transientKey := storetypes.NewTransientStoreKey(evmtypes.TransientKey)
 
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	ss.MountStoreWithDB(transientKey, storetypes.StoreTypeTransient, db)
@@ -561,7 +561,7 @@ func CapabilityKeeper(
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 ) *capabilitykeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(capabilitytypes.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(capabilitytypes.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(capabilitytypes.MemStoreKey)
 
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
@@ -580,7 +580,7 @@ func IBCKeeper(
 	uppgradeKeeper upgradekeeper.Keeper,
 	capabilityKeeper capabilitykeeper.Keeper,
 ) *ibckeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(ibcexported.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(ibcexported.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	scopedIBCKeeper := capabilityKeeper.ScopeToModule(ibcexported.ModuleName)
@@ -607,7 +607,7 @@ func TransferKeeper(
 	capabilityKeeper capabilitykeeper.Keeper,
 	ibcRouter *porttypes.Router,
 ) ibctransferkeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(ibctransfertypes.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(ibctransfertypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	scopedTransferKeeper := capabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)

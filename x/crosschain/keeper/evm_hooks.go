@@ -8,6 +8,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -239,7 +240,7 @@ func (k Keeper) ProcessZetaSentEvent(
 	if err := k.bankKeeper.BurnCoins(
 		ctx,
 		fungibletypes.ModuleName,
-		sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(event.ZetaValueAndGas))),
+		sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdkmath.NewIntFromBigInt(event.ZetaValueAndGas))),
 	); err != nil {
 		ctx.Logger().Error(fmt.Sprintf("ProcessZetaSentEvent: failed to burn coins from fungible: %s", err.Error()))
 		return fmt.Errorf("ProcessZetaSentEvent: failed to burn coins from fungible: %s", err.Error())

@@ -64,7 +64,7 @@ func (k Keeper) RemoveGasPrice(ctx sdk.Context, index string) {
 // GetAllGasPrice returns all gasPrice
 func (k Keeper) GetAllGasPrice(ctx sdk.Context) (list []types.GasPrice) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GasPriceKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 

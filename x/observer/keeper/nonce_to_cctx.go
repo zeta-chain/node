@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/x/observer/types"
@@ -42,7 +43,7 @@ func (k Keeper) GetNonceToCctx(
 
 func (k Keeper) GetAllNonceToCctx(ctx sdk.Context) (list []types.NonceToCctx) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.NonceToCctxKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

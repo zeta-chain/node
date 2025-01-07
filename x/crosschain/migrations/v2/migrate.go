@@ -28,7 +28,7 @@ func MigrateStore(
 
 	// Fetch data from cross chain store using the legacy keys directly
 	store := prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(LegacyNodeAccountKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var val observerTypes.NodeAccount

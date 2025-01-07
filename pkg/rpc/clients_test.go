@@ -5,6 +5,8 @@ import (
 	"net"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
+
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -168,8 +170,8 @@ func TestZetacore_GetChainParamsForChainID(t *testing.T) {
 
 	expectedOutput := observertypes.QueryGetChainParamsForChainResponse{ChainParams: &observertypes.ChainParams{
 		ChainId:               123,
-		BallotThreshold:       types.ZeroDec(),
-		MinObserverDelegation: types.ZeroDec(),
+		BallotThreshold:       sdkmath.LegacyZeroDec(),
+		MinObserverDelegation: sdkmath.LegacyZeroDec(),
 	}}
 	input := observertypes.QueryGetChainParamsForChainRequest{ChainId: 123}
 	method := "/zetachain.zetacore.observer.Query/GetChainParamsForChain"
@@ -189,8 +191,8 @@ func TestZetacore_GetChainParams(t *testing.T) {
 		ChainParams: []*observertypes.ChainParams{
 			{
 				ChainId:               123,
-				MinObserverDelegation: types.ZeroDec(),
-				BallotThreshold:       types.ZeroDec(),
+				MinObserverDelegation: sdkmath.LegacyZeroDec(),
+				BallotThreshold:       sdkmath.LegacyZeroDec(),
 			},
 		},
 	}}
@@ -378,7 +380,7 @@ func TestZetacore_GetZetaTokenSupplyOnNode(t *testing.T) {
 	expectedOutput := banktypes.QuerySupplyOfResponse{
 		Amount: types.Coin{
 			Denom:  config.BaseDenom,
-			Amount: types.NewInt(329438),
+			Amount: sdkmath.NewInt(329438),
 		}}
 	input := banktypes.QuerySupplyOfRequest{Denom: config.BaseDenom}
 	method := "/cosmos.bank.v1beta1.Query/SupplyOf"
@@ -454,7 +456,7 @@ func TestZetacore_GetBaseGasPrice(t *testing.T) {
 
 	expectedOutput := feemarkettypes.QueryParamsResponse{
 		Params: feemarkettypes.Params{
-			BaseFee: types.NewInt(23455),
+			BaseFee: sdkmath.NewInt(23455),
 		},
 	}
 	input := feemarkettypes.QueryParamsRequest{}

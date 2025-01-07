@@ -72,7 +72,7 @@ func NewABCIUtilsTestSuite(t *testing.T) *ABCIUtilsTestSuite {
 	}
 
 	// create context
-	s.ctx = sdk.Context{}.WithConsensusParams(&cmtproto.ConsensusParams{})
+	s.ctx = sdk.Context{}.WithConsensusParams(cmtproto.ConsensusParams{})
 	return s
 }
 

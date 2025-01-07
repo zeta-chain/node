@@ -172,6 +172,7 @@ func simulationModules(
 			app.BankKeeper,
 			app.StakingKeeper,
 			app.GetSubspace(slashingtypes.ModuleName),
+			app.interfaceRegistry,
 		),
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),

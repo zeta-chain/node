@@ -37,8 +37,8 @@ func setupTssMigrationParams(
 		ChainParams: []*observertypes.ChainParams{
 			{
 				ChainId:               chain.ChainId,
-				BallotThreshold:       sdk.NewDec(0),
-				MinObserverDelegation: sdk.OneDec(),
+				BallotThreshold:       sdkmath.LegacyNewDec(0),
+				MinObserverDelegation: sdkmath.LegacyOneDec(),
 				IsSupported:           true,
 			},
 		},
@@ -391,7 +391,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		index := hash.Hex()
 		cctx, found := k.GetCrossChainTx(ctx, index)
 		require.True(t, found)
-		feeCalculated := sdk.NewUint(cctx.GetCurrentOutboundParam().CallOptions.GasLimit).
+		feeCalculated := sdkmath.NewUint(cctx.GetCurrentOutboundParam().CallOptions.GasLimit).
 			Mul(sdkmath.NewUintFromString(cctx.GetCurrentOutboundParam().GasPrice)).
 			Add(sdkmath.NewUintFromString(crosschaintypes.TSSMigrationBufferAmountEVM))
 		require.Equal(t, cctx.GetCurrentOutboundParam().Amount.String(), amount.Sub(feeCalculated).String())

@@ -84,7 +84,7 @@ func StringRandom(r *rand.Rand, length int) string {
 
 // Coins returns a sample sdk.Coins
 func Coins() sdk.Coins {
-	return sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(42)))
+	return sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdkmath.NewInt(42)))
 }
 
 // Uint64InRange returns a sample uint64 in the given ranges

@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
@@ -20,7 +20,7 @@ func TestKeeper_GetBallot(t *testing.T) {
 		BallotIdentifier:     identifier,
 		VoterList:            nil,
 		ObservationType:      0,
-		BallotThreshold:      sdk.ZeroDec(),
+		BallotThreshold:      sdkmath.LegacyZeroDec(),
 		BallotStatus:         0,
 		BallotCreationHeight: 1,
 	}
@@ -39,7 +39,7 @@ func TestKeeper_GetBallot(t *testing.T) {
 		BallotIdentifier:     identifier,
 		VoterList:            nil,
 		ObservationType:      1,
-		BallotThreshold:      sdk.ZeroDec(),
+		BallotThreshold:      sdkmath.LegacyZeroDec(),
 		BallotStatus:         1,
 		BallotCreationHeight: 2,
 	}
@@ -61,7 +61,7 @@ func TestKeeper_GetBallotList(t *testing.T) {
 		BallotIdentifier:     identifier,
 		VoterList:            nil,
 		ObservationType:      0,
-		BallotThreshold:      sdk.ZeroDec(),
+		BallotThreshold:      sdkmath.LegacyZeroDec(),
 		BallotStatus:         0,
 		BallotCreationHeight: 1,
 	}
@@ -83,7 +83,7 @@ func TestKeeper_GetMaturedBallots(t *testing.T) {
 		BallotIdentifier:     identifier,
 		VoterList:            nil,
 		ObservationType:      0,
-		BallotThreshold:      sdk.Dec{},
+		BallotThreshold:      sdkmath.LegacyDec{},
 		BallotStatus:         0,
 		BallotCreationHeight: 1,
 	}
@@ -106,7 +106,7 @@ func TestKeeper_GetAllBallots(t *testing.T) {
 		BallotIdentifier:     identifier,
 		VoterList:            nil,
 		ObservationType:      0,
-		BallotThreshold:      sdk.ZeroDec(),
+		BallotThreshold:      sdkmath.LegacyZeroDec(),
 		BallotStatus:         0,
 		BallotCreationHeight: 1,
 	}

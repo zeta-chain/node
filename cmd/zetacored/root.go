@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 
 	"cosmossdk.io/log"
-	dbm "github.com/cometbft/cometbft-db"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -19,7 +20,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -76,6 +80,27 @@ func NewRootCmd() (*cobra.Command, types.EncodingConfig) {
 				return err
 			}
 
+			// This needs to go after ReadFromClientConfig, as that function
+			// sets the RPC client needed for SIGN_MODE_TEXTUAL. This sign mode
+			// is only available if the client is online.
+			if !initClientCtx.Offline {
+				enabledSignModes := slices.Clone(tx.DefaultSignModes)
+				enabledSignModes = append(enabledSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
+				txConfigOpts := tx.ConfigOptions{
+					EnabledSignModes:           enabledSignModes,
+					TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx),
+				}
+				txConfig, err := tx.NewTxConfigWithOptions(
+					initClientCtx.Codec,
+					txConfigOpts,
+				)
+				if err != nil {
+					return err
+				}
+
+				initClientCtx = initClientCtx.WithTxConfig(txConfig)
+			}
+
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
@@ -101,11 +126,6 @@ func initAppConfig() (string, interface{}) {
 func initTmConfig() *tmcfg.Config {
 	cfg := tmcfg.DefaultConfig()
 
-	// use mempool version 1 to enable tx priority
-	if cfg.Mempool != nil {
-		cfg.Mempool.Version = tmcfg.MempoolV1
-	}
-
 	cfg.DBBackend = "pebbledb"
 
 	return cfg
@@ -124,12 +144,14 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig types.EncodingConfig) {
 			banktypes.GenesisBalancesIterator{},
 			app.DefaultNodeHome,
 			genutiltypes.DefaultMessageValidator,
+			encodingConfig.TxConfig.SigningContext().ValidatorAddressCodec(),
 		),
 		genutilcli.GenTxCmd(
 			app.ModuleBasics,
 			encodingConfig.TxConfig,
 			banktypes.GenesisBalancesIterator{},
 			app.DefaultNodeHome,
+			encodingConfig.TxConfig.SigningContext().ValidatorAddressCodec(),
 		),
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
@@ -143,7 +165,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig types.EncodingConfig) {
 		ethermintclient.NewTestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 
 		debug.Cmd(),
-		config.Cmd(),
 		snapshot.Cmd(ac.newApp),
 	)
 
@@ -159,7 +180,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig types.EncodingConfig) {
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
-		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
 		docsCommand(),
@@ -187,9 +207,7 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetAccountCmd(),
 		rpc.ValidatorCommand(),
-		rpc.BlockCommand(),
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
 	)

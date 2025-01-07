@@ -52,7 +52,7 @@ func (k Keeper) RemoveForeignCoins(
 // GetAllForeignCoinsForChain returns all foreignCoins on a given chain
 func (k Keeper) GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64) (list []types.ForeignCoins) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ForeignCoinsKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 
@@ -69,7 +69,7 @@ func (k Keeper) GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64
 // GetAllForeignCoins returns all foreignCoins
 func (k Keeper) GetAllForeignCoins(ctx sdk.Context) (list []types.ForeignCoins) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ForeignCoinsKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 

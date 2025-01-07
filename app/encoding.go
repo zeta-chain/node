@@ -25,7 +25,7 @@ import (
 
 // MakeEncodingConfig creates an EncodingConfig for testing
 func MakeEncodingConfig() ethermint.EncodingConfig {
-	encodingConfig := evmenc.MakeConfig(ModuleBasics)
+	encodingConfig := evmenc.MakeConfig()
 	registry := encodingConfig.InterfaceRegistry
 
 	// TODO test if we need to register these interfaces again as MakeConfig already registers them

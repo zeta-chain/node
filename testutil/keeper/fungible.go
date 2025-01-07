@@ -59,7 +59,7 @@ func initFungibleKeeper(
 	observerKeeper types.ObserverKeeper,
 	authorityKeeper types.AuthorityKeeper,
 ) *keeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, nil)
 	ss.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, nil)

@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -28,27 +29,27 @@ func RateLimiterFlags() types.RateLimiterFlags {
 	return types.RateLimiterFlags{
 		Enabled: true,
 		Window:  r.Int63(),
-		Rate:    sdk.NewUint(r.Uint64()),
+		Rate:    sdkmath.NewUint(r.Uint64()),
 		Conversions: []types.Conversion{
 			{
 				Zrc20: EthAddress().Hex(),
-				Rate:  sdk.NewDec(r.Int63()),
+				Rate:  sdkmath.LegacyNewDec(r.Int63()),
 			},
 			{
 				Zrc20: EthAddress().Hex(),
-				Rate:  sdk.NewDec(r.Int63()),
+				Rate:  sdkmath.LegacyNewDec(r.Int63()),
 			},
 			{
 				Zrc20: EthAddress().Hex(),
-				Rate:  sdk.NewDec(r.Int63()),
+				Rate:  sdkmath.LegacyNewDec(r.Int63()),
 			},
 			{
 				Zrc20: EthAddress().Hex(),
-				Rate:  sdk.NewDec(r.Int63()),
+				Rate:  sdkmath.LegacyNewDec(r.Int63()),
 			},
 			{
 				Zrc20: EthAddress().Hex(),
-				Rate:  sdk.NewDec(r.Int63()),
+				Rate:  sdkmath.LegacyNewDec(r.Int63()),
 			},
 		},
 	}
@@ -256,7 +257,7 @@ func CustomCctxsInBlockRange(
 		cctx.InboundParams.Asset = asset
 		cctx.InboundParams.ObservedExternalHeight = i
 		cctx.GetCurrentOutboundParam().ReceiverChainId = receiverChainID
-		cctx.GetCurrentOutboundParam().Amount = sdk.NewUint(amount)
+		cctx.GetCurrentOutboundParam().Amount = sdkmath.NewUint(amount)
 		cctx.GetCurrentOutboundParam().TssNonce = nonce
 		cctxs = append(cctxs, cctx)
 	}

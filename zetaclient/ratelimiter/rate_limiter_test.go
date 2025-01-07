@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -22,8 +21,8 @@ func Test_NewInput(t *testing.T) {
 		CctxsMissed:             []*crosschaintypes.CrossChainTx{sample.CrossChainTx(t, "1-1")},
 		CctxsPending:            []*crosschaintypes.CrossChainTx{sample.CrossChainTx(t, "1-2")},
 		TotalPending:            7,
-		PastCctxsValue:          sdk.NewInt(12345678).Mul(sdk.NewInt(1e18)).String(),
-		PendingCctxsValue:       sdk.NewInt(4321).Mul(sdk.NewInt(1e18)).String(),
+		PastCctxsValue:          sdkmath.NewInt(12345678).Mul(sdkmath.NewInt(1e18)).String(),
+		PendingCctxsValue:       sdkmath.NewInt(4321).Mul(sdkmath.NewInt(1e18)).String(),
 		LowestPendingCctxHeight: 2,
 	}
 
@@ -186,13 +185,13 @@ func Test_ApplyRateLimiter(t *testing.T) {
 		{
 			name:   "should return all missed and pending cctxs",
 			window: 100,
-			rate:   sdk.NewUint(1e18), // 1 ZETA/block
+			rate:   sdkmath.NewUint(1e18), // 1 ZETA/block
 			input: ratelimiter.Input{
 				Height:                  100,
 				CctxsMissed:             allCctxsMissed,
 				CctxsPending:            allCctxsPending,
-				PastCctxsValue:          sdk.NewInt(10).Mul(sdk.NewInt(1e18)), // 10 * 1 ZETA
-				PendingCctxsValue:       sdk.NewInt(90).Mul(sdk.NewInt(1e18)), // 90 * 1 ZETA
+				PastCctxsValue:          sdkmath.NewInt(10).Mul(sdkmath.NewInt(1e18)), // 10 * 1 ZETA
+				PendingCctxsValue:       sdkmath.NewInt(90).Mul(sdkmath.NewInt(1e18)), // 90 * 1 ZETA
 				LowestPendingCctxHeight: 11,
 			},
 			output: ratelimiter.Output{
@@ -200,21 +199,21 @@ func Test_ApplyRateLimiter(t *testing.T) {
 					ethChainID: ethCctxsAll,
 					btcChainID: btcCctxsAll,
 				},
-				CurrentWithdrawWindow: 100,              // height [1, 100]
-				CurrentWithdrawRate:   sdk.NewInt(1e18), // (10 + 90) / 100
+				CurrentWithdrawWindow: 100,                  // height [1, 100]
+				CurrentWithdrawRate:   sdkmath.NewInt(1e18), // (10 + 90) / 100
 				RateLimitExceeded:     false,
 			},
 		},
 		{
 			name:   "should monitor a wider window and adjust the total limit",
 			window: 50,
-			rate:   sdk.NewUint(1e18), // 1 ZETA/block
+			rate:   sdkmath.NewUint(1e18), // 1 ZETA/block
 			input: ratelimiter.Input{
 				Height:                  100,
 				CctxsMissed:             allCctxsMissed,
 				CctxsPending:            allCctxsPending,
-				PastCctxsValue:          sdk.NewInt(0),                        // no past cctx in height range [51, 100]
-				PendingCctxsValue:       sdk.NewInt(90).Mul(sdk.NewInt(1e18)), // 90 * 1 ZETA
+				PastCctxsValue:          sdkmath.NewInt(0),                            // no past cctx in height range [51, 100]
+				PendingCctxsValue:       sdkmath.NewInt(90).Mul(sdkmath.NewInt(1e18)), // 90 * 1 ZETA
 				LowestPendingCctxHeight: 11,
 			},
 			output: ratelimiter.Output{
@@ -222,21 +221,21 @@ func Test_ApplyRateLimiter(t *testing.T) {
 					ethChainID: ethCctxsAll,
 					btcChainID: btcCctxsAll,
 				},
-				CurrentWithdrawWindow: 90,               // [LowestPendingCctxHeight, Height] = [11, 100]
-				CurrentWithdrawRate:   sdk.NewInt(1e18), // 90 / 90 = 1 ZETA/block
+				CurrentWithdrawWindow: 90,                   // [LowestPendingCctxHeight, Height] = [11, 100]
+				CurrentWithdrawRate:   sdkmath.NewInt(1e18), // 90 / 90 = 1 ZETA/block
 				RateLimitExceeded:     false,
 			},
 		},
 		{
 			name:   "rate limit is exceeded in given sliding window 100",
 			window: 100,
-			rate:   sdk.NewUint(1e18), // 1 ZETA/block
+			rate:   sdkmath.NewUint(1e18), // 1 ZETA/block
 			input: ratelimiter.Input{
 				Height:                  100,
 				CctxsMissed:             allCctxsMissed,
 				CctxsPending:            allCctxsPending,
-				PastCctxsValue:          sdk.NewInt(11).Mul(sdk.NewInt(1e18)), // 11 ZETA, increased value by 1 ZETA
-				PendingCctxsValue:       sdk.NewInt(90).Mul(sdk.NewInt(1e18)), // 90 * 1 ZETA
+				PastCctxsValue:          sdkmath.NewInt(11).Mul(sdkmath.NewInt(1e18)), // 11 ZETA, increased value by 1 ZETA
+				PendingCctxsValue:       sdkmath.NewInt(90).Mul(sdkmath.NewInt(1e18)), // 90 * 1 ZETA
 				LowestPendingCctxHeight: 11,
 			},
 			output: ratelimiter.Output{ // should return missed cctxs only
@@ -245,7 +244,7 @@ func Test_ApplyRateLimiter(t *testing.T) {
 					btcChainID: btcCctxsMissed,
 				},
 				CurrentWithdrawWindow: 100, // height [1, 100]
-				CurrentWithdrawRate: sdk.NewInt(
+				CurrentWithdrawRate: sdkmath.NewInt(
 					101e16,
 				), // (11 + 90) / 100 = 1.01 ZETA/block (exceeds 0.99 ZETA/block)
 				RateLimitExceeded: true,
@@ -254,13 +253,13 @@ func Test_ApplyRateLimiter(t *testing.T) {
 		{
 			name:   "rate limit is exceeded in wider window then the given sliding window 50",
 			window: 50,
-			rate:   sdk.NewUint(1e18), // 1 ZETA/block
+			rate:   sdkmath.NewUint(1e18), // 1 ZETA/block
 			input: ratelimiter.Input{
 				Height:                  100,
 				CctxsMissed:             allCctxsMissed,
 				CctxsPending:            allCctxsPending,
-				PastCctxsValue:          sdk.NewInt(0),                        // no past cctx in height range [51, 100]
-				PendingCctxsValue:       sdk.NewInt(91).Mul(sdk.NewInt(1e18)), // 91 ZETA, increased value by 1 ZETA
+				PastCctxsValue:          sdkmath.NewInt(0),                            // no past cctx in height range [51, 100]
+				PendingCctxsValue:       sdkmath.NewInt(91).Mul(sdkmath.NewInt(1e18)), // 91 ZETA, increased value by 1 ZETA
 				LowestPendingCctxHeight: 11,
 			},
 			output: ratelimiter.Output{
@@ -269,9 +268,9 @@ func Test_ApplyRateLimiter(t *testing.T) {
 					btcChainID: btcCctxsMissed,
 				},
 				CurrentWithdrawWindow: 90, // [LowestPendingCctxHeight, Height] = [11, 100]
-				CurrentWithdrawRate: sdk.NewInt(91).
-					Mul(sdk.NewInt(1e18)).
-					Quo(sdk.NewInt(90)),
+				CurrentWithdrawRate: sdkmath.NewInt(91).
+					Mul(sdkmath.NewInt(1e18)).
+					Quo(sdkmath.NewInt(90)),
 				// 91 / 90 = 1.011111111111111111 ZETA/block
 				RateLimitExceeded: true,
 			},
@@ -279,13 +278,13 @@ func Test_ApplyRateLimiter(t *testing.T) {
 		{
 			name:   "should not exceed rate limit if we wait for 1 more block",
 			window: 50,
-			rate:   sdk.NewUint(1e18), // 1 ZETA/block
+			rate:   sdkmath.NewUint(1e18), // 1 ZETA/block
 			input: ratelimiter.Input{
 				Height:                  101,
 				CctxsMissed:             allCctxsMissed,
 				CctxsPending:            allCctxsPending,
-				PastCctxsValue:          sdk.NewInt(0),                        // no past cctx in height range [52, 101]
-				PendingCctxsValue:       sdk.NewInt(91).Mul(sdk.NewInt(1e18)), // 91 ZETA, increased value by 1 ZETA
+				PastCctxsValue:          sdkmath.NewInt(0),                            // no past cctx in height range [52, 101]
+				PendingCctxsValue:       sdkmath.NewInt(91).Mul(sdkmath.NewInt(1e18)), // 91 ZETA, increased value by 1 ZETA
 				LowestPendingCctxHeight: 11,
 			},
 			output: ratelimiter.Output{
@@ -294,9 +293,9 @@ func Test_ApplyRateLimiter(t *testing.T) {
 					btcChainID: btcCctxsAll,
 				},
 				CurrentWithdrawWindow: 91, // [LowestPendingCctxHeight, Height] = [11, 101]
-				CurrentWithdrawRate: sdk.NewInt(91).
-					Mul(sdk.NewInt(1e18)).
-					Quo(sdk.NewInt(91)),
+				CurrentWithdrawRate: sdkmath.NewInt(91).
+					Mul(sdkmath.NewInt(1e18)).
+					Quo(sdkmath.NewInt(91)),
 				// 91 / 91 = 1.011 ZETA/block
 				RateLimitExceeded: false,
 			},

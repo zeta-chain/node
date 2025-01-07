@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
@@ -222,7 +223,7 @@ func setupZRC20Pool(
 	err = bankKeeper.MintCoins(
 		ctx,
 		types.ModuleName,
-		sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(liquidityAmount))),
+		sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdkmath.NewIntFromBigInt(liquidityAmount))),
 	)
 	require.NoError(t, err)
 

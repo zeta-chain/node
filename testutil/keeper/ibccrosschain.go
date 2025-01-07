@@ -37,7 +37,7 @@ func initIBCCrosschainKeeper(
 	ibcTransferKeeper types.IBCTransferKeeper,
 	capabilityKeeper capabilitykeeper.Keeper,
 ) *keeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	ss.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, db)
@@ -57,7 +57,7 @@ func IBCCrosschainKeeperWithMocks(
 	t testing.TB,
 	mockOptions IBCCroscchainMockOptions,
 ) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
 	// Initialize local store

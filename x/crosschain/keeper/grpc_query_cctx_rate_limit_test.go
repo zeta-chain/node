@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -46,17 +47,17 @@ func createTestRateLimiterFlags(
 			// ETH
 			{
 				Zrc20: zrc20ETH,
-				Rate:  sdk.MustNewDecFromStr(ethRate),
+				Rate:  sdkmath.LegacyMustNewDecFromStr(ethRate),
 			},
 			// BTC
 			{
 				Zrc20: zrc20BTC,
-				Rate:  sdk.MustNewDecFromStr(btcRate),
+				Rate:  sdkmath.LegacyMustNewDecFromStr(btcRate),
 			},
 			// USDT
 			{
 				Zrc20: zrc20USDT,
-				Rate:  sdk.MustNewDecFromStr(usdtRate),
+				Rate:  sdkmath.LegacyMustNewDecFromStr(usdtRate),
 			},
 		},
 	}
@@ -250,8 +251,8 @@ func TestKeeper_RateLimiterInput(t *testing.T) {
 				append(append([]*types.CrossChainTx{}, ethPendingCctxs[100:200]...), btcPendingCctxs[100:200]...),
 			),
 			expectedTotalPending:            400,
-			expectedPastCctxsValue:          sdk.NewInt(1200).Mul(sdk.NewInt(1e18)).String(), // 400 * (2.5 + 0.5) ZETA
-			expectedPendingCctxsValue:       sdk.NewInt(300).Mul(sdk.NewInt(1e18)).String(),  // 100 * (2.5 + 0.5) ZETA
+			expectedPastCctxsValue:          sdkmath.NewInt(1200).Mul(sdkmath.NewInt(1e18)).String(), // 400 * (2.5 + 0.5) ZETA
+			expectedPendingCctxsValue:       sdkmath.NewInt(300).Mul(sdkmath.NewInt(1e18)).String(),  // 100 * (2.5 + 0.5) ZETA
 			expectedLowestPendingCctxHeight: 1100,
 		},
 		{
@@ -294,11 +295,11 @@ func TestKeeper_RateLimiterInput(t *testing.T) {
 				append(append([]*types.CrossChainTx{}, ethPendingRevertCctxs[100:200]...), btcPendingCctxs[100:200]...),
 			),
 			expectedTotalPending: 400,
-			expectedPastCctxsValue: sdk.NewInt(200).
-				Mul(sdk.NewInt(1e18)).
+			expectedPastCctxsValue: sdkmath.NewInt(200).
+				Mul(sdkmath.NewInt(1e18)).
 				String(),
 			// 400 * 0.5 ZETA, ignore Eth chain reverted cctxs
-			expectedPendingCctxsValue:       sdk.NewInt(300).Mul(sdk.NewInt(1e18)).String(), // 100 * (2.5 + 0.5) ZETA
+			expectedPendingCctxsValue:       sdkmath.NewInt(300).Mul(sdkmath.NewInt(1e18)).String(), // 100 * (2.5 + 0.5) ZETA
 			expectedLowestPendingCctxHeight: 1100,
 		},
 		{
@@ -341,8 +342,8 @@ func TestKeeper_RateLimiterInput(t *testing.T) {
 				append(append([]*types.CrossChainTx{}, ethPendingCctxs[100:200]...), btcPendingCctxs[100:200]...),
 			),
 			expectedTotalPending:            400,
-			expectedPastCctxsValue:          sdk.NewInt(3297).Mul(sdk.NewInt(1e18)).String(), // 1099 * (2.5 + 0.5) ZETA
-			expectedPendingCctxsValue:       sdk.NewInt(300).Mul(sdk.NewInt(1e18)).String(),  // 100 * (2.5 + 0.5) ZETA
+			expectedPastCctxsValue:          sdkmath.NewInt(3297).Mul(sdkmath.NewInt(1e18)).String(), // 1099 * (2.5 + 0.5) ZETA
+			expectedPendingCctxsValue:       sdkmath.NewInt(300).Mul(sdkmath.NewInt(1e18)).String(),  // 100 * (2.5 + 0.5) ZETA
 			expectedLowestPendingCctxHeight: 1100,
 		},
 		{
@@ -383,8 +384,8 @@ func TestKeeper_RateLimiterInput(t *testing.T) {
 				append(append([]*types.CrossChainTx{}, ethPendingCctxs...), btcPendingCctxs...),
 			),
 			expectedTotalPending:            400,
-			expectedPastCctxsValue:          sdk.NewInt(900).Mul(sdk.NewInt(1e18)).String(), // 300 * (2.5 + 0.5) ZETA
-			expectedPendingCctxsValue:       sdk.NewInt(600).Mul(sdk.NewInt(1e18)).String(), // 200 * (2.5 + 0.5) ZETA
+			expectedPastCctxsValue:          sdkmath.NewInt(900).Mul(sdkmath.NewInt(1e18)).String(), // 300 * (2.5 + 0.5) ZETA
+			expectedPendingCctxsValue:       sdkmath.NewInt(600).Mul(sdkmath.NewInt(1e18)).String(), // 200 * (2.5 + 0.5) ZETA
 			expectedLowestPendingCctxHeight: 1000,
 		},
 		{
@@ -428,8 +429,8 @@ func TestKeeper_RateLimiterInput(t *testing.T) {
 				append(append([]*types.CrossChainTx{}, ethPendingCctxs[100:150]...), btcPendingCctxs[100:150]...),
 			),
 			expectedTotalPending:            400,
-			expectedPastCctxsValue:          sdk.NewInt(1200).Mul(sdk.NewInt(1e18)).String(), // 400 * (2.5 + 0.5) ZETA
-			expectedPendingCctxsValue:       sdk.NewInt(300).Mul(sdk.NewInt(1e18)).String(),  // 100 * (2.5 + 0.5) ZETA
+			expectedPastCctxsValue:          sdkmath.NewInt(1200).Mul(sdkmath.NewInt(1e18)).String(), // 400 * (2.5 + 0.5) ZETA
+			expectedPendingCctxsValue:       sdkmath.NewInt(300).Mul(sdkmath.NewInt(1e18)).String(),  // 100 * (2.5 + 0.5) ZETA
 			expectedLowestPendingCctxHeight: 1100,
 		},
 	}
@@ -758,8 +759,8 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 			queryLimit:             keeper.MaxPendingCctxs,
 			expectedCctxs:          append(append([]*types.CrossChainTx{}, ethPendingCctxs...), btcPendingCctxs...),
 			expectedTotalPending:   400,
-			expectedWithdrawWindow: 500,                       // the sliding window
-			expectedWithdrawRate:   sdk.NewInt(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
+			expectedWithdrawWindow: 500,                           // the sliding window
+			expectedWithdrawRate:   sdkmath.NewInt(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
 			rateLimitExceeded:      false,
 		},
 		{
@@ -796,8 +797,8 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 				append([]*types.CrossChainTx{}, ethPendingRevertCctxs...),
 				btcPendingCctxs...),
 			expectedTotalPending:   400,
-			expectedWithdrawWindow: 500,                       // the sliding window
-			expectedWithdrawRate:   sdk.NewInt(5e17).String(), // 0.5 ZETA per block, only btc cctxs should be counted
+			expectedWithdrawWindow: 500,                           // the sliding window
+			expectedWithdrawRate:   sdkmath.NewInt(5e17).String(), // 0.5 ZETA per block, only btc cctxs should be counted
 			rateLimitExceeded:      false,
 		},
 		{
@@ -832,8 +833,8 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 			queryLimit:             keeper.MaxPendingCctxs,
 			expectedCctxs:          append(append([]*types.CrossChainTx{}, ethPendingCctxs...), btcPendingCctxs...),
 			expectedTotalPending:   400,
-			expectedWithdrawWindow: 500,                       // the sliding window
-			expectedWithdrawRate:   sdk.NewInt(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
+			expectedWithdrawWindow: 500,                           // the sliding window
+			expectedWithdrawRate:   sdkmath.NewInt(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
 			rateLimitExceeded:      false,
 		},
 		{
@@ -871,8 +872,8 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 				append([]*types.CrossChainTx{}, ethPendingCctxs[0:100]...),
 				btcPendingCctxs[0:100]...),
 			expectedTotalPending:   400,
-			expectedWithdrawWindow: 500,                       // the sliding window
-			expectedWithdrawRate:   sdk.NewInt(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
+			expectedWithdrawWindow: 500,                           // the sliding window
+			expectedWithdrawRate:   sdkmath.NewInt(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
 			rateLimitExceeded:      true,
 		},
 		{
@@ -909,8 +910,8 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 				append([]*types.CrossChainTx{}, ethPendingCctxs[0:100]...),
 				btcPendingCctxs...),
 			expectedTotalPending:   400,
-			expectedWithdrawWindow: 500,                       // the sliding window
-			expectedWithdrawRate:   sdk.NewInt(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
+			expectedWithdrawWindow: 500,                           // the sliding window
+			expectedWithdrawRate:   sdkmath.NewInt(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
 			rateLimitExceeded:      false,
 		},
 		{
@@ -948,8 +949,8 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 				append([]*types.CrossChainTx{}, ethPendingCctxs[0:100]...),
 				btcPendingCctxs[0:100]...),
 			expectedTotalPending:   400,
-			expectedWithdrawWindow: 500,                       // the sliding window
-			expectedWithdrawRate:   sdk.NewInt(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
+			expectedWithdrawWindow: 500,                           // the sliding window
+			expectedWithdrawRate:   sdkmath.NewInt(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
 			rateLimitExceeded:      true,
 		},
 		{
@@ -991,8 +992,8 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 				append([]*types.CrossChainTx{}, ethPendingCctxs[0:100]...),
 				btcPendingCctxs[0:100]...),
 			expectedTotalPending:   400,
-			expectedWithdrawWindow: 100,                       // 100 > sliding window 50
-			expectedWithdrawRate:   sdk.NewInt(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
+			expectedWithdrawWindow: 100,                           // 100 > sliding window 50
+			expectedWithdrawRate:   sdkmath.NewInt(3e18).String(), // 3 ZETA, (2.5 + 0.5) per block
 			rateLimitExceeded:      true,
 		},
 	}

@@ -6,6 +6,7 @@ import (
 
 	cosmoserrors "cosmossdk.io/errors"
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
@@ -368,7 +369,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 	}
 
 	// get the gas fee in gas token
-	gasLimit := sdk.NewUint(cctx.GetCurrentOutboundParam().CallOptions.GasLimit)
+	gasLimit := sdkmath.NewUint(cctx.GetCurrentOutboundParam().CallOptions.GasLimit)
 	outTxGasFee := gasLimit.Mul(gasPrice)
 
 	// get the gas fee in Zeta using system uniswapv2 pool wzeta/gasZRC20 and adding the protocol fee
@@ -396,7 +397,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 	// ** The following logic converts the outTxGasFeeInZeta into gasZRC20 and burns it **
 	// swap the outTxGasFeeInZeta portion of zeta to the real gas ZRC20 and burn it, in a temporary context.
 	{
-		coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(feeInZeta.BigInt())))
+		coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdkmath.NewIntFromBigInt(feeInZeta.BigInt())))
 		err := k.bankKeeper.MintCoins(ctx, types.ModuleName, coins)
 		if err != nil {
 			return cosmoserrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to mint coins")
