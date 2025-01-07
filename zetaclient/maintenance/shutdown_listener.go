@@ -26,7 +26,8 @@ type ShutdownListener struct {
 	logger zerolog.Logger
 
 	lastRestartHeightMissed int64
-	getVersion              func() string
+	// get the current version of zetaclient
+	getVersion func() string
 }
 
 // NewShutdownListener creates a new ShutdownListener.
@@ -46,10 +47,7 @@ func (o *ShutdownListener) RunPreStartCheck(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "unable to get initial operational flags")
 	}
-	if err := o.checkMinimumVersion(operationalFlags); err != nil {
-		return err
-	}
-	return nil
+	return o.checkMinimumVersion(operationalFlags)
 }
 
 func (o *ShutdownListener) Listen(ctx context.Context, action func()) {
@@ -100,7 +98,7 @@ func (o *ShutdownListener) getOperationalFlagsWithRetry(ctx context.Context) (ob
 // handleNewFlags processes the flags and returns true if a shutdown should be signaled
 func (o *ShutdownListener) handleNewFlags(ctx context.Context, f observertypes.OperationalFlags) bool {
 	if err := o.checkMinimumVersion(f); err != nil {
-		o.logger.Error().Err(err).Msg("minimum version check")
+		o.logger.Error().Err(err).Any("operational_flags", f).Msg("minimum version check")
 		return true
 	}
 	if f.RestartHeight < 1 {

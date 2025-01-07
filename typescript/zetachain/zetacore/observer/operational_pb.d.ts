@@ -30,7 +30,8 @@ export declare class OperationalFlags extends Message<OperationalFlags> {
 
   /**
    * Minimum version of zetaclient that is allowed to run. This must be either
-   * a valid semver string (v23.0.1) or empty.
+   * a valid semver string (v23.0.1) or empty. If empty, all versions are
+   * allowed.
    *
    * @generated from field: string minimum_version = 3;
    */

@@ -59,6 +59,13 @@ func TestOperationalFlags_Validate(t *testing.T) {
 			},
 		},
 		{
+			name: "minimum version invalid",
+			of: types.OperationalFlags{
+				MinimumVersion: "asdf",
+			},
+			errContains: types.ErrOperationalFlagsInvalidMinimumVersion.Error(),
+		},
+		{
 			name: "all flags valid",
 			of: types.OperationalFlags{
 				RestartHeight:         1,

@@ -58119,7 +58119,8 @@ definitions:
         type: string
         description: |-
           Minimum version of zetaclient that is allowed to run. This must be either
-          a valid semver string (v23.0.1) or empty.
+          a valid semver string (v23.0.1) or empty. If empty, all versions are
+          allowed.
     description: Flags for the top-level operation of zetaclient.
   observerPendingNonces:
     type: object

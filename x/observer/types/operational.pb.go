@@ -36,7 +36,8 @@ type OperationalFlags struct {
 	// Should be calculated and set based on max(zetaclient_core_block_latency).
 	SignerBlockTimeOffset *time.Duration `protobuf:"bytes,2,opt,name=signer_block_time_offset,json=signerBlockTimeOffset,proto3,stdduration" json:"signer_block_time_offset,omitempty"`
 	// Minimum version of zetaclient that is allowed to run. This must be either
-	// a valid semver string (v23.0.1) or empty.
+	// a valid semver string (v23.0.1) or empty. If empty, all versions are
+	// allowed.
 	MinimumVersion string `protobuf:"bytes,3,opt,name=minimum_version,json=minimumVersion,proto3" json:"minimum_version,omitempty"`
 }
 
