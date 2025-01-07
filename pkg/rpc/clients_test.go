@@ -9,11 +9,11 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	tmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/require"
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 	"go.nhat.io/grpcmock"
@@ -412,17 +412,17 @@ func TestZetacore_GetBlockHeight(t *testing.T) {
 func TestZetacore_GetLatestZetaBlock(t *testing.T) {
 	ctx := context.Background()
 
-	expectedOutput := tmservice.GetLatestBlockResponse{
-		SdkBlock: &tmservice.Block{
-			Header:     tmservice.Header{},
+	expectedOutput := cmtservice.GetLatestBlockResponse{
+		SdkBlock: &cmtservice.Block{
+			Header:     cmtservice.Header{},
 			Data:       tmtypes.Data{},
 			Evidence:   tmtypes.EvidenceList{},
 			LastCommit: nil,
 		},
 	}
-	input := tmservice.GetLatestBlockRequest{}
+	input := cmtservice.GetLatestBlockRequest{}
 	method := "/cosmos.base.tendermint.v1beta1.Service/GetLatestBlock"
-	setupMockServer(t, tmservice.RegisterServiceServer, method, input, expectedOutput)
+	setupMockServer(t, cmtservice.RegisterServiceServer, method, input, expectedOutput)
 
 	client := setupZetacoreClients(t)
 
@@ -434,13 +434,13 @@ func TestZetacore_GetLatestZetaBlock(t *testing.T) {
 func TestZetacore_GetNodeInfo(t *testing.T) {
 	ctx := context.Background()
 
-	expectedOutput := tmservice.GetNodeInfoResponse{
+	expectedOutput := cmtservice.GetNodeInfoResponse{
 		DefaultNodeInfo:    nil,
-		ApplicationVersion: &tmservice.VersionInfo{},
+		ApplicationVersion: &cmtservice.VersionInfo{},
 	}
-	input := tmservice.GetNodeInfoRequest{}
+	input := cmtservice.GetNodeInfoRequest{}
 	method := "/cosmos.base.tendermint.v1beta1.Service/GetNodeInfo"
-	setupMockServer(t, tmservice.RegisterServiceServer, method, input, expectedOutput)
+	setupMockServer(t, cmtservice.RegisterServiceServer, method, input, expectedOutput)
 
 	client := setupZetacoreClients(t)
 

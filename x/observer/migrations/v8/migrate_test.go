@@ -1,7 +1,9 @@
 package v8_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"testing"
+
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -9,7 +11,6 @@ import (
 	"github.com/zeta-chain/node/x/observer/keeper"
 	v8 "github.com/zeta-chain/node/x/observer/migrations/v8"
 	"github.com/zeta-chain/node/x/observer/types"
-	"testing"
 )
 
 var chainNoncesArray = []types.ChainNonces{

@@ -7,11 +7,11 @@ import (
 	"math/big"
 
 	"cosmossdk.io/math"
+	"cosmossdk.io/store"
 	tmdb "github.com/cometbft/cometbft-db"
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/holiman/uint256"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"

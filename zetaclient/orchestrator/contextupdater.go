@@ -3,7 +3,7 @@ package orchestrator
 import (
 	"context"
 
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
