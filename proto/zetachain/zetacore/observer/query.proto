@@ -18,11 +18,13 @@ import "zetachain/zetacore/observer/operational.proto";
 import "zetachain/zetacore/pkg/chains/chains.proto";
 import "zetachain/zetacore/pkg/proofs/proofs.proto";
 import "zetachain/zetacore/observer/tss_funds_migrator.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/zeta-chain/node/x/observer/types";
 
 // Query defines the gRPC querier service.
 service Query {
+  option (cosmos.msg.v1.service) = true;
   // Query if a voter has voted for a ballot
   rpc HasVoted(QueryHasVotedRequest) returns (QueryHasVotedResponse) {
     option (google.api.http).get =
