@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -14,6 +15,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/cosmos"
 	zetacrypto "github.com/zeta-chain/node/pkg/crypto"
+	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -287,6 +289,7 @@ func GasPriceIncreaseFlags() types.GasPriceIncreaseFlags {
 
 func OperationalFlags() types.OperationalFlags {
 	return types.OperationalFlags{
-		RestartHeight: 1,
+		RestartHeight:         1,
+		SignerBlockTimeOffset: ptr.Ptr(time.Second),
 	}
 }

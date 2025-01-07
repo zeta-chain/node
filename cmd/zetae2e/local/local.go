@@ -303,6 +303,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		bitcoinDepositTestsAdvanced := []string{
 			e2etests.TestBitcoinDepositAndCallRevertWithDustName,
 			e2etests.TestBitcoinStdMemoDepositAndCallRevertOtherAddressName,
+			e2etests.TestBitcoinDepositAndWithdrawWithDustName,
 		}
 		bitcoinWithdrawTests := []string{
 			e2etests.TestBitcoinWithdrawSegWitName,
@@ -362,7 +363,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose,
-			e2etests.TestOperationalFlagsName,
+			e2etests.TestZetaclientSignerOffsetName,
+			e2etests.TestZetaclientRestartHeightName,
 			e2etests.TestWhitelistERC20Name,
 			e2etests.TestPauseZRC20Name,
 			e2etests.TestUpdateBytecodeZRC20Name,

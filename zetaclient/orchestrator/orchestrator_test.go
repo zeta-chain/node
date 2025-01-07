@@ -3,6 +3,7 @@ package orchestrator
 import (
 	"context"
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/testutil/sample"
 	crosschainkeeper "github.com/zeta-chain/node/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -538,6 +540,58 @@ func Test_GetPendingCctxsWithinRateLimit(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSyncObserverOperationalFlags(t *testing.T) {
+	ctx := context.Background()
+	t.Run("no flags set", func(t *testing.T) {
+		client := mocks.NewZetacoreClient(t)
+
+		client.Mock.On("GetOperationalFlags", ctx).Return(observertypes.OperationalFlags{}, nil)
+		orchestrator := mockOrchestrator(t, client)
+		err := orchestrator.syncObserverOperationalFlags(ctx)
+		require.NoError(t, err)
+		require.Zero(
+			t,
+			orchestrator.signerBlockTimeOffset,
+			"block time offset should be zero if operational flags not set",
+		)
+	})
+
+	t.Run("flags set", func(t *testing.T) {
+		client := mocks.NewZetacoreClient(t)
+
+		expectedDuration := time.Second
+		client.Mock.On("GetOperationalFlags", ctx).Return(observertypes.OperationalFlags{
+			SignerBlockTimeOffset: ptr.Ptr(expectedDuration),
+		}, nil)
+		orchestrator := mockOrchestrator(t, client)
+		err := orchestrator.syncObserverOperationalFlags(ctx)
+		require.NoError(t, err)
+		require.Equal(t, expectedDuration, orchestrator.signerBlockTimeOffset)
+	})
+
+	t.Run("flags updated", func(t *testing.T) {
+		client := mocks.NewZetacoreClient(t)
+
+		expectedDuration := time.Second
+		mock := client.Mock.On("GetOperationalFlags", ctx).Return(observertypes.OperationalFlags{
+			SignerBlockTimeOffset: ptr.Ptr(expectedDuration),
+		}, nil)
+		orchestrator := mockOrchestrator(t, client)
+		err := orchestrator.syncObserverOperationalFlags(ctx)
+		require.NoError(t, err)
+		require.Equal(t, expectedDuration, orchestrator.signerBlockTimeOffset)
+
+		mock.Unset()
+		expectedDuration = time.Second * 2
+		client.Mock.On("GetOperationalFlags", ctx).Return(observertypes.OperationalFlags{
+			SignerBlockTimeOffset: ptr.Ptr(expectedDuration),
+		}, nil)
+		err = orchestrator.syncObserverOperationalFlags(ctx)
+		require.NoError(t, err)
+		require.Equal(t, expectedDuration, orchestrator.signerBlockTimeOffset)
+	})
 }
 
 func mockOrchestrator(t *testing.T, zetaClient interfaces.ZetacoreClient, chainsOrParams ...any) *Orchestrator {
