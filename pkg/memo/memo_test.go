@@ -2,6 +2,7 @@ package memo_test
 
 import (
 	"encoding/hex"
+	mathrand "math/rand"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -307,6 +308,9 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 
 func Test_DecodeLegacyMemoHex(t *testing.T) {
 	expectedShortMsgResult, err := hex.DecodeString("1a2b3c4d5e6f708192a3b4c5d6e7f808")
+	r := mathrand.New(mathrand.NewSource(42))
+	address, data, memoHex := sample.MemoFromRand(r)
+
 	require.NoError(t, err)
 	tests := []struct {
 		name       string
@@ -326,6 +330,7 @@ func Test_DecodeLegacyMemoHex(t *testing.T) {
 		{"invalid hex", "invalidHex", common.Address{}, nil, true},
 		{"short msg", "1a2b3c4d5e6f708192a3b4c5d6e7f808", common.Address{}, expectedShortMsgResult, false},
 		{"random message", sample.EthAddress().String(), common.Address{}, nil, true},
+		{"random message with hex encoding", memoHex, address, data, false},
 	}
 
 	for _, tt := range tests {
@@ -340,4 +345,21 @@ func Test_DecodeLegacyMemoHex(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_DecodeLegacyMemoHex_Random(t *testing.T) {
+	r := mathrand.New(mathrand.NewSource(42))
+
+	// Generate a random memo hex
+	randomMemo := common.BytesToAddress([]byte{0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0x12, 0x34, 0x56, 0x78}).Hex()
+	randomData := []byte(sample.StringRandom(r, 10))
+	randomMemoHex := hex.EncodeToString(append(common.FromHex(randomMemo), randomData...))
+
+	// Decode the random memo hex
+	addr, data, err := memo.DecodeLegacyMemoHex(randomMemoHex)
+
+	// Validate the results
+	require.NoError(t, err)
+	require.Equal(t, common.HexToAddress(randomMemo), addr)
+	require.Equal(t, randomData, data)
 }

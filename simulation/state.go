@@ -34,10 +34,10 @@ const (
 	InitiallyBondedValidators = "initially_bonded_validators"
 )
 
-// updateBankState updates the bank genesis state.
+// extractBankGenesisState extracts and updates the bank genesis state.
 // It adds the following
 // - The not bonded balance for the not bonded pool
-func updateBankState(
+func extractBankGenesisState(
 	t *testing.T,
 	rawState map[string]json.RawMessage,
 	cdc codec.Codec,
@@ -68,9 +68,9 @@ func updateBankState(
 	return bankState
 }
 
-// updateEVMState updates the evm genesis state.
+// extractEVMGenesisState extracts and updates the evm genesis state.
 // It replaces the EvmDenom with BondDenom
-func updateEVMState(
+func extractEVMGenesisState(
 	t *testing.T,
 	rawState map[string]json.RawMessage,
 	cdc codec.Codec,
@@ -88,11 +88,11 @@ func updateEVMState(
 	return evmState
 }
 
-// updateStakingState updates the staking genesis state.
+// extractStakingGenesisState extracts and updates the staking genesis state.
 // It adds the following
 // - The not bonded balance for the not bonded pool
 // It additionally returns the non-bonded coins as well
-func updateStakingState(
+func extractStakingGenesisState(
 	t *testing.T,
 	rawState map[string]json.RawMessage,
 	cdc codec.Codec,
@@ -119,7 +119,7 @@ func updateStakingState(
 	return stakingState, notBondedCoins
 }
 
-// updateObserverState updates the observer genesis state.
+// extractObserverGenesisState extracts and updates the observer genesis state.
 // It adds the following
 // - A random observer set which is a subset of the current validator set
 // - A randomised node account for each observer
@@ -128,7 +128,7 @@ func updateStakingState(
 // - Chain nonces for each chain
 // - Pending nonces for each chain
 // - Crosschain flags, inbound and outbound enabled
-func updateObserverState(
+func extractObserverGenesisState(
 	t *testing.T,
 	rawState map[string]json.RawMessage,
 	cdc codec.Codec,
@@ -211,10 +211,11 @@ func updateObserverState(
 	return observerState
 }
 
-// updateAuthorityState updates the authority genesis state.
+// extractAuthorityGenesisState extracts and updates the authority genesis state.
 // It adds the following
-// - A policy for each policy type, the address is a random account address selected from the simulation accounts list
-func updateAuthorityState(
+// - A policy for each policy type;
+// the address is a random account address selected from the simulation accounts list
+func extractAuthorityGenesisState(
 	t *testing.T,
 	rawState map[string]json.RawMessage,
 	cdc codec.Codec,
@@ -249,10 +250,10 @@ func updateAuthorityState(
 	return authorityState
 }
 
-// updateCrosschainState updates the crosschain genesis state.
+// extractCrosschainGenesisState extracts and updates the crosschain genesis state.
 // It adds the following
 // - A gas price list for each chain
-func updateCrosschainState(
+func extractCrosschainGenesisState(
 	t *testing.T,
 	rawState map[string]json.RawMessage,
 	cdc codec.Codec,
@@ -276,13 +277,13 @@ func updateCrosschainState(
 	return crossChainState
 }
 
-// updateFungibleState updates the fungible genesis state.
+// extractFungibleGenesisState extracts and updates the fungible genesis state.
 // It adds the following
 // - A random system contract address
 // - A random connector zevm address
 // - A random gateway address
 // - A foreign coin for each chain under the default chain list.
-func updateFungibleState(
+func extractFungibleGenesisState(
 	t *testing.T,
 	rawState map[string]json.RawMessage,
 	cdc codec.Codec,
@@ -328,12 +329,12 @@ func updateRawState(
 	r *rand.Rand,
 	accs []simtypes.Account,
 ) {
-	stakingState, notBondedCoins := updateStakingState(t, rawState, cdc)
-	bankState := updateBankState(t, rawState, cdc, notBondedCoins)
-	evmState := updateEVMState(t, rawState, cdc, stakingState.Params.BondDenom)
-	observerState := updateObserverState(t, rawState, cdc, r, stakingState.Validators)
-	authorityState := updateAuthorityState(t, rawState, cdc, r, accs)
-	fungibleState := updateFungibleState(t, rawState, cdc, r)
+	stakingState, notBondedCoins := extractStakingGenesisState(t, rawState, cdc)
+	bankState := extractBankGenesisState(t, rawState, cdc, notBondedCoins)
+	evmState := extractEVMGenesisState(t, rawState, cdc, stakingState.Params.BondDenom)
+	observerState := extractObserverGenesisState(t, rawState, cdc, r, stakingState.Validators)
+	authorityState := extractAuthorityGenesisState(t, rawState, cdc, r, accs)
+	fungibleState := extractFungibleGenesisState(t, rawState, cdc, r)
 
 	rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
 	rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
@@ -341,7 +342,7 @@ func updateRawState(
 	rawState[observertypes.ModuleName] = cdc.MustMarshalJSON(observerState)
 	rawState[authoritytypes.ModuleName] = cdc.MustMarshalJSON(authorityState)
 	rawState[fungibletypes.ModuleName] = cdc.MustMarshalJSON(fungibleState)
-	rawState[crosschaintypes.ModuleName] = cdc.MustMarshalJSON(updateCrosschainState(t, rawState, cdc, r))
+	rawState[crosschaintypes.ModuleName] = cdc.MustMarshalJSON(extractCrosschainGenesisState(t, rawState, cdc, r))
 }
 
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.

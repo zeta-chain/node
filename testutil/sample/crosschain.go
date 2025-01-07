@@ -2,6 +2,7 @@ package sample
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -17,6 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -365,6 +367,8 @@ func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteInbound {
 // InboundVoteFromRand creates a simulated inbound vote message. This function uses the provided source of randomness to generate the vote
 func InboundVoteFromRand(from, to int64, r *rand.Rand, asset string) types.MsgVoteInbound {
 	coinType := CoinTypeFromRand(r)
+	_, _, memo := MemoFromRand(r)
+
 	return types.MsgVoteInbound{
 		Creator:            "",
 		Sender:             EthAddressFromRand(r).String(),
@@ -372,7 +376,7 @@ func InboundVoteFromRand(from, to int64, r *rand.Rand, asset string) types.MsgVo
 		Receiver:           EthAddressFromRand(r).String(),
 		ReceiverChain:      to,
 		Amount:             math.NewUint(r.Uint64()),
-		Message:            EthAddressFromRand(r).String(),
+		Message:            memo,
 		InboundBlockHeight: r.Uint64(),
 		CallOptions: &types.CallOptions{
 			GasLimit: 1000000000,
@@ -395,6 +399,13 @@ func CoinTypeFromRand(r *rand.Rand) coin.CoinType {
 	coinTypes := []coin.CoinType{coin.CoinType_Gas, coin.CoinType_ERC20, coin.CoinType_Zeta}
 	coinType := coinTypes[r.Intn(len(coinTypes))]
 	return coinType
+}
+
+func MemoFromRand(r *rand.Rand) (common.Address, []byte, string) {
+	randomMemo := common.BytesToAddress([]byte{0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0x12, 0x34, 0x56, 0x78}).Hex()
+	randomData := []byte(StringRandom(r, 10))
+	memoHex := hex.EncodeToString(append(common.FromHex(randomMemo), randomData...))
+	return common.HexToAddress(randomMemo), randomData, memoHex
 }
 
 func CCTXfromRand(r *rand.Rand,
