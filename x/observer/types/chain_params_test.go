@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	. "gopkg.in/check.v1"
@@ -202,7 +201,7 @@ func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {
 	require.NotNil(s.T(), err)
 
 	copy = *params
-	copy.BallotThreshold = sdk.Dec{}
+	copy.BallotThreshold = sdkmath.LegacyDec{}
 	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 	copy.BallotThreshold = sdkmath.LegacyMustNewDecFromStr("1.2")
@@ -213,7 +212,7 @@ func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {
 	require.Nil(s.T(), err)
 
 	copy = *params
-	copy.MinObserverDelegation = sdk.Dec{}
+	copy.MinObserverDelegation = sdkmath.LegacyDec{}
 	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 	copy.MinObserverDelegation = sdkmath.LegacyMustNewDecFromStr("0.9")

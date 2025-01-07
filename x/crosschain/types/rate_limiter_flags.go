@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	coin "github.com/zeta-chain/node/pkg/coin"
@@ -41,7 +40,7 @@ func (r RateLimiterFlags) Validate() error {
 }
 
 // GetConversionRate returns the conversion rate for the given zrc20
-func (r RateLimiterFlags) GetConversionRate(zrc20 string) (sdk.Dec, bool) {
+func (r RateLimiterFlags) GetConversionRate(zrc20 string) (sdkmath.LegacyDec, bool) {
 	for _, conversion := range r.Conversions {
 		if conversion.Zrc20 == zrc20 {
 			return conversion.Rate, true
@@ -80,7 +79,7 @@ func ConvertCctxValueToAzeta(
 	gasAssetRateMap map[int64]AssetRate,
 	erc20AssetRateMap map[int64]map[string]AssetRate,
 ) sdkmath.Int {
-	var rate sdk.Dec
+	var rate sdkmath.LegacyDec
 	var decimals uint32
 	switch cctx.InboundParams.CoinType {
 	case coin.CoinType_Zeta:

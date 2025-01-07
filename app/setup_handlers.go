@@ -1,11 +1,11 @@
 package app
 
 import (
+	"context"
 	"os"
 
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"golang.org/x/mod/semver"
 
@@ -72,7 +72,7 @@ func SetupHandlers(app *App) {
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		upgradeHandlerVersion,
-		func(ctx sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		func(ctx context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 			app.Logger().Info("Running upgrade handler for " + upgradeHandlerVersion)
 
 			var err error

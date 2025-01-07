@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -33,7 +32,7 @@ func GetMinObserverDelegation() (sdkmath.Int, bool) {
 	return sdkmath.NewIntFromString(MinObserverDelegation)
 }
 
-func GetMinObserverDelegationDec() (sdk.Dec, error) {
+func GetMinObserverDelegationDec() (sdkmath.LegacyDec, error) {
 	return sdkmath.LegacyNewDecFromStr(MinObserverDelegation)
 }
 

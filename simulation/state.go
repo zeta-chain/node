@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -314,7 +315,7 @@ func AppStateRandomizedFn(
 	}
 
 	// set the default power reduction to be one less than the initial stake so that all randomised validators are part of the validator set
-	sdk.DefaultPowerReduction = initialStake.Sub(sdk.OneInt())
+	sdk.DefaultPowerReduction = initialStake.Sub(sdkmath.OneInt())
 
 	fmt.Printf(
 		`Selected randomly generated parameters for simulated genesis:

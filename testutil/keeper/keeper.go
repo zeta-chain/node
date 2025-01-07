@@ -72,7 +72,7 @@ import (
 )
 
 // NewContext creates a new sdk.Context for testing purposes with initialized header
-func NewContext(stateStore sdk.MultiStore) sdk.Context {
+func NewContext(stateStore storetypes.MultiStore) sdk.Context {
 	header := tmproto.Header{
 		Height:  1,
 		ChainID: "test_7000-1",

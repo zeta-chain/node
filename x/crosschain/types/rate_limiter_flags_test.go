@@ -7,7 +7,6 @@ import (
 
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -136,7 +135,7 @@ func TestRateLimiterFlags_GetConversionRate(t *testing.T) {
 		name       string
 		flags      types.RateLimiterFlags
 		zrc20      string
-		expected   sdk.Dec
+		expected   sdkmath.LegacyDec
 		shouldFind bool
 	}{
 		{
@@ -345,7 +344,7 @@ func TestConvertCctxValue(t *testing.T) {
 				// set rate to nil
 				nilAssetRateMap, _ := types.BuildAssetRateMapFromList(assetRateList)
 				nilRate := nilAssetRateMap[ethChainID]
-				nilRate.Rate = sdk.Dec{}
+				nilRate.Rate = sdkmath.LegacyDec{}
 				nilAssetRateMap[ethChainID] = nilRate
 				return nilAssetRateMap
 			}(),

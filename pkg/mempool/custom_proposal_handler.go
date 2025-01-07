@@ -70,7 +70,7 @@ func (h *CustomProposalHandler) SetTxSelector(ts TxSelector) {
 // requested from CometBFT will simply be returned, which, by default, are in
 // FIFO order.
 func (h *CustomProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHandler {
-	return func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 		var maxBlockGas uint64
 		if b := ctx.ConsensusParams().Block; b != nil {
 			// #nosec G115 range checked, cosmos-sdk forked code
@@ -96,7 +96,7 @@ func (h *CustomProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 				}
 			}
 
-			return abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs()}
+			return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs()}, nil
 		}
 
 		iterator := h.mempool.Select(ctx, req.Txs)
@@ -145,7 +145,7 @@ func (h *CustomProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 			if err != nil {
 				err := h.mempool.Remove(memTx)
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-					panic(err)
+					return nil, err
 				}
 			} else {
 				// #nosec G115 range checked, cosmos-sdk forked code
@@ -175,7 +175,7 @@ func (h *CustomProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 			iterator = iterator.Next()
 		}
 
-		return abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs()}
+		return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs()}, nil
 	}
 }
 
@@ -198,7 +198,7 @@ func (h *CustomProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHand
 		return NoOpProcessProposal()
 	}
 
-	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
+	return func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 		var totalTxGas uint64
 
 		var maxBlockGas int64
@@ -209,7 +209,7 @@ func (h *CustomProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHand
 		for _, txBytes := range req.Txs {
 			tx, err := h.txVerifier.ProcessProposalVerifyTx(txBytes)
 			if err != nil {
-				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 			}
 
 			if maxBlockGas > 0 {
@@ -220,28 +220,28 @@ func (h *CustomProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHand
 
 				// #nosec G115 range checked, cosmos-sdk forked code
 				if totalTxGas > uint64(maxBlockGas) {
-					return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+					return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 				}
 			}
 		}
 
-		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
 	}
 }
 
 // NoOpPrepareProposal defines a no-op PrepareProposal handler. It will always
 // return the transactions sent by the client's request.
 func NoOpPrepareProposal() sdk.PrepareProposalHandler {
-	return func(_ sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
-		return abci.ResponsePrepareProposal{Txs: req.Txs}
+	return func(_ sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+		return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
 	}
 }
 
 // NoOpProcessProposal defines a no-op ProcessProposal Handler. It will always
 // return ACCEPT.
 func NoOpProcessProposal() sdk.ProcessProposalHandler {
-	return func(_ sdk.Context, _ abci.RequestProcessProposal) abci.ResponseProcessProposal {
-		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+	return func(_ sdk.Context, _ *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
 	}
 }
 

@@ -116,7 +116,8 @@ func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_NoopMempool() {
 	}
 
 	// since it is noop mempool, all txs returned in fifo order
-	resp := prepareProposalHandler(s.ctx, req)
+	resp, err := prepareProposalHandler(s.ctx, &req)
+	s.Require().NoError(err)
 	for i, tx := range resp.Txs {
 		require.Equal(s.T(), tx, testTxs[i].bz)
 	}
@@ -125,9 +126,10 @@ func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_NoopMempool() {
 	for i, v := range req.Txs {
 		app.EXPECT().ProcessProposalVerifyTx(v).Return(testTxs[i].tx, nil).AnyTimes()
 	}
-	resp2 := processProposalHandler(s.ctx, abci.RequestProcessProposal{
+	resp2, err := processProposalHandler(s.ctx, &abci.RequestProcessProposal{
 		Txs: resp.Txs,
 	})
+	s.Require().NoError(err)
 	s.Require().Equal(resp2.Status, abci.ResponseProcessProposal_ACCEPT)
 }
 
@@ -325,7 +327,8 @@ func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_PriorityNonceMempoolTxSel
 				tc.req.Txs = append(tc.req.Txs, v.bz)
 			}
 
-			resp := prepareProposalHandler(tc.ctx, tc.req)
+			resp, err := prepareProposalHandler(tc.ctx, &tc.req)
+			s.Require().NoError(err)
 			respTxIndexes := []int{}
 			for _, tx := range resp.Txs {
 				for i, v := range testTxs {
@@ -344,7 +347,8 @@ func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_PriorityNonceMempoolTxSel
 			for i, v := range req.Txs {
 				app.EXPECT().ProcessProposalVerifyTx(v).Return(tc.txInputs[i].tx, nil).AnyTimes()
 			}
-			resp2 := processProposalHandler(tc.ctx, req)
+			resp2, err := processProposalHandler(tc.ctx, &req)
+			s.Require().NoError(err)
 			s.Require().Equal(resp2.Status, abci.ResponseProcessProposal_ACCEPT)
 		})
 	}

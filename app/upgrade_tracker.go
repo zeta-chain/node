@@ -1,19 +1,19 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path"
 	"strconv"
 
 	storetypes "cosmossdk.io/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 const incrementalUpgradeTrackerStateFile = "incrementalupgradetracker"
 
-type upgradeHandlerFn func(ctx sdk.Context, vm module.VersionMap) (module.VersionMap, error)
+type upgradeHandlerFn func(ctx context.Context, vm module.VersionMap) (module.VersionMap, error)
 
 type upgradeTrackerItem struct {
 	// Monotonically increasing index to order and track migrations. Typically the current unix epoch timestamp.

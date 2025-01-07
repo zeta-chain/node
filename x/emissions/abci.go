@@ -185,7 +185,7 @@ func DistributeObserverRewards(
 
 // DistributeTSSRewards trasferes the allocated rewards to the Undistributed Tss Rewards Pool.
 // This is done so that the reserves factor is properly calculated in the next block
-func DistributeTSSRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.BankKeeper) error {
+func DistributeTSSRewards(ctx sdk.Context, amount sdkmath.Int, bankKeeper types.BankKeeper) error {
 	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedTSSRewardsPool, coin)
 }

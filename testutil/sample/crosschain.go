@@ -11,7 +11,6 @@ import (
 
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -61,7 +60,7 @@ func CustomAssetRate(
 	asset string,
 	decimals uint32,
 	coinType coin.CoinType,
-	rate sdk.Dec,
+	rate sdkmath.LegacyDec,
 ) types.AssetRate {
 	return types.AssetRate{
 		ChainId:  chainID,

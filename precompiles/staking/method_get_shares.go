@@ -40,7 +40,11 @@ func (c *Contract) GetShares(
 		return nil, err
 	}
 
-	delegation := c.stakingKeeper.Delegation(ctx, sdk.AccAddress(stakerAddress.Bytes()), validator)
+	delegation, err := c.stakingKeeper.Delegation(ctx, sdk.AccAddress(stakerAddress.Bytes()), validator)
+	if err != nil {
+		return nil, err
+	}
+
 	shares := big.NewInt(0)
 	if delegation != nil {
 		shares = delegation.GetShares().BigInt()

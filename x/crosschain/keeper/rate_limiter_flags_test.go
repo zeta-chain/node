@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -23,7 +22,7 @@ func createForeignCoinAndAssetRate(
 	chainID int64,
 	decimals uint32,
 	coinType coin.CoinType,
-	rate sdk.Dec,
+	rate sdkmath.LegacyDec,
 ) (fungibletypes.ForeignCoins, types.AssetRate) {
 	// create foreign coin
 	foreignCoin := sample.ForeignCoins(t, zrc20Addr)
