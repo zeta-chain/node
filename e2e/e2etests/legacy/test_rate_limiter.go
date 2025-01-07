@@ -6,11 +6,11 @@ import (
 	"math/big"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"

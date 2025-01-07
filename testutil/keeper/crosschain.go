@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
+	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/rootmulti"
 	storetypes "cosmossdk.io/store/types"
 	tmdb "github.com/cosmos/cosmos-db"
@@ -100,7 +101,7 @@ func CrosschainKeeperWithMocks(
 	// Initialize local store
 	db := tmdb.NewMemDB()
 	logger := log.NewNopLogger()
-	stateStore := rootmulti.NewStore(db, logger)
+	stateStore := rootmulti.NewStore(db, logger, metrics.NewNoOpMetrics())
 	cdc := NewCodec()
 
 	// Create regular keepers

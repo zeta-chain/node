@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethchains "github.com/ethereum/go-ethereum/common"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 )

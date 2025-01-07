@@ -6,11 +6,13 @@ import (
 
 	"math/big"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/store"
 	tmdb "github.com/cosmos/cosmos-db"
 	"github.com/holiman/uint256"
 
+	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -208,7 +210,7 @@ func setup(t *testing.T) (sdk.Context, *Contract, abi.ABI, keeper.SDKKeepers, *v
 	// Get sdk keepers initialized with this state and the context.
 	cdc := keeper.NewCodec()
 	db := tmdb.NewMemDB()
-	stateStore := store.NewCommitMultiStore(db)
+	stateStore := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	keys, memKeys, tkeys, allKeys := keeper.StoreKeys()
 
 	sdkKeepers := keeper.NewSDKKeepersWithKeys(cdc, keys, memKeys, tkeys, allKeys)

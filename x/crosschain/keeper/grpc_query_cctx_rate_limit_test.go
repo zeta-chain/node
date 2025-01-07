@@ -250,9 +250,15 @@ func TestKeeper_RateLimiterInput(t *testing.T) {
 			expectedCctxsPending: keeper.SortCctxsByHeightAndChainID(
 				append(append([]*types.CrossChainTx{}, ethPendingCctxs[100:200]...), btcPendingCctxs[100:200]...),
 			),
-			expectedTotalPending:            400,
-			expectedPastCctxsValue:          sdkmath.NewInt(1200).Mul(sdkmath.NewInt(1e18)).String(), // 400 * (2.5 + 0.5) ZETA
-			expectedPendingCctxsValue:       sdkmath.NewInt(300).Mul(sdkmath.NewInt(1e18)).String(),  // 100 * (2.5 + 0.5) ZETA
+			expectedTotalPending: 400,
+			expectedPastCctxsValue: sdkmath.NewInt(1200).
+				Mul(sdkmath.NewInt(1e18)).
+				String(),
+			// 400 * (2.5 + 0.5) ZETA
+			expectedPendingCctxsValue: sdkmath.NewInt(300).
+				Mul(sdkmath.NewInt(1e18)).
+				String(),
+			// 100 * (2.5 + 0.5) ZETA
 			expectedLowestPendingCctxHeight: 1100,
 		},
 		{
@@ -299,7 +305,10 @@ func TestKeeper_RateLimiterInput(t *testing.T) {
 				Mul(sdkmath.NewInt(1e18)).
 				String(),
 			// 400 * 0.5 ZETA, ignore Eth chain reverted cctxs
-			expectedPendingCctxsValue:       sdkmath.NewInt(300).Mul(sdkmath.NewInt(1e18)).String(), // 100 * (2.5 + 0.5) ZETA
+			expectedPendingCctxsValue: sdkmath.NewInt(300).
+				Mul(sdkmath.NewInt(1e18)).
+				String(),
+			// 100 * (2.5 + 0.5) ZETA
 			expectedLowestPendingCctxHeight: 1100,
 		},
 		{
@@ -341,9 +350,15 @@ func TestKeeper_RateLimiterInput(t *testing.T) {
 			expectedCctxsPending: keeper.SortCctxsByHeightAndChainID(
 				append(append([]*types.CrossChainTx{}, ethPendingCctxs[100:200]...), btcPendingCctxs[100:200]...),
 			),
-			expectedTotalPending:            400,
-			expectedPastCctxsValue:          sdkmath.NewInt(3297).Mul(sdkmath.NewInt(1e18)).String(), // 1099 * (2.5 + 0.5) ZETA
-			expectedPendingCctxsValue:       sdkmath.NewInt(300).Mul(sdkmath.NewInt(1e18)).String(),  // 100 * (2.5 + 0.5) ZETA
+			expectedTotalPending: 400,
+			expectedPastCctxsValue: sdkmath.NewInt(3297).
+				Mul(sdkmath.NewInt(1e18)).
+				String(),
+			// 1099 * (2.5 + 0.5) ZETA
+			expectedPendingCctxsValue: sdkmath.NewInt(300).
+				Mul(sdkmath.NewInt(1e18)).
+				String(),
+			// 100 * (2.5 + 0.5) ZETA
 			expectedLowestPendingCctxHeight: 1100,
 		},
 		{
@@ -383,9 +398,15 @@ func TestKeeper_RateLimiterInput(t *testing.T) {
 			expectedCctxsPending: keeper.SortCctxsByHeightAndChainID(
 				append(append([]*types.CrossChainTx{}, ethPendingCctxs...), btcPendingCctxs...),
 			),
-			expectedTotalPending:            400,
-			expectedPastCctxsValue:          sdkmath.NewInt(900).Mul(sdkmath.NewInt(1e18)).String(), // 300 * (2.5 + 0.5) ZETA
-			expectedPendingCctxsValue:       sdkmath.NewInt(600).Mul(sdkmath.NewInt(1e18)).String(), // 200 * (2.5 + 0.5) ZETA
+			expectedTotalPending: 400,
+			expectedPastCctxsValue: sdkmath.NewInt(900).
+				Mul(sdkmath.NewInt(1e18)).
+				String(),
+			// 300 * (2.5 + 0.5) ZETA
+			expectedPendingCctxsValue: sdkmath.NewInt(600).
+				Mul(sdkmath.NewInt(1e18)).
+				String(),
+			// 200 * (2.5 + 0.5) ZETA
 			expectedLowestPendingCctxHeight: 1000,
 		},
 		{
@@ -428,9 +449,15 @@ func TestKeeper_RateLimiterInput(t *testing.T) {
 			expectedCctxsPending: keeper.SortCctxsByHeightAndChainID(
 				append(append([]*types.CrossChainTx{}, ethPendingCctxs[100:150]...), btcPendingCctxs[100:150]...),
 			),
-			expectedTotalPending:            400,
-			expectedPastCctxsValue:          sdkmath.NewInt(1200).Mul(sdkmath.NewInt(1e18)).String(), // 400 * (2.5 + 0.5) ZETA
-			expectedPendingCctxsValue:       sdkmath.NewInt(300).Mul(sdkmath.NewInt(1e18)).String(),  // 100 * (2.5 + 0.5) ZETA
+			expectedTotalPending: 400,
+			expectedPastCctxsValue: sdkmath.NewInt(1200).
+				Mul(sdkmath.NewInt(1e18)).
+				String(),
+			// 400 * (2.5 + 0.5) ZETA
+			expectedPendingCctxsValue: sdkmath.NewInt(300).
+				Mul(sdkmath.NewInt(1e18)).
+				String(),
+			// 100 * (2.5 + 0.5) ZETA
 			expectedLowestPendingCctxHeight: 1100,
 		},
 	}
@@ -797,9 +824,11 @@ func TestKeeper_ListPendingCctxWithinRateLimit(t *testing.T) {
 				append([]*types.CrossChainTx{}, ethPendingRevertCctxs...),
 				btcPendingCctxs...),
 			expectedTotalPending:   400,
-			expectedWithdrawWindow: 500,                           // the sliding window
-			expectedWithdrawRate:   sdkmath.NewInt(5e17).String(), // 0.5 ZETA per block, only btc cctxs should be counted
-			rateLimitExceeded:      false,
+			expectedWithdrawWindow: 500, // the sliding window
+			expectedWithdrawRate: sdkmath.NewInt(5e17).
+				String(),
+			// 0.5 ZETA per block, only btc cctxs should be counted
+			rateLimitExceeded: false,
 		},
 		{
 			name: "can loop backwards all the way to endNonce 0",

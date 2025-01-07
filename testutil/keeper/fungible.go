@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
+	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/rootmulti"
 	storetypes "cosmossdk.io/store/types"
 	tmdb "github.com/cosmos/cosmos-db"
@@ -85,7 +86,7 @@ func FungibleKeeperWithMocks(
 
 	// Initialize local store
 	db := tmdb.NewMemDB()
-	stateStore := rootmulti.NewStore(db, log.NewNopLogger())
+	stateStore := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	cdc := NewCodec()
 
 	// Create regular keepers

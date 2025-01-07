@@ -22,7 +22,6 @@ import (
 	"strconv"
 
 	sdkmath "cosmossdk.io/math"
-
 	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -209,10 +209,12 @@ func Test_ApplyRateLimiter(t *testing.T) {
 			window: 50,
 			rate:   sdkmath.NewUint(1e18), // 1 ZETA/block
 			input: ratelimiter.Input{
-				Height:                  100,
-				CctxsMissed:             allCctxsMissed,
-				CctxsPending:            allCctxsPending,
-				PastCctxsValue:          sdkmath.NewInt(0),                            // no past cctx in height range [51, 100]
+				Height:       100,
+				CctxsMissed:  allCctxsMissed,
+				CctxsPending: allCctxsPending,
+				PastCctxsValue: sdkmath.NewInt(
+					0,
+				), // no past cctx in height range [51, 100]
 				PendingCctxsValue:       sdkmath.NewInt(90).Mul(sdkmath.NewInt(1e18)), // 90 * 1 ZETA
 				LowestPendingCctxHeight: 11,
 			},
@@ -231,10 +233,12 @@ func Test_ApplyRateLimiter(t *testing.T) {
 			window: 100,
 			rate:   sdkmath.NewUint(1e18), // 1 ZETA/block
 			input: ratelimiter.Input{
-				Height:                  100,
-				CctxsMissed:             allCctxsMissed,
-				CctxsPending:            allCctxsPending,
-				PastCctxsValue:          sdkmath.NewInt(11).Mul(sdkmath.NewInt(1e18)), // 11 ZETA, increased value by 1 ZETA
+				Height:       100,
+				CctxsMissed:  allCctxsMissed,
+				CctxsPending: allCctxsPending,
+				PastCctxsValue: sdkmath.NewInt(11).
+					Mul(sdkmath.NewInt(1e18)),
+				// 11 ZETA, increased value by 1 ZETA
 				PendingCctxsValue:       sdkmath.NewInt(90).Mul(sdkmath.NewInt(1e18)), // 90 * 1 ZETA
 				LowestPendingCctxHeight: 11,
 			},
@@ -255,11 +259,15 @@ func Test_ApplyRateLimiter(t *testing.T) {
 			window: 50,
 			rate:   sdkmath.NewUint(1e18), // 1 ZETA/block
 			input: ratelimiter.Input{
-				Height:                  100,
-				CctxsMissed:             allCctxsMissed,
-				CctxsPending:            allCctxsPending,
-				PastCctxsValue:          sdkmath.NewInt(0),                            // no past cctx in height range [51, 100]
-				PendingCctxsValue:       sdkmath.NewInt(91).Mul(sdkmath.NewInt(1e18)), // 91 ZETA, increased value by 1 ZETA
+				Height:       100,
+				CctxsMissed:  allCctxsMissed,
+				CctxsPending: allCctxsPending,
+				PastCctxsValue: sdkmath.NewInt(
+					0,
+				), // no past cctx in height range [51, 100]
+				PendingCctxsValue: sdkmath.NewInt(91).
+					Mul(sdkmath.NewInt(1e18)),
+				// 91 ZETA, increased value by 1 ZETA
 				LowestPendingCctxHeight: 11,
 			},
 			output: ratelimiter.Output{
@@ -280,11 +288,15 @@ func Test_ApplyRateLimiter(t *testing.T) {
 			window: 50,
 			rate:   sdkmath.NewUint(1e18), // 1 ZETA/block
 			input: ratelimiter.Input{
-				Height:                  101,
-				CctxsMissed:             allCctxsMissed,
-				CctxsPending:            allCctxsPending,
-				PastCctxsValue:          sdkmath.NewInt(0),                            // no past cctx in height range [52, 101]
-				PendingCctxsValue:       sdkmath.NewInt(91).Mul(sdkmath.NewInt(1e18)), // 91 ZETA, increased value by 1 ZETA
+				Height:       101,
+				CctxsMissed:  allCctxsMissed,
+				CctxsPending: allCctxsPending,
+				PastCctxsValue: sdkmath.NewInt(
+					0,
+				), // no past cctx in height range [52, 101]
+				PendingCctxsValue: sdkmath.NewInt(91).
+					Mul(sdkmath.NewInt(1e18)),
+				// 91 ZETA, increased value by 1 ZETA
 				LowestPendingCctxHeight: 11,
 			},
 			output: ratelimiter.Output{

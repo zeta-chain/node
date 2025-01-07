@@ -75,7 +75,11 @@ func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
-func (k Keeper) CleanSlashedValidator(ctx context.Context, valAddress sdk.ValAddress, fraction sdkmath.LegacyDec) error {
+func (k Keeper) CleanSlashedValidator(
+	ctx context.Context,
+	valAddress sdk.ValAddress,
+	fraction sdkmath.LegacyDec,
+) error {
 	validator, err := k.stakingKeeper.GetValidator(ctx, valAddress)
 	if err != nil {
 		return err

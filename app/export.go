@@ -152,11 +152,13 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 		if err != nil {
 			panic(err)
 		}
-		err = app.DistrKeeper.Hooks().BeforeDelegationCreated(ctx, sdk.MustAccAddressFromBech32(del.GetDelegatorAddr()), valAddr)
+		err = app.DistrKeeper.Hooks().
+			BeforeDelegationCreated(ctx, sdk.MustAccAddressFromBech32(del.GetDelegatorAddr()), valAddr)
 		if err != nil {
 			panic(err)
 		}
-		err = app.DistrKeeper.Hooks().AfterDelegationModified(ctx, sdk.MustAccAddressFromBech32(del.GetDelegatorAddr()), valAddr)
+		err = app.DistrKeeper.Hooks().
+			AfterDelegationModified(ctx, sdk.MustAccAddressFromBech32(del.GetDelegatorAddr()), valAddr)
 		if err != nil {
 			panic(err)
 		}

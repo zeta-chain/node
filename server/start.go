@@ -154,12 +154,10 @@ which accepts a path for the resulting pprof file.
 
 			// amino is needed here for backwards compatibility of REST routes
 			err = startInProcess(serverCtx, clientCtx, opts)
-			errCode, ok := err.(server.ErrorCode)
-			if !ok {
+			if err != nil {
 				return err
 			}
 
-			serverCtx.Logger.Debug(fmt.Sprintf("received quit signal: %d", errCode.Code))
 			return nil
 		},
 	}
@@ -200,8 +198,6 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().String(srvflags.GRPCAddress, serverconfig.DefaultGRPCAddress, "the gRPC server address to listen on")
 	cmd.Flags().
 		Bool(srvflags.GRPCWebEnable, true, "Define if the gRPC-Web server should be enabled. (Note: gRPC must also be enabled.)")
-	cmd.Flags().
-		String(srvflags.GRPCWebAddress, serverconfig.DefaultGRPCWebAddress, "The gRPC-Web server address to listen on")
 
 	cmd.Flags().Bool(srvflags.RPCEnable, false, "Defines if Cosmos-sdk REST server should be enabled")
 	cmd.Flags().

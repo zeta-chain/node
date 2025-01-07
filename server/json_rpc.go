@@ -20,19 +20,17 @@ import (
 	"net/http"
 	"time"
 
-	"golang.org/x/exp/slog"
-
-	"github.com/gorilla/mux"
-	"github.com/rs/cors"
-
+	tmlog "cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	ethlog "github.com/ethereum/go-ethereum/log"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
-	"github.com/zeta-chain/node/rpc"
-
-	tmlog "cosmossdk.io/log"
+	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 	ethermint "github.com/zeta-chain/ethermint/types"
+	"golang.org/x/exp/slog"
+
+	"github.com/zeta-chain/node/rpc"
 	"github.com/zeta-chain/node/server/config"
 )
 

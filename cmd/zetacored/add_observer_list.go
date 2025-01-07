@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -22,7 +23,6 @@ import (
 	ethermint "github.com/zeta-chain/ethermint/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/crypto"
