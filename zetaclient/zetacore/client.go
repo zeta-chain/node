@@ -8,6 +8,7 @@ import (
 
 	cometbftrpc "github.com/cometbft/cometbft/rpc/client"
 	cometbfthttp "github.com/cometbft/cometbft/rpc/client/http"
+	ctypes "github.com/cometbft/cometbft/types"
 	cosmosclient "github.com/cosmos/cosmos-sdk/client"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/pkg/errors"
@@ -19,6 +20,7 @@ import (
 	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/fanout"
 	zetacorerpc "github.com/zeta-chain/node/pkg/rpc"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/config"
@@ -46,6 +48,9 @@ type Client struct {
 	keys        keyinterfaces.ObserverKeys
 	chainID     string
 	chain       chains.Chain
+
+	// blocksFanout that receives new block events from Zetacore via websockets
+	blocksFanout *fanout.FanOut[ctypes.EventDataNewBlock]
 
 	mu sync.RWMutex
 }
