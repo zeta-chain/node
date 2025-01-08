@@ -355,6 +355,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			//	e2etests.TestPrecompilesDistributeNonZRC20Name,
 			//	e2etests.TestPrecompilesDistributeThroughContractName,
 			//)
+			// prevent lint error
+			_ = precompiledContractTests
 		} else {
 			logger.Print("⚠️ partial precompiled run (unclean state)")
 		}
