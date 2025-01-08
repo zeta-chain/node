@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## Unreleased
+
+### Features
+
+* [3306](https://github.com/zeta-chain/node/pull/3306) - add support for Bitcoin RBF (Replace-By-Fee)
+
+### Tests
+
+## Refactor
+
+### Fixes
+
 ## v25.0.0
 
 ### Features
