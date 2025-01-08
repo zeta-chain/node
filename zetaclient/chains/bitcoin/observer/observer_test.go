@@ -335,8 +335,7 @@ func newTestSuite(t *testing.T, chain chains.Chain, dbPath string) *testSuite {
 		tss,
 		database,
 		base.DefaultLogger(),
-		//base.Logger{Std: log, Compliance: log},
-		nil,
+		&metrics.TelemetryServer{},
 	)
 	require.NoError(t, err)
 

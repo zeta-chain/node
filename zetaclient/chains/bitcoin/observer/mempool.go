@@ -9,6 +9,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/common"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
@@ -34,11 +35,17 @@ func NewLastStuckOutbound(nonce uint64, tx *btcutil.Tx, stuckFor time.Duration) 
 	}
 }
 
+// LastTxFinder is a function type for finding the last Bitcoin outbound tx.
+type LastTxFinder func(ctx context.Context, ob *Observer) (*btcutil.Tx, uint64, error)
+
+// StuckTxChecker is a function type for checking if a tx is stuck in the mempool.
+type StuckTxChecker func(client interfaces.BTCRPCClient, txHash string, maxWaitBlocks int64) (bool, time.Duration, error)
+
 // WatchMempoolTxs monitors pending outbound txs in the Bitcoin mempool.
 func (ob *Observer) WatchMempoolTxs(ctx context.Context) error {
 	task := func(ctx context.Context, _ *ticker.Ticker) error {
-		if err := ob.refreshLastStuckOutbound(ctx); err != nil {
-			ob.Logger().Chain.Err(err).Msg("refreshLastStuckOutbound error")
+		if err := ob.RefreshLastStuckOutbound(ctx, GetLastOutbound, rpc.IsTxStuckInMempool); err != nil {
+			ob.Logger().Chain.Err(err).Msg("RefreshLastStuckOutbound error")
 		}
 		return nil
 	}
@@ -52,25 +59,29 @@ func (ob *Observer) WatchMempoolTxs(ctx context.Context) error {
 	)
 }
 
-// refreshLastStuckOutbound refreshes the information about the last stuck tx in the Bitcoin mempool.
-func (ob *Observer) refreshLastStuckOutbound(ctx context.Context) error {
-	// log fields
-	lf := map[string]any{
-		logs.FieldMethod: "refreshLastStuckOutbound",
+// RefreshLastStuckOutbound refreshes the information about the last stuck tx in the Bitcoin mempool.
+func (ob *Observer) RefreshLastStuckOutbound(
+	ctx context.Context,
+	txFinder LastTxFinder,
+	txChecker StuckTxChecker,
+) error {
+	// step 1: get last TSS transaction
+	lastTx, lastNonce, err := txFinder(ctx, ob)
+	if err != nil {
+		return errors.Wrap(err, "unable to find last outbound")
 	}
 
-	// step 1: get last TSS transaction
-	lastTx, lastNonce, err := ob.GetLastOutbound(ctx)
-	if err != nil {
-		return errors.Wrap(err, "GetLastOutbound failed")
-	}
+	// log fields
 	txHash := lastTx.MsgTx().TxID()
-	lf[logs.FieldNonce] = lastNonce
-	lf[logs.FieldTx] = txHash
+	lf := map[string]any{
+		logs.FieldMethod: "RefreshLastStuckOutbound",
+		logs.FieldNonce:  lastNonce,
+		logs.FieldTx:     txHash,
+	}
 	ob.logger.Outbound.Info().Fields(lf).Msg("checking last TSS outbound")
 
 	// step 2: is last tx stuck in mempool?
-	stuck, stuckFor, err := rpc.IsTxStuckInMempool(ob.btcClient, txHash, rpc.PendingTxFeeBumpWaitBlocks)
+	stuck, stuckFor, err := txChecker(ob.btcClient, txHash, rpc.PendingTxFeeBumpWaitBlocks)
 	if err != nil {
 		return errors.Wrapf(err, "cannot determine if tx %s nonce %d is stuck", txHash, lastNonce)
 	}
@@ -107,7 +118,7 @@ func (ob *Observer) refreshLastStuckOutbound(ctx context.Context) error {
 //  2. txs that had been broadcasted by this observer self.
 //
 // Once 2/3+ of the observers reach consensus on last outbound, RBF will start.
-func (ob *Observer) GetLastOutbound(ctx context.Context) (*btcutil.Tx, uint64, error) {
+func GetLastOutbound(ctx context.Context, ob *Observer) (*btcutil.Tx, uint64, error) {
 	var (
 		lastNonce uint64
 		lastHash  string
@@ -121,13 +132,11 @@ func (ob *Observer) GetLastOutbound(ctx context.Context) (*btcutil.Tx, uint64, e
 
 	// source 1:
 	// pick highest nonce tx from included txs
-	lastNonce = pendingNonce - 1
-	txResult := ob.GetIncludedTx(lastNonce)
-	if txResult == nil {
-		// should NEVER happen by design
-		return nil, 0, errors.New("last included tx not found")
+	txResult := ob.GetIncludedTx(pendingNonce - 1)
+	if txResult != nil {
+		lastNonce = pendingNonce - 1
+		lastHash = txResult.TxID
 	}
-	lastHash = txResult.TxID
 
 	// source 2:
 	// pick highest nonce tx from broadcasted txs
@@ -145,7 +154,13 @@ func (ob *Observer) GetLastOutbound(ctx context.Context) (*btcutil.Tx, uint64, e
 		}
 	}
 
-	// ensure this nonce is the REAL last transaction
+	// stop if last tx not found, and it is okay
+	// this individual zetaclient lost track of the last tx for some reason (offline, db reset, etc.)
+	if lastNonce == 0 {
+		return nil, 0, errors.New("last tx not found")
+	}
+
+	// ensure this tx is the REAL last transaction
 	// cross-check the latest UTXO list, the nonce-mark utxo exists ONLY for last nonce
 	if ob.FetchUTXOs(ctx) != nil {
 		return nil, 0, errors.New("FetchUTXOs failed")
