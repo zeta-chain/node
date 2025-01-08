@@ -112,7 +112,7 @@ func Test_BroadcastOutbound(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// setup s and observer
+			// setup signer and observer
 			s := newTestSuite(t, tt.chain)
 			observer := s.getNewObserver(t)
 

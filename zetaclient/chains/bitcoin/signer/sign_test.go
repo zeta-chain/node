@@ -1,24 +1,29 @@
-package signer
+package signer_test
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
 
+	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
 func TestAddWithdrawTxOutputs(t *testing.T) {
 	// Create test signer and receiver address
-	signer := NewSigner(
+	signer := signer.NewSigner(
 		chains.BitcoinMainnet,
 		mocks.NewBTCRPCClient(t),
 		mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet),
@@ -177,6 +182,75 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				require.True(t, reflect.DeepEqual(tt.txout, tt.tx.TxOut))
+			}
+		})
+	}
+}
+
+func Test_SignTx(t *testing.T) {
+	tests := []struct {
+		name    string
+		chain   chains.Chain
+		net     *chaincfg.Params
+		inputs  []float64
+		outputs []int64
+		height  uint64
+		nonce   uint64
+	}{
+		{
+			name:  "should sign tx successfully",
+			chain: chains.BitcoinMainnet,
+			net:   &chaincfg.MainNetParams,
+			inputs: []float64{
+				0.0001,
+				0.0002,
+			},
+			outputs: []int64{
+				5000,
+				20000,
+			},
+			nonce: 100,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// setup signer
+			s := newTestSuite(t, tt.chain)
+			address, err := s.TSS().PubKey().AddressBTC(tt.chain.ChainId)
+			require.NoError(t, err)
+
+			// create tx msg
+			tx := wire.NewMsgTx(wire.TxVersion)
+
+			// add inputs
+			utxos := []btcjson.ListUnspentResult{}
+			for i, amount := range tt.inputs {
+				utxos = append(utxos, btcjson.ListUnspentResult{
+					TxID:    sample.BtcHash().String(),
+					Vout:    uint32(i),
+					Address: address.EncodeAddress(),
+					Amount:  amount,
+				})
+			}
+			inAmounts, err := s.AddTxInputs(tx, utxos)
+			require.NoError(t, err)
+			require.Len(t, inAmounts, len(tt.inputs))
+
+			// add outputs
+			for _, amount := range tt.outputs {
+				pkScript := sample.BtcAddressP2WPKHScript(t, tt.net)
+				tx.AddTxOut(wire.NewTxOut(amount, pkScript))
+			}
+
+			// sign tx
+			ctx := context.Background()
+			err = s.SignTx(ctx, tx, inAmounts, tt.height, tt.nonce)
+			require.NoError(t, err)
+
+			// check tx signature
+			for i := range tx.TxIn {
+				require.Len(t, tx.TxIn[i].Witness, 2)
 			}
 		})
 	}

@@ -10,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -18,7 +17,7 @@ const (
 	// rbfTxInSequenceNum is the sequence number used to signal an opt-in full-RBF (Replace-By-Fee) transaction
 	// Setting sequenceNum to "1" effectively makes the transaction timelocks irrelevant.
 	// See: https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki
-	// Also see: https://github.com/BlockchainCommons/Learning-Bitcoin-from-the-Command-Line/blob/master/05_2_Resending_a_Transaction_with_RBF.md
+	// See: https://github.com/BlockchainCommons/Learning-Bitcoin-from-the-Command-Line/blob/master/05_2_Resending_a_Transaction_with_RBF.md
 	rbfTxInSequenceNum uint32 = 1
 )
 
@@ -30,8 +29,10 @@ const (
 func (signer *Signer) SignRBFTx(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
+	height uint64,
 	lastTx *btcutil.Tx,
 	minRelayFee float64,
+	memplTxsInfoFetcher MempoolTxsInfoFetcher,
 ) (*wire.MsgTx, error) {
 	var (
 		params = cctx.GetCurrentOutboundParam()
@@ -44,15 +45,15 @@ func (signer *Signer) SignRBFTx(
 	)
 
 	// parse recent fee rate from CCTX
-	cctxRate, err := strconv.ParseInt(params.GasPrice, 10, 64)
+	cctxRate, err := strconv.ParseInt(params.GasPriorityFee, 10, 64)
 	if err != nil || cctxRate <= 0 {
-		return nil, fmt.Errorf("cannot convert fee rate %s", params.GasPrice)
+		return nil, fmt.Errorf("invalid fee rate %s", params.GasPrice)
 	}
 
 	// create fee bumper
 	fb, err := NewCPFPFeeBumper(
 		signer.client,
-		rpc.GetTotalMempoolParentsSizeNFees,
+		memplTxsInfoFetcher,
 		lastTx,
 		cctxRate,
 		minRelayFee,
@@ -69,7 +70,7 @@ func (signer *Signer) SignRBFTx(
 	}
 	logger.Info().Msgf("BumpTxFee success, additional fees: %d satoshis", additionalFees)
 
-	// collect input amounts for later signing
+	// collect input amounts for signing
 	inAmounts := make([]int64, len(newTx.TxIn))
 	for i, input := range newTx.TxIn {
 		preOut := input.PreviousOutPoint
@@ -81,7 +82,7 @@ func (signer *Signer) SignRBFTx(
 	}
 
 	// sign the RBF tx
-	err = signer.SignTx(ctx, newTx, inAmounts, 0, params.TssNonce)
+	err = signer.SignTx(ctx, newTx, inAmounts, height, params.TssNonce)
 	if err != nil {
 		return nil, errors.Wrap(err, "SignTx failed")
 	}

@@ -140,7 +140,7 @@ func Test_SetRevertOutboundValues(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "test")
 		cctx.InboundParams.SenderChainId = chains.BitcoinTestnet.ChainId
 		cctx.OutboundParams = cctx.OutboundParams[:1]
-		cctx.RevertOptions.RevertAddress = sample.BtcAddressP2WPKH(t, &chaincfg.TestNet3Params)
+		cctx.RevertOptions.RevertAddress = sample.BtcAddressP2WPKH(t, &chaincfg.TestNet3Params).String()
 
 		err := cctx.AddRevertOutbound(100)
 		require.NoError(t, err)

@@ -103,16 +103,7 @@ func Test_BumpTxFee(t *testing.T) {
 	// https://mempool.space/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
 	chain := chains.BitcoinMainnet
 	txid := "030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0"
-	msgTx := testutils.LoadBTCMsgTx(t, TestDataDir, chain.ChainId, txid).Copy()
-
-	// cleanMsgTx is a helper function to clean witness data
-	cleanMsgTx := func(tx *wire.MsgTx) *wire.MsgTx {
-		newTx := tx.Copy()
-		for idx := range newTx.TxIn {
-			newTx.TxIn[idx].Witness = wire.TxWitness{}
-		}
-		return newTx
-	}
+	msgTx := testutils.LoadBTCMsgTx(t, TestDataDir, chain.ChainId, txid)
 
 	tests := []struct {
 		name           string
@@ -135,7 +126,7 @@ func Test_BumpTxFee(t *testing.T) {
 			additionalFees: 5790,
 			expectedTx: func() *wire.MsgTx {
 				// deduct additional fees
-				newTx := cleanMsgTx(msgTx)
+				newTx := copyMsgTx(msgTx)
 				newTx.TxOut[2].Value -= 5790
 				return newTx
 			}(),
@@ -154,7 +145,7 @@ func Test_BumpTxFee(t *testing.T) {
 			additionalFees: 1158,
 			expectedTx: func() *wire.MsgTx {
 				// deduct additional fees
-				newTx := cleanMsgTx(msgTx)
+				newTx := copyMsgTx(msgTx)
 				newTx.TxOut[2].Value -= 1158
 				return newTx
 			}(),
@@ -178,7 +169,7 @@ func Test_BumpTxFee(t *testing.T) {
 			additionalFees: 5790 + constant.BTCWithdrawalDustAmount - 1, // 6789
 			expectedTx: func() *wire.MsgTx {
 				// give up all reserved bump fees
-				newTx := cleanMsgTx(msgTx)
+				newTx := copyMsgTx(msgTx)
 				newTx.TxOut = newTx.TxOut[:2]
 				return newTx
 			}(),
@@ -327,4 +318,13 @@ func makeMempoolTxsInfoFetcher(
 	return func(interfaces.BTCRPCClient, string) (int64, float64, int64, int64, error) {
 		return totalTxs, totalFees, totalVSize, avgFeeRate, err
 	}
+}
+
+// copyMsgTx is a helper function to copy a MsgTx and clean witness data
+func copyMsgTx(tx *wire.MsgTx) *wire.MsgTx {
+	newTx := tx.Copy()
+	for idx := range newTx.TxIn {
+		newTx.TxIn[idx].Witness = wire.TxWitness{}
+	}
+	return newTx
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
@@ -166,7 +167,14 @@ func (signer *Signer) TryProcessOutbound(
 
 	// sign outbound
 	if stuckTx != nil && params.TssNonce == stuckTx.Nonce {
-		signedTx, err = signer.SignRBFTx(ctx, cctx, stuckTx.Tx, minRelayFee)
+		signedTx, err = signer.SignRBFTx(
+			ctx,
+			cctx,
+			height,
+			stuckTx.Tx,
+			minRelayFee,
+			rpc.GetTotalMempoolParentsSizeNFees,
+		)
 		if err != nil {
 			logger.Error().Err(err).Msg("SignRBFTx failed")
 			return
