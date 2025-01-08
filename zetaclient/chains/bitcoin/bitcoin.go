@@ -55,7 +55,6 @@ func (b *Bitcoin) Start(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get app from context")
 	}
 
-	// TODO: should we share & fan-out the same chan across all chains?
 	newBlockChan, err := b.observer.ZetacoreClient().NewBlockSubscriber(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to create new block subscriber")

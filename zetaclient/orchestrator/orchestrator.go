@@ -352,6 +352,13 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 					continue
 				}
 
+				// managed by V2
+				if chain.IsBitcoin() {
+					continue
+				}
+
+				// todo move metrics to v2
+
 				chainID := chain.ID()
 
 				// update chain parameters for signer and chain observer
