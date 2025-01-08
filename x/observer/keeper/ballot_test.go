@@ -262,13 +262,6 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 		}
 		_, found = k.GetBallotListForHeight(ctx, 0)
 		require.False(t, found)
-		eventCount := 0
-		for _, event := range ctx.EventManager().Events() {
-			if event.Type == "zetachain.zetacore.observer.EventBallotDeleted" {
-				eventCount++
-			}
-		}
-		require.Equal(t, numberOfBallots, eventCount)
 	})
 
 	t.Run("clear only ballotList if no ballots are found", func(t *testing.T) {
@@ -366,4 +359,106 @@ func TestGetMaturedBallotHeight(t *testing.T) {
 			require.Equal(t, tc.expectedHeight, keeper.GetMaturedBallotHeightFunc(ctx, tc.maturityBlocks))
 		})
 	}
+}
+
+func TestLogBallotDeletion(t *testing.T) {
+	t.Run("log ballot deletion", func(t *testing.T) {
+		//Arrange
+		_, ctx, _, _ := keepertest.ObserverKeeper(t)
+		identifier := sample.ZetaIndex(t)
+		b := types.Ballot{
+			BallotIdentifier: identifier,
+			ObservationType:  types.ObservationType_InboundTx,
+			VoterList:        []string{"voter1", "voter2"},
+			Votes:            []types.VoteType{types.VoteType_SuccessObservation, types.VoteType_SuccessObservation},
+		}
+
+		testLogger := sample.NewTestLogger()
+		ctx = ctx.WithLogger(testLogger)
+
+		//Act
+		keeper.LogBallotDeletionFunc(ctx, b)
+
+		//Assert
+		logOutput := testLogger.String()
+		require.Contains(t, logOutput, "ballotIdentifier: "+identifier)
+		require.Contains(t, logOutput, "Voter : voter1 | Vote : SuccessObservation")
+		require.Contains(t, logOutput, "Voter : voter2 | Vote : SuccessObservation")
+		require.Contains(t, logOutput, "ballotType: InboundTx")
+	})
+
+	t.Run("log error if voter list and votes list length mismatch", func(t *testing.T) {
+		//Arrange
+		_, ctx, _, _ := keepertest.ObserverKeeper(t)
+		identifier := sample.ZetaIndex(t)
+		b := types.Ballot{
+			BallotIdentifier: identifier,
+			ObservationType:  types.ObservationType_InboundTx,
+			VoterList:        []string{"voter1", "voter2"},
+			Votes:            []types.VoteType{types.VoteType_SuccessObservation},
+		}
+
+		testLogger := sample.NewTestLogger()
+		ctx = ctx.WithLogger(testLogger)
+
+		//Act
+		keeper.LogBallotDeletionFunc(ctx, b)
+
+		//Assert
+		logOutput := testLogger.String()
+		require.Contains(t, logOutput, "voter list and votes list length mismatch for deleted ballot "+identifier)
+	})
+
+	t.Run("does not panic if ballot identifier is empty", func(t *testing.T) {
+		//Arrange
+		_, ctx, _, _ := keepertest.ObserverKeeper(t)
+		b := types.Ballot{
+			BallotIdentifier: "",
+			ObservationType:  types.ObservationType_InboundTx,
+			VoterList:        []string{"voter1", "voter2"},
+			Votes:            []types.VoteType{types.VoteType_SuccessObservation, types.VoteType_SuccessObservation},
+		}
+
+		testLogger := sample.NewTestLogger()
+		ctx = ctx.WithLogger(testLogger)
+
+		//Act
+		require.NotPanics(t, func() {
+			keeper.LogBallotDeletionFunc(ctx, b)
+		})
+
+		//Assert
+		logOutput := testLogger.String()
+		require.Contains(t, logOutput, "ballotIdentifier: ")
+		require.Contains(t, logOutput, "Voter : voter1 | Vote : SuccessObservation")
+		require.Contains(t, logOutput, "Voter : voter2 | Vote : SuccessObservation")
+		require.Contains(t, logOutput, "ballotType: InboundTx")
+	})
+
+	t.Run("does not panic if observation type is empty", func(t *testing.T) {
+		//Arrange
+		_, ctx, _, _ := keepertest.ObserverKeeper(t)
+		identifier := sample.ZetaIndex(t)
+		b := types.Ballot{
+			BallotIdentifier: identifier,
+			ObservationType:  0,
+			VoterList:        []string{"voter1", "voter2"},
+			Votes:            []types.VoteType{types.VoteType_SuccessObservation, types.VoteType_SuccessObservation},
+		}
+
+		testLogger := sample.NewTestLogger()
+		ctx = ctx.WithLogger(testLogger)
+
+		//Act
+		require.NotPanics(t, func() {
+			keeper.LogBallotDeletionFunc(ctx, b)
+		})
+
+		//Assert
+		logOutput := testLogger.String()
+		require.Contains(t, logOutput, "ballotIdentifier: "+identifier)
+		require.Contains(t, logOutput, "Voter : voter1 | Vote : SuccessObservation")
+		require.Contains(t, logOutput, "Voter : voter2 | Vote : SuccessObservation")
+		require.Contains(t, logOutput, "ballotType: ")
+	})
 }

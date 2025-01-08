@@ -6,7 +6,7 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { PageRequest, PageResponse } from "../../../cosmos/base/query/v1beta1/pagination_pb.js";
-import type { Ballot, BallotStatus, Voter } from "./ballot_pb.js";
+import type { Ballot, BallotStatus, VoteType } from "./ballot_pb.js";
 import type { OperationalFlags } from "./operational_pb.js";
 import type { TssFundMigratorInfo } from "./tss_funds_migrator_pb.js";
 import type { ChainNonces } from "./chain_nonces_pb.js";
@@ -694,6 +694,35 @@ export declare class QueryBallotByIdentifierRequest extends Message<QueryBallotB
 }
 
 /**
+ * @generated from message zetachain.zetacore.observer.VoterList
+ */
+export declare class VoterList extends Message<VoterList> {
+  /**
+   * @generated from field: string voter_address = 1;
+   */
+  voterAddress: string;
+
+  /**
+   * @generated from field: zetachain.zetacore.observer.VoteType vote_type = 2;
+   */
+  voteType: VoteType;
+
+  constructor(data?: PartialMessage<VoterList>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.VoterList";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): VoterList;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): VoterList;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): VoterList;
+
+  static equals(a: VoterList | PlainMessage<VoterList> | undefined, b: VoterList | PlainMessage<VoterList> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.observer.QueryBallotByIdentifierResponse
  */
 export declare class QueryBallotByIdentifierResponse extends Message<QueryBallotByIdentifierResponse> {
@@ -703,9 +732,9 @@ export declare class QueryBallotByIdentifierResponse extends Message<QueryBallot
   ballotIdentifier: string;
 
   /**
-   * @generated from field: repeated zetachain.zetacore.observer.Voter voters = 2;
+   * @generated from field: repeated zetachain.zetacore.observer.VoterList voters = 2;
    */
-  voters: Voter[];
+  voters: VoterList[];
 
   /**
    * @generated from field: zetachain.zetacore.observer.ObservationType observation_type = 3;

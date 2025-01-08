@@ -58259,7 +58259,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/observerVoter'
+          $ref: '#/definitions/observerVoterList'
       observation_type:
         $ref: '#/definitions/observerObservationType'
       ballot_status:
@@ -58432,7 +58432,7 @@ definitions:
        - FailureObservation: Failure observation means , the the message that
        - NotYetVoted: this voter is observing failed / reverted . It does
       not mean it was unable to observe.
-  observerVoter:
+  observerVoterList:
     type: object
     properties:
       voter_address:

@@ -1,13 +1,13 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/x/observer/types"
 )
-
-var GetMaturedBallotHeightFunc = getMaturedBallotHeight
 
 func (k Keeper) SetBallot(ctx sdk.Context, ballot *types.Ballot) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VoterKey))
@@ -100,7 +100,7 @@ func (k Keeper) ClearMaturedBallotsAndBallotList(ctx sdk.Context, maturityBlocks
 			continue
 		}
 		k.DeleteBallot(ctx, ballotIndex)
-		EmitEventBallotDeleted(ctx, ballot)
+		logBallotDeletion(ctx, ballot)
 	}
 	// Delete the list of matured ballots
 	k.DeleteBallotListForHeight(ctx, maturedBallotsHeight)
@@ -110,4 +110,20 @@ func (k Keeper) ClearMaturedBallotsAndBallotList(ctx sdk.Context, maturityBlocks
 // getMaturedBallotHeight returns the height at which a ballot is considered matured.
 func getMaturedBallotHeight(ctx sdk.Context, maturityBlocks int64) int64 {
 	return ctx.BlockHeight() - maturityBlocks
+}
+
+func logBallotDeletion(ctx sdk.Context, ballot types.Ballot) {
+	if len(ballot.VoterList) != len(ballot.Votes) {
+		ctx.Logger().
+			Error(fmt.Sprintf("voter list and votes list length mismatch for deleted ballot %s", ballot.BallotIdentifier))
+		return
+	}
+
+	votersList := ""
+	for i := range ballot.VoterList {
+		votersList += fmt.Sprintf("Voter : %s | Vote : %s\n", ballot.VoterList[i], ballot.Votes[i])
+	}
+
+	ctx.Logger().
+		Debug(fmt.Sprintf("ballotIdentifier: %s,ballotType: %s,voterList: %s", ballot.BallotIdentifier, ballot.ObservationType.String(), votersList))
 }

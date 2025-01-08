@@ -16,12 +16,6 @@ message EventBallotCreated {
   string ballot_type = 5;
 }
 
-message EventBallotDeleted {
-  string ballot_identifier = 1;
-  string ballot_type = 2;
-  repeated Voter voters = 3 [ (gogoproto.nullable) = false ];
-}
-
 message EventKeygenBlockUpdated {
   string msg_type_url = 1;
   string keygen_block = 2;

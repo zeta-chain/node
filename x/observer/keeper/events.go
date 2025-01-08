@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"strconv"
 
@@ -35,23 +34,6 @@ func prettyPrintStruct(val interface{}) string {
 	}
 
 	return string(prettyStruct)
-}
-
-func EmitEventBallotDeleted(ctx sdk.Context, ballot types.Ballot) {
-	var voterList []types.Voter
-	voterList, err := ballot.GenerateVoterList()
-	if err != nil {
-		ctx.Logger().
-			Error(fmt.Sprintf("failed to generate voter list for ballot %s", ballot.BallotIdentifier), err.Error())
-	}
-	err = ctx.EventManager().EmitTypedEvent(&types.EventBallotDeleted{
-		BallotIdentifier: ballot.BallotIdentifier,
-		BallotType:       ballot.ObservationType.String(),
-		Voters:           voterList,
-	})
-	if err != nil {
-		ctx.Logger().Error("failed to emit EventBallotDeleted : %s", err.Error())
-	}
 }
 
 func EmitEventKeyGenBlockUpdated(ctx sdk.Context, keygen *types.Keygen) {

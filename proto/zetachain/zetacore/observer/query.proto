@@ -274,9 +274,14 @@ message QueryHasVotedResponse { bool has_voted = 1; }
 
 message QueryBallotByIdentifierRequest { string ballot_identifier = 1; }
 
+message VoterList {
+  string voter_address = 1;
+  VoteType vote_type = 2;
+}
+
 message QueryBallotByIdentifierResponse {
   string ballot_identifier = 1;
-  repeated Voter voters = 2 [ (gogoproto.nullable) = false ];
+  repeated VoterList voters = 2;
   ObservationType observation_type = 3;
   BallotStatus ballot_status = 4;
 }

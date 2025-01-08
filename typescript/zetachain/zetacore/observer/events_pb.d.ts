@@ -5,7 +5,6 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { Voter } from "./ballot_pb.js";
 import type { GasPriceIncreaseFlags } from "./crosschain_flags_pb.js";
 
 /**
@@ -50,40 +49,6 @@ export declare class EventBallotCreated extends Message<EventBallotCreated> {
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventBallotCreated;
 
   static equals(a: EventBallotCreated | PlainMessage<EventBallotCreated> | undefined, b: EventBallotCreated | PlainMessage<EventBallotCreated> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.observer.EventBallotDeleted
- */
-export declare class EventBallotDeleted extends Message<EventBallotDeleted> {
-  /**
-   * @generated from field: string ballot_identifier = 1;
-   */
-  ballotIdentifier: string;
-
-  /**
-   * @generated from field: string ballot_type = 2;
-   */
-  ballotType: string;
-
-  /**
-   * @generated from field: repeated zetachain.zetacore.observer.Voter voters = 3;
-   */
-  voters: Voter[];
-
-  constructor(data?: PartialMessage<EventBallotDeleted>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.EventBallotDeleted";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventBallotDeleted;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventBallotDeleted;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventBallotDeleted;
-
-  static equals(a: EventBallotDeleted | PlainMessage<EventBallotDeleted> | undefined, b: EventBallotDeleted | PlainMessage<EventBallotDeleted> | undefined): boolean;
 }
 
 /**

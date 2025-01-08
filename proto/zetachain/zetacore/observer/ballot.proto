@@ -41,8 +41,3 @@ message BallotListForHeight {
   int64 height = 1;
   repeated string ballots_index_list = 2;
 }
-
-message Voter {
-  string voter_address = 1;
-  VoteType vote_type = 2;
-}
