@@ -327,7 +327,7 @@ ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from source"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source \
-		--build-arg OLD_VERSION='release/v23' \
+		--build-arg OLD_VERSION='release/v24' \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
 		--build-arg NODE_COMMIT=$(NODE_COMMIT)
 		.
@@ -336,7 +336,7 @@ else
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from binaries"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime \
-	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v23.1.5' \
+	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v24.0.0' \
 	--build-arg NODE_VERSION=$(NODE_VERSION) \
 	--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 	.
@@ -481,49 +481,6 @@ stop-eth-node-mainnet:
 
 clean-eth-node-mainnet:
 	cd contrib/rpc/ethereum && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
-
-#ZETA
-
-#FULL-NODE-RPC-FROM-BUILT-IMAGE
-start-zetacored-rpc-mainnet:
-	cd contrib/rpc/zetacored && bash init_docker_compose.sh mainnet image $(DOCKER_TAG)
-
-stop-zetacored-rpc-mainnet:
-	cd contrib/rpc/zetacored && bash kill_docker_compose.sh mainnet false
-
-clean-zetacored-rpc-mainnet:
-	cd contrib/rpc/zetacored && bash kill_docker_compose.sh mainnet true
-
-#FULL-NODE-RPC-FROM-BUILT-IMAGE
-start-zetacored-rpc-testnet:
-	cd contrib/rpc/zetacored && bash init_docker_compose.sh athens3 image $(DOCKER_TAG)
-
-stop-zetacored-rpc-testnet:
-	cd contrib/rpc/zetacored && bash kill_docker_compose.sh athens3 false
-
-clean-zetacored-rpc-testnet:
-	cd contrib/rpc/zetacored && bash kill_docker_compose.sh athens3 true
-
-#FULL-NODE-RPC-FROM-LOCAL-BUILD
-start-zetacored-rpc-mainnet-localbuild:
-	cd contrib/rpc/zetacored && bash init_docker_compose.sh mainnet localbuild $(DOCKER_TAG)
-
-stop-zetacored-rpc-mainnet-localbuild:
-	cd contrib/rpc/zetacored && bash kill_docker_compose.sh mainnet false
-
-clean-zetacored-rpc-mainnet-localbuild:
-	cd contrib/rpc/zetacored && bash kill_docker_compose.sh mainnet true
-
-#FULL-NODE-RPC-FROM-LOCAL-BUILD
-start-zetacored-rpc-testnet-localbuild:
-	cd contrib/rpc/zetacored && bash init_docker_compose.sh athens3 localbuild $(DOCKER_TAG)
-
-stop-zetacored-rpc-testnet-localbuild:
-	cd contrib/rpc/zetacored && bash kill_docker_compose.sh athens3 false
-
-clean-zetacored-rpc-testnet-localbuild:
-	cd contrib/rpc/zetacored && bash kill_docker_compose.sh athens3 true
-
 
 ###############################################################################
 ###                               Debug Tools                               ###

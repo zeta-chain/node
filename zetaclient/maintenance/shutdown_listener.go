@@ -2,12 +2,16 @@ package maintenance
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"cosmossdk.io/errors"
 	"github.com/rs/zerolog"
+	"golang.org/x/mod/semver"
 
 	"github.com/zeta-chain/node/pkg/bg"
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/retry"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
@@ -22,15 +26,28 @@ type ShutdownListener struct {
 	logger zerolog.Logger
 
 	lastRestartHeightMissed int64
+	// get the current version of zetaclient
+	getVersion func() string
 }
 
 // NewShutdownListener creates a new ShutdownListener.
 func NewShutdownListener(client interfaces.ZetacoreClient, logger zerolog.Logger) *ShutdownListener {
 	log := logger.With().Str("module", "shutdown_listener").Logger()
 	return &ShutdownListener{
-		client: client,
-		logger: log,
+		client:     client,
+		logger:     log,
+		getVersion: getVersionDefault,
 	}
+}
+
+// RunPreStartCheck runs any checks that must run before fully starting zetaclient.
+// Specifically this should be run before any TSS P2P is started.
+func (o *ShutdownListener) RunPreStartCheck(ctx context.Context) error {
+	operationalFlags, err := o.getOperationalFlagsWithRetry(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to get initial operational flags")
+	}
+	return o.checkMinimumVersion(operationalFlags)
 }
 
 func (o *ShutdownListener) Listen(ctx context.Context, action func()) {
@@ -43,12 +60,9 @@ func (o *ShutdownListener) Listen(ctx context.Context, action func()) {
 }
 
 func (o *ShutdownListener) waitForUpdate(ctx context.Context) error {
-	operationalFlags, err := retry.DoTypedWithBackoffAndRetry(
-		func() (observertypes.OperationalFlags, error) { return o.client.GetOperationalFlags(ctx) },
-		retry.DefaultConstantBackoff(),
-	)
+	operationalFlags, err := o.getOperationalFlagsWithRetry(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get initial operational flags")
+		return errors.Wrap(err, "get initial operational flags")
 	}
 	if o.handleNewFlags(ctx, operationalFlags) {
 		return nil
@@ -74,8 +88,19 @@ func (o *ShutdownListener) waitForUpdate(ctx context.Context) error {
 	}
 }
 
+func (o *ShutdownListener) getOperationalFlagsWithRetry(ctx context.Context) (observertypes.OperationalFlags, error) {
+	return retry.DoTypedWithBackoffAndRetry(
+		func() (observertypes.OperationalFlags, error) { return o.client.GetOperationalFlags(ctx) },
+		retry.DefaultConstantBackoff(),
+	)
+}
+
 // handleNewFlags processes the flags and returns true if a shutdown should be signaled
 func (o *ShutdownListener) handleNewFlags(ctx context.Context, f observertypes.OperationalFlags) bool {
+	if err := o.checkMinimumVersion(f); err != nil {
+		o.logger.Error().Err(err).Any("operational_flags", f).Msg("minimum version check")
+		return true
+	}
 	if f.RestartHeight < 1 {
 		return false
 	}
@@ -122,4 +147,30 @@ func (o *ShutdownListener) handleNewFlags(ctx context.Context, f observertypes.O
 			return false
 		}
 	}
+}
+
+func (o *ShutdownListener) checkMinimumVersion(f observertypes.OperationalFlags) error {
+	if f.MinimumVersion != "" {
+		// we typically store the version without the required v prefix
+		currentVersion := ensurePrefix(o.getVersion(), "v")
+		if semver.Compare(currentVersion, f.MinimumVersion) == -1 {
+			return fmt.Errorf(
+				"current version (%s) is less than minimum version (%s)",
+				currentVersion,
+				f.MinimumVersion,
+			)
+		}
+	}
+	return nil
+}
+
+func getVersionDefault() string {
+	return constant.Version
+}
+
+func ensurePrefix(s, prefix string) string {
+	if !strings.HasPrefix(s, prefix) {
+		return prefix + s
+	}
+	return s
 }

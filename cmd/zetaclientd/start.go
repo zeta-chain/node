@@ -84,6 +84,20 @@ func Start(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "unable to resolve observer pub key bech32")
 	}
 
+	isObserver, err := isObserverNode(ctx, zetacoreClient)
+	switch {
+	case err != nil:
+		return errors.Wrap(err, "unable to check if observer node")
+	case !isObserver:
+		logger.Std.Warn().Msg("This node is not an observer node. Exit 0")
+		return nil
+	}
+
+	shutdownListener := maintenance.NewShutdownListener(zetacoreClient, logger.Std)
+	if err := shutdownListener.RunPreStartCheck(ctx); err != nil {
+		return errors.Wrap(err, "pre start check failed")
+	}
+
 	tssSetupProps := zetatss.SetupProps{
 		Config:              cfg,
 		Zetacore:            zetacoreClient,
@@ -95,18 +109,11 @@ func Start(_ *cobra.Command, _ []string) error {
 		Telemetry:           telemetry,
 	}
 
+	// This will start p2p communication so it should only happen after
+	// preflight checks have completed
 	tss, err := zetatss.Setup(ctx, tssSetupProps, logger.Std)
 	if err != nil {
 		return errors.Wrap(err, "unable to setup TSS service")
-	}
-
-	isObserver, err := isObserverNode(ctx, zetacoreClient)
-	switch {
-	case err != nil:
-		return errors.Wrap(err, "unable to check if observer node")
-	case !isObserver:
-		logger.Std.Warn().Msg("This node is not an observer node. Exit 0")
-		return nil
 	}
 
 	graceful.AddStopper(tss.Stop)
@@ -118,7 +125,7 @@ func Start(_ *cobra.Command, _ []string) error {
 		graceful.ShutdownNow()
 	})
 
-	maintenance.NewShutdownListener(zetacoreClient, logger.Std).Listen(ctx, func() {
+	shutdownListener.Listen(ctx, func() {
 		logger.Std.Info().Msg("Shutdown listener received an action to shutdown zetaclientd.")
 		graceful.ShutdownNow()
 	})
