@@ -1,12 +1,12 @@
 # CHANGELOG
 
-## Unreleased
+## v25.0.0
 
 ### Features
 
 * [3235](https://github.com/zeta-chain/node/pull/3235) - add /systemtime telemetry endpoint (zetaclient)
 * [3317](https://github.com/zeta-chain/node/pull/3317) - add configurable signer latency correction (zetaclient)
-
+* [3320](https://github.com/zeta-chain/node/pull/3320) - add zetaclient minimum version check
 
 ### Tests
 
@@ -15,7 +15,7 @@
 * [3095](https://github.com/zeta-chain/node/pull/3095) - initialize simulation tests for custom zetachain modules
 * [3276](https://github.com/zeta-chain/node/pull/3276) - add Solana E2E performance tests and improve Solana outbounds performance
 
-## Refactor
+### Refactor
 
 * [3170](https://github.com/zeta-chain/node/pull/3170) - revamp TSS package in zetaclient
 * [3291](https://github.com/zeta-chain/node/pull/3291) - revamp zetaclient initialization (+ graceful shutdown)
