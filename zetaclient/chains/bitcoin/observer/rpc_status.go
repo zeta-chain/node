@@ -16,7 +16,12 @@ func (ob *Observer) CheckRPCStatus(_ context.Context) error {
 	}
 
 	blockTime, err := rpc.CheckRPCStatus(ob.btcClient, tssAddress)
-	if err != nil {
+	switch {
+	case err != nil && !ob.isNodeEnabled():
+		// suppress error if node is disabled
+		ob.logger.Chain.Debug().Err(err).Msg("CheckRPC status failed")
+		return nil
+	case err != nil:
 		return errors.Wrap(err, "unable to check RPC status")
 	}
 

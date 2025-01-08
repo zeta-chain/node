@@ -34,9 +34,12 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 	// 0 will be returned if the node is not synced
 	if currentBlock == 0 {
+		ob.nodeEnabled.Store(false)
 		ob.logger.Inbound.Debug().Err(err).Msg("WatchInbound: Bitcoin node is not enabled")
 		return nil
 	}
+
+	ob.nodeEnabled.Store(true)
 
 	// #nosec G115 checked positive
 	lastBlock := uint64(currentBlock)

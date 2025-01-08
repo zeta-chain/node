@@ -7,6 +7,7 @@ import (
 	"math"
 	"math/big"
 	"sort"
+	"sync/atomic"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
@@ -80,6 +81,10 @@ type Observer struct {
 	// broadcastedTx indexes the outbound hash with the outbound tx identifier
 	broadcastedTx map[string]string
 
+	// nodeEnabled indicates whether BTC node is enabled (might be disabled during certain E2E tests)
+	// We assume it's true by default. The flag is updated on each ObserveInbound call.
+	nodeEnabled atomic.Bool
+
 	// logger contains the loggers used by the bitcoin observer
 	logger Logger
 }
@@ -132,6 +137,8 @@ func NewObserver(
 		},
 	}
 
+	ob.nodeEnabled.Store(true)
+
 	// load last scanned block
 	if err = ob.LoadLastBlockScanned(); err != nil {
 		return nil, errors.Wrap(err, "unable to load last scanned block")
@@ -143,6 +150,10 @@ func NewObserver(
 	}
 
 	return ob, nil
+}
+
+func (ob *Observer) isNodeEnabled() bool {
+	return ob.nodeEnabled.Load()
 }
 
 // GetPendingNonce returns the artificial pending nonce
@@ -223,6 +234,11 @@ func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 			ob.logger.UTXOs.Error().Msgf("BTC FetchUTXOs: caught panic error: %v", err)
 		}
 	}()
+
+	// noop
+	if !ob.isNodeEnabled() {
+		return nil
+	}
 
 	// This is useful when a zetaclient's pending nonce lagged behind for whatever reason.
 	ob.refreshPendingNonce(ctx)
