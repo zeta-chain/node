@@ -110,10 +110,11 @@ func NewOutboundData(
 	}
 
 	return &OutboundData{
-		chainID:  chainID,
-		to:       to,
-		amount:   amount,
-		feeRate:  feeRate,
+		chainID: chainID,
+		to:      to,
+		amount:  amount,
+		feeRate: feeRate,
+		// #nosec G115 always in range
 		txSize:   int64(params.CallOptions.GasLimit),
 		nonce:    params.TssNonce,
 		height:   height,

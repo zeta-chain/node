@@ -10,7 +10,7 @@ import (
 func Test_IncreaseIntByPercent(t *testing.T) {
 	for i, tt := range []struct {
 		value    int64
-		percent  uint64
+		percent  uint32
 		round    bool
 		expected int64
 	}{

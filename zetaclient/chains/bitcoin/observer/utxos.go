@@ -60,22 +60,12 @@ func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 	// this is useful when a zetaclient's pending nonce lagged behind for whatever reason.
 	ob.refreshPendingNonce(ctx)
 
-	// refresh the last block height.
-	lastBlock, err := ob.btcClient.GetBlockCount()
-	if err != nil {
-		return fmt.Errorf("btc: error getting block height : %v", err)
-	}
-	if ob.LastBlock() < uint64(lastBlock) {
-		ob.WithLastBlock(uint64(lastBlock))
-	}
-
 	// list all unspent UTXOs (160ms)
-	maxConfirmations := int(lastBlock)
 	tssAddr, err := ob.TSS().PubKey().AddressBTC(ob.Chain().ChainId)
 	if err != nil {
 		return fmt.Errorf("error getting bitcoin tss address")
 	}
-	utxos, err := ob.btcClient.ListUnspentMinMaxAddresses(0, maxConfirmations, []btcutil.Address{tssAddr})
+	utxos, err := ob.btcClient.ListUnspentMinMaxAddresses(0, 9999999, []btcutil.Address{tssAddr})
 	if err != nil {
 		return err
 	}

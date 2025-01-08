@@ -5,7 +5,7 @@ import "math"
 // IncreaseIntByPercent is a function that increases integer by a percentage.
 // Example1: IncreaseIntByPercent(10, 15, true) = 10 * 1.15 = 12
 // Example2: IncreaseIntByPercent(10, 15, false) = 10 + 10 * 0.15 = 11
-func IncreaseIntByPercent(value int64, percent uint64, round bool) int64 {
+func IncreaseIntByPercent(value int64, percent uint32, round bool) int64 {
 	switch {
 	case percent == 0:
 		return value

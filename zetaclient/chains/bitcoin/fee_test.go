@@ -184,6 +184,11 @@ func TestOutboundSize2In3Out(t *testing.T) {
 	privateKey, _, payerScript := generateKeyPair(t, &chaincfg.TestNet3Params)
 	_, payee, payeeScript := generateKeyPair(t, &chaincfg.TestNet3Params)
 
+	// return 0 vByte if no UTXO
+	vBytesEstimated, err := EstimateOutboundSize(0, []btcutil.Address{payee})
+	require.NoError(t, err)
+	require.Zero(t, vBytesEstimated)
+
 	// 2 example UTXO txids to use in the test.
 	utxosTxids := exampleTxids[:2]
 
@@ -194,10 +199,9 @@ func TestOutboundSize2In3Out(t *testing.T) {
 	addTxInputsOutputsAndSignTx(t, tx, privateKey, payerScript, utxosTxids, [][]byte{payeeScript})
 
 	// Estimate the tx size in vByte
-	// #nosec G115 always positive
 	vError := int64(1) // 1 vByte error tolerance
 	vBytes := blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor
-	vBytesEstimated, err := EstimateOutboundSize(int64(len(utxosTxids)), []btcutil.Address{payee})
+	vBytesEstimated, err = EstimateOutboundSize(int64(len(utxosTxids)), []btcutil.Address{payee})
 	require.NoError(t, err)
 	if vBytes > vBytesEstimated {
 		require.True(t, vBytes-vBytesEstimated <= vError)
@@ -264,62 +268,62 @@ func TestGetOutputSizeByAddress(t *testing.T) {
 	nilP2TR := (*btcutil.AddressTaproot)(nil)
 	sizeNilP2TR, err := GetOutputSizeByAddress(nilP2TR)
 	require.NoError(t, err)
-	require.Equal(t, uint64(0), sizeNilP2TR)
+	require.Zero(t, sizeNilP2TR)
 
 	addrP2TR := getTestAddrScript(t, ScriptTypeP2TR)
 	sizeP2TR, err := GetOutputSizeByAddress(addrP2TR)
 	require.NoError(t, err)
-	require.Equal(t, uint64(bytesPerOutputP2TR), sizeP2TR)
+	require.Equal(t, int64(bytesPerOutputP2TR), sizeP2TR)
 
 	// test nil P2WSH address and non-nil P2WSH address
 	nilP2WSH := (*btcutil.AddressWitnessScriptHash)(nil)
 	sizeNilP2WSH, err := GetOutputSizeByAddress(nilP2WSH)
 	require.NoError(t, err)
-	require.Equal(t, uint64(0), sizeNilP2WSH)
+	require.Zero(t, sizeNilP2WSH)
 
 	addrP2WSH := getTestAddrScript(t, ScriptTypeP2WSH)
 	sizeP2WSH, err := GetOutputSizeByAddress(addrP2WSH)
 	require.NoError(t, err)
-	require.Equal(t, uint64(bytesPerOutputP2WSH), sizeP2WSH)
+	require.Equal(t, int64(bytesPerOutputP2WSH), sizeP2WSH)
 
 	// test nil P2WPKH address and non-nil P2WPKH address
 	nilP2WPKH := (*btcutil.AddressWitnessPubKeyHash)(nil)
 	sizeNilP2WPKH, err := GetOutputSizeByAddress(nilP2WPKH)
 	require.NoError(t, err)
-	require.Equal(t, uint64(0), sizeNilP2WPKH)
+	require.Zero(t, sizeNilP2WPKH)
 
 	addrP2WPKH := getTestAddrScript(t, ScriptTypeP2WPKH)
 	sizeP2WPKH, err := GetOutputSizeByAddress(addrP2WPKH)
 	require.NoError(t, err)
-	require.Equal(t, uint64(bytesPerOutputP2WPKH), sizeP2WPKH)
+	require.Equal(t, int64(bytesPerOutputP2WPKH), sizeP2WPKH)
 
 	// test nil P2SH address and non-nil P2SH address
 	nilP2SH := (*btcutil.AddressScriptHash)(nil)
 	sizeNilP2SH, err := GetOutputSizeByAddress(nilP2SH)
 	require.NoError(t, err)
-	require.Equal(t, uint64(0), sizeNilP2SH)
+	require.Zero(t, sizeNilP2SH)
 
 	addrP2SH := getTestAddrScript(t, ScriptTypeP2SH)
 	sizeP2SH, err := GetOutputSizeByAddress(addrP2SH)
 	require.NoError(t, err)
-	require.Equal(t, uint64(bytesPerOutputP2SH), sizeP2SH)
+	require.Equal(t, int64(bytesPerOutputP2SH), sizeP2SH)
 
 	// test nil P2PKH address and non-nil P2PKH address
 	nilP2PKH := (*btcutil.AddressPubKeyHash)(nil)
 	sizeNilP2PKH, err := GetOutputSizeByAddress(nilP2PKH)
 	require.NoError(t, err)
-	require.Equal(t, uint64(0), sizeNilP2PKH)
+	require.Zero(t, sizeNilP2PKH)
 
 	addrP2PKH := getTestAddrScript(t, ScriptTypeP2PKH)
 	sizeP2PKH, err := GetOutputSizeByAddress(addrP2PKH)
 	require.NoError(t, err)
-	require.Equal(t, uint64(bytesPerOutputP2PKH), sizeP2PKH)
+	require.Equal(t, int64(bytesPerOutputP2PKH), sizeP2PKH)
 
 	// test unsupported address type
 	nilP2PK := (*btcutil.AddressPubKey)(nil)
 	sizeP2PK, err := GetOutputSizeByAddress(nilP2PK)
 	require.ErrorContains(t, err, "cannot get output size for address type")
-	require.Equal(t, uint64(0), sizeP2PK)
+	require.Zero(t, sizeP2PK)
 }
 
 func TestOutputSizeP2TR(t *testing.T) {
@@ -335,8 +339,7 @@ func TestOutputSizeP2TR(t *testing.T) {
 	addTxInputsOutputsAndSignTx(t, tx, privateKey, payerScript, exampleTxids[:2], payeeScripts)
 
 	// Estimate the tx size in vByte
-	// #nosec G115 always positive
-	vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
+	vBytes := blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor
 	vBytesEstimated, err := EstimateOutboundSize(2, payees)
 	require.NoError(t, err)
 	require.Equal(t, vBytes, vBytesEstimated)
@@ -355,8 +358,7 @@ func TestOutputSizeP2WSH(t *testing.T) {
 	addTxInputsOutputsAndSignTx(t, tx, privateKey, payerScript, exampleTxids[:2], payeeScripts)
 
 	// Estimate the tx size in vByte
-	// #nosec G115 always positive
-	vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
+	vBytes := blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor
 	vBytesEstimated, err := EstimateOutboundSize(2, payees)
 	require.NoError(t, err)
 	require.Equal(t, vBytes, vBytesEstimated)
@@ -375,8 +377,7 @@ func TestOutputSizeP2SH(t *testing.T) {
 	addTxInputsOutputsAndSignTx(t, tx, privateKey, payerScript, exampleTxids[:2], payeeScripts)
 
 	// Estimate the tx size in vByte
-	// #nosec G115 always positive
-	vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
+	vBytes := blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor
 	vBytesEstimated, err := EstimateOutboundSize(2, payees)
 	require.NoError(t, err)
 	require.Equal(t, vBytes, vBytesEstimated)
@@ -395,8 +396,7 @@ func TestOutputSizeP2PKH(t *testing.T) {
 	addTxInputsOutputsAndSignTx(t, tx, privateKey, payerScript, exampleTxids[:2], payeeScripts)
 
 	// Estimate the tx size in vByte
-	// #nosec G115 always positive
-	vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
+	vBytes := blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor
 	vBytesEstimated, err := EstimateOutboundSize(2, payees)
 	require.NoError(t, err)
 	require.Equal(t, vBytes, vBytesEstimated)
@@ -422,15 +422,15 @@ func TestOutboundSizeBreakdown(t *testing.T) {
 
 	// calculate the average outbound size (245 vByte)
 	// #nosec G115 always in range
-	txSizeAverage := uint64((float64(txSizeTotal))/float64(len(payees)) + 0.5)
+	txSizeAverage := int64((float64(txSizeTotal))/float64(len(payees)) + 0.5)
 
 	// get deposit fee
 	txSizeDepositor := OutboundSizeDepositor()
-	require.Equal(t, uint64(68), txSizeDepositor)
+	require.Equal(t, int64(68), txSizeDepositor)
 
 	// get withdrawer fee
 	txSizeWithdrawer := OutboundSizeWithdrawer()
-	require.Equal(t, uint64(177), txSizeWithdrawer)
+	require.Equal(t, int64(177), txSizeWithdrawer)
 
 	// total outbound size == (deposit fee + withdrawer fee), 245 = 68 + 177
 	require.Equal(t, txSizeAverage, txSizeDepositor+txSizeWithdrawer)
@@ -459,5 +459,5 @@ func TestOutboundSizeMinMaxError(t *testing.T) {
 	nilP2PK := (*btcutil.AddressPubKey)(nil)
 	size, err := EstimateOutboundSize(1, []btcutil.Address{nilP2PK})
 	require.Error(t, err)
-	require.Equal(t, uint64(0), size)
+	require.Zero(t, size)
 }

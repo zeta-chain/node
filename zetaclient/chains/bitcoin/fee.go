@@ -67,11 +67,12 @@ func WiredTxSize(numInputs uint64, numOutputs uint64) int64 {
 
 // EstimateOutboundSize estimates the size of an outbound in vBytes
 func EstimateOutboundSize(numInputs int64, payees []btcutil.Address) (int64, error) {
-	if numInputs == 0 {
+	if numInputs <= 0 {
 		return 0, nil
 	}
 	// #nosec G115 always positive
 	numOutputs := 2 + uint64(len(payees))
+	// #nosec G115 checked positive
 	bytesWiredTx := WiredTxSize(uint64(numInputs), numOutputs)
 	bytesInput := numInputs * bytesPerInput
 	bytesOutput := int64(2) * bytesPerOutputP2WPKH // new nonce mark, change

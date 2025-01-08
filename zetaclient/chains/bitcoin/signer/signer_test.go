@@ -62,11 +62,16 @@ func newTestSuite(t *testing.T, chain chains.Chain) *testSuite {
 		WithKeys(&keys.Keys{}).
 		WithZetaChain()
 
+	// create logger
+	testLogger := zerolog.New(zerolog.NewTestWriter(t))
+	logger := base.Logger{Std: testLogger, Compliance: testLogger}
+
+	// create signer
 	signer := signer.NewSigner(
 		chain,
 		rpcClient,
 		tss,
-		base.DefaultLogger(),
+		logger,
 	)
 
 	return &testSuite{
