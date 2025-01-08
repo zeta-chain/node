@@ -98,20 +98,20 @@ func CmdParseGenesisFile() *cobra.Command {
 			if len(args) == 2 {
 				genesisFilePath = args[1]
 			}
-			genDoc, err := GetGenDoc(genesisFilePath)
+			_, genesis, err := genutiltypes.GenesisStateFromGenFile(genesisFilePath)
 			if err != nil {
 				return err
 			}
-			importData, err := GetGenDoc(args[0])
+			_, importData, err := genutiltypes.GenesisStateFromGenFile(args[0])
 			if err != nil {
 				return err
 			}
-			err = ImportDataIntoFile(genDoc, importData, cdc, modifyEnabled)
+			err = ImportDataIntoFile2(genesis, importData, cdc, modifyEnabled)
 			if err != nil {
 				return err
 			}
 
-			err = genutil.ExportGenesisFile(genDoc, genesisFilePath)
+			err = genutil.ExportGenesisFile(genesis, genesisFilePath)
 			if err != nil {
 				return err
 			}
@@ -123,20 +123,22 @@ func CmdParseGenesisFile() *cobra.Command {
 	return cmd
 }
 
-func ImportDataIntoFile(
-	genDoc *types.GenesisDoc,
-	importFile *types.GenesisDoc,
+func ImportDataIntoFile2(
+	gen *genutiltypes.AppGenesis,
+	importFile *genutiltypes.AppGenesis,
 	cdc codec.Codec,
 	modifyEnabled bool,
 ) error {
-	appState, err := genutiltypes.GenesisStateFromGenDoc(*genDoc)
+	appState, err := genutiltypes.GenesisStateFromAppGenesis(gen)
 	if err != nil {
 		return err
 	}
-	importAppState, err := genutiltypes.GenesisStateFromGenDoc(*importFile)
+
+	importAppState, err := genutiltypes.GenesisStateFromAppGenesis(importFile)
 	if err != nil {
 		return err
 	}
+
 	moduleList := app.InitGenesisModuleList()
 	for _, m := range moduleList {
 		if Skip[m] {
@@ -167,7 +169,7 @@ func ImportDataIntoFile(
 	if err != nil {
 		return fmt.Errorf("failed to marshal application genesis state: %w", err)
 	}
-	genDoc.AppState = appStateJSON
+	gen.AppState = appStateJSON
 
 	return nil
 }
