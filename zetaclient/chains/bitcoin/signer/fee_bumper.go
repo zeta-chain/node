@@ -11,16 +11,22 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/constant"
+	mathpkg "github.com/zeta-chain/node/pkg/math"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 )
 
 const (
-	// minCPFPFeeBumpFactor is the minimum factor by which the CPFP average fee rate should be bumped.
+	// gasRateCap is the maximum average gas rate for CPFP fee bumping
+	// 100 sat/vB is a typical heuristic based on Bitcoin mempool statistics
+	// see: https://mempool.space/graphs/mempool#3y
+	gasRateCap = 100
+
+	// minCPFPFeeBumpPercent is the minimum percentage by which the CPFP average fee rate should be bumped.
 	// This value 20% is a heuristic, not mandated by the Bitcoin protocol, designed to balance effectiveness
 	// in replacing stuck transactions while avoiding excessive sensitivity to fee market fluctuations.
-	minCPFPFeeBumpFactor = 1.2
+	minCPFPFeeBumpPercent = 20
 )
 
 // MempoolTxsInfoFetcher is a function type to fetch mempool txs information
@@ -80,7 +86,7 @@ func NewCPFPFeeBumper(
 }
 
 // BumpTxFee bumps the fee of the stuck transaction using reserved bump fees
-func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, error) {
+func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, int64, error) {
 	// reuse old tx body and clear witness data (e.g., signatures)
 	newTx := b.Tx.MsgTx().Copy()
 	for idx := range newTx.TxIn {
@@ -89,14 +95,14 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, error) {
 
 	// check reserved bump fees amount in the original tx
 	if len(newTx.TxOut) < 3 {
-		return nil, 0, errors.New("original tx has no reserved bump fees")
+		return nil, 0, 0, errors.New("original tx has no reserved bump fees")
 	}
 
 	// tx replacement is triggered only when market fee rate goes 20% higher than current paid fee rate.
 	// zetacore updates the cctx fee rate evey 10 minutes, we could hold on and retry later.
-	minBumpRate := int64(math.Ceil(float64(b.AvgFeeRate) * minCPFPFeeBumpFactor))
+	minBumpRate := mathpkg.IncreaseIntByPercent(b.AvgFeeRate, minCPFPFeeBumpPercent, true)
 	if b.CCTXRate < minBumpRate {
-		return nil, 0, fmt.Errorf(
+		return nil, 0, 0, fmt.Errorf(
 			"hold on RBF: cctx rate %d is lower than the min bumped rate %d",
 			b.CCTXRate,
 			minBumpRate,
@@ -106,13 +112,19 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, error) {
 	// the live rate may continue increasing during network congestion, we should wait until it stabilizes a bit.
 	// this is to ensure the live rate is not 20%+ higher than the cctx rate, otherwise, the replacement tx may
 	// also get stuck and need another replacement.
-	bumpedRate := int64(math.Ceil(float64(b.CCTXRate) * minCPFPFeeBumpFactor))
+	bumpedRate := mathpkg.IncreaseIntByPercent(b.CCTXRate, minCPFPFeeBumpPercent, true)
 	if b.LiveRate > bumpedRate {
-		return nil, 0, fmt.Errorf(
+		return nil, 0, 0, fmt.Errorf(
 			"hold on RBF: live rate %d is much higher than the cctx rate %d",
 			b.LiveRate,
 			b.CCTXRate,
 		)
+	}
+
+	// cap the gas rate to avoid excessive fees
+	gasRateNew := b.CCTXRate
+	if b.CCTXRate > gasRateCap {
+		gasRateNew = gasRateCap
 	}
 
 	// calculate minmimum relay fees of the new replacement tx
@@ -127,7 +139,7 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, error) {
 	// 2. additionalFees >= minRelayTxFees
 	//
 	// see: https://github.com/bitcoin/bitcoin/blob/master/src/policy/rbf.cpp#L166-L183
-	additionalFees := b.TotalVSize*b.CCTXRate - b.TotalFees
+	additionalFees := b.TotalVSize*gasRateNew - b.TotalFees
 	if additionalFees < minRelayTxFees {
 		additionalFees = minRelayTxFees
 	}
@@ -142,7 +154,10 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, error) {
 		newTx.TxOut = newTx.TxOut[:2]
 	}
 
-	return newTx, additionalFees, nil
+	// effective gas rate
+	gasRateNew = int64(math.Ceil(float64(b.TotalFees+additionalFees) / float64(b.TotalVSize)))
+
+	return newTx, additionalFees, gasRateNew, nil
 }
 
 // fetchFeeBumpInfo fetches all necessary information needed to bump the stuck tx

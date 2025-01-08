@@ -62,10 +62,17 @@ func NewOutboundData(
 		return nil, errors.New("can only send gas token to a Bitcoin network")
 	}
 
-	// fee rate
+	// initial fee rate
 	feeRate, err := strconv.ParseInt(params.GasPrice, 10, 64)
 	if err != nil || feeRate < 0 {
 		return nil, fmt.Errorf("cannot convert gas price %s", params.GasPrice)
+	}
+
+	// use current gas rate if fed by zetacore
+	newRate, err := strconv.ParseInt(params.GasPriorityFee, 10, 64)
+	if err == nil && newRate > 0 && newRate != feeRate {
+		logger.Info().Msgf("use new gas rate %d sat/vB instead of %d sat/vB", newRate, feeRate)
+		feeRate = newRate
 	}
 
 	// check receiver address

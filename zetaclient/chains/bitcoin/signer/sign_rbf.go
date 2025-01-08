@@ -64,11 +64,11 @@ func (signer *Signer) SignRBFTx(
 	}
 
 	// bump tx fees
-	newTx, additionalFees, err := fb.BumpTxFee()
+	newTx, additionalFees, newRate, err := fb.BumpTxFee()
 	if err != nil {
 		return nil, errors.Wrap(err, "BumpTxFee failed")
 	}
-	logger.Info().Msgf("BumpTxFee success, additional fees: %d satoshis", additionalFees)
+	logger.Info().Msgf("BumpTxFee succeed, additional fees: %d satoshis, new rate: %d sat/vB", additionalFees, newRate)
 
 	// collect input amounts for signing
 	inAmounts := make([]int64, len(newTx.TxIn))

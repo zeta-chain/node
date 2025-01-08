@@ -41,7 +41,7 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 				2,      // 2 stuck TSS txs
 				0.0001, // total fees 0.0001 BTC
 				1000,   // total vsize 1000
-				10,     // average fee rate 10 sat/vbyte
+				10,     // average fee rate 10 sat/vB
 				"",     // no error
 			),
 			expected: &signer.CPFPFeeBumper{
@@ -106,11 +106,12 @@ func Test_BumpTxFee(t *testing.T) {
 	msgTx := testutils.LoadBTCMsgTx(t, TestDataDir, chain.ChainId, txid)
 
 	tests := []struct {
-		name           string
-		feeBumper      *signer.CPFPFeeBumper
-		errMsg         string
-		additionalFees int64
-		expectedTx     *wire.MsgTx
+		name            string
+		feeBumper       *signer.CPFPFeeBumper
+		additionalFees  int64
+		expectedNewRate int64
+		expectedNewTx   *wire.MsgTx
+		errMsg          string
 	}{
 		{
 			name: "should bump tx fee successfully",
@@ -123,8 +124,9 @@ func Test_BumpTxFee(t *testing.T) {
 				TotalVSize:  579,
 				AvgFeeRate:  47,
 			},
-			additionalFees: 5790,
-			expectedTx: func() *wire.MsgTx {
+			additionalFees:  5790,
+			expectedNewRate: 57,
+			expectedNewTx: func() *wire.MsgTx {
 				// deduct additional fees
 				newTx := copyMsgTx(msgTx)
 				newTx.TxOut[2].Value -= 5790
@@ -137,13 +139,14 @@ func Test_BumpTxFee(t *testing.T) {
 				Tx:          btcutil.NewTx(msgTx),
 				MinRelayFee: 0.00002, // min relay fee will be 579vB * 2 = 1158 sats
 				CCTXRate:    6,
-				LiveRate:    8,
+				LiveRate:    7,
 				TotalFees:   2895,
 				TotalVSize:  579,
 				AvgFeeRate:  5,
 			},
-			additionalFees: 1158,
-			expectedTx: func() *wire.MsgTx {
+			additionalFees:  1158,
+			expectedNewRate: 7, // (2895 + 1158) / 579 = 7
+			expectedNewTx: func() *wire.MsgTx {
 				// deduct additional fees
 				newTx := copyMsgTx(msgTx)
 				newTx.TxOut[2].Value -= 1158
@@ -166,11 +169,32 @@ func Test_BumpTxFee(t *testing.T) {
 				TotalVSize:  579,
 				AvgFeeRate:  47,
 			},
-			additionalFees: 5790 + constant.BTCWithdrawalDustAmount - 1, // 6789
-			expectedTx: func() *wire.MsgTx {
+			additionalFees:  5790 + constant.BTCWithdrawalDustAmount - 1, // 6789
+			expectedNewRate: 59,                                          // (27213 + 6789) / 579 ≈ 59
+			expectedNewTx: func() *wire.MsgTx {
 				// give up all reserved bump fees
 				newTx := copyMsgTx(msgTx)
 				newTx.TxOut = newTx.TxOut[:2]
+				return newTx
+			}(),
+		},
+		{
+			name: "should cap new gas rate to 'gasRateCap'",
+			feeBumper: &signer.CPFPFeeBumper{
+				Tx:          btcutil.NewTx(msgTx),
+				MinRelayFee: 0.00001,
+				CCTXRate:    101, // > 100
+				LiveRate:    120,
+				TotalFees:   27213,
+				TotalVSize:  579,
+				AvgFeeRate:  47,
+			},
+			additionalFees:  30687, // (100-47)*579
+			expectedNewRate: 100,
+			expectedNewTx: func() *wire.MsgTx {
+				// deduct additional fees
+				newTx := copyMsgTx(msgTx)
+				newTx.TxOut[2].Value -= 30687
 				return newTx
 			}(),
 		},
@@ -190,7 +214,7 @@ func Test_BumpTxFee(t *testing.T) {
 			name: "should hold on RBF if CCTX rate is lower than minimum bumpeed rate",
 			feeBumper: &signer.CPFPFeeBumper{
 				Tx:         btcutil.NewTx(msgTx),
-				CCTXRate:   56, // 56 < 47 * 120%
+				CCTXRate:   55, // 56 < 47 * 120%
 				AvgFeeRate: 47,
 			},
 			errMsg: "lower than the min bumped rate",
@@ -209,15 +233,16 @@ func Test_BumpTxFee(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			newTx, additionalFees, err := tt.feeBumper.BumpTxFee()
+			newTx, additionalFees, newRate, err := tt.feeBumper.BumpTxFee()
 			if tt.errMsg != "" {
 				require.Nil(t, newTx)
 				require.Zero(t, additionalFees)
 				require.ErrorContains(t, err, tt.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tt.expectedTx, newTx)
+				require.Equal(t, tt.expectedNewTx, newTx)
 				require.Equal(t, tt.additionalFees, additionalFees)
+				require.Equal(t, tt.expectedNewRate, newRate)
 			}
 		})
 	}
@@ -246,7 +271,7 @@ func Test_FetchFeeBumpInfo(t *testing.T) {
 				2,      // 2 stuck TSS txs
 				0.0001, // total fees 0.0001 BTC
 				1000,   // total vsize 1000
-				10,     // average fee rate 10 sat/vbyte
+				10,     // average fee rate 10 sat/vB
 				"",     // no error
 			),
 			expected: &signer.CPFPFeeBumper{

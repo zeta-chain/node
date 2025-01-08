@@ -25,6 +25,11 @@ const (
 
 	// the rank below (or equal to) which we consolidate UTXOs
 	consolidationRank = 10
+
+	// reservedRBFFees is the amount of BTC reserved for RBF fee bumping.
+	// the TSS keysign stops automatically when transactions get stuck in the mempool
+	// 0.01 BTC can bump 10 transactions (1KB each) by 100 sat/vB
+	reservedRBFFees = 0.01
 )
 
 // SignWithdrawTx signs a BTC withdrawal tx and returns the signed tx
@@ -35,15 +40,15 @@ func (signer *Signer) SignWithdrawTx(
 ) (*wire.MsgTx, error) {
 	nonceMark := chains.NonceMarkAmount(txData.nonce)
 	estimateFee := float64(txData.feeRate*bitcoin.OutboundBytesMax) / 1e8
+	totalAmount := txData.amount + estimateFee + reservedRBFFees + float64(nonceMark)*1e-8
 
 	// refreshing UTXO list before TSS keysign is important:
 	// 1. all TSS outbounds have opted-in for RBF to be replaceable
-	// 2. using old UTXOs may lead to accidental double-spending
-	// 3. double-spending may trigger unexpected tx replacement (RBF)
+	// 2. using old UTXOs may lead to accidental double-spending, which may trigger unwanted RBF
 	//
-	// Note: unwanted RBF will rarely happen for two reasons:
+	// Note: unwanted RBF is very unlikely to happen for two reasons:
 	// 1. it requires 2/3 TSS signers to accidentally sign the same tx using same outdated UTXOs.
-	// 2. RBF requires a higher fee rate than the original tx.
+	// 2. RBF requires a higher fee rate than the original tx, otherwise it will fail.
 	err := ob.FetchUTXOs(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "FetchUTXOs failed")
@@ -52,7 +57,7 @@ func (signer *Signer) SignWithdrawTx(
 	// select N UTXOs to cover the total expense
 	prevOuts, total, consolidatedUtxo, consolidatedValue, err := ob.SelectUTXOs(
 		ctx,
-		txData.amount+estimateFee+float64(nonceMark)*1e-8,
+		totalAmount,
 		MaxNoOfInputsPerTx,
 		txData.nonce,
 		consolidationRank,
@@ -79,7 +84,7 @@ func (signer *Signer) SignWithdrawTx(
 		signer.Logger().Std.Info().
 			Msgf("txSize %d is less than BtcOutboundBytesWithdrawer %d for nonce %d", txData.txSize, txSize, txData.nonce)
 	}
-	if txSize < bitcoin.OutboundBytesMin { // outbound shouldn't be blocked a low sizeLimit
+	if txSize < bitcoin.OutboundBytesMin { // outbound shouldn't be blocked by low sizeLimit
 		signer.Logger().Std.Warn().
 			Msgf("txSize %d is less than outboundBytesMin %d; use outboundBytesMin", txSize, bitcoin.OutboundBytesMin)
 		txSize = bitcoin.OutboundBytesMin

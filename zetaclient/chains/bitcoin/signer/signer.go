@@ -159,6 +159,10 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 	minRelayFee := networkInfo.RelayFee
+	if minRelayFee <= 0 {
+		logger.Error().Msgf("invalid minimum relay fee: %f", minRelayFee)
+		return
+	}
 
 	var (
 		signedTx *wire.MsgTx
@@ -167,6 +171,7 @@ func (signer *Signer) TryProcessOutbound(
 
 	// sign outbound
 	if stuckTx != nil && params.TssNonce == stuckTx.Nonce {
+		// sign RBF tx
 		signedTx, err = signer.SignRBFTx(
 			ctx,
 			cctx,
