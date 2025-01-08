@@ -1,11 +1,14 @@
 package network
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"time"
 
+	"cosmossdk.io/log"
+	cmtcfg "github.com/cometbft/cometbft/config"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
@@ -14,9 +17,10 @@ import (
 	"github.com/cometbft/cometbft/rpc/client/local"
 	tmtypes "github.com/cometbft/cometbft/types"
 	tmtime "github.com/cometbft/cometbft/types/time"
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
-	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
+	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -40,17 +44,25 @@ func startInProcess(cfg Config, val *Validator) error {
 	app := cfg.AppConstructor(*val)
 	val.app = app
 
-	genDocProvider := node.DefaultGenesisDocProviderFunc(tmCfg)
+	appGenesisProvider := func() (*tmtypes.GenesisDoc, error) {
+		appGenesis, err := genutiltypes.AppGenesisFromFile(tmCfg.GenesisFile())
+		if err != nil {
+			return nil, err
+		}
 
+		return appGenesis.ToGenesisDoc()
+	}
+
+	cmtApp := server.NewCometABCIWrapper(app)
 	tmNode, err := node.NewNode( //resleak:notresource
 		tmCfg,
 		pvm.LoadOrGenFilePV(tmCfg.PrivValidatorKeyFile(), tmCfg.PrivValidatorStateFile()),
 		nodeKey,
-		proxy.NewLocalClientCreator(app),
-		genDocProvider,
-		node.DefaultDBProvider,
+		proxy.NewLocalClientCreator(cmtApp),
+		appGenesisProvider,
+		cmtcfg.DefaultDBProvider,
 		node.DefaultMetricsProvider(tmCfg.Instrumentation),
-		logger.With("module", val.Moniker),
+		servercmtlog.CometLoggerWrapper{Logger: logger.With("module", val.Moniker)},
 	)
 	if err != nil {
 		return err
@@ -65,6 +77,8 @@ func startInProcess(cfg Config, val *Validator) error {
 		val.RPCClient = local.New(tmNode)
 	}
 
+	ctx := context.Background()
+
 	// We'll need a RPC client if the validator exposes a gRPC or REST endpoint.
 	if val.APIAddress != "" || val.AppConfig.GRPC.Enable {
 		val.ClientCtx = val.ClientCtx.
@@ -72,17 +86,17 @@ func startInProcess(cfg Config, val *Validator) error {
 
 		app.RegisterTxService(val.ClientCtx)
 		app.RegisterTendermintService(val.ClientCtx)
-		app.RegisterNodeService(val.ClientCtx)
+		app.RegisterNodeService(val.ClientCtx, *val.AppConfig)
 	}
 
 	if val.APIAddress != "" {
-		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"))
+		apiSrv := api.New(val.ClientCtx, logger.With(log.ModuleKey, "api-server"), val.grpc)
 		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
 
 		errCh := make(chan error)
 
 		go func() {
-			if err := apiSrv.Start(*val.AppConfig); err != nil {
+			if err := apiSrv.Start(ctx, *val.AppConfig); err != nil {
 				errCh <- err
 			}
 		}()
@@ -90,26 +104,36 @@ func startInProcess(cfg Config, val *Validator) error {
 		select {
 		case err := <-errCh:
 			return err
-		case <-time.After(srvtypes.ServerStartTime): // assume server started successfully
+		case <-time.After(5 * time.Second): // assume server started successfully
 		}
 
 		val.api = apiSrv
 	}
 
+	grpcCfg := val.AppConfig.GRPC
 	if val.AppConfig.GRPC.Enable {
-		grpcSrv, err := servergrpc.StartGRPCServer(val.ClientCtx, app, val.AppConfig.GRPC)
+		grpcSrv, err := servergrpc.NewGRPCServer(val.ClientCtx, app, grpcCfg)
 		if err != nil {
 			return err
 		}
 
-		val.grpc = grpcSrv
+		errCh := make(chan error)
 
-		if val.AppConfig.GRPCWeb.Enable {
-			val.grpcWeb, err = servergrpc.StartGRPCWeb(grpcSrv, *val.AppConfig)
-			if err != nil {
-				return err
+		// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
+		// that the server is gracefully shut down.
+		go func() {
+			if err := servergrpc.StartGRPCServer(ctx, logger.With(log.ModuleKey, "grpc-server"), grpcCfg, grpcSrv); err != nil {
+				errCh <- err
 			}
+		}()
+
+		select {
+		case err := <-errCh:
+			return err
+		case <-time.After(5 * time.Second): // assume server started successfully
 		}
+
+		val.grpc = grpcSrv
 	}
 	return nil
 }
@@ -134,8 +158,13 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 			return err
 		}
 
+		appGenesis, err := genutiltypes.AppGenesisFromFile(genFile)
+		if err != nil {
+			return err
+		}
+
 		appState, err := genutil.GenAppStateFromConfig(cfg.Codec, cfg.TxConfig,
-			tmCfg, initCfg, *genDoc, banktypes.GenesisBalancesIterator{}, genutiltypes.DefaultMessageValidator)
+			tmCfg, initCfg, appGenesis, banktypes.GenesisBalancesIterator{}, genutiltypes.DefaultMessageValidator, cfg.TxConfig.SigningContext().ValidatorAddressCodec())
 		if err != nil {
 			return err
 		}

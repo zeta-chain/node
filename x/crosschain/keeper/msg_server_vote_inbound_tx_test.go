@@ -139,7 +139,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 			Asset:       "",
 			EventIndex:  1,
 		}
-		_, err := msgServer.VoteInbound(
+		_, err = msgServer.VoteInbound(
 			ctx,
 			msg,
 		)
