@@ -76,67 +76,67 @@ func WeightedOperations(
 		weightUpdateRateLimiterFlags int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgAddOutboundTracker, &weightMsgAddOutboundTracker, nil,
+	appParams.GetOrGenerate(OpWeightMsgAddOutboundTracker, &weightMsgAddOutboundTracker, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddOutboundTracker = DefaultWeightMsgAddOutboundTracker
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightAddInboundTracker, &weightAddInboundTracker, nil,
+	appParams.GetOrGenerate(OpWeightAddInboundTracker, &weightAddInboundTracker, nil,
 		func(_ *rand.Rand) {
 			weightAddInboundTracker = DefaultWeightAddInboundTracker
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightRemoveOutboundTracker, &weightRemoveOutboundTracker, nil,
+	appParams.GetOrGenerate(OpWeightRemoveOutboundTracker, &weightRemoveOutboundTracker, nil,
 		func(_ *rand.Rand) {
 			weightRemoveOutboundTracker = DefaultWeightRemoveOutboundTracker
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightVoteGasPrice, &weightVoteGasPrice, nil,
+	appParams.GetOrGenerate(OpWeightVoteGasPrice, &weightVoteGasPrice, nil,
 		func(_ *rand.Rand) {
 			weightVoteGasPrice = DefaultWeightVoteGasPrice
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightVoteOutbound, &weightVoteOutbound, nil,
+	appParams.GetOrGenerate(OpWeightVoteOutbound, &weightVoteOutbound, nil,
 		func(_ *rand.Rand) {
 			weightVoteOutbound = DefaultWeightVoteOutbound
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightVoteInbound, &weightVoteInbound, nil,
+	appParams.GetOrGenerate(OpWeightVoteInbound, &weightVoteInbound, nil,
 		func(_ *rand.Rand) {
 			weightVoteInbound = DefaultWeightVoteInbound
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightWhitelistERC20, &weightWhitelistERC20, nil,
+	appParams.GetOrGenerate(OpWeightWhitelistERC20, &weightWhitelistERC20, nil,
 		func(_ *rand.Rand) {
 			weightWhitelistERC20 = DefaultWeightWhitelistERC20
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMigrateTssFunds, &weightMigrateTssFunds, nil,
+	appParams.GetOrGenerate(OpWeightMigrateTssFunds, &weightMigrateTssFunds, nil,
 		func(_ *rand.Rand) {
 			weightMigrateTssFunds = DefaultWeightMigrateTssFunds
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightUpdateTssAddress, &weightUpdateTssAddress, nil,
+	appParams.GetOrGenerate(OpWeightUpdateTssAddress, &weightUpdateTssAddress, nil,
 		func(_ *rand.Rand) {
 			weightUpdateTssAddress = DefaultWeightUpdateTssAddress
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightAbortStuckCCTX, &weightAbortStuckCCTX, nil,
+	appParams.GetOrGenerate(OpWeightAbortStuckCCTX, &weightAbortStuckCCTX, nil,
 		func(_ *rand.Rand) {
 			weightAbortStuckCCTX = DefaultWeightAbortStuckCCTX
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightUpdateRateLimiterFlags, &weightUpdateRateLimiterFlags, nil,
+	appParams.GetOrGenerate(OpWeightUpdateRateLimiterFlags, &weightUpdateRateLimiterFlags, nil,
 		func(_ *rand.Rand) {
 			weightUpdateRateLimiterFlags = DefaultWeightUpdateRateLimiterFlags
 		},
@@ -173,7 +173,6 @@ func operationSimulateVoteInbound(
 			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             &msg,
-			MsgType:         msg.Type(),
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   k.GetAuthKeeper(),
@@ -275,7 +274,7 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
-		opMsg := simtypes.NewOperationMsg(&msg, true, "", nil)
+		opMsg := simtypes.NewOperationMsg(&msg, true, "")
 
 		// Add subsequent votes
 		observerSet, found := k.GetObserverKeeper().GetObserverSet(ctx)
@@ -360,7 +359,7 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 
 		// System contracts are deployed on the first block, so we cannot vote on gas prices before that
 		if ctx.BlockHeight() <= 1 {
-			return simtypes.NewOperationMsg(&msg, true, "block height less than 1", nil), nil, nil
+			return simtypes.NewOperationMsg(&msg, true, "block height less than 1"), nil, nil
 		}
 
 		err = msg.ValidateBasic()
@@ -374,7 +373,6 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             &msg,
-			MsgType:         msg.Type(),
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   k.GetAuthKeeper(),
@@ -451,12 +449,12 @@ func GenAndDeliverTxWithRandFees(
 
 	coins, hasNeg := spendable.SafeSub(txCtx.CoinsSpentInMsg...)
 	if hasNeg {
-		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "message doesn't leave room for fees"), nil, err
+		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "message doesn't leave room for fees"), nil, err
 	}
 
 	fees, err = simtypes.RandomFees(txCtx.R, txCtx.Context, coins)
 	if err != nil {
-		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to generate fees"), nil, err
+		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "unable to generate fees"), nil, err
 	}
 	return GenAndDeliverTx(txCtx, fees)
 }
@@ -480,13 +478,13 @@ func GenAndDeliverTx(
 		txCtx.SimAccount.PrivKey,
 	)
 	if err != nil {
-		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to generate mock tx"), nil, err
+		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "unable to generate mock tx"), nil, err
 	}
 
 	_, _, err = txCtx.App.SimDeliver(txCtx.TxGen.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to deliver tx"), nil, nil
+		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "unable to deliver tx"), nil, nil
 	}
 
-	return simtypes.NewOperationMsg(txCtx.Msg, true, "", txCtx.Cdc), nil, nil
+	return simtypes.NewOperationMsg(txCtx.Msg, true, ""), nil, nil
 }

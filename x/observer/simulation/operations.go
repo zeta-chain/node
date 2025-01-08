@@ -42,7 +42,7 @@ func WeightedOperations(
 ) simulation.WeightedOperations {
 	var weightMsgTypeMsgEnableCCTX int
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgTypeMsgEnableCCTX, &weightMsgTypeMsgEnableCCTX, nil,
+	appParams.GetOrGenerate(OpWeightMsgTypeMsgEnableCCTX, &weightMsgTypeMsgEnableCCTX, nil,
 		func(_ *rand.Rand) {
 			weightMsgTypeMsgEnableCCTX = DefaultWeightMsgTypeMsgEnableCCTX
 		})
@@ -94,7 +94,6 @@ func SimulateMsgTypeMsgEnableCCTX(k keeper.Keeper) simtypes.Operation {
 			TxGen:         moduletestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:           nil,
 			Msg:           &msg,
-			MsgType:       msg.Type(),
 			Context:       ctx,
 			SimAccount:    simAccount,
 			AccountKeeper: k.GetAuthKeeper(),

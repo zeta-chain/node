@@ -12,12 +12,11 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	cosmossimutils "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	cosmossim "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -365,15 +364,9 @@ func TestAppImportExport(t *testing.T) {
 	}()
 
 	// Create context for the old and the new sim app, which can be used to compare keys
-	ctxSimApp := simApp.NewContext(true, tmproto.Header{
-		Height:  simApp.LastBlockHeight(),
-		ChainID: SimAppChainID,
-	})
+	ctxSimApp := simApp.NewContext(true).WithBlockHeight(simApp.LastBlockHeight()).WithChainID(SimAppChainID)
 
-	ctxNewSimApp := newSimApp.NewContext(true, tmproto.Header{
-		Height:  simApp.LastBlockHeight(),
-		ChainID: SimAppChainID,
-	})
+	ctxNewSimApp := newSimApp.NewContext(true).WithBlockHeight(simApp.LastBlockHeight()).WithChainID(SimAppChainID)
 
 	t.Log("initializing genesis for the new app using exported genesis state")
 	// Use genesis state from the first app to initialize the second app
@@ -421,7 +414,7 @@ func TestAppImportExport(t *testing.T) {
 		storeA := ctxSimApp.KVStore(skp.A)
 		storeB := ctxNewSimApp.KVStore(skp.B)
 
-		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, skp.SkipPrefixes)
+		failedKVAs, failedKVBs := sims.DiffKVStores(storeA, storeB, skp.SkipPrefixes)
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
 
 		t.Logf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
@@ -545,7 +538,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log("Importing genesis into the new app")
-	newSimApp.InitChain(abci.RequestInitChain{
+	newSimApp.InitChain(&abci.RequestInitChain{
 		ChainId:       SimAppChainID,
 		AppStateBytes: exported.AppState,
 	})

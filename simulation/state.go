@@ -118,7 +118,7 @@ func updateObserverState(
 	rawState map[string]json.RawMessage,
 	cdc codec.Codec,
 	r *rand.Rand,
-	validators stakingtypes.Validators,
+	validators []stakingtypes.Validator,
 ) *observertypes.GenesisState {
 	observerStateBz, ok := rawState[observertypes.ModuleName]
 	require.True(t, ok, "observer genesis state is missing")
@@ -301,11 +301,11 @@ func AppStateRandomizedFn(
 		initialStake       math.Int
 	)
 
-	appParams.GetOrGenerate(cdc,
+	appParams.GetOrGenerate(
 		StakePerAccount, &initialStake, r,
 		func(r *rand.Rand) { initialStake = math.NewInt(r.Int63n(1e12)) },
 	)
-	appParams.GetOrGenerate(cdc,
+	appParams.GetOrGenerate(
 		InitiallyBondedValidators, &numInitiallyBonded, r,
 		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(300)) },
 	)
