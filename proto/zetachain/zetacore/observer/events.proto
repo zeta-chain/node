@@ -4,7 +4,6 @@ package zetachain.zetacore.observer;
 import "gogoproto/gogo.proto";
 import "zetachain/zetacore/observer/crosschain_flags.proto";
 import "zetachain/zetacore/observer/observer.proto";
-import "zetachain/zetacore/observer/ballot.proto";
 
 option go_package = "github.com/zeta-chain/node/x/observer/types";
 
