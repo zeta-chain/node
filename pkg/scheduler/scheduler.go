@@ -234,3 +234,12 @@ func newTickable(task *Task, opts *taskOpts) tickable {
 		task.logger,
 	)
 }
+
+// normalizeInterval ensures that the interval is positive to prevent panics.
+func normalizeInterval(dur time.Duration) time.Duration {
+	if dur > 0 {
+		return dur
+	}
+
+	return time.Second
+}
