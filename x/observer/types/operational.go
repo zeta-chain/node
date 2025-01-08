@@ -4,6 +4,7 @@ import (
 	"time"
 
 	cosmoserrors "cosmossdk.io/errors"
+	"golang.org/x/mod/semver"
 )
 
 const (
@@ -22,6 +23,9 @@ func (f *OperationalFlags) Validate() error {
 		if signerBlockTimeOffset > signerBlockTimeOffsetLimit {
 			return cosmoserrors.Wrapf(ErrOperationalFlagsSignerBlockTimeOffsetLimit, "(%s)", signerBlockTimeOffset)
 		}
+	}
+	if f.MinimumVersion != "" && !semver.IsValid(f.MinimumVersion) {
+		return ErrOperationalFlagsInvalidMinimumVersion
 	}
 	return nil
 }

@@ -6,6 +6,7 @@
 
 * [3235](https://github.com/zeta-chain/node/pull/3235) - add /systemtime telemetry endpoint (zetaclient)
 * [3317](https://github.com/zeta-chain/node/pull/3317) - add configurable signer latency correction (zetaclient)
+* [3320](https://github.com/zeta-chain/node/pull/3320) - add zetaclient minimum version check
 
 ### Tests
 
