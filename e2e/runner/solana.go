@@ -218,6 +218,7 @@ func (r *E2ERunner) SPLDepositAndCall(
 	whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, r.GatewayProgram)
 	require.NoError(r, err)
 
+	r.Logger.Info("deposit spl %d %s %s %s %s %s %s", amount, privateKey.PublicKey(), whitelistEntryPDA.String(), mintAccount.String(), ata.String(), pdaAta.String(), receiver.String())
 	depositSPLInstruction := r.CreateDepositSPLInstruction(
 		amount,
 		privateKey.PublicKey(),
@@ -324,13 +325,17 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 // BroadcastTxSync broadcasts a transaction and waits for it to be finalized
 func (r *E2ERunner) BroadcastTxSync(tx *solana.Transaction) (solana.Signature, *rpc.GetTransactionResult) {
 	// broadcast the transaction
-	sig, err := r.SolanaClient.SendTransactionWithOpts(r.Ctx, tx, rpc.TransactionOpts{})
+	maxRetries := uint(5)
+	sig, err := r.SolanaClient.SendTransactionWithOpts(r.Ctx, tx, rpc.TransactionOpts{
+		MaxRetries:    &maxRetries,
+		SkipPreflight: true,
+	})
 	require.NoError(r, err)
 	r.Logger.Info("broadcast success! tx sig %s; waiting for confirmation...", sig)
 
 	var (
 		start   = time.Now()
-		timeout = 2 * time.Minute // Solana tx expires automatically after 2 minutes
+		timeout = 4 * time.Minute // Solana tx expires automatically after 4 minutes
 	)
 
 	// wait for the transaction to be finalized
@@ -342,6 +347,8 @@ func (r *E2ERunner) BroadcastTxSync(tx *solana.Transaction) (solana.Signature, *
 		out, err = r.SolanaClient.GetTransaction(r.Ctx, sig, &rpc.GetTransactionOpts{})
 		if err == nil {
 			break
+		} else {
+			r.Logger.Info("error getting tx %s", err.Error())
 		}
 	}
 

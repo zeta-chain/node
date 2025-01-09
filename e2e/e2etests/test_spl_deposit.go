@@ -21,12 +21,16 @@ func TestSPLDeposit(r *runner.E2ERunner, args []string) {
 
 	// get SPL balance for pda and sender atas
 	pda := r.ComputePdaAddress()
+	r.Logger.Info("resolving pda ata")
 	pdaAta := r.ResolveSolanaATA(privKey, pda, r.SPLAddr)
+	r.Logger.Info("pda ata resolved %s", pdaAta.String())
 
 	pdaBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 
+	r.Logger.Info("resolving sender ata")
 	senderAta := r.ResolveSolanaATA(privKey, privKey.PublicKey(), r.SPLAddr)
+	r.Logger.Info("sender ata resolved %s", senderAta.String())
 	senderBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 
@@ -36,6 +40,7 @@ func TestSPLDeposit(r *runner.E2ERunner, args []string) {
 
 	// deposit SPL tokens
 	// #nosec G115 e2eTest - always in range
+	r.Logger.Info("deposit spl start")
 	sig := r.SPLDepositAndCall(&privKey, uint64(amount), r.SPLAddr, r.EVMAddress(), nil)
 
 	// wait for the cctx to be mined
