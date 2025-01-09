@@ -183,7 +183,7 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 				Uint64("outbound.earliest_pending_nonce", cctxList[0].GetCurrentOutboundParam().TssNonce).
 				Msg("Schedule CCTX: lookahead reached")
 			return nil
-		case !b.proc.IsOutboundActive(outboundID):
+		case b.proc.IsOutboundActive(outboundID):
 			// outbound is already being processed
 			continue
 		}
