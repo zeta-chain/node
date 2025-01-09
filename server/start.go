@@ -57,6 +57,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
+	cmttypes "github.com/cometbft/cometbft/types"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	zetaos "github.com/zeta-chain/node/pkg/os"
 	"github.com/zeta-chain/node/server/config"
 	srvflags "github.com/zeta-chain/node/server/flags"
@@ -407,7 +409,7 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 		return err
 	}
 
-	genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
+	genDocProvider := GenDocProvider(cfg)
 
 	var (
 		tmNode   *node.Node
@@ -601,6 +603,18 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 	// At this point it is safe to block the process if we're in query only mode as
 	// we do not need to start Rosetta or handle any CometBFT related processes.
 	return g.Wait()
+}
+
+// returns a function which returns the genesis doc from the genesis file.
+func GenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) {
+	return func() (*cmttypes.GenesisDoc, error) {
+		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
+		if err != nil {
+			return nil, err
+		}
+
+		return appGenesis.ToGenesisDoc()
+	}
 }
 
 func startGrpcServer(

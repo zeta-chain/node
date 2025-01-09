@@ -270,6 +270,7 @@ then
   if jq -e '.app_state.gov | has("params")' "$HOME/.zetacored/config/genesis.json" > /dev/null; then
     cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["params"]["min_deposit"][0]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
     cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["params"]["voting_period"]="100s"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+    cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["params"]["expedited_voting_period"]="50s"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   fi
 
 # set admin account
@@ -357,6 +358,7 @@ then
 # Update governance voting parameters for localnet
 # this allows for quick upgrades and using more than two nodes
   jq '.app_state["gov"]["params"]["voting_period"]="100s" |
+    .app_state["gov"]["params"]["expedited_voting_period"]="50s" |
     .app_state["gov"]["params"]["quorum"]="0.1" |
     .app_state["gov"]["params"]["threshold"]="0.1"' \
   $HOME/.zetacored/config/genesis.json > tmp.json && mv tmp.json $HOME/.zetacored/config/genesis.json

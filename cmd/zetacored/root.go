@@ -35,6 +35,7 @@ import (
 	"github.com/zeta-chain/ethermint/crypto/hd"
 	"github.com/zeta-chain/ethermint/types"
 
+	confixcmd "cosmossdk.io/tools/confix/cmd"
 	"github.com/zeta-chain/node/app"
 	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
 	zetamempool "github.com/zeta-chain/node/pkg/mempool"
@@ -112,6 +113,9 @@ func NewRootCmd() (*cobra.Command, types.EncodingConfig) {
 	}
 
 	initRootCmd(rootCmd, encodingConfig)
+	rootCmd.AddCommand(
+		confixcmd.ConfigCommand(),
+	)
 
 	return rootCmd, encodingConfig
 }
@@ -238,7 +242,6 @@ func txCommand() *cobra.Command {
 		authcmd.GetDecodeCommand(),
 	)
 
-	app.ModuleBasics.AddTxCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd

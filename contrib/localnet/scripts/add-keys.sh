@@ -16,9 +16,9 @@ if [ "$HOTKEY_BACKEND" == "$KEYRING_FILE" ]; then
     hotkey_address=$(printf "%s\n%s\n" "$HOTKEY_PASSWORD" "$HOTKEY_PASSWORD" | zetacored keys show hotkey -a --keyring-backend=$KEYRING_FILE)
 
     # Get hotkey pubkey, the command use keyring-backend in the cosmos config
-    zetacored config keyring-backend "$KEYRING_FILE"
+    zetacored config set client keyring-backend "$KEYRING_FILE"
     pubkey=$(printf "%s\n%s\n" "$HOTKEY_PASSWORD" "$HOTKEY_PASSWORD" | zetacored get-pubkey hotkey | sed -e 's/secp256k1:"\(.*\)"/\1/' |sed 's/ //g' )
-    zetacored config keyring-backend "$KEYRING_TEST"
+    zetacored config set client keyring-backend "$KEYRING_TEST"
 else
     zetacored keys add hotkey --algo=secp256k1 --keyring-backend=$KEYRING
     hotkey_address=$(zetacored keys show hotkey -a --keyring-backend=$KEYRING)

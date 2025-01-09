@@ -309,6 +309,7 @@ require (
 
 require (
 	cosmossdk.io/store v1.1.1
+	cosmossdk.io/tools/confix v0.1.2
 	github.com/bnb-chain/tss-lib v1.5.0
 	github.com/cosmos/cosmos-db v1.1.0
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
@@ -334,6 +335,8 @@ require (
 	github.com/cosmos/rosetta v0.50.11 // indirect
 	github.com/crate-crypto/go-ipa v0.0.0-20231025140028-3c0104f4b233 // indirect
 	github.com/crate-crypto/go-kzg-4844 v0.7.0 // indirect
+	github.com/creachadair/atomicfile v0.3.1 // indirect
+	github.com/creachadair/tomledit v0.0.24 // indirect
 	github.com/deckarep/golang-set/v2 v2.1.0 // indirect
 	github.com/decred/dcrd/crypto/blake256 v1.0.1 // indirect
 	github.com/emicklei/dot v1.6.2 // indirect
