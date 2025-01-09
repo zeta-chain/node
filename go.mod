@@ -54,7 +54,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
-	github.com/zeta-chain/ethermint v0.0.0-20250107221844-a6a640016b3b
+	github.com/zeta-chain/ethermint v0.0.0-20250109001946-42c9a4f16e48
 	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20241021075719-d40d2e28467c
 	gitlab.com/thorchain/tss/go-tss v1.6.5
 	go.nhat.io/grpcmock v0.25.0

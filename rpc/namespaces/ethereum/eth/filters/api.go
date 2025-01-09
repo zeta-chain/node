@@ -18,6 +18,7 @@ package filters
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"sync"
 	"time"
 
@@ -30,6 +31,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/filters"
+	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
@@ -353,6 +355,8 @@ func (api *PublicFilterAPI) NewHeads(ctx context.Context) (*rpc.Subscription, er
 		return &rpc.Subscription{}, err
 	}
 
+	// TODO: use events
+	baseFee := big.NewInt(params.InitialBaseFee)
 	go func(headersCh <-chan coretypes.ResultEvent) {
 		defer cancelSubs()
 
@@ -369,8 +373,6 @@ func (api *PublicFilterAPI) NewHeads(ctx context.Context) (*rpc.Subscription, er
 					api.logger.Debug("event data type mismatch", "type", fmt.Sprintf("%T", ev.Data))
 					continue
 				}
-
-				baseFee := types.BaseFeeFromEvents(data.ResultBeginBlock.Events)
 
 				validatorAccount, err := backend.GetValidatorAccount(&data.Header, api.queryClient)
 				if err != nil {

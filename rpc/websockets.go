@@ -35,6 +35,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/filters"
+	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -427,6 +428,8 @@ func (api *pubSubAPI) subscribeNewHeads(wsConn *wsConn, subID rpc.ID) (pubsub.Un
 		return nil, errors.Wrap(err, "error creating block filter")
 	}
 
+	// TODO: use events
+	baseFee := big.NewInt(params.InitialBaseFee)
 	go func() {
 		headersCh := sub.Event()
 		errCh := sub.Err()
@@ -448,8 +451,6 @@ func (api *pubSubAPI) subscribeNewHeads(wsConn *wsConn, subID rpc.ID) (pubsub.Un
 					api.logger.Error("failed to get validator account", "err", err)
 					continue
 				}
-
-				baseFee := types.BaseFeeFromEvents(data.ResultBeginBlock.Events)
 
 				header := types.EthHeaderFromTendermint(data.Header, ethtypes.Bloom{}, baseFee, validatorAccount)
 
