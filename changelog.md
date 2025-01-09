@@ -33,6 +33,7 @@
 * [3289](https://github.com/zeta-chain/node/pull/3289) - remove all dynamic peer discovery (zetaclient)
 * [3314](https://github.com/zeta-chain/node/pull/3314) - update `last_scanned_block_number` metrics more frequently for Solana chain
 * [3321](https://github.com/zeta-chain/node/pull/3321) - make crosschain-call with invalid withdraw revert
+* [3342](https://github.com/zeta-chain/node/pull/3342) - set per transaction gas limit to 10M
 
 ## v24.0.0
 
