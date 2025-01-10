@@ -170,12 +170,8 @@ func (signer *Signer) SignWithdrawTx(
 	nonceMark := chains.NonceMarkAmount(nonce)
 
 	// refresh unspent UTXOs and continue with keysign regardless of error
-	err := observer.FetchUTXOs(ctx)
-	if err != nil {
-		signer.Logger().
-			Std.Error().
-			Err(err).
-			Msgf("SignGasWithdraw: FetchUTXOs error: nonce %d chain %d", nonce, chain.ChainId)
+	if err := observer.FetchUTXOs(ctx); err != nil {
+		signer.Logger().Std.Error().Err(err).Uint64("nonce", nonce).Msg("SignWithdrawTx: FetchUTXOs failed")
 	}
 
 	// select N UTXOs to cover the total expense
@@ -188,7 +184,7 @@ func (signer *Signer) SignWithdrawTx(
 		false,
 	)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to select UTXOs")
 	}
 
 	// build tx with selected unspents
@@ -196,8 +192,9 @@ func (signer *Signer) SignWithdrawTx(
 	for _, prevOut := range prevOuts {
 		hash, err := chainhash.NewHashFromStr(prevOut.TxID)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "unable to construct hash")
 		}
+
 		outpoint := wire.NewOutPoint(hash, prevOut.Vout)
 		txIn := wire.NewTxIn(outpoint, nil, nil)
 		tx.AddTxIn(txIn)
@@ -207,7 +204,7 @@ func (signer *Signer) SignWithdrawTx(
 	// #nosec G115 always positive
 	txSize, err := common.EstimateOutboundSize(uint64(len(prevOuts)), []btcutil.Address{to})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to estimate tx size")
 	}
 	if sizeLimit < common.BtcOutboundBytesWithdrawer { // ZRC20 'withdraw' charged less fee from end user
 		signer.Logger().Std.Info().
@@ -235,7 +232,7 @@ func (signer *Signer) SignWithdrawTx(
 	// add tx outputs
 	err = signer.AddWithdrawTxOutputs(tx, to, total, amount, nonceMark, fees, cancelTx)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to add withdrawal tx outputs")
 	}
 
 	// sign the tx
@@ -258,7 +255,7 @@ func (signer *Signer) SignWithdrawTx(
 
 	sig65Bs, err := signer.TSS().SignBatch(ctx, witnessHashes, height, nonce, chain.ChainId)
 	if err != nil {
-		return nil, fmt.Errorf("SignBatch error: %v", err)
+		return nil, errors.Wrap(err, "unable to batch sign")
 	}
 
 	for ix := range tx.TxIn {
@@ -280,22 +277,21 @@ func (signer *Signer) SignWithdrawTx(
 
 // Broadcast sends the signed transaction to the network
 func (signer *Signer) Broadcast(signedTx *wire.MsgTx) error {
-	fmt.Printf("BTCSigner: Broadcasting: %s\n", signedTx.TxHash().String())
-
 	var outBuff bytes.Buffer
-	err := signedTx.Serialize(&outBuff)
-	if err != nil {
-		return err
-	}
-	str := hex.EncodeToString(outBuff.Bytes())
-	fmt.Printf("BTCSigner: Transaction Data: %s\n", str)
-
-	hash, err := signer.client.SendRawTransaction(signedTx, true)
-	if err != nil {
-		return err
+	if err := signedTx.Serialize(&outBuff); err != nil {
+		return errors.Wrap(err, "unable to serialize tx")
 	}
 
-	signer.Logger().Std.Info().Msgf("Broadcasting BTC tx , hash %s ", hash)
+	signer.Logger().Std.Info().
+		Stringer("signer.tx_hash", signedTx.TxHash()).
+		Str("signer.tx_payload", hex.EncodeToString(outBuff.Bytes())).
+		Msg("Broadcasting transaction")
+
+	_, err := signer.client.SendRawTransaction(signedTx, true)
+	if err != nil {
+		return errors.Wrap(err, "unable to broadcast raw tx")
+	}
+
 	return nil
 }
 
