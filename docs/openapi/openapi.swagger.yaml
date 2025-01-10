@@ -58110,6 +58110,17 @@ definitions:
         description: |-
           Height for a coordinated zetaclient restart.
           Will be ignored if missed.
+      signer_block_time_offset:
+        type: string
+        description: |-
+          Offset from the zetacore block time to initiate signing.
+          Should be calculated and set based on max(zetaclient_core_block_latency).
+      minimum_version:
+        type: string
+        description: |-
+          Minimum version of zetaclient that is allowed to run. This must be either
+          a valid semver string (v23.0.1) or empty. If empty, all versions are
+          allowed.
     description: Flags for the top-level operation of zetaclient.
   observerPendingNonces:
     type: object

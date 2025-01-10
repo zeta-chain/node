@@ -11,11 +11,13 @@ import (
 )
 
 const (
-	startTimestampMetricName = "zetaclient_last_start_timestamp_seconds"
+	startTimestampMetricName        = "zetaclient_last_start_timestamp_seconds"
+	blockTimeLatencyMetricName      = "zetaclient_core_block_latency"
+	blockTimeLatencySleepMetricName = "zetaclient_core_block_latency_sleep"
 )
 
-// TestOperationalFlags tests the functionality of operations flags.
-func TestOperationalFlags(r *runner.E2ERunner, _ []string) {
+// TestZetaclientRestartHeight tests scheduling a zetaclient restart via operational flags
+func TestZetaclientRestartHeight(r *runner.E2ERunner, _ []string) {
 	_, err := r.Clients.Zetacore.Observer.OperationalFlags(
 		r.Ctx,
 		&observertypes.QueryOperationalFlagsRequest{},
@@ -59,4 +61,47 @@ func TestOperationalFlags(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	require.Greater(r, currentStartTime, originalStartTime+1)
+}
+
+// TestZetaclientSignerOffset tests scheduling a zetaclient restart via operational flags
+func TestZetaclientSignerOffset(r *runner.E2ERunner, _ []string) {
+	startBlockTimeLatencySleep, err := r.Clients.ZetaclientMetrics.FetchGauge(blockTimeLatencySleepMetricName)
+	require.NoError(r, err)
+	require.InDelta(r, 0, startBlockTimeLatencySleep, .01, "start block time latency should be 0")
+
+	// get starting block time latency.
+	// we need to ensure it's not zero (if zetaclient just finished a restart)
+	var startBlockTimeLatency float64
+	require.Eventually(r, func() bool {
+		startBlockTimeLatency, err = r.Clients.ZetaclientMetrics.FetchGauge(blockTimeLatencyMetricName)
+		require.NoError(r, err)
+		return startBlockTimeLatency > 1
+	}, time.Second*15, time.Millisecond*100)
+
+	desiredSignerBlockTimeOffset := time.Duration(startBlockTimeLatency*float64(time.Second)) + time.Millisecond*200
+
+	updateMsg := observertypes.NewMsgUpdateOperationalFlags(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+		observertypes.OperationalFlags{
+			SignerBlockTimeOffset: &desiredSignerBlockTimeOffset,
+		},
+	)
+
+	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, updateMsg)
+	require.NoError(r, err)
+
+	operationalFlagsRes, err := r.Clients.Zetacore.Observer.OperationalFlags(
+		r.Ctx,
+		&observertypes.QueryOperationalFlagsRequest{},
+	)
+	require.NoError(r, err)
+	require.InDelta(r, desiredSignerBlockTimeOffset, *(operationalFlagsRes.OperationalFlags.SignerBlockTimeOffset), .01)
+
+	require.Eventually(r, func() bool {
+		blockTimeLatencySleep, err := r.Clients.ZetaclientMetrics.FetchGauge(blockTimeLatencySleepMetricName)
+		if err != nil {
+			return false
+		}
+		return blockTimeLatencySleep > .05
+	}, time.Second*20, time.Second*1)
 }

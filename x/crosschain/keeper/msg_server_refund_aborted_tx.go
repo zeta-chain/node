@@ -75,7 +75,6 @@ func (k msgServer) RefundAbortedCCTX(
 	cctx.CctxStatus.AbortRefunded()
 
 	k.SetCrossChainTx(ctx, cctx)
-
 	return &types.MsgRefundAbortedCCTXResponse{}, nil
 }
 

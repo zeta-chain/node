@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	fileFlag          = "file"
-	restartHeightFlag = "restart-height"
+	fileFlag                  = "file"
+	restartHeightFlag         = "restart-height"
+	signerBlockTimeOffsetFlag = "signer-block-time-offset"
 )
 
 func CmdUpdateOperationalFlags() *cobra.Command {
@@ -33,6 +34,7 @@ func CmdUpdateOperationalFlags() *cobra.Command {
 			flagSet := cmd.Flags()
 			file, _ := flagSet.GetString(fileFlag)
 			restartHeight, _ := flagSet.GetInt64(restartHeightFlag)
+			signerBlockTimeOffset, _ := flagSet.GetDuration(signerBlockTimeOffsetFlag)
 
 			if file != "" {
 				input, err := os.ReadFile(file) // #nosec G304
@@ -45,6 +47,7 @@ func CmdUpdateOperationalFlags() *cobra.Command {
 				}
 			} else {
 				operationalFlags.RestartHeight = restartHeight
+				operationalFlags.SignerBlockTimeOffset = &signerBlockTimeOffset
 			}
 
 			msg := types.NewMsgUpdateOperationalFlags(
@@ -58,6 +61,7 @@ func CmdUpdateOperationalFlags() *cobra.Command {
 
 	cmd.Flags().String(fileFlag, "", "Path to a JSON file containing OperationalFlags")
 	cmd.Flags().Int64(restartHeightFlag, 0, "Height for a coordinated zetaclient restart")
+	cmd.Flags().Duration(signerBlockTimeOffsetFlag, 0, "Offset from the zetacore block time to initiate signing")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

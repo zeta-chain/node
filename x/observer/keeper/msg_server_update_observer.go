@@ -36,6 +36,7 @@ func (k msgServer) UpdateObserver(
 			"Observer address is not authorized : %s", msg.OldObserverAddress)
 	}
 
+	// The New address should be a validator, not jailed and bonded
 	err = k.IsValidator(ctx, msg.NewObserverAddress)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrUpdateObserver, err.Error())
@@ -72,7 +73,12 @@ func (k msgServer) UpdateObserver(
 		return nil, errorsmod.Wrap(types.ErrLastObserverCountNotFound, "Observer count not found")
 	}
 	if lastBlockCount.Count != totalObserverCountCurrentBlock {
-		return nil, errorsmod.Wrap(types.ErrUpdateObserver, "Observer count mismatch")
+		return nil, errorsmod.Wrapf(
+			types.ErrUpdateObserver,
+			"Observer count mismatch current block: %d , last block: %d",
+			totalObserverCountCurrentBlock,
+			lastBlockCount.Count,
+		)
 	}
 	return &types.MsgUpdateObserverResponse{}, nil
 }

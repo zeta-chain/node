@@ -42,8 +42,6 @@ func init() {
 	zetasimulation.GetSimulatorFlags()
 }
 
-// StoreKeysPrefixes defines a struct used in comparing two keys for two different stores
-// SkipPrefixes is used to skip certain prefixes when comparing the stores
 type StoreKeysPrefixes struct {
 	A            storetypes.StoreKey
 	B            storetypes.StoreKey
@@ -66,6 +64,12 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 }
 
 // TestAppStateDeterminism runs a full application simulation , and produces multiple blocks as per the config
+// It does the following
+// 1. It runs the simulation multiple times with the same seed value
+// 2. It checks the apphash at the end of each run
+// 3. It compares the apphash at the end of each run to check for determinism
+// 4. Repeat steps 1-3 for multiple seeds
+
 // It checks the determinism of the application by comparing the apphash at the end of each run to other runs
 // The following test certifies that , for the same set of operations ( irrespective of what the operations are ) ,
 // we would reach the same final state if the initial state is the same
@@ -179,7 +183,10 @@ func TestAppStateDeterminism(t *testing.T) {
 }
 
 // TestFullAppSimulation runs a full simApp simulation with the provided configuration.
-// At the end of the run it tries to export the genesis state to make sure the export works.
+// This test does the following
+// 1. It runs a full simulation with the provided configuration
+// 2. It exports the state and validators
+// 3. Verifies that the run and export were successful
 func TestFullAppSimulation(t *testing.T) {
 
 	config := zetasimulation.NewConfigFromFlags()
@@ -252,6 +259,15 @@ func TestFullAppSimulation(t *testing.T) {
 	zetasimulation.PrintStats(db)
 }
 
+// TestAppImportExport tests the application simulation after importing the state exported from a previous.At a high level,it does the following
+//  1. It runs a full simulation and exports the state
+//  2. It creates a new app, and db
+//  3. It imports the exported state into the new app
+//  4. It compares the key value pairs for the two apps.The comparison function takes a list of keys to skip as an input as well
+//     a. First app which ran the simulation
+//     b. Second app which imported the state
+
+// This can verify the export and import process do not modify the state in anyway irrespective of the operations performed
 func TestAppImportExport(t *testing.T) {
 	config := zetasimulation.NewConfigFromFlags()
 
@@ -270,7 +286,6 @@ func TestAppImportExport(t *testing.T) {
 		t.Skip("skipping application simulation")
 	}
 	require.NoError(t, err, "simulation setup failed")
-
 	t.Cleanup(func() {
 		if err := db.Close(); err != nil {
 			require.NoError(t, err, "Error closing new database")
@@ -375,7 +390,6 @@ func TestAppImportExport(t *testing.T) {
 		ChainID: SimAppChainID,
 	})
 
-	t.Log("initializing genesis for the new app using exported genesis state")
 	// Use genesis state from the first app to initialize the second app
 	newSimApp.ModuleManager().InitGenesis(ctxNewSimApp, newSimApp.AppCodec(), genesisState)
 	newSimApp.StoreConsensusParams(ctxNewSimApp, exported.ConsensusParams)
@@ -390,7 +404,7 @@ func TestAppImportExport(t *testing.T) {
 		// We will need to explore this further to find a definitive answer
 		// TODO:https://github.com/zeta-chain/node/issues/3263
 
-		// {simApp.GetKey(authtypes.StoreKey), newSimApp.GetKey(authtypes.StoreKey), [][]byte{}},
+		//{simApp.GetKey(authtypes.StoreKey), newSimApp.GetKey(authtypes.StoreKey), [][]byte{}},
 		{
 			simApp.GetKey(stakingtypes.StoreKey), newSimApp.GetKey(stakingtypes.StoreKey),
 			[][]byte{
@@ -439,6 +453,12 @@ func TestAppImportExport(t *testing.T) {
 	}
 }
 
+// TestAppSimulationAfterImport tests the application simulation after importing the state exported from a previous simulation run.
+// It does the following steps
+// 1. It runs a full simulation and exports the state
+// 2. It creates a new app, and db
+// 3. It imports the exported state into the new app
+// 4. It runs a simulation on the new app and verifies that there is no error in the second simulation
 func TestAppSimulationAfterImport(t *testing.T) {
 	config := zetasimulation.NewConfigFromFlags()
 
@@ -516,6 +536,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	exported, err := simApp.ExportAppStateAndValidators(true, []string{}, []string{})
 	require.NoError(t, err)
 
+	// Setup a new app with new database and directory
 	newDB, newDir, _, _, err := cosmossimutils.SetupSimulation(
 		config,
 		SimDBBackend+"_new",
@@ -523,9 +544,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		zetasimulation.FlagVerboseValue,
 		zetasimulation.FlagEnabledValue,
 	)
-
 	require.NoError(t, err, "simulation setup failed")
-
 	t.Cleanup(func() {
 		if err := newDB.Close(); err != nil {
 			require.NoError(t, err, "Error closing new database")
@@ -534,7 +553,6 @@ func TestAppSimulationAfterImport(t *testing.T) {
 			require.NoError(t, err, "Error removing directory")
 		}
 	})
-
 	newSimApp, err := zetasimulation.NewSimApp(
 		logger,
 		newDB,
@@ -544,12 +562,14 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	)
 	require.NoError(t, err)
 
+	// Initialize the new app with the exported genesis state of the first run
 	t.Log("Importing genesis into the new app")
 	newSimApp.InitChain(abci.RequestInitChain{
 		ChainId:       SimAppChainID,
 		AppStateBytes: exported.AppState,
 	})
 
+	// Run simulation on the new app
 	stopEarly, simParams, simErr = simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
@@ -567,5 +587,5 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		config,
 		simApp.AppCodec(),
 	)
-	require.NoError(t, err)
+	require.NoError(t, simErr)
 }

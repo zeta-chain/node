@@ -99,6 +99,7 @@ func (k Keeper) getAndCheckZRC20(
 	// this simplify the current workflow and allow to pause calls by pausing the gas token
 	// TODO: refactor this logic and create specific workflow for no asset call
 	// https://github.com/zeta-chain/node/issues/2627
+
 	if coinType == coin.CoinType_Gas || coinType == coin.CoinType_NoAssetCall {
 		foreignCoin, found = k.GetGasCoinForForeignCoin(ctx, chainID)
 		if !found {
