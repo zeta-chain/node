@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/cosmos"
@@ -72,6 +71,15 @@ func Keygen(t *testing.T) *types.Keygen {
 	}
 }
 
+func KeygenFromRand(r *rand.Rand) types.Keygen {
+	pubkey := PubKey(r)
+	return types.Keygen{
+		Status:         types.KeygenStatus_KeyGenSuccess,
+		GranteePubkeys: []string{pubkey.String()},
+		BlockNumber:    r.Int63(),
+	}
+}
+
 func LastObserverCount(lastChangeHeight int64) *types.LastObserverCount {
 	r := newRandFromSeed(lastChangeHeight)
 
@@ -108,6 +116,27 @@ func ChainParams(chainID int64) *types.ChainParams {
 	}
 }
 
+func ChainParamsFromRand(r *rand.Rand, chainID int64) *types.ChainParams {
+	fiftyPercent := sdk.MustNewDecFromStr("0.5")
+	return &types.ChainParams{
+		ChainId:           chainID,
+		ConfirmationCount: r.Uint64(),
+
+		GasPriceTicker:              Uint64InRangeFromRand(r, 1, 300),
+		InboundTicker:               Uint64InRangeFromRand(r, 1, 300),
+		OutboundTicker:              Uint64InRangeFromRand(r, 1, 300),
+		WatchUtxoTicker:             Uint64InRangeFromRand(r, 1, 300),
+		ZetaTokenContractAddress:    EthAddressFromRand(r).String(),
+		ConnectorContractAddress:    EthAddressFromRand(r).String(),
+		Erc20CustodyContractAddress: EthAddressFromRand(r).String(),
+		OutboundScheduleInterval:    Int64InRangeFromRand(r, 1, 100),
+		OutboundScheduleLookahead:   Int64InRangeFromRand(r, 1, 500),
+		BallotThreshold:             fiftyPercent,
+		MinObserverDelegation:       sdk.NewDec(r.Int63()),
+		IsSupported:                 true,
+	}
+}
+
 func ChainParamsSupported(chainID int64) *types.ChainParams {
 	cp := ChainParams(chainID)
 	cp.IsSupported = true
@@ -124,12 +153,16 @@ func ChainParamsList() (cpl types.ChainParamsList) {
 }
 
 // TSSFromRand returns a random TSS,it uses the randomness provided as a parameter
-func TSSFromRand(t *testing.T, r *rand.Rand) types.TSS {
+func TSSFromRand(r *rand.Rand) (types.TSS, error) {
 	pubKey := PubKey(r)
 	spk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
-	require.NoError(t, err)
+	if err != nil {
+		return types.TSS{}, err
+	}
 	pk, err := zetacrypto.NewPubKey(spk)
-	require.NoError(t, err)
+	if err != nil {
+		return types.TSS{}, err
+	}
 	pubkeyString := pk.String()
 	return types.TSS{
 		TssPubkey:           pubkeyString,
@@ -137,7 +170,7 @@ func TSSFromRand(t *testing.T, r *rand.Rand) types.TSS {
 		OperatorAddressList: []string{},
 		FinalizedZetaHeight: r.Int63(),
 		KeyGenZetaHeight:    r.Int63(),
-	}
+	}, nil
 }
 
 // TODO: rename to TSS
@@ -282,6 +315,17 @@ func GasPriceIncreaseFlags() types.GasPriceIncreaseFlags {
 	return types.GasPriceIncreaseFlags{
 		EpochLength:             1,
 		RetryInterval:           1,
+		GasPriceIncreasePercent: 1,
+		MaxPendingCctxs:         100,
+	}
+}
+
+func GasPriceIncreaseFlagsFromRand(r *rand.Rand) types.GasPriceIncreaseFlags {
+	minValue := 1
+	maxValue := 100
+	return types.GasPriceIncreaseFlags{
+		EpochLength:             int64(r.Intn(maxValue-minValue) + minValue),
+		RetryInterval:           time.Duration(r.Intn(maxValue-minValue) + minValue),
 		GasPriceIncreasePercent: 1,
 		MaxPendingCctxs:         100,
 	}

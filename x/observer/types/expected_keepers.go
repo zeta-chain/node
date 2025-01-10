@@ -19,6 +19,7 @@ type StakingKeeper interface {
 		valAddr sdk.ValAddress,
 	) (delegation stakingtypes.Delegation, found bool)
 	SetValidator(ctx sdk.Context, validator stakingtypes.Validator)
+	GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator)
 }
 
 type SlashingKeeper interface {

@@ -14,6 +14,7 @@
 * [3254](https://github.com/zeta-chain/node/pull/3254) - rename v2 E2E tests as evm tests and rename old evm tests as legacy
 * [3095](https://github.com/zeta-chain/node/pull/3095) - initialize simulation tests for custom zetachain modules
 * [3276](https://github.com/zeta-chain/node/pull/3276) - add Solana E2E performance tests and improve Solana outbounds performance
+* [3207](https://github.com/zeta-chain/node/pull/3207) - add simulation test operations for all messages in crosschain and observer module
 
 ### Refactor
 

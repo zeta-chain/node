@@ -18,6 +18,11 @@ import (
 )
 
 func TestKeeper_WhitelistERC20(t *testing.T) {
+	r := sample.Rand()
+	firstTokenAddress, err := sample.SolanaAddressFromRand(r)
+	require.NoError(t, err)
+	secondTokenAddress, err := sample.SolanaAddressFromRand(r)
+	require.NoError(t, err)
 	tests := []struct {
 		name               string
 		tokenAddress       string
@@ -34,6 +39,12 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			name:               "can deploy and whitelist a spl",
 			tokenAddress:       sample.SolanaAddress(t),
 			secondTokenAddress: sample.SolanaAddress(t),
+			chainID:            getValidSolanaChainID(),
+		},
+		{
+			name:               "can deploy and whitelist a spl",
+			tokenAddress:       firstTokenAddress,
+			secondTokenAddress: secondTokenAddress,
 			chainID:            getValidSolanaChainID(),
 		},
 	}

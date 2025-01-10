@@ -18,6 +18,11 @@ func FilterByConsensus(cs Consensus) ChainFilter {
 	return func(chain Chain) bool { return chain.Consensus == cs }
 }
 
+// FilterByVM filters chains by VM type
+func FilterByVM(vm Vm) ChainFilter {
+	return func(chain Chain) bool { return chain.Vm == vm }
+}
+
 // FilterChains applies a list of filters to a list of chains
 func FilterChains(chainList []Chain, filters ...ChainFilter) []Chain {
 	// Apply each filter to the list of supported chains

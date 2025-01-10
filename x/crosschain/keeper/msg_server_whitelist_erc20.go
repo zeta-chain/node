@@ -107,6 +107,7 @@ func (k msgServer) WhitelistERC20(
 			msg.ChainId,
 		)
 	}
+
 	if zrc20Addr == (ethcommon.Address{}) {
 		return nil, errorsmod.Wrapf(
 			types.ErrDeployContract,

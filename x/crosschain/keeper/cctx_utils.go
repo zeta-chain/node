@@ -30,7 +30,6 @@ func (k Keeper) SetObserverOutboundInfo(ctx sdk.Context, receiveChainID int64, c
 			"identifiers: %s (chain %q)", cctx.LogIdentifierForCCTX(), chain.Name,
 		)
 	}
-
 	// SET nonce
 	cctx.GetCurrentOutboundParam().TssNonce = nonce.Nonce
 	tss, found := k.GetObserverKeeper().GetTSS(ctx)

@@ -409,7 +409,7 @@ test-sim-fullappsimulation:
 	$(call run-sim-test,"TestFullAppSimulation",TestFullAppSimulation,100,200,30m)
 
 test-sim-import-export:
-	$(call run-sim-test,"test-import-export",TestAppImportExport,50,100,30m)
+	$(call run-sim-test,"test-import-export",TestAppImportExport,100,200,30m)
 
 test-sim-after-import:
 	$(call run-sim-test,"test-sim-after-import",TestAppSimulationAfterImport,100,200,30m)
@@ -429,6 +429,12 @@ test-sim-import-export-long: runsim
 test-sim-after-import-long: runsim
 	@echo "Running application simulation-after-import. This may take several minute"
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 500 50 TestAppSimulationAfterImport
+
+# Use to run all simulation tests quickly (for example, before a creating a PR)
+test-sim-quick:
+	$(call run-sim-test,"test-full-app-sim",TestFullAppSimulation,10,20,30m)
+	$(call run-sim-test,"test-import-export",TestAppImportExport,10,20,30m)
+	$(call run-sim-test,"test-sim-after-import",TestAppSimulationAfterImport,10,20,30m)
 
 .PHONY: \
 test-sim-nondeterminism \

@@ -2,6 +2,7 @@ package sample
 
 import (
 	"crypto/ecdsa"
+	cryptoed25519 "crypto/ed25519"
 	"math/big"
 	"math/rand"
 	"strconv"
@@ -33,6 +34,15 @@ func PubKeySet() *crypto.PubKeySet {
 	return &pubKeySet
 }
 
+func Ed25519PrivateKeyFromRand(r *rand.Rand) (*ed25519.PrivKey, error) {
+	randomBytes := make([]byte, 32)
+	_, err := r.Read(randomBytes)
+	if err != nil {
+		return nil, err
+	}
+	return ed25519.GenPrivKeyFromSecret(randomBytes), nil
+}
+
 // PubKeyString returns a sample public key string
 func PubKeyString() string {
 	priKey := ed25519.GenPrivKey()
@@ -45,6 +55,22 @@ func PubKeyString() string {
 		panic(err)
 	}
 	return pubkey.String()
+}
+
+func PubkeyStringFromRand(r *rand.Rand) (string, error) {
+	priKey, err := Ed25519PrivateKeyFromRand(r)
+	if err != nil {
+		return "", err
+	}
+	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, priKey.PubKey())
+	if err != nil {
+		return "", err
+	}
+	pubkey, err := crypto.NewPubKey(s)
+	if err != nil {
+		return "", err
+	}
+	return pubkey.String(), nil
 }
 
 // PrivKeyAddressPair returns a private key, address pair
@@ -83,11 +109,29 @@ func SolanaPrivateKey(t *testing.T) solana.PrivateKey {
 	return privKey
 }
 
+func SolanaPrivateKeyFromRand(r *rand.Rand) (solana.PrivateKey, error) {
+	pub, priv, err := cryptoed25519.GenerateKey(r)
+	if err != nil {
+		return nil, err
+	}
+	var publicKey cryptoed25519.PublicKey
+	copy(publicKey[:], pub)
+	return solana.PrivateKey(priv), nil
+}
+
 // SolanaAddress returns a sample solana address
 func SolanaAddress(t *testing.T) string {
 	privKey, err := solana.NewRandomPrivateKey()
 	require.NoError(t, err)
 	return privKey.PublicKey().String()
+}
+
+func SolanaAddressFromRand(r *rand.Rand) (string, error) {
+	privKey, err := SolanaPrivateKeyFromRand(r)
+	if err != nil {
+		return "", err
+	}
+	return privKey.PublicKey().String(), nil
 }
 
 // SolanaSignature returns a sample solana signature
@@ -113,6 +157,11 @@ func Hash() ethcommon.Hash {
 	return ethcommon.BytesToHash(EthAddress().Bytes())
 }
 
+// Hash returns a sample hash
+func HashFromRand(r *rand.Rand) ethcommon.Hash {
+	return ethcommon.BytesToHash(EthAddressFromRand(r).Bytes())
+}
+
 // BtcHash returns a sample btc hash
 func BtcHash() chainhash.Hash {
 	return chainhash.Hash(Hash())
@@ -134,6 +183,13 @@ func Bech32AccAddress() sdk.AccAddress {
 // AccAddress returns a sample account address in string
 func AccAddress() string {
 	pk := ed25519.GenPrivKey().PubKey()
+	addr := pk.Address()
+	return sdk.AccAddress(addr).String()
+}
+
+// AccAddressFromRand returns a sample account address in string
+func AccAddressFromRand(r *rand.Rand) string {
+	pk := PubKey(r)
 	addr := pk.Address()
 	return sdk.AccAddress(addr).String()
 }
