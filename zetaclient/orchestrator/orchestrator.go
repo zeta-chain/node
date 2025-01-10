@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
@@ -70,10 +71,11 @@ type Orchestrator struct {
 	signerBlockTimeOffset time.Duration
 
 	// misc
-	logger multiLogger
-	ts     *metrics.TelemetryServer
-	stop   chan struct{}
-	mu     sync.RWMutex
+	logger  multiLogger
+	ts      *metrics.TelemetryServer
+	stop    chan struct{}
+	stopped atomic.Bool
+	mu      sync.RWMutex
 }
 
 type multiLogger struct {
@@ -146,7 +148,15 @@ func (oc *Orchestrator) Start(ctx context.Context) error {
 }
 
 func (oc *Orchestrator) Stop() {
+	// noop
+	if oc.stopped.Load() {
+		oc.logger.Warn().Msg("Already stopped")
+		return
+	}
+
 	close(oc.stop)
+
+	oc.stopped.Store(true)
 }
 
 // returns signer with updated chain parameters.
