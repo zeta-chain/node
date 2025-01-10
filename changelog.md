@@ -1,5 +1,11 @@
 # CHANGELOG
 
+### Unreleases
+
+### Refactor
+
+* [3326](https://github.com/zeta-chain/node/pull/3326) - improve error messages for cctx status object
+
 ## v25.0.0
 
 ### Features
