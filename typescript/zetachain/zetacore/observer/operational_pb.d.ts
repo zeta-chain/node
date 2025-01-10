@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type { BinaryReadOptions, Duration, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 
 /**
@@ -19,6 +19,23 @@ export declare class OperationalFlags extends Message<OperationalFlags> {
    * @generated from field: int64 restart_height = 1;
    */
   restartHeight: bigint;
+
+  /**
+   * Offset from the zetacore block time to initiate signing.
+   * Should be calculated and set based on max(zetaclient_core_block_latency).
+   *
+   * @generated from field: google.protobuf.Duration signer_block_time_offset = 2;
+   */
+  signerBlockTimeOffset?: Duration;
+
+  /**
+   * Minimum version of zetaclient that is allowed to run. This must be either
+   * a valid semver string (v23.0.1) or empty. If empty, all versions are
+   * allowed.
+   *
+   * @generated from field: string minimum_version = 3;
+   */
+  minimumVersion: string;
 
   constructor(data?: PartialMessage<OperationalFlags>);
 

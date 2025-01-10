@@ -26,7 +26,8 @@ const (
 	ProtocolFee = 2000000000000000000
 
 	// CCTXIndexLength is the length of a crosschain transaction index
-	CCTXIndexLength = 66
+	CCTXIndexLength          = 66
+	MaxOutboundTrackerHashes = 5
 )
 
 func GetProtocolFee() math.Uint {

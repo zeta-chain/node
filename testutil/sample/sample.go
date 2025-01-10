@@ -93,9 +93,19 @@ func Uint64InRange(low, high uint64) uint64 {
 	return r.Uint64()%(high-low) + low
 }
 
+// Uint64InRange returns a sample uint64 in the given ranges
+func Uint64InRangeFromRand(r *rand.Rand, low, high uint64) uint64 {
+	return r.Uint64()%(high-low) + low
+}
+
 // Int64InRange returns a sample int64 in the given ranges
 func Int64InRange(low, high int64) int64 {
 	r := newRandFromSeed(low)
+	return r.Int63()%(high-low) + low
+}
+
+// Int64InRangeFromRand returns a sample int64 in the given ranges
+func Int64InRangeFromRand(r *rand.Rand, low, high int64) int64 {
 	return r.Int63()%(high-low) + low
 }
 

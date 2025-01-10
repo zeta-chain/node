@@ -75,6 +75,7 @@ const (
 	TestBitcoinDepositAndCallName                          = "bitcoin_deposit_and_call"
 	TestBitcoinDepositAndCallRevertName                    = "bitcoin_deposit_and_call_revert"
 	TestBitcoinDepositAndCallRevertWithDustName            = "bitcoin_deposit_and_call_revert_with_dust"
+	TestBitcoinDepositAndWithdrawWithDustName              = "bitcoin_deposit_and_withdraw_with_dust"
 	TestBitcoinDonationName                                = "bitcoin_donation"
 	TestBitcoinStdMemoDepositName                          = "bitcoin_std_memo_deposit"
 	TestBitcoinStdMemoDepositAndCallName                   = "bitcoin_std_memo_deposit_and_call"
@@ -132,7 +133,8 @@ const (
 	TestMigrateERC20CustodyFundsName  = "migrate_erc20_custody_funds"
 	TestMigrateTSSName                = "migrate_tss"
 	TestSolanaWhitelistSPLName        = "solana_whitelist_spl"
-	TestOperationalFlagsName          = "operational_flags"
+	TestZetaclientRestartHeightName   = "zetaclient_restart_height"
+	TestZetaclientSignerOffsetName    = "zetaclient_signer_offset"
 
 	/*
 	 Operational tests
@@ -586,15 +588,23 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositAndCallRevertName,
-		"deposit Bitcoin into ZEVM; expect refund", []runner.ArgDefinition{
+		"deposit Bitcoin into ZEVM; expect refund",
+		[]runner.ArgDefinition{
 			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
 		TestBitcoinDepositAndCallRevert,
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositAndCallRevertWithDustName,
-		"deposit Bitcoin into ZEVM; revert with dust amount that aborts the CCTX", []runner.ArgDefinition{},
+		"deposit Bitcoin into ZEVM; revert with dust amount that aborts the CCTX",
+		[]runner.ArgDefinition{},
 		TestBitcoinDepositAndCallRevertWithDust,
+	),
+	runner.NewE2ETest(
+		TestBitcoinDepositAndWithdrawWithDustName,
+		"deposit Bitcoin into ZEVM and withdraw with dust amount that fails the CCTX",
+		[]runner.ArgDefinition{},
+		TestBitcoinDepositAndWithdrawWithDust,
 	),
 	runner.NewE2ETest(
 		TestBitcoinStdMemoDepositName,
@@ -880,10 +890,16 @@ var AllE2ETests = []runner.E2ETest{
 		TestMigrateERC20CustodyFunds,
 	),
 	runner.NewE2ETest(
-		TestOperationalFlagsName,
-		"operational flags functionality",
+		TestZetaclientRestartHeightName,
+		"zetaclient scheduled restart height",
 		[]runner.ArgDefinition{},
-		TestOperationalFlags,
+		TestZetaclientRestartHeight,
+	),
+	runner.NewE2ETest(
+		TestZetaclientSignerOffsetName,
+		"zetaclient signer offset",
+		[]runner.ArgDefinition{},
+		TestZetaclientSignerOffset,
 	),
 	/*
 	 Special tests

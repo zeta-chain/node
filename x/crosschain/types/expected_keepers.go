@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/proofs"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
@@ -224,6 +225,7 @@ type FungibleKeeper interface {
 type AuthorityKeeper interface {
 	CheckAuthorization(ctx sdk.Context, msg sdk.Msg) error
 	GetAdditionalChainList(ctx sdk.Context) (list []chains.Chain)
+	GetPolicies(ctx sdk.Context) (val authoritytypes.Policies, found bool)
 }
 
 type LightclientKeeper interface {
