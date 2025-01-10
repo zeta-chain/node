@@ -12,13 +12,12 @@ import (
 func TestEvmErrorMessage(t *testing.T) {
 	t.Run("TestEvmErrorMessage", func(t *testing.T) {
 		address := sample.EthAddress()
-		msg := types.EvmErrorMessage("errorMsg", "method", address, "args")
+		msg := types.EvmErrorMessage("method", address, "args")
 		msg = types.EvmErrorMessageAddErrorString(msg, "error_cause")
 		msg = types.EvmErrorMessageAddRevertReason(msg, "revert_reason")
 
 		require.Equal(t, fmt.Sprintf(
-			"message:%s,method:%s,contract:%s,args:%s,error:%s,revertReason:%s",
-			"errorMsg",
+			"method:%s,contract:%s,args:%s,error:%s,revertReason:%s",
 			"method",
 			address.String(),
 			"args",

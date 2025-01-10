@@ -58,12 +58,11 @@ A cctx can have a maximum of two outbound params. We can refer to the first outb
 
 - For a failed deposit, the ErrorMessage would contain the following fields. The protocol generates the fields tagged as internal.
 ```
-  - description[Internal]: This is message created by the protocol to provide a high level description of what caused the error
-  - method: The method that was called by the protocol,
-  - contract: The contract that his method was called on,
-  - args:The argumets that were used for this call,
-  - errorMessage[Internal]: Error message from the ZEVM call,
-  - revertReason: Revert reason from the smart contract,
+  - method: The method that was called by the protocol
+  - contract: The contract that his method was called on
+  - args:The argumets that were used for this call
+  - errorMessage[Internal]: Error message from the ZEVM call
+  - revertReason: Revert reason from the smart contract
 ```
 
 - `outbound failed to external chain ,start revert` : withdraw failed to an external chain, and the protocol is starting the revert process back to ZEVM.

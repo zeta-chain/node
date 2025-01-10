@@ -35,7 +35,7 @@ var (
 	ErrZeroAddress             = cosmoserrors.Register(ModuleName, 1133, "address cannot be zero")
 	ErrInvalidAmount           = cosmoserrors.Register(ModuleName, 1134, "invalid amount")
 	ErrMaxSupplyReached        = cosmoserrors.Register(ModuleName, 1135, "max supply reached")
-	ErrCallEvmWithData         = cosmoserrors.Register(ModuleName, 1136, "error calling EVM with data")
+	ErrCallEvmWithData         = cosmoserrors.Register(ModuleName, 1136, "contract call failed when calling EVM with data")
 	ErrDepositZetaToEvmAccount = cosmoserrors.Register(
 		ModuleName,
 		1137,

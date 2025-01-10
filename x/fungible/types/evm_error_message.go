@@ -7,7 +7,6 @@ import (
 )
 
 const (
-	MessageKey      = "message"
 	MethodKey       = "method"
 	ContractKey     = "contract"
 	ArgsKey         = "args"
@@ -15,11 +14,9 @@ const (
 	RevertReasonKey = "revertReason"
 )
 
-func EvmErrorMessage(errorMessage string, method string, contract common.Address, args interface{}) string {
+func EvmErrorMessage(method string, contract common.Address, args interface{}) string {
 	return fmt.Sprintf(
-		"%s:%s,%s:%s,%s:%s,%s:%v",
-		MessageKey,
-		errorMessage,
+		"%s:%s,%s:%s,%s:%v",
 		MethodKey,
 		method,
 		ContractKey,
