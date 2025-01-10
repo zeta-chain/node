@@ -7,7 +7,7 @@ import (
 	"math"
 	"math/big"
 	"sort"
-	"strings"
+	"sync/atomic"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
@@ -16,11 +16,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/node/pkg/bg"
 	"github.com/zeta-chain/node/pkg/chains"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/metrics"
@@ -40,8 +39,6 @@ const (
 	// BigValueConfirmationCount represents the number of confirmation necessary for bigger values: 6 confirmations
 	BigValueConfirmationCount = 6
 )
-
-var _ interfaces.ChainObserver = (*Observer)(nil)
 
 // Logger contains list of loggers used by Bitcoin chain observer
 type Logger struct {
@@ -83,6 +80,10 @@ type Observer struct {
 
 	// broadcastedTx indexes the outbound hash with the outbound tx identifier
 	broadcastedTx map[string]string
+
+	// nodeEnabled indicates whether BTC node is enabled (might be disabled during certain E2E tests)
+	// We assume it's true by default. The flag is updated on each ObserveInbound call.
+	nodeEnabled atomic.Bool
 
 	// logger contains the loggers used by the bitcoin observer
 	logger Logger
@@ -136,50 +137,23 @@ func NewObserver(
 		},
 	}
 
+	ob.nodeEnabled.Store(true)
+
 	// load last scanned block
-	if err := ob.LoadLastBlockScanned(); err != nil {
+	if err = ob.LoadLastBlockScanned(); err != nil {
 		return nil, errors.Wrap(err, "unable to load last scanned block")
 	}
 
 	// load broadcasted transactions
-	if err := ob.LoadBroadcastedTxMap(); err != nil {
+	if err = ob.LoadBroadcastedTxMap(); err != nil {
 		return nil, errors.Wrap(err, "unable to load broadcasted tx map")
 	}
 
 	return ob, nil
 }
 
-// BtcClient returns the btc client
-func (ob *Observer) BtcClient() interfaces.BTCRPCClient {
-	return ob.btcClient
-}
-
-// Start starts the Go routine processes to observe the Bitcoin chain
-func (ob *Observer) Start(ctx context.Context) {
-	if ok := ob.Observer.Start(); !ok {
-		ob.Logger().Chain.Info().Msgf("observer is already started for chain %d", ob.Chain().ChainId)
-		return
-	}
-
-	ob.Logger().Chain.Info().Msgf("observer is starting for chain %d", ob.Chain().ChainId)
-
-	// watch bitcoin chain for incoming txs and post votes to zetacore
-	bg.Work(ctx, ob.WatchInbound, bg.WithName("WatchInbound"), bg.WithLogger(ob.Logger().Inbound))
-
-	// watch bitcoin chain for outgoing txs status
-	bg.Work(ctx, ob.WatchOutbound, bg.WithName("WatchOutbound"), bg.WithLogger(ob.Logger().Outbound))
-
-	// watch bitcoin chain for UTXOs owned by the TSS address
-	bg.Work(ctx, ob.WatchUTXOs, bg.WithName("WatchUTXOs"), bg.WithLogger(ob.Logger().Outbound))
-
-	// watch bitcoin chain for gas rate and post to zetacore
-	bg.Work(ctx, ob.WatchGasPrice, bg.WithName("WatchGasPrice"), bg.WithLogger(ob.Logger().GasPrice))
-
-	// watch zetacore for bitcoin inbound trackers
-	bg.Work(ctx, ob.WatchInboundTracker, bg.WithName("WatchInboundTracker"), bg.WithLogger(ob.Logger().Inbound))
-
-	// watch the RPC status of the bitcoin chain
-	bg.Work(ctx, ob.watchRPCStatus, bg.WithName("watchRPCStatus"), bg.WithLogger(ob.Logger().Chain))
+func (ob *Observer) isNodeEnabled() bool {
+	return ob.nodeEnabled.Load()
 }
 
 // GetPendingNonce returns the artificial pending nonce
@@ -201,43 +175,6 @@ func (ob *Observer) ConfirmationsThreshold(amount *big.Int) int64 {
 
 	// #nosec G115 always in range
 	return int64(ob.ChainParams().ConfirmationCount)
-}
-
-// WatchGasPrice watches Bitcoin chain for gas rate and post to zetacore
-// TODO(revamp): move ticker related functions to a specific file
-// TODO(revamp): move inner logic in a separate function
-func (ob *Observer) WatchGasPrice(ctx context.Context) error {
-	// report gas price right away as the ticker takes time to kick in
-	err := ob.PostGasPrice(ctx)
-	if err != nil {
-		ob.logger.GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.Chain().ChainId)
-	}
-
-	// start gas price ticker
-	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchGasPrice", ob.ChainParams().GasPriceTicker)
-	if err != nil {
-		return errors.Wrapf(err, "NewDynamicTicker error")
-	}
-	ob.logger.GasPrice.Info().Msgf("WatchGasPrice started for chain %d with interval %d",
-		ob.Chain().ChainId, ob.ChainParams().GasPriceTicker)
-
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C():
-			if !ob.ChainParams().IsSupported {
-				continue
-			}
-			err := ob.PostGasPrice(ctx)
-			if err != nil {
-				ob.logger.GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.Chain().ChainId)
-			}
-			ticker.UpdateInterval(ob.ChainParams().GasPriceTicker, ob.logger.GasPrice)
-		case <-ob.StopChannel():
-			ob.logger.GasPrice.Info().Msgf("WatchGasPrice stopped for chain %d", ob.Chain().ChainId)
-			return nil
-		}
-	}
 }
 
 // PostGasPrice posts gas price to zetacore
@@ -268,7 +205,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 		if *feeResult.FeeRate > math.MaxInt64 {
 			return fmt.Errorf("gas price is too large: %f", *feeResult.FeeRate)
 		}
-		feeRateEstimated = bitcoin.FeeRateToSatPerByte(*feeResult.FeeRate).Uint64()
+		feeRateEstimated = common.FeeRateToSatPerByte(*feeResult.FeeRate).Uint64()
 	}
 
 	// query the current block number
@@ -289,42 +226,6 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	return nil
 }
 
-// WatchUTXOs watches bitcoin chain for UTXOs owned by the TSS address
-// TODO(revamp): move ticker related functions to a specific file
-func (ob *Observer) WatchUTXOs(ctx context.Context) error {
-	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchUTXOs", ob.ChainParams().WatchUtxoTicker)
-	if err != nil {
-		ob.logger.UTXOs.Error().Err(err).Msg("error creating ticker")
-		return err
-	}
-
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C():
-			if !ob.ChainParams().IsSupported {
-				continue
-			}
-			err := ob.FetchUTXOs(ctx)
-			if err != nil {
-				// log debug log if the error if no wallet is loaded
-				// this is to prevent extensive logging in localnet when the wallet is not loaded for non-Bitcoin test
-				// TODO: prevent this routine from running if Bitcoin node is not enabled
-				// https://github.com/zeta-chain/node/issues/2790
-				if !strings.Contains(err.Error(), "No wallet is loaded") {
-					ob.logger.UTXOs.Error().Err(err).Msg("error fetching btc utxos")
-				} else {
-					ob.logger.UTXOs.Debug().Err(err).Msg("No wallet is loaded")
-				}
-			}
-			ticker.UpdateInterval(ob.ChainParams().WatchUtxoTicker, ob.logger.UTXOs)
-		case <-ob.StopChannel():
-			ob.logger.UTXOs.Info().Msgf("WatchUTXOs stopped for chain %d", ob.Chain().ChainId)
-			return nil
-		}
-	}
-}
-
 // FetchUTXOs fetches TSS-owned UTXOs from the Bitcoin node
 // TODO(revamp): move to UTXO file
 func (ob *Observer) FetchUTXOs(ctx context.Context) error {
@@ -334,24 +235,31 @@ func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 		}
 	}()
 
+	// noop
+	if !ob.isNodeEnabled() {
+		return nil
+	}
+
 	// This is useful when a zetaclient's pending nonce lagged behind for whatever reason.
 	ob.refreshPendingNonce(ctx)
 
 	// get the current block height.
 	bh, err := ob.btcClient.GetBlockCount()
 	if err != nil {
-		return fmt.Errorf("btc: error getting block height : %v", err)
+		return errors.Wrap(err, "unable to get block height")
 	}
+
 	maxConfirmations := int(bh)
 
 	// List all unspent UTXOs (160ms)
 	tssAddr, err := ob.TSS().PubKey().AddressBTC(ob.Chain().ChainId)
 	if err != nil {
-		return fmt.Errorf("error getting bitcoin tss address")
+		return errors.Wrap(err, "unable to get tss address")
 	}
+
 	utxos, err := ob.btcClient.ListUnspentMinMaxAddresses(0, maxConfirmations, []btcutil.Address{tssAddr})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to list unspent utxo")
 	}
 
 	// rigid sort to make utxo list deterministic
@@ -369,7 +277,7 @@ func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 	utxosFiltered := make([]btcjson.ListUnspentResult, 0)
 	for _, utxo := range utxos {
 		// UTXOs big enough to cover the cost of spending themselves
-		if utxo.Amount < bitcoin.DefaultDepositorFee {
+		if utxo.Amount < common.DefaultDepositorFee {
 			continue
 		}
 		// we don't want to spend other people's unconfirmed UTXOs as they may not be safe to spend
@@ -486,7 +394,7 @@ func (ob *Observer) specialHandleFeeRate() (uint64, error) {
 		// hardcode gas price for regnet
 		return 1, nil
 	case chains.NetworkType_testnet:
-		feeRateEstimated, err := bitcoin.GetRecentFeeRate(ob.btcClient, ob.netParams)
+		feeRateEstimated, err := common.GetRecentFeeRate(ob.btcClient, ob.netParams)
 		if err != nil {
 			return 0, errors.Wrapf(err, "error GetRecentFeeRate")
 		}

@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/node/pkg/memo"
 	testcontract "github.com/zeta-chain/node/testutil/contracts"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
 func TestBitcoinStdMemoDepositAndCall(r *runner.E2ERunner, args []string) {

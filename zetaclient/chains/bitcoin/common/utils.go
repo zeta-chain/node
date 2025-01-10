@@ -1,7 +1,6 @@
-package bitcoin
+package common
 
 import (
-	"encoding/json"
 	"math"
 
 	"github.com/btcsuite/btcd/btcutil"
@@ -9,19 +8,6 @@ import (
 )
 
 // TODO(revamp): Remove utils.go and move the functions to the appropriate files
-
-// PrettyPrintStruct returns a pretty-printed string representation of a struct
-func PrettyPrintStruct(val interface{}) (string, error) {
-	prettyStruct, err := json.MarshalIndent(
-		val,
-		"",
-		" ",
-	)
-	if err != nil {
-		return "", err
-	}
-	return string(prettyStruct), nil
-}
 
 // GetSatoshis converts a bitcoin amount to satoshis
 func GetSatoshis(btc float64) (int64, error) {

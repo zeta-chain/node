@@ -8,7 +8,7 @@ import (
 
 type appContextKey struct{}
 
-var ErrNotSet = errors.New("AppContext is not set in the context.Context")
+var ErrNotSet = errors.New("unable to get AppContext from context.Context")
 
 // WithAppContext applied AppContext to standard Go context.Context.
 func WithAppContext(ctx goctx.Context, app *AppContext) goctx.Context {

@@ -8,6 +8,8 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/tonkeeper/tongo/ton"
+
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // Validate checks whether the chain is valid
@@ -106,6 +108,13 @@ func (chain Chain) IsBitcoinChain() bool {
 
 func (chain Chain) IsTONChain() bool {
 	return chain.Consensus == Consensus_catchain_consensus
+}
+
+func (chain Chain) LogFields() map[string]any {
+	return map[string]any{
+		logs.FieldChain:        chain.ChainId,
+		logs.FieldChainNetwork: chain.Network.String(),
+	}
 }
 
 // DecodeAddressFromChainID decode the address string to bytes

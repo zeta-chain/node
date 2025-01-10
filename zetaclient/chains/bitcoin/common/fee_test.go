@@ -1,4 +1,4 @@
-package bitcoin
+package common
 
 import (
 	"math/rand"
@@ -6,14 +6,13 @@ import (
 
 	"github.com/btcsuite/btcd/blockchain"
 	"github.com/btcsuite/btcd/btcec/v2"
+	btcecdsa "github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/stretchr/testify/require"
-
-	btcecdsa "github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	"github.com/zeta-chain/node/pkg/chains"
 )
 

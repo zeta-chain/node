@@ -9,110 +9,71 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
-	zctx "github.com/zeta-chain/node/zetaclient/context"
-	"github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// WatchOutbound watches Bitcoin chain for outgoing txs status
-// TODO(revamp): move ticker functions to a specific file
-// TODO(revamp): move into a separate package
-func (ob *Observer) WatchOutbound(ctx context.Context) error {
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to get app from context")
-	}
-
-	ticker, err := types.NewDynamicTicker("Bitcoin_WatchOutbound", ob.ChainParams().OutboundTicker)
-	if err != nil {
-		return errors.Wrap(err, "unable to create dynamic ticker")
-	}
-
-	defer ticker.Stop()
-
+func (ob *Observer) ObserveOutbound(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
-	ob.logger.Outbound.Info().Msgf("WatchOutbound started for chain %d", chainID)
-	sampledLogger := ob.logger.Outbound.Sample(&zerolog.BasicSampler{N: 10})
 
-	for {
-		select {
-		case <-ticker.C():
-			if !app.IsOutboundObservationEnabled() {
-				sampledLogger.Info().
-					Msgf("WatchOutbound: outbound observation is disabled for chain %d", chainID)
-				continue
-			}
-			trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
-			if err != nil {
-				ob.logger.Outbound.Error().
-					Err(err).
-					Msgf("WatchOutbound: error GetAllOutboundTrackerByChain for chain %d", chainID)
-				continue
-			}
-			for _, tracker := range trackers {
-				// get original cctx parameters
-				outboundID := ob.OutboundID(tracker.Nonce)
-				cctx, err := ob.ZetacoreClient().GetCctxByNonce(ctx, chainID, tracker.Nonce)
-				if err != nil {
-					ob.logger.Outbound.Info().
-						Err(err).
-						Msgf("WatchOutbound: can't find cctx for chain %d nonce %d", chainID, tracker.Nonce)
-					break
-				}
+	trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
+	if err != nil {
+		return errors.Wrap(err, "unable to get all outbound trackers")
+	}
 
-				nonce := cctx.GetCurrentOutboundParam().TssNonce
-				if tracker.Nonce != nonce { // Tanmay: it doesn't hurt to check
-					ob.logger.Outbound.Error().
-						Msgf("WatchOutbound: tracker nonce %d not match cctx nonce %d", tracker.Nonce, nonce)
-					break
-				}
+	for _, tracker := range trackers {
+		// get original cctx parameters
+		outboundID := ob.OutboundID(tracker.Nonce)
+		cctx, err := ob.ZetacoreClient().GetCctxByNonce(ctx, chainID, tracker.Nonce)
+		if err != nil {
+			return errors.Wrapf(err, "unable to get cctx by nonce %d", tracker.Nonce)
+		}
 
-				if len(tracker.HashList) > 1 {
-					ob.logger.Outbound.Warn().
-						Msgf("WatchOutbound: oops, outboundID %s got multiple (%d) outbound hashes", outboundID, len(tracker.HashList))
-				}
+		nonce := cctx.GetCurrentOutboundParam().TssNonce
+		if tracker.Nonce != nonce { // Tanmay: it doesn't hurt to check
+			return fmt.Errorf("tracker nonce %d not match cctx nonce %d", tracker.Nonce, nonce)
+		}
 
-				// iterate over all txHashes to find the truly included one.
-				// we do it this (inefficient) way because we don't rely on the first one as it may be a false positive (for unknown reason).
-				txCount := 0
-				var txResult *btcjson.GetTransactionResult
-				for _, txHash := range tracker.HashList {
-					result, inMempool := ob.checkIncludedTx(ctx, cctx, txHash.TxHash)
-					if result != nil && !inMempool { // included
-						txCount++
-						txResult = result
-						ob.logger.Outbound.Info().
-							Msgf("WatchOutbound: included outbound %s for chain %d nonce %d", txHash.TxHash, chainID, tracker.Nonce)
-						if txCount > 1 {
-							ob.logger.Outbound.Error().Msgf(
-								"WatchOutbound: checkIncludedTx passed, txCount %d chain %d nonce %d result %v", txCount, chainID, tracker.Nonce, result)
-						}
-					}
-				}
+		if len(tracker.HashList) > 1 {
+			ob.logger.Outbound.Warn().
+				Msgf("WatchOutbound: oops, outboundID %s got multiple (%d) outbound hashes", outboundID, len(tracker.HashList))
+		}
 
-				if txCount == 1 { // should be only one txHash included for each nonce
-					ob.setIncludedTx(tracker.Nonce, txResult)
-				} else if txCount > 1 {
-					ob.removeIncludedTx(tracker.Nonce) // we can't tell which txHash is true, so we remove all (if any) to be safe
-					ob.logger.Outbound.Error().Msgf("WatchOutbound: included multiple (%d) outbound for chain %d nonce %d", txCount, chainID, tracker.Nonce)
+		// iterate over all txHashes to find the truly included one.
+		// we do it this (inefficient) way because we don't rely on the first one as it may be a false positive (for unknown reason).
+		txCount := 0
+		var txResult *btcjson.GetTransactionResult
+		for _, txHash := range tracker.HashList {
+			result, inMempool := ob.checkIncludedTx(ctx, cctx, txHash.TxHash)
+			if result != nil && !inMempool { // included
+				txCount++
+				txResult = result
+				ob.logger.Outbound.Info().
+					Msgf("WatchOutbound: included outbound %s for chain %d nonce %d", txHash.TxHash, chainID, tracker.Nonce)
+				if txCount > 1 {
+					ob.logger.Outbound.Error().Msgf(
+						"WatchOutbound: checkIncludedTx passed, txCount %d chain %d nonce %d result %v", txCount, chainID, tracker.Nonce, result)
 				}
 			}
-			ticker.UpdateInterval(ob.ChainParams().OutboundTicker, ob.logger.Outbound)
-		case <-ob.StopChannel():
-			ob.logger.Outbound.Info().Msgf("WatchOutbound stopped for chain %d", chainID)
-			return nil
+		}
+
+		if txCount == 1 { // should be only one txHash included for each nonce
+			ob.setIncludedTx(tracker.Nonce, txResult)
+		} else if txCount > 1 {
+			ob.removeIncludedTx(tracker.Nonce) // we can't tell which txHash is true, so we remove all (if any) to be safe
+			ob.logger.Outbound.Error().Msgf("WatchOutbound: included multiple (%d) outbound for chain %d nonce %d", txCount, chainID, tracker.Nonce)
 		}
 	}
+
+	return nil
 }
 
 // VoteOutboundIfConfirmed checks outbound status and returns (continueKeysign, error)
@@ -418,7 +379,7 @@ func (ob *Observer) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
 	tssAddress := ob.TSSAddressString()
 	amount := chains.NonceMarkAmount(nonce)
 	for i, utxo := range ob.utxos {
-		sats, err := bitcoin.GetSatoshis(utxo.Amount)
+		sats, err := common.GetSatoshis(utxo.Amount)
 		if err != nil {
 			ob.logger.Outbound.Error().Err(err).Msgf("findNonceMarkUTXO: error getting satoshis for utxo %v", utxo)
 		}
@@ -608,7 +569,7 @@ func (ob *Observer) checkTSSVout(params *crosschaintypes.OutboundParams, vouts [
 			// the 2nd output is the payment to recipient
 			receiverExpected = params.Receiver
 		}
-		receiverVout, amount, err := bitcoin.DecodeTSSVout(vout, receiverExpected, ob.Chain())
+		receiverVout, amount, err := common.DecodeTSSVout(vout, receiverExpected, ob.Chain())
 		if err != nil {
 			return err
 		}
@@ -662,7 +623,7 @@ func (ob *Observer) checkTSSVoutCancelled(params *crosschaintypes.OutboundParams
 	tssAddress := ob.TSSAddressString()
 	for _, vout := range vouts {
 		// decode receiver and amount from vout
-		receiverVout, amount, err := bitcoin.DecodeTSSVout(vout, tssAddress, ob.Chain())
+		receiverVout, amount, err := common.DecodeTSSVout(vout, tssAddress, ob.Chain())
 		if err != nil {
 			return errors.Wrap(err, "checkTSSVoutCancelled: error decoding P2WPKH vout")
 		}

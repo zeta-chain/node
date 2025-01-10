@@ -26,17 +26,20 @@ func LogFields(fields map[string]any) Opt {
 
 // Interval sets initial task interval.
 func Interval(interval time.Duration) Opt {
-	return func(_ *Task, opts *taskOpts) { opts.interval = interval }
+	return func(_ *Task, opts *taskOpts) { opts.interval = normalizeInterval(interval) }
 }
 
-// Skipper sets task skipper function
+// Skipper sets task skipper function. If it returns true, the task is skipped.
 func Skipper(skipper func() bool) Opt {
 	return func(t *Task, _ *taskOpts) { t.skipper = skipper }
 }
 
-// IntervalUpdater sets interval updater function.
+// IntervalUpdater sets interval updater function. Overrides Interval.
 func IntervalUpdater(intervalUpdater func() time.Duration) Opt {
-	return func(_ *Task, opts *taskOpts) { opts.intervalUpdater = intervalUpdater }
+	return func(_ *Task, opts *taskOpts) {
+		opts.interval = normalizeInterval(intervalUpdater())
+		opts.intervalUpdater = intervalUpdater
+	}
 }
 
 // BlockTicker makes Task to listen for new zeta blocks

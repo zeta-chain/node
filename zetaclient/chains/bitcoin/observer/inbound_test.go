@@ -16,12 +16,12 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/testutil"
 	"github.com/zeta-chain/node/testutil/sample"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	clientcommon "github.com/zeta-chain/node/zetaclient/common"
@@ -32,7 +32,7 @@ import (
 )
 
 // mockDepositFeeCalculator returns a mock depositor fee calculator that returns the given fee and error.
-func mockDepositFeeCalculator(fee float64, err error) bitcoin.DepositorFeeCalculator {
+func mockDepositFeeCalculator(fee float64, err error) common.DepositorFeeCalculator {
 	return func(interfaces.BTCRPCClient, *btcjson.TxRawResult, *chaincfg.Params) (float64, error) {
 		return fee, err
 	}
@@ -55,7 +55,7 @@ func TestAvgFeeRateBlock828440(t *testing.T) {
 		path.Join(TestDataDir, testutils.TestDataPathBTC, "block_mempool.space_8332_828440.json"),
 	)
 
-	gasRate, err := bitcoin.CalcBlockAvgFeeRate(&blockVb, &chaincfg.MainNetParams)
+	gasRate, err := common.CalcBlockAvgFeeRate(&blockVb, &chaincfg.MainNetParams)
 	require.NoError(t, err)
 	require.Equal(t, int64(blockMb.Extras.AvgFeeRate), gasRate)
 }
@@ -71,7 +71,7 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 
 	t.Run("block has no transactions", func(t *testing.T) {
 		emptyVb := btcjson.GetBlockVerboseTxResult{Tx: []btcjson.TxRawResult{}}
-		_, err := bitcoin.CalcBlockAvgFeeRate(&emptyVb, &chaincfg.MainNetParams)
+		_, err := common.CalcBlockAvgFeeRate(&emptyVb, &chaincfg.MainNetParams)
 		require.Error(t, err)
 		require.ErrorContains(t, err, "block has no transactions")
 	})
@@ -79,32 +79,32 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 		coinbaseVb := btcjson.GetBlockVerboseTxResult{Tx: []btcjson.TxRawResult{
 			blockVb.Tx[0],
 		}}
-		_, err := bitcoin.CalcBlockAvgFeeRate(&coinbaseVb, &chaincfg.MainNetParams)
+		_, err := common.CalcBlockAvgFeeRate(&coinbaseVb, &chaincfg.MainNetParams)
 		require.NoError(t, err)
 	})
 	t.Run("tiny block weight should fail", func(t *testing.T) {
 		invalidVb := blockVb
 		invalidVb.Weight = 3
-		_, err := bitcoin.CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
+		_, err := common.CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
 		require.Error(t, err)
 		require.ErrorContains(t, err, "block weight 3 too small")
 	})
 	t.Run("block weight should not be less than coinbase tx weight", func(t *testing.T) {
 		invalidVb := blockVb
 		invalidVb.Weight = blockVb.Tx[0].Weight - 1
-		_, err := bitcoin.CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
+		_, err := common.CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
 		require.Error(t, err)
 		require.ErrorContains(t, err, "less than coinbase tx weight")
 	})
 	t.Run("invalid block height should fail", func(t *testing.T) {
 		invalidVb := blockVb
 		invalidVb.Height = 0
-		_, err := bitcoin.CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
+		_, err := common.CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
 		require.Error(t, err)
 		require.ErrorContains(t, err, "invalid block height")
 
 		invalidVb.Height = math.MaxInt32 + 1
-		_, err = bitcoin.CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
+		_, err = common.CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
 		require.Error(t, err)
 		require.ErrorContains(t, err, "invalid block height")
 	})
@@ -112,14 +112,14 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 		invalidVb := blockVb
 		invalidVb.Tx = []btcjson.TxRawResult{blockVb.Tx[0], blockVb.Tx[1]}
 		invalidVb.Tx[0].Hex = "invalid hex"
-		_, err := bitcoin.CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
+		_, err := common.CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
 		require.Error(t, err)
 		require.ErrorContains(t, err, "failed to decode coinbase tx")
 	})
 	t.Run("1st tx is not coinbase", func(t *testing.T) {
 		invalidVb := blockVb
 		invalidVb.Tx = []btcjson.TxRawResult{blockVb.Tx[1], blockVb.Tx[0]}
-		_, err := bitcoin.CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
+		_, err := common.CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
 		require.Error(t, err)
 		require.ErrorContains(t, err, "not coinbase tx")
 	})
@@ -144,7 +144,7 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 		err = msgTx.Serialize(&buf)
 		require.NoError(t, err)
 		invalidVb.Tx[0].Hex = hex.EncodeToString(buf.Bytes())
-		_, err = bitcoin.CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
+		_, err = common.CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
 		require.Error(t, err)
 		require.ErrorContains(t, err, "less than subsidy")
 	})
@@ -283,7 +283,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 	net := &chaincfg.MainNetParams
 
 	// fee rate of above tx is 28 sat/vB
-	depositorFee := bitcoin.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
+	depositorFee := common.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
 	feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
 
 	// expected result
@@ -613,7 +613,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 	blockNumber := uint64(835640)
 
 	// fee rate of above tx is 28 sat/vB
-	depositorFee := bitcoin.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
+	depositorFee := common.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
 	feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
 
 	t.Run("should return error on invalid Vout[0] script", func(t *testing.T) {
@@ -688,7 +688,7 @@ func TestGetBtcEvent(t *testing.T) {
 		blockNumber := uint64(835640)
 		net := &chaincfg.MainNetParams
 		// 2.992e-05, see avgFeeRate https://mempool.space/api/v1/blocks/835640
-		depositorFee := bitcoin.DepositorFee(22 * clientcommon.BTCOutboundGasPriceMultiplier)
+		depositorFee := common.DepositorFee(22 * clientcommon.BTCOutboundGasPriceMultiplier)
 		feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
 
 		txHash2 := "37777defed8717c581b4c0509329550e344bdc14ac38f71fc050096887e535c8"
@@ -721,7 +721,7 @@ func TestGetBtcEvent(t *testing.T) {
 		net := &chaincfg.MainNetParams
 
 		// fee rate of above tx is 28 sat/vB
-		depositorFee := bitcoin.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
+		depositorFee := common.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
 		feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
 
 		// expected result

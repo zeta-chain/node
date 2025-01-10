@@ -107,6 +107,18 @@ func (s *Scheduler) Register(ctx context.Context, exec Executable, opts ...Opt) 
 	return task
 }
 
+func (s *Scheduler) Tasks() map[uuid.UUID]*Task {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	copied := make(map[uuid.UUID]*Task, len(s.tasks))
+	for k, v := range s.tasks {
+		copied[k] = v
+	}
+
+	return copied
+}
+
 // Stop stops all tasks.
 func (s *Scheduler) Stop() {
 	s.StopGroup("")
@@ -131,6 +143,11 @@ func (s *Scheduler) StopGroup(group Group) {
 	if len(selectedTasks) == 0 {
 		return
 	}
+
+	s.logger.Info().
+		Int("tasks", len(selectedTasks)).
+		Str("group", string(group)).
+		Msg("Stopping scheduler group")
 
 	// Stop all selected tasks concurrently
 	var wg sync.WaitGroup
@@ -159,6 +176,14 @@ func (t *Task) Stop() {
 
 	timeTakenMS := time.Since(start).Milliseconds()
 	t.logger.Info().Int64("time_taken_ms", timeTakenMS).Msg("Stopped scheduler task")
+}
+
+func (t *Task) Group() Group {
+	return t.group
+}
+
+func (t *Task) Name() string {
+	return t.name
 }
 
 // execute executes Task with additional logging and metrics.
@@ -208,4 +233,13 @@ func newTickable(task *Task, opts *taskOpts) tickable {
 		task.name,
 		task.logger,
 	)
+}
+
+// normalizeInterval ensures that the interval is positive to prevent panics.
+func normalizeInterval(dur time.Duration) time.Duration {
+	if dur > 0 {
+		return dur
+	}
+
+	return time.Second
 }
