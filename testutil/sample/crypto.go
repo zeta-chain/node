@@ -3,7 +3,6 @@ package sample
 import (
 	"crypto/ecdsa"
 	cryptoed25519 "crypto/ed25519"
-
 	"math/big"
 	"math/rand"
 	"strconv"

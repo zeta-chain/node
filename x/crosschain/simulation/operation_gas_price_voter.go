@@ -8,9 +8,9 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/zeta-chain/node/testutil/sample"
 
 	"github.com/zeta-chain/node/pkg/authz"
+	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )

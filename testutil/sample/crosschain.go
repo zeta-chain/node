@@ -12,12 +12,12 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -401,7 +401,8 @@ func CoinTypeFromRand(r *rand.Rand) coin.CoinType {
 }
 
 func MemoFromRand(r *rand.Rand) (common.Address, []byte, string) {
-	randomMemo := common.BytesToAddress([]byte{0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0x12, 0x34, 0x56, 0x78}).Hex()
+	randomMemo := common.BytesToAddress([]byte{0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0x12, 0x34, 0x56, 0x78}).
+		Hex()
 	randomData := []byte(StringRandom(r, 10))
 	memoHex := hex.EncodeToString(append(common.FromHex(randomMemo), randomData...))
 	return common.HexToAddress(randomMemo), randomData, memoHex
