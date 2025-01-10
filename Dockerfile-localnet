@@ -28,7 +28,7 @@ RUN --mount=type=cache,target="/root/.cache/go-build" \
     make install install-zetae2e
 
 FROM ghcr.io/zeta-chain/golang:1.22.7-bookworm AS cosmovisor-build
-RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.6.0
+RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.7.0
 
 FROM ghcr.io/zeta-chain/golang:1.22.7-bookworm AS base-runtime
 
