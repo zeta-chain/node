@@ -12,7 +12,7 @@ import (
 
 const (
 	// AbortMessage is the message to abort a stuck CCTX
-	AbortMessage = "CCTX aborted with admin cmd"
+	AbortMessage = "cctx aborted with admin cmd"
 )
 
 // AbortStuckCCTX aborts a stuck CCTX

@@ -38,6 +38,6 @@ func (k Keeper) InitiateOutbound(ctx sdk.Context, config InitiateOutboundConfig)
 		)
 	}
 
-	config.CCTX.SetPendingOutbound(types.StatusMessages{StatusMessage: "Initiating outbound"})
+	config.CCTX.SetPendingOutbound(types.StatusMessages{StatusMessage: "initiating outbound"})
 	return cctxGateway.InitiateOutbound(ctx, config)
 }

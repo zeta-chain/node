@@ -31,8 +31,8 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 	if err != nil && !isContractReverted {
 		// exceptional case; internal error; should abort CCTX
 		config.CCTX.SetAbort(types.StatusMessages{
-			StatusMessage:        "Error processing outbound to ZEVM, but contract call did not revert",
-			ErrorMessageOutbound: fmt.Sprintf("Error from EVMDeposit: %s", err.Error()),
+			StatusMessage:        "outbound failed deposit to ZEVM failed but contract call did not revert",
+			ErrorMessageOutbound: fmt.Sprintf("error from EVMDeposit: %s", err.Error()),
 		})
 		return types.CctxStatus_Aborted, err
 	}

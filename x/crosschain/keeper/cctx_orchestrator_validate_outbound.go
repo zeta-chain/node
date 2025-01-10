@@ -52,15 +52,13 @@ func (k Keeper) ValidateOutboundZEVM(
 			depositErr.Error(),
 			cctx.InboundParams.Amount,
 		)
-		// In this case the outbound and revert both fail in the same block ,so we should update status for both together.
-		// A status revert failed indicates that the outbound has already failed before this.
-
 		if reverErr != nil {
 			// Error here would mean the outbound tx failed and we also failed to create a revert tx.
-			// This is the only case where we set outbound and revert messages, as both the outbound and the revert failed in the same block
+			// This is the only case where we set outbound and revert messages,
+			// as both the outbound and the revert failed in the same block
 			cctx.SetAbort(
 				types.StatusMessages{
-					StatusMessage:        fmt.Sprintf("Revert failed"),
+					StatusMessage:        fmt.Sprintf("revert failed"),
 					ErrorMessageOutbound: depositErr.Error(),
 					ErrorMessageRevert:   reverErr.Error(),
 				})
@@ -149,7 +147,7 @@ func (k Keeper) processFailedOutboundObservers(ctx sdk.Context, cctx *types.Cros
 			{
 				cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 				cctx.SetAbort(types.StatusMessages{
-					StatusMessage:        "Outbound failed for non-ZETA cctx",
+					StatusMessage:        "outbound failed for non-ZETA cctx",
 					ErrorMessageOutbound: fmt.Sprintf("coin type %s not supported for revert when source chain is Zetachain", cctx.InboundParams.CoinType),
 				})
 			}
@@ -170,7 +168,7 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,
 	oldStatus types.CctxStatus,
-	revertMsg string,
+	errorMsg string,
 	inputAmount math.Uint,
 ) error {
 	switch oldStatus {
@@ -223,14 +221,14 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 		}
 		// Not setting the finalization status here, the required changes have been made while creating the revert tx
 		cctx.SetPendingRevert(types.StatusMessages{
-			StatusMessage:        "Outbound failed",
-			ErrorMessageOutbound: revertMsg,
+			StatusMessage:        "outbound failed",
+			ErrorMessageOutbound: errorMsg,
 		})
 	case types.CctxStatus_PendingRevert:
 		cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 		cctx.SetAbort(types.StatusMessages{
-			StatusMessage:      "Revert failed",
-			ErrorMessageRevert: revertMsg,
+			StatusMessage:      "revert failed",
+			ErrorMessageRevert: errorMsg,
 		})
 	}
 	return nil
@@ -258,9 +256,9 @@ func (k Keeper) processSuccessfulOutbound(
 	oldStatus := cctx.CctxStatus.Status
 	switch oldStatus {
 	case types.CctxStatus_PendingRevert:
-		cctx.SetReverted(types.StatusMessages{StatusMessage: "Revert successful"})
+		cctx.SetReverted(types.StatusMessages{StatusMessage: "revert successful"})
 	case types.CctxStatus_PendingOutbound:
-		cctx.SetOutboundMined(types.StatusMessages{StatusMessage: "Outbound mined successfully"})
+		cctx.SetOutboundMined(types.StatusMessages{StatusMessage: "outbound mined successfully"})
 	default:
 		return
 	}
@@ -288,9 +286,10 @@ func (k Keeper) processFailedZETAOutboundOnZEVM(ctx sdk.Context, cctx *types.Cro
 		return fmt.Errorf("failed AddRevertOutbound: %s", err.Error())
 	}
 
-	// Trying to revert the transaction this would get set to a finalized status in the same block as this does not need a TSS singing
+	// Trying to revert the transaction, this would get set to a finalized status in the same block as this does not need a TSS singing
+	// The outbound failed due to majority of observer voting failure.We do not have the exact reason for the failure available on chain.
 	cctx.SetPendingRevert(types.StatusMessages{
-		StatusMessage:        "Outbound failed",
+		StatusMessage:        "outbound failed",
 		ErrorMessageOutbound: "outbound failed to external chain ,start revert",
 	})
 	data, err := base64.StdEncoding.DecodeString(cctx.RelayedMessage)
@@ -327,7 +326,7 @@ func (k Keeper) processFailedZETAOutboundOnZEVM(ctx sdk.Context, cctx *types.Cro
 	}
 
 	cctx.SetReverted(types.StatusMessages{
-		StatusMessage: "Reverted to ZEVM",
+		StatusMessage: "revert successful",
 	})
 
 	if len(ctx.TxBytes()) > 0 {
@@ -375,8 +374,8 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 
 		// update status
 		cctx.SetPendingRevert(types.StatusMessages{
-			StatusMessage:        "Outbound failed",
-			ErrorMessageOutbound: "Outbound failed to external chain ,start revert",
+			StatusMessage:        "outbound failed",
+			ErrorMessageOutbound: "outbound failed to external chain ,start revert",
 		})
 
 		// process the revert on ZEVM
@@ -396,7 +395,7 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 
 		// tx is reverted
 		cctx.SetReverted(types.StatusMessages{
-			StatusMessage: "Reverted to ZEVM",
+			StatusMessage: "revert successful",
 		})
 
 		// add event for tendermint transaction hash format
@@ -411,7 +410,7 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 	case types.CctxStatus_PendingRevert:
 		cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 		cctx.SetAbort(types.StatusMessages{
-			StatusMessage:      "Revert failed",
+			StatusMessage:      "revert failed",
 			ErrorMessageRevert: "outbound and revert failed",
 		})
 	}

@@ -730,7 +730,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 		require.False(t, types.IsContractReverted(res, err))
 		require.NotContains(t, err.Error(), "reason:")
 
-		// No revert with successfull call
+		// No revert with successful call
 		res, err = k.CallEVM(
 			ctx,
 			*abi,
