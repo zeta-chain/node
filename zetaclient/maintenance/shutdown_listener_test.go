@@ -100,8 +100,65 @@ func TestShutdownListener(t *testing.T) {
 			return len(client.Calls) == 2
 		}, time.Second, time.Millisecond)
 		assertChannelNotClosed(t, complete)
-		cancel()
 	})
+
+	t.Run("minimum version ok", func(t *testing.T) {
+		client := mocks.NewZetacoreClient(t)
+
+		listener := NewShutdownListener(client, logger)
+		listener.getVersion = func() string {
+			return "1.1.2"
+		}
+
+		client.Mock.On("GetOperationalFlags", ctx).Return(observertypes.OperationalFlags{
+			MinimumVersion: "v1.1.1",
+		}, nil)
+
+		// pre start checks passed
+		err := listener.RunPreStartCheck(ctx)
+		require.NoError(t, err)
+
+		// listener also does not shutdown
+		complete := make(chan interface{})
+		listener.Listen(ctx, func() {
+			close(complete)
+		})
+
+		require.Eventually(t, func() bool {
+			return len(client.Calls) == 2
+		}, time.Second, time.Millisecond)
+		assertChannelNotClosed(t, complete)
+	})
+
+	t.Run("minimum version failed", func(t *testing.T) {
+		client := mocks.NewZetacoreClient(t)
+
+		listener := NewShutdownListener(client, logger)
+		listener.getVersion = func() string {
+			return "1.1.1"
+		}
+
+		client.Mock.On("GetOperationalFlags", ctx).Return(observertypes.OperationalFlags{
+			MinimumVersion: "v1.1.2",
+		}, nil)
+
+		// pre start checks would return error
+		err := listener.RunPreStartCheck(ctx)
+		require.Error(t, err)
+
+		// listener would also shutdown
+		complete := make(chan interface{})
+		listener.Listen(ctx, func() {
+			close(complete)
+		})
+
+		require.Eventually(t, func() bool {
+			return len(client.Calls) == 2
+		}, time.Second, time.Millisecond)
+		<-complete
+	})
+
 	// avoid Log in goroutine after TestShutdownListener has completed
+	cancel()
 	time.Sleep(time.Millisecond * 100)
 }
