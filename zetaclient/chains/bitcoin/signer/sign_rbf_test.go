@@ -110,7 +110,7 @@ func Test_SignRBFTx(t *testing.T) {
 			),
 			expectedTx: func() *wire.MsgTx {
 				// deduct additional fees
-				newTx := copyMsgTx(msgTx)
+				newTx := signer.CopyMsgTxNoWitness(msgTx)
 				newTx.TxOut[2].Value -= 5790
 				return newTx
 			}(),

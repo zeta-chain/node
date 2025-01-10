@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
@@ -27,6 +28,24 @@ const (
 
 	DefaultCctxTimeout = 8 * time.Minute
 )
+
+// GetCctxByInboundHash gets cctx by inbound hash
+func GetCctxByInboundHash(
+	ctx context.Context,
+	inboundHash string,
+	client crosschaintypes.QueryClient,
+) *crosschaintypes.CrossChainTx {
+	t := TestingFromContext(ctx)
+
+	// query cctx by inbound hash
+	in := &crosschaintypes.QueryInboundHashToCctxDataRequest{InboundHash: inboundHash}
+	res, err := client.InTxHashToCctxData(ctx, in)
+
+	require.NoError(t, err)
+	require.Len(t, res.CrossChainTxs, 1)
+
+	return &res.CrossChainTxs[0]
+}
 
 // WaitCctxMinedByInboundHash waits until cctx is mined; returns the cctxIndex (the last one)
 func WaitCctxMinedByInboundHash(
@@ -184,6 +203,56 @@ func WaitCCTXMinedByIndex(
 		}
 
 		return cctx
+	}
+}
+
+// WaitOutboundTracker wait for outbound tracker to be filled with 'hashCount' hashes
+func WaitOutboundTracker(
+	ctx context.Context,
+	client crosschaintypes.QueryClient,
+	chainID int64,
+	nonce uint64,
+	hashCount int,
+	logger infoLogger,
+	timeout time.Duration,
+) []string {
+	if timeout == 0 {
+		timeout = DefaultCctxTimeout
+	}
+
+	t := TestingFromContext(ctx)
+	startTime := time.Now()
+	in := &crosschaintypes.QueryAllOutboundTrackerByChainRequest{Chain: chainID}
+
+	for {
+		require.False(
+			t,
+			time.Since(startTime) > timeout,
+			fmt.Sprintf("waiting outbound tracker timeout, chainID: %d, nonce: %d", chainID, nonce),
+		)
+		time.Sleep(5 * time.Second)
+
+		outboundTracker, err := client.OutboundTrackerAllByChain(ctx, in)
+		require.NoError(t, err)
+
+		// loop through all outbound trackers
+		for i, tracker := range outboundTracker.OutboundTracker {
+			if tracker.Nonce == nonce {
+				logger.Info("Tracker[%d]:\n", i)
+				logger.Info("  ChainId: %d\n", tracker.ChainId)
+				logger.Info("  Nonce: %d\n", tracker.Nonce)
+				logger.Info("  HashList:\n")
+
+				hashes := []string{}
+				for j, hash := range tracker.HashList {
+					hashes = append(hashes, hash.TxHash)
+					logger.Info("    hash[%d]: %s\n", j, hash.TxHash)
+				}
+				if len(hashes) >= hashCount {
+					return hashes
+				}
+			}
+		}
 	}
 }
 

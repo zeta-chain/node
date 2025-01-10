@@ -21,6 +21,7 @@ import (
 func Test_NewCPFPFeeBumper(t *testing.T) {
 	tests := []struct {
 		name                string
+		chain               chains.Chain
 		client              *mocks.BTCRPCClient
 		tx                  *btcutil.Tx
 		cctxRate            int64
@@ -31,6 +32,7 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 		expected            *signer.CPFPFeeBumper
 	}{
 		{
+			chain:       chains.BitcoinMainnet,
 			name:        "should create new CPFPFeeBumper successfully",
 			client:      mocks.NewBTCRPCClient(t),
 			tx:          btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
@@ -45,6 +47,7 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 				"",     // no error
 			),
 			expected: &signer.CPFPFeeBumper{
+				Chain:       chains.BitcoinMainnet,
 				Tx:          btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
 				MinRelayFee: 0.00001,
 				CCTXRate:    10,
@@ -56,6 +59,7 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 			},
 		},
 		{
+			chain:    chains.BitcoinMainnet,
 			name:     "should fail when mempool txs info fetcher returns error",
 			client:   mocks.NewBTCRPCClient(t),
 			tx:       btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
@@ -80,6 +84,7 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 			}, nil)
 
 			bumper, err := signer.NewCPFPFeeBumper(
+				tt.chain,
 				tt.client,
 				tt.memplTxsInfoFetcher,
 				tt.tx,
@@ -128,28 +133,8 @@ func Test_BumpTxFee(t *testing.T) {
 			expectedNewRate: 57,
 			expectedNewTx: func() *wire.MsgTx {
 				// deduct additional fees
-				newTx := copyMsgTx(msgTx)
+				newTx := signer.CopyMsgTxNoWitness(msgTx)
 				newTx.TxOut[2].Value -= 5790
-				return newTx
-			}(),
-		},
-		{
-			name: "should cover min relay fees",
-			feeBumper: &signer.CPFPFeeBumper{
-				Tx:          btcutil.NewTx(msgTx),
-				MinRelayFee: 0.00002, // min relay fee will be 579vB * 2 = 1158 sats
-				CCTXRate:    6,
-				LiveRate:    7,
-				TotalFees:   2895,
-				TotalVSize:  579,
-				AvgFeeRate:  5,
-			},
-			additionalFees:  1158,
-			expectedNewRate: 7, // (2895 + 1158) / 579 = 7
-			expectedNewTx: func() *wire.MsgTx {
-				// deduct additional fees
-				newTx := copyMsgTx(msgTx)
-				newTx.TxOut[2].Value -= 1158
 				return newTx
 			}(),
 		},
@@ -173,7 +158,7 @@ func Test_BumpTxFee(t *testing.T) {
 			expectedNewRate: 59,                                          // (27213 + 6789) / 579 ≈ 59
 			expectedNewTx: func() *wire.MsgTx {
 				// give up all reserved bump fees
-				newTx := copyMsgTx(msgTx)
+				newTx := signer.CopyMsgTxNoWitness(msgTx)
 				newTx.TxOut = newTx.TxOut[:2]
 				return newTx
 			}(),
@@ -193,7 +178,7 @@ func Test_BumpTxFee(t *testing.T) {
 			expectedNewRate: 100,
 			expectedNewTx: func() *wire.MsgTx {
 				// deduct additional fees
-				newTx := copyMsgTx(msgTx)
+				newTx := signer.CopyMsgTxNoWitness(msgTx)
 				newTx.TxOut[2].Value -= 30687
 				return newTx
 			}(),
@@ -228,6 +213,19 @@ func Test_BumpTxFee(t *testing.T) {
 				AvgFeeRate: 47,
 			},
 			errMsg: "much higher than the cctx rate",
+		},
+		{
+			name: "should hold on RBF if additional fees is lower than min relay fees",
+			feeBumper: &signer.CPFPFeeBumper{
+				Tx:          btcutil.NewTx(msgTx),
+				MinRelayFee: 0.00002, // min relay fee will be 579vB * 2 = 1158 sats
+				CCTXRate:    6,
+				LiveRate:    7,
+				TotalFees:   2895,
+				TotalVSize:  579,
+				AvgFeeRate:  5,
+			},
+			errMsg: "lower than min relay fees",
 		},
 	}
 
@@ -327,6 +325,24 @@ func Test_FetchFeeBumpInfo(t *testing.T) {
 	}
 }
 
+func Test_CopyMsgTxNoWitness(t *testing.T) {
+	chain := chains.BitcoinMainnet
+	txid := "030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0"
+	msgTx := testutils.LoadBTCMsgTx(t, TestDataDir, chain.ChainId, txid)
+
+	// make a non-witness copy
+	copyTx := signer.CopyMsgTxNoWitness(msgTx)
+
+	// make another copy and clear witness data manually
+	newTx := msgTx.Copy()
+	for idx := range newTx.TxIn {
+		newTx.TxIn[idx].Witness = wire.TxWitness{}
+	}
+
+	// check
+	require.Equal(t, newTx, copyTx)
+}
+
 // makeMempoolTxsInfoFetcher is a helper function to create a mock MempoolTxsInfoFetcher
 func makeMempoolTxsInfoFetcher(
 	totalTxs int64,
@@ -343,13 +359,4 @@ func makeMempoolTxsInfoFetcher(
 	return func(interfaces.BTCRPCClient, string) (int64, float64, int64, int64, error) {
 		return totalTxs, totalFees, totalVSize, avgFeeRate, err
 	}
-}
-
-// copyMsgTx is a helper function to copy a MsgTx and clean witness data
-func copyMsgTx(tx *wire.MsgTx) *wire.MsgTx {
-	newTx := tx.Copy()
-	for idx := range newTx.TxIn {
-		newTx.TxIn[idx].Witness = wire.TxWitness{}
-	}
-	return newTx
 }

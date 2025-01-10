@@ -172,19 +172,13 @@ func (signer *Signer) TryProcessOutbound(
 	// sign outbound
 	if stuckTx != nil && params.TssNonce == stuckTx.Nonce {
 		// sign RBF tx
-		signedTx, err = signer.SignRBFTx(
-			ctx,
-			cctx,
-			height,
-			stuckTx.Tx,
-			minRelayFee,
-			rpc.GetTotalMempoolParentsSizeNFees,
-		)
+		mempoolFetcher := rpc.GetTotalMempoolParentsSizeNFees
+		signedTx, err = signer.SignRBFTx(ctx, cctx, height, stuckTx.Tx, minRelayFee, mempoolFetcher)
 		if err != nil {
 			logger.Error().Err(err).Msg("SignRBFTx failed")
 			return
 		}
-		logger.Info().Msg("SignRBFTx success")
+		logger.Info().Str(logs.FieldTx, signedTx.TxID()).Msg("SignRBFTx succeed")
 	} else {
 		// setup outbound data
 		txData, err := NewOutboundData(cctx, chain.ChainId, height, minRelayFee, logger, signer.Logger().Compliance)
@@ -199,7 +193,7 @@ func (signer *Signer) TryProcessOutbound(
 			logger.Error().Err(err).Msg("SignWithdrawTx failed")
 			return
 		}
-		logger.Info().Msg("SignWithdrawTx success")
+		logger.Info().Str(logs.FieldTx, signedTx.TxID()).Msg("SignWithdrawTx succeed")
 	}
 
 	// broadcast signed outbound

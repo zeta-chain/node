@@ -90,6 +90,7 @@ const (
 	TestBitcoinWithdrawP2SHName                            = "bitcoin_withdraw_p2sh"
 	TestBitcoinWithdrawInvalidAddressName                  = "bitcoin_withdraw_invalid"
 	TestBitcoinWithdrawRestrictedName                      = "bitcoin_withdraw_restricted"
+	TestBitcoinWithdrawRBFName                             = "bitcoin_withdraw_rbf"
 
 	/*
 	 Application tests
@@ -716,6 +717,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.001"},
 		},
 		TestBitcoinWithdrawRestricted,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawRBFName,
+		"withdraw Bitcoin from ZEVM and replace the outbound using RBF",
+		[]runner.ArgDefinition{
+			{Description: "receiver address", DefaultValue: ""},
+			{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinWithdrawRBF,
 	),
 	/*
 	 Application tests

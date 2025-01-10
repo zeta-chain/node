@@ -3,6 +3,7 @@ package observer_test
 import (
 	"context"
 	"errors"
+	"reflect"
 	"testing"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 )
@@ -35,7 +37,7 @@ func Test_FefreshLastStuckOutbound(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		txFinder   observer.LastTxFinder
+		txFinder   observer.PendingTxFinder
 		txChecker  observer.StuckTxChecker
 		oldStuckTx *observer.LastStuckOutbound
 		expectedTx *observer.LastStuckOutbound
@@ -43,34 +45,33 @@ func Test_FefreshLastStuckOutbound(t *testing.T) {
 	}{
 		{
 			name:       "should set last stuck tx successfully",
-			txFinder:   makeLastTxFinder(sampleTx1, 1, ""),
+			txFinder:   makePendingTxFinder(sampleTx1, 1, ""),
 			txChecker:  makeStuckTxChecker(true, 30*time.Minute, ""),
 			oldStuckTx: nil,
 			expectedTx: observer.NewLastStuckOutbound(1, sampleTx1, 30*time.Minute),
 		},
 		{
 			name:       "should update last stuck tx successfully",
-			txFinder:   makeLastTxFinder(sampleTx2, 2, ""),
+			txFinder:   makePendingTxFinder(sampleTx2, 2, ""),
 			txChecker:  makeStuckTxChecker(true, 40*time.Minute, ""),
 			oldStuckTx: observer.NewLastStuckOutbound(1, sampleTx1, 30*time.Minute),
 			expectedTx: observer.NewLastStuckOutbound(2, sampleTx2, 40*time.Minute),
 		},
 		{
 			name:       "should clear last stuck tx successfully",
-			txFinder:   makeLastTxFinder(sampleTx1, 1, ""),
+			txFinder:   makePendingTxFinder(sampleTx1, 1, ""),
 			txChecker:  makeStuckTxChecker(false, 1*time.Minute, ""),
 			oldStuckTx: observer.NewLastStuckOutbound(1, sampleTx1, 30*time.Minute),
 			expectedTx: nil,
 		},
 		{
-			name:       "should return error if txFinder failed",
-			txFinder:   makeLastTxFinder(nil, 0, "txFinder failed"),
+			name:       "do nothing if unable to find last pending tx",
+			txFinder:   makePendingTxFinder(nil, 0, "txFinder failed"),
 			expectedTx: nil,
-			errMsg:     "unable to find last outbound",
 		},
 		{
 			name:       "should return error if txChecker failed",
-			txFinder:   makeLastTxFinder(sampleTx1, 1, ""),
+			txFinder:   makePendingTxFinder(sampleTx1, 1, ""),
 			txChecker:  makeStuckTxChecker(false, 0, "txChecker failed"),
 			expectedTx: nil,
 			errMsg:     "cannot determine",
@@ -104,7 +105,7 @@ func Test_FefreshLastStuckOutbound(t *testing.T) {
 	}
 }
 
-func Test_GetLastOutbound(t *testing.T) {
+func Test_GetLastPendingOutbound(t *testing.T) {
 	sampleTx := btcutil.NewTx(wire.NewMsgTx(wire.TxVersion))
 
 	tests := []struct {
@@ -116,6 +117,7 @@ func Test_GetLastOutbound(t *testing.T) {
 		tx            *btcutil.Tx
 		saveTx        bool
 		includeTx     bool
+		failMempool   bool
 		failGetTx     bool
 		expectedTx    *btcutil.Tx
 		expectedNonce uint64
@@ -196,6 +198,22 @@ func Test_GetLastOutbound(t *testing.T) {
 			expectedTx:    nil,
 			expectedNonce: 0,
 			errMsg:        "last tx not found",
+		},
+		{
+			name:         "return error if GetMempoolEntry failed",
+			chain:        chains.BitcoinMainnet,
+			pendingNonce: 10,
+			pendingNonces: &crosschaintypes.PendingNonces{
+				NonceLow:  9,
+				NonceHigh: 10,
+			},
+			tx:            sampleTx,
+			saveTx:        true,
+			includeTx:     false,
+			failMempool:   true,
+			expectedTx:    nil,
+			expectedNonce: 0,
+			errMsg:        "last tx is not in mempool",
 		},
 		{
 			name:         "return error if FetchUTXOs failed",
@@ -302,6 +320,11 @@ func Test_GetLastOutbound(t *testing.T) {
 			} else {
 				ob.client.On("ListUnspentMinMaxAddresses", mock.Anything, mock.Anything, mock.Anything).Maybe().Return(nil, errors.New("failed"))
 			}
+			if !tt.failMempool {
+				ob.client.On("GetMempoolEntry", mock.Anything).Maybe().Return(nil, nil)
+			} else {
+				ob.client.On("GetMempoolEntry", mock.Anything).Maybe().Return(nil, errors.New("failed"))
+			}
 			if tt.tx != nil && !tt.failGetTx {
 				ob.client.On("GetRawTransaction", mock.Anything).Maybe().Return(tt.tx, nil)
 			} else {
@@ -309,7 +332,7 @@ func Test_GetLastOutbound(t *testing.T) {
 			}
 
 			ctx := context.Background()
-			lastTx, lastNonce, err := observer.GetLastOutbound(ctx, ob.Observer)
+			lastTx, lastNonce, err := observer.GetLastPendingOutbound(ctx, ob.Observer)
 
 			if tt.errMsg != "" {
 				require.ErrorContains(t, err, tt.errMsg)
@@ -325,8 +348,80 @@ func Test_GetLastOutbound(t *testing.T) {
 	}
 }
 
-// makeLastTxFinder is a helper function to create a mock tx finder
-func makeLastTxFinder(tx *btcutil.Tx, nonce uint64, errMsg string) observer.LastTxFinder {
+func Test_GetStuckTxCheck(t *testing.T) {
+	tests := []struct {
+		name      string
+		chainID   int64
+		txChecker observer.StuckTxChecker
+	}{
+		{
+			name:      "should return 3 blocks for Bitcoin mainnet",
+			chainID:   chains.BitcoinMainnet.ChainId,
+			txChecker: rpc.IsTxStuckInMempool,
+		},
+		{
+			name:      "should return 3 blocks for Bitcoin testnet4",
+			chainID:   chains.BitcoinTestnet.ChainId,
+			txChecker: rpc.IsTxStuckInMempool,
+		},
+		{
+			name:      "should return 3 blocks for Bitcoin Signet",
+			chainID:   chains.BitcoinSignetTestnet.ChainId,
+			txChecker: rpc.IsTxStuckInMempool,
+		},
+		{
+			name:      "should return 10 blocks for Bitcoin regtest",
+			chainID:   chains.BitcoinRegtest.ChainId,
+			txChecker: rpc.IsTxStuckInMempoolRegnet,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			txChecker := observer.GetStuckTxChecker(tt.chainID)
+			require.Equal(t, reflect.ValueOf(tt.txChecker).Pointer(), reflect.ValueOf(txChecker).Pointer())
+		})
+	}
+}
+
+func Test_GetFeeBumpWaitBlocks(t *testing.T) {
+	tests := []struct {
+		name               string
+		chainID            int64
+		expectedWaitBlocks int64
+	}{
+		{
+			name:               "should return 3 blocks for Bitcoin mainnet",
+			chainID:            chains.BitcoinMainnet.ChainId,
+			expectedWaitBlocks: 3,
+		},
+		{
+			name:               "should return 3 blocks for Bitcoin testnet4",
+			chainID:            chains.BitcoinTestnet.ChainId,
+			expectedWaitBlocks: 3,
+		},
+		{
+			name:               "should return 3 blocks for Bitcoin Signet",
+			chainID:            chains.BitcoinSignetTestnet.ChainId,
+			expectedWaitBlocks: 3,
+		},
+		{
+			name:               "should return 10 blocks for Bitcoin regtest",
+			chainID:            chains.BitcoinRegtest.ChainId,
+			expectedWaitBlocks: 10,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			blocks := observer.GetFeeBumpWaitBlocks(tt.chainID)
+			require.Equal(t, tt.expectedWaitBlocks, blocks)
+		})
+	}
+}
+
+// makePendingTxFinder is a helper function to create a mock pending tx finder
+func makePendingTxFinder(tx *btcutil.Tx, nonce uint64, errMsg string) observer.PendingTxFinder {
 	var err error
 	if errMsg != "" {
 		err = errors.New(errMsg)

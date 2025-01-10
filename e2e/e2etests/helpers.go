@@ -8,6 +8,7 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -25,30 +26,12 @@ func randomPayload(r *runner.E2ERunner) string {
 }
 
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
-	tx, err := r.BTCZRC20.Approve(
-		r.ZEVMAuth,
-		r.BTCZRC20Addr,
-		big.NewInt(amount.Int64()*2),
-	) // approve more to cover withdraw fee
-	require.NoError(r, err)
-
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireTxSuccessful(r, receipt)
+	// call approve and withdraw on ZRC20 contract
+	receipt := approveAndWithdrawBTCZRC20(r, to, amount)
 
 	// mine blocks if testing on regnet
 	stop := r.MineBlocksIfLocalBitcoin()
 	defer stop()
-
-	// withdraw 'amount' of BTC from ZRC20 to BTC address
-	tx, err = r.BTCZRC20.Withdraw(r.ZEVMAuth, []byte(to.EncodeAddress()), amount)
-	require.NoError(r, err)
-
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireTxSuccessful(r, receipt)
-
-	// mine 10 blocks to confirm the withdrawal tx
-	_, err = r.GenerateToAddressIfLocalBitcoin(10, to)
-	require.NoError(r, err)
 
 	// get cctx and check status
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
@@ -77,6 +60,28 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	}
 
 	return rawTx
+}
+
+// approveAndWithdrawBTCZRC20 is a helper function to call 'approve' and 'withdraw' on BTCZRC20 contract
+func approveAndWithdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *ethtypes.Receipt {
+	tx, err := r.BTCZRC20.Approve(
+		r.ZEVMAuth,
+		r.BTCZRC20Addr,
+		big.NewInt(amount.Int64()*2),
+	) // approve more to cover withdraw fee
+	require.NoError(r, err)
+
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt)
+
+	// withdraw 'amount' of BTC from ZRC20 to BTC address
+	tx, err = r.BTCZRC20.Withdraw(r.ZEVMAuth, []byte(to.EncodeAddress()), amount)
+	require.NoError(r, err)
+
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt)
+
+	return receipt
 }
 
 // bigAdd is shorthand for new(big.Int).Add(x, y)

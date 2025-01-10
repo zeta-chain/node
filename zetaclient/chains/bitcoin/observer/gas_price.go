@@ -63,7 +63,8 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 			return errors.Wrap(err, "unable to execute specialHandleFeeRate")
 		}
 	} else {
-		feeRateEstimated, err = rpc.GetEstimatedFeeRate(ob.btcClient, 1)
+		isRegnet := chains.IsBitcoinRegnet(ob.Chain().ChainId)
+		feeRateEstimated, err = rpc.GetEstimatedFeeRate(ob.btcClient, 1, isRegnet)
 		if err != nil {
 			return errors.Wrap(err, "unable to get estimated fee rate")
 		}
@@ -92,8 +93,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 func (ob *Observer) specialHandleFeeRate() (int64, error) {
 	switch ob.Chain().NetworkType {
 	case chains.NetworkType_privnet:
-		// hardcode gas price for regnet
-		return 1, nil
+		return rpc.FeeRateRegnet, nil
 	case chains.NetworkType_testnet:
 		feeRateEstimated, err := bitcoin.GetRecentFeeRate(ob.btcClient, ob.netParams)
 		if err != nil {

@@ -7,11 +7,21 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/common"
 	"github.com/zeta-chain/node/zetaclient/logs"
+)
+
+const (
+	// PendingTxFeeBumpWaitBlocks is the number of blocks to await before considering a tx stuck in mempool
+	PendingTxFeeBumpWaitBlocks = 3
+
+	// PendingTxFeeBumpWaitBlocksRegnet is the number of blocks to await before considering a tx stuck in mempool in regnet
+	// Note: this is used for E2E test only
+	PendingTxFeeBumpWaitBlocksRegnet = 30
 )
 
 // LastStuckOutbound contains the last stuck outbound tx information.
@@ -35,16 +45,17 @@ func NewLastStuckOutbound(nonce uint64, tx *btcutil.Tx, stuckFor time.Duration) 
 	}
 }
 
-// LastTxFinder is a function type for finding the last Bitcoin outbound tx.
-type LastTxFinder func(ctx context.Context, ob *Observer) (*btcutil.Tx, uint64, error)
+// PendingTxFinder is a function type for finding the last Bitcoin pending tx.
+type PendingTxFinder func(ctx context.Context, ob *Observer) (*btcutil.Tx, uint64, error)
 
 // StuckTxChecker is a function type for checking if a tx is stuck in the mempool.
 type StuckTxChecker func(client interfaces.BTCRPCClient, txHash string, maxWaitBlocks int64) (bool, time.Duration, error)
 
 // WatchMempoolTxs monitors pending outbound txs in the Bitcoin mempool.
 func (ob *Observer) WatchMempoolTxs(ctx context.Context) error {
+	txChecker := GetStuckTxChecker(ob.Chain().ChainId)
 	task := func(ctx context.Context, _ *ticker.Ticker) error {
-		if err := ob.RefreshLastStuckOutbound(ctx, GetLastOutbound, rpc.IsTxStuckInMempool); err != nil {
+		if err := ob.RefreshLastStuckOutbound(ctx, GetLastPendingOutbound, txChecker); err != nil {
 			ob.Logger().Chain.Err(err).Msg("RefreshLastStuckOutbound error")
 		}
 		return nil
@@ -60,28 +71,32 @@ func (ob *Observer) WatchMempoolTxs(ctx context.Context) error {
 }
 
 // RefreshLastStuckOutbound refreshes the information about the last stuck tx in the Bitcoin mempool.
+// Once 2/3+ of the observers reach consensus on last stuck outbound, RBF will start.
 func (ob *Observer) RefreshLastStuckOutbound(
 	ctx context.Context,
-	txFinder LastTxFinder,
+	txFinder PendingTxFinder,
 	txChecker StuckTxChecker,
 ) error {
+	lf := map[string]any{
+		logs.FieldMethod: "RefreshLastStuckOutbound",
+	}
+
 	// step 1: get last TSS transaction
 	lastTx, lastNonce, err := txFinder(ctx, ob)
 	if err != nil {
-		return errors.Wrap(err, "unable to find last outbound")
+		ob.logger.Outbound.Info().Msgf("last pending outbound not found: %s", err.Error())
+		return nil
 	}
 
 	// log fields
 	txHash := lastTx.MsgTx().TxID()
-	lf := map[string]any{
-		logs.FieldMethod: "RefreshLastStuckOutbound",
-		logs.FieldNonce:  lastNonce,
-		logs.FieldTx:     txHash,
-	}
+	lf[logs.FieldNonce] = lastNonce
+	lf[logs.FieldTx] = txHash
 	ob.logger.Outbound.Info().Fields(lf).Msg("checking last TSS outbound")
 
 	// step 2: is last tx stuck in mempool?
-	stuck, stuckFor, err := txChecker(ob.btcClient, txHash, rpc.PendingTxFeeBumpWaitBlocks)
+	feeBumpWaitBlocks := GetFeeBumpWaitBlocks(ob.Chain().ChainId)
+	stuck, stuckFor, err := txChecker(ob.btcClient, txHash, feeBumpWaitBlocks)
 	if err != nil {
 		return errors.Wrapf(err, "cannot determine if tx %s nonce %d is stuck", txHash, lastNonce)
 	}
@@ -112,13 +127,13 @@ func (ob *Observer) RefreshLastStuckOutbound(
 	return nil
 }
 
-// GetLastOutbound gets the last outbound (with highest nonce) that had been sent to Bitcoin network.
+// GetLastPendingOutbound gets the last pending outbound (with highest nonce) that sits in the Bitcoin mempool.
 // Bitcoin outbound txs can be found from two sources:
 //  1. txs that had been reported to tracker and then checked and included by this observer self.
 //  2. txs that had been broadcasted by this observer self.
 //
-// Once 2/3+ of the observers reach consensus on last outbound, RBF will start.
-func GetLastOutbound(ctx context.Context, ob *Observer) (*btcutil.Tx, uint64, error) {
+// Returns error if last pending outbound is not found
+func GetLastPendingOutbound(ctx context.Context, ob *Observer) (*btcutil.Tx, uint64, error) {
 	var (
 		lastNonce uint64
 		lastHash  string
@@ -161,6 +176,12 @@ func GetLastOutbound(ctx context.Context, ob *Observer) (*btcutil.Tx, uint64, er
 		return nil, 0, errors.New("last tx not found")
 	}
 
+	// is tx in the mempool?
+	_, err = ob.btcClient.GetMempoolEntry(lastHash)
+	if err != nil {
+		return nil, 0, errors.New("last tx is not in mempool")
+	}
+
 	// ensure this tx is the REAL last transaction
 	// cross-check the latest UTXO list, the nonce-mark utxo exists ONLY for last nonce
 	if ob.FetchUTXOs(ctx) != nil {
@@ -181,4 +202,20 @@ func GetLastOutbound(ctx context.Context, ob *Observer) (*btcutil.Tx, uint64, er
 	}
 
 	return lastTx, lastNonce, nil
+}
+
+// GetStuckTxChecker returns the stuck tx checker function based on the chain ID.
+func GetStuckTxChecker(chainID int64) StuckTxChecker {
+	if chains.IsBitcoinRegnet(chainID) {
+		return rpc.IsTxStuckInMempoolRegnet
+	}
+	return rpc.IsTxStuckInMempool
+}
+
+// GetFeeBumpWaitBlocks returns the number of blocks to await before bumping tx fees
+func GetFeeBumpWaitBlocks(chainID int64) int64 {
+	if chains.IsBitcoinRegnet(chainID) {
+		return PendingTxFeeBumpWaitBlocksRegnet
+	}
+	return PendingTxFeeBumpWaitBlocks
 }

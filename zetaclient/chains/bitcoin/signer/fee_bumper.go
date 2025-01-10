@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	mathpkg "github.com/zeta-chain/node/pkg/math"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
@@ -19,7 +20,7 @@ import (
 
 const (
 	// gasRateCap is the maximum average gas rate for CPFP fee bumping
-	// 100 sat/vB is a typical heuristic based on Bitcoin mempool statistics
+	// 100 sat/vB is a heuristic based on Bitcoin mempool statistics to avoid excessive fees
 	// see: https://mempool.space/graphs/mempool#3y
 	gasRateCap = 100
 
@@ -34,6 +35,8 @@ type MempoolTxsInfoFetcher func(interfaces.BTCRPCClient, string) (int64, float64
 
 // CPFPFeeBumper is a helper struct to contain CPFP (child-pays-for-parent) fee bumping logic
 type CPFPFeeBumper struct {
+	Chain chains.Chain
+
 	// Client is the RPC Client to interact with the Bitcoin chain
 	Client interfaces.BTCRPCClient
 
@@ -64,6 +67,7 @@ type CPFPFeeBumper struct {
 
 // NewCPFPFeeBumper creates a new CPFPFeeBumper
 func NewCPFPFeeBumper(
+	chain chains.Chain,
 	client interfaces.BTCRPCClient,
 	memplTxsInfoFetcher MempoolTxsInfoFetcher,
 	tx *btcutil.Tx,
@@ -72,6 +76,7 @@ func NewCPFPFeeBumper(
 	logger zerolog.Logger,
 ) (*CPFPFeeBumper, error) {
 	fb := &CPFPFeeBumper{
+		Chain:       chain,
 		Client:      client,
 		Tx:          tx,
 		MinRelayFee: minRelayFee,
@@ -93,12 +98,12 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, int64, error) {
 		newTx.TxIn[idx].Witness = wire.TxWitness{}
 	}
 
-	// check reserved bump fees amount in the original tx
+	// ensure the original tx has reserved bump fees
 	if len(newTx.TxOut) < 3 {
 		return nil, 0, 0, errors.New("original tx has no reserved bump fees")
 	}
 
-	// tx replacement is triggered only when market fee rate goes 20% higher than current paid fee rate.
+	// tx replacement is triggered only when market fee rate goes 20% higher than current paid rate.
 	// zetacore updates the cctx fee rate evey 10 minutes, we could hold on and retry later.
 	minBumpRate := mathpkg.IncreaseIntByPercent(b.AvgFeeRate, minCPFPFeeBumpPercent, true)
 	if b.CCTXRate < minBumpRate {
@@ -141,7 +146,11 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, int64, error) {
 	// see: https://github.com/bitcoin/bitcoin/blob/master/src/policy/rbf.cpp#L166-L183
 	additionalFees := b.TotalVSize*gasRateNew - b.TotalFees
 	if additionalFees < minRelayTxFees {
-		additionalFees = minRelayTxFees
+		return nil, 0, 0, fmt.Errorf(
+			"hold on RBF: additional fees %d is lower than min relay fees %d",
+			additionalFees,
+			minRelayTxFees,
+		)
 	}
 
 	// bump fees in two ways:
@@ -162,8 +171,9 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, int64, error) {
 
 // fetchFeeBumpInfo fetches all necessary information needed to bump the stuck tx
 func (b *CPFPFeeBumper) FetchFeeBumpInfo(memplTxsInfoFetcher MempoolTxsInfoFetcher, logger zerolog.Logger) error {
-	// query live network fee rate
-	liveRate, err := rpc.GetEstimatedFeeRate(b.Client, 1)
+	// query live fee rate
+	isRegnet := chains.IsBitcoinRegnet(b.Chain.ChainId)
+	liveRate, err := rpc.GetEstimatedFeeRate(b.Client, 1, isRegnet)
 	if err != nil {
 		return errors.Wrap(err, "GetEstimatedFeeRate failed")
 	}
@@ -187,4 +197,13 @@ func (b *CPFPFeeBumper) FetchFeeBumpInfo(memplTxsInfoFetcher MempoolTxsInfoFetch
 		Msgf("totalTxs %d, totalFees %f, totalVSize %d, avgFeeRate %d", totalTxs, totalFees, totalVSize, avgFeeRate)
 
 	return nil
+}
+
+// CopyMsgTxNoWitness creates a deep copy of the given MsgTx and clears the witness data
+func CopyMsgTxNoWitness(tx *wire.MsgTx) *wire.MsgTx {
+	copyTx := tx.Copy()
+	for idx := range copyTx.TxIn {
+		copyTx.TxIn[idx].Witness = wire.TxWitness{}
+	}
+	return copyTx
 }

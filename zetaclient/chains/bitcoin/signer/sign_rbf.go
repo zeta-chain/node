@@ -9,7 +9,9 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -44,14 +46,22 @@ func (signer *Signer) SignRBFTx(
 		logger = signer.Logger().Std.With().Fields(lf).Logger()
 	)
 
-	// parse recent fee rate from CCTX
-	cctxRate, err := strconv.ParseInt(params.GasPriorityFee, 10, 64)
-	if err != nil || cctxRate <= 0 {
-		return nil, fmt.Errorf("invalid fee rate %s", params.GasPrice)
+	var cctxRate int64
+	switch signer.Chain().ChainId {
+	case chains.BitcoinRegtest.ChainId:
+		// hardcode for regnet E2E test, zetacore won't feed it to CCTX
+		cctxRate = rpc.FeeRateRegnetRBF
+	default:
+		// parse recent fee rate from CCTX
+		cctxRate, err := strconv.ParseInt(params.GasPriorityFee, 10, 64)
+		if err != nil || cctxRate <= 0 {
+			return nil, fmt.Errorf("invalid fee rate %s", params.GasPrice)
+		}
 	}
 
 	// create fee bumper
 	fb, err := NewCPFPFeeBumper(
+		signer.Chain(),
 		signer.client,
 		memplTxsInfoFetcher,
 		lastTx,
@@ -68,7 +78,8 @@ func (signer *Signer) SignRBFTx(
 	if err != nil {
 		return nil, errors.Wrap(err, "BumpTxFee failed")
 	}
-	logger.Info().Msgf("BumpTxFee succeed, additional fees: %d satoshis, new rate: %d sat/vB", additionalFees, newRate)
+	logger.Info().
+		Msgf("BumpTxFee succeed, additional fees: %d sats, rate: %d => %d sat/vB", additionalFees, fb.AvgFeeRate, newRate)
 
 	// collect input amounts for signing
 	inAmounts := make([]int64, len(newTx.TxIn))

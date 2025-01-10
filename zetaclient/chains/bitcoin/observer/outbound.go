@@ -25,6 +25,12 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
+const (
+	// minTxConfirmations is the minimum confirmations for a Bitcoin tx to be considered valid by the observer
+	// Note: please change this value to 1 to be able to run the Bitcoin E2E RBF test
+	minTxConfirmations = 0
+)
+
 // WatchOutbound watches Bitcoin chain for outgoing txs status
 // TODO(revamp): move ticker functions to a specific file
 // TODO(revamp): move into a separate package
@@ -121,6 +127,8 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 //  2. a valid tx included in a block with confirmation > 0
 //
 // Returns: (txResult, included)
+//
+// Note: A 'included' tx may still be considered stuck if it sits in the mempool for too long.
 func (ob *Observer) TryIncludeOutbound(
 	ctx context.Context,
 	cctx *crosschaintypes.CrossChainTx,
@@ -320,8 +328,6 @@ func (ob *Observer) getOutboundHashByNonce(ctx context.Context, nonce uint64, te
 }
 
 // checkTxInclusion checks if a txHash is included and returns (txResult, included)
-//
-// Note: a 'included' tx may still be considered stuck if it's in mempool for too long.
 func (ob *Observer) checkTxInclusion(
 	ctx context.Context,
 	cctx *crosschaintypes.CrossChainTx,
@@ -338,6 +344,12 @@ func (ob *Observer) checkTxInclusion(
 	hash, txResult, err := rpc.GetTxResultByHash(ob.btcClient, txHash)
 	if err != nil {
 		ob.logger.Outbound.Warn().Err(err).Fields(lf).Msg("GetTxResultByHash failed")
+		return nil, false
+	}
+
+	// check minimum confirmations
+	if txResult.Confirmations < minTxConfirmations {
+		ob.logger.Outbound.Warn().Fields(lf).Msgf("invalid confirmations %d", txResult.Confirmations)
 		return nil, false
 	}
 
@@ -420,11 +432,6 @@ func (ob *Observer) checkTssOutboundResult(
 	hash *chainhash.Hash,
 	res *btcjson.GetTransactionResult,
 ) error {
-	// negative confirmation means invalid tx, return error
-	if res.Confirmations < 0 {
-		return fmt.Errorf("checkTssOutboundResult: negative confirmations %d", res.Confirmations)
-	}
-
 	params := cctx.GetCurrentOutboundParam()
 	nonce := params.TssNonce
 	rawResult, err := rpc.GetRawTxResult(ob.btcClient, hash, res)

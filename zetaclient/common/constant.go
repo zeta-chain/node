@@ -16,5 +16,5 @@ const (
 	RPCStatusCheckInterval = time.Minute
 
 	// MempoolStuckTxCheckInterval is the interval to check for stuck transactions in the mempool
-	MempoolStuckTxCheckInterval = time.Minute
+	MempoolStuckTxCheckInterval = 30 * time.Second
 )
