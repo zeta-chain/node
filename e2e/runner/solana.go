@@ -327,7 +327,7 @@ func (r *E2ERunner) BroadcastTxSync(tx *solana.Transaction) (solana.Signature, *
 	// broadcast the transaction
 	r.Logger.Info("Broadcast start")
 	sig, err := r.SolanaClient.SendTransactionWithOpts(r.Ctx, tx, rpc.TransactionOpts{
-		PreflightCommitment: rpc.CommitmentProcessed,
+		SkipPreflight: true,
 	})
 	require.NoError(r, err)
 	r.Logger.Info("broadcast success! tx sig %s; waiting for confirmation...", sig)
