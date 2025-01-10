@@ -53,10 +53,11 @@ func (signer *Signer) SignRBFTx(
 		cctxRate = rpc.FeeRateRegnetRBF
 	default:
 		// parse recent fee rate from CCTX
-		cctxRate, err := strconv.ParseInt(params.GasPriorityFee, 10, 64)
-		if err != nil || cctxRate <= 0 {
+		recentRate, err := strconv.ParseInt(params.GasPriorityFee, 10, 64)
+		if err != nil || recentRate <= 0 {
 			return nil, fmt.Errorf("invalid fee rate %s", params.GasPrice)
 		}
+		cctxRate = recentRate
 	}
 
 	// create fee bumper

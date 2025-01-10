@@ -62,10 +62,12 @@ func Test_BitcoinRBFLive(t *testing.T) {
 		return
 	}
 
+	LiveTest_RBFTransaction(t)
+	LiveTest_RBFTransaction_Chained_CPFP(t)
 	LiveTest_PendingMempoolTx(t)
 }
 
-func Test_RBFTransaction(t *testing.T) {
+func LiveTest_RBFTransaction(t *testing.T) {
 	// setup test
 	client, privKey, sender, to := setupTest(t)
 
@@ -143,8 +145,8 @@ func Test_RBFTransaction(t *testing.T) {
 	//fmt.Println("tx2 dropped")
 }
 
-// Test_RBFTransactionChained_CPFP tests Child-Pays-For-Parent (CPFP) fee bumping strategy for chained RBF transactions
-func Test_RBFTransaction_Chained_CPFP(t *testing.T) {
+// LiveTest_RBFTransaction_Chained_CPFP tests Child-Pays-For-Parent (CPFP) fee bumping strategy for chained RBF transactions
+func LiveTest_RBFTransaction_Chained_CPFP(t *testing.T) {
 	// setup test
 	client, privKey, sender, to := setupTest(t)
 

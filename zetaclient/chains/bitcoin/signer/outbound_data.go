@@ -71,7 +71,7 @@ func NewOutboundData(
 	// use current gas rate if fed by zetacore
 	newRate, err := strconv.ParseInt(params.GasPriorityFee, 10, 64)
 	if err == nil && newRate > 0 && newRate != feeRate {
-		logger.Info().Msgf("use new gas rate %d sat/vB instead of %d sat/vB", newRate, feeRate)
+		logger.Info().Msgf("use new fee rate %d sat/vB instead of %d sat/vB", newRate, feeRate)
 		feeRate = newRate
 	}
 

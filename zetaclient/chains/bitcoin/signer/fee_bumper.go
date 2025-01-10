@@ -92,13 +92,8 @@ func NewCPFPFeeBumper(
 
 // BumpTxFee bumps the fee of the stuck transaction using reserved bump fees
 func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, int64, error) {
-	// reuse old tx body and clear witness data (e.g., signatures)
-	newTx := b.Tx.MsgTx().Copy()
-	for idx := range newTx.TxIn {
-		newTx.TxIn[idx].Witness = wire.TxWitness{}
-	}
-
-	// ensure the original tx has reserved bump fees
+	// reuse old tx body
+	newTx := CopyMsgTxNoWitness(b.Tx.MsgTx())
 	if len(newTx.TxOut) < 3 {
 		return nil, 0, 0, errors.New("original tx has no reserved bump fees")
 	}

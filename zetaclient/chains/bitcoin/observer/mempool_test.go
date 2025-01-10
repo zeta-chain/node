@@ -391,24 +391,24 @@ func Test_GetFeeBumpWaitBlocks(t *testing.T) {
 		expectedWaitBlocks int64
 	}{
 		{
-			name:               "should return 3 blocks for Bitcoin mainnet",
+			name:               "should return wait blocks for Bitcoin mainnet",
 			chainID:            chains.BitcoinMainnet.ChainId,
-			expectedWaitBlocks: 3,
+			expectedWaitBlocks: observer.PendingTxFeeBumpWaitBlocks,
 		},
 		{
-			name:               "should return 3 blocks for Bitcoin testnet4",
+			name:               "should return wait blocks for Bitcoin testnet4",
 			chainID:            chains.BitcoinTestnet.ChainId,
-			expectedWaitBlocks: 3,
+			expectedWaitBlocks: observer.PendingTxFeeBumpWaitBlocks,
 		},
 		{
-			name:               "should return 3 blocks for Bitcoin Signet",
+			name:               "should return wait blocks for Bitcoin signet",
 			chainID:            chains.BitcoinSignetTestnet.ChainId,
-			expectedWaitBlocks: 3,
+			expectedWaitBlocks: observer.PendingTxFeeBumpWaitBlocks,
 		},
 		{
-			name:               "should return 10 blocks for Bitcoin regtest",
+			name:               "should return wait blocks for Bitcoin regtest",
 			chainID:            chains.BitcoinRegtest.ChainId,
-			expectedWaitBlocks: 10,
+			expectedWaitBlocks: observer.PendingTxFeeBumpWaitBlocksRegnet,
 		},
 	}
 
