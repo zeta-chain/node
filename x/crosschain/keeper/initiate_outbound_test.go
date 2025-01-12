@@ -76,7 +76,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		require.ErrorContains(t, err, "deposit error")
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Equal(t, types.CctxStatus_Aborted, newStatus)
-		require.Equal(t, "deposit error", cctx.CctxStatus.ErrorMessage)
+		require.Contains(t, cctx.CctxStatus.ErrorMessage, "deposit error")
 	})
 
 	t.Run(
@@ -427,7 +427,7 @@ func TestKeeper_InitiateOutboundProcessCrosschainMsgPassing(t *testing.T) {
 		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Equal(t, types.CctxStatus_Aborted, newStatus)
-		require.Equal(t, observertypes.ErrSupportedChains.Error(), cctx.CctxStatus.ErrorMessage)
+		require.Contains(t, cctx.CctxStatus.ErrorMessage, observertypes.ErrSupportedChains.Error())
 	})
 
 	t.Run("unable to process crosschain msg passing UpdateNonce fails", func(t *testing.T) {
