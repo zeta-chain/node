@@ -1,10 +1,18 @@
 # CHANGELOG
 
+## v25.0.0
+
 ## Unreleased
+
+## Refactor
+
+* [2863](https://github.com/zeta-chain/node/pull/2863) - refactor zetacore to delete matured ballots and add a migration script to remove all old ballots.
 
 ### Features
 
 * [3235](https://github.com/zeta-chain/node/pull/3235) - add /systemtime telemetry endpoint (zetaclient)
+* [3317](https://github.com/zeta-chain/node/pull/3317) - add configurable signer latency correction (zetaclient)
+* [3320](https://github.com/zeta-chain/node/pull/3320) - add zetaclient minimum version check
 
 ### Tests
 
@@ -12,12 +20,14 @@
 * [3254](https://github.com/zeta-chain/node/pull/3254) - rename v2 E2E tests as evm tests and rename old evm tests as legacy
 * [3095](https://github.com/zeta-chain/node/pull/3095) - initialize simulation tests for custom zetachain modules
 * [3276](https://github.com/zeta-chain/node/pull/3276) - add Solana E2E performance tests and improve Solana outbounds performance
+* [3207](https://github.com/zeta-chain/node/pull/3207) - add simulation test operations for all messages in crosschain and observer module
 
-## Refactor
+### Refactor
 
 * [3170](https://github.com/zeta-chain/node/pull/3170) - revamp TSS package in zetaclient
 * [3291](https://github.com/zeta-chain/node/pull/3291) - revamp zetaclient initialization (+ graceful shutdown)
-* [2863](https://github.com/zeta-chain/node/pull/2863) - refactor zetacore to delete matured ballots and add a migration script to remove all old ballots.
+* [3319](https://github.com/zeta-chain/node/pull/3319) - implement scheduler for zetaclient
+* [3332](https://github.com/zeta-chain/node/pull/3332) - implement orchestrator V2. Move BTC observer-signer to V2
 
 ### Fixes
 
@@ -30,6 +40,11 @@
 * [3278](https://github.com/zeta-chain/node/pull/3278) - enforce checksum format for asset address in ZRC20
 * [3289](https://github.com/zeta-chain/node/pull/3289) - remove all dynamic peer discovery (zetaclient)
 * [3314](https://github.com/zeta-chain/node/pull/3314) - update `last_scanned_block_number` metrics more frequently for Solana chain
+* [3321](https://github.com/zeta-chain/node/pull/3321) - make crosschain-call with invalid withdraw revert
+
+## v24.0.0
+
+* [3323](https://github.com/zeta-chain/node/pull/3323) - upgrade cosmos sdk to 0.47.15
 
 ## v23.0.0
 

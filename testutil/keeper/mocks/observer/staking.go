@@ -15,6 +15,26 @@ type ObserverStakingKeeper struct {
 	mock.Mock
 }
 
+// GetAllValidators provides a mock function with given fields: ctx
+func (_m *ObserverStakingKeeper) GetAllValidators(ctx types.Context) []stakingtypes.Validator {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAllValidators")
+	}
+
+	var r0 []stakingtypes.Validator
+	if rf, ok := ret.Get(0).(func(types.Context) []stakingtypes.Validator); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]stakingtypes.Validator)
+		}
+	}
+
+	return r0
+}
+
 // GetDelegation provides a mock function with given fields: ctx, delAddr, valAddr
 func (_m *ObserverStakingKeeper) GetDelegation(ctx types.Context, delAddr types.AccAddress, valAddr types.ValAddress) (stakingtypes.Delegation, bool) {
 	ret := _m.Called(ctx, delAddr, valAddr)

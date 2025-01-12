@@ -23,7 +23,7 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/memo"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	zetabtc "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 )
@@ -100,7 +100,7 @@ func (r *E2ERunner) DepositBTCWithAmount(amount float64, memo *memo.InboundMemo)
 	r.Logger.Info("Now sending two txs to TSS address...")
 
 	// add depositor fee so that receiver gets the exact given 'amount' in ZetaChain
-	amount += zetabitcoin.DefaultDepositorFee
+	amount += zetabtc.DefaultDepositorFee
 
 	// deposit to TSS address
 	var txHash *chainhash.Hash
@@ -148,7 +148,7 @@ func (r *E2ERunner) DepositBTC(receiver common.Address) {
 	r.Logger.Info("Now sending two txs to TSS address and tester ZEVM address...")
 
 	// send initial BTC to the tester ZEVM address
-	amount := 1.15 + zetabitcoin.DefaultDepositorFee
+	amount := 1.15 + zetabtc.DefaultDepositorFee
 	txHash, err := r.DepositBTCWithLegacyMemo(amount, utxos[:2], receiver)
 	require.NoError(r, err)
 
@@ -241,7 +241,7 @@ func (r *E2ERunner) sendToAddrFromDeployerWithMemo(
 
 	// use static fee 0.0005 BTC to calculate change
 	feeSats := btcutil.Amount(0.0005 * btcutil.SatoshiPerBitcoin)
-	amountInt, err := zetabitcoin.GetSatoshis(amount)
+	amountInt, err := zetabtc.GetSatoshis(amount)
 	require.NoError(r, err)
 	amountSats := btcutil.Amount(amountInt)
 	change := inputSats - feeSats - amountSats
@@ -351,7 +351,7 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 
 	// parameters to build the reveal transaction
 	commitOutputIdx := uint32(0)
-	commitAmount, err := zetabitcoin.GetSatoshis(amount)
+	commitAmount, err := zetabtc.GetSatoshis(amount)
 	require.NoError(r, err)
 
 	// build the reveal transaction to spend above funds
@@ -412,7 +412,7 @@ func (r *E2ERunner) QueryOutboundReceiverAndAmount(txid string) (string, int64) 
 	// parse receiver address from pkScript
 	txOutput := revertTx.MsgTx().TxOut[1]
 	pkScript := txOutput.PkScript
-	receiver, err := zetabitcoin.DecodeScriptP2WPKH(hex.EncodeToString(pkScript), r.BitcoinParams)
+	receiver, err := zetabtc.DecodeScriptP2WPKH(hex.EncodeToString(pkScript), r.BitcoinParams)
 	require.NoError(r, err)
 
 	return receiver, txOutput.Value

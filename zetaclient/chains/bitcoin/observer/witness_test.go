@@ -10,9 +10,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	clientcommon "github.com/zeta-chain/node/zetaclient/common"
 	"github.com/zeta-chain/node/zetaclient/testutils"
@@ -60,7 +60,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 	net := &chaincfg.MainNetParams
 
 	// fee rate of above tx is 28 sat/vB
-	depositorFee := bitcoin.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
+	depositorFee := common.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
 	feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
 
 	t.Run("decode OP_RETURN ok", func(t *testing.T) {

@@ -18,9 +18,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
+	btc "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/node/zetaclient/common"
@@ -363,7 +363,7 @@ func compareAvgFeeRate(t *testing.T, client *rpcclient.Client, startBlock int, e
 			if testnet {
 				netParams = &chaincfg.TestNet3Params
 			}
-			gasRate, err := bitcoin.CalcBlockAvgFeeRate(blockVb, netParams)
+			gasRate, err := btc.CalcBlockAvgFeeRate(blockVb, netParams)
 			require.NoError(t, err)
 
 			// compare with mempool.space
@@ -415,7 +415,7 @@ func LiveTest_GetRecentFeeRate(t *testing.T) {
 	require.NoError(t, err)
 
 	// get fee rate from recent blocks
-	feeRate, err := bitcoin.GetRecentFeeRate(client, &chaincfg.TestNet3Params)
+	feeRate, err := btc.GetRecentFeeRate(client, &chaincfg.TestNet3Params)
 	require.NoError(t, err)
 	require.Greater(t, feeRate, uint64(0))
 }
@@ -596,19 +596,19 @@ func LiveTest_CalcDepositorFee(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("should return default depositor fee", func(t *testing.T) {
-		depositorFee, err := bitcoin.CalcDepositorFee(client, rawResult, &chaincfg.RegressionNetParams)
+		depositorFee, err := btc.CalcDepositorFee(client, rawResult, &chaincfg.RegressionNetParams)
 		require.NoError(t, err)
-		require.Equal(t, bitcoin.DefaultDepositorFee, depositorFee)
+		require.Equal(t, btc.DefaultDepositorFee, depositorFee)
 	})
 
 	t.Run("should return correct depositor fee for a given tx", func(t *testing.T) {
-		depositorFee, err := bitcoin.CalcDepositorFee(client, rawResult, &chaincfg.MainNetParams)
+		depositorFee, err := btc.CalcDepositorFee(client, rawResult, &chaincfg.MainNetParams)
 		require.NoError(t, err)
 
 		// the actual fee rate is 860 sat/vByte
 		// #nosec G115 always in range
 		expectedRate := int64(float64(860) * common.BTCOutboundGasPriceMultiplier)
-		expectedFee := bitcoin.DepositorFee(expectedRate)
+		expectedFee := btc.DepositorFee(expectedRate)
 		require.Equal(t, expectedFee, depositorFee)
 	})
 }

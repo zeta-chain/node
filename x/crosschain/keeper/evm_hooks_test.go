@@ -161,7 +161,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 			*sample.ValidZRC20WithdrawToBTCReceipt(t).Logs[3],
 		)
 		require.NoError(t, err)
-		err = k.ValidateZrc20WithdrawEvent(ctx, btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
+		err = k.ValidateZRC20WithdrawEvent(ctx, btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
 		require.NoError(t, err)
 	})
 
@@ -174,12 +174,12 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 
 		// 1000 satoshis is the minimum amount that can be withdrawn
 		btcMainNetWithdrawalEvent.Value = big.NewInt(constant.BTCWithdrawalDustAmount)
-		err = k.ValidateZrc20WithdrawEvent(ctx, btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
+		err = k.ValidateZRC20WithdrawEvent(ctx, btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
 		require.NoError(t, err)
 
 		// 999 satoshis cannot be withdrawn
 		btcMainNetWithdrawalEvent.Value = big.NewInt(constant.BTCWithdrawalDustAmount - 1)
-		err = k.ValidateZrc20WithdrawEvent(ctx, btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
+		err = k.ValidateZRC20WithdrawEvent(ctx, btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
 		require.ErrorContains(t, err, "less than dust amount")
 	})
 
@@ -189,7 +189,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 			*sample.ValidZRC20WithdrawToBTCReceipt(t).Logs[3],
 		)
 		require.NoError(t, err)
-		err = k.ValidateZrc20WithdrawEvent(ctx, btcMainNetWithdrawalEvent, chains.BitcoinTestnet.ChainId)
+		err = k.ValidateZRC20WithdrawEvent(ctx, btcMainNetWithdrawalEvent, chains.BitcoinTestnet.ChainId)
 		require.ErrorContains(t, err, "invalid address")
 	})
 
@@ -201,7 +201,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 		require.NoError(t, err)
 		btcMainNetWithdrawalEvent.To = []byte("04b2891ba8cb491828db3ebc8a780d43b169e7b3974114e6e50f9bab6ec" +
 			"63c2f20f6d31b2025377d05c2a704d3bd799d0d56f3a8543d79a01ab6084a1cb204f260")
-		err = k.ValidateZrc20WithdrawEvent(ctx, btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
+		err = k.ValidateZRC20WithdrawEvent(ctx, btcMainNetWithdrawalEvent, chains.BitcoinMainnet.ChainId)
 		require.ErrorContains(t, err, "unsupported address")
 	})
 
@@ -213,7 +213,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 		value := big.NewInt(constant.SolanaWalletRentExempt)
 		solWithdrawalEvent := sample.ZRC20Withdrawal(to, value)
 
-		err := k.ValidateZrc20WithdrawEvent(ctx, solWithdrawalEvent, chains.SolanaMainnet.ChainId)
+		err := k.ValidateZRC20WithdrawEvent(ctx, solWithdrawalEvent, chains.SolanaMainnet.ChainId)
 		require.ErrorContains(t, err, "invalid address")
 	})
 
@@ -227,12 +227,12 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 		solWithdrawalEvent := sample.ZRC20Withdrawal(to, value)
 
 		// 1000000 lamports can be withdrawn
-		err := k.ValidateZrc20WithdrawEvent(ctx, solWithdrawalEvent, chainID)
+		err := k.ValidateZRC20WithdrawEvent(ctx, solWithdrawalEvent, chainID)
 		require.NoError(t, err)
 
 		// 999999 lamports cannot be withdrawn
 		solWithdrawalEvent.Value = big.NewInt(constant.SolanaWalletRentExempt - 1)
-		err = k.ValidateZrc20WithdrawEvent(ctx, solWithdrawalEvent, chainID)
+		err = k.ValidateZRC20WithdrawEvent(ctx, solWithdrawalEvent, chainID)
 		require.ErrorContains(t, err, "less than rent exempt")
 	})
 }

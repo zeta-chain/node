@@ -9,7 +9,7 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/constant"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
 func TestBitcoinDonation(r *runner.E2ERunner, args []string) {

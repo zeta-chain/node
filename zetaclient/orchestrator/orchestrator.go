@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
@@ -19,9 +20,7 @@ import (
 	zetamath "github.com/zeta-chain/node/pkg/math"
 	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	solanaobserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	tonobserver "github.com/zeta-chain/node/zetaclient/chains/ton/observer"
@@ -68,11 +67,15 @@ type Orchestrator struct {
 	dbDirectory string
 	baseLogger  base.Logger
 
+	// signerBlockTimeOffset
+	signerBlockTimeOffset time.Duration
+
 	// misc
-	logger multiLogger
-	ts     *metrics.TelemetryServer
-	stop   chan struct{}
-	mu     sync.RWMutex
+	logger  multiLogger
+	ts      *metrics.TelemetryServer
+	stop    chan struct{}
+	stopped atomic.Bool
+	mu      sync.RWMutex
 }
 
 type multiLogger struct {
@@ -134,13 +137,26 @@ func (oc *Orchestrator) Start(ctx context.Context) error {
 
 	bg.Work(ctx, oc.runScheduler, bg.WithName("runScheduler"), bg.WithLogger(oc.logger.Logger))
 	bg.Work(ctx, oc.runObserverSignerSync, bg.WithName("runObserverSignerSync"), bg.WithLogger(oc.logger.Logger))
-	bg.Work(ctx, oc.runAppContextUpdater, bg.WithName("runAppContextUpdater"), bg.WithLogger(oc.logger.Logger))
+	bg.Work(
+		ctx,
+		oc.runSyncObserverOperationalFlags,
+		bg.WithName("runSyncObserverOperationalFlags"),
+		bg.WithLogger(oc.logger.Logger),
+	)
 
 	return nil
 }
 
 func (oc *Orchestrator) Stop() {
+	// noop
+	if oc.stopped.Load() {
+		oc.logger.Warn().Msg("Already stopped")
+		return
+	}
+
 	close(oc.stop)
+
+	oc.stopped.Store(true)
 }
 
 // returns signer with updated chain parameters.
@@ -202,18 +218,7 @@ func (oc *Orchestrator) resolveObserver(app *zctx.AppContext, chainID int64) (in
 	}
 
 	// update chain observer chain parameters
-	var (
-		curParams   = observer.ChainParams()
-		freshParams = chain.Params()
-	)
-
-	if !observertypes.ChainParamsEqual(curParams, *freshParams) {
-		observer.SetChainParams(*freshParams)
-		oc.logger.Info().
-			Int64("observer.chain_id", chainID).
-			Interface("observer.chain_params", *freshParams).
-			Msg("updated chain params")
-	}
+	observer.SetChainParams(*chain.Params())
 
 	return observer, nil
 }
@@ -318,6 +323,13 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 				continue
 			}
 
+			sleepDuration := time.Until(newBlock.Block.Time.Add(oc.signerBlockTimeOffset))
+			if sleepDuration < 0 {
+				sleepDuration = 0
+			}
+			metrics.CoreBlockLatencySleep.Set(sleepDuration.Seconds())
+			time.Sleep(sleepDuration)
+
 			balance, err := oc.zetacoreClient.GetZetaHotKeyBalance(ctx)
 			if err != nil {
 				oc.logger.Error().Err(err).Msgf("couldn't get operator balance")
@@ -349,6 +361,13 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 				if chain.IsZeta() {
 					continue
 				}
+
+				// managed by V2
+				if chain.IsBitcoin() {
+					continue
+				}
+
+				// todo move metrics to v2
 
 				chainID := chain.ID()
 
@@ -391,7 +410,8 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 				case chain.IsEVM():
 					oc.ScheduleCctxEVM(ctx, zetaHeight, chainID, cctxList, ob, signer)
 				case chain.IsBitcoin():
-					oc.ScheduleCctxBTC(ctx, zetaHeight, chainID, cctxList, ob, signer)
+					// Managed by orchestrator V2
+					continue
 				case chain.IsSolana():
 					oc.ScheduleCctxSolana(ctx, zetaHeight, chainID, cctxList, ob, signer)
 				case chain.IsTON():
@@ -503,81 +523,6 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 		// #nosec G115 always in range
 		if int64(idx) >= outboundScheduleLookahead-1 { // only look at 'lookahead' cctxs per chain
 			break
-		}
-	}
-}
-
-// ScheduleCctxBTC schedules bitcoin outbound keysign on each ZetaChain block (the ticker)
-// 1. schedule at most one keysign per ticker
-// 2. schedule keysign only when nonce-mark UTXO is available
-// 3. stop keysign when lookahead is reached
-func (oc *Orchestrator) ScheduleCctxBTC(
-	ctx context.Context,
-	zetaHeight uint64,
-	chainID int64,
-	cctxList []*types.CrossChainTx,
-	observer interfaces.ChainObserver,
-	signer interfaces.ChainSigner,
-) {
-	btcObserver, ok := observer.(*btcobserver.Observer)
-	if !ok { // should never happen
-		oc.logger.Error().Msgf("ScheduleCctxBTC: chain observer is not a bitcoin observer")
-		return
-	}
-	// #nosec G115 positive
-	interval := uint64(observer.ChainParams().OutboundScheduleInterval)
-	lookahead := observer.ChainParams().OutboundScheduleLookahead
-
-	// schedule at most one keysign per ticker
-	for idx, cctx := range cctxList {
-		params := cctx.GetCurrentOutboundParam()
-		nonce := params.TssNonce
-		outboundID := outboundprocessor.ToOutboundID(cctx.Index, params.ReceiverChainId, nonce)
-
-		if params.ReceiverChainId != chainID {
-			oc.logger.Error().
-				Msgf("ScheduleCctxBTC: outbound %s chainid mismatch: want %d, got %d", outboundID, chainID, params.ReceiverChainId)
-			continue
-		}
-		// try confirming the outbound
-		continueKeysign, err := btcObserver.VoteOutboundIfConfirmed(ctx, cctx)
-		if err != nil {
-			oc.logger.Error().
-				Err(err).
-				Msgf("ScheduleCctxBTC: VoteOutboundIfConfirmed failed for chain %d nonce %d", chainID, nonce)
-			continue
-		}
-		if !continueKeysign {
-			oc.logger.Info().
-				Msgf("ScheduleCctxBTC: outbound %s already processed; do not schedule keysign", outboundID)
-			continue
-		}
-
-		// stop if the nonce being processed is higher than the pending nonce
-		if nonce > btcObserver.GetPendingNonce() {
-			break
-		}
-		// stop if lookahead is reached
-		if int64(
-			idx,
-		) >= lookahead { // 2 bitcoin confirmations span is 20 minutes on average. We look ahead up to 100 pending cctx to target TPM of 5.
-			oc.logger.Warn().
-				Msgf("ScheduleCctxBTC: lookahead reached, signing %d, earliest pending %d", nonce, cctxList[0].GetCurrentOutboundParam().TssNonce)
-			break
-		}
-		// schedule a TSS keysign
-		if nonce%interval == zetaHeight%interval && !oc.outboundProc.IsOutboundActive(outboundID) {
-			oc.outboundProc.StartTryProcess(outboundID)
-			oc.logger.Debug().Msgf("ScheduleCctxBTC: sign outbound %s with value %d", outboundID, params.Amount)
-			go signer.TryProcessOutbound(
-				ctx,
-				cctx,
-				oc.outboundProc,
-				outboundID,
-				observer,
-				oc.zetacoreClient,
-				zetaHeight,
-			)
 		}
 	}
 }
@@ -791,6 +736,51 @@ func (oc *Orchestrator) syncObserverSigner(ctx context.Context) error {
 			Int("signer.added", added).
 			Int("signer.removed", removed).
 			Msg("synced signers")
+	}
+
+	return nil
+}
+
+func (oc *Orchestrator) runSyncObserverOperationalFlags(ctx context.Context) error {
+	// every other block
+	const cadence = 2 * constant.ZetaBlockTime
+
+	task := func(ctx context.Context, _ *ticker.Ticker) error {
+		if err := oc.syncObserverOperationalFlags(ctx); err != nil {
+			oc.logger.Error().Err(err).Msg("syncObserverOperationalFlags failed")
+		}
+
+		return nil
+	}
+
+	return ticker.Run(
+		ctx,
+		cadence,
+		task,
+		ticker.WithLogger(oc.logger.Logger, "SyncObserverOperationalFlags"),
+		ticker.WithStopChan(oc.stop),
+	)
+}
+
+func (oc *Orchestrator) syncObserverOperationalFlags(ctx context.Context) error {
+	client := oc.zetacoreClient
+	flags, err := client.GetOperationalFlags(ctx)
+	if err != nil {
+		return fmt.Errorf("get operational flags: %w", err)
+	}
+
+	oc.mu.Lock()
+	defer oc.mu.Unlock()
+	newSignerBlockTimeOffsetPtr := flags.SignerBlockTimeOffset
+	if newSignerBlockTimeOffsetPtr == nil {
+		return nil
+	}
+	newSignerBlockTimeOffset := *newSignerBlockTimeOffsetPtr
+	if oc.signerBlockTimeOffset != newSignerBlockTimeOffset {
+		oc.logger.Info().
+			Dur("offset", newSignerBlockTimeOffset).
+			Msg("block time offset updated")
+		oc.signerBlockTimeOffset = newSignerBlockTimeOffset
 	}
 
 	return nil
