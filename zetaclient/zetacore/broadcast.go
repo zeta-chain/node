@@ -19,6 +19,7 @@ import (
 	"github.com/zeta-chain/node/app/ante"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/zetaclient/authz"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // paying 50% more than the current base gas price to buffer for potential block-by-block
@@ -158,16 +159,17 @@ func (c *Client) QueryTxResult(hash string) (*sdktypes.TxResponse, error) {
 
 // HandleBroadcastError returns whether to retry in a few seconds, and whether to report via AddOutboundTracker
 // returns (bool retry, bool report)
-func HandleBroadcastError(err error, nonce, toChain, outboundHash string) (bool, bool) {
+func HandleBroadcastError(err error, nonce uint64, toChain int64, outboundHash string) (bool, bool) {
 	if err == nil {
 		return false, false
 	}
 
 	msg := err.Error()
 	evt := log.Warn().Err(err).
-		Str("broadcast.nonce", nonce).
-		Str("broadcast.to_chain", toChain).
-		Str("broadcast.outbound_hash", outboundHash)
+		Str(logs.FieldMethod, "HandleBroadcastError").
+		Int64(logs.FieldChain, toChain).
+		Uint64(logs.FieldNonce, nonce).
+		Str(logs.FieldTx, outboundHash)
 
 	switch {
 	case strings.Contains(msg, "nonce too low"):
