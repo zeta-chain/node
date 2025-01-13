@@ -48,10 +48,10 @@ A cctx can have a maximum of two outbound params. We can refer to the first outb
 - `outbound failed` : The outbound failed, The protocol would try to create a revert either in the same block or schedule one to be picked up by zetaclient
 - `outbound failed for non-ZETA cctx` : Special case of outbound failed where we do not try to revert the cctx
 - `outbound failed for admin tx` : The outbound failed for an admin transaction, in this case we do not revert the cctx
-- `outbound failed deposit to ZEVM failed but contract call did not revert` : Special case of outbound failed The outbound/deposit failed, but the contract did not revert,
+- `outbound failed but the universal contract did not revert` : Special case of outbound failed The outbound/deposit failed, but the contract did not revert,
    this is most likely caused by an internal error in the protocol.The CCTX is this case is aborted. Users can try connecting with the zetachain team to get a refund
 -  `outbound pre-processing failed` : The outbound failed during the pre-processing step. This means the outbound is never created. In this case the cctx is aborted
-- `cctx aborted with admin cmd` : The cctx was aborted manually by an admin command
+- `cctx aborted through MsgAbortStuckCCTX` : The cctx was aborted manually by an admin command
 
 
 ### Example values for ErrorMessage and ErrorMessageRevert fields and how to interpret them
@@ -65,6 +65,6 @@ A cctx can have a maximum of two outbound params. We can refer to the first outb
   - revertReason: Revert reason from the smart contract
 ```
 
-- `outbound failed to external chain ,start revert` : withdraw failed to an external chain, and the protocol is starting the revert process back to ZEVM.
+- `outbound failed to connected chain ,start revert` : withdraw failed to an external chain, and the protocol is starting the revert process back to ZEVM.
 - `coin type [CoinType] not supported for revert when source chain is Zetachain` : The coin type is not supported for revert when the source chain is Zetachain.
 - `error from EVMDeposit: [Error_String]` : Error returned by the protocol when trying to deposit tokens( and optionally call a contract) on ZEVM. The error string should explain the cause 

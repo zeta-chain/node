@@ -147,6 +147,7 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 		TssPubkey: m.GetCurrentOutboundParam().TssPubkey,
 	}
 
+	// TODO : Refactor to move CoinType field to the CCTX object directly : https://github.com/zeta-chain/node/issues/1943
 	if m.InboundParams != nil {
 		revertTxParams.CoinType = m.InboundParams.CoinType
 	}
