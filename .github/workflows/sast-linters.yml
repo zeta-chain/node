@@ -48,7 +48,7 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.59
+          version: v1.63.4
           skip-cache: true
 
   nosec_alert:
