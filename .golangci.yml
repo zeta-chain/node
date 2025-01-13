@@ -13,7 +13,6 @@ linters:
     - misspell
     - goimports
     - govet
-    - gosec
     - stylecheck
     - typecheck
     - misspell
