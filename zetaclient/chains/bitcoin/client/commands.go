@@ -46,7 +46,7 @@ func (c *Client) GetBlockCount(ctx context.Context) (int64, error) {
 func (c *Client) GetBlockHash(ctx context.Context, blockHeight int64) (*chainhash.Hash, error) {
 	out, err := c.sendCommand(ctx, types.NewGetBlockHashCmd(blockHeight))
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to get block hash")
+		return nil, errors.Wrapf(err, "unable to get block hash for %d", blockHeight)
 	}
 
 	return unmarshalPtr[chainhash.Hash](out)
@@ -57,7 +57,7 @@ func (c *Client) GetBlockHeader(ctx context.Context, hash *chainhash.Hash) (*wir
 
 	out, err := c.sendCommand(ctx, cmd)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to get block header")
+		return nil, errors.Wrapf(err, "unable to get block header for %s", hash.String())
 	}
 
 	var bhHex string
