@@ -17,7 +17,7 @@ import (
 // It needs block mining to be stopped and runs as the last test in the suite.
 //
 // IMPORTANT: the test requires to simulate a stuck tx in the Bitcoin regnet.
-// Chainging the 'minTxConfirmations' to 1 to not include Bitcoin a pending tx.
+// Changing the 'minTxConfirmations' to 1 to not include Bitcoin pending txs.
 // https://github.com/zeta-chain/node/blob/feat-bitcoin-Replace-By-Fee/zetaclient/chains/bitcoin/observer/outbound.go#L30
 func TestBitcoinWithdrawRBF(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)

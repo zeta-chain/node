@@ -100,7 +100,7 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, int64, error) {
 
 	// tx replacement is triggered only when market fee rate goes 20% higher than current paid rate.
 	// zetacore updates the cctx fee rate evey 10 minutes, we could hold on and retry later.
-	minBumpRate := mathpkg.IncreaseIntByPercent(b.AvgFeeRate, minCPFPFeeBumpPercent, true)
+	minBumpRate := mathpkg.IncreaseIntByPercent(b.AvgFeeRate, minCPFPFeeBumpPercent)
 	if b.CCTXRate < minBumpRate {
 		return nil, 0, 0, fmt.Errorf(
 			"hold on RBF: cctx rate %d is lower than the min bumped rate %d",
@@ -112,7 +112,7 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, int64, error) {
 	// the live rate may continue increasing during network congestion, we should wait until it stabilizes a bit.
 	// this is to ensure the live rate is not 20%+ higher than the cctx rate, otherwise, the replacement tx may
 	// also get stuck and need another replacement.
-	bumpedRate := mathpkg.IncreaseIntByPercent(b.CCTXRate, minCPFPFeeBumpPercent, true)
+	bumpedRate := mathpkg.IncreaseIntByPercent(b.CCTXRate, minCPFPFeeBumpPercent)
 	if b.LiveRate > bumpedRate {
 		return nil, 0, 0, fmt.Errorf(
 			"hold on RBF: live rate %d is much higher than the cctx rate %d",
