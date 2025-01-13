@@ -6,7 +6,7 @@ set -e
 if ! command -v golangci-lint &> /dev/null
 then
     echo "golangci-lint is not found, installing..."
-    go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.1
+    go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.63.4
 fi
 
 if ! command -v golines &> /dev/null
