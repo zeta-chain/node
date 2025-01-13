@@ -675,8 +675,7 @@ func (k Keeper) CallEVM(
 		errMessage := types.EvmErrorMessage(method, contract, args)
 		errMessage = types.EvmErrorMessageAddErrorString(errMessage, err.Error())
 		// if it is a revert error then add the revert reason
-		var revertErr *evmtypes.RevertError
-		ok := errors.As(err, &revertErr)
+		revertErr, ok := err.(*evmtypes.RevertError)
 		if ok {
 			errMessage = types.EvmErrorMessageAddRevertReason(
 				errMessage,
