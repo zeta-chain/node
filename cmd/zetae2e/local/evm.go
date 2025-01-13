@@ -59,6 +59,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 			e2etests.TestETHDepositAndCallRevertWithCallName,
 			e2etests.TestETHWithdrawAndCallRevertName,
 			e2etests.TestETHWithdrawAndCallRevertWithCallName,
+			e2etests.TestETHWithdrawAndCallRevertWithWithdrawName,
 			e2etests.TestDepositAndCallOutOfGasName,
 		),
 	)
