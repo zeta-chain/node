@@ -134,6 +134,7 @@ func Test_SetRevertOutboundValues(t *testing.T) {
 		require.Equal(t, cctx.GetCurrentOutboundParam().CallOptions.GasLimit, uint64(100))
 		require.Equal(t, cctx.GetCurrentOutboundParam().TssPubkey, cctx.OutboundParams[0].TssPubkey)
 		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundParams[0].TxFinalizationStatus)
+		require.Equal(t, cctx.GetCurrentOutboundParam().CoinType, cctx.InboundParams.CoinType)
 	})
 
 	t.Run("successfully set BTC revert address V1", func(t *testing.T) {
@@ -151,6 +152,7 @@ func Test_SetRevertOutboundValues(t *testing.T) {
 		require.Equal(t, cctx.GetCurrentOutboundParam().CallOptions.GasLimit, uint64(100))
 		require.Equal(t, cctx.GetCurrentOutboundParam().TssPubkey, cctx.OutboundParams[0].TssPubkey)
 		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundParams[0].TxFinalizationStatus)
+		require.Equal(t, cctx.GetCurrentOutboundParam().CoinType, cctx.InboundParams.CoinType)
 	})
 
 	t.Run("successfully set EVM revert address V2", func(t *testing.T) {
@@ -167,6 +169,7 @@ func Test_SetRevertOutboundValues(t *testing.T) {
 		require.Equal(t, cctx.GetCurrentOutboundParam().CallOptions.GasLimit, uint64(100))
 		require.Equal(t, cctx.GetCurrentOutboundParam().TssPubkey, cctx.OutboundParams[0].TssPubkey)
 		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundParams[0].TxFinalizationStatus)
+		require.Equal(t, cctx.GetCurrentOutboundParam().CoinType, cctx.InboundParams.CoinType)
 	})
 
 	t.Run("failed to set revert outbound values if revert outbound already exists", func(t *testing.T) {
