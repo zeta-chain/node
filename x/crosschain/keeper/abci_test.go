@@ -65,7 +65,7 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 	// test that the default crosschain flags are used when not set and the epoch length is not reached
 	ctx = ctx.WithBlockHeight(observertypes.DefaultCrosschainFlags().GasPriceIncreaseFlags.EpochLength + 1)
 
-	cctxCount, flags := k.IterateAndUpdateCctxGasPrice(ctx, supportedChains, updateFunc)
+	cctxCount, flags := k.IterateAndUpdateCCTXGasPrice(ctx, supportedChains, updateFunc)
 	require.Equal(t, 0, cctxCount)
 	require.Equal(t, *observertypes.DefaultCrosschainFlags().GasPriceIncreaseFlags, flags)
 
@@ -81,13 +81,13 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 	crosschainFlags.GasPriceIncreaseFlags = &customFlags
 	zk.ObserverKeeper.SetCrosschainFlags(ctx, *crosschainFlags)
 
-	cctxCount, flags = k.IterateAndUpdateCctxGasPrice(ctx, supportedChains, updateFunc)
+	cctxCount, flags = k.IterateAndUpdateCCTXGasPrice(ctx, supportedChains, updateFunc)
 	require.Equal(t, 0, cctxCount)
 	require.Equal(t, customFlags, flags)
 
 	// test that cctx are iterated and updated when the epoch length is reached
 	ctx = ctx.WithBlockHeight(observertypes.DefaultCrosschainFlags().GasPriceIncreaseFlags.EpochLength * 2)
-	cctxCount, flags = k.IterateAndUpdateCctxGasPrice(ctx, supportedChains, updateFunc)
+	cctxCount, flags = k.IterateAndUpdateCCTXGasPrice(ctx, supportedChains, updateFunc)
 
 	// 2 eth + 5 btc + 5 bsc = 12
 	require.Equal(t, 12, cctxCount)
@@ -111,7 +111,7 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 	require.Contains(t, updateFuncMap, sample.GetCctxIndexFromString("56-34"))
 }
 
-func Test_CheckAndUpdateCctxGasPriceEVM(t *testing.T) {
+func Test_CheckAndUpdateCCTXGasPriceEVM(t *testing.T) {
 	sampleTimestamp := time.Now()
 	retryIntervalReached := sampleTimestamp.Add(observertypes.DefaultGasPriceIncreaseFlags.RetryInterval + time.Second)
 	retryIntervalNotReached := sampleTimestamp.Add(
@@ -414,7 +414,7 @@ func Test_CheckAndUpdateCctxGasPriceEVM(t *testing.T) {
 			}
 
 			// check and update gas price
-			gasPriceIncrease, feesPaid, err := keeper.CheckAndUpdateCctxGasPriceEVM(ctx, *k, tc.cctx, tc.flags)
+			gasPriceIncrease, feesPaid, err := keeper.CheckAndUpdateCCTXGasPriceEVM(ctx, *k, tc.cctx, tc.flags)
 
 			if tc.isError {
 				require.Error(t, err)
@@ -458,7 +458,7 @@ func Test_CheckAndUpdateCctxGasPriceEVM(t *testing.T) {
 	}
 }
 
-func Test_CheckAndUpdateCctxGasRateBTC(t *testing.T) {
+func Test_CheckAndUpdateCCTXGasRateBTC(t *testing.T) {
 	sampleTimestamp := time.Now()
 	gasRateUpdateInterval := observertypes.DefaultGasPriceIncreaseFlags.RetryInterval
 	retryIntervalReached := sampleTimestamp.Add(gasRateUpdateInterval + time.Second)
@@ -597,7 +597,7 @@ func Test_CheckAndUpdateCctxGasRateBTC(t *testing.T) {
 			ctx = ctx.WithBlockTime(tc.blockTimestamp)
 
 			// check and update gas rate
-			gasPriceIncrease, feesPaid, err := keeper.CheckAndUpdateCctxGasRateBTC(ctx, *k, tc.cctx, tc.flags)
+			gasPriceIncrease, feesPaid, err := keeper.CheckAndUpdateCCTXGasRateBTC(ctx, *k, tc.cctx, tc.flags)
 			if tc.isError {
 				require.Error(t, err)
 				return
@@ -621,30 +621,30 @@ func Test_CheckAndUpdateCctxGasRateBTC(t *testing.T) {
 	}
 }
 
-func Test_GetCctxGasPriceUpdater(t *testing.T) {
+func Test_GetCCTXGasPriceUpdater(t *testing.T) {
 	tests := []struct {
 		name       string
 		chainID    int64
 		found      bool
-		updateFunc keeper.CheckAndUpdateCctxGasPriceFunc
+		updateFunc keeper.CheckAndUpdateCCTXGasPriceFunc
 	}{
 		{
 			name:       "Ethereum is enabled",
 			chainID:    chains.Ethereum.ChainId,
 			found:      true,
-			updateFunc: keeper.CheckAndUpdateCctxGasPriceEVM,
+			updateFunc: keeper.CheckAndUpdateCCTXGasPriceEVM,
 		},
 		{
 			name:       "Binance Smart Chain is enabled",
 			chainID:    chains.BscMainnet.ChainId,
 			found:      true,
-			updateFunc: keeper.CheckAndUpdateCctxGasPriceEVM,
+			updateFunc: keeper.CheckAndUpdateCCTXGasPriceEVM,
 		},
 		{
 			name:       "Bitcoin is enabled",
 			chainID:    chains.BitcoinMainnet.ChainId,
 			found:      true,
-			updateFunc: keeper.CheckAndUpdateCctxGasRateBTC,
+			updateFunc: keeper.CheckAndUpdateCCTXGasRateBTC,
 		},
 		{
 			name:       "ZetaChain is not enabled",
@@ -668,7 +668,7 @@ func Test_GetCctxGasPriceUpdater(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			updateFunc, found := keeper.GetCctxGasPriceUpdater(tt.chainID, []zetachains.Chain{})
+			updateFunc, found := keeper.GetCCTXGasPriceUpdater(tt.chainID, []zetachains.Chain{})
 			require.Equal(t, tt.found, found)
 			require.Equal(t, reflect.ValueOf(tt.updateFunc).Pointer(), reflect.ValueOf(updateFunc).Pointer())
 		})

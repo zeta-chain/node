@@ -19,20 +19,20 @@ const (
 	RemainingFeesToStabilityPoolPercent = 95
 )
 
-// CheckAndUpdateCctxGasPriceFunc is a function type for checking and updating the gas price of a cctx
-type CheckAndUpdateCctxGasPriceFunc func(
+// CheckAndUpdateCCTXGasPriceFunc is a function type for checking and updating the gas price of a cctx
+type CheckAndUpdateCCTXGasPriceFunc func(
 	ctx sdk.Context,
 	k Keeper,
 	cctx types.CrossChainTx,
 	flags observertypes.GasPriceIncreaseFlags,
 ) (math.Uint, math.Uint, error)
 
-// IterateAndUpdateCctxGasPrice iterates through all cctx and updates the gas price if pending for too long
+// IterateAndUpdateCCTXGasPrice iterates through all cctx and updates the gas price if pending for too long
 // The function returns the number of cctxs updated and the gas price increase flags used
-func (k Keeper) IterateAndUpdateCctxGasPrice(
+func (k Keeper) IterateAndUpdateCCTXGasPrice(
 	ctx sdk.Context,
 	chains []zetachains.Chain,
-	updateFunc CheckAndUpdateCctxGasPriceFunc,
+	updateFunc CheckAndUpdateCCTXGasPriceFunc,
 ) (int, observertypes.GasPriceIncreaseFlags) {
 	// fetch the gas price increase flags or use default
 	gasPriceIncreaseFlags := observertypes.DefaultGasPriceIncreaseFlags
@@ -58,7 +58,7 @@ IterateChains:
 
 		// support only external evm chains and bitcoin chain
 		// use provided updateFunc if available, otherwise get updater based on chain type
-		updater, found := GetCctxGasPriceUpdater(chain.ChainId, additionalChains)
+		updater, found := GetCCTXGasPriceUpdater(chain.ChainId, additionalChains)
 		if found && updateFunc == nil {
 			updateFunc = updater
 		}
@@ -110,9 +110,9 @@ IterateChains:
 	return cctxCount, gasPriceIncreaseFlags
 }
 
-// CheckAndUpdateCctxGasPriceEVM checks if the retry interval is reached and updates the gas price if so
+// CheckAndUpdateCCTXGasPriceEVM checks if the retry interval is reached and updates the gas price if so
 // The function returns the gas price increase and the additional fees paid from the gas stability pool
-func CheckAndUpdateCctxGasPriceEVM(
+func CheckAndUpdateCCTXGasPriceEVM(
 	ctx sdk.Context,
 	k Keeper,
 	cctx types.CrossChainTx,
@@ -186,9 +186,9 @@ func CheckAndUpdateCctxGasPriceEVM(
 	return gasPriceIncrease, additionalFees, nil
 }
 
-// CheckAndUpdateCctxGasRateBTC checks if the retry interval is reached and updates the gas rate if so
+// CheckAndUpdateCCTXGasRateBTC checks if the retry interval is reached and updates the gas rate if so
 // Zetacore only needs to update the gas rate in CCTX and fee bumping will be handled by zetaclient
-func CheckAndUpdateCctxGasRateBTC(
+func CheckAndUpdateCCTXGasRateBTC(
 	ctx sdk.Context,
 	k Keeper,
 	cctx types.CrossChainTx,
@@ -223,16 +223,16 @@ func CheckAndUpdateCctxGasRateBTC(
 	return math.ZeroUint(), math.ZeroUint(), nil
 }
 
-// GetCctxGasPriceUpdater returns the function to update gas price according to chain type
-func GetCctxGasPriceUpdater(chainID int64, additionalChains []zetachains.Chain) (CheckAndUpdateCctxGasPriceFunc, bool) {
+// GetCCTXGasPriceUpdater returns the function to update gas price according to chain type
+func GetCCTXGasPriceUpdater(chainID int64, additionalChains []zetachains.Chain) (CheckAndUpdateCCTXGasPriceFunc, bool) {
 	switch {
 	case zetachains.IsEVMChain(chainID, additionalChains):
 		if !zetachains.IsZetaChain(chainID, additionalChains) {
-			return CheckAndUpdateCctxGasPriceEVM, true
+			return CheckAndUpdateCCTXGasPriceEVM, true
 		}
 		return nil, false
 	case zetachains.IsBitcoinChain(chainID, additionalChains):
-		return CheckAndUpdateCctxGasRateBTC, true
+		return CheckAndUpdateCCTXGasRateBTC, true
 	default:
 		return nil, false
 	}

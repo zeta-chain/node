@@ -32,7 +32,7 @@ func TestBitcoinWithdrawRBF(r *runner.E2ERunner, args []string) {
 
 	// initiate a withdraw CCTX
 	receipt := approveAndWithdrawBTCZRC20(r, to, amount)
-	cctx := utils.GetCctxByInboundHash(r.Ctx, receipt.TxHash.Hex(), r.CctxClient)
+	cctx := utils.GetCCTXByInboundHash(r.Ctx, receipt.TxHash.Hex(), r.CctxClient)
 
 	// wait for the 1st outbound tracker hash to come in
 	nonce := cctx.GetCurrentOutboundParam().TssNonce

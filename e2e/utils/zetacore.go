@@ -29,8 +29,8 @@ const (
 	DefaultCctxTimeout = 8 * time.Minute
 )
 
-// GetCctxByInboundHash gets cctx by inbound hash
-func GetCctxByInboundHash(
+// GetCCTXByInboundHash gets cctx by inbound hash
+func GetCCTXByInboundHash(
 	ctx context.Context,
 	inboundHash string,
 	client crosschaintypes.QueryClient,
