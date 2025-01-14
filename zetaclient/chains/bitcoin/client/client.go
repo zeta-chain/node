@@ -20,14 +20,16 @@ import (
 
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 type Client struct {
-	hostURL string
-	client  *http.Client
-	config  config.BTCConfig
-	params  chains.Params
-	logger  zerolog.Logger
+	hostURL    string
+	client     *http.Client
+	clientName string
+	config     config.BTCConfig
+	params     chains.Params
+	logger     zerolog.Logger
 }
 
 type Opt func(c *Client)
@@ -50,17 +52,23 @@ func WithHTTP(httpClient *http.Client) Opt {
 }
 
 // New Client constructor
-func New(cfg config.BTCConfig, logger zerolog.Logger, opts ...Opt) (*Client, error) {
+func New(cfg config.BTCConfig, chainID int64, logger zerolog.Logger, opts ...Opt) (*Client, error) {
 	params, err := resolveParams(cfg.RPCParams)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to resolve chain params")
 	}
 
+	clientName := fmt.Sprintf("btc:%d", chainID)
+
 	c := &Client{
-		hostURL: normalizeHostURL(cfg.RPCHost, true),
-		client:  defaultHTTPClient(),
-		params:  params,
-		logger:  logger.With().Str(logs.FieldModule, "btc_client").Logger(),
+		hostURL:    normalizeHostURL(cfg.RPCHost, true),
+		client:     defaultHTTPClient(),
+		params:     params,
+		clientName: clientName,
+		logger: logger.With().
+			Str(logs.FieldModule, "btc_client").
+			Int64(logs.FieldChain, chainID).
+			Logger(),
 	}
 
 	for _, opt := range opts {
@@ -95,17 +103,31 @@ func (c *Client) sendCommand(ctx context.Context, cmd any) (json.RawMessage, err
 	return out.Result, nil
 }
 
-func (c *Client) sendRequest(req *http.Request, method string) (out rawResponse, err error) {
-	// todo prometheus metrics (chain_id, method, latency, ok/fail)
+func (c *Client) newRequest(ctx context.Context, body []byte) (*http.Request, error) {
+	payload := bytes.NewReader(body)
 
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.hostURL, payload)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	if c.config.RPCPassword != "" || c.config.RPCUsername != "" {
+		req.SetBasicAuth(c.config.RPCUsername, c.config.RPCPassword)
+	}
+
+	return req, nil
+}
+
+func (c *Client) sendRequest(req *http.Request, method string) (out rawResponse, err error) {
 	c.logger.Debug().Str("rpc.method", method).Msg("Sending request")
 	start := time.Now()
 
 	defer func() {
-		c.logger.Debug().
-			Str("rpc.method", method).
-			Dur("rpc.duration", time.Since(start)).
-			Err(err).
+		c.recordMetrics(method, start, out, err)
+		c.logger.Debug().Err(err).
+			Str("rpc.method", method).Dur("rpc.duration", time.Since(start)).
 			Msg("Sent request")
 	}()
 
@@ -126,6 +148,18 @@ func (c *Client) sendRequest(req *http.Request, method string) (out rawResponse,
 	}
 
 	return out, nil
+}
+
+func (c *Client) recordMetrics(method string, start time.Time, out rawResponse, err error) {
+	dur := time.Since(start).Seconds()
+
+	status := "ok"
+	if err != nil || out.Error != nil {
+		status = "failed"
+	}
+
+	// "status", "client", "method"
+	metrics.RPCClientDuration.WithLabelValues(status, c.clientName, method).Observe(dur)
 }
 
 func (c *Client) marshalCmd(cmd any) (string, []byte, error) {
@@ -159,23 +193,6 @@ func unmarshalPtr[T any](raw json.RawMessage) (*T, error) {
 	}
 
 	return &tt, nil
-}
-
-func (c *Client) newRequest(ctx context.Context, body []byte) (*http.Request, error) {
-	payload := bytes.NewReader(body)
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.hostURL, payload)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	if c.config.RPCPassword != "" || c.config.RPCUsername != "" {
-		req.SetBasicAuth(c.config.RPCUsername, c.config.RPCPassword)
-	}
-
-	return req, nil
 }
 
 func resolveParams(name string) (chains.Params, error) {

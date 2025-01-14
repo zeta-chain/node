@@ -198,6 +198,16 @@ var (
 		},
 		[]string{"status", "task_group", "task_name"},
 	)
+
+	RPCClientDuration = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: ZetaClientNamespace,
+			Name:      "rpc_client_duration_seconds",
+			Help:      "Histogram of rpc client calls durations in seconds",
+			Buckets:   []float64{0.05, 0.1, 0.2, 0.3, 0.5, 1, 1.5, 2, 3, 5, 7.5, 10, 15}, // 50ms to 15s
+		},
+		[]string{"status", "client", "method"},
+	)
 )
 
 // NewMetrics creates a new Metrics instance
