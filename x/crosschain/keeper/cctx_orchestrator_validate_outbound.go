@@ -418,6 +418,9 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 	case types.CctxStatus_PendingRevert:
 		cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 		cctx.SetAbort("aborted while processing failed outbound", "outbound and revert failed")
+	default:
+		return fmt.Errorf("unexpected cctx status %s", cctx.CctxStatus.Status)
 	}
-	return fmt.Errorf("unexpected cctx status %s", cctx.CctxStatus.Status)
+
+	return nil
 }
