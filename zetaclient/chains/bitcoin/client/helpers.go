@@ -101,7 +101,7 @@ func (c *Client) GetRawTransactionResult(ctx context.Context,
 }
 
 // GetTransactionFeeAndRate gets the transaction fee and rate for a given tx result
-func (c *Client) GetTransactionFeeAndRate(ctx context.Context, rawResult *btcjson.TxRawResult) (int64, int64, error) {
+func (c *Client) GetTransactionFeeAndRate(ctx context.Context, rawResult *types.TxRawResult) (int64, int64, error) {
 	var (
 		totalInputValue  int64
 		totalOutputValue int64
@@ -156,17 +156,17 @@ func (c *Client) Healthcheck(ctx context.Context, tssAddress btcutil.Address) (t
 	// 1. Query latest block header
 	bn, err := c.GetBlockCount(ctx)
 	if err != nil {
-		return time.Time{}, err
+		return time.Time{}, errors.Wrap(err, "unable to get block count")
 	}
 
 	hash, err := c.GetBlockHash(ctx, bn)
 	if err != nil {
-		return time.Time{}, err
+		return time.Time{}, errors.Wrap(err, "unable to get block hash")
 	}
 
 	header, err := c.GetBlockHeader(ctx, hash)
 	if err != nil {
-		return time.Time{}, err
+		return time.Time{}, errors.Wrap(err, "unable to get block header")
 	}
 
 	// 2. Query utxos owned by TSS address

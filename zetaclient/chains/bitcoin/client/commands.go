@@ -12,7 +12,6 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/pkg/errors"
-	"github.com/tendermint/btcd/btcjson"
 )
 
 const (
@@ -53,7 +52,7 @@ func (c *Client) GetBlockHash(ctx context.Context, blockHeight int64) (*chainhas
 }
 
 func (c *Client) GetBlockHeader(ctx context.Context, hash *chainhash.Hash) (*wire.BlockHeader, error) {
-	cmd := types.NewGetBlockHeaderCmd(hash.String(), btcjson.Bool(false))
+	cmd := types.NewGetBlockHeaderCmd(hash.String(), types.Bool(false))
 
 	out, err := c.sendCommand(ctx, cmd)
 	if err != nil {
@@ -80,7 +79,7 @@ func (c *Client) GetBlockHeader(ctx context.Context, hash *chainhash.Hash) (*wir
 }
 
 func (c *Client) GetBlockVerbose(ctx context.Context, hash *chainhash.Hash) (*types.GetBlockVerboseTxResult, error) {
-	cmd := types.NewGetBlockCmd(hash.String(), btcjson.Int(2))
+	cmd := types.NewGetBlockCmd(hash.String(), types.Int(2))
 
 	out, err := c.sendCommand(ctx, cmd)
 	if err != nil {
@@ -100,7 +99,7 @@ func (c *Client) GetTransaction(ctx context.Context, hash *chainhash.Hash) (*typ
 }
 
 func (c *Client) GetRawTransaction(ctx context.Context, hash *chainhash.Hash) (*btcutil.Tx, error) {
-	cmd := types.NewGetRawTransactionCmd(hash.String(), btcjson.Int(0))
+	cmd := types.NewGetRawTransactionCmd(hash.String(), types.Int(0))
 
 	out, err := c.sendCommand(ctx, cmd)
 	if err != nil {
@@ -129,7 +128,7 @@ func (c *Client) GetRawTransaction(ctx context.Context, hash *chainhash.Hash) (*
 }
 
 func (c *Client) GetRawTransactionVerbose(ctx context.Context, hash *chainhash.Hash) (*types.TxRawResult, error) {
-	cmd := types.NewGetRawTransactionCmd(hash.String(), btcjson.Int(1))
+	cmd := types.NewGetRawTransactionCmd(hash.String(), types.Int(1))
 
 	out, err := c.sendCommand(ctx, cmd)
 	if err != nil {
@@ -176,35 +175,35 @@ func (c *Client) SendRawTransaction(ctx context.Context, tx *wire.MsgTx, allowHi
 	return chainhash.NewHashFromStr(txHashStr)
 }
 
-func (c *Client) ListUnspent(ctx context.Context) ([]btcjson.ListUnspentResult, error) {
-	cmd := btcjson.NewListUnspentCmd(nil, nil, nil)
+func (c *Client) ListUnspent(ctx context.Context) ([]types.ListUnspentResult, error) {
+	cmd := types.NewListUnspentCmd(nil, nil, nil)
 
 	out, err := c.sendCommand(ctx, cmd)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to list unspent")
 	}
 
-	return unmarshal[[]btcjson.ListUnspentResult](out)
+	return unmarshal[[]types.ListUnspentResult](out)
 }
 
 func (c *Client) ListUnspentMinMaxAddresses(
 	ctx context.Context,
 	minConf, maxConf int,
 	addresses []btcutil.Address,
-) ([]btcjson.ListUnspentResult, error) {
+) ([]types.ListUnspentResult, error) {
 	stringAddresses := make([]string, 0, len(addresses))
 	for _, a := range addresses {
 		stringAddresses = append(stringAddresses, a.EncodeAddress())
 	}
 
-	cmd := btcjson.NewListUnspentCmd(&minConf, &maxConf, &stringAddresses)
+	cmd := types.NewListUnspentCmd(&minConf, &maxConf, &stringAddresses)
 
 	out, err := c.sendCommand(ctx, cmd)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to list unspent")
 	}
 
-	return unmarshal[[]btcjson.ListUnspentResult](out)
+	return unmarshal[[]types.ListUnspentResult](out)
 }
 
 func (c *Client) EstimateSmartFee(
