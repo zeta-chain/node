@@ -166,8 +166,7 @@ func GetLastPendingOutbound(ctx context.Context, ob *Observer) (*btcutil.Tx, uin
 	}
 
 	// is tx in the mempool?
-	_, err = ob.btcClient.GetMempoolEntry(lastHash)
-	if err != nil {
+	if _, err = ob.btcClient.GetMempoolEntry(lastHash); err != nil {
 		return nil, 0, errors.New("last tx is not in mempool")
 	}
 

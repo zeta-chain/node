@@ -127,6 +127,7 @@ func (signer *Signer) TryProcessOutbound(
 	}
 
 	var (
+		rbfTx    = false
 		signedTx *wire.MsgTx
 		stuckTx  = observer.GetLastStuckOutbound()
 	)
@@ -134,6 +135,7 @@ func (signer *Signer) TryProcessOutbound(
 	// sign outbound
 	if stuckTx != nil && params.TssNonce == stuckTx.Nonce {
 		// sign RBF tx
+		rbfTx = true
 		mempoolFetcher := rpc.GetTotalMempoolParentsSizeNFees
 		signedTx, err = signer.SignRBFTx(ctx, cctx, height, stuckTx.Tx, minRelayFee, mempoolFetcher)
 		if err != nil {
@@ -159,7 +161,7 @@ func (signer *Signer) TryProcessOutbound(
 	}
 
 	// broadcast signed outbound
-	signer.BroadcastOutbound(ctx, signedTx, params.TssNonce, cctx, observer, zetacoreClient)
+	signer.BroadcastOutbound(ctx, signedTx, params.TssNonce, rbfTx, cctx, observer, zetacoreClient)
 }
 
 // BroadcastOutbound sends the signed transaction to the Bitcoin network
@@ -167,6 +169,7 @@ func (signer *Signer) BroadcastOutbound(
 	ctx context.Context,
 	tx *wire.MsgTx,
 	nonce uint64,
+	rbfTx bool,
 	cctx *types.CrossChainTx,
 	ob *observer.Observer,
 	zetacoreClient interfaces.ZetacoreClient,
@@ -182,6 +185,14 @@ func (signer *Signer) BroadcastOutbound(
 	}
 	logger := signer.Logger().Std
 
+	// double check to ensure the tx is still the last outbound
+	if rbfTx {
+		if ob.GetPendingNonce() > nonce+1 {
+			logger.Warn().Fields(lf).Msgf("RBF tx nonce is outdated, skipping broadcast")
+			return
+		}
+	}
+
 	// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s) in case of RPC error
 	backOff := broadcastBackoff
 	for i := 0; i < broadcastRetries; i++ {
@@ -194,7 +205,7 @@ func (signer *Signer) BroadcastOutbound(
 			backOff *= 2
 			continue
 		}
-		logger.Info().Fields(lf).Msgf("broadcasted Bitcoin outbound successfully")
+		logger.Info().Fields(lf).Msg("broadcasted Bitcoin outbound successfully")
 
 		// save tx local db
 		ob.SaveBroadcastedTx(txHash, nonce)
@@ -202,16 +213,16 @@ func (signer *Signer) BroadcastOutbound(
 		// add tx to outbound tracker so that all observers know about it
 		zetaHash, err := zetacoreClient.PostOutboundTracker(ctx, ob.Chain().ChainId, nonce, txHash)
 		if err != nil {
-			logger.Err(err).Fields(lf).Msgf("unable to add Bitcoin outbound tracker")
+			logger.Err(err).Fields(lf).Msg("unable to add Bitcoin outbound tracker")
 		} else {
 			lf[logs.FieldZetaTx] = zetaHash
-			logger.Info().Fields(lf).Msgf("add Bitcoin outbound tracker successfully")
+			logger.Info().Fields(lf).Msg("add Bitcoin outbound tracker successfully")
 		}
 
 		// try including this outbound as early as possible
 		_, included := ob.TryIncludeOutbound(ctx, cctx, txHash)
 		if included {
-			logger.Info().Fields(lf).Msgf("included newly broadcasted Bitcoin outbound")
+			logger.Info().Fields(lf).Msg("included newly broadcasted Bitcoin outbound")
 		}
 
 		// successful broadcast; no need to retry

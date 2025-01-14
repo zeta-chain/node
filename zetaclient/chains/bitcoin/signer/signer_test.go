@@ -100,6 +100,8 @@ func Test_BroadcastOutbound(t *testing.T) {
 		name        string
 		chain       chains.Chain
 		nonce       uint64
+		rbfTx       bool
+		skipRBFTx   bool
 		failTracker bool
 	}{
 		{
@@ -108,10 +110,23 @@ func Test_BroadcastOutbound(t *testing.T) {
 			nonce: uint64(148),
 		},
 		{
-			name:        "should successfully broadcast and include outbound, but failed to post outbound tracker",
+			name:  "should successfully broadcast and include RBF outbound",
+			chain: chains.BitcoinMainnet,
+			nonce: uint64(148),
+			rbfTx: true,
+		},
+		{
+			name:        "should successfully broadcast and include outbound, but fail to post outbound tracker",
 			chain:       chains.BitcoinMainnet,
 			nonce:       uint64(148),
 			failTracker: true,
+		},
+		{
+			name:      "should skip broadcasting RBF tx",
+			chain:     chains.BitcoinMainnet,
+			nonce:     uint64(148),
+			rbfTx:     true,
+			skipRBFTx: true,
 		},
 	}
 
@@ -128,9 +143,9 @@ func Test_BroadcastOutbound(t *testing.T) {
 			msgTx := testutils.LoadBTCMsgTx(t, TestDataDir, chainID, rawResult.Txid)
 
 			// mock RPC response
-			s.client.On("SendRawTransaction", mock.Anything, mock.Anything).Return(nil, nil)
-			s.client.On("GetTransaction", mock.Anything).Return(txResult, nil)
-			s.client.On("GetRawTransactionVerbose", mock.Anything).Return(rawResult, nil)
+			s.client.On("SendRawTransaction", mock.Anything, mock.Anything).Maybe().Return(nil, nil)
+			s.client.On("GetTransaction", mock.Anything).Maybe().Return(txResult, nil)
+			s.client.On("GetRawTransactionVerbose", mock.Anything).Maybe().Return(rawResult, nil)
 
 			// mock Zetacore client response
 			if tt.failTracker {
@@ -145,11 +160,17 @@ func Test_BroadcastOutbound(t *testing.T) {
 				TxID: rawResult.Vin[0].Txid,
 			})
 
+			// set a higher pending nonce so the RBF tx is not the last tx
+			if tt.rbfTx && tt.skipRBFTx {
+				observer.SetPendingNonce(tt.nonce + 2)
+			}
+
 			ctx := makeCtx(t)
 			s.BroadcastOutbound(
 				ctx,
 				msgTx,
 				tt.nonce,
+				tt.rbfTx,
 				cctx,
 				observer,
 				s.zetacoreClient,
@@ -157,7 +178,11 @@ func Test_BroadcastOutbound(t *testing.T) {
 
 			// check if outbound is included
 			gotResult := observer.GetIncludedTx(tt.nonce)
-			require.Equal(t, txResult, gotResult)
+			if tt.skipRBFTx {
+				require.Nil(t, gotResult)
+			} else {
+				require.Equal(t, txResult, gotResult)
+			}
 		})
 	}
 }
@@ -360,12 +385,15 @@ func getNewOutboundProcessor() *outboundprocessor.Processor {
 func (s *testSuite) getNewObserver(t *testing.T) *observer.Observer {
 	// prepare mock arguments to create observer
 	params := mocks.MockChainParams(s.Chain().ChainId, 2)
-	logger := base.DefaultLogger()
 	ts := &metrics.TelemetryServer{}
 
 	// create in-memory db
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
+
+	// create logger
+	testLogger := zerolog.New(zerolog.NewTestWriter(t))
+	logger := base.Logger{Std: testLogger, Compliance: testLogger}
 
 	ob, err := observer.NewObserver(
 		s.Chain(),
