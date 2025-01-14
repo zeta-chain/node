@@ -199,6 +199,15 @@ var (
 		[]string{"status", "task_group", "task_name"},
 	)
 
+	RPCClientCounter = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: ZetaClientNamespace,
+			Name:      "rpc_client_calls_total",
+			Help:      "Total number of rpc calls",
+		},
+		[]string{"status", "client", "method"},
+	)
+
 	RPCClientDuration = promauto.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Namespace: ZetaClientNamespace,

@@ -158,7 +158,7 @@ func (c *Client) recordMetrics(method string, start time.Time, out rawResponse, 
 		status = "failed"
 	}
 
-	// "status", "client", "method"
+	metrics.RPCClientCounter.WithLabelValues(status, c.clientName, method).Inc()
 	metrics.RPCClientDuration.WithLabelValues(status, c.clientName, method).Observe(dur)
 }
 
