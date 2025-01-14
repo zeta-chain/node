@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## unreleased
+
+### Refactor
+
+* [3332](https://github.com/zeta-chain/node/pull/3332) - implement orchestrator V2. Move BTC observer-signer to V2
+
 ## v25.0.0
 
 ### Features
@@ -21,7 +27,6 @@
 * [3170](https://github.com/zeta-chain/node/pull/3170) - revamp TSS package in zetaclient
 * [3291](https://github.com/zeta-chain/node/pull/3291) - revamp zetaclient initialization (+ graceful shutdown)
 * [3319](https://github.com/zeta-chain/node/pull/3319) - implement scheduler for zetaclient
-* [3332](https://github.com/zeta-chain/node/pull/3332) - implement orchestrator V2. Move BTC observer-signer to V2
 
 ### Fixes
 
