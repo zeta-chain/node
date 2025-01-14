@@ -38,8 +38,8 @@ func TestETHWithdrawAndCallRevertWithWithdraw(r *runner.E2ERunner, args []string
 
 	r.Logger.Print("cctxRevert")
 	r.Logger.Print(cctxRevert.String())
-	//cctxWithdrawFromRevert := utils.WaitCctxMinedByInboundHash(r.Ctx, cctxRevert, r.CctxClient, r.Logger, r.CctxTimeout)
+	cctxWithdrawFromRevert := utils.WaitCctxMinedByInboundHash(r.Ctx, cctxRevert.Index, r.CctxClient, r.Logger, r.CctxTimeout)
 
-	// check the cctx status
-	//utils.RequireCCTXStatus(r, cctxWithdrawFromRevert, crosschaintypes.CctxStatus_OutboundMined)
+	//check the cctx status
+	utils.RequireCCTXStatus(r, cctxWithdrawFromRevert, crosschaintypes.CctxStatus_OutboundMined)
 }
