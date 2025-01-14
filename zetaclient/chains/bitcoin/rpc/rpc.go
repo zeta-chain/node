@@ -365,30 +365,29 @@ func CheckRPCStatus(client interfaces.BTCRPCClient, tssAddress btcutil.Address) 
 	// query latest block number
 	bn, err := client.GetBlockCount()
 	if err != nil {
-		return time.Time{}, errors.Wrap(err, "RPC failed on GetBlockCount, RPC down?")
+		return time.Time{}, errors.Wrap(err, "unable to get block count")
 	}
 
 	// query latest block header
 	hash, err := client.GetBlockHash(bn)
 	if err != nil {
-		return time.Time{}, errors.Wrap(err, "RPC failed on GetBlockHash, RPC down?")
+		return time.Time{}, errors.Wrapf(err, "unable to get hash for block %d", bn)
 	}
 
 	// query latest block header thru hash
 	header, err := client.GetBlockHeader(hash)
 	if err != nil {
-		return time.Time{}, errors.Wrap(err, "RPC failed on GetBlockHeader, RPC down?")
+		return time.Time{}, errors.Wrapf(err, "unable to get block header (%s)", hash.String())
 	}
 
 	// should be able to list utxos owned by TSS address
 	res, err := client.ListUnspentMinMaxAddresses(0, 1000000, []btcutil.Address{tssAddress})
-	if err != nil {
-		return time.Time{}, errors.Wrap(err, "can't list utxos of TSS address; TSS address is not imported?")
-	}
 
-	// TSS address should have utxos
-	if len(res) == 0 {
-		return time.Time{}, errors.New("TSS address has no utxos; TSS address is not imported?")
+	switch {
+	case err != nil:
+		return time.Time{}, errors.Wrap(err, "unable to list TSS UTXOs")
+	case len(res) == 0:
+		return time.Time{}, errors.New("no UTXOs found for TSS")
 	}
 
 	return header.Timestamp, nil

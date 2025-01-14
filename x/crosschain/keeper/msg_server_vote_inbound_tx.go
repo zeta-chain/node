@@ -64,6 +64,7 @@ func (k msgServer) VoteInbound(
 	// vote on inbound ballot
 	// use a temporary context to not commit any ballot state change in case of error
 	tmpCtx, commit := ctx.CacheContext()
+
 	finalized, isNew, err := k.zetaObserverKeeper.VoteOnInboundBallot(
 		tmpCtx,
 		msg.SenderChainId,

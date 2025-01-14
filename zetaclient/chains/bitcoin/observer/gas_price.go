@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
@@ -95,7 +95,7 @@ func (ob *Observer) specialHandleFeeRate() (int64, error) {
 	case chains.NetworkType_privnet:
 		return rpc.FeeRateRegnet, nil
 	case chains.NetworkType_testnet:
-		feeRateEstimated, err := bitcoin.GetRecentFeeRate(ob.btcClient, ob.netParams)
+		feeRateEstimated, err := common.GetRecentFeeRate(ob.btcClient, ob.netParams)
 		if err != nil {
 			return 0, errors.Wrapf(err, "error GetRecentFeeRate")
 		}

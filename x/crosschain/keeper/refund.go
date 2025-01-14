@@ -27,7 +27,7 @@ func (k Keeper) RefundAbortedAmountOnZetaChain(
 	case coin.CoinType_ERC20:
 		return k.RefundAmountOnZetaChainERC20(ctx, cctx, refundAddress)
 	default:
-		return errors.New("unsupported coin type for refund on ZetaChain")
+		return fmt.Errorf("unsupported coin type for refund on ZetaChain : %s", coinType)
 	}
 }
 

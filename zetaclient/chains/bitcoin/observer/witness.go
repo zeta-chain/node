@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 )
 
@@ -24,7 +24,7 @@ func GetBtcEventWithWitness(
 	blockNumber uint64,
 	logger zerolog.Logger,
 	netParams *chaincfg.Params,
-	feeCalculator bitcoin.DepositorFeeCalculator,
+	feeCalculator common.DepositorFeeCalculator,
 ) (*BTCInboundEvent, error) {
 	if len(tx.Vout) < 1 {
 		logger.Debug().Msgf("no output %s", tx.Txid)
@@ -137,7 +137,7 @@ func tryExtractOpRet(tx btcjson.TxRawResult, logger zerolog.Logger) []byte {
 		return nil
 	}
 
-	memo, found, err := bitcoin.DecodeOpReturnMemo(tx.Vout[1].ScriptPubKey.Hex)
+	memo, found, err := common.DecodeOpReturnMemo(tx.Vout[1].ScriptPubKey.Hex)
 	if err != nil {
 		logger.Error().Err(err).Msgf("tryExtractOpRet: error decoding OP_RETURN memo: %s", tx.Vout[1].ScriptPubKey.Hex)
 		return nil
@@ -159,7 +159,7 @@ func tryExtractInscription(tx btcjson.TxRawResult, logger zerolog.Logger) []byte
 
 		logger.Debug().Msgf("potential witness script, tx %s, input idx %d", tx.Txid, i)
 
-		memo, found, err := bitcoin.DecodeScript(script)
+		memo, found, err := common.DecodeScript(script)
 		if err != nil || !found {
 			logger.Debug().Msgf("invalid witness script, tx %s, input idx %d", tx.Txid, i)
 			continue
@@ -187,7 +187,7 @@ func isValidRecipient(
 	tssAddress string,
 	netParams *chaincfg.Params,
 ) error {
-	receiver, err := bitcoin.DecodeScriptP2WPKH(script, netParams)
+	receiver, err := common.DecodeScriptP2WPKH(script, netParams)
 	if err != nil {
 		return fmt.Errorf("invalid p2wpkh script detected, %s", err)
 	}

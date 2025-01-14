@@ -3,8 +3,10 @@
 package mocks
 
 import (
-	mock "github.com/stretchr/testify/mock"
 	chains "github.com/zeta-chain/node/pkg/chains"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+
+	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/cosmos/cosmos-sdk/types"
 )
@@ -50,6 +52,34 @@ func (_m *CrosschainAuthorityKeeper) GetAdditionalChainList(ctx types.Context) [
 	}
 
 	return r0
+}
+
+// GetPolicies provides a mock function with given fields: ctx
+func (_m *CrosschainAuthorityKeeper) GetPolicies(ctx types.Context) (authoritytypes.Policies, bool) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPolicies")
+	}
+
+	var r0 authoritytypes.Policies
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context) (authoritytypes.Policies, bool)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context) authoritytypes.Policies); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(authoritytypes.Policies)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context) bool); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
 }
 
 // NewCrosschainAuthorityKeeper creates a new instance of CrosschainAuthorityKeeper. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

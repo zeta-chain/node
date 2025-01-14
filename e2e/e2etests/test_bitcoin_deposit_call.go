@@ -9,7 +9,7 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 	testcontract "github.com/zeta-chain/node/testutil/contracts"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
 func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
@@ -20,7 +20,7 @@ func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
 	// Given amount to send
 	require.Len(r, args, 1)
 	amount := utils.ParseFloat(r, args[0])
-	amountTotal := amount + zetabitcoin.DefaultDepositorFee
+	amountTotal := amount + common.DefaultDepositorFee
 
 	// Given a list of UTXOs
 	utxos, err := r.ListDeployerUTXOs()
@@ -45,7 +45,7 @@ func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// check if example contract has been called, 'bar' value should be set to amount
-	amountSats, err := zetabitcoin.GetSatoshis(amount)
+	amountSats, err := common.GetSatoshis(amount)
 	require.NoError(r, err)
 	utils.MustHaveCalledExampleContract(r, contract, big.NewInt(amountSats))
 }

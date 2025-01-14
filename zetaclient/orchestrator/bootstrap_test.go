@@ -6,6 +6,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/ptr"
@@ -36,9 +37,6 @@ func TestCreateSignerMap(t *testing.T) {
 
 	t.Run("CreateSignerMap", func(t *testing.T) {
 		// ARRANGE
-		// Given a BTC server
-		_, btcConfig := testrpc.NewBtcServer(t)
-
 		// Given a zetaclient config with ETH, MATIC, and BTC chains
 		cfg := config.New(false)
 
@@ -49,8 +47,6 @@ func TestCreateSignerMap(t *testing.T) {
 		cfg.EVMChainConfigs[chains.Polygon.ChainId] = config.EVMConfig{
 			Endpoint: testutils.MockEVMRPCEndpoint,
 		}
-
-		cfg.BTCChainConfigs[chains.BitcoinMainnet.ChainId] = btcConfig
 
 		// Given AppContext
 		app := zctx.New(cfg, nil, log)
@@ -69,15 +65,14 @@ func TestCreateSignerMap(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotEmpty(t, signers)
 
-		// Okay, now we want to check that signers for EVM and BTC were created
-		assert.Equal(t, 2, len(signers))
+		// Okay, now we want to check that signer for EVM was created
+		assert.Equal(t, 1, len(signers))
 		hasSigner(t, signers, chains.Ethereum.ChainId)
-		hasSigner(t, signers, chains.BitcoinMainnet.ChainId)
 
 		t.Run("Add polygon in the runtime", func(t *testing.T) {
 			// ARRANGE
 			mustUpdateAppContextChainParams(t, app, []chains.Chain{
-				chains.Ethereum, chains.BitcoinMainnet, chains.Polygon,
+				chains.Ethereum, chains.Polygon,
 			})
 
 			// ACT
@@ -90,7 +85,6 @@ func TestCreateSignerMap(t *testing.T) {
 
 			hasSigner(t, signers, chains.Ethereum.ChainId)
 			hasSigner(t, signers, chains.Polygon.ChainId)
-			hasSigner(t, signers, chains.BitcoinMainnet.ChainId)
 		})
 
 		t.Run("Disable ethereum in the runtime", func(t *testing.T) {
@@ -109,7 +103,7 @@ func TestCreateSignerMap(t *testing.T) {
 
 			missesSigner(t, signers, chains.Ethereum.ChainId)
 			hasSigner(t, signers, chains.Polygon.ChainId)
-			hasSigner(t, signers, chains.BitcoinMainnet.ChainId)
+			missesSigner(t, signers, chains.BitcoinMainnet.ChainId)
 		})
 
 		t.Run("Re-enable ethereum in the runtime", func(t *testing.T) {
@@ -117,7 +111,6 @@ func TestCreateSignerMap(t *testing.T) {
 			mustUpdateAppContextChainParams(t, app, []chains.Chain{
 				chains.Ethereum,
 				chains.Polygon,
-				chains.BitcoinMainnet,
 			})
 
 			// ACT
@@ -130,49 +123,6 @@ func TestCreateSignerMap(t *testing.T) {
 
 			hasSigner(t, signers, chains.Ethereum.ChainId)
 			hasSigner(t, signers, chains.Polygon.ChainId)
-			hasSigner(t, signers, chains.BitcoinMainnet.ChainId)
-		})
-
-		t.Run("Disable btc in the runtime", func(t *testing.T) {
-			// ARRANGE
-			mustUpdateAppContextChainParams(t, app, []chains.Chain{
-				chains.Ethereum,
-				chains.Polygon,
-			})
-
-			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
-
-			// ASSERT
-			assert.NoError(t, err)
-			assert.Equal(t, 0, added)
-			assert.Equal(t, 1, removed)
-
-			hasSigner(t, signers, chains.Ethereum.ChainId)
-			hasSigner(t, signers, chains.Polygon.ChainId)
-			missesSigner(t, signers, chains.BitcoinMainnet.ChainId)
-		})
-
-		t.Run("Re-enable btc in the runtime", func(t *testing.T) {
-			// ARRANGE
-			// Given updated data from zetacore containing polygon chain
-			mustUpdateAppContextChainParams(t, app, []chains.Chain{
-				chains.Ethereum,
-				chains.Polygon,
-				chains.BitcoinMainnet,
-			})
-
-			// ACT
-			added, removed, err := syncSignerMap(ctx, tss, baseLogger, &signers)
-
-			// ASSERT
-			assert.NoError(t, err)
-			assert.Equal(t, 1, added)
-			assert.Equal(t, 0, removed)
-
-			hasSigner(t, signers, chains.Ethereum.ChainId)
-			hasSigner(t, signers, chains.Polygon.ChainId)
-			hasSigner(t, signers, chains.BitcoinMainnet.ChainId)
 		})
 
 		t.Run("No changes", func(t *testing.T) {
@@ -200,6 +150,8 @@ func TestCreateChainObserverMap(t *testing.T) {
 		client     = mocks.NewZetacoreClient(t)
 		dbPath     = db.SqliteInMemory
 	)
+
+	mockZetacore(client)
 
 	t.Run("CreateChainObserverMap", func(t *testing.T) {
 		// ARRANGE
@@ -238,11 +190,12 @@ func TestCreateChainObserverMap(t *testing.T) {
 		ctx := zctx.WithAppContext(context.Background(), app)
 
 		// Given chain & chainParams "fetched" from zetacore
-		// (note that slice LACKS polygon & SOL chains on purpose)
+		// note that slice LACKS polygon & SOL chains on purpose
+		// also note that BTC is handled by orchestrator v2
 		mustUpdateAppContextChainParams(t, app, []chains.Chain{
 			chains.Ethereum,
-			chains.BitcoinMainnet,
 			chains.TONMainnet,
+			chains.BitcoinMainnet,
 		})
 
 		// ACT
@@ -253,10 +206,10 @@ func TestCreateChainObserverMap(t *testing.T) {
 		assert.NotEmpty(t, observers)
 
 		// Okay, now we want to check that signers for EVM and BTC were created
-		assert.Equal(t, 3, len(observers))
+		assert.Equal(t, 2, len(observers))
 		hasObserver(t, observers, chains.Ethereum.ChainId)
-		hasObserver(t, observers, chains.BitcoinMainnet.ChainId)
 		hasObserver(t, observers, chains.TONMainnet.ChainId)
+		missesObserver(t, observers, chains.BitcoinMainnet.ChainId)
 
 		t.Run("Add polygon and remove TON in the runtime", func(t *testing.T) {
 			// ARRANGE
@@ -274,7 +227,6 @@ func TestCreateChainObserverMap(t *testing.T) {
 
 			hasObserver(t, observers, chains.Ethereum.ChainId)
 			hasObserver(t, observers, chains.Polygon.ChainId)
-			hasObserver(t, observers, chains.BitcoinMainnet.ChainId)
 		})
 
 		t.Run("Add solana in the runtime", func(t *testing.T) {
@@ -296,7 +248,6 @@ func TestCreateChainObserverMap(t *testing.T) {
 
 			hasObserver(t, observers, chains.Ethereum.ChainId)
 			hasObserver(t, observers, chains.Polygon.ChainId)
-			hasObserver(t, observers, chains.BitcoinMainnet.ChainId)
 			hasObserver(t, observers, chains.SolanaMainnet.ChainId)
 		})
 
@@ -317,7 +268,6 @@ func TestCreateChainObserverMap(t *testing.T) {
 
 			missesObserver(t, observers, chains.Ethereum.ChainId)
 			hasObserver(t, observers, chains.Polygon.ChainId)
-			hasObserver(t, observers, chains.BitcoinMainnet.ChainId)
 			missesObserver(t, observers, chains.SolanaMainnet.ChainId)
 		})
 
@@ -337,45 +287,6 @@ func TestCreateChainObserverMap(t *testing.T) {
 
 			hasObserver(t, observers, chains.Ethereum.ChainId)
 			hasObserver(t, observers, chains.Polygon.ChainId)
-			hasObserver(t, observers, chains.BitcoinMainnet.ChainId)
-		})
-
-		t.Run("Disable btc in the runtime", func(t *testing.T) {
-			// ARRANGE
-			mustUpdateAppContextChainParams(t, app, []chains.Chain{
-				chains.Ethereum, chains.Polygon,
-			})
-
-			// ACT
-			added, removed, err := syncObserverMap(ctx, client, tss, dbPath, baseLogger, ts, &observers)
-
-			// ASSERT
-			assert.NoError(t, err)
-			assert.Equal(t, 0, added)
-			assert.Equal(t, 1, removed)
-
-			hasObserver(t, observers, chains.Ethereum.ChainId)
-			hasObserver(t, observers, chains.Polygon.ChainId)
-			missesObserver(t, observers, chains.BitcoinMainnet.ChainId)
-		})
-
-		t.Run("Re-enable btc in the runtime", func(t *testing.T) {
-			// ARRANGE
-			mustUpdateAppContextChainParams(t, app, []chains.Chain{
-				chains.BitcoinMainnet, chains.Ethereum, chains.Polygon,
-			})
-
-			// ACT
-			added, removed, err := syncObserverMap(ctx, client, tss, dbPath, baseLogger, ts, &observers)
-
-			// ASSERT
-			assert.NoError(t, err)
-			assert.Equal(t, 1, added)
-			assert.Equal(t, 0, removed)
-
-			hasObserver(t, observers, chains.Ethereum.ChainId)
-			hasObserver(t, observers, chains.Polygon.ChainId)
-			hasObserver(t, observers, chains.BitcoinMainnet.ChainId)
 		})
 
 		t.Run("No changes", func(t *testing.T) {
@@ -503,6 +414,8 @@ func missesSigner(t *testing.T, signers map[int64]interfaces.ChainSigner, chainI
 }
 
 func hasObserver(t *testing.T, observer map[int64]interfaces.ChainObserver, chainId int64) {
+	t.Helper()
+
 	signer, ok := observer[chainId]
 	assert.True(t, ok, "missing observer for chain %d", chainId)
 	assert.NotEmpty(t, signer)
@@ -511,4 +424,14 @@ func hasObserver(t *testing.T, observer map[int64]interfaces.ChainObserver, chai
 func missesObserver(t *testing.T, observer map[int64]interfaces.ChainObserver, chainId int64) {
 	_, ok := observer[chainId]
 	assert.False(t, ok, "unexpected observer for chain %d", chainId)
+}
+
+// observer&signers have background tasks that rely on mocked calls.
+// Ignorance results in FLAKY tests which fail silently with exit code 1.
+func mockZetacore(client *mocks.ZetacoreClient) {
+	// ctx context.Context, chain chains.Chain, gasPrice uint64, priorityFee uint64, blockNum uint64
+	client.
+		On("PostVoteGasPrice", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Return("", nil).
+		Maybe()
 }

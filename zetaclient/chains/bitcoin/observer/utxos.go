@@ -10,7 +10,7 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
@@ -85,7 +85,7 @@ func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 	utxosFiltered := make([]btcjson.ListUnspentResult, 0)
 	for _, utxo := range utxos {
 		// UTXOs big enough to cover the cost of spending themselves
-		if utxo.Amount < bitcoin.DefaultDepositorFee {
+		if utxo.Amount < common.DefaultDepositorFee {
 			continue
 		}
 		// we don't want to spend other people's unconfirmed UTXOs as they may not be safe to spend
@@ -206,7 +206,7 @@ func (ob *Observer) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
 	tssAddress := ob.TSSAddressString()
 	amount := chains.NonceMarkAmount(nonce)
 	for i, utxo := range ob.utxos {
-		sats, err := bitcoin.GetSatoshis(utxo.Amount)
+		sats, err := common.GetSatoshis(utxo.Amount)
 		if err != nil {
 			ob.logger.Outbound.Error().Err(err).Msgf("FindNonceMarkUTXO: error getting satoshis for utxo %v", utxo)
 		}

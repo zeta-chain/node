@@ -26,12 +26,14 @@
 * [3254](https://github.com/zeta-chain/node/pull/3254) - rename v2 E2E tests as evm tests and rename old evm tests as legacy
 * [3095](https://github.com/zeta-chain/node/pull/3095) - initialize simulation tests for custom zetachain modules
 * [3276](https://github.com/zeta-chain/node/pull/3276) - add Solana E2E performance tests and improve Solana outbounds performance
+* [3207](https://github.com/zeta-chain/node/pull/3207) - add simulation test operations for all messages in crosschain and observer module
 
 ### Refactor
 
 * [3170](https://github.com/zeta-chain/node/pull/3170) - revamp TSS package in zetaclient
 * [3291](https://github.com/zeta-chain/node/pull/3291) - revamp zetaclient initialization (+ graceful shutdown)
 * [3319](https://github.com/zeta-chain/node/pull/3319) - implement scheduler for zetaclient
+* [3332](https://github.com/zeta-chain/node/pull/3332) - implement orchestrator V2. Move BTC observer-signer to V2
 
 ### Fixes
 

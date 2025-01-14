@@ -2,8 +2,8 @@
 package observer
 
 import (
-	"context"
 	"math/big"
+	"sync/atomic"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
@@ -11,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/node/pkg/bg"
 	"github.com/zeta-chain/node/pkg/chains"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
@@ -34,8 +33,6 @@ const (
 	// BigValueConfirmationCount represents the number of confirmation necessary for bigger values: 6 confirmations
 	BigValueConfirmationCount = 6
 )
-
-var _ interfaces.ChainObserver = (*Observer)(nil)
 
 // Logger contains list of loggers used by Bitcoin chain observer
 type Logger struct {
@@ -81,6 +78,10 @@ type Observer struct {
 
 	// broadcastedTx indexes the outbound hash with the outbound tx identifier
 	broadcastedTx map[string]string
+
+	// nodeEnabled indicates whether BTC node is enabled (might be disabled during certain E2E tests)
+	// We assume it's true by default. The flag is updated on each ObserveInbound call.
+	nodeEnabled atomic.Bool
 
 	// logger contains the loggers used by the bitcoin observer
 	logger Logger
@@ -133,53 +134,19 @@ func NewObserver(
 		},
 	}
 
+	ob.nodeEnabled.Store(true)
+
 	// load last scanned block
-	if err := ob.LoadLastBlockScanned(); err != nil {
+	if err = ob.LoadLastBlockScanned(); err != nil {
 		return nil, errors.Wrap(err, "unable to load last scanned block")
 	}
 
 	// load broadcasted transactions
-	if err := ob.LoadBroadcastedTxMap(); err != nil {
+	if err = ob.LoadBroadcastedTxMap(); err != nil {
 		return nil, errors.Wrap(err, "unable to load broadcasted tx map")
 	}
 
 	return ob, nil
-}
-
-// BtcClient returns the btc client
-func (ob *Observer) BtcClient() interfaces.BTCRPCClient {
-	return ob.btcClient
-}
-
-// Start starts the Go routine processes to observe the Bitcoin chain
-func (ob *Observer) Start(ctx context.Context) {
-	if ok := ob.Observer.Start(); !ok {
-		ob.Logger().Chain.Info().Msgf("observer is already started for chain %d", ob.Chain().ChainId)
-		return
-	}
-
-	ob.Logger().Chain.Info().Msgf("observer is starting for chain %d", ob.Chain().ChainId)
-
-	// watch bitcoin chain for incoming txs and post votes to zetacore
-	bg.Work(ctx, ob.WatchInbound, bg.WithName("WatchInbound"), bg.WithLogger(ob.Logger().Inbound))
-
-	// watch bitcoin chain for outgoing txs status
-	bg.Work(ctx, ob.WatchOutbound, bg.WithName("WatchOutbound"), bg.WithLogger(ob.Logger().Outbound))
-
-	// watch bitcoin chain for UTXOs owned by the TSS address
-	bg.Work(ctx, ob.WatchUTXOs, bg.WithName("WatchUTXOs"), bg.WithLogger(ob.Logger().Outbound))
-
-	// watch bitcoin chain for pending mempool txs
-	bg.Work(ctx, ob.WatchMempoolTxs, bg.WithName("WatchMempoolTxs"), bg.WithLogger(ob.Logger().Outbound))
-
-	// watch bitcoin chain for gas rate and post to zetacore
-	bg.Work(ctx, ob.WatchGasPrice, bg.WithName("WatchGasPrice"), bg.WithLogger(ob.Logger().GasPrice))
-
-	// watch zetacore for bitcoin inbound trackers
-	bg.Work(ctx, ob.WatchInboundTracker, bg.WithName("WatchInboundTracker"), bg.WithLogger(ob.Logger().Inbound))
-
-	// watch the RPC status of the bitcoin chain
-	bg.Work(ctx, ob.watchRPCStatus, bg.WithName("watchRPCStatus"), bg.WithLogger(ob.Logger().Chain))
 }
 
 // GetPendingNonce returns the artificial pending nonce
@@ -290,4 +257,8 @@ func (ob *Observer) GetBroadcastedTx(nonce uint64) (string, bool) {
 	outboundID := ob.OutboundID(nonce)
 	txHash, found := ob.broadcastedTx[outboundID]
 	return txHash, found
+}
+
+func (ob *Observer) isNodeEnabled() bool {
+	return ob.nodeEnabled.Load()
 }

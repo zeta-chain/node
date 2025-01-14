@@ -20,7 +20,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	btccommon "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/node/zetaclient/common"
 )
@@ -363,15 +363,15 @@ func buildRBFTx(
 		tx.AddTxIn(txIn)
 		total += output.Amount
 	}
-	totalSats, err := bitcoin.GetSatoshis(total)
+	totalSats, err := btccommon.GetSatoshis(total)
 	require.NoError(t, err)
 
 	// amount to send in satoshis
-	amountSats, err := bitcoin.GetSatoshis(amount)
+	amountSats, err := btccommon.GetSatoshis(amount)
 	require.NoError(t, err)
 
 	// calculate tx fee
-	txSize, err := bitcoin.EstimateOutboundSize(int64(len(utxos)), []btcutil.Address{to})
+	txSize, err := btccommon.EstimateOutboundSize(int64(len(utxos)), []btcutil.Address{to})
 	require.NoError(t, err)
 	fees := int64(txSize) * feeRate
 

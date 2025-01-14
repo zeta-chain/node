@@ -9,19 +9,16 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
-	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
-	"github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -31,54 +28,11 @@ const (
 	minTxConfirmations = 0
 )
 
-// WatchOutbound watches Bitcoin chain for outgoing txs status
-// TODO(revamp): move ticker functions to a specific file
-// TODO(revamp): move into a separate package
-func (ob *Observer) WatchOutbound(ctx context.Context) error {
-	// get app context
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to get app from context")
-	}
-
-	// create outbound ticker
-	ticker, err := types.NewDynamicTicker("Bitcoin_WatchOutbound", ob.ChainParams().OutboundTicker)
-	if err != nil {
-		return errors.Wrap(err, "unable to create dynamic ticker")
-	}
-	defer ticker.Stop()
-
-	ob.logger.Outbound.Info().Msg("WatchOutbound: started")
-	sampledLogger := ob.logger.Outbound.Sample(&zerolog.BasicSampler{N: 10})
-
-	for {
-		select {
-		case <-ticker.C():
-			if !app.IsOutboundObservationEnabled() {
-				sampledLogger.Info().Msg("WatchOutbound: outbound observation is disabled")
-				continue
-			}
-
-			// process outbound trackers
-			err := ob.ProcessOutboundTrackers(ctx)
-			if err != nil {
-				ob.Logger().Outbound.Error().Err(err).Msg("WatchOutbound: ProcessOutboundTrackers failed")
-			}
-
-			ticker.UpdateInterval(ob.ChainParams().OutboundTicker, ob.logger.Outbound)
-		case <-ob.StopChannel():
-			ob.logger.Outbound.Info().Msg("WatchOutbound: stopped")
-			return nil
-		}
-	}
-}
-
-// ProcessOutboundTrackers processes outbound trackers
-func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
+func (ob *Observer) ObserveOutbound(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
 	trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
 	if err != nil {
-		return errors.Wrap(err, "GetAllOutboundTrackerByChain failed")
+		return errors.Wrap(err, "unable to get all outbound trackers")
 	}
 
 	// logger fields
@@ -86,7 +40,6 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		logs.FieldMethod: "ProcessOutboundTrackers",
 	}
 
-	// process outbound trackers
 	for _, tracker := range trackers {
 		// set logger fields
 		lf[logs.FieldNonce] = tracker.Nonce
@@ -519,7 +472,7 @@ func (ob *Observer) checkTSSVout(params *crosschaintypes.OutboundParams, vouts [
 			// the 2nd output is the payment to recipient
 			receiverExpected = params.Receiver
 		}
-		receiverVout, amount, err := bitcoin.DecodeTSSVout(vout, receiverExpected, ob.Chain())
+		receiverVout, amount, err := common.DecodeTSSVout(vout, receiverExpected, ob.Chain())
 		if err != nil {
 			return err
 		}
@@ -573,7 +526,7 @@ func (ob *Observer) checkTSSVoutCancelled(params *crosschaintypes.OutboundParams
 	tssAddress := ob.TSSAddressString()
 	for _, vout := range vouts {
 		// decode receiver and amount from vout
-		receiverVout, amount, err := bitcoin.DecodeTSSVout(vout, tssAddress, ob.Chain())
+		receiverVout, amount, err := common.DecodeTSSVout(vout, tssAddress, ob.Chain())
 		if err != nil {
 			return errors.Wrap(err, "checkTSSVoutCancelled: error decoding P2WPKH vout")
 		}

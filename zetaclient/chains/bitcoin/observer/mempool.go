@@ -8,10 +8,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/node/zetaclient/common"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -54,20 +52,11 @@ type StuckTxChecker func(client interfaces.BTCRPCClient, txHash string, maxWaitB
 // WatchMempoolTxs monitors pending outbound txs in the Bitcoin mempool.
 func (ob *Observer) WatchMempoolTxs(ctx context.Context) error {
 	txChecker := GetStuckTxChecker(ob.Chain().ChainId)
-	task := func(ctx context.Context, _ *ticker.Ticker) error {
-		if err := ob.RefreshLastStuckOutbound(ctx, GetLastPendingOutbound, txChecker); err != nil {
-			ob.Logger().Chain.Err(err).Msg("RefreshLastStuckOutbound error")
-		}
-		return nil
-	}
 
-	return ticker.Run(
-		ctx,
-		common.MempoolStuckTxCheckInterval,
-		task,
-		ticker.WithStopChan(ob.StopChannel()),
-		ticker.WithLogger(ob.Logger().Chain, "WatchMempoolTxs"),
-	)
+	if err := ob.RefreshLastStuckOutbound(ctx, GetLastPendingOutbound, txChecker); err != nil {
+		ob.Logger().Chain.Err(err).Msg("RefreshLastStuckOutbound failed")
+	}
+	return nil
 }
 
 // RefreshLastStuckOutbound refreshes the information about the last stuck tx in the Bitcoin mempool.
@@ -84,7 +73,7 @@ func (ob *Observer) RefreshLastStuckOutbound(
 	// step 1: get last TSS transaction
 	lastTx, lastNonce, err := txFinder(ctx, ob)
 	if err != nil {
-		ob.logger.Outbound.Info().Msgf("last pending outbound not found: %s", err.Error())
+		ob.logger.Outbound.Info().Fields(lf).Msgf("last pending outbound not found: %s", err.Error())
 		return nil
 	}
 

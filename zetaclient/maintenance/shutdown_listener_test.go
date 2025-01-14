@@ -15,7 +15,7 @@ import (
 func assertChannelNotClosed[T any](t *testing.T, ch <-chan T) {
 	select {
 	case <-ch:
-		t.FailNow()
+		t.Errorf("Failed: channel was closed")
 	default:
 	}
 }

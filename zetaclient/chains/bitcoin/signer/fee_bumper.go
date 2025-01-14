@@ -14,7 +14,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	mathpkg "github.com/zeta-chain/node/pkg/math"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 )
@@ -180,7 +180,7 @@ func (b *CPFPFeeBumper) FetchFeeBumpInfo(memplTxsInfoFetcher MempoolTxsInfoFetch
 	if err != nil {
 		return errors.Wrap(err, "unable to fetch mempool txs info")
 	}
-	totalFeesSats, err := bitcoin.GetSatoshis(totalFees)
+	totalFeesSats, err := common.GetSatoshis(totalFees)
 	if err != nil {
 		return errors.Wrapf(err, "cannot convert total fees %f", totalFees)
 	}

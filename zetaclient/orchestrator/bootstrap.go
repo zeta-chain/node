@@ -15,9 +15,6 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
-	btcsigner "github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 	evmobserver "github.com/zeta-chain/node/zetaclient/chains/evm/observer"
 	evmsigner "github.com/zeta-chain/node/zetaclient/chains/evm/signer"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
@@ -139,21 +136,9 @@ func syncSignerMap(
 
 			addSigner(chainID, signer)
 		case chain.IsBitcoin():
-			cfg, found := app.Config().GetBTCConfig(chainID)
-			if !found {
-				logger.Std.Warn().Msgf("Unable to find BTC config for chain %d signer", chainID)
-				continue
-			}
+			// managed by orchestrator V2
+			continue
 
-			rpcClient, err := rpc.NewRPCClient(cfg)
-			if err != nil {
-				logger.Std.Error().Err(err).Msgf("unable to create rpc client for BTC chain %d", chainID)
-				continue
-			}
-
-			signer := btcsigner.NewSigner(*rawChain, rpcClient, tss, logger)
-
-			addSigner(chainID, signer)
 		case chain.IsSolana():
 			cfg, found := app.Config().GetSolanaConfig()
 			if !found {
@@ -347,40 +332,9 @@ func syncObserverMap(
 
 			addObserver(chainID, observer)
 		case chain.IsBitcoin():
-			cfg, found := app.Config().GetBTCConfig(chainID)
-			if !found {
-				logger.Std.Warn().Msgf("Unable to find BTC config for chain %d observer", chainID)
-				continue
-			}
+			// managed by orchestrator V2
+			continue
 
-			btcRPC, err := rpc.NewRPCClient(cfg)
-			if err != nil {
-				logger.Std.Error().Err(err).Msgf("unable to create rpc client for BTC chain %d", chainID)
-				continue
-			}
-
-			database, err := db.NewFromSqlite(dbpath, btcDatabaseFileName(*rawChain), true)
-			if err != nil {
-				logger.Std.Error().Err(err).Msgf("unable to open database for BTC chain %d", chainID)
-				continue
-			}
-
-			btcObserver, err := btcobserver.NewObserver(
-				*rawChain,
-				btcRPC,
-				*params,
-				client,
-				tss,
-				database,
-				logger,
-				ts,
-			)
-			if err != nil {
-				logger.Std.Error().Err(err).Msgf("NewObserver error for BTC chain %d", chainID)
-				continue
-			}
-
-			addObserver(chainID, btcObserver)
 		case chain.IsSolana():
 			cfg, found := app.Config().GetSolanaConfig()
 			if !found {

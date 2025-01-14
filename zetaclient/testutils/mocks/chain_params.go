@@ -32,7 +32,7 @@ func MockChainParams(chainID int64, confirmation uint64) observertypes.ChainPara
 		Erc20CustodyContractAddress: erc20CustodyAddr,
 		InboundTicker:               12,
 		OutboundTicker:              15,
-		WatchUtxoTicker:             0,
+		WatchUtxoTicker:             1,
 		GasPriceTicker:              30,
 		OutboundScheduleInterval:    30,
 		OutboundScheduleLookahead:   60,

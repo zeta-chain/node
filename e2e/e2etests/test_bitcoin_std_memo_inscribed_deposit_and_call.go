@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/node/pkg/memo"
 	testcontract "github.com/zeta-chain/node/testutil/contracts"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
 func TestBitcoinStdMemoInscribedDepositAndCall(r *runner.E2ERunner, args []string) {
@@ -53,7 +53,7 @@ func TestBitcoinStdMemoInscribedDepositAndCall(r *runner.E2ERunner, args []strin
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// check if example contract has been called, 'bar' value should be set to correct amount
-	depositFeeSats, err := zetabitcoin.GetSatoshis(zetabitcoin.DefaultDepositorFee)
+	depositFeeSats, err := common.GetSatoshis(common.DefaultDepositorFee)
 	require.NoError(r, err)
 	receiveAmount := depositAmount - depositFeeSats
 	utils.MustHaveCalledExampleContract(r, contract, big.NewInt(receiveAmount))

@@ -9,7 +9,7 @@ import (
 
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -28,8 +28,6 @@ const (
 	// broadcastRetries is the maximum number of retries for broadcasting a transaction
 	broadcastRetries = 5
 )
-
-var _ interfaces.ChainSigner = (*Signer)(nil)
 
 // Signer deals with signing BTC transactions and implements the ChainSigner interface
 type Signer struct {
@@ -55,35 +53,24 @@ func NewSigner(
 	}
 }
 
-// TODO: get rid of below four get/set functions for Bitcoin, as they are not needed in future
-// https://github.com/zeta-chain/node/issues/2532
-// SetZetaConnectorAddress does nothing for BTC
-func (signer *Signer) SetZetaConnectorAddress(_ ethcommon.Address) {
-}
+// Broadcast sends the signed transaction to the network
+func (signer *Signer) Broadcast(signedTx *wire.MsgTx) error {
+	var outBuff bytes.Buffer
+	if err := signedTx.Serialize(&outBuff); err != nil {
+		return errors.Wrap(err, "unable to serialize tx")
+	}
 
-// SetERC20CustodyAddress does nothing for BTC
-func (signer *Signer) SetERC20CustodyAddress(_ ethcommon.Address) {
-}
+	signer.Logger().Std.Info().
+		Str(logs.FieldTx, signedTx.TxHash().String()).
+		Str("signer.tx_payload", hex.EncodeToString(outBuff.Bytes())).
+		Msg("Broadcasting transaction")
 
-// GetZetaConnectorAddress returns dummy address
-func (signer *Signer) GetZetaConnectorAddress() ethcommon.Address {
-	return ethcommon.Address{}
-}
+	_, err := signer.client.SendRawTransaction(signedTx, true)
+	if err != nil {
+		return errors.Wrap(err, "unable to broadcast raw tx")
+	}
 
-// GetERC20CustodyAddress returns dummy address
-func (signer *Signer) GetERC20CustodyAddress() ethcommon.Address {
-	return ethcommon.Address{}
-}
-
-// SetGatewayAddress does nothing for BTC
-// Note: TSS address will be used as gateway address for Bitcoin
-func (signer *Signer) SetGatewayAddress(_ string) {
-}
-
-// GetGatewayAddress returns empty address
-// Note: same as SetGatewayAddress
-func (signer *Signer) GetGatewayAddress() string {
-	return ""
+	return nil
 }
 
 // PkScriptTSS returns the TSS pkScript
@@ -95,31 +82,13 @@ func (signer *Signer) PkScriptTSS() ([]byte, error) {
 	return txscript.PayToAddrScript(tssAddrP2WPKH)
 }
 
-// Broadcast sends the signed transaction to the network
-func (signer *Signer) Broadcast(signedTx *wire.MsgTx) error {
-	var outBuff bytes.Buffer
-	err := signedTx.Serialize(&outBuff)
-	if err != nil {
-		return err
-	}
-	str := hex.EncodeToString(outBuff.Bytes())
-
-	_, err = signer.client.SendRawTransaction(signedTx, true)
-	if err != nil {
-		return err
-	}
-
-	signer.Logger().Std.Info().Msgf("Broadcasted transaction data: %s ", str)
-	return nil
-}
-
 // TryProcessOutbound signs and broadcasts a BTC transaction from a new outbound
 func (signer *Signer) TryProcessOutbound(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
 	outboundProcessor *outboundprocessor.Processor,
 	outboundID string,
-	chainObserver interfaces.ChainObserver,
+	observer *observer.Observer,
 	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
@@ -145,13 +114,6 @@ func (signer *Signer) TryProcessOutbound(
 	}
 	logger := signer.Logger().Std.With().Fields(lf).Logger()
 
-	// convert chain observer to BTC observer
-	btcObserver, ok := chainObserver.(*observer.Observer)
-	if !ok {
-		logger.Error().Msg("chain observer is not a bitcoin observer")
-		return
-	}
-
 	// query network info to get minRelayFee (typically 1000 satoshis)
 	networkInfo, err := signer.client.GetNetworkInfo()
 	if err != nil {
@@ -166,7 +128,7 @@ func (signer *Signer) TryProcessOutbound(
 
 	var (
 		signedTx *wire.MsgTx
-		stuckTx  = btcObserver.GetLastStuckOutbound()
+		stuckTx  = observer.GetLastStuckOutbound()
 	)
 
 	// sign outbound
@@ -188,7 +150,7 @@ func (signer *Signer) TryProcessOutbound(
 		}
 
 		// sign withdraw tx
-		signedTx, err = signer.SignWithdrawTx(ctx, txData, btcObserver)
+		signedTx, err = signer.SignWithdrawTx(ctx, txData, observer)
 		if err != nil {
 			logger.Error().Err(err).Msg("SignWithdrawTx failed")
 			return
@@ -197,7 +159,7 @@ func (signer *Signer) TryProcessOutbound(
 	}
 
 	// broadcast signed outbound
-	signer.BroadcastOutbound(ctx, signedTx, params.TssNonce, cctx, btcObserver, zetacoreClient)
+	signer.BroadcastOutbound(ctx, signedTx, params.TssNonce, cctx, observer, zetacoreClient)
 }
 
 // BroadcastOutbound sends the signed transaction to the Bitcoin network

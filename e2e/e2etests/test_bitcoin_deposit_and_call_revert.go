@@ -6,7 +6,7 @@ import (
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/testutil/sample"
-	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
 func TestBitcoinDepositAndCallRevert(r *runner.E2ERunner, args []string) {

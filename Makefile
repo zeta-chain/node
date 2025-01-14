@@ -13,7 +13,7 @@ GOFLAGS := ""
 GOPATH ?= '$(HOME)/go'
 
 # common goreaser command definition
-GOLANG_CROSS_VERSION ?= v1.22.7@sha256:24b2d75007f0ec8e35d01f3a8efa40c197235b200a1a91422d78b851f67ecce4
+GOLANG_CROSS_VERSION ?= v1.23.3@sha256:380420abb74844aaebca5bf9e2d00b1d7c78f59ce9e6d47cdb3276281702ca23
 GORELEASER := $(DOCKER) run \
 	--rm \
 	--privileged \
@@ -409,7 +409,7 @@ test-sim-fullappsimulation:
 	$(call run-sim-test,"TestFullAppSimulation",TestFullAppSimulation,100,200,30m)
 
 test-sim-import-export:
-	$(call run-sim-test,"test-import-export",TestAppImportExport,50,100,30m)
+	$(call run-sim-test,"test-import-export",TestAppImportExport,100,200,30m)
 
 test-sim-after-import:
 	$(call run-sim-test,"test-sim-after-import",TestAppSimulationAfterImport,100,200,30m)
@@ -429,6 +429,12 @@ test-sim-import-export-long: runsim
 test-sim-after-import-long: runsim
 	@echo "Running application simulation-after-import. This may take several minute"
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 500 50 TestAppSimulationAfterImport
+
+# Use to run all simulation tests quickly (for example, before a creating a PR)
+test-sim-quick:
+	$(call run-sim-test,"test-full-app-sim",TestFullAppSimulation,10,20,30m)
+	$(call run-sim-test,"test-import-export",TestAppImportExport,10,20,30m)
+	$(call run-sim-test,"test-sim-after-import",TestAppSimulationAfterImport,10,20,30m)
 
 .PHONY: \
 test-sim-nondeterminism \
