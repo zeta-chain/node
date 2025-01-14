@@ -304,6 +304,7 @@ func IsTxStuckInMempoolRegnet(
 func GetTotalMempoolParentsSizeNFees(
 	client interfaces.BTCRPCClient,
 	childHash string,
+	timeout time.Duration,
 ) (int64, float64, int64, int64, error) {
 	var (
 		totalTxs   int64
@@ -313,6 +314,7 @@ func GetTotalMempoolParentsSizeNFees(
 	)
 
 	// loop through all parents
+	startTime := time.Now()
 	parentHash := childHash
 	for {
 		memplEntry, err := client.GetMempoolEntry(parentHash)
@@ -335,6 +337,11 @@ func GetTotalMempoolParentsSizeNFees(
 			return 0, 0, 0, 0, errors.Wrapf(err, "unable to get tx %s", parentHash)
 		}
 		parentHash = tx.MsgTx().TxIn[0].PreviousOutPoint.Hash.String()
+
+		// check timeout to avoid infinite loop
+		if time.Since(startTime) > timeout {
+			return 0, 0, 0, 0, errors.Errorf("timeout reached on %dth tx: %s", totalTxs, parentHash)
+		}
 	}
 
 	// no pending tx found

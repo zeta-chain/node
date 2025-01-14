@@ -3,6 +3,7 @@ package signer
 import (
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/mempool"
@@ -19,10 +20,10 @@ import (
 )
 
 const (
-	// gasRateCap is the maximum average gas rate for CPFP fee bumping
+	// feeRateCap is the maximum average fee rate for CPFP fee bumping
 	// 100 sat/vB is a heuristic based on Bitcoin mempool statistics to avoid excessive fees
 	// see: https://mempool.space/graphs/mempool#3y
-	gasRateCap = 100
+	feeRateCap = 100
 
 	// minCPFPFeeBumpPercent is the minimum percentage by which the CPFP average fee rate should be bumped.
 	// This value 20% is a heuristic, not mandated by the Bitcoin protocol, designed to balance effectiveness
@@ -31,7 +32,7 @@ const (
 )
 
 // MempoolTxsInfoFetcher is a function type to fetch mempool txs information
-type MempoolTxsInfoFetcher func(interfaces.BTCRPCClient, string) (int64, float64, int64, int64, error)
+type MempoolTxsInfoFetcher func(interfaces.BTCRPCClient, string, time.Duration) (int64, float64, int64, int64, error)
 
 // CPFPFeeBumper is a helper struct to contain CPFP (child-pays-for-parent) fee bumping logic
 type CPFPFeeBumper struct {
@@ -121,10 +122,10 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, int64, error) {
 		)
 	}
 
-	// cap the gas rate to avoid excessive fees
-	gasRateNew := b.CCTXRate
-	if b.CCTXRate > gasRateCap {
-		gasRateNew = gasRateCap
+	// cap the fee rate to avoid excessive fees
+	feeRateNew := b.CCTXRate
+	if b.CCTXRate > feeRateCap {
+		feeRateNew = feeRateCap
 	}
 
 	// calculate minmimum relay fees of the new replacement tx
@@ -139,7 +140,7 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, int64, error) {
 	// 2. additionalFees >= minRelayTxFees
 	//
 	// see: https://github.com/bitcoin/bitcoin/blob/master/src/policy/rbf.cpp#L166-L183
-	additionalFees := b.TotalVSize*gasRateNew - b.TotalFees
+	additionalFees := b.TotalVSize*feeRateNew - b.TotalFees
 	if additionalFees < minRelayTxFees {
 		return nil, 0, 0, fmt.Errorf(
 			"hold on RBF: additional fees %d is lower than min relay fees %d",
@@ -158,10 +159,10 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, int64, error) {
 		newTx.TxOut = newTx.TxOut[:2]
 	}
 
-	// effective gas rate
-	gasRateNew = int64(math.Ceil(float64(b.TotalFees+additionalFees) / float64(b.TotalVSize)))
+	// effective fee rate
+	feeRateNew = int64(math.Ceil(float64(b.TotalFees+additionalFees) / float64(b.TotalVSize)))
 
-	return newTx, additionalFees, gasRateNew, nil
+	return newTx, additionalFees, feeRateNew, nil
 }
 
 // fetchFeeBumpInfo fetches all necessary information needed to bump the stuck tx
@@ -175,7 +176,7 @@ func (b *CPFPFeeBumper) FetchFeeBumpInfo(memplTxsInfoFetcher MempoolTxsInfoFetch
 	b.LiveRate = liveRate
 
 	// query total fees and sizes of all pending parent TSS txs
-	totalTxs, totalFees, totalVSize, avgFeeRate, err := memplTxsInfoFetcher(b.Client, b.Tx.MsgTx().TxID())
+	totalTxs, totalFees, totalVSize, avgFeeRate, err := memplTxsInfoFetcher(b.Client, b.Tx.MsgTx().TxID(), time.Minute)
 	if err != nil {
 		return errors.Wrap(err, "unable to fetch mempool txs info")
 	}

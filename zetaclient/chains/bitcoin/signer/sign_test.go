@@ -46,27 +46,27 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 
 	// test cases
 	tests := []struct {
-		name      string
-		tx        *wire.MsgTx
-		to        btcutil.Address
-		total     float64
-		amount    float64
-		nonceMark int64
-		fees      int64
-		cancelTx  bool
-		fail      bool
-		message   string
-		txout     []*wire.TxOut
+		name       string
+		tx         *wire.MsgTx
+		to         btcutil.Address
+		total      float64
+		amountSats int64
+		nonceMark  int64
+		fees       int64
+		cancelTx   bool
+		fail       bool
+		message    string
+		txout      []*wire.TxOut
 	}{
 		{
-			name:      "should add outputs successfully",
-			tx:        wire.NewMsgTx(wire.TxVersion),
-			to:        to,
-			total:     1.00012000,
-			amount:    0.2,
-			nonceMark: 10000,
-			fees:      2000,
-			fail:      false,
+			name:       "should add outputs successfully",
+			tx:         wire.NewMsgTx(wire.TxVersion),
+			to:         to,
+			total:      1.00012000,
+			amountSats: 20000000,
+			nonceMark:  10000,
+			fees:       2000,
+			fail:       false,
 			txout: []*wire.TxOut{
 				{Value: 10000, PkScript: tssScript},
 				{Value: 20000000, PkScript: toScript},
@@ -74,70 +74,62 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 			},
 		},
 		{
-			name:      "should add outputs without change successfully",
-			tx:        wire.NewMsgTx(wire.TxVersion),
-			to:        to,
-			total:     0.20012000,
-			amount:    0.2,
-			nonceMark: 10000,
-			fees:      2000,
-			fail:      false,
+			name:       "should add outputs without change successfully",
+			tx:         wire.NewMsgTx(wire.TxVersion),
+			to:         to,
+			total:      0.20012000,
+			amountSats: 20000000,
+			nonceMark:  10000,
+			fees:       2000,
+			fail:       false,
 			txout: []*wire.TxOut{
 				{Value: 10000, PkScript: tssScript},
 				{Value: 20000000, PkScript: toScript},
 			},
 		},
 		{
-			name:      "should cancel tx successfully",
-			tx:        wire.NewMsgTx(wire.TxVersion),
-			to:        to,
-			total:     1.00012000,
-			amount:    0.2,
-			nonceMark: 10000,
-			fees:      2000,
-			cancelTx:  true,
-			fail:      false,
+			name:       "should cancel tx successfully",
+			tx:         wire.NewMsgTx(wire.TxVersion),
+			to:         to,
+			total:      1.00012000,
+			amountSats: 20000000,
+			nonceMark:  10000,
+			fees:       2000,
+			cancelTx:   true,
+			fail:       false,
 			txout: []*wire.TxOut{
 				{Value: 10000, PkScript: tssScript},
 				{Value: 100000000, PkScript: tssScript},
 			},
 		},
 		{
-			name:   "should fail on invalid amount",
-			tx:     wire.NewMsgTx(wire.TxVersion),
-			to:     to,
-			total:  1.00012000,
-			amount: -0.5,
-			fail:   true,
+			name:       "should fail when total < amount",
+			tx:         wire.NewMsgTx(wire.TxVersion),
+			to:         to,
+			total:      0.00012000,
+			amountSats: 20000000,
+			fail:       true,
 		},
 		{
-			name:   "should fail when total < amount",
-			tx:     wire.NewMsgTx(wire.TxVersion),
-			to:     to,
-			total:  0.00012000,
-			amount: 0.2,
-			fail:   true,
+			name:       "should fail when total < fees + amount + nonce",
+			tx:         wire.NewMsgTx(wire.TxVersion),
+			to:         to,
+			total:      0.20011000,
+			amountSats: 20000000,
+			nonceMark:  10000,
+			fees:       2000,
+			fail:       true,
+			message:    "remainder value is negative",
 		},
 		{
-			name:      "should fail when total < fees + amount + nonce",
-			tx:        wire.NewMsgTx(wire.TxVersion),
-			to:        to,
-			total:     0.20011000,
-			amount:    0.2,
-			nonceMark: 10000,
-			fees:      2000,
-			fail:      true,
-			message:   "remainder value is negative",
-		},
-		{
-			name:      "should not produce duplicate nonce mark",
-			tx:        wire.NewMsgTx(wire.TxVersion),
-			to:        to,
-			total:     0.20022000, //  0.2 + fee + nonceMark * 2
-			amount:    0.2,
-			nonceMark: 10000,
-			fees:      2000,
-			fail:      false,
+			name:       "should not produce duplicate nonce mark",
+			tx:         wire.NewMsgTx(wire.TxVersion),
+			to:         to,
+			total:      0.20022000, //  0.2 + fee + nonceMark * 2
+			amountSats: 20000000,
+			nonceMark:  10000,
+			fees:       2000,
+			fail:       false,
 			txout: []*wire.TxOut{
 				{Value: 10000, PkScript: tssScript},
 				{Value: 20000000, PkScript: toScript},
@@ -145,34 +137,42 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 			},
 		},
 		{
-			name:      "should not produce dust change to TSS self",
-			tx:        wire.NewMsgTx(wire.TxVersion),
-			to:        to,
-			total:     0.20012999, // 0.2 + fee + nonceMark
-			amount:    0.2,
-			nonceMark: 10000,
-			fees:      2000,
-			fail:      false,
+			name:       "should not produce dust change to TSS self",
+			tx:         wire.NewMsgTx(wire.TxVersion),
+			to:         to,
+			total:      0.20012999, // 0.2 + fee + nonceMark
+			amountSats: 20000000,
+			nonceMark:  10000,
+			fees:       2000,
+			fail:       false,
 			txout: []*wire.TxOut{ // 3rd output 999 is dust and removed
 				{Value: 10000, PkScript: tssScript},
 				{Value: 20000000, PkScript: toScript},
 			},
 		},
 		{
-			name:      "should fail on invalid to address",
-			tx:        wire.NewMsgTx(wire.TxVersion),
-			to:        nil,
-			total:     1.00012000,
-			amount:    0.2,
-			nonceMark: 10000,
-			fees:      2000,
-			fail:      true,
+			name:       "should fail on invalid to address",
+			tx:         wire.NewMsgTx(wire.TxVersion),
+			to:         nil,
+			total:      1.00012000,
+			amountSats: 20000000,
+			nonceMark:  10000,
+			fees:       2000,
+			fail:       true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := signer.AddWithdrawTxOutputs(tt.tx, tt.to, tt.total, tt.amount, tt.nonceMark, tt.fees, tt.cancelTx)
+			err := signer.AddWithdrawTxOutputs(
+				tt.tx,
+				tt.to,
+				tt.total,
+				tt.amountSats,
+				tt.nonceMark,
+				tt.fees,
+				tt.cancelTx,
+			)
 			if tt.fail {
 				require.Error(t, err)
 				if tt.message != "" {

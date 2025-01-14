@@ -2,6 +2,7 @@ package signer
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 
 	"github.com/btcsuite/btcd/btcutil"
@@ -26,6 +27,9 @@ type OutboundData struct {
 
 	// amount is the amount in BTC
 	amount float64
+
+	// amountSats is the amount in satoshis
+	amountSats int64
 
 	// feeRate is the fee rate in satoshis/vByte
 	feeRate int64
@@ -64,8 +68,8 @@ func NewOutboundData(
 
 	// initial fee rate
 	feeRate, err := strconv.ParseInt(params.GasPrice, 10, 64)
-	if err != nil || feeRate < 0 {
-		return nil, fmt.Errorf("cannot convert gas price %s", params.GasPrice)
+	if err != nil || feeRate <= 0 {
+		return nil, fmt.Errorf("invalid fee rate %s", params.GasPrice)
 	}
 
 	// use current gas rate if fed by zetacore
@@ -83,7 +87,15 @@ func NewOutboundData(
 	if !chains.IsBtcAddressSupported(to) {
 		return nil, fmt.Errorf("unsupported receiver address %s", params.Receiver)
 	}
+
+	// amount in BTC and satoshis
 	amount := float64(params.Amount.Uint64()) / 1e8
+	amountSats := params.Amount.BigInt().Int64()
+
+	// check gas limit
+	if params.CallOptions.GasLimit > math.MaxInt64 {
+		return nil, fmt.Errorf("invalid gas limit %d", params.CallOptions.GasLimit)
+	}
 
 	// add minimum relay fee (1000 satoshis/KB by default) to gasPrice to avoid minRelayTxFee error
 	// see: https://github.com/bitcoin/bitcoin/blob/master/src/policy/policy.h#L35
@@ -107,14 +119,16 @@ func NewOutboundData(
 	cancelTx := restrictedCCTX || dustAmount
 	if cancelTx {
 		amount = 0.0
+		amountSats = 0
 	}
 
 	return &OutboundData{
-		chainID: chainID,
-		to:      to,
-		amount:  amount,
-		feeRate: feeRate,
-		// #nosec G115 always in range
+		chainID:    chainID,
+		to:         to,
+		amount:     amount,
+		amountSats: amountSats,
+		feeRate:    feeRate,
+		// #nosec G115 checked in range
 		txSize:   int64(params.CallOptions.GasLimit),
 		nonce:    params.TssNonce,
 		height:   height,

@@ -55,7 +55,7 @@ func (signer *Signer) SignRBFTx(
 		// parse recent fee rate from CCTX
 		recentRate, err := strconv.ParseInt(params.GasPriorityFee, 10, 64)
 		if err != nil || recentRate <= 0 {
-			return nil, fmt.Errorf("invalid fee rate %s", params.GasPrice)
+			return nil, fmt.Errorf("invalid fee rate %s", params.GasPriorityFee)
 		}
 		cctxRate = recentRate
 	}

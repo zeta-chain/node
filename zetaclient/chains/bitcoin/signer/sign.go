@@ -104,7 +104,7 @@ func (signer *Signer) SignWithdrawTx(
 			txData.nonce, txData.feeRate, txSize, fees, consolidatedUtxo, consolidatedValue)
 
 	// add tx outputs
-	err = signer.AddWithdrawTxOutputs(tx, txData.to, total, txData.amount, nonceMark, fees, txData.cancelTx)
+	err = signer.AddWithdrawTxOutputs(tx, txData.to, total, txData.amountSats, nonceMark, fees, txData.cancelTx)
 	if err != nil {
 		return nil, err
 	}
@@ -155,16 +155,13 @@ func (signer *Signer) AddWithdrawTxOutputs(
 	tx *wire.MsgTx,
 	to btcutil.Address,
 	total float64,
-	amount float64,
+	amountSats int64,
 	nonceMark int64,
 	fees int64,
 	cancelTx bool,
 ) error {
-	// convert withdraw amount to satoshis
-	amountSatoshis, err := bitcoin.GetSatoshis(amount)
-	if err != nil {
-		return err
-	}
+	// convert withdraw amount to BTC
+	amount := float64(amountSats) / 1e8
 
 	// calculate remaining btc (the change) to TSS self
 	remaining := total - amount
@@ -195,11 +192,11 @@ func (signer *Signer) AddWithdrawTxOutputs(
 		if err != nil {
 			return err
 		}
-		txOut2 := wire.NewTxOut(amountSatoshis, pkScript)
+		txOut2 := wire.NewTxOut(amountSats, pkScript)
 		tx.AddTxOut(txOut2)
 	} else {
 		// send the amount to TSS self if tx is cancelled
-		remainingSats += amountSatoshis
+		remainingSats += amountSats
 	}
 
 	// 3rd output: the remaining btc to TSS self

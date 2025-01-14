@@ -1,6 +1,7 @@
 package signer
 
 import (
+	"math"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,14 +54,15 @@ func Test_NewOutboundData(t *testing.T) {
 			height:      101,
 			minRelayFee: 0.00001, // 1000 sat/KB
 			expected: &OutboundData{
-				chainID:  chain.ChainId,
-				to:       receiver,
-				amount:   0.1,
-				feeRate:  11, // 10 + 1 (minRelayFee)
-				txSize:   254,
-				nonce:    1,
-				height:   101,
-				cancelTx: false,
+				chainID:    chain.ChainId,
+				to:         receiver,
+				amount:     0.1,
+				amountSats: 10000000,
+				feeRate:    11, // 10 + 1 (minRelayFee)
+				txSize:     254,
+				nonce:      1,
+				height:     101,
+				cancelTx:   false,
 			},
 			errMsg: "",
 		},
@@ -81,14 +83,15 @@ func Test_NewOutboundData(t *testing.T) {
 			height:      101,
 			minRelayFee: 0.00001, // 1000 sat/KB
 			expected: &OutboundData{
-				chainID:  chain.ChainId,
-				to:       receiver,
-				amount:   0.1,
-				feeRate:  16, // 15 + 1 (minRelayFee)
-				txSize:   254,
-				nonce:    1,
-				height:   101,
-				cancelTx: false,
+				chainID:    chain.ChainId,
+				to:         receiver,
+				amount:     0.1,
+				amountSats: 10000000,
+				feeRate:    16, // 15 + 1 (minRelayFee)
+				txSize:     254,
+				nonce:      1,
+				height:     101,
+				cancelTx:   false,
 			},
 			errMsg: "",
 		},
@@ -116,7 +119,17 @@ func Test_NewOutboundData(t *testing.T) {
 				cctx.GetCurrentOutboundParam().GasPrice = "invalid"
 			},
 			expected: nil,
-			errMsg:   "cannot convert gas price",
+			errMsg:   "invalid fee rate",
+		},
+		{
+			name: "zero fee rate",
+			cctx: sample.CrossChainTx(t, "0x123"),
+			cctxModifier: func(cctx *crosschaintypes.CrossChainTx) {
+				cctx.InboundParams.CoinType = coin.CoinType_Gas
+				cctx.GetCurrentOutboundParam().GasPrice = "0"
+			},
+			expected: nil,
+			errMsg:   "invalid fee rate",
 		},
 		{
 			name: "invalid receiver address",
@@ -140,6 +153,18 @@ func Test_NewOutboundData(t *testing.T) {
 			errMsg:   "unsupported receiver address",
 		},
 		{
+			name: "invalid gas limit",
+			cctx: sample.CrossChainTx(t, "0x123"),
+			cctxModifier: func(cctx *crosschaintypes.CrossChainTx) {
+				cctx.InboundParams.CoinType = coin.CoinType_Gas
+				cctx.GetCurrentOutboundParam().Receiver = receiver.String()
+				cctx.GetCurrentOutboundParam().ReceiverChainId = chain.ChainId
+				cctx.GetCurrentOutboundParam().CallOptions.GasLimit = math.MaxInt64 + 1
+			},
+			expected: nil,
+			errMsg:   "invalid gas limit",
+		},
+		{
 			name: "should cancel restricted CCTX",
 			cctx: sample.CrossChainTx(t, "0x123"),
 			cctxModifier: func(cctx *crosschaintypes.CrossChainTx) {
@@ -156,14 +181,15 @@ func Test_NewOutboundData(t *testing.T) {
 			height:      101,
 			minRelayFee: 0.00001, // 1000 sat/KB
 			expected: &OutboundData{
-				chainID:  chain.ChainId,
-				to:       receiver,
-				amount:   0,  // should cancel the tx
-				feeRate:  11, // 10 + 1 (minRelayFee)
-				txSize:   254,
-				nonce:    1,
-				height:   101,
-				cancelTx: true,
+				chainID:    chain.ChainId,
+				to:         receiver,
+				amount:     0, // should cancel the tx
+				amountSats: 0,
+				feeRate:    11, // 10 + 1 (minRelayFee)
+				txSize:     254,
+				nonce:      1,
+				height:     101,
+				cancelTx:   true,
 			},
 		},
 		{
@@ -182,14 +208,15 @@ func Test_NewOutboundData(t *testing.T) {
 			height:      101,
 			minRelayFee: 0.00001, // 1000 sat/KB
 			expected: &OutboundData{
-				chainID:  chain.ChainId,
-				to:       receiver,
-				amount:   0,  // should cancel the tx
-				feeRate:  11, // 10 + 1 (minRelayFee)
-				txSize:   254,
-				nonce:    1,
-				height:   101,
-				cancelTx: true,
+				chainID:    chain.ChainId,
+				to:         receiver,
+				amount:     0, // should cancel the tx
+				amountSats: 0,
+				feeRate:    11, // 10 + 1 (minRelayFee)
+				txSize:     254,
+				nonce:      1,
+				height:     101,
+				cancelTx:   true,
 			},
 		},
 	}

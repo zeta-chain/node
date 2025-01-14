@@ -2,6 +2,7 @@ package signer_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
@@ -326,21 +327,29 @@ func Test_FetchFeeBumpInfo(t *testing.T) {
 }
 
 func Test_CopyMsgTxNoWitness(t *testing.T) {
-	chain := chains.BitcoinMainnet
-	txid := "030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0"
-	msgTx := testutils.LoadBTCMsgTx(t, TestDataDir, chain.ChainId, txid)
+	t.Run("should copy tx msg without witness", func(t *testing.T) {
+		chain := chains.BitcoinMainnet
+		txid := "030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0"
+		msgTx := testutils.LoadBTCMsgTx(t, TestDataDir, chain.ChainId, txid)
 
-	// make a non-witness copy
-	copyTx := signer.CopyMsgTxNoWitness(msgTx)
+		// make a non-witness copy
+		copyTx := signer.CopyMsgTxNoWitness(msgTx)
 
-	// make another copy and clear witness data manually
-	newTx := msgTx.Copy()
-	for idx := range newTx.TxIn {
-		newTx.TxIn[idx].Witness = wire.TxWitness{}
-	}
+		// make another copy and clear witness data manually
+		newTx := msgTx.Copy()
+		for idx := range newTx.TxIn {
+			newTx.TxIn[idx].Witness = wire.TxWitness{}
+		}
 
-	// check
-	require.Equal(t, newTx, copyTx)
+		// check
+		require.Equal(t, newTx, copyTx)
+	})
+
+	t.Run("should handle nil input", func(t *testing.T) {
+		require.Panics(t, func() {
+			signer.CopyMsgTxNoWitness(nil)
+		}, "should panic on nil input")
+	})
 }
 
 // makeMempoolTxsInfoFetcher is a helper function to create a mock MempoolTxsInfoFetcher
@@ -356,7 +365,7 @@ func makeMempoolTxsInfoFetcher(
 		err = errors.New(errMsg)
 	}
 
-	return func(interfaces.BTCRPCClient, string) (int64, float64, int64, int64, error) {
+	return func(interfaces.BTCRPCClient, string, time.Duration) (int64, float64, int64, int64, error) {
 		return totalTxs, totalFees, totalVSize, avgFeeRate, err
 	}
 }
