@@ -303,6 +303,35 @@ func MockFailedGetSupportedChainFromChainID(m *crosschainmocks.CrosschainObserve
 		Return(chains.Chain{}, false).Once()
 }
 
+func MockProcessV2RevertDeposit(
+	m *crosschainmocks.CrosschainFungibleKeeper,
+	retEVMTxResponse *evmtypes.MsgEthereumTxResponse,
+	retErr error,
+) {
+	// ctx types.Context
+	// inboundSender string
+	// amount *big.Int
+	// chainID int64
+	// coinType coin.CoinType
+	// asset string
+	// revertAddress common.Address
+	// callOnRevert bool
+	// revertMessage []byte
+	m.On(
+		"ProcessV2RevertDeposit",
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+	).
+		Return(retEVMTxResponse, retErr).Once()
+}
+
 func MockGetRevertGasLimitForERC20(
 	m *crosschainmocks.CrosschainFungibleKeeper,
 	asset string,
