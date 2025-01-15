@@ -106,12 +106,10 @@ type RPCs struct {
 
 // BitcoinRPC contains the configuration for the Bitcoin RPC endpoint
 type BitcoinRPC struct {
-	User         string             `yaml:"user"`
-	Pass         string             `yaml:"pass"`
-	Host         string             `yaml:"host"`
-	HTTPPostMode bool               `yaml:"http_post_mode"`
-	DisableTLS   bool               `yaml:"disable_tls"`
-	Params       BitcoinNetworkType `yaml:"params"`
+	User   string             `yaml:"user"`
+	Pass   string             `yaml:"pass"`
+	Host   string             `yaml:"host"`
+	Params BitcoinNetworkType `yaml:"params"`
 }
 
 // Contracts contains the addresses of predeployed contracts
@@ -166,12 +164,10 @@ func DefaultConfig() Config {
 			Zevm: "http://zetacore0:8545",
 			EVM:  "http://eth:8545",
 			Bitcoin: BitcoinRPC{
-				Host:         "bitcoin:18443",
-				User:         "smoketest",
-				Pass:         "123",
-				HTTPPostMode: true,
-				DisableTLS:   true,
-				Params:       Regnet,
+				Host:   "bitcoin:18443",
+				User:   "smoketest",
+				Pass:   "123",
+				Params: Regnet,
 			},
 			ZetaCoreGRPC: "zetacore0:9090",
 			ZetaCoreRPC:  "http://zetacore0:26657",
