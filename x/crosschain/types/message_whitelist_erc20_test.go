@@ -100,7 +100,7 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 				Decimals:     6,
 				GasLimit:     10,
 			},
-			error: false,
+			error: true,
 		},
 		{
 			name: "valid message with evm asset address",
