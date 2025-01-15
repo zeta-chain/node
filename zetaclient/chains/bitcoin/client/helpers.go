@@ -9,7 +9,6 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
-	"github.com/tendermint/btcd/btcjson"
 )
 
 // GetBlockVerboseByStr alias for GetBlockVerbose
@@ -38,13 +37,18 @@ func (c *Client) GetBlockHeightByStr(ctx context.Context, blockHash string) (int
 }
 
 // GetTransactionByStr alias for GetTransaction
-func (c *Client) GetTransactionByStr(ctx context.Context, hash string) (*types.GetTransactionResult, error) {
+func (c *Client) GetTransactionByStr(
+	ctx context.Context,
+	hash string,
+) (*chainhash.Hash, *types.GetTransactionResult, error) {
 	h, err := strToHash(hash)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return c.GetTransaction(ctx, h)
+	tx, err := c.GetTransaction(ctx, h)
+
+	return h, tx, err
 }
 
 // GetRawTransactionByStr alias for GetRawTransaction
@@ -60,7 +64,7 @@ func (c *Client) GetRawTransactionByStr(ctx context.Context, hash string) (*btcu
 // GetRawTransactionResult gets the raw tx result
 func (c *Client) GetRawTransactionResult(ctx context.Context,
 	hash *chainhash.Hash,
-	res *btcjson.GetTransactionResult,
+	res *types.GetTransactionResult,
 ) (types.TxRawResult, error) {
 	switch {
 	case res.Confirmations == 0:

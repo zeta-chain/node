@@ -11,11 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/errors"
 	types "github.com/btcsuite/btcd/btcjson"
 	chains "github.com/btcsuite/btcd/chaincfg"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"github.com/tendermint/btcd/btcjson"
 	"github.com/tendermint/btcd/chaincfg"
 
 	"github.com/zeta-chain/node/zetaclient/config"
@@ -23,6 +22,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
+// Client Bitcoin RPC client
 type Client struct {
 	hostURL    string
 	client     *http.Client
@@ -35,8 +35,8 @@ type Client struct {
 type Opt func(c *Client)
 
 type rawResponse struct {
-	Result json.RawMessage   `json:"result"`
-	Error  *btcjson.RPCError `json:"error"`
+	Result json.RawMessage `json:"result"`
+	Error  *types.RPCError `json:"error"`
 }
 
 const (
@@ -46,6 +46,8 @@ const (
 	// rpc command id. as we don't send batch requests, it's always 1
 	commandID = uint64(1)
 )
+
+var _ client = (*Client)(nil)
 
 func WithHTTP(httpClient *http.Client) Opt {
 	return func(c *Client) { c.client = httpClient }
