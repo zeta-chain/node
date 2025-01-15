@@ -328,7 +328,6 @@ jobs:
               body: JSON.stringify({text: msg}),
             });
 
-
       - run: |
           result="${{ needs.build-zetanode.result }}"
           if [[ $result == "failed" ]]; then
