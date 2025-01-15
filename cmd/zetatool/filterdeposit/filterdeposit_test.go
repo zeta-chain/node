@@ -34,7 +34,7 @@ func TestCheckForCCTX(t *testing.T) {
 			Amount: uint64(657177295293237048),
 		}}
 		cfg := config.DefaultConfig()
-		cfg.ZetaURL = server.URL
+		cfg.ZetaGRPC = server.URL
 		missedInbounds, err := CheckForCCTX(deposits, cfg)
 		require.NoError(t, err)
 		require.Equal(t, 0, len(missedInbounds))
@@ -53,7 +53,7 @@ func TestCheckForCCTX(t *testing.T) {
 			Amount: uint64(657177295293237048),
 		}}
 		cfg := config.DefaultConfig()
-		cfg.ZetaURL = server.URL
+		cfg.ZetaGRPC = server.URL
 		missedInbounds, err := CheckForCCTX(deposits, cfg)
 		require.NoError(t, err)
 		require.Equal(t, 1, len(missedInbounds))
@@ -74,7 +74,7 @@ func TestGetTssAddress(t *testing.T) {
 			require.NoError(t, err)
 		}))
 		cfg := config.DefaultConfig()
-		cfg.ZetaURL = server.URL
+		cfg.ZetaGRPC = server.URL
 		_, err := GetTssAddress(cfg, "8332")
 		require.NoError(t, err)
 	})
@@ -91,7 +91,7 @@ func TestGetTssAddress(t *testing.T) {
 			}
 		}))
 		cfg := config.DefaultConfig()
-		cfg.ZetaURL = server.URL
+		cfg.ZetaGRPC = server.URL
 		_, err := GetTssAddress(cfg, "8332")
 		require.Error(t, err)
 	})

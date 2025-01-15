@@ -10,7 +10,7 @@ import (
 func TestDefaultConfig(t *testing.T) {
 	cfg := DefaultConfig()
 	require.Equal(t, cfg.EthRPCURL, EthRPCURL)
-	require.Equal(t, cfg.ZetaURL, ZetaURL)
+	require.Equal(t, cfg.ZetaGRPC, ZetaChainGRPC)
 	require.Equal(t, cfg.BtcExplorerURL, BtcExplorerURL)
 	require.Equal(t, cfg.ConnectorAddress, ConnectorAddress)
 	require.Equal(t, cfg.CustodyAddress, CustodyAddress)

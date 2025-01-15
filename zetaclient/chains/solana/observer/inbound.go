@@ -10,6 +10,7 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
@@ -176,12 +177,19 @@ func (ob *Observer) FilterInboundEventsAndVote(ctx context.Context, txResult *rp
 	return nil
 }
 
-// FilterInboundEvents filters inbound events from a tx result.
+func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*clienttypes.InboundEvent, error) {
+	return FilterSolanaInboundEvents(txResult, ob.Logger(), ob.gatewayID, ob.Chain().ChainId)
+}
+
+// FilterSolanaInboundEvents filters inbound events from a tx result.
 // Note: for consistency with EVM chains, this method
 //   - takes at one event (the first) per token (SOL or SPL) per transaction.
 //   - takes at most two events (one SOL + one SPL) per transaction.
 //   - ignores exceeding events.
-func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*clienttypes.InboundEvent, error) {
+func FilterSolanaInboundEvents(txResult *rpc.GetTransactionResult,
+	logger *base.ObserverLogger,
+	gatewayID solana.PublicKey,
+	senderChainID int64) ([]*clienttypes.InboundEvent, error) {
 	// unmarshal transaction
 	tx, err := txResult.Transaction.GetTransaction()
 	if err != nil {
@@ -203,14 +211,14 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 		// get the program ID
 		programPk, err := tx.Message.Program(instruction.ProgramIDIndex)
 		if err != nil {
-			ob.Logger().
+			logger.
 				Inbound.Err(err).
 				Msgf("no program found at index %d for sig %s", instruction.ProgramIDIndex, tx.Signatures[0])
 			continue
 		}
 
 		// skip instructions that are irrelevant to the gateway program invocation
-		if !programPk.Equals(ob.gatewayID) {
+		if !programPk.Equals(gatewayID) {
 			continue
 		}
 
@@ -222,7 +230,7 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 			} else if deposit != nil {
 				seenDeposit = true
 				events = append(events, &clienttypes.InboundEvent{
-					SenderChainID: ob.Chain().ChainId,
+					SenderChainID: senderChainID,
 					Sender:        deposit.Sender,
 					Receiver:      "", // receiver will be pulled out from memo later
 					TxOrigin:      deposit.Sender,
@@ -234,11 +242,11 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 					CoinType:      coin.CoinType_Gas,
 					Asset:         deposit.Asset,
 				})
-				ob.Logger().Inbound.Info().
+				logger.Inbound.Info().
 					Msgf("FilterInboundEvents: deposit detected in sig %s instruction %d", tx.Signatures[0], i)
 			}
 		} else {
-			ob.Logger().Inbound.Warn().
+			logger.Inbound.Warn().
 				Msgf("FilterInboundEvents: multiple deposits detected in sig %s instruction %d", tx.Signatures[0], i)
 		}
 
@@ -250,7 +258,7 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 			} else if deposit != nil {
 				seenDepositSPL = true
 				events = append(events, &clienttypes.InboundEvent{
-					SenderChainID: ob.Chain().ChainId,
+					SenderChainID: senderChainID,
 					Sender:        deposit.Sender,
 					Receiver:      "", // receiver will be pulled out from memo later
 					TxOrigin:      deposit.Sender,
@@ -262,11 +270,11 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 					CoinType:      coin.CoinType_ERC20,
 					Asset:         deposit.Asset,
 				})
-				ob.Logger().Inbound.Info().
+				logger.Inbound.Info().
 					Msgf("FilterInboundEvents: SPL deposit detected in sig %s instruction %d", tx.Signatures[0], i)
 			}
 		} else {
-			ob.Logger().Inbound.Warn().
+			logger.Inbound.Warn().
 				Msgf("FilterInboundEvents: multiple SPL deposits detected in sig %s instruction %d", tx.Signatures[0], i)
 		}
 	}

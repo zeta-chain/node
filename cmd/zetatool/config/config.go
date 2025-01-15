@@ -11,30 +11,51 @@ var AppFs = afero.NewOsFs()
 const (
 	FlagConfig         = "config"
 	defaultCfgFileName = "zetatool_config.json"
-	ZetaURL            = "127.0.0.1:1317"
-	BtcExplorerURL     = "https://blockstream.info/api/"
-	EthRPCURL          = "https://ethereum-rpc.publicnode.com"
-	ConnectorAddress   = "0x000007Cf399229b2f5A4D043F20E90C9C98B7C6a"
-	CustodyAddress     = "0x0000030Ec64DF25301d8414eE5a29588C4B0dE10"
+	ZetaChainGRPC      = "127.0.0.1:9090"
+	EthRPCURL          = "http://127.0.0.1:8545"
+
+	BtcRPC         = "smoketest"
+	BtcRPCPassword = "123"
+	BtcRPCHost     = "127.0.0.1:18443"
+	BtcRPCParams   = "regtest"
+
+	SolanaRPC = "http://127.0.0.1:8899"
+
+	ZetaChainID      = 101
+	ConnectorAddress = "0x000007Cf399229b2f5A4D043F20E90C9C98B7C6a"
+	CustodyAddress   = "0x0000030Ec64DF25301d8414eE5a29588C4B0dE10"
+	BtcExplorerURL   = "https://blockstream.info/api/"
 )
 
 // Config is a struct the defines the configuration fields used by zetatool
 type Config struct {
-	ZetaURL          string
+	ZetaGRPC         string
+	ZetaChainID      int64
 	BtcExplorerURL   string
 	EthRPCURL        string
 	EtherscanAPIkey  string
 	ConnectorAddress string
 	CustodyAddress   string
+	BtcUser          string
+	BtcPassword      string
+	BtcHost          string
+	BtcRPCParams     string
+	SolanaRPC        string
 }
 
 func DefaultConfig() *Config {
 	return &Config{
-		ZetaURL:          ZetaURL,
+		ZetaGRPC:         ZetaChainGRPC,
 		BtcExplorerURL:   BtcExplorerURL,
 		EthRPCURL:        EthRPCURL,
 		ConnectorAddress: ConnectorAddress,
 		CustodyAddress:   CustodyAddress,
+		ZetaChainID:      ZetaChainID,
+		BtcUser:          BtcRPC,
+		BtcPassword:      BtcRPCPassword,
+		BtcHost:          BtcRPCHost,
+		BtcRPCParams:     BtcRPCParams,
+		SolanaRPC:        SolanaRPC,
 	}
 }
 

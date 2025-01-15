@@ -47,7 +47,7 @@ func CheckForCCTX(list []Deposit, cfg *config.Config) ([]Deposit, error) {
 
 	fmt.Println("Going through list, num of transactions: ", len(list))
 	for _, entry := range list {
-		zetaURL, err := url.JoinPath(cfg.ZetaURL, "zeta-chain", "crosschain", "in_tx_hash_to_cctx_data", entry.TxID)
+		zetaURL, err := url.JoinPath(cfg.ZetaGRPC, "zeta-chain", "crosschain", "in_tx_hash_to_cctx_data", entry.TxID)
 		if err != nil {
 			return missedList, err
 		}
@@ -97,7 +97,7 @@ func CheckForCCTX(list []Deposit, cfg *config.Config) ([]Deposit, error) {
 
 func GetTssAddress(cfg *config.Config, btcChainID string) (*types.QueryGetTssAddressResponse, error) {
 	res := &types.QueryGetTssAddressResponse{}
-	requestURL, err := url.JoinPath(cfg.ZetaURL, "zeta-chain", "observer", "get_tss_address", btcChainID)
+	requestURL, err := url.JoinPath(cfg.ZetaGRPC, "zeta-chain", "observer", "get_tss_address", btcChainID)
 	if err != nil {
 		return res, err
 	}
