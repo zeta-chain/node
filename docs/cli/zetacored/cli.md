@@ -9543,7 +9543,7 @@ zetacored tx crosschain vote-outbound [sendHash] [outboundHash] [outBlockHeight]
 Add a new erc20 token to whitelist
 
 ```
-zetacored tx crosschain whitelist-erc20 [erc20Address] [chainID] [name] [symbol] [decimals] [gasLimit] [flags]
+zetacored tx crosschain whitelist-erc20 [erc20Address] [chainID] [name] [symbol] [decimals] [gasLimit] [liquidityCap] [flags]
 ```
 
 ### Options
@@ -10219,7 +10219,7 @@ zetacored tx fungible [flags]
 Broadcast message DeployFungibleCoinZRC20
 
 ```
-zetacored tx fungible deploy-fungible-coin-zrc-4 [erc-20] [foreign-chain] [decimals] [name] [symbol] [coin-type] [gas-limit] [flags]
+zetacored tx fungible deploy-fungible-coin-zrc-4 [erc-20] [foreign-chain] [decimals] [name] [symbol] [coin-type] [gas-limit] [liquidity-cap] [flags]
 ```
 
 ### Options

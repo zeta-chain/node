@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -236,6 +237,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 			coin.CoinType_Gas,
 			"foobar",
 			big.NewInt(1000),
+			sdkmath.NewUint(1000),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -256,6 +258,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 			coin.CoinType_Gas,
 			"foobar",
 			big.NewInt(1000),
+			sdkmath.NewUint(1000),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -281,6 +284,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 			coin.CoinType_Gas,
 			"foobar",
 			big.NewInt(1000),
+			sdkmath.NewUint(1000),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -302,6 +306,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 			coin.CoinType_Gas,
 			"foobar",
 			big.NewInt(1000),
+			sdkmath.NewUint(2000),
 		)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, addr)
@@ -316,7 +321,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 		require.Equal(t, "bar", foreignCoins.Symbol)
 		require.Equal(t, coin.CoinType_Gas, foreignCoins.CoinType)
 		require.Equal(t, uint64(1000), foreignCoins.GasLimit)
-		require.True(t, foreignCoins.LiquidityCap.Equal(sdk.NewUint(types.DefaultLiquidityCap).MulUint64(8)))
+		require.Equal(t, uint64(2000), foreignCoins.LiquidityCap.Uint64())
 
 		// can get the zrc20 data
 		zrc20Data, err := k.QueryZRC20Data(ctx, addr)
@@ -363,6 +368,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 			coin.CoinType_Gas,
 			"foobar",
 			big.NewInt(1000),
+			sdkmath.NewUint(2000),
 		)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, addr)
@@ -377,6 +383,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 		require.Equal(t, "bar", foreignCoins.Symbol)
 		require.Equal(t, coin.CoinType_Gas, foreignCoins.CoinType)
 		require.Equal(t, uint64(1000), foreignCoins.GasLimit)
+		require.Equal(t, uint64(2000), foreignCoins.LiquidityCap.Uint64())
 
 		// can get the zrc20 data
 		zrc20Data, err := k.QueryZRC20Data(ctx, addr)

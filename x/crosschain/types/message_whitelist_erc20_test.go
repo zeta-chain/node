@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,6 +29,7 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 				"symbol",
 				6,
 				10,
+				sdkmath.NewUint(100),
 			),
 			error: true,
 		},
@@ -41,6 +43,7 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 				"symbol",
 				6,
 				10,
+				sdkmath.NewUint(100),
 			),
 			error: true,
 		},
@@ -54,6 +57,7 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 				"symbol",
 				130,
 				10,
+				sdkmath.NewUint(100),
 			),
 			error: true,
 		},
@@ -67,6 +71,7 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 				"symbol",
 				6,
 				-10,
+				sdkmath.NewUint(100),
 			),
 			error: true,
 		},
@@ -80,8 +85,22 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 				"symbol",
 				6,
 				10,
+				sdkmath.NewUint(100),
 			),
 			error: true,
+		},
+		{
+			name: "invalid liquidity cap",
+			msg: &types.MsgWhitelistERC20{
+				Creator:      sample.AccAddress(),
+				Erc20Address: "0x5a4f260A7D716c859A2736151cB38b9c58C32c64",
+				ChainId:      1,
+				Name:         "name",
+				Symbol:       "symbol",
+				Decimals:     6,
+				GasLimit:     10,
+			},
+			error: false,
 		},
 		{
 			name: "valid message with evm asset address",
@@ -93,6 +112,7 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 				"symbol",
 				6,
 				10,
+				sdkmath.NewUint(100),
 			),
 			error: false,
 		},
@@ -106,6 +126,7 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 				"symbol",
 				6,
 				10,
+				sdkmath.NewUint(100),
 			),
 			error: false,
 		},
