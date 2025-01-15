@@ -166,8 +166,11 @@ func (a *AppContext) updateChainRegistry(
 		existingChainIDs = a.chainRegistry.ChainIDs()
 	)
 
+	slices.Sort(freshChainIDs)
+	slices.Sort(existingChainIDs)
+
 	// 2. Compare existing chains with fresh ones
-	if len(existingChainIDs) > 0 && !elementsMatch(existingChainIDs, freshChainIDs) {
+	if len(existingChainIDs) > 0 && !slicesEqual(existingChainIDs, freshChainIDs) {
 		a.logger.Warn().
 			Ints64("chains.current", existingChainIDs).
 			Ints64("chains.new", freshChainIDs).
@@ -232,15 +235,10 @@ func zetaObserverChainParams(chainID int64) *observertypes.ChainParams {
 	return &observertypes.ChainParams{ChainId: chainID, IsSupported: true}
 }
 
-// elementsMatch returns true if two slices are equal.
-// SORTS the slices before comparison.
-func elementsMatch[T constraints.Ordered](a, b []T) bool {
+func slicesEqual[T constraints.Ordered](a, b []T) bool {
 	if len(a) != len(b) {
 		return false
 	}
-
-	slices.Sort(a)
-	slices.Sort(b)
 
 	for i := range a {
 		if a[i] != b[i] {
