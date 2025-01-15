@@ -2,6 +2,10 @@
 
 ## v26.0.0
 
+### Features
+
+* [3353](https://github.com/zeta-chain/node/pull/3353) - add liquidity cap parameter to ZRC20 creation
+
 ### Fixes
 
 * [3374](https://github.com/zeta-chain/node/pull/3374) - remove minimum rent exempt check for SPL token withdrawals
