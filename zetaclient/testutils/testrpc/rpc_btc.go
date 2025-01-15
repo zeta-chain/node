@@ -8,9 +8,9 @@ import (
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/wire"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
@@ -32,7 +32,7 @@ func NewBtcServer(t *testing.T) (*BtcServer, config.BTCConfig) {
 		RPCUsername: "btc-user",
 		RPCPassword: "btc-password",
 		RPCHost:     host,
-		RPCParams:   "",
+		RPCParams:   "mainnet",
 	}
 
 	rpc.On("ping", func(_ []any) (any, error) {
@@ -58,9 +58,9 @@ func formatBitcoinRPCHost(serverURL string) (string, error) {
 }
 
 // CreateBTCRPCAndLoadTx is a helper function to load raw txs and feed them to mock rpc client
-func CreateBTCRPCAndLoadTx(t *testing.T, dir string, chainID int64, txHashes ...string) interfaces.BTCRPCClient {
+func CreateBTCRPCAndLoadTx(t *testing.T, dir string, chainID int64, txHashes ...string) *mocks.BitcoinClient {
 	// create mock rpc client
-	rpcClient := mocks.NewBTCRPCClient(t)
+	rpcClient := mocks.NewBitcoinClient(t)
 
 	// feed txs to mock rpc client
 	for _, txHash := range txHashes {
@@ -73,7 +73,7 @@ func CreateBTCRPCAndLoadTx(t *testing.T, dir string, chainID int64, txHashes ...
 
 		// mock rpc response
 		tx := btcutil.NewTx(&msgTx)
-		rpcClient.On("GetRawTransaction", tx.Hash()).Return(tx, nil)
+		rpcClient.On("GetRawTransaction", mock.Anything, tx.Hash()).Return(tx, nil)
 	}
 
 	return rpcClient

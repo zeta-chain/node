@@ -6,8 +6,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	btcsigner "github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
@@ -29,7 +29,7 @@ func (oc *V2) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) (*bitcoin.
 		return nil, errors.Wrap(errSkipChain, "unable to find btc config")
 	}
 
-	rpcClient, err := rpc.NewRPCClient(cfg)
+	rpcClient, err := client.New(cfg, chain.ID(), oc.logger.Logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create rpc client")
 	}
@@ -64,10 +64,7 @@ func (oc *V2) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) (*bitcoin.
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
 
-	signer, err := btcsigner.NewSigner(*rawChain, oc.deps.TSS, oc.logger.base, cfg)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to create signer")
-	}
+	signer := btcsigner.New(*rawChain, oc.deps.TSS, rpcClient, oc.logger.base)
 
 	return bitcoin.New(oc.scheduler, observer, signer), nil
 }
