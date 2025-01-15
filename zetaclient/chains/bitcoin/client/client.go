@@ -1,9 +1,10 @@
-// Package client represents BTC RPC client.
+// Package client implements a Bitcoin RPC client that supports context, logging, and metrics.
 package client
 
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -65,6 +66,7 @@ func New(cfg config.BTCConfig, chainID int64, logger zerolog.Logger, opts ...Opt
 	c := &Client{
 		hostURL:    normalizeHostURL(cfg.RPCHost, true),
 		client:     defaultHTTPClient(),
+		config:     cfg,
 		params:     params,
 		clientName: clientName,
 		logger: logger.With().
@@ -145,6 +147,10 @@ func (c *Client) sendRequest(req *http.Request, method string) (out rawResponse,
 		return rawResponse{}, errors.Wrap(err, "unable to read response body")
 	}
 
+	if res.StatusCode != http.StatusOK {
+		return rawResponse{}, errors.Errorf("unexpected status code %d (%s)", res.StatusCode, resBody)
+	}
+
 	if err = json.Unmarshal(resBody, &out); err != nil {
 		return rawResponse{}, errors.Wrapf(err, "unable to unmarshal rpc response (%s)", resBody)
 	}
@@ -197,13 +203,24 @@ func unmarshalPtr[T any](raw json.RawMessage) (*T, error) {
 	return &tt, nil
 }
 
+func unmarshalHex(raw json.RawMessage) ([]byte, error) {
+	str, err := unmarshal[string](raw)
+	if err != nil {
+		return nil, err
+	}
+
+	return hex.DecodeString(str)
+}
+
 func resolveParams(name string) (chains.Params, error) {
+	const regNetAlias = "regnet"
+
 	switch name {
 	case chains.MainNetParams.Name:
 		return chains.MainNetParams, nil
 	case chains.TestNet3Params.Name:
 		return chains.TestNet3Params, nil
-	case chaincfg.RegressionNetParams.Name:
+	case chaincfg.RegressionNetParams.Name, regNetAlias:
 		return chains.RegressionNetParams, nil
 	case chaincfg.SimNetParams.Name:
 		return chains.SimNetParams, nil

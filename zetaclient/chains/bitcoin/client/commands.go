@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 
 	types "github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
@@ -48,7 +49,12 @@ func (c *Client) GetBlockHash(ctx context.Context, blockHeight int64) (*chainhas
 		return nil, errors.Wrapf(err, "unable to get block hash for %d", blockHeight)
 	}
 
-	return unmarshalPtr[chainhash.Hash](out)
+	str, err := unmarshal[string](out)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to unmarshal block hash")
+	}
+
+	return chainhash.NewHashFromStr(str)
 }
 
 func (c *Client) GetBlockHeader(ctx context.Context, hash *chainhash.Hash) (*wire.BlockHeader, error) {
@@ -59,13 +65,7 @@ func (c *Client) GetBlockHeader(ctx context.Context, hash *chainhash.Hash) (*wir
 		return nil, errors.Wrapf(err, "unable to get block header for %s", hash.String())
 	}
 
-	var bhHex string
-	err = json.Unmarshal(out, &bhHex)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to unmarshal hex")
-	}
-
-	serializedBH, err := hex.DecodeString(bhHex)
+	serializedBH, err := unmarshalHex(out)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to decode hex")
 	}
@@ -106,14 +106,8 @@ func (c *Client) GetRawTransaction(ctx context.Context, hash *chainhash.Hash) (*
 		return nil, errors.Wrap(err, "unable to get raw tx")
 	}
 
-	var txHex string
-	err = json.Unmarshal(out, &txHex)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to unmarshal raw tx")
-	}
-
 	// Decode the serialized transaction hex to raw bytes.
-	serializedTx, err := hex.DecodeString(txHex)
+	serializedTx, err := unmarshalHex(out)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to decode raw tx")
 	}
@@ -166,13 +160,27 @@ func (c *Client) SendRawTransaction(ctx context.Context, tx *wire.MsgTx, allowHi
 		return nil, errors.Wrap(err, "unable to send raw tx")
 	}
 
-	var txHashStr string
-	err = json.Unmarshal(out, &txHashStr)
+	txHashStr, err := unmarshal[string](out)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to unmarshal tx hash")
 	}
 
 	return chainhash.NewHashFromStr(txHashStr)
+}
+
+func (c *Client) EstimateSmartFee(
+	ctx context.Context,
+	confTarget int64,
+	mode *types.EstimateSmartFeeMode,
+) (*types.EstimateSmartFeeResult, error) {
+	cmd := types.NewEstimateSmartFeeCmd(confTarget, mode)
+
+	out, err := c.sendCommand(ctx, cmd)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to estimate smart fee")
+	}
+
+	return unmarshalPtr[types.EstimateSmartFeeResult](out)
 }
 
 func (c *Client) ListUnspent(ctx context.Context) ([]types.ListUnspentResult, error) {
@@ -204,21 +212,6 @@ func (c *Client) ListUnspentMinMaxAddresses(
 	}
 
 	return unmarshal[[]types.ListUnspentResult](out)
-}
-
-func (c *Client) EstimateSmartFee(
-	ctx context.Context,
-	confTarget int64,
-	mode *types.EstimateSmartFeeMode,
-) (*types.EstimateSmartFeeResult, error) {
-	cmd := types.NewEstimateSmartFeeCmd(confTarget, mode)
-
-	out, err := c.sendCommand(ctx, cmd)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to estimate smart fee")
-	}
-
-	return unmarshalPtr[types.EstimateSmartFeeResult](out)
 }
 
 func (c *Client) CreateWallet(
@@ -263,8 +256,7 @@ func (c *Client) GetNewAddress(ctx context.Context, account string) (btcutil.Add
 		return nil, errors.Wrap(err, "unable to get new address")
 	}
 
-	var addr string
-	err = json.Unmarshal(out, &addr)
+	addr, err := unmarshal[string](out)
 	if err != nil {
 		return nil, err
 	}
@@ -299,4 +291,138 @@ func (c *Client) GenerateToAddress(
 	}
 
 	return convertedResult, nil
+}
+
+func (c *Client) CreateRawTransaction(
+	ctx context.Context,
+	inputs []types.TransactionInput,
+	amounts map[btcutil.Address]btcutil.Amount,
+	lockTime *int64,
+) (*wire.MsgTx, error) {
+	convertedAmounts := make(map[string]float64, len(amounts))
+	for addr, amount := range amounts {
+		convertedAmounts[addr.String()] = amount.ToBTC()
+	}
+
+	cmd := types.NewCreateRawTransactionCmd(inputs, convertedAmounts, lockTime)
+
+	out, err := c.sendCommand(ctx, cmd)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create raw tx")
+	}
+
+	// Decode the serialized transaction hex to raw bytes.
+	serializedTx, err := unmarshalHex(out)
+	if err != nil {
+		return nil, err
+	}
+
+	// Deserialize the transaction and return it.
+	var msgTx wire.MsgTx
+
+	if err = msgTx.Deserialize(bytes.NewReader(serializedTx)); err != nil {
+		return nil, err
+	}
+
+	return &msgTx, nil
+}
+
+func (c *Client) SignRawTransactionWithWallet2(
+	ctx context.Context,
+	tx *wire.MsgTx,
+	inputs []types.RawTxWitnessInput,
+) (*wire.MsgTx, bool, error) {
+	if tx == nil {
+		return nil, false, errors.New("tx is nil")
+	}
+
+	// Serialize the transaction and convert to hex string.
+	buf := bytes.NewBuffer(make([]byte, 0, tx.SerializeSize()))
+	if err := tx.Serialize(buf); err != nil {
+		return nil, false, errors.Wrap(err, "unable to serialize tx")
+	}
+
+	txHex := hex.EncodeToString(buf.Bytes())
+
+	cmd := types.NewSignRawTransactionWithWalletCmd(txHex, &inputs, nil)
+
+	out, err := c.sendCommand(ctx, cmd)
+	if err != nil {
+		return nil, false, errors.Wrap(err, "unable to sign raw tx")
+	}
+
+	result, err := unmarshalPtr[types.SignRawTransactionWithWalletResult](out)
+	if err != nil {
+		return nil, false, errors.Wrap(err, "unable to unmarshal sign raw tx result")
+	}
+
+	// Decode the serialized transaction hex to raw bytes.
+	serializedTx, err := hex.DecodeString(result.Hex)
+	if err != nil {
+		return nil, false, err
+	}
+
+	// Deserialize the transaction and return it.
+	var msgTx wire.MsgTx
+	if err = msgTx.Deserialize(bytes.NewReader(serializedTx)); err != nil {
+		return nil, false, err
+	}
+
+	return &msgTx, result.Complete, nil
+}
+
+func (c *Client) ImportAddress(ctx context.Context, address string) error {
+	cmd := types.NewImportAddressCmd(address, "", nil)
+
+	_, err := c.sendCommand(ctx, cmd)
+	return err
+}
+
+func (c *Client) ImportPrivKeyRescan(ctx context.Context, privKeyWIF *btcutil.WIF, label string, rescan bool) error {
+	wif := ""
+	if privKeyWIF != nil {
+		wif = privKeyWIF.String()
+	}
+
+	cmd := types.NewImportPrivKeyCmd(wif, &label, &rescan)
+
+	_, err := c.sendCommand(ctx, cmd)
+	return err
+}
+
+func (c *Client) RawRequest(ctx context.Context, method string, params []json.RawMessage) (json.RawMessage, error) {
+	switch {
+	case method == "":
+		return nil, errors.New("no method")
+	case params == nil:
+		params = []json.RawMessage{}
+	}
+
+	paramsBytes, err := json.Marshal(params)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to marshal params")
+	}
+
+	body := fmt.Sprintf(
+		`{"jsonrpc":"%s","id":%d,"method":"%s","params":%s}`,
+		rpcVersion,
+		commandID,
+		method,
+		paramsBytes,
+	)
+
+	req, err := c.newRequest(ctx, []byte(body))
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create request")
+	}
+
+	res, err := c.sendRequest(req, method)
+	switch {
+	case err != nil:
+		return nil, errors.Wrapf(err, "%q failed", method)
+	case res.Error != nil:
+		return nil, errors.Wrapf(res.Error, "got rpc error for %q", method)
+	}
+
+	return res.Result, nil
 }

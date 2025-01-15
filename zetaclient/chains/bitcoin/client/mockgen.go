@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	types "github.com/btcsuite/btcd/btcjson"
@@ -28,21 +29,33 @@ type client interface {
 	GetTransaction(ctx context.Context, hash *hash.Hash) (*types.GetTransactionResult, error)
 	GetRawTransaction(ctx context.Context, hash *hash.Hash) (*btcutil.Tx, error)
 	GetRawTransactionVerbose(ctx context.Context, hash *hash.Hash) (*types.TxRawResult, error)
+
 	GetRawTransactionResult(
 		ctx context.Context,
 		hash *hash.Hash,
 		res *types.GetTransactionResult,
 	) (types.TxRawResult, error)
 
-	GetTransactionFeeAndRate(ctx context.Context, tx *types.TxRawResult) (int64, int64, error)
+	CreateRawTransaction(
+		ctx context.Context,
+		inputs []types.TransactionInput,
+		amounts map[btcutil.Address]btcutil.Amount,
+		lockTime *int64,
+	) (*wire.MsgTx, error)
 
 	SendRawTransaction(ctx context.Context, tx *wire.MsgTx, allowHighFees bool) (*hash.Hash, error)
 
+	GetTransactionFeeAndRate(ctx context.Context, tx *types.TxRawResult) (int64, int64, error)
 	EstimateSmartFee(
 		ctx context.Context,
 		confTarget int64,
 		mode *types.EstimateSmartFeeMode,
 	) (*types.EstimateSmartFeeResult, error)
+
+	GetBlockVerboseByStr(ctx context.Context, blockHash string) (*types.GetBlockVerboseTxResult, error)
+	GetBlockHeightByStr(ctx context.Context, blockHash string) (int64, error)
+	GetTransactionByStr(ctx context.Context, hash string) (*hash.Hash, *types.GetTransactionResult, error)
+	GetRawTransactionByStr(ctx context.Context, hash string) (*btcutil.Tx, error)
 
 	ListUnspent(ctx context.Context) ([]types.ListUnspentResult, error)
 	ListUnspentMinMaxAddresses(
@@ -52,8 +65,10 @@ type client interface {
 	) ([]types.ListUnspentResult, error)
 
 	CreateWallet(ctx context.Context, name string, opts ...rpcclient.CreateWalletOpt) (*types.CreateWalletResult, error)
-	GetBalance(ctx context.Context, account string) (btcutil.Amount, error)
 	GetNewAddress(ctx context.Context, account string) (btcutil.Address, error)
+	ImportAddress(ctx context.Context, address string) error
+	ImportPrivKeyRescan(ctx context.Context, privKeyWIF *btcutil.WIF, label string, rescan bool) error
+	GetBalance(ctx context.Context, account string) (btcutil.Amount, error)
 	GenerateToAddress(
 		ctx context.Context,
 		numBlocks int64,
@@ -61,8 +76,11 @@ type client interface {
 		maxTries *int64,
 	) ([]*hash.Hash, error)
 
-	GetBlockVerboseByStr(ctx context.Context, blockHash string) (*types.GetBlockVerboseTxResult, error)
-	GetBlockHeightByStr(ctx context.Context, blockHash string) (int64, error)
-	GetTransactionByStr(ctx context.Context, hash string) (*hash.Hash, *types.GetTransactionResult, error)
-	GetRawTransactionByStr(ctx context.Context, hash string) (*btcutil.Tx, error)
+	SignRawTransactionWithWallet2(
+		ctx context.Context,
+		tx *wire.MsgTx,
+		inputs []types.RawTxWitnessInput,
+	) (*wire.MsgTx, bool, error)
+
+	RawRequest(ctx context.Context, method string, params []json.RawMessage) (json.RawMessage, error)
 }
