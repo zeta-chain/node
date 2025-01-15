@@ -76,7 +76,7 @@ func CheckRPCStatus(ctx context.Context, client interfaces.EVMRPCClient) (time.T
 	// query latest block header
 	header, err := client.HeaderByNumber(ctx, new(big.Int).SetUint64(bn))
 	if err != nil {
-		return time.Time{}, errors.Wrap(err, "RPC failed on HeaderByNumber, RPC down?")
+		return time.Time{}, errors.Wrapf(err, "RPC failed on HeaderByNumber(%d), RPC down?", bn)
 	}
 
 	// convert block time to UTC
