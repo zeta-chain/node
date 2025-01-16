@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	"github.com/zeta-chain/node/pkg/chains"
 	zetacorerpc "github.com/zeta-chain/node/pkg/rpc"
@@ -13,8 +14,8 @@ import (
 
 func NewFetchInboundBallotCMD() *cobra.Command {
 	return &cobra.Command{
-		Use:   "inbound",
-		Short: "Fetch Inbound ballot from the inbound hash",
+		Use:   "get-ballot [inboundHash] [chainID]",
+		Short: "fetch ballot identifier from the inbound hash",
 		RunE:  InboundGetBallot,
 	}
 }
@@ -55,23 +56,56 @@ func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile st
 	ballotIdentifier := ""
 
 	if observationChain.IsEVMChain() {
-		ballotIdentifier, err = EvmInboundBallotIdentified(ctx, *cfg, zetacoreClient, inboundHash, observationChain, cfg.ZetaChainID)
+		ballotIdentifier, err = EvmInboundBallotIdentified(
+			ctx,
+			*cfg,
+			zetacoreClient,
+			inboundHash,
+			observationChain,
+			cfg.ZetaChainID,
+		)
 		if err != nil {
-			return fmt.Errorf("failed to get inbound ballot for evm chain %d, %s", observationChain.ChainId, err.Error())
+			return fmt.Errorf(
+				"failed to get inbound ballot for evm chain %d, %s",
+				observationChain.ChainId,
+				err.Error(),
+			)
 		}
 	}
 
 	if observationChain.IsBitcoinChain() {
-		ballotIdentifier, err = BtcInboundBallotIdentified(ctx, *cfg, zetacoreClient, inboundHash, observationChain, cfg.ZetaChainID)
+		ballotIdentifier, err = BtcInboundBallotIdentified(
+			ctx,
+			*cfg,
+			zetacoreClient,
+			inboundHash,
+			observationChain,
+			cfg.ZetaChainID,
+		)
 		if err != nil {
-			return fmt.Errorf("failed to get inbound ballot for bitcoin chain %d, %s", observationChain.ChainId, err.Error())
+			return fmt.Errorf(
+				"failed to get inbound ballot for bitcoin chain %d, %s",
+				observationChain.ChainId,
+				err.Error(),
+			)
 		}
 	}
 
 	if observationChain.IsSolanaChain() {
-		ballotIdentifier, err = SolanaInboundBallotIdentified(ctx, *cfg, zetacoreClient, inboundHash, observationChain, cfg.ZetaChainID)
+		ballotIdentifier, err = SolanaInboundBallotIdentified(
+			ctx,
+			*cfg,
+			zetacoreClient,
+			inboundHash,
+			observationChain,
+			cfg.ZetaChainID,
+		)
 		if err != nil {
-			return fmt.Errorf("failed to get inbound ballot for solana chain %d, %s", observationChain.ChainId, err.Error())
+			return fmt.Errorf(
+				"failed to get inbound ballot for solana chain %d, %s",
+				observationChain.ChainId,
+				err.Error(),
+			)
 		}
 	}
 

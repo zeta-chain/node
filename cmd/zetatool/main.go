@@ -5,9 +5,9 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/node/cmd/zetatool/inbound_ballot"
 
 	"github.com/zeta-chain/node/cmd/zetatool/config"
+	"github.com/zeta-chain/node/cmd/zetatool/inbound_ballot"
 )
 
 var rootCmd = &cobra.Command{

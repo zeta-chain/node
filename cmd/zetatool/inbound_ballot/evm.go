@@ -12,6 +12,10 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
+
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -22,9 +26,6 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 )
 
 func resolveRPC(chain chains.Chain, cfg config.Config) string {
@@ -34,7 +35,6 @@ func resolveRPC(chain chains.Chain, cfg config.Config) string {
 		chains.Network_polygon: cfg.PolygonRPC,
 		chains.Network_bsc:     cfg.BscRPC,
 	}[chain.Network]
-
 }
 
 func EvmInboundBallotIdentified(ctx context.Context,
@@ -43,8 +43,6 @@ func EvmInboundBallotIdentified(ctx context.Context,
 	inboundHash string,
 	inboundChain chains.Chain,
 	zetaChainID int64) (string, error) {
-
-	// create evm client for the observation chain
 	evmRpc := resolveRPC(inboundChain, cfg)
 	if evmRpc == "" {
 		return "", fmt.Errorf("rpc not found for chain %d network %s", inboundChain.ChainId, inboundChain.Network)
@@ -55,19 +53,12 @@ func EvmInboundBallotIdentified(ctx context.Context,
 	}
 	evmClient := ethclient.NewClient(rpcClient)
 
-	// Fetch transaction from the inbound
-	hash := ethcommon.HexToHash(inboundHash)
-	tx, isPending, err := evmClient.TransactionByHash(ctx, hash)
+	// create evm client for the observation chain
+	tx, receipt, err := getEvmTx(ctx, evmClient, inboundHash, inboundChain)
 	if err != nil {
-		return "", fmt.Errorf("tx not found on chain %s, %d", err.Error(), inboundChain.ChainId)
+		return "", fmt.Errorf("failed to get tx %s", err.Error())
 	}
-	if isPending {
-		return "", fmt.Errorf("tx is still pending on chain %d", inboundChain.ChainId)
-	}
-	receipt, err := evmClient.TransactionReceipt(ctx, hash)
-	if err != nil {
-		return "", fmt.Errorf("failed to get receipt %s , tx hash %s", err.Error(), inboundHash)
-	}
+
 	chainParams, err := zetacoreClient.GetChainParamsForChainID(context.Background(), inboundChain.ChainId)
 	if err != nil {
 		return "", fmt.Errorf("failed to get chain params %s", err.Error())
@@ -156,8 +147,32 @@ func EvmInboundBallotIdentified(ctx context.Context,
 				}
 			}
 		}
+	default:
+		return "", fmt.Errorf("irrelevant trasnaction , not sent to any known address txHash:  %s", inboundHash)
 	}
 	return "", fmt.Errorf("no event found for tx %s", inboundHash)
+}
+
+func getEvmTx(
+	ctx context.Context,
+	evmClient *ethclient.Client,
+	inboundHash string,
+	inboundChain chains.Chain,
+) (*ethtypes.Transaction, *ethtypes.Receipt, error) {
+	// Fetch transaction from the inbound
+	hash := ethcommon.HexToHash(inboundHash)
+	tx, isPending, err := evmClient.TransactionByHash(ctx, hash)
+	if err != nil {
+		return nil, nil, fmt.Errorf("tx not found on chain %s, %d", err.Error(), inboundChain.ChainId)
+	}
+	if isPending {
+		return nil, nil, fmt.Errorf("tx is still pending on chain %d", inboundChain.ChainId)
+	}
+	receipt, err := evmClient.TransactionReceipt(ctx, hash)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get receipt %s , tx hash %s", err.Error(), inboundHash)
+	}
+	return tx, receipt, nil
 }
 
 func zetaTokenVoteV1(

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/spf13/afero"
+
 	"github.com/zeta-chain/node/pkg/chains"
 )
 

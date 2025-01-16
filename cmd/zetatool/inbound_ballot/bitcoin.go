@@ -11,6 +11,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/rs/zerolog"
+
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -18,7 +19,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	zetaclientObserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 )
 
 func BtcInboundBallotIdentified(ctx context.Context,
@@ -27,7 +28,6 @@ func BtcInboundBallotIdentified(ctx context.Context,
 	inboundHash string,
 	inboundChain chains.Chain,
 	zetaChainID int64) (string, error) {
-
 	params, err := chains.BitcoinNetParamsFromChainID(inboundChain.ChainId)
 	if err != nil {
 		return "", fmt.Errorf("unable to get bitcoin net params from chain id: %s", err)
@@ -56,7 +56,15 @@ func BtcInboundBallotIdentified(ctx context.Context,
 	}
 	tssBtcAddress := res.GetBtc()
 
-	return bitcoinBallotIdentifier(ctx, rpcClient, params, tssBtcAddress, inboundHash, inboundChain.ChainId, zetaChainID)
+	return bitcoinBallotIdentifier(
+		ctx,
+		rpcClient,
+		params,
+		tssBtcAddress,
+		inboundHash,
+		inboundChain.ChainId,
+		zetaChainID,
+	)
 }
 
 func bitcoinBallotIdentifier(ctx context.Context,
@@ -91,7 +99,7 @@ func bitcoinBallotIdentifier(ctx context.Context,
 	}
 	// #nosec G115 always positive
 
-	event, err := observer.GetBtcEvent(
+	event, err := zetaclientObserver.GetBtcEvent(
 		btcClient,
 		*tx,
 		tss,
@@ -109,10 +117,9 @@ func bitcoinBallotIdentifier(ctx context.Context,
 	}
 
 	return identifierFromBtcEvent(event, senderChainID, zetacoreChainID)
-
 }
 
-func identifierFromBtcEvent(event *observer.BTCInboundEvent,
+func identifierFromBtcEvent(event *zetaclientObserver.BTCInboundEvent,
 	senderChainID int64,
 	zetacoreChainID int64) (string, error) {
 	// decode event memo bytes
@@ -144,7 +151,7 @@ func identifierFromBtcEvent(event *observer.BTCInboundEvent,
 
 // NewInboundVoteFromLegacyMemo creates a MsgVoteInbound message for inbound that uses legacy memo
 func voteFromLegacyMemo(
-	event *observer.BTCInboundEvent,
+	event *zetaclientObserver.BTCInboundEvent,
 	amountSats *big.Int,
 	senderChainId int64,
 	zetacoreChainId int64,
@@ -172,7 +179,7 @@ func voteFromLegacyMemo(
 }
 
 func voteFromStdMemo(
-	event *observer.BTCInboundEvent,
+	event *zetaclientObserver.BTCInboundEvent,
 	amountSats *big.Int,
 	senderChainId int64,
 	zetacoreChainId int64,

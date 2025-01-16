@@ -61,13 +61,6 @@ var (
 		Short: "Show relayer address",
 		RunE:  RelayerShowAddress,
 	}
-
-	InboundCmd          = &cobra.Command{Use: "inbound", Short: "Inbound transactions"}
-	InboundGetBallotCmd = &cobra.Command{
-		Use:   "get-ballot [inboundHash] [chainID]",
-		Short: "Get the ballot status for the tx hash",
-		RunE:  InboundGetBallot,
-	}
 )
 
 // globalOptions defines the global options for all commands.
@@ -103,9 +96,6 @@ func init() {
 	RootCmd.AddCommand(RelayerCmd)
 	RelayerCmd.AddCommand(RelayerImportKeyCmd)
 	RelayerCmd.AddCommand(RelayerShowAddressCmd)
-
-	RootCmd.AddCommand(InboundCmd)
-	InboundCmd.AddCommand(InboundGetBallotCmd)
 }
 
 func main() {

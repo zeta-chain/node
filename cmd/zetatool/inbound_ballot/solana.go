@@ -9,6 +9,7 @@ import (
 	cosmosmath "cosmossdk.io/math"
 	"github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
+
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	"github.com/zeta-chain/node/pkg/chains"
 	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
@@ -26,7 +27,6 @@ func SolanaInboundBallotIdentified(ctx context.Context,
 	inboundHash string,
 	inboundChain chains.Chain,
 	zetaChainID int64) (string, error) {
-
 	solClient := solrpc.New(cfg.SolanaRPC)
 	if solClient == nil {
 		return "", fmt.Errorf("error creating rpc client")
@@ -61,16 +61,14 @@ func SolanaInboundBallotIdentified(ctx context.Context,
 	for _, event := range events {
 		msg := voteMsgFromSolEvent(event, zetaChainID)
 		return msg.Digest(), nil
-
 	}
 
 	return "", errors.New("no inbound vote message found")
 }
 
-// BuildInboundVoteMsgFromEvent builds a MsgVoteInbound from an inbound event
+// voteMsgFromSolEvent builds a MsgVoteInbound from an inbound event
 func voteMsgFromSolEvent(event *clienttypes.InboundEvent,
 	zetaChainID int64) *crosschaintypes.MsgVoteInbound {
-
 	// decode event memo bytes to get the receiver
 	err := event.DecodeMemo()
 	if err != nil {
