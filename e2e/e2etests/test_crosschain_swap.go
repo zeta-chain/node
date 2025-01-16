@@ -157,7 +157,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		outboundHash, err := chainhash.NewHashFromStr(cctx.GetCurrentOutboundParam().Hash)
 		require.NoError(r, err)
 
-		txraw, err := r.BtcRPCClient.GetRawTransactionVerbose(outboundHash)
+		txraw, err := r.BtcRPCClient.GetRawTransactionVerbose(r.Ctx, outboundHash)
 		require.NoError(r, err)
 
 		r.Logger.Info("out txid %s", txraw.Txid)

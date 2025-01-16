@@ -23,7 +23,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
-	"github.com/zeta-chain/node/zetaclient/testutils/testrpc"
 )
 
 func TestOrchestratorV2(t *testing.T) {
@@ -109,8 +108,6 @@ func newTestSuite(t *testing.T) *testSuite {
 		Std:        logger.Logger,
 		Compliance: logger.Logger,
 	}
-
-	testrpc.NewBtcServer(t)
 
 	chainList, chainParams := parseChainsWithParams(t, defaultChainsWithParams...)
 

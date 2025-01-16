@@ -5,8 +5,15 @@
 ### Refactor
 
 * [3332](https://github.com/zeta-chain/node/pull/3332) - implement orchestrator V2. Move BTC observer-signer to V2
+* [3349](https://github.com/zeta-chain/node/pull/3349) - implement new bitcoin rpc in zetaclient with improved performance and observability
 
 ## v25.0.0
+
+## Unreleased
+
+## Refactor
+
+* [2863](https://github.com/zeta-chain/node/pull/2863) - refactor zetacore to delete matured ballots and add a migration script to remove all old ballots.
 
 ### Features
 

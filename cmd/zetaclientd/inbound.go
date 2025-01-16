@@ -15,8 +15,8 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	btcclient "github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
-	btcrpc "github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	evmobserver "github.com/zeta-chain/node/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
@@ -162,7 +162,7 @@ func InboundGetBallot(_ *cobra.Command, args []string) error {
 			return fmt.Errorf("unable to find btc config")
 		}
 
-		rpcClient, err := btcrpc.NewRPCClient(bitcoinConfig)
+		rpcClient, err := btcclient.New(bitcoinConfig, chain.ID(), zerolog.Nop())
 		if err != nil {
 			return errors.Wrap(err, "unable to create rpc client")
 		}

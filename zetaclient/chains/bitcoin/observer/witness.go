@@ -1,6 +1,7 @@
 package observer
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 
@@ -11,14 +12,14 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 )
 
 // GetBtcEventWithWitness either returns a valid BTCInboundEvent or nil.
 // This method supports data with more than 80 bytes by scanning the witness for possible presence of a tapscript.
 // It will first prioritize OP_RETURN over tapscript.
 func GetBtcEventWithWitness(
-	client interfaces.BTCRPCClient,
+	ctx context.Context,
+	rpc RPC,
 	tx btcjson.TxRawResult,
 	tssAddress string,
 	blockNumber uint64,
@@ -41,7 +42,7 @@ func GetBtcEventWithWitness(
 	}
 
 	// calculate depositor fee
-	depositorFee, err := feeCalculator(client, &tx, netParams)
+	depositorFee, err := feeCalculator(ctx, rpc, &tx, netParams)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
 	}
@@ -72,7 +73,7 @@ func GetBtcEventWithWitness(
 	}
 
 	// event found, get sender address
-	fromAddress, err := GetSenderAddressByVin(client, tx.Vin[0], netParams)
+	fromAddress, err := GetSenderAddressByVin(ctx, rpc, tx.Vin[0], netParams)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error getting sender address for inbound: %s", tx.Txid)
 	}

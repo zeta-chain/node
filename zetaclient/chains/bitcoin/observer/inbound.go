@@ -15,7 +15,6 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -24,7 +23,7 @@ import (
 // TODO(revamp): simplify this function into smaller functions
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	// get and update latest block height
-	currentBlock, err := ob.btcClient.GetBlockCount()
+	currentBlock, err := ob.rpc.GetBlockCount(ctx)
 	if err != nil {
 		return fmt.Errorf("observeInboundBTC: error getting block number: %s", err)
 	}
@@ -60,7 +59,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 	// query incoming gas asset to TSS address
 	// #nosec G115 always in range
-	res, err := ob.GetBlockByNumberCached(int64(blockNumber))
+	res, err := ob.GetBlockByNumberCached(ctx, int64(blockNumber))
 	if err != nil {
 		ob.logger.Inbound.Error().Err(err).Msgf("observeInboundBTC: error getting bitcoin block %d", blockNumber)
 		return err
@@ -75,7 +74,8 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 		// #nosec G115 always positive
 		events, err := FilterAndParseIncomingTx(
-			ob.btcClient,
+			ctx,
+			ob.rpc,
 			res.Block.Tx,
 			uint64(res.Block.Height),
 			tssAddress,
@@ -145,7 +145,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		return "", err
 	}
 
-	tx, err := ob.btcClient.GetRawTransactionVerbose(hash)
+	tx, err := ob.rpc.GetRawTransactionVerbose(ctx, hash)
 	if err != nil {
 		return "", err
 	}
@@ -155,7 +155,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		return "", err
 	}
 
-	blockVb, err := ob.btcClient.GetBlockVerboseTx(blockHash)
+	blockVb, err := ob.rpc.GetBlockVerbose(ctx, blockHash)
 	if err != nil {
 		return "", err
 	}
@@ -177,7 +177,8 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 
 	// #nosec G115 always positive
 	event, err := GetBtcEvent(
-		ob.btcClient,
+		ctx,
+		ob.rpc,
 		*tx,
 		tss,
 		uint64(blockVb.Height),
@@ -210,7 +211,8 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 // vout0: p2wpkh to the TSS address (targetAddress)
 // vout1: OP_RETURN memo, base64 encoded
 func FilterAndParseIncomingTx(
-	rpcClient interfaces.BTCRPCClient,
+	ctx context.Context,
+	rpc RPC,
 	txs []btcjson.TxRawResult,
 	blockNumber uint64,
 	tssAddress string,
@@ -218,12 +220,14 @@ func FilterAndParseIncomingTx(
 	netParams *chaincfg.Params,
 ) ([]*BTCInboundEvent, error) {
 	events := make([]*BTCInboundEvent, 0)
+
 	for idx, tx := range txs {
 		if idx == 0 {
-			continue // the first tx is coinbase; we do not process coinbase tx
+			// the first tx is coinbase; we do not process coinbase tx
+			continue
 		}
 
-		event, err := GetBtcEvent(rpcClient, tx, tssAddress, blockNumber, logger, netParams, common.CalcDepositorFee)
+		event, err := GetBtcEvent(ctx, rpc, tx, tssAddress, blockNumber, logger, netParams, common.CalcDepositorFee)
 		if err != nil {
 			// unable to parse the tx, the caller should retry
 			return nil, errors.Wrapf(err, "error getting btc event for tx %s in block %d", tx.Txid, blockNumber)
@@ -234,6 +238,7 @@ func FilterAndParseIncomingTx(
 			logger.Info().Msgf("FilterAndParseIncomingTx: found btc event for tx %s in block %d", tx.Txid, blockNumber)
 		}
 	}
+
 	return events, nil
 }
 
@@ -282,7 +287,8 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 // GetBtcEvent returns a valid BTCInboundEvent or nil
 // it uses witness data to extract the sender address, except for mainnet
 func GetBtcEvent(
-	rpcClient interfaces.BTCRPCClient,
+	ctx context.Context,
+	rpc RPC,
 	tx btcjson.TxRawResult,
 	tssAddress string,
 	blockNumber uint64,
@@ -291,16 +297,18 @@ func GetBtcEvent(
 	feeCalculator common.DepositorFeeCalculator,
 ) (*BTCInboundEvent, error) {
 	if netParams.Name == chaincfg.MainNetParams.Name {
-		return GetBtcEventWithoutWitness(rpcClient, tx, tssAddress, blockNumber, logger, netParams, feeCalculator)
+		return GetBtcEventWithoutWitness(ctx, rpc, tx, tssAddress, blockNumber, logger, netParams, feeCalculator)
 	}
-	return GetBtcEventWithWitness(rpcClient, tx, tssAddress, blockNumber, logger, netParams, feeCalculator)
+
+	return GetBtcEventWithWitness(ctx, rpc, tx, tssAddress, blockNumber, logger, netParams, feeCalculator)
 }
 
 // GetBtcEventWithoutWitness either returns a valid BTCInboundEvent or nil
 // Note: the caller should retry the tx on error (e.g., GetSenderAddressByVin failed)
 // TODO(revamp): simplify this function
 func GetBtcEventWithoutWitness(
-	rpcClient interfaces.BTCRPCClient,
+	ctx context.Context,
+	rpc RPC,
 	tx btcjson.TxRawResult,
 	tssAddress string,
 	blockNumber uint64,
@@ -333,7 +341,7 @@ func GetBtcEventWithoutWitness(
 			}
 
 			// calculate depositor fee
-			depositorFee, err = feeCalculator(rpcClient, &tx, netParams)
+			depositorFee, err = feeCalculator(ctx, rpc, &tx, netParams)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
 			}
@@ -363,7 +371,7 @@ func GetBtcEventWithoutWitness(
 		}
 
 		// get sender address by input (vin)
-		fromAddress, err := GetSenderAddressByVin(rpcClient, tx.Vin[0], netParams)
+		fromAddress, err := GetSenderAddressByVin(ctx, rpc, tx.Vin[0], netParams)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error getting sender address for inbound: %s", tx.Txid)
 		}
@@ -389,7 +397,12 @@ func GetBtcEventWithoutWitness(
 }
 
 // GetSenderAddressByVin get the sender address from the transaction input (vin)
-func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, net *chaincfg.Params) (string, error) {
+func GetSenderAddressByVin(
+	ctx context.Context,
+	rpc RPC,
+	vin btcjson.Vin,
+	net *chaincfg.Params,
+) (string, error) {
 	// query previous raw transaction by txid
 	hash, err := chainhash.NewHashFromStr(vin.Txid)
 	if err != nil {
@@ -397,7 +410,7 @@ func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, n
 	}
 
 	// this requires running bitcoin node with 'txindex=1'
-	tx, err := rpcClient.GetRawTransaction(hash)
+	tx, err := rpc.GetRawTransaction(ctx, hash)
 	if err != nil {
 		return "", errors.Wrapf(err, "error getting raw transaction %s", vin.Txid)
 	}

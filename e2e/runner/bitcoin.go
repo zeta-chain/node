@@ -32,6 +32,7 @@ import (
 func (r *E2ERunner) ListDeployerUTXOs() []btcjson.ListUnspentResult {
 	// query UTXOs from node
 	utxos, err := r.BtcRPCClient.ListUnspentMinMaxAddresses(
+		r.Ctx,
 		1,
 		9999999,
 		[]btcutil.Address{r.BTCDeployerAddress},
@@ -68,6 +69,7 @@ func (r *E2ERunner) ListDeployerUTXOs() []btcjson.ListUnspentResult {
 func (r *E2ERunner) GetTop20UTXOsForTssAddress() ([]btcjson.ListUnspentResult, error) {
 	// query UTXOs from node
 	utxos, err := r.BtcRPCClient.ListUnspentMinMaxAddresses(
+		r.Ctx,
 		0,
 		9999999,
 		[]btcutil.Address{r.BTCTSSAddress},
@@ -231,7 +233,7 @@ func (r *E2ERunner) sendToAddrFromDeployerWithMemo(
 
 	// create raw
 	r.Logger.Info("ADDRESS: %s, %s", btcDeployerAddress.EncodeAddress(), to.EncodeAddress())
-	tx, err := btcRPC.CreateRawTransaction(inputs, amountMap, nil)
+	tx, err := btcRPC.CreateRawTransaction(r.Ctx, inputs, amountMap, nil)
 	require.NoError(r, err)
 
 	// this adds a OP_RETURN + single BYTE len prefix to the data
@@ -268,22 +270,23 @@ func (r *E2ERunner) sendToAddrFromDeployerWithMemo(
 		}
 	}
 
-	stx, signed, err := btcRPC.SignRawTransactionWithWallet2(tx, inputsForSign)
+	stx, signed, err := btcRPC.SignRawTransactionWithWallet2(r.Ctx, tx, inputsForSign)
 	require.NoError(r, err)
 	require.True(r, signed, "btc transaction is not signed")
 
-	txid, err := btcRPC.SendRawTransaction(stx, true)
+	txid, err := btcRPC.SendRawTransaction(r.Ctx, stx, true)
 	require.NoError(r, err)
 	r.Logger.Info("txid: %+v", txid)
 	_, err = r.GenerateToAddressIfLocalBitcoin(6, btcDeployerAddress)
 	require.NoError(r, err)
-	gtx, err := btcRPC.GetTransaction(txid)
+	gtx, err := btcRPC.GetTransaction(r.Ctx, txid)
 	require.NoError(r, err)
 	r.Logger.Info("rawtx confirmation: %d", gtx.BlockIndex)
-	rawtx, err := btcRPC.GetRawTransactionVerbose(txid)
+	rawtx, err := btcRPC.GetRawTransactionVerbose(r.Ctx, txid)
 	require.NoError(r, err)
 
 	events, err := btcobserver.FilterAndParseIncomingTx(
+		r.Ctx,
 		btcRPC,
 		[]btcjson.TxRawResult{*rawtx},
 		0,
@@ -341,7 +344,7 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 	require.NoError(r, err)
 
 	// submit the reveal transaction
-	txid, err := r.BtcRPCClient.SendRawTransaction(revealTx, true)
+	txid, err := r.BtcRPCClient.SendRawTransaction(r.Ctx, revealTx, true)
 	require.NoError(r, err)
 	r.Logger.Info("reveal txid: %s", txid.String())
 
@@ -368,7 +371,7 @@ func (r *E2ERunner) GenerateToAddressIfLocalBitcoin(
 ) ([]*chainhash.Hash, error) {
 	// if not local bitcoin network, do nothing
 	if r.IsLocalBitcoin() {
-		return r.BtcRPCClient.GenerateToAddress(numBlocks, address, nil)
+		return r.BtcRPCClient.GenerateToAddress(r.Ctx, numBlocks, address, nil)
 	}
 	return nil, nil
 }
@@ -379,7 +382,7 @@ func (r *E2ERunner) QueryOutboundReceiverAndAmount(txid string) (string, int64) 
 	require.NoError(r, err)
 
 	// query outbound raw transaction
-	revertTx, err := r.BtcRPCClient.GetRawTransaction(txHash)
+	revertTx, err := r.BtcRPCClient.GetRawTransaction(r.Ctx, txHash)
 	require.NoError(r, err, revertTx)
 	require.True(r, len(revertTx.MsgTx().TxOut) >= 2, "bitcoin outbound must have at least two outputs")
 
