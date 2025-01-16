@@ -143,8 +143,9 @@ func init() {
 }
 
 var (
-	NodeDir         = ".zetacored"
-	DefaultNodeHome = os.ExpandEnv("$HOME/") + NodeDir
+	NodeDir                    = ".zetacored"
+	DefaultNodeHome            = os.ExpandEnv("$HOME/") + NodeDir
+	TransactionGasLimit uint64 = 10_000_000
 )
 
 func getGovProposalHandlers() []govclient.ProposalHandler {
@@ -784,7 +785,6 @@ func New(
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 
-	maxGasWanted := cast.ToUint64(appOpts.Get(srvflags.EVMMaxTxGasWanted))
 	options := ante.HandlerOptions{
 		AccountKeeper:   app.AccountKeeper,
 		BankKeeper:      app.BankKeeper,
@@ -792,7 +792,7 @@ func New(
 		FeeMarketKeeper: app.FeeMarketKeeper,
 		SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 		SigGasConsumer:  evmante.DefaultSigVerificationGasConsumer,
-		MaxTxGasWanted:  maxGasWanted,
+		MaxTxGasWanted:  TransactionGasLimit,
 		DisabledAuthzMsgs: []string{
 			sdk.MsgTypeURL(
 				&evmtypes.MsgEthereumTx{},

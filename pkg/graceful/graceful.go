@@ -147,9 +147,9 @@ func (p *Process) ShutdownNow() {
 	}
 }
 
-// panicToErr converts panic to error WITH exact line of panic.
+// panicToErr converts recoverVal to error WITH exact line of panic.
 // Note the offset should be determined empirically.
-func panicToErr(panic any, offset int) error {
+func panicToErr(recoverVal any, offset int) error {
 	stack := string(debug.Stack())
 	lines := strings.Split(stack, "\n")
 	line := ""
@@ -158,7 +158,7 @@ func panicToErr(panic any, offset int) error {
 		line = strings.TrimSpace(lines[offset])
 	}
 
-	return fmt.Errorf("panic: %v at %s", panic, line)
+	return fmt.Errorf("panic: %v at %s", recoverVal, line)
 }
 
 // NewSigChan creates a new signal channel.

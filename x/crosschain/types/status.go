@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"slices"
 )
 
 func (m *Status) AbortRefunded() {
@@ -56,12 +57,7 @@ func (m *Status) ValidateTransition(newStatus CctxStatus) bool {
 	if !isOldStatusValid {
 		return false
 	}
-	for _, status := range nextStatusList {
-		if status == newStatus {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(nextStatusList, newStatus)
 }
 
 func stateTransitionMap() map[CctxStatus][]CctxStatus {
