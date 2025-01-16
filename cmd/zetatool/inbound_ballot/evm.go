@@ -27,26 +27,35 @@ import (
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
 )
 
+func resolveRPC(chain chains.Chain, cfg config.Config) string {
+	return map[chains.Network]string{
+		chains.Network_eth:     cfg.EthereumRPC,
+		chains.Network_base:    cfg.BaseRPC,
+		chains.Network_polygon: cfg.PolygonRPC,
+		chains.Network_bsc:     cfg.BscRPC,
+	}[chain.Network]
+
+}
+
 func EvmInboundBallotIdentified(ctx context.Context,
 	cfg config.Config,
 	zetacoreClient rpc.Clients,
 	inboundHash string,
 	inboundChain chains.Chain,
 	zetaChainID int64) (string, error) {
-	rpcClient, err := ethrpc.DialHTTP(cfg.EthRPCURL)
+
+	// create evm client for the observation chain
+	evmRpc := resolveRPC(inboundChain, cfg)
+	if evmRpc == "" {
+		return "", fmt.Errorf("rpc not found for chain %d network %s", inboundChain.ChainId, inboundChain.Network)
+	}
+	rpcClient, err := ethrpc.DialHTTP(evmRpc)
 	if err != nil {
 		return "", fmt.Errorf("failed to connect to eth rpc %s", err.Error())
 	}
 	evmClient := ethclient.NewClient(rpcClient)
 
-	res, err := zetacoreClient.Observer.GetTssAddress(context.Background(), &types.QueryGetTssAddressRequest{})
-	if err != nil {
-		return "", fmt.Errorf("failed to get tss address %s", err.Error())
-	}
-	tssEthAddress := res.GetEth()
-
-	fmt.Println("ETH Address: ", tssEthAddress)
-
+	// Fetch transaction from the inbound
 	hash := ethcommon.HexToHash(inboundHash)
 	tx, isPending, err := evmClient.TransactionByHash(ctx, hash)
 	if err != nil {
@@ -64,6 +73,13 @@ func EvmInboundBallotIdentified(ctx context.Context,
 		return "", fmt.Errorf("failed to get chain params %s", err.Error())
 	}
 
+	res, err := zetacoreClient.Observer.GetTssAddress(context.Background(), &types.QueryGetTssAddressRequest{})
+	if err != nil {
+		return "", fmt.Errorf("failed to get tss address %s", err.Error())
+	}
+	tssEthAddress := res.GetEth()
+
+	// Create inbound vote message based on the cointype and protocol version
 	switch tx.To().Hex() {
 	case chainParams.ConnectorContractAddress:
 		{

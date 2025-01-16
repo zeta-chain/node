@@ -6,12 +6,9 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/node/cmd/zetatool/config"
 	"github.com/zeta-chain/node/pkg/chains"
 	zetacorerpc "github.com/zeta-chain/node/pkg/rpc"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
-	"github.com/zeta-chain/node/cmd/zetatool/config"
 )
 
 func NewFetchInboundBallotCMD() *cobra.Command {
@@ -25,39 +22,31 @@ func NewFetchInboundBallotCMD() *cobra.Command {
 func InboundGetBallot(cmd *cobra.Command, args []string) error {
 	cobra.ExactArgs(2)
 
-	configFile, err := cmd.Flags().GetString(config.FlagConfig)
-	if err != nil {
-		return err
-	}
-
-	cfg, err := config.GetConfig(configFile)
-	if err != nil {
-		panic(err)
-	}
 	inboundHash := args[0]
-	fmt.Println("Inbound Hash: ", inboundHash)
-
 	inboundChainID, err := strconv.ParseInt(args[1], 10, 64)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("failed to parse chain id")
 	}
-
-	var unsecureGRPC = grpc.WithTransportCredentials(insecure.NewCredentials())
-	zetacoreClient, err := zetacorerpc.NewGRPCClients(cfg.ZetaGRPC, unsecureGRPC)
-	if err != nil {
-		panic(err)
-	}
-
-	//zetacoreClient, err := zetacorerpc.NewGRPCClients(
-	//	cfg.ZetaGRPC,
-	//	grpc.WithTransportCredentials(insecure.NewCredentials()),
-	//	grpc.WithBlock(),
-	//)
-
 	observationChain, found := chains.GetChainFromChainID(inboundChainID, []chains.Chain{})
 	if !found {
-		fmt.Println("Chain not found")
+		return fmt.Errorf("chain not supported,chain id : %d", inboundChainID)
 	}
+
+	configFile, err := cmd.Flags().GetString(config.FlagConfig)
+	if err != nil {
+		return fmt.Errorf("failed to read value for flag %s , err %s", config.FlagConfig, err.Error())
+	}
+
+	cfg, err := config.GetConfig(observationChain, configFile)
+	if err != nil {
+		return fmt.Errorf("failed to get config, %s", err.Error())
+	}
+
+	zetacoreClient, err := zetacorerpc.NewCometBFTClients(cfg.ZetaChainRPC)
+	if err != nil {
+		return fmt.Errorf("failed to create zetacore client, %s", err.Error())
+	}
+
 	ctx := context.Background()
 	ballotIdentifier := ""
 
