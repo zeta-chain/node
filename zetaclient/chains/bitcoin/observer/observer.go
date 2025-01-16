@@ -36,7 +36,6 @@ type RPC interface {
 	GetBlockHeader(ctx context.Context, hash *hash.Hash) (*wire.BlockHeader, error)
 	GetBlockVerbose(ctx context.Context, hash *hash.Hash) (*btcjson.GetBlockVerboseTxResult, error)
 
-	GetTransaction(ctx context.Context, hash *hash.Hash) (*btcjson.GetTransactionResult, error)
 	GetRawTransaction(ctx context.Context, hash *hash.Hash) (*btcutil.Tx, error)
 	GetRawTransactionVerbose(ctx context.Context, hash *hash.Hash) (*btcjson.TxRawResult, error)
 	GetRawTransactionResult(
@@ -59,10 +58,8 @@ type RPC interface {
 		addresses []btcutil.Address,
 	) ([]btcjson.ListUnspentResult, error)
 
-	GetBlockVerboseByStr(ctx context.Context, blockHash string) (*btcjson.GetBlockVerboseTxResult, error)
 	GetBlockHeightByStr(ctx context.Context, blockHash string) (int64, error)
 	GetTransactionByStr(ctx context.Context, hash string) (*hash.Hash, *btcjson.GetTransactionResult, error)
-	GetRawTransactionByStr(ctx context.Context, hash string) (*btcutil.Tx, error)
 }
 
 const (
