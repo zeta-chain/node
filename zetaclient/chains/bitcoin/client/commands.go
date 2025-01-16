@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 
 	types "github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
@@ -398,20 +397,24 @@ func (c *Client) RawRequest(ctx context.Context, method string, params []json.Ra
 		params = []json.RawMessage{}
 	}
 
-	paramsBytes, err := json.Marshal(params)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to marshal params")
+	payload := struct {
+		Version string            `json:"jsonrpc"`
+		ID      uint64            `json:"id"`
+		Method  string            `json:"method"`
+		Params  []json.RawMessage `json:"params"`
+	}{
+		Version: string(rpcVersion),
+		ID:      commandID,
+		Method:  method,
+		Params:  params,
 	}
 
-	body := fmt.Sprintf(
-		`{"jsonrpc":"%s","id":%d,"method":"%s","params":%s}`,
-		rpcVersion,
-		commandID,
-		method,
-		paramsBytes,
-	)
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to marshal body")
+	}
 
-	req, err := c.newRequest(ctx, []byte(body))
+	req, err := c.newRequest(ctx, body)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create request")
 	}
