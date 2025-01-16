@@ -27,14 +27,18 @@ func InboundGetBallot(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to parse chain id")
 	}
-	observationChain, found := chains.GetChainFromChainID(inboundChainID, []chains.Chain{})
-	if !found {
-		return fmt.Errorf("chain not supported,chain id : %d", inboundChainID)
-	}
-
 	configFile, err := cmd.Flags().GetString(config.FlagConfig)
 	if err != nil {
 		return fmt.Errorf("failed to read value for flag %s , err %s", config.FlagConfig, err.Error())
+	}
+
+	return GetBallotIdentifier(inboundHash, inboundChainID, configFile)
+}
+
+func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile string) error {
+	observationChain, found := chains.GetChainFromChainID(inboundChainID, []chains.Chain{})
+	if !found {
+		return fmt.Errorf("chain not supported,chain id : %d", inboundChainID)
 	}
 
 	cfg, err := config.GetConfig(observationChain, configFile)

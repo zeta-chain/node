@@ -77,12 +77,6 @@ func voteMsgFromSolEvent(event *clienttypes.InboundEvent,
 		return nil
 	}
 
-	//// check if the event is processable
-	//if !ob.IsEventProcessable(*event) {
-	//	return nil
-	//}
-	//
-
 	// create inbound vote message
 	return crosschaintypes.NewMsgVoteInbound(
 		"",
@@ -102,5 +96,4 @@ func voteMsgFromSolEvent(event *clienttypes.InboundEvent,
 		crosschaintypes.ProtocolContractVersion_V1,
 		false, // not relevant for v1
 	)
-
 }

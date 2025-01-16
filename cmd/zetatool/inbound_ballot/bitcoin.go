@@ -89,13 +89,6 @@ func bitcoinBallotIdentifier(ctx context.Context,
 	if len(blockVb.Tx) <= 1 {
 		return "", fmt.Errorf("block %d has no transactions", blockVb.Height)
 	}
-
-	//// check confirmation
-	//// #nosec G115 block height always positive
-	//if !ob.IsBlockConfirmed(uint64(blockVb.Height)) {
-	//	return "", fmt.Errorf("block %d is not confirmed yet", blockVb.Height)
-	//}
-
 	// #nosec G115 always positive
 
 	event, err := observer.GetBtcEvent(
@@ -127,11 +120,6 @@ func identifierFromBtcEvent(event *observer.BTCInboundEvent,
 	if err != nil {
 		return "", fmt.Errorf("error decoding memo bytes: %s", err)
 	}
-
-	// check if the event is processable
-	//if !ob.IsEventProcessable(*event) {
-	//	return nil
-	//}
 
 	// convert the amount to integer (satoshis)
 	amountSats, err := common.GetSatoshis(event.Value)
