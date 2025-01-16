@@ -109,8 +109,6 @@ func (c *Client) sendCommand(ctx context.Context, cmd any) (json.RawMessage, err
 		return nil, errors.Wrap(err, "unable to marshal cmd")
 	}
 
-	// ps: we can add retry logic if needed
-
 	req, err := c.newRequest(ctx, reqBody)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to create http request for %q", method)
@@ -187,7 +185,7 @@ func (c *Client) recordMetrics(method string, start time.Time, out rawResponse, 
 	}
 
 	metrics.RPCClientCounter.WithLabelValues(status, c.clientName, method).Inc()
-	metrics.RPCClientDuration.WithLabelValues(status, c.clientName, method).Observe(dur)
+	metrics.RPCClientDuration.WithLabelValues(c.clientName).Observe(dur)
 }
 
 func (c *Client) marshalCmd(cmd any) (string, []byte, error) {
