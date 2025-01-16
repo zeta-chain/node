@@ -308,6 +308,7 @@ func (ob *Observer) voteDeposit(
 		asset,
 		operatorAddress.String(),
 		eventIndex,
+		"",
 	)
 
 	return ob.PostVoteInbound(ctx, msg, retryGasLimit)

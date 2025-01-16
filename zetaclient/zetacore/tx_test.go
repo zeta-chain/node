@@ -261,7 +261,8 @@ func TestZetacore_GetInboundVoteMessage(t *testing.T) {
 			coin.CoinType_Gas,
 			"azeta",
 			address.String(),
-			0)
+			0,
+			"")
 		require.Equal(t, address.String(), msg.Creator)
 	})
 }
