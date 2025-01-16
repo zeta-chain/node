@@ -4,7 +4,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -64,8 +63,9 @@ func NewIBankContract(
 	kvGasConfig storetypes.GasConfig,
 ) *Contract {
 	accAddress := sdk.AccAddress(ContractAddress.Bytes())
-	if fungibleKeeper.GetAuthKeeper().GetAccount(ctx, accAddress) == nil {
-		fungibleKeeper.GetAuthKeeper().SetAccount(ctx, authtypes.NewBaseAccount(accAddress, nil, 0, 0))
+	if !fungibleKeeper.GetAuthKeeper().HasAccount(ctx, accAddress) {
+		acc := fungibleKeeper.GetAuthKeeper().NewAccountWithAddress(ctx, accAddress)
+		fungibleKeeper.GetAuthKeeper().SetAccount(ctx, acc)
 	}
 
 	return &Contract{

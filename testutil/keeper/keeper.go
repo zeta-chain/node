@@ -213,7 +213,12 @@ func ConsensusKeeper(
 	storeKey := storetypes.NewKVStoreKey(consensustypes.StoreKey)
 
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
-	return consensuskeeper.NewKeeper(cdc, runtime.NewKVStoreService(storeKey), authtypes.NewModuleAddress(govtypes.ModuleName).String(), runtime.EventService{})
+	return consensuskeeper.NewKeeper(
+		cdc,
+		runtime.NewKVStoreService(storeKey),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		runtime.EventService{},
+	)
 }
 
 // AccountKeeper instantiates an account keeper for testing purposes
