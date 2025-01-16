@@ -8,6 +8,12 @@
 
 ## v25.0.0
 
+## Unreleased
+
+## Refactor
+
+* [2863](https://github.com/zeta-chain/node/pull/2863) - refactor zetacore to delete matured ballots and add a migration script to remove all old ballots.
+
 ### Features
 
 * [3235](https://github.com/zeta-chain/node/pull/3235) - add /systemtime telemetry endpoint (zetaclient)

@@ -3,7 +3,9 @@ package keeper
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -56,4 +58,33 @@ func (k Keeper) BallotByIdentifier(
 		ObservationType:  ballot.ObservationType,
 		BallotStatus:     ballot.BallotStatus,
 	}, nil
+}
+
+// Ballots queries all the ballots. It is a paginated query
+func (k Keeper) Ballots(goCtx context.Context, req *types.QueryBallotsRequest) (*types.QueryBallotsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ballots := make([]types.Ballot, 0)
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	ballotStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VoterKey))
+
+	if req.Pagination == nil {
+		req.Pagination = &query.PageRequest{}
+	}
+
+	pageRes, err := query.Paginate(ballotStore, req.Pagination, func(_ []byte, value []byte) error {
+		var ballot types.Ballot
+		if err := k.cdc.Unmarshal(value, &ballot); err != nil {
+			return err
+		}
+		ballots = append(ballots, ballot)
+		return nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QueryBallotsResponse{Ballots: ballots, Pagination: pageRes}, nil
 }

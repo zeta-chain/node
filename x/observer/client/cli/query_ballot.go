@@ -8,6 +8,7 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
+// CmdBallotByIdentifier returns a command which queries a ballot by its identifier
 func CmdBallotByIdentifier() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show-ballot [ballot-identifier]",
@@ -37,6 +38,39 @@ func CmdBallotByIdentifier() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
 
+// CmdAllBallots returns a command which queries all ballots
+func CmdAllBallots() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list-ballots",
+		Short: "Query all ballots",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, _ []string) (err error) {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			params := &types.QueryBallotsRequest{
+				Pagination: pageReq,
+			}
+
+			res, err := queryClient.Ballots(cmd.Context(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
