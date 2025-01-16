@@ -9,6 +9,7 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/db"
@@ -33,8 +34,8 @@ func MockBTCObserverMainnet(t *testing.T, tss interfaces.TSSSigner) *Observer {
 	}
 
 	// create mock rpc client
-	btcClient := mocks.NewBTCRPCClient(t)
-	btcClient.On("GetBlockCount").Return(int64(100), nil)
+	btcClient := mocks.NewBitcoinClient(t)
+	btcClient.On("GetBlockCount", mock.Anything).Return(int64(100), nil)
 
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
