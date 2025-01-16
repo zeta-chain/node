@@ -2,6 +2,10 @@
 
 ## unreleased
 
+### Features
+
+* [3358](https://github.com/zeta-chain/node/pull/3358) - register aborted CCTX for Bitcoin inbound that carries insufficient depositor fee
+
 ### Refactor
 
 * [3332](https://github.com/zeta-chain/node/pull/3332) - implement orchestrator V2. Move BTC observer-signer to V2
