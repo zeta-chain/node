@@ -684,6 +684,13 @@ export declare class MsgVoteInbound extends Message<MsgVoteInbound> {
    */
   isCrossChainCall: boolean;
 
+  /**
+   * it carries the error message that caused the inbound to fail
+   *
+   * @generated from field: string error_message = 20;
+   */
+  errorMessage: string;
+
   constructor(data?: PartialMessage<MsgVoteInbound>);
 
   static readonly runtime: typeof proto3;

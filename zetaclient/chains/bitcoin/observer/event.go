@@ -47,6 +47,9 @@ type BTCInboundEvent struct {
 
 	// TxHash is the hash of the inbound
 	TxHash string
+
+	// ErrMessage is reason for failed inbound observation
+	ErrMessage string
 }
 
 // Category returns the category of the inbound event
@@ -195,6 +198,7 @@ func (ob *Observer) NewInboundVoteFromLegacyMemo(
 		0,
 		crosschaintypes.ProtocolContractVersion_V1,
 		false, // not relevant for v1
+		event.ErrMessage,
 	)
 }
 
@@ -232,6 +236,7 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 		0,
 		crosschaintypes.ProtocolContractVersion_V1,
 		false, // not relevant for v1
+		event.ErrMessage,
 		crosschaintypes.WithRevertOptions(revertOptions),
 	)
 }

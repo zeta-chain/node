@@ -71,6 +71,7 @@ func NewMsgVoteInbound(
 	eventIndex uint,
 	protocolContractVersion ProtocolContractVersion,
 	isArbitraryCall bool,
+	errMessage string,
 	options ...InboundVoteOption,
 ) *MsgVoteInbound {
 	msg := &MsgVoteInbound{
@@ -94,6 +95,7 @@ func NewMsgVoteInbound(
 		ProtocolContractVersion: protocolContractVersion,
 		RevertOptions:           NewEmptyRevertOptions(),
 		IsCrossChainCall:        false,
+		ErrorMessage:            errMessage,
 	}
 
 	for _, option := range options {

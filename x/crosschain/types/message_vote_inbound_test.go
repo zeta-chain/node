@@ -38,6 +38,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			42,
 			types.ProtocolContractVersion_V1,
 			true,
+			"",
 		)
 		require.EqualValues(t, types.NewEmptyRevertOptions(), msg.RevertOptions)
 	})
@@ -64,6 +65,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			31,
 			types.ProtocolContractVersion_V2,
 			true,
+			"",
 			types.WithRevertOptions(types.RevertOptions{
 				RevertAddress:  revertAddress.Hex(),
 				CallOnRevert:   true,
@@ -103,6 +105,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			42,
 			types.ProtocolContractVersion_V1,
 			true,
+			"",
 			types.WithZEVMRevertOptions(gatewayzevm.RevertOptions{
 				RevertAddress:    revertAddress,
 				CallOnRevert:     true,
@@ -137,6 +140,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			42,
 			types.ProtocolContractVersion_V1,
 			true,
+			"",
 			types.WithZEVMRevertOptions(gatewayzevm.RevertOptions{
 				RevertAddress: revertAddress,
 				CallOnRevert:  true,
@@ -175,6 +179,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			42,
 			types.ProtocolContractVersion_V1,
 			true,
+			"",
 			types.WithEVMRevertOptions(gatewayevm.RevertOptions{
 				RevertAddress:    revertAddress,
 				CallOnRevert:     true,
@@ -208,6 +213,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			42,
 			types.ProtocolContractVersion_V1,
 			true,
+			"",
 			types.WithEVMRevertOptions(gatewayevm.RevertOptions{
 				RevertAddress: revertAddress,
 				CallOnRevert:  true,
@@ -243,6 +249,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			42,
 			types.ProtocolContractVersion_V1,
 			true,
+			"",
 		)
 		require.False(t, msg.IsCrossChainCall)
 
@@ -263,6 +270,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			42,
 			types.ProtocolContractVersion_V1,
 			true,
+			"",
 			types.WithCrossChainCall(true),
 		)
 		require.True(t, msg.IsCrossChainCall)
@@ -284,6 +292,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			42,
 			types.ProtocolContractVersion_V1,
 			true,
+			"",
 			types.WithCrossChainCall(false),
 		)
 		require.False(t, msg.IsCrossChainCall)
@@ -317,6 +326,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				42,
 				types.ProtocolContractVersion_V1,
 				true,
+				"",
 			),
 		},
 		{
@@ -338,6 +348,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				42,
 				types.ProtocolContractVersion_V1,
 				true,
+				"",
 			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
@@ -360,6 +371,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				42,
 				types.ProtocolContractVersion_V1,
 				true,
+				"",
 			),
 			err: types.ErrInvalidChainID,
 		},
@@ -382,6 +394,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				42,
 				types.ProtocolContractVersion_V1,
 				true,
+				"",
 			),
 			err: types.ErrInvalidChainID,
 		},
@@ -404,6 +417,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				42,
 				types.ProtocolContractVersion_V1,
 				true,
+				"",
 			),
 			err: sdkerrors.ErrInvalidRequest,
 		},

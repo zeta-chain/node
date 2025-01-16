@@ -89,6 +89,7 @@ func CmdVoteInbound() *cobra.Command {
 				uint(argsEventIndex),
 				protocolContractVersion,
 				isArbitraryCall,
+				"",
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

@@ -28,7 +28,7 @@ func TestStressBTCDeposit(r *runner.E2ERunner, args []string) {
 	// send the deposits
 	for i := 0; i < numDeposits; i++ {
 		i := i
-		txHash := r.DepositBTCWithAmount(depositAmount, nil)
+		txHash := r.DepositBTCWithAmount(depositAmount, nil, true)
 		r.Logger.Print("index %d: starting deposit, tx hash: %s", i, txHash.String())
 
 		eg.Go(func() error { return monitorBTCDeposit(r, txHash, i, time.Now()) })

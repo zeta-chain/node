@@ -184,6 +184,9 @@ message MsgVoteInbound {
 
   // define if a smart contract call should be made with asset
   bool is_cross_chain_call = 19;
+
+  // it carries the error message that caused the inbound to fail
+  string error_message = 20;
 }
 
 message MsgVoteInboundResponse {}

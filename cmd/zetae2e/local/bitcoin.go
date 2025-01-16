@@ -58,7 +58,8 @@ func bitcoinTestRoutines(
 		_, err := runnerDeposit.GenerateToAddressIfLocalBitcoin(101, runnerDeposit.BTCDeployerAddress)
 		require.NoError(runnerDeposit, err)
 
-		// send BTC to ZEVM addresses
+		// donate BTC to TSS and send BTC to ZEVM addresses
+		runnerDeposit.DonateBTC()
 		runnerDeposit.DepositBTC(runnerDeposit.EVMAddress())
 		runnerDeposit.DepositBTC(runnerWithdraw.EVMAddress())
 	}

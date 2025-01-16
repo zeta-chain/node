@@ -23,6 +23,13 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 	ctx sdk.Context,
 	config InitiateOutboundConfig,
 ) (newCCTXStatus types.CctxStatus, err error) {
+	// abort if CCTX already contains an initial error message from inbound vote msg
+	if config.CCTX.CctxStatus.ErrorMessage != "" {
+		config.CCTX.SetAbort("observation failed", "")
+		return types.CctxStatus_Aborted, nil
+	}
+
+	// process the deposit
 	tmpCtx, commit := ctx.CacheContext()
 	isContractReverted, err := c.crosschainKeeper.HandleEVMDeposit(tmpCtx, config.CCTX)
 

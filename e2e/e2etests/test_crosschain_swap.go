@@ -102,8 +102,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 
 	r.Logger.Info("******* Second test: BTC -> ERC20ZRC20")
 	// list deployer utxos
-	utxos, err := r.ListDeployerUTXOs()
-	require.NoError(r, err)
+	utxos := r.ListDeployerUTXOs()
 
 	r.Logger.Info("#utxos %d", len(utxos))
 	r.Logger.Info("memo address %s", r.ERC20ZRC20Addr)
@@ -143,8 +142,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		r.Logger.Info("memo length %d", len(memo))
 
 		amount := 0.1
-		utxos, err = r.ListDeployerUTXOs()
-		require.NoError(r, err)
+		utxos = r.ListDeployerUTXOs()
 		txid, err := r.SendToTSSFromDeployerWithMemo(amount, utxos[0:1], memo)
 		require.NoError(r, err)
 

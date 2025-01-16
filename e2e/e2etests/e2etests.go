@@ -82,6 +82,7 @@ const (
 	TestBitcoinStdMemoDepositAndCallRevertName             = "bitcoin_std_memo_deposit_and_call_revert"
 	TestBitcoinStdMemoDepositAndCallRevertOtherAddressName = "bitcoin_std_memo_deposit_and_call_revert_other_address"
 	TestBitcoinStdMemoInscribedDepositAndCallName          = "bitcoin_std_memo_inscribed_deposit_and_call"
+	TestBitcoinDepositAndAbortWithLowDepositFeeName        = "bitcoin_deposit_and_abort_with_low_deposit_fee"
 	TestBitcoinWithdrawSegWitName                          = "bitcoin_withdraw_segwit"
 	TestBitcoinWithdrawTaprootName                         = "bitcoin_withdraw_taproot"
 	TestBitcoinWithdrawMultipleName                        = "bitcoin_withdraw_multiple"
@@ -646,6 +647,12 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "fee rate", DefaultValue: "10"},
 		},
 		TestBitcoinStdMemoInscribedDepositAndCall,
+	),
+	runner.NewE2ETest(
+		TestBitcoinDepositAndAbortWithLowDepositFeeName,
+		"deposit Bitcoin into ZEVM that aborts due to insufficient deposit fee",
+		[]runner.ArgDefinition{},
+		TestBitcoinDepositAndAbortWithLowDepositFee,
 	),
 	runner.NewE2ETest(
 		TestBitcoinWithdrawSegWitName,

@@ -312,6 +312,7 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 		0, // not a smart contract call
 		crosschaintypes.ProtocolContractVersion_V1,
 		false, // not relevant for v1
+		"",
 	)
 }
 

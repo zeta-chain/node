@@ -51,6 +51,7 @@ func GetInboundVoteMessage(
 		eventIndex,
 		types.ProtocolContractVersion_V1,
 		false, // not relevant for v1
+		"",
 	)
 	return msg
 }

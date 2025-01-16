@@ -313,6 +313,7 @@ func GetBtcEventWithoutWitness(
 		value        float64
 		depositorFee float64
 		memo         []byte
+		errMessage   string
 	)
 
 	if len(tx.Vout) >= 2 {
@@ -337,13 +338,14 @@ func GetBtcEventWithoutWitness(
 				return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
 			}
 
-			// deposit amount has to be no less than the minimum depositor fee
-			if vout0.Value < depositorFee {
-				logger.Info().
-					Msgf("GetBtcEvent: btc deposit amount %v in txid %s is less than depositor fee %v", vout0.Value, tx.Txid, depositorFee)
-				return nil, nil
+			// deduct depositor fee
+			// to allow developers to track failed deposit caused by insufficient depositor fee,
+			// the error message will be forwarded to zetacore to register a failed CCTX
+			value, err = DeductDepositorFee(vout0.Value, depositorFee)
+			if err != nil {
+				errMessage = err.Error()
+				logger.Info().Err(err).Msgf("unable to deduct depositor fee for tx %s", tx.Txid)
 			}
-			value = vout0.Value - depositorFee
 
 			// 2nd vout must be a valid OP_RETURN memo
 			vout1 := tx.Vout[1]
@@ -380,6 +382,7 @@ func GetBtcEventWithoutWitness(
 			MemoBytes:    memo,
 			BlockNumber:  blockNumber,
 			TxHash:       tx.Txid,
+			ErrMessage:   errMessage,
 		}, nil
 	}
 	return nil, nil
