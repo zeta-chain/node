@@ -8,7 +8,6 @@ import (
 	"github.com/zeta-chain/node/cmd/zetatool/inbound_ballot"
 
 	"github.com/zeta-chain/node/cmd/zetatool/config"
-	"github.com/zeta-chain/node/cmd/zetatool/filterdeposit"
 )
 
 var rootCmd = &cobra.Command{
@@ -17,8 +16,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(filterdeposit.NewFilterDepositCmd())
-	rootCmd.AddCommand(inbound_ballot.NewInboundCMD())
+	rootCmd.AddCommand(inbound_ballot.NewFetchInboundBallotCMD())
 	rootCmd.PersistentFlags().String(config.FlagConfig, "", "custom config file: --config filename.json")
 }
 

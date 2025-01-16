@@ -13,49 +13,66 @@ const (
 	defaultCfgFileName = "zetatool_config.json"
 	ZetaChainGRPC      = "127.0.0.1:9090"
 	EthRPCURL          = "http://127.0.0.1:8545"
-
-	BtcRPC         = "smoketest"
-	BtcRPCPassword = "123"
-	BtcRPCHost     = "127.0.0.1:18443"
-	BtcRPCParams   = "regtest"
-
-	SolanaRPC = "http://127.0.0.1:8899"
-
-	ZetaChainID      = 101
-	ConnectorAddress = "0x000007Cf399229b2f5A4D043F20E90C9C98B7C6a"
-	CustodyAddress   = "0x0000030Ec64DF25301d8414eE5a29588C4B0dE10"
-	BtcExplorerURL   = "https://blockstream.info/api/"
+	BtcRPC             = "smoketest"
+	BtcRPCPassword     = "123"
+	BtcRPCHost         = "127.0.0.1:18443"
+	BtcRPCParams       = "regtest"
+	SolanaRPC          = "http://127.0.0.1:8899"
+	ZetaChainID        = 101
 )
+
+func TestnetConfig() *Config {
+	return &Config{
+		ZetaGRPC:     "zetachain-testnet-grpc.itrocket.net:443",
+		EthRPCURL:    "https://ethereum-sepolia-rpc.publicnode.com",
+		ZetaChainID:  101,
+		BtcUser:      "",
+		BtcPassword:  "",
+		BtcHost:      "",
+		BtcRPCParams: "",
+		SolanaRPC:    "",
+	}
+}
+
+func MainnetConfig() *Config {
+	return &Config{
+		ZetaGRPC:     "https://zetachain-grpc.f5nodes.com:9090",
+		EthRPCURL:    "",
+		ZetaChainID:  7001,
+		BtcUser:      "",
+		BtcPassword:  "",
+		BtcHost:      "",
+		BtcRPCParams: "",
+		SolanaRPC:    "",
+	}
+}
+
+func LocalNetConfig() *Config {
+	return DefaultConfig()
+}
 
 // Config is a struct the defines the configuration fields used by zetatool
 type Config struct {
-	ZetaGRPC         string
-	ZetaChainID      int64
-	BtcExplorerURL   string
-	EthRPCURL        string
-	EtherscanAPIkey  string
-	ConnectorAddress string
-	CustodyAddress   string
-	BtcUser          string
-	BtcPassword      string
-	BtcHost          string
-	BtcRPCParams     string
-	SolanaRPC        string
+	ZetaGRPC     string
+	ZetaChainID  int64
+	EthRPCURL    string
+	BtcUser      string
+	BtcPassword  string
+	BtcHost      string
+	BtcRPCParams string
+	SolanaRPC    string
 }
 
 func DefaultConfig() *Config {
 	return &Config{
-		ZetaGRPC:         ZetaChainGRPC,
-		BtcExplorerURL:   BtcExplorerURL,
-		EthRPCURL:        EthRPCURL,
-		ConnectorAddress: ConnectorAddress,
-		CustodyAddress:   CustodyAddress,
-		ZetaChainID:      ZetaChainID,
-		BtcUser:          BtcRPC,
-		BtcPassword:      BtcRPCPassword,
-		BtcHost:          BtcRPCHost,
-		BtcRPCParams:     BtcRPCParams,
-		SolanaRPC:        SolanaRPC,
+		ZetaGRPC:     ZetaChainGRPC,
+		EthRPCURL:    EthRPCURL,
+		ZetaChainID:  ZetaChainID,
+		BtcUser:      BtcRPC,
+		BtcPassword:  BtcRPCPassword,
+		BtcHost:      BtcRPCHost,
+		BtcRPCParams: BtcRPCParams,
+		SolanaRPC:    SolanaRPC,
 	}
 }
 
@@ -80,7 +97,7 @@ func (c *Config) Read(filename string) error {
 func GetConfig(filename string) (*Config, error) {
 	//Check if cfgFile is empty, if so return default Config and save to file
 	if filename == "" {
-		cfg := DefaultConfig()
+		cfg := TestnetConfig()
 		err := cfg.Save()
 		return cfg, err
 	}

@@ -14,10 +14,10 @@ import (
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 )
 
-func NewInboundCMD() *cobra.Command {
+func NewFetchInboundBallotCMD() *cobra.Command {
 	return &cobra.Command{
 		Use:   "inbound",
-		Short: "Fetch Inbound ballot",
+		Short: "Fetch Inbound ballot from the inbound hash",
 		RunE:  InboundGetBallot,
 	}
 }
@@ -47,6 +47,12 @@ func InboundGetBallot(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		panic(err)
 	}
+
+	//zetacoreClient, err := zetacorerpc.NewGRPCClients(
+	//	cfg.ZetaGRPC,
+	//	grpc.WithTransportCredentials(insecure.NewCredentials()),
+	//	grpc.WithBlock(),
+	//)
 
 	observationChain, found := chains.GetChainFromChainID(inboundChainID, []chains.Chain{})
 	if !found {

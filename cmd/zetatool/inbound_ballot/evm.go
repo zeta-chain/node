@@ -45,6 +45,8 @@ func EvmInboundBallotIdentified(ctx context.Context,
 	}
 	tssEthAddress := res.GetEth()
 
+	fmt.Println("ETH Address: ", tssEthAddress)
+
 	hash := ethcommon.HexToHash(inboundHash)
 	tx, isPending, err := evmClient.TransactionByHash(ctx, hash)
 	if err != nil {
