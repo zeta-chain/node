@@ -30,7 +30,7 @@ func btcInboundBallotIdentifier(
 	zetaChainID int64) (string, error) {
 	params, err := chains.BitcoinNetParamsFromChainID(inboundChain.ChainId)
 	if err != nil {
-		return "", fmt.Errorf("unable to get bitcoin net params from chain id: %s", err)
+		return "", fmt.Errorf("unable to get bitcoin net params from chain id: %w", err)
 	}
 
 	connCfg := &rpcclient.ConnConfig{
@@ -43,22 +43,22 @@ func btcInboundBallotIdentifier(
 	}
 	rpcClient, err := rpcclient.New(connCfg, nil)
 	if err != nil {
-		return "", fmt.Errorf("error creating rpc client: %s", err)
+		return "", fmt.Errorf("error creating rpc client: %w", err)
 	}
 
 	err = rpcClient.Ping()
 	if err != nil {
-		return "", fmt.Errorf("error ping the bitcoin server: %s", err)
+		return "", fmt.Errorf("error ping the bitcoin server: %w", err)
 	}
 	res, err := zetacoreClient.Observer.GetTssAddress(context.Background(), &types.QueryGetTssAddressRequest{})
 	if err != nil {
-		return "", fmt.Errorf("failed to get tss address %s", err.Error())
+		return "", fmt.Errorf("failed to get tss address %w", err)
 	}
 	tssBtcAddress := res.GetBtc()
 
 	chainParams, err := zetacoreClient.GetChainParamsForChainID(context.Background(), inboundChain.ChainId)
 	if err != nil {
-		return "", fmt.Errorf("failed to get chain params %s", err.Error())
+		return "", fmt.Errorf("failed to get chain params: %w", err)
 	}
 
 	return bitcoinBallotIdentifier(
@@ -119,7 +119,7 @@ func bitcoinBallotIdentifier(
 		common.CalcDepositorFee,
 	)
 	if err != nil {
-		return "", fmt.Errorf("error getting btc event: %s", err)
+		return "", fmt.Errorf("error getting btc event: %w", err)
 	}
 
 	if event == nil {
@@ -135,13 +135,13 @@ func identifierFromBtcEvent(event *zetaclientObserver.BTCInboundEvent,
 	// decode event memo bytes
 	err := event.DecodeMemoBytes(senderChainID)
 	if err != nil {
-		return "", fmt.Errorf("error decoding memo bytes: %s", err)
+		return "", fmt.Errorf("error decoding memo bytes: %w", err)
 	}
 
 	// convert the amount to integer (satoshis)
 	amountSats, err := common.GetSatoshis(event.Value)
 	if err != nil {
-		return "", fmt.Errorf("error converting amount to satoshis: %s", err)
+		return "", fmt.Errorf("error converting amount to satoshis: %w", err)
 	}
 	amountInt := big.NewInt(amountSats)
 
@@ -162,7 +162,7 @@ func identifierFromBtcEvent(event *zetaclientObserver.BTCInboundEvent,
 
 	index := msg.Digest()
 	if confirmationMessage != "" {
-		return fmt.Sprintf("ballot identifier %s warning :%s", index, confirmationMessage), nil
+		return fmt.Sprintf("ballot identifier: %s warning: %s", index, confirmationMessage), nil
 	}
 	return fmt.Sprintf("ballot identifier: %s", msg.Digest()), nil
 }

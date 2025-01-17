@@ -30,7 +30,7 @@ func GetInboundBallot(cmd *cobra.Command, args []string) error {
 	}
 	configFile, err := cmd.Flags().GetString(config.FlagConfig)
 	if err != nil {
-		return fmt.Errorf("failed to read value for flag %s , err %s", config.FlagConfig, err.Error())
+		return fmt.Errorf("failed to read value for flag %s , err %w", config.FlagConfig, err)
 	}
 
 	return GetBallotIdentifier(inboundHash, inboundChainID, configFile)
@@ -44,12 +44,12 @@ func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile st
 
 	cfg, err := config.GetConfig(observationChain, configFile)
 	if err != nil {
-		return fmt.Errorf("failed to get config: %s", err.Error())
+		return fmt.Errorf("failed to get config: %w", err)
 	}
 
 	zetacoreClient, err := zetacorerpc.NewCometBFTClients(cfg.ZetaChainRPC)
 	if err != nil {
-		return fmt.Errorf("failed to create zetacore client: %s", err.Error())
+		return fmt.Errorf("failed to create zetacore client: %w", err)
 	}
 
 	ctx := context.Background()
@@ -66,9 +66,9 @@ func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile st
 		)
 		if err != nil {
 			return fmt.Errorf(
-				"failed to get inbound ballot for evm chain %d, %s",
+				"failed to get inbound ballot for evm chain %d, %w",
 				observationChain.ChainId,
-				err.Error(),
+				err,
 			)
 		}
 	}
@@ -83,9 +83,9 @@ func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile st
 		)
 		if err != nil {
 			return fmt.Errorf(
-				"failed to get inbound ballot for bitcoin chain %d, %s",
+				"failed to get inbound ballot for bitcoin chain %d, %w",
 				observationChain.ChainId,
-				err.Error(),
+				err,
 			)
 		}
 	}
@@ -101,9 +101,9 @@ func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile st
 		)
 		if err != nil {
 			return fmt.Errorf(
-				"failed to get inbound ballot for solana chain %d, %s",
+				"failed to get inbound ballot for solana chain %d, %w",
 				observationChain.ChainId,
-				err.Error(),
+				err,
 			)
 		}
 	}

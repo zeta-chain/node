@@ -50,24 +50,24 @@ func evmInboundBallotIdentifier(ctx context.Context,
 	}
 	rpcClient, err := ethrpc.DialHTTP(evmRRC)
 	if err != nil {
-		return "", fmt.Errorf("failed to connect to eth rpc %s", err.Error())
+		return "", fmt.Errorf("failed to connect to eth rpc: %w", err)
 	}
 	evmClient := ethclient.NewClient(rpcClient)
 
 	// create evm client for the observation chain
 	tx, receipt, err := getEvmTx(ctx, evmClient, inboundHash, inboundChain)
 	if err != nil {
-		return "", fmt.Errorf("failed to get tx %s", err.Error())
+		return "", fmt.Errorf("failed to get tx: %w", err)
 	}
 
 	chainParams, err := zetacoreClient.GetChainParamsForChainID(context.Background(), inboundChain.ChainId)
 	if err != nil {
-		return "", fmt.Errorf("failed to get chain params %s", err.Error())
+		return "", fmt.Errorf("failed to get chain params: %w", err)
 	}
 
 	res, err := zetacoreClient.Observer.GetTssAddress(context.Background(), &types.QueryGetTssAddressRequest{})
 	if err != nil {
-		return "", fmt.Errorf("failed to get tss address %s", err.Error())
+		return "", fmt.Errorf("failed to get tss address: %w", err)
 	}
 	tssEthAddress := res.GetEth()
 
@@ -78,10 +78,10 @@ func evmInboundBallotIdentifier(ctx context.Context,
 	confirmationMessage := ""
 	confirmed, err := zetaclientrpc.IsTxConfirmed(ctx, evmClient, inboundHash, chainParams.ConfirmationCount)
 	if err != nil {
-		return "", fmt.Errorf("unable to confirm tx %s", err.Error())
+		return "", fmt.Errorf("unable to confirm tx: %w", err)
 	}
 	if !confirmed {
-		confirmationMessage = fmt.Sprintf("tx might not confirmed on chain %d", inboundChain.ChainId)
+		confirmationMessage = fmt.Sprintf("tx might not be confirmed on chain %d", inboundChain.ChainId)
 	}
 
 	msg := &crosschaintypes.MsgVoteInbound{}
@@ -93,7 +93,7 @@ func evmInboundBallotIdentifier(ctx context.Context,
 			addrConnector := ethcommon.HexToAddress(chainParams.ConnectorContractAddress)
 			connector, err := zetaconnector.NewZetaConnectorNonEth(addrConnector, evmClient)
 			if err != nil {
-				return "", fmt.Errorf("failed to get connector contract %s", err.Error())
+				return "", fmt.Errorf("failed to get connector contract: %w", err)
 			}
 			for _, log := range receipt.Logs {
 				event, err := connector.ParseZetaSent(*log)
@@ -107,11 +107,11 @@ func evmInboundBallotIdentifier(ctx context.Context,
 			addrCustody := ethcommon.HexToAddress(chainParams.Erc20CustodyContractAddress)
 			custody, err := erc20custody.NewERC20Custody(addrCustody, evmClient)
 			if err != nil {
-				return "", fmt.Errorf("failed to get custody contract %s", err.Error())
+				return "", fmt.Errorf("failed to get custody contract: %w", err)
 			}
 			sender, err := evmClient.TransactionSender(ctx, tx, receipt.BlockHash, receipt.TransactionIndex)
 			if err != nil {
-				return "", fmt.Errorf("failed to get tx sender %s", err.Error())
+				return "", fmt.Errorf("failed to get tx sender: %w", err)
 			}
 			for _, log := range receipt.Logs {
 				zetaDeposited, err := custody.ParseDeposited(*log)
@@ -127,7 +127,7 @@ func evmInboundBallotIdentifier(ctx context.Context,
 			}
 			sender, err := evmClient.TransactionSender(ctx, tx, receipt.BlockHash, receipt.TransactionIndex)
 			if err != nil {
-				return "", fmt.Errorf("failed to get tx sender %s", err.Error())
+				return "", fmt.Errorf("failed to get tx sender: %w", err)
 			}
 			msg = gasVoteV1(tx, sender, receipt.BlockNumber.Uint64(), inboundChain.ChainId, zetaChainID)
 		}
@@ -136,7 +136,7 @@ func evmInboundBallotIdentifier(ctx context.Context,
 			gatewayAddr := ethcommon.HexToAddress(chainParams.GatewayAddress)
 			gateway, err := gatewayevm.NewGatewayEVM(gatewayAddr, evmClient)
 			if err != nil {
-				return "", fmt.Errorf("failed to get gateway contract %s", err.Error())
+				return "", fmt.Errorf("failed to get gateway contract: %w", err)
 			}
 			for _, log := range receipt.Logs {
 				if log == nil || log.Address != gatewayAddr {
@@ -178,14 +178,14 @@ func getEvmTx(
 	hash := ethcommon.HexToHash(inboundHash)
 	tx, isPending, err := evmClient.TransactionByHash(ctx, hash)
 	if err != nil {
-		return nil, nil, fmt.Errorf("tx not found on chain %s, %d", err.Error(), inboundChain.ChainId)
+		return nil, nil, fmt.Errorf("tx not found on chain: %w,chainID: %d", err, inboundChain.ChainId)
 	}
 	if isPending {
 		return nil, nil, fmt.Errorf("tx is still pending on chain %d", inboundChain.ChainId)
 	}
 	receipt, err := evmClient.TransactionReceipt(ctx, hash)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get receipt %s , tx hash %s", err.Error(), inboundHash)
+		return nil, nil, fmt.Errorf("failed to get receipt: %w, tx hash: %s", err, inboundHash)
 	}
 	return tx, receipt, nil
 }
@@ -197,7 +197,6 @@ func zetaTokenVoteV1(
 	// note that this is most likely zeta chain
 	destChain, found := chains.GetChainFromChainID(event.DestinationChainId.Int64(), []chains.Chain{})
 	if !found {
-		fmt.Println("Not found")
 		return nil
 	}
 
@@ -260,8 +259,6 @@ func gasVoteV1(
 	zetacoreChainID int64,
 ) *crosschaintypes.MsgVoteInbound {
 	message := string(tx.Data())
-	// donation check
-	// #nosec G703 err is already checked
 	data, _ := hex.DecodeString(message)
 	if bytes.Equal(data, []byte(constant.DonationMessage)) {
 		return nil

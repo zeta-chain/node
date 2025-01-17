@@ -35,17 +35,17 @@ func solanaInboundBallotIdentifier(ctx context.Context,
 
 	txResult, err := solanarpc.GetTransaction(ctx, solClient, signature)
 	if err != nil {
-		return "", fmt.Errorf("error getting transaction: %s", err)
+		return "", fmt.Errorf("error getting transaction: %w", err)
 	}
 
 	chainParams, err := zetacoreClient.GetChainParamsForChainID(context.Background(), inboundChain.ChainId)
 	if err != nil {
-		return "", fmt.Errorf("failed to get chain params %s", err.Error())
+		return "", fmt.Errorf("failed to get chain params %w", err)
 	}
 
 	gatewayID, _, err := solanacontracts.ParseGatewayWithPDA(chainParams.GatewayAddress)
 	if err != nil {
-		return "", fmt.Errorf("cannot parse gateway address %s , err %s", chainParams.GatewayAddress, err.Error())
+		return "", fmt.Errorf("cannot parse gateway address %s, err %w", chainParams.GatewayAddress, err)
 	}
 
 	logger := &base.ObserverLogger{}
