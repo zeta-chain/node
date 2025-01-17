@@ -2,10 +2,14 @@
 
 ## unreleased
 
+### Features
+
+* [3368](https://github.com/zeta-chain/node/pull/3368) - cli command to fetch inbound ballot from inbound hash added to zetatools.
+
 ### Refactor
 
 * [3332](https://github.com/zeta-chain/node/pull/3332) - implement orchestrator V2. Move BTC observer-signer to V2
-* [3368](https://github.com/zeta-chain/node/pull/3368) - refactor cli command to fetch inbound ballot from inbound hash and move to zetatools
+
 
 ## v25.0.0
 

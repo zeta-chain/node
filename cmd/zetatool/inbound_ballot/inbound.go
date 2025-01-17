@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/node/cmd/zetatool/config"
@@ -56,7 +57,7 @@ func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile st
 	ballotIdentifier := ""
 
 	if observationChain.IsEVMChain() {
-		ballotIdentifier, err = EvmInboundBallotIdentified(
+		ballotIdentifier, err = evmInboundBallotIdentifier(
 			ctx,
 			*cfg,
 			zetacoreClient,
@@ -74,8 +75,7 @@ func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile st
 	}
 
 	if observationChain.IsBitcoinChain() {
-		ballotIdentifier, err = BtcInboundBallotIdentified(
-			ctx,
+		ballotIdentifier, err = btcInboundBallotIdentifier(
 			*cfg,
 			zetacoreClient,
 			inboundHash,
@@ -92,7 +92,7 @@ func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile st
 	}
 
 	if observationChain.IsSolanaChain() {
-		ballotIdentifier, err = SolanaInboundBallotIdentified(
+		ballotIdentifier, err = solanaInboundBallotIdentifier(
 			ctx,
 			*cfg,
 			zetacoreClient,
@@ -109,6 +109,6 @@ func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile st
 		}
 	}
 
-	fmt.Println("Ballot Identifier: ", ballotIdentifier)
+	log.Info().Msgf("Ballot Identifier: %s", ballotIdentifier)
 	return nil
 }

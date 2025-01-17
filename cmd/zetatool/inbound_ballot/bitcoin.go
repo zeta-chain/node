@@ -22,7 +22,7 @@ import (
 	zetaclientObserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 )
 
-func BtcInboundBallotIdentified(ctx context.Context,
+func btcInboundBallotIdentifier(
 	cfg config.Config,
 	zetacoreClient rpc.Clients,
 	inboundHash string,
@@ -57,7 +57,6 @@ func BtcInboundBallotIdentified(ctx context.Context,
 	tssBtcAddress := res.GetBtc()
 
 	return bitcoinBallotIdentifier(
-		ctx,
 		rpcClient,
 		params,
 		tssBtcAddress,
@@ -67,7 +66,7 @@ func BtcInboundBallotIdentified(ctx context.Context,
 	)
 }
 
-func bitcoinBallotIdentifier(ctx context.Context,
+func bitcoinBallotIdentifier(
 	btcClient *rpcclient.Client,
 	params *chaincfg.Params,
 	tss string,
@@ -153,18 +152,18 @@ func identifierFromBtcEvent(event *zetaclientObserver.BTCInboundEvent,
 func voteFromLegacyMemo(
 	event *zetaclientObserver.BTCInboundEvent,
 	amountSats *big.Int,
-	senderChainId int64,
-	zetacoreChainId int64,
+	senderChainID int64,
+	zetacoreChainID int64,
 ) *crosschaintypes.MsgVoteInbound {
 	message := hex.EncodeToString(event.MemoBytes)
 
 	return crosschaintypes.NewMsgVoteInbound(
 		"",
 		event.FromAddress,
-		senderChainId,
+		senderChainID,
 		event.FromAddress,
 		event.ToAddress,
-		zetacoreChainId,
+		zetacoreChainID,
 		cosmosmath.NewUintFromBigInt(amountSats),
 		message,
 		event.TxHash,
@@ -181,8 +180,8 @@ func voteFromLegacyMemo(
 func voteFromStdMemo(
 	event *zetaclientObserver.BTCInboundEvent,
 	amountSats *big.Int,
-	senderChainId int64,
-	zetacoreChainId int64,
+	senderChainID int64,
+	zetacoreChainID int64,
 ) *crosschaintypes.MsgVoteInbound {
 	// zetacore will create a revert outbound that points to the custom revert address.
 	revertOptions := crosschaintypes.RevertOptions{
@@ -196,10 +195,10 @@ func voteFromStdMemo(
 	return crosschaintypes.NewMsgVoteInbound(
 		"",
 		event.FromAddress,
-		senderChainId,
+		senderChainID,
 		event.FromAddress,
 		event.ToAddress,
-		zetacoreChainId,
+		zetacoreChainID,
 		cosmosmath.NewUintFromBigInt(amountSats),
 		message,
 		event.TxHash,

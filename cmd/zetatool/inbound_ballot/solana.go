@@ -21,7 +21,7 @@ import (
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
-func SolanaInboundBallotIdentified(ctx context.Context,
+func solanaInboundBallotIdentifier(ctx context.Context,
 	cfg config.Config,
 	zetacoreClient rpc.Clients,
 	inboundHash string,

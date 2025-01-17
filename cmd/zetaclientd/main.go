@@ -82,7 +82,6 @@ func init() {
 	setupGlobalOptions()
 	setupInitializeConfigOptions()
 	setupRelayerOptions()
-	setupInboundOptions()
 
 	// Define commands
 	RootCmd.AddCommand(VersionCmd)

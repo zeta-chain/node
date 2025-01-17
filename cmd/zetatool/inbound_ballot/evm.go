@@ -37,7 +37,7 @@ func resolveRPC(chain chains.Chain, cfg config.Config) string {
 	}[chain.Network]
 }
 
-func EvmInboundBallotIdentified(ctx context.Context,
+func evmInboundBallotIdentifier(ctx context.Context,
 	cfg config.Config,
 	zetacoreClient rpc.Clients,
 	inboundHash string,
