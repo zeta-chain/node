@@ -59,7 +59,10 @@ func solanaInboundBallotIdentifier(ctx context.Context,
 
 	// build inbound vote message from events and post to zetacore
 	for _, event := range events {
-		msg := voteMsgFromSolEvent(event, zetaChainID)
+		msg, err := voteMsgFromSolEvent(event, zetaChainID)
+		if err != nil {
+			return "", fmt.Errorf("failed to create vote message: %w", err)
+		}
 		return msg.Digest(), nil
 	}
 
@@ -68,11 +71,11 @@ func solanaInboundBallotIdentifier(ctx context.Context,
 
 // voteMsgFromSolEvent builds a MsgVoteInbound from an inbound event
 func voteMsgFromSolEvent(event *clienttypes.InboundEvent,
-	zetaChainID int64) *crosschaintypes.MsgVoteInbound {
+	zetaChainID int64) (*crosschaintypes.MsgVoteInbound, error) {
 	// decode event memo bytes to get the receiver
 	err := event.DecodeMemo()
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("failed to decode memo: %w", err)
 	}
 
 	// create inbound vote message
@@ -93,5 +96,5 @@ func voteMsgFromSolEvent(event *clienttypes.InboundEvent,
 		0, // not a smart contract call
 		crosschaintypes.ProtocolContractVersion_V1,
 		false, // not relevant for v1
-	)
+	), nil
 }

@@ -13,17 +13,16 @@ import (
 	zetacorerpc "github.com/zeta-chain/node/pkg/rpc"
 )
 
-func NewFetchInboundBallotCMD() *cobra.Command {
+func NewGetInboundBallotCMD() *cobra.Command {
 	return &cobra.Command{
 		Use:   "get-ballot [inboundHash] [chainID]",
 		Short: "fetch ballot identifier from the inbound hash",
 		RunE:  GetInboundBallot,
+		Args:  cobra.ExactArgs(2),
 	}
 }
 
 func GetInboundBallot(cmd *cobra.Command, args []string) error {
-	cobra.ExactArgs(2)
-
 	inboundHash := args[0]
 	inboundChainID, err := strconv.ParseInt(args[1], 10, 64)
 	if err != nil {

@@ -16,7 +16,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(inbound.NewFetchInboundBallotCMD())
+	rootCmd.AddCommand(inbound.NewGetInboundBallotCMD())
 	rootCmd.PersistentFlags().String(config.FlagConfig, "", "custom config file: --config filename.json")
 }
 

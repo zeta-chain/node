@@ -134,18 +134,21 @@ func identifierFromBtcEvent(event *zetaclientObserver.BTCInboundEvent,
 	}
 	amountInt := big.NewInt(amountSats)
 
+	var msg *crosschaintypes.MsgVoteInbound
 	switch event.MemoStd {
 	case nil:
 		{
-			msg := voteFromLegacyMemo(event, amountInt, senderChainID, zetacoreChainID)
-			return msg.Digest(), nil
+			msg = voteFromLegacyMemo(event, amountInt, senderChainID, zetacoreChainID)
 		}
 	default:
 		{
-			msg := voteFromStdMemo(event, amountInt, senderChainID, zetacoreChainID)
-			return msg.Digest(), nil
+			msg = voteFromStdMemo(event, amountInt, senderChainID, zetacoreChainID)
 		}
 	}
+	if msg == nil {
+		return "", fmt.Errorf("failed to create vote message")
+	}
+	return msg.Digest(), nil
 }
 
 // NewInboundVoteFromLegacyMemo creates a MsgVoteInbound message for inbound that uses legacy memo

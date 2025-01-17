@@ -70,6 +70,10 @@ func evmInboundBallotIdentifier(ctx context.Context,
 	}
 	tssEthAddress := res.GetEth()
 
+	if tx.To() == nil {
+		return "", fmt.Errorf("invalid trasnaction,to field is empty %s", inboundHash)
+	}
+
 	// Create inbound vote message based on the cointype and protocol version
 	switch tx.To().Hex() {
 	case chainParams.ConnectorContractAddress:
