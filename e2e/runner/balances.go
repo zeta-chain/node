@@ -50,41 +50,41 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	// zevm
 	zetaZeta, err := r.ZEVMClient.BalanceAt(r.Ctx, r.EVMAddress(), nil)
 	if err != nil {
-		return AccountBalances{}, err
+		return AccountBalances{}, fmt.Errorf("get zeta balance: %w", err)
 	}
 	zetaWZeta, err := r.WZeta.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	if err != nil {
-		return AccountBalances{}, err
+		return AccountBalances{}, fmt.Errorf("get wzeta balance: %w", err)
 	}
 	zetaEth, err := r.getZRC20BalanceSafe(r.ETHZRC20)
 	if err != nil {
-		return AccountBalances{}, err
+		return AccountBalances{}, fmt.Errorf("get eth zrc20 balance: %w", err)
 	}
 	zetaErc20, err := r.getZRC20BalanceSafe(r.ERC20ZRC20)
 	if err != nil {
-		return AccountBalances{}, err
+		return AccountBalances{}, fmt.Errorf("get erc20 zrc20 balance: %w", err)
 	}
 	zetaBtc, err := r.getZRC20BalanceSafe(r.BTCZRC20)
 	if err != nil {
-		return AccountBalances{}, err
+		return AccountBalances{}, fmt.Errorf("get btc zrc20 balance: %w", err)
 	}
 	zetaSol, err := r.getZRC20BalanceSafe(r.SOLZRC20)
 	if err != nil {
-		return AccountBalances{}, err
+		return AccountBalances{}, fmt.Errorf("get sol zrc20 balance: %w", err)
 	}
 
 	// evm
 	evmEth, err := r.EVMClient.BalanceAt(r.Ctx, r.EVMAddress(), nil)
 	if err != nil {
-		return AccountBalances{}, err
+		return AccountBalances{}, fmt.Errorf("get eth balance: %w", err)
 	}
 	evmZeta, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	if err != nil {
-		return AccountBalances{}, err
+		return AccountBalances{}, fmt.Errorf("get eth zeta balance: %w", err)
 	}
 	evmErc20, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	if err != nil {
-		return AccountBalances{}, err
+		return AccountBalances{}, fmt.Errorf("get eth erc20 balance: %w", err)
 	}
 
 	// bitcoin
@@ -107,7 +107,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 			rpc.CommitmentFinalized,
 		)
 		if err != nil {
-			return AccountBalances{}, err
+			return AccountBalances{}, fmt.Errorf("get sol balance: %w", err)
 		}
 
 		// #nosec G115 always in range
@@ -121,7 +121,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 			)
 			splBalance, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, ata, rpc.CommitmentFinalized)
 			if err != nil {
-				return AccountBalances{}, err
+				return AccountBalances{}, fmt.Errorf("get spl balance: %w", err)
 			}
 
 			solSPLParsed, ok := new(big.Int).SetString(splBalance.Value.Amount, 10)
