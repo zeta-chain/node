@@ -8,7 +8,6 @@ import (
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -48,6 +47,7 @@ import (
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
+	btcclient "github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 )
 
 type E2ERunnerOption func(*E2ERunner)
@@ -86,7 +86,7 @@ type E2ERunner struct {
 	// rpc clients
 	ZEVMClient   *ethclient.Client
 	EVMClient    *ethclient.Client
-	BtcRPCClient *rpcclient.Client
+	BtcRPCClient *btcclient.Client
 	SolanaClient *rpc.Client
 
 	// zetacored grpc clients

@@ -1,6 +1,7 @@
-package rpc_test
+package client_test
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"os"
@@ -13,24 +14,39 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/mempool"
-	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	btccommon "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/node/zetaclient/common"
+	"github.com/zeta-chain/node/zetaclient/config"
 )
 
-// setupTest initializes the privateKey, sender, receiver and RPC client
-func setupTest(t *testing.T) (*rpcclient.Client, *secp256k1.PrivateKey, btcutil.Address, btcutil.Address) {
+// Test_BitcoinLive runs RBF tests on a live Bitcoin network.
+func Test_BitcoinRBFLive(t *testing.T) {
+	if !common.LiveTestEnabled() {
+		t.Skip("skipping live test")
+	}
+
+	LiveTest_RBFTransaction(t)
+	LiveTest_RBFTransaction_Chained_CPFP(t)
+	LiveTest_PendingMempoolTx(t)
+}
+
+// setupRBFTest initializes the test suite, privateKey, sender, receiver
+func setupRBFTest(t *testing.T) (*testSuite, *secp256k1.PrivateKey, btcutil.Address, btcutil.Address) {
 	// network to use
-	chain := chains.BitcoinMainnet
+	chain := chains.BitcoinTestnet4
 	net, err := chains.GetBTCChainParams(chain.ChainId)
 	require.NoError(t, err)
+	config := config.BTCConfig{
+		RPCHost:   os.Getenv(common.EnvBtcRPCMainnet),
+		RPCParams: "testnet3",
+	}
 
 	// load test private key
 	privKeyHex := os.Getenv("TEST_PK_BTC")
@@ -49,27 +65,15 @@ func setupTest(t *testing.T) (*rpcclient.Client, *secp256k1.PrivateKey, btcutil.
 	require.NoError(t, err)
 	fmt.Printf("receiver: %s\n", to.EncodeAddress())
 
-	// setup Bitcoin client
-	client, err := createRPCClient(chain.ChainId)
-	require.NoError(t, err)
+	// create a new test suite
+	ts := newTestSuite(t, config)
 
-	return client, privKey, sender, to
-}
-
-// Test_BitcoinLive is a test to run all Bitcoin RBF related tests
-func Test_BitcoinRBFLive(t *testing.T) {
-	if !common.LiveTestEnabled() {
-		return
-	}
-
-	LiveTest_RBFTransaction(t)
-	LiveTest_RBFTransaction_Chained_CPFP(t)
-	LiveTest_PendingMempoolTx(t)
+	return ts, privKey, sender, to
 }
 
 func LiveTest_RBFTransaction(t *testing.T) {
 	// setup test
-	client, privKey, sender, to := setupTest(t)
+	ts, privKey, sender, to := setupRBFTest(t)
 
 	// define amount, fee rate and bump fee reserved
 	amount := 0.00001
@@ -80,18 +84,42 @@ func LiveTest_RBFTransaction(t *testing.T) {
 	// STEP 1
 	// build and send tx1
 	nonceMark += 1
-	txHash1 := buildAndSendRBFTx(t, client, privKey, nil, sender, to, amount, nonceMark, feeRate, bumpFeeReserved)
+	txHash1 := buildAndSendRBFTx(
+		t,
+		ts.ctx,
+		ts.Client,
+		privKey,
+		nil,
+		sender,
+		to,
+		amount,
+		nonceMark,
+		feeRate,
+		bumpFeeReserved,
+	)
 	fmt.Printf("sent tx1: %s\n", txHash1)
 
 	// STEP 2
 	// build and send tx2 (child of tx1)
 	nonceMark += 1
-	txHash2 := buildAndSendRBFTx(t, client, privKey, txHash1, sender, to, amount, nonceMark, feeRate, bumpFeeReserved)
+	txHash2 := buildAndSendRBFTx(
+		t,
+		ts.ctx,
+		ts.Client,
+		privKey,
+		txHash1,
+		sender,
+		to,
+		amount,
+		nonceMark,
+		feeRate,
+		bumpFeeReserved,
+	)
 	fmt.Printf("sent tx2: %s\n", txHash2)
 
 	// STEP 3
 	// wait for a short time before bumping fee
-	rawTx1, confirmed := waitForTxConfirmation(client, sender, txHash1, 10*time.Second)
+	rawTx1, confirmed := waitForTxConfirmation(ts.ctx, ts.Client, sender, txHash1, 10*time.Second)
 	if confirmed {
 		fmt.Println("Opps: tx1 confirmed, no chance to bump fee; please start over")
 		return
@@ -114,30 +142,30 @@ func LiveTest_RBFTransaction(t *testing.T) {
 
 	// STEP 5
 	// sign and send tx3, which replaces tx1
-	signTx(t, client, privKey, tx3)
-	txHash3, err := client.SendRawTransaction(tx3, true)
+	signTx(t, ts.ctx, ts.Client, privKey, tx3)
+	txHash3, err := ts.Client.SendRawTransaction(ts.ctx, tx3, true)
 	require.NoError(t, err)
 	fmt.Printf("sent tx3: %s\n", txHash3)
 
 	// STEP 6
 	// wait for tx3 confirmation
-	rawTx3, confirmed := waitForTxConfirmation(client, sender, txHash3, 30*time.Minute)
+	rawTx3, confirmed := waitForTxConfirmation(ts.ctx, ts.Client, sender, txHash3, 30*time.Minute)
 	require.True(t, confirmed)
 	printTx(rawTx3.MsgTx())
 	fmt.Println("tx3 confirmed")
 
 	// STEP 7
 	// tx1 and tx2 must be dropped
-	ensureTxDropped(t, client, txHash1)
+	ensureTxDropped(t, ts.ctx, ts.Client, txHash1)
 	fmt.Println("tx1 dropped")
-	ensureTxDropped(t, client, txHash2)
+	ensureTxDropped(t, ts.ctx, ts.Client, txHash2)
 	fmt.Println("tx2 dropped")
 }
 
 // Test_RBFTransactionChained_CPFP tests Child-Pays-For-Parent (CPFP) fee bumping strategy for chained RBF transactions
 func LiveTest_RBFTransaction_Chained_CPFP(t *testing.T) {
 	// setup test
-	client, privKey, sender, to := setupTest(t)
+	ts, privKey, sender, to := setupRBFTest(t)
 
 	// define amount, fee rate and bump fee reserved
 	amount := 0.00001
@@ -148,24 +176,60 @@ func LiveTest_RBFTransaction_Chained_CPFP(t *testing.T) {
 	// STEP 1
 	// build and send tx1
 	nonceMark += 1
-	txHash1 := buildAndSendRBFTx(t, client, privKey, nil, sender, to, amount, nonceMark, feeRate, bumpFeeReserved)
+	txHash1 := buildAndSendRBFTx(
+		t,
+		ts.ctx,
+		ts.Client,
+		privKey,
+		nil,
+		sender,
+		to,
+		amount,
+		nonceMark,
+		feeRate,
+		bumpFeeReserved,
+	)
 	fmt.Printf("sent tx1: %s\n", txHash1)
 
 	// STEP 2
 	// build and send tx2 (child of tx1)
 	nonceMark += 1
-	txHash2 := buildAndSendRBFTx(t, client, privKey, txHash1, sender, to, amount, nonceMark, feeRate, bumpFeeReserved)
+	txHash2 := buildAndSendRBFTx(
+		t,
+		ts.ctx,
+		ts.Client,
+		privKey,
+		txHash1,
+		sender,
+		to,
+		amount,
+		nonceMark,
+		feeRate,
+		bumpFeeReserved,
+	)
 	fmt.Printf("sent tx2: %s\n", txHash2)
 
 	// STEP 3
 	// build and send tx3 (child of tx2)
 	nonceMark += 1
-	txHash3 := buildAndSendRBFTx(t, client, privKey, txHash2, sender, to, amount, nonceMark, feeRate, bumpFeeReserved)
+	txHash3 := buildAndSendRBFTx(
+		t,
+		ts.ctx,
+		ts.Client,
+		privKey,
+		txHash2,
+		sender,
+		to,
+		amount,
+		nonceMark,
+		feeRate,
+		bumpFeeReserved,
+	)
 	fmt.Printf("sent tx3: %s\n", txHash3)
 
 	// STEP 4
 	// wait for a short time before bumping fee
-	rawTx3, confirmed := waitForTxConfirmation(client, sender, txHash3, 10*time.Second)
+	rawTx3, confirmed := waitForTxConfirmation(ts.ctx, ts.Client, sender, txHash3, 10*time.Second)
 	if confirmed {
 		fmt.Println("Opps: tx3 confirmed, no chance to bump fee; please start over")
 		return
@@ -187,36 +251,41 @@ func LiveTest_RBFTransaction_Chained_CPFP(t *testing.T) {
 
 	// STEP 6
 	// sign and send tx4, which replaces tx3
-	signTx(t, client, privKey, tx4)
-	txHash4, err := client.SendRawTransaction(tx4, true)
+	signTx(t, ts.ctx, ts.Client, privKey, tx4)
+	txHash4, err := ts.Client.SendRawTransaction(ts.ctx, tx4, true)
 	require.NoError(t, err)
 	fmt.Printf("sent tx4: %s\n", txHash4)
 
 	// STEP 7
 	// wait for tx4 confirmation
-	rawTx4, confirmed := waitForTxConfirmation(client, sender, txHash4, 30*time.Minute)
+	rawTx4, confirmed := waitForTxConfirmation(ts.ctx, ts.Client, sender, txHash4, 30*time.Minute)
 	require.True(t, confirmed)
 	printTx(rawTx4.MsgTx())
 	fmt.Println("tx4 confirmed")
 
 	// STEP 8
 	// tx3 must be dropped
-	ensureTxDropped(t, client, txHash3)
+	ensureTxDropped(t, ts.ctx, ts.Client, txHash3)
 	fmt.Println("tx1 dropped")
 }
 
 func LiveTest_PendingMempoolTx(t *testing.T) {
-	// setup Bitcoin client
-	client, err := createRPCClient(chains.BitcoinMainnet.ChainId)
-	require.NoError(t, err)
+	// network to use
+	config := config.BTCConfig{
+		RPCHost:   os.Getenv(common.EnvBtcRPCMainnet),
+		RPCParams: "mainnet",
+	}
+
+	// create a new test suite
+	ts := newTestSuite(t, config)
 
 	// get mempool transactions
-	mempoolTxs, err := client.GetRawMempool()
+	mempoolTxs, err := ts.Client.GetRawMempool(ts.ctx)
 	require.NoError(t, err)
 	fmt.Printf("mempool txs: %d\n", len(mempoolTxs))
 
 	// get last block height
-	lastHeight, err := client.GetBlockCount()
+	lastHeight, err := ts.Client.GetBlockCount(ts.ctx)
 	require.NoError(t, err)
 	fmt.Printf("block height: %d\n", lastHeight)
 
@@ -235,7 +304,7 @@ func LiveTest_PendingMempoolTx(t *testing.T) {
 	N := 10
 	for i := len(mempoolTxs) - 1; i >= 0; i-- {
 		txHash := mempoolTxs[i]
-		entry, err := client.GetMempoolEntry(txHash.String())
+		entry, err := ts.Client.GetMempoolEntry(ts.ctx, txHash.String())
 		if err == nil {
 			require.Positive(t, entry.Fee)
 			txTime := time.Unix(entry.Time, 0)
@@ -274,7 +343,8 @@ func LiveTest_PendingMempoolTx(t *testing.T) {
 // buildAndSendRBFTx builds, signs and sends an RBF transaction
 func buildAndSendRBFTx(
 	t *testing.T,
-	client *rpcclient.Client,
+	ctx context.Context,
+	client *client.Client,
 	privKey *secp256k1.PrivateKey,
 	parent *chainhash.Hash,
 	sender, to btcutil.Address,
@@ -284,7 +354,7 @@ func buildAndSendRBFTx(
 	bumpFeeReserved int64,
 ) *chainhash.Hash {
 	// list outputs
-	utxos := listUTXOs(client, sender)
+	utxos := listUTXOs(ctx, client, sender)
 	require.NotEmpty(t, utxos)
 
 	// ensure all inputs are from the parent tx
@@ -298,17 +368,17 @@ func buildAndSendRBFTx(
 	tx := buildRBFTx(t, utxos, sender, to, amount, nonceMark, feeRate, bumpFeeReserved)
 
 	// sign tx
-	signTx(t, client, privKey, tx)
+	signTx(t, ctx, client, privKey, tx)
 
 	// broadcast tx
-	txHash, err := client.SendRawTransaction(tx, true)
+	txHash, err := client.SendRawTransaction(ctx, tx, true)
 	require.NoError(t, err)
 
 	return txHash
 }
 
-func listUTXOs(client *rpcclient.Client, address btcutil.Address) []btcjson.ListUnspentResult {
-	utxos, err := client.ListUnspentMinMaxAddresses(0, 9999999, []btcutil.Address{address})
+func listUTXOs(ctx context.Context, client *client.Client, address btcutil.Address) []btcjson.ListUnspentResult {
+	utxos, err := client.ListUnspentMinMaxAddresses(ctx, 0, 9999999, []btcutil.Address{address})
 	if err != nil {
 		fmt.Printf("ListUnspent failed: %s\n", err)
 		return nil
@@ -399,14 +469,14 @@ func buildRBFTx(
 	return tx
 }
 
-func signTx(t *testing.T, client *rpcclient.Client, privKey *secp256k1.PrivateKey, tx *wire.MsgTx) {
+func signTx(t *testing.T, ctx context.Context, client *client.Client, privKey *secp256k1.PrivateKey, tx *wire.MsgTx) {
 	// we know that the first output is the nonce-mark amount, so it contains the sender pkScript
 	pkScriptSender := tx.TxOut[0].PkScript
 
 	sigHashes := txscript.NewTxSigHashes(tx, txscript.NewCannedPrevOutputFetcher([]byte{}, 0))
 	for idx, input := range tx.TxIn {
 		// get input amount from previous tx outpoint via RPC
-		rawTx, err := client.GetRawTransaction(&input.PreviousOutPoint.Hash)
+		rawTx, err := client.GetRawTransaction(ctx, &input.PreviousOutPoint.Hash)
 		require.NoError(t, err)
 		amount := rawTx.MsgTx().TxOut[input.PreviousOutPoint.Index].Value
 
@@ -450,11 +520,11 @@ func printTx(tx *wire.MsgTx) {
 	fmt.Printf("==============================================================\n\n")
 }
 
-func peekUnconfirmedTx(client *rpcclient.Client, txHash *chainhash.Hash) (*btcutil.Tx, bool) {
+func peekUnconfirmedTx(ctx context.Context, client *client.Client, txHash *chainhash.Hash) (*btcutil.Tx, bool) {
 	confirmed := false
 
 	// try querying tx result
-	_, getTxResult, err := rpc.GetTxResultByHash(client, txHash.String())
+	getTxResult, err := client.GetTransaction(ctx, txHash)
 	if err == nil {
 		confirmed = getTxResult.Confirmations > 0
 		fmt.Printf("tx confirmations: %d\n", getTxResult.Confirmations)
@@ -463,7 +533,7 @@ func peekUnconfirmedTx(client *rpcclient.Client, txHash *chainhash.Hash) (*btcut
 	}
 
 	// query tx from mempool
-	entry, err := client.GetMempoolEntry(txHash.String())
+	entry, err := client.GetMempoolEntry(ctx, txHash.String())
 	switch {
 	case err != nil:
 		fmt.Println("tx in mempool: NO")
@@ -481,7 +551,7 @@ func peekUnconfirmedTx(client *rpcclient.Client, txHash *chainhash.Hash) (*btcut
 	}
 
 	// query the raw tx
-	rawTx, err := client.GetRawTransaction(txHash)
+	rawTx, err := client.GetRawTransaction(ctx, txHash)
 	if err != nil {
 		fmt.Printf("GetRawTransaction failed: %s\n", err)
 	}
@@ -490,15 +560,16 @@ func peekUnconfirmedTx(client *rpcclient.Client, txHash *chainhash.Hash) (*btcut
 }
 
 func waitForTxConfirmation(
-	client *rpcclient.Client,
+	ctx context.Context,
+	client *client.Client,
 	sender btcutil.Address,
 	txHash *chainhash.Hash,
 	timeOut time.Duration,
 ) (*btcutil.Tx, bool) {
 	start := time.Now()
 	for {
-		rawTx, confirmed := peekUnconfirmedTx(client, txHash)
-		listUTXOs(client, sender)
+		rawTx, confirmed := peekUnconfirmedTx(ctx, client, txHash)
+		listUTXOs(ctx, client, sender)
 		fmt.Println()
 
 		if confirmed {
@@ -531,21 +602,21 @@ func bumpRBFTxFee(oldTx *wire.MsgTx, additionalFee int64) (*wire.MsgTx, error) {
 	return newTx, nil
 }
 
-func ensureTxDropped(t *testing.T, client *rpcclient.Client, txHash *chainhash.Hash) {
+func ensureTxDropped(t *testing.T, ctx context.Context, client *client.Client, txHash *chainhash.Hash) {
 	// dropped tx must has negative confirmations (if returned)
-	_, getTxResult, err := rpc.GetTxResultByHash(client, txHash.String())
+	getTxResult, err := client.GetTransaction(ctx, txHash)
 	if err == nil {
 		require.Negative(t, getTxResult.Confirmations)
 	}
 
 	// dropped tx should be removed from mempool
-	entry, err := client.GetMempoolEntry(txHash.String())
+	entry, err := client.GetMempoolEntry(ctx, txHash.String())
 	require.Error(t, err)
 	require.Nil(t, entry)
 
 	// dropped tx should not be found
 	// -5: No such mempool or blockchain transaction
-	rawTx, err := client.GetRawTransaction(txHash)
+	rawTx, err := client.GetRawTransaction(ctx, txHash)
 	require.Error(t, err)
 	require.Nil(t, rawTx)
 }

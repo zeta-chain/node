@@ -2,14 +2,13 @@ package observer
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -20,6 +19,9 @@ const (
 	// PendingTxFeeBumpWaitBlocksRegnet is the number of blocks to await before considering a tx stuck in mempool in regnet
 	// Note: this is used for E2E test only
 	PendingTxFeeBumpWaitBlocksRegnet = 30
+
+	// blockTimeBTC represents the average time to mine a block in Bitcoin
+	blockTimeBTC = 10 * time.Minute
 )
 
 // LastStuckOutbound contains the last stuck outbound tx information.
@@ -47,7 +49,7 @@ func NewLastStuckOutbound(nonce uint64, tx *btcutil.Tx, stuckFor time.Duration) 
 type PendingTxFinder func(ctx context.Context, ob *Observer) (*btcutil.Tx, uint64, error)
 
 // StuckTxChecker is a function type for checking if a tx is stuck in the mempool.
-type StuckTxChecker func(client interfaces.BTCRPCClient, txHash string, maxWaitBlocks int64) (bool, time.Duration, error)
+type StuckTxChecker func(ctx context.Context, rpc RPC, txHash string, maxWaitBlocks int64) (bool, time.Duration, error)
 
 // WatchMempoolTxs monitors pending outbound txs in the Bitcoin mempool.
 func (ob *Observer) WatchMempoolTxs(ctx context.Context) error {
@@ -85,7 +87,7 @@ func (ob *Observer) RefreshLastStuckOutbound(
 
 	// step 2: is last tx stuck in mempool?
 	feeBumpWaitBlocks := GetFeeBumpWaitBlocks(ob.Chain().ChainId)
-	stuck, stuckFor, err := txChecker(ob.btcClient, txHash, feeBumpWaitBlocks)
+	stuck, stuckFor, err := txChecker(ctx, ob.rpc, txHash, feeBumpWaitBlocks)
 	if err != nil {
 		return errors.Wrapf(err, "cannot determine if tx %s nonce %d is stuck", txHash, lastNonce)
 	}
@@ -166,7 +168,7 @@ func GetLastPendingOutbound(ctx context.Context, ob *Observer) (*btcutil.Tx, uin
 	}
 
 	// is tx in the mempool?
-	if _, err = ob.btcClient.GetMempoolEntry(lastHash); err != nil {
+	if _, err = ob.rpc.GetMempoolEntry(ctx, lastHash); err != nil {
 		return nil, 0, errors.New("last tx is not in mempool")
 	}
 
@@ -184,7 +186,7 @@ func GetLastPendingOutbound(ctx context.Context, ob *Observer) (*btcutil.Tx, uin
 	//  1. it can fetch both stuck tx and non-stuck tx as far as they are valid txs.
 	//  2. it never fetch invalid tx (e.g., old tx replaced by RBF), so we can exclude invalid ones.
 	//  3. zetaclient needs the original tx body of a stuck tx to bump its fee and sign again.
-	lastTx, err := rpc.GetRawTxByHash(ob.btcClient, lastHash)
+	lastTx, err := ob.rpc.GetRawTransactionByStr(ctx, lastHash)
 	if err != nil {
 		return nil, 0, errors.Wrapf(err, "GetRawTxByHash failed for last tx %s nonce %d", lastHash, lastNonce)
 	}
@@ -192,12 +194,78 @@ func GetLastPendingOutbound(ctx context.Context, ob *Observer) (*btcutil.Tx, uin
 	return lastTx, lastNonce, nil
 }
 
+// IsTxStuckInMempool checks if the transaction is stuck in the mempool.
+//
+// A pending tx with 'confirmations == 0' will be considered stuck due to excessive pending time.
+func IsTxStuckInMempool(
+	ctx context.Context,
+	rpc RPC,
+	txHash string,
+	maxWaitBlocks int64,
+) (bool, time.Duration, error) {
+	lastBlock, err := rpc.GetBlockCount(ctx)
+	if err != nil {
+		return false, 0, errors.Wrap(err, "GetBlockCount failed")
+	}
+
+	memplEntry, err := rpc.GetMempoolEntry(ctx, txHash)
+	if err != nil {
+		if strings.Contains(err.Error(), "Transaction not in mempool") {
+			return false, 0, nil // not a mempool tx, of course not stuck
+		}
+		return false, 0, errors.Wrap(err, "GetMempoolEntry failed")
+	}
+
+	// is the tx pending for too long?
+	pendingTime := time.Since(time.Unix(memplEntry.Time, 0))
+	pendingTimeAllowed := blockTimeBTC * time.Duration(maxWaitBlocks)
+	pendingDeadline := memplEntry.Height + maxWaitBlocks
+	if pendingTime > pendingTimeAllowed && lastBlock > pendingDeadline {
+		return true, pendingTime, nil
+	}
+
+	return false, pendingTime, nil
+}
+
+// IsTxStuckInMempoolRegnet checks if the transaction is stuck in the mempool in regnet.
+// Note: this function is a simplified version used in regnet for E2E test.
+func IsTxStuckInMempoolRegnet(
+	ctx context.Context,
+	rpc RPC,
+	txHash string,
+	maxWaitBlocks int64,
+) (bool, time.Duration, error) {
+	lastBlock, err := rpc.GetBlockCount(ctx)
+	if err != nil {
+		return false, 0, errors.Wrap(err, "GetBlockCount failed")
+	}
+
+	memplEntry, err := rpc.GetMempoolEntry(ctx, txHash)
+	if err != nil {
+		if strings.Contains(err.Error(), "Transaction not in mempool") {
+			return false, 0, nil // not a mempool tx, of course not stuck
+		}
+		return false, 0, errors.Wrap(err, "GetMempoolEntry failed")
+	}
+
+	// is the tx pending for too long?
+	pendingTime := time.Since(time.Unix(memplEntry.Time, 0))
+	pendingTimeAllowed := time.Second * time.Duration(maxWaitBlocks)
+
+	// the block mining is frozen in Regnet for E2E test
+	if pendingTime > pendingTimeAllowed && memplEntry.Height == lastBlock {
+		return true, pendingTime, nil
+	}
+
+	return false, pendingTime, nil
+}
+
 // GetStuckTxChecker returns the stuck tx checker function based on the chain ID.
 func GetStuckTxChecker(chainID int64) StuckTxChecker {
 	if chains.IsBitcoinRegnet(chainID) {
-		return rpc.IsTxStuckInMempoolRegnet
+		return IsTxStuckInMempoolRegnet
 	}
-	return rpc.IsTxStuckInMempool
+	return IsTxStuckInMempool
 }
 
 // GetFeeBumpWaitBlocks returns the number of blocks to await before bumping tx fees

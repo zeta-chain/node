@@ -11,7 +11,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -34,7 +34,6 @@ func (signer *Signer) SignRBFTx(
 	height uint64,
 	lastTx *btcutil.Tx,
 	minRelayFee float64,
-	memplTxsInfoFetcher MempoolTxsInfoFetcher,
 ) (*wire.MsgTx, error) {
 	var (
 		params = cctx.GetCurrentOutboundParam()
@@ -50,7 +49,7 @@ func (signer *Signer) SignRBFTx(
 	switch signer.Chain().ChainId {
 	case chains.BitcoinRegtest.ChainId:
 		// hardcode for regnet E2E test, zetacore won't feed it to CCTX
-		cctxRate = rpc.FeeRateRegnetRBF
+		cctxRate = client.FeeRateRegnetRBF
 	default:
 		// parse recent fee rate from CCTX
 		recentRate, err := strconv.ParseInt(params.GasPriorityFee, 10, 64)
@@ -62,9 +61,9 @@ func (signer *Signer) SignRBFTx(
 
 	// create fee bumper
 	fb, err := NewCPFPFeeBumper(
+		ctx,
+		signer.rpc,
 		signer.Chain(),
-		signer.client,
-		memplTxsInfoFetcher,
 		lastTx,
 		cctxRate,
 		minRelayFee,
@@ -86,7 +85,7 @@ func (signer *Signer) SignRBFTx(
 	inAmounts := make([]int64, len(newTx.TxIn))
 	for i, input := range newTx.TxIn {
 		preOut := input.PreviousOutPoint
-		preTx, err := signer.client.GetRawTransaction(&preOut.Hash)
+		preTx, err := signer.rpc.GetRawTransaction(ctx, &preOut.Hash)
 		if err != nil {
 			return nil, errors.Wrapf(err, "unable to get previous tx %s", preOut.Hash)
 		}

@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/rs/zerolog"
 	ton "github.com/tonkeeper/tongo/liteapi"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -15,9 +15,12 @@ import (
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/runner"
 	tonrunner "github.com/zeta-chain/node/e2e/runner/ton"
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/retry"
 	zetacore_rpc "github.com/zeta-chain/node/pkg/rpc"
+	btcclient "github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	tonconfig "github.com/zeta-chain/node/zetaclient/chains/ton"
+	zetaclientconfig "github.com/zeta-chain/node/zetaclient/config"
 )
 
 // getClientsFromConfig get clients from config
@@ -72,27 +75,27 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, account confi
 }
 
 // getBtcClient get btc client
-func getBtcClient(rpcConf config.BitcoinRPC) (*rpcclient.Client, error) {
-	var param string
-	switch rpcConf.Params {
-	case config.Regnet:
-	case config.Testnet3:
-		param = "testnet3"
-	case config.Mainnet:
-		param = "mainnet"
-	default:
-		return nil, fmt.Errorf("invalid bitcoin params %s", rpcConf.Params)
+func getBtcClient(e2eConfig config.BitcoinRPC) (*btcclient.Client, error) {
+	cfg := zetaclientconfig.BTCConfig{
+		RPCUsername: e2eConfig.User,
+		RPCPassword: e2eConfig.Pass,
+		RPCHost:     e2eConfig.Host,
+		RPCParams:   string(e2eConfig.Params),
 	}
 
-	connCfg := &rpcclient.ConnConfig{
-		Host:         rpcConf.Host,
-		User:         rpcConf.User,
-		Pass:         rpcConf.Pass,
-		HTTPPostMode: rpcConf.HTTPPostMode,
-		DisableTLS:   rpcConf.DisableTLS,
-		Params:       param,
+	var chain chains.Chain
+	switch e2eConfig.Params {
+	case config.Regnet:
+		chain = chains.BitcoinRegtest
+	case config.Testnet3:
+		chain = chains.BitcoinTestnet
+	case config.Mainnet:
+		chain = chains.BitcoinMainnet
+	default:
+		return nil, fmt.Errorf("invalid bitcoin params %s", e2eConfig.Params)
 	}
-	return rpcclient.New(connCfg, nil)
+
+	return btcclient.New(cfg, chain.ChainId, zerolog.Nop())
 }
 
 // getEVMClient get evm client

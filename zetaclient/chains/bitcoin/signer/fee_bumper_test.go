@@ -1,8 +1,8 @@
 package signer_test
 
 import (
+	"context"
 	"testing"
-	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
@@ -14,38 +14,53 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
+// mempoolTxsInfo is a helper struct to contain mempool txs information
+type mempoolTxsInfo struct {
+	totalTxs   int64
+	totalFees  float64
+	totalVSize int64
+	avgFeeRate int64
+}
+
+func newMempoolTxsInfo(totalTxs int64, totalFees float64, totalVSize int64, avgFeeRate int64) *mempoolTxsInfo {
+	return &mempoolTxsInfo{
+		totalTxs:   totalTxs,
+		totalFees:  totalFees,
+		totalVSize: totalVSize,
+		avgFeeRate: avgFeeRate,
+	}
+}
+
 func Test_NewCPFPFeeBumper(t *testing.T) {
 	tests := []struct {
-		name                string
-		chain               chains.Chain
-		client              *mocks.BTCRPCClient
-		tx                  *btcutil.Tx
-		cctxRate            int64
-		liveRate            float64
-		minRelayFee         float64
-		memplTxsInfoFetcher signer.MempoolTxsInfoFetcher
-		errMsg              string
-		expected            *signer.CPFPFeeBumper
+		name         string
+		chain        chains.Chain
+		client       *mocks.BitcoinClient
+		tx           *btcutil.Tx
+		cctxRate     int64
+		liveRate     float64
+		minRelayFee  float64
+		memplTxsInfo mempoolTxsInfo
+		errMsg       string
+		expected     *signer.CPFPFeeBumper
 	}{
 		{
 			chain:       chains.BitcoinMainnet,
 			name:        "should create new CPFPFeeBumper successfully",
-			client:      mocks.NewBTCRPCClient(t),
+			client:      mocks.NewBitcoinClient(t),
 			tx:          btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
 			cctxRate:    10,
 			liveRate:    0.00012,
 			minRelayFee: 0.00001,
-			memplTxsInfoFetcher: makeMempoolTxsInfoFetcher(
+			memplTxsInfo: *newMempoolTxsInfo(
 				2,      // 2 stuck TSS txs
 				0.0001, // total fees 0.0001 BTC
 				1000,   // total vsize 1000
 				10,     // average fee rate 10 sat/vB
-				"",     // no error
 			),
 			expected: &signer.CPFPFeeBumper{
 				Chain:       chains.BitcoinMainnet,
@@ -62,16 +77,15 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 		{
 			chain:    chains.BitcoinMainnet,
 			name:     "should fail when mempool txs info fetcher returns error",
-			client:   mocks.NewBTCRPCClient(t),
+			client:   mocks.NewBitcoinClient(t),
 			tx:       btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
 			liveRate: 0.00012,
 			//memplTxsInfoFetcher: makeMempoolTxsInfoFetcher(0, 0.0, 0, 0, "rpc error"),
-			memplTxsInfoFetcher: makeMempoolTxsInfoFetcher(
+			memplTxsInfo: *newMempoolTxsInfo(
 				2,      // 2 stuck TSS txs
 				0.0001, // total fees 0.0001 BTC
 				1000,   // total vsize 1000
 				10,     // average fee rate 10 sat/vbyte
-				"err",  // no error
 			),
 			errMsg: "unable to fetch mempool txs info",
 		},
@@ -84,10 +98,14 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 				FeeRate: &tt.liveRate,
 			}, nil)
 
+			// mock mempool txs information
+			tt.client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).
+				Return(tt.memplTxsInfo.totalTxs, tt.memplTxsInfo.totalFees, tt.memplTxsInfo.totalVSize, tt.memplTxsInfo.avgFeeRate, nil)
+
 			bumper, err := signer.NewCPFPFeeBumper(
-				tt.chain,
+				context.Background(),
 				tt.client,
-				tt.memplTxsInfoFetcher,
+				tt.chain,
 				tt.tx,
 				tt.cctxRate,
 				tt.minRelayFee,
@@ -97,7 +115,7 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 				require.Nil(t, bumper)
 				require.ErrorContains(t, err, tt.errMsg)
 			} else {
-				bumper.Client = nil // ignore the RPC client
+				bumper.RPC = nil // ignore the RPC
 				require.NoError(t, err)
 				require.Equal(t, tt.expected, bumper)
 			}
@@ -249,29 +267,28 @@ func Test_BumpTxFee(t *testing.T) {
 
 func Test_FetchFeeBumpInfo(t *testing.T) {
 	liveRate := 0.00012
-	mockClient := mocks.NewBTCRPCClient(t)
+	mockClient := mocks.NewBitcoinClient(t)
 	mockClient.On("EstimateSmartFee", mock.Anything, mock.Anything).Return(&btcjson.EstimateSmartFeeResult{
 		FeeRate: &liveRate,
 	}, nil)
 
 	tests := []struct {
-		name                string
-		client              *mocks.BTCRPCClient
-		tx                  *btcutil.Tx
-		memplTxsInfoFetcher signer.MempoolTxsInfoFetcher
-		expected            *signer.CPFPFeeBumper
-		errMsg              string
+		name         string
+		client       *mocks.BitcoinClient
+		tx           *btcutil.Tx
+		memplTxsInfo *mempoolTxsInfo
+		expected     *signer.CPFPFeeBumper
+		errMsg       string
 	}{
 		{
 			name:   "should fetch fee bump info successfully",
 			client: mockClient,
 			tx:     btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
-			memplTxsInfoFetcher: makeMempoolTxsInfoFetcher(
+			memplTxsInfo: newMempoolTxsInfo(
 				2,      // 2 stuck TSS txs
 				0.0001, // total fees 0.0001 BTC
 				1000,   // total vsize 1000
 				10,     // average fee rate 10 sat/vB
-				"",     // no error
 			),
 			expected: &signer.CPFPFeeBumper{
 				Tx:         btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
@@ -284,41 +301,49 @@ func Test_FetchFeeBumpInfo(t *testing.T) {
 		},
 		{
 			name: "should fail if unable to estimate smart fee",
-			client: func() *mocks.BTCRPCClient {
-				client := mocks.NewBTCRPCClient(t)
+			client: func() *mocks.BitcoinClient {
+				client := mocks.NewBitcoinClient(t)
 				client.On("EstimateSmartFee", mock.Anything, mock.Anything).Return(nil, errors.New("rpc error"))
 				return client
 			}(),
 			errMsg: "GetEstimatedFeeRate failed",
 		},
 		{
-			name:                "should fail if unable to fetch mempool txs info",
-			client:              mockClient,
-			tx:                  btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
-			memplTxsInfoFetcher: makeMempoolTxsInfoFetcher(0, 0.0, 0, 0, "rpc error"),
-			errMsg:              "unable to fetch mempool txs info",
+			name:         "should fail if unable to fetch mempool txs info",
+			client:       mockClient,
+			tx:           btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
+			memplTxsInfo: nil,
+			errMsg:       "unable to fetch mempool txs info",
 		},
 		{
-			name:                "should fail on invalid total fees",
-			client:              mockClient,
-			tx:                  btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
-			memplTxsInfoFetcher: makeMempoolTxsInfoFetcher(2, 21000000.1, 1000, 10, ""), // fee exceeds max BTC supply
-			errMsg:              "cannot convert total fees",
+			name:         "should fail on invalid total fees",
+			client:       mockClient,
+			tx:           btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
+			memplTxsInfo: newMempoolTxsInfo(2, 21000000.1, 1000, 10), // fee exceeds max BTC supply
+			errMsg:       "cannot convert total fees",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			bumper := &signer.CPFPFeeBumper{
-				Client: tt.client,
-				Tx:     tt.tx,
+			// mock mempool txs information
+			if tt.memplTxsInfo != nil {
+				tt.client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).
+					Return(tt.memplTxsInfo.totalTxs, tt.memplTxsInfo.totalFees, tt.memplTxsInfo.totalVSize, tt.memplTxsInfo.avgFeeRate, nil)
+			} else {
+				tt.client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).Return(0, 0.0, 0, 0, "rpc error")
 			}
-			err := bumper.FetchFeeBumpInfo(tt.memplTxsInfoFetcher, log.Logger)
+
+			bumper := &signer.CPFPFeeBumper{
+				RPC: tt.client,
+				Tx:  tt.tx,
+			}
+			err := bumper.FetchFeeBumpInfo(log.Logger)
 
 			if tt.errMsg != "" {
 				require.ErrorContains(t, err, tt.errMsg)
 			} else {
-				bumper.Client = nil // ignore the RPC client
+				bumper.RPC = nil // ignore the RPC client
 				require.NoError(t, err)
 				require.Equal(t, tt.expected, bumper)
 			}
@@ -352,20 +377,20 @@ func Test_CopyMsgTxNoWitness(t *testing.T) {
 	})
 }
 
-// makeMempoolTxsInfoFetcher is a helper function to create a mock MempoolTxsInfoFetcher
-func makeMempoolTxsInfoFetcher(
-	totalTxs int64,
-	totalFees float64,
-	totalVSize int64,
-	avgFeeRate int64,
-	errMsg string,
-) signer.MempoolTxsInfoFetcher {
-	var err error
-	if errMsg != "" {
-		err = errors.New(errMsg)
-	}
+// // makeMempoolTxsInfoFetcher is a helper function to create a mock MempoolTxsInfoFetcher
+// func makeMempoolTxsInfoFetcher(
+// 	totalTxs int64,
+// 	totalFees float64,
+// 	totalVSize int64,
+// 	avgFeeRate int64,
+// 	errMsg string,
+// ) signer.MempoolTxsInfoFetcher {
+// 	var err error
+// 	if errMsg != "" {
+// 		err = errors.New(errMsg)
+// 	}
 
-	return func(interfaces.BTCRPCClient, string, time.Duration) (int64, float64, int64, int64, error) {
-		return totalTxs, totalFees, totalVSize, avgFeeRate, err
-	}
-}
+// 	return func(signer.RPC, string, time.Duration) (int64, float64, int64, int64, error) {
+// 		return totalTxs, totalFees, totalVSize, avgFeeRate, err
+// 	}
+// }

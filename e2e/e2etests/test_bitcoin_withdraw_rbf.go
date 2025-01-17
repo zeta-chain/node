@@ -10,7 +10,6 @@ import (
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 )
 
 // TestBitcoinWithdrawRBF tests the RBF (Replace-By-Fee) feature in Zetaclient.
@@ -42,7 +41,7 @@ func TestBitcoinWithdrawRBF(r *runner.E2ERunner, args []string) {
 
 	// get original tx
 	require.NoError(r, err)
-	txResult, err := r.BtcRPCClient.GetTransaction(txHash)
+	txResult, err := r.BtcRPCClient.GetTransaction(r.Ctx, txHash)
 	require.NoError(r, err)
 	require.Zero(r, txResult.Confirmations)
 
@@ -71,7 +70,7 @@ func TestBitcoinWithdrawRBF(r *runner.E2ERunner, args []string) {
 	oldRate, err := strconv.ParseInt(params.GasPrice, 10, 64)
 	require.NoError(r, err)
 
-	_, newRate, err := rpc.GetTransactionFeeAndRate(r.BtcRPCClient, rawResult)
+	_, newRate, err := r.BtcRPCClient.GetTransactionFeeAndRate(r.Ctx, rawResult)
 	require.NoError(r, err)
 	require.Greater(r, newRate, oldRate, "RBF fee rate should be higher than the original tx")
 }

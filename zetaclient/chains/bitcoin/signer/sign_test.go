@@ -23,10 +23,10 @@ import (
 
 func TestAddWithdrawTxOutputs(t *testing.T) {
 	// Create test signer and receiver address
-	signer := signer.NewSigner(
+	signer := signer.New(
 		chains.BitcoinMainnet,
-		mocks.NewBTCRPCClient(t),
 		mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet),
+		mocks.NewBitcoinClient(t),
 		base.DefaultLogger(),
 	)
 

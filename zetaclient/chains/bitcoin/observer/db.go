@@ -1,6 +1,8 @@
 package observer
 
 import (
+	"context"
+
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -25,7 +27,7 @@ func (ob *Observer) SaveBroadcastedTx(txHash string, nonce uint64) {
 }
 
 // LoadLastBlockScanned loads the last scanned block from the database
-func (ob *Observer) LoadLastBlockScanned() error {
+func (ob *Observer) LoadLastBlockScanned(ctx context.Context) error {
 	err := ob.Observer.LoadLastBlockScanned(ob.Logger().Chain)
 	if err != nil {
 		return errors.Wrapf(err, "error LoadLastBlockScanned for chain %d", ob.Chain().ChainId)
@@ -35,7 +37,7 @@ func (ob *Observer) LoadLastBlockScanned() error {
 	// 1. environment variable is set explicitly to "latest"
 	// 2. environment variable is empty and last scanned block is not found in DB
 	if ob.LastBlockScanned() == 0 {
-		blockNumber, err := ob.btcClient.GetBlockCount()
+		blockNumber, err := ob.rpc.GetBlockCount(ctx)
 		if err != nil {
 			return errors.Wrapf(err, "error GetBlockCount for chain %d", ob.Chain().ChainId)
 		}

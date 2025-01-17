@@ -2,11 +2,15 @@
 package observer
 
 import (
+	"context"
 	"math/big"
 	"sync/atomic"
+	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
+	hash "github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -19,6 +23,43 @@ import (
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
+
+type RPC interface {
+	Healthcheck(ctx context.Context, tssAddress btcutil.Address) (time.Time, error)
+
+	GetBlockCount(ctx context.Context) (int64, error)
+	GetBlockHash(ctx context.Context, blockHeight int64) (*hash.Hash, error)
+	GetBlockHeader(ctx context.Context, hash *hash.Hash) (*wire.BlockHeader, error)
+	GetBlockVerbose(ctx context.Context, hash *hash.Hash) (*btcjson.GetBlockVerboseTxResult, error)
+
+	GetRawTransaction(ctx context.Context, hash *hash.Hash) (*btcutil.Tx, error)
+	GetRawTransactionVerbose(ctx context.Context, hash *hash.Hash) (*btcjson.TxRawResult, error)
+	GetRawTransactionResult(
+		ctx context.Context,
+		hash *hash.Hash,
+		res *btcjson.GetTransactionResult,
+	) (btcjson.TxRawResult, error)
+	GetMempoolEntry(ctx context.Context, txHash string) (*btcjson.GetMempoolEntryResult, error)
+
+	GetEstimatedFeeRate(ctx context.Context, confTarget int64, regnet bool) (int64, error)
+	GetTransactionFeeAndRate(ctx context.Context, tx *btcjson.TxRawResult) (int64, int64, error)
+
+	EstimateSmartFee(
+		ctx context.Context,
+		confTarget int64,
+		mode *btcjson.EstimateSmartFeeMode,
+	) (*btcjson.EstimateSmartFeeResult, error)
+
+	ListUnspentMinMaxAddresses(
+		ctx context.Context,
+		minConf, maxConf int,
+		addresses []btcutil.Address,
+	) ([]btcjson.ListUnspentResult, error)
+
+	GetBlockHeightByStr(ctx context.Context, blockHash string) (int64, error)
+	GetTransactionByStr(ctx context.Context, hash string) (*hash.Hash, *btcjson.GetTransactionResult, error)
+	GetRawTransactionByStr(ctx context.Context, hash string) (*btcutil.Tx, error)
+}
 
 const (
 	// btcBlocksPerDay represents Bitcoin blocks per days for LRU block cache size
@@ -58,7 +99,7 @@ type Observer struct {
 	netParams *chaincfg.Params
 
 	// btcClient is the Bitcoin RPC client that interacts with the Bitcoin node
-	btcClient interfaces.BTCRPCClient
+	rpc RPC
 
 	// pendingNonce is the outbound artificial pending nonce
 	pendingNonce uint64
@@ -90,7 +131,7 @@ type Observer struct {
 // NewObserver returns a new Bitcoin chain observer
 func NewObserver(
 	chain chains.Chain,
-	btcClient interfaces.BTCRPCClient,
+	rpc RPC,
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
@@ -110,20 +151,20 @@ func NewObserver(
 		logger,
 	)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to create base observer for chain %d", chain.ChainId)
+		return nil, errors.Wrapf(err, "unable to create base observer")
 	}
 
 	// get the bitcoin network params
 	netParams, err := chains.BitcoinNetParamsFromChainID(chain.ChainId)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to get BTC net params for chain %d", chain.ChainId)
+		return nil, errors.Wrapf(err, "unable to get BTC net params")
 	}
 
 	// create bitcoin observer
 	ob := &Observer{
 		Observer:          *baseObserver,
 		netParams:         netParams,
-		btcClient:         btcClient,
+		rpc:               rpc,
 		utxos:             []btcjson.ListUnspentResult{},
 		tssOutboundHashes: make(map[string]bool),
 		includedTxResults: make(map[string]*btcjson.GetTransactionResult),
@@ -137,7 +178,10 @@ func NewObserver(
 	ob.nodeEnabled.Store(true)
 
 	// load last scanned block
-	if err = ob.LoadLastBlockScanned(); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err = ob.LoadLastBlockScanned(ctx); err != nil {
 		return nil, errors.Wrap(err, "unable to load last scanned block")
 	}
 
@@ -178,7 +222,7 @@ func (ob *Observer) ConfirmationsThreshold(amount *big.Int) int64 {
 }
 
 // GetBlockByNumberCached gets cached block (and header) by block number
-func (ob *Observer) GetBlockByNumberCached(blockNumber int64) (*BTCBlockNHeader, error) {
+func (ob *Observer) GetBlockByNumberCached(ctx context.Context, blockNumber int64) (*BTCBlockNHeader, error) {
 	if result, ok := ob.BlockCache().Get(blockNumber); ok {
 		if block, ok := result.(*BTCBlockNHeader); ok {
 			return block, nil
@@ -187,17 +231,17 @@ func (ob *Observer) GetBlockByNumberCached(blockNumber int64) (*BTCBlockNHeader,
 	}
 
 	// Get the block hash
-	hash, err := ob.btcClient.GetBlockHash(blockNumber)
+	hash, err := ob.rpc.GetBlockHash(ctx, blockNumber)
 	if err != nil {
 		return nil, err
 	}
 	// Get the block header
-	header, err := ob.btcClient.GetBlockHeader(hash)
+	header, err := ob.rpc.GetBlockHeader(ctx, hash)
 	if err != nil {
 		return nil, err
 	}
 	// Get the block with verbose transactions
-	block, err := ob.btcClient.GetBlockVerboseTx(hash)
+	block, err := ob.rpc.GetBlockVerbose(ctx, hash)
 	if err != nil {
 		return nil, err
 	}

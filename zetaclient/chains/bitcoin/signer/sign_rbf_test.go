@@ -80,17 +80,17 @@ func Test_SignRBFTx(t *testing.T) {
 
 	// test cases
 	tests := []struct {
-		name                string
-		chain               chains.Chain
-		cctx                *crosschaintypes.CrossChainTx
-		lastTx              *btcutil.Tx
-		preTxs              []prevTx
-		minRelayFee         float64
-		cctxRate            string
-		liveRate            float64
-		memplTxsInfoFetcher signer.MempoolTxsInfoFetcher
-		errMsg              string
-		expectedTx          *wire.MsgTx
+		name         string
+		chain        chains.Chain
+		cctx         *crosschaintypes.CrossChainTx
+		lastTx       *btcutil.Tx
+		preTxs       []prevTx
+		minRelayFee  float64
+		cctxRate     string
+		liveRate     float64
+		memplTxsInfo *mempoolTxsInfo
+		errMsg       string
+		expectedTx   *wire.MsgTx
 	}{
 		{
 			name:        "should sign RBF tx successfully",
@@ -101,12 +101,11 @@ func Test_SignRBFTx(t *testing.T) {
 			minRelayFee: 0.00001,
 			cctxRate:    "57",
 			liveRate:    0.00059, // 59 sat/vB
-			memplTxsInfoFetcher: makeMempoolTxsInfoFetcher(
+			memplTxsInfo: newMempoolTxsInfo(
 				1,          // 1 stuck tx
 				0.00027213, // fees: 0.00027213 BTC
 				579,        // size: 579 vByte
 				47,         // rate: 47 sat/vB
-				"",         // no error
 			),
 			expectedTx: func() *wire.MsgTx {
 				// deduct additional fees
@@ -125,14 +124,14 @@ func Test_SignRBFTx(t *testing.T) {
 			errMsg:      "invalid fee rate",
 		},
 		{
-			name:                "should return error if unable to create fee bumper",
-			chain:               chains.BitcoinMainnet,
-			cctx:                cctx,
-			lastTx:              btcutil.NewTx(msgTx.Copy()),
-			minRelayFee:         0.00001,
-			cctxRate:            "57",
-			memplTxsInfoFetcher: makeMempoolTxsInfoFetcher(0, 0, 0, 0, "error"),
-			errMsg:              "NewCPFPFeeBumper failed",
+			name:         "should return error if unable to create fee bumper",
+			chain:        chains.BitcoinMainnet,
+			cctx:         cctx,
+			lastTx:       btcutil.NewTx(msgTx.Copy()),
+			minRelayFee:  0.00001,
+			cctxRate:     "57",
+			memplTxsInfo: nil,
+			errMsg:       "NewCPFPFeeBumper failed",
 		},
 		{
 			name:        "should return error if live rate is too high",
@@ -142,12 +141,11 @@ func Test_SignRBFTx(t *testing.T) {
 			minRelayFee: 0.00001,
 			cctxRate:    "57",
 			liveRate:    0.00099, // 99 sat/vB is much higher than ccxt rate
-			memplTxsInfoFetcher: makeMempoolTxsInfoFetcher(
+			memplTxsInfo: newMempoolTxsInfo(
 				1,          // 1 stuck tx
 				0.00027213, // fees: 0.00027213 BTC
 				579,        // size: 579 vByte
 				47,         // rate: 47 sat/vB
-				"",         // no error
 			),
 			errMsg: "BumpTxFee failed",
 		},
@@ -159,12 +157,11 @@ func Test_SignRBFTx(t *testing.T) {
 			minRelayFee: 0.00001,
 			cctxRate:    "57",
 			liveRate:    0.00059, // 59 sat/vB
-			memplTxsInfoFetcher: makeMempoolTxsInfoFetcher(
+			memplTxsInfo: newMempoolTxsInfo(
 				1,          // 1 stuck tx
 				0.00027213, // fees: 0.00027213 BTC
 				579,        // size: 579 vByte
 				47,         // rate: 47 sat/vB
-				"",         // no error
 			),
 			errMsg: "unable to get previous tx",
 		},
@@ -187,6 +184,14 @@ func Test_SignRBFTx(t *testing.T) {
 					}, nil)
 			} else {
 				s.client.On("EstimateSmartFee", mock.Anything, mock.Anything).Maybe().Return(nil, errors.New("rpc error"))
+			}
+
+			// mock mempool txs information
+			if tt.memplTxsInfo != nil {
+				s.client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).
+					Return(tt.memplTxsInfo.totalTxs, tt.memplTxsInfo.totalFees, tt.memplTxsInfo.totalVSize, tt.memplTxsInfo.avgFeeRate, nil)
+			} else {
+				s.client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).Return(0, 0.0, 0, 0, "rpc error")
 			}
 
 			// mock RPC transactions
@@ -213,7 +218,7 @@ func Test_SignRBFTx(t *testing.T) {
 
 			// sign tx
 			ctx := context.Background()
-			newTx, err := s.SignRBFTx(ctx, tt.cctx, 1, tt.lastTx, tt.minRelayFee, tt.memplTxsInfoFetcher)
+			newTx, err := s.SignRBFTx(ctx, tt.cctx, 1, tt.lastTx, tt.minRelayFee)
 			if tt.errMsg != "" {
 				require.ErrorContains(t, err, tt.errMsg)
 				return

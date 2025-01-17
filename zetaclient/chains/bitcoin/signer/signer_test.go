@@ -40,13 +40,13 @@ var TestDataDir = "../../../"
 type testSuite struct {
 	*signer.Signer
 	tss            *mocks.TSS
-	client         *mocks.BTCRPCClient
+	client         *mocks.BitcoinClient
 	zetacoreClient *mocks.ZetacoreClient
 }
 
 func newTestSuite(t *testing.T, chain chains.Chain) *testSuite {
 	// mock BTC RPC client
-	rpcClient := mocks.NewBTCRPCClient(t)
+	rpcClient := mocks.NewBitcoinClient(t)
 	rpcClient.On("GetBlockCount", mock.Anything).Maybe().Return(int64(101), nil)
 
 	// mock TSS
@@ -67,10 +67,10 @@ func newTestSuite(t *testing.T, chain chains.Chain) *testSuite {
 	logger := base.Logger{Std: testLogger, Compliance: testLogger}
 
 	// create signer
-	signer := signer.NewSigner(
+	signer := signer.New(
 		chain,
-		rpcClient,
 		tss,
+		rpcClient,
 		logger,
 	)
 
@@ -85,12 +85,12 @@ func newTestSuite(t *testing.T, chain chains.Chain) *testSuite {
 func Test_NewSigner(t *testing.T) {
 	// test private key with EVM address
 	// EVM: 0x236C7f53a90493Bb423411fe4117Cb4c2De71DfB
-	// BTC testnet3: muGe9prUBjQwEnX19zG26fVRHNi8z7kSPo
+	// BTC testnet: muGe9prUBjQwEnX19zG26fVRHNi8z7kSPo
 	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
 	privateKey, err := crypto.HexToECDSA(skHex)
 	require.NoError(t, err)
 	tss := mocks.NewTSSFromPrivateKey(t, privateKey)
-	signer := signer.NewSigner(chains.BitcoinMainnet, mocks.NewBTCRPCClient(t), tss, base.DefaultLogger())
+	signer := signer.New(chains.BitcoinMainnet, tss, mocks.NewBitcoinClient(t), base.DefaultLogger())
 	require.NotNil(t, signer)
 }
 
@@ -405,7 +405,5 @@ func (s *testSuite) getNewObserver(t *testing.T) *observer.Observer {
 		logger,
 		ts,
 	)
-	require.NoError(t, err)
-
 	return ob
 }

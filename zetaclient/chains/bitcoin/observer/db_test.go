@@ -1,6 +1,7 @@
 package observer_test
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -35,6 +36,8 @@ func Test_SaveBroadcastedTx(t *testing.T) {
 }
 
 func Test_LoadLastBlockScanned(t *testing.T) {
+	ctx := context.Background()
+
 	// use Bitcoin mainnet chain for testing
 	chain := chains.BitcoinMainnet
 
@@ -44,7 +47,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 		ob.WriteLastBlockScannedToDB(199)
 
 		// load last block scanned
-		err := ob.LoadLastBlockScanned()
+		err := ob.LoadLastBlockScanned(ctx)
 		require.NoError(t, err)
 		require.EqualValues(t, 199, ob.LastBlockScanned())
 	})
@@ -58,7 +61,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 		defer os.Unsetenv(envvar)
 
 		// load last block scanned
-		err := ob.LoadLastBlockScanned()
+		err := ob.LoadLastBlockScanned(ctx)
 		require.ErrorContains(t, err, "error LoadLastBlockScanned")
 	})
 	t.Run("should fail on RPC error", func(t *testing.T) {
@@ -73,7 +76,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 		obOther.client.On("GetBlockCount").Return(int64(0), errors.New("rpc error"))
 
 		// load last block scanned
-		err := obOther.LoadLastBlockScanned()
+		err := obOther.LoadLastBlockScanned(ctx)
 		require.ErrorContains(t, err, "rpc error")
 	})
 	t.Run("should use hardcode block 100 for regtest", func(t *testing.T) {
@@ -81,7 +84,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 		obRegnet := newTestSuite(t, chains.BitcoinRegtest, "")
 
 		// load last block scanned
-		err := obRegnet.LoadLastBlockScanned()
+		err := obRegnet.LoadLastBlockScanned(ctx)
 		require.NoError(t, err)
 		require.EqualValues(t, observer.RegnetStartBlock, obRegnet.LastBlockScanned())
 	})

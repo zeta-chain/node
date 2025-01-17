@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"math"
@@ -9,11 +10,10 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	clientcommon "github.com/zeta-chain/node/zetaclient/common"
 )
 
@@ -54,8 +54,16 @@ var (
 	DefaultDepositorFee = DepositorFee(defaultDepositorFeeRate)
 )
 
+type RPC interface {
+	GetBlockCount(ctx context.Context) (int64, error)
+	GetBlockHash(ctx context.Context, blockHeight int64) (*chainhash.Hash, error)
+	GetBlockHeader(ctx context.Context, hash *chainhash.Hash) (*wire.BlockHeader, error)
+	GetBlockVerbose(ctx context.Context, hash *chainhash.Hash) (*btcjson.GetBlockVerboseTxResult, error)
+	GetTransactionFeeAndRate(ctx context.Context, tx *btcjson.TxRawResult) (int64, int64, error)
+}
+
 // DepositorFeeCalculator is a function type to calculate the Bitcoin depositor fee
-type DepositorFeeCalculator func(interfaces.BTCRPCClient, *btcjson.TxRawResult, *chaincfg.Params) (float64, error)
+type DepositorFeeCalculator func(context.Context, RPC, *btcjson.TxRawResult, *chaincfg.Params) (float64, error)
 
 // WiredTxSize calculates the wired tx size in bytes
 func WiredTxSize(numInputs uint64, numOutputs uint64) int64 {
@@ -214,7 +222,8 @@ func CalcBlockAvgFeeRate(blockVb *btcjson.GetBlockVerboseTxResult, netParams *ch
 
 // CalcDepositorFee calculates the depositor fee for a given tx result
 func CalcDepositorFee(
-	rpcClient interfaces.BTCRPCClient,
+	ctx context.Context,
+	rpc RPC,
 	rawResult *btcjson.TxRawResult,
 	netParams *chaincfg.Params,
 ) (float64, error) {
@@ -224,7 +233,7 @@ func CalcDepositorFee(
 	}
 
 	// get fee rate of the transaction
-	_, feeRate, err := rpc.GetTransactionFeeAndRate(rpcClient, rawResult)
+	_, feeRate, err := rpc.GetTransactionFeeAndRate(ctx, rawResult)
 	if err != nil {
 		return 0, errors.Wrapf(err, "error getting fee rate for tx %s", rawResult.Txid)
 	}
@@ -238,14 +247,14 @@ func CalcDepositorFee(
 
 // GetRecentFeeRate gets the highest fee rate from recent blocks
 // Note: this method should be used for testnet ONLY
-func GetRecentFeeRate(rpcClient interfaces.BTCRPCClient, netParams *chaincfg.Params) (int64, error) {
+func GetRecentFeeRate(ctx context.Context, rpc RPC, netParams *chaincfg.Params) (int64, error) {
 	// should avoid using this method for mainnet
 	if netParams.Name == chaincfg.MainNetParams.Name {
 		return 0, errors.New("GetRecentFeeRate should not be used for mainnet")
 	}
 
 	// get the current block number
-	blockNumber, err := rpcClient.GetBlockCount()
+	blockNumber, err := rpc.GetBlockCount(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -254,11 +263,11 @@ func GetRecentFeeRate(rpcClient interfaces.BTCRPCClient, netParams *chaincfg.Par
 	highestRate := int64(0)
 	for i := int64(0); i < feeRateCountBackBlocks; i++ {
 		// get the block
-		hash, err := rpcClient.GetBlockHash(blockNumber - i)
+		hash, err := rpc.GetBlockHash(ctx, blockNumber-i)
 		if err != nil {
 			return 0, err
 		}
-		block, err := rpcClient.GetBlockVerboseTx(hash)
+		block, err := rpc.GetBlockVerbose(ctx, hash)
 		if err != nil {
 			return 0, err
 		}

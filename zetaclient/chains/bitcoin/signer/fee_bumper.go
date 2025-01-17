@@ -1,6 +1,7 @@
 package signer
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"time"
@@ -14,9 +15,8 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	mathpkg "github.com/zeta-chain/node/pkg/math"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 )
 
 const (
@@ -31,15 +31,14 @@ const (
 	minCPFPFeeBumpPercent = 20
 )
 
-// MempoolTxsInfoFetcher is a function type to fetch mempool txs information
-type MempoolTxsInfoFetcher func(interfaces.BTCRPCClient, string, time.Duration) (int64, float64, int64, int64, error)
-
 // CPFPFeeBumper is a helper struct to contain CPFP (child-pays-for-parent) fee bumping logic
 type CPFPFeeBumper struct {
+	Ctx context.Context
+
 	Chain chains.Chain
 
-	// Client is the RPC Client to interact with the Bitcoin chain
-	Client interfaces.BTCRPCClient
+	// RPC is the interface to interact with the Bitcoin chain
+	RPC RPC
 
 	// Tx is the stuck transaction to bump
 	Tx *btcutil.Tx
@@ -68,23 +67,24 @@ type CPFPFeeBumper struct {
 
 // NewCPFPFeeBumper creates a new CPFPFeeBumper
 func NewCPFPFeeBumper(
+	ctx context.Context,
+	rpc RPC,
 	chain chains.Chain,
-	client interfaces.BTCRPCClient,
-	memplTxsInfoFetcher MempoolTxsInfoFetcher,
 	tx *btcutil.Tx,
 	cctxRate int64,
 	minRelayFee float64,
 	logger zerolog.Logger,
 ) (*CPFPFeeBumper, error) {
 	fb := &CPFPFeeBumper{
+		Ctx:         ctx,
 		Chain:       chain,
-		Client:      client,
+		RPC:         rpc,
 		Tx:          tx,
 		MinRelayFee: minRelayFee,
 		CCTXRate:    cctxRate,
 	}
 
-	err := fb.FetchFeeBumpInfo(memplTxsInfoFetcher, logger)
+	err := fb.FetchFeeBumpInfo(logger)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, int64, error) {
 	// calculate minmimum relay fees of the new replacement tx
 	// the new tx will have almost same size as the old one because the tx body stays the same
 	txVSize := mempool.GetTxVirtualSize(b.Tx)
-	minRelayFeeRate := rpc.FeeRateToSatPerByte(b.MinRelayFee)
+	minRelayFeeRate := client.FeeRateToSatPerByte(b.MinRelayFee)
 	minRelayTxFees := txVSize * minRelayFeeRate.Int64()
 
 	// calculate the RBF additional fees required by Bitcoin protocol
@@ -166,17 +166,21 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, int64, error) {
 }
 
 // fetchFeeBumpInfo fetches all necessary information needed to bump the stuck tx
-func (b *CPFPFeeBumper) FetchFeeBumpInfo(memplTxsInfoFetcher MempoolTxsInfoFetcher, logger zerolog.Logger) error {
+func (b *CPFPFeeBumper) FetchFeeBumpInfo(logger zerolog.Logger) error {
 	// query live fee rate
 	isRegnet := chains.IsBitcoinRegnet(b.Chain.ChainId)
-	liveRate, err := rpc.GetEstimatedFeeRate(b.Client, 1, isRegnet)
+	liveRate, err := b.RPC.GetEstimatedFeeRate(b.Ctx, 1, isRegnet)
 	if err != nil {
 		return errors.Wrap(err, "GetEstimatedFeeRate failed")
 	}
 	b.LiveRate = liveRate
 
 	// query total fees and sizes of all pending parent TSS txs
-	totalTxs, totalFees, totalVSize, avgFeeRate, err := memplTxsInfoFetcher(b.Client, b.Tx.MsgTx().TxID(), time.Minute)
+	totalTxs, totalFees, totalVSize, avgFeeRate, err := b.RPC.GetTotalMempoolParentsSizeNFees(
+		b.Ctx,
+		b.Tx.MsgTx().TxID(),
+		time.Minute,
+	)
 	if err != nil {
 		return errors.Wrap(err, "unable to fetch mempool txs info")
 	}

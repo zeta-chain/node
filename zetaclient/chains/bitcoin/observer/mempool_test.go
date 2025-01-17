@@ -15,8 +15,6 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
@@ -357,22 +355,22 @@ func Test_GetStuckTxCheck(t *testing.T) {
 		{
 			name:      "should return 3 blocks for Bitcoin mainnet",
 			chainID:   chains.BitcoinMainnet.ChainId,
-			txChecker: rpc.IsTxStuckInMempool,
+			txChecker: observer.IsTxStuckInMempool,
 		},
 		{
 			name:      "should return 3 blocks for Bitcoin testnet4",
 			chainID:   chains.BitcoinTestnet.ChainId,
-			txChecker: rpc.IsTxStuckInMempool,
+			txChecker: observer.IsTxStuckInMempool,
 		},
 		{
 			name:      "should return 3 blocks for Bitcoin Signet",
 			chainID:   chains.BitcoinSignetTestnet.ChainId,
-			txChecker: rpc.IsTxStuckInMempool,
+			txChecker: observer.IsTxStuckInMempool,
 		},
 		{
 			name:      "should return 10 blocks for Bitcoin regtest",
 			chainID:   chains.BitcoinRegtest.ChainId,
-			txChecker: rpc.IsTxStuckInMempoolRegnet,
+			txChecker: observer.IsTxStuckInMempoolRegnet,
 		},
 	}
 
@@ -437,7 +435,7 @@ func makeStuckTxChecker(stuck bool, stuckFor time.Duration, errMsg string) obser
 	if errMsg != "" {
 		err = errors.New(errMsg)
 	}
-	return func(_ interfaces.BTCRPCClient, _ string, _ int64) (bool, time.Duration, error) {
+	return func(_ context.Context, _ observer.RPC, _ string, _ int64) (bool, time.Duration, error) {
 		return stuck, stuckFor, err
 	}
 }

@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	v8 "github.com/zeta-chain/node/x/observer/migrations/v8"
+	v9 "github.com/zeta-chain/node/x/observer/migrations/v9"
 )
 
 // Migrator is a struct for handling in-place store migrations.
@@ -48,4 +49,9 @@ func (m Migrator) Migrate6to7(_ sdk.Context) error {
 // Migrate7to8 migrates the store from consensus version 7 to 8
 func (m Migrator) Migrate7to8(ctx sdk.Context) error {
 	return v8.MigrateStore(ctx, m.observerKeeper)
+}
+
+// Migrate8to9 migrates the store from consensus version 8 to 9
+func (m Migrator) Migrate8to9(ctx sdk.Context) error {
+	return v9.MigrateStore(ctx, m.observerKeeper)
 }

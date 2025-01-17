@@ -15,7 +15,6 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -159,7 +158,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 	}
 
 	// Get outbound block height
-	blockHeight, err := rpc.GetBlockHeightByHash(ob.btcClient, res.BlockHash)
+	blockHeight, err := ob.rpc.GetBlockHeightByStr(ctx, res.BlockHash)
 	if err != nil {
 		return false, errors.Wrapf(
 			err,
@@ -263,7 +262,7 @@ func (ob *Observer) getOutboundHashByNonce(ctx context.Context, nonce uint64, te
 			return "", fmt.Errorf("getOutboundIDByNonce: cannot find outbound txid for nonce %d", nonce)
 		}
 		// make sure it's a real Bitcoin txid
-		_, getTxResult, err := rpc.GetTxResultByHash(ob.btcClient, txid)
+		_, getTxResult, err := ob.rpc.GetTransactionByStr(ctx, txid)
 		if err != nil {
 			return "", errors.Wrapf(
 				err,
@@ -294,7 +293,7 @@ func (ob *Observer) checkTxInclusion(
 	}
 
 	// fetch tx result
-	hash, txResult, err := rpc.GetTxResultByHash(ob.btcClient, txHash)
+	hash, txResult, err := ob.rpc.GetTransactionByStr(ctx, txHash)
 	if err != nil {
 		ob.logger.Outbound.Warn().Err(err).Fields(lf).Msg("GetTxResultByHash failed")
 		return nil, false
@@ -387,7 +386,7 @@ func (ob *Observer) checkTssOutboundResult(
 ) error {
 	params := cctx.GetCurrentOutboundParam()
 	nonce := params.TssNonce
-	rawResult, err := rpc.GetRawTxResult(ob.btcClient, hash, res)
+	rawResult, err := ob.rpc.GetRawTransactionResult(ctx, hash, res)
 	if err != nil {
 		return errors.Wrapf(err, "checkTssOutboundResult: error GetRawTxResult %s", hash.String())
 	}

@@ -42,7 +42,7 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	hash, err := chainhash.NewHashFromStr(outTxHash)
 	require.NoError(r, err)
 
-	rawTx, err := r.BtcRPCClient.GetRawTransactionVerbose(hash)
+	rawTx, err := r.BtcRPCClient.GetRawTransactionVerbose(r.Ctx, hash)
 	require.NoError(r, err)
 
 	r.Logger.Info("raw tx:")

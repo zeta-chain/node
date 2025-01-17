@@ -1,6 +1,7 @@
 package observer_test
 
 import (
+	"context"
 	"math/big"
 	"os"
 	"strconv"
@@ -71,14 +72,14 @@ func Test_NewObserver(t *testing.T) {
 	params := mocks.MockChainParams(chain.ChainId, 10)
 
 	// create mock btc client with block height 100
-	btcClient := mocks.NewBTCRPCClient(t)
-	btcClient.On("GetBlockCount").Return(int64(100), nil)
+	btcClient := mocks.NewBitcoinClient(t)
+	btcClient.On("GetBlockCount", mock.Anything).Return(int64(100), nil)
 
 	// test cases
 	tests := []struct {
 		name         string
 		chain        chains.Chain
-		btcClient    interfaces.BTCRPCClient
+		btcClient    *mocks.BitcoinClient
 		chainParams  observertypes.ChainParams
 		coreClient   interfaces.ZetacoreClient
 		tss          interfaces.TSSSigner
@@ -103,7 +104,7 @@ func Test_NewObserver(t *testing.T) {
 			chainParams:  params,
 			coreClient:   nil,
 			tss:          mocks.NewTSS(t),
-			errorMessage: "unable to get BTC net params for chain",
+			errorMessage: "unable to get BTC net params",
 		},
 		{
 			name:        "should fail if env var us invalid",
@@ -172,18 +173,18 @@ func Test_BlockCache(t *testing.T) {
 		hash := sample.BtcHash()
 		header := &wire.BlockHeader{Version: 1}
 		block := &btcjson.GetBlockVerboseTxResult{Version: 1}
-		ob.client.On("GetBlockHash", mock.Anything).Return(&hash, nil)
-		ob.client.On("GetBlockHeader", &hash).Return(header, nil)
-		ob.client.On("GetBlockVerboseTx", &hash).Return(block, nil)
+		ob.client.On("GetBlockHash", mock.Anything, mock.Anything).Return(&hash, nil)
+		ob.client.On("GetBlockHeader", mock.Anything, &hash).Return(header, nil)
+		ob.client.On("GetBlockVerbose", mock.Anything, &hash).Return(block, nil)
 
 		// get block and header from observer, fallback to btc client
-		result, err := ob.GetBlockByNumberCached(100)
+		result, err := ob.GetBlockByNumberCached(ob.ctx, 100)
 		require.NoError(t, err)
 		require.EqualValues(t, header, result.Header)
 		require.EqualValues(t, block, result.Block)
 
 		// get block header from cache
-		result, err = ob.GetBlockByNumberCached(100)
+		result, err = ob.GetBlockByNumberCached(ob.ctx, 100)
 		require.NoError(t, err)
 		require.EqualValues(t, header, result.Header)
 		require.EqualValues(t, block, result.Block)
@@ -197,7 +198,7 @@ func Test_BlockCache(t *testing.T) {
 		ob.BlockCache().Add(blockNumber, "a string value")
 
 		// get result from cache
-		result, err := ob.GetBlockByNumberCached(blockNumber)
+		result, err := ob.GetBlockByNumberCached(ob.ctx, blockNumber)
 		require.ErrorContains(t, err, "cached value is not of type *BTCBlockNHeader")
 		require.Nil(t, result)
 	})
@@ -294,18 +295,21 @@ func TestSubmittedTx(t *testing.T) {
 type testSuite struct {
 	*observer.Observer
 
-	client   *mocks.BTCRPCClient
+	ctx      context.Context
+	client   *mocks.BitcoinClient
 	zetacore *mocks.ZetacoreClient
 	db       *db.DB
 }
 
 func newTestSuite(t *testing.T, chain chains.Chain, dbPath string) *testSuite {
+	ctx := context.Background()
+
 	require.True(t, chain.IsBitcoinChain())
 
 	chainParams := mocks.MockChainParams(chain.ChainId, 10)
 
-	client := mocks.NewBTCRPCClient(t)
-	client.On("GetBlockCount").Return(int64(100), nil).Maybe()
+	client := mocks.NewBitcoinClient(t)
+	client.On("GetBlockCount", mock.Anything).Return(int64(100), nil).Maybe()
 
 	zetacore := mocks.NewZetacoreClient(t)
 
@@ -344,6 +348,7 @@ func newTestSuite(t *testing.T, chain chains.Chain, dbPath string) *testSuite {
 	require.NoError(t, err)
 
 	return &testSuite{
+		ctx:      ctx,
 		Observer: ob,
 		client:   client,
 		zetacore: zetacore,

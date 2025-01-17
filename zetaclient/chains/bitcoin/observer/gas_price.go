@@ -7,8 +7,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/rpc"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
@@ -58,20 +58,20 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	// regnet:  RPC 'EstimateSmartFee' is not available
 	// testnet: RPC 'EstimateSmartFee' returns unreasonable high gas rate
 	if ob.Chain().NetworkType != chains.NetworkType_mainnet {
-		feeRateEstimated, err = ob.specialHandleFeeRate()
+		feeRateEstimated, err = ob.specialHandleFeeRate(ctx)
 		if err != nil {
 			return errors.Wrap(err, "unable to execute specialHandleFeeRate")
 		}
 	} else {
 		isRegnet := chains.IsBitcoinRegnet(ob.Chain().ChainId)
-		feeRateEstimated, err = rpc.GetEstimatedFeeRate(ob.btcClient, 1, isRegnet)
+		feeRateEstimated, err = ob.rpc.GetEstimatedFeeRate(ctx, 1, isRegnet)
 		if err != nil {
 			return errors.Wrap(err, "unable to get estimated fee rate")
 		}
 	}
 
 	// query the current block number
-	blockNumber, err := ob.btcClient.GetBlockCount()
+	blockNumber, err := ob.rpc.GetBlockCount(ctx)
 	if err != nil {
 		return errors.Wrap(err, "GetBlockCount error")
 	}
@@ -90,12 +90,12 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 }
 
 // specialHandleFeeRate handles the fee rate for regnet and testnet
-func (ob *Observer) specialHandleFeeRate() (int64, error) {
+func (ob *Observer) specialHandleFeeRate(ctx context.Context) (int64, error) {
 	switch ob.Chain().NetworkType {
 	case chains.NetworkType_privnet:
-		return rpc.FeeRateRegnet, nil
+		return client.FeeRateRegnet, nil
 	case chains.NetworkType_testnet:
-		feeRateEstimated, err := common.GetRecentFeeRate(ob.btcClient, ob.netParams)
+		feeRateEstimated, err := common.GetRecentFeeRate(ctx, ob.rpc, ob.netParams)
 		if err != nil {
 			return 0, errors.Wrapf(err, "error GetRecentFeeRate")
 		}
