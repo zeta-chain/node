@@ -90,7 +90,7 @@ func bitcoinBallotIdentifier(
 		return "", err
 	}
 	if tx.Confirmations < confirmationCount {
-		confirmationMessage = fmt.Sprintf("tx might not confirmed on chain %d", senderChainID)
+		confirmationMessage = fmt.Sprintf("tx might not be confirmed on chain %d", senderChainID)
 	}
 
 	blockHash, err := chainhash.NewHashFromStr(tx.BlockHash)
@@ -162,9 +162,9 @@ func identifierFromBtcEvent(event *zetaclientObserver.BTCInboundEvent,
 
 	index := msg.Digest()
 	if confirmationMessage != "" {
-		return fmt.Sprintf("ballot idetifier %s warning :%s", index, confirmationMessage), nil
+		return fmt.Sprintf("ballot identifier %s warning :%s", index, confirmationMessage), nil
 	}
-	return fmt.Sprintf("ballot idetifier: %s", msg.Digest()), nil
+	return fmt.Sprintf("ballot identifier: %s", msg.Digest()), nil
 }
 
 // NewInboundVoteFromLegacyMemo creates a MsgVoteInbound message for inbound that uses legacy memo

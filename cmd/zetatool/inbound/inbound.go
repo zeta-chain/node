@@ -39,17 +39,17 @@ func GetInboundBallot(cmd *cobra.Command, args []string) error {
 func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile string) error {
 	observationChain, found := chains.GetChainFromChainID(inboundChainID, []chains.Chain{})
 	if !found {
-		return fmt.Errorf("chain not supported,chain id : %d", inboundChainID)
+		return fmt.Errorf("chain not supported,chain id: %d", inboundChainID)
 	}
 
 	cfg, err := config.GetConfig(observationChain, configFile)
 	if err != nil {
-		return fmt.Errorf("failed to get config, %s", err.Error())
+		return fmt.Errorf("failed to get config: %s", err.Error())
 	}
 
 	zetacoreClient, err := zetacorerpc.NewCometBFTClients(cfg.ZetaChainRPC)
 	if err != nil {
-		return fmt.Errorf("failed to create zetacore client, %s", err.Error())
+		return fmt.Errorf("failed to create zetacore client: %s", err.Error())
 	}
 
 	ctx := context.Background()

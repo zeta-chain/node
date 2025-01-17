@@ -12,7 +12,6 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
-	zetaclientrpc "github.com/zeta-chain/node/zetaclient/chains/evm/rpc"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
@@ -25,6 +24,7 @@ import (
 	"github.com/zeta-chain/node/pkg/rpc"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/x/observer/types"
+	zetaclientrpc "github.com/zeta-chain/node/zetaclient/chains/evm/rpc"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -72,13 +72,13 @@ func evmInboundBallotIdentifier(ctx context.Context,
 	tssEthAddress := res.GetEth()
 
 	if tx.To() == nil {
-		return "", fmt.Errorf("invalid trasnaction,to field is empty %s", inboundHash)
+		return "", fmt.Errorf("invalid transaction,to field is empty %s", inboundHash)
 	}
 
 	confirmationMessage := ""
 	confirmed, err := zetaclientrpc.IsTxConfirmed(ctx, evmClient, inboundHash, chainParams.ConfirmationCount)
 	if err != nil {
-		return "", fmt.Errorf("unbale to confirm tx %s", err.Error())
+		return "", fmt.Errorf("unable to confirm tx %s", err.Error())
 	}
 	if !confirmed {
 		confirmationMessage = fmt.Sprintf("tx might not confirmed on chain %d", inboundChain.ChainId)
@@ -117,7 +117,6 @@ func evmInboundBallotIdentifier(ctx context.Context,
 				zetaDeposited, err := custody.ParseDeposited(*log)
 				if err == nil && zetaDeposited != nil {
 					msg = erc20VoteV1(zetaDeposited, sender, inboundChain.ChainId, zetaChainID)
-
 				}
 			}
 		}
@@ -131,7 +130,6 @@ func evmInboundBallotIdentifier(ctx context.Context,
 				return "", fmt.Errorf("failed to get tx sender %s", err.Error())
 			}
 			msg = gasVoteV1(tx, sender, receipt.BlockNumber.Uint64(), inboundChain.ChainId, zetaChainID)
-
 		}
 	case chainParams.GatewayAddress:
 		{
@@ -161,13 +159,13 @@ func evmInboundBallotIdentifier(ctx context.Context,
 			}
 		}
 	default:
-		return "", fmt.Errorf("irrelevant trasnaction , not sent to any known address txHash:  %s", inboundHash)
+		return "", fmt.Errorf("irrelevant transaction , not sent to any known address txHash: %s", inboundHash)
 	}
 
 	if confirmationMessage != "" {
-		return fmt.Sprintf("ballot idetifier %s warning :%s", msg.Digest(), confirmationMessage), nil
+		return fmt.Sprintf("ballot identifier %s warning :%s", msg.Digest(), confirmationMessage), nil
 	}
-	return fmt.Sprintf("ballot idetifier: %s", msg.Digest()), nil
+	return fmt.Sprintf("ballot identifier: %s", msg.Digest()), nil
 }
 
 func getEvmTx(

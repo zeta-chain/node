@@ -45,7 +45,7 @@ func solanaInboundBallotIdentifier(ctx context.Context,
 
 	gatewayID, _, err := solanacontracts.ParseGatewayWithPDA(chainParams.GatewayAddress)
 	if err != nil {
-		return "", fmt.Errorf("cannot parse gateway address %s , errr %s", chainParams.GatewayAddress, err.Error())
+		return "", fmt.Errorf("cannot parse gateway address %s , err %s", chainParams.GatewayAddress, err.Error())
 	}
 
 	logger := &base.ObserverLogger{}
@@ -66,7 +66,7 @@ func solanaInboundBallotIdentifier(ctx context.Context,
 		}
 	}
 
-	return fmt.Sprintf("ballot idetifier: %s", msg.Digest()), nil
+	return fmt.Sprintf("ballot identifier: %s", msg.Digest()), nil
 }
 
 // voteMsgFromSolEvent builds a MsgVoteInbound from an inbound event
