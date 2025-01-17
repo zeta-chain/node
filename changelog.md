@@ -2,6 +2,10 @@
 
 ## unreleased
 
+### Features
+
+* [3377](https://github.com/zeta-chain/node/pull/3377) - have zetacore feed latest gas price to pending Bitcoin cctxs
+
 ### Refactor
 
 * [3332](https://github.com/zeta-chain/node/pull/3332) - implement orchestrator V2. Move BTC observer-signer to V2
