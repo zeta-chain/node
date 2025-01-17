@@ -1,4 +1,4 @@
-package inbound_ballot
+package inbound
 
 import (
 	"bytes"
@@ -43,11 +43,11 @@ func evmInboundBallotIdentifier(ctx context.Context,
 	inboundHash string,
 	inboundChain chains.Chain,
 	zetaChainID int64) (string, error) {
-	evmRpc := resolveRPC(inboundChain, cfg)
-	if evmRpc == "" {
+	evmRRC := resolveRPC(inboundChain, cfg)
+	if evmRRC == "" {
 		return "", fmt.Errorf("rpc not found for chain %d network %s", inboundChain.ChainId, inboundChain.Network)
 	}
-	rpcClient, err := ethrpc.DialHTTP(evmRpc)
+	rpcClient, err := ethrpc.DialHTTP(evmRRC)
 	if err != nil {
 		return "", fmt.Errorf("failed to connect to eth rpc %s", err.Error())
 	}

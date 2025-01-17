@@ -1,4 +1,4 @@
-package inbound_ballot
+package inbound
 
 import (
 	"context"
@@ -17,11 +17,11 @@ func NewFetchInboundBallotCMD() *cobra.Command {
 	return &cobra.Command{
 		Use:   "get-ballot [inboundHash] [chainID]",
 		Short: "fetch ballot identifier from the inbound hash",
-		RunE:  InboundGetBallot,
+		RunE:  GetInboundBallot,
 	}
 }
 
-func InboundGetBallot(cmd *cobra.Command, args []string) error {
+func GetInboundBallot(cmd *cobra.Command, args []string) error {
 	cobra.ExactArgs(2)
 
 	inboundHash := args[0]

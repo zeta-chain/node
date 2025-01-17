@@ -1,4 +1,4 @@
-package inbound_ballot
+package inbound
 
 import (
 	"context"

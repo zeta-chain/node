@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/node/cmd/zetatool/config"
-	"github.com/zeta-chain/node/cmd/zetatool/inbound_ballot"
+	"github.com/zeta-chain/node/cmd/zetatool/inbound"
 )
 
 var rootCmd = &cobra.Command{
@@ -16,7 +16,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(inbound_ballot.NewFetchInboundBallotCMD())
+	rootCmd.AddCommand(inbound.NewFetchInboundBallotCMD())
 	rootCmd.PersistentFlags().String(config.FlagConfig, "", "custom config file: --config filename.json")
 }
 
