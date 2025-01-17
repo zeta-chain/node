@@ -172,7 +172,7 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 
 	// iterate and update gas price for cctx that are pending for too long
 	// error is logged in the function
-	am.keeper.IterateAndUpdateCctxGasPrice(ctx, supportedChains, keeper.CheckAndUpdateCctxGasPrice)
+	am.keeper.IterateAndUpdateCCTXGasPrice(ctx, supportedChains, keeper.CheckAndUpdateCCTXGasPrice)
 }
 
 // EndBlock executes all ABCI EndBlock logic respective to the crosschain module. It

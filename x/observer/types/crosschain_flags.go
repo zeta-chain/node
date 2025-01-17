@@ -4,8 +4,8 @@ import "time"
 
 var DefaultGasPriceIncreaseFlags = GasPriceIncreaseFlags{
 	// EpochLength is the number of blocks in an epoch before triggering a gas price increase
-
 	EpochLength: 100,
+
 	// RetryInterval is the number of blocks to wait before incrementing the gas price again
 	RetryInterval: time.Minute * 10,
 
