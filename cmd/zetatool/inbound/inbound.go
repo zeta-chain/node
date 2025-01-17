@@ -53,10 +53,10 @@ func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile st
 	}
 
 	ctx := context.Background()
-	ballotIdentifier := ""
+	ballotIdentifierMessage := ""
 
 	if observationChain.IsEVMChain() {
-		ballotIdentifier, err = evmInboundBallotIdentifier(
+		ballotIdentifierMessage, err = evmInboundBallotIdentifier(
 			ctx,
 			*cfg,
 			zetacoreClient,
@@ -74,7 +74,7 @@ func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile st
 	}
 
 	if observationChain.IsBitcoinChain() {
-		ballotIdentifier, err = btcInboundBallotIdentifier(
+		ballotIdentifierMessage, err = btcInboundBallotIdentifier(
 			*cfg,
 			zetacoreClient,
 			inboundHash,
@@ -91,7 +91,7 @@ func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile st
 	}
 
 	if observationChain.IsSolanaChain() {
-		ballotIdentifier, err = solanaInboundBallotIdentifier(
+		ballotIdentifierMessage, err = solanaInboundBallotIdentifier(
 			ctx,
 			*cfg,
 			zetacoreClient,
@@ -108,6 +108,6 @@ func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile st
 		}
 	}
 
-	log.Info().Msgf("Ballot Identifier: %s", ballotIdentifier)
+	log.Info().Msgf(ballotIdentifierMessage)
 	return nil
 }

@@ -56,6 +56,11 @@ func btcInboundBallotIdentifier(
 	}
 	tssBtcAddress := res.GetBtc()
 
+	chainParams, err := zetacoreClient.GetChainParamsForChainID(context.Background(), inboundChain.ChainId)
+	if err != nil {
+		return "", fmt.Errorf("failed to get chain params %s", err.Error())
+	}
+
 	return bitcoinBallotIdentifier(
 		rpcClient,
 		params,
@@ -63,6 +68,7 @@ func btcInboundBallotIdentifier(
 		inboundHash,
 		inboundChain.ChainId,
 		zetaChainID,
+		chainParams.ConfirmationCount,
 	)
 }
 
@@ -72,15 +78,19 @@ func bitcoinBallotIdentifier(
 	tss string,
 	txHash string,
 	senderChainID int64,
-	zetacoreChainID int64) (string, error) {
+	zetacoreChainID int64,
+	confirmationCount uint64) (string, error) {
 	hash, err := chainhash.NewHashFromStr(txHash)
 	if err != nil {
 		return "", err
 	}
-
+	confirmationMessage := ""
 	tx, err := btcClient.GetRawTransactionVerbose(hash)
 	if err != nil {
 		return "", err
+	}
+	if tx.Confirmations < confirmationCount {
+		confirmationMessage = fmt.Sprintf("tx might not confirmed on chain %d", senderChainID)
 	}
 
 	blockHash, err := chainhash.NewHashFromStr(tx.BlockHash)
@@ -96,6 +106,7 @@ func bitcoinBallotIdentifier(
 	if len(blockVb.Tx) <= 1 {
 		return "", fmt.Errorf("block %d has no transactions", blockVb.Height)
 	}
+
 	// #nosec G115 always positive
 
 	event, err := zetaclientObserver.GetBtcEvent(
@@ -115,12 +126,12 @@ func bitcoinBallotIdentifier(
 		return "", fmt.Errorf("no event built for btc sent to TSS")
 	}
 
-	return identifierFromBtcEvent(event, senderChainID, zetacoreChainID)
+	return identifierFromBtcEvent(event, senderChainID, zetacoreChainID, confirmationMessage)
 }
 
 func identifierFromBtcEvent(event *zetaclientObserver.BTCInboundEvent,
 	senderChainID int64,
-	zetacoreChainID int64) (string, error) {
+	zetacoreChainID int64, confirmationMessage string) (string, error) {
 	// decode event memo bytes
 	err := event.DecodeMemoBytes(senderChainID)
 	if err != nil {
@@ -148,7 +159,12 @@ func identifierFromBtcEvent(event *zetaclientObserver.BTCInboundEvent,
 	if msg == nil {
 		return "", fmt.Errorf("failed to create vote message")
 	}
-	return msg.Digest(), nil
+
+	index := msg.Digest()
+	if confirmationMessage != "" {
+		return fmt.Sprintf("ballot idetifier %s warning :%s", index, confirmationMessage), nil
+	}
+	return fmt.Sprintf("ballot idetifier: %s", msg.Digest()), nil
 }
 
 // NewInboundVoteFromLegacyMemo creates a MsgVoteInbound message for inbound that uses legacy memo

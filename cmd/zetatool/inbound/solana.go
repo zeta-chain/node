@@ -3,7 +3,6 @@ package inbound
 import (
 	"context"
 	"encoding/hex"
-	"errors"
 	"fmt"
 
 	cosmosmath "cosmossdk.io/math"
@@ -57,16 +56,17 @@ func solanaInboundBallotIdentifier(ctx context.Context,
 		inboundChain.ChainId,
 	)
 
+	msg := &crosschaintypes.MsgVoteInbound{}
+
 	// build inbound vote message from events and post to zetacore
 	for _, event := range events {
-		msg, err := voteMsgFromSolEvent(event, zetaChainID)
+		msg, err = voteMsgFromSolEvent(event, zetaChainID)
 		if err != nil {
 			return "", fmt.Errorf("failed to create vote message: %w", err)
 		}
-		return msg.Digest(), nil
 	}
 
-	return "", errors.New("no inbound vote message found")
+	return fmt.Sprintf("ballot idetifier: %s", msg.Digest()), nil
 }
 
 // voteMsgFromSolEvent builds a MsgVoteInbound from an inbound event

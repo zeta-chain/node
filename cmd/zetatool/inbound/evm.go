@@ -12,6 +12,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
+	zetaclientrpc "github.com/zeta-chain/node/zetaclient/chains/evm/rpc"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
@@ -74,6 +75,16 @@ func evmInboundBallotIdentifier(ctx context.Context,
 		return "", fmt.Errorf("invalid trasnaction,to field is empty %s", inboundHash)
 	}
 
+	confirmationMessage := ""
+	confirmed, err := zetaclientrpc.IsTxConfirmed(ctx, evmClient, inboundHash, chainParams.ConfirmationCount)
+	if err != nil {
+		return "", fmt.Errorf("unbale to confirm tx %s", err.Error())
+	}
+	if !confirmed {
+		confirmationMessage = fmt.Sprintf("tx might not confirmed on chain %d", inboundChain.ChainId)
+	}
+
+	msg := &crosschaintypes.MsgVoteInbound{}
 	// Create inbound vote message based on the cointype and protocol version
 	switch tx.To().Hex() {
 	case chainParams.ConnectorContractAddress:
@@ -87,8 +98,7 @@ func evmInboundBallotIdentifier(ctx context.Context,
 			for _, log := range receipt.Logs {
 				event, err := connector.ParseZetaSent(*log)
 				if err == nil && event != nil {
-					msg := zetaTokenVoteV1(event, inboundChain.ChainId)
-					return msg.Digest(), nil
+					msg = zetaTokenVoteV1(event, inboundChain.ChainId)
 				}
 			}
 		}
@@ -106,8 +116,8 @@ func evmInboundBallotIdentifier(ctx context.Context,
 			for _, log := range receipt.Logs {
 				zetaDeposited, err := custody.ParseDeposited(*log)
 				if err == nil && zetaDeposited != nil {
-					msg := erc20VoteV1(zetaDeposited, sender, inboundChain.ChainId, zetaChainID)
-					return msg.Digest(), nil
+					msg = erc20VoteV1(zetaDeposited, sender, inboundChain.ChainId, zetaChainID)
+
 				}
 			}
 		}
@@ -120,8 +130,8 @@ func evmInboundBallotIdentifier(ctx context.Context,
 			if err != nil {
 				return "", fmt.Errorf("failed to get tx sender %s", err.Error())
 			}
-			msg := gasVoteV1(tx, sender, receipt.BlockNumber.Uint64(), inboundChain.ChainId, zetaChainID)
-			return msg.Digest(), nil
+			msg = gasVoteV1(tx, sender, receipt.BlockNumber.Uint64(), inboundChain.ChainId, zetaChainID)
+
 		}
 	case chainParams.GatewayAddress:
 		{
@@ -136,25 +146,28 @@ func evmInboundBallotIdentifier(ctx context.Context,
 				}
 				eventDeposit, err := gateway.ParseDeposited(*log)
 				if err == nil {
-					msg := depositInboundVoteV2(eventDeposit, inboundChain.ChainId, zetaChainID)
+					msg = depositInboundVoteV2(eventDeposit, inboundChain.ChainId, zetaChainID)
 					return msg.Digest(), nil
 				}
 				eventDepositAndCall, err := gateway.ParseDepositedAndCalled(*log)
 				if err == nil {
-					msg := depositAndCallInboundVoteV2(eventDepositAndCall, inboundChain.ChainId, zetaChainID)
+					msg = depositAndCallInboundVoteV2(eventDepositAndCall, inboundChain.ChainId, zetaChainID)
 					return msg.Digest(), nil
 				}
 				eventCall, err := gateway.ParseCalled(*log)
 				if err == nil {
-					msg := callInboundVoteV2(eventCall, inboundChain.ChainId, zetaChainID)
-					return msg.Digest(), nil
+					msg = callInboundVoteV2(eventCall, inboundChain.ChainId, zetaChainID)
 				}
 			}
 		}
 	default:
 		return "", fmt.Errorf("irrelevant trasnaction , not sent to any known address txHash:  %s", inboundHash)
 	}
-	return "", fmt.Errorf("no event found for tx %s", inboundHash)
+
+	if confirmationMessage != "" {
+		return fmt.Sprintf("ballot idetifier %s warning :%s", msg.Digest(), confirmationMessage), nil
+	}
+	return fmt.Sprintf("ballot idetifier: %s", msg.Digest()), nil
 }
 
 func getEvmTx(
@@ -276,7 +289,7 @@ func gasVoteV1(
 
 func depositInboundVoteV2(event *gatewayevm.GatewayEVMDeposited,
 	senderChainID int64,
-	zetacoreChainID int64) crosschaintypes.MsgVoteInbound {
+	zetacoreChainID int64) *crosschaintypes.MsgVoteInbound {
 	// if event.Asset is zero, it's a native token
 	coinType := coin.CoinType_ERC20
 	if crypto.IsEmptyAddress(event.Asset) {
@@ -289,7 +302,7 @@ func depositInboundVoteV2(event *gatewayevm.GatewayEVMDeposited,
 		isCrossChainCall = true
 	}
 
-	return *crosschaintypes.NewMsgVoteInbound(
+	return crosschaintypes.NewMsgVoteInbound(
 		"",
 		event.Sender.Hex(),
 		senderChainID,
@@ -313,14 +326,14 @@ func depositInboundVoteV2(event *gatewayevm.GatewayEVMDeposited,
 
 func depositAndCallInboundVoteV2(event *gatewayevm.GatewayEVMDepositedAndCalled,
 	senderChainID int64,
-	zetacoreChainID int64) crosschaintypes.MsgVoteInbound {
+	zetacoreChainID int64) *crosschaintypes.MsgVoteInbound {
 	// if event.Asset is zero, it's a native token
 	coinType := coin.CoinType_ERC20
 	if crypto.IsEmptyAddress(event.Asset) {
 		coinType = coin.CoinType_Gas
 	}
 
-	return *crosschaintypes.NewMsgVoteInbound(
+	return crosschaintypes.NewMsgVoteInbound(
 		"",
 		event.Sender.Hex(),
 		senderChainID,
@@ -344,8 +357,8 @@ func depositAndCallInboundVoteV2(event *gatewayevm.GatewayEVMDepositedAndCalled,
 
 func callInboundVoteV2(event *gatewayevm.GatewayEVMCalled,
 	senderChainID int64,
-	zetacoreChainID int64) crosschaintypes.MsgVoteInbound {
-	return *crosschaintypes.NewMsgVoteInbound(
+	zetacoreChainID int64) *crosschaintypes.MsgVoteInbound {
+	return crosschaintypes.NewMsgVoteInbound(
 		"",
 		event.Sender.Hex(),
 		senderChainID,
