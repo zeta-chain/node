@@ -11,9 +11,9 @@ import (
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	btcecdsa "github.com/btcsuite/btcd/btcec/v2/ecdsa"
+	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/pkg/errors"
@@ -28,7 +28,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
-	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 )
@@ -47,42 +46,23 @@ const (
 	broadcastRetries = 5
 )
 
-// Signer deals with signing BTC transactions and implements the ChainSigner interface
-type Signer struct {
-	*base.Signer
-
-	// client is the RPC client to interact with the Bitcoin chain
-	client interfaces.BTCRPCClient
+type RPC interface {
+	GetNetworkInfo(ctx context.Context) (*btcjson.GetNetworkInfoResult, error)
+	SendRawTransaction(ctx context.Context, tx *wire.MsgTx, allowHighFees bool) (*chainhash.Hash, error)
 }
 
-// NewSigner creates a new Bitcoin signer
-func NewSigner(
-	chain chains.Chain,
-	tss interfaces.TSSSigner,
-	logger base.Logger,
-	cfg config.BTCConfig,
-) (*Signer, error) {
-	// create base signer
-	baseSigner := base.NewSigner(chain, tss, logger)
+// Signer deals with signing & broadcasting BTC transactions.
+type Signer struct {
+	*base.Signer
+	rpc RPC
+}
 
-	// create the bitcoin rpc client using the provided config
-	connCfg := &rpcclient.ConnConfig{
-		Host:         cfg.RPCHost,
-		User:         cfg.RPCUsername,
-		Pass:         cfg.RPCPassword,
-		HTTPPostMode: true,
-		DisableTLS:   true,
-		Params:       cfg.RPCParams,
-	}
-	client, err := rpcclient.New(connCfg, nil)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to create bitcoin rpc client")
-	}
-
+// New creates a new Bitcoin signer
+func New(chain chains.Chain, tss interfaces.TSSSigner, rpc RPC, logger base.Logger) *Signer {
 	return &Signer{
-		Signer: baseSigner,
-		client: client,
-	}, nil
+		Signer: base.NewSigner(chain, tss, logger),
+		rpc:    rpc,
+	}
 }
 
 // AddWithdrawTxOutputs adds the 3 outputs to the withdraw tx
@@ -276,7 +256,7 @@ func (signer *Signer) SignWithdrawTx(
 }
 
 // Broadcast sends the signed transaction to the network
-func (signer *Signer) Broadcast(signedTx *wire.MsgTx) error {
+func (signer *Signer) Broadcast(ctx context.Context, signedTx *wire.MsgTx) error {
 	var outBuff bytes.Buffer
 	if err := signedTx.Serialize(&outBuff); err != nil {
 		return errors.Wrap(err, "unable to serialize tx")
@@ -287,7 +267,7 @@ func (signer *Signer) Broadcast(signedTx *wire.MsgTx) error {
 		Str("signer.tx_payload", hex.EncodeToString(outBuff.Bytes())).
 		Msg("Broadcasting transaction")
 
-	_, err := signer.client.SendRawTransaction(signedTx, true)
+	_, err := signer.rpc.SendRawTransaction(ctx, signedTx, true)
 	if err != nil {
 		return errors.Wrap(err, "unable to broadcast raw tx")
 	}
@@ -361,7 +341,7 @@ func (signer *Signer) TryProcessOutbound(
 	amount := float64(params.Amount.Uint64()) / 1e8
 
 	// Add 1 satoshi/byte to gasPrice to avoid minRelayTxFee issue
-	networkInfo, err := signer.client.GetNetworkInfo()
+	networkInfo, err := signer.rpc.GetNetworkInfo(ctx)
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot get bitcoin network info")
 		return
@@ -422,7 +402,7 @@ func (signer *Signer) TryProcessOutbound(
 		backOff := broadcastBackoff
 		for i := 0; i < broadcastRetries; i++ {
 			time.Sleep(backOff)
-			err := signer.Broadcast(tx)
+			err := signer.Broadcast(ctx, tx)
 			if err != nil {
 				logger.Warn().Err(err).Fields(lf).Msgf("Broadcasting Bitcoin tx, retry %d", i)
 				backOff *= 2

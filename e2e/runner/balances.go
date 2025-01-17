@@ -162,7 +162,7 @@ func (r *E2ERunner) GetBitcoinBalance() (string, error) {
 
 // GetBitcoinBalanceByAddress get btc balance by address.
 func (r *E2ERunner) GetBitcoinBalanceByAddress(address btcutil.Address) (btcutil.Amount, error) {
-	unspentList, err := r.BtcRPCClient.ListUnspentMinMaxAddresses(1, 9999999, []btcutil.Address{address})
+	unspentList, err := r.BtcRPCClient.ListUnspentMinMaxAddresses(r.Ctx, 1, 9999999, []btcutil.Address{address})
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to list unspent")
 	}
