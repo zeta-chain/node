@@ -10,8 +10,8 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"

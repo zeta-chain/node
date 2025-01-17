@@ -7,8 +7,8 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
-	connectorevm "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.base.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
+	connectorevm "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.base.sol"
 
 	"github.com/zeta-chain/node/zetaclient/chains/evm"
 )

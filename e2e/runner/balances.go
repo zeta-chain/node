@@ -10,7 +10,7 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 )
 
 var errNilZRC20 = errors.New("zrc20 contract is nil")
