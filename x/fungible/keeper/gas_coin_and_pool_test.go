@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"errors"
+	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"math/big"
 	"testing"
 
@@ -13,8 +14,7 @@ import (
 
 	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/systemcontract.sol"
-	uniswapv2router02 "github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
