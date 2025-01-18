@@ -9,6 +9,7 @@ import (
 	"github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/rs/zerolog"
+
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	"github.com/zeta-chain/node/pkg/chains"
 	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
@@ -17,7 +18,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
-
 	//solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
@@ -43,12 +43,12 @@ func solanaInboundBallotIdentifier(ctx context.Context,
 
 	chainParams, err := zetacoreClient.GetChainParamsForChainID(context.Background(), inboundChain.ChainId)
 	if err != nil {
-		return "", fmt.Errorf("failed to get chain params %w", err)
+		return "", fmt.Errorf("failed to get chain params: %w", err)
 	}
 
 	gatewayID, _, err := solanacontracts.ParseGatewayWithPDA(chainParams.GatewayAddress)
 	if err != nil {
-		return "", fmt.Errorf("cannot parse gateway address %s, err %w", chainParams.GatewayAddress, err)
+		return "", fmt.Errorf("cannot parse gateway address: %s, err: %w", chainParams.GatewayAddress, err)
 	}
 
 	observerLogger := &base.ObserverLogger{

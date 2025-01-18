@@ -57,6 +57,8 @@ func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile st
 	ctx := context.Background()
 	ballotIdentifierMessage := ""
 
+	// logger is used when calling internal zetaclient functions which need a logger.
+	// we do not need to log those messages for this tool
 	logger := zerolog.New(zerolog.ConsoleWriter{
 		Out:        zerolog.Nop(),
 		TimeFormat: time.RFC3339,

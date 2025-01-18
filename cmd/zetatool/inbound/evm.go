@@ -163,7 +163,7 @@ func evmInboundBallotIdentifier(ctx context.Context,
 	}
 
 	if confirmationMessage != "" {
-		return fmt.Sprintf("ballot identifier %s warning :%s", msg.Digest(), confirmationMessage), nil
+		return fmt.Sprintf("ballot identifier: %s warning: %s", msg.Digest(), confirmationMessage), nil
 	}
 	return fmt.Sprintf("ballot identifier: %s", msg.Digest()), nil
 }
@@ -181,7 +181,7 @@ func getEvmTx(
 		return nil, nil, fmt.Errorf("tx not found on chain: %w,chainID: %d", err, inboundChain.ChainId)
 	}
 	if isPending {
-		return nil, nil, fmt.Errorf("tx is still pending on chain %d", inboundChain.ChainId)
+		return nil, nil, fmt.Errorf("tx is still pending on chain: %d", inboundChain.ChainId)
 	}
 	receipt, err := evmClient.TransactionReceipt(ctx, hash)
 	if err != nil {

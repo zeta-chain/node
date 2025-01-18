@@ -19,12 +19,12 @@ Alternatively you can also use the target `make install-zetatool`
 ### Fetching the Ballot Identifier
 
 ```shell
-get-ballot [inboundHash] [chainID] --config <filename.json>
+zetatool get-ballot [inboundHash] [chainID] --config <filename.json>
 ```
 
 - `inboundHash`: The inbound hash of the transaction for which the ballot identifier is to be fetched
 - `chainID`: The chain ID of the chain to which the transaction belongs
-- `--config`: [Optional]The path to the configuration file. When not provided, the default configuration is used. A sample config is provided in the `config` directory. 
+- `config`: [Optional] The path to the configuration file. When not provided, the configuration in the file is user. A sample config is provided at `cmd/zetatool/config/sample_config.json`
 
 The command returns a ballot identifier for the given inbound hash.
 

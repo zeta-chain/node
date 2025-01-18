@@ -54,7 +54,7 @@ func btcInboundBallotIdentifier(
 	}
 	res, err := zetacoreClient.Observer.GetTssAddress(context.Background(), &types.QueryGetTssAddressRequest{})
 	if err != nil {
-		return "", fmt.Errorf("failed to get tss address %w", err)
+		return "", fmt.Errorf("failed to get tss address: %w", err)
 	}
 	tssBtcAddress := res.GetBtc()
 
@@ -94,7 +94,7 @@ func bitcoinBallotIdentifier(
 		return "", err
 	}
 	if tx.Confirmations < confirmationCount {
-		confirmationMessage = fmt.Sprintf("tx might not be confirmed on chain %d", senderChainID)
+		confirmationMessage = fmt.Sprintf("tx might not be confirmed on chain: %d", senderChainID)
 	}
 
 	blockHash, err := chainhash.NewHashFromStr(tx.BlockHash)
@@ -106,11 +106,6 @@ func bitcoinBallotIdentifier(
 	if err != nil {
 		return "", err
 	}
-
-	if len(blockVb.Tx) <= 1 {
-		return "", fmt.Errorf("block %d has no transactions", blockVb.Height)
-	}
-
 	// #nosec G115 always positive
 
 	event, err := zetaclientObserver.GetBtcEvent(
@@ -126,7 +121,6 @@ func bitcoinBallotIdentifier(
 	if err != nil {
 		return "", fmt.Errorf("error getting btc event: %w", err)
 	}
-
 	if event == nil {
 		return "", fmt.Errorf("no event built for btc sent to TSS")
 	}
