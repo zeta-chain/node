@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"os"
 
 	"github.com/spf13/afero"
 
@@ -26,7 +27,7 @@ func TestnetConfig() *Config {
 		BtcParams:    "",
 		SolanaRPC:    "",
 		BscRPC:       "https://bsc-testnet-rpc.publicnode.com",
-		PolygonRPC:   "https://polygon-amoy.gateway.tenderly.co",
+		PolygonRPC:   "https://polygon-amoy.gateway.tenderly.com",
 		BaseRPC:      "https://base-sepolia-rpc.publicnode.com",
 	}
 }
@@ -78,17 +79,17 @@ func PrivateNetConfig() *Config {
 
 // Config is a struct the defines the configuration fields used by zetatool
 type Config struct {
-	ZetaChainRPC string
-	ZetaChainID  int64
-	EthereumRPC  string
-	BtcUser      string
-	BtcPassword  string
-	BtcHost      string
-	BtcParams    string
-	SolanaRPC    string
-	BscRPC       string
-	PolygonRPC   string
-	BaseRPC      string
+	ZetaChainRPC string `json:"zeta_chain_rpc"`
+	ZetaChainID  int64  `json:"zeta_chain_id"`
+	EthereumRPC  string `json:"ethereum_rpc"`
+	BtcUser      string `json:"btc_user"`
+	BtcPassword  string `json:"btc_password"`
+	BtcHost      string `json:"btc_host"`
+	BtcParams    string `json:"btc_params"`
+	SolanaRPC    string `json:"solana_rpc"`
+	BscRPC       string `json:"bsc_rpc"`
+	PolygonRPC   string `json:"polygon_rpc"`
+	BaseRPC      string `json:"base_rpc"`
 }
 
 func (c *Config) Save() error {
@@ -99,9 +100,8 @@ func (c *Config) Save() error {
 	err = afero.WriteFile(AppFs, defaultCfgFileName, file, 0600)
 	return err
 }
-
 func (c *Config) Read(filename string) error {
-	data, err := afero.ReadFile(AppFs, filename)
+	data, err := os.ReadFile(filename)
 	if err != nil {
 		return err
 	}
@@ -110,7 +110,7 @@ func (c *Config) Read(filename string) error {
 }
 
 func GetConfig(chain chains.Chain, filename string) (*Config, error) {
-	//Check if cfgFile is empty, if so return default Config and save to file
+	//Check if cfgFile is empty, if so return default Config based on network type
 	if filename == "" {
 		return map[chains.NetworkType]*Config{
 			chains.NetworkType_mainnet: MainnetConfig(),
@@ -120,7 +120,7 @@ func GetConfig(chain chains.Chain, filename string) (*Config, error) {
 		}[chain.NetworkType], nil
 	}
 
-	//if file is specified, open file and return struct
+	//if a file is specified, use the config in the file
 	cfg := &Config{}
 	err := cfg.Read(filename)
 	return cfg, err

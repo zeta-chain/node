@@ -8,7 +8,7 @@ import (
 	cosmosmath "cosmossdk.io/math"
 	"github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
-
+	"github.com/rs/zerolog"
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	"github.com/zeta-chain/node/pkg/chains"
 	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
@@ -17,6 +17,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
+
+	//solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
@@ -25,7 +27,8 @@ func solanaInboundBallotIdentifier(ctx context.Context,
 	zetacoreClient rpc.Clients,
 	inboundHash string,
 	inboundChain chains.Chain,
-	zetaChainID int64) (string, error) {
+	zetaChainID int64,
+	logger zerolog.Logger) (string, error) {
 	solClient := solrpc.New(cfg.SolanaRPC)
 	if solClient == nil {
 		return "", fmt.Errorf("error creating rpc client")
@@ -48,10 +51,12 @@ func solanaInboundBallotIdentifier(ctx context.Context,
 		return "", fmt.Errorf("cannot parse gateway address %s, err %w", chainParams.GatewayAddress, err)
 	}
 
-	logger := &base.ObserverLogger{}
+	observerLogger := &base.ObserverLogger{
+		Inbound: logger,
+	}
 
 	events, err := observer.FilterSolanaInboundEvents(txResult,
-		logger,
+		observerLogger,
 		gatewayID,
 		inboundChain.ChainId,
 	)

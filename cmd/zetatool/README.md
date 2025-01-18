@@ -24,7 +24,7 @@ get-ballot [inboundHash] [chainID] --config <filename.json>
 
 - `inboundHash`: The inbound hash of the transaction for which the ballot identifier is to be fetched
 - `chainID`: The chain ID of the chain to which the transaction belongs
-- `--config`: [Optional]The path to the configuration file. When not provided, the default configuration is used 
+- `--config`: [Optional]The path to the configuration file. When not provided, the default configuration is used. A sample config is provided in the `config` directory. 
 
 The command returns a ballot identifier for the given inbound hash.
 

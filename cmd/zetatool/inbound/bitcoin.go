@@ -9,7 +9,6 @@ import (
 	cosmosmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/cmd/zetatool/config"
@@ -18,35 +17,38 @@ import (
 	"github.com/zeta-chain/node/pkg/rpc"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	zetaclientObserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	zetaclientConfig "github.com/zeta-chain/node/zetaclient/config"
 )
 
 func btcInboundBallotIdentifier(
+	ctx context.Context,
 	cfg config.Config,
 	zetacoreClient rpc.Clients,
 	inboundHash string,
 	inboundChain chains.Chain,
-	zetaChainID int64) (string, error) {
+	zetaChainID int64,
+	logger zerolog.Logger) (string, error) {
 	params, err := chains.BitcoinNetParamsFromChainID(inboundChain.ChainId)
 	if err != nil {
 		return "", fmt.Errorf("unable to get bitcoin net params from chain id: %w", err)
 	}
 
-	connCfg := &rpcclient.ConnConfig{
-		Host:         cfg.BtcHost,
-		User:         cfg.BtcUser,
-		Pass:         cfg.BtcPassword,
-		HTTPPostMode: true,
-		DisableTLS:   true,
-		Params:       params.Name,
-	}
-	rpcClient, err := rpcclient.New(connCfg, nil)
-	if err != nil {
-		return "", fmt.Errorf("error creating rpc client: %w", err)
+	connCfg := zetaclientConfig.BTCConfig{
+		RPCUsername: cfg.BtcUser,
+		RPCPassword: cfg.BtcPassword,
+		RPCHost:     cfg.BtcHost,
+		RPCParams:   params.Name,
 	}
 
-	err = rpcClient.Ping()
+	rpcClient, err := client.New(connCfg, inboundChain.ChainId, logger)
+	if err != nil {
+		return "", fmt.Errorf("unable to create rpc client: %w", err)
+	}
+
+	err = rpcClient.Ping(ctx)
 	if err != nil {
 		return "", fmt.Errorf("error ping the bitcoin server: %w", err)
 	}
@@ -62,6 +64,7 @@ func btcInboundBallotIdentifier(
 	}
 
 	return bitcoinBallotIdentifier(
+		ctx,
 		rpcClient,
 		params,
 		tssBtcAddress,
@@ -73,7 +76,8 @@ func btcInboundBallotIdentifier(
 }
 
 func bitcoinBallotIdentifier(
-	btcClient *rpcclient.Client,
+	ctx context.Context,
+	btcClient *client.Client,
 	params *chaincfg.Params,
 	tss string,
 	txHash string,
@@ -85,7 +89,7 @@ func bitcoinBallotIdentifier(
 		return "", err
 	}
 	confirmationMessage := ""
-	tx, err := btcClient.GetRawTransactionVerbose(hash)
+	tx, err := btcClient.GetRawTransactionVerbose(ctx, hash)
 	if err != nil {
 		return "", err
 	}
@@ -98,7 +102,7 @@ func bitcoinBallotIdentifier(
 		return "", err
 	}
 
-	blockVb, err := btcClient.GetBlockVerboseTx(blockHash)
+	blockVb, err := btcClient.GetBlockVerbose(ctx, blockHash)
 	if err != nil {
 		return "", err
 	}
@@ -110,6 +114,7 @@ func bitcoinBallotIdentifier(
 	// #nosec G115 always positive
 
 	event, err := zetaclientObserver.GetBtcEvent(
+		ctx,
 		btcClient,
 		*tx,
 		tss,

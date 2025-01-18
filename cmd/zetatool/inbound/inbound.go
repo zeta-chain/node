@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
@@ -55,6 +57,11 @@ func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile st
 	ctx := context.Background()
 	ballotIdentifierMessage := ""
 
+	logger := zerolog.New(zerolog.ConsoleWriter{
+		Out:        zerolog.Nop(),
+		TimeFormat: time.RFC3339,
+	}).With().Timestamp().Logger()
+
 	if observationChain.IsEVMChain() {
 		ballotIdentifierMessage, err = evmInboundBallotIdentifier(
 			ctx,
@@ -75,11 +82,13 @@ func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile st
 
 	if observationChain.IsBitcoinChain() {
 		ballotIdentifierMessage, err = btcInboundBallotIdentifier(
+			ctx,
 			*cfg,
 			zetacoreClient,
 			inboundHash,
 			observationChain,
 			cfg.ZetaChainID,
+			logger,
 		)
 		if err != nil {
 			return fmt.Errorf(
@@ -98,6 +107,7 @@ func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile st
 			inboundHash,
 			observationChain,
 			cfg.ZetaChainID,
+			logger,
 		)
 		if err != nil {
 			return fmt.Errorf(
