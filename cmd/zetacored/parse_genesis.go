@@ -3,13 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"cosmossdk.io/math"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -106,7 +104,7 @@ func CmdParseGenesisFile() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			err = ImportDataIntoFile2(genesis, importData, cdc, modifyEnabled)
+			err = ImportDataIntoFile(genesis, importData, cdc, modifyEnabled)
 			if err != nil {
 				return err
 			}
@@ -123,7 +121,7 @@ func CmdParseGenesisFile() *cobra.Command {
 	return cmd
 }
 
-func ImportDataIntoFile2(
+func ImportDataIntoFile(
 	gen *genutiltypes.AppGenesis,
 	importFile *genutiltypes.AppGenesis,
 	cdc codec.Codec,
@@ -217,20 +215,4 @@ func ModifyObserverState(
 
 	appState[observertypes.ModuleName] = currentGenStateBz
 	return nil
-}
-
-func GetGenDoc(fp string) (*types.GenesisDoc, error) {
-	path, err := filepath.Abs(fp)
-	if err != nil {
-		return nil, err
-	}
-	jsonBlob, err := os.ReadFile(filepath.Clean(path))
-	if err != nil {
-		return nil, err
-	}
-	genData, err := types.GenesisDocFromJSON(jsonBlob)
-	if err != nil {
-		return nil, err
-	}
-	return genData, nil
 }

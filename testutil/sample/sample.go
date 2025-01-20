@@ -1,6 +1,7 @@
 package sample
 
 import (
+	"encoding/json"
 	"errors"
 	"hash/fnv"
 	"math/rand"
@@ -10,6 +11,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
@@ -117,11 +119,11 @@ func IntInRange(low, high int64) sdkmath.Int {
 	return sdkmath.NewInt(i)
 }
 
-// func AppState(t *testing.T) map[string]json.RawMessage {
-// 	appState, err := genutiltypes.GenesisStateFromGenDoc(*GenDoc(t))
-// 	require.NoError(t, err)
-// 	return appState
-// }
+func AppState(t *testing.T) map[string]json.RawMessage {
+	appState, err := genutiltypes.GenesisStateFromAppGenesis(AppGenesis(t))
+	require.NoError(t, err)
+	return appState
+}
 
 func Chain(chainID int64) chains.Chain {
 	r := newRandFromSeed(chainID)
