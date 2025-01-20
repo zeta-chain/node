@@ -7,7 +7,6 @@ import (
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -198,7 +197,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(
 		txOrigin,
 		toAddr,
 		foreignCoin.ForeignChainId,
-		math.NewUintFromBigInt(event.Value),
+		sdkmath.NewUintFromBigInt(event.Value),
 		"",
 		event.Raw.TxHash.String(),
 		event.Raw.BlockNumber,
@@ -269,7 +268,7 @@ func (k Keeper) ProcessZetaSentEvent(
 		return fmt.Errorf("ProcessZetaSentEvent: failed to convert chainID: %s", err.Error())
 	}
 
-	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
+	amount := sdkmath.NewUintFromBigInt(event.ZetaValueAndGas)
 	messageString := base64.StdEncoding.EncodeToString(event.Message)
 
 	// Bump gasLimit by event index (which is very unlikely to be larger than 1000) to always have different ZetaSent events msgs.

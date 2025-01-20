@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
-	tmlog "cosmossdk.io/log"
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -311,7 +310,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			appCfg.GRPCWeb.Enable = true
 		}
 
-		logger := tmlog.NewNopLogger()
+		logger := log.NewNopLogger()
 		if cfg.EnableTMLogging {
 			logger = log.NewLogger(os.Stdout)
 		}

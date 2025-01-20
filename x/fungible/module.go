@@ -164,7 +164,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (AppModule) ConsensusVersion() uint64 { return 3 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the fungible module.
-func (am AppModule) BeginBlock(c context.Context) error {
+func (am AppModule) BeginBlock(_ context.Context) error {
 	return nil
 }
 

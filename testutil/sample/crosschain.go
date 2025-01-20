@@ -10,7 +10,6 @@ import (
 	"strings"
 	"testing"
 
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -175,7 +174,7 @@ func InboundParams(r *rand.Rand) *types.InboundParams {
 		TxOrigin:               EthAddress().String(),
 		CoinType:               coin.CoinType(r.Intn(100)),
 		Asset:                  StringRandom(r, 32),
-		Amount:                 math.NewUint(uint64(r.Int63())),
+		Amount:                 sdkmath.NewUint(uint64(r.Int63())),
 		ObservedHash:           StringRandom(r, 32),
 		ObservedExternalHeight: r.Uint64(),
 		BallotIndex:            StringRandom(r, 32),
@@ -189,7 +188,7 @@ func InboundParamsValidChainID(r *rand.Rand) *types.InboundParams {
 		SenderChainId:          chains.Goerli.ChainId,
 		TxOrigin:               EthAddress().String(),
 		Asset:                  StringRandom(r, 32),
-		Amount:                 math.NewUint(uint64(r.Int63())),
+		Amount:                 sdkmath.NewUint(uint64(r.Int63())),
 		ObservedHash:           StringRandom(r, 32),
 		ObservedExternalHeight: r.Uint64(),
 		BallotIndex:            StringRandom(r, 32),
@@ -202,17 +201,17 @@ func OutboundParams(r *rand.Rand) *types.OutboundParams {
 		Receiver:        EthAddress().String(),
 		ReceiverChainId: r.Int63(),
 		CoinType:        coin.CoinType(r.Intn(100)),
-		Amount:          math.NewUint(uint64(r.Int63())),
+		Amount:          sdkmath.NewUint(uint64(r.Int63())),
 		TssNonce:        r.Uint64(),
 		CallOptions: &types.CallOptions{
 			GasLimit: r.Uint64(),
 		},
-		GasPrice:               math.NewUint(uint64(r.Int63())).String(),
+		GasPrice:               sdkmath.NewUint(uint64(r.Int63())).String(),
 		Hash:                   StringRandom(r, 32),
 		BallotIndex:            StringRandom(r, 32),
 		ObservedExternalHeight: r.Uint64(),
 		GasUsed:                r.Uint64(),
-		EffectiveGasPrice:      math.NewInt(r.Int63()),
+		EffectiveGasPrice:      sdkmath.NewInt(r.Int63()),
 	}
 }
 
@@ -220,17 +219,17 @@ func OutboundParamsValidChainID(r *rand.Rand) *types.OutboundParams {
 	return &types.OutboundParams{
 		Receiver:        EthAddress().String(),
 		ReceiverChainId: chains.Goerli.ChainId,
-		Amount:          math.NewUint(uint64(r.Int63())),
+		Amount:          sdkmath.NewUint(uint64(r.Int63())),
 		TssNonce:        r.Uint64(),
 		CallOptions: &types.CallOptions{
 			GasLimit: r.Uint64(),
 		},
-		GasPrice:               math.NewUint(uint64(r.Int63())).String(),
+		GasPrice:               sdkmath.NewUint(uint64(r.Int63())).String(),
 		Hash:                   StringRandom(r, 32),
 		BallotIndex:            StringRandom(r, 32),
 		ObservedExternalHeight: r.Uint64(),
 		GasUsed:                r.Uint64(),
-		EffectiveGasPrice:      math.NewInt(r.Int63()),
+		EffectiveGasPrice:      sdkmath.NewInt(r.Int63()),
 	}
 }
 
@@ -258,7 +257,7 @@ func CrossChainTx(t *testing.T, index string) *types.CrossChainTx {
 	return &types.CrossChainTx{
 		Creator:                 AccAddress(),
 		Index:                   GetCctxIndexFromString(index),
-		ZetaFees:                math.NewUint(uint64(r.Int63())),
+		ZetaFees:                sdkmath.NewUint(uint64(r.Int63())),
 		RelayedMessage:          StringRandom(r, 32),
 		CctxStatus:              Status(t, index),
 		InboundParams:           InboundParams(r),
@@ -274,7 +273,7 @@ func CrossChainTxV2(t *testing.T, index string) *types.CrossChainTx {
 	return &types.CrossChainTx{
 		Creator:                 AccAddress(),
 		Index:                   GetCctxIndexFromString(index),
-		ZetaFees:                math.NewUint(uint64(r.Int63())),
+		ZetaFees:                sdkmath.NewUint(uint64(r.Int63())),
 		RelayedMessage:          StringRandom(r, 32),
 		CctxStatus:              Status(t, index),
 		InboundParams:           InboundParams(r),
@@ -337,7 +336,7 @@ func InboundHashToCctx(t *testing.T, inboundHash string) types.InboundHashToCctx
 func ZetaAccounting(t *testing.T, index string) types.ZetaAccounting {
 	r := newRandFromStringSeed(t, index)
 	return types.ZetaAccounting{
-		AbortedZetaAmount: math.NewUint(uint64(r.Int63())),
+		AbortedZetaAmount: sdkmath.NewUint(uint64(r.Int63())),
 	}
 }
 
@@ -374,7 +373,7 @@ func InboundVoteFromRand(from, to int64, r *rand.Rand, asset string) types.MsgVo
 		SenderChainId:      from,
 		Receiver:           EthAddressFromRand(r).String(),
 		ReceiverChain:      to,
-		Amount:             math.NewUint(r.Uint64()),
+		Amount:             sdkmath.NewUint(r.Uint64()),
 		Message:            memo,
 		InboundBlockHeight: r.Uint64(),
 		CallOptions: &types.CallOptions{
@@ -418,7 +417,7 @@ func CCTXfromRand(r *rand.Rand,
 ) types.CrossChainTx {
 	coinType := CoinTypeFromRand(r)
 
-	amount := math.NewUint(uint64(r.Int63()))
+	amount := sdkmath.NewUint(uint64(r.Int63()))
 	inbound := &types.InboundParams{
 		Sender:                 EthAddressFromRand(r).String(),
 		SenderChainId:          from,
@@ -436,18 +435,18 @@ func CCTXfromRand(r *rand.Rand,
 		Receiver:        EthAddressFromRand(r).String(),
 		ReceiverChainId: to,
 		CoinType:        coinType,
-		Amount:          math.NewUint(uint64(r.Int63())),
+		Amount:          sdkmath.NewUint(uint64(r.Int63())),
 		TssNonce:        0,
 		TssPubkey:       tssPubkey,
 		CallOptions: &types.CallOptions{
 			GasLimit: r.Uint64(),
 		},
-		GasPrice:               math.NewUint(uint64(r.Int63())).String(),
+		GasPrice:               sdkmath.NewUint(uint64(r.Int63())).String(),
 		Hash:                   StringRandom(r, 32),
 		BallotIndex:            StringRandom(r, 32),
 		ObservedExternalHeight: r.Uint64(),
 		GasUsed:                100,
-		EffectiveGasPrice:      math.NewInt(r.Int63()),
+		EffectiveGasPrice:      sdkmath.NewInt(r.Int63()),
 		EffectiveGasLimit:      100,
 	}
 

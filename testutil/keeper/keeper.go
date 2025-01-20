@@ -356,8 +356,6 @@ func FeeMarketKeeper(
 	cdc codec.Codec,
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
-	paramKeeper paramskeeper.Keeper,
-	consensusKeeper consensuskeeper.Keeper,
 ) feemarketkeeper.Keeper {
 	storeKey := storetypes.NewKVStoreKey(feemarkettypes.StoreKey)
 	transientKey := storetypes.NewTransientStoreKey(feemarkettypes.TransientKey)
@@ -383,8 +381,6 @@ func EVMKeeper(
 	bankKeeper bankkeeper.Keeper,
 	stakingKeeper stakingkeeper.Keeper,
 	feemarketKeeper feemarketkeeper.Keeper,
-	paramKeeper paramskeeper.Keeper,
-	consensusKeeper consensuskeeper.Keeper,
 ) *evmkeeper.Keeper {
 	storeKey := storetypes.NewKVStoreKey(evmtypes.StoreKey)
 	transientKey := storetypes.NewTransientStoreKey(evmtypes.TransientKey)
@@ -656,8 +652,7 @@ func NewSDKKeepers(
 	authKeeper := AccountKeeper(cdc, db, ss)
 	bankKeeper := BankKeeper(cdc, db, ss, authKeeper)
 	stakingKeeper := StakingKeeper(cdc, db, ss, authKeeper, bankKeeper)
-	consensusKeeper := ConsensusKeeper(cdc, db, ss)
-	feeMarketKeeper := FeeMarketKeeper(cdc, db, ss, paramsKeeper, consensusKeeper)
+	feeMarketKeeper := FeeMarketKeeper(cdc, db, ss)
 	evmKeeper := EVMKeeper(
 		cdc,
 		db,
@@ -666,8 +661,6 @@ func NewSDKKeepers(
 		bankKeeper,
 		stakingKeeper,
 		feeMarketKeeper,
-		paramsKeeper,
-		consensusKeeper,
 	)
 	slashingKeeper := SlashingKeeper(cdc, db, ss, stakingKeeper)
 
@@ -717,8 +710,9 @@ func (sdkk SDKKeepers) InitBlockProposer(t testing.TB, ctx sdk.Context) sdk.Cont
 
 	// Set validator in the store
 	validator := sample.Validator(t, r)
-	sdkk.StakingKeeper.SetValidator(ctx, validator)
-	err := sdkk.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
+	err := sdkk.StakingKeeper.SetValidator(ctx, validator)
+	require.NoError(t, err)
+	err = sdkk.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 	require.NoError(t, err)
 
 	// Validator is proposer
