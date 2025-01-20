@@ -14,11 +14,10 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethclient"
-	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -28,10 +27,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
-	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
-	"github.com/zeta-chain/node/zetaclient/testutils"
-	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -55,10 +51,7 @@ type Signer struct {
 	*base.Signer
 
 	// client is the EVM RPC client to interact with the EVM chain
-	client interfaces.EVMRPCClient
-
-	// ethSigner encapsulates EVM transaction signature handling
-	ethSigner ethtypes.Signer
+	client *client.Client
 
 	// zetaConnectorAddress is the address of the ZetaConnector contract
 	zetaConnectorAddress ethcommon.Address
@@ -72,28 +65,20 @@ type Signer struct {
 
 // NewSigner creates a new EVM signer
 func NewSigner(
-	ctx context.Context,
 	chain chains.Chain,
 	tss interfaces.TSSSigner,
-	logger base.Logger,
-	endpoint string,
+	client *client.Client,
 	zetaConnectorAddress ethcommon.Address,
 	erc20CustodyAddress ethcommon.Address,
 	gatewayAddress ethcommon.Address,
+	logger base.Logger,
 ) (*Signer, error) {
 	// create base signer
 	baseSigner := base.NewSigner(chain, tss, logger)
 
-	// create EVM client
-	client, ethSigner, err := getEVMRPC(ctx, endpoint)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to create EVM client")
-	}
-
 	return &Signer{
 		Signer:               baseSigner,
 		client:               client,
-		ethSigner:            ethSigner,
 		zetaConnectorAddress: zetaConnectorAddress,
 		er20CustodyAddress:   erc20CustodyAddress,
 		gatewayAddress:       gatewayAddress,
@@ -189,7 +174,7 @@ func (signer *Signer) Sign(
 		return nil, nil, nil, err
 	}
 
-	hashBytes := signer.ethSigner.Hash(tx).Bytes()
+	hashBytes := signer.client.Hash(tx).Bytes()
 
 	sig, err := signer.TSS().Sign(ctx, hashBytes, height, nonce, signer.Chain().ChainId)
 	if err != nil {
@@ -204,7 +189,7 @@ func (signer *Signer) Sign(
 
 	addr := crypto.PubkeyToAddress(*pubk)
 	signer.Logger().Std.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
-	signedTX, err := tx.WithSignature(signer.ethSigner, sig[:])
+	signedTX, err := tx.WithSignature(signer.client, sig[:])
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -563,33 +548,4 @@ func ErrorMsg(cctx *crosschaintypes.CrossChainTx) string {
 		cctx.GetCurrentOutboundParam().TssNonce,
 		cctx.GetCurrentOutboundParam().ReceiverChainId,
 	)
-}
-
-// getEVMRPC is a helper function to set up the client and signer, also initializes a mock client for unit tests
-func getEVMRPC(ctx context.Context, endpoint string) (interfaces.EVMRPCClient, ethtypes.Signer, error) {
-	if endpoint == testutils.MockEVMRPCEndpoint {
-		chainID := big.NewInt(chains.BscMainnet.ChainId)
-		ethSigner := ethtypes.NewLondonSigner(chainID)
-		client := &mocks.EVMRPCClient{}
-		return client, ethSigner, nil
-	}
-	httpClient, err := metrics.GetInstrumentedHTTPClient(endpoint)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "unable to get instrumented HTTP client")
-	}
-
-	rpcClient, err := ethrpc.DialHTTPWithClient(endpoint, httpClient)
-	if err != nil {
-		return nil, nil, errors.Wrapf(err, "unable to dial EVM client (endpoint %q)", endpoint)
-	}
-	client := ethclient.NewClient(rpcClient)
-
-	chainID, err := client.ChainID(ctx)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "unable to get chain ID")
-	}
-
-	ethSigner := ethtypes.LatestSignerForChainID(chainID)
-
-	return client, ethSigner, nil
 }
