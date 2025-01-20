@@ -3,13 +3,13 @@ package simulation
 import (
 	"math/rand"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/keeper"

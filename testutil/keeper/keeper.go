@@ -6,9 +6,6 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/codec/address"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
-
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
@@ -17,8 +14,10 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmdb "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"

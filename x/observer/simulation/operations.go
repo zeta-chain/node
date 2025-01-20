@@ -373,7 +373,11 @@ func GenAndDeliverTxWithRandFees(
 
 	coins, hasNeg := spendable.SafeSub(txCtx.CoinsSpentInMsg...)
 	if hasNeg {
-		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "message doesn't leave room for fees"), nil, err
+		return simtypes.NoOpMsg(
+			txCtx.ModuleName,
+			sdk.MsgTypeURL(txCtx.Msg),
+			"message doesn't leave room for fees",
+		), nil, err
 	}
 
 	fees, err = simtypes.RandomFees(txCtx.R, txCtx.Context, coins)

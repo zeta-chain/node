@@ -8,6 +8,7 @@ import (
 	"slices"
 
 	"cosmossdk.io/log"
+	confixcmd "cosmossdk.io/tools/confix/cmd"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	dbm "github.com/cosmos/cosmos-db"
@@ -35,7 +36,6 @@ import (
 	"github.com/zeta-chain/ethermint/crypto/hd"
 	"github.com/zeta-chain/ethermint/types"
 
-	confixcmd "cosmossdk.io/tools/confix/cmd"
 	"github.com/zeta-chain/node/app"
 	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
 	zetamempool "github.com/zeta-chain/node/pkg/mempool"
