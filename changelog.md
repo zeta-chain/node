@@ -8,6 +8,10 @@
 * [3360](https://github.com/zeta-chain/node/pull/3360) - update protocol contract imports using consolidated path
 * [3349](https://github.com/zeta-chain/node/pull/3349) - implement new bitcoin rpc in zetaclient with improved performance and observability
 
+### Fixes
+
+* [3374](https://github.com/zeta-chain/node/pull/3374) - remove minimum rent exempt check for SPL token withdrawals
+
 ## v25.0.0
 
 ## Unreleased
