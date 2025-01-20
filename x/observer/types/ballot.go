@@ -79,8 +79,8 @@ func (m Ballot) IsFinalizingVote() (Ballot, bool) {
 	return m, false
 }
 
-func CreateVotes(len int) []VoteType {
-	voterList := make([]VoteType, len)
+func CreateVotes(listSize int) []VoteType {
+	voterList := make([]VoteType, listSize)
 	for i := range voterList {
 		voterList[i] = VoteType_NotYetVoted
 	}

@@ -21,7 +21,6 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
@@ -30,6 +29,10 @@ type BTCSignerSuite struct {
 }
 
 var _ = Suite(&BTCSignerSuite{})
+
+type cWrapper struct{ *C }
+
+func (cWrapper) Cleanup(func()) { /* noop */ }
 
 func (s *BTCSignerSuite) SetUpTest(c *C) {
 	// test private key with EVM address
@@ -47,13 +50,12 @@ func (s *BTCSignerSuite) SetUpTest(c *C) {
 
 	tss := mocks.NewTSSFromPrivateKey(c, privateKey)
 
-	s.btcSigner, err = NewSigner(
+	s.btcSigner = New(
 		chains.Chain{},
 		tss,
+		mocks.NewBitcoinClient(cWrapper{c}),
 		base.DefaultLogger(),
-		config.BTCConfig{},
 	)
-	c.Assert(err, IsNil)
 }
 
 func (s *BTCSignerSuite) TestP2PH(c *C) {
@@ -227,13 +229,12 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 
 func TestAddWithdrawTxOutputs(t *testing.T) {
 	// Create test signer and receiver address
-	signer, err := NewSigner(
+	signer := New(
 		chains.BitcoinMainnet,
 		mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet),
+		mocks.NewBitcoinClient(t),
 		base.DefaultLogger(),
-		config.BTCConfig{},
 	)
-	require.NoError(t, err)
 
 	// tss address and script
 	tssAddr, err := signer.TSS().PubKey().AddressBTC(chains.BitcoinMainnet.ChainId)
@@ -376,22 +377,4 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 			}
 		})
 	}
-}
-
-// Coverage doesn't seem to pick this up from the suite
-func TestNewBTCSigner(t *testing.T) {
-	// test private key with EVM address
-	//// EVM: 0x236C7f53a90493Bb423411fe4117Cb4c2De71DfB
-	// BTC testnet3: muGe9prUBjQwEnX19zG26fVRHNi8z7kSPo
-	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
-	privateKey, err := crypto.HexToECDSA(skHex)
-	require.NoError(t, err)
-	tss := mocks.NewTSSFromPrivateKey(t, privateKey)
-	btcSigner, err := NewSigner(
-		chains.Chain{},
-		tss,
-		base.DefaultLogger(),
-		config.BTCConfig{})
-	require.NoError(t, err)
-	require.NotNil(t, btcSigner)
 }

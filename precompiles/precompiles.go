@@ -22,9 +22,9 @@ import (
 // This is useful for listing and reading from other packages, such as BlockedAddrs() function.
 // Setting to false a contract here will disable it, not being included in the blockchain.
 var EnabledStatefulContracts = map[common.Address]bool{
-	prototype.ContractAddress: true,
-	staking.ContractAddress:   true,
-	bank.ContractAddress:      true,
+	prototype.ContractAddress: false,
+	staking.ContractAddress:   false,
+	bank.ContractAddress:      false,
 }
 
 // StatefulContracts returns all the registered precompiled contracts.

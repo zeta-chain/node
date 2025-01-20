@@ -53,7 +53,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		validatorList := setObservers(t, k, ctx, zk)
 
-		to, from := int64(1337), int64(101)
+		to, from := chains.GoerliLocalnet.ChainId, chains.ZetaChainPrivnet.ChainId
 		supportedChains := zk.ObserverKeeper.GetSupportedChains(ctx)
 		for _, chain := range supportedChains {
 			if chains.IsEthereumChain(chain.ChainId, []chains.Chain{}) {
@@ -187,7 +187,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		observerMock.On("VoteOnInboundBallot", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(true, false, errors.New("err"))
 		msgServer := keeper.NewMsgServerImpl(*k)
-		to, from := int64(1337), int64(101)
+		to, from := chains.GoerliLocalnet.ChainId, chains.ZetaChainPrivnet.ChainId
 
 		msg := sample.InboundVote(0, from, to)
 		res, err := msgServer.VoteInbound(
@@ -210,7 +210,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{
 			ObserverList: observerSet,
 		})
-		to, from := int64(1337), int64(101)
+		to, from := chains.GoerliLocalnet.ChainId, chains.ZetaChainPrivnet.ChainId
 		supportedChains := zk.ObserverKeeper.GetSupportedChains(ctx)
 		for _, chain := range supportedChains {
 			if chains.IsEthereumChain(chain.ChainId, []chains.Chain{}) {
@@ -257,7 +257,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 			Return(true, false, nil)
 		observerMock.On("GetTSS", mock.Anything).Return(observertypes.TSS{}, false)
 		msgServer := keeper.NewMsgServerImpl(*k)
-		to, from := int64(1337), int64(101)
+		to, from := chains.GoerliLocalnet.ChainId, chains.ZetaChainPrivnet.ChainId
 
 		msg := sample.InboundVote(0, from, to)
 		res, err := msgServer.VoteInbound(

@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	eth "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -99,6 +99,7 @@ func (k Keeper) getAndCheckZRC20(
 	// this simplify the current workflow and allow to pause calls by pausing the gas token
 	// TODO: refactor this logic and create specific workflow for no asset call
 	// https://github.com/zeta-chain/node/issues/2627
+
 	if coinType == coin.CoinType_Gas || coinType == coin.CoinType_NoAssetCall {
 		foreignCoin, found = k.GetGasCoinForForeignCoin(ctx, chainID)
 		if !found {

@@ -1,6 +1,7 @@
 package observer
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 
@@ -10,21 +11,21 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
 // GetBtcEventWithWitness either returns a valid BTCInboundEvent or nil.
 // This method supports data with more than 80 bytes by scanning the witness for possible presence of a tapscript.
 // It will first prioritize OP_RETURN over tapscript.
 func GetBtcEventWithWitness(
-	client interfaces.BTCRPCClient,
+	ctx context.Context,
+	rpc RPC,
 	tx btcjson.TxRawResult,
 	tssAddress string,
 	blockNumber uint64,
 	logger zerolog.Logger,
 	netParams *chaincfg.Params,
-	feeCalculator bitcoin.DepositorFeeCalculator,
+	feeCalculator common.DepositorFeeCalculator,
 ) (*BTCInboundEvent, error) {
 	if len(tx.Vout) < 1 {
 		logger.Debug().Msgf("no output %s", tx.Txid)
@@ -41,7 +42,7 @@ func GetBtcEventWithWitness(
 	}
 
 	// calculate depositor fee
-	depositorFee, err := feeCalculator(client, &tx, netParams)
+	depositorFee, err := feeCalculator(ctx, rpc, &tx, netParams)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
 	}
@@ -69,7 +70,7 @@ func GetBtcEventWithWitness(
 	}
 
 	// event found, get sender address
-	fromAddress, err := GetSenderAddressByVin(client, tx.Vin[0], netParams)
+	fromAddress, err := GetSenderAddressByVin(ctx, rpc, tx.Vin[0], netParams)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error getting sender address for inbound: %s", tx.Txid)
 	}
@@ -137,7 +138,7 @@ func tryExtractOpRet(tx btcjson.TxRawResult, logger zerolog.Logger) []byte {
 		return nil
 	}
 
-	memo, found, err := bitcoin.DecodeOpReturnMemo(tx.Vout[1].ScriptPubKey.Hex)
+	memo, found, err := common.DecodeOpReturnMemo(tx.Vout[1].ScriptPubKey.Hex)
 	if err != nil {
 		logger.Error().Err(err).Msgf("tryExtractOpRet: error decoding OP_RETURN memo: %s", tx.Vout[1].ScriptPubKey.Hex)
 		return nil
@@ -159,7 +160,7 @@ func tryExtractInscription(tx btcjson.TxRawResult, logger zerolog.Logger) []byte
 
 		logger.Debug().Msgf("potential witness script, tx %s, input idx %d", tx.Txid, i)
 
-		memo, found, err := bitcoin.DecodeScript(script)
+		memo, found, err := common.DecodeScript(script)
 		if err != nil || !found {
 			logger.Debug().Msgf("invalid witness script, tx %s, input idx %d", tx.Txid, i)
 			continue
@@ -187,7 +188,7 @@ func isValidRecipient(
 	tssAddress string,
 	netParams *chaincfg.Params,
 ) error {
-	receiver, err := bitcoin.DecodeScriptP2WPKH(script, netParams)
+	receiver, err := common.DecodeScriptP2WPKH(script, netParams)
 	if err != nil {
 		return fmt.Errorf("invalid p2wpkh script detected, %s", err)
 	}

@@ -153,6 +153,8 @@ func newKeySignerMock(t *testing.T) *keySignerMock {
 	}
 }
 
+func (*keySignerMock) Stop() { return }
+
 func (m *keySignerMock) PubKeyBech32() string {
 	cosmosPrivateKey := &secp256k1.PrivKey{Key: m.privateKey.D.Bytes()}
 	pk := cosmosPrivateKey.PubKey()

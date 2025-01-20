@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/ticker"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 )
@@ -25,39 +24,6 @@ type Zetacore interface {
 }
 
 var ErrUpgradeRequired = errors.New("upgrade required")
-
-func (oc *Orchestrator) runAppContextUpdater(ctx context.Context) error {
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	interval := ticker.DurationFromUint64Seconds(app.Config().ConfigUpdateTicker)
-
-	oc.logger.Info().Msg("UpdateAppContext worker started")
-
-	task := func(ctx context.Context, t *ticker.Ticker) error {
-		err := UpdateAppContext(ctx, app, oc.zetacoreClient, oc.logger.Sampled)
-		switch {
-		case errors.Is(err, ErrUpgradeRequired):
-			oc.onUpgradeDetected(err)
-			t.Stop()
-			return nil
-		case err != nil:
-			oc.logger.Err(err).Msg("UpdateAppContext failed")
-		}
-
-		return nil
-	}
-
-	return ticker.Run(
-		ctx,
-		interval,
-		task,
-		ticker.WithLogger(oc.logger.Logger, "UpdateAppContext"),
-		ticker.WithStopChan(oc.stop),
-	)
-}
 
 // UpdateAppContext fetches latest data from Zetacore and updates the AppContext.
 // Also detects if an upgrade is required. If an upgrade is required, it returns ErrUpgradeRequired.
@@ -148,13 +114,4 @@ func checkForZetacoreUpgrade(ctx context.Context, zetaHeight int64, zc Zetacore)
 	}
 
 	return nil
-}
-
-// onUpgradeDetected is called when an upgrade is detected.
-func (oc *Orchestrator) onUpgradeDetected(errDetected error) {
-	const msg = "Upgrade detected." +
-		" Kill the process, replace the binary with upgraded version, and restart zetaclientd"
-
-	oc.logger.Warn().Str("upgrade", errDetected.Error()).Msg(msg)
-	oc.Stop()
 }

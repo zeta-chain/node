@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/testutil/sample"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 )
 
 func Test_ZRC20Allowance(t *testing.T) {

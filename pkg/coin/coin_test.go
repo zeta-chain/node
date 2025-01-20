@@ -1,14 +1,15 @@
-package coin
+package coin_test
 
 import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/pkg/coin"
 )
 
 func Test_AzetaPerZeta(t *testing.T) {
-	require.Equal(t, sdkmath.LegacyNewDec(1e18), AzetaPerZeta())
+	require.Equal(t, sdkmath.LegacyNewDec(1e18), coin.AzetaPerZeta())
 }
 
 func Test_GetAzetaDecFromAmountInZeta(t *testing.T) {
@@ -57,7 +58,7 @@ func Test_GetAzetaDecFromAmountInZeta(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			azeta, err := GetAzetaDecFromAmountInZeta(tc.zetaAmount)
+			azeta, err := coin.GetAzetaDecFromAmountInZeta(tc.zetaAmount)
 			tc.err(t, err)
 			if err == nil {
 				require.Equal(t, tc.azetaAmount, azeta)
@@ -71,31 +72,31 @@ func TestGetCoinType(t *testing.T) {
 	tests := []struct {
 		name    string
 		coin    string
-		want    CoinType
+		want    coin.CoinType
 		wantErr bool
 	}{
 		{
 			name:    "valid coin type 0",
 			coin:    "0",
-			want:    CoinType(0),
+			want:    coin.CoinType(0),
 			wantErr: false,
 		},
 		{
 			name:    "valid coin type 1",
 			coin:    "1",
-			want:    CoinType(1),
+			want:    coin.CoinType(1),
 			wantErr: false,
 		},
 		{
 			name:    "valid coin type 2",
 			coin:    "2",
-			want:    CoinType(2),
+			want:    coin.CoinType(2),
 			wantErr: false,
 		},
 		{
 			name:    "valid coin type 3",
 			coin:    "3",
-			want:    CoinType(3),
+			want:    coin.CoinType(3),
 			wantErr: false,
 		},
 		{
@@ -106,7 +107,7 @@ func TestGetCoinType(t *testing.T) {
 		{
 			name: "invalid coin type large number",
 			coin: "4",
-			want: CoinType(4),
+			want: coin.CoinType(4),
 		},
 		{
 			name:    "invalid coin type non-integer",
@@ -117,12 +118,33 @@ func TestGetCoinType(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetCoinType(tt.coin)
+			got, err := coin.GetCoinType(tt.coin)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func TestCoinType_SupportsRefund(t *testing.T) {
+	tests := []struct {
+		name string
+		c    coin.CoinType
+		want bool
+	}{
+		{"should support refund for ERC20", coin.CoinType_ERC20, true},
+		{"should support refund forGas", coin.CoinType_Gas, true},
+		{"should support refund forZeta", coin.CoinType_Zeta, true},
+		{"should not support refund forCmd", coin.CoinType_Cmd, false},
+		{"should not support refund forUnknown", coin.CoinType(100), false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.c.SupportsRefund(); got != tt.want {
+				t.Errorf("CoinType.SupportsRefund() = %v, want %v", got, tt.want)
 			}
 		})
 	}

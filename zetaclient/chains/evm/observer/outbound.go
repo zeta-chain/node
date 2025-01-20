@@ -13,14 +13,12 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
-	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
-	crosschainkeeper "github.com/zeta-chain/node/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/evm"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
@@ -126,7 +124,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 			// should not happen. We can't tell which txHash is true. It might happen (e.g. bug, glitchy/hacked endpoint)
 			ob.Logger().Outbound.Error().Msgf("WatchOutbound: confirmed multiple (%d) outbound for chain %d nonce %d", txCount, chainID, nonce)
 		} else {
-			if len(tracker.HashList) == crosschainkeeper.MaxOutboundTrackerHashes {
+			if tracker.MaxReached() {
 				ob.Logger().Outbound.Error().Msgf("WatchOutbound: outbound tracker is full of hashes for chain %d nonce %d", chainID, nonce)
 			}
 		}
@@ -285,7 +283,7 @@ func parseOutboundReceivedValue(
 	connector *zetaconnector.ZetaConnectorNonEth,
 	custodyAddress ethcommon.Address,
 	custody *erc20custody.ERC20Custody,
-	custodyV2 *erc20custodyv2.ERC20Custody,
+	custodyV2 *erc20custody.ERC20Custody,
 	gatewayAddress ethcommon.Address,
 	gateway *gatewayevm.GatewayEVM,
 ) (*big.Int, chains.ReceiveStatus, error) {
@@ -409,13 +407,13 @@ func ParseAndCheckWithdrawnEvent(
 			if err != nil {
 				return nil, errors.Wrap(err, "error validating Withdrawn event")
 			}
-			if !strings.EqualFold(withdrawn.Recipient.Hex(), params.Receiver) {
+			if !strings.EqualFold(withdrawn.To.Hex(), params.Receiver) {
 				return nil, fmt.Errorf("receiver address mismatch in Withdrawn event, want %s got %s",
-					params.Receiver, withdrawn.Recipient.Hex())
+					params.Receiver, withdrawn.To.Hex())
 			}
-			if !strings.EqualFold(withdrawn.Asset.Hex(), cctx.InboundParams.Asset) {
+			if !strings.EqualFold(withdrawn.Token.Hex(), cctx.InboundParams.Asset) {
 				return nil, fmt.Errorf("asset mismatch in Withdrawn event, want %s got %s",
-					cctx.InboundParams.Asset, withdrawn.Asset.Hex())
+					cctx.InboundParams.Asset, withdrawn.Token.Hex())
 			}
 			if withdrawn.Amount.Cmp(params.Amount.BigInt()) != 0 {
 				return nil, fmt.Errorf("amount mismatch in Withdrawn event, want %s got %s",

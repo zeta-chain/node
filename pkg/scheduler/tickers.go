@@ -31,7 +31,7 @@ func newIntervalTicker(
 
 		if intervalUpdater != nil {
 			// noop if interval is not changed
-			t.SetInterval(intervalUpdater())
+			t.SetInterval(normalizeInterval(intervalUpdater()))
 		}
 
 		return nil

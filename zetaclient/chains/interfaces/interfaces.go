@@ -7,11 +7,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"github.com/btcsuite/btcd/btcjson"
-	"github.com/btcsuite/btcd/btcutil"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/rpcclient"
-	"github.com/btcsuite/btcd/wire"
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -146,29 +141,6 @@ type ZetacoreClient interface {
 
 	PostOutboundTracker(ctx context.Context, chainID int64, nonce uint64, txHash string) (string, error)
 	NewBlockSubscriber(ctx context.Context) (chan cometbfttypes.EventDataNewBlock, error)
-}
-
-// BTCRPCClient is the interface for BTC RPC client
-//
-// WARN: you must add any RPCs used on mainnet/testnet to the whitelist in https://github.com/zeta-chain/bitcoin-core-docker
-type BTCRPCClient interface {
-	GetNetworkInfo() (*btcjson.GetNetworkInfoResult, error)
-	CreateWallet(name string, opts ...rpcclient.CreateWalletOpt) (*btcjson.CreateWalletResult, error)
-	GetNewAddress(account string) (btcutil.Address, error)
-	GenerateToAddress(numBlocks int64, address btcutil.Address, maxTries *int64) ([]*chainhash.Hash, error)
-	GetBalance(account string) (btcutil.Amount, error)
-	SendRawTransaction(tx *wire.MsgTx, allowHighFees bool) (*chainhash.Hash, error)
-	ListUnspent() ([]btcjson.ListUnspentResult, error)
-	ListUnspentMinMaxAddresses(minConf int, maxConf int, addrs []btcutil.Address) ([]btcjson.ListUnspentResult, error)
-	EstimateSmartFee(confTarget int64, mode *btcjson.EstimateSmartFeeMode) (*btcjson.EstimateSmartFeeResult, error)
-	GetTransaction(txHash *chainhash.Hash) (*btcjson.GetTransactionResult, error)
-	GetRawTransaction(txHash *chainhash.Hash) (*btcutil.Tx, error)
-	GetRawTransactionVerbose(txHash *chainhash.Hash) (*btcjson.TxRawResult, error)
-	GetBlockCount() (int64, error)
-	GetBlockHash(blockHeight int64) (*chainhash.Hash, error)
-	GetBlockVerbose(blockHash *chainhash.Hash) (*btcjson.GetBlockVerboseResult, error)
-	GetBlockVerboseTx(blockHash *chainhash.Hash) (*btcjson.GetBlockVerboseTxResult, error)
-	GetBlockHeader(blockHash *chainhash.Hash) (*wire.BlockHeader, error)
 }
 
 // EVMRPCClient is the interface for EVM RPC client

@@ -453,7 +453,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestSPLWithdrawName,
 		"withdraw SPL from ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount in spl tokens", DefaultValue: "1000000"},
+			{Description: "amount in spl tokens", DefaultValue: "100000"},
 		},
 		TestSPLWithdraw,
 	),

@@ -13,7 +13,6 @@ import (
 )
 
 // MaxOutboundTrackerHashes is the maximum number of hashes that can be stored in the outbound transaction tracker
-const MaxOutboundTrackerHashes = 5
 
 // AddOutboundTracker adds a new record to the outbound transaction tracker.
 // only the admin policy account and the observer validators are authorized to broadcast this message without proof.
@@ -45,7 +44,6 @@ func (k msgServer) AddOutboundTracker(
 			msg.Nonce,
 		)
 	}
-
 	// tracker submission is only allowed when the cctx is pending
 	if !IsPending(cctx.CrossChainTx) {
 		// garbage tracker (for any reason) is harmful to outTx observation and should be removed if it exists
@@ -87,7 +85,7 @@ func (k msgServer) AddOutboundTracker(
 	}
 
 	// check if max hashes are reached
-	if len(tracker.HashList) >= MaxOutboundTrackerHashes {
+	if tracker.MaxReached() {
 		return nil, types.ErrMaxTxOutTrackerHashesReached.Wrapf(
 			"max hashes reached for chain %d, nonce %d, hash number: %d",
 			msg.ChainId,

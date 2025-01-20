@@ -71,4 +71,9 @@ var (
 		1140,
 		"signer block time offset exceeds limit",
 	)
+	ErrOperationalFlagsInvalidMinimumVersion = errorsmod.Register(
+		ModuleName,
+		1141,
+		"minimum version is not a valid semver string",
+	)
 )

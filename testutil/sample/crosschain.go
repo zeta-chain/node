@@ -2,6 +2,7 @@ package sample
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -11,11 +12,11 @@ import (
 
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
-	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -48,6 +49,36 @@ func RateLimiterFlags() types.RateLimiterFlags {
 			},
 			{
 				Zrc20: EthAddress().Hex(),
+				Rate:  sdkmath.LegacyNewDec(r.Int63()),
+			},
+		},
+	}
+}
+
+func RateLimiterFlagsFromRand(r *rand.Rand) types.RateLimiterFlags {
+	return types.RateLimiterFlags{
+		Enabled: true,
+		Window:  r.Int63(),
+		Rate:    sdkmath.NewUint(r.Uint64()),
+		Conversions: []types.Conversion{
+			{
+				Zrc20: EthAddressFromRand(r).Hex(),
+				Rate:  sdkmath.LegacyNewDec(r.Int63()),
+			},
+			{
+				Zrc20: EthAddressFromRand(r).Hex(),
+				Rate:  sdkmath.LegacyNewDec(r.Int63()),
+			},
+			{
+				Zrc20: EthAddressFromRand(r).Hex(),
+				Rate:  sdkmath.LegacyNewDec(r.Int63()),
+			},
+			{
+				Zrc20: EthAddressFromRand(r).Hex(),
+				Rate:  sdkmath.LegacyNewDec(r.Int63()),
+			},
+			{
+				Zrc20: EthAddressFromRand(r).Hex(),
 				Rate:  sdkmath.LegacyNewDec(r.Int63()),
 			},
 		},
@@ -115,6 +146,25 @@ func GasPriceWithChainID(t *testing.T, chainID int64) types.GasPrice {
 		BlockNums:   []uint64{r.Uint64(), r.Uint64()},
 		Prices:      []uint64{r.Uint64(), r.Uint64()},
 		MedianIndex: 0,
+	}
+}
+
+func GasPriceFromRand(r *rand.Rand, chainID int64) *types.GasPrice {
+	var price uint64
+	for price == 0 {
+		maxGasPrice := uint64(1000 * 1e9) // 1000 Gwei
+		price = uint64(1e9) + r.Uint64()%maxGasPrice
+	}
+	// Select priority fee between 0 and price
+	priorityFee := r.Uint64() % price
+	return &types.GasPrice{
+		Creator:      "",
+		ChainId:      chainID,
+		Signers:      []string{AccAddressFromRand(r)},
+		BlockNums:    []uint64{r.Uint64()},
+		Prices:       []uint64{price},
+		MedianIndex:  0,
+		PriorityFees: []uint64{priorityFee},
 	}
 }
 
@@ -314,8 +364,10 @@ func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteInbound {
 }
 
 // InboundVoteFromRand creates a simulated inbound vote message. This function uses the provided source of randomness to generate the vote
-func InboundVoteFromRand(coinType coin.CoinType, from, to int64, r *rand.Rand) types.MsgVoteInbound {
-	EthAddress()
+func InboundVoteFromRand(from, to int64, r *rand.Rand, asset string) types.MsgVoteInbound {
+	coinType := CoinTypeFromRand(r)
+	_, _, memo := MemoFromRand(r)
+
 	return types.MsgVoteInbound{
 		Creator:            "",
 		Sender:             EthAddressFromRand(r).String(),
@@ -323,17 +375,116 @@ func InboundVoteFromRand(coinType coin.CoinType, from, to int64, r *rand.Rand) t
 		Receiver:           EthAddressFromRand(r).String(),
 		ReceiverChain:      to,
 		Amount:             math.NewUint(r.Uint64()),
-		Message:            base64.StdEncoding.EncodeToString(RandomBytes(r)),
+		Message:            memo,
 		InboundBlockHeight: r.Uint64(),
 		CallOptions: &types.CallOptions{
 			GasLimit: 1000000000,
 		},
-		InboundHash: ethcommon.BytesToHash(RandomBytes(r)).String(),
-		CoinType:    coinType,
-		TxOrigin:    EthAddressFromRand(r).String(),
-		Asset:       StringRandom(r, 32),
-		EventIndex:  r.Uint64(),
+		InboundHash:             common.BytesToHash(RandomBytes(r)).String(),
+		CoinType:                coinType,
+		TxOrigin:                EthAddressFromRand(r).String(),
+		Asset:                   asset,
+		EventIndex:              r.Uint64(),
+		ProtocolContractVersion: ProtocolVersionFromRand(r),
 	}
+}
+
+func ProtocolVersionFromRand(r *rand.Rand) types.ProtocolContractVersion {
+	versions := []types.ProtocolContractVersion{types.ProtocolContractVersion_V1, types.ProtocolContractVersion_V2}
+	return versions[r.Intn(len(versions))]
+}
+
+func CoinTypeFromRand(r *rand.Rand) coin.CoinType {
+	coinTypes := []coin.CoinType{coin.CoinType_Gas, coin.CoinType_ERC20, coin.CoinType_Zeta}
+	coinType := coinTypes[r.Intn(len(coinTypes))]
+	return coinType
+}
+
+func MemoFromRand(r *rand.Rand) (common.Address, []byte, string) {
+	randomMemo := common.BytesToAddress([]byte{0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0x12, 0x34, 0x56, 0x78}).
+		Hex()
+	randomData := []byte(StringRandom(r, 10))
+	memoHex := hex.EncodeToString(append(common.FromHex(randomMemo), randomData...))
+	return common.HexToAddress(randomMemo), randomData, memoHex
+}
+
+func CCTXfromRand(r *rand.Rand,
+	creator string,
+	index string,
+	to int64,
+	from int64,
+	tssPubkey string,
+	asset string,
+) types.CrossChainTx {
+	coinType := CoinTypeFromRand(r)
+
+	amount := math.NewUint(uint64(r.Int63()))
+	inbound := &types.InboundParams{
+		Sender:                 EthAddressFromRand(r).String(),
+		SenderChainId:          from,
+		TxOrigin:               EthAddressFromRand(r).String(),
+		CoinType:               coinType,
+		Asset:                  asset,
+		Amount:                 amount,
+		ObservedHash:           StringRandom(r, 32),
+		ObservedExternalHeight: r.Uint64(),
+		BallotIndex:            StringRandom(r, 32),
+		FinalizedZetaHeight:    r.Uint64(),
+	}
+
+	outbound := &types.OutboundParams{
+		Receiver:        EthAddressFromRand(r).String(),
+		ReceiverChainId: to,
+		CoinType:        coinType,
+		Amount:          math.NewUint(uint64(r.Int63())),
+		TssNonce:        0,
+		TssPubkey:       tssPubkey,
+		CallOptions: &types.CallOptions{
+			GasLimit: r.Uint64(),
+		},
+		GasPrice:               math.NewUint(uint64(r.Int63())).String(),
+		Hash:                   StringRandom(r, 32),
+		BallotIndex:            StringRandom(r, 32),
+		ObservedExternalHeight: r.Uint64(),
+		GasUsed:                100,
+		EffectiveGasPrice:      math.NewInt(r.Int63()),
+		EffectiveGasLimit:      100,
+	}
+
+	cctx := types.CrossChainTx{
+		Creator:        creator,
+		Index:          index,
+		ZetaFees:       sdkmath.NewUint(1),
+		RelayedMessage: base64.StdEncoding.EncodeToString(RandomBytes(r)),
+		CctxStatus: &types.Status{
+			IsAbortRefunded: false,
+			Status:          types.CctxStatus_PendingOutbound,
+		},
+		InboundParams:           inbound,
+		OutboundParams:          []*types.OutboundParams{outbound},
+		ProtocolContractVersion: ProtocolVersionFromRand(r),
+	}
+	return cctx
+}
+
+func OutboundVoteSim(r *rand.Rand,
+	cctx types.CrossChainTx,
+) (types.CrossChainTx, types.MsgVoteOutbound) {
+	msg := types.MsgVoteOutbound{
+		CctxHash:                          cctx.Index,
+		OutboundTssNonce:                  cctx.GetCurrentOutboundParam().TssNonce,
+		OutboundChain:                     cctx.GetCurrentOutboundParam().ReceiverChainId,
+		Status:                            chains.ReceiveStatus_success,
+		Creator:                           cctx.Creator,
+		ObservedOutboundHash:              common.BytesToHash(EthAddressFromRand(r).Bytes()).String(),
+		ValueReceived:                     cctx.GetCurrentOutboundParam().Amount,
+		ObservedOutboundBlockHeight:       cctx.GetCurrentOutboundParam().ObservedExternalHeight,
+		ObservedOutboundEffectiveGasPrice: cctx.GetCurrentOutboundParam().EffectiveGasPrice,
+		ObservedOutboundGasUsed:           cctx.GetCurrentOutboundParam().GasUsed,
+		CoinType:                          cctx.InboundParams.CoinType,
+	}
+
+	return cctx, msg
 }
 
 func ZRC20Withdrawal(to []byte, value *big.Int) *zrc20.ZRC20Withdrawal {
