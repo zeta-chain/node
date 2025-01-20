@@ -57073,12 +57073,12 @@ definitions:
       - op_stack
       - solana_consensus
       - catchain_consensus
-      - snowman_consensus
+      - snowman
       - arbitrum_nitro
     default: ethereum
     description: |-
       - catchain_consensus: ton
-       - snowman_consensus: avalanche
+       - snowman: avalanche
     title: |-
       Consensus represents the consensus algorithm used by the chain
       this can represent the consensus of a L1

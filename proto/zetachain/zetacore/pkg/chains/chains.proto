@@ -100,7 +100,7 @@ enum Consensus {
   op_stack = 3;
   solana_consensus = 4;
   catchain_consensus = 5; // ton
-  snowman_consensus = 6;  // avalanche
+  snowman = 6;            // avalanche
   arbitrum_nitro = 7;
 }
 
