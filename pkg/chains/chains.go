@@ -98,6 +98,11 @@ var (
 		Name:        "base_mainnet",
 	}
 
+	// AvalancheMainnet is the Avalanche mainnet C-Chain
+	AvalancheMainnet = Chain{
+		ChainId: 43114,
+	}
+
 	// SolanaMainnet is Solana mainnet
 	// TODO: define final chain ID
 	// https://github.com/zeta-chain/node/issues/2421

@@ -202,6 +202,21 @@ export declare enum Network {
    * @generated from enum value: ton = 8;
    */
   ton = 8,
+
+  /**
+   * @generated from enum value: avalanche = 9;
+   */
+  avalanche = 9,
+
+  /**
+   * @generated from enum value: arbitrum = 10;
+   */
+  arbitrum = 10,
+
+  /**
+   * @generated from enum value: worldchain = 11;
+   */
+  worldchain = 11,
 }
 
 /**
@@ -299,6 +314,18 @@ export declare enum Consensus {
    * @generated from enum value: catchain_consensus = 5;
    */
   catchain_consensus = 5,
+
+  /**
+   * avalanche
+   *
+   * @generated from enum value: snowman_consensus = 6;
+   */
+  snowman_consensus = 6,
+
+  /**
+   * @generated from enum value: arbitrum_nitro = 7;
+   */
+  arbitrum_nitro = 7,
 }
 
 /**
