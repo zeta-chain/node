@@ -101,6 +101,7 @@ func (c *Config) Save() error {
 	return err
 }
 func (c *Config) Read(filename string) error {
+	// #nosec G304 reading file is safe
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return err

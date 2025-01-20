@@ -106,14 +106,13 @@ func bitcoinBallotIdentifier(
 	if err != nil {
 		return "", err
 	}
-	// #nosec G115 always positive
 
 	event, err := zetaclientObserver.GetBtcEvent(
 		ctx,
 		btcClient,
 		*tx,
 		tss,
-		uint64(blockVb.Height),
+		uint64(blockVb.Height), // #nosec G115 always positive
 		zerolog.New(zerolog.Nop()),
 		params,
 		common.CalcDepositorFee,
