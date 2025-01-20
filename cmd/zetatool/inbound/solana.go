@@ -18,7 +18,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
-	//solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
