@@ -795,7 +795,9 @@ func New(
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
-	app.mm.RegisterServices(app.configurator)
+	if err := app.mm.RegisterServices(app.configurator); err != nil {
+		panic(err)
+	}
 
 	app.sm = module.NewSimulationManager(simulationModules(app, appCodec, skipGenesisInvariants)...)
 
@@ -894,7 +896,10 @@ https://www.zetachain.com/docs/nodes/start-here/syncing/`
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
-	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
+	if err := app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap()); err != nil {
+		panic(err)
+	}
+
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 

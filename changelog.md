@@ -2,6 +2,10 @@
 
 ## unreleased
 
+## Features
+
+* [3357](https://github.com/zeta-chain/node/pull/3357) - cosmos-sdk v.50.x upgrade
+
 ### Refactor
 
 * [3332](https://github.com/zeta-chain/node/pull/3332) - implement orchestrator V2. Move BTC observer-signer to V2
