@@ -318,9 +318,9 @@ export declare enum Consensus {
   /**
    * avalanche
    *
-   * @generated from enum value: snowman_consensus = 6;
+   * @generated from enum value: snowman = 6;
    */
-  snowman_consensus = 6,
+  snowman = 6,
 
   /**
    * @generated from enum value: arbitrum_nitro = 7;
