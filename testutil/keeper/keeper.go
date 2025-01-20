@@ -416,7 +416,6 @@ func EVMKeeper(
 		feemarketKeeper,
 		"",
 		nil,
-		consensusKeeper,
 		allKeys,
 	)
 
@@ -479,12 +478,6 @@ func NewSDKKeepersWithKeys(
 		address.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		address.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
 	)
-	consensusKeeper := consensuskeeper.NewKeeper(
-		cdc,
-		runtime.NewKVStoreService(keys[consensustypes.StoreKey]),
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		runtime.EventService{},
-	)
 	feeMarketKeeper := feemarketkeeper.NewKeeper(
 		cdc,
 		runtime.NewKVStoreService(keys[feemarkettypes.StoreKey]),
@@ -504,7 +497,6 @@ func NewSDKKeepersWithKeys(
 		feeMarketKeeper,
 		"",
 		[]evmkeeper.CustomContractFn{},
-		consensusKeeper,
 		allKeys,
 	)
 	slashingKeeper := slashingkeeper.NewKeeper(

@@ -535,7 +535,6 @@ func New(
 			appCodec,
 			storetypes.TransientGasConfig(),
 		),
-		app.ConsensusParamsKeeper,
 		aggregateAllKeys(keys, tKeys, memKeys),
 	)
 
