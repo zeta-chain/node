@@ -177,7 +177,7 @@ type ObserverMockStakingKeeper struct {
 }
 
 func (m *ObserverMockStakingKeeper) MockGetValidator(validator stakingtypes.Validator) {
-	m.On("GetValidator", mock.Anything, mock.Anything).Return(validator, true)
+	m.On("GetValidator", mock.Anything, mock.Anything).Return(validator, nil)
 }
 
 // GetObserverSlashingMock returns a new observer slashing keeper mock

@@ -132,8 +132,6 @@ func (suite *BackendTestSuite) buildEthereumTx() (*evmtypes.MsgEthereumTx, []byt
 		nil,
 	)
 	suite.signAndEncodeEthTx(msgEthereumTx)
-	// A valid msg should have empty `From`
-	msgEthereumTx.From = ""
 
 	txBuilder := suite.backend.clientCtx.TxConfig.NewTxBuilder()
 	txBuilder.SetSignatures()

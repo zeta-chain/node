@@ -15,7 +15,6 @@ import (
 	"github.com/zeta-chain/ethermint/indexer"
 	ethermint "github.com/zeta-chain/ethermint/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-	"google.golang.org/grpc/metadata"
 
 	"github.com/zeta-chain/node/rpc/backend/mocks"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
@@ -76,10 +75,6 @@ func (suite *BackendTestSuite) TestGetSyntheticTransactionReceiptByHash() {
 		evmtypes.AttributeKeyEthereumTxHash,
 		common.HexToHash(hash).Hex(),
 	)
-	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-	var header metadata.MD
-	RegisterParams(queryClient, &header, 1)
-	RegisterParamsWithoutHeader(queryClient, 1)
 	RegisterTxSearchWithTxResult(client, query, []byte{}, txRes)
 	RegisterBlock(client, 1, nil)
 	RegisterBlockResultsWithTxResults(client, 1, []*abci.ExecTxResult{&txRes})
@@ -731,11 +726,7 @@ func (suite *BackendTestSuite) TestGetTransactionReceipt() {
 		{
 			"fail - Receipts do not match ",
 			func() {
-				var header metadata.MD
-				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				RegisterParams(queryClient, &header, 1)
-				RegisterParamsWithoutHeader(queryClient, 1)
 				RegisterBlock(client, 1, []types.Tx{txBz})
 				RegisterBlockResults(client, 1)
 			},

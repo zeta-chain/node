@@ -79,7 +79,7 @@ func Test_ClaimRewards(t *testing.T) {
 		require.Contains(
 			t,
 			err.Error(),
-			"unexpected error in WithdrawDelegationRewards: no delegation distribution info",
+			"no delegation for (address, validator) tuple",
 		)
 	})
 }

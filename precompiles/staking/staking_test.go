@@ -15,7 +15,6 @@ import (
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -242,7 +241,8 @@ func setup(t *testing.T) (sdk.Context, *Contract, abi.ABI, keeper.SDKKeepers, *v
 	fungibleKeeper, _, _, _ := keeper.FungibleKeeper(t)
 
 	accAddress := sdk.AccAddress(ContractAddress.Bytes())
-	fungibleKeeper.GetAuthKeeper().SetAccount(ctx, authtypes.NewBaseAccount(accAddress, nil, 0, 0))
+	acc := fungibleKeeper.GetAuthKeeper().NewAccountWithAddress(ctx, accAddress)
+	fungibleKeeper.GetAuthKeeper().SetAccount(ctx, acc)
 
 	// Initialize staking contract.
 	contract := NewIStakingContract(
@@ -330,7 +330,8 @@ func newTestSuite(t *testing.T) testSuite {
 	require.NotNil(t, contract, "NewIStakingContract() should not return a nil contract")
 
 	accAddress := sdk.AccAddress(ContractAddress.Bytes())
-	fungibleKeeper.GetAuthKeeper().SetAccount(ctx, authtypes.NewBaseAccount(accAddress, nil, 0, 0))
+	acc := fungibleKeeper.GetAuthKeeper().NewAccountWithAddress(ctx, accAddress)
+	fungibleKeeper.GetAuthKeeper().SetAccount(ctx, acc)
 
 	abi := contract.Abi()
 	require.NotNil(t, abi, "contract ABI should not be nil")

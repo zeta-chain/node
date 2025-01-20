@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
@@ -31,7 +30,8 @@ func Test_LockZRC20(t *testing.T) {
 
 	// Make sure locker account exists in state.
 	accAddress := sdk.AccAddress(locker.Bytes())
-	ts.fungibleKeeper.GetAuthKeeper().SetAccount(ts.ctx, authtypes.NewBaseAccount(accAddress, nil, 0, 0))
+	acc := ts.fungibleKeeper.GetAuthKeeper().NewAccountWithAddress(ts.ctx, accAddress)
+	ts.fungibleKeeper.GetAuthKeeper().SetAccount(ts.ctx, acc)
 
 	// Deposit 1000 ZRC20 tokens into the fungible.
 	ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, owner, depositTotal)
@@ -146,7 +146,8 @@ func Test_UnlockZRC20(t *testing.T) {
 
 	// Make sure locker account exists in state.
 	accAddress := sdk.AccAddress(locker.Bytes())
-	ts.fungibleKeeper.GetAuthKeeper().SetAccount(ts.ctx, authtypes.NewBaseAccount(accAddress, nil, 0, 0))
+	acc := ts.fungibleKeeper.GetAuthKeeper().NewAccountWithAddress(ts.ctx, accAddress)
+	ts.fungibleKeeper.GetAuthKeeper().SetAccount(ts.ctx, acc)
 
 	// Deposit 1000 ZRC20 tokens into the fungible.
 	ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, owner, depositTotal)
@@ -211,7 +212,8 @@ func Test_CheckZRC20Allowance(t *testing.T) {
 
 	// Make sure locker account exists in state.
 	accAddress := sdk.AccAddress(spender.Bytes())
-	ts.fungibleKeeper.GetAuthKeeper().SetAccount(ts.ctx, authtypes.NewBaseAccount(accAddress, nil, 0, 0))
+	acc := ts.fungibleKeeper.GetAuthKeeper().NewAccountWithAddress(ts.ctx, accAddress)
+	ts.fungibleKeeper.GetAuthKeeper().SetAccount(ts.ctx, acc)
 
 	// Deposit ZRC20 tokens into the fungible.
 	ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, fungibletypes.ModuleAddressEVM, depositTotal)
