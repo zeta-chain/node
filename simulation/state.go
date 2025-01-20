@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -108,7 +107,7 @@ func extractStakingGenesisState(
 	}
 
 	// compute not bonded balance
-	notBondedTokens := math.ZeroInt()
+	notBondedTokens := sdkmath.ZeroInt()
 	for _, val := range stakingState.Validators {
 		if val.Status != stakingtypes.Unbonded {
 			continue
@@ -312,7 +311,7 @@ func extractFungibleGenesisState(
 			Decimals:             18,
 			Paused:               false,
 			CoinType:             coin.CoinType_Gas,
-			LiquidityCap:         math.ZeroUint(),
+			LiquidityCap:         sdkmath.ZeroUint(),
 		}
 		foreignCoins = append(foreignCoins, foreignCoin)
 	}
@@ -411,12 +410,12 @@ func AppStateRandomizedFn(
 	// number of bonded accounts
 	var (
 		numInitiallyBonded int64
-		initialStake       math.Int
+		initialStake       sdkmath.Int
 	)
 
 	appParams.GetOrGenerate(
 		StakePerAccount, &initialStake, r,
-		func(r *rand.Rand) { initialStake = math.NewInt(r.Int63n(1e12)) },
+		func(r *rand.Rand) { initialStake = sdkmath.NewInt(r.Int63n(1e12)) },
 	)
 	appParams.GetOrGenerate(
 		InitiallyBondedValidators, &numInitiallyBonded, r,
