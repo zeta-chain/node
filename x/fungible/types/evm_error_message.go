@@ -1,42 +1,42 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
 )
 
-const (
-	MethodKey       = "method"
-	ContractKey     = "contract"
-	ArgsKey         = "args"
-	ErrorKey        = "error"
-	RevertReasonKey = "revertReason"
-)
-
-func EvmErrorMessage(method string, contract common.Address, args interface{}) string {
-	return fmt.Sprintf(
-		"%s:%s,%s:%s,%s:%v",
-		MethodKey,
-		method,
-		ContractKey,
-		contract.Hex(),
-		ArgsKey,
-		args)
+type EvmErrorMessage struct {
+	Message      string `json:"message"`
+	Method       string `json:"method"`
+	Contract     string `json:"contract"`
+	Args         string `json:"args"`
+	Error        string `json:"error"`
+	RevertReason string `json:"revert_reason"`
 }
 
-func EvmErrorMessageAddErrorString(errorMessage string, error string) string {
-	return fmt.Sprintf(
-		"%s,%s:%s",
-		errorMessage,
-		ErrorKey,
-		error)
+func NewEvmErrorMessage(method string, contract common.Address, args interface{}, message string) EvmErrorMessage {
+	return EvmErrorMessage{
+		Method:   method,
+		Contract: contract.String(),
+		Args:     fmt.Sprintf("%v", args),
+		Message:  message,
+	}
 }
 
-func EvmErrorMessageAddRevertReason(errorMessage string, revertReason interface{}) string {
-	return fmt.Sprintf(
-		"%s,%s:%v",
-		errorMessage,
-		RevertReasonKey,
-		revertReason)
+func (e *EvmErrorMessage) AddError(error string) {
+	e.Error = error
+}
+
+func (e *EvmErrorMessage) AddRevertReason(revertReason interface{}) {
+	e.RevertReason = fmt.Sprintf("%v", revertReason)
+}
+
+func (e *EvmErrorMessage) ToJSON() (string, error) {
+	jsonData, err := json.Marshal(e)
+	if err != nil {
+		return "", fmt.Errorf("error marshalling EvmErrorMessage to JSON: %v", err)
+	}
+	return string(jsonData), nil
 }

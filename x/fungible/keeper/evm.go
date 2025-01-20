@@ -672,17 +672,18 @@ func (k Keeper) CallEVM(
 	k.Logger(ctx).Debug("calling EVM", "from", from, "contract", contract, "value", value, "method", method)
 	resp, err := k.CallEVMWithData(ctx, from, &contract, data, commit, noEthereumTxEvent, value, gasLimit)
 	if err != nil {
-		errMessage := types.EvmErrorMessage(method, contract, args)
-		errMessage = types.EvmErrorMessageAddErrorString(errMessage, err.Error())
+		errMessage := types.NewEvmErrorMessage(method, contract, args, types.ErrCallEvmWithData.Error())
+		errMessage.AddError(err.Error())
 		// if it is a revert error then add the revert reason
 		revertErr, ok := err.(*evmtypes.RevertError)
 		if ok {
-			errMessage = types.EvmErrorMessageAddRevertReason(
-				errMessage,
-				fmt.Sprintf("revert reason: %s", revertErr.ErrorData()),
-			)
+			errMessage.AddRevertReason(revertErr.ErrorData())
 		}
-		return resp, cosmoserrors.Wrap(types.ErrCallEvmWithData, errMessage)
+		errString, err := errMessage.ToJSON()
+		if err != nil {
+			return resp, err
+		}
+		return resp, errors.New(errString)
 	}
 	return resp, nil
 }

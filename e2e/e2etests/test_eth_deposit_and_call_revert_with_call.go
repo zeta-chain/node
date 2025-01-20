@@ -36,6 +36,8 @@ func TestETHDepositAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "deposit")
 	require.Equal(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
 
+	r.Logger.Print("Reverted CCTX mined %s", cctx.Index)
+
 	// check the payload was received on the contract
 	r.AssertTestDAppEVMCalled(true, payload, big.NewInt(0))
 
