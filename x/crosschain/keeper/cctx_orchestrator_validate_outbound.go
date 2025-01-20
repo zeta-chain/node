@@ -380,7 +380,7 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 		}
 
 		// a withdrawal event in the logs could generate cctxs for outbound transactions.
-		if !evmTxResponse.Failed() {
+		if evmTxResponse != nil {
 			logs := evmtypes.LogsToEthereum(evmTxResponse.Logs)
 			if len(logs) > 0 {
 				tmpCtx = tmpCtx.WithValue(InCCTXIndexKey, cctx.Index)
@@ -390,8 +390,7 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 				}
 
 				// process logs to process cctx events initiated during the contract call
-				err = k.ProcessLogs(tmpCtx, logs, to, txOrigin)
-				if err != nil {
+				if err = k.ProcessLogs(tmpCtx, logs, to, txOrigin); err != nil {
 					// this happens if the cctx events are not processed correctly with invalid withdrawals
 					// in this situation we want the CCTX to be reverted, we don't commit the state so the contract call is not persisted
 					// the contract call is considered as reverted
