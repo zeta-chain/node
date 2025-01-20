@@ -61,6 +61,10 @@ func solanaInboundBallotIdentifier(ctx context.Context,
 		inboundChain.ChainId,
 	)
 
+	if err != nil {
+		return "", fmt.Errorf("failed to filter solana inbound events: %w", err)
+	}
+
 	msg := &crosschaintypes.MsgVoteInbound{}
 
 	// build inbound vote message from events and post to zetacore

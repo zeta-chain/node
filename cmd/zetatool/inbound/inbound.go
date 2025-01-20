@@ -120,6 +120,6 @@ func GetBallotIdentifier(inboundHash string, inboundChainID int64, configFile st
 		}
 	}
 
-	log.Info().Msgf(ballotIdentifierMessage)
+	log.Info().Msgf("%s", ballotIdentifierMessage)
 	return nil
 }
