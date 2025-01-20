@@ -43,15 +43,15 @@ func (c *Client) NewBlockSubscriber(ctx context.Context) (chan ctypes.EventDataN
 // resolveBlockSubscriber returns the block subscriber channel
 // or subscribes to it for the first time.
 func (c *Client) resolveBlockSubscriber() (*fanout.FanOut[ctypes.EventDataNewBlock], error) {
-	// noop
-	if blocksFanout := c.blockFanOutThreadSafe(); blocksFanout != nil {
-		c.logger.Info().Msg("Resolved existing block subscriber")
-		return blocksFanout, nil
-	}
-
 	// we need this lock to prevent 2 Subscribe calls at the same time
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
+	// noop
+	if c.blocksFanout != nil {
+		c.logger.Info().Msg("Resolved existing block subscriber")
+		return c.blocksFanout, nil
+	}
 
 	c.logger.Info().Msg("Subscribing to block events")
 
@@ -89,11 +89,4 @@ func (c *Client) resolveBlockSubscriber() (*fanout.FanOut[ctypes.EventDataNewBlo
 	c.blocksFanout = fo
 
 	return fo, nil
-}
-
-func (c *Client) blockFanOutThreadSafe() *fanout.FanOut[ctypes.EventDataNewBlock] {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	return c.blocksFanout
 }
