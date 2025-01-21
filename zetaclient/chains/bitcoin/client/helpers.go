@@ -131,11 +131,11 @@ func (c *Client) GetEstimatedFeeRate(ctx context.Context, confTarget int64, regn
 	if feeResult.FeeRate == nil {
 		return 0, fmt.Errorf("nil fee rate")
 	}
-	if *feeResult.FeeRate <= 0 || *feeResult.FeeRate >= maxBTCSupply {
-		return 0, fmt.Errorf("invalid fee rate: %f", *feeResult.FeeRate)
+	feeRate := *feeResult.FeeRate
+	if feeRate <= 0 || feeRate >= maxBTCSupply {
+		return 0, fmt.Errorf("invalid fee rate: %f", feeRate)
 	}
-
-	return common.FeeRateToSatPerByte(*feeResult.FeeRate), nil
+	return common.FeeRateToSatPerByte(feeRate), nil
 }
 
 // GetTransactionFeeAndRate gets the transaction fee and rate for a given tx result

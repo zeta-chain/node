@@ -19,16 +19,13 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	)
 
 	// special handle regnet and testnet gas rate
-	// regnet:  RPC 'EstimateSmartFee' is not available
-	// testnet: RPC 'EstimateSmartFee' returns unreasonable high gas rate
 	if ob.Chain().NetworkType != chains.NetworkType_mainnet {
-		feeRateEstimated, err = ob.specialHandleFeeRate(ctx)
+		feeRateEstimated, err = ob.GetFeeRateForRegnetAndTestnet(ctx)
 		if err != nil {
 			return errors.Wrap(err, "unable to execute specialHandleFeeRate")
 		}
 	} else {
-		isRegnet := chains.IsBitcoinRegnet(ob.Chain().ChainId)
-		feeRateEstimated, err = ob.rpc.GetEstimatedFeeRate(ctx, 1, isRegnet)
+		feeRateEstimated, err = ob.rpc.GetEstimatedFeeRate(ctx, 1, false)
 		if err != nil {
 			return errors.Wrap(err, "unable to get estimated fee rate")
 		}
@@ -53,8 +50,10 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	return nil
 }
 
-// specialHandleFeeRate handles the fee rate for regnet and testnet
-func (ob *Observer) specialHandleFeeRate(ctx context.Context) (int64, error) {
+// GetFeeRateForRegnetAndTestnet handles the fee rate for regnet and testnet
+// regnet:  RPC 'EstimateSmartFee' is not available
+// testnet: RPC 'EstimateSmartFee' can return unreasonable high fee rate
+func (ob *Observer) GetFeeRateForRegnetAndTestnet(ctx context.Context) (int64, error) {
 	switch ob.Chain().NetworkType {
 	case chains.NetworkType_privnet:
 		return client.FeeRateRegnet, nil
