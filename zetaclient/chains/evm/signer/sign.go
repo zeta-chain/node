@@ -51,7 +51,8 @@ func (signer *Signer) SignConnectorOnReceive(ctx context.Context, txData *Outbou
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height)
+		txData.height,
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign onReceive error")
 	}

@@ -5,7 +5,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/zeta-chain/node/zetaclient/chains/evm/rpc"
 	"github.com/zeta-chain/node/zetaclient/common"
 )
 
@@ -30,7 +29,7 @@ func (ob *Observer) watchRPCStatus(ctx context.Context) error {
 
 // checkRPCStatus checks the RPC status of the EVM chain
 func (ob *Observer) checkRPCStatus(ctx context.Context) {
-	blockTime, err := rpc.CheckRPCStatus(ctx, ob.evmClient)
+	blockTime, err := ob.evmClient.HealthCheck(ctx)
 	if err != nil {
 		ob.Logger().Chain.Error().Err(err).Msg("CheckRPCStatus failed")
 		return

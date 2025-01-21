@@ -22,6 +22,7 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/metrics"
@@ -37,7 +38,7 @@ type Observer struct {
 	priorityFeeConfig
 
 	// evmClient is the EVM client for the observed chain
-	evmClient interfaces.EVMRPCClient
+	evmClient *client.Client
 
 	// evmJSONRPC is the EVM JSON RPC client for the observed chain
 	evmJSONRPC interfaces.EVMJSONRPCClient
@@ -63,7 +64,7 @@ type priorityFeeConfig struct {
 func NewObserver(
 	ctx context.Context,
 	chain chains.Chain,
-	evmClient interfaces.EVMRPCClient,
+	evmClient *client.Client,
 	evmJSONRPC interfaces.EVMJSONRPCClient,
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,

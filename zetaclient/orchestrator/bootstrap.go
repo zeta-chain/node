@@ -5,8 +5,6 @@ import (
 	"fmt"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
-	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	ethrpc2 "github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
@@ -15,6 +13,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	evmclient "github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	evmobserver "github.com/zeta-chain/node/zetaclient/chains/evm/observer"
 	evmsigner "github.com/zeta-chain/node/zetaclient/chains/evm/signer"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
@@ -119,15 +118,19 @@ func syncSignerMap(
 				continue
 			}
 
+			evmClient, err := evmclient.NewFromEndpoint(ctx, cfg.Endpoint)
+			if err != nil {
+				logger.Std.Error().Err(err).Msg("Unable to create EVM client")
+			}
+
 			signer, err := evmsigner.NewSigner(
-				ctx,
 				*rawChain,
 				tss,
-				logger,
-				cfg.Endpoint,
+				evmClient,
 				zetaConnectorAddress,
 				erc20CustodyAddress,
 				gatewayAddress,
+				logger,
 			)
 			if err != nil {
 				logger.Std.Error().Err(err).Msgf("Unable to construct signer for EVM chain %d", chainID)
@@ -297,12 +300,12 @@ func syncObserverMap(
 				logger.Std.Error().Err(err).Str("rpc.endpoint", cfg.Endpoint).Msgf("Unable to create HTTP client")
 				continue
 			}
-			rpcClient, err := ethrpc.DialHTTPWithClient(cfg.Endpoint, httpClient)
+
+			evmClient, err := evmclient.NewFromEndpoint(ctx, cfg.Endpoint)
 			if err != nil {
-				logger.Std.Error().Err(err).Str("rpc.endpoint", cfg.Endpoint).Msgf("Unable to dial EVM RPC")
+				logger.Std.Error().Err(err).Msg("Unable to create EVM client")
 				continue
 			}
-			evmClient := ethclient.NewClient(rpcClient)
 
 			database, err := db.NewFromSqlite(dbpath, chainName, true)
 			if err != nil {

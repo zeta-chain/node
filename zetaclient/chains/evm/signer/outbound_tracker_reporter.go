@@ -9,7 +9,6 @@ import (
 
 	"github.com/zeta-chain/node/pkg/bg"
 	"github.com/zeta-chain/node/zetaclient/chains/evm"
-	"github.com/zeta-chain/node/zetaclient/chains/evm/rpc"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
@@ -60,7 +59,7 @@ func (signer *Signer) reportToOutboundTracker(
 			}
 
 			// check tx confirmation status
-			confirmed, err := rpc.IsTxConfirmed(ctx, signer.client, outboundHash, evm.ReorgProtectBlockCount)
+			confirmed, err := signer.client.IsTxConfirmed(ctx, outboundHash, evm.ReorgProtectBlockCount)
 			if err != nil {
 				logger.Err(err).Msg("unable to check confirmation status of outbound")
 				continue

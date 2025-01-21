@@ -10,12 +10,12 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/pkg/errors"
+
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
-
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 )
 
 type Client struct {
@@ -104,12 +104,12 @@ func (c *Client) HealthCheck(ctx context.Context) (time.Time, error) {
 	}
 
 	// query suggested gas price
-	if _, err = c.SuggestGasPrice(ctx); err != nil {
+	if _, err = c.EVMRPCClient.SuggestGasPrice(ctx); err != nil {
 		return time.Time{}, errors.Wrap(err, "RPC failed on SuggestGasPrice, RPC down?")
 	}
 
 	// query latest block header
-	header, err := c.HeaderByNumber(ctx, new(big.Int).SetUint64(bn))
+	header, err := c.EVMRPCClient.HeaderByNumber(ctx, new(big.Int).SetUint64(bn))
 	if err != nil {
 		return time.Time{}, errors.Wrapf(err, "RPC failed on HeaderByNumber(%d), RPC down?", bn)
 	}

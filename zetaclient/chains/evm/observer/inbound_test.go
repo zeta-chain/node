@@ -492,7 +492,7 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 			ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationCount)
 
 			if tt.mockEVMClient != nil {
-				tt.mockEVMClient(ob.evmClient)
+				tt.mockEVMClient(ob.evmMock)
 			}
 
 			if tt.mockJSONClient != nil {

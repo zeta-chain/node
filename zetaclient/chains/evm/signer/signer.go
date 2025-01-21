@@ -17,12 +17,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
@@ -237,7 +237,7 @@ func (signer *Signer) broadcast(ctx context.Context, tx *ethtypes.Transaction) e
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
-	return signer.client.SendTransaction(ctx, tx)
+	return signer.client.EVMRPCClient.SendTransaction(ctx, tx)
 }
 
 // TryProcessOutbound - signer interface implementation
@@ -523,12 +523,6 @@ func (signer *Signer) BroadcastOutbound(
 		signer.reportToOutboundTracker(ctx, zetacoreClient, toChain.ID(), tx.Nonce(), outboundHash, logger)
 		break // successful broadcast; no need to retry
 	}
-}
-
-// EvmSigner returns the EVM signer object for the signer
-func (signer *Signer) EvmSigner() ethtypes.Signer {
-	// TODO(revamp): rename field into evmSigner
-	return signer.ethSigner
 }
 
 // IsSenderZetaChain checks if the sender chain is ZetaChain
