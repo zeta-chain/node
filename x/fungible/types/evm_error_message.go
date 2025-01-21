@@ -16,6 +16,7 @@ type EvmErrorMessage struct {
 	RevertReason string `json:"revert_reason"`
 }
 
+// NewEvmErrorMessage creates a new EvmErrorMessage struct
 func NewEvmErrorMessage(method string, contract common.Address, args interface{}, message string) EvmErrorMessage {
 	return EvmErrorMessage{
 		Method:   method,
@@ -25,14 +26,17 @@ func NewEvmErrorMessage(method string, contract common.Address, args interface{}
 	}
 }
 
+// AddError adds an error to the EvmErrorMessage struct
 func (e *EvmErrorMessage) AddError(error string) {
 	e.Error = error
 }
 
+// AddRevertReason adds a revert reason to the EvmErrorMessage struct
 func (e *EvmErrorMessage) AddRevertReason(revertReason interface{}) {
 	e.RevertReason = fmt.Sprintf("%v", revertReason)
 }
 
+// ToJSON marshals an EvmErrorMessage struct into a JSON string
 func (e *EvmErrorMessage) ToJSON() (string, error) {
 	jsonData, err := json.Marshal(e)
 	if err != nil {
@@ -41,7 +45,7 @@ func (e *EvmErrorMessage) ToJSON() (string, error) {
 	return string(jsonData), nil
 }
 
-// Write a function to parse Json string to EvmErrorMessage
+// ParseEvmErrorMessage parses a JSON string into an EvmErrorMessage struct
 func ParseEvmErrorMessage(jsonData string) (EvmErrorMessage, error) {
 	var evmErrorMessage EvmErrorMessage
 	err := json.Unmarshal([]byte(jsonData), &evmErrorMessage)
