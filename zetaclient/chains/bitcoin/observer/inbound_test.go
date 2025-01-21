@@ -151,6 +151,8 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 }
 
 func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
+	r := sample.Rand()
+
 	// can use any bitcoin chain for testing
 	chain := chains.BitcoinMainnet
 
@@ -167,7 +169,7 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 		{
 			name: "should return vote for standard memo",
 			event: &observer.BTCInboundEvent{
-				FromAddress: sample.BtcAddressP2WPKH(t, &chaincfg.MainNetParams).String(),
+				FromAddress: sample.BtcAddressP2WPKH(t, r, &chaincfg.MainNetParams).String(),
 				// a deposit and call
 				MemoBytes: testutil.HexToBytes(
 					t,

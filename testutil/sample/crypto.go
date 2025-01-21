@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -17,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
@@ -92,8 +92,8 @@ func EthAddressFromRand(r *rand.Rand) ethcommon.Address {
 }
 
 // BtcAddressP2WPKH returns a sample Bitcoin Pay-to-Witness-Public-Key-Hash (P2WPKH) address
-func BtcAddressP2WPKH(t *testing.T, net *chaincfg.Params) *btcutil.AddressWitnessPubKeyHash {
-	privateKey, err := btcec.NewPrivateKey()
+func BtcAddressP2WPKH(t *testing.T, r *rand.Rand, net *chaincfg.Params) *btcutil.AddressWitnessPubKeyHash {
+	privateKey, err := secp.GeneratePrivateKeyFromRand(r)
 	require.NoError(t, err)
 
 	pubKeyHash := btcutil.Hash160(privateKey.PubKey().SerializeCompressed())
@@ -104,8 +104,8 @@ func BtcAddressP2WPKH(t *testing.T, net *chaincfg.Params) *btcutil.AddressWitnes
 }
 
 // BtcAddressP2WPKH returns a pkscript for a sample btc P2WPKH address
-func BtcAddressP2WPKHScript(t *testing.T, net *chaincfg.Params) []byte {
-	addr := BtcAddressP2WPKH(t, net)
+func BtcAddressP2WPKHScript(t *testing.T, r *rand.Rand, net *chaincfg.Params) []byte {
+	addr := BtcAddressP2WPKH(t, r, net)
 	script, err := txscript.PayToAddrScript(addr)
 	require.NoError(t, err)
 	return script
