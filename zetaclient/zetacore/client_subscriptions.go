@@ -2,6 +2,7 @@ package zetacore
 
 import (
 	"context"
+	"time"
 
 	"cosmossdk.io/errors"
 	ctypes "github.com/cometbft/cometbft/types"
@@ -22,17 +23,20 @@ func (c *Client) NewBlockSubscriber(ctx context.Context) (chan ctypes.EventDataN
 	blocksChan := make(chan ctypes.EventDataNewBlock)
 
 	go func() {
-		consumer := blockSubscriber.Add()
+		consumer, closeConsumer := blockSubscriber.Add()
 
 		for {
 			select {
-			case <-ctx.Done():
-				// fixme: MEMORY LEAK: this might be dangerous because the consumer is not closed.
-				// Fanout will spawn "zombie" goroutines to push to the chan, but nobody is reading from it,
-				// Will be addressed in future orchestrator V2 PRs (not urgent as of now)
-				return
 			case block := <-consumer:
 				blocksChan <- block
+			case <-time.After(time.Second * 10):
+				// the subscription should automatically reconnect after zetacore
+				// restart, but we should log this just in case that logic is not
+				// working
+				c.logger.Warn().Msg("Block subscriber: no blocks after 10 seconds")
+			case <-ctx.Done():
+				closeConsumer()
+				return
 			}
 		}
 	}()

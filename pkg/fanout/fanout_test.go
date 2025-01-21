@@ -18,9 +18,9 @@ func TestFanOut(t *testing.T) {
 	f := New(input, DefaultBuffer)
 
 	// That has 3 outputs
-	out1 := f.Add()
-	out2 := f.Add()
-	out3 := f.Add()
+	out1, _ := f.Add()
+	out2, _ := f.Add()
+	out3, _ := f.Add()
 
 	// Given a wait group
 	wg := sync.WaitGroup{}
@@ -69,4 +69,67 @@ func TestFanOut(t *testing.T) {
 	// Check that total is valid
 	// total == sum(1...10) * 3 = n(n+1)/2 * 3 = 55 * 3 = 165
 	require.Equal(t, int32(165), total)
+
+}
+
+func TestFanOutClose(t *testing.T) {
+	// ARRANGE
+	// Given input
+	input := make(chan int64)
+
+	f := New(input, DefaultBuffer)
+
+	// Given 2 channels
+	out4, _ := f.Add()
+	out5, close5 := f.Add()
+
+	// Given total counter
+	var total int64
+
+	// ACT
+	f.Start()
+
+	// Write to the input
+	go func() {
+		for i := int64(0); i < 10; i++ {
+			input <- i
+			time.Sleep(15 * time.Millisecond)
+		}
+		close(input)
+	}()
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	// Read from chan4 unless input is closed
+	go func() {
+		defer wg.Done()
+
+		for i := range out4 {
+			t.Logf("out4: received %d", i)
+			atomic.AddInt64(&total, 1)
+			time.Sleep(10 * time.Millisecond)
+		}
+	}()
+
+	// Read 5 items from chan5 and then close it
+	go func() {
+		defer wg.Done()
+
+		for i := 0; i < 5; i++ {
+			v := <-out5
+			t.Logf("out5: received %d", v)
+			atomic.AddInt64(&total, 1)
+			time.Sleep(10 * time.Millisecond)
+		}
+
+		// after 5 iterations, close out5
+		t.Logf("out5: closing")
+		close5()
+	}()
+
+	wg.Wait()
+
+	// ASSERT
+	require.Equal(t, int64(10+5), total)
 }

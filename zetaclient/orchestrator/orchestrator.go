@@ -304,11 +304,6 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 		case <-oc.stop:
 			oc.logger.Warn().Msg("runScheduler: stopped")
 			return nil
-		case <-time.After(time.Second * 10):
-			// the subscription should automatically reconnect after zetacore
-			// restart, but we should log this just in case that logic is not
-			// working
-			oc.logger.Warn().Msg("runScheduler: no blocks after 10 seconds")
 		case newBlock := <-newBlockChan:
 			bn := newBlock.Block.Height
 
