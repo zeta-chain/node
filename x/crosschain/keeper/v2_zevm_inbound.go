@@ -75,7 +75,7 @@ func (k Keeper) ProcessZEVMInboundV2(
 		}
 
 		// validate data of the withdrawal event
-		if err := k.validateZRC20Withdrawal(ctx, foreignCoin.ForeignChainId, value, receiver); err != nil {
+		if err := k.validateZRC20Withdrawal(ctx, foreignCoin.ForeignChainId, foreignCoin.CoinType, value, receiver); err != nil {
 			return err
 		}
 
