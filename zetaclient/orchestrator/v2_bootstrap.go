@@ -49,7 +49,6 @@ func (oc *V2) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) (*bitcoin.
 	// TODO extract base observer
 	// TODO extract base signer
 	// https://github.com/zeta-chain/node/issues/3331
-
 	observer, err := btcobserver.NewObserver(
 		*rawChain,
 		rpcClient,

@@ -263,85 +263,85 @@ func TestSelectUTXOs(t *testing.T) {
 	// Case1: nonce = 0, bootstrap
 	// 		input: utxoCap = 5, amount = 0.01, nonce = 0
 	// 		output: [0.01], 0.01
-	result, amount, _, _, err := ob.SelectUTXOs(ctx, 0.01, 5, 0, math.MaxUint16, true)
+	selected, err := ob.SelectUTXOs(ctx, 0.01, 5, 0, math.MaxUint16, true)
 	require.NoError(t, err)
-	require.Equal(t, 0.01, amount)
-	require.Equal(t, ob.utxos[0:1], result)
+	require.Equal(t, 0.01, selected.Value)
+	require.Equal(t, ob.utxos[0:1], selected.UTXOs)
 
 	// Case2: nonce = 1, must FAIL and wait for previous transaction to be mined
 	// 		input: utxoCap = 5, amount = 0.5, nonce = 1
 	// 		output: error
-	result, amount, _, _, err = ob.SelectUTXOs(ctx, 0.5, 5, 1, math.MaxUint16, true)
+	selected, err = ob.SelectUTXOs(ctx, 0.5, 5, 1, math.MaxUint16, true)
 	require.Error(t, err)
-	require.Nil(t, result)
-	require.Zero(t, amount)
-	require.Equal(t, "getOutboundIDByNonce: cannot find outbound txid for nonce 0", err.Error())
+	require.Nil(t, selected.UTXOs)
+	require.Zero(t, selected.Value)
+	require.Equal(t, "getOutboundHashByNonce: cannot find outbound txid for nonce 0", err.Error())
 	mineTxNSetNonceMark(t, ob, 0, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 0
 
 	// Case3: nonce = 1, should pass now
 	// 		input: utxoCap = 5, amount = 0.5, nonce = 1
 	// 		output: [0.00002, 0.01, 0.12, 0.18, 0.24], 0.55002
-	result, amount, _, _, err = ob.SelectUTXOs(ctx, 0.5, 5, 1, math.MaxUint16, true)
+	selected, err = ob.SelectUTXOs(ctx, 0.5, 5, 1, math.MaxUint16, true)
 	require.NoError(t, err)
-	require.Equal(t, 0.55002, amount)
-	require.Equal(t, ob.utxos[0:5], result)
+	require.Equal(t, 0.55002, selected.Value)
+	require.Equal(t, ob.utxos[0:5], selected.UTXOs)
 	mineTxNSetNonceMark(t, ob, 1, dummyTxID, 0) // mine a transaction and set nonce-mark utxo for nonce 1
 
 	// Case4:
 	// 		input: utxoCap = 5, amount = 1.0, nonce = 2
 	// 		output: [0.00002001, 0.01, 0.12, 0.18, 0.24, 0.5], 1.05002001
-	result, amount, _, _, err = ob.SelectUTXOs(ctx, 1.0, 5, 2, math.MaxUint16, true)
+	selected, err = ob.SelectUTXOs(ctx, 1.0, 5, 2, math.MaxUint16, true)
 	require.NoError(t, err)
-	require.InEpsilon(t, 1.05002001, amount, 1e-8)
-	require.Equal(t, ob.utxos[0:6], result)
+	require.InEpsilon(t, 1.05002001, selected.Value, 1e-8)
+	require.Equal(t, ob.utxos[0:6], selected.UTXOs)
 	mineTxNSetNonceMark(t, ob, 2, dummyTxID, 0) // mine a transaction and set nonce-mark utxo for nonce 2
 
 	// Case5: should include nonce-mark utxo on the LEFT
 	// 		input: utxoCap = 5, amount = 8.05, nonce = 3
 	// 		output: [0.00002002, 0.24, 0.5, 1.26, 2.97, 3.28], 8.25002002
-	result, amount, _, _, err = ob.SelectUTXOs(ctx, 8.05, 5, 3, math.MaxUint16, true)
+	selected, err = ob.SelectUTXOs(ctx, 8.05, 5, 3, math.MaxUint16, true)
 	require.NoError(t, err)
-	require.InEpsilon(t, 8.25002002, amount, 1e-8)
+	require.InEpsilon(t, 8.25002002, selected.Value, 1e-8)
 	expected := append([]btcjson.ListUnspentResult{ob.utxos[0]}, ob.utxos[4:9]...)
-	require.Equal(t, expected, result)
+	require.Equal(t, expected, selected.UTXOs)
 	mineTxNSetNonceMark(t, ob, 24105431, dummyTxID, 0) // mine a transaction and set nonce-mark utxo for nonce 24105431
 
 	// Case6: should include nonce-mark utxo on the RIGHT
 	// 		input: utxoCap = 5, amount = 0.503, nonce = 24105432
 	// 		output: [0.24107432, 0.01, 0.12, 0.18, 0.24], 0.55002002
-	result, amount, _, _, err = ob.SelectUTXOs(ctx, 0.503, 5, 24105432, math.MaxUint16, true)
+	selected, err = ob.SelectUTXOs(ctx, 0.503, 5, 24105432, math.MaxUint16, true)
 	require.NoError(t, err)
-	require.InEpsilon(t, 0.79107431, amount, 1e-8)
+	require.InEpsilon(t, 0.79107431, selected.Value, 1e-8)
 	expected = append([]btcjson.ListUnspentResult{ob.utxos[4]}, ob.utxos[0:4]...)
-	require.Equal(t, expected, result)
+	require.Equal(t, expected, selected.UTXOs)
 	mineTxNSetNonceMark(t, ob, 24105432, dummyTxID, 4) // mine a transaction and set nonce-mark utxo for nonce 24105432
 
 	// Case7: should include nonce-mark utxo in the MIDDLE
 	// 		input: utxoCap = 5, amount = 1.0, nonce = 24105433
 	// 		output: [0.24107432, 0.12, 0.18, 0.24, 0.5], 1.28107432
-	result, amount, _, _, err = ob.SelectUTXOs(ctx, 1.0, 5, 24105433, math.MaxUint16, true)
+	selected, err = ob.SelectUTXOs(ctx, 1.0, 5, 24105433, math.MaxUint16, true)
 	require.NoError(t, err)
-	require.InEpsilon(t, 1.28107432, amount, 1e-8)
+	require.InEpsilon(t, 1.28107432, selected.Value, 1e-8)
 	expected = append([]btcjson.ListUnspentResult{ob.utxos[4]}, ob.utxos[1:4]...)
 	expected = append(expected, ob.utxos[5])
-	require.Equal(t, expected, result)
+	require.Equal(t, expected, selected.UTXOs)
 
 	// Case8: should work with maximum amount
 	// 		input: utxoCap = 5, amount = 16.03
 	// 		output: [0.24107432, 1.26, 2.97, 3.28, 5.16, 8.72], 21.63107432
-	result, amount, _, _, err = ob.SelectUTXOs(ctx, 16.03, 5, 24105433, math.MaxUint16, true)
+	selected, err = ob.SelectUTXOs(ctx, 16.03, 5, 24105433, math.MaxUint16, true)
 	require.NoError(t, err)
-	require.InEpsilon(t, 21.63107432, amount, 1e-8)
+	require.InEpsilon(t, 21.63107432, selected.Value, 1e-8)
 	expected = append([]btcjson.ListUnspentResult{ob.utxos[4]}, ob.utxos[6:11]...)
-	require.Equal(t, expected, result)
+	require.Equal(t, expected, selected.UTXOs)
 
 	// Case9: must FAIL due to insufficient funds
 	// 		input: utxoCap = 5, amount = 21.64
 	// 		output: error
-	result, amount, _, _, err = ob.SelectUTXOs(ctx, 21.64, 5, 24105433, math.MaxUint16, true)
+	selected, err = ob.SelectUTXOs(ctx, 21.64, 5, 24105433, math.MaxUint16, true)
 	require.Error(t, err)
-	require.Nil(t, result)
-	require.Zero(t, amount)
+	require.Nil(t, selected.UTXOs)
+	require.Zero(t, selected.Value)
 	require.Equal(
 		t,
 		"SelectUTXOs: not enough btc in reserve - available : 21.63107432 , tx amount : 21.64",
@@ -360,12 +360,12 @@ func TestUTXOConsolidation(t *testing.T) {
 
 		// input: utxoCap = 10, amount = 0.01, nonce = 1, rank = 10
 		// output: [0.00002, 0.01], 0.01002
-		result, amount, clsdtUtxo, clsdtValue, err := ob.SelectUTXOs(ctx, 0.01, 10, 1, 10, true)
+		res, err := ob.SelectUTXOs(ctx, 0.01, 10, 1, 10, true)
 		require.NoError(t, err)
-		require.Equal(t, 0.01002, amount)
-		require.Equal(t, ob.utxos[0:2], result)
-		require.Equal(t, uint16(0), clsdtUtxo)
-		require.Equal(t, 0.0, clsdtValue)
+		require.Equal(t, 0.01002, res.Value)
+		require.Equal(t, ob.utxos[0:2], res.UTXOs)
+		require.Equal(t, uint16(0), res.ConsolidatedUTXOs)
+		require.Equal(t, 0.0, res.ConsolidatedValue)
 	})
 
 	t.Run("should consolidate 1 utxo", func(t *testing.T) {
@@ -374,12 +374,12 @@ func TestUTXOConsolidation(t *testing.T) {
 
 		// input: utxoCap = 9, amount = 0.01, nonce = 1, rank = 9
 		// output: [0.00002, 0.01, 0.12], 0.13002
-		result, amount, clsdtUtxo, clsdtValue, err := ob.SelectUTXOs(ctx, 0.01, 9, 1, 9, true)
+		res, err := ob.SelectUTXOs(ctx, 0.01, 9, 1, 9, true)
 		require.NoError(t, err)
-		require.Equal(t, 0.13002, amount)
-		require.Equal(t, ob.utxos[0:3], result)
-		require.Equal(t, uint16(1), clsdtUtxo)
-		require.Equal(t, 0.12, clsdtValue)
+		require.Equal(t, 0.13002, res.Value)
+		require.Equal(t, ob.utxos[0:3], res.UTXOs)
+		require.Equal(t, uint16(1), res.ConsolidatedUTXOs)
+		require.Equal(t, 0.12, res.ConsolidatedValue)
 	})
 
 	t.Run("should consolidate 3 utxos", func(t *testing.T) {
@@ -388,17 +388,17 @@ func TestUTXOConsolidation(t *testing.T) {
 
 		// input: utxoCap = 5, amount = 0.01, nonce = 0, rank = 5
 		// output: [0.00002, 0.014, 1.26, 0.5, 0.2], 2.01002
-		result, amount, clsdtUtxo, clsdtValue, err := ob.SelectUTXOs(ctx, 0.01, 5, 1, 5, true)
+		res, err := ob.SelectUTXOs(ctx, 0.01, 5, 1, 5, true)
 		require.NoError(t, err)
-		require.Equal(t, 2.01002, amount)
+		require.Equal(t, 2.01002, res.Value)
 		expected := make([]btcjson.ListUnspentResult, 2)
 		copy(expected, ob.utxos[0:2])
 		for i := 6; i >= 4; i-- { // append consolidated utxos in descending order
 			expected = append(expected, ob.utxos[i])
 		}
-		require.Equal(t, expected, result)
-		require.Equal(t, uint16(3), clsdtUtxo)
-		require.Equal(t, 2.0, clsdtValue)
+		require.Equal(t, expected, res.UTXOs)
+		require.Equal(t, uint16(3), res.ConsolidatedUTXOs)
+		require.Equal(t, 2.0, res.ConsolidatedValue)
 	})
 
 	t.Run("should consolidate all utxos using rank 1", func(t *testing.T) {
@@ -407,17 +407,17 @@ func TestUTXOConsolidation(t *testing.T) {
 
 		// input: utxoCap = 12, amount = 0.01, nonce = 0, rank = 1
 		// output: [0.00002, 0.01, 8.72, 5.16, 3.28, 2.97, 1.26, 0.5, 0.24, 0.18, 0.12], 22.44002
-		result, amount, clsdtUtxo, clsdtValue, err := ob.SelectUTXOs(ctx, 0.01, 12, 1, 1, true)
+		res, err := ob.SelectUTXOs(ctx, 0.01, 12, 1, 1, true)
 		require.NoError(t, err)
-		require.Equal(t, 22.44002, amount)
+		require.Equal(t, 22.44002, res.Value)
 		expected := make([]btcjson.ListUnspentResult, 2)
 		copy(expected, ob.utxos[0:2])
 		for i := 10; i >= 2; i-- { // append consolidated utxos in descending order
 			expected = append(expected, ob.utxos[i])
 		}
-		require.Equal(t, expected, result)
-		require.Equal(t, uint16(9), clsdtUtxo)
-		require.Equal(t, 22.43, clsdtValue)
+		require.Equal(t, expected, res.UTXOs)
+		require.Equal(t, uint16(9), res.ConsolidatedUTXOs)
+		require.Equal(t, 22.43, res.ConsolidatedValue)
 	})
 
 	t.Run("should consolidate 3 utxos sparse", func(t *testing.T) {
@@ -432,16 +432,16 @@ func TestUTXOConsolidation(t *testing.T) {
 
 		// input: utxoCap = 5, amount = 0.13, nonce = 24105432, rank = 5
 		// output: [0.24107431, 0.01, 0.12, 1.26, 0.5, 0.24], 2.37107431
-		result, amount, clsdtUtxo, clsdtValue, err := ob.SelectUTXOs(ctx, 0.13, 5, 24105432, 5, true)
+		res, err := ob.SelectUTXOs(ctx, 0.13, 5, 24105432, 5, true)
 		require.NoError(t, err)
-		require.InEpsilon(t, 2.37107431, amount, 1e-8)
+		require.InEpsilon(t, 2.37107431, res.Value, 1e-8)
 		expected := append([]btcjson.ListUnspentResult{ob.utxos[4]}, ob.utxos[0:2]...)
 		expected = append(expected, ob.utxos[6])
 		expected = append(expected, ob.utxos[5])
 		expected = append(expected, ob.utxos[3])
-		require.Equal(t, expected, result)
-		require.Equal(t, uint16(3), clsdtUtxo)
-		require.Equal(t, 2.0, clsdtValue)
+		require.Equal(t, expected, res.UTXOs)
+		require.Equal(t, uint16(3), res.ConsolidatedUTXOs)
+		require.Equal(t, 2.0, res.ConsolidatedValue)
 	})
 
 	t.Run("should consolidate all utxos sparse", func(t *testing.T) {
@@ -456,17 +456,17 @@ func TestUTXOConsolidation(t *testing.T) {
 
 		// input: utxoCap = 12, amount = 0.13, nonce = 24105432, rank = 1
 		// output: [0.24107431, 0.01, 0.12, 8.72, 5.16, 3.28, 2.97, 1.26, 0.5, 0.24, 0.18], 22.68107431
-		result, amount, clsdtUtxo, clsdtValue, err := ob.SelectUTXOs(ctx, 0.13, 12, 24105432, 1, true)
+		res, err := ob.SelectUTXOs(ctx, 0.13, 12, 24105432, 1, true)
 		require.NoError(t, err)
-		require.InEpsilon(t, 22.68107431, amount, 1e-8)
+		require.InEpsilon(t, 22.68107431, res.Value, 1e-8)
 		expected := append([]btcjson.ListUnspentResult{ob.utxos[4]}, ob.utxos[0:2]...)
 		for i := 10; i >= 5; i-- { // append consolidated utxos in descending order
 			expected = append(expected, ob.utxos[i])
 		}
 		expected = append(expected, ob.utxos[3])
 		expected = append(expected, ob.utxos[2])
-		require.Equal(t, expected, result)
-		require.Equal(t, uint16(8), clsdtUtxo)
-		require.Equal(t, 22.31, clsdtValue)
+		require.Equal(t, expected, res.UTXOs)
+		require.Equal(t, uint16(8), res.ConsolidatedUTXOs)
+		require.Equal(t, 22.31, res.ConsolidatedValue)
 	})
 }

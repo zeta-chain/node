@@ -408,12 +408,12 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 
 				switch {
 				case chain.IsEVM():
-					oc.ScheduleCctxEVM(ctx, zetaHeight, chainID, cctxList, ob, signer)
+					oc.ScheduleCCTXEVM(ctx, zetaHeight, chainID, cctxList, ob, signer)
 				case chain.IsBitcoin():
 					// Managed by orchestrator V2
 					continue
 				case chain.IsSolana():
-					oc.ScheduleCctxSolana(ctx, zetaHeight, chainID, cctxList, ob, signer)
+					oc.ScheduleCCTXSolana(ctx, zetaHeight, chainID, cctxList, ob, signer)
 				case chain.IsTON():
 					oc.ScheduleCCTXTON(ctx, zetaHeight, chainID, cctxList, ob, signer)
 				default:
@@ -428,8 +428,8 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 	}
 }
 
-// ScheduleCctxEVM schedules evm outbound keysign on each ZetaChain block (the ticker)
-func (oc *Orchestrator) ScheduleCctxEVM(
+// ScheduleCCTXEVM schedules evm outbound keysign on each ZetaChain block (the ticker)
+func (oc *Orchestrator) ScheduleCCTXEVM(
 	ctx context.Context,
 	zetaHeight uint64,
 	chainID int64,
@@ -439,7 +439,7 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 ) {
 	res, err := oc.zetacoreClient.GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
 	if err != nil {
-		oc.logger.Warn().Err(err).Msgf("ScheduleCctxEVM: GetAllOutboundTrackerByChain failed for chain %d", chainID)
+		oc.logger.Warn().Err(err).Msgf("ScheduleCCTXEVM: GetAllOutboundTrackerByChain failed for chain %d", chainID)
 		return
 	}
 	trackerMap := make(map[uint64]bool)
@@ -461,11 +461,11 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 
 		if params.ReceiverChainId != chainID {
 			oc.logger.Error().
-				Msgf("ScheduleCctxEVM: outbound %s chainid mismatch: want %d, got %d", outboundID, chainID, params.ReceiverChainId)
+				Msgf("ScheduleCCTXEVM: outbound %s chainid mismatch: want %d, got %d", outboundID, chainID, params.ReceiverChainId)
 			continue
 		}
 		if params.TssNonce > cctxList[0].GetCurrentOutboundParam().TssNonce+outboundScheduleLookback {
-			oc.logger.Error().Msgf("ScheduleCctxEVM: nonce too high: signing %d, earliest pending %d, chain %d",
+			oc.logger.Error().Msgf("ScheduleCCTXEVM: nonce too high: signing %d, earliest pending %d, chain %d",
 				params.TssNonce, cctxList[0].GetCurrentOutboundParam().TssNonce, chainID)
 			break
 		}
@@ -475,12 +475,12 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 		if err != nil {
 			oc.logger.Error().
 				Err(err).
-				Msgf("ScheduleCctxEVM: VoteOutboundIfConfirmed failed for chain %d nonce %d", chainID, nonce)
+				Msgf("ScheduleCCTXEVM: VoteOutboundIfConfirmed failed for chain %d nonce %d", chainID, nonce)
 			continue
 		}
 		if !continueKeysign {
 			oc.logger.Info().
-				Msgf("ScheduleCctxEVM: outbound %s already processed; do not schedule keysign", outboundID)
+				Msgf("ScheduleCCTXEVM: outbound %s already processed; do not schedule keysign", outboundID)
 			continue
 		}
 
@@ -508,7 +508,7 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 			!oc.outboundProc.IsOutboundActive(outboundID) {
 			oc.outboundProc.StartTryProcess(outboundID)
 			oc.logger.Debug().
-				Msgf("ScheduleCctxEVM: sign outbound %s with value %d", outboundID, cctx.GetCurrentOutboundParam().Amount)
+				Msgf("ScheduleCCTXEVM: sign outbound %s with value %d", outboundID, cctx.GetCurrentOutboundParam().Amount)
 			go signer.TryProcessOutbound(
 				ctx,
 				cctx,
@@ -527,8 +527,8 @@ func (oc *Orchestrator) ScheduleCctxEVM(
 	}
 }
 
-// ScheduleCctxSolana schedules solana outbound keysign on each ZetaChain block (the ticker)
-func (oc *Orchestrator) ScheduleCctxSolana(
+// ScheduleCCTXSolana schedules solana outbound keysign on each ZetaChain block (the ticker)
+func (oc *Orchestrator) ScheduleCCTXSolana(
 	ctx context.Context,
 	zetaHeight uint64,
 	chainID int64,
@@ -538,7 +538,7 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 ) {
 	solObserver, ok := observer.(*solanaobserver.Observer)
 	if !ok { // should never happen
-		oc.logger.Error().Msgf("ScheduleCctxSolana: chain observer is not a solana observer")
+		oc.logger.Error().Msgf("ScheduleCCTXSolana: chain observer is not a solana observer")
 		return
 	}
 
@@ -556,11 +556,11 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 
 		if params.ReceiverChainId != chainID {
 			oc.logger.Error().
-				Msgf("ScheduleCctxSolana: outbound %s chainid mismatch: want %d, got %d", outboundID, chainID, params.ReceiverChainId)
+				Msgf("ScheduleCCTXSolana: outbound %s chainid mismatch: want %d, got %d", outboundID, chainID, params.ReceiverChainId)
 			continue
 		}
 		if params.TssNonce > cctxList[0].GetCurrentOutboundParam().TssNonce+outboundScheduleLookback {
-			oc.logger.Warn().Msgf("ScheduleCctxSolana: nonce too high: signing %d, earliest pending %d",
+			oc.logger.Warn().Msgf("ScheduleCCTXSolana: nonce too high: signing %d, earliest pending %d",
 				params.TssNonce, cctxList[0].GetCurrentOutboundParam().TssNonce)
 			break
 		}
@@ -570,19 +570,19 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 		if err != nil {
 			oc.logger.Error().
 				Err(err).
-				Msgf("ScheduleCctxSolana: VoteOutboundIfConfirmed failed for chain %d nonce %d", chainID, nonce)
+				Msgf("ScheduleCCTXSolana: VoteOutboundIfConfirmed failed for chain %d nonce %d", chainID, nonce)
 			continue
 		}
 		if !continueKeysign {
 			oc.logger.Info().
-				Msgf("ScheduleCctxSolana: outbound %s already processed; do not schedule keysign", outboundID)
+				Msgf("ScheduleCCTXSolana: outbound %s already processed; do not schedule keysign", outboundID)
 			continue
 		}
 
 		// schedule a TSS keysign
 		if nonce%interval == zetaHeight%interval && !oc.outboundProc.IsOutboundActive(outboundID) {
 			oc.outboundProc.StartTryProcess(outboundID)
-			oc.logger.Debug().Msgf("ScheduleCctxSolana: sign outbound %s with value %d", outboundID, params.Amount)
+			oc.logger.Debug().Msgf("ScheduleCCTXSolana: sign outbound %s with value %d", outboundID, params.Amount)
 			go signer.TryProcessOutbound(
 				ctx,
 				cctx,

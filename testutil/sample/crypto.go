@@ -12,6 +12,7 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/txscript"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -91,7 +92,7 @@ func EthAddressFromRand(r *rand.Rand) ethcommon.Address {
 }
 
 // BtcAddressP2WPKH returns a sample btc P2WPKH address
-func BtcAddressP2WPKH(t *testing.T, net *chaincfg.Params) string {
+func BtcAddressP2WPKH(t *testing.T, net *chaincfg.Params) *btcutil.AddressWitnessPubKeyHash {
 	privateKey, err := btcec.NewPrivateKey()
 	require.NoError(t, err)
 
@@ -99,7 +100,15 @@ func BtcAddressP2WPKH(t *testing.T, net *chaincfg.Params) string {
 	addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, net)
 	require.NoError(t, err)
 
-	return addr.String()
+	return addr
+}
+
+// BtcAddressP2WPKH returns a pkscript for a sample btc P2WPKH address
+func BtcAddressP2WPKHScript(t *testing.T, net *chaincfg.Params) []byte {
+	addr := BtcAddressP2WPKH(t, net)
+	script, err := txscript.PayToAddrScript(addr)
+	require.NoError(t, err)
+	return script
 }
 
 // SolanaPrivateKey returns a sample solana private key

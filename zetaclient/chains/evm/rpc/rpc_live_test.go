@@ -3,6 +3,7 @@ package rpc_test
 import (
 	"context"
 	"math"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stretchr/testify/require"
@@ -17,6 +18,7 @@ const (
 	URLEthSepolia     = "https://rpc.ankr.com/eth_sepolia"
 	URLBscMainnet     = "https://rpc.ankr.com/bsc"
 	URLPolygonMainnet = "https://rpc.ankr.com/polygon"
+	URLBaseMainnet    = "https://rpc.ankr.com/base"
 )
 
 // Test_EVMRPCLive is a phony test to run each live test individually
@@ -27,6 +29,7 @@ func Test_EVMRPCLive(t *testing.T) {
 
 	LiveTest_IsTxConfirmed(t)
 	LiveTest_CheckRPCStatus(t)
+	LiveTest_SuggestGasPrice(t)
 }
 
 func LiveTest_IsTxConfirmed(t *testing.T) {
@@ -57,4 +60,14 @@ func LiveTest_CheckRPCStatus(t *testing.T) {
 	ctx := context.Background()
 	_, err = rpc.CheckRPCStatus(ctx, client)
 	require.NoError(t, err)
+}
+
+func LiveTest_SuggestGasPrice(t *testing.T) {
+	client, err := ethclient.Dial(URLBaseMainnet)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	gasPrice, err := client.SuggestGasPrice(ctx)
+	require.NoError(t, err)
+	require.True(t, gasPrice.Cmp(big.NewInt(0)) > 0)
 }

@@ -31,7 +31,7 @@ func TestHandleBroadcastError(t *testing.T) {
 		errors.New(""):                                    {retry: true, report: false},
 	}
 	for input, output := range testCases {
-		retry, report := HandleBroadcastError(input, "", "", "")
+		retry, report := HandleBroadcastError(input, 100, 1, "")
 		require.Equal(t, output.report, report)
 		require.Equal(t, output.retry, retry)
 	}
