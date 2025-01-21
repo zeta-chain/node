@@ -178,6 +178,42 @@ func signTx(t *testing.T, tx *wire.MsgTx, payerScript []byte, privateKey *btcec.
 	}
 }
 
+func Test_FeeRateToSatPerByte(t *testing.T) {
+	tests := []struct {
+		name     string
+		rate     float64
+		expected int64
+	}{
+		{
+			name:     "0 sat/vByte",
+			rate:     0.00000999,
+			expected: 0,
+		},
+		{
+			name:     "1 sat/vByte",
+			rate:     0.00001,
+			expected: 1,
+		},
+		{
+			name:     "5 sat/vByte",
+			rate:     0.00005999,
+			expected: 5,
+		},
+		{
+			name:     "10 sat/vByte",
+			rate:     0.0001,
+			expected: 10,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rate := FeeRateToSatPerByte(tt.rate)
+			require.Equal(t, tt.expected, rate)
+		})
+	}
+}
+
 func TestOutboundSize2In3Out(t *testing.T) {
 	// Generate payer/payee private keys and P2WPKH addresss
 	privateKey, _, payerScript := generateKeyPair(t, &chaincfg.TestNet3Params)

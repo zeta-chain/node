@@ -13,7 +13,7 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 )
 
@@ -99,8 +99,8 @@ func NewOutboundData(
 
 	// add minimum relay fee (1000 satoshis/KB by default) to gasPrice to avoid minRelayTxFee error
 	// see: https://github.com/bitcoin/bitcoin/blob/master/src/policy/policy.h#L35
-	satPerByte := client.FeeRateToSatPerByte(minRelayFee)
-	feeRate += satPerByte.Int64()
+	satPerByte := common.FeeRateToSatPerByte(minRelayFee)
+	feeRate += satPerByte
 
 	// compliance check
 	restrictedCCTX := compliance.IsCctxRestricted(cctx)

@@ -31,6 +31,9 @@ const (
 	OutboundBytesMin     = int64(239)  // 239vB == EstimateOutboundSize(2, 2, toP2WPKH)
 	OutboundBytesMax     = int64(1543) // 1543v == EstimateOutboundSize(21, 2, toP2TR)
 
+	// bytesPerKB is the number of vB in a KB
+	bytesPerKB = 1000
+
 	// defaultDepositorFeeRate is the default fee rate for depositor fee, 20 sat/vB
 	defaultDepositorFeeRate = 20
 
@@ -64,6 +67,13 @@ type RPC interface {
 
 // DepositorFeeCalculator is a function type to calculate the Bitcoin depositor fee
 type DepositorFeeCalculator func(context.Context, RPC, *btcjson.TxRawResult, *chaincfg.Params) (float64, error)
+
+// FeeRateToSatPerByte converts a fee rate from BTC/KB to sat/vB.
+func FeeRateToSatPerByte(rate float64) int64 {
+	satPerKB := rate * btcutil.SatoshiPerBitcoin
+	// #nosec G115 always in range
+	return int64(satPerKB / bytesPerKB)
+}
 
 // WiredTxSize calculates the wired tx size in bytes
 func WiredTxSize(numInputs uint64, numOutputs uint64) int64 {

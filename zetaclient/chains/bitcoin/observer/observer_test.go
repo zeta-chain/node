@@ -292,6 +292,7 @@ func newTestSuite(t *testing.T, chain chains.Chain, dbPath string) *testSuite {
 		database, err = db.NewFromSqliteInMemory(true)
 	} else {
 		database, err = db.NewFromSqlite(dbPath, "test.db", true)
+		t.Cleanup(func() { os.RemoveAll(dbPath) })
 	}
 	require.NoError(t, err)
 

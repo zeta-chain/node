@@ -3,13 +3,14 @@ package client
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"time"
 
 	types "github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
+
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
 const (
@@ -18,9 +19,6 @@ const (
 
 	// maxBTCSupply is the maximum supply of Bitcoin
 	maxBTCSupply = 21000000.0
-
-	// bytesPerKB is the number of vB in a KB
-	bytesPerKB = 1000
 )
 
 // GetBlockVerboseByStr alias for GetBlockVerbose
@@ -116,13 +114,6 @@ func (c *Client) GetRawTransactionResult(ctx context.Context,
 	}
 }
 
-// FeeRateToSatPerByte converts a fee rate from BTC/KB to sat/vB.
-func FeeRateToSatPerByte(rate float64) *big.Int {
-	// #nosec G115 always in range
-	satPerKB := new(big.Int).SetInt64(int64(rate * btcutil.SatoshiPerBitcoin))
-	return new(big.Int).Div(satPerKB, big.NewInt(bytesPerKB))
-}
-
 // GetEstimatedFeeRate gets estimated smart fee rate (BTC/Kb) targeting given block confirmation
 func (c *Client) GetEstimatedFeeRate(ctx context.Context, confTarget int64, regnet bool) (int64, error) {
 	// RPC 'EstimateSmartFee' is not available in regnet
@@ -144,7 +135,7 @@ func (c *Client) GetEstimatedFeeRate(ctx context.Context, confTarget int64, regn
 		return 0, fmt.Errorf("invalid fee rate: %f", *feeResult.FeeRate)
 	}
 
-	return FeeRateToSatPerByte(*feeResult.FeeRate).Int64(), nil
+	return common.FeeRateToSatPerByte(*feeResult.FeeRate), nil
 }
 
 // GetTransactionFeeAndRate gets the transaction fee and rate for a given tx result
