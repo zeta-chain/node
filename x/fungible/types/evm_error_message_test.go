@@ -45,6 +45,5 @@ func TestParseEvmErrorMessage(t *testing.T) {
 		require.Equal(t, "execution reverted: ret 0x: evm transaction execution failed", parsedMsg.Error)
 		require.Equal(t, "", parsedMsg.RevertReason)
 
-		fmt.Println(types2.PrettyPrintStruct(parsedMsg))
 	})
 }
