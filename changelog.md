@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## v26.0.0
+
+### Features
+
+* [3353](https://github.com/zeta-chain/node/pull/3353) - add liquidity cap parameter to ZRC20 creation
+* [3379](https://github.com/zeta-chain/node/pull/3379) - add Avalanche, Arbitrum and World Chain in chain info
+
+### Fixes
+
+* [3374](https://github.com/zeta-chain/node/pull/3374) - remove minimum rent exempt check for SPL token withdrawals
+* [3348](https://github.com/zeta-chain/node/pull/3348) - add support to perform withdraws in ZetaChain `onRevert` call
+
 ## v25.0.0
 
 ### Features

@@ -57014,8 +57014,12 @@ definitions:
       - op_stack
       - solana_consensus
       - catchain_consensus
+      - snowman
+      - arbitrum_nitro
     default: ethereum
-    description: '- catchain_consensus: ton'
+    description: |-
+      - catchain_consensus: ton
+       - snowman: avalanche
     title: |-
       Consensus represents the consensus algorithm used by the chain
       this can represent the consensus of a L1
@@ -57032,6 +57036,9 @@ definitions:
       - base
       - solana
       - ton
+      - avalanche
+      - arbitrum
+      - worldchain
     default: eth
     title: |-
       Network represents the network of the chain
