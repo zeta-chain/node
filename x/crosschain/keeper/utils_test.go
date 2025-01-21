@@ -2,7 +2,6 @@
 package keeper_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"math/big"
 	"testing"
 
@@ -169,7 +168,6 @@ func setupGasCoin(
 		symbol,
 		8,
 		nil,
-		sdkmath.NewUint(1000),
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)
@@ -196,7 +194,6 @@ func deployZRC20(
 		0,
 		assetAddress,
 		big.NewInt(21_000),
-		sdkmath.NewUint(1000),
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)

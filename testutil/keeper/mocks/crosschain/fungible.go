@@ -14,8 +14,6 @@ import (
 
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 
-	math "cosmossdk.io/math"
-
 	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/cosmos/cosmos-sdk/types"
@@ -122,9 +120,9 @@ func (_m *CrosschainFungibleKeeper) CallZRC20Burn(ctx types.Context, sender comm
 	return r0
 }
 
-// DeployZRC20Contract provides a mock function with given fields: ctx, name, symbol, decimals, chainID, coinType, erc20Contract, gasLimit, liquidityCap
-func (_m *CrosschainFungibleKeeper) DeployZRC20Contract(ctx types.Context, name string, symbol string, decimals uint8, chainID int64, coinType coin.CoinType, erc20Contract string, gasLimit *big.Int, liquidityCap math.Uint) (common.Address, error) {
-	ret := _m.Called(ctx, name, symbol, decimals, chainID, coinType, erc20Contract, gasLimit, liquidityCap)
+// DeployZRC20Contract provides a mock function with given fields: ctx, name, symbol, decimals, chainID, coinType, erc20Contract, gasLimit
+func (_m *CrosschainFungibleKeeper) DeployZRC20Contract(ctx types.Context, name string, symbol string, decimals uint8, chainID int64, coinType coin.CoinType, erc20Contract string, gasLimit *big.Int) (common.Address, error) {
+	ret := _m.Called(ctx, name, symbol, decimals, chainID, coinType, erc20Contract, gasLimit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DeployZRC20Contract")
@@ -132,19 +130,19 @@ func (_m *CrosschainFungibleKeeper) DeployZRC20Contract(ctx types.Context, name 
 
 	var r0 common.Address
 	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, string, string, uint8, int64, coin.CoinType, string, *big.Int, math.Uint) (common.Address, error)); ok {
-		return rf(ctx, name, symbol, decimals, chainID, coinType, erc20Contract, gasLimit, liquidityCap)
+	if rf, ok := ret.Get(0).(func(types.Context, string, string, uint8, int64, coin.CoinType, string, *big.Int) (common.Address, error)); ok {
+		return rf(ctx, name, symbol, decimals, chainID, coinType, erc20Contract, gasLimit)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, string, string, uint8, int64, coin.CoinType, string, *big.Int, math.Uint) common.Address); ok {
-		r0 = rf(ctx, name, symbol, decimals, chainID, coinType, erc20Contract, gasLimit, liquidityCap)
+	if rf, ok := ret.Get(0).(func(types.Context, string, string, uint8, int64, coin.CoinType, string, *big.Int) common.Address); ok {
+		r0 = rf(ctx, name, symbol, decimals, chainID, coinType, erc20Contract, gasLimit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(common.Address)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, string, string, uint8, int64, coin.CoinType, string, *big.Int, math.Uint) error); ok {
-		r1 = rf(ctx, name, symbol, decimals, chainID, coinType, erc20Contract, gasLimit, liquidityCap)
+	if rf, ok := ret.Get(1).(func(types.Context, string, string, uint8, int64, coin.CoinType, string, *big.Int) error); ok {
+		r1 = rf(ctx, name, symbol, decimals, chainID, coinType, erc20Contract, gasLimit)
 	} else {
 		r1 = ret.Error(1)
 	}

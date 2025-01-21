@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"errors"
 	"math/big"
 	"testing"
@@ -41,7 +40,6 @@ func setupGasCoin(
 		symbol,
 		8,
 		nil,
-		sdkmath.NewUint(1000),
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)
@@ -74,7 +72,6 @@ func deployZRC20(
 		0,
 		assetAddress,
 		big.NewInt(21_000),
-		sdkmath.NewUint(1000),
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)
@@ -186,7 +183,6 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 			"test",
 			8,
 			nil,
-			sdkmath.NewUint(1000),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -211,7 +207,6 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 			"test",
 			8,
 			nil,
-			sdkmath.NewUint(1000),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -240,7 +235,6 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 			"test",
 			8,
 			nil,
-			sdkmath.NewUint(1000),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -272,7 +266,6 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 			"test",
 			8,
 			nil,
-			sdkmath.NewUint(1000),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -305,7 +298,6 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 			"test",
 			8,
 			nil,
-			sdkmath.NewUint(1000),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -339,7 +331,6 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 			"test",
 			8,
 			nil,
-			sdkmath.NewUint(1000),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -380,7 +371,6 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 			"test",
 			8,
 			nil,
-			sdkmath.NewUint(1000),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -424,7 +414,6 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 			"test",
 			8,
 			nil,
-			sdkmath.NewUint(1000),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -468,7 +457,6 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 			"test",
 			8,
 			nil,
-			sdkmath.NewUint(1000),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)

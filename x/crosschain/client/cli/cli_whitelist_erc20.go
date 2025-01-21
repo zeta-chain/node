@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -15,9 +14,9 @@ import (
 
 func CmdWhitelistERC20() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "whitelist-erc20 [erc20Address] [chainID] [name] [symbol] [decimals] [gasLimit] [liquidityCap]",
+		Use:   "whitelist-erc20 [erc20Address] [chainID] [name] [symbol] [decimals] [gasLimit]",
 		Short: "Add a new erc20 token to whitelist",
-		Args:  cobra.ExactArgs(7),
+		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -45,8 +44,6 @@ func CmdWhitelistERC20() *cobra.Command {
 				return err
 			}
 
-			liquidityCap := sdkmath.NewUintFromString(args[6])
-
 			msg := types.NewMsgWhitelistERC20(
 				clientCtx.GetFromAddress().String(),
 				erc20Address,
@@ -56,7 +53,6 @@ func CmdWhitelistERC20() *cobra.Command {
 				// #nosec G115 always in range
 				uint32(decimals),
 				gasLimit,
-				liquidityCap,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

@@ -58,7 +58,6 @@ func (k msgServer) DeployFungibleCoinZRC20(
 			msg.Symbol,
 			uint8(msg.Decimals),
 			big.NewInt(msg.GasLimit),
-			msg.LiquidityCap,
 		)
 		if err != nil {
 			return nil, cosmoserrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
@@ -74,7 +73,6 @@ func (k msgServer) DeployFungibleCoinZRC20(
 			msg.CoinType,
 			msg.ERC20,
 			big.NewInt(msg.GasLimit),
-			msg.LiquidityCap,
 		)
 		if err != nil {
 			return nil, err

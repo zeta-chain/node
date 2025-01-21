@@ -98,7 +98,6 @@ func (k msgServer) WhitelistERC20(
 		coin.CoinType_ERC20,
 		msg.Erc20Address,
 		big.NewInt(msg.GasLimit),
-		msg.LiquidityCap,
 	)
 	if err != nil {
 		return nil, errorsmod.Wrapf(
@@ -172,8 +171,7 @@ func (k msgServer) WhitelistERC20(
 		Symbol:               msg.Symbol,
 		CoinType:             coin.CoinType_ERC20,
 		// #nosec G115 always positive
-		GasLimit:     uint64(msg.GasLimit),
-		LiquidityCap: msg.LiquidityCap,
+		GasLimit: uint64(msg.GasLimit),
 	}
 	k.fungibleKeeper.SetForeignCoins(ctx, foreignCoin)
 	k.SaveCCTXUpdate(ctx, cctx, tss.TssPubkey)

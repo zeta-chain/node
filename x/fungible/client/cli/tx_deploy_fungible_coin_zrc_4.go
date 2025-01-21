@@ -3,7 +3,6 @@ package cli
 import (
 	"strconv"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -15,9 +14,9 @@ import (
 
 func CmdDeployFungibleCoinZRC4() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "deploy-fungible-coin-zrc-4 [erc-20] [foreign-chain] [decimals] [name] [symbol] [coin-type] [gas-limit] [liquidity-cap]",
+		Use:   "deploy-fungible-coin-zrc-4 [erc-20] [foreign-chain] [decimals] [name] [symbol] [coin-type] [gas-limit]",
 		Short: "Broadcast message DeployFungibleCoinZRC20",
-		Args:  cobra.ExactArgs(8),
+		Args:  cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argERC20 := args[0]
 			argForeignChain, err := strconv.ParseInt(args[1], 10, 32)
@@ -38,7 +37,6 @@ func CmdDeployFungibleCoinZRC4() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argLiquidityCap := sdkmath.NewUintFromString(args[7])
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -54,7 +52,6 @@ func CmdDeployFungibleCoinZRC4() *cobra.Command {
 				argSymbol,
 				coin.CoinType(argCoinType),
 				argGasLimit,
-				argLiquidityCap,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

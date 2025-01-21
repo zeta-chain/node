@@ -2,7 +2,6 @@ package types
 
 import (
 	cosmoserrors "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/pkg/errors"
@@ -16,15 +15,8 @@ const TypeMsgWhitelistERC20 = "whitelist_erc20"
 var _ sdk.Msg = &MsgWhitelistERC20{}
 
 func NewMsgWhitelistERC20(
-	creator string,
-	erc20Address string,
-	chainID int64,
-	name string,
-	symbol string,
-	decimals uint32,
-	gasLimit int64,
-	liquidityCap sdkmath.Uint,
-) *MsgWhitelistERC20 {
+	creator string, erc20Address string, chainID int64, name string,
+	symbol string, decimals uint32, gasLimit int64) *MsgWhitelistERC20 {
 	return &MsgWhitelistERC20{
 		Creator:      creator,
 		Erc20Address: erc20Address,
@@ -33,7 +25,6 @@ func NewMsgWhitelistERC20(
 		Symbol:       symbol,
 		Decimals:     decimals,
 		GasLimit:     gasLimit,
-		LiquidityCap: liquidityCap,
 	}
 }
 
@@ -72,10 +63,6 @@ func (msg *MsgWhitelistERC20) ValidateBasic() error {
 	if msg.GasLimit <= 0 {
 		return cosmoserrors.Wrapf(types.ErrInvalidGasLimit, "invalid gas limit (%d)", msg.GasLimit)
 	}
-	if msg.LiquidityCap.IsNil() {
-		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "liquidity cap is nil")
-	}
-
 	return nil
 }
 
