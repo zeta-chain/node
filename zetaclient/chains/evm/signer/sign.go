@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	connectorevm "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.base.sol"
 
-	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 )
 
 // SignConnectorOnReceive
@@ -108,7 +108,7 @@ func (signer *Signer) SignConnectorOnRevert(ctx context.Context, txData *Outboun
 
 // SignCancel signs a transaction from TSS address to itself with a zero amount in order to increment the nonce
 func (signer *Signer) SignCancel(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
-	txData.gas.Limit = evm.EthTransferGasLimit
+	txData.gas.Limit = common.EthTransferGasLimit
 	tx, _, _, err := signer.Sign(
 		ctx,
 		nil,
@@ -127,7 +127,7 @@ func (signer *Signer) SignCancel(ctx context.Context, txData *OutboundData) (*et
 
 // SignGasWithdraw signs a withdrawal transaction sent from the TSS address to the destination
 func (signer *Signer) SignGasWithdraw(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
-	txData.gas.Limit = evm.EthTransferGasLimit
+	txData.gas.Limit = common.EthTransferGasLimit
 	tx, _, _, err := signer.Sign(
 		ctx,
 		nil,

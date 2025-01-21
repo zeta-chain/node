@@ -20,7 +20,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
@@ -346,7 +346,7 @@ func ParseAndCheckZetaEvent(
 		// try parsing ZetaReceived event
 		received, err := connector.ZetaConnectorNonEthFilterer.ParseZetaReceived(*vLog)
 		if err == nil {
-			err = evm.ValidateEvmTxLog(vLog, connectorAddr, receipt.TxHash.Hex(), evm.TopicsZetaReceived)
+			err = common.ValidateEvmTxLog(vLog, connectorAddr, receipt.TxHash.Hex(), common.TopicsZetaReceived)
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "error validating ZetaReceived event")
 			}
@@ -367,7 +367,7 @@ func ParseAndCheckZetaEvent(
 		// try parsing ZetaReverted event
 		reverted, err := connector.ZetaConnectorNonEthFilterer.ParseZetaReverted(*vLog)
 		if err == nil {
-			err = evm.ValidateEvmTxLog(vLog, connectorAddr, receipt.TxHash.Hex(), evm.TopicsZetaReverted)
+			err = common.ValidateEvmTxLog(vLog, connectorAddr, receipt.TxHash.Hex(), common.TopicsZetaReverted)
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "error validating ZetaReverted event")
 			}
@@ -403,7 +403,7 @@ func ParseAndCheckWithdrawnEvent(
 	for _, vLog := range receipt.Logs {
 		withdrawn, err := custody.ParseWithdrawn(*vLog)
 		if err == nil {
-			err = evm.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), evm.TopicsWithdrawn)
+			err = common.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), common.TopicsWithdrawn)
 			if err != nil {
 				return nil, errors.Wrap(err, "error validating Withdrawn event")
 			}

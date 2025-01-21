@@ -25,7 +25,7 @@ import (
 	"github.com/zeta-chain/node/pkg/memo"
 	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
@@ -326,7 +326,7 @@ func (ob *Observer) ObserveZetaSent(ctx context.Context, startBlock, toBlock uin
 	events := make([]*zetaconnector.ZetaConnectorNonEthZetaSent, 0)
 	for iter.Next() {
 		// sanity check tx event
-		err := evm.ValidateEvmTxLog(&iter.Event.Raw, addrConnector, "", evm.TopicsZetaSent)
+		err := common.ValidateEvmTxLog(&iter.Event.Raw, addrConnector, "", common.TopicsZetaSent)
 		if err == nil {
 			events = append(events, iter.Event)
 			continue
@@ -406,7 +406,7 @@ func (ob *Observer) ObserveERC20Deposited(ctx context.Context, startBlock, toBlo
 	events := make([]*erc20custody.ERC20CustodyDeposited, 0)
 	for iter.Next() {
 		// sanity check tx event
-		err := evm.ValidateEvmTxLog(&iter.Event.Raw, addrCustody, "", evm.TopicsDeposited)
+		err := common.ValidateEvmTxLog(&iter.Event.Raw, addrCustody, "", common.TopicsDeposited)
 		if err == nil {
 			events = append(events, iter.Event)
 			continue
@@ -523,7 +523,7 @@ func (ob *Observer) CheckAndVoteInboundTokenZeta(
 		event, err := connector.ParseZetaSent(*log)
 		if err == nil && event != nil {
 			// sanity check tx event
-			err = evm.ValidateEvmTxLog(&event.Raw, addrConnector, tx.Hash, evm.TopicsZetaSent)
+			err = common.ValidateEvmTxLog(&event.Raw, addrConnector, tx.Hash, common.TopicsZetaSent)
 			if err == nil {
 				msg = ob.BuildInboundVoteMsgForZetaSentEvent(app, event)
 			} else {
@@ -574,7 +574,7 @@ func (ob *Observer) CheckAndVoteInboundTokenERC20(
 		zetaDeposited, err := custody.ParseDeposited(*log)
 		if err == nil && zetaDeposited != nil {
 			// sanity check tx event
-			err = evm.ValidateEvmTxLog(&zetaDeposited.Raw, addrCustody, tx.Hash, evm.TopicsDeposited)
+			err = common.ValidateEvmTxLog(&zetaDeposited.Raw, addrCustody, tx.Hash, common.TopicsDeposited)
 			if err == nil {
 				msg = ob.BuildInboundVoteMsgForDepositedEvent(zetaDeposited, sender)
 			} else {

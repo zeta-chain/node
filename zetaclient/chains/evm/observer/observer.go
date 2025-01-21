@@ -21,8 +21,8 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/evm"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/metrics"
@@ -234,7 +234,7 @@ func (ob *Observer) TransactionByHash(txHash string) (*ethrpc.Transaction, bool,
 	if err != nil {
 		return nil, false, err
 	}
-	err = evm.ValidateEvmTransaction(tx)
+	err = common.ValidateEvmTransaction(tx)
 	if err != nil {
 		return nil, false, err
 	}
@@ -281,7 +281,7 @@ func (ob *Observer) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
 		return nil, fmt.Errorf("block not found: %d", blockNumber)
 	}
 	for i := range block.Transactions {
-		err := evm.ValidateEvmTransaction(&block.Transactions[i])
+		err := common.ValidateEvmTransaction(&block.Transactions[i])
 		if err != nil {
 			return nil, err
 		}
