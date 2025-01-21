@@ -1,7 +1,6 @@
 package bank
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"math/big"
 	"testing"
 
@@ -635,7 +634,6 @@ func setupGasCoin(
 		symbol,
 		8,
 		nil,
-		sdkmath.NewUintFromString("100000000000000000000000000"),
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, *evmk, ctx, addr)

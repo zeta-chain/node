@@ -508,7 +508,6 @@ func setupGasCoin(
 		symbol,
 		8,
 		nil,
-		math.NewUintFromString("100000000000000000000000000"),
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, *evmk, ctx, addr)
