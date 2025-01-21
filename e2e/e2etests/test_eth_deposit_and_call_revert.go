@@ -36,8 +36,6 @@ func TestETHDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "deposit")
 	require.Equal(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
 
-	r.Logger.Print("Reverted CCTX mined %s", cctx.Index)
-
 	// check the balance is more than 0
 	balance, err = r.EVMClient.BalanceAt(r.Ctx, revertAddress, nil)
 	require.NoError(r, err)

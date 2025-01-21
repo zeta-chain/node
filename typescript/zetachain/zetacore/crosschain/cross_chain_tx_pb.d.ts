@@ -419,44 +419,6 @@ export declare class Status extends Message<Status> {
 }
 
 /**
- * StatusMessages is a message that carries status and error messages for a
- * cctx Currently this is only used internally to pass messages when updating
- * the status
- *
- * @generated from message zetachain.zetacore.crosschain.StatusMessages
- */
-export declare class StatusMessages extends Message<StatusMessages> {
-  /**
-   * @generated from field: string status_message = 1;
-   */
-  statusMessage: string;
-
-  /**
-   * @generated from field: string error_message_outbound = 2;
-   */
-  errorMessageOutbound: string;
-
-  /**
-   * @generated from field: string error_message_revert = 3;
-   */
-  errorMessageRevert: string;
-
-  constructor(data?: PartialMessage<StatusMessages>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.StatusMessages";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): StatusMessages;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): StatusMessages;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): StatusMessages;
-
-  static equals(a: StatusMessages | PlainMessage<StatusMessages> | undefined, b: StatusMessages | PlainMessage<StatusMessages> | undefined): boolean;
-}
-
-/**
  * RevertOptions represents the options for reverting a cctx
  *
  * @generated from message zetachain.zetacore.crosschain.RevertOptions

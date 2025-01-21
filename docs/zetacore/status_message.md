@@ -14,16 +14,16 @@ type Status struct {
 ```
 
 ## Status 
-This is the most updated status for the cctx . This can be one of the following values
-- `PendingInbound` : The cctx is pending for the inbound to be finalized , this is an intermediately status used by the protocol only
-- `PendingOutbound` : This means that the inbound has been finalzied, and the outbound is pending
+This is the most updated status for the cctx. This can be one of the following values
+- `PendingInbound` : The cctx is pending for the inbound to be finalized, this is an intermediate status used by the protocol only
+- `PendingOutbound` : This means that the inbound has been finalized, and the outbound is pending
 - `OutboundMined` : The outbound has been successfully mined. This is a terminal status
 - `Aborted` : The cctx has been aborted. This is a terminal status
 - `PendingRevert` : The the cctx failed at some step and is pending for the revert to be finalized
 - `Reverted` : The cctx has been successfully reverted. This is a terminal status
 
 ### StatusMessage
-The status message provides a some details about the current status.This is primiary meant for the user to quickly understand the status of the cctx.
+The status message provides a some details about the current status.This is primarily meant for the user to quickly understand the status of the cctx.
 ### LastUpdateTimestamp
 The last time the status was updated
 ### IsAbortRefunded
@@ -49,7 +49,7 @@ A cctx can have a maximum of two outbound params. We can refer to the first outb
 - `outbound failed for admin tx` : The outbound failed for an admin transaction, in this case we do not revert the cctx
 - `outbound failed unable to process` : The outbound processing failed at the protocol level. When this happens, the protocol sets the cctx to aborted.
 - `outbound failed but the universal contract did not revert` :  The outbound/deposit failed, but the contract did not revert,
-   this is most likely caused by an internal error in the protocol.The CCTX is this case is aborted. Users can try connecting with the zetachain team to get a refund
+   this is most likely caused by an internal error in the protocol. The CCTX is this case is aborted. Users can try connecting with the zetachain team to get a refund
 - `cctx aborted through MsgAbortStuckCCTX` : The cctx was aborted manually by an admin command
 
 
@@ -57,11 +57,24 @@ A cctx can have a maximum of two outbound params. We can refer to the first outb
 
 - For a failed deposit, the ErrorMessage would contain the following fields. The protocol generates the fields tagged as internal.
 ```
+  - message [Internal]: A message from the protocol to explain the error
   - method: The method that was called by the protocol
   - contract: The contract that his method was called on
-  - args:The argumets that were used for this call
-  - errorMessage[Internal]: Error message from the ZEVM call
-  - revertReason: Revert reason from the smart contract
+  - args:The arguments that were used for this call
+  - error : Error message from the ZEVM call
+  - revert_reason: Revert reason from the smart contract call, if any
+```
+Sample error message for a failed deposit
+
+```json
+{
+ "message": "contract call failed when calling EVM with data",
+ "method": "depositAndCall0",
+ "contract": "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
+ "args": "[{[]0xdFb74337c53141bf912101b0Ee770FA8e2DCB921 1337} 0x13A0c5930C028511Dc02665E7285134B6d11A5f410000000000000000 0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca [114 101 118 101114 116]]",
+ "error": "execution reverted: ret 0x: evm transaction execution failed",
+ "revert_reason": ""
+}
 ```
 
 - `outbound tx failed to be executed on connected chain` : `revert tx failed to be executed on connected chain` : The outbound/revert transaction failed to be executed on the connected chain.

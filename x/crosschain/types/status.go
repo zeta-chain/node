@@ -4,6 +4,12 @@ import (
 	"fmt"
 )
 
+type StatusMessages struct {
+	StatusMessage        string `json:"status_message"`
+	ErrorMessageOutbound string `json:"error_message_outbound"`
+	ErrorMessageRevert   string `json:"error_message_revert"`
+}
+
 func (m *Status) AbortRefunded() {
 	m.IsAbortRefunded = true
 	m.StatusMessage = "CCTX aborted and Refunded"
@@ -32,6 +38,7 @@ func (m *Status) UpdateStatus(newStatus CctxStatus) {
 func (m *Status) UpdateErrorMessages(messages StatusMessages) {
 	// Always update the status message, status should contain only the most recent update
 	m.StatusMessage = messages.StatusMessage
+
 	if messages.ErrorMessageOutbound != "" {
 		m.ErrorMessage = messages.ErrorMessageOutbound
 	}

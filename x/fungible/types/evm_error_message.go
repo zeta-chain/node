@@ -40,3 +40,13 @@ func (e *EvmErrorMessage) ToJSON() (string, error) {
 	}
 	return string(jsonData), nil
 }
+
+// Write a function to parse Json string to EvmErrorMessage
+func ParseEvmErrorMessage(jsonData string) (EvmErrorMessage, error) {
+	var evmErrorMessage EvmErrorMessage
+	err := json.Unmarshal([]byte(jsonData), &evmErrorMessage)
+	if err != nil {
+		return EvmErrorMessage{}, fmt.Errorf("error unmarshalling JSON to EvmErrorMessage: %v", err)
+	}
+	return evmErrorMessage, nil
+}

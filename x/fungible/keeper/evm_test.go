@@ -684,10 +684,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 		require.True(t, types.IsContractReverted(res, err))
 
 		// check reason is included for revert error
-
-		// Check for ,\"revertReason\":\"0xbfb4ebcf\" in the error message
-		require.Contains(t, err.Error(), fmt.Sprintf("\"revertReason\":\"%s\"", utils.ErrHashRevertFoo))
-		//require.ErrorContains(t, err, fmt.Sprintf("reason: %s", utils.ErrHashRevertFoo))
+		require.Contains(t, err.Error(), fmt.Sprintf("\"revert_reason\":\"%s\"", utils.ErrHashRevertFoo))
 
 		res, err = k.CallEVM(
 			ctx,

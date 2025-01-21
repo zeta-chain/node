@@ -31,8 +31,6 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_Aborted)
 	require.False(r, cctx.CctxStatus.IsAbortRefunded, "expected cctx status to be not refunded")
 
-	r.Logger.Print("CCTX has been aborted on ZetaChain %s", cctx.Index)
-
 	r.Logger.CCTX(*cctx, "deposit")
 	r.Logger.Info("Refunding the cctx via admin")
 
