@@ -285,6 +285,7 @@ func Test_CheckAndUpdateCCTXGasPrice(t *testing.T) {
 	for _, tc := range tt {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			// ARRANGE
 			k, ctx := testkeeper.CrosschainKeeperAllMocks(t)
 			fungibleMock := testkeeper.GetCrosschainFungibleMock(t, k)
 			authorityMock := testkeeper.GetCrosschainAuthorityMock(t, k)
@@ -321,9 +322,11 @@ func Test_CheckAndUpdateCCTXGasPrice(t *testing.T) {
 				).Return(tc.withdrawFromGasStabilityPoolReturn)
 			}
 
+			// ACT
 			// check and update gas price
 			gasPriceIncrease, feesPaid, err := keeper.CheckAndUpdateCCTXGasPrice(ctx, *k, tc.cctx, tc.flags)
 
+			// ASSERT
 			if tc.isError {
 				require.Error(t, err)
 				return
@@ -386,7 +389,7 @@ func Test_CheckAndUpdateCCTXGasPriceEVM(t *testing.T) {
 		{
 			name: "can update gas price",
 			cctx: types.CrossChainTx{
-				Index: "a1",
+				Index: sample.ZetaIndex(t),
 				CctxStatus: &types.Status{
 					CreatedTimestamp:    sampleTimestamp.Unix(),
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
@@ -413,7 +416,7 @@ func Test_CheckAndUpdateCCTXGasPriceEVM(t *testing.T) {
 		{
 			name: "can update gas price at max limit",
 			cctx: types.CrossChainTx{
-				Index: "a2",
+				Index: sample.ZetaIndex(t),
 				CctxStatus: &types.Status{
 					CreatedTimestamp:    sampleTimestamp.Unix(),
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
@@ -445,7 +448,7 @@ func Test_CheckAndUpdateCCTXGasPriceEVM(t *testing.T) {
 		{
 			name: "default gas price increase limit used if not defined",
 			cctx: types.CrossChainTx{
-				Index: "a3",
+				Index: sample.ZetaIndex(t),
 				CctxStatus: &types.Status{
 					CreatedTimestamp:    sampleTimestamp.Unix(),
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
@@ -477,7 +480,7 @@ func Test_CheckAndUpdateCCTXGasPriceEVM(t *testing.T) {
 		{
 			name: "skip if max limit reached",
 			cctx: types.CrossChainTx{
-				Index: "b",
+				Index: sample.ZetaIndex(t),
 				CctxStatus: &types.Status{
 					CreatedTimestamp:    sampleTimestamp.Unix(),
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
@@ -508,7 +511,7 @@ func Test_CheckAndUpdateCCTXGasPriceEVM(t *testing.T) {
 		{
 			name: "returns error if can't withdraw from gas stability pool",
 			cctx: types.CrossChainTx{
-				Index: "c",
+				Index: sample.ZetaIndex(t),
 				CctxStatus: &types.Status{
 					CreatedTimestamp:    sampleTimestamp.Unix(),
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
@@ -537,6 +540,7 @@ func Test_CheckAndUpdateCCTXGasPriceEVM(t *testing.T) {
 	for _, tc := range tt {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			// ARRANGE
 			k, ctx := testkeeper.CrosschainKeeperAllMocks(t)
 			fungibleMock := testkeeper.GetCrosschainFungibleMock(t, k)
 			chainID := tc.cctx.GetCurrentOutboundParam().ReceiverChainId
@@ -554,6 +558,7 @@ func Test_CheckAndUpdateCCTXGasPriceEVM(t *testing.T) {
 				).Return(tc.withdrawFromGasStabilityPoolReturn)
 			}
 
+			// ACT
 			// check and update gas price
 			gasPriceIncrease, feesPaid, err := keeper.CheckAndUpdateCCTXGasPriceEVM(
 				ctx,
@@ -564,6 +569,7 @@ func Test_CheckAndUpdateCCTXGasPriceEVM(t *testing.T) {
 				tc.flags,
 			)
 
+			// ASSERT
 			if tc.isError {
 				require.Error(t, err)
 				return
@@ -620,7 +626,7 @@ func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 		{
 			name: "can update fee rate",
 			cctx: types.CrossChainTx{
-				Index: "a",
+				Index: sample.ZetaIndex(t),
 				CctxStatus: &types.Status{
 					CreatedTimestamp:    sampleTimestamp.Unix(),
 					LastUpdateTimestamp: sampleTimestamp.Unix(),
@@ -642,11 +648,13 @@ func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 	for _, tc := range tt {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			// ARRANGE
 			k, ctx := testkeeper.CrosschainKeeperAllMocks(t)
 
 			// set block timestamp
 			ctx = ctx.WithBlockTime(tc.blockTimestamp)
 
+			// ACT
 			// check and update gas rate
 			gasPriceIncrease, feesPaid, err := keeper.CheckAndUpdateCCTXGasPriceBTC(
 				ctx,
@@ -654,6 +662,8 @@ func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 				math.NewUint(tc.medianGasPrice),
 				tc.cctx,
 			)
+
+			// ASSERT
 			require.NoError(t, err)
 
 			// check values
@@ -683,8 +693,18 @@ func Test_IsCCTXGasPriceUpdateSupported(t *testing.T) {
 			isSupport: false,
 		},
 		{
+			name:      "Zetachain testnet is unsupported for gas price update",
+			chainID:   chains.ZetaChainTestnet.ChainId,
+			isSupport: false,
+		},
+		{
 			name:      "Ethereum is supported for gas price update",
 			chainID:   chains.Ethereum.ChainId,
+			isSupport: true,
+		},
+		{
+			name:      "Ethereum Sepolia is supported for gas price update",
+			chainID:   chains.Sepolia.ChainId,
 			isSupport: true,
 		},
 		{
@@ -693,8 +713,18 @@ func Test_IsCCTXGasPriceUpdateSupported(t *testing.T) {
 			isSupport: true,
 		},
 		{
+			name:      "BSC testnet is supported for gas price update",
+			chainID:   chains.BscTestnet.ChainId,
+			isSupport: true,
+		},
+		{
 			name:      "Polygon is supported for gas price update",
 			chainID:   chains.Polygon.ChainId,
+			isSupport: true,
+		},
+		{
+			name:      "Polygon Amoy is supported for gas price update",
+			chainID:   chains.Amoy.ChainId,
 			isSupport: true,
 		},
 		{
@@ -703,8 +733,18 @@ func Test_IsCCTXGasPriceUpdateSupported(t *testing.T) {
 			isSupport: true,
 		},
 		{
+			name:      "Base Sepolia is supported for gas price update",
+			chainID:   chains.BaseSepolia.ChainId,
+			isSupport: true,
+		},
+		{
 			name:      "Bitcoin is supported for gas price update",
 			chainID:   chains.BitcoinMainnet.ChainId,
+			isSupport: true,
+		},
+		{
+			name:      "Bitcoin testnet is supported for gas price update",
+			chainID:   chains.BitcoinTestnet4.ChainId,
 			isSupport: true,
 		},
 		{
@@ -713,8 +753,18 @@ func Test_IsCCTXGasPriceUpdateSupported(t *testing.T) {
 			isSupport: false,
 		},
 		{
+			name:      "Solana devnet is unsupported for gas price update",
+			chainID:   chains.SolanaDevnet.ChainId,
+			isSupport: false,
+		},
+		{
 			name:      "TON is unsupported for gas price update",
 			chainID:   chains.TONMainnet.ChainId,
+			isSupport: false,
+		},
+		{
+			name:      "TON testnet is unsupported for gas price update",
+			chainID:   chains.TONTestnet.ChainId,
 			isSupport: false,
 		},
 	}

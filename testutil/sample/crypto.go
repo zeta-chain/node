@@ -91,7 +91,7 @@ func EthAddressFromRand(r *rand.Rand) ethcommon.Address {
 	return ethcommon.BytesToAddress(sdk.AccAddress(PubKey(r).Address()).Bytes())
 }
 
-// BtcAddressP2WPKH returns a sample btc P2WPKH address
+// BtcAddressP2WPKH returns a sample Bitcoin Pay-to-Witness-Public-Key-Hash (P2WPKH) address
 func BtcAddressP2WPKH(t *testing.T, net *chaincfg.Params) *btcutil.AddressWitnessPubKeyHash {
 	privateKey, err := btcec.NewPrivateKey()
 	require.NoError(t, err)

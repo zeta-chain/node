@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	zetachains "github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/chains"
 	mathpkg "github.com/zeta-chain/node/pkg/math"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -31,7 +31,7 @@ type CheckAndUpdateCCTXGasPriceFunc func(
 // The function returns the number of cctxs updated and the gas price increase flags used
 func (k Keeper) IterateAndUpdateCCTXGasPrice(
 	ctx sdk.Context,
-	chains []zetachains.Chain,
+	chains []chains.Chain,
 	updateFunc CheckAndUpdateCCTXGasPriceFunc,
 ) (int, observertypes.GasPriceIncreaseFlags) {
 	// fetch the gas price increase flags or use default
@@ -70,31 +70,35 @@ IterateChains:
 
 		// iterate through all pending cctx
 		for _, pendingCctx := range res.CrossChainTx {
-			if pendingCctx != nil {
-				gasPriceIncrease, additionalFees, err := updateFunc(ctx, k, *pendingCctx, gasPriceIncreaseFlags)
-				if err != nil {
-					ctx.Logger().Info("GasStabilityPool: updating gas price for pending cctx failed",
-						"cctxIndex", pendingCctx.Index,
-						"err", err.Error(),
-					)
-					continue IterateChains
-				}
-				if !gasPriceIncrease.IsNil() && !gasPriceIncrease.IsZero() {
-					// Emit typed event for gas price increase
-					if err := ctx.EventManager().EmitTypedEvent(
-						&types.EventCCTXGasPriceIncreased{
-							CctxIndex:        pendingCctx.Index,
-							GasPriceIncrease: gasPriceIncrease.String(),
-							AdditionalFees:   additionalFees.String(),
-						}); err != nil {
-						ctx.Logger().Error(
-							"GasStabilityPool: failed to emit EventCCTXGasPriceIncreased",
-							"err", err.Error(),
-						)
-					}
-					cctxCount++
-				}
+			if pendingCctx == nil {
+				continue
 			}
+
+			gasPriceIncrease, additionalFees, err := updateFunc(ctx, k, *pendingCctx, gasPriceIncreaseFlags)
+			if err != nil {
+				ctx.Logger().Info("GasStabilityPool: updating gas price for pending cctx failed",
+					"cctxIndex", pendingCctx.Index,
+					"err", err.Error(),
+				)
+				continue IterateChains
+			}
+			if gasPriceIncrease.IsNil() || gasPriceIncrease.IsZero() {
+				continue
+			}
+
+			// Emit typed event for gas price increase
+			if err := ctx.EventManager().EmitTypedEvent(
+				&types.EventCCTXGasPriceIncreased{
+					CctxIndex:        pendingCctx.Index,
+					GasPriceIncrease: gasPriceIncrease.String(),
+					AdditionalFees:   additionalFees.String(),
+				}); err != nil {
+				ctx.Logger().Error(
+					"GasStabilityPool: failed to emit EventCCTXGasPriceIncreased",
+					"err", err.Error(),
+				)
+			}
+			cctxCount++
 		}
 	}
 
@@ -133,9 +137,9 @@ func CheckAndUpdateCCTXGasPrice(
 	// dispatch to chain-specific gas price update function
 	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
 	switch {
-	case zetachains.IsEVMChain(chainID, additionalChains):
+	case chains.IsEVMChain(chainID, additionalChains):
 		return CheckAndUpdateCCTXGasPriceEVM(ctx, k, medianGasPrice, medianPriorityFee, cctx, flags)
-	case zetachains.IsBitcoinChain(chainID, additionalChains):
+	case chains.IsBitcoinChain(chainID, additionalChains):
 		return CheckAndUpdateCCTXGasPriceBTC(ctx, k, medianGasPrice, cctx)
 	default:
 		return math.ZeroUint(), math.ZeroUint(), nil
@@ -150,10 +154,10 @@ func CheckAndUpdateCCTXGasPriceEVM(
 	medianPriorityFee math.Uint,
 	cctx types.CrossChainTx,
 	flags observertypes.GasPriceIncreaseFlags,
-) (math.Uint, math.Uint, error) {
+) (gasPriceIncrease math.Uint, additionalFees math.Uint, err error) {
 	// compute gas price increase
 	chainID := cctx.GetCurrentOutboundParam().ReceiverChainId
-	gasPriceIncrease := medianGasPrice.MulUint64(uint64(flags.GasPriceIncreasePercent)).QuoUint64(100)
+	gasPriceIncrease = medianGasPrice.MulUint64(uint64(flags.GasPriceIncreasePercent)).QuoUint64(100)
 
 	// compute new gas price
 	currentGasPrice, err := cctx.GetCurrentOutboundParam().GetGasPriceUInt64()
@@ -185,7 +189,7 @@ func CheckAndUpdateCCTXGasPriceEVM(
 
 	// withdraw additional fees from the gas stability pool
 	gasLimit := math.NewUint(cctx.GetCurrentOutboundParam().CallOptions.GasLimit)
-	additionalFees := gasLimit.Mul(gasPriceIncrease)
+	additionalFees = gasLimit.Mul(gasPriceIncrease)
 	if err := k.fungibleKeeper.WithdrawFromGasStabilityPool(ctx, chainID, additionalFees.BigInt()); err != nil {
 		return math.ZeroUint(), math.ZeroUint(), cosmoserrors.Wrap(
 			types.ErrNotEnoughFunds,
@@ -207,7 +211,7 @@ func CheckAndUpdateCCTXGasPriceBTC(
 	k Keeper,
 	medianGasPrice math.Uint,
 	cctx types.CrossChainTx,
-) (math.Uint, math.Uint, error) {
+) (gasPriceIncrease math.Uint, additionalFees math.Uint, err error) {
 	// zetacore simply update 'GasPriorityFee', and zetaclient will use it to schedule RBF tx
 	// there is no priority fee in Bitcoin, the 'GasPriorityFee' is repurposed to store latest fee rate in sat/vB
 	cctx.GetCurrentOutboundParam().GasPriorityFee = medianGasPrice.String()
@@ -217,13 +221,12 @@ func CheckAndUpdateCCTXGasPriceBTC(
 }
 
 // IsCCTXGasPriceUpdateSupported checks if the given chain supports gas price update
-func IsCCTXGasPriceUpdateSupported(chainID int64, additionalChains []zetachains.Chain) bool {
+func IsCCTXGasPriceUpdateSupported(chainID int64, additionalChains []chains.Chain) bool {
 	switch {
-	case zetachains.IsZetaChain(chainID, additionalChains):
+	case chains.IsZetaChain(chainID, additionalChains):
 		return false
-	case zetachains.IsEVMChain(chainID, additionalChains):
-		return true
-	case zetachains.IsBitcoinChain(chainID, additionalChains):
+	case chains.IsEVMChain(chainID, additionalChains),
+		chains.IsBitcoinChain(chainID, additionalChains):
 		return true
 	default:
 		return false
