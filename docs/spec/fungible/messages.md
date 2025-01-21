@@ -43,7 +43,6 @@ message MsgDeployFungibleCoinZRC20 {
 	string symbol = 6;
 	pkg.coin.CoinType coin_type = 7;
 	int64 gas_limit = 8;
-	string liquidity_cap = 9;
 }
 ```
 

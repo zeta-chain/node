@@ -227,11 +227,6 @@ export declare class MsgDeployFungibleCoinZRC20 extends Message<MsgDeployFungibl
    */
   gasLimit: bigint;
 
-  /**
-   * @generated from field: string liquidity_cap = 9;
-   */
-  liquidityCap: string;
-
   constructor(data?: PartialMessage<MsgDeployFungibleCoinZRC20>);
 
   static readonly runtime: typeof proto3;
