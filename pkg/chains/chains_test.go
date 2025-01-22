@@ -37,6 +37,9 @@ func TestChainListByNetworkType(t *testing.T) {
 				chains.BaseMainnet,
 				chains.SolanaMainnet,
 				chains.TONMainnet,
+				chains.AvalancheMainnet,
+				chains.ArbitrumMainnet,
+				chains.WorldMainnet,
 			},
 		},
 		{
@@ -56,6 +59,9 @@ func TestChainListByNetworkType(t *testing.T) {
 				chains.BaseSepolia,
 				chains.SolanaDevnet,
 				chains.TONTestnet,
+				chains.AvalancheTestnet,
+				chains.ArbitrumSepolia,
+				chains.WorldTestnet,
 			},
 		},
 		{
@@ -179,6 +185,12 @@ func TestDefaultChainList(t *testing.T) {
 		chains.TONMainnet,
 		chains.TONTestnet,
 		chains.TONLocalnet,
+		chains.AvalancheMainnet,
+		chains.AvalancheTestnet,
+		chains.ArbitrumSepolia,
+		chains.ArbitrumMainnet,
+		chains.WorldMainnet,
+		chains.WorldTestnet,
 	}, chains.DefaultChainsList())
 }
 
@@ -216,7 +228,12 @@ func TestChainListByGateway(t *testing.T) {
 				chains.TONMainnet,
 				chains.TONTestnet,
 				chains.TONLocalnet,
-			},
+				chains.AvalancheMainnet,
+				chains.AvalancheTestnet,
+				chains.ArbitrumSepolia,
+				chains.ArbitrumMainnet,
+				chains.WorldMainnet,
+				chains.WorldTestnet},
 		},
 		{
 			"zevm",
@@ -263,6 +280,12 @@ func TestExternalChainList(t *testing.T) {
 		chains.TONMainnet,
 		chains.TONTestnet,
 		chains.TONLocalnet,
+		chains.AvalancheMainnet,
+		chains.AvalancheTestnet,
+		chains.ArbitrumSepolia,
+		chains.ArbitrumMainnet,
+		chains.WorldMainnet,
+		chains.WorldTestnet,
 	}, chains.ExternalChainList([]chains.Chain{}))
 }
 

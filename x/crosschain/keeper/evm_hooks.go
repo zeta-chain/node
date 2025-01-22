@@ -133,7 +133,7 @@ func (k Keeper) ProcessZEVMInboundV1(
 
 		// If Validation fails, we will not process the event and return and error. This condition means that the event was correct, and emitted from a registered ZRC20 contract
 		// But the information entered by the user is incorrect. In this case we can return an error and roll back the transaction
-		if err := k.ValidateZRC20WithdrawEvent(ctx, eventZRC20Withdrawal, coin.ForeignChainId); err != nil {
+		if err := k.ValidateZRC20WithdrawEvent(ctx, eventZRC20Withdrawal, coin.ForeignChainId, coin.CoinType); err != nil {
 			return err
 		}
 		// If the event is valid, we will process it and create a new CCTX
@@ -307,14 +307,25 @@ func (k Keeper) ProcessZetaSentEvent(
 
 // ValidateZRC20WithdrawEvent checks if the ZRC20Withdrawal event is valid
 // It verifies event information for BTC chains and returns an error if the event is invalid
-func (k Keeper) ValidateZRC20WithdrawEvent(ctx sdk.Context, event *zrc20.ZRC20Withdrawal, chainID int64) error {
+func (k Keeper) ValidateZRC20WithdrawEvent(
+	ctx sdk.Context,
+	event *zrc20.ZRC20Withdrawal,
+	chainID int64,
+	coinType coin.CoinType,
+) error {
 	// The event was parsed; that means the user has deposited tokens to the contract.
-	return k.validateZRC20Withdrawal(ctx, chainID, event.Value, event.To)
+	return k.validateZRC20Withdrawal(ctx, chainID, coinType, event.Value, event.To)
 }
 
 // validateZRC20Withdrawal validates the data of a ZRC20 Withdrawal event (version 1 or 2)
 // it checks if the withdrawal amount is valid and the destination address is supported depending on the chain
-func (k Keeper) validateZRC20Withdrawal(ctx sdk.Context, chainID int64, value *big.Int, to []byte) error {
+func (k Keeper) validateZRC20Withdrawal(
+	ctx sdk.Context,
+	chainID int64,
+	coinType coin.CoinType,
+	value *big.Int,
+	to []byte,
+) error {
 	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
 	if chains.IsBitcoinChain(chainID, additionalChains) {
 		if value.Cmp(big.NewInt(constant.BTCWithdrawalDustAmount)) < 0 {
@@ -333,7 +344,9 @@ func (k Keeper) validateZRC20Withdrawal(ctx sdk.Context, chainID int64, value *b
 			return errorsmod.Wrapf(types.ErrInvalidAddress, "unsupported address %s", string(to))
 		}
 	} else if chains.IsSolanaChain(chainID, additionalChains) {
-		if value.Cmp(big.NewInt(constant.SolanaWalletRentExempt)) < 0 {
+		// The rent exempt check is not needed for ZRC20 (SPL) tokens because withdrawing SPL token
+		// already needs a non-trivial amount of SOL for potential ATA creation so we can skip the check.
+		if coinType == coin.CoinType_Gas && value.Cmp(big.NewInt(constant.SolanaWalletRentExempt)) < 0 {
 			return errorsmod.Wrapf(
 				types.ErrInvalidWithdrawalAmount,
 				"withdraw amount %s is less than rent exempt %d",

@@ -11,37 +11,38 @@ const (
 	/*
 	  EVM chain tests
 	*/
-	TestETHDepositName                         = "eth_deposit"
-	TestETHDepositAndCallName                  = "eth_deposit_and_call"
-	TestETHDepositAndCallNoMessageName         = "eth_deposit_and_call_no_message"
-	TestETHDepositAndCallRevertName            = "eth_deposit_and_call_revert"
-	TestETHDepositAndCallRevertWithCallName    = "eth_deposit_and_call_revert_with_call"
-	TestETHWithdrawName                        = "eth_withdraw"
-	TestETHWithdrawAndArbitraryCallName        = "eth_withdraw_and_arbitrary_call"
-	TestETHWithdrawAndCallName                 = "eth_withdraw_and_call"
-	TestETHWithdrawAndCallNoMessageName        = "eth_withdraw_and_call_no_message"
-	TestETHWithdrawAndCallThroughContractName  = "eth_withdraw_and_call_through_contract"
-	TestETHWithdrawAndCallRevertName           = "eth_withdraw_and_call_revert"
-	TestETHWithdrawAndCallRevertWithCallName   = "eth_withdraw_and_call_revert_with_call"
-	TestDepositAndCallOutOfGasName             = "deposit_and_call_out_of_gas"
-	TestERC20DepositName                       = "erc20_deposit"
-	TestERC20DepositAndCallName                = "erc20_deposit_and_call"
-	TestERC20DepositAndCallNoMessageName       = "erc20_deposit_and_call_no_message"
-	TestERC20DepositAndCallRevertName          = "erc20_deposit_and_call_revert"
-	TestERC20DepositAndCallRevertWithCallName  = "erc20_deposit_and_call_revert_with_call"
-	TestERC20WithdrawName                      = "erc20_withdraw"
-	TestERC20WithdrawAndArbitraryCallName      = "erc20_withdraw_and_arbitrary_call"
-	TestERC20WithdrawAndCallName               = "erc20_withdraw_and_call"
-	TestERC20WithdrawAndCallNoMessageName      = "erc20_withdraw_and_call_no_message"
-	TestERC20WithdrawAndCallRevertName         = "erc20_withdraw_and_call_revert"
-	TestERC20WithdrawAndCallRevertWithCallName = "erc20_withdraw_and_call_revert_with_call"
-	TestZEVMToEVMArbitraryCallName             = "zevm_to_evm_arbitrary_call"
-	TestZEVMToEVMCallName                      = "zevm_to_evm_call"
-	TestZEVMToEVMCallThroughContractName       = "zevm_to_evm_call_through_contract"
-	TestEVMToZEVMCallName                      = "evm_to_zevm_call"
-	TestDepositAndCallSwapName                 = "deposit_and_call_swap"
-	TestEtherWithdrawRestrictedName            = "eth_withdraw_restricted"
-	TestERC20DepositRestrictedName             = "erc20_deposit_restricted" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestETHDepositName                           = "eth_deposit"
+	TestETHDepositAndCallName                    = "eth_deposit_and_call"
+	TestETHDepositAndCallNoMessageName           = "eth_deposit_and_call_no_message"
+	TestETHDepositAndCallRevertName              = "eth_deposit_and_call_revert"
+	TestETHDepositAndCallRevertWithCallName      = "eth_deposit_and_call_revert_with_call"
+	TestETHWithdrawName                          = "eth_withdraw"
+	TestETHWithdrawAndArbitraryCallName          = "eth_withdraw_and_arbitrary_call"
+	TestETHWithdrawAndCallName                   = "eth_withdraw_and_call"
+	TestETHWithdrawAndCallNoMessageName          = "eth_withdraw_and_call_no_message"
+	TestETHWithdrawAndCallThroughContractName    = "eth_withdraw_and_call_through_contract"
+	TestETHWithdrawAndCallRevertName             = "eth_withdraw_and_call_revert"
+	TestETHWithdrawAndCallRevertWithCallName     = "eth_withdraw_and_call_revert_with_call"
+	TestETHWithdrawAndCallRevertWithWithdrawName = "eth_withdraw_and_call_revert_with_withdraw"
+	TestDepositAndCallOutOfGasName               = "deposit_and_call_out_of_gas"
+	TestERC20DepositName                         = "erc20_deposit"
+	TestERC20DepositAndCallName                  = "erc20_deposit_and_call"
+	TestERC20DepositAndCallNoMessageName         = "erc20_deposit_and_call_no_message"
+	TestERC20DepositAndCallRevertName            = "erc20_deposit_and_call_revert"
+	TestERC20DepositAndCallRevertWithCallName    = "erc20_deposit_and_call_revert_with_call"
+	TestERC20WithdrawName                        = "erc20_withdraw"
+	TestERC20WithdrawAndArbitraryCallName        = "erc20_withdraw_and_arbitrary_call"
+	TestERC20WithdrawAndCallName                 = "erc20_withdraw_and_call"
+	TestERC20WithdrawAndCallNoMessageName        = "erc20_withdraw_and_call_no_message"
+	TestERC20WithdrawAndCallRevertName           = "erc20_withdraw_and_call_revert"
+	TestERC20WithdrawAndCallRevertWithCallName   = "erc20_withdraw_and_call_revert_with_call"
+	TestZEVMToEVMArbitraryCallName               = "zevm_to_evm_arbitrary_call"
+	TestZEVMToEVMCallName                        = "zevm_to_evm_call"
+	TestZEVMToEVMCallThroughContractName         = "zevm_to_evm_call_through_contract"
+	TestEVMToZEVMCallName                        = "evm_to_zevm_call"
+	TestDepositAndCallSwapName                   = "deposit_and_call_swap"
+	TestEtherWithdrawRestrictedName              = "eth_withdraw_restricted"
+	TestERC20DepositRestrictedName               = "erc20_deposit_restricted" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 
 	/*
 	 * Solana tests
@@ -297,6 +298,14 @@ var AllE2ETests = []runner.E2ETest{
 		TestETHWithdrawAndCallRevertWithCall,
 	),
 	runner.NewE2ETest(
+		TestETHWithdrawAndCallRevertWithWithdrawName,
+		"withdraw Ether from ZEVM and call a contract that reverts with a onRevert call that triggers a withdraw",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000"},
+		},
+		TestETHWithdrawAndCallRevertWithWithdraw,
+	),
+	runner.NewE2ETest(
 		TestDepositAndCallOutOfGasName,
 		"deposit Ether into ZEVM and call a contract that runs out of gas",
 		[]runner.ArgDefinition{
@@ -454,7 +463,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestSPLWithdrawName,
 		"withdraw SPL from ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount in spl tokens", DefaultValue: "1000000"},
+			{Description: "amount in spl tokens", DefaultValue: "100000"},
 		},
 		TestSPLWithdraw,
 	),
