@@ -1,11 +1,12 @@
 package keeper_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"encoding/json"
 	"fmt"
 	"math/big"
 	"testing"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -25,6 +26,7 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/server/config"
 	"github.com/zeta-chain/node/testutil/contracts"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
@@ -237,7 +239,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 			coin.CoinType_Gas,
 			"foobar",
 			big.NewInt(1000),
-			sdkmath.NewUint(1000),
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -258,7 +260,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 			coin.CoinType_Gas,
 			"foobar",
 			big.NewInt(1000),
-			sdkmath.NewUint(1000),
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -284,7 +286,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 			coin.CoinType_Gas,
 			"foobar",
 			big.NewInt(1000),
-			sdkmath.NewUint(1000),
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -306,7 +308,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 			coin.CoinType_Gas,
 			"foobar",
 			big.NewInt(1000),
-			sdkmath.NewUint(2000),
+			ptr.Ptr(sdkmath.NewUint(2000)),
 		)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, addr)
@@ -368,7 +370,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 			coin.CoinType_Gas,
 			"foobar",
 			big.NewInt(1000),
-			sdkmath.NewUint(2000),
+			ptr.Ptr(sdkmath.NewUint(2000)),
 		)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, addr)
@@ -407,6 +409,32 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, newBalance)
 		require.Equal(t, amount.Int64(), newBalance.Int64())
+	})
+
+	t.Run("can deploy the zrc20 contract with default liquidity cap", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		addr, err := k.DeployZRC20Contract(
+			ctx,
+			"foo",
+			"bar",
+			8,
+			chainID,
+			coin.CoinType_Gas,
+			"foobar",
+			big.NewInt(1000),
+			nil,
+		)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, addr)
+
+		foreignCoins, found := k.GetForeignCoins(ctx, addr.Hex())
+		require.True(t, found)
+		require.Greater(t, foreignCoins.LiquidityCap.Uint64(), uint64(0))
 	})
 }
 

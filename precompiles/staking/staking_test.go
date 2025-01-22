@@ -28,6 +28,7 @@ import (
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
+	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/precompiles/prototype"
 	"github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -508,7 +509,7 @@ func setupGasCoin(
 		symbol,
 		8,
 		nil,
-		math.NewUintFromString("100000000000000000000000000"),
+		ptr.Ptr(math.NewUintFromString("100000000000000000000000000")),
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, *evmk, ctx, addr)

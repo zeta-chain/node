@@ -31,6 +31,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/server/config"
 	"github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -106,7 +107,7 @@ func (k Keeper) DeployZRC20Contract(
 	coinType coin.CoinType,
 	erc20Contract string,
 	gasLimit *big.Int,
-	liquidityCap sdkmath.Uint,
+	liquidityCap *sdkmath.Uint,
 ) (common.Address, error) {
 	chain, found := chains.GetChainFromChainID(chainID, k.GetAuthorityKeeper().GetAdditionalChainList(ctx))
 	if !found {
@@ -164,7 +165,10 @@ func (k Keeper) DeployZRC20Contract(
 	newCoin.Zrc20ContractAddress = contractAddr.Hex()
 	newCoin.ForeignChainId = chain.ChainId
 	newCoin.GasLimit = gasLimit.Uint64()
-	newCoin.LiquidityCap = liquidityCap
+	if liquidityCap == nil {
+		liquidityCap = ptr.Ptr(sdk.NewUint(types.DefaultLiquidityCap).MulUint64(uint64(newCoin.Decimals)))
+	}
+	newCoin.LiquidityCap = *liquidityCap
 	k.SetForeignCoins(ctx, newCoin)
 
 	return contractAddr, nil
