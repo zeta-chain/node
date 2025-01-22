@@ -98,6 +98,42 @@ var (
 		Name:        "base_mainnet",
 	}
 
+	// AvalancheMainnet is the Avalanche mainnet C-Chain
+	AvalancheMainnet = Chain{
+		ChainId:     43114,
+		Network:     Network_avalanche,
+		NetworkType: NetworkType_mainnet,
+		Vm:          Vm_evm,
+		Consensus:   Consensus_snowman,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+		Name:        "avalanche_mainnet",
+	}
+
+	// ArbitrumMainnet is the Arbitrum mainnet
+	ArbitrumMainnet = Chain{
+		ChainId:     42161,
+		Network:     Network_arbitrum,
+		NetworkType: NetworkType_mainnet,
+		Vm:          Vm_evm,
+		Consensus:   Consensus_arbitrum_nitro,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+		Name:        "arbitrum_mainnet",
+	}
+
+	// WorldMainnet is the World Chain mainnet
+	WorldMainnet = Chain{
+		ChainId:     480,
+		Network:     Network_worldchain,
+		NetworkType: NetworkType_mainnet,
+		Vm:          Vm_evm,
+		Consensus:   Consensus_op_stack,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+		Name:        "world_mainnet",
+	}
+
 	// SolanaMainnet is Solana mainnet
 	// TODO: define final chain ID
 	// https://github.com/zeta-chain/node/issues/2421
@@ -242,6 +278,42 @@ var (
 		IsExternal:  true,
 		CctxGateway: CCTXGateway_observers,
 		Name:        "base_sepolia",
+	}
+
+	// AvalancheTestnet is the Avalanche testnet C-Chain
+	AvalancheTestnet = Chain{
+		ChainId:     43113,
+		Network:     Network_avalanche,
+		NetworkType: NetworkType_testnet,
+		Vm:          Vm_evm,
+		Consensus:   Consensus_snowman,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+		Name:        "avalanche_testnet",
+	}
+
+	// ArbitrumSepolia is the Arbitrum sepolia testnet
+	ArbitrumSepolia = Chain{
+		ChainId:     421614,
+		Network:     Network_arbitrum,
+		NetworkType: NetworkType_testnet,
+		Vm:          Vm_evm,
+		Consensus:   Consensus_arbitrum_nitro,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+		Name:        "arbitrum_sepolia",
+	}
+
+	// WorldTestnet is the World Chain testnet
+	WorldTestnet = Chain{
+		ChainId:     4801,
+		Network:     Network_worldchain,
+		NetworkType: NetworkType_testnet,
+		Vm:          Vm_evm,
+		Consensus:   Consensus_op_stack,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+		Name:        "world_testnet",
 	}
 
 	// SolanaDevnet is Solana devnet
@@ -429,6 +501,12 @@ func DefaultChainsList() []Chain {
 		TONMainnet,
 		TONTestnet,
 		TONLocalnet,
+		AvalancheMainnet,
+		AvalancheTestnet,
+		ArbitrumMainnet,
+		ArbitrumSepolia,
+		WorldMainnet,
+		WorldTestnet,
 	}
 }
 
