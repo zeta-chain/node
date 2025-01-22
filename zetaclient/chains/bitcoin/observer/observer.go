@@ -19,12 +19,8 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/node/zetaclient/db"
-	"github.com/zeta-chain/node/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
@@ -125,32 +121,8 @@ type Observer struct {
 	logger Logger
 }
 
-// NewObserver returns a new Bitcoin chain observer
-func NewObserver(
-	chain chains.Chain,
-	rpc RPC,
-	chainParams observertypes.ChainParams,
-	zetacoreClient interfaces.ZetacoreClient,
-	tss interfaces.TSSSigner,
-	database *db.DB,
-	logger base.Logger,
-	ts *metrics.TelemetryServer,
-) (*Observer, error) {
-	// create base observer
-	baseObserver, err := base.NewObserver(
-		chain,
-		chainParams,
-		zetacoreClient,
-		tss,
-		btcBlocksPerDay,
-		ts,
-		database,
-		logger,
-	)
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to create base observer")
-	}
-
+// New BTC Observer constructor.
+func New(chain chains.Chain, baseObserver *base.Observer, rpc RPC) (*Observer, error) {
 	// get the bitcoin network params
 	netParams, err := chains.BitcoinNetParamsFromChainID(chain.ChainId)
 	if err != nil {
