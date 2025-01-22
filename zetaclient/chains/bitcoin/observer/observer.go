@@ -104,7 +104,6 @@ type Observer struct {
 	// utxos contains the UTXOs owned by the TSS address
 	utxos []btcjson.ListUnspentResult
 
-	// tssOutboundHashes indexes included tx with tx hash
 	// tssOutboundHashes keeps track of outbound hashes sent from TSS address
 	tssOutboundHashes map[string]bool
 
