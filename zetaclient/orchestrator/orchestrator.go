@@ -358,7 +358,7 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 				}
 
 				// managed by V2
-				if chain.IsBitcoin() {
+				if chain.IsBitcoin() || chain.IsEVM() {
 					continue
 				}
 
