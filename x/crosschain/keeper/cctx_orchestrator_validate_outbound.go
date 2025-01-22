@@ -200,6 +200,7 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 		err = k.validateZRC20Withdrawal(
 			ctx,
 			cctx.GetCurrentOutboundParam().ReceiverChainId,
+			cctx.InboundParams.CoinType,
 			cctx.GetCurrentOutboundParam().Amount.BigInt(),
 			[]byte(cctx.GetCurrentOutboundParam().Receiver),
 		)

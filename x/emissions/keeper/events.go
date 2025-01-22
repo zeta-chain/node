@@ -1,14 +1,16 @@
-package types
+package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/zeta-chain/node/x/emissions/types"
 )
 
 func EmitValidatorEmissions(
 	ctx sdk.Context,
 	bondFactor, reservesFactor, durationsFactor, validatorRewards, observerRewards, tssRewards string,
 ) {
-	err := ctx.EventManager().EmitTypedEvents(&EventBlockEmissions{
+	err := ctx.EventManager().EmitTypedEvents(&types.EventBlockEmissions{
 		MsgTypeUrl:               "/zetachain.zetacore.emissions.internal.BlockEmissions",
 		BondFactor:               bondFactor,
 		DurationFactor:           durationsFactor,
@@ -22,8 +24,8 @@ func EmitValidatorEmissions(
 	}
 }
 
-func EmitObserverEmissions(ctx sdk.Context, em []*ObserverEmission) {
-	err := ctx.EventManager().EmitTypedEvents(&EventObserverEmissions{
+func EmitObserverEmissions(ctx sdk.Context, em []*types.ObserverEmission) {
+	err := ctx.EventManager().EmitTypedEvents(&types.EventObserverEmissions{
 		MsgTypeUrl: "/zetachain.zetacore.emissions.internal.ObserverEmissions",
 		Emissions:  em,
 	})

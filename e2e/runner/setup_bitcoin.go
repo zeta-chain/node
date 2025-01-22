@@ -18,7 +18,7 @@ func (r *E2ERunner) AddTSSToNode() {
 	}()
 
 	// import the TSS address
-	err := r.BtcRPCClient.ImportAddress(r.BTCTSSAddress.EncodeAddress())
+	err := r.BtcRPCClient.ImportAddress(r.Ctx, r.BTCTSSAddress.EncodeAddress())
 	require.NoError(r, err)
 
 	// mine some blocks to get some BTC into the deployer address
@@ -38,12 +38,12 @@ func (r *E2ERunner) SetupBitcoinAccounts(createWallet bool) {
 	r.SetupBtcAddress(createWallet)
 
 	// import the TSS address to index TSS utxos and transactions
-	err := r.BtcRPCClient.ImportAddress(r.BTCTSSAddress.EncodeAddress())
+	err := r.BtcRPCClient.ImportAddress(r.Ctx, r.BTCTSSAddress.EncodeAddress())
 	require.NoError(r, err)
 	r.Logger.Info("⚙️ imported BTC TSSAddress: %s", r.BTCTSSAddress.EncodeAddress())
 
 	// import deployer address to index deployer utxos and transactions
-	err = r.BtcRPCClient.ImportAddress(r.BTCDeployerAddress.EncodeAddress())
+	err = r.BtcRPCClient.ImportAddress(r.Ctx, r.BTCDeployerAddress.EncodeAddress())
 	require.NoError(r, err)
 	r.Logger.Info("⚙️ imported BTCDeployerAddress: %s", r.BTCDeployerAddress.EncodeAddress())
 }
@@ -98,12 +98,12 @@ func (r *E2ERunner) SetupBtcAddress(createWallet bool) {
 			require.NoError(r, err)
 			argsRawMsg = append(argsRawMsg, encodedArg)
 		}
-		_, err := r.BtcRPCClient.RawRequest("createwallet", argsRawMsg)
+		_, err := r.BtcRPCClient.RawRequest(r.Ctx, "createwallet", argsRawMsg)
 		if err != nil {
 			require.ErrorContains(r, err, "Database already exists")
 		}
 
-		err = r.BtcRPCClient.ImportPrivKeyRescan(privkeyWIF, r.Name, true)
+		err = r.BtcRPCClient.ImportPrivKeyRescan(r.Ctx, privkeyWIF, r.Name, true)
 		require.NoError(r, err, "failed to execute ImportPrivKeyRescan")
 	}
 }

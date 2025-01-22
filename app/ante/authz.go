@@ -2,6 +2,7 @@ package ante
 
 import (
 	"fmt"
+	"slices"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -94,11 +95,5 @@ func (ald AuthzLimiterDecorator) checkDisabledMsgs(msgs []sdk.Msg, isAuthzInnerM
 // isDisabledMsg returns true if the given message is in the list of restricted
 // messages from the AnteHandler.
 func (ald AuthzLimiterDecorator) isDisabledMsg(msgTypeURL string) bool {
-	for _, disabledType := range ald.disabledMsgTypes {
-		if msgTypeURL == disabledType {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(ald.disabledMsgTypes, msgTypeURL)
 }

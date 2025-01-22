@@ -99,7 +99,7 @@ func (r *E2ERunner) CheckBTCTSSBalance() error {
 		if err != nil {
 			continue
 		}
-		utxos, err := r.BtcRPCClient.ListUnspent()
+		utxos, err := r.BtcRPCClient.ListUnspent(r.Ctx)
 		if err != nil {
 			continue
 		}

@@ -3,8 +3,8 @@ package types
 import (
 	sdkmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/crypto"

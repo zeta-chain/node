@@ -2,6 +2,7 @@ package observer_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"math"
 	"path"
@@ -23,7 +24,6 @@ import (
 	"github.com/zeta-chain/node/testutil"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	clientcommon "github.com/zeta-chain/node/zetaclient/common"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils"
@@ -33,7 +33,7 @@ import (
 
 // mockDepositFeeCalculator returns a mock depositor fee calculator that returns the given fee and error.
 func mockDepositFeeCalculator(fee float64, err error) common.DepositorFeeCalculator {
-	return func(interfaces.BTCRPCClient, *btcjson.TxRawResult, *chaincfg.Params) (float64, error) {
+	return func(_ context.Context, _ common.RPC, _ *btcjson.TxRawResult, _ *chaincfg.Params) (float64, error) {
 		return fee, err
 	}
 }
@@ -220,6 +220,8 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 }
 
 func TestGetSenderAddressByVin(t *testing.T) {
+	ctx := context.Background()
+
 	// https://mempool.space/tx/3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867
 	txHash := "3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867"
 	chain := chains.BitcoinMainnet
@@ -233,28 +235,28 @@ func TestGetSenderAddressByVin(t *testing.T) {
 
 		// get sender address
 		txVin := btcjson.Vin{Txid: txHash, Vout: 2}
-		sender, err := observer.GetSenderAddressByVin(rpcClient, txVin, net)
+		sender, err := observer.GetSenderAddressByVin(ctx, rpcClient, txVin, net)
 		require.NoError(t, err)
 		require.Equal(t, "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e", sender)
 	})
 
 	t.Run("should return error on invalid txHash", func(t *testing.T) {
-		rpcClient := mocks.NewBTCRPCClient(t)
+		rpcClient := mocks.NewBitcoinClient(t)
 		// use invalid tx hash
 		txVin := btcjson.Vin{Txid: "invalid tx hash", Vout: 2}
-		sender, err := observer.GetSenderAddressByVin(rpcClient, txVin, net)
+		sender, err := observer.GetSenderAddressByVin(ctx, rpcClient, txVin, net)
 		require.Error(t, err)
 		require.Empty(t, sender)
 	})
 
 	t.Run("should return error when RPC client fails to get raw tx", func(t *testing.T) {
 		// create mock rpc client that returns rpc error
-		rpcClient := mocks.NewBTCRPCClient(t)
-		rpcClient.On("GetRawTransaction", mock.Anything).Return(nil, errors.New("rpc error"))
+		rpcClient := mocks.NewBitcoinClient(t)
+		rpcClient.On("GetRawTransaction", mock.Anything, mock.Anything).Return(nil, errors.New("rpc error"))
 
 		// get sender address
 		txVin := btcjson.Vin{Txid: txHash, Vout: 2}
-		sender, err := observer.GetSenderAddressByVin(rpcClient, txVin, net)
+		sender, err := observer.GetSenderAddressByVin(ctx, rpcClient, txVin, net)
 		require.ErrorContains(t, err, "error getting raw transaction")
 		require.Empty(t, sender)
 	})
@@ -262,15 +264,18 @@ func TestGetSenderAddressByVin(t *testing.T) {
 	t.Run("should return error on invalid output index", func(t *testing.T) {
 		// create mock rpc client with preloaded tx
 		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, txHash)
+
 		// invalid output index
 		txVin := btcjson.Vin{Txid: txHash, Vout: 3}
-		sender, err := observer.GetSenderAddressByVin(rpcClient, txVin, net)
+		sender, err := observer.GetSenderAddressByVin(ctx, rpcClient, txVin, net)
 		require.ErrorContains(t, err, "out of range")
 		require.Empty(t, sender)
 	})
 }
 
 func TestGetBtcEventWithoutWitness(t *testing.T) {
+	ctx := context.Background()
+
 	// load archived inbound P2WPKH raw result
 	// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
 	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
@@ -310,6 +315,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 
 		// get BTC event
 		event, err := observer.GetBtcEventWithoutWitness(
+			ctx,
 			rpcClient,
 			*tx,
 			tssAddress,
@@ -334,6 +340,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 
 		// get BTC event
 		event, err := observer.GetBtcEventWithoutWitness(
+			ctx,
 			rpcClient,
 			*tx,
 			tssAddress,
@@ -358,6 +365,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 
 		// get BTC event
 		event, err := observer.GetBtcEventWithoutWitness(
+			ctx,
 			rpcClient,
 			*tx,
 			tssAddress,
@@ -382,6 +390,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 
 		// get BTC event
 		event, err := observer.GetBtcEventWithoutWitness(
+			ctx,
 			rpcClient,
 			*tx,
 			tssAddress,
@@ -406,6 +415,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 
 		// get BTC event
 		event, err := observer.GetBtcEventWithoutWitness(
+			ctx,
 			rpcClient,
 			*tx,
 			tssAddress,
@@ -424,8 +434,9 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 		tx.Vout = tx.Vout[:1]
 
 		// get BTC event
-		rpcClient := mocks.NewBTCRPCClient(t)
+		rpcClient := mocks.NewBitcoinClient(t)
 		event, err := observer.GetBtcEventWithoutWitness(
+			ctx,
 			rpcClient,
 			*tx,
 			tssAddress,
@@ -440,12 +451,13 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 
 	t.Run("should skip tx if Vout[0] is not a P2WPKH output", func(t *testing.T) {
 		// load tx
-		rpcClient := mocks.NewBTCRPCClient(t)
+		rpcClient := mocks.NewBitcoinClient(t)
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 
 		// modify the tx to have Vout[0] a P2SH output
 		tx.Vout[0].ScriptPubKey.Hex = strings.Replace(tx.Vout[0].ScriptPubKey.Hex, "0014", "a914", 1)
 		event, err := observer.GetBtcEventWithoutWitness(
+			ctx,
 			rpcClient,
 			*tx,
 			tssAddress,
@@ -460,6 +472,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 		// append 1 byte to script to make it longer than 22 bytes
 		tx.Vout[0].ScriptPubKey.Hex = tx.Vout[0].ScriptPubKey.Hex + "00"
 		event, err = observer.GetBtcEventWithoutWitness(
+			ctx,
 			rpcClient,
 			*tx,
 			tssAddress,
@@ -478,8 +491,9 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 		tx.Vout[0].ScriptPubKey.Hex = "001471dc3cd95bf4fe0fb7ffd6bb29b865ddf5581196"
 
 		// get BTC event
-		rpcClient := mocks.NewBTCRPCClient(t)
+		rpcClient := mocks.NewBitcoinClient(t)
 		event, err := observer.GetBtcEventWithoutWitness(
+			ctx,
 			rpcClient,
 			*tx,
 			tssAddress,
@@ -497,8 +511,9 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 
 		// get BTC event
-		rpcClient := mocks.NewBTCRPCClient(t)
+		rpcClient := mocks.NewBitcoinClient(t)
 		event, err := observer.GetBtcEventWithoutWitness(
+			ctx,
 			rpcClient,
 			*tx,
 			tssAddress,
@@ -517,8 +532,9 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 		tx.Vout[0].Value = depositorFee - 1.0/1e8 // 1 satoshi less than depositor fee
 
 		// get BTC event
-		rpcClient := mocks.NewBTCRPCClient(t)
+		rpcClient := mocks.NewBitcoinClient(t)
 		event, err := observer.GetBtcEventWithoutWitness(
+			ctx,
 			rpcClient,
 			*tx,
 			tssAddress,
@@ -537,8 +553,9 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 		tx.Vout[1].ScriptPubKey.Hex = strings.Replace(tx.Vout[1].ScriptPubKey.Hex, "6a", "51", 1)
 
 		// get BTC event
-		rpcClient := mocks.NewBTCRPCClient(t)
+		rpcClient := mocks.NewBitcoinClient(t)
 		event, err := observer.GetBtcEventWithoutWitness(
+			ctx,
 			rpcClient,
 			*tx,
 			tssAddress,
@@ -557,8 +574,9 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 		tx.Vout[1].ScriptPubKey.Hex = strings.Replace(tx.Vout[1].ScriptPubKey.Hex, "6a14", "6a13", 1)
 
 		// get BTC event
-		rpcClient := mocks.NewBTCRPCClient(t)
+		rpcClient := mocks.NewBitcoinClient(t)
 		event, err := observer.GetBtcEventWithoutWitness(
+			ctx,
 			rpcClient,
 			*tx,
 			tssAddress,
@@ -579,17 +597,18 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 		tx.Vin[0].Vout = preVout
 
 		// create mock rpc client
-		rpcClient := mocks.NewBTCRPCClient(t)
+		rpcClient := mocks.NewBitcoinClient(t)
 
 		// load archived MsgTx and modify previous input script to invalid
 		msgTx := testutils.LoadBTCMsgTx(t, TestDataDir, chain.ChainId, preHash)
 		msgTx.TxOut[preVout].PkScript = []byte{0x00, 0x01}
 
 		// mock rpc response to return invalid tx msg
-		rpcClient.On("GetRawTransaction", mock.Anything).Return(btcutil.NewTx(msgTx), nil)
+		rpcClient.On("GetRawTransaction", mock.Anything, mock.Anything).Return(btcutil.NewTx(msgTx), nil)
 
 		// get BTC event
 		event, err := observer.GetBtcEventWithoutWitness(
+			ctx,
 			rpcClient,
 			*tx,
 			tssAddress,
@@ -604,6 +623,8 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 }
 
 func TestGetBtcEventErrors(t *testing.T) {
+	ctx := context.Background()
+
 	// load archived inbound P2WPKH raw result
 	// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
 	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
@@ -622,8 +643,9 @@ func TestGetBtcEventErrors(t *testing.T) {
 		tx.Vout[0].ScriptPubKey.Hex = "0014invalid000000000000000000000000000000000"
 
 		// get BTC event
-		rpcClient := mocks.NewBTCRPCClient(t)
+		rpcClient := mocks.NewBitcoinClient(t)
 		event, err := observer.GetBtcEventWithoutWitness(
+			ctx,
 			rpcClient,
 			*tx,
 			tssAddress,
@@ -642,8 +664,9 @@ func TestGetBtcEventErrors(t *testing.T) {
 		tx.Vin = nil
 
 		// get BTC event
-		rpcClient := mocks.NewBTCRPCClient(t)
+		rpcClient := mocks.NewBitcoinClient(t)
 		event, err := observer.GetBtcEventWithoutWitness(
+			ctx,
 			rpcClient,
 			*tx,
 			tssAddress,
@@ -661,11 +684,12 @@ func TestGetBtcEventErrors(t *testing.T) {
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 
 		// create mock rpc client that returns rpc error
-		rpcClient := mocks.NewBTCRPCClient(t)
-		rpcClient.On("GetRawTransaction", mock.Anything).Return(nil, errors.New("rpc error"))
+		rpcClient := mocks.NewBitcoinClient(t)
+		rpcClient.On("GetRawTransaction", mock.Anything, mock.Anything).Return(nil, errors.New("rpc error"))
 
 		// get BTC event
 		event, err := observer.GetBtcEventWithoutWitness(
+			ctx,
 			rpcClient,
 			*tx,
 			tssAddress,
@@ -680,6 +704,8 @@ func TestGetBtcEventErrors(t *testing.T) {
 }
 
 func TestGetBtcEvent(t *testing.T) {
+	ctx := context.Background()
+
 	t.Run("should not decode inbound event with witness with mainnet chain", func(t *testing.T) {
 		// load archived inbound P2WPKH raw result
 		// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
@@ -693,9 +719,10 @@ func TestGetBtcEvent(t *testing.T) {
 
 		txHash2 := "37777defed8717c581b4c0509329550e344bdc14ac38f71fc050096887e535c8"
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash2, false)
-		rpcClient := mocks.NewBTCRPCClient(t)
+		rpcClient := mocks.NewBitcoinClient(t)
 		// get BTC event
 		event, err := observer.GetBtcEvent(
+			ctx,
 			rpcClient,
 			*tx,
 			tssAddress,
@@ -747,6 +774,7 @@ func TestGetBtcEvent(t *testing.T) {
 
 		// get BTC event
 		event, err := observer.GetBtcEvent(
+			ctx,
 			rpcClient,
 			*tx,
 			tssAddress,

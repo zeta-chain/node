@@ -155,11 +155,6 @@ func TestCreateChainObserverMap(t *testing.T) {
 
 	t.Run("CreateChainObserverMap", func(t *testing.T) {
 		// ARRANGE
-		// Given a BTC server
-		btcServer, btcConfig := testrpc.NewBtcServer(t)
-
-		btcServer.SetBlockCount(123)
-
 		// Given generic EVM RPC
 		evmServer := testrpc.NewEVMServer(t)
 		evmServer.SetBlockNumber(100)
@@ -181,7 +176,6 @@ func TestCreateChainObserverMap(t *testing.T) {
 			Endpoint: evmServer.Endpoint,
 		}
 
-		cfg.BTCChainConfigs[chains.BitcoinMainnet.ChainId] = btcConfig
 		cfg.SolanaConfig = solConfig
 		cfg.TONConfig = tonConfig
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -13,6 +12,7 @@ import (
 
 	tonrunner "github.com/zeta-chain/node/e2e/runner/ton"
 	zetacore_rpc "github.com/zeta-chain/node/pkg/rpc"
+	btcclient "github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 )
 
 // Clients contains all the RPC clients and gRPC clients for E2E tests
@@ -20,7 +20,7 @@ type Clients struct {
 	Zetacore zetacore_rpc.Clients
 
 	// the RPC clients for external chains in the localnet
-	BtcRPC  *rpcclient.Client
+	BtcRPC  *btcclient.Client
 	Solana  *rpc.Client
 	Evm     *ethclient.Client
 	EvmAuth *bind.TransactOpts

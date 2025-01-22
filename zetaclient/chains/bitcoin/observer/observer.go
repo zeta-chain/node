@@ -8,10 +8,12 @@ import (
 	"math/big"
 	"sort"
 	"sync/atomic"
+	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
+	hash "github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -25,6 +27,40 @@ import (
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
+
+type RPC interface {
+	Healthcheck(ctx context.Context, tssAddress btcutil.Address) (time.Time, error)
+
+	GetBlockCount(ctx context.Context) (int64, error)
+	GetBlockHash(ctx context.Context, blockHeight int64) (*hash.Hash, error)
+	GetBlockHeader(ctx context.Context, hash *hash.Hash) (*wire.BlockHeader, error)
+	GetBlockVerbose(ctx context.Context, hash *hash.Hash) (*btcjson.GetBlockVerboseTxResult, error)
+
+	GetRawTransaction(ctx context.Context, hash *hash.Hash) (*btcutil.Tx, error)
+	GetRawTransactionVerbose(ctx context.Context, hash *hash.Hash) (*btcjson.TxRawResult, error)
+	GetRawTransactionResult(
+		ctx context.Context,
+		hash *hash.Hash,
+		res *btcjson.GetTransactionResult,
+	) (btcjson.TxRawResult, error)
+
+	GetTransactionFeeAndRate(ctx context.Context, tx *btcjson.TxRawResult) (int64, int64, error)
+
+	EstimateSmartFee(
+		ctx context.Context,
+		confTarget int64,
+		mode *btcjson.EstimateSmartFeeMode,
+	) (*btcjson.EstimateSmartFeeResult, error)
+
+	ListUnspentMinMaxAddresses(
+		ctx context.Context,
+		minConf, maxConf int,
+		addresses []btcutil.Address,
+	) ([]btcjson.ListUnspentResult, error)
+
+	GetBlockHeightByStr(ctx context.Context, blockHash string) (int64, error)
+	GetTransactionByStr(ctx context.Context, hash string) (*hash.Hash, *btcjson.GetTransactionResult, error)
+}
 
 const (
 	// btcBlocksPerDay represents Bitcoin blocks per days for LRU block cache size
@@ -64,7 +100,7 @@ type Observer struct {
 	netParams *chaincfg.Params
 
 	// btcClient is the Bitcoin RPC client that interacts with the Bitcoin node
-	btcClient interfaces.BTCRPCClient
+	rpc RPC
 
 	// pendingNonce is the outbound artificial pending nonce
 	pendingNonce uint64
@@ -92,7 +128,7 @@ type Observer struct {
 // NewObserver returns a new Bitcoin chain observer
 func NewObserver(
 	chain chains.Chain,
-	btcClient interfaces.BTCRPCClient,
+	rpc RPC,
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
 	tss interfaces.TSSSigner,
@@ -112,20 +148,20 @@ func NewObserver(
 		logger,
 	)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to create base observer for chain %d", chain.ChainId)
+		return nil, errors.Wrapf(err, "unable to create base observer")
 	}
 
 	// get the bitcoin network params
 	netParams, err := chains.BitcoinNetParamsFromChainID(chain.ChainId)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to get BTC net params for chain %d", chain.ChainId)
+		return nil, errors.Wrapf(err, "unable to get BTC net params")
 	}
 
 	// create bitcoin observer
 	ob := &Observer{
 		Observer:          *baseObserver,
 		netParams:         netParams,
-		btcClient:         btcClient,
+		rpc:               rpc,
 		pendingNonce:      0,
 		utxos:             []btcjson.ListUnspentResult{},
 		includedTxHashes:  make(map[string]bool),
@@ -140,7 +176,10 @@ func NewObserver(
 	ob.nodeEnabled.Store(true)
 
 	// load last scanned block
-	if err = ob.LoadLastBlockScanned(); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err = ob.LoadLastBlockScanned(ctx); err != nil {
 		return nil, errors.Wrap(err, "unable to load last scanned block")
 	}
 
@@ -189,13 +228,13 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	// regnet:  RPC 'EstimateSmartFee' is not available
 	// testnet: RPC 'EstimateSmartFee' returns unreasonable high gas rate
 	if ob.Chain().NetworkType != chains.NetworkType_mainnet {
-		feeRateEstimated, err = ob.specialHandleFeeRate()
+		feeRateEstimated, err = ob.specialHandleFeeRate(ctx)
 		if err != nil {
 			return errors.Wrap(err, "unable to execute specialHandleFeeRate")
 		}
 	} else {
 		// EstimateSmartFee returns the fees per kilobyte (BTC/kb) targeting given block confirmation
-		feeResult, err := ob.btcClient.EstimateSmartFee(1, &btcjson.EstimateModeEconomical)
+		feeResult, err := ob.rpc.EstimateSmartFee(ctx, 1, &btcjson.EstimateModeEconomical)
 		if err != nil {
 			return errors.Wrap(err, "unable to estimate smart fee")
 		}
@@ -209,7 +248,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	}
 
 	// query the current block number
-	blockNumber, err := ob.btcClient.GetBlockCount()
+	blockNumber, err := ob.rpc.GetBlockCount(ctx)
 	if err != nil {
 		return errors.Wrap(err, "GetBlockCount error")
 	}
@@ -244,7 +283,7 @@ func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 	ob.refreshPendingNonce(ctx)
 
 	// get the current block height.
-	bh, err := ob.btcClient.GetBlockCount()
+	bh, err := ob.rpc.GetBlockCount(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to get block height")
 	}
@@ -257,7 +296,7 @@ func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get tss address")
 	}
 
-	utxos, err := ob.btcClient.ListUnspentMinMaxAddresses(0, maxConfirmations, []btcutil.Address{tssAddr})
+	utxos, err := ob.rpc.ListUnspentMinMaxAddresses(ctx, 0, maxConfirmations, []btcutil.Address{tssAddr})
 	if err != nil {
 		return errors.Wrap(err, "unable to list unspent utxo")
 	}
@@ -314,7 +353,7 @@ func (ob *Observer) SaveBroadcastedTx(txHash string, nonce uint64) {
 }
 
 // GetBlockByNumberCached gets cached block (and header) by block number
-func (ob *Observer) GetBlockByNumberCached(blockNumber int64) (*BTCBlockNHeader, error) {
+func (ob *Observer) GetBlockByNumberCached(ctx context.Context, blockNumber int64) (*BTCBlockNHeader, error) {
 	if result, ok := ob.BlockCache().Get(blockNumber); ok {
 		if block, ok := result.(*BTCBlockNHeader); ok {
 			return block, nil
@@ -323,17 +362,17 @@ func (ob *Observer) GetBlockByNumberCached(blockNumber int64) (*BTCBlockNHeader,
 	}
 
 	// Get the block hash
-	hash, err := ob.btcClient.GetBlockHash(blockNumber)
+	hash, err := ob.rpc.GetBlockHash(ctx, blockNumber)
 	if err != nil {
 		return nil, err
 	}
 	// Get the block header
-	header, err := ob.btcClient.GetBlockHeader(hash)
+	header, err := ob.rpc.GetBlockHeader(ctx, hash)
 	if err != nil {
 		return nil, err
 	}
 	// Get the block with verbose transactions
-	block, err := ob.btcClient.GetBlockVerboseTx(hash)
+	block, err := ob.rpc.GetBlockVerbose(ctx, hash)
 	if err != nil {
 		return nil, err
 	}
@@ -347,7 +386,7 @@ func (ob *Observer) GetBlockByNumberCached(blockNumber int64) (*BTCBlockNHeader,
 }
 
 // LoadLastBlockScanned loads the last scanned block from the database
-func (ob *Observer) LoadLastBlockScanned() error {
+func (ob *Observer) LoadLastBlockScanned(ctx context.Context) error {
 	err := ob.Observer.LoadLastBlockScanned(ob.Logger().Chain)
 	if err != nil {
 		return errors.Wrapf(err, "error LoadLastBlockScanned for chain %d", ob.Chain().ChainId)
@@ -357,7 +396,7 @@ func (ob *Observer) LoadLastBlockScanned() error {
 	// 1. environment variable is set explicitly to "latest"
 	// 2. environment variable is empty and last scanned block is not found in DB
 	if ob.LastBlockScanned() == 0 {
-		blockNumber, err := ob.btcClient.GetBlockCount()
+		blockNumber, err := ob.rpc.GetBlockCount(ctx)
 		if err != nil {
 			return errors.Wrapf(err, "error GetBlockCount for chain %d", ob.Chain().ChainId)
 		}
@@ -388,13 +427,13 @@ func (ob *Observer) LoadBroadcastedTxMap() error {
 }
 
 // specialHandleFeeRate handles the fee rate for regnet and testnet
-func (ob *Observer) specialHandleFeeRate() (uint64, error) {
+func (ob *Observer) specialHandleFeeRate(ctx context.Context) (uint64, error) {
 	switch ob.Chain().NetworkType {
 	case chains.NetworkType_privnet:
 		// hardcode gas price for regnet
 		return 1, nil
 	case chains.NetworkType_testnet:
-		feeRateEstimated, err := common.GetRecentFeeRate(ob.btcClient, ob.netParams)
+		feeRateEstimated, err := common.GetRecentFeeRate(ctx, ob.rpc, ob.netParams)
 		if err != nil {
 			return 0, errors.Wrapf(err, "error GetRecentFeeRate")
 		}
