@@ -352,7 +352,7 @@ func GetBtcEventWithoutWitness(
 			value, err = DeductDepositorFee(vout0.Value, depositorFee)
 			if err != nil {
 				errMessage = err.Error()
-				logger.Info().Err(err).Msgf("unable to deduct depositor fee for tx %s", tx.Txid)
+				logger.Error().Err(err).Msgf("unable to deduct depositor fee for tx %s", tx.Txid)
 			}
 
 			// 2nd vout must be a valid OP_RETURN memo

@@ -89,11 +89,14 @@ func (r *E2ERunner) GetTop20UTXOsForTssAddress() ([]btcjson.ListUnspentResult, e
 }
 
 // DepositBTCWithAmount deposits BTC into ZetaChain with a specific amount and memo
+//
+// If `addDepositFee` is true, the depositor fee will be added to the amount, so that
+// the receiver will get the exact given 'amount' in ZetaChain
 func (r *E2ERunner) DepositBTCWithAmount(amount float64, memo *memo.InboundMemo, addDepositFee bool) *chainhash.Hash {
 	// list deployer utxos
 	utxos := r.ListDeployerUTXOs()
 
-	// add depositor fee so that receiver gets the exact given 'amount' in ZetaChain
+	// add depositor fee if needed
 	if addDepositFee {
 		amount += zetabtc.DefaultDepositorFee
 	}

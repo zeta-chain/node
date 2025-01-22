@@ -178,6 +178,7 @@ func tryExtractInscription(tx btcjson.TxRawResult, logger zerolog.Logger) []byte
 }
 
 // DeductDepositorFee returns the inbound amount after deducting the depositor fee.
+// returns an error if the deposited amount is lower than the depositor fee.
 func DeductDepositorFee(deposited, depositorFee float64) (float64, error) {
 	if deposited < depositorFee {
 		return 0, fmt.Errorf("deposited amount %v is less than depositor fee %v", deposited, depositorFee)
