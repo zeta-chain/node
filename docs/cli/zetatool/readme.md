@@ -1,6 +1,6 @@
 # ZetaTool
 
-ZetaTool is a utility tool for Zetachain.It currently provides a command to fetch the ballot/cctx identifier from the inbound hash
+ZetaTool is a utility CLI for Zetachain.It currently provides a command to fetch the ballot/cctx identifier from the inbound hash
 
 ## Installation
 
