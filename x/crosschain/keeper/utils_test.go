@@ -2,11 +2,13 @@
 package keeper_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"math/big"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
+	"github.com/zeta-chain/node/pkg/ptr"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
 
@@ -169,7 +171,7 @@ func setupGasCoin(
 		symbol,
 		8,
 		nil,
-		sdkmath.NewUint(1000),
+		ptr.Ptr(sdkmath.NewUint(1000)),
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)
@@ -196,7 +198,7 @@ func deployZRC20(
 		0,
 		assetAddress,
 		big.NewInt(21_000),
-		sdkmath.NewUint(1000),
+		ptr.Ptr(sdkmath.NewUint(1000)),
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)

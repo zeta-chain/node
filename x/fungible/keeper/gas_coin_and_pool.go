@@ -27,7 +27,7 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	symbol string,
 	decimals uint8,
 	gasLimit *big.Int,
-	liquidityCap sdkmath.Uint,
+	liquidityCap *sdkmath.Uint,
 ) (ethcommon.Address, error) {
 	// additional on-chain static chain information
 	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)

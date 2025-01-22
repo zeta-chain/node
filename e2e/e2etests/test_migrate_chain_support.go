@@ -80,7 +80,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 			"sETH",
 			coin.CoinType_Gas,
 			100000,
-			sdkmath.NewUintFromString("100000000000000000000000000"),
+			nil,
 		),
 	)
 	require.NoError(r, err)

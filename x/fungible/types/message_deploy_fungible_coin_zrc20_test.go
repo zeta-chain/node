@@ -1,8 +1,9 @@
 package types_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"testing"
+
+	sdkmath "cosmossdk.io/math"
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/fungible/types"
 )
@@ -31,7 +33,7 @@ func TestMsgDeployFungibleCoinZRC4_ValidateBasic(t *testing.T) {
 				"test",
 				coin.CoinType_ERC20,
 				10,
-				sdkmath.NewUint(1000),
+				ptr.Ptr(sdkmath.NewUint(1000)),
 			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
@@ -46,7 +48,7 @@ func TestMsgDeployFungibleCoinZRC4_ValidateBasic(t *testing.T) {
 				"test",
 				coin.CoinType_ERC20,
 				-1,
-				sdkmath.NewUint(1000),
+				ptr.Ptr(sdkmath.NewUint(1000)),
 			),
 			err: sdkerrors.ErrInvalidGasLimit,
 		},
@@ -61,12 +63,12 @@ func TestMsgDeployFungibleCoinZRC4_ValidateBasic(t *testing.T) {
 				"test",
 				coin.CoinType_ERC20,
 				10,
-				sdkmath.NewUint(1000),
+				ptr.Ptr(sdkmath.NewUint(1000)),
 			),
 			err: cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "decimals must be less than 78"),
 		},
 		{
-			name: "invalid liquidity cap",
+			name: "nil liquidity cap",
 			msg: &types.MsgDeployFungibleCoinZRC20{
 				Creator:        sample.AccAddress(),
 				ERC20:          "test erc20",
@@ -76,6 +78,20 @@ func TestMsgDeployFungibleCoinZRC4_ValidateBasic(t *testing.T) {
 				Symbol:         "test",
 				CoinType:       coin.CoinType_ERC20,
 				GasLimit:       10,
+			},
+		},
+		{
+			name: "nil liquidity cap inner",
+			msg: &types.MsgDeployFungibleCoinZRC20{
+				Creator:        sample.AccAddress(),
+				ERC20:          "test erc20",
+				ForeignChainId: 1,
+				Decimals:       6,
+				Name:           "test",
+				Symbol:         "test",
+				CoinType:       coin.CoinType_ERC20,
+				GasLimit:       10,
+				LiquidityCap:   &sdkmath.Uint{},
 			},
 			err: cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "liquidity cap is nil"),
 		},
@@ -90,7 +106,7 @@ func TestMsgDeployFungibleCoinZRC4_ValidateBasic(t *testing.T) {
 				"test",
 				coin.CoinType_ERC20,
 				10,
-				sdkmath.NewUint(1000),
+				ptr.Ptr(sdkmath.NewUint(1000)),
 			),
 		},
 	}

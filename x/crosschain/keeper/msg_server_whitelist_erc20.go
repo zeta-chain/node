@@ -11,6 +11,7 @@ import (
 	"github.com/gagliardetto/solana-go"
 
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/ptr"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
@@ -98,7 +99,7 @@ func (k msgServer) WhitelistERC20(
 		coin.CoinType_ERC20,
 		msg.Erc20Address,
 		big.NewInt(msg.GasLimit),
-		msg.LiquidityCap,
+		ptr.Ptr(msg.LiquidityCap),
 	)
 	if err != nil {
 		return nil, errorsmod.Wrapf(

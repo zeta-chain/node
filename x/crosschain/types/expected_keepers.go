@@ -203,7 +203,7 @@ type FungibleKeeper interface {
 		coinType coin.CoinType,
 		erc20Contract string,
 		gasLimit *big.Int,
-		liquidityCap sdkmath.Uint,
+		liquidityCap *sdkmath.Uint,
 	) (ethcommon.Address, error)
 	FundGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
 	WithdrawFromGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error

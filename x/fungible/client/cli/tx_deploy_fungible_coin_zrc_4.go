@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/x/fungible/types"
 )
 
@@ -54,7 +55,7 @@ func CmdDeployFungibleCoinZRC4() *cobra.Command {
 				argSymbol,
 				coin.CoinType(argCoinType),
 				argGasLimit,
-				argLiquidityCap,
+				ptr.Ptr(argLiquidityCap),
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

@@ -433,9 +433,6 @@ func (zts ZetaTxServer) DeployZRC20s(
 		deployerAddr = addrOperational.String()
 	}
 
-	// 100M * 10^18
-	liquidityCap := sdkmath.NewUintFromString("100000000000000000000000000")
-
 	deployMsgs := []*fungibletypes.MsgDeployFungibleCoinZRC20{
 		fungibletypes.NewMsgDeployFungibleCoinZRC20(
 			deployerAddr,
@@ -446,7 +443,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 			"gETH",
 			coin.CoinType_Gas,
 			100000,
-			liquidityCap,
+			nil,
 		),
 		fungibletypes.NewMsgDeployFungibleCoinZRC20(
 			deployerAddr,
@@ -457,7 +454,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 			"tBTC",
 			coin.CoinType_Gas,
 			100000,
-			liquidityCap,
+			nil,
 		),
 		fungibletypes.NewMsgDeployFungibleCoinZRC20(
 			deployerAddr,
@@ -468,7 +465,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 			"SOL",
 			coin.CoinType_Gas,
 			100000,
-			liquidityCap,
+			nil,
 		),
 		fungibletypes.NewMsgDeployFungibleCoinZRC20(
 			deployerAddr,
@@ -479,7 +476,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 			"TON",
 			coin.CoinType_Gas,
 			100_000,
-			liquidityCap,
+			nil,
 		),
 		fungibletypes.NewMsgDeployFungibleCoinZRC20(
 			deployerAddr,
@@ -490,7 +487,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 			"USDT",
 			coin.CoinType_ERC20,
 			100000,
-			liquidityCap,
+			nil,
 		),
 	}
 
@@ -504,7 +501,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 			"USDT",
 			coin.CoinType_ERC20,
 			100000,
-			liquidityCap,
+			nil,
 		))
 	}
 
