@@ -128,7 +128,7 @@ func (k msgServer) VoteOutbound(
 		k.HandleInvalidOutbound(ctx, &cctx, err.Error(), tss.TssPubkey)
 		return &types.MsgVoteOutboundResponse{}, nil
 	}
-	// The outbound s valid, the HandleValidOutbound function would save the required status changes
+	// The outbound is valid, the HandleValidOutbound function would save the required status changes
 	k.HandleValidOutbound(ctx, &cctx, tss.TssPubkey)
 	return &types.MsgVoteOutboundResponse{}, nil
 }
