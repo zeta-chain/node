@@ -2,10 +2,13 @@ package keeper_test
 
 import (
 	"encoding/base64"
+	"errors"
+	"github.com/ethereum/go-ethereum/core/vm"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"math/big"
 	"testing"
 
-	"cosmossdk.io/errors"
+	cosmoserror "cosmossdk.io/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -26,30 +29,237 @@ func TestKeeper_ValidateSuccessfulOutbound(t *testing.T) {
 	cctx := sample.CrossChainTx(t, "test")
 	// transition to reverted if pending revert
 	cctx.CctxStatus.Status = types.CctxStatus_PendingRevert
-	k.ValidateOutboundObservers(
+	err := k.ValidateOutboundObservers(
 		ctx,
 		cctx,
 		observertypes.BallotStatus_BallotFinalized_SuccessObservation,
 		sample.String(),
 	)
+	require.NoError(t, err)
 	require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Reverted)
+
 	// transition to outbound mined if pending outbound
 	cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-	k.ValidateOutboundObservers(
+	err = k.ValidateOutboundObservers(
 		ctx,
 		cctx,
 		observertypes.BallotStatus_BallotFinalized_SuccessObservation,
 		sample.String(),
 	)
+	require.NoError(t, err)
 	require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_OutboundMined)
+
 	// do nothing if it's in any other state
-	k.ValidateOutboundObservers(
+	err = k.ValidateOutboundObservers(
 		ctx,
 		cctx,
 		observertypes.BallotStatus_BallotFinalized_SuccessObservation,
 		sample.String(),
 	)
+	require.NoError(t, err)
 	require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_OutboundMined)
+}
+
+func TestKeeper_ValidateFailedOutboundV2(t *testing.T) {
+	t.Run("fail if can't fetch ZetaChain chain ID", func(t *testing.T) {
+		// arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.ProtocolContractVersion = types.ProtocolContractVersion_V2
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+
+		ctx = ctx.WithChainID("invalid")
+
+		// act
+		err := k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
+
+		// assert
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed to get ZetaChain chainID")
+	})
+
+	t.Run("fail if CCTX source chain is not ZetaChain", func(t *testing.T) {
+		// arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.ProtocolContractVersion = types.ProtocolContractVersion_V2
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		cctx.InboundParams.SenderChainId = chains.Ethereum.ChainId
+
+		// act
+		err := k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
+
+		// assert
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "sender chain for withdraw cctx is not ZetaChain")
+	})
+
+	t.Run("fail if fail to add revert outbound", func(t *testing.T) {
+		// arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		cctx := sample.CrossChainTxV2(t, "test")
+		cctx.ProtocolContractVersion = types.ProtocolContractVersion_V2
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		cctx.InboundParams.SenderChainId = chains.ZetaChainMainnet.ChainId
+		// fail to add revert outbound if it already exists
+		cctx.OutboundParams = []*types.OutboundParams{
+			sample.OutboundParams(sample.Rand()),
+			sample.OutboundParams(sample.Rand()),
+		}
+
+		// act
+		err := k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
+
+		// assert
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed AddRevertOutbound")
+	})
+
+	t.Run("fail if the revert call get reverted", func(t *testing.T) {
+		// arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.ProtocolContractVersion = types.ProtocolContractVersion_V2
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		cctx.InboundParams.SenderChainId = chains.ZetaChainMainnet.ChainId
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+
+		cctx.OutboundParams = []*types.OutboundParams{sample.OutboundParams(sample.Rand())}
+
+		revertErr := vm.ErrExecutionReverted
+		keepertest.MockProcessV2RevertDeposit(fungibleMock, nil, revertErr)
+
+		// act
+		err := k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
+
+		// assert
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "revert transaction reverted")
+	})
+
+	t.Run("fail if the revert call can't be processed", func(t *testing.T) {
+		// arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.ProtocolContractVersion = types.ProtocolContractVersion_V2
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		cctx.InboundParams.SenderChainId = chains.ZetaChainMainnet.ChainId
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+
+		cctx.OutboundParams = []*types.OutboundParams{sample.OutboundParams(sample.Rand())}
+
+		keepertest.MockProcessV2RevertDeposit(fungibleMock, nil, errors.New("error that is not onRevert reverts"))
+
+		// act
+		err := k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
+
+		// assert
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "revert transaction couldn't be processed")
+	})
+
+	t.Run("process failed outbound with a revert", func(t *testing.T) {
+		// arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.ProtocolContractVersion = types.ProtocolContractVersion_V2
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		cctx.InboundParams.SenderChainId = chains.ZetaChainMainnet.ChainId
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+
+		cctx.OutboundParams = []*types.OutboundParams{sample.OutboundParams(sample.Rand())}
+
+		keepertest.MockProcessV2RevertDeposit(fungibleMock, &evmtypes.MsgEthereumTxResponse{}, nil)
+
+		// act
+		err := k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
+
+		// assert
+		require.NoError(t, err)
+		require.Len(t, cctx.OutboundParams, 2)
+		require.EqualValues(t, types.CctxStatus_Reverted, cctx.CctxStatus.Status)
+	})
+
+	t.Run("process aborting the cctx if is pending revert", func(t *testing.T) {
+		// arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.ProtocolContractVersion = types.ProtocolContractVersion_V2
+		cctx.CctxStatus.Status = types.CctxStatus_PendingRevert
+		cctx.InboundParams.SenderChainId = chains.ZetaChainMainnet.ChainId
+
+		// act
+		err := k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
+
+		// assert
+		require.NoError(t, err)
+		require.EqualValues(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
+	})
+
+	t.Run("fail if cctx status is invalid", func(t *testing.T) {
+		// arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.ProtocolContractVersion = types.ProtocolContractVersion_V2
+		cctx.CctxStatus.Status = types.CctxStatus_OutboundMined
+
+		// act
+		err := k.ValidateOutboundObservers(
+			ctx,
+			cctx,
+			observertypes.BallotStatus_BallotFinalized_FailureObservation,
+			sample.String(),
+		)
+
+		// assert
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "unexpected cctx status")
+	})
 }
 
 func TestKeeper_ValidateFailedOutbound(t *testing.T) {
@@ -165,7 +375,7 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		})
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
-		errorFailedZETARevertAndCallContract := errors.New("test", 999, "failed ZETARevertAndCallContract")
+		errorFailedZETARevertAndCallContract := cosmoserror.New("test", 999, "failed ZETARevertAndCallContract")
 		cctx := GetERC20Cctx(t, receiver, chains.Goerli, "", big.NewInt(42))
 		cctx.InboundParams.CoinType = coin.CoinType_Zeta
 		cctx.InboundParams.SenderChainId = chains.ZetaChainMainnet.ChainId

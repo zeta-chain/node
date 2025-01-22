@@ -103,7 +103,7 @@ func BTCAddressP2WPKH(t *testing.T, net *chaincfg.Params) *btcutil.AddressWitnes
 	return addr
 }
 
-// BtcAddressP2WPKH returns a pkscript for a sample Bitcoin P2WPKH address
+// BTCAddressP2WPKHScript returns a pkscript for a sample Bitcoin P2WPKH address
 func BTCAddressP2WPKHScript(t *testing.T, net *chaincfg.Params) []byte {
 	addr := BTCAddressP2WPKH(t, net)
 	script, err := txscript.PayToAddrScript(addr)
