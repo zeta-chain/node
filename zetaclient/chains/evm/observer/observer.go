@@ -17,7 +17,6 @@ import (
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.eth.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
 
-	"github.com/zeta-chain/node/pkg/bg"
 	"github.com/zeta-chain/node/pkg/chains"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
@@ -27,8 +26,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
-
-var _ interfaces.ChainObserver = (*Observer)(nil)
 
 // Observer is the observer for evm chains
 type Observer struct {
@@ -60,8 +57,8 @@ type priorityFeeConfig struct {
 	supported bool
 }
 
-// NewObserver returns a new EVM chain observer
-func NewObserver(
+// New Observer constructor
+func New(
 	ctx context.Context,
 	chain chains.Chain,
 	evmClient *client.Client,
@@ -160,22 +157,6 @@ func FetchZetaTokenContract(
 	client interfaces.EVMRPCClient,
 ) (*zeta.ZetaNonEth, error) {
 	return zeta.NewZetaNonEth(addr, client)
-}
-
-// Start all observation routines for the evm chain
-func (ob *Observer) Start(ctx context.Context) {
-	if ok := ob.Observer.Start(); !ok {
-		ob.Logger().Chain.Info().Msgf("observer is already started for chain %d", ob.Chain().ChainId)
-		return
-	}
-
-	ob.Logger().Chain.Info().Msgf("observer is starting for chain %d", ob.Chain().ChainId)
-
-	bg.Work(ctx, ob.WatchInbound, bg.WithName("WatchInbound"), bg.WithLogger(ob.Logger().Inbound))
-	bg.Work(ctx, ob.WatchOutbound, bg.WithName("WatchOutbound"), bg.WithLogger(ob.Logger().Outbound))
-	bg.Work(ctx, ob.WatchGasPrice, bg.WithName("WatchGasPrice"), bg.WithLogger(ob.Logger().GasPrice))
-	bg.Work(ctx, ob.WatchInboundTracker, bg.WithName("WatchInboundTracker"), bg.WithLogger(ob.Logger().Inbound))
-	bg.Work(ctx, ob.watchRPCStatus, bg.WithName("watchRPCStatus"), bg.WithLogger(ob.Logger().Chain))
 }
 
 // SetTxNReceipt sets the receipt and transaction in memory
@@ -308,6 +289,17 @@ func (ob *Observer) LoadLastBlockScanned(ctx context.Context) error {
 		ob.WithLastBlockScanned(blockNumber)
 	}
 	ob.Logger().Chain.Info().Msgf("chain %d starts scanning from block %d", ob.Chain().ChainId, ob.LastBlockScanned())
+
+	return nil
+}
+
+func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
+	blockTime, err := ob.evmClient.HealthCheck(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to check rpc health")
+	}
+
+	ob.ReportBlockLatency(blockTime)
 
 	return nil
 }

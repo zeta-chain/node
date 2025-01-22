@@ -58,7 +58,7 @@ func newTestSuite(t *testing.T) *testSuite {
 
 	logger := testlog.New(t)
 
-	s, err := NewSigner(
+	s, err := New(
 		chain,
 		tss,
 		evmClient,
@@ -104,7 +104,7 @@ func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.O
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
 
-	return observer.NewObserver(
+	return observer.New(
 		ctx,
 		chains.BscMainnet,
 		evmClient,
@@ -187,8 +187,6 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 	evmSigner := newTestSuite(t)
 	cctx := getCCTX(t)
 	processor := getNewOutboundProcessor()
-	mockObserver, err := getNewEvmChainObserver(t, nil)
-	require.NoError(t, err)
 
 	// Attach mock EVM client to the signer
 	evmSigner.evmMock.On("SendTransaction", mock.Anything, mock.Anything).Return(nil)
@@ -199,7 +197,7 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 		WithZetaChain().
 		WithPostVoteOutbound("", "")
 
-	evmSigner.TryProcessOutbound(ctx, cctx, processor, "123", mockObserver, client, 123)
+	evmSigner.TryProcessOutbound(ctx, cctx, processor, "123", client, 123)
 
 	// Check if cctx was signed and broadcasted
 	list := evmSigner.GetReportedTxList()

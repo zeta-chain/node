@@ -403,7 +403,8 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 
 				switch {
 				case chain.IsEVM():
-					oc.ScheduleCctxEVM(ctx, zetaHeight, chainID, cctxList, ob, signer)
+					// Managed by orchestrator V2
+					continue
 				case chain.IsBitcoin():
 					// Managed by orchestrator V2
 					continue
@@ -419,105 +420,6 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 
 			// update last processed block number
 			oc.ts.SetCoreBlockNumber(bn)
-		}
-	}
-}
-
-// ScheduleCctxEVM schedules evm outbound keysign on each ZetaChain block (the ticker)
-func (oc *Orchestrator) ScheduleCctxEVM(
-	ctx context.Context,
-	zetaHeight uint64,
-	chainID int64,
-	cctxList []*types.CrossChainTx,
-	observer interfaces.ChainObserver,
-	signer interfaces.ChainSigner,
-) {
-	res, err := oc.zetacoreClient.GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
-	if err != nil {
-		oc.logger.Warn().Err(err).Msgf("ScheduleCctxEVM: GetAllOutboundTrackerByChain failed for chain %d", chainID)
-		return
-	}
-	trackerMap := make(map[uint64]bool)
-	for _, v := range res {
-		trackerMap[v.Nonce] = true
-	}
-	outboundScheduleLookahead := observer.ChainParams().OutboundScheduleLookahead
-	// #nosec G115 always in range
-	outboundScheduleLookback := uint64(float64(outboundScheduleLookahead) * outboundLookbackFactor)
-	// #nosec G115 positive
-	outboundScheduleInterval := uint64(observer.ChainParams().OutboundScheduleInterval)
-	criticalInterval := uint64(10)                      // for critical pending outbound we reduce re-try interval
-	nonCriticalInterval := outboundScheduleInterval * 2 // for non-critical pending outbound we increase re-try interval
-
-	for idx, cctx := range cctxList {
-		params := cctx.GetCurrentOutboundParam()
-		nonce := params.TssNonce
-		outboundID := outboundprocessor.ToOutboundID(cctx.Index, params.ReceiverChainId, nonce)
-
-		if params.ReceiverChainId != chainID {
-			oc.logger.Error().
-				Msgf("ScheduleCctxEVM: outbound %s chainid mismatch: want %d, got %d", outboundID, chainID, params.ReceiverChainId)
-			continue
-		}
-		if params.TssNonce > cctxList[0].GetCurrentOutboundParam().TssNonce+outboundScheduleLookback {
-			oc.logger.Error().Msgf("ScheduleCctxEVM: nonce too high: signing %d, earliest pending %d, chain %d",
-				params.TssNonce, cctxList[0].GetCurrentOutboundParam().TssNonce, chainID)
-			break
-		}
-
-		// vote outbound if it's already confirmed
-		continueKeysign, err := observer.VoteOutboundIfConfirmed(ctx, cctx)
-		if err != nil {
-			oc.logger.Error().
-				Err(err).
-				Msgf("ScheduleCctxEVM: VoteOutboundIfConfirmed failed for chain %d nonce %d", chainID, nonce)
-			continue
-		}
-		if !continueKeysign {
-			oc.logger.Info().
-				Msgf("ScheduleCctxEVM: outbound %s already processed; do not schedule keysign", outboundID)
-			continue
-		}
-
-		// determining critical outbound; if it satisfies following criteria
-		// 1. it's the first pending outbound for this chain
-		// 2. the following 5 nonces have been in tracker
-		if nonce%criticalInterval == zetaHeight%criticalInterval {
-			count := 0
-			for i := nonce + 1; i <= nonce+10; i++ {
-				if _, found := trackerMap[i]; found {
-					count++
-				}
-			}
-			if count >= 5 {
-				outboundScheduleInterval = criticalInterval
-			}
-		}
-		// if it's already in tracker, we increase re-try interval
-		if _, ok := trackerMap[nonce]; ok {
-			outboundScheduleInterval = nonCriticalInterval
-		}
-
-		// otherwise, the normal interval is used
-		if nonce%outboundScheduleInterval == zetaHeight%outboundScheduleInterval &&
-			!oc.outboundProc.IsOutboundActive(outboundID) {
-			oc.outboundProc.StartTryProcess(outboundID)
-			oc.logger.Debug().
-				Msgf("ScheduleCctxEVM: sign outbound %s with value %d", outboundID, cctx.GetCurrentOutboundParam().Amount)
-			go signer.TryProcessOutbound(
-				ctx,
-				cctx,
-				oc.outboundProc,
-				outboundID,
-				observer,
-				oc.zetacoreClient,
-				zetaHeight,
-			)
-		}
-
-		// #nosec G115 always in range
-		if int64(idx) >= outboundScheduleLookahead-1 { // only look at 'lookahead' cctxs per chain
-			break
 		}
 	}
 }

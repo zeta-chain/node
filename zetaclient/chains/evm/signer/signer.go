@@ -40,8 +40,6 @@ const (
 )
 
 var (
-	_ interfaces.ChainSigner = (*Signer)(nil)
-
 	// zeroValue is for outbounds that carry no ETH (gas token) value
 	zeroValue = big.NewInt(0)
 )
@@ -63,8 +61,8 @@ type Signer struct {
 	gatewayAddress ethcommon.Address
 }
 
-// NewSigner creates a new EVM signer
-func NewSigner(
+// New Signer constructor
+func New(
 	chain chains.Chain,
 	tss interfaces.TSSSigner,
 	client *client.Client,
@@ -249,7 +247,6 @@ func (signer *Signer) TryProcessOutbound(
 	cctx *crosschaintypes.CrossChainTx,
 	outboundProc *outboundprocessor.Processor,
 	outboundID string,
-	_ interfaces.ChainObserver,
 	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
@@ -319,12 +316,7 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 
-	logger.Info().Msgf(
-		"Key-sign success: %d => %d, nonce %d",
-		cctx.InboundParams.SenderChainId,
-		toChain.ID(),
-		cctx.GetCurrentOutboundParam().TssNonce,
-	)
+	logger.Info().Uint64("outbound.nonce", cctx.GetCurrentOutboundParam().TssNonce).Msg("key-sign success")
 
 	// Broadcast Signed Tx
 	signer.BroadcastOutbound(ctx, tx, cctx, logger, myID, zetacoreClient, txData)

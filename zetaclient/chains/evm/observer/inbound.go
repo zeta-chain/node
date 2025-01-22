@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"slices"
 	"sort"
 	"strings"
 
@@ -16,14 +17,12 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/memo"
-	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/compliance"
@@ -34,89 +33,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// WatchInbound watches evm chain for incoming txs and post votes to zetacore
-// TODO(revamp): move ticker function to a separate file
-func (ob *Observer) WatchInbound(ctx context.Context) error {
-	sampledLogger := ob.Logger().Inbound.Sample(&zerolog.BasicSampler{N: 10})
-	interval := ticker.DurationFromUint64Seconds(ob.ChainParams().InboundTicker)
-	task := func(ctx context.Context, t *ticker.Ticker) error {
-		return ob.watchInboundOnce(ctx, t, sampledLogger)
-	}
-
-	ob.Logger().Inbound.Info().Msgf("WatchInbound started")
-
-	return ticker.Run(
-		ctx,
-		interval,
-		task,
-		ticker.WithStopChan(ob.StopChannel()),
-		ticker.WithLogger(ob.Logger().Inbound, "WatchInbound"),
-	)
-}
-
-func (ob *Observer) watchInboundOnce(ctx context.Context, t *ticker.Ticker, sampledLogger zerolog.Logger) error {
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	// noop
-	if !app.IsInboundObservationEnabled() {
-		ob.Logger().Inbound.Warn().Msg("WatchInbound: inbound observation is disabled")
-		return nil
-	}
-
-	if err := ob.ObserveInbound(ctx, sampledLogger); err != nil {
-		ob.Logger().Inbound.Err(err).Msg("WatchInbound: observeInbound error")
-	}
-
-	newInterval := ticker.DurationFromUint64Seconds(ob.ChainParams().InboundTicker)
-	t.SetInterval(newInterval)
-
-	return nil
-}
-
-// WatchInboundTracker gets a list of Inbound tracker suggestions from zeta-core at each tick and tries to check if the in-tx was confirmed.
-// If it was, it tries to broadcast the confirmation vote. If this zeta client has previously broadcast the vote, the tx would be rejected
-// TODO(revamp): move inbound tracker function to a separate file
-func (ob *Observer) WatchInboundTracker(ctx context.Context) error {
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	ticker, err := clienttypes.NewDynamicTicker(
-		fmt.Sprintf("EVM_WatchInboundTracker_%d", ob.Chain().ChainId),
-		ob.ChainParams().InboundTicker,
-	)
-	if err != nil {
-		ob.Logger().Inbound.Err(err).Msg("error creating ticker")
-		return err
-	}
-	defer ticker.Stop()
-
-	ob.Logger().Inbound.Info().Msgf("Inbound tracker watcher started for chain %d", ob.Chain().ChainId)
-	for {
-		select {
-		case <-ticker.C():
-			if !app.IsInboundObservationEnabled() {
-				continue
-			}
-			err := ob.ProcessInboundTrackers(ctx)
-			if err != nil {
-				ob.Logger().Inbound.Err(err).Msg("ProcessInboundTrackers error")
-			}
-			ticker.UpdateInterval(ob.ChainParams().InboundTicker, ob.Logger().Inbound)
-		case <-ob.StopChannel():
-			ob.Logger().Inbound.Info().Msgf("WatchInboundTracker stopped for chain %d", ob.Chain().ChainId)
-			return nil
-		}
-	}
-}
-
-// ProcessInboundTrackers processes inbound trackers from zetacore
-// TODO(revamp): move inbound tracker function to a separate file
-func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
+// ObserveInboundTrackers observes inbound trackers from zetacore
+func (ob *Observer) ObserveInboundTrackers(ctx context.Context) error {
 	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
 	if err != nil {
 		return err
@@ -179,19 +97,16 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 }
 
 // ObserveInbound observes the evm chain for inbounds and posts votes to zetacore
-func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Logger) error {
+func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	// get and update latest block height
 	blockNumber, err := ob.evmClient.BlockNumber(ctx)
-	if err != nil {
-		return err
+	switch {
+	case err != nil:
+		return errors.Wrap(err, "error getting block number")
+	case blockNumber < ob.LastBlock():
+		return fmt.Errorf("block number should not decrease: current %d last %d", blockNumber, ob.LastBlock())
 	}
-	if blockNumber < ob.LastBlock() {
-		return fmt.Errorf(
-			"observeInbound: block number should not decrease: current %d last %d",
-			blockNumber,
-			ob.LastBlock(),
-		)
-	}
+
 	ob.WithLastBlock(blockNumber)
 
 	// increment prom counter
@@ -205,15 +120,14 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 
 	// skip if current height is too low
 	if blockNumber < ob.ChainParams().ConfirmationCount {
-		return fmt.Errorf("observeInbound: skipping observer, current block number %d is too low", blockNumber)
+		return fmt.Errorf("skipping observer, current block number %d is too low", blockNumber)
 	}
+
 	confirmedBlockNum := blockNumber - ob.ChainParams().ConfirmationCount
 
 	// skip if no new block is confirmed
 	lastScanned := ob.LastBlockScanned()
 	if lastScanned >= confirmedBlockNum {
-		sampledLogger.Debug().
-			Msgf("observeInbound: skipping observer, no new block is produced for chain %d", ob.Chain().ChainId)
 		return nil
 	}
 
@@ -263,35 +177,26 @@ func (ob *Observer) ObserveInbound(ctx context.Context, sampledLogger zerolog.Lo
 			Msgf("ObserveInbound: error observing depositAndCall events from Gateway contract")
 	}
 
-	// note: using lowest height for all 3 events is not perfect, but it's simple and good enough
-	lastScannedLowest := lastScannedZetaSent
-	if lastScannedDeposited < lastScannedLowest {
-		lastScannedLowest = lastScannedDeposited
-	}
-	if lastScannedTssRecvd < lastScannedLowest {
-		lastScannedLowest = lastScannedTssRecvd
-	}
-	if lastScannedGatewayDeposit < lastScannedLowest {
-		lastScannedLowest = lastScannedGatewayDeposit
-	}
-	if lastScannedGatewayCall < lastScannedLowest {
-		lastScannedLowest = lastScannedGatewayCall
-	}
-	if lastScannedGatewayDepositAndCall < lastScannedLowest {
-		lastScannedLowest = lastScannedGatewayDepositAndCall
-	}
+	// note: using the lowest height for all events is not perfect,
+	// but it's simple and good enough
+	lowestLastScannedBlock := slices.Min([]uint64{
+		lastScannedZetaSent,
+		lastScannedDeposited,
+		lastScannedTssRecvd,
+		lastScannedGatewayDeposit,
+		lastScannedGatewayCall,
+		lastScannedGatewayDepositAndCall,
+	})
 
 	// update last scanned block height for all 3 events (ZetaSent, Deposited, TssRecvd), ignore db error
-	if lastScannedLowest > lastScanned {
-		sampledLogger.Info().
-			Msgf("observeInbound: lastScanned heights for chain %d ZetaSent %d ERC20Deposited %d TssRecvd %d",
-				ob.Chain().ChainId, lastScannedZetaSent, lastScannedDeposited, lastScannedTssRecvd)
-		if err := ob.SaveLastBlockScanned(lastScannedLowest); err != nil {
-			ob.Logger().Inbound.Error().
-				Err(err).
-				Msgf("observeInbound: error saving lastScannedLowest %d to db", lastScannedLowest)
+	if lowestLastScannedBlock > lastScanned {
+		if err = ob.SaveLastBlockScanned(lowestLastScannedBlock); err != nil {
+			ob.Logger().Inbound.Error().Err(err).
+				Uint64("observer.last_scanned_lowest", lowestLastScannedBlock).
+				Msg("ObserveInbound: error saving lastScannedLowest to db")
 		}
 	}
+
 	return nil
 }
 

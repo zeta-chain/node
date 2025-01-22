@@ -179,7 +179,7 @@ func Test_NewObserver(t *testing.T) {
 			}
 
 			// create observer
-			ob, err := observer.NewObserver(
+			ob, err := observer.New(
 				ctx,
 				chain,
 				tt.evmClient,
@@ -431,7 +431,7 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 	log := zerolog.New(zerolog.NewTestWriter(t)).With().Caller().Logger()
 	logger := base.Logger{Std: log, Compliance: log}
 
-	ob, err := observer.NewObserver(
+	ob, err := observer.New(
 		ctx,
 		chain,
 		evmClient,

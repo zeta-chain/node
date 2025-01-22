@@ -17,7 +17,6 @@ import (
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/metrics"
-	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testrpc"
 )
@@ -40,22 +39,13 @@ func TestCreateSignerMap(t *testing.T) {
 		// Given a zetaclient config with ETH, MATIC, and BTC chains
 		cfg := config.New(false)
 
-		cfg.EVMChainConfigs[chains.Ethereum.ChainId] = config.EVMConfig{
-			Endpoint: testutils.MockEVMRPCEndpoint,
-		}
-
-		cfg.EVMChainConfigs[chains.Polygon.ChainId] = config.EVMConfig{
-			Endpoint: testutils.MockEVMRPCEndpoint,
-		}
-
 		// Given AppContext
 		app := zctx.New(cfg, nil, log)
 		ctx := zctx.WithAppContext(context.Background(), app)
 
 		// Given chain & chainParams "fetched" from zetacore
-		// (note that slice LACKS polygon chain on purpose)
 		mustUpdateAppContextChainParams(t, app, []chains.Chain{
-			chains.Ethereum, chains.BitcoinMainnet,
+			chains.SolanaMainnet,
 		})
 
 		// ACT
