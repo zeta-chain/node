@@ -7,6 +7,7 @@
 * [3332](https://github.com/zeta-chain/node/pull/3332) - implement orchestrator V2. Move BTC observer-signer to V2
 * [3360](https://github.com/zeta-chain/node/pull/3360) - update protocol contract imports using consolidated path
 * [3349](https://github.com/zeta-chain/node/pull/3349) - implement new bitcoin rpc in zetaclient with improved performance and observability
+* [3390](https://github.com/zeta-chain/node/pull/3390) - orchestrator V2: EVM observer-signer
 
 ### Fixes
 
