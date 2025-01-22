@@ -36,7 +36,7 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 	// get deployer account balance
 	privkey, err := solana.PrivateKeyFromBase58(deployerPrivateKey)
 	require.NoError(r, err)
-	bal, err := r.SolanaClient.GetBalance(r.Ctx, privkey.PublicKey(), rpc.CommitmentFinalized)
+	bal, err := r.SolanaClient.GetBalance(r.Ctx, privkey.PublicKey(), rpc.CommitmentConfirmed)
 	require.NoError(r, err)
 	r.Logger.Info("deployer address: %s, balance: %f SOL", privkey.PublicKey().String(), float64(bal.Value)/1e9)
 
@@ -68,7 +68,9 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 	r.Logger.Info("initialize logs: %v", out.Meta.LogMessages)
 
 	// retrieve the PDA account info
-	pdaInfo, err := r.SolanaClient.GetAccountInfo(r.Ctx, pdaComputed)
+	pdaInfo, err := r.SolanaClient.GetAccountInfoWithOpts(r.Ctx, pdaComputed, &rpc.GetAccountInfoOpts{
+		Commitment: rpc.CommitmentConfirmed,
+	})
 	require.NoError(r, err)
 
 	// deserialize the PDA info

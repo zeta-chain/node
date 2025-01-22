@@ -8,6 +8,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/gagliardetto/solana-go"
 	associatedtokenaccount "github.com/gagliardetto/solana-go/programs/associated-token-account"
+	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
 	"github.com/gagliardetto/solana-go/programs/system"
 	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -141,8 +142,10 @@ func (r *E2ERunner) CreateSignedTransaction(
 	additionalPrivateKeys []solana.PrivateKey,
 ) *solana.Transaction {
 	// get a recent blockhash
-	recent, err := r.SolanaClient.GetLatestBlockhash(r.Ctx, rpc.CommitmentFinalized)
+	recent, err := r.SolanaClient.GetLatestBlockhash(r.Ctx, rpc.CommitmentConfirmed)
 	require.NoError(r, err)
+
+	r.Logger.Info("Latest valid block height for tx %d", recent.Value.LastValidBlockHeight)
 
 	// create the initialize transaction
 	tx, err := solana.NewTransaction(
@@ -180,7 +183,11 @@ func (r *E2ERunner) ResolveSolanaATA(
 	pdaAta, _, err := solana.FindAssociatedTokenAddress(owner, mintAccount)
 	require.NoError(r, err)
 
-	info, _ := r.SolanaClient.GetAccountInfo(r.Ctx, pdaAta)
+	info, _ := r.SolanaClient.GetAccountInfoWithOpts(
+		r.Ctx,
+		pdaAta,
+		&rpc.GetAccountInfoOpts{Commitment: rpc.CommitmentConfirmed},
+	)
 	if info != nil {
 		// already exists
 		return pdaAta
@@ -228,8 +235,12 @@ func (r *E2ERunner) SPLDepositAndCall(
 		receiver,
 		data,
 	)
+
+	limit := computebudget.NewSetComputeUnitLimitInstruction(50000).Build() // 50k compute unit limit
+	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().
+		SetMicroLamports(100000).Build() // 0.1 lamports per compute unit
 	signedTx := r.CreateSignedTransaction(
-		[]solana.Instruction{depositSPLInstruction},
+		[]solana.Instruction{limit, feesInit, depositSPLInstruction},
 		*privateKey,
 		[]solana.PrivateKey{},
 	)
@@ -241,7 +252,7 @@ func (r *E2ERunner) SPLDepositAndCall(
 }
 
 func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *solana.Wallet {
-	lamport, err := r.SolanaClient.GetMinimumBalanceForRentExemption(r.Ctx, token.MINT_SIZE, rpc.CommitmentFinalized)
+	lamport, err := r.SolanaClient.GetMinimumBalanceForRentExemption(r.Ctx, token.MINT_SIZE, rpc.CommitmentConfirmed)
 	require.NoError(r, err)
 
 	// to deploy new spl token, create account instruction and initialize mint instruction have to be in the same transaction
@@ -292,7 +303,11 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 		whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, r.GatewayProgram)
 		require.NoError(r, err)
 
-		whitelistEntryInfo, err := r.SolanaClient.GetAccountInfo(r.Ctx, whitelistEntryPDA)
+		whitelistEntryInfo, err := r.SolanaClient.GetAccountInfoWithOpts(
+			r.Ctx,
+			whitelistEntryPDA,
+			&rpc.GetAccountInfoOpts{Commitment: rpc.CommitmentConfirmed},
+		)
 		require.Error(r, err)
 
 		// already whitelisted
@@ -313,7 +328,13 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 		_, out := r.BroadcastTxSync(signedTx)
 		r.Logger.Info("whitelist spl mint logs: %v", out.Meta.LogMessages)
 
-		whitelistEntryInfo, err = r.SolanaClient.GetAccountInfo(r.Ctx, whitelistEntryPDA)
+		whitelistEntryInfo, err = r.SolanaClient.GetAccountInfoWithOpts(
+			r.Ctx,
+			whitelistEntryPDA,
+			&rpc.GetAccountInfoOpts{
+				Commitment: rpc.CommitmentConfirmed,
+			},
+		)
 		require.NoError(r, err)
 		require.NotNil(r, whitelistEntryInfo)
 	}
@@ -321,31 +342,68 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 	return mintAccount
 }
 
-// BroadcastTxSync broadcasts a transaction and waits for it to be finalized
-func (r *E2ERunner) BroadcastTxSync(tx *solana.Transaction) (solana.Signature, *rpc.GetTransactionResult) {
+// BroadcastTxSync broadcasts a transaction once and checks if it's confirmed
+func (r *E2ERunner) BroadcastTxSyncOnce(tx *solana.Transaction) (solana.Signature, *rpc.GetTransactionResult, bool) {
 	// broadcast the transaction
-	sig, err := r.SolanaClient.SendTransactionWithOpts(r.Ctx, tx, rpc.TransactionOpts{})
-	require.NoError(r, err)
-	r.Logger.Info("broadcast success! tx sig %s; waiting for confirmation...", sig)
+	r.Logger.Info("Broadcast once start")
+	maxRetries := uint(1)
+	sig, err := r.SolanaClient.SendTransactionWithOpts(r.Ctx, tx, rpc.TransactionOpts{
+		SkipPreflight:       true,
+		MaxRetries:          &maxRetries,
+		PreflightCommitment: rpc.CommitmentConfirmed,
+	})
+	if err != nil { // try to fetch tx to see if error is not because it is already broadcasted, since we manually retry
+		r.Logger.Info("Error sending tx %s, check if it's already broadcasted, err: %s", sig, err.Error())
 
-	var (
-		start   = time.Now()
-		timeout = 2 * time.Minute // Solana tx expires automatically after 2 minutes
-	)
+		out, errGet := r.SolanaClient.GetTransaction(r.Ctx, sig, &rpc.GetTransactionOpts{
+			Commitment: rpc.CommitmentConfirmed,
+		})
+
+		if errGet == nil {
+			return sig, out, true
+		}
+
+		r.Logger.Info("Error getting tx %s", errGet.Error())
+		require.NoError(r, err) // fail the test with send tx error
+	}
+	r.Logger.Info("Broadcast success! tx sig %s; waiting for confirmation...", sig)
 
 	// wait for the transaction to be finalized
 	var out *rpc.GetTransactionResult
-	for {
-		require.False(r, time.Since(start) > timeout, "waiting solana tx timeout")
+	time.Sleep(5 * time.Second) // wait a bit and check if its confirmed
+	blockHeight, err := r.SolanaClient.GetBlockHeight(r.Ctx, rpc.CommitmentConfirmed)
+	require.NoError(r, err)
+	r.Logger.Info("Current block height %d", blockHeight)
 
-		time.Sleep(1 * time.Second)
-		out, err = r.SolanaClient.GetTransaction(r.Ctx, sig, &rpc.GetTransactionOpts{})
-		if err == nil {
-			break
-		}
+	out, err = r.SolanaClient.GetTransaction(r.Ctx, sig, &rpc.GetTransactionOpts{
+		Commitment: rpc.CommitmentConfirmed,
+	})
+	if err != nil {
+		r.Logger.Info("Error getting tx %s", err.Error())
 	}
 
-	return sig, out
+	isConfirmed := err == nil
+	r.Logger.Info("Broadcast once finished, tx: %s, confirmed: %t", sig, isConfirmed)
+	return sig, out, isConfirmed
+}
+
+// BroadcastTxSync broadcasts a transaction and waits for it to be finalized
+func (r *E2ERunner) BroadcastTxSync(tx *solana.Transaction) (solana.Signature, *rpc.GetTransactionResult) {
+	r.Logger.Info("Broadcast start")
+	start := time.Now()
+	timeout := 2 * time.Minute // Expires after 2 mins
+	sig, out, isConfirmed := r.BroadcastTxSyncOnce(tx)
+	for {
+		require.False(r, time.Since(start) > timeout, "solana tx timeout")
+
+		if isConfirmed {
+			r.Logger.Info("Tx broadcasted and confirmed")
+			return sig, out
+		}
+
+		r.Logger.Info("Manually retrying tx")
+		sig, out, isConfirmed = r.BroadcastTxSyncOnce(tx)
+	}
 }
 
 // SOLDepositAndCall deposits an amount of ZRC20 SOL tokens (in lamports) and calls a contract (if data is provided)
@@ -365,7 +423,14 @@ func (r *E2ERunner) SOLDepositAndCall(
 	instruction := r.CreateDepositInstruction(signerPrivKey.PublicKey(), receiver, data, amount.Uint64())
 
 	// create and sign the transaction
-	signedTx := r.CreateSignedTransaction([]solana.Instruction{instruction}, *signerPrivKey, []solana.PrivateKey{})
+	limit := computebudget.NewSetComputeUnitLimitInstruction(50000).Build() // 50k compute unit limit
+	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().
+		SetMicroLamports(100000).Build() // 0.1 lamports per compute unit
+	signedTx := r.CreateSignedTransaction(
+		[]solana.Instruction{limit, feesInit, instruction},
+		*signerPrivKey,
+		[]solana.PrivateKey{},
+	)
 
 	// broadcast the transaction and wait for finalization
 	sig, out := r.BroadcastTxSync(signedTx)
