@@ -1,0 +1,37 @@
+name: Reusable Sim Workflow
+on:
+  workflow_call:
+    inputs:
+      make-target:
+        description: 'Makefile target to execute'
+        required: true
+        type: string
+      run:
+        description: 'Whether to run the job or not'
+        required: true
+        type: boolean
+      runs-on:
+        description: 'The runner to use for the job'
+        type: string
+        default: 'ubuntu-22.04'
+jobs:
+  sim:
+    if: ${{ inputs.run }}
+    runs-on: ${{ inputs.runs-on }}
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Install dependencies
+        run: make runsim
+
+      - name: Run ${{ inputs.make-target }}
+        run: |
+          make ${{ inputs.make-target }}

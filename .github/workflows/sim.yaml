@@ -78,41 +78,28 @@ jobs:
   simulation-tests:
     needs:
       - matrix-conditionals
-    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
         include:
           - make-target: "test-sim-nondeterminism"
-            condition: ${{ needs.matrix-conditionals.outputs.SIM_TEST_NOND == 'true' }}
+            run: ${{ needs.matrix-conditionals.outputs.SIM_TEST_NOND == 'true' }}
           - make-target: "test-sim-fullappsimulation"
-            condition: ${{ needs.matrix-conditionals.outputs.SIM_TEST_FULL == 'true' }}
+            run: ${{ needs.matrix-conditionals.outputs.SIM_TEST_FULL == 'true' }}
           - make-target: "test-sim-import-export"
-            condition: ${{ needs.matrix-conditionals.outputs.SIM_TEST_IMPORT_EXPORT == 'true' }}
+            run: ${{ needs.matrix-conditionals.outputs.SIM_TEST_IMPORT_EXPORT == 'true' }}
           - make-target: "test-sim-after-import"
-            condition: ${{ needs.matrix-conditionals.outputs.SIM_TEST_AFTER_IMPORT == 'true' }}
+            run: ${{ needs.matrix-conditionals.outputs.SIM_TEST_AFTER_IMPORT == 'true' }}
     name: ${{ matrix.make-target }}
-    if: ${{ matrix.condition }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.23'
-
-      - name: Install dependencies
-        run: make runsim
-
-      - name: Run ${{ matrix.make-target }}
-        run: |
-          make ${{ matrix.make-target }}
-
+    uses: ./.github/workflows/reusable-sim.yml
+    with:
+      make-target: ${{ matrix.make-target }}
+      run: ${{ matrix.run }}
   sim-ok:
+    runs-on: ubuntu-22.04
     needs:
       - simulation-tests
-    runs-on: ubuntu-22.04
+    if: ${{ !cancelled() }}
     steps:
       - name: Aggregate Results
         run: |
