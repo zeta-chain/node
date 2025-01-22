@@ -3,16 +3,7 @@
 ZetaTool is a utility CLI for Zetachain.It currently provides a command to fetch the ballot/cctx identifier from the inbound hash
 
 ## Installation
-
-To install ZetaTool, clone the repository and build the project:
-
-```sh
-git clone https://github.com/zeta-chain/node.git
-cd node/cmd/zetatool
-go build -o zetatool
-```
-
-Alternatively you can also use the target `make install-zetatool`
+Use the target : `make install-zetatool`
 
 ## Usage 
 
