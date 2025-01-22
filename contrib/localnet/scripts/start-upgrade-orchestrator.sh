@@ -103,7 +103,7 @@ while [[ -z $PROPOSAL_ID ]]; do
     # proposal_id=$(zetacored query tx $PROPOSAL_TX_HASH -o json | jq -r '.events[] | select(.type == "submit_proposal") | .attributes[] | select(.key == "proposal_id") | .value')
     
     # v0.46 version
-    PROPOSAL_ID=$(zetacored query tx $PROPOSAL_TX_HASH -o json | jq -r '.logs[0].events[] | select(.type == "proposal_deposit") | .attributes[] | select(.key == "proposal_id") | .value')
+    PROPOSAL_ID=$(zetacored query tx --type=hash $PROPOSAL_TX_HASH -o json | jq -r '.logs[0].events[] | select(.type == "proposal_deposit") | .attributes[] | select(.key == "proposal_id") | .value')
 done
 echo "proposal id is ${PROPOSAL_ID}"
 
