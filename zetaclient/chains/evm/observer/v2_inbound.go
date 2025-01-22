@@ -446,7 +446,7 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 	return filtered
 }
 
-// newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
+// newDepositAndCallInboundVote creates a MsgVoteInbound message for a Deposit event
 func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDepositedAndCalled) types.MsgVoteInbound {
 	// if event.Asset is zero, it's a native token
 	coinType := coin.CoinType_ERC20
