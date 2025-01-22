@@ -188,7 +188,7 @@ func percentOf(n *big.Int, percent int64) *big.Int {
 }
 
 /*
-HandleInvalidOutbound saves a failed outbound transaction.It does the following things in one function:
+HandleInvalidOutbound saves an invalid outbound transaction. It does the following things in one function:
 
  1. Change the status of the CCTX to Aborted
 
