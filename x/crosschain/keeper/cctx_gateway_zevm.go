@@ -26,6 +26,7 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 	config InitiateOutboundConfig,
 ) (newCCTXStatus types.CctxStatus, err error) {
 	// abort if CCTX already contains an initial error message from inbound vote msg
+	// the 'insufficient_depositor_fee' is the only case handled for now
 	if strings.Contains(config.CCTX.CctxStatus.ErrorMessage, types.InboundStatus_insufficient_depositor_fee.String()) {
 		config.CCTX.SetAbort("observation failed", "")
 		return types.CctxStatus_Aborted, nil
