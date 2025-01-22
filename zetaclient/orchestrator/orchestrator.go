@@ -386,10 +386,6 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 				// get cctxs from map and set pending transactions prometheus gauge
 				cctxList := cctxMap[chainID]
 
-				metrics.PendingTxsPerChain.
-					WithLabelValues(chain.Name()).
-					Set(float64(len(cctxList)))
-
 				if len(cctxList) == 0 {
 					continue
 				}
