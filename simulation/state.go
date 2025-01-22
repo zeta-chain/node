@@ -447,6 +447,7 @@ func AppStateRandomizedFn(
 		InitialStake: initialStake,
 		NumBonded:    numInitiallyBonded,
 		GenTimestamp: genesisTimestamp,
+		BondDenom:    sdk.DefaultBondDenom,
 	}
 
 	simManager.GenerateGenesisStates(simState)
