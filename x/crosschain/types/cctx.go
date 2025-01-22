@@ -269,10 +269,15 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		TssPubkey:              tssPubkey,
 		CoinType:               msg.CoinType,
 	}
+
+	errorMessage := ""
+	if msg.Status != InboundStatus_success {
+		errorMessage = msg.Status.String()
+	}
 	status := &Status{
 		Status:              CctxStatus_PendingInbound,
 		StatusMessage:       "",
-		ErrorMessage:        msg.ErrorMessage,
+		ErrorMessage:        errorMessage,
 		CreatedTimestamp:    ctx.BlockHeader().Time.Unix(),
 		LastUpdateTimestamp: ctx.BlockHeader().Time.Unix(),
 		IsAbortRefunded:     false,

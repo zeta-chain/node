@@ -693,7 +693,7 @@ func (ob *Observer) BuildInboundVoteMsgForDepositedEvent(
 		event.Asset.String(),
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		event.Raw.Index,
-		"",
+		types.InboundStatus_success,
 	)
 }
 
@@ -746,7 +746,7 @@ func (ob *Observer) BuildInboundVoteMsgForZetaSentEvent(
 		"",
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		event.Raw.Index,
-		"",
+		types.InboundStatus_success,
 	)
 }
 
@@ -796,7 +796,7 @@ func (ob *Observer) BuildInboundVoteMsgForTokenSentToTSS(
 		"",
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		0, // not a smart contract call
-		"",
+		types.InboundStatus_success,
 	)
 }
 

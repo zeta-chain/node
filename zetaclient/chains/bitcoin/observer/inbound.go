@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/coin"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -248,7 +248,7 @@ func FilterAndParseIncomingTx(
 //   - a valid MsgVoteInbound message, or
 //   - nil if no valid message can be created for whatever reasons:
 //     invalid data, not processable, invalid amount, etc.
-func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosschaintypes.MsgVoteInbound {
+func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *types.MsgVoteInbound {
 	// prepare logger fields
 	lf := map[string]any{
 		logs.FieldMethod: "GetInboundVoteFromBtcEvent",
@@ -321,7 +321,7 @@ func GetBtcEventWithoutWitness(
 		value        float64
 		depositorFee float64
 		memo         []byte
-		errMessage   string
+		status       = types.InboundStatus_success
 	)
 
 	if len(tx.Vout) >= 2 {
@@ -351,7 +351,7 @@ func GetBtcEventWithoutWitness(
 			// the error message will be forwarded to zetacore to register a failed CCTX
 			value, err = DeductDepositorFee(vout0.Value, depositorFee)
 			if err != nil {
-				errMessage = err.Error()
+				status = types.InboundStatus_insufficient_depositor_fee
 				logger.Error().Err(err).Msgf("unable to deduct depositor fee for tx %s", tx.Txid)
 			}
 
@@ -390,7 +390,7 @@ func GetBtcEventWithoutWitness(
 			MemoBytes:    memo,
 			BlockNumber:  blockNumber,
 			TxHash:       tx.Txid,
-			ErrMessage:   errMessage,
+			Status:       status,
 		}, nil
 	}
 	return nil, nil

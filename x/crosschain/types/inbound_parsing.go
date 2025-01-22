@@ -143,7 +143,7 @@ func NewWithdrawalInbound(
 		event.Raw.Index,
 		ProtocolContractVersion_V2,
 		event.CallOptions.IsArbitraryCall,
-		"",
+		InboundStatus_success,
 		WithZEVMRevertOptions(event.RevertOptions),
 		WithCrossChainCall(isCrossChainCall),
 	), nil
@@ -192,7 +192,7 @@ func NewCallInbound(
 		event.Raw.Index,
 		ProtocolContractVersion_V2,
 		event.CallOptions.IsArbitraryCall,
-		"",
+		InboundStatus_success,
 		WithZEVMRevertOptions(event.RevertOptions),
 	), nil
 }
@@ -242,7 +242,7 @@ func NewWithdrawAndCallInbound(
 		event.Raw.Index,
 		ProtocolContractVersion_V2,
 		event.CallOptions.IsArbitraryCall,
-		"",
+		InboundStatus_success,
 		WithZEVMRevertOptions(event.RevertOptions),
 		WithCrossChainCall(true),
 	), nil

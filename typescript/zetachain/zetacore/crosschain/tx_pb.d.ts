@@ -12,6 +12,23 @@ import type { CallOptions, ProtocolContractVersion, RevertOptions } from "./cros
 import type { RateLimiterFlags } from "./rate_limiter_flags_pb.js";
 
 /**
+ * InboundStatus represents the status of an observed inbound
+ *
+ * @generated from enum zetachain.zetacore.crosschain.InboundStatus
+ */
+export declare enum InboundStatus {
+  /**
+   * @generated from enum value: success = 0;
+   */
+  success = 0,
+
+  /**
+   * @generated from enum value: insufficient_depositor_fee = 1;
+   */
+  insufficient_depositor_fee = 1,
+}
+
+/**
  * @generated from message zetachain.zetacore.crosschain.MsgMigrateTssFunds
  */
 export declare class MsgMigrateTssFunds extends Message<MsgMigrateTssFunds> {
@@ -685,11 +702,11 @@ export declare class MsgVoteInbound extends Message<MsgVoteInbound> {
   isCrossChainCall: boolean;
 
   /**
-   * it carries the error message that caused the inbound to fail
+   * success or failure
    *
-   * @generated from field: string error_message = 20;
+   * @generated from field: zetachain.zetacore.crosschain.InboundStatus status = 20;
    */
-  errorMessage: string;
+  status: InboundStatus;
 
   constructor(data?: PartialMessage<MsgVoteInbound>);
 

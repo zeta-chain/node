@@ -3,7 +3,6 @@ package observer_test
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"testing"
 
 	"github.com/btcsuite/btcd/btcutil"
@@ -12,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -105,7 +105,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		require.Equal(t, eventExpected, event)
 	})
 
-	t.Run("should emit error message if amount is less than depositor fee", func(t *testing.T) {
+	t.Run("should return failed status if amount is less than depositor fee", func(t *testing.T) {
 		// load tx and modify amount to less than depositor fee
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		tx.Vout[0].Value = depositorFee - 1.0/1e8 // 1 satoshi less than depositor fee
@@ -125,11 +125,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			MemoBytes:    memo,
 			BlockNumber:  blockNumber,
 			TxHash:       tx.Txid,
-			ErrMessage: fmt.Sprintf(
-				"deposited amount %v is less than depositor fee %v",
-				tx.Vout[0].Value,
-				depositorFee,
-			),
+			Status:       types.InboundStatus_insufficient_depositor_fee,
 		}
 
 		// load previous raw tx so so mock rpc client can return it

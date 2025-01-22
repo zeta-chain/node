@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
-	"fmt"
 	"math"
 	"path"
 	"strings"
@@ -24,6 +23,7 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/testutil"
 	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	clientcommon "github.com/zeta-chain/node/zetaclient/common"
 	"github.com/zeta-chain/node/zetaclient/keys"
@@ -329,7 +329,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 		require.Equal(t, eventExpected, event)
 	})
 
-	t.Run("should emit error message if amount is less than depositor fee", func(t *testing.T) {
+	t.Run("should return failed status if amount is less than depositor fee", func(t *testing.T) {
 		// load tx
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 
@@ -342,11 +342,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 
 		expectedEvent := *eventExpected
 		expectedEvent.Value = 0
-		expectedEvent.ErrMessage = fmt.Sprintf(
-			"deposited amount %v is less than depositor fee %v",
-			tx.Vout[0].Value,
-			depositorFee,
-		)
+		expectedEvent.Status = types.InboundStatus_insufficient_depositor_fee
 
 		// load previous raw tx so so mock rpc client can return it
 		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)

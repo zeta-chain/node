@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
+	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
@@ -50,11 +51,11 @@ func GetBtcEventWithWitness(
 	// deduct depositor fee
 	// to allow developers to track failed deposit caused by insufficient depositor fee,
 	// the error message will be forwarded to zetacore to register a failed CCTX
-	var errMessage string
+	status := types.InboundStatus_success
 	amount, err := DeductDepositorFee(tx.Vout[0].Value, depositorFee)
 	if err != nil {
-		errMessage = err.Error()
-		logger.Info().Err(err).Msgf("unable to deduct depositor fee for tx %s", tx.Txid)
+		status = types.InboundStatus_insufficient_depositor_fee
+		logger.Error().Err(err).Msgf("unable to deduct depositor fee for tx %s", tx.Txid)
 	}
 
 	// Try to extract the memo from the BTC txn. First try to extract from OP_RETURN
@@ -92,7 +93,7 @@ func GetBtcEventWithWitness(
 		MemoBytes:    memo,
 		BlockNumber:  blockNumber,
 		TxHash:       tx.Txid,
-		ErrMessage:   errMessage,
+		Status:       status,
 	}, nil
 }
 
