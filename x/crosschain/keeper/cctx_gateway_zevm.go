@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -24,7 +26,7 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 	config InitiateOutboundConfig,
 ) (newCCTXStatus types.CctxStatus, err error) {
 	// abort if CCTX already contains an initial error message from inbound vote msg
-	if config.CCTX.CctxStatus.ErrorMessage != "" {
+	if strings.Contains(config.CCTX.CctxStatus.ErrorMessage, types.InboundStatus_insufficient_depositor_fee.String()) {
 		config.CCTX.SetAbort("observation failed", "")
 		return types.CctxStatus_Aborted, nil
 	}
