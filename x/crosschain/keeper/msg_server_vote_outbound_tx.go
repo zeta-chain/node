@@ -123,7 +123,7 @@ func (k msgServer) VoteOutbound(
 	// We use the current TSS pubkey to finalize the outbound.
 	err = k.ValidateOutboundObservers(ctx, &cctx, ballot.BallotStatus, msg.ValueReceived.String())
 	if err != nil {
-		// The validate function for the outbound returns and error , which means that the outbound is invalid and should instead be aborted directly
+		// The validate function for the outbound returns an error, which means that the outbound is invalid and should instead be aborted directly
 		// Irrespective of what the Ballot status is
 		k.HandleInvalidOutbound(ctx, &cctx, err.Error(), tss.TssPubkey)
 		return &types.MsgVoteOutboundResponse{}, nil
