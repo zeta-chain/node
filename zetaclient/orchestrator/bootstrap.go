@@ -2,13 +2,11 @@ package orchestrator
 
 import (
 	"context"
-	"fmt"
 
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 	"github.com/tonkeeper/tongo/ton"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
@@ -352,20 +350,6 @@ func syncObserverMap(
 	mapDeleteMissingKeys(observerMap, presentChainIDs, onBeforeRemove)
 
 	return added, removed, nil
-}
-
-func btcDatabaseFileName(chain chains.Chain) string {
-	// legacyBTCDatabaseFilename is the Bitcoin database file name now used in mainnet and testnet3
-	// so we keep using it here for backward compatibility
-	const legacyBTCDatabaseFilename = "btc_chain_client"
-
-	// For additional bitcoin networks, we use the chain name as the database file name
-	switch chain.ChainId {
-	case chains.BitcoinMainnet.ChainId, chains.BitcoinTestnet.ChainId:
-		return legacyBTCDatabaseFilename
-	default:
-		return fmt.Sprintf("%s_%s", legacyBTCDatabaseFilename, chain.Name)
-	}
 }
 
 func makeTONClient(

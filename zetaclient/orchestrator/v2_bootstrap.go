@@ -2,10 +2,12 @@ package orchestrator
 
 import (
 	"context"
+	"fmt"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
+	"github.com/zeta-chain/node/pkg/chains"
 
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
@@ -150,4 +152,18 @@ func (oc *V2) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*evm.EVM, err
 	}
 
 	return evm.New(oc.scheduler, observer, signer), nil
+}
+
+func btcDatabaseFileName(chain chains.Chain) string {
+	// legacyBTCDatabaseFilename is the Bitcoin database file name now used in mainnet and testnet3
+	// so we keep using it here for backward compatibility
+	const legacyBTCDatabaseFilename = "btc_chain_client"
+
+	// For additional bitcoin networks, we use the chain name as the database file name
+	switch chain.ChainId {
+	case chains.BitcoinMainnet.ChainId, chains.BitcoinTestnet.ChainId:
+		return legacyBTCDatabaseFilename
+	default:
+		return fmt.Sprintf("%s_%s", legacyBTCDatabaseFilename, chain.Name)
+	}
 }
