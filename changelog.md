@@ -7,11 +7,13 @@
 * [3332](https://github.com/zeta-chain/node/pull/3332) - implement orchestrator V2. Move BTC observer-signer to V2
 * [3360](https://github.com/zeta-chain/node/pull/3360) - update protocol contract imports using consolidated path
 * [3349](https://github.com/zeta-chain/node/pull/3349) - implement new bitcoin rpc in zetaclient with improved performance and observability
+* [3379](https://github.com/zeta-chain/node/pull/3379) - add Avalanche, Arbitrum and World Chain in chain info
 * [3390](https://github.com/zeta-chain/node/pull/3390) - orchestrator V2: EVM observer-signer
 
 ### Fixes
 
 * [3374](https://github.com/zeta-chain/node/pull/3374) - remove minimum rent exempt check for SPL token withdrawals
+* [3348](https://github.com/zeta-chain/node/pull/3348) - add support to perform withdraws in ZetaChain `onRevert` call
 
 ## v25.0.0
 
