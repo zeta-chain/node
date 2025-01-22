@@ -129,7 +129,7 @@ func (c *Client) GetEstimatedFeeRate(ctx context.Context, confTarget int64, regn
 		return 0, fmt.Errorf("fee result contains errors: %s", feeResult.Errors)
 	}
 	if feeResult.FeeRate == nil {
-		return 0, fmt.Errorf("nil fee rate")
+		return 0, errors.New("nil fee rate")
 	}
 	feeRate := *feeResult.FeeRate
 	if feeRate <= 0 || feeRate >= maxBTCSupply {

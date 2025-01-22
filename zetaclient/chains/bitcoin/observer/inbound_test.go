@@ -167,7 +167,7 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 		{
 			name: "should return vote for standard memo",
 			event: &observer.BTCInboundEvent{
-				FromAddress: sample.BtcAddressP2WPKH(t, &chaincfg.MainNetParams).String(),
+				FromAddress: sample.BTCAddressP2WPKH(t, &chaincfg.MainNetParams).String(),
 				// a deposit and call
 				MemoBytes: testutil.HexToBytes(
 					t,

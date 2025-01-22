@@ -91,8 +91,8 @@ func EthAddressFromRand(r *rand.Rand) ethcommon.Address {
 	return ethcommon.BytesToAddress(sdk.AccAddress(PubKey(r).Address()).Bytes())
 }
 
-// BtcAddressP2WPKH returns a sample btc P2WPKH address
-func BtcAddressP2WPKH(t *testing.T, net *chaincfg.Params) *btcutil.AddressWitnessPubKeyHash {
+// BTCAddressP2WPKH returns a sample Bitcoin P2WPKH address
+func BTCAddressP2WPKH(t *testing.T, net *chaincfg.Params) *btcutil.AddressWitnessPubKeyHash {
 	privateKey, err := btcec.NewPrivateKey()
 	require.NoError(t, err)
 
@@ -103,9 +103,9 @@ func BtcAddressP2WPKH(t *testing.T, net *chaincfg.Params) *btcutil.AddressWitnes
 	return addr
 }
 
-// BtcAddressP2WPKH returns a pkscript for a sample btc P2WPKH address
-func BtcAddressP2WPKHScript(t *testing.T, net *chaincfg.Params) []byte {
-	addr := BtcAddressP2WPKH(t, net)
+// BtcAddressP2WPKH returns a pkscript for a sample Bitcoin P2WPKH address
+func BTCAddressP2WPKHScript(t *testing.T, net *chaincfg.Params) []byte {
+	addr := BTCAddressP2WPKH(t, net)
 	script, err := txscript.PayToAddrScript(addr)
 	require.NoError(t, err)
 	return script

@@ -18,17 +18,24 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 		feeRateEstimated int64
 	)
 
-	// special handle regnet and testnet gas rate
-	if ob.Chain().NetworkType != chains.NetworkType_mainnet {
-		feeRateEstimated, err = ob.GetFeeRateForRegnetAndTestnet(ctx)
+	// estimate fee rate according to network type
+	switch ob.Chain().NetworkType {
+	case chains.NetworkType_privnet:
+		// regnet RPC 'EstimateSmartFee' is not available
+		feeRateEstimated = client.FeeRateRegnet
+	case chains.NetworkType_testnet:
+		// testnet RPC 'EstimateSmartFee' can return unreasonable high fee rate
+		feeRateEstimated, err = common.GetRecentFeeRate(ctx, ob.rpc, ob.netParams)
 		if err != nil {
-			return errors.Wrap(err, "unable to execute specialHandleFeeRate")
+			return errors.Wrapf(err, "unable to get recent fee rate")
 		}
-	} else {
+	case chains.NetworkType_mainnet:
 		feeRateEstimated, err = ob.rpc.GetEstimatedFeeRate(ctx, 1, false)
 		if err != nil {
 			return errors.Wrap(err, "unable to get estimated fee rate")
 		}
+	default:
+		return fmt.Errorf("unsupported bitcoin network type %d", ob.Chain().NetworkType)
 	}
 
 	// query the current block number
@@ -48,22 +55,4 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// GetFeeRateForRegnetAndTestnet handles the fee rate for regnet and testnet
-// regnet:  RPC 'EstimateSmartFee' is not available
-// testnet: RPC 'EstimateSmartFee' can return unreasonable high fee rate
-func (ob *Observer) GetFeeRateForRegnetAndTestnet(ctx context.Context) (int64, error) {
-	switch ob.Chain().NetworkType {
-	case chains.NetworkType_privnet:
-		return client.FeeRateRegnet, nil
-	case chains.NetworkType_testnet:
-		feeRateEstimated, err := common.GetRecentFeeRate(ctx, ob.rpc, ob.netParams)
-		if err != nil {
-			return 0, errors.Wrapf(err, "error GetRecentFeeRate")
-		}
-		return feeRateEstimated, nil
-	default:
-		return 0, fmt.Errorf(" unsupported bitcoin network type %d", ob.Chain().NetworkType)
-	}
 }
