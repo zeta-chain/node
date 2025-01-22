@@ -26,9 +26,15 @@ type FanOut[T any] struct {
 
 type output[T any] struct {
 	ch            chan T
-	closed        atomic.Bool
+	status        atomic.Int32
 	pendingWrites atomic.Int32
 }
+
+const (
+	statusRunning = int32(0)
+	statusClosing = int32(1)
+	statusClosed  = int32(2)
+)
 
 // New constructs FanOut
 func New[T any](source <-chan T, buf int) *FanOut[T] {
@@ -83,7 +89,7 @@ func (f *FanOut[T]) Start() {
 				// imagine f.input receives 5 msgs/sec *at peak*,
 				// but the output processes only 1 msg/sec, thus +4 goroutines will be spawned
 				// => no control over the order.
-				go f.outputs[i].write(data)
+				f.outputs[i].write(data)
 			}
 			f.mu.RUnlock()
 		}
@@ -100,14 +106,15 @@ func (f *FanOut[T]) Start() {
 }
 
 func (o *output[T]) write(data T) {
-	// noop
-	if o.closed.Load() {
-		return
-	}
-
 	o.pendingWrites.Add(1)
-	o.ch <- data
-	o.pendingWrites.Add(-1)
+
+	go func() {
+		if o.isRunning() {
+			o.ch <- data
+		}
+
+		o.pendingWrites.Add(-1)
+	}()
 }
 
 func (o *output[T]) equal(item *output[T]) bool {
@@ -117,18 +124,23 @@ func (o *output[T]) equal(item *output[T]) bool {
 
 func (o *output[T]) close() {
 	// noop
-	if o.closed.Load() {
+	if !o.isRunning() {
 		return
 	}
 
-	o.closed.Store(true)
+	o.status.Store(statusClosing)
 
 	// spin-lock
 	for {
 		if o.pendingWrites.Load() == 0 {
+			o.status.Store(statusClosed)
 			close(o.ch)
 			break
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
+}
+
+func (o *output[T]) isRunning() bool {
+	return o.status.Load() == statusRunning
 }

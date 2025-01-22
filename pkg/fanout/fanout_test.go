@@ -1,11 +1,13 @@
 package fanout
 
 import (
+	"runtime"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -132,4 +134,90 @@ func TestFanOutClose(t *testing.T) {
 
 	// ASSERT
 	require.Equal(t, int64(10+5), total)
+}
+
+// go test -v -bench=BenchmarkFanOutMemoryUsage -benchmem -benchtime=30s
+func BenchmarkFanOutMemoryUsage(b *testing.B) {
+	b.ReportAllocs()
+
+	const (
+		outputBufferSize = 16
+		numOutputs       = 3
+		numMessages      = 100
+	)
+
+	runtime.GC()
+
+	for iter := 0; iter < b.N; iter++ {
+		// ARRANGE
+		// Given an input channel & fanout
+		input := make(chan int)
+		f := New(input, outputBufferSize)
+
+		// Given counter
+		var counter uint64
+
+		// Given outputs what simply consume data
+		var wg sync.WaitGroup
+		for i := 0; i < numOutputs; i++ {
+			out, _ := f.Add()
+
+			wg.Add(1)
+			go func(out <-chan int, i int) {
+				defer wg.Done()
+				for range out {
+					atomic.AddUint64(&counter, 1)
+				}
+			}(out, i)
+		}
+
+		// Start fanout
+		f.Start()
+
+		// Given mem stats
+		var memStatsBefore runtime.MemStats
+		runtime.ReadMemStats(&memStatsBefore)
+
+		// ACT
+		// Send messages to the input channel
+		for i := 0; i < numMessages; i++ {
+			input <- i
+		}
+
+		// Then close input channel to stop the fan-out process
+		close(input)
+
+		// Wait for consumers to finish
+		wg.Wait()
+
+		// ASSERT
+		// Check counter. We don't have guarantees that after (input.close)
+		assert.NotZero(b, counter)
+
+		// Track memory usage after processing messages
+		var memStatsAfter runtime.MemStats
+		runtime.ReadMemStats(&memStatsAfter)
+
+		logMem(b, &memStatsBefore, &memStatsAfter)
+	}
+}
+
+func logMem(t testing.TB, before, after *runtime.MemStats) {
+	t.Logf(
+		"Mem Before: Alloc = %d KB, TotalAlloc = %d KB, HeapAlloc = %d KB, HeapInUse = %d, HeapSys = %d KB",
+		before.Alloc/1024,
+		before.TotalAlloc/1024,
+		before.HeapAlloc/1024,
+		before.HeapInuse/1024,
+		before.HeapSys/1024,
+	)
+
+	t.Logf(
+		"Mem After: Alloc = %d KB, TotalAlloc = %d KB, HeapAlloc = %d KB, HeapInUse = %d KB, HeapSys = %d KB",
+		after.Alloc/1024,
+		after.TotalAlloc/1024,
+		after.HeapAlloc/1024,
+		before.HeapInuse/1024,
+		after.HeapSys/1024,
+	)
 }
