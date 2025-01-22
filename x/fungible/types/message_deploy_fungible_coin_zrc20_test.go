@@ -81,6 +81,21 @@ func TestMsgDeployFungibleCoinZRC4_ValidateBasic(t *testing.T) {
 			},
 		},
 		{
+			name: "nil liquidity cap inner",
+			msg: &types.MsgDeployFungibleCoinZRC20{
+				Creator:        sample.AccAddress(),
+				ERC20:          "test erc20",
+				ForeignChainId: 1,
+				Decimals:       6,
+				Name:           "test",
+				Symbol:         "test",
+				CoinType:       coin.CoinType_ERC20,
+				GasLimit:       10,
+				LiquidityCap:   &sdkmath.Uint{},
+			},
+			err: cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "liquidity cap is nil"),
+		},
+		{
 			name: "valid message",
 			msg: types.NewMsgDeployFungibleCoinZRC20(
 				sample.AccAddress(),
