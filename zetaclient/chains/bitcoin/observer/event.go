@@ -230,8 +230,8 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 		coin.CoinType_Gas,
 		"",
 		0,
-		crosschaintypes.ProtocolContractVersion_V1,
-		false, // not relevant for v1
+		crosschaintypes.ProtocolContractVersion_V2,
+		false,
 		crosschaintypes.WithRevertOptions(revertOptions),
 	)
 }
