@@ -163,7 +163,6 @@ func TestBtcDatabaseFileName(t *testing.T) {
 func tasksHaveGroup(t *testing.T, tasks map[uuid.UUID]*scheduler.Task, group string) {
 	var found bool
 	for _, task := range tasks {
-		// t.Logf("Task %s:%s", task.Group(), task.Name())
 		if !found && task.Group() == scheduler.Group(group) {
 			found = true
 		}

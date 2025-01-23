@@ -62,6 +62,10 @@ func New(client interfaces.EVMRPCClient, signer ethtypes.Signer) *Client {
 
 // IsTxConfirmed checks whether txHash settled on-chain && has at least X blocks of confirmations.
 func (c *Client) IsTxConfirmed(ctx context.Context, txHash string, confirmations uint64) (bool, error) {
+	if confirmations == 0 {
+		return false, errors.New("confirmations must be greater than 0")
+	}
+
 	hash := ethcommon.HexToHash(txHash)
 
 	// query the tx
@@ -84,16 +88,17 @@ func (c *Client) IsTxConfirmed(ctx context.Context, txHash string, confirmations
 	}
 
 	// query last block height
-	lastHeight, err := c.BlockNumber(ctx)
+	blockNumber, err := c.BlockNumber(ctx)
 	switch {
 	case err != nil:
 		return false, errors.Wrap(err, "error getting block number")
-	case lastHeight < receipt.BlockNumber.Uint64():
-		// check confirmations
+	case blockNumber < receipt.BlockNumber.Uint64():
+		// should not happen
 		return false, nil
 	}
 
-	blocksConfirmed := 1 + (lastHeight - receipt.BlockNumber.Uint64())
+	// check confirmations
+	blocksConfirmed := 1 + (blockNumber - receipt.BlockNumber.Uint64())
 
 	return blocksConfirmed >= confirmations, nil
 }
@@ -103,18 +108,13 @@ func (c *Client) HealthCheck(ctx context.Context) (time.Time, error) {
 	// query latest block number
 	bn, err := c.BlockNumber(ctx)
 	if err != nil {
-		return time.Time{}, errors.Wrap(err, "RPC failed on BlockNumber, RPC down?")
-	}
-
-	// query suggested gas price
-	if _, err = c.EVMRPCClient.SuggestGasPrice(ctx); err != nil {
-		return time.Time{}, errors.Wrap(err, "RPC failed on SuggestGasPrice, RPC down?")
+		return time.Time{}, errors.Wrap(err, "unable to get block number")
 	}
 
 	// query latest block header
 	header, err := c.EVMRPCClient.HeaderByNumber(ctx, new(big.Int).SetUint64(bn))
 	if err != nil {
-		return time.Time{}, errors.Wrapf(err, "RPC failed on HeaderByNumber(%d), RPC down?", bn)
+		return time.Time{}, errors.Wrapf(err, "unable to get block header for block %d", bn)
 	}
 
 	// convert block time to UTC
