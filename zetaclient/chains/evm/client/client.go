@@ -23,6 +23,7 @@ type Client struct {
 	ethtypes.Signer
 }
 
+// NewFromEndpoint new Client constructor based on endpoint URL.
 func NewFromEndpoint(ctx context.Context, endpoint string) (*Client, error) {
 	if endpoint == testutils.MockEVMRPCEndpoint {
 		chainID := big.NewInt(chains.Ethereum.ChainId)
@@ -54,10 +55,12 @@ func NewFromEndpoint(ctx context.Context, endpoint string) (*Client, error) {
 	return New(client, ethSigner), nil
 }
 
+// New Client constructor.
 func New(client interfaces.EVMRPCClient, signer ethtypes.Signer) *Client {
 	return &Client{client, signer}
 }
 
+// IsTxConfirmed checks whether txHash settled on-chain && has at least X blocks of confirmations.
 func (c *Client) IsTxConfirmed(ctx context.Context, txHash string, confirmations uint64) (bool, error) {
 	hash := ethcommon.HexToHash(txHash)
 

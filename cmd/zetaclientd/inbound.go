@@ -106,7 +106,7 @@ func InboundGetBallot(_ *cobra.Command, args []string) error {
 
 		evmConfig, found := appContext.Config().GetEVMConfig(chain.ID())
 		if !found {
-			return fmt.Errorf("unable to find btc config")
+			return fmt.Errorf("unable to find evm config")
 		}
 
 		httpClient, err := metrics.GetInstrumentedHTTPClient(evmConfig.Endpoint)

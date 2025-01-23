@@ -181,12 +181,12 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 			e.outboundLogger(outboundID).Error().Msg("chain id mismatch")
 			continue
 		case params.TssNonce > cctxList[0].GetCurrentOutboundParam().TssNonce+outboundScheduleLookBack:
-			e.outboundLogger(outboundID).Error().
-				Uint64("nonce.signing", params.TssNonce).
-				Uint64("nonce.earliest", cctxList[0].GetCurrentOutboundParam().TssNonce).
-				Msg("Schedule CCTX: nonce is too high")
-
-			return nil
+			return fmt.Errorf(
+				"nonce %d is too high (%s). Earliest nonce %d",
+				params.TssNonce,
+				outboundID,
+				cctxList[0].GetCurrentOutboundParam().TssNonce,
+			)
 		}
 
 		// vote outbound if it's already confirmed
