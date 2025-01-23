@@ -1182,7 +1182,7 @@ func (m *MsgVoteInbound) GetStatus() InboundStatus {
 	if m != nil {
 		return m.Status
 	}
-	return InboundStatus_success
+	return InboundStatus_SUCCESS
 }
 
 type MsgVoteInboundResponse struct {

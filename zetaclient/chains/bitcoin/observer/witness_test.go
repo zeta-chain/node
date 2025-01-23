@@ -125,7 +125,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			MemoBytes:    memo,
 			BlockNumber:  blockNumber,
 			TxHash:       tx.Txid,
-			Status:       types.InboundStatus_insufficient_depositor_fee,
+			Status:       types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
 		}
 
 		// load previous raw tx so so mock rpc client can return it

@@ -87,17 +87,17 @@ export declare enum TxFinalizationStatus {
  */
 export declare enum InboundStatus {
   /**
-   * @generated from enum value: success = 0;
+   * @generated from enum value: SUCCESS = 0;
    */
-  success = 0,
+  SUCCESS = 0,
 
   /**
    * this field is specifically for Bitcoin when the deposit amount is less than
    * depositor fee
    *
-   * @generated from enum value: insufficient_depositor_fee = 1;
+   * @generated from enum value: INSUFFICIENT_DEPOSITOR_FEE = 1;
    */
-  insufficient_depositor_fee = 1,
+  INSUFFICIENT_DEPOSITOR_FEE = 1,
 }
 
 /**

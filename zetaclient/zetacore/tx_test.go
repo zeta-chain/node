@@ -263,7 +263,7 @@ func TestZetacore_GetInboundVoteMessage(t *testing.T) {
 			"azeta",
 			address.String(),
 			0,
-			types.InboundStatus_success,
+			types.InboundStatus_SUCCESS,
 		)
 		require.Equal(t, address.String(), msg.Creator)
 	})

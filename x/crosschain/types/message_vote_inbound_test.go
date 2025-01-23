@@ -38,7 +38,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			42,
 			types.ProtocolContractVersion_V1,
 			true,
-			types.InboundStatus_success,
+			types.InboundStatus_SUCCESS,
 		)
 		require.EqualValues(t, types.NewEmptyRevertOptions(), msg.RevertOptions)
 	})
@@ -65,7 +65,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			31,
 			types.ProtocolContractVersion_V2,
 			true,
-			types.InboundStatus_success,
+			types.InboundStatus_SUCCESS,
 			types.WithRevertOptions(types.RevertOptions{
 				RevertAddress:  revertAddress.Hex(),
 				CallOnRevert:   true,
@@ -105,7 +105,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			42,
 			types.ProtocolContractVersion_V1,
 			true,
-			types.InboundStatus_success,
+			types.InboundStatus_SUCCESS,
 			types.WithZEVMRevertOptions(gatewayzevm.RevertOptions{
 				RevertAddress:    revertAddress,
 				CallOnRevert:     true,
@@ -140,7 +140,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			42,
 			types.ProtocolContractVersion_V1,
 			true,
-			types.InboundStatus_success,
+			types.InboundStatus_SUCCESS,
 			types.WithZEVMRevertOptions(gatewayzevm.RevertOptions{
 				RevertAddress: revertAddress,
 				CallOnRevert:  true,
@@ -179,7 +179,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			42,
 			types.ProtocolContractVersion_V1,
 			true,
-			types.InboundStatus_success,
+			types.InboundStatus_SUCCESS,
 			types.WithEVMRevertOptions(gatewayevm.RevertOptions{
 				RevertAddress:    revertAddress,
 				CallOnRevert:     true,
@@ -213,7 +213,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			42,
 			types.ProtocolContractVersion_V1,
 			true,
-			types.InboundStatus_success,
+			types.InboundStatus_SUCCESS,
 			types.WithEVMRevertOptions(gatewayevm.RevertOptions{
 				RevertAddress: revertAddress,
 				CallOnRevert:  true,
@@ -249,7 +249,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			42,
 			types.ProtocolContractVersion_V1,
 			true,
-			types.InboundStatus_success,
+			types.InboundStatus_SUCCESS,
 		)
 		require.False(t, msg.IsCrossChainCall)
 
@@ -270,7 +270,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			42,
 			types.ProtocolContractVersion_V1,
 			true,
-			types.InboundStatus_success,
+			types.InboundStatus_SUCCESS,
 			types.WithCrossChainCall(true),
 		)
 		require.True(t, msg.IsCrossChainCall)
@@ -292,7 +292,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			42,
 			types.ProtocolContractVersion_V1,
 			true,
-			types.InboundStatus_success,
+			types.InboundStatus_SUCCESS,
 			types.WithCrossChainCall(false),
 		)
 		require.False(t, msg.IsCrossChainCall)
@@ -326,7 +326,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				42,
 				types.ProtocolContractVersion_V1,
 				true,
-				types.InboundStatus_success,
+				types.InboundStatus_SUCCESS,
 			),
 		},
 		{
@@ -348,7 +348,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				42,
 				types.ProtocolContractVersion_V1,
 				true,
-				types.InboundStatus_success,
+				types.InboundStatus_SUCCESS,
 			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
@@ -371,7 +371,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				42,
 				types.ProtocolContractVersion_V1,
 				true,
-				types.InboundStatus_success,
+				types.InboundStatus_SUCCESS,
 			),
 			err: types.ErrInvalidChainID,
 		},
@@ -394,7 +394,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				42,
 				types.ProtocolContractVersion_V1,
 				true,
-				types.InboundStatus_success,
+				types.InboundStatus_SUCCESS,
 			),
 			err: types.ErrInvalidChainID,
 		},
@@ -417,7 +417,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				42,
 				types.ProtocolContractVersion_V1,
 				true,
-				types.InboundStatus_success,
+				types.InboundStatus_SUCCESS,
 			),
 			err: sdkerrors.ErrInvalidRequest,
 		},
@@ -467,7 +467,7 @@ func TestMsgVoteInbound_Digest(t *testing.T) {
 			Asset:                   asset,
 			EventIndex:              42,
 			ProtocolContractVersion: types.ProtocolContractVersion_V1,
-			Status:                  types.InboundStatus_success,
+			Status:                  types.InboundStatus_SUCCESS,
 		}
 	}
 
@@ -568,7 +568,7 @@ func TestMsgVoteInbound_Digest(t *testing.T) {
 
 	// inbound status used
 	msg = getMsg()
-	msg.Status = types.InboundStatus_insufficient_depositor_fee
+	msg.Status = types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
 	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "inbound status should change hash")
 }

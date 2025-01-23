@@ -57294,11 +57294,11 @@ definitions:
   crosschainInboundStatus:
     type: string
     enum:
-      - success
-      - insufficient_depositor_fee
-    default: success
+      - SUCCESS
+      - INSUFFICIENT_DEPOSITOR_FEE
+    default: SUCCESS
     description: |-
-      - insufficient_depositor_fee: this field is specifically for Bitcoin when the deposit amount is less than
+      - INSUFFICIENT_DEPOSITOR_FEE: this field is specifically for Bitcoin when the deposit amount is less than
       depositor fee
     title: InboundStatus represents the status of an observed inbound
   crosschainInboundTracker:

@@ -342,7 +342,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 
 		expectedEvent := *eventExpected
 		expectedEvent.Value = 0
-		expectedEvent.Status = types.InboundStatus_insufficient_depositor_fee
+		expectedEvent.Status = types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
 
 		// load previous raw tx so so mock rpc client can return it
 		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)

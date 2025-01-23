@@ -389,7 +389,7 @@ func Test_NewCCTX(t *testing.T) {
 			Asset:                   asset,
 			EventIndex:              eventIndex,
 			ProtocolContractVersion: types.ProtocolContractVersion_V2,
-			Status:                  types.InboundStatus_insufficient_depositor_fee,
+			Status:                  types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
 		}
 		cctx, err := types.NewCCTX(ctx, msg, tss.TssPubkey)
 		require.NoError(t, err)
@@ -409,7 +409,7 @@ func Test_NewCCTX(t *testing.T) {
 		require.Equal(t, types.CctxStatus_PendingInbound, cctx.CctxStatus.Status)
 		require.Equal(t, false, cctx.CctxStatus.IsAbortRefunded)
 		require.Equal(t, types.ProtocolContractVersion_V2, cctx.ProtocolContractVersion)
-		require.Equal(t, types.InboundStatus_insufficient_depositor_fee, cctx.GetInboundParams().Status)
+		require.Equal(t, types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE, cctx.GetInboundParams().Status)
 	})
 
 	t.Run("should return an error if the cctx is invalid", func(t *testing.T) {

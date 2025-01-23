@@ -30,10 +30,10 @@ enum TxFinalizationStatus {
 // InboundStatus represents the status of an observed inbound
 enum InboundStatus {
   option (gogoproto.goproto_enum_stringer) = true;
-  success = 0;
+  SUCCESS = 0;
   // this field is specifically for Bitcoin when the deposit amount is less than
   // depositor fee
-  insufficient_depositor_fee = 1;
+  INSUFFICIENT_DEPOSITOR_FEE = 1;
 }
 
 message InboundParams {
