@@ -43,8 +43,11 @@ func MockBTCObserverMainnet(t *testing.T, tss interfaces.TSSSigner) *Observer {
 	logger := zerolog.New(zerolog.NewTestWriter(t))
 	baseLogger := base.Logger{Std: logger, Compliance: logger}
 
+	baseObserver, err := base.NewObserver(chain, params, nil, tss, 100, nil, database, baseLogger)
+	require.NoError(t, err)
+
 	// create Bitcoin observer
-	ob, err := NewObserver(chain, btcClient, params, nil, tss, database, baseLogger, nil)
+	ob, err := New(chain, baseObserver, btcClient)
 	require.NoError(t, err)
 
 	return ob
