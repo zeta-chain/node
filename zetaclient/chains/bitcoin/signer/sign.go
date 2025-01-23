@@ -92,15 +92,8 @@ func (signer *Signer) SignWithdrawTx(
 			txData.nonce, txData.feeRate, txSize, fees, selected.ConsolidatedUTXOs, selected.ConsolidatedValue)
 
 	// add tx outputs
-	err = signer.AddWithdrawTxOutputs(
-		tx,
-		txData.to,
-		selected.Value,
-		txData.amountSats,
-		nonceMark,
-		fees,
-		txData.cancelTx,
-	)
+	inputValue := selected.Value
+	err = signer.AddWithdrawTxOutputs(tx, txData.to, inputValue, txData.amountSats, nonceMark, fees, txData.cancelTx)
 	if err != nil {
 		return nil, err
 	}
