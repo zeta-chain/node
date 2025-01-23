@@ -2,9 +2,7 @@
 
 ## unreleased
 
-### Features
-
-* [3396](https://github.com/zeta-chain/node/pull/3396) - add support for Bitcoin RBF (Replace-By-Fee) in zetaclient
+### Tests
 
 ### Refactor
 
