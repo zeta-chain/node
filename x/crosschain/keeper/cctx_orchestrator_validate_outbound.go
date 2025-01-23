@@ -155,8 +155,8 @@ func (k Keeper) processFailedOutboundObservers(ctx sdk.Context, cctx *types.Cros
 			}
 		}
 	} else {
-		errorMsg := ccctxerror.NewCCTXErrorJsonMessage("outbound failed to be executed on connected chain", nil)
-		err := k.processFailedOutboundOnExternalChain(ctx, cctx, oldStatus, errors.New(errorMsg), cctx.GetCurrentOutboundParam().Amount)
+		// We add a hardcoded message here as the error from the connected chain is not available,
+		err := k.processFailedOutboundOnExternalChain(ctx, cctx, oldStatus, errors.New("outbound failed to be executed on connected chain"), cctx.GetCurrentOutboundParam().Amount)
 		if err != nil {
 			return cosmoserrors.Wrap(err, "processFailedOutboundOnExternalChain")
 		}
@@ -171,7 +171,7 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,
 	oldStatus types.CctxStatus,
-	errorMsg error,
+	depositErr error,
 	inputAmount math.Uint,
 ) error {
 	switch oldStatus {
@@ -225,13 +225,13 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 		// Not setting the finalization status here, the required changes have been made while creating the revert tx
 		cctx.SetPendingRevert(types.StatusMessages{
 			StatusMessage:        "outbound failed",
-			ErrorMessageOutbound: ccctxerror.NewCCTXErrorJsonMessage("", errorMsg),
+			ErrorMessageOutbound: ccctxerror.NewCCTXErrorJsonMessage("", depositErr),
 		})
 	case types.CctxStatus_PendingRevert:
 		cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 		cctx.SetAbort(types.StatusMessages{
 			StatusMessage:      "revert failed to be processed",
-			ErrorMessageRevert: ccctxerror.NewCCTXErrorJsonMessage("", errorMsg),
+			ErrorMessageRevert: ccctxerror.NewCCTXErrorJsonMessage("", depositErr),
 		})
 	}
 	return nil

@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	cctxerror "github.com/zeta-chain/node/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	cctxerror "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 

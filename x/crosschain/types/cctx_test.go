@@ -237,21 +237,16 @@ func TestCrossChainTx_SetPendingOutbound(t *testing.T) {
 func TestCrossChainTx_SetOutboundMined(t *testing.T) {
 	cctx := sample.CrossChainTx(t, "test")
 	cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-	cctx.SetOutboundMined(types.StatusMessages{
-		StatusMessage: "status message",
-	})
+	cctx.SetOutboundMined()
 	require.Equal(t, types.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
-	require.Equal(t, cctx.CctxStatus.StatusMessage, "status message")
+	require.Equal(t, cctx.CctxStatus.StatusMessage, "")
 }
 
 func TestCrossChainTx_SetReverted(t *testing.T) {
 	cctx := sample.CrossChainTx(t, "test")
 	cctx.CctxStatus.Status = types.CctxStatus_PendingRevert
-	cctx.SetReverted(types.StatusMessages{
-		StatusMessage:      "status message",
-		ErrorMessageRevert: "error revert",
-	})
+	cctx.SetReverted()
 	require.Equal(t, types.CctxStatus_Reverted, cctx.CctxStatus.Status)
-	require.Equal(t, cctx.CctxStatus.StatusMessage, "status message")
-	require.Equal(t, cctx.CctxStatus.ErrorMessageRevert, "error revert")
+	require.Equal(t, cctx.CctxStatus.StatusMessage, "")
+	require.Equal(t, cctx.CctxStatus.ErrorMessageRevert, "")
 }

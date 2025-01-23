@@ -29,7 +29,13 @@ type CCTXErrorMessage struct {
 }
 
 // NewZEVMErrorMessage creates a new CCTXErrorMessage , which contains additional fields which are specific to ZEVM calls only
-func NewZEVMErrorMessage(method string, contract common.Address, args interface{}, message string, err error) CCTXErrorMessage {
+func NewZEVMErrorMessage(
+	method string,
+	contract common.Address,
+	args interface{},
+	message string,
+	err error,
+) CCTXErrorMessage {
 	return CCTXErrorMessage{
 		Method:   method,
 		Contract: contract.String(),

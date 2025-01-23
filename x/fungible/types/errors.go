@@ -24,7 +24,7 @@ var (
 	ErrPausedZRC20             = cosmoserrors.Register(ModuleName, 1121, "ZRC20 is paused")
 	ErrForeignCoinNotFound     = cosmoserrors.Register(ModuleName, 1122, "foreign coin not found")
 	ErrForeignCoinCapReached   = cosmoserrors.Register(ModuleName, 1123, "foreign coin cap reached")
-	ErrCallNonContract         = cosmoserrors.Register(ModuleName, 1124, "can't call a non-contract address")
+	ErrCallNonContract         = cosmoserrors.Register(ModuleName, 1124, "cannot call a non-contract address")
 	ErrForeignCoinAlreadyExist = cosmoserrors.Register(ModuleName, 1125, "foreign coin already exist")
 	ErrNilGasPrice             = cosmoserrors.Register(ModuleName, 1127, "nil gas price")
 	ErrAccountNotFound         = cosmoserrors.Register(ModuleName, 1128, "account not found")

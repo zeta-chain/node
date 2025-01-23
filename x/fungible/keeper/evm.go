@@ -21,7 +21,6 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-	ccctxerror "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/wzeta.sol"
 	zevmconnectorcontract "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zetaconnectorzevm.sol"
@@ -31,6 +30,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	ccctxerror "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/server/config"
 	"github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -674,8 +674,6 @@ func (k Keeper) CallEVM(
 	resp, err := k.CallEVMWithData(ctx, from, &contract, data, commit, noEthereumTxEvent, value, gasLimit)
 	if err != nil {
 		// create an error message
-		// ErrCallEvmWithData is added to the message field of the error which is an internal message.
-		// The error from the CallEVMWithData is added to the error field of the error which is the actual error
 		errMessage := ccctxerror.NewZEVMErrorMessage(method, contract, args, types.ErrCallEvmWithData.Error(), err)
 		// if it is a revert error/ the revert reason is available, then add it
 		revertErr, ok := err.(*evmtypes.RevertError)
