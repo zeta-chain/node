@@ -16,7 +16,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"

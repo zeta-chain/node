@@ -7,14 +7,14 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/systemcontract.sol"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"github.com/zeta-chain/node/x/fungible/types"
-	zetaObserverTypes "github.com/zeta-chain/node/x/observer/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // SetupChainGasCoinAndPool setup gas ZRC20, and ZETA/gas pool for a chain
@@ -34,7 +34,7 @@ func (k Keeper) SetupChainGasCoinAndPool(
 
 	chain, found := chains.GetChainFromChainID(chainID, additionalChains)
 	if !found {
-		return ethcommon.Address{}, zetaObserverTypes.ErrSupportedChains
+		return ethcommon.Address{}, observertypes.ErrSupportedChains
 	}
 
 	transferGasLimit := gasLimit

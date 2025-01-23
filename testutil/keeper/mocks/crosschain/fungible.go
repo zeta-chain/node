@@ -421,21 +421,33 @@ func (_m *CrosschainFungibleKeeper) GetUniswapV2Router02Address(ctx types.Contex
 }
 
 // ProcessV2RevertDeposit provides a mock function with given fields: ctx, inboundSender, amount, chainID, coinType, asset, revertAddress, callOnRevert, revertMessage
-func (_m *CrosschainFungibleKeeper) ProcessV2RevertDeposit(ctx types.Context, inboundSender string, amount *big.Int, chainID int64, coinType coin.CoinType, asset string, revertAddress common.Address, callOnRevert bool, revertMessage []byte) error {
+func (_m *CrosschainFungibleKeeper) ProcessV2RevertDeposit(ctx types.Context, inboundSender string, amount *big.Int, chainID int64, coinType coin.CoinType, asset string, revertAddress common.Address, callOnRevert bool, revertMessage []byte) (*evmtypes.MsgEthereumTxResponse, error) {
 	ret := _m.Called(ctx, inboundSender, amount, chainID, coinType, asset, revertAddress, callOnRevert, revertMessage)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ProcessV2RevertDeposit")
 	}
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, string, *big.Int, int64, coin.CoinType, string, common.Address, bool, []byte) error); ok {
+	var r0 *evmtypes.MsgEthereumTxResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, string, *big.Int, int64, coin.CoinType, string, common.Address, bool, []byte) (*evmtypes.MsgEthereumTxResponse, error)); ok {
+		return rf(ctx, inboundSender, amount, chainID, coinType, asset, revertAddress, callOnRevert, revertMessage)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, string, *big.Int, int64, coin.CoinType, string, common.Address, bool, []byte) *evmtypes.MsgEthereumTxResponse); ok {
 		r0 = rf(ctx, inboundSender, amount, chainID, coinType, asset, revertAddress, callOnRevert, revertMessage)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*evmtypes.MsgEthereumTxResponse)
+		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(types.Context, string, *big.Int, int64, coin.CoinType, string, common.Address, bool, []byte) error); ok {
+		r1 = rf(ctx, inboundSender, amount, chainID, coinType, asset, revertAddress, callOnRevert, revertMessage)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // QueryGasLimit provides a mock function with given fields: ctx, contract

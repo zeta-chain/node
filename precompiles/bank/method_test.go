@@ -18,15 +18,15 @@ import (
 	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 	"github.com/zeta-chain/node/pkg/chains"
-	erc1967proxy "github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
+	"github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
 	"github.com/zeta-chain/node/pkg/ptr"
 	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 	"github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
-	gatewayzevm "github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 )
 
 func Test_Methods(t *testing.T) {

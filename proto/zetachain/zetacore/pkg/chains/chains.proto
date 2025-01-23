@@ -64,6 +64,9 @@ enum Network {
   base = 6;
   solana = 7;
   ton = 8;
+  avalanche = 9;
+  arbitrum = 10;
+  worldchain = 11;
 }
 
 // NetworkType represents the network type of the chain
@@ -97,6 +100,8 @@ enum Consensus {
   op_stack = 3;
   solana_consensus = 4;
   catchain_consensus = 5; // ton
+  snowman = 6;            // avalanche
+  arbitrum_nitro = 7;
 }
 
 // CCTXGateway describes for the chain the gateway used to handle CCTX outbounds

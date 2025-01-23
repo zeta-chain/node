@@ -10,7 +10,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
@@ -446,7 +446,7 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 	return filtered
 }
 
-// newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
+// newDepositAndCallInboundVote creates a MsgVoteInbound message for a Deposit event
 func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDepositedAndCalled) types.MsgVoteInbound {
 	// if event.Asset is zero, it's a native token
 	coinType := coin.CoinType_ERC20

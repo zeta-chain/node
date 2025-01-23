@@ -162,7 +162,7 @@ type FungibleKeeper interface {
 		revertAddress ethcommon.Address,
 		callOnRevert bool,
 		revertMessage []byte,
-	) error
+	) (*evmtypes.MsgEthereumTxResponse, error)
 	CallUniswapV2RouterSwapExactTokensForTokens(
 		ctx sdk.Context,
 		sender ethcommon.Address,

@@ -73,7 +73,7 @@ func TestChain_Validate(t *testing.T) {
 			chain: chains.Chain{
 				ChainId:     42,
 				Name:        "foo",
-				Network:     chains.Network_ton + 1,
+				Network:     chains.Network_worldchain + 1,
 				NetworkType: chains.NetworkType_testnet,
 				Vm:          chains.Vm_evm,
 				Consensus:   chains.Consensus_op_stack,
@@ -115,7 +115,7 @@ func TestChain_Validate(t *testing.T) {
 				Network:     chains.Network_base,
 				NetworkType: chains.NetworkType_devnet,
 				Vm:          chains.Vm_evm,
-				Consensus:   chains.Consensus_catchain_consensus + 1,
+				Consensus:   chains.Consensus_arbitrum_nitro + 1,
 				IsExternal:  true,
 			},
 			errStr: "invalid consensus",
