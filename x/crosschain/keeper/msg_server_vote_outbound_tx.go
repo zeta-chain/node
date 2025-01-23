@@ -124,12 +124,12 @@ func (k msgServer) VoteOutbound(
 	// We use the current TSS pubkey to finalize the outbound.
 	err = k.ValidateOutboundObservers(ctx, &cctx, ballot.BallotStatus, msg.ValueReceived.String())
 	if err != nil {
-		// The validate function for the outbound returns and error , which means that the outbound is invalid and should instead be aborted directly
+		// The validate function for the outbound returns an error, which means that the outbound is invalid and should instead be aborted directly
 		// Irrespective of what the Ballot status is
 		k.HandleInvalidOutbound(ctx, &cctx, err.Error(), tss.TssPubkey)
 		return &types.MsgVoteOutboundResponse{}, nil
 	}
-	// The outbound s valid, the HandleValidOutbound function would save the required status changes
+	// The outbound is valid, the HandleValidOutbound function would save the required status changes
 	k.HandleValidOutbound(ctx, &cctx, tss.TssPubkey)
 	return &types.MsgVoteOutboundResponse{}, nil
 }
@@ -189,7 +189,7 @@ func percentOf(n *big.Int, percent int64) *big.Int {
 }
 
 /*
-HandleInvalidOutbound saves a failed outbound transaction.It does the following things in one function:
+HandleInvalidOutbound saves an invalid outbound transaction. It does the following things in one function:
 
  1. Change the status of the CCTX to Aborted
 
