@@ -1,6 +1,7 @@
 package e2etests
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
@@ -45,6 +46,7 @@ func TestSolanaWhitelistSPL(r *runner.E2ERunner, _ []string) {
 		"TESTSPL",
 		6,
 		100000,
+		sdkmath.NewUintFromString("100000000000000000000000000"),
 	))
 	require.NoError(r, err)
 
