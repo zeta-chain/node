@@ -46,7 +46,7 @@ func runBalances(cmd *cobra.Command, args []string) error {
 	logger := runner.NewLogger(false, color.FgHiCyan, "")
 
 	// initialize context
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancelCause(context.Background())
 
 	// initialize deployer runner with config
 	r, err := zetae2econfig.RunnerFromConfig(
@@ -58,13 +58,13 @@ func runBalances(cmd *cobra.Command, args []string) error {
 		logger,
 	)
 	if err != nil {
-		cancel()
+		cancel(err)
 		return err
 	}
 
 	balances, err := r.GetAccountBalances(skipBTC)
 	if err != nil {
-		cancel()
+		cancel(err)
 		return err
 	}
 	r.PrintAccountBalances(balances)

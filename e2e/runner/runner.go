@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"sync"
 	"time"
@@ -169,7 +170,7 @@ type E2ERunner struct {
 	// other
 	Name          string
 	Ctx           context.Context
-	CtxCancel     context.CancelFunc
+	CtxCancel     context.CancelCauseFunc
 	Logger        *Logger
 	BitcoinParams *chaincfg.Params
 	mutex         sync.Mutex
@@ -178,7 +179,7 @@ type E2ERunner struct {
 func NewE2ERunner(
 	ctx context.Context,
 	name string,
-	ctxCancel context.CancelFunc,
+	ctxCancel context.CancelCauseFunc,
 	account config.Account,
 	clients Clients,
 	logger *Logger,
@@ -410,8 +411,7 @@ func (r *E2ERunner) Errorf(format string, args ...any) {
 // FailNow implemented to mimic the behavior of testing.T.FailNow
 func (r *E2ERunner) FailNow() {
 	r.Logger.Error("Test failed")
-	r.CtxCancel()
-	os.Exit(1)
+	r.CtxCancel(fmt.Errorf("FailNow on %s", r.Name))
 }
 
 func (r *E2ERunner) requireTxSuccessful(receipt *ethtypes.Receipt, msgAndArgs ...any) {
