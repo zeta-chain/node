@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
+	ccctxerror "github.com/zeta-chain/node/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -49,7 +50,7 @@ func (k Keeper) ValidateOutboundZEVM(
 			tmpCtxRevert,
 			cctx,
 			types.CctxStatus_PendingOutbound,
-			depositErr.Error(),
+			depositErr,
 			cctx.InboundParams.Amount,
 		)
 		if revertErr != nil {
@@ -59,8 +60,8 @@ func (k Keeper) ValidateOutboundZEVM(
 			cctx.SetAbort(
 				types.StatusMessages{
 					StatusMessage:        fmt.Sprintf("revert failed to be processed"),
-					ErrorMessageOutbound: depositErr.Error(),
-					ErrorMessageRevert:   revertErr.Error(),
+					ErrorMessageOutbound: ccctxerror.NewCCTXErrorJsonMessage("", depositErr),
+					ErrorMessageRevert:   ccctxerror.NewCCTXErrorJsonMessage("", revertErr),
 				})
 			return types.CctxStatus_Aborted
 		}
@@ -148,13 +149,14 @@ func (k Keeper) processFailedOutboundObservers(ctx sdk.Context, cctx *types.Cros
 				cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 				cctx.SetAbort(types.StatusMessages{
 					StatusMessage:        "outbound failed",
-					ErrorMessageOutbound: "outbound tx failed to be executed on connected chain",
-					ErrorMessageRevert:   fmt.Sprintf("revert on ZetaChain is not supported for cctx v1 with coin type %s", cctx.InboundParams.CoinType),
+					ErrorMessageOutbound: ccctxerror.NewCCTXErrorJsonMessage("outbound failed to be executed on connected chain", nil),
+					ErrorMessageRevert:   ccctxerror.NewCCTXErrorJsonMessage(fmt.Sprintf("revert on ZetaChain is not supported for cctx v1 with coin type %s", cctx.InboundParams.CoinType), nil),
 				})
 			}
 		}
 	} else {
-		err := k.processFailedOutboundOnExternalChain(ctx, cctx, oldStatus, "Outbound failed, start revert", cctx.GetCurrentOutboundParam().Amount)
+		errorMsg := ccctxerror.NewCCTXErrorJsonMessage("outbound failed to be executed on connected chain", nil)
+		err := k.processFailedOutboundOnExternalChain(ctx, cctx, oldStatus, errors.New(errorMsg), cctx.GetCurrentOutboundParam().Amount)
 		if err != nil {
 			return cosmoserrors.Wrap(err, "processFailedOutboundOnExternalChain")
 		}
@@ -169,7 +171,7 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,
 	oldStatus types.CctxStatus,
-	errorMsg string,
+	errorMsg error,
 	inputAmount math.Uint,
 ) error {
 	switch oldStatus {
@@ -223,13 +225,13 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 		// Not setting the finalization status here, the required changes have been made while creating the revert tx
 		cctx.SetPendingRevert(types.StatusMessages{
 			StatusMessage:        "outbound failed",
-			ErrorMessageOutbound: errorMsg,
+			ErrorMessageOutbound: ccctxerror.NewCCTXErrorJsonMessage("", errorMsg),
 		})
 	case types.CctxStatus_PendingRevert:
 		cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 		cctx.SetAbort(types.StatusMessages{
 			StatusMessage:      "revert failed to be processed",
-			ErrorMessageRevert: errorMsg,
+			ErrorMessageRevert: ccctxerror.NewCCTXErrorJsonMessage("", errorMsg),
 		})
 	}
 	return nil
@@ -257,9 +259,9 @@ func (k Keeper) processSuccessfulOutbound(
 	oldStatus := cctx.CctxStatus.Status
 	switch oldStatus {
 	case types.CctxStatus_PendingRevert:
-		cctx.SetReverted(types.StatusMessages{StatusMessage: "revert successfully processed"})
+		cctx.SetReverted()
 	case types.CctxStatus_PendingOutbound:
-		cctx.SetOutboundMined(types.StatusMessages{StatusMessage: "outbound successfully mined"})
+		cctx.SetOutboundMined()
 	default:
 		return
 	}
@@ -291,7 +293,7 @@ func (k Keeper) processFailedZETAOutboundOnZEVM(ctx sdk.Context, cctx *types.Cro
 	// The outbound failed due to majority of observer voting failure.We do not have the exact reason for the failure available on chain.
 	cctx.SetPendingRevert(types.StatusMessages{
 		StatusMessage:        "outbound failed",
-		ErrorMessageOutbound: "outbound failed to be executed on connected chain",
+		ErrorMessageOutbound: ccctxerror.NewCCTXErrorJsonMessage("outbound failed to be executed on connected chain", nil),
 	})
 	data, err := base64.StdEncoding.DecodeString(cctx.RelayedMessage)
 	if err != nil {
@@ -326,9 +328,7 @@ func (k Keeper) processFailedZETAOutboundOnZEVM(ctx sdk.Context, cctx *types.Cro
 		return fmt.Errorf("failed ZETARevertAndCallContract: %s", err.Error())
 	}
 
-	cctx.SetReverted(types.StatusMessages{
-		StatusMessage: "revert successfully processed",
-	})
+	cctx.SetReverted()
 
 	if len(ctx.TxBytes()) > 0 {
 		// add event for tendermint transaction hash format
@@ -376,7 +376,7 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 		// update status
 		cctx.SetPendingRevert(types.StatusMessages{
 			StatusMessage:        "outbound failed",
-			ErrorMessageOutbound: "outbound tx failed to be executed on connected chain",
+			ErrorMessageOutbound: ccctxerror.NewCCTXErrorJsonMessage("outbound tx failed to be executed on connected chain", nil),
 		})
 
 		// process the revert on ZEVM
@@ -395,9 +395,7 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 		}
 
 		// tx is reverted
-		cctx.SetReverted(types.StatusMessages{
-			StatusMessage: "revert successfully processed",
-		})
+		cctx.SetReverted()
 
 		// add event for tendermint transaction hash format
 		if len(ctx.TxBytes()) > 0 {
@@ -412,7 +410,7 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 		cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 		cctx.SetAbort(types.StatusMessages{
 			StatusMessage:      "revert failed to be processed",
-			ErrorMessageRevert: "revert tx failed to be executed on connected chain",
+			ErrorMessageRevert: ccctxerror.NewCCTXErrorJsonMessage("revert tx failed to be executed on connected chain", nil),
 		})
 	}
 	return nil

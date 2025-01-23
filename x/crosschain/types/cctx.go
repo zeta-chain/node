@@ -203,13 +203,13 @@ func (m CrossChainTx) SetPendingOutbound(messages StatusMessages) {
 }
 
 // SetOutboundMined sets the CCTX status to OutboundMined with the given error message.
-func (m CrossChainTx) SetOutboundMined(messages StatusMessages) {
-	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_OutboundMined, messages)
+func (m CrossChainTx) SetOutboundMined() {
+	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_OutboundMined, StatusMessages{})
 }
 
 // SetReverted sets the CCTX status to Reverted with the given error message.
-func (m CrossChainTx) SetReverted(messages StatusMessages) {
-	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_Reverted, messages)
+func (m CrossChainTx) SetReverted() {
+	m.CctxStatus.UpdateStatusAndErrorMessages(CctxStatus_Reverted, StatusMessages{})
 }
 
 func (m CrossChainTx) GetCCTXIndexBytes() ([32]byte, error) {
@@ -278,6 +278,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		Status:              CctxStatus_PendingInbound,
 		StatusMessage:       "",
 		ErrorMessage:        "",
+		ErrorMessageRevert:  "",
 		CreatedTimestamp:    ctx.BlockHeader().Time.Unix(),
 		LastUpdateTimestamp: ctx.BlockHeader().Time.Unix(),
 		IsAbortRefunded:     false,

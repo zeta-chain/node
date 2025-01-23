@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	cctxerror "github.com/zeta-chain/node/pkg/errors"
 
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observerkeeper "github.com/zeta-chain/node/x/observer/keeper"
@@ -198,7 +199,7 @@ HandleInvalidOutbound saves a failed outbound transaction.It does the following 
 func (k Keeper) HandleInvalidOutbound(ctx sdk.Context, cctx *types.CrossChainTx, errMessage string, tssPubkey string) {
 	cctx.SetAbort(types.StatusMessages{
 		StatusMessage:        "outbound failed unable to process",
-		ErrorMessageOutbound: errMessage,
+		ErrorMessageOutbound: cctxerror.NewCCTXErrorJsonMessage(errMessage, nil),
 	})
 	ctx.Logger().Error(errMessage)
 	k.SaveOutbound(ctx, cctx, tssPubkey)

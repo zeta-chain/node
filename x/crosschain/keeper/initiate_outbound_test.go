@@ -321,7 +321,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, types.CctxStatus_PendingRevert, cctx.CctxStatus.Status)
 		require.Equal(t, types.CctxStatus_PendingRevert, newStatus)
-		require.Equal(t, errDeposit.Error(), cctx.CctxStatus.ErrorMessage)
+		require.Contains(t, cctx.CctxStatus.ErrorMessage, errDeposit.Error())
 		require.Equal(t, updatedNonce, cctx.GetCurrentOutboundParam().TssNonce)
 	})
 

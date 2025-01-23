@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	cctxerror "github.com/zeta-chain/node/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -77,7 +78,7 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 		// do not commit anything here as the CCTX should be aborted
 		config.CCTX.SetAbort(types.StatusMessages{
 			StatusMessage:        "outbound failed unable to process",
-			ErrorMessageOutbound: fmt.Sprintf("unable to create outbound: %s", err.Error()),
+			ErrorMessageOutbound: cctxerror.NewCCTXErrorJsonMessage("Unable to create outbound", err),
 		})
 		return types.CctxStatus_Aborted, err
 	}

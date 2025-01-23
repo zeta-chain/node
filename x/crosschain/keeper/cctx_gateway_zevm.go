@@ -1,9 +1,8 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	cctxerror "github.com/zeta-chain/node/pkg/errors"
 
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -32,7 +31,7 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 		// exceptional case; internal error; should abort CCTX
 		config.CCTX.SetAbort(types.StatusMessages{
 			StatusMessage:        "outbound failed but the universal contract did not revert",
-			ErrorMessageOutbound: fmt.Sprintf("failed to deposit tokens in ZEVM: %s", err.Error()),
+			ErrorMessageOutbound: cctxerror.NewCCTXErrorJsonMessage("failed to deposit tokens in ZEVM", err),
 		})
 		return types.CctxStatus_Aborted, err
 	}
