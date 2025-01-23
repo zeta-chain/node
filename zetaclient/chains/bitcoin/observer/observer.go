@@ -59,9 +59,6 @@ type RPC interface {
 }
 
 const (
-	// btcBlocksPerDay represents Bitcoin blocks per days for LRU block cache size
-	btcBlocksPerDay = 144
-
 	// RegnetStartBlock is the hardcoded start block for regnet
 	RegnetStartBlock = 100
 
