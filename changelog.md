@@ -12,6 +12,7 @@
 * [3360](https://github.com/zeta-chain/node/pull/3360) - update protocol contract imports using consolidated path
 * [3349](https://github.com/zeta-chain/node/pull/3349) - implement new bitcoin rpc in zetaclient with improved performance and observability
 * [3379](https://github.com/zeta-chain/node/pull/3379) - add Avalanche, Arbitrum and World Chain in chain info
+* [3390](https://github.com/zeta-chain/node/pull/3390) - orchestrator V2: EVM observer-signer
 
 ### Fixes
 

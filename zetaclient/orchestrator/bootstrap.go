@@ -2,21 +2,13 @@ package orchestrator
 
 import (
 	"context"
-	"fmt"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
-	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
-	ethrpc2 "github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
 	"github.com/tonkeeper/tongo/ton"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	evmobserver "github.com/zeta-chain/node/zetaclient/chains/evm/observer"
-	evmsigner "github.com/zeta-chain/node/zetaclient/chains/evm/signer"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	solbserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	solanasigner "github.com/zeta-chain/node/zetaclient/chains/solana/signer"
@@ -107,34 +99,9 @@ func syncSignerMap(
 
 		switch {
 		case chain.IsEVM():
-			var (
-				zetaConnectorAddress = ethcommon.HexToAddress(chain.Params().ConnectorContractAddress)
-				erc20CustodyAddress  = ethcommon.HexToAddress(chain.Params().Erc20CustodyContractAddress)
-				gatewayAddress       = ethcommon.HexToAddress(chain.Params().GatewayAddress)
-			)
+			// managed by orchestrator V2
+			continue
 
-			cfg, found := app.Config().GetEVMConfig(chainID)
-			if !found || cfg.Empty() {
-				logger.Std.Warn().Msgf("Unable to find EVM config for chain %d", chainID)
-				continue
-			}
-
-			signer, err := evmsigner.NewSigner(
-				ctx,
-				*rawChain,
-				tss,
-				logger,
-				cfg.Endpoint,
-				zetaConnectorAddress,
-				erc20CustodyAddress,
-				gatewayAddress,
-			)
-			if err != nil {
-				logger.Std.Error().Err(err).Msgf("Unable to construct signer for EVM chain %d", chainID)
-				continue
-			}
-
-			addSigner(chainID, signer)
 		case chain.IsBitcoin():
 			// managed by orchestrator V2
 			continue
@@ -286,51 +253,9 @@ func syncObserverMap(
 
 		switch {
 		case chain.IsEVM():
-			cfg, found := app.Config().GetEVMConfig(chainID)
-			if !found || cfg.Empty() {
-				logger.Std.Warn().Msgf("Unable to find EVM config for chain %d", chainID)
-				continue
-			}
+			// managed by orchestrator V2
+			continue
 
-			httpClient, err := metrics.GetInstrumentedHTTPClient(cfg.Endpoint)
-			if err != nil {
-				logger.Std.Error().Err(err).Str("rpc.endpoint", cfg.Endpoint).Msgf("Unable to create HTTP client")
-				continue
-			}
-			rpcClient, err := ethrpc.DialHTTPWithClient(cfg.Endpoint, httpClient)
-			if err != nil {
-				logger.Std.Error().Err(err).Str("rpc.endpoint", cfg.Endpoint).Msgf("Unable to dial EVM RPC")
-				continue
-			}
-			evmClient := ethclient.NewClient(rpcClient)
-
-			database, err := db.NewFromSqlite(dbpath, chainName, true)
-			if err != nil {
-				logger.Std.Error().Err(err).Msgf("Unable to open a database for EVM chain %q", chainName)
-				continue
-			}
-
-			evmJSONRPCClient := ethrpc2.NewEthRPC(cfg.Endpoint, ethrpc2.WithHttpClient(httpClient))
-
-			// create EVM chain observer
-			observer, err := evmobserver.NewObserver(
-				ctx,
-				*rawChain,
-				evmClient,
-				evmJSONRPCClient,
-				*params,
-				client,
-				tss,
-				database,
-				logger,
-				ts,
-			)
-			if err != nil {
-				logger.Std.Error().Err(err).Msgf("NewObserver error for EVM chain %d", chainID)
-				continue
-			}
-
-			addObserver(chainID, observer)
 		case chain.IsBitcoin():
 			// managed by orchestrator V2
 			continue
@@ -425,20 +350,6 @@ func syncObserverMap(
 	mapDeleteMissingKeys(observerMap, presentChainIDs, onBeforeRemove)
 
 	return added, removed, nil
-}
-
-func btcDatabaseFileName(chain chains.Chain) string {
-	// legacyBTCDatabaseFilename is the Bitcoin database file name now used in mainnet and testnet3
-	// so we keep using it here for backward compatibility
-	const legacyBTCDatabaseFilename = "btc_chain_client"
-
-	// For additional bitcoin networks, we use the chain name as the database file name
-	switch chain.ChainId {
-	case chains.BitcoinMainnet.ChainId, chains.BitcoinTestnet.ChainId:
-		return legacyBTCDatabaseFilename
-	default:
-		return fmt.Sprintf("%s_%s", legacyBTCDatabaseFilename, chain.Name)
-	}
 }
 
 func makeTONClient(

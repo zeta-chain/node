@@ -18,7 +18,7 @@ import (
 
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	"github.com/zeta-chain/node/pkg/constant"
-	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	evmcommon "github.com/zeta-chain/node/zetaclient/chains/evm/common"
 )
 
 const (
@@ -152,7 +152,7 @@ func GetHashListSegment(
 	// Get ERC20 Custody Deposit events
 	for custodyIter.Next() {
 		// sanity check tx event
-		err := CheckEvmTxLog(&custodyIter.Event.Raw, erc20CustodyAddress, "", evm.TopicsDeposited)
+		err := CheckEvmTxLog(&custodyIter.Event.Raw, erc20CustodyAddress, "", evmcommon.TopicsDeposited)
 		if err == nil {
 			deposits = append(deposits, Deposit{
 				TxID:   custodyIter.Event.Raw.TxHash.Hex(),
@@ -164,7 +164,7 @@ func GetHashListSegment(
 	// Get Connector ZetaSent events
 	for connectorIter.Next() {
 		// sanity check tx event
-		err := CheckEvmTxLog(&connectorIter.Event.Raw, connectorAddress, "", evm.TopicsZetaSent)
+		err := CheckEvmTxLog(&connectorIter.Event.Raw, connectorAddress, "", evmcommon.TopicsZetaSent)
 		if err == nil {
 			deposits = append(deposits, Deposit{
 				TxID:   connectorIter.Event.Raw.TxHash.Hex(),
