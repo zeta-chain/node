@@ -4,11 +4,14 @@ import (
 	"math/big"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/ptr"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
@@ -40,6 +43,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			"foo",
 			coin.CoinType_Gas,
 			1000000,
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
 		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
@@ -73,6 +77,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			"bar",
 			coin.CoinType_ERC20,
 			2000000,
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
 		res, err = msgServer.DeployFungibleCoinZRC20(ctx, msg)
@@ -82,7 +87,8 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 
 		foreignCoin, found = k.GetForeignCoins(ctx, res.Address)
 		require.True(t, found)
-		require.Equal(t, foreignCoin.CoinType, coin.CoinType_ERC20)
+		require.Equal(t, coin.CoinType_ERC20, foreignCoin.CoinType)
+		require.Equal(t, uint64(1000), foreignCoin.LiquidityCap.Uint64())
 		require.Contains(t, foreignCoin.Name, "bar")
 
 		// check gas limit
@@ -118,6 +124,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			"foo",
 			coin.CoinType_Gas,
 			1000000,
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, authoritytypes.ErrUnauthorized)
 		_, err := keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, msg)
@@ -142,6 +149,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			"foo",
 			coin.CoinType_Gas,
 			1000000,
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -173,6 +181,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			"foo",
 			coin.CoinType_Gas,
 			1000000,
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
 		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
@@ -203,6 +212,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			"foo",
 			coin.CoinType_Gas,
 			1000000,
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, deployMsg, nil)
 		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
