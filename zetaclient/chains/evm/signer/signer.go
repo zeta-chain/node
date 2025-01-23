@@ -18,7 +18,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
@@ -63,17 +62,12 @@ type Signer struct {
 
 // New Signer constructor
 func New(
-	chain chains.Chain,
-	tss interfaces.TSSSigner,
+	baseSigner *base.Signer,
 	client *client.Client,
 	zetaConnectorAddress ethcommon.Address,
 	erc20CustodyAddress ethcommon.Address,
 	gatewayAddress ethcommon.Address,
-	logger base.Logger,
 ) (*Signer, error) {
-	// create base signer
-	baseSigner := base.NewSigner(chain, tss, logger)
-
 	return &Signer{
 		Signer:               baseSigner,
 		client:               client,

@@ -79,8 +79,6 @@ func getAppContext(
 }
 
 func Test_NewObserver(t *testing.T) {
-	ctx := context.Background()
-
 	// use Ethereum chain for testing
 	chain := chains.Ethereum
 	params := mocks.MockChainParams(chain.ChainId, 10)
@@ -179,18 +177,18 @@ func Test_NewObserver(t *testing.T) {
 			}
 
 			// create observer
-			ob, err := observer.New(
-				ctx,
+			baseObserver, err := base.NewObserver(
 				chain,
-				tt.evmClient,
-				tt.evmJSONRPC,
 				tt.chainParams,
 				zetacoreClient,
 				tt.tss,
+				1000,
+				tt.ts,
 				database,
 				tt.logger,
-				tt.ts,
 			)
+			require.NoError(t, err)
+			ob, err := observer.New(baseObserver, tt.evmClient, tt.evmJSONRPC)
 
 			// check result
 			if tt.fail {
@@ -431,18 +429,10 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 	log := zerolog.New(zerolog.NewTestWriter(t)).With().Caller().Logger()
 	logger := base.Logger{Std: log, Compliance: log}
 
-	ob, err := observer.New(
-		ctx,
-		chain,
-		evmClient,
-		rpcClient,
-		chainParams,
-		zetacore,
-		tss,
-		database,
-		logger,
-		nil,
-	)
+	baseObserver, err := base.NewObserver(chain, chainParams, zetacore, tss, 1000, nil, database, logger)
+	require.NoError(t, err)
+
+	ob, err := observer.New(baseObserver, evmClient, rpcClient)
 	require.NoError(t, err)
 	ob.WithLastBlock(1)
 

@@ -121,18 +121,21 @@ func InboundGetBallot(_ *cobra.Command, args []string) error {
 
 		evmJSONRPCClient := ethrpc.NewEthRPC(evmConfig.Endpoint, ethrpc.WithHttpClient(httpClient))
 
-		evmObserver, err := evmobserver.New(
-			ctx,
+		baseObserver, err := base.NewObserver(
 			*rawChain,
-			evmClient,
-			evmJSONRPCClient,
 			*rawChainParams,
 			client,
 			nil,
+			1000,
+			nil,
 			database,
 			baseLogger,
-			nil,
 		)
+		if err != nil {
+			return errors.Wrap(err, "unable to create base observer")
+		}
+
+		evmObserver, err := evmobserver.New(baseObserver, evmClient, evmJSONRPCClient)
 		if err != nil {
 			return errors.Wrap(err, "unable to create observer")
 		}

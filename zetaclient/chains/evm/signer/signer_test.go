@@ -14,7 +14,6 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
-	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
 
@@ -22,10 +21,7 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/evm/observer"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/config"
-	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
@@ -58,14 +54,14 @@ func newTestSuite(t *testing.T) *testSuite {
 
 	logger := testlog.New(t)
 
+	baseSigner := base.NewSigner(chain, tss, base.Logger{Std: logger.Logger, Compliance: logger.Logger})
+
 	s, err := New(
-		chain,
-		tss,
+		baseSigner,
 		evmClient,
 		ConnectorAddress,
 		ERC20CustodyAddress,
 		sample.EthAddress(),
-		base.Logger{Std: logger.Logger, Compliance: logger.Logger},
 	)
 	require.NoError(t, err)
 
@@ -79,43 +75,6 @@ func newTestSuite(t *testing.T) *testSuite {
 
 func (ts *testSuite) EvmSigner() ethtypes.Signer {
 	return ts.client.Signer
-}
-
-// getNewEvmChainObserver creates a new EVM chain observer for testing
-func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.Observer, error) {
-	ctx := context.Background()
-
-	// use default mock TSS if not provided
-	if tss == nil {
-		tss = mocks.NewTSS(t)
-	}
-
-	// prepare mock arguments to create observer
-
-	evmMock := mocks.NewEVMRPCClient(t)
-	evmMock.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
-	evmClient := client.New(evmMock, nil)
-
-	evmJSONRPCClient := mocks.NewMockJSONRPCClient()
-	params := mocks.MockChainParams(chains.BscMainnet.ChainId, 10)
-	logger := base.Logger{}
-	ts := &metrics.TelemetryServer{}
-
-	database, err := db.NewFromSqliteInMemory(true)
-	require.NoError(t, err)
-
-	return observer.New(
-		ctx,
-		chains.BscMainnet,
-		evmClient,
-		evmJSONRPCClient,
-		params,
-		mocks.NewZetacoreClient(t),
-		tss,
-		database,
-		logger,
-		ts,
-	)
 }
 
 func getNewOutboundProcessor() *outboundprocessor.Processor {

@@ -17,20 +17,16 @@ import (
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.eth.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
 
-	"github.com/zeta-chain/node/pkg/chains"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/node/zetaclient/db"
-	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 // Observer is the observer for evm chains
 type Observer struct {
 	// base.Observer implements the base chain observer
-	base.Observer
+	*base.Observer
 
 	priorityFeeConfig
 
@@ -59,35 +55,13 @@ type priorityFeeConfig struct {
 
 // New Observer constructor
 func New(
-	ctx context.Context,
-	chain chains.Chain,
+	baseObserver *base.Observer,
 	evmClient *client.Client,
 	evmJSONRPC interfaces.EVMJSONRPCClient,
-	chainParams observertypes.ChainParams,
-	zetacoreClient interfaces.ZetacoreClient,
-	tss interfaces.TSSSigner,
-	database *db.DB,
-	logger base.Logger,
-	ts *metrics.TelemetryServer,
 ) (*Observer, error) {
-	// create base observer
-	baseObserver, err := base.NewObserver(
-		chain,
-		chainParams,
-		zetacoreClient,
-		tss,
-		base.DefaultBlockCacheSize,
-		ts,
-		database,
-		logger,
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to create base observer")
-	}
-
 	// create evm observer
 	ob := &Observer{
-		Observer:                      *baseObserver,
+		Observer:                      baseObserver,
 		evmClient:                     evmClient,
 		evmJSONRPC:                    evmJSONRPC,
 		outboundConfirmedReceipts:     make(map[string]*ethtypes.Receipt),
@@ -96,7 +70,7 @@ func New(
 	}
 
 	// load last block scanned
-	if err = ob.LoadLastBlockScanned(ctx); err != nil {
+	if err := ob.LoadLastBlockScanned(context.Background()); err != nil {
 		return nil, errors.Wrap(err, "unable to load last block scanned")
 	}
 
