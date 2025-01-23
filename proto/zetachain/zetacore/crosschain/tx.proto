@@ -153,14 +153,6 @@ message MsgVoteOutbound {
   pkg.coin.CoinType coin_type = 9;
 }
 
-// InboundStatus represents the status of an observed inbound
-enum InboundStatus {
-  option (gogoproto.goproto_enum_stringer) = true;
-
-  success = 0;
-  insufficient_depositor_fee = 1;
-}
-
 message MsgVoteOutboundResponse {}
 
 message MsgVoteInbound {
@@ -197,7 +189,7 @@ message MsgVoteInbound {
   // define if a smart contract call should be made with asset
   bool is_cross_chain_call = 19;
 
-  // success or failure
+  // status of the inbound observation
   InboundStatus status = 20;
 }
 

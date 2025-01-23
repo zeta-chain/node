@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"strings"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -25,10 +23,10 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 	ctx sdk.Context,
 	config InitiateOutboundConfig,
 ) (newCCTXStatus types.CctxStatus, err error) {
-	// abort if CCTX already contains an initial error message from inbound vote msg
-	// the 'insufficient_depositor_fee' is the only case handled for now
-	if strings.Contains(config.CCTX.CctxStatus.ErrorMessage, types.InboundStatus_insufficient_depositor_fee.String()) {
-		config.CCTX.SetAbort("observation failed", "")
+	// abort if CCTX inbound observation status indicates failure
+	// this is specifically for Bitcoin inbound error 'insufficient_depositor_fee'
+	if config.CCTX.InboundParams.Status == types.InboundStatus_insufficient_depositor_fee {
+		config.CCTX.SetAbort("observation failed", types.InboundStatus_insufficient_depositor_fee.String())
 		return types.CctxStatus_Aborted, nil
 	}
 

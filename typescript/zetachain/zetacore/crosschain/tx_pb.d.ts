@@ -8,25 +8,8 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 import type { CoinType } from "../pkg/coin/coin_pb.js";
 import type { Proof } from "../pkg/proofs/proofs_pb.js";
 import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
-import type { CallOptions, ProtocolContractVersion, RevertOptions } from "./cross_chain_tx_pb.js";
+import type { CallOptions, InboundStatus, ProtocolContractVersion, RevertOptions } from "./cross_chain_tx_pb.js";
 import type { RateLimiterFlags } from "./rate_limiter_flags_pb.js";
-
-/**
- * InboundStatus represents the status of an observed inbound
- *
- * @generated from enum zetachain.zetacore.crosschain.InboundStatus
- */
-export declare enum InboundStatus {
-  /**
-   * @generated from enum value: success = 0;
-   */
-  success = 0,
-
-  /**
-   * @generated from enum value: insufficient_depositor_fee = 1;
-   */
-  insufficient_depositor_fee = 1,
-}
 
 /**
  * @generated from message zetachain.zetacore.crosschain.MsgMigrateTssFunds
@@ -707,7 +690,7 @@ export declare class MsgVoteInbound extends Message<MsgVoteInbound> {
   isCrossChainCall: boolean;
 
   /**
-   * success or failure
+   * status of the inbound observation
    *
    * @generated from field: zetachain.zetacore.crosschain.InboundStatus status = 20;
    */

@@ -18,7 +18,7 @@ func TestBitcoinDepositAndAbortWithLowDepositFee(r *runner.E2ERunner, args []str
 	depositAmount := zetabitcoin.DefaultDepositorFee - float64(1)/btcutil.SatoshiPerBitcoin
 
 	// ACT
-	txHash := r.DepositBTCWithAmount(depositAmount, nil, false)
+	txHash := r.DepositBTCWithAmount(depositAmount, nil)
 
 	// ASSERT
 	// cctx status should be aborted

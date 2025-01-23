@@ -81,6 +81,26 @@ export declare enum TxFinalizationStatus {
 }
 
 /**
+ * InboundStatus represents the status of an observed inbound
+ *
+ * @generated from enum zetachain.zetacore.crosschain.InboundStatus
+ */
+export declare enum InboundStatus {
+  /**
+   * @generated from enum value: success = 0;
+   */
+  success = 0,
+
+  /**
+   * this field is specifically for Bitcoin when the deposit amount is less than
+   * depositor fee
+   *
+   * @generated from enum value: insufficient_depositor_fee = 1;
+   */
+  insufficient_depositor_fee = 1,
+}
+
+/**
  * ProtocolContractVersion represents the version of the protocol contract used
  * for cctx workflow
  *
@@ -172,6 +192,13 @@ export declare class InboundParams extends Message<InboundParams> {
    * @generated from field: bool is_cross_chain_call = 12;
    */
   isCrossChainCall: boolean;
+
+  /**
+   * status of the inbound observation
+   *
+   * @generated from field: zetachain.zetacore.crosschain.InboundStatus status = 20;
+   */
+  status: InboundStatus;
 
   constructor(data?: PartialMessage<InboundParams>);
 

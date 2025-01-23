@@ -33,7 +33,7 @@ func TestBitcoinStdMemoDepositAndCallRevert(r *runner.E2ERunner, args []string) 
 
 	// ACT
 	// Deposit
-	txHash := r.DepositBTCWithAmount(amount, memo, true)
+	txHash := r.DepositBTCWithExactAmount(amount, memo)
 
 	// ASSERT
 	// Now we want to make sure revert TX is completed.

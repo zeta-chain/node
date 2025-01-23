@@ -437,117 +437,140 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 func TestMsgVoteInbound_Digest(t *testing.T) {
 	r := rand.New(rand.NewSource(42))
 
-	msg := types.MsgVoteInbound{
-		Creator:            sample.AccAddress(),
-		Sender:             sample.AccAddress(),
-		SenderChainId:      42,
-		TxOrigin:           sample.String(),
-		Receiver:           sample.String(),
-		ReceiverChain:      42,
-		Amount:             math.NewUint(42),
-		Message:            sample.String(),
-		InboundHash:        sample.String(),
-		InboundBlockHeight: 42,
-		CallOptions: &types.CallOptions{
-			GasLimit: 42,
-		},
-		CoinType:                coin.CoinType_Zeta,
-		Asset:                   sample.String(),
-		EventIndex:              42,
-		ProtocolContractVersion: types.ProtocolContractVersion_V1,
+	var (
+		creator     = sample.AccAddress()
+		sender      = sample.AccAddress()
+		txOrigin    = sample.String()
+		receiver    = sample.String()
+		message     = sample.String()
+		inboundHash = sample.String()
+		asset       = sample.String()
+	)
+
+	// getMsg creates a constant message object
+	getMsg := func() types.MsgVoteInbound {
+		return types.MsgVoteInbound{
+			Creator:            creator,
+			Sender:             sender,
+			SenderChainId:      42,
+			TxOrigin:           txOrigin,
+			Receiver:           receiver,
+			ReceiverChain:      42,
+			Amount:             math.NewUint(42),
+			Message:            message,
+			InboundHash:        inboundHash,
+			InboundBlockHeight: 42,
+			CallOptions: &types.CallOptions{
+				GasLimit: 42,
+			},
+			CoinType:                coin.CoinType_Zeta,
+			Asset:                   asset,
+			EventIndex:              42,
+			ProtocolContractVersion: types.ProtocolContractVersion_V1,
+			Status:                  types.InboundStatus_success,
+		}
 	}
+
+	// get original digest
+	msg := getMsg()
 	hash := msg.Digest()
 	require.NotEmpty(t, hash, "hash should not be empty")
 
 	// creator not used
-	msg = msg
+	msg = getMsg()
 	msg.Creator = sample.AccAddress()
 	hash2 := msg.Digest()
 	require.Equal(t, hash, hash2, "creator should not change hash")
 
 	// in block height not used
-	msg = msg
+	msg = getMsg()
 	msg.InboundBlockHeight = 43
 	hash2 = msg.Digest()
 	require.Equal(t, hash, hash2, "in block height should not change hash")
 
 	// sender used
-	msg = msg
+	msg = getMsg()
 	msg.Sender = sample.AccAddress()
 	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "sender should change hash")
 
 	// sender chain ID used
-	msg = msg
+	msg = getMsg()
 	msg.SenderChainId = 43
 	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "sender chain ID should change hash")
 
 	// tx origin used
-	msg = msg
+	msg = getMsg()
 	msg.TxOrigin = sample.StringRandom(r, 32)
 	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "tx origin should change hash")
 
 	// receiver used
-	msg = msg
+	msg = getMsg()
 	msg.Receiver = sample.StringRandom(r, 32)
 	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "receiver should change hash")
 
 	// receiver chain ID used
-	msg = msg
+	msg = getMsg()
 	msg.ReceiverChain = 43
 	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "receiver chain ID should change hash")
 
 	// amount used
-	msg = msg
+	msg = getMsg()
 	msg.Amount = math.NewUint(43)
 	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "amount should change hash")
 
 	// message used
-	msg = msg
+	msg = getMsg()
 	msg.Message = sample.StringRandom(r, 32)
 	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "message should change hash")
 
 	// in tx hash used
-	msg = msg
+	msg = getMsg()
 	msg.InboundHash = sample.StringRandom(r, 32)
 	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "in tx hash should change hash")
 
 	// gas limit used
-	msg = msg
+	msg = getMsg()
 	msg.CallOptions.GasLimit = 43
 	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "gas limit should change hash")
 
 	// coin type used
-	msg = msg
+	msg = getMsg()
 	msg.CoinType = coin.CoinType_ERC20
 	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "coin type should change hash")
 
 	// asset used
-	msg = msg
+	msg = getMsg()
 	msg.Asset = sample.StringRandom(r, 32)
 	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "asset should change hash")
 
 	// event index used
-	msg = msg
+	msg = getMsg()
 	msg.EventIndex = 43
 	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "event index should change hash")
 
 	// protocol contract version used
-	msg = msg
+	msg = getMsg()
 	msg.ProtocolContractVersion = types.ProtocolContractVersion_V2
 	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "protocol contract version should change hash")
+
+	// inbound status used
+	msg = getMsg()
+	msg.Status = types.InboundStatus_insufficient_depositor_fee
+	hash2 = msg.Digest()
+	require.NotEqual(t, hash, hash2, "inbound status should change hash")
 }
 
 func TestMsgVoteInbound_GetSigners(t *testing.T) {

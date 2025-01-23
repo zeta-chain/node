@@ -26,6 +26,16 @@ enum TxFinalizationStatus {
   Finalized = 1;    // the corresponding tx is finalized but not executed yet
   Executed = 2;     // the corresponding tx is executed
 }
+
+// InboundStatus represents the status of an observed inbound
+enum InboundStatus {
+  option (gogoproto.goproto_enum_stringer) = true;
+  success = 0;
+  // this field is specifically for Bitcoin when the deposit amount is less than
+  // depositor fee
+  insufficient_depositor_fee = 1;
+}
+
 message InboundParams {
   string sender = 1; // this address is the immediate contract/EOA that calls
   // the Connector.send()
@@ -47,6 +57,9 @@ message InboundParams {
   // this field describes if a smart contract call should be made for a inbound
   // with assets only used for protocol contract version 2
   bool is_cross_chain_call = 12;
+
+  // status of the inbound observation
+  InboundStatus status = 20;
 }
 
 message ZetaAccounting {

@@ -67,7 +67,7 @@ func TestKeeper_InitiateOutboundZEVM(t *testing.T) {
 		// mock up CCTX data
 		cctx := sample.CrossChainTx(t, "test")
 		cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingOutbound}
-		cctx.CctxStatus.ErrorMessage = types.InboundStatus_insufficient_depositor_fee.String()
+		cctx.InboundParams.Status = types.InboundStatus_insufficient_depositor_fee
 
 		// ACT
 		// call InitiateOutbound

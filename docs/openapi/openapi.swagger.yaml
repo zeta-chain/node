@@ -57288,12 +57288,18 @@ definitions:
         title: |-
           this field describes if a smart contract call should be made for a inbound
           with assets only used for protocol contract version 2
+      status:
+        $ref: '#/definitions/crosschainInboundStatus'
+        title: status of the inbound observation
   crosschainInboundStatus:
     type: string
     enum:
       - success
       - insufficient_depositor_fee
     default: success
+    description: |-
+      - insufficient_depositor_fee: this field is specifically for Bitcoin when the deposit amount is less than
+      depositor fee
     title: InboundStatus represents the status of an observed inbound
   crosschainInboundTracker:
     type: object
