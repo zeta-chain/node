@@ -3,11 +3,19 @@ package runner
 import (
 	"fmt"
 	"time"
+
+	"golang.org/x/mod/semver"
 )
 
 // RunE2ETests runs a list of e2e tests
 func (r *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
+	zetacoredVersion := r.GetZetacoredVersion()
 	for _, e2eTest := range e2eTests {
+		if semver.Major(zetacoredVersion) != "v0" && semver.Compare(zetacoredVersion, e2eTest.MinimumVersion) < 0 {
+			// note: spacing is padded to width of completed message
+			r.Logger.Print("⚠️ skipping  - %s (minimum version %s)", e2eTest.Name, e2eTest.MinimumVersion)
+			continue
+		}
 		if err := r.Ctx.Err(); err != nil {
 			return fmt.Errorf("context cancelled: %w", err)
 		}

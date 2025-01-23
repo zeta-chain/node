@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -168,12 +169,13 @@ type E2ERunner struct {
 	ReceiptTimeout time.Duration
 
 	// other
-	Name          string
-	Ctx           context.Context
-	CtxCancel     context.CancelCauseFunc
-	Logger        *Logger
-	BitcoinParams *chaincfg.Params
-	mutex         sync.Mutex
+	Name             string
+	Ctx              context.Context
+	CtxCancel        context.CancelCauseFunc
+	Logger           *Logger
+	BitcoinParams    *chaincfg.Params
+	mutex            sync.Mutex
+	zetacoredVersion string
 }
 
 func NewE2ERunner(
@@ -427,4 +429,21 @@ func (r *E2ERunner) GetSolanaPrivKey() solana.PrivateKey {
 	privkey, err := solana.PrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
 	require.NoError(r, err)
 	return privkey
+}
+
+func (r *E2ERunner) GetZetacoredVersion() string {
+	if r.zetacoredVersion != "" {
+		return r.zetacoredVersion
+	}
+	nodeInfo, err := r.Clients.Zetacore.GetNodeInfo(r.Ctx)
+	require.NoError(r, err, "get node info")
+	r.zetacoredVersion = ensurePrefix(nodeInfo.ApplicationVersion.Version, "v")
+	return r.zetacoredVersion
+}
+
+func ensurePrefix(s, prefix string) string {
+	if !strings.HasPrefix(s, prefix) {
+		return prefix + s
+	}
+	return s
 }
