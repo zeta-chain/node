@@ -3,7 +3,6 @@ package local
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
@@ -13,11 +12,10 @@ import (
 )
 
 // monitorBlockProductionExit calls monitorBlockProduction and exits upon any error
-func monitorBlockProductionExit(ctx context.Context, conf config.Config) {
+func monitorBlockProductionExit(ctx context.Context, cancel context.CancelCauseFunc, conf config.Config) {
 	err := monitorBlockProduction(ctx, conf)
 	if err != nil {
-		fmt.Printf("❌ block monitor: %v\n", err)
-		os.Exit(2)
+		cancel(err)
 	}
 }
 

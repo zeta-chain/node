@@ -1,12 +1,16 @@
 package runner
 
 import (
+	"fmt"
 	"time"
 )
 
 // RunE2ETests runs a list of e2e tests
 func (r *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
 	for _, e2eTest := range e2eTests {
+		if err := r.Ctx.Err(); err != nil {
+			return fmt.Errorf("context cancelled: %w", err)
+		}
 		if err := r.RunE2ETest(e2eTest, true); err != nil {
 			return err
 		}
@@ -17,21 +21,41 @@ func (r *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
 // RunE2ETest runs a e2e test
 func (r *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) error {
 	startTime := time.Now()
-	r.Logger.Print("⏳running - %s", e2eTest.Description)
+	// note: spacing is padded to width of completed message
+	r.Logger.Print("⏳ running   - %s", e2eTest.Name)
 
 	// run e2e test, if args are not provided, use default args
 	args := e2eTest.Args
 	if len(args) == 0 {
 		args = e2eTest.DefaultArgs()
 	}
-	e2eTest.E2ETest(r, args)
+	errChan := make(chan error)
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				errChan <- fmt.Errorf("panic: %v", r)
+			}
+			close(errChan)
+		}()
+		e2eTest.E2ETest(r, args)
+		errChan <- nil
+	}()
+
+	select {
+	case err := <-errChan:
+		if err != nil {
+			return fmt.Errorf("%s failed (duration %s): %w", e2eTest.Name, time.Since(startTime), err)
+		}
+	case <-r.Ctx.Done():
+		return fmt.Errorf("context cancelled in %s after %s", e2eTest.Name, time.Since(startTime))
+	}
 
 	// check zrc20 balance vs. supply
 	if checkAccounting {
 		r.CheckZRC20BalanceAndSupply()
 	}
 
-	r.Logger.Print("✅ completed in %s - %s", time.Since(startTime), e2eTest.Description)
+	r.Logger.Print("✅ completed - %s (duration %s)", e2eTest.Name, time.Since(startTime))
 
 	return nil
 }
