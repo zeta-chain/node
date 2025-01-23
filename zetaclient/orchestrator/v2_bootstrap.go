@@ -8,6 +8,7 @@ import (
 	"github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
@@ -21,6 +22,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
+
+const btcBlocksPerDay = 144
 
 func (oc *V2) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) (*bitcoin.Bitcoin, error) {
 	// should not happen
@@ -44,38 +47,56 @@ func (oc *V2) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) (*bitcoin.
 	}
 
 	var (
+		rawChain = chain.RawChain()
+		dbName   = btcDatabaseFileName(*rawChain)
+	)
+
+	baseObserver, err := oc.newBaseObserver(chain, dbName)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create base observer")
+	}
+
+	observer, err := btcobserver.New(*rawChain, baseObserver, rpcClient)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create observer")
+	}
+
+	baseSigner := oc.newBaseSigner(chain)
+	signer := btcsigner.New(baseSigner, rpcClient)
+
+	return bitcoin.New(oc.scheduler, observer, signer), nil
+}
+
+func (oc *V2) newBaseObserver(chain zctx.Chain, dbName string) (*base.Observer, error) {
+	var (
 		rawChain       = chain.RawChain()
 		rawChainParams = chain.Params()
 	)
-
-	dbName := btcDatabaseFileName(*rawChain)
 
 	database, err := db.NewFromSqlite(oc.deps.DBPath, dbName, true)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to open database %s", dbName)
 	}
 
-	// TODO extract base observer
-	// TODO extract base signer
-	// https://github.com/zeta-chain/node/issues/3331
+	blocksCacheSize := base.DefaultBlockCacheSize
+	if chain.IsBitcoin() {
+		blocksCacheSize = btcBlocksPerDay
+	}
 
-	observer, err := btcobserver.NewObserver(
+	return base.NewObserver(
 		*rawChain,
-		rpcClient,
 		*rawChainParams,
 		oc.deps.Zetacore,
 		oc.deps.TSS,
+		blocksCacheSize,
+		oc.deps.Telemetry,
 		database,
 		oc.logger.base,
-		oc.deps.Telemetry,
 	)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to create observer")
-	}
+}
 
-	signer := btcsigner.New(*rawChain, oc.deps.TSS, rpcClient, oc.logger.base)
-
-	return bitcoin.New(oc.scheduler, observer, signer), nil
+func (oc *V2) newBaseSigner(chain zctx.Chain) *base.Signer {
+	return base.NewSigner(*chain.RawChain(), oc.deps.TSS, oc.logger.base)
 }
 
 func (oc *V2) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*evm.EVM, error) {

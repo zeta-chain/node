@@ -198,16 +198,21 @@ func InboundGetBallot(_ *cobra.Command, args []string) error {
 			return errors.Wrap(err, "unable to create rpc client")
 		}
 
-		observer, err := btcobserver.NewObserver(
+		baseObserver, err := base.NewObserver(
 			*chain.RawChain(),
-			rpcClient,
 			*chain.Params(),
 			client,
 			nil,
+			100,
+			nil,
 			database,
 			baseLogger,
-			nil,
 		)
+		if err != nil {
+			return errors.Wrap(err, "unable to create base observer")
+		}
+
+		observer, err := btcobserver.New(*chain.RawChain(), baseObserver, rpcClient)
 		if err != nil {
 			return errors.Wrap(err, "unable to create btc observer")
 		}

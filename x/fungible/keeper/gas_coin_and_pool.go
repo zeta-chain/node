@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	cosmoserrors "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
@@ -26,6 +27,7 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	symbol string,
 	decimals uint8,
 	gasLimit *big.Int,
+	liquidityCap *sdkmath.Uint,
 ) (ethcommon.Address, error) {
 	// additional on-chain static chain information
 	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
@@ -60,6 +62,7 @@ func (k Keeper) SetupChainGasCoinAndPool(
 		coin.CoinType_Gas,
 		"",
 		transferGasLimit,
+		liquidityCap,
 	)
 	if err != nil {
 		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to DeployZRC20Contract")
