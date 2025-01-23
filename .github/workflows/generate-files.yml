@@ -31,8 +31,9 @@ jobs:
 
       - name: Check for changes
         run: |
-          git diff
           if [[ -n $(git status --porcelain) ]]; then
             echo "::error::Generated files are not up-to-date (including deleted files). Please run 'make generate' locally and commit any changes."
+            git status --porcelain
+            git diff
             exit 1
           fi
