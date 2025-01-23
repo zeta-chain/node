@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/ethereum/go-ethereum/common"
@@ -12,6 +13,7 @@ import (
 	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
 	"github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+	"github.com/zeta-chain/node/pkg/ptr"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
@@ -166,6 +168,7 @@ func setupGasCoin(
 		symbol,
 		8,
 		nil,
+		ptr.Ptr(sdkmath.NewUint(1000)),
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)
@@ -192,6 +195,7 @@ func deployZRC20(
 		0,
 		assetAddress,
 		big.NewInt(21_000),
+		ptr.Ptr(sdkmath.NewUint(1000)),
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)

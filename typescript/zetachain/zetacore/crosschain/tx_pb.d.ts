@@ -246,6 +246,11 @@ export declare class MsgWhitelistERC20 extends Message<MsgWhitelistERC20> {
    */
   gasLimit: bigint;
 
+  /**
+   * @generated from field: string liquidity_cap = 8;
+   */
+  liquidityCap: string;
+
   constructor(data?: PartialMessage<MsgWhitelistERC20>);
 
   static readonly runtime: typeof proto3;

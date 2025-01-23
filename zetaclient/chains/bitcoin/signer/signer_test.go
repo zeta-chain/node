@@ -50,12 +50,9 @@ func (s *BTCSignerSuite) SetUpTest(c *C) {
 
 	tss := mocks.NewTSSFromPrivateKey(c, privateKey)
 
-	s.btcSigner = New(
-		chains.Chain{},
-		tss,
-		mocks.NewBitcoinClient(cWrapper{c}),
-		base.DefaultLogger(),
-	)
+	baseSigner := base.NewSigner(chains.Chain{}, tss, base.DefaultLogger())
+
+	s.btcSigner = New(baseSigner, mocks.NewBitcoinClient(cWrapper{c}))
 }
 
 func (s *BTCSignerSuite) TestP2PH(c *C) {
@@ -229,12 +226,13 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 
 func TestAddWithdrawTxOutputs(t *testing.T) {
 	// Create test signer and receiver address
-	signer := New(
+	baseSigner := base.NewSigner(
 		chains.BitcoinMainnet,
 		mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet),
-		mocks.NewBitcoinClient(t),
 		base.DefaultLogger(),
 	)
+
+	signer := New(baseSigner, mocks.NewBitcoinClient(t))
 
 	// tss address and script
 	tssAddr, err := signer.TSS().PubKey().AddressBTC(chains.BitcoinMainnet.ChainId)

@@ -16,7 +16,7 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/metrics"
@@ -130,7 +130,7 @@ func (ob *Observer) parseAndValidateDepositEvents(
 	events := make([]*gatewayevm.GatewayEVMDeposited, 0)
 	for iterator.Next() {
 		events = append(events, iterator.Event)
-		err := evm.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", evm.TopicsGatewayDeposit)
+		err := common.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", common.TopicsGatewayDeposit)
 		if err == nil {
 			events = append(events, iterator.Event)
 			continue
@@ -279,7 +279,7 @@ func (ob *Observer) parseAndValidateCallEvents(
 	events := make([]*gatewayevm.GatewayEVMCalled, 0)
 	for iterator.Next() {
 		events = append(events, iterator.Event)
-		err := evm.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", evm.TopicsGatewayCall)
+		err := common.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", common.TopicsGatewayCall)
 		if err == nil {
 			events = append(events, iterator.Event)
 			continue
@@ -411,7 +411,7 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 	events := make([]*gatewayevm.GatewayEVMDepositedAndCalled, 0)
 	for iterator.Next() {
 		events = append(events, iterator.Event)
-		err := evm.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", evm.TopicsGatewayDepositAndCall)
+		err := common.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", common.TopicsGatewayDepositAndCall)
 		if err == nil {
 			events = append(events, iterator.Event)
 			continue
