@@ -1,11 +1,11 @@
 package runner
 
 import (
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 

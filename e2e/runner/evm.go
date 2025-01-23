@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 	"log"
 	"math/big"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/constant"
