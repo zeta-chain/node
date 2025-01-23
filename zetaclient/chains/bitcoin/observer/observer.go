@@ -87,7 +87,7 @@ type BTCBlockNHeader struct {
 // Observer is the Bitcoin chain observer
 type Observer struct {
 	// base.Observer implements the base chain observer
-	base.Observer
+	*base.Observer
 
 	// netParams contains the Bitcoin network parameters
 	netParams *chaincfg.Params
@@ -128,7 +128,7 @@ func New(chain chains.Chain, baseObserver *base.Observer, rpc RPC) (*Observer, e
 
 	// create bitcoin observer
 	ob := &Observer{
-		Observer:          *baseObserver,
+		Observer:          baseObserver,
 		netParams:         netParams,
 		rpc:               rpc,
 		pendingNonce:      0,
