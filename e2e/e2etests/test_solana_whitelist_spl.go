@@ -1,7 +1,9 @@
 package e2etests
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -26,7 +28,11 @@ func TestSolanaWhitelistSPL(r *runner.E2ERunner, _ []string) {
 	whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, r.GatewayProgram)
 	require.NoError(r, err)
 
-	whitelistEntryInfo, err := r.SolanaClient.GetAccountInfo(r.Ctx, whitelistEntryPDA)
+	whitelistEntryInfo, err := r.SolanaClient.GetAccountInfoWithOpts(
+		r.Ctx,
+		whitelistEntryPDA,
+		&rpc.GetAccountInfoOpts{Commitment: rpc.CommitmentConfirmed},
+	)
 	require.Error(r, err)
 	require.Nil(r, whitelistEntryInfo)
 
@@ -40,6 +46,7 @@ func TestSolanaWhitelistSPL(r *runner.E2ERunner, _ []string) {
 		"TESTSPL",
 		6,
 		100000,
+		sdkmath.NewUintFromString("100000000000000000000000000"),
 	))
 	require.NoError(r, err)
 
@@ -62,7 +69,11 @@ func TestSolanaWhitelistSPL(r *runner.E2ERunner, _ []string) {
 	r.WaitForMinedCCTXFromIndex(whitelistCCTXIndex)
 
 	// check that whitelist entry exists for this spl
-	whitelistEntryInfo, err = r.SolanaClient.GetAccountInfo(r.Ctx, whitelistEntryPDA)
+	whitelistEntryInfo, err = r.SolanaClient.GetAccountInfoWithOpts(
+		r.Ctx,
+		whitelistEntryPDA,
+		&rpc.GetAccountInfoOpts{Commitment: rpc.CommitmentConfirmed},
+	)
 	require.NoError(r, err)
 	require.NotNil(r, whitelistEntryInfo)
 }

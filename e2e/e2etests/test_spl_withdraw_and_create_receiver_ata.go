@@ -45,7 +45,11 @@ func TestSPLWithdrawAndCreateReceiverAta(r *runner.E2ERunner, args []string) {
 	receiverAta, _, err := solana.FindAssociatedTokenAddress(receiverPrivKey.PublicKey(), r.SPLAddr)
 	require.NoError(r, err)
 
-	receiverAtaAcc, err := r.SolanaClient.GetAccountInfo(r.Ctx, receiverAta)
+	receiverAtaAcc, err := r.SolanaClient.GetAccountInfoWithOpts(
+		r.Ctx,
+		receiverAta,
+		&rpc.GetAccountInfoOpts{Commitment: rpc.CommitmentConfirmed},
+	)
 	require.Error(r, err)
 	require.Nil(r, receiverAtaAcc)
 
@@ -62,12 +66,16 @@ func TestSPLWithdrawAndCreateReceiverAta(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("runner balance of SPL after withdraw: %d", zrc20BalanceAfter)
 
 	// verify receiver ata was created
-	receiverAtaAcc, err = r.SolanaClient.GetAccountInfo(r.Ctx, receiverAta)
+	receiverAtaAcc, err = r.SolanaClient.GetAccountInfoWithOpts(
+		r.Ctx,
+		receiverAta,
+		&rpc.GetAccountInfoOpts{Commitment: rpc.CommitmentConfirmed},
+	)
 	require.NoError(r, err)
 	require.NotNil(r, receiverAtaAcc)
 
 	// verify balances are updated
-	receiverBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, receiverAta, rpc.CommitmentFinalized)
+	receiverBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, receiverAta, rpc.CommitmentConfirmed)
 	require.NoError(r, err)
 	r.Logger.Info("receiver balance of SPL after withdraw: %s", receiverBalanceAfter.Value.Amount)
 

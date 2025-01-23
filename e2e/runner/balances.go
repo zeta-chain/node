@@ -104,7 +104,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		solSOLBalance, err := r.SolanaClient.GetBalance(
 			r.Ctx,
 			solanaAddr,
-			rpc.CommitmentFinalized,
+			rpc.CommitmentConfirmed,
 		)
 		if err != nil {
 			return AccountBalances{}, fmt.Errorf("get sol balance: %w", err)
@@ -119,7 +119,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 				solanaAddr,
 				r.SPLAddr,
 			)
-			splBalance, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, ata, rpc.CommitmentFinalized)
+			splBalance, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, ata, rpc.CommitmentConfirmed)
 			if err != nil {
 				return AccountBalances{}, fmt.Errorf("get spl balance: %w", err)
 			}

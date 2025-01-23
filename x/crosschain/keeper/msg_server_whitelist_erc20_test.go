@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"fmt"
 	"testing"
 
@@ -80,6 +81,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 				Symbol:       "FOO",
 				Decimals:     18,
 				GasLimit:     100000,
+				LiquidityCap: sdkmath.NewUint(1000),
 			}
 			keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 			res, err := msgServer.WhitelistERC20(ctx, &msg)
@@ -94,6 +96,12 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			require.True(t, found)
 			require.EqualValues(t, "foo", fc.Name)
 			require.EqualValues(t, tt.tokenAddress, fc.Asset)
+			require.EqualValues(
+				t,
+				uint64(1000),
+				fc.LiquidityCap.Uint64(),
+				fmt.Sprintf("%d != %d", 1000, fc.LiquidityCap.Uint64()),
+			)
 			cctx, found := k.GetCrossChainTx(ctx, cctxIndex)
 			require.True(t, found)
 			require.EqualValues(
@@ -115,6 +123,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 				Symbol:       "BAR",
 				Decimals:     18,
 				GasLimit:     100000,
+				LiquidityCap: sdkmath.NewUint(1000),
 			}
 			keepertest.MockCheckAuthorization(&authorityMock.Mock, &msgNew, nil)
 
@@ -145,6 +154,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Symbol:       "FOO",
 			Decimals:     18,
 			GasLimit:     100000,
+			LiquidityCap: sdkmath.NewUint(1000),
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
 		_, err := msgServer.WhitelistERC20(ctx, &msg)
@@ -170,6 +180,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Symbol:       "FOO",
 			Decimals:     18,
 			GasLimit:     100000,
+			LiquidityCap: sdkmath.NewUint(1000),
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
@@ -199,6 +210,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Symbol:       "FOO",
 			Decimals:     18,
 			GasLimit:     100000,
+			LiquidityCap: sdkmath.NewUint(1000),
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
@@ -228,6 +240,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Symbol:       "FOO",
 			Decimals:     18,
 			GasLimit:     100000,
+			LiquidityCap: sdkmath.NewUint(1000),
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
@@ -261,6 +274,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Symbol:       "FOO",
 			Decimals:     18,
 			GasLimit:     100000,
+			LiquidityCap: sdkmath.NewUint(1000),
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.WhitelistERC20(ctx, &msg)
@@ -288,6 +302,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Symbol:       "FOO",
 			Decimals:     18,
 			GasLimit:     100000,
+			LiquidityCap: sdkmath.NewUint(1000),
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.WhitelistERC20(ctx, &msg)
@@ -316,6 +331,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Symbol:       "FOO",
 			Decimals:     18,
 			GasLimit:     100000,
+			LiquidityCap: sdkmath.NewUint(1000),
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		_, err := msgServer.WhitelistERC20(ctx, &msg)

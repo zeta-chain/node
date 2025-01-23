@@ -2,6 +2,7 @@ package types
 
 import (
 	cosmoserrors "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -21,6 +22,7 @@ func NewMsgDeployFungibleCoinZRC20(
 	symbol string,
 	coinType coin.CoinType,
 	gasLimit int64,
+	liquidityCap *sdkmath.Uint,
 ) *MsgDeployFungibleCoinZRC20 {
 	return &MsgDeployFungibleCoinZRC20{
 		Creator:        creator,
@@ -31,6 +33,7 @@ func NewMsgDeployFungibleCoinZRC20(
 		Symbol:         symbol,
 		CoinType:       coinType,
 		GasLimit:       gasLimit,
+		LiquidityCap:   liquidityCap,
 	}
 }
 
@@ -63,9 +66,12 @@ func (msg *MsgDeployFungibleCoinZRC20) ValidateBasic() error {
 	if msg.GasLimit < 0 {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidGasLimit, "invalid gas limit")
 	}
-
 	if msg.Decimals > 77 {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "decimals must be less than 78")
 	}
+	if msg.LiquidityCap != nil && msg.LiquidityCap.IsNil() {
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "liquidity cap is nil")
+	}
+
 	return nil
 }
