@@ -6,7 +6,6 @@ package fanout
 import (
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 const DefaultBuffer = 8
@@ -25,9 +24,9 @@ type FanOut[T any] struct {
 }
 
 type output[T any] struct {
-	ch            chan T
-	status        atomic.Int32
-	pendingWrites atomic.Int32
+	ch     chan T
+	status atomic.Int32
+	wg     sync.WaitGroup
 }
 
 const (
@@ -106,14 +105,13 @@ func (f *FanOut[T]) Start() {
 }
 
 func (o *output[T]) write(data T) {
-	o.pendingWrites.Add(1)
+	o.wg.Add(1)
 
 	go func() {
+		defer o.wg.Done()
 		if o.isRunning() {
 			o.ch <- data
 		}
-
-		o.pendingWrites.Add(-1)
 	}()
 }
 
@@ -129,16 +127,10 @@ func (o *output[T]) close() {
 	}
 
 	o.status.Store(statusClosing)
+	o.wg.Wait()
 
-	// spin-lock
-	for {
-		if o.pendingWrites.Load() == 0 {
-			o.status.Store(statusClosed)
-			close(o.ch)
-			break
-		}
-		time.Sleep(50 * time.Millisecond)
-	}
+	o.status.Store(statusClosed)
+	close(o.ch)
 }
 
 func (o *output[T]) isRunning() bool {
