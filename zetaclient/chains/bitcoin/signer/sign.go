@@ -25,6 +25,17 @@ const (
 
 	// the rank below (or equal to) which we consolidate UTXOs
 	consolidationRank = 10
+
+	// reservedRBFFees is the amount of BTC reserved for RBF fee bumping.
+	// the TSS keysign stops automatically when transactions get stuck in the mempool
+	// 0.01 BTC can bump 10 transactions (1KB each) by 100 sat/vB
+	reservedRBFFees = 0.01
+
+	// rbfTxInSequenceNum is the sequence number used to signal an opt-in full-RBF (Replace-By-Fee) transaction
+	// Setting sequenceNum to "1" effectively makes the transaction timelocks irrelevant.
+	// See: https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki
+	// See: https://github.com/BlockchainCommons/Learning-Bitcoin-from-the-Command-Line/blob/master/05_2_Resending_a_Transaction_with_RBF.md
+	rbfTxInSequenceNum uint32 = 1
 )
 
 // SignWithdrawTx signs a BTC withdrawal tx and returns the signed tx
@@ -35,11 +46,18 @@ func (signer *Signer) SignWithdrawTx(
 ) (*wire.MsgTx, error) {
 	nonceMark := chains.NonceMarkAmount(txData.nonce)
 	estimateFee := float64(txData.feeRate*common.OutboundBytesMax) / 1e8
-	totalAmount := txData.amount + estimateFee + float64(nonceMark)*1e-8
+	totalAmount := txData.amount + estimateFee + reservedRBFFees + float64(nonceMark)*1e-8
 
-	// refresh unspent UTXOs and continue with keysign regardless of error
-	if err := ob.FetchUTXOs(ctx); err != nil {
-		signer.Logger().Std.Error().Err(err).Uint64("nonce", txData.nonce).Msg("SignWithdrawTx: FetchUTXOs failed")
+	// refreshing UTXO list before TSS keysign is important:
+	// 1. all TSS outbounds have opted-in for RBF to be replaceable
+	// 2. using old UTXOs may lead to accidental double-spending, which may trigger unwanted RBF
+	//
+	// Note: unwanted RBF is very unlikely to happen for two reasons:
+	// 1. it requires 2/3 TSS signers to accidentally sign the same tx using same outdated UTXOs.
+	// 2. RBF requires a higher fee rate than the original tx, otherwise it will fail.
+	err := ob.FetchUTXOs(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "FetchUTXOs failed")
 	}
 
 	// select N UTXOs to cover the total expense
@@ -92,15 +110,11 @@ func (signer *Signer) SignWithdrawTx(
 			txData.nonce, txData.feeRate, txSize, fees, selected.ConsolidatedUTXOs, selected.ConsolidatedValue)
 
 	// add tx outputs
-	err = signer.AddWithdrawTxOutputs(
-		tx,
-		txData.to,
-		selected.Value,
-		txData.amountSats,
-		nonceMark,
-		fees,
-		txData.cancelTx,
-	)
+	inputValue := selected.Value
+	err = signer.AddWithdrawTxOutputs(tx, txData.to, inputValue, txData.amountSats, nonceMark, fees, txData.cancelTx)
+	if err != nil {
+		return nil, err
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -123,8 +137,13 @@ func (signer *Signer) AddTxInputs(tx *wire.MsgTx, utxos []btcjson.ListUnspentRes
 			return nil, err
 		}
 
+		// add input and set 'nSequence' to opt-in for RBF
+		// it doesn't matter on which input we set the RBF sequence
 		outpoint := wire.NewOutPoint(hash, utxo.Vout)
 		txIn := wire.NewTxIn(outpoint, nil, nil)
+		if i == 0 {
+			txIn.Sequence = rbfTxInSequenceNum
+		}
 		tx.AddTxIn(txIn)
 
 		// store the amount for later signing use

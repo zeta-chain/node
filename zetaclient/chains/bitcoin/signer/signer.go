@@ -36,6 +36,11 @@ type RPC interface {
 	GetRawTransaction(ctx context.Context, hash *chainhash.Hash) (*btcutil.Tx, error)
 	GetEstimatedFeeRate(ctx context.Context, confTarget int64, regnet bool) (int64, error)
 	SendRawTransaction(ctx context.Context, tx *wire.MsgTx, allowHighFees bool) (*chainhash.Hash, error)
+	GetTotalMempoolParentsSizeNFees(
+		ctx context.Context,
+		childHash string,
+		timeout time.Duration,
+	) (int64, float64, int64, int64, error)
 }
 
 // Signer deals with signing & broadcasting BTC transactions.
@@ -125,23 +130,41 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 
-	// setup outbound data
-	txData, err := NewOutboundData(cctx, chain.ChainId, height, minRelayFee, logger, signer.Logger().Compliance)
-	if err != nil {
-		logger.Error().Err(err).Msg("failed to setup Bitcoin outbound data")
-		return
-	}
+	var (
+		rbfTx    = false
+		signedTx *wire.MsgTx
+		stuckTx  = observer.GetLastStuckOutbound()
+	)
 
-	// sign withdraw tx
-	signedTx, err := signer.SignWithdrawTx(ctx, txData, observer)
-	if err != nil {
-		logger.Error().Err(err).Msg("SignWithdrawTx failed")
-		return
+	// sign outbound
+	if stuckTx != nil && params.TssNonce == stuckTx.Nonce {
+		// sign RBF tx
+		rbfTx = true
+		signedTx, err = signer.SignRBFTx(ctx, cctx, height, stuckTx.Tx, minRelayFee)
+		if err != nil {
+			logger.Error().Err(err).Msg("SignRBFTx failed")
+			return
+		}
+		logger.Info().Str(logs.FieldTx, signedTx.TxID()).Msg("SignRBFTx succeed")
+	} else {
+		// setup outbound data
+		txData, err := NewOutboundData(cctx, chain.ChainId, height, minRelayFee, logger, signer.Logger().Compliance)
+		if err != nil {
+			logger.Error().Err(err).Msg("failed to setup Bitcoin outbound data")
+			return
+		}
+
+		// sign withdraw tx
+		signedTx, err = signer.SignWithdrawTx(ctx, txData, observer)
+		if err != nil {
+			logger.Error().Err(err).Msg("SignWithdrawTx failed")
+			return
+		}
+		logger.Info().Str(logs.FieldTx, signedTx.TxID()).Msg("SignWithdrawTx succeed")
 	}
-	logger.Info().Str(logs.FieldTx, signedTx.TxID()).Msg("SignWithdrawTx succeed")
 
 	// broadcast signed outbound
-	signer.BroadcastOutbound(ctx, signedTx, params.TssNonce, cctx, observer, zetacoreClient)
+	signer.BroadcastOutbound(ctx, signedTx, params.TssNonce, rbfTx, cctx, observer, zetacoreClient)
 }
 
 // BroadcastOutbound sends the signed transaction to the Bitcoin network
@@ -149,6 +172,7 @@ func (signer *Signer) BroadcastOutbound(
 	ctx context.Context,
 	tx *wire.MsgTx,
 	nonce uint64,
+	rbfTx bool,
 	cctx *types.CrossChainTx,
 	ob *observer.Observer,
 	zetacoreClient interfaces.ZetacoreClient,
@@ -163,6 +187,12 @@ func (signer *Signer) BroadcastOutbound(
 		logs.FieldCctx:   cctx.Index,
 	}
 	logger := signer.Logger().Std
+
+	// double check to ensure the tx being replaced is still the last outbound
+	if rbfTx && ob.GetPendingNonce() > nonce+1 {
+		logger.Warn().Fields(lf).Msgf("RBF tx nonce is outdated, skipping broadcasting")
+		return
+	}
 
 	// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s) in case of RPC error
 	backOff := broadcastBackoff

@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 	"fmt"
+	"math"
+	"strings"
 	"time"
 
 	types "github.com/btcsuite/btcd/btcjson"
@@ -16,6 +18,9 @@ import (
 const (
 	// FeeRateRegnet is the hardcoded fee rate for regnet
 	FeeRateRegnet = 1
+
+	// FeeRateRegnetRBF is the hardcoded fee rate for regnet RBF
+	FeeRateRegnetRBF = 5
 
 	// maxBTCSupply is the maximum supply of Bitcoin
 	maxBTCSupply = 21000000.0
@@ -217,6 +222,72 @@ func (c *Client) Healthcheck(ctx context.Context, tssAddress btcutil.Address) (t
 	}
 
 	return header.Timestamp, nil
+}
+
+// GetTotalMempoolParentsSizeNFees returns the information of all pending parent txs of a given tx (inclusive)
+//
+// A parent tx is defined as:
+//   - a tx that is also pending in the mempool
+//   - a tx that has its first output spent by the child as first input
+//
+// Returns: (totalTxs, totalFees, totalVSize, error)
+func (c *Client) GetTotalMempoolParentsSizeNFees(
+	ctx context.Context,
+	childHash string,
+	timeout time.Duration,
+) (int64, float64, int64, int64, error) {
+	var (
+		totalTxs   int64
+		totalFees  float64
+		totalVSize int64
+		avgFeeRate int64
+	)
+
+	// loop through all parents
+	startTime := time.Now()
+	parentHash := childHash
+	for {
+		memplEntry, err := c.GetMempoolEntry(ctx, parentHash)
+		if err != nil {
+			if strings.Contains(err.Error(), "Transaction not in mempool") {
+				// not a mempool tx, stop looking for parents
+				break
+			}
+			return 0, 0, 0, 0, errors.Wrapf(err, "unable to get mempool entry for tx %s", parentHash)
+		}
+
+		// accumulate fees and vsize
+		totalTxs++
+		totalFees += memplEntry.Fee
+		totalVSize += int64(memplEntry.VSize)
+
+		// find the parent tx
+		tx, err := c.GetRawTransactionByStr(ctx, parentHash)
+		if err != nil {
+			return 0, 0, 0, 0, errors.Wrapf(err, "unable to get tx %s", parentHash)
+		}
+		parentHash = tx.MsgTx().TxIn[0].PreviousOutPoint.Hash.String()
+
+		// check timeout to avoid infinite loop
+		if time.Since(startTime) > timeout {
+			return 0, 0, 0, 0, errors.Errorf("timeout reached on %dth tx: %s", totalTxs, parentHash)
+		}
+	}
+
+	// no pending tx found
+	if totalTxs == 0 {
+		return 0, 0, 0, 0, errors.Errorf("given tx is not pending: %s", childHash)
+	}
+
+	// sanity check, should never happen
+	if totalFees < 0 || totalVSize <= 0 {
+		return 0, 0, 0, 0, errors.Errorf("invalid result: totalFees %f, totalVSize %d", totalFees, totalVSize)
+	}
+
+	// calculate the average fee rate
+	avgFeeRate = int64(math.Ceil(totalFees / float64(totalVSize)))
+
+	return totalTxs, totalFees, totalVSize, avgFeeRate, nil
 }
 
 func strToHash(s string) (*chainhash.Hash, error) {

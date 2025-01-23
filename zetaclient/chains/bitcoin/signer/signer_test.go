@@ -100,6 +100,8 @@ func Test_BroadcastOutbound(t *testing.T) {
 		name        string
 		chain       chains.Chain
 		nonce       uint64
+		rbfTx       bool
+		skipRBFTx   bool
 		failTracker bool
 	}{
 		{
@@ -111,6 +113,7 @@ func Test_BroadcastOutbound(t *testing.T) {
 			name:  "should successfully broadcast and include RBF outbound",
 			chain: chains.BitcoinMainnet,
 			nonce: uint64(148),
+			rbfTx: true,
 		},
 		{
 			name:        "should successfully broadcast and include outbound, but fail to post outbound tracker",
@@ -118,10 +121,18 @@ func Test_BroadcastOutbound(t *testing.T) {
 			nonce:       uint64(148),
 			failTracker: true,
 		},
+		{
+			name:      "should skip broadcasting RBF tx",
+			chain:     chains.BitcoinMainnet,
+			nonce:     uint64(148),
+			rbfTx:     true,
+			skipRBFTx: true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// ARRANGE
 			// setup signer and observer
 			s := newTestSuite(t, tt.chain)
 			observer := s.getNewObserver(t)
@@ -153,19 +164,31 @@ func Test_BroadcastOutbound(t *testing.T) {
 				TxID: rawResult.Vin[0].Txid,
 			})
 
+			// set a higher pending nonce so the RBF tx is not the last tx
+			if tt.rbfTx && tt.skipRBFTx {
+				observer.SetPendingNonce(tt.nonce + 2)
+			}
+
+			// ACT
 			ctx := makeCtx(t)
 			s.BroadcastOutbound(
 				ctx,
 				msgTx,
 				tt.nonce,
+				tt.rbfTx,
 				cctx,
 				observer,
 				s.zetacoreClient,
 			)
 
+			// ASSERT
 			// check if outbound is included
 			gotResult := observer.GetIncludedTx(tt.nonce)
-			require.Equal(t, txResult, gotResult)
+			if tt.skipRBFTx {
+				require.Nil(t, gotResult)
+			} else {
+				require.Equal(t, txResult, gotResult)
+			}
 		})
 	}
 }
@@ -390,10 +413,4 @@ func (s *testSuite) getNewObserver(t *testing.T) *observer.Observer {
 	)
 	require.NoError(t, err)
 	return ob
-}
-
-func hashFromTXID(t *testing.T, txid string) *chainhash.Hash {
-	h, err := chainhash.NewHashFromStr(txid)
-	require.NoError(t, err)
-	return h
 }

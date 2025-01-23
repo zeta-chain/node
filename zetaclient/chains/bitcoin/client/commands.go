@@ -77,6 +77,41 @@ func (c *Client) GetBlockHeader(ctx context.Context, hash *chainhash.Hash) (*wir
 	return &bh, nil
 }
 
+func (c *Client) GetRawMempool(ctx context.Context) ([]*chainhash.Hash, error) {
+	cmd := types.NewGetRawMempoolCmd(types.Bool(false))
+
+	out, err := c.sendCommand(ctx, cmd)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to list unspent")
+	}
+
+	txHashStrs, err := unmarshal[[]string](out)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to unmarshal to strings")
+	}
+
+	txHashes := make([]*chainhash.Hash, len(txHashStrs))
+	for i, hashString := range txHashStrs {
+		txHashes[i], err = chainhash.NewHashFromStr(hashString)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return txHashes, nil
+}
+
+func (c *Client) GetMempoolEntry(ctx context.Context, txHash string) (*types.GetMempoolEntryResult, error) {
+	cmd := types.NewGetMempoolEntryCmd(txHash)
+
+	out, err := c.sendCommand(ctx, cmd)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to get mempool entry for %s", txHash)
+	}
+
+	return unmarshalPtr[types.GetMempoolEntryResult](out)
+}
+
 func (c *Client) GetBlockVerbose(ctx context.Context, hash *chainhash.Hash) (*types.GetBlockVerboseTxResult, error) {
 	cmd := types.NewGetBlockCmd(hash.String(), types.Int(2))
 

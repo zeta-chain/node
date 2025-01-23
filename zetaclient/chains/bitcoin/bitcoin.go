@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
+	"github.com/zeta-chain/node/zetaclient/common"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 )
@@ -72,6 +73,8 @@ func (b *Bitcoin) Start(ctx context.Context) error {
 		return ticker.DurationFromUint64Seconds(b.observer.ChainParams().WatchUtxoTicker)
 	})
 
+	optMempoolInterval := scheduler.Interval(common.BTCMempoolStuckTxCheckInterval)
+
 	optOutboundInterval := scheduler.IntervalUpdater(func() time.Duration {
 		return ticker.DurationFromUint64Seconds(b.observer.ChainParams().OutboundTicker)
 	})
@@ -101,6 +104,7 @@ func (b *Bitcoin) Start(ctx context.Context) error {
 	register(b.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
 	register(b.observer.ObserveInboundTrackers, "observe_inbound_trackers", optInboundInterval, optInboundSkipper)
 	register(b.observer.FetchUTXOs, "fetch_utxos", optUTXOInterval, optGenericSkipper)
+	register(b.observer.WatchMempoolTxs, "watch_mempool_txs", optMempoolInterval, optGenericSkipper)
 	register(b.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
 	register(b.observer.CheckRPCStatus, "check_rpc_status")
 	register(b.observer.ObserveOutbound, "observe_outbound", optOutboundInterval, optOutboundSkipper)

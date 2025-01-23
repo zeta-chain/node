@@ -20,6 +20,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
@@ -38,6 +39,7 @@ type RPC interface {
 		hash *hash.Hash,
 		res *btcjson.GetTransactionResult,
 	) (btcjson.TxRawResult, error)
+	GetMempoolEntry(ctx context.Context, txHash string) (*btcjson.GetMempoolEntryResult, error)
 
 	GetEstimatedFeeRate(ctx context.Context, confTarget int64, regnet bool) (int64, error)
 	GetTransactionFeeAndRate(ctx context.Context, tx *btcjson.TxRawResult) (int64, int64, error)
@@ -56,6 +58,7 @@ type RPC interface {
 
 	GetBlockHeightByStr(ctx context.Context, blockHash string) (int64, error)
 	GetTransactionByStr(ctx context.Context, hash string) (*hash.Hash, *btcjson.GetTransactionResult, error)
+	GetRawTransactionByStr(ctx context.Context, hash string) (*btcutil.Tx, error)
 }
 
 const (
@@ -101,10 +104,13 @@ type Observer struct {
 	// pendingNonce is the outbound artificial pending nonce
 	pendingNonce uint64
 
+	// lastStuckTx contains the last stuck outbound tx information
+	// Note: nil if outbound is not stuck
+	lastStuckTx *LastStuckOutbound
+
 	// utxos contains the UTXOs owned by the TSS address
 	utxos []btcjson.ListUnspentResult
 
-	// tssOutboundHashes indexes included tx with tx hash
 	// tssOutboundHashes keeps track of outbound hashes sent from TSS address
 	tssOutboundHashes map[string]bool
 
@@ -248,9 +254,41 @@ func (ob *Observer) GetBlockByNumberCached(ctx context.Context, blockNumber int6
 	return blockNheader, nil
 }
 
+// GetLastStuckOutbound returns the last stuck outbound tx information
+func (ob *Observer) GetLastStuckOutbound() *LastStuckOutbound {
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
+	return ob.lastStuckTx
+}
+
+// SetLastStuckOutbound sets the information of last stuck outbound
+func (ob *Observer) SetLastStuckOutbound(stuckTx *LastStuckOutbound) {
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
+
+	lf := map[string]any{
+		logs.FieldMethod: "SetLastStuckOutbound",
+	}
+
+	if stuckTx != nil {
+		lf[logs.FieldNonce] = stuckTx.Nonce
+		lf[logs.FieldTx] = stuckTx.Tx.MsgTx().TxID()
+		ob.logger.Outbound.Warn().
+			Fields(lf).
+			Msgf("Bitcoin outbound is stuck for %f minutes", stuckTx.StuckFor.Minutes())
+	} else if ob.lastStuckTx != nil {
+		lf[logs.FieldNonce] = ob.lastStuckTx.Nonce
+		lf[logs.FieldTx] = ob.lastStuckTx.Tx.MsgTx().TxID()
+		ob.logger.Outbound.Info().Fields(lf).Msgf("Bitcoin outbound is no longer stuck")
+	}
+	ob.lastStuckTx = stuckTx
+}
+
 // IsTSSTransaction checks if a given transaction was sent by TSS itself.
-// An unconfirmed transaction is safe to spend only if it was sent by TSS and verified by ourselves.
+// An unconfirmed transaction is safe to spend only if it was sent by TSS self.
 func (ob *Observer) IsTSSTransaction(txid string) bool {
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
 	_, found := ob.tssOutboundHashes[txid]
 	return found
 }

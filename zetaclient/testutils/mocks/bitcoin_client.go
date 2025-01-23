@@ -385,6 +385,36 @@ func (_m *BitcoinClient) GetEstimatedFeeRate(ctx context.Context, confTarget int
 	return r0, r1
 }
 
+// GetMempoolEntry provides a mock function with given fields: ctx, txHash
+func (_m *BitcoinClient) GetMempoolEntry(ctx context.Context, txHash string) (*btcjson.GetMempoolEntryResult, error) {
+	ret := _m.Called(ctx, txHash)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMempoolEntry")
+	}
+
+	var r0 *btcjson.GetMempoolEntryResult
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*btcjson.GetMempoolEntryResult, error)); ok {
+		return rf(ctx, txHash)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *btcjson.GetMempoolEntryResult); ok {
+		r0 = rf(ctx, txHash)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*btcjson.GetMempoolEntryResult)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, txHash)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetNetworkInfo provides a mock function with given fields: ctx
 func (_m *BitcoinClient) GetNetworkInfo(ctx context.Context) (*btcjson.GetNetworkInfoResult, error) {
 	ret := _m.Called(ctx)
@@ -403,6 +433,36 @@ func (_m *BitcoinClient) GetNetworkInfo(ctx context.Context) (*btcjson.GetNetwor
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*btcjson.GetNetworkInfoResult)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetRawMempool provides a mock function with given fields: ctx
+func (_m *BitcoinClient) GetRawMempool(ctx context.Context) ([]*chainhash.Hash, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetRawMempool")
+	}
+
+	var r0 []*chainhash.Hash
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) ([]*chainhash.Hash, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) []*chainhash.Hash); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*chainhash.Hash)
 		}
 	}
 
@@ -561,6 +621,55 @@ func (_m *BitcoinClient) GetRawTransactionVerbose(ctx context.Context, hash *cha
 	}
 
 	return r0, r1
+}
+
+// GetTotalMempoolParentsSizeNFees provides a mock function with given fields: ctx, childHash, timeout
+func (_m *BitcoinClient) GetTotalMempoolParentsSizeNFees(ctx context.Context, childHash string, timeout time.Duration) (int64, float64, int64, int64, error) {
+	ret := _m.Called(ctx, childHash, timeout)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTotalMempoolParentsSizeNFees")
+	}
+
+	var r0 int64
+	var r1 float64
+	var r2 int64
+	var r3 int64
+	var r4 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, time.Duration) (int64, float64, int64, int64, error)); ok {
+		return rf(ctx, childHash, timeout)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, time.Duration) int64); ok {
+		r0 = rf(ctx, childHash, timeout)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, time.Duration) float64); ok {
+		r1 = rf(ctx, childHash, timeout)
+	} else {
+		r1 = ret.Get(1).(float64)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, string, time.Duration) int64); ok {
+		r2 = rf(ctx, childHash, timeout)
+	} else {
+		r2 = ret.Get(2).(int64)
+	}
+
+	if rf, ok := ret.Get(3).(func(context.Context, string, time.Duration) int64); ok {
+		r3 = rf(ctx, childHash, timeout)
+	} else {
+		r3 = ret.Get(3).(int64)
+	}
+
+	if rf, ok := ret.Get(4).(func(context.Context, string, time.Duration) error); ok {
+		r4 = rf(ctx, childHash, timeout)
+	} else {
+		r4 = ret.Error(4)
+	}
+
+	return r0, r1, r2, r3, r4
 }
 
 // GetTransaction provides a mock function with given fields: ctx, hash

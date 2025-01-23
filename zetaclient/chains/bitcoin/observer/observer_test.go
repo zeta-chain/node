@@ -6,8 +6,10 @@ import (
 	"os"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
@@ -237,6 +239,39 @@ func TestConfirmationThreshold(t *testing.T) {
 		ob.SetChainParams(observertypes.ChainParams{ConfirmationCount: observer.BigValueConfirmationCount + 1})
 		require.Equal(t, int64(observer.BigValueConfirmationCount), ob.ConfirmationsThreshold(big.NewInt(1000)))
 	})
+}
+
+func Test_SetLastStuckOutbound(t *testing.T) {
+	// create observer and example stuck tx
+	ob := newTestSuite(t, chains.BitcoinMainnet, "")
+	tx := btcutil.NewTx(wire.NewMsgTx(wire.TxVersion))
+
+	// STEP 1
+	// initial stuck outbound is nil
+	require.Nil(t, ob.GetLastStuckOutbound())
+
+	// STEP 2
+	// set stuck outbound
+	stuckTx := observer.NewLastStuckOutbound(100, tx, 30*time.Minute)
+	ob.SetLastStuckOutbound(stuckTx)
+
+	// retrieve stuck outbound
+	require.Equal(t, stuckTx, ob.GetLastStuckOutbound())
+
+	// STEP 3
+	// update stuck outbound
+	stuckTxUpdate := observer.NewLastStuckOutbound(101, tx, 40*time.Minute)
+	ob.SetLastStuckOutbound(stuckTxUpdate)
+
+	// retrieve updated stuck outbound
+	require.Equal(t, stuckTxUpdate, ob.GetLastStuckOutbound())
+
+	// STEP 4
+	// clear stuck outbound
+	ob.SetLastStuckOutbound(nil)
+
+	// stuck outbound should be nil
+	require.Nil(t, ob.GetLastStuckOutbound())
 }
 
 func TestSubmittedTx(t *testing.T) {

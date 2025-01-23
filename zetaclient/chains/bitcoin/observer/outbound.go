@@ -353,11 +353,16 @@ func (ob *Observer) SetIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 		}
 	} else {
 		// for other hash:
-		// be alert for duplicate payment!!! As we got a new hash paying same cctx (for whatever reason).
-		// we can't tell which txHash is true, so we remove all to be safe
+		// got multiple hashes for same nonce. RBF happened.
+		ob.logger.Outbound.Info().Fields(lf).Msgf("replaced bitcoin outbound %s", res.TxID)
+
+		// remove prior txHash and txResult
 		delete(ob.tssOutboundHashes, res.TxID)
 		delete(ob.includedTxResults, outboundID)
-		ob.logger.Outbound.Error().Msgf("setIncludedTx: duplicate payment by bitcoin outbound %s outboundID %s, prior outbound %s", txHash, outboundID, res.TxID)
+
+		// add new txHash and txResult
+		ob.tssOutboundHashes[txHash] = true
+		ob.includedTxResults[outboundID] = getTxResult
 	}
 }
 
