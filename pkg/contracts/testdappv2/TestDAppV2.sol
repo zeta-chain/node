@@ -77,6 +77,16 @@ contract TestDAppV2 {
         bytes revertMessage;
     }
 
+    /// @notice Struct containing abort context passed to onAbort.
+    struct AbortContext {
+        bytes sender;
+        address asset;
+        uint256 amount;
+        bool outgoing;
+        uint256 chainID;
+        bytes revertMessage;
+    }
+
     /// @notice Message context passed to execute function.
     /// @param sender Sender from omnichain contract.
     struct MessageContext {
@@ -87,6 +97,9 @@ contract TestDAppV2 {
     mapping(bytes32 => bool) public calledWithMessage;
     mapping(bytes => address) public senderWithMessage;
     mapping(bytes32 => uint256) public amountWithMessage;
+
+    // allow to assess onAbort calls
+    mapping(bytes32 => AbortContext) public abortedWithMessage;
 
     // the constructor is used to determine if the chain is ZetaChain
     constructor(bool isZetaChain_, address gateway_) {
@@ -115,6 +128,14 @@ contract TestDAppV2 {
 
     function getAmountWithMessage(string memory message) public view returns (uint256) {
         return amountWithMessage[keccak256(abi.encodePacked(message))];
+    }
+
+    function setAbortedWithMessage(string memory message, AbortContext memory abortContext) internal {
+        abortedWithMessage[keccak256(abi.encodePacked(message))] = abortContext;
+    }
+
+    function getAbortedWithMessage(string memory message) public view returns (AbortContext memory) {
+        return abortedWithMessage[keccak256(abi.encodePacked(message))];
     }
 
     // Universal contract interface on ZEVM
@@ -206,6 +227,12 @@ contract TestDAppV2 {
         senderWithMessage[bytes(messageStr)] = messageContext.sender;
 
         return "";
+    }
+
+    /// @notice Handles a cross-chain call abort.
+    /// @param abortContext Abort context.
+    function onAbort(AbortContext calldata abortContext) external {
+        setAbortedWithMessage(string(abortContext.revertMessage), abortContext);
     }
 
     // deposit through Gateway EVM
