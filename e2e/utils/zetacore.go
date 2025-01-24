@@ -314,18 +314,19 @@ func WaitForBlockHeight(
 
 	var currentHeight int64
 	for i := 0; currentHeight < desiredHeight; i++ {
+		time.Sleep(1 * time.Second)
 		s, err := rpc.Status(ctx)
 		if err != nil {
-			return errors.Wrap(err, "unable to get status")
+			continue
 		}
-
 		currentHeight = s.SyncInfo.LatestBlockHeight
-
-		time.Sleep(1 * time.Second)
 
 		// prevent spamming logs
 		if i%10 == 0 {
 			logger.Info("waiting for block: %d, current height: %d\n", desiredHeight, currentHeight)
+		}
+		if i > 100 {
+			return errors.Wrapf(err, "unable to get status after %d attempts", i)
 		}
 	}
 
