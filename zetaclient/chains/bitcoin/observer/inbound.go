@@ -357,6 +357,7 @@ func GetBtcEventWithoutWitness(
 			// the error message will be forwarded to zetacore to register a failed CCTX
 			value, err = DeductDepositorFee(vout0.Value, depositorFee)
 			if err != nil {
+				value = 0
 				status = types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
 				logger.Error().Err(err).Fields(lf).Msgf("unable to deduct depositor fee")
 			}

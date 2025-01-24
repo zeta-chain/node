@@ -13,6 +13,7 @@ import (
 
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // GetBtcEventWithWitness either returns a valid BTCInboundEvent or nil.
@@ -28,17 +29,22 @@ func GetBtcEventWithWitness(
 	netParams *chaincfg.Params,
 	feeCalculator common.DepositorFeeCalculator,
 ) (*BTCInboundEvent, error) {
+	lf := map[string]any{
+		logs.FieldMethod: "GetBtcEventWithWitness",
+		logs.FieldTx:     tx.Txid,
+	}
+
 	if len(tx.Vout) < 1 {
-		logger.Debug().Msgf("no output %s", tx.Txid)
+		logger.Debug().Fields(lf).Msg("no output")
 		return nil, nil
 	}
 	if len(tx.Vin) == 0 {
-		logger.Debug().Msgf("no input found for inbound: %s", tx.Txid)
+		logger.Debug().Fields(lf).Msg("no input found for inbound")
 		return nil, nil
 	}
 
 	if err := isValidRecipient(tx.Vout[0].ScriptPubKey.Hex, tssAddress, netParams); err != nil {
-		logger.Debug().Msgf("irrelevant recipient %s for tx %s, err: %s", tx.Vout[0].ScriptPubKey.Hex, tx.Txid, err)
+		logger.Debug().Err(err).Fields(lf).Msgf("irrelevant recipient: %s", tx.Vout[0].ScriptPubKey.Hex)
 		return nil, nil
 	}
 
@@ -56,7 +62,7 @@ func GetBtcEventWithWitness(
 	if err != nil {
 		amount = 0
 		status = types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
-		logger.Error().Err(err).Msgf("unable to deduct depositor fee for tx %s", tx.Txid)
+		logger.Error().Err(err).Fields(lf).Msgf("unable to deduct depositor fee")
 	}
 
 	// Try to extract the memo from the BTC txn. First try to extract from OP_RETURN
@@ -65,11 +71,10 @@ func GetBtcEventWithWitness(
 	var memo []byte
 	if candidate := tryExtractOpRet(tx, logger); candidate != nil {
 		memo = candidate
-		logger.Debug().
-			Msgf("GetBtcEventWithWitness: found OP_RETURN memo %s in tx %s", hex.EncodeToString(memo), tx.Txid)
+		logger.Debug().Fields(lf).Msgf("found OP_RETURN memo: %s", hex.EncodeToString(memo))
 	} else if candidate = tryExtractInscription(tx, logger); candidate != nil {
 		memo = candidate
-		logger.Debug().Msgf("GetBtcEventWithWitness: found inscription memo %s in tx %s", hex.EncodeToString(memo), tx.Txid)
+		logger.Debug().Fields(lf).Msgf("found inscription memo: %s", hex.EncodeToString(memo))
 	} else {
 		return nil, nil
 	}
