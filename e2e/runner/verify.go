@@ -42,7 +42,9 @@ func (r *E2ERunner) VerifySolanaWithdrawalAmountFromCCTX(cctx *crosschaintypes.C
 	require.NoError(r, err)
 
 	// query transaction by signature
-	txResult, err := r.SolanaClient.GetTransaction(r.Ctx, sig, &rpc.GetTransactionOpts{})
+	txResult, err := r.SolanaClient.GetTransaction(r.Ctx, sig, &rpc.GetTransactionOpts{
+		Commitment: rpc.CommitmentConfirmed,
+	})
 	require.NoError(r, err)
 
 	// unmarshal transaction

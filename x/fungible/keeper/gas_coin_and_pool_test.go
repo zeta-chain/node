@@ -2,11 +2,13 @@ package keeper_test
 
 import (
 	"errors"
-	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"math/big"
 	"testing"
 
+	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+
 	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/ethereum/go-ethereum/common"
@@ -18,6 +20,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
+	"github.com/zeta-chain/node/pkg/ptr"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
@@ -41,6 +44,7 @@ func setupGasCoin(
 		symbol,
 		8,
 		nil,
+		ptr.Ptr(sdkmath.NewUint(1000)),
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)
@@ -73,6 +77,7 @@ func deployZRC20(
 		0,
 		assetAddress,
 		big.NewInt(21_000),
+		ptr.Ptr(sdkmath.NewUint(1000)),
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)
@@ -184,6 +189,7 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 			"test",
 			8,
 			nil,
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -208,6 +214,7 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 			"test",
 			8,
 			nil,
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -236,6 +243,7 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 			"test",
 			8,
 			nil,
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -267,6 +275,7 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 			"test",
 			8,
 			nil,
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -299,6 +308,7 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 			"test",
 			8,
 			nil,
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -332,6 +342,7 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 			"test",
 			8,
 			nil,
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -372,6 +383,7 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 			"test",
 			8,
 			nil,
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -415,6 +427,7 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 			"test",
 			8,
 			nil,
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -458,6 +471,7 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 			"test",
 			8,
 			nil,
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)

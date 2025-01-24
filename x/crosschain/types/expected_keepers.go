@@ -4,6 +4,7 @@ import (
 	"context"
 	"math/big"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -160,7 +161,7 @@ type FungibleKeeper interface {
 		revertAddress ethcommon.Address,
 		callOnRevert bool,
 		revertMessage []byte,
-	) error
+	) (*evmtypes.MsgEthereumTxResponse, error)
 	CallUniswapV2RouterSwapExactTokensForTokens(
 		ctx sdk.Context,
 		sender ethcommon.Address,
@@ -201,6 +202,7 @@ type FungibleKeeper interface {
 		coinType coin.CoinType,
 		erc20Contract string,
 		gasLimit *big.Int,
+		liquidityCap *sdkmath.Uint,
 	) (ethcommon.Address, error)
 	FundGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
 	WithdrawFromGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error

@@ -27,6 +27,7 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	symbol string,
 	decimals uint8,
 	gasLimit *big.Int,
+	liquidityCap *sdkmath.Uint,
 ) (ethcommon.Address, error) {
 	// additional on-chain static chain information
 	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
@@ -61,6 +62,7 @@ func (k Keeper) SetupChainGasCoinAndPool(
 		coin.CoinType_Gas,
 		"",
 		transferGasLimit,
+		liquidityCap,
 	)
 	if err != nil {
 		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to DeployZRC20Contract")

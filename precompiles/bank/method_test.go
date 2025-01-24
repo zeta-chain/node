@@ -4,7 +4,9 @@ import (
 	"math/big"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -17,6 +19,7 @@ import (
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
+	"github.com/zeta-chain/node/pkg/ptr"
 	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 	"github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -634,6 +637,7 @@ func setupGasCoin(
 		symbol,
 		8,
 		nil,
+		ptr.Ptr(sdkmath.NewUintFromString("100000000000000000000000000")),
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, *evmk, ctx, addr)

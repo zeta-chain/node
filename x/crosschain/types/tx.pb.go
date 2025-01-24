@@ -343,13 +343,14 @@ var xxx_messageInfo_MsgAddInboundTrackerResponse proto.InternalMessageInfo
 
 // TODO: https://github.com/zeta-chain/node/issues/3083
 type MsgWhitelistERC20 struct {
-	Creator      string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	Erc20Address string `protobuf:"bytes,2,opt,name=erc20_address,json=erc20Address,proto3" json:"erc20_address,omitempty"`
-	ChainId      int64  `protobuf:"varint,3,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
-	Name         string `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
-	Symbol       string `protobuf:"bytes,5,opt,name=symbol,proto3" json:"symbol,omitempty"`
-	Decimals     uint32 `protobuf:"varint,6,opt,name=decimals,proto3" json:"decimals,omitempty"`
-	GasLimit     int64  `protobuf:"varint,7,opt,name=gas_limit,json=gasLimit,proto3" json:"gas_limit,omitempty"`
+	Creator      string                                  `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Erc20Address string                                  `protobuf:"bytes,2,opt,name=erc20_address,json=erc20Address,proto3" json:"erc20_address,omitempty"`
+	ChainId      int64                                   `protobuf:"varint,3,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	Name         string                                  `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
+	Symbol       string                                  `protobuf:"bytes,5,opt,name=symbol,proto3" json:"symbol,omitempty"`
+	Decimals     uint32                                  `protobuf:"varint,6,opt,name=decimals,proto3" json:"decimals,omitempty"`
+	GasLimit     int64                                   `protobuf:"varint,7,opt,name=gas_limit,json=gasLimit,proto3" json:"gas_limit,omitempty"`
+	LiquidityCap github_com_cosmos_cosmos_sdk_types.Uint `protobuf:"bytes,8,opt,name=liquidity_cap,json=liquidityCap,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Uint" json:"liquidity_cap"`
 }
 
 func (m *MsgWhitelistERC20) Reset()         { *m = MsgWhitelistERC20{} }
@@ -2653,6 +2654,16 @@ func (m *MsgWhitelistERC20) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	{
+		size := m.LiquidityCap.Size()
+		i -= size
+		if _, err := m.LiquidityCap.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x42
 	if m.GasLimit != 0 {
 		i = encodeVarintTx(dAtA, i, uint64(m.GasLimit))
 		i--
@@ -3777,6 +3788,8 @@ func (m *MsgWhitelistERC20) Size() (n int) {
 	if m.GasLimit != 0 {
 		n += 1 + sovTx(uint64(m.GasLimit))
 	}
+	l = m.LiquidityCap.Size()
+	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
@@ -5051,6 +5064,40 @@ func (m *MsgWhitelistERC20) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LiquidityCap", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.LiquidityCap.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
