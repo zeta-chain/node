@@ -324,6 +324,12 @@ func GetBtcEventWithoutWitness(
 		status       = types.InboundStatus_SUCCESS
 	)
 
+	// prepare logger fields
+	lf := map[string]any{
+		logs.FieldMethod: "GetBtcEventWithoutWitness",
+		logs.FieldTx:     tx.Txid,
+	}
+
 	if len(tx.Vout) >= 2 {
 		// 1st vout must have tss address as receiver with p2wpkh scriptPubKey
 		vout0 := tx.Vout[0]
@@ -352,14 +358,15 @@ func GetBtcEventWithoutWitness(
 			value, err = DeductDepositorFee(vout0.Value, depositorFee)
 			if err != nil {
 				status = types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
-				logger.Error().Err(err).Msgf("unable to deduct depositor fee for tx %s", tx.Txid)
+				logger.Error().Err(err).Fields(lf).Msgf("unable to deduct depositor fee")
 			}
 
 			// 2nd vout must be a valid OP_RETURN memo
 			vout1 := tx.Vout[1]
 			memo, found, err = common.DecodeOpReturnMemo(vout1.ScriptPubKey.Hex)
 			if err != nil {
-				logger.Error().Err(err).Msgf("GetBtcEvent: error decoding OP_RETURN memo: %s", vout1.ScriptPubKey.Hex)
+				lf["memo"] = vout1.ScriptPubKey.Hex
+				logger.Error().Err(err).Fields(lf).Msgf("unable to decode OP_RETURN memo")
 				return nil, nil
 			}
 		}
