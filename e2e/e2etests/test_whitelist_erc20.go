@@ -3,6 +3,7 @@ package e2etests
 import (
 	"math/big"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -40,6 +41,7 @@ func TestWhitelistERC20(r *runner.E2ERunner, _ []string) {
 		"NEWERC20",
 		6,
 		100000,
+		sdkmath.NewUintFromString("100000000000000000000000000"),
 	))
 	require.NoError(r, err)
 

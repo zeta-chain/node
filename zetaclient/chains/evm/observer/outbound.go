@@ -20,66 +20,15 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
-	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
-	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// WatchOutbound watches evm chain for outgoing txs status
-// TODO(revamp): move ticker function to ticker file
-func (ob *Observer) WatchOutbound(ctx context.Context) error {
-	// get app context
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	// create outbound ticker
-	chainID := ob.Chain().ChainId
-	ticker, err := clienttypes.NewDynamicTicker(
-		fmt.Sprintf("EVM_WatchOutbound_%d", ob.Chain().ChainId),
-		ob.ChainParams().OutboundTicker,
-	)
-	if err != nil {
-		ob.Logger().Outbound.Error().Err(err).Msg("error creating ticker")
-		return err
-	}
-
-	ob.Logger().Outbound.Info().Msgf("WatchOutbound started for chain %d", ob.Chain().ChainId)
-	sampledLogger := ob.Logger().Outbound.Sample(&zerolog.BasicSampler{N: 10})
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C():
-			if !app.IsOutboundObservationEnabled() {
-				sampledLogger.Info().
-					Msgf("WatchOutbound: outbound observation is disabled for chain %d", ob.Chain().ChainId)
-				continue
-			}
-
-			// process outbound trackers
-			err := ob.ProcessOutboundTrackers(ctx)
-			if err != nil {
-				ob.Logger().
-					Outbound.Error().
-					Err(err).
-					Msgf("WatchOutbound: error ProcessOutboundTrackers for chain %d", chainID)
-			}
-
-			ticker.UpdateInterval(ob.ChainParams().OutboundTicker, ob.Logger().Outbound)
-		case <-ob.StopChannel():
-			ob.Logger().Outbound.Info().Msg("WatchOutbound: stopped")
-			return nil
-		}
-	}
-}
-
-// ProcessOutboundTrackers processes outbound trackers
-func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
+// ObserverOutbound processes outbound trackers
+func (ob *Observer) ObserverOutbound(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
 	trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, ob.Chain().ChainId, interfaces.Ascending)
 	if err != nil {
@@ -346,7 +295,7 @@ func ParseAndCheckZetaEvent(
 		// try parsing ZetaReceived event
 		received, err := connector.ZetaConnectorNonEthFilterer.ParseZetaReceived(*vLog)
 		if err == nil {
-			err = evm.ValidateEvmTxLog(vLog, connectorAddr, receipt.TxHash.Hex(), evm.TopicsZetaReceived)
+			err = common.ValidateEvmTxLog(vLog, connectorAddr, receipt.TxHash.Hex(), common.TopicsZetaReceived)
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "error validating ZetaReceived event")
 			}
@@ -367,7 +316,7 @@ func ParseAndCheckZetaEvent(
 		// try parsing ZetaReverted event
 		reverted, err := connector.ZetaConnectorNonEthFilterer.ParseZetaReverted(*vLog)
 		if err == nil {
-			err = evm.ValidateEvmTxLog(vLog, connectorAddr, receipt.TxHash.Hex(), evm.TopicsZetaReverted)
+			err = common.ValidateEvmTxLog(vLog, connectorAddr, receipt.TxHash.Hex(), common.TopicsZetaReverted)
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "error validating ZetaReverted event")
 			}
@@ -403,7 +352,7 @@ func ParseAndCheckWithdrawnEvent(
 	for _, vLog := range receipt.Logs {
 		withdrawn, err := custody.ParseWithdrawn(*vLog)
 		if err == nil {
-			err = evm.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), evm.TopicsWithdrawn)
+			err = common.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), common.TopicsWithdrawn)
 			if err != nil {
 				return nil, errors.Wrap(err, "error validating Withdrawn event")
 			}

@@ -59,7 +59,7 @@ func (k Keeper) ProcessV2RevertDeposit(
 	revertAddress ethcommon.Address,
 	callOnRevert bool,
 	revertMessage []byte,
-) error {
+) (*evmtypes.MsgEthereumTxResponse, error) {
 	// get the zrc20 contract
 	zrc20Addr, _, err := k.getAndCheckZRC20(
 		ctx,
@@ -69,7 +69,7 @@ func (k Keeper) ProcessV2RevertDeposit(
 		asset,
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	switch coinType {
@@ -77,18 +77,18 @@ func (k Keeper) ProcessV2RevertDeposit(
 
 		if callOnRevert {
 			// no asset, call simple revert
-			_, err := k.CallExecuteRevert(ctx, inboundSender, zrc20Addr, amount, revertAddress, revertMessage)
-			return err
+			res, err := k.CallExecuteRevert(ctx, inboundSender, zrc20Addr, amount, revertAddress, revertMessage)
+			return res, err
 		} else {
 			// no asset, no call, do nothing
-			return nil
+			return nil, nil
 		}
 	case coin.CoinType_Zeta:
-		return errors.New("ZETA asset is currently unsupported for revert with V2 protocol contracts")
+		return nil, errors.New("ZETA asset is currently unsupported for revert with V2 protocol contracts")
 	case coin.CoinType_ERC20, coin.CoinType_Gas:
 		if callOnRevert {
 			// revert with a ZRC20 asset
-			_, err := k.CallDepositAndRevert(
+			res, err := k.CallDepositAndRevert(
 				ctx,
 				inboundSender,
 				zrc20Addr,
@@ -96,13 +96,13 @@ func (k Keeper) ProcessV2RevertDeposit(
 				revertAddress,
 				revertMessage,
 			)
-			return err
+			return res, err
 		} else {
 			// simply deposit back to the revert address
-			_, err := k.DepositZRC20(ctx, zrc20Addr, revertAddress, amount)
-			return err
+			res, err := k.DepositZRC20(ctx, zrc20Addr, revertAddress, amount)
+			return res, err
 		}
 	}
 
-	return fmt.Errorf("unsupported coin type for revert %s", coinType)
+	return nil, fmt.Errorf("unsupported coin type for revert %s", coinType)
 }

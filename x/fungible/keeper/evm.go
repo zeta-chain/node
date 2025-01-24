@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	cosmoserrors "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,6 +31,7 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/server/config"
 	"github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -105,6 +107,7 @@ func (k Keeper) DeployZRC20Contract(
 	coinType coin.CoinType,
 	erc20Contract string,
 	gasLimit *big.Int,
+	liquidityCap *sdkmath.Uint,
 ) (common.Address, error) {
 	chain, found := chains.GetChainFromChainID(chainID, k.GetAuthorityKeeper().GetAdditionalChainList(ctx))
 	if !found {
@@ -162,7 +165,10 @@ func (k Keeper) DeployZRC20Contract(
 	newCoin.Zrc20ContractAddress = contractAddr.Hex()
 	newCoin.ForeignChainId = chain.ChainId
 	newCoin.GasLimit = gasLimit.Uint64()
-	newCoin.LiquidityCap = sdk.NewUint(types.DefaultLiquidityCap).MulUint64(uint64(newCoin.Decimals))
+	if liquidityCap == nil {
+		liquidityCap = ptr.Ptr(sdk.NewUint(types.DefaultLiquidityCap).MulUint64(uint64(newCoin.Decimals)))
+	}
+	newCoin.LiquidityCap = *liquidityCap
 	k.SetForeignCoins(ctx, newCoin)
 
 	return contractAddr, nil

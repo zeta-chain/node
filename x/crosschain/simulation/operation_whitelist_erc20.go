@@ -3,6 +3,7 @@ package simulation
 import (
 	"math/rand"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -116,6 +117,7 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 			Decimals:     18,
 			Name:         sample.StringRandom(r, nameLength),
 			Symbol:       sample.StringRandom(r, 3),
+			LiquidityCap: sdkmath.NewUint(sample.Uint64InRangeFromRand(r, 1, 1000000000000000000)),
 		}
 
 		err = msg.ValidateBasic()

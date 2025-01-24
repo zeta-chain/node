@@ -24,7 +24,7 @@ import (
 	"github.com/zeta-chain/node/pkg/rpc"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/x/observer/types"
-	zetaclientrpc "github.com/zeta-chain/node/zetaclient/chains/evm/rpc"
+	evmclient "github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -76,7 +76,10 @@ func evmInboundBallotIdentifier(ctx context.Context,
 	}
 
 	confirmationMessage := ""
-	confirmed, err := zetaclientrpc.IsTxConfirmed(ctx, evmClient, inboundHash, chainParams.ConfirmationCount)
+
+	// Signer is unused
+	c := evmclient.New(evmClient, ethtypes.NewLondonSigner(tx.ChainId()))
+	confirmed, err := c.IsTxConfirmed(ctx, inboundHash, chainParams.ConfirmationCount)
 	if err != nil {
 		return "", fmt.Errorf("unable to confirm tx: %w", err)
 	}
