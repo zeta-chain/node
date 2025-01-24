@@ -145,7 +145,7 @@ func (h *CustomProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHand
 			if err != nil {
 				err := h.mempool.Remove(memTx)
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-					return nil, err
+					return nil, errors.Wrap(err, "remove from mempool failed")
 				}
 			} else {
 				// #nosec G115 range checked, cosmos-sdk forked code

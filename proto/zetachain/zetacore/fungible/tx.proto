@@ -77,8 +77,10 @@ message MsgDeployFungibleCoinZRC20 {
   string symbol = 6;
   pkg.coin.CoinType coin_type = 7;
   int64 gas_limit = 8;
-  string liquidity_cap = 9
-      [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint" ];
+  string liquidity_cap = 9 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
+    (gogoproto.nullable) = true
+  ];
 }
 
 message MsgDeployFungibleCoinZRC20Response { string address = 1; }

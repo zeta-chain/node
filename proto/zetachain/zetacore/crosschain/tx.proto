@@ -88,7 +88,7 @@ message MsgWhitelistERC20 {
   uint32 decimals = 6;
   int64 gas_limit = 7;
   string liquidity_cap = 8 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false
   ];
 }

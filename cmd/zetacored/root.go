@@ -34,6 +34,7 @@ import (
 	"github.com/spf13/cobra"
 	ethermintclient "github.com/zeta-chain/ethermint/client"
 	"github.com/zeta-chain/ethermint/crypto/hd"
+	evmenc "github.com/zeta-chain/ethermint/encoding"
 	"github.com/zeta-chain/ethermint/types"
 
 	"github.com/zeta-chain/node/app"
@@ -47,6 +48,10 @@ const EnvPrefix = "zetacore"
 
 // NewRootCmd creates a new root command for wasmd. It is called once in the
 // main function.
+
+type emptyAppOptions struct{}
+
+func (ao emptyAppOptions) Get(_ string) interface{} { return nil }
 
 func NewRootCmd() (*cobra.Command, types.EncodingConfig) {
 	encodingConfig := app.MakeEncodingConfig()
@@ -116,6 +121,25 @@ func NewRootCmd() (*cobra.Command, types.EncodingConfig) {
 	rootCmd.AddCommand(
 		confixcmd.ConfigCommand(),
 	)
+
+	// need to create this app instance to get autocliopts
+	tempApp := app.New(
+		log.NewNopLogger(),
+		dbm.NewMemDB(),
+		nil,
+		true,
+		map[int64]bool{},
+		"",
+		0,
+		evmenc.MakeConfig(),
+		emptyAppOptions{},
+	)
+	autoCliOpts := tempApp.AutoCliOpts()
+	autoCliOpts.ClientCtx = initClientCtx
+
+	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
+		panic(err)
+	}
 
 	return rootCmd, encodingConfig
 }
@@ -216,7 +240,6 @@ func queryCommand() *cobra.Command {
 		authcmd.QueryTxCmd(),
 	)
 
-	app.ModuleBasics.AddQueryCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
