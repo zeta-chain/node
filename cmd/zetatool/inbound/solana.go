@@ -15,7 +15,6 @@ import (
 	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/pkg/rpc"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
@@ -50,14 +49,10 @@ func solanaInboundBallotIdentifier(ctx context.Context,
 		return "", fmt.Errorf("cannot parse gateway address: %s, err: %w", chainParams.GatewayAddress, err)
 	}
 
-	observerLogger := &base.ObserverLogger{
-		Inbound: logger,
-	}
-
-	events, err := observer.FilterSolanaInboundEvents(txResult,
-		observerLogger,
+	events, err := observer.FilterInboundEvents(txResult,
 		gatewayID,
 		inboundChain.ChainId,
+		logger,
 	)
 
 	if err != nil {

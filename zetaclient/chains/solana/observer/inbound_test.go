@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -66,14 +67,8 @@ func Test_FilterInboundEvents(t *testing.T) {
 	chain := chains.SolanaDevnet
 	txResult := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHash, false)
 
-	database, err := db.NewFromSqliteInMemory(true)
-	require.NoError(t, err)
-
-	// create observer
-	chainParams := sample.ChainParams(chain.ChainId)
-	chainParams.GatewayAddress = testutils.OldSolanaGatewayAddressDevnet
-
-	ob, err := observer.NewObserver(chain, nil, *chainParams, nil, nil, database, base.DefaultLogger(), nil)
+	// given gateway ID
+	gatewayID, _, err := contracts.ParseGatewayWithPDA(testutils.OldSolanaGatewayAddressDevnet)
 	require.NoError(t, err)
 
 	// expected result
@@ -94,7 +89,7 @@ func Test_FilterInboundEvents(t *testing.T) {
 	}
 
 	t.Run("should filter inbound event deposit SOL", func(t *testing.T) {
-		events, err := ob.FilterInboundEvents(txResult)
+		events, err := observer.FilterInboundEvents(txResult, gatewayID, chain.ChainId, zerolog.Nop())
 		require.NoError(t, err)
 
 		// check result
