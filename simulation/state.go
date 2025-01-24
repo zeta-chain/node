@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -107,7 +107,7 @@ func extractStakingGenesisState(
 	}
 
 	// compute not bonded balance
-	notBondedTokens := math.ZeroInt()
+	notBondedTokens := sdkmath.ZeroInt()
 	for _, val := range stakingState.Validators {
 		if val.Status != stakingtypes.Unbonded {
 			continue
@@ -133,7 +133,7 @@ func extractObserverGenesisState(
 	rawState map[string]json.RawMessage,
 	cdc codec.Codec,
 	r *rand.Rand,
-	validators stakingtypes.Validators,
+	validators []stakingtypes.Validator,
 ) *observertypes.GenesisState {
 	observerStateBz, ok := rawState[observertypes.ModuleName]
 	require.True(t, ok, "observer genesis state is missing")
@@ -311,7 +311,7 @@ func extractFungibleGenesisState(
 			Decimals:             18,
 			Paused:               false,
 			CoinType:             coin.CoinType_Gas,
-			LiquidityCap:         math.ZeroUint(),
+			LiquidityCap:         sdkmath.ZeroUint(),
 		}
 		foreignCoins = append(foreignCoins, foreignCoin)
 	}
@@ -410,14 +410,14 @@ func AppStateRandomizedFn(
 	// number of bonded accounts
 	var (
 		numInitiallyBonded int64
-		initialStake       math.Int
+		initialStake       sdkmath.Int
 	)
 
-	appParams.GetOrGenerate(cdc,
+	appParams.GetOrGenerate(
 		StakePerAccount, &initialStake, r,
-		func(r *rand.Rand) { initialStake = math.NewInt(r.Int63n(1e12)) },
+		func(r *rand.Rand) { initialStake = sdkmath.NewInt(r.Int63n(1e12)) },
 	)
-	appParams.GetOrGenerate(cdc,
+	appParams.GetOrGenerate(
 		InitiallyBondedValidators, &numInitiallyBonded, r,
 		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(300)) },
 	)
@@ -427,7 +427,7 @@ func AppStateRandomizedFn(
 	}
 
 	// set the default power reduction to be one less than the initial stake so that all randomised validators are part of the validator set
-	sdk.DefaultPowerReduction = initialStake.Sub(sdk.OneInt())
+	sdk.DefaultPowerReduction = initialStake.Sub(sdkmath.OneInt())
 
 	fmt.Printf(
 		`Selected randomly generated parameters for simulated genesis:
@@ -447,6 +447,7 @@ func AppStateRandomizedFn(
 		InitialStake: initialStake,
 		NumBonded:    numInitiallyBonded,
 		GenTimestamp: genesisTimestamp,
+		BondDenom:    sdk.DefaultBondDenom,
 	}
 
 	simManager.GenerateGenesisStates(simState)

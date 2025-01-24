@@ -14,7 +14,7 @@ message RateLimiterFlags {
 
   // rate in azeta per block
   string rate = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false
   ];
 
@@ -25,7 +25,7 @@ message RateLimiterFlags {
 message Conversion {
   string zrc20 = 1;
   string rate = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }
@@ -36,7 +36,7 @@ message AssetRate {
   uint32 decimals = 3;
   pkg.coin.CoinType coin_type = 4;
   string rate = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }

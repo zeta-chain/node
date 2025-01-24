@@ -7,11 +7,13 @@ import "google/api/annotations.proto";
 import "zetachain/zetacore/lightclient/block_header_verification.proto";
 import "zetachain/zetacore/lightclient/chain_state.proto";
 import "zetachain/zetacore/pkg/proofs/proofs.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/zeta-chain/node/x/lightclient/types";
 
 // Query defines the gRPC querier service.
 service Query {
+  option (cosmos.msg.v1.service) = true;
   rpc BlockHeaderAll(QueryAllBlockHeaderRequest)
       returns (QueryAllBlockHeaderResponse) {
     option (google.api.http).get = "/zeta-chain/lightclient/block_headers";

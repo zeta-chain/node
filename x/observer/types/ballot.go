@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	cosmoserrors "cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 )
 
 func (m Ballot) AddVote(address string, vote VoteType) (Ballot, error) {
@@ -50,17 +50,17 @@ func (m Ballot) IsFinalizingVote() (Ballot, bool) {
 	if m.BallotStatus != BallotStatus_BallotInProgress {
 		return m, false
 	}
-	success, failure := sdk.ZeroDec(), sdk.ZeroDec()
-	total := sdk.NewDec(int64(len(m.VoterList)))
+	success, failure := sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec()
+	total := sdkmath.LegacyNewDec(int64(len(m.VoterList)))
 	if total.IsZero() {
 		return m, false
 	}
 	for _, vote := range m.Votes {
 		if vote == VoteType_SuccessObservation {
-			success = success.Add(sdk.OneDec())
+			success = success.Add(sdkmath.LegacyOneDec())
 		}
 		if vote == VoteType_FailureObservation {
-			failure = failure.Add(sdk.OneDec())
+			failure = failure.Add(sdkmath.LegacyOneDec())
 		}
 	}
 	if failure.IsPositive() {

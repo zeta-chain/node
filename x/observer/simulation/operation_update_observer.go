@@ -35,7 +35,11 @@ func SimulateUpdateObserver(k keeper.Keeper) simtypes.Operation {
 			observerMap[observer] = true
 		}
 
-		validators := k.GetStakingKeeper().GetAllValidators(ctx)
+		validators, err := k.GetStakingKeeper().GetAllValidators(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUpdateObserver, err.Error()), nil, nil
+		}
+
 		if len(validators) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
@@ -104,7 +108,6 @@ func SimulateUpdateObserver(k keeper.Keeper) simtypes.Operation {
 			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             &msg,
-			MsgType:         msg.Type(),
 			Context:         ctx,
 			SimAccount:      policyAccount,
 			AccountKeeper:   k.GetAuthKeeper(),

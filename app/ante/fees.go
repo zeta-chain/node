@@ -22,6 +22,7 @@ import (
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -108,7 +109,7 @@ func (mpd MinGasPriceDecorator) AnteHandle(
 		}
 	}
 
-	reductionRate := sdk.MustNewDecFromStr(GasPriceReductionRate)
+	reductionRate := sdkmath.LegacyMustNewDecFromStr(GasPriceReductionRate)
 	minGasPrice = minGasPrice.Mul(reductionRate) // discounts min gas price for system tx
 
 	evmParams := mpd.evmKeeper.GetParams(ctx)
@@ -127,7 +128,7 @@ func (mpd MinGasPriceDecorator) AnteHandle(
 
 	// Determine the required fees by multiplying each required minimum gas
 	// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
-	gasLimit := sdk.NewDecFromBigInt(new(big.Int).SetUint64(gas))
+	gasLimit := sdkmath.LegacyNewDecFromBigInt(new(big.Int).SetUint64(gas))
 
 	for _, gp := range minGasPrices {
 		fee := gp.Amount.Mul(gasLimit).Ceil().RoundInt()
@@ -196,10 +197,10 @@ func (empd EthMinGasPriceDecorator) AnteHandle(
 			feeAmt = ethMsg.GetEffectiveFee(baseFee)
 		}
 
-		gasLimit := sdk.NewDecFromBigInt(new(big.Int).SetUint64(ethMsg.GetGas()))
+		gasLimit := sdkmath.LegacyNewDecFromBigInt(new(big.Int).SetUint64(ethMsg.GetGas()))
 
 		requiredFee := minGasPrice.Mul(gasLimit)
-		fee := sdk.NewDecFromBigInt(feeAmt)
+		fee := sdkmath.LegacyNewDecFromBigInt(feeAmt)
 
 		if fee.LT(requiredFee) {
 			return ctx, errorsmod.Wrapf(
@@ -250,8 +251,8 @@ func (mfd EthMempoolFeeDecorator) AnteHandle(
 			)
 		}
 
-		fee := sdk.NewDecFromBigInt(ethMsg.GetFee())
-		gasLimit := sdk.NewDecFromBigInt(new(big.Int).SetUint64(ethMsg.GetGas()))
+		fee := sdkmath.LegacyNewDecFromBigInt(ethMsg.GetFee())
+		gasLimit := sdkmath.LegacyNewDecFromBigInt(new(big.Int).SetUint64(ethMsg.GetGas()))
 		requiredFee := minGasPrice.Mul(gasLimit)
 
 		if fee.LT(requiredFee) {

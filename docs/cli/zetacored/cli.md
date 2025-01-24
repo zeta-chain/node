@@ -8,7 +8,7 @@ Zetacore Daemon (server)
   -h, --help                help for zetacored
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -21,7 +21,7 @@ Zetacore Daemon (server)
 * [zetacored collect-gentxs](#zetacored-collect-gentxs)	 - Collect genesis txs and output a genesis.json file
 * [zetacored collect-observer-info](#zetacored-collect-observer-info)	 - collect observer info into the genesis from a folder , default path is ~/.zetacored/os_info/ 
 
-* [zetacored config](#zetacored-config)	 - Create or query an application CLI configuration file
+* [zetacored config](#zetacored-config)	 - Utilities for managing application configuration
 * [zetacored debug](#zetacored-debug)	 - Tool for helping with debugging your application
 * [zetacored docs](#zetacored-docs)	 - Generate markdown documentation for zetacored
 * [zetacored export](#zetacored-export)	 - Export state to JSON
@@ -32,15 +32,14 @@ Zetacore Daemon (server)
 * [zetacored keys](#zetacored-keys)	 - Manage your application's keys
 * [zetacored parse-genesis-file](#zetacored-parse-genesis-file)	 - Parse the provided genesis file and import the required data into the optionally provided genesis file
 * [zetacored query](#zetacored-query)	 - Querying subcommands
-* [zetacored rollback](#zetacored-rollback)	 - rollback cosmos-sdk and tendermint state by one height
+* [zetacored rollback](#zetacored-rollback)	 - rollback Cosmos SDK and CometBFT state by one height
 * [zetacored snapshots](#zetacored-snapshots)	 - Manage local snapshots
 * [zetacored start](#zetacored-start)	 - Run the full node
-* [zetacored status](#zetacored-status)	 - Query remote node for status
 * [zetacored tendermint](#zetacored-tendermint)	 - Tendermint subcommands
 * [zetacored testnet](#zetacored-testnet)	 - subcommands for starting or configuring local testnets
 * [zetacored tx](#zetacored-tx)	 - Transactions subcommands
 * [zetacored upgrade-handler-version](#zetacored-upgrade-handler-version)	 - Print the default upgrade handler version
-* [zetacored validate-genesis](#zetacored-validate-genesis)	 - validates the genesis file at the default location or at the location passed as an arg
+* [zetacored validate](#zetacored-validate)	 - Validates the genesis file at the default location or at the location passed as an arg
 * [zetacored version](#zetacored-version)	 - Print the application binary version information
 
 ## zetacored add-genesis-account
@@ -63,12 +62,12 @@ zetacored add-genesis-account [address_or_key_name] [coin][,[coin]] [flags]
 
 ```
       --grpc-addr string         the gRPC endpoint to use for this chain
-      --grpc-insecure            allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
       --height int               Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help                     help for add-genesis-account
       --home string              The application home directory 
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test) 
-      --node string              [host]:[port] to Tendermint RPC interface for this chain 
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string            Output format (text|json) 
       --vesting-amount string    amount of coins for vesting accounts
       --vesting-end-time int     schedule end time (unix epoch) for vesting accounts
@@ -79,7 +78,7 @@ zetacored add-genesis-account [address_or_key_name] [coin][,[coin]] [flags]
 
 ```
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -109,7 +108,7 @@ zetacored add-observer-list [observer-list.json]  [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -145,7 +144,7 @@ zetacored addr-conversion [zeta address] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -174,7 +173,7 @@ zetacored collect-gentxs [flags]
 
 ```
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -203,7 +202,7 @@ zetacored collect-observer-info [folder] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -214,11 +213,7 @@ zetacored collect-observer-info [folder] [flags]
 
 ## zetacored config
 
-Create or query an application CLI configuration file
-
-```
-zetacored config [key] [value] [flags]
-```
+Utilities for managing application configuration
 
 ### Options
 
@@ -231,7 +226,7 @@ zetacored config [key] [value] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -239,6 +234,209 @@ zetacored config [key] [value] [flags]
 ### SEE ALSO
 
 * [zetacored](#zetacored)	 - Zetacore Daemon (server)
+* [zetacored config diff](#zetacored-config-diff)	 - Outputs all config values that are different from the app.toml defaults.
+* [zetacored config get](#zetacored-config-get)	 - Get an application config value
+* [zetacored config home](#zetacored-config-home)	 - Outputs the folder used as the binary home. No home directory is set when using the `confix` tool standalone.
+* [zetacored config migrate](#zetacored-config-migrate)	 - Migrate Cosmos SDK app configuration file to the specified version
+* [zetacored config set](#zetacored-config-set)	 - Set an application config value
+* [zetacored config view](#zetacored-config-view)	 - View the config file
+
+## zetacored config diff
+
+Outputs all config values that are different from the app.toml defaults.
+
+```
+zetacored config diff [target-version] [app-toml-path] [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for diff
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored config](#zetacored-config)	 - Utilities for managing application configuration
+
+## zetacored config get
+
+Get an application config value
+
+### Synopsis
+
+Get an application config value. The [config] argument must be the path of the file when using the `confix` tool standalone, otherwise it must be the name of the config file without the .toml extension.
+
+```
+zetacored config get [config] [key] [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for get
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored config](#zetacored-config)	 - Utilities for managing application configuration
+
+## zetacored config home
+
+Outputs the folder used as the binary home. No home directory is set when using the `confix` tool standalone.
+
+### Synopsis
+
+Outputs the folder used as the binary home. In order to change the home directory path, set the $APPD_HOME environment variable, or use the "--home" flag.
+
+```
+zetacored config home [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for home
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored config](#zetacored-config)	 - Utilities for managing application configuration
+
+## zetacored config migrate
+
+Migrate Cosmos SDK app configuration file to the specified version
+
+### Synopsis
+
+Migrate the contents of the Cosmos SDK app configuration (app.toml) to the specified version.
+The output is written in-place unless --stdout is provided.
+In case of any error in updating the file, no output is written.
+
+```
+zetacored config migrate [target-version] [app-toml-path] (options) [flags]
+```
+
+### Options
+
+```
+  -h, --help            help for migrate
+      --skip-validate   skip configuration validation (allows to migrate unknown configurations)
+      --stdout          print the updated config to stdout
+      --verbose         log changes to stderr
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored config](#zetacored-config)	 - Utilities for managing application configuration
+
+## zetacored config set
+
+Set an application config value
+
+### Synopsis
+
+Set an application config value. The [config] argument must be the path of the file when using the `confix` tool standalone, otherwise it must be the name of the config file without the .toml extension.
+
+```
+zetacored config set [config] [key] [value] [flags]
+```
+
+### Options
+
+```
+  -h, --help            help for set
+  -s, --skip-validate   skip configuration validation (allows to mutate unknown configurations)
+      --stdout          print the updated config to stdout
+  -v, --verbose         log changes to stderr
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored config](#zetacored-config)	 - Utilities for managing application configuration
+
+## zetacored config view
+
+View the config file
+
+### Synopsis
+
+View the config file. The [config] argument must be the path of the file when using the `confix` tool standalone, otherwise it must be the name of the config file without the .toml extension.
+
+```
+zetacored config view [config] [flags]
+```
+
+### Options
+
+```
+  -h, --help                   help for view
+      --output-format string   Output format (json|toml) 
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored config](#zetacored-config)	 - Utilities for managing application configuration
 
 ## zetacored debug
 
@@ -259,7 +457,7 @@ zetacored debug [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -268,6 +466,7 @@ zetacored debug [flags]
 
 * [zetacored](#zetacored)	 - Zetacore Daemon (server)
 * [zetacored debug addr](#zetacored-debug-addr)	 - Convert an address between hex and bech32
+* [zetacored debug codec](#zetacored-debug-codec)	 - Tool for helping with debugging your application codec
 * [zetacored debug prefixes](#zetacored-debug-prefixes)	 - List prefixes used for Human-Readable Part (HRP) in Bech32
 * [zetacored debug pubkey](#zetacored-debug-pubkey)	 - Decode a pubkey from proto JSON
 * [zetacored debug pubkey-raw](#zetacored-debug-pubkey-raw)	 - Decode a ED25519 or secp256k1 pubkey from hex, base64, or bech32
@@ -300,7 +499,7 @@ zetacored debug addr [address] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -308,6 +507,100 @@ zetacored debug addr [address] [flags]
 ### SEE ALSO
 
 * [zetacored debug](#zetacored-debug)	 - Tool for helping with debugging your application
+
+## zetacored debug codec
+
+Tool for helping with debugging your application codec
+
+```
+zetacored debug codec [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for codec
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored debug](#zetacored-debug)	 - Tool for helping with debugging your application
+* [zetacored debug codec list-implementations](#zetacored-debug-codec-list-implementations)	 - List the registered type URLs for the provided interface
+* [zetacored debug codec list-interfaces](#zetacored-debug-codec-list-interfaces)	 - List all registered interface type URLs
+
+## zetacored debug codec list-implementations
+
+List the registered type URLs for the provided interface
+
+### Synopsis
+
+List the registered type URLs that can be used for the provided interface name using the application codec
+
+```
+zetacored debug codec list-implementations [interface] [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for list-implementations
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored debug codec](#zetacored-debug-codec)	 - Tool for helping with debugging your application codec
+
+## zetacored debug codec list-interfaces
+
+List all registered interface type URLs
+
+### Synopsis
+
+List all registered interface type URLs using the application codec
+
+```
+zetacored debug codec list-interfaces [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for list-interfaces
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored debug codec](#zetacored-debug-codec)	 - Tool for helping with debugging your application codec
 
 ## zetacored debug prefixes
 
@@ -338,7 +631,7 @@ $ zetacored debug prefixes
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -374,7 +667,7 @@ zetacored debug pubkey [pubkey] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -390,13 +683,19 @@ Decode a ED25519 or secp256k1 pubkey from hex, base64, or bech32
 ### Synopsis
 
 Decode a pubkey from hex, base64, or bech32.
-Example:
-$ zetacored debug pubkey-raw TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlz
-$ zetacored debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
-			
 
 ```
 zetacored debug pubkey-raw [pubkey] -t [{ed25519, secp256k1}] [flags]
+```
+
+### Examples
+
+```
+
+zetacored debug pubkey-raw 8FCA9D6D1F80947FD5E9A05309259746F5F72541121766D5F921339DD061174A
+zetacored debug pubkey-raw j8qdbR+AlH/V6aBTCSWXRvX3JUESF2bV+SEzndBhF0o=
+zetacored debug pubkey-raw cosmospub1zcjduepq3l9f6mglsz28l40f5pfsjfvhgm6lwf2pzgtkd40eyyeem5rpza9q47axrz
+			
 ```
 
 ### Options
@@ -411,7 +710,7 @@ zetacored debug pubkey-raw [pubkey] -t [{ed25519, secp256k1}] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -428,12 +727,14 @@ Convert raw bytes output (eg. [10 21 13 255]) to hex
 
 Convert raw-bytes to hex.
 
-Example:
-$ zetacored debug raw-bytes [72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]
-			
-
 ```
 zetacored debug raw-bytes [raw-bytes] [flags]
+```
+
+### Examples
+
+```
+zetacored debug raw-bytes '[72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]'
 ```
 
 ### Options
@@ -447,7 +748,7 @@ zetacored debug raw-bytes [raw-bytes] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -476,7 +777,7 @@ zetacored docs [path] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -509,7 +810,7 @@ zetacored export [flags]
 
 ```
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -525,7 +826,7 @@ Generate a genesis tx carrying a self delegation
 ### Synopsis
 
 Generate a genesis transaction that creates a validator with a self-delegation,
-that is signed by the key in the Keyring referenced by a given name. A node ID and Bech32 consensus
+that is signed by the key in the Keyring referenced by a given name. A node ID and consensus
 pubkey may optionally be provided. If they are omitted, they will be retrieved from the priv_validator.json
 file. The following default parameters are included:
     
@@ -581,7 +882,7 @@ zetacored gentx [key_name] [amount] [flags]
       --ledger                              Use a connected Ledger device
       --min-self-delegation string          The minimum self delegation required on the validator
       --moniker string                      The validator's (optional) moniker
-      --node string                         [host]:[port] to tendermint rpc interface for this chain 
+      --node string                         [host]:[port] to CometBFT rpc interface for this chain 
       --node-id string                      The node's NodeID
       --note string                         Note to add a description to the transaction (previously --memo)
       --offline                             Offline mode (does not allow any online functionality)
@@ -590,7 +891,7 @@ zetacored gentx [key_name] [amount] [flags]
       --pubkey string                       The validator's Protobuf JSON encoded public key
       --security-contact string             The validator's (optional) security contact email
   -s, --sequence uint                       The sequence number of the signing account (offline mode only)
-      --sign-mode string                    Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string                    Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint                 Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string                          Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
       --website string                      The validator's (optional) website
@@ -601,7 +902,7 @@ zetacored gentx [key_name] [amount] [flags]
 
 ```
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -629,7 +930,7 @@ zetacored get-pubkey [tssKeyName] [password] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -667,7 +968,7 @@ zetacored index-eth-tx [backward|forward] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -704,7 +1005,7 @@ zetacored init [moniker] [flags]
 
 ```
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -756,7 +1057,7 @@ The pass backend requires GnuPG: https://gnupg.org/
 
 ```
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -799,7 +1100,7 @@ zetacored keys  [flags]
       --keyring-backend string   Select keyring's backend (os|file|test) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --log_format string        The logging format (json|plain) 
-      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color             Disable colored logs
       --output string            Output format (text|json) 
       --trace                    print out full stack trace on errors
@@ -826,6 +1127,11 @@ If run with --dry-run, a key would be generated (or recovered) but not stored to
 local keystore.
 Use the --pubkey flag to add arbitrary public keys to the keystore for constructing
 multisig transactions.
+
+Use the --source flag to import mnemonic from a file in recover or interactive mode. 
+Example:
+
+	keys add testing --recover --source ./mnemonic.txt
 
 You can create and store a multisig key by passing the list of key names stored in a keyring
 and the minimum number of signatures required through --multisig-threshold. The keys are
@@ -856,7 +1162,9 @@ zetacored keys add [name] [flags]
       --no-backup                Don't print out seed phrase (if others are watching the terminal)
       --nosort                   Keys passed to --multisig are taken in the order they're supplied
       --pubkey string            Parse a public key in JSON format and saves key info to [name] file.
+      --pubkey-base64 string     Parse a public key in base64 format and saves key info.
       --recover                  Provide seed phrase to recover existing key instead of creating
+      --source string            Import mnemonic from a file (only usable when recover or interactive is passed)
 ```
 
 ### Options inherited from parent commands
@@ -866,7 +1174,7 @@ zetacored keys add [name] [flags]
       --keyring-backend string   Select keyring's backend (os|file|test) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --log_format string        The logging format (json|plain) 
-      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color             Disable colored logs
       --output string            Output format (text|json) 
       --trace                    print out full stack trace on errors
@@ -908,7 +1216,7 @@ zetacored keys delete [name]... [flags]
       --keyring-backend string   Select keyring's backend (os|file|test) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --log_format string        The logging format (json|plain) 
-      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color             Disable colored logs
       --output string            Output format (text|json) 
       --trace                    print out full stack trace on errors
@@ -952,7 +1260,7 @@ zetacored keys export [name] [flags]
       --keyring-backend string   Select keyring's backend (os|file|test) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --log_format string        The logging format (json|plain) 
-      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color             Disable colored logs
       --output string            Output format (text|json) 
       --trace                    print out full stack trace on errors
@@ -987,7 +1295,7 @@ zetacored keys import [name] [keyfile] [flags]
       --keyring-backend string   Select keyring's backend (os|file|test) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --log_format string        The logging format (json|plain) 
-      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color             Disable colored logs
       --output string            Output format (text|json) 
       --trace                    print out full stack trace on errors
@@ -1024,7 +1332,7 @@ zetacored keys list [flags]
       --keyring-backend string   Select keyring's backend (os|file|test) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --log_format string        The logging format (json|plain) 
-      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color             Disable colored logs
       --output string            Output format (text|json) 
       --trace                    print out full stack trace on errors
@@ -1048,8 +1356,6 @@ LegacyInfo to Protobuf serialization format and overwrite the keyring entry. If 
 outputted in CLI and migration will be continued until all keys in the keyring DB are exhausted.
 See https://github.com/cosmos/cosmos-sdk/pull/9695 for more details.
 
-It is recommended to run in 'dry-run' mode first to verify all key migration material.
-
 
 ```
 zetacored keys migrate [flags]
@@ -1068,7 +1374,7 @@ zetacored keys migrate [flags]
       --keyring-backend string   Select keyring's backend (os|file|test) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --log_format string        The logging format (json|plain) 
-      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color             Disable colored logs
       --output string            Output format (text|json) 
       --trace                    print out full stack trace on errors
@@ -1104,7 +1410,7 @@ zetacored keys mnemonic [flags]
       --keyring-backend string   Select keyring's backend (os|file|test) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --log_format string        The logging format (json|plain) 
-      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color             Disable colored logs
       --output string            Output format (text|json) 
       --trace                    print out full stack trace on errors
@@ -1141,7 +1447,7 @@ zetacored keys parse [hex-or-bech32-address] [flags]
       --keyring-backend string   Select keyring's backend (os|file|test) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --log_format string        The logging format (json|plain) 
-      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color             Disable colored logs
       --output string            Output format (text|json) 
       --trace                    print out full stack trace on errors
@@ -1182,7 +1488,7 @@ zetacored keys rename [old_name] [new_name] [flags]
       --keyring-backend string   Select keyring's backend (os|file|test) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --log_format string        The logging format (json|plain) 
-      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color             Disable colored logs
       --output string            Output format (text|json) 
       --trace                    print out full stack trace on errors
@@ -1209,12 +1515,12 @@ zetacored keys show [name_or_address [name_or_address...]] [flags]
 ### Options
 
 ```
-  -a, --address                  Output the address only (overrides --output)
+  -a, --address                  Output the address only (cannot be used with --output)
       --bech string              The Bech32 prefix encoding for a key (acc|val|cons) 
-  -d, --device                   Output the address in a ledger device
+  -d, --device                   Output the address in a ledger device (cannot be used with --pubkey)
   -h, --help                     help for show
       --multisig-threshold int   K out of N required signatures (default 1)
-  -p, --pubkey                   Output the public key only (overrides --output)
+  -p, --pubkey                   Output the public key only (cannot be used with --output)
 ```
 
 ### Options inherited from parent commands
@@ -1224,7 +1530,7 @@ zetacored keys show [name_or_address [name_or_address...]] [flags]
       --keyring-backend string   Select keyring's backend (os|file|test) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --log_format string        The logging format (json|plain) 
-      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color             Disable colored logs
       --output string            Output format (text|json) 
       --trace                    print out full stack trace on errors
@@ -1259,7 +1565,7 @@ zetacored keys unsafe-export-eth-key [name] [flags]
       --keyring-backend string   Select keyring's backend (os|file|test) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --log_format string        The logging format (json|plain) 
-      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color             Disable colored logs
       --output string            Output format (text|json) 
       --trace                    print out full stack trace on errors
@@ -1294,7 +1600,7 @@ zetacored keys unsafe-import-eth-key [name] [pk] [flags]
       --keyring-backend string   Select keyring's backend (os|file|test) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --log_format string        The logging format (json|plain) 
-      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color             Disable colored logs
       --output string            Output format (text|json) 
       --trace                    print out full stack trace on errors
@@ -1324,7 +1630,7 @@ zetacored parse-genesis-file [import-genesis-file] [optional-genesis-file] [flag
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -1353,7 +1659,7 @@ zetacored query [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -1361,64 +1667,29 @@ zetacored query [flags]
 ### SEE ALSO
 
 * [zetacored](#zetacored)	 - Zetacore Daemon (server)
-* [zetacored query account](#zetacored-query-account)	 - Query for account by address
 * [zetacored query auth](#zetacored-query-auth)	 - Querying commands for the auth module
 * [zetacored query authority](#zetacored-query-authority)	 - Querying commands for the authority module
 * [zetacored query authz](#zetacored-query-authz)	 - Querying commands for the authz module
 * [zetacored query bank](#zetacored-query-bank)	 - Querying commands for the bank module
-* [zetacored query block](#zetacored-query-block)	 - Get verified data for the block at given height
+* [zetacored query comet-validator-set](#zetacored-query-comet-validator-set)	 - Get the full CometBFT validator set at given height
+* [zetacored query consensus](#zetacored-query-consensus)	 - Querying commands for the consensus module
 * [zetacored query crosschain](#zetacored-query-crosschain)	 - Querying commands for the crosschain module
 * [zetacored query distribution](#zetacored-query-distribution)	 - Querying commands for the distribution module
 * [zetacored query emissions](#zetacored-query-emissions)	 - Querying commands for the emissions module
-* [zetacored query evidence](#zetacored-query-evidence)	 - Query for evidence by hash or for all (paginated) submitted evidence
+* [zetacored query evidence](#zetacored-query-evidence)	 - Querying commands for the evidence module
 * [zetacored query evm](#zetacored-query-evm)	 - Querying commands for the evm module
 * [zetacored query feemarket](#zetacored-query-feemarket)	 - Querying commands for the fee market module
 * [zetacored query fungible](#zetacored-query-fungible)	 - Querying commands for the fungible module
-* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the governance module
+* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the gov module
 * [zetacored query group](#zetacored-query-group)	 - Querying commands for the group module
 * [zetacored query lightclient](#zetacored-query-lightclient)	 - Querying commands for the lightclient module
 * [zetacored query observer](#zetacored-query-observer)	 - Querying commands for the observer module
 * [zetacored query params](#zetacored-query-params)	 - Querying commands for the params module
 * [zetacored query slashing](#zetacored-query-slashing)	 - Querying commands for the slashing module
 * [zetacored query staking](#zetacored-query-staking)	 - Querying commands for the staking module
-* [zetacored query tendermint-validator-set](#zetacored-query-tendermint-validator-set)	 - Get the full tendermint validator set at given height
 * [zetacored query tx](#zetacored-query-tx)	 - Query for a transaction by hash, "[addr]/[seq]" combination or comma-separated signatures in a committed block
 * [zetacored query txs](#zetacored-query-txs)	 - Query for paginated transactions that match a set of events
 * [zetacored query upgrade](#zetacored-query-upgrade)	 - Querying commands for the upgrade module
-
-## zetacored query account
-
-Query for account by address
-
-```
-zetacored query account [address] [flags]
-```
-
-### Options
-
-```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for account
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
-```
-
-### Options inherited from parent commands
-
-```
-      --chain-id string     The network chain ID
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
-```
-
-### SEE ALSO
-
-* [zetacored query](#zetacored-query)	 - Querying subcommands
 
 ## zetacored query auth
 
@@ -1440,7 +1711,7 @@ zetacored query auth [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -1448,16 +1719,20 @@ zetacored query auth [flags]
 ### SEE ALSO
 
 * [zetacored query](#zetacored-query)	 - Querying subcommands
-* [zetacored query auth account](#zetacored-query-auth-account)	 - Query for account by address
+* [zetacored query auth account](#zetacored-query-auth-account)	 - Query account by address
+* [zetacored query auth account-info](#zetacored-query-auth-account-info)	 - Query account info which is common to all account types.
 * [zetacored query auth accounts](#zetacored-query-auth-accounts)	 - Query all the accounts
-* [zetacored query auth address-by-acc-num](#zetacored-query-auth-address-by-acc-num)	 - Query for an address by account number
+* [zetacored query auth address-by-acc-num](#zetacored-query-auth-address-by-acc-num)	 - Query account address by account number
+* [zetacored query auth address-bytes-to-string](#zetacored-query-auth-address-bytes-to-string)	 - Transform an address bytes to string
+* [zetacored query auth address-string-to-bytes](#zetacored-query-auth-address-string-to-bytes)	 - Transform an address string to bytes
+* [zetacored query auth bech32-prefix](#zetacored-query-auth-bech32-prefix)	 - Query the chain bech32 prefix (if applicable)
 * [zetacored query auth module-account](#zetacored-query-auth-module-account)	 - Query module account info by module name
 * [zetacored query auth module-accounts](#zetacored-query-auth-module-accounts)	 - Query all module accounts
 * [zetacored query auth params](#zetacored-query-auth-params)	 - Query the current auth parameters
 
 ## zetacored query auth account
 
-Query for account by address
+Query account by address
 
 ```
 zetacored query auth account [address] [flags]
@@ -1466,12 +1741,15 @@ zetacored query auth account [address] [flags]
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for account
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for account
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -1480,7 +1758,44 @@ zetacored query auth account [address] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query auth](#zetacored-query-auth)	 - Querying commands for the auth module
+
+## zetacored query auth account-info
+
+Query account info which is common to all account types.
+
+```
+zetacored query auth account-info [address] [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for account-info
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -1500,18 +1815,20 @@ zetacored query auth accounts [flags]
 ### Options
 
 ```
-      --count-total        count total number of records in all-accounts to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for accounts
-      --limit uint         pagination limit of all-accounts to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of all-accounts to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of all-accounts to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of all-accounts to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for accounts
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -1520,7 +1837,7 @@ zetacored query auth accounts [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -1531,27 +1848,25 @@ zetacored query auth accounts [flags]
 
 ## zetacored query auth address-by-acc-num
 
-Query for an address by account number
+Query account address by account number
 
 ```
 zetacored query auth address-by-acc-num [acc-num] [flags]
 ```
 
-### Examples
-
-```
-zetacored q auth address-by-acc-num 1
-```
-
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for address-by-acc-num
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for address-by-acc-num
+      --id int                   
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -1560,7 +1875,118 @@ zetacored q auth address-by-acc-num 1
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query auth](#zetacored-query-auth)	 - Querying commands for the auth module
+
+## zetacored query auth address-bytes-to-string
+
+Transform an address bytes to string
+
+```
+zetacored query auth address-bytes-to-string [address-bytes] [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for address-bytes-to-string
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query auth](#zetacored-query-auth)	 - Querying commands for the auth module
+
+## zetacored query auth address-string-to-bytes
+
+Transform an address string to bytes
+
+```
+zetacored query auth address-string-to-bytes [address-string] [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for address-string-to-bytes
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query auth](#zetacored-query-auth)	 - Querying commands for the auth module
+
+## zetacored query auth bech32-prefix
+
+Query the chain bech32 prefix (if applicable)
+
+```
+zetacored query auth bech32-prefix [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for bech32-prefix
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -1580,18 +2006,21 @@ zetacored query auth module-account [module-name] [flags]
 ### Examples
 
 ```
-zetacored q auth module-account auth
+zetacored q auth module-account gov
 ```
 
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for module-account
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for module-account
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -1600,7 +2029,7 @@ zetacored q auth module-account auth
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -1620,12 +2049,15 @@ zetacored query auth module-accounts [flags]
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for module-accounts
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for module-accounts
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -1634,7 +2066,7 @@ zetacored query auth module-accounts [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -1647,12 +2079,6 @@ zetacored query auth module-accounts [flags]
 
 Query the current auth parameters
 
-### Synopsis
-
-Query the current auth parameters:
-
-$ zetacored query auth params
-
 ```
 zetacored query auth params [flags]
 ```
@@ -1660,12 +2086,15 @@ zetacored query auth params [flags]
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for params
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for params
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -1674,7 +2103,7 @@ zetacored query auth params [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -1703,7 +2132,7 @@ zetacored query authority [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -1728,10 +2157,10 @@ zetacored query authority list-authorizations [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-authorizations
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -1741,7 +2170,7 @@ zetacored query authority list-authorizations [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -1762,10 +2191,10 @@ zetacored query authority show-authorization [msg-url] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-authorization
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -1775,7 +2204,7 @@ zetacored query authority show-authorization [msg-url] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -1796,10 +2225,10 @@ zetacored query authority show-chain-info [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-chain-info
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -1809,7 +2238,7 @@ zetacored query authority show-chain-info [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -1830,10 +2259,10 @@ zetacored query authority show-policies [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-policies
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -1843,7 +2272,7 @@ zetacored query authority show-policies [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -1872,7 +2301,7 @@ zetacored query authz [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -1880,41 +2309,45 @@ zetacored query authz [flags]
 ### SEE ALSO
 
 * [zetacored query](#zetacored-query)	 - Querying subcommands
-* [zetacored query authz grants](#zetacored-query-authz-grants)	 - query grants for a granter-grantee pair and optionally a msg-type-url
-* [zetacored query authz grants-by-grantee](#zetacored-query-authz-grants-by-grantee)	 - query authorization grants granted to a grantee
-* [zetacored query authz grants-by-granter](#zetacored-query-authz-grants-by-granter)	 - query authorization grants granted by granter
+* [zetacored query authz grants](#zetacored-query-authz-grants)	 - Query grants for a granter-grantee pair and optionally a msg-type-url
+* [zetacored query authz grants-by-grantee](#zetacored-query-authz-grants-by-grantee)	 - Query authorization grants granted to a grantee
+* [zetacored query authz grants-by-granter](#zetacored-query-authz-grants-by-granter)	 - Query authorization grants granted by granter
 
 ## zetacored query authz grants
 
-query grants for a granter-grantee pair and optionally a msg-type-url
+Query grants for a granter-grantee pair and optionally a msg-type-url
 
 ### Synopsis
 
-Query authorization grants for a granter-grantee pair. If msg-type-url
-is set, it will select grants only for that msg type.
-Examples:
-$ zetacored query authz grants cosmos1skj.. cosmos1skjwj..
-$ zetacored query authz grants cosmos1skjw.. cosmos1skjwj.. /cosmos.bank.v1beta1.MsgSend
+Query authorization grants for a granter-grantee pair. If msg-type-url is set, it will select grants only for that msg type.
 
 ```
-zetacored query authz grants [granter-addr] [grantee-addr] [msg-type-url]? [flags]
+zetacored query authz grants [granter-addr] [grantee-addr] [msg-type-url] [flags]
+```
+
+### Examples
+
+```
+zetacored query authz grants cosmos1skj.. cosmos1skjwj.. /cosmos.bank.v1beta1.MsgSend
 ```
 
 ### Options
 
 ```
-      --count-total        count total number of records in grants to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for grants
-      --limit uint         pagination limit of grants to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of grants to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of grants to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of grants to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for grants
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -1923,7 +2356,7 @@ zetacored query authz grants [granter-addr] [grantee-addr] [msg-type-url]? [flag
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -1934,13 +2367,7 @@ zetacored query authz grants [granter-addr] [grantee-addr] [msg-type-url]? [flag
 
 ## zetacored query authz grants-by-grantee
 
-query authorization grants granted to a grantee
-
-### Synopsis
-
-Query authorization grants granted to a grantee.
-Examples:
-$ zetacored q authz grants-by-grantee cosmos1skj..
+Query authorization grants granted to a grantee
 
 ```
 zetacored query authz grants-by-grantee [grantee-addr] [flags]
@@ -1949,18 +2376,20 @@ zetacored query authz grants-by-grantee [grantee-addr] [flags]
 ### Options
 
 ```
-      --count-total        count total number of records in grantee-grants to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for grants-by-grantee
-      --limit uint         pagination limit of grantee-grants to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of grantee-grants to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of grantee-grants to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of grantee-grants to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for grants-by-grantee
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -1969,7 +2398,7 @@ zetacored query authz grants-by-grantee [grantee-addr] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -1980,13 +2409,7 @@ zetacored query authz grants-by-grantee [grantee-addr] [flags]
 
 ## zetacored query authz grants-by-granter
 
-query authorization grants granted by granter
-
-### Synopsis
-
-Query authorization grants granted by granter.
-Examples:
-$ zetacored q authz grants-by-granter cosmos1skj..
+Query authorization grants granted by granter
 
 ```
 zetacored query authz grants-by-granter [granter-addr] [flags]
@@ -1995,18 +2418,20 @@ zetacored query authz grants-by-granter [granter-addr] [flags]
 ### Options
 
 ```
-      --count-total        count total number of records in granter-grants to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for grants-by-granter
-      --limit uint         pagination limit of granter-grants to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of granter-grants to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of granter-grants to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of granter-grants to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for grants-by-granter
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -2015,7 +2440,7 @@ zetacored query authz grants-by-granter [granter-addr] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2044,7 +2469,7 @@ zetacored query bank [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2052,11 +2477,55 @@ zetacored query bank [flags]
 ### SEE ALSO
 
 * [zetacored query](#zetacored-query)	 - Querying subcommands
+* [zetacored query bank balance](#zetacored-query-bank-balance)	 - Query an account balance by address and denom
 * [zetacored query bank balances](#zetacored-query-bank-balances)	 - Query for account balances by address
-* [zetacored query bank denom-metadata](#zetacored-query-bank-denom-metadata)	 - Query the client metadata for coin denominations
+* [zetacored query bank denom-metadata](#zetacored-query-bank-denom-metadata)	 - Query the client metadata of a given coin denomination
+* [zetacored query bank denom-metadata-by-query-string](#zetacored-query-bank-denom-metadata-by-query-string)	 - Execute the DenomMetadataByQueryString RPC method
+* [zetacored query bank denom-owners](#zetacored-query-bank-denom-owners)	 - Query for all account addresses that own a particular token denomination.
+* [zetacored query bank denoms-metadata](#zetacored-query-bank-denoms-metadata)	 - Query the client metadata for all registered coin denominations
+* [zetacored query bank params](#zetacored-query-bank-params)	 - Query the current bank parameters
 * [zetacored query bank send-enabled](#zetacored-query-bank-send-enabled)	 - Query for send enabled entries
+* [zetacored query bank spendable-balance](#zetacored-query-bank-spendable-balance)	 - Query the spendable balance of a single denom for a single account.
 * [zetacored query bank spendable-balances](#zetacored-query-bank-spendable-balances)	 - Query for account spendable balances by address
-* [zetacored query bank total](#zetacored-query-bank-total)	 - Query the total supply of coins of the chain
+* [zetacored query bank total-supply](#zetacored-query-bank-total-supply)	 - Query the total supply of coins of the chain
+* [zetacored query bank total-supply-of](#zetacored-query-bank-total-supply-of)	 - Query the supply of a single coin denom
+
+## zetacored query bank balance
+
+Query an account balance by address and denom
+
+```
+zetacored query bank balance [address] [denom] [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for balance
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query bank](#zetacored-query-bank)	 - Querying commands for the bank module
 
 ## zetacored query bank balances
 
@@ -2066,10 +2535,6 @@ Query for account balances by address
 
 Query the total balance of an account or of a specific denomination.
 
-Example:
-  $ zetacored query bank balances [address]
-  $ zetacored query bank balances [address] --denom=[denom]
-
 ```
 zetacored query bank balances [address] [flags]
 ```
@@ -2077,19 +2542,21 @@ zetacored query bank balances [address] [flags]
 ### Options
 
 ```
-      --count-total        count total number of records in all balances to query for
-      --denom string       The specific balance denomination to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for balances
-      --limit uint         pagination limit of all balances to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of all balances to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of all balances to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of all balances to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for balances
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
+      --resolve-denom            
 ```
 
 ### Options inherited from parent commands
@@ -2098,7 +2565,7 @@ zetacored query bank balances [address] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2109,33 +2576,24 @@ zetacored query bank balances [address] [flags]
 
 ## zetacored query bank denom-metadata
 
-Query the client metadata for coin denominations
-
-### Synopsis
-
-Query the client metadata for all the registered coin denominations
-
-Example:
-  To query for the client metadata of all coin denominations use:
-  $ zetacored query bank denom-metadata
-
-To query for the client metadata of a specific coin denomination use:
-  $ zetacored query bank denom-metadata --denom=[denom]
+Query the client metadata of a given coin denomination
 
 ```
-zetacored query bank denom-metadata [flags]
+zetacored query bank denom-metadata [denom] [flags]
 ```
 
 ### Options
 
 ```
-      --denom string       The specific denomination to query client metadata for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for denom-metadata
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for denom-metadata
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -2144,7 +2602,166 @@ zetacored query bank denom-metadata [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query bank](#zetacored-query-bank)	 - Querying commands for the bank module
+
+## zetacored query bank denom-metadata-by-query-string
+
+Execute the DenomMetadataByQueryString RPC method
+
+```
+zetacored query bank denom-metadata-by-query-string [flags]
+```
+
+### Options
+
+```
+      --denom string             
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for denom-metadata-by-query-string
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query bank](#zetacored-query-bank)	 - Querying commands for the bank module
+
+## zetacored query bank denom-owners
+
+Query for all account addresses that own a particular token denomination.
+
+```
+zetacored query bank denom-owners [denom] [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for denom-owners
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query bank](#zetacored-query-bank)	 - Querying commands for the bank module
+
+## zetacored query bank denoms-metadata
+
+Query the client metadata for all registered coin denominations
+
+```
+zetacored query bank denoms-metadata [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for denoms-metadata
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query bank](#zetacored-query-bank)	 - Querying commands for the bank module
+
+## zetacored query bank params
+
+Query the current bank parameters
+
+```
+zetacored query bank params [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for params
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2160,7 +2777,7 @@ Query for send enabled entries
 ### Synopsis
 
 Query for send enabled entries that have been specifically set.
-
+			
 To look up one or more specific denoms, supply them as arguments to this command.
 To look up all denoms, do not provide any arguments.
 
@@ -2168,34 +2785,23 @@ To look up all denoms, do not provide any arguments.
 zetacored query bank send-enabled [denom1 ...] [flags]
 ```
 
-### Examples
-
-```
-Getting one specific entry:
-  $ zetacored query bank send-enabled foocoin
-
-Getting two specific entries:
-  $ zetacored query bank send-enabled foocoin barcoin
-
-Getting all entries:
-  $ zetacored query bank send-enabled
-```
-
 ### Options
 
 ```
-      --count-total        count total number of records in send enabled entries to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for send-enabled
-      --limit uint         pagination limit of send enabled entries to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of send enabled entries to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of send enabled entries to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of send enabled entries to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for send-enabled
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -2204,7 +2810,44 @@ Getting all entries:
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query bank](#zetacored-query-bank)	 - Querying commands for the bank module
+
+## zetacored query bank spendable-balance
+
+Query the spendable balance of a single denom for a single account.
+
+```
+zetacored query bank spendable-balance [address] [denom] [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for spendable-balance
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2221,28 +2864,23 @@ Query for account spendable balances by address
 zetacored query bank spendable-balances [address] [flags]
 ```
 
-### Examples
-
-```
-$ zetacored query bank spendable-balances [address]
-```
-
 ### Options
 
 ```
-      --count-total        count total number of records in spendable balances to query for
-      --denom string       The specific balance denomination to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for spendable-balances
-      --limit uint         pagination limit of spendable balances to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of spendable balances to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of spendable balances to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of spendable balances to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for spendable-balances
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -2251,7 +2889,7 @@ $ zetacored query bank spendable-balances [address]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2260,40 +2898,35 @@ $ zetacored query bank spendable-balances [address]
 
 * [zetacored query bank](#zetacored-query-bank)	 - Querying commands for the bank module
 
-## zetacored query bank total
+## zetacored query bank total-supply
 
 Query the total supply of coins of the chain
 
 ### Synopsis
 
-Query total supply of coins that are held by accounts in the chain.
-
-Example:
-  $ zetacored query bank total
-
-To query for the total supply of a specific coin denomination use:
-  $ zetacored query bank total --denom=[denom]
+Query total supply of coins that are held by accounts in the chain. To query for the total supply of a specific coin denomination use --denom flag.
 
 ```
-zetacored query bank total [flags]
+zetacored query bank total-supply [flags]
 ```
 
 ### Options
 
 ```
-      --count-total        count total number of records in all supply totals to query for
-      --denom string       The specific balance denomination to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for total
-      --limit uint         pagination limit of all supply totals to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of all supply totals to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of all supply totals to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of all supply totals to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for total-supply
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -2302,7 +2935,7 @@ zetacored query bank total [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2311,19 +2944,26 @@ zetacored query bank total [flags]
 
 * [zetacored query bank](#zetacored-query-bank)	 - Querying commands for the bank module
 
-## zetacored query block
+## zetacored query bank total-supply-of
 
-Get verified data for the block at given height
+Query the supply of a single coin denom
 
 ```
-zetacored query block [height] [flags]
+zetacored query bank total-supply-of [denom] [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help          help for block
-  -n, --node string   Node to connect to 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for total-supply-of
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -2332,7 +2972,40 @@ zetacored query block [height] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query bank](#zetacored-query-bank)	 - Querying commands for the bank module
+
+## zetacored query comet-validator-set
+
+Get the full CometBFT validator set at given height
+
+```
+zetacored query comet-validator-set [height] [flags]
+```
+
+### Options
+
+```
+  -h, --help            help for comet-validator-set
+      --limit int       Query number of results returned per page (default 100)
+      --node string     [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string   Output format (text|json) 
+      --page int        Query a specific page of paginated results (default 1)
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2340,6 +3013,345 @@ zetacored query block [height] [flags]
 ### SEE ALSO
 
 * [zetacored query](#zetacored-query)	 - Querying subcommands
+
+## zetacored query consensus
+
+Querying commands for the consensus module
+
+```
+zetacored query consensus [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for consensus
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query](#zetacored-query)	 - Querying subcommands
+* [zetacored query consensus comet](#zetacored-query-consensus-comet)	 - Querying commands for the cosmos.base.tendermint.v1beta1.Service service
+* [zetacored query consensus params](#zetacored-query-consensus-params)	 - Query the current consensus parameters
+
+## zetacored query consensus comet
+
+Querying commands for the cosmos.base.tendermint.v1beta1.Service service
+
+```
+zetacored query consensus comet [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for comet
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query consensus](#zetacored-query-consensus)	 - Querying commands for the consensus module
+* [zetacored query consensus comet block-by-height](#zetacored-query-consensus-comet-block-by-height)	 - Query for a committed block by height
+* [zetacored query consensus comet block-latest](#zetacored-query-consensus-comet-block-latest)	 - Query for the latest committed block
+* [zetacored query consensus comet node-info](#zetacored-query-consensus-comet-node-info)	 - Query the current node info
+* [zetacored query consensus comet syncing](#zetacored-query-consensus-comet-syncing)	 - Query node syncing status
+* [zetacored query consensus comet validator-set](#zetacored-query-consensus-comet-validator-set)	 - Query for the latest validator set
+* [zetacored query consensus comet validator-set-by-height](#zetacored-query-consensus-comet-validator-set-by-height)	 - Query for a validator set by height
+
+## zetacored query consensus comet block-by-height
+
+Query for a committed block by height
+
+### Synopsis
+
+Query for a specific committed block using the CometBFT RPC `block_by_height` method
+
+```
+zetacored query consensus comet block-by-height [height] [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for block-by-height
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query consensus comet](#zetacored-query-consensus-comet)	 - Querying commands for the cosmos.base.tendermint.v1beta1.Service service
+
+## zetacored query consensus comet block-latest
+
+Query for the latest committed block
+
+```
+zetacored query consensus comet block-latest [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for block-latest
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query consensus comet](#zetacored-query-consensus-comet)	 - Querying commands for the cosmos.base.tendermint.v1beta1.Service service
+
+## zetacored query consensus comet node-info
+
+Query the current node info
+
+```
+zetacored query consensus comet node-info [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for node-info
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query consensus comet](#zetacored-query-consensus-comet)	 - Querying commands for the cosmos.base.tendermint.v1beta1.Service service
+
+## zetacored query consensus comet syncing
+
+Query node syncing status
+
+```
+zetacored query consensus comet syncing [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for syncing
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query consensus comet](#zetacored-query-consensus-comet)	 - Querying commands for the cosmos.base.tendermint.v1beta1.Service service
+
+## zetacored query consensus comet validator-set
+
+Query for the latest validator set
+
+```
+zetacored query consensus comet validator-set [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for validator-set
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query consensus comet](#zetacored-query-consensus-comet)	 - Querying commands for the cosmos.base.tendermint.v1beta1.Service service
+
+## zetacored query consensus comet validator-set-by-height
+
+Query for a validator set by height
+
+```
+zetacored query consensus comet validator-set-by-height [height] [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for validator-set-by-height
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query consensus comet](#zetacored-query-consensus-comet)	 - Querying commands for the cosmos.base.tendermint.v1beta1.Service service
+
+## zetacored query consensus params
+
+Query the current consensus parameters
+
+```
+zetacored query consensus params [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for params
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query consensus](#zetacored-query-consensus)	 - Querying commands for the consensus module
 
 ## zetacored query crosschain
 
@@ -2361,7 +3373,7 @@ zetacored query crosschain [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2399,10 +3411,10 @@ zetacored query crosschain get-zeta-accounting [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for get-zeta-accounting
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -2412,7 +3424,7 @@ zetacored query crosschain get-zeta-accounting [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2433,10 +3445,10 @@ zetacored query crosschain inbound-hash-to-cctx-data [inbound-hash] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for inbound-hash-to-cctx-data
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -2446,7 +3458,7 @@ zetacored query crosschain inbound-hash-to-cctx-data [inbound-hash] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2467,10 +3479,10 @@ zetacored query crosschain last-zeta-height [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for last-zeta-height
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -2480,7 +3492,7 @@ zetacored query crosschain last-zeta-height [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2501,10 +3513,10 @@ zetacored query crosschain list-all-inbound-trackers [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-all-inbound-trackers
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -2514,7 +3526,7 @@ zetacored query crosschain list-all-inbound-trackers [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2536,11 +3548,11 @@ zetacored query crosschain list-cctx [flags]
 ```
       --count-total        count total number of records in list-cctx to query for
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-cctx
       --limit uint         pagination limit of list-cctx to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
       --offset uint        pagination offset of list-cctx to query for
   -o, --output string      Output format (text|json) 
       --page uint          pagination page of list-cctx to query for. This sets offset to a multiple of limit (default 1)
@@ -2554,7 +3566,7 @@ zetacored query crosschain list-cctx [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2576,11 +3588,11 @@ zetacored query crosschain list-gas-price [flags]
 ```
       --count-total        count total number of records in list-gas-price to query for
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-gas-price
       --limit uint         pagination limit of list-gas-price to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
       --offset uint        pagination offset of list-gas-price to query for
   -o, --output string      Output format (text|json) 
       --page uint          pagination page of list-gas-price to query for. This sets offset to a multiple of limit (default 1)
@@ -2594,7 +3606,7 @@ zetacored query crosschain list-gas-price [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2616,11 +3628,11 @@ zetacored query crosschain list-inbound-hash-to-cctx [flags]
 ```
       --count-total        count total number of records in list-inbound-hash-to-cctx to query for
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-inbound-hash-to-cctx
       --limit uint         pagination limit of list-inbound-hash-to-cctx to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
       --offset uint        pagination offset of list-inbound-hash-to-cctx to query for
   -o, --output string      Output format (text|json) 
       --page uint          pagination page of list-inbound-hash-to-cctx to query for. This sets offset to a multiple of limit (default 1)
@@ -2634,7 +3646,7 @@ zetacored query crosschain list-inbound-hash-to-cctx [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2656,11 +3668,11 @@ zetacored query crosschain list-inbound-tracker [chainId] [flags]
 ```
       --count-total        count total number of records in list-inbound-tracker [chainId] to query for
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-inbound-tracker
       --limit uint         pagination limit of list-inbound-tracker [chainId] to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
       --offset uint        pagination offset of list-inbound-tracker [chainId] to query for
   -o, --output string      Output format (text|json) 
       --page uint          pagination page of list-inbound-tracker [chainId] to query for. This sets offset to a multiple of limit (default 1)
@@ -2674,7 +3686,7 @@ zetacored query crosschain list-inbound-tracker [chainId] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2696,11 +3708,11 @@ zetacored query crosschain list-outbound-tracker [flags]
 ```
       --count-total        count total number of records in list-outbound-tracker to query for
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-outbound-tracker
       --limit uint         pagination limit of list-outbound-tracker to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
       --offset uint        pagination offset of list-outbound-tracker to query for
   -o, --output string      Output format (text|json) 
       --page uint          pagination page of list-outbound-tracker to query for. This sets offset to a multiple of limit (default 1)
@@ -2714,7 +3726,7 @@ zetacored query crosschain list-outbound-tracker [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2735,10 +3747,10 @@ zetacored query crosschain list-pending-cctx [chain-id] [limit] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-pending-cctx
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -2748,7 +3760,7 @@ zetacored query crosschain list-pending-cctx [chain-id] [limit] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2769,10 +3781,10 @@ zetacored query crosschain list_pending_cctx_within_rate_limit [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list_pending_cctx_within_rate_limit
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -2782,7 +3794,7 @@ zetacored query crosschain list_pending_cctx_within_rate_limit [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2803,10 +3815,10 @@ zetacored query crosschain show-cctx [index] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-cctx
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -2816,7 +3828,7 @@ zetacored query crosschain show-cctx [index] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2837,10 +3849,10 @@ zetacored query crosschain show-gas-price [index] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-gas-price
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -2850,7 +3862,7 @@ zetacored query crosschain show-gas-price [index] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2871,10 +3883,10 @@ zetacored query crosschain show-inbound-hash-to-cctx [inbound-hash] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-inbound-hash-to-cctx
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -2884,7 +3896,7 @@ zetacored query crosschain show-inbound-hash-to-cctx [inbound-hash] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2905,10 +3917,10 @@ zetacored query crosschain show-inbound-tracker [chainID] [txHash] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-inbound-tracker
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -2918,7 +3930,7 @@ zetacored query crosschain show-inbound-tracker [chainID] [txHash] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2939,10 +3951,10 @@ zetacored query crosschain show-outbound-tracker [chainId] [nonce] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-outbound-tracker
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -2952,7 +3964,7 @@ zetacored query crosschain show-outbound-tracker [chainId] [nonce] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -2973,10 +3985,10 @@ zetacored query crosschain show-rate-limiter-flags [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-rate-limiter-flags
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -2986,7 +3998,7 @@ zetacored query crosschain show-rate-limiter-flags [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3015,7 +4027,7 @@ zetacored query distribution [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3025,8 +4037,11 @@ zetacored query distribution [flags]
 * [zetacored query](#zetacored-query)	 - Querying subcommands
 * [zetacored query distribution commission](#zetacored-query-distribution-commission)	 - Query distribution validator commission
 * [zetacored query distribution community-pool](#zetacored-query-distribution-community-pool)	 - Query the amount of coins in the community pool
-* [zetacored query distribution params](#zetacored-query-distribution-params)	 - Query distribution params
-* [zetacored query distribution rewards](#zetacored-query-distribution-rewards)	 - Query all distribution delegator rewards or rewards from a particular validator
+* [zetacored query distribution delegator-validators](#zetacored-query-distribution-delegator-validators)	 - Execute the DelegatorValidators RPC method
+* [zetacored query distribution delegator-withdraw-address](#zetacored-query-distribution-delegator-withdraw-address)	 - Execute the DelegatorWithdrawAddress RPC method
+* [zetacored query distribution params](#zetacored-query-distribution-params)	 - Query the current distribution parameters.
+* [zetacored query distribution rewards](#zetacored-query-distribution-rewards)	 - Query all distribution delegator rewards
+* [zetacored query distribution rewards-by-validator](#zetacored-query-distribution-rewards-by-validator)	 - Query all distribution delegator from a particular validator
 * [zetacored query distribution slashes](#zetacored-query-distribution-slashes)	 - Query distribution validator slashes
 * [zetacored query distribution validator-distribution-info](#zetacored-query-distribution-validator-distribution-info)	 - Query validator distribution info
 * [zetacored query distribution validator-outstanding-rewards](#zetacored-query-distribution-validator-outstanding-rewards)	 - Query distribution outstanding (un-withdrawn) rewards for a validator and all their delegations
@@ -3035,26 +4050,28 @@ zetacored query distribution [flags]
 
 Query distribution validator commission
 
-### Synopsis
-
-Query validator commission rewards from delegators to that validator.
-
-Example:
-$ zetacored query distribution commission zetavaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
-
 ```
 zetacored query distribution commission [validator] [flags]
+```
+
+### Examples
+
+```
+$ zetacored query distribution commission [validator-address]
 ```
 
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for commission
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for commission
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -3063,7 +4080,7 @@ zetacored query distribution commission [validator] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3076,26 +4093,28 @@ zetacored query distribution commission [validator] [flags]
 
 Query the amount of coins in the community pool
 
-### Synopsis
-
-Query all coins in the community pool which is under Governance control.
-
-Example:
-$ zetacored query distribution community-pool
-
 ```
 zetacored query distribution community-pool [flags]
+```
+
+### Examples
+
+```
+$ zetacored query distribution community-pool
 ```
 
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for community-pool
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for community-pool
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -3104,7 +4123,83 @@ zetacored query distribution community-pool [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query distribution](#zetacored-query-distribution)	 - Querying commands for the distribution module
+
+## zetacored query distribution delegator-validators
+
+Execute the DelegatorValidators RPC method
+
+```
+zetacored query distribution delegator-validators [flags]
+```
+
+### Options
+
+```
+      --delegator-address account address or key name   
+      --grpc-addr string                                the gRPC endpoint to use for this chain
+      --grpc-insecure                                   allow gRPC over insecure channels, if not the server must use TLS
+      --height int                                      Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                                            help for delegator-validators
+      --keyring-backend string                          Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string                              The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                                       Do not indent JSON output
+      --node string                                     [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string                                   Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query distribution](#zetacored-query-distribution)	 - Querying commands for the distribution module
+
+## zetacored query distribution delegator-withdraw-address
+
+Execute the DelegatorWithdrawAddress RPC method
+
+```
+zetacored query distribution delegator-withdraw-address [flags]
+```
+
+### Options
+
+```
+      --delegator-address account address or key name   
+      --grpc-addr string                                the gRPC endpoint to use for this chain
+      --grpc-insecure                                   allow gRPC over insecure channels, if not the server must use TLS
+      --height int                                      Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                                            help for delegator-withdraw-address
+      --keyring-backend string                          Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string                              The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                                       Do not indent JSON output
+      --node string                                     [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string                                   Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3115,7 +4210,7 @@ zetacored query distribution community-pool [flags]
 
 ## zetacored query distribution params
 
-Query distribution params
+Query the current distribution parameters.
 
 ```
 zetacored query distribution params [flags]
@@ -3124,12 +4219,15 @@ zetacored query distribution params [flags]
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for params
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for params
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -3138,7 +4236,7 @@ zetacored query distribution params [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3149,29 +4247,34 @@ zetacored query distribution params [flags]
 
 ## zetacored query distribution rewards
 
-Query all distribution delegator rewards or rewards from a particular validator
+Query all distribution delegator rewards
 
 ### Synopsis
 
-Query all rewards earned by a delegator, optionally restrict to rewards from a single validator.
-
-Example:
-$ zetacored query distribution rewards zeta1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
-$ zetacored query distribution rewards zeta1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p zetavaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+Query all rewards earned by a delegator
 
 ```
-zetacored query distribution rewards [delegator-addr] [validator-addr] [flags]
+zetacored query distribution rewards [delegator-addr] [flags]
+```
+
+### Examples
+
+```
+$ zetacored query distribution rewards [delegator-address]
 ```
 
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for rewards
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for rewards
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -3180,7 +4283,50 @@ zetacored query distribution rewards [delegator-addr] [validator-addr] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query distribution](#zetacored-query-distribution)	 - Querying commands for the distribution module
+
+## zetacored query distribution rewards-by-validator
+
+Query all distribution delegator from a particular validator
+
+```
+zetacored query distribution rewards-by-validator [delegator-addr] [validator-addr] [flags]
+```
+
+### Examples
+
+```
+$ zetacored query distribution rewards [delegator-address] [validator-address]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for rewards-by-validator
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3193,32 +4339,33 @@ zetacored query distribution rewards [delegator-addr] [validator-addr] [flags]
 
 Query distribution validator slashes
 
-### Synopsis
-
-Query all slashes of a validator for a given block range.
-
-Example:
-$ zetacored query distribution slashes zetavalopervaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 0 100
-
 ```
 zetacored query distribution slashes [validator] [start-height] [end-height] [flags]
+```
+
+### Examples
+
+```
+$ zetacored query distribution slashes [validator-address] 0 100
 ```
 
 ### Options
 
 ```
-      --count-total        count total number of records in validator slashes to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for slashes
-      --limit uint         pagination limit of validator slashes to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of validator slashes to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of validator slashes to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of validator slashes to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for slashes
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -3227,7 +4374,7 @@ zetacored query distribution slashes [validator] [start-height] [end-height] [fl
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3240,25 +4387,28 @@ zetacored query distribution slashes [validator] [start-height] [end-height] [fl
 
 Query validator distribution info
 
-### Synopsis
-
-Query validator distribution info.
-Example:
-$ zetacored query distribution validator-distribution-info zetavaloper1lwjmdnks33xwnmfayc64ycprww49n33mtm92ne
-
 ```
 zetacored query distribution validator-distribution-info [validator] [flags]
+```
+
+### Examples
+
+```
+Example: $ zetacored query distribution validator-distribution-info [validator-address]
 ```
 
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for validator-distribution-info
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for validator-distribution-info
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -3267,7 +4417,7 @@ zetacored query distribution validator-distribution-info [validator] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3280,26 +4430,28 @@ zetacored query distribution validator-distribution-info [validator] [flags]
 
 Query distribution outstanding (un-withdrawn) rewards for a validator and all their delegations
 
-### Synopsis
-
-Query distribution outstanding (un-withdrawn) rewards for a validator and all their delegations.
-
-Example:
-$ zetacored query distribution validator-outstanding-rewards zetavaloper1lwjmdnks33xwnmfayc64ycprww49n33mtm92ne
-
 ```
 zetacored query distribution validator-outstanding-rewards [validator] [flags]
+```
+
+### Examples
+
+```
+$ zetacored query distribution validator-outstanding-rewards [validator-address]
 ```
 
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for validator-outstanding-rewards
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for validator-outstanding-rewards
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -3308,7 +4460,7 @@ zetacored query distribution validator-outstanding-rewards [validator] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3337,7 +4489,7 @@ zetacored query emissions [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3361,10 +4513,10 @@ zetacored query emissions list-pool-addresses [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-pool-addresses
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -3374,7 +4526,7 @@ zetacored query emissions list-pool-addresses [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3395,10 +4547,10 @@ zetacored query emissions params [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for params
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -3408,7 +4560,7 @@ zetacored query emissions params [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3429,10 +4581,10 @@ zetacored query emissions show-available-emissions [address] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-available-emissions
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -3442,7 +4594,7 @@ zetacored query emissions show-available-emissions [address] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3453,15 +4605,7 @@ zetacored query emissions show-available-emissions [address] [flags]
 
 ## zetacored query evidence
 
-Query for evidence by hash or for all (paginated) submitted evidence
-
-### Synopsis
-
-Query for specific submitted evidence by hash or query for all (paginated) evidence:
-
-Example:
-$ zetacored query evidence DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660
-$ zetacored query evidence --page=2 --limit=50
+Querying commands for the evidence module
 
 ```
 zetacored query evidence [flags]
@@ -3470,18 +4614,7 @@ zetacored query evidence [flags]
 ### Options
 
 ```
-      --count-total        count total number of records in evidence to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for evidence
-      --limit uint         pagination limit of evidence to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of evidence to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of evidence to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of evidence to query for
-      --reverse            results are sorted in descending order
+  -h, --help   help for evidence
 ```
 
 ### Options inherited from parent commands
@@ -3490,7 +4623,7 @@ zetacored query evidence [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3498,6 +4631,100 @@ zetacored query evidence [flags]
 ### SEE ALSO
 
 * [zetacored query](#zetacored-query)	 - Querying subcommands
+* [zetacored query evidence evidence](#zetacored-query-evidence-evidence)	 - Query for evidence by hash
+* [zetacored query evidence list](#zetacored-query-evidence-list)	 - Query all (paginated) submitted evidence
+
+## zetacored query evidence evidence
+
+Query for evidence by hash
+
+```
+zetacored query evidence evidence [hash] [flags]
+```
+
+### Examples
+
+```
+zetacored query evidence DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660
+```
+
+### Options
+
+```
+      --evidence-hash binary     
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for evidence
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query evidence](#zetacored-query-evidence)	 - Querying commands for the evidence module
+
+## zetacored query evidence list
+
+Query all (paginated) submitted evidence
+
+```
+zetacored query evidence list [flags]
+```
+
+### Examples
+
+```
+zetacored query evidence --page=2 --page-limit=50
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for list
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query evidence](#zetacored-query-evidence)	 - Querying commands for the evidence module
 
 ## zetacored query evm
 
@@ -3519,7 +4746,7 @@ zetacored query evm [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3547,10 +4774,10 @@ zetacored query evm code ADDRESS [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for code
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -3560,7 +4787,7 @@ zetacored query evm code ADDRESS [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3585,10 +4812,10 @@ zetacored query evm params [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for params
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -3598,7 +4825,7 @@ zetacored query evm params [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3623,10 +4850,10 @@ zetacored query evm storage ADDRESS KEY [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for storage
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -3636,7 +4863,7 @@ zetacored query evm storage ADDRESS KEY [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3665,7 +4892,7 @@ zetacored query feemarket [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3694,10 +4921,10 @@ zetacored query feemarket base-fee [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for base-fee
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -3707,7 +4934,7 @@ zetacored query feemarket base-fee [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3733,10 +4960,10 @@ zetacored query feemarket block-gas [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for block-gas
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -3746,7 +4973,7 @@ zetacored query feemarket block-gas [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3771,10 +4998,10 @@ zetacored query feemarket params [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for params
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -3784,7 +5011,7 @@ zetacored query feemarket params [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3813,7 +5040,7 @@ zetacored query fungible [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3841,10 +5068,10 @@ zetacored query fungible code-hash [address] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for code-hash
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -3854,7 +5081,7 @@ zetacored query fungible code-hash [address] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3876,11 +5103,11 @@ zetacored query fungible gas-stability-pool-address [flags]
 ```
       --count-total        count total number of records in gas-stability-pool-address to query for
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for gas-stability-pool-address
       --limit uint         pagination limit of gas-stability-pool-address to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
       --offset uint        pagination offset of gas-stability-pool-address to query for
   -o, --output string      Output format (text|json) 
       --page uint          pagination page of gas-stability-pool-address to query for. This sets offset to a multiple of limit (default 1)
@@ -3894,7 +5121,7 @@ zetacored query fungible gas-stability-pool-address [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3916,11 +5143,11 @@ zetacored query fungible gas-stability-pool-balance [chain-id] [flags]
 ```
       --count-total        count total number of records in gas-stability-pool-balance [chain-id] to query for
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for gas-stability-pool-balance
       --limit uint         pagination limit of gas-stability-pool-balance [chain-id] to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
       --offset uint        pagination offset of gas-stability-pool-balance [chain-id] to query for
   -o, --output string      Output format (text|json) 
       --page uint          pagination page of gas-stability-pool-balance [chain-id] to query for. This sets offset to a multiple of limit (default 1)
@@ -3934,7 +5161,7 @@ zetacored query fungible gas-stability-pool-balance [chain-id] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3956,11 +5183,11 @@ zetacored query fungible gas-stability-pool-balances [flags]
 ```
       --count-total        count total number of records in gas-stability-pool-balances to query for
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for gas-stability-pool-balances
       --limit uint         pagination limit of gas-stability-pool-balances to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
       --offset uint        pagination offset of gas-stability-pool-balances to query for
   -o, --output string      Output format (text|json) 
       --page uint          pagination page of gas-stability-pool-balances to query for. This sets offset to a multiple of limit (default 1)
@@ -3974,7 +5201,7 @@ zetacored query fungible gas-stability-pool-balances [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -3996,11 +5223,11 @@ zetacored query fungible list-foreign-coins [flags]
 ```
       --count-total        count total number of records in list-foreign-coins to query for
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-foreign-coins
       --limit uint         pagination limit of list-foreign-coins to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
       --offset uint        pagination offset of list-foreign-coins to query for
   -o, --output string      Output format (text|json) 
       --page uint          pagination page of list-foreign-coins to query for. This sets offset to a multiple of limit (default 1)
@@ -4014,7 +5241,7 @@ zetacored query fungible list-foreign-coins [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -4035,10 +5262,10 @@ zetacored query fungible show-foreign-coins [index] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-foreign-coins
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -4048,7 +5275,7 @@ zetacored query fungible show-foreign-coins [index] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -4069,10 +5296,10 @@ zetacored query fungible system-contract [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for system-contract
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -4082,7 +5309,7 @@ zetacored query fungible system-contract [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -4093,7 +5320,7 @@ zetacored query fungible system-contract [flags]
 
 ## zetacored query gov
 
-Querying commands for the governance module
+Querying commands for the gov module
 
 ```
 zetacored query gov [flags]
@@ -4111,7 +5338,7 @@ zetacored query gov [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -4119,27 +5346,56 @@ zetacored query gov [flags]
 ### SEE ALSO
 
 * [zetacored query](#zetacored-query)	 - Querying subcommands
+* [zetacored query gov constitution](#zetacored-query-gov-constitution)	 - Query the current chain constitution
 * [zetacored query gov deposit](#zetacored-query-gov-deposit)	 - Query details of a deposit
 * [zetacored query gov deposits](#zetacored-query-gov-deposits)	 - Query deposits on a proposal
-* [zetacored query gov param](#zetacored-query-gov-param)	 - Query the parameters (voting|tallying|deposit) of the governance process
 * [zetacored query gov params](#zetacored-query-gov-params)	 - Query the parameters of the governance process
 * [zetacored query gov proposal](#zetacored-query-gov-proposal)	 - Query details of a single proposal
 * [zetacored query gov proposals](#zetacored-query-gov-proposals)	 - Query proposals with optional filters
-* [zetacored query gov proposer](#zetacored-query-gov-proposer)	 - Query the proposer of a governance proposal
-* [zetacored query gov tally](#zetacored-query-gov-tally)	 - Get the tally of a proposal vote
+* [zetacored query gov tally](#zetacored-query-gov-tally)	 - Query the tally of a proposal vote
 * [zetacored query gov vote](#zetacored-query-gov-vote)	 - Query details of a single vote
-* [zetacored query gov votes](#zetacored-query-gov-votes)	 - Query votes on a proposal
+* [zetacored query gov votes](#zetacored-query-gov-votes)	 - Query votes of a single proposal
+
+## zetacored query gov constitution
+
+Query the current chain constitution
+
+```
+zetacored query gov constitution [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for constitution
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the gov module
 
 ## zetacored query gov deposit
 
 Query details of a deposit
-
-### Synopsis
-
-Query details for a single proposal deposit on a proposal by its identifier.
-
-Example:
-$ zetacored query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 
 ```
 zetacored query gov deposit [proposal-id] [depositer-addr] [flags]
@@ -4148,12 +5404,15 @@ zetacored query gov deposit [proposal-id] [depositer-addr] [flags]
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for deposit
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for deposit
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -4162,26 +5421,18 @@ zetacored query gov deposit [proposal-id] [depositer-addr] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 
 ### SEE ALSO
 
-* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the governance module
+* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the gov module
 
 ## zetacored query gov deposits
 
 Query deposits on a proposal
-
-### Synopsis
-
-Query details for all deposits on a proposal.
-You can find the proposal-id by running "zetacored query gov proposals".
-
-Example:
-$ zetacored query gov deposits 1
 
 ```
 zetacored query gov deposits [proposal-id] [flags]
@@ -4190,18 +5441,20 @@ zetacored query gov deposits [proposal-id] [flags]
 ### Options
 
 ```
-      --count-total        count total number of records in deposits to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for deposits
-      --limit uint         pagination limit of deposits to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of deposits to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of deposits to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of deposits to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for deposits
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -4210,56 +5463,14 @@ zetacored query gov deposits [proposal-id] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 
 ### SEE ALSO
 
-* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the governance module
-
-## zetacored query gov param
-
-Query the parameters (voting|tallying|deposit) of the governance process
-
-### Synopsis
-
-Query the all the parameters for the governance process.
-Example:
-$ zetacored query gov param voting
-$ zetacored query gov param tallying
-$ zetacored query gov param deposit
-
-```
-zetacored query gov param [param-type] [flags]
-```
-
-### Options
-
-```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for param
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
-```
-
-### Options inherited from parent commands
-
-```
-      --chain-id string     The network chain ID
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
-```
-
-### SEE ALSO
-
-* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the governance module
+* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the gov module
 
 ## zetacored query gov params
 
@@ -4267,10 +5478,7 @@ Query the parameters of the governance process
 
 ### Synopsis
 
-Query the all the parameters for the governance process.
-
-Example:
-$ zetacored query gov params
+Query the parameters of the governance process. Specify specific param types (voting|tallying|deposit) to filter results.
 
 ```
 zetacored query gov params [flags]
@@ -4279,12 +5487,15 @@ zetacored query gov params [flags]
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for params
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for params
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -4293,40 +5504,41 @@ zetacored query gov params [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 
 ### SEE ALSO
 
-* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the governance module
+* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the gov module
 
 ## zetacored query gov proposal
 
 Query details of a single proposal
 
-### Synopsis
-
-Query details for a proposal. You can find the
-proposal-id by running "zetacored query gov proposals".
-
-Example:
-$ zetacored query gov proposal 1
-
 ```
 zetacored query gov proposal [proposal-id] [flags]
+```
+
+### Examples
+
+```
+zetacored query gov proposal 1
 ```
 
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for proposal
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for proposal
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -4335,51 +5547,51 @@ zetacored query gov proposal [proposal-id] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 
 ### SEE ALSO
 
-* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the governance module
+* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the gov module
 
 ## zetacored query gov proposals
 
 Query proposals with optional filters
 
-### Synopsis
-
-Query for a all paginated proposals that match optional filters:
-
-Example:
-$ zetacored query gov proposals --depositor cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
-$ zetacored query gov proposals --voter cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
-$ zetacored query gov proposals --status (DepositPeriod|VotingPeriod|Passed|Rejected)
-$ zetacored query gov proposals --page=2 --limit=100
-
 ```
 zetacored query gov proposals [flags]
 ```
 
+### Examples
+
+```
+zetacored query gov proposals --depositor cosmos1...
+zetacored query gov proposals --voter cosmos1...
+zetacored query gov proposals --proposal-status (unspecified | deposit-period | voting-period | passed | rejected | failed)
+```
+
 ### Options
 
 ```
-      --count-total        count total number of records in proposals to query for
-      --depositor string   (optional) filter by proposals deposited on by depositor
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for proposals
-      --limit uint         pagination limit of proposals to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of proposals to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of proposals to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of proposals to query for
-      --reverse            results are sorted in descending order
-      --status string      (optional) filter proposals by proposal status, status: deposit_period/voting_period/passed/rejected
-      --voter string       (optional) filter by proposals voted on by voted
+      --depositor account address or key name                                                                        
+      --grpc-addr string                                                                                             the gRPC endpoint to use for this chain
+      --grpc-insecure                                                                                                allow gRPC over insecure channels, if not the server must use TLS
+      --height int                                                                                                   Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                                                                                                         help for proposals
+      --keyring-backend string                                                                                       Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string                                                                                           The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                                                                                                    Do not indent JSON output
+      --node string                                                                                                  [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string                                                                                                Output format (text|json) 
+      --page-count-total                                                                                             
+      --page-key binary                                                                                              
+      --page-limit uint                                                                                              
+      --page-offset uint                                                                                             
+      --page-reverse                                                                                                 
+      --proposal-status ProposalStatus (unspecified | deposit-period | voting-period | passed | rejected | failed)    (default unspecified)
+      --voter account address or key name                                                                            
 ```
 
 ### Options inherited from parent commands
@@ -4388,81 +5600,41 @@ zetacored query gov proposals [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 
 ### SEE ALSO
 
-* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the governance module
-
-## zetacored query gov proposer
-
-Query the proposer of a governance proposal
-
-### Synopsis
-
-Query which address proposed a proposal with a given ID.
-
-Example:
-$ zetacored query gov proposer 1
-
-```
-zetacored query gov proposer [proposal-id] [flags]
-```
-
-### Options
-
-```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for proposer
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
-```
-
-### Options inherited from parent commands
-
-```
-      --chain-id string     The network chain ID
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
-```
-
-### SEE ALSO
-
-* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the governance module
+* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the gov module
 
 ## zetacored query gov tally
 
-Get the tally of a proposal vote
-
-### Synopsis
-
-Query tally of votes on a proposal. You can find
-the proposal-id by running "zetacored query gov proposals".
-
-Example:
-$ zetacored query gov tally 1
+Query the tally of a proposal vote
 
 ```
 zetacored query gov tally [proposal-id] [flags]
 ```
 
+### Examples
+
+```
+zetacored query gov tally 1
+```
+
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for tally
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for tally
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -4471,39 +5643,41 @@ zetacored query gov tally [proposal-id] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 
 ### SEE ALSO
 
-* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the governance module
+* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the gov module
 
 ## zetacored query gov vote
 
 Query details of a single vote
 
-### Synopsis
-
-Query details for a single vote on a proposal given its identifier.
-
-Example:
-$ zetacored query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
-
 ```
 zetacored query gov vote [proposal-id] [voter-addr] [flags]
+```
+
+### Examples
+
+```
+zetacored query gov vote 1 cosmos1...
 ```
 
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for vote
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for vote
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -4512,46 +5686,46 @@ zetacored query gov vote [proposal-id] [voter-addr] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 
 ### SEE ALSO
 
-* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the governance module
+* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the gov module
 
 ## zetacored query gov votes
 
-Query votes on a proposal
-
-### Synopsis
-
-Query vote details for a single proposal by its identifier.
-
-Example:
-$ zetacored query gov votes 1
-$ zetacored query gov votes 1 --page=2 --limit=100
+Query votes of a single proposal
 
 ```
 zetacored query gov votes [proposal-id] [flags]
 ```
 
+### Examples
+
+```
+zetacored query gov votes 1
+```
+
 ### Options
 
 ```
-      --count-total        count total number of records in votes to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for votes
-      --limit uint         pagination limit of votes to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of votes to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of votes to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of votes to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for votes
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -4560,14 +5734,14 @@ zetacored query gov votes [proposal-id] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 
 ### SEE ALSO
 
-* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the governance module
+* [zetacored query gov](#zetacored-query-gov)	 - Querying commands for the gov module
 
 ## zetacored query group
 
@@ -4589,7 +5763,7 @@ zetacored query group [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -4598,37 +5772,40 @@ zetacored query group [flags]
 
 * [zetacored query](#zetacored-query)	 - Querying subcommands
 * [zetacored query group group-info](#zetacored-query-group-group-info)	 - Query for group info by group id
-* [zetacored query group group-members](#zetacored-query-group-group-members)	 - Query for group members by group id with pagination flags
-* [zetacored query group group-policies-by-admin](#zetacored-query-group-group-policies-by-admin)	 - Query for group policies by admin account address with pagination flags
-* [zetacored query group group-policies-by-group](#zetacored-query-group-group-policies-by-group)	 - Query for group policies by group id with pagination flags
+* [zetacored query group group-members](#zetacored-query-group-group-members)	 - Query for group members by group id
+* [zetacored query group group-policies-by-admin](#zetacored-query-group-group-policies-by-admin)	 - Query for group policies by admin account address
+* [zetacored query group group-policies-by-group](#zetacored-query-group-group-policies-by-group)	 - Query for group policies by group id
 * [zetacored query group group-policy-info](#zetacored-query-group-group-policy-info)	 - Query for group policy info by account address of group policy
-* [zetacored query group groups](#zetacored-query-group-groups)	 - Query for groups present in the state
-* [zetacored query group groups-by-admin](#zetacored-query-group-groups-by-admin)	 - Query for groups by admin account address with pagination flags
-* [zetacored query group groups-by-member](#zetacored-query-group-groups-by-member)	 - Query for groups by member address with pagination flags
+* [zetacored query group groups](#zetacored-query-group-groups)	 - Query for all groups on chain
+* [zetacored query group groups-by-admin](#zetacored-query-group-groups-by-admin)	 - Query for groups by admin account address
+* [zetacored query group groups-by-member](#zetacored-query-group-groups-by-member)	 - Query for groups by member address
 * [zetacored query group proposal](#zetacored-query-group-proposal)	 - Query for proposal by id
-* [zetacored query group proposals-by-group-policy](#zetacored-query-group-proposals-by-group-policy)	 - Query for proposals by account address of group policy with pagination flags
+* [zetacored query group proposals-by-group-policy](#zetacored-query-group-proposals-by-group-policy)	 - Query for proposals by account address of group policy
 * [zetacored query group tally-result](#zetacored-query-group-tally-result)	 - Query tally result of proposal
 * [zetacored query group vote](#zetacored-query-group-vote)	 - Query for vote by proposal id and voter account address
-* [zetacored query group votes-by-proposal](#zetacored-query-group-votes-by-proposal)	 - Query for votes by proposal id with pagination flags
-* [zetacored query group votes-by-voter](#zetacored-query-group-votes-by-voter)	 - Query for votes by voter account address with pagination flags
+* [zetacored query group votes-by-proposal](#zetacored-query-group-votes-by-proposal)	 - Query for votes by proposal id
+* [zetacored query group votes-by-voter](#zetacored-query-group-votes-by-voter)	 - Query for votes by voter account address
 
 ## zetacored query group group-info
 
 Query for group info by group id
 
 ```
-zetacored query group group-info [id] [flags]
+zetacored query group group-info [group-id] [flags]
 ```
 
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for group-info
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for group-info
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -4637,7 +5814,7 @@ zetacored query group group-info [id] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -4648,27 +5825,29 @@ zetacored query group group-info [id] [flags]
 
 ## zetacored query group group-members
 
-Query for group members by group id with pagination flags
+Query for group members by group id
 
 ```
-zetacored query group group-members [id] [flags]
+zetacored query group group-members [group-id] [flags]
 ```
 
 ### Options
 
 ```
-      --count-total        count total number of records in group-members to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for group-members
-      --limit uint         pagination limit of group-members to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of group-members to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of group-members to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of group-members to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for group-members
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -4677,7 +5856,7 @@ zetacored query group group-members [id] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -4688,7 +5867,7 @@ zetacored query group group-members [id] [flags]
 
 ## zetacored query group group-policies-by-admin
 
-Query for group policies by admin account address with pagination flags
+Query for group policies by admin account address
 
 ```
 zetacored query group group-policies-by-admin [admin] [flags]
@@ -4697,18 +5876,20 @@ zetacored query group group-policies-by-admin [admin] [flags]
 ### Options
 
 ```
-      --count-total        count total number of records in group-policies-by-admin to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for group-policies-by-admin
-      --limit uint         pagination limit of group-policies-by-admin to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of group-policies-by-admin to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of group-policies-by-admin to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of group-policies-by-admin to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for group-policies-by-admin
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -4717,7 +5898,7 @@ zetacored query group group-policies-by-admin [admin] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -4728,7 +5909,7 @@ zetacored query group group-policies-by-admin [admin] [flags]
 
 ## zetacored query group group-policies-by-group
 
-Query for group policies by group id with pagination flags
+Query for group policies by group id
 
 ```
 zetacored query group group-policies-by-group [group-id] [flags]
@@ -4737,18 +5918,20 @@ zetacored query group group-policies-by-group [group-id] [flags]
 ### Options
 
 ```
-      --count-total        count total number of records in groups-policies-by-group to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for group-policies-by-group
-      --limit uint         pagination limit of groups-policies-by-group to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of groups-policies-by-group to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of groups-policies-by-group to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of groups-policies-by-group to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for group-policies-by-group
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -4757,7 +5940,7 @@ zetacored query group group-policies-by-group [group-id] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -4777,12 +5960,15 @@ zetacored query group group-policy-info [group-policy-account] [flags]
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for group-policy-info
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for group-policy-info
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -4791,7 +5977,7 @@ zetacored query group group-policy-info [group-policy-account] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -4802,7 +5988,7 @@ zetacored query group group-policy-info [group-policy-account] [flags]
 
 ## zetacored query group groups
 
-Query for groups present in the state
+Query for all groups on chain
 
 ```
 zetacored query group groups [flags]
@@ -4811,18 +5997,20 @@ zetacored query group groups [flags]
 ### Options
 
 ```
-      --count-total        count total number of records in groups to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for groups
-      --limit uint         pagination limit of groups to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of groups to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of groups to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of groups to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for groups
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -4831,7 +6019,7 @@ zetacored query group groups [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -4842,7 +6030,7 @@ zetacored query group groups [flags]
 
 ## zetacored query group groups-by-admin
 
-Query for groups by admin account address with pagination flags
+Query for groups by admin account address
 
 ```
 zetacored query group groups-by-admin [admin] [flags]
@@ -4851,18 +6039,20 @@ zetacored query group groups-by-admin [admin] [flags]
 ### Options
 
 ```
-      --count-total        count total number of records in groups-by-admin to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for groups-by-admin
-      --limit uint         pagination limit of groups-by-admin to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of groups-by-admin to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of groups-by-admin to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of groups-by-admin to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for groups-by-admin
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -4871,7 +6061,7 @@ zetacored query group groups-by-admin [admin] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -4882,7 +6072,7 @@ zetacored query group groups-by-admin [admin] [flags]
 
 ## zetacored query group groups-by-member
 
-Query for groups by member address with pagination flags
+Query for groups by member address
 
 ```
 zetacored query group groups-by-member [address] [flags]
@@ -4891,18 +6081,20 @@ zetacored query group groups-by-member [address] [flags]
 ### Options
 
 ```
-      --count-total        count total number of records in groups-by-members to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for groups-by-member
-      --limit uint         pagination limit of groups-by-members to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of groups-by-members to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of groups-by-members to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of groups-by-members to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for groups-by-member
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -4911,7 +6103,7 @@ zetacored query group groups-by-member [address] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -4925,18 +6117,21 @@ zetacored query group groups-by-member [address] [flags]
 Query for proposal by id
 
 ```
-zetacored query group proposal [id] [flags]
+zetacored query group proposal [proposal-id] [flags]
 ```
 
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for proposal
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for proposal
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -4945,7 +6140,7 @@ zetacored query group proposal [id] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -4956,7 +6151,7 @@ zetacored query group proposal [id] [flags]
 
 ## zetacored query group proposals-by-group-policy
 
-Query for proposals by account address of group policy with pagination flags
+Query for proposals by account address of group policy
 
 ```
 zetacored query group proposals-by-group-policy [group-policy-account] [flags]
@@ -4965,18 +6160,20 @@ zetacored query group proposals-by-group-policy [group-policy-account] [flags]
 ### Options
 
 ```
-      --count-total        count total number of records in proposals-by-group-policy to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for proposals-by-group-policy
-      --limit uint         pagination limit of proposals-by-group-policy to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of proposals-by-group-policy to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of proposals-by-group-policy to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of proposals-by-group-policy to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for proposals-by-group-policy
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -4985,7 +6182,7 @@ zetacored query group proposals-by-group-policy [group-policy-account] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5005,12 +6202,15 @@ zetacored query group tally-result [proposal-id] [flags]
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for tally-result
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for tally-result
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -5019,7 +6219,7 @@ zetacored query group tally-result [proposal-id] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5039,12 +6239,15 @@ zetacored query group vote [proposal-id] [voter] [flags]
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for vote
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for vote
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -5053,7 +6256,7 @@ zetacored query group vote [proposal-id] [voter] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5064,7 +6267,7 @@ zetacored query group vote [proposal-id] [voter] [flags]
 
 ## zetacored query group votes-by-proposal
 
-Query for votes by proposal id with pagination flags
+Query for votes by proposal id
 
 ```
 zetacored query group votes-by-proposal [proposal-id] [flags]
@@ -5073,18 +6276,20 @@ zetacored query group votes-by-proposal [proposal-id] [flags]
 ### Options
 
 ```
-      --count-total        count total number of records in votes-by-proposal to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for votes-by-proposal
-      --limit uint         pagination limit of votes-by-proposal to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of votes-by-proposal to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of votes-by-proposal to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of votes-by-proposal to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for votes-by-proposal
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -5093,7 +6298,7 @@ zetacored query group votes-by-proposal [proposal-id] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5104,7 +6309,7 @@ zetacored query group votes-by-proposal [proposal-id] [flags]
 
 ## zetacored query group votes-by-voter
 
-Query for votes by voter account address with pagination flags
+Query for votes by voter account address
 
 ```
 zetacored query group votes-by-voter [voter] [flags]
@@ -5113,18 +6318,20 @@ zetacored query group votes-by-voter [voter] [flags]
 ### Options
 
 ```
-      --count-total        count total number of records in votes-by-voter to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for votes-by-voter
-      --limit uint         pagination limit of votes-by-voter to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of votes-by-voter to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of votes-by-voter to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of votes-by-voter to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for votes-by-voter
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -5133,7 +6340,7 @@ zetacored query group votes-by-voter [voter] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5162,7 +6369,7 @@ zetacored query lightclient [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5188,10 +6395,10 @@ zetacored query lightclient list-block-header [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-block-header
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -5201,7 +6408,7 @@ zetacored query lightclient list-block-header [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5222,10 +6429,10 @@ zetacored query lightclient list-chain-state [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-chain-state
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -5235,7 +6442,7 @@ zetacored query lightclient list-chain-state [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5256,10 +6463,10 @@ zetacored query lightclient show-block-header [block-hash] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-block-header
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -5269,7 +6476,7 @@ zetacored query lightclient show-block-header [block-hash] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5290,10 +6497,10 @@ zetacored query lightclient show-chain-state [chain-id] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-chain-state
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -5303,7 +6510,7 @@ zetacored query lightclient show-chain-state [chain-id] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5324,10 +6531,10 @@ zetacored query lightclient show-header-enabled-chains [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-header-enabled-chains
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -5337,7 +6544,7 @@ zetacored query lightclient show-header-enabled-chains [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5366,7 +6573,7 @@ zetacored query observer [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5411,10 +6618,10 @@ zetacored query observer get-historical-tss-address [finalizedZetaHeight] [bitco
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for get-historical-tss-address
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -5424,7 +6631,7 @@ zetacored query observer get-historical-tss-address [finalizedZetaHeight] [bitco
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5445,10 +6652,10 @@ zetacored query observer get-tss-address [bitcoinChainId]] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for get-tss-address
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -5458,7 +6665,7 @@ zetacored query observer get-tss-address [bitcoinChainId]] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5479,10 +6686,10 @@ zetacored query observer list-ballots [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-ballots
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -5492,7 +6699,7 @@ zetacored query observer list-ballots [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5513,10 +6720,10 @@ zetacored query observer list-blame [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-blame
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -5526,7 +6733,7 @@ zetacored query observer list-blame [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5547,10 +6754,10 @@ zetacored query observer list-blame-by-msg [chainId] [nonce] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-blame-by-msg
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -5560,7 +6767,7 @@ zetacored query observer list-blame-by-msg [chainId] [nonce] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5582,11 +6789,11 @@ zetacored query observer list-chain-nonces [flags]
 ```
       --count-total        count total number of records in list-chain-nonces to query for
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-chain-nonces
       --limit uint         pagination limit of list-chain-nonces to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
       --offset uint        pagination offset of list-chain-nonces to query for
   -o, --output string      Output format (text|json) 
       --page uint          pagination page of list-chain-nonces to query for. This sets offset to a multiple of limit (default 1)
@@ -5600,7 +6807,7 @@ zetacored query observer list-chain-nonces [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5621,10 +6828,10 @@ zetacored query observer list-chain-params [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-chain-params
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -5634,7 +6841,7 @@ zetacored query observer list-chain-params [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5656,11 +6863,11 @@ zetacored query observer list-chains [flags]
 ```
       --count-total        count total number of records in list-chains to query for
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-chains
       --limit uint         pagination limit of list-chains to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
       --offset uint        pagination offset of list-chains to query for
   -o, --output string      Output format (text|json) 
       --page uint          pagination page of list-chains to query for. This sets offset to a multiple of limit (default 1)
@@ -5674,7 +6881,7 @@ zetacored query observer list-chains [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5696,11 +6903,11 @@ zetacored query observer list-node-account [flags]
 ```
       --count-total        count total number of records in list-node-account to query for
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-node-account
       --limit uint         pagination limit of list-node-account to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
       --offset uint        pagination offset of list-node-account to query for
   -o, --output string      Output format (text|json) 
       --page uint          pagination page of list-node-account to query for. This sets offset to a multiple of limit (default 1)
@@ -5714,7 +6921,7 @@ zetacored query observer list-node-account [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5735,10 +6942,10 @@ zetacored query observer list-observer-set [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-observer-set
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -5748,7 +6955,7 @@ zetacored query observer list-observer-set [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5769,10 +6976,10 @@ zetacored query observer list-pending-nonces [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-pending-nonces
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -5782,7 +6989,7 @@ zetacored query observer list-pending-nonces [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5804,11 +7011,11 @@ zetacored query observer list-tss-funds-migrator [flags]
 ```
       --count-total        count total number of records in list-tss-funds-migrator to query for
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-tss-funds-migrator
       --limit uint         pagination limit of list-tss-funds-migrator to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
       --offset uint        pagination offset of list-tss-funds-migrator to query for
   -o, --output string      Output format (text|json) 
       --page uint          pagination page of list-tss-funds-migrator to query for. This sets offset to a multiple of limit (default 1)
@@ -5822,7 +7029,7 @@ zetacored query observer list-tss-funds-migrator [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5843,10 +7050,10 @@ zetacored query observer list-tss-history [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-tss-history
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -5856,7 +7063,7 @@ zetacored query observer list-tss-history [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5877,10 +7084,10 @@ zetacored query observer show-ballot [ballot-identifier] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-ballot
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -5890,7 +7097,7 @@ zetacored query observer show-ballot [ballot-identifier] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5911,10 +7118,10 @@ zetacored query observer show-blame [blame-identifier] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-blame
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -5924,7 +7131,7 @@ zetacored query observer show-blame [blame-identifier] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5945,10 +7152,10 @@ zetacored query observer show-chain-nonces [chain-id] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-chain-nonces
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -5958,7 +7165,7 @@ zetacored query observer show-chain-nonces [chain-id] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -5979,10 +7186,10 @@ zetacored query observer show-chain-params [chain-id] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-chain-params
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -5992,7 +7199,7 @@ zetacored query observer show-chain-params [chain-id] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6013,10 +7220,10 @@ zetacored query observer show-crosschain-flags [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-crosschain-flags
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -6026,7 +7233,7 @@ zetacored query observer show-crosschain-flags [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6047,10 +7254,10 @@ zetacored query observer show-keygen [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-keygen
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -6060,7 +7267,7 @@ zetacored query observer show-keygen [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6081,10 +7288,10 @@ zetacored query observer show-node-account [operator_address] [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-node-account
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -6094,7 +7301,7 @@ zetacored query observer show-node-account [operator_address] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6115,10 +7322,10 @@ zetacored query observer show-observer-count [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-observer-count
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -6128,7 +7335,7 @@ zetacored query observer show-observer-count [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6149,10 +7356,10 @@ zetacored query observer show-operational-flags [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-operational-flags
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -6162,7 +7369,7 @@ zetacored query observer show-operational-flags [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6183,10 +7390,10 @@ zetacored query observer show-tss [flags]
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-tss
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
 
@@ -6196,7 +7403,7 @@ zetacored query observer show-tss [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6218,11 +7425,11 @@ zetacored query observer show-tss-funds-migrator [chain-id] [flags]
 ```
       --count-total        count total number of records in show-tss-funds-migrator [chain-id] to query for
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for show-tss-funds-migrator
       --limit uint         pagination limit of show-tss-funds-migrator [chain-id] to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
       --offset uint        pagination offset of show-tss-funds-migrator [chain-id] to query for
   -o, --output string      Output format (text|json) 
       --page uint          pagination page of show-tss-funds-migrator [chain-id] to query for. This sets offset to a multiple of limit (default 1)
@@ -6236,7 +7443,7 @@ zetacored query observer show-tss-funds-migrator [chain-id] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6265,7 +7472,7 @@ zetacored query params [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6274,6 +7481,7 @@ zetacored query params [flags]
 
 * [zetacored query](#zetacored-query)	 - Querying subcommands
 * [zetacored query params subspace](#zetacored-query-params-subspace)	 - Query for raw parameters by subspace and key
+* [zetacored query params subspaces](#zetacored-query-params-subspaces)	 - Query for all registered subspaces and all keys for a subspace
 
 ## zetacored query params subspace
 
@@ -6286,12 +7494,15 @@ zetacored query params subspace [subspace] [key] [flags]
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for subspace
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for subspace
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -6300,7 +7511,44 @@ zetacored query params subspace [subspace] [key] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query params](#zetacored-query-params)	 - Querying commands for the params module
+
+## zetacored query params subspaces
+
+Query for all registered subspaces and all keys for a subspace
+
+```
+zetacored query params subspaces [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for subspaces
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6329,7 +7577,7 @@ zetacored query slashing [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6345,12 +7593,6 @@ zetacored query slashing [flags]
 
 Query the current slashing parameters
 
-### Synopsis
-
-Query genesis parameters for the slashing module:
-
-$ zetacored query slashing params
-
 ```
 zetacored query slashing params [flags]
 ```
@@ -6358,12 +7600,15 @@ zetacored query slashing params [flags]
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for params
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for params
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -6372,7 +7617,7 @@ zetacored query slashing params [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6387,23 +7632,30 @@ Query a validator's signing information
 
 ### Synopsis
 
-Use a validators' consensus public key to find the signing-info for that validator:
-
-$ zetacored query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"OauFcTKbN5Lx3fJL689cikXBqe+hcp6Y+x0rYUdR9Jk="}'
+Query a validator's signing information, with a pubkey ('zetacored comet show-validator') or a validator consensus address
 
 ```
-zetacored query slashing signing-info [validator-conspub] [flags]
+zetacored query slashing signing-info [validator-conspub/address] [flags]
+```
+
+### Examples
+
+```
+zetacored query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"OauFcTKbN5Lx3fJL689cikXBqe+hcp6Y+x0rYUdR9Jk="}'
 ```
 
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for signing-info
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for signing-info
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -6412,7 +7664,7 @@ zetacored query slashing signing-info [validator-conspub] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6425,12 +7677,6 @@ zetacored query slashing signing-info [validator-conspub] [flags]
 
 Query signing information of all validators
 
-### Synopsis
-
-signing infos of validators:
-
-$ zetacored query slashing signing-infos
-
 ```
 zetacored query slashing signing-infos [flags]
 ```
@@ -6438,18 +7684,20 @@ zetacored query slashing signing-infos [flags]
 ### Options
 
 ```
-      --count-total        count total number of records in signing infos to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for signing-infos
-      --limit uint         pagination limit of signing infos to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of signing infos to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of signing infos to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of signing infos to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for signing-infos
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -6458,7 +7706,7 @@ zetacored query slashing signing-infos [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6487,7 +7735,7 @@ zetacored query staking [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6498,12 +7746,12 @@ zetacored query staking [flags]
 * [zetacored query staking delegation](#zetacored-query-staking-delegation)	 - Query a delegation based on address and validator address
 * [zetacored query staking delegations](#zetacored-query-staking-delegations)	 - Query all delegations made by one delegator
 * [zetacored query staking delegations-to](#zetacored-query-staking-delegations-to)	 - Query all delegations made to one validator
+* [zetacored query staking delegator-validator](#zetacored-query-staking-delegator-validator)	 - Query validator info for given delegator validator pair
+* [zetacored query staking delegator-validators](#zetacored-query-staking-delegator-validators)	 - Query all validators info for given delegator address
 * [zetacored query staking historical-info](#zetacored-query-staking-historical-info)	 - Query historical info at given height
 * [zetacored query staking params](#zetacored-query-staking-params)	 - Query the current staking parameters information
 * [zetacored query staking pool](#zetacored-query-staking-pool)	 - Query the current staking pool values
 * [zetacored query staking redelegation](#zetacored-query-staking-redelegation)	 - Query a redelegation record based on delegator and a source and destination validator address
-* [zetacored query staking redelegations](#zetacored-query-staking-redelegations)	 - Query all redelegations records for one delegator
-* [zetacored query staking redelegations-from](#zetacored-query-staking-redelegations-from)	 - Query all outgoing redelegatations from a validator
 * [zetacored query staking unbonding-delegation](#zetacored-query-staking-unbonding-delegation)	 - Query an unbonding-delegation record based on delegator and validator address
 * [zetacored query staking unbonding-delegations](#zetacored-query-staking-unbonding-delegations)	 - Query all unbonding-delegations records for one delegator
 * [zetacored query staking unbonding-delegations-from](#zetacored-query-staking-unbonding-delegations-from)	 - Query all unbonding delegatations from a validator
@@ -6516,10 +7764,7 @@ Query a delegation based on address and validator address
 
 ### Synopsis
 
-Query delegations for an individual delegator on an individual validator.
-
-Example:
-$ zetacored query staking delegation zeta1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p zetavaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+Query delegations for an individual delegator on an individual validator
 
 ```
 zetacored query staking delegation [delegator-addr] [validator-addr] [flags]
@@ -6528,12 +7773,15 @@ zetacored query staking delegation [delegator-addr] [validator-addr] [flags]
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for delegation
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for delegation
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -6542,7 +7790,7 @@ zetacored query staking delegation [delegator-addr] [validator-addr] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6559,9 +7807,6 @@ Query all delegations made by one delegator
 
 Query delegations for an individual delegator on all validators.
 
-Example:
-$ zetacored query staking delegations zeta1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
-
 ```
 zetacored query staking delegations [delegator-addr] [flags]
 ```
@@ -6569,18 +7814,20 @@ zetacored query staking delegations [delegator-addr] [flags]
 ### Options
 
 ```
-      --count-total        count total number of records in delegations to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for delegations
-      --limit uint         pagination limit of delegations to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of delegations to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of delegations to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of delegations to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for delegations
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -6589,7 +7836,7 @@ zetacored query staking delegations [delegator-addr] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6606,9 +7853,6 @@ Query all delegations made to one validator
 
 Query delegations on an individual validator.
 
-Example:
-$ zetacored query staking delegations-to zetavaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
-
 ```
 zetacored query staking delegations-to [validator-addr] [flags]
 ```
@@ -6616,18 +7860,20 @@ zetacored query staking delegations-to [validator-addr] [flags]
 ### Options
 
 ```
-      --count-total        count total number of records in validator delegations to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for delegations-to
-      --limit uint         pagination limit of validator delegations to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of validator delegations to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of validator delegations to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of validator delegations to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for delegations-to
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -6636,7 +7882,86 @@ zetacored query staking delegations-to [validator-addr] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query staking](#zetacored-query-staking)	 - Querying commands for the staking module
+
+## zetacored query staking delegator-validator
+
+Query validator info for given delegator validator pair
+
+```
+zetacored query staking delegator-validator [delegator-addr] [validator-addr] [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for delegator-validator
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query staking](#zetacored-query-staking)	 - Querying commands for the staking module
+
+## zetacored query staking delegator-validators
+
+Query all validators info for given delegator address
+
+```
+zetacored query staking delegator-validators [delegator-addr] [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for delegator-validators
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6649,26 +7974,28 @@ zetacored query staking delegations-to [validator-addr] [flags]
 
 Query historical info at given height
 
-### Synopsis
-
-Query historical info at given height.
-
-Example:
-$ zetacored query staking historical-info 5
-
 ```
 zetacored query staking historical-info [height] [flags]
+```
+
+### Examples
+
+```
+$ zetacored query staking historical-info 5
 ```
 
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for historical-info
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for historical-info
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -6677,7 +8004,7 @@ zetacored query staking historical-info [height] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6694,9 +8021,6 @@ Query the current staking parameters information
 
 Query values set as staking parameters.
 
-Example:
-$ zetacored query staking params
-
 ```
 zetacored query staking params [flags]
 ```
@@ -6704,12 +8028,15 @@ zetacored query staking params [flags]
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for params
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for params
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -6718,7 +8045,7 @@ zetacored query staking params [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6735,9 +8062,6 @@ Query the current staking pool values
 
 Query values for amounts stored in the staking pool.
 
-Example:
-$ zetacored query staking pool
-
 ```
 zetacored query staking pool [flags]
 ```
@@ -6745,12 +8069,15 @@ zetacored query staking pool [flags]
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for pool
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for pool
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -6759,7 +8086,7 @@ zetacored query staking pool [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6776,9 +8103,6 @@ Query a redelegation record based on delegator and a source and destination vali
 
 Query a redelegation record for an individual delegator between a source and destination validator.
 
-Example:
-$ zetacored query staking redelegation zeta1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p zetavaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm zetavaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
-
 ```
 zetacored query staking redelegation [delegator-addr] [src-validator-addr] [dst-validator-addr] [flags]
 ```
@@ -6786,12 +8110,20 @@ zetacored query staking redelegation [delegator-addr] [src-validator-addr] [dst-
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for redelegation
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for redelegation
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -6800,101 +8132,7 @@ zetacored query staking redelegation [delegator-addr] [src-validator-addr] [dst-
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
-```
-
-### SEE ALSO
-
-* [zetacored query staking](#zetacored-query-staking)	 - Querying commands for the staking module
-
-## zetacored query staking redelegations
-
-Query all redelegations records for one delegator
-
-### Synopsis
-
-Query all redelegation records for an individual delegator.
-
-Example:
-$ zetacored query staking redelegation zeta1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
-
-```
-zetacored query staking redelegations [delegator-addr] [flags]
-```
-
-### Options
-
-```
-      --count-total        count total number of records in delegator redelegations to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for redelegations
-      --limit uint         pagination limit of delegator redelegations to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of delegator redelegations to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of delegator redelegations to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of delegator redelegations to query for
-      --reverse            results are sorted in descending order
-```
-
-### Options inherited from parent commands
-
-```
-      --chain-id string     The network chain ID
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
-```
-
-### SEE ALSO
-
-* [zetacored query staking](#zetacored-query-staking)	 - Querying commands for the staking module
-
-## zetacored query staking redelegations-from
-
-Query all outgoing redelegatations from a validator
-
-### Synopsis
-
-Query delegations that are redelegating _from_ a validator.
-
-Example:
-$ zetacored query staking redelegations-from zetavaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
-
-```
-zetacored query staking redelegations-from [validator-addr] [flags]
-```
-
-### Options
-
-```
-      --count-total        count total number of records in validator redelegations to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for redelegations-from
-      --limit uint         pagination limit of validator redelegations to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of validator redelegations to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of validator redelegations to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of validator redelegations to query for
-      --reverse            results are sorted in descending order
-```
-
-### Options inherited from parent commands
-
-```
-      --chain-id string     The network chain ID
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6911,9 +8149,6 @@ Query an unbonding-delegation record based on delegator and validator address
 
 Query unbonding delegations for an individual delegator on an individual validator.
 
-Example:
-$ zetacored query staking unbonding-delegation zeta1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p zetavaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
-
 ```
 zetacored query staking unbonding-delegation [delegator-addr] [validator-addr] [flags]
 ```
@@ -6921,12 +8156,15 @@ zetacored query staking unbonding-delegation [delegator-addr] [validator-addr] [
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for unbonding-delegation
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for unbonding-delegation
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -6935,7 +8173,7 @@ zetacored query staking unbonding-delegation [delegator-addr] [validator-addr] [
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6952,9 +8190,6 @@ Query all unbonding-delegations records for one delegator
 
 Query unbonding delegations for an individual delegator.
 
-Example:
-$ zetacored query staking unbonding-delegations zeta1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
-
 ```
 zetacored query staking unbonding-delegations [delegator-addr] [flags]
 ```
@@ -6962,18 +8197,20 @@ zetacored query staking unbonding-delegations [delegator-addr] [flags]
 ### Options
 
 ```
-      --count-total        count total number of records in unbonding delegations to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for unbonding-delegations
-      --limit uint         pagination limit of unbonding delegations to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of unbonding delegations to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of unbonding delegations to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of unbonding delegations to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for unbonding-delegations
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -6982,7 +8219,7 @@ zetacored query staking unbonding-delegations [delegator-addr] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -6999,28 +8236,33 @@ Query all unbonding delegatations from a validator
 
 Query delegations that are unbonding _from_ a validator.
 
-Example:
-$ zetacored query staking unbonding-delegations-from zetavaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
-
 ```
 zetacored query staking unbonding-delegations-from [validator-addr] [flags]
+```
+
+### Examples
+
+```
+$ zetacored query staking unbonding-delegations-from [val-addr]
 ```
 
 ### Options
 
 ```
-      --count-total        count total number of records in unbonding delegations to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for unbonding-delegations-from
-      --limit uint         pagination limit of unbonding delegations to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of unbonding delegations to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of unbonding delegations to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of unbonding delegations to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for unbonding-delegations-from
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
 ```
 
 ### Options inherited from parent commands
@@ -7029,7 +8271,7 @@ zetacored query staking unbonding-delegations-from [validator-addr] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7046,9 +8288,6 @@ Query a validator
 
 Query details about an individual validator.
 
-Example:
-$ zetacored query staking validator zetavaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
-
 ```
 zetacored query staking validator [validator-addr] [flags]
 ```
@@ -7056,12 +8295,15 @@ zetacored query staking validator [validator-addr] [flags]
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for validator
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for validator
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -7070,7 +8312,7 @@ zetacored query staking validator [validator-addr] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7087,9 +8329,6 @@ Query for all validators
 
 Query details about all validators on a network.
 
-Example:
-$ zetacored query staking validators
-
 ```
 zetacored query staking validators [flags]
 ```
@@ -7097,18 +8336,21 @@ zetacored query staking validators [flags]
 ### Options
 
 ```
-      --count-total        count total number of records in validators to query for
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for validators
-      --limit uint         pagination limit of validators to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-      --offset uint        pagination offset of validators to query for
-  -o, --output string      Output format (text|json) 
-      --page uint          pagination page of validators to query for. This sets offset to a multiple of limit (default 1)
-      --page-key string    pagination page-key of validators to query for
-      --reverse            results are sorted in descending order
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for validators
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
+      --status string            
 ```
 
 ### Options inherited from parent commands
@@ -7117,7 +8359,7 @@ zetacored query staking validators [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7125,39 +8367,6 @@ zetacored query staking validators [flags]
 ### SEE ALSO
 
 * [zetacored query staking](#zetacored-query-staking)	 - Querying commands for the staking module
-
-## zetacored query tendermint-validator-set
-
-Get the full tendermint validator set at given height
-
-```
-zetacored query tendermint-validator-set [height] [flags]
-```
-
-### Options
-
-```
-  -h, --help            help for tendermint-validator-set
-      --limit int       Query number of results returned per page (default 100)
-      --node string     [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string   Output format (text|json) 
-      --page int        Query a specific page of paginated results (default 1)
-```
-
-### Options inherited from parent commands
-
-```
-      --chain-id string     The network chain ID
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
-```
-
-### SEE ALSO
-
-* [zetacored query](#zetacored-query)	 - Querying subcommands
 
 ## zetacored query tx
 
@@ -7178,10 +8387,10 @@ zetacored query tx --type=[hash|acc_seq|signature] [hash|acc_seq|signature] [fla
 
 ```
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for tx
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
       --type string        The type to be used when querying tx, can be one of "hash", "acc_seq", "signature" 
 ```
@@ -7192,7 +8401,7 @@ zetacored query tx --type=[hash|acc_seq|signature] [hash|acc_seq|signature] [fla
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7208,29 +8417,36 @@ Query for paginated transactions that match a set of events
 ### Synopsis
 
 Search for transactions that match the exact given events where results are paginated.
-Each event takes the form of '{eventType}.{eventAttribute}={value}'. Please refer
-to each module's documentation for the full set of events to query for. Each module
-documents its respective events under 'xx_events.md'.
+The events query is directly passed to Tendermint's RPC TxSearch method and must
+conform to Tendermint's query syntax.
 
-Example:
-$ zetacored query txs --events 'message.sender=cosmos1...&message.action=withdraw_delegator_reward' --page 1 --limit 30
+Please refer to each module's documentation for the full set of events to query
+for. Each module documents its respective events under 'xx_events.md'.
+
 
 ```
 zetacored query txs [flags]
 ```
 
+### Examples
+
+```
+$ zetacored query txs --query "message.sender='cosmos1...' AND message.action='withdraw_delegator_reward' AND tx.height > 7" --page 1 --limit 30
+```
+
 ### Options
 
 ```
-      --events string      list of transaction events in the form of {eventType}.{eventAttribute}={value}
       --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for txs
       --limit int          Query number of transactions results per page returned (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
+      --order_by string    The ordering semantics (asc|dsc)
   -o, --output string      Output format (text|json) 
       --page int           Query a specific page of paginated results (default 1)
+      --query string       The transactions events query per Tendermint's query semantics
 ```
 
 ### Options inherited from parent commands
@@ -7239,7 +8455,7 @@ zetacored query txs [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7251,6 +8467,10 @@ zetacored query txs [flags]
 ## zetacored query upgrade
 
 Querying commands for the upgrade module
+
+```
+zetacored query upgrade [flags]
+```
 
 ### Options
 
@@ -7264,7 +8484,7 @@ Querying commands for the upgrade module
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7272,18 +8492,18 @@ Querying commands for the upgrade module
 ### SEE ALSO
 
 * [zetacored query](#zetacored-query)	 - Querying subcommands
-* [zetacored query upgrade applied](#zetacored-query-upgrade-applied)	 - block header for height at which a completed upgrade was applied
-* [zetacored query upgrade module_versions](#zetacored-query-upgrade-module-versions)	 - get the list of module versions
-* [zetacored query upgrade plan](#zetacored-query-upgrade-plan)	 - get upgrade plan (if one exists)
+* [zetacored query upgrade applied](#zetacored-query-upgrade-applied)	 - Query the block header for height at which a completed upgrade was applied
+* [zetacored query upgrade authority](#zetacored-query-upgrade-authority)	 - Get the upgrade authority address
+* [zetacored query upgrade module-versions](#zetacored-query-upgrade-module-versions)	 - Query the list of module versions
+* [zetacored query upgrade plan](#zetacored-query-upgrade-plan)	 - Query the upgrade plan (if one exists)
 
 ## zetacored query upgrade applied
 
-block header for height at which a completed upgrade was applied
+Query the block header for height at which a completed upgrade was applied
 
 ### Synopsis
 
-If upgrade-name was previously executed on the chain, this returns the header for the block at which it was applied.
-This helps a client determine which binary was valid over a given range of blocks, as well as more context to understand past migrations.
+If upgrade-name was previously executed on the chain, this returns the header for the block at which it was applied. This helps a client determine which binary was valid over a given range of blocks, as well as more context to understand past migrations.
 
 ```
 zetacored query upgrade applied [upgrade-name] [flags]
@@ -7292,12 +8512,15 @@ zetacored query upgrade applied [upgrade-name] [flags]
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for applied
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for applied
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -7306,7 +8529,7 @@ zetacored query upgrade applied [upgrade-name] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7315,29 +8538,26 @@ zetacored query upgrade applied [upgrade-name] [flags]
 
 * [zetacored query upgrade](#zetacored-query-upgrade)	 - Querying commands for the upgrade module
 
-## zetacored query upgrade module_versions
+## zetacored query upgrade authority
 
-get the list of module versions
-
-### Synopsis
-
-Gets a list of module names and their respective consensus versions.
-Following the command with a specific module name will return only
-that module's information.
+Get the upgrade authority address
 
 ```
-zetacored query upgrade module_versions [optional module_name] [flags]
+zetacored query upgrade authority [flags]
 ```
 
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for module_versions
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for authority
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -7346,7 +8566,48 @@ zetacored query upgrade module_versions [optional module_name] [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query upgrade](#zetacored-query-upgrade)	 - Querying commands for the upgrade module
+
+## zetacored query upgrade module-versions
+
+Query the list of module versions
+
+### Synopsis
+
+Gets a list of module names and their respective consensus versions. Following the command with a specific module name will return only that module's information.
+
+```
+zetacored query upgrade module-versions [optional module_name] [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for module-versions
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7357,7 +8618,7 @@ zetacored query upgrade module_versions [optional module_name] [flags]
 
 ## zetacored query upgrade plan
 
-get upgrade plan (if one exists)
+Query the upgrade plan (if one exists)
 
 ### Synopsis
 
@@ -7370,12 +8631,15 @@ zetacored query upgrade plan [flags]
 ### Options
 
 ```
-      --grpc-addr string   the gRPC endpoint to use for this chain
-      --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
-      --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for plan
-      --node string        [host]:[port] to Tendermint RPC interface for this chain 
-  -o, --output string      Output format (text|json) 
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for plan
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
 ```
 
 ### Options inherited from parent commands
@@ -7384,7 +8648,7 @@ zetacored query upgrade plan [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7395,16 +8659,16 @@ zetacored query upgrade plan [flags]
 
 ## zetacored rollback
 
-rollback cosmos-sdk and tendermint state by one height
+rollback Cosmos SDK and CometBFT state by one height
 
 ### Synopsis
 
 
 A state rollback is performed to recover from an incorrect application state transition,
-when Tendermint has persisted an incorrect app hash and is thus unable to make
+when CometBFT has persisted an incorrect app hash and is thus unable to make
 progress. Rollback overwrites a state at height n with the state at height n - 1.
 The application also rolls back to height n - 1. No blocks are removed, so upon
-restarting Tendermint the transactions in block n will be re-executed against the
+restarting CometBFT the transactions in block n will be re-executed against the
 application.
 
 
@@ -7424,7 +8688,7 @@ zetacored rollback [flags]
 
 ```
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7448,7 +8712,7 @@ Manage local snapshots
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7482,7 +8746,7 @@ zetacored snapshots delete [height] [format] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7511,7 +8775,7 @@ zetacored snapshots dump [height] [format] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7540,7 +8804,7 @@ zetacored snapshots export [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7568,7 +8832,7 @@ zetacored snapshots list [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7596,7 +8860,7 @@ zetacored snapshots load [archive-file] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7628,7 +8892,7 @@ zetacored snapshots restore [height] [format] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7678,7 +8942,6 @@ zetacored start [flags]
       --api.enable                                      Defines if Cosmos-sdk REST server should be enabled
       --api.enabled-unsafe-cors                         Defines if CORS should be enabled (unsafe - use it at your own risk)
       --app-db-backend string                           The type of database for application and snapshots databases
-      --block_sync                                      sync the block chain using the blocksync algorithm (default true)
       --consensus.create_empty_blocks                   set this to false to only produce blocks when there are txs or when the AppHash changes (default true)
       --consensus.create_empty_blocks_interval string   the possible interval between empty blocks 
       --consensus.double_sign_check_height int          how many blocks to look back to check existence of the node's consensus votes before joining consensus
@@ -7689,7 +8952,6 @@ zetacored start [flags]
       --evm.tracer string                               the EVM tracer type to collect execution traces from the EVM transaction execution (json|struct|access_list|markdown)
       --genesis_hash bytesHex                           optional SHA-256 hash of the genesis file
       --grpc-only                                       Start the node in gRPC query only mode without Tendermint process
-      --grpc-web.address string                         The gRPC-Web server address to listen on 
       --grpc-web.enable                                 Define if the gRPC-Web server should be enabled. (Note: gRPC must also be enabled.) (default true)
       --grpc.address string                             the gRPC server address to listen on 
       --grpc.enable                                     Define if the gRPC server should be enabled (default true)
@@ -7751,37 +9013,8 @@ zetacored start [flags]
 
 ```
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
-```
-
-### SEE ALSO
-
-* [zetacored](#zetacored)	 - Zetacore Daemon (server)
-
-## zetacored status
-
-Query remote node for status
-
-```
-zetacored status [flags]
-```
-
-### Options
-
-```
-  -h, --help          help for status
-  -n, --node string   Node to connect to 
-```
-
-### Options inherited from parent commands
-
-```
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
 ```
 
 ### SEE ALSO
@@ -7803,7 +9036,7 @@ Tendermint subcommands
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7812,11 +9045,11 @@ Tendermint subcommands
 
 * [zetacored](#zetacored)	 - Zetacore Daemon (server)
 * [zetacored tendermint reset-state](#zetacored-tendermint-reset-state)	 - Remove all the data and WAL
-* [zetacored tendermint show-address](#zetacored-tendermint-show-address)	 - Shows this node's tendermint validator consensus address
+* [zetacored tendermint show-address](#zetacored-tendermint-show-address)	 - Shows this node's CometBFT validator consensus address
 * [zetacored tendermint show-node-id](#zetacored-tendermint-show-node-id)	 - Show this node's ID
-* [zetacored tendermint show-validator](#zetacored-tendermint-show-validator)	 - Show this node's tendermint validator info
+* [zetacored tendermint show-validator](#zetacored-tendermint-show-validator)	 - Show this node's CometBFT validator info
 * [zetacored tendermint unsafe-reset-all](#zetacored-tendermint-unsafe-reset-all)	 - (unsafe) Remove all the data and WAL, reset this node's validator to genesis state
-* [zetacored tendermint version](#zetacored-tendermint-version)	 - Print tendermint libraries' version
+* [zetacored tendermint version](#zetacored-tendermint-version)	 - Print CometBFT libraries' version
 
 ## zetacored tendermint reset-state
 
@@ -7837,7 +9070,7 @@ zetacored tendermint reset-state [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7848,7 +9081,7 @@ zetacored tendermint reset-state [flags]
 
 ## zetacored tendermint show-address
 
-Shows this node's tendermint validator consensus address
+Shows this node's CometBFT validator consensus address
 
 ```
 zetacored tendermint show-address [flags]
@@ -7865,7 +9098,7 @@ zetacored tendermint show-address [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7893,7 +9126,7 @@ zetacored tendermint show-node-id [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7904,7 +9137,7 @@ zetacored tendermint show-node-id [flags]
 
 ## zetacored tendermint show-validator
 
-Show this node's tendermint validator info
+Show this node's CometBFT validator info
 
 ```
 zetacored tendermint show-validator [flags]
@@ -7921,7 +9154,7 @@ zetacored tendermint show-validator [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7950,7 +9183,7 @@ zetacored tendermint unsafe-reset-all [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -7961,7 +9194,7 @@ zetacored tendermint unsafe-reset-all [flags]
 
 ## zetacored tendermint version
 
-Print tendermint libraries' version
+Print CometBFT libraries' version
 
 ### Synopsis
 
@@ -7982,7 +9215,7 @@ zetacored tendermint version [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8010,7 +9243,7 @@ zetacored testnet [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8063,7 +9296,7 @@ zetacored testnet init-files [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8112,7 +9345,7 @@ zetacored testnet start [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8141,7 +9374,7 @@ zetacored tx [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8149,11 +9382,13 @@ zetacored tx [flags]
 ### SEE ALSO
 
 * [zetacored](#zetacored)	 - Zetacore Daemon (server)
+* [zetacored tx auth](#zetacored-tx-auth)	 - Transactions commands for the auth module
 * [zetacored tx authority](#zetacored-tx-authority)	 - authority transactions subcommands
 * [zetacored tx authz](#zetacored-tx-authz)	 - Authorization transactions subcommands
 * [zetacored tx bank](#zetacored-tx-bank)	 - Bank transaction subcommands
 * [zetacored tx broadcast](#zetacored-tx-broadcast)	 - Broadcast transactions generated offline
-* [zetacored tx crisis](#zetacored-tx-crisis)	 - Crisis transactions subcommands
+* [zetacored tx consensus](#zetacored-tx-consensus)	 - Transactions commands for the consensus module
+* [zetacored tx crisis](#zetacored-tx-crisis)	 - Transactions commands for the crisis module
 * [zetacored tx crosschain](#zetacored-tx-crosschain)	 - crosschain transactions subcommands
 * [zetacored tx decode](#zetacored-tx-decode)	 - Decode a binary encoded transaction string
 * [zetacored tx distribution](#zetacored-tx-distribution)	 - Distribution transactions subcommands
@@ -8161,6 +9396,7 @@ zetacored tx [flags]
 * [zetacored tx encode](#zetacored-tx-encode)	 - Encode transactions generated offline
 * [zetacored tx evidence](#zetacored-tx-evidence)	 - Evidence transaction subcommands
 * [zetacored tx evm](#zetacored-tx-evm)	 - evm transactions subcommands
+* [zetacored tx feemarket](#zetacored-tx-feemarket)	 - Transactions commands for the feemarket module
 * [zetacored tx fungible](#zetacored-tx-fungible)	 - fungible transactions subcommands
 * [zetacored tx gov](#zetacored-tx-gov)	 - Governance transactions subcommands
 * [zetacored tx group](#zetacored-tx-group)	 - Group transaction subcommands
@@ -8170,10 +9406,40 @@ zetacored tx [flags]
 * [zetacored tx observer](#zetacored-tx-observer)	 - observer transactions subcommands
 * [zetacored tx sign](#zetacored-tx-sign)	 - Sign a transaction generated offline
 * [zetacored tx sign-batch](#zetacored-tx-sign-batch)	 - Sign transaction batch files
-* [zetacored tx slashing](#zetacored-tx-slashing)	 - Slashing transaction subcommands
+* [zetacored tx slashing](#zetacored-tx-slashing)	 - Transactions commands for the slashing module
 * [zetacored tx staking](#zetacored-tx-staking)	 - Staking transaction subcommands
+* [zetacored tx upgrade](#zetacored-tx-upgrade)	 - Upgrade transaction subcommands
 * [zetacored tx validate-signatures](#zetacored-tx-validate-signatures)	 - validate transactions signatures
 * [zetacored tx vesting](#zetacored-tx-vesting)	 - Vesting transaction subcommands
+
+## zetacored tx auth
+
+Transactions commands for the auth module
+
+```
+zetacored tx auth [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for auth
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx](#zetacored-tx)	 - Transactions subcommands
 
 ## zetacored tx authority
 
@@ -8195,7 +9461,7 @@ zetacored tx authority [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8237,12 +9503,12 @@ zetacored tx authority add-authorization [msg-url] [authorized-policy] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -8253,7 +9519,7 @@ zetacored tx authority add-authorization [msg-url] [authorized-policy] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8290,12 +9556,12 @@ zetacored tx authority remove-authorization [msg-url] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -8306,7 +9572,7 @@ zetacored tx authority remove-authorization [msg-url] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8343,12 +9609,12 @@ zetacored tx authority remove-chain-info [chain-id] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -8359,7 +9625,7 @@ zetacored tx authority remove-chain-info [chain-id] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8396,12 +9662,12 @@ zetacored tx authority update-chain-info [chain-info-json-file] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -8412,7 +9678,7 @@ zetacored tx authority update-chain-info [chain-info-json-file] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8449,12 +9715,12 @@ zetacored tx authority update-policies [policies-json-file] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -8465,7 +9731,7 @@ zetacored tx authority update-policies [policies-json-file] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8498,7 +9764,7 @@ zetacored tx authz [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8545,12 +9811,12 @@ zetacored tx authz exec [tx-json-file] --from [grantee] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -8561,7 +9827,7 @@ zetacored tx authz exec [tx-json-file] --from [grantee] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8611,12 +9877,12 @@ zetacored tx authz grant [grantee] [authorization_type="send"|"generic"|"delegat
       --keyring-dir string           The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                       Use a connected Ledger device
       --msg-type string              The Msg method name for which we are creating a GenericAuthorization
-      --node string                  [host]:[port] to tendermint rpc interface for this chain 
+      --node string                  [host]:[port] to CometBFT rpc interface for this chain 
       --note string                  Note to add a description to the transaction (previously --memo)
       --offline                      Offline mode (does not allow any online functionality)
   -o, --output string                Output format (text|json) 
   -s, --sequence uint                The sequence number of the signing account (offline mode only)
-      --sign-mode string             Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string             Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --spend-limit string           SpendLimit for Send Authorization, an array of Coins allowed spend
       --timeout-height uint          Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string                   Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
@@ -8628,7 +9894,7 @@ zetacored tx authz grant [grantee] [authorization_type="send"|"generic"|"delegat
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8671,12 +9937,12 @@ zetacored tx authz revoke [grantee] [msg-type-url] --from=[granter] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -8687,7 +9953,7 @@ zetacored tx authz revoke [grantee] [msg-type-url] --from=[granter] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8716,7 +9982,7 @@ zetacored tx bank [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8770,12 +10036,12 @@ zetacored tx bank multi-send cosmos1... cosmos1... cosmos1... cosmos1... 10stake
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --split                    Send the equally split token amount to each address
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
@@ -8787,7 +10053,7 @@ zetacored tx bank multi-send cosmos1... cosmos1... cosmos1... cosmos1... 10stake
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8831,12 +10097,12 @@ zetacored tx bank send [from_key_or_address] [to_address] [amount] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -8847,7 +10113,7 @@ zetacored tx bank send [from_key_or_address] [to_address] [amount] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8893,12 +10159,12 @@ zetacored tx broadcast [file_path] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -8909,7 +10175,36 @@ zetacored tx broadcast [file_path] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx](#zetacored-tx)	 - Transactions subcommands
+
+## zetacored tx consensus
+
+Transactions commands for the consensus module
+
+```
+zetacored tx consensus [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for consensus
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8920,7 +10215,7 @@ zetacored tx broadcast [file_path] [flags]
 
 ## zetacored tx crisis
 
-Crisis transactions subcommands
+Transactions commands for the crisis module
 
 ```
 zetacored tx crisis [flags]
@@ -8938,7 +10233,7 @@ zetacored tx crisis [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -8946,14 +10241,14 @@ zetacored tx crisis [flags]
 ### SEE ALSO
 
 * [zetacored tx](#zetacored-tx)	 - Transactions subcommands
-* [zetacored tx crisis invariant-broken](#zetacored-tx-crisis-invariant-broken)	 - Submit proof that an invariant broken to halt the chain
+* [zetacored tx crisis invariant-broken](#zetacored-tx-crisis-invariant-broken)	 - Submit proof that an invariant broken
 
 ## zetacored tx crisis invariant-broken
 
-Submit proof that an invariant broken to halt the chain
+Submit proof that an invariant broken
 
 ```
-zetacored tx crisis invariant-broken [module-name] [invariant-route] [flags]
+zetacored tx crisis invariant-broken [module-name] [invariant-route] --from mykey [flags]
 ```
 
 ### Options
@@ -8976,12 +10271,12 @@ zetacored tx crisis invariant-broken [module-name] [invariant-route] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -8992,14 +10287,14 @@ zetacored tx crisis invariant-broken [module-name] [invariant-route] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 
 ### SEE ALSO
 
-* [zetacored tx crisis](#zetacored-tx-crisis)	 - Crisis transactions subcommands
+* [zetacored tx crisis](#zetacored-tx-crisis)	 - Transactions commands for the crisis module
 
 ## zetacored tx crosschain
 
@@ -9021,7 +10316,7 @@ zetacored tx crosschain [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -9070,12 +10365,12 @@ zetacored tx crosschain abort-stuck-cctx [index] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -9086,7 +10381,7 @@ zetacored tx crosschain abort-stuck-cctx [index] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -9124,12 +10419,12 @@ zetacored tx crosschain add-inbound-tracker [chain-id] [tx-hash] [coin-type] [fl
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -9140,7 +10435,7 @@ zetacored tx crosschain add-inbound-tracker [chain-id] [tx-hash] [coin-type] [fl
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -9177,12 +10472,12 @@ zetacored tx crosschain add-outbound-tracker [chain] [nonce] [tx-hash] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -9193,7 +10488,7 @@ zetacored tx crosschain add-outbound-tracker [chain] [nonce] [tx-hash] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -9230,12 +10525,12 @@ zetacored tx crosschain migrate-tss-funds [chainID] [amount] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -9246,7 +10541,7 @@ zetacored tx crosschain migrate-tss-funds [chainID] [amount] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -9283,12 +10578,12 @@ zetacored tx crosschain refund-aborted [cctx-index] [refund-address] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -9299,7 +10594,7 @@ zetacored tx crosschain refund-aborted [cctx-index] [refund-address] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -9336,12 +10631,12 @@ zetacored tx crosschain remove-outbound-tracker [chain] [nonce] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -9352,7 +10647,7 @@ zetacored tx crosschain remove-outbound-tracker [chain] [nonce] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -9389,12 +10684,12 @@ zetacored tx crosschain update-tss-address [pubkey] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -9405,7 +10700,7 @@ zetacored tx crosschain update-tss-address [pubkey] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -9442,12 +10737,12 @@ zetacored tx crosschain vote-gas-price [chain] [price] [priorityFee] [blockNumbe
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -9458,7 +10753,7 @@ zetacored tx crosschain vote-gas-price [chain] [price] [priorityFee] [blockNumbe
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -9495,12 +10790,12 @@ zetacored tx crosschain vote-inbound [sender] [senderChainID] [txOrigin] [receiv
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -9511,7 +10806,7 @@ zetacored tx crosschain vote-inbound [sender] [senderChainID] [txOrigin] [receiv
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -9548,12 +10843,12 @@ zetacored tx crosschain vote-outbound [sendHash] [outboundHash] [outBlockHeight]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -9564,7 +10859,7 @@ zetacored tx crosschain vote-outbound [sendHash] [outboundHash] [outBlockHeight]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -9601,12 +10896,12 @@ zetacored tx crosschain whitelist-erc20 [erc20Address] [chainID] [name] [symbol]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -9617,7 +10912,7 @@ zetacored tx crosschain whitelist-erc20 [erc20Address] [chainID] [name] [symbol]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -9655,11 +10950,11 @@ zetacored tx decode [protobuf-byte-string] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -9670,7 +10965,7 @@ zetacored tx decode [protobuf-byte-string] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -9699,7 +10994,7 @@ zetacored tx distribution [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -9708,6 +11003,7 @@ zetacored tx distribution [flags]
 
 * [zetacored tx](#zetacored-tx)	 - Transactions subcommands
 * [zetacored tx distribution fund-community-pool](#zetacored-tx-distribution-fund-community-pool)	 - Funds the community pool with the specified amount
+* [zetacored tx distribution fund-validator-rewards-pool](#zetacored-tx-distribution-fund-validator-rewards-pool)	 - Fund the validator rewards pool with the specified amount
 * [zetacored tx distribution set-withdraw-addr](#zetacored-tx-distribution-set-withdraw-addr)	 - change the default withdraw address for rewards associated with an address
 * [zetacored tx distribution withdraw-all-rewards](#zetacored-tx-distribution-withdraw-all-rewards)	 - withdraw all delegations rewards for a delegator
 * [zetacored tx distribution withdraw-rewards](#zetacored-tx-distribution-withdraw-rewards)	 - Withdraw rewards from a given delegation address, and optionally withdraw validator commission if the delegation address given is a validator operator
@@ -9747,12 +11043,12 @@ zetacored tx distribution fund-community-pool [amount] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -9763,7 +11059,66 @@ zetacored tx distribution fund-community-pool [amount] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx distribution](#zetacored-tx-distribution)	 - Distribution transactions subcommands
+
+## zetacored tx distribution fund-validator-rewards-pool
+
+Fund the validator rewards pool with the specified amount
+
+```
+zetacored tx distribution fund-validator-rewards-pool [val_addr] [amount] [flags]
+```
+
+### Examples
+
+```
+zetacored tx distribution fund-validator-rewards-pool cosmosvaloper1x20lytyf6zkcrv5edpkfkn8sz578qg5sqfyqnp 100uatom --from mykey
+```
+
+### Options
+
+```
+  -a, --account-number uint      The account number of the signing account (offline mode only)
+      --aux                      Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
+      --chain-id string          The network chain ID
+      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string       Fee granter grants fees for the transaction
+      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string              Fees to pay along with transaction; eg: 10uatom
+      --from string              Name or address of private key with which to sign
+      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                     help for fund-validator-rewards-pool
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                   Use a connected Ledger device
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
+      --note string              Note to add a description to the transaction (previously --memo)
+      --offline                  Offline mode (does not allow any online functionality)
+  -o, --output string            Output format (text|json) 
+  -s, --sequence uint            The sequence number of the signing account (offline mode only)
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+  -y, --yes                      Skip tx broadcasting prompt confirmation
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -9807,12 +11162,12 @@ zetacored tx distribution set-withdraw-addr [withdraw-addr] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -9823,7 +11178,7 @@ zetacored tx distribution set-withdraw-addr [withdraw-addr] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -9869,12 +11224,12 @@ zetacored tx distribution withdraw-all-rewards [flags]
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
       --max-msgs int             Limit the number of messages per tx (0 for unlimited)
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -9885,7 +11240,7 @@ zetacored tx distribution withdraw-all-rewards [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -9932,12 +11287,12 @@ zetacored tx distribution withdraw-rewards [validator-addr] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -9948,7 +11303,7 @@ zetacored tx distribution withdraw-rewards [validator-addr] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -9977,7 +11332,7 @@ zetacored tx emissions [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10015,12 +11370,12 @@ zetacored tx emissions withdraw-emission [amount] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -10031,7 +11386,7 @@ zetacored tx emissions withdraw-emission [amount] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10074,11 +11429,11 @@ zetacored tx encode [file] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -10089,7 +11444,7 @@ zetacored tx encode [file] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10118,7 +11473,7 @@ zetacored tx evidence [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10147,7 +11502,7 @@ zetacored tx evm [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10185,12 +11540,12 @@ zetacored tx evm raw TX_HEX [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -10201,7 +11556,7 @@ zetacored tx evm raw TX_HEX [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10209,6 +11564,90 @@ zetacored tx evm raw TX_HEX [flags]
 ### SEE ALSO
 
 * [zetacored tx evm](#zetacored-tx-evm)	 - evm transactions subcommands
+
+## zetacored tx feemarket
+
+Transactions commands for the feemarket module
+
+```
+zetacored tx feemarket [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for feemarket
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx](#zetacored-tx)	 - Transactions subcommands
+* [zetacored tx feemarket update-params](#zetacored-tx-feemarket-update-params)	 - Execute the UpdateParams RPC method
+
+## zetacored tx feemarket update-params
+
+Execute the UpdateParams RPC method
+
+```
+zetacored tx feemarket update-params [flags]
+```
+
+### Options
+
+```
+  -a, --account-number uint                           The account number of the signing account (offline mode only)
+      --aux                                           Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string                         Transaction broadcasting mode (sync|async) 
+      --chain-id string                               The network chain ID
+      --dry-run                                       ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string                            Fee granter grants fees for the transaction
+      --fee-payer string                              Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                                   Fees to pay along with transaction; eg: 10uatom
+      --from string                                   Name or address of private key with which to sign
+      --gas string                                    gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float                          adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string                             Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only                                 Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                                          help for update-params
+      --keyring-backend string                        Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string                            The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                                        Use a connected Ledger device
+      --node string                                   [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                                   Note to add a description to the transaction (previously --memo)
+      --offline                                       Offline mode (does not allow any online functionality)
+  -o, --output string                                 Output format (text|json) 
+      --params ethermint.feemarket.v1.Params (json)   
+  -s, --sequence uint                                 The sequence number of the signing account (offline mode only)
+      --sign-mode string                              Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-height uint                           Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                                    Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+  -y, --yes                                           Skip tx broadcasting prompt confirmation
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx feemarket](#zetacored-tx-feemarket)	 - Transactions commands for the feemarket module
 
 ## zetacored tx fungible
 
@@ -10230,7 +11669,7 @@ zetacored tx fungible [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10277,12 +11716,12 @@ zetacored tx fungible deploy-fungible-coin-zrc-4 [erc-20] [foreign-chain] [decim
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -10293,7 +11732,7 @@ zetacored tx fungible deploy-fungible-coin-zrc-4 [erc-20] [foreign-chain] [decim
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10330,12 +11769,12 @@ zetacored tx fungible deploy-system-contracts [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -10346,7 +11785,7 @@ zetacored tx fungible deploy-system-contracts [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10389,12 +11828,12 @@ zetacored tx fungible pause-zrc20 "0xece40cbB54d65282c4623f141c4a8a0bE7D6AdEc, 0
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -10405,7 +11844,7 @@ zetacored tx fungible pause-zrc20 "0xece40cbB54d65282c4623f141c4a8a0bE7D6AdEc, 0
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10442,12 +11881,12 @@ zetacored tx fungible remove-foreign-coin [name] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -10458,7 +11897,7 @@ zetacored tx fungible remove-foreign-coin [name] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10501,12 +11940,12 @@ zetacored tx fungible unpause-zrc20 "0xece40cbB54d65282c4623f141c4a8a0bE7D6AdEc,
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -10517,7 +11956,7 @@ zetacored tx fungible unpause-zrc20 "0xece40cbB54d65282c4623f141c4a8a0bE7D6AdEc,
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10554,12 +11993,12 @@ zetacored tx fungible update-contract-bytecode [contract-address] [new-code-hash
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -10570,7 +12009,7 @@ zetacored tx fungible update-contract-bytecode [contract-address] [new-code-hash
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10607,12 +12046,12 @@ zetacored tx fungible update-gateway-contract [contract-address] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -10623,7 +12062,7 @@ zetacored tx fungible update-gateway-contract [contract-address] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10660,12 +12099,12 @@ zetacored tx fungible update-system-contract [contract-address]  [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -10676,7 +12115,7 @@ zetacored tx fungible update-system-contract [contract-address]  [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10713,12 +12152,12 @@ zetacored tx fungible update-zrc20-liquidity-cap [zrc20] [liquidity-cap] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -10729,7 +12168,7 @@ zetacored tx fungible update-zrc20-liquidity-cap [zrc20] [liquidity-cap] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10766,12 +12205,12 @@ zetacored tx fungible update-zrc20-withdraw-fee [contractAddress] [newWithdrawFe
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -10782,7 +12221,7 @@ zetacored tx fungible update-zrc20-withdraw-fee [contractAddress] [newWithdrawFe
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10811,7 +12250,7 @@ zetacored tx gov [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10819,12 +12258,72 @@ zetacored tx gov [flags]
 ### SEE ALSO
 
 * [zetacored tx](#zetacored-tx)	 - Transactions subcommands
+* [zetacored tx gov cancel-proposal](#zetacored-tx-gov-cancel-proposal)	 - Cancel governance proposal before the voting period ends. Must be signed by the proposal creator.
 * [zetacored tx gov deposit](#zetacored-tx-gov-deposit)	 - Deposit tokens for an active proposal
 * [zetacored tx gov draft-proposal](#zetacored-tx-gov-draft-proposal)	 - Generate a draft proposal json file. The generated proposal json contains only one message (skeleton).
 * [zetacored tx gov submit-legacy-proposal](#zetacored-tx-gov-submit-legacy-proposal)	 - Submit a legacy proposal along with an initial deposit
 * [zetacored tx gov submit-proposal](#zetacored-tx-gov-submit-proposal)	 - Submit a proposal along with some messages, metadata and deposit
 * [zetacored tx gov vote](#zetacored-tx-gov-vote)	 - Vote for an active proposal, options: yes/no/no_with_veto/abstain
 * [zetacored tx gov weighted-vote](#zetacored-tx-gov-weighted-vote)	 - Vote for an active proposal, options: yes/no/no_with_veto/abstain
+
+## zetacored tx gov cancel-proposal
+
+Cancel governance proposal before the voting period ends. Must be signed by the proposal creator.
+
+```
+zetacored tx gov cancel-proposal [proposal-id] [flags]
+```
+
+### Examples
+
+```
+$ zetacored tx gov cancel-proposal 1 --from mykey
+```
+
+### Options
+
+```
+  -a, --account-number uint      The account number of the signing account (offline mode only)
+      --aux                      Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
+      --chain-id string          The network chain ID
+      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string       Fee granter grants fees for the transaction
+      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string              Fees to pay along with transaction; eg: 10uatom
+      --from string              Name or address of private key with which to sign
+      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                     help for cancel-proposal
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                   Use a connected Ledger device
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
+      --note string              Note to add a description to the transaction (previously --memo)
+      --offline                  Offline mode (does not allow any online functionality)
+  -o, --output string            Output format (text|json) 
+  -s, --sequence uint            The sequence number of the signing account (offline mode only)
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+  -y, --yes                      Skip tx broadcasting prompt confirmation
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx gov](#zetacored-tx-gov)	 - Governance transactions subcommands
 
 ## zetacored tx gov deposit
 
@@ -10862,12 +12361,12 @@ zetacored tx gov deposit [proposal-id] [deposit] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -10878,7 +12377,7 @@ zetacored tx gov deposit [proposal-id] [deposit] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10915,12 +12414,12 @@ zetacored tx gov draft-proposal [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --skip-metadata            skip metadata prompt
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
@@ -10932,7 +12431,7 @@ zetacored tx gov draft-proposal [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -10992,13 +12491,13 @@ zetacored tx gov submit-legacy-proposal [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
       --proposal string          Proposal file path (if this path is given, other proposal flags are ignored)
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
       --title string             The proposal title
@@ -11011,7 +12510,7 @@ zetacored tx gov submit-legacy-proposal [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -11019,220 +12518,6 @@ zetacored tx gov submit-legacy-proposal [flags]
 ### SEE ALSO
 
 * [zetacored tx gov](#zetacored-tx-gov)	 - Governance transactions subcommands
-* [zetacored tx gov submit-legacy-proposal cancel-software-upgrade](#zetacored-tx-gov-submit-legacy-proposal-cancel-software-upgrade)	 - Cancel the current software upgrade proposal
-* [zetacored tx gov submit-legacy-proposal param-change](#zetacored-tx-gov-submit-legacy-proposal-param-change)	 - Submit a parameter change proposal
-* [zetacored tx gov submit-legacy-proposal software-upgrade](#zetacored-tx-gov-submit-legacy-proposal-software-upgrade)	 - Submit a software upgrade proposal
-
-## zetacored tx gov submit-legacy-proposal cancel-software-upgrade
-
-Cancel the current software upgrade proposal
-
-### Synopsis
-
-Cancel a software upgrade along with an initial deposit.
-
-```
-zetacored tx gov submit-legacy-proposal cancel-software-upgrade [flags]
-```
-
-### Options
-
-```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --deposit string           deposit of proposal
-      --description string       description of proposal
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for cancel-software-upgrade
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-      --title string             title of proposal
-  -y, --yes                      Skip tx broadcasting prompt confirmation
-```
-
-### Options inherited from parent commands
-
-```
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
-```
-
-### SEE ALSO
-
-* [zetacored tx gov submit-legacy-proposal](#zetacored-tx-gov-submit-legacy-proposal)	 - Submit a legacy proposal along with an initial deposit
-
-## zetacored tx gov submit-legacy-proposal param-change
-
-Submit a parameter change proposal
-
-### Synopsis
-
-Submit a parameter proposal along with an initial deposit.
-The proposal details must be supplied via a JSON file. For values that contains
-objects, only non-empty fields will be updated.
-
-IMPORTANT: Currently parameter changes are evaluated but not validated, so it is
-very important that any "value" change is valid (ie. correct type and within bounds)
-for its respective parameter, eg. "MaxValidators" should be an integer and not a decimal.
-
-Proper vetting of a parameter change proposal should prevent this from happening
-(no deposits should occur during the governance process), but it should be noted
-regardless.
-
-Example:
-$ zetacored tx gov submit-proposal param-change [path/to/proposal.json] --from=[key_or_address]
-
-Where proposal.json contains:
-
-{
-  "title": "Staking Param Change",
-  "description": "Update max validators",
-  "changes": [
-    {
-      "subspace": "staking",
-      "key": "MaxValidators",
-      "value": 105
-    }
-  ],
-  "deposit": "1000stake"
-}
-
-```
-zetacored tx gov submit-legacy-proposal param-change [proposal-file] [flags]
-```
-
-### Options
-
-```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for param-change
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
-```
-
-### Options inherited from parent commands
-
-```
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
-```
-
-### SEE ALSO
-
-* [zetacored tx gov submit-legacy-proposal](#zetacored-tx-gov-submit-legacy-proposal)	 - Submit a legacy proposal along with an initial deposit
-
-## zetacored tx gov submit-legacy-proposal software-upgrade
-
-Submit a software upgrade proposal
-
-### Synopsis
-
-Submit a software upgrade along with an initial deposit.
-Please specify a unique name and height for the upgrade to take effect.
-You may include info to reference a binary download link, in a format compatible with: https://github.com/cosmos/cosmos-sdk/tree/main/cosmovisor
-
-```
-zetacored tx gov submit-legacy-proposal software-upgrade [name] (--upgrade-height [height]) (--upgrade-info [info]) [flags]
-```
-
-### Options
-
-```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --daemon-name string       The name of the executable being upgraded (for upgrade-info validation). Default is the DAEMON_NAME env var if set, or else this executable 
-      --deposit string           deposit of proposal
-      --description string       description of proposal
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for software-upgrade
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --no-validate              Skip validation of the upgrade info
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-      --title string             title of proposal
-      --upgrade-height int       The height at which the upgrade must happen
-      --upgrade-info string      Info for the upgrade plan such as new version download urls, etc.
-  -y, --yes                      Skip tx broadcasting prompt confirmation
-```
-
-### Options inherited from parent commands
-
-```
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
-```
-
-### SEE ALSO
-
-* [zetacored tx gov submit-legacy-proposal](#zetacored-tx-gov-submit-legacy-proposal)	 - Submit a legacy proposal along with an initial deposit
 
 ## zetacored tx gov submit-proposal
 
@@ -11263,7 +12548,8 @@ Where proposal.json contains:
   "metadata": "4pIMOgIGx1vZGU=",
   "deposit": "10stake",
   "title": "My proposal",
-  "summary": "A short summary of my proposal"
+  "summary": "A short summary of my proposal",
+  "expedited": false
 }
 
 metadata example: 
@@ -11300,12 +12586,12 @@ zetacored tx gov submit-proposal [path/to/proposal.json] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -11316,7 +12602,7 @@ zetacored tx gov submit-proposal [path/to/proposal.json] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -11362,12 +12648,12 @@ zetacored tx gov vote [proposal-id] [option] [flags]
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
       --metadata string          Specify metadata of the vote
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -11378,7 +12664,7 @@ zetacored tx gov vote [proposal-id] [option] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -11424,12 +12710,12 @@ zetacored tx gov weighted-vote [proposal-id] [weighted-options] [flags]
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
       --metadata string          Specify metadata of the weighted vote
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -11440,7 +12726,7 @@ zetacored tx gov weighted-vote [proposal-id] [weighted-options] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -11469,7 +12755,7 @@ zetacored tx group [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -11550,12 +12836,12 @@ Where members.json contains:
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -11566,7 +12852,7 @@ Where members.json contains:
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -11632,12 +12918,12 @@ Here, we can use percentage decision policy when needed, where 0 < percentage <=
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -11648,7 +12934,7 @@ Here, we can use percentage decision policy when needed, where 0 < percentage <=
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -11729,12 +13015,12 @@ and policy.json contains:
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -11745,7 +13031,7 @@ and policy.json contains:
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -11782,12 +13068,12 @@ zetacored tx group draft-proposal [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --skip-metadata            skip metadata prompt
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
@@ -11799,7 +13085,7 @@ zetacored tx group draft-proposal [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -11836,12 +13122,12 @@ zetacored tx group exec [proposal-id] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -11852,7 +13138,7 @@ zetacored tx group exec [proposal-id] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -11899,12 +13185,12 @@ zetacored tx group leave-group [member-address] [group-id] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -11915,7 +13201,7 @@ zetacored tx group leave-group [member-address] [group-id] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -11985,7 +13271,7 @@ metadata example:
   -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
       --chain-id string          The network chain ID
       --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --exec string              Set to 1 to try to execute proposal immediately after creation (proposers signatures are considered as Yes votes)
+      --exec string              Set to 1 or 'try' to try to execute proposal immediately after creation (proposers signatures are considered as Yes votes)
       --fee-granter string       Fee granter grants fees for the transaction
       --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
       --fees string              Fees to pay along with transaction; eg: 10uatom
@@ -11998,12 +13284,12 @@ metadata example:
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -12014,7 +13300,7 @@ metadata example:
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -12051,12 +13337,12 @@ zetacored tx group update-group-admin [admin] [group-id] [new-admin] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -12067,7 +13353,7 @@ zetacored tx group update-group-admin [admin] [group-id] [new-admin] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -12131,12 +13417,12 @@ Set a member's weight to "0" to delete it.
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -12147,7 +13433,7 @@ Set a member's weight to "0" to delete it.
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -12184,12 +13470,12 @@ zetacored tx group update-group-metadata [admin] [group-id] [metadata] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -12200,7 +13486,7 @@ zetacored tx group update-group-metadata [admin] [group-id] [metadata] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -12237,12 +13523,12 @@ zetacored tx group update-group-policy-admin [admin] [group-policy-account] [new
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -12253,7 +13539,7 @@ zetacored tx group update-group-policy-admin [admin] [group-policy-account] [new
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -12290,12 +13576,12 @@ zetacored tx group update-group-policy-decision-policy [admin] [group-policy-acc
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -12306,7 +13592,7 @@ zetacored tx group update-group-policy-decision-policy [admin] [group-policy-acc
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -12343,12 +13629,12 @@ zetacored tx group update-group-policy-metadata [admin] [group-policy-account] [
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -12359,7 +13645,7 @@ zetacored tx group update-group-policy-metadata [admin] [group-policy-account] [
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -12413,12 +13699,12 @@ zetacored tx group vote [proposal-id] [voter] [vote-option] [metadata] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -12429,7 +13715,7 @@ zetacored tx group vote [proposal-id] [voter] [vote-option] [metadata] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -12476,12 +13762,12 @@ zetacored tx group withdraw-proposal [proposal-id] [group-policy-admin-or-propos
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -12492,7 +13778,7 @@ zetacored tx group withdraw-proposal [proposal-id] [group-policy-admin-or-propos
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -12521,7 +13807,7 @@ zetacored tx lightclient [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -12569,12 +13855,12 @@ zetacored tx lightclient disable-header-verification [list of chain-id] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -12585,7 +13871,7 @@ zetacored tx lightclient disable-header-verification [list of chain-id] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -12631,12 +13917,12 @@ zetacored tx lightclient enable-header-verification [list of chain-id] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -12647,7 +13933,7 @@ zetacored tx lightclient enable-header-verification [list of chain-id] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -12677,6 +13963,10 @@ If the --offline flag is on, the client will not reach out to an external node.
 Account number or sequence number lookups are not performed so you must
 set these parameters manually.
 
+If the --skip-signature-verification flag is on, the command will not verify the
+signatures in the provided signature files. This is useful when the multisig
+account is a signer in a nested multisig scenario.
+
 The current multisig implementation defaults to amino-json sign mode.
 The SIGN_MODE_DIRECT sign mode is not supported.'
 
@@ -12687,34 +13977,34 @@ zetacored tx multi-sign [file] [name] [[signature]...] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --amino                    Generate Amino-encoded JSON suitable for submitting to the txs REST endpoint
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for multi-sign
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-      --output-document string   The document is written to the given file instead of STDOUT
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
-      --signature-only           Print only the generated signature, then exit
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint           The account number of the signing account (offline mode only)
+      --aux                           Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string         Transaction broadcasting mode (sync|async) 
+      --chain-id string               The network chain ID
+      --dry-run                       ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string            Fee granter grants fees for the transaction
+      --fee-payer string              Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                   Fees to pay along with transaction; eg: 10uatom
+      --from string                   Name or address of private key with which to sign
+      --gas string                    gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float          adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string             Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only                 Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                          help for multi-sign
+      --keyring-backend string        Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string            The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                        Use a connected Ledger device
+      --node string                   [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                   Note to add a description to the transaction (previously --memo)
+      --offline                       Offline mode (does not allow any online functionality)
+      --output-document string        The document is written to the given file instead of STDOUT
+  -s, --sequence uint                 The sequence number of the signing account (offline mode only)
+      --sign-mode string              Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --signature-only                Print only the generated signature, then exit
+      --skip-signature-verification   Skip signature verification
+      --timeout-height uint           Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                    Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+  -y, --yes                           Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -12722,7 +14012,7 @@ zetacored tx multi-sign [file] [name] [[signature]...] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -12774,12 +14064,12 @@ zetacored tx multisign-batch [file] [name] [[signature-file]...] [flags]
       --ledger                   Use a connected Ledger device
       --multisig string          Address of the multisig account that the transaction signs on behalf of
       --no-auto-increment        disable sequence auto increment
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
       --output-document string   The document is written to the given file instead of STDOUT
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -12790,7 +14080,7 @@ zetacored tx multisign-batch [file] [name] [[signature-file]...] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -12819,7 +14109,7 @@ zetacored tx observer [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -12869,12 +14159,12 @@ zetacored tx observer add-observer [observer-address] [zetaclient-grantee-pubkey
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -12885,7 +14175,7 @@ zetacored tx observer add-observer [observer-address] [zetaclient-grantee-pubkey
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -12922,12 +14212,12 @@ zetacored tx observer disable-cctx [disable-inbound] [disable-outbound] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -12938,7 +14228,7 @@ zetacored tx observer disable-cctx [disable-inbound] [disable-outbound] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -12975,12 +14265,12 @@ zetacored tx observer enable-cctx [enable-inbound] [enable-outbound] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -12991,7 +14281,7 @@ zetacored tx observer enable-cctx [enable-inbound] [enable-outbound] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -13028,12 +14318,12 @@ zetacored tx observer encode [file.json] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -13044,7 +14334,7 @@ zetacored tx observer encode [file.json] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -13081,12 +14371,12 @@ zetacored tx observer remove-chain-params [chain-id] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -13097,7 +14387,7 @@ zetacored tx observer remove-chain-params [chain-id] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -13134,12 +14424,12 @@ zetacored tx observer reset-chain-nonces [chain-id] [chain-nonce-low] [chain-non
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -13150,7 +14440,7 @@ zetacored tx observer reset-chain-nonces [chain-id] [chain-nonce-low] [chain-non
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -13187,12 +14477,12 @@ zetacored tx observer update-chain-params [chain-id] [client-params.json] [flags
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -13203,7 +14493,7 @@ zetacored tx observer update-chain-params [chain-id] [client-params.json] [flags
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -13240,12 +14530,12 @@ zetacored tx observer update-gas-price-increase-flags [epochLength] [retryInterv
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -13256,7 +14546,7 @@ zetacored tx observer update-gas-price-increase-flags [epochLength] [retryInterv
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -13293,12 +14583,12 @@ zetacored tx observer update-keygen [block] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -13309,7 +14599,7 @@ zetacored tx observer update-keygen [block] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -13346,12 +14636,12 @@ zetacored tx observer update-observer [old-observer-address] [new-observer-addre
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -13362,7 +14652,7 @@ zetacored tx observer update-observer [old-observer-address] [new-observer-addre
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -13400,13 +14690,13 @@ zetacored tx observer update-operational-flags [flags]
       --keyring-backend string              Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string                  The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                              Use a connected Ledger device
-      --node string                         [host]:[port] to tendermint rpc interface for this chain 
+      --node string                         [host]:[port] to CometBFT rpc interface for this chain 
       --note string                         Note to add a description to the transaction (previously --memo)
       --offline                             Offline mode (does not allow any online functionality)
   -o, --output string                       Output format (text|json) 
       --restart-height int                  Height for a coordinated zetaclient restart
   -s, --sequence uint                       The sequence number of the signing account (offline mode only)
-      --sign-mode string                    Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string                    Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --signer-block-time-offset duration   Offset from the zetacore block time to initiate signing
       --timeout-height uint                 Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string                          Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
@@ -13418,7 +14708,7 @@ zetacored tx observer update-operational-flags [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -13455,12 +14745,12 @@ zetacored tx observer vote-blame [chain-id] [index] [failure-reason] [node-list]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -13471,7 +14761,7 @@ zetacored tx observer vote-blame [chain-id] [index] [failure-reason] [node-list]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -13508,12 +14798,12 @@ zetacored tx observer vote-tss [pubkey] [keygen-block] [status] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -13524,7 +14814,7 @@ zetacored tx observer vote-tss [pubkey] [keygen-block] [status] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -13562,7 +14852,6 @@ zetacored tx sign [file] [flags]
 
 ```
   -a, --account-number uint      The account number of the signing account (offline mode only)
-      --amino                    Generate Amino encoded JSON suitable for submiting to the txs REST endpoint
       --aux                      Generate aux signer data instead of sending a tx
   -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
       --chain-id string          The network chain ID
@@ -13580,14 +14869,14 @@ zetacored tx sign [file] [flags]
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
       --multisig string          Address or key name of the multisig account on behalf of which the transaction shall be signed
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
       --output-document string   The document will be written to the given file instead of STDOUT
       --overwrite                Overwrite existing signatures with a new one. If disabled, new signature will be appended
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --signature-only           Print only the signatures
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
@@ -13599,7 +14888,7 @@ zetacored tx sign [file] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -13660,13 +14949,13 @@ zetacored tx sign-batch [file] ([file2]...) [flags]
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
       --multisig string          Address or key name of the multisig account on behalf of which the transaction shall be signed
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
       --output-document string   The document will be written to the given file instead of STDOUT
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --signature-only           Print only the generated signature, then exit
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
@@ -13678,7 +14967,7 @@ zetacored tx sign-batch [file] ([file2]...) [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -13689,7 +14978,7 @@ zetacored tx sign-batch [file] ([file2]...) [flags]
 
 ## zetacored tx slashing
 
-Slashing transaction subcommands
+Transactions commands for the slashing module
 
 ```
 zetacored tx slashing [flags]
@@ -13707,7 +14996,7 @@ zetacored tx slashing [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -13715,21 +15004,20 @@ zetacored tx slashing [flags]
 ### SEE ALSO
 
 * [zetacored tx](#zetacored-tx)	 - Transactions subcommands
-* [zetacored tx slashing unjail](#zetacored-tx-slashing-unjail)	 - unjail validator previously jailed for downtime
+* [zetacored tx slashing unjail](#zetacored-tx-slashing-unjail)	 - Unjail a jailed validator
 
 ## zetacored tx slashing unjail
 
-unjail validator previously jailed for downtime
-
-### Synopsis
-
-unjail a jailed validator:
-
-$ zetacored tx slashing unjail --from mykey
-
+Unjail a jailed validator
 
 ```
 zetacored tx slashing unjail [flags]
+```
+
+### Examples
+
+```
+zetacored tx slashing unjail --from [validator]
 ```
 
 ### Options
@@ -13752,12 +15040,12 @@ zetacored tx slashing unjail [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -13768,14 +15056,14 @@ zetacored tx slashing unjail [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
 
 ### SEE ALSO
 
-* [zetacored tx slashing](#zetacored-tx-slashing)	 - Slashing transaction subcommands
+* [zetacored tx slashing](#zetacored-tx-slashing)	 - Transactions commands for the slashing module
 
 ## zetacored tx staking
 
@@ -13797,7 +15085,7 @@ zetacored tx staking [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -13853,12 +15141,12 @@ $ zetacored tx staking cancel-unbond zetavaloper1gghjut3ccd8ay0zduzj64hwre2fxs9l
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -13869,7 +15157,7 @@ $ zetacored tx staking cancel-unbond zetavaloper1gghjut3ccd8ay0zduzj64hwre2fxs9l
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -13882,52 +15170,69 @@ $ zetacored tx staking cancel-unbond zetavaloper1gghjut3ccd8ay0zduzj64hwre2fxs9l
 
 create new validator initialized with a self-delegation to it
 
+### Synopsis
+
+Create a new validator initialized with a self-delegation by submitting a JSON file with the new validator details.
+
 ```
-zetacored tx staking create-validator [flags]
+zetacored tx staking create-validator [path/to/validator.json] [flags]
+```
+
+### Examples
+
+```
+$ zetacored tx staking create-validator path/to/validator.json --from keyname
+
+Where validator.json contains:
+
+{
+	"pubkey": {"@type":"/cosmos.crypto.ed25519.PubKey","key":"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw="},
+	"amount": "1000000stake",
+	"moniker": "myvalidator",
+	"identity": "optional identity signature (ex. UPort or Keybase)",
+	"website": "validator's (optional) website",
+	"security": "validator's (optional) security contact email",
+	"details": "validator's (optional) details",
+	"commission-rate": "0.1",
+	"commission-max-rate": "0.2",
+	"commission-max-change-rate": "0.01",
+	"min-self-delegation": "1"
+}
+
+where we can get the pubkey using "zetacored tendermint show-validator"
 ```
 
 ### Options
 
 ```
-  -a, --account-number uint                 The account number of the signing account (offline mode only)
-      --amount string                       Amount of coins to bond
-      --aux                                 Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string               Transaction broadcasting mode (sync|async) 
-      --chain-id string                     The network chain ID
-      --commission-max-change-rate string   The maximum commission change rate percentage (per day)
-      --commission-max-rate string          The maximum commission rate percentage
-      --commission-rate string              The initial commission rate percentage
-      --details string                      The validator's (optional) details
-      --dry-run                             ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string                  Fee granter grants fees for the transaction
-      --fee-payer string                    Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string                         Fees to pay along with transaction; eg: 10uatom
-      --from string                         Name or address of private key with which to sign
-      --gas string                          gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float                adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string                   Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only                       Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                                help for create-validator
-      --identity string                     The optional identity signature (ex. UPort or Keybase)
-      --ip string                           The node's public IP. It takes effect only when used in combination with --generate-only
-      --keyring-backend string              Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string                  The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                              Use a connected Ledger device
-      --min-self-delegation string          The minimum self delegation required on the validator
-      --moniker string                      The validator's name
-      --node string                         [host]:[port] to tendermint rpc interface for this chain 
-      --node-id string                      The node's ID
-      --note string                         Note to add a description to the transaction (previously --memo)
-      --offline                             Offline mode (does not allow any online functionality)
-  -o, --output string                       Output format (text|json) 
-      --pubkey string                       The validator's Protobuf JSON encoded public key
-      --security-contact string             The validator's (optional) security contact email
-  -s, --sequence uint                       The sequence number of the signing account (offline mode only)
-      --sign-mode string                    Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
-      --timeout-height uint                 Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string                          Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-      --website string                      The validator's (optional) website
-  -y, --yes                                 Skip tx broadcasting prompt confirmation
+  -a, --account-number uint      The account number of the signing account (offline mode only)
+      --aux                      Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
+      --chain-id string          The network chain ID
+      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string       Fee granter grants fees for the transaction
+      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string              Fees to pay along with transaction; eg: 10uatom
+      --from string              Name or address of private key with which to sign
+      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                     help for create-validator
+      --ip string                The node's public IP. It takes effect only when used in combination with --generate-only
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                   Use a connected Ledger device
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
+      --node-id string           The node's ID
+      --note string              Note to add a description to the transaction (previously --memo)
+      --offline                  Offline mode (does not allow any online functionality)
+  -o, --output string            Output format (text|json) 
+  -s, --sequence uint            The sequence number of the signing account (offline mode only)
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+  -y, --yes                      Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -13935,7 +15240,7 @@ zetacored tx staking create-validator [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -13953,7 +15258,7 @@ Delegate liquid tokens to a validator
 Delegate an amount of liquid coins to a validator from your wallet.
 
 Example:
-$ zetacored tx staking delegate zetavaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --from mykey
+$ zetacored tx staking delegate cosmosvalopers1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --from mykey
 
 ```
 zetacored tx staking delegate [validator-addr] [amount] [flags]
@@ -13979,12 +15284,12 @@ zetacored tx staking delegate [validator-addr] [amount] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -13995,7 +15300,7 @@ zetacored tx staking delegate [validator-addr] [amount] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -14037,13 +15342,13 @@ zetacored tx staking edit-validator [flags]
       --ledger                       Use a connected Ledger device
       --min-self-delegation string   The minimum self delegation required on the validator
       --new-moniker string           The validator's name 
-      --node string                  [host]:[port] to tendermint rpc interface for this chain 
+      --node string                  [host]:[port] to CometBFT rpc interface for this chain 
       --note string                  Note to add a description to the transaction (previously --memo)
       --offline                      Offline mode (does not allow any online functionality)
   -o, --output string                Output format (text|json) 
       --security-contact string      The validator's (optional) security contact email 
   -s, --sequence uint                The sequence number of the signing account (offline mode only)
-      --sign-mode string             Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string             Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint          Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string                   Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
       --website string               The validator's (optional) website 
@@ -14055,7 +15360,7 @@ zetacored tx staking edit-validator [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -14073,7 +15378,7 @@ Redelegate illiquid tokens from one validator to another
 Redelegate an amount of illiquid staking tokens from one validator to another.
 
 Example:
-$ zetacored tx staking redelegate zetavaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj zetavaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 100stake --from mykey
+$ zetacored tx staking redelegate cosmosvalopers1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj cosmosvalopers1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 100stake --from mykey
 
 ```
 zetacored tx staking redelegate [src-validator-addr] [dst-validator-addr] [amount] [flags]
@@ -14099,12 +15404,12 @@ zetacored tx staking redelegate [src-validator-addr] [dst-validator-addr] [amoun
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -14115,7 +15420,7 @@ zetacored tx staking redelegate [src-validator-addr] [dst-validator-addr] [amoun
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -14159,12 +15464,12 @@ zetacored tx staking unbond [validator-addr] [amount] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -14175,7 +15480,7 @@ zetacored tx staking unbond [validator-addr] [amount] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -14183,6 +15488,164 @@ zetacored tx staking unbond [validator-addr] [amount] [flags]
 ### SEE ALSO
 
 * [zetacored tx staking](#zetacored-tx-staking)	 - Staking transaction subcommands
+
+## zetacored tx upgrade
+
+Upgrade transaction subcommands
+
+### Options
+
+```
+  -h, --help   help for upgrade
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx](#zetacored-tx)	 - Transactions subcommands
+* [zetacored tx upgrade cancel-software-upgrade](#zetacored-tx-upgrade-cancel-software-upgrade)	 - Cancel the current software upgrade proposal
+* [zetacored tx upgrade software-upgrade](#zetacored-tx-upgrade-software-upgrade)	 - Submit a software upgrade proposal
+
+## zetacored tx upgrade cancel-software-upgrade
+
+Cancel the current software upgrade proposal
+
+### Synopsis
+
+Cancel a software upgrade along with an initial deposit.
+
+```
+zetacored tx upgrade cancel-software-upgrade [flags]
+```
+
+### Options
+
+```
+  -a, --account-number uint      The account number of the signing account (offline mode only)
+      --authority string         The address of the upgrade module authority (defaults to gov)
+      --aux                      Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
+      --chain-id string          The network chain ID
+      --deposit string           The deposit to include with the governance proposal
+      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string       Fee granter grants fees for the transaction
+      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string              Fees to pay along with transaction; eg: 10uatom
+      --from string              Name or address of private key with which to sign
+      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                     help for cancel-software-upgrade
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                   Use a connected Ledger device
+      --metadata string          The metadata to include with the governance proposal
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
+      --note string              Note to add a description to the transaction (previously --memo)
+      --offline                  Offline mode (does not allow any online functionality)
+  -o, --output string            Output format (text|json) 
+  -s, --sequence uint            The sequence number of the signing account (offline mode only)
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --summary string           The summary to include with the governance proposal
+      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --title string             The title to put on the governance proposal
+  -y, --yes                      Skip tx broadcasting prompt confirmation
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx upgrade](#zetacored-tx-upgrade)	 - Upgrade transaction subcommands
+
+## zetacored tx upgrade software-upgrade
+
+Submit a software upgrade proposal
+
+### Synopsis
+
+Submit a software upgrade along with an initial deposit.
+Please specify a unique name and height for the upgrade to take effect.
+You may include info to reference a binary download link, in a format compatible with: https://docs.cosmos.network/main/tooling/cosmovisor
+
+```
+zetacored tx upgrade software-upgrade [name] (--upgrade-height [height]) (--upgrade-info [info]) [flags]
+```
+
+### Options
+
+```
+  -a, --account-number uint      The account number of the signing account (offline mode only)
+      --authority string         The address of the upgrade module authority (defaults to gov)
+      --aux                      Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
+      --chain-id string          The network chain ID
+      --daemon-name string       The name of the executable being upgraded (for upgrade-info validation). Default is the DAEMON_NAME env var if set, or else this executable 
+      --deposit string           The deposit to include with the governance proposal
+      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string       Fee granter grants fees for the transaction
+      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string              Fees to pay along with transaction; eg: 10uatom
+      --from string              Name or address of private key with which to sign
+      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                     help for software-upgrade
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                   Use a connected Ledger device
+      --metadata string          The metadata to include with the governance proposal
+      --no-checksum-required     Skip requirement of checksums for binaries in the upgrade info
+      --no-validate              Skip validation of the upgrade info (dangerous!)
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
+      --note string              Note to add a description to the transaction (previously --memo)
+      --offline                  Offline mode (does not allow any online functionality)
+  -o, --output string            Output format (text|json) 
+  -s, --sequence uint            The sequence number of the signing account (offline mode only)
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --summary string           The summary to include with the governance proposal
+      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --title string             The title to put on the governance proposal
+      --upgrade-height int       The height at which the upgrade must happen
+      --upgrade-info string      Info for the upgrade plan such as new version download urls, etc.
+  -y, --yes                      Skip tx broadcasting prompt confirmation
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx upgrade](#zetacored-tx-upgrade)	 - Upgrade transaction subcommands
 
 ## zetacored tx validate-signatures
 
@@ -14223,12 +15686,12 @@ zetacored tx validate-signatures [file] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -14239,7 +15702,7 @@ zetacored tx validate-signatures [file] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -14268,7 +15731,7 @@ zetacored tx vesting [flags]
       --chain-id string     The network chain ID
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -14328,12 +15791,12 @@ zetacored tx vesting create-periodic-vesting-account [to_address] [periods_json_
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -14344,7 +15807,7 @@ zetacored tx vesting create-periodic-vesting-account [to_address] [periods_json_
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -14387,12 +15850,12 @@ zetacored tx vesting create-permanent-locked-account [to_address] [amount] [flag
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -14403,7 +15866,7 @@ zetacored tx vesting create-permanent-locked-account [to_address] [amount] [flag
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -14449,12 +15912,12 @@ zetacored tx vesting create-vesting-account [to_address] [amount] [end_time] [fl
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain 
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
   -y, --yes                      Skip tx broadcasting prompt confirmation
@@ -14465,7 +15928,7 @@ zetacored tx vesting create-vesting-account [to_address] [amount] [end_time] [fl
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -14493,7 +15956,7 @@ zetacored upgrade-handler-version [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -14502,18 +15965,18 @@ zetacored upgrade-handler-version [flags]
 
 * [zetacored](#zetacored)	 - Zetacore Daemon (server)
 
-## zetacored validate-genesis
+## zetacored validate
 
-validates the genesis file at the default location or at the location passed as an arg
+Validates the genesis file at the default location or at the location passed as an arg
 
 ```
-zetacored validate-genesis [file] [flags]
+zetacored validate [file] [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for validate-genesis
+  -h, --help   help for validate
 ```
 
 ### Options inherited from parent commands
@@ -14521,7 +15984,7 @@ zetacored validate-genesis [file] [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```
@@ -14551,7 +16014,7 @@ zetacored version [flags]
 ```
       --home string         directory for config and data 
       --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
       --trace               print out full stack trace on errors
 ```

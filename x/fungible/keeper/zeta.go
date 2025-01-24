@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
@@ -21,7 +22,7 @@ func (k *Keeper) MintZetaToEVMAccount(ctx sdk.Context, to sdk.AccAddress, amount
 		return err
 	}
 
-	coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(amount)))
+	coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdkmath.NewIntFromBigInt(amount)))
 	// Mint coins
 	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, coins); err != nil {
 		return err
@@ -36,20 +37,20 @@ func (k *Keeper) MintZetaToFungibleModule(ctx sdk.Context, amount *big.Int) erro
 		return err
 	}
 
-	coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(amount)))
+	coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdkmath.NewIntFromBigInt(amount)))
 	// Mint coins
 	return k.bankKeeper.MintCoins(ctx, types.ModuleName, coins)
 }
 
 // validateZetaSupply checks if the minted ZETA amount exceeds the maximum supply
 func (k *Keeper) validateZetaSupply(ctx sdk.Context, amount *big.Int) error {
-	zetaMaxSupply, ok := sdk.NewIntFromString(ZETAMaxSupplyStr)
+	zetaMaxSupply, ok := sdkmath.NewIntFromString(ZETAMaxSupplyStr)
 	if !ok {
 		return fmt.Errorf("failed to parse ZETA max supply: %s", ZETAMaxSupplyStr)
 	}
 
 	supply := k.bankKeeper.GetSupply(ctx, config.BaseDenom)
-	if supply.Amount.Add(sdk.NewIntFromBigInt(amount)).GT(zetaMaxSupply) {
+	if supply.Amount.Add(sdkmath.NewIntFromBigInt(amount)).GT(zetaMaxSupply) {
 		return types.ErrMaxSupplyReached
 	}
 	return nil

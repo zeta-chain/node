@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -167,7 +167,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 			// already voted
 			Votes:           []types.VoteType{types.VoteType_SuccessObservation},
 			BallotStatus:    types.BallotStatus_BallotInProgress,
-			BallotThreshold: sdk.NewDec(2),
+			BallotThreshold: sdkmath.LegacyNewDec(2),
 		}
 		k.SetBallot(ctx, &ballot)
 		isFinalized, isNew, ballot, _, err := k.VoteOnOutboundBallot(
@@ -193,7 +193,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 		keepertest.MockGetChainListEmpty(&authorityMock.Mock)
 
 		// threshold high enough to not finalize the ballot
-		threshold, err := sdk.NewDecFromStr("0.7")
+		threshold, err := sdkmath.LegacyNewDecFromStr("0.7")
 		require.NoError(t, err)
 
 		k.SetChainParamsList(ctx, types.ChainParamsList{
@@ -256,7 +256,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 		slashingMock.MockIsTombstoned(false)
 
 		// set a ballot
-		threshold, err := sdk.NewDecFromStr("0.7")
+		threshold, err := sdkmath.LegacyNewDecFromStr("0.7")
 		require.NoError(t, err)
 		ballot := types.Ballot{
 			Index:            "index",
@@ -317,7 +317,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 		slashingMock.MockIsTombstoned(false)
 
 		// set a ballot
-		threshold, err := sdk.NewDecFromStr("0.1")
+		threshold, err := sdkmath.LegacyNewDecFromStr("0.1")
 		require.NoError(t, err)
 		ballot := types.Ballot{
 			Index:            "index",

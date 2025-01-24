@@ -3,14 +3,14 @@ package rpc
 import (
 	"fmt"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	rpcclient "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 	"google.golang.org/grpc"
 
@@ -35,7 +35,7 @@ type Clients struct {
 	Bank banktypes.QueryClient
 	// Bank is a github.com/cosmos/cosmos-sdk/x/staking/types QueryClient
 	Staking stakingtypes.QueryClient
-	// Upgrade is a github.com/cosmos/cosmos-sdk/x/upgrade/types QueryClient
+	// Upgrade is a cosmossdk.io/x/upgrade/types QueryClient
 	Upgrade upgradetypes.QueryClient
 	// Distribution is a "github.com/cosmos/cosmos-sdk/x/distribution/types" QueryClient
 	Distribution distributiontypes.QueryClient
@@ -64,8 +64,8 @@ type Clients struct {
 
 	// Tendermint specific clients
 
-	// Tendermint is a github.com/cosmos/cosmos-sdk/client/grpc/tmservice QueryClient
-	Tendermint tmservice.ServiceClient
+	// Tendermint is a github.com/cosmos/cosmos-sdk/client/grpc/cmtservice QueryClient
+	Tendermint cmtservice.ServiceClient
 }
 
 func newClients(ctx client.Context) (Clients, error) {
@@ -87,7 +87,7 @@ func newClients(ctx client.Context) (Clients, error) {
 		Ethermint:          etherminttypes.NewQueryClient(ctx),
 		EthermintFeeMarket: feemarkettypes.NewQueryClient(ctx),
 		// Tendermint specific clients
-		Tendermint: tmservice.NewServiceClient(ctx),
+		Tendermint: cmtservice.NewServiceClient(ctx),
 	}, nil
 }
 
